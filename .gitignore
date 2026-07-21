@@ -47,6 +47,12 @@ htmlcov/
 # uv
 uv.lock.bak
 
+# Reference / vendored sources (not part of this project)
+/reference/
+
+# Local research data (Parquet cache, SQLite runs, exports, logs)
+/data/
+
 # Misc
 *.log
 tmp/
