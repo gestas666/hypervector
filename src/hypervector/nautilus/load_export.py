@@ -25,6 +25,7 @@ class StrategyLoadout:
     costs: dict[str, Any] | None
     risk: dict[str, Any] | None
     exit_mode: str | None
+    exits: dict[str, Any] | None
     export_dir: Path
     metrics: dict[str, Any] = field(default_factory=dict)
     run_id: str | None = None
@@ -46,6 +47,7 @@ class StrategyLoadout:
             "exit_mode": self.exit_mode,
             "has_costs": self.costs is not None,
             "has_risk": self.risk is not None,
+            "has_exits": self.exits is not None,
             "schema_version": self.schema_version,
             "param_keys": sorted(self.params.keys()),
             "metric_keys": sorted(self.metrics.keys()),
@@ -80,7 +82,8 @@ def load_strategy_loadout(
 
     costs = meta.get("costs") if isinstance(meta.get("costs"), dict) else None
     risk = meta.get("risk") if isinstance(meta.get("risk"), dict) else None
-    exit_mode = meta.get("tp_sl_mode") or params.get("exit_mode")
+    exits = meta.get("exits") if isinstance(meta.get("exits"), dict) else None
+    exit_mode = meta.get("tp_sl_mode") or (exits or {}).get("mode") or params.get("exit_mode")
     if exit_mode is not None:
         exit_mode = str(exit_mode)
 
@@ -96,6 +99,7 @@ def load_strategy_loadout(
         costs=costs,
         risk=risk,
         exit_mode=exit_mode,
+        exits=exits,
         export_dir=root.resolve(),
         metrics=metrics,
         run_id=str(meta.get("run_id")) if meta.get("run_id") is not None else None,

@@ -191,6 +191,7 @@ def test_cli_export_validate_and_phase2_check(tmp_path: Path, capsys, inject_his
     assert val["ok"] is True
     assert val["strategy"] == "crown_stack_short"
     assert val["has_costs"] is True
+    assert val["has_exits"] is True
 
     assert (
         main(
@@ -208,8 +209,27 @@ def test_cli_export_validate_and_phase2_check(tmp_path: Path, capsys, inject_his
     report = json.loads(captured.out)
     assert report["ok"] is True
     assert report["phase2_stub"]["loadout"]["strategy_name"] == "crown_stack_short"
+    assert report["phase2_stub"]["exits"]["mode"] == "atr"
     assert report["paper_live"]["implemented"] is False
     assert "paper/live not implemented" in captured.err
+
+    # DB re-export should also be Phase 2-ready (research_meta path)
+    assert main(["--data-root", str(data), "export", "--track", "downtrend"]) == 0
+    reexport_path = Path(capsys.readouterr().out.strip())
+    assert reexport_path.is_dir()
+    assert (
+        main(
+            [
+                "--data-root",
+                str(data),
+                "export-validate",
+                "--path",
+                str(reexport_path),
+                "--strict",
+            ]
+        )
+        == 0
+    )
 
 
 def test_cli_export_validate_fails_on_garbage(tmp_path: Path, capsys):

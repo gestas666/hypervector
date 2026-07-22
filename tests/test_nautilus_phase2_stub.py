@@ -26,6 +26,14 @@ def _write_phase15_export(root: Path) -> Path:
             "lookback_days": 30,
             "init_cash": 10_000.0,
             "tp_sl_mode": "atr",
+            "exits": {
+                "mode": "atr",
+                "sl_pct": 0.01,
+                "rr": 2.0,
+                "atr_length": 14,
+                "sl_atr_mult": 1.5,
+                "trail_atr_mult": 2.0,
+            },
             "costs": {
                 "taker_fee": 0.00035,
                 "slippage_bps": 2.0,
@@ -64,6 +72,8 @@ def test_load_strategy_loadout_from_fixture_export(tmp_path: Path):
     assert loadout.timeframe == "1m"
     assert loadout.init_cash == 10_000.0
     assert loadout.exit_mode == "atr"
+    assert loadout.exits is not None
+    assert loadout.exits["sl_atr_mult"] == 1.5
     assert loadout.costs is not None
     assert loadout.costs["taker_fee"] == 0.00035
     assert loadout.risk is not None

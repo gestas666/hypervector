@@ -24,6 +24,11 @@ def test_insert_and_list_trials(tmp_path: Path):
             losses=4,
             win_pct=60.0,
             max_drawdown=-0.05,
+            research_meta={
+                "init_cash": 10_000.0,
+                "tp_sl_mode": "atr",
+                "exits": {"mode": "atr", "sl_pct": 0.01, "rr": 2.0},
+            },
         )
     )
     assert tid >= 1
@@ -31,6 +36,7 @@ def test_insert_and_list_trials(tmp_path: Path):
     assert len(rows) == 1
     assert rows[0]["net_pnl"] == 100.0
     assert rows[0]["params"] == {"fast": 5, "slow": 20}
+    assert rows[0]["research_meta"]["init_cash"] == 10_000.0
 
 
 def test_best_by_net_pnl_orders_primary(tmp_path: Path):

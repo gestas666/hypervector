@@ -29,6 +29,7 @@ META_PHASE15_REQUIRED: tuple[str, ...] = (
     "costs",
     "risk",
     "tp_sl_mode",
+    "exits",
 )
 
 PARAMS_REQUIRED: tuple[str, ...] = ("strategy",)
@@ -94,6 +95,28 @@ def _check_risk(risk: Any, errors: list[str], *, prefix: str = "meta.risk") -> N
             errors.append(f"{prefix}: risk_pct_min must be <= risk_pct_max")
     except (TypeError, ValueError):
         pass
+
+
+def _check_exits(exits: Any, errors: list[str], *, prefix: str = "meta.exits") -> None:
+    if not isinstance(exits, dict):
+        errors.append(f"{prefix} must be an object")
+        return
+    mode = exits.get("mode")
+    if mode is None or mode == "":
+        errors.append(f"{prefix}.mode missing")
+    elif str(mode) not in VALID_TP_SL_MODES:
+        errors.append(
+            f"{prefix}.mode={mode!r} invalid "
+            f"(expected one of {sorted(VALID_TP_SL_MODES)})"
+        )
+    for key in ("sl_pct", "rr", "atr_length", "sl_atr_mult", "trail_atr_mult"):
+        if key not in exits:
+            errors.append(f"{prefix}.{key} missing")
+            continue
+        try:
+            float(exits[key])
+        except (TypeError, ValueError):
+            errors.append(f"{prefix}.{key} must be numeric")
 
 
 def validate_export_dir(
@@ -172,6 +195,19 @@ def validate_export_dir(
         _check_costs(meta["costs"], errors)
     if "risk" in meta and meta["risk"] is not None:
         _check_risk(meta["risk"], errors)
+    if "exits" in meta and meta["exits"] is not None:
+        _check_exits(meta["exits"], errors)
+        # Mode string and exits.mode should agree when both present
+        if (
+            isinstance(meta.get("exits"), dict)
+            and meta.get("tp_sl_mode") is not None
+            and meta["exits"].get("mode") is not None
+            and str(meta["tp_sl_mode"]) != str(meta["exits"]["mode"])
+        ):
+            errors.append(
+                f"meta.tp_sl_mode={meta['tp_sl_mode']!r} disagrees with "
+                f"meta.exits.mode={meta['exits']['mode']!r}"
+            )
 
     if "init_cash" in meta and meta["init_cash"] is not None:
         try:
@@ -189,6 +225,8 @@ def validate_export_dir(
             _check_costs(meta["costs"], errors)
         if "risk" in meta and meta["risk"] is not None:
             _check_risk(meta["risk"], errors)
+        if "exits" in meta and meta["exits"] is not None:
+            _check_exits(meta["exits"], errors)
 
     present_optional = [name for name in OPTIONAL_FILES if (root / name).is_file()]
 
@@ -209,6 +247,7 @@ def validate_export_dir(
         "tp_sl_mode": meta.get("tp_sl_mode"),
         "has_costs": isinstance(meta.get("costs"), dict),
         "has_risk": isinstance(meta.get("risk"), dict),
+        "has_exits": isinstance(meta.get("exits"), dict),
         "optional_files": present_optional,
         "metric_keys": sorted(metrics.keys()),
         "param_keys": sorted(params.keys()),

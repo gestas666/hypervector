@@ -49,6 +49,7 @@ class Phase2StubConfig:
             "costs": self.loadout.costs,
             "risk": self.loadout.risk,
             "exit_mode": self.loadout.exit_mode,
+            "exits": self.loadout.exits,
             "params": self.loadout.params,
         }
 

@@ -191,6 +191,19 @@ def _run_sweep(args: argparse.Namespace, role: str) -> int:
     rows = []
     db = RunsDB(root / "runs" / "hypervector.db")
     run_id = str(uuid.uuid4())[:8]
+    research_meta = {
+        "symbol": args.symbol,
+        "timeframe": args.timeframe,
+        "lookback_days": args.lookback,
+        "init_cash": init_cash,
+        "tp_sl_mode": exit_cfg.mode,
+        "exits": exit_cfg.to_dict(),
+        "risk": risk_cfg.to_dict(),
+        "costs": cost.to_dict(),
+        "data_provenance": prov,
+        "fee_model": getattr(args, "fee_model", "hl_taker_default"),
+        "conviction": risk_cfg.default_conviction,
+    }
     for r in results:
         row = {
             "strategy": r.strategy,
@@ -215,6 +228,7 @@ def _run_sweep(args: argparse.Namespace, role: str) -> int:
                     win_pct=r.metrics["win_pct"],
                     max_drawdown=r.metrics["max_drawdown"],
                     status="ok",
+                    research_meta=research_meta,
                 )
             )
     board = rank_trials(rows)
@@ -226,14 +240,7 @@ def _run_sweep(args: argparse.Namespace, role: str) -> int:
             run_id=run_id,
             meta={
                 "track": role,
-                "symbol": args.symbol,
-                "timeframe": args.timeframe,
-                "lookback_days": args.lookback,
-                "init_cash": init_cash,
-                "tp_sl_mode": exit_cfg.mode,
-                "risk": risk_cfg.to_dict(),
-                "costs": cost.to_dict(),
-                "data_provenance": prov,
+                **research_meta,
             },
             params={"strategy": best.strategy, "role": role, **best.params},
             metrics=best.metrics,
@@ -261,21 +268,49 @@ def cmd_report(args: argparse.Namespace) -> int:
 
 
 def cmd_export(args: argparse.Namespace) -> int:
+    """Re-export best trial for a track as a Phase 2-ready bundle.
+
+    Requires trials written by a modern sweep that stored ``research_meta``
+    (costs/risk/exits/cash). Older DB rows without research_meta are refused.
+    """
     root = _ensure_root(args).root
     db = RunsDB(root / "runs" / "hypervector.db")
-    best = db.best_by_net_pnl(args.track) if args.track else None
+    rows = db.list_trials(track=args.track) if args.track else []
+    # Prefer Phase 2-ready trials (research_meta from modern sweeps)
+    ready = [
+        r
+        for r in rows
+        if r.get("status") == "ok"
+        and isinstance(r.get("research_meta"), dict)
+        and r["research_meta"]
+    ]
+    best = ready[0] if ready else None
     if best is None:
-        print("no ok trials to export", file=sys.stderr)
+        # Distinguish empty track vs legacy-only rows
+        any_ok = any(r.get("status") == "ok" for r in rows)
+        if any_ok:
+            print(
+                "ok trials exist but none have research_meta "
+                "(costs/risk/exits/cash); re-run sweep-* with current CLI "
+                "so Phase 2-ready config is stored",
+                file=sys.stderr,
+            )
+        else:
+            print("no ok trials to export", file=sys.stderr)
         return 1
+    research = best["research_meta"]
+    meta = {
+        "track": best["track"],
+        "exported_from": "cli",
+        **research,
+    }
+    # CLI symbol/timeframe only fill gaps; research_meta wins when present
+    meta.setdefault("symbol", getattr(args, "symbol", "BTC"))
+    meta.setdefault("timeframe", getattr(args, "timeframe", "1m"))
     path = export_candidate(
         root / "exports",
         run_id=best["run_id"],
-        meta={
-            "track": best["track"],
-            "exported_from": "cli",
-            "symbol": getattr(args, "symbol", "BTC"),
-            "timeframe": getattr(args, "timeframe", "1m"),
-        },
+        meta=meta,
         params={"strategy": best["strategy"], **best["params"]},
         metrics={
             k: best[k]
@@ -291,6 +326,7 @@ def cmd_export(args: argparse.Namespace) -> int:
             )
         },
         candidate_id=f"export_{best['track']}_{best['id']}",
+        strict=True,
     )
     print(str(path))
     return 0

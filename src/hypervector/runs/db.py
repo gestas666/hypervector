@@ -25,6 +25,8 @@ class TrialRow:
     win_pct: float
     max_drawdown: float
     status: str = "ok"
+    # Phase 1.5 research config for Phase 2-ready re-export (costs/risk/exits/cash)
+    research_meta: dict[str, Any] | None = None
     id: int | None = None
     created_at: str | None = None
 
@@ -55,7 +57,8 @@ class RunsDB:
                 win_pct REAL NOT NULL,
                 max_drawdown REAL NOT NULL,
                 status TEXT NOT NULL DEFAULT 'ok',
-                created_at TEXT NOT NULL
+                created_at TEXT NOT NULL,
+                research_meta_json TEXT
             )
             """
         )
@@ -65,17 +68,32 @@ class RunsDB:
         self._conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_trials_run ON trials(run_id)"
         )
+        # Migrate DBs created before research_meta_json existed
+        cols = {
+            r[1]
+            for r in self._conn.execute("PRAGMA table_info(trials)").fetchall()
+        }
+        if "research_meta_json" not in cols:
+            self._conn.execute(
+                "ALTER TABLE trials ADD COLUMN research_meta_json TEXT"
+            )
         self._conn.commit()
 
     def insert_trial(self, trial: TrialRow) -> int:
         created = trial.created_at or datetime.now(timezone.utc).isoformat()
+        meta_json = (
+            json.dumps(trial.research_meta, sort_keys=True, default=str)
+            if trial.research_meta is not None
+            else None
+        )
         cur = self._conn.execute(
             """
             INSERT INTO trials (
                 run_id, track, strategy, params_json,
                 net_pnl, total_return_pct, sharpe, trade_count,
-                wins, losses, win_pct, max_drawdown, status, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                wins, losses, win_pct, max_drawdown, status, created_at,
+                research_meta_json
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 trial.run_id,
@@ -92,6 +110,7 @@ class RunsDB:
                 float(trial.max_drawdown),
                 trial.status,
                 created,
+                meta_json,
             ),
         )
         self._conn.commit()
@@ -121,6 +140,11 @@ class RunsDB:
     def _row_to_dict(row: sqlite3.Row) -> dict[str, Any]:
         d = dict(row)
         d["params"] = json.loads(d.pop("params_json"))
+        raw_meta = d.pop("research_meta_json", None)
+        if raw_meta:
+            d["research_meta"] = json.loads(raw_meta)
+        else:
+            d["research_meta"] = None
         return d
 
     def close(self) -> None:

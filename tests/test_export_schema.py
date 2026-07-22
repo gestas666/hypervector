@@ -23,6 +23,14 @@ def _phase15_meta(**extra) -> dict:
         "lookback_days": 30,
         "init_cash": 10_000.0,
         "tp_sl_mode": "atr",
+        "exits": {
+            "mode": "atr",
+            "sl_pct": 0.01,
+            "rr": 2.0,
+            "atr_length": 14,
+            "sl_atr_mult": 1.5,
+            "trail_atr_mult": 2.0,
+        },
         "costs": {
             "taker_fee": 0.00035,
             "slippage_bps": 2.0,
@@ -106,6 +114,7 @@ def test_validate_strict_requires_phase15_fields(tmp_path: Path):
     assert "costs" in msg
     assert "risk" in msg
     assert "tp_sl_mode" in msg
+    assert "exits" in msg
 
 
 def test_export_write_round_trip_validates(tmp_path: Path):
