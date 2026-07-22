@@ -242,6 +242,6 @@ def test_session_inject_book_offline_no_poll(tmp_path: Path):
         now_ms=1.0,
     )
     assert rec["fill_model_id"] == FILL_MODEL_L2_WALK_V1
-    # Loadout slippage_bps=2.0 → VWAP 101 * (1 + 2/10000)
-    assert abs(rec["fill_px"] - 101.0 * (1.0 + 2.0 / 10_000.0)) < 1e-9
+    # l2_walk_v1 uses pure VWAP (slippage_bps unused; impact is in the walk)
+    assert abs(rec["fill_px"] - 101.0) < 1e-9
     assert rec.get("skipped") is not True

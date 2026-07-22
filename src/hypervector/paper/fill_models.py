@@ -143,7 +143,8 @@ class L2WalkFillModel:
 
     buy  walks asks ascending; sell walks bids descending.
     fill_qty = min(requested, available); shortfall_qty = remainder.
-    Optional slippage_bps is applied on the VWAP (buy up / sell down).
+    fill_px is pure VWAP of consumed levels (impact is already in the walk).
+    slippage_bps is accepted for Protocol compatibility but unused for L2.
     If the walked side has no size, fill_qty=0 (caller skips / falls back).
     """
 
@@ -156,7 +157,7 @@ class L2WalkFillModel:
         qty: float,
         mark_px: float,
         book: Any | None,
-        slippage_bps: float,
+        slippage_bps: float,  # unused: impact already in L2 walk VWAP
     ) -> FillResult:
         requested = float(qty)
         if book is None or getattr(book, "is_empty", lambda: True)():
@@ -176,7 +177,7 @@ class L2WalkFillModel:
         bid = book.best_bid()
         ask = book.best_ask()
         side_n = side.lower().strip()
-        slip = float(slippage_bps) / 10_000.0
+        _ = slippage_bps  # Protocol-compat; not applied on L2 VWAP
 
         if side_n == "buy":
             levels = list(getattr(book, "asks", ()) or ())
@@ -206,11 +207,7 @@ class L2WalkFillModel:
 
         shortfall = requested - filled
         if filled > 0:
-            vwap = total_notional / filled
-            if side_n == "buy":
-                fill_px = vwap * (1.0 + slip)
-            else:
-                fill_px = vwap * (1.0 - slip)
+            fill_px = total_notional / filled  # pure VWAP; ignore slippage_bps
         else:
             # No depth on walked side — do not invent; engine should skip.
             fill_px = float(mark_px)
