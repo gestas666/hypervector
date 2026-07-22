@@ -5,17 +5,21 @@
 **User:** Albert  
 **Branch:** `feat/phase2-actor-and-ml` (not pushed)
 
-**Status:** Phase 1 / 1.5 / Phase 2 complete. Phase 3 **design + implementation plan ready** (not executed yet).  
+**Status:** Phase 1 / 1.5 / Phase 2 complete. Phase 3 design + plan **locked**. **Next session starts implementation.**  
 **Completed plan:** `docs/superpowers/plans/2026-07-22-phase2-actor-and-ml.md`  
-**Phase 3 design:** `docs/superpowers/specs/2026-07-22-phase3-paper-live-feed-design.md`  
-**Phase 3 plan (execute next):** `docs/superpowers/plans/2026-07-22-phase3-paper-live-feed.md`  
+**Phase 3 design (approved):** `docs/superpowers/specs/2026-07-22-phase3-paper-live-feed-design.md`  
+**Phase 3 plan (EXECUTE THIS):** `docs/superpowers/plans/2026-07-22-phase3-paper-live-feed.md`  
 **Spec (pipeline lock):** `docs/superpowers/specs/2026-07-22-phase2-3-handoff.md`  
 **Prior plan (done):** `docs/superpowers/plans/2026-07-22-phase15-to-phase2-prep.md`  
 **Infra doc:** `docs/infra-data-layout.md`
 
-**Next session:** **Execute** Phase 3 paper plan Tasks 1–5 (CostProvider → fills → offline session → paper-run daemon → sandbox flag + handoff). Do not go live.
+**Next session (mandatory):** **Execute** Phase 3 paper plan Tasks 1→5 end-to-end.  
+Do **not** re-design. Do **not** re-execute Phase 2. Do **not** start Phase 4 (ML / book / live).
 
-**Phase 4 (after paper proven — first-class, not “Phase 3+”):** order book, **ML metalabel conviction**, live exec flip + secrets, userFees, ops kill switch. Separate design + plan.
+**Execution mode (recommended):** `subagent-driven-development` — one task per subagent, TDD, commit per task.  
+**Fallback:** `executing-plans` inline with checkpoints.
+
+**Phase 4 (after paper proven — first-class, not “Phase 3+”):** order book, **ML metalabel conviction**, live exec flip + secrets, userFees, ops kill switch. Separate design + plan — **not this session**.
 
 **Later (after phases complete):** ship an **agent skill package / plugin** so agents use the full research→Phase2→paper→live ladder correctly (see below).
 
@@ -64,12 +68,13 @@ features (metadata schema)
 
 ## What’s not built yet
 
-| Item | Notes |
-|------|--------|
-| **CLI metalabel / feature builder** | `Metalabeler` ready; needs bar→feature builder + bundle id; defer until process is correct |
-| **Venue fee/slippage from loadout.costs** | Runner uses loadout for sizing; fill model not fully cost-parity with VectorBT |
-| **Phase 3 paper live-feed loop** | HL subscribe + synthetic fills + append_paper_decision — **next** |
-| **Phase 3 live** | Out of scope until paper proven |
+| Item | Phase | Notes |
+|------|-------|--------|
+| **CostProvider + ExplicitFillEngine + paper session + `paper-run`** | **3** | **Execute next** — plan Tasks 1–5 |
+| **CLI metalabel / feature builder** | **4** | `Metalabeler` ready; wire after paper |
+| **Order book / impact fills** | **4** | `cache/book/` reserved |
+| **Live exec + live ledger** | **4** | Config flip + secrets after paper proven |
+| **Venue fee/slippage parity in Phase 2 runner** | backlog | Not blocking paper |
 
 **Locked rules still apply:** signals parquet = parity only; never VectorBT → live; paper ledger ≠ live ledger.
 
@@ -88,19 +93,28 @@ features (metadata schema)
 
 ---
 
-## Plan progress (2026-07-22-phase2-actor-and-ml)
+## Plan progress — Phase 2 (CLOSED)
 
 | Task | Status | Commit |
 |------|--------|--------|
-| 1 Shared bar-window signal adapter | **Done** | `35d3219` |
-| 2 Loadout sizing + exit helpers | **Done** | `e804ec2` |
-| 3 OHLCV → Nautilus bars | **Done** | `243268a` |
-| 4 HypervectorStrategy actor | **Done** | `55210ed` |
-| 5 Historical runner + artifacts | **Done** | `b1680cf` |
-| 6 CLI `phase2-run` | **Done** | `406bbef` |
-| 7 Metalabeler (optional; was impulse façade) | **Done** | `c9490e1` + rename |
-| 8 Paper ledger scaffold | **Done** | `f9c1fa9` |
-| 9 Full verify + handoff | **Done** | (this commit) |
+| 1–9 actor, runner, metalabeler, paper scaffold | **Done** | through `f9c1fa9` + handoff |
+
+Do **not** re-execute Phase 2.
+
+## Plan progress — Phase 3 paper (EXECUTE NEXT)
+
+**Plan:** `docs/superpowers/plans/2026-07-22-phase3-paper-live-feed.md`  
+**Design:** `docs/superpowers/specs/2026-07-22-phase3-paper-live-feed-design.md`
+
+| Task | Deliverable | Status |
+|------|-------------|--------|
+| 1 | `paper/costs.py` — HL fee tiers + signed funding | **Pending** |
+| 2 | `paper/fills.py` — ExplicitFillEngine + decision fields | **Pending** |
+| 3 | `paper/session.py` — offline bar session | **Pending** |
+| 4 | `paper/runner.py` + `paper-run` daemon + live bars | **Pending** |
+| 5 | Sandbox flag + full offline verify + HANDOFF update | **Pending** |
+
+Success when: offline suite green; `paper-run` can warm + process bars; decisions under `data/paper/` with `execution_mode=paper`; no venue orders; no Phase 4 scope creep.
 
 ---
 
@@ -120,19 +134,34 @@ features (metadata schema)
 
 ---
 
-## Next session — start here
+## Next session — START EXECUTION HERE
+
+**Goal:** Implement Phase 3 paper live-feed loop per plan (Tasks 1→5). Design is done — code only.
 
 ```bash
 cd /Users/gestas/Prototypes/hypervector
 git checkout feat/phase2-actor-and-ml
 uv sync --all-extras
-# Skills: subagent-driven-development or executing-plans + write-clean-code
-# Plan: docs/superpowers/plans/2026-07-22-phase3-paper-live-feed.md
-# Execute Tasks 1→5 only. Phase 4 (ML, book, live) is AFTER paper.
+
+# 1) Baseline
 uv run pytest tests/ -q -m "not network"
+
+# 2) Read then execute (do not redesign)
+#    docs/superpowers/plans/2026-07-22-phase3-paper-live-feed.md
+# Skills: subagent-driven-development (preferred) OR executing-plans
+#         + write-clean-code; karpathy-guidelines if loaded
+# Order: Task 1 → 2 → 3 → 4 → 5; TDD; commit per task
+# Out of scope: Phase 4 ML, order book, live orders
 ```
 
-### Research / Phase 2 (working)
+**Agent checklist on open:**
+
+1. Confirm branch `feat/phase2-actor-and-ml`, working tree known.  
+2. Open Phase 3 plan; mark Task 1 in progress.  
+3. Execute Tasks 1–5 completely (or as far as session allows; leave checkboxes accurate).  
+4. End session: update this HANDOFF task table + commits; leave Phase 4 for later.
+
+### Research / Phase 2 (working — do not rebuild)
 
 ```bash
 uv run python -m hypervector export-validate --path data/exports/<id> --strict
@@ -177,29 +206,28 @@ CLI still uses fixed `--conviction` until a feature builder is wired to a bundle
 
 ---
 
-## Next session entry
+## Next session entry (copy-paste)
 
 ```bash
 cd /Users/gestas/Prototypes/hypervector
 git checkout feat/phase2-actor-and-ml
 uv sync --all-extras
-# Skills: engineering-software, brainstorming, write-clean-code
-# Phase 2 plan is CLOSED — do not re-execute Tasks 1–9
-# 1) Read this HANDOFF + specs/2026-07-22-phase2-3-handoff.md §3–4
-# 2) Brainstorm → design doc → user approve → writing-plans
-# 3) Only then subagent-driven execute Phase 3 paper loop
+# EXECUTE Phase 3 — design/plan already locked
+# Plan: docs/superpowers/plans/2026-07-22-phase3-paper-live-feed.md
+# Skills: subagent-driven-development + write-clean-code
+# Phase 2 CLOSED. Phase 4 (ML/book/live) NOT this session.
 uv run pytest tests/ -q -m "not network"
+# Then implement Task 1 (paper/costs.py) and continue 2→5
 ```
 
-### Phase 3 paper loop (design + plan locked; implement next)
+### Phase 3 scope (implementing)
 
-- HL **live** bars (cache warm-up first); full Nautilus host
-- Explicit fills + hybrid costs (Tier 0 fees, live signed funding)
-- Optional sandbox shadow (default off); daemon `paper-run`
-- Secrets env names ready for Phase 4; paper needs no keys for public path
-- **Not in Phase 3:** order book, ML metalabel, live orders
+- HL **live** bars (cache warm-up first); full Nautilus host  
+- Explicit fills + hybrid costs (Tier 0 fees, live signed funding)  
+- Optional sandbox shadow (default off); daemon `paper-run`  
+- Secrets env names ready for Phase 4; paper needs no keys for public path  
 
-### Phase 4 (important — design after paper)
+### Phase 4 (do not implement until paper Tasks 1–5 done)
 
 - Order book + impact fills  
 - Metalabel conviction on shared path  
@@ -232,8 +260,10 @@ Until then: **this HANDOFF + specs/plans** are the agent contract.
 ## Agent notes
 
 - Prefer this HANDOFF over stale agentmemory for phase status.  
-- Phase 2 plan is **closed** — next work needs a **new** design + plan.  
-- SDD ledger: `.superpowers/sdd/progress.md` (Phase 2 complete).  
-- Branch `feat/phase2-actor-and-ml` not pushed; merge/PR when you want Phase 2 on main.  
+- Phase 2 plan is **closed**. Phase 3 design + plan are **closed** — **execute**, do not re-brainstorm.  
+- Next agent action: open `docs/superpowers/plans/2026-07-22-phase3-paper-live-feed.md` and run Task 1.  
+- SDD ledger: `.superpowers/sdd/progress.md` (update as Phase 3 tasks complete).  
+- Branch `feat/phase2-actor-and-ml` not pushed; merge/PR when ready.  
 - Legacy pre-schema exports fail `export-validate` until re-exported.  
 - Upstream noise: Nautilus `Timestamp.utcnow` Pandas4Warning; sklearn calibrator version skew.  
+- Secrets for Phase 4: `HYPERVECTOR_HL_WALLET_ADDRESS`, `HYPERVECTOR_HL_API_PRIVATE_KEY` — paper path must not place live orders even if present.  
