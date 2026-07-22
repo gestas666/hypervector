@@ -11,7 +11,9 @@
 **Prior plan (done):** `docs/superpowers/plans/2026-07-22-phase15-to-phase2-prep.md`  
 **Infra doc:** `docs/infra-data-layout.md`
 
-**Next session:** Phase 3 **paper live-feed loop** (HL subscribe + same strategy path + synthetic fills logged via paper ledger). Not started. Do not go live.
+**Next session:** **Design** Phase 3 paper live-feed loop (not implement yet). No Phase 3 execution plan exists — only scaffold + pipeline lock in `2026-07-22-phase2-3-handoff.md`. Do not go live.
+
+**Later (after phases complete):** ship an **agent skill package / plugin** so agents use the full research→Phase2→paper→live ladder correctly (see below).
 
 ---
 
