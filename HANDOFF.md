@@ -1,11 +1,20 @@
 # HANDOFF — hypervector
 
-**Saved:** 2026-07-22  
+**Saved:** 2026-07-22 (evening)  
 **Project:** `/Users/gestas/Prototypes/hypervector`  
 **User:** Albert  
-**Branch:** `feat/phase2-actor-and-ml` (**not pushed**)  
-**HEAD tip:** Phase 3 paper Tasks 1–5 complete (see task table)  
-**Working tree:** untracked `audio/` ok to ignore  
+**Branch:** `main`  
+**HEAD (last commit):** `b83b791` — Phase 3 paper complete (funding fix + offline pass notes)  
+**Working tree at handoff write:**
+
+| Path | State |
+|------|--------|
+| `docs/superpowers/specs/2026-07-22-phase4a-book-fills-metalabel-design.md` | **Untracked** — design approved |
+| `docs/superpowers/plans/2026-07-22-phase4a-book-fills-metalabel.md` | **Untracked** — plan ready |
+| `HANDOFF.md` | **Modified** — this file |
+| `audio/` | Untracked — ignore |
+
+**Prefer this HANDOFF over agentmemory for phase status.**
 
 ---
 
@@ -14,14 +23,164 @@
 | Layer | State |
 |-------|--------|
 | Phase 1 / 1.5 research | **Done** |
-| Phase 2 actor + historical runner + metalabeler + paper ledger scaffold | **Done** (plan closed) |
-| Phase 3 paper **design** | **Approved / locked** |
-| Phase 3 paper **implementation plan** | **Complete — 5/5 tasks** |
-| Phase 3 paper **code** | **Done** — live-feed loop + explicit fills + costs + sandbox flag |
-| Phase 4 | **Next design** — order book, ML metalabel, live exec, CLI complete, GOAT TUI, 1-page GUI |
+| Phase 2 actor + historical + metalabeler process | **Done** (plan closed) |
+| Phase 3 paper design + plan + code | **Done** (5/5 + funding fix) |
+| Phase **4a design** | **Approved / locked** |
+| Phase **4a plan** | **Ready — Tasks 1–6 all pending code** |
+| Phase 4b live / 4c CLI | **Not started** (separate designs later) |
+| Phase 5 TUI + 1-page GUI | **Not started** (was old 4d/4e) |
 
-**This session (outgoing):** Phase 3 Tasks 1–5 implemented and verified offline.  
-**Next session (incoming):** **Phase 4 design** (brainstorm + spec + plan). Do **not** re-do Phase 3. Do not start Phase 4 code until design is locked.
+**Outgoing session:** Design + plan only. **No Phase 4a code yet.**  
+**Incoming session:** **Subagent-driven implementation** of Phase 4a plan Tasks 1→6.
+
+---
+
+## CLEAN SESSION START — Phase 4a implement (subagent-driven)
+
+### Goal (one sentence)
+
+Execute `docs/superpowers/plans/2026-07-22-phase4a-book-fills-metalabel.md` task-by-task with **subagent-driven-development**: honest paper fills (book + staged L2 walk) then optional meta-label **scale-only** conviction — no live orders, no Phase 3 rewrite, no TUI/GUI.
+
+### Skills to load (in order)
+
+1. **using-superpowers** (skill-first)  
+2. **subagent-driven-development** (REQUIRED execution mode — Albert chose this; clean session)  
+3. **engineering-software** (testable requirements, verification vs validation)  
+4. **ml-for-algo-trading** (point-in-time features, fill realism, meta-label ≠ primary signal)  
+5. Optional: **test-driven-development** per plan step  
+
+Do **not** re-run brainstorming or rewrite the design unless Albert asks. Do **not** use the blog “LightGBM is the primary buy/sell brain” architecture — product path is meta-label **scale only**.
+
+### Bootstrap commands
+
+```bash
+cd /Users/gestas/Prototypes/hypervector
+git status -sb
+git log -3 --oneline
+uv sync --all-extras
+uv run pytest tests/ -q -m "not network"
+# Baseline: Phase 3 offline suite green (was ~170 passed). If red, fix before Task 1.
+```
+
+### First commits (recommended before Task 1 code)
+
+Design + plan + HANDOFF are uncommitted. Either:
+
+```bash
+# Option A — docs-only commit first (clean history)
+git add docs/superpowers/specs/2026-07-22-phase4a-book-fills-metalabel-design.md \
+        docs/superpowers/plans/2026-07-22-phase4a-book-fills-metalabel.md \
+        HANDOFF.md
+git commit -m "docs: Phase 4a design + plan for book fills and meta-label wire"
+```
+
+…or include them with Task 1 if Albert prefers fewer commits. **Do not commit `audio/`.**
+
+### Agent checklist (strict)
+
+1. Read **this HANDOFF** + Phase 4a **design** + Phase 4a **plan** (sections: Global Constraints, File map, Task N).  
+2. Confirm offline baseline green.  
+3. Invoke **subagent-driven-development**: one subagent per plan task; two-stage review between tasks.  
+4. Start at **Task 1** only (FillModel extract). Mark plan checkboxes as done.  
+5. After each task: tests for that task green + commit as plan specifies.  
+6. **Never** implement Task 5 (metalabel) before Tasks 1–4 fill path is green.  
+7. **Never** place venue orders; **never** write `data/live/`.  
+8. End session: update this HANDOFF task table + HEAD; leave clear next task id.
+
+### Phase 4a task board (implement these)
+
+| Task | Deliverable | Status |
+|------|-------------|--------|
+| **1** | `FillModel` protocol + `bar_close` extraction; engine delegates; no regression | **Pending** |
+| **2** | `BookSnapshot` + HL L2 REST `BookFeed` + fixture/tests | **Pending** |
+| **3** | `top_bps_v1` + `select_fill_model` stale/missing → logged fallback | **Pending** |
+| **4** | `l2_walk_v1` VWAP + shortfall; preferred when book fresh | **Pending** |
+| **5** | `ConvictionProvider` meta-label scale-only (default **off**) + FeatureBuilder | **Pending** |
+| **6** | CLI/config/`paper-check` surface + full offline verify + HANDOFF | **Pending** |
+
+**Plan path (source of truth for steps/code):**  
+`docs/superpowers/plans/2026-07-22-phase4a-book-fills-metalabel.md`
+
+**Design path (locks + SRS tags):**  
+`docs/superpowers/specs/2026-07-22-phase4a-book-fills-metalabel-design.md`
+
+### Architecture (do not reopen)
+
+```text
+export + configs → paper daemon (Phase 3 shell — Approach 1)
+HL bars → HypervectorStrategy (alpha unchanged)
+HL L2 book → BookFeed → BookSnapshot
+FillModel: bar_close_slippage_v1 | top_bps_v1 | l2_walk_v1
+  selection: prefer l2 when book fresh; else fallback + fill_fallback_reason
+ExplicitFillEngine → data/paper/ (execution_mode=paper)
+
+After fills green (Task 5):
+  Metalabeler p ∈ [0,1] → conviction = p (scale only, no skip floor)
+  → existing risk_pct_from_conviction / position_size_frac
+  default metalabel OFF; failure → fallback_fixed
+```
+
+### Locks (Albert approved — do not reopen without him)
+
+| Topic | Choice |
+|-------|--------|
+| +EV package | Book + honest fills **before** metalabel; L2 walk destination |
+| Fill delivery | Staged: extract bar_close → top_bps → **l2_walk_v1** preferred |
+| Fallback | `bar_close_slippage_v1` if book missing/stale; **log reason, never silent** |
+| `max_book_age_ms` | **3000** default |
+| Meta-label policy | **Scale only** (`conviction = p`); **no skip floor** |
+| Meta-label default | **Off** until L2 path verified |
+| Meta-label fail | `conviction_source=fallback_fixed` |
+| Leverage | **Not** a second model — existing risk band only |
+| Host | Thin paper shell (not full Nautilus node in 4a) |
+| Book transport v1 | Public HL **REST** L2 (`l2Book`); WS later |
+| Live / TUI / GUI | **Out of scope** (4b / Phase 5) |
+| Blog VBT+LGBM primary classifier | **Not** the product path |
+
+### Naming (for commits/docs)
+
+- Pattern name: **meta-labeling** (secondary model scores strength; primary signal stays strategy/params).  
+- Not: “LightGBM predicts long/short as the live brain.”
+
+### Success bar (4a done)
+
+1. Offline suite green with bar-close path (Phase 3 no regression).  
+2. Golden book tests: top_bps + l2 VWAP + shortfall + stale fallback.  
+3. Preferred fill `l2_walk_v1` when book fresh.  
+4. Metalabel optional; default fixed conviction.  
+5. `paper-check` reports book/fill/metalabel surface; `live.enabled` false.  
+6. No `data/live/` writes; no venue orders.
+
+### Out of scope this implementation pass
+
+- 4b live exec, kill switch, secrets-required trading  
+- 4c full CLI completeness epic  
+- Phase 5 GOAT TUI / 1-page GUI  
+- userFees (optional DG — only if free during Task 6)  
+- ML training / LEXLB primary-signal notebook architecture  
+- Reopening Phase 3 plan tasks  
+
+### Key code surfaces (today, before 4a)
+
+| Path | Role |
+|------|------|
+| `src/hypervector/paper/fills.py` | `ExplicitFillEngine` — **Task 1** extracts fill model from here |
+| `src/hypervector/paper/session.py` / `runner.py` | Bar session + daemon — later pass book + conviction |
+| `src/hypervector/paper/costs.py` | Fees/funding; `fill_model_id` on snapshot |
+| `src/hypervector/data/hl.py` | Candles REST — **Task 2** adds L2 helper |
+| `src/hypervector/ml/metalabel.py` | Inference process — wire in **Task 5** only |
+| `src/hypervector/sweep/sizing.py` | `risk_pct_from_conviction` — reuse, don’t fork |
+| `src/hypervector/cli.py` | paper-check / paper-run — **Task 6** surface |
+
+### Prompt seed for clean session (paste-friendly)
+
+```text
+Read HANDOFF.md. Load using-superpowers + subagent-driven-development +
+engineering-software + ml-for-algo-trading. Execute Phase 4a plan
+docs/superpowers/plans/2026-07-22-phase4a-book-fills-metalabel.md
+subagent-driven, Task 1 first. Do not redesign. Do not touch live/TUI.
+Commit design/plan/HANDOFF if still untracked, then implement.
+```
 
 ---
 
@@ -29,6 +188,8 @@
 
 | Role | Path |
 |------|------|
+| **Phase 4a design (APPROVED)** | `docs/superpowers/specs/2026-07-22-phase4a-book-fills-metalabel-design.md` |
+| **Phase 4a plan (READY — execute)** | `docs/superpowers/plans/2026-07-22-phase4a-book-fills-metalabel.md` |
 | Phase 3 plan (COMPLETE) | `docs/superpowers/plans/2026-07-22-phase3-paper-live-feed.md` |
 | Phase 3 design (approved) | `docs/superpowers/specs/2026-07-22-phase3-paper-live-feed-design.md` |
 | Pipeline / paper identity lock | `docs/superpowers/specs/2026-07-22-phase2-3-handoff.md` |
@@ -37,36 +198,6 @@
 | Phase 1.5 + prep plan (CLOSED) | `docs/superpowers/plans/2026-07-22-phase15-to-phase2-prep.md` |
 | Infra I2 | `docs/infra-data-layout.md` |
 | This handoff | `HANDOFF.md` |
-
-Prefer **this HANDOFF** over stale agentmemory for phase status.
-
----
-
-## Next session — START HERE (Phase 4 design)
-
-**Goal:** Design Phase 4 only. Phase 3 paper is proven offline — **do not re-implement**.
-
-```bash
-cd /Users/gestas/Prototypes/hypervector
-git checkout feat/phase2-actor-and-ml
-uv sync --all-extras
-uv run pytest tests/ -q -m "not network"
-
-# Smoke paper surfaces (no keys required):
-uv run python -m hypervector paper-check
-# Optional short daemon smoke (needs export + HL public or offline inject):
-# uv run python -m hypervector paper-run --path data/exports/<id> --max-live-bars 2
-```
-
-**Agent checklist on open:**
-
-1. Confirm branch `feat/phase2-actor-and-ml`; note HEAD; do not start on `main` without asking.  
-2. Baseline: offline suite green.  
-3. **Do not** re-open Phase 3 plan tasks.  
-4. Start **Phase 4 design** (brainstorm + spec + plan): book, ML wire, live flip, CLI complete → TUI/GUI.  
-5. End session: update this HANDOFF with Phase 4 design paths when locked.
-
-**Skills:** brainstorming → write-spec → write-plan. UX sequencing: **CLI complete → GOAT TUI + 1-page GUI**.
 
 ---
 
@@ -140,7 +271,10 @@ Decisions: `data/paper/decisions/decisions.jsonl` (I2 layout).
 Phase 1/1.5  VectorBT research → export
 Phase 2      Nautilus historical (params, not signals.parquet)
 Phase 3      Paper: live HL bars + same strategy + explicit fills   ← DONE
-Phase 4      Book + ML + live flip + full CLI + GOAT TUI + 1-page GUI  ← DESIGN NEXT
+Phase 4a     Book + staged L2 fills + meta-label scale-only         ← DESIGN LOCKED; plan next
+Phase 4b     Live exec flip + kill switch
+Phase 4c     CLI completeness
+Phase 5      GOAT TUI + 1-page GUI
 ```
 
 | Phase | Role | State |
@@ -148,7 +282,9 @@ Phase 4      Book + ML + live flip + full CLI + GOAT TUI + 1-page GUI  ← DESIG
 | **1 / 1.5** | Research, costs, risk, export | **Done** |
 | **2** | Event-driven historical sim | **Done** |
 | **3 paper** | Live feed + synthetic fills + paper ledger | **Done** (offline verified) |
-| **4** | Book, ML, live, CLI complete, GOAT TUI, 1-page GUI | **Next design** |
+| **4a** | Book, impact fills, metalabel wire | **Design locked** |
+| **4b–4c** | Live + CLI | Later design |
+| **5** | TUI + GUI | Later design |
 
 ---
 
@@ -254,23 +390,22 @@ p = ml.predict_probability(features)  # [0, 1]
 
 ---
 
-## Phase 4 epic (NEXT design session)
+## Phase 4 / 5 epic
 
-Implement only **after** a locked Phase 4 design + plan. Separate design session.
+| Track | Deliverable | State |
+|-------|-------------|--------|
+| **4a** | Order book + staged L2 fills; meta-label scale-only; optional userFees | **Design locked** — plan/implement next |
+| **4b** | Live exec flip, secrets required, `data/live/`, kill switch | Later design |
+| **4c** | CLI completeness — every capability consistent | Later design; gate for UX |
+| **5a** | **GOAT TUI** — best-in-class terminal ops console | Phase 5 |
+| **5b** | **1-page GUI** monitoring dashboard | Phase 5 |
 
-| Track | Deliverable | Bar |
-|-------|-------------|-----|
-| **4a** | Order book + impact fills; ML metalabel on shared path; userFees | Honest fills + conviction |
-| **4b** | Live exec flip, secrets required, `data/live/`, kill switch | Same strategy path as paper |
-| **4c** | CLI completeness — every capability consistent | Gate for UX |
-| **4d** | **GOAT TUI** — best-in-class terminal ops console | Epic quality; design session |
-| **4e** | **1-page GUI** monitoring dashboard | Same truth as TUI/CLI; one page |
+**4a design:** `docs/superpowers/specs/2026-07-22-phase4a-book-fills-metalabel-design.md`  
 
-**UX sequencing:** **4c CLI complete → then 4d TUI + 4e GUI.**  
+**UX sequencing:** **4c CLI complete → then Phase 5 TUI + GUI.**  
 TUI/GUI are views over ledgers/processes — not a second brain. `execution_mode` always obvious. CLI stays scriptable.
 
 Also defer: real Nautilus sandbox client (Phase 3 only plumbs flag + null `sandbox_fill_px`).
-
 ---
 
 ## Non-goals (until Phase 4 design says otherwise)
