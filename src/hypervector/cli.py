@@ -56,6 +56,21 @@ def cmd_infra_init(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_paper_check(args: argparse.Namespace) -> int:
+    """Print paper/live layout identity; live feed loop is not implemented."""
+    paths = _ensure_root(args)
+    report = layout_report(paths.root)
+    report["paper"] = {
+        "execution_mode": "paper",
+        "decisions": str(paths.paper_decisions),
+        "ledger": str(paths.paper_ledger),
+        "live_feed_loop": False,
+    }
+    print(json.dumps(report, indent=2))
+    print("live feed loop not implemented", file=sys.stderr)
+    return 0
+
+
 def cmd_history(args: argparse.Namespace) -> int:
     df, prov = _load_bars(args)
     print(
@@ -466,6 +481,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="Create I2 data layout (cache/runs/exports/logs/paper/live/nautilus)",
     )
     infra.set_defaults(func=cmd_infra_init)
+
+    pc = sub.add_parser(
+        "paper-check",
+        help="Paper identity scaffold: layout + note that live feed loop is not implemented",
+    )
+    pc.set_defaults(func=cmd_paper_check)
 
     h = sub.add_parser("history", help="Fetch/cache HL-max + Binance/Bybit backfill")
     _add_market_args(h)
