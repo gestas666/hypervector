@@ -4,109 +4,99 @@
 **Project:** `/Users/gestas/Prototypes/hypervector`  
 **User:** Albert  
 
-**Status:** Phase 1 / 1.5 / prep Tasks **1–7 DONE**. Ready for Phase 2 strategy actor.  
-**Phase 1 funnel DONE** · **Phase 1.5 costs/TP-SL/risk IN CODE** · **Infra I2 DONE**  
-**Export schema v1 DONE** · **Nautilus load-export stub DONE** · **CLI export-validate / phase2-check DONE**  
-
-**Plan:** `docs/superpowers/plans/2026-07-22-phase15-to-phase2-prep.md`  
-**Spec:** `docs/superpowers/specs/2026-07-22-phase2-3-handoff.md`  
+**Status:** Phase 1 / 1.5 / Phase 2 **prep** complete and verified.  
+**Next plan:** `docs/superpowers/plans/2026-07-22-phase2-actor-and-ml.md`  
+**Spec (locked):** `docs/superpowers/specs/2026-07-22-phase2-3-handoff.md`  
+**Prior plan (done):** `docs/superpowers/plans/2026-07-22-phase15-to-phase2-prep.md`  
 **Infra doc:** `docs/infra-data-layout.md`
 
-**Next execute:** implement Nautilus **strategy actor** that re-runs strategy from `StrategyLoadout` params (not signal replay). Task 8 ML façade optional.
+**Next execute:** plan Tasks **1→6** (signal adapter → actor → runner → `phase2-run`).  
+Task **7 ML façade** optional. Task **8** paper ledger scaffold. Task **9** verify + handoff.
+
+---
+
+## What’s working (built + verified)
+
+| Area | Status |
+|------|--------|
+| Phase 1 VectorBT research funnel | **Working** — history, regime, sweeps, rank, export |
+| Phase 1.5 costs / TP-SL / risk | **Working** — fees, slippage, funding est., `fixed_rr\|atr\|trail`, 1–5% conviction risk |
+| Infra I2 layout | **Working** — `infra-init`, paper/live separation |
+| Export schema v1 | **Working** — strict needs costs, risk, tp_sl_mode, **exits** |
+| Nautilus load-export **stub** | **Working** — `StrategyLoadout`, offline probe (no engine run) |
+| CLI | **Working** — see commands below |
+| Unit tests | **100 passed** offline; network fetchers optional green |
+| Real sweeps | **Working** — 30d BTC 1m atr / fixed_rr / trail + strict validate |
+
+## What’s not built yet
+
+| Item | Notes |
+|------|--------|
+| **Nautilus strategy actor** | Next plan Tasks 1–6 — re-run logic from loadout params |
+| **`phase2-run` historical engine** | BacktestEngine + artifacts under `data/nautilus/backtest/` |
+| **ML impulse façade** | Task 7 optional — no `src/hypervector/ml/` yet; conviction is CLI constant |
+| **Phase 3 paper live-feed loop** | Task 8 scaffold only; no HL subscribe / synthetic fill loop |
+| **Phase 3 live** | Out of scope until paper proven |
+
+**Locked rules still apply:** signals parquet = parity only; never VectorBT → live; paper ledger ≠ live ledger.
 
 ---
 
 ## Goal (pipeline)
 
-| Phase | Role | Framework |
-|-------|------|-----------|
-| **1** | Research / grids / rank / export | **VectorBT** |
-| **1.5** | Fees, slippage, funding est., TP/SL modes, 1–5% conviction risk | VectorBT |
-| **2** | Event-driven historical validation | **NautilusTrader** |
-| **3 paper** | Live **HL feed**, same logic as live, **synthetic fills logged** | Nautilus |
-| **3 live** | Same as paper; real execution client only | Nautilus + HL |
-
-**Modular handoff (locked):** VectorBT exports **params + meta + metrics** (+ optional signals for **replay only**). Nautilus **re-runs strategy logic** from params — not frozen signals as live alpha.
-
-**Phase 3 paper (locked):** 1:1 with live strategy/risk/ML path; market data from **Hyperliquid live feed**; no real orders; log would-be executions. Promote: Phase 2 sim → paper on HL feed → tiny live. Never VectorBT → live.
+| Phase | Role | Framework | State |
+|-------|------|-----------|--------|
+| **1** | Research / grids / rank / export | VectorBT | **Done** |
+| **1.5** | Fees, slippage, funding, TP/SL, risk | VectorBT | **Done** |
+| **2 prep** | Export contract + loadout stub | hypervector | **Done** |
+| **2 actor** | Event-driven historical sim from params | NautilusTrader | **Next plan** |
+| **3 paper** | HL live feed + same logic + synthetic fills | Nautilus | Scaffold then full |
+| **3 live** | Same as paper; real exec client | Nautilus + HL | Later |
 
 ---
 
-## Plan progress
+## Prior plan progress (2026-07-22-phase15-to-phase2-prep)
 
 | Task | Status |
 |------|--------|
 | 1 Spec Phase 2/3 + paper | **Done** |
 | 2 Infra I2 layout + CLI | **Done** |
-| 3 Export schema harden | **Done** (`export/schema.py`, `EXPORT_SCHEMA_VERSION=1`) |
-| 4 Phase 1.5 verification sweep | **Done** (real 30d BTC 1m sweeps + strict validate) |
-| 5 Nautilus Phase 2 load-export stub | **Done** (`nautilus/load_export.py`, `config_stub.py`) |
+| 3 Export schema harden | **Done** |
+| 4 Phase 1.5 verification | **Done** |
+| 5 Nautilus load-export stub | **Done** |
 | 6 CLI export-validate / phase2-check | **Done** |
-| 7 Commit product (not data/reference) | **Done** (this session) |
-| 8 ML impulse façade (optional) | Pending |
+| 7 Commit product | **Done** (`e63e923`, `e73393e`) |
+| 8 ML impulse façade | **Moved** → new plan Task 7 |
 
 ---
 
-## Verification evidence (2026-07-22 session)
+## New plan progress (2026-07-22-phase2-actor-and-ml)
 
-```bash
-uv run pytest tests/ -q
-# 100 passed, 4 deselected (network)
-
-uv run pytest tests/test_fetchers.py -m network -q
-# 4 passed
-
-# Real path (cached HL+Binance 30d, 43200 bars):
-uv run python -m hypervector --data-root data history --lookback 30
-uv run python -m hypervector --data-root data sweep-down --lookback 30 \
-  --strategy crown_stack_short --cash 10000 --tp-sl-mode atr \
-  --risk-min 0.01 --risk-max 0.05 --conviction 0.5 --export
-uv run python -m hypervector export-validate --path data/exports/<id> --strict
-uv run python -m hypervector phase2-check --path data/exports/<id>
-```
-
-Also exercised **fixed_rr** (uptrend crown), **trail** (downtrend trend_ride), negative paths (missing dir, pre-schema legacy exports correctly fail).
-
-Example new bundle: `data/exports/downtrend_crown_stack_short_6e7347e6` with `schema_version=1`, costs/risk/tp_sl_mode.
+| Task | Status |
+|------|--------|
+| 1 Shared bar-window signal adapter | **Pending** |
+| 2 Loadout sizing + exit helpers | **Pending** |
+| 3 OHLCV → Nautilus bars | **Pending** |
+| 4 HypervectorStrategy actor | **Pending** |
+| 5 Historical runner + artifacts | **Pending** |
+| 6 CLI `phase2-run` | **Pending** |
+| 7 ML impulse façade (optional) | **Pending** |
+| 8 Paper ledger scaffold | **Pending** |
+| 9 Full verify + handoff | **Pending** |
 
 ---
 
-## Key surfaces
+## Key surfaces (current)
 
 | Path | Role |
 |------|------|
-| `src/hypervector/export/schema.py` | `validate_export_dir`, `EXPORT_SCHEMA_VERSION` |
-| `src/hypervector/export/phase2.py` | Write bundle + optional validate |
-| `src/hypervector/nautilus/load_export.py` | `StrategyLoadout`, `load_strategy_loadout` |
-| `src/hypervector/nautilus/config_stub.py` | Offline Phase 2 stub + nautilus probe |
+| `src/hypervector/export/schema.py` | `validate_export_dir`, schema v1 + `meta.exits` |
+| `src/hypervector/export/phase2.py` | Write bundle |
+| `src/hypervector/nautilus/load_export.py` | `StrategyLoadout` |
+| `src/hypervector/nautilus/config_stub.py` | Offline phase2-check |
 | `src/hypervector/infra.py` | I2 layout |
+| `src/hypervector/strategies/*` | Registry + crown / trend_ride / classic (shared by Phase 2 actor) |
 | CLI | `history\|regime\|sweep-up\|sweep-down\|report\|export\|export-validate\|phase2-check\|infra-init` |
-
----
-
-## Done this arc
-
-### Environment
-- Python 3.13 / uv; `vectorbt[full,rust]==1.1.0`; `nautilus_trader>=1.230`; `backtrader[plotting]`
-- Install tests: `tests/test_install.py`, `test_nautilus_install.py`, `test_backtrader_install.py`
-
-### Phase 1 research (`src/hypervector/`)
-- Live history HL → Binance → Bybit + provenance + cache
-- Regime / up / down tracks; strategies: classic, crown_stack (1m), trend_ride
-- SQLite runs, report, exports under `data/exports/`
-
-### Phase 1.5
-- `sweep/costs.py`, `exits.py` (`fixed_rr|atr|trail`), `sizing.py` (1–5% risk by conviction)
-- CLI: `--cash`, `--tp-sl-mode`, `--risk-min/max`, `--conviction`, `--fee-model`
-
-### Phase 2 prep
-- Export schema v1; strict Phase 1.5 fields for loadout readiness
-- Nautilus offline loadout + HYPERLIQUID config probe (no engine start)
-- paper/live explicitly **not implemented**
-
-### Infra
-- `infra.ensure_data_layout` wired into pipeline + CLI IO commands
-- Tests: `tests/test_infra.py`
 
 ---
 
@@ -115,12 +105,16 @@ Example new bundle: `data/exports/downtrend_crown_stack_short_6e7347e6` with `sc
 ```bash
 cd /Users/gestas/Prototypes/hypervector
 uv sync --all-extras
+# Read:
+#   HANDOFF.md
+#   docs/superpowers/plans/2026-07-22-phase2-actor-and-ml.md
+#   docs/superpowers/specs/2026-07-22-phase2-3-handoff.md
 uv run pytest tests/ -q
-# Implement Nautilus strategy actor from StrategyLoadout (next plan)
-# Optional: Task 8 ML impulse façade
+# Execute new plan Task 1 first (signal adapter)
 ```
 
-### Quick research commands
+### Research / validate (already working)
+
 ```bash
 uv run python -m hypervector infra-init
 uv run python -m hypervector --data-root data history --lookback 30
@@ -131,20 +125,39 @@ uv run python -m hypervector export-validate --path data/exports/<id> --strict
 uv run python -m hypervector phase2-check --path data/exports/<id>
 ```
 
+### After Task 6 lands
+
+```bash
+uv run python -m hypervector --data-root data phase2-run --path data/exports/<id> --lookback 30
+```
+
+---
+
+## ML notes (for Task 7)
+
+- **Not in tree yet** — no `src/hypervector/ml/`
+- Façade only: LightGBM metalabel → conviction ∈ [0,1] or skip  
+- Reuse (env `HYPERVECTOR_IMPULSE_BTC_ROOT` or defaults):
+  - `~/dev/hyper-pi/services/ml-service/external-strategies/impulse_1m_btc/`
+  - `~/Prototypes/hypertrader/backend/app/backtest/impulse_metalabel/`
+  - features: hyper-pi `ml/features_impulse.py`
+- No greenfield training in hypervector first
+
 ---
 
 ## Non-goals (still)
 
 - Live trading / keys / vaults  
-- Full Nautilus strategy actor (next)  
-- Greenfield ML training  
+- VectorBT → live skip of Phase 2/paper  
 - CEX bars claimed as HL book  
-- Paper/live shared ledgers  
+- Shared paper/live ledgers  
+- Postgres / Redis / k8s  
 
 ---
 
 ## Agent notes
 
-- Prefer this HANDOFF + plan over stale agentmemory for phase status.
-- Skills used: engineering-software, write-clean-code, verification-before-completion.
-- Legacy pre-schema exports under `data/exports/*` fail validate until re-exported with current CLI.
+- Prefer this HANDOFF + **new** plan over stale agentmemory for phase status.  
+- Skills: engineering-software, write-clean-code, executing-plans / subagent-driven-development.  
+- Legacy pre-schema exports fail `export-validate` until re-exported with current CLI.  
+- `export --track` only re-exports trials that have `research_meta` (modern sweeps).  

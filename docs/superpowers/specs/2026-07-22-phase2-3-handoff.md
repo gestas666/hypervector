@@ -3,7 +3,8 @@
 **Date:** 2026-07-22  
 **Status:** Approved in session (design lock for next implementation)  
 **Depends on:** Phase 1 design `2026-07-21-phase1-vectorbt-design.md` (complete for start funnel)  
-**Execute via:** `docs/superpowers/plans/2026-07-22-phase15-to-phase2-prep.md`
+**Execute via (prep, done):** `docs/superpowers/plans/2026-07-22-phase15-to-phase2-prep.md`  
+**Execute via (actor + ML next):** `docs/superpowers/plans/2026-07-22-phase2-actor-and-ml.md`
 
 ---
 

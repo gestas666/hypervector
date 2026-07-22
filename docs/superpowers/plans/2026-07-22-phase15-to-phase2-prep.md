@@ -232,19 +232,11 @@ ML       metalabel → conviction/skip (reuse HT/hyper-pi); train only for new t
 
 ---
 
-### Task 8 (optional next session+): ML façade spike
+### Task 8 (optional): ML façade spike — **moved**
 
-Only after Tasks 1–7 green.
+Superseded by **Task 7** in `docs/superpowers/plans/2026-07-22-phase2-actor-and-ml.md` (after Phase 2 actor Tasks 1–6).
 
-- [ ] Read-only adapter stub: `src/hypervector/ml/impulse_btc.py` pointing at hyper-pi bundle paths **or** env `HYPERVECTOR_IMPULSE_BTC_ROOT`
-- [ ] `predict_conviction(features) -> float` using loaded LGBM if present; else skip with clear error
-- [ ] No training code in hypervector in this spike
-- [ ] Unit test with mock booster / missing-bundle graceful fail
-
-**Reuse roots (do not vendor huge trees):**
-- `/Users/gestas/dev/hyper-pi/services/ml-service/external-strategies/impulse_1m_btc/`
-- `/Users/gestas/Prototypes/hypertrader/backend/app/backtest/impulse_metalabel/`
-- Features: hyper-pi `ml/features_impulse.py`
+- [x] Deferred intentionally; prep plan Tasks 1–7 complete without ML
 
 ---
 
