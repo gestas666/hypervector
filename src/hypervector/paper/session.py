@@ -1,11 +1,14 @@
 """Paper session: loadout → bar walk → intent → ExplicitFillEngine.
 
 Offline multi-bar walk and incremental ``on_bar`` for the live daemon share
-the same alpha path. No live network, no Nautilus node, no venue orders.
+the same alpha path. No Nautilus node, no venue orders. Funding uses the
+configured/last hourly rate offline; optional live refresh is opt-in.
 """
 
 from __future__ import annotations
 
+import logging
+import time
 import uuid
 from dataclasses import dataclass
 from pathlib import Path
@@ -27,6 +30,8 @@ from hypervector.paper.costs import CostProvider
 from hypervector.paper.fills import ExplicitFillEngine
 from hypervector.paper.ledger import DECISIONS_FILENAME, append_paper_decision
 from hypervector.strategies import register_all_strategies
+
+logger = logging.getLogger(__name__)
 
 _OHLCV_REQUIRED = ("open", "high", "low", "close", "volume")
 
@@ -54,6 +59,8 @@ class PaperSession:
         fee_tier: int = 0,
         sandbox_enabled: bool = False,
         run_id: str | None = None,
+        funding_rate_hourly: float | None = None,
+        enable_funding_refresh: bool = False,
     ) -> None:
         register_all_strategies()
         export_path = Path(export_dir)
@@ -66,13 +73,18 @@ class PaperSession:
         self.decisions_path = self.paths.paper_decisions / DECISIONS_FILENAME
         self.conviction = float(conviction)
         self.sandbox_enabled = bool(sandbox_enabled)
+        self.enable_funding_refresh = bool(enable_funding_refresh)
 
         self.run_id = run_id or uuid.uuid4().hex[:12]
         self.export_id = self.loadout.run_id or export_path.name
-        cost_provider = _cost_provider_from_loadout(self.loadout, fee_tier=fee_tier)
+        self.cost_provider = _cost_provider_from_loadout(
+            self.loadout,
+            fee_tier=fee_tier,
+            funding_rate_hourly=funding_rate_hourly,
+        )
         self.engine = ExplicitFillEngine(
             self.root,
-            cost_provider=cost_provider,
+            cost_provider=self.cost_provider,
             run_id=self.run_id,
             export_id=str(self.export_id),
             strategy_name=self.loadout.strategy_name,
@@ -91,13 +103,40 @@ class PaperSession:
         self.fills_count = 0
         self.bars_processed = 0
         self._last_ts: pd.Timestamp | None = None
+        self._last_funding_refresh_mono: float = 0.0
 
     @property
     def last_timestamp(self) -> pd.Timestamp | None:
         return self._last_ts
 
+    def maybe_refresh_funding(self) -> float | None:
+        """Refresh live funding rate when enabled (throttled). Offline-safe no-op.
+
+        Returns the new rate, or None if skipped / failed.
+        """
+        if not self.enable_funding_refresh:
+            return None
+        now = time.monotonic()
+        poll = float(self.cost_provider.funding_poll_secs)
+        if (
+            self._last_funding_refresh_mono > 0.0
+            and (now - self._last_funding_refresh_mono) < poll
+        ):
+            return None
+        try:
+            rate = self.cost_provider.refresh_funding(self.loadout.symbol)
+        except Exception as exc:
+            logger.warning("funding refresh failed for %s: %s", self.loadout.symbol, exc)
+            return None
+        self._last_funding_refresh_mono = now
+        return rate
+
     def on_bar(self, row: pd.Series | dict[str, Any]) -> str | None:
-        """Process one OHLCV bar. Returns fill action or None."""
+        """Process one OHLCV bar. Returns fill action or None.
+
+        When a position is open, applies one hour of signed funding at bar close
+        using the current ``cost_provider`` rate (no network in this method).
+        """
         record = _row_to_buffer_record(row if isinstance(row, pd.Series) else pd.Series(row))
         _append_bar_record(
             self.buffer_rows, record, max_lookback=DEFAULT_MAX_LOOKBACK
@@ -107,9 +146,24 @@ class PaperSession:
         if isinstance(ts, pd.Timestamp):
             self._last_ts = ts
 
-        if len(self.buffer_rows) < 2:
-            return None
+        self.maybe_refresh_funding()
 
+        fill_action: str | None = None
+        if len(self.buffer_rows) >= 2:
+            fill_action = self._process_intent(record)
+
+        # Signed funding once per bar while open (configured/last rate).
+        if self.engine.position.qty != 0.0:
+            mark_px = float(record["close"])
+            self.engine.apply_funding(
+                feed_ts=_feed_ts(record),
+                oracle_px=mark_px,
+            )
+
+        return fill_action
+
+    def _process_intent(self, record: dict[str, Any]) -> str | None:
+        """Map strategy intent on the latest bar into a market fill, if any."""
         df = _buffer_to_df(self.buffer_rows)
         try:
             intent = last_bar_intent(
@@ -232,11 +286,13 @@ def run_paper_session_offline(
     conviction: float = 0.5,
     fee_tier: int = 0,
     max_bars: int | None = None,
+    funding_rate_hourly: float | None = None,
 ) -> PaperSessionResult:
     """Walk injected OHLCV bars through loadout alpha into paper fills.
 
     Warm-up matches :class:`HypervectorStrategy`: no trade when buffer length
-    is less than 2. No live funding poll, no venue orders.
+    is less than 2. Uses loadout/injected funding rate (no network poll).
+    Open positions receive signed funding once per bar. No venue orders.
     """
     session = PaperSession(
         export_dir=export_dir,
@@ -244,6 +300,8 @@ def run_paper_session_offline(
         conviction=conviction,
         fee_tier=fee_tier,
         sandbox_enabled=False,
+        funding_rate_hourly=funding_rate_hourly,
+        enable_funding_refresh=False,
     )
     session.process_frame(ohlcv, max_bars=max_bars)
     return session.result()
@@ -310,15 +368,21 @@ def _exits_dict(loadout: StrategyLoadout) -> dict[str, Any]:
 
 
 def _cost_provider_from_loadout(
-    loadout: StrategyLoadout, *, fee_tier: int
+    loadout: StrategyLoadout,
+    *,
+    fee_tier: int,
+    funding_rate_hourly: float | None = None,
 ) -> CostProvider:
     costs = loadout.costs or {}
     slippage_bps = float(costs.get("slippage_bps", 2.0))
-    funding_hourly = 0.0
-    if "funding_rate_hourly" in costs:
+    if funding_rate_hourly is not None:
+        funding_hourly = float(funding_rate_hourly)
+    elif "funding_rate_hourly" in costs:
         funding_hourly = float(costs["funding_rate_hourly"])
     elif "funding_rate_8h" in costs:
         funding_hourly = float(costs["funding_rate_8h"]) / 8.0
+    else:
+        funding_hourly = 0.0
     return CostProvider(
         fee_tier=int(fee_tier),
         slippage_bps=slippage_bps,

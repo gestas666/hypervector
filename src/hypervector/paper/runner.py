@@ -57,11 +57,18 @@ def start_paper_daemon(
     sleep_fn: Callable[[float], Any] | None = None,
     install_signal_handlers: bool = True,
     lookback_days: int | None = None,
+    enable_funding_refresh: bool | None = None,
+    funding_rate_hourly: float | None = None,
 ) -> PaperDaemonResult:
     """Start paper daemon: warm history, then process live bars until stop.
 
     Offline-testable via ``warm_ohlcv``, ``poll_fn``, ``max_live_bars``,
     ``stop_file``, and ``sleep_fn``. Never constructs a live order client.
+
+    Live funding poll (``CostProvider.refresh_funding``) is enabled by default
+    only when using the default REST feed (``poll_fn is None``). Injected
+    ``poll_fn`` offline tests keep refresh off unless ``enable_funding_refresh``
+    is set True. Open positions still receive funding from the configured rate.
 
     Parameters
     ----------
@@ -77,6 +84,11 @@ def start_paper_daemon(
         Stop after this many live (post-warm) bars; None = run until signal/stop.
     stop_file:
         If this path exists, stop gracefully.
+    enable_funding_refresh:
+        When True, periodically refresh hourly funding from public HL API.
+        Default: True if ``poll_fn is None`` (live REST path), else False.
+    funding_rate_hourly:
+        Optional override for the starting hourly funding rate (no network).
     """
     _print_banner()
     sleep = sleep_fn if sleep_fn is not None else time.sleep
@@ -93,12 +105,18 @@ def start_paper_daemon(
         lb = int(meta_lb) if meta_lb is not None else DEFAULT_LOOKBACK
     lb = max(int(lb), FLOOR_LOOKBACK)
 
+    # Default: live REST path may refresh funding; injected poll_fn = offline tests.
+    if enable_funding_refresh is None:
+        enable_funding_refresh = poll_fn is None
+
     session = PaperSession(
         export_dir=export_path,
         data_root=root,
         conviction=conviction,
         fee_tier=fee_tier,
         sandbox_enabled=sandbox_enabled,
+        funding_rate_hourly=funding_rate_hourly,
+        enable_funding_refresh=bool(enable_funding_refresh),
     )
 
     # --- warm-up (cache-first history or injected frame) ---

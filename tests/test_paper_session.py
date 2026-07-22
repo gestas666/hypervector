@@ -2,13 +2,19 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
+import pandas as pd
 import pytest
 
 from hypervector.data.sources import fixture_ohlcv
 from hypervector.export.phase2 import export_candidate
-from hypervector.paper.session import PaperSessionResult, run_paper_session_offline
+from hypervector.paper.session import (
+    PaperSession,
+    PaperSessionResult,
+    run_paper_session_offline,
+)
 
 
 def _write_strict_export(root: Path, *, strategy: str = "crown_stack_short") -> Path:
@@ -121,3 +127,81 @@ def test_offline_session_missing_export(tmp_path: Path):
             data_root=tmp_path / "data",
             ohlcv=ohlcv,
         )
+
+
+def test_session_applies_funding_on_open_long(tmp_path: Path):
+    """Open long + non-zero hourly rate → on_bar writes signed funding decision."""
+    export = _write_strict_export(tmp_path)
+    rate = 0.0001
+    mark = 50_000.0
+    qty = 1.0
+    session = PaperSession(
+        export_dir=export,
+        data_root=tmp_path / "data",
+        funding_rate_hourly=rate,
+        enable_funding_refresh=False,
+    )
+    session.engine.apply_market_fill(
+        feed_ts="t0",
+        action="enter_long",
+        side="buy",
+        qty=qty,
+        mark_px=mark,
+    )
+    bar = {
+        "timestamp": pd.Timestamp("2026-07-22T00:01:00Z"),
+        "open": mark,
+        "high": mark,
+        "low": mark,
+        "close": mark,
+        "volume": 1.0,
+    }
+    session.on_bar(bar)
+
+    lines = [
+        json.loads(line)
+        for line in session.decisions_path.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    funding_rows = [r for r in lines if r.get("action") == "funding"]
+    assert len(funding_rows) == 1
+    fre = funding_rows[0]
+    assert fre["funding_payment_usd"] == pytest.approx(qty * mark * rate)
+    assert fre["funding_payment_usd"] > 0  # long pays when rate > 0
+    assert fre["funding_rate_hourly"] == pytest.approx(rate)
+    assert fre["side"] == "buy"
+    assert session.engine.position.qty == qty
+
+
+def test_session_funding_refresh_disabled_offline(tmp_path: Path, monkeypatch):
+    """enable_funding_refresh=False must never hit CostProvider.refresh_funding."""
+    export = _write_strict_export(tmp_path)
+    session = PaperSession(
+        export_dir=export,
+        data_root=tmp_path / "data",
+        funding_rate_hourly=0.0001,
+        enable_funding_refresh=False,
+    )
+
+    def _boom(*_a, **_k):
+        raise AssertionError("refresh_funding must not be called offline")
+
+    monkeypatch.setattr(session.cost_provider, "refresh_funding", _boom)
+    session.engine.apply_market_fill(
+        feed_ts="t0",
+        action="enter_long",
+        side="buy",
+        qty=0.01,
+        mark_px=50_000.0,
+    )
+    session.on_bar(
+        {
+            "timestamp": pd.Timestamp("2026-07-22T00:01:00Z"),
+            "open": 50_000.0,
+            "high": 50_000.0,
+            "low": 50_000.0,
+            "close": 50_000.0,
+            "volume": 1.0,
+        }
+    )
+    assert session.maybe_refresh_funding() is None
