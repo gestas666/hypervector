@@ -83,8 +83,8 @@ features (metadata schema)
 | **1.5** | Fees, slippage, funding, TP/SL, risk | VectorBT | **Done** |
 | **2 prep** | Export contract + loadout stub | hypervector | **Done** |
 | **2 actor** | Event-driven historical sim from params | NautilusTrader | **Done** |
-| **3 paper** | HL live feed + same logic + synthetic fills | Nautilus | Scaffold done; **loop next** |
-| **3 live** | Same as paper; real exec client | Nautilus + HL | Later |
+| **3 paper** | HL live feed + same logic + synthetic fills | Nautilus | Design+plan ready; **execute next** |
+| **4** | Order book + ML metalabel + live exec flip | Nautilus + HL | After paper proven |
 
 ---
 
