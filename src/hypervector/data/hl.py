@@ -9,12 +9,15 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pandas as pd
 import requests
 
 from hypervector.data.provenance import normalize_ohlcv
+
+if TYPE_CHECKING:
+    from hypervector.paper.book import BookSnapshot
 
 logger = logging.getLogger(__name__)
 
@@ -123,3 +126,38 @@ def fetch_hl_ohlcv(
         df = df.loc[mask].drop_duplicates(subset=["timestamp"]).reset_index(drop=True)
     logger.info("HL %s %s lookback=%sd → %d bars", coin, timeframe, lookback_days, len(df))
     return df
+
+
+def fetch_hl_l2_book(
+    symbol: str,
+    *,
+    session: requests.Session | None = None,
+) -> BookSnapshot:
+    """Fetch HL public L2 book (info type ``l2Book``) as a BookSnapshot.
+
+    POST body: ``{"type": "l2Book", "coin": <hl_coin>}``.
+    Raises ``RuntimeError`` on HTTP or parse failure.
+    """
+    # Deferred import avoids data↔paper cycle at module load
+    from hypervector.paper.book import parse_hl_l2_payload
+
+    coin = hl_coin(symbol)
+    sess = session or requests.Session()
+    payload = {"type": "l2Book", "coin": coin}
+    try:
+        resp = sess.post(HL_INFO_URL, json=payload, timeout=30)
+        resp.raise_for_status()
+        raw = resp.json()
+    except Exception as exc:  # noqa: BLE001 — wrap all transport failures
+        raise RuntimeError(f"HL l2Book fetch failed for {coin}: {exc}") from exc
+
+    ts_recv_ms = time.time() * 1000.0
+    try:
+        return parse_hl_l2_payload(
+            raw,
+            symbol=symbol,
+            ts_recv_ms=ts_recv_ms,
+            source="hl_rest_l2",
+        )
+    except Exception as exc:  # noqa: BLE001
+        raise RuntimeError(f"HL l2Book parse failed for {coin}: {exc}") from exc
