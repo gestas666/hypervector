@@ -1,7 +1,7 @@
-"""Offline paper session: loadout → bar walk → intent → ExplicitFillEngine.
+"""Paper session: loadout → bar walk → intent → ExplicitFillEngine.
 
-No live network, no Nautilus node, no venue orders. Alpha math matches the
-actor via :func:`last_bar_intent` on an expanding OHLCV buffer.
+Offline multi-bar walk and incremental ``on_bar`` for the live daemon share
+the same alpha path. No live network, no Nautilus node, no venue orders.
 """
 
 from __future__ import annotations
@@ -33,13 +33,195 @@ _OHLCV_REQUIRED = ("open", "high", "low", "close", "volume")
 
 @dataclass(frozen=True)
 class PaperSessionResult:
-    """Outcome of an offline paper session walk."""
+    """Outcome of a paper session walk (offline or daemon summary)."""
 
     run_id: str
     decisions_path: Path
     bars_processed: int
     fills_count: int
     export_dir: Path
+
+
+class PaperSession:
+    """Incremental paper bar processor (warm-up + live share this path)."""
+
+    def __init__(
+        self,
+        *,
+        export_dir: Path | str,
+        data_root: Path | str,
+        conviction: float = 0.5,
+        fee_tier: int = 0,
+        sandbox_enabled: bool = False,
+        run_id: str | None = None,
+    ) -> None:
+        register_all_strategies()
+        export_path = Path(export_dir)
+        if not export_path.is_dir():
+            raise FileNotFoundError(f"export_dir not found: {export_path}")
+
+        self.loadout = load_strategy_loadout(export_path, strict=True)
+        self.root = Path(data_root)
+        self.paths = ensure_data_layout(self.root)
+        self.decisions_path = self.paths.paper_decisions / DECISIONS_FILENAME
+        self.conviction = float(conviction)
+        self.sandbox_enabled = bool(sandbox_enabled)
+
+        self.run_id = run_id or uuid.uuid4().hex[:12]
+        self.export_id = self.loadout.run_id or export_path.name
+        cost_provider = _cost_provider_from_loadout(self.loadout, fee_tier=fee_tier)
+        self.engine = ExplicitFillEngine(
+            self.root,
+            cost_provider=cost_provider,
+            run_id=self.run_id,
+            export_id=str(self.export_id),
+            strategy_name=self.loadout.strategy_name,
+            symbol=self.loadout.symbol,
+            timeframe=self.loadout.timeframe,
+            conviction=self.conviction,
+            sandbox_enabled=self.sandbox_enabled,
+        )
+        self.equity = (
+            float(self.loadout.init_cash)
+            if self.loadout.init_cash is not None
+            else 10_000.0
+        )
+        self.exits = _exits_dict(self.loadout)
+        self.buffer_rows: list[dict[str, Any]] = []
+        self.fills_count = 0
+        self.bars_processed = 0
+        self._last_ts: pd.Timestamp | None = None
+
+    @property
+    def last_timestamp(self) -> pd.Timestamp | None:
+        return self._last_ts
+
+    def on_bar(self, row: pd.Series | dict[str, Any]) -> str | None:
+        """Process one OHLCV bar. Returns fill action or None."""
+        record = _row_to_buffer_record(row if isinstance(row, pd.Series) else pd.Series(row))
+        _append_bar_record(
+            self.buffer_rows, record, max_lookback=DEFAULT_MAX_LOOKBACK
+        )
+        self.bars_processed += 1
+        ts = record.get("timestamp")
+        if isinstance(ts, pd.Timestamp):
+            self._last_ts = ts
+
+        if len(self.buffer_rows) < 2:
+            return None
+
+        df = _buffer_to_df(self.buffer_rows)
+        try:
+            intent = last_bar_intent(
+                df, self.loadout.strategy_name, dict(self.loadout.params)
+            )
+        except Exception:
+            # Match actor: skip bar on signal failure rather than abort session.
+            return None
+
+        pos = self.engine.position
+        is_flat = pos.qty == 0.0
+        if is_flat:
+            position_side: str | None = None
+        elif pos.qty > 0:
+            position_side = "long"
+        else:
+            position_side = "short"
+
+        action = _action_from_intent(
+            intent, is_flat=is_flat, position_side=position_side
+        )
+        if action == "hold":
+            return None
+
+        mark_px = float(record["close"])
+        feed_ts = _feed_ts(record)
+        intent_payload = {
+            "direction": intent.direction,
+            "enter": intent.enter,
+            "exit": intent.exit,
+            "bar_index": intent.bar_index,
+        }
+
+        if action == "close":
+            qty = abs(float(pos.qty))
+            if qty <= 0:
+                return None
+            side = "sell" if pos.qty > 0 else "buy"
+            self.engine.apply_market_fill(
+                feed_ts=feed_ts,
+                action="close",
+                side=side,
+                qty=qty,
+                mark_px=mark_px,
+                intent=intent_payload,
+            )
+            self.fills_count += 1
+            return action
+
+        if action in ("enter_long", "enter_short"):
+            qty = _entry_qty(
+                df=df,
+                loadout=self.loadout,
+                exits=self.exits,
+                equity=self.equity,
+                conviction=self.conviction,
+                mark_px=mark_px,
+            )
+            if qty is None or qty <= 0:
+                return None
+            side = "buy" if action == "enter_long" else "sell"
+            self.engine.apply_market_fill(
+                feed_ts=feed_ts,
+                action=action,
+                side=side,
+                qty=qty,
+                mark_px=mark_px,
+                intent=intent_payload,
+            )
+            self.fills_count += 1
+            return action
+
+        return None
+
+    def process_frame(
+        self, ohlcv: pd.DataFrame, *, max_bars: int | None = None
+    ) -> int:
+        """Walk a DataFrame of bars; return count processed in this call."""
+        frame = _prepare_ohlcv(ohlcv, max_bars=max_bars)
+        n = 0
+        for _, row in frame.iterrows():
+            self.on_bar(row)
+            n += 1
+        return n
+
+    def ensure_session_identity(self) -> None:
+        """Write a session_start row if no decisions exist yet."""
+        if not self.decisions_path.is_file():
+            append_paper_decision(
+                self.root,
+                {
+                    "feed_ts": "session_start",
+                    "run_id": self.run_id,
+                    "export_id": str(self.export_id),
+                    "strategy_name": self.loadout.strategy_name,
+                    "symbol": self.loadout.symbol,
+                    "timeframe": self.loadout.timeframe,
+                    "action": "session_start",
+                    "conviction": self.conviction,
+                    "bars_processed": self.bars_processed,
+                },
+            )
+
+    def result(self) -> PaperSessionResult:
+        self.ensure_session_identity()
+        return PaperSessionResult(
+            run_id=self.run_id,
+            decisions_path=self.decisions_path,
+            bars_processed=self.bars_processed,
+            fills_count=self.fills_count,
+            export_dir=self.loadout.export_dir,
+        )
 
 
 def run_paper_session_offline(
@@ -56,142 +238,15 @@ def run_paper_session_offline(
     Warm-up matches :class:`HypervectorStrategy`: no trade when buffer length
     is less than 2. No live funding poll, no venue orders.
     """
-    register_all_strategies()
-    export_path = Path(export_dir)
-    if not export_path.is_dir():
-        raise FileNotFoundError(f"export_dir not found: {export_path}")
-
-    loadout = load_strategy_loadout(export_path, strict=True)
-    frame = _prepare_ohlcv(ohlcv, max_bars=max_bars)
-    root = Path(data_root)
-    paths = ensure_data_layout(root)
-    decisions_path = paths.paper_decisions / DECISIONS_FILENAME
-
-    run_id = uuid.uuid4().hex[:12]
-    export_id = loadout.run_id or export_path.name
-    cost_provider = _cost_provider_from_loadout(loadout, fee_tier=fee_tier)
-    engine = ExplicitFillEngine(
-        root,
-        cost_provider=cost_provider,
-        run_id=run_id,
-        export_id=str(export_id),
-        strategy_name=loadout.strategy_name,
-        symbol=loadout.symbol,
-        timeframe=loadout.timeframe,
-        conviction=float(conviction),
+    session = PaperSession(
+        export_dir=export_dir,
+        data_root=data_root,
+        conviction=conviction,
+        fee_tier=fee_tier,
         sandbox_enabled=False,
     )
-
-    equity = float(loadout.init_cash) if loadout.init_cash is not None else 10_000.0
-    exits = _exits_dict(loadout)
-    buffer_rows: list[dict[str, Any]] = []
-    fills_count = 0
-    bars_processed = 0
-
-    for _, row in frame.iterrows():
-        record = _row_to_buffer_record(row)
-        _append_bar_record(
-            buffer_rows, record, max_lookback=DEFAULT_MAX_LOOKBACK
-        )
-        bars_processed += 1
-        if len(buffer_rows) < 2:
-            continue
-
-        df = _buffer_to_df(buffer_rows)
-        try:
-            intent = last_bar_intent(
-                df, loadout.strategy_name, dict(loadout.params)
-            )
-        except Exception:
-            # Match actor: skip bar on signal failure rather than abort session.
-            continue
-
-        pos = engine.position
-        is_flat = pos.qty == 0.0
-        if is_flat:
-            position_side: str | None = None
-        elif pos.qty > 0:
-            position_side = "long"
-        else:
-            position_side = "short"
-
-        action = _action_from_intent(
-            intent, is_flat=is_flat, position_side=position_side
-        )
-        if action == "hold":
-            continue
-
-        mark_px = float(record["close"])
-        feed_ts = _feed_ts(record)
-        intent_payload = {
-            "direction": intent.direction,
-            "enter": intent.enter,
-            "exit": intent.exit,
-            "bar_index": intent.bar_index,
-        }
-
-        if action == "close":
-            qty = abs(float(pos.qty))
-            if qty <= 0:
-                continue
-            side = "sell" if pos.qty > 0 else "buy"
-            engine.apply_market_fill(
-                feed_ts=feed_ts,
-                action="close",
-                side=side,
-                qty=qty,
-                mark_px=mark_px,
-                intent=intent_payload,
-            )
-            fills_count += 1
-            continue
-
-        if action in ("enter_long", "enter_short"):
-            qty = _entry_qty(
-                df=df,
-                loadout=loadout,
-                exits=exits,
-                equity=equity,
-                conviction=float(conviction),
-                mark_px=mark_px,
-            )
-            if qty is None or qty <= 0:
-                continue
-            side = "buy" if action == "enter_long" else "sell"
-            engine.apply_market_fill(
-                feed_ts=feed_ts,
-                action=action,
-                side=side,
-                qty=qty,
-                mark_px=mark_px,
-                intent=intent_payload,
-            )
-            fills_count += 1
-
-    # Ensure decisions path exists even if no fills (session identity row).
-    if not decisions_path.is_file():
-        append_paper_decision(
-            root,
-            {
-                "feed_ts": "session_start",
-                "run_id": run_id,
-                "export_id": str(export_id),
-                "strategy_name": loadout.strategy_name,
-                "symbol": loadout.symbol,
-                "timeframe": loadout.timeframe,
-                "action": "session_start",
-                "conviction": float(conviction),
-                "bars_processed": bars_processed,
-            },
-        )
-
-    return PaperSessionResult(
-        run_id=run_id,
-        decisions_path=decisions_path,
-        bars_processed=bars_processed,
-        fills_count=fills_count,
-        export_dir=loadout.export_dir,
-    )
+    session.process_frame(ohlcv, max_bars=max_bars)
+    return session.result()
 
 
 def _prepare_ohlcv(

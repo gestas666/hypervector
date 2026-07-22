@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 import uuid
 from pathlib import Path
@@ -15,6 +16,7 @@ from hypervector.export.schema import ExportSchemaError, validate_export_dir
 from hypervector.infra import ensure_data_layout, layout_report
 from hypervector.nautilus.config_stub import phase2_check_report
 from hypervector.nautilus.runner import run_phase2_backtest
+from hypervector.paper.runner import start_paper_daemon
 from hypervector.regime.detectors import detect_regime_ema
 from hypervector.regime.metrics import regime_detection_metrics
 from hypervector.report import rank_trials
@@ -25,6 +27,17 @@ from hypervector.sweep.costs import resolve_cost_model
 from hypervector.sweep.exits import EXIT_MODES, ExitConfig
 from hypervector.sweep.search import run_grid_search
 from hypervector.sweep.sizing import RiskConfig
+
+# Phase 4 live secrets (paper public path works without keys; never print values).
+SECRET_ENV_WALLET = "HYPERVECTOR_HL_WALLET_ADDRESS"
+SECRET_ENV_API_KEY = "HYPERVECTOR_HL_API_PRIVATE_KEY"
+
+
+def _secrets_present() -> bool:
+    """True when both live secret env vars are set (values never logged)."""
+    return bool(os.environ.get(SECRET_ENV_WALLET)) and bool(
+        os.environ.get(SECRET_ENV_API_KEY)
+    )
 
 
 def _default_data_root() -> Path:
@@ -57,17 +70,70 @@ def cmd_infra_init(args: argparse.Namespace) -> int:
 
 
 def cmd_paper_check(args: argparse.Namespace) -> int:
-    """Print paper/live layout identity; live feed loop is not implemented."""
+    """Print paper/live layout identity and readiness flags (no secret values)."""
     paths = _ensure_root(args)
     report = layout_report(paths.root)
     report["paper"] = {
         "execution_mode": "paper",
         "decisions": str(paths.paper_decisions),
         "ledger": str(paths.paper_ledger),
-        "live_feed_loop": False,
+        "live_feed_loop": True,
+        "secrets_present": _secrets_present(),
+        "secret_env_names": [SECRET_ENV_WALLET, SECRET_ENV_API_KEY],
+    }
+    report["live"] = {
+        "enabled": False,
+        "note": "Phase 4: set live.enabled + secrets; paper never places venue orders",
     }
     print(json.dumps(report, indent=2))
-    print("live feed loop not implemented", file=sys.stderr)
+    return 0
+
+
+def cmd_paper_run(args: argparse.Namespace) -> int:
+    """Start paper daemon: warm-up + live HL bars + synthetic fills (no venue orders)."""
+    _ensure_root(args)
+    path = Path(args.path)
+    if not path.is_dir():
+        print(f"export path not found: {path}", file=sys.stderr)
+        return 1
+
+    stop_file = Path(args.stop_file) if getattr(args, "stop_file", None) else None
+    try:
+        result = start_paper_daemon(
+            export_dir=path,
+            data_root=Path(args.data_root),
+            conviction=float(args.conviction),
+            sandbox_enabled=bool(getattr(args, "sandbox", False)),
+            fee_tier=int(getattr(args, "fee_tier", 0)),
+            stop_file=stop_file,
+            poll_interval_secs=float(getattr(args, "poll_interval", 5.0)),
+            max_live_bars=int(args.max_live_bars)
+            if getattr(args, "max_live_bars", None) is not None
+            else None,
+            lookback_days=int(args.lookback) if getattr(args, "lookback", None) else None,
+        )
+    except FileNotFoundError as exc:
+        print(str(exc), file=sys.stderr)
+        return 1
+    except Exception as exc:
+        print(f"paper-run failed: {exc}", file=sys.stderr)
+        return 1
+
+    out = {
+        "ok": True,
+        "execution_mode": result.execution_mode,
+        "run_id": result.run_id,
+        "export_dir": str(result.export_dir),
+        "decisions_path": str(result.decisions_path),
+        "warm_bars": result.warm_bars,
+        "live_bars": result.live_bars,
+        "bars_processed": result.bars_processed,
+        "fills_count": result.fills_count,
+        "stop_reason": result.stop_reason,
+        "sandbox_enabled": bool(getattr(args, "sandbox", False)),
+        "secrets_present": _secrets_present(),
+    }
+    print(json.dumps(out, indent=2, default=str))
     return 0
 
 
@@ -484,9 +550,60 @@ def build_parser() -> argparse.ArgumentParser:
 
     pc = sub.add_parser(
         "paper-check",
-        help="Paper identity scaffold: layout + note that live feed loop is not implemented",
+        help="Paper identity: layout, live_feed_loop, secrets_present (no key values)",
     )
     pc.set_defaults(func=cmd_paper_check)
+
+    pr = sub.add_parser(
+        "paper-run",
+        help="Paper daemon: warm-up + live HL bars + synthetic fills (no venue orders)",
+    )
+    pr.add_argument(
+        "--path",
+        required=True,
+        help="path to strict Phase 1.5 export directory",
+    )
+    pr.add_argument(
+        "--conviction",
+        type=float,
+        default=0.5,
+        help="0-1 conviction for position sizing (default 0.5)",
+    )
+    pr.add_argument(
+        "--fee-tier",
+        type=int,
+        default=0,
+        help="HL fee tier for CostProvider (default 0)",
+    )
+    pr.add_argument(
+        "--sandbox",
+        action="store_true",
+        help="enable optional sandbox shadow fields (non-authoritative; default off)",
+    )
+    pr.add_argument(
+        "--stop-file",
+        default=None,
+        help="if this path exists, daemon stops gracefully",
+    )
+    pr.add_argument(
+        "--poll-interval",
+        type=float,
+        default=5.0,
+        help="seconds between REST candle polls (default 5)",
+    )
+    pr.add_argument(
+        "--max-live-bars",
+        type=int,
+        default=None,
+        help="stop after N live bars (offline / smoke tests)",
+    )
+    pr.add_argument(
+        "--lookback",
+        type=int,
+        default=None,
+        help=f"warm-up lookback days (default: export meta or {DEFAULT_LOOKBACK})",
+    )
+    pr.set_defaults(func=cmd_paper_run)
 
     h = sub.add_parser("history", help="Fetch/cache HL-max + Binance/Bybit backfill")
     _add_market_args(h)

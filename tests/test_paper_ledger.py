@@ -84,7 +84,7 @@ def test_refuse_write_when_data_root_nested_under_live(tmp_path: Path):
         append_paper_decision(nested, {"feed_ts": "t0"})
 
 
-def test_cli_paper_check_prints_layout_and_not_implemented(tmp_path: Path, capsys):
+def test_cli_paper_check_prints_layout_and_live_feed_loop(tmp_path: Path, capsys):
     data = tmp_path / "data"
     assert main(["--data-root", str(data), "paper-check"]) == 0
     captured = capsys.readouterr()
@@ -92,5 +92,6 @@ def test_cli_paper_check_prints_layout_and_not_implemented(tmp_path: Path, capsy
     assert report["dirs"]["paper_decisions"]["exists"] is True
     assert report["dirs"]["paper_ledger"]["exists"] is True
     assert report["rules"]["paper_live_separated"] is True
-    combined = captured.out + captured.err
-    assert "live feed loop not implemented" in combined
+    assert report["paper"]["live_feed_loop"] is True
+    assert report["paper"]["execution_mode"] == "paper"
+    assert "secrets_present" in report["paper"]

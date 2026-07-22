@@ -1,0 +1,258 @@
+"""Paper daemon lifecycle: warm-up → live bar feed → graceful stop.
+
+Runner owns start/stop only. Bar processing is :class:`PaperSession`.
+Feed is :mod:`hypervector.paper.live_node` (REST poll fallback; no venue orders).
+"""
+
+from __future__ import annotations
+
+import logging
+import signal
+import sys
+import time
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Callable
+
+import pandas as pd
+
+from hypervector.config import DEFAULT_LOOKBACK, FLOOR_LOOKBACK
+from hypervector.data.pipeline import load_research_history
+from hypervector.nautilus.load_export import load_strategy_loadout
+from hypervector.paper.live_node import DEFAULT_POLL_INTERVAL_SECS, make_rest_poll_fn
+from hypervector.paper.session import PaperSession
+
+logger = logging.getLogger(__name__)
+
+PAPER_BANNER = "PAPER MODE — no venue orders"
+
+
+@dataclass(frozen=True)
+class PaperDaemonResult:
+    """Summary after paper daemon stops."""
+
+    run_id: str
+    decisions_path: Path
+    export_dir: Path
+    warm_bars: int
+    live_bars: int
+    bars_processed: int
+    fills_count: int
+    stop_reason: str
+    execution_mode: str = "paper"
+
+
+def start_paper_daemon(
+    *,
+    export_dir: Path | str,
+    data_root: Path | str,
+    conviction: float = 0.5,
+    sandbox_enabled: bool = False,
+    fee_tier: int = 0,
+    stop_file: Path | None = None,
+    poll_interval_secs: float = DEFAULT_POLL_INTERVAL_SECS,
+    max_live_bars: int | None = None,
+    warm_ohlcv: pd.DataFrame | None = None,
+    poll_fn: Callable[..., pd.DataFrame] | None = None,
+    sleep_fn: Callable[[float], Any] | None = None,
+    install_signal_handlers: bool = True,
+    lookback_days: int | None = None,
+) -> PaperDaemonResult:
+    """Start paper daemon: warm history, then process live bars until stop.
+
+    Offline-testable via ``warm_ohlcv``, ``poll_fn``, ``max_live_bars``,
+    ``stop_file``, and ``sleep_fn``. Never constructs a live order client.
+
+    Parameters
+    ----------
+    export_dir:
+        Strict Phase 1.5 export bundle path.
+    data_root:
+        I2 data root (paper decisions under ``data/paper/``).
+    warm_ohlcv:
+        If set, use this frame for warm-up instead of ``load_research_history``.
+    poll_fn:
+        Callable ``(*, after_ts=...) -> DataFrame`` of new bars. Default: HL REST.
+    max_live_bars:
+        Stop after this many live (post-warm) bars; None = run until signal/stop.
+    stop_file:
+        If this path exists, stop gracefully.
+    """
+    _print_banner()
+    sleep = sleep_fn if sleep_fn is not None else time.sleep
+    export_path = Path(export_dir)
+    root = Path(data_root)
+
+    if not export_path.is_dir():
+        raise FileNotFoundError(f"export_dir not found: {export_path}")
+
+    loadout = load_strategy_loadout(export_path, strict=True)
+    lb = lookback_days
+    if lb is None:
+        meta_lb = (loadout.meta or {}).get("lookback_days")
+        lb = int(meta_lb) if meta_lb is not None else DEFAULT_LOOKBACK
+    lb = max(int(lb), FLOOR_LOOKBACK)
+
+    session = PaperSession(
+        export_dir=export_path,
+        data_root=root,
+        conviction=conviction,
+        fee_tier=fee_tier,
+        sandbox_enabled=sandbox_enabled,
+    )
+
+    # --- warm-up (cache-first history or injected frame) ---
+    if warm_ohlcv is not None:
+        warm_df = warm_ohlcv
+    else:
+        warm_df, prov = load_research_history(
+            root,
+            symbol=loadout.symbol,
+            timeframe=loadout.timeframe,
+            lookback_days=lb,
+            force_refresh=False,
+        )
+        logger.info(
+            "paper warm-up loaded bars=%s provenance=%s",
+            len(warm_df),
+            prov,
+        )
+
+    if warm_df is None or len(warm_df) == 0:
+        raise RuntimeError(
+            f"no warm-up bars for {loadout.symbol} {loadout.timeframe} "
+            f"lookback={lb}d"
+        )
+
+    warm_bars = session.process_frame(warm_df)
+    session.ensure_session_identity()
+    after_ts = session.last_timestamp
+
+    # --- live feed (REST poll by default; injectable for tests) ---
+    # TODO Phase3: prefer HyperliquidDataClient WS when stable
+    feed = poll_fn
+    if feed is None:
+        feed = make_rest_poll_fn(loadout.symbol, loadout.timeframe)
+
+    stop_state = {"reason": None, "stop": False}
+
+    def _request_stop(reason: str) -> None:
+        if not stop_state["stop"]:
+            stop_state["stop"] = True
+            stop_state["reason"] = reason
+
+    prev_handlers: dict[int, Any] = {}
+    if install_signal_handlers:
+        def _handle_signal(signum: int, _frame: Any) -> None:
+            name = signal.Signals(signum).name if signum in signal.Signals._value2member_map_ else str(signum)
+            logger.info("paper daemon received %s — stopping", name)
+            _request_stop(f"signal_{name}")
+
+        for sig in (signal.SIGINT, signal.SIGTERM):
+            try:
+                prev_handlers[sig] = signal.signal(sig, _handle_signal)
+            except (ValueError, OSError):
+                # Not in main thread or unsupported — skip
+                pass
+
+    live_bars = 0
+    empty_polls = 0
+    max_empty_when_capped = 3
+
+    try:
+        while not stop_state["stop"]:
+            if stop_file is not None and Path(stop_file).exists():
+                _request_stop("stop_file")
+                break
+
+            if max_live_bars is not None and live_bars >= max_live_bars:
+                _request_stop("max_live_bars")
+                break
+
+            try:
+                new_bars = feed(after_ts=after_ts)
+            except Exception as exc:
+                logger.warning("paper poll failed: %s", exc)
+                new_bars = None
+
+            if new_bars is None or not isinstance(new_bars, pd.DataFrame) or new_bars.empty:
+                empty_polls += 1
+                # Offline tests with max_live_bars=0 or exhausted mock: exit soon
+                if max_live_bars is not None and max_live_bars == 0:
+                    _request_stop("max_live_bars")
+                    break
+                if (
+                    max_live_bars is not None
+                    and live_bars >= max_live_bars
+                ):
+                    _request_stop("max_live_bars")
+                    break
+                if max_live_bars is not None and empty_polls >= max_empty_when_capped and live_bars > 0:
+                    _request_stop("poll_exhausted")
+                    break
+                if max_live_bars is not None and empty_polls >= max_empty_when_capped and live_bars == 0:
+                    # mock returned nothing; still "ran" live phase
+                    _request_stop("poll_exhausted")
+                    break
+                sleep(float(poll_interval_secs))
+                continue
+
+            empty_polls = 0
+            # Process in timestamp order
+            frame = new_bars
+            if "timestamp" in frame.columns:
+                frame = frame.sort_values("timestamp")
+            for _, row in frame.iterrows():
+                if max_live_bars is not None and live_bars >= max_live_bars:
+                    _request_stop("max_live_bars")
+                    break
+                if stop_file is not None and Path(stop_file).exists():
+                    _request_stop("stop_file")
+                    break
+                session.on_bar(row)
+                live_bars += 1
+                ts = row["timestamp"] if "timestamp" in row.index else None
+                if ts is not None and not (isinstance(ts, float) and pd.isna(ts)):
+                    t = pd.Timestamp(ts)
+                    if t.tzinfo is None:
+                        t = t.tz_localize("UTC")
+                    after_ts = t
+                if stop_state["stop"]:
+                    break
+
+            if stop_state["stop"]:
+                break
+            sleep(float(poll_interval_secs))
+    finally:
+        for sig, handler in prev_handlers.items():
+            try:
+                signal.signal(sig, handler)
+            except (ValueError, OSError):
+                pass
+
+    if stop_state["reason"] is None:
+        stop_state["reason"] = "stop"
+
+    result = PaperDaemonResult(
+        run_id=session.run_id,
+        decisions_path=session.decisions_path,
+        export_dir=session.loadout.export_dir,
+        warm_bars=warm_bars,
+        live_bars=live_bars,
+        bars_processed=session.bars_processed,
+        fills_count=session.fills_count,
+        stop_reason=str(stop_state["reason"]),
+        execution_mode="paper",
+    )
+    logger.info(
+        "paper daemon stopped reason=%s warm=%s live=%s fills=%s",
+        result.stop_reason,
+        result.warm_bars,
+        result.live_bars,
+        result.fills_count,
+    )
+    return result
+
+
+def _print_banner() -> None:
+    print(PAPER_BANNER, file=sys.stderr, flush=True)
