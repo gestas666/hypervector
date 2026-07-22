@@ -454,15 +454,20 @@ git commit -m "docs: handoff after Phase 2 actor plan execution"
 
 ## Next session entry (execute)
 
+**User lock:** subagent-driven only; load **write-clean-code** at start. Do not start this plan in the session that only wrote docs.
+
 ```bash
 cd /Users/gestas/Prototypes/hypervector
 uv sync --all-extras
+# skills: write-clean-code (+ engineering-software optional)
+# REQUIRED SUB-SKILL: superpowers:subagent-driven-development
 # read:
 #   HANDOFF.md
 #   docs/superpowers/plans/2026-07-22-phase2-actor-and-ml.md
 #   docs/superpowers/specs/2026-07-22-phase2-3-handoff.md
 uv run pytest tests/ -q
-# execute Tasks 1→6 first; Task 7 ML optional; Task 8 paper scaffold; Task 9 verify
+# Task 1 first; one subagent per task; review between tasks
+# Tasks 1→6 first; Task 7 ML optional; Task 8 paper scaffold; Task 9 verify
 ```
 
 ## Deviations

@@ -10,8 +10,15 @@
 **Prior plan (done):** `docs/superpowers/plans/2026-07-22-phase15-to-phase2-prep.md`  
 **Infra doc:** `docs/infra-data-layout.md`
 
-**Next execute:** plan Tasks **1→6** (signal adapter → actor → runner → `phase2-run`).  
+**Next execute (NEXT SESSION — not started):** plan Tasks **1→6** first  
+(signal adapter → actor → runner → `phase2-run`).  
 Task **7 ML façade** optional. Task **8** paper ledger scaffold. Task **9** verify + handoff.
+
+**Execution mode (user lock 2026-07-22):**
+- **Subagent-driven development** (fresh subagent per task + review between tasks)
+- **Required skill:** `write-clean-code` (load at session start; also `engineering-software` if process/docs)
+- **Do not** inline-implement the whole plan in one agent turn unless user overrides
+- Plan file: `docs/superpowers/plans/2026-07-22-phase2-actor-and-ml.md`
 
 ---
 
@@ -105,12 +112,11 @@ Task **7 ML façade** optional. Task **8** paper ledger scaffold. Task **9** ver
 ```bash
 cd /Users/gestas/Prototypes/hypervector
 uv sync --all-extras
-# Read:
-#   HANDOFF.md
-#   docs/superpowers/plans/2026-07-22-phase2-actor-and-ml.md
-#   docs/superpowers/specs/2026-07-22-phase2-3-handoff.md
-uv run pytest tests/ -q
-# Execute new plan Task 1 first (signal adapter)
+# 1) Load skills: write-clean-code (+ engineering-software optional)
+# 2) Read HANDOFF + plan 2026-07-22-phase2-actor-and-ml.md + phase2-3-handoff spec
+# 3) Use superpowers:subagent-driven-development (NOT full inline)
+# 4) Baseline: uv run pytest tests/ -q
+# 5) Start at Task 1 (signal adapter); one subagent per task; review gate between tasks
 ```
 
 ### Research / validate (already working)
