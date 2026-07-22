@@ -43,6 +43,7 @@ class HypervectorStrategyConfig(StrategyConfig, frozen=True):
     costs: dict[str, Any] | None = None
     conviction: float = 0.5
     max_lookback: int = DEFAULT_MAX_LOOKBACK
+    execution_mode: str = EXECUTION_MODE
 
 
 def config_from_loadout(
@@ -224,7 +225,9 @@ class HypervectorStrategy(Strategy):
 
     def __init__(self, config: HypervectorStrategyConfig) -> None:
         super().__init__(config)
-        self.execution_mode = EXECUTION_MODE
+        self.execution_mode = str(
+            getattr(config, "execution_mode", None) or EXECUTION_MODE
+        )
         self.max_lookback = int(config.max_lookback or DEFAULT_MAX_LOOKBACK)
         self._bar_buffer: list[dict[str, Any]] = []
         self._bar_type: BarType | None = None
