@@ -11,13 +11,16 @@ from hypervector.nautilus.actor import (
 )
 from hypervector.nautilus.config_stub import Phase2StubConfig, build_phase2_stub_config
 from hypervector.nautilus.load_export import StrategyLoadout, load_strategy_loadout
+from hypervector.nautilus.runner import Phase2Result, run_phase2_backtest
 
 __all__ = [
     "HypervectorStrategy",
     "HypervectorStrategyConfig",
+    "Phase2Result",
     "Phase2StubConfig",
     "StrategyLoadout",
     "build_phase2_stub_config",
     "config_from_loadout",
     "load_strategy_loadout",
+    "run_phase2_backtest",
 ]

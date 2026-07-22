@@ -321,6 +321,18 @@ class HypervectorStrategy(Strategy):
             return None
 
     def _equity_estimate(self) -> float:
+        """Prefer portfolio mark equity when the engine is attached; else init_cash."""
+        try:
+            venue = None
+            if self._instrument_id is not None:
+                venue = self._instrument_id.venue
+            equity_map = self.portfolio.equity(venue)
+            if equity_map:
+                total = sum(float(m.as_double()) for m in equity_map.values())
+                if total > 0:
+                    return total
+        except Exception:
+            pass
         summary = self.config.loadout_summary or {}
         init = summary.get("init_cash")
         if init is not None:
@@ -491,14 +503,30 @@ class HypervectorStrategy(Strategy):
         # Offline / no instrument in cache: 3-decimal crypto stub
         return Quantity.from_str(f"{qty_raw:.3f}")
 
+    def on_order_denied(self, event: Any) -> None:
+        """Clear pending-entry so a deny cannot wedge the strategy forever."""
+        self._pending_entry = False
+
+    def on_order_rejected(self, event: Any) -> None:
+        self._pending_entry = False
+
+    def on_position_opened(self, event: Any) -> None:
+        self._pending_entry = False
+
+    def on_position_closed(self, event: Any) -> None:
+        self._pending_entry = False
+
     def on_event(self, event: Any) -> None:
-        """Clear pending-entry flag when position state changes."""
+        """Fallback clear for terminal order/position events (typed hooks preferred)."""
         name = type(event).__name__
-        if name in ("PositionOpened", "PositionClosed", "OrderRejected"):
-            if name != "PositionOpened":
-                self._pending_entry = False
-            if name == "PositionOpened":
-                self._pending_entry = False
+        if name in (
+            "PositionOpened",
+            "PositionClosed",
+            "OrderRejected",
+            "OrderDenied",
+            "OrderCanceled",
+        ):
+            self._pending_entry = False
 
 
 def _sizing_loadout_view(config: HypervectorStrategyConfig) -> StrategyLoadout:
