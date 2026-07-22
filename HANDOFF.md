@@ -19,7 +19,7 @@ Do **not** re-design. Do **not** re-execute Phase 2. Do **not** start Phase 4 (M
 **Execution mode (recommended):** `subagent-driven-development` — one task per subagent, TDD, commit per task.  
 **Fallback:** `executing-plans` inline with checkpoints.
 
-**Phase 4 (after paper proven — first-class, not “Phase 3+”):** order book, **ML metalabel conviction**, live exec flip + secrets, userFees, ops kill switch. Separate design + plan — **not this session**.
+**Phase 4 (after paper proven — first-class, not “Phase 3+”):** see full Phase 4 epic below. Separate design + plan — **not this session**.
 
 **Later (after phases complete):** ship an **agent skill package / plugin** so agents use the full research→Phase2→paper→live ladder correctly (see below).
 
@@ -89,7 +89,7 @@ features (metadata schema)
 | **2 prep** | Export contract + loadout stub | hypervector | **Done** |
 | **2 actor** | Event-driven historical sim from params | NautilusTrader | **Done** |
 | **3 paper** | HL live feed + same logic + synthetic fills | Nautilus | Design+plan ready; **execute next** |
-| **4** | Order book + ML metalabel + live exec flip | Nautilus + HL | After paper proven |
+| **4** | Book + ML + live + full CLI + GOAT TUI + 1-page GUI dashboard | Nautilus + HL + TUI/GUI | After paper proven |
 
 ---
 
@@ -227,12 +227,24 @@ uv run pytest tests/ -q -m "not network"
 - Optional sandbox shadow (default off); daemon `paper-run`  
 - Secrets env names ready for Phase 4; paper needs no keys for public path  
 
-### Phase 4 (do not implement until paper Tasks 1–5 done)
+### Phase 4 epic (do not implement until paper Tasks 1–5 done)
 
-- Order book + impact fills  
-- Metalabel conviction on shared path  
-- Live exec config flip + `data/live/` + kill switch  
-- Authenticated userFees
+**Gate before UX work:** CLI must expose **all current capabilities** end-to-end (research → export → phase2 → paper → eventually live ops), clean help, exit codes, config surface — then design/build UX on that complete surface.
+
+| Track | Deliverable | Bar |
+|-------|-------------|-----|
+| **4a Data / alpha** | Order book + impact fills; ML metalabel on shared path; authenticated userFees | Honest fills + conviction |
+| **4b Live** | Exec config flip, secrets required, `data/live/`, tiny size + kill switch | Same strategy path as paper |
+| **4c CLI complete** | Full command map: every working capability (history, regime, sweep, report, export, validate, phase2-*, paper-*, infra, future live) documented and consistent | Single source of truth for agents + humans |
+| **4d GOAT TUI** | Terminal UI over the full CLI/process ladder — not a thin wrapper; **epic / best-in-class** ops console (paper/live status, decisions feed, PnL, mode banner, kill switch, run control) | Greatest-of-all-time quality bar; design session required |
+| **4e 1-page GUI dashboard** | Single-page monitoring dashboard (paper/live identity, positions, recent decisions, costs/funding, health) — same truth as TUI/CLI, not a second brain | One page, high signal, monitoring-first |
+
+**UX principles (locked for Phase 4 design):**
+
+- TUI and GUI are **views** over the same processes/ledgers — no paper-only smarter path.  
+- `execution_mode` always obvious (paper vs live).  
+- CLI remains scriptable; TUI/GUI never replace batch automation.  
+- Build TUI/GUI only **after** CLI completeness pass (4c).
 
 ---
 

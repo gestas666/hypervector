@@ -301,7 +301,7 @@ Rules:
 ## 8. Phase 4 (important — deferred from this plan)
 
 **Phase 3** = paper live-feed loop only (this design + plan).  
-**Phase 4** is a first-class next phase, not a vague “nice later” list. It owns the deferred items that matter for production-quality promotion:
+**Phase 4** is a first-class next phase, not a vague “nice later” list. It owns promotion-quality trading **and** operator UX once the process ladder is real.
 
 | Phase 4 item | Why it matters |
 |--------------|----------------|
@@ -310,6 +310,11 @@ Rules:
 | **Live execution flip** | Config switch: real `HyperliquidExecClient`, secrets required, `data/live/` ledger, tiny size + kill switch |
 | **Authenticated fee tier** | Optional `userFees` from wallet when secrets present |
 | **Ops hardening** | Supervisor recipes, kill switch, live risk banners |
+| **CLI complete (gate for UX)** | All current capabilities exposed consistently (research → Phase 2 → paper → live ops); clean help/exit codes; agent-friendly |
+| **GOAT TUI** | Best-in-class terminal console over the full ladder — status, decisions, PnL, mode banner, run control, kill switch — not a thin CLI wrapper |
+| **1-page GUI monitoring dashboard** | Single-page monitor of paper/live identity, positions, decisions, costs/funding, health; same ledger truth as TUI/CLI |
+
+**UX sequencing (locked):** complete CLI surface first → then design/build epic TUI + 1-page GUI (same data model; no second strategy brain).
 
 ### 8.1 Order book (Phase 4)
 
@@ -425,7 +430,10 @@ Integrity: medium — wrong fills mislead promotion; explicit model + schema tes
 - Metalabel conviction on shared path  
 - Live exec flip + kill switch + live ledger  
 - Authenticated `userFees` tier  
-- Ops hardening (supervisor, kill switch UX) 
+- Ops hardening (supervisor, kill switch UX)  
+- **CLI completeness pass** (all capabilities; gate for UX)  
+- **GOAT TUI** (epic terminal ops console)  
+- **1-page GUI** monitoring dashboard (same truth as TUI/CLI) 
 
 ---
 

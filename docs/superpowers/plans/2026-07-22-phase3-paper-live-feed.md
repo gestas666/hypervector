@@ -695,8 +695,11 @@ Do **not** implement in Tasks 1–5:
 3. **Live execution** real orders + `data/live/` ledger  
 4. **userFees** authenticated fee tier  
 5. **Kill switch / supervisor** production ops  
+6. **CLI completeness pass** as a dedicated UX surface audit (paper-run may add flags; full CLI epic is Phase 4)  
+7. **GOAT TUI** (best-in-class terminal ops console over full ladder)  
+8. **1-page GUI** monitoring dashboard  
 
-After Phase 3 success criteria met → **new Phase 4 design** (brainstorm + spec + plan).
+After Phase 3 success criteria met → **new Phase 4 design** (brainstorm + spec + plan), including UX sequencing: **CLI complete → epic TUI + 1-page GUI**.
 
 ---
 
