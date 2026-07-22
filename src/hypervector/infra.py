@@ -1,0 +1,99 @@
+"""I2 local data layout: Parquet cache, SQLite runs, exports, paper/live separation.
+
+All runtime paths hang off a configurable data root (default ``./data``).
+Never mix paper and live ledgers. No Postgres/Redis/k8s for MVP.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from pathlib import Path
+
+# Relative subdirs under data root (I2 + Phase 2/3 paper prep)
+DATA_SUBDIRS: tuple[str, ...] = (
+    "cache",
+    "cache/book",
+    "runs",
+    "exports",
+    "logs/research",
+    "logs/nautilus",
+    "nautilus/backtest",
+    "paper/ledger",
+    "paper/decisions",
+    "live",
+)
+
+
+@dataclass(frozen=True)
+class DataPaths:
+    """Resolved paths for a data root."""
+
+    root: Path
+    cache: Path
+    cache_book: Path
+    runs: Path
+    runs_db: Path
+    exports: Path
+    logs_research: Path
+    logs_nautilus: Path
+    nautilus_backtest: Path
+    paper_ledger: Path
+    paper_decisions: Path
+    paper_db: Path
+    live: Path
+
+
+def paths_for(root: Path | str) -> DataPaths:
+    """Return path constants for ``root`` without creating directories."""
+    r = Path(root)
+    return DataPaths(
+        root=r,
+        cache=r / "cache",
+        cache_book=r / "cache" / "book",
+        runs=r / "runs",
+        runs_db=r / "runs" / "hypervector.db",
+        exports=r / "exports",
+        logs_research=r / "logs" / "research",
+        logs_nautilus=r / "logs" / "nautilus",
+        nautilus_backtest=r / "nautilus" / "backtest",
+        paper_ledger=r / "paper" / "ledger",
+        paper_decisions=r / "paper" / "decisions",
+        paper_db=r / "paper" / "paper.db",
+        live=r / "live",
+    )
+
+
+def ensure_data_layout(root: Path | str) -> DataPaths:
+    """Idempotently create the I2 + paper/live/nautilus directory tree."""
+    paths = paths_for(root)
+    paths.root.mkdir(parents=True, exist_ok=True)
+    for rel in DATA_SUBDIRS:
+        (paths.root / rel).mkdir(parents=True, exist_ok=True)
+    return paths
+
+
+def layout_report(root: Path | str) -> dict[str, object]:
+    """JSON-serializable status of layout (exists flags)."""
+    paths = paths_for(root)
+    dirs = {
+        "cache": paths.cache,
+        "runs": paths.runs,
+        "exports": paths.exports,
+        "logs_research": paths.logs_research,
+        "logs_nautilus": paths.logs_nautilus,
+        "nautilus_backtest": paths.nautilus_backtest,
+        "paper_ledger": paths.paper_ledger,
+        "paper_decisions": paths.paper_decisions,
+        "live": paths.live,
+    }
+    return {
+        "root": str(paths.root.resolve()),
+        "dirs": {k: {"path": str(p), "exists": p.is_dir()} for k, p in dirs.items()},
+        "runs_db": str(paths.runs_db),
+        "paper_db": str(paths.paper_db),
+        "rules": {
+            "paper_live_separated": True,
+            "gitignored_data": True,
+            "no_postgres_redis_k8s": True,
+        },
+    }

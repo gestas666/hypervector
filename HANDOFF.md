@@ -1,179 +1,150 @@
 # HANDOFF — hypervector
 
-**Saved:** 2026-07-21  
+**Saved:** 2026-07-22  
 **Project:** `/Users/gestas/Prototypes/hypervector`  
 **User:** Albert  
-**Status:** Install done. **Phase 1 design cycle in progress.** User process = **`engineering-software` (Hyde) + brainstorming** for the full development cycle. Load `~/.grok/skills/engineering-software` after restart. No implementation until requirements/design approved.
 
-Agentmemory: `mem_mrv00zmt_4d9453952d47` (workflow handoff). Resume with “read HANDOFF.md” or `/handoff` / recall `hypervector`.
+**Status:** Phase 1 / 1.5 / prep Tasks **1–7 DONE**. Ready for Phase 2 strategy actor.  
+**Phase 1 funnel DONE** · **Phase 1.5 costs/TP-SL/risk IN CODE** · **Infra I2 DONE**  
+**Export schema v1 DONE** · **Nautilus load-export stub DONE** · **CLI export-validate / phase2-check DONE**  
 
----
+**Plan:** `docs/superpowers/plans/2026-07-22-phase15-to-phase2-prep.md`  
+**Spec:** `docs/superpowers/specs/2026-07-22-phase2-3-handoff.md`  
+**Infra doc:** `docs/infra-data-layout.md`
 
-## Goal (current understanding)
-
-Hybrid quantitative pipeline (from `pyproject.toml` / `initial-spec.md`):
-
-1. **Phase 1 — VectorBT** research / vectorized backtests  
-2. **Phase 2/3 — NautilusTrader** event-driven sim → live path (Hyperliquid in scope for install)  
-3. **Backtrader** also installed as an additional classical backtest engine (user request this session)
-
-Exact product scope beyond “install engines + docs” is **TBD — user will detail next**.
+**Next execute:** implement Nautilus **strategy actor** that re-runs strategy from `StrategyLoadout` params (not signal replay). Task 8 ML façade optional.
 
 ---
 
-## Current progress
+## Goal (pipeline)
 
-### Environment (Python 3.13 via `uv`)
+| Phase | Role | Framework |
+|-------|------|-----------|
+| **1** | Research / grids / rank / export | **VectorBT** |
+| **1.5** | Fees, slippage, funding est., TP/SL modes, 1–5% conviction risk | VectorBT |
+| **2** | Event-driven historical validation | **NautilusTrader** |
+| **3 paper** | Live **HL feed**, same logic as live, **synthetic fills logged** | Nautilus |
+| **3 live** | Same as paper; real execution client only | Nautilus + HL |
 
-| Package | Version / notes |
-|---------|-----------------|
-| `vectorbt[full,rust]` | `1.1.0` (existing; rust engine + full integrations) |
-| `nautilus_trader` | `>=1.230.0` → installed **1.230.0** official **wheel** (cp313 macOS arm64) |
-| Hyperliquid adapter | Bundled in core wheel — no pip extra; import `nautilus_trader.adapters.hyperliquid` works |
-| `backtrader[plotting]` | `>=1.9.78.123` → **1.9.78.123** + matplotlib |
+**Modular handoff (locked):** VectorBT exports **params + meta + metrics** (+ optional signals for **replay only**). Nautilus **re-runs strategy logic** from params — not frozen signals as live alpha.
 
-`pyproject.toml` + `uv.lock` updated. No secrets in repo.
+**Phase 3 paper (locked):** 1:1 with live strategy/risk/ML path; market data from **Hyperliquid live feed**; no real orders; log would-be executions. Promote: Phase 2 sim → paper on HL feed → tiny live. Never VectorBT → live.
 
-### Install tests (in-repo)
+---
 
-| File | What it proves |
-|------|----------------|
-| `tests/test_install.py` | VectorBT rust + full integrations |
-| `tests/test_nautilus_install.py` | Nautilus version, Hyperliquid public surface, offline config construct, factories |
-| `tests/test_backtrader_install.py` | Backtrader version, plotting extra, public API, minimal offline Cerebro SMA-cross |
+## Plan progress
 
-Run:
+| Task | Status |
+|------|--------|
+| 1 Spec Phase 2/3 + paper | **Done** |
+| 2 Infra I2 layout + CLI | **Done** |
+| 3 Export schema harden | **Done** (`export/schema.py`, `EXPORT_SCHEMA_VERSION=1`) |
+| 4 Phase 1.5 verification sweep | **Done** (real 30d BTC 1m sweeps + strict validate) |
+| 5 Nautilus Phase 2 load-export stub | **Done** (`nautilus/load_export.py`, `config_stub.py`) |
+| 6 CLI export-validate / phase2-check | **Done** |
+| 7 Commit product (not data/reference) | **Done** (this session) |
+| 8 ML impulse façade (optional) | Pending |
+
+---
+
+## Verification evidence (2026-07-22 session)
 
 ```bash
-uv sync --all-extras
-uv run pytest tests/test_install.py tests/test_nautilus_install.py tests/test_backtrader_install.py -v
+uv run pytest tests/ -q
+# 100 passed, 4 deselected (network)
+
+uv run pytest tests/test_fetchers.py -m network -q
+# 4 passed
+
+# Real path (cached HL+Binance 30d, 43200 bars):
+uv run python -m hypervector --data-root data history --lookback 30
+uv run python -m hypervector --data-root data sweep-down --lookback 30 \
+  --strategy crown_stack_short --cash 10000 --tp-sl-mode atr \
+  --risk-min 0.01 --risk-max 0.05 --conviction 0.5 --export
+uv run python -m hypervector export-validate --path data/exports/<id> --strict
+uv run python -m hypervector phase2-check --path data/exports/<id>
 ```
 
-### Reference / offline docs (all under `reference/`, **gitignored** via `/reference/`)
+Also exercised **fixed_rr** (uptrend crown), **trail** (downtrend trend_ride), negative paths (missing dir, pre-schema legacy exports correctly fail).
 
-| Path | Contents |
-|------|----------|
-| `reference/nautilus_trader-develop/` | Vendored Nautilus develop tree (source + docs + examples) |
-| `reference/nautilus-backtester-docs/` | Curated scrape: latest + nightly backtesting, Python API, notebook conversions — see its `README.md` |
-| `reference/vectorbt-v1.1.0/` | VectorBT 1.1.0 source tree |
-| `reference/backtrader/` | Clone of https://github.com/mementum/backtrader @ v1.9.78.123 |
-| `reference/backtrader-docs/` | Full `/docu/` scrape (69/69 pages) + `README.md` |
-| `reference/backtrader-master/`, `apex/`, `orderbook/`, `pine-scripts/` | Present; not owned by this session |
-
-### Skills installed for agents (user request)
-
-From `backtest-lab/backtest_lab/skills/` → copied to:
-
-- `~/.grok/skills/{write-clean-code,think-like-a-programmer,engineering-software}`
-- `~/.agents/skills/` (same three)
-- `~/.claude/skills/` (same three)
-
-Grok primary path: `~/.grok/skills/`. Claude-compat skills flag is `false` in `~/.grok/config.toml`; Grok path is what matters here.
+Example new bundle: `data/exports/downtrend_crown_stack_short_6e7347e6` with `schema_version=1`, costs/risk/tp_sl_mode.
 
 ---
 
-## What worked
+## Key surfaces
 
-- Prefer **PyPI wheels** for Nautilus (do not source-build unless wheel missing).
-- Hyperliquid is **in the core Nautilus package** — no separate extra.
-- Backtrader “full” install = **`backtrader[plotting]`** (pulls matplotlib).
-- Docs: `web-scrape` with Parallel engine into `reference/*-docs/`; keep README reading orders.
-- Install gates = real imports + offline engine smoke (no network, no live keys).
-
-## What to avoid / non-goals so far
-
-- Live trading, Hyperliquid keys, builder fees, vaults (explicit non-goal of install goal).
-- Committing `reference/` (gitignored on purpose — huge trees).
-- Replacing VectorBT or rewriting Phase-1 beyond coexistence.
-- Source-building Nautilus when wheels exist.
+| Path | Role |
+|------|------|
+| `src/hypervector/export/schema.py` | `validate_export_dir`, `EXPORT_SCHEMA_VERSION` |
+| `src/hypervector/export/phase2.py` | Write bundle + optional validate |
+| `src/hypervector/nautilus/load_export.py` | `StrategyLoadout`, `load_strategy_loadout` |
+| `src/hypervector/nautilus/config_stub.py` | Offline Phase 2 stub + nautilus probe |
+| `src/hypervector/infra.py` | I2 layout |
+| CLI | `history\|regime\|sweep-up\|sweep-down\|report\|export\|export-validate\|phase2-check\|infra-init` |
 
 ---
 
-## Git state (uncommitted at handoff)
+## Done this arc
 
-```
- M .gitignore          # /reference/
- M initial-spec.md
- M pyproject.toml      # nautilus + backtrader deps
- M tests/test_install.py
- M uv.lock
-?? tests/test_backtrader_install.py
-?? tests/test_nautilus_install.py
-?? HANDOFF.md
-```
+### Environment
+- Python 3.13 / uv; `vectorbt[full,rust]==1.1.0`; `nautilus_trader>=1.230`; `backtrader[plotting]`
+- Install tests: `tests/test_install.py`, `test_nautilus_install.py`, `test_backtrader_install.py`
 
-No commit was made for this work unless user asked later.
+### Phase 1 research (`src/hypervector/`)
+- Live history HL → Binance → Bybit + provenance + cache
+- Regime / up / down tracks; strategies: classic, crown_stack (1m), trend_ride
+- SQLite runs, report, exports under `data/exports/`
 
----
+### Phase 1.5
+- `sweep/costs.py`, `exits.py` (`fixed_rr|atr|trail`), `sizing.py` (1–5% risk by conviction)
+- CLI: `--cash`, `--tp-sl-mode`, `--risk-min/max`, `--conviction`, `--fee-model`
 
-## Preferred development cycle (USER MANDATE)
+### Phase 2 prep
+- Export schema v1; strict Phase 1.5 fields for loadout readiness
+- Nautilus offline loadout + HYPERLIQUID config probe (no engine start)
+- paper/live explicitly **not implemented**
 
-Load and follow after every restart:
-
-1. **`engineering-software`** — `~/.grok/skills/engineering-software/SKILL.md` (Write Great Code Vol. 3 / Hyde)  
-   Process framing for hypervector (small solo project → light iterative, not enterprise Waterfall theater):
-   - **Verify** (build the product right) and **validate** (build the right product) explicitly.
-   - Requirements must be **testable** — *shall* / *must*; black-box; atomic. Weak words killed.
-   - Prefer **use-case narratives** for externally visible Phase 1 behaviors (what, not how).
-   - Design concerns → viewpoints/views only after requirements are solid enough.
-   - Traceability light-weight: tag requirements → design notes → tests (STC-style), not full IEEE doc set.
-   - ~40% cost from bad requirements — **front-load Q&A**; estimate with ×2–4 on small tasks.
-   - Project size: treat Phase 1 as **small/medium solo** → iterative MVP loops, not Spiral/FDD ceremony.
-
-2. **`brainstorming`** (superpowers) — collaborative design gate  
-   One question at a time → 2–3 approaches → design sections → write `docs/superpowers/specs/…-design.md` → user review → **`writing-plans` only** after approval.
-
-3. **Hard-gate:** no product implementation until Phase 1 design/spec is approved.
-
-4. Related book skills (installed same session, optional for tone/quality):  
-   `write-clean-code`, `think-like-a-programmer` under `~/.grok/skills/`.
+### Infra
+- `infra.ensure_data_layout` wired into pipeline + CLI IO commands
+- Tests: `tests/test_infra.py`
 
 ---
 
-## Brainstorming log (Phase 1)
-
-**Process:** `engineering-software` + superpowers `brainstorming`. See mandate above.
-
-**Hard-gate:** no product code until Phase 1 design is approved.
-
-**Known from `initial-spec.md`:**
-- Phase 1 = VectorBT: features, ML matrices, multi-dim parameter sweeps on candles
-- Output = filtered candidates with robust parameter bounds for Phase 2 (Nautilus)
-- Integration preference = modular: export signals/weights → Nautilus ingest
-- Tuning note: “Kapathy-style autotune / Optima / Both” (unresolved)
-
-**Q&A (append each answer):**
-1. **Market universe:** Hyperliquid **perps only**.
-2. **Adapters:** Prefer reuse — `dev/hyper-pi`, `Prototypes/hypertrader`, `reference/apex/`, other HL tooling.
-3. **Symbols:** MVP **BTC only**; design for **majors basket**.
-4. **TF:** MVP **1m**; design multi-TF **5m, 15m** then maybe 30m/1h.
-5. **History:** floor 30d; default 90d; promo 180d; config-driven.
-6. **Rank:** primary **net PnL / total return**; secondary Sharpe, trade count, W/L, win%, DD — **no risk gates**.
-7. **Strategies start:** best **uptrend**, best **downtrend**, **regime detection** (up/down/range); pine + book families; multi-export.
-8. **Data:** HL-max first; **Binance then Bybit** backfill with provenance.
-9. **Infra I2:** Parquet cache + SQLite runs + FS exports under `/data/` (gitignored).
-
-**Design spec:** `docs/superpowers/specs/2026-07-21-phase1-vectorbt-design.md` — awaiting user review of written file.
-
----
-
-## Next steps (for following session)
-
-0. **On restart:** load `engineering-software` + brainstorming; read this HANDOFF + design spec.
-1. User reviews/approves written design spec (or requests edits).
-2. Then **writing-plans** only → implementation plan.
-3. Optionally commit install/test changes if user wants.
-4. Do **not** implement Phase 1 product code until plan execution begins.
-
----
-
-## Quick resume commands
+## Next session — start here
 
 ```bash
 cd /Users/gestas/Prototypes/hypervector
 uv sync --all-extras
-uv run python -c "import vectorbt, nautilus_trader, backtrader; print(vectorbt.__version__, nautilus_trader.__version__, backtrader.__version__)"
-# Docs indexes
-open reference/nautilus-backtester-docs/README.md   # or just read in editor
-open reference/backtrader-docs/README.md
+uv run pytest tests/ -q
+# Implement Nautilus strategy actor from StrategyLoadout (next plan)
+# Optional: Task 8 ML impulse façade
 ```
+
+### Quick research commands
+```bash
+uv run python -m hypervector infra-init
+uv run python -m hypervector --data-root data history --lookback 30
+uv run python -m hypervector --data-root data sweep-down --lookback 30 \
+  --strategy crown_stack_short --cash 10000 --tp-sl-mode atr \
+  --risk-min 0.01 --risk-max 0.05 --conviction 0.5 --export
+uv run python -m hypervector export-validate --path data/exports/<id> --strict
+uv run python -m hypervector phase2-check --path data/exports/<id>
+```
+
+---
+
+## Non-goals (still)
+
+- Live trading / keys / vaults  
+- Full Nautilus strategy actor (next)  
+- Greenfield ML training  
+- CEX bars claimed as HL book  
+- Paper/live shared ledgers  
+
+---
+
+## Agent notes
+
+- Prefer this HANDOFF + plan over stale agentmemory for phase status.
+- Skills used: engineering-software, write-clean-code, verification-before-completion.
+- Legacy pre-schema exports under `data/exports/*` fail validate until re-exported with current CLI.

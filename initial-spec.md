@@ -8,7 +8,7 @@ A multi-stage hybrid pipeline that assigns distinct strategy lifecycle tasks to 
        ▼  Goal: Evaluate millions of parameter permutations in seconds.
        │
 [ Phase 2: Microstructure & Execution Realism ]
-       │  Tool: NautilusTrader or HftBacktest (Event-Driven Tick/L2 Engine)
+       │  Tool: NautilusTrader (Event-Driven Tick/L2 Engine)
        ▼  Goal: Validate fills, queue dynamics, slippage, and latency.
        │
 [ Phase 3: Production Live Execution ]
@@ -41,3 +41,7 @@ Phase 3: Live Production Deployment
 2. Integration Strategy: Adapting vs. Custom Building
 
 •     Modular Pipeline Integration (Recommended): Export signal arrays or trained model weights from VectorBT and ingest them directly as custom data feeds or strategy state inputs in NautilusTrader. This keeps the rapid research phase isolated from execution logic.
+
+Tuning with Kaparthy style autotune
+Optima
+Both

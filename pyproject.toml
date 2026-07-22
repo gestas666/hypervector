@@ -5,7 +5,9 @@ description = "Hybrid quantitative pipeline: VectorBT (Phase 1) → NautilusTrad
 readme = "initial-spec.md"
 requires-python = ">=3.13,<3.14"
 dependencies = [
-    "vectorbt[full,rust]>=1.1.0,<1.2",
+    "vectorbt[full,rust]==1.1.0",
+    "nautilus_trader>=1.230.0",
+    "backtrader[plotting]>=1.9.78.123",
 ]
 
 [project.optional-dependencies]
@@ -18,12 +20,19 @@ dev = [
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+[project.scripts]
+hypervector = "hypervector.cli:main"
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/hypervector"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
+markers = [
+    "network: hits live Hyperliquid/Binance/Bybit APIs (skipped by default)",
+]
+addopts = "-m 'not network'"
 
 [tool.uv]
 package = true

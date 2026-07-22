@@ -1,0 +1,512 @@
+"""CLI: history (live HL+backfill), regime, sweep-up, sweep-down, report, export."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+import uuid
+from pathlib import Path
+
+from hypervector.config import DEFAULT_LOOKBACK, FLOOR_LOOKBACK, PROMO_LOOKBACK
+from hypervector.data.pipeline import load_research_history
+from hypervector.export.phase2 import export_candidate
+from hypervector.export.schema import ExportSchemaError, validate_export_dir
+from hypervector.infra import ensure_data_layout, layout_report
+from hypervector.nautilus.config_stub import phase2_check_report
+from hypervector.regime.detectors import detect_regime_ema
+from hypervector.regime.metrics import regime_detection_metrics
+from hypervector.report import rank_trials
+from hypervector.runs.db import RunsDB, TrialRow
+from hypervector.strategies import register_all_strategies
+from hypervector.strategies.registry import get_strategy, list_strategies
+from hypervector.sweep.costs import resolve_cost_model
+from hypervector.sweep.exits import EXIT_MODES, ExitConfig
+from hypervector.sweep.search import run_grid_search
+from hypervector.sweep.sizing import RiskConfig
+
+
+def _default_data_root() -> Path:
+    return Path("data")
+
+
+def _ensure_root(args: argparse.Namespace):
+    """Create I2 layout under --data-root before any IO."""
+    return ensure_data_layout(Path(args.data_root))
+
+
+def _load_bars(args: argparse.Namespace):
+    """Load OHLCV from cache or live HL→Binance→Bybit pipeline."""
+    _ensure_root(args)
+    return load_research_history(
+        args.data_root,
+        symbol=getattr(args, "symbol", "BTC"),
+        timeframe=getattr(args, "timeframe", "1m"),
+        lookback_days=getattr(args, "lookback", DEFAULT_LOOKBACK),
+        strict_hl_only=getattr(args, "strict_hl_only", False),
+        force_refresh=getattr(args, "force", False),
+    )
+
+
+def cmd_infra_init(args: argparse.Namespace) -> int:
+    paths = _ensure_root(args)
+    report = layout_report(paths.root)
+    print(json.dumps(report, indent=2))
+    return 0
+
+
+def cmd_history(args: argparse.Namespace) -> int:
+    df, prov = _load_bars(args)
+    print(
+        json.dumps(
+            {
+                "bars": len(df),
+                "symbol": args.symbol,
+                "timeframe": args.timeframe,
+                "lookback_days": args.lookback,
+                "provenance": prov,
+            },
+            indent=2,
+            default=str,
+        )
+    )
+    return 0
+
+
+def cmd_regime(args: argparse.Namespace) -> int:
+    df, prov = _load_bars(args)
+    labels = detect_regime_ema(df["close"], fast=args.fast, slow=args.slow)
+    metrics = regime_detection_metrics(labels)
+    print(
+        json.dumps(
+            {
+                "labels_sample": labels.value_counts().to_dict(),
+                "metrics": metrics,
+                "data_provenance": prov,
+            },
+            indent=2,
+            default=str,
+        )
+    )
+    if args.export:
+        export_candidate(
+            Path(args.data_root) / "exports",
+            run_id=str(uuid.uuid4())[:8],
+            meta={
+                "track": "regime",
+                "symbol": args.symbol,
+                "timeframe": args.timeframe,
+                "data_provenance": prov,
+            },
+            params={
+                "strategy": "regime_ema",
+                "fast": args.fast,
+                "slow": args.slow,
+            },
+            metrics=metrics,
+            regime_labels=labels,
+            candidate_id=f"regime_{args.symbol}",
+        )
+    return 0
+
+
+def _run_sweep(args: argparse.Namespace, role: str) -> int:
+    register_all_strategies()
+    root = _ensure_root(args).root
+    df, prov = _load_bars(args)
+    name = getattr(args, "strategy", None)
+    if name:
+        strategy = get_strategy(name)
+        if strategy.role != role:
+            print(
+                f"strategy {name!r} has role={strategy.role!r}, expected {role!r}",
+                file=sys.stderr,
+            )
+            return 1
+    else:
+        # Prefer frankenstein trend_ride, then crown_stack
+        preferred = (
+            f"trend_ride_{'long' if role == 'uptrend' else 'short'}",
+            f"crown_stack_{'long' if role == 'uptrend' else 'short'}",
+        )
+        specs = list_strategies(role=role)
+        by_name = {s.name: s for s in specs}
+        strategy = None
+        for name in preferred:
+            if name in by_name:
+                strategy = by_name[name]
+                break
+        if strategy is None and specs:
+            strategy = specs[0]
+    if strategy is None:
+        print(f"no strategies for role={role}", file=sys.stderr)
+        return 1
+    init_cash = float(getattr(args, "cash", 10_000.0))
+    cost = resolve_cost_model(getattr(args, "fee_model", "hl_taker_default"))
+    mode = getattr(args, "tp_sl_mode", "atr")
+    if mode not in EXIT_MODES:
+        print(f"tp_sl_mode must be one of {EXIT_MODES}", file=sys.stderr)
+        return 2
+    exit_cfg = ExitConfig(
+        mode=mode,
+        sl_pct=float(getattr(args, "sl_pct", 0.01)),
+        rr=float(getattr(args, "rr", 2.0)),
+        atr_length=int(getattr(args, "atr_length", 14)),
+        sl_atr_mult=float(getattr(args, "sl_atr_mult", 1.5)),
+        trail_atr_mult=float(getattr(args, "trail_atr_mult", 2.0)),
+    )
+    risk_cfg = RiskConfig(
+        risk_pct_min=float(getattr(args, "risk_min", 0.01)),
+        risk_pct_max=float(getattr(args, "risk_max", 0.05)),
+        default_conviction=float(getattr(args, "conviction", 0.5)),
+    )
+    print(
+        json.dumps(
+            {
+                "strategy": strategy.name,
+                "role": strategy.role,
+                "bars": len(df),
+                "init_cash": init_cash,
+                "tp_sl_mode": exit_cfg.mode,
+                "risk_pct_range": [risk_cfg.risk_pct_min, risk_cfg.risk_pct_max],
+                "conviction": risk_cfg.default_conviction,
+                "costs": cost.to_dict(),
+                "data_provenance": prov,
+            },
+            indent=2,
+            default=str,
+        ),
+        file=sys.stderr,
+    )
+    results = run_grid_search(
+        df,
+        strategy,
+        init_cash=init_cash,
+        cost=cost,
+        exit_cfg=exit_cfg,
+        risk_cfg=risk_cfg,
+        conviction=risk_cfg.default_conviction,
+        apply_costs=not getattr(args, "no_costs", False),
+    )
+    rows = []
+    db = RunsDB(root / "runs" / "hypervector.db")
+    run_id = str(uuid.uuid4())[:8]
+    for r in results:
+        row = {
+            "strategy": r.strategy,
+            "params": r.params,
+            "status": r.status,
+            **r.metrics,
+        }
+        rows.append(row)
+        if r.status == "ok":
+            db.insert_trial(
+                TrialRow(
+                    run_id=run_id,
+                    track=role,
+                    strategy=r.strategy,
+                    params=r.params,
+                    net_pnl=r.metrics["net_pnl"],
+                    total_return_pct=r.metrics["total_return_pct"],
+                    sharpe=r.metrics["sharpe"],
+                    trade_count=r.metrics["trade_count"],
+                    wins=r.metrics["wins"],
+                    losses=r.metrics["losses"],
+                    win_pct=r.metrics["win_pct"],
+                    max_drawdown=r.metrics["max_drawdown"],
+                    status="ok",
+                )
+            )
+    board = rank_trials(rows)
+    print(board.to_string(index=False))
+    if args.export and results and results[0].status == "ok":
+        best = results[0]
+        export_candidate(
+            root / "exports",
+            run_id=run_id,
+            meta={
+                "track": role,
+                "symbol": args.symbol,
+                "timeframe": args.timeframe,
+                "lookback_days": args.lookback,
+                "init_cash": init_cash,
+                "tp_sl_mode": exit_cfg.mode,
+                "risk": risk_cfg.to_dict(),
+                "costs": cost.to_dict(),
+                "data_provenance": prov,
+            },
+            params={"strategy": best.strategy, "role": role, **best.params},
+            metrics=best.metrics,
+            candidate_id=f"{role}_{best.strategy}_{run_id}",
+            strict=True,
+        )
+    return 0
+
+
+def cmd_sweep_up(args: argparse.Namespace) -> int:
+    return _run_sweep(args, "uptrend")
+
+
+def cmd_sweep_down(args: argparse.Namespace) -> int:
+    return _run_sweep(args, "downtrend")
+
+
+def cmd_report(args: argparse.Namespace) -> int:
+    root = _ensure_root(args).root
+    db = RunsDB(root / "runs" / "hypervector.db")
+    rows = db.list_trials(track=args.track)
+    board = rank_trials(rows)
+    print(board.to_string(index=False) if len(board) else "(no trials)")
+    return 0
+
+
+def cmd_export(args: argparse.Namespace) -> int:
+    root = _ensure_root(args).root
+    db = RunsDB(root / "runs" / "hypervector.db")
+    best = db.best_by_net_pnl(args.track) if args.track else None
+    if best is None:
+        print("no ok trials to export", file=sys.stderr)
+        return 1
+    path = export_candidate(
+        root / "exports",
+        run_id=best["run_id"],
+        meta={
+            "track": best["track"],
+            "exported_from": "cli",
+            "symbol": getattr(args, "symbol", "BTC"),
+            "timeframe": getattr(args, "timeframe", "1m"),
+        },
+        params={"strategy": best["strategy"], **best["params"]},
+        metrics={
+            k: best[k]
+            for k in (
+                "net_pnl",
+                "total_return_pct",
+                "sharpe",
+                "trade_count",
+                "wins",
+                "losses",
+                "win_pct",
+                "max_drawdown",
+            )
+        },
+        candidate_id=f"export_{best['track']}_{best['id']}",
+    )
+    print(str(path))
+    return 0
+
+
+def cmd_export_validate(args: argparse.Namespace) -> int:
+    """Validate an export bundle against the Phase 1→2 schema contract."""
+    path = Path(args.path)
+    try:
+        report = validate_export_dir(path, strict=bool(args.strict))
+    except ExportSchemaError as exc:
+        print(
+            json.dumps(
+                {"ok": False, "path": str(path), "errors": exc.errors},
+                indent=2,
+            ),
+            file=sys.stderr,
+        )
+        return 1
+    # Drop heavy nested blobs from CLI stdout unless --verbose
+    out = {k: v for k, v in report.items() if k not in ("meta", "params", "metrics")}
+    if args.verbose:
+        out["meta"] = report["meta"]
+        out["params"] = report["params"]
+        out["metrics"] = report["metrics"]
+    print(json.dumps(out, indent=2, default=str))
+    return 0
+
+
+def cmd_phase2_check(args: argparse.Namespace) -> int:
+    """Load export as Phase 2 loadout stub; confirm paper/live not implemented."""
+    _ensure_root(args)
+    path = Path(args.path)
+    try:
+        report = phase2_check_report(
+            path,
+            data_root=args.data_root,
+            strict=not args.loose,
+            probe_nautilus=not args.no_nautilus_probe,
+        )
+    except ExportSchemaError as exc:
+        print(
+            json.dumps(
+                {"ok": False, "path": str(path), "errors": exc.errors},
+                indent=2,
+            ),
+            file=sys.stderr,
+        )
+        return 1
+    print(json.dumps(report, indent=2, default=str))
+    if not report.get("paper_live", {}).get("implemented", False):
+        print("paper/live not implemented", file=sys.stderr)
+    return 0
+
+
+def _add_market_args(p: argparse.ArgumentParser) -> None:
+    p.add_argument("--symbol", default="BTC")
+    p.add_argument("--timeframe", default="1m")
+    p.add_argument(
+        "--lookback",
+        type=int,
+        default=DEFAULT_LOOKBACK,
+        help=f"calendar days (floor={FLOOR_LOOKBACK}, default={DEFAULT_LOOKBACK}, promo={PROMO_LOOKBACK})",
+    )
+    p.add_argument(
+        "--strict-hl-only",
+        action="store_true",
+        help="do not backfill from Binance/Bybit",
+    )
+    p.add_argument(
+        "--force",
+        action="store_true",
+        help="ignore Parquet cache and re-fetch",
+    )
+
+
+def build_parser() -> argparse.ArgumentParser:
+    p = argparse.ArgumentParser(
+        prog="hypervector",
+        description="Phase 1 research funnel (live HL history + Binance/Bybit backfill)",
+    )
+    p.add_argument("--data-root", default=str(_default_data_root()))
+    sub = p.add_subparsers(dest="command", required=True)
+
+    infra = sub.add_parser(
+        "infra-init",
+        help="Create I2 data layout (cache/runs/exports/logs/paper/live/nautilus)",
+    )
+    infra.set_defaults(func=cmd_infra_init)
+
+    h = sub.add_parser("history", help="Fetch/cache HL-max + Binance/Bybit backfill")
+    _add_market_args(h)
+    h.set_defaults(func=cmd_history)
+
+    r = sub.add_parser("regime", help="Run regime detector on live/cached history")
+    _add_market_args(r)
+    r.add_argument("--fast", type=int, default=12)
+    r.add_argument("--slow", type=int, default=48)
+    r.add_argument("--export", action="store_true")
+    r.set_defaults(func=cmd_regime)
+
+    for name, fn in (("sweep-up", cmd_sweep_up), ("sweep-down", cmd_sweep_down)):
+        s = sub.add_parser(name, help=f"Search {name} track on live/cached history")
+        _add_market_args(s)
+        s.add_argument(
+            "--strategy",
+            default=None,
+            help="strategy name (default: trend_ride then crown_stack)",
+        )
+        s.add_argument(
+            "--cash",
+            type=float,
+            default=10_000.0,
+            help="starting cash for VectorBT portfolio (default: 10000)",
+        )
+        s.add_argument(
+            "--tp-sl-mode",
+            choices=list(EXIT_MODES),
+            default="atr",
+            help="TP/SL mode: fixed_rr | atr | trail (default: atr)",
+        )
+        s.add_argument("--sl-pct", type=float, default=0.01, help="fixed_rr stop as fraction")
+        s.add_argument("--rr", type=float, default=2.0, help="reward:risk for fixed_rr/atr")
+        s.add_argument("--atr-length", type=int, default=14)
+        s.add_argument("--sl-atr-mult", type=float, default=1.5)
+        s.add_argument("--trail-atr-mult", type=float, default=2.0)
+        s.add_argument(
+            "--risk-min",
+            type=float,
+            default=0.01,
+            help="min equity risk fraction (default 1%%)",
+        )
+        s.add_argument(
+            "--risk-max",
+            type=float,
+            default=0.05,
+            help="max equity risk fraction (default 5%%)",
+        )
+        s.add_argument(
+            "--conviction",
+            type=float,
+            default=0.5,
+            help="0-1 conviction → risk between min and max (default 0.5 → ~3%%)",
+        )
+        s.add_argument(
+            "--fee-model",
+            default="hl_taker_default",
+            help="hl_taker_default | hl_taker_tight | zero",
+        )
+        s.add_argument(
+            "--no-costs",
+            action="store_true",
+            help="disable fees/slippage/funding (debug only)",
+        )
+        s.add_argument("--export", action="store_true")
+        s.set_defaults(func=fn)
+
+    rep = sub.add_parser("report", help="Print ranked board from SQLite")
+    rep.add_argument("--track", default=None)
+    rep.set_defaults(func=cmd_report)
+
+    ex = sub.add_parser("export", help="Export best trial for a track")
+    ex.add_argument("--track", required=True)
+    ex.add_argument("--symbol", default="BTC")
+    ex.add_argument("--timeframe", default="1m")
+    ex.set_defaults(func=cmd_export)
+
+    ev = sub.add_parser(
+        "export-validate",
+        help="Validate a Phase 1 export bundle (meta/params/metrics schema)",
+    )
+    ev.add_argument("--path", required=True, help="path to export directory")
+    ev.add_argument(
+        "--strict",
+        action="store_true",
+        help="require Phase 1.5 fields (init_cash, costs, risk, tp_sl_mode)",
+    )
+    ev.add_argument(
+        "--verbose",
+        action="store_true",
+        help="include full meta/params/metrics in JSON output",
+    )
+    ev.set_defaults(func=cmd_export_validate)
+
+    p2 = sub.add_parser(
+        "phase2-check",
+        help="Load export as Phase 2 StrategyLoadout stub (offline; no paper/live)",
+    )
+    p2.add_argument("--path", required=True, help="path to export directory")
+    p2.add_argument(
+        "--loose",
+        action="store_true",
+        help="do not require Phase 1.5 fields",
+    )
+    p2.add_argument(
+        "--no-nautilus-probe",
+        action="store_true",
+        help="skip offline Nautilus import/config probe",
+    )
+    p2.set_defaults(func=cmd_phase2_check)
+
+    return p
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = build_parser()
+    args = parser.parse_args(argv)
+    if hasattr(args, "lookback") and args.lookback is not None:
+        if args.lookback < FLOOR_LOOKBACK:
+            print(
+                f"lookback must be >= {FLOOR_LOOKBACK} (promo={PROMO_LOOKBACK})",
+                file=sys.stderr,
+            )
+            return 2
+    return int(args.func(args))
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
