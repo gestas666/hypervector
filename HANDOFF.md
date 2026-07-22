@@ -3,22 +3,15 @@
 **Saved:** 2026-07-22  
 **Project:** `/Users/gestas/Prototypes/hypervector`  
 **User:** Albert  
+**Branch:** `feat/phase2-actor-and-ml` (not pushed)
 
-**Status:** Phase 1 / 1.5 / Phase 2 **prep** complete and verified.  
-**Next plan:** `docs/superpowers/plans/2026-07-22-phase2-actor-and-ml.md`  
+**Status:** Phase 1 / 1.5 / Phase 2 **actor + runner + ML façade + paper scaffold** complete and verified.  
+**Completed plan:** `docs/superpowers/plans/2026-07-22-phase2-actor-and-ml.md`  
 **Spec (locked):** `docs/superpowers/specs/2026-07-22-phase2-3-handoff.md`  
 **Prior plan (done):** `docs/superpowers/plans/2026-07-22-phase15-to-phase2-prep.md`  
 **Infra doc:** `docs/infra-data-layout.md`
 
-**Next execute (NEXT SESSION — not started):** plan Tasks **1→6** first  
-(signal adapter → actor → runner → `phase2-run`).  
-Task **7 ML façade** optional. Task **8** paper ledger scaffold. Task **9** verify + handoff.
-
-**Execution mode (user lock 2026-07-22):**
-- **Subagent-driven development** (fresh subagent per task + review between tasks)
-- **Required skill:** `write-clean-code` (load at session start; also `engineering-software` if process/docs)
-- **Do not** inline-implement the whole plan in one agent turn unless user overrides
-- Plan file: `docs/superpowers/plans/2026-07-22-phase2-actor-and-ml.md`
+**Next session:** Phase 3 **paper live-feed loop** (HL subscribe + same strategy path + synthetic fills logged via paper ledger). Not started. Do not go live.
 
 ---
 
@@ -30,19 +23,24 @@ Task **7 ML façade** optional. Task **8** paper ledger scaffold. Task **9** ver
 | Phase 1.5 costs / TP-SL / risk | **Working** — fees, slippage, funding est., `fixed_rr\|atr\|trail`, 1–5% conviction risk |
 | Infra I2 layout | **Working** — `infra-init`, paper/live separation |
 | Export schema v1 | **Working** — strict needs costs, risk, tp_sl_mode, **exits** |
-| Nautilus load-export **stub** | **Working** — `StrategyLoadout`, offline probe (no engine run) |
-| CLI | **Working** — see commands below |
-| Unit tests | **100 passed** offline; network fetchers optional green |
-| Real sweeps | **Working** — 30d BTC 1m atr / fixed_rr / trail + strict validate |
+| Nautilus signal adapter | **Working** — `nautilus/signals.py` registry → `last_bar_intent` |
+| Loadout sizing / exits | **Working** — `nautilus/sizing.py` → `ExitConfig` / size frac |
+| OHLCV → Nautilus bars | **Working** — `nautilus/bars.py` + synthetic BTC-PERP |
+| HypervectorStrategy actor | **Working** — params-driven; never signals.parquet; `execution_mode=phase2_historical` |
+| Historical runner + artifacts | **Working** — `run_phase2_backtest` → `data/nautilus/backtest/<run_id>/summary.json` |
+| CLI `phase2-run` | **Working** — strict export + cache history |
+| ML impulse façade | **Working** — `ml/impulse_btc.py` load LGBM+calibrator → conviction [0,1]; no training |
+| Paper ledger scaffold | **Working** — `paper/ledger.py` forces `execution_mode=paper`; refuses live paths; `paper-check` CLI |
+| Unit tests | **143 passed** offline (`-m "not network"`, ignore fetchers) |
+| Real Phase 2 path | **Working** — strict export `downtrend_crown_stack_short_c4fd7067`, 43200 bars, 690 orders, summary under `data/nautilus/backtest/` |
 
 ## What’s not built yet
 
 | Item | Notes |
 |------|--------|
-| **Nautilus strategy actor** | Next plan Tasks 1–6 — re-run logic from loadout params |
-| **`phase2-run` historical engine** | BacktestEngine + artifacts under `data/nautilus/backtest/` |
-| **ML impulse façade** | Task 7 optional — no `src/hypervector/ml/` yet; conviction is CLI constant |
-| **Phase 3 paper live-feed loop** | Task 8 scaffold only; no HL subscribe / synthetic fill loop |
+| **CLI `--conviction-model impulse_btc`** | Façade ready; needs feature vector builder wired to phase2-run (defer) |
+| **Venue fee/slippage from loadout.costs** | Runner uses loadout for sizing; fill model not fully cost-parity with VectorBT |
+| **Phase 3 paper live-feed loop** | HL subscribe + synthetic fills + append_paper_decision — **next** |
 | **Phase 3 live** | Out of scope until paper proven |
 
 **Locked rules still apply:** signals parquet = parity only; never VectorBT → live; paper ledger ≠ live ledger.
@@ -56,40 +54,25 @@ Task **7 ML façade** optional. Task **8** paper ledger scaffold. Task **9** ver
 | **1** | Research / grids / rank / export | VectorBT | **Done** |
 | **1.5** | Fees, slippage, funding, TP/SL, risk | VectorBT | **Done** |
 | **2 prep** | Export contract + loadout stub | hypervector | **Done** |
-| **2 actor** | Event-driven historical sim from params | NautilusTrader | **Next plan** |
-| **3 paper** | HL live feed + same logic + synthetic fills | Nautilus | Scaffold then full |
+| **2 actor** | Event-driven historical sim from params | NautilusTrader | **Done** |
+| **3 paper** | HL live feed + same logic + synthetic fills | Nautilus | Scaffold done; **loop next** |
 | **3 live** | Same as paper; real exec client | Nautilus + HL | Later |
 
 ---
 
-## Prior plan progress (2026-07-22-phase15-to-phase2-prep)
+## Plan progress (2026-07-22-phase2-actor-and-ml)
 
-| Task | Status |
-|------|--------|
-| 1 Spec Phase 2/3 + paper | **Done** |
-| 2 Infra I2 layout + CLI | **Done** |
-| 3 Export schema harden | **Done** |
-| 4 Phase 1.5 verification | **Done** |
-| 5 Nautilus load-export stub | **Done** |
-| 6 CLI export-validate / phase2-check | **Done** |
-| 7 Commit product | **Done** (`e63e923`, `e73393e`) |
-| 8 ML impulse façade | **Moved** → new plan Task 7 |
-
----
-
-## New plan progress (2026-07-22-phase2-actor-and-ml)
-
-| Task | Status |
-|------|--------|
-| 1 Shared bar-window signal adapter | **Pending** |
-| 2 Loadout sizing + exit helpers | **Pending** |
-| 3 OHLCV → Nautilus bars | **Pending** |
-| 4 HypervectorStrategy actor | **Pending** |
-| 5 Historical runner + artifacts | **Pending** |
-| 6 CLI `phase2-run` | **Pending** |
-| 7 ML impulse façade (optional) | **Pending** |
-| 8 Paper ledger scaffold | **Pending** |
-| 9 Full verify + handoff | **Pending** |
+| Task | Status | Commit |
+|------|--------|--------|
+| 1 Shared bar-window signal adapter | **Done** | `35d3219` |
+| 2 Loadout sizing + exit helpers | **Done** | `e804ec2` |
+| 3 OHLCV → Nautilus bars | **Done** | `243268a` |
+| 4 HypervectorStrategy actor | **Done** | `55210ed` |
+| 5 Historical runner + artifacts | **Done** | `b1680cf` |
+| 6 CLI `phase2-run` | **Done** | `406bbef` |
+| 7 ML impulse façade (optional) | **Done** | `c9490e1` |
+| 8 Paper ledger scaffold | **Done** | `f9c1fa9` |
+| 9 Full verify + handoff | **Done** | (this commit) |
 
 ---
 
@@ -98,12 +81,14 @@ Task **7 ML façade** optional. Task **8** paper ledger scaffold. Task **9** ver
 | Path | Role |
 |------|------|
 | `src/hypervector/export/schema.py` | `validate_export_dir`, schema v1 + `meta.exits` |
-| `src/hypervector/export/phase2.py` | Write bundle |
-| `src/hypervector/nautilus/load_export.py` | `StrategyLoadout` |
-| `src/hypervector/nautilus/config_stub.py` | Offline phase2-check |
-| `src/hypervector/infra.py` | I2 layout |
-| `src/hypervector/strategies/*` | Registry + crown / trend_ride / classic (shared by Phase 2 actor) |
-| CLI | `history\|regime\|sweep-up\|sweep-down\|report\|export\|export-validate\|phase2-check\|infra-init` |
+| `src/hypervector/nautilus/signals.py` | OHLCV window → registry signals / `SignalIntent` |
+| `src/hypervector/nautilus/sizing.py` | Loadout → ExitConfig + position_size_frac |
+| `src/hypervector/nautilus/bars.py` | Research frame → Bar list + synthetic instrument |
+| `src/hypervector/nautilus/actor.py` | `HypervectorStrategy` from loadout |
+| `src/hypervector/nautilus/runner.py` | `run_phase2_backtest` + summary.json |
+| `src/hypervector/ml/impulse_btc.py` | Optional metalabel conviction façade |
+| `src/hypervector/paper/ledger.py` | Paper decisions JSONL scaffold |
+| CLI | `history\|regime\|sweep-*\|report\|export\|export-validate\|phase2-check\|phase2-run\|paper-check\|infra-init` |
 
 ---
 
@@ -111,43 +96,46 @@ Task **7 ML façade** optional. Task **8** paper ledger scaffold. Task **9** ver
 
 ```bash
 cd /Users/gestas/Prototypes/hypervector
+git checkout feat/phase2-actor-and-ml
 uv sync --all-extras
-# 1) Load skills: write-clean-code (+ engineering-software optional)
-# 2) Read HANDOFF + plan 2026-07-22-phase2-actor-and-ml.md + phase2-3-handoff spec
-# 3) Use superpowers:subagent-driven-development (NOT full inline)
-# 4) Baseline: uv run pytest tests/ -q
-# 5) Start at Task 1 (signal adapter); one subagent per task; review gate between tasks
+# Load write-clean-code (+ engineering-software / brainstorming for design)
+# NEXT: design + plan Phase 3 paper live-feed loop (HL feed + synthetic fills)
+#   - reuse HypervectorStrategy + paper ledger
+#   - still no live orders
+uv run pytest tests/ -q -m "not network"
 ```
 
-### Research / validate (already working)
+### Research / Phase 2 (working)
 
 ```bash
-uv run python -m hypervector infra-init
-uv run python -m hypervector --data-root data history --lookback 30
-uv run python -m hypervector --data-root data sweep-down --lookback 30 \
-  --strategy crown_stack_short --cash 10000 --tp-sl-mode atr \
-  --risk-min 0.01 --risk-max 0.05 --conviction 0.5 --export
 uv run python -m hypervector export-validate --path data/exports/<id> --strict
 uv run python -m hypervector phase2-check --path data/exports/<id>
+uv run python -m hypervector --data-root data phase2-run \
+  --path data/exports/<id> --lookback 30 --no-network
+ls data/nautilus/backtest/
+uv run python -m hypervector paper-check
 ```
 
-### After Task 6 lands
+### ML façade (optional conviction)
 
-```bash
-uv run python -m hypervector --data-root data phase2-run --path data/exports/<id> --lookback 30
+```python
+from hypervector.ml.impulse_btc import ImpulseBtcFacade
+# HYPERVECTOR_IMPULSE_BTC_ROOT or hypertrader/hyper-pi defaults
+facade = ImpulseBtcFacade.from_env()
+p = facade.predict_conviction({"rsi_1m": 40.0, ...})  # feature dict; clipped [0,1]
 ```
+
+CLI still uses fixed `--conviction` until a feature builder is wired.
 
 ---
 
-## ML notes (for Task 7)
+## ML notes (shipped Task 7)
 
-- **Not in tree yet** — no `src/hypervector/ml/`
-- Façade only: LightGBM metalabel → conviction ∈ [0,1] or skip  
-- Reuse (env `HYPERVECTOR_IMPULSE_BTC_ROOT` or defaults):
-  - `~/dev/hyper-pi/services/ml-service/external-strategies/impulse_1m_btc/`
-  - `~/Prototypes/hypertrader/backend/app/backtest/impulse_metalabel/`
-  - features: hyper-pi `ml/features_impulse.py`
-- No greenfield training in hypervector first
+- **In tree:** `src/hypervector/ml/impulse_btc.py` (inference only)
+- LightGBM `metalabel_lgbm.txt` + optional `metalabel_calibrator.joblib`
+- Env: `HYPERVECTOR_IMPULSE_BTC_ROOT`; defaults hyper-pi then hypertrader models
+- Optional extra: `uv sync --extra ml` (lightgbm)
+- **Not shipped:** training, feature engine in hypervector, CLI `--conviction-model`
 
 ---
 
@@ -163,7 +151,9 @@ uv run python -m hypervector --data-root data phase2-run --path data/exports/<id
 
 ## Agent notes
 
-- Prefer this HANDOFF + **new** plan over stale agentmemory for phase status.  
-- Skills: engineering-software, write-clean-code, executing-plans / subagent-driven-development.  
+- Prefer this HANDOFF over stale agentmemory for phase status.  
+- SDD ledger: `.superpowers/sdd/progress.md`  
+- Skills used this session: engineering-software, brainstorming (design already locked), write-clean-code, subagent-driven-development.  
 - Legacy pre-schema exports fail `export-validate` until re-exported with current CLI.  
-- `export --track` only re-exports trials that have `research_meta` (modern sweeps).  
+- Upstream noise: Nautilus `Timestamp.utcnow` Pandas4Warning; sklearn calibrator version skew.  
+- Ray adapter test can flake on raylet startup — not Phase 2 scope.  

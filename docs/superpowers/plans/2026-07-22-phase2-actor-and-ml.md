@@ -87,7 +87,7 @@ class SignalIntent:
     bar_index: int
 ```
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 ```python
 # tests/test_nautilus_signals.py
@@ -113,13 +113,13 @@ def test_last_bar_intent_is_boolean_on_final_index():
     assert isinstance(intent.exit, bool)
 ```
 
-- [ ] **Step 2: Run tests — expect FAIL (module missing)**
+- [x] **Step 2: Run tests — expect FAIL (module missing)**
 
 ```bash
 uv run pytest tests/test_nautilus_signals.py -v
 ```
 
-- [ ] **Step 3: Implement minimal adapter**
+- [x] **Step 3: Implement minimal adapter**
 
 ```python
 # src/hypervector/nautilus/signals.py (core logic)
@@ -139,13 +139,13 @@ def last_bar_intent(df, strategy_name, params) -> SignalIntent:
 
 **Note:** `build_signals` signatures differ by strategy — pass only kwargs present on the builder (filter via `inspect.signature` if needed). Do not reimplement crown/trend indicators.
 
-- [ ] **Step 4: Tests pass**
+- [x] **Step 4: Tests pass**
 
 ```bash
 uv run pytest tests/test_nautilus_signals.py -v
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/hypervector/nautilus/signals.py tests/test_nautilus_signals.py
@@ -166,7 +166,7 @@ git commit -m "feat(nautilus): shared OHLCV signal adapter from strategy registr
   - `exit_config_from_loadout(loadout: StrategyLoadout) -> ExitConfig`
   - `position_size_frac(equity: float, stop_frac: float, loadout: StrategyLoadout, conviction: float) -> float`
 
-- [ ] **Step 1: Failing tests for exits reconstruction and size clamp**
+- [x] **Step 1: Failing tests for exits reconstruction and size clamp**
 
 ```python
 def test_exit_config_from_loadout_preserves_cli_overrides():
@@ -181,9 +181,9 @@ def test_position_size_frac_uses_risk_band():
     ...
 ```
 
-- [ ] **Step 2: Implement from existing `ExitConfig` / `RiskConfig` dataclasses (import, do not duplicate formulas)**
+- [x] **Step 2: Implement from existing `ExitConfig` / `RiskConfig` dataclasses (import, do not duplicate formulas)**
 
-- [ ] **Step 3: pytest green + commit**
+- [x] **Step 3: pytest green + commit**
 
 ```bash
 uv run pytest tests/test_nautilus_sizing.py -v
@@ -204,11 +204,11 @@ git commit -m "feat(nautilus): size and exit helpers from StrategyLoadout"
   - `synthetic_btc_perp_instrument(...)` — minimal instrument for backtest venue `HYPERLIQUID` or `SIM`
   - `bar_type_from_loadout(loadout) -> str`  # e.g. `BTC-PERP.HYPERLIQUID-1-MINUTE-LAST-EXTERNAL`
 
-- [ ] **Step 1: Failing test with `fixture_ohlcv` → N bars constructed; no network**
+- [x] **Step 1: Failing test with `fixture_ohlcv` → N bars constructed; no network**
 
-- [ ] **Step 2: Implement using `nautilus_trader.model` Bar / BarType / CryptoPerpetual (or CurrencyPair stub if simpler for offline). Prefer patterns in `reference/nautilus_trader-develop/examples/backtest/example_05_using_portfolio/`.**
+- [x] **Step 2: Implement using `nautilus_trader.model` Bar / BarType / CryptoPerpetual (or CurrencyPair stub if simpler for offline). Prefer patterns in `reference/nautilus_trader-develop/examples/backtest/example_05_using_portfolio/`.**
 
-- [ ] **Step 3: pytest offline + commit**
+- [x] **Step 3: pytest offline + commit**
 
 ```bash
 uv run pytest tests/test_nautilus_bars.py -v
@@ -238,7 +238,7 @@ git commit -m "feat(nautilus): convert research OHLCV frames to Bar list"
 5. **Never** read `signals.parquet` for decisions.
 6. Log decisions with `execution_mode=phase2_historical`.
 
-- [ ] **Step 1: Failing unit tests for config construction from loadout + buffer intent without `engine.run()`**
+- [x] **Step 1: Failing unit tests for config construction from loadout + buffer intent without `engine.run()`**
 
 ```python
 def test_strategy_config_from_loadout(tmp_path):
@@ -248,9 +248,9 @@ def test_strategy_config_from_loadout(tmp_path):
     assert cfg.exits["mode"] == loadout.exit_mode
 ```
 
-- [ ] **Step 2: Implement actor; keep order placement minimal (one position netting)**
+- [x] **Step 2: Implement actor; keep order placement minimal (one position netting)**
 
-- [ ] **Step 3: pytest + commit**
+- [x] **Step 3: pytest + commit**
 
 ```bash
 uv run pytest tests/test_nautilus_actor_offline.py -v
@@ -279,17 +279,17 @@ git commit -m "feat(nautilus): HypervectorStrategy actor driven by StrategyLoado
 6. `engine.run()` / `dispose()`
 7. Write JSON report to `data/nautilus/backtest/<run_id>/summary.json`
 
-- [ ] **Step 1: Failing test with fixture OHLCV + temp export (strict meta with exits)**
+- [x] **Step 1: Failing test with fixture OHLCV + temp export (strict meta with exits)**
 
-- [ ] **Step 2: Implement runner; timeout-friendly (≤500 bars in unit test)**
+- [x] **Step 2: Implement runner; timeout-friendly (≤500 bars in unit test)**
 
-- [ ] **Step 3: pytest offline**
+- [x] **Step 3: pytest offline**
 
 ```bash
 uv run pytest tests/test_nautilus_runner.py -v
 ```
 
-- [ ] **Step 4: Real-world check (manual / optional in CI)**
+- [x] **Step 4: Real-world check (manual / optional in CI)**
 
 ```bash
 uv run python -m hypervector --data-root data phase2-run \
@@ -297,7 +297,7 @@ uv run python -m hypervector --data-root data phase2-run \
 # expect summary.json under data/nautilus/backtest/
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git commit -m "feat(nautilus): Phase 2 historical backtest runner + artifacts"
@@ -323,11 +323,11 @@ uv run python -m hypervector --data-root data phase2-run \
 - Exit `1` on schema/loadout errors (reuse `ExportSchemaError`)  
 - stderr may note `paper/live not implemented` only if flags requested (do not claim paper ran)
 
-- [ ] **Step 1: CLI test with tmp export + injected OHLCV (monkeypatch history)**
+- [x] **Step 1: CLI test with tmp export + injected OHLCV (monkeypatch history)**
 
-- [ ] **Step 2: Wire `cmd_phase2_run` → `run_phase2_backtest`**
+- [x] **Step 2: Wire `cmd_phase2_run` → `run_phase2_backtest`**
 
-- [ ] **Step 3: pytest + commit**
+- [x] **Step 3: pytest + commit**
 
 ```bash
 uv run pytest tests/test_cli.py -k phase2 -v
@@ -359,11 +359,11 @@ git commit -m "feat(cli): phase2-run historical backtest from export"
 - Unit tests use mock booster / missing path → graceful fail  
 - Wire optional CLI: `--conviction-model impulse_btc` on `phase2-run` / sweeps later; default remains fixed `--conviction`
 
-- [ ] **Step 1: Tests for missing root and mock predict**
+- [x] **Step 1: Tests for missing root and mock predict**
 
-- [ ] **Step 2: Implement façade (load `metalabel_lgbm.txt` + calibrator if present)**
+- [x] **Step 2: Implement façade (load `metalabel_lgbm.txt` + calibrator if present)**
 
-- [ ] **Step 3: pytest + commit**
+- [x] **Step 3: pytest + commit**
 
 ```bash
 uv run pytest tests/test_ml_impulse_btc.py -v
@@ -387,7 +387,7 @@ git commit -m "feat(ml): optional BTC 1m impulse metalabel conviction façade"
 
 **Out of scope this task:** Hyperliquid live subscribe, order gateway, real synthetic fill loop.
 
-- [ ] **Step 1–4: TDD ledger helper + CLI smoke + commit**
+- [x] **Step 1–4: TDD ledger helper + CLI smoke + commit**
 
 ```bash
 git commit -m "feat(paper): decision ledger scaffold with execution_mode=paper"
@@ -401,14 +401,14 @@ git commit -m "feat(paper): decision ledger scaffold with execution_mode=paper"
 - Modify: `HANDOFF.md`
 - Modify: this plan checkboxes as done
 
-- [ ] **Step 1: Full offline suite**
+- [x] **Step 1: Full offline suite**
 
 ```bash
 uv run pytest tests/ -q
 # expect 0 failures (network deselected)
 ```
 
-- [ ] **Step 2: Real-world Phase 2 path**
+- [x] **Step 2: Real-world Phase 2 path**
 
 ```bash
 uv run python -m hypervector --data-root data history --lookback 30
@@ -419,9 +419,9 @@ uv run python -m hypervector --data-root data phase2-run --path data/exports/<id
 ls data/nautilus/backtest/
 ```
 
-- [ ] **Step 3: Update HANDOFF status → Phase 2 actor done; paper live-loop next**
+- [x] **Step 3: Update HANDOFF status → Phase 2 actor done; paper live-loop next**
 
-- [ ] **Step 4: Commit docs**
+- [x] **Step 4: Commit docs**
 
 ```bash
 git commit -m "docs: handoff after Phase 2 actor plan execution"
@@ -472,7 +472,9 @@ uv run pytest tests/ -q
 
 ## Deviations
 
-- (none yet)
+- Task 3: `dataframe_to_bars` requires instrument arg (BarDataWrangler).
+- Task 7: CLI `--conviction-model` deferred until feature builder exists.
+- Task 5: loadout costs not fully mapped onto venue fee model yet.
 
 ## Spec coverage (self-check)
 
