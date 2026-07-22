@@ -12,6 +12,7 @@ from hypervector.paper.fill_models import (
     FILL_MODEL_TOP_BPS_V1,
     BarCloseSlippageFillModel,
     FillResult,
+    L2WalkFillModel,
     TopBpsFillModel,
     select_fill_model,
 )
@@ -30,6 +31,7 @@ __all__ = [
     "CostSnapshot",
     "ExplicitFillEngine",
     "FillResult",
+    "L2WalkFillModel",
     "TopBpsFillModel",
     "PaperDaemonResult",
     "PaperLedgerError",

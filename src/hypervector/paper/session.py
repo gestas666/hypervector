@@ -26,7 +26,12 @@ from hypervector.nautilus.actor import (
 from hypervector.nautilus.load_export import StrategyLoadout, load_strategy_loadout
 from hypervector.nautilus.signals import last_bar_intent
 from hypervector.nautilus.sizing import position_size_frac
+from hypervector.paper.book import BookFeed, BookSnapshot
 from hypervector.paper.costs import CostProvider
+from hypervector.paper.fill_models import (
+    DEFAULT_MAX_BOOK_AGE_MS,
+    FILL_MODEL_BAR_CLOSE_SLIPPAGE_V1,
+)
 from hypervector.paper.fills import ExplicitFillEngine
 from hypervector.paper.ledger import DECISIONS_FILENAME, append_paper_decision
 from hypervector.strategies import register_all_strategies
@@ -61,6 +66,10 @@ class PaperSession:
         run_id: str | None = None,
         funding_rate_hourly: float | None = None,
         enable_funding_refresh: bool = False,
+        preferred_fill_model: str = FILL_MODEL_BAR_CLOSE_SLIPPAGE_V1,
+        max_book_age_ms: float = DEFAULT_MAX_BOOK_AGE_MS,
+        book_feed: BookFeed | None = None,
+        enable_book_poll: bool = False,
     ) -> None:
         register_all_strategies()
         export_path = Path(export_dir)
@@ -74,6 +83,9 @@ class PaperSession:
         self.conviction = float(conviction)
         self.sandbox_enabled = bool(sandbox_enabled)
         self.enable_funding_refresh = bool(enable_funding_refresh)
+        self.enable_book_poll = bool(enable_book_poll)
+        self.max_book_age_ms = float(max_book_age_ms)
+        self.preferred_fill_model = str(preferred_fill_model)
 
         self.run_id = run_id or uuid.uuid4().hex[:12]
         self.export_id = self.loadout.run_id or export_path.name
@@ -81,6 +93,11 @@ class PaperSession:
             self.loadout,
             fee_tier=fee_tier,
             funding_rate_hourly=funding_rate_hourly,
+        )
+        self.book_feed = (
+            book_feed
+            if book_feed is not None
+            else BookFeed(self.loadout.symbol, max_age_ms=self.max_book_age_ms)
         )
         self.engine = ExplicitFillEngine(
             self.root,
@@ -92,6 +109,8 @@ class PaperSession:
             timeframe=self.loadout.timeframe,
             conviction=self.conviction,
             sandbox_enabled=self.sandbox_enabled,
+            preferred_fill_model=self.preferred_fill_model,
+            max_book_age_ms=self.max_book_age_ms,
         )
         self.equity = (
             float(self.loadout.init_cash)
@@ -104,6 +123,10 @@ class PaperSession:
         self.bars_processed = 0
         self._last_ts: pd.Timestamp | None = None
         self._last_funding_refresh_mono: float = 0.0
+
+    def inject_book(self, snap: BookSnapshot) -> None:
+        """Inject a BookSnapshot for offline tests (no network)."""
+        self.book_feed.update(snap)
 
     @property
     def last_timestamp(self) -> pd.Timestamp | None:
@@ -147,6 +170,11 @@ class PaperSession:
             self._last_ts = ts
 
         self.maybe_refresh_funding()
+        if self.enable_book_poll:
+            try:
+                self.book_feed.poll()
+            except Exception as exc:  # noqa: BLE001 — never abort bar path
+                logger.warning("book poll failed for %s: %s", self.loadout.symbol, exc)
 
         fill_action: str | None = None
         if len(self.buffer_rows) >= 2:
@@ -197,21 +225,26 @@ class PaperSession:
             "bar_index": intent.bar_index,
         }
 
+        book = self.book_feed.latest()
+
         if action == "close":
             qty = abs(float(pos.qty))
             if qty <= 0:
                 return None
             side = "sell" if pos.qty > 0 else "buy"
-            self.engine.apply_market_fill(
+            rec = self.engine.apply_market_fill(
                 feed_ts=feed_ts,
                 action="close",
                 side=side,
                 qty=qty,
                 mark_px=mark_px,
                 intent=intent_payload,
+                book=book,
             )
-            self.fills_count += 1
-            return action
+            if not rec.get("skipped"):
+                self.fills_count += 1
+                return action
+            return None
 
         if action in ("enter_long", "enter_short"):
             qty = _entry_qty(
@@ -225,16 +258,19 @@ class PaperSession:
             if qty is None or qty <= 0:
                 return None
             side = "buy" if action == "enter_long" else "sell"
-            self.engine.apply_market_fill(
+            rec = self.engine.apply_market_fill(
                 feed_ts=feed_ts,
                 action=action,
                 side=side,
                 qty=qty,
                 mark_px=mark_px,
                 intent=intent_payload,
+                book=book,
             )
-            self.fills_count += 1
-            return action
+            if not rec.get("skipped"):
+                self.fills_count += 1
+                return action
+            return None
 
         return None
 

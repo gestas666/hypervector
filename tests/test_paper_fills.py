@@ -95,3 +95,48 @@ def test_sandbox_flag_on_record_does_not_change_fill(tmp_path: Path):
     # Real Nautilus sandbox client deferred; shadow key present and null.
     assert rec_on["sandbox_fill_px"] is None
     assert rec_off["sandbox_fill_px"] is None
+
+
+def test_l2_walk_zero_fill_skips_ledger(tmp_path: Path):
+    """fill_qty==0 (empty walked side) → skip position + ledger; no invented depth."""
+    from hypervector.paper.book import BookLevel, BookSnapshot
+    from hypervector.paper.fill_models import FILL_MODEL_L2_WALK_V1, L2WalkFillModel
+
+    # Bids only — buy walk has no asks.
+    book = BookSnapshot(
+        symbol="BTC-PERP",
+        bids=(BookLevel(100.0, 5.0),),
+        asks=(),
+        ts_recv_ms=1.0,
+        ts_exchange_ms=1.0,
+        source="t",
+    )
+    eng = ExplicitFillEngine(
+        tmp_path / "data",
+        cost_provider=CostProvider(fee_tier=0, slippage_bps=0.0),
+        run_id="r1",
+        export_id="e1",
+        strategy_name="s",
+        symbol="BTC",
+        timeframe="1m",
+        conviction=0.5,
+        preferred_fill_model=FILL_MODEL_L2_WALK_V1,
+    )
+    rec = eng.apply_market_fill(
+        feed_ts="t0",
+        action="enter_long",
+        side="buy",
+        qty=1.0,
+        mark_px=100.0,
+        book=book,
+        fill_model=L2WalkFillModel(),
+    )
+    assert rec.get("skipped") is True
+    assert rec["fill_qty"] == 0.0
+    assert eng.position.qty == 0.0
+    decisions = tmp_path / "data" / "paper" / "decisions"
+    # No market fill row written (ledger dir may not exist if nothing appended).
+    if decisions.is_dir():
+        for p in decisions.glob("*.jsonl"):
+            text = p.read_text(encoding="utf-8")
+            assert "enter_long" not in text

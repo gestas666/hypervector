@@ -120,6 +120,37 @@ class ExplicitFillEngine:
         fill_px = float(result.fill_px)
         fill_qty = float(result.fill_qty)
 
+        # L2 walk (and similar) may return fill_qty=0 when the walked side has
+        # no depth — never invent liquidity; skip position + ledger write.
+        if fill_qty <= 0:
+            logger.warning(
+                "fill skipped: zero fill_qty model=%s side=%s requested=%s shortfall=%s",
+                result.fill_model_id,
+                side_n,
+                qty_f,
+                result.shortfall_qty,
+            )
+            skipped: dict[str, Any] = {
+                "execution_mode": "paper",
+                "feed_ts": feed_ts,
+                "run_id": self._run_id,
+                "action": str(action),
+                "side": side_n,
+                "qty": 0.0,
+                "mark_px": mark,
+                "fill_px": fill_px,
+                "fill_qty": 0.0,
+                "fill_model_id": result.fill_model_id,
+                "shortfall_qty": result.shortfall_qty,
+                "levels_used": result.levels_used,
+                "requested_qty": result.requested_qty,
+                "skipped": True,
+                "fill_fallback_reason": result.fill_fallback_reason,
+            }
+            if intent is not None:
+                skipped["intent"] = intent
+            return skipped
+
         fee_usd = abs(fill_qty) * fill_px * self._cost_provider.trade_fee_rate()
         self._update_position(side=side_n, qty=fill_qty, fill_px=fill_px, fee_usd=fee_usd)
 

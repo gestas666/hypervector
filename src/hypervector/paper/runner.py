@@ -109,6 +109,9 @@ def start_paper_daemon(
     if enable_funding_refresh is None:
         enable_funding_refresh = poll_fn is None
 
+    # Live REST path may poll L2 book; injected poll_fn offline tests keep book off-network.
+    enable_book_poll = poll_fn is None
+
     session = PaperSession(
         export_dir=export_path,
         data_root=root,
@@ -117,6 +120,7 @@ def start_paper_daemon(
         sandbox_enabled=sandbox_enabled,
         funding_rate_hourly=funding_rate_hourly,
         enable_funding_refresh=bool(enable_funding_refresh),
+        enable_book_poll=enable_book_poll,
     )
 
     # --- warm-up (cache-first history or injected frame) ---

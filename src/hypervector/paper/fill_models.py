@@ -1,8 +1,7 @@
-"""FillModel protocol, bar_close / top_bps models, and book-aware selection.
+"""FillModel protocol, bar_close / top_bps / l2_walk models, book-aware selection.
 
-Task 3: TopBpsFillModel + full select_fill_model (stale/missing → bar_close).
-L2 walk is deferred to Task 4; preferred l2_walk_v1 currently selects TopBps
-when the book is fresh.
+Task 4: L2WalkFillModel (VWAP level walk) is preferred when book is fresh
+and preferred_fill_model is l2_walk_v1. Missing/stale book → bar_close fallback.
 """
 
 from __future__ import annotations
@@ -139,6 +138,104 @@ class TopBpsFillModel:
         )
 
 
+class L2WalkFillModel:
+    """Walk L2 levels for size-weighted average price; never invent depth.
+
+    buy  walks asks ascending; sell walks bids descending.
+    fill_qty = min(requested, available); shortfall_qty = remainder.
+    Optional slippage_bps is applied on the VWAP (buy up / sell down).
+    If the walked side has no size, fill_qty=0 (caller skips / falls back).
+    """
+
+    fill_model_id = FILL_MODEL_L2_WALK_V1
+
+    def fill(
+        self,
+        *,
+        side: str,
+        qty: float,
+        mark_px: float,
+        book: Any | None,
+        slippage_bps: float,
+    ) -> FillResult:
+        requested = float(qty)
+        if book is None or getattr(book, "is_empty", lambda: True)():
+            return FillResult(
+                fill_px=float(mark_px),
+                fill_qty=0.0,
+                fill_model_id=self.fill_model_id,
+                levels_used=0,
+                shortfall_qty=requested,
+                bbo_bid=None,
+                bbo_ask=None,
+                book_age_ms=None,
+                fill_fallback_reason=None,
+                requested_qty=requested,
+            )
+
+        bid = book.best_bid()
+        ask = book.best_ask()
+        side_n = side.lower().strip()
+        slip = float(slippage_bps) / 10_000.0
+
+        if side_n == "buy":
+            levels = list(getattr(book, "asks", ()) or ())
+        else:
+            levels = list(getattr(book, "bids", ()) or ())
+
+        remaining = requested
+        total_notional = 0.0
+        filled = 0.0
+        levels_used = 0
+
+        for lvl in levels:
+            if remaining <= 0:
+                break
+            try:
+                px = float(lvl.price)
+                sz = float(lvl.size)
+            except (TypeError, ValueError, AttributeError):
+                continue
+            if sz <= 0:
+                continue
+            take = min(remaining, sz)
+            total_notional += take * px
+            filled += take
+            remaining -= take
+            levels_used += 1
+
+        shortfall = requested - filled
+        if filled > 0:
+            vwap = total_notional / filled
+            if side_n == "buy":
+                fill_px = vwap * (1.0 + slip)
+            else:
+                fill_px = vwap * (1.0 - slip)
+        else:
+            # No depth on walked side — do not invent; engine should skip.
+            fill_px = float(mark_px)
+
+        book_age: float | None = None
+        try:
+            now = time.time() * 1000.0
+            book_age = float(book.age_ms(now))
+        except Exception:  # noqa: BLE001 — optional diagnostic field
+            book_age = None
+
+        return FillResult(
+            fill_px=fill_px,
+            fill_qty=filled,
+            fill_model_id=self.fill_model_id,
+            levels_used=levels_used,
+            shortfall_qty=shortfall,
+            bbo_bid=float(bid) if bid is not None else None,
+            bbo_ask=float(ask) if ask is not None else None,
+            book_age_ms=book_age,
+            fill_fallback_reason=None,
+            requested_qty=requested,
+        )
+
+
 def select_fill_model(
     *,
     preferred: str,
@@ -156,7 +253,7 @@ def select_fill_model(
     - book None or empty → BarClose, ``book_missing``
     - book.age_ms(now) > max → BarClose, ``book_stale``
     - preferred top_bps with fresh book → TopBps, None
-    - preferred l2_walk with fresh book → TopBps for now (L2Walk lands in Task 4)
+    - preferred l2_walk with fresh book → L2Walk, None
 
     Unknown preferred values with a fresh book fall back to bar_close with no
     reason (same as Task 1 scaffold for unwired models).
@@ -173,9 +270,10 @@ def select_fill_model(
     if age > float(max_book_age_ms):
         return BarCloseSlippageFillModel(), "book_stale"
 
-    # Fresh book: prefer top_bps; l2_walk temporarily maps to TopBps until Task 4.
-    if preferred_n in (FILL_MODEL_TOP_BPS_V1, FILL_MODEL_L2_WALK_V1):
+    if preferred_n == FILL_MODEL_TOP_BPS_V1:
         return TopBpsFillModel(), None
+    if preferred_n == FILL_MODEL_L2_WALK_V1:
+        return L2WalkFillModel(), None
 
     # Unknown preferred with usable book → keep bar_close (no silent switch).
     return BarCloseSlippageFillModel(), None

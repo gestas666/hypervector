@@ -165,10 +165,10 @@ def test_select_top_bps_when_fresh():
     assert reason is None
 
 
-def test_select_l2_walk_maps_to_top_bps_until_task4():
-    """Task 3 temporary: preferred l2_walk with fresh book → TopBps."""
+def test_select_l2_walk_when_fresh():
+    """preferred l2_walk_v1 with fresh book → L2WalkFillModel."""
     from hypervector.paper.book import BookLevel, BookSnapshot
-    from hypervector.paper.fill_models import FILL_MODEL_L2_WALK_V1, TopBpsFillModel
+    from hypervector.paper.fill_models import FILL_MODEL_L2_WALK_V1, L2WalkFillModel
 
     book = BookSnapshot(
         symbol="X",
@@ -184,7 +184,7 @@ def test_select_l2_walk_maps_to_top_bps_until_task4():
         max_book_age_ms=3000,
         now_ms=10_000,
     )
-    assert isinstance(model, TopBpsFillModel)
+    assert isinstance(model, L2WalkFillModel)
     assert reason is None
 
 
@@ -207,3 +207,43 @@ def test_select_empty_book_is_missing():
     )
     assert model.fill_model_id == FILL_MODEL_BAR_CLOSE_SLIPPAGE_V1
     assert reason == "book_missing"
+
+
+def test_l2_walk_buy_vwap_two_levels():
+    from hypervector.paper.book import BookLevel, BookSnapshot
+    from hypervector.paper.fill_models import FILL_MODEL_L2_WALK_V1, L2WalkFillModel
+
+    # ask 100.1 x 2.0, 100.2 x 1.0; buy qty 3 → full
+    book = BookSnapshot(
+        symbol="BTC-PERP",
+        bids=(BookLevel(100.0, 5.0),),
+        asks=(BookLevel(100.1, 2.0), BookLevel(100.2, 1.0)),
+        ts_recv_ms=1.0,
+        ts_exchange_ms=1.0,
+        source="t",
+    )
+    r = L2WalkFillModel().fill(side="buy", qty=3.0, mark_px=100.0, book=book, slippage_bps=0.0)
+    assert r.fill_model_id == FILL_MODEL_L2_WALK_V1
+    # VWAP = (2*100.1 + 1*100.2) / 3 = 100.1333...
+    assert abs(r.fill_px - (2 * 100.1 + 1 * 100.2) / 3.0) < 1e-9
+    assert r.fill_qty == 3.0
+    assert r.shortfall_qty == 0.0
+    assert r.levels_used == 2
+
+
+def test_l2_walk_shortfall_no_invented_depth():
+    from hypervector.paper.book import BookLevel, BookSnapshot
+    from hypervector.paper.fill_models import L2WalkFillModel
+
+    book = BookSnapshot(
+        symbol="BTC-PERP",
+        bids=(BookLevel(100.0, 1.0),),
+        asks=(BookLevel(100.1, 1.0),),
+        ts_recv_ms=1.0,
+        ts_exchange_ms=1.0,
+        source="t",
+    )
+    r = L2WalkFillModel().fill(side="buy", qty=5.0, mark_px=100.0, book=book, slippage_bps=0.0)
+    assert r.fill_qty == 1.0
+    assert r.shortfall_qty == 4.0
+    assert r.levels_used == 1
