@@ -1,5 +1,21 @@
-"""Optional ML façades (inference only; no training code)."""
+"""Optional ML inference (no training).
 
-from hypervector.ml.impulse_btc import ImpulseBtcFacade, ImpulseBundleError
+Primary surface: :class:`~hypervector.ml.metalabel.Metalabeler` — a reusable
+metalabel process parameterized by bundle root (any asset/interval version).
+"""
 
-__all__ = ["ImpulseBtcFacade", "ImpulseBundleError"]
+from hypervector.ml.metalabel import (
+    ENV_ROOT,
+    ENV_ROOT_LEGACY,
+    MetalabelError,
+    Metalabeler,
+    resolve_metalabel_root,
+)
+
+__all__ = [
+    "ENV_ROOT",
+    "ENV_ROOT_LEGACY",
+    "MetalabelError",
+    "Metalabeler",
+    "resolve_metalabel_root",
+]

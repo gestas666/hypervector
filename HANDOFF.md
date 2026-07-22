@@ -5,13 +5,35 @@
 **User:** Albert  
 **Branch:** `feat/phase2-actor-and-ml` (not pushed)
 
-**Status:** Phase 1 / 1.5 / Phase 2 **actor + runner + ML façade + paper scaffold** complete and verified.  
+**Status:** Phase 1 / 1.5 / Phase 2 **actor + runner + metalabeler + paper scaffold** complete and verified.  
 **Completed plan:** `docs/superpowers/plans/2026-07-22-phase2-actor-and-ml.md`  
 **Spec (locked):** `docs/superpowers/specs/2026-07-22-phase2-3-handoff.md`  
 **Prior plan (done):** `docs/superpowers/plans/2026-07-22-phase15-to-phase2-prep.md`  
 **Infra doc:** `docs/infra-data-layout.md`
 
 **Next session:** Phase 3 **paper live-feed loop** (HL subscribe + same strategy path + synthetic fills logged via paper ledger). Not started. Do not go live.
+
+---
+
+## Process principles (locked)
+
+Build **reusable processes**, not one-off asset/interval products. Defaults may be BTC 1m for MVP; the design must reapply without a rewrite.
+
+| Principle | Meaning |
+|-----------|---------|
+| **Process over asset** | Strategy registry, export loadout, Phase 2 actor, metalabeler, paper ledger — parameterized by symbol / TF / bundle id, not `BtcOnly` types. |
+| **Version via config/bundle** | New market or model = new export / strategy params / metalabel **bundle directory**, not a forked module. Spin off a code version only when the *process* changes. |
+| **Improve, don’t ship suboptimal** | No wiring ML conviction until features + labels match the gate; no dual leverage vs risk semantics; measure before promote. |
+| **Same path paper → live** | Only execution client differs later; no paper-only smarter branch. |
+
+Metalabel process (any asset/interval once bundle is valid):
+
+```text
+features (metadata schema)
+  → LightGBM + optional calibrator
+  → p ∈ [0, 1]
+  → policy (optional floor skip) → conviction → existing risk band
+```
 
 ---
 
@@ -29,16 +51,16 @@
 | HypervectorStrategy actor | **Working** — params-driven; never signals.parquet; `execution_mode=phase2_historical` |
 | Historical runner + artifacts | **Working** — `run_phase2_backtest` → `data/nautilus/backtest/<run_id>/summary.json` |
 | CLI `phase2-run` | **Working** — strict export + cache history |
-| ML impulse façade | **Working** — `ml/impulse_btc.py` load LGBM+calibrator → conviction [0,1]; no training |
+| Metalabeler (reusable) | **Working** — `ml/metalabel.py` load any LGBM+calibrator bundle → p∈[0,1]; no training |
 | Paper ledger scaffold | **Working** — `paper/ledger.py` forces `execution_mode=paper`; refuses live paths; `paper-check` CLI |
-| Unit tests | **143 passed** offline (`-m "not network"`, ignore fetchers) |
+| Unit tests | offline suite green (see latest pytest) |
 | Real Phase 2 path | **Working** — strict export `downtrend_crown_stack_short_c4fd7067`, 43200 bars, 690 orders, summary under `data/nautilus/backtest/` |
 
 ## What’s not built yet
 
 | Item | Notes |
 |------|--------|
-| **CLI `--conviction-model impulse_btc`** | Façade ready; needs feature vector builder wired to phase2-run (defer) |
+| **CLI metalabel / feature builder** | `Metalabeler` ready; needs bar→feature builder + bundle id; defer until process is correct |
 | **Venue fee/slippage from loadout.costs** | Runner uses loadout for sizing; fill model not fully cost-parity with VectorBT |
 | **Phase 3 paper live-feed loop** | HL subscribe + synthetic fills + append_paper_decision — **next** |
 | **Phase 3 live** | Out of scope until paper proven |
@@ -70,7 +92,7 @@
 | 4 HypervectorStrategy actor | **Done** | `55210ed` |
 | 5 Historical runner + artifacts | **Done** | `b1680cf` |
 | 6 CLI `phase2-run` | **Done** | `406bbef` |
-| 7 ML impulse façade (optional) | **Done** | `c9490e1` |
+| 7 Metalabeler (optional; was impulse façade) | **Done** | `c9490e1` + rename |
 | 8 Paper ledger scaffold | **Done** | `f9c1fa9` |
 | 9 Full verify + handoff | **Done** | (this commit) |
 
@@ -86,7 +108,7 @@
 | `src/hypervector/nautilus/bars.py` | Research frame → Bar list + synthetic instrument |
 | `src/hypervector/nautilus/actor.py` | `HypervectorStrategy` from loadout |
 | `src/hypervector/nautilus/runner.py` | `run_phase2_backtest` + summary.json |
-| `src/hypervector/ml/impulse_btc.py` | Optional metalabel conviction façade |
+| `src/hypervector/ml/metalabel.py` | Reusable `Metalabeler` (bundle-parameterized) |
 | `src/hypervector/paper/ledger.py` | Paper decisions JSONL scaffold |
 | CLI | `history\|regime\|sweep-*\|report\|export\|export-validate\|phase2-check\|phase2-run\|paper-check\|infra-init` |
 
@@ -116,26 +138,27 @@ ls data/nautilus/backtest/
 uv run python -m hypervector paper-check
 ```
 
-### ML façade (optional conviction)
+### Metalabeler (optional conviction / probability)
 
 ```python
-from hypervector.ml.impulse_btc import ImpulseBtcFacade
-# HYPERVECTOR_IMPULSE_BTC_ROOT or hypertrader/hyper-pi defaults
-facade = ImpulseBtcFacade.from_env()
-p = facade.predict_conviction({"rsi_1m": 40.0, ...})  # feature dict; clipped [0,1]
+from hypervector.ml import Metalabeler
+# HYPERVECTOR_METALABEL_ROOT → any bundle dir (legacy: HYPERVECTOR_IMPULSE_BTC_ROOT)
+ml = Metalabeler.from_env()           # or Metalabeler.from_root(path)
+p = ml.predict_probability(features)  # clipped [0, 1]; alias: predict_conviction
 ```
 
-CLI still uses fixed `--conviction` until a feature builder is wired.
+CLI still uses fixed `--conviction` until a feature builder is wired to a bundle whose **labels match the strategy gate**.
 
 ---
 
-## ML notes (shipped Task 7)
+## ML notes
 
-- **In tree:** `src/hypervector/ml/impulse_btc.py` (inference only)
-- LightGBM `metalabel_lgbm.txt` + optional `metalabel_calibrator.joblib`
-- Env: `HYPERVECTOR_IMPULSE_BTC_ROOT`; defaults hyper-pi then hypertrader models
+- **Process:** `Metalabeler` — not BTC-specific; version via new bundle directory
+- **Bundle contract:** `metalabel_lgbm.txt`, optional calibrator, `metalabel_metadata.json` (`feature_names`)
+- **Env:** `HYPERVECTOR_METALABEL_ROOT` (preferred); legacy `HYPERVECTOR_IMPULSE_BTC_ROOT` still works
+- **Compat:** `ml/impulse_btc.py` re-exports deprecated aliases for one cycle
 - Optional extra: `uv sync --extra ml` (lightgbm)
-- **Not shipped:** training, feature engine in hypervector, CLI `--conviction-model`
+- **Not shipped:** training, feature engine, policy (floor_p), multi-bundle registry, CLI flag
 
 ---
 
