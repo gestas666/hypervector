@@ -1,10 +1,18 @@
 """Phase 3 paper: costs, fills, session, live-feed daemon (no venue orders)."""
 
 from hypervector.paper.costs import (
-    FILL_MODEL_BAR_CLOSE_SLIPPAGE_V1,
     CostProvider,
     CostSnapshot,
     funding_payment,
+)
+from hypervector.paper.fill_models import (
+    DEFAULT_MAX_BOOK_AGE_MS,
+    FILL_MODEL_BAR_CLOSE_SLIPPAGE_V1,
+    FILL_MODEL_L2_WALK_V1,
+    FILL_MODEL_TOP_BPS_V1,
+    BarCloseSlippageFillModel,
+    FillResult,
+    select_fill_model,
 )
 from hypervector.paper.fills import ExplicitFillEngine, PaperPosition
 from hypervector.paper.ledger import PaperLedgerError, append_paper_decision
@@ -12,10 +20,15 @@ from hypervector.paper.runner import PaperDaemonResult, start_paper_daemon
 from hypervector.paper.session import PaperSession, PaperSessionResult, run_paper_session_offline
 
 __all__ = [
+    "DEFAULT_MAX_BOOK_AGE_MS",
     "FILL_MODEL_BAR_CLOSE_SLIPPAGE_V1",
+    "FILL_MODEL_L2_WALK_V1",
+    "FILL_MODEL_TOP_BPS_V1",
+    "BarCloseSlippageFillModel",
     "CostProvider",
     "CostSnapshot",
     "ExplicitFillEngine",
+    "FillResult",
     "PaperDaemonResult",
     "PaperLedgerError",
     "PaperPosition",
@@ -24,5 +37,6 @@ __all__ = [
     "append_paper_decision",
     "funding_payment",
     "run_paper_session_offline",
+    "select_fill_model",
     "start_paper_daemon",
 ]

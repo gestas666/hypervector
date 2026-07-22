@@ -1,17 +1,19 @@
-"""Explicit paper fills: bar_close_slippage_v1 + funding rows.
+"""Explicit paper fills: FillModel-driven prices + funding rows.
 
 Pure position math + decision append. No live orders.
 Optional sandbox_enabled is shadow-only (no Nautilus sandbox client in Phase 3).
+Default fill model is bar_close_slippage_v1 (Phase 4a protocol extraction).
 """
 
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
 
 from hypervector.paper.costs import CostProvider, CostSnapshot, funding_payment
+from hypervector.paper.fill_models import BarCloseSlippageFillModel, FillModel, FillResult
 from hypervector.paper.ledger import append_paper_decision
 
 logger = logging.getLogger(__name__)
@@ -71,6 +73,8 @@ class ExplicitFillEngine:
         qty: float,
         mark_px: float,
         intent: dict | None = None,
+        book: Any | None = None,
+        fill_model: FillModel | None = None,
     ) -> dict:
         side_n = str(side).lower().strip()
         if side_n not in _VALID_SIDES:
@@ -83,25 +87,31 @@ class ExplicitFillEngine:
             raise ValueError(f"mark_px must be positive, got {mark_px}")
 
         snap = self._cost_provider.snapshot()
-        slip = float(snap.slippage_bps) / 10_000.0
-        if side_n == "buy":
-            fill_px = mark * (1.0 + slip)
-        else:
-            fill_px = mark * (1.0 - slip)
+        model: FillModel = fill_model if fill_model is not None else BarCloseSlippageFillModel()
+        result = model.fill(
+            side=side_n,
+            qty=qty_f,
+            mark_px=mark,
+            book=book,
+            slippage_bps=float(snap.slippage_bps),
+        )
+        fill_px = float(result.fill_px)
+        fill_qty = float(result.fill_qty)
 
-        fee_usd = abs(qty_f) * fill_px * self._cost_provider.trade_fee_rate()
-        self._update_position(side=side_n, qty=qty_f, fill_px=fill_px, fee_usd=fee_usd)
+        fee_usd = abs(fill_qty) * fill_px * self._cost_provider.trade_fee_rate()
+        self._update_position(side=side_n, qty=fill_qty, fill_px=fill_px, fee_usd=fee_usd)
 
         record = self._base_record(
             feed_ts=feed_ts,
             action=str(action),
             side=side_n,
-            qty=qty_f,
+            qty=fill_qty,
             mark_px=mark,
             fill_px=fill_px,
             snap=snap,
             fee_usd=fee_usd,
             funding_payment_usd=0.0,
+            fill_result=result,
         )
         if intent is not None:
             record["intent"] = intent
@@ -152,8 +162,13 @@ class ExplicitFillEngine:
         snap: CostSnapshot,
         fee_usd: float,
         funding_payment_usd: float,
+        fill_result: FillResult | None = None,
     ) -> dict:
-        return {
+        # Actual model from FillResult overwrites CostSnapshot fill_model_id when present.
+        fill_model_id = (
+            fill_result.fill_model_id if fill_result is not None else snap.fill_model_id
+        )
+        record: dict[str, Any] = {
             "execution_mode": "paper",
             "feed_ts": feed_ts,
             "run_id": self._run_id,
@@ -166,7 +181,7 @@ class ExplicitFillEngine:
             "qty": qty,
             "mark_px": mark_px,
             "fill_px": fill_px,
-            "fill_model_id": snap.fill_model_id,
+            "fill_model_id": fill_model_id,
             "slippage_bps": snap.slippage_bps,
             "taker_fee": snap.taker_fee,
             "maker_fee": snap.maker_fee,
@@ -182,6 +197,15 @@ class ExplicitFillEngine:
             "position_avg_px": self._position.avg_px,
             "realized_pnl": self._position.realized_pnl,
         }
+        if fill_result is not None:
+            # Merge all FillResult fields; fill_model_id / fill_px already set above.
+            for key, value in asdict(fill_result).items():
+                record[key] = value
+            # Keep ledger qty aligned with filled qty (bar_close: same as requested).
+            record["qty"] = fill_result.fill_qty
+            record["fill_px"] = fill_result.fill_px
+            record["fill_model_id"] = fill_result.fill_model_id
+        return record
 
     def _update_position(
         self,
