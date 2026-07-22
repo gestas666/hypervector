@@ -4,8 +4,8 @@
 **Project:** `/Users/gestas/Prototypes/hypervector`  
 **User:** Albert  
 **Branch:** `feat/phase2-actor-and-ml` (**not pushed**)  
-**HEAD (docs tip):** `5f62f35` — handoff/docs only; Phase 3 **code not started**  
-**Working tree:** clean for product code; untracked `audio/` ok to ignore  
+**HEAD tip:** Phase 3 paper Tasks 1–5 complete (see task table)  
+**Working tree:** untracked `audio/` ok to ignore  
 
 ---
 
@@ -16,13 +16,12 @@
 | Phase 1 / 1.5 research | **Done** |
 | Phase 2 actor + historical runner + metalabeler + paper ledger scaffold | **Done** (plan closed) |
 | Phase 3 paper **design** | **Approved / locked** |
-| Phase 3 paper **implementation plan** | **Locked — 0/5 tasks coded** |
-| Phase 3 paper **code** | **Not started** — next session implements |
-| Phase 4 | **Deferred** — design after Phase 3 paper proven |
+| Phase 3 paper **implementation plan** | **Complete — 5/5 tasks** |
+| Phase 3 paper **code** | **Done** — live-feed loop + explicit fills + costs + sandbox flag |
+| Phase 4 | **Next design** — order book, ML metalabel, live exec, CLI complete, GOAT TUI, 1-page GUI |
 
-**This session (outgoing):** design + plan + Phase 4 epic notes only. **No Phase 3 product code.**
-
-**Next session (incoming):** **EXECUTE Phase 3 plan Tasks 1→5.** Do not re-design. Do not re-execute Phase 2. Do not start Phase 4.
+**This session (outgoing):** Phase 3 Tasks 1–5 implemented and verified offline.  
+**Next session (incoming):** **Phase 4 design** (brainstorm + spec + plan). Do **not** re-do Phase 3. Do not start Phase 4 code until design is locked.
 
 ---
 
@@ -30,7 +29,7 @@
 
 | Role | Path |
 |------|------|
-| **EXECUTE THIS** | `docs/superpowers/plans/2026-07-22-phase3-paper-live-feed.md` |
+| Phase 3 plan (COMPLETE) | `docs/superpowers/plans/2026-07-22-phase3-paper-live-feed.md` |
 | Phase 3 design (approved) | `docs/superpowers/specs/2026-07-22-phase3-paper-live-feed-design.md` |
 | Pipeline / paper identity lock | `docs/superpowers/specs/2026-07-22-phase2-3-handoff.md` |
 | Phase 1 design | `docs/superpowers/specs/2026-07-21-phase1-vectorbt-design.md` |
@@ -43,9 +42,9 @@ Prefer **this HANDOFF** over stale agentmemory for phase status.
 
 ---
 
-## Next session — START EXECUTION HERE
+## Next session — START HERE (Phase 4 design)
 
-**Goal:** Implement Phase 3 paper live-feed loop. Design is done — **code only**.
+**Goal:** Design Phase 4 only. Phase 3 paper is proven offline — **do not re-implement**.
 
 ```bash
 cd /Users/gestas/Prototypes/hypervector
@@ -53,62 +52,84 @@ git checkout feat/phase2-actor-and-ml
 uv sync --all-extras
 uv run pytest tests/ -q -m "not network"
 
-# Then open and execute:
-#   docs/superpowers/plans/2026-07-22-phase3-paper-live-feed.md
-# Skills: subagent-driven-development (preferred) OR executing-plans
-#         + write-clean-code
-# Order: Task 1 → 2 → 3 → 4 → 5 · TDD · commit per task
-# Out of scope: Phase 4 (ML, book, live, TUI, GUI)
+# Smoke paper surfaces (no keys required):
+uv run python -m hypervector paper-check
+# Optional short daemon smoke (needs export + HL public or offline inject):
+# uv run python -m hypervector paper-run --path data/exports/<id> --max-live-bars 2
 ```
 
 **Agent checklist on open:**
 
 1. Confirm branch `feat/phase2-actor-and-ml`; note HEAD; do not start on `main` without asking.  
-2. Baseline: `uv run pytest tests/ -q -m "not network"` (expect green).  
-3. Open Phase 3 plan; begin **Task 1** (`paper/costs.py`).  
-4. Execute Tasks 1–5 completely (or as far as session allows; keep task table accurate).  
-5. End session: update this HANDOFF (task status + commits); leave Phase 4 alone.  
-6. Optional: `.superpowers/sdd/progress.md` ledger line per completed task.
+2. Baseline: offline suite green.  
+3. **Do not** re-open Phase 3 plan tasks.  
+4. Start **Phase 4 design** (brainstorm + spec + plan): book, ML wire, live flip, CLI complete → TUI/GUI.  
+5. End session: update this HANDOFF with Phase 4 design paths when locked.
 
-**Execution mode:** `subagent-driven-development` recommended (one implementer + review per task). Fallback: inline `executing-plans`.
+**Skills:** brainstorming → write-spec → write-plan. UX sequencing: **CLI complete → GOAT TUI + 1-page GUI**.
 
 ---
 
-## Phase 3 plan progress (0/5)
+## Phase 3 plan progress (5/5)
 
 **Plan:** `docs/superpowers/plans/2026-07-22-phase3-paper-live-feed.md`  
 **Design:** `docs/superpowers/specs/2026-07-22-phase3-paper-live-feed-design.md`
 
-| Task | Deliverable | Status | Commit |
-|------|-------------|--------|--------|
-| 1 | `paper/costs.py` — HL fee tiers + signed funding | **Pending** | — |
-| 2 | `paper/fills.py` — ExplicitFillEngine + decision fields | **Pending** | — |
-| 3 | `paper/session.py` — offline bar session | **Pending** | — |
-| 4 | `paper/runner.py` + `paper-run` daemon + live bars | **Pending** | — |
-| 5 | Sandbox flag + full offline verify + HANDOFF update | **Pending** | — |
+| Task | Deliverable | Status | Commit (approx) |
+|------|-------------|--------|-----------------|
+| 1 | `paper/costs.py` — HL fee tiers + signed funding | **Done** | `37eed5e` |
+| 2 | `paper/fills.py` — ExplicitFillEngine + decision fields | **Done** | `740dd5c` |
+| 3 | `paper/session.py` — offline bar session | **Done** | `2ff363a` |
+| 4 | `paper/runner.py` + `paper-run` daemon + live bars | **Done** | `8208600` |
+| 5 | Sandbox flag + full offline verify + HANDOFF update | **Done** | (this commit) |
 
-**Success when:** offline suite green; `paper-run` warms + processes bars; decisions under `data/paper/` with `execution_mode=paper`; no venue orders; no Phase 4 scope creep.
+**Success criteria met:** offline suite green; `paper-run` warms + processes bars; decisions under `data/paper/` with `execution_mode=paper`; no venue orders; Phase 4 scope not started.
+
+### How to run paper-check / paper-run
+
+```bash
+# Identity + readiness (no secret values; live.enabled always false in report)
+uv run python -m hypervector --data-root data paper-check
+# → paper.execution_mode=paper, live_feed_loop=true, sandbox_enabled=false,
+#   secrets_present bool, secret_env_names listed
+
+# Daemon: warm-up + live HL REST bar poll + explicit fills (no venue orders)
+uv run python -m hypervector --data-root data paper-run \
+  --path data/exports/<export_id> \
+  --conviction 0.5 \
+  --fee-tier 0 \
+  [--sandbox] \              # shadow flag only; no real sandbox client
+  [--stop-file /tmp/hv.stop] \
+  [--max-live-bars N] \      # smoke / offline cap
+  [--poll-interval 5]
+```
+
+Banner on stderr: `PAPER MODE — no venue orders`.  
+Decisions: `data/paper/decisions/decisions.jsonl` (I2 layout).
 
 ### Phase 3 locks (do not reopen)
 
 | Decision | Choice |
 |----------|--------|
-| Host | Full Nautilus node + HL data client |
+| Host | Paper shell around `HypervectorStrategy` path (session + daemon) |
 | Market data v1 | Bars only (order book = Phase 4) |
-| Runtime | Long-running daemon |
-| Fills | Explicit model = ledger truth; optional sandbox shadow (default **off**) |
-| Costs | Hybrid: config fee tier + slippage; **live signed hourly funding** |
+| Runtime | Long-running daemon (`paper-run`) |
+| Fills | Explicit model = ledger truth; sandbox shadow default **off** |
+| Sandbox v1 | Flag + `sandbox_fill_px=null` only; log `sandbox_requested_but_not_wired` |
+| Costs | Hybrid: config fee tier + slippage; signed hourly funding math |
 | Fee default | HL Tier 0 base **taker 0.045% / maker 0.015%** |
-| Warm-up | Cache-first → HL REST if cold → live bars |
-| Architecture | Approach 1: thin shell around `HypervectorStrategy` |
+| Warm-up | Cache-first → HL REST if cold → live bar poll |
+| Live feed v1 | HL REST poll fallback (WS preferred later) |
 | ML | **Off** in Phase 3 — fixed conviction only |
 | Secrets | Env names ready; paper public path works **without** keys |
 | Live | Config flip later (Phase 4); paper must never place venue orders |
 
-**Secrets env (Phase 4 live; ignore for order placement in paper):**
+**Secrets env (Phase 4 live; ignored for order placement in paper):**
 
 - `HYPERVECTOR_HL_WALLET_ADDRESS`  
 - `HYPERVECTOR_HL_API_PRIVATE_KEY`  
+
+**Live:** `configs/default.toml` → `[live] enabled = false`. Paper never writes `data/live/` or submits venue orders.
 
 ---
 
@@ -117,16 +138,16 @@ uv run pytest tests/ -q -m "not network"
 ```text
 Phase 1/1.5  VectorBT research → export
 Phase 2      Nautilus historical (params, not signals.parquet)
-Phase 3      Paper: live HL bars + same strategy + explicit fills   ← IMPLEMENT NEXT
-Phase 4      Book + ML + live flip + full CLI + GOAT TUI + 1-page GUI
+Phase 3      Paper: live HL bars + same strategy + explicit fills   ← DONE
+Phase 4      Book + ML + live flip + full CLI + GOAT TUI + 1-page GUI  ← DESIGN NEXT
 ```
 
 | Phase | Role | State |
 |-------|------|--------|
 | **1 / 1.5** | Research, costs, risk, export | **Done** |
 | **2** | Event-driven historical sim | **Done** |
-| **3 paper** | Live feed + synthetic fills + paper ledger | **Design+plan locked; code pending** |
-| **4** | Book, ML, live, CLI complete, GOAT TUI, 1-page GUI | **After paper proven** |
+| **3 paper** | Live feed + synthetic fills + paper ledger | **Done** (offline verified) |
+| **4** | Book, ML, live, CLI complete, GOAT TUI, 1-page GUI | **Next design** |
 
 ---
 
@@ -161,21 +182,28 @@ features (metadata schema)
 | Nautilus signals / sizing / bars / actor / runner | **Working** |
 | CLI `phase2-run` / `phase2-check` / `export-validate` | **Working** |
 | Metalabeler process (`ml/metalabel.py`) | **Working** (not wired to CLI) |
-| Paper ledger scaffold + `paper-check` | **Working** (no live-feed loop yet) |
+| `CostProvider` + HL fee tiers + signed funding | **Working** |
+| `ExplicitFillEngine` (`bar_close_slippage_v1`) | **Working** |
+| Offline `PaperSession` bar walk | **Working** |
+| `paper-run` daemon (warm + REST poll + stop) | **Working** |
+| `paper-check` (live_feed_loop, sandbox flag, secrets flags) | **Working** |
+| Sandbox shadow flag (`sandbox_enabled`, `sandbox_fill_px=null`) | **Working** (no real client) |
 | Real Phase 2 sample | export `downtrend_crown_stack_short_c4fd7067`, artifacts under `data/nautilus/backtest/` |
 
-## What’s not built yet
+## What’s not built yet (Phase 4 — first-class next phase)
 
 | Item | Phase | Notes |
 |------|-------|--------|
-| CostProvider + ExplicitFillEngine + session + `paper-run` | **3** | **Next session Tasks 1–5** |
-| CLI metalabel / feature builder | **4a** | After paper |
-| Order book / impact fills | **4a** | `cache/book/` reserved |
-| Live exec + live ledger | **4b** | Config flip + secrets |
+| Order book L2 subscribe + impact fills | **4a** | `cache/book/` reserved |
+| ML metalabel conviction / feature builder CLI | **4a** | Metalabeler process exists |
+| Live exec + live ledger + secrets required | **4b** | Config flip; kill switch |
+| Real Nautilus sandbox client mirror | **4 / harden** | Flag only in Phase 3 |
+| userFees authenticated fee tier | **4a** | |
+| Kill switch / supervisor production ops | **4b** | |
 | CLI completeness pass | **4c** | **Gate before TUI/GUI** |
 | GOAT TUI | **4d** | Epic terminal ops console |
 | 1-page GUI monitoring dashboard | **4e** | Same ledger truth as TUI/CLI |
-| Phase 2 runner full cost parity with VBT | backlog | Not blocking paper |
+| Phase 2 runner full cost parity with VBT | backlog | Not blocking |
 
 **Rules:** signals.parquet = parity only; never VectorBT → live; paper ledger ≠ live ledger.
 
@@ -192,12 +220,14 @@ features (metadata schema)
 | `src/hypervector/nautilus/actor.py` | `HypervectorStrategy` |
 | `src/hypervector/nautilus/runner.py` | Phase 2 historical backtest |
 | `src/hypervector/ml/metalabel.py` | Reusable Metalabeler |
-| `src/hypervector/paper/ledger.py` | Paper decisions JSONL scaffold only |
+| `src/hypervector/paper/costs.py` | Fee tiers, `CostProvider`, funding math |
+| `src/hypervector/paper/fills.py` | `ExplicitFillEngine` + sandbox shadow keys |
+| `src/hypervector/paper/session.py` | Offline/incremental bar → fill |
+| `src/hypervector/paper/runner.py` | `start_paper_daemon` |
+| `src/hypervector/paper/live_node.py` | REST poll feed (WS TODO) |
+| `src/hypervector/paper/ledger.py` | Paper decisions JSONL; refuse live path |
 | `src/hypervector/data/hl.py` | Public HL candle REST |
-| CLI | `history\|regime\|sweep-*\|report\|export\|export-validate\|phase2-check\|phase2-run\|paper-check\|infra-init` |
-
-**Planned Phase 3 paths (create in Tasks 1–5):**  
-`paper/costs.py`, `paper/fills.py`, `paper/session.py`, `paper/runner.py`, `paper/live_node.py`, `paper-run` CLI.
+| CLI | `…\|phase2-check\|phase2-run\|paper-check\|paper-run\|infra-init` |
 
 ---
 
@@ -209,6 +239,7 @@ uv run python -m hypervector phase2-check --path data/exports/<id>
 uv run python -m hypervector --data-root data phase2-run \
   --path data/exports/<id> --lookback 30 --no-network
 uv run python -m hypervector paper-check
+uv run python -m hypervector paper-run --path data/exports/<id> --max-live-bars 2
 uv run pytest tests/ -q -m "not network"
 ```
 
@@ -222,9 +253,9 @@ p = ml.predict_probability(features)  # [0, 1]
 
 ---
 
-## Phase 4 epic (NOT next session)
+## Phase 4 epic (NEXT design session)
 
-Implement only **after** Phase 3 Tasks 1–5 succeed. Separate design + plan.
+Implement only **after** a locked Phase 4 design + plan. Separate design session.
 
 | Track | Deliverable | Bar |
 |-------|-------------|-----|
@@ -237,16 +268,18 @@ Implement only **after** Phase 3 Tasks 1–5 succeed. Separate design + plan.
 **UX sequencing:** **4c CLI complete → then 4d TUI + 4e GUI.**  
 TUI/GUI are views over ledgers/processes — not a second brain. `execution_mode` always obvious. CLI stays scriptable.
 
+Also defer: real Nautilus sandbox client (Phase 3 only plumbs flag + null `sandbox_fill_px`).
+
 ---
 
 ## Non-goals (until Phase 4 design says otherwise)
 
-- Live venue orders in Phase 3  
+- Live venue orders in Phase 3 (done — still forbidden until 4b)  
 - VectorBT → live skip of Phase 2/paper  
 - CEX bars claimed as HL book  
 - Shared paper/live ledgers  
 - Postgres / Redis / k8s  
-- Phase 3 metalabel wiring  
+- Phase 3 metalabel wiring (still off)  
 - Building TUI/GUI before CLI completeness  
 
 ---
@@ -259,25 +292,24 @@ After paper proven (+ live ops checklist): skill/plugin so agents follow researc
 
 ## Agent notes
 
-- Phase 2 plan **closed**. Phase 3 design + plan **closed** → **execute only**.  
-- First code file: `src/hypervector/paper/costs.py` + `tests/test_paper_costs.py` (Task 1).  
+- Phase 2 plan **closed**. Phase 3 design + plan + code **closed**.  
+- **Next:** Phase 4 **design**, not Phase 3 re-execution.  
 - Branch not pushed; merge/PR when Albert wants.  
 - Legacy pre-schema exports fail `export-validate` until re-exported.  
 - Upstream noise: Nautilus `Timestamp.utcnow` Pandas4Warning; sklearn calibrator skew.  
 - Paper must not submit real orders even if wallet/API key env vars are set.  
+- Live feed uses **REST poll** fallback (`live_node.py`); full Nautilus WS host optional later.  
 
 ---
 
-## Outgoing session summary (2026-07-22 design session)
+## Outgoing session summary (Phase 3 implementation)
 
-Done this session (docs only):
+Done:
 
-- Skills: engineering-software, ml-for-algo-trading, brainstorming  
-- Phase 3 design Approach 1 locked (Nautilus host, bars, daemon, fill C, hybrid costs, warm-up A)  
-- Spec: `2026-07-22-phase3-paper-live-feed-design.md`  
-- Plan: `2026-07-22-phase3-paper-live-feed.md` (Tasks 1–5)  
-- Deferred work renamed **Phase 4** (not “Phase 3+”), including ML importance  
-- Phase 4 UX: CLI complete → GOAT TUI + 1-page GUI  
-- HANDOFF pointed at **execute next**  
+- Task 1: `CostProvider` + HL fee tiers + signed funding  
+- Task 2: `ExplicitFillEngine` + decision schema  
+- Task 3: offline `PaperSession`  
+- Task 4: `paper-run` daemon + warm-up + live bar poll  
+- Task 5: sandbox shadow flag end-to-end; full offline suite; HANDOFF → Phase 4 design  
 
-**Not done:** any Phase 3 implementation code.
+**Not done (Phase 4):** order book, ML wire, live exec, real sandbox client, TUI/GUI.

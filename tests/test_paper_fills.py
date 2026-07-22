@@ -51,3 +51,47 @@ def test_funding_on_open_long_drag(tmp_path: Path):
     assert fre is not None
     assert fre["action"] == "funding"
     assert fre["funding_payment_usd"] == 5.0  # 1 * 50000 * 0.0001
+
+
+def test_sandbox_flag_on_record_does_not_change_fill(tmp_path: Path):
+    """sandbox_enabled is shadow-only: fill_px stays explicit-model truth."""
+    mark = 100_000.0
+    slip_bps = 10.0
+    expected_px = mark * (1.0 + slip_bps / 10_000.0)
+
+    def _engine(*, sandbox: bool) -> ExplicitFillEngine:
+        return ExplicitFillEngine(
+            tmp_path / ("data_on" if sandbox else "data_off"),
+            cost_provider=CostProvider(fee_tier=0, slippage_bps=slip_bps),
+            run_id="r1",
+            export_id="e1",
+            strategy_name="crown_stack_short",
+            symbol="BTC",
+            timeframe="1m",
+            conviction=0.5,
+            sandbox_enabled=sandbox,
+        )
+
+    rec_off = _engine(sandbox=False).apply_market_fill(
+        feed_ts="2026-07-22T00:00:00Z",
+        action="enter_long",
+        side="buy",
+        qty=0.01,
+        mark_px=mark,
+    )
+    rec_on = _engine(sandbox=True).apply_market_fill(
+        feed_ts="2026-07-22T00:00:00Z",
+        action="enter_long",
+        side="buy",
+        qty=0.01,
+        mark_px=mark,
+    )
+
+    assert rec_off["sandbox_enabled"] is False
+    assert rec_on["sandbox_enabled"] is True
+    assert rec_on["fill_px"] == expected_px
+    assert rec_on["fill_px"] == rec_off["fill_px"]
+    assert rec_on["fee_usd"] == rec_off["fee_usd"]
+    # Real Nautilus sandbox client deferred; shadow key present and null.
+    assert rec_on["sandbox_fill_px"] is None
+    assert rec_off["sandbox_fill_px"] is None

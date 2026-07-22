@@ -78,6 +78,8 @@ def cmd_paper_check(args: argparse.Namespace) -> int:
         "decisions": str(paths.paper_decisions),
         "ledger": str(paths.paper_ledger),
         "live_feed_loop": True,
+        # Default off; paper-run --sandbox sets shadow fields only (no real sandbox client).
+        "sandbox_enabled": False,
         "secrets_present": _secrets_present(),
         "secret_env_names": [SECRET_ENV_WALLET, SECRET_ENV_API_KEY],
     }

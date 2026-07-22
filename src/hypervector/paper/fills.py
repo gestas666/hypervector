@@ -1,16 +1,20 @@
 """Explicit paper fills: bar_close_slippage_v1 + funding rows.
 
-Pure position math + decision append. No live orders, no sandbox client.
+Pure position math + decision append. No live orders.
+Optional sandbox_enabled is shadow-only (no Nautilus sandbox client in Phase 3).
 """
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 from hypervector.paper.costs import CostProvider, CostSnapshot, funding_payment
 from hypervector.paper.ledger import append_paper_decision
+
+logger = logging.getLogger(__name__)
 
 _VALID_SIDES = frozenset({"buy", "sell"})
 
@@ -50,6 +54,9 @@ class ExplicitFillEngine:
         self._conviction = float(conviction)
         self._sandbox_enabled = bool(sandbox_enabled)
         self._position = PaperPosition()
+        if self._sandbox_enabled:
+            # Real Nautilus Sandbox client is Phase 4/hardening; flag + shadow keys only.
+            logger.info("sandbox_requested_but_not_wired")
 
     @property
     def position(self) -> PaperPosition:
@@ -168,6 +175,8 @@ class ExplicitFillEngine:
             "funding_payment_usd": funding_payment_usd,
             "costs_source": _costs_source(snap),
             "sandbox_enabled": self._sandbox_enabled,
+            # Shadow only — explicit fill_px remains ledger truth (sandbox client Phase 4).
+            "sandbox_fill_px": None,
             "conviction": self._conviction,
             "position_qty": self._position.qty,
             "position_avg_px": self._position.avg_px,

@@ -76,6 +76,7 @@ def test_paper_check_reports_mode(tmp_path: Path, capsys, monkeypatch):
     report = json.loads(captured.out)
     assert report["paper"]["execution_mode"] == "paper"
     assert report["paper"]["live_feed_loop"] is True
+    assert report["paper"]["sandbox_enabled"] is False
     assert report["paper"]["secrets_present"] is False
     assert "decisions" in report["paper"]
     assert "ledger" in report["paper"]

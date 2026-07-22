@@ -57,13 +57,16 @@
 | Metalabeler process (unused in Phase 3) | `ml/metalabel.py` |
 | Design lock | `specs/2026-07-22-phase3-paper-live-feed-design.md` |
 
-### Pending (this plan)
+### Status (implementation)
 
-1. CostProvider + fee schedule + funding poll math  
-2. ExplicitFillEngine + decision schema  
-3. Offline paper session runner (injected bars)  
-4. Live HL data + `paper-run` daemon CLI  
-5. Optional sandbox flag + HANDOFF / config surface for Phase 4  
+All Tasks 1–5 **complete** on `feat/phase2-actor-and-ml` (2026-07-22).  
+Next work is **Phase 4 design** — not further Phase 3 coding.
+
+1. ~~CostProvider + fee schedule + funding poll math~~ **done**  
+2. ~~ExplicitFillEngine + decision schema~~ **done**  
+3. ~~Offline paper session runner (injected bars)~~ **done**  
+4. ~~Live HL data + `paper-run` daemon CLI~~ **done** (REST poll fallback)  
+5. ~~Optional sandbox flag + HANDOFF / config surface for Phase 4~~ **done** (flag + shadow keys only)
 
 ---
 
