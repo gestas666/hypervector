@@ -9,10 +9,17 @@ fee_model = "hl_taker_default"
 init_cash = 10000
 
 # Costs (research approx; Nautilus Phase 2 for full realism)
+# Dual-path: research [costs] stays static; paper uses fee_tier schedule in CostProvider.
 [costs]
 taker_fee = 0.00035
 slippage_bps = 2.0
 funding_rate_8h = 0.0001
+
+# Paper live-feed costs (HL tier schedule + live funding; does not replace [costs])
+[paper]
+fee_tier = 0
+slippage_bps = 2.0
+
 
 # Risk: 1%–5% of equity at risk, scaled by conviction [0,1]
 [risk]
