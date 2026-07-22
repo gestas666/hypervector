@@ -74,6 +74,9 @@ features (metadata schema)
 | **CLI metalabel / feature builder** | **4** | `Metalabeler` ready; wire after paper |
 | **Order book / impact fills** | **4** | `cache/book/` reserved |
 | **Live exec + live ledger** | **4** | Config flip + secrets after paper proven |
+| **CLI completeness pass** | **4c** | Gate before TUI/GUI — all capabilities consistent |
+| **GOAT TUI** | **4d** | Epic terminal ops console over full ladder |
+| **1-page GUI monitoring dashboard** | **4e** | Same truth as TUI/CLI; monitoring-first |
 | **Venue fee/slippage parity in Phase 2 runner** | backlog | Not blocking paper |
 
 **Locked rules still apply:** signals parquet = parity only; never VectorBT → live; paper ledger ≠ live ledger.
