@@ -22,11 +22,11 @@ Prove the **paper → live promotion ladder** without capital risk:
 Phase 1/1.5 export
   → Phase 2 historical Nautilus (done)
   → Phase 3 paper: live HL bars + same strategy + synthetic fills (this design)
-  → Phase 3 live: config switch → real HL exec + live ledger (later)
+  → Phase 4: order book + ML metalabel + live exec flip (separate design/plan)
 ```
 
 **One-sentence lock:**  
-Phase 3 paper = live HL market data + exact same Nautilus strategy/risk stack as future live, with **explicit** fills fully logged as would-be executions; live only flips execution client + ledger root + secrets usage.
+Phase 3 paper = live HL market data + exact same Nautilus strategy/risk stack as future live, with **explicit** fills fully logged as would-be executions; **Phase 4** flips execution client + ledger root + secrets, and adds book/ML.
 
 **Process-over-asset:** symbol / timeframe / export id / cost tier are configuration — no BTC-only modules.
 
@@ -37,7 +37,7 @@ Phase 3 paper = live HL market data + exact same Nautilus strategy/risk stack as
 | Topic | Choice |
 |-------|--------|
 | Host | **Full Nautilus node** (TradingNode / kernel) + `HyperliquidDataClient` |
-| Market data v1 | **Bars only** (export TF); order book = Phase 3+ extension hook |
+| Market data v1 | **Bars only** (export TF); order book = **Phase 4** |
 | Runtime | **Daemon** (long-running until stop) |
 | Fill path | **C:** explicit model = ledger truth; **optional Nautilus Sandbox** (off by default, toggleable) |
 | Costs | **Hybrid:** config fees/slippage/tier; **live signed funding** from HL public info; export costs = research provenance only |
@@ -298,30 +298,41 @@ Rules:
 
 ---
 
-## 8. Order book (Phase 3+ extension — not v1)
+## 8. Phase 4 (important — deferred from this plan)
 
-Design hooks only:
+**Phase 3** = paper live-feed loop only (this design + plan).  
+**Phase 4** is a first-class next phase, not a vague “nice later” list. It owns the deferred items that matter for production-quality promotion:
+
+| Phase 4 item | Why it matters |
+|--------------|----------------|
+| **Order book** | Honest impact/slippage; L2 subscribe; optional impact fill model; `cache/book/` already reserved |
+| **ML metalabel conviction** | Real sizing signal via `Metalabeler` + feature builder; same path paper/live; labels must match gate |
+| **Live execution flip** | Config switch: real `HyperliquidExecClient`, secrets required, `data/live/` ledger, tiny size + kill switch |
+| **Authenticated fee tier** | Optional `userFees` from wallet when secrets present |
+| **Ops hardening** | Supervisor recipes, kill switch, live risk banners |
+
+### 8.1 Order book (Phase 4)
+
+Design hooks only in Phase 3:
 
 - `cache/book/` already exists in I2 layout  
 - Future: subscribe L2 via HL adapter; optional `ImpactFillModel` replacing flat slippage  
 - Alpha remains bar-driven until a strategy explicitly consumes book features  
 
-v1 **must not** block on book.
+Phase 3 **must not** block on book.
 
----
+### 8.2 ML (Phase 4 — explicit flag)
 
-## 9. ML (deferred — explicit flag)
+**Phase 3 paper:** `conviction` from CLI/config only.
 
-**Paper v1:** `conviction` from CLI/config only.
-
-When ML is opened later:
+When Phase 4 opens ML:
 
 - Same decision path as paper/live (no paper-only smarter branch)  
 - `Metalabeler` + feature builder + label/gate alignment required first  
 - Decision rows carry `metalabel_bundle_id`, `p`, `feature_schema_version`  
 - Still subject to existing risk band  
 
-Out of scope for the paper-loop implementation plan derived from this doc unless scope is expanded.
+Out of scope for the Phase 3 paper-loop implementation plan.
 
 ---
 
@@ -371,7 +382,7 @@ Integrity: medium — wrong fills mislead promotion; explicit model + schema tes
 
 | Concern | Spec | Plan (next) |
 |---------|------|-------------|
-| Phase 3 paper loop | this file | `docs/superpowers/plans/2026-07-22-phase3-paper-live-feed.md` (to write) |
+| Phase 3 paper loop | this file | `docs/superpowers/plans/2026-07-22-phase3-paper-live-feed.md` |
 | Phase 2 actor | handoff + phase2 plan | done |
 | Infra I2 | `docs/infra-data-layout.md` | done |
 
@@ -409,11 +420,12 @@ Integrity: medium — wrong fills mislead promotion; explicit model + schema tes
 - Network-marked smoke optional  
 - **Deps:** PR4  
 
-### Later (Phase 3+ — separate designs/plans)
+### Later — **Phase 4** (separate design + plan; high priority after paper proven)
 - Order book subscribe + impact fills  
 - Metalabel conviction on shared path  
 - Live exec flip + kill switch + live ledger  
 - Authenticated `userFees` tier  
+- Ops hardening (supervisor, kill switch UX) 
 
 ---
 
@@ -431,5 +443,6 @@ Integrity: medium — wrong fills mislead promotion; explicit model + schema tes
 ## 16. Implementation note (for next session)
 
 Do **not** re-execute Phase 2 plan.  
-Next: write `writing-plans` implementation plan from this PR plan, then subagent-driven execute PR1→PR5.  
-Live keys may be **present in env** for future work; paper code path must ignore them for order placement.
+Next: execute `docs/superpowers/plans/2026-07-22-phase3-paper-live-feed.md` (PR/tasks 1→5).  
+After paper proven: **Phase 4** design (ML, order book, live flip) — not “Phase 3+”.  
+Live keys may be **present in env** for Phase 4; Phase 3 paper path must ignore them for order placement.

@@ -5,13 +5,17 @@
 **User:** Albert  
 **Branch:** `feat/phase2-actor-and-ml` (not pushed)
 
-**Status:** Phase 1 / 1.5 / Phase 2 **actor + runner + metalabeler + paper scaffold** complete and verified.  
+**Status:** Phase 1 / 1.5 / Phase 2 complete. Phase 3 **design + implementation plan ready** (not executed yet).  
 **Completed plan:** `docs/superpowers/plans/2026-07-22-phase2-actor-and-ml.md`  
-**Spec (locked):** `docs/superpowers/specs/2026-07-22-phase2-3-handoff.md`  
+**Phase 3 design:** `docs/superpowers/specs/2026-07-22-phase3-paper-live-feed-design.md`  
+**Phase 3 plan (execute next):** `docs/superpowers/plans/2026-07-22-phase3-paper-live-feed.md`  
+**Spec (pipeline lock):** `docs/superpowers/specs/2026-07-22-phase2-3-handoff.md`  
 **Prior plan (done):** `docs/superpowers/plans/2026-07-22-phase15-to-phase2-prep.md`  
 **Infra doc:** `docs/infra-data-layout.md`
 
-**Next session:** **Design** Phase 3 paper live-feed loop (not implement yet). No Phase 3 execution plan exists — only scaffold + pipeline lock in `2026-07-22-phase2-3-handoff.md`. Do not go live.
+**Next session:** **Execute** Phase 3 paper plan Tasks 1–5 (CostProvider → fills → offline session → paper-run daemon → sandbox flag + handoff). Do not go live.
+
+**Phase 4 (after paper proven — first-class, not “Phase 3+”):** order book, **ML metalabel conviction**, live exec flip + secrets, userFees, ops kill switch. Separate design + plan.
 
 **Later (after phases complete):** ship an **agent skill package / plugin** so agents use the full research→Phase2→paper→live ladder correctly (see below).
 
@@ -122,10 +126,9 @@ features (metadata schema)
 cd /Users/gestas/Prototypes/hypervector
 git checkout feat/phase2-actor-and-ml
 uv sync --all-extras
-# Load write-clean-code (+ engineering-software / brainstorming for design)
-# NEXT: design + plan Phase 3 paper live-feed loop (HL feed + synthetic fills)
-#   - reuse HypervectorStrategy + paper ledger
-#   - still no live orders
+# Skills: subagent-driven-development or executing-plans + write-clean-code
+# Plan: docs/superpowers/plans/2026-07-22-phase3-paper-live-feed.md
+# Execute Tasks 1→5 only. Phase 4 (ML, book, live) is AFTER paper.
 uv run pytest tests/ -q -m "not network"
 ```
 
@@ -188,14 +191,20 @@ uv sync --all-extras
 uv run pytest tests/ -q -m "not network"
 ```
 
-### Scope of next design (Phase 3 paper loop)
+### Phase 3 paper loop (design + plan locked; implement next)
 
-- HL **live** market data (same adapter path as future live)
-- **Same** strategy / risk / exits as Phase 2 (params from loadout)
-- Synthetic fills + `append_paper_decision` (`execution_mode=paper`)
-- No venue orders; no shared paper/live ledgers
-- Process-over-asset: symbol/TF configurable
-- Metalabeler optional only if gate + features + labels align
+- HL **live** bars (cache warm-up first); full Nautilus host
+- Explicit fills + hybrid costs (Tier 0 fees, live signed funding)
+- Optional sandbox shadow (default off); daemon `paper-run`
+- Secrets env names ready for Phase 4; paper needs no keys for public path
+- **Not in Phase 3:** order book, ML metalabel, live orders
+
+### Phase 4 (important — design after paper)
+
+- Order book + impact fills  
+- Metalabel conviction on shared path  
+- Live exec config flip + `data/live/` + kill switch  
+- Authenticated userFees
 
 ---
 
