@@ -174,11 +174,57 @@ CLI still uses fixed `--conviction` until a feature builder is wired to a bundle
 
 ---
 
+## Next session entry
+
+```bash
+cd /Users/gestas/Prototypes/hypervector
+git checkout feat/phase2-actor-and-ml
+uv sync --all-extras
+# Skills: engineering-software, brainstorming, write-clean-code
+# Phase 2 plan is CLOSED — do not re-execute Tasks 1–9
+# 1) Read this HANDOFF + specs/2026-07-22-phase2-3-handoff.md §3–4
+# 2) Brainstorm → design doc → user approve → writing-plans
+# 3) Only then subagent-driven execute Phase 3 paper loop
+uv run pytest tests/ -q -m "not network"
+```
+
+### Scope of next design (Phase 3 paper loop)
+
+- HL **live** market data (same adapter path as future live)
+- **Same** strategy / risk / exits as Phase 2 (params from loadout)
+- Synthetic fills + `append_paper_decision` (`execution_mode=paper`)
+- No venue orders; no shared paper/live ledgers
+- Process-over-asset: symbol/TF configurable
+- Metalabeler optional only if gate + features + labels align
+
+---
+
+## Future: agent skill package / plugin (after phases)
+
+**When:** after Phase 3 paper is proven (and a clear live ops checklist) — not mid-pipeline.
+
+**Why:** agents invent VBT→live shortcuts, asset-specific forks, or wire metalabel wrong without a contract.
+
+**Deliverable sketch** (later via create-skill or grok plugin):
+
+| Piece | Content |
+|-------|---------|
+| `SKILL.md` | When to use hypervector; promotion ladder; non-goals; process principles |
+| Playbooks | Research → export-validate → phase2-run → paper-check → paper loop |
+| CLI map | Commands, flags, exit codes, data roots |
+| Contracts | Export schema v1, StrategyLoadout, Metalabeler bundle layout, paper ledger |
+| Anti-patterns | signals.parquet as alpha; VectorBT→live; shared paper/live ledgers; BTC-only modules |
+| Verify | Offline pytest; real phase2-run; paper isolation |
+
+Until then: **this HANDOFF + specs/plans** are the agent contract.
+
+---
+
 ## Agent notes
 
 - Prefer this HANDOFF over stale agentmemory for phase status.  
-- SDD ledger: `.superpowers/sdd/progress.md`  
-- Skills used this session: engineering-software, brainstorming (design already locked), write-clean-code, subagent-driven-development.  
-- Legacy pre-schema exports fail `export-validate` until re-exported with current CLI.  
+- Phase 2 plan is **closed** — next work needs a **new** design + plan.  
+- SDD ledger: `.superpowers/sdd/progress.md` (Phase 2 complete).  
+- Branch `feat/phase2-actor-and-ml` not pushed; merge/PR when you want Phase 2 on main.  
+- Legacy pre-schema exports fail `export-validate` until re-exported.  
 - Upstream noise: Nautilus `Timestamp.utcnow` Pandas4Warning; sklearn calibrator version skew.  
-- Ray adapter test can flake on raylet startup — not Phase 2 scope.  
