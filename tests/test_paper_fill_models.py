@@ -61,3 +61,149 @@ def test_select_fill_model_book_missing_fallback():
     )
     assert isinstance(model, BarCloseSlippageFillModel)
     assert reason == "book_missing"
+
+
+def test_top_bps_buy_uses_ask():
+    from hypervector.paper.book import BookLevel, BookSnapshot
+    from hypervector.paper.fill_models import TopBpsFillModel
+
+    book = BookSnapshot(
+        symbol="BTC-PERP",
+        bids=(BookLevel(100.0, 1.0),),
+        asks=(BookLevel(100.1, 2.0),),
+        ts_recv_ms=1.0,
+        ts_exchange_ms=1.0,
+        source="t",
+    )
+    r = TopBpsFillModel().fill(side="buy", qty=1.0, mark_px=100.0, book=book, slippage_bps=0.0)
+    assert r.fill_model_id == FILL_MODEL_TOP_BPS_V1
+    assert abs(r.fill_px - 100.1) < 1e-9
+    assert r.bbo_ask == 100.1 and r.bbo_bid == 100.0
+    assert r.levels_used == 1
+    assert r.fill_qty == 1.0
+    assert r.shortfall_qty == 0.0
+
+
+def test_top_bps_sell_uses_bid():
+    from hypervector.paper.book import BookLevel, BookSnapshot
+    from hypervector.paper.fill_models import TopBpsFillModel
+
+    book = BookSnapshot(
+        symbol="BTC-PERP",
+        bids=(BookLevel(100.0, 1.0),),
+        asks=(BookLevel(100.1, 2.0),),
+        ts_recv_ms=1.0,
+        ts_exchange_ms=1.0,
+        source="t",
+    )
+    r = TopBpsFillModel().fill(side="sell", qty=0.5, mark_px=100.0, book=book, slippage_bps=10.0)
+    # sell = best_bid * (1 - slip) = 100.0 * 0.999
+    assert abs(r.fill_px - 100.0 * 0.999) < 1e-9
+    assert r.bbo_bid == 100.0 and r.bbo_ask == 100.1
+    assert r.levels_used == 1
+
+
+def test_top_bps_empty_book_raises():
+    from hypervector.paper.book import BookSnapshot
+    from hypervector.paper.fill_models import TopBpsFillModel
+
+    book = BookSnapshot(
+        symbol="X",
+        bids=(),
+        asks=(),
+        ts_recv_ms=1.0,
+        ts_exchange_ms=1.0,
+        source="t",
+    )
+    try:
+        TopBpsFillModel().fill(side="buy", qty=1.0, mark_px=100.0, book=book, slippage_bps=0.0)
+        raise AssertionError("expected ValueError")
+    except ValueError:
+        pass
+
+
+def test_select_falls_back_when_stale():
+    from hypervector.paper.book import BookLevel, BookSnapshot
+
+    book = BookSnapshot(
+        symbol="X",
+        bids=(BookLevel(1.0, 1.0),),
+        asks=(BookLevel(1.1, 1.0),),
+        ts_recv_ms=0.0,
+        ts_exchange_ms=0.0,
+        source="t",
+    )
+    model, reason = select_fill_model(
+        preferred=FILL_MODEL_TOP_BPS_V1,
+        book=book,
+        max_book_age_ms=3000,
+        now_ms=10_000,
+    )
+    assert model.fill_model_id == FILL_MODEL_BAR_CLOSE_SLIPPAGE_V1
+    assert reason == "book_stale"
+
+
+def test_select_top_bps_when_fresh():
+    from hypervector.paper.book import BookLevel, BookSnapshot
+    from hypervector.paper.fill_models import TopBpsFillModel
+
+    book = BookSnapshot(
+        symbol="X",
+        bids=(BookLevel(1.0, 1.0),),
+        asks=(BookLevel(1.1, 1.0),),
+        ts_recv_ms=9_500.0,
+        ts_exchange_ms=9_500.0,
+        source="t",
+    )
+    model, reason = select_fill_model(
+        preferred=FILL_MODEL_TOP_BPS_V1,
+        book=book,
+        max_book_age_ms=3000,
+        now_ms=10_000,
+    )
+    assert isinstance(model, TopBpsFillModel)
+    assert reason is None
+
+
+def test_select_l2_walk_maps_to_top_bps_until_task4():
+    """Task 3 temporary: preferred l2_walk with fresh book → TopBps."""
+    from hypervector.paper.book import BookLevel, BookSnapshot
+    from hypervector.paper.fill_models import FILL_MODEL_L2_WALK_V1, TopBpsFillModel
+
+    book = BookSnapshot(
+        symbol="X",
+        bids=(BookLevel(1.0, 1.0),),
+        asks=(BookLevel(1.1, 1.0),),
+        ts_recv_ms=9_500.0,
+        ts_exchange_ms=9_500.0,
+        source="t",
+    )
+    model, reason = select_fill_model(
+        preferred=FILL_MODEL_L2_WALK_V1,
+        book=book,
+        max_book_age_ms=3000,
+        now_ms=10_000,
+    )
+    assert isinstance(model, TopBpsFillModel)
+    assert reason is None
+
+
+def test_select_empty_book_is_missing():
+    from hypervector.paper.book import BookSnapshot
+
+    book = BookSnapshot(
+        symbol="X",
+        bids=(),
+        asks=(),
+        ts_recv_ms=1.0,
+        ts_exchange_ms=1.0,
+        source="t",
+    )
+    model, reason = select_fill_model(
+        preferred=FILL_MODEL_TOP_BPS_V1,
+        book=book,
+        max_book_age_ms=3000,
+        now_ms=1.0,
+    )
+    assert model.fill_model_id == FILL_MODEL_BAR_CLOSE_SLIPPAGE_V1
+    assert reason == "book_missing"

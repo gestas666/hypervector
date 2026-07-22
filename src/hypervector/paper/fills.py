@@ -8,12 +8,18 @@ Default fill model is bar_close_slippage_v1 (Phase 4a protocol extraction).
 from __future__ import annotations
 
 import logging
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 from typing import Any
 
 from hypervector.paper.costs import CostProvider, CostSnapshot, funding_payment
-from hypervector.paper.fill_models import BarCloseSlippageFillModel, FillModel, FillResult
+from hypervector.paper.fill_models import (
+    DEFAULT_MAX_BOOK_AGE_MS,
+    FILL_MODEL_BAR_CLOSE_SLIPPAGE_V1,
+    FillModel,
+    FillResult,
+    select_fill_model,
+)
 from hypervector.paper.ledger import append_paper_decision
 
 logger = logging.getLogger(__name__)
@@ -45,6 +51,8 @@ class ExplicitFillEngine:
         timeframe: str,
         conviction: float,
         sandbox_enabled: bool = False,
+        preferred_fill_model: str = FILL_MODEL_BAR_CLOSE_SLIPPAGE_V1,
+        max_book_age_ms: float = DEFAULT_MAX_BOOK_AGE_MS,
     ) -> None:
         self._data_root = Path(data_root)
         self._cost_provider = cost_provider
@@ -55,6 +63,8 @@ class ExplicitFillEngine:
         self._timeframe = str(timeframe)
         self._conviction = float(conviction)
         self._sandbox_enabled = bool(sandbox_enabled)
+        self._preferred_fill_model = str(preferred_fill_model)
+        self._max_book_age_ms = float(max_book_age_ms)
         self._position = PaperPosition()
         if self._sandbox_enabled:
             # Real Nautilus Sandbox client is Phase 4/hardening; flag + shadow keys only.
@@ -75,6 +85,7 @@ class ExplicitFillEngine:
         intent: dict | None = None,
         book: Any | None = None,
         fill_model: FillModel | None = None,
+        now_ms: float | None = None,
     ) -> dict:
         side_n = str(side).lower().strip()
         if side_n not in _VALID_SIDES:
@@ -87,7 +98,16 @@ class ExplicitFillEngine:
             raise ValueError(f"mark_px must be positive, got {mark_px}")
 
         snap = self._cost_provider.snapshot()
-        model: FillModel = fill_model if fill_model is not None else BarCloseSlippageFillModel()
+        if fill_model is not None:
+            model: FillModel = fill_model
+            fallback_reason: str | None = None
+        else:
+            model, fallback_reason = select_fill_model(
+                preferred=self._preferred_fill_model,
+                book=book,
+                max_book_age_ms=self._max_book_age_ms,
+                now_ms=now_ms,
+            )
         result = model.fill(
             side=side_n,
             qty=qty_f,
@@ -95,6 +115,8 @@ class ExplicitFillEngine:
             book=book,
             slippage_bps=float(snap.slippage_bps),
         )
+        if fallback_reason is not None and result.fill_fallback_reason is None:
+            result = replace(result, fill_fallback_reason=fallback_reason)
         fill_px = float(result.fill_px)
         fill_qty = float(result.fill_qty)
 

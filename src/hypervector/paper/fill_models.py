@@ -1,11 +1,13 @@
-"""FillModel protocol and bar_close_slippage_v1 (Phase 4a extraction).
+"""FillModel protocol, bar_close / top_bps models, and book-aware selection.
 
-Book-based models (top_bps / l2_walk) land in later tasks; select_fill_model
-scaffolds fallback to bar_close when preferred is bar_close or book is missing.
+Task 3: TopBpsFillModel + full select_fill_model (stale/missing → bar_close).
+L2 walk is deferred to Task 4; preferred l2_walk_v1 currently selects TopBps
+when the book is fresh.
 """
 
 from __future__ import annotations
 
+import time
 from dataclasses import dataclass
 from typing import Any, Protocol
 
@@ -30,6 +32,8 @@ class FillResult:
 
 
 class FillModel(Protocol):
+    fill_model_id: str
+
     def fill(
         self,
         *,
@@ -76,6 +80,65 @@ class BarCloseSlippageFillModel:
         )
 
 
+class TopBpsFillModel:
+    """Fill at best bid/ask ± slippage_bps; uses top of book only (levels_used=1).
+
+    buy  = best_ask * (1 + slip)
+    sell = best_bid * (1 - slip)
+    Raises ValueError if book is None/empty or the required BBO side is missing.
+    """
+
+    fill_model_id = FILL_MODEL_TOP_BPS_V1
+
+    def fill(
+        self,
+        *,
+        side: str,
+        qty: float,
+        mark_px: float,
+        book: Any | None,
+        slippage_bps: float,
+    ) -> FillResult:
+        if book is None or getattr(book, "is_empty", lambda: True)():
+            raise ValueError("TopBpsFillModel requires a non-empty book")
+
+        bid = book.best_bid()
+        ask = book.best_ask()
+        side_n = side.lower().strip()
+        slip = float(slippage_bps) / 10_000.0
+
+        if side_n == "buy":
+            if ask is None:
+                raise ValueError("TopBpsFillModel buy requires best_ask")
+            px = float(ask) * (1.0 + slip)
+        else:
+            if bid is None:
+                raise ValueError("TopBpsFillModel sell requires best_bid")
+            px = float(bid) * (1.0 - slip)
+
+        q = float(qty)
+        book_age: float | None = None
+        # Caller may have already checked freshness; still record age if ts present.
+        try:
+            now = time.time() * 1000.0
+            book_age = float(book.age_ms(now))
+        except Exception:  # noqa: BLE001 — optional diagnostic field
+            book_age = None
+
+        return FillResult(
+            fill_px=px,
+            fill_qty=q,
+            fill_model_id=self.fill_model_id,
+            levels_used=1,
+            shortfall_qty=0.0,
+            bbo_bid=float(bid) if bid is not None else None,
+            bbo_ask=float(ask) if ask is not None else None,
+            book_age_ms=book_age,
+            fill_fallback_reason=None,
+            requested_qty=q,
+        )
+
+
 def select_fill_model(
     *,
     preferred: str,
@@ -83,17 +146,36 @@ def select_fill_model(
     max_book_age_ms: float,
     now_ms: float | None = None,
 ) -> tuple[FillModel, str | None]:
-    """Pick a fill model; Task 1 scaffold: bar_close or unusable book → bar_close.
+    """Pick a fill model based on preferred id and book freshness.
 
-    Returns (model, fill_fallback_reason). Reason is ``book_missing`` when
-    preferred is not bar_close and book is None. Stale/top_bps/l2_walk selection
-    is implemented in later tasks; ``max_book_age_ms`` / ``now_ms`` reserved.
+    Returns ``(model, fill_fallback_reason)``. Reason is set when falling back
+    to bar_close because the book is missing/empty or stale.
+
+    Selection rules:
+    - preferred bar_close → BarClose, reason None
+    - book None or empty → BarClose, ``book_missing``
+    - book.age_ms(now) > max → BarClose, ``book_stale``
+    - preferred top_bps with fresh book → TopBps, None
+    - preferred l2_walk with fresh book → TopBps for now (L2Walk lands in Task 4)
+
+    Unknown preferred values with a fresh book fall back to bar_close with no
+    reason (same as Task 1 scaffold for unwired models).
     """
-    _ = max_book_age_ms, now_ms  # reserved for stale-book checks (later tasks)
     preferred_n = str(preferred).strip()
     if preferred_n == FILL_MODEL_BAR_CLOSE_SLIPPAGE_V1:
         return BarCloseSlippageFillModel(), None
-    if book is None:
+
+    if book is None or getattr(book, "is_empty", lambda: True)():
         return BarCloseSlippageFillModel(), "book_missing"
-    # Book present but book models not wired yet → still bar_close (no silent switch)
+
+    now = float(now_ms) if now_ms is not None else time.time() * 1000.0
+    age = float(book.age_ms(now))
+    if age > float(max_book_age_ms):
+        return BarCloseSlippageFillModel(), "book_stale"
+
+    # Fresh book: prefer top_bps; l2_walk temporarily maps to TopBps until Task 4.
+    if preferred_n in (FILL_MODEL_TOP_BPS_V1, FILL_MODEL_L2_WALK_V1):
+        return TopBpsFillModel(), None
+
+    # Unknown preferred with usable book → keep bar_close (no silent switch).
     return BarCloseSlippageFillModel(), None
