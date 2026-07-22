@@ -81,9 +81,10 @@ uv run python -m hypervector paper-check
 | 2 | `paper/fills.py` — ExplicitFillEngine + decision fields | **Done** | `740dd5c` |
 | 3 | `paper/session.py` — offline bar session | **Done** | `2ff363a` |
 | 4 | `paper/runner.py` + `paper-run` daemon + live bars | **Done** | `8208600` |
-| 5 | Sandbox flag + full offline verify + HANDOFF update | **Done** | (this commit) |
+| 5 | Sandbox flag + full offline verify + HANDOFF update | **Done** | `25604bc` |
+| fix | Signed funding applied each bar while open | **Done** | `fdab716` |
 
-**Success criteria met:** offline suite green; `paper-run` warms + processes bars; decisions under `data/paper/` with `execution_mode=paper`; no venue orders; Phase 4 scope not started.
+**Success criteria met:** offline suite **170 passed** (`-m "not network"`); `paper-run` warms + processes bars; decisions under `data/paper/` with `execution_mode=paper`; funding applied on open positions; no venue orders; Phase 4 scope not started.
 
 ### How to run paper-check / paper-run
 
