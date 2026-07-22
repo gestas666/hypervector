@@ -52,6 +52,10 @@ def inject_history(monkeypatch):
         monkeypatch.setattr(
             "hypervector.data.pipeline.load_research_history", fake_load
         )
+        # Runner binds load_research_history at import; patch for phase2-run E2E.
+        monkeypatch.setattr(
+            "hypervector.nautilus.runner.load_research_history", fake_load
+        )
         return df, prov
 
     return _install
@@ -260,3 +264,151 @@ def test_cli_infra_init(tmp_path: Path, capsys):
     assert report["dirs"]["exports"]["exists"] is True
     assert report["dirs"]["paper_ledger"]["exists"] is True
     assert report["rules"]["paper_live_separated"] is True
+
+
+def _strict_export_for_phase2(exports_root: Path) -> Path:
+    """Write a Phase 1.5 strict export suitable for phase2-run."""
+    from hypervector.export.phase2 import export_candidate
+
+    return export_candidate(
+        exports_root,
+        run_id="cli_p2",
+        meta={
+            "symbol": "BTC",
+            "timeframe": "1m",
+            "track": "uptrend",
+            "lookback_days": 30,
+            "init_cash": 10_000.0,
+            "tp_sl_mode": "fixed_rr",
+            "exits": {
+                "mode": "fixed_rr",
+                "sl_pct": 0.01,
+                "rr": 2.0,
+                "atr_length": 14,
+                "sl_atr_mult": 1.5,
+                "trail_atr_mult": 2.0,
+            },
+            "costs": {
+                "taker_fee": 0.00035,
+                "slippage_bps": 2.0,
+                "funding_rate_8h": 0.0001,
+                "minutes_per_funding": 480,
+            },
+            "risk": {
+                "risk_pct_min": 0.01,
+                "risk_pct_max": 0.05,
+                "default_conviction": 0.5,
+                "max_size_frac": 1.0,
+            },
+            "data_provenance": {"sources": {"fixture": 200}},
+        },
+        params={"strategy": "ma_cross_long", "exit_mode": "fixed_rr", "fast": 5, "slow": 20},
+        metrics={
+            "net_pnl": 100.0,
+            "total_return_pct": 1.0,
+            "sharpe": 0.5,
+            "trade_count": 5,
+        },
+        candidate_id="cli_phase2_run",
+        strict=True,
+    )
+
+
+def test_cli_phase2_run_offline(tmp_path: Path, capsys, inject_history):
+    """phase2-run: strict export + injected OHLCV → JSON summary, artifacts."""
+    from hypervector.data.sources import fixture_ohlcv
+
+    # Short wave series: MA cross fires; keep engine time reasonable
+    df = fixture_ohlcv(n_bars=200, drift=5.0, wave_period=40, source="hl")
+    inject_history(df, summarize_provenance(df))
+
+    data = tmp_path / "data"
+    export_dir = _strict_export_for_phase2(data / "exports")
+
+    rc = main(
+        [
+            "--data-root",
+            str(data),
+            "phase2-run",
+            "--path",
+            str(export_dir),
+            "--lookback",
+            "30",
+            "--conviction",
+            "0.5",
+            "--no-network",
+        ]
+    )
+    assert rc == 0
+    captured = capsys.readouterr()
+    summary = json.loads(captured.out)
+    assert summary["ok"] is True
+    assert summary["execution_mode"] == "phase2_historical"
+    assert "orders_count" in summary
+    assert isinstance(summary["orders_count"], int)
+    assert "pnl" in summary
+    assert "report_path" in summary
+    assert Path(summary["report_path"]).is_file()
+    assert summary["loadout"]["strategy_name"] == "ma_cross_long"
+    # Historical only — do not claim paper/live ran
+    assert "paper/live not implemented" not in captured.err
+    assert "paper ran" not in captured.err.lower()
+    # Artifacts under data/nautilus/backtest/
+    assert (data / "nautilus" / "backtest").is_dir()
+    assert any((data / "nautilus" / "backtest").rglob("summary.json"))
+
+
+def test_cli_phase2_run_schema_error(tmp_path: Path, capsys):
+    """phase2-run exits 1 on invalid export (ExportSchemaError)."""
+    bad = tmp_path / "bad_export"
+    bad.mkdir()
+    (bad / "meta.json").write_text("{}", encoding="utf-8")
+    (bad / "params.json").write_text("{}", encoding="utf-8")
+    (bad / "metrics.json").write_text("{}", encoding="utf-8")
+
+    rc = main(
+        [
+            "--data-root",
+            str(tmp_path / "data"),
+            "phase2-run",
+            "--path",
+            str(bad),
+            "--lookback",
+            "30",
+        ]
+    )
+    assert rc == 1
+    err = json.loads(capsys.readouterr().err)
+    assert err["ok"] is False
+    assert err["errors"]
+
+
+def test_cli_phase2_run_paper_flag_notes_not_implemented(tmp_path: Path, capsys, inject_history):
+    """If --paper requested, note not implemented on stderr; still run historical."""
+    from hypervector.data.sources import fixture_ohlcv
+
+    df = fixture_ohlcv(n_bars=80, drift=5.0, wave_period=30, source="hl")
+    inject_history(df, summarize_provenance(df))
+    data = tmp_path / "data"
+    export_dir = _strict_export_for_phase2(data / "exports")
+
+    rc = main(
+        [
+            "--data-root",
+            str(data),
+            "phase2-run",
+            "--path",
+            str(export_dir),
+            "--lookback",
+            "30",
+            "--paper",
+            "--no-network",
+        ]
+    )
+    assert rc == 0
+    captured = capsys.readouterr()
+    summary = json.loads(captured.out)
+    assert summary["ok"] is True
+    assert summary["execution_mode"] == "phase2_historical"
+    assert "paper/live not implemented" in captured.err
+    assert "paper ran" not in captured.err.lower()

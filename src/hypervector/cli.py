@@ -14,6 +14,7 @@ from hypervector.export.phase2 import export_candidate
 from hypervector.export.schema import ExportSchemaError, validate_export_dir
 from hypervector.infra import ensure_data_layout, layout_report
 from hypervector.nautilus.config_stub import phase2_check_report
+from hypervector.nautilus.runner import run_phase2_backtest
 from hypervector.regime.detectors import detect_regime_ema
 from hypervector.regime.metrics import regime_detection_metrics
 from hypervector.report import rank_trials
@@ -382,6 +383,55 @@ def cmd_phase2_check(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_phase2_run(args: argparse.Namespace) -> int:
+    """Run Phase 2 historical backtest from a strict export bundle.
+
+    Paper/live modes are not implemented; if those flags are requested we only
+    note that on stderr and still run the historical engine path.
+    """
+    _ensure_root(args)
+    path = Path(args.path)
+    if getattr(args, "paper", False) or getattr(args, "live", False):
+        print("paper/live not implemented", file=sys.stderr)
+
+    try:
+        result = run_phase2_backtest(
+            export_dir=path,
+            data_root=Path(args.data_root),
+            conviction=float(args.conviction),
+            lookback_days=int(args.lookback) if args.lookback is not None else None,
+        )
+    except ExportSchemaError as exc:
+        print(
+            json.dumps(
+                {"ok": False, "path": str(path), "errors": exc.errors},
+                indent=2,
+            ),
+            file=sys.stderr,
+        )
+        return 1
+
+    # Prefer on-disk summary payload; ensure CLI contract fields are present.
+    try:
+        payload = json.loads(result.report_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        payload = {}
+    out = {
+        "ok": True,
+        "execution_mode": payload.get("execution_mode", "phase2_historical"),
+        "orders_count": result.orders_count,
+        "pnl": result.pnl,
+        "report_path": str(result.report_path),
+        "export_dir": str(result.export_dir),
+        "run_id": payload.get("run_id"),
+        "bars": payload.get("bars"),
+        "conviction": payload.get("conviction", float(args.conviction)),
+        "loadout": result.loadout_summary,
+    }
+    print(json.dumps(out, indent=2, default=str))
+    return 0
+
+
 def _add_market_args(p: argparse.ArgumentParser) -> None:
     p.add_argument("--symbol", default="BTC")
     p.add_argument("--timeframe", default="1m")
@@ -527,6 +577,40 @@ def build_parser() -> argparse.ArgumentParser:
         help="skip offline Nautilus import/config probe",
     )
     p2.set_defaults(func=cmd_phase2_check)
+
+    p2r = sub.add_parser(
+        "phase2-run",
+        help="Run Phase 2 historical backtest from a strict export (Nautilus engine)",
+    )
+    p2r.add_argument("--path", required=True, help="path to export directory")
+    p2r.add_argument(
+        "--lookback",
+        type=int,
+        default=DEFAULT_LOOKBACK,
+        help=f"calendar days for research history (floor={FLOOR_LOOKBACK}, default={DEFAULT_LOOKBACK})",
+    )
+    p2r.add_argument(
+        "--conviction",
+        type=float,
+        default=0.5,
+        help="0-1 conviction for position sizing (default 0.5)",
+    )
+    p2r.add_argument(
+        "--no-network",
+        action="store_true",
+        help="offline intent: history load is cache-first (no force refresh)",
+    )
+    p2r.add_argument(
+        "--paper",
+        action="store_true",
+        help="request paper mode (not implemented; historical still runs)",
+    )
+    p2r.add_argument(
+        "--live",
+        action="store_true",
+        help="request live mode (not implemented; historical still runs)",
+    )
+    p2r.set_defaults(func=cmd_phase2_run)
 
     return p
 
