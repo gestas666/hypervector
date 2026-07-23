@@ -39,11 +39,17 @@ tail -f /tmp/hv4a-soak/stderr.log
 
 | Checkpoint | Time | Notes |
 |------------|------|-------|
-| Process started | 2026-07-22 | pid in `/tmp/hv4a-soak.pid` |
-| Warm complete | | warm_bars ~43200 expected (~5 min CPU) |
-| Live L2 fill seen | | first `l2_walk_v1` row with BBO |
+| Process started | 2026-07-22 | pid `35764` in `/tmp/hv4a-soak.pid` |
+| Warm progress | ~6–7 min | decisions climbed to **1383** then flat → warm done, live polling |
+| Warm honesty | mid-soak | **370** market fills, all `bar_close_slippage_v1` + `book_missing`; **0** live files; all `execution_mode=paper` |
+| Live L2 fill seen | pending | wait for strategy signal on a live bar after warm |
 | Soak stop | | reason + summary |
+
+## Warm-up sample (honest)
+
+- `fill_model_id=bar_close_slippage_v1`, `fill_fallback_reason=book_missing`
+- No BBO on historical fills (correct)
 
 ## Verdict
 
-_Pending soak completion._
+_Warm-up honesty: **PASS** so far. Live L2 fill still pending strategy signal. Soak left running._
