@@ -19,6 +19,8 @@ def test_ensure_data_layout_creates_all_subdirs(tmp_path: Path):
     assert paths.paper_ledger != paths.live
     assert paths.paper_ledger.is_relative_to(root / "paper")
     assert paths.live == root / "live"
+    assert paths.live_decisions == root / "live" / "decisions"
+    assert paths.live_ledger == root / "live" / "ledger"
 
 
 def test_ensure_data_layout_idempotent(tmp_path: Path):
@@ -43,3 +45,5 @@ def test_layout_report_after_ensure(tmp_path: Path):
     assert rep["rules"]["paper_live_separated"] is True
     assert rep["dirs"]["paper_ledger"]["exists"] is True
     assert rep["dirs"]["live"]["exists"] is True
+    assert rep["dirs"]["live_decisions"]["exists"] is True
+    assert rep["dirs"]["live_ledger"]["exists"] is True

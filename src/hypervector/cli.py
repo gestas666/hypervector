@@ -20,6 +20,10 @@ from hypervector.paper.fill_models import (
     DEFAULT_MAX_BOOK_AGE_MS,
     FILL_MODEL_L2_WALK_V1,
 )
+from hypervector.live.policy import (
+    DEFAULT_MAX_NOTIONAL_USD,
+    live_policy_from_env,
+)
 from hypervector.paper.order_intent import NETWORK_MAINNET, ORDER_INTENT_SCHEMA
 from hypervector.paper.report import report_from_data_root
 from hypervector.paper.runner import start_paper_daemon
@@ -131,14 +135,53 @@ def cmd_paper_check(args: argparse.Namespace) -> int:
     }
     paper.update(_paper_surface_flags())
     report["paper"] = paper
+    live_pol = live_policy_from_env(enabled=False, armed=False)
     report["live"] = {
         "enabled": False,
+        "decisions": str(paths.live_decisions),
+        "ledger": str(paths.live_ledger),
+        "submit_wired": False,
         "note": (
-            "Phase 4b shadow: mainnet market data + order intents only; "
-            "no venue orders. Real submit is a later phase."
+            "Phase 4b-live foundation: live ledger paths exist; "
+            "venue submit not wired. Use paper-run for dry-run."
         ),
+        "readiness": live_pol.readiness(),
     }
     print(json.dumps(report, indent=2))
+    return 0
+
+
+def cmd_live_check(args: argparse.Namespace) -> int:
+    """Live readiness (policy only; never prints secret values; no submit)."""
+    paths = _ensure_root(args)
+    enabled = bool(getattr(args, "enabled", False))
+    armed = bool(getattr(args, "armed", False))
+    max_notional = float(
+        getattr(args, "max_notional_usd", DEFAULT_MAX_NOTIONAL_USD)
+    )
+    policy = live_policy_from_env(
+        enabled=enabled,
+        armed=armed,
+        max_notional_usd=max_notional,
+    )
+    ready = policy.readiness()
+    report = {
+        "ok": True,
+        "root": str(paths.root.resolve()),
+        "live_decisions": str(paths.live_decisions),
+        "live_ledger": str(paths.live_ledger),
+        "live": ready,
+        "paper_path_unchanged": True,
+        "venue_submit": False,
+    }
+    # Attempt start gate only for diagnostics (do not start daemon).
+    try:
+        policy.require_start()
+        report["start_gate"] = "ok"
+    except Exception as exc:  # LivePolicyError
+        report["start_gate"] = "refused"
+        report["start_gate_reason"] = str(exc)
+    print(json.dumps(report, indent=2, default=str))
     return 0
 
 
@@ -689,6 +732,31 @@ def build_parser() -> argparse.ArgumentParser:
         help="include last N market fills in sample (default 5)",
     )
     prep.set_defaults(func=cmd_paper_report)
+
+    lc = sub.add_parser(
+        "live-check",
+        help=(
+            "Live readiness: secrets present (bool), arm/enabled gates, "
+            "max notional (no secret values; submit not wired in F1)"
+        ),
+    )
+    lc.add_argument(
+        "--enabled",
+        action="store_true",
+        help="simulate [live] enabled=true for readiness (default false)",
+    )
+    lc.add_argument(
+        "--armed",
+        action="store_true",
+        help="simulate --i-accept-live-risk arm for readiness (default false)",
+    )
+    lc.add_argument(
+        "--max-notional-usd",
+        type=float,
+        default=DEFAULT_MAX_NOTIONAL_USD,
+        help=f"max notional cap for policy (default {DEFAULT_MAX_NOTIONAL_USD})",
+    )
+    lc.set_defaults(func=cmd_live_check)
 
     pr = sub.add_parser(
         "paper-run",
