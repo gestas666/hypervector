@@ -13,13 +13,13 @@
 | F1d | `live/policy.py` secrets/arm/caps | **Done** |
 | F1e | CLI `live-check` | **Done** |
 | F1f | Tests + HANDOFF | **Done** |
-| **F2a** | `LiveExecClient` Protocol + `PlaceResult` | **Next session** |
-| **F2b** | HL mainnet adapter (place market only); secrets from env | **Next** |
-| **F2c** | Factory: construct only after `LivePolicy.require_start()` | **Next** |
-| **F2d** | Offline tests with mock transport; paper no-submit regression | **Next** |
-| **F2e** | `live-check` / readiness reflects client wired vs can_start | **Next** |
-| F3 | `live-run` daemon + live ledger writes | After F2 |
-| F4 | Kill switch cancel-open on stop | After F3 |
+| **F2a** | `LiveExecClient` Protocol + `PlaceResult` | **Done** |
+| **F2b** | HL mainnet adapter (place market only); secrets from env | **Done** |
+| **F2c** | Factory: construct only after `LivePolicy.require_start()` | **Done** |
+| **F2d** | Offline tests with mock transport; paper no-submit regression | **Done** |
+| **F2e** | `live-check` / readiness reflects client wired vs can_start | **Done** |
+| **F3** | `live-run` daemon + live ledger writes | **Done** |
+| **F4** | Kill switch cancel-open on stop | **Done** |
 
 ### F2 notes for implementer
 

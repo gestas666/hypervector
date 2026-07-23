@@ -22,8 +22,10 @@ from hypervector.paper.fill_models import (
 )
 from hypervector.live.policy import (
     DEFAULT_MAX_NOTIONAL_USD,
+    LivePolicyError,
     live_policy_from_env,
 )
+from hypervector.live.runner import start_live_daemon
 from hypervector.paper.order_intent import NETWORK_MAINNET, ORDER_INTENT_SCHEMA
 from hypervector.paper.report import report_from_data_root
 from hypervector.paper.runner import start_paper_daemon
@@ -136,16 +138,17 @@ def cmd_paper_check(args: argparse.Namespace) -> int:
     paper.update(_paper_surface_flags())
     report["paper"] = paper
     live_pol = live_policy_from_env(enabled=False, armed=False)
+    ready = live_pol.readiness()
     report["live"] = {
         "enabled": False,
         "decisions": str(paths.live_decisions),
         "ledger": str(paths.live_ledger),
-        "submit_wired": False,
-        "note": (
-            "Phase 4b-live foundation: live ledger paths exist; "
-            "venue submit not wired. Use paper-run for dry-run."
+        "submit_wired": bool(ready.get("submit_wired")),
+        "note": ready.get(
+            "note",
+            "Live readiness — use live-check for start gates.",
         ),
-        "readiness": live_pol.readiness(),
+        "readiness": ready,
     }
     print(json.dumps(report, indent=2))
     return 0
@@ -172,7 +175,9 @@ def cmd_live_check(args: argparse.Namespace) -> int:
         "live_ledger": str(paths.live_ledger),
         "live": ready,
         "paper_path_unchanged": True,
+        # live-check never places; True only would mean an active submit session.
         "venue_submit": False,
+        "submit_wired": bool(ready.get("submit_wired")),
     }
     # Attempt start gate only for diagnostics (do not start daemon).
     try:
@@ -182,6 +187,104 @@ def cmd_live_check(args: argparse.Namespace) -> int:
         report["start_gate"] = "refused"
         report["start_gate_reason"] = str(exc)
     print(json.dumps(report, indent=2, default=str))
+    return 0
+
+
+def cmd_live_run(args: argparse.Namespace) -> int:
+    """Live daemon: mainnet place when enabled+armed+secrets (fail-closed)."""
+    _ensure_root(args)
+    path = Path(args.path)
+    if not path.is_dir():
+        print(f"export path not found: {path}", file=sys.stderr)
+        return 1
+
+    armed = bool(getattr(args, "i_accept_live_risk", False))
+    if not armed:
+        print(
+            "live-run refused: pass --i-accept-live-risk to arm mainnet risk",
+            file=sys.stderr,
+        )
+        return 1
+
+    enabled = bool(getattr(args, "enabled", False))
+    if not enabled:
+        print(
+            "live-run refused: pass --enabled (or set [live] enabled=true) "
+            "to allow live execution",
+            file=sys.stderr,
+        )
+        return 1
+
+    max_notional = float(
+        getattr(args, "max_notional_usd", DEFAULT_MAX_NOTIONAL_USD)
+    )
+    policy = live_policy_from_env(
+        enabled=enabled,
+        armed=armed,
+        max_notional_usd=max_notional,
+    )
+    try:
+        policy.require_start()
+    except LivePolicyError as exc:
+        print(f"live-run refused: {exc}", file=sys.stderr)
+        return 1
+
+    wallet = (os.environ.get(SECRET_ENV_WALLET) or "").strip()
+    key = (os.environ.get(SECRET_ENV_API_KEY) or "").strip()
+    if not wallet or not key:
+        print(
+            f"live-run refused: set {SECRET_ENV_WALLET} and {SECRET_ENV_API_KEY}",
+            file=sys.stderr,
+        )
+        return 1
+
+    stop_file = Path(args.stop_file) if getattr(args, "stop_file", None) else None
+    try:
+        result = start_live_daemon(
+            export_dir=path,
+            data_root=Path(args.data_root),
+            policy=policy,
+            wallet_address=wallet,
+            private_key=key,
+            conviction=float(getattr(args, "conviction", 0.5)),
+            fee_tier=int(getattr(args, "fee_tier", 0)),
+            stop_file=stop_file,
+            poll_interval_secs=float(getattr(args, "poll_interval", 5.0)),
+            max_live_bars=int(args.max_live_bars)
+            if getattr(args, "max_live_bars", None) is not None
+            else None,
+            lookback_days=int(args.lookback) if getattr(args, "lookback", None) else None,
+        )
+    except LivePolicyError as exc:
+        print(f"live-run refused: {exc}", file=sys.stderr)
+        return 1
+    except FileNotFoundError as exc:
+        print(str(exc), file=sys.stderr)
+        return 1
+    except Exception as exc:
+        print(f"live-run failed: {exc}", file=sys.stderr)
+        return 1
+
+    out = {
+        "ok": True,
+        "execution_mode": result.execution_mode,
+        "run_id": result.run_id,
+        "export_dir": str(result.export_dir),
+        "decisions_path": str(result.decisions_path),
+        "warm_bars": result.warm_bars,
+        "live_bars": result.live_bars,
+        "bars_processed": result.bars_processed,
+        "fills_count": result.fills_count,
+        "places_count": result.places_count,
+        "stop_reason": result.stop_reason,
+        "cancel_attempted": result.cancel_attempted,
+        "cancel_ok": result.cancel_ok,
+        "cancel_error": result.cancel_error,
+        "network": NETWORK_MAINNET,
+        "max_notional_usd": max_notional,
+        "venue_submit": True,  # armed live-run path (actual places depend on signals)
+    }
+    print(json.dumps(out, indent=2, default=str))
     return 0
 
 
@@ -737,7 +840,7 @@ def build_parser() -> argparse.ArgumentParser:
         "live-check",
         help=(
             "Live readiness: secrets present (bool), arm/enabled gates, "
-            "max notional (no secret values; submit not wired in F1)"
+            "max notional, submit_wired (no secret values; no place)"
         ),
     )
     lc.add_argument(
@@ -757,6 +860,72 @@ def build_parser() -> argparse.ArgumentParser:
         help=f"max notional cap for policy (default {DEFAULT_MAX_NOTIONAL_USD})",
     )
     lc.set_defaults(func=cmd_live_check)
+
+    lr = sub.add_parser(
+        "live-run",
+        help=(
+            "Live mainnet daemon: requires --enabled + --i-accept-live-risk + secrets; "
+            "writes data/live/ decisions (fail-closed)"
+        ),
+    )
+    lr.add_argument(
+        "--path",
+        required=True,
+        help="path to strict Phase 1.5 export directory",
+    )
+    lr.add_argument(
+        "--enabled",
+        action="store_true",
+        help="set [live] enabled=true for this run (required)",
+    )
+    lr.add_argument(
+        "--i-accept-live-risk",
+        action="store_true",
+        dest="i_accept_live_risk",
+        help="explicit arm for mainnet risk (required)",
+    )
+    lr.add_argument(
+        "--max-notional-usd",
+        type=float,
+        default=DEFAULT_MAX_NOTIONAL_USD,
+        help=f"hard notional cap (default {DEFAULT_MAX_NOTIONAL_USD})",
+    )
+    lr.add_argument(
+        "--conviction",
+        type=float,
+        default=0.5,
+        help="fixed conviction [0,1] (default 0.5)",
+    )
+    lr.add_argument(
+        "--fee-tier",
+        type=int,
+        default=0,
+        help="HL fee tier index (default 0)",
+    )
+    lr.add_argument(
+        "--stop-file",
+        default=None,
+        help="path: when this file exists, stop gracefully",
+    )
+    lr.add_argument(
+        "--poll-interval",
+        type=float,
+        default=5.0,
+        help="seconds between bar polls (default 5)",
+    )
+    lr.add_argument(
+        "--max-live-bars",
+        type=int,
+        default=None,
+        help="stop after N live bars (smoke / offline cap)",
+    )
+    lr.add_argument(
+        "--lookback",
+        type=int,
+        default=None,
+        help="warm-up lookback days (default from export meta)",
+    )
+    lr.set_defaults(func=cmd_live_run)
 
     pr = sub.add_parser(
         "paper-run",
