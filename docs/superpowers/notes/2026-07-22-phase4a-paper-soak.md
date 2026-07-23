@@ -42,14 +42,20 @@ tail -f /tmp/hv4a-soak/stderr.log
 | Process started | 2026-07-22 | pid `35764` in `/tmp/hv4a-soak.pid` |
 | Warm progress | ~6–7 min | decisions climbed to **1383** then flat → warm done, live polling |
 | Warm honesty | mid-soak | **370** market fills, all `bar_close_slippage_v1` + `book_missing`; **0** live files; all `execution_mode=paper` |
-| Live L2 fill seen | pending | wait for strategy signal on a live bar after warm |
+| Live phase (~15 min) | 2026-07-22 | Still running; **rows flat at 1383** (flat book after warm close — no new market decisions until next signal) |
+| Live L2 fill seen | pending | needs enter/exit on a post-warm live bar |
 | Soak stop | | reason + summary |
 
 ## Warm-up sample (honest)
 
 - `fill_model_id=bar_close_slippage_v1`, `fill_fallback_reason=book_missing`
 - No BBO on historical fills (correct)
+- No ConnectionReset / L2 spam in stderr (only PAPER MODE banner)
+
+## Live phase note
+
+After warm close at `2026-07-22T23:44`, position flat → no funding rows. 1m live bars may process with **no decision append** until strategy fires. That is expected, not a hang.
 
 ## Verdict
 
-_Warm-up honesty: **PASS** so far. Live L2 fill still pending strategy signal. Soak left running._
+_Warm-up honesty: **PASS**. Live L2 fill: **pending signal**. Soak left running for longer observation. 4b design can start in parallel._
