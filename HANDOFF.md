@@ -4,7 +4,7 @@
 **Project:** `/Users/gestas/Prototypes/hypervector`  
 **User:** Albert  
 **Branch:** `feat/phase4a-book-fills-metalabel`  
-**HEAD:** `07a10eb` — `fix(paper): shadow banner matches execution_mode; 4b soak verified` (base Task 6 `9579981`)  
+**HEAD:** `55c8189` — verification tip (banner fix `07a10eb` + HANDOFF pin; base Task 6 `9579981`)  
 **Working tree:** clean except untracked `audio/` (ignore). Not pushed.
 
 **Prefer this HANDOFF over agentmemory for phase status.**
