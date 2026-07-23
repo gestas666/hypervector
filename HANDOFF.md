@@ -1,11 +1,12 @@
 # HANDOFF — hypervector
 
-**Saved:** 2026-07-23 — **Phase 5 TUI implemented.** Awaiting Albert visual + holistic acceptance.  
+**Saved:** 2026-07-23 — **Phase 5 TUI merged to main + pushed to GitHub.** Awaiting Albert visual + holistic acceptance.  
 **Project:** `/Users/gestas/Prototypes/hypervector`  
 **User:** Albert  
-**Branch:** `feat/phase5-tui`  
+**Branch:** `main` (tracks `origin/main`)  
+**Remote:** `https://github.com/gestas666/hypervector.git`  
 **HEAD:** check `git log -1`  
-**Working tree:** implementation committed locally. **Do not push** unless Albert requests.
+**Working tree:** clean after merge+push.
 
 **Prefer this HANDOFF over agentmemory for phase status.**
 
@@ -146,7 +147,7 @@ uv run python -m hypervector status → ok, honesty flags intact
 | Albert visual sign-off | Required before merge claim of “holistic complete” |
 | Merge `feat/phase5-tui` | After visual OK |
 | 1-page GUI | Deferred |
-| Push remote | Not done |
+| Push remote | **Done** — `origin` → `gestas666/hypervector` |
 | Real mainnet soak | Optional; Albert secrets only |
 
 ---
