@@ -1,11 +1,11 @@
 # HANDOFF — hypervector
 
-**Saved:** 2026-07-23 — **4b-live F1 foundation** (live ledger + policy + live-check); paper complete A still done; **no venue submit**  
+**Saved:** 2026-07-23 — **This feature branch build CLOSED** (4a → 4b shadow → paper A → 4b-live F1). Neural-trader rejected. **No venue submit.**  
 **Project:** `/Users/gestas/Prototypes/hypervector`  
 **User:** Albert  
 **Branch:** `feat/phase4a-book-fills-metalabel`  
-**HEAD:** branch tip — 4b-live foundation F1  
-**Working tree:** clean except untracked `audio/` (ignore). Not pushed.
+**HEAD:** branch tip — build closed (see latest commit)  
+**Working tree:** clean except intentionally gitignored local noise. **Not pushed** (push/PR when Albert wants).
 
 **Prefer this HANDOFF over agentmemory for phase status.**
 
@@ -25,29 +25,30 @@
 | Phase **4b shadow verification / soak** | **PASS** — dual smoke + bounded mainnet soak + 1× live `l2_walk_v1` |
 | Phase **paper completeness (slice A)** | **Done** — `paper-report`, CLI honesty, acceptance matrix |
 | Phase **4b-live F1 foundation** | **Done** — live ledger, LivePolicy, `live-check`; **submit not wired** |
-| Phase **4b-live F2+** (exec client + live-run + kill) | **Not started** |
+| Phase **4b-live F2+** (exec client + live-run + kill) | **Not started** — next *product* build when Albert asks |
 | Phase 4c CLI | **Partial** (paper-report + live-check); full epic later |
 | Phase 5 TUI + 1-page GUI | **Not started** |
+| neural-trader / `@neural-trader/*` | **Rejected** — no high-value +EV synergy; do not integrate |
 
-**Outgoing session:** 4b-live **F1 foundation** + paper completeness A. Offline suite green. **Still no venue orders.**  
-**Incoming session:** **F2** `LiveExecClient` + HL adapter, then **F3** `live-run`, **F4** kill/cancel. Keep paper-run for dry-run.
+**Outgoing session:** Feature branch build **closed and verified**. Offline suite green. Dry-run paper/shadow is the production path. Live gates exist but **cannot place orders**.  
+**Incoming session:** Optional longer shadow soak **or** **4b-live F2** (exec client) when ready for capital path design execution.
 
 ---
 
-## CLEAN SESSION START — 4b-live F2 (exec client) or paper dry-run
+## CLEAN SESSION START — next product work (F2 or soak)
 
 ### Goal (one sentence)
 
-Paper dry-run remains default; 4b-live F1 gates exist — next wire a real exec client behind arm/secrets (still fail-closed).
+This branch is merge-ready as a **dry-run + live foundation** drop; next code is **F2 LiveExecClient** only when Albert opens capital path work.
 
 ### Bootstrap commands
 
 ```bash
 cd /Users/gestas/Prototypes/hypervector
 git status -sb
-git log -8 --oneline   # expect 4b Task 6 commit at tip
+git log -8 --oneline
 uv sync --all-extras
-uv run pytest tests/ -q -m "not network"   # ~237 passed
+uv run pytest tests/ -q -m "not network"   # ~249+ passed
 uv run python -m hypervector paper-check
 # → mode/execution_mode=shadow, network=mainnet, no_submit=true,
 #   submitted_default=false, order_intent_schema=hv_order_intent_v1,
@@ -500,13 +501,20 @@ After paper proven (+ live ops checklist): skill/plugin so agents follow researc
 
 ## Outgoing session summary
 
-Done this build arc (2026-07-23 continue):
+**This feature branch build is CLOSED (2026-07-23).**
 
-- Paper completeness A (prior commit `69e2e27`)  
-- **4b-live F1:** `live/ledger.py`, `live/policy.py`, infra `live/decisions|ledger`, CLI `live-check`  
-- Design + plan for full 4b-live; **venue submit still not wired**  
-- Offline suite green  
+Shipped on `feat/phase4a-book-fills-metalabel`:
 
-**Next human/agent:** implement **F2** exec client + arm path (still fail-closed without secrets/arm).  
+| Arc | Highlights |
+|-----|------------|
+| 4a | Book + staged L2 fills + metalabel scale-only |
+| 4b shadow | Intents, `submitted=false`, mainnet-only, soak PASS |
+| Paper A | `paper-report`, CLI honesty, acceptance matrix |
+| 4b-live F1 | Live ledger + policy + `live-check` (no submit) |
+| Decision | **neural-trader rejected** — no high-value +EV synergy |
 
-**Not done:** real place/cancel orders, `live-run` daemon, kill cancel, full 4c, TUI/GUI.
+**Final verify:** offline **249 passed** (`-m "not network"`); `paper-check` / `live-check` / `paper-report` smokes OK.  
+
+**Next human/agent:** merge/PR when Albert wants; then optional soak **or** **4b-live F2** (exec client).  
+
+**Not done (explicit):** venue place/cancel, `live-run`, kill cancel, full 4c, TUI/GUI, NT packages.

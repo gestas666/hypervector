@@ -58,3 +58,10 @@ uv.lock.bak
 tmp/
 temp/
 .cache/
+.tmp-*/
+audio/
+
+# Agent / review scratch (never ship)
+.tmp-nt-review/
+
+.pytest-*.txt
