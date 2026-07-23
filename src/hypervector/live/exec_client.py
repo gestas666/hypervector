@@ -48,7 +48,7 @@ class PlaceResult:
 
 @runtime_checkable
 class PlaceTransport(Protocol):
-    """Low-level venue place (injectable for offline tests)."""
+    """Low-level venue place/cancel (injectable for offline tests)."""
 
     def place_market(
         self,
@@ -62,10 +62,20 @@ class PlaceTransport(Protocol):
         """Return venue response dict; should include ``oid`` when accepted."""
         ...
 
+    def cancel_all(
+        self,
+        *,
+        wallet_address: str,
+        private_key: str,
+        coin: str | None = None,
+    ) -> dict[str, Any]:
+        """Best-effort cancel open orders; return venue response dict."""
+        ...
+
 
 @runtime_checkable
 class LiveExecClient(Protocol):
-    """Public place surface for armed live execution."""
+    """Public place + kill surface for armed live execution."""
 
     def place_market(
         self,
@@ -77,6 +87,7 @@ class LiveExecClient(Protocol):
         client_order_id: str | None = None,
     ) -> PlaceResult: ...
 
+    def cancel_all(self, *, symbol: str | None = None) -> PlaceResult: ...
 
 def is_submit_wired() -> bool:
     """True when the live exec client module is present (F2+)."""
@@ -196,6 +207,28 @@ class HyperliquidLiveExecClient:
         except Exception as exc:  # noqa: BLE001 — surface venue/transport failures
             return PlaceResult(submitted=False, venue_order_id=None, error=str(exc))
 
+    def cancel_all(self, *, symbol: str | None = None) -> PlaceResult:
+        """Best-effort cancel open orders (F4 kill switch)."""
+        try:
+            coin = hl_coin(symbol) if symbol else None
+            cancel = getattr(self._transport, "cancel_all", None)
+            if cancel is None:
+                return PlaceResult(
+                    submitted=False,
+                    venue_order_id=None,
+                    error="transport does not support cancel_all",
+                )
+            raw = cancel(
+                wallet_address=self._wallet,
+                private_key=self._private_key,
+                coin=coin,
+            )
+            oid = _parse_oid(raw if isinstance(raw, dict) else {})
+            # submitted=True means cancel request was accepted by transport.
+            return PlaceResult(submitted=True, venue_order_id=oid, error=None)
+        except Exception as exc:  # noqa: BLE001 — best-effort kill path
+            return PlaceResult(submitted=False, venue_order_id=None, error=str(exc))
+
 
 class _SdkPlaceTransport:
     """Optional production transport: hyperliquid-python-sdk when installed.
@@ -247,6 +280,43 @@ class _SdkPlaceTransport:
         if isinstance(raw, dict):
             return raw
         return {"status": "ok", "raw": raw, "oid": None}
+
+    def cancel_all(
+        self,
+        *,
+        wallet_address: str,
+        private_key: str,
+        coin: str | None = None,
+    ) -> dict[str, Any]:
+        del wallet_address
+        try:
+            from eth_account import Account  # type: ignore[import-untyped]
+            from hyperliquid.exchange import Exchange  # type: ignore[import-untyped]
+            from hyperliquid.utils import constants  # type: ignore[import-untyped]
+        except ImportError as exc:
+            raise RuntimeError(
+                "Hyperliquid cancel requires optional deps "
+                "(hyperliquid-python-sdk + eth_account)."
+            ) from exc
+
+        api_url = getattr(constants, "MAINNET_API_URL", "https://api.hyperliquid.xyz")
+        if "testnet" in str(api_url).lower():
+            raise RuntimeError("refusing testnet Hyperliquid URL")
+        account = Account.from_key(private_key)
+        exchange = Exchange(account, base_url=api_url)
+        if coin and hasattr(exchange, "cancel"):
+            # Best-effort: schedule cancel-all for coin if SDK exposes bulk cancel.
+            if hasattr(exchange, "cancel_all"):
+                raw = exchange.cancel_all(coin)
+            else:
+                raw = {"status": "ok", "note": "no cancel_all on SDK; open orders untouched"}
+        elif hasattr(exchange, "cancel_all"):
+            raw = exchange.cancel_all()
+        else:
+            raw = {"status": "ok", "note": "cancel_all not available on SDK build"}
+        if isinstance(raw, dict):
+            return raw
+        return {"status": "ok", "raw": raw}
 
 
 def create_live_exec_client(

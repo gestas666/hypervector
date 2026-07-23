@@ -20,10 +20,13 @@ class RecordingTransport:
         *,
         response: dict[str, Any] | None = None,
         error: Exception | None = None,
+        cancel_error: Exception | None = None,
     ) -> None:
         self.calls: list[dict[str, Any]] = []
+        self.cancel_calls: list[dict[str, Any]] = []
         self._response = response if response is not None else {"status": "ok", "oid": "live-1"}
         self._error = error
+        self._cancel_error = cancel_error
 
     def place_market(
         self,
@@ -46,6 +49,24 @@ class RecordingTransport:
         if self._error is not None:
             raise self._error
         return dict(self._response)
+
+    def cancel_all(
+        self,
+        *,
+        wallet_address: str,
+        private_key: str,
+        coin: str | None = None,
+    ) -> dict[str, Any]:
+        self.cancel_calls.append(
+            {
+                "wallet_address": wallet_address,
+                "private_key": private_key,
+                "coin": coin,
+            }
+        )
+        if self._cancel_error is not None:
+            raise self._cancel_error
+        return {"status": "ok", "oid": "cancel-batch-1"}
 
 
 def _write_strict_export(root: Path, *, strategy: str = "crown_stack_short") -> Path:
@@ -374,3 +395,57 @@ def test_paper_package_still_has_no_live_exec_import():
             if needle in text:
                 offenders.append(f"{path.name}: {needle}")
     assert not offenders, "paper must not import live exec:\n" + "\n".join(offenders)
+
+
+def test_start_live_daemon_cancel_all_on_stop(tmp_path: Path):
+    """F4: after live phase armed, stop path best-effort cancel_all once."""
+    from hypervector.live.runner import start_live_daemon
+
+    export = _write_strict_export(tmp_path)
+    transport = RecordingTransport()
+    warm = fixture_ohlcv(n_bars=40, drift=-5.0)
+
+    result = start_live_daemon(
+        export_dir=export,
+        data_root=tmp_path / "data",
+        policy=_armed_policy(),
+        wallet_address="0xabc",
+        private_key="k",
+        transport=transport,
+        warm_ohlcv=warm,
+        poll_fn=lambda after_ts=None: pd.DataFrame(),
+        max_live_bars=0,
+        install_signal_handlers=False,
+        sleep_fn=lambda _s: None,
+    )
+    assert result.cancel_attempted is True
+    assert result.cancel_ok is True
+    assert result.cancel_error is None
+    assert len(transport.cancel_calls) == 1
+    assert transport.cancel_calls[0]["wallet_address"] == "0xabc"
+    assert transport.cancel_calls[0]["coin"] == "BTC"
+
+
+def test_cancel_all_transport_error_is_best_effort(tmp_path: Path):
+    from hypervector.live.runner import start_live_daemon
+
+    export = _write_strict_export(tmp_path)
+    transport = RecordingTransport(cancel_error=RuntimeError("cancel down"))
+    warm = fixture_ohlcv(n_bars=20, drift=-5.0)
+
+    result = start_live_daemon(
+        export_dir=export,
+        data_root=tmp_path / "data",
+        policy=_armed_policy(),
+        wallet_address="0xabc",
+        private_key="k",
+        transport=transport,
+        warm_ohlcv=warm,
+        poll_fn=lambda after_ts=None: pd.DataFrame(),
+        max_live_bars=0,
+        install_signal_handlers=False,
+        sleep_fn=lambda _s: None,
+    )
+    assert result.cancel_attempted is True
+    assert result.cancel_ok is False
+    assert "cancel down" in (result.cancel_error or "")

@@ -43,6 +43,9 @@ class LiveDaemonResult:
     places_count: int
     stop_reason: str
     execution_mode: str = "live"
+    cancel_attempted: bool = False
+    cancel_ok: bool | None = None
+    cancel_error: str | None = None
 
 
 def start_live_daemon(
@@ -226,6 +229,25 @@ def start_live_daemon(
     if stop_state["reason"] is None:
         stop_state["reason"] = "stop"
 
+    # F4 kill: best-effort cancel open orders after live phase was armed.
+    cancel_attempted = False
+    cancel_ok: bool | None = None
+    cancel_error: str | None = None
+    if session.engine.place_enabled:
+        cancel_attempted = True
+        try:
+            cancel_result = client.cancel_all(symbol=loadout.symbol)
+            cancel_ok = bool(cancel_result.submitted)
+            cancel_error = cancel_result.error
+            if cancel_ok:
+                logger.info("live kill cancel_all ok oid=%s", cancel_result.venue_order_id)
+            else:
+                logger.warning("live kill cancel_all failed: %s", cancel_error)
+        except Exception as exc:  # noqa: BLE001 — never block stop summary
+            cancel_ok = False
+            cancel_error = str(exc)
+            logger.warning("live kill cancel_all exception: %s", exc)
+
     result = LiveDaemonResult(
         run_id=session.run_id,
         decisions_path=session.decisions_path,
@@ -237,13 +259,17 @@ def start_live_daemon(
         places_count=session.places_count,
         stop_reason=str(stop_state["reason"]),
         execution_mode="live",
+        cancel_attempted=cancel_attempted,
+        cancel_ok=cancel_ok,
+        cancel_error=cancel_error,
     )
     logger.info(
-        "live daemon stopped reason=%s warm=%s live=%s fills=%s places=%s",
+        "live daemon stopped reason=%s warm=%s live=%s fills=%s places=%s cancel=%s",
         result.stop_reason,
         result.warm_bars,
         result.live_bars,
         result.fills_count,
         result.places_count,
+        result.cancel_attempted,
     )
     return result

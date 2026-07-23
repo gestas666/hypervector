@@ -277,6 +277,9 @@ def cmd_live_run(args: argparse.Namespace) -> int:
         "fills_count": result.fills_count,
         "places_count": result.places_count,
         "stop_reason": result.stop_reason,
+        "cancel_attempted": result.cancel_attempted,
+        "cancel_ok": result.cancel_ok,
+        "cancel_error": result.cancel_error,
         "network": NETWORK_MAINNET,
         "max_notional_usd": max_notional,
         "venue_submit": True,  # armed live-run path (actual places depend on signals)

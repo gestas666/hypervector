@@ -11,7 +11,7 @@ from hypervector.live.policy import LivePolicy, LivePolicyError
 
 
 class RecordingTransport:
-    """Mock venue transport — records place calls, never hits network."""
+    """Mock venue transport — records place/cancel calls, never hits network."""
 
     def __init__(
         self,
@@ -20,6 +20,7 @@ class RecordingTransport:
         error: Exception | None = None,
     ) -> None:
         self.calls: list[dict[str, Any]] = []
+        self.cancel_calls: list[dict[str, Any]] = []
         self._response = response if response is not None else {"status": "ok", "oid": "oid-1"}
         self._error = error
 
@@ -44,6 +45,22 @@ class RecordingTransport:
         if self._error is not None:
             raise self._error
         return dict(self._response)
+
+    def cancel_all(
+        self,
+        *,
+        wallet_address: str,
+        private_key: str,
+        coin: str | None = None,
+    ) -> dict[str, Any]:
+        self.cancel_calls.append(
+            {
+                "wallet_address": wallet_address,
+                "private_key": private_key,
+                "coin": coin,
+            }
+        )
+        return {"status": "ok", "oid": "cancel-1"}
 
 
 def _armed_policy(**kwargs: Any) -> LivePolicy:
@@ -266,3 +283,20 @@ def test_cli_live_check_submit_wired_true_can_start_false_default(
     assert rep["live"]["can_start"] is False
     assert rep["start_gate"] == "refused"
     assert rep["venue_submit"] is False
+
+
+def test_cancel_all_calls_transport():
+    from hypervector.live.exec_client import create_live_exec_client
+
+    transport = RecordingTransport()
+    client = create_live_exec_client(
+        _armed_policy(),
+        wallet_address="0xabc",
+        private_key="k",
+        transport=transport,
+    )
+    result = client.cancel_all(symbol="BTC-PERP")
+    assert result.submitted is True
+    assert result.venue_order_id == "cancel-1"
+    assert len(transport.cancel_calls) == 1
+    assert transport.cancel_calls[0]["coin"] == "BTC"
