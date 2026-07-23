@@ -18,6 +18,11 @@ from hypervector.paper.fill_models import (
 )
 from hypervector.paper.fills import ExplicitFillEngine, PaperPosition
 from hypervector.paper.ledger import PaperLedgerError, append_paper_decision
+from hypervector.paper.order_intent import (
+    NETWORK_MAINNET,
+    ORDER_INTENT_SCHEMA,
+    build_order_intent,
+)
 from hypervector.paper.runner import PaperDaemonResult, start_paper_daemon
 from hypervector.paper.session import PaperSession, PaperSessionResult, run_paper_session_offline
 
@@ -26,6 +31,8 @@ __all__ = [
     "FILL_MODEL_BAR_CLOSE_SLIPPAGE_V1",
     "FILL_MODEL_L2_WALK_V1",
     "FILL_MODEL_TOP_BPS_V1",
+    "NETWORK_MAINNET",
+    "ORDER_INTENT_SCHEMA",
     "BarCloseSlippageFillModel",
     "CostProvider",
     "CostSnapshot",
@@ -39,6 +46,7 @@ __all__ = [
     "PaperSession",
     "PaperSessionResult",
     "append_paper_decision",
+    "build_order_intent",
     "funding_payment",
     "run_paper_session_offline",
     "select_fill_model",
