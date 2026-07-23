@@ -25,10 +25,32 @@ from hypervector.live.policy import (
     LivePolicyError,
     live_policy_from_env,
 )
+from hypervector.live.report import report_from_data_root as live_report_from_data_root
 from hypervector.live.runner import start_live_daemon
 from hypervector.paper.order_intent import NETWORK_MAINNET, ORDER_INTENT_SCHEMA
 from hypervector.paper.report import report_from_data_root
 from hypervector.paper.runner import start_paper_daemon
+
+# Phase 4c: discoverable command inventory (status command + tests).
+CLI_COMMANDS: tuple[str, ...] = (
+    "infra-init",
+    "status",
+    "paper-check",
+    "paper-report",
+    "paper-run",
+    "live-check",
+    "live-report",
+    "live-run",
+    "history",
+    "regime",
+    "sweep-up",
+    "sweep-down",
+    "report",
+    "export",
+    "export-validate",
+    "phase2-check",
+    "phase2-run",
+)
 from hypervector.regime.detectors import detect_regime_ema
 from hypervector.regime.metrics import regime_detection_metrics
 from hypervector.report import rank_trials
@@ -85,6 +107,45 @@ def cmd_infra_init(args: argparse.Namespace) -> int:
     paths = _ensure_root(args)
     report = layout_report(paths.root)
     print(json.dumps(report, indent=2))
+    return 0
+
+
+def cmd_status(args: argparse.Namespace) -> int:
+    """Pipeline + CLI inventory (no secret values; no place)."""
+    paths = _ensure_root(args)
+    ready = live_policy_from_env(enabled=False, armed=False).readiness()
+    out = {
+        "ok": True,
+        "root": str(paths.root.resolve()),
+        "pipeline": {
+            "phase1_research": True,
+            "phase2_historical": True,
+            "paper_shadow_dry_run": True,
+            "live_submit": True,
+            "tui_gui": False,
+        },
+        "commands": list(CLI_COMMANDS),
+        "paper": {
+            "default_mode": DEFAULT_EXECUTION_MODE,
+            "no_submit": True,
+            "commands": ["paper-check", "paper-report", "paper-run"],
+        },
+        "live": {
+            "submit_wired": bool(ready.get("submit_wired")),
+            "can_start": bool(ready.get("can_start")),
+            "enabled_default": False,
+            "max_notional_usd": float(ready.get("max_notional_usd", DEFAULT_MAX_NOTIONAL_USD)),
+            "network": ready.get("network", NETWORK_MAINNET),
+            "commands": ["live-check", "live-report", "live-run"],
+            "requires_for_run": ["--enabled", "--i-accept-live-risk", "secrets"],
+        },
+        "honesty": {
+            "paper_never_constructs_exec_client": True,
+            "live_run_fail_closed": True,
+            "secret_values_never_printed": True,
+        },
+    }
+    print(json.dumps(out, indent=2, default=str))
     return 0
 
 
@@ -296,6 +357,25 @@ def cmd_paper_report(args: argparse.Namespace) -> int:
     last_n = int(getattr(args, "last", 5))
     try:
         report = report_from_data_root(
+            root,
+            decisions_path=decisions,
+            last_n=last_n,
+        )
+    except ValueError as exc:
+        print(str(exc), file=sys.stderr)
+        return 1
+    print(json.dumps(report, indent=2, default=str))
+    return 0
+
+
+def cmd_live_report(args: argparse.Namespace) -> int:
+    """Summarize live decisions JSONL (read-only; no place)."""
+    _ensure_root(args)
+    root = Path(args.data_root)
+    decisions = Path(args.path) if getattr(args, "path", None) else None
+    last_n = int(getattr(args, "last", 5))
+    try:
+        report = live_report_from_data_root(
             root,
             decisions_path=decisions,
             last_n=last_n,
@@ -701,15 +781,12 @@ def cmd_phase2_check(args: argparse.Namespace) -> int:
         )
         return 1
     print(json.dumps(report, indent=2, default=str))
-    pl = report.get("paper_live") or {}
-    # Honest routing: dry-run paper is paper-run; live submit still absent.
-    if not pl.get("implemented", False):
-        print(
-            "note: phase2-run is historical only; "
-            "paper/shadow dry-run → paper-run (default shadow, no venue orders); "
-            "live submit not implemented",
-            file=sys.stderr,
-        )
+    print(
+        "note: phase2-run is historical only; "
+        "paper/shadow dry-run → paper-run (default shadow, no venue orders); "
+        "live venue submit → live-run (--enabled + --i-accept-live-risk + secrets)",
+        file=sys.stderr,
+    )
     return 0
 
 
@@ -717,7 +794,7 @@ def cmd_phase2_run(args: argparse.Namespace) -> int:
     """Run Phase 2 historical backtest from a strict export bundle.
 
     ``--paper`` / ``--live`` on phase2-run do not switch engines: historical
-    path still runs. Paper dry-run is ``paper-run``; live submit is not armed.
+    path still runs. Paper dry-run is ``paper-run``; live venue is ``live-run``.
     """
     _ensure_root(args)
     path = Path(args.path)
@@ -729,8 +806,8 @@ def cmd_phase2_run(args: argparse.Namespace) -> int:
         )
     if getattr(args, "live", False):
         print(
-            "note: live submit not implemented (4b-live later); "
-            "use paper-run for dry-run shadow",
+            "note: phase2-run --live does not place venue orders; "
+            "use: hypervector live-run --path <export> --enabled --i-accept-live-risk",
             file=sys.stderr,
         )
 
@@ -796,7 +873,10 @@ def _add_market_args(p: argparse.ArgumentParser) -> None:
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="hypervector",
-        description="Phase 1 research funnel (live HL history + Binance/Bybit backfill)",
+        description=(
+            "Hypervector ops CLI: research (history/sweep/export) → "
+            "phase2 historical → paper/shadow dry-run → live-run (fail-closed)"
+        ),
     )
     p.add_argument("--data-root", default=str(_default_data_root()))
     sub = p.add_subparsers(dest="command", required=True)
@@ -806,6 +886,15 @@ def build_parser() -> argparse.ArgumentParser:
         help="Create I2 data layout (cache/runs/exports/logs/paper/live/nautilus)",
     )
     infra.set_defaults(func=cmd_infra_init)
+
+    st = sub.add_parser(
+        "status",
+        help=(
+            "Pipeline + command inventory + paper/live honesty flags "
+            "(no secret values; no place)"
+        ),
+    )
+    st.set_defaults(func=cmd_status)
 
     pc = sub.add_parser(
         "paper-check",
@@ -835,6 +924,26 @@ def build_parser() -> argparse.ArgumentParser:
         help="include last N market fills in sample (default 5)",
     )
     prep.set_defaults(func=cmd_paper_report)
+
+    lrep = sub.add_parser(
+        "live-report",
+        help=(
+            "Summarize live decisions.jsonl (submitted/place_attempted, "
+            "modes; read-only; no place)"
+        ),
+    )
+    lrep.add_argument(
+        "--path",
+        default=None,
+        help="optional decisions JSONL path (default: <data-root>/live/decisions/decisions.jsonl)",
+    )
+    lrep.add_argument(
+        "--last",
+        type=int,
+        default=5,
+        help="include last N market fills in sample (default 5)",
+    )
+    lrep.set_defaults(func=cmd_live_report)
 
     lc = sub.add_parser(
         "live-check",
@@ -1154,7 +1263,7 @@ def build_parser() -> argparse.ArgumentParser:
     p2r.add_argument(
         "--live",
         action="store_true",
-        help="legacy flag: live submit not implemented; use paper-run for dry-run",
+        help="legacy flag: does not place; use live-run for venue submit",
     )
     p2r.set_defaults(func=cmd_phase2_run)
 

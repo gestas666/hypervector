@@ -65,7 +65,8 @@ def test_summarize_paper_decisions_counters():
     assert rep["honesty"]["all_submitted_false_or_absent"] is True
     assert rep["honesty"]["all_intent_submit_enabled_false"] is True
     assert rep["no_submit"] is True
-    assert rep["live_submit_implemented"] is False
+    assert rep["live_submit_implemented"] is True
+    assert rep["live_submit_command"] == "live-run"
     assert len(rep["last_market"]) == 2
 
 
