@@ -103,13 +103,14 @@ def test_build_phase2_stub_config_offline(tmp_path: Path):
     data_root = tmp_path / "data"
     stub = build_phase2_stub_config(export_dir, data_root=data_root, strict=True)
     assert stub.execution_mode == "phase2_historical"
-    assert stub.paper_live_implemented is False
+    assert stub.paper_live_implemented is True
     assert stub.catalog_path == (data_root / "nautilus" / "backtest").resolve()
     assert stub.log_path == (data_root / "logs" / "nautilus").resolve()
     d = stub.to_dict()
     assert d["loadout"]["strategy_name"] == "crown_stack_short"
     assert d["venue"] == "HYPERLIQUID"
-    assert any("paper/live not implemented" in n for n in d["notes"])
+    assert any("paper-run" in n for n in d["notes"])
+    assert any("live-run" in n for n in d["notes"])
 
 
 def test_phase2_check_report_probes_nautilus(tmp_path: Path):
@@ -121,10 +122,11 @@ def test_phase2_check_report_probes_nautilus(tmp_path: Path):
         probe_nautilus=True,
     )
     assert report["ok"] is True
-    assert report["paper_live"]["implemented"] is False
+    assert report["paper_live"]["implemented"] is True
     assert report["paper_live"]["paper_dry_run"]["implemented"] is True
     assert report["paper_live"]["paper_dry_run"]["command"] == "paper-run"
-    assert report["paper_live"]["live_submit"]["implemented"] is False
+    assert report["paper_live"]["live_submit"]["implemented"] is True
+    assert report["paper_live"]["live_submit"]["command"] == "live-run"
     probe = report["nautilus_probe"]
     assert probe.get("engine_started") is False
     assert probe.get("venue") == "HYPERLIQUID" or "error" in probe

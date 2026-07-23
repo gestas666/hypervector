@@ -26,11 +26,12 @@ class Phase2StubConfig:
     execution_mode: str = "phase2_historical"
     venue: str = "HYPERLIQUID"
     instrument_id_hint: str = "BTC-PERP.HYPERLIQUID"
-    paper_live_implemented: bool = False
+    paper_live_implemented: bool = True
     notes: tuple[str, ...] = field(
         default_factory=lambda: (
-            "Strategy actor not implemented — loadout only",
-            "paper/live not implemented",
+            "phase2-run is historical Nautilus only",
+            "paper/shadow dry-run → paper-run (no venue orders)",
+            "live venue submit → live-run (enabled+armed+secrets)",
             "Re-run strategy from params; do not replay signals as alpha",
         )
     )
@@ -121,7 +122,7 @@ def phase2_check_report(
         # Honesty: paper/shadow dry-run is implemented via paper-run (not phase2-run).
         # Live venue submit remains a later phase (4b-live).
         "paper_live": {
-            "implemented": False,
+            "implemented": True,
             "phase2_run_modes": False,
             "paper_dry_run": {
                 "implemented": True,
@@ -130,12 +131,17 @@ def phase2_check_report(
                 "no_submit": True,
             },
             "live_submit": {
-                "implemented": False,
-                "message": "4b-live not started — use paper-run for dry-run only",
+                "implemented": True,
+                "command": "live-run",
+                "requires": ["--enabled", "--i-accept-live-risk", "secrets"],
+                "message": (
+                    "live-run places only when enabled+armed+secrets; "
+                    "paper-run remains no-submit"
+                ),
             },
             "message": (
                 "phase2-run is historical only; paper/shadow dry-run is paper-run "
-                "(default mode=shadow, no venue orders); live submit not implemented"
+                "(default mode=shadow, no venue orders); live venue submit is live-run"
             ),
         },
     }

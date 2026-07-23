@@ -162,8 +162,10 @@ def summarize_paper_decisions(
         },
         "honesty": honesty,
         "last_market": sample,
-        "no_submit": True,
-        "live_submit_implemented": False,
+        "no_submit": True,  # this ledger path never submits
+        # Product-wide: venue submit exists via live-run (not this paper report).
+        "live_submit_implemented": True,
+        "live_submit_command": "live-run",
     }
 
 

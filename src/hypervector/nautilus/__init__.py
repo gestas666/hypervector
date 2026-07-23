@@ -1,7 +1,8 @@
-"""Phase 2 NautilusTrader integration (load-export stub first).
+"""Phase 2 NautilusTrader integration (historical event sim).
 
-Historical event sim loads VectorBT export params and re-runs strategy logic.
-Paper/live modes are not implemented in this package surface yet.
+Historical path loads VectorBT export params and re-runs strategy logic.
+Paper/shadow dry-run is ``paper-run``; live venue submit is ``live-run``
+(outside this package).
 """
 
 from hypervector.nautilus.actor import (
