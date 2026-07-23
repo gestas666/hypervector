@@ -1,7 +1,7 @@
 # Phase 4b Design: Mainnet Shadow Path (hypervector)
 
 **Date:** 2026-07-22  
-**Status:** Design draft for approval (session-locked decisions below)  
+**Status:** **Approved** 2026-07-22 — plan ready `plans/2026-07-22-phase4b-mainnet-shadow.md`  
 **Process:** engineering-software (Hyde — requirements, RTM tags, verify vs validate) + prior Phase 3/4a locks  
 **Impl skills (later):** write-clean-code; troubleshooting with think-like-a-programmer  
 **Depends on:**  

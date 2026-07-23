@@ -21,12 +21,13 @@
 | Phase 3 paper design + plan + code | **Done** (5/5 + funding fix) |
 | Phase **4a design + plan + code** | **Done** (Tasks 1–6 + warm-up book fix) |
 | Phase **4a paper soak** | **In progress** — warm honesty PASS; live L2 fill pending signal |
-| Phase **4b design** | **Draft ready for review** — mainnet shadow (no testnet, no submit) |
+| Phase **4b design** | **Approved** — mainnet shadow (no testnet, no submit) |
+| Phase **4b plan** | **Ready** — Tasks 1–6 pending implementation |
 | Phase 4b-live / 4c CLI | **Not started** (real submit later) |
 | Phase 5 TUI + 1-page GUI | **Not started** |
 
-**Outgoing session:** 4a shipped; soak running; 4b shadow design drafted.  
-**Incoming session:** **Review 4b design** → writing-plans → implement. No venue orders. No TUI/GUI.
+**Outgoing session:** 4b design approved + implementation plan written.  
+**Incoming session:** **Implement 4b plan** (`docs/superpowers/plans/2026-07-22-phase4b-mainnet-shadow.md`) via subagent-driven or inline. Skills: write-clean-code; troubleshoot with think-like-a-programmer. No venue orders.
 
 ---
 
