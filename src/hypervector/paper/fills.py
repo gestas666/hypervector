@@ -2,7 +2,7 @@
 
 Pure position math + decision append. No live orders.
 Optional sandbox_enabled is shadow-only (no Nautilus sandbox client in Phase 3).
-Default fill model is bar_close_slippage_v1 (Phase 4a protocol extraction).
+Preferred default is l2_walk_v1; missing/stale book falls back to bar_close.
 """
 
 from __future__ import annotations
@@ -15,7 +15,7 @@ from typing import Any
 from hypervector.paper.costs import CostProvider, CostSnapshot, funding_payment
 from hypervector.paper.fill_models import (
     DEFAULT_MAX_BOOK_AGE_MS,
-    FILL_MODEL_BAR_CLOSE_SLIPPAGE_V1,
+    FILL_MODEL_L2_WALK_V1,
     FillModel,
     FillResult,
     select_fill_model,
@@ -51,7 +51,7 @@ class ExplicitFillEngine:
         timeframe: str,
         conviction: float,
         sandbox_enabled: bool = False,
-        preferred_fill_model: str = FILL_MODEL_BAR_CLOSE_SLIPPAGE_V1,
+        preferred_fill_model: str = FILL_MODEL_L2_WALK_V1,
         max_book_age_ms: float = DEFAULT_MAX_BOOK_AGE_MS,
     ) -> None:
         self._data_root = Path(data_root)

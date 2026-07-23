@@ -96,6 +96,28 @@ def test_paper_check_secrets_present_true(tmp_path: Path, capsys, monkeypatch):
     assert "0xabc" not in out
 
 
+def test_paper_check_reports_fill_and_book_surface(tmp_path: Path, capsys, monkeypatch):
+    """Phase 4a: paper-check exposes book/fill/metalabel surface (no secrets)."""
+    data = tmp_path / "data"
+    monkeypatch.delenv("HYPERVECTOR_HL_WALLET_ADDRESS", raising=False)
+    monkeypatch.delenv("HYPERVECTOR_HL_API_PRIVATE_KEY", raising=False)
+    rc = main(["--data-root", str(data), "paper-check"])
+    assert rc == 0
+    out = capsys.readouterr().out
+    report = json.loads(out)
+    paper = report["paper"]
+    assert paper["preferred_fill_model"] == "l2_walk_v1"
+    assert paper["max_book_age_ms"] == 3000
+    assert paper["book_feed"] is True
+    assert paper["l2_walk_available"] is True
+    assert paper["metalabel_enabled"] is False
+    assert paper["metalabel_default_off"] is True
+    assert report["live"]["enabled"] is False
+    # No secret material in the payload
+    assert "sekrit" not in out
+    assert "private" not in out.lower() or "private_key" in str(paper.get("secret_env_names", [])).lower()
+
+
 def test_paper_run_requires_export_path():
     with pytest.raises(SystemExit) as exc:
         main(["paper-run"])
@@ -106,6 +128,17 @@ def test_paper_run_help():
     with pytest.raises(SystemExit) as exc:
         main(["paper-run", "--help"])
     assert exc.value.code == 0
+
+
+def test_paper_run_help_lists_phase4a_flags(capsys):
+    with pytest.raises(SystemExit) as exc:
+        main(["paper-run", "--help"])
+    assert exc.value.code == 0
+    help_text = capsys.readouterr().out
+    assert "--preferred-fill-model" in help_text
+    assert "--max-book-age-ms" in help_text
+    assert "--metalabel" in help_text
+    assert "--no-metalabel" in help_text
 
 
 def test_start_paper_daemon_offline_injected_bars(tmp_path: Path, capsys):
@@ -193,6 +226,9 @@ def test_cli_paper_run_offline_via_monkeypatch(tmp_path: Path, capsys, monkeypat
             conviction=kwargs.get("conviction", 0.5),
             fee_tier=kwargs.get("fee_tier", 0),
             sandbox_enabled=kwargs.get("sandbox_enabled", False),
+            preferred_fill_model=kwargs.get("preferred_fill_model", "l2_walk_v1"),
+            max_book_age_ms=kwargs.get("max_book_age_ms", 3000),
+            metalabel_enabled=kwargs.get("metalabel_enabled", False),
             stop_file=kwargs.get("stop_file"),
             warm_ohlcv=warm,
             poll_fn=lambda **_: warm.iloc[0:0].copy(),
@@ -219,3 +255,48 @@ def test_cli_paper_run_offline_via_monkeypatch(tmp_path: Path, capsys, monkeypat
     assert payload["ok"] is True
     assert payload["execution_mode"] == "paper"
     assert payload["warm_bars"] == 20
+
+
+def test_cli_paper_run_passes_fill_and_metalabel_flags(tmp_path: Path, monkeypatch):
+    """CLI flags for preferred fill model, book age, metalabel flow into daemon."""
+    export = _write_strict_export(tmp_path)
+    data = tmp_path / "data"
+    captured: dict = {}
+
+    def fake_daemon(**kwargs):
+        captured.update(kwargs)
+        warm = fixture_ohlcv(n_bars=5, drift=-1.0)
+        return start_paper_daemon(
+            export_dir=kwargs["export_dir"],
+            data_root=kwargs["data_root"],
+            conviction=kwargs.get("conviction", 0.5),
+            preferred_fill_model=kwargs.get("preferred_fill_model"),
+            max_book_age_ms=kwargs.get("max_book_age_ms"),
+            metalabel_enabled=kwargs.get("metalabel_enabled", False),
+            warm_ohlcv=warm,
+            poll_fn=lambda **_: warm.iloc[0:0].copy(),
+            max_live_bars=0,
+            poll_interval_secs=0.0,
+            sleep_fn=lambda _s: None,
+            install_signal_handlers=False,
+        )
+
+    monkeypatch.setattr("hypervector.cli.start_paper_daemon", fake_daemon)
+    rc = main(
+        [
+            "--data-root",
+            str(data),
+            "paper-run",
+            "--path",
+            str(export),
+            "--preferred-fill-model",
+            "top_bps_v1",
+            "--max-book-age-ms",
+            "1500",
+            "--metalabel",
+        ]
+    )
+    assert rc == 0
+    assert captured["preferred_fill_model"] == "top_bps_v1"
+    assert captured["max_book_age_ms"] == 1500.0
+    assert captured["metalabel_enabled"] is True

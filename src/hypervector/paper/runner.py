@@ -19,6 +19,10 @@ import pandas as pd
 from hypervector.config import DEFAULT_LOOKBACK, FLOOR_LOOKBACK
 from hypervector.data.pipeline import load_research_history
 from hypervector.nautilus.load_export import load_strategy_loadout
+from hypervector.paper.fill_models import (
+    DEFAULT_MAX_BOOK_AGE_MS,
+    FILL_MODEL_L2_WALK_V1,
+)
 from hypervector.paper.live_node import DEFAULT_POLL_INTERVAL_SECS, make_rest_poll_fn
 from hypervector.paper.session import PaperSession
 
@@ -59,6 +63,9 @@ def start_paper_daemon(
     lookback_days: int | None = None,
     enable_funding_refresh: bool | None = None,
     funding_rate_hourly: float | None = None,
+    preferred_fill_model: str = FILL_MODEL_L2_WALK_V1,
+    max_book_age_ms: float = DEFAULT_MAX_BOOK_AGE_MS,
+    metalabel_enabled: bool = False,
 ) -> PaperDaemonResult:
     """Start paper daemon: warm history, then process live bars until stop.
 
@@ -89,6 +96,13 @@ def start_paper_daemon(
         Default: True if ``poll_fn is None`` (live REST path), else False.
     funding_rate_hourly:
         Optional override for the starting hourly funding rate (no network).
+    preferred_fill_model:
+        Preferred FillModel id when book is fresh (default ``l2_walk_v1``).
+        Falls back to bar_close with logged reason when book missing/stale.
+    max_book_age_ms:
+        Stale book threshold in milliseconds (default 3000).
+    metalabel_enabled:
+        When True, scale conviction via Metalabeler (default off).
     """
     _print_banner()
     sleep = sleep_fn if sleep_fn is not None else time.sleep
@@ -121,6 +135,9 @@ def start_paper_daemon(
         funding_rate_hourly=funding_rate_hourly,
         enable_funding_refresh=bool(enable_funding_refresh),
         enable_book_poll=enable_book_poll,
+        preferred_fill_model=str(preferred_fill_model),
+        max_book_age_ms=float(max_book_age_ms),
+        metalabel_enabled=bool(metalabel_enabled),
     )
 
     # --- warm-up (cache-first history or injected frame) ---

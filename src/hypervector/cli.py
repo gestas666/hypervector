@@ -16,6 +16,10 @@ from hypervector.export.schema import ExportSchemaError, validate_export_dir
 from hypervector.infra import ensure_data_layout, layout_report
 from hypervector.nautilus.config_stub import phase2_check_report
 from hypervector.nautilus.runner import run_phase2_backtest
+from hypervector.paper.fill_models import (
+    DEFAULT_MAX_BOOK_AGE_MS,
+    FILL_MODEL_L2_WALK_V1,
+)
 from hypervector.paper.runner import start_paper_daemon
 from hypervector.regime.detectors import detect_regime_ema
 from hypervector.regime.metrics import regime_detection_metrics
@@ -31,6 +35,10 @@ from hypervector.sweep.sizing import RiskConfig
 # Phase 4 live secrets (paper public path works without keys; never print values).
 SECRET_ENV_WALLET = "HYPERVECTOR_HL_WALLET_ADDRESS"
 SECRET_ENV_API_KEY = "HYPERVECTOR_HL_API_PRIVATE_KEY"
+
+# Phase 4a paper defaults (match configs/default.toml [paper]).
+DEFAULT_PREFERRED_FILL_MODEL = FILL_MODEL_L2_WALK_V1
+DEFAULT_METALABEL_ENABLED = False
 
 
 def _secrets_present() -> bool:
@@ -69,11 +77,37 @@ def cmd_infra_init(args: argparse.Namespace) -> int:
     return 0
 
 
+def _paper_surface_flags() -> dict:
+    """Capability/config surface for paper-check (booleans/strings only; no secrets)."""
+    book_feed_ok = False
+    l2_walk_ok = False
+    try:
+        from hypervector.paper.book import BookFeed  # noqa: F401
+
+        book_feed_ok = True
+    except Exception:  # noqa: BLE001 — surface probe only
+        book_feed_ok = False
+    try:
+        from hypervector.paper.fill_models import L2WalkFillModel  # noqa: F401
+
+        l2_walk_ok = True
+    except Exception:  # noqa: BLE001 — surface probe only
+        l2_walk_ok = False
+    return {
+        "preferred_fill_model": DEFAULT_PREFERRED_FILL_MODEL,
+        "max_book_age_ms": int(DEFAULT_MAX_BOOK_AGE_MS),
+        "book_feed": book_feed_ok,
+        "l2_walk_available": l2_walk_ok,
+        "metalabel_enabled": DEFAULT_METALABEL_ENABLED,
+        "metalabel_default_off": True,
+    }
+
+
 def cmd_paper_check(args: argparse.Namespace) -> int:
     """Print paper/live layout identity and readiness flags (no secret values)."""
     paths = _ensure_root(args)
     report = layout_report(paths.root)
-    report["paper"] = {
+    paper = {
         "execution_mode": "paper",
         "decisions": str(paths.paper_decisions),
         "ledger": str(paths.paper_ledger),
@@ -83,9 +117,11 @@ def cmd_paper_check(args: argparse.Namespace) -> int:
         "secrets_present": _secrets_present(),
         "secret_env_names": [SECRET_ENV_WALLET, SECRET_ENV_API_KEY],
     }
+    paper.update(_paper_surface_flags())
+    report["paper"] = paper
     report["live"] = {
         "enabled": False,
-        "note": "Phase 4: set live.enabled + secrets; paper never places venue orders",
+        "note": "Phase 4b: set live.enabled + secrets; paper never places venue orders",
     }
     print(json.dumps(report, indent=2))
     return 0
@@ -100,6 +136,13 @@ def cmd_paper_run(args: argparse.Namespace) -> int:
         return 1
 
     stop_file = Path(args.stop_file) if getattr(args, "stop_file", None) else None
+    preferred = str(
+        getattr(args, "preferred_fill_model", DEFAULT_PREFERRED_FILL_MODEL)
+    )
+    max_book_age_ms = float(
+        getattr(args, "max_book_age_ms", DEFAULT_MAX_BOOK_AGE_MS)
+    )
+    metalabel_enabled = bool(getattr(args, "metalabel", DEFAULT_METALABEL_ENABLED))
     try:
         result = start_paper_daemon(
             export_dir=path,
@@ -113,6 +156,9 @@ def cmd_paper_run(args: argparse.Namespace) -> int:
             if getattr(args, "max_live_bars", None) is not None
             else None,
             lookback_days=int(args.lookback) if getattr(args, "lookback", None) else None,
+            preferred_fill_model=preferred,
+            max_book_age_ms=max_book_age_ms,
+            metalabel_enabled=metalabel_enabled,
         )
     except FileNotFoundError as exc:
         print(str(exc), file=sys.stderr)
@@ -133,6 +179,9 @@ def cmd_paper_run(args: argparse.Namespace) -> int:
         "fills_count": result.fills_count,
         "stop_reason": result.stop_reason,
         "sandbox_enabled": bool(getattr(args, "sandbox", False)),
+        "preferred_fill_model": preferred,
+        "max_book_age_ms": max_book_age_ms,
+        "metalabel_enabled": metalabel_enabled,
         "secrets_present": _secrets_present(),
     }
     print(json.dumps(out, indent=2, default=str))
@@ -604,6 +653,26 @@ def build_parser() -> argparse.ArgumentParser:
         type=int,
         default=None,
         help=f"warm-up lookback days (default: export meta or {DEFAULT_LOOKBACK})",
+    )
+    pr.add_argument(
+        "--preferred-fill-model",
+        default=DEFAULT_PREFERRED_FILL_MODEL,
+        help=(
+            "preferred FillModel id when book is fresh "
+            f"(default: {DEFAULT_PREFERRED_FILL_MODEL}; falls back to bar_close without book)"
+        ),
+    )
+    pr.add_argument(
+        "--max-book-age-ms",
+        type=float,
+        default=float(DEFAULT_MAX_BOOK_AGE_MS),
+        help=f"stale book threshold in ms (default: {int(DEFAULT_MAX_BOOK_AGE_MS)})",
+    )
+    pr.add_argument(
+        "--metalabel",
+        action=argparse.BooleanOptionalAction,
+        default=DEFAULT_METALABEL_ENABLED,
+        help="enable metalabel scale-only conviction (default: off)",
     )
     pr.set_defaults(func=cmd_paper_run)
 

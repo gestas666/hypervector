@@ -36,7 +36,7 @@ from hypervector.paper.conviction import (
 from hypervector.paper.costs import CostProvider
 from hypervector.paper.fill_models import (
     DEFAULT_MAX_BOOK_AGE_MS,
-    FILL_MODEL_BAR_CLOSE_SLIPPAGE_V1,
+    FILL_MODEL_L2_WALK_V1,
 )
 from hypervector.paper.fills import ExplicitFillEngine
 from hypervector.paper.ledger import DECISIONS_FILENAME, append_paper_decision
@@ -72,7 +72,7 @@ class PaperSession:
         run_id: str | None = None,
         funding_rate_hourly: float | None = None,
         enable_funding_refresh: bool = False,
-        preferred_fill_model: str = FILL_MODEL_BAR_CLOSE_SLIPPAGE_V1,
+        preferred_fill_model: str = FILL_MODEL_L2_WALK_V1,
         max_book_age_ms: float = DEFAULT_MAX_BOOK_AGE_MS,
         book_feed: BookFeed | None = None,
         enable_book_poll: bool = False,
