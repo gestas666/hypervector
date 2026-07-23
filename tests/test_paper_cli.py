@@ -187,6 +187,76 @@ def test_start_paper_daemon_offline_injected_bars(tmp_path: Path, capsys):
     assert "no venue orders" in err.lower() or "no venue" in err.lower()
 
 
+def test_daemon_warmup_does_not_poll_book(tmp_path: Path, monkeypatch):
+    """Highest-+EV lock: historical warm-up never hits live L2 REST."""
+    export = _write_strict_export(tmp_path)
+    warm = fixture_ohlcv(n_bars=30, drift=-5.0, wave_period=20)
+    live = fixture_ohlcv(n_bars=3, drift=-5.0, wave_period=20)
+    live = live.copy()
+    live["timestamp"] = warm["timestamp"].iloc[-1] + (
+        live["timestamp"] - live["timestamp"].iloc[0]
+    ) + (warm["timestamp"].iloc[1] - warm["timestamp"].iloc[0])
+
+    book_polls = {"n": 0}
+
+    def fake_poll(self, *, session=None):
+        book_polls["n"] += 1
+        return None
+
+    monkeypatch.setattr("hypervector.paper.book.BookFeed.poll", fake_poll)
+
+    calls = {"n": 0}
+
+    def poll_fn(*, after_ts=None, **_kwargs):
+        calls["n"] += 1
+        if calls["n"] == 1:
+            return live
+        return live.iloc[0:0].copy()
+
+    # Injected poll_fn ⇒ offline path; book stays off entirely.
+    result = start_paper_daemon(
+        export_dir=export,
+        data_root=tmp_path / "data",
+        warm_ohlcv=warm,
+        poll_fn=poll_fn,
+        max_live_bars=3,
+        poll_interval_secs=0.0,
+        sleep_fn=lambda _s: None,
+        install_signal_handlers=False,
+    )
+    assert result.warm_bars == 30
+    assert result.live_bars == 3
+    assert book_polls["n"] == 0
+
+    # Simulate live REST path (poll_fn is None → live_book_enabled): warm-up
+    # still no poll; one arm poll after warm, then live bars may poll.
+    book_polls["n"] = 0
+    # Avoid real network for bars: still inject warm; use a stub feed via
+    # monkeypatching make_rest_poll_fn and process only warm by max_live_bars=0.
+    from hypervector.paper import runner as runner_mod
+
+    def fake_rest_poll_fn(symbol, timeframe):
+        def _feed(*, after_ts=None, **_kwargs):
+            return live.iloc[0:0].copy()
+
+        return _feed
+
+    monkeypatch.setattr(runner_mod, "make_rest_poll_fn", fake_rest_poll_fn)
+    result2 = start_paper_daemon(
+        export_dir=export,
+        data_root=tmp_path / "data2",
+        warm_ohlcv=warm,
+        poll_fn=None,  # live REST path ⇒ book armed after warm
+        max_live_bars=0,
+        poll_interval_secs=0.0,
+        sleep_fn=lambda _s: None,
+        install_signal_handlers=False,
+    )
+    assert result2.warm_bars == 30
+    # Exactly one arm poll after warm-up (max_live_bars=0 → no live on_bar polls)
+    assert book_polls["n"] == 1
+
+
 def test_start_paper_daemon_stop_file(tmp_path: Path):
     export = _write_strict_export(tmp_path)
     warm = fixture_ohlcv(n_bars=5, drift=-1.0)

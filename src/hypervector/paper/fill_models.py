@@ -84,7 +84,7 @@ class TopBpsFillModel:
 
     buy  = best_ask * (1 + slip)
     sell = best_bid * (1 - slip)
-    Raises ValueError if book is None/empty or the required BBO side is missing.
+    Empty book or missing required side → fill_qty=0 (no raise; no invented price).
     """
 
     fill_model_id = FILL_MODEL_TOP_BPS_V1
@@ -98,35 +98,67 @@ class TopBpsFillModel:
         book: Any | None,
         slippage_bps: float,
     ) -> FillResult:
+        requested = float(qty)
         if book is None or getattr(book, "is_empty", lambda: True)():
-            raise ValueError("TopBpsFillModel requires a non-empty book")
+            return FillResult(
+                fill_px=float(mark_px),
+                fill_qty=0.0,
+                fill_model_id=self.fill_model_id,
+                levels_used=0,
+                shortfall_qty=requested,
+                bbo_bid=None,
+                bbo_ask=None,
+                book_age_ms=None,
+                fill_fallback_reason=None,
+                requested_qty=requested,
+            )
 
         bid = book.best_bid()
         ask = book.best_ask()
         side_n = side.lower().strip()
         slip = float(slippage_bps) / 10_000.0
 
-        if side_n == "buy":
-            if ask is None:
-                raise ValueError("TopBpsFillModel buy requires best_ask")
-            px = float(ask) * (1.0 + slip)
-        else:
-            if bid is None:
-                raise ValueError("TopBpsFillModel sell requires best_bid")
-            px = float(bid) * (1.0 - slip)
-
-        q = float(qty)
         book_age: float | None = None
-        # Caller may have already checked freshness; still record age if ts present.
         try:
             now = time.time() * 1000.0
             book_age = float(book.age_ms(now))
         except Exception:  # noqa: BLE001 — optional diagnostic field
             book_age = None
 
+        if side_n == "buy":
+            if ask is None:
+                return FillResult(
+                    fill_px=float(mark_px),
+                    fill_qty=0.0,
+                    fill_model_id=self.fill_model_id,
+                    levels_used=0,
+                    shortfall_qty=requested,
+                    bbo_bid=float(bid) if bid is not None else None,
+                    bbo_ask=None,
+                    book_age_ms=book_age,
+                    fill_fallback_reason=None,
+                    requested_qty=requested,
+                )
+            px = float(ask) * (1.0 + slip)
+        else:
+            if bid is None:
+                return FillResult(
+                    fill_px=float(mark_px),
+                    fill_qty=0.0,
+                    fill_model_id=self.fill_model_id,
+                    levels_used=0,
+                    shortfall_qty=requested,
+                    bbo_bid=None,
+                    bbo_ask=float(ask) if ask is not None else None,
+                    book_age_ms=book_age,
+                    fill_fallback_reason=None,
+                    requested_qty=requested,
+                )
+            px = float(bid) * (1.0 - slip)
+
         return FillResult(
             fill_px=px,
-            fill_qty=q,
+            fill_qty=requested,
             fill_model_id=self.fill_model_id,
             levels_used=1,
             shortfall_qty=0.0,
@@ -134,7 +166,7 @@ class TopBpsFillModel:
             bbo_ask=float(ask) if ask is not None else None,
             book_age_ms=book_age,
             fill_fallback_reason=None,
-            requested_qty=q,
+            requested_qty=requested,
         )
 
 
@@ -251,9 +283,7 @@ def select_fill_model(
     - book.age_ms(now) > max → BarClose, ``book_stale``
     - preferred top_bps with fresh book → TopBps, None
     - preferred l2_walk with fresh book → L2Walk, None
-
-    Unknown preferred values with a fresh book fall back to bar_close with no
-    reason (same as Task 1 scaffold for unwired models).
+    - unknown preferred with usable book → BarClose, ``unknown_preferred``
     """
     preferred_n = str(preferred).strip()
     if preferred_n == FILL_MODEL_BAR_CLOSE_SLIPPAGE_V1:
@@ -272,5 +302,5 @@ def select_fill_model(
     if preferred_n == FILL_MODEL_L2_WALK_V1:
         return L2WalkFillModel(), None
 
-    # Unknown preferred with usable book → keep bar_close (no silent switch).
-    return BarCloseSlippageFillModel(), None
+    # Unknown preferred: never silent — log reason on decision path.
+    return BarCloseSlippageFillModel(), "unknown_preferred"

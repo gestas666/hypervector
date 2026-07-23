@@ -124,8 +124,9 @@ class ExplicitFillEngine:
         fill_px = float(result.fill_px)
         fill_qty = float(result.fill_qty)
 
-        # L2 walk (and similar) may return fill_qty=0 when the walked side has
-        # no depth — never invent liquidity; skip position + ledger write.
+        # L2 / TopBps may return fill_qty=0 when required side has no depth —
+        # never invent liquidity; keep position flat but **ledger the skip**
+        # so shortfall / model id remain auditable (SRS_HV4A_LOG).
         if fill_qty <= 0:
             logger.warning(
                 "fill skipped: zero fill_qty model=%s side=%s requested=%s shortfall=%s",
@@ -134,25 +135,30 @@ class ExplicitFillEngine:
                 qty_f,
                 result.shortfall_qty,
             )
-            skipped: dict[str, Any] = {
-                "execution_mode": "paper",
-                "feed_ts": feed_ts,
-                "run_id": self._run_id,
-                "action": str(action),
-                "side": side_n,
-                "qty": 0.0,
-                "mark_px": mark,
-                "fill_px": fill_px,
-                "fill_qty": 0.0,
-                "fill_model_id": result.fill_model_id,
-                "shortfall_qty": result.shortfall_qty,
-                "levels_used": result.levels_used,
-                "requested_qty": result.requested_qty,
-                "skipped": True,
-                "fill_fallback_reason": result.fill_fallback_reason,
-            }
+            skipped = self._base_record(
+                feed_ts=feed_ts,
+                action=str(action),
+                side=side_n,
+                qty=0.0,
+                mark_px=mark,
+                fill_px=fill_px,
+                snap=snap,
+                fee_usd=0.0,
+                funding_payment_usd=0.0,
+                fill_result=result,
+                conviction=conviction,
+                conviction_source=conviction_source,
+                metalabel_p=metalabel_p,
+                metalabel_bundle_id=metalabel_bundle_id,
+            )
+            skipped["qty"] = 0.0
+            skipped["fill_qty"] = 0.0
+            skipped["skipped"] = True
+            skipped["requested_qty"] = float(result.requested_qty)
+            skipped["shortfall_qty"] = float(result.shortfall_qty)
             if intent is not None:
                 skipped["intent"] = intent
+            append_paper_decision(self._data_root, skipped)
             return skipped
 
         fee_usd = abs(fill_qty) * fill_px * self._cost_provider.trade_fee_rate()

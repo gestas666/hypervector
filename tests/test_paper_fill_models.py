@@ -103,7 +103,7 @@ def test_top_bps_sell_uses_bid():
     assert r.levels_used == 1
 
 
-def test_top_bps_empty_book_raises():
+def test_top_bps_empty_book_zero_qty():
     from hypervector.paper.book import BookSnapshot
     from hypervector.paper.fill_models import TopBpsFillModel
 
@@ -115,11 +115,48 @@ def test_top_bps_empty_book_raises():
         ts_exchange_ms=1.0,
         source="t",
     )
-    try:
-        TopBpsFillModel().fill(side="buy", qty=1.0, mark_px=100.0, book=book, slippage_bps=0.0)
-        raise AssertionError("expected ValueError")
-    except ValueError:
-        pass
+    r = TopBpsFillModel().fill(side="buy", qty=1.0, mark_px=100.0, book=book, slippage_bps=0.0)
+    assert r.fill_qty == 0.0
+    assert r.shortfall_qty == 1.0
+    assert r.levels_used == 0
+
+
+def test_top_bps_one_sided_missing_ask_zero_qty():
+    from hypervector.paper.book import BookLevel, BookSnapshot
+    from hypervector.paper.fill_models import TopBpsFillModel
+
+    book = BookSnapshot(
+        symbol="X",
+        bids=(BookLevel(100.0, 1.0),),
+        asks=(),
+        ts_recv_ms=1.0,
+        ts_exchange_ms=1.0,
+        source="t",
+    )
+    r = TopBpsFillModel().fill(side="buy", qty=1.0, mark_px=100.0, book=book, slippage_bps=0.0)
+    assert r.fill_qty == 0.0
+    assert r.shortfall_qty == 1.0
+
+
+def test_select_unknown_preferred_not_silent():
+    from hypervector.paper.book import BookLevel, BookSnapshot
+
+    book = BookSnapshot(
+        symbol="X",
+        bids=(BookLevel(1.0, 1.0),),
+        asks=(BookLevel(1.1, 1.0),),
+        ts_recv_ms=9_500.0,
+        ts_exchange_ms=9_500.0,
+        source="t",
+    )
+    model, reason = select_fill_model(
+        preferred="not_a_real_model",
+        book=book,
+        max_book_age_ms=3000,
+        now_ms=10_000,
+    )
+    assert model.fill_model_id == FILL_MODEL_BAR_CLOSE_SLIPPAGE_V1
+    assert reason == "unknown_preferred"
 
 
 def test_select_falls_back_when_stale():

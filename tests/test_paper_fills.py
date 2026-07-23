@@ -134,9 +134,10 @@ def test_l2_walk_zero_fill_skips_ledger(tmp_path: Path):
     assert rec.get("skipped") is True
     assert rec["fill_qty"] == 0.0
     assert eng.position.qty == 0.0
+    # Ledger must record the skip for audit (model id + shortfall, no invent).
     decisions = tmp_path / "data" / "paper" / "decisions"
-    # No market fill row written (ledger dir may not exist if nothing appended).
-    if decisions.is_dir():
-        for p in decisions.glob("*.jsonl"):
-            text = p.read_text(encoding="utf-8")
-            assert "enter_long" not in text
+    assert decisions.is_dir()
+    text = (decisions / "decisions.jsonl").read_text(encoding="utf-8")
+    assert "enter_long" in text
+    assert "skipped" in text
+    assert "l2_walk_v1" in text

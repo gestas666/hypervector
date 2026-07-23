@@ -123,8 +123,10 @@ def start_paper_daemon(
     if enable_funding_refresh is None:
         enable_funding_refresh = poll_fn is None
 
-    # Live REST path may poll L2 book; injected poll_fn offline tests keep book off-network.
-    enable_book_poll = poll_fn is None
+    # Live REST path may use L2 book **only after warm-up**. Historical warm-up
+    # must never poll live book (wrong prices + REST spam). Offline injected
+    # poll_fn keeps book off-network unless the caller sets enable_book_poll later.
+    live_book_enabled = poll_fn is None
 
     session = PaperSession(
         export_dir=export_path,
@@ -134,7 +136,7 @@ def start_paper_daemon(
         sandbox_enabled=sandbox_enabled,
         funding_rate_hourly=funding_rate_hourly,
         enable_funding_refresh=bool(enable_funding_refresh),
-        enable_book_poll=enable_book_poll,
+        enable_book_poll=False,  # always off for historical warm-up
         preferred_fill_model=str(preferred_fill_model),
         max_book_age_ms=float(max_book_age_ms),
         metalabel_enabled=bool(metalabel_enabled),
@@ -166,6 +168,23 @@ def start_paper_daemon(
     warm_bars = session.process_frame(warm_df)
     session.ensure_session_identity()
     after_ts = session.last_timestamp
+
+    # --- arm book for live phase only (design: one snapshot, not multi-day warm) ---
+    if live_book_enabled:
+        try:
+            snap = session.book_feed.poll()
+            if snap is not None:
+                logger.info(
+                    "paper live book armed source=%s bid=%s ask=%s",
+                    snap.source,
+                    snap.best_bid(),
+                    snap.best_ask(),
+                )
+            else:
+                logger.info("paper live book poll returned None; fills fall back until fresh")
+        except Exception as exc:  # noqa: BLE001 — never block live start
+            logger.warning("paper live book arm failed: %s", exc)
+        session.enable_book_poll = True
 
     # --- live feed (REST poll by default; injectable for tests) ---
     # TODO Phase3: prefer HyperliquidDataClient WS when stable
