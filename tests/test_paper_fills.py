@@ -141,3 +141,35 @@ def test_l2_walk_zero_fill_skips_ledger(tmp_path: Path):
     assert "enter_long" in text
     assert "skipped" in text
     assert "l2_walk_v1" in text
+
+
+def test_shadow_market_fill_has_intent_and_submitted_false(tmp_path: Path):
+    from hypervector.paper.costs import CostProvider
+    from hypervector.paper.fills import ExplicitFillEngine
+
+    eng = ExplicitFillEngine(
+        tmp_path / "data",
+        cost_provider=CostProvider(fee_tier=0, slippage_bps=0.0),
+        run_id="r1",
+        export_id="e1",
+        strategy_name="s",
+        symbol="BTC-PERP",
+        timeframe="1m",
+        conviction=0.5,
+        execution_mode="shadow",
+    )
+    rec = eng.apply_market_fill(
+        feed_ts="t0", action="enter_long", side="buy", qty=0.01, mark_px=100.0
+    )
+    assert rec["execution_mode"] == "shadow"
+    assert rec["submitted"] is False
+    assert rec["network"] == "mainnet"
+    oi = rec["order_intent"]
+    assert oi["schema"] == "hv_order_intent_v1"
+    assert oi["submit_enabled"] is False
+    assert oi["side"] == "buy"
+    assert oi["qty"] == 0.01
+    # persisted
+    text = (tmp_path / "data" / "paper" / "decisions" / "decisions.jsonl").read_text()
+    assert "shadow" in text
+    assert "order_intent" in text

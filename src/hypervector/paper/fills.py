@@ -20,7 +20,8 @@ from hypervector.paper.fill_models import (
     FillResult,
     select_fill_model,
 )
-from hypervector.paper.ledger import append_paper_decision
+from hypervector.paper.ledger import ALLOWED_EXECUTION_MODES, append_paper_decision
+from hypervector.paper.order_intent import NETWORK_MAINNET, build_order_intent
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +54,13 @@ class ExplicitFillEngine:
         sandbox_enabled: bool = False,
         preferred_fill_model: str = FILL_MODEL_L2_WALK_V1,
         max_book_age_ms: float = DEFAULT_MAX_BOOK_AGE_MS,
+        execution_mode: str = "paper",
     ) -> None:
+        mode = str(execution_mode).lower().strip()
+        if mode not in ALLOWED_EXECUTION_MODES:
+            raise ValueError(
+                f"execution_mode must be paper|shadow, got {execution_mode!r}"
+            )
         self._data_root = Path(data_root)
         self._cost_provider = cost_provider
         self._run_id = str(run_id)
@@ -65,6 +72,7 @@ class ExplicitFillEngine:
         self._sandbox_enabled = bool(sandbox_enabled)
         self._preferred_fill_model = str(preferred_fill_model)
         self._max_book_age_ms = float(max_book_age_ms)
+        self._execution_mode = mode
         self._position = PaperPosition()
         if self._sandbox_enabled:
             # Real Nautilus Sandbox client is Phase 4/hardening; flag + shadow keys only.
@@ -156,6 +164,10 @@ class ExplicitFillEngine:
             skipped["skipped"] = True
             skipped["requested_qty"] = float(result.requested_qty)
             skipped["shortfall_qty"] = float(result.shortfall_qty)
+            # Intent is the requested order, not the zero fill_qty.
+            skipped["order_intent"] = build_order_intent(
+                symbol=self._symbol, side=side_n, qty=qty_f
+            )
             if intent is not None:
                 skipped["intent"] = intent
             append_paper_decision(self._data_root, skipped)
@@ -179,6 +191,10 @@ class ExplicitFillEngine:
             conviction_source=conviction_source,
             metalabel_p=metalabel_p,
             metalabel_bundle_id=metalabel_bundle_id,
+        )
+        # Intent qty is what we wanted to send (requested), not filled qty.
+        record["order_intent"] = build_order_intent(
+            symbol=self._symbol, side=side_n, qty=qty_f
         )
         if intent is not None:
             record["intent"] = intent
@@ -240,7 +256,9 @@ class ExplicitFillEngine:
             fill_result.fill_model_id if fill_result is not None else snap.fill_model_id
         )
         record: dict[str, Any] = {
-            "execution_mode": "paper",
+            "execution_mode": self._execution_mode,
+            "submitted": False,  # structural: never true in 4b
+            "network": NETWORK_MAINNET,
             "feed_ts": feed_ts,
             "run_id": self._run_id,
             "export_id": self._export_id,
