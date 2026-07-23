@@ -40,6 +40,27 @@ def test_append_stamps_execution_mode_paper_even_if_caller_lies(tmp_path: Path):
     assert rec["execution_mode"] == "paper"
 
 
+def test_append_preserves_shadow_mode(tmp_path: Path):
+    p = append_paper_decision(
+        tmp_path / "data",
+        {"feed_ts": "t0", "action": "enter_long", "execution_mode": "shadow"},
+    )
+    line = p.read_text(encoding="utf-8").strip().splitlines()[-1]
+    row = json.loads(line)
+    assert row["execution_mode"] == "shadow"
+
+
+def test_append_defaults_paper_when_mode_missing(tmp_path: Path):
+    p = append_paper_decision(tmp_path / "data", {"feed_ts": "t0", "action": "x"})
+    row = json.loads(p.read_text(encoding="utf-8").strip().splitlines()[-1])
+    assert row["execution_mode"] == "paper"
+
+
+def test_append_still_refuses_live_root(tmp_path: Path):
+    with pytest.raises(PaperLedgerError):
+        append_paper_decision(tmp_path / "data" / "live", {"feed_ts": "t0"})
+
+
 def test_append_requires_feed_timestamp(tmp_path: Path):
     root = tmp_path / "data"
     with pytest.raises(PaperLedgerError, match="feed"):

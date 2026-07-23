@@ -1,8 +1,9 @@
 """Append-only paper decision ledger.
 
-Phase 3 identity scaffold only: stamps ``execution_mode=paper``, requires a
-feed timestamp, writes under ``data/paper/decisions/``, and refuses any path
-that resolves under ``data/live/``. No live subscribe / synthetic fill loop.
+Accepts ``execution_mode`` in ``{paper, shadow}`` under the paper root;
+defaults to ``paper`` when missing or invalid. Requires a feed timestamp,
+writes under ``data/paper/decisions/``, and refuses any path that resolves
+under ``data/live/``. Never enables live write paths.
 """
 
 from __future__ import annotations
@@ -14,6 +15,7 @@ from typing import Any
 from hypervector.infra import ensure_data_layout
 
 EXECUTION_MODE = "paper"
+ALLOWED_EXECUTION_MODES = frozenset({"paper", "shadow"})
 DECISIONS_FILENAME = "decisions.jsonl"
 FEED_TS_KEY = "feed_ts"
 _FEED_TS_ALIASES = (FEED_TS_KEY, "feed_timestamp")
@@ -57,9 +59,12 @@ def _resolve_feed_ts(record: dict[str, Any]) -> Any:
 def append_paper_decision(data_root: Path | str, record: dict[str, Any]) -> Path:
     """Append one paper decision JSON line under ``data/paper/decisions/``.
 
-    Always stamps ``execution_mode="paper"``. Requires ``feed_ts`` (or
-    ``feed_timestamp`` alias, normalized to ``feed_ts``). Creates the I2 layout
-    via :func:`ensure_data_layout`. Returns the decisions JSONL path.
+    Stamps ``execution_mode`` from the record when it is in
+    :data:`ALLOWED_EXECUTION_MODES` (``paper``|``shadow``); otherwise defaults
+    to ``paper``. Never force-overwrites a valid ``shadow``. Requires
+    ``feed_ts`` (or ``feed_timestamp`` alias, normalized to ``feed_ts``).
+    Creates the I2 layout via :func:`ensure_data_layout`. Returns the
+    decisions JSONL path.
 
     Raises:
         PaperLedgerError: missing feed timestamp, or destination under live/.
@@ -92,7 +97,10 @@ def append_paper_decision(data_root: Path | str, record: dict[str, Any]) -> Path
     payload = dict(record)
     payload.pop("feed_timestamp", None)
     payload[FEED_TS_KEY] = feed_ts
-    payload["execution_mode"] = EXECUTION_MODE
+    mode = record.get("execution_mode")
+    if mode not in ALLOWED_EXECUTION_MODES:
+        mode = EXECUTION_MODE
+    payload["execution_mode"] = mode
 
     dest_dir.mkdir(parents=True, exist_ok=True)
     line = json.dumps(payload, default=str, separators=(",", ":"))
