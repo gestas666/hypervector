@@ -86,6 +86,10 @@ class ExplicitFillEngine:
         book: Any | None = None,
         fill_model: FillModel | None = None,
         now_ms: float | None = None,
+        conviction: float | None = None,
+        conviction_source: str | None = None,
+        metalabel_p: float | None = None,
+        metalabel_bundle_id: str | None = None,
     ) -> dict:
         side_n = str(side).lower().strip()
         if side_n not in _VALID_SIDES:
@@ -165,6 +169,10 @@ class ExplicitFillEngine:
             fee_usd=fee_usd,
             funding_payment_usd=0.0,
             fill_result=result,
+            conviction=conviction,
+            conviction_source=conviction_source,
+            metalabel_p=metalabel_p,
+            metalabel_bundle_id=metalabel_bundle_id,
         )
         if intent is not None:
             record["intent"] = intent
@@ -216,6 +224,10 @@ class ExplicitFillEngine:
         fee_usd: float,
         funding_payment_usd: float,
         fill_result: FillResult | None = None,
+        conviction: float | None = None,
+        conviction_source: str | None = None,
+        metalabel_p: float | None = None,
+        metalabel_bundle_id: str | None = None,
     ) -> dict:
         # Actual model from FillResult overwrites CostSnapshot fill_model_id when present.
         fill_model_id = (
@@ -245,7 +257,14 @@ class ExplicitFillEngine:
             "sandbox_enabled": self._sandbox_enabled,
             # Shadow only — explicit fill_px remains ledger truth (sandbox client Phase 4).
             "sandbox_fill_px": None,
-            "conviction": self._conviction,
+            "conviction": (
+                float(conviction) if conviction is not None else self._conviction
+            ),
+            "conviction_source": (
+                conviction_source if conviction_source is not None else "fixed"
+            ),
+            "metalabel_p": metalabel_p,
+            "metalabel_bundle_id": metalabel_bundle_id,
             "position_qty": self._position.qty,
             "position_avg_px": self._position.avg_px,
             "realized_pnl": self._position.realized_pnl,

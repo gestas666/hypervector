@@ -27,6 +27,12 @@ from hypervector.nautilus.load_export import StrategyLoadout, load_strategy_load
 from hypervector.nautilus.signals import last_bar_intent
 from hypervector.nautilus.sizing import position_size_frac
 from hypervector.paper.book import BookFeed, BookSnapshot
+from hypervector.paper.conviction import (
+    ConvictionProvider,
+    ConvictionResult,
+    FixedConvictionProvider,
+    MetalabelConvictionProvider,
+)
 from hypervector.paper.costs import CostProvider
 from hypervector.paper.fill_models import (
     DEFAULT_MAX_BOOK_AGE_MS,
@@ -70,6 +76,9 @@ class PaperSession:
         max_book_age_ms: float = DEFAULT_MAX_BOOK_AGE_MS,
         book_feed: BookFeed | None = None,
         enable_book_poll: bool = False,
+        metalabel_enabled: bool = False,
+        metalabeler: Any | None = None,
+        conviction_provider: ConvictionProvider | None = None,
     ) -> None:
         register_all_strategies()
         export_path = Path(export_dir)
@@ -86,6 +95,13 @@ class PaperSession:
         self.enable_book_poll = bool(enable_book_poll)
         self.max_book_age_ms = float(max_book_age_ms)
         self.preferred_fill_model = str(preferred_fill_model)
+        self.metalabel_enabled = bool(metalabel_enabled)
+        self.conviction_provider = _build_conviction_provider(
+            conviction=self.conviction,
+            metalabel_enabled=self.metalabel_enabled,
+            metalabeler=metalabeler,
+            conviction_provider=conviction_provider,
+        )
 
         self.run_id = run_id or uuid.uuid4().hex[:12]
         self.export_id = self.loadout.run_id or export_path.name
@@ -226,6 +242,9 @@ class PaperSession:
         }
 
         book = self.book_feed.latest()
+        # Scale-only conviction per decision (fixed by default; metalabel when enabled).
+        cv = self.conviction_provider.resolve(bars=df)
+        cv_kwargs = _conviction_fill_kwargs(cv)
 
         if action == "close":
             qty = abs(float(pos.qty))
@@ -240,6 +259,7 @@ class PaperSession:
                 mark_px=mark_px,
                 intent=intent_payload,
                 book=book,
+                **cv_kwargs,
             )
             if not rec.get("skipped"):
                 self.fills_count += 1
@@ -252,7 +272,7 @@ class PaperSession:
                 loadout=self.loadout,
                 exits=self.exits,
                 equity=self.equity,
-                conviction=self.conviction,
+                conviction=cv.conviction,
                 mark_px=mark_px,
             )
             if qty is None or qty <= 0:
@@ -266,6 +286,7 @@ class PaperSession:
                 mark_px=mark_px,
                 intent=intent_payload,
                 book=book,
+                **cv_kwargs,
             )
             if not rec.get("skipped"):
                 self.fills_count += 1
@@ -424,6 +445,45 @@ def _cost_provider_from_loadout(
         slippage_bps=slippage_bps,
         funding_rate_hourly=funding_hourly,
     )
+
+
+def _build_conviction_provider(
+    *,
+    conviction: float,
+    metalabel_enabled: bool,
+    metalabeler: Any | None,
+    conviction_provider: ConvictionProvider | None,
+) -> ConvictionProvider:
+    """Fixed by default; metalabel only when explicitly enabled (SRS_HV4A_ORDER)."""
+    if conviction_provider is not None:
+        return conviction_provider
+    if not metalabel_enabled:
+        return FixedConvictionProvider(conviction)
+    try:
+        from hypervector.ml.features import FeatureBuilder
+        from hypervector.ml.metalabel import Metalabeler
+
+        ml = metalabeler if metalabeler is not None else Metalabeler.from_env()
+        return MetalabelConvictionProvider(
+            ml,
+            FeatureBuilder(),
+            fixed_fallback=float(conviction),
+        )
+    except Exception as exc:  # noqa: BLE001 — keep session usable on load failure
+        logger.warning(
+            "metalabel_enabled but provider setup failed; using fixed conviction: %s",
+            exc,
+        )
+        return FixedConvictionProvider(conviction)
+
+
+def _conviction_fill_kwargs(cv: ConvictionResult) -> dict[str, Any]:
+    return {
+        "conviction": cv.conviction,
+        "conviction_source": cv.source,
+        "metalabel_p": cv.metalabel_p,
+        "metalabel_bundle_id": cv.metalabel_bundle_id,
+    }
 
 
 def _entry_qty(
