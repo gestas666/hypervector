@@ -1,11 +1,11 @@
 # HANDOFF — hypervector
 
-**Saved:** 2026-07-23 — **Phase 5 design + plan approved.** **Next session: execute Phase 5 TUI plan** (`hypervector-tui`).  
+**Saved:** 2026-07-23 — **Phase 5 TUI implemented.** Awaiting Albert visual + holistic acceptance.  
 **Project:** `/Users/gestas/Prototypes/hypervector`  
 **User:** Albert  
-**Branch:** `main` (start work on `feat/phase5-tui`)  
-**HEAD:** check `git log -1` (docs for design/plan may be uncommitted)  
-**Working tree:** may include uncommitted design/plan docs — commit before implementation if clean history preferred. **Local only — not pushed** unless Albert requests.
+**Branch:** `feat/phase5-tui`  
+**HEAD:** check `git log -1`  
+**Working tree:** implementation committed locally. **Do not push** unless Albert requests.
 
 **Prefer this HANDOFF over agentmemory for phase status.**
 
@@ -24,29 +24,76 @@
 | Phase **4b-live F1–F4** | **Done** (merged main) |
 | Phase **4c** CLI completeness | **Done** (merged main) |
 | Phase **5 design** (TUI) | **Approved** |
-| Phase **5 plan** | **Ready to execute** |
-| Phase **5 implementation** | **NEXT SESSION** |
-| 1-page GUI | **Deferred** until TUI complete + holistic review/test |
+| Phase **5 plan** | **Executed** (Tasks 1–9) |
+| Phase **5 implementation** | **Done — in review** (visual + holistic gate) |
+| 1-page GUI | **Deferred** until TUI holistic acceptance |
 | neural-trader / `@neural-trader/*` | **Rejected** — do not integrate |
 
-**Outgoing session:** Design approved; plan written; handoff for **implementation**.  
-**Incoming session:** **Execute** `docs/superpowers/plans/2026-07-23-phase5-tui.md` (Tasks 1–9).
+**Outgoing session:** Phase 5 `hypervector-tui` fully implemented and automated QA green.  
+**Incoming session:** Albert visual sign-off (tickrs bar) + holistic CLI+TUI acceptance; then merge `feat/phase5-tui` → main. GUI still deferred.
 
 ---
 
-## CLEAN SESSION START — Phase 5 TUI implementation
+## Phase 5 TUI — what shipped
 
-### Goal (one sentence)
+### Binary
 
-Build **`hypervector-tui`**: read-only Ratatui condensed financial ops terminal (Ops Floor + Card Focus) over CLI/ledger truth — mode, gates, KPIs, decision tape, regime — with **tickrs-grade** visual craft; no second strategy brain; no GUI yet.
+```bash
+cargo run -p hypervector-tui -- --data-root data
+# or
+./target/release/hypervector-tui --data-root data
+```
 
-### Canonical docs
+| Flag | Default | Notes |
+|------|---------|--------|
+| `--data-root` | `data` | Same layout as CLI (I2) |
+| `--refresh-ms` | `1000` | Hot path tape/status refresh |
+| `--tape` | `auto` | `paper` \| `live` \| `auto` (mtime) |
+
+### Views (exactly 2)
+
+1. **Ops Floor** — mode banner, gates, KPI (big-text + sparkline), regime, decision tape, health footer  
+2. **Card Focus** — Enter on focused card; Esc → floor  
+
+Keys: `Tab`/arrows focus · `Enter` expand · `Esc` floor · `r` refresh · `R` regime · `p`/`l`/`a` tape · `?` help · `q` quit  
+
+### Safety
+
+- Read-only: CLI probe allowlist only `status|paper-check|live-check|paper-report|live-report|regime`  
+- Never spawns `paper-run` / `live-run`  
+- No secret values rendered (presence bools only)  
+- Paper/live path refuse for decision tape  
+- Terminal restored via `ratatui::restore()` on quit  
+
+### Verification (this session)
+
+```text
+cargo test -p hypervector-tui     → 28 passed (unit + integration + UI banner)
+cargo build -p hypervector-tui --release → ok
+uv run pytest tests/ -q -m "not network" → 279 passed, 4 deselected
+uv run python -m hypervector status → ok, honesty flags intact
+```
+
+### Manual (Albert)
+
+- [ ] Mode banner obvious for paper vs live tape  
+- [ ] Cold data-root empty states (no panic)  
+- [ ] Sample decisions appear on tape  
+- [ ] Regime card after `R` or fixture  
+- [ ] Focus Enter/Esc only two views  
+- [ ] Quit restores terminal  
+- [ ] No secrets on screen with env secrets set  
+- [ ] Visual: tickrs density / btop-k9s packing bar  
+
+---
+
+## Canonical docs
 
 | Role | Path |
 |------|------|
 | **This handoff** | `HANDOFF.md` |
 | **Approved design** | `docs/superpowers/specs/2026-07-23-phase5-tui-design.md` |
-| **Execute this plan** | `docs/superpowers/plans/2026-07-23-phase5-tui.md` |
+| **Plan (executed)** | `docs/superpowers/plans/2026-07-23-phase5-tui.md` |
 | CLI contract (4c) | `docs/superpowers/specs/2026-07-23-phase4c-cli-completeness-design.md` |
 | Infra layout | `docs/infra-data-layout.md` |
 
@@ -54,51 +101,13 @@ Build **`hypervector-tui`**: read-only Ratatui condensed financial ops terminal 
 
 | Topic | Choice |
 |-------|--------|
-| Name | **`hypervector-tui`** (not “GOAT”) |
-| Stack | **Ratatui** (Rust) + crossterm |
-| Control plane v1 | **Read-only** — no start/stop/arm/kill from TUI |
-| Views | **Ops floor + card focus** only (max 2) |
-| Regime | Visible; metrics from CLI/export shape — **no second detector** |
-| Visual bar | **tickrs** for data-display craft; btop/k9s for packing/mode |
-| Data | `data/paper/`, `data/live/` + CLI JSON; no parallel truth DB |
-| GUI | **Deferred** post holistic TUI+CLI acceptance |
-| Live / paper safety | Paper never orders; live fail-closed; no secrets on screen |
+| Name | **`hypervector-tui`** |
+| Stack | **Ratatui** + crossterm |
+| Control plane v1 | **Read-only** |
+| Views | **Ops floor + card focus** only |
+| Regime | Display only — no second detector |
+| GUI | **Deferred** post holistic acceptance |
 | Network | Mainnet only |
-
-### Bootstrap
-
-```bash
-cd /Users/gestas/Prototypes/hypervector
-git status -sb
-git log -6 --oneline
-# recommended:
-git checkout -b feat/phase5-tui
-uv sync --all-extras
-uv run pytest tests/ -q -m "not network"
-uv run python -m hypervector status
-cargo build -p hypervector-core   # existing workspace sanity
-# After Task 1:
-# cargo build -p hypervector-tui && cargo test -p hypervector-tui
-```
-
-### Agent checklist (implementation session)
-
-1. Read **this HANDOFF** + **approved design** + **plan** Tasks 1–9.  
-2. Use **subagent-driven-development** or **executing-plans**; work task-by-task with tests.  
-3. Branch `feat/phase5-tui`; do not implement GUI.  
-4. Enforce subprocess allowlist: `status`, `paper-check`, `live-check`, `paper-report`, `live-report`, `regime` only.  
-5. Never place venue orders; never log secret values.  
-6. Visual target: tickrs density + mode banner always obvious.  
-7. End session: mark plan checkboxes; update HANDOFF (partial progress or done + acceptance gate).  
-8. Do not push unless Albert asks. Do not commit `audio/`.
-
-### Out of scope this epic
-
-- 1-page GUI  
-- TUI control plane (start/stop/arm)  
-- Armed mainnet smoke (optional anytime with Albert secrets)  
-- neural-trader  
-- Postgres / Redis / k8s  
 
 ---
 
@@ -112,9 +121,9 @@ cargo build -p hypervector-core   # existing workspace sanity
 4b shadow          DONE
 4b-live F1–F4      DONE
 4c CLI complete    DONE
-5 design + plan    DONE (approved)
-5 TUI implement    NEXT SESSION  ← execute plan
-5 GUI              DEFERRED (after holistic acceptance)
+5 design + plan    DONE
+5 TUI implement    DONE (in review / visual gate)  ← you are here
+5 GUI              DEFERRED
 ```
 
 ---
@@ -127,13 +136,15 @@ cargo build -p hypervector-core   # existing workspace sanity
 | Paper/shadow | `paper-check`, `paper-run`, `paper-report` |
 | Live | `live-check`, `live-run`, `live-report` |
 | Regime research | `hypervector regime` |
-| Offline tests | `uv run pytest tests/ -q -m "not network"` |
+| **TUI monitor** | **`hypervector-tui`** (read-only) |
+| Offline tests | `uv run pytest tests/ -q -m "not network"` + `cargo test -p hypervector-tui` |
 
-## What’s not built yet
+## What’s not done yet
 
 | Item | Notes |
 |------|--------|
-| **hypervector-tui** | Plan ready — implement next |
+| Albert visual sign-off | Required before merge claim of “holistic complete” |
+| Merge `feat/phase5-tui` | After visual OK |
 | 1-page GUI | Deferred |
 | Push remote | Not done |
 | Real mainnet soak | Optional; Albert secrets only |
@@ -142,14 +153,15 @@ cargo build -p hypervector-core   # existing workspace sanity
 
 ## Agent notes
 
-- **Next session title:** Execute Phase 5 — `hypervector-tui` plan Tasks 1–9.  
+- **Next session title:** Phase 5 visual acceptance + merge; then optional GUI design only if Albert reopens.  
 - Prefer HANDOFF + design + plan over agentmemory for phase status.  
-- Plan stages: 5a scaffold/floor → 5b tape/KPI → 5c regime/focus → 5d polish/tests → gate.
+- Do not implement GUI until holistic TUI+CLI acceptance.  
+- Do not commit `audio/`; do not push unless asked.
 
 ---
 
 ## Outgoing summary
 
-**Phase 5 design approved; implementation plan written.**  
+**Phase 5 `hypervector-tui` implemented (Tasks 1–9). Automated QA green.**  
 
-**Next human/agent:** Checkout `feat/phase5-tui` and **execute** `docs/superpowers/plans/2026-07-23-phase5-tui.md` until Task 9 verification, then stop for Albert visual + holistic acceptance before any GUI work.
+**Next human:** Run the binary, visual-check against tickrs bar, tick the manual checklist above, then merge branch when satisfied. GUI remains deferred.

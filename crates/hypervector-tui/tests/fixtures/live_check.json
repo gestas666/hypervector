@@ -1,0 +1,20 @@
+{
+  "ok": true,
+  "root": "/fixture/data",
+  "live_decisions": "data/live/decisions",
+  "live_ledger": "data/live/ledger",
+  "live": {
+    "enabled": false,
+    "armed": false,
+    "secrets_present": false,
+    "max_notional_usd": 50.0,
+    "network": "mainnet",
+    "submit_wired": true,
+    "can_start": false
+  },
+  "paper_path_unchanged": true,
+  "venue_submit": false,
+  "submit_wired": true,
+  "start_gate": "refused",
+  "start_gate_reason": "live.enabled is false"
+}

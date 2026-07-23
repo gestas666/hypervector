@@ -1,0 +1,12 @@
+{
+  "labels_sample": {"up": 45, "down": 25, "range": 30},
+  "metrics": {
+    "pct_up": 0.45,
+    "pct_down": 0.25,
+    "pct_range": 0.30,
+    "flip_rate": 0.08,
+    "mean_duration": 12.5,
+    "n_bars": 1000
+  },
+  "data_provenance": {"source": "fixture", "symbol": "BTC"}
+}
