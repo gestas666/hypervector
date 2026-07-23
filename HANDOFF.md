@@ -1,11 +1,11 @@
 # HANDOFF — hypervector
 
-**Saved:** 2026-07-23 — **This feature branch build CLOSED** (4a → 4b shadow → paper A → 4b-live F1). Neural-trader rejected. **No venue submit.**  
+**Saved:** 2026-07-23 — Merged to **main**: 4a → 4b shadow → paper A → 4b-live F1. **Next session: 4b-live F2.** Neural-trader rejected. **No venue submit yet.**  
 **Project:** `/Users/gestas/Prototypes/hypervector`  
 **User:** Albert  
-**Branch:** `feat/phase4a-book-fills-metalabel`  
-**HEAD:** branch tip — build closed (see latest commit)  
-**Working tree:** clean except intentionally gitignored local noise. **Not pushed** (push/PR when Albert wants).
+**Branch:** `main` (feature work merged from `feat/phase4a-book-fills-metalabel`)  
+**HEAD:** post-merge main tip  
+**Working tree:** clean. **Local merge only — not pushed** unless Albert requests push/PR.
 
 **Prefer this HANDOFF over agentmemory for phase status.**
 
@@ -25,27 +25,45 @@
 | Phase **4b shadow verification / soak** | **PASS** — dual smoke + bounded mainnet soak + 1× live `l2_walk_v1` |
 | Phase **paper completeness (slice A)** | **Done** — `paper-report`, CLI honesty, acceptance matrix |
 | Phase **4b-live F1 foundation** | **Done** — live ledger, LivePolicy, `live-check`; **submit not wired** |
-| Phase **4b-live F2+** (exec client + live-run + kill) | **Not started** — next *product* build when Albert asks |
+| Phase **4b-live F2** (exec client) | **NEXT SESSION** — protocol + HL adapter behind policy gates |
+| Phase **4b-live F3–F4** (live-run + kill/cancel) | After F2 |
 | Phase 4c CLI | **Partial** (paper-report + live-check); full epic later |
 | Phase 5 TUI + 1-page GUI | **Not started** |
-| neural-trader / `@neural-trader/*` | **Rejected** — no high-value +EV synergy; do not integrate |
+| neural-trader / `@neural-trader/*` | **Rejected** — do not integrate |
 
-**Outgoing session:** Feature branch build **closed and verified**. Offline suite green. Dry-run paper/shadow is the production path. Live gates exist but **cannot place orders**.  
-**Incoming session:** Optional longer shadow soak **or** **4b-live F2** (exec client) when ready for capital path design execution.
+**Outgoing session:** Merged to main; dry-run default; live F1 gates only.  
+**Incoming session:** **Implement 4b-live F2** (`LiveExecClient` + HL place adapter). Still fail-closed without secrets+arm+enabled.
 
 ---
 
-## CLEAN SESSION START — next product work (F2 or soak)
+## CLEAN SESSION START — 4b-live F2 (exec client)
 
 ### Goal (one sentence)
 
-This branch is merge-ready as a **dry-run + live foundation** drop; next code is **F2 LiveExecClient** only when Albert opens capital path work.
+Implement **F2**: a fail-closed `LiveExecClient` protocol + Hyperliquid mainnet adapter that can place **only** when `LivePolicy.require_start()` passes; paper/shadow path must never construct it.
+
+### Spec / plan
+
+| Doc | Path |
+|-----|------|
+| Design | `docs/superpowers/specs/2026-07-23-phase4b-live-design.md` |
+| Plan | `docs/superpowers/plans/2026-07-23-phase4b-live.md` |
+
+### F2 acceptance (next session)
+
+1. `LiveExecClient` Protocol: `place_market(symbol, side, qty, …) -> PlaceResult` with `submitted`, `venue_order_id | None`, `error | None`.  
+2. `HyperliquidLiveExecClient` (or equivalent) uses secrets from env; **constructed only after** policy gates.  
+3. Offline tests: mock transport — armed+secrets → place called; unarmed/no secrets → never constructs or place refused.  
+4. Paper path regression: `tests/test_paper_no_submit.py` still green; no exchange imports in `paper/`.  
+5. `live-check` can report `submit_wired=true` only when client module is present **and** still `can_start` false by default.  
+6. **No** `live-run` daemon yet (F3). **No** cancel-all yet (F4) unless trivial interface stub.  
+7. Default max notional still tiny (`50` USD unless Albert changes).  
 
 ### Bootstrap commands
 
 ```bash
 cd /Users/gestas/Prototypes/hypervector
-git status -sb
+git status -sb   # expect main
 git log -8 --oneline
 uv sync --all-extras
 uv run pytest tests/ -q -m "not network"   # ~249+ passed
@@ -55,9 +73,8 @@ uv run python -m hypervector paper-check
 #   preferred_fill_model=l2_walk_v1, live.enabled=false
 # Banner on paper-run: SHADOW MODE — no venue orders (default)
 uv run python -m hypervector paper-report --last 5
-# → honesty counters over data/paper/decisions/decisions.jsonl
 uv run python -m hypervector live-check
-# → start_gate=refused unless --enabled --armed + secrets; submit_wired=false
+# → start_gate=refused by default; submit_wired=false until F2 lands
 ```
 
 ### Shadow soak (how to run / stop / check)
@@ -109,15 +126,15 @@ PY
 
 **Soak notes:** `docs/superpowers/notes/2026-07-22-phase4b-shadow-soak.md`
 
-### Agent checklist
+### Agent checklist (next session = F2)
 
-1. Read **this HANDOFF**.  
-2. Confirm offline suite green (~228) + verification tip at HEAD.  
-3. Optional: longer mainnet shadow soak for ops confidence — **no submit path**.  
-4. **Never** place venue orders until **4b-live** design locks them.  
-5. **Never** write `data/live/` from paper/shadow.  
-6. Next design when Albert asks: 4b-live (real submit, kill switch, live ledger).  
-7. End session: update this HANDOFF + HEAD + soak notes.
+1. Read **this HANDOFF** + 4b-live design/plan.  
+2. Confirm offline suite green (~249+) on `main`.  
+3. Implement **F2 only** (exec client + tests); do not skip to unguarded live-run.  
+4. **Never** place venue orders from paper/shadow path.  
+5. **Never** construct exec client without `LivePolicy.require_start()`.  
+6. Real HL place in tests must be mocked offline; any network live smoke only with Albert-approved secrets + arm.  
+7. End session: update HANDOFF + plan F2 checkboxes + offline suite green.
 
 ### Phase 4b task board (COMPLETE)
 
@@ -501,9 +518,7 @@ After paper proven (+ live ops checklist): skill/plugin so agents follow researc
 
 ## Outgoing session summary
 
-**This feature branch build is CLOSED (2026-07-23).**
-
-Shipped on `feat/phase4a-book-fills-metalabel`:
+**Merged to main (2026-07-23). Feature branch build closed.**
 
 | Arc | Highlights |
 |-----|------------|
@@ -511,10 +526,10 @@ Shipped on `feat/phase4a-book-fills-metalabel`:
 | 4b shadow | Intents, `submitted=false`, mainnet-only, soak PASS |
 | Paper A | `paper-report`, CLI honesty, acceptance matrix |
 | 4b-live F1 | Live ledger + policy + `live-check` (no submit) |
-| Decision | **neural-trader rejected** — no high-value +EV synergy |
+| Decision | **neural-trader rejected** |
 
-**Final verify:** offline **249 passed** (`-m "not network"`); `paper-check` / `live-check` / `paper-report` smokes OK.  
+**Final verify:** offline **249 passed**; paper-check / live-check / paper-report OK.  
 
-**Next human/agent:** merge/PR when Albert wants; then optional soak **or** **4b-live F2** (exec client).  
+**Next human/agent:** **4b-live F2** — `LiveExecClient` + HL adapter behind policy gates (see CLEAN SESSION START).  
 
-**Not done (explicit):** venue place/cancel, `live-run`, kill cancel, full 4c, TUI/GUI, NT packages.
+**Not done:** venue place in daemon, `live-run`, kill cancel, full 4c, TUI/GUI.

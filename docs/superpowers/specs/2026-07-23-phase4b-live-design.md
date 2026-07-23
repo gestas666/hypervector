@@ -1,7 +1,7 @@
 # Design: Phase 4b-live (real mainnet submit)
 
 **Date:** 2026-07-23  
-**Status:** In progress — foundation tasks offline-first; **no venue submit in foundation**  
+**Status:** **F1 Done** (merged main). **Next: F2 exec client.**  
 **Depends on:** Phase 4b shadow (shipped + soak PASS), paper completeness slice A  
 
 ## Intent
@@ -53,7 +53,7 @@ export + configs
 | **F3 daemon** | `live-run` reuses paper daemon shell with live engine + ledger | Yes when armed |
 | **F4 kill** | stop-file / signals cancel open; refuse start if unarmed | Yes cancel path |
 
-This session implements **F1** only unless F1 lands clean.
+**F1 shipped.** Next session implements **F2** (client only). F3/F4 after F2 green.
 
 ## Requirements (testable)
 
