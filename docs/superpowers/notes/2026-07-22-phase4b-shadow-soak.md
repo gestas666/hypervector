@@ -3,7 +3,7 @@
 **Date:** 2026-07-22 (session end 2026-07-23 UTC)  
 **Branch:** `feat/phase4a-book-fills-metalabel`  
 **HEAD at verification start:** `9579981` (Phase 4b Task 6 tip)  
-**HEAD after honesty fix:** post-commit banner mode label (see git log)  
+**HEAD after honesty fix:** `07a10eb` banner mode label (+ follow-up HANDOFF docs commits)  
 **Export:** `data/exports/downtrend_crown_stack_short_c4fd7067`  
 **Network:** Hyperliquid **mainnet** public info API reachable  
 
