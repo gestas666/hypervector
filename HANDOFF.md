@@ -1,11 +1,11 @@
 # HANDOFF — hypervector
 
-**Saved:** 2026-07-22 (Phase 4a complete)  
+**Saved:** 2026-07-22 (evening) — Phase 4a closed + warm-up book fix; paper soak next  
 **Project:** `/Users/gestas/Prototypes/hypervector`  
 **User:** Albert  
 **Branch:** `feat/phase4a-book-fills-metalabel`  
-**HEAD (last commit):** tip of `feat/phase4a-book-fills-metalabel` — `feat(paper): Phase 4a CLI/config surface and handoff`  
-**Working tree at handoff write:** clean except untracked `audio/` (ignore)
+**HEAD:** `09329f4` — `fix(paper): warm-up without live book; live-only L2 arm`  
+**Working tree:** clean except untracked `audio/` (ignore). Not pushed.
 
 **Prefer this HANDOFF over agentmemory for phase status.**
 
@@ -18,63 +18,116 @@
 | Phase 1 / 1.5 research | **Done** |
 | Phase 2 actor + historical + metalabeler process | **Done** (plan closed) |
 | Phase 3 paper design + plan + code | **Done** (5/5 + funding fix) |
-| Phase **4a design + plan + code** | **Done** (Tasks 1–6) |
-| Phase 4b live / 4c CLI | **Not started** (separate designs later) |
+| Phase **4a design + plan + code** | **Done** (Tasks 1–6 + warm-up book fix) |
+| Phase **4a paper soak** | **In progress / next** — prove live L2 on live bars only |
+| Phase 4b live / 4c CLI | **Not started** (design after soak) |
 | Phase 5 TUI + 1-page GUI | **Not started** |
 
-**Outgoing session:** Phase 4a Tasks 1–6 implemented and offline-verified.  
-**Incoming session:** **4b design** (live exec flip + kill switch) **or** soak paper with book/L2 fills; do **not** claim live/TUI done.
+**Outgoing session:** 4a shipped; whole-branch review REQUEST CHANGES fixed in `09329f4`; offline **213** passed; soak started.  
+**Incoming session:** **Continue paper soak** → if green, start **4b design**. No venue orders. No TUI/GUI.
 
 ---
 
-## CLEAN SESSION START — after Phase 4a
+## CLEAN SESSION START — paper soak → 4b design
 
 ### Goal (one sentence)
 
-Either design Phase **4b** (live exec flip, secrets-required trading, kill switch, `data/live/`) or soak/validate paper with real book + optional metalabel — no TUI/GUI, no venue orders until 4b design locks them.
+Soak paper with real HL bars + L2 (metalabel off) until warm/live fill honesty is proven, then design Phase **4b** (live exec flip + kill switch + `data/live/`) — no venue orders until 4b is locked.
 
 ### Bootstrap commands
 
 ```bash
 cd /Users/gestas/Prototypes/hypervector
 git status -sb
-git log -8 --oneline
+git log -8 --oneline   # expect 09329f4 at tip
 uv sync --all-extras
-uv run pytest tests/ -q -m "not network"
+uv run pytest tests/ -q -m "not network"   # ~213 passed
 uv run python -m hypervector paper-check
 # → preferred_fill_model=l2_walk_v1, book_feed/l2_walk true, metalabel off, live.enabled false
 ```
 
+### Paper soak (how to run / stop / check)
+
+```bash
+# Isolated ledger (recommended)
+SOAK_ROOT=/tmp/hv4a-soak
+mkdir -p "$SOAK_ROOT"
+uv run python -m hypervector --data-root "$SOAK_ROOT" infra-init
+
+# Long-running soak (no max-live-bars). Stop with stop-file.
+uv run python -m hypervector --data-root "$SOAK_ROOT" paper-run \
+  --path data/exports/downtrend_crown_stack_short_c4fd7067 \
+  --conviction 0.5 \
+  --preferred-fill-model l2_walk_v1 \
+  --max-book-age-ms 3000 \
+  --no-metalabel \
+  --poll-interval 5 \
+  --stop-file /tmp/hv4a-soak.stop \
+  2>"$SOAK_ROOT/stderr.log" | tee "$SOAK_ROOT/stdout.json"
+
+# Stop:  touch /tmp/hv4a-soak.stop
+
+# Honesty checks on decisions:
+python3 - <<'PY'
+import json
+from pathlib import Path
+from collections import Counter
+p = Path("/tmp/hv4a-soak/paper/decisions/decisions.jsonl")
+rows = [json.loads(l) for l in p.read_text().splitlines() if l.strip()] if p.exists() else []
+fills = [r for r in rows if r.get("action") not in ("funding", None) and r.get("fill_model_id")]
+print("fills", len(fills), Counter(r.get("fill_model_id") for r in fills))
+print("fallback", Counter(r.get("fill_fallback_reason") for r in fills))
+print("execution_mode", Counter(r.get("execution_mode") for r in rows))
+# Warm should be bar_close + book_missing; live may show l2_walk_v1 with BBO
+for r in fills[-5:]:
+    print({k: r.get(k) for k in [
+        "feed_ts","action","fill_model_id","fill_fallback_reason",
+        "mark_px","fill_px","bbo_bid","bbo_ask","book_age_ms"]})
+PY
+```
+
+**Soak pass criteria:**
+1. Warm-up market fills: `bar_close_slippage_v1` + `fill_fallback_reason=book_missing` (no live BBO on old bars).  
+2. Live bars after warm: when book fresh, fills may be `l2_walk_v1` with BBO; never invent depth.  
+3. All rows `execution_mode=paper`; **zero** files under soak `data/live/`.  
+4. No REST hammer / ConnectionReset storm during warm.  
+5. Offline suite still green after any soak-driven fixes.
+
 ### Agent checklist
 
-1. Read **this HANDOFF** + Phase 4a design/plan (closed) if debugging fills.  
-2. Confirm offline suite green.  
-3. Next work: **4b design** or paper soak — not re-open 4a fill/metalabel path unless bugfix.  
-4. **Never** place venue orders until 4b is designed and explicitly enabled.  
-5. **Never** write `data/live/` from paper.  
-6. End session: update this HANDOFF + HEAD.
+1. Read **this HANDOFF**.  
+2. Confirm offline suite green + HEAD is `09329f4` or later.  
+3. **Soak first** — do not start 4b code before design.  
+4. After soak pass: open **4b design** (live flip, secrets, kill switch, live ledger).  
+5. **Never** place venue orders until 4b design locks them.  
+6. **Never** write `data/live/` from paper.  
+7. End session: update this HANDOFF + HEAD + soak notes.
 
 ### Phase 4a task board (COMPLETE)
 
 | Task | Deliverable | Status | Commit |
 |------|-------------|--------|--------|
 | docs | Design + plan | **Done** | `171d955` |
-| **1** | `FillModel` protocol + `bar_close` extraction; engine delegates | **Done** | `6aeba90` |
-| **2** | `BookSnapshot` + HL L2 REST `BookFeed` + fixture/tests | **Done** | `782032e` |
-| **3** | `top_bps_v1` + `select_fill_model` stale/missing → logged fallback | **Done** | `2f149c9` |
-| **4** | `l2_walk_v1` VWAP + shortfall; preferred when book fresh | **Done** | `e788152` + fix `ff4a417` |
-| **5** | `ConvictionProvider` meta-label scale-only (default **off**) + FeatureBuilder | **Done** | `70f1367` |
-| **6** | CLI/config/`paper-check` surface + full offline verify + HANDOFF | **Done** | branch tip (message above) |
+| **1** | `FillModel` protocol + `bar_close` extraction | **Done** | `6aeba90` |
+| **2** | `BookSnapshot` + HL L2 REST `BookFeed` | **Done** | `782032e` |
+| **3** | `top_bps_v1` + select stale/missing fallback | **Done** | `2f149c9` |
+| **4** | `l2_walk_v1` VWAP + shortfall | **Done** | `e788152` + `ff4a417` |
+| **5** | Metalabel scale-only ConvictionProvider (default off) | **Done** | `70f1367` |
+| **6** | CLI/config/`paper-check` + HANDOFF | **Done** | `9a2f369` |
+| fix | Warm-up **no** live book; arm L2 only for live loop | **Done** | `09329f4` |
 
 **Plan path:** `docs/superpowers/plans/2026-07-22-phase4a-book-fills-metalabel.md`  
-**Design path:** `docs/superpowers/specs/2026-07-22-phase4a-book-fills-metalabel-design.md`
+**Design path:** `docs/superpowers/specs/2026-07-22-phase4a-book-fills-metalabel-design.md`  
+**Whole-branch review:** `.superpowers/sdd/phase4a-whole-branch-review.md` (REQUEST CHANGES → fixed)
 
 ### Architecture (locked — 4a shipped)
 
 ```text
 export + configs → paper daemon (Phase 3 shell)
 HL bars → HypervectorStrategy (alpha unchanged)
-HL L2 book → BookFeed → BookSnapshot
+HL L2 book → BookFeed → BookSnapshot  (LIVE phase only)
+  warm-up: enable_book_poll=False → bar_close + book_missing
+  after warm: one poll to arm, then poll on live bars
 FillModel: bar_close_slippage_v1 | top_bps_v1 | l2_walk_v1
   selection: prefer l2 when book fresh; else fallback + fill_fallback_reason
 ExplicitFillEngine → data/paper/ (execution_mode=paper)
@@ -148,9 +201,10 @@ Metalabel (default OFF):
 | 4 | l2_walk_v1 preferred | **Done** | `e788152` |
 | 4 fix | pure VWAP (no extra slip) | **Done** | `ff4a417` |
 | 5 | Metalabel ConvictionProvider default off | **Done** | `70f1367` |
-| 6 | CLI/config/paper-check + HANDOFF | **Done** | branch tip |
+| 6 | CLI/config/paper-check + HANDOFF | **Done** | `9a2f369` |
+| fix | Warm-up without live book; live-only L2 arm | **Done** | `09329f4` |
 
-**Success criteria met:** offline suite **210 passed** (`-m "not network"`); preferred fill `l2_walk_v1` with bar_close fallback; metalabel default off; `paper-check` surfaces book/fill/metalabel; `live.enabled` false; no venue orders.
+**Success criteria met:** offline suite **213 passed** (`-m "not network"`); preferred fill `l2_walk_v1` with bar_close fallback; metalabel default off; `paper-check` surfaces book/fill/metalabel; `live.enabled` false; no venue orders. Warm-up does not apply live L2 to historical bars (`09329f4`).
 
 ### How to run paper-check / paper-run (Phase 4a)
 
@@ -379,27 +433,30 @@ After paper proven (+ live ops checklist): skill/plugin so agents follow researc
 
 ## Agent notes
 
-- Phase 2 plan **closed**. Phase 3 **closed**. Phase 4a **closed** (Tasks 1–6).  
-- **Next:** Phase **4b design** or soak paper with book (not live orders, not TUI).  
+- Phase 2 plan **closed**. Phase 3 **closed**. Phase 4a **closed** (Tasks 1–6 + `09329f4`).  
+- **Next:** finish **paper soak** → then **4b design** (not live orders, not TUI).  
+- Soak notes: `docs/superpowers/notes/2026-07-22-phase4a-paper-soak.md`  
+- Soak runtime: `/tmp/hv4a-soak` + stop `/tmp/hv4a-soak.stop` + pid `/tmp/hv4a-soak.pid`  
 - Branch `feat/phase4a-book-fills-metalabel` not pushed; merge/PR when Albert wants.  
 - Legacy pre-schema exports fail `export-validate` until re-exported.  
 - Upstream noise: Nautilus `Timestamp.utcnow` Pandas4Warning; sklearn calibrator version skew.  
 - Paper must not submit real orders even if wallet/API key env vars are set.  
 - Live feed uses **REST poll** fallback (`live_node.py`); full Nautilus WS host optional later.  
-- Book feed: public HL L2 REST; WS later.  
+- Book: public HL L2 REST **only after warm-up** (one arm poll + live bars).  
 - Do not commit `audio/`.  
 
 ---
 
-## Outgoing session summary (Phase 4a implementation)
+## Outgoing session summary
 
-Done:
+Done this arc:
 
-- Task 1: FillModel + bar_close extract (`6aeba90`)  
-- Task 2: BookSnapshot + BookFeed (`782032e`)  
-- Task 3: top_bps_v1 + select_fill_model (`2f149c9`)  
-- Task 4: l2_walk_v1 preferred (`e788152` + `ff4a417`)  
-- Task 5: metalabel scale-only ConvictionProvider default off (`70f1367`)  
-- Task 6: CLI/config/`paper-check` surface + full offline verify + HANDOFF  
+- Phase 4a Tasks 1–6 (`171d955`…`9a2f369`)  
+- Pure L2 VWAP fix (`ff4a417`)  
+- Warm-up without live book + honesty fixes (`09329f4`)  
+- Offline **213** passed; whole-branch review blocker closed  
+- HANDOFF updated for soak → 4b; soak process started under `/tmp/hv4a-soak`  
 
-**Not done (later phases):** live exec, kill switch, real sandbox client, TUI/GUI, userFees.
+**Next human/agent:** monitor soak pass criteria → then 4b design.  
+
+**Not done:** live exec, kill switch, real sandbox client, TUI/GUI, userFees.
