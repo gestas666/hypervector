@@ -18,8 +18,8 @@
 | **F2c** | Factory: construct only after `LivePolicy.require_start()` | **Done** |
 | **F2d** | Offline tests with mock transport; paper no-submit regression | **Done** |
 | **F2e** | `live-check` / readiness reflects client wired vs can_start | **Done** |
-| F3 | `live-run` daemon + live ledger writes | **Next** |
-| F4 | Kill switch cancel-open on stop | After F3 |
+| **F3** | `live-run` daemon + live ledger writes | **Done** |
+| F4 | Kill switch cancel-open on stop | **Next** |
 
 ### F2 notes for implementer
 

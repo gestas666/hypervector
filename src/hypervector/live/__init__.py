@@ -1,4 +1,4 @@
-"""Phase 4b-live: live ledger, policy, and fail-closed exec client (F2)."""
+"""Phase 4b-live: ledger, policy, exec client (F2), live-run daemon (F3)."""
 
 from hypervector.live.exec_client import (
     HyperliquidLiveExecClient,
@@ -10,9 +10,11 @@ from hypervector.live.exec_client import (
 )
 from hypervector.live.ledger import LiveLedgerError, append_live_decision
 from hypervector.live.policy import LivePolicy, LivePolicyError, live_policy_from_env
+from hypervector.live.runner import LiveDaemonResult, start_live_daemon
 
 __all__ = [
     "HyperliquidLiveExecClient",
+    "LiveDaemonResult",
     "LiveExecClient",
     "LiveLedgerError",
     "LivePolicy",
@@ -23,4 +25,5 @@ __all__ = [
     "create_live_exec_client_from_env",
     "is_submit_wired",
     "live_policy_from_env",
+    "start_live_daemon",
 ]

@@ -1,7 +1,7 @@
 # Design: Phase 4b-live (real mainnet submit)
 
 **Date:** 2026-07-23  
-**Status:** **F1+F2 Done** (F2 on `feat/phase4b-live-f2-exec-client`). **Next: F3 live-run.**  
+**Status:** **F1–F3 Done** (branch `feat/phase4b-live-f2-exec-client`). **Next: F4 kill/cancel.**  
 **Depends on:** Phase 4b shadow (shipped + soak PASS), paper completeness slice A  
 
 ## Intent
@@ -53,7 +53,7 @@ export + configs
 | **F3 daemon** | `live-run` reuses paper daemon shell with live engine + ledger | Yes when armed |
 | **F4 kill** | stop-file / signals cancel open; refuse start if unarmed | Yes cancel path |
 
-**F1+F2 shipped.** Next session implements **F3** (`live-run` + live ledger). F4 kill after F3 green.
+**F1–F3 shipped.** Next session implements **F4** (kill switch / cancel-open on stop).
 
 ## Requirements (testable)
 
