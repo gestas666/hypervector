@@ -1,10 +1,10 @@
 # HANDOFF — hypervector
 
-**Saved:** 2026-07-22 — Phase 4b mainnet shadow **Done** (Tasks 1–6)  
+**Saved:** 2026-07-23 — Phase 4b shadow **verified** (soak PASS + expert review + banner honesty fix)  
 **Project:** `/Users/gestas/Prototypes/hypervector`  
 **User:** Albert  
 **Branch:** `feat/phase4a-book-fills-metalabel`  
-**HEAD:** Task 6 tip — `docs: Phase 4b shadow verify + handoff; no-submit barriers`  
+**HEAD:** after 4b verification commit (banner mode label + soak notes); base Task 6 was `9579981`  
 **Working tree:** clean except untracked `audio/` (ignore). Not pushed.
 
 **Prefer this HANDOFF over agentmemory for phase status.**
@@ -19,23 +19,24 @@
 | Phase 2 actor + historical + metalabeler process | **Done** (plan closed) |
 | Phase 3 paper design + plan + code | **Done** (5/5 + funding fix) |
 | Phase **4a design + plan + code** | **Done** (Tasks 1–6 + warm-up book fix) |
-| Phase **4a paper soak** | Optional continue under **shadow** default |
+| Phase **4a paper soak** | Warm honesty PASS (earlier); superseded by 4b shadow soak |
 | Phase **4b design** | **Approved** — mainnet shadow (no testnet, no submit) |
 | Phase **4b plan + code** | **Done** (Tasks 1–6) |
-| Phase **4b-live** (real submit + `data/live/`) | **Not started** — design later |
+| Phase **4b shadow verification / soak** | **PASS** — dual smoke + bounded mainnet soak + 1× live `l2_walk_v1` |
+| Phase **4b-live** (real submit + `data/live/`) | **Not started** — next design when Albert asks |
 | Phase 4c CLI | **Not started** (shadow flags only in 4b) |
 | Phase 5 TUI + 1-page GUI | **Not started** |
 
-**Outgoing session:** Phase 4b shadow closed; offline suite green; structural no-submit barriers in place.  
-**Incoming session:** longer **mainnet soak under shadow**; then **4b-live** design when ready. Skills: write-clean-code. **Still no venue orders.**
+**Outgoing session:** 4b shadow **re-proven** end-to-end (offline 228, barriers, paper-check, dual smoke, mainnet soak with live L2 fill). Banner now says `SHADOW MODE` under default.  
+**Incoming session:** optional longer shadow soak for ops confidence **or** **4b-live design** (real submit, kill switch, `data/live/`). **Still no venue orders until 4b-live is designed and approved.**
 
 ---
 
-## CLEAN SESSION START — shadow soak → 4b-live design later
+## CLEAN SESSION START — 4b-live design (or optional longer soak)
 
 ### Goal (one sentence)
 
-Run mainnet-honest **shadow** paper (real HL bars/L2, order intents, `submitted=false`) under `data/paper/`; soak until confidence; design real submit / `data/live/` only as a later 4b-live phase.
+Shadow path is trusted; next product step is **4b-live design** (real submit + live ledger + kill switch) when Albert asks — optional longer shadow soak only if more ops confidence is wanted first.
 
 ### Bootstrap commands
 
@@ -44,11 +45,12 @@ cd /Users/gestas/Prototypes/hypervector
 git status -sb
 git log -8 --oneline   # expect 4b Task 6 commit at tip
 uv sync --all-extras
-uv run pytest tests/ -q -m "not network"   # ~227 passed
+uv run pytest tests/ -q -m "not network"   # ~228 passed
 uv run python -m hypervector paper-check
 # → mode/execution_mode=shadow, network=mainnet, no_submit=true,
 #   submitted_default=false, order_intent_schema=hv_order_intent_v1,
 #   preferred_fill_model=l2_walk_v1, live.enabled=false
+# Banner on paper-run: SHADOW MODE — no venue orders (default)
 ```
 
 ### Shadow soak (how to run / stop / check)
@@ -90,19 +92,21 @@ for r in fills[-5:]:
 PY
 ```
 
-**Soak pass criteria (4b shadow):**
-1. Daemon / decisions: `execution_mode=shadow`, `submitted=false`, `network=mainnet` on market rows.  
-2. Market fills include `order_intent` with `submit_enabled=false`, schema `hv_order_intent_v1`.  
-3. Warm-up: `bar_close_slippage_v1` + `book_missing` (no live BBO on old bars).  
-4. Live bars: when book fresh, may be `l2_walk_v1`; never invent depth.  
-5. **Zero** files under soak `data/live/`; ledger only under `data/paper/`.  
-6. Offline suite still green; barrier tests in `tests/test_paper_no_submit.py` green.
+**Soak pass criteria (4b shadow) — all PASS (2026-07-23 verification):**
+1. Daemon / decisions: `execution_mode=shadow`, `submitted=false`, `network=mainnet` on market rows. **PASS**  
+2. Market fills include `order_intent` with `submit_enabled=false`, schema `hv_order_intent_v1`. **PASS**  
+3. Warm-up: `bar_close_slippage_v1` + `book_missing` (no live BBO on old bars). **PASS**  
+4. Live bars: when book fresh, may be `l2_walk_v1`; never invent depth. **PASS** (1× live l2 close observed).  
+5. **Zero** files under soak `data/live/`; ledger only under `data/paper/`. **PASS**  
+6. Offline suite still green; barrier tests in `tests/test_paper_no_submit.py` green. **PASS** (228 offline).
+
+**Soak notes:** `docs/superpowers/notes/2026-07-22-phase4b-shadow-soak.md`
 
 ### Agent checklist
 
 1. Read **this HANDOFF**.  
-2. Confirm offline suite green + 4b Task 6 commit at tip.  
-3. **Shadow soak** under mainnet public data — no submit path.  
+2. Confirm offline suite green (~228) + verification tip at HEAD.  
+3. Optional: longer mainnet shadow soak for ops confidence — **no submit path**.  
 4. **Never** place venue orders until **4b-live** design locks them.  
 5. **Never** write `data/live/` from paper/shadow.  
 6. Next design when Albert asks: 4b-live (real submit, kill switch, live ledger).  
@@ -178,16 +182,17 @@ Metalabel (default OFF):
 | TUI / GUI | **Out of scope** (Phase 5) |
 | Blog VBT+LGBM primary classifier | **Not** the product path |
 
-### Success bar (4b shadow — met)
+### Success bar (4b shadow — met + re-verified 2026-07-23)
 
-1. Offline suite green (`~227` passed, `-m "not network"`).  
+1. Offline suite green (`~228` passed, `-m "not network"`).  
 2. Order intent schema + always `submit_enabled=false`.  
 3. Ledger accepts `paper|shadow`; refuses live paths.  
 4. Engine stamps `submitted=false`, `network=mainnet`, `order_intent` on market fills.  
 5. Daemon default `shadow`; offline tests can force `paper`.  
 6. `paper-check` reports shadow/mainnet/no_submit surface; `live.enabled` false.  
 7. Structural barriers: no testnet in `HL_INFO_URL`; no exchange-submit imports in `paper/`.  
-8. No `data/live/` writes; no venue orders.
+8. No `data/live/` writes; no venue orders.  
+9. Daemon stderr banner matches mode (`SHADOW MODE` default / `PAPER MODE` when forced).
 
 ### Out of scope remaining
 
@@ -229,7 +234,7 @@ Metalabel (default OFF):
 | 5 | CLI paper-check + mode flag | **Done** | `e1eea31` |
 | 6 | Barriers + offline verify + HANDOFF | **Done** | Task 6 tip |
 
-**Success criteria met:** offline suite **227 passed** (`-m "not network"`); mainnet-only HL info URL; daemon default shadow; intents never submit-enabled; ledger stays paper root; `paper-check` surfaces no_submit/mainnet/shadow; no venue orders.
+**Success criteria met:** offline suite **228 passed** (`-m "not network"`); mainnet-only HL info URL; daemon default shadow; intents never submit-enabled; ledger stays paper root; `paper-check` surfaces no_submit/mainnet/shadow; mainnet soak PASS with live `l2_walk_v1` fill; no venue orders.
 
 ### How to run paper-check / paper-run (Phase 4b shadow)
 
@@ -260,7 +265,7 @@ uv run python -m hypervector --data-root data paper-run \
   [--poll-interval 5]
 ```
 
-Banner on stderr: paper/shadow mode — **no venue orders**.  
+Banner on stderr: `SHADOW MODE — no venue orders` (default) or `PAPER MODE — no venue orders` (`--mode paper`).  
 Decisions: `data/paper/decisions/decisions.jsonl` (I2 layout).
 
 ### Config knobs (`configs/default.toml` `[paper]`)
@@ -419,7 +424,7 @@ uv run python -m hypervector paper-check
 uv run python -m hypervector paper-run --path data/exports/<id> --max-live-bars 2
 uv run pytest tests/test_paper_no_submit.py -q
 uv run pytest tests/ -q -m "not network"
-# Expected: 227+ passed offline
+# Expected: 228+ passed offline
 ```
 
 ### Metalabeler (optional; enable with `--metalabel`)
@@ -472,9 +477,10 @@ After paper proven (+ live ops checklist): skill/plugin so agents follow researc
 
 ## Agent notes
 
-- Phase 2 plan **closed**. Phase 3 **closed**. Phase 4a **closed**. Phase **4b shadow closed** (Tasks 1–6).  
-- **Next:** longer **mainnet shadow soak**; then **4b-live design** (real submit) when Albert asks — not TUI yet.  
+- Phase 2 plan **closed**. Phase 3 **closed**. Phase 4a **closed**. Phase **4b shadow closed + verified** (Tasks 1–6 + soak PASS).  
+- **Next:** **4b-live design** (real submit, kill switch, `data/live/`) when Albert asks — not TUI yet. Optional longer shadow soak only for ops confidence.  
 - Daemon default: `execution_mode=shadow`; force paper with `--mode paper`.  
+- Soak notes (4b): `docs/superpowers/notes/2026-07-22-phase4b-shadow-soak.md`  
 - Soak notes (4a): `docs/superpowers/notes/2026-07-22-phase4a-paper-soak.md`  
 - Branch `feat/phase4a-book-fills-metalabel` not pushed; merge/PR when Albert wants.  
 - Legacy pre-schema exports fail `export-validate` until re-exported.  
@@ -488,14 +494,15 @@ After paper proven (+ live ops checklist): skill/plugin so agents follow researc
 
 ## Outgoing session summary
 
-Done this arc:
+Done this verification arc (2026-07-23):
 
-- Phase 4b Tasks 1–6 (`46f269d`…Task 6)  
-- Order intent, ledger modes, engine stamps, daemon shadow default, CLI surface  
-- Structural no-submit / no-testnet barriers  
-- Offline **227** passed (`-m "not network"`)  
-- HANDOFF points at shadow soak → 4b-live design later  
+- Re-proved offline suite (**228** passed after banner test) and barrier honesty  
+- Real `paper-check` surface matches locked 4b fields  
+- Dual isolated `paper-run` smokes: all shadow / submitted=false / mainnet / no live writes  
+- Bounded mainnet shadow soak: **PASS** all 6 criteria; **1× live `l2_walk_v1` fill** observed  
+- Honesty fix: stderr banner matches `execution_mode` (SHADOW vs PAPER)  
+- Soak notes + this HANDOFF updated  
 
-**Next human/agent:** mainnet shadow soak under default daemon mode → then 4b-live design.  
+**Next human/agent:** optional longer soak **or** **4b-live design** when Albert asks.  
 
 **Not done:** real submit, kill switch, `data/live/`, real sandbox client, TUI/GUI, userFees.

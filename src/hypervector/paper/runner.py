@@ -29,6 +29,15 @@ from hypervector.paper.session import PaperSession
 logger = logging.getLogger(__name__)
 
 PAPER_BANNER = "PAPER MODE — no venue orders"
+SHADOW_BANNER = "SHADOW MODE — no venue orders"
+
+
+def banner_for_mode(execution_mode: str) -> str:
+    """Stderr banner for daemon mode. Shadow is the 4b default; both refuse venue orders."""
+    mode = str(execution_mode).lower().strip()
+    if mode == "shadow":
+        return SHADOW_BANNER
+    return PAPER_BANNER
 
 
 @dataclass(frozen=True)
@@ -110,11 +119,11 @@ def start_paper_daemon(
     execution_mode:
         ``shadow`` (default) or ``paper``; stamped on fills via session/engine.
     """
-    _print_banner()
+    mode = str(execution_mode)
+    _print_banner(mode)
     sleep = sleep_fn if sleep_fn is not None else time.sleep
     export_path = Path(export_dir)
     root = Path(data_root)
-    mode = str(execution_mode)
 
     if not export_path.is_dir():
         raise FileNotFoundError(f"export_dir not found: {export_path}")
@@ -320,5 +329,5 @@ def start_paper_daemon(
     return result
 
 
-def _print_banner() -> None:
-    print(PAPER_BANNER, file=sys.stderr, flush=True)
+def _print_banner(execution_mode: str = "shadow") -> None:
+    print(banner_for_mode(execution_mode), file=sys.stderr, flush=True)

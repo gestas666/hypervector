@@ -380,7 +380,9 @@ def test_cli_paper_run_offline_via_monkeypatch(tmp_path: Path, capsys, monkeypat
     )
     assert rc == 0
     out = capsys.readouterr()
-    assert "PAPER MODE" in out.err
+    # Default daemon mode is shadow — banner must match (not lie as paper-only).
+    assert "SHADOW MODE" in out.err
+    assert "no venue orders" in out.err.lower()
     payload = json.loads(out.out)
     assert payload["ok"] is True
     # Daemon default is shadow; CLI Task 5 may wire flags later
