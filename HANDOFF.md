@@ -4,8 +4,9 @@
 **Project:** `/Users/gestas/Prototypes/hypervector`  
 **User:** Albert  
 **Branch:** `feat/phase4a-book-fills-metalabel`  
-**HEAD:** `09329f4` — `fix(paper): warm-up without live book; live-only L2 arm`  
-**Working tree:** clean except untracked `audio/` (ignore). Not pushed.
+**HEAD:** `b14b38b`+ — docs/soak notes; code tip still includes `09329f4` warm-up fix  
+**Working tree:** clean except untracked `audio/` (ignore). Not pushed.  
+**Soak:** running at `/tmp/hv4a-soak` (stop: `touch /tmp/hv4a-soak.stop`)
 
 **Prefer this HANDOFF over agentmemory for phase status.**
 
