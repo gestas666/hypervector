@@ -1,12 +1,11 @@
 # HANDOFF — hypervector
 
-**Saved:** 2026-07-22 (evening) — Phase 4a closed + warm-up book fix; paper soak next  
+**Saved:** 2026-07-22 — Phase 4b mainnet shadow **Done** (Tasks 1–6)  
 **Project:** `/Users/gestas/Prototypes/hypervector`  
 **User:** Albert  
 **Branch:** `feat/phase4a-book-fills-metalabel`  
-**HEAD:** `b14b38b`+ — docs/soak notes; code tip still includes `09329f4` warm-up fix  
-**Working tree:** clean except untracked `audio/` (ignore). Not pushed.  
-**Soak:** running at `/tmp/hv4a-soak` (stop: `touch /tmp/hv4a-soak.stop`)
+**HEAD:** Task 6 tip — `docs: Phase 4b shadow verify + handoff; no-submit barriers`  
+**Working tree:** clean except untracked `audio/` (ignore). Not pushed.
 
 **Prefer this HANDOFF over agentmemory for phase status.**
 
@@ -20,44 +19,46 @@
 | Phase 2 actor + historical + metalabeler process | **Done** (plan closed) |
 | Phase 3 paper design + plan + code | **Done** (5/5 + funding fix) |
 | Phase **4a design + plan + code** | **Done** (Tasks 1–6 + warm-up book fix) |
-| Phase **4a paper soak** | **In progress** — warm honesty PASS; live L2 fill pending signal |
+| Phase **4a paper soak** | Optional continue under **shadow** default |
 | Phase **4b design** | **Approved** — mainnet shadow (no testnet, no submit) |
-| Phase **4b plan** | **Ready** — Tasks 1–6 pending implementation |
-| Phase 4b-live / 4c CLI | **Not started** (real submit later) |
+| Phase **4b plan + code** | **Done** (Tasks 1–6) |
+| Phase **4b-live** (real submit + `data/live/`) | **Not started** — design later |
+| Phase 4c CLI | **Not started** (shadow flags only in 4b) |
 | Phase 5 TUI + 1-page GUI | **Not started** |
 
-**Outgoing session:** 4b design approved + implementation plan written.  
-**Incoming session:** **Implement 4b plan** (`docs/superpowers/plans/2026-07-22-phase4b-mainnet-shadow.md`) via subagent-driven or inline. Skills: write-clean-code; troubleshoot with think-like-a-programmer. No venue orders.
+**Outgoing session:** Phase 4b shadow closed; offline suite green; structural no-submit barriers in place.  
+**Incoming session:** longer **mainnet soak under shadow**; then **4b-live** design when ready. Skills: write-clean-code. **Still no venue orders.**
 
 ---
 
-## CLEAN SESSION START — paper soak → 4b design
+## CLEAN SESSION START — shadow soak → 4b-live design later
 
 ### Goal (one sentence)
 
-Soak paper with real HL bars + L2 (metalabel off) until warm/live fill honesty is proven, then design Phase **4b** (live exec flip + kill switch + `data/live/`) — no venue orders until 4b is locked.
+Run mainnet-honest **shadow** paper (real HL bars/L2, order intents, `submitted=false`) under `data/paper/`; soak until confidence; design real submit / `data/live/` only as a later 4b-live phase.
 
 ### Bootstrap commands
 
 ```bash
 cd /Users/gestas/Prototypes/hypervector
 git status -sb
-git log -8 --oneline   # expect 09329f4 at tip
+git log -8 --oneline   # expect 4b Task 6 commit at tip
 uv sync --all-extras
-uv run pytest tests/ -q -m "not network"   # ~213 passed
+uv run pytest tests/ -q -m "not network"   # ~227 passed
 uv run python -m hypervector paper-check
-# → preferred_fill_model=l2_walk_v1, book_feed/l2_walk true, metalabel off, live.enabled false
+# → mode/execution_mode=shadow, network=mainnet, no_submit=true,
+#   submitted_default=false, order_intent_schema=hv_order_intent_v1,
+#   preferred_fill_model=l2_walk_v1, live.enabled=false
 ```
 
-### Paper soak (how to run / stop / check)
+### Shadow soak (how to run / stop / check)
 
 ```bash
-# Isolated ledger (recommended)
-SOAK_ROOT=/tmp/hv4a-soak
+SOAK_ROOT=/tmp/hv4b-soak
 mkdir -p "$SOAK_ROOT"
 uv run python -m hypervector --data-root "$SOAK_ROOT" infra-init
 
-# Long-running soak (no max-live-bars). Stop with stop-file.
+# Default paper-run mode is shadow (mainnet-honest, no venue orders)
 uv run python -m hypervector --data-root "$SOAK_ROOT" paper-run \
   --path data/exports/downtrend_crown_stack_short_c4fd7067 \
   --conviction 0.5 \
@@ -65,46 +66,62 @@ uv run python -m hypervector --data-root "$SOAK_ROOT" paper-run \
   --max-book-age-ms 3000 \
   --no-metalabel \
   --poll-interval 5 \
-  --stop-file /tmp/hv4a-soak.stop \
+  --stop-file /tmp/hv4b-soak.stop \
   2>"$SOAK_ROOT/stderr.log" | tee "$SOAK_ROOT/stdout.json"
 
-# Stop:  touch /tmp/hv4a-soak.stop
+# Force offline-compat paper mode: paper-run --mode paper
+# Stop:  touch /tmp/hv4b-soak.stop
 
-# Honesty checks on decisions:
 python3 - <<'PY'
 import json
 from pathlib import Path
 from collections import Counter
-p = Path("/tmp/hv4a-soak/paper/decisions/decisions.jsonl")
+p = Path("/tmp/hv4b-soak/paper/decisions/decisions.jsonl")
 rows = [json.loads(l) for l in p.read_text().splitlines() if l.strip()] if p.exists() else []
 fills = [r for r in rows if r.get("action") not in ("funding", None) and r.get("fill_model_id")]
 print("fills", len(fills), Counter(r.get("fill_model_id") for r in fills))
-print("fallback", Counter(r.get("fill_fallback_reason") for r in fills))
 print("execution_mode", Counter(r.get("execution_mode") for r in rows))
-# Warm should be bar_close + book_missing; live may show l2_walk_v1 with BBO
+print("submitted", Counter(r.get("submitted") for r in rows))
+print("fallback", Counter(r.get("fill_fallback_reason") for r in fills))
 for r in fills[-5:]:
     print({k: r.get(k) for k in [
-        "feed_ts","action","fill_model_id","fill_fallback_reason",
-        "mark_px","fill_px","bbo_bid","bbo_ask","book_age_ms"]})
+        "feed_ts","action","execution_mode","submitted","network",
+        "fill_model_id","fill_fallback_reason","order_intent"]})
 PY
 ```
 
-**Soak pass criteria:**
-1. Warm-up market fills: `bar_close_slippage_v1` + `fill_fallback_reason=book_missing` (no live BBO on old bars).  
-2. Live bars after warm: when book fresh, fills may be `l2_walk_v1` with BBO; never invent depth.  
-3. All rows `execution_mode=paper`; **zero** files under soak `data/live/`.  
-4. No REST hammer / ConnectionReset storm during warm.  
-5. Offline suite still green after any soak-driven fixes.
+**Soak pass criteria (4b shadow):**
+1. Daemon / decisions: `execution_mode=shadow`, `submitted=false`, `network=mainnet` on market rows.  
+2. Market fills include `order_intent` with `submit_enabled=false`, schema `hv_order_intent_v1`.  
+3. Warm-up: `bar_close_slippage_v1` + `book_missing` (no live BBO on old bars).  
+4. Live bars: when book fresh, may be `l2_walk_v1`; never invent depth.  
+5. **Zero** files under soak `data/live/`; ledger only under `data/paper/`.  
+6. Offline suite still green; barrier tests in `tests/test_paper_no_submit.py` green.
 
 ### Agent checklist
 
 1. Read **this HANDOFF**.  
-2. Confirm offline suite green + HEAD is `09329f4` or later.  
-3. **Soak first** — do not start 4b code before design.  
-4. After soak pass: open **4b design** (live flip, secrets, kill switch, live ledger).  
-5. **Never** place venue orders until 4b design locks them.  
-6. **Never** write `data/live/` from paper.  
+2. Confirm offline suite green + 4b Task 6 commit at tip.  
+3. **Shadow soak** under mainnet public data — no submit path.  
+4. **Never** place venue orders until **4b-live** design locks them.  
+5. **Never** write `data/live/` from paper/shadow.  
+6. Next design when Albert asks: 4b-live (real submit, kill switch, live ledger).  
 7. End session: update this HANDOFF + HEAD + soak notes.
+
+### Phase 4b task board (COMPLETE)
+
+| Task | Deliverable | Status | Commit |
+|------|-------------|--------|--------|
+| docs | Design + plan | **Done** | `4429b52` / `d514d39` |
+| **1** | `build_order_intent` (`hv_order_intent_v1`) | **Done** | `46f269d` |
+| **2** | Ledger allow `paper\|shadow`; still refuse live | **Done** | `172e506` |
+| **3** | Engine stamps `submitted=false` + `order_intent` | **Done** | `72cab62` |
+| **4** | Session/runner; daemon default **shadow** | **Done** | `a8d79f8` |
+| **5** | paper-check surface + paper-run mode flag | **Done** | `e1eea31` |
+| **6** | No-submit barriers + offline verify + HANDOFF | **Done** | Task 6 tip |
+
+**Plan path:** `docs/superpowers/plans/2026-07-22-phase4b-mainnet-shadow.md`  
+**Design path:** `docs/superpowers/specs/2026-07-22-phase4b-mainnet-shadow-design.md`
 
 ### Phase 4a task board (COMPLETE)
 
@@ -119,11 +136,7 @@ PY
 | **6** | CLI/config/`paper-check` + HANDOFF | **Done** | `9a2f369` |
 | fix | Warm-up **no** live book; arm L2 only for live loop | **Done** | `09329f4` |
 
-**Plan path:** `docs/superpowers/plans/2026-07-22-phase4a-book-fills-metalabel.md`  
-**Design path:** `docs/superpowers/specs/2026-07-22-phase4a-book-fills-metalabel-design.md`  
-**Whole-branch review:** `.superpowers/sdd/phase4a-whole-branch-review.md` (REQUEST CHANGES → fixed)
-
-### Architecture (locked — 4a shipped)
+### Architecture (locked — 4a + 4b shadow shipped)
 
 ```text
 export + configs → paper daemon (Phase 3 shell)
@@ -133,7 +146,10 @@ HL L2 book → BookFeed → BookSnapshot  (LIVE phase only)
   after warm: one poll to arm, then poll on live bars
 FillModel: bar_close_slippage_v1 | top_bps_v1 | l2_walk_v1
   selection: prefer l2 when book fresh; else fallback + fill_fallback_reason
-ExplicitFillEngine → data/paper/ (execution_mode=paper)
+ExplicitFillEngine → data/paper/
+  execution_mode=shadow (daemon default) | paper (offline/tests)
+  submitted=false, network=mainnet, order_intent on market fills
+  submit_enabled always false on intent
 
 Metalabel (default OFF):
   Metalabeler p ∈ [0,1] → conviction = p (scale only, no skip floor)
@@ -153,23 +169,29 @@ Metalabel (default OFF):
 | Meta-label default | **Off** until explicitly enabled (`--metalabel`) |
 | Meta-label fail | `conviction_source=fallback_fixed` |
 | Leverage | **Not** a second model — existing risk band only |
-| Host | Thin paper shell (not full Nautilus node in 4a) |
+| Host | Thin paper shell (not full Nautilus node in 4a/4b) |
 | Book transport v1 | Public HL **REST** L2 (`l2Book`); WS later |
-| Live / TUI / GUI | **Out of scope** (4b / Phase 5) |
+| **4b network** | **Mainnet only** — no testnet URL/config path |
+| **4b submit** | **Never** — order intent logged; `submit_enabled=false` |
+| **4b ledger** | Still `data/paper/`; refuse `data/live/` |
+| **Daemon default** | `execution_mode=shadow` |
+| TUI / GUI | **Out of scope** (Phase 5) |
 | Blog VBT+LGBM primary classifier | **Not** the product path |
 
-### Success bar (4a — met)
+### Success bar (4b shadow — met)
 
-1. Offline suite green with bar-close path (Phase 3 no regression).  
-2. Golden book tests: top_bps + l2 VWAP + shortfall + stale fallback.  
-3. Preferred fill `l2_walk_v1` when book fresh.  
-4. Metalabel optional; default fixed conviction.  
-5. `paper-check` reports book/fill/metalabel surface; `live.enabled` false.  
-6. No `data/live/` writes; no venue orders.
+1. Offline suite green (`~227` passed, `-m "not network"`).  
+2. Order intent schema + always `submit_enabled=false`.  
+3. Ledger accepts `paper|shadow`; refuses live paths.  
+4. Engine stamps `submitted=false`, `network=mainnet`, `order_intent` on market fills.  
+5. Daemon default `shadow`; offline tests can force `paper`.  
+6. `paper-check` reports shadow/mainnet/no_submit surface; `live.enabled` false.  
+7. Structural barriers: no testnet in `HL_INFO_URL`; no exchange-submit imports in `paper/`.  
+8. No `data/live/` writes; no venue orders.
 
 ### Out of scope remaining
 
-- 4b live exec, kill switch, secrets-required trading  
+- **4b-live** real submit, kill switch, secrets-required trading, `data/live/`  
 - 4c full CLI completeness epic  
 - Phase 5 GOAT TUI / 1-page GUI  
 - userFees (optional DG — deferred)  
@@ -181,6 +203,8 @@ Metalabel (default OFF):
 
 | Role | Path |
 |------|------|
+| **Phase 4b design (APPROVED / SHIPPED shadow)** | `docs/superpowers/specs/2026-07-22-phase4b-mainnet-shadow-design.md` |
+| **Phase 4b plan (COMPLETE Tasks 1–6)** | `docs/superpowers/plans/2026-07-22-phase4b-mainnet-shadow.md` |
 | **Phase 4a design (APPROVED / SHIPPED)** | `docs/superpowers/specs/2026-07-22-phase4a-book-fills-metalabel-design.md` |
 | **Phase 4a plan (COMPLETE Tasks 1–6)** | `docs/superpowers/plans/2026-07-22-phase4a-book-fills-metalabel.md` |
 | Phase 3 plan (COMPLETE) | `docs/superpowers/plans/2026-07-22-phase3-paper-live-feed.md` |
@@ -193,39 +217,40 @@ Metalabel (default OFF):
 
 ---
 
-## Phase 4a progress (6/6)
+## Phase 4b progress (6/6)
 
 | Task | Deliverable | Status | Commit |
 |------|-------------|--------|--------|
-| docs | Design + plan | **Done** | `171d955` |
-| 1 | FillModel + bar_close extract | **Done** | `6aeba90` |
-| 2 | BookSnapshot + BookFeed | **Done** | `782032e` |
-| 3 | top_bps_v1 + select_fill_model | **Done** | `2f149c9` |
-| 4 | l2_walk_v1 preferred | **Done** | `e788152` |
-| 4 fix | pure VWAP (no extra slip) | **Done** | `ff4a417` |
-| 5 | Metalabel ConvictionProvider default off | **Done** | `70f1367` |
-| 6 | CLI/config/paper-check + HANDOFF | **Done** | `9a2f369` |
-| fix | Warm-up without live book; live-only L2 arm | **Done** | `09329f4` |
+| docs | Design + plan | **Done** | `4429b52` / `d514d39` |
+| 1 | Order intent builder | **Done** | `46f269d` |
+| 2 | Ledger paper\|shadow modes | **Done** | `172e506` |
+| 3 | Engine submitted + order_intent | **Done** | `72cab62` |
+| 4 | Daemon default shadow | **Done** | `a8d79f8` |
+| 5 | CLI paper-check + mode flag | **Done** | `e1eea31` |
+| 6 | Barriers + offline verify + HANDOFF | **Done** | Task 6 tip |
 
-**Success criteria met:** offline suite **213 passed** (`-m "not network"`); preferred fill `l2_walk_v1` with bar_close fallback; metalabel default off; `paper-check` surfaces book/fill/metalabel; `live.enabled` false; no venue orders. Warm-up does not apply live L2 to historical bars (`09329f4`).
+**Success criteria met:** offline suite **227 passed** (`-m "not network"`); mainnet-only HL info URL; daemon default shadow; intents never submit-enabled; ledger stays paper root; `paper-check` surfaces no_submit/mainnet/shadow; no venue orders.
 
-### How to run paper-check / paper-run (Phase 4a)
+### How to run paper-check / paper-run (Phase 4b shadow)
 
 ```bash
 # Identity + readiness (no secret values; live.enabled always false in report)
 uv run python -m hypervector --data-root data paper-check
-# → paper.execution_mode=paper, live_feed_loop=true, sandbox_enabled=false,
+# → paper.mode=shadow, paper.execution_mode=shadow, network=mainnet,
+#   no_submit=true, submitted_default=false,
+#   order_intent_schema=hv_order_intent_v1,
 #   preferred_fill_model=l2_walk_v1, max_book_age_ms=3000,
 #   book_feed=true, l2_walk_available=true,
 #   metalabel_enabled=false, metalabel_default_off=true,
 #   secrets_present bool, secret_env_names listed
 # → live.enabled=false
 
-# Daemon: warm-up + live HL REST bar poll + book-aware fills (no venue orders)
+# Daemon: default --mode shadow (no venue orders)
 uv run python -m hypervector --data-root data paper-run \
   --path data/exports/<export_id> \
   --conviction 0.5 \
   --fee-tier 0 \
+  [--mode shadow|paper] \    # default shadow
   [--preferred-fill-model l2_walk_v1] \
   [--max-book-age-ms 3000] \
   [--metalabel | --no-metalabel] \   # default off
@@ -235,18 +260,19 @@ uv run python -m hypervector --data-root data paper-run \
   [--poll-interval 5]
 ```
 
-Banner on stderr: `PAPER MODE — no venue orders`.  
+Banner on stderr: paper/shadow mode — **no venue orders**.  
 Decisions: `data/paper/decisions/decisions.jsonl` (I2 layout).
 
 ### Config knobs (`configs/default.toml` `[paper]`)
 
 ```toml
+mode = "shadow"                 # paper|shadow; daemon default shadow
 preferred_fill_model = "l2_walk_v1"
 max_book_age_ms = 3000
 metalabel_enabled = false
 ```
 
-`[live] enabled = false` — Phase 4b only.
+`[live] enabled = false` — 4b-live only.
 
 ### Phase 3 locks (do not reopen)
 
@@ -257,9 +283,9 @@ metalabel_enabled = false
 | Fills | Explicit model = ledger truth; sandbox shadow default **off** |
 | Sandbox v1 | Flag + `sandbox_fill_px=null` only |
 | Secrets | Env names ready; paper public path works **without** keys |
-| Live | Config flip later (Phase 4b); paper must never place venue orders |
+| Live submit | Later **4b-live**; paper/shadow must never place venue orders |
 
-**Secrets env (Phase 4b live; ignored for order placement in paper):**
+**Secrets env (4b-live later; ignored for order placement in paper/shadow):**
 
 - `HYPERVECTOR_HL_WALLET_ADDRESS`  
 - `HYPERVECTOR_HL_API_PRIVATE_KEY`  
@@ -273,7 +299,8 @@ Phase 1/1.5  VectorBT research → export
 Phase 2      Nautilus historical (params, not signals.parquet)
 Phase 3      Paper: live HL bars + same strategy + explicit fills   ← DONE
 Phase 4a     Book + staged L2 fills + meta-label scale-only         ← DONE
-Phase 4b     Live exec flip + kill switch                           ← NEXT DESIGN
+Phase 4b     Mainnet shadow: intents, submitted=false, no submit    ← DONE
+Phase 4b-live Real submit + data/live/ + kill switch                ← NEXT DESIGN
 Phase 4c     CLI completeness
 Phase 5      GOAT TUI + 1-page GUI
 ```
@@ -284,7 +311,8 @@ Phase 5      GOAT TUI + 1-page GUI
 | **2** | Event-driven historical sim | **Done** |
 | **3 paper** | Live feed + synthetic fills + paper ledger | **Done** |
 | **4a** | Book, impact fills, metalabel wire | **Done** |
-| **4b–4c** | Live + CLI completeness | Later design |
+| **4b shadow** | Mainnet-honest intents, no venue submit | **Done** |
+| **4b-live / 4c** | Real submit + CLI completeness | Later design |
 | **5** | TUI + GUI | Later design |
 
 ---
@@ -324,10 +352,13 @@ features (metadata schema)
 | `CostProvider` + HL fee tiers + signed funding | **Working** |
 | `FillModel` + `bar_close` / `top_bps` / `l2_walk` | **Working** |
 | `BookSnapshot` + REST `BookFeed` | **Working** |
-| `ExplicitFillEngine` (book-aware selection + fallback log) | **Working** |
+| `ExplicitFillEngine` (book-aware + shadow stamps) | **Working** |
+| `build_order_intent` (`hv_order_intent_v1`) | **Working** |
+| Ledger paper\|shadow modes (refuse live) | **Working** |
 | Offline `PaperSession` bar walk | **Working** |
-| `paper-run` daemon (warm + REST poll + stop + fill/metalabel flags) | **Working** |
-| `paper-check` (book/fill/metalabel surface; live false) | **Working** |
+| `paper-run` daemon default **shadow** | **Working** |
+| `paper-check` shadow/mainnet/no_submit surface | **Working** |
+| Structural no-submit / no-testnet barriers | **Working** |
 | `ConvictionProvider` scale-only metalabel (default off) | **Working** |
 | Sandbox shadow flag | **Working** (no real client) |
 
@@ -335,10 +366,10 @@ features (metadata schema)
 
 | Item | Phase | Notes |
 |------|-------|--------|
-| Live exec + live ledger + secrets required | **4b** | Config flip; kill switch |
-| Real Nautilus sandbox client mirror | **4 / harden** | Flag only |
+| Live exec + live ledger + secrets required | **4b-live** | Config flip; kill switch |
+| Real Nautilus sandbox client mirror | **harden** | Flag only |
 | userFees authenticated fee tier | optional | Deferred |
-| Kill switch / supervisor production ops | **4b** | |
+| Kill switch / supervisor production ops | **4b-live** | |
 | CLI completeness pass | **4c** | **Gate before TUI/GUI** |
 | GOAT TUI | **5** | Epic terminal ops console |
 | 1-page GUI monitoring dashboard | **5** | Same ledger truth as TUI/CLI |
@@ -363,15 +394,17 @@ features (metadata schema)
 | `src/hypervector/paper/costs.py` | Fee tiers, `CostProvider`, funding math |
 | `src/hypervector/paper/fill_models.py` | FillModel protocol + bar_close/top_bps/l2_walk |
 | `src/hypervector/paper/book.py` | BookSnapshot + BookFeed |
-| `src/hypervector/paper/fills.py` | `ExplicitFillEngine` + sandbox shadow keys |
+| `src/hypervector/paper/order_intent.py` | `build_order_intent` shadow intents |
+| `src/hypervector/paper/fills.py` | `ExplicitFillEngine` + shadow stamps |
 | `src/hypervector/paper/conviction.py` | Fixed / metalabel conviction providers |
 | `src/hypervector/paper/session.py` | Offline/incremental bar → fill |
-| `src/hypervector/paper/runner.py` | `start_paper_daemon` (fill + metalabel flags) |
+| `src/hypervector/paper/runner.py` | `start_paper_daemon` (default shadow) |
 | `src/hypervector/paper/live_node.py` | REST poll feed (WS TODO) |
-| `src/hypervector/paper/ledger.py` | Paper decisions JSONL; refuse live path |
-| `src/hypervector/data/hl.py` | Public HL candle + L2 REST |
-| `src/hypervector/cli.py` | paper-check surface; paper-run 4a flags |
-| `configs/default.toml` | `[paper]` preferred fill / book age / metalabel |
+| `src/hypervector/paper/ledger.py` | Paper decisions JSONL; paper\|shadow; refuse live |
+| `src/hypervector/data/hl.py` | Public HL candle + L2 REST (**mainnet only**) |
+| `src/hypervector/cli.py` | paper-check shadow surface; paper-run `--mode` |
+| `configs/default.toml` | `[paper] mode = "shadow"` + fill/metalabel knobs |
+| `tests/test_paper_no_submit.py` | Structural no-testnet / no-submit barriers |
 
 ---
 
@@ -384,8 +417,9 @@ uv run python -m hypervector --data-root data phase2-run \
   --path data/exports/<id> --lookback 30 --no-network
 uv run python -m hypervector paper-check
 uv run python -m hypervector paper-run --path data/exports/<id> --max-live-bars 2
+uv run pytest tests/test_paper_no_submit.py -q
 uv run pytest tests/ -q -m "not network"
-# Expected: 210+ passed offline
+# Expected: 227+ passed offline
 ```
 
 ### Metalabeler (optional; enable with `--metalabel`)
@@ -403,12 +437,13 @@ p = ml.predict_probability(features)  # [0, 1]
 | Track | Deliverable | State |
 |-------|-------------|--------|
 | **4a** | Order book + staged L2 fills; meta-label scale-only | **Done** |
-| **4b** | Live exec flip, secrets required, `data/live/`, kill switch | **Next design** |
+| **4b shadow** | Mainnet-honest intents; no venue submit | **Done** |
+| **4b-live** | Real submit, secrets required, `data/live/`, kill switch | **Next design** |
 | **4c** | CLI completeness — every capability consistent | Later design; gate for UX |
 | **5a** | **GOAT TUI** — best-in-class terminal ops console | Phase 5 |
 | **5b** | **1-page GUI** monitoring dashboard | Phase 5 |
 
-**4a design:** `docs/superpowers/specs/2026-07-22-phase4a-book-fills-metalabel-design.md`  
+**4b design:** `docs/superpowers/specs/2026-07-22-phase4b-mainnet-shadow-design.md`  
 
 **UX sequencing:** **4c CLI complete → then Phase 5 TUI + GUI.**  
 TUI/GUI are views over ledgers/processes — not a second brain. `execution_mode` always obvious. CLI stays scriptable.
@@ -417,9 +452,10 @@ Also defer: real Nautilus sandbox client (Phase 3 only plumbs flag + null `sandb
 
 ---
 
-## Non-goals (until Phase 4b design says otherwise)
+## Non-goals (until 4b-live design says otherwise)
 
-- Live venue orders (still forbidden until 4b)  
+- Live venue orders (still forbidden)  
+- Testnet as validation path  
 - VectorBT → live skip of Phase 2/paper  
 - CEX bars claimed as HL book  
 - Shared paper/live ledgers  
@@ -436,14 +472,14 @@ After paper proven (+ live ops checklist): skill/plugin so agents follow researc
 
 ## Agent notes
 
-- Phase 2 plan **closed**. Phase 3 **closed**. Phase 4a **closed** (Tasks 1–6 + `09329f4`).  
-- **Next:** finish **paper soak** → then **4b design** (not live orders, not TUI).  
-- Soak notes: `docs/superpowers/notes/2026-07-22-phase4a-paper-soak.md`  
-- Soak runtime: `/tmp/hv4a-soak` + stop `/tmp/hv4a-soak.stop` + pid `/tmp/hv4a-soak.pid`  
+- Phase 2 plan **closed**. Phase 3 **closed**. Phase 4a **closed**. Phase **4b shadow closed** (Tasks 1–6).  
+- **Next:** longer **mainnet shadow soak**; then **4b-live design** (real submit) when Albert asks — not TUI yet.  
+- Daemon default: `execution_mode=shadow`; force paper with `--mode paper`.  
+- Soak notes (4a): `docs/superpowers/notes/2026-07-22-phase4a-paper-soak.md`  
 - Branch `feat/phase4a-book-fills-metalabel` not pushed; merge/PR when Albert wants.  
 - Legacy pre-schema exports fail `export-validate` until re-exported.  
 - Upstream noise: Nautilus `Timestamp.utcnow` Pandas4Warning; sklearn calibrator version skew.  
-- Paper must not submit real orders even if wallet/API key env vars are set.  
+- Paper/shadow must not submit real orders even if wallet/API key env vars are set.  
 - Live feed uses **REST poll** fallback (`live_node.py`); full Nautilus WS host optional later.  
 - Book: public HL L2 REST **only after warm-up** (one arm poll + live bars).  
 - Do not commit `audio/`.  
@@ -454,12 +490,12 @@ After paper proven (+ live ops checklist): skill/plugin so agents follow researc
 
 Done this arc:
 
-- Phase 4a Tasks 1–6 (`171d955`…`9a2f369`)  
-- Pure L2 VWAP fix (`ff4a417`)  
-- Warm-up without live book + honesty fixes (`09329f4`)  
-- Offline **213** passed; whole-branch review blocker closed  
-- HANDOFF updated for soak → 4b; soak process started under `/tmp/hv4a-soak`  
+- Phase 4b Tasks 1–6 (`46f269d`…Task 6)  
+- Order intent, ledger modes, engine stamps, daemon shadow default, CLI surface  
+- Structural no-submit / no-testnet barriers  
+- Offline **227** passed (`-m "not network"`)  
+- HANDOFF points at shadow soak → 4b-live design later  
 
-**Next human/agent:** monitor soak pass criteria → then 4b design.  
+**Next human/agent:** mainnet shadow soak under default daemon mode → then 4b-live design.  
 
-**Not done:** live exec, kill switch, real sandbox client, TUI/GUI, userFees.
+**Not done:** real submit, kill switch, `data/live/`, real sandbox client, TUI/GUI, userFees.

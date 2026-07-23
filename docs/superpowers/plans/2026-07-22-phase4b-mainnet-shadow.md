@@ -59,7 +59,7 @@
 
 ### Status (implementation)
 
-Tasks 1–6 **pending**.
+Tasks 1–6 **Done** (2026-07-22). Commits: `46f269d` → `172e506` → `72cab62` → `a8d79f8` → `e1eea31` → Task 6 tip.
 
 ---
 
