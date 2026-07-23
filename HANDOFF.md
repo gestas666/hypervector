@@ -1,10 +1,12 @@
 # HANDOFF — hypervector
 
-**Saved:** 2026-07-23 — **4b-live F1–F4 complete** on `feat/phase4b-live-f2-exec-client`. **Next: merge to main (Albert) + optional armed mainnet smoke; then 4c / 5.** Neural-trader rejected.  
+**Saved:** 2026-07-23 — **4b-live F1–F4 merged to `main`** (`3b94008`). **Next: optional armed mainnet smoke (Albert); then 4c / 5.** Neural-trader rejected.  
 **Project:** `/Users/gestas/Prototypes/hypervector`  
 **User:** Albert  
-**Branch:** `feat/phase4b-live-f2-exec-client`  
-**Not pushed** unless Albert requests.
+**Branch:** `main`  
+**HEAD:** `3b94008` Merge branch 'feat/phase4b-live-f2-exec-client' (4b-live F2–F4); docs tip may be later  
+
+**Local only — not pushed** unless Albert requests.
 
 **Prefer this HANDOFF over agentmemory for phase status.**
 
@@ -23,16 +25,16 @@
 | Phase **5** TUI + GUI | **Not started** |
 | neural-trader | **Rejected** |
 
-**Outgoing:** Full 4b-live code path offline-verified. Paper/shadow never constructs exec client.  
-**Incoming:** Merge/PR decision; optional Albert-approved mainnet smoke with secrets; then 4c or Phase 5 design.
+**Outgoing:** 4b-live merged to main; offline 272 passed; live-check refuse-by-default.  
+**Incoming:** Optional Albert-approved mainnet smoke; then 4c CLI completeness or Phase 5 design.
 
 ---
 
-## CLEAN SESSION START — after 4b-live
+## CLEAN SESSION START — after 4b-live merge
 
 ### Goal options (pick one)
 
-1. **Merge** `feat/phase4b-live-f2-exec-client` → `main` (local or PR).  
+1. ~~**Merge** to main~~ **Done** (`3b94008`).  
 2. **Armed mainnet smoke** (Albert only): tiny notional, secrets + arm + enabled, short `--max-live-bars`.  
 3. **4c CLI completeness** epic.  
 4. **Phase 5** TUI/GUI design (after 4c preferred).
@@ -57,7 +59,7 @@
 
 ```bash
 cd /Users/gestas/Prototypes/hypervector
-git status -sb   # feat/phase4b-live-f2-exec-client
+git status -sb   # expect main @ 3b94008 (or later handoff tip)
 uv run pytest tests/ -q -m "not network"   # ~272+
 uv run python -m hypervector live-check
 # → submit_wired=true, can_start=false, start_gate=refused
@@ -116,9 +118,9 @@ uv run python -m hypervector live-check
 
 | Arc | Status |
 |-----|--------|
-| 4b-live F1–F4 | **Complete** on feature branch |
-| Offline | **272+ passed** expected |
-| Merge/push | Not done |
+| 4b-live F1–F4 | **Complete + merged to main** |
+| Offline | **272 passed** |
+| Push remote | Not done |
 | Real mainnet soak | Not done (needs Albert) |
 
-**Next human decision:** merge branch? mainnet smoke? 4c?
+**Next human decision:** mainnet smoke? 4c? push?

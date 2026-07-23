@@ -1,7 +1,7 @@
 # Design: Phase 4b-live (real mainnet submit)
 
 **Date:** 2026-07-23  
-**Status:** **F1–F4 Done** (branch `feat/phase4b-live-f2-exec-client`). 4b-live code complete; merge + optional mainnet soak next.  
+**Status:** **F1–F4 Done + merged to `main`** (`3b94008`). Optional mainnet soak / 4c next.  
 **Depends on:** Phase 4b shadow (shipped + soak PASS), paper completeness slice A  
 
 ## Intent
