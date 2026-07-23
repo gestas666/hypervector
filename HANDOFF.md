@@ -20,12 +20,13 @@
 | Phase 2 actor + historical + metalabeler process | **Done** (plan closed) |
 | Phase 3 paper design + plan + code | **Done** (5/5 + funding fix) |
 | Phase **4a design + plan + code** | **Done** (Tasks 1–6 + warm-up book fix) |
-| Phase **4a paper soak** | **In progress / next** — prove live L2 on live bars only |
-| Phase 4b live / 4c CLI | **Not started** (design after soak) |
+| Phase **4a paper soak** | **In progress** — warm honesty PASS; live L2 fill pending signal |
+| Phase **4b design** | **Draft ready for review** — mainnet shadow (no testnet, no submit) |
+| Phase 4b-live / 4c CLI | **Not started** (real submit later) |
 | Phase 5 TUI + 1-page GUI | **Not started** |
 
-**Outgoing session:** 4a shipped; whole-branch review REQUEST CHANGES fixed in `09329f4`; offline **213** passed; soak started.  
-**Incoming session:** **Continue paper soak** → if green, start **4b design**. No venue orders. No TUI/GUI.
+**Outgoing session:** 4a shipped; soak running; 4b shadow design drafted.  
+**Incoming session:** **Review 4b design** → writing-plans → implement. No venue orders. No TUI/GUI.
 
 ---
 
