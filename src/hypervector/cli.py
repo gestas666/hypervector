@@ -20,6 +20,7 @@ from hypervector.paper.fill_models import (
     DEFAULT_MAX_BOOK_AGE_MS,
     FILL_MODEL_L2_WALK_V1,
 )
+from hypervector.paper.order_intent import NETWORK_MAINNET, ORDER_INTENT_SCHEMA
 from hypervector.paper.runner import start_paper_daemon
 from hypervector.regime.detectors import detect_regime_ema
 from hypervector.regime.metrics import regime_detection_metrics
@@ -39,6 +40,9 @@ SECRET_ENV_API_KEY = "HYPERVECTOR_HL_API_PRIVATE_KEY"
 # Phase 4a paper defaults (match configs/default.toml [paper]).
 DEFAULT_PREFERRED_FILL_MODEL = FILL_MODEL_L2_WALK_V1
 DEFAULT_METALABEL_ENABLED = False
+# Phase 4b: daemon default is mainnet shadow (no venue submit).
+DEFAULT_EXECUTION_MODE = "shadow"
+ALLOWED_CLI_EXECUTION_MODES = frozenset({"shadow", "paper"})
 
 
 def _secrets_present() -> bool:
@@ -94,6 +98,12 @@ def _paper_surface_flags() -> dict:
     except Exception:  # noqa: BLE001 — surface probe only
         l2_walk_ok = False
     return {
+        # Phase 4b shadow surface (strings/bools only; never secret values).
+        "mode": DEFAULT_EXECUTION_MODE,
+        "network": NETWORK_MAINNET,
+        "no_submit": True,
+        "submitted_default": False,
+        "order_intent_schema": ORDER_INTENT_SCHEMA,
         "preferred_fill_model": DEFAULT_PREFERRED_FILL_MODEL,
         "max_book_age_ms": int(DEFAULT_MAX_BOOK_AGE_MS),
         "book_feed": book_feed_ok,
@@ -108,7 +118,8 @@ def cmd_paper_check(args: argparse.Namespace) -> int:
     paths = _ensure_root(args)
     report = layout_report(paths.root)
     paper = {
-        "execution_mode": "paper",
+        # Alias of mode; Phase 4b default is shadow (mainnet, no venue orders).
+        "execution_mode": DEFAULT_EXECUTION_MODE,
         "decisions": str(paths.paper_decisions),
         "ledger": str(paths.paper_ledger),
         "live_feed_loop": True,
@@ -121,7 +132,10 @@ def cmd_paper_check(args: argparse.Namespace) -> int:
     report["paper"] = paper
     report["live"] = {
         "enabled": False,
-        "note": "Phase 4b: set live.enabled + secrets; paper never places venue orders",
+        "note": (
+            "Phase 4b shadow: mainnet market data + order intents only; "
+            "no venue orders. Real submit is a later phase."
+        ),
     }
     print(json.dumps(report, indent=2))
     return 0
@@ -143,6 +157,13 @@ def cmd_paper_run(args: argparse.Namespace) -> int:
         getattr(args, "max_book_age_ms", DEFAULT_MAX_BOOK_AGE_MS)
     )
     metalabel_enabled = bool(getattr(args, "metalabel", DEFAULT_METALABEL_ENABLED))
+    execution_mode = str(getattr(args, "mode", DEFAULT_EXECUTION_MODE)).lower().strip()
+    if execution_mode not in ALLOWED_CLI_EXECUTION_MODES:
+        print(
+            f"invalid --mode {execution_mode!r}; choose shadow|paper",
+            file=sys.stderr,
+        )
+        return 1
     try:
         result = start_paper_daemon(
             export_dir=path,
@@ -159,6 +180,7 @@ def cmd_paper_run(args: argparse.Namespace) -> int:
             preferred_fill_model=preferred,
             max_book_age_ms=max_book_age_ms,
             metalabel_enabled=metalabel_enabled,
+            execution_mode=execution_mode,
         )
     except FileNotFoundError as exc:
         print(str(exc), file=sys.stderr)
@@ -170,6 +192,7 @@ def cmd_paper_run(args: argparse.Namespace) -> int:
     out = {
         "ok": True,
         "execution_mode": result.execution_mode,
+        "mode": result.execution_mode,
         "run_id": result.run_id,
         "export_dir": str(result.export_dir),
         "decisions_path": str(result.decisions_path),
@@ -183,6 +206,8 @@ def cmd_paper_run(args: argparse.Namespace) -> int:
         "max_book_age_ms": max_book_age_ms,
         "metalabel_enabled": metalabel_enabled,
         "secrets_present": _secrets_present(),
+        "no_submit": True,
+        "network": NETWORK_MAINNET,
     }
     print(json.dumps(out, indent=2, default=str))
     return 0
@@ -601,18 +626,33 @@ def build_parser() -> argparse.ArgumentParser:
 
     pc = sub.add_parser(
         "paper-check",
-        help="Paper identity: layout, live_feed_loop, secrets_present (no key values)",
+        help=(
+            "Paper/shadow identity: mode, mainnet network, no_submit "
+            "(booleans/strings only; never secret values)"
+        ),
     )
     pc.set_defaults(func=cmd_paper_check)
 
     pr = sub.add_parser(
         "paper-run",
-        help="Paper daemon: warm-up + live HL bars + synthetic fills (no venue orders)",
+        help=(
+            "Paper/shadow daemon: mainnet HL bars + synthetic fills; "
+            "no venue orders (default mode=shadow)"
+        ),
     )
     pr.add_argument(
         "--path",
         required=True,
         help="path to strict Phase 1.5 export directory",
+    )
+    pr.add_argument(
+        "--mode",
+        choices=sorted(ALLOWED_CLI_EXECUTION_MODES),
+        default=DEFAULT_EXECUTION_MODE,
+        help=(
+            "execution mode: shadow (default; mainnet-honest intents, no venue orders) "
+            "or paper (offline-compat synthetic path)"
+        ),
     )
     pr.add_argument(
         "--conviction",
