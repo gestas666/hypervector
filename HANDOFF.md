@@ -1,10 +1,10 @@
 # HANDOFF — hypervector
 
-**Saved:** 2026-07-23 — Phase 4b shadow **verified** (soak PASS + expert review + banner honesty fix)  
+**Saved:** 2026-07-23 — Paper completeness **slice A done** (paper-report + CLI honesty + acceptance matrix); 4b shadow still verified  
 **Project:** `/Users/gestas/Prototypes/hypervector`  
 **User:** Albert  
 **Branch:** `feat/phase4a-book-fills-metalabel`  
-**HEAD:** branch tip on `feat/phase4a-book-fills-metalabel` — 4b shadow verification complete (banner honesty `07a10eb`; base Task 6 `9579981`)  
+**HEAD:** branch tip — paper completeness slice A (after 4b shadow verify)  
 **Working tree:** clean except untracked `audio/` (ignore). Not pushed.
 
 **Prefer this HANDOFF over agentmemory for phase status.**
@@ -23,20 +23,21 @@
 | Phase **4b design** | **Approved** — mainnet shadow (no testnet, no submit) |
 | Phase **4b plan + code** | **Done** (Tasks 1–6) |
 | Phase **4b shadow verification / soak** | **PASS** — dual smoke + bounded mainnet soak + 1× live `l2_walk_v1` |
-| Phase **4b-live** (real submit + `data/live/`) | **Not started** — next design when Albert asks |
-| Phase 4c CLI | **Not started** (shadow flags only in 4b) |
+| Phase **paper completeness (slice A)** | **Done** — `paper-report`, CLI honesty, acceptance matrix; offline ~237 |
+| Phase **4b-live** (real submit + `data/live/`) | **Not started** — after paper dry-run confidence; design when Albert asks |
+| Phase 4c CLI | **Partial** (paper-report + honesty); full epic later |
 | Phase 5 TUI + 1-page GUI | **Not started** |
 
-**Outgoing session:** 4b shadow **re-proven** end-to-end (offline 228, barriers, paper-check, dual smoke, mainnet soak with live L2 fill). Banner now says `SHADOW MODE` under default.  
-**Incoming session:** optional longer shadow soak for ops confidence **or** **4b-live design** (real submit, kill switch, `data/live/`). **Still no venue orders until 4b-live is designed and approved.**
+**Outgoing session:** Paper dry-run **ops-complete slice A** shipped: `paper-report`, phase2→paper-run honesty, session_start mode stamps, acceptance matrix. Offline **237** passed.  
+**Incoming session:** optional longer shadow soak **or** **4b-live design**. **Still no venue orders until 4b-live is designed and approved.**
 
 ---
 
-## CLEAN SESSION START — 4b-live design (or optional longer soak)
+## CLEAN SESSION START — paper dry-run ops / then 4b-live design
 
 ### Goal (one sentence)
 
-Shadow path is trusted; next product step is **4b-live design** (real submit + live ledger + kill switch) when Albert asks — optional longer shadow soak only if more ops confidence is wanted first.
+Paper/shadow dry-run is the trusted path; use `paper-report` for ledger ops; only then design **4b-live** (real submit + live ledger + kill switch).
 
 ### Bootstrap commands
 
@@ -45,12 +46,14 @@ cd /Users/gestas/Prototypes/hypervector
 git status -sb
 git log -8 --oneline   # expect 4b Task 6 commit at tip
 uv sync --all-extras
-uv run pytest tests/ -q -m "not network"   # ~228 passed
+uv run pytest tests/ -q -m "not network"   # ~237 passed
 uv run python -m hypervector paper-check
 # → mode/execution_mode=shadow, network=mainnet, no_submit=true,
 #   submitted_default=false, order_intent_schema=hv_order_intent_v1,
 #   preferred_fill_model=l2_walk_v1, live.enabled=false
 # Banner on paper-run: SHADOW MODE — no venue orders (default)
+uv run python -m hypervector paper-report --last 5
+# → honesty counters over data/paper/decisions/decisions.jsonl
 ```
 
 ### Shadow soak (how to run / stop / check)
@@ -375,7 +378,7 @@ features (metadata schema)
 | Real Nautilus sandbox client mirror | **harden** | Flag only |
 | userFees authenticated fee tier | optional | Deferred |
 | Kill switch / supervisor production ops | **4b-live** | |
-| CLI completeness pass | **4c** | **Gate before TUI/GUI** |
+| CLI completeness pass | **4c** | **Partial** (paper-report); full gate before TUI/GUI |
 | GOAT TUI | **5** | Epic terminal ops console |
 | 1-page GUI monitoring dashboard | **5** | Same ledger truth as TUI/CLI |
 | Phase 2 runner full cost parity with VBT | backlog | Not blocking |
@@ -406,8 +409,9 @@ features (metadata schema)
 | `src/hypervector/paper/runner.py` | `start_paper_daemon` (default shadow) |
 | `src/hypervector/paper/live_node.py` | REST poll feed (WS TODO) |
 | `src/hypervector/paper/ledger.py` | Paper decisions JSONL; paper\|shadow; refuse live |
+| `src/hypervector/paper/report.py` | Read-only decisions summary (`paper-report`) |
 | `src/hypervector/data/hl.py` | Public HL candle + L2 REST (**mainnet only**) |
-| `src/hypervector/cli.py` | paper-check shadow surface; paper-run `--mode` |
+| `src/hypervector/cli.py` | paper-check / paper-run / **paper-report**; phase2 honesty |
 | `configs/default.toml` | `[paper] mode = "shadow"` + fill/metalabel knobs |
 | `tests/test_paper_no_submit.py` | Structural no-testnet / no-submit barriers |
 
@@ -422,9 +426,10 @@ uv run python -m hypervector --data-root data phase2-run \
   --path data/exports/<id> --lookback 30 --no-network
 uv run python -m hypervector paper-check
 uv run python -m hypervector paper-run --path data/exports/<id> --max-live-bars 2
-uv run pytest tests/test_paper_no_submit.py -q
+uv run python -m hypervector paper-report --last 5
+uv run pytest tests/test_paper_no_submit.py tests/test_paper_acceptance_matrix.py -q
 uv run pytest tests/ -q -m "not network"
-# Expected: 228+ passed offline
+# Expected: 237+ passed offline
 ```
 
 ### Metalabeler (optional; enable with `--metalabel`)
@@ -443,8 +448,9 @@ p = ml.predict_probability(features)  # [0, 1]
 |-------|-------------|--------|
 | **4a** | Order book + staged L2 fills; meta-label scale-only | **Done** |
 | **4b shadow** | Mainnet-honest intents; no venue submit | **Done** |
-| **4b-live** | Real submit, secrets required, `data/live/`, kill switch | **Next design** |
-| **4c** | CLI completeness — every capability consistent | Later design; gate for UX |
+| **paper complete A** | paper-report + CLI honesty + acceptance matrix | **Done** |
+| **4b-live** | Real submit, secrets required, `data/live/`, kill switch | **Next design** (after dry-run confidence) |
+| **4c** | CLI completeness — every capability consistent | Partial; full epic later; gate for UX |
 | **5a** | **GOAT TUI** — best-in-class terminal ops console | Phase 5 |
 | **5b** | **1-page GUI** monitoring dashboard | Phase 5 |
 
@@ -477,11 +483,12 @@ After paper proven (+ live ops checklist): skill/plugin so agents follow researc
 
 ## Agent notes
 
-- Phase 2 plan **closed**. Phase 3 **closed**. Phase 4a **closed**. Phase **4b shadow closed + verified** (Tasks 1–6 + soak PASS).  
-- **Next:** **4b-live design** (real submit, kill switch, `data/live/`) when Albert asks — not TUI yet. Optional longer shadow soak only for ops confidence.  
+- Phase 2 plan **closed**. Phase 3 **closed**. Phase 4a **closed**. Phase **4b shadow closed + verified**. Paper completeness **slice A done**.  
+- **Next:** optional longer shadow soak **or** **4b-live design** when Albert asks — not TUI yet.  
 - Daemon default: `execution_mode=shadow`; force paper with `--mode paper`.  
+- Ops: `paper-report` summarizes decisions honesty counters (read-only).  
 - Soak notes (4b): `docs/superpowers/notes/2026-07-22-phase4b-shadow-soak.md`  
-- Soak notes (4a): `docs/superpowers/notes/2026-07-22-phase4a-paper-soak.md`  
+- Paper complete design: `docs/superpowers/specs/2026-07-23-paper-completeness-design.md`  
 - Branch `feat/phase4a-book-fills-metalabel` not pushed; merge/PR when Albert wants.  
 - Legacy pre-schema exports fail `export-validate` until re-exported.  
 - Upstream noise: Nautilus `Timestamp.utcnow` Pandas4Warning; sklearn calibrator version skew.  
@@ -494,15 +501,14 @@ After paper proven (+ live ops checklist): skill/plugin so agents follow researc
 
 ## Outgoing session summary
 
-Done this verification arc (2026-07-23):
+Done this build arc (2026-07-23 paper completeness A):
 
-- Re-proved offline suite (**228** passed after banner test) and barrier honesty  
-- Real `paper-check` surface matches locked 4b fields  
-- Dual isolated `paper-run` smokes: all shadow / submitted=false / mainnet / no live writes  
-- Bounded mainnet shadow soak: **PASS** all 6 criteria; **1× live `l2_walk_v1` fill** observed  
-- Honesty fix: stderr banner matches `execution_mode` (SHADOW vs PAPER)  
-- Soak notes + this HANDOFF updated  
+- `paper-report` CLI + pure `paper/report.py` over real decisions JSONL  
+- CLI honesty: phase2-check/run point to `paper-run`; live submit still not implemented  
+- session_start stamps real `execution_mode` / `submitted=false` / `network=mainnet`  
+- Acceptance matrix tests (`tests/test_paper_acceptance_matrix.py`)  
+- Offline suite **237** passed (`-m "not network"`)  
 
-**Next human/agent:** optional longer soak **or** **4b-live design** when Albert asks.  
+**Next human/agent:** keep dry-running with paper-run + paper-report; **4b-live design** only when ready for capital path.  
 
-**Not done:** real submit, kill switch, `data/live/`, real sandbox client, TUI/GUI, userFees.
+**Not done:** real submit, kill switch, `data/live/`, real sandbox client, full 4c, TUI/GUI, userFees.

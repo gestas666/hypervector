@@ -23,6 +23,12 @@ from hypervector.paper.order_intent import (
     ORDER_INTENT_SCHEMA,
     build_order_intent,
 )
+from hypervector.paper.report import (
+    default_decisions_path,
+    load_decision_rows,
+    report_from_data_root,
+    summarize_paper_decisions,
+)
 from hypervector.paper.runner import PaperDaemonResult, start_paper_daemon
 from hypervector.paper.session import PaperSession, PaperSessionResult, run_paper_session_offline
 
@@ -47,8 +53,12 @@ __all__ = [
     "PaperSessionResult",
     "append_paper_decision",
     "build_order_intent",
+    "default_decisions_path",
     "funding_payment",
+    "load_decision_rows",
+    "report_from_data_root",
     "run_paper_session_offline",
     "select_fill_model",
     "start_paper_daemon",
+    "summarize_paper_decisions",
 ]

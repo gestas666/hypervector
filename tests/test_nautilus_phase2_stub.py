@@ -122,6 +122,9 @@ def test_phase2_check_report_probes_nautilus(tmp_path: Path):
     )
     assert report["ok"] is True
     assert report["paper_live"]["implemented"] is False
+    assert report["paper_live"]["paper_dry_run"]["implemented"] is True
+    assert report["paper_live"]["paper_dry_run"]["command"] == "paper-run"
+    assert report["paper_live"]["live_submit"]["implemented"] is False
     probe = report["nautilus_probe"]
     assert probe.get("engine_started") is False
     assert probe.get("venue") == "HYPERLIQUID" or "error" in probe

@@ -310,8 +310,15 @@ class PaperSession:
         return n
 
     def ensure_session_identity(self) -> None:
-        """Write a session_start row if no decisions exist yet."""
+        """Write a session_start row if no decisions exist yet.
+
+        Stamps the session ``execution_mode`` (shadow|paper) plus dry-run
+        honesty fields so ledger mode never silently defaults to paper when
+        the daemon is shadow.
+        """
         if not self.decisions_path.is_file():
+            from hypervector.paper.order_intent import NETWORK_MAINNET
+
             append_paper_decision(
                 self.root,
                 {
@@ -324,6 +331,10 @@ class PaperSession:
                     "action": "session_start",
                     "conviction": self.conviction,
                     "bars_processed": self.bars_processed,
+                    "execution_mode": self.execution_mode,
+                    "submitted": False,
+                    "network": NETWORK_MAINNET,
+                    "no_submit": True,
                 },
             )
 

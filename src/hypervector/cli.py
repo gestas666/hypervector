@@ -21,6 +21,7 @@ from hypervector.paper.fill_models import (
     FILL_MODEL_L2_WALK_V1,
 )
 from hypervector.paper.order_intent import NETWORK_MAINNET, ORDER_INTENT_SCHEMA
+from hypervector.paper.report import report_from_data_root
 from hypervector.paper.runner import start_paper_daemon
 from hypervector.regime.detectors import detect_regime_ema
 from hypervector.regime.metrics import regime_detection_metrics
@@ -138,6 +139,25 @@ def cmd_paper_check(args: argparse.Namespace) -> int:
         ),
     }
     print(json.dumps(report, indent=2))
+    return 0
+
+
+def cmd_paper_report(args: argparse.Namespace) -> int:
+    """Summarize paper/shadow decisions JSONL (read-only; no venue orders)."""
+    _ensure_root(args)
+    root = Path(args.data_root)
+    decisions = Path(args.path) if getattr(args, "path", None) else None
+    last_n = int(getattr(args, "last", 5))
+    try:
+        report = report_from_data_root(
+            root,
+            decisions_path=decisions,
+            last_n=last_n,
+        )
+    except ValueError as exc:
+        print(str(exc), file=sys.stderr)
+        return 1
+    print(json.dumps(report, indent=2, default=str))
     return 0
 
 
@@ -515,7 +535,7 @@ def cmd_export_validate(args: argparse.Namespace) -> int:
 
 
 def cmd_phase2_check(args: argparse.Namespace) -> int:
-    """Load export as Phase 2 loadout stub; confirm paper/live not implemented."""
+    """Load export as Phase 2 loadout stub; note paper dry-run is paper-run."""
     _ensure_root(args)
     path = Path(args.path)
     try:
@@ -535,21 +555,38 @@ def cmd_phase2_check(args: argparse.Namespace) -> int:
         )
         return 1
     print(json.dumps(report, indent=2, default=str))
-    if not report.get("paper_live", {}).get("implemented", False):
-        print("paper/live not implemented", file=sys.stderr)
+    pl = report.get("paper_live") or {}
+    # Honest routing: dry-run paper is paper-run; live submit still absent.
+    if not pl.get("implemented", False):
+        print(
+            "note: phase2-run is historical only; "
+            "paper/shadow dry-run → paper-run (default shadow, no venue orders); "
+            "live submit not implemented",
+            file=sys.stderr,
+        )
     return 0
 
 
 def cmd_phase2_run(args: argparse.Namespace) -> int:
     """Run Phase 2 historical backtest from a strict export bundle.
 
-    Paper/live modes are not implemented; if those flags are requested we only
-    note that on stderr and still run the historical engine path.
+    ``--paper`` / ``--live`` on phase2-run do not switch engines: historical
+    path still runs. Paper dry-run is ``paper-run``; live submit is not armed.
     """
     _ensure_root(args)
     path = Path(args.path)
-    if getattr(args, "paper", False) or getattr(args, "live", False):
-        print("paper/live not implemented", file=sys.stderr)
+    if getattr(args, "paper", False):
+        print(
+            "note: phase2-run --paper does not start paper daemon; "
+            "use: hypervector paper-run --path <export>",
+            file=sys.stderr,
+        )
+    if getattr(args, "live", False):
+        print(
+            "note: live submit not implemented (4b-live later); "
+            "use paper-run for dry-run shadow",
+            file=sys.stderr,
+        )
 
     try:
         result = run_phase2_backtest(
@@ -632,6 +669,26 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     pc.set_defaults(func=cmd_paper_check)
+
+    prep = sub.add_parser(
+        "paper-report",
+        help=(
+            "Summarize paper/shadow decisions.jsonl (fill models, modes, "
+            "intents, honesty counters; read-only)"
+        ),
+    )
+    prep.add_argument(
+        "--path",
+        default=None,
+        help="optional decisions JSONL path (default: <data-root>/paper/decisions/decisions.jsonl)",
+    )
+    prep.add_argument(
+        "--last",
+        type=int,
+        default=5,
+        help="include last N market fills in sample (default 5)",
+    )
+    prep.set_defaults(func=cmd_paper_report)
 
     pr = sub.add_parser(
         "paper-run",
@@ -812,7 +869,10 @@ def build_parser() -> argparse.ArgumentParser:
 
     p2 = sub.add_parser(
         "phase2-check",
-        help="Load export as Phase 2 StrategyLoadout stub (offline; no paper/live)",
+        help=(
+            "Load export as Phase 2 StrategyLoadout stub "
+            "(historical; paper dry-run is paper-run)"
+        ),
     )
     p2.add_argument("--path", required=True, help="path to export directory")
     p2.add_argument(
@@ -852,12 +912,12 @@ def build_parser() -> argparse.ArgumentParser:
     p2r.add_argument(
         "--paper",
         action="store_true",
-        help="request paper mode (not implemented; historical still runs)",
+        help="legacy flag: does not switch engines — use paper-run for dry-run",
     )
     p2r.add_argument(
         "--live",
         action="store_true",
-        help="request live mode (not implemented; historical still runs)",
+        help="legacy flag: live submit not implemented; use paper-run for dry-run",
     )
     p2r.set_defaults(func=cmd_phase2_run)
 
