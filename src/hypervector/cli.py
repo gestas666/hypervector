@@ -136,16 +136,17 @@ def cmd_paper_check(args: argparse.Namespace) -> int:
     paper.update(_paper_surface_flags())
     report["paper"] = paper
     live_pol = live_policy_from_env(enabled=False, armed=False)
+    ready = live_pol.readiness()
     report["live"] = {
         "enabled": False,
         "decisions": str(paths.live_decisions),
         "ledger": str(paths.live_ledger),
-        "submit_wired": False,
-        "note": (
-            "Phase 4b-live foundation: live ledger paths exist; "
-            "venue submit not wired. Use paper-run for dry-run."
+        "submit_wired": bool(ready.get("submit_wired")),
+        "note": ready.get(
+            "note",
+            "Live readiness — use live-check for start gates.",
         ),
-        "readiness": live_pol.readiness(),
+        "readiness": ready,
     }
     print(json.dumps(report, indent=2))
     return 0
@@ -172,7 +173,9 @@ def cmd_live_check(args: argparse.Namespace) -> int:
         "live_ledger": str(paths.live_ledger),
         "live": ready,
         "paper_path_unchanged": True,
+        # live-check never places; True only would mean an active submit session (F3).
         "venue_submit": False,
+        "submit_wired": bool(ready.get("submit_wired")),
     }
     # Attempt start gate only for diagnostics (do not start daemon).
     try:
@@ -737,7 +740,7 @@ def build_parser() -> argparse.ArgumentParser:
         "live-check",
         help=(
             "Live readiness: secrets present (bool), arm/enabled gates, "
-            "max notional (no secret values; submit not wired in F1)"
+            "max notional, submit_wired (no secret values; no place)"
         ),
     )
     lc.add_argument(

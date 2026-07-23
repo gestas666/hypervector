@@ -78,6 +78,10 @@ class LivePolicy:
 
     def readiness(self) -> dict[str, Any]:
         """JSON-safe readiness (never secret values)."""
+        # Import locally to avoid circular import (exec_client → policy).
+        from hypervector.live.exec_client import is_submit_wired
+
+        wired = bool(is_submit_wired())
         return {
             "enabled": self.enabled,
             "armed": self.armed,
@@ -85,13 +89,18 @@ class LivePolicy:
             "max_notional_usd": float(self.max_notional_usd),
             "secret_env_names": [SECRET_ENV_WALLET, SECRET_ENV_API_KEY],
             "network": "mainnet",
-            "submit_wired": False,  # F1 foundation: no venue client yet
+            "submit_wired": wired,
             "can_start": bool(
                 self.enabled and self.armed and self.secrets_present
             ),
             "note": (
-                "Foundation only: live ledger + policy. "
-                "Venue submit is a later 4b-live task."
+                "Live exec client present (F2). "
+                "live-run / venue place only when enabled+armed+secrets (F3)."
+                if wired
+                else (
+                    "Foundation only: live ledger + policy. "
+                    "Venue submit is a later 4b-live task."
+                )
             ),
         }
 
