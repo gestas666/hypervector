@@ -79,6 +79,7 @@ class PaperSession:
         metalabel_enabled: bool = False,
         metalabeler: Any | None = None,
         conviction_provider: ConvictionProvider | None = None,
+        execution_mode: str = "paper",
     ) -> None:
         register_all_strategies()
         export_path = Path(export_dir)
@@ -96,6 +97,7 @@ class PaperSession:
         self.max_book_age_ms = float(max_book_age_ms)
         self.preferred_fill_model = str(preferred_fill_model)
         self.metalabel_enabled = bool(metalabel_enabled)
+        self.execution_mode = str(execution_mode)
         self.conviction_provider = _build_conviction_provider(
             conviction=self.conviction,
             metalabel_enabled=self.metalabel_enabled,
@@ -127,6 +129,7 @@ class PaperSession:
             sandbox_enabled=self.sandbox_enabled,
             preferred_fill_model=self.preferred_fill_model,
             max_book_age_ms=self.max_book_age_ms,
+            execution_mode=self.execution_mode,
         )
         self.equity = (
             float(self.loadout.init_cash)

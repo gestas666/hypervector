@@ -66,6 +66,7 @@ def start_paper_daemon(
     preferred_fill_model: str = FILL_MODEL_L2_WALK_V1,
     max_book_age_ms: float = DEFAULT_MAX_BOOK_AGE_MS,
     metalabel_enabled: bool = False,
+    execution_mode: str = "shadow",
 ) -> PaperDaemonResult:
     """Start paper daemon: warm history, then process live bars until stop.
 
@@ -76,6 +77,9 @@ def start_paper_daemon(
     only when using the default REST feed (``poll_fn is None``). Injected
     ``poll_fn`` offline tests keep refresh off unless ``enable_funding_refresh``
     is set True. Open positions still receive funding from the configured rate.
+
+    Default ``execution_mode`` is ``shadow`` (mainnet-honest intents, no submit).
+    Offline tests that need paper stamps may pass ``execution_mode="paper"``.
 
     Parameters
     ----------
@@ -103,11 +107,14 @@ def start_paper_daemon(
         Stale book threshold in milliseconds (default 3000).
     metalabel_enabled:
         When True, scale conviction via Metalabeler (default off).
+    execution_mode:
+        ``shadow`` (default) or ``paper``; stamped on fills via session/engine.
     """
     _print_banner()
     sleep = sleep_fn if sleep_fn is not None else time.sleep
     export_path = Path(export_dir)
     root = Path(data_root)
+    mode = str(execution_mode)
 
     if not export_path.is_dir():
         raise FileNotFoundError(f"export_dir not found: {export_path}")
@@ -140,6 +147,7 @@ def start_paper_daemon(
         preferred_fill_model=str(preferred_fill_model),
         max_book_age_ms=float(max_book_age_ms),
         metalabel_enabled=bool(metalabel_enabled),
+        execution_mode=mode,
     )
 
     # --- warm-up (cache-first history or injected frame) ---
@@ -300,7 +308,7 @@ def start_paper_daemon(
         bars_processed=session.bars_processed,
         fills_count=session.fills_count,
         stop_reason=str(stop_state["reason"]),
-        execution_mode="paper",
+        execution_mode=mode,
     )
     logger.info(
         "paper daemon stopped reason=%s warm=%s live=%s fills=%s",

@@ -92,6 +92,28 @@ def test_offline_session_writes_paper_decisions(tmp_path: Path):
     assert result.fills_count >= 0
 
 
+def test_session_passes_execution_mode_to_engine(tmp_path: Path):
+    """PaperSession execution_mode is forwarded to ExplicitFillEngine fills."""
+    export = _write_strict_export(tmp_path)
+    session = PaperSession(
+        export_dir=export,
+        data_root=tmp_path / "data",
+        conviction=0.5,
+        execution_mode="shadow",
+    )
+    assert session.execution_mode == "shadow"
+    # Engine path: force a market fill stamp via apply_market_fill
+    rec = session.engine.apply_market_fill(
+        feed_ts="t0",
+        action="enter_long",
+        side="buy",
+        qty=0.01,
+        mark_px=100.0,
+    )
+    assert rec["execution_mode"] == "shadow"
+    assert rec["submitted"] is False
+
+
 def test_offline_session_no_trade_before_two_bars(tmp_path: Path):
     """Warm-up matches actor: no intent/fill path until buffer length >= 2."""
     export = _write_strict_export(tmp_path)

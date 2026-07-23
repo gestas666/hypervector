@@ -141,6 +141,26 @@ def test_paper_run_help_lists_phase4a_flags(capsys):
     assert "--no-metalabel" in help_text
 
 
+def test_daemon_default_shadow_mode_on_offline_path(tmp_path: Path):
+    """Daemon default execution_mode is shadow (live REST default; offline path same kwargs)."""
+    export = _write_strict_export(tmp_path)
+    warm = fixture_ohlcv(n_bars=20, drift=-3.0, wave_period=15)
+
+    result = start_paper_daemon(
+        export_dir=export,
+        data_root=tmp_path / "data",
+        warm_ohlcv=warm,
+        poll_fn=lambda **_: warm.iloc[0:0].copy(),
+        max_live_bars=0,
+        poll_interval_secs=0.0,
+        sleep_fn=lambda _s: None,
+        install_signal_handlers=False,
+    )
+    assert isinstance(result, PaperDaemonResult)
+    assert result.execution_mode == "shadow"
+    assert result.warm_bars == 20
+
+
 def test_start_paper_daemon_offline_injected_bars(tmp_path: Path, capsys):
     """Daemon warm-up + live poll mock; no network; stop after max live bars."""
     export = _write_strict_export(tmp_path)
@@ -171,6 +191,7 @@ def test_start_paper_daemon_offline_injected_bars(tmp_path: Path, capsys):
         poll_interval_secs=0.0,
         sleep_fn=lambda _s: None,
         install_signal_handlers=False,
+        execution_mode="paper",  # offline stable paper assertions
     )
     assert isinstance(result, PaperDaemonResult)
     assert result.warm_bars == 50
@@ -178,6 +199,7 @@ def test_start_paper_daemon_offline_injected_bars(tmp_path: Path, capsys):
     assert result.bars_processed == 60
     assert result.decisions_path.is_file()
     assert result.stop_reason in ("max_live_bars", "poll_exhausted", "stop")
+    assert result.execution_mode == "paper"
     text = result.decisions_path.read_text(encoding="utf-8")
     assert "execution_mode" in text
     assert "paper" in text
@@ -300,6 +322,7 @@ def test_cli_paper_run_offline_via_monkeypatch(tmp_path: Path, capsys, monkeypat
             max_book_age_ms=kwargs.get("max_book_age_ms", 3000),
             metalabel_enabled=kwargs.get("metalabel_enabled", False),
             stop_file=kwargs.get("stop_file"),
+            execution_mode=kwargs.get("execution_mode", "shadow"),
             warm_ohlcv=warm,
             poll_fn=lambda **_: warm.iloc[0:0].copy(),
             max_live_bars=0,
@@ -323,7 +346,8 @@ def test_cli_paper_run_offline_via_monkeypatch(tmp_path: Path, capsys, monkeypat
     assert "PAPER MODE" in out.err
     payload = json.loads(out.out)
     assert payload["ok"] is True
-    assert payload["execution_mode"] == "paper"
+    # Daemon default is shadow; CLI Task 5 may wire flags later
+    assert payload["execution_mode"] == "shadow"
     assert payload["warm_bars"] == 20
 
 
