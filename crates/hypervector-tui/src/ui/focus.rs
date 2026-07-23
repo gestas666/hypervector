@@ -8,7 +8,7 @@ use ratatui::Frame;
 
 use crate::model::{AppSnapshot, CardId};
 use crate::theme::Theme;
-use crate::ui::cards::{gates, regime, tape};
+use crate::ui::cards::{gates, kpi, regime, tape};
 
 pub fn render_focus(
     frame: &mut Frame,
@@ -77,34 +77,7 @@ pub fn render_focus(
             frame.render_widget(Paragraph::new(lines), inner);
         }
         CardId::Kpi => {
-            // Reuse floor KPI but full height via simple dump of aggregates.
-            let a = &snap.tape_agg;
-            let lines = vec![
-                Line::from(Span::styled(
-                    format!("decisions: {}", a.decision_count),
-                    theme.fg_style(),
-                )),
-                Line::from(Span::styled(
-                    format!("submitted: {}", a.submitted_count),
-                    theme.fg_style(),
-                )),
-                Line::from(Span::styled(
-                    format!("place_attempted: {}", a.place_attempted_count),
-                    theme.fg_style(),
-                )),
-                Line::from(Span::styled(
-                    format!("max_notional_usd: {:.0}", snap.status.max_notional_usd()),
-                    theme.fg_style(),
-                )),
-                Line::from(Span::styled(
-                    "sparkline buckets:",
-                    theme.muted_style(),
-                )),
-                Line::from(Span::styled(
-                    format!("{:?}", a.buckets),
-                    theme.muted_style(),
-                )),
-            ];
+            let lines = kpi::focus_lines(snap, theme);
             frame.render_widget(Paragraph::new(lines), inner);
         }
         CardId::Health => {

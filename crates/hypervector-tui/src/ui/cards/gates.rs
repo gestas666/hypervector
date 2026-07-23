@@ -1,16 +1,17 @@
-//! Identity / gates card — bools only, no secrets.
+//! Readiness / gates card — paper green path vs live refused (bools only).
 
 use ratatui::layout::Rect;
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Borders, BorderType, Paragraph};
 use ratatui::Frame;
 
-use crate::model::{AppSnapshot, CardId};
+use crate::model::{AppSnapshot, CardId, LiveState};
 use crate::theme::Theme;
 
 pub fn render(frame: &mut Frame, area: Rect, snap: &AppSnapshot, theme: &Theme, focused: bool) {
     let g = &snap.gates;
     let s = &snap.status;
+    let r = &snap.readiness;
     let border = theme.card_border(focused);
     let title = theme.title_style(focused);
     let fg = theme.fg_style();
@@ -20,7 +21,7 @@ pub fn render(frame: &mut Frame, area: Rect, snap: &AppSnapshot, theme: &Theme, 
 
     let mut lines: Vec<Line> = Vec::new();
 
-    if !g.layout_ok && snap.health.first_load {
+    if !r.layout_ok && !g.layout_ok {
         lines.push(Line::from(Span::styled(
             "no layout — run: hypervector infra-init",
             theme.muted_style().fg(theme.warning),
@@ -30,46 +31,72 @@ pub fn render(frame: &mut Frame, area: Rect, snap: &AppSnapshot, theme: &Theme, 
             muted,
         )));
     } else {
+        let ready_label = if r.dry_run_ready {
+            "DRY-RUN READY"
+        } else {
+            "DRY-RUN BLOCKED"
+        };
+        let ready_style = if r.dry_run_ready {
+            fg.fg(ok)
+        } else {
+            fg.fg(theme.warning)
+        };
         lines.push(Line::from(vec![
-            Span::styled("data-root  ", muted),
-            Span::styled(snap.data_root.display().to_string(), fg),
+            Span::styled("status   ", muted),
+            Span::styled(ready_label, ready_style),
+            Span::styled("  ", muted),
+            Span::styled(
+                r.live_state.as_str(),
+                match r.live_state {
+                    LiveState::Refused => fg.fg(theme.warning),
+                    LiveState::Ready => fg.fg(ok),
+                    LiveState::Armed => fg.fg(theme.mode_live).bg(theme.mode_live_bg),
+                },
+            ),
         ]));
         lines.push(Line::from(vec![
-            Span::styled("paper mode ", muted),
+            Span::styled("data     ", muted),
+            Span::styled(snap.data_root.display().to_string(), fg),
+        ]));
+
+        lines.push(Line::from(Span::styled("— paper / shadow —", muted)));
+        lines.push(Line::from(vec![
+            Span::styled("mode     ", muted),
             Span::styled(
-                if g.paper.execution_mode.is_empty() {
+                if r.paper_mode.is_empty() {
                     "shadow".into()
                 } else {
-                    g.paper.execution_mode.clone()
+                    r.paper_mode.clone()
                 },
                 fg,
             ),
             Span::styled("  no_submit=", muted),
-            bool_span(g.paper.no_submit || s.paper.no_submit, ok, bad),
+            bool_span(r.paper_no_submit || g.paper.no_submit || s.paper.no_submit, ok, bad),
         ]));
         lines.push(Line::from(vec![
-            Span::styled("book_feed  ", muted),
+            Span::styled("book     ", muted),
             bool_span(g.paper.book_feed, ok, bad),
             Span::styled("  l2_walk=", muted),
             bool_span(g.paper.l2_walk_available, ok, bad),
             Span::styled("  metalabel=", muted),
             bool_span(g.paper.metalabel_enabled, ok, bad),
         ]));
+
+        lines.push(Line::from(Span::styled("— live (fail-closed) —", muted)));
         lines.push(Line::from(vec![
-            Span::styled("live       ", muted),
-            Span::styled("enabled=", muted),
+            Span::styled("enabled  ", muted),
             bool_span(g.live.enabled, ok, bad),
-            Span::styled(" armed=", muted),
+            Span::styled("  armed=", muted),
             bool_span(g.live.armed, ok, bad),
-            Span::styled(" can_start=", muted),
+            Span::styled("  can_start=", muted),
             bool_span(g.live.can_start || s.live.can_start, ok, bad),
         ]));
         lines.push(Line::from(vec![
-            Span::styled("submit_wired=", muted),
+            Span::styled("wired    ", muted),
             bool_span(g.live.submit_wired || s.live.submit_wired, ok, bad),
             Span::styled(
                 format!(
-                    "  max_notional=${:.0}",
+                    "  max=${:.0}",
                     if g.live.max_notional_usd > 0.0 {
                         g.live.max_notional_usd
                     } else {
@@ -78,24 +105,18 @@ pub fn render(frame: &mut Frame, area: Rect, snap: &AppSnapshot, theme: &Theme, 
                 ),
                 fg,
             ),
-        ]));
-        lines.push(Line::from(vec![
-            Span::styled("secrets    ", muted),
-            Span::styled("present=", muted),
+            Span::styled("  secrets=", muted),
             bool_span(g.live.secrets_present || g.paper.secrets_present, ok, bad),
-            Span::styled("  (values never shown)", muted),
         ]));
-        if !g.live.start_gate.is_empty() {
+        if !r.live_reason.is_empty() {
+            let reason = if r.live_reason.len() > 64 {
+                format!("{}…", &r.live_reason[..63])
+            } else {
+                r.live_reason.clone()
+            };
             lines.push(Line::from(vec![
-                Span::styled("start_gate ", muted),
-                Span::styled(
-                    g.live.start_gate.clone(),
-                    if g.live.start_gate == "ok" {
-                        fg.fg(ok)
-                    } else {
-                        fg.fg(theme.warning)
-                    },
-                ),
+                Span::styled("reason   ", muted),
+                Span::styled(reason, fg.fg(theme.warning)),
             ]));
         }
     }
@@ -124,12 +145,14 @@ fn bool_span(v: bool, ok: ratatui::style::Color, bad: ratatui::style::Color) -> 
 pub fn checklist_lines(snap: &AppSnapshot, theme: &Theme) -> Vec<Line<'static>> {
     let g = &snap.gates;
     let s = &snap.status;
+    let r = &snap.readiness;
     let muted = theme.muted;
     let fg = theme.fg;
     let ok = theme.positive;
     let bad = theme.negative;
 
     let items: Vec<(&str, bool)> = vec![
+        ("dry_run_ready", r.dry_run_ready),
         ("paper.no_submit", g.paper.no_submit || s.paper.no_submit),
         ("paper.book_feed", g.paper.book_feed),
         ("paper.l2_walk", g.paper.l2_walk_available),

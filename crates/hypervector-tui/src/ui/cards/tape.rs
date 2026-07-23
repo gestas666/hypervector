@@ -1,4 +1,4 @@
-//! Decision tape table.
+//! Decision tape table — ops-grade columns, newest first.
 
 use ratatui::layout::{Constraint, Rect};
 use ratatui::style::{Modifier, Style};
@@ -28,7 +28,7 @@ pub fn render(
     let path_hint = snap
         .tape_path
         .as_ref()
-        .map(|p| p.display().to_string())
+        .map(|p| shorten_path(&p.display().to_string(), 72))
         .unwrap_or_else(|| "—".into());
 
     let block = Block::default()
@@ -36,7 +36,11 @@ pub fn render(
         .border_type(BorderType::Rounded)
         .border_style(border)
         .title(Span::styled(
-            format!(" {} [{source}] ", CardId::Tape.title()),
+            format!(
+                " {} [{source}] n={} ",
+                CardId::Tape.title(),
+                snap.decisions.len()
+            ),
             title,
         ))
         .title_bottom(Span::styled(
@@ -54,28 +58,32 @@ pub fn render(
         return;
     }
 
-    let header = Row::new(vec!["time", "mode", "action", "side", "sub", "px"])
-        .style(
-            Style::default()
-                .fg(theme.muted)
-                .add_modifier(Modifier::BOLD),
-        )
-        .height(1);
+    let header = Row::new(vec![
+        "time", "mode", "act", "side", "sub", "qty", "mark", "fill",
+    ])
+    .style(
+        Style::default()
+            .fg(theme.muted)
+            .add_modifier(Modifier::BOLD),
+    )
+    .height(1);
 
     let rows: Vec<Row> = snap
         .decisions
         .iter()
-        .rev() // newest first on tape
+        .rev()
         .map(|r| row_from_decision(r, theme))
         .collect();
 
     let widths = [
-        Constraint::Percentage(28),
-        Constraint::Percentage(12),
-        Constraint::Percentage(16),
-        Constraint::Percentage(12),
-        Constraint::Percentage(10),
-        Constraint::Percentage(22),
+        Constraint::Length(20),
+        Constraint::Length(7),
+        Constraint::Length(5),
+        Constraint::Length(5),
+        Constraint::Length(3),
+        Constraint::Length(7),
+        Constraint::Length(10),
+        Constraint::Length(10),
     ];
 
     let table = Table::new(rows, widths)
@@ -100,52 +108,88 @@ fn row_from_decision(r: &DecisionRow, theme: &Theme) -> Row<'static> {
         "shadow" => Style::default().fg(theme.mode_shadow),
         _ => Style::default().fg(theme.muted),
     };
-    let px = r
+    let act = r.action_str().to_string();
+    let act_style = match act.to_ascii_lowercase().as_str() {
+        "buy" => Style::default().fg(theme.positive),
+        "sell" => Style::default().fg(theme.negative),
+        _ => Style::default().fg(theme.muted),
+    };
+    let qty = r
+        .qty
+        .map(|q| format!("{q:.4}"))
+        .unwrap_or_else(|| "—".into());
+    let mark = r
+        .mark_px
+        .map(|p| format!("{p:.2}"))
+        .unwrap_or_else(|| "—".into());
+    let fill = r
         .fill_px
-        .or(r.mark_px)
         .map(|p| format!("{p:.2}"))
         .unwrap_or_else(|| "—".into());
 
     Row::new(vec![
-        Cell::from(truncate(&r.timestamp_display(), 22)),
-        Cell::from(mode).style(mode_style),
-        Cell::from(r.action_str().to_string()),
-        Cell::from(r.side.clone().unwrap_or_else(|| "—".into())),
+        Cell::from(truncate(&r.timestamp_display(), 20)),
+        Cell::from(truncate(&mode, 7)).style(mode_style),
+        Cell::from(truncate(&act, 5)).style(act_style),
+        Cell::from(truncate(
+            &r.side.clone().unwrap_or_else(|| "—".into()),
+            5,
+        )),
         Cell::from(r.submitted_str().to_string()),
-        Cell::from(px),
+        Cell::from(qty),
+        Cell::from(mark),
+        Cell::from(fill),
     ])
 }
 
 fn truncate(s: &str, max: usize) -> String {
-    if s.len() <= max {
+    if s.chars().count() <= max {
         s.to_string()
     } else {
-        format!("{}…", &s[..max.saturating_sub(1)])
+        let t: String = s.chars().take(max.saturating_sub(1)).collect();
+        format!("{t}…")
     }
+}
+
+fn shorten_path(s: &str, max: usize) -> String {
+    if s.len() <= max {
+        return s.to_string();
+    }
+    if let Some(idx) = s.find("/paper/") {
+        return format!("…{}", &s[idx..]);
+    }
+    if let Some(idx) = s.find("/live/") {
+        return format!("…{}", &s[idx..]);
+    }
+    truncate(s, max)
 }
 
 pub fn focus_table<'a>(
     decisions: &'a [DecisionRow],
     theme: &'a Theme,
-) -> (Row<'static>, Vec<Row<'static>>, [Constraint; 6]) {
-    let header = Row::new(vec!["time", "mode", "action", "side", "sub", "px"])
-        .style(
-            Style::default()
-                .fg(theme.muted)
-                .add_modifier(Modifier::BOLD),
-        );
+) -> (Row<'static>, Vec<Row<'static>>, [Constraint; 8]) {
+    let header = Row::new(vec![
+        "time", "mode", "act", "side", "sub", "qty", "mark", "fill",
+    ])
+    .style(
+        Style::default()
+            .fg(theme.muted)
+            .add_modifier(Modifier::BOLD),
+    );
     let rows: Vec<Row> = decisions
         .iter()
         .rev()
         .map(|r| row_from_decision(r, theme))
         .collect();
     let widths = [
-        Constraint::Percentage(28),
-        Constraint::Percentage(12),
-        Constraint::Percentage(16),
-        Constraint::Percentage(12),
-        Constraint::Percentage(10),
-        Constraint::Percentage(22),
+        Constraint::Length(20),
+        Constraint::Length(7),
+        Constraint::Length(5),
+        Constraint::Length(5),
+        Constraint::Length(3),
+        Constraint::Length(7),
+        Constraint::Length(10),
+        Constraint::Length(10),
     ];
     (header, rows, widths)
 }

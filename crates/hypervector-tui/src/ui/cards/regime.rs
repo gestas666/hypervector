@@ -26,14 +26,18 @@ pub fn render(frame: &mut Frame, area: Rect, snap: &AppSnapshot, theme: &Theme, 
     frame.render_widget(block, area);
 
     if !r.available {
+        let status = if snap.health.regime_refreshing {
+            "regime probing… (auto)"
+        } else if snap.health.last_error.as_deref().unwrap_or("").contains("regime") {
+            "regime error — see toast; retry with R"
+        } else {
+            "no regime metrics yet"
+        };
         frame.render_widget(
             Paragraph::new(vec![
+                Line::from(Span::styled(status, theme.muted_style())),
                 Line::from(Span::styled(
-                    "no regime metrics yet",
-                    theme.muted_style(),
-                )),
-                Line::from(Span::styled(
-                    "press R to run: hypervector regime (read-only)",
+                    "auto on boot · R refreshes · CLI metrics only",
                     theme.muted_style(),
                 )),
             ]),

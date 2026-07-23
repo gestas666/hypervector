@@ -3,7 +3,7 @@
 **Audience:** Albert (ops owner) + agents assisting review  
 **When:** After Phase 5 `hypervector-tui` implementation (Tasks 1–9 done)  
 **Outcome:** Signed visual + holistic acceptance **before** any GUI work  
-**Status:** Ready for use (2026-07-23)  
+**Status:** Shadow Ops Floor bar (2026-07-23) — thin projector rejected  
 **Related:** `docs/superpowers/specs/2026-07-23-phase5-tui-design.md`, `docs/superpowers/specs/2026-07-23-phase4c-cli-completeness-design.md`, `HANDOFF.md`
 
 ---
@@ -59,7 +59,7 @@ cp crates/hypervector-tui/tests/fixtures/decisions_paper.jsonl \
 | **bottom** | Clean multi-panel resize | Generic status bars only |
 
 **One-sentence bar:**  
-*“At a glance I know mode (shadow/paper/live), whether I’m safe, last decisions, and regime mix — without squinting or hunting menus.”*
+*“At a glance I know mode, DRY-RUN READY vs LIVE REFUSED, regime mix, price/activity charts, and last decisions — without squinting or hunting menus.”*
 
 ### 2.2 Launch surfaces
 
@@ -112,6 +112,8 @@ Score each: **PASS / FAIL / N/A**. Failures need a note (screenshot path optiona
 |---|--------|----------------|
 | V15 | Sparse motion | Skeleton on first load OK; no rain/particles/carnival |
 | V16 | Focus only two views | Enter → Focus; Esc → Floor; **no third screen** |
+| V17 | Charts present | KPI card shows price + activity sparklines (and equity when derivable); not empty when tape has marks |
+| V18 | Dry-run chip | Banner shows DRY-RUN READY for honest shadow/paper; LIVE REFUSED when live cannot start |
 
 ### 2.4 Visual sign-off block (copy into HANDOFF or PR)
 
@@ -127,7 +129,7 @@ Reviewer:
 Notes:
 ```
 
-**PASS rule:** No FAIL on V1–V4, V11–V14, V16. Soft fails on V15 only if still non-carnival. Density V5–V10: at most one minor nit if still ops-usable.
+**PASS rule:** No FAIL on V1–V4, V11–V14, V16–V18. Soft fails on V15 only if still non-carnival. Density V5–V10: at most one minor nit if still ops-usable.
 
 ---
 

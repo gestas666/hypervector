@@ -3,8 +3,8 @@
 use std::path::PathBuf;
 
 use super::{
-    aggregate_tape, DecisionRow, GatesSnapshot, HealthSnapshot, RegimeSnapshot, StatusSnapshot,
-    TapeAggregate,
+    aggregate_tape, DecisionRow, GatesSnapshot, HealthSnapshot, ReadinessSnapshot, RegimeSnapshot,
+    SeriesSnapshot, StatusSnapshot, TapeAggregate,
 };
 use crate::cli_args::TapeMode;
 use crate::theme::ExecMode;
@@ -64,6 +64,8 @@ pub struct AppSnapshot {
     pub gates: GatesSnapshot,
     pub decisions: Vec<DecisionRow>,
     pub tape_agg: TapeAggregate,
+    pub series: SeriesSnapshot,
+    pub readiness: ReadinessSnapshot,
     pub regime: RegimeSnapshot,
     pub health: HealthSnapshot,
     pub exec_mode: ExecMode,
@@ -80,6 +82,8 @@ impl AppSnapshot {
             gates: GatesSnapshot::default(),
             decisions: Vec::new(),
             tape_agg: TapeAggregate::default(),
+            series: SeriesSnapshot::default(),
+            readiness: ReadinessSnapshot::default(),
             regime: RegimeSnapshot::empty_hint(),
             health: HealthSnapshot {
                 first_load: true,
@@ -94,11 +98,13 @@ impl AppSnapshot {
         if let Some(row) = self.decisions.last() {
             if let Some(ref m) = row.execution_mode {
                 self.exec_mode = ExecMode::parse(m);
+                self.recompute_readiness();
                 return;
             }
         }
         if !self.gates.paper.execution_mode.is_empty() {
             self.exec_mode = ExecMode::parse(&self.gates.paper.execution_mode);
+            self.recompute_readiness();
             return;
         }
         match self.tape_source {
@@ -106,9 +112,20 @@ impl AppSnapshot {
             TapeMode::Paper => self.exec_mode = ExecMode::Paper,
             TapeMode::Auto => self.exec_mode = ExecMode::Shadow,
         }
+        self.recompute_readiness();
     }
 
     pub fn recompute_tape_agg(&mut self) {
         self.tape_agg = aggregate_tape(&self.decisions, 24);
+        self.series = SeriesSnapshot::from_decisions(&self.decisions, 32);
+    }
+
+    pub fn recompute_readiness(&mut self) {
+        self.readiness = ReadinessSnapshot::from_parts(
+            &self.status,
+            &self.gates,
+            &self.health,
+            self.exec_mode,
+        );
     }
 }

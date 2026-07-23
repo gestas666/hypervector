@@ -36,7 +36,8 @@ pub struct CliArgs {
     #[arg(long, value_enum, default_value_t = TapeMode::Auto)]
     pub tape: TapeMode,
 
-    /// Optional path to `python` (default: `python3` then `python`).
+    /// Optional path to `python`.
+    /// Default resolution: HYPERVECTOR_PYTHON → project `.venv` → `uv run` → `python3`/`python`.
     #[arg(long)]
     pub python: Option<PathBuf>,
 

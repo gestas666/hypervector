@@ -4,6 +4,13 @@
 //!   status, paper-check, live-check, paper-report, live-report, regime
 //!
 //! Never spawn paper-run / live-run / any control plane command.
+//!
+//! Python resolution (first match wins):
+//!   1. explicit `--python` / caller path
+//!   2. `HYPERVECTOR_PYTHON` env
+//!   3. project `.venv/bin/python` (walk up from data-root and cwd)
+//!   4. `uv run python` when `uv` + project `pyproject.toml` exist
+//!   5. `python3` / `python` on PATH (last resort)
 
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -93,32 +100,24 @@ pub fn probe_json(
         }
     }
 
-    let py = resolve_python(python);
+    let launcher = resolve_launcher(python, data_root);
     let data_root_s = data_root.to_string_lossy().into_owned();
 
-    let mut args: Vec<String> = vec![
-        "-m".into(),
-        "hypervector".into(),
-        subcommand.into(),
-    ];
-    // status / checks use global --data-root on the root parser.
-    // Always pass --data-root for consistency when the CLI supports it.
-    // Some subcommands take it on parent; we pass via env-free explicit flag
-    // by prepending after -m hypervector when known.
     // Actual CLI: `python -m hypervector --data-root X status`
-    // Rebuild: python -m hypervector --data-root <root> <sub> [extra]
-    args = vec![
+    // Or: `uv run python -m hypervector --data-root X status`
+    let mut args: Vec<String> = launcher.prefix.clone();
+    args.extend([
         "-m".into(),
         "hypervector".into(),
         "--data-root".into(),
         data_root_s,
         subcommand.into(),
-    ];
+    ]);
     for a in extra_args {
         args.push((*a).into());
     }
 
-    let output = run_with_timeout(&py, &args, timeout)?;
+    let output = run_with_timeout(&launcher, &args, timeout)?;
     if !output.status.success() {
         let code = output.status.code().unwrap_or(-1);
         let stderr = String::from_utf8_lossy(&output.stderr).into_owned();
@@ -137,17 +136,123 @@ pub fn probe_status(
     probe_json("status", data_root, python, &[], Duration::from_secs(15))
 }
 
-fn resolve_python(python: Option<&Path>) -> PathBuf {
-    if let Some(p) = python {
-        return p.to_path_buf();
-    }
-    if which("python3") {
-        return PathBuf::from("python3");
-    }
-    PathBuf::from("python")
+/// How the probe invokes Python for `python -m hypervector ...`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct Launcher {
+    program: PathBuf,
+    /// Args inserted before `-m hypervector` (e.g. `uv run python`).
+    prefix: Vec<String>,
+    /// Optional working directory (needed for `uv run` project discovery).
+    current_dir: Option<PathBuf>,
 }
 
-fn which(name: &str) -> bool {
+fn resolve_launcher(python: Option<&Path>, data_root: &Path) -> Launcher {
+    if let Some(p) = python {
+        return Launcher {
+            program: p.to_path_buf(),
+            prefix: Vec::new(),
+            current_dir: None,
+        };
+    }
+    if let Ok(p) = std::env::var("HYPERVECTOR_PYTHON") {
+        let p = p.trim();
+        if !p.is_empty() {
+            return Launcher {
+                program: PathBuf::from(p),
+                prefix: Vec::new(),
+                current_dir: None,
+            };
+        }
+    }
+    if let Some(venv_py) = find_venv_python(data_root) {
+        return Launcher {
+            program: venv_py,
+            prefix: Vec::new(),
+            current_dir: None,
+        };
+    }
+    if let Some(launcher) = find_uv_launcher(data_root) {
+        return launcher;
+    }
+    let program = if path_on_path("python3") {
+        PathBuf::from("python3")
+    } else {
+        PathBuf::from("python")
+    };
+    Launcher {
+        program,
+        prefix: Vec::new(),
+        current_dir: None,
+    }
+}
+
+fn find_venv_python(data_root: &Path) -> Option<PathBuf> {
+    for root in project_roots(data_root) {
+        let candidate = venv_python_path(&root);
+        if candidate.is_file() {
+            return Some(candidate);
+        }
+    }
+    None
+}
+
+fn find_uv_launcher(data_root: &Path) -> Option<Launcher> {
+    if !path_on_path("uv") {
+        return None;
+    }
+    for root in project_roots(data_root) {
+        if root.join("pyproject.toml").is_file() {
+            return Some(Launcher {
+                program: PathBuf::from("uv"),
+                prefix: vec!["run".into(), "python".into()],
+                current_dir: Some(root),
+            });
+        }
+    }
+    None
+}
+
+fn venv_python_path(project_root: &Path) -> PathBuf {
+    if cfg!(windows) {
+        project_root.join(".venv").join("Scripts").join("python.exe")
+    } else {
+        project_root.join(".venv").join("bin").join("python")
+    }
+}
+
+/// Candidate project roots: data-root parent chain, then cwd parent chain.
+fn project_roots(data_root: &Path) -> Vec<PathBuf> {
+    let mut out = Vec::new();
+    push_ancestors(&mut out, data_root);
+    // If data_root is `.../project/data`, also try its parent first-class.
+    if let Ok(cwd) = std::env::current_dir() {
+        push_ancestors(&mut out, &cwd);
+    }
+    out
+}
+
+fn push_ancestors(out: &mut Vec<PathBuf>, start: &Path) {
+    let mut cur = if start.is_absolute() {
+        Some(start.to_path_buf())
+    } else {
+        std::env::current_dir()
+            .ok()
+            .map(|cwd| cwd.join(start))
+    };
+    let mut depth = 0;
+    while let Some(path) = cur {
+        if !out.iter().any(|p| p == &path) {
+            out.push(path.clone());
+        }
+        if depth >= 8 {
+            break;
+        }
+        cur = path.parent().map(|p| p.to_path_buf());
+        depth += 1;
+    }
+}
+
+fn path_on_path(name: &str) -> bool {
     Command::new("which")
         .arg(name)
         .output()
@@ -156,7 +261,7 @@ fn which(name: &str) -> bool {
 }
 
 fn run_with_timeout(
-    program: &Path,
+    launcher: &Launcher,
     args: &[String],
     timeout: Duration,
 ) -> Result<std::process::Output, ProbeError> {
@@ -164,7 +269,12 @@ fn run_with_timeout(
     // No async runtime in v1 — blocking is fine off the UI thread if we ever
     // split; for now main loop accepts blocking refresh.
     let _ = timeout; // reserved for future non-blocking; still document bound
-    let output = Command::new(program).args(args).output()?;
+    let mut cmd = Command::new(&launcher.program);
+    cmd.args(args);
+    if let Some(dir) = &launcher.current_dir {
+        cmd.current_dir(dir);
+    }
+    let output = cmd.output()?;
     Ok(output)
 }
 
@@ -217,5 +327,58 @@ mod tests {
             Duration::from_secs(1),
         );
         assert!(matches!(err, Err(ProbeError::NotAllowed(_))));
+    }
+
+    #[test]
+    fn resolve_launcher_prefers_explicit_python() {
+        let p = Path::new("/opt/custom/python");
+        let launcher = resolve_launcher(Some(p), Path::new("data"));
+        assert_eq!(launcher.program, p);
+        assert!(launcher.prefix.is_empty());
+        assert!(launcher.current_dir.is_none());
+    }
+
+    #[test]
+    fn resolve_launcher_prefers_venv_under_project() {
+        let tmp = tempfile_project_with_venv();
+        let data = tmp.join("data");
+        std::fs::create_dir_all(&data).expect("data dir");
+        let launcher = resolve_launcher(None, &data);
+        let expected = venv_python_path(&tmp);
+        assert_eq!(
+            launcher.program, expected,
+            "expected project .venv python, got {:?}",
+            launcher
+        );
+        assert!(launcher.prefix.is_empty());
+        // cleanup
+        let _ = std::fs::remove_dir_all(&tmp);
+    }
+
+    fn tempfile_project_with_venv() -> PathBuf {
+        let base = std::env::temp_dir().join(format!(
+            "hv-tui-probe-test-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map(|d| d.as_nanos())
+                .unwrap_or(0)
+        ));
+        let bin = if cfg!(windows) {
+            base.join(".venv").join("Scripts")
+        } else {
+            base.join(".venv").join("bin")
+        };
+        std::fs::create_dir_all(&bin).expect("venv bin");
+        let py = venv_python_path(&base);
+        std::fs::write(&py, b"").expect("touch python");
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            let mut perms = std::fs::metadata(&py).unwrap().permissions();
+            perms.set_mode(0o755);
+            std::fs::set_permissions(&py, perms).unwrap();
+        }
+        base
     }
 }

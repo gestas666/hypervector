@@ -64,7 +64,7 @@ impl App {
 
     pub fn run(mut self, terminal: &mut DefaultTerminal) -> color_eyre::Result<()> {
         let refresh = Duration::from_millis(self.args.refresh_ms.max(200));
-        let regime_every = Duration::from_secs(60);
+        let regime_every = Duration::from_secs(30);
 
         while !self.should_quit {
             terminal.draw(|frame| self.draw(frame))?;
@@ -323,6 +323,7 @@ impl App {
         gates.layout_ok = paper_dec.is_dir() || self.args.data_root.join("paper").is_dir();
         self.snap.gates = gates;
         self.snap.recompute_mode();
+        self.snap.recompute_readiness();
     }
 
     fn refresh_tape(&mut self) {

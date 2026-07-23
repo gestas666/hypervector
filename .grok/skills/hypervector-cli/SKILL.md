@@ -38,7 +38,12 @@ TUI (separate binary):
 cargo run -p hypervector-tui -- --data-root data
 # or
 ./target/release/hypervector-tui --data-root data --tape auto --refresh-ms 1000
+# optional explicit interpreter:
+./target/release/hypervector-tui --data-root data --python .venv/bin/python
+# or: export HYPERVECTOR_PYTHON=$PWD/.venv/bin/python
 ```
+
+TUI probes resolve Python as: `--python` → `HYPERVECTOR_PYTHON` → project `.venv` → `uv run` → `python3`.
 
 ## Funnel map (pick the right layer)
 

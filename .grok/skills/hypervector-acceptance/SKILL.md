@@ -11,6 +11,8 @@ description: >
 
 Drive **Gate B (visual assist)** and **Gate C (holistic CLI↔TUI)** using the canonical guide.
 
+Product bar is **Shadow Ops Floor** (dry-run cockpit): DRY-RUN READY chip, regime auto, price/activity charts, ops tape — not a thin JSON mirror.
+
 ## Canonical doc (source of truth)
 
 Read and follow:
