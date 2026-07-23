@@ -1,4 +1,4 @@
-//! Ops Floor layout — mode banner, gates|kpi, regime|tape, health footer.
+//! Ops Floor layout — mode banner, gates|book, regime|tape, health footer.
 
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::widgets::TableState;
@@ -6,7 +6,7 @@ use ratatui::Frame;
 
 use crate::model::{AppSnapshot, CardId};
 use crate::theme::Theme;
-use crate::ui::cards::{gates, health, kpi, mode_banner, regime, tape};
+use crate::ui::cards::{book_card, gates, health, mode_banner, regime, tape};
 
 pub fn render_floor(
     frame: &mut Frame,
@@ -29,13 +29,13 @@ pub fn render_floor(
 
     mode_banner::render(frame, cols[0], snap, theme);
 
-    // Mid: gates | kpi
+    // Mid: gates | book
     let mid = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([Constraint::Percentage(48), Constraint::Percentage(52)])
         .split(cols[1]);
     gates::render(frame, mid[0], snap, theme, focus_card == CardId::Gates);
-    kpi::render(frame, mid[1], snap, theme, focus_card == CardId::Kpi);
+    book_card::render(frame, mid[1], snap, theme, focus_card == CardId::Book);
 
     // Lower: regime | tape
     let low = Layout::default()

@@ -8,7 +8,7 @@ use ratatui::Frame;
 
 use crate::model::{AppSnapshot, CardId};
 use crate::theme::Theme;
-use crate::ui::cards::{gates, kpi, regime, tape};
+use crate::ui::cards::{book_card, gates, regime, tape};
 
 pub fn render_focus(
     frame: &mut Frame,
@@ -76,8 +76,8 @@ pub fn render_focus(
             let lines = gates::checklist_lines(snap, theme);
             frame.render_widget(Paragraph::new(lines), inner);
         }
-        CardId::Kpi => {
-            let lines = kpi::focus_lines(snap, theme);
+        CardId::Book => {
+            let lines = book_card::focus_lines(snap, theme);
             frame.render_widget(Paragraph::new(lines), inner);
         }
         CardId::Health => {

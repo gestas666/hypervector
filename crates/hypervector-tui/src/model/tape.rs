@@ -34,6 +34,20 @@ pub struct DecisionRow {
     pub network: Option<String>,
     #[serde(default)]
     pub run_id: Option<String>,
+    #[serde(default)]
+    pub strategy_name: Option<String>,
+    #[serde(default)]
+    pub position_qty: Option<f64>,
+    #[serde(default)]
+    pub position_avg_px: Option<f64>,
+    #[serde(default)]
+    pub realized_pnl: Option<f64>,
+    #[serde(default)]
+    pub unrealized_pnl: Option<f64>,
+    #[serde(default)]
+    pub equity: Option<f64>,
+    #[serde(default)]
+    pub init_cash: Option<f64>,
 }
 
 impl DecisionRow {
@@ -67,7 +81,7 @@ impl DecisionRow {
     }
 }
 
-/// Aggregates over a tape slice for KPIs.
+/// Aggregates over a tape slice for book chrome.
 #[derive(Debug, Clone, Default)]
 pub struct TapeAggregate {
     pub decision_count: usize,
@@ -78,7 +92,7 @@ pub struct TapeAggregate {
     pub buckets: Vec<u64>,
 }
 
-/// Pure aggregate helpers for KPI strip.
+/// Pure aggregate helpers for tape density.
 pub fn aggregate_tape(rows: &[DecisionRow], bucket_count: usize) -> TapeAggregate {
     let decision_count = rows.len();
     let submitted_count = rows.iter().filter(|r| r.submitted == Some(true)).count();

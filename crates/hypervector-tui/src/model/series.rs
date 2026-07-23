@@ -5,7 +5,7 @@
 
 use super::DecisionRow;
 
-/// Action mix counters for KPI chrome.
+/// Action mix counters for tape chrome.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct ActionMix {
     pub buy: usize,
@@ -14,7 +14,7 @@ pub struct ActionMix {
     pub other: usize,
 }
 
-/// Chartable series + KPI helpers from the decision tape.
+/// Chartable series + chart helpers from the decision tape.
 #[derive(Debug, Clone, Default)]
 pub struct SeriesSnapshot {
     /// Mark prices oldest → newest (missing marks skipped).
@@ -71,7 +71,10 @@ impl SeriesSnapshot {
             let px = r.fill_px.or(r.mark_px);
             let qty = r.qty.unwrap_or(0.0);
             let act = r.action_str().to_ascii_lowercase();
-            if let Some(p) = px {
+            // Prefer ledger equity when the paper/shadow session recorded it; else derive a sketch.
+            if let Some(e) = r.equity {
+                equity_raw.push(e);
+            } else if let Some(p) = px {
                 if qty > 0.0 {
                     match act.as_str() {
                         "buy" => {

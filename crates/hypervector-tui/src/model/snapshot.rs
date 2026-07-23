@@ -3,8 +3,8 @@
 use std::path::PathBuf;
 
 use super::{
-    aggregate_tape, DecisionRow, GatesSnapshot, HealthSnapshot, ReadinessSnapshot, RegimeSnapshot,
-    SeriesSnapshot, StatusSnapshot, TapeAggregate,
+    aggregate_tape, BookSnapshot, DecisionRow, GatesSnapshot, HealthSnapshot, ReadinessSnapshot,
+    RegimeSnapshot, SeriesSnapshot, StatusSnapshot, TapeAggregate,
 };
 use crate::cli_args::TapeMode;
 use crate::theme::ExecMode;
@@ -14,7 +14,7 @@ use crate::theme::ExecMode;
 pub enum CardId {
     Mode,
     Gates,
-    Kpi,
+    Book,
     Regime,
     Tape,
     Health,
@@ -24,7 +24,7 @@ impl CardId {
     pub const ALL: [CardId; 6] = [
         CardId::Mode,
         CardId::Gates,
-        CardId::Kpi,
+        CardId::Book,
         CardId::Regime,
         CardId::Tape,
         CardId::Health,
@@ -34,7 +34,7 @@ impl CardId {
         match self {
             Self::Mode => "MODE",
             Self::Gates => "GATES",
-            Self::Kpi => "KPI",
+            Self::Book => "BOOK",
             Self::Regime => "REGIME",
             Self::Tape => "TAPE",
             Self::Health => "HEALTH",
@@ -65,6 +65,7 @@ pub struct AppSnapshot {
     pub decisions: Vec<DecisionRow>,
     pub tape_agg: TapeAggregate,
     pub series: SeriesSnapshot,
+    pub book: BookSnapshot,
     pub readiness: ReadinessSnapshot,
     pub regime: RegimeSnapshot,
     pub health: HealthSnapshot,
@@ -83,6 +84,7 @@ impl AppSnapshot {
             decisions: Vec::new(),
             tape_agg: TapeAggregate::default(),
             series: SeriesSnapshot::default(),
+            book: BookSnapshot::default(),
             readiness: ReadinessSnapshot::default(),
             regime: RegimeSnapshot::empty_hint(),
             health: HealthSnapshot {
@@ -118,6 +120,7 @@ impl AppSnapshot {
     pub fn recompute_tape_agg(&mut self) {
         self.tape_agg = aggregate_tape(&self.decisions, 24);
         self.series = SeriesSnapshot::from_decisions(&self.decisions, 32);
+        self.book = BookSnapshot::from_decisions(&self.decisions);
     }
 
     pub fn recompute_readiness(&mut self) {

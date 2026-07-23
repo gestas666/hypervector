@@ -117,6 +117,11 @@ class PaperSession:
             if book_feed is not None
             else BookFeed(self.loadout.symbol, max_age_ms=self.max_book_age_ms)
         )
+        self.equity = (
+            float(self.loadout.init_cash)
+            if self.loadout.init_cash is not None
+            else 10_000.0
+        )
         self.engine = ExplicitFillEngine(
             self.root,
             cost_provider=self.cost_provider,
@@ -130,11 +135,7 @@ class PaperSession:
             preferred_fill_model=self.preferred_fill_model,
             max_book_age_ms=self.max_book_age_ms,
             execution_mode=self.execution_mode,
-        )
-        self.equity = (
-            float(self.loadout.init_cash)
-            if self.loadout.init_cash is not None
-            else 10_000.0
+            init_cash=float(self.equity),
         )
         self.exits = _exits_dict(self.loadout)
         self.buffer_rows: list[dict[str, Any]] = []
@@ -334,6 +335,12 @@ class PaperSession:
                     "execution_mode": self.execution_mode,
                     "submitted": False,
                     "network": NETWORK_MAINNET,
+                    "position_qty": 0.0,
+                    "position_avg_px": 0.0,
+                    "realized_pnl": 0.0,
+                    "unrealized_pnl": 0.0,
+                    "equity": float(self.equity),
+                    "init_cash": float(self.equity),
                     "no_submit": True,
                 },
             )

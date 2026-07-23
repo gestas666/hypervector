@@ -55,6 +55,7 @@ class ExplicitFillEngine:
         preferred_fill_model: str = FILL_MODEL_L2_WALK_V1,
         max_book_age_ms: float = DEFAULT_MAX_BOOK_AGE_MS,
         execution_mode: str = "paper",
+        init_cash: float = 10_000.0,
     ) -> None:
         mode = str(execution_mode).lower().strip()
         if mode not in ALLOWED_EXECUTION_MODES:
@@ -73,6 +74,7 @@ class ExplicitFillEngine:
         self._preferred_fill_model = str(preferred_fill_model)
         self._max_book_age_ms = float(max_book_age_ms)
         self._execution_mode = mode
+        self._init_cash = float(init_cash)
         self._position = PaperPosition()
         if self._sandbox_enabled:
             # Real Nautilus Sandbox client is Phase 4/hardening; flag + shadow keys only.
@@ -255,6 +257,15 @@ class ExplicitFillEngine:
         fill_model_id = (
             fill_result.fill_model_id if fill_result is not None else snap.fill_model_id
         )
+        mark_for_mtm = float(mark_px) if mark_px is not None else 0.0
+        _qty = float(self._position.qty)
+        _avg = float(self._position.avg_px)
+        _realized = float(self._position.realized_pnl)
+        if _qty != 0.0 and mark_for_mtm != 0.0 and _avg != 0.0:
+            _unrealized = _qty * (mark_for_mtm - _avg)
+        else:
+            _unrealized = 0.0
+        _equity = float(getattr(self, "_init_cash", 10_000.0)) + _realized + _unrealized
         record: dict[str, Any] = {
             "execution_mode": self._execution_mode,
             "submitted": False,  # structural: never true in 4b
@@ -292,6 +303,9 @@ class ExplicitFillEngine:
             "position_qty": self._position.qty,
             "position_avg_px": self._position.avg_px,
             "realized_pnl": self._position.realized_pnl,
+            "unrealized_pnl": _unrealized,
+            "equity": _equity,
+            "init_cash": float(getattr(self, "_init_cash", 10_000.0)),
         }
         if fill_result is not None:
             # Merge all FillResult fields; fill_model_id / fill_px already set above.

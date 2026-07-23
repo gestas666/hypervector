@@ -49,7 +49,7 @@ fn source_tree_has_no_control_spawns() {
             // Forbidden list and docs are OK.
             continue;
         }
-        if p.ends_with("effects.rs") || p.ends_with("health.rs") || p.ends_with("mode_banner.rs") {
+        if p.ends_with("effects.rs") || p.ends_with("health.rs") || p.ends_with("mode_banner.rs") || p.ends_with("book_card.rs") || p.ends_with("book.rs") {
             // UI copy may mention read-only policy.
             if line.contains("no paper-run") || line.contains("no arm") || line.contains("READ-ONLY")
             {
