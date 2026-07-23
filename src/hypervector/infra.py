@@ -21,6 +21,8 @@ DATA_SUBDIRS: tuple[str, ...] = (
     "paper/ledger",
     "paper/decisions",
     "live",
+    "live/ledger",
+    "live/decisions",
 )
 
 
@@ -41,6 +43,8 @@ class DataPaths:
     paper_decisions: Path
     paper_db: Path
     live: Path
+    live_ledger: Path
+    live_decisions: Path
 
 
 def paths_for(root: Path | str) -> DataPaths:
@@ -60,6 +64,8 @@ def paths_for(root: Path | str) -> DataPaths:
         paper_decisions=r / "paper" / "decisions",
         paper_db=r / "paper" / "paper.db",
         live=r / "live",
+        live_ledger=r / "live" / "ledger",
+        live_decisions=r / "live" / "decisions",
     )
 
 
@@ -85,6 +91,8 @@ def layout_report(root: Path | str) -> dict[str, object]:
         "paper_ledger": paths.paper_ledger,
         "paper_decisions": paths.paper_decisions,
         "live": paths.live,
+        "live_ledger": paths.live_ledger,
+        "live_decisions": paths.live_decisions,
     }
     return {
         "root": str(paths.root.resolve()),

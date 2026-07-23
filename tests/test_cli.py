@@ -215,7 +215,11 @@ def test_cli_export_validate_and_phase2_check(tmp_path: Path, capsys, inject_his
     assert report["phase2_stub"]["loadout"]["strategy_name"] == "crown_stack_short"
     assert report["phase2_stub"]["exits"]["mode"] == "atr"
     assert report["paper_live"]["implemented"] is False
-    assert "paper/live not implemented" in captured.err
+    assert report["paper_live"]["paper_dry_run"]["implemented"] is True
+    assert report["paper_live"]["paper_dry_run"]["command"] == "paper-run"
+    assert report["paper_live"]["live_submit"]["implemented"] is False
+    assert "paper-run" in captured.err
+    assert "live submit not implemented" in captured.err
 
     # DB re-export should also be Phase 2-ready (research_meta path)
     assert main(["--data-root", str(data), "export", "--track", "downtrend"]) == 0
@@ -384,7 +388,7 @@ def test_cli_phase2_run_schema_error(tmp_path: Path, capsys):
 
 
 def test_cli_phase2_run_paper_flag_notes_not_implemented(tmp_path: Path, capsys, inject_history):
-    """If --paper requested, note not implemented on stderr; still run historical."""
+    """If --paper requested, redirect to paper-run on stderr; still run historical."""
     from hypervector.data.sources import fixture_ohlcv
 
     df = fixture_ohlcv(n_bars=80, drift=5.0, wave_period=30, source="hl")
@@ -410,5 +414,5 @@ def test_cli_phase2_run_paper_flag_notes_not_implemented(tmp_path: Path, capsys,
     summary = json.loads(captured.out)
     assert summary["ok"] is True
     assert summary["execution_mode"] == "phase2_historical"
-    assert "paper/live not implemented" in captured.err
+    assert "paper-run" in captured.err
     assert "paper ran" not in captured.err.lower()

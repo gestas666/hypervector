@@ -118,9 +118,25 @@ def phase2_check_report(
     report: dict[str, Any] = {
         "ok": True,
         "phase2_stub": stub.to_dict(),
+        # Honesty: paper/shadow dry-run is implemented via paper-run (not phase2-run).
+        # Live venue submit remains a later phase (4b-live).
         "paper_live": {
             "implemented": False,
-            "message": "paper/live not implemented — Phase 3 after Phase 2 strategy actor",
+            "phase2_run_modes": False,
+            "paper_dry_run": {
+                "implemented": True,
+                "command": "paper-run",
+                "default_mode": "shadow",
+                "no_submit": True,
+            },
+            "live_submit": {
+                "implemented": False,
+                "message": "4b-live not started — use paper-run for dry-run only",
+            },
+            "message": (
+                "phase2-run is historical only; paper/shadow dry-run is paper-run "
+                "(default mode=shadow, no venue orders); live submit not implemented"
+            ),
         },
     }
     if probe_nautilus:

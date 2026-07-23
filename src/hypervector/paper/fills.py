@@ -1,18 +1,27 @@
-"""Explicit paper fills: bar_close_slippage_v1 + funding rows.
+"""Explicit paper fills: FillModel-driven prices + funding rows.
 
 Pure position math + decision append. No live orders.
 Optional sandbox_enabled is shadow-only (no Nautilus sandbox client in Phase 3).
+Preferred default is l2_walk_v1; missing/stale book falls back to bar_close.
 """
 
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 from typing import Any
 
 from hypervector.paper.costs import CostProvider, CostSnapshot, funding_payment
-from hypervector.paper.ledger import append_paper_decision
+from hypervector.paper.fill_models import (
+    DEFAULT_MAX_BOOK_AGE_MS,
+    FILL_MODEL_L2_WALK_V1,
+    FillModel,
+    FillResult,
+    select_fill_model,
+)
+from hypervector.paper.ledger import ALLOWED_EXECUTION_MODES, append_paper_decision
+from hypervector.paper.order_intent import NETWORK_MAINNET, build_order_intent
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +52,15 @@ class ExplicitFillEngine:
         timeframe: str,
         conviction: float,
         sandbox_enabled: bool = False,
+        preferred_fill_model: str = FILL_MODEL_L2_WALK_V1,
+        max_book_age_ms: float = DEFAULT_MAX_BOOK_AGE_MS,
+        execution_mode: str = "paper",
     ) -> None:
+        mode = str(execution_mode).lower().strip()
+        if mode not in ALLOWED_EXECUTION_MODES:
+            raise ValueError(
+                f"execution_mode must be paper|shadow, got {execution_mode!r}"
+            )
         self._data_root = Path(data_root)
         self._cost_provider = cost_provider
         self._run_id = str(run_id)
@@ -53,6 +70,9 @@ class ExplicitFillEngine:
         self._timeframe = str(timeframe)
         self._conviction = float(conviction)
         self._sandbox_enabled = bool(sandbox_enabled)
+        self._preferred_fill_model = str(preferred_fill_model)
+        self._max_book_age_ms = float(max_book_age_ms)
+        self._execution_mode = mode
         self._position = PaperPosition()
         if self._sandbox_enabled:
             # Real Nautilus Sandbox client is Phase 4/hardening; flag + shadow keys only.
@@ -71,6 +91,13 @@ class ExplicitFillEngine:
         qty: float,
         mark_px: float,
         intent: dict | None = None,
+        book: Any | None = None,
+        fill_model: FillModel | None = None,
+        now_ms: float | None = None,
+        conviction: float | None = None,
+        conviction_source: str | None = None,
+        metalabel_p: float | None = None,
+        metalabel_bundle_id: str | None = None,
     ) -> dict:
         side_n = str(side).lower().strip()
         if side_n not in _VALID_SIDES:
@@ -83,25 +110,91 @@ class ExplicitFillEngine:
             raise ValueError(f"mark_px must be positive, got {mark_px}")
 
         snap = self._cost_provider.snapshot()
-        slip = float(snap.slippage_bps) / 10_000.0
-        if side_n == "buy":
-            fill_px = mark * (1.0 + slip)
+        if fill_model is not None:
+            model: FillModel = fill_model
+            fallback_reason: str | None = None
         else:
-            fill_px = mark * (1.0 - slip)
+            model, fallback_reason = select_fill_model(
+                preferred=self._preferred_fill_model,
+                book=book,
+                max_book_age_ms=self._max_book_age_ms,
+                now_ms=now_ms,
+            )
+        result = model.fill(
+            side=side_n,
+            qty=qty_f,
+            mark_px=mark,
+            book=book,
+            slippage_bps=float(snap.slippage_bps),
+        )
+        if fallback_reason is not None and result.fill_fallback_reason is None:
+            result = replace(result, fill_fallback_reason=fallback_reason)
+        fill_px = float(result.fill_px)
+        fill_qty = float(result.fill_qty)
 
-        fee_usd = abs(qty_f) * fill_px * self._cost_provider.trade_fee_rate()
-        self._update_position(side=side_n, qty=qty_f, fill_px=fill_px, fee_usd=fee_usd)
+        # L2 / TopBps may return fill_qty=0 when required side has no depth —
+        # never invent liquidity; keep position flat but **ledger the skip**
+        # so shortfall / model id remain auditable (SRS_HV4A_LOG).
+        if fill_qty <= 0:
+            logger.warning(
+                "fill skipped: zero fill_qty model=%s side=%s requested=%s shortfall=%s",
+                result.fill_model_id,
+                side_n,
+                qty_f,
+                result.shortfall_qty,
+            )
+            skipped = self._base_record(
+                feed_ts=feed_ts,
+                action=str(action),
+                side=side_n,
+                qty=0.0,
+                mark_px=mark,
+                fill_px=fill_px,
+                snap=snap,
+                fee_usd=0.0,
+                funding_payment_usd=0.0,
+                fill_result=result,
+                conviction=conviction,
+                conviction_source=conviction_source,
+                metalabel_p=metalabel_p,
+                metalabel_bundle_id=metalabel_bundle_id,
+            )
+            skipped["qty"] = 0.0
+            skipped["fill_qty"] = 0.0
+            skipped["skipped"] = True
+            skipped["requested_qty"] = float(result.requested_qty)
+            skipped["shortfall_qty"] = float(result.shortfall_qty)
+            # Intent is the requested order, not the zero fill_qty.
+            skipped["order_intent"] = build_order_intent(
+                symbol=self._symbol, side=side_n, qty=qty_f
+            )
+            if intent is not None:
+                skipped["intent"] = intent
+            append_paper_decision(self._data_root, skipped)
+            return skipped
+
+        fee_usd = abs(fill_qty) * fill_px * self._cost_provider.trade_fee_rate()
+        self._update_position(side=side_n, qty=fill_qty, fill_px=fill_px, fee_usd=fee_usd)
 
         record = self._base_record(
             feed_ts=feed_ts,
             action=str(action),
             side=side_n,
-            qty=qty_f,
+            qty=fill_qty,
             mark_px=mark,
             fill_px=fill_px,
             snap=snap,
             fee_usd=fee_usd,
             funding_payment_usd=0.0,
+            fill_result=result,
+            conviction=conviction,
+            conviction_source=conviction_source,
+            metalabel_p=metalabel_p,
+            metalabel_bundle_id=metalabel_bundle_id,
+        )
+        # Intent qty is what we wanted to send (requested), not filled qty.
+        record["order_intent"] = build_order_intent(
+            symbol=self._symbol, side=side_n, qty=qty_f
         )
         if intent is not None:
             record["intent"] = intent
@@ -152,9 +245,20 @@ class ExplicitFillEngine:
         snap: CostSnapshot,
         fee_usd: float,
         funding_payment_usd: float,
+        fill_result: FillResult | None = None,
+        conviction: float | None = None,
+        conviction_source: str | None = None,
+        metalabel_p: float | None = None,
+        metalabel_bundle_id: str | None = None,
     ) -> dict:
-        return {
-            "execution_mode": "paper",
+        # Actual model from FillResult overwrites CostSnapshot fill_model_id when present.
+        fill_model_id = (
+            fill_result.fill_model_id if fill_result is not None else snap.fill_model_id
+        )
+        record: dict[str, Any] = {
+            "execution_mode": self._execution_mode,
+            "submitted": False,  # structural: never true in 4b
+            "network": NETWORK_MAINNET,
             "feed_ts": feed_ts,
             "run_id": self._run_id,
             "export_id": self._export_id,
@@ -166,7 +270,7 @@ class ExplicitFillEngine:
             "qty": qty,
             "mark_px": mark_px,
             "fill_px": fill_px,
-            "fill_model_id": snap.fill_model_id,
+            "fill_model_id": fill_model_id,
             "slippage_bps": snap.slippage_bps,
             "taker_fee": snap.taker_fee,
             "maker_fee": snap.maker_fee,
@@ -177,11 +281,27 @@ class ExplicitFillEngine:
             "sandbox_enabled": self._sandbox_enabled,
             # Shadow only — explicit fill_px remains ledger truth (sandbox client Phase 4).
             "sandbox_fill_px": None,
-            "conviction": self._conviction,
+            "conviction": (
+                float(conviction) if conviction is not None else self._conviction
+            ),
+            "conviction_source": (
+                conviction_source if conviction_source is not None else "fixed"
+            ),
+            "metalabel_p": metalabel_p,
+            "metalabel_bundle_id": metalabel_bundle_id,
             "position_qty": self._position.qty,
             "position_avg_px": self._position.avg_px,
             "realized_pnl": self._position.realized_pnl,
         }
+        if fill_result is not None:
+            # Merge all FillResult fields; fill_model_id / fill_px already set above.
+            for key, value in asdict(fill_result).items():
+                record[key] = value
+            # Keep ledger qty aligned with filled qty (bar_close: same as requested).
+            record["qty"] = fill_result.fill_qty
+            record["fill_px"] = fill_result.fill_px
+            record["fill_model_id"] = fill_result.fill_model_id
+        return record
 
     def _update_position(
         self,

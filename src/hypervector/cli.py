@@ -16,6 +16,16 @@ from hypervector.export.schema import ExportSchemaError, validate_export_dir
 from hypervector.infra import ensure_data_layout, layout_report
 from hypervector.nautilus.config_stub import phase2_check_report
 from hypervector.nautilus.runner import run_phase2_backtest
+from hypervector.paper.fill_models import (
+    DEFAULT_MAX_BOOK_AGE_MS,
+    FILL_MODEL_L2_WALK_V1,
+)
+from hypervector.live.policy import (
+    DEFAULT_MAX_NOTIONAL_USD,
+    live_policy_from_env,
+)
+from hypervector.paper.order_intent import NETWORK_MAINNET, ORDER_INTENT_SCHEMA
+from hypervector.paper.report import report_from_data_root
 from hypervector.paper.runner import start_paper_daemon
 from hypervector.regime.detectors import detect_regime_ema
 from hypervector.regime.metrics import regime_detection_metrics
@@ -31,6 +41,13 @@ from hypervector.sweep.sizing import RiskConfig
 # Phase 4 live secrets (paper public path works without keys; never print values).
 SECRET_ENV_WALLET = "HYPERVECTOR_HL_WALLET_ADDRESS"
 SECRET_ENV_API_KEY = "HYPERVECTOR_HL_API_PRIVATE_KEY"
+
+# Phase 4a paper defaults (match configs/default.toml [paper]).
+DEFAULT_PREFERRED_FILL_MODEL = FILL_MODEL_L2_WALK_V1
+DEFAULT_METALABEL_ENABLED = False
+# Phase 4b: daemon default is mainnet shadow (no venue submit).
+DEFAULT_EXECUTION_MODE = "shadow"
+ALLOWED_CLI_EXECUTION_MODES = frozenset({"shadow", "paper"})
 
 
 def _secrets_present() -> bool:
@@ -69,12 +86,45 @@ def cmd_infra_init(args: argparse.Namespace) -> int:
     return 0
 
 
+def _paper_surface_flags() -> dict:
+    """Capability/config surface for paper-check (booleans/strings only; no secrets)."""
+    book_feed_ok = False
+    l2_walk_ok = False
+    try:
+        from hypervector.paper.book import BookFeed  # noqa: F401
+
+        book_feed_ok = True
+    except Exception:  # noqa: BLE001 — surface probe only
+        book_feed_ok = False
+    try:
+        from hypervector.paper.fill_models import L2WalkFillModel  # noqa: F401
+
+        l2_walk_ok = True
+    except Exception:  # noqa: BLE001 — surface probe only
+        l2_walk_ok = False
+    return {
+        # Phase 4b shadow surface (strings/bools only; never secret values).
+        "mode": DEFAULT_EXECUTION_MODE,
+        "network": NETWORK_MAINNET,
+        "no_submit": True,
+        "submitted_default": False,
+        "order_intent_schema": ORDER_INTENT_SCHEMA,
+        "preferred_fill_model": DEFAULT_PREFERRED_FILL_MODEL,
+        "max_book_age_ms": int(DEFAULT_MAX_BOOK_AGE_MS),
+        "book_feed": book_feed_ok,
+        "l2_walk_available": l2_walk_ok,
+        "metalabel_enabled": DEFAULT_METALABEL_ENABLED,
+        "metalabel_default_off": True,
+    }
+
+
 def cmd_paper_check(args: argparse.Namespace) -> int:
     """Print paper/live layout identity and readiness flags (no secret values)."""
     paths = _ensure_root(args)
     report = layout_report(paths.root)
-    report["paper"] = {
-        "execution_mode": "paper",
+    paper = {
+        # Alias of mode; Phase 4b default is shadow (mainnet, no venue orders).
+        "execution_mode": DEFAULT_EXECUTION_MODE,
         "decisions": str(paths.paper_decisions),
         "ledger": str(paths.paper_ledger),
         "live_feed_loop": True,
@@ -83,11 +133,74 @@ def cmd_paper_check(args: argparse.Namespace) -> int:
         "secrets_present": _secrets_present(),
         "secret_env_names": [SECRET_ENV_WALLET, SECRET_ENV_API_KEY],
     }
+    paper.update(_paper_surface_flags())
+    report["paper"] = paper
+    live_pol = live_policy_from_env(enabled=False, armed=False)
     report["live"] = {
         "enabled": False,
-        "note": "Phase 4: set live.enabled + secrets; paper never places venue orders",
+        "decisions": str(paths.live_decisions),
+        "ledger": str(paths.live_ledger),
+        "submit_wired": False,
+        "note": (
+            "Phase 4b-live foundation: live ledger paths exist; "
+            "venue submit not wired. Use paper-run for dry-run."
+        ),
+        "readiness": live_pol.readiness(),
     }
     print(json.dumps(report, indent=2))
+    return 0
+
+
+def cmd_live_check(args: argparse.Namespace) -> int:
+    """Live readiness (policy only; never prints secret values; no submit)."""
+    paths = _ensure_root(args)
+    enabled = bool(getattr(args, "enabled", False))
+    armed = bool(getattr(args, "armed", False))
+    max_notional = float(
+        getattr(args, "max_notional_usd", DEFAULT_MAX_NOTIONAL_USD)
+    )
+    policy = live_policy_from_env(
+        enabled=enabled,
+        armed=armed,
+        max_notional_usd=max_notional,
+    )
+    ready = policy.readiness()
+    report = {
+        "ok": True,
+        "root": str(paths.root.resolve()),
+        "live_decisions": str(paths.live_decisions),
+        "live_ledger": str(paths.live_ledger),
+        "live": ready,
+        "paper_path_unchanged": True,
+        "venue_submit": False,
+    }
+    # Attempt start gate only for diagnostics (do not start daemon).
+    try:
+        policy.require_start()
+        report["start_gate"] = "ok"
+    except Exception as exc:  # LivePolicyError
+        report["start_gate"] = "refused"
+        report["start_gate_reason"] = str(exc)
+    print(json.dumps(report, indent=2, default=str))
+    return 0
+
+
+def cmd_paper_report(args: argparse.Namespace) -> int:
+    """Summarize paper/shadow decisions JSONL (read-only; no venue orders)."""
+    _ensure_root(args)
+    root = Path(args.data_root)
+    decisions = Path(args.path) if getattr(args, "path", None) else None
+    last_n = int(getattr(args, "last", 5))
+    try:
+        report = report_from_data_root(
+            root,
+            decisions_path=decisions,
+            last_n=last_n,
+        )
+    except ValueError as exc:
+        print(str(exc), file=sys.stderr)
+        return 1
+    print(json.dumps(report, indent=2, default=str))
     return 0
 
 
@@ -100,6 +213,20 @@ def cmd_paper_run(args: argparse.Namespace) -> int:
         return 1
 
     stop_file = Path(args.stop_file) if getattr(args, "stop_file", None) else None
+    preferred = str(
+        getattr(args, "preferred_fill_model", DEFAULT_PREFERRED_FILL_MODEL)
+    )
+    max_book_age_ms = float(
+        getattr(args, "max_book_age_ms", DEFAULT_MAX_BOOK_AGE_MS)
+    )
+    metalabel_enabled = bool(getattr(args, "metalabel", DEFAULT_METALABEL_ENABLED))
+    execution_mode = str(getattr(args, "mode", DEFAULT_EXECUTION_MODE)).lower().strip()
+    if execution_mode not in ALLOWED_CLI_EXECUTION_MODES:
+        print(
+            f"invalid --mode {execution_mode!r}; choose shadow|paper",
+            file=sys.stderr,
+        )
+        return 1
     try:
         result = start_paper_daemon(
             export_dir=path,
@@ -113,6 +240,10 @@ def cmd_paper_run(args: argparse.Namespace) -> int:
             if getattr(args, "max_live_bars", None) is not None
             else None,
             lookback_days=int(args.lookback) if getattr(args, "lookback", None) else None,
+            preferred_fill_model=preferred,
+            max_book_age_ms=max_book_age_ms,
+            metalabel_enabled=metalabel_enabled,
+            execution_mode=execution_mode,
         )
     except FileNotFoundError as exc:
         print(str(exc), file=sys.stderr)
@@ -124,6 +255,7 @@ def cmd_paper_run(args: argparse.Namespace) -> int:
     out = {
         "ok": True,
         "execution_mode": result.execution_mode,
+        "mode": result.execution_mode,
         "run_id": result.run_id,
         "export_dir": str(result.export_dir),
         "decisions_path": str(result.decisions_path),
@@ -133,7 +265,12 @@ def cmd_paper_run(args: argparse.Namespace) -> int:
         "fills_count": result.fills_count,
         "stop_reason": result.stop_reason,
         "sandbox_enabled": bool(getattr(args, "sandbox", False)),
+        "preferred_fill_model": preferred,
+        "max_book_age_ms": max_book_age_ms,
+        "metalabel_enabled": metalabel_enabled,
         "secrets_present": _secrets_present(),
+        "no_submit": True,
+        "network": NETWORK_MAINNET,
     }
     print(json.dumps(out, indent=2, default=str))
     return 0
@@ -441,7 +578,7 @@ def cmd_export_validate(args: argparse.Namespace) -> int:
 
 
 def cmd_phase2_check(args: argparse.Namespace) -> int:
-    """Load export as Phase 2 loadout stub; confirm paper/live not implemented."""
+    """Load export as Phase 2 loadout stub; note paper dry-run is paper-run."""
     _ensure_root(args)
     path = Path(args.path)
     try:
@@ -461,21 +598,38 @@ def cmd_phase2_check(args: argparse.Namespace) -> int:
         )
         return 1
     print(json.dumps(report, indent=2, default=str))
-    if not report.get("paper_live", {}).get("implemented", False):
-        print("paper/live not implemented", file=sys.stderr)
+    pl = report.get("paper_live") or {}
+    # Honest routing: dry-run paper is paper-run; live submit still absent.
+    if not pl.get("implemented", False):
+        print(
+            "note: phase2-run is historical only; "
+            "paper/shadow dry-run → paper-run (default shadow, no venue orders); "
+            "live submit not implemented",
+            file=sys.stderr,
+        )
     return 0
 
 
 def cmd_phase2_run(args: argparse.Namespace) -> int:
     """Run Phase 2 historical backtest from a strict export bundle.
 
-    Paper/live modes are not implemented; if those flags are requested we only
-    note that on stderr and still run the historical engine path.
+    ``--paper`` / ``--live`` on phase2-run do not switch engines: historical
+    path still runs. Paper dry-run is ``paper-run``; live submit is not armed.
     """
     _ensure_root(args)
     path = Path(args.path)
-    if getattr(args, "paper", False) or getattr(args, "live", False):
-        print("paper/live not implemented", file=sys.stderr)
+    if getattr(args, "paper", False):
+        print(
+            "note: phase2-run --paper does not start paper daemon; "
+            "use: hypervector paper-run --path <export>",
+            file=sys.stderr,
+        )
+    if getattr(args, "live", False):
+        print(
+            "note: live submit not implemented (4b-live later); "
+            "use paper-run for dry-run shadow",
+            file=sys.stderr,
+        )
 
     try:
         result = run_phase2_backtest(
@@ -552,18 +706,78 @@ def build_parser() -> argparse.ArgumentParser:
 
     pc = sub.add_parser(
         "paper-check",
-        help="Paper identity: layout, live_feed_loop, secrets_present (no key values)",
+        help=(
+            "Paper/shadow identity: mode, mainnet network, no_submit "
+            "(booleans/strings only; never secret values)"
+        ),
     )
     pc.set_defaults(func=cmd_paper_check)
 
+    prep = sub.add_parser(
+        "paper-report",
+        help=(
+            "Summarize paper/shadow decisions.jsonl (fill models, modes, "
+            "intents, honesty counters; read-only)"
+        ),
+    )
+    prep.add_argument(
+        "--path",
+        default=None,
+        help="optional decisions JSONL path (default: <data-root>/paper/decisions/decisions.jsonl)",
+    )
+    prep.add_argument(
+        "--last",
+        type=int,
+        default=5,
+        help="include last N market fills in sample (default 5)",
+    )
+    prep.set_defaults(func=cmd_paper_report)
+
+    lc = sub.add_parser(
+        "live-check",
+        help=(
+            "Live readiness: secrets present (bool), arm/enabled gates, "
+            "max notional (no secret values; submit not wired in F1)"
+        ),
+    )
+    lc.add_argument(
+        "--enabled",
+        action="store_true",
+        help="simulate [live] enabled=true for readiness (default false)",
+    )
+    lc.add_argument(
+        "--armed",
+        action="store_true",
+        help="simulate --i-accept-live-risk arm for readiness (default false)",
+    )
+    lc.add_argument(
+        "--max-notional-usd",
+        type=float,
+        default=DEFAULT_MAX_NOTIONAL_USD,
+        help=f"max notional cap for policy (default {DEFAULT_MAX_NOTIONAL_USD})",
+    )
+    lc.set_defaults(func=cmd_live_check)
+
     pr = sub.add_parser(
         "paper-run",
-        help="Paper daemon: warm-up + live HL bars + synthetic fills (no venue orders)",
+        help=(
+            "Paper/shadow daemon: mainnet HL bars + synthetic fills; "
+            "no venue orders (default mode=shadow)"
+        ),
     )
     pr.add_argument(
         "--path",
         required=True,
         help="path to strict Phase 1.5 export directory",
+    )
+    pr.add_argument(
+        "--mode",
+        choices=sorted(ALLOWED_CLI_EXECUTION_MODES),
+        default=DEFAULT_EXECUTION_MODE,
+        help=(
+            "execution mode: shadow (default; mainnet-honest intents, no venue orders) "
+            "or paper (offline-compat synthetic path)"
+        ),
     )
     pr.add_argument(
         "--conviction",
@@ -604,6 +818,26 @@ def build_parser() -> argparse.ArgumentParser:
         type=int,
         default=None,
         help=f"warm-up lookback days (default: export meta or {DEFAULT_LOOKBACK})",
+    )
+    pr.add_argument(
+        "--preferred-fill-model",
+        default=DEFAULT_PREFERRED_FILL_MODEL,
+        help=(
+            "preferred FillModel id when book is fresh "
+            f"(default: {DEFAULT_PREFERRED_FILL_MODEL}; falls back to bar_close without book)"
+        ),
+    )
+    pr.add_argument(
+        "--max-book-age-ms",
+        type=float,
+        default=float(DEFAULT_MAX_BOOK_AGE_MS),
+        help=f"stale book threshold in ms (default: {int(DEFAULT_MAX_BOOK_AGE_MS)})",
+    )
+    pr.add_argument(
+        "--metalabel",
+        action=argparse.BooleanOptionalAction,
+        default=DEFAULT_METALABEL_ENABLED,
+        help="enable metalabel scale-only conviction (default: off)",
     )
     pr.set_defaults(func=cmd_paper_run)
 
@@ -703,7 +937,10 @@ def build_parser() -> argparse.ArgumentParser:
 
     p2 = sub.add_parser(
         "phase2-check",
-        help="Load export as Phase 2 StrategyLoadout stub (offline; no paper/live)",
+        help=(
+            "Load export as Phase 2 StrategyLoadout stub "
+            "(historical; paper dry-run is paper-run)"
+        ),
     )
     p2.add_argument("--path", required=True, help="path to export directory")
     p2.add_argument(
@@ -743,12 +980,12 @@ def build_parser() -> argparse.ArgumentParser:
     p2r.add_argument(
         "--paper",
         action="store_true",
-        help="request paper mode (not implemented; historical still runs)",
+        help="legacy flag: does not switch engines — use paper-run for dry-run",
     )
     p2r.add_argument(
         "--live",
         action="store_true",
-        help="request live mode (not implemented; historical still runs)",
+        help="legacy flag: live submit not implemented; use paper-run for dry-run",
     )
     p2r.set_defaults(func=cmd_phase2_run)
 

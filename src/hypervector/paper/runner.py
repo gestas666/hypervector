@@ -19,12 +19,25 @@ import pandas as pd
 from hypervector.config import DEFAULT_LOOKBACK, FLOOR_LOOKBACK
 from hypervector.data.pipeline import load_research_history
 from hypervector.nautilus.load_export import load_strategy_loadout
+from hypervector.paper.fill_models import (
+    DEFAULT_MAX_BOOK_AGE_MS,
+    FILL_MODEL_L2_WALK_V1,
+)
 from hypervector.paper.live_node import DEFAULT_POLL_INTERVAL_SECS, make_rest_poll_fn
 from hypervector.paper.session import PaperSession
 
 logger = logging.getLogger(__name__)
 
 PAPER_BANNER = "PAPER MODE — no venue orders"
+SHADOW_BANNER = "SHADOW MODE — no venue orders"
+
+
+def banner_for_mode(execution_mode: str) -> str:
+    """Stderr banner for daemon mode. Shadow is the 4b default; both refuse venue orders."""
+    mode = str(execution_mode).lower().strip()
+    if mode == "shadow":
+        return SHADOW_BANNER
+    return PAPER_BANNER
 
 
 @dataclass(frozen=True)
@@ -59,6 +72,10 @@ def start_paper_daemon(
     lookback_days: int | None = None,
     enable_funding_refresh: bool | None = None,
     funding_rate_hourly: float | None = None,
+    preferred_fill_model: str = FILL_MODEL_L2_WALK_V1,
+    max_book_age_ms: float = DEFAULT_MAX_BOOK_AGE_MS,
+    metalabel_enabled: bool = False,
+    execution_mode: str = "shadow",
 ) -> PaperDaemonResult:
     """Start paper daemon: warm history, then process live bars until stop.
 
@@ -69,6 +86,9 @@ def start_paper_daemon(
     only when using the default REST feed (``poll_fn is None``). Injected
     ``poll_fn`` offline tests keep refresh off unless ``enable_funding_refresh``
     is set True. Open positions still receive funding from the configured rate.
+
+    Default ``execution_mode`` is ``shadow`` (mainnet-honest intents, no submit).
+    Offline tests that need paper stamps may pass ``execution_mode="paper"``.
 
     Parameters
     ----------
@@ -89,8 +109,18 @@ def start_paper_daemon(
         Default: True if ``poll_fn is None`` (live REST path), else False.
     funding_rate_hourly:
         Optional override for the starting hourly funding rate (no network).
+    preferred_fill_model:
+        Preferred FillModel id when book is fresh (default ``l2_walk_v1``).
+        Falls back to bar_close with logged reason when book missing/stale.
+    max_book_age_ms:
+        Stale book threshold in milliseconds (default 3000).
+    metalabel_enabled:
+        When True, scale conviction via Metalabeler (default off).
+    execution_mode:
+        ``shadow`` (default) or ``paper``; stamped on fills via session/engine.
     """
-    _print_banner()
+    mode = str(execution_mode)
+    _print_banner(mode)
     sleep = sleep_fn if sleep_fn is not None else time.sleep
     export_path = Path(export_dir)
     root = Path(data_root)
@@ -109,6 +139,11 @@ def start_paper_daemon(
     if enable_funding_refresh is None:
         enable_funding_refresh = poll_fn is None
 
+    # Live REST path may use L2 book **only after warm-up**. Historical warm-up
+    # must never poll live book (wrong prices + REST spam). Offline injected
+    # poll_fn keeps book off-network unless the caller sets enable_book_poll later.
+    live_book_enabled = poll_fn is None
+
     session = PaperSession(
         export_dir=export_path,
         data_root=root,
@@ -117,6 +152,11 @@ def start_paper_daemon(
         sandbox_enabled=sandbox_enabled,
         funding_rate_hourly=funding_rate_hourly,
         enable_funding_refresh=bool(enable_funding_refresh),
+        enable_book_poll=False,  # always off for historical warm-up
+        preferred_fill_model=str(preferred_fill_model),
+        max_book_age_ms=float(max_book_age_ms),
+        metalabel_enabled=bool(metalabel_enabled),
+        execution_mode=mode,
     )
 
     # --- warm-up (cache-first history or injected frame) ---
@@ -145,6 +185,23 @@ def start_paper_daemon(
     warm_bars = session.process_frame(warm_df)
     session.ensure_session_identity()
     after_ts = session.last_timestamp
+
+    # --- arm book for live phase only (design: one snapshot, not multi-day warm) ---
+    if live_book_enabled:
+        try:
+            snap = session.book_feed.poll()
+            if snap is not None:
+                logger.info(
+                    "paper live book armed source=%s bid=%s ask=%s",
+                    snap.source,
+                    snap.best_bid(),
+                    snap.best_ask(),
+                )
+            else:
+                logger.info("paper live book poll returned None; fills fall back until fresh")
+        except Exception as exc:  # noqa: BLE001 — never block live start
+            logger.warning("paper live book arm failed: %s", exc)
+        session.enable_book_poll = True
 
     # --- live feed (REST poll by default; injectable for tests) ---
     # TODO Phase3: prefer HyperliquidDataClient WS when stable
@@ -260,7 +317,7 @@ def start_paper_daemon(
         bars_processed=session.bars_processed,
         fills_count=session.fills_count,
         stop_reason=str(stop_state["reason"]),
-        execution_mode="paper",
+        execution_mode=mode,
     )
     logger.info(
         "paper daemon stopped reason=%s warm=%s live=%s fills=%s",
@@ -272,5 +329,5 @@ def start_paper_daemon(
     return result
 
 
-def _print_banner() -> None:
-    print(PAPER_BANNER, file=sys.stderr, flush=True)
+def _print_banner(execution_mode: str = "shadow") -> None:
+    print(banner_for_mode(execution_mode), file=sys.stderr, flush=True)

@@ -16,22 +16,31 @@ slippage_bps = 2.0
 funding_rate_8h = 0.0001
 
 # Paper live-feed (HL tier schedule + live funding; does not replace [costs])
+# Phase 4a: preferred fill is l2_walk_v1 when book fresh; falls back to bar_close.
+# Phase 4b: mode = "shadow" — mainnet-honest order intents, no venue submit;
+# ledger stays under data/paper/. Use mode = "paper" for offline-compat synthetic.
 [paper]
+mode = "shadow"  # shadow | paper — never live submit
 sandbox_enabled = false
 funding_poll_secs = 60
 fill_model_id = "bar_close_slippage_v1"
+preferred_fill_model = "l2_walk_v1"
+max_book_age_ms = 3000
+metalabel_enabled = false
 fee_tier = 0
 assume_taker = true
 slippage_bps = 2.0
 
-# Live execution flip is Phase 4 — paper never places venue orders.
-# Secrets env (required only when live.enabled=true):
+# Live execution (Phase 4b-live). Paper/shadow never places venue orders.
+# Secrets env (required to start live-run when enabled+armed):
 #   HYPERVECTOR_HL_WALLET_ADDRESS=
 #   HYPERVECTOR_HL_API_PRIVATE_KEY=
 [live]
 enabled = false
-# execution_mode = "live"  # Phase 4 only
-# ledger_root under data/live/ when enabled
+max_notional_usd = 50.0
+# require CLI --i-accept-live-risk in addition to enabled=true
+require_arm_flag = true
+# ledger under data/live/decisions (never paper)
 
 # Risk: 1%–5% of equity at risk, scaled by conviction [0,1]
 [risk]

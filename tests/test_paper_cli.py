@@ -74,7 +74,9 @@ def test_paper_check_reports_mode(tmp_path: Path, capsys, monkeypatch):
     assert rc == 0
     captured = capsys.readouterr()
     report = json.loads(captured.out)
-    assert report["paper"]["execution_mode"] == "paper"
+    # Phase 4b default surface is shadow (mainnet-honest, no venue submit).
+    assert report["paper"]["execution_mode"] == "shadow"
+    assert report["paper"]["mode"] == "shadow"
     assert report["paper"]["live_feed_loop"] is True
     assert report["paper"]["sandbox_enabled"] is False
     assert report["paper"]["secrets_present"] is False
@@ -82,6 +84,29 @@ def test_paper_check_reports_mode(tmp_path: Path, capsys, monkeypatch):
     assert "ledger" in report["paper"]
     # Env *names* may be listed; never print secret *values* (none set here).
     assert "secret_env_names" in report["paper"]
+
+
+def test_paper_check_reports_shadow_surface(tmp_path: Path, capsys, monkeypatch):
+    """Phase 4b: paper-check exposes shadow/mainnet/no-submit surface (no secrets)."""
+    data = tmp_path / "data"
+    monkeypatch.delenv("HYPERVECTOR_HL_WALLET_ADDRESS", raising=False)
+    monkeypatch.delenv("HYPERVECTOR_HL_API_PRIVATE_KEY", raising=False)
+    rc = main(["--data-root", str(data), "paper-check"])
+    assert rc == 0
+    out = capsys.readouterr().out
+    report = json.loads(out)
+    paper = report["paper"]
+    assert paper["mode"] in ("shadow", "paper")
+    assert paper["mode"] == "shadow"  # 4b default
+    assert paper["network"] == "mainnet"
+    assert paper["no_submit"] is True
+    assert paper["submitted_default"] is False
+    assert paper["order_intent_schema"] == "hv_order_intent_v1"
+    assert report["live"]["enabled"] is False
+    # Booleans/strings only for shadow keys; never secret values.
+    assert "sekrit" not in out
+    assert "0x" not in out
+    assert "testnet" not in out.lower()
 
 
 def test_paper_check_secrets_present_true(tmp_path: Path, capsys, monkeypatch):
@@ -96,6 +121,28 @@ def test_paper_check_secrets_present_true(tmp_path: Path, capsys, monkeypatch):
     assert "0xabc" not in out
 
 
+def test_paper_check_reports_fill_and_book_surface(tmp_path: Path, capsys, monkeypatch):
+    """Phase 4a: paper-check exposes book/fill/metalabel surface (no secrets)."""
+    data = tmp_path / "data"
+    monkeypatch.delenv("HYPERVECTOR_HL_WALLET_ADDRESS", raising=False)
+    monkeypatch.delenv("HYPERVECTOR_HL_API_PRIVATE_KEY", raising=False)
+    rc = main(["--data-root", str(data), "paper-check"])
+    assert rc == 0
+    out = capsys.readouterr().out
+    report = json.loads(out)
+    paper = report["paper"]
+    assert paper["preferred_fill_model"] == "l2_walk_v1"
+    assert paper["max_book_age_ms"] == 3000
+    assert paper["book_feed"] is True
+    assert paper["l2_walk_available"] is True
+    assert paper["metalabel_enabled"] is False
+    assert paper["metalabel_default_off"] is True
+    assert report["live"]["enabled"] is False
+    # No secret material in the payload
+    assert "sekrit" not in out
+    assert "private" not in out.lower() or "private_key" in str(paper.get("secret_env_names", [])).lower()
+
+
 def test_paper_run_requires_export_path():
     with pytest.raises(SystemExit) as exc:
         main(["paper-run"])
@@ -106,6 +153,49 @@ def test_paper_run_help():
     with pytest.raises(SystemExit) as exc:
         main(["paper-run", "--help"])
     assert exc.value.code == 0
+
+
+def test_paper_run_help_lists_phase4a_flags(capsys):
+    with pytest.raises(SystemExit) as exc:
+        main(["paper-run", "--help"])
+    assert exc.value.code == 0
+    help_text = capsys.readouterr().out
+    assert "--preferred-fill-model" in help_text
+    assert "--max-book-age-ms" in help_text
+    assert "--metalabel" in help_text
+    assert "--no-metalabel" in help_text
+
+
+def test_paper_run_help_lists_mode_and_shadow_surface(capsys):
+    """Phase 4b: --mode flag + help states no venue orders / mainnet shadow."""
+    with pytest.raises(SystemExit) as exc:
+        main(["paper-run", "--help"])
+    assert exc.value.code == 0
+    help_text = capsys.readouterr().out.lower()
+    assert "--mode" in help_text
+    assert "shadow" in help_text
+    assert "no venue" in help_text or "no venue orders" in help_text
+    assert "mainnet" in help_text
+
+
+def test_daemon_default_shadow_mode_on_offline_path(tmp_path: Path):
+    """Daemon default execution_mode is shadow (live REST default; offline path same kwargs)."""
+    export = _write_strict_export(tmp_path)
+    warm = fixture_ohlcv(n_bars=20, drift=-3.0, wave_period=15)
+
+    result = start_paper_daemon(
+        export_dir=export,
+        data_root=tmp_path / "data",
+        warm_ohlcv=warm,
+        poll_fn=lambda **_: warm.iloc[0:0].copy(),
+        max_live_bars=0,
+        poll_interval_secs=0.0,
+        sleep_fn=lambda _s: None,
+        install_signal_handlers=False,
+    )
+    assert isinstance(result, PaperDaemonResult)
+    assert result.execution_mode == "shadow"
+    assert result.warm_bars == 20
 
 
 def test_start_paper_daemon_offline_injected_bars(tmp_path: Path, capsys):
@@ -138,6 +228,7 @@ def test_start_paper_daemon_offline_injected_bars(tmp_path: Path, capsys):
         poll_interval_secs=0.0,
         sleep_fn=lambda _s: None,
         install_signal_handlers=False,
+        execution_mode="paper",  # offline stable paper assertions
     )
     assert isinstance(result, PaperDaemonResult)
     assert result.warm_bars == 50
@@ -145,6 +236,7 @@ def test_start_paper_daemon_offline_injected_bars(tmp_path: Path, capsys):
     assert result.bars_processed == 60
     assert result.decisions_path.is_file()
     assert result.stop_reason in ("max_live_bars", "poll_exhausted", "stop")
+    assert result.execution_mode == "paper"
     text = result.decisions_path.read_text(encoding="utf-8")
     assert "execution_mode" in text
     assert "paper" in text
@@ -152,6 +244,76 @@ def test_start_paper_daemon_offline_injected_bars(tmp_path: Path, capsys):
     err = capsys.readouterr().err
     assert "PAPER MODE" in err
     assert "no venue orders" in err.lower() or "no venue" in err.lower()
+
+
+def test_daemon_warmup_does_not_poll_book(tmp_path: Path, monkeypatch):
+    """Highest-+EV lock: historical warm-up never hits live L2 REST."""
+    export = _write_strict_export(tmp_path)
+    warm = fixture_ohlcv(n_bars=30, drift=-5.0, wave_period=20)
+    live = fixture_ohlcv(n_bars=3, drift=-5.0, wave_period=20)
+    live = live.copy()
+    live["timestamp"] = warm["timestamp"].iloc[-1] + (
+        live["timestamp"] - live["timestamp"].iloc[0]
+    ) + (warm["timestamp"].iloc[1] - warm["timestamp"].iloc[0])
+
+    book_polls = {"n": 0}
+
+    def fake_poll(self, *, session=None):
+        book_polls["n"] += 1
+        return None
+
+    monkeypatch.setattr("hypervector.paper.book.BookFeed.poll", fake_poll)
+
+    calls = {"n": 0}
+
+    def poll_fn(*, after_ts=None, **_kwargs):
+        calls["n"] += 1
+        if calls["n"] == 1:
+            return live
+        return live.iloc[0:0].copy()
+
+    # Injected poll_fn ⇒ offline path; book stays off entirely.
+    result = start_paper_daemon(
+        export_dir=export,
+        data_root=tmp_path / "data",
+        warm_ohlcv=warm,
+        poll_fn=poll_fn,
+        max_live_bars=3,
+        poll_interval_secs=0.0,
+        sleep_fn=lambda _s: None,
+        install_signal_handlers=False,
+    )
+    assert result.warm_bars == 30
+    assert result.live_bars == 3
+    assert book_polls["n"] == 0
+
+    # Simulate live REST path (poll_fn is None → live_book_enabled): warm-up
+    # still no poll; one arm poll after warm, then live bars may poll.
+    book_polls["n"] = 0
+    # Avoid real network for bars: still inject warm; use a stub feed via
+    # monkeypatching make_rest_poll_fn and process only warm by max_live_bars=0.
+    from hypervector.paper import runner as runner_mod
+
+    def fake_rest_poll_fn(symbol, timeframe):
+        def _feed(*, after_ts=None, **_kwargs):
+            return live.iloc[0:0].copy()
+
+        return _feed
+
+    monkeypatch.setattr(runner_mod, "make_rest_poll_fn", fake_rest_poll_fn)
+    result2 = start_paper_daemon(
+        export_dir=export,
+        data_root=tmp_path / "data2",
+        warm_ohlcv=warm,
+        poll_fn=None,  # live REST path ⇒ book armed after warm
+        max_live_bars=0,
+        poll_interval_secs=0.0,
+        sleep_fn=lambda _s: None,
+        install_signal_handlers=False,
+    )
+    assert result2.warm_bars == 30
+    # Exactly one arm poll after warm-up (max_live_bars=0 → no live on_bar polls)
+    assert book_polls["n"] == 1
 
 
 def test_start_paper_daemon_stop_file(tmp_path: Path):
@@ -193,7 +355,11 @@ def test_cli_paper_run_offline_via_monkeypatch(tmp_path: Path, capsys, monkeypat
             conviction=kwargs.get("conviction", 0.5),
             fee_tier=kwargs.get("fee_tier", 0),
             sandbox_enabled=kwargs.get("sandbox_enabled", False),
+            preferred_fill_model=kwargs.get("preferred_fill_model", "l2_walk_v1"),
+            max_book_age_ms=kwargs.get("max_book_age_ms", 3000),
+            metalabel_enabled=kwargs.get("metalabel_enabled", False),
             stop_file=kwargs.get("stop_file"),
+            execution_mode=kwargs.get("execution_mode", "shadow"),
             warm_ohlcv=warm,
             poll_fn=lambda **_: warm.iloc[0:0].copy(),
             max_live_bars=0,
@@ -214,8 +380,95 @@ def test_cli_paper_run_offline_via_monkeypatch(tmp_path: Path, capsys, monkeypat
     )
     assert rc == 0
     out = capsys.readouterr()
-    assert "PAPER MODE" in out.err
+    # Default daemon mode is shadow — banner must match (not lie as paper-only).
+    assert "SHADOW MODE" in out.err
+    assert "no venue orders" in out.err.lower()
     payload = json.loads(out.out)
     assert payload["ok"] is True
-    assert payload["execution_mode"] == "paper"
+    # Daemon default is shadow; CLI Task 5 may wire flags later
+    assert payload["execution_mode"] == "shadow"
     assert payload["warm_bars"] == 20
+
+
+def test_cli_paper_run_passes_fill_and_metalabel_flags(tmp_path: Path, monkeypatch):
+    """CLI flags for preferred fill model, book age, metalabel flow into daemon."""
+    export = _write_strict_export(tmp_path)
+    data = tmp_path / "data"
+    captured: dict = {}
+
+    def fake_daemon(**kwargs):
+        captured.update(kwargs)
+        warm = fixture_ohlcv(n_bars=5, drift=-1.0)
+        return start_paper_daemon(
+            export_dir=kwargs["export_dir"],
+            data_root=kwargs["data_root"],
+            conviction=kwargs.get("conviction", 0.5),
+            preferred_fill_model=kwargs.get("preferred_fill_model"),
+            max_book_age_ms=kwargs.get("max_book_age_ms"),
+            metalabel_enabled=kwargs.get("metalabel_enabled", False),
+            execution_mode=kwargs.get("execution_mode", "shadow"),
+            warm_ohlcv=warm,
+            poll_fn=lambda **_: warm.iloc[0:0].copy(),
+            max_live_bars=0,
+            poll_interval_secs=0.0,
+            sleep_fn=lambda _s: None,
+            install_signal_handlers=False,
+        )
+
+    monkeypatch.setattr("hypervector.cli.start_paper_daemon", fake_daemon)
+    rc = main(
+        [
+            "--data-root",
+            str(data),
+            "paper-run",
+            "--path",
+            str(export),
+            "--preferred-fill-model",
+            "top_bps_v1",
+            "--max-book-age-ms",
+            "1500",
+            "--metalabel",
+        ]
+    )
+    assert rc == 0
+    assert captured["preferred_fill_model"] == "top_bps_v1"
+    assert captured["max_book_age_ms"] == 1500.0
+    assert captured["metalabel_enabled"] is True
+    assert captured["execution_mode"] == "shadow"  # CLI default
+
+
+def test_cli_paper_run_mode_flag_wires_execution_mode(tmp_path: Path, monkeypatch):
+    """paper-run --mode paper|shadow is forwarded to start_paper_daemon."""
+    export = _write_strict_export(tmp_path)
+    data = tmp_path / "data"
+    captured: dict = {}
+
+    def fake_daemon(**kwargs):
+        captured.update(kwargs)
+        warm = fixture_ohlcv(n_bars=5, drift=-1.0)
+        return start_paper_daemon(
+            export_dir=kwargs["export_dir"],
+            data_root=kwargs["data_root"],
+            execution_mode=kwargs.get("execution_mode", "shadow"),
+            warm_ohlcv=warm,
+            poll_fn=lambda **_: warm.iloc[0:0].copy(),
+            max_live_bars=0,
+            poll_interval_secs=0.0,
+            sleep_fn=lambda _s: None,
+            install_signal_handlers=False,
+        )
+
+    monkeypatch.setattr("hypervector.cli.start_paper_daemon", fake_daemon)
+    rc = main(
+        [
+            "--data-root",
+            str(data),
+            "paper-run",
+            "--path",
+            str(export),
+            "--mode",
+            "paper",
+        ]
+    )
+    assert rc == 0
+    assert captured["execution_mode"] == "paper"

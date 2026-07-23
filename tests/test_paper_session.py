@@ -92,6 +92,28 @@ def test_offline_session_writes_paper_decisions(tmp_path: Path):
     assert result.fills_count >= 0
 
 
+def test_session_passes_execution_mode_to_engine(tmp_path: Path):
+    """PaperSession execution_mode is forwarded to ExplicitFillEngine fills."""
+    export = _write_strict_export(tmp_path)
+    session = PaperSession(
+        export_dir=export,
+        data_root=tmp_path / "data",
+        conviction=0.5,
+        execution_mode="shadow",
+    )
+    assert session.execution_mode == "shadow"
+    # Engine path: force a market fill stamp via apply_market_fill
+    rec = session.engine.apply_market_fill(
+        feed_ts="t0",
+        action="enter_long",
+        side="buy",
+        qty=0.01,
+        mark_px=100.0,
+    )
+    assert rec["execution_mode"] == "shadow"
+    assert rec["submitted"] is False
+
+
 def test_offline_session_no_trade_before_two_bars(tmp_path: Path):
     """Warm-up matches actor: no intent/fill path until buffer length >= 2."""
     export = _write_strict_export(tmp_path)
@@ -205,3 +227,43 @@ def test_session_funding_refresh_disabled_offline(tmp_path: Path, monkeypatch):
         }
     )
     assert session.maybe_refresh_funding() is None
+
+
+def test_session_inject_book_offline_no_poll(tmp_path: Path):
+    """Offline: inject BookSnapshot into BookFeed; enable_book_poll stays False."""
+    from hypervector.paper.book import BookLevel, BookSnapshot
+    from hypervector.paper.fill_models import FILL_MODEL_L2_WALK_V1
+
+    export = _write_strict_export(tmp_path)
+    session = PaperSession(
+        export_dir=export,
+        data_root=tmp_path / "data",
+        preferred_fill_model=FILL_MODEL_L2_WALK_V1,
+        enable_book_poll=False,
+        enable_funding_refresh=False,
+    )
+    assert session.book_feed.latest() is None
+    snap = BookSnapshot(
+        symbol="BTC",
+        bids=(BookLevel(99.0, 10.0),),
+        asks=(BookLevel(101.0, 10.0),),
+        ts_recv_ms=1.0,
+        ts_exchange_ms=1.0,
+        source="inject",
+    )
+    session.inject_book(snap)
+    assert session.book_feed.latest() is snap
+    # Direct engine path with injected book uses L2 walk when preferred.
+    rec = session.engine.apply_market_fill(
+        feed_ts="t0",
+        action="enter_long",
+        side="buy",
+        qty=1.0,
+        mark_px=100.0,
+        book=session.book_feed.latest(),
+        now_ms=1.0,
+    )
+    assert rec["fill_model_id"] == FILL_MODEL_L2_WALK_V1
+    # l2_walk_v1 uses pure VWAP (slippage_bps unused; impact is in the walk)
+    assert abs(rec["fill_px"] - 101.0) < 1e-9
+    assert rec.get("skipped") is not True

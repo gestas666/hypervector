@@ -26,7 +26,18 @@ from hypervector.nautilus.actor import (
 from hypervector.nautilus.load_export import StrategyLoadout, load_strategy_loadout
 from hypervector.nautilus.signals import last_bar_intent
 from hypervector.nautilus.sizing import position_size_frac
+from hypervector.paper.book import BookFeed, BookSnapshot
+from hypervector.paper.conviction import (
+    ConvictionProvider,
+    ConvictionResult,
+    FixedConvictionProvider,
+    MetalabelConvictionProvider,
+)
 from hypervector.paper.costs import CostProvider
+from hypervector.paper.fill_models import (
+    DEFAULT_MAX_BOOK_AGE_MS,
+    FILL_MODEL_L2_WALK_V1,
+)
 from hypervector.paper.fills import ExplicitFillEngine
 from hypervector.paper.ledger import DECISIONS_FILENAME, append_paper_decision
 from hypervector.strategies import register_all_strategies
@@ -61,6 +72,14 @@ class PaperSession:
         run_id: str | None = None,
         funding_rate_hourly: float | None = None,
         enable_funding_refresh: bool = False,
+        preferred_fill_model: str = FILL_MODEL_L2_WALK_V1,
+        max_book_age_ms: float = DEFAULT_MAX_BOOK_AGE_MS,
+        book_feed: BookFeed | None = None,
+        enable_book_poll: bool = False,
+        metalabel_enabled: bool = False,
+        metalabeler: Any | None = None,
+        conviction_provider: ConvictionProvider | None = None,
+        execution_mode: str = "paper",
     ) -> None:
         register_all_strategies()
         export_path = Path(export_dir)
@@ -74,6 +93,17 @@ class PaperSession:
         self.conviction = float(conviction)
         self.sandbox_enabled = bool(sandbox_enabled)
         self.enable_funding_refresh = bool(enable_funding_refresh)
+        self.enable_book_poll = bool(enable_book_poll)
+        self.max_book_age_ms = float(max_book_age_ms)
+        self.preferred_fill_model = str(preferred_fill_model)
+        self.metalabel_enabled = bool(metalabel_enabled)
+        self.execution_mode = str(execution_mode)
+        self.conviction_provider = _build_conviction_provider(
+            conviction=self.conviction,
+            metalabel_enabled=self.metalabel_enabled,
+            metalabeler=metalabeler,
+            conviction_provider=conviction_provider,
+        )
 
         self.run_id = run_id or uuid.uuid4().hex[:12]
         self.export_id = self.loadout.run_id or export_path.name
@@ -81,6 +111,11 @@ class PaperSession:
             self.loadout,
             fee_tier=fee_tier,
             funding_rate_hourly=funding_rate_hourly,
+        )
+        self.book_feed = (
+            book_feed
+            if book_feed is not None
+            else BookFeed(self.loadout.symbol, max_age_ms=self.max_book_age_ms)
         )
         self.engine = ExplicitFillEngine(
             self.root,
@@ -92,6 +127,9 @@ class PaperSession:
             timeframe=self.loadout.timeframe,
             conviction=self.conviction,
             sandbox_enabled=self.sandbox_enabled,
+            preferred_fill_model=self.preferred_fill_model,
+            max_book_age_ms=self.max_book_age_ms,
+            execution_mode=self.execution_mode,
         )
         self.equity = (
             float(self.loadout.init_cash)
@@ -104,6 +142,10 @@ class PaperSession:
         self.bars_processed = 0
         self._last_ts: pd.Timestamp | None = None
         self._last_funding_refresh_mono: float = 0.0
+
+    def inject_book(self, snap: BookSnapshot) -> None:
+        """Inject a BookSnapshot for offline tests (no network)."""
+        self.book_feed.update(snap)
 
     @property
     def last_timestamp(self) -> pd.Timestamp | None:
@@ -147,6 +189,11 @@ class PaperSession:
             self._last_ts = ts
 
         self.maybe_refresh_funding()
+        if self.enable_book_poll:
+            try:
+                self.book_feed.poll()
+            except Exception as exc:  # noqa: BLE001 — never abort bar path
+                logger.warning("book poll failed for %s: %s", self.loadout.symbol, exc)
 
         fill_action: str | None = None
         if len(self.buffer_rows) >= 2:
@@ -197,21 +244,30 @@ class PaperSession:
             "bar_index": intent.bar_index,
         }
 
+        book = self.book_feed.latest()
+        # Scale-only conviction per decision (fixed by default; metalabel when enabled).
+        cv = self.conviction_provider.resolve(bars=df)
+        cv_kwargs = _conviction_fill_kwargs(cv)
+
         if action == "close":
             qty = abs(float(pos.qty))
             if qty <= 0:
                 return None
             side = "sell" if pos.qty > 0 else "buy"
-            self.engine.apply_market_fill(
+            rec = self.engine.apply_market_fill(
                 feed_ts=feed_ts,
                 action="close",
                 side=side,
                 qty=qty,
                 mark_px=mark_px,
                 intent=intent_payload,
+                book=book,
+                **cv_kwargs,
             )
-            self.fills_count += 1
-            return action
+            if not rec.get("skipped"):
+                self.fills_count += 1
+                return action
+            return None
 
         if action in ("enter_long", "enter_short"):
             qty = _entry_qty(
@@ -219,22 +275,26 @@ class PaperSession:
                 loadout=self.loadout,
                 exits=self.exits,
                 equity=self.equity,
-                conviction=self.conviction,
+                conviction=cv.conviction,
                 mark_px=mark_px,
             )
             if qty is None or qty <= 0:
                 return None
             side = "buy" if action == "enter_long" else "sell"
-            self.engine.apply_market_fill(
+            rec = self.engine.apply_market_fill(
                 feed_ts=feed_ts,
                 action=action,
                 side=side,
                 qty=qty,
                 mark_px=mark_px,
                 intent=intent_payload,
+                book=book,
+                **cv_kwargs,
             )
-            self.fills_count += 1
-            return action
+            if not rec.get("skipped"):
+                self.fills_count += 1
+                return action
+            return None
 
         return None
 
@@ -250,8 +310,15 @@ class PaperSession:
         return n
 
     def ensure_session_identity(self) -> None:
-        """Write a session_start row if no decisions exist yet."""
+        """Write a session_start row if no decisions exist yet.
+
+        Stamps the session ``execution_mode`` (shadow|paper) plus dry-run
+        honesty fields so ledger mode never silently defaults to paper when
+        the daemon is shadow.
+        """
         if not self.decisions_path.is_file():
+            from hypervector.paper.order_intent import NETWORK_MAINNET
+
             append_paper_decision(
                 self.root,
                 {
@@ -264,6 +331,10 @@ class PaperSession:
                     "action": "session_start",
                     "conviction": self.conviction,
                     "bars_processed": self.bars_processed,
+                    "execution_mode": self.execution_mode,
+                    "submitted": False,
+                    "network": NETWORK_MAINNET,
+                    "no_submit": True,
                 },
             )
 
@@ -388,6 +459,45 @@ def _cost_provider_from_loadout(
         slippage_bps=slippage_bps,
         funding_rate_hourly=funding_hourly,
     )
+
+
+def _build_conviction_provider(
+    *,
+    conviction: float,
+    metalabel_enabled: bool,
+    metalabeler: Any | None,
+    conviction_provider: ConvictionProvider | None,
+) -> ConvictionProvider:
+    """Fixed by default; metalabel only when explicitly enabled (SRS_HV4A_ORDER)."""
+    if conviction_provider is not None:
+        return conviction_provider
+    if not metalabel_enabled:
+        return FixedConvictionProvider(conviction)
+    try:
+        from hypervector.ml.features import FeatureBuilder
+        from hypervector.ml.metalabel import Metalabeler
+
+        ml = metalabeler if metalabeler is not None else Metalabeler.from_env()
+        return MetalabelConvictionProvider(
+            ml,
+            FeatureBuilder(),
+            fixed_fallback=float(conviction),
+        )
+    except Exception as exc:  # noqa: BLE001 — keep session usable on load failure
+        logger.warning(
+            "metalabel_enabled but provider setup failed; using fixed conviction: %s",
+            exc,
+        )
+        return FixedConvictionProvider(conviction)
+
+
+def _conviction_fill_kwargs(cv: ConvictionResult) -> dict[str, Any]:
+    return {
+        "conviction": cv.conviction,
+        "conviction_source": cv.source,
+        "metalabel_p": cv.metalabel_p,
+        "metalabel_bundle_id": cv.metalabel_bundle_id,
+    }
 
 
 def _entry_qty(
