@@ -302,6 +302,15 @@ fn render_screen_strategy_policy(f: &mut Frame, app: &App, area: Rect) {
     let sw_fill = "█".repeat(sw_len);
     let sw_empty = "░".repeat(16 - sw_len);
 
+    let net_weight = snap.long_weight - snap.short_weight;
+    let (net_str, net_style) = if net_weight > 0.0 {
+        (format!("+{:.2}x NET LONG", net_weight), app.theme.bull)
+    } else if net_weight < 0.0 {
+        (format!("{:.2}x NET SHORT", net_weight), app.theme.bear)
+    } else {
+        ("0.00x FLAT (Net Position 0.0 / Dual Stop Breakout)".into(), app.theme.gold)
+    };
+
     let policy_text = vec![
         Line::from(vec![
             Span::raw("Dynamic Leverage:     "),
@@ -323,6 +332,12 @@ fn render_screen_strategy_policy(f: &mut Frame, app: &App, area: Rect) {
             Span::styled(format!("[{}{}] {:.2}x Target Weight", sw_fill, sw_empty, snap.short_weight), app.theme.bear),
         ]),
         Line::from(vec![
+            Span::raw("Net Position Exposure: "),
+            Span::styled(net_str, net_style),
+            Span::raw(" │ Venue Accounting: "),
+            Span::styled("Hyperliquid Single Position Netting Active", app.theme.title),
+        ]),
+        Line::from(vec![
             Span::raw("Execution Policy:     "),
             Span::styled(
                 if snap.taker_allowed { "TAKERS PERMITTED (Impulse High Conviction)" } else { "MAKER ORDERS ONLY (Spread Guard Active)" },
@@ -338,7 +353,7 @@ fn render_screen_strategy_policy(f: &mut Frame, app: &App, area: Rect) {
     ];
 
     let policy_block = Block::default()
-        .title(" DYNAMIC LEVERAGE & POSITION SIZING ENGINE ")
+        .title(" DYNAMIC LEVERAGE & NET POSITION SIZING ENGINE (Hyperliquid 1 Position / Symbol Netting) ")
         .title_style(app.theme.title)
         .borders(Borders::ALL)
         .border_style(app.theme.border_active);
