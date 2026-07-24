@@ -67,8 +67,10 @@ def run_long_short_portfolio(
         entries_s_final = entries_s_final & (~conflict)
     else:
         # Raw ungated strategy signals by default (SRS_HV1_REGIME_NO_GATE)
+        # Enforce perpetual venue single position rule: resolve simultaneous Long/Short conflicts
+        conflict = entries_l & entries_s
         entries_l_final = entries_l
-        entries_s_final = entries_s
+        entries_s_final = entries_s & (~conflict)
 
     close = df["close"].astype(float)
 
