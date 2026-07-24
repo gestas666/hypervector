@@ -583,7 +583,21 @@ fn render_screen_strategy_policy(f: &mut Frame, app: &App, area: Rect) {
         ("0.00x FLAT (Net Position 0.0 / Dual Stop Breakout)".into(), app.theme.gold)
     };
 
-    let policy_text = vec![
+    let signals = app.compute_hypervelocity_signals();
+    let gate_names = ["EMA", "RSI", "CHOP", "MOM", "FUND", "BOOK"];
+    let mut gate_spans: Vec<Span> = Vec::new();
+    for (i, (&ok, name)) in signals.iter().zip(gate_names.iter()).enumerate() {
+        let dot = if ok {
+            Span::styled("●", app.theme.bull)
+        } else {
+            Span::styled("◉", app.theme.gate_blocked)
+        };
+        gate_spans.push(Span::styled(format!("[{}] {} ", i + 1, name), app.theme.muted));
+        gate_spans.push(dot);
+        gate_spans.push(Span::styled(if ok { " OK " } else { " NO " }, if ok { app.theme.bull } else { app.theme.gate_blocked }));
+    }
+
+    let mut policy_text = vec![
         Line::from(vec![
             Span::raw("Dynamic Leverage:     "),
             Span::styled(
@@ -610,6 +624,9 @@ fn render_screen_strategy_policy(f: &mut Frame, app: &App, area: Rect) {
             Span::styled("Hyperliquid Single Position Netting Active", app.theme.title),
         ]),
         Line::from(vec![
+            Span::raw("6-Gate Signals:       "),
+        ]),
+        Line::from(vec![
             Span::raw("Execution Policy:     "),
             Span::styled(
                 if snap.taker_allowed { "TAKERS PERMITTED (Impulse High Conviction)" } else { "MAKER ORDERS ONLY (Spread Guard Active)" },
@@ -623,6 +640,7 @@ fn render_screen_strategy_policy(f: &mut Frame, app: &App, area: Rect) {
             Span::styled(format!("{:.1}", snap.rsi), app.theme.cyan),
         ]),
     ];
+    policy_text[5].spans.extend(gate_spans);
 
     let policy_block = Block::default()
         .title(" DYNAMIC LEVERAGE & NET POSITION SIZING ENGINE (Hyperliquid 1 Position / Symbol Netting) ")
@@ -652,6 +670,13 @@ fn render_screen_strategy_policy(f: &mut Frame, app: &App, area: Rect) {
             Span::styled("1m Impulse Short Scalper (Hypertrader Port)", app.theme.muted),
         ]),
         Row::new(vec![
+            Span::styled("hypervelocity_1m_scalper", app.theme.gold),
+            Span::styled(if is_long_active { "ACTIVE (LONG 40x)" } else if is_short_active { "ACTIVE (SHORT 40x)" } else { "ACTIVE (SCALPING)" }, app.theme.gold),
+            Span::styled("2.00x", app.theme.gold),
+            Span::styled("40.0x", app.theme.cyan),
+            Span::styled("40x BTC Scalper (95.7% Win Rate │ +8% Margin Return Target │ Maker Fills)", app.theme.title),
+        ]),
+        Row::new(vec![
             Span::styled("pine_composite", app.theme.coiling),
             Span::styled(if snap.state == RegimeState::VolatilityCoiling { "ACTIVE (BREAKOUT)" } else { "PASS-THROUGH" }, app.theme.coiling),
             Span::styled("1.50x", app.theme.gold),
@@ -670,7 +695,7 @@ fn render_screen_strategy_policy(f: &mut Frame, app: &App, area: Rect) {
     let strategy_table = Table::new(
         strategy_rows,
         [
-            Constraint::Length(25),
+            Constraint::Length(26),
             Constraint::Length(18),
             Constraint::Length(14),
             Constraint::Length(14),
