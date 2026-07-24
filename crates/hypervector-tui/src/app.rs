@@ -17,6 +17,9 @@ pub struct App {
     pub tick_count: u64,
     pub should_quit: bool,
     pub show_help_overlay: bool,
+    pub selected_event_index: usize,
+    pub show_event_detail_modal: bool,
+    pub theme_mode: usize,
 }
 
 impl App {
@@ -35,9 +38,30 @@ impl App {
             tick_count: 0,
             should_quit: false,
             show_help_overlay: false,
+            selected_event_index: 0,
+            show_event_detail_modal: false,
+            theme_mode: 0,
         };
         app.rebuild_events();
         app
+    }
+
+    pub fn select_next_event(&mut self) {
+        if !self.events.is_empty() && self.selected_event_index + 1 < self.events.len() {
+            self.selected_event_index += 1;
+        }
+    }
+
+    pub fn select_prev_event(&mut self) {
+        if self.selected_event_index > 0 {
+            self.selected_event_index -= 1;
+        }
+    }
+
+    pub fn toggle_event_modal(&mut self) {
+        if !self.events.is_empty() {
+            self.show_event_detail_modal = !self.show_event_detail_modal;
+        }
     }
 
     pub fn toggle_help_overlay(&mut self) {
@@ -120,11 +144,11 @@ impl App {
             let curr = &self.snapshots[i];
             if prev.state != curr.state {
                 let reason = match curr.state {
-                    RegimeState::BullMomentum => "15m MTF Bullish + OPI > +0.20",
-                    RegimeState::BearMomentum => "15m MTF Bearish + OPI < -0.20",
+                    RegimeState::BullMomentum => "15m/5m MTF Bullish + OPI >= 0.0",
+                    RegimeState::BearMomentum => "15m/5m MTF Bearish + OPI <= 0.0",
                     RegimeState::VolatilityCoiling => "BBWP Percentile < 20.0 (Coiling)",
-                    RegimeState::FundingCarry => "Funding Rate Z-Score |Z| > 1.8",
-                    RegimeState::RangeChop => "Spread > 4.0bps / Choppiness > 55",
+                    RegimeState::FundingCarry => "Funding Rate Z-Score |Z| >= 1.8",
+                    RegimeState::RangeChop => "Spread > 6.0bps / Choppiness > 55",
                 };
                 self.events.push(RegimeEvent {
                     timestamp_str: curr.timestamp_str.clone(),
