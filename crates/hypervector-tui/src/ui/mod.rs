@@ -601,15 +601,56 @@ fn render_bottom_performance_section(f: &mut Frame, app: &App, area: Rect) {
     let perf_chunks = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([
-            Constraint::Percentage(33), // All-Time Performance Summary Box
-            Constraint::Percentage(33), // This Run Performance Box
-            Constraint::Percentage(34), // Return Distribution Sparklines
+            Constraint::Percentage(22), // All-Time Performance Summary Box (Narrowed)
+            Constraint::Percentage(22), // This Run Performance Box (Narrowed)
+            Constraint::Percentage(22), // Return Distribution Sparklines (Narrowed)
+            Constraint::Percentage(34), // Dedicated Screen 3 Account Portfolio & Margin Telemetry Box
         ])
         .split(area);
 
     hypervelocity::render_all_time_stats(f, app, perf_chunks[0]);
     hypervelocity::render_run_stats(f, app, perf_chunks[1]);
     hypervelocity::render_return_distribution(f, app, perf_chunks[2]);
+    render_screen3_portfolio_telemetry_box(f, app, perf_chunks[3]);
+}
+
+fn render_screen3_portfolio_telemetry_box(f: &mut Frame, app: &App, area: Rect) {
+    let stats = &app.paper_stats;
+    let (pnl_style, pnl_sign) = if stats.realized_pnl >= 0.0 { (app.theme.bull, "+") } else { (app.theme.bear, "") };
+    let eq_pct = (stats.current_equity - stats.initial_capital) / stats.initial_capital * 100.0;
+
+    let text = vec![
+        Line::from(vec![
+            Span::raw("INITIAL CAP: "),
+            Span::styled(format!("${:.2}", stats.initial_capital), app.theme.title),
+            Span::raw("  EQUITY: "),
+            Span::styled(format!("${:.2} ({}{:.2}%)", stats.current_equity, pnl_sign, eq_pct), pnl_style),
+        ]),
+        Line::from(vec![
+            Span::raw("NET PNL:     "),
+            Span::styled(format!("{}{:.2} USD", pnl_sign, stats.realized_pnl), pnl_style),
+            Span::raw("  MARGIN: "),
+            Span::styled(format!("${:.2} (25% Cap)", stats.current_equity * 0.25), app.theme.gold),
+        ]),
+        Line::from(vec![
+            Span::raw("EXECUTION:   "),
+            Span::styled("LIVE PAPER SHADOW (0.06% Taker Drag)", app.theme.cyan),
+        ]),
+        Line::from(vec![
+            Span::raw("TOTAL TRADES: "),
+            Span::styled(format!("{}", stats.total_trades), app.theme.gold),
+            Span::raw("  WIN RATE: "),
+            Span::styled(format!("{:.1}% ({}W/{}L)", stats.win_rate_pct, stats.wins, stats.losses), if stats.win_rate_pct >= 50.0 { app.theme.bull } else { app.theme.bear }),
+        ]),
+    ];
+
+    let block = Block::default()
+        .title(" SHADOW PORTFOLIO TELEMETRY ")
+        .title_style(app.theme.title)
+        .borders(Borders::ALL)
+        .border_style(app.theme.border_active);
+
+    f.render_widget(Paragraph::new(text).block(block), area);
 }
 
 fn render_bottom_journal_and_trend_log(f: &mut Frame, app: &App, area: Rect) {
