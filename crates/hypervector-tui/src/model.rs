@@ -77,3 +77,34 @@ pub struct RegimeEvent {
     pub trigger_reason: String,
     pub price: f64,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PaperTradeRecord {
+    pub trade_id: String,
+    pub timestamp_str: String,
+    pub symbol: String,
+    pub direction: String, // "LONG" or "SHORT"
+    pub entry_price: f64,
+    pub exit_price: f64,
+    pub size_btc: f64,
+    pub leverage: f64,
+    pub pnl_usd: f64,
+    pub pnl_pct: f64,
+    pub exit_reason: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LivePaperStats {
+    pub initial_capital: f64,
+    pub current_equity: f64,
+    pub realized_pnl: f64,
+    pub unrealized_pnl: f64,
+    pub total_trades: usize,
+    pub wins: usize,
+    pub losses: usize,
+    pub win_rate_pct: f64,
+    pub profit_factor: f64,
+    pub max_drawdown_pct: f64,
+    pub avg_win_usd: f64,
+    pub avg_loss_usd: f64,
+}

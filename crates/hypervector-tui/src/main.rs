@@ -80,6 +80,7 @@ fn run_app<B: ratatui::backend::Backend>(
                             KeyCode::Tab => app.toggle_tab(),
                             KeyCode::Char('1') => app.active_tab = 0,
                             KeyCode::Char('2') => app.active_tab = 1,
+                            KeyCode::Char('3') => app.active_tab = 2,
                             KeyCode::Char('?') | KeyCode::Char('h') => app.toggle_help_overlay(),
                             KeyCode::Enter => app.toggle_event_modal(),
                             KeyCode::Char(' ') => app.toggle_play_pause(),

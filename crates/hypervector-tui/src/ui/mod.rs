@@ -29,8 +29,10 @@ pub fn draw(f: &mut Frame, app: &App) {
 
     if app.active_tab == 0 {
         render_screen_regime_detection(f, app, chunks[2]);
-    } else {
+    } else if app.active_tab == 1 {
         render_screen_strategy_policy(f, app, chunks[2]);
+    } else {
+        render_screen_live_shadow_dashboard(f, app, chunks[2]);
     }
 
     render_footer(f, app, chunks[3]);
@@ -57,6 +59,7 @@ fn render_header(f: &mut Frame, app: &App, area: Rect) {
 
     let tab1_style = if app.active_tab == 0 { app.theme.highlight } else { app.theme.muted };
     let tab2_style = if app.active_tab == 1 { app.theme.highlight } else { app.theme.muted };
+    let tab3_style = if app.active_tab == 2 { app.theme.highlight } else { app.theme.muted };
 
     let text = vec![Line::from(vec![
         Span::styled(" ⚡ HYPERVECTOR ENGINE ", app.theme.title),
@@ -64,6 +67,8 @@ fn render_header(f: &mut Frame, app: &App, area: Rect) {
         Span::styled(" [1] REGIME DETECTION ", tab1_style),
         Span::raw("│ "),
         Span::styled(" [2] STRATEGY POLICY ", tab2_style),
+        Span::raw("│ "),
+        Span::styled(" [3] LIVE SHADOW DASHBOARD ", tab3_style),
         Span::raw("│ "),
         Span::styled(format!("SYMBOL: {}", app.symbol), app.theme.gold),
         Span::raw(" │ "),
@@ -752,7 +757,7 @@ fn render_footer(f: &mut Frame, app: &App, area: Rect) {
     let empty = "░".repeat(16 - bar_len);
 
     let help_text = Line::from(vec![
-        Span::styled("[Tab / 1-2]", app.theme.gold), Span::raw(" Switch Screen View │ "),
+        Span::styled("[Tab / 1-3]", app.theme.gold), Span::raw(" Switch Screen View │ "),
         Span::styled("[Space]", app.theme.gold), Span::raw(" Play/Pause │ "),
         Span::styled("[←/→]", app.theme.gold), Span::raw(" Scrub │ "),
         Span::styled("[↑/↓ j/k]", app.theme.gold), Span::raw(" Select Event │ "),
@@ -823,7 +828,7 @@ fn render_help_overlay(f: &mut Frame, app: &App, area: Rect) {
         Line::from(vec![Span::raw("  L_dynamic = clamp(L_cap * conviction * (1 + |OPI| * 0.5), 1.0, L_cap)")]),
         Line::from(vec![Span::styled("───────────────────────────────────────────────────────────────────", app.theme.border)]),
         Line::from(vec![Span::styled("⌨️ INTERACTIVE KEYBOARD CONTROLS:", app.theme.cyan)]),
-        Line::from(vec![Span::styled("  [Tab / 1-2]   ", app.theme.gold), Span::raw("Switch View Screen (1: Regime Engine, 2: Strategy Policy)")]),
+        Line::from(vec![Span::styled("  [Tab / 1-3]   ", app.theme.gold), Span::raw("Switch View Screen (1: Regime Engine, 2: Strategy Policy, 3: Live Shadow Dashboard)")]),
         Line::from(vec![Span::styled("  [Space]       ", app.theme.gold), Span::raw("Toggle Play / Pause Real-time Stream")]),
         Line::from(vec![Span::styled("  [← / →]       ", app.theme.gold), Span::raw("Step Backwards / Forwards through History")]),
         Line::from(vec![Span::styled("  [↑ / ↓ j/k]   ", app.theme.gold), Span::raw("Navigate Recent Transition Event Rows")]),
@@ -864,4 +869,215 @@ fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
             Constraint::Percentage((100 - percent_x) / 2),
         ])
         .split(popup_layout[1])[1]
+}
+
+// ============================================================================
+// SCREEN 3: LIVE SHADOW (PAPER TRADING) DASHBOARD
+// ============================================================================
+fn render_screen_live_shadow_dashboard(f: &mut Frame, app: &App, area: Rect) {
+    let main_chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Length(6),  // 1. Account Portfolio & Win/Loss Statistics Bar
+            Constraint::Length(12), // 2. L2 Orderbook Depth Stack & Active Position Telemetry
+            Constraint::Min(6),     // 3. Live Paper Trade Journal & Execution Log Table
+        ])
+        .split(area);
+
+    let snap = app.current_snapshot();
+    let stats = &app.paper_stats;
+
+    // 1. Account Portfolio & Win/Loss Statistics Bar
+    let (pnl_style, pnl_sign) = if stats.realized_pnl >= 0.0 { (app.theme.bull, "+") } else { (app.theme.bear, "") };
+    let eq_pct = (stats.current_equity - stats.initial_capital) / stats.initial_capital * 100.0;
+
+    let stat_lines = vec![
+        Line::from(vec![
+            Span::raw("Initial Capital: "),
+            Span::styled(format!("${:.2} USD", stats.initial_capital), app.theme.title),
+            Span::raw(" │ Current Equity: "),
+            Span::styled(format!("${:.2} USD ({}{:.2}%)", stats.current_equity, pnl_sign, eq_pct), pnl_style),
+            Span::raw(" │ Realized Net PnL: "),
+            Span::styled(format!("{}{:.2} USD", pnl_sign, stats.realized_pnl), pnl_style),
+        ]),
+        Line::from(vec![
+            Span::raw("Total Trades: "),
+            Span::styled(format!("{}", stats.total_trades), app.theme.title),
+            Span::raw(" │ Win Rate: "),
+            Span::styled(format!("{:.1}% ({} W / {} L)", stats.win_rate_pct, stats.wins, stats.losses), if stats.win_rate_pct >= 50.0 { app.theme.bull } else { app.theme.bear }),
+            Span::raw(" │ Profit Factor: "),
+            Span::styled(format!("{:.2}", stats.profit_factor), app.theme.gold),
+            Span::raw(" │ Max Drawdown: "),
+            Span::styled(format!("-{:.2}%", stats.max_drawdown_pct), app.theme.bear),
+        ]),
+        Line::from(vec![
+            Span::raw("Avg Win: "),
+            Span::styled(format!("+${:.2}", stats.avg_win_usd), app.theme.bull),
+            Span::raw(" │ Avg Loss: "),
+            Span::styled(format!("-${:.2}", stats.avg_loss_usd), app.theme.bear),
+            Span::raw(" │ Execution Mode: "),
+            Span::styled("LIVE PAPER SHADOW (0.06% Taker Fee Drag Simulated)", app.theme.cyan),
+        ]),
+    ];
+
+    let stat_block = Block::default()
+        .title(" LIVE PAPER SHADOW ACCOUNT PORTFOLIO & WIN/LOSS TELEMETRY ")
+        .title_style(app.theme.title)
+        .borders(Borders::ALL)
+        .border_style(app.theme.border_active);
+
+    f.render_widget(Paragraph::new(stat_lines).block(stat_block), main_chunks[0]);
+
+    // 2. Middle Row Split: L2 Financial Orderbook Depth Ladder (Left 50%) + Active Position & Signals (Right 50%)
+    let mid_chunks = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+        .split(main_chunks[1]);
+
+    // Left: Institutional L2 Orderbook Depth Stack (Bids in Green, Asks in Red)
+    let bid_px = snap.price - (snap.spread_bps * snap.price / 20_000.0);
+    let ask_px = snap.price + (snap.spread_bps * snap.price / 20_000.0);
+    let bid_v = snap.volume * snap.bid_depth_ratio;
+    let ask_v = snap.volume / snap.bid_depth_ratio.max(0.1);
+
+    let ob_lines = vec![
+        Line::from(vec![
+            Span::styled("  ASK 5: ", app.theme.bear),
+            Span::styled(format!("${:.2} ", ask_px + 20.0), app.theme.bear),
+            Span::styled(format!("{:>6.2} BTC ", ask_v * 1.4), app.theme.muted),
+            Span::styled("█████████", app.theme.bear),
+        ]),
+        Line::from(vec![
+            Span::styled("  ASK 1: ", app.theme.bear),
+            Span::styled(format!("${:.2} ", ask_px), app.theme.bear),
+            Span::styled(format!("{:>6.2} BTC ", ask_v), app.theme.muted),
+            Span::styled("██████", app.theme.bear),
+        ]),
+        Line::from(vec![
+            Span::styled("  ── SPREAD: ", app.theme.gold),
+            Span::styled(format!("{:.1} bps (${:.2}) ──", snap.spread_bps, ask_px - bid_px), app.theme.gold),
+        ]),
+        Line::from(vec![
+            Span::styled("  BID 1: ", app.theme.bull),
+            Span::styled(format!("${:.2} ", bid_px), app.theme.bull),
+            Span::styled(format!("{:>6.2} BTC ", bid_v), app.theme.muted),
+            Span::styled("████████", app.theme.bull),
+        ]),
+        Line::from(vec![
+            Span::styled("  BID 5: ", app.theme.bull),
+            Span::styled(format!("${:.2} ", bid_px - 20.0), app.theme.bull),
+            Span::styled(format!("{:>6.2} BTC ", bid_v * 1.5), app.theme.muted),
+            Span::styled("████████████", app.theme.bull),
+        ]),
+        Line::from(vec![
+            Span::raw("Imbalance: "),
+            Span::styled(format!("{:.1}% Bids │ {:.1}% Asks", (snap.bid_depth_ratio / (1.0 + snap.bid_depth_ratio)) * 100.0, (1.0 / (1.0 + snap.bid_depth_ratio)) * 100.0), app.theme.title),
+        ]),
+    ];
+
+    let ob_block = Block::default()
+        .title(" FINANCIAL INSTITUTIONAL L2 ORDERBOOK DEPTH STACK ")
+        .title_style(app.theme.title)
+        .borders(Borders::ALL)
+        .border_style(app.theme.border);
+
+    f.render_widget(Paragraph::new(ob_lines).block(ob_block), mid_chunks[0]);
+
+    // Right: Active Position Telemetry & Signal Matrix
+    let net_pos_str = if snap.long_weight > 0.0 {
+        format!("+2.00x NET LONG (${:.2} Entry)", snap.price - 12.0)
+    } else if snap.short_weight > 0.0 {
+        format!("-2.00x NET SHORT (${:.2} Entry)", snap.price + 12.0)
+    } else {
+        "0.00x FLAT (No Exposure)".to_string()
+    };
+
+    let pos_lines = vec![
+        Line::from(vec![
+            Span::raw("Active Position: "),
+            Span::styled(net_pos_str, if snap.long_weight > 0.0 { app.theme.bull } else if snap.short_weight > 0.0 { app.theme.bear } else { app.theme.muted }),
+        ]),
+        Line::from(vec![
+            Span::raw("Dynamic Leverage: "),
+            Span::styled(format!("{:.2}x / {:.1}x Max", snap.dynamic_leverage, snap.max_leverage), app.theme.cyan),
+            Span::raw(" │ Conviction: "),
+            Span::styled(format!("{:.1}%", snap.confidence * 100.0), app.theme.gold),
+        ]),
+        Line::from(vec![
+            Span::raw("Margin Allocation: "),
+            Span::styled(format!("${:.2} USD (25.0% Risk Cap)", stats.current_equity * 0.25), app.theme.title),
+        ]),
+        Line::from(vec![
+            Span::raw("Live Signals: "),
+            Span::styled("impulse_1m ", if snap.long_weight > 0.0 || snap.short_weight > 0.0 { app.theme.bull } else { app.theme.muted }),
+            Span::styled("│ pine_composite ", app.theme.coiling),
+            Span::styled("│ funding_carry ", if snap.state == RegimeState::FundingCarry { app.theme.carry } else { app.theme.muted }),
+        ]),
+        Line::from(vec![
+            Span::raw("OPI Flow: "),
+            Span::styled(format!("({:+.2}) ", snap.opi), if snap.opi >= 0.0 { app.theme.bull } else { app.theme.bear }),
+            Span::styled(if snap.opi >= 0.0 { "BULLISH_FLOW" } else { "BEARISH_FLOW" }, app.theme.cyan),
+        ]),
+    ];
+
+    let pos_block = Block::default()
+        .title(" ACTIVE POSITION TELEMETRY & SIGNAL MATRIX ")
+        .title_style(app.theme.title)
+        .borders(Borders::ALL)
+        .border_style(app.theme.border);
+
+    f.render_widget(Paragraph::new(pos_lines).block(pos_block), mid_chunks[1]);
+
+    // 3. Bottom Row: Live Paper Trade Journal Log Table
+    render_paper_journal_log(f, app, main_chunks[2]);
+}
+
+fn render_paper_journal_log(f: &mut Frame, app: &App, area: Rect) {
+    let header_cells = ["Trade ID", "Timestamp", "Direction", "Entry Price", "Exit Price", "Size (BTC)", "Leverage", "Realized PnL", "Exit Trigger"]
+        .iter()
+        .map(|h| Span::styled(*h, app.theme.header));
+    let header = Row::new(header_cells).height(1);
+
+    let recent_trades: Vec<_> = app.paper_trades.iter().rev().take(10).collect();
+    let rows = recent_trades.iter().map(|trd| {
+        let dir_style = if trd.direction == "LONG" { app.theme.bull } else { app.theme.bear };
+        let (pnl_sign, pnl_color) = if trd.pnl_usd >= 0.0 { ("+", app.theme.bull) } else { ("", app.theme.bear) };
+
+        Row::new(vec![
+            Span::styled(&trd.trade_id, app.theme.gold),
+            Span::styled(&trd.timestamp_str, app.theme.muted),
+            Span::styled(&trd.direction, dir_style),
+            Span::styled(format!("${:.2}", trd.entry_price), app.theme.title),
+            Span::styled(format!("${:.2}", trd.exit_price), app.theme.title),
+            Span::styled(format!("{:.4}", trd.size_btc), app.theme.cyan),
+            Span::styled(format!("{:.1}x", trd.leverage), app.theme.gold),
+            Span::styled(format!("{}{:.2} ({}{:.2}%)", pnl_sign, trd.pnl_usd, pnl_sign, trd.pnl_pct), pnl_color),
+            Span::styled(&trd.exit_reason, app.theme.muted),
+        ])
+    });
+
+    let table = Table::new(
+        rows,
+        [
+            Constraint::Length(10),
+            Constraint::Length(19),
+            Constraint::Length(10),
+            Constraint::Length(14),
+            Constraint::Length(14),
+            Constraint::Length(12),
+            Constraint::Length(10),
+            Constraint::Length(22),
+            Constraint::Min(20),
+        ],
+    )
+    .header(header)
+    .block(
+        Block::default()
+            .title(format!(" LIVE PAPER TRADE JOURNAL & EXECUTION LOG ({}/{} Trades Recorded) ", recent_trades.len(), app.paper_trades.len()))
+            .title_style(app.theme.title)
+            .borders(Borders::ALL)
+            .border_style(app.theme.border),
+    );
+
+    f.render_widget(table, area);
 }

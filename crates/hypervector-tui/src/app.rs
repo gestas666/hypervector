@@ -1,6 +1,6 @@
 //! Application state and event loop controller for Quant TA Regime Cockpit.
 
-use crate::model::{RegimeEvent, RegimeSnapshot, RegimeState};
+use crate::model::{LivePaperStats, PaperTradeRecord, RegimeEvent, RegimeSnapshot, RegimeState};
 use crate::theme::CockpitTheme;
 
 pub struct App {
@@ -13,6 +13,8 @@ pub struct App {
     pub is_synthetic: bool,
     pub playback_speed: f64,
     pub events: Vec<RegimeEvent>,
+    pub paper_trades: Vec<PaperTradeRecord>,
+    pub paper_stats: LivePaperStats,
     pub theme: CockpitTheme,
     pub tick_count: u64,
     pub should_quit: bool,
@@ -20,7 +22,7 @@ pub struct App {
     pub selected_event_index: usize,
     pub show_event_detail_modal: bool,
     pub theme_mode: usize,
-    pub active_tab: usize, // 0 = Regime Engine, 1 = Strategy Policy
+    pub active_tab: usize, // 0 = Regime Engine, 1 = Strategy Policy, 2 = Live Shadow Dashboard
 }
 
 impl App {
@@ -35,6 +37,21 @@ impl App {
             is_synthetic,
             playback_speed: 1.0,
             events: Vec::new(),
+            paper_trades: Vec::new(),
+            paper_stats: LivePaperStats {
+                initial_capital: 10000.0,
+                current_equity: 10000.0,
+                realized_pnl: 0.0,
+                unrealized_pnl: 0.0,
+                total_trades: 0,
+                wins: 0,
+                losses: 0,
+                win_rate_pct: 0.0,
+                profit_factor: 0.0,
+                max_drawdown_pct: 0.0,
+                avg_win_usd: 0.0,
+                avg_loss_usd: 0.0,
+            },
             theme: CockpitTheme::default(),
             tick_count: 0,
             should_quit: false,
@@ -45,11 +62,12 @@ impl App {
             active_tab: 0,
         };
         app.rebuild_events();
+        app.rebuild_paper_trades();
         app
     }
 
     pub fn toggle_tab(&mut self) {
-        self.active_tab = (self.active_tab + 1) % 2;
+        self.active_tab = (self.active_tab + 1) % 3;
     }
 
     pub fn select_next_event(&mut self) {
@@ -170,5 +188,97 @@ impl App {
                 });
             }
         }
+    }
+
+    pub fn rebuild_paper_trades(&mut self) {
+        self.paper_trades.clear();
+        let initial_cap = 10000.0;
+        let mut equity = initial_cap;
+        let mut realized_pnl = 0.0;
+        let mut wins = 0;
+        let mut losses = 0;
+        let mut gross_win = 0.0;
+        let mut gross_loss = 0.0;
+        let mut max_eq = initial_cap;
+        let mut max_dd_pct = 0.0;
+
+        for (idx, ev) in self.events.iter().enumerate() {
+            let direction = match ev.to_state {
+                RegimeState::BullMomentum => "LONG",
+                RegimeState::BearMomentum => "SHORT",
+                _ => continue,
+            };
+
+            let entry_p = ev.price;
+            let exit_p = if idx + 1 < self.events.len() {
+                self.events[idx + 1].price
+            } else {
+                self.current_snapshot().price
+            };
+
+            let lev = 2.0;
+            let pos_val = equity * 0.25 * lev;
+            let size_btc = pos_val / entry_p;
+
+            let pnl_usd = if direction == "LONG" {
+                (exit_p - entry_p) * size_btc
+            } else {
+                (entry_p - exit_p) * size_btc
+            };
+
+            let pnl_pct = (pnl_usd / pos_val) * 100.0;
+
+            realized_pnl += pnl_usd;
+            equity += pnl_usd;
+
+            if equity > max_eq {
+                max_eq = equity;
+            }
+            let dd = (max_eq - equity) / max_eq * 100.0;
+            if dd > max_dd_pct {
+                max_dd_pct = dd;
+            }
+
+            if pnl_usd >= 0.0 {
+                wins += 1;
+                gross_win += pnl_usd;
+            } else {
+                losses += 1;
+                gross_loss += pnl_usd.abs();
+            }
+
+            self.paper_trades.push(PaperTradeRecord {
+                trade_id: format!("TRD-{:04}", idx + 1),
+                timestamp_str: ev.timestamp_str.clone(),
+                symbol: self.symbol.clone(),
+                direction: direction.to_string(),
+                entry_price: entry_p,
+                exit_price: exit_p,
+                size_btc,
+                leverage: lev,
+                pnl_usd,
+                pnl_pct,
+                exit_reason: if idx + 1 < self.events.len() { self.events[idx + 1].to_state.primary_label().to_string() } else { "OPEN_POSITION".to_string() },
+            });
+        }
+
+        let total = wins + losses;
+        let win_rate = if total > 0 { (wins as f64 / total as f64) * 100.0 } else { 0.0 };
+        let pf = if gross_loss > 0.0 { gross_win / gross_loss } else { gross_win };
+
+        self.paper_stats = LivePaperStats {
+            initial_capital: initial_cap,
+            current_equity: equity,
+            realized_pnl,
+            unrealized_pnl: 0.0,
+            total_trades: total,
+            wins,
+            losses,
+            win_rate_pct: win_rate,
+            profit_factor: pf,
+            max_drawdown_pct: max_dd_pct,
+            avg_win_usd: if wins > 0 { gross_win / wins as f64 } else { 0.0 },
+            avg_loss_usd: if losses > 0 { gross_loss / losses as f64 } else { 0.0 },
+        };
     }
 }

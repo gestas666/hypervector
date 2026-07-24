@@ -1,6 +1,7 @@
-# OS
+# OS / User Data
 .DS_Store
 Thumbs.db
+docs/external/
 
 # Rust
 /target/
