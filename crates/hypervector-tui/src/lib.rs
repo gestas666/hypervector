@@ -1,3 +1,4 @@
+pub mod animation;
 pub mod app;
 pub mod cli_args;
 pub mod data_loader;

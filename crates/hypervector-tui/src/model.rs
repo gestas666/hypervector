@@ -160,6 +160,68 @@ impl Default for EngineConfig {
     }
 }
 
+// ---------------------------------------------------------------------------
+// Hypervelocity strategy trade record
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Clone)]
+pub struct HypervelocityTrade {
+    pub index: u32,
+    pub tick_closed: u64,
+    pub direction: String,
+    pub pnl_usd: f64,
+    pub margin_pnl_pct: f64,
+    pub exit_reason: String,
+    pub fill_type: String,
+}
+
+// ---------------------------------------------------------------------------
+// Live orderbook state for the hypervelocity depth ladder
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Clone)]
+pub struct BookLevel {
+    pub price: f64,
+    pub size: f64,
+}
+
+#[derive(Debug, Clone)]
+pub struct HypervelocityBookState {
+    pub spread_bps: f64,
+    pub opi: f64,
+    pub depth_ratio: f64,
+    pub age_ms: f64,
+    pub microprice_delta_bps: f64,
+    pub touch_bid_sz: f64,
+    pub touch_ask_sz: f64,
+    pub bid_levels: Vec<BookLevel>,
+    pub ask_levels: Vec<BookLevel>,
+    pub bid_last_change: Vec<u64>,
+    pub ask_last_change: Vec<u64>,
+    pub gate_ok: bool,
+    pub gate_reason: String,
+}
+
+impl Default for HypervelocityBookState {
+    fn default() -> Self {
+        Self {
+            spread_bps: 1.8,
+            opi: 0.0,
+            depth_ratio: 1.0,
+            age_ms: 0.0,
+            microprice_delta_bps: 0.0,
+            touch_bid_sz: 0.0,
+            touch_ask_sz: 0.0,
+            bid_levels: vec![],
+            ask_levels: vec![],
+            bid_last_change: vec![],
+            ask_last_change: vec![],
+            gate_ok: true,
+            gate_reason: String::new(),
+        }
+    }
+}
+
 pub fn get_coin_max_leverage(symbol: &str) -> f64 {
     match symbol.to_uppercase().as_str() {
         "BTC" => 40.0,

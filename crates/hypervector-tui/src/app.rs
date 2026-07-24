@@ -1,6 +1,6 @@
 //! Application state and event loop controller for Quant TA Regime Cockpit.
 
-use crate::model::{get_coin_max_leverage, EngineConfig, LeverageMode, LivePaperStats, PaperTradeRecord, RegimeEvent, RegimeSnapshot, RegimeState, RiskSizingMode, TpSlStrategy};
+use crate::model::{get_coin_max_leverage, EngineConfig, HypervelocityBookState, HypervelocityTrade, LeverageMode, LivePaperStats, PaperTradeRecord, RegimeEvent, RegimeSnapshot, RegimeState, RiskSizingMode, TpSlStrategy};
 use crate::theme::CockpitTheme;
 
 pub struct App {
@@ -23,7 +23,16 @@ pub struct App {
     pub selected_event_index: usize,
     pub show_event_detail_modal: bool,
     pub theme_mode: usize,
-    pub active_tab: usize, // 0 = Regime Engine, 1 = Strategy Policy, 2 = Live Shadow Dashboard, 3 = Engine & Risk Config
+    pub active_tab: usize, // 0 = Regime Engine, 1 = Strategy Policy, 2 = Live Shadow Dashboard, 3 = Hypervelocity, 4 = Engine & Risk Config
+    // Hypervelocity state
+    pub previous_margin_pct: f64,
+    pub hv_trades: Vec<HypervelocityTrade>,
+    pub position_run_direction: String,
+    pub run_position_index: u32,
+    pub run_wins: u32,
+    pub run_pnl: f64,
+    pub equity_history: Vec<f64>,
+    pub book_state: HypervelocityBookState,
 }
 
 impl App {
@@ -62,6 +71,14 @@ impl App {
             show_event_detail_modal: false,
             theme_mode: 0,
             active_tab: 0,
+            previous_margin_pct: 0.0,
+            hv_trades: Vec::new(),
+            position_run_direction: "FLAT".to_string(),
+            run_position_index: 0,
+            run_wins: 0,
+            run_pnl: 0.0,
+            equity_history: Vec::new(),
+            book_state: HypervelocityBookState::default(),
         };
         app.rebuild_events();
         app.rebuild_paper_trades();
