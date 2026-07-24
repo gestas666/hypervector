@@ -12,6 +12,8 @@ data/
   cache/                 # Parquet OHLCV (+ future book features under cache/book/)
   runs/                  # SQLite research trials (hypervector.db)
   exports/               # Phase 1 → Phase 2 bundles <id>/meta|params|metrics
+  models/
+    metalabel/           # LightGBM bundle (lgbm + optional calibrator + metadata)
   logs/
     research/            # CLI / sweep logs
     nautilus/            # Phase 2/3 engine logs
@@ -23,6 +25,16 @@ data/
     # optional: paper.db
   live/                  # Live only — never share files with paper/
 ```
+
+### Metalabel bundle (optional conviction scale)
+
+- **Default off** — sizing stays fixed until `paper-run --metalabel`.
+- **Ready path:** `data/models/metalabel/` with `metalabel_lgbm.txt`, optional
+  `metalabel_calibrator.joblib`, and `metalabel_metadata.json` (feature_names).
+- **Override:** `HYPERVECTOR_METALABEL_ROOT` (or legacy `HYPERVECTOR_IMPULSE_BTC_ROOT`).
+- **Probe:** `status` / `paper-check` report `metalabel.ready` / `metalabel_ready`
+  without enabling the flag.
+- Weights are gitignored under `/data/` — install locally, do not commit.
 
 ## Rules
 

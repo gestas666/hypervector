@@ -29,18 +29,23 @@ ENV_ROOT = "HYPERVECTOR_METALABEL_ROOT"
 # Legacy alias kept so existing shells keep working until callers migrate.
 ENV_ROOT_LEGACY = "HYPERVECTOR_IMPULSE_BTC_ROOT"
 
-# Discovery defaults only — not identity. Prefer explicit root / env in production.
+# Project-local layout under --data-root (I2): data/models/metalabel/
+REL_BUNDLE_UNDER_DATA = Path("models") / "metalabel"
+
+# Discovery defaults only — not identity. Prefer env / data-root in production.
+# Order after env + data_root: cwd data layout, then known sibling checkouts.
 _DEFAULT_DISCOVERY: tuple[Path, ...] = (
-    Path(
-        "/Users/gestas/dev/hyper-pi/services/ml-service/"
-        "external-strategies/impulse_1m_btc"
-    ),
+    Path("data") / "models" / "metalabel",
     Path(
         "/Users/gestas/Prototypes/hypertrader/backend/app/backtest/"
         "impulse_metalabel/models"
     ),
     Path(
         "/Users/gestas/dev/hyper-pi/services/ml-service/models/impulse-mr"
+    ),
+    Path(
+        "/Users/gestas/dev/hyper-pi/services/ml-service/"
+        "external-strategies/impulse_1m_btc"
     ),
 )
 
@@ -83,13 +88,18 @@ def _normalize_bundle_root(candidate: Path) -> Path | None:
     return None
 
 
-def resolve_metalabel_root(env: Mapping[str, str] | None = None) -> Path:
-    """Resolve metalabel bundle directory from env or discovery defaults.
+def resolve_metalabel_root(
+    env: Mapping[str, str] | None = None,
+    *,
+    data_root: Path | str | None = None,
+) -> Path:
+    """Resolve metalabel bundle directory from env, data root, or discovery.
 
     Order:
       1. ``HYPERVECTOR_METALABEL_ROOT``
       2. ``HYPERVECTOR_IMPULSE_BTC_ROOT`` (legacy)
-      3. known local discovery paths (first usable real model file)
+      3. ``{data_root}/models/metalabel`` when ``data_root`` is set
+      4. known local discovery paths (first usable real model file)
     """
     environ = env if env is not None else os.environ
     for key in (ENV_ROOT, ENV_ROOT_LEGACY):
@@ -104,6 +114,11 @@ def resolve_metalabel_root(env: Mapping[str, str] | None = None) -> Path:
             return (p / "models").resolve()
         return p.resolve()
 
+    if data_root is not None:
+        under = _normalize_bundle_root(Path(data_root) / REL_BUNDLE_UNDER_DATA)
+        if under is not None:
+            return under
+
     for candidate in _DEFAULT_DISCOVERY:
         root = _normalize_bundle_root(candidate)
         if root is not None:
@@ -112,8 +127,67 @@ def resolve_metalabel_root(env: Mapping[str, str] | None = None) -> Path:
     raise MetalabelError(
         "metalabel bundle not found: set "
         f"{ENV_ROOT} (or legacy {ENV_ROOT_LEGACY}) to a directory containing "
-        f"{_MODEL_NAME} (or models/{_MODEL_NAME})"
+        f"{_MODEL_NAME} (or place bundle at data/models/metalabel/)"
     )
+
+
+def probe_metalabel(
+    env: Mapping[str, str] | None = None,
+    *,
+    data_root: Path | str | None = None,
+) -> dict[str, Any]:
+    """Readiness probe for paper-check/status (no secret values).
+
+    Does not enable metalabel; reports whether a bundle can load when
+    ``paper-run --metalabel`` is used.
+    """
+    out: dict[str, Any] = {
+        "env_root_set": bool((env if env is not None else os.environ).get(ENV_ROOT)),
+        "legacy_env_set": bool(
+            (env if env is not None else os.environ).get(ENV_ROOT_LEGACY)
+        ),
+        "bundle_resolved": False,
+        "bundle_root": None,
+        "model_present": False,
+        "calibrator_present": False,
+        "metadata_present": False,
+        "loadable": False,
+        "n_features": None,
+        "error": None,
+    }
+    try:
+        root = resolve_metalabel_root(env, data_root=data_root)
+    except MetalabelError as exc:
+        out["error"] = str(exc)
+        return out
+
+    out["bundle_resolved"] = True
+    out["bundle_root"] = str(root)
+    model_path = root / _MODEL_NAME
+    out["model_present"] = _is_usable_model_file(model_path)
+    out["calibrator_present"] = (root / _CALIBRATOR_NAME).is_file()
+    out["metadata_present"] = (root / _METADATA_NAME).is_file()
+    if not out["model_present"]:
+        out["error"] = f"{_MODEL_NAME} missing or unloadable at {root}"
+        return out
+    try:
+        import warnings
+
+        with warnings.catch_warnings():
+            # Bundle may predate current sklearn; still usable for inference.
+            warnings.filterwarnings(
+                "ignore",
+                category=UserWarning,
+                module=r"sklearn\.base",
+            )
+            ml = Metalabeler.from_root(root)
+        out["loadable"] = True
+        out["n_features"] = len(ml.feature_names)
+    except MetalabelError as exc:
+        out["error"] = str(exc)
+    except Exception as exc:  # noqa: BLE001 — probe must not raise
+        out["error"] = f"{type(exc).__name__}: {exc}"
+    return out
 
 
 def _load_booster(model_path: Path) -> Any:
@@ -231,9 +305,14 @@ class Metalabeler:
         )
 
     @classmethod
-    def from_env(cls) -> Metalabeler:
-        """Resolve root via env/discovery and load the bundle."""
-        root = resolve_metalabel_root()
+    def from_env(
+        cls,
+        env: Mapping[str, str] | None = None,
+        *,
+        data_root: Path | str | None = None,
+    ) -> Metalabeler:
+        """Resolve root via env / data_root / discovery and load the bundle."""
+        root = resolve_metalabel_root(env, data_root=data_root)
         model_path = root / _MODEL_NAME
         if not model_path.is_file():
             raise MetalabelError(

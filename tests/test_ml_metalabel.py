@@ -26,6 +26,37 @@ def test_resolve_uses_env_override(tmp_path: Path, monkeypatch: pytest.MonkeyPat
     assert resolve_metalabel_root() == root.resolve()
 
 
+def test_resolve_uses_data_root_models_metalabel(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.delenv(ENV_ROOT, raising=False)
+    monkeypatch.delenv("HYPERVECTOR_IMPULSE_BTC_ROOT", raising=False)
+    data = tmp_path / "data"
+    bundle = data / "models" / "metalabel"
+    bundle.mkdir(parents=True)
+    # Large enough to pass _is_usable_model_file (not LFS pointer)
+    (bundle / "metalabel_lgbm.txt").write_text("x" * 300, encoding="utf-8")
+    assert resolve_metalabel_root(data_root=data) == bundle.resolve()
+
+
+def test_probe_metalabel_reports_loadable_fields(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from hypervector.ml.metalabel import probe_metalabel
+
+    monkeypatch.delenv(ENV_ROOT, raising=False)
+    monkeypatch.delenv("HYPERVECTOR_IMPULSE_BTC_ROOT", raising=False)
+    data = tmp_path / "data"
+    bundle = data / "models" / "metalabel"
+    bundle.mkdir(parents=True)
+    (bundle / "metalabel_lgbm.txt").write_text("x" * 300, encoding="utf-8")
+    p = probe_metalabel(data_root=data)
+    assert p["bundle_resolved"] is True
+    assert p["model_present"] is True
+    # loadable may be False without lightgbm parseable model; root still resolved
+    assert p["bundle_root"] == str(bundle.resolve())
+
+
 def test_resolve_accepts_legacy_env(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

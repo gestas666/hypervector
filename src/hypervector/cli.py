@@ -50,6 +50,10 @@ CLI_COMMANDS: tuple[str, ...] = (
     "export-validate",
     "phase2-check",
     "phase2-run",
+    "metalabel-train",
+    "book-record",
+    "autotune",
+    "book-align",
 )
 from hypervector.regime.detectors import detect_regime_ema
 from hypervector.regime.metrics import regime_detection_metrics
@@ -144,12 +148,37 @@ def cmd_status(args: argparse.Namespace) -> int:
             "live_run_fail_closed": True,
             "secret_values_never_printed": True,
         },
+        "metalabel": _metalabel_status(paths.root),
     }
     print(json.dumps(out, indent=2, default=str))
     return 0
 
 
-def _paper_surface_flags() -> dict:
+def _metalabel_status(data_root: Path | str) -> dict:
+    """Compact metalabel readiness for status (default still off)."""
+    try:
+        from hypervector.ml.metalabel import probe_metalabel
+
+        p = probe_metalabel(data_root=data_root)
+    except Exception as exc:  # noqa: BLE001 — status must not fail
+        return {
+            "enabled_default": False,
+            "ready": False,
+            "error": f"{type(exc).__name__}: {exc}",
+        }
+    return {
+        "enabled_default": False,
+        "ready": bool(p.get("loadable")),
+        "bundle_root": p.get("bundle_root"),
+        "n_features": p.get("n_features"),
+        "calibrator": bool(p.get("calibrator_present")),
+        "env_root_set": bool(p.get("env_root_set")),
+        "error": p.get("error"),
+        "enable_flag": "paper-run --metalabel",
+    }
+
+
+def _paper_surface_flags(data_root: Path | str | None = None) -> dict:
     """Capability/config surface for paper-check (booleans/strings only; no secrets)."""
     book_feed_ok = False
     l2_walk_ok = False
@@ -165,6 +194,25 @@ def _paper_surface_flags() -> dict:
         l2_walk_ok = True
     except Exception:  # noqa: BLE001 — surface probe only
         l2_walk_ok = False
+    metalabel_probe: dict = {
+        "loadable": False,
+        "bundle_root": None,
+        "n_features": None,
+        "calibrator_present": False,
+        "error": None,
+    }
+    try:
+        from hypervector.ml.metalabel import probe_metalabel
+
+        metalabel_probe = probe_metalabel(data_root=data_root)
+    except Exception as exc:  # noqa: BLE001 — surface probe only
+        metalabel_probe = {
+            "loadable": False,
+            "bundle_root": None,
+            "n_features": None,
+            "calibrator_present": False,
+            "error": f"{type(exc).__name__}: {exc}",
+        }
     return {
         # Phase 4b shadow surface (strings/bools only; never secret values).
         "mode": DEFAULT_EXECUTION_MODE,
@@ -178,6 +226,12 @@ def _paper_surface_flags() -> dict:
         "l2_walk_available": l2_walk_ok,
         "metalabel_enabled": DEFAULT_METALABEL_ENABLED,
         "metalabel_default_off": True,
+        # Ready-to-enable (bundle installed); still off until paper-run --metalabel.
+        "metalabel_ready": bool(metalabel_probe.get("loadable")),
+        "metalabel_bundle_root": metalabel_probe.get("bundle_root"),
+        "metalabel_n_features": metalabel_probe.get("n_features"),
+        "metalabel_calibrator": bool(metalabel_probe.get("calibrator_present")),
+        "metalabel_error": metalabel_probe.get("error"),
     }
 
 
@@ -196,7 +250,7 @@ def cmd_paper_check(args: argparse.Namespace) -> int:
         "secrets_present": _secrets_present(),
         "secret_env_names": [SECRET_ENV_WALLET, SECRET_ENV_API_KEY],
     }
-    paper.update(_paper_surface_flags())
+    paper.update(_paper_surface_flags(paths.root))
     report["paper"] = paper
     live_pol = live_policy_from_env(enabled=False, armed=False)
     ready = live_pol.readiness()
@@ -403,6 +457,8 @@ def cmd_paper_run(args: argparse.Namespace) -> int:
         getattr(args, "max_book_age_ms", DEFAULT_MAX_BOOK_AGE_MS)
     )
     metalabel_enabled = bool(getattr(args, "metalabel", DEFAULT_METALABEL_ENABLED))
+    metalabel_min_p = float(getattr(args, "metalabel_min_p", 0.5))
+    metalabel_filter = bool(getattr(args, "metalabel_filter", True))
     execution_mode = str(getattr(args, "mode", DEFAULT_EXECUTION_MODE)).lower().strip()
     if execution_mode not in ALLOWED_CLI_EXECUTION_MODES:
         print(
@@ -426,6 +482,8 @@ def cmd_paper_run(args: argparse.Namespace) -> int:
             preferred_fill_model=preferred,
             max_book_age_ms=max_book_age_ms,
             metalabel_enabled=metalabel_enabled,
+            metalabel_min_p=metalabel_min_p,
+            metalabel_filter=metalabel_filter,
             execution_mode=execution_mode,
         )
     except FileNotFoundError as exc:
@@ -451,11 +509,47 @@ def cmd_paper_run(args: argparse.Namespace) -> int:
         "preferred_fill_model": preferred,
         "max_book_age_ms": max_book_age_ms,
         "metalabel_enabled": metalabel_enabled,
+        "metalabel_filter": metalabel_filter if metalabel_enabled else False,
+        "metalabel_min_p": metalabel_min_p if metalabel_enabled else None,
         "secrets_present": _secrets_present(),
         "no_submit": True,
         "network": NETWORK_MAINNET,
     }
     print(json.dumps(out, indent=2, default=str))
+    return 0
+
+
+def cmd_book_record(args: argparse.Namespace) -> int:
+    """Poll HL public L2 and append snapshots under data/cache/book/."""
+    from hypervector.data.book_record import append_snapshot, run_book_recorder
+
+    paths = _ensure_root(args)
+    symbol = str(getattr(args, "symbol", "BTC"))
+    once = bool(getattr(args, "once", False))
+    if once:
+        try:
+            row = append_snapshot(paths.root, symbol)
+        except Exception as exc:  # noqa: BLE001
+            print(json.dumps({"ok": False, "error": str(exc)}, indent=2), file=sys.stderr)
+            return 1
+        print(json.dumps({"ok": True, "mode": "once", **row}, indent=2, default=str))
+        return 0
+
+    interval = float(getattr(args, "interval", 2.0))
+    max_n = getattr(args, "max_snapshots", None)
+    stop = getattr(args, "stop_file", None)
+    try:
+        result = run_book_recorder(
+            paths.root,
+            symbol=symbol,
+            interval_secs=interval,
+            max_snapshots=int(max_n) if max_n is not None else None,
+            stop_file=stop,
+        )
+    except Exception as exc:  # noqa: BLE001
+        print(json.dumps({"ok": False, "error": str(exc)}, indent=2), file=sys.stderr)
+        return 1
+    print(json.dumps(result, indent=2, default=str))
     return 0
 
 
@@ -595,6 +689,7 @@ def _run_sweep(args: argparse.Namespace, role: str) -> int:
     rows = []
     db = RunsDB(root / "runs" / "hypervector.db")
     run_id = str(uuid.uuid4())[:8]
+    apply_costs = not getattr(args, "no_costs", False)
     research_meta = {
         "symbol": args.symbol,
         "timeframe": args.timeframe,
@@ -604,6 +699,7 @@ def _run_sweep(args: argparse.Namespace, role: str) -> int:
         "exits": exit_cfg.to_dict(),
         "risk": risk_cfg.to_dict(),
         "costs": cost.to_dict(),
+        "apply_costs": apply_costs,
         "data_provenance": prov,
         "fee_model": getattr(args, "fee_model", "hl_taker_default"),
         "conviction": risk_cfg.default_conviction,
@@ -680,7 +776,9 @@ def cmd_export(args: argparse.Namespace) -> int:
     root = _ensure_root(args).root
     db = RunsDB(root / "runs" / "hypervector.db")
     rows = db.list_trials(track=args.track) if args.track else []
-    # Prefer Phase 2-ready trials (research_meta from modern sweeps)
+    # Prefer Phase 2-ready trials (research_meta from modern sweeps).
+    # list_trials already ranks by net_pnl DESC. Prefer cost-aware rows
+    # (non-zero taker_fee) so --no-costs diagnostics never become the export.
     ready = [
         r
         for r in rows
@@ -688,7 +786,22 @@ def cmd_export(args: argparse.Namespace) -> int:
         and isinstance(r.get("research_meta"), dict)
         and r["research_meta"]
     ]
-    best = ready[0] if ready else None
+
+    def _costs_applied(r: dict) -> bool:
+        meta = r.get("research_meta") or {}
+        if "apply_costs" in meta:
+            return bool(meta["apply_costs"])
+        # Legacy rows: treat fee_model zero / explicit zero fees as diagnostic-only
+        if meta.get("fee_model") == "zero":
+            return False
+        costs = meta.get("costs") or {}
+        try:
+            return float(costs.get("taker_fee", 0) or 0) > 0
+        except (TypeError, ValueError):
+            return False
+
+    costed = [r for r in ready if _costs_applied(r)]
+    best = costed[0] if costed else (ready[0] if ready else None)
     if best is None:
         # Distinguish empty track vs legacy-only rows
         any_ok = any(r.get("status") == "ok" for r in rows)
@@ -849,6 +962,247 @@ def cmd_phase2_run(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_metalabel_train(args: argparse.Namespace) -> int:
+    """Walk-forward LightGBM retrain; labels match export strategy exits."""
+    from hypervector.ml.walk_forward import run_walk_forward_metalabel
+
+    paths = _ensure_root(args)
+    export_path = Path(args.path)
+    if not export_path.is_dir():
+        print(json.dumps({"ok": False, "error": f"export not found: {export_path}"}))
+        return 1
+    try:
+        result = run_walk_forward_metalabel(
+            export_dir=export_path,
+            data_root=paths.root,
+            out_dir=Path(args.out) if args.out else None,
+            lookback_days=int(args.lookback) if args.lookback is not None else None,
+            train_days=int(args.train_days),
+            test_days=int(args.test_days),
+            step_days=int(args.step_days) if args.step_days is not None else None,
+            embargo_minutes=int(args.embargo_minutes),
+            max_hold_bars=int(args.max_hold_bars),
+        )
+    except Exception as exc:  # noqa: BLE001 — surface as JSON error
+        print(
+            json.dumps(
+                {"ok": False, "error": f"{type(exc).__name__}: {exc}"},
+                indent=2,
+            ),
+            file=sys.stderr,
+        )
+        return 1
+
+    install_path = None
+    if getattr(args, "install", False):
+        import shutil
+
+        dest = paths.root / "models" / "metalabel"
+        dest.mkdir(parents=True, exist_ok=True)
+        for name in (
+            "metalabel_lgbm.txt",
+            "metalabel_calibrator.joblib",
+            "metalabel_metadata.json",
+        ):
+            src = result.bundle_dir / name
+            if src.is_file():
+                shutil.copy2(src, dest / name)
+        report_src = result.bundle_dir / "walk_forward_report.json"
+        if report_src.is_file():
+            shutil.copy2(report_src, dest / "walk_forward_report.json")
+        install_path = str(dest.resolve())
+
+    out = {
+        **result.report,
+        "installed_to": install_path,
+        "env_hint": (
+            f"export HYPERVECTOR_METALABEL_ROOT={install_path or result.bundle_dir}"
+        ),
+    }
+    print(json.dumps(out, indent=2, default=str))
+    return 0
+
+
+def cmd_autotune(args: argparse.Namespace) -> int:
+    """Run Optuna / Karpathy autotuning for strategy optimization."""
+    from hypervector.sweep.autotune import run_optuna_autotune
+
+    res = run_optuna_autotune(
+        strategy_name=args.strategy,
+        symbol=args.symbol,
+        timeframe=args.timeframe,
+        lookback_days=args.lookback,
+        n_trials=args.n_trials,
+        data_root=args.data_root,
+        cost_preset=args.fee_model,
+        export_best=not args.no_export,
+        book_data_path=getattr(args, "book_path", None),
+        sampler=getattr(args, "sampler", "hybrid"),
+    )
+    out = {
+        "ok": True,
+        "strategy": res.strategy_name,
+        "symbol": res.symbol,
+        "timeframe": res.timeframe,
+        "lookback_days": res.lookback_days,
+        "n_trials": res.n_trials,
+        "sampler_used": res.sampler_used,
+        "best_params": res.best_params,
+        "best_exit_cfg": res.best_exit_cfg,
+        "best_metrics": res.best_metrics,
+        "export_dir": str(res.export_dir) if res.export_dir else None,
+        "board_path": str(res.board_path),
+    }
+def cmd_regime_eval(args: argparse.Namespace) -> int:
+    """Evaluate forward return accuracy and predictive edge of Ultimate Regime Classifier."""
+    from hypervector.data.pipeline import load_research_history
+    from hypervector.regime.evaluator import evaluate_regime_accuracy
+
+    root = Path(args.data_root)
+    df_1m, _ = load_research_history(root, symbol=args.symbol, timeframe=args.timeframe, lookback_days=args.lookback)
+
+    book_path = getattr(args, "book_path", None)
+    if book_path and Path(book_path).is_file():
+        from hypervector.data.book_align import align_orderbook_to_ohlcv, load_l2_jsonl
+        df_book = load_l2_jsonl(book_path)
+        df_1m = align_orderbook_to_ohlcv(df_1m, df_book)
+
+    rpt = evaluate_regime_accuracy(df_1m, forward_horizon=args.forward_horizon)
+    out = {
+        "ok": True,
+        "symbol": rpt.symbol,
+        "timeframe": rpt.timeframe,
+        "total_bars": rpt.total_bars,
+        "forward_horizon": args.forward_horizon,
+        "overall_directional_accuracy_pct": rpt.overall_directional_accuracy,
+        "regime_stats": rpt.regime_stats,
+    }
+    print(json.dumps(out, indent=2, default=str))
+    return 0
+
+
+def cmd_backtest(args: argparse.Namespace) -> int:
+    """Run Phase-1.5 backtest across any registered strategy with leverage & fee models."""
+    from hypervector.data.pipeline import load_research_history
+    from hypervector.strategies import register_all_strategies
+    from hypervector.strategies.registry import get_strategy
+    from hypervector.sweep.costs import resolve_cost_model
+    from hypervector.sweep.exits import ExitConfig
+    from hypervector.sweep.sizing import RiskConfig
+    from hypervector.sweep.metrics import compute_trial_metrics
+
+    register_all_strategies()
+    root = Path(args.data_root)
+    df_bars, _ = load_research_history(
+        root, symbol=args.symbol, timeframe=args.timeframe, lookback_days=args.lookback
+    )
+
+    book_path = getattr(args, "book_path", None)
+    if book_path and Path(book_path).is_file():
+        from hypervector.data.book_align import align_orderbook_to_ohlcv, load_l2_jsonl
+        df_book = load_l2_jsonl(book_path)
+        df_bars = align_orderbook_to_ohlcv(df_bars, df_book)
+
+    spec = get_strategy(args.strategy)
+    params = {}
+    if getattr(args, "book_gate", False):
+        params["book_gate"] = True
+        params["max_spread_bps"] = getattr(args, "max_spread_bps", 3.0)
+        params["min_obi"] = getattr(args, "min_obi", 0.1)
+
+    entries, exits, direction = spec.build_signals(df_bars, **params)
+    close = df_bars["close"].astype(float)
+
+    exit_cfg = ExitConfig(
+        mode=args.exit_mode,
+        sl_atr_mult=args.sl_atr_mult,
+        rr=args.rr,
+    )
+    risk_cfg = RiskConfig(max_size_frac=args.leverage)
+    cost = resolve_cost_model(args.fee_model)
+
+    m = compute_trial_metrics(
+        close,
+        entries,
+        exits,
+        direction=direction,
+        init_cash=args.init_cash,
+        df=df_bars,
+        cost=cost,
+        exit_cfg=exit_cfg,
+        risk_cfg=risk_cfg,
+    )
+
+    out = {
+        "ok": True,
+        "strategy": args.strategy,
+        "symbol": args.symbol,
+        "timeframe": args.timeframe,
+        "lookback_days": args.lookback,
+        "leverage": args.leverage,
+        "initial_cash": args.init_cash,
+        "fee_model": args.fee_model,
+        "orderbook_gated": getattr(args, "book_gate", False),
+        "metrics": {
+            "net_pnl": round(m["net_pnl"], 2),
+            "total_return_pct": round(m["total_return_pct"], 2),
+            "sharpe_annualized": round(m["sharpe"], 2),
+            "max_drawdown_pct": round(m["max_drawdown"], 2),
+            "total_trades": m["trade_count"],
+            "wins": m["wins"],
+            "losses": m["losses"],
+            "win_pct": round(m["win_pct"], 1),
+            "profit_factor": round(m["profit_factor"], 2) if m.get("profit_factor") is not None else None,
+            "avg_trade_pnl": round(m["net_pnl"] / m["trade_count"], 2) if m["trade_count"] > 0 else 0.0,
+        },
+    }
+    print(json.dumps(out, indent=2, default=str))
+    return 0
+
+
+
+
+def cmd_book_align(args: argparse.Namespace) -> int:
+    """Align L2 orderbook snapshot data with OHLCV bars and export parquet."""
+    from hypervector.data.book_align import (
+        align_orderbook_to_ohlcv,
+        load_l2_jsonl,
+        load_l2_sqlite_feature_samples,
+    )
+
+    root = Path(args.data_root)
+    df_bars, prov = load_research_history(
+        root,
+        symbol=args.symbol,
+        timeframe=args.timeframe,
+        lookback_days=args.lookback,
+    )
+
+    book_path = Path(args.book_path)
+    if str(book_path).endswith(".jsonl"):
+        df_book = load_l2_jsonl(book_path)
+    else:
+        df_book = load_l2_sqlite_feature_samples(book_path, coin=args.symbol)
+
+    aligned = align_orderbook_to_ohlcv(df_bars, df_book)
+    out_dir = root / "cache" / "aligned"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out_file = out_dir / f"{args.symbol}_{args.timeframe}_aligned_book.parquet"
+    aligned.to_parquet(out_file)
+
+    out = {
+        "ok": True,
+        "symbol": args.symbol,
+        "timeframe": args.timeframe,
+        "bars_count": len(aligned),
+        "book_records": len(df_book),
+        "aligned_path": str(out_file),
+        "sample": aligned[["close", "spread_bps", "obi_5", "book_depth_ratio"]].tail(3).to_dict(orient="records"),
+    }
+    print(json.dumps(out, indent=2, default=str))
+    return 0
+
+
 def _add_market_args(p: argparse.ArgumentParser) -> None:
     p.add_argument("--symbol", default="BTC")
     p.add_argument("--timeframe", default="1m")
@@ -873,9 +1227,38 @@ def _add_market_args(p: argparse.ArgumentParser) -> None:
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="hypervector",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
         description=(
-            "Hypervector ops CLI: research (history/sweep/export) → "
-            "phase2 historical → paper/shadow dry-run → live-run (fail-closed)"
+            "================================================================================\n"
+            "⚡ HYPERVECTOR PERPETUALS BACKTEST ENGINE & ULTIMATE REGIME DETECTOR\n"
+            "================================================================================\n"
+            "Autonomous quant strategy research (VectorBT vectorized engine), phase2 historical\n"
+            "backtest (Nautilus event-driven engine), paper/shadow dry-run, live-run execution,\n"
+            "multi-timeframe regime classification, Karpathy/Optuna autotuning, LightGBM metalabeling,\n"
+            "and Rust TUI cockpit."
+        ),
+        epilog=(
+            "EXAMPLES & COMMON WORKFLOWS:\n"
+            "  ----------------------------------------------------------------------------\n"
+            "  1. Run Fast VectorBT Strategy Backtest (Phase 1.5 Vectorized Simulation):\n"
+            "     uv run python -m hypervector backtest --strategy crown_stack_long --symbol BTC --timeframe 5m --leverage 2.0 --fee-model hl_maker\n"
+            "     uv run python -m hypervector backtest --strategy oi_divergence_long --symbol BTC --timeframe 1m --book-gate --max-spread-bps 3.0\n\n"
+            "  2. Run Event-Driven Nautilus Engine Backtest:\n"
+            "     uv run python -m hypervector phase2-run --path data/exports/<export_dir> --lookback 180\n\n"
+            "  3. Run Ultimate Regime Accuracy Evaluator:\n"
+            "     uv run python -m hypervector regime-eval --symbol BTC --timeframe 5m --lookback 180\n"
+            "     uv run python -m hypervector regime-eval --symbol BTC --timeframe 1m --book-path data/cache/book/BTC_l2_20260723.jsonl\n\n"
+            "  4. Launch Visual Quant TA Terminal Cockpit (Rust Ratatui):\n"
+            "     cargo run -p hypervector-tui --bin tui-regime-detector -- --symbol BTC --timeframe 5m\n"
+            "     cargo run -p hypervector-tui --bin tui-regime-detector -- --symbol BTC --live --refresh-ms 250\n\n"
+            "  5. Karpathy & Optuna Dual Autotuning:\n"
+            "     uv run python -m hypervector autotune --strategy crown_stack_long --sampler hybrid --n-trials 100\n"
+            "     uv run python -m hypervector autotune --strategy oi_divergence_long --sampler karpathy\n\n"
+            "  6. LightGBM Metalabeling Walk-Forward Training:\n"
+            "     uv run python -m hypervector metalabel-train --path data/exports/<export_dir> --install\n\n"
+            "  7. Pipeline & System Status:\n"
+            "     uv run python -m hypervector status\n"
+            "================================================================================"
         ),
     )
     p.add_argument("--data-root", default=str(_default_data_root()))
@@ -1115,7 +1498,25 @@ def build_parser() -> argparse.ArgumentParser:
         "--metalabel",
         action=argparse.BooleanOptionalAction,
         default=DEFAULT_METALABEL_ENABLED,
-        help="enable metalabel scale-only conviction (default: off)",
+        help=(
+            "enable LightGBM metalabel: scale conviction by p and "
+            "filter entries below --metalabel-min-p (default: off)"
+        ),
+    )
+    pr.add_argument(
+        "--metalabel-min-p",
+        type=float,
+        default=0.5,
+        help="min metalabel p to allow entry when filtering (default: 0.5)",
+    )
+    pr.add_argument(
+        "--metalabel-filter",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help=(
+            "when metalabel is on, skip entries with p < min-p "
+            "(default: on; use --no-metalabel-filter for scale-only)"
+        ),
     )
     pr.set_defaults(func=cmd_paper_run)
 
@@ -1131,7 +1532,7 @@ def build_parser() -> argparse.ArgumentParser:
     r.set_defaults(func=cmd_regime)
 
     for name, fn in (("sweep-up", cmd_sweep_up), ("sweep-down", cmd_sweep_down)):
-        s = sub.add_parser(name, help=f"Search {name} track on live/cached history")
+        s = sub.add_parser(name, help=f"Search {name} track on live/cached history (VectorBT engine)")
         _add_market_args(s)
         s.add_argument(
             "--strategy",
@@ -1267,10 +1668,275 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p2r.set_defaults(func=cmd_phase2_run)
 
+    mt = sub.add_parser(
+        "metalabel-train",
+        help=(
+            "Walk-forward LightGBM metalabel retrain on strategy entries "
+            "from a Phase-1.5 export (labels match export TP/SL)"
+        ),
+    )
+    mt.add_argument(
+        "--path",
+        required=True,
+        help="export directory (params/meta with strategy + exits)",
+    )
+    mt.add_argument(
+        "--lookback",
+        type=int,
+        default=None,
+        help=f"history lookback days (default: export meta or {DEFAULT_LOOKBACK})",
+    )
+    mt.add_argument(
+        "--train-days",
+        type=int,
+        default=45,
+        help="walk-forward train window in days (default 45)",
+    )
+    mt.add_argument(
+        "--test-days",
+        type=int,
+        default=15,
+        help="walk-forward OOS test window in days (default 15)",
+    )
+    mt.add_argument(
+        "--step-days",
+        type=int,
+        default=None,
+        help="step between OOS windows (default: test-days)",
+    )
+    mt.add_argument(
+        "--embargo-minutes",
+        type=int,
+        default=60,
+        help="purged-CV embargo minutes (default 60)",
+    )
+    mt.add_argument(
+        "--max-hold-bars",
+        type=int,
+        default=120,
+        help="label barrier timeout in bars (default 120 = 2h on 1m)",
+    )
+    mt.add_argument(
+        "--out",
+        default=None,
+        help="bundle output dir (default data/models/metalabel/wf_<strategy>_<ts>)",
+    )
+    mt.add_argument(
+        "--install",
+        action="store_true",
+        help=(
+            "also copy final model files into data/models/metalabel/ "
+            "and print HYPERVECTOR_METALABEL_ROOT"
+        ),
+    )
+    mt.set_defaults(func=cmd_metalabel_train)
+
+    br = sub.add_parser(
+        "book-record",
+        help="Record HL public L2 snapshots under data/cache/book/ (jsonl)",
+    )
+    br.add_argument("--symbol", default="BTC")
+    br.add_argument(
+        "--interval",
+        type=float,
+        default=2.0,
+        help="seconds between snapshots (default 2)",
+    )
+    br.add_argument(
+        "--once",
+        action="store_true",
+        help="fetch and write a single snapshot then exit",
+    )
+    br.add_argument(
+        "--max-snapshots",
+        type=int,
+        default=None,
+        help="stop after N snapshots (omit = run until stop-file)",
+    )
+    br.add_argument(
+        "--stop-file",
+        default=None,
+        help="stop when this path exists",
+    )
+    br.set_defaults(func=cmd_book_record)
+
+    at = sub.add_parser(
+        "autotune",
+        help="Run Karpathy / Optuna TPE parameter autotuning for strategy optimization (VectorBT engine)",
+    )
+    _add_market_args(at)
+    at.add_argument(
+        "--strategy",
+        default="crown_stack_long",
+        help="strategy name (e.g. crown_stack_long, pine_composite_long, crown_stack_short)",
+    )
+    at.add_argument(
+        "--n-trials",
+        type=int,
+        default=100,
+        help="number of Optuna/Karpathy trial iterations (default 100)",
+    )
+    at.add_argument(
+        "--fee-model",
+        default="hl_taker_default",
+        help="cost model: hl_taker_default | hl_taker_tight | zero",
+    )
+    at.add_argument(
+        "--book-path",
+        default=None,
+        help="optional orderbook L2 data path (JSONL or SQLite)",
+    )
+    at.add_argument(
+        "--sampler",
+        choices=["hybrid", "karpathy", "optuna"],
+        default="hybrid",
+        help="search sampler: hybrid | karpathy (random-adaptive + elite zoom) | optuna (TPE)",
+    )
+    at.add_argument(
+        "--no-export",
+        action="store_true",
+        help="do not automatically export best strategy configuration",
+    )
+    at.set_defaults(func=cmd_autotune)
+
+    ba = sub.add_parser(
+        "book-align",
+        help="Align historical L2 orderbook data (JSONL or SQLite) with OHLCV bars",
+    )
+    _add_market_args(ba)
+    ba.add_argument(
+        "--book-path",
+        required=True,
+        help="path to L2 orderbook data (data/cache/book/BTC_l2_...jsonl or impulse_calibration_snapshot.sqlite.zst)",
+    )
+    ba.set_defaults(func=cmd_book_align)
+
+    re_parser = sub.add_parser(
+        "regime-eval",
+        help="Evaluate forward return accuracy and predictive edge of Ultimate Regime Classifier",
+    )
+    _add_market_args(re_parser)
+    re_parser.add_argument(
+        "--forward-horizon",
+        type=int,
+        default=15,
+        help="number of forward bars to evaluate return accuracy (default 15)",
+    )
+    re_parser.add_argument(
+        "--book-path",
+        default=None,
+        help="optional orderbook L2 data path (JSONL or SQLite)",
+    )
+    re_parser.set_defaults(func=cmd_regime_eval)
+
+    bt = sub.add_parser(
+        "backtest",
+        help="Run Phase-1.5 backtest across any registered strategy with leverage & fee models (VectorBT engine)",
+    )
+    _add_market_args(bt)
+    bt.add_argument(
+        "--strategy",
+        default="crown_stack_long",
+        help="strategy name (e.g. crown_stack_long, oi_divergence_long, funding_momentum, pine_composite_long)",
+    )
+    bt.add_argument(
+        "--leverage",
+        type=float,
+        default=2.0,
+        help="position leverage scaling factor 1.0-10.0 (default 2.0)",
+    )
+    bt.add_argument(
+        "--init-cash",
+        type=float,
+        default=10000.0,
+        help="starting portfolio balance USD (default 10000.0)",
+    )
+    bt.add_argument(
+        "--fee-model",
+        default="hl_maker",
+        help="fee preset: hl_maker | hl_base_taker | hl_referred_taker | hl_vip1_taker",
+    )
+    bt.add_argument(
+        "--exit-mode",
+        default="atr",
+        help="exit mode: atr | fixed_rr | trail",
+    )
+    bt.add_argument(
+        "--sl-atr-mult",
+        type=float,
+        default=2.5,
+        help="ATR stop loss multiplier (default 2.5)",
+    )
+    bt.add_argument(
+        "--rr",
+        type=float,
+        default=3.0,
+        help="risk/reward ratio (default 3.0)",
+    )
+    bt.add_argument(
+        "--book-gate",
+        action="store_true",
+        help="enable orderbook entry gating filter",
+    )
+    bt.add_argument(
+        "--max-spread-bps",
+        type=float,
+        default=3.0,
+        help="max bid-ask spread in bps for book gating (default 3.0)",
+    )
+    bt.add_argument(
+        "--min-obi",
+        type=float,
+        default=0.10,
+        help="min orderbook imbalance ratio for book gating (default 0.10)",
+    )
+    bt.add_argument(
+        "--book-path",
+        default=None,
+        help="optional orderbook L2 snapshot data path (JSONL or SQLite)",
+    )
+    bt.set_defaults(func=cmd_backtest)
+
     return p
 
 
+def _load_dotenv_if_present() -> None:
+    """Load repo-root ``.env`` KEY=VALUE into os.environ without overwriting.
+
+    Minimal parser (no python-dotenv dependency). Skips blank/comment lines.
+    Secrets stay local (``.env`` is gitignored).
+    """
+    candidates = (
+        Path.cwd() / ".env",
+        Path(__file__).resolve().parents[2] / ".env",
+    )
+    seen: set[Path] = set()
+    for path in candidates:
+        try:
+            resolved = path.resolve()
+        except OSError:
+            continue
+        if resolved in seen or not path.is_file():
+            continue
+        seen.add(resolved)
+        try:
+            lines = path.read_text(encoding="utf-8").splitlines()
+        except OSError:
+            continue
+        for raw in lines:
+            line = raw.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, _, val = line.partition("=")
+            key = key.strip()
+            if not key or key in os.environ:
+                continue
+            val = val.strip().strip("'").strip('"')
+            os.environ[key] = val
+
+
 def main(argv: list[str] | None = None) -> int:
+    _load_dotenv_if_present()
     parser = build_parser()
     args = parser.parse_args(argv)
     if hasattr(args, "lookback") and args.lookback is not None:

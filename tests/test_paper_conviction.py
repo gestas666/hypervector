@@ -31,15 +31,52 @@ def test_metalabel_scales_with_p(monkeypatch):
             return float(features["a"])
 
     fb = FeatureBuilder()
-    prov = MetalabelConvictionProvider(FakeML(), fb, fixed_fallback=0.5)
+    prov = MetalabelConvictionProvider(FakeML(), fb, fixed_fallback=0.5, min_p=0.5)
     r = prov.resolve(features={"a": 0.8})
     assert r.conviction == 0.8
     assert r.source == "metalabel"
     assert r.metalabel_p == 0.8
     assert r.metalabel_bundle_id == "bundle"
+    assert r.allow_entry is True
 
 
-def test_metalabel_fallback_on_missing_features():
+def test_metalabel_filters_below_min_p():
+    class FakeML:
+        root = type("R", (), {"name": "bundle"})()
+        feature_names = ["a"]
+
+        def predict_probability(self, features):
+            return 0.35
+
+    prov = MetalabelConvictionProvider(
+        FakeML(), FeatureBuilder(), fixed_fallback=0.5, min_p=0.5, filter_entries=True
+    )
+    r = prov.resolve(features={"a": 0.35})
+    assert r.allow_entry is False
+    assert r.source == "metalabel_skip"
+    assert r.conviction == 0.0
+    assert r.metalabel_p == 0.35
+    assert r.skip_reason is not None and "below_min" in r.skip_reason
+
+
+def test_metalabel_scale_only_no_filter():
+    class FakeML:
+        root = type("R", (), {"name": "bundle"})()
+        feature_names = ["a"]
+
+        def predict_probability(self, features):
+            return 0.2
+
+    prov = MetalabelConvictionProvider(
+        FakeML(), FeatureBuilder(), fixed_fallback=0.5, min_p=0.5, filter_entries=False
+    )
+    r = prov.resolve(features={"a": 0.2})
+    assert r.allow_entry is True
+    assert r.source == "metalabel"
+    assert r.conviction == 0.2
+
+
+def test_metalabel_fail_closed_when_filtering():
     class FakeML:
         root = type("R", (), {"name": "bundle"})()
         feature_names = ["a", "b"]
@@ -47,14 +84,16 @@ def test_metalabel_fallback_on_missing_features():
         def predict_probability(self, features):
             raise AssertionError("should not call")
 
-    prov = MetalabelConvictionProvider(FakeML(), FeatureBuilder(), fixed_fallback=0.5)
+    prov = MetalabelConvictionProvider(
+        FakeML(), FeatureBuilder(), fixed_fallback=0.5, filter_entries=True, fail_closed=True
+    )
     r = prov.resolve(features={"a": 0.1})  # missing b
-    assert r.conviction == 0.5
-    assert r.source == "fallback_fixed"
-    assert r.metalabel_p is None
+    assert r.allow_entry is False
+    assert r.source == "fallback_skip"
+    assert r.conviction == 0.0
 
 
-def test_metalabel_fallback_on_predict_error():
+def test_metalabel_fallback_on_predict_error_scale_only():
     class FakeML:
         root = type("R", (), {"name": "bundle"})()
         feature_names = ["a"]
@@ -62,10 +101,17 @@ def test_metalabel_fallback_on_predict_error():
         def predict_probability(self, features):
             raise RuntimeError("boom")
 
-    prov = MetalabelConvictionProvider(FakeML(), FeatureBuilder(), fixed_fallback=0.33)
+    prov = MetalabelConvictionProvider(
+        FakeML(),
+        FeatureBuilder(),
+        fixed_fallback=0.33,
+        filter_entries=False,
+        fail_closed=False,
+    )
     r = prov.resolve(features={"a": 0.9})
     assert r.conviction == 0.33
     assert r.source == "fallback_fixed"
+    assert r.allow_entry is True
 
 
 def test_higher_p_higher_risk_size():
@@ -77,6 +123,29 @@ def test_feature_builder_mapping_path():
     fb = FeatureBuilder()
     out = fb.build(feature_names=["x", "y"], bars=None, features={"x": 1.0, "y": 2.0, "z": 9.0})
     assert out == {"x": 1.0, "y": 2.0}
+
+
+def test_feature_builder_computes_from_ohlcv():
+    """Paper path only has OHLCV columns — must compute metalabel schema."""
+    import numpy as np
+    from hypervector.ml.feature_matrix import FEATURE_NAMES
+
+    n = 80
+    rng = np.random.default_rng(0)
+    close = 50_000 + np.cumsum(rng.normal(0, 10, size=n))
+    bars = pd.DataFrame(
+        {
+            "open": close,
+            "high": close + 5,
+            "low": close - 5,
+            "close": close,
+            "volume": 1.0,
+            "timestamp": pd.date_range("2026-01-01", periods=n, freq="1min", tz="UTC"),
+        }
+    )
+    out = FeatureBuilder().build(feature_names=list(FEATURE_NAMES), bars=bars)
+    assert set(out) == set(FEATURE_NAMES)
+    assert all(isinstance(v, float) for v in out.values())
 
 
 def test_feature_builder_bars_last_row_only():

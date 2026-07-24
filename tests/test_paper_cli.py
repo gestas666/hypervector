@@ -137,6 +137,8 @@ def test_paper_check_reports_fill_and_book_surface(tmp_path: Path, capsys, monke
     assert paper["l2_walk_available"] is True
     assert paper["metalabel_enabled"] is False
     assert paper["metalabel_default_off"] is True
+    assert "metalabel_ready" in paper
+    assert "metalabel_bundle_root" in paper
     assert report["live"]["enabled"] is False
     # No secret material in the payload
     assert "sekrit" not in out

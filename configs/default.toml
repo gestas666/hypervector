@@ -26,7 +26,12 @@ funding_poll_secs = 60
 fill_model_id = "bar_close_slippage_v1"
 preferred_fill_model = "l2_walk_v1"
 max_book_age_ms = 3000
+# Metalabel: scale conviction by p + filter entries with p < min_p.
+# Bundle: data/models/metalabel/ (or HYPERVECTOR_METALABEL_ROOT).
+# Enable: paper-run --metalabel [--metalabel-min-p 0.5] [--no-metalabel-filter]
 metalabel_enabled = false
+metalabel_min_p = 0.5
+metalabel_filter = true
 fee_tier = 0
 assume_taker = true
 slippage_bps = 2.0

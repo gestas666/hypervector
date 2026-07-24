@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import pandas as pd
 
+from hypervector.regime.detectors import detect_regime_ema
 from hypervector.strategies.indicators import (
     choppiness_index,
     ema,
@@ -54,6 +55,10 @@ def trend_ride_signals(
     pmarp_ema: int = 21,
     pmarp_exit_hi: float = 90.0,
     pmarp_exit_lo: float = 10.0,
+    regime_filter: bool = False,
+    regime_fast: int = 12,
+    regime_slow: int = 48,
+    regime_band: float = 0.001,
 ) -> tuple[pd.Series, pd.Series, str]:
     if direction not in ("long", "short"):
         raise ValueError("direction must be long|short")
@@ -95,9 +100,20 @@ def trend_ride_signals(
         sq_ok_long = pd.Series(True, index=close.index)
         sq_ok_short = pd.Series(True, index=close.index)
 
+    if regime_filter:
+        reg = detect_regime_ema(
+            close, fast=int(regime_fast), slow=int(regime_slow), range_band=float(regime_band)
+        )
+        regime_long_ok = reg == "up"
+        regime_short_ok = reg == "down"
+    else:
+        regime_long_ok = pd.Series(True, index=close.index)
+        regime_short_ok = pd.Series(True, index=close.index)
+
     if direction == "long":
         entries = (
             trending.fillna(False)
+            & regime_long_ok.fillna(False)
             & (st_dir == 1)
             & (vip > vim).fillna(False)
             & (r > r_sig).fillna(False)
@@ -109,10 +125,12 @@ def trend_ride_signals(
             | (pm >= pmarp_exit_hi).fillna(False)
             | ((st_dir == -1) & (st_dir.shift(1) == 1)).fillna(False)
             | ((r < r_sig) & (r < 45)).fillna(False)
+            | (~regime_long_ok).fillna(False)
         )
     else:
         entries = (
             trending.fillna(False)
+            & regime_short_ok.fillna(False)
             & (st_dir == -1)
             & (vip < vim).fillna(False)
             & (r < r_sig).fillna(False)
@@ -124,6 +142,7 @@ def trend_ride_signals(
             | (pm <= pmarp_exit_lo).fillna(False)
             | ((st_dir == 1) & (st_dir.shift(1) == -1)).fillna(False)
             | ((r > r_sig) & (r > 55)).fillna(False)
+            | (~regime_short_ok).fillna(False)
         )
 
     entries = entries.fillna(False).astype(bool)
@@ -144,10 +163,14 @@ def register_trend_ride() -> None:
         StrategySpec(
             name="trend_ride_long",
             role="uptrend",
+            # Broader autotune: ST params + chop + squeeze + regime gate
             param_grid={
-                "st_mult": [2.5, 3.0],
-                "chop_max": [45.0, 55.0],
-                "use_squeeze": [True, False],
+                "st_atr": [10, 14],
+                "st_mult": [2.5, 3.0, 3.5, 4.0],
+                "chop_max": [40.0, 45.0, 50.0],
+                "use_squeeze": [True],
+                "regime_filter": [True, False],
+                "zl_length": [50, 70],
             },
             build_signals=trend_ride_long,
             description="Pine frankenstein: Supertrend+ZLEMA+Squeeze+Chop+Vortex+RSI/PMARP long",
@@ -158,9 +181,12 @@ def register_trend_ride() -> None:
             name="trend_ride_short",
             role="downtrend",
             param_grid={
-                "st_mult": [2.5, 3.0],
-                "chop_max": [45.0, 55.0],
-                "use_squeeze": [True, False],
+                "st_atr": [10, 14],
+                "st_mult": [2.5, 3.0, 3.5, 4.0],
+                "chop_max": [40.0, 45.0, 50.0],
+                "use_squeeze": [True],
+                "regime_filter": [True, False],
+                "zl_length": [50, 70],
             },
             build_signals=trend_ride_short,
             description="Pine frankenstein: Supertrend+ZLEMA+Squeeze+Chop+Vortex+RSI/PMARP short",

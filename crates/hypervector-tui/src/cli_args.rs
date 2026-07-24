@@ -1,59 +1,36 @@
-//! CLI flags for hypervector-tui.
+//! CLI argument parser for Quant TA & Microstructure Regime Detector Cockpit.
 
 use std::path::PathBuf;
+use clap::Parser;
 
-use clap::{Parser, ValueEnum};
-
-/// Which decisions ledger the tape binds to.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum, Default)]
-pub enum TapeMode {
-    /// Prefer the freshest of paper vs live by mtime.
-    #[default]
-    Auto,
-    /// `data_root/paper/decisions/decisions.jsonl`
-    Paper,
-    /// `data_root/live/decisions/decisions.jsonl`
-    Live,
-}
-
-/// Args for the read-only ops terminal.
 #[derive(Debug, Clone, Parser)]
 #[command(
-    name = "hypervector-tui",
-    about = "Read-only condensed financial ops terminal for hypervector",
+    name = "tui-regime-detector",
+    about = "Quant TA & Microstructure Regime Detector Cockpit for Hypervector",
     version
 )]
 pub struct CliArgs {
-    /// Project data root (paper/ and live/ ledgers live under this).
-    #[arg(long, default_value = "data")]
-    pub data_root: PathBuf,
+    /// Trading Symbol (e.g. BTC, ETH)
+    #[arg(short, long, default_value = "BTC")]
+    pub symbol: String,
 
-    /// Floor refresh interval for file-backed hot path (milliseconds).
-    #[arg(long, default_value_t = 1000)]
+    /// Initial Timeframe (1m, 5m, 15m)
+    #[arg(short, long, default_value = "5m")]
+    pub timeframe: String,
+
+    /// Optional path to historical parquet or JSON file for playback
+    #[arg(short, long)]
+    pub file: Option<PathBuf>,
+
+    /// Run in real-time live mode
+    #[arg(short, long)]
+    pub live: bool,
+
+    /// Refresh interval in milliseconds
+    #[arg(short, long, default_value_t = 500)]
     pub refresh_ms: u64,
 
-    /// Decision tape source: paper, live, or auto (mtime).
-    #[arg(long, value_enum, default_value_t = TapeMode::Auto)]
-    pub tape: TapeMode,
-
-    /// Optional path to `python`.
-    /// Default resolution: HYPERVECTOR_PYTHON → project `.venv` → `uv run` → `python3`/`python`.
-    #[arg(long)]
-    pub python: Option<PathBuf>,
-
-    /// Inject fixture status JSON (tests / offline demos).
-    #[arg(long, hide = true)]
-    pub fixture_status: Option<PathBuf>,
-
-    /// Inject fixture paper-check JSON.
-    #[arg(long, hide = true)]
-    pub fixture_paper_check: Option<PathBuf>,
-
-    /// Inject fixture live-check JSON.
-    #[arg(long, hide = true)]
-    pub fixture_live_check: Option<PathBuf>,
-
-    /// Inject fixture regime JSON.
-    #[arg(long, hide = true)]
-    pub fixture_regime: Option<PathBuf>,
+    /// Data root directory
+    #[arg(long, default_value = "data")]
+    pub data_root: PathBuf,
 }

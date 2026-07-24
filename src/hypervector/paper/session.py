@@ -26,8 +26,15 @@ from hypervector.nautilus.actor import (
 from hypervector.nautilus.load_export import StrategyLoadout, load_strategy_loadout
 from hypervector.nautilus.signals import last_bar_intent
 from hypervector.nautilus.sizing import position_size_frac
-from hypervector.paper.book import BookFeed, BookSnapshot
+from hypervector.paper.book import BookFeed, BookSnapshot, DEFAULT_MAX_BOOK_AGE_MS
+from hypervector.paper.book_gate import (
+    DEFAULT_MAX_SPREAD_BPS,
+    DEFAULT_MIN_IMBALANCE,
+    DEFAULT_MIN_TOUCH_SIZE,
+    evaluate_book_entry,
+)
 from hypervector.paper.conviction import (
+    DEFAULT_METALABEL_MIN_P,
     ConvictionProvider,
     ConvictionResult,
     FixedConvictionProvider,
@@ -76,8 +83,14 @@ class PaperSession:
         max_book_age_ms: float = DEFAULT_MAX_BOOK_AGE_MS,
         book_feed: BookFeed | None = None,
         enable_book_poll: bool = False,
+        book_gate_enabled: bool = True,
+        book_max_spread_bps: float = DEFAULT_MAX_SPREAD_BPS,
+        book_min_touch_size: float = DEFAULT_MIN_TOUCH_SIZE,
+        book_min_imbalance: float = DEFAULT_MIN_IMBALANCE,
         metalabel_enabled: bool = False,
         metalabeler: Any | None = None,
+        metalabel_min_p: float = DEFAULT_METALABEL_MIN_P,
+        metalabel_filter: bool = True,
         conviction_provider: ConvictionProvider | None = None,
         execution_mode: str = "paper",
     ) -> None:
@@ -94,15 +107,24 @@ class PaperSession:
         self.sandbox_enabled = bool(sandbox_enabled)
         self.enable_funding_refresh = bool(enable_funding_refresh)
         self.enable_book_poll = bool(enable_book_poll)
+        self.book_gate_enabled = bool(book_gate_enabled)
+        self.book_max_spread_bps = float(book_max_spread_bps)
+        self.book_min_touch_size = float(book_min_touch_size)
+        self.book_min_imbalance = float(book_min_imbalance)
         self.max_book_age_ms = float(max_book_age_ms)
         self.preferred_fill_model = str(preferred_fill_model)
         self.metalabel_enabled = bool(metalabel_enabled)
+        self.metalabel_min_p = float(metalabel_min_p)
+        self.metalabel_filter = bool(metalabel_filter)
         self.execution_mode = str(execution_mode)
         self.conviction_provider = _build_conviction_provider(
             conviction=self.conviction,
             metalabel_enabled=self.metalabel_enabled,
             metalabeler=metalabeler,
+            metalabel_min_p=self.metalabel_min_p,
+            metalabel_filter=self.metalabel_filter,
             conviction_provider=conviction_provider,
+            data_root=self.root,
         )
 
         self.run_id = run_id or uuid.uuid4().hex[:12]
@@ -245,12 +267,16 @@ class PaperSession:
             "bar_index": intent.bar_index,
         }
 
+        # Live path: refresh book so the gate uses current L2, not a stale cache.
+        if self.enable_book_poll:
+            self.book_feed.poll()
         book = self.book_feed.latest()
-        # Scale-only conviction per decision (fixed by default; metalabel when enabled).
+        # Metalabel: scale conviction by p; optionally filter entries (skip low p).
         cv = self.conviction_provider.resolve(bars=df)
         cv_kwargs = _conviction_fill_kwargs(cv)
 
         if action == "close":
+            # Exits are never book/ML-filtered — always allow risk-off.
             qty = abs(float(pos.qty))
             if qty <= 0:
                 return None
@@ -271,6 +297,79 @@ class PaperSession:
             return None
 
         if action in ("enter_long", "enter_short"):
+            side = "buy" if action == "enter_long" else "sell"
+            # Book gate: whether we fire (not only how we fill).
+            if self.book_gate_enabled:
+                import time as _time
+
+                now_ms = _time.time() * 1000.0
+                # Require fresh book on live feed; offline warm-up may lack L2.
+                require_fresh = bool(self.enable_book_poll)
+                gate = evaluate_book_entry(
+                    book,
+                    side=side,
+                    now_ms=now_ms,
+                    max_age_ms=self.max_book_age_ms,
+                    max_spread_bps=self.book_max_spread_bps,
+                    min_touch_size=self.book_min_touch_size,
+                    min_imbalance=self.book_min_imbalance,
+                    require_fresh=require_fresh,
+                )
+                if not gate.allow:
+                    logger.info(
+                        "book gate skip %s: %s metrics=%s",
+                        action,
+                        gate.reason,
+                        gate.metrics,
+                    )
+                    append_paper_decision(
+                        self.root,
+                        {
+                            "feed_ts": feed_ts,
+                            "action": action,
+                            "side": side,
+                            "qty": 0.0,
+                            "fill_qty": 0.0,
+                            "mark_px": mark_px,
+                            "skipped": True,
+                            "skip_reason": gate.reason or "book_gate",
+                            "book_gate": gate.metrics,
+                            "intent": intent_payload,
+                            "execution_mode": self.execution_mode,
+                            "run_id": self.run_id,
+                            "export_id": self.export_id,
+                            **cv_kwargs,
+                        },
+                    )
+                    return None
+
+            if not cv.allow_entry:
+                logger.info(
+                    "metalabel filter skip %s: %s (p=%s)",
+                    action,
+                    cv.skip_reason,
+                    cv.metalabel_p,
+                )
+                append_paper_decision(
+                    self.root,
+                    {
+                        "feed_ts": feed_ts,
+                        "action": action,
+                        "side": "buy" if action == "enter_long" else "sell",
+                        "qty": 0.0,
+                        "fill_qty": 0.0,
+                        "mark_px": mark_px,
+                        "skipped": True,
+                        "skip_reason": cv.skip_reason or "metalabel_filter",
+                        "metalabel_allow_entry": False,
+                        "intent": intent_payload,
+                        "execution_mode": self.execution_mode,
+                        "run_id": self.run_id,
+                        "export_id": self.export_id,
+                        **cv_kwargs,
+                    },
+                )
+                return None
             qty = _entry_qty(
                 df=df,
                 loadout=self.loadout,
@@ -281,7 +380,6 @@ class PaperSession:
             )
             if qty is None or qty <= 0:
                 return None
-            side = "buy" if action == "enter_long" else "sell"
             rec = self.engine.apply_market_fill(
                 feed_ts=feed_ts,
                 action=action,
@@ -474,8 +572,11 @@ def _build_conviction_provider(
     metalabel_enabled: bool,
     metalabeler: Any | None,
     conviction_provider: ConvictionProvider | None,
+    data_root: Path | str | None = None,
+    metalabel_min_p: float = DEFAULT_METALABEL_MIN_P,
+    metalabel_filter: bool = True,
 ) -> ConvictionProvider:
-    """Fixed by default; metalabel only when explicitly enabled (SRS_HV4A_ORDER)."""
+    """Fixed by default; metalabel scales and filters when enabled."""
     if conviction_provider is not None:
         return conviction_provider
     if not metalabel_enabled:
@@ -484,11 +585,18 @@ def _build_conviction_provider(
         from hypervector.ml.features import FeatureBuilder
         from hypervector.ml.metalabel import Metalabeler
 
-        ml = metalabeler if metalabeler is not None else Metalabeler.from_env()
+        ml = (
+            metalabeler
+            if metalabeler is not None
+            else Metalabeler.from_env(data_root=data_root)
+        )
         return MetalabelConvictionProvider(
             ml,
             FeatureBuilder(),
             fixed_fallback=float(conviction),
+            min_p=float(metalabel_min_p),
+            filter_entries=bool(metalabel_filter),
+            fail_closed=bool(metalabel_filter),
         )
     except Exception as exc:  # noqa: BLE001 — keep session usable on load failure
         logger.warning(
@@ -499,6 +607,7 @@ def _build_conviction_provider(
 
 
 def _conviction_fill_kwargs(cv: ConvictionResult) -> dict[str, Any]:
+    """Fields accepted by ExplicitFillEngine.apply_market_fill."""
     return {
         "conviction": cv.conviction,
         "conviction_source": cv.source,

@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import pandas as pd
 
+from hypervector.regime.detectors import detect_regime_ema
 from hypervector.strategies.indicators import (
     bbwp,
     crown_emas,
@@ -45,6 +46,11 @@ def _stack_signals(
     pmarp_ema: int = 21,
     pmarp_exit_hi: float = 90.0,
     pmarp_exit_lo: float = 10.0,
+    regime_filter: bool = False,
+    regime_fast: int = 12,
+    regime_slow: int = 48,
+    regime_band: float = 0.001,
+    **kwargs: Any,
 ) -> tuple[pd.Series, pd.Series, str]:
     if direction not in ("long", "short"):
         raise ValueError("direction must be long|short")
@@ -72,11 +78,22 @@ def _stack_signals(
     bull_prev = bull_stack.shift(1).fillna(False).astype(bool)
     bear_prev = bear_stack.shift(1).fillna(False).astype(bool)
 
+    if regime_filter:
+        reg = detect_regime_ema(
+            close, fast=int(regime_fast), slow=int(regime_slow), range_band=float(regime_band)
+        )
+        regime_long_ok = reg == "up"
+        regime_short_ok = reg == "down"
+    else:
+        regime_long_ok = pd.Series(True, index=close.index)
+        regime_short_ok = pd.Series(True, index=close.index)
+
     if direction == "long":
         macro = bias == 1
         stack_turn_up = bull_stack & (~bull_prev)
         entries = (
             macro.astype(bool)
+            & regime_long_ok.fillna(False).astype(bool)
             & compression.fillna(False).astype(bool)
             & bull_stack.astype(bool)
             & (cross_up.fillna(False) | stack_turn_up)
@@ -87,12 +104,14 @@ def _stack_signals(
             | (pm >= pmarp_exit_hi).fillna(False)
             | (rsi_bear & (r < 50)).fillna(False)
             | (bias != 1)
+            | (~regime_long_ok).fillna(False)
         )
     else:
         macro = bias == -1
         stack_turn_dn = bear_stack & (~bear_prev)
         entries = (
             macro.astype(bool)
+            & regime_short_ok.fillna(False).astype(bool)
             & compression.fillna(False).astype(bool)
             & bear_stack.astype(bool)
             & (cross_dn.fillna(False) | stack_turn_dn)
@@ -103,11 +122,25 @@ def _stack_signals(
             | (pm <= pmarp_exit_lo).fillna(False)
             | (rsi_bull & (r > 50)).fillna(False)
             | (bias != -1)
+            | (~regime_short_ok).fillna(False)
+        )
+
+    # Optional Orderbook Gate
+    book_gate = kwargs.get("book_gate", False)
+    if book_gate:
+        from hypervector.data.book_align import gate_signals_by_orderbook
+        entries = gate_signals_by_orderbook(
+            entries,
+            df,
+            direction=direction,
+            max_spread_bps=float(kwargs.get("max_spread_bps", 8.0)),
+            min_obi=float(kwargs.get("min_obi", -0.3)),
         )
 
     entries = entries.fillna(False).astype(bool)
     exits = exits.fillna(False).astype(bool) & (~entries)
     return entries, exits, direction
+
 
 
 def crown_stack_long(
@@ -127,9 +160,14 @@ def crown_stack_long(
     pmarp_ema: int = 21,
     pmarp_exit_hi: float = 90.0,
     pmarp_exit_lo: float = 10.0,
+    regime_filter: bool = False,
+    regime_fast: int = 12,
+    regime_slow: int = 48,
+    regime_band: float = 0.001,
     # accept old kw names so prior grids/exports don't break
     daily_fast: int | None = None,
     daily_slow: int | None = None,
+    **kwargs: Any,
 ) -> tuple[pd.Series, pd.Series, str]:
     if daily_fast is not None:
         bias_fast = daily_fast
@@ -153,6 +191,11 @@ def crown_stack_long(
         pmarp_ema=pmarp_ema,
         pmarp_exit_hi=pmarp_exit_hi,
         pmarp_exit_lo=pmarp_exit_lo,
+        regime_filter=regime_filter,
+        regime_fast=regime_fast,
+        regime_slow=regime_slow,
+        regime_band=regime_band,
+        **kwargs,
     )
 
 
@@ -173,8 +216,13 @@ def crown_stack_short(
     pmarp_ema: int = 21,
     pmarp_exit_hi: float = 90.0,
     pmarp_exit_lo: float = 10.0,
+    regime_filter: bool = False,
+    regime_fast: int = 12,
+    regime_slow: int = 48,
+    regime_band: float = 0.001,
     daily_fast: int | None = None,
     daily_slow: int | None = None,
+    **kwargs: Any,
 ) -> tuple[pd.Series, pd.Series, str]:
     if daily_fast is not None:
         bias_fast = daily_fast
@@ -198,6 +246,11 @@ def crown_stack_short(
         pmarp_ema=pmarp_ema,
         pmarp_exit_hi=pmarp_exit_hi,
         pmarp_exit_lo=pmarp_exit_lo,
+        regime_filter=regime_filter,
+        regime_fast=regime_fast,
+        regime_slow=regime_slow,
+        regime_band=regime_band,
+        **kwargs,
     )
 
 
@@ -206,10 +259,12 @@ def register_crown_stack() -> None:
         StrategySpec(
             name="crown_stack_long",
             role="uptrend",
+            # BBWP + PMARP exit + optional EMA-regime gate
             param_grid={
-                "bbwp_lookback": [100, 252],
-                "bbwp_threshold": [20.0, 25.0],
-                "pmarp_exit_hi": [85.0, 90.0],
+                "bbwp_lookback": [100, 180, 252],
+                "bbwp_threshold": [15.0, 20.0, 25.0],
+                "pmarp_exit_hi": [85.0, 90.0, 95.0],
+                "regime_filter": [True, False],
             },
             build_signals=crown_stack_long,
             description="1m EMA21/55 bias + Crown 9/21/55 + BBWP + RSI + PMARP (long)",
@@ -220,8 +275,8 @@ def register_crown_stack() -> None:
             name="crown_stack_short",
             role="downtrend",
             param_grid={
-                "bbwp_lookback": [100, 252],
-                "bbwp_threshold": [20.0, 25.0],
+                "bbwp_lookback": [100, 180, 252],
+                "bbwp_threshold": [15.0, 20.0, 25.0],
                 "pmarp_exit_lo": [10.0, 15.0],
             },
             build_signals=crown_stack_short,

@@ -21,6 +21,8 @@ def test_ensure_data_layout_creates_all_subdirs(tmp_path: Path):
     assert paths.live == root / "live"
     assert paths.live_decisions == root / "live" / "decisions"
     assert paths.live_ledger == root / "live" / "ledger"
+    assert paths.models_metalabel == root / "models" / "metalabel"
+    assert paths.models_metalabel.is_dir()
 
 
 def test_ensure_data_layout_idempotent(tmp_path: Path):

@@ -75,6 +75,8 @@ def start_paper_daemon(
     preferred_fill_model: str = FILL_MODEL_L2_WALK_V1,
     max_book_age_ms: float = DEFAULT_MAX_BOOK_AGE_MS,
     metalabel_enabled: bool = False,
+    metalabel_min_p: float = 0.5,
+    metalabel_filter: bool = True,
     execution_mode: str = "shadow",
 ) -> PaperDaemonResult:
     """Start paper daemon: warm history, then process live bars until stop.
@@ -115,7 +117,11 @@ def start_paper_daemon(
     max_book_age_ms:
         Stale book threshold in milliseconds (default 3000).
     metalabel_enabled:
-        When True, scale conviction via Metalabeler (default off).
+        When True, Metalabeler scales conviction and (by default) filters entries.
+    metalabel_min_p:
+        Minimum metalabel p to allow a new entry when filtering is on (default 0.5).
+    metalabel_filter:
+        When True with metalabel, skip entries with p < min_p (default True).
     execution_mode:
         ``shadow`` (default) or ``paper``; stamped on fills via session/engine.
     """
@@ -156,6 +162,8 @@ def start_paper_daemon(
         preferred_fill_model=str(preferred_fill_model),
         max_book_age_ms=float(max_book_age_ms),
         metalabel_enabled=bool(metalabel_enabled),
+        metalabel_min_p=float(metalabel_min_p),
+        metalabel_filter=bool(metalabel_filter),
         execution_mode=mode,
     )
 

@@ -23,6 +23,7 @@ DATA_SUBDIRS: tuple[str, ...] = (
     "live",
     "live/ledger",
     "live/decisions",
+    "models/metalabel",
 )
 
 
@@ -45,6 +46,7 @@ class DataPaths:
     live: Path
     live_ledger: Path
     live_decisions: Path
+    models_metalabel: Path
 
 
 def paths_for(root: Path | str) -> DataPaths:
@@ -66,6 +68,7 @@ def paths_for(root: Path | str) -> DataPaths:
         live=r / "live",
         live_ledger=r / "live" / "ledger",
         live_decisions=r / "live" / "decisions",
+        models_metalabel=r / "models" / "metalabel",
     )
 
 
@@ -93,6 +96,7 @@ def layout_report(root: Path | str) -> dict[str, object]:
         "live": paths.live,
         "live_ledger": paths.live_ledger,
         "live_decisions": paths.live_decisions,
+        "models_metalabel": paths.models_metalabel,
     }
     return {
         "root": str(paths.root.resolve()),

@@ -3,14 +3,14 @@ name = "hypervector-tui"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "Read-only condensed financial ops terminal for hypervector"
+description = "Quant TA & Microstructure Regime Detector Cockpit for Hypervector"
 
 [lib]
 name = "hypervector_tui"
 path = "src/lib.rs"
 
 [[bin]]
-name = "hypervector-tui"
+name = "tui-regime-detector"
 path = "src/main.rs"
 
 [dependencies]
