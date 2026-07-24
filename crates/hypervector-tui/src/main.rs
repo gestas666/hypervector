@@ -90,10 +90,30 @@ fn run_app<B: ratatui::backend::Backend>(
                                     app.toggle_event_modal();
                                 }
                             }
-                            KeyCode::Char('c') => app.toggle_config_option(),
-                            KeyCode::Char(' ') => app.toggle_play_pause(),
-                            KeyCode::Left => app.step_backward(),
-                            KeyCode::Right => app.step_forward(),
+                            KeyCode::Char('+') | KeyCode::Char('=') => {
+                                if app.active_tab == 3 {
+                                    app.increase_config_value();
+                                }
+                            }
+                            KeyCode::Char('-') => {
+                                if app.active_tab == 3 {
+                                    app.decrease_config_value();
+                                }
+                            }
+                            KeyCode::Left => {
+                                if app.active_tab == 3 {
+                                    app.decrease_config_value();
+                                } else {
+                                    app.step_backward();
+                                }
+                            }
+                            KeyCode::Right => {
+                                if app.active_tab == 3 {
+                                    app.increase_config_value();
+                                } else {
+                                    app.step_forward();
+                                }
+                            }
                             KeyCode::Down | KeyCode::Char('j') => {
                                 if app.active_tab == 3 {
                                     app.select_next_config();
