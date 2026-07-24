@@ -85,10 +85,10 @@ impl App {
     pub fn sparkline_price_data(&self) -> Vec<u64> {
         let start = if self.current_index > 60 { self.current_index - 60 } else { 0 };
         let end = (self.current_index + 1).min(self.snapshots.len());
-        self.snapshots[start..end]
-            .iter()
-            .map(|s| (s.price * 10.0) as u64)
-            .collect()
+        let window = &self.snapshots[start..end];
+        let (min, max) = window.iter().fold((f64::MAX, f64::MIN), |(mn, mx), s| (mn.min(s.price), mx.max(s.price)));
+        let range = (max - min).max(0.01);
+        window.iter().map(|s| (((s.price - min) / range) * 100.0) as u64).collect()
     }
 
     pub fn sparkline_bbwp_data(&self) -> Vec<u64> {

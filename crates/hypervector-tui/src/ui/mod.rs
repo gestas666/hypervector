@@ -1,11 +1,13 @@
 //! Ultra High-Density 2-Screen Telemetry UI Rendering Engine for Hypervector Regime Cockpit v2.0.
+//! Implements visual telemetry spec from docs/enhancements/2026-07-24-tui-regime-cockpit-eyecandy.md.
 
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
+    style::Modifier,
     text::{Line, Span},
     widgets::{
         canvas::{Canvas, Line as CanvasLine},
-        BarChart, Block, BorderType, Borders, Clear, Gauge, Paragraph, Row, Sparkline, Table,
+        BarChart, Block, BorderType, Borders, Clear, Paragraph, Row, Sparkline, Table,
     },
     Frame,
 };
@@ -18,20 +20,22 @@ pub fn draw(f: &mut Frame, app: &App) {
         .direction(Direction::Vertical)
         .constraints([
             Constraint::Length(3),  // Top Telemetry Header Bar
+            Constraint::Length(1),  // SRS_TUI_EC1 Regime Timeline Ribbon
             Constraint::Min(20),    // Active View Screen Content (Screen 1 or Screen 2)
             Constraint::Length(3),  // Command Keybindings Footer Bar
         ])
         .split(f.area());
 
     render_header(f, app, chunks[0]);
+    render_timeline_ribbon(f, app, chunks[1]);
 
     if app.active_tab == 0 {
-        render_screen_regime_detection(f, app, chunks[1]);
+        render_screen_regime_detection(f, app, chunks[2]);
     } else {
-        render_screen_strategy_policy(f, app, chunks[1]);
+        render_screen_strategy_policy(f, app, chunks[2]);
     }
 
-    render_footer(f, app, chunks[2]);
+    render_footer(f, app, chunks[3]);
 
     if app.show_event_detail_modal {
         render_event_modal(f, app, f.area());
@@ -43,11 +47,14 @@ pub fn draw(f: &mut Frame, app: &App) {
 }
 
 fn render_header(f: &mut Frame, app: &App, area: Rect) {
+    let spinner_frames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
+    let spinner = spinner_frames[(app.tick_count % spinner_frames.len() as u64) as usize];
+
     let (mode_str, mode_style) = match (app.is_live, app.is_synthetic) {
-        (true, false) => ("🟢 REAL-TIME LIVE", app.theme.bull),
-        (true, true) => ("⚠️ DEMO PLAYBACK (Synthetic Live)", app.theme.coiling),
-        (false, false) => ("▶️ HISTORICAL PLAYBACK", app.theme.cyan),
-        (false, true) => ("▶️ DEMO PLAYBACK (Synthetic)", app.theme.gold),
+        (true, false) => (format!("{} REAL-TIME LIVE", spinner), app.theme.bull),
+        (true, true) => (format!("{} DEMO PLAYBACK (Synthetic Live)", spinner), app.theme.coiling),
+        (false, false) => ("▶️ HISTORICAL PLAYBACK".into(), app.theme.cyan),
+        (false, true) => ("▶️ DEMO PLAYBACK (Synthetic)".into(), app.theme.gold),
     };
     let status_str = if app.is_playing { "PLAYING" } else { "PAUSED" };
 
@@ -79,6 +86,39 @@ fn render_header(f: &mut Frame, app: &App, area: Rect) {
     f.render_widget(p, area);
 }
 
+// SRS_TUI_EC1: Regime Timeline Ribbon (1-row strip)
+fn render_timeline_ribbon(f: &mut Frame, app: &App, area: Rect) {
+    if area.width < 5 || app.snapshots.is_empty() {
+        return;
+    }
+    let total = app.snapshots.len();
+    let width = area.width as usize;
+    let start = if app.current_index > width / 2 { app.current_index - width / 2 } else { 0 };
+    let end = (start + width).min(total);
+
+    let spans: Vec<Span> = app.snapshots[start..end]
+        .iter()
+        .enumerate()
+        .map(|(i, snap)| {
+            let idx = start + i;
+            let style = match snap.state {
+                RegimeState::BullMomentum => app.theme.bull,
+                RegimeState::BearMomentum => app.theme.bear,
+                RegimeState::VolatilityCoiling => app.theme.coiling,
+                RegimeState::FundingCarry => app.theme.carry,
+                RegimeState::RangeChop => app.theme.chop,
+            };
+            if idx == app.current_index {
+                Span::styled("█", style.add_modifier(Modifier::REVERSED))
+            } else {
+                Span::styled("█", style)
+            }
+        })
+        .collect();
+
+    f.render_widget(Paragraph::new(Line::from(spans)), area);
+}
+
 // ============================================================================
 // SCREEN 1: REGIME DETECTION ENGINE ONLY (FULL DENSITY GRAPHICAL DASHBOARD)
 // ============================================================================
@@ -90,7 +130,8 @@ fn render_screen_regime_detection(f: &mut Frame, app: &App, area: Rect) {
             Constraint::Length(9),  // 2. High-Resolution 2D Braille OHLC Candlestick Canvas
             Constraint::Length(8),  // 3. Visual Graphics Row (Orderbook BarChart + Regime Histogram BarChart)
             Constraint::Length(8),  // 4. Trajectory & Volatility Compression Sparklines
-            Constraint::Length(5),  // 5. Compact 5-Row Transition Audit Log Table
+            Constraint::Length(1),  // 5. SRS_TUI_EC8 Regime Distribution Bar
+            Constraint::Length(5),  // 6. Compact Reserved 5-Row Audit Log Table
         ])
         .split(area);
 
@@ -102,7 +143,7 @@ fn render_screen_regime_detection(f: &mut Frame, app: &App, area: Rect) {
         .constraints([
             Constraint::Percentage(42), // Active Regime & Conviction Box
             Constraint::Percentage(28), // MTF Hysteresis Matrix
-            Constraint::Percentage(30), // L2 Microstructure & Flow
+            Constraint::Percentage(30), // L2 Microstructure & Bipolar Meters
         ])
         .split(main_chunks[0]);
 
@@ -118,6 +159,18 @@ fn render_screen_regime_detection(f: &mut Frame, app: &App, area: Rect) {
     let conf_bar_len = ((conf_pct / 100.0) * 16.0) as usize;
     let conf_fill = "█".repeat(conf_bar_len);
     let conf_empty = "░".repeat(16 - conf_bar_len);
+
+    // SRS_TUI_EC14: Price Delta Ticker
+    let prev_price = if app.current_index > 0 { app.snapshots[app.current_index - 1].price } else { snap.price };
+    let price_diff = snap.price - prev_price;
+    let bps_delta = if prev_price > 0.0 { (price_diff / prev_price) * 10_000.0 } else { 0.0 };
+    let (ticker_str, ticker_style) = if bps_delta > 0.0 {
+        (format!("▲ +{:.1} bps", bps_delta), app.theme.bull)
+    } else if bps_delta < 0.0 {
+        (format!("▼ {:.1} bps", bps_delta), app.theme.bear)
+    } else {
+        ("· 0.0 bps".into(), app.theme.muted)
+    };
 
     let banner_text = vec![
         Line::from(vec![Span::styled(state_label, state_style)]),
@@ -143,6 +196,8 @@ fn render_screen_regime_detection(f: &mut Frame, app: &App, area: Rect) {
         Line::from(vec![
             Span::raw("Mark Price: "),
             Span::styled(format!("${:.2}", snap.price), app.theme.gold),
+            Span::raw(" "),
+            Span::styled(ticker_str, ticker_style),
             Span::raw(" │ High: "),
             Span::styled(format!("${:.2}", snap.high), app.theme.bull),
             Span::raw(" │ Low: "),
@@ -165,30 +220,24 @@ fn render_screen_regime_detection(f: &mut Frame, app: &App, area: Rect) {
 
     f.render_widget(Paragraph::new(banner_text).block(banner_block), top_chunks[0]);
 
-    // MTF Hysteresis Matrix
+    // SRS_TUI_EC13: MTF Hysteresis Matrix with state dots
     let mtf_text = vec![
         Line::from(vec![
+            Span::styled("● ", if snap.trend_1m == "BULL" { app.theme.bull } else if snap.trend_1m == "BEAR" { app.theme.bear } else { app.theme.chop }),
             Span::raw(" 1m Trend: "),
-            Span::styled(
-                format!(" [{}] ", snap.trend_1m),
-                if snap.trend_1m == "BULL" { app.theme.bull } else if snap.trend_1m == "BEAR" { app.theme.bear } else { app.theme.chop },
-            ),
+            Span::styled(format!(" [{}] ", snap.trend_1m), app.theme.title),
             Span::styled("ZLEMA Hysteresis", app.theme.muted),
         ]),
         Line::from(vec![
+            Span::styled("● ", if snap.trend_5m == "BULL" { app.theme.bull } else if snap.trend_5m == "BEAR" { app.theme.bear } else { app.theme.chop }),
             Span::raw(" 5m Trend: "),
-            Span::styled(
-                format!(" [{}] ", snap.trend_5m),
-                if snap.trend_5m == "BULL" { app.theme.bull } else if snap.trend_5m == "BEAR" { app.theme.bear } else { app.theme.chop },
-            ),
+            Span::styled(format!(" [{}] ", snap.trend_5m), app.theme.title),
             Span::styled("ZLEMA Hysteresis", app.theme.muted),
         ]),
         Line::from(vec![
+            Span::styled("● ", if snap.trend_15m == "BULL" { app.theme.bull } else if snap.trend_15m == "BEAR" { app.theme.bear } else { app.theme.chop }),
             Span::raw("15m Trend: "),
-            Span::styled(
-                format!(" [{}] ", snap.trend_15m),
-                if snap.trend_15m == "BULL" { app.theme.bull } else if snap.trend_15m == "BEAR" { app.theme.bear } else { app.theme.chop },
-            ),
+            Span::styled(format!(" [{}] ", snap.trend_15m), app.theme.title),
             Span::styled("ZLEMA Hysteresis", app.theme.muted),
         ]),
         Line::from(vec![
@@ -216,21 +265,40 @@ fn render_screen_regime_detection(f: &mut Frame, app: &App, area: Rect) {
 
     f.render_widget(Paragraph::new(mtf_text).block(mtf_block), top_chunks[1]);
 
-    // L2 Microstructure OPI Dial
-    let opi_ratio = ((snap.opi + 1.0) / 2.0).clamp(0.0, 1.0);
-    let opi_gauge = Gauge::default()
-        .block(
-            Block::default()
-                .title(format!(" L2 ORDERBOOK OPI ({:.2}) ", snap.opi))
-                .title_style(app.theme.title)
-                .borders(Borders::ALL)
-                .border_style(app.theme.border),
-        )
-        .gauge_style(if snap.opi >= 0.0 { app.theme.bull } else { app.theme.bear })
-        .percent((opi_ratio * 100.0) as u16)
-        .label(format!("Spread: {:.1}bps │ Depth: {:.2}x Ratio", snap.spread_bps, snap.bid_depth_ratio));
+    // SRS_TUI_EC7: Microstructure Bipolar Meters (OPI & Funding Z-score)
+    let opi_bipolar = render_bipolar_str(snap.opi, 1.0, "OPI");
+    let funding_bipolar = render_bipolar_str(snap.funding_zscore / 3.0, 1.0, "Z-Score");
 
-    f.render_widget(opi_gauge, top_chunks[2]);
+    let micro_text = vec![
+        Line::from(vec![
+            Span::raw("OPI Order Flow: "),
+            Span::styled(format!("({:+.2}) ", snap.opi), if snap.opi >= 0.0 { app.theme.bull } else { app.theme.bear }),
+            Span::styled(opi_bipolar, app.theme.cyan),
+        ]),
+        Line::from(vec![
+            Span::raw("Funding Rate Z: "),
+            Span::styled(format!("({:+.2}) ", snap.funding_zscore), app.theme.carry),
+            Span::styled(funding_bipolar, app.theme.gold),
+        ]),
+        Line::from(vec![
+            Span::raw("Friction Spread: "),
+            Span::styled(format!("{:.1} bps ", snap.spread_bps), app.theme.title),
+            Span::styled(if snap.spread_bps > 6.0 { "[HIGH FRICTION]" } else { "[PASS]" }, if snap.spread_bps > 6.0 { app.theme.chop } else { app.theme.bull }),
+        ]),
+        Line::from(vec![
+            Span::raw("Orderbook Depth: "),
+            Span::styled(format!("{:.2}x Ratio ", snap.bid_depth_ratio), app.theme.gold),
+            Span::styled(if snap.bid_depth_ratio >= 1.0 { "(Bids Dominant)" } else { "(Asks Dominant)" }, app.theme.muted),
+        ]),
+    ];
+
+    let micro_block = Block::default()
+        .title(" MICROSTRUCTURE TELEMETRY ")
+        .title_style(app.theme.title)
+        .borders(Borders::ALL)
+        .border_style(app.theme.border);
+
+    f.render_widget(Paragraph::new(micro_text).block(micro_block), top_chunks[2]);
 
     // 2. High-Resolution 2D Braille OHLC Candlestick Canvas
     let count = app.snapshots.len();
@@ -365,8 +433,77 @@ fn render_screen_regime_detection(f: &mut Frame, app: &App, area: Rect) {
 
     f.render_widget(sparkline_bbwp, sparkline_chunks[1]);
 
-    // 5. Compact Half-Height Transition Audit Log Table (5 rows height)
-    render_event_log(f, app, main_chunks[4]);
+    // 5. SRS_TUI_EC8: Regime Distribution Bar
+    render_distribution_bar(f, app, main_chunks[4]);
+
+    // 6. Compact Reserved 5-Row Transition Audit Log Table
+    render_event_log(f, app, main_chunks[5]);
+}
+
+// SRS_TUI_EC7 Helper: Bipolar center-zero meter string
+fn render_bipolar_str(val: f64, max_val: f64, _label: &str) -> String {
+    let width = 10;
+    let norm = (val / max_val).clamp(-1.0, 1.0);
+    let center = width / 2;
+    let offset = (norm * (center as f64)).round() as i32;
+
+    let mut chars = vec!['─'; width];
+    chars[center] = '│';
+
+    if offset > 0 {
+        for i in (center + 1)..=(center + offset as usize).min(width - 1) {
+            chars[i] = '█';
+        }
+    } else if offset < 0 {
+        let left_idx = (center as i32 + offset).max(0) as usize;
+        for i in left_idx..center {
+            chars[i] = '█';
+        }
+    }
+    format!("[{}]", chars.into_iter().collect::<String>())
+}
+
+// SRS_TUI_EC8: Horizontal State Distribution Bar
+fn render_distribution_bar(f: &mut Frame, app: &App, area: Rect) {
+    if area.width < 10 || app.snapshots.is_empty() {
+        return;
+    }
+    let total = app.snapshots.len() as f64;
+    let mut bull_cnt = 0.0;
+    let mut bear_cnt = 0.0;
+    let mut coil_cnt = 0.0;
+    let mut carry_cnt = 0.0;
+    let mut chop_cnt = 0.0;
+
+    for s in &app.snapshots {
+        match s.state {
+            RegimeState::BullMomentum => bull_cnt += 1.0,
+            RegimeState::BearMomentum => bear_cnt += 1.0,
+            RegimeState::VolatilityCoiling => coil_cnt += 1.0,
+            RegimeState::FundingCarry => carry_cnt += 1.0,
+            RegimeState::RangeChop => chop_cnt += 1.0,
+        }
+    }
+
+    let bull_pct = (bull_cnt / total) * 100.0;
+    let bear_pct = (bear_cnt / total) * 100.0;
+    let coil_pct = (coil_cnt / total) * 100.0;
+    let carry_pct = (carry_cnt / total) * 100.0;
+    let chop_pct = (chop_cnt / total) * 100.0;
+
+    let line = Line::from(vec![
+        Span::styled(format!("BULL {:.0}% ", bull_pct), app.theme.bull),
+        Span::styled("│ ", app.theme.border),
+        Span::styled(format!("BEAR {:.0}% ", bear_pct), app.theme.bear),
+        Span::styled("│ ", app.theme.border),
+        Span::styled(format!("COIL {:.0}% ", coil_pct), app.theme.coiling),
+        Span::styled("│ ", app.theme.border),
+        Span::styled(format!("CARRY {:.0}% ", carry_pct), app.theme.carry),
+        Span::styled("│ ", app.theme.border),
+        Span::styled(format!("CHOP {:.0}%", chop_pct), app.theme.chop),
+    ]);
+
+    f.render_widget(Paragraph::new(line).alignment(Alignment::Center), area);
 }
 
 // ============================================================================
@@ -521,8 +658,7 @@ fn render_event_log(f: &mut Frame, app: &App, area: Rect) {
         .map(|h| Span::styled(*h, app.theme.header));
     let header = Row::new(header_cells).height(1);
 
-    let visible_rows = area.height.saturating_sub(3) as usize;
-    let recent_events: Vec<_> = app.events.iter().rev().take(visible_rows.max(4)).collect();
+    let recent_events: Vec<_> = app.events.iter().rev().take(10).collect();
     let rows = recent_events.iter().enumerate().map(|(idx, ev)| {
         let from_str = ev.from_state.display_name();
         let to_str = ev.to_state.display_name();
