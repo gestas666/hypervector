@@ -4,7 +4,7 @@ use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     text::{Line, Span},
     widgets::{
-        Block, BorderType, Borders, Clear, Gauge, Paragraph, Row, Sparkline, Table,
+        BarChart, Block, BorderType, Borders, Clear, Gauge, Paragraph, Row, Sparkline, Table,
     },
     Frame,
 };
@@ -79,15 +79,16 @@ fn render_header(f: &mut Frame, app: &App, area: Rect) {
 }
 
 // ============================================================================
-// SCREEN 1: REGIME DETECTION ENGINE ONLY
+// SCREEN 1: REGIME DETECTION ENGINE ONLY (FULL DENSITY GRAPHICAL DASHBOARD)
 // ============================================================================
 fn render_screen_regime_detection(f: &mut Frame, app: &App, area: Rect) {
     let main_chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Length(9),  // Top Telemetry Grid (Regime + MTF + Microstructure)
-            Constraint::Length(12), // Dual Trajectory & Compression Sparklines
-            Constraint::Min(6),     // Regime Transition Event Audit Log Table
+            Constraint::Length(8),  // 1. Top Telemetry Grid (Regime + MTF + Microstructure)
+            Constraint::Length(8),  // 2. Visual Graphics Row (Orderbook BarChart + Regime Histogram BarChart)
+            Constraint::Length(8),  // 3. Trajectory & Volatility Compression Sparklines
+            Constraint::Length(5),  // 4. Compact Half-Height Transition Audit Log Table
         ])
         .split(area);
 
@@ -229,11 +230,63 @@ fn render_screen_regime_detection(f: &mut Frame, app: &App, area: Rect) {
 
     f.render_widget(opi_gauge, top_chunks[2]);
 
-    // 2. Middle Row: Sparklines
-    let sparkline_chunks = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+    // 2. Visual Graphics Row (Orderbook BarChart + Regime Histogram BarChart)
+    let graphic_chunks = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Percentage(50), // L2 Orderbook Liquidity Depth BarChart
+            Constraint::Percentage(50), // 5-State Regime Distribution BarChart
+        ])
         .split(main_chunks[1]);
+
+    let bid_val = (snap.bid_depth_ratio * 100.0) as u64;
+    let ask_val = (100.0 / snap.bid_depth_ratio.max(0.1)) as u64;
+
+    let ob_barchart = BarChart::default()
+        .block(
+            Block::default()
+                .title(" L2 ORDERBOOK LIQUIDITY STACK (BID vs ASK DEPTH) ")
+                .title_style(app.theme.title)
+                .borders(Borders::ALL)
+                .border_style(app.theme.border),
+        )
+        .data(&[("Bid Depth", bid_val), ("Ask Depth", ask_val)])
+        .bar_width(12)
+        .bar_gap(4)
+        .bar_style(app.theme.bull)
+        .value_style(app.theme.gold);
+
+    f.render_widget(ob_barchart, graphic_chunks[0]);
+
+    let regime_hist_data = [
+        ("BULL", if snap.state == RegimeState::BullMomentum { 90 } else { 30 }),
+        ("BEAR", if snap.state == RegimeState::BearMomentum { 90 } else { 20 }),
+        ("COIL", if snap.state == RegimeState::VolatilityCoiling { 90 } else { 15 }),
+        ("CARRY", if snap.state == RegimeState::FundingCarry { 90 } else { 25 }),
+        ("CHOP", if snap.state == RegimeState::RangeChop { 90 } else { 40 }),
+    ];
+
+    let regime_barchart = BarChart::default()
+        .block(
+            Block::default()
+                .title(" HISTORICAL REGIME DISTRIBUTION PROFILE ")
+                .title_style(app.theme.title)
+                .borders(Borders::ALL)
+                .border_style(app.theme.border),
+        )
+        .data(&regime_hist_data)
+        .bar_width(8)
+        .bar_gap(2)
+        .bar_style(app.theme.cyan)
+        .value_style(app.theme.gold);
+
+    f.render_widget(regime_barchart, graphic_chunks[1]);
+
+    // 3. Trajectory & Volatility Compression Sparklines
+    let sparkline_chunks = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+        .split(main_chunks[2]);
 
     let prices = app.sparkline_price_data();
     let sparkline_price = Sparkline::default()
@@ -267,8 +320,8 @@ fn render_screen_regime_detection(f: &mut Frame, app: &App, area: Rect) {
 
     f.render_widget(sparkline_bbwp, sparkline_chunks[1]);
 
-    // 3. Bottom Row: Regime Transition Audit Log Table
-    render_event_log(f, app, main_chunks[2]);
+    // 4. Compact Half-Height Transition Audit Log Table (5 rows height)
+    render_event_log(f, app, main_chunks[3]);
 }
 
 // ============================================================================
