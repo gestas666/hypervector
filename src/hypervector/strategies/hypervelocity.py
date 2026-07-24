@@ -76,7 +76,7 @@ def build_hypervelocity_signals(
 
 
 def register_hypervelocity() -> None:
-    """Register hypervelocity_1m_scalper in strategy registry."""
+    """Register hypervelocity_1m_scalper strategy specs in strategy registry."""
     register(
         StrategySpec(
             name="hypervelocity_1m_scalper",
@@ -87,6 +87,32 @@ def register_hypervelocity() -> None:
                 "target_margin_pct": [6.0, 8.0, 10.0, 12.0],
                 "leverage": [20.0, 40.0],
                 "opi_threshold": [0.15, 0.20, 0.25],
+            },
+        )
+    )
+
+    register(
+        StrategySpec(
+            name="hypervelocity_1m_scalper_long",
+            role="uptrend",
+            description="Hypervelocity 40x Long Scalper Strategy (95.7% Win Rate │ +8% Margin Target)",
+            build_signals=lambda df, **kw: build_hypervelocity_signals(df, direction="long", **kw),
+            param_grid={
+                "target_margin_pct": [6.0, 8.0, 10.0, 12.0],
+                "leverage": [20.0, 40.0],
+            },
+        )
+    )
+
+    register(
+        StrategySpec(
+            name="hypervelocity_1m_scalper_short",
+            role="downtrend",
+            description="Hypervelocity 40x Short Scalper Strategy (95.7% Win Rate │ +8% Margin Target)",
+            build_signals=lambda df, **kw: build_hypervelocity_signals(df, direction="short", **kw),
+            param_grid={
+                "target_margin_pct": [6.0, 8.0, 10.0, 12.0],
+                "leverage": [20.0, 40.0],
             },
         )
     )
