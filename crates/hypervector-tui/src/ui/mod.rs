@@ -11,6 +11,7 @@ use ratatui::{
 };
 
 use crate::app::App;
+use crate::hypervelocity;
 use crate::model::{get_coin_max_leverage, LeverageMode, RegimeState, RiskSizingMode, TpSlStrategy};
 
 pub fn draw(f: &mut Frame, app: &App) {
@@ -33,6 +34,8 @@ pub fn draw(f: &mut Frame, app: &App) {
         render_screen_strategy_policy(f, app, chunks[2]);
     } else if app.active_tab == 2 {
         render_screen_live_shadow_dashboard(f, app, chunks[2]);
+    } else if app.active_tab == 3 {
+        hypervelocity::render_screen_hypervelocity(f, app, chunks[2]);
     } else {
         render_screen_engine_config(f, app, chunks[2]);
     }
@@ -63,6 +66,7 @@ fn render_header(f: &mut Frame, app: &App, area: Rect) {
     let tab2_style = if app.active_tab == 1 { app.theme.highlight } else { app.theme.muted };
     let tab3_style = if app.active_tab == 2 { app.theme.highlight } else { app.theme.muted };
     let tab4_style = if app.active_tab == 3 { app.theme.highlight } else { app.theme.muted };
+    let tab5_style = if app.active_tab == 4 { app.theme.highlight } else { app.theme.muted };
 
     let text = vec![Line::from(vec![
         Span::styled(" ⚡ HYPERVECTOR ENGINE ", app.theme.title),
@@ -73,7 +77,9 @@ fn render_header(f: &mut Frame, app: &App, area: Rect) {
         Span::raw("│ "),
         Span::styled(" [3] LIVE SHADOW DASHBOARD ", tab3_style),
         Span::raw("│ "),
-        Span::styled(" [4] ENGINE & RISK CONFIG ", tab4_style),
+        Span::styled(" [4] HYPERVELOCITY ", tab4_style),
+        Span::raw("│ "),
+        Span::styled(" [5] ENGINE & RISK CONFIG ", tab5_style),
         Span::raw("│ "),
         Span::styled(format!("SYMBOL: {}", app.symbol), app.theme.gold),
         Span::raw(" │ "),
@@ -763,7 +769,7 @@ fn render_footer(f: &mut Frame, app: &App, area: Rect) {
     let empty = "░".repeat(16 - bar_len);
 
     let help_text = Line::from(vec![
-        Span::styled("[Tab / 1-3]", app.theme.gold), Span::raw(" Switch Screen View │ "),
+        Span::styled("[Tab / 1-5]", app.theme.gold), Span::raw(" Switch Screen View │ "),
         Span::styled("[Space]", app.theme.gold), Span::raw(" Play/Pause │ "),
         Span::styled("[←/→]", app.theme.gold), Span::raw(" Scrub │ "),
         Span::styled("[↑/↓ j/k]", app.theme.gold), Span::raw(" Select Event │ "),
@@ -834,7 +840,7 @@ fn render_help_overlay(f: &mut Frame, app: &App, area: Rect) {
         Line::from(vec![Span::raw("  L_dynamic = clamp(L_cap * conviction * (1 + |OPI| * 0.5), 1.0, L_cap)")]),
         Line::from(vec![Span::styled("───────────────────────────────────────────────────────────────────", app.theme.border)]),
         Line::from(vec![Span::styled("⌨️ INTERACTIVE KEYBOARD CONTROLS:", app.theme.cyan)]),
-        Line::from(vec![Span::styled("  [Tab / 1-3]   ", app.theme.gold), Span::raw("Switch View Screen (1: Regime Engine, 2: Strategy Policy, 3: Live Shadow Dashboard)")]),
+        Line::from(vec![Span::styled("  [Tab / 1-5]   ", app.theme.gold), Span::raw("Switch View Screen (1: Regime Engine, 2: Strategy Policy, 3: Live Shadow Dashboard, 4: Hypervelocity, 5: Config)")]),
         Line::from(vec![Span::styled("  [Space]       ", app.theme.gold), Span::raw("Toggle Play / Pause Real-time Stream")]),
         Line::from(vec![Span::styled("  [← / →]       ", app.theme.gold), Span::raw("Step Backwards / Forwards through History")]),
         Line::from(vec![Span::styled("  [↑ / ↓ j/k]   ", app.theme.gold), Span::raw("Navigate Recent Transition Event Rows")]),
@@ -1187,7 +1193,7 @@ fn render_screen_engine_config(f: &mut Frame, app: &App, area: Rect) {
             Span::styled("⌨️ KEYBOARD CONTROLS: ", app.theme.gold),
             Span::styled("[↑ / ↓ j/k]", app.theme.cyan), Span::raw(" Select Setting │ "),
             Span::styled("[Enter / c]", app.theme.cyan), Span::raw(" Cycle Active Setting Value │ "),
-            Span::styled("[Tab / 1-4]", app.theme.cyan), Span::raw(" Switch Cockpit Screen View"),
+            Span::styled("[Tab / 1-5]", app.theme.cyan), Span::raw(" Switch Cockpit Screen View"),
         ]),
         Line::from(vec![
             Span::styled("💡 NOTE: ", app.theme.title),
