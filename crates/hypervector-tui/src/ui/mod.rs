@@ -545,19 +545,45 @@ fn render_screen_strategy_policy(f: &mut Frame, app: &App, area: Rect) {
     let main_chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Length(5),  // Row 1: Strategy Command Bar & 6-Gate Cascade Telemetry
-            Constraint::Length(9),  // Row 2: Dynamic Leverage & Net Position Sizing Engine
-            Constraint::Length(8),  // Row 3: Registered Strategy Portfolio Signals Grid (1 Active Strategy / Coin)
-            Constraint::Length(10), // Row 4: Active Position PnL + L2 Orderbook Depth Ladder Stack (Side-by-Side)
-            Constraint::Min(12),    // Row 5: Trade State Tracker Dashboard & Run Journal
+            Constraint::Length(6),  // Row 1: Narrow Strategy Command Box (42%) + Dynamic Leverage Panel (58%)
+            Constraint::Length(6),  // Row 2: Loaded Strategy Portfolio Matrix (3 Strategies)
+            Constraint::Length(10), // Row 3: Active Position PnL (Strictly 1 / coin) + L2 Depth Ladder Stack
+            Constraint::Min(11),    // Row 4: Performance Summary + Equity Curve Sparkline + Trend State Log
         ])
         .split(area);
 
-    hypervelocity::render_command_bar(f, app, main_chunks[0]);
-    render_dynamic_leverage_panel(f, app, main_chunks[1]);
-    render_registered_strategy_matrix(f, app, main_chunks[2]);
-    hypervelocity::render_position_and_book(f, app, main_chunks[3]);
-    hypervelocity::render_trade_state_dashboard(f, app, main_chunks[4]);
+    // Row 1: Narrower Strategy Command Box + Dynamic Leverage Panel
+    let row1_chunks = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([Constraint::Percentage(42), Constraint::Percentage(58)])
+        .split(main_chunks[0]);
+
+    hypervelocity::render_command_bar(f, app, row1_chunks[0]);
+    render_dynamic_leverage_panel(f, app, row1_chunks[1]);
+
+    // Row 2: Loaded Strategy Matrix
+    render_registered_strategy_matrix(f, app, main_chunks[1]);
+
+    // Row 3: Active Position Telemetry (Strictly 1 position / coin) + Orderbook L2 Depth Ladder
+    hypervelocity::render_position_and_book(f, app, main_chunks[2]);
+
+    // Row 4: Performance Section + Equity Sparkline + Trend State Log (Bottom Corner)
+    render_bottom_performance_and_trend_log(f, app, main_chunks[3]);
+}
+
+fn render_bottom_performance_and_trend_log(f: &mut Frame, app: &App, area: Rect) {
+    let row4_chunks = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Percentage(32), // Performance Summary Box
+            Constraint::Percentage(33), // Equity Curve & Return Distribution
+            Constraint::Percentage(35), // Trend State Log (Bottom Corner)
+        ])
+        .split(area);
+
+    hypervelocity::render_all_time_stats(f, app, row4_chunks[0]);
+    hypervelocity::render_return_distribution(f, app, row4_chunks[1]);
+    render_event_log(f, app, row4_chunks[2]);
 }
 
 fn render_dynamic_leverage_panel(f: &mut Frame, app: &App, area: Rect) {

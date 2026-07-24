@@ -365,7 +365,7 @@ fn render_stats_row(f: &mut Frame, app: &App, area: Rect) {
     render_return_distribution(f, app, chunks[2]);
 }
 
-fn render_all_time_stats(f: &mut Frame, app: &App, area: Rect) {
+pub fn render_all_time_stats(f: &mut Frame, app: &App, area: Rect) {
     let stats = &app.paper_stats;
     let win_pct = stats.win_rate_pct;
 
@@ -413,7 +413,7 @@ fn render_all_time_stats(f: &mut Frame, app: &App, area: Rect) {
     ];
 
     let block = Block::default()
-        .title(" ALL-TIME ")
+        .title(" ALL-TIME PERFORMANCE ")
         .title_style(app.theme.title)
         .borders(Borders::ALL)
         .border_style(app.theme.border);
@@ -421,8 +421,7 @@ fn render_all_time_stats(f: &mut Frame, app: &App, area: Rect) {
     f.render_widget(Paragraph::new(text).block(block), area);
 }
 
-fn render_run_stats(f: &mut Frame, app: &App, area: Rect) {
-    let snap = app.current_snapshot();
+pub fn render_run_stats(f: &mut Frame, app: &App, area: Rect) {
     let dir = &app.position_run_direction;
     let dir_icon = if dir == "LONG" { "▲" } else if dir == "SHORT" { "▼" } else { "◆" };
     let dir_style = if dir == "LONG" { app.theme.bull } else if dir == "SHORT" { app.theme.bear } else { app.theme.muted };
@@ -448,24 +447,16 @@ fn render_run_stats(f: &mut Frame, app: &App, area: Rect) {
             Span::styled(format!("{} {}", dir_icon, dir), dir_style),
         ]),
         Line::from(vec![
-            Span::raw("W/L RUN  "),
-            Span::styled(format!("{}W / {}L", app.run_wins, app.run_position_index.saturating_sub(app.run_wins)), app.theme.title),
-            Span::styled(format!("  {:.0}%", run_win_rate), app.theme.bull),
+            Span::raw("RUN WINS  "),
+            Span::styled(format!("{}/{} ({:.0}%)", app.run_wins, app.run_position_index, run_win_rate), app.theme.bull),
         ]),
         Line::from(vec![
-            Span::raw("RUN PnL  "),
-            Span::styled(format!("+${:.2}", app.run_pnl), app.theme.gold),
+            Span::raw("RUN PNL   "),
+            Span::styled(format!("+${:.2}", app.run_pnl), app.theme.bull),
         ]),
         Line::from(vec![
-            Span::styled(format!("AVG MGN {:.2}%", avg_margin), app.theme.cyan),
-        ]),
-        Line::from(vec![
-            Span::raw("REGIME  "),
-            Span::styled(snap.state.primary_label(), match snap.state {
-                RegimeState::BullMomentum => app.theme.bull,
-                RegimeState::BearMomentum => app.theme.bear,
-                _ => app.theme.muted,
-            }),
+            Span::raw("AVG MARGIN "),
+            Span::styled(format!("+{:.2}%", avg_margin), app.theme.gold),
         ]),
     ];
 
@@ -478,7 +469,7 @@ fn render_run_stats(f: &mut Frame, app: &App, area: Rect) {
     f.render_widget(Paragraph::new(text).block(block), area);
 }
 
-fn render_return_distribution(f: &mut Frame, app: &App, area: Rect) {
+pub fn render_return_distribution(f: &mut Frame, app: &App, area: Rect) {
     // Build histogram buckets
     let mut buckets = [0usize; 7]; // -2, 0, +2, +4, +6, +8, +10+
     for t in &app.hv_trades {
