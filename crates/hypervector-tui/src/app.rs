@@ -135,8 +135,13 @@ impl App {
 
     pub fn on_tick(&mut self) {
         self.tick_count += 1;
-        if self.is_playing && self.current_index + 1 < self.snapshots.len() {
-            self.current_index += 1;
+        if self.is_playing {
+            if self.current_index + 1 < self.snapshots.len() {
+                self.current_index += 1;
+            } else if !self.snapshots.is_empty() {
+                // Continuous live playback loop so live telemetry never freezes
+                self.current_index = 0;
+            }
         }
     }
 

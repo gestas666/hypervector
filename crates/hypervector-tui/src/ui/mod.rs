@@ -3,7 +3,6 @@
 
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
-    style::Modifier,
     text::{Line, Span},
     widgets::{
         BarChart, Block, BorderType, Borders, Clear, Gauge, Paragraph, Row, Sparkline, Table,
@@ -84,7 +83,7 @@ fn render_header(f: &mut Frame, app: &App, area: Rect) {
     f.render_widget(p, area);
 }
 
-// SRS_TUI_EC1: Regime Timeline Ribbon (Titled Block Strip)
+// High-Visual Regime Timeline Ribbon with Explicit Legend Title
 fn render_timeline_ribbon(f: &mut Frame, app: &App, area: Rect) {
     if area.width < 5 || app.snapshots.is_empty() {
         return;
@@ -107,15 +106,22 @@ fn render_timeline_ribbon(f: &mut Frame, app: &App, area: Rect) {
                 RegimeState::RangeChop => app.theme.chop,
             };
             if idx == app.current_index {
-                Span::styled("█", style.add_modifier(Modifier::REVERSED))
+                Span::styled("█", style.add_modifier(ratatui::style::Modifier::REVERSED))
             } else {
                 Span::styled("█", style)
             }
         })
         .collect();
 
+    let snap = app.current_snapshot();
+    let title_str = format!(
+        " 🎞️ REGIME TIMELINE (Playhead: █ Inverted) │ Active: [{}] │ HTF Lock: 15m [{}] ",
+        snap.state.primary_label(),
+        snap.trend_15m
+    );
+
     let block = Block::default()
-        .title(" HISTORICAL REGIME TIMELINE RIBBON (Current Playhead Position: █ Inverted) ")
+        .title(title_str)
         .title_style(app.theme.title)
         .borders(Borders::ALL)
         .border_style(app.theme.border);
