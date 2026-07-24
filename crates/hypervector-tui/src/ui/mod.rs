@@ -575,15 +575,17 @@ fn render_bottom_performance_and_trend_log(f: &mut Frame, app: &App, area: Rect)
     let row4_chunks = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([
-            Constraint::Percentage(32), // Performance Summary Box
-            Constraint::Percentage(33), // Equity Curve & Return Distribution
-            Constraint::Percentage(35), // Trend State Log (Bottom Corner)
+            Constraint::Percentage(24), // All-Time Performance Summary Box
+            Constraint::Percentage(24), // This Run Performance Box
+            Constraint::Percentage(22), // Return Distribution Sparkline
+            Constraint::Percentage(30), // Trend State Log (Bottom Corner)
         ])
         .split(area);
 
     hypervelocity::render_all_time_stats(f, app, row4_chunks[0]);
-    hypervelocity::render_return_distribution(f, app, row4_chunks[1]);
-    render_event_log(f, app, row4_chunks[2]);
+    hypervelocity::render_run_stats(f, app, row4_chunks[1]);
+    hypervelocity::render_return_distribution(f, app, row4_chunks[2]);
+    render_event_log(f, app, row4_chunks[3]);
 }
 
 fn render_dynamic_leverage_panel(f: &mut Frame, app: &App, area: Rect) {
@@ -681,20 +683,6 @@ fn render_registered_strategy_matrix(f: &mut Frame, app: &App, area: Rect) {
             Span::styled(format!("{:.2}x", if is_bull_active || is_bear_active { 2.00 } else { 0.0 }), app.theme.gold),
             Span::styled(format!("{:.1}x", if is_bull_active || is_bear_active { 40.0 } else { 1.0 }), app.theme.cyan),
             Span::styled("Primary 40x BTC Scalper (95.7% Win Rate │ +8% Margin Target │ Single Position Netting)", app.theme.title),
-        ]),
-        Row::new(vec![
-            Span::styled("impulse_1m_long", app.theme.bull),
-            Span::styled(if is_bull_active && !is_bear_active { "PASS-THROUGH" } else { "INACTIVE (NETTED)" }, if is_bull_active { app.theme.bull } else { app.theme.muted }),
-            Span::styled("0.00x", app.theme.muted),
-            Span::styled("1.00x", app.theme.muted),
-            Span::styled("1m Impulse Scalper (Secondary Fallback Signal)", app.theme.muted),
-        ]),
-        Row::new(vec![
-            Span::styled("impulse_1m_short", app.theme.bear),
-            Span::styled(if is_bear_active { "PASS-THROUGH" } else { "INACTIVE (NETTED)" }, if is_bear_active { app.theme.bear } else { app.theme.muted }),
-            Span::styled("0.00x", app.theme.muted),
-            Span::styled("1.00x", app.theme.muted),
-            Span::styled("1m Impulse Short Scalper (Secondary Fallback Signal)", app.theme.muted),
         ]),
         Row::new(vec![
             Span::styled("pine_composite", app.theme.coiling),
