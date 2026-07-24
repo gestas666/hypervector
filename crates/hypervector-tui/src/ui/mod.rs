@@ -754,11 +754,17 @@ fn render_event_log(f: &mut Frame, app: &App, area: Rect) {
 
         let row_style = if is_selected { app.theme.highlight } else { ratatui::style::Style::default() };
 
+        let ts_display = if ev.timestamp_str.contains('T') {
+            ev.timestamp_str.split('T').nth(1).unwrap_or(&ev.timestamp_str).get(..8).unwrap_or(&ev.timestamp_str)
+        } else {
+            &ev.timestamp_str
+        };
+
         Row::new(vec![
-            Span::styled(&ev.timestamp_str, if is_selected { app.theme.highlight } else { app.theme.muted }),
+            Span::styled(ts_display, if is_selected { app.theme.highlight } else { app.theme.muted }),
             Span::styled(from_str, row_style),
             Span::styled(to_str, to_style),
-            Span::styled(format!("${:.2}", ev.price), if is_selected { app.theme.highlight } else { app.theme.gold }),
+            Span::styled(format!("${:.0}", ev.price), if is_selected { app.theme.highlight } else { app.theme.gold }),
             Span::styled(&ev.trigger_reason, if is_selected { app.theme.highlight } else { app.theme.cyan }),
         ])
         .style(row_style)
@@ -767,11 +773,11 @@ fn render_event_log(f: &mut Frame, app: &App, area: Rect) {
     let table = Table::new(
         rows,
         [
-            Constraint::Length(19),
-            Constraint::Length(42),
-            Constraint::Length(42),
-            Constraint::Length(12),
-            Constraint::Min(25),
+            Constraint::Length(10),
+            Constraint::Length(14),
+            Constraint::Length(14),
+            Constraint::Length(10),
+            Constraint::Min(15),
         ],
     )
     .header(header)
