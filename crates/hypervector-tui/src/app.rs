@@ -86,7 +86,7 @@ impl App {
     }
 
     pub fn toggle_tab(&mut self) {
-        self.active_tab = (self.active_tab + 1) % 4;
+        self.active_tab = (self.active_tab + 1) % 5;
     }
 
     pub fn select_next_event(&mut self) {
