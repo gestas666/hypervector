@@ -22,7 +22,7 @@ from typing import Any, Literal
 import numpy as np
 import pandas as pd
 
-from hypervector.strategies.indicators import bbwp, choppiness_index, ema, rsi
+from hypervector.strategies.indicators import bbwp, choppiness_index, ema, rsi, zero_lag_trend_ohlc
 
 UltimateRegimeState = Literal[
     "BULL_MOMENTUM_EXPANSION",
@@ -58,12 +58,10 @@ def detect_ultimate_regime(
     h = df_1m["high"].astype(float)
     l = df_1m["low"].astype(float)
 
-    # 1. Technical Indicators
-    ef_1m = ema(c, 12)
-    es_1m = ema(c, 48)
-    r_1m = rsi(c, 14)
+    # 1. Technical Indicators & Hysteresis Trend State Machine
     chop = choppiness_index(h, l, c, length=14)
     bb_pct, _ = bbwp(c, bb_length=20, lookback=180)
+    _, t_1m = zero_lag_trend_ohlc(h, l, c, length=70, mult=1.2)
 
     # Higher Timeframe Confirmation (safe for 1m, 5m, 15m+ inputs)
     step_minutes = 1.0
@@ -73,33 +71,37 @@ def detect_ultimate_regime(
             step_minutes = diff_sec / 60.0
 
     if step_minutes >= 15.0:
-        macro_bull = ef_1m > es_1m
-        macro_bear = ef_1m < es_1m
+        macro_bull = t_1m == 1
+        macro_bear = t_1m == -1
     else:
         if df_5m is None and isinstance(df_1m.index, pd.DatetimeIndex) and step_minutes < 5.0:
-            df_5m = df_1m.resample("5min", label="right", closed="right").agg({"close": "last"}).dropna()
+            df_5m = df_1m.resample("5min", label="right", closed="right").agg(
+                {"high": "max", "low": "min", "close": "last"}
+            ).dropna()
         if df_15m is None and isinstance(df_1m.index, pd.DatetimeIndex) and step_minutes < 15.0:
-            df_15m = df_1m.resample("15min", label="right", closed="right").agg({"close": "last"}).dropna()
+            df_15m = df_1m.resample("15min", label="right", closed="right").agg(
+                {"high": "max", "low": "min", "close": "last"}
+            ).dropna()
 
     if df_15m is not None and not df_15m.empty:
+        h15 = df_15m["high"].astype(float)
+        l15 = df_15m["low"].astype(float)
         c15 = df_15m["close"].astype(float)
-        ef15 = ema(c15, 12)
-        es15 = ema(c15, 48)
-        ef_15m = ef15.shift(1).reindex(c.index, method="ffill")
-        es_15m = es15.shift(1).reindex(c.index, method="ffill")
-        macro_bull = (ef_1m > es_1m) & (ef_15m > es_15m)
-        macro_bear = (ef_1m < es_1m) & (ef_15m < es_15m)
+        _, t15 = zero_lag_trend_ohlc(h15, l15, c15, length=70, mult=1.2)
+        t_15m = t15.shift(1).reindex(c.index, method="ffill").fillna(0)
+        macro_bull = (t_1m == 1) & (t_15m == 1)
+        macro_bear = (t_1m == -1) & (t_15m == -1)
     elif df_5m is not None and not df_5m.empty:
+        h5 = df_5m["high"].astype(float)
+        l5 = df_5m["low"].astype(float)
         c5 = df_5m["close"].astype(float)
-        ef5 = ema(c5, 12)
-        es5 = ema(c5, 48)
-        ef_5m = ef5.shift(1).reindex(c.index, method="ffill")
-        es_5m = es5.shift(1).reindex(c.index, method="ffill")
-        macro_bull = (ef_1m > es_1m) & (ef_5m > es_5m)
-        macro_bear = (ef_1m < es_1m) & (ef_5m < es_5m)
+        _, t5 = zero_lag_trend_ohlc(h5, l5, c5, length=70, mult=1.2)
+        t_5m = t5.shift(1).reindex(c.index, method="ffill").fillna(0)
+        macro_bull = (t_1m == 1) & (t_5m == 1)
+        macro_bear = (t_1m == -1) & (t_5m == -1)
     else:
-        macro_bull = ef_1m > es_1m
-        macro_bear = ef_1m < es_1m
+        macro_bull = t_1m == 1
+        macro_bear = t_1m == -1
 
     # 2. Microstructure Features
     opi = df_1m["order_pressure_index"].astype(float) if "order_pressure_index" in df_1m.columns else df_1m.get("obi_5", pd.Series(0.0, index=c.index)).astype(float)
@@ -120,8 +122,6 @@ def detect_ultimate_regime(
     short_w = np.ones(n, dtype=float)
     max_lev = np.full(n, 2.0, dtype=float)
 
-    ef_arr = ef_1m.to_numpy()
-    es_arr = es_1m.to_numpy()
     bb_arr = bb_pct.to_numpy()
     chop_arr = chop.to_numpy()
     mb_arr = macro_bull.to_numpy()
