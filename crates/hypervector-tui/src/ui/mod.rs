@@ -620,20 +620,23 @@ fn render_screen_strategy_policy(f: &mut Frame, app: &App, area: Rect) {
 
     f.render_widget(Paragraph::new(policy_text).block(policy_block), main_chunks[0]);
 
-    // 2. Strategy Portfolio Signals Grid
+    // 2. Strategy Portfolio Signals Grid (Enforcing Perpetual Single Position Netting)
+    let is_long_active = snap.long_weight > 0.0 && snap.short_weight == 0.0;
+    let is_short_active = snap.short_weight > 0.0 && snap.long_weight == 0.0;
+
     let strategy_rows = vec![
         Row::new(vec![
             Span::styled("impulse_1m_long", app.theme.bull),
-            Span::styled(if snap.long_weight > 0.0 { "ACTIVE (LONG)" } else { "INACTIVE" }, if snap.long_weight > 0.0 { app.theme.bull } else { app.theme.muted }),
-            Span::styled(format!("{:.2}x", snap.long_weight), app.theme.gold),
-            Span::styled(format!("{:.2}x", snap.dynamic_leverage), app.theme.cyan),
+            Span::styled(if is_long_active { "ACTIVE (LONG)" } else { "INACTIVE (FLAT)" }, if is_long_active { app.theme.bull } else { app.theme.muted }),
+            Span::styled(format!("{:.2}x", if is_long_active { snap.long_weight } else { 0.0 }), app.theme.gold),
+            Span::styled(format!("{:.2}x", if is_long_active { snap.dynamic_leverage } else { 1.0 }), app.theme.cyan),
             Span::styled("1m Impulse Scalper (Hypertrader Port)", app.theme.muted),
         ]),
         Row::new(vec![
             Span::styled("impulse_1m_short", app.theme.bear),
-            Span::styled(if snap.short_weight > 0.0 { "ACTIVE (SHORT)" } else { "INACTIVE" }, if snap.short_weight > 0.0 { app.theme.bear } else { app.theme.muted }),
-            Span::styled(format!("{:.2}x", snap.short_weight), app.theme.gold),
-            Span::styled(format!("{:.2}x", snap.dynamic_leverage), app.theme.cyan),
+            Span::styled(if is_short_active { "ACTIVE (SHORT)" } else { "INACTIVE (FLAT)" }, if is_short_active { app.theme.bear } else { app.theme.muted }),
+            Span::styled(format!("{:.2}x", if is_short_active { snap.short_weight } else { 0.0 }), app.theme.gold),
+            Span::styled(format!("{:.2}x", if is_short_active { snap.dynamic_leverage } else { 1.0 }), app.theme.cyan),
             Span::styled("1m Impulse Short Scalper (Hypertrader Port)", app.theme.muted),
         ]),
         Row::new(vec![
