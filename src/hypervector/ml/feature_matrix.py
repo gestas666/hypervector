@@ -146,6 +146,9 @@ def build_feature_matrix(df: pd.DataFrame, include_book: bool = True) -> pd.Data
             utc=True,
         )
 
+    if not isinstance(ts, pd.Series):
+        ts = pd.Series(ts, index=df.index)
+
     hour = ts.dt.hour.astype(float) + ts.dt.minute.astype(float) / 60.0
     dow = ts.dt.dayofweek.astype(float)
     hour_sin = np.sin(2 * math.pi * hour / 24.0)

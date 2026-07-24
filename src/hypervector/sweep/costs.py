@@ -25,7 +25,7 @@ class CostModel:
     maker_fee: float = 0.00015
     # Adverse fill slippage in basis points (2.0 bps per side default)
     slippage_bps: float = 2.0
-    # Hourly funding rate on notional (0.0000125 = 1.25 bps / day default)
+    # Hourly funding rate on notional (0.0000125 = 0.125 bps/hour, ~3.0 bps/day default)
     funding_rate_1h: float = 0.0000125
     # Backward compatibility 8h funding rate parameter
     funding_rate_8h: float | None = None

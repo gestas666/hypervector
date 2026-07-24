@@ -1053,6 +1053,10 @@ def cmd_autotune(args: argparse.Namespace) -> int:
         "export_dir": str(res.export_dir) if res.export_dir else None,
         "board_path": str(res.board_path),
     }
+    print(json.dumps(out, indent=2, default=str))
+    return 0
+
+
 def cmd_regime_eval(args: argparse.Namespace) -> int:
     """Evaluate forward return accuracy and predictive edge of Ultimate Regime Classifier."""
     from hypervector.data.pipeline import load_research_history

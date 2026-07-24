@@ -115,7 +115,7 @@ def run_optuna_autotune(
                 apply_costs=True,
             )
 
-            trades = int(m.get("trades", 0))
+            trades = int(m.get("trade_count", m.get("trades", 0)))
             sharpe = float(m.get("sharpe", -99.0))
             net_pnl = float(m.get("net_pnl", -9999.0))
             max_dd = float(m.get("max_drawdown", 100.0))

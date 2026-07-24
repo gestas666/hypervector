@@ -65,11 +65,21 @@ def detect_ultimate_regime(
     chop = choppiness_index(h, l, c, length=14)
     bb_pct, _ = bbwp(c, bb_length=20, lookback=180)
 
-    # Higher Timeframe Confirmation (5m and 15m resampling)
-    if df_5m is None and isinstance(df_1m.index, pd.DatetimeIndex):
-        df_5m = df_1m.resample("5min").agg({"close": "last"}).dropna()
-    if df_15m is None and isinstance(df_1m.index, pd.DatetimeIndex):
-        df_15m = df_1m.resample("15min").agg({"close": "last"}).dropna()
+    # Higher Timeframe Confirmation (safe for 1m, 5m, 15m+ inputs)
+    step_minutes = 1.0
+    if isinstance(df_1m.index, pd.DatetimeIndex) and len(df_1m) > 1:
+        diff_sec = (df_1m.index[1] - df_1m.index[0]).total_seconds()
+        if diff_sec > 0:
+            step_minutes = diff_sec / 60.0
+
+    if step_minutes >= 15.0:
+        macro_bull = ef_1m > es_1m
+        macro_bear = ef_1m < es_1m
+    else:
+        if df_5m is None and isinstance(df_1m.index, pd.DatetimeIndex) and step_minutes < 5.0:
+            df_5m = df_1m.resample("5min").agg({"close": "last"}).dropna()
+        if df_15m is None and isinstance(df_1m.index, pd.DatetimeIndex) and step_minutes < 15.0:
+            df_15m = df_1m.resample("15min").agg({"close": "last"}).dropna()
 
     if df_15m is not None and not df_15m.empty:
         c15 = df_15m["close"].astype(float).reindex(c.index, method="ffill")
