@@ -188,7 +188,7 @@ def test_session_applies_funding_on_open_long(tmp_path: Path):
     funding_rows = [r for r in lines if r.get("action") == "funding"]
     assert len(funding_rows) == 1
     fre = funding_rows[0]
-    assert fre["funding_payment_usd"] == pytest.approx(qty * mark * rate)
+    assert fre["funding_payment_usd"] == pytest.approx(qty * mark * rate / 60.0)
     assert fre["funding_payment_usd"] > 0  # long pays when rate > 0
     assert fre["funding_rate_hourly"] == pytest.approx(rate)
     assert fre["side"] == "buy"

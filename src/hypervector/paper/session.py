@@ -222,12 +222,14 @@ class PaperSession:
         if len(self.buffer_rows) >= 2:
             fill_action = self._process_intent(record)
 
-        # Signed funding once per bar while open (configured/last rate).
+        # Signed funding once per bar while open (fractional hourly rate per bar).
         if self.engine.position.qty != 0.0:
             mark_px = float(record["close"])
+            bar_mins = 1.0 if self.loadout.timeframe == "1m" else (5.0 if self.loadout.timeframe == "5m" else 15.0)
             self.engine.apply_funding(
                 feed_ts=_feed_ts(record),
                 oracle_px=mark_px,
+                hours=bar_mins / 60.0,
             )
 
         return fill_action

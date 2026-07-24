@@ -17,7 +17,6 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-from hypervector.ml.feature_matrix import build_feature_matrix
 from hypervector.strategies.indicators import ema
 from hypervector.strategies.registry import StrategySpec, register
 
@@ -48,6 +47,7 @@ def build_impulse_1m_signals(
     close_vs_ema_bps = (close - ema_val) / ema_val * 10_000.0
 
     # 2. DI Delta (Plus DI - Minus DI) via build_feature_matrix
+    from hypervector.ml.feature_matrix import build_feature_matrix
     feats = build_feature_matrix(df)
     if "di_delta_1m" in feats.columns:
         di_delta = feats["di_delta_1m"]
@@ -75,31 +75,36 @@ def build_impulse_1m_signals(
     return entries, exits, f"impulse_1m_{direction}"
 
 
-# Register Strategy Specs
-register(
-    StrategySpec(
-        name="impulse_1m_long",
-        role="uptrend",
-        description="1m Impulse Long Strategy (Close vs EMA21 + DI Delta + ROC)",
-        build_signals=lambda df, **kw: build_impulse_1m_signals(df, direction="long", **kw),
-        param_grid={
-            "long_ema": [-50.0, -35.0, -25.0, -15.0],
-            "long_di": [-40.0, -30.0, -20.0],
-            "long_roc": [-0.50, -0.25, -0.10],
-        },
+def register_impulse_1m() -> None:
+    """Explicitly register impulse_1m strategy specs (idempotent across registry clears)."""
+    register(
+        StrategySpec(
+            name="impulse_1m_long",
+            role="uptrend",
+            description="1m Impulse Long Strategy (Close vs EMA21 + DI Delta + ROC)",
+            build_signals=lambda df, **kw: build_impulse_1m_signals(df, direction="long", **kw),
+            param_grid={
+                "long_ema": [-50.0, -35.0, -25.0, -15.0],
+                "long_di": [-40.0, -30.0, -20.0],
+                "long_roc": [-0.50, -0.25, -0.10],
+            },
+        )
     )
-)
 
-register(
-    StrategySpec(
-        name="impulse_1m_short",
-        role="downtrend",
-        description="1m Impulse Short Strategy (Close vs EMA21 + DI Delta + ROC)",
-        build_signals=lambda df, **kw: build_impulse_1m_signals(df, direction="short", **kw),
-        param_grid={
-            "short_ema": [15.0, 20.0, 30.0, 45.0],
-            "short_di": [15.0, 25.0, 35.0],
-            "short_roc": [0.10, 0.20, 0.40],
-        },
+    register(
+        StrategySpec(
+            name="impulse_1m_short",
+            role="downtrend",
+            description="1m Impulse Short Strategy (Close vs EMA21 + DI Delta + ROC)",
+            build_signals=lambda df, **kw: build_impulse_1m_signals(df, direction="short", **kw),
+            param_grid={
+                "short_ema": [15.0, 20.0, 30.0, 45.0],
+                "short_di": [15.0, 25.0, 35.0],
+                "short_roc": [0.10, 0.20, 0.40],
+            },
+        )
     )
-)
+
+
+# Register on initial import
+register_impulse_1m()

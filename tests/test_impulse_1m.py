@@ -38,6 +38,9 @@ def test_impulse_1m_signal_generation():
 
 
 def test_impulse_1m_registry():
+    from hypervector.strategies import register_all_strategies
+
+    register_all_strategies()
     spec_l = get_strategy("impulse_1m_long")
     assert spec_l.name == "impulse_1m_long"
     assert spec_l.role == "uptrend"

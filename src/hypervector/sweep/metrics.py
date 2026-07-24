@@ -158,7 +158,7 @@ def compute_trial_metrics(
             win_pct = float(wins) / trade_count if trade_count else 0.0
 
             # Funding drag: duration * notional * rate (research estimate)
-            if apply_costs and cost.funding_rate_8h:
+            if apply_costs and (cost.funding_rate_1h or cost.funding_rate_8h):
                 funding_cost = _estimate_funding(records, cost, close)
                 net_pnl -= funding_cost
                 final_adj = init_cash + net_pnl

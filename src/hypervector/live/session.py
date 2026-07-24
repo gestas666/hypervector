@@ -131,9 +131,11 @@ class LiveSession:
             fill_action = self._process_intent(record)
 
         if self.engine.position.qty != 0.0:
+            bar_mins = 1.0 if self.loadout.timeframe == "1m" else (5.0 if self.loadout.timeframe == "5m" else 15.0)
             self.engine.apply_funding(
                 feed_ts=_feed_ts(record),
                 oracle_px=float(record["close"]),
+                hours=bar_mins / 60.0,
             )
         return fill_action
 
