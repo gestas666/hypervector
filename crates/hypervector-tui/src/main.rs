@@ -77,6 +77,9 @@ fn run_app<B: ratatui::backend::Backend>(
                     } else {
                         match key.code {
                             KeyCode::Char('q') | KeyCode::Esc => app.should_quit = true,
+                            KeyCode::Tab => app.toggle_tab(),
+                            KeyCode::Char('1') => app.active_tab = 0,
+                            KeyCode::Char('2') => app.active_tab = 1,
                             KeyCode::Char('?') | KeyCode::Char('h') => app.toggle_help_overlay(),
                             KeyCode::Enter => app.toggle_event_modal(),
                             KeyCode::Char(' ') => app.toggle_play_pause(),
@@ -86,9 +89,6 @@ fn run_app<B: ratatui::backend::Backend>(
                             KeyCode::Up | KeyCode::Char('k') => app.select_prev_event(),
                             KeyCode::Char('s') => app.cycle_speed(),
                             KeyCode::Char('t') => app.cycle_timeframe(),
-                            KeyCode::Char('1') => app.timeframe = "1m".into(),
-                            KeyCode::Char('2') => app.timeframe = "5m".into(),
-                            KeyCode::Char('3') => app.timeframe = "15m".into(),
                             KeyCode::Char('r') => app.current_index = 0,
                             _ => {}
                         }

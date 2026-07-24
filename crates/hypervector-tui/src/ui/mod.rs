@@ -1,4 +1,4 @@
-//! Ultra High-Density Telemetry UI Rendering Engine for Hypervector Regime Cockpit v2.0.
+//! Ultra High-Density 2-Screen Telemetry UI Rendering Engine for Hypervector Regime Cockpit v2.0.
 
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
@@ -17,18 +17,20 @@ pub fn draw(f: &mut Frame, app: &App) {
         .direction(Direction::Vertical)
         .constraints([
             Constraint::Length(3),  // Top Telemetry Header Bar
-            Constraint::Length(9),  // Upper Telemetry Grid (Regime + MTF + Microstructure)
-            Constraint::Length(12), // Analytics Grid (Sparklines + Dynamic Allocation)
-            Constraint::Min(6),     // Regime Transition Event Audit Log Table
+            Constraint::Min(20),    // Active View Screen Content (Screen 1 or Screen 2)
             Constraint::Length(3),  // Command Keybindings Footer Bar
         ])
         .split(f.area());
 
     render_header(f, app, chunks[0]);
-    render_top_telemetry(f, app, chunks[1]);
-    render_analytics_grid(f, app, chunks[2]);
-    render_event_log(f, app, chunks[3]);
-    render_footer(f, app, chunks[4]);
+
+    if app.active_tab == 0 {
+        render_screen_regime_detection(f, app, chunks[1]);
+    } else {
+        render_screen_strategy_policy(f, app, chunks[1]);
+    }
+
+    render_footer(f, app, chunks[2]);
 
     if app.show_event_detail_modal {
         render_event_modal(f, app, f.area());
@@ -48,18 +50,23 @@ fn render_header(f: &mut Frame, app: &App, area: Rect) {
     };
     let status_str = if app.is_playing { "PLAYING" } else { "PAUSED" };
 
+    let tab1_style = if app.active_tab == 0 { app.theme.highlight } else { app.theme.muted };
+    let tab2_style = if app.active_tab == 1 { app.theme.highlight } else { app.theme.muted };
+
     let text = vec![Line::from(vec![
-        Span::styled(" ⚡ HYPERVECTOR PERPETUALS ENGINE COCKPIT ", app.theme.title),
-        Span::raw(" │ "),
+        Span::styled(" ⚡ HYPERVECTOR ENGINE ", app.theme.title),
+        Span::raw("│ "),
+        Span::styled(" [1] REGIME DETECTION ", tab1_style),
+        Span::raw("│ "),
+        Span::styled(" [2] STRATEGY POLICY ", tab2_style),
+        Span::raw("│ "),
         Span::styled(format!("SYMBOL: {}", app.symbol), app.theme.gold),
         Span::raw(" │ "),
-        Span::styled(format!("TIMEFRAME: {}", app.timeframe), app.theme.cyan),
+        Span::styled(format!("TF: {}", app.timeframe), app.theme.cyan),
         Span::raw(" │ "),
         Span::styled(mode_str, mode_style),
         Span::raw(" │ "),
         Span::styled(format!("[{}] ({:.1}x)", status_str, app.playback_speed), app.theme.header),
-        Span::raw(" │ "),
-        Span::styled(format!("FRAME #{}", app.current_index + 1), app.theme.muted),
     ])];
 
     let block = Block::default()
@@ -71,19 +78,31 @@ fn render_header(f: &mut Frame, app: &App, area: Rect) {
     f.render_widget(p, area);
 }
 
-fn render_top_telemetry(f: &mut Frame, app: &App, area: Rect) {
-    let chunks = Layout::default()
+// ============================================================================
+// SCREEN 1: REGIME DETECTION ENGINE ONLY
+// ============================================================================
+fn render_screen_regime_detection(f: &mut Frame, app: &App, area: Rect) {
+    let main_chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Length(9),  // Top Telemetry Grid (Regime + MTF + Microstructure)
+            Constraint::Length(12), // Dual Trajectory & Compression Sparklines
+            Constraint::Min(6),     // Regime Transition Event Audit Log Table
+        ])
+        .split(area);
+
+    let snap = app.current_snapshot();
+
+    // 1. Top Telemetry Row
+    let top_chunks = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([
             Constraint::Percentage(42), // Active Regime & Conviction Box
             Constraint::Percentage(28), // MTF Hysteresis Matrix
             Constraint::Percentage(30), // L2 Microstructure & Flow
         ])
-        .split(area);
+        .split(main_chunks[0]);
 
-    let snap = app.current_snapshot();
-
-    // 1. Active Regime Banner & Conviction
     let (state_style, state_label) = match snap.state {
         RegimeState::BullMomentum => (app.theme.bull, "🔥 TREND_UP (BULL MOMENTUM EXPANSION)"),
         RegimeState::BearMomentum => (app.theme.bear, "🔻 TREND_DOWN (BEAR MOMENTUM EXPANSION)"),
@@ -102,7 +121,7 @@ fn render_top_telemetry(f: &mut Frame, app: &App, area: Rect) {
         Line::from(vec![
             Span::raw("Primary TA Label: "),
             Span::styled(snap.state.primary_label(), app.theme.gold),
-            Span::raw(" │ Market State: "),
+            Span::raw(" │ Market Phase: "),
             Span::styled(
                 match snap.state {
                     RegimeState::BullMomentum => "IMPULSE UPTREND",
@@ -141,9 +160,9 @@ fn render_top_telemetry(f: &mut Frame, app: &App, area: Rect) {
         .border_type(BorderType::Thick)
         .border_style(state_style);
 
-    f.render_widget(Paragraph::new(banner_text).block(banner_block), chunks[0]);
+    f.render_widget(Paragraph::new(banner_text).block(banner_block), top_chunks[0]);
 
-    // 2. MTF Hysteresis Matrix
+    // MTF Hysteresis Matrix
     let mtf_text = vec![
         Line::from(vec![
             Span::raw(" 1m Trend: "),
@@ -192,9 +211,9 @@ fn render_top_telemetry(f: &mut Frame, app: &App, area: Rect) {
         .borders(Borders::ALL)
         .border_style(app.theme.border);
 
-    f.render_widget(Paragraph::new(mtf_text).block(mtf_block), chunks[1]);
+    f.render_widget(Paragraph::new(mtf_text).block(mtf_block), top_chunks[1]);
 
-    // 3. L2 Microstructure OPI & Depth Gauge
+    // L2 Microstructure OPI Dial
     let opi_ratio = ((snap.opi + 1.0) / 2.0).clamp(0.0, 1.0);
     let opi_gauge = Gauge::default()
         .block(
@@ -208,25 +227,13 @@ fn render_top_telemetry(f: &mut Frame, app: &App, area: Rect) {
         .percent((opi_ratio * 100.0) as u16)
         .label(format!("Spread: {:.1}bps │ Depth: {:.2}x Ratio", snap.spread_bps, snap.bid_depth_ratio));
 
-    f.render_widget(opi_gauge, chunks[2]);
-}
+    f.render_widget(opi_gauge, top_chunks[2]);
 
-fn render_analytics_grid(f: &mut Frame, app: &App, area: Rect) {
-    let chunks = Layout::default()
-        .direction(Direction::Horizontal)
-        .constraints([
-            Constraint::Percentage(55), // Dual Trajectory Sparklines
-            Constraint::Percentage(45), // Dynamic Risk & Allocation Engine
-        ])
-        .split(area);
-
-    let snap = app.current_snapshot();
-
-    // 1. Dual Trajectory Sparklines
-    let inner_chunks = Layout::default()
+    // 2. Middle Row: Sparklines
+    let sparkline_chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
-        .split(chunks[0]);
+        .split(main_chunks[1]);
 
     let prices = app.sparkline_price_data();
     let sparkline_price = Sparkline::default()
@@ -240,7 +247,7 @@ fn render_analytics_grid(f: &mut Frame, app: &App, area: Rect) {
         .data(&prices)
         .style(app.theme.cyan);
 
-    f.render_widget(sparkline_price, inner_chunks[0]);
+    f.render_widget(sparkline_price, sparkline_chunks[0]);
 
     let bbwps = app.sparkline_bbwp_data();
     let sparkline_bbwp = Sparkline::default()
@@ -258,53 +265,72 @@ fn render_analytics_grid(f: &mut Frame, app: &App, area: Rect) {
         .data(&bbwps)
         .style(if snap.bbwp_percentile < 20.0 { app.theme.coiling } else { app.theme.cyan });
 
-    f.render_widget(sparkline_bbwp, inner_chunks[1]);
+    f.render_widget(sparkline_bbwp, sparkline_chunks[1]);
 
-    // 2. Dynamic Risk & Allocation Engine
+    // 3. Bottom Row: Regime Transition Audit Log Table
+    render_event_log(f, app, main_chunks[2]);
+}
+
+// ============================================================================
+// SCREEN 2: STRATEGY POLICY & RISK ALLOCATION ENGINE ONLY
+// ============================================================================
+fn render_screen_strategy_policy(f: &mut Frame, app: &App, area: Rect) {
+    let main_chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Length(10), // Dynamic Leverage & Position Sizing Engine
+            Constraint::Length(10), // Strategy Components & Portfolio Allocation Grid
+            Constraint::Min(6),     // Policy Risk & Execution Rules Diagnostics
+        ])
+        .split(area);
+
+    let snap = app.current_snapshot();
+
+    // 1. Dynamic Leverage & Position Sizing Engine
     let lev_pct = ((snap.dynamic_leverage / snap.max_leverage) * 100.0).clamp(0.0, 100.0);
-    let lev_bar_len = ((lev_pct / 100.0) * 14.0) as usize;
+    let lev_bar_len = ((lev_pct / 100.0) * 20.0) as usize;
     let lev_fill = "█".repeat(lev_bar_len);
-    let lev_empty = "░".repeat(14 - lev_bar_len);
+    let lev_empty = "░".repeat(20 - lev_bar_len);
 
     let lw_pct = (snap.long_weight / 2.0).clamp(0.0, 1.0);
-    let lw_len = (lw_pct * 12.0) as usize;
+    let lw_len = (lw_pct * 16.0) as usize;
     let lw_fill = "█".repeat(lw_len);
-    let lw_empty = "░".repeat(12 - lw_len);
+    let lw_empty = "░".repeat(16 - lw_len);
 
     let sw_pct = (snap.short_weight / 2.0).clamp(0.0, 1.0);
-    let sw_len = (sw_pct * 12.0) as usize;
+    let sw_len = (sw_pct * 16.0) as usize;
     let sw_fill = "█".repeat(sw_len);
-    let sw_empty = "░".repeat(12 - sw_len);
+    let sw_empty = "░".repeat(16 - sw_len);
 
     let policy_text = vec![
         Line::from(vec![
-            Span::raw("Long Weight:       "),
-            Span::styled(format!("[{}{}] {:.2}x", lw_fill, lw_empty, snap.long_weight), app.theme.bull),
-        ]),
-        Line::from(vec![
-            Span::raw("Short Weight:      "),
-            Span::styled(format!("[{}{}] {:.2}x", sw_fill, sw_empty, snap.short_weight), app.theme.bear),
-        ]),
-        Line::from(vec![
-            Span::raw("Dynamic Leverage:  "),
+            Span::raw("Dynamic Leverage:     "),
             Span::styled(
-                format!("[{}{}] {:.2}x / {:.1}x Cap", lev_fill, lev_empty, snap.dynamic_leverage, snap.max_leverage),
+                format!("[{}{}] {:.2}x / {:.1}x Max Cap", lev_fill, lev_empty, snap.dynamic_leverage, snap.max_leverage),
                 app.theme.gold,
             ),
         ]),
         Line::from(vec![
-            Span::raw("Leverage Scaling:  "),
-            Span::styled("Conviction & Orderbook Flow Scaled", app.theme.cyan),
+            Span::raw("Leverage Scaling:     "),
+            Span::styled("L_dynamic = clamp(L_cap * Conviction * (1 + |OPI| * 0.5), 1.0, L_cap)", app.theme.cyan),
         ]),
         Line::from(vec![
-            Span::raw("Execution Policy:  "),
+            Span::raw("Long Alloc Weight:    "),
+            Span::styled(format!("[{}{}] {:.2}x Target Weight", lw_fill, lw_empty, snap.long_weight), app.theme.bull),
+        ]),
+        Line::from(vec![
+            Span::raw("Short Alloc Weight:   "),
+            Span::styled(format!("[{}{}] {:.2}x Target Weight", sw_fill, sw_empty, snap.short_weight), app.theme.bear),
+        ]),
+        Line::from(vec![
+            Span::raw("Execution Policy:     "),
             Span::styled(
-                if snap.taker_allowed { "YES (Taker Allowed)" } else { "NO (Maker Only)" },
+                if snap.taker_allowed { "TAKERS PERMITTED (Impulse High Conviction)" } else { "MAKER ORDERS ONLY (Spread Guard Active)" },
                 if snap.taker_allowed { app.theme.bull } else { app.theme.gold },
             ),
         ]),
         Line::from(vec![
-            Span::raw("Funding Z-Score:   "),
+            Span::raw("Funding Carry Z-Score: "),
             Span::styled(format!("{:.2}", snap.funding_zscore), app.theme.carry),
             Span::raw(" │ Wilder RSI (14): "),
             Span::styled(format!("{:.1}", snap.rsi), app.theme.cyan),
@@ -312,12 +338,68 @@ fn render_analytics_grid(f: &mut Frame, app: &App, area: Rect) {
     ];
 
     let policy_block = Block::default()
-        .title(" DYNAMIC RISK & ALLOCATION ENGINE ")
+        .title(" DYNAMIC LEVERAGE & POSITION SIZING ENGINE ")
         .title_style(app.theme.title)
         .borders(Borders::ALL)
         .border_style(app.theme.border_active);
 
-    f.render_widget(Paragraph::new(policy_text).block(policy_block), chunks[1]);
+    f.render_widget(Paragraph::new(policy_text).block(policy_block), main_chunks[0]);
+
+    // 2. Strategy Portfolio Signals Grid
+    let strategy_rows = vec![
+        Row::new(vec![
+            Span::styled("impulse_1m_long", app.theme.bull),
+            Span::styled(if snap.long_weight > 0.0 { "ACTIVE (LONG)" } else { "INACTIVE" }, if snap.long_weight > 0.0 { app.theme.bull } else { app.theme.muted }),
+            Span::styled(format!("{:.2}x", snap.long_weight), app.theme.gold),
+            Span::styled(format!("{:.2}x", snap.dynamic_leverage), app.theme.cyan),
+            Span::styled("1m Impulse Scalper (Hypertrader Port)", app.theme.muted),
+        ]),
+        Row::new(vec![
+            Span::styled("impulse_1m_short", app.theme.bear),
+            Span::styled(if snap.short_weight > 0.0 { "ACTIVE (SHORT)" } else { "INACTIVE" }, if snap.short_weight > 0.0 { app.theme.bear } else { app.theme.muted }),
+            Span::styled(format!("{:.2}x", snap.short_weight), app.theme.gold),
+            Span::styled(format!("{:.2}x", snap.dynamic_leverage), app.theme.cyan),
+            Span::styled("1m Impulse Short Scalper (Hypertrader Port)", app.theme.muted),
+        ]),
+        Row::new(vec![
+            Span::styled("pine_composite", app.theme.coiling),
+            Span::styled(if snap.state == RegimeState::VolatilityCoiling { "ACTIVE (BREAKOUT)" } else { "PASS-THROUGH" }, app.theme.coiling),
+            Span::styled("1.50x", app.theme.gold),
+            Span::styled("2.50x", app.theme.cyan),
+            Span::styled("PineScript Multi-Indicator Composite Strategy", app.theme.muted),
+        ]),
+        Row::new(vec![
+            Span::styled("funding_carry_reversal", app.theme.carry),
+            Span::styled(if snap.state == RegimeState::FundingCarry { "ACTIVE (CARRY)" } else { "INACTIVE" }, if snap.state == RegimeState::FundingCarry { app.theme.carry } else { app.theme.muted }),
+            Span::styled("2.00x", app.theme.gold),
+            Span::styled("3.00x", app.theme.cyan),
+            Span::styled("Funding Rate Carry Mean Reversal Strategy", app.theme.muted),
+        ]),
+    ];
+
+    let strategy_table = Table::new(
+        strategy_rows,
+        [
+            Constraint::Length(25),
+            Constraint::Length(18),
+            Constraint::Length(14),
+            Constraint::Length(14),
+            Constraint::Min(30),
+        ],
+    )
+    .header(Row::new(["Strategy Component", "Signal State", "Alloc Weight", "Dyn Leverage", "Strategy Description"].iter().map(|h| Span::styled(*h, app.theme.header))))
+    .block(
+        Block::default()
+            .title(" REGISTERED STRATEGY PORTFOLIO SIGNALS ")
+            .title_style(app.theme.title)
+            .borders(Borders::ALL)
+            .border_style(app.theme.border),
+    );
+
+    f.render_widget(strategy_table, main_chunks[1]);
+
+    // 3. Policy Risk Diagnostics Table
+    render_event_log(f, app, main_chunks[2]);
 }
 
 fn render_event_log(f: &mut Frame, app: &App, area: Rect) {
@@ -391,11 +473,11 @@ fn render_footer(f: &mut Frame, app: &App, area: Rect) {
     let empty = "░".repeat(16 - bar_len);
 
     let help_text = Line::from(vec![
+        Span::styled("[Tab / 1-2]", app.theme.gold), Span::raw(" Switch Screen View │ "),
         Span::styled("[Space]", app.theme.gold), Span::raw(" Play/Pause │ "),
         Span::styled("[←/→]", app.theme.gold), Span::raw(" Scrub │ "),
         Span::styled("[↑/↓ j/k]", app.theme.gold), Span::raw(" Select Event │ "),
-        Span::styled("[Enter]", app.theme.gold), Span::raw(" Event Details │ "),
-        Span::styled("[1-3]", app.theme.gold), Span::raw(" Timeframe │ "),
+        Span::styled("[Enter]", app.theme.gold), Span::raw(" Details │ "),
         Span::styled("[?]", app.theme.gold), Span::raw(" Help │ "),
         Span::styled("Scrub: ", app.theme.cyan),
         Span::styled(format!("[{}{}] {:.1}% ({}/{})", fill, empty, scrub_pct, current, total), app.theme.title),
@@ -462,10 +544,13 @@ fn render_help_overlay(f: &mut Frame, app: &App, area: Rect) {
         Line::from(vec![Span::raw("  L_dynamic = clamp(L_cap * conviction * (1 + |OPI| * 0.5), 1.0, L_cap)")]),
         Line::from(vec![Span::styled("───────────────────────────────────────────────────────────────────", app.theme.border)]),
         Line::from(vec![Span::styled("⌨️ INTERACTIVE KEYBOARD CONTROLS:", app.theme.cyan)]),
+        Line::from(vec![Span::styled("  [Tab / 1-2]   ", app.theme.gold), Span::raw("Switch View Screen (1: Regime Engine, 2: Strategy Policy)")]),
         Line::from(vec![Span::styled("  [Space]       ", app.theme.gold), Span::raw("Toggle Play / Pause Real-time Stream")]),
         Line::from(vec![Span::styled("  [← / →]       ", app.theme.gold), Span::raw("Step Backwards / Forwards through History")]),
-        Line::from(vec![Span::styled("  [1 / 2 / 3]   ", app.theme.gold), Span::raw("Select Timeframe (1m / 5m / 15m)")]),
+        Line::from(vec![Span::styled("  [↑ / ↓ j/k]   ", app.theme.gold), Span::raw("Navigate Recent Transition Event Rows")]),
+        Line::from(vec![Span::styled("  [Enter]       ", app.theme.gold), Span::raw("Open Transition Event Diagnostic Inspector Modal")]),
         Line::from(vec![Span::styled("  [s]           ", app.theme.gold), Span::raw("Cycle Playback Speed (1.0x -> 2.0x -> 5.0x -> 10.0x)")]),
+        Line::from(vec![Span::styled("  [t]           ", app.theme.gold), Span::raw("Cycle Timeframe (1m -> 5m -> 15m)")]),
         Line::from(vec![Span::styled("  [r]           ", app.theme.gold), Span::raw("Reset Scrub Position to Start")]),
         Line::from(vec![Span::styled("  [? / h]       ", app.theme.gold), Span::raw("Toggle this Help & Rules Overlay Window")]),
         Line::from(vec![Span::styled("  [q / Esc]     ", app.theme.gold), Span::raw("Dismiss Overlay / Quit Cockpit")]),
