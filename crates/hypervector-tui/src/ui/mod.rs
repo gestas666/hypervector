@@ -19,7 +19,7 @@ pub fn draw(f: &mut Frame, app: &App) {
         .direction(Direction::Vertical)
         .constraints([
             Constraint::Length(3),  // Top Telemetry Header Bar
-            Constraint::Length(1),  // SRS_TUI_EC1 Regime Timeline Ribbon
+            Constraint::Length(3),  // SRS_TUI_EC1 Regime Timeline Ribbon
             Constraint::Min(20),    // Active View Screen Content (Screen 1 or Screen 2)
             Constraint::Length(3),  // Command Keybindings Footer Bar
         ])
@@ -85,15 +85,15 @@ fn render_header(f: &mut Frame, app: &App, area: Rect) {
     f.render_widget(p, area);
 }
 
-// SRS_TUI_EC1: Regime Timeline Ribbon (1-row strip)
+// SRS_TUI_EC1: Regime Timeline Ribbon (Titled Block Strip)
 fn render_timeline_ribbon(f: &mut Frame, app: &App, area: Rect) {
     if area.width < 5 || app.snapshots.is_empty() {
         return;
     }
     let total = app.snapshots.len();
-    let width = area.width as usize;
-    let start = if app.current_index > width / 2 { app.current_index - width / 2 } else { 0 };
-    let end = (start + width).min(total);
+    let inner_width = area.width.saturating_sub(2) as usize;
+    let start = if app.current_index > inner_width / 2 { app.current_index - inner_width / 2 } else { 0 };
+    let end = (start + inner_width).min(total);
 
     let spans: Vec<Span> = app.snapshots[start..end]
         .iter()
@@ -115,7 +115,13 @@ fn render_timeline_ribbon(f: &mut Frame, app: &App, area: Rect) {
         })
         .collect();
 
-    f.render_widget(Paragraph::new(Line::from(spans)), area);
+    let block = Block::default()
+        .title(" HISTORICAL REGIME TIMELINE RIBBON (Current Playhead Position: █ Inverted) ")
+        .title_style(app.theme.title)
+        .borders(Borders::ALL)
+        .border_style(app.theme.border);
+
+    f.render_widget(Paragraph::new(Line::from(spans)).block(block), area);
 }
 
 // ============================================================================
