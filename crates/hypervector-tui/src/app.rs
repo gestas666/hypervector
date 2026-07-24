@@ -10,6 +10,7 @@ pub struct App {
     pub current_index: usize,
     pub is_playing: bool,
     pub is_live: bool,
+    pub is_synthetic: bool,
     pub playback_speed: f64,
     pub events: Vec<RegimeEvent>,
     pub theme: CockpitTheme,
@@ -18,7 +19,7 @@ pub struct App {
 }
 
 impl App {
-    pub fn new(symbol: String, timeframe: String, snapshots: Vec<RegimeSnapshot>, is_live: bool) -> Self {
+    pub fn new(symbol: String, timeframe: String, snapshots: Vec<RegimeSnapshot>, is_live: bool, is_synthetic: bool) -> Self {
         let mut app = Self {
             symbol,
             timeframe,
@@ -26,6 +27,7 @@ impl App {
             current_index: 0,
             is_playing: true,
             is_live,
+            is_synthetic,
             playback_speed: 1.0,
             events: Vec::new(),
             theme: CockpitTheme::default(),

@@ -83,7 +83,7 @@ def run_long_short_portfolio(
 
     # Combined Portfolio metrics
     net_pnl_comb = float(m_long.get("net_pnl", 0.0)) + float(m_short.get("net_pnl", 0.0))
-    trades_comb = int(m_long.get("trades", 0)) + int(m_short.get("trades", 0))
+    trades_comb = int(m_long.get("trade_count", 0)) + int(m_short.get("trade_count", 0))
     wins_comb = int(m_long.get("wins", 0)) + int(m_short.get("wins", 0))
     win_pct_comb = (wins_comb / trades_comb * 100.0) if trades_comb > 0 else 0.0
 
@@ -95,6 +95,7 @@ def run_long_short_portfolio(
         "net_pnl": net_pnl_comb,
         "total_return_pct": (net_pnl_comb / init_cash) * 100.0,
         "sharpe": sharpe_comb,
+        "trade_count": trades_comb,
         "trades": trades_comb,
         "wins": wins_comb,
         "win_pct": win_pct_comb,

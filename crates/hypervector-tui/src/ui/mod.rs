@@ -32,7 +32,12 @@ pub fn draw(f: &mut Frame, app: &App) {
 }
 
 fn render_header(f: &mut Frame, app: &App, area: Rect) {
-    let mode_str = if app.is_live { "🟢 REAL-TIME LIVE" } else { "▶️ HISTORICAL PLAYBACK" };
+    let (mode_str, mode_style) = match (app.is_live, app.is_synthetic) {
+        (true, false) => ("🟢 REAL-TIME LIVE", app.theme.bull),
+        (true, true) => ("⚠️ DEMO PLAYBACK (Synthetic Live)", app.theme.coiling),
+        (false, false) => ("▶️ HISTORICAL PLAYBACK", app.theme.cyan),
+        (false, true) => ("▶️ DEMO PLAYBACK (Synthetic)", app.theme.gold),
+    };
     let status_str = if app.is_playing { "PLAYING" } else { "PAUSED" };
     
     let text = vec![Line::from(vec![
@@ -42,7 +47,7 @@ fn render_header(f: &mut Frame, app: &App, area: Rect) {
         Span::raw(" | "),
         Span::styled(format!("TIMEFRAME: {}", app.timeframe), app.theme.cyan),
         Span::raw(" | "),
-        Span::styled(mode_str, app.theme.bull),
+        Span::styled(mode_str, mode_style),
         Span::raw(" | "),
         Span::styled(format!("[{}] ({:.1}x)", status_str, app.playback_speed), app.theme.header),
     ])];

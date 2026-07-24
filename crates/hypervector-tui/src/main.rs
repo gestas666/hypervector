@@ -16,7 +16,7 @@ use ratatui::Terminal;
 use hypervector_tui::{
     app::App,
     cli_args::CliArgs,
-    data_loader::{generate_synthetic_history, load_snapshots_from_file},
+    data_loader::load_snapshots_with_metadata,
     ui,
 };
 
@@ -24,13 +24,8 @@ fn main() -> Result<()> {
     color_eyre::install()?;
     let args = CliArgs::parse();
 
-    let snapshots = if let Some(ref path) = args.file {
-        load_snapshots_from_file(path)
-    } else {
-        generate_synthetic_history(300)
-    };
-
-    let mut app = App::new(args.symbol, args.timeframe, snapshots, args.live);
+    let (snapshots, is_synthetic) = load_snapshots_with_metadata(&args);
+    let mut app = App::new(args.symbol, args.timeframe, snapshots, args.live, is_synthetic);
 
     // Terminal Initialization
     enable_raw_mode()?;

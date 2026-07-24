@@ -6,6 +6,33 @@ use serde_json::Value;
 
 use crate::model::{RegimeSnapshot, RegimeState};
 
+pub fn load_snapshots_with_metadata(args: &crate::cli_args::CliArgs) -> (Vec<RegimeSnapshot>, bool) {
+    if let Some(ref path) = args.file {
+        if path.exists() {
+            let snaps = load_snapshots_from_file(path);
+            return (snaps, false);
+        }
+    }
+
+    // Check data_root for real cached aligned data snapshots
+    let cache_candidates = [
+        args.data_root.join("exports").join("regime_snapshots.json"),
+        args.data_root.join("cache").join("aligned").join(format!("{}_aligned_latest.json", args.symbol)),
+    ];
+
+    for candidate in &cache_candidates {
+        if candidate.exists() {
+            let snaps = load_snapshots_from_file(candidate);
+            if !snaps.is_empty() {
+                return (snaps, false);
+            }
+        }
+    }
+
+    // Fall back to synthetic data with explicit synthetic flag
+    (generate_synthetic_history(300), true)
+}
+
 pub fn load_snapshots_from_file(path: &Path) -> Vec<RegimeSnapshot> {
     if !path.exists() {
         return generate_synthetic_history(300);

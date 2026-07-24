@@ -11,7 +11,7 @@ fn test_regime_cockpit_app_state() {
     let snapshots = generate_synthetic_history(100);
     assert_eq!(snapshots.len(), 100);
 
-    let mut app = App::new("BTC".into(), "5m".into(), snapshots, false);
+    let mut app = App::new("BTC".into(), "5m".into(), snapshots, false, true);
 
     assert_eq!(app.symbol, "BTC");
     assert_eq!(app.timeframe, "5m");
