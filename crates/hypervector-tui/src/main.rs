@@ -61,12 +61,22 @@ fn run_app<B: ratatui::backend::Backend>(
             if let Event::Key(key) = event::read()? {
                 if key.kind == KeyEventKind::Press {
                     match key.code {
-                        KeyCode::Char('q') | KeyCode::Esc => app.should_quit = true,
+                        KeyCode::Char('q') | KeyCode::Esc => {
+                            if app.show_help_overlay {
+                                app.show_help_overlay = false;
+                            } else {
+                                app.should_quit = true;
+                            }
+                        }
+                        KeyCode::Char('?') | KeyCode::Char('h') => app.toggle_help_overlay(),
                         KeyCode::Char(' ') => app.toggle_play_pause(),
                         KeyCode::Left => app.step_backward(),
                         KeyCode::Right => app.step_forward(),
                         KeyCode::Char('s') => app.cycle_speed(),
                         KeyCode::Char('t') => app.cycle_timeframe(),
+                        KeyCode::Char('1') => app.timeframe = "1m".into(),
+                        KeyCode::Char('2') => app.timeframe = "5m".into(),
+                        KeyCode::Char('3') => app.timeframe = "15m".into(),
                         KeyCode::Char('r') => app.current_index = 0,
                         _ => {}
                     }
