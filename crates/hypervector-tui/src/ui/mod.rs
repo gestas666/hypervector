@@ -49,11 +49,10 @@ fn render_header(f: &mut Frame, app: &App, area: Rect) {
     let spinner_frames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
     let spinner = spinner_frames[(app.tick_count % spinner_frames.len() as u64) as usize];
 
-    let (mode_str, mode_style) = match (app.is_live, app.is_synthetic) {
-        (true, false) => (format!("{} REAL-TIME LIVE", spinner), app.theme.bull),
-        (true, true) => (format!("{} DEMO PLAYBACK (Synthetic Live)", spinner), app.theme.coiling),
-        (false, false) => ("▶️ HISTORICAL PLAYBACK".into(), app.theme.cyan),
-        (false, true) => ("▶️ DEMO PLAYBACK (Synthetic)".into(), app.theme.gold),
+    let (mode_str, mode_style) = if app.is_live {
+        (format!("{} REAL-TIME LIVE ORDERBOOK STREAM", spinner), app.theme.bull)
+    } else {
+        ("▶️ REAL HISTORICAL MARKET DATA".into(), app.theme.cyan)
     };
     let status_str = if app.is_playing { "PLAYING" } else { "PAUSED" };
 
@@ -180,19 +179,10 @@ fn render_screen_regime_detection(f: &mut Frame, app: &App, area: Rect) {
     let banner_text = vec![
         Line::from(vec![Span::styled(state_label, state_style)]),
         Line::from(vec![
-            Span::raw("Primary TA Label: "),
-            Span::styled(snap.state.primary_label(), app.theme.gold),
-            Span::raw(" │ Market Phase: "),
-            Span::styled(
-                match snap.state {
-                    RegimeState::BullMomentum => "IMPULSE UPTREND",
-                    RegimeState::BearMomentum => "IMPULSE DOWNTREND",
-                    RegimeState::VolatilityCoiling => "BBWP COMPRESSION",
-                    RegimeState::FundingCarry => "CARRY REVERSAL",
-                    RegimeState::RangeChop => "HIGH FRICTION CHOP",
-                },
-                app.theme.title,
-            ),
+            Span::raw("HTF Regime Lock: "),
+            Span::styled("15m (3x-15x Filter)", app.theme.gold),
+            Span::raw(" │ Active HTF Trend: "),
+            Span::styled(format!("15m [{}]", snap.trend_15m), if snap.trend_15m == "BULL" { app.theme.bull } else if snap.trend_15m == "BEAR" { app.theme.bear } else { app.theme.chop }),
         ]),
         Line::from(vec![
             Span::raw("Model Conviction: "),
@@ -225,13 +215,13 @@ fn render_screen_regime_detection(f: &mut Frame, app: &App, area: Rect) {
 
     f.render_widget(Paragraph::new(banner_text).block(banner_block), top_chunks[0]);
 
-    // SRS_TUI_EC13: MTF Hysteresis Matrix with state dots
+    // SRS_TUI_EC13: MTF Hysteresis Matrix with state dots & explicit HTF Lock
     let mtf_text = vec![
         Line::from(vec![
             Span::styled("● ", if snap.trend_1m == "BULL" { app.theme.bull } else if snap.trend_1m == "BEAR" { app.theme.bear } else { app.theme.chop }),
             Span::raw(" 1m Trend: "),
             Span::styled(format!(" [{}] ", snap.trend_1m), app.theme.title),
-            Span::styled("ZLEMA Hysteresis", app.theme.muted),
+            Span::styled("LTF Execution", app.theme.muted),
         ]),
         Line::from(vec![
             Span::styled("● ", if snap.trend_5m == "BULL" { app.theme.bull } else if snap.trend_5m == "BEAR" { app.theme.bear } else { app.theme.chop }),
@@ -240,10 +230,10 @@ fn render_screen_regime_detection(f: &mut Frame, app: &App, area: Rect) {
             Span::styled("ZLEMA Hysteresis", app.theme.muted),
         ]),
         Line::from(vec![
-            Span::styled("● ", if snap.trend_15m == "BULL" { app.theme.bull } else if snap.trend_15m == "BEAR" { app.theme.bear } else { app.theme.chop }),
-            Span::raw("15m Trend: "),
-            Span::styled(format!(" [{}] ", snap.trend_15m), app.theme.title),
-            Span::styled("ZLEMA Hysteresis", app.theme.muted),
+            Span::styled("★ ", app.theme.gold),
+            Span::styled("15m HTF Lock: ", app.theme.gold),
+            Span::styled(format!(" [{}] ", snap.trend_15m), if snap.trend_15m == "BULL" { app.theme.bull } else if snap.trend_15m == "BEAR" { app.theme.bear } else { app.theme.chop }),
+            Span::styled("[MACRO REGIME LOCK]", app.theme.title),
         ]),
         Line::from(vec![
             Span::raw("Alignment: "),
