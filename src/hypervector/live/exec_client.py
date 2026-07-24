@@ -200,7 +200,11 @@ class HyperliquidLiveExecClient:
                 wallet_address=self._wallet,
                 private_key=self._private_key,
             )
-            oid = _parse_oid(raw if isinstance(raw, dict) else {})
+            raw_dict = raw if isinstance(raw, dict) else {}
+            if raw_dict.get("status") in ("err", "error") or "error" in raw_dict:
+                err_msg = str(raw_dict.get("error") or raw_dict.get("response") or raw_dict)
+                return PlaceResult(submitted=False, venue_order_id=None, error=err_msg)
+            oid = _parse_oid(raw_dict)
             return PlaceResult(submitted=True, venue_order_id=oid, error=None)
         except LivePolicyError as exc:
             return PlaceResult(submitted=False, venue_order_id=None, error=str(exc))

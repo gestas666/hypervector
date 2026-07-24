@@ -67,21 +67,26 @@ def compute_trial_metrics(
     risk_pct = risk_pct_from_conviction(conv, risk_cfg)
     size = size_frac_from_risk(risk_pct, sl_frac, risk_cfg)
 
+    # Infer bar frequency for accurate Sharpe ratio annualization (Bug B4)
+    if freq == "1min" and df is not None and len(df) > 1 and isinstance(df.index, pd.DatetimeIndex):
+        step_s = int((df.index[1] - df.index[0]).total_seconds())
+        if step_s >= 3600:
+            freq = f"{step_s // 3600}h"
+        elif step_s >= 60:
+            freq = f"{step_s // 60}min"
+
     fees = cost.fees if apply_costs else 0.0
     slippage = cost.slippage if apply_costs else 0.0
 
-    # VectorBT: size as fraction of equity when size_type='percent' uses 0-1? 
-    # In vbt, size=1 with percent often means 100%. Use size array 0-1 as percent of equity.
-    # Confirm: Portfolio.from_signals size_type='percent' → size is percentage (0-100) in some versions
-    # VectorBT 0.26+ / 1.x: size_type "amount" | "value" | "percent" where percent is 0-1 of equity in many builds.
-    # Safer: use size as percent of available cash via size=size.values and size_type="percent"
+    # VectorBT: use size_type="value" with size in USD notional to support leverage > 1.0 (Bug B2)
+    notional_size = (size * init_cash).to_numpy(dtype=float)
     common: dict[str, Any] = dict(
         init_cash=init_cash,
         freq=freq,
         fees=fees,
         slippage=slippage,
-        size=size.to_numpy(dtype=float),
-        size_type="percent",
+        size=notional_size,
+        size_type="value",
         upon_opposite_entry="ignore",
     )
 
@@ -158,7 +163,7 @@ def compute_trial_metrics(
             win_pct = float(wins) / trade_count if trade_count else 0.0
 
             # Funding drag: duration * notional * rate (research estimate)
-            if apply_costs and cost.funding_rate_8h:
+            if apply_costs and (cost.funding_rate_1h or cost.funding_rate_8h):
                 funding_cost = _estimate_funding(records, cost, close)
                 net_pnl -= funding_cost
                 final_adj = init_cash + net_pnl

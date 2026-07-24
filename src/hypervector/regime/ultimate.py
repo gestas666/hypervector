@@ -77,20 +77,24 @@ def detect_ultimate_regime(
         macro_bear = ef_1m < es_1m
     else:
         if df_5m is None and isinstance(df_1m.index, pd.DatetimeIndex) and step_minutes < 5.0:
-            df_5m = df_1m.resample("5min").agg({"close": "last"}).dropna()
+            df_5m = df_1m.resample("5min", label="right", closed="right").agg({"close": "last"}).dropna()
         if df_15m is None and isinstance(df_1m.index, pd.DatetimeIndex) and step_minutes < 15.0:
-            df_15m = df_1m.resample("15min").agg({"close": "last"}).dropna()
+            df_15m = df_1m.resample("15min", label="right", closed="right").agg({"close": "last"}).dropna()
 
     if df_15m is not None and not df_15m.empty:
-        c15 = df_15m["close"].astype(float).reindex(c.index, method="ffill")
-        ef_15m = ema(c15, 12)
-        es_15m = ema(c15, 48)
+        c15 = df_15m["close"].astype(float)
+        ef15 = ema(c15, 12)
+        es15 = ema(c15, 48)
+        ef_15m = ef15.shift(1).reindex(c.index, method="ffill")
+        es_15m = es15.shift(1).reindex(c.index, method="ffill")
         macro_bull = (ef_1m > es_1m) & (ef_15m > es_15m)
         macro_bear = (ef_1m < es_1m) & (ef_15m < es_15m)
     elif df_5m is not None and not df_5m.empty:
-        c5 = df_5m["close"].astype(float).reindex(c.index, method="ffill")
-        ef_5m = ema(c5, 12)
-        es_5m = ema(c5, 48)
+        c5 = df_5m["close"].astype(float)
+        ef5 = ema(c5, 12)
+        es5 = ema(c5, 48)
+        ef_5m = ef5.shift(1).reindex(c.index, method="ffill")
+        es_5m = es5.shift(1).reindex(c.index, method="ffill")
         macro_bull = (ef_1m > es_1m) & (ef_5m > es_5m)
         macro_bear = (ef_1m < es_1m) & (ef_5m < es_5m)
     else:

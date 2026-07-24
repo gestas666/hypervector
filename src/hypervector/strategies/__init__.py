@@ -3,6 +3,7 @@
 from hypervector.strategies.classic import register_classic_baselines
 from hypervector.strategies.crown_stack import register_crown_stack
 from hypervector.strategies.funding_momentum import register_funding_momentum
+from hypervector.strategies.impulse_1m import register_impulse_1m
 from hypervector.strategies.oi_divergence import register_oi_divergence
 from hypervector.strategies.pine_composite import register_pine_composite
 from hypervector.strategies.registry import StrategySpec, get_strategy, list_strategies, register
@@ -16,6 +17,7 @@ def register_all_strategies() -> None:
     register_pine_composite()
     register_oi_divergence()
     register_funding_momentum()
+    register_impulse_1m()
 
 
 __all__ = [

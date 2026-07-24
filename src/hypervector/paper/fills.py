@@ -203,8 +203,8 @@ class ExplicitFillEngine:
         append_paper_decision(self._data_root, record)
         return record
 
-    def apply_funding(self, *, feed_ts: Any, oracle_px: float) -> dict | None:
-        """Apply one hour of funding on open position; return decision or None if flat."""
+    def apply_funding(self, *, feed_ts: Any, oracle_px: float, hours: float = 1.0) -> dict | None:
+        """Apply fractional/hourly funding on open position; return decision or None if flat."""
         pos = self._position
         if pos.qty == 0.0:
             return None
@@ -215,7 +215,7 @@ class ExplicitFillEngine:
             position_qty=pos.qty,
             oracle_px=oracle,
             funding_rate_hourly=snap.funding_rate_hourly,
-            hours=1.0,
+            hours=hours,
         )
         # Positive payment = cash paid by position holder (drag on realized pnl).
         pos.realized_pnl -= payment

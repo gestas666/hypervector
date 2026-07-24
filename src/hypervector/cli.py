@@ -1125,11 +1125,13 @@ def cmd_backtest(args: argparse.Namespace) -> int:
     risk_cfg = RiskConfig(max_size_frac=args.leverage)
     cost = resolve_cost_model(args.fee_model)
 
+    direction_clean = "short" if "short" in str(direction).lower() else "long"
+
     m = compute_trial_metrics(
         close,
         entries,
         exits,
-        direction=direction,
+        direction=direction_clean,
         init_cash=args.init_cash,
         df=df_bars,
         cost=cost,

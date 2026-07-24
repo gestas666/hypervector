@@ -213,7 +213,7 @@ class LiveFillEngine:
         append_live_decision(self._data_root, record)
         return record
 
-    def apply_funding(self, *, feed_ts: Any, oracle_px: float) -> dict | None:
+    def apply_funding(self, *, feed_ts: Any, oracle_px: float, hours: float = 1.0) -> dict | None:
         pos = self._position
         if pos.qty == 0.0:
             return None
@@ -223,7 +223,7 @@ class LiveFillEngine:
             position_qty=pos.qty,
             oracle_px=oracle,
             funding_rate_hourly=snap.funding_rate_hourly,
-            hours=1.0,
+            hours=hours,
         )
         pos.realized_pnl -= payment
         side = "buy" if pos.qty > 0 else "sell"

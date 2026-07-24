@@ -22,9 +22,19 @@ def rsi(close: pd.Series, length: int = 14) -> pd.Series:
     loss = (-delta).clip(lower=0.0)
     avg_gain = gain.ewm(alpha=1.0 / length, min_periods=length, adjust=False).mean()
     avg_loss = loss.ewm(alpha=1.0 / length, min_periods=length, adjust=False).mean()
-    rs = avg_gain / avg_loss.replace(0.0, np.nan)
-    out = 100.0 - (100.0 / (1.0 + rs))
-    return out.fillna(50.0)
+    
+    out = pd.Series(50.0, index=c.index)
+    both_zero = (avg_gain == 0.0) & (avg_loss == 0.0)
+    zero_loss = (avg_loss == 0.0) & (avg_gain > 0.0)
+    zero_gain = (avg_gain == 0.0) & (avg_loss > 0.0)
+    normal = (avg_loss > 0.0) & (avg_gain > 0.0)
+    
+    rs = avg_gain[normal] / avg_loss[normal]
+    out.loc[normal] = 100.0 - (100.0 / (1.0 + rs))
+    out.loc[zero_loss] = 100.0
+    out.loc[zero_gain] = 0.0
+    out.loc[both_zero] = 50.0
+    return out
 
 
 def bollinger_width(close: pd.Series, length: int = 20, n_std: float = 2.0) -> pd.Series:
