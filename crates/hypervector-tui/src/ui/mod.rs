@@ -1,4 +1,4 @@
-//! High-Density UI rendering engine for Hypervector Regime Cockpit v2.0.
+//! Ultra High-Density Telemetry UI Rendering Engine for Hypervector Regime Cockpit v2.0.
 
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
@@ -16,11 +16,11 @@ pub fn draw(f: &mut Frame, app: &App) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Length(3),  // Header Bar
-            Constraint::Length(8),  // Top Telemetry Grid (Regime + MTF + Microstructure)
+            Constraint::Length(3),  // Top Telemetry Header Bar
+            Constraint::Length(9),  // Upper Telemetry Grid (Regime + MTF + Microstructure)
             Constraint::Length(12), // Analytics Grid (Sparklines + Dynamic Allocation)
-            Constraint::Min(6),     // Regime Transition Event Audit Log
-            Constraint::Length(3),  // Command Keybindings Footer
+            Constraint::Min(6),     // Regime Transition Event Audit Log Table
+            Constraint::Length(3),  // Command Keybindings Footer Bar
         ])
         .split(f.area());
 
@@ -50,6 +50,8 @@ fn render_header(f: &mut Frame, app: &App, area: Rect) {
         Span::styled(mode_str, mode_style),
         Span::raw(" │ "),
         Span::styled(format!("[{}] ({:.1}x)", status_str, app.playback_speed), app.theme.header),
+        Span::raw(" │ "),
+        Span::styled(format!("FRAME #{}", app.current_index + 1), app.theme.muted),
     ])];
 
     let block = Block::default()
@@ -83,22 +85,35 @@ fn render_top_telemetry(f: &mut Frame, app: &App, area: Rect) {
     };
 
     let conf_pct = (snap.confidence * 100.0).clamp(0.0, 100.0);
-    let conf_bar_len = ((conf_pct / 100.0) * 15.0) as usize;
+    let conf_bar_len = ((conf_pct / 100.0) * 16.0) as usize;
     let conf_fill = "█".repeat(conf_bar_len);
-    let conf_empty = "░".repeat(15 - conf_bar_len);
+    let conf_empty = "░".repeat(16 - conf_bar_len);
 
     let banner_text = vec![
         Line::from(vec![Span::styled(state_label, state_style)]),
         Line::from(vec![
-            Span::raw("Primary TA: "),
+            Span::raw("Primary TA Label: "),
             Span::styled(snap.state.primary_label(), app.theme.gold),
-            Span::raw(" │ Conviction: "),
+            Span::raw(" │ Market State: "),
+            Span::styled(
+                match snap.state {
+                    RegimeState::BullMomentum => "IMPULSE UPTREND",
+                    RegimeState::BearMomentum => "IMPULSE DOWNTREND",
+                    RegimeState::VolatilityCoiling => "BBWP COMPRESSION",
+                    RegimeState::FundingCarry => "CARRY REVERSAL",
+                    RegimeState::RangeChop => "HIGH FRICTION CHOP",
+                },
+                app.theme.title,
+            ),
+        ]),
+        Line::from(vec![
+            Span::raw("Model Conviction: "),
             Span::styled(format!("[{}{}] {:.1}%", conf_fill, conf_empty, conf_pct), app.theme.cyan),
         ]),
         Line::from(vec![
             Span::raw("Mark Price: "),
             Span::styled(format!("${:.2}", snap.price), app.theme.gold),
-            Span::raw(" │ 24h High: "),
+            Span::raw(" │ High: "),
             Span::styled(format!("${:.2}", snap.high), app.theme.bull),
             Span::raw(" │ Low: "),
             Span::styled(format!("${:.2}", snap.low), app.theme.bear),
@@ -112,7 +127,7 @@ fn render_top_telemetry(f: &mut Frame, app: &App, area: Rect) {
     ];
 
     let banner_block = Block::default()
-        .title(" ACTIVE MARKET REGIME ")
+        .title(" ACTIVE MARKET REGIME TELEMETRY ")
         .title_style(app.theme.title)
         .borders(Borders::ALL)
         .border_type(BorderType::Thick)
@@ -147,15 +162,19 @@ fn render_top_telemetry(f: &mut Frame, app: &App, area: Rect) {
             Span::styled("ZLEMA Hysteresis", app.theme.muted),
         ]),
         Line::from(vec![
-            Span::raw("Confirmation: "),
+            Span::raw("Alignment: "),
             Span::styled(
                 if snap.trend_1m == snap.trend_5m && snap.trend_5m == snap.trend_15m {
-                    "FULL ALIGNMENT"
+                    "FULL 3-TF ALIGNMENT"
                 } else {
                     "PARTIAL ALIGNMENT"
                 },
                 app.theme.title,
             ),
+        ]),
+        Line::from(vec![
+            Span::raw("Lookahead Guard: "),
+            Span::styled("ACTIVE (Shift+Right)", app.theme.bull),
         ]),
     ];
 
@@ -179,7 +198,7 @@ fn render_top_telemetry(f: &mut Frame, app: &App, area: Rect) {
         )
         .gauge_style(if snap.opi >= 0.0 { app.theme.bull } else { app.theme.bear })
         .percent((opi_ratio * 100.0) as u16)
-        .label(format!("Spread: {:.1}bps │ Depth: {:.2}x", snap.spread_bps, snap.bid_depth_ratio));
+        .label(format!("Spread: {:.1}bps │ Depth: {:.2}x Ratio", snap.spread_bps, snap.bid_depth_ratio));
 
     f.render_widget(opi_gauge, chunks[2]);
 }
@@ -235,19 +254,19 @@ fn render_analytics_grid(f: &mut Frame, app: &App, area: Rect) {
 
     // 2. Dynamic Risk & Allocation Engine
     let lev_pct = ((snap.dynamic_leverage / snap.max_leverage) * 100.0).clamp(0.0, 100.0);
-    let lev_bar_len = ((lev_pct / 100.0) * 12.0) as usize;
+    let lev_bar_len = ((lev_pct / 100.0) * 14.0) as usize;
     let lev_fill = "█".repeat(lev_bar_len);
-    let lev_empty = "░".repeat(12 - lev_bar_len);
+    let lev_empty = "░".repeat(14 - lev_bar_len);
 
     let lw_pct = (snap.long_weight / 2.0).clamp(0.0, 1.0);
-    let lw_len = (lw_pct * 10.0) as usize;
+    let lw_len = (lw_pct * 12.0) as usize;
     let lw_fill = "█".repeat(lw_len);
-    let lw_empty = "░".repeat(10 - lw_len);
+    let lw_empty = "░".repeat(12 - lw_len);
 
     let sw_pct = (snap.short_weight / 2.0).clamp(0.0, 1.0);
-    let sw_len = (sw_pct * 10.0) as usize;
+    let sw_len = (sw_pct * 12.0) as usize;
     let sw_fill = "█".repeat(sw_len);
-    let sw_empty = "░".repeat(10 - sw_len);
+    let sw_empty = "░".repeat(12 - sw_len);
 
     let policy_text = vec![
         Line::from(vec![
@@ -266,6 +285,10 @@ fn render_analytics_grid(f: &mut Frame, app: &App, area: Rect) {
             ),
         ]),
         Line::from(vec![
+            Span::raw("Leverage Scaling:  "),
+            Span::styled("Conviction & Orderbook Flow Scaled", app.theme.cyan),
+        ]),
+        Line::from(vec![
             Span::raw("Execution Policy:  "),
             Span::styled(
                 if snap.taker_allowed { "YES (Taker Allowed)" } else { "NO (Maker Only)" },
@@ -275,7 +298,7 @@ fn render_analytics_grid(f: &mut Frame, app: &App, area: Rect) {
         Line::from(vec![
             Span::raw("Funding Z-Score:   "),
             Span::styled(format!("{:.2}", snap.funding_zscore), app.theme.carry),
-            Span::raw(" │ RSI (14): "),
+            Span::raw(" │ Wilder RSI (14): "),
             Span::styled(format!("{:.1}", snap.rsi), app.theme.cyan),
         ]),
     ];
