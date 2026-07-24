@@ -34,8 +34,6 @@ pub fn draw(f: &mut Frame, app: &App) {
         render_screen_strategy_policy(f, app, chunks[2]);
     } else if app.active_tab == 2 {
         render_screen_live_shadow_dashboard(f, app, chunks[2]);
-    } else if app.active_tab == 3 {
-        hypervelocity::render_screen_hypervelocity(f, app, chunks[2]);
     } else {
         render_screen_engine_config(f, app, chunks[2]);
     }
@@ -66,20 +64,17 @@ fn render_header(f: &mut Frame, app: &App, area: Rect) {
     let tab2_style = if app.active_tab == 1 { app.theme.highlight } else { app.theme.muted };
     let tab3_style = if app.active_tab == 2 { app.theme.highlight } else { app.theme.muted };
     let tab4_style = if app.active_tab == 3 { app.theme.highlight } else { app.theme.muted };
-    let tab5_style = if app.active_tab == 4 { app.theme.highlight } else { app.theme.muted };
 
     let text = vec![Line::from(vec![
         Span::styled(" ⚡ HYPERVECTOR ENGINE ", app.theme.title),
         Span::raw("│ "),
         Span::styled(" [1] REGIME DETECTION ", tab1_style),
         Span::raw("│ "),
-        Span::styled(" [2] STRATEGY POLICY ", tab2_style),
+        Span::styled(" [2] STRATEGY POLICY & HYPERVELOCITY COCKPIT ", tab2_style),
         Span::raw("│ "),
         Span::styled(" [3] LIVE SHADOW DASHBOARD ", tab3_style),
         Span::raw("│ "),
-        Span::styled(" [4] HYPERVELOCITY ", tab4_style),
-        Span::raw("│ "),
-        Span::styled(" [5] ENGINE & RISK CONFIG ", tab5_style),
+        Span::styled(" [4] ENGINE & RISK CONFIG ", tab4_style),
         Span::raw("│ "),
         Span::styled(format!("SYMBOL: {}", app.symbol), app.theme.gold),
         Span::raw(" │ "),
@@ -550,15 +545,24 @@ fn render_screen_strategy_policy(f: &mut Frame, app: &App, area: Rect) {
     let main_chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Length(10), // Dynamic Leverage & Position Sizing Engine
-            Constraint::Length(10), // Strategy Components & Portfolio Allocation Grid
-            Constraint::Min(6),     // Policy Risk & Execution Rules Diagnostics
+            Constraint::Length(5),  // Row 1: Strategy Command Bar & 6-Gate Cascade Telemetry
+            Constraint::Length(9),  // Row 2: Dynamic Leverage & Net Position Sizing Engine
+            Constraint::Length(8),  // Row 3: Registered Strategy Portfolio Signals Grid (1 Active Strategy / Coin)
+            Constraint::Length(10), // Row 4: Active Position PnL + L2 Orderbook Depth Ladder Stack (Side-by-Side)
+            Constraint::Min(12),    // Row 5: Trade State Tracker Dashboard & Run Journal
         ])
         .split(area);
 
+    hypervelocity::render_command_bar(f, app, main_chunks[0]);
+    render_dynamic_leverage_panel(f, app, main_chunks[1]);
+    render_registered_strategy_matrix(f, app, main_chunks[2]);
+    hypervelocity::render_position_and_book(f, app, main_chunks[3]);
+    hypervelocity::render_trade_state_dashboard(f, app, main_chunks[4]);
+}
+
+fn render_dynamic_leverage_panel(f: &mut Frame, app: &App, area: Rect) {
     let snap = app.current_snapshot();
 
-    // 1. Dynamic Leverage & Position Sizing Engine
     let lev_pct = ((snap.dynamic_leverage / snap.max_leverage) * 100.0).clamp(0.0, 100.0);
     let lev_bar_len = ((lev_pct / 100.0) * 20.0) as usize;
     let lev_fill = "█".repeat(lev_bar_len);
@@ -583,21 +587,7 @@ fn render_screen_strategy_policy(f: &mut Frame, app: &App, area: Rect) {
         ("0.00x FLAT (Net Position 0.0 / Dual Stop Breakout)".into(), app.theme.gold)
     };
 
-    let signals = app.compute_hypervelocity_signals();
-    let gate_names = ["EMA", "RSI", "CHOP", "MOM", "FUND", "BOOK"];
-    let mut gate_spans: Vec<Span> = Vec::new();
-    for (i, (&ok, name)) in signals.iter().zip(gate_names.iter()).enumerate() {
-        let dot = if ok {
-            Span::styled("●", app.theme.bull)
-        } else {
-            Span::styled("◉", app.theme.gate_blocked)
-        };
-        gate_spans.push(Span::styled(format!("[{}] {} ", i + 1, name), app.theme.muted));
-        gate_spans.push(dot);
-        gate_spans.push(Span::styled(if ok { " OK " } else { " NO " }, if ok { app.theme.bull } else { app.theme.gate_blocked }));
-    }
-
-    let mut policy_text = vec![
+    let policy_text = vec![
         Line::from(vec![
             Span::raw("Dynamic Leverage:     "),
             Span::styled(
@@ -624,9 +614,6 @@ fn render_screen_strategy_policy(f: &mut Frame, app: &App, area: Rect) {
             Span::styled("Hyperliquid Single Position Netting Active", app.theme.title),
         ]),
         Line::from(vec![
-            Span::raw("6-Gate Signals:       "),
-        ]),
-        Line::from(vec![
             Span::raw("Execution Policy:     "),
             Span::styled(
                 if snap.taker_allowed { "TAKERS PERMITTED (Impulse High Conviction)" } else { "MAKER ORDERS ONLY (Spread Guard Active)" },
@@ -640,7 +627,6 @@ fn render_screen_strategy_policy(f: &mut Frame, app: &App, area: Rect) {
             Span::styled(format!("{:.1}", snap.rsi), app.theme.cyan),
         ]),
     ];
-    policy_text[5].spans.extend(gate_spans);
 
     let policy_block = Block::default()
         .title(" DYNAMIC LEVERAGE & NET POSITION SIZING ENGINE (Hyperliquid 1 Position / Symbol Netting) ")
@@ -648,9 +634,12 @@ fn render_screen_strategy_policy(f: &mut Frame, app: &App, area: Rect) {
         .borders(Borders::ALL)
         .border_style(app.theme.border_active);
 
-    f.render_widget(Paragraph::new(policy_text).block(policy_block), main_chunks[0]);
+    f.render_widget(Paragraph::new(policy_text).block(policy_block), area);
+}
 
-    // 2. Strategy Portfolio Signals Grid (STRICT REGIME DETECTOR ARBITRATION: EXACTLY 1 ACTIVE STRATEGY PER COIN)
+fn render_registered_strategy_matrix(f: &mut Frame, app: &App, area: Rect) {
+    let snap = app.current_snapshot();
+
     let is_bull_active = snap.state == RegimeState::BullMomentum;
     let is_bear_active = snap.state == RegimeState::BearMomentum;
     let is_coil_active = snap.state == RegimeState::VolatilityCoiling;
@@ -716,10 +705,7 @@ fn render_screen_strategy_policy(f: &mut Frame, app: &App, area: Rect) {
             .border_style(app.theme.border),
     );
 
-    f.render_widget(strategy_table, main_chunks[1]);
-
-    // 3. Policy Risk Diagnostics Table
-    render_event_log(f, app, main_chunks[2]);
+    f.render_widget(strategy_table, area);
 }
 
 fn render_event_log(f: &mut Frame, app: &App, area: Rect) {

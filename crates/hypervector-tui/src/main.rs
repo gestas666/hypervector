@@ -82,48 +82,47 @@ fn run_app<B: ratatui::backend::Backend>(
                             KeyCode::Char('2') => app.active_tab = 1,
                             KeyCode::Char('3') => app.active_tab = 2,
                             KeyCode::Char('4') => app.active_tab = 3,
-                            KeyCode::Char('5') => app.active_tab = 4,
                             KeyCode::Char('?') | KeyCode::Char('h') => app.toggle_help_overlay(),
                             KeyCode::Enter => {
-                                if app.active_tab == 4 {
+                                if app.active_tab == 3 {
                                     app.toggle_config_option();
                                 } else {
                                     app.toggle_event_modal();
                                 }
                             }
                             KeyCode::Char('+') | KeyCode::Char('=') => {
-                                if app.active_tab == 4 {
+                                if app.active_tab == 3 {
                                     app.increase_config_value();
                                 }
                             }
                             KeyCode::Char('-') => {
-                                if app.active_tab == 4 {
+                                if app.active_tab == 3 {
                                     app.decrease_config_value();
                                 }
                             }
                             KeyCode::Left => {
-                                if app.active_tab == 4 {
+                                if app.active_tab == 3 {
                                     app.decrease_config_value();
                                 } else {
                                     app.step_backward();
                                 }
                             }
                             KeyCode::Right => {
-                                if app.active_tab == 4 {
+                                if app.active_tab == 3 {
                                     app.increase_config_value();
                                 } else {
                                     app.step_forward();
                                 }
                             }
                             KeyCode::Down | KeyCode::Char('j') => {
-                                if app.active_tab == 4 {
+                                if app.active_tab == 3 {
                                     app.select_next_config();
                                 } else {
                                     app.select_next_event();
                                 }
                             }
                             KeyCode::Up | KeyCode::Char('k') => {
-                                if app.active_tab == 4 {
+                                if app.active_tab == 3 {
                                     app.select_prev_config();
                                 } else {
                                     app.select_prev_event();
