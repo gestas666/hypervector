@@ -16,6 +16,7 @@ def register_all_strategies() -> None:
     register_pine_composite()
     register_oi_divergence()
     register_funding_momentum()
+    import hypervector.strategies.impulse_1m
 
 
 __all__ = [
