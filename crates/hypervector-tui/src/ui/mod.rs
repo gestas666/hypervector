@@ -650,45 +650,50 @@ fn render_screen_strategy_policy(f: &mut Frame, app: &App, area: Rect) {
 
     f.render_widget(Paragraph::new(policy_text).block(policy_block), main_chunks[0]);
 
-    // 2. Strategy Portfolio Signals Grid (Enforcing Perpetual Single Position Netting)
-    let is_long_active = snap.long_weight > 0.0 && snap.short_weight == 0.0;
-    let is_short_active = snap.short_weight > 0.0 && snap.long_weight == 0.0;
+    // 2. Strategy Portfolio Signals Grid (STRICT REGIME DETECTOR ARBITRATION: EXACTLY 1 ACTIVE STRATEGY PER COIN)
+    let is_bull_active = snap.state == RegimeState::BullMomentum;
+    let is_bear_active = snap.state == RegimeState::BearMomentum;
+    let is_coil_active = snap.state == RegimeState::VolatilityCoiling;
+    let is_carry_active = snap.state == RegimeState::FundingCarry;
 
     let strategy_rows = vec![
         Row::new(vec![
+            Span::styled("hypervelocity_1m_scalper", app.theme.gold),
+            Span::styled(
+                if is_bull_active { "ACTIVE (BULL 40x)" } else if is_bear_active { "ACTIVE (BEAR 40x)" } else { "INACTIVE (MUTED)" },
+                if is_bull_active || is_bear_active { app.theme.gold } else { app.theme.muted },
+            ),
+            Span::styled(format!("{:.2}x", if is_bull_active || is_bear_active { 2.00 } else { 0.0 }), app.theme.gold),
+            Span::styled(format!("{:.1}x", if is_bull_active || is_bear_active { 40.0 } else { 1.0 }), app.theme.cyan),
+            Span::styled("Primary 40x BTC Scalper (95.7% Win Rate │ +8% Margin Target │ Single Position Netting)", app.theme.title),
+        ]),
+        Row::new(vec![
             Span::styled("impulse_1m_long", app.theme.bull),
-            Span::styled(if is_long_active { "ACTIVE (LONG)" } else { "INACTIVE (FLAT)" }, if is_long_active { app.theme.bull } else { app.theme.muted }),
-            Span::styled(format!("{:.2}x", if is_long_active { snap.long_weight } else { 0.0 }), app.theme.gold),
-            Span::styled(format!("{:.2}x", if is_long_active { snap.dynamic_leverage } else { 1.0 }), app.theme.cyan),
-            Span::styled("1m Impulse Scalper (Hypertrader Port)", app.theme.muted),
+            Span::styled(if is_bull_active && !is_bear_active { "PASS-THROUGH" } else { "INACTIVE (NETTED)" }, if is_bull_active { app.theme.bull } else { app.theme.muted }),
+            Span::styled("0.00x", app.theme.muted),
+            Span::styled("1.00x", app.theme.muted),
+            Span::styled("1m Impulse Scalper (Secondary Fallback Signal)", app.theme.muted),
         ]),
         Row::new(vec![
             Span::styled("impulse_1m_short", app.theme.bear),
-            Span::styled(if is_short_active { "ACTIVE (SHORT)" } else { "INACTIVE (FLAT)" }, if is_short_active { app.theme.bear } else { app.theme.muted }),
-            Span::styled(format!("{:.2}x", if is_short_active { snap.short_weight } else { 0.0 }), app.theme.gold),
-            Span::styled(format!("{:.2}x", if is_short_active { snap.dynamic_leverage } else { 1.0 }), app.theme.cyan),
-            Span::styled("1m Impulse Short Scalper (Hypertrader Port)", app.theme.muted),
-        ]),
-        Row::new(vec![
-            Span::styled("hypervelocity_1m_scalper", app.theme.gold),
-            Span::styled(if is_long_active { "ACTIVE (LONG 40x)" } else if is_short_active { "ACTIVE (SHORT 40x)" } else { "ACTIVE (SCALPING)" }, app.theme.gold),
-            Span::styled("2.00x", app.theme.gold),
-            Span::styled("40.0x", app.theme.cyan),
-            Span::styled("40x BTC Scalper (95.7% Win Rate │ +8% Margin Return Target │ Maker Fills)", app.theme.title),
+            Span::styled(if is_bear_active { "PASS-THROUGH" } else { "INACTIVE (NETTED)" }, if is_bear_active { app.theme.bear } else { app.theme.muted }),
+            Span::styled("0.00x", app.theme.muted),
+            Span::styled("1.00x", app.theme.muted),
+            Span::styled("1m Impulse Short Scalper (Secondary Fallback Signal)", app.theme.muted),
         ]),
         Row::new(vec![
             Span::styled("pine_composite", app.theme.coiling),
-            Span::styled(if snap.state == RegimeState::VolatilityCoiling { "ACTIVE (BREAKOUT)" } else { "PASS-THROUGH" }, app.theme.coiling),
-            Span::styled("1.50x", app.theme.gold),
-            Span::styled("2.50x", app.theme.cyan),
-            Span::styled("PineScript Multi-Indicator Composite Strategy", app.theme.muted),
+            Span::styled(if is_coil_active { "ACTIVE (BREAKOUT)" } else { "INACTIVE (MUTED)" }, if is_coil_active { app.theme.coiling } else { app.theme.muted }),
+            Span::styled(format!("{:.2}x", if is_coil_active { 1.50 } else { 0.0 }), app.theme.gold),
+            Span::styled(format!("{:.2}x", if is_coil_active { 2.50 } else { 1.0 }), app.theme.cyan),
+            Span::styled("PineScript Multi-Indicator Breakout Strategy (Coiling Compression)", app.theme.muted),
         ]),
         Row::new(vec![
             Span::styled("funding_carry_reversal", app.theme.carry),
-            Span::styled(if snap.state == RegimeState::FundingCarry { "ACTIVE (CARRY)" } else { "INACTIVE" }, if snap.state == RegimeState::FundingCarry { app.theme.carry } else { app.theme.muted }),
-            Span::styled("2.00x", app.theme.gold),
-            Span::styled("3.00x", app.theme.cyan),
-            Span::styled("Funding Rate Carry Mean Reversal Strategy", app.theme.muted),
+            Span::styled(if is_carry_active { "ACTIVE (CARRY)" } else { "INACTIVE (MUTED)" }, if is_carry_active { app.theme.carry } else { app.theme.muted }),
+            Span::styled(format!("{:.2}x", if is_carry_active { 2.00 } else { 0.0 }), app.theme.gold),
+            Span::styled(format!("{:.2}x", if is_carry_active { 3.00 } else { 1.0 }), app.theme.cyan),
+            Span::styled("Funding Rate Carry Mean Reversal Strategy (Z-Score Extreme)", app.theme.muted),
         ]),
     ];
 
@@ -696,16 +701,16 @@ fn render_screen_strategy_policy(f: &mut Frame, app: &App, area: Rect) {
         strategy_rows,
         [
             Constraint::Length(26),
-            Constraint::Length(18),
+            Constraint::Length(20),
             Constraint::Length(14),
             Constraint::Length(14),
             Constraint::Min(30),
         ],
     )
-    .header(Row::new(["Strategy Component", "Signal State", "Alloc Weight", "Dyn Leverage", "Strategy Description"].iter().map(|h| Span::styled(*h, app.theme.header))))
+    .header(Row::new(["Strategy Component", "Regime Signal State", "Alloc Weight", "Dyn Leverage", "Strategy Mechanics & Netting Guard"].iter().map(|h| Span::styled(*h, app.theme.header))))
     .block(
         Block::default()
-            .title(" REGISTERED STRATEGY PORTFOLIO SIGNALS ")
+            .title(" REGISTERED STRATEGY PORTFOLIO SIGNALS (Strict Regime Detector Arbitration: Max 1 Active Strategy / Coin) ")
             .title_style(app.theme.title)
             .borders(Borders::ALL)
             .border_style(app.theme.border),
@@ -1157,6 +1162,7 @@ fn render_screen_engine_config(f: &mut Frame, app: &App, area: Rect) {
         TpSlStrategy::FixedPercentage { tp_pct, sl_pct } => format!("FIXED % (TP: +{:.1}% price │ SL: -{:.1}% price)", tp_pct, sl_pct),
         TpSlStrategy::ChandelierTrailing => "CHANDELIER EXIT (3.0x ATR Trailing High/Low)".to_string(),
         TpSlStrategy::ParabolicSarTrail => "PARABOLIC SAR TRAIL (Acceleration Fact 0.02 - 0.20)".to_string(),
+        TpSlStrategy::HypervelocityTargetTrail { target_margin_pct } => format!("HYPERVELOCITY 40x TARGET TRAIL (+{:.1}% Margin TP / Dynamic ATR SL)", target_margin_pct),
     };
 
     let lev_approx = match cfg.leverage_mode {
@@ -1182,6 +1188,7 @@ fn render_screen_engine_config(f: &mut Frame, app: &App, area: Rect) {
         RiskSizingMode::DynamicKellyPercent(pct) => format!("DYNAMIC KELLY CRITERION ({:.1}% Fractional Kelly)", pct),
         RiskSizingMode::FixedUsdAmount(amt) => format!("FIXED USD AMOUNT (${:.2} Fixed Risk / Trade)", amt),
         RiskSizingMode::VolatilityParity => "VOLATILITY PARITY (Inverse ATR Volatility Sizing)".to_string(),
+        RiskSizingMode::HypervelocityMarginParity { leverage, target_pct } => format!("HYPERVELOCITY MARGIN PARITY ({:.1}x Leverage / {:.1}% Target)", leverage, target_pct),
     };
 
     let lev_desc = format!("Dynamic ML vs Static Multiplier (1.0x → {:.1}x for {})", max_coin_lev, app.symbol);
