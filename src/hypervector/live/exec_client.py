@@ -118,6 +118,24 @@ def _parse_oid(response: dict[str, Any]) -> str | None:
     return None
 
 
+def _check_venue_error(response: dict[str, Any]) -> str | None:
+    if not isinstance(response, dict):
+        return None
+    if response.get("status") in ("err", "error") or "error" in response:
+        return str(response.get("error") or response.get("response") or response)
+
+    # Check nested Hyperliquid response.data.statuses[0].error
+    statuses = response.get("response") or response.get("statuses")
+    if isinstance(statuses, dict):
+        data = statuses.get("data") if isinstance(statuses.get("data"), dict) else statuses
+        st_list = data.get("statuses") if isinstance(data, dict) else None
+        if isinstance(st_list, list) and st_list:
+            first = st_list[0]
+            if isinstance(first, dict) and "error" in first:
+                return str(first["error"])
+    return None
+
+
 def _normalize_side(side: str) -> bool:
     s = str(side).strip().lower()
     if s in ("buy", "long", "b"):
@@ -201,8 +219,8 @@ class HyperliquidLiveExecClient:
                 private_key=self._private_key,
             )
             raw_dict = raw if isinstance(raw, dict) else {}
-            if raw_dict.get("status") in ("err", "error") or "error" in raw_dict:
-                err_msg = str(raw_dict.get("error") or raw_dict.get("response") or raw_dict)
+            err_msg = _check_venue_error(raw_dict)
+            if err_msg:
                 return PlaceResult(submitted=False, venue_order_id=None, error=err_msg)
             oid = _parse_oid(raw_dict)
             return PlaceResult(submitted=True, venue_order_id=oid, error=None)
