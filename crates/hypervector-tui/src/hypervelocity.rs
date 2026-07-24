@@ -33,7 +33,7 @@ pub fn render_screen_hypervelocity(f: &mut Frame, app: &App, area: Rect) {
 // ============================================================================
 // ROW 1: Strategy Command Bar (6-Gate Cascade + Status)
 // ============================================================================
-fn render_command_bar(f: &mut Frame, app: &App, area: Rect) {
+pub fn render_command_bar(f: &mut Frame, app: &App, area: Rect) {
     let snap = app.current_snapshot();
     let signals = app.compute_hypervelocity_signals();
     let all_green = signals.iter().all(|&s| s);
@@ -117,7 +117,7 @@ fn render_command_bar(f: &mut Frame, app: &App, area: Rect) {
 // ============================================================================
 // ROW 2: Active Position PnL + L2 Orderbook Depth Ladder (side by side)
 // ============================================================================
-fn render_position_and_book(f: &mut Frame, app: &App, area: Rect) {
+pub fn render_position_and_book(f: &mut Frame, app: &App, area: Rect) {
     let chunks = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
@@ -337,7 +337,7 @@ fn render_book_ladder(f: &mut Frame, app: &App, area: Rect) {
 // ============================================================================
 // ROW 3: Trade State Tracker — The Unified Dashboard
 // ============================================================================
-fn render_trade_state_dashboard(f: &mut Frame, app: &App, area: Rect) {
+pub fn render_trade_state_dashboard(f: &mut Frame, app: &App, area: Rect) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
