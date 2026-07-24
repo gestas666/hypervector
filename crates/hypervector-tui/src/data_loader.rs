@@ -71,7 +71,10 @@ fn parse_snapshot_json(val: &Value, idx: usize) -> Option<RegimeSnapshot> {
     };
 
     Some(RegimeSnapshot {
-        timestamp_str: format!("2026-07-24 {:02}:{:02}:00", (idx / 60) % 24, idx % 60),
+        timestamp_str: val.get("timestamp_str")
+            .and_then(|v| v.as_str())
+            .map(|s| s.to_string())
+            .unwrap_or_else(|| format!("2026-07-24 {:02}:{:02}:00 EDT", (idx / 60) % 24, idx % 60)),
         timestamp_ms: 1784850000000 + (idx as u64 * 60000),
         price: px,
         high: px + 40.0,
