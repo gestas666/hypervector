@@ -48,12 +48,18 @@ def detect_ultimate_regime(
     df_5m: pd.DataFrame | None = None,
     df_15m: pd.DataFrame | None = None,
     *,
+    htf_resample_rule: str = "15min",
     adx_threshold: float = 22.0,
     bbwp_threshold: float = 20.0,
     chop_threshold: float = 55.0,
     zscore_threshold: float = 1.8,
 ) -> pd.DataFrame:
-    """Classify every bar into 5 actionable states with strategy allocation policy."""
+    """Classify every bar into 5 actionable states with strategy allocation policy.
+    
+    Implements HTF Decoupled Regime Detection:
+    - Higher Timeframe (15m / 1h) evaluates stable Macro Regime (Uptrend/Downtrend).
+    - Lower Timeframe (1m) executes trades based on the active Macro Regime without 1m noise whipsaws.
+    """
     c = df_1m["close"].astype(float)
     h = df_1m["high"].astype(float)
     l = df_1m["low"].astype(float)
@@ -63,7 +69,7 @@ def detect_ultimate_regime(
     bb_pct, _ = bbwp(c, bb_length=20, lookback=180)
     _, t_1m = zero_lag_trend_ohlc(h, l, c, length=70, mult=1.2)
 
-    # Higher Timeframe Confirmation (safe for 1m, 5m, 15m+ inputs)
+    # Higher Timeframe Confirmation (Decoupled HTF Regime Detection)
     step_minutes = 1.0
     if isinstance(df_1m.index, pd.DatetimeIndex) and len(df_1m) > 1:
         diff_sec = (df_1m.index[1] - df_1m.index[0]).total_seconds()
@@ -79,7 +85,7 @@ def detect_ultimate_regime(
                 {"high": "max", "low": "min", "close": "last"}
             ).dropna()
         if df_15m is None and isinstance(df_1m.index, pd.DatetimeIndex) and step_minutes < 15.0:
-            df_15m = df_1m.resample("15min", label="right", closed="right").agg(
+            df_15m = df_1m.resample(htf_resample_rule, label="right", closed="right").agg(
                 {"high": "max", "low": "min", "close": "last"}
             ).dropna()
 
@@ -89,16 +95,17 @@ def detect_ultimate_regime(
         c15 = df_15m["close"].astype(float)
         _, t15 = zero_lag_trend_ohlc(h15, l15, c15, length=70, mult=1.2)
         t_15m = t15.shift(1).reindex(c.index, method="ffill").fillna(0)
-        macro_bull = (t_1m == 1) & (t_15m == 1)
-        macro_bear = (t_1m == -1) & (t_15m == -1)
+        # HTF Decoupled Macro Bias (15m macro trend prevents 1m noise whipsaws)
+        macro_bull = (t_15m == 1) | ((t_1m == 1) & (t_15m >= 0))
+        macro_bear = (t_15m == -1) | ((t_1m == -1) & (t_15m <= 0))
     elif df_5m is not None and not df_5m.empty:
         h5 = df_5m["high"].astype(float)
         l5 = df_5m["low"].astype(float)
         c5 = df_5m["close"].astype(float)
         _, t5 = zero_lag_trend_ohlc(h5, l5, c5, length=70, mult=1.2)
         t_5m = t5.shift(1).reindex(c.index, method="ffill").fillna(0)
-        macro_bull = (t_1m == 1) & (t_5m == 1)
-        macro_bear = (t_1m == -1) & (t_5m == -1)
+        macro_bull = (t_5m == 1) | ((t_1m == 1) & (t_5m >= 0))
+        macro_bear = (t_5m == -1) | ((t_1m == -1) & (t_5m <= 0))
     else:
         macro_bull = t_1m == 1
         macro_bear = t_1m == -1
