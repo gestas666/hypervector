@@ -29,6 +29,15 @@ Paths (project-scoped):
 - Mainnet only. No neural-trader.
 - GUI deferred until acceptance guide gates B+C PASS.
 
+## Project Charter
+
+| Principle | Spec Identifier | Core Rule & Enforcement |
+|-----------|-----------------|-------------------------|
+| **Ungated Execution** | `SRS_HV1_NO_GATES` | Only **technical failure** aborts a trial. No implicit strategy, drawdown, or risk rejection gates unless explicitly configured by the user. Performance, drawdown, trade count, regime confidence, and model scores remain reported trial results rather than implicit abort conditions. |
+| **Fail-Closed Safety** | `SRS_HV1_HONESTY` | Paper/shadow mode **never** constructs live execution clients or places live orders. Live mode is strictly fail-closed and arms **only** on explicit `--enabled --i-accept-live-risk` flags. Wallet/API secrets are **never** printed. |
+| **Regime Telemetry** | `SRS_HV1_REGIME` | Multi-timeframe trend & volatility classification (1m execution, 15m HTF regime lock) with dynamic ML conviction scaling and continuous rolling window transition logging. |
+| **Venue Precision** | `SRS_HV1_VENUE_SPEC` | Strict adherence to Hyperliquid per-asset venue leverage specifications (BTC 40x max, ETH 25x max, SOL 20x max, Altcoins 10x-15x max). |
+
 ## Quick verify
 
 ```bash
