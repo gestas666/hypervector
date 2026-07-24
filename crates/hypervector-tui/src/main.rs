@@ -60,25 +60,38 @@ fn run_app<B: ratatui::backend::Backend>(
         if event::poll(timeout)? {
             if let Event::Key(key) = event::read()? {
                 if key.kind == KeyEventKind::Press {
-                    match key.code {
-                        KeyCode::Char('q') | KeyCode::Esc => {
-                            if app.show_help_overlay {
+                    if app.show_help_overlay {
+                        match key.code {
+                            KeyCode::Char('q') | KeyCode::Esc | KeyCode::Char('?') | KeyCode::Char('h') | KeyCode::Enter | KeyCode::Char(' ') => {
                                 app.show_help_overlay = false;
-                            } else {
-                                app.should_quit = true;
                             }
+                            _ => {}
                         }
-                        KeyCode::Char('?') | KeyCode::Char('h') => app.toggle_help_overlay(),
-                        KeyCode::Char(' ') => app.toggle_play_pause(),
-                        KeyCode::Left => app.step_backward(),
-                        KeyCode::Right => app.step_forward(),
-                        KeyCode::Char('s') => app.cycle_speed(),
-                        KeyCode::Char('t') => app.cycle_timeframe(),
-                        KeyCode::Char('1') => app.timeframe = "1m".into(),
-                        KeyCode::Char('2') => app.timeframe = "5m".into(),
-                        KeyCode::Char('3') => app.timeframe = "15m".into(),
-                        KeyCode::Char('r') => app.current_index = 0,
-                        _ => {}
+                    } else if app.show_event_detail_modal {
+                        match key.code {
+                            KeyCode::Char('q') | KeyCode::Esc | KeyCode::Enter | KeyCode::Char(' ') => {
+                                app.show_event_detail_modal = false;
+                            }
+                            _ => {}
+                        }
+                    } else {
+                        match key.code {
+                            KeyCode::Char('q') | KeyCode::Esc => app.should_quit = true,
+                            KeyCode::Char('?') | KeyCode::Char('h') => app.toggle_help_overlay(),
+                            KeyCode::Enter => app.toggle_event_modal(),
+                            KeyCode::Char(' ') => app.toggle_play_pause(),
+                            KeyCode::Left => app.step_backward(),
+                            KeyCode::Right => app.step_forward(),
+                            KeyCode::Down | KeyCode::Char('j') => app.select_next_event(),
+                            KeyCode::Up | KeyCode::Char('k') => app.select_prev_event(),
+                            KeyCode::Char('s') => app.cycle_speed(),
+                            KeyCode::Char('t') => app.cycle_timeframe(),
+                            KeyCode::Char('1') => app.timeframe = "1m".into(),
+                            KeyCode::Char('2') => app.timeframe = "5m".into(),
+                            KeyCode::Char('3') => app.timeframe = "15m".into(),
+                            KeyCode::Char('r') => app.current_index = 0,
+                            _ => {}
+                        }
                     }
                 }
             }

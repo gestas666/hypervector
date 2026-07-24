@@ -30,6 +30,10 @@ pub fn draw(f: &mut Frame, app: &App) {
     render_event_log(f, app, chunks[3]);
     render_footer(f, app, chunks[4]);
 
+    if app.show_event_detail_modal {
+        render_event_modal(f, app, f.area());
+    }
+
     if app.show_help_overlay {
         render_help_overlay(f, app, f.area());
     }
@@ -322,24 +326,34 @@ fn render_event_log(f: &mut Frame, app: &App, area: Rect) {
         .map(|h| Span::styled(*h, app.theme.header));
     let header = Row::new(header_cells).height(1);
 
-    let rows = app.events.iter().rev().take(10).map(|ev| {
+    let recent_events: Vec<_> = app.events.iter().rev().take(10).collect();
+    let rows = recent_events.iter().enumerate().map(|(idx, ev)| {
         let from_str = ev.from_state.display_name();
         let to_str = ev.to_state.display_name();
-        let to_style = match ev.to_state {
-            RegimeState::BullMomentum => app.theme.bull,
-            RegimeState::BearMomentum => app.theme.bear,
-            RegimeState::VolatilityCoiling => app.theme.coiling,
-            RegimeState::FundingCarry => app.theme.carry,
-            RegimeState::RangeChop => app.theme.chop,
+        let is_selected = idx == app.selected_event_index.min(recent_events.len().saturating_sub(1));
+
+        let to_style = if is_selected {
+            app.theme.highlight
+        } else {
+            match ev.to_state {
+                RegimeState::BullMomentum => app.theme.bull,
+                RegimeState::BearMomentum => app.theme.bear,
+                RegimeState::VolatilityCoiling => app.theme.coiling,
+                RegimeState::FundingCarry => app.theme.carry,
+                RegimeState::RangeChop => app.theme.chop,
+            }
         };
 
+        let row_style = if is_selected { app.theme.highlight } else { ratatui::style::Style::default() };
+
         Row::new(vec![
-            Span::styled(&ev.timestamp_str, app.theme.muted),
-            Span::raw(from_str),
+            Span::styled(&ev.timestamp_str, if is_selected { app.theme.highlight } else { app.theme.muted }),
+            Span::styled(from_str, row_style),
             Span::styled(to_str, to_style),
-            Span::styled(format!("${:.2}", ev.price), app.theme.gold),
-            Span::styled(&ev.trigger_reason, app.theme.cyan),
+            Span::styled(format!("${:.2}", ev.price), if is_selected { app.theme.highlight } else { app.theme.gold }),
+            Span::styled(&ev.trigger_reason, if is_selected { app.theme.highlight } else { app.theme.cyan }),
         ])
+        .style(row_style)
     });
 
     let table = Table::new(
@@ -355,7 +369,11 @@ fn render_event_log(f: &mut Frame, app: &App, area: Rect) {
     .header(header)
     .block(
         Block::default()
-            .title(" RECENT REGIME TRANSITION AUDIT LOG ")
+            .title(format!(
+                " RECENT REGIME TRANSITION AUDIT LOG (Use [↑/↓] or [j/k] to navigate, [Enter] for details) [{}/{}] ",
+                app.selected_event_index.min(recent_events.len().saturating_sub(1)) + 1,
+                recent_events.len()
+            ))
             .title_style(app.theme.title)
             .borders(Borders::ALL)
             .border_style(app.theme.border),
@@ -365,13 +383,22 @@ fn render_event_log(f: &mut Frame, app: &App, area: Rect) {
 }
 
 fn render_footer(f: &mut Frame, app: &App, area: Rect) {
+    let total = app.snapshots.len();
+    let current = app.current_index + 1;
+    let scrub_pct = ((current as f64 / total as f64) * 100.0).clamp(0.0, 100.0);
+    let bar_len = ((scrub_pct / 100.0) * 16.0) as usize;
+    let fill = "█".repeat(bar_len);
+    let empty = "░".repeat(16 - bar_len);
+
     let help_text = Line::from(vec![
         Span::styled("[Space]", app.theme.gold), Span::raw(" Play/Pause │ "),
         Span::styled("[←/→]", app.theme.gold), Span::raw(" Scrub │ "),
-        Span::styled("[1-3]", app.theme.gold), Span::raw(" Timeframe (1m/5m/15m) │ "),
-        Span::styled("[s]", app.theme.gold), Span::raw(" Speed │ "),
-        Span::styled("[?]", app.theme.gold), Span::raw(" Help Rules Overlay │ "),
-        Span::styled("[q/Esc]", app.theme.gold), Span::raw(" Quit"),
+        Span::styled("[↑/↓ j/k]", app.theme.gold), Span::raw(" Select Event │ "),
+        Span::styled("[Enter]", app.theme.gold), Span::raw(" Event Details │ "),
+        Span::styled("[1-3]", app.theme.gold), Span::raw(" Timeframe │ "),
+        Span::styled("[?]", app.theme.gold), Span::raw(" Help │ "),
+        Span::styled("Scrub: ", app.theme.cyan),
+        Span::styled(format!("[{}{}] {:.1}% ({}/{})", fill, empty, scrub_pct, current, total), app.theme.title),
     ]);
 
     let p = Paragraph::new(help_text)
@@ -379,6 +406,42 @@ fn render_footer(f: &mut Frame, app: &App, area: Rect) {
         .alignment(Alignment::Center);
 
     f.render_widget(p, area);
+}
+
+fn render_event_modal(f: &mut Frame, app: &App, area: Rect) {
+    let modal_area = centered_rect(60, 50, area);
+    f.render_widget(Clear, modal_area);
+
+    let recent_events: Vec<_> = app.events.iter().rev().take(10).collect();
+    if recent_events.is_empty() {
+        return;
+    }
+    let idx = app.selected_event_index.min(recent_events.len() - 1);
+    let ev = recent_events[idx];
+
+    let lines = vec![
+        Line::from(vec![Span::styled("🔬 TRANSITION DIAGNOSTIC INSPECTOR", app.theme.title)]),
+        Line::from(vec![Span::styled("────────────────────────────────────────────────────────────", app.theme.border)]),
+        Line::from(vec![Span::raw("Timestamp:           "), Span::styled(&ev.timestamp_str, app.theme.muted)]),
+        Line::from(vec![Span::raw("Origin State:        "), Span::styled(ev.from_state.display_name(), app.theme.gold)]),
+        Line::from(vec![Span::raw("Destination State:   "), Span::styled(ev.to_state.display_name(), app.theme.bull)]),
+        Line::from(vec![Span::raw("Transition Price:    "), Span::styled(format!("${:.2}", ev.price), app.theme.gold)]),
+        Line::from(vec![Span::styled("────────────────────────────────────────────────────────────", app.theme.border)]),
+        Line::from(vec![Span::styled("TRIGGER DIAGNOSTIC REASON:", app.theme.cyan)]),
+        Line::from(vec![Span::styled(format!("  \"{}\"", ev.trigger_reason), app.theme.title)]),
+        Line::from(vec![Span::styled("────────────────────────────────────────────────────────────", app.theme.border)]),
+        Line::from(vec![Span::styled("Press [Enter] or [Esc] to return to Cockpit View", app.theme.muted)]),
+    ];
+
+    let block = Block::default()
+        .title(" EVENT DIAGNOSTIC INSPECTOR ")
+        .title_style(app.theme.title)
+        .borders(Borders::ALL)
+        .border_type(BorderType::Double)
+        .border_style(app.theme.border_active);
+
+    let p = Paragraph::new(lines).block(block).alignment(Alignment::Left);
+    f.render_widget(p, modal_area);
 }
 
 fn render_help_overlay(f: &mut Frame, app: &App, area: Rect) {
