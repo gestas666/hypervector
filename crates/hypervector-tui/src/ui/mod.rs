@@ -126,11 +126,11 @@ fn render_screen_regime_detection(f: &mut Frame, app: &App, area: Rect) {
         .direction(Direction::Vertical)
         .constraints([
             Constraint::Length(8),  // 1. Top Telemetry Grid (Regime + MTF + Microstructure)
-            Constraint::Length(9),  // 2. High-Resolution 2D Braille OHLC Candlestick Canvas
-            Constraint::Length(8),  // 3. Visual Graphics Row (Orderbook BarChart + Regime Histogram BarChart)
-            Constraint::Length(8),  // 4. Trajectory & Volatility Compression Sparklines
+            Constraint::Length(7),  // 2. Real-time Price Range & Impulse Conviction Telemetry
+            Constraint::Length(7),  // 3. Visual Graphics Row (Orderbook BarChart + Regime Histogram BarChart)
+            Constraint::Length(7),  // 4. Trajectory & Volatility Compression Sparklines
             Constraint::Length(1),  // 5. SRS_TUI_EC8 Regime Distribution Bar
-            Constraint::Length(5),  // 6. Compact Reserved 5-Row Audit Log Table
+            Constraint::Min(6),     // 6. Expansive Audit Log Box Extending to Bottom of Screen
         ])
         .split(area);
 
@@ -471,23 +471,39 @@ fn render_distribution_bar(f: &mut Frame, app: &App, area: Rect) {
     if area.width < 10 || app.snapshots.is_empty() {
         return;
     }
-    let total = app.snapshots.len() as f64;
+
+    let current_ts = &app.current_snapshot().timestamp_str;
+    let events_to_now: Vec<_> = app.events.iter()
+        .filter(|e| &e.timestamp_str <= current_ts)
+        .collect();
+
     let mut bull_cnt = 0.0;
     let mut bear_cnt = 0.0;
     let mut coil_cnt = 0.0;
     let mut carry_cnt = 0.0;
     let mut chop_cnt = 0.0;
 
-    for s in &app.snapshots {
-        match s.state {
-            RegimeState::BullMomentum => bull_cnt += 1.0,
-            RegimeState::BearMomentum => bear_cnt += 1.0,
-            RegimeState::VolatilityCoiling => coil_cnt += 1.0,
-            RegimeState::FundingCarry => carry_cnt += 1.0,
-            RegimeState::RangeChop => chop_cnt += 1.0,
+    if events_to_now.is_empty() {
+        match app.current_snapshot().state {
+            RegimeState::BullMomentum => bull_cnt = 1.0,
+            RegimeState::BearMomentum => bear_cnt = 1.0,
+            RegimeState::VolatilityCoiling => coil_cnt = 1.0,
+            RegimeState::FundingCarry => carry_cnt = 1.0,
+            RegimeState::RangeChop => chop_cnt = 1.0,
+        }
+    } else {
+        for ev in &events_to_now {
+            match ev.to_state {
+                RegimeState::BullMomentum => bull_cnt += 1.0,
+                RegimeState::BearMomentum => bear_cnt += 1.0,
+                RegimeState::VolatilityCoiling => coil_cnt += 1.0,
+                RegimeState::FundingCarry => carry_cnt += 1.0,
+                RegimeState::RangeChop => chop_cnt += 1.0,
+            }
         }
     }
 
+    let total = f64::max(bull_cnt + bear_cnt + coil_cnt + carry_cnt + chop_cnt, 1.0);
     let bull_pct = (bull_cnt / total) * 100.0;
     let bear_pct = (bear_cnt / total) * 100.0;
     let coil_pct = (coil_cnt / total) * 100.0;
@@ -495,7 +511,7 @@ fn render_distribution_bar(f: &mut Frame, app: &App, area: Rect) {
     let chop_pct = (chop_cnt / total) * 100.0;
 
     let line = Line::from(vec![
-        Span::styled(format!("BULL {:.0}% ", bull_pct), app.theme.bull),
+        Span::styled(format!("TRANSITION DISTRIBUTION: BULL {:.0}% ", bull_pct), app.theme.bull),
         Span::styled("│ ", app.theme.border),
         Span::styled(format!("BEAR {:.0}% ", bear_pct), app.theme.bear),
         Span::styled("│ ", app.theme.border),
