@@ -1,4 +1,4 @@
-//! UI rendering module for Quant TA & Microstructure Regime Detector Cockpit.
+//! High-Density UI rendering engine for Hypervector Regime Cockpit v2.0.
 
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
@@ -17,16 +17,16 @@ pub fn draw(f: &mut Frame, app: &App) {
         .direction(Direction::Vertical)
         .constraints([
             Constraint::Length(3),  // Header Bar
-            Constraint::Length(7),  // Big Banner + MTF Matrix + OPI Gauge
-            Constraint::Length(10), // Price Sparkline + BBWP + Policy Allocation Box
-            Constraint::Min(6),     // Regime Transition Event Log
-            Constraint::Length(3),  // Keybindings Footer
+            Constraint::Length(8),  // Top Telemetry Grid (Regime + MTF + Microstructure)
+            Constraint::Length(12), // Analytics Grid (Sparklines + Dynamic Allocation)
+            Constraint::Min(6),     // Regime Transition Event Audit Log
+            Constraint::Length(3),  // Command Keybindings Footer
         ])
         .split(f.area());
 
     render_header(f, app, chunks[0]);
-    render_top_dashboard(f, app, chunks[1]);
-    render_center_analytics(f, app, chunks[2]);
+    render_top_telemetry(f, app, chunks[1]);
+    render_analytics_grid(f, app, chunks[2]);
     render_event_log(f, app, chunks[3]);
     render_footer(f, app, chunks[4]);
 }
@@ -39,16 +39,16 @@ fn render_header(f: &mut Frame, app: &App, area: Rect) {
         (false, true) => ("▶️ DEMO PLAYBACK (Synthetic)", app.theme.gold),
     };
     let status_str = if app.is_playing { "PLAYING" } else { "PAUSED" };
-    
+
     let text = vec![Line::from(vec![
-        Span::styled(" ⚡ HYPERVECTOR PERPETUALS BACKTEST ENGINE & ULTIMATE REGIME DETECTOR ", app.theme.title),
-        Span::raw(" | "),
+        Span::styled(" ⚡ HYPERVECTOR PERPETUALS ENGINE COCKPIT ", app.theme.title),
+        Span::raw(" │ "),
         Span::styled(format!("SYMBOL: {}", app.symbol), app.theme.gold),
-        Span::raw(" | "),
+        Span::raw(" │ "),
         Span::styled(format!("TIMEFRAME: {}", app.timeframe), app.theme.cyan),
-        Span::raw(" | "),
+        Span::raw(" │ "),
         Span::styled(mode_str, mode_style),
-        Span::raw(" | "),
+        Span::raw(" │ "),
         Span::styled(format!("[{}] ({:.1}x)", status_str, app.playback_speed), app.theme.header),
     ])];
 
@@ -61,19 +61,19 @@ fn render_header(f: &mut Frame, app: &App, area: Rect) {
     f.render_widget(p, area);
 }
 
-fn render_top_dashboard(f: &mut Frame, app: &App, area: Rect) {
+fn render_top_telemetry(f: &mut Frame, app: &App, area: Rect) {
     let chunks = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([
-            Constraint::Percentage(45), // Big Banner State Box
-            Constraint::Percentage(25), // MTF Alignment Matrix
-            Constraint::Percentage(30), // Microstructure OPI & Depth Gauge
+            Constraint::Percentage(42), // Active Regime & Conviction Box
+            Constraint::Percentage(28), // MTF Hysteresis Matrix
+            Constraint::Percentage(30), // L2 Microstructure & Flow
         ])
         .split(area);
 
     let snap = app.current_snapshot();
 
-    // 1. Big Banner State Box with Hypertrader Primary Label Badge
+    // 1. Active Regime Banner & Conviction
     let (state_style, state_label) = match snap.state {
         RegimeState::BullMomentum => (app.theme.bull, "🔥 TREND_UP (BULL MOMENTUM EXPANSION)"),
         RegimeState::BearMomentum => (app.theme.bear, "🔻 TREND_DOWN (BEAR MOMENTUM EXPANSION)"),
@@ -82,19 +82,32 @@ fn render_top_dashboard(f: &mut Frame, app: &App, area: Rect) {
         RegimeState::RangeChop => (app.theme.chop, "🛡️ RANGE (RANGE CHOP / HIGH FRICTION)"),
     };
 
+    let conf_pct = (snap.confidence * 100.0).clamp(0.0, 100.0);
+    let conf_bar_len = ((conf_pct / 100.0) * 15.0) as usize;
+    let conf_fill = "█".repeat(conf_bar_len);
+    let conf_empty = "░".repeat(15 - conf_bar_len);
+
     let banner_text = vec![
         Line::from(vec![Span::styled(state_label, state_style)]),
         Line::from(vec![
-            Span::raw("Primary TA Label: "),
+            Span::raw("Primary TA: "),
             Span::styled(snap.state.primary_label(), app.theme.gold),
-            Span::raw(" | Confidence: "),
-            Span::styled(format!("{:.1}%", snap.confidence * 100.0), app.theme.title),
+            Span::raw(" │ Conviction: "),
+            Span::styled(format!("[{}{}] {:.1}%", conf_fill, conf_empty, conf_pct), app.theme.cyan),
         ]),
         Line::from(vec![
-            Span::raw("Price: "),
+            Span::raw("Mark Price: "),
             Span::styled(format!("${:.2}", snap.price), app.theme.gold),
-            Span::raw(" | Time: "),
+            Span::raw(" │ 24h High: "),
+            Span::styled(format!("${:.2}", snap.high), app.theme.bull),
+            Span::raw(" │ Low: "),
+            Span::styled(format!("${:.2}", snap.low), app.theme.bear),
+        ]),
+        Line::from(vec![
+            Span::raw("Timestamp: "),
             Span::styled(&snap.timestamp_str, app.theme.muted),
+            Span::raw(" │ Volume: "),
+            Span::styled(format!("{:.1} BTC", snap.volume), app.theme.title),
         ]),
     ];
 
@@ -107,50 +120,82 @@ fn render_top_dashboard(f: &mut Frame, app: &App, area: Rect) {
 
     f.render_widget(Paragraph::new(banner_text).block(banner_block), chunks[0]);
 
-    // 2. MTF Alignment Matrix
+    // 2. MTF Hysteresis Matrix
     let mtf_text = vec![
-        Line::from(vec![Span::raw(" 1m Trend: "), Span::styled(&snap.trend_1m, if snap.trend_1m == "BULL" { app.theme.bull } else { app.theme.bear })]),
-        Line::from(vec![Span::raw(" 5m Trend: "), Span::styled(&snap.trend_5m, if snap.trend_5m == "BULL" { app.theme.bull } else { app.theme.bear })]),
-        Line::from(vec![Span::raw("15m Trend: "), Span::styled(&snap.trend_15m, if snap.trend_15m == "BULL" { app.theme.bull } else { app.theme.bear })]),
+        Line::from(vec![
+            Span::raw(" 1m Trend: "),
+            Span::styled(
+                format!(" [{}] ", snap.trend_1m),
+                if snap.trend_1m == "BULL" { app.theme.bull } else if snap.trend_1m == "BEAR" { app.theme.bear } else { app.theme.chop },
+            ),
+            Span::styled("ZLEMA Hysteresis", app.theme.muted),
+        ]),
+        Line::from(vec![
+            Span::raw(" 5m Trend: "),
+            Span::styled(
+                format!(" [{}] ", snap.trend_5m),
+                if snap.trend_5m == "BULL" { app.theme.bull } else if snap.trend_5m == "BEAR" { app.theme.bear } else { app.theme.chop },
+            ),
+            Span::styled("ZLEMA Hysteresis", app.theme.muted),
+        ]),
+        Line::from(vec![
+            Span::raw("15m Trend: "),
+            Span::styled(
+                format!(" [{}] ", snap.trend_15m),
+                if snap.trend_15m == "BULL" { app.theme.bull } else if snap.trend_15m == "BEAR" { app.theme.bear } else { app.theme.chop },
+            ),
+            Span::styled("ZLEMA Hysteresis", app.theme.muted),
+        ]),
+        Line::from(vec![
+            Span::raw("Confirmation: "),
+            Span::styled(
+                if snap.trend_1m == snap.trend_5m && snap.trend_5m == snap.trend_15m {
+                    "FULL ALIGNMENT"
+                } else {
+                    "PARTIAL ALIGNMENT"
+                },
+                app.theme.title,
+            ),
+        ]),
     ];
 
     let mtf_block = Block::default()
-        .title(" MTF ALIGNMENT ")
+        .title(" MTF HYSTERESIS MATRIX ")
         .title_style(app.theme.title)
         .borders(Borders::ALL)
         .border_style(app.theme.border);
 
     f.render_widget(Paragraph::new(mtf_text).block(mtf_block), chunks[1]);
 
-    // 3. Microstructure OPI & Depth Gauge
+    // 3. L2 Microstructure OPI & Depth Gauge
     let opi_ratio = ((snap.opi + 1.0) / 2.0).clamp(0.0, 1.0);
     let opi_gauge = Gauge::default()
         .block(
             Block::default()
-                .title(" L2 ORDERBOOK PRESSURE (OPI) ")
+                .title(format!(" L2 ORDERBOOK OPI ({:.2}) ", snap.opi))
                 .title_style(app.theme.title)
                 .borders(Borders::ALL)
                 .border_style(app.theme.border),
         )
         .gauge_style(if snap.opi >= 0.0 { app.theme.bull } else { app.theme.bear })
         .percent((opi_ratio * 100.0) as u16)
-        .label(format!("OPI: {:.2} | Spread: {:.1}bps", snap.opi, snap.spread_bps));
+        .label(format!("Spread: {:.1}bps │ Depth: {:.2}x", snap.spread_bps, snap.bid_depth_ratio));
 
     f.render_widget(opi_gauge, chunks[2]);
 }
 
-fn render_center_analytics(f: &mut Frame, app: &App, area: Rect) {
+fn render_analytics_grid(f: &mut Frame, app: &App, area: Rect) {
     let chunks = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([
-            Constraint::Percentage(60), // ASCII Sparkline Price & BBWP
-            Constraint::Percentage(40), // Policy Strategy Allocation Box
+            Constraint::Percentage(55), // Dual Trajectory Sparklines
+            Constraint::Percentage(45), // Dynamic Risk & Allocation Engine
         ])
         .split(area);
 
     let snap = app.current_snapshot();
 
-    // 1. ASCII Sparkline Price & BBWP
+    // 1. Dual Trajectory Sparklines
     let inner_chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
@@ -174,7 +219,11 @@ fn render_center_analytics(f: &mut Frame, app: &App, area: Rect) {
     let sparkline_bbwp = Sparkline::default()
         .block(
             Block::default()
-                .title(format!(" BBWP COMPRESSION PERCENTILE ({:.1}%) ", snap.bbwp_percentile))
+                .title(format!(
+                    " BBWP COMPRESSION ({:.1}%) {} ",
+                    snap.bbwp_percentile,
+                    if snap.bbwp_percentile < 20.0 { "[COILING EXTREME]" } else { "" }
+                ))
                 .title_style(app.theme.gold)
                 .borders(Borders::ALL)
                 .border_style(app.theme.border),
@@ -184,18 +233,55 @@ fn render_center_analytics(f: &mut Frame, app: &App, area: Rect) {
 
     f.render_widget(sparkline_bbwp, inner_chunks[1]);
 
-    // 2. Policy Strategy Allocation Box
+    // 2. Dynamic Risk & Allocation Engine
+    let lev_pct = ((snap.dynamic_leverage / snap.max_leverage) * 100.0).clamp(0.0, 100.0);
+    let lev_bar_len = ((lev_pct / 100.0) * 12.0) as usize;
+    let lev_fill = "█".repeat(lev_bar_len);
+    let lev_empty = "░".repeat(12 - lev_bar_len);
+
+    let lw_pct = (snap.long_weight / 2.0).clamp(0.0, 1.0);
+    let lw_len = (lw_pct * 10.0) as usize;
+    let lw_fill = "█".repeat(lw_len);
+    let lw_empty = "░".repeat(10 - lw_len);
+
+    let sw_pct = (snap.short_weight / 2.0).clamp(0.0, 1.0);
+    let sw_len = (sw_pct * 10.0) as usize;
+    let sw_fill = "█".repeat(sw_len);
+    let sw_empty = "░".repeat(10 - sw_len);
+
     let policy_text = vec![
-        Line::from(vec![Span::raw("Long Alloc Weight:  "), Span::styled(format!("{:.2}x", snap.long_weight), app.theme.bull)]),
-        Line::from(vec![Span::raw("Short Alloc Weight: "), Span::styled(format!("{:.2}x", snap.short_weight), app.theme.bear)]),
-        Line::from(vec![Span::raw("Max Leverage Cap:   "), Span::styled(format!("{:.1}x", snap.max_leverage), app.theme.gold)]),
-        Line::from(vec![Span::raw("Taker Allowed:      "), Span::styled(if snap.taker_allowed { "YES" } else { "NO (Maker Only)" }, if snap.taker_allowed { app.theme.bull } else { app.theme.gold })]),
-        Line::from(vec![Span::raw("Funding Z-Score:    "), Span::styled(format!("{:.2}", snap.funding_zscore), app.theme.carry)]),
-        Line::from(vec![Span::raw("RSI (14):           "), Span::styled(format!("{:.1}", snap.rsi), app.theme.cyan)]),
+        Line::from(vec![
+            Span::raw("Long Weight:       "),
+            Span::styled(format!("[{}{}] {:.2}x", lw_fill, lw_empty, snap.long_weight), app.theme.bull),
+        ]),
+        Line::from(vec![
+            Span::raw("Short Weight:      "),
+            Span::styled(format!("[{}{}] {:.2}x", sw_fill, sw_empty, snap.short_weight), app.theme.bear),
+        ]),
+        Line::from(vec![
+            Span::raw("Dynamic Leverage:  "),
+            Span::styled(
+                format!("[{}{}] {:.2}x / {:.1}x Cap", lev_fill, lev_empty, snap.dynamic_leverage, snap.max_leverage),
+                app.theme.gold,
+            ),
+        ]),
+        Line::from(vec![
+            Span::raw("Execution Policy:  "),
+            Span::styled(
+                if snap.taker_allowed { "YES (Taker Allowed)" } else { "NO (Maker Only)" },
+                if snap.taker_allowed { app.theme.bull } else { app.theme.gold },
+            ),
+        ]),
+        Line::from(vec![
+            Span::raw("Funding Z-Score:   "),
+            Span::styled(format!("{:.2}", snap.funding_zscore), app.theme.carry),
+            Span::raw(" │ RSI (14): "),
+            Span::styled(format!("{:.1}", snap.rsi), app.theme.cyan),
+        ]),
     ];
 
     let policy_block = Block::default()
-        .title(" STRATEGY ALLOCATION POLICY ")
+        .title(" DYNAMIC RISK & ALLOCATION ENGINE ")
         .title_style(app.theme.title)
         .borders(Borders::ALL)
         .border_style(app.theme.border_active);
@@ -204,7 +290,7 @@ fn render_center_analytics(f: &mut Frame, app: &App, area: Rect) {
 }
 
 fn render_event_log(f: &mut Frame, app: &App, area: Rect) {
-    let header_cells = ["Timestamp", "From State", "To State", "Price", "Trigger Reason"]
+    let header_cells = ["Timestamp", "From State", "To State", "Price", "Trigger Diagnostic"]
         .iter()
         .map(|h| Span::styled(*h, app.theme.header));
     let header = Row::new(header_cells).height(1);
@@ -233,8 +319,8 @@ fn render_event_log(f: &mut Frame, app: &App, area: Rect) {
         rows,
         [
             Constraint::Length(19),
-            Constraint::Length(45),
-            Constraint::Length(45),
+            Constraint::Length(42),
+            Constraint::Length(42),
             Constraint::Length(12),
             Constraint::Min(25),
         ],
@@ -242,7 +328,7 @@ fn render_event_log(f: &mut Frame, app: &App, area: Rect) {
     .header(header)
     .block(
         Block::default()
-            .title(" RECENT REGIME TRANSITION EVENTS ")
+            .title(" RECENT REGIME TRANSITION AUDIT LOG ")
             .title_style(app.theme.title)
             .borders(Borders::ALL)
             .border_style(app.theme.border),
@@ -253,12 +339,12 @@ fn render_event_log(f: &mut Frame, app: &App, area: Rect) {
 
 fn render_footer(f: &mut Frame, app: &App, area: Rect) {
     let help_text = Line::from(vec![
-        Span::styled("[Space]", app.theme.gold), Span::raw(" Play/Pause | "),
-        Span::styled("[←/→]", app.theme.gold), Span::raw(" Scrub Back/Fwd | "),
-        Span::styled("[s]", app.theme.gold), Span::raw(" Cycle Speed | "),
-        Span::styled("[t]", app.theme.gold), Span::raw(" Timeframe | "),
-        Span::styled("[r]", app.theme.gold), Span::raw(" Reset | "),
-        Span::styled("[q / Esc]", app.theme.gold), Span::raw(" Quit"),
+        Span::styled("[Space]", app.theme.gold), Span::raw(" Play/Pause │ "),
+        Span::styled("[←/→]", app.theme.gold), Span::raw(" Scrub │ "),
+        Span::styled("[s]", app.theme.gold), Span::raw(" Speed │ "),
+        Span::styled("[t]", app.theme.gold), Span::raw(" Timeframe │ "),
+        Span::styled("[r]", app.theme.gold), Span::raw(" Reset │ "),
+        Span::styled("[q/Esc]", app.theme.gold), Span::raw(" Quit"),
     ]);
 
     let p = Paragraph::new(help_text)

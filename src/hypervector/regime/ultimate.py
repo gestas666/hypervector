@@ -130,12 +130,15 @@ def detect_ultimate_regime(
     spread_arr = spread.to_numpy()
     fz_arr = fr_zscore.to_numpy()
 
+    dyn_lev = np.full(n, 1.0, dtype=float)
+
     for i in range(n):
         # High friction spread filter
         if spread_arr[i] > 6.0:
             states[i] = "RANGE_CHOP_HIGH_FRICTION"
             long_w[i] = short_w[i] = 0.0
             max_lev[i] = 1.0
+            dyn_lev[i] = 1.0
             continue
 
         # Funding Carry Reversal Extreme
@@ -148,6 +151,9 @@ def detect_ultimate_regime(
                 long_w[i] = 0.0
                 short_w[i] = 2.0
             max_lev[i] = 3.0
+            # Dynamic leverage scaling by zscore magnitude
+            z_scale = min(abs(fz_arr[i]) / zscore_threshold, 1.5)
+            dyn_lev[i] = round(float(np.clip(3.0 * (z_scale / 1.2), 1.0, 3.0)), 2)
             continue
 
         # Volatility Coiling Compression
@@ -155,6 +161,9 @@ def detect_ultimate_regime(
             states[i] = "VOLATILITY_COILING_COMPRESSION"
             long_w[i] = short_w[i] = 1.5
             max_lev[i] = 2.5
+            # Dynamic leverage scaling by coiling intensity (lower BBWP -> higher breakout leverage)
+            coil_scale = 1.0 + (bbwp_threshold - bb_arr[i]) / bbwp_threshold
+            dyn_lev[i] = round(float(np.clip(1.5 * coil_scale, 1.0, 2.5)), 2)
             continue
 
         # Range Chop
@@ -162,6 +171,7 @@ def detect_ultimate_regime(
             states[i] = "RANGE_CHOP_HIGH_FRICTION"
             long_w[i] = short_w[i] = 0.25
             max_lev[i] = 1.0
+            dyn_lev[i] = 1.0
             continue
 
         # Momentum Expansions
@@ -170,15 +180,21 @@ def detect_ultimate_regime(
             long_w[i] = 2.0
             short_w[i] = 0.0
             max_lev[i] = 3.0
+            # Dynamic leverage scaling by OPI orderbook flow pressure
+            flow_mult = 1.0 + abs(opi_arr[i]) * 0.5
+            dyn_lev[i] = round(float(np.clip(2.0 * flow_mult, 1.0, 3.0)), 2)
         elif mbe_arr[i] and opi_arr[i] <= 0.0:
             states[i] = "BEAR_MOMENTUM_EXPANSION"
             long_w[i] = 0.0
             short_w[i] = 2.0
             max_lev[i] = 3.0
+            flow_mult = 1.0 + abs(opi_arr[i]) * 0.5
+            dyn_lev[i] = round(float(np.clip(2.0 * flow_mult, 1.0, 3.0)), 2)
         else:
             states[i] = "RANGE_CHOP_HIGH_FRICTION"
             long_w[i] = short_w[i] = 0.5
             max_lev[i] = 1.5
+            dyn_lev[i] = 1.0
 
     return pd.DataFrame(
         {
@@ -186,6 +202,7 @@ def detect_ultimate_regime(
             "long_weight": long_w,
             "short_weight": short_w,
             "max_leverage": max_lev,
+            "dynamic_leverage": dyn_lev,
         },
         index=df_1m.index,
     )
