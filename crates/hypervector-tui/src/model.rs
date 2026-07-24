@@ -65,6 +65,7 @@ pub struct RegimeSnapshot {
     pub long_weight: f64,
     pub short_weight: f64,
     pub max_leverage: f64,
+    pub dynamic_leverage: f64,
     pub taker_allowed: bool,
 }
 

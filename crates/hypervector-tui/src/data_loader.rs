@@ -91,6 +91,7 @@ fn parse_snapshot_json(val: &Value, idx: usize) -> Option<RegimeSnapshot> {
         long_weight: if state == RegimeState::BullMomentum { 2.0 } else { 0.5 },
         short_weight: if state == RegimeState::BearMomentum { 2.0 } else { 0.0 },
         max_leverage: 3.0,
+        dynamic_leverage: if state == RegimeState::BullMomentum { 2.42 } else { 1.25 },
         taker_allowed: false,
     })
 }
@@ -120,12 +121,19 @@ pub fn generate_synthetic_history(count: usize) -> Vec<RegimeSnapshot> {
         };
 
         let current_px = base_px + noise;
-        let (opi, spread, depth_ratio, bbwp, rsi, zscore, t1, t5, t15, lw, sw, lev, taker) = match state {
+        let (opi, spread, depth_ratio, bbwp, rsi, zscore, t1, t5, t15, lw, sw, lev, taker): (f64, f64, f64, f64, f64, f64, &str, &str, &str, f64, f64, f64, bool) = match state {
             RegimeState::BullMomentum => (0.42, 1.6, 1.65, 48.0, 64.5, 0.4, "BULL", "BULL", "BULL", 2.0, 0.0, 3.0, false),
             RegimeState::BearMomentum => (-0.38, 1.9, 0.62, 52.0, 38.0, -0.3, "BEAR", "BEAR", "BEAR", 0.0, 2.0, 3.0, false),
             RegimeState::VolatilityCoiling => (0.05, 1.4, 1.10, 14.5, 51.0, 0.1, "NEUTRAL", "BULL", "NEUTRAL", 1.5, 1.5, 2.5, false),
             RegimeState::FundingCarry => (0.12, 1.5, 1.25, 38.0, 44.0, -2.15, "BULL", "BEAR", "BEAR", 2.0, 0.0, 3.0, false),
             RegimeState::RangeChop => (-0.02, 5.2, 0.95, 68.0, 49.0, 0.0, "NEUTRAL", "NEUTRAL", "NEUTRAL", 0.25, 0.25, 1.0, false),
+        };
+
+        let dynamic_leverage = match state {
+            RegimeState::BullMomentum | RegimeState::BearMomentum => (2.0 * (1.0 + opi.abs() * 0.5)).clamp(1.0, lev),
+            RegimeState::VolatilityCoiling => (1.5 * (1.0 + (20.0 - bbwp) / 20.0)).clamp(1.0, lev),
+            RegimeState::FundingCarry => (3.0 * (zscore.abs() / 2.0)).clamp(1.0, lev),
+            RegimeState::RangeChop => 1.0,
         };
 
         snapshots.push(RegimeSnapshot {
@@ -149,6 +157,7 @@ pub fn generate_synthetic_history(count: usize) -> Vec<RegimeSnapshot> {
             long_weight: lw,
             short_weight: sw,
             max_leverage: lev,
+            dynamic_leverage: (dynamic_leverage * 100.0).round() / 100.0,
             taker_allowed: taker,
         });
     }
