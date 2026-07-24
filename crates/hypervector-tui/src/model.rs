@@ -175,6 +175,50 @@ pub struct HypervelocityTrade {
     pub fill_type: String,
 }
 
+/// Live position state tracked by the hypervelocity strategy.
+#[derive(Debug, Clone)]
+pub struct ActivePosition {
+    pub direction: String,   // "LONG" or "SHORT"
+    pub entry_price: f64,
+    pub size_btc: f64,
+    pub leverage: f64,
+    pub entry_equity: f64,
+    pub peak_margin_pct: f64,
+}
+
+impl ActivePosition {
+    pub fn flat() -> Self {
+        Self {
+            direction: "FLAT".to_string(),
+            entry_price: 0.0,
+            size_btc: 0.0,
+            leverage: 0.0,
+            entry_equity: 0.0,
+            peak_margin_pct: 0.0,
+        }
+    }
+
+    pub fn is_active(&self) -> bool {
+        self.direction != "FLAT"
+    }
+}
+
+/// Shared intermediate: the raw outcome of simulating one trade through the
+/// position-sizing + PnL engine. Both the paper-trade journal and the
+/// hypervelocity dashboard consume these, so we compute once.
+pub struct SimulatedTrade {
+    pub index: u32,
+    pub timestamp_str: String,
+    pub direction: String,
+    pub entry_price: f64,
+    pub exit_price: f64,
+    pub size_btc: f64,
+    pub leverage: f64,
+    pub pnl_usd: f64,
+    pub margin_pnl_pct: f64,
+    pub exit_reason: String,
+}
+
 // ---------------------------------------------------------------------------
 // Live orderbook state for the hypervelocity depth ladder
 // ---------------------------------------------------------------------------
