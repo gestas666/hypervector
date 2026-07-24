@@ -301,15 +301,20 @@ impl App {
     }
 
     pub fn toggle_config_option(&mut self) {
-        let max_lev = get_coin_max_leverage(&self.symbol);
         match self.config.selected_option_index {
             0 => {
                 self.config.leverage_mode = match self.config.leverage_mode {
-                    LeverageMode::DynamicML => LeverageMode::StaticMultiplier(2.0),
-                    LeverageMode::StaticMultiplier(v) if v < 5.0 => LeverageMode::StaticMultiplier(5.0_f64.min(max_lev)),
-                    LeverageMode::StaticMultiplier(v) if v < 10.0 => LeverageMode::StaticMultiplier(10.0_f64.min(max_lev)),
-                    LeverageMode::StaticMultiplier(v) if v < 20.0 => LeverageMode::StaticMultiplier(20.0_f64.min(max_lev)),
-                    LeverageMode::StaticMultiplier(v) if v < max_lev => LeverageMode::StaticMultiplier(max_lev),
+                    LeverageMode::DynamicML => LeverageMode::StaticMultiplier(1.0),
+                    LeverageMode::StaticMultiplier(v) if v < 2.0 => LeverageMode::StaticMultiplier(2.0),
+                    LeverageMode::StaticMultiplier(v) if v < 3.0 => LeverageMode::StaticMultiplier(3.0),
+                    LeverageMode::StaticMultiplier(v) if v < 5.0 => LeverageMode::StaticMultiplier(5.0),
+                    LeverageMode::StaticMultiplier(v) if v < 10.0 => LeverageMode::StaticMultiplier(10.0),
+                    LeverageMode::StaticMultiplier(v) if v < 20.0 => LeverageMode::StaticMultiplier(20.0),
+                    LeverageMode::StaticMultiplier(v) if v < 25.0 => LeverageMode::StaticMultiplier(25.0),
+                    LeverageMode::StaticMultiplier(v) if v < 30.0 => LeverageMode::StaticMultiplier(30.0),
+                    LeverageMode::StaticMultiplier(v) if v < 40.0 => LeverageMode::StaticMultiplier(40.0),
+                    LeverageMode::StaticMultiplier(v) if v < 50.0 => LeverageMode::StaticMultiplier(50.0),
+                    LeverageMode::StaticMultiplier(v) if v < 100.0 => LeverageMode::StaticMultiplier(100.0),
                     _ => LeverageMode::DynamicML,
                 };
             }
