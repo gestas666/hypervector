@@ -11,7 +11,7 @@ use ratatui::{
 };
 
 use crate::app::App;
-use crate::model::{LeverageMode, RegimeState, RiskSizingMode, TpSlStrategy};
+use crate::model::{get_coin_max_leverage, LeverageMode, RegimeState, RiskSizingMode, TpSlStrategy};
 
 pub fn draw(f: &mut Frame, app: &App) {
     let chunks = Layout::default()
@@ -1115,10 +1115,11 @@ fn render_screen_engine_config(f: &mut Frame, app: &App, area: Rect) {
 
     // 2. Interactive Config Options Table
     let sel_idx = cfg.selected_option_index;
+    let max_coin_lev = get_coin_max_leverage(&app.symbol);
 
     let lev_val_str = match cfg.leverage_mode {
-        LeverageMode::DynamicML => "DYNAMIC ML (Scaling via Model Conviction & OPI Flow)".to_string(),
-        LeverageMode::StaticMultiplier(mult) => format!("STATIC MULTIPLIER ({:.1}x Fixed Multiplier)", mult),
+        LeverageMode::DynamicML => format!("DYNAMIC ML (Scaling 1.0x - {:.1}x Max for {})", max_coin_lev, app.symbol),
+        LeverageMode::StaticMultiplier(mult) => format!("STATIC MULTIPLIER ({:.1}x Multiplier │ Max: {:.1}x for {})", mult, max_coin_lev, app.symbol),
     };
 
     let tpsl_val_str = match &cfg.tpsl_strategy {
@@ -1135,8 +1136,10 @@ fn render_screen_engine_config(f: &mut Frame, app: &App, area: Rect) {
         RiskSizingMode::VolatilityParity => "VOLATILITY PARITY (Inverse ATR Volatility Sizing)".to_string(),
     };
 
+    let lev_desc = format!("Dynamic ML Scaling vs Static Multiplier (Dial 1.0x up to {:.1}x Max for {})", max_coin_lev, app.symbol);
+
     let options = [
-        ("1. LEVERAGE SCALING ENGINE", lev_val_str, "Dynamic ML Scaling (1.0x-3.0x) vs Static Fixed Multiplier (2.0x, 5.0x, 10.0x)"),
+        ("1. LEVERAGE SCALING ENGINE", lev_val_str, lev_desc.as_str()),
         ("2. TAKE PROFIT / STOP LOSS ENGINE", tpsl_val_str, "Pine Composite ATR/BBWP Trails, Fixed %, Chandelier Exit, or Parabolic SAR"),
         ("3. RISK & POSITION SIZING CALCULATOR", risk_val_str, "Equity % Risk Cap, Fractional Kelly, Fixed USD Amount ($250), or Volatility Parity"),
     ];

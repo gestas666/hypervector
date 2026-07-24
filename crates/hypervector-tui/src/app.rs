@@ -1,6 +1,6 @@
 //! Application state and event loop controller for Quant TA Regime Cockpit.
 
-use crate::model::{EngineConfig, LeverageMode, LivePaperStats, PaperTradeRecord, RegimeEvent, RegimeSnapshot, RegimeState, RiskSizingMode, TpSlStrategy};
+use crate::model::{get_coin_max_leverage, EngineConfig, LeverageMode, LivePaperStats, PaperTradeRecord, RegimeEvent, RegimeSnapshot, RegimeState, RiskSizingMode, TpSlStrategy};
 use crate::theme::CockpitTheme;
 
 pub struct App {
@@ -218,7 +218,11 @@ impl App {
                 self.current_snapshot().price
             };
 
-            let lev = 2.0;
+            let max_coin_lev = get_coin_max_leverage(&self.symbol);
+            let lev = match self.config.leverage_mode {
+                LeverageMode::DynamicML => 2.0_f64.min(max_coin_lev),
+                LeverageMode::StaticMultiplier(mult) => mult.min(max_coin_lev),
+            };
             let pos_val = equity * 0.25 * lev;
             let size_btc = pos_val / entry_p;
 
@@ -297,12 +301,15 @@ impl App {
     }
 
     pub fn toggle_config_option(&mut self) {
+        let max_lev = get_coin_max_leverage(&self.symbol);
         match self.config.selected_option_index {
             0 => {
                 self.config.leverage_mode = match self.config.leverage_mode {
                     LeverageMode::DynamicML => LeverageMode::StaticMultiplier(2.0),
-                    LeverageMode::StaticMultiplier(2.0) => LeverageMode::StaticMultiplier(5.0),
-                    LeverageMode::StaticMultiplier(5.0) => LeverageMode::StaticMultiplier(10.0),
+                    LeverageMode::StaticMultiplier(v) if v < 5.0 => LeverageMode::StaticMultiplier(5.0_f64.min(max_lev)),
+                    LeverageMode::StaticMultiplier(v) if v < 10.0 => LeverageMode::StaticMultiplier(10.0_f64.min(max_lev)),
+                    LeverageMode::StaticMultiplier(v) if v < 20.0 => LeverageMode::StaticMultiplier(20.0_f64.min(max_lev)),
+                    LeverageMode::StaticMultiplier(v) if v < max_lev => LeverageMode::StaticMultiplier(max_lev),
                     _ => LeverageMode::DynamicML,
                 };
             }
@@ -326,5 +333,34 @@ impl App {
             _ => {}
         }
         self.rebuild_paper_trades();
+    }
+
+    pub fn increase_config_value(&mut self) {
+        let max_lev = get_coin_max_leverage(&self.symbol);
+        if self.config.selected_option_index == 0 {
+            let cur = match self.config.leverage_mode {
+                LeverageMode::DynamicML => 1.0,
+                LeverageMode::StaticMultiplier(v) => v,
+            };
+            let next = (cur + 1.0).min(max_lev);
+            self.config.leverage_mode = LeverageMode::StaticMultiplier(next);
+            self.rebuild_paper_trades();
+        }
+    }
+
+    pub fn decrease_config_value(&mut self) {
+        if self.config.selected_option_index == 0 {
+            let cur = match self.config.leverage_mode {
+                LeverageMode::DynamicML => 1.0,
+                LeverageMode::StaticMultiplier(v) => v,
+            };
+            let next = (cur - 1.0).max(1.0);
+            if next <= 1.0 {
+                self.config.leverage_mode = LeverageMode::DynamicML;
+            } else {
+                self.config.leverage_mode = LeverageMode::StaticMultiplier(next);
+            }
+            self.rebuild_paper_trades();
+        }
     }
 }
