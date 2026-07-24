@@ -659,11 +659,10 @@ impl App {
         let snap = self.current_snapshot();
         let rsi_val = snap.rsi;
         let funding_z = snap.funding_zscore;
-        let is_bull = snap.long_weight > 0.0 && snap.short_weight == 0.0;
-        let is_bear = snap.short_weight > 0.0 && snap.long_weight == 0.0;
+        let is_regime_active = snap.state == RegimeState::BullMomentum || snap.state == RegimeState::BearMomentum || snap.long_weight > 0.0 || snap.short_weight > 0.0;
 
         vec![
-            is_bull || is_bear,                         // EMA direction gate
+            is_regime_active,                           // EMA direction gate
             rsi_val > 30.0 && rsi_val < 70.0,           // RSI filter
             snap.bbwp_percentile > 20.0,                 // Chop/ADX (proxy: BBWP > coiling threshold)
             snap.confidence > 0.3,                       // Momentum pulse (proxy: conviction)
