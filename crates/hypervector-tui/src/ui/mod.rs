@@ -6,8 +6,7 @@ use ratatui::{
     style::Modifier,
     text::{Line, Span},
     widgets::{
-        canvas::{Canvas, Line as CanvasLine},
-        BarChart, Block, BorderType, Borders, Clear, Paragraph, Row, Sparkline, Table,
+        BarChart, Block, BorderType, Borders, Clear, Gauge, Paragraph, Row, Sparkline, Table,
     },
     Frame,
 };
@@ -300,48 +299,52 @@ fn render_screen_regime_detection(f: &mut Frame, app: &App, area: Rect) {
 
     f.render_widget(Paragraph::new(micro_text).block(micro_block), top_chunks[2]);
 
-    // 2. High-Resolution 2D Braille OHLC Candlestick Canvas
+    // 2. Real-time Price Action Range & Impulse Conviction Telemetry Panel
     let count = app.snapshots.len();
     let start = if app.current_index > 60 { app.current_index - 60 } else { 0 };
     let end = (app.current_index + 1).min(count);
     let view_snaps = &app.snapshots[start..end];
 
-    let (min_px, max_px) = view_snaps
-        .iter()
-        .fold((f64::MAX, f64::MIN), |(min, max), s| (min.min(s.low), max.max(s.high)));
+    let min_p = view_snaps.iter().map(|s| s.low).fold(f64::MAX, f64::min);
+    let max_p = view_snaps.iter().map(|s| s.high).fold(f64::MIN, f64::max);
+    let px_pct = if max_p > min_p { ((snap.price - min_p) / (max_p - min_p) * 100.0).clamp(0.0, 100.0) } else { 50.0 };
 
-    let canvas_chart = Canvas::default()
+    let px_chunks = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Percentage(50), // Price Range & High/Low Trajectory Gauge
+            Constraint::Percentage(50), // Volatility & Impulse Conviction Scale
+        ])
+        .split(main_chunks[1]);
+
+    let px_gauge = Gauge::default()
         .block(
             Block::default()
-                .title(format!(" HIGH-RESOLUTION 2D BRAILLE OHLC CANDLESTICK CANVAS (${:.2} -> ${:.2}) ", min_px, max_px))
+                .title(format!(" 60-BAR PRICE ACTION RANGE TRAJECTORY (${:.2} -> ${:.2}) ", min_p, max_p))
                 .title_style(app.theme.title)
                 .borders(Borders::ALL)
                 .border_style(app.theme.border),
         )
-        .x_bounds([0.0, 60.0])
-        .y_bounds([min_px - 5.0, max_px + 5.0])
-        .paint(|ctx| {
-            for (i, s) in view_snaps.iter().enumerate() {
-                let x = i as f64;
-                let color = if s.state == RegimeState::BullMomentum {
-                    ratatui::style::Color::Rgb(0, 255, 128)
-                } else if s.state == RegimeState::BearMomentum {
-                    ratatui::style::Color::Rgb(255, 45, 85)
-                } else {
-                    ratatui::style::Color::Rgb(0, 240, 255)
-                };
-                // High-Low Wick Line
-                ctx.draw(&CanvasLine {
-                    x1: x,
-                    y1: s.low,
-                    x2: x,
-                    y2: s.high,
-                    color,
-                });
-            }
-        });
+        .gauge_style(app.theme.gold)
+        .percent(px_pct as u16)
+        .label(format!("Mark: ${:.2} (60-Bar Range Pos: {:.1}%)", snap.price, px_pct));
 
-    f.render_widget(canvas_chart, main_chunks[1]);
+    f.render_widget(px_gauge, px_chunks[0]);
+
+    let conv_pct = (snap.confidence * 100.0).clamp(0.0, 100.0);
+    let conv_gauge = Gauge::default()
+        .block(
+            Block::default()
+                .title(format!(" IMPULSE CONVICTION & DYNAMIC LEVERAGE ENGINE ({:.1}%) ", conv_pct))
+                .title_style(app.theme.title)
+                .borders(Borders::ALL)
+                .border_style(app.theme.border),
+        )
+        .gauge_style(if snap.confidence >= 0.70 { app.theme.bull } else { app.theme.coiling })
+        .percent(conv_pct as u16)
+        .label(format!("Conviction: {:.1}% │ Dyn Lev: {:.2}x / {:.1}x", conv_pct, snap.dynamic_leverage, snap.max_leverage));
+
+    f.render_widget(conv_gauge, px_chunks[1]);
 
     // 3. Visual Graphics Row (Orderbook BarChart + Regime Histogram BarChart)
     let graphic_chunks = Layout::default()
