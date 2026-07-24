@@ -160,6 +160,12 @@ impl Default for EngineConfig {
     }
 }
 
-pub fn get_coin_max_leverage(_symbol: &str) -> f64 {
-    100.0
+pub fn get_coin_max_leverage(symbol: &str) -> f64 {
+    match symbol.to_uppercase().as_str() {
+        "BTC" => 40.0,
+        "ETH" => 25.0,
+        "SOL" => 20.0,
+        "AVAX" | "BNB" | "SUI" | "APT" | "DOGE" | "XRP" | "LINK" => 15.0,
+        _ => 10.0,
+    }
 }
