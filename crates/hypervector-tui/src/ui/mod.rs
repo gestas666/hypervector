@@ -4,6 +4,7 @@ use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     text::{Line, Span},
     widgets::{
+        canvas::{Canvas, Line as CanvasLine},
         BarChart, Block, BorderType, Borders, Clear, Gauge, Paragraph, Row, Sparkline, Table,
     },
     Frame,
@@ -86,9 +87,10 @@ fn render_screen_regime_detection(f: &mut Frame, app: &App, area: Rect) {
         .direction(Direction::Vertical)
         .constraints([
             Constraint::Length(8),  // 1. Top Telemetry Grid (Regime + MTF + Microstructure)
-            Constraint::Length(8),  // 2. Visual Graphics Row (Orderbook BarChart + Regime Histogram BarChart)
-            Constraint::Length(8),  // 3. Trajectory & Volatility Compression Sparklines
-            Constraint::Min(6),     // 4. Responsive Expansive Transition Audit Log Table
+            Constraint::Length(9),  // 2. High-Resolution 2D Braille OHLC Candlestick Canvas
+            Constraint::Length(8),  // 3. Visual Graphics Row (Orderbook BarChart + Regime Histogram BarChart)
+            Constraint::Length(8),  // 4. Trajectory & Volatility Compression Sparklines
+            Constraint::Length(5),  // 5. Compact 5-Row Transition Audit Log Table
         ])
         .split(area);
 
@@ -230,14 +232,57 @@ fn render_screen_regime_detection(f: &mut Frame, app: &App, area: Rect) {
 
     f.render_widget(opi_gauge, top_chunks[2]);
 
-    // 2. Visual Graphics Row (Orderbook BarChart + Regime Histogram BarChart)
+    // 2. High-Resolution 2D Braille OHLC Candlestick Canvas
+    let count = app.snapshots.len();
+    let start = if app.current_index > 60 { app.current_index - 60 } else { 0 };
+    let end = (app.current_index + 1).min(count);
+    let view_snaps = &app.snapshots[start..end];
+
+    let (min_px, max_px) = view_snaps
+        .iter()
+        .fold((f64::MAX, f64::MIN), |(min, max), s| (min.min(s.low), max.max(s.high)));
+
+    let canvas_chart = Canvas::default()
+        .block(
+            Block::default()
+                .title(format!(" HIGH-RESOLUTION 2D BRAILLE OHLC CANDLESTICK CANVAS (${:.2} -> ${:.2}) ", min_px, max_px))
+                .title_style(app.theme.title)
+                .borders(Borders::ALL)
+                .border_style(app.theme.border),
+        )
+        .x_bounds([0.0, 60.0])
+        .y_bounds([min_px - 5.0, max_px + 5.0])
+        .paint(|ctx| {
+            for (i, s) in view_snaps.iter().enumerate() {
+                let x = i as f64;
+                let color = if s.state == RegimeState::BullMomentum {
+                    ratatui::style::Color::Rgb(0, 255, 128)
+                } else if s.state == RegimeState::BearMomentum {
+                    ratatui::style::Color::Rgb(255, 45, 85)
+                } else {
+                    ratatui::style::Color::Rgb(0, 240, 255)
+                };
+                // High-Low Wick Line
+                ctx.draw(&CanvasLine {
+                    x1: x,
+                    y1: s.low,
+                    x2: x,
+                    y2: s.high,
+                    color,
+                });
+            }
+        });
+
+    f.render_widget(canvas_chart, main_chunks[1]);
+
+    // 3. Visual Graphics Row (Orderbook BarChart + Regime Histogram BarChart)
     let graphic_chunks = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([
             Constraint::Percentage(50), // L2 Orderbook Liquidity Depth BarChart
             Constraint::Percentage(50), // 5-State Regime Distribution BarChart
         ])
-        .split(main_chunks[1]);
+        .split(main_chunks[2]);
 
     let bid_val = (snap.bid_depth_ratio * 100.0) as u64;
     let ask_val = (100.0 / snap.bid_depth_ratio.max(0.1)) as u64;
@@ -282,11 +327,11 @@ fn render_screen_regime_detection(f: &mut Frame, app: &App, area: Rect) {
 
     f.render_widget(regime_barchart, graphic_chunks[1]);
 
-    // 3. Trajectory & Volatility Compression Sparklines
+    // 4. Trajectory & Volatility Compression Sparklines
     let sparkline_chunks = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
-        .split(main_chunks[2]);
+        .split(main_chunks[3]);
 
     let prices = app.sparkline_price_data();
     let sparkline_price = Sparkline::default()
@@ -320,8 +365,8 @@ fn render_screen_regime_detection(f: &mut Frame, app: &App, area: Rect) {
 
     f.render_widget(sparkline_bbwp, sparkline_chunks[1]);
 
-    // 4. Compact Half-Height Transition Audit Log Table (5 rows height)
-    render_event_log(f, app, main_chunks[3]);
+    // 5. Compact Half-Height Transition Audit Log Table (5 rows height)
+    render_event_log(f, app, main_chunks[4]);
 }
 
 // ============================================================================
