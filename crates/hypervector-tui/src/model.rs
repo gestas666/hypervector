@@ -108,3 +108,54 @@ pub struct LivePaperStats {
     pub avg_win_usd: f64,
     pub avg_loss_usd: f64,
 }
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub enum LeverageMode {
+    DynamicML,
+    StaticMultiplier(f64),
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub enum TpSlStrategy {
+    PineCompositeVolatility,
+    FixedPercentage { tp_pct: f64, sl_pct: f64 },
+    ChandelierTrailing,
+    ParabolicSarTrail,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub enum RiskSizingMode {
+    DynamicKellyPercent(f64),
+    FixedUsdAmount(f64),
+    EquityPercentage(f64),
+    VolatilityParity,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EngineConfig {
+    pub leverage_mode: LeverageMode,
+    pub static_leverage_value: f64,
+    pub tpsl_strategy: TpSlStrategy,
+    pub fixed_tp_pct: f64,
+    pub fixed_sl_pct: f64,
+    pub risk_sizing_mode: RiskSizingMode,
+    pub fixed_risk_usd: f64,
+    pub equity_risk_pct: f64,
+    pub selected_option_index: usize,
+}
+
+impl Default for EngineConfig {
+    fn default() -> Self {
+        Self {
+            leverage_mode: LeverageMode::DynamicML,
+            static_leverage_value: 2.0,
+            tpsl_strategy: TpSlStrategy::PineCompositeVolatility,
+            fixed_tp_pct: 1.5,
+            fixed_sl_pct: 0.75,
+            risk_sizing_mode: RiskSizingMode::EquityPercentage(25.0),
+            fixed_risk_usd: 250.0,
+            equity_risk_pct: 25.0,
+            selected_option_index: 0,
+        }
+    }
+}

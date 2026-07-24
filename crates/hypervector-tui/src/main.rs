@@ -81,13 +81,33 @@ fn run_app<B: ratatui::backend::Backend>(
                             KeyCode::Char('1') => app.active_tab = 0,
                             KeyCode::Char('2') => app.active_tab = 1,
                             KeyCode::Char('3') => app.active_tab = 2,
+                            KeyCode::Char('4') => app.active_tab = 3,
                             KeyCode::Char('?') | KeyCode::Char('h') => app.toggle_help_overlay(),
-                            KeyCode::Enter => app.toggle_event_modal(),
+                            KeyCode::Enter => {
+                                if app.active_tab == 3 {
+                                    app.toggle_config_option();
+                                } else {
+                                    app.toggle_event_modal();
+                                }
+                            }
+                            KeyCode::Char('c') => app.toggle_config_option(),
                             KeyCode::Char(' ') => app.toggle_play_pause(),
                             KeyCode::Left => app.step_backward(),
                             KeyCode::Right => app.step_forward(),
-                            KeyCode::Down | KeyCode::Char('j') => app.select_next_event(),
-                            KeyCode::Up | KeyCode::Char('k') => app.select_prev_event(),
+                            KeyCode::Down | KeyCode::Char('j') => {
+                                if app.active_tab == 3 {
+                                    app.select_next_config();
+                                } else {
+                                    app.select_next_event();
+                                }
+                            }
+                            KeyCode::Up | KeyCode::Char('k') => {
+                                if app.active_tab == 3 {
+                                    app.select_prev_config();
+                                } else {
+                                    app.select_prev_event();
+                                }
+                            }
                             KeyCode::Char('s') => app.cycle_speed(),
                             KeyCode::Char('t') => app.cycle_timeframe(),
                             KeyCode::Char('r') => app.current_index = 0,
