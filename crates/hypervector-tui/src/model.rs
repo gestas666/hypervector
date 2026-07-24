@@ -121,6 +121,7 @@ pub enum TpSlStrategy {
     FixedPercentage { tp_pct: f64, sl_pct: f64 },
     ChandelierTrailing,
     ParabolicSarTrail,
+    HypervelocityTargetTrail { target_margin_pct: f64 },
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -129,6 +130,7 @@ pub enum RiskSizingMode {
     FixedUsdAmount(f64),
     EquityPercentage(f64),
     VolatilityParity,
+    HypervelocityMarginParity { leverage: f64, target_pct: f64 },
 }
 
 /// Whether the hypervelocity execution engine uses maker-only or taker fills.

@@ -378,11 +378,12 @@ impl App {
                 };
             }
             1 => {
-                self.config.tpsl_strategy = match self.config.tpsl_strategy {
+                self.config.tpsl_strategy = match &self.config.tpsl_strategy {
                     TpSlStrategy::PineCompositeVolatility => TpSlStrategy::FixedPercentage { tp_pct: 1.5, sl_pct: 0.75 },
                     TpSlStrategy::FixedPercentage { .. } => TpSlStrategy::ChandelierTrailing,
                     TpSlStrategy::ChandelierTrailing => TpSlStrategy::ParabolicSarTrail,
-                    TpSlStrategy::ParabolicSarTrail => TpSlStrategy::PineCompositeVolatility,
+                    TpSlStrategy::ParabolicSarTrail => TpSlStrategy::HypervelocityTargetTrail { target_margin_pct: 8.0 },
+                    TpSlStrategy::HypervelocityTargetTrail { .. } => TpSlStrategy::PineCompositeVolatility,
                 };
             }
             2 => {
@@ -422,11 +423,12 @@ impl App {
                 }
             }
             5 => {
-                self.config.risk_sizing_mode = match self.config.risk_sizing_mode {
+                self.config.risk_sizing_mode = match &self.config.risk_sizing_mode {
                     RiskSizingMode::EquityPercentage(_) => RiskSizingMode::DynamicKellyPercent(15.0),
                     RiskSizingMode::DynamicKellyPercent(_) => RiskSizingMode::FixedUsdAmount(250.0),
                     RiskSizingMode::FixedUsdAmount(_) => RiskSizingMode::VolatilityParity,
-                    RiskSizingMode::VolatilityParity => RiskSizingMode::EquityPercentage(25.0),
+                    RiskSizingMode::VolatilityParity => RiskSizingMode::HypervelocityMarginParity { leverage: 40.0, target_pct: 8.0 },
+                    RiskSizingMode::HypervelocityMarginParity { .. } => RiskSizingMode::EquityPercentage(25.0),
                 };
             }
             _ => {}
