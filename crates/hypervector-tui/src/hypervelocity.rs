@@ -71,9 +71,14 @@ fn render_command_bar(f: &mut Frame, app: &App, area: Rect) {
     }
 
     let status_line = if all_green {
+        let max_coin_lev = crate::model::get_coin_max_leverage(&app.symbol);
+        let disp_lev = match app.config.leverage_mode {
+            crate::model::LeverageMode::DynamicML => 2.0_f64.min(max_coin_lev),
+            crate::model::LeverageMode::StaticMultiplier(mult) => mult.min(max_coin_lev),
+        };
         let dir_arrow = if snap.long_weight > 0.0 { "▲ LONG" } else if snap.short_weight > 0.0 { "▼ SHORT" } else { "◆ FLAT" };
         Span::styled(
-            format!("▶ ALL 6 GATES GREEN — ENTRY AUTHORIZED — {} — {}x LEVERAGE", dir_arrow, 40),
+            format!("▶ ALL 6 GATES GREEN — ENTRY AUTHORIZED — {} — {:.0}x LEVERAGE", dir_arrow, disp_lev),
             app.theme.bull,
         )
     } else {
@@ -134,8 +139,8 @@ fn render_position_panel(f: &mut Frame, app: &App, area: Rect) {
         ("◆ FLAT", app.theme.muted, 0.0, snap.price, 0.0)
     };
 
-    let tp1_pct = app.config.fixed_tp_pct * lev.max(1.0);
-    let sl_pct = app.config.fixed_sl_pct * lev.max(1.0);
+    let tp1_pct = app.config.margin_tp_pct;
+    let sl_pct = app.config.margin_sl_pct;
 
     let (margin_pct, peak_pct, unrealized_pnl) = if pos.is_active() {
         let mgn = if pos.direction == "LONG" {
@@ -615,21 +620,19 @@ fn render_equity_sparkline(f: &mut Frame, app: &App, area: Rect) {
 
     f.render_widget(sparkline, chunks[0]);
 
-    let tp_pct = app.config.fixed_tp_pct * match app.config.leverage_mode {
-        crate::model::LeverageMode::DynamicML => 2.0,
-        crate::model::LeverageMode::StaticMultiplier(mult) => mult,
+    let max_coin_lev = crate::model::get_coin_max_leverage(&app.symbol);
+    let lev_approx = match app.config.leverage_mode {
+        crate::model::LeverageMode::DynamicML => 2.0_f64.min(max_coin_lev),
+        crate::model::LeverageMode::StaticMultiplier(mult) => mult.min(max_coin_lev),
     };
 
     let text = vec![
         Line::from(vec![
-            Span::styled(format!("EQUITY ${:.2}  │  +{:.1}%  │  TP {:.1}% MARGIN  │  {}x FIXED",
+            Span::styled(format!("EQUITY ${:.2}  │  +{:.1}%  │  TP {:.1}% MARGIN  │  {:.1}x",
                 app.paper_stats.current_equity,
                 (app.paper_stats.current_equity - app.paper_stats.initial_capital) / app.paper_stats.initial_capital * 100.0,
-                tp_pct,
-                match app.config.leverage_mode {
-                    crate::model::LeverageMode::DynamicML => 2.0,
-                    crate::model::LeverageMode::StaticMultiplier(mult) => mult,
-                }
+                app.config.margin_tp_pct,
+                lev_approx,
             ), app.theme.muted),
         ]),
         Line::from(vec![
