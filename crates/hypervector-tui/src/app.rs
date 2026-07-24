@@ -23,7 +23,7 @@ pub struct App {
     pub selected_event_index: usize,
     pub show_event_detail_modal: bool,
     pub theme_mode: usize,
-    pub active_tab: usize, // 0 = Regime Engine, 1 = Strategy Policy, 2 = Live Shadow Dashboard, 3 = Hypervelocity, 4 = Engine & Risk Config
+    pub active_tab: usize, // 0 = Regime Detection, 1 = Dashboard, 2 = Engine & Risk Config
     // Hypervelocity state
     pub active_position: ActivePosition,
     pub previous_margin_pct: f64,
@@ -90,7 +90,7 @@ impl App {
     }
 
     pub fn toggle_tab(&mut self) {
-        self.active_tab = (self.active_tab + 1) % 4;
+        self.active_tab = (self.active_tab + 1) % 3;
     }
 
     pub fn select_next_event(&mut self) {

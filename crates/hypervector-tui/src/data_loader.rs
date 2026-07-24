@@ -58,6 +58,10 @@ pub fn load_snapshots_from_file(path: &Path) -> Vec<RegimeSnapshot> {
     Vec::new()
 }
 
+pub fn get_today_date_str() -> String {
+    chrono::Local::now().format("%Y-%m-%d").to_string()
+}
+
 fn parse_snapshot_json(val: &Value, idx: usize) -> Option<RegimeSnapshot> {
     let px = val.get("close").or_else(|| val.get("price")).and_then(|v| v.as_f64()).unwrap_or(65000.0);
     let state_str = val.get("regime_state").and_then(|v| v.as_str()).unwrap_or("BULL_MOMENTUM_EXPANSION");
@@ -70,11 +74,22 @@ fn parse_snapshot_json(val: &Value, idx: usize) -> Option<RegimeSnapshot> {
         _ => RegimeState::RangeChop,
     };
 
+    let today = get_today_date_str();
+    let raw_ts = val.get("timestamp_str")
+        .or_else(|| val.get("timestamp"))
+        .or_else(|| val.get("time"))
+        .or_else(|| val.get("datetime"))
+        .and_then(|v| v.as_str())
+        .map(|s| s.to_string());
+
+    let timestamp_str = match raw_ts {
+        Some(s) if !s.contains("1969-12-31") && !s.contains("1970-01-01") => s,
+        Some(s) => s.replace("1969-12-31", &today).replace("1970-01-01", &today),
+        None => format!("{} {:02}:{:02}:00 EDT", today, (idx / 60) % 24, idx % 60),
+    };
+
     Some(RegimeSnapshot {
-        timestamp_str: val.get("timestamp_str")
-            .and_then(|v| v.as_str())
-            .map(|s| s.to_string())
-            .unwrap_or_else(|| format!("2026-07-24 {:02}:{:02}:00 EDT", (idx / 60) % 24, idx % 60)),
+        timestamp_str,
         timestamp_ms: 1784850000000 + (idx as u64 * 60000),
         price: px,
         high: px + 40.0,
@@ -110,6 +125,7 @@ pub fn generate_synthetic_history(count: usize) -> Vec<RegimeSnapshot> {
         RegimeState::BearMomentum,
         RegimeState::FundingCarry,
     ];
+    let today = get_today_date_str();
 
     for i in 0..count {
         let phase = (i / 30) % states.len();
@@ -140,7 +156,7 @@ pub fn generate_synthetic_history(count: usize) -> Vec<RegimeSnapshot> {
         };
 
         snapshots.push(RegimeSnapshot {
-            timestamp_str: format!("2026-07-24 {:02}:{:02}:00", (i / 60) % 24, i % 60),
+            timestamp_str: format!("{} {:02}:{:02}:00", today, (i / 60) % 24, i % 60),
             timestamp_ms: 1784850000000 + (i as u64 * 60000),
             price: current_px,
             high: current_px + 25.0,
