@@ -2,22 +2,23 @@
 name: hypervector-cli
 description: >
   Operate the Hypervector perpetuals quant engine CLI, VectorBT vectorized backtester,
-  Nautilus event-driven engine, Karpathy/Optuna autotuner, and tui-regime-detector cockpit.
+  Nautilus event-driven engine, Karpathy/Optuna autotuner, and 4-screen tui-regime-detector cockpit.
   Use when running hypervector commands, backtesting, autotuning, regime evaluation,
   paper/shadow/live checks, metalabel training, or launching the Ratatui TUI cockpit.
 ---
 
 # Hypervector Perpetuals Quant Engine & Regime Detector CLI
 
-Comprehensive operator skill for **Hypervector** — VectorBT vectorized backtesting, Nautilus event-driven backtesting, Karpathy/Optuna autotuning, LightGBM metalabeling, and Ratatui TUI regime cockpit.
+Comprehensive operator skill for **Hypervector** — VectorBT vectorized backtesting, Nautilus event-driven backtesting, Karpathy/Optuna autotuning, LightGBM metalabeling, and 4-Screen Ratatui TUI regime cockpit.
 
-## Hard Safety Rules
+## Hard Safety Rules & Project Charter
 
-1. **Paper/shadow never places venue orders.** Default mode is `shadow`.
-2. **Live is fail-closed.** `live-run` requires `--enabled` **and** `--i-accept-live-risk` **and** secrets env. Do not arm without explicit user request.
-3. **Never print secret values** (`HYPERVECTOR_HL_WALLET_ADDRESS`, `HYPERVECTOR_HL_API_PRIVATE_KEY`). Only presence booleans.
-4. **Mainnet only** — no testnet path.
-5. **TUI is read-only.** CLI owns lifecycle and execution.
+1. **Ungated Execution (`SRS_HV1_NO_GATES`)**: Only **technical failure** aborts a trial. No implicit strategy, drawdown, or risk rejection gates unless explicitly configured by the user. Performance, drawdown, trade count, regime confidence, and model scores remain reported trial results rather than implicit abort conditions.
+2. **Fail-Closed Safety (`SRS_HV1_HONESTY`)**: Paper/shadow mode **never** constructs live execution clients or places live orders. Default mode is `shadow`. `live-run` is strictly fail-closed and arms **only** on explicit `--enabled --i-accept-live-risk` flags and secret environment variables.
+3. **Secret Protection**: Never print secret values (`HYPERVECTOR_HL_WALLET_ADDRESS`, `HYPERVECTOR_HL_API_PRIVATE_KEY`). Only print presence booleans.
+4. **Venue Specification (`SRS_HV1_VENUE_SPEC`)**: Strict adherence to Hyperliquid per-asset leverage specifications (BTC 40x max, ETH 25x max, SOL 20x max, Altcoins 10x-15x max).
+5. **Mainnet Only**: Mainnet venue parameters only — no testnet path.
+6. **TUI Integrity**: TUI is a read-only live telemetry display and paper trading cockpit; CLI owns process lifecycle and execution.
 
 ---
 
@@ -41,7 +42,7 @@ cargo run -p hypervector-tui --bin tui-regime-detector -- [options]
 
 ### 1. VectorBT Strategy Backtest (Phase 1.5 Vectorized Engine)
 
-Runs high-speed vectorized simulation across 180+ days of 1m/5m data in seconds with leverage scaling ($1\times - 10\times$), fee presets, and orderbook entry gating:
+Runs high-speed vectorized simulation across 180+ days of 1m/5m data in seconds with venue-restricted leverage scaling, fee presets, and orderbook entry gating:
 
 ```bash
 # Backtest Crown Stack Long on 5m BTC with 2.0x leverage & Maker fees
@@ -92,17 +93,23 @@ uv run python -m hypervector autotune --strategy crown_stack_long --sampler hybr
 uv run python -m hypervector autotune --strategy oi_divergence_long --sampler karpathy --n-trials 100
 ```
 
-### 5. Visual Quant TA & Microstructure Terminal Cockpit (`tui-regime-detector`)
+### 5. 4-Screen Visual Microstructure Cockpit (`tui-regime-detector`)
 
-Ratatui 0.29 interactive visual cockpit displaying active regime states, MTF alignment, sparklines, orderbook pressure gauges, and policy allocation:
+Ratatui 0.29 interactive 4-screen cockpit featuring live stream playback, L2 orderbook depth stack, paper trade journal, and interactive engine configuration:
 
 ```bash
-# Interactive playback cockpit
-cargo run -p hypervector-tui --bin tui-regime-detector -- --symbol BTC --timeframe 5m
+# Interactive playback cockpit (1m BTC execution with 15m HTF lock)
+cargo run -p hypervector-tui --bin tui-regime-detector -- --symbol BTC --timeframe 1m
 
-# Real-time live mode (250ms tick refresh)
-cargo run -p hypervector-tui --bin tui-regime-detector -- --symbol BTC --live --refresh-ms 250
+# Real-time live mode (250ms refresh rate)
+cargo run -p hypervector-tui --bin tui-regime-detector -- --symbol BTC --timeframe 1m --live --refresh-ms 250
 ```
+
+#### Cockpit Screen Navigation:
+- **`[1]`**: **Regime Classifier Engine** (15m HTF lock, continuous rolling transition audit log).
+- **`[2]`**: **Strategy Policy Matrix**.
+- **`[3]`**: **Live Shadow Paper Trading Cockpit** ($10k starting capital, L2 orderbook stack, win/loss stats, execution journal).
+- **`[4]`**: **Engine & Risk Configuration** (Leverage mode, TP/SL trailing engines, position sizing rules).
 
 ### 6. Walk-Forward LightGBM Metalabeling
 
@@ -124,7 +131,7 @@ uv run python -m hypervector status
 
 1. **VectorBT Engine (`hypervector backtest` & `hypervector autotune`)**:
    - Used for Phase 1 / Phase 1.5 high-speed vectorized simulation across 180+ days of 1m/5m data in seconds.
-   - Calculates portfolio return curves, leverage scaling ($1\times - 10\times$), fee schedules, trailing exit stops, and drives the autotuning engine.
+   - Calculates portfolio return curves, venue leverage scaling, fee schedules, trailing exit stops, and drives the autotuning engine.
 
 2. **Nautilus Engine (`hypervector phase2-run`)**:
    - Used for Phase 2 event-driven backtesting with order matching, venue fills, and strict export bundle verification.
