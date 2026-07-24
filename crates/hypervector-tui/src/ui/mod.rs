@@ -12,7 +12,7 @@ use ratatui::{
 
 use crate::app::App;
 use crate::hypervelocity;
-use crate::model::{get_coin_max_leverage, LeverageMode, RegimeState, RiskSizingMode, TpSlStrategy};
+use crate::model::{FillMode, get_coin_max_leverage, LeverageMode, RegimeState, RiskSizingMode, TpSlStrategy};
 
 pub fn draw(f: &mut Frame, app: &App) {
     let chunks = Layout::default()
@@ -583,7 +583,21 @@ fn render_screen_strategy_policy(f: &mut Frame, app: &App, area: Rect) {
         ("0.00x FLAT (Net Position 0.0 / Dual Stop Breakout)".into(), app.theme.gold)
     };
 
-    let policy_text = vec![
+    let signals = app.compute_hypervelocity_signals();
+    let gate_names = ["EMA", "RSI", "CHOP", "MOM", "FUND", "BOOK"];
+    let mut gate_spans: Vec<Span> = Vec::new();
+    for (i, (&ok, name)) in signals.iter().zip(gate_names.iter()).enumerate() {
+        let dot = if ok {
+            Span::styled("●", app.theme.bull)
+        } else {
+            Span::styled("◉", app.theme.gate_blocked)
+        };
+        gate_spans.push(Span::styled(format!("[{}] {} ", i + 1, name), app.theme.muted));
+        gate_spans.push(dot);
+        gate_spans.push(Span::styled(if ok { " OK " } else { " NO " }, if ok { app.theme.bull } else { app.theme.gate_blocked }));
+    }
+
+    let mut policy_text = vec![
         Line::from(vec![
             Span::raw("Dynamic Leverage:     "),
             Span::styled(
@@ -610,6 +624,9 @@ fn render_screen_strategy_policy(f: &mut Frame, app: &App, area: Rect) {
             Span::styled("Hyperliquid Single Position Netting Active", app.theme.title),
         ]),
         Line::from(vec![
+            Span::raw("6-Gate Signals:       "),
+        ]),
+        Line::from(vec![
             Span::raw("Execution Policy:     "),
             Span::styled(
                 if snap.taker_allowed { "TAKERS PERMITTED (Impulse High Conviction)" } else { "MAKER ORDERS ONLY (Spread Guard Active)" },
@@ -623,6 +640,7 @@ fn render_screen_strategy_policy(f: &mut Frame, app: &App, area: Rect) {
             Span::styled(format!("{:.1}", snap.rsi), app.theme.cyan),
         ]),
     ];
+    policy_text[5].spans.extend(gate_spans);
 
     let policy_block = Block::default()
         .title(" DYNAMIC LEVERAGE & NET POSITION SIZING ENGINE (Hyperliquid 1 Position / Symbol Netting) ")
@@ -652,6 +670,13 @@ fn render_screen_strategy_policy(f: &mut Frame, app: &App, area: Rect) {
             Span::styled("1m Impulse Short Scalper (Hypertrader Port)", app.theme.muted),
         ]),
         Row::new(vec![
+            Span::styled("hypervelocity_1m_scalper", app.theme.gold),
+            Span::styled(if is_long_active { "ACTIVE (LONG 40x)" } else if is_short_active { "ACTIVE (SHORT 40x)" } else { "ACTIVE (SCALPING)" }, app.theme.gold),
+            Span::styled("2.00x", app.theme.gold),
+            Span::styled("40.0x", app.theme.cyan),
+            Span::styled("40x BTC Scalper (95.7% Win Rate │ +8% Margin Return Target │ Maker Fills)", app.theme.title),
+        ]),
+        Row::new(vec![
             Span::styled("pine_composite", app.theme.coiling),
             Span::styled(if snap.state == RegimeState::VolatilityCoiling { "ACTIVE (BREAKOUT)" } else { "PASS-THROUGH" }, app.theme.coiling),
             Span::styled("1.50x", app.theme.gold),
@@ -670,7 +695,7 @@ fn render_screen_strategy_policy(f: &mut Frame, app: &App, area: Rect) {
     let strategy_table = Table::new(
         strategy_rows,
         [
-            Constraint::Length(25),
+            Constraint::Length(26),
             Constraint::Length(18),
             Constraint::Length(14),
             Constraint::Length(14),
@@ -1101,8 +1126,8 @@ fn render_screen_engine_config(f: &mut Frame, app: &App, area: Rect) {
     let main_chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Length(4),  // Title Banner
-            Constraint::Min(16),    // Interactive Config Panel
+            Constraint::Length(3),  // Title Banner
+            Constraint::Min(18),    // Interactive Config Panel
             Constraint::Length(4),  // Keyboard Guidance Bar
         ])
         .split(area);
@@ -1112,28 +1137,45 @@ fn render_screen_engine_config(f: &mut Frame, app: &App, area: Rect) {
     // 1. Title Banner
     let banner_text = vec![
         Line::from(vec![Span::styled("⚙️ HYPERVECTOR ENGINE & RISK SYSTEM CONFIGURATION", app.theme.title)]),
-        Line::from(vec![Span::styled("Configure Dynamic vs Static Leverage, TP/SL Trailing Engines, and Risk Position Sizing Rules", app.theme.muted)]),
     ];
     let banner_block = Block::default()
         .borders(Borders::ALL)
         .border_style(app.theme.border_active);
     f.render_widget(Paragraph::new(banner_text).block(banner_block), main_chunks[0]);
 
-    // 2. Interactive Config Options Table
+    // 2. Interactive Config Options Table (6 rows)
     let sel_idx = cfg.selected_option_index;
     let max_coin_lev = get_coin_max_leverage(&app.symbol);
 
     let lev_val_str = match cfg.leverage_mode {
         LeverageMode::DynamicML => format!("DYNAMIC ML (Scaling 1.0x - {:.1}x Max for {})", max_coin_lev, app.symbol),
-        LeverageMode::StaticMultiplier(mult) => format!("STATIC MULTIPLIER ({:.1}x Multiplier │ Max: {:.1}x for {})", mult, max_coin_lev, app.symbol),
+        LeverageMode::StaticMultiplier(mult) => format!("STATIC MULTIPLIER ({:.1}x │ Max: {:.1}x for {})", mult, max_coin_lev, app.symbol),
     };
 
     let tpsl_val_str = match &cfg.tpsl_strategy {
         TpSlStrategy::PineCompositeVolatility => "PINE COMPOSITE VOLATILITY (ATR 2.0x & BBWP Trailing Stop)".to_string(),
-        TpSlStrategy::FixedPercentage { tp_pct, sl_pct } => format!("FIXED PERCENTAGE (TP: +{:.1}% │ SL: -{:.1}%)", tp_pct, sl_pct),
+        TpSlStrategy::FixedPercentage { tp_pct, sl_pct } => format!("FIXED % (TP: +{:.1}% price │ SL: -{:.1}% price)", tp_pct, sl_pct),
         TpSlStrategy::ChandelierTrailing => "CHANDELIER EXIT (3.0x ATR Trailing High/Low)".to_string(),
-        TpSlStrategy::ParabolicSarTrail => "PARABOLIC SAR TRAIL (Acceleration Factor 0.02 - 0.20)".to_string(),
+        TpSlStrategy::ParabolicSarTrail => "PARABOLIC SAR TRAIL (Acceleration Fact 0.02 - 0.20)".to_string(),
     };
+
+    let lev_approx = match cfg.leverage_mode {
+        LeverageMode::DynamicML => 2.0_f64.min(max_coin_lev),
+        LeverageMode::StaticMultiplier(mult) => mult.min(max_coin_lev),
+    };
+    let price_tp_pct = cfg.margin_tp_pct / lev_approx.max(1.0);
+    let price_sl_pct = cfg.margin_sl_pct / lev_approx.max(1.0);
+
+    let margin_tp_val = format!("{:.1}% MARGIN ({:.2}% PRICE at {:.1}x) — Cycle w/ Enter", cfg.margin_tp_pct, price_tp_pct, lev_approx);
+    let margin_sl_val = format!("{:.1}% MARGIN ({:.2}% PRICE at {:.1}x) — Cycle w/ Enter", cfg.margin_sl_pct, price_sl_pct, lev_approx);
+
+    let exec_val = format!(
+        "RISK {:.0}%  │  FILL {}  │  SPLIT {} ({:.0}% TP1)",
+        cfg.equity_risk_frac * 100.0,
+        match cfg.fill_mode { FillMode::MakerOnly => "MAKER", FillMode::TakerOk => "TAKER" },
+        cfg.split_position_mode.label(),
+        cfg.split_position_mode.tp1_ratio() * 100.0,
+    );
 
     let risk_val_str = match &cfg.risk_sizing_mode {
         RiskSizingMode::EquityPercentage(pct) => format!("EQUITY FRACTION ({:.1}% Account Equity Risk Cap)", pct),
@@ -1142,12 +1184,15 @@ fn render_screen_engine_config(f: &mut Frame, app: &App, area: Rect) {
         RiskSizingMode::VolatilityParity => "VOLATILITY PARITY (Inverse ATR Volatility Sizing)".to_string(),
     };
 
-    let lev_desc = format!("Dynamic ML Scaling vs Static Multiplier (Dial 1.0x up to {:.1}x Max for {})", max_coin_lev, app.symbol);
+    let lev_desc = format!("Dynamic ML vs Static Multiplier (1.0x → {:.1}x for {})", max_coin_lev, app.symbol);
 
-    let options = [
-        ("1. LEVERAGE SCALING ENGINE", lev_val_str, lev_desc.as_str()),
-        ("2. TAKE PROFIT / STOP LOSS ENGINE", tpsl_val_str, "Pine Composite ATR/BBWP Trails, Fixed %, Chandelier Exit, or Parabolic SAR"),
-        ("3. RISK & POSITION SIZING CALCULATOR", risk_val_str, "Equity % Risk Cap, Fractional Kelly, Fixed USD Amount ($250), or Volatility Parity"),
+    let options: [(&str, String, &str); 6] = [
+        ("1. LEVERAGE MODE",        lev_val_str,       lev_desc.as_str()),
+        ("2. TP / SL ENGINE",       tpsl_val_str,      "Pine Composite Trails, Fixed %, Chandelier, or Parabolic SAR"),
+        ("3. MARGIN TP TARGET",     margin_tp_val,     "Margin return % at which tp1 fires (8.0% default for 40x strategy). Use ←→ to fine-tune."),
+        ("4. MARGIN SL STOP",       margin_sl_val,     "Margin return % at which stop-loss fires (2.0% default). Use ←→ to fine-tune."),
+        ("5. EXECUTION PARAMS",     exec_val,          "Risk fraction per trade, fill type, split-position ratio. Cycle fills & split w/ Enter, risk w/ ←→."),
+        ("6. RISK SIZING CALC",     risk_val_str,      "Equity %, Fractional Kelly, Fixed USD, or Volatility Parity"),
     ];
 
     let rows = options.iter().enumerate().map(|(idx, (name, val, desc))| {
@@ -1159,7 +1204,7 @@ fn render_screen_engine_config(f: &mut Frame, app: &App, area: Rect) {
 
         Row::new(vec![
             Span::styled(format!("{}{}", pointer, name), name_style),
-            Span::styled(val, val_style),
+            Span::styled(val.as_str(), val_style),
             Span::styled(*desc, desc_style),
         ])
     });
@@ -1167,19 +1212,19 @@ fn render_screen_engine_config(f: &mut Frame, app: &App, area: Rect) {
     let table = Table::new(
         rows,
         [
-            Constraint::Length(36),
-            Constraint::Length(54),
+            Constraint::Length(30),
+            Constraint::Length(60),
             Constraint::Min(30),
         ],
     )
     .header(Row::new(vec![
-        Span::styled("Configuration Parameter", app.theme.header),
-        Span::styled("Active Setting Value", app.theme.header),
-        Span::styled("Engine Description & Mechanics", app.theme.header),
+        Span::styled("Parameter", app.theme.header),
+        Span::styled("Active Value", app.theme.header),
+        Span::styled("Description", app.theme.header),
     ]))
     .block(
         Block::default()
-            .title(" INTERACTIVE ENGINE PARAMETERS (Use [↑/↓] or [j/k] to Select, [Enter] or [c] to Cycle Setting) ")
+            .title(" INTERACTIVE ENGINE PARAMETERS ([↑/↓] or [j/k] Select, [Enter/c] Cycle, [←/→] Fine-Tune Value) ")
             .title_style(app.theme.title)
             .borders(Borders::ALL)
             .border_style(app.theme.border),
@@ -1190,14 +1235,15 @@ fn render_screen_engine_config(f: &mut Frame, app: &App, area: Rect) {
     // 3. Guidance Footer
     let guide_lines = vec![
         Line::from(vec![
-            Span::styled("⌨️ KEYBOARD CONTROLS: ", app.theme.gold),
-            Span::styled("[↑ / ↓ j/k]", app.theme.cyan), Span::raw(" Select Setting │ "),
-            Span::styled("[Enter / c]", app.theme.cyan), Span::raw(" Cycle Active Setting Value │ "),
-            Span::styled("[Tab / 1-5]", app.theme.cyan), Span::raw(" Switch Cockpit Screen View"),
+            Span::styled("⌨️ CONTROLS: ", app.theme.gold),
+            Span::styled("[↑/↓ j/k]", app.theme.cyan), Span::raw(" Select Param │ "),
+            Span::styled("[Enter/c]", app.theme.cyan), Span::raw(" Cycle Setting │ "),
+            Span::styled("[←/→]", app.theme.cyan), Span::raw(" Adjust numeric value (rows 1, 3, 4, 5) │ "),
+            Span::styled("[Tab / 1-5]", app.theme.cyan), Span::raw(" Switch Tab"),
         ]),
         Line::from(vec![
-            Span::styled("💡 NOTE: ", app.theme.title),
-            Span::raw("All configuration changes instantly re-calculate position sizing and trade outcomes in Screen 3 Live Shadow Dashboard."),
+            Span::styled("💡 ", app.theme.title),
+            Span::raw("All config changes instantly re-calculate position sizing and trade outcomes in all dashboard views."),
         ]),
     ];
 

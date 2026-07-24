@@ -1,6 +1,6 @@
 //! Application state and event loop controller for Quant TA Regime Cockpit.
 
-use crate::model::{ActivePosition, get_coin_max_leverage, BookLevel, EngineConfig, HypervelocityBookState, HypervelocityTrade, LeverageMode, LivePaperStats, PaperTradeRecord, RegimeEvent, RegimeSnapshot, RegimeState, RiskSizingMode, SimulatedTrade, TpSlStrategy};
+use crate::model::{ActivePosition, FillMode, get_coin_max_leverage, BookLevel, EngineConfig, HypervelocityBookState, HypervelocityTrade, LeverageMode, LivePaperStats, PaperTradeRecord, RegimeEvent, RegimeSnapshot, RegimeState, RiskSizingMode, SimulatedTrade, SplitPositionMode, TpSlStrategy};
 use crate::theme::CockpitTheme;
 
 pub struct App {
@@ -232,8 +232,11 @@ impl App {
             LeverageMode::DynamicML => 2.0_f64.min(max_coin_lev),
             LeverageMode::StaticMultiplier(mult) => mult.min(max_coin_lev),
         };
-        let tp_pct = self.config.fixed_tp_pct;
-        let sl_pct = self.config.fixed_sl_pct;
+        // Margin-return based TP/SL targets (strategy-native units).
+        // Price-move targets are derived by dividing by leverage.
+        let margin_tp_pct = self.config.margin_tp_pct;
+        let margin_sl_pct = self.config.margin_sl_pct;
+        let risk_frac = self.config.equity_risk_frac;
 
         for (idx, ev) in self.events.iter().enumerate() {
             let direction = match ev.to_state {
@@ -249,7 +252,8 @@ impl App {
                 self.current_snapshot().price
             };
 
-            let pos_val = equity * 0.25 * lev;
+            // Position value = account equity * risk fraction * leverage
+            let pos_val = equity * risk_frac * lev;
             let size_btc = pos_val / entry_p;
 
             let pnl_usd = if direction == "LONG" {
@@ -281,9 +285,9 @@ impl App {
 
             let exit_reason = if idx + 1 >= self.events.len() {
                 "OPEN".to_string()
-            } else if margin_pnl_pct >= tp_pct {
+            } else if margin_pnl_pct >= margin_tp_pct {
                 "tp1".to_string()
-            } else if margin_pnl_pct <= -sl_pct {
+            } else if margin_pnl_pct <= -margin_sl_pct {
                 "SL".to_string()
             } else {
                 self.events[idx + 1].to_state.primary_label().to_string()
@@ -344,7 +348,7 @@ impl App {
     }
 
     pub fn select_next_config(&mut self) {
-        if self.config.selected_option_index < 2 {
+        if self.config.selected_option_index < 5 {
             self.config.selected_option_index += 1;
         }
     }
@@ -382,46 +386,108 @@ impl App {
                 };
             }
             2 => {
+                // Margin TP target: cycle through common values
+                let current = self.config.margin_tp_pct;
+                self.config.margin_tp_pct = match current {
+                    v if v < 3.0 => 4.0,
+                    v if v < 5.0 => 6.0,
+                    v if v < 7.0 => 8.0,
+                    v if v < 9.0 => 10.0,
+                    v if v < 11.0 => 12.0,
+                    _ => 2.0,
+                };
+            }
+            3 => {
+                // Margin SL stop: cycle through common values
+                let current = self.config.margin_sl_pct;
+                self.config.margin_sl_pct = match current {
+                    v if v < 1.5 => 2.0,
+                    v if v < 2.5 => 3.0,
+                    v if v < 3.5 => 4.0,
+                    v if v < 5.0 => 5.0,
+                    _ => 1.0,
+                };
+            }
+            4 => {
+                // Execution params: cycle fill mode then split position
+                if self.config.fill_mode == FillMode::MakerOnly {
+                    self.config.fill_mode = FillMode::TakerOk;
+                } else {
+                    self.config.fill_mode = FillMode::MakerOnly;
+                    self.config.split_position_mode = match self.config.split_position_mode {
+                        SplitPositionMode::None => SplitPositionMode::Active { tp1_ratio: 0.63 },
+                        SplitPositionMode::Active { tp1_ratio: 0.63 } => SplitPositionMode::Active { tp1_ratio: 0.50 },
+                        SplitPositionMode::Active { .. } => SplitPositionMode::None,
+                    };
+                }
+            }
+            5 => {
                 self.config.risk_sizing_mode = match self.config.risk_sizing_mode {
-                    RiskSizingMode::EquityPercentage(25.0) => RiskSizingMode::DynamicKellyPercent(15.0),
+                    RiskSizingMode::EquityPercentage(_) => RiskSizingMode::DynamicKellyPercent(15.0),
                     RiskSizingMode::DynamicKellyPercent(_) => RiskSizingMode::FixedUsdAmount(250.0),
                     RiskSizingMode::FixedUsdAmount(_) => RiskSizingMode::VolatilityParity,
                     RiskSizingMode::VolatilityParity => RiskSizingMode::EquityPercentage(25.0),
-                    _ => RiskSizingMode::EquityPercentage(25.0),
                 };
             }
             _ => {}
         }
         self.rebuild_paper_trades();
+        self.rebuild_hypervelocity_trades();
     }
 
     pub fn increase_config_value(&mut self) {
         let max_lev = get_coin_max_leverage(&self.symbol);
-        if self.config.selected_option_index == 0 {
-            let cur = match self.config.leverage_mode {
-                LeverageMode::DynamicML => 1.0,
-                LeverageMode::StaticMultiplier(v) => v,
-            };
-            let next = (cur + 1.0).min(max_lev);
-            self.config.leverage_mode = LeverageMode::StaticMultiplier(next);
-            self.rebuild_paper_trades();
+        match self.config.selected_option_index {
+            0 => {
+                let cur = match self.config.leverage_mode {
+                    LeverageMode::DynamicML => 1.0,
+                    LeverageMode::StaticMultiplier(v) => v,
+                };
+                let next = (cur + 1.0).min(max_lev);
+                self.config.leverage_mode = LeverageMode::StaticMultiplier(next);
+            }
+            2 => {
+                self.config.margin_tp_pct = (self.config.margin_tp_pct + 0.5).min(20.0);
+            }
+            3 => {
+                self.config.margin_sl_pct = (self.config.margin_sl_pct + 0.5).min(10.0);
+            }
+            4 => {
+                self.config.equity_risk_frac = (self.config.equity_risk_frac + 0.05).min(0.50);
+            }
+            _ => {}
         }
+        self.rebuild_paper_trades();
+        self.rebuild_hypervelocity_trades();
     }
 
     pub fn decrease_config_value(&mut self) {
-        if self.config.selected_option_index == 0 {
-            let cur = match self.config.leverage_mode {
-                LeverageMode::DynamicML => 1.0,
-                LeverageMode::StaticMultiplier(v) => v,
-            };
-            let next = (cur - 1.0).max(1.0);
-            if next <= 1.0 {
-                self.config.leverage_mode = LeverageMode::DynamicML;
-            } else {
-                self.config.leverage_mode = LeverageMode::StaticMultiplier(next);
+        match self.config.selected_option_index {
+            0 => {
+                let cur = match self.config.leverage_mode {
+                    LeverageMode::DynamicML => 1.0,
+                    LeverageMode::StaticMultiplier(v) => v,
+                };
+                let next = (cur - 1.0).max(1.0);
+                if next <= 1.0 {
+                    self.config.leverage_mode = LeverageMode::DynamicML;
+                } else {
+                    self.config.leverage_mode = LeverageMode::StaticMultiplier(next);
+                }
             }
-            self.rebuild_paper_trades();
+            2 => {
+                self.config.margin_tp_pct = (self.config.margin_tp_pct - 0.5).max(0.5);
+            }
+            3 => {
+                self.config.margin_sl_pct = (self.config.margin_sl_pct - 0.5).max(0.5);
+            }
+            4 => {
+                self.config.equity_risk_frac = (self.config.equity_risk_frac - 0.05).max(0.05);
+            }
+            _ => {}
         }
+        self.rebuild_paper_trades();
+        self.rebuild_hypervelocity_trades();
     }
 
     // -----------------------------------------------------------------------
@@ -430,6 +496,7 @@ impl App {
 
     pub fn rebuild_hypervelocity_trades(&mut self) {
         let (trades, stats) = self.simulate_trades();
+        let fill_label = self.config.fill_mode.label().to_string();
 
         // Build equity history from the simulated trade stream
         self.equity_history = vec![stats.initial_capital];
@@ -475,7 +542,7 @@ impl App {
                 pnl_usd: t.pnl_usd,
                 margin_pnl_pct: t.margin_pnl_pct,
                 exit_reason: exit_label.clone(),
-                fill_type: "maker".to_string(),
+                fill_type: fill_label.clone(),
             });
 
             // Track live position: record the most recent trade as a candidate

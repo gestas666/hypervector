@@ -131,6 +131,45 @@ pub enum RiskSizingMode {
     VolatilityParity,
 }
 
+/// Whether the hypervelocity execution engine uses maker-only or taker fills.
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+pub enum FillMode {
+    MakerOnly,
+    TakerOk,
+}
+
+impl FillMode {
+    pub fn label(&self) -> &'static str {
+        match self {
+            FillMode::MakerOnly => "maker",
+            FillMode::TakerOk => "taker",
+        }
+    }
+}
+
+/// Controls how the split-position (two-target) partial exit behaves.
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+pub enum SplitPositionMode {
+    None,
+    Active { tp1_ratio: f64 },   // e.g. 0.63 means 63% exits at TP1, 37% at TP2
+}
+
+impl SplitPositionMode {
+    pub fn label(&self) -> &'static str {
+        match self {
+            SplitPositionMode::None => "OFF",
+            SplitPositionMode::Active { .. } => "ACTIVE",
+        }
+    }
+
+    pub fn tp1_ratio(&self) -> f64 {
+        match self {
+            SplitPositionMode::None => 1.0,
+            SplitPositionMode::Active { tp1_ratio } => *tp1_ratio,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EngineConfig {
     pub leverage_mode: LeverageMode,
@@ -138,23 +177,34 @@ pub struct EngineConfig {
     pub tpsl_strategy: TpSlStrategy,
     pub fixed_tp_pct: f64,
     pub fixed_sl_pct: f64,
+    /// Margin-return target % for the hypervelocity strategy (e.g. 8.0%).
+    pub margin_tp_pct: f64,
+    /// Margin-return stop-loss % for the hypervelocity strategy (e.g. 2.0%).
+    pub margin_sl_pct: f64,
     pub risk_sizing_mode: RiskSizingMode,
     pub fixed_risk_usd: f64,
-    pub equity_risk_pct: f64,
+    /// Fraction of equity risked per trade (e.g. 0.25 = 25%).
+    pub equity_risk_frac: f64,
+    pub fill_mode: FillMode,
+    pub split_position_mode: SplitPositionMode,
     pub selected_option_index: usize,
 }
 
 impl Default for EngineConfig {
     fn default() -> Self {
         Self {
-            leverage_mode: LeverageMode::DynamicML,
-            static_leverage_value: 2.0,
-            tpsl_strategy: TpSlStrategy::PineCompositeVolatility,
-            fixed_tp_pct: 1.5,
-            fixed_sl_pct: 0.75,
-            risk_sizing_mode: RiskSizingMode::EquityPercentage(25.0),
+            leverage_mode: LeverageMode::StaticMultiplier(40.0),
+            static_leverage_value: 40.0,
+            tpsl_strategy: TpSlStrategy::FixedPercentage { tp_pct: 0.2, sl_pct: 0.05 },
+            fixed_tp_pct: 0.2,
+            fixed_sl_pct: 0.05,
+            margin_tp_pct: 8.0,
+            margin_sl_pct: 2.0,
+            risk_sizing_mode: RiskSizingMode::EquityPercentage(100.0),
             fixed_risk_usd: 250.0,
-            equity_risk_pct: 25.0,
+            equity_risk_frac: 1.0,
+            fill_mode: FillMode::MakerOnly,
+            split_position_mode: SplitPositionMode::Active { tp1_ratio: 0.63 },
             selected_option_index: 0,
         }
     }
