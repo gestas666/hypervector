@@ -381,11 +381,11 @@ fn render_screen_regime_detection(f: &mut Frame, app: &App, area: Rect) {
     f.render_widget(ob_barchart, graphic_chunks[0]);
 
     let regime_hist_data = [
-        ("BULL", if snap.state == RegimeState::BullMomentum { 90 } else { 30 }),
-        ("BEAR", if snap.state == RegimeState::BearMomentum { 90 } else { 20 }),
-        ("COIL", if snap.state == RegimeState::VolatilityCoiling { 90 } else { 15 }),
-        ("CARRY", if snap.state == RegimeState::FundingCarry { 90 } else { 25 }),
-        ("CHOP", if snap.state == RegimeState::RangeChop { 90 } else { 40 }),
+        ("TREND_UP", if snap.state == RegimeState::BullMomentum { 90 } else { 30 }),
+        ("TREND_DOWN", if snap.state == RegimeState::BearMomentum { 90 } else { 20 }),
+        ("BREAKOUT", if snap.state == RegimeState::VolatilityCoiling { 90 } else { 15 }),
+        ("TRANSITION", if snap.state == RegimeState::FundingCarry { 90 } else { 25 }),
+        ("RANGE", if snap.state == RegimeState::RangeChop { 90 } else { 40 }),
     ];
 
     let regime_barchart = BarChart::default()
@@ -517,15 +517,15 @@ fn render_distribution_bar(f: &mut Frame, app: &App, area: Rect) {
     let chop_pct = (chop_cnt / total) * 100.0;
 
     let line = Line::from(vec![
-        Span::styled(format!("TRANSITION DISTRIBUTION: BULL {:.0}% ", bull_pct), app.theme.bull),
+        Span::styled(format!("TRANSITION DISTRIBUTION: TREND_UP {:.0}% ", bull_pct), app.theme.bull),
         Span::styled("│ ", app.theme.border),
-        Span::styled(format!("BEAR {:.0}% ", bear_pct), app.theme.bear),
+        Span::styled(format!("TREND_DOWN {:.0}% ", bear_pct), app.theme.bear),
         Span::styled("│ ", app.theme.border),
-        Span::styled(format!("COIL {:.0}% ", coil_pct), app.theme.coiling),
+        Span::styled(format!("BREAKOUT {:.0}% ", coil_pct), app.theme.coiling),
         Span::styled("│ ", app.theme.border),
-        Span::styled(format!("CARRY {:.0}% ", carry_pct), app.theme.carry),
+        Span::styled(format!("TRANSITION {:.0}% ", carry_pct), app.theme.carry),
         Span::styled("│ ", app.theme.border),
-        Span::styled(format!("CHOP {:.0}%", chop_pct), app.theme.chop),
+        Span::styled(format!("RANGE {:.0}%", chop_pct), app.theme.chop),
     ]);
 
     f.render_widget(Paragraph::new(line).alignment(Alignment::Center), area);
