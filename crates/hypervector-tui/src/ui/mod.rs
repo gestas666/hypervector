@@ -14,6 +14,28 @@ use crate::app::App;
 use crate::hypervelocity;
 use crate::model::{FillMode, get_coin_max_leverage, LeverageMode, RegimeState, RiskSizingMode, TpSlStrategy};
 
+pub fn format_timestamp_display(ts: &str) -> String {
+    if ts.contains('T') {
+        let parts: Vec<&str> = ts.split('T').collect();
+        let date = parts[0];
+        let time = parts.get(1).unwrap_or(&"").split('.').next().unwrap_or("").trim_end_matches('Z');
+        format!("{} {}", date, time)
+    } else {
+        ts.to_string()
+    }
+}
+
+pub fn format_time_display(ts: &str) -> String {
+    if ts.contains('T') {
+        let time_part = ts.split('T').nth(1).unwrap_or(ts);
+        time_part.split('.').next().unwrap_or(time_part).trim_end_matches('Z').to_string()
+    } else if ts.len() >= 8 {
+        ts[..8].to_string()
+    } else {
+        ts.to_string()
+    }
+}
+
 pub fn draw(f: &mut Frame, app: &App) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
@@ -600,11 +622,12 @@ fn render_bottom_journal_and_trend_log(f: &mut Frame, app: &App, area: Rect) {
         .split(area);
 
     render_paper_journal_log(f, app, row5_chunks[0]);
-    render_event_log(f, app, row5_chunks[1]);
+    render_event_log_screen2(f, app, row5_chunks[1]);
 }
 
 fn render_dynamic_leverage_panel(f: &mut Frame, app: &App, area: Rect) {
     let snap = app.current_snapshot();
+    let stats = &app.paper_stats;
 
     let lev_pct = ((snap.dynamic_leverage / snap.max_leverage) * 100.0).clamp(0.0, 100.0);
     let lev_bar_len = ((lev_pct / 100.0) * 20.0) as usize;
@@ -629,6 +652,9 @@ fn render_dynamic_leverage_panel(f: &mut Frame, app: &App, area: Rect) {
     } else {
         ("0.00x FLAT (Net Position 0.0 / Dual Stop Breakout)".into(), app.theme.gold)
     };
+
+    let pnl_sign = if stats.realized_pnl >= 0.0 { "+" } else { "" };
+    let pnl_style = if stats.realized_pnl >= 0.0 { app.theme.bull } else { app.theme.bear };
 
     let policy_text = vec![
         Line::from(vec![
@@ -657,11 +683,29 @@ fn render_dynamic_leverage_panel(f: &mut Frame, app: &App, area: Rect) {
             Span::styled("Hyperliquid Single Position Netting Active", app.theme.title),
         ]),
         Line::from(vec![
+            Span::raw("OPI Flow Telemetry:   "),
+            Span::styled(format!("({:+.2}) ", snap.opi), if snap.opi >= 0.0 { app.theme.bull } else { app.theme.bear }),
+            Span::styled(if snap.opi >= 0.0 { "BULLISH_ORDER_FLOW" } else { "BEARISH_ORDER_FLOW" }, app.theme.cyan),
+            Span::raw(" │ Scale Multiplier: "),
+            Span::styled(format!("{:.2}x", 1.0 + snap.opi.abs() * 0.5), app.theme.gold),
+        ]),
+        Line::from(vec![
+            Span::raw("Account Portfolio:    "),
+            Span::raw("Equity "),
+            Span::styled(format!("${:.2} USD", stats.current_equity), app.theme.title),
+            Span::raw(" │ PnL "),
+            Span::styled(format!("{}{:.2} USD", pnl_sign, stats.realized_pnl), pnl_style),
+            Span::raw(" │ Margin Alloc "),
+            Span::styled(format!("${:.2} (25.0% Cap)", stats.current_equity * 0.25), app.theme.gold),
+        ]),
+        Line::from(vec![
             Span::raw("Execution Policy:     "),
             Span::styled(
                 if snap.taker_allowed { "TAKERS PERMITTED (Impulse High Conviction)" } else { "MAKER ORDERS ONLY (Spread Guard Active)" },
                 if snap.taker_allowed { app.theme.bull } else { app.theme.gold },
             ),
+            Span::raw(" │ Drag: "),
+            Span::styled("0.06% Taker Fee Drag Simulated", app.theme.muted),
         ]),
         Line::from(vec![
             Span::raw("Funding Carry Z-Score: "),
@@ -800,6 +844,73 @@ fn render_event_log(f: &mut Frame, app: &App, area: Rect) {
         Block::default()
             .title(format!(
                 " RECENT REGIME TRANSITION AUDIT LOG (Use [↑/↓] or [j/k] to navigate, [Enter] for details) [{}/{}] ",
+                app.selected_event_index.min(recent_events.len().saturating_sub(1)) + 1,
+                recent_events.len()
+            ))
+            .title_style(app.theme.title)
+            .borders(Borders::ALL)
+            .border_style(app.theme.border),
+    );
+
+    f.render_widget(table, area);
+}
+
+fn render_event_log_screen2(f: &mut Frame, app: &App, area: Rect) {
+    let header_cells = ["Timestamp", "From State", "To State", "Price"]
+        .iter()
+        .map(|h| Span::styled(*h, app.theme.header));
+    let header = Row::new(header_cells).height(1);
+
+    let current_ts = &app.current_snapshot().timestamp_str;
+    let max_rows = area.height.saturating_sub(3).max(5) as usize;
+    let recent_events: Vec<_> = app.events.iter()
+        .filter(|e| &e.timestamp_str <= current_ts)
+        .rev()
+        .take(max_rows)
+        .collect();
+    let rows = recent_events.iter().enumerate().map(|(idx, ev)| {
+        let from_str = ev.from_state.primary_label();
+        let to_str = ev.to_state.primary_label();
+        let is_selected = idx == app.selected_event_index.min(recent_events.len().saturating_sub(1));
+
+        let to_style = if is_selected {
+            app.theme.highlight
+        } else {
+            match ev.to_state {
+                RegimeState::BullMomentum => app.theme.bull,
+                RegimeState::BearMomentum => app.theme.bear,
+                RegimeState::VolatilityCoiling => app.theme.coiling,
+                RegimeState::FundingCarry => app.theme.carry,
+                RegimeState::RangeChop => app.theme.chop,
+            }
+        };
+
+        let row_style = if is_selected { app.theme.highlight } else { ratatui::style::Style::default() };
+        let ts_display = format_time_display(&ev.timestamp_str);
+
+        Row::new(vec![
+            Span::styled(ts_display, if is_selected { app.theme.highlight } else { app.theme.muted }),
+            Span::styled(from_str, row_style),
+            Span::styled(to_str, to_style),
+            Span::styled(format!("${:.2}", ev.price), if is_selected { app.theme.highlight } else { app.theme.gold }),
+        ])
+        .style(row_style)
+    });
+
+    let table = Table::new(
+        rows,
+        [
+            Constraint::Length(10),
+            Constraint::Length(14),
+            Constraint::Length(14),
+            Constraint::Min(10),
+        ],
+    )
+    .header(header)
+    .block(
+        Block::default()
+            .title(format!(
+                " RECENT REGIME TRANSITION AUDIT LOG [{}/{}] ",
                 app.selected_event_index.min(recent_events.len().saturating_sub(1)) + 1,
                 recent_events.len()
             ))
@@ -1106,9 +1217,11 @@ fn render_paper_journal_log(f: &mut Frame, app: &App, area: Rect) {
         let dir_style = if trd.direction == "LONG" { app.theme.bull } else { app.theme.bear };
         let (pnl_sign, pnl_color) = if trd.pnl_usd >= 0.0 { ("+", app.theme.bull) } else { ("", app.theme.bear) };
 
+        let ts_display = format_time_display(&trd.timestamp_str);
+
         Row::new(vec![
             Span::styled(&trd.trade_id, app.theme.gold),
-            Span::styled(&trd.timestamp_str, app.theme.muted),
+            Span::styled(ts_display, app.theme.muted),
             Span::styled(&trd.direction, dir_style),
             Span::styled(format!("${:.2}", trd.entry_price), app.theme.title),
             Span::styled(format!("${:.2}", trd.exit_price), app.theme.title),
@@ -1122,15 +1235,15 @@ fn render_paper_journal_log(f: &mut Frame, app: &App, area: Rect) {
     let table = Table::new(
         rows,
         [
+            Constraint::Length(8),
             Constraint::Length(10),
-            Constraint::Length(19),
+            Constraint::Length(7),
+            Constraint::Length(11),
+            Constraint::Length(11),
             Constraint::Length(10),
-            Constraint::Length(14),
-            Constraint::Length(14),
-            Constraint::Length(12),
-            Constraint::Length(10),
-            Constraint::Length(22),
-            Constraint::Min(20),
+            Constraint::Length(7),
+            Constraint::Length(18),
+            Constraint::Min(12),
         ],
     )
     .header(header)
