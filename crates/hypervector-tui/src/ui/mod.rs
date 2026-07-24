@@ -545,10 +545,11 @@ fn render_screen_strategy_policy(f: &mut Frame, app: &App, area: Rect) {
     let main_chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Length(6),  // Row 1: Narrow Strategy Command Box (42%) + Dynamic Leverage Panel (58%)
-            Constraint::Length(6),  // Row 2: Loaded Strategy Portfolio Matrix (3 Strategies)
-            Constraint::Length(10), // Row 3: Active Position PnL (Strictly 1 / coin) + L2 Depth Ladder Stack
-            Constraint::Min(11),    // Row 4: Performance Summary + Equity Curve Sparkline + Trend State Log
+            Constraint::Length(5),  // Row 1: Narrow Strategy Command Box (42%) + Dynamic Leverage Panel (58%)
+            Constraint::Length(5),  // Row 2: Loaded Strategy Portfolio Matrix (3 Strategies)
+            Constraint::Length(9),  // Row 3: Active Position Telemetry (1/coin) + L2 Depth Ladder Stack
+            Constraint::Length(6),  // Row 4: Performance Section (Compact Height 6: All-Time, Run, Sparkline)
+            Constraint::Min(6),     // Row 5: Live Paper Trade Journal Log (60%) + Trend State Audit Stream (40%)
         ])
         .split(area);
 
@@ -567,25 +568,39 @@ fn render_screen_strategy_policy(f: &mut Frame, app: &App, area: Rect) {
     // Row 3: Active Position Telemetry (Strictly 1 position / coin) + Orderbook L2 Depth Ladder
     hypervelocity::render_position_and_book(f, app, main_chunks[2]);
 
-    // Row 4: Performance Section + Equity Sparkline + Trend State Log (Bottom Corner)
-    render_bottom_performance_and_trend_log(f, app, main_chunks[3]);
+    // Row 4: Performance Summary Section (Compact 6-line height)
+    render_bottom_performance_section(f, app, main_chunks[3]);
+
+    // Row 5: Paper Trade Journal & Execution Log (60%) + Trend State Log (40%)
+    render_bottom_journal_and_trend_log(f, app, main_chunks[4]);
 }
 
-fn render_bottom_performance_and_trend_log(f: &mut Frame, app: &App, area: Rect) {
-    let row4_chunks = Layout::default()
+fn render_bottom_performance_section(f: &mut Frame, app: &App, area: Rect) {
+    let perf_chunks = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([
-            Constraint::Percentage(24), // All-Time Performance Summary Box
-            Constraint::Percentage(24), // This Run Performance Box
-            Constraint::Percentage(22), // Return Distribution Sparkline
-            Constraint::Percentage(30), // Trend State Log (Bottom Corner)
+            Constraint::Percentage(33), // All-Time Performance Summary Box
+            Constraint::Percentage(33), // This Run Performance Box
+            Constraint::Percentage(34), // Return Distribution Sparklines
         ])
         .split(area);
 
-    hypervelocity::render_all_time_stats(f, app, row4_chunks[0]);
-    hypervelocity::render_run_stats(f, app, row4_chunks[1]);
-    hypervelocity::render_return_distribution(f, app, row4_chunks[2]);
-    render_event_log(f, app, row4_chunks[3]);
+    hypervelocity::render_all_time_stats(f, app, perf_chunks[0]);
+    hypervelocity::render_run_stats(f, app, perf_chunks[1]);
+    hypervelocity::render_return_distribution(f, app, perf_chunks[2]);
+}
+
+fn render_bottom_journal_and_trend_log(f: &mut Frame, app: &App, area: Rect) {
+    let row5_chunks = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Percentage(60), // Live Paper Trade Journal Log Table (from Screen 3)
+            Constraint::Percentage(40), // Trend State Log & Rolling Transition Audit (Bottom-Right Corner)
+        ])
+        .split(area);
+
+    render_paper_journal_log(f, app, row5_chunks[0]);
+    render_event_log(f, app, row5_chunks[1]);
 }
 
 fn render_dynamic_leverage_panel(f: &mut Frame, app: &App, area: Rect) {
