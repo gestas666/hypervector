@@ -682,7 +682,12 @@ fn render_event_log(f: &mut Frame, app: &App, area: Rect) {
         .map(|h| Span::styled(*h, app.theme.header));
     let header = Row::new(header_cells).height(1);
 
-    let recent_events: Vec<_> = app.events.iter().rev().take(10).collect();
+    let current_ts = &app.current_snapshot().timestamp_str;
+    let recent_events: Vec<_> = app.events.iter()
+        .filter(|e| &e.timestamp_str <= current_ts)
+        .rev()
+        .take(10)
+        .collect();
     let rows = recent_events.iter().enumerate().map(|(idx, ev)| {
         let from_str = ev.from_state.display_name();
         let to_str = ev.to_state.display_name();
