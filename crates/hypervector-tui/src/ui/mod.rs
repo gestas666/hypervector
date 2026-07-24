@@ -3,7 +3,6 @@
 
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
-    style::Modifier,
     text::{Line, Span},
     widgets::{
         BarChart, Block, BorderType, Borders, Clear, Gauge, Paragraph, Row, Sparkline, Table,
@@ -84,43 +83,40 @@ fn render_header(f: &mut Frame, app: &App, area: Rect) {
     f.render_widget(p, area);
 }
 
-// SRS_TUI_EC1: Regime Timeline Ribbon (Titled Block Strip)
+// Simplified Live Telemetry Status Ribbon
 fn render_timeline_ribbon(f: &mut Frame, app: &App, area: Rect) {
-    if area.width < 5 || app.snapshots.is_empty() {
+    if app.snapshots.is_empty() {
         return;
     }
+    let snap = app.current_snapshot();
     let total = app.snapshots.len();
-    let inner_width = area.width.saturating_sub(2) as usize;
-    let start = if app.current_index > inner_width / 2 { app.current_index - inner_width / 2 } else { 0 };
-    let end = (start + inner_width).min(total);
 
-    let spans: Vec<Span> = app.snapshots[start..end]
-        .iter()
-        .enumerate()
-        .map(|(i, snap)| {
-            let idx = start + i;
-            let style = match snap.state {
-                RegimeState::BullMomentum => app.theme.bull,
-                RegimeState::BearMomentum => app.theme.bear,
-                RegimeState::VolatilityCoiling => app.theme.coiling,
-                RegimeState::FundingCarry => app.theme.carry,
-                RegimeState::RangeChop => app.theme.chop,
-            };
-            if idx == app.current_index {
-                Span::styled("█", style.add_modifier(Modifier::REVERSED))
-            } else {
-                Span::styled("█", style)
-            }
-        })
-        .collect();
+    let (state_style, state_str) = match snap.state {
+        RegimeState::BullMomentum => (app.theme.bull, "🔥 TREND_UP (BULL MOMENTUM)"),
+        RegimeState::BearMomentum => (app.theme.bear, "🔻 TREND_DOWN (BEAR MOMENTUM)"),
+        RegimeState::VolatilityCoiling => (app.theme.coiling, "⚡ BREAKOUT (VOLATILITY COILING)"),
+        RegimeState::FundingCarry => (app.theme.carry, "💰 TRANSITION (FUNDING CARRY)"),
+        RegimeState::RangeChop => (app.theme.chop, "🛡️ RANGE (RANGE CHOP)"),
+    };
+
+    let line = Line::from(vec![
+        Span::styled(" ACTIVE REGIME: ", app.theme.header),
+        Span::styled(format!("[ {} ]", state_str), state_style),
+        Span::raw("   │   "),
+        Span::styled("MACRO HTF LOCK: ", app.theme.header),
+        Span::styled(format!("[ 15m {} ]", snap.trend_15m), if snap.trend_15m == "BULL" { app.theme.bull } else if snap.trend_15m == "BEAR" { app.theme.bear } else { app.theme.chop }),
+        Span::raw("   │   "),
+        Span::styled("TELEMETRY BAR: ", app.theme.header),
+        Span::styled(format!("[ Bar {} / {} ]", app.current_index + 1, total), app.theme.gold),
+    ]);
 
     let block = Block::default()
-        .title(" HISTORICAL REGIME TIMELINE RIBBON (Current Playhead Position: █ Inverted) ")
+        .title(" LIVE REGIME TELEMETRY STATUS ")
         .title_style(app.theme.title)
         .borders(Borders::ALL)
         .border_style(app.theme.border);
 
-    f.render_widget(Paragraph::new(Line::from(spans)).block(block), area);
+    f.render_widget(Paragraph::new(line).block(block).alignment(Alignment::Center), area);
 }
 
 // ============================================================================
