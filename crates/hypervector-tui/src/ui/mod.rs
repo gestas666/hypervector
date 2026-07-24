@@ -88,7 +88,7 @@ fn render_screen_regime_detection(f: &mut Frame, app: &App, area: Rect) {
             Constraint::Length(8),  // 1. Top Telemetry Grid (Regime + MTF + Microstructure)
             Constraint::Length(8),  // 2. Visual Graphics Row (Orderbook BarChart + Regime Histogram BarChart)
             Constraint::Length(8),  // 3. Trajectory & Volatility Compression Sparklines
-            Constraint::Length(5),  // 4. Compact Half-Height Transition Audit Log Table
+            Constraint::Min(6),     // 4. Responsive Expansive Transition Audit Log Table
         ])
         .split(area);
 
@@ -476,7 +476,8 @@ fn render_event_log(f: &mut Frame, app: &App, area: Rect) {
         .map(|h| Span::styled(*h, app.theme.header));
     let header = Row::new(header_cells).height(1);
 
-    let recent_events: Vec<_> = app.events.iter().rev().take(10).collect();
+    let visible_rows = area.height.saturating_sub(3) as usize;
+    let recent_events: Vec<_> = app.events.iter().rev().take(visible_rows.max(4)).collect();
     let rows = recent_events.iter().enumerate().map(|(idx, ev)| {
         let from_str = ev.from_state.display_name();
         let to_str = ev.to_state.display_name();
