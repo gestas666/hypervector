@@ -29,13 +29,13 @@ pub fn load_snapshots_with_metadata(args: &crate::cli_args::CliArgs) -> (Vec<Reg
         }
     }
 
-    // Fall back to synthetic data with explicit synthetic flag
-    (generate_synthetic_history(300), true)
+    // Default to empty real snapshot array (NO synthetic demo fallback)
+    (Vec::new(), false)
 }
 
 pub fn load_snapshots_from_file(path: &Path) -> Vec<RegimeSnapshot> {
     if !path.exists() {
-        return generate_synthetic_history(300);
+        return Vec::new();
     }
 
     if let Ok(content) = fs::read_to_string(path) {
@@ -55,7 +55,7 @@ pub fn load_snapshots_from_file(path: &Path) -> Vec<RegimeSnapshot> {
         }
     }
 
-    generate_synthetic_history(300)
+    Vec::new()
 }
 
 fn parse_snapshot_json(val: &Value, idx: usize) -> Option<RegimeSnapshot> {
