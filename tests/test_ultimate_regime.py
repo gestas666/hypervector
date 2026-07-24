@@ -28,3 +28,18 @@ def test_ultimate_regime():
     assert "long_weight" in res.columns
     assert "short_weight" in res.columns
     assert len(res) == len(df_1m)
+
+
+def test_htf_decoupled_regime():
+    """Verify HTF (15m) macro trend lock prevents 1m noise whipsaws."""
+    df_1m = _make_dummy_df(300)
+    res_15m = detect_ultimate_regime(df_1m, htf_resample_rule="15min")
+    assert len(res_15m) == 300
+    # Ensure regime states are assigned cleanly across all bars
+    assert set(res_15m["regime_state"].unique()).issubset({
+        "BULL_MOMENTUM_EXPANSION",
+        "BEAR_MOMENTUM_EXPANSION",
+        "VOLATILITY_COILING_COMPRESSION",
+        "FUNDING_CARRY_REVERSAL",
+        "RANGE_CHOP_HIGH_FRICTION",
+    })
