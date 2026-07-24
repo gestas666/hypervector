@@ -1,6 +1,6 @@
 //! Application state and event loop controller for Quant TA Regime Cockpit.
 
-use crate::model::{LivePaperStats, PaperTradeRecord, RegimeEvent, RegimeSnapshot, RegimeState};
+use crate::model::{EngineConfig, LeverageMode, LivePaperStats, PaperTradeRecord, RegimeEvent, RegimeSnapshot, RegimeState, RiskSizingMode, TpSlStrategy};
 use crate::theme::CockpitTheme;
 
 pub struct App {
@@ -15,6 +15,7 @@ pub struct App {
     pub events: Vec<RegimeEvent>,
     pub paper_trades: Vec<PaperTradeRecord>,
     pub paper_stats: LivePaperStats,
+    pub config: EngineConfig,
     pub theme: CockpitTheme,
     pub tick_count: u64,
     pub should_quit: bool,
@@ -22,7 +23,7 @@ pub struct App {
     pub selected_event_index: usize,
     pub show_event_detail_modal: bool,
     pub theme_mode: usize,
-    pub active_tab: usize, // 0 = Regime Engine, 1 = Strategy Policy, 2 = Live Shadow Dashboard
+    pub active_tab: usize, // 0 = Regime Engine, 1 = Strategy Policy, 2 = Live Shadow Dashboard, 3 = Engine & Risk Config
 }
 
 impl App {
@@ -52,6 +53,7 @@ impl App {
                 avg_win_usd: 0.0,
                 avg_loss_usd: 0.0,
             },
+            config: EngineConfig::default(),
             theme: CockpitTheme::default(),
             tick_count: 0,
             should_quit: false,
@@ -67,7 +69,7 @@ impl App {
     }
 
     pub fn toggle_tab(&mut self) {
-        self.active_tab = (self.active_tab + 1) % 3;
+        self.active_tab = (self.active_tab + 1) % 4;
     }
 
     pub fn select_next_event(&mut self) {
@@ -280,5 +282,49 @@ impl App {
             avg_win_usd: if wins > 0 { gross_win / wins as f64 } else { 0.0 },
             avg_loss_usd: if losses > 0 { gross_loss / losses as f64 } else { 0.0 },
         };
+    }
+
+    pub fn select_next_config(&mut self) {
+        if self.config.selected_option_index < 2 {
+            self.config.selected_option_index += 1;
+        }
+    }
+
+    pub fn select_prev_config(&mut self) {
+        if self.config.selected_option_index > 0 {
+            self.config.selected_option_index -= 1;
+        }
+    }
+
+    pub fn toggle_config_option(&mut self) {
+        match self.config.selected_option_index {
+            0 => {
+                self.config.leverage_mode = match self.config.leverage_mode {
+                    LeverageMode::DynamicML => LeverageMode::StaticMultiplier(2.0),
+                    LeverageMode::StaticMultiplier(2.0) => LeverageMode::StaticMultiplier(5.0),
+                    LeverageMode::StaticMultiplier(5.0) => LeverageMode::StaticMultiplier(10.0),
+                    _ => LeverageMode::DynamicML,
+                };
+            }
+            1 => {
+                self.config.tpsl_strategy = match self.config.tpsl_strategy {
+                    TpSlStrategy::PineCompositeVolatility => TpSlStrategy::FixedPercentage { tp_pct: 1.5, sl_pct: 0.75 },
+                    TpSlStrategy::FixedPercentage { .. } => TpSlStrategy::ChandelierTrailing,
+                    TpSlStrategy::ChandelierTrailing => TpSlStrategy::ParabolicSarTrail,
+                    TpSlStrategy::ParabolicSarTrail => TpSlStrategy::PineCompositeVolatility,
+                };
+            }
+            2 => {
+                self.config.risk_sizing_mode = match self.config.risk_sizing_mode {
+                    RiskSizingMode::EquityPercentage(25.0) => RiskSizingMode::DynamicKellyPercent(15.0),
+                    RiskSizingMode::DynamicKellyPercent(_) => RiskSizingMode::FixedUsdAmount(250.0),
+                    RiskSizingMode::FixedUsdAmount(_) => RiskSizingMode::VolatilityParity,
+                    RiskSizingMode::VolatilityParity => RiskSizingMode::EquityPercentage(25.0),
+                    _ => RiskSizingMode::EquityPercentage(25.0),
+                };
+            }
+            _ => {}
+        }
+        self.rebuild_paper_trades();
     }
 }
