@@ -20,6 +20,7 @@ pub struct App {
     pub selected_event_index: usize,
     pub show_event_detail_modal: bool,
     pub theme_mode: usize,
+    pub active_tab: usize, // 0 = Regime Engine, 1 = Strategy Policy
 }
 
 impl App {
@@ -41,9 +42,14 @@ impl App {
             selected_event_index: 0,
             show_event_detail_modal: false,
             theme_mode: 0,
+            active_tab: 0,
         };
         app.rebuild_events();
         app
+    }
+
+    pub fn toggle_tab(&mut self) {
+        self.active_tab = (self.active_tab + 1) % 2;
     }
 
     pub fn select_next_event(&mut self) {
