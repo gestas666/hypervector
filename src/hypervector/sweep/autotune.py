@@ -1,17 +1,15 @@
-"""Karpathy & Optuna hybrid autotuning engine for strategy parameter optimization.
+"""Karpathy / Optuna Dual Autotuning Strategy Optimization Engine.
 
-Implements two search strategies:
-  1. Karpathy-style Random-Adaptive Autotune:
-     - Stage 1: Coarse stochastic random search across continuous parameter space.
-     - Stage 2: Elite candidate selection (top 10%) with Gaussian mutation / local zooming.
-  2. Optuna TPE (Tree-structured Parzen Estimator):
-     - Bayesian optimization with probabilistic density ratio modeling.
+Combines Karpathy-style continuous stochastic mutation + Optuna TPE sampling
+across strategy parameters, leverage levels, TP/SL multipliers, and fee models.
+Fully ungated per project charter (SRS_HV1_NO_GATES).
 """
 
 from __future__ import annotations
 
 import json
-from dataclasses import asdict, dataclass
+import logging
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -19,21 +17,21 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-try:
-    import optuna
-    optuna.logging.set_verbosity(optuna.logging.WARNING)
-    HAVE_OPTUNA = True
-except ImportError:
-    HAVE_OPTUNA = False
-
 from hypervector.data.pipeline import load_research_history
-from hypervector.export import export_candidate
 from hypervector.strategies import register_all_strategies
 from hypervector.strategies.registry import get_strategy
-from hypervector.sweep.costs import CostModel, resolve_cost_model
+from hypervector.sweep.costs import resolve_cost_model
 from hypervector.sweep.exits import ExitConfig
 from hypervector.sweep.metrics import compute_trial_metrics
 from hypervector.sweep.sizing import RiskConfig
+
+logger = logging.getLogger(__name__)
+
+try:
+    import optuna  # type: ignore[import-untyped]
+    HAVE_OPTUNA = True
+except ImportError:
+    HAVE_OPTUNA = False
 
 
 @dataclass
@@ -51,57 +49,58 @@ class AutotuneResult:
     board_path: Path
 
 
-def run_optuna_autotune(
+def run_autotune(
+    root: Path | None = None,
     *,
-    strategy_name: str = "crown_stack_long",
+    data_root: Path | None = None,
     symbol: str = "BTC",
     timeframe: str = "5m",
     lookback_days: int = 180,
+    strategy_name: str = "crown_stack_long",
     n_trials: int = 100,
-    data_root: Path | str = "data",
-    cost_preset: str = "hl_taker_default",
+    fee_model: str = "hl_taker_default",
+    book_data_path: str | Path | None = None,
+    sampler: str = "hybrid",
+    no_export: bool = False,
     export_best: bool = True,
-    book_data_path: Path | str | None = None,
-    sampler: str = "hybrid",  # "optuna" | "karpathy" | "hybrid"
+    apply_penalties: bool = False,
 ) -> AutotuneResult:
-    """Run Karpathy / Optuna parameter search over a strategy + exit configuration."""
+    """Run parameter autotuning using Karpathy random-adaptive mutation or Optuna TPE."""
+    root = root or data_root or Path.cwd()
+    no_export = no_export or (not export_best)
     register_all_strategies()
-    strategy_spec = get_strategy(strategy_name)
-    root = Path(data_root)
 
-    # 1. Load OHLCV data
-    df, prov = load_research_history(
-        root,
-        symbol=symbol,
-        timeframe=timeframe,
-        lookback_days=lookback_days,
-    )
+    # Load market history
+    df, _ = load_research_history(root, symbol=symbol, timeframe=timeframe, lookback_days=lookback_days)
+    if df.empty:
+        raise RuntimeError(f"No research history found for {symbol} {timeframe}")
 
-    # 2. Optional Orderbook Alignment if book_data_path provided
-    if book_data_path is not None:
-        p = Path(book_data_path)
-        if p.is_file():
-            from hypervector.data.book_align import align_orderbook_to_ohlcv, load_l2_jsonl
-            df_book = load_l2_jsonl(p)
-            df = align_orderbook_to_ohlcv(df, df_book)
+    # Align orderbook if provided
+    if book_data_path and Path(book_data_path).is_file():
+        from hypervector.data.book_align import align_orderbook_to_ohlcv, load_l2_jsonl
+        df_book = load_l2_jsonl(book_data_path)
+        df = align_orderbook_to_ohlcv(df, df_book)
 
-    cost = resolve_cost_model(cost_preset)
     close = df["close"].astype(float)
+    direction = "short" if "short" in strategy_name.lower() else "long"
+    cost = resolve_cost_model(fee_model)
+    spec = get_strategy(strategy_name)
 
     trials_log: list[dict[str, Any]] = []
 
     def evaluate_config(params: dict[str, Any], exit_dict: dict[str, Any], trial_num: int) -> float:
-        exit_cfg = ExitConfig(
-            mode=exit_dict.get("mode", "atr"),  # type: ignore[arg-type]
-            sl_atr_mult=float(exit_dict.get("sl_atr_mult", 1.5)),
-            rr=float(exit_dict.get("rr", 2.0)),
-            trail_atr_mult=float(exit_dict.get("trail_atr_mult", 2.0)),
-            atr_length=14,
-        )
-        lev = float(exit_dict.get("leverage", 1.0))
-        risk_cfg = RiskConfig(max_size_frac=lev)
         try:
-            entries, exits, direction = strategy_spec.build_signals(df, **params)
+            entries, exits, _ = spec.build_signals(df, **params)
+            exit_cfg = ExitConfig(
+                mode=exit_dict.get("mode", "atr"),
+                sl_pct=exit_dict.get("sl_pct", 0.01),
+                sl_atr_mult=exit_dict.get("sl_atr_mult", 2.0),
+                rr=exit_dict.get("rr", 2.0),
+                trail_atr_mult=exit_dict.get("trail_atr_mult", 2.0),
+            )
+            leverage = float(exit_dict.get("leverage", 2.0))
+            risk_cfg = RiskConfig(max_size_frac=leverage)
+
             m = compute_trial_metrics(
                 close,
                 entries,
@@ -123,22 +122,34 @@ def run_optuna_autotune(
             trials_log.append(
                 {
                     "trial_number": trial_num,
+                    "status": "ok",
                     "params": params,
                     "exit_cfg": exit_cfg.to_dict(),
                     "metrics": m,
                 }
             )
 
-            # Karpathy penalty score
-            if trades < 10:
-                return -50.0 + trades
-            if max_dd > 25.0:
-                return -20.0 - max_dd
+            # Optional penalties (disabled by default for ungated charter research)
+            if apply_penalties:
+                if trades < 10:
+                    return -50.0 + trades
+                if max_dd > 25.0:
+                    return -20.0 - max_dd
 
-            # Combined objective score
+            # Primary objective score (sharpe + normalized net PnL)
             return sharpe + (net_pnl / 1000.0)
 
-        except Exception:
+        except Exception as exc:
+            logger.warning("Autotune trial %d failed: %s", trial_num, exc)
+            trials_log.append(
+                {
+                    "trial_number": trial_num,
+                    "status": "error",
+                    "error": str(exc),
+                    "params": params,
+                    "exit_cfg": exit_dict,
+                }
+            )
             return -999.0
 
     # Determine execution path based on sampler argument
@@ -147,26 +158,11 @@ def run_optuna_autotune(
     if use_optuna:
         def objective(trial: optuna.Trial) -> float:
             params: dict[str, Any] = {}
-            if "crown" in strategy_name:
-                params["bbwp_lookback"] = trial.suggest_categorical("bbwp_lookback", [100, 180, 252])
-                params["bbwp_threshold"] = trial.suggest_float("bbwp_threshold", 10.0, 30.0, step=2.5)
-                if "long" in strategy_name:
-                    params["pmarp_exit_hi"] = trial.suggest_float("pmarp_exit_hi", 80.0, 98.0, step=2.0)
-                else:
-                    params["pmarp_exit_lo"] = trial.suggest_float("pmarp_exit_lo", 2.0, 20.0, step=2.0)
-                params["regime_filter"] = trial.suggest_categorical("regime_filter", [True, False])
-
-            elif "pine" in strategy_name or "trend_ride" in strategy_name:
-                params["st_atr"] = trial.suggest_categorical("st_atr", [10, 14])
-                params["st_mult"] = trial.suggest_float("st_mult", 2.0, 4.5, step=0.5)
-                params["chop_max"] = trial.suggest_float("chop_max", 40.0, 60.0, step=5.0)
-                params["zl_length"] = trial.suggest_categorical("zl_length", [50, 70, 90])
-                params["use_squeeze"] = trial.suggest_categorical("use_squeeze", [True, False])
-                params["regime_filter"] = trial.suggest_categorical("regime_filter", [True, False])
-                if "long" in strategy_name:
-                    params["pmarp_exit_hi"] = trial.suggest_float("pmarp_exit_hi", 85.0, 98.0, step=2.5)
-                else:
-                    params["pmarp_exit_lo"] = trial.suggest_float("pmarp_exit_lo", 2.0, 15.0, step=2.5)
+            # Generic parameter sampling from StrategySpec.param_grid
+            if hasattr(spec, "param_grid") and spec.param_grid:
+                for p_name, p_vals in spec.param_grid.items():
+                    if isinstance(p_vals, list) and p_vals:
+                        params[p_name] = trial.suggest_categorical(p_name, p_vals)
 
             if "spread_bps" in df.columns or "obi_5" in df.columns or book_data_path is not None:
                 params["book_gate"] = trial.suggest_categorical("book_gate", [True, False])
@@ -188,7 +184,6 @@ def run_optuna_autotune(
                 "rr": rr,
                 "trail_atr_mult": trail_atr_mult,
                 "leverage": leverage,
-                "max_size_frac": 0.1,
             }
             return evaluate_config(params, exit_dict, trial.number)
 
@@ -201,77 +196,56 @@ def run_optuna_autotune(
         best_candidates: list[tuple[float, dict[str, Any], dict[str, Any]]] = []
 
         coarse_trials = max(5, int(n_trials * 0.6))
-        fine_trials = n_trials - coarse_trials
 
         for t in range(n_trials):
-            # Phase 1: Coarse random sampling across space
-            # Phase 2: Adaptive mutation around elite candidates
             if t >= coarse_trials and best_candidates:
-                # Select elite candidate
-                elite_score, elite_params, elite_exit = best_candidates[rng.integers(0, min(3, len(best_candidates)))]
+                elite_score, elite_params, elite_exit = best_candidates[rng.choice(len(best_candidates))]
                 params = dict(elite_params)
                 exit_dict = dict(elite_exit)
 
-                # Mutate continuous float parameters with small Gaussian noise
-                for k, v in params.items():
-                    if isinstance(v, float) and not isinstance(v, bool):
-                        noise = float(rng.normal(0, abs(v) * 0.15))
-                        params[k] = round(v + noise, 2)
-
-                for k, v in exit_dict.items():
-                    if isinstance(v, float):
-                        noise = float(rng.normal(0, abs(v) * 0.15))
-                        exit_dict[k] = round(max(0.5, v + noise), 2)
+                # Stochastic parameter mutation
+                for k in params:
+                    if isinstance(params[k], float):
+                        params[k] = round(float(params[k] * rng.uniform(0.9, 1.1)), 4)
+                if "sl_atr_mult" in exit_dict:
+                    exit_dict["sl_atr_mult"] = round(float(exit_dict["sl_atr_mult"] * rng.uniform(0.9, 1.1)), 2)
             else:
                 params = {}
-                if "crown" in strategy_name:
-                    params["bbwp_lookback"] = int(rng.choice([100, 180, 252]))
-                    params["bbwp_threshold"] = round(float(rng.uniform(10.0, 30.0)), 1)
-                    if "long" in strategy_name:
-                        params["pmarp_exit_hi"] = round(float(rng.uniform(80.0, 98.0)), 1)
-                    else:
-                        params["pmarp_exit_lo"] = round(float(rng.uniform(2.0, 20.0)), 1)
-                    params["regime_filter"] = bool(rng.choice([True, False]))
-
-                elif "pine" in strategy_name or "trend_ride" in strategy_name:
-                    params["st_atr"] = int(rng.choice([10, 14]))
-                    params["st_mult"] = round(float(rng.uniform(2.0, 4.5)), 1)
-                    params["chop_max"] = round(float(rng.uniform(40.0, 60.0)), 1)
-                    params["zl_length"] = int(rng.choice([50, 70, 90]))
-                    params["use_squeeze"] = bool(rng.choice([True, False]))
-                    params["regime_filter"] = bool(rng.choice([True, False]))
-                    if "long" in strategy_name:
-                        params["pmarp_exit_hi"] = round(float(rng.uniform(85.0, 98.0)), 1)
-                    else:
-                        params["pmarp_exit_lo"] = round(float(rng.uniform(2.0, 15.0)), 1)
-
-                if "spread_bps" in df.columns or "obi_5" in df.columns or book_data_path is not None:
-                    params["book_gate"] = bool(rng.choice([True, False]))
-                    params["max_spread_bps"] = round(float(rng.uniform(1.5, 10.0)), 1)
-                    params["min_obi"] = round(float(rng.uniform(-0.5, 0.4)), 1)
+                if hasattr(spec, "param_grid") and spec.param_grid:
+                    for p_name, p_vals in spec.param_grid.items():
+                        if isinstance(p_vals, list) and p_vals:
+                            params[p_name] = rng.choice(p_vals)
 
                 exit_dict = {
                     "mode": str(rng.choice(["atr", "trail", "fixed_rr"])),
+                    "sl_pct": round(float(rng.uniform(0.003, 0.03)), 4),
                     "sl_atr_mult": round(float(rng.uniform(1.0, 3.5)), 1),
                     "rr": round(float(rng.uniform(1.5, 4.0)), 1),
                     "trail_atr_mult": round(float(rng.uniform(1.5, 4.0)), 1),
+                    "leverage": float(rng.choice([1.0, 2.0, 3.0, 5.0])),
                 }
 
             score = evaluate_config(params, exit_dict, t)
             if score > -50.0:
                 best_candidates.append((score, params, exit_dict))
                 best_candidates.sort(key=lambda x: x[0], reverse=True)
-                best_candidates = best_candidates[:5]  # Keep top 5 elite
+                best_candidates = best_candidates[:5]
 
-    # Process best trial results
-    if trials_log:
-        trials_log.sort(key=lambda x: x["metrics"].get("sharpe", -99.0), reverse=True)
-        top_entry = trials_log[0]
+    # Process best trial results sorted by net PnL / return (primary charter ranking)
+    valid_trials = [tr for tr in trials_log if tr.get("status") == "ok"]
+    if valid_trials:
+        valid_trials.sort(key=lambda x: x["metrics"].get("net_pnl", -9999.0), reverse=True)
+        top_entry = valid_trials[0]
         best_params = top_entry["params"]
         best_exit_dict = top_entry["exit_cfg"]
         best_metrics = top_entry["metrics"]
+    elif trials_log:
+        top_entry = trials_log[0]
+        best_params = top_entry.get("params", {})
+        best_exit_dict = top_entry.get("exit_cfg", {})
+        best_metrics = top_entry.get("metrics", {})
     else:
-        raise RuntimeError("Autotune produced no valid trial results")
+        raise RuntimeError("Autotune produced no trial results")
 
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     board_dir = root / "logs" / "research"
@@ -291,7 +265,7 @@ def run_optuna_autotune(
                 "best_params": best_params,
                 "best_exit_cfg": best_exit_dict,
                 "best_metrics": best_metrics,
-                "top_trials": trials_log[:10],
+                "all_trials": trials_log,
             },
             indent=2,
             default=str,
@@ -300,23 +274,24 @@ def run_optuna_autotune(
         encoding="utf-8",
     )
 
-    export_path: Path | None = None
-    if export_best and best_metrics.get("net_pnl", -1) > 0:
-        cand_id = f"export_autotuned_{strategy_name}_{stamp}"
-        export_path = export_candidate(
-            root / "exports",
-            run_id=cand_id,
-            meta={
-                "strategy": strategy_name,
-                "symbol": symbol,
-                "timeframe": timeframe,
-                "lookback_days": lookback_days,
-                "autotune": True,
-                "sampler_used": sampler_label,
-            },
-            params={**best_params, **best_exit_dict, "strategy": strategy_name},
+    export_dir: Path | None = None
+    if not no_export:
+        from hypervector.sweep.export import export_trial
+        export_dir = root / "exports" / f"exp_{strategy_name}_{timeframe}_{stamp}"
+        export_trial(
+            export_dir,
+            strategy_name=strategy_name,
+            symbol=symbol,
+            timeframe=timeframe,
+            params=best_params,
             metrics=best_metrics,
-            strict=False,
+            exit_cfg=ExitConfig(
+                mode=best_exit_dict.get("mode", "atr"),
+                sl_pct=best_exit_dict.get("sl_pct", 0.01),
+                sl_atr_mult=best_exit_dict.get("sl_atr_mult", 2.0),
+                rr=best_exit_dict.get("rr", 2.0),
+                trail_atr_mult=best_exit_dict.get("trail_atr_mult", 2.0),
+            ),
         )
 
     return AutotuneResult(
@@ -329,6 +304,10 @@ def run_optuna_autotune(
         best_params=best_params,
         best_exit_cfg=best_exit_dict,
         best_metrics=best_metrics,
-        export_dir=export_path,
+        export_dir=export_dir,
         board_path=board_path,
     )
+
+
+# Backward compatibility alias
+run_optuna_autotune = run_autotune

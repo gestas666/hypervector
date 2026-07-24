@@ -40,8 +40,9 @@ def run_long_short_portfolio(
     cost_preset: str = "hl_taker_default",
     exit_cfg: ExitConfig | None = None,
     init_cash: float = 10_000.0,
+    composition_mode: bool = False,
 ) -> PortfolioResult:
-    """Run dual-track Long/Short strategy backtest with regime-aware portfolio allocation."""
+    """Run dual-track Long/Short strategy backtest with optional regime-aware portfolio allocation."""
     from hypervector.strategies import register_all_strategies
 
     register_all_strategies()
@@ -57,19 +58,17 @@ def run_long_short_portfolio(
     entries_l, exits_l, _ = long_spec.build_signals(df, **l_params)
     entries_s, exits_s, _ = short_spec.build_signals(df, **s_params)
 
-    # Detect 4-State Regime
-    regime = detect_4state_regime(df)
-
-    # Conflict Resolution & Regime Allocation
-    # In BULL_TREND: prefer Longs, filter Shorts
-    # In BEAR_TREND: prefer Shorts, filter Longs
-    # In LOW_VOL_CHOP: require book_gate or skip
-    entries_l_final = entries_l & (regime != "BEAR_TREND")
-    entries_s_final = entries_s & (regime != "BULL_TREND")
-
-    # Prevent simultaneous long & short entry on same bar
-    conflict = entries_l_final & entries_s_final
-    entries_s_final = entries_s_final & (~conflict)
+    if composition_mode:
+        # Detect 4-State Regime for composition arm
+        regime = detect_4state_regime(df)
+        entries_l_final = entries_l & (regime != "BEAR_TREND")
+        entries_s_final = entries_s & (regime != "BULL_TREND")
+        conflict = entries_l_final & entries_s_final
+        entries_s_final = entries_s_final & (~conflict)
+    else:
+        # Raw ungated strategy signals by default (SRS_HV1_REGIME_NO_GATE)
+        entries_l_final = entries_l
+        entries_s_final = entries_s
 
     close = df["close"].astype(float)
 
