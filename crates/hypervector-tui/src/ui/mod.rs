@@ -4,7 +4,7 @@ use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     text::{Line, Span},
     widgets::{
-        Block, BorderType, Borders, Gauge, Paragraph, Row, Sparkline, Table,
+        Block, BorderType, Borders, Clear, Gauge, Paragraph, Row, Sparkline, Table,
     },
     Frame,
 };
@@ -29,6 +29,10 @@ pub fn draw(f: &mut Frame, app: &App) {
     render_analytics_grid(f, app, chunks[2]);
     render_event_log(f, app, chunks[3]);
     render_footer(f, app, chunks[4]);
+
+    if app.show_help_overlay {
+        render_help_overlay(f, app, f.area());
+    }
 }
 
 fn render_header(f: &mut Frame, app: &App, area: Rect) {
@@ -364,9 +368,9 @@ fn render_footer(f: &mut Frame, app: &App, area: Rect) {
     let help_text = Line::from(vec![
         Span::styled("[Space]", app.theme.gold), Span::raw(" Play/Pause │ "),
         Span::styled("[←/→]", app.theme.gold), Span::raw(" Scrub │ "),
+        Span::styled("[1-3]", app.theme.gold), Span::raw(" Timeframe (1m/5m/15m) │ "),
         Span::styled("[s]", app.theme.gold), Span::raw(" Speed │ "),
-        Span::styled("[t]", app.theme.gold), Span::raw(" Timeframe │ "),
-        Span::styled("[r]", app.theme.gold), Span::raw(" Reset │ "),
+        Span::styled("[?]", app.theme.gold), Span::raw(" Help Rules Overlay │ "),
         Span::styled("[q/Esc]", app.theme.gold), Span::raw(" Quit"),
     ]);
 
@@ -375,4 +379,62 @@ fn render_footer(f: &mut Frame, app: &App, area: Rect) {
         .alignment(Alignment::Center);
 
     f.render_widget(p, area);
+}
+
+fn render_help_overlay(f: &mut Frame, app: &App, area: Rect) {
+    let modal_area = centered_rect(65, 75, area);
+    f.render_widget(Clear, modal_area);
+
+    let lines = vec![
+        Line::from(vec![Span::styled("⚡ HYPERVECTOR ULTIMATE REGIME ENGINE RULES & KEYBINDINGS", app.theme.title)]),
+        Line::from(vec![Span::styled("───────────────────────────────────────────────────────────────────", app.theme.border)]),
+        Line::from(vec![Span::styled("🏛️ 5-TIER MICROSTRUCTURE REGIME CLASSIFICATION RULES:", app.theme.gold)]),
+        Line::from(vec![Span::styled("  🔥 TREND_UP       : 15m/5m Bull MTF + ADX > 25 + OPI >= 0.0", app.theme.bull)]),
+        Line::from(vec![Span::styled("  🔻 TREND_DOWN     : 15m/5m Bear MTF + ADX > 25 + OPI <= 0.0", app.theme.bear)]),
+        Line::from(vec![Span::styled("  ⚡ BREAKOUT       : BBWP Compression Percentile < 20.0 (Coiling)", app.theme.coiling)]),
+        Line::from(vec![Span::styled("  💰 TRANSITION     : Funding Rate Z-Score |Z| >= 1.8 (Carry Reversal)", app.theme.carry)]),
+        Line::from(vec![Span::styled("  🛡️ RANGE          : Choppiness Index > 55 or Spread > 6.0 bps", app.theme.chop)]),
+        Line::from(vec![Span::styled("───────────────────────────────────────────────────────────────────", app.theme.border)]),
+        Line::from(vec![Span::styled("📊 DYNAMIC LEVERAGE SCALING (HYPERTRADER 1M IMPULSE ML):", app.theme.gold)]),
+        Line::from(vec![Span::raw("  L_dynamic = clamp(L_cap * conviction * (1 + |OPI| * 0.5), 1.0, L_cap)")]),
+        Line::from(vec![Span::styled("───────────────────────────────────────────────────────────────────", app.theme.border)]),
+        Line::from(vec![Span::styled("⌨️ INTERACTIVE KEYBOARD CONTROLS:", app.theme.cyan)]),
+        Line::from(vec![Span::styled("  [Space]       ", app.theme.gold), Span::raw("Toggle Play / Pause Real-time Stream")]),
+        Line::from(vec![Span::styled("  [← / →]       ", app.theme.gold), Span::raw("Step Backwards / Forwards through History")]),
+        Line::from(vec![Span::styled("  [1 / 2 / 3]   ", app.theme.gold), Span::raw("Select Timeframe (1m / 5m / 15m)")]),
+        Line::from(vec![Span::styled("  [s]           ", app.theme.gold), Span::raw("Cycle Playback Speed (1.0x -> 2.0x -> 5.0x -> 10.0x)")]),
+        Line::from(vec![Span::styled("  [r]           ", app.theme.gold), Span::raw("Reset Scrub Position to Start")]),
+        Line::from(vec![Span::styled("  [? / h]       ", app.theme.gold), Span::raw("Toggle this Help & Rules Overlay Window")]),
+        Line::from(vec![Span::styled("  [q / Esc]     ", app.theme.gold), Span::raw("Dismiss Overlay / Quit Cockpit")]),
+    ];
+
+    let block = Block::default()
+        .title(" COCKPIT HELP & ENGINE ARCHITECTURE ")
+        .title_style(app.theme.title)
+        .borders(Borders::ALL)
+        .border_type(BorderType::Double)
+        .border_style(app.theme.border_active);
+
+    let p = Paragraph::new(lines).block(block).alignment(Alignment::Left);
+    f.render_widget(p, modal_area);
+}
+
+fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
+    let popup_layout = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Percentage((100 - percent_y) / 2),
+            Constraint::Percentage(percent_y),
+            Constraint::Percentage((100 - percent_y) / 2),
+        ])
+        .split(r);
+
+    Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Percentage((100 - percent_x) / 2),
+            Constraint::Percentage(percent_x),
+            Constraint::Percentage((100 - percent_x) / 2),
+        ])
+        .split(popup_layout[1])[1]
 }

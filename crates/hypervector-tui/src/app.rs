@@ -16,6 +16,7 @@ pub struct App {
     pub theme: CockpitTheme,
     pub tick_count: u64,
     pub should_quit: bool,
+    pub show_help_overlay: bool,
 }
 
 impl App {
@@ -33,9 +34,14 @@ impl App {
             theme: CockpitTheme::default(),
             tick_count: 0,
             should_quit: false,
+            show_help_overlay: false,
         };
         app.rebuild_events();
         app
+    }
+
+    pub fn toggle_help_overlay(&mut self) {
+        self.show_help_overlay = !self.show_help_overlay;
     }
 
     pub fn current_snapshot(&self) -> &RegimeSnapshot {
