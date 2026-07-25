@@ -56,6 +56,7 @@ class RegimeTuningBoard:
 
     trials: tuple[RegimeTuningTrial, ...]
     selected_trial_id: int | None
+    contract_candidate_trial_id: int | None
     selection_basis: str
     train_entry_decisions: int
     holdout_entry_decisions: int
@@ -228,6 +229,31 @@ def _failed_trial(
     )
 
 
+def _contract_candidate(
+    trials: list[RegimeTuningTrial],
+) -> RegimeTuningTrial | None:
+    eligible = [
+        trial
+        for trial in trials
+        if trial.train_alignment is not None
+        and trial.train_alignment.no_entry_state_at_entries == 0
+        and trial.train_alignment.false_range_at_entries == 0
+        and trial.train_breakout_quality is not None
+        and trial.train_range_quality is not None
+    ]
+    if not eligible:
+        return None
+    return max(
+        eligible,
+        key=lambda trial: (
+            trial.train_alignment.direction_matches,
+            -trial.train_range_quality.one_sided_expansion_pct,
+            -trial.train_breakout_quality.false_breakout_pct,
+            -trial.label_churn,
+        ),
+    )
+
+
 def autotune_regime_candidates(
     bars: pd.DataFrame,
     positions: pd.DataFrame,
@@ -260,9 +286,11 @@ def autotune_regime_candidates(
         if completed
         else None
     )
+    contract_candidate = _contract_candidate(trials)
     return RegimeTuningBoard(
         tuple(trials),
         selected.trial_id if selected else None,
+        contract_candidate.trial_id if contract_candidate else None,
         "train_only",
         len(split.train_positions),
         len(split.holdout_positions),
