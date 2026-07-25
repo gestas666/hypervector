@@ -64,6 +64,7 @@ CLI_COMMANDS: tuple[str, ...] = (
     "hypervelocity-maker-replay",
     "hypervelocity-shadow-compare",
     "hypervelocity-shadow-run",
+    "hypervelocity-tui",
     "sweep-up",
     "sweep-down",
     "report",
@@ -564,23 +565,26 @@ def cmd_paper_run(args: argparse.Namespace) -> int:
 
 def cmd_hypervelocity_shadow_run(args: argparse.Namespace) -> int:
     """Run the validated one-position, bidirectional Hypervelocity backend."""
+    from hypervector.runtime_lock import hypervelocity_runtime_lock
+
     _ensure_root(args)
     try:
         profile = load_hypervelocity_profile(Path(args.config))
-        result = start_paper_daemon(
-            export_dir=profile.export_path,
-            data_root=Path(args.data_root),
-            fee_tier=profile.fee_tier,
-            poll_interval_secs=profile.poll_interval_seconds,
-            max_live_bars=args.max_live_bars,
-            lookback_days=profile.lookback_days,
-            enable_funding_refresh=True,
-            metalabel_enabled=profile.metalabel_mode != "off",
-            metalabel_filter=False,
-            metalabel_mode=profile.metalabel_mode,
-            execution_mode=profile.runtime_mode,
-            hypervelocity_profile=profile,
-        )
+        with hypervelocity_runtime_lock(Path(args.data_root)):
+            result = start_paper_daemon(
+                export_dir=profile.export_path,
+                data_root=Path(args.data_root),
+                fee_tier=profile.fee_tier,
+                poll_interval_secs=profile.poll_interval_seconds,
+                max_live_bars=args.max_live_bars,
+                lookback_days=profile.lookback_days,
+                enable_funding_refresh=True,
+                metalabel_enabled=profile.metalabel_mode != "off",
+                metalabel_filter=False,
+                metalabel_mode=profile.metalabel_mode,
+                execution_mode=profile.runtime_mode,
+                hypervelocity_profile=profile,
+            )
     except (FileNotFoundError, OSError, RuntimeError, ValueError) as exc:
         print(f"hypervelocity-shadow-run failed: {exc}", file=sys.stderr)
         return 1
@@ -599,6 +603,44 @@ def cmd_hypervelocity_shadow_run(args: argparse.Namespace) -> int:
             indent=2,
         )
     )
+    return 0
+
+
+def cmd_hypervelocity_tui(args: argparse.Namespace) -> int:
+    """Launch one supervised shadow backend with the read-only TUI."""
+    from hypervector.tui_launcher import (
+        BACKEND_LOG_NAME,
+        build_backend_command,
+        build_tui_command,
+        supervise_hypervelocity_tui,
+    )
+
+    root = Path(args.data_root)
+    config = Path(args.config)
+    try:
+        profile = load_hypervelocity_profile(config)
+        backend_command = build_backend_command(data_root=root, config_path=config)
+        tui_command = build_tui_command(
+            data_root=root,
+            symbol=profile.symbol,
+            timeframe=profile.timeframe,
+            refresh_ms=int(args.refresh_ms),
+            tui_binary=Path(args.tui_bin) if args.tui_bin else None,
+        )
+        result = supervise_hypervelocity_tui(
+            data_root=root,
+            backend_command=backend_command,
+            tui_command=tui_command,
+            startup_timeout_seconds=float(args.startup_timeout),
+        )
+    except KeyboardInterrupt:
+        print("Hypervelocity TUI stopped; backend child terminated.")
+        return 130
+    except (FileNotFoundError, OSError, RuntimeError, ValueError) as exc:
+        log_path = root / "paper" / BACKEND_LOG_NAME
+        print(f"hypervelocity-tui failed: {exc}; backend log: {log_path}", file=sys.stderr)
+        return 1
+    print(json.dumps({"ok": True, "backend_log": str(result.backend_log)}, indent=2))
     return 0
 
 
@@ -2191,6 +2233,34 @@ def build_parser() -> argparse.ArgumentParser:
         help="optional bounded smoke-run bar count",
     )
     hv_shadow.set_defaults(func=cmd_hypervelocity_shadow_run)
+
+    hv_tui = sub.add_parser(
+        "hypervelocity-tui",
+        help="Launch one shadow backend and its read-only TUI in this terminal",
+    )
+    hv_tui.add_argument(
+        "--config",
+        default="configs/hypervelocity_faithful.toml",
+        help="validated Hypervelocity TOML profile",
+    )
+    hv_tui.add_argument(
+        "--refresh-ms",
+        type=int,
+        default=500,
+        help="TUI refresh interval in milliseconds",
+    )
+    hv_tui.add_argument(
+        "--startup-timeout",
+        type=float,
+        default=60.0,
+        help="seconds to wait for backend telemetry",
+    )
+    hv_tui.add_argument(
+        "--tui-bin",
+        default=None,
+        help="optional explicit tui-regime-detector binary path",
+    )
+    hv_tui.set_defaults(func=cmd_hypervelocity_tui)
 
     rex = sub.add_parser(
         "regime-export",

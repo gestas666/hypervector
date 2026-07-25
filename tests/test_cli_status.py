@@ -40,6 +40,7 @@ def test_all_cli_commands_registered():
     # Every inventory command must be in the live parser (no orphans the other way optional)
     assert "status" in choices
     assert "live-report" in choices
+    assert "hypervelocity-tui" in choices
 
 
 def test_root_description_names_pipeline():

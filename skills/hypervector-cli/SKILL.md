@@ -95,24 +95,20 @@ uv run python -m hypervector autotune --strategy oi_divergence_long --sampler ka
 
 ### 5. Hypervelocity Shadow Backend and Read-Only TUI
 
-Run one backend that selects long or short while flat, holds an open position
-through regime changes until its fixed target, refreshes public Hyperliquid
-funding, and writes authoritative telemetry without submitting venue orders:
+Use one command to supervise the backend and display its telemetry in the TUI:
 
 ```bash
 uv run python -m hypervector \
-  --data-root data/ops/hypervelocity_visual_long \
-  hypervelocity-shadow-run \
+  --data-root data/ops/hypervelocity_visual \
+  hypervelocity-tui \
   --config configs/hypervelocity_faithful.toml
 ```
 
-In a second terminal, display that backend ledger:
-
-```bash
-cargo run -q -p hypervector-tui --bin tui-regime-detector -- \
-  --symbol BTC --timeframe 1m --live --refresh-ms 500 \
-  --data-root data/ops/hypervelocity_visual_long
-```
+The Python CLI starts the no-submit backend, waits for its fresh session row,
+and opens the TUI in the foreground. Pressing `q` stops the TUI and its child
+backend cleanly. Backend output is retained at
+`<data-root>/paper/hypervelocity-shadow.log`. A per-data-root process lock
+refuses a second Hypervelocity backend.
 
 The TUI does not execute or reconstruct trades. Trade, position, PnL, cost,
 and policy fields come from the backend ledger. The current depth visualization
