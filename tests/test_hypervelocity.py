@@ -5,13 +5,13 @@ from __future__ import annotations
 import pandas as pd
 
 from hypervector.data.sources import fixture_ohlcv
+from hypervector.regime.models import BreakoutDirection, PrimaryRegime
 from hypervector.strategies.hypervelocity import (
     build_hypervelocity_signals,
     hypervelocity_long,
     hypervelocity_short,
     register_hypervelocity,
 )
-from hypervector.strategies.indicators import ema
 from hypervector.strategies.registry import clear_registry, get_strategy
 from hypervector.sweep.search import run_grid_search
 
@@ -34,26 +34,112 @@ def test_hypervelocity_short_mirrors_long():
     assert len(exits) == len(df)
 
 
-def test_long_entries_only_with_trend_alignment():
-    """Plan section 3.1: no counter-trend trades — entries align with EMA trend."""
-    df = fixture_ohlcv(n_bars=4000, drift=6.0, wave_period=90)
-    entries, _, _ = hypervelocity_long(df, regime_filter=False)
-    close = df["close"].astype(float)
-    trend_up = ema(close, 9) > ema(close, 21)
-    assert entries.sum() > 0
-    assert bool((entries & ~trend_up).sum() == 0)
-
-
-def test_target_margin_maps_to_price_move():
-    """8% margin at 40x == 0.2% price target; barrier exit must fire after entry."""
-    df = fixture_ohlcv(n_bars=4000, drift=10.0, wave_period=80)
-    entries, exits, _ = build_hypervelocity_signals(
-        df, direction="long", target_margin_pct=8.0, leverage=40.0, regime_filter=False
+def _regime_decisions(
+    index: pd.Index,
+    primary: list[PrimaryRegime],
+    breakout: list[BreakoutDirection | None] | None = None,
+) -> pd.DataFrame:
+    return pd.DataFrame(
+        {
+            "primary_regime": [state.value for state in primary],
+            "breakout_direction": [
+                direction.value if direction else None
+                for direction in (breakout or [None] * len(primary))
+            ],
+        },
+        index=index,
     )
-    assert entries.sum() > 0
-    assert exits.sum() > 0
-    first_entry = entries.idxmax()
-    assert exits.loc[first_entry:].sum() > 0
+
+
+def test_long_entries_use_backend_regime_without_range_entries(monkeypatch):
+    df = fixture_ohlcv(n_bars=6, drift=0.0, wave_period=100)
+    decisions = _regime_decisions(
+        df.index,
+        [
+            PrimaryRegime.RANGE,
+            PrimaryRegime.TREND_UP,
+            PrimaryRegime.TREND_UP,
+            PrimaryRegime.RANGE,
+            PrimaryRegime.TREND_DOWN,
+            PrimaryRegime.UNKNOWN,
+        ],
+    )
+    monkeypatch.setattr(
+        "hypervector.strategies.hypervelocity._classify_regimes",
+        lambda _bars, config: decisions,
+    )
+
+    entries, exits, _ = hypervelocity_long(df)
+
+    assert entries.tolist() == [False, True, False, False, False, False]
+    assert not exits.any()
+
+
+def test_direction_confirmed_breakout_is_entry_eligible(monkeypatch):
+    df = fixture_ohlcv(n_bars=4, drift=0.0, wave_period=100)
+    decisions = _regime_decisions(
+        df.index,
+        [PrimaryRegime.RANGE, PrimaryRegime.BREAKOUT] * 2,
+        [None, BreakoutDirection.UPWARD, None, BreakoutDirection.DOWNWARD],
+    )
+    monkeypatch.setattr(
+        "hypervector.strategies.hypervelocity._classify_regimes",
+        lambda _bars, config: decisions,
+    )
+
+    long_entries, _, _ = hypervelocity_long(df)
+    short_entries, _, _ = hypervelocity_short(df)
+
+    assert long_entries.tolist() == [False, True, False, False]
+    assert short_entries.tolist() == [False, False, False, True]
+
+
+def test_target_margin_maps_to_price_move(monkeypatch):
+    """8% margin at 40x == 0.2% price target; barrier exit must fire after entry."""
+    index = pd.date_range("2026-01-01", periods=5, freq="1min", tz="UTC")
+    df = pd.DataFrame(
+        {
+            "open": [100.0] * 5,
+            "high": [100.0, 100.0, 100.21, 100.0, 100.0],
+            "low": [100.0] * 5,
+            "close": [100.0] * 5,
+            "volume": [100.0] * 5,
+        },
+        index=index,
+    )
+    decisions = _regime_decisions(index, [PrimaryRegime.TREND_UP] * 5)
+    monkeypatch.setattr(
+        "hypervector.strategies.hypervelocity._classify_regimes",
+        lambda _bars, config: decisions,
+    )
+    entries, exits, _ = build_hypervelocity_signals(
+        df, direction="long", target_margin_pct=8.0, leverage=40.0
+    )
+    assert entries.tolist() == [True, False, False, True, False]
+    assert exits.tolist() == [False, False, True, False, False]
+
+
+def test_adverse_move_does_not_invent_unobserved_stop(monkeypatch):
+    index = pd.date_range("2026-01-01", periods=3, freq="1min", tz="UTC")
+    df = pd.DataFrame(
+        {
+            "open": [100.0] * 3,
+            "high": [100.0] * 3,
+            "low": [100.0, 90.0, 90.0],
+            "close": [100.0] * 3,
+            "volume": [100.0] * 3,
+        },
+        index=index,
+    )
+    decisions = _regime_decisions(index, [PrimaryRegime.TREND_UP] * 3)
+    monkeypatch.setattr(
+        "hypervector.strategies.hypervelocity._classify_regimes",
+        lambda _bars, config: decisions,
+    )
+
+    _, exits, _ = hypervelocity_long(df)
+
+    assert not exits.any()
 
 
 def test_hypervelocity_grid_runs():
@@ -67,9 +153,6 @@ def test_hypervelocity_grid_runs():
         param_grid={
             "target_margin_pct": [8.0],
             "leverage": [40.0],
-            "atr_stop_mult": [1.5],
-            "momentum_lookback": [3],
-            "regime_filter": [False],
         },
     )
     assert results

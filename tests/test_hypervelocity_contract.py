@@ -8,6 +8,7 @@ from hypervector.regime.models import BreakoutDirection, PrimaryRegime
 from hypervector.strategies.hypervelocity_contract import (
     HypervelocityContract,
     entry_direction_for,
+    faithful_regime_config,
 )
 
 
@@ -56,6 +57,15 @@ def test_fixed_contract_converts_equity_and_margin_target() -> None:
     assert contract.target_margin_pct == pytest.approx(8.0)
     assert contract.order_type == "limit"
     assert contract.time_in_force == "post_only"
+
+
+def test_faithful_regime_config_matches_zero_false_range_training_candidate() -> None:
+    config = faithful_regime_config()
+
+    assert (config.ema_fast, config.ema_slow) == (5, 13)
+    assert config.minimum_trend_gap_bps == pytest.approx(0.5)
+    assert config.breakout_clearance_bps == pytest.approx(8.0)
+    assert config.breakout_volume_multiple == pytest.approx(2.5)
 
 
 @pytest.mark.parametrize("equity", [0.0, -1.0])

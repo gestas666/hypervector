@@ -3,15 +3,38 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 from hypervector.regime.models import BreakoutDirection, PrimaryRegime
+
+if TYPE_CHECKING:
+    from hypervector.regime.classifier import RegimeClassifierConfig
 
 EntryDirection = Literal["long", "short"]
 
 _MARGIN_FRACTION = 0.70
 _LEVERAGE = 40.0
 _TARGET_MARGIN_PCT = 8.0
+
+
+def faithful_regime_config() -> RegimeClassifierConfig:
+    """Return the training Pareto candidate with no RANGE/no-entry logged states."""
+    from hypervector.regime.classifier import RegimeClassifierConfig
+
+    return RegimeClassifierConfig(
+        ema_fast=5,
+        ema_slow=13,
+        warmup_bars=60,
+        structure_lookback=120,
+        trend_strength_percentile=70.0,
+        range_strength_percentile=40.0,
+        minimum_trend_gap_bps=0.5,
+        choppiness_range_threshold=75.0,
+        coiling_width_bps=1.0,
+        breakout_lookback=90,
+        breakout_clearance_bps=8.0,
+        breakout_volume_multiple=2.5,
+    )
 
 
 @dataclass(frozen=True)
@@ -74,4 +97,3 @@ def entry_direction_for(
         if breakout is BreakoutDirection.DOWNWARD:
             return "short"
     return None
-
