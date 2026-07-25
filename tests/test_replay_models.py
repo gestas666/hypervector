@@ -56,6 +56,8 @@ def test_train_replay_candidates_writes_both_model_options(tmp_path: Path):
 
     assert result.lightgbm_path.is_file()
     assert result.temporal_logistic_path.is_file()
+    assert result.lagged_logistic_path.is_file()
     assert result.metadata_path.is_file()
     assert result.metrics["lightgbm"]["folds_used"] > 0
     assert result.metrics["temporal_logistic"]["folds_used"] > 0
+    assert result.metrics["lagged_logistic"]["folds_used"] > 0

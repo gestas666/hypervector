@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import brier_score_loss, log_loss
+from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
@@ -40,10 +41,11 @@ REPLAY_FEATURE_NAMES: tuple[str, ...] = (
 
 @dataclass(frozen=True)
 class ReplayCandidateResult:
-    """Paths and chronological metrics for both replay model candidates."""
+    """Paths and chronological metrics for all replay model candidates."""
 
     lightgbm_path: Path
     temporal_logistic_path: Path
+    lagged_logistic_path: Path
     metadata_path: Path
     metrics: dict[str, dict[str, float | int]]
 
@@ -106,6 +108,7 @@ def _temporal_logistic() -> Pipeline:
     """Create a regularized linear baseline over temporal replay features."""
     return Pipeline(
         [
+            ("impute", SimpleImputer(strategy="median")),
             ("scale", StandardScaler()),
             (
                 "model",
@@ -118,6 +121,17 @@ def _temporal_logistic() -> Pipeline:
             ),
         ]
     )
+
+
+def _lagged_feature_frame(features: pd.DataFrame, *, lags: int = 3) -> pd.DataFrame:
+    """Add prior event rows without using any feature from the future."""
+    if lags < 1:
+        raise ValueError("lags must be positive")
+    frames = [features.add_suffix("_t0")]
+    frames.extend(
+        features.shift(lag).add_suffix(f"_lag{lag}") for lag in range(1, lags + 1)
+    )
+    return pd.concat(frames, axis=1)
 
 
 def _score_predictions(
@@ -157,8 +171,9 @@ def _walk_forward_metrics(
     """Evaluate LightGBM and logistic on identical chronological folds."""
     scores = {
         name: {"ll": [], "br": [], "base": []}
-        for name in ("lightgbm", "temporal_logistic")
+        for name in ("lightgbm", "temporal_logistic", "lagged_logistic")
     }
+    lagged = _lagged_feature_frame(features)
     for train, test in chronological_replay_folds(
         rows,
         n_splits=n_splits,
@@ -172,9 +187,11 @@ def _walk_forward_metrics(
             num_boost_round=150,
         )
         logistic = _temporal_logistic().fit(features.iloc[train], labels[train])
+        lagged_logistic = _temporal_logistic().fit(lagged.iloc[train], labels[train])
         predictions = {
             "lightgbm": booster.predict(features.iloc[test]),
             "temporal_logistic": logistic.predict_proba(features.iloc[test])[:, 1],
+            "lagged_logistic": lagged_logistic.predict_proba(lagged.iloc[test])[:, 1],
         }
         base_p = float(np.clip(labels[train].mean(), 1e-6, 1.0 - 1e-6))
         baseline = float(
@@ -210,6 +227,8 @@ def _write_metadata(
         "embargo_minutes": embargo_minutes,
         "metrics": metrics,
         "installed": False,
+        "decision_policy": "annotation_only",
+        "candidate_models": ["lightgbm", "temporal_logistic", "lagged_logistic"],
     }
     path.write_text(
         json.dumps(metadata, indent=2, sort_keys=True) + "\n",
@@ -249,6 +268,9 @@ def train_replay_candidates(
     logistic = _temporal_logistic().fit(features, labels)
     logistic_path = destination / "replay_temporal_logistic.joblib"
     joblib.dump(logistic, logistic_path)
+    lagged_logistic = _temporal_logistic().fit(_lagged_feature_frame(features), labels)
+    lagged_logistic_path = destination / "replay_lagged_logistic.joblib"
+    joblib.dump(lagged_logistic, lagged_logistic_path)
     metadata_path = destination / "replay_model_metadata.json"
     _write_metadata(
         metadata_path,
@@ -260,6 +282,7 @@ def train_replay_candidates(
     return ReplayCandidateResult(
         lightgbm_path=lightgbm_path.resolve(),
         temporal_logistic_path=logistic_path.resolve(),
+        lagged_logistic_path=lagged_logistic_path.resolve(),
         metadata_path=metadata_path.resolve(),
         metrics=metrics,
     )
