@@ -51,6 +51,7 @@ class CostSnapshot:
     maker_fee: float
     slippage_bps: float
     funding_rate_hourly: float
+    oracle_px: float | None
     fee_tier: int
     fill_model_id: str
     asof_ts: str
@@ -88,6 +89,7 @@ class CostProvider:
         self.assume_taker = bool(assume_taker)
         self.funding_poll_secs = float(funding_poll_secs)
         self._funding_rate_hourly = float(funding_rate_hourly)
+        self._oracle_px: float | None = None
         self._taker, self._maker = fees_for_tier(self.fee_tier)
 
     def trade_fee_rate(self) -> float:
@@ -100,6 +102,7 @@ class CostProvider:
             maker_fee=self._maker,
             slippage_bps=self.slippage_bps,
             funding_rate_hourly=self._funding_rate_hourly,
+            oracle_px=self._oracle_px,
             fee_tier=self.fee_tier,
             fill_model_id=self.fill_model_id,
             asof_ts=now,
@@ -141,11 +144,13 @@ class CostProvider:
         instrument = universe[idx]
         context = ctxs[idx]
         rate = float(context["funding"])
+        oracle_px = float(context["oraclePx"])
         self._funding_rate_hourly = rate
+        self._oracle_px = oracle_px
         return HyperliquidMarketState(
             coin=name,
             size_decimals=int(instrument["szDecimals"]),
             max_leverage=float(instrument["maxLeverage"]),
             funding_rate_hourly=rate,
-            oracle_px=float(context["oraclePx"]),
+            oracle_px=oracle_px,
         )

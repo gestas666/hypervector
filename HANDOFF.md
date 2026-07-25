@@ -35,7 +35,7 @@
 - Startup validates current public Hyperliquid BTC metadata. On 2026-07-25 the live response reported `szDecimals=5`, `maxLeverage=40`, and hourly funding `0.0000125`.
 - Tier-0 fees are explicit: maker `0.00015`, taker `0.00045`. Qualified post-only fills use maker fees and no invented slippage; funding refreshes every 60 seconds and applies only at hourly settlement boundaries while a position is open.
 - Hyperliquid price ticks are calculated from venue precision rules rather than a permanently fixed `$1` assumption. At the observed BTC price near `$64k`, the effective tick is `$1`.
-- Verification: 421 offline Python tests passed, 8 Rust TUI tests passed, targeted Ruff passed, TOML parsed, and a real zero-live-bar startup wrote unified no-submit telemetry.
+- Verification: 422 offline Python tests passed, 8 Rust TUI tests passed, targeted Ruff passed, TOML parsed, and a real zero-live-bar startup wrote unified no-submit telemetry.
 
 - `paper-run --metalabel-mode observe` records model probability and bundle identity without changing conviction or entry eligibility.
 - Every backend run stamps its run/export/strategy/execution/model identity and effective strategy, exit, risk, and cost configuration in `session_start`.

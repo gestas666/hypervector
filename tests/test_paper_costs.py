@@ -36,6 +36,7 @@ def test_refresh_market_state_uses_public_hyperliquid_fields() -> None:
     assert state.max_leverage == 40.0
     assert state.funding_rate_hourly == pytest.approx(0.0000125)
     assert provider.snapshot().funding_rate_hourly == pytest.approx(0.0000125)
+    assert provider.snapshot().oracle_px == pytest.approx(64_195.0)
 
 
 def test_tier0_matches_official_base():

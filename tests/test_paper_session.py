@@ -523,6 +523,51 @@ def test_session_does_not_prorate_funding_between_hourly_boundaries(
     assert not [row for row in rows if row.get("action") == "funding"]
 
 
+def test_session_uses_live_oracle_for_hourly_funding(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from dataclasses import replace
+
+    export = _write_strict_export(tmp_path)
+    session = PaperSession(
+        export_dir=export,
+        data_root=tmp_path / "data",
+        funding_rate_hourly=0.0001,
+        enable_funding_refresh=False,
+    )
+    snapshot = session.cost_provider.snapshot()
+    monkeypatch.setattr(
+        session.cost_provider,
+        "snapshot",
+        lambda: replace(snapshot, oracle_px=51_000.0),
+    )
+    session.engine.apply_market_fill(
+        feed_ts="t0",
+        action="enter_long",
+        side="buy",
+        qty=1.0,
+        mark_px=50_000.0,
+    )
+    session.on_bar(
+        {
+            "timestamp": pd.Timestamp("2026-07-22T00:59:00Z"),
+            "open": 50_000.0,
+            "high": 50_000.0,
+            "low": 50_000.0,
+            "close": 50_000.0,
+            "volume": 1.0,
+        }
+    )
+    rows = [
+        json.loads(line)
+        for line in session.decisions_path.read_text().splitlines()
+        if line.strip()
+    ]
+    funding = next(row for row in rows if row.get("action") == "funding")
+    assert funding["funding_payment_usd"] == pytest.approx(5.1)
+
+
 def test_session_funding_refresh_disabled_offline(tmp_path: Path, monkeypatch):
     """enable_funding_refresh=False must never hit CostProvider.refresh_funding."""
     export = _write_strict_export(tmp_path)

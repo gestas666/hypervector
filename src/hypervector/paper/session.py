@@ -304,13 +304,14 @@ class PaperSession:
             record,
             timeframe=self.loadout.timeframe,
         ):
-            mark_px = float(record["close"])
+            snapshot = self.cost_provider.snapshot()
+            oracle_px = snapshot.oracle_px or float(record["close"])
             self.engine.apply_funding(
                 feed_ts=_bar_close_timestamp(
                     record,
                     timeframe=self.loadout.timeframe,
                 ).isoformat(),
-                oracle_px=mark_px,
+                oracle_px=oracle_px,
                 hours=1.0,
             )
 
@@ -828,6 +829,7 @@ class PaperSession:
             "slippage_bps": snapshot.slippage_bps,
             "funding_source": "live_meta_and_asset_contexts",
             "funding_rate_hourly": snapshot.funding_rate_hourly,
+            "funding_oracle_px": snapshot.oracle_px,
             "funding_asof_ts": snapshot.asof_ts,
             "funding_refresh_seconds": self.cost_provider.funding_poll_secs,
             "funding_accrual": "hourly_boundary",
