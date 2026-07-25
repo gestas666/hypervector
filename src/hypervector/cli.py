@@ -57,6 +57,7 @@ CLI_COMMANDS: tuple[str, ...] = (
     "history",
     "regime",
     "hypervelocity-regime-eval",
+    "hypervelocity-regime-autotune",
     "sweep-up",
     "sweep-down",
     "report",
@@ -1139,6 +1140,41 @@ def cmd_hypervelocity_regime_eval(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_hypervelocity_regime_autotune(args: argparse.Namespace) -> int:
+    """Tune causal regime parameters and retain every trial result."""
+    from hypervector.regime.tuning import (
+        autotune_regime_candidates,
+        generate_candidate_parameters,
+    )
+
+    df, provenance = _load_bars(args)
+    positions_path = Path(args.positions)
+    if not positions_path.is_file():
+        raise FileNotFoundError(f"positions file not found: {positions_path}")
+    positions = pd.read_csv(positions_path)
+    candidates = generate_candidate_parameters(n_trials=args.n_trials, seed=args.seed)
+    board = autotune_regime_candidates(
+        df,
+        positions,
+        candidates,
+        train_fraction=args.train_fraction,
+        forward_horizon=args.forward_horizon,
+    )
+    out = {
+        "ok": True,
+        "report_only": True,
+        "data_provenance": provenance,
+        "tuning_board": board.to_dict(),
+    }
+    rendered = json.dumps(out, indent=2, default=str)
+    if args.out:
+        output_path = Path(args.out)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(rendered + "\n", encoding="utf-8")
+    print(rendered)
+    return 0
+
+
 def cmd_regime_export(args: argparse.Namespace) -> int:
     """Export real per-bar regime telemetry snapshots for the TUI cockpit."""
     from hypervector.regime.snapshot_export import export_regime_snapshots
@@ -1954,6 +1990,27 @@ def build_parser() -> argparse.ArgumentParser:
         help="forward 1m bars used to report breakout target misses (default 30)",
     )
     hv_re.set_defaults(func=cmd_hypervelocity_regime_eval)
+
+    hv_tune = sub.add_parser(
+        "hypervelocity-regime-autotune",
+        help="Tune Hypervelocity regime parameters with chronological holdout",
+    )
+    _add_market_args(hv_tune)
+    hv_tune.add_argument(
+        "--positions",
+        required=True,
+        help="CSV containing open_time_utc, side, and symbol",
+    )
+    hv_tune.add_argument("--n-trials", type=int, default=100)
+    hv_tune.add_argument("--seed", type=int, default=7)
+    hv_tune.add_argument("--train-fraction", type=float, default=0.7)
+    hv_tune.add_argument("--forward-horizon", type=int, default=30)
+    hv_tune.add_argument(
+        "--out",
+        default=None,
+        help="optional path for the complete JSON tuning board",
+    )
+    hv_tune.set_defaults(func=cmd_hypervelocity_regime_autotune)
 
     rex = sub.add_parser(
         "regime-export",

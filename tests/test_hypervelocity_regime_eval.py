@@ -13,6 +13,7 @@ from hypervector.regime.hypervelocity_eval import (
     evaluate_breakout_quality,
     evaluate_entry_alignment,
     evaluate_hypervelocity_regimes,
+    evaluate_range_quality,
 )
 
 
@@ -59,6 +60,30 @@ def test_entry_alignment_reports_false_range_without_aborting() -> None:
     assert result.direction_recall_pct == 200.0 / 3.0
     assert result.false_range_at_entries == 1
     assert result.no_entry_state_at_entries == 1
+    assert result.recorded_positions == 3
+    assert result.unique_entry_decisions == 3
+
+
+def test_entry_alignment_clusters_split_fills_into_one_decision() -> None:
+    decisions = _decisions()
+    positions = pd.DataFrame(
+        {
+            "open_time_utc": [
+                decisions.index[0],
+                decisions.index[0] + pd.Timedelta(milliseconds=500),
+                decisions.index[2],
+            ],
+            "side": ["long", "long", "short"],
+            "symbol": ["BTC", "BTC", "BTC"],
+        }
+    )
+
+    result = evaluate_entry_alignment(decisions, positions)
+
+    assert result.recorded_positions == 3
+    assert result.unique_entry_decisions == 2
+    assert result.total_entries == 2
+    assert result.direction_matches == 2
 
 
 def test_entry_alignment_reports_resting_order_lookback_separately() -> None:
@@ -139,6 +164,79 @@ def test_breakout_quality_reports_target_misses() -> None:
     assert result.breakout_events == 2
     assert result.false_breakouts == 1
     assert result.false_breakout_pct == 50.0
+
+
+def test_breakout_quality_counts_consecutive_labels_as_one_episode() -> None:
+    decisions = _decisions()
+    decisions["primary_regime"] = "RANGE"
+    decisions["breakout_direction"] = None
+    decisions.loc[decisions.index[1:3], "primary_regime"] = "BREAKOUT"
+    decisions.loc[decisions.index[1:3], "breakout_direction"] = "BK_UPWARD"
+    close = np.full(6, 100.0)
+    bars = pd.DataFrame(
+        {
+            "open": close,
+            "high": [100.0, 100.0, 100.0, 100.3, 100.0, 100.0],
+            "low": close,
+            "close": close,
+            "volume": 100.0,
+        },
+        index=decisions.index,
+    )
+
+    result = evaluate_breakout_quality(
+        bars,
+        decisions,
+        target_price_fraction=0.002,
+        forward_horizon=2,
+    )
+
+    assert result.breakout_bars == 2
+    assert result.breakout_events == 1
+    assert result.false_breakouts == 0
+
+
+def test_range_quality_separates_directional_oscillating_and_quiet_outcomes() -> None:
+    index = pd.date_range("2026-01-01", periods=8, freq="1min", tz="UTC")
+    decisions = pd.DataFrame(
+        {
+            "primary_regime": [
+                "RANGE",
+                "TREND_UP",
+                "RANGE",
+                "TREND_UP",
+                "RANGE",
+                "TREND_UP",
+                "TREND_UP",
+                "TREND_UP",
+            ]
+        },
+        index=index,
+    )
+    close = np.full(8, 100.0)
+    bars = pd.DataFrame(
+        {
+            "open": close,
+            "high": [100.0, 100.3, 100.0, 100.3, 100.0, 100.1, 100.0, 100.0],
+            "low": [100.0, 99.95, 100.0, 99.7, 100.0, 99.9, 100.0, 100.0],
+            "close": close,
+            "volume": 100.0,
+        },
+        index=index,
+    )
+
+    result = evaluate_range_quality(
+        bars,
+        decisions,
+        target_price_fraction=0.002,
+        forward_horizon=1,
+    )
+
+    assert result.range_events == 3
+    assert result.one_sided_expansions == 1
+    assert result.two_sided_oscillations == 1
+    assert result.quiet_ranges == 1
+    assert result.one_sided_expansion_pct == 100.0 / 3.0
 
 
 def test_full_report_records_source_limitations() -> None:
