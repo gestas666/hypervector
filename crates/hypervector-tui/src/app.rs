@@ -23,7 +23,7 @@ pub struct App {
     pub selected_event_index: usize,
     pub show_event_detail_modal: bool,
     pub theme_mode: usize,
-    pub active_tab: usize, // 0 = Regime Detection, 1 = Dashboard, 2 = Engine & Risk Config
+    pub active_tab: usize, // 0 = Dashboard, 1 = Regime Detection, 2 = Config
     // Hypervelocity state
     pub active_position: ActivePosition,
     pub previous_margin_pct: f64,

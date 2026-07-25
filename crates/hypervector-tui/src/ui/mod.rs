@@ -60,9 +60,9 @@ pub fn draw(f: &mut Frame, app: &App) {
     render_timeline_ribbon(f, app, chunks[1]);
 
     if app.active_tab == 0 {
-        render_screen_regime_detection(f, app, chunks[2]);
-    } else if app.active_tab == 1 {
         render_screen_strategy_policy(f, app, chunks[2]);
+    } else if app.active_tab == 1 {
+        render_screen_regime_detection(f, app, chunks[2]);
     } else {
         render_screen_engine_config(f, app, chunks[2]);
     }
@@ -96,9 +96,9 @@ fn render_header(f: &mut Frame, app: &App, area: Rect) {
     let text = vec![Line::from(vec![
         Span::styled(" ⚡ HYPERVECTOR ENGINE ", app.theme.title),
         Span::raw("│ "),
-        Span::styled(" [1] REGIME DETECTION ", tab1_style),
+        Span::styled(" [1] DASHBOARD ", tab1_style),
         Span::raw("│ "),
-        Span::styled(" [2] DASHBOARD ", tab2_style),
+        Span::styled(" [2] REGIME DETECTION ", tab2_style),
         Span::raw("│ "),
         Span::styled(" [3] CONFIG ", tab3_style),
         Span::raw("│ "),
@@ -167,7 +167,7 @@ fn render_timeline_ribbon(f: &mut Frame, app: &App, area: Rect) {
 }
 
 // ============================================================================
-// SCREEN 1: REGIME DETECTION ENGINE ONLY (FULL DENSITY GRAPHICAL DASHBOARD)
+// SCREEN 2: REGIME DETECTION ENGINE ONLY (FULL DENSITY GRAPHICAL DASHBOARD)
 // ============================================================================
 fn render_screen_regime_detection(f: &mut Frame, app: &App, area: Rect) {
     let main_chunks = Layout::default()
@@ -565,7 +565,7 @@ fn render_distribution_bar(f: &mut Frame, app: &App, area: Rect) {
 }
 
 // ============================================================================
-// SCREEN 2: STRATEGY POLICY & RISK ALLOCATION ENGINE ONLY
+// SCREEN 1: DASHBOARD (STRATEGY POLICY & RISK ALLOCATION)
 // ============================================================================
 fn render_screen_strategy_policy(f: &mut Frame, app: &App, area: Rect) {
     let main_chunks = Layout::default()
@@ -606,16 +606,14 @@ fn render_bottom_performance_section(f: &mut Frame, app: &App, area: Rect) {
         .direction(Direction::Horizontal)
         .constraints([
             Constraint::Percentage(34), // Dedicated Account Portfolio & Margin Telemetry Box (First)
-            Constraint::Percentage(22), // All-Time Performance Summary Box
-            Constraint::Percentage(22), // This Run Performance Box
-            Constraint::Percentage(22), // Return Distribution Sparklines
+            Constraint::Percentage(33), // All-Time Performance Summary Box
+            Constraint::Percentage(33), // This Run Performance Box
         ])
         .split(area);
 
     render_screen3_portfolio_telemetry_box(f, app, perf_chunks[0]);
     hypervelocity::render_all_time_stats(f, app, perf_chunks[1]);
     hypervelocity::render_run_stats(f, app, perf_chunks[2]);
-    hypervelocity::render_return_distribution(f, app, perf_chunks[3]);
 }
 
 fn render_screen3_portfolio_telemetry_box(f: &mut Frame, app: &App, area: Rect) {
@@ -870,7 +868,8 @@ fn render_paper_journal_log(f: &mut Frame, app: &App, area: Rect) {
         .map(|h| Span::styled(*h, app.theme.header));
     let header = Row::new(header_cells).height(1);
 
-    let recent_trades: Vec<_> = app.paper_trades.iter().rev().take(10).collect();
+    let max_rows = area.height.saturating_sub(3).max(1) as usize;
+    let recent_trades: Vec<_> = app.paper_trades.iter().rev().take(max_rows).collect();
     let rows = recent_trades.iter().map(|trd| {
         let dir_style = if trd.direction == "LONG" { app.theme.bull } else { app.theme.bear };
         let (pnl_sign, pnl_color) = if trd.pnl_usd >= 0.0 { ("+", app.theme.bull) } else { ("", app.theme.bear) };
