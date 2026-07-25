@@ -209,6 +209,28 @@ In TUI: press `p` (paper). Confirm:
 
 Toggle `l` (live): path footer must use `live/decisions`; empty state if no live file.
 
+#### Step C4b — Effective Hypervelocity backend contract
+
+Start a bounded shadow run and open the TUI backend-configuration screen. The
+TUI values must equal the latest `session_start` row; it must not substitute its
+display fallback when telemetry is connected.
+
+| Backend ledger field | Required displayed value |
+|----------------------|--------------------------|
+| `strategy_params.leverage` | `40.0` |
+| `strategy_params.target_margin_pct` | `8.0` |
+| `risk.margin_fraction` | `0.7` |
+| `risk.notional_fraction` | `28.0` |
+| `exits.mode` | `strategy_target_only` |
+| `exits.stop` | `null` |
+| `execution.order_type` / `time_in_force` | `limit` / `post_only` |
+| `execution.fill_rule` | `through_one_tick` |
+| `metalabel_mode` | `off` or `observe`; never `scale`/`filter` for Hypervelocity |
+
+In the decision tape, `submit_entry` is a pending order and must not create a
+trade or position. Only a later backend `enter_long`/`enter_short` row with
+positive `fill_qty` may do so. A `cancel_entry` row remains a non-trade event.
+
 #### Step C5 — Regime
 
 ```bash
@@ -250,7 +272,7 @@ data-root:
 C1 status parity: PASS|FAIL
 C2 paper-check: PASS|FAIL
 C3 live-check: PASS|FAIL
-C4 tape vs paper-report: PASS|FAIL
+C4 tape/config vs backend ledger: PASS|FAIL
 C5 regime: PASS|FAIL|SKIP (reason)
 C6 two views: PASS|FAIL
 C7 honesty: PASS|FAIL

@@ -1,9 +1,9 @@
 # HANDOFF — hypervector
 
-**Saved:** 2026-07-25 — Full L2 replay recovered, four lanes autotuned, and replay ML candidates trained.
+**Saved:** 2026-07-25 — Faithful Hypervelocity backend contract, causal regime evaluation, maker replay/paper execution, and annotation-model comparison.
 **Project:** `/Users/gestas/Prototypes/hypervector`  
 **User:** Albert  
-**Branch:** `feat/hypervelocity-backend-telemetry`
+**Branch:** `feature/hypervelocity-faithful-regime` (merge target: `main`)
 **Prefer this HANDOFF over agentmemory for phase status.**
 
 ---
@@ -16,12 +16,14 @@
 | Phase 5 thin projector TUI | **Superseded** by Shadow Ops Floor |
 | Probe Python resolution | **Fixed** (`.venv` / `HYPERVECTOR_PYTHON` / `uv run`) |
 | Shadow Ops Floor (readiness + charts + regime auto + tape craft) | **Implemented** — agent PTY evidence green |
-| Automated QA | **Green** (TUI 7 tests; pytest offline 333 on 2026-07-25) |
+| Automated QA | **Changed surface green**; Rust 8/8, Python 400/400 excluding one pre-existing Ray worker termination |
 | Visual PASS (human) | **NEXT — Albert** |
 | Holistic CLI↔TUI | **Agent assist PASS**; human on-screen confirm |
 | GUI | **Deferred** until Shadow Ops visual PASS |
 | Hypervelocity execution authority | **Python backend only**; TUI consumes ledger telemetry |
-| Hypervelocity LightGBM | **Observe-only mode implemented**; candle and L2-replay candidates retained with metrics |
+| Hypervelocity execution contract | **BTC 1m, 70% margin, 40x, one 8% margin target, post-only** |
+| Hypervelocity entry states | **Trend up/down or direction-confirmed breakout only; no range entries** |
+| Hypervelocity model | **Observe-only enforced**; no candidate installed |
 | Hypervelocity 180d autotune | **Completed**; best long/short candle trials remained materially negative after costs |
 | L2 replay archive | **Operational**; 4,219 paired BTC trades and 32,209 L2-derived 1m bars |
 | Range 1m impulse research | **Autotuned from 681 L2 replay trades** (339 long, 342 short) |
@@ -36,6 +38,69 @@
 - Research, sweep, backtest, autotune, and model-training CLI commands remain separate from both the backend daemon and TUI process.
 - Candidate bundles are retained under `data/models/metalabel/candidates/`; neither 2026-07-25 Hypervelocity candidate was installed because chronological OOS log loss did not beat the constant-probability baseline.
 - Paper cost resolution now accepts the canonical exported `funding_rate_1h` when the legacy `funding_rate_8h` field is null; this was validated with the real Hypervelocity export.
+
+### 2026-07-25 faithful-contract validation
+
+The recorded strategy facts supplied by Albert supersede the speculative
+32%-risk, ATR-stop, and split-exit hypotheses in `docs/external`. The backend
+now enforces the observed baseline:
+
+- BTC 1m only, with separate long and short strategy IDs.
+- Entries only during canonical `TREND_UP`, `TREND_DOWN`, or a direction-confirmed real breakout.
+- `RANGE`, `TRANSITION`, `UNKNOWN`, and directionless breakout create no entry.
+- 70% of current equity is margin at 40x (28x-equity notional).
+- One 8% return-on-margin target (0.2% BTC price move), with no invented stop or split exit.
+- Post-only entry and target orders. Streaming paper execution retains pending orders and requires one-tick-through evidence; missing L2 falls back to a causal next-completed-bar through test.
+- LightGBM and temporal/logistic candidates are annotations only. CLI requests to scale or filter Hypervelocity are converted to `observe`, and the effective policy is stamped in the backend ledger.
+- TUI trade, position, PnL, equity, risk, exit, model, and order-execution fields come from the backend ledger. Display fallback values are fixed-contract labels only and never execute trades.
+
+Corrected causal regime evaluation (candle-open timestamps become available one
+minute later) used 35 unique recorded entry decisions:
+
+| Candidate | Train exact | Holdout exact | Total exact | RANGE/no-entry at logged entries |
+|-----------|------------:|--------------:|------------:|---------------------------------:|
+| Scalar-score winner (trial 91) | 21/24 | 9/11 | 30/35 (85.7%) | 1 |
+| Selected zero-false-range candidate (trial 248) | 19/24 | 10/11 | 29/35 (82.9%) | 0 |
+
+Confidence is high for those counts on the evaluated cache and medium for
+general range accuracy: the manual log contains positive entries, not labeled
+negative/range intervals, and 11.9% of the evaluated candles came from
+Hyperliquid while the remainder came from Binance rather than the original
+recording venue. A point-in-time venue-matched labeled range set would update
+this conclusion.
+
+The bounded order-book replay used 32,609 BTC L2 snapshots and produced 8
+filled entries, 7 completed trades, one open position, and one expired entry
+from a $71.23 flat-start account; final equity was about $98.64 after 1.5 bp
+maker fees. Touch and one-tick-through bounds agreed on those fills, but queue
+position, cancellations, partial fills, and the already-open real position at
+the beginning of coverage remain unknown. Therefore exact timestamp-for-
+timestamp strategy replication is not yet proven.
+
+The faithful replay annotation comparison used 4,219 overlapping rows and four
+purged/embargoed chronological folds:
+
+| Model | OOS log loss | OOS Brier | Decision |
+|-------|-------------:|----------:|----------|
+| Constant past-only baseline | 0.13747 | — | Reference |
+| LightGBM | 0.28282 | 0.07958 | Retain only; did not beat baseline |
+| Current-row logistic | 0.68939 | 0.24199 | Retain only; did not beat baseline |
+| Three-event lag logistic | 0.70004 | 0.23935 | Retain only; did not beat baseline |
+
+A TCN remains a future research option, not a missing runtime dependency:
+PyTorch/TensorFlow are absent and the effective independent sample count is
+materially lower than 4,219 because windows overlap. It should be tested only
+after venue-matched labels and replay fidelity are stronger.
+
+Verification evidence:
+
+- `cargo test -p hypervector-tui`: 8 passed.
+- `uv run pytest tests/ -q -m "not network" -k "not ray_adapter_executes_through_vectorbt"`: 400 passed, 5 deselected.
+- The excluded pre-existing VectorBT/Ray adapter test terminated its worker process before producing a result in this host environment; it is unverified, not counted as passed.
+- All changed Python files pass targeted Ruff. Repository-wide Ruff still reports 37 pre-existing issues in unrelated modules.
+- `status` and `paper-check` passed: shadow is no-submit, live remains unarmed/fail-closed, and no secret values were printed.
+- Both TOML profiles parse successfully.
+- A bounded 500-bar shadow run on cached BTC 1m data produced two pending entries, two causal maker entry fills, one fixed-target close, and zero submit attempts. Its ledger stamped 70% margin, 28x notional, 40x/8%, no stop, post-only, and one-tick-through execution.
 
 Candidate evidence:
 
@@ -170,8 +235,8 @@ Last agent PTY markers: SHADOW OPS, DRY-RUN READY, LIVE REFUSED, regime dominant
 
 ## NEXT
 
-1. Run a bounded Hypervelocity shadow session with `--metalabel-mode observe` and visually confirm ledger/TUI parity.
-2. Run each lane in bounded shadow/observe mode with its explicitly selected `20260725T081458Z` replay candidate and verify probability telemetry.
-3. Add an explicit per-strategy model map if multiple lanes must run in one backend process; do not rely on one shared model root for different feature/outcome populations.
-4. Continue time-series experiments with a small GRU or temporal CNN only as additional reported research; preserve purged/embargoed walk-forward evidence.
-5. Albert visual walk (V* against Shadow Ops bar), then sign off before reopening the GUI epic.
+1. Collect venue-matched point-in-time BTC bars plus explicit range/non-range labels; rerun the causal detector board without changing the fixed contract.
+2. Start bounded long and short shadow sessions with `--metalabel-mode observe`; visually confirm pending-order, fill, target, equity, and model telemetry in the TUI.
+3. Reconcile shadow submissions/fills against the next complete real-strategy log window. Use mismatches to tune detector unknowns, never the fixed 70%/40x/8% facts.
+4. Add a per-strategy model map before testing multiple annotation candidates in one backend process.
+5. Consider a TCN only after the faithful label set beats simple past-only baselines and has enough independent events.

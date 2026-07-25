@@ -8,6 +8,15 @@
 
 **Tech Stack:** Python 3.13, pandas, NumPy, VectorBT research, event-driven paper/Nautilus execution, pytest, Rust 2021, serde/serde_json, Ratatui, Cargo tests.
 
+**Implementation status (2026-07-25):** Tasks 1–10 are implemented. Corrected causal evaluation produced 29/35 exact
+directions for the selected zero-false-range-at-entry candidate; this is not a
+claim that all range intervals are correct because the source log contains
+positive entries rather than labeled negative intervals. The bounded maker
+replay produced 8 entry fills and 7 completed trades from 32,609 snapshots.
+LightGBM, current-row logistic, and three-event lag logistic candidates all
+failed to beat the past-only constant log-loss baseline and remain uninstalled,
+annotation-only research artifacts.
+
 ---
 
 ## Fixed contract and explicitly unknown behavior
