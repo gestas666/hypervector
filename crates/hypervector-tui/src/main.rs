@@ -127,9 +127,10 @@ fn run_app<B: ratatui::backend::Backend>(
                                     app.select_prev_event();
                                 }
                             }
+                            KeyCode::Char(' ') => app.toggle_play_pause(),
                             KeyCode::Char('s') => app.cycle_speed(),
                             KeyCode::Char('t') => app.cycle_timeframe(),
-                            KeyCode::Char('r') => app.current_index = 0,
+                            KeyCode::Char('r') => app.reset_playhead(),
                             _ => {}
                         }
                     }

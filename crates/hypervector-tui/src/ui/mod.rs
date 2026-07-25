@@ -100,7 +100,7 @@ fn render_header(f: &mut Frame, app: &App, area: Rect) {
         Span::raw("│ "),
         Span::styled(" [2] DASHBOARD ", tab2_style),
         Span::raw("│ "),
-        Span::styled(" [3] ENGINE & RISK CONFIG ", tab3_style),
+        Span::styled(" [3] CONFIG ", tab3_style),
         Span::raw("│ "),
         Span::styled(format!("SYMBOL: {}", app.symbol), app.theme.gold),
         Span::raw(" │ "),
@@ -597,7 +597,7 @@ fn render_screen_strategy_policy(f: &mut Frame, app: &App, area: Rect) {
     // Row 4: Performance Summary Section
     render_bottom_performance_section(f, app, main_chunks[3]);
 
-    // Row 5: Paper Trade Journal & Execution Log (60%) + Trend State Log (40%)
+    // Row 5: Transition Distribution mirror + full-width Paper Trade Journal
     render_bottom_journal_and_trend_log(f, app, main_chunks[4]);
 }
 
@@ -659,15 +659,15 @@ fn render_screen3_portfolio_telemetry_box(f: &mut Frame, app: &App, area: Rect) 
 
 fn render_bottom_journal_and_trend_log(f: &mut Frame, app: &App, area: Rect) {
     let row5_chunks = Layout::default()
-        .direction(Direction::Horizontal)
+        .direction(Direction::Vertical)
         .constraints([
-            Constraint::Percentage(60), // Live Paper Trade Journal Log Table
-            Constraint::Percentage(40), // Trend State Log & Rolling Transition Audit
+            Constraint::Length(1), // Transition Distribution line (mirrored from Screen 1)
+            Constraint::Min(4),    // Full-width Live Paper Trade Journal Log Table
         ])
         .split(area);
 
-    render_paper_journal_log(f, app, row5_chunks[0]);
-    render_event_log_screen2(f, app, row5_chunks[1]);
+    render_distribution_bar(f, app, row5_chunks[0]);
+    render_paper_journal_log(f, app, row5_chunks[1]);
 }
 
 fn render_dynamic_leverage_panel(f: &mut Frame, app: &App, area: Rect) {
@@ -749,16 +749,27 @@ fn render_registered_strategy_matrix(f: &mut Frame, app: &App, area: Rect) {
     let is_bull_active = snap.state == RegimeState::BullMomentum;
     let is_bear_active = snap.state == RegimeState::BearMomentum;
 
+    let alloc_weight = if is_bull_active { snap.long_weight } else if is_bear_active { snap.short_weight } else { 0.0 };
+    let strategy_lev = match app.config.leverage_mode {
+        crate::model::LeverageMode::DynamicML => snap.dynamic_leverage,
+        crate::model::LeverageMode::StaticMultiplier(mult) => mult,
+    };
     let strategy_rows = vec![
         Row::new(vec![
             Span::styled("hypervelocity_1m_scalper", app.theme.gold),
             Span::styled(
-                if is_bull_active { "ACTIVE (BULL 40x)" } else if is_bear_active { "ACTIVE (BEAR 40x)" } else { "INACTIVE (MUTED)" },
+                if is_bull_active { "ACTIVE (BULL)" } else if is_bear_active { "ACTIVE (BEAR)" } else { "INACTIVE (MUTED)" },
                 if is_bull_active || is_bear_active { app.theme.gold } else { app.theme.muted },
             ),
-            Span::styled(format!("{:.2}x", if is_bull_active || is_bear_active { 2.00 } else { 0.0 }), app.theme.gold),
-            Span::styled(format!("{:.1}x", if is_bull_active || is_bear_active { 40.0 } else { 1.0 }), app.theme.cyan),
-            Span::styled("Primary 40x BTC Scalper (95.7% Win Rate │ +8% Margin Target │ Single Position Netting)", app.theme.title),
+            Span::styled(format!("{:.2}x", alloc_weight), app.theme.gold),
+            Span::styled(format!("{:.1}x", if is_bull_active || is_bear_active { strategy_lev } else { 1.0 }), app.theme.cyan),
+            Span::styled(
+                format!(
+                    "Primary {:.0}x BTC Scalper ({:.1}% Win Rate │ +{:.1}% Margin Target │ Single Position Netting)",
+                    strategy_lev, app.paper_stats.win_rate_pct, app.config.margin_tp_pct,
+                ),
+                app.theme.title,
+            ),
         ]),
     ];
 
@@ -897,73 +908,6 @@ fn render_paper_journal_log(f: &mut Frame, app: &App, area: Rect) {
     .block(
         Block::default()
             .title(format!(" LIVE PAPER TRADE JOURNAL & EXECUTION LOG ({}/{} Trades Recorded) ", recent_trades.len(), app.paper_trades.len()))
-            .title_style(app.theme.title)
-            .borders(Borders::ALL)
-            .border_style(app.theme.border),
-    );
-
-    f.render_widget(table, area);
-}
-
-fn render_event_log_screen2(f: &mut Frame, app: &App, area: Rect) {
-    let header_cells = ["Timestamp", "From State", "To State", "Price"]
-        .iter()
-        .map(|h| Span::styled(*h, app.theme.header));
-    let header = Row::new(header_cells).height(1);
-
-    let current_ts = &app.current_snapshot().timestamp_str;
-    let max_rows = area.height.saturating_sub(3).max(5) as usize;
-    let recent_events: Vec<_> = app.events.iter()
-        .filter(|e| &e.timestamp_str <= current_ts)
-        .rev()
-        .take(max_rows)
-        .collect();
-    let rows = recent_events.iter().enumerate().map(|(idx, ev)| {
-        let from_str = ev.from_state.primary_label();
-        let to_str = ev.to_state.primary_label();
-        let is_selected = idx == app.selected_event_index.min(recent_events.len().saturating_sub(1));
-
-        let to_style = if is_selected {
-            app.theme.highlight
-        } else {
-            match ev.to_state {
-                RegimeState::BullMomentum => app.theme.bull,
-                RegimeState::BearMomentum => app.theme.bear,
-                RegimeState::VolatilityCoiling => app.theme.coiling,
-                RegimeState::FundingCarry => app.theme.carry,
-                RegimeState::RangeChop => app.theme.chop,
-            }
-        };
-
-        let row_style = if is_selected { app.theme.highlight } else { ratatui::style::Style::default() };
-        let ts_display = format_timestamp_display(&ev.timestamp_str);
-
-        Row::new(vec![
-            Span::styled(ts_display, if is_selected { app.theme.highlight } else { app.theme.muted }),
-            Span::styled(from_str, row_style),
-            Span::styled(to_str, to_style),
-            Span::styled(format!("${:.2}", ev.price), if is_selected { app.theme.highlight } else { app.theme.gold }),
-        ])
-        .style(row_style)
-    });
-
-    let table = Table::new(
-        rows,
-        [
-            Constraint::Length(19),
-            Constraint::Length(14),
-            Constraint::Length(14),
-            Constraint::Min(10),
-        ],
-    )
-    .header(header)
-    .block(
-        Block::default()
-            .title(format!(
-                " RECENT REGIME TRANSITION AUDIT LOG [{}/{}] ",
-                app.selected_event_index.min(recent_events.len().saturating_sub(1)) + 1,
-                recent_events.len()
-            ))
             .title_style(app.theme.title)
             .borders(Borders::ALL)
             .border_style(app.theme.border),

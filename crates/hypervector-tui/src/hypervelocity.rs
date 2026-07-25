@@ -149,7 +149,8 @@ fn render_position_panel(f: &mut Frame, app: &App, area: Rect) {
             ((entry_price - snap.price) / entry_price * lev * 100.0 * 100.0).round() / 100.0
         };
         let peak = mgn.max(pos.peak_margin_pct);
-        let upnl = mgn / 100.0 * (pos.entry_equity * 0.25);
+        let margin_posted = pos.entry_equity * app.config.equity_risk_frac;
+        let upnl = mgn / 100.0 * margin_posted;
         (mgn, peak, upnl)
     } else {
         (0.0, 0.0, 0.0)
@@ -564,14 +565,11 @@ fn render_per_trade_breakdown(f: &mut Frame, app: &App, area: Rect) {
         }
 
         let exit_label = match t.exit_reason.as_str() {
-            "tp1" | "tp2" => t.exit_reason.as_str(),
+            "tp1" | "tp2" | "tp1+tp2" => t.exit_reason.as_str(),
             "SL" => "SL",
             "OPEN" => "OPEN",
-            "TREND_UP (BULL MOMENTUM EXPANSION)" => "regime",
-            "TREND_DOWN (BEAR MOMENTUM EXPANSION)" => "regime",
-            "BREAKOUT (VOLATILITY COILING COMPRESSION)" => "regime",
-            "TRANSITION (FUNDING CARRY REVERSAL)" => "regime",
-            "RANGE (RANGE CHOP / HIGH FRICTION)" => "regime",
+            "TREND_UP" | "TREND_DOWN" | "BREAKOUT" | "TRANSITION" | "RANGE" => "regime",
+            s if s.contains("MOMENTUM") || s.contains("COILING") || s.contains("CARRY") || s.contains("CHOP") => "regime",
             _ => &t.exit_reason,
         };
 

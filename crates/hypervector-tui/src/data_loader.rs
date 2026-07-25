@@ -62,10 +62,13 @@ pub fn get_today_date_str() -> String {
     chrono::Local::now().format("%Y-%m-%d").to_string()
 }
 
-fn parse_snapshot_json(val: &Value, idx: usize) -> Option<RegimeSnapshot> {
-    let px = val.get("close").or_else(|| val.get("price")).and_then(|v| v.as_f64()).unwrap_or(65000.0);
+pub fn parse_snapshot_json(val: &Value, idx: usize) -> Option<RegimeSnapshot> {
+    let num = |key: &str| val.get(key).and_then(|v| v.as_f64());
+    let text = |key: &str| val.get(key).and_then(|v| v.as_str()).map(|s| s.to_string());
+
+    let px = num("close").or_else(|| num("price")).unwrap_or(65000.0);
     let state_str = val.get("regime_state").and_then(|v| v.as_str()).unwrap_or("BULL_MOMENTUM_EXPANSION");
-    
+
     let state = match state_str {
         s if s.contains("BULL") => RegimeState::BullMomentum,
         s if s.contains("BEAR") => RegimeState::BearMomentum,
@@ -75,12 +78,10 @@ fn parse_snapshot_json(val: &Value, idx: usize) -> Option<RegimeSnapshot> {
     };
 
     let today = get_today_date_str();
-    let raw_ts = val.get("timestamp_str")
-        .or_else(|| val.get("timestamp"))
-        .or_else(|| val.get("time"))
-        .or_else(|| val.get("datetime"))
-        .and_then(|v| v.as_str())
-        .map(|s| s.to_string());
+    let raw_ts = text("timestamp_str")
+        .or_else(|| text("timestamp"))
+        .or_else(|| text("time"))
+        .or_else(|| text("datetime"));
 
     let timestamp_str = match raw_ts {
         Some(s) if !s.contains("1969-12-31") && !s.contains("1970-01-01") => s,
@@ -88,29 +89,51 @@ fn parse_snapshot_json(val: &Value, idx: usize) -> Option<RegimeSnapshot> {
         None => format!("{} {:02}:{:02}:00 EDT", today, (idx / 60) % 24, idx % 60),
     };
 
+    // Real exported telemetry wins; state-derived values only as fallback
+    // when a field is missing from the snapshot file.
+    let default_opi = match state {
+        RegimeState::BullMomentum => 0.35,
+        RegimeState::BearMomentum => -0.35,
+        _ => 0.05,
+    };
+    let (default_lw, default_sw) = match state {
+        RegimeState::BullMomentum => (2.0, 0.0),
+        RegimeState::BearMomentum => (0.0, 2.0),
+        RegimeState::VolatilityCoiling => (1.5, 1.5),
+        RegimeState::FundingCarry => (2.0, 0.0),
+        RegimeState::RangeChop => (0.25, 0.25),
+    };
+    let default_trend = |bull_state: bool| if bull_state { "BULL".to_string() } else { "BEAR".to_string() };
+
+    let timestamp_ms = val
+        .get("timestamp_ms")
+        .and_then(|v| v.as_u64())
+        .filter(|&ms| ms > 0)
+        .unwrap_or(1_784_850_000_000 + (idx as u64 * 60_000));
+
     Some(RegimeSnapshot {
         timestamp_str,
-        timestamp_ms: 1784850000000 + (idx as u64 * 60000),
+        timestamp_ms,
         price: px,
-        high: px + 40.0,
-        low: px - 40.0,
-        volume: 12.5 + (idx as f64 % 10.0),
+        high: num("high").unwrap_or(px + 40.0),
+        low: num("low").unwrap_or(px - 40.0),
+        volume: num("volume").unwrap_or(12.5),
         state,
-        confidence: 0.85,
-        opi: if state == RegimeState::BullMomentum { 0.35 } else if state == RegimeState::BearMomentum { -0.35 } else { 0.05 },
-        spread_bps: 1.8,
-        bid_depth_ratio: 1.45,
-        bbwp_percentile: if state == RegimeState::VolatilityCoiling { 14.2 } else { 45.0 },
-        rsi: if state == RegimeState::BullMomentum { 62.0 } else { 42.0 },
-        funding_zscore: if state == RegimeState::FundingCarry { -2.1 } else { 0.2 },
-        trend_1m: if state == RegimeState::BullMomentum { "BULL".into() } else { "BEAR".into() },
-        trend_5m: "BULL".into(),
-        trend_15m: "BULL".into(),
-        long_weight: if state == RegimeState::BullMomentum { 2.0 } else { 0.5 },
-        short_weight: if state == RegimeState::BearMomentum { 2.0 } else { 0.0 },
-        max_leverage: 3.0,
-        dynamic_leverage: if state == RegimeState::BullMomentum { 2.42 } else { 1.25 },
-        taker_allowed: false,
+        confidence: num("confidence").unwrap_or(0.85),
+        opi: num("opi").unwrap_or(default_opi),
+        spread_bps: num("spread_bps").unwrap_or(1.8),
+        bid_depth_ratio: num("bid_depth_ratio").unwrap_or(1.45),
+        bbwp_percentile: num("bbwp_percentile").unwrap_or(if state == RegimeState::VolatilityCoiling { 14.2 } else { 45.0 }),
+        rsi: num("rsi").unwrap_or(if state == RegimeState::BullMomentum { 62.0 } else { 42.0 }),
+        funding_zscore: num("funding_zscore").unwrap_or(if state == RegimeState::FundingCarry { -2.1 } else { 0.2 }),
+        trend_1m: text("trend_1m").unwrap_or_else(|| default_trend(state == RegimeState::BullMomentum)),
+        trend_5m: text("trend_5m").unwrap_or_else(|| "BULL".into()),
+        trend_15m: text("trend_15m").unwrap_or_else(|| "BULL".into()),
+        long_weight: num("long_weight").unwrap_or(default_lw),
+        short_weight: num("short_weight").unwrap_or(default_sw),
+        max_leverage: num("max_leverage").unwrap_or(3.0),
+        dynamic_leverage: num("dynamic_leverage").unwrap_or(1.25),
+        taker_allowed: val.get("taker_allowed").and_then(|v| v.as_bool()).unwrap_or(false),
     })
 }
 

@@ -54,6 +54,7 @@ CLI_COMMANDS: tuple[str, ...] = (
     "book-record",
     "autotune",
     "book-align",
+    "regime-export",
 )
 from hypervector.regime.detectors import detect_regime_ema
 from hypervector.regime.metrics import regime_detection_metrics
@@ -1085,6 +1086,34 @@ def cmd_regime_eval(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_regime_export(args: argparse.Namespace) -> int:
+    """Export real per-bar regime telemetry snapshots for the TUI cockpit."""
+    from hypervector.regime.snapshot_export import export_regime_snapshots
+
+    root = Path(args.data_root)
+    df, prov = _load_bars(args)
+
+    book_path = getattr(args, "book_path", None)
+    if book_path and Path(book_path).is_file():
+        from hypervector.data.book_align import align_orderbook_to_ohlcv, load_l2_jsonl
+
+        df_book = load_l2_jsonl(book_path)
+        df = align_orderbook_to_ohlcv(df, df_book)
+
+    out_path = args.out or (root / "exports" / "regime_snapshots.json")
+    summary = export_regime_snapshots(
+        df,
+        out_path,
+        symbol=args.symbol,
+        timeframe=args.timeframe,
+        data_root=root,
+        max_bars=args.bars,
+    )
+    summary["data_provenance"] = prov
+    print(json.dumps(summary, indent=2, default=str))
+    return 0
+
+
 def cmd_backtest(args: argparse.Namespace) -> int:
     """Run Phase-1.5 backtest across any registered strategy with leverage & fee models."""
     from hypervector.data.pipeline import load_research_history
@@ -1834,6 +1863,29 @@ def build_parser() -> argparse.ArgumentParser:
         help="optional orderbook L2 data path (JSONL or SQLite)",
     )
     re_parser.set_defaults(func=cmd_regime_eval)
+
+    rex = sub.add_parser(
+        "regime-export",
+        help="Export real per-bar regime telemetry snapshots for tui-regime-detector",
+    )
+    _add_market_args(rex)
+    rex.add_argument(
+        "--bars",
+        type=int,
+        default=1500,
+        help="number of most recent bars to export (default 1500)",
+    )
+    rex.add_argument(
+        "--out",
+        default=None,
+        help="output JSON path (default <data-root>/exports/regime_snapshots.json)",
+    )
+    rex.add_argument(
+        "--book-path",
+        default=None,
+        help="optional orderbook L2 data path (JSONL) to align microstructure features",
+    )
+    rex.set_defaults(func=cmd_regime_export)
 
     bt = sub.add_parser(
         "backtest",

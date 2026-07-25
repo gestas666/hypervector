@@ -83,8 +83,7 @@ impl App {
             book_state: HypervelocityBookState::default(),
         };
         app.rebuild_events();
-        app.rebuild_paper_trades();
-        app.rebuild_hypervelocity_trades();
+        app.rebuild_trade_state();
         app.update_book_state();
         app
     }
@@ -148,13 +147,30 @@ impl App {
     pub fn step_forward(&mut self) {
         if self.current_index + 1 < self.snapshots.len() {
             self.current_index += 1;
+            self.refresh_playhead_state();
         }
     }
 
     pub fn step_backward(&mut self) {
         if self.current_index > 0 {
             self.current_index -= 1;
+            self.refresh_playhead_state();
         }
+    }
+
+    pub fn reset_playhead(&mut self) {
+        self.current_index = 0;
+        self.refresh_playhead_state();
+    }
+
+    /// Re-derive every playhead-dependent feed (book ladder, paper journal,
+    /// hypervelocity trades, position, stats) after the index moves.
+    pub fn refresh_playhead_state(&mut self) {
+        if self.snapshots.is_empty() {
+            return;
+        }
+        self.rebuild_trade_state();
+        self.update_book_state();
     }
 
     pub fn cycle_speed(&mut self) {
@@ -183,6 +199,7 @@ impl App {
                 // Continuous live playback loop so live telemetry never freezes
                 self.current_index = 0;
             }
+            self.refresh_playhead_state();
         }
     }
 
@@ -204,6 +221,7 @@ impl App {
                 };
                 self.events.push(RegimeEvent {
                     timestamp_str: curr.timestamp_str.clone(),
+                    snapshot_index: i,
                     from_state: prev.state,
                     to_state: curr.state,
                     trigger_reason: reason.into(),
@@ -213,12 +231,16 @@ impl App {
         }
     }
 
-    /// Run the shared position-sizing + PnL simulation once and materialise
-    /// both the paper journal and hypervelocity trade list from the results.
+    /// Playhead-aware simulation of the reverse-engineered hypervelocity
+    /// strategy (docs/external plan section 4.5): entries at directional
+    /// regime transitions, bar-walked exits at the margin TP target, margin
+    /// SL stop, or trend-flip invalidation at the next transition. Supports
+    /// split take-profit blending and compounding equity sizing.
     fn simulate_trades(&self) -> (Vec<SimulatedTrade>, LivePaperStats) {
         let initial_cap = 10000.0;
         let mut equity = initial_cap;
         let mut realized_pnl = 0.0;
+        let mut unrealized_pnl = 0.0;
         let mut wins: usize = 0;
         let mut losses: usize = 0;
         let mut gross_win = 0.0;
@@ -227,74 +249,174 @@ impl App {
         let mut max_dd_pct = 0.0;
         let mut trades: Vec<SimulatedTrade> = Vec::new();
 
+        if self.snapshots.is_empty() {
+            return (
+                trades,
+                LivePaperStats {
+                    initial_capital: initial_cap,
+                    current_equity: initial_cap,
+                    realized_pnl: 0.0,
+                    unrealized_pnl: 0.0,
+                    total_trades: 0,
+                    wins: 0,
+                    losses: 0,
+                    win_rate_pct: 0.0,
+                    profit_factor: 0.0,
+                    max_drawdown_pct: 0.0,
+                    avg_win_usd: 0.0,
+                    avg_loss_usd: 0.0,
+                },
+            );
+        }
+
+        let upto = self.current_index.min(self.snapshots.len() - 1);
+        let events: Vec<&RegimeEvent> = self
+            .events
+            .iter()
+            .filter(|e| e.snapshot_index <= upto)
+            .collect();
+
         let max_coin_lev = get_coin_max_leverage(&self.symbol);
         let lev = match self.config.leverage_mode {
             LeverageMode::DynamicML => 2.0_f64.min(max_coin_lev),
             LeverageMode::StaticMultiplier(mult) => mult.min(max_coin_lev),
         };
-        // Margin-return based TP/SL targets (strategy-native units).
-        // Price-move targets are derived by dividing by leverage.
+        // Margin-return targets are strategy-native; price barriers derive
+        // by dividing by leverage (8% margin at 40x == 0.2% price move).
         let margin_tp_pct = self.config.margin_tp_pct;
         let margin_sl_pct = self.config.margin_sl_pct;
         let risk_frac = self.config.equity_risk_frac;
+        let tp_frac = margin_tp_pct / lev.max(1.0) / 100.0;
+        let sl_frac = margin_sl_pct / lev.max(1.0) / 100.0;
+        let tp1_ratio = self.config.split_position_mode.tp1_ratio();
+        // Plan section 8 (TP/SL ruler): TP2 is the tighter target at ~81%
+        // of TP1 (6.5% vs 8.0% in the observed dataset).
+        let tp2_margin_pct = margin_tp_pct * 0.8125;
 
-        for (idx, ev) in self.events.iter().enumerate() {
+        for (idx, ev) in events.iter().enumerate() {
             let direction = match ev.to_state {
                 RegimeState::BullMomentum => "LONG",
                 RegimeState::BearMomentum => "SHORT",
                 _ => continue,
             };
-
+            let is_long = direction == "LONG";
             let entry_p = ev.price;
-            let exit_p = if idx + 1 < self.events.len() {
-                self.events[idx + 1].price
+            if entry_p <= 0.0 {
+                continue;
+            }
+
+            let (tp_price, sl_price) = if is_long {
+                (entry_p * (1.0 + tp_frac), entry_p * (1.0 - sl_frac))
             } else {
-                self.current_snapshot().price
+                (entry_p * (1.0 - tp_frac), entry_p * (1.0 + sl_frac))
+            };
+
+            let next_event = events.get(idx + 1);
+            let walk_end = match next_event {
+                Some(n) => n.snapshot_index.saturating_sub(1).min(upto),
+                None => upto,
+            };
+
+            let mut peak_margin_pct: f64 = 0.0;
+            let mut exit_price: Option<f64> = None;
+            let mut exit_reason = String::new();
+
+            for j in (ev.snapshot_index + 1)..=walk_end {
+                let bar = &self.snapshots[j];
+                let fav_move = if is_long {
+                    (bar.high - entry_p) / entry_p
+                } else {
+                    (entry_p - bar.low) / entry_p
+                };
+                peak_margin_pct = peak_margin_pct.max(fav_move * lev * 100.0);
+
+                let sl_hit = if is_long { bar.low <= sl_price } else { bar.high >= sl_price };
+                let tp_hit = if is_long { bar.high >= tp_price } else { bar.low <= tp_price };
+
+                // Conservative intrabar ordering: stop evaluated before target.
+                if sl_hit {
+                    exit_price = Some(sl_price);
+                    exit_reason = "SL".into();
+                    break;
+                }
+                if tp_hit {
+                    if tp1_ratio < 1.0 {
+                        let blended_margin =
+                            tp1_ratio * margin_tp_pct + (1.0 - tp1_ratio) * tp2_margin_pct;
+                        let blended_frac = blended_margin / lev.max(1.0) / 100.0;
+                        exit_price = Some(if is_long {
+                            entry_p * (1.0 + blended_frac)
+                        } else {
+                            entry_p * (1.0 - blended_frac)
+                        });
+                        exit_reason = "tp1+tp2".into();
+                    } else {
+                        exit_price = Some(tp_price);
+                        exit_reason = "tp1".into();
+                    }
+                    break;
+                }
+            }
+
+            let is_open = exit_price.is_none() && next_event.is_none();
+            let exit_p = match exit_price {
+                Some(p) => p,
+                None => match next_event {
+                    // Trend invalidation: flip closes the position at the
+                    // transition price (plan section 3.1 exit rule 4).
+                    Some(n) => {
+                        exit_reason = n.to_state.primary_label().to_string();
+                        n.price
+                    }
+                    None => {
+                        exit_reason = "OPEN".into();
+                        self.snapshots[upto].price
+                    }
+                },
             };
 
             // Position value = account equity * risk fraction * leverage
             let pos_val = equity * risk_frac * lev;
             let size_btc = pos_val / entry_p;
+            let margin_posted = pos_val / lev.max(1.0);
 
-            let pnl_usd = if direction == "LONG" {
+            let pnl_usd = if is_long {
                 (exit_p - entry_p) * size_btc
             } else {
                 (entry_p - exit_p) * size_btc
             };
-
-            let margin_pnl_pct = if pos_val > 0.0 { (pnl_usd / (pos_val / lev)) * 100.0 } else { 0.0 };
-
-            realized_pnl += pnl_usd;
-            equity += pnl_usd;
-
-            if equity > max_eq {
-                max_eq = equity;
-            }
-            let dd = (max_eq - equity) / max_eq * 100.0;
-            if dd > max_dd_pct {
-                max_dd_pct = dd;
-            }
-
-            if pnl_usd >= 0.0 {
-                wins += 1;
-                gross_win += pnl_usd;
+            let margin_pnl_pct = if margin_posted > 0.0 {
+                (pnl_usd / margin_posted) * 100.0
             } else {
-                losses += 1;
-                gross_loss += pnl_usd.abs();
-            }
-
-            let exit_reason = if idx + 1 >= self.events.len() {
-                "OPEN".to_string()
-            } else if margin_pnl_pct >= margin_tp_pct {
-                "tp1".to_string()
-            } else if margin_pnl_pct <= -margin_sl_pct {
-                "SL".to_string()
-            } else {
-                self.events[idx + 1].to_state.primary_label().to_string()
+                0.0
             };
+            peak_margin_pct = peak_margin_pct.max(margin_pnl_pct.max(0.0));
+
+            if is_open {
+                unrealized_pnl += pnl_usd;
+            } else {
+                realized_pnl += pnl_usd;
+                equity += pnl_usd;
+
+                if equity > max_eq {
+                    max_eq = equity;
+                }
+                let dd = (max_eq - equity) / max_eq * 100.0;
+                if dd > max_dd_pct {
+                    max_dd_pct = dd;
+                }
+
+                if pnl_usd >= 0.0 {
+                    wins += 1;
+                    gross_win += pnl_usd;
+                } else {
+                    losses += 1;
+                    gross_loss += pnl_usd.abs();
+                }
+            }
 
             trades.push(SimulatedTrade {
-                index: (idx + 1) as u32,
+                index: trades.len() as u32 + 1,
                 timestamp_str: ev.timestamp_str.clone(),
                 direction: direction.to_string(),
                 entry_price: entry_p,
@@ -303,6 +425,7 @@ impl App {
                 leverage: lev,
                 pnl_usd,
                 margin_pnl_pct,
+                peak_margin_pct,
                 exit_reason,
             });
         }
@@ -313,9 +436,9 @@ impl App {
 
         let stats = LivePaperStats {
             initial_capital: initial_cap,
-            current_equity: equity,
+            current_equity: equity + unrealized_pnl,
             realized_pnl,
-            unrealized_pnl: 0.0,
+            unrealized_pnl,
             total_trades: total,
             wins,
             losses,
@@ -327,24 +450,6 @@ impl App {
         };
 
         (trades, stats)
-    }
-
-    pub fn rebuild_paper_trades(&mut self) {
-        let (trades, stats) = self.simulate_trades();
-        self.paper_trades = trades.iter().map(|t| PaperTradeRecord {
-            trade_id: format!("TRD-{:04}", t.index),
-            timestamp_str: t.timestamp_str.clone(),
-            symbol: self.symbol.clone(),
-            direction: t.direction.clone(),
-            entry_price: t.entry_price,
-            exit_price: t.exit_price,
-            size_btc: t.size_btc,
-            leverage: t.leverage,
-            pnl_usd: t.pnl_usd,
-            pnl_pct: t.margin_pnl_pct,
-            exit_reason: t.exit_reason.clone(),
-        }).collect();
-        self.paper_stats = stats;
     }
 
     pub fn select_next_config(&mut self) {
@@ -433,8 +538,7 @@ impl App {
             }
             _ => {}
         }
-        self.rebuild_paper_trades();
-        self.rebuild_hypervelocity_trades();
+        self.rebuild_trade_state();
     }
 
     pub fn increase_config_value(&mut self) {
@@ -459,8 +563,7 @@ impl App {
             }
             _ => {}
         }
-        self.rebuild_paper_trades();
-        self.rebuild_hypervelocity_trades();
+        self.rebuild_trade_state();
     }
 
     pub fn decrease_config_value(&mut self) {
@@ -488,34 +591,56 @@ impl App {
             }
             _ => {}
         }
-        self.rebuild_paper_trades();
-        self.rebuild_hypervelocity_trades();
+        self.rebuild_trade_state();
     }
 
     // -----------------------------------------------------------------------
-    // Hypervelocity methods
+    // Trade state (paper journal + hypervelocity feeds)
     // -----------------------------------------------------------------------
 
-    pub fn rebuild_hypervelocity_trades(&mut self) {
+    /// Run the playhead-aware simulation once and materialise every derived
+    /// feed: paper journal, paper stats, hypervelocity trade tape, equity
+    /// curve, directional-run tracking, and the live position panel.
+    pub fn rebuild_trade_state(&mut self) {
         let (trades, stats) = self.simulate_trades();
         let fill_label = self.config.fill_mode.label().to_string();
 
-        // Build equity history from the simulated trade stream
+        self.paper_trades = trades
+            .iter()
+            .map(|t| PaperTradeRecord {
+                trade_id: format!("TRD-{:04}", t.index),
+                timestamp_str: t.timestamp_str.clone(),
+                symbol: self.symbol.clone(),
+                direction: t.direction.clone(),
+                entry_price: t.entry_price,
+                exit_price: t.exit_price,
+                size_btc: t.size_btc,
+                leverage: t.leverage,
+                pnl_usd: t.pnl_usd,
+                pnl_pct: t.margin_pnl_pct,
+                exit_reason: t.exit_reason.clone(),
+            })
+            .collect();
+
+        // Realised equity curve (open trade PnL stays unrealised)
         self.equity_history = vec![stats.initial_capital];
         let mut eq = stats.initial_capital;
         for t in &trades {
-            eq += t.pnl_usd;
-            self.equity_history.push(eq);
+            if t.exit_reason != "OPEN" {
+                eq += t.pnl_usd;
+                self.equity_history.push(eq);
+            }
         }
 
-        // Build hypervelocity trade list with directional-run tracking
-        // and live position state derived from most recent trade
+        // Hypervelocity trade tape with directional-run tracking and the
+        // live position derived from the most recent (possibly open) trade
         self.hv_trades.clear();
         let mut current_direction = String::from("FLAT");
         let mut run_idx: u32 = 0;
         let mut run_wins: u32 = 0;
         let mut run_pnl: f64 = 0.0;
         let mut last_pos: Option<ActivePosition> = None;
+        let mut entry_eq = stats.initial_capital;
 
         for t in &trades {
             if t.direction != current_direction {
@@ -532,32 +657,28 @@ impl App {
             }
             run_pnl += t.pnl_usd;
 
-            let exit_label = match t.exit_reason.as_str() {
-                "tp1" | "tp2" | "SL" | "OPEN" => t.exit_reason.clone(),
-                other => other.to_string(),
-            };
-
             self.hv_trades.push(HypervelocityTrade {
                 index: t.index,
                 tick_closed: 0,
                 direction: t.direction.clone(),
                 pnl_usd: t.pnl_usd,
                 margin_pnl_pct: t.margin_pnl_pct,
-                exit_reason: exit_label.clone(),
+                exit_reason: t.exit_reason.clone(),
                 fill_type: fill_label.clone(),
             });
 
-            // Track live position: record the most recent trade as a candidate
-            // position. If the last trade's exit reason is "OPEN", it's still
-            // open; otherwise the position is closed.
             last_pos = Some(ActivePosition {
                 direction: t.direction.clone(),
                 entry_price: t.entry_price,
                 size_btc: t.size_btc,
                 leverage: t.leverage,
-                entry_equity: eq - t.pnl_usd,
-                peak_margin_pct: t.margin_pnl_pct.max(0.0),
+                entry_equity: entry_eq,
+                peak_margin_pct: t.peak_margin_pct,
             });
+
+            if t.exit_reason != "OPEN" {
+                entry_eq += t.pnl_usd;
+            }
         }
 
         // If the most recent trade is closed (exit_reason != "OPEN"), position is flat
@@ -579,6 +700,7 @@ impl App {
         self.run_position_index = run_idx;
         self.run_wins = run_wins;
         self.run_pnl = run_pnl;
+        self.paper_stats = stats;
     }
 
     pub fn update_book_state(&mut self) {
@@ -593,7 +715,9 @@ impl App {
         bs.spread_bps = spread_bps;
         bs.opi = opi;
         bs.depth_ratio = bid_depth_ratio;
-        bs.microprice_delta_bps = 0.0;
+        // Microprice tilt derived from order-book pressure imbalance:
+        // positive OPI pulls the microprice toward the ask side.
+        bs.microprice_delta_bps = opi * spread_bps * 0.5;
 
         let spread_ok = spread_bps <= 5.0;
         let depth_ok = bid_depth_ratio >= 0.5 && bid_depth_ratio <= 2.0;
@@ -611,6 +735,9 @@ impl App {
         let base_size = volume.max(0.5);
         let mid = price;
 
+        let old_bids: Vec<f64> = bs.bid_levels.iter().map(|l| l.size).collect();
+        let old_asks: Vec<f64> = bs.ask_levels.iter().map(|l| l.size).collect();
+
         bs.bid_levels.clear();
         bs.ask_levels.clear();
 
@@ -623,9 +750,9 @@ impl App {
             let bid_sz = base_size * bid_depth_ratio * (1.0 - i as f64 * 0.18).max(0.1);
             let ask_sz = base_size / bid_depth_ratio.max(0.1) * (1.0 - i as f64 * 0.18).max(0.1);
 
-            // Check if this level's size changed vs previous value
-            let old_bid = bs.bid_levels.get(i).map(|l| l.size).unwrap_or(0.0);
-            let old_ask = bs.ask_levels.get(i).map(|l| l.size).unwrap_or(0.0);
+            // Flash a level only when its size actually moved vs the prior tick
+            let old_bid = old_bids.get(i).copied().unwrap_or(0.0);
+            let old_ask = old_asks.get(i).copied().unwrap_or(0.0);
 
             bid_changes.push(if (bid_sz - old_bid).abs() > old_bid.max(0.001) * 0.01 { now } else { bs.bid_last_change.get(i).copied().unwrap_or(0) });
             ask_changes.push(if (ask_sz - old_ask).abs() > old_ask.max(0.001) * 0.01 { now } else { bs.ask_last_change.get(i).copied().unwrap_or(0) });
@@ -659,13 +786,15 @@ impl App {
         let snap = self.current_snapshot();
         let rsi_val = snap.rsi;
         let funding_z = snap.funding_zscore;
-        let is_regime_active = snap.state == RegimeState::BullMomentum || snap.state == RegimeState::BearMomentum || snap.long_weight > 0.0 || snap.short_weight > 0.0;
+        // EMA direction gate: directional momentum regime with MTF agreement
+        let is_directional = matches!(snap.state, RegimeState::BullMomentum | RegimeState::BearMomentum);
+        let mtf_aligned = snap.trend_1m == snap.trend_15m;
 
         vec![
-            is_regime_active,                           // EMA direction gate
-            rsi_val > 30.0 && rsi_val < 70.0,           // RSI filter
-            snap.bbwp_percentile > 20.0,                 // Chop/ADX (proxy: BBWP > coiling threshold)
-            snap.confidence > 0.3,                       // Momentum pulse (proxy: conviction)
+            is_directional && mtf_aligned,               // EMA direction gate
+            rsi_val > 30.0 && rsi_val < 70.0,            // RSI filter (avoid extremes)
+            snap.bbwp_percentile > 20.0,                 // Chop gate (proxy: BBWP above coiling floor)
+            snap.confidence > 0.55,                      // Momentum pulse (proxy: regime conviction)
             funding_z.abs() < 1.8,                       // Funding gate
             self.book_state.gate_ok,                     // Orderbook gate
         ]

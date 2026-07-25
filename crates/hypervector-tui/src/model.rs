@@ -72,6 +72,10 @@ pub struct RegimeSnapshot {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RegimeEvent {
     pub timestamp_str: String,
+    /// Index into the snapshot stream where this transition occurred
+    /// (playhead-aware filtering and bar-walk simulation anchor).
+    #[serde(default)]
+    pub snapshot_index: usize,
     pub from_state: RegimeState,
     pub to_state: RegimeState,
     pub trigger_reason: String,
@@ -194,17 +198,20 @@ pub struct EngineConfig {
 
 impl Default for EngineConfig {
     fn default() -> Self {
+        // Defaults mirror the reverse-engineered external strategy
+        // (docs/external plan section 4.6): 8% margin TP, 2% margin SL,
+        // 40x leverage, ~25% equity risk, maker fills, 63/37 split TP.
         Self {
             leverage_mode: LeverageMode::StaticMultiplier(40.0),
             static_leverage_value: 40.0,
-            tpsl_strategy: TpSlStrategy::FixedPercentage { tp_pct: 0.2, sl_pct: 0.05 },
+            tpsl_strategy: TpSlStrategy::HypervelocityTargetTrail { target_margin_pct: 8.0 },
             fixed_tp_pct: 0.2,
             fixed_sl_pct: 0.05,
             margin_tp_pct: 8.0,
             margin_sl_pct: 2.0,
-            risk_sizing_mode: RiskSizingMode::EquityPercentage(100.0),
+            risk_sizing_mode: RiskSizingMode::EquityPercentage(25.0),
             fixed_risk_usd: 250.0,
-            equity_risk_frac: 1.0,
+            equity_risk_frac: 0.25,
             fill_mode: FillMode::MakerOnly,
             split_position_mode: SplitPositionMode::Active { tp1_ratio: 0.63 },
             selected_option_index: 0,
@@ -268,6 +275,8 @@ pub struct SimulatedTrade {
     pub leverage: f64,
     pub pnl_usd: f64,
     pub margin_pnl_pct: f64,
+    /// Best favorable margin excursion observed during the trade's bar walk.
+    pub peak_margin_pct: f64,
     pub exit_reason: String,
 }
 
