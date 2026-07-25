@@ -9,7 +9,12 @@ import pandas as pd
 
 from hypervector.sweep.costs import CostModel, resolve_cost_model
 from hypervector.sweep.exits import ExitConfig, apply_exit_mode
-from hypervector.sweep.sizing import RiskConfig, conviction_series, risk_pct_from_conviction, size_frac_from_risk
+from hypervector.sweep.sizing import (
+    RiskConfig,
+    conviction_series,
+    risk_pct_from_conviction,
+    size_frac_from_risk,
+)
 
 REQUIRED_METRIC_KEYS = (
     "net_pnl",
@@ -44,6 +49,9 @@ def compute_trial_metrics(
     risk_cfg: RiskConfig | None = None,
     conviction: float | pd.Series | None = None,
     apply_costs: bool = True,
+    fixed_notional_fraction: float | None = None,
+    fixed_margin_fraction: float | None = None,
+    strategy_managed_exits: bool = False,
 ) -> dict[str, Any]:
     """VectorBT portfolio with optional fees/slippage, TP/SL, risk sizing, funding drag."""
     import vectorbt as vbt
@@ -56,19 +64,39 @@ def compute_trial_metrics(
     entries = entries.reindex(close.index).fillna(False).astype(bool)
     exits = exits.reindex(close.index).fillna(False).astype(bool)
 
-    work = df if df is not None else pd.DataFrame({"close": close, "high": close, "low": close})
+    work = (
+        df
+        if df is not None
+        else pd.DataFrame({"close": close, "high": close, "low": close})
+    )
     work = work.reindex(close.index)
 
-    entries, exits, sl_frac, tp_frac = apply_exit_mode(
-        work, entries, exits, direction=direction, cfg=exit_cfg
-    )
+    if strategy_managed_exits:
+        sl_frac = pd.Series(np.nan, index=close.index, dtype=float)
+        tp_frac = pd.Series(np.nan, index=close.index, dtype=float)
+    else:
+        entries, exits, sl_frac, tp_frac = apply_exit_mode(
+            work, entries, exits, direction=direction, cfg=exit_cfg
+        )
 
     conv = conviction_series(close.index, conviction, risk_cfg)
     risk_pct = risk_pct_from_conviction(conv, risk_cfg)
-    size = size_frac_from_risk(risk_pct, sl_frac, risk_cfg)
+    if fixed_notional_fraction is None:
+        size = size_frac_from_risk(risk_pct, sl_frac, risk_cfg)
+        portfolio_cash = init_cash
+    else:
+        if fixed_notional_fraction <= 0.0:
+            raise ValueError("fixed_notional_fraction must be positive")
+        size = pd.Series(fixed_notional_fraction, index=close.index, dtype=float)
+        portfolio_cash = init_cash * fixed_notional_fraction
 
     # Infer bar frequency for accurate Sharpe ratio annualization (Bug B4)
-    if freq == "1min" and df is not None and len(df) > 1 and isinstance(df.index, pd.DatetimeIndex):
+    if (
+        freq == "1min"
+        and df is not None
+        and len(df) > 1
+        and isinstance(df.index, pd.DatetimeIndex)
+    ):
         step_s = int((df.index[1] - df.index[0]).total_seconds())
         if step_s >= 3600:
             freq = f"{step_s // 3600}h"
@@ -81,7 +109,7 @@ def compute_trial_metrics(
     # VectorBT: use size_type="value" with size in USD notional to support leverage > 1.0 (Bug B2)
     notional_size = (size * init_cash).to_numpy(dtype=float)
     common: dict[str, Any] = dict(
-        init_cash=init_cash,
+        init_cash=portfolio_cash,
         freq=freq,
         fees=fees,
         slippage=slippage,
@@ -118,9 +146,9 @@ def compute_trial_metrics(
     else:
         raise ValueError(f"direction must be long|short, got {direction}")
 
-    total_return = float(pf.total_return())
-    final_value = float(pf.final_value())
-    net_pnl = final_value - init_cash
+    virtual_final_value = float(pf.final_value())
+    net_pnl = virtual_final_value - portfolio_cash
+    total_return = net_pnl / init_cash if init_cash else 0.0
 
     try:
         sharpe = float(pf.sharpe_ratio())
@@ -131,6 +159,8 @@ def compute_trial_metrics(
 
     try:
         max_dd = float(pf.max_drawdown())
+        if fixed_notional_fraction is not None:
+            max_dd *= fixed_notional_fraction
         if not np.isfinite(max_dd):
             max_dd = 0.0
     except Exception:
@@ -167,14 +197,20 @@ def compute_trial_metrics(
                 funding_cost = _estimate_funding(records, cost, close)
                 net_pnl -= funding_cost
                 final_adj = init_cash + net_pnl
-                total_return = (final_adj / init_cash) - 1.0 if init_cash else total_return
+                total_return = (
+                    (final_adj / init_cash) - 1.0 if init_cash else total_return
+                )
         except Exception:
             wins = losses = 0
             win_pct = 0.0
 
-    avg_risk = float(pd.Series(risk_pct).mean()) if trade_count else float(
-        risk_pct_from_conviction(risk_cfg.default_conviction, risk_cfg)
+    avg_risk = (
+        float(pd.Series(risk_pct).mean())
+        if trade_count
+        else float(risk_pct_from_conviction(risk_cfg.default_conviction, risk_cfg))
     )
+    if fixed_margin_fraction is not None:
+        avg_risk = fixed_margin_fraction
 
     return {
         "net_pnl": float(net_pnl),
@@ -191,10 +227,19 @@ def compute_trial_metrics(
         "init_cash": float(init_cash),
         "fees": fees,
         "slippage_bps": cost.slippage_bps if apply_costs else 0.0,
+        "position_notional_fraction": fixed_notional_fraction,
+        "strategy_managed_exits": strategy_managed_exits,
+        "sizing_model": (
+            "fixed_initial_equity_proxy"
+            if fixed_notional_fraction is not None
+            else "conviction_stop_risk"
+        ),
     }
 
 
-def _estimate_funding(records: pd.DataFrame, cost: CostModel, close: pd.Series) -> float:
+def _estimate_funding(
+    records: pd.DataFrame, cost: CostModel, close: pd.Series
+) -> float:
     """Sum |notional| * funding over hold time from trade records if available."""
     total = 0.0
     cols = {c.lower(): c for c in records.columns}

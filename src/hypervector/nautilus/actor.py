@@ -20,6 +20,7 @@ from nautilus_trader.trading.strategy import Strategy
 from hypervector.nautilus.load_export import StrategyLoadout
 from hypervector.nautilus.signals import SignalIntent, last_bar_intent
 from hypervector.nautilus.sizing import exit_config_from_loadout, position_size_frac
+from hypervector.strategies.hypervelocity_contract import is_hypervelocity_strategy
 from hypervector.sweep.exits import stop_distance_frac, tp_distance_frac
 
 DEFAULT_MAX_LOOKBACK = 2000
@@ -28,6 +29,10 @@ EXECUTION_MODE = "phase2_historical"
 Action = Literal["enter_long", "enter_short", "close", "hold"]
 
 _OHLCV_COLS = ("open", "high", "low", "close", "volume")
+
+
+def _uses_strategy_exits_only(strategy_name: str) -> bool:
+    return is_hypervelocity_strategy(strategy_name)
 
 
 class HypervectorStrategyConfig(StrategyConfig, frozen=True):
@@ -382,7 +387,10 @@ class HypervectorStrategy(Strategy):
         side = OrderSide.BUY if direction == "long" else OrderSide.SELL
         mode = (self.config.exits or {}).get("mode", "atr")
 
-        if mode in ("fixed_rr", "atr") and tp_frac is not None and stop_frac > 0:
+        uses_bracket = not _uses_strategy_exits_only(self.config.strategy_name)
+        uses_bracket &= mode in ("fixed_rr", "atr")
+        uses_bracket &= tp_frac is not None and stop_frac > 0
+        if uses_bracket:
             self._submit_bracket(
                 instrument_id=instrument_id,
                 side=side,
@@ -492,9 +500,7 @@ class HypervectorStrategy(Strategy):
                 )
         self._pending_entry = False
 
-    def _make_qty(
-        self, instrument_id: InstrumentId, qty_raw: float
-    ) -> Quantity | None:
+    def _make_qty(self, instrument_id: InstrumentId, qty_raw: float) -> Quantity | None:
         if qty_raw <= 0:
             return None
         try:

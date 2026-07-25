@@ -22,6 +22,7 @@ from hypervector.nautilus.actor import (
     _bar_ohlcv_record,
     _bars_to_ohlcv_df,
     _stop_tp_fracs,
+    _uses_strategy_exits_only,
     config_from_loadout,
 )
 from hypervector.nautilus.load_export import StrategyLoadout, load_strategy_loadout
@@ -158,9 +159,16 @@ def test_config_fills_exits_mode_from_exit_mode_when_exits_sparse():
         exits={"sl_pct": 0.02, "rr": 3.0},
         export_dir=Path("/tmp"),
     )
-    cfg = config_from_loadout(loadout, bar_type="BTC-PERP.HYPERLIQUID-1-MINUTE-LAST-EXTERNAL")
+    cfg = config_from_loadout(
+        loadout, bar_type="BTC-PERP.HYPERLIQUID-1-MINUTE-LAST-EXTERNAL"
+    )
     assert cfg.exits["mode"] == "fixed_rr"
     assert cfg.exits["sl_pct"] == 0.02
+
+
+def test_hypervelocity_uses_only_strategy_emitted_tp_exit() -> None:
+    assert _uses_strategy_exits_only("hypervelocity_1m_scalper_long") is True
+    assert _uses_strategy_exits_only("crown_stack_long") is False
 
 
 def test_bar_ohlcv_record_and_buffer_to_df():
@@ -216,7 +224,9 @@ def test_action_from_intent_enter_when_flat():
     assert _action_from_intent(intent, is_flat=True, position_side=None) == "enter_long"
 
     intent_s = SignalIntent(direction="short", enter=True, exit=False, bar_index=0)
-    assert _action_from_intent(intent_s, is_flat=True, position_side=None) == "enter_short"
+    assert (
+        _action_from_intent(intent_s, is_flat=True, position_side=None) == "enter_short"
+    )
 
 
 def test_action_from_intent_hold_when_flat_no_enter():
@@ -231,9 +241,7 @@ def test_action_from_intent_close_on_exit_or_opposite():
     )
 
     opposite = SignalIntent(direction="short", enter=True, exit=False, bar_index=2)
-    assert (
-        _action_from_intent(opposite, is_flat=False, position_side="long") == "close"
-    )
+    assert _action_from_intent(opposite, is_flat=False, position_side="long") == "close"
 
     same = SignalIntent(direction="long", enter=True, exit=False, bar_index=3)
     assert _action_from_intent(same, is_flat=False, position_side="long") == "hold"

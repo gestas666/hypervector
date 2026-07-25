@@ -84,6 +84,14 @@ class ExplicitFillEngine:
     def position(self) -> PaperPosition:
         return self._position
 
+    def equity(self, *, mark_px: float) -> float:
+        """Return current paper equity including fees, funding, and open PnL."""
+        mark = float(mark_px)
+        if mark <= 0.0:
+            raise ValueError(f"mark_px must be positive, got {mark_px}")
+        unrealized = self._position.qty * (mark - self._position.avg_px)
+        return self._init_cash + self._position.realized_pnl + unrealized
+
     def apply_market_fill(
         self,
         *,
@@ -176,7 +184,9 @@ class ExplicitFillEngine:
             return skipped
 
         fee_usd = abs(fill_qty) * fill_px * self._cost_provider.trade_fee_rate()
-        self._update_position(side=side_n, qty=fill_qty, fill_px=fill_px, fee_usd=fee_usd)
+        self._update_position(
+            side=side_n, qty=fill_qty, fill_px=fill_px, fee_usd=fee_usd
+        )
 
         record = self._base_record(
             feed_ts=feed_ts,
@@ -203,7 +213,9 @@ class ExplicitFillEngine:
         append_paper_decision(self._data_root, record)
         return record
 
-    def apply_funding(self, *, feed_ts: Any, oracle_px: float, hours: float = 1.0) -> dict | None:
+    def apply_funding(
+        self, *, feed_ts: Any, oracle_px: float, hours: float = 1.0
+    ) -> dict | None:
         """Apply fractional/hourly funding on open position; return decision or None if flat."""
         pos = self._position
         if pos.qty == 0.0:
@@ -265,7 +277,7 @@ class ExplicitFillEngine:
             _unrealized = _qty * (mark_for_mtm - _avg)
         else:
             _unrealized = 0.0
-        _equity = float(getattr(self, "_init_cash", 10_000.0)) + _realized + _unrealized
+        _equity = self.equity(mark_px=mark_for_mtm)
         record: dict[str, Any] = {
             "execution_mode": self._execution_mode,
             "submitted": False,  # structural: never true in 4b
@@ -338,9 +350,9 @@ class ExplicitFillEngine:
         same_direction = (pos.qty > 0 and signed > 0) or (pos.qty < 0 and signed < 0)
         if same_direction:
             new_qty = pos.qty + signed
-            pos.avg_px = (
-                abs(pos.qty) * pos.avg_px + abs(signed) * fill_px
-            ) / abs(new_qty)
+            pos.avg_px = (abs(pos.qty) * pos.avg_px + abs(signed) * fill_px) / abs(
+                new_qty
+            )
             pos.qty = new_qty
             return
 

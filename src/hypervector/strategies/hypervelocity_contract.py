@@ -15,6 +15,18 @@ EntryDirection = Literal["long", "short"]
 _MARGIN_FRACTION = 0.70
 _LEVERAGE = 40.0
 _TARGET_MARGIN_PCT = 8.0
+_STRATEGY_NAMES = frozenset(
+    {
+        "hypervelocity_1m_scalper",
+        "hypervelocity_1m_scalper_long",
+        "hypervelocity_1m_scalper_short",
+    }
+)
+
+
+def is_hypervelocity_strategy(strategy_name: str) -> bool:
+    """Return whether a registry name uses the fixed Hypervelocity contract."""
+    return str(strategy_name) in _STRATEGY_NAMES
 
 
 def faithful_regime_config() -> RegimeClassifierConfig:
@@ -69,6 +81,11 @@ class HypervelocityContract:
     def target_price_fraction(self) -> float:
         """Return the unlevered price move required for the margin target."""
         return self.target_margin_pct / self.leverage / 100.0
+
+    @property
+    def notional_fraction(self) -> float:
+        """Return notional divided by equity for the fixed allocation."""
+        return self.margin_fraction * self.leverage
 
     def allocate(self, equity: float) -> HypervelocityAllocation:
         """Allocate 70% of positive equity as margin at 40x leverage."""

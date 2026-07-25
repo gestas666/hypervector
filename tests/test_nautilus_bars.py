@@ -40,6 +40,7 @@ def test_synthetic_btc_perp_instrument_is_crypto_perp_on_hyperliquid():
     assert isinstance(inst, CryptoPerpetual)
     assert str(inst.id) == "BTC-PERP.HYPERLIQUID"
     assert str(inst.id.venue) == "HYPERLIQUID"
+    assert float(inst.margin_init) == pytest.approx(0.025)
 
 
 def test_synthetic_btc_perp_instrument_sim_venue():
@@ -72,7 +73,9 @@ def test_dataframe_to_bars_from_fixture_ohlcv_no_network():
     assert all(isinstance(b, Bar) for b in bars)
     assert str(bars[0].bar_type) == bar_type
     # First fixture close is base_price with zero drift offset at t=0
-    assert float(bars[0].close) == pytest.approx(float(df["close"].iloc[0]), rel=0, abs=0.1)
+    assert float(bars[0].close) == pytest.approx(
+        float(df["close"].iloc[0]), rel=0, abs=0.1
+    )
     # Timestamps advance (ns)
     assert bars[1].ts_event > bars[0].ts_event
 

@@ -32,6 +32,26 @@ def test_buy_fill_pays_slippage_and_fee(tmp_path: Path):
     assert eng.position.qty == 0.01
 
 
+def test_engine_equity_includes_realized_fees_and_current_mark(tmp_path: Path):
+    eng = ExplicitFillEngine(
+        tmp_path / "data_equity",
+        cost_provider=CostProvider(fee_tier=0, slippage_bps=0.0),
+        run_id="r1",
+        export_id="e1",
+        strategy_name="hypervelocity_1m_scalper_long",
+        symbol="BTC",
+        timeframe="1m",
+        conviction=0.5,
+        init_cash=10_000.0,
+    )
+    eng.apply_market_fill(
+        feed_ts="t0", action="enter_long", side="buy", qty=1.0, mark_px=100.0
+    )
+
+    expected = 10_000.0 + eng.position.realized_pnl + 10.0
+    assert eng.equity(mark_px=110.0) == expected
+
+
 def test_funding_on_open_long_drag(tmp_path: Path):
     cp = CostProvider(fee_tier=0, funding_rate_hourly=0.0001)
     eng = ExplicitFillEngine(

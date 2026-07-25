@@ -12,7 +12,15 @@ import pandas as pd
 
 from hypervector.nautilus.load_export import StrategyLoadout
 from hypervector.sweep.exits import ExitConfig
-from hypervector.sweep.sizing import RiskConfig, risk_pct_from_conviction, size_frac_from_risk
+from hypervector.sweep.sizing import (
+    RiskConfig,
+    risk_pct_from_conviction,
+    size_frac_from_risk,
+)
+from hypervector.strategies.hypervelocity_contract import (
+    HypervelocityContract,
+    is_hypervelocity_strategy,
+)
 
 
 def exit_config_from_loadout(loadout: StrategyLoadout) -> ExitConfig:
@@ -56,6 +64,8 @@ def position_size_frac(
     size is fraction-of-equity via existing sizing helpers.
     """
     del equity  # reserved for future notional conversion
+    if is_hypervelocity_strategy(loadout.strategy_name):
+        return HypervelocityContract().notional_fraction
     cfg = _risk_config_from_loadout(loadout)
     risk_pct = float(risk_pct_from_conviction(float(conviction), cfg))
     stop = pd.Series([float(stop_frac)])

@@ -13,8 +13,10 @@ from hypervector.export.phase2 import export_candidate
 from hypervector.paper.session import (
     PaperSession,
     PaperSessionResult,
+    _entry_qty,
     run_paper_session_offline,
 )
+from hypervector.nautilus.load_export import load_strategy_loadout
 
 
 def _write_strict_export(root: Path, *, strategy: str = "crown_stack_short") -> Path:
@@ -184,6 +186,26 @@ def test_offline_session_no_trade_before_two_bars(tmp_path: Path):
     )
     assert result.bars_processed == 1
     assert result.fills_count == 0
+
+
+def test_hypervelocity_paper_qty_is_70pct_margin_at_40x(tmp_path: Path) -> None:
+    export = _write_strict_export(
+        tmp_path,
+        strategy="hypervelocity_1m_scalper_long",
+    )
+    loadout = load_strategy_loadout(export)
+    bars = fixture_ohlcv(n_bars=20)
+
+    qty = _entry_qty(
+        df=bars,
+        loadout=loadout,
+        exits=dict(loadout.exits or {}),
+        equity=10_000.0,
+        conviction=0.0,
+        mark_px=50_000.0,
+    )
+
+    assert qty == pytest.approx(5.6)
 
 
 def test_offline_session_rejects_bad_ohlcv(tmp_path: Path):

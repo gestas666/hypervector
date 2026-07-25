@@ -159,4 +159,6 @@ def test_hypervelocity_grid_runs():
     ok = [r for r in results if r.status == "ok"]
     assert ok
     assert "net_pnl" in ok[0].metrics
+    assert ok[0].metrics["position_notional_fraction"] == 28.0
+    assert ok[0].metrics["strategy_managed_exits"] is True
     clear_registry()

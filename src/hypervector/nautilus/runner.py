@@ -32,6 +32,7 @@ from hypervector.nautilus.actor import (
     HypervectorStrategy,
     config_from_loadout,
 )
+from hypervector.strategies.hypervelocity_contract import is_hypervelocity_strategy
 from hypervector.nautilus.bars import (
     bar_type_from_loadout,
     dataframe_to_bars,
@@ -53,6 +54,10 @@ class Phase2Result:
     pnl: float
     report_path: Path
     loadout_summary: dict[str, Any]
+
+
+def _default_leverage(loadout: StrategyLoadout) -> int:
+    return 40 if is_hypervelocity_strategy(loadout.strategy_name) else 1
 
 
 def run_phase2_backtest(
@@ -113,7 +118,11 @@ def run_phase2_backtest(
     bar_type = bar_type_from_loadout(loadout, venue=venue)
     bars = dataframe_to_bars(df, bar_type, instrument)
 
-    init_cash = float(loadout.init_cash) if loadout.init_cash is not None else _DEFAULT_INIT_CASH
+    init_cash = (
+        float(loadout.init_cash)
+        if loadout.init_cash is not None
+        else _DEFAULT_INIT_CASH
+    )
     strategy_config = config_from_loadout(
         loadout,
         bar_type=bar_type,
@@ -141,7 +150,7 @@ def run_phase2_backtest(
             account_type=AccountType.MARGIN,
             starting_balances=[Money(init_cash, USDT)],
             base_currency=USDT,
-            default_leverage=Decimal(1),
+            default_leverage=Decimal(_default_leverage(loadout)),
         )
         engine.add_instrument(instrument)
         engine.add_data(bars)

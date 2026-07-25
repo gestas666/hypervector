@@ -9,7 +9,12 @@ import pytest
 
 from hypervector.data.sources import fixture_ohlcv
 from hypervector.export.phase2 import export_candidate
-from hypervector.nautilus.runner import Phase2Result, run_phase2_backtest
+from hypervector.nautilus.load_export import StrategyLoadout
+from hypervector.nautilus.runner import (
+    Phase2Result,
+    _default_leverage,
+    run_phase2_backtest,
+)
 from hypervector.strategies import register_all_strategies
 
 
@@ -128,6 +133,26 @@ def test_run_phase2_backtest_creates_data_layout(tmp_path: Path) -> None:
     assert (data_root / "nautilus" / "backtest").is_dir()
     assert (data_root / "cache").is_dir()
     assert (data_root / "exports").is_dir()
+
+
+def test_backend_arms_40x_sim_leverage_only_for_hypervelocity() -> None:
+    base = {
+        "role": None,
+        "params": {},
+        "meta": {},
+        "costs": None,
+        "risk": None,
+        "exit_mode": None,
+        "exits": None,
+        "export_dir": Path("/tmp"),
+    }
+    hypervelocity = StrategyLoadout(
+        strategy_name="hypervelocity_1m_scalper_short", **base
+    )
+    ordinary = StrategyLoadout(strategy_name="ma_cross_long", **base)
+
+    assert _default_leverage(hypervelocity) == 40
+    assert _default_leverage(ordinary) == 1
 
 
 def test_run_phase2_backtest_respects_max_bars(tmp_path: Path) -> None:

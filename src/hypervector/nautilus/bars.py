@@ -65,8 +65,8 @@ def synthetic_btc_perp_instrument(
         min_notional=Money(10.00, USDT),
         max_price=Price.from_str("1000000.0"),
         min_price=Price.from_str("0.1"),
-        margin_init=Decimal("0.05"),
-        margin_maint=Decimal("0.03"),
+        margin_init=Decimal("0.025"),
+        margin_maint=Decimal("0.015"),
         maker_fee=Decimal("0.0002"),
         taker_fee=Decimal("0.0005"),
         ts_event=0,
@@ -179,7 +179,9 @@ def _to_wrangler_ohlcv(df: pd.DataFrame) -> pd.DataFrame:
     elif not isinstance(work.index, pd.DatetimeIndex):
         raise ValueError("OHLCV frame needs a timestamp column or DatetimeIndex")
     else:
-        work.index = pd.DatetimeIndex(pd.to_datetime(work.index, utc=True), name="timestamp")
+        work.index = pd.DatetimeIndex(
+            pd.to_datetime(work.index, utc=True), name="timestamp"
+        )
 
     missing = [c for c in _OHLCV if c not in work.columns]
     if missing:

@@ -390,7 +390,7 @@ class PaperSession:
                 df=df,
                 loadout=self.loadout,
                 exits=self.exits,
-                equity=self.equity,
+                equity=self.engine.equity(mark_px=mark_px),
                 conviction=cv.conviction,
                 mark_px=mark_px,
             )

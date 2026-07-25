@@ -9,6 +9,7 @@ from hypervector.strategies.hypervelocity_contract import (
     HypervelocityContract,
     entry_direction_for,
     faithful_regime_config,
+    is_hypervelocity_strategy,
 )
 
 
@@ -55,6 +56,7 @@ def test_fixed_contract_converts_equity_and_margin_target() -> None:
     assert contract.margin_fraction == pytest.approx(0.70)
     assert contract.leverage == pytest.approx(40.0)
     assert contract.target_margin_pct == pytest.approx(8.0)
+    assert contract.notional_fraction == pytest.approx(28.0)
     assert contract.order_type == "limit"
     assert contract.time_in_force == "post_only"
 
@@ -66,6 +68,19 @@ def test_faithful_regime_config_matches_zero_false_range_training_candidate() ->
     assert config.minimum_trend_gap_bps == pytest.approx(0.5)
     assert config.breakout_clearance_bps == pytest.approx(8.0)
     assert config.breakout_volume_multiple == pytest.approx(2.5)
+
+
+@pytest.mark.parametrize(
+    ("name", "expected"),
+    [
+        ("hypervelocity_1m_scalper", True),
+        ("hypervelocity_1m_scalper_long", True),
+        ("hypervelocity_1m_scalper_short", True),
+        ("crown_stack_long", False),
+    ],
+)
+def test_hypervelocity_strategy_identity_is_explicit(name: str, expected: bool) -> None:
+    assert is_hypervelocity_strategy(name) is expected
 
 
 @pytest.mark.parametrize("equity", [0.0, -1.0])

@@ -9,6 +9,10 @@ from typing import Any
 import pandas as pd
 
 from hypervector.strategies.registry import StrategySpec
+from hypervector.strategies.hypervelocity_contract import (
+    HypervelocityContract,
+    is_hypervelocity_strategy,
+)
 from hypervector.sweep.costs import CostModel, resolve_cost_model
 from hypervector.sweep.exits import ExitConfig
 from hypervector.sweep.metrics import compute_trial_metrics
@@ -105,6 +109,8 @@ def run_grid_search(
             entries, exits, direction = strategy.build_signals(df, **build_kwargs)
             # Optional per-bar conviction from strategy params
             conv = params.get("conviction", conviction)
+            faithful = is_hypervelocity_strategy(strategy.name)
+            contract = HypervelocityContract() if faithful else None
             metrics = compute_trial_metrics(
                 close,
                 entries,
@@ -117,6 +123,13 @@ def run_grid_search(
                 risk_cfg=risk_cfg,
                 conviction=conv,
                 apply_costs=apply_costs,
+                fixed_notional_fraction=(
+                    contract.notional_fraction if contract is not None else None
+                ),
+                fixed_margin_fraction=(
+                    contract.margin_fraction if contract is not None else None
+                ),
+                strategy_managed_exits=faithful,
             )
             results.append(
                 TrialResult(
@@ -143,7 +156,11 @@ def run_grid_search(
     def sort_key(t: TrialResult) -> tuple:
         ok = 1 if t.status == "ok" else 0
         p = t.metrics.get(primary, float("-inf")) if t.status == "ok" else float("-inf")
-        s = t.metrics.get(secondary, float("-inf")) if t.status == "ok" else float("-inf")
+        s = (
+            t.metrics.get(secondary, float("-inf"))
+            if t.status == "ok"
+            else float("-inf")
+        )
         return (ok, p, s)
 
     results.sort(key=sort_key, reverse=True)
