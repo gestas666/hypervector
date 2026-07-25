@@ -61,6 +61,50 @@ def test_entry_alignment_reports_false_range_without_aborting() -> None:
     assert result.no_entry_state_at_entries == 1
 
 
+def test_entry_alignment_reports_resting_order_lookback_separately() -> None:
+    decisions = _decisions()
+    positions = pd.DataFrame(
+        {
+            "open_time_utc": [decisions.index[3]],
+            "side": ["short"],
+            "symbol": ["BTC"],
+        }
+    )
+
+    result = evaluate_entry_alignment(decisions, positions, lookback_minutes=(0, 2))
+
+    assert result.direction_recall_by_lookback_pct == {"0m": 0.0, "2m": 100.0}
+    assert result.range_only_entries_by_lookback == {"0m": 1, "2m": 0}
+
+
+def test_zero_minute_window_uses_last_completed_bar_before_fill_seconds() -> None:
+    decisions = _decisions()
+    positions = pd.DataFrame(
+        {
+            "open_time_utc": [decisions.index[2] + pd.Timedelta(seconds=30)],
+            "side": ["short"],
+            "symbol": ["BTC"],
+        }
+    )
+
+    result = evaluate_entry_alignment(decisions, positions, lookback_minutes=(0,))
+
+    assert result.direction_recall_by_lookback_pct == {"0m": 100.0}
+
+
+def test_alignment_normalizes_microsecond_fill_against_millisecond_bars() -> None:
+    decisions = _decisions()
+    decisions.index = decisions.index.as_unit("ms")
+    fill = pd.Timestamp("2026-01-01T00:02:30.123456Z")
+    positions = pd.DataFrame(
+        {"open_time_utc": [fill], "side": ["short"], "symbol": ["BTC"]}
+    )
+
+    result = evaluate_entry_alignment(decisions, positions, lookback_minutes=(0,))
+
+    assert result.direction_recall_by_lookback_pct == {"0m": 100.0}
+
+
 def test_breakout_quality_reports_target_misses() -> None:
     decisions = _decisions()
     decisions["primary_regime"] = "RANGE"

@@ -20,6 +20,8 @@ class EntryAlignmentReport:
     direction_recall_pct: float
     false_range_at_entries: int
     no_entry_state_at_entries: int
+    direction_recall_by_lookback_pct: dict[str, float]
+    range_only_entries_by_lookback: dict[str, int]
 
 
 @dataclass(frozen=True)
@@ -82,25 +84,63 @@ def _decision_directions(rows: pd.DataFrame) -> pd.Series:
     )
 
 
+def _window_alignment(
+    decisions: pd.DataFrame,
+    positions: pd.DataFrame,
+    minutes: int,
+) -> tuple[int, int]:
+    matches = 0
+    range_only = 0
+    normalized_index = decisions.index.as_unit("ns")
+    for row in positions.itertuples(index=False):
+        timestamp = pd.Timestamp(row.event_time).as_unit("ns")
+        end_position = int(normalized_index.searchsorted(timestamp, side="right")) - 1
+        if end_position < 0:
+            continue
+        end_time = decisions.index[end_position]
+        start = end_time - pd.Timedelta(minutes=minutes)
+        window = decisions.loc[(decisions.index >= start) & (decisions.index <= end_time)]
+        predicted = set(_decision_directions(window).dropna().astype(str))
+        matches += int(str(row.side).lower() in predicted)
+        range_only += int(
+            len(window) > 0
+            and window["primary_regime"].eq(PrimaryRegime.RANGE.value).all()
+        )
+    return matches, range_only
+
+
 def evaluate_entry_alignment(
     decisions: pd.DataFrame,
     positions: pd.DataFrame,
+    *,
+    lookback_minutes: tuple[int, ...] = (0, 1, 5, 10, 30),
 ) -> EntryAlignmentReport:
     """Measure whether candidate states recover recorded entry directions."""
     times = _position_times(positions)
-    unique = positions.assign(_time=times).drop_duplicates(["_time", "side"])
-    aligned = decisions.reindex(pd.DatetimeIndex(unique["_time"]), method="ffill")
+    unique = positions.assign(event_time=times).drop_duplicates(["event_time", "side"])
+    aligned = decisions.reindex(pd.DatetimeIndex(unique["event_time"]), method="ffill")
     wanted = unique["side"].astype(str).str.lower().to_numpy()
     predicted = _decision_directions(aligned).to_numpy()
     primary = aligned["primary_regime"]
     matches = int((predicted == wanted).sum())
     total = len(unique)
+    by_window = {
+        minutes: _window_alignment(decisions, unique, minutes)
+        for minutes in lookback_minutes
+    }
     return EntryAlignmentReport(
         total_entries=total,
         direction_matches=matches,
         direction_recall_pct=(100.0 * matches / total) if total else 0.0,
         false_range_at_entries=int(primary.eq(PrimaryRegime.RANGE.value).sum()),
         no_entry_state_at_entries=int(pd.isna(predicted).sum()),
+        direction_recall_by_lookback_pct={
+            f"{minutes}m": (100.0 * values[0] / total) if total else 0.0
+            for minutes, values in by_window.items()
+        },
+        range_only_entries_by_lookback={
+            f"{minutes}m": values[1] for minutes, values in by_window.items()
+        },
     )
 
 

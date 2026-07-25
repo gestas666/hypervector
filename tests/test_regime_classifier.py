@@ -144,11 +144,24 @@ def test_confirmed_1m_and_5m_breakout_overrides_stale_15m() -> None:
     assert set(result.reason) == {"confirmed_1m_5m_breakout"}
 
 
-def test_5m_range_remains_no_entry_state() -> None:
+def test_1m_direction_can_resolve_non_directional_5m_state() -> None:
     index = pd.date_range("2026-01-01", periods=3, freq="1min", tz="UTC")
 
     result = compose_regimes(
         _state_frame(index, "TREND_UP"),
+        _state_frame(index, "RANGE"),
+        _state_frame(index, "TREND_UP"),
+    )
+
+    assert set(result.primary_regime) == {"TREND_UP"}
+    assert set(result.reason) == {"1m_directional_fallback"}
+
+
+def test_range_remains_when_1m_and_5m_are_non_directional() -> None:
+    index = pd.date_range("2026-01-01", periods=3, freq="1min", tz="UTC")
+
+    result = compose_regimes(
+        _state_frame(index, "RANGE"),
         _state_frame(index, "RANGE"),
         _state_frame(index, "TREND_UP"),
     )
