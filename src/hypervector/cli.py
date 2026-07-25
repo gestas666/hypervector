@@ -58,6 +58,7 @@ CLI_COMMANDS: tuple[str, ...] = (
     "regime",
     "hypervelocity-regime-eval",
     "hypervelocity-regime-autotune",
+    "hypervelocity-maker-replay",
     "sweep-up",
     "sweep-down",
     "report",
@@ -1175,6 +1176,51 @@ def cmd_hypervelocity_regime_autotune(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_hypervelocity_maker_replay(args: argparse.Namespace) -> int:
+    """Replay backend decisions against recorded post-only book paths."""
+    from hypervector.data.book_align import load_l2_jsonl
+    from hypervector.regime.composite import classify_multitimeframe
+    from hypervector.research.maker_replay import MakerReplayConfig, replay_maker_orders
+    from hypervector.strategies.hypervelocity_contract import faithful_regime_config
+
+    bars, provenance = _load_bars(args)
+    indexed = bars.copy()
+    if not isinstance(indexed.index, pd.DatetimeIndex):
+        indexed.index = pd.DatetimeIndex(pd.to_datetime(indexed["timestamp"], utc=True))
+    decisions = classify_multitimeframe(indexed, config=faithful_regime_config())
+    books = [load_l2_jsonl(Path(path)) for path in args.book_path]
+    book = pd.concat(books, ignore_index=True).sort_values("ts_ms")
+    rules = ("touch", "through") if args.fill_rule == "both" else (args.fill_rule,)
+    reports = {
+        rule: replay_maker_orders(
+            book,
+            decisions,
+            MakerReplayConfig(
+                initial_equity=args.initial_equity,
+                maker_fee_rate=args.maker_fee_rate,
+                fill_rule=rule,
+                tick_size=args.tick_size,
+                entry_ttl_seconds=args.entry_ttl_seconds,
+            ),
+        ).to_dict()
+        for rule in rules
+    }
+    out = {
+        "ok": True,
+        "report_only": True,
+        "data_provenance": provenance,
+        "book_paths": [str(Path(path)) for path in args.book_path],
+        "reports": reports,
+    }
+    rendered = json.dumps(out, indent=2, default=str)
+    if args.out:
+        output_path = Path(args.out)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(rendered + "\n", encoding="utf-8")
+    print(rendered)
+    return 0
+
+
 def cmd_regime_export(args: argparse.Namespace) -> int:
     """Export real per-bar regime telemetry snapshots for the TUI cockpit."""
     from hypervector.regime.snapshot_export import export_regime_snapshots
@@ -2011,6 +2057,24 @@ def build_parser() -> argparse.ArgumentParser:
         help="optional path for the complete JSON tuning board",
     )
     hv_tune.set_defaults(func=cmd_hypervelocity_regime_autotune)
+
+    hv_maker = sub.add_parser(
+        "hypervelocity-maker-replay",
+        help="Replay canonical Hypervelocity decisions against recorded L2 books",
+    )
+    _add_market_args(hv_maker)
+    hv_maker.add_argument("--book-path", action="append", required=True)
+    hv_maker.add_argument(
+        "--fill-rule",
+        choices=("both", "touch", "through"),
+        default="both",
+    )
+    hv_maker.add_argument("--initial-equity", type=float, default=10_000.0)
+    hv_maker.add_argument("--maker-fee-rate", type=float, default=0.00015)
+    hv_maker.add_argument("--tick-size", type=float, default=1.0)
+    hv_maker.add_argument("--entry-ttl-seconds", type=float, default=300.0)
+    hv_maker.add_argument("--out", default=None)
+    hv_maker.set_defaults(func=cmd_hypervelocity_maker_replay)
 
     rex = sub.add_parser(
         "regime-export",
