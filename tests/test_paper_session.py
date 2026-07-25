@@ -114,6 +114,64 @@ def test_session_passes_execution_mode_to_engine(tmp_path: Path):
     assert rec["submitted"] is False
 
 
+def test_session_identity_stamps_effective_metalabel_policy(tmp_path: Path):
+    """Every backend run identifies its immutable strategy and model policy."""
+    export = _write_strict_export(tmp_path, strategy="crown_stack_long")
+
+    class FakeML:
+        root = type("R", (), {"name": "hypervelocity-long-v001"})()
+        feature_names = ["a"]
+
+        def predict_probability(self, features):
+            return 0.6
+
+    session = PaperSession(
+        export_dir=export,
+        data_root=tmp_path / "data",
+        conviction=0.42,
+        execution_mode="shadow",
+        metalabeler=FakeML(),
+        metalabel_mode="observe",
+    )
+
+    session.ensure_session_identity()
+    row = json.loads(
+        session.decisions_path.read_text(encoding="utf-8").splitlines()[-1]
+    )
+
+    assert row["run_id"] == session.run_id
+    assert row["export_id"] == session.export_id
+    assert row["strategy_name"] == "crown_stack_long"
+    assert row["execution_mode"] == "shadow"
+    assert row["metalabel_mode"] == "observe"
+    assert row["metalabel_bundle_id"] == "hypervelocity-long-v001"
+    assert row["conviction"] == 0.42
+    assert row["strategy_params"]["strategy"] == "crown_stack_long"
+    assert row["exits"]["mode"] == "fixed_rr"
+    assert row["risk"]["risk_pct_max"] == 0.05
+    assert row["costs"]["slippage_bps"] == 2.0
+    assert "private_key" not in json.dumps(row).lower()
+    assert "wallet" not in json.dumps(row).lower()
+
+
+def test_session_accepts_canonical_hourly_funding_with_null_legacy_rate(
+    tmp_path: Path,
+):
+    """Research CostModel exports must load directly into the paper backend."""
+    export = _write_strict_export(tmp_path)
+    meta_path = export / "meta.json"
+    meta = json.loads(meta_path.read_text(encoding="utf-8"))
+    meta["costs"]["funding_rate_1h"] = 0.0000125
+    meta["costs"]["funding_rate_8h"] = None
+    meta_path.write_text(json.dumps(meta), encoding="utf-8")
+
+    session = PaperSession(export_dir=export, data_root=tmp_path / "data")
+
+    assert session.cost_provider.snapshot().funding_rate_hourly == pytest.approx(
+        0.0000125
+    )
+
+
 def test_offline_session_no_trade_before_two_bars(tmp_path: Path):
     """Warm-up matches actor: no intent/fill path until buffer length >= 2."""
     export = _write_strict_export(tmp_path)

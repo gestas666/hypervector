@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import os
 from pathlib import Path
 
 import pytest
@@ -137,12 +136,17 @@ def test_paper_check_reports_fill_and_book_surface(tmp_path: Path, capsys, monke
     assert paper["l2_walk_available"] is True
     assert paper["metalabel_enabled"] is False
     assert paper["metalabel_default_off"] is True
+    assert paper["metalabel_modes"] == ["off", "observe", "scale", "filter"]
+    assert paper["recommended_annotation_flag"] == "--metalabel-mode observe"
     assert "metalabel_ready" in paper
     assert "metalabel_bundle_root" in paper
     assert report["live"]["enabled"] is False
     # No secret material in the payload
     assert "sekrit" not in out
-    assert "private" not in out.lower() or "private_key" in str(paper.get("secret_env_names", [])).lower()
+    assert (
+        "private" not in out.lower()
+        or "private_key" in str(paper.get("secret_env_names", [])).lower()
+    )
 
 
 def test_paper_run_requires_export_path():
@@ -207,9 +211,11 @@ def test_start_paper_daemon_offline_injected_bars(tmp_path: Path, capsys):
     live = fixture_ohlcv(n_bars=10, drift=-5.0, wave_period=20)
     # Shift live timestamps after warm so they count as new bars
     live = live.copy()
-    live["timestamp"] = warm["timestamp"].iloc[-1] + (
-        live["timestamp"] - live["timestamp"].iloc[0]
-    ) + (warm["timestamp"].iloc[1] - warm["timestamp"].iloc[0])
+    live["timestamp"] = (
+        warm["timestamp"].iloc[-1]
+        + (live["timestamp"] - live["timestamp"].iloc[0])
+        + (warm["timestamp"].iloc[1] - warm["timestamp"].iloc[0])
+    )
 
     calls = {"n": 0}
 
@@ -254,9 +260,11 @@ def test_daemon_warmup_does_not_poll_book(tmp_path: Path, monkeypatch):
     warm = fixture_ohlcv(n_bars=30, drift=-5.0, wave_period=20)
     live = fixture_ohlcv(n_bars=3, drift=-5.0, wave_period=20)
     live = live.copy()
-    live["timestamp"] = warm["timestamp"].iloc[-1] + (
-        live["timestamp"] - live["timestamp"].iloc[0]
-    ) + (warm["timestamp"].iloc[1] - warm["timestamp"].iloc[0])
+    live["timestamp"] = (
+        warm["timestamp"].iloc[-1]
+        + (live["timestamp"] - live["timestamp"].iloc[0])
+        + (warm["timestamp"].iloc[1] - warm["timestamp"].iloc[0])
+    )
 
     book_polls = {"n": 0}
 
@@ -437,6 +445,48 @@ def test_cli_paper_run_passes_fill_and_metalabel_flags(tmp_path: Path, monkeypat
     assert captured["max_book_age_ms"] == 1500.0
     assert captured["metalabel_enabled"] is True
     assert captured["execution_mode"] == "shadow"  # CLI default
+
+
+def test_cli_paper_run_observe_mode_reaches_daemon(tmp_path: Path, monkeypatch):
+    """Observe mode is explicit and reaches the backend without enabling a gate."""
+    export = _write_strict_export(tmp_path)
+    data = tmp_path / "data"
+    captured: dict = {}
+
+    def fake_daemon(**kwargs):
+        captured.update(kwargs)
+        warm = fixture_ohlcv(n_bars=5, drift=-1.0)
+        return start_paper_daemon(
+            export_dir=kwargs["export_dir"],
+            data_root=kwargs["data_root"],
+            metalabel_enabled=kwargs.get("metalabel_enabled", False),
+            metalabel_mode=kwargs.get("metalabel_mode"),
+            execution_mode=kwargs.get("execution_mode", "shadow"),
+            warm_ohlcv=warm,
+            poll_fn=lambda **_: warm.iloc[0:0].copy(),
+            max_live_bars=0,
+            poll_interval_secs=0.0,
+            sleep_fn=lambda _s: None,
+            install_signal_handlers=False,
+        )
+
+    monkeypatch.setattr("hypervector.cli.start_paper_daemon", fake_daemon)
+
+    rc = main(
+        [
+            "--data-root",
+            str(data),
+            "paper-run",
+            "--path",
+            str(export),
+            "--metalabel-mode",
+            "observe",
+        ]
+    )
+
+    assert rc == 0
+    assert captured["metalabel_enabled"] is True
+    assert captured["metalabel_mode"] == "observe"
 
 
 def test_cli_paper_run_mode_flag_wires_execution_mode(tmp_path: Path, monkeypatch):

@@ -39,12 +39,11 @@ from hypervector.paper.conviction import (
     ConvictionResult,
     FixedConvictionProvider,
     MetalabelConvictionProvider,
+    MetalabelMode,
+    resolve_metalabel_mode,
 )
 from hypervector.paper.costs import CostProvider
-from hypervector.paper.fill_models import (
-    DEFAULT_MAX_BOOK_AGE_MS,
-    FILL_MODEL_L2_WALK_V1,
-)
+from hypervector.paper.fill_models import FILL_MODEL_L2_WALK_V1
 from hypervector.paper.fills import ExplicitFillEngine
 from hypervector.paper.ledger import DECISIONS_FILENAME, append_paper_decision
 from hypervector.strategies import register_all_strategies
@@ -91,6 +90,7 @@ class PaperSession:
         metalabeler: Any | None = None,
         metalabel_min_p: float = DEFAULT_METALABEL_MIN_P,
         metalabel_filter: bool = True,
+        metalabel_mode: str | None = None,
         conviction_provider: ConvictionProvider | None = None,
         execution_mode: str = "paper",
     ) -> None:
@@ -113,9 +113,14 @@ class PaperSession:
         self.book_min_imbalance = float(book_min_imbalance)
         self.max_book_age_ms = float(max_book_age_ms)
         self.preferred_fill_model = str(preferred_fill_model)
-        self.metalabel_enabled = bool(metalabel_enabled)
+        self.metalabel_mode = resolve_metalabel_mode(
+            enabled=bool(metalabel_enabled),
+            filter_entries=bool(metalabel_filter),
+            requested=metalabel_mode,
+        )
+        self.metalabel_enabled = self.metalabel_mode != "off"
         self.metalabel_min_p = float(metalabel_min_p)
-        self.metalabel_filter = bool(metalabel_filter)
+        self.metalabel_filter = self.metalabel_mode == "filter"
         self.execution_mode = str(execution_mode)
         self.conviction_provider = _build_conviction_provider(
             conviction=self.conviction,
@@ -123,6 +128,7 @@ class PaperSession:
             metalabeler=metalabeler,
             metalabel_min_p=self.metalabel_min_p,
             metalabel_filter=self.metalabel_filter,
+            metalabel_mode=self.metalabel_mode,
             conviction_provider=conviction_provider,
             data_root=self.root,
         )
@@ -165,6 +171,7 @@ class PaperSession:
         self.bars_processed = 0
         self._last_ts: pd.Timestamp | None = None
         self._last_funding_refresh_mono: float = 0.0
+        self._identity_written = False
 
     def inject_book(self, snap: BookSnapshot) -> None:
         """Inject a BookSnapshot for offline tests (no network)."""
@@ -191,7 +198,9 @@ class PaperSession:
         try:
             rate = self.cost_provider.refresh_funding(self.loadout.symbol)
         except Exception as exc:
-            logger.warning("funding refresh failed for %s: %s", self.loadout.symbol, exc)
+            logger.warning(
+                "funding refresh failed for %s: %s", self.loadout.symbol, exc
+            )
             return None
         self._last_funding_refresh_mono = now
         return rate
@@ -202,10 +211,11 @@ class PaperSession:
         When a position is open, applies one hour of signed funding at bar close
         using the current ``cost_provider`` rate (no network in this method).
         """
-        record = _row_to_buffer_record(row if isinstance(row, pd.Series) else pd.Series(row))
-        _append_bar_record(
-            self.buffer_rows, record, max_lookback=DEFAULT_MAX_LOOKBACK
+        self.ensure_session_identity()
+        record = _row_to_buffer_record(
+            row if isinstance(row, pd.Series) else pd.Series(row)
         )
+        _append_bar_record(self.buffer_rows, record, max_lookback=DEFAULT_MAX_LOOKBACK)
         self.bars_processed += 1
         ts = record.get("timestamp")
         if isinstance(ts, pd.Timestamp):
@@ -225,7 +235,11 @@ class PaperSession:
         # Signed funding once per bar while open (fractional hourly rate per bar).
         if self.engine.position.qty != 0.0:
             mark_px = float(record["close"])
-            bar_mins = 1.0 if self.loadout.timeframe == "1m" else (5.0 if self.loadout.timeframe == "5m" else 15.0)
+            bar_mins = (
+                1.0
+                if self.loadout.timeframe == "1m"
+                else (5.0 if self.loadout.timeframe == "5m" else 15.0)
+            )
             self.engine.apply_funding(
                 feed_ts=_feed_ts(record),
                 oracle_px=mark_px,
@@ -399,9 +413,7 @@ class PaperSession:
 
         return None
 
-    def process_frame(
-        self, ohlcv: pd.DataFrame, *, max_bars: int | None = None
-    ) -> int:
+    def process_frame(self, ohlcv: pd.DataFrame, *, max_bars: int | None = None) -> int:
         """Walk a DataFrame of bars; return count processed in this call."""
         frame = _prepare_ohlcv(ohlcv, max_bars=max_bars)
         n = 0
@@ -411,39 +423,50 @@ class PaperSession:
         return n
 
     def ensure_session_identity(self) -> None:
-        """Write a session_start row if no decisions exist yet.
+        """Write exactly one session_start row for this backend run.
 
         Stamps the session ``execution_mode`` (shadow|paper) plus dry-run
         honesty fields so ledger mode never silently defaults to paper when
         the daemon is shadow.
         """
-        if not self.decisions_path.is_file():
-            from hypervector.paper.order_intent import NETWORK_MAINNET
+        if self._identity_written:
+            return
+        from hypervector.paper.order_intent import NETWORK_MAINNET
 
-            append_paper_decision(
-                self.root,
-                {
-                    "feed_ts": "session_start",
-                    "run_id": self.run_id,
-                    "export_id": str(self.export_id),
-                    "strategy_name": self.loadout.strategy_name,
-                    "symbol": self.loadout.symbol,
-                    "timeframe": self.loadout.timeframe,
-                    "action": "session_start",
-                    "conviction": self.conviction,
-                    "bars_processed": self.bars_processed,
-                    "execution_mode": self.execution_mode,
-                    "submitted": False,
-                    "network": NETWORK_MAINNET,
-                    "position_qty": 0.0,
-                    "position_avg_px": 0.0,
-                    "realized_pnl": 0.0,
-                    "unrealized_pnl": 0.0,
-                    "equity": float(self.equity),
-                    "init_cash": float(self.equity),
-                    "no_submit": True,
+        append_paper_decision(
+            self.root,
+            {
+                "feed_ts": "session_start",
+                "run_id": self.run_id,
+                "export_id": str(self.export_id),
+                "strategy_name": self.loadout.strategy_name,
+                "symbol": self.loadout.symbol,
+                "timeframe": self.loadout.timeframe,
+                "action": "session_start",
+                "conviction": self.conviction,
+                "metalabel_mode": self.metalabel_mode,
+                "metalabel_bundle_id": self.conviction_provider.bundle_id,
+                "strategy_params": {
+                    "strategy": self.loadout.strategy_name,
+                    **dict(self.loadout.params or {}),
                 },
-            )
+                "exits": dict(self.loadout.exits or {}),
+                "risk": dict(self.loadout.risk or {}),
+                "costs": dict(self.loadout.costs or {}),
+                "bars_processed": self.bars_processed,
+                "execution_mode": self.execution_mode,
+                "submitted": False,
+                "network": NETWORK_MAINNET,
+                "position_qty": 0.0,
+                "position_avg_px": 0.0,
+                "realized_pnl": 0.0,
+                "unrealized_pnl": 0.0,
+                "equity": float(self.equity),
+                "init_cash": float(self.equity),
+                "no_submit": True,
+            },
+        )
+        self._identity_written = True
 
     def result(self) -> PaperSessionResult:
         self.ensure_session_identity()
@@ -485,9 +508,7 @@ def run_paper_session_offline(
     return session.result()
 
 
-def _prepare_ohlcv(
-    ohlcv: pd.DataFrame, *, max_bars: int | None
-) -> pd.DataFrame:
+def _prepare_ohlcv(ohlcv: pd.DataFrame, *, max_bars: int | None) -> pd.DataFrame:
     if ohlcv is None or not isinstance(ohlcv, pd.DataFrame) or ohlcv.empty:
         raise ValueError("OHLCV must be a non-empty DataFrame")
     frame = ohlcv.copy()
@@ -555,9 +576,11 @@ def _cost_provider_from_loadout(
     slippage_bps = float(costs.get("slippage_bps", 2.0))
     if funding_rate_hourly is not None:
         funding_hourly = float(funding_rate_hourly)
-    elif "funding_rate_hourly" in costs:
+    elif costs.get("funding_rate_1h") is not None:
+        funding_hourly = float(costs["funding_rate_1h"])
+    elif costs.get("funding_rate_hourly") is not None:
         funding_hourly = float(costs["funding_rate_hourly"])
-    elif "funding_rate_8h" in costs:
+    elif costs.get("funding_rate_8h") is not None:
         funding_hourly = float(costs["funding_rate_8h"]) / 8.0
     else:
         funding_hourly = 0.0
@@ -577,11 +600,17 @@ def _build_conviction_provider(
     data_root: Path | str | None = None,
     metalabel_min_p: float = DEFAULT_METALABEL_MIN_P,
     metalabel_filter: bool = True,
+    metalabel_mode: MetalabelMode | None = None,
 ) -> ConvictionProvider:
     """Fixed by default; metalabel scales and filters when enabled."""
     if conviction_provider is not None:
         return conviction_provider
-    if not metalabel_enabled:
+    mode = resolve_metalabel_mode(
+        enabled=metalabel_enabled,
+        filter_entries=metalabel_filter,
+        requested=metalabel_mode,
+    )
+    if mode == "off":
         return FixedConvictionProvider(conviction)
     try:
         from hypervector.ml.features import FeatureBuilder
@@ -592,13 +621,20 @@ def _build_conviction_provider(
             if metalabeler is not None
             else Metalabeler.from_env(data_root=data_root)
         )
+        if mode == "observe":
+            active_mode = "observe"
+        elif mode == "scale":
+            active_mode = "scale"
+        else:
+            active_mode = "filter"
         return MetalabelConvictionProvider(
             ml,
             FeatureBuilder(),
             fixed_fallback=float(conviction),
             min_p=float(metalabel_min_p),
-            filter_entries=bool(metalabel_filter),
-            fail_closed=bool(metalabel_filter),
+            filter_entries=mode == "filter",
+            fail_closed=mode == "filter",
+            mode=active_mode,
         )
     except Exception as exc:  # noqa: BLE001 — keep session usable on load failure
         logger.warning(

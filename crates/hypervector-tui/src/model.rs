@@ -157,7 +157,7 @@ impl FillMode {
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub enum SplitPositionMode {
     None,
-    Active { tp1_ratio: f64 },   // e.g. 0.63 means 63% exits at TP1, 37% at TP2
+    Active { tp1_ratio: f64 }, // e.g. 0.63 means 63% exits at TP1, 37% at TP2
 }
 
 impl SplitPositionMode {
@@ -176,7 +176,7 @@ impl SplitPositionMode {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct EngineConfig {
     pub leverage_mode: LeverageMode,
     pub static_leverage_value: f64,
@@ -204,7 +204,9 @@ impl Default for EngineConfig {
         Self {
             leverage_mode: LeverageMode::StaticMultiplier(40.0),
             static_leverage_value: 40.0,
-            tpsl_strategy: TpSlStrategy::HypervelocityTargetTrail { target_margin_pct: 8.0 },
+            tpsl_strategy: TpSlStrategy::HypervelocityTargetTrail {
+                target_margin_pct: 8.0,
+            },
             fixed_tp_pct: 0.2,
             fixed_sl_pct: 0.05,
             margin_tp_pct: 8.0,
@@ -237,7 +239,7 @@ pub struct HypervelocityTrade {
 /// Live position state tracked by the hypervelocity strategy.
 #[derive(Debug, Clone)]
 pub struct ActivePosition {
-    pub direction: String,   // "LONG" or "SHORT"
+    pub direction: String, // "LONG" or "SHORT"
     pub entry_price: f64,
     pub size_btc: f64,
     pub leverage: f64,

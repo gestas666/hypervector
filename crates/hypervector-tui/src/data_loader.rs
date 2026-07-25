@@ -1,12 +1,14 @@
 //! Data loader and synthesizer for real-time and historical playback snapshots.
 
+use serde_json::Value;
 use std::fs;
 use std::path::Path;
-use serde_json::Value;
 
 use crate::model::{RegimeSnapshot, RegimeState};
 
-pub fn load_snapshots_with_metadata(args: &crate::cli_args::CliArgs) -> (Vec<RegimeSnapshot>, bool) {
+pub fn load_snapshots_with_metadata(
+    args: &crate::cli_args::CliArgs,
+) -> (Vec<RegimeSnapshot>, bool) {
     if let Some(ref path) = args.file {
         if path.exists() {
             let snaps = load_snapshots_from_file(path);
@@ -17,7 +19,10 @@ pub fn load_snapshots_with_metadata(args: &crate::cli_args::CliArgs) -> (Vec<Reg
     // Check data_root for real cached aligned data snapshots
     let cache_candidates = [
         args.data_root.join("exports").join("regime_snapshots.json"),
-        args.data_root.join("cache").join("aligned").join(format!("{}_aligned_latest.json", args.symbol)),
+        args.data_root
+            .join("cache")
+            .join("aligned")
+            .join(format!("{}_aligned_latest.json", args.symbol)),
     ];
 
     for candidate in &cache_candidates {
@@ -67,7 +72,10 @@ pub fn parse_snapshot_json(val: &Value, idx: usize) -> Option<RegimeSnapshot> {
     let text = |key: &str| val.get(key).and_then(|v| v.as_str()).map(|s| s.to_string());
 
     let px = num("close").or_else(|| num("price")).unwrap_or(65000.0);
-    let state_str = val.get("regime_state").and_then(|v| v.as_str()).unwrap_or("BULL_MOMENTUM_EXPANSION");
+    let state_str = val
+        .get("regime_state")
+        .and_then(|v| v.as_str())
+        .unwrap_or("BULL_MOMENTUM_EXPANSION");
 
     let state = match state_str {
         s if s.contains("BULL") => RegimeState::BullMomentum,
@@ -85,7 +93,9 @@ pub fn parse_snapshot_json(val: &Value, idx: usize) -> Option<RegimeSnapshot> {
 
     let timestamp_str = match raw_ts {
         Some(s) if !s.contains("1969-12-31") && !s.contains("1970-01-01") => s,
-        Some(s) => s.replace("1969-12-31", &today).replace("1970-01-01", &today),
+        Some(s) => s
+            .replace("1969-12-31", &today)
+            .replace("1970-01-01", &today),
         None => format!("{} {:02}:{:02}:00 EDT", today, (idx / 60) % 24, idx % 60),
     };
 
@@ -103,7 +113,13 @@ pub fn parse_snapshot_json(val: &Value, idx: usize) -> Option<RegimeSnapshot> {
         RegimeState::FundingCarry => (2.0, 0.0),
         RegimeState::RangeChop => (0.25, 0.25),
     };
-    let default_trend = |bull_state: bool| if bull_state { "BULL".to_string() } else { "BEAR".to_string() };
+    let default_trend = |bull_state: bool| {
+        if bull_state {
+            "BULL".to_string()
+        } else {
+            "BEAR".to_string()
+        }
+    };
 
     let timestamp_ms = val
         .get("timestamp_ms")
@@ -123,17 +139,35 @@ pub fn parse_snapshot_json(val: &Value, idx: usize) -> Option<RegimeSnapshot> {
         opi: num("opi").unwrap_or(default_opi),
         spread_bps: num("spread_bps").unwrap_or(1.8),
         bid_depth_ratio: num("bid_depth_ratio").unwrap_or(1.45),
-        bbwp_percentile: num("bbwp_percentile").unwrap_or(if state == RegimeState::VolatilityCoiling { 14.2 } else { 45.0 }),
-        rsi: num("rsi").unwrap_or(if state == RegimeState::BullMomentum { 62.0 } else { 42.0 }),
-        funding_zscore: num("funding_zscore").unwrap_or(if state == RegimeState::FundingCarry { -2.1 } else { 0.2 }),
-        trend_1m: text("trend_1m").unwrap_or_else(|| default_trend(state == RegimeState::BullMomentum)),
+        bbwp_percentile: num("bbwp_percentile").unwrap_or(
+            if state == RegimeState::VolatilityCoiling {
+                14.2
+            } else {
+                45.0
+            },
+        ),
+        rsi: num("rsi").unwrap_or(if state == RegimeState::BullMomentum {
+            62.0
+        } else {
+            42.0
+        }),
+        funding_zscore: num("funding_zscore").unwrap_or(if state == RegimeState::FundingCarry {
+            -2.1
+        } else {
+            0.2
+        }),
+        trend_1m: text("trend_1m")
+            .unwrap_or_else(|| default_trend(state == RegimeState::BullMomentum)),
         trend_5m: text("trend_5m").unwrap_or_else(|| "BULL".into()),
         trend_15m: text("trend_15m").unwrap_or_else(|| "BULL".into()),
         long_weight: num("long_weight").unwrap_or(default_lw),
         short_weight: num("short_weight").unwrap_or(default_sw),
         max_leverage: num("max_leverage").unwrap_or(3.0),
         dynamic_leverage: num("dynamic_leverage").unwrap_or(1.25),
-        taker_allowed: val.get("taker_allowed").and_then(|v| v.as_bool()).unwrap_or(false),
+        taker_allowed: val
+            .get("taker_allowed")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false),
     })
 }
 
@@ -163,16 +197,44 @@ pub fn generate_synthetic_history(count: usize) -> Vec<RegimeSnapshot> {
         };
 
         let current_px = base_px + noise;
-        let (opi, spread, depth_ratio, bbwp, rsi, zscore, t1, t5, t15, lw, sw, lev, taker): (f64, f64, f64, f64, f64, f64, &str, &str, &str, f64, f64, f64, bool) = match state {
-            RegimeState::BullMomentum => (0.42, 1.6, 1.65, 48.0, 64.5, 0.4, "BULL", "BULL", "BULL", 2.0, 0.0, 3.0, false),
-            RegimeState::BearMomentum => (-0.38, 1.9, 0.62, 52.0, 38.0, -0.3, "BEAR", "BEAR", "BEAR", 0.0, 2.0, 3.0, false),
-            RegimeState::VolatilityCoiling => (0.05, 1.4, 1.10, 14.5, 51.0, 0.1, "NEUTRAL", "BULL", "NEUTRAL", 1.5, 0.0, 2.5, false),
-            RegimeState::FundingCarry => (0.12, 1.5, 1.25, 38.0, 44.0, -2.15, "BULL", "BEAR", "BEAR", 2.0, 0.0, 3.0, false),
-            RegimeState::RangeChop => (-0.02, 5.2, 0.95, 68.0, 49.0, 0.0, "NEUTRAL", "NEUTRAL", "NEUTRAL", 0.0, 0.0, 1.0, false),
+        let (opi, spread, depth_ratio, bbwp, rsi, zscore, t1, t5, t15, lw, sw, lev, taker): (
+            f64,
+            f64,
+            f64,
+            f64,
+            f64,
+            f64,
+            &str,
+            &str,
+            &str,
+            f64,
+            f64,
+            f64,
+            bool,
+        ) = match state {
+            RegimeState::BullMomentum => (
+                0.42, 1.6, 1.65, 48.0, 64.5, 0.4, "BULL", "BULL", "BULL", 2.0, 0.0, 3.0, false,
+            ),
+            RegimeState::BearMomentum => (
+                -0.38, 1.9, 0.62, 52.0, 38.0, -0.3, "BEAR", "BEAR", "BEAR", 0.0, 2.0, 3.0, false,
+            ),
+            RegimeState::VolatilityCoiling => (
+                0.05, 1.4, 1.10, 14.5, 51.0, 0.1, "NEUTRAL", "BULL", "NEUTRAL", 1.5, 0.0, 2.5,
+                false,
+            ),
+            RegimeState::FundingCarry => (
+                0.12, 1.5, 1.25, 38.0, 44.0, -2.15, "BULL", "BEAR", "BEAR", 2.0, 0.0, 3.0, false,
+            ),
+            RegimeState::RangeChop => (
+                -0.02, 5.2, 0.95, 68.0, 49.0, 0.0, "NEUTRAL", "NEUTRAL", "NEUTRAL", 0.0, 0.0, 1.0,
+                false,
+            ),
         };
 
         let dynamic_leverage = match state {
-            RegimeState::BullMomentum | RegimeState::BearMomentum => (2.0 * (1.0 + opi.abs() * 0.5)).clamp(1.0, lev),
+            RegimeState::BullMomentum | RegimeState::BearMomentum => {
+                (2.0 * (1.0 + opi.abs() * 0.5)).clamp(1.0, lev)
+            }
             RegimeState::VolatilityCoiling => (1.5 * (1.0 + (20.0 - bbwp) / 20.0)).clamp(1.0, lev),
             RegimeState::FundingCarry => (3.0 * (zscore.abs() / 2.0)).clamp(1.0, lev),
             RegimeState::RangeChop => 1.0,

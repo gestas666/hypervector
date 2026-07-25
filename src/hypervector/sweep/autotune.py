@@ -15,7 +15,6 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
-import pandas as pd
 
 from hypervector.data.pipeline import load_research_history
 from hypervector.strategies import register_all_strategies
@@ -27,8 +26,14 @@ from hypervector.sweep.sizing import RiskConfig
 
 logger = logging.getLogger(__name__)
 
+_EXIT_SL_ATR_MIN = 1.0
+_EXIT_SL_ATR_MAX = 3.5
+_VENUE_LEVERAGE_CAPS = {"BTC": 40.0, "ETH": 25.0, "SOL": 20.0}
+_DEFAULT_ALT_LEVERAGE_CAP = 10.0
+
 try:
     import optuna  # type: ignore[import-untyped]
+
     HAVE_OPTUNA = True
 except ImportError:
     HAVE_OPTUNA = False
@@ -49,6 +54,99 @@ class AutotuneResult:
     board_path: Path
 
 
+def _sample_grid_params(rng: Any, param_grid: dict[str, list[Any]]) -> dict[str, Any]:
+    """Sample values by index so Python grid types survive NumPy RNG use."""
+    return {
+        name: values[int(rng.integers(0, len(values)))]
+        for name, values in param_grid.items()
+        if values
+    }
+
+
+def _mutate_grid_params(
+    rng: Any,
+    params: dict[str, Any],
+    param_grid: dict[str, list[Any]],
+) -> dict[str, Any]:
+    """Mutate float parameters without leaving their declared search bounds."""
+    mutated = dict(params)
+    for name, value in params.items():
+        numeric_grid = [
+            float(item)
+            for item in param_grid.get(name, [])
+            if type(item) in (int, float)
+        ]
+        if type(value) is not float or not numeric_grid:
+            continue
+        candidate = float(value) * float(rng.uniform(0.9, 1.1))
+        mutated[name] = round(
+            min(max(candidate, min(numeric_grid)), max(numeric_grid)), 4
+        )
+    return mutated
+
+
+def _clamp_strategy_leverage(params: dict[str, Any], symbol: str) -> dict[str, Any]:
+    """Clamp strategy leverage to the configured Hyperliquid venue cap."""
+    if "leverage" not in params:
+        return params
+    cap = _VENUE_LEVERAGE_CAPS.get(symbol.upper(), _DEFAULT_ALT_LEVERAGE_CAP)
+    clamped = dict(params)
+    clamped["leverage"] = min(float(params["leverage"]), cap)
+    return clamped
+
+
+def _export_autotune_candidate(
+    *,
+    root: Path,
+    stamp: str,
+    strategy_name: str,
+    role: str,
+    symbol: str,
+    timeframe: str,
+    lookback_days: int,
+    fee_model: str,
+    provenance: dict[str, Any],
+    best_params: dict[str, Any],
+    best_exit_dict: dict[str, Any],
+    best_metrics: dict[str, Any],
+) -> Path:
+    """Write a strict Phase-2 bundle through the canonical exporter."""
+    from hypervector.export.phase2 import export_candidate
+
+    exit_cfg = ExitConfig(
+        **{k: v for k, v in best_exit_dict.items() if k != "leverage"}
+    )
+    risk_cfg = RiskConfig(max_size_frac=float(best_exit_dict.get("leverage", 1.0)))
+    candidate_id = f"exp_{strategy_name}_{timeframe}_{stamp}"
+    return export_candidate(
+        root / "exports",
+        run_id=stamp,
+        meta={
+            "track": role,
+            "symbol": symbol,
+            "timeframe": timeframe,
+            "lookback_days": lookback_days,
+            "init_cash": 10_000.0,
+            "tp_sl_mode": exit_cfg.mode,
+            "exits": exit_cfg.to_dict(),
+            "risk": risk_cfg.to_dict(),
+            "costs": resolve_cost_model(fee_model).to_dict(),
+            "apply_costs": True,
+            "data_provenance": provenance,
+            "fee_model": fee_model,
+        },
+        params={
+            "strategy": strategy_name,
+            "role": role,
+            "exit_mode": exit_cfg.mode,
+            **best_params,
+        },
+        metrics=best_metrics,
+        candidate_id=candidate_id,
+        strict=True,
+    )
+
+
 def run_autotune(
     root: Path | None = None,
     *,
@@ -66,18 +164,24 @@ def run_autotune(
     apply_penalties: bool = False,
 ) -> AutotuneResult:
     """Run parameter autotuning using Karpathy random-adaptive mutation or Optuna TPE."""
-    root = root or data_root or Path.cwd()
+    root = Path(root or data_root or Path.cwd())
     no_export = no_export or (not export_best)
     register_all_strategies()
 
     # Load market history
-    df, _ = load_research_history(root, symbol=symbol, timeframe=timeframe, lookback_days=lookback_days)
+    df, provenance = load_research_history(
+        root,
+        symbol=symbol,
+        timeframe=timeframe,
+        lookback_days=lookback_days,
+    )
     if df.empty:
         raise RuntimeError(f"No research history found for {symbol} {timeframe}")
 
     # Align orderbook if provided
     if book_data_path and Path(book_data_path).is_file():
         from hypervector.data.book_align import align_orderbook_to_ohlcv, load_l2_jsonl
+
         df_book = load_l2_jsonl(book_data_path)
         df = align_orderbook_to_ohlcv(df, df_book)
 
@@ -88,7 +192,9 @@ def run_autotune(
 
     trials_log: list[dict[str, Any]] = []
 
-    def evaluate_config(params: dict[str, Any], exit_dict: dict[str, Any], trial_num: int) -> float:
+    def evaluate_config(
+        params: dict[str, Any], exit_dict: dict[str, Any], trial_num: int
+    ) -> float:
         try:
             entries, exits, _ = spec.build_signals(df, **params)
             exit_cfg = ExitConfig(
@@ -124,7 +230,7 @@ def run_autotune(
                     "trial_number": trial_num,
                     "status": "ok",
                     "params": params,
-                    "exit_cfg": exit_cfg.to_dict(),
+                    "exit_cfg": {**exit_cfg.to_dict(), "leverage": leverage},
                     "metrics": m,
                 }
             )
@@ -156,6 +262,7 @@ def run_autotune(
     use_optuna = HAVE_OPTUNA and sampler in ("optuna", "hybrid")
 
     if use_optuna:
+
         def objective(trial: optuna.Trial) -> float:
             params: dict[str, Any] = {}
             # Generic parameter sampling from StrategySpec.param_grid
@@ -164,14 +271,24 @@ def run_autotune(
                     if isinstance(p_vals, list) and p_vals:
                         params[p_name] = trial.suggest_categorical(p_name, p_vals)
 
-            if "spread_bps" in df.columns or "obi_5" in df.columns or book_data_path is not None:
-                params["book_gate"] = trial.suggest_categorical("book_gate", [True, False])
-                params["max_spread_bps"] = trial.suggest_float("max_spread_bps", 1.5, 10.0, step=0.5)
+            if (
+                "spread_bps" in df.columns
+                or "obi_5" in df.columns
+                or book_data_path is not None
+            ):
+                params["book_gate"] = trial.suggest_categorical(
+                    "book_gate", [True, False]
+                )
+                params["max_spread_bps"] = trial.suggest_float(
+                    "max_spread_bps", 1.5, 10.0, step=0.5
+                )
                 params["min_obi"] = trial.suggest_float("min_obi", -0.5, 0.4, step=0.1)
 
             # Suggest Exit & Leverage Configuration
             leverage = trial.suggest_categorical("leverage", [1.0, 2.0, 3.0, 5.0])
-            exit_mode = trial.suggest_categorical("exit_mode", ["atr", "trail", "fixed_rr"])
+            exit_mode = trial.suggest_categorical(
+                "exit_mode", ["atr", "trail", "fixed_rr"]
+            )
             sl_atr_mult = trial.suggest_float("sl_atr_mult", 0.8, 4.0, step=0.4)
             rr = trial.suggest_float("rr", 1.2, 5.0, step=0.3)
             trail_atr_mult = trial.suggest_float("trail_atr_mult", 1.2, 5.0, step=0.3)
@@ -185,9 +302,12 @@ def run_autotune(
                 "trail_atr_mult": trail_atr_mult,
                 "leverage": leverage,
             }
+            params = _clamp_strategy_leverage(params, symbol)
             return evaluate_config(params, exit_dict, trial.number)
 
-        study = optuna.create_study(direction="maximize", sampler=optuna.samplers.TPESampler(seed=42))
+        study = optuna.create_study(
+            direction="maximize", sampler=optuna.samplers.TPESampler(seed=42)
+        )
         study.optimize(objective, n_trials=n_trials, show_progress_bar=False)
 
     else:
@@ -199,32 +319,38 @@ def run_autotune(
 
         for t in range(n_trials):
             if t >= coarse_trials and best_candidates:
-                elite_score, elite_params, elite_exit = best_candidates[rng.choice(len(best_candidates))]
-                params = dict(elite_params)
+                elite_index = int(rng.integers(0, len(best_candidates)))
+                _, elite_params, elite_exit = best_candidates[elite_index]
+                params = _mutate_grid_params(rng, elite_params, spec.param_grid)
                 exit_dict = dict(elite_exit)
 
-                # Stochastic parameter mutation
-                for k in params:
-                    if isinstance(params[k], float):
-                        params[k] = round(float(params[k] * rng.uniform(0.9, 1.1)), 4)
                 if "sl_atr_mult" in exit_dict:
-                    exit_dict["sl_atr_mult"] = round(float(exit_dict["sl_atr_mult"] * rng.uniform(0.9, 1.1)), 2)
+                    candidate = float(exit_dict["sl_atr_mult"]) * float(
+                        rng.uniform(0.9, 1.1)
+                    )
+                    exit_dict["sl_atr_mult"] = round(
+                        min(max(candidate, _EXIT_SL_ATR_MIN), _EXIT_SL_ATR_MAX),
+                        2,
+                    )
             else:
-                params = {}
-                if hasattr(spec, "param_grid") and spec.param_grid:
-                    for p_name, p_vals in spec.param_grid.items():
-                        if isinstance(p_vals, list) and p_vals:
-                            params[p_name] = rng.choice(p_vals)
+                params = _sample_grid_params(rng, spec.param_grid)
 
                 exit_dict = {
-                    "mode": str(rng.choice(["atr", "trail", "fixed_rr"])),
+                    "mode": _sample_grid_params(
+                        rng, {"mode": ["atr", "trail", "fixed_rr"]}
+                    )["mode"],
                     "sl_pct": round(float(rng.uniform(0.003, 0.03)), 4),
-                    "sl_atr_mult": round(float(rng.uniform(1.0, 3.5)), 1),
+                    "sl_atr_mult": round(
+                        float(rng.uniform(_EXIT_SL_ATR_MIN, _EXIT_SL_ATR_MAX)), 1
+                    ),
                     "rr": round(float(rng.uniform(1.5, 4.0)), 1),
                     "trail_atr_mult": round(float(rng.uniform(1.5, 4.0)), 1),
-                    "leverage": float(rng.choice([1.0, 2.0, 3.0, 5.0])),
+                    "leverage": _sample_grid_params(
+                        rng, {"leverage": [1.0, 2.0, 3.0, 5.0]}
+                    )["leverage"],
                 }
 
+            params = _clamp_strategy_leverage(params, symbol)
             score = evaluate_config(params, exit_dict, t)
             if score > -50.0:
                 best_candidates.append((score, params, exit_dict))
@@ -234,7 +360,9 @@ def run_autotune(
     # Process best trial results sorted by net PnL / return (primary charter ranking)
     valid_trials = [tr for tr in trials_log if tr.get("status") == "ok"]
     if valid_trials:
-        valid_trials.sort(key=lambda x: x["metrics"].get("net_pnl", -9999.0), reverse=True)
+        valid_trials.sort(
+            key=lambda x: x["metrics"].get("net_pnl", -9999.0), reverse=True
+        )
         top_entry = valid_trials[0]
         best_params = top_entry["params"]
         best_exit_dict = top_entry["exit_cfg"]
@@ -276,22 +404,19 @@ def run_autotune(
 
     export_dir: Path | None = None
     if not no_export:
-        from hypervector.sweep.export import export_trial
-        export_dir = root / "exports" / f"exp_{strategy_name}_{timeframe}_{stamp}"
-        export_trial(
-            export_dir,
+        export_dir = _export_autotune_candidate(
+            root=root,
+            stamp=stamp,
             strategy_name=strategy_name,
+            role=spec.role,
             symbol=symbol,
             timeframe=timeframe,
-            params=best_params,
-            metrics=best_metrics,
-            exit_cfg=ExitConfig(
-                mode=best_exit_dict.get("mode", "atr"),
-                sl_pct=best_exit_dict.get("sl_pct", 0.01),
-                sl_atr_mult=best_exit_dict.get("sl_atr_mult", 2.0),
-                rr=best_exit_dict.get("rr", 2.0),
-                trail_atr_mult=best_exit_dict.get("trail_atr_mult", 2.0),
-            ),
+            lookback_days=lookback_days,
+            fee_model=fee_model,
+            provenance=provenance,
+            best_params=best_params,
+            best_exit_dict=best_exit_dict,
+            best_metrics=best_metrics,
         )
 
     return AutotuneResult(

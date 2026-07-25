@@ -51,7 +51,9 @@ def load_l2_jsonl(path: Path | str) -> pd.DataFrame:
             denom_10 = bid_vol_10 + ask_vol_10
             obi_10 = (bid_vol_10 - ask_vol_10) / denom_10 if denom_10 > 0 else 0.0
 
-            mid = (best_bid + best_ask) / 2.0 if (best_bid > 0 and best_ask > 0) else 0.0
+            mid = (
+                (best_bid + best_ask) / 2.0 if (best_bid > 0 and best_ask > 0) else 0.0
+            )
             spread_bps = ((best_ask - best_bid) / mid * 10_000.0) if mid > 0 else 0.0
 
             # Microprice = (ask_vol_1 * best_bid + bid_vol_1 * best_ask) / (bid_vol_1 + ask_vol_1)
@@ -91,7 +93,9 @@ def load_l2_jsonl(path: Path | str) -> pd.DataFrame:
     return df
 
 
-def load_l2_sqlite_feature_samples(zst_or_sqlite_path: Path | str, coin: str = "BTC") -> pd.DataFrame:
+def load_l2_sqlite_feature_samples(
+    zst_or_sqlite_path: Path | str, coin: str = "BTC"
+) -> pd.DataFrame:
     """Load orderbook features from impulse_calibration_snapshot.sqlite (.zst or raw)."""
     p = Path(zst_or_sqlite_path)
     if not p.is_file():
@@ -114,7 +118,7 @@ def load_l2_sqlite_feature_samples(zst_or_sqlite_path: Path | str, coin: str = "
 
     try:
         conn = sqlite3.connect(target_path)
-        query = f"""
+        query = """
             SELECT
                 feature_time as ts_ms,
                 mid,
@@ -178,6 +182,7 @@ def align_orderbook_to_ohlcv(
         return df_ohlcv
 
     bars = df_ohlcv.copy()
+    original_index = bars.index.copy()
     if "ts_ms" not in bars.columns:
         if "timestamp" in bars.columns:
             ts_col = pd.to_datetime(bars["timestamp"], utc=True, errors="coerce")
@@ -188,9 +193,9 @@ def align_orderbook_to_ohlcv(
                 ts_col = ts_col.tz_localize("UTC")
             bars["ts_ms"] = _to_ts_ms_series(ts_col)
         else:
-            raise ValueError("OHLCV DataFrame must have 'timestamp', 'ts_ms', or DatetimeIndex")
-
-
+            raise ValueError(
+                "OHLCV DataFrame must have 'timestamp', 'ts_ms', or DatetimeIndex"
+            )
 
     if df_book.empty:
         # Fill defaults when no book data exists
@@ -208,6 +213,7 @@ def align_orderbook_to_ohlcv(
             bars[k] = v
         return bars
 
+    bars["__bar_order"] = np.arange(len(bars), dtype=np.int64)
     bars_sorted = bars.sort_values("ts_ms").reset_index(drop=True)
     book_sorted = df_book.sort_values("ts_ms").reset_index(drop=True)
 
@@ -242,6 +248,9 @@ def align_orderbook_to_ohlcv(
         if col in merged.columns:
             merged[col] = merged[col].fillna(val)
 
+    merged = merged.sort_values("__bar_order")
+    order = merged.pop("__bar_order").to_numpy(dtype=np.int64)
+    merged.index = original_index.take(order)
     return merged
 
 
@@ -280,4 +289,3 @@ def gate_signals_by_orderbook(
             gate_ok = gate_ok & (df["book_depth_ratio"].to_numpy() <= max_dr)
 
     return entries & gate_ok.fillna(True).astype(bool)
-

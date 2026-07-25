@@ -4,9 +4,7 @@ import json
 import tempfile
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
-import pytest
 
 from hypervector.data.book_align import (
     align_orderbook_to_ohlcv,
@@ -63,10 +61,43 @@ def test_load_l2_jsonl_and_alignment():
 
         # Test gating
         entries = pd.Series([True, True])
-        gated_long = gate_signals_by_orderbook(entries, aligned, direction="long", min_obi=0.0)
-        assert gated_long.iloc[0] == True
-        assert gated_long.iloc[1] == False  # r2 has obi_5 < 0
+        gated_long = gate_signals_by_orderbook(
+            entries, aligned, direction="long", min_obi=0.0
+        )
+        assert gated_long.iloc[0]
+        assert not gated_long.iloc[1]  # r2 has obi_5 < 0
 
     finally:
         if tmp_path.exists():
             tmp_path.unlink()
+
+
+def test_alignment_handles_millisecond_index_and_preserves_it():
+    """Parquet-style datetime64[ms] bars must retain causal book matches."""
+    index = pd.DatetimeIndex(
+        pd.to_datetime([1784827380000, 1784827440000], unit="ms", utc=True)
+    ).as_unit("ms")
+    bars = pd.DataFrame(
+        {
+            "open": [100.0, 101.0],
+            "high": [101.0, 102.0],
+            "low": [99.0, 100.0],
+            "close": [100.5, 101.5],
+            "volume": [1.0, 2.0],
+        },
+        index=index,
+    )
+    book = pd.DataFrame(
+        {
+            "ts_ms": [1784827370000, 1784827430000],
+            "best_bid": [99.0, 100.0],
+            "best_ask": [100.0, 101.0],
+            "spread_bps": [1.0, 2.0],
+            "obi_5": [0.2, -0.2],
+        }
+    )
+
+    aligned = align_orderbook_to_ohlcv(bars, book)
+
+    assert aligned.index.equals(index)
+    assert aligned["best_bid"].tolist() == [99.0, 100.0]

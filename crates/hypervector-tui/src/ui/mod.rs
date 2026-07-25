@@ -2,25 +2,34 @@
 //! Implements visual telemetry spec from docs/enhancements/2026-07-24-tui-regime-cockpit-eyecandy.md.
 
 use ratatui::{
+    Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     text::{Line, Span},
     widgets::{
         BarChart, Block, BorderType, Borders, Clear, Gauge, Paragraph, Row, Sparkline, Table,
     },
-    Frame,
 };
 
 use crate::app::App;
+use crate::backend_telemetry::BackendConnectionState;
 use crate::hypervelocity;
-use crate::model::{FillMode, get_coin_max_leverage, LeverageMode, RegimeState, RiskSizingMode, TpSlStrategy};
+use crate::model::RegimeState;
 
 pub fn format_timestamp_display(ts: &str) -> String {
     let today = crate::data_loader::get_today_date_str();
-    let fixed_ts = ts.replace("1969-12-31", &today).replace("1970-01-01", &today);
+    let fixed_ts = ts
+        .replace("1969-12-31", &today)
+        .replace("1970-01-01", &today);
     if fixed_ts.contains('T') {
         let parts: Vec<&str> = fixed_ts.split('T').collect();
         let date = parts[0];
-        let time = parts.get(1).unwrap_or(&"").split('.').next().unwrap_or("").trim_end_matches('Z');
+        let time = parts
+            .get(1)
+            .unwrap_or(&"")
+            .split('.')
+            .next()
+            .unwrap_or("")
+            .trim_end_matches('Z');
         format!("{} {}", date, time)
     } else {
         fixed_ts
@@ -29,7 +38,9 @@ pub fn format_timestamp_display(ts: &str) -> String {
 
 pub fn format_time_display(ts: &str) -> String {
     let today = crate::data_loader::get_today_date_str();
-    let fixed_ts = ts.replace("1969-12-31", &today).replace("1970-01-01", &today);
+    let fixed_ts = ts
+        .replace("1969-12-31", &today)
+        .replace("1970-01-01", &today);
     let time_str = if fixed_ts.contains('T') {
         fixed_ts.split('T').nth(1).unwrap_or("")
     } else if fixed_ts.contains(' ') {
@@ -37,7 +48,11 @@ pub fn format_time_display(ts: &str) -> String {
     } else {
         &fixed_ts
     };
-    let time_clean = time_str.split('.').next().unwrap_or(time_str).trim_end_matches('Z');
+    let time_clean = time_str
+        .split('.')
+        .next()
+        .unwrap_or(time_str)
+        .trim_end_matches('Z');
     if time_clean.is_empty() {
         fixed_ts.to_string()
     } else {
@@ -46,13 +61,17 @@ pub fn format_time_display(ts: &str) -> String {
 }
 
 pub fn draw(f: &mut Frame, app: &App) {
+    if app.snapshots.is_empty() {
+        render_backend_only(f, app);
+        return;
+    }
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Length(3),  // Top Telemetry Header Bar
-            Constraint::Length(3),  // SRS_TUI_EC1 Regime Timeline Ribbon
-            Constraint::Min(20),    // Active View Screen Content
-            Constraint::Length(3),  // Command Keybindings Footer Bar
+            Constraint::Length(3), // Top Telemetry Header Bar
+            Constraint::Length(3), // SRS_TUI_EC1 Regime Timeline Ribbon
+            Constraint::Min(20),   // Active View Screen Content
+            Constraint::Length(3), // Command Keybindings Footer Bar
         ])
         .split(f.area());
 
@@ -64,7 +83,7 @@ pub fn draw(f: &mut Frame, app: &App) {
     } else if app.active_tab == 1 {
         render_screen_regime_detection(f, app, chunks[2]);
     } else {
-        render_screen_engine_config(f, app, chunks[2]);
+        render_backend_configuration(f, app, chunks[2]);
     }
 
     render_footer(f, app, chunks[3]);
@@ -78,20 +97,106 @@ pub fn draw(f: &mut Frame, app: &App) {
     }
 }
 
+fn render_backend_configuration(f: &mut Frame, app: &App, area: Rect) {
+    let rows = vec![
+        Line::from(format!(
+            "run: {}   export: {}",
+            app.backend.run_id.as_deref().unwrap_or("unknown"),
+            app.backend.export_id.as_deref().unwrap_or("unknown"),
+        )),
+        Line::from(format!(
+            "strategy: {}   execution: {}   metalabel: {}",
+            app.backend.strategy_name.as_deref().unwrap_or("unknown"),
+            app.backend.execution_mode.as_deref().unwrap_or("unknown"),
+            app.backend.metalabel_mode.as_deref().unwrap_or("off"),
+        )),
+        Line::from(format!(
+            "model bundle: {}",
+            app.backend.metalabel_bundle_id.as_deref().unwrap_or("none"),
+        )),
+        Line::from(format!(
+            "strategy params: {}",
+            compact_json(&app.backend.strategy_params)
+        )),
+        Line::from(format!("exits: {}", compact_json(&app.backend.exits))),
+        Line::from(format!("risk: {}", compact_json(&app.backend.risk))),
+        Line::from(format!("costs: {}", compact_json(&app.backend.costs))),
+        Line::from("Read only: change backend configuration through an acknowledged CLI workflow."),
+    ];
+    let block = Block::default()
+        .title(" EFFECTIVE BACKEND CONFIGURATION ")
+        .borders(Borders::ALL)
+        .border_style(app.theme.border_active);
+    f.render_widget(Paragraph::new(rows).block(block), area);
+}
+
+fn compact_json(value: &serde_json::Value) -> String {
+    if value.is_null() {
+        "not stamped by backend".to_string()
+    } else {
+        value.to_string()
+    }
+}
+
+fn render_backend_only(f: &mut Frame, app: &App) {
+    let state = match app.backend.connection {
+        BackendConnectionState::Connected => "CONNECTED",
+        BackendConnectionState::Stale => "STALE",
+        BackendConnectionState::Disconnected => "DISCONNECTED",
+        BackendConnectionState::Error => "ERROR",
+    };
+    let lines = vec![
+        Line::from(format!("BACKEND {state}: {}", app.backend.status_message)),
+        Line::from(format!(
+            "run={} strategy={} mode={}",
+            app.backend.run_id.as_deref().unwrap_or("unknown"),
+            app.backend.strategy_name.as_deref().unwrap_or("unknown"),
+            app.backend.execution_mode.as_deref().unwrap_or("unknown"),
+        )),
+        Line::from(format!(
+            "equity=${:.2} trades={} position={}",
+            app.paper_stats.current_equity,
+            app.paper_stats.total_trades,
+            app.active_position.direction,
+        )),
+        Line::from("Market/regime snapshots unavailable; no local fallback was generated."),
+    ];
+    let block = Block::default()
+        .title(" READ-ONLY BACKEND TELEMETRY ")
+        .borders(Borders::ALL)
+        .border_style(app.theme.border_active);
+    f.render_widget(Paragraph::new(lines).block(block), f.area());
+}
+
 fn render_header(f: &mut Frame, app: &App, area: Rect) {
     let spinner_frames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
     let spinner = spinner_frames[(app.tick_count % spinner_frames.len() as u64) as usize];
 
     let (mode_str, mode_style) = if app.is_live {
-        (format!("{} REAL-TIME LIVE ORDERBOOK STREAM", spinner), app.theme.bull)
+        (
+            format!("{} REAL-TIME LIVE ORDERBOOK STREAM", spinner),
+            app.theme.bull,
+        )
     } else {
         ("▶️ REAL HISTORICAL MARKET DATA".into(), app.theme.cyan)
     };
     let status_str = if app.is_playing { "PLAYING" } else { "PAUSED" };
 
-    let tab1_style = if app.active_tab == 0 { app.theme.highlight } else { app.theme.muted };
-    let tab2_style = if app.active_tab == 1 { app.theme.highlight } else { app.theme.muted };
-    let tab3_style = if app.active_tab == 2 { app.theme.highlight } else { app.theme.muted };
+    let tab1_style = if app.active_tab == 0 {
+        app.theme.highlight
+    } else {
+        app.theme.muted
+    };
+    let tab2_style = if app.active_tab == 1 {
+        app.theme.highlight
+    } else {
+        app.theme.muted
+    };
+    let tab3_style = if app.active_tab == 2 {
+        app.theme.highlight
+    } else {
+        app.theme.muted
+    };
 
     let text = vec![Line::from(vec![
         Span::styled(" ⚡ HYPERVECTOR ENGINE ", app.theme.title),
@@ -108,7 +213,10 @@ fn render_header(f: &mut Frame, app: &App, area: Rect) {
         Span::raw(" │ "),
         Span::styled(mode_str, mode_style),
         Span::raw(" │ "),
-        Span::styled(format!("[{}] ({:.1}x)", status_str, app.playback_speed), app.theme.header),
+        Span::styled(
+            format!("[{}] ({:.1}x)", status_str, app.playback_speed),
+            app.theme.header,
+        ),
     ])];
 
     let block = Block::default()
@@ -127,7 +235,11 @@ fn render_timeline_ribbon(f: &mut Frame, app: &App, area: Rect) {
     }
     let total = app.snapshots.len();
     let inner_width = area.width.saturating_sub(2) as usize;
-    let start = if app.current_index > inner_width / 2 { app.current_index - inner_width / 2 } else { 0 };
+    let start = if app.current_index > inner_width / 2 {
+        app.current_index - inner_width / 2
+    } else {
+        0
+    };
     let end = (start + inner_width).min(total);
 
     let spans: Vec<Span> = app.snapshots[start..end]
@@ -173,12 +285,12 @@ fn render_screen_regime_detection(f: &mut Frame, app: &App, area: Rect) {
     let main_chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Length(8),  // 1. Top Telemetry Grid (Regime + MTF + Microstructure)
-            Constraint::Length(7),  // 2. Real-time Price Range & Impulse Conviction Telemetry
-            Constraint::Length(7),  // 3. Visual Graphics Row (Orderbook BarChart + Regime Histogram BarChart)
-            Constraint::Length(7),  // 4. Trajectory & Volatility Compression Sparklines
-            Constraint::Length(1),  // 5. SRS_TUI_EC8 Regime Distribution Bar
-            Constraint::Min(6),     // 6. Expansive Audit Log Box Extending to Bottom of Screen
+            Constraint::Length(8), // 1. Top Telemetry Grid (Regime + MTF + Microstructure)
+            Constraint::Length(7), // 2. Real-time Price Range & Impulse Conviction Telemetry
+            Constraint::Length(7), // 3. Visual Graphics Row (Orderbook BarChart + Regime Histogram BarChart)
+            Constraint::Length(7), // 4. Trajectory & Volatility Compression Sparklines
+            Constraint::Length(1), // 5. SRS_TUI_EC8 Regime Distribution Bar
+            Constraint::Min(6),    // 6. Expansive Audit Log Box Extending to Bottom of Screen
         ])
         .split(area);
 
@@ -197,7 +309,10 @@ fn render_screen_regime_detection(f: &mut Frame, app: &App, area: Rect) {
     let (state_style, state_label) = match snap.state {
         RegimeState::BullMomentum => (app.theme.bull, "🔥 TREND_UP (BULL MOMENTUM EXPANSION)"),
         RegimeState::BearMomentum => (app.theme.bear, "🔻 TREND_DOWN (BEAR MOMENTUM EXPANSION)"),
-        RegimeState::VolatilityCoiling => (app.theme.coiling, "⚡ BREAKOUT (VOLATILITY COILING COMPRESSION)"),
+        RegimeState::VolatilityCoiling => (
+            app.theme.coiling,
+            "⚡ BREAKOUT (VOLATILITY COILING COMPRESSION)",
+        ),
         RegimeState::FundingCarry => (app.theme.carry, "💰 TRANSITION (FUNDING CARRY REVERSAL)"),
         RegimeState::RangeChop => (app.theme.chop, "🛡️ RANGE (RANGE CHOP / HIGH FRICTION)"),
     };
@@ -208,9 +323,17 @@ fn render_screen_regime_detection(f: &mut Frame, app: &App, area: Rect) {
     let conf_empty = "░".repeat(16 - conf_bar_len);
 
     // SRS_TUI_EC14: Price Delta Ticker
-    let prev_price = if app.current_index > 0 { app.snapshots[app.current_index - 1].price } else { snap.price };
+    let prev_price = if app.current_index > 0 {
+        app.snapshots[app.current_index - 1].price
+    } else {
+        snap.price
+    };
     let price_diff = snap.price - prev_price;
-    let bps_delta = if prev_price > 0.0 { (price_diff / prev_price) * 10_000.0 } else { 0.0 };
+    let bps_delta = if prev_price > 0.0 {
+        (price_diff / prev_price) * 10_000.0
+    } else {
+        0.0
+    };
     let (ticker_str, ticker_style) = if bps_delta > 0.0 {
         (format!("▲ +{:.1} bps", bps_delta), app.theme.bull)
     } else if bps_delta < 0.0 {
@@ -225,11 +348,23 @@ fn render_screen_regime_detection(f: &mut Frame, app: &App, area: Rect) {
             Span::raw("HTF Regime Lock: "),
             Span::styled("15m (3x-15x Filter)", app.theme.gold),
             Span::raw(" │ Active HTF Trend: "),
-            Span::styled(format!("15m [{}]", snap.trend_15m), if snap.trend_15m == "BULL" { app.theme.bull } else if snap.trend_15m == "BEAR" { app.theme.bear } else { app.theme.chop }),
+            Span::styled(
+                format!("15m [{}]", snap.trend_15m),
+                if snap.trend_15m == "BULL" {
+                    app.theme.bull
+                } else if snap.trend_15m == "BEAR" {
+                    app.theme.bear
+                } else {
+                    app.theme.chop
+                },
+            ),
         ]),
         Line::from(vec![
             Span::raw("Model Conviction: "),
-            Span::styled(format!("[{}{}] {:.1}%", conf_fill, conf_empty, conf_pct), app.theme.cyan),
+            Span::styled(
+                format!("[{}{}] {:.1}%", conf_fill, conf_empty, conf_pct),
+                app.theme.cyan,
+            ),
         ]),
         Line::from(vec![
             Span::raw("Mark Price: "),
@@ -256,18 +391,39 @@ fn render_screen_regime_detection(f: &mut Frame, app: &App, area: Rect) {
         .border_type(BorderType::Thick)
         .border_style(state_style);
 
-    f.render_widget(Paragraph::new(banner_text).block(banner_block), top_chunks[0]);
+    f.render_widget(
+        Paragraph::new(banner_text).block(banner_block),
+        top_chunks[0],
+    );
 
     // SRS_TUI_EC13: MTF Hysteresis Matrix with state dots & explicit HTF Lock
     let mtf_text = vec![
         Line::from(vec![
-            Span::styled("● ", if snap.trend_1m == "BULL" { app.theme.bull } else if snap.trend_1m == "BEAR" { app.theme.bear } else { app.theme.chop }),
+            Span::styled(
+                "● ",
+                if snap.trend_1m == "BULL" {
+                    app.theme.bull
+                } else if snap.trend_1m == "BEAR" {
+                    app.theme.bear
+                } else {
+                    app.theme.chop
+                },
+            ),
             Span::raw(" 1m Trend: "),
             Span::styled(format!(" [{}] ", snap.trend_1m), app.theme.title),
             Span::styled("LTF Execution", app.theme.muted),
         ]),
         Line::from(vec![
-            Span::styled("● ", if snap.trend_5m == "BULL" { app.theme.bull } else if snap.trend_5m == "BEAR" { app.theme.bear } else { app.theme.chop }),
+            Span::styled(
+                "● ",
+                if snap.trend_5m == "BULL" {
+                    app.theme.bull
+                } else if snap.trend_5m == "BEAR" {
+                    app.theme.bear
+                } else {
+                    app.theme.chop
+                },
+            ),
             Span::raw(" 5m Trend: "),
             Span::styled(format!(" [{}] ", snap.trend_5m), app.theme.title),
             Span::styled("ZLEMA Hysteresis", app.theme.muted),
@@ -275,7 +431,16 @@ fn render_screen_regime_detection(f: &mut Frame, app: &App, area: Rect) {
         Line::from(vec![
             Span::styled("★ ", app.theme.gold),
             Span::styled("15m HTF Lock: ", app.theme.gold),
-            Span::styled(format!(" [{}] ", snap.trend_15m), if snap.trend_15m == "BULL" { app.theme.bull } else if snap.trend_15m == "BEAR" { app.theme.bear } else { app.theme.chop }),
+            Span::styled(
+                format!(" [{}] ", snap.trend_15m),
+                if snap.trend_15m == "BULL" {
+                    app.theme.bull
+                } else if snap.trend_15m == "BEAR" {
+                    app.theme.bear
+                } else {
+                    app.theme.chop
+                },
+            ),
             Span::styled("[MACRO REGIME LOCK]", app.theme.title),
         ]),
         Line::from(vec![
@@ -310,7 +475,14 @@ fn render_screen_regime_detection(f: &mut Frame, app: &App, area: Rect) {
     let micro_text = vec![
         Line::from(vec![
             Span::raw("OPI Order Flow: "),
-            Span::styled(format!("({:+.2}) ", snap.opi), if snap.opi >= 0.0 { app.theme.bull } else { app.theme.bear }),
+            Span::styled(
+                format!("({:+.2}) ", snap.opi),
+                if snap.opi >= 0.0 {
+                    app.theme.bull
+                } else {
+                    app.theme.bear
+                },
+            ),
             Span::styled(opi_bipolar, app.theme.cyan),
         ]),
         Line::from(vec![
@@ -321,12 +493,33 @@ fn render_screen_regime_detection(f: &mut Frame, app: &App, area: Rect) {
         Line::from(vec![
             Span::raw("Friction Spread: "),
             Span::styled(format!("{:.1} bps ", snap.spread_bps), app.theme.title),
-            Span::styled(if snap.spread_bps > 6.0 { "[HIGH FRICTION]" } else { "[PASS]" }, if snap.spread_bps > 6.0 { app.theme.chop } else { app.theme.bull }),
+            Span::styled(
+                if snap.spread_bps > 6.0 {
+                    "[HIGH FRICTION]"
+                } else {
+                    "[PASS]"
+                },
+                if snap.spread_bps > 6.0 {
+                    app.theme.chop
+                } else {
+                    app.theme.bull
+                },
+            ),
         ]),
         Line::from(vec![
             Span::raw("Orderbook Depth: "),
-            Span::styled(format!("{:.2}x Ratio ", snap.bid_depth_ratio), app.theme.gold),
-            Span::styled(if snap.bid_depth_ratio >= 1.0 { "(Bids Dominant)" } else { "(Asks Dominant)" }, app.theme.muted),
+            Span::styled(
+                format!("{:.2}x Ratio ", snap.bid_depth_ratio),
+                app.theme.gold,
+            ),
+            Span::styled(
+                if snap.bid_depth_ratio >= 1.0 {
+                    "(Bids Dominant)"
+                } else {
+                    "(Asks Dominant)"
+                },
+                app.theme.muted,
+            ),
         ]),
     ];
 
@@ -340,13 +533,21 @@ fn render_screen_regime_detection(f: &mut Frame, app: &App, area: Rect) {
 
     // 2. Real-time Price Action Range & Impulse Conviction Telemetry Panel
     let count = app.snapshots.len();
-    let start = if app.current_index > 60 { app.current_index - 60 } else { 0 };
+    let start = if app.current_index > 60 {
+        app.current_index - 60
+    } else {
+        0
+    };
     let end = (app.current_index + 1).min(count);
     let view_snaps = &app.snapshots[start..end];
 
     let min_p = view_snaps.iter().map(|s| s.low).fold(f64::MAX, f64::min);
     let max_p = view_snaps.iter().map(|s| s.high).fold(f64::MIN, f64::max);
-    let px_pct = if max_p > min_p { ((snap.price - min_p) / (max_p - min_p) * 100.0).clamp(0.0, 100.0) } else { 50.0 };
+    let px_pct = if max_p > min_p {
+        ((snap.price - min_p) / (max_p - min_p) * 100.0).clamp(0.0, 100.0)
+    } else {
+        50.0
+    };
 
     let px_chunks = Layout::default()
         .direction(Direction::Horizontal)
@@ -359,14 +560,20 @@ fn render_screen_regime_detection(f: &mut Frame, app: &App, area: Rect) {
     let px_gauge = Gauge::default()
         .block(
             Block::default()
-                .title(format!(" 60-BAR PRICE ACTION RANGE TRAJECTORY (${:.2} -> ${:.2}) ", min_p, max_p))
+                .title(format!(
+                    " 60-BAR PRICE ACTION RANGE TRAJECTORY (${:.2} -> ${:.2}) ",
+                    min_p, max_p
+                ))
                 .title_style(app.theme.title)
                 .borders(Borders::ALL)
                 .border_style(app.theme.border),
         )
         .gauge_style(app.theme.gold)
         .percent(px_pct as u16)
-        .label(format!("Mark: ${:.2} (60-Bar Range Pos: {:.1}%)", snap.price, px_pct));
+        .label(format!(
+            "Mark: ${:.2} (60-Bar Range Pos: {:.1}%)",
+            snap.price, px_pct
+        ));
 
     f.render_widget(px_gauge, px_chunks[0]);
 
@@ -374,14 +581,24 @@ fn render_screen_regime_detection(f: &mut Frame, app: &App, area: Rect) {
     let conv_gauge = Gauge::default()
         .block(
             Block::default()
-                .title(format!(" IMPULSE CONVICTION & DYNAMIC LEVERAGE ENGINE ({:.1}%) ", conv_pct))
+                .title(format!(
+                    " IMPULSE CONVICTION & DYNAMIC LEVERAGE ENGINE ({:.1}%) ",
+                    conv_pct
+                ))
                 .title_style(app.theme.title)
                 .borders(Borders::ALL)
                 .border_style(app.theme.border),
         )
-        .gauge_style(if snap.confidence >= 0.70 { app.theme.bull } else { app.theme.coiling })
+        .gauge_style(if snap.confidence >= 0.70 {
+            app.theme.bull
+        } else {
+            app.theme.coiling
+        })
         .percent(conv_pct as u16)
-        .label(format!("Conviction: {:.1}% │ Dyn Lev: {:.2}x / {:.1}x", conv_pct, snap.dynamic_leverage, snap.max_leverage));
+        .label(format!(
+            "Conviction: {:.1}% │ Dyn Lev: {:.2}x / {:.1}x",
+            conv_pct, snap.dynamic_leverage, snap.max_leverage
+        ));
 
     f.render_widget(conv_gauge, px_chunks[1]);
 
@@ -414,11 +631,46 @@ fn render_screen_regime_detection(f: &mut Frame, app: &App, area: Rect) {
     f.render_widget(ob_barchart, graphic_chunks[0]);
 
     let regime_hist_data = [
-        ("TREND_UP", if snap.state == RegimeState::BullMomentum { 90 } else { 30 }),
-        ("TREND_DOWN", if snap.state == RegimeState::BearMomentum { 90 } else { 20 }),
-        ("BREAKOUT", if snap.state == RegimeState::VolatilityCoiling { 90 } else { 15 }),
-        ("TRANSITION", if snap.state == RegimeState::FundingCarry { 90 } else { 25 }),
-        ("RANGE", if snap.state == RegimeState::RangeChop { 90 } else { 40 }),
+        (
+            "TREND_UP",
+            if snap.state == RegimeState::BullMomentum {
+                90
+            } else {
+                30
+            },
+        ),
+        (
+            "TREND_DOWN",
+            if snap.state == RegimeState::BearMomentum {
+                90
+            } else {
+                20
+            },
+        ),
+        (
+            "BREAKOUT",
+            if snap.state == RegimeState::VolatilityCoiling {
+                90
+            } else {
+                15
+            },
+        ),
+        (
+            "TRANSITION",
+            if snap.state == RegimeState::FundingCarry {
+                90
+            } else {
+                25
+            },
+        ),
+        (
+            "RANGE",
+            if snap.state == RegimeState::RangeChop {
+                90
+            } else {
+                40
+            },
+        ),
     ];
 
     let regime_barchart = BarChart::default()
@@ -464,14 +716,22 @@ fn render_screen_regime_detection(f: &mut Frame, app: &App, area: Rect) {
                 .title(format!(
                     " BBWP COMPRESSION ({:.1}%) {} ",
                     snap.bbwp_percentile,
-                    if snap.bbwp_percentile < 20.0 { "[COILING EXTREME]" } else { "" }
+                    if snap.bbwp_percentile < 20.0 {
+                        "[COILING EXTREME]"
+                    } else {
+                        ""
+                    }
                 ))
                 .title_style(app.theme.gold)
                 .borders(Borders::ALL)
                 .border_style(app.theme.border),
         )
         .data(&bbwps)
-        .style(if snap.bbwp_percentile < 20.0 { app.theme.coiling } else { app.theme.cyan });
+        .style(if snap.bbwp_percentile < 20.0 {
+            app.theme.coiling
+        } else {
+            app.theme.cyan
+        });
 
     f.render_widget(sparkline_bbwp, sparkline_chunks[1]);
 
@@ -512,7 +772,9 @@ fn render_distribution_bar(f: &mut Frame, app: &App, area: Rect) {
     }
 
     let current_ts = &app.current_snapshot().timestamp_str;
-    let events_to_now: Vec<_> = app.events.iter()
+    let events_to_now: Vec<_> = app
+        .events
+        .iter()
         .filter(|e| &e.timestamp_str <= current_ts)
         .collect();
 
@@ -550,7 +812,10 @@ fn render_distribution_bar(f: &mut Frame, app: &App, area: Rect) {
     let chop_pct = (chop_cnt / total) * 100.0;
 
     let line = Line::from(vec![
-        Span::styled(format!("TRANSITION DISTRIBUTION: TREND_UP {:.0}% ", bull_pct), app.theme.bull),
+        Span::styled(
+            format!("TRANSITION DISTRIBUTION: TREND_UP {:.0}% ", bull_pct),
+            app.theme.bull,
+        ),
         Span::styled("│ ", app.theme.border),
         Span::styled(format!("TREND_DOWN {:.0}% ", bear_pct), app.theme.bear),
         Span::styled("│ ", app.theme.border),
@@ -571,11 +836,11 @@ fn render_screen_strategy_policy(f: &mut Frame, app: &App, area: Rect) {
     let main_chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Length(6),  // Row 1: Strategy Command Box (42%) + Dynamic Leverage Panel (58%)
-            Constraint::Length(4),  // Row 2: Loaded Strategy Portfolio Matrix (Hypervelocity Only)
+            Constraint::Length(6), // Row 1: Strategy Command Box (42%) + Dynamic Leverage Panel (58%)
+            Constraint::Length(4), // Row 2: Loaded Strategy Portfolio Matrix (Hypervelocity Only)
             Constraint::Length(10), // Row 3: Active Position Telemetry + L2 Depth Ladder Stack
-            Constraint::Length(6),  // Row 4: Performance Summary Section
-            Constraint::Min(6),     // Row 5: Paper Trade Journal Log (60%) + Trend State Log (40%)
+            Constraint::Length(6), // Row 4: Performance Summary Section
+            Constraint::Min(6),    // Row 5: Paper Trade Journal Log (60%) + Trend State Log (40%)
         ])
         .split(area);
 
@@ -618,7 +883,11 @@ fn render_bottom_performance_section(f: &mut Frame, app: &App, area: Rect) {
 
 fn render_screen3_portfolio_telemetry_box(f: &mut Frame, app: &App, area: Rect) {
     let stats = &app.paper_stats;
-    let (pnl_style, pnl_sign) = if stats.realized_pnl >= 0.0 { (app.theme.bull, "+") } else { (app.theme.bear, "") };
+    let (pnl_style, pnl_sign) = if stats.realized_pnl >= 0.0 {
+        (app.theme.bull, "+")
+    } else {
+        (app.theme.bear, "")
+    };
     let eq_pct = (stats.current_equity - stats.initial_capital) / stats.initial_capital * 100.0;
 
     let text = vec![
@@ -626,13 +895,22 @@ fn render_screen3_portfolio_telemetry_box(f: &mut Frame, app: &App, area: Rect) 
             Span::raw("INITIAL CAP: "),
             Span::styled(format!("${:.2}", stats.initial_capital), app.theme.title),
             Span::raw("  EQUITY: "),
-            Span::styled(format!("${:.2} ({}{:.2}%)", stats.current_equity, pnl_sign, eq_pct), pnl_style),
+            Span::styled(
+                format!("${:.2} ({}{:.2}%)", stats.current_equity, pnl_sign, eq_pct),
+                pnl_style,
+            ),
         ]),
         Line::from(vec![
             Span::raw("NET PNL:     "),
-            Span::styled(format!("{}{:.2} USD", pnl_sign, stats.realized_pnl), pnl_style),
+            Span::styled(
+                format!("{}{:.2} USD", pnl_sign, stats.realized_pnl),
+                pnl_style,
+            ),
             Span::raw("  MARGIN: "),
-            Span::styled(format!("${:.2} (25% Cap)", stats.current_equity * 0.25), app.theme.gold),
+            Span::styled(
+                format!("${:.2} (25% Cap)", stats.current_equity * 0.25),
+                app.theme.gold,
+            ),
         ]),
         Line::from(vec![
             Span::raw("EXECUTION:   "),
@@ -642,7 +920,17 @@ fn render_screen3_portfolio_telemetry_box(f: &mut Frame, app: &App, area: Rect) 
             Span::raw("TOTAL TRADES: "),
             Span::styled(format!("{}", stats.total_trades), app.theme.gold),
             Span::raw("  WIN RATE: "),
-            Span::styled(format!("{:.1}% ({}W/{}L)", stats.win_rate_pct, stats.wins, stats.losses), if stats.win_rate_pct >= 50.0 { app.theme.bull } else { app.theme.bear }),
+            Span::styled(
+                format!(
+                    "{:.1}% ({}W/{}L)",
+                    stats.win_rate_pct, stats.wins, stats.losses
+                ),
+                if stats.win_rate_pct >= 50.0 {
+                    app.theme.bull
+                } else {
+                    app.theme.bear
+                },
+            ),
         ]),
     ];
 
@@ -697,25 +985,55 @@ fn render_dynamic_leverage_panel(f: &mut Frame, app: &App, area: Rect) {
     };
 
     let pnl_sign = if stats.realized_pnl >= 0.0 { "+" } else { "" };
-    let pnl_style = if stats.realized_pnl >= 0.0 { app.theme.bull } else { app.theme.bear };
+    let pnl_style = if stats.realized_pnl >= 0.0 {
+        app.theme.bull
+    } else {
+        app.theme.bear
+    };
 
     let policy_text = vec![
         Line::from(vec![
             Span::raw("Dynamic Leverage: "),
-            Span::styled(format!("[{}{}] {:.2}x / {:.1}x", lev_fill, lev_empty, snap.dynamic_leverage, snap.max_leverage), app.theme.gold),
+            Span::styled(
+                format!(
+                    "[{}{}] {:.2}x / {:.1}x",
+                    lev_fill, lev_empty, snap.dynamic_leverage, snap.max_leverage
+                ),
+                app.theme.gold,
+            ),
             Span::raw(" │ Net Position: "),
             Span::styled(net_str, net_style),
         ]),
         Line::from(vec![
             Span::raw("Long Alloc: "),
-            Span::styled(format!("[{}{}] {:.2}x", lw_fill, lw_empty, snap.long_weight), app.theme.bull),
+            Span::styled(
+                format!("[{}{}] {:.2}x", lw_fill, lw_empty, snap.long_weight),
+                app.theme.bull,
+            ),
             Span::raw(" │ Short Alloc: "),
-            Span::styled(format!("[{}{}] {:.2}x", sw_fill, sw_empty, snap.short_weight), app.theme.bear),
+            Span::styled(
+                format!("[{}{}] {:.2}x", sw_fill, sw_empty, snap.short_weight),
+                app.theme.bear,
+            ),
         ]),
         Line::from(vec![
             Span::raw("OPI Flow: "),
-            Span::styled(format!("({:+.2}) ", snap.opi), if snap.opi >= 0.0 { app.theme.bull } else { app.theme.bear }),
-            Span::styled(if snap.opi >= 0.0 { "BULLISH_FLOW" } else { "BEARISH_FLOW" }, app.theme.cyan),
+            Span::styled(
+                format!("({:+.2}) ", snap.opi),
+                if snap.opi >= 0.0 {
+                    app.theme.bull
+                } else {
+                    app.theme.bear
+                },
+            ),
+            Span::styled(
+                if snap.opi >= 0.0 {
+                    "BULLISH_FLOW"
+                } else {
+                    "BEARISH_FLOW"
+                },
+                app.theme.cyan,
+            ),
             Span::raw(" │ Funding Z: "),
             Span::styled(format!("{:.2}", snap.funding_zscore), app.theme.carry),
             Span::raw(" │ RSI (14): "),
@@ -728,7 +1046,18 @@ fn render_dynamic_leverage_panel(f: &mut Frame, app: &App, area: Rect) {
             Span::raw(" │ PnL "),
             Span::styled(format!("{}{:.2}", pnl_sign, stats.realized_pnl), pnl_style),
             Span::raw(" │ Execution: "),
-            Span::styled(if snap.taker_allowed { "TAKERS PERMITTED" } else { "MAKER ONLY" }, if snap.taker_allowed { app.theme.bull } else { app.theme.gold }),
+            Span::styled(
+                if snap.taker_allowed {
+                    "TAKERS PERMITTED"
+                } else {
+                    "MAKER ONLY"
+                },
+                if snap.taker_allowed {
+                    app.theme.bull
+                } else {
+                    app.theme.gold
+                },
+            ),
         ]),
     ];
 
@@ -742,34 +1071,41 @@ fn render_dynamic_leverage_panel(f: &mut Frame, app: &App, area: Rect) {
 }
 
 fn render_registered_strategy_matrix(f: &mut Frame, app: &App, area: Rect) {
-    let snap = app.current_snapshot();
-
-    let is_bull_active = snap.state == RegimeState::BullMomentum;
-    let is_bear_active = snap.state == RegimeState::BearMomentum;
-
-    let alloc_weight = if is_bull_active { snap.long_weight } else if is_bear_active { snap.short_weight } else { 0.0 };
-    let strategy_lev = match app.config.leverage_mode {
-        crate::model::LeverageMode::DynamicML => snap.dynamic_leverage,
-        crate::model::LeverageMode::StaticMultiplier(mult) => mult,
+    let backend_state = match app.backend.connection {
+        BackendConnectionState::Connected => "CONNECTED",
+        BackendConnectionState::Stale => "STALE",
+        BackendConnectionState::Disconnected => "DISCONNECTED",
+        BackendConnectionState::Error => "ERROR",
     };
-    let strategy_rows = vec![
-        Row::new(vec![
-            Span::styled("hypervelocity_1m_scalper", app.theme.gold),
-            Span::styled(
-                if is_bull_active { "ACTIVE (BULL)" } else if is_bear_active { "ACTIVE (BEAR)" } else { "INACTIVE (MUTED)" },
-                if is_bull_active || is_bear_active { app.theme.gold } else { app.theme.muted },
+    let strategy = app.backend.strategy_name.as_deref().unwrap_or("unknown");
+    let model_probability = app
+        .backend
+        .latest_metalabel_p
+        .map(|value| format!("{value:.4}"))
+        .unwrap_or_else(|| "n/a".to_string());
+    let leverage = app
+        .backend
+        .strategy_params
+        .get("leverage")
+        .and_then(serde_json::Value::as_f64)
+        .map(|value| format!("{value:.1}x"))
+        .unwrap_or_else(|| "n/a".to_string());
+    let model_mode = app.backend.metalabel_mode.as_deref().unwrap_or("off");
+    let strategy_rows = vec![Row::new(vec![
+        Span::styled(strategy, app.theme.gold),
+        Span::styled(backend_state, app.theme.cyan),
+        Span::styled(model_probability, app.theme.gold),
+        Span::styled(leverage, app.theme.cyan),
+        Span::styled(
+            format!(
+                "run={} | execution={} | metalabel={}",
+                app.backend.run_id.as_deref().unwrap_or("unknown"),
+                app.backend.execution_mode.as_deref().unwrap_or("unknown"),
+                model_mode,
             ),
-            Span::styled(format!("{:.2}x", alloc_weight), app.theme.gold),
-            Span::styled(format!("{:.1}x", if is_bull_active || is_bear_active { strategy_lev } else { 1.0 }), app.theme.cyan),
-            Span::styled(
-                format!(
-                    "Primary {:.0}x BTC Scalper ({:.1}% Win Rate │ +{:.1}% Margin Target │ Single Position Netting)",
-                    strategy_lev, app.paper_stats.win_rate_pct, app.config.margin_tp_pct,
-                ),
-                app.theme.title,
-            ),
-        ]),
-    ];
+            app.theme.title,
+        ),
+    ])];
 
     let strategy_table = Table::new(
         strategy_rows,
@@ -781,10 +1117,20 @@ fn render_registered_strategy_matrix(f: &mut Frame, app: &App, area: Rect) {
             Constraint::Min(30),
         ],
     )
-    .header(Row::new(["Strategy Component", "Regime Signal State", "Alloc Weight", "Dyn Leverage", "Strategy Mechanics & Netting Guard"].iter().map(|h| Span::styled(*h, app.theme.header))))
+    .header(Row::new(
+        [
+            "Backend Strategy",
+            "Telemetry",
+            "Model p",
+            "Leverage",
+            "Authoritative Run Identity",
+        ]
+        .iter()
+        .map(|h| Span::styled(*h, app.theme.header)),
+    ))
     .block(
         Block::default()
-            .title(" REGISTERED STRATEGY SIGNALS (Hypervelocity 40x Engine Active) ")
+            .title(" BACKEND STRATEGY EXECUTION TELEMETRY ")
             .title_style(app.theme.title)
             .borders(Borders::ALL)
             .border_style(app.theme.border),
@@ -794,14 +1140,22 @@ fn render_registered_strategy_matrix(f: &mut Frame, app: &App, area: Rect) {
 }
 
 fn render_event_log(f: &mut Frame, app: &App, area: Rect) {
-    let header_cells = ["Timestamp", "From State", "To State", "Price", "Trigger Diagnostic"]
-        .iter()
-        .map(|h| Span::styled(*h, app.theme.header));
+    let header_cells = [
+        "Timestamp",
+        "From State",
+        "To State",
+        "Price",
+        "Trigger Diagnostic",
+    ]
+    .iter()
+    .map(|h| Span::styled(*h, app.theme.header));
     let header = Row::new(header_cells).height(1);
 
     let current_ts = &app.current_snapshot().timestamp_str;
     let max_rows = area.height.saturating_sub(3).max(5) as usize;
-    let recent_events: Vec<_> = app.events.iter()
+    let recent_events: Vec<_> = app
+        .events
+        .iter()
         .filter(|e| &e.timestamp_str <= current_ts)
         .rev()
         .take(max_rows)
@@ -809,7 +1163,10 @@ fn render_event_log(f: &mut Frame, app: &App, area: Rect) {
     let rows = recent_events.iter().enumerate().map(|(idx, ev)| {
         let from_str = ev.from_state.display_name();
         let to_str = ev.to_state.display_name();
-        let is_selected = idx == app.selected_event_index.min(recent_events.len().saturating_sub(1));
+        let is_selected = idx
+            == app
+                .selected_event_index
+                .min(recent_events.len().saturating_sub(1));
 
         let to_style = if is_selected {
             app.theme.highlight
@@ -823,15 +1180,40 @@ fn render_event_log(f: &mut Frame, app: &App, area: Rect) {
             }
         };
 
-        let row_style = if is_selected { app.theme.highlight } else { ratatui::style::Style::default() };
+        let row_style = if is_selected {
+            app.theme.highlight
+        } else {
+            ratatui::style::Style::default()
+        };
         let ts_display = format_timestamp_display(&ev.timestamp_str);
 
         Row::new(vec![
-            Span::styled(ts_display, if is_selected { app.theme.highlight } else { app.theme.muted }),
+            Span::styled(
+                ts_display,
+                if is_selected {
+                    app.theme.highlight
+                } else {
+                    app.theme.muted
+                },
+            ),
             Span::styled(from_str, row_style),
             Span::styled(to_str, to_style),
-            Span::styled(format!("${:.2}", ev.price), if is_selected { app.theme.highlight } else { app.theme.gold }),
-            Span::styled(&ev.trigger_reason, if is_selected { app.theme.highlight } else { app.theme.cyan }),
+            Span::styled(
+                format!("${:.2}", ev.price),
+                if is_selected {
+                    app.theme.highlight
+                } else {
+                    app.theme.gold
+                },
+            ),
+            Span::styled(
+                &ev.trigger_reason,
+                if is_selected {
+                    app.theme.highlight
+                } else {
+                    app.theme.cyan
+                },
+            ),
         ])
         .style(row_style)
     });
@@ -863,16 +1245,34 @@ fn render_event_log(f: &mut Frame, app: &App, area: Rect) {
 }
 
 fn render_paper_journal_log(f: &mut Frame, app: &App, area: Rect) {
-    let header_cells = ["Trade ID", "Timestamp", "Direction", "Entry Price", "Exit Price", "Size (BTC)", "Leverage", "Realized PnL", "Exit Trigger"]
-        .iter()
-        .map(|h| Span::styled(*h, app.theme.header));
+    let header_cells = [
+        "Trade ID",
+        "Timestamp",
+        "Direction",
+        "Entry Price",
+        "Exit Price",
+        "Size (BTC)",
+        "Leverage",
+        "Realized PnL",
+        "Exit Trigger",
+    ]
+    .iter()
+    .map(|h| Span::styled(*h, app.theme.header));
     let header = Row::new(header_cells).height(1);
 
     let max_rows = area.height.saturating_sub(3).max(1) as usize;
     let recent_trades: Vec<_> = app.paper_trades.iter().rev().take(max_rows).collect();
     let rows = recent_trades.iter().map(|trd| {
-        let dir_style = if trd.direction == "LONG" { app.theme.bull } else { app.theme.bear };
-        let (pnl_sign, pnl_color) = if trd.pnl_usd >= 0.0 { ("+", app.theme.bull) } else { ("", app.theme.bear) };
+        let dir_style = if trd.direction == "LONG" {
+            app.theme.bull
+        } else {
+            app.theme.bear
+        };
+        let (pnl_sign, pnl_color) = if trd.pnl_usd >= 0.0 {
+            ("+", app.theme.bull)
+        } else {
+            ("", app.theme.bear)
+        };
 
         let ts_display = format_timestamp_display(&trd.timestamp_str);
 
@@ -884,7 +1284,13 @@ fn render_paper_journal_log(f: &mut Frame, app: &App, area: Rect) {
             Span::styled(format!("${:.2}", trd.exit_price), app.theme.title),
             Span::styled(format!("{:.4}", trd.size_btc), app.theme.cyan),
             Span::styled(format!("{:.1}x", trd.leverage), app.theme.gold),
-            Span::styled(format!("{}{:.2} ({}{:.2}%)", pnl_sign, trd.pnl_usd, pnl_sign, trd.pnl_pct), pnl_color),
+            Span::styled(
+                format!(
+                    "{}{:.2} ({}{:.2}%)",
+                    pnl_sign, trd.pnl_usd, pnl_sign, trd.pnl_pct
+                ),
+                pnl_color,
+            ),
             Span::styled(&trd.exit_reason, app.theme.muted),
         ])
     });
@@ -906,7 +1312,11 @@ fn render_paper_journal_log(f: &mut Frame, app: &App, area: Rect) {
     .header(header)
     .block(
         Block::default()
-            .title(format!(" LIVE PAPER TRADE JOURNAL & EXECUTION LOG ({}/{} Trades Recorded) ", recent_trades.len(), app.paper_trades.len()))
+            .title(format!(
+                " LIVE PAPER TRADE JOURNAL & EXECUTION LOG ({}/{} Trades Recorded) ",
+                recent_trades.len(),
+                app.paper_trades.len()
+            ))
             .title_style(app.theme.title)
             .borders(Borders::ALL)
             .border_style(app.theme.border),
@@ -924,18 +1334,34 @@ fn render_footer(f: &mut Frame, app: &App, area: Rect) {
     let empty = "░".repeat(16 - bar_len);
 
     let help_text = Line::from(vec![
-        Span::styled("[Tab / 1-3]", app.theme.gold), Span::raw(" Switch Screen View │ "),
-        Span::styled("[Space]", app.theme.gold), Span::raw(" Play/Pause │ "),
-        Span::styled("[←/→]", app.theme.gold), Span::raw(" Scrub │ "),
-        Span::styled("[↑/↓ j/k]", app.theme.gold), Span::raw(" Select Event │ "),
-        Span::styled("[Enter]", app.theme.gold), Span::raw(" Details │ "),
-        Span::styled("[?]", app.theme.gold), Span::raw(" Help │ "),
+        Span::styled("[Tab / 1-3]", app.theme.gold),
+        Span::raw(" Switch Screen View │ "),
+        Span::styled("[Space]", app.theme.gold),
+        Span::raw(" Play/Pause │ "),
+        Span::styled("[←/→]", app.theme.gold),
+        Span::raw(" Scrub │ "),
+        Span::styled("[↑/↓ j/k]", app.theme.gold),
+        Span::raw(" Select Event │ "),
+        Span::styled("[Enter]", app.theme.gold),
+        Span::raw(" Details │ "),
+        Span::styled("[?]", app.theme.gold),
+        Span::raw(" Help │ "),
         Span::styled("Scrub: ", app.theme.cyan),
-        Span::styled(format!("[{}{}] {:.1}% ({}/{})", fill, empty, scrub_pct, current, total), app.theme.title),
+        Span::styled(
+            format!(
+                "[{}{}] {:.1}% ({}/{})",
+                fill, empty, scrub_pct, current, total
+            ),
+            app.theme.title,
+        ),
     ]);
 
     let p = Paragraph::new(help_text)
-        .block(Block::default().borders(Borders::ALL).border_style(app.theme.border))
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .border_style(app.theme.border),
+        )
         .alignment(Alignment::Center);
 
     f.render_widget(p, area);
@@ -953,17 +1379,50 @@ fn render_event_modal(f: &mut Frame, app: &App, area: Rect) {
     let ev = recent_events[idx];
 
     let lines = vec![
-        Line::from(vec![Span::styled("🔬 TRANSITION DIAGNOSTIC INSPECTOR", app.theme.title)]),
-        Line::from(vec![Span::styled("────────────────────────────────────────────────────────────", app.theme.border)]),
-        Line::from(vec![Span::raw("Timestamp:           "), Span::styled(&ev.timestamp_str, app.theme.muted)]),
-        Line::from(vec![Span::raw("Origin State:        "), Span::styled(ev.from_state.display_name(), app.theme.gold)]),
-        Line::from(vec![Span::raw("Destination State:   "), Span::styled(ev.to_state.display_name(), app.theme.bull)]),
-        Line::from(vec![Span::raw("Transition Price:    "), Span::styled(format!("${:.2}", ev.price), app.theme.gold)]),
-        Line::from(vec![Span::styled("────────────────────────────────────────────────────────────", app.theme.border)]),
-        Line::from(vec![Span::styled("TRIGGER DIAGNOSTIC REASON:", app.theme.cyan)]),
-        Line::from(vec![Span::styled(format!("  \"{}\"", ev.trigger_reason), app.theme.title)]),
-        Line::from(vec![Span::styled("────────────────────────────────────────────────────────────", app.theme.border)]),
-        Line::from(vec![Span::styled("Press [Enter] or [Esc] to return to Cockpit View", app.theme.muted)]),
+        Line::from(vec![Span::styled(
+            "🔬 TRANSITION DIAGNOSTIC INSPECTOR",
+            app.theme.title,
+        )]),
+        Line::from(vec![Span::styled(
+            "────────────────────────────────────────────────────────────",
+            app.theme.border,
+        )]),
+        Line::from(vec![
+            Span::raw("Timestamp:           "),
+            Span::styled(&ev.timestamp_str, app.theme.muted),
+        ]),
+        Line::from(vec![
+            Span::raw("Origin State:        "),
+            Span::styled(ev.from_state.display_name(), app.theme.gold),
+        ]),
+        Line::from(vec![
+            Span::raw("Destination State:   "),
+            Span::styled(ev.to_state.display_name(), app.theme.bull),
+        ]),
+        Line::from(vec![
+            Span::raw("Transition Price:    "),
+            Span::styled(format!("${:.2}", ev.price), app.theme.gold),
+        ]),
+        Line::from(vec![Span::styled(
+            "────────────────────────────────────────────────────────────",
+            app.theme.border,
+        )]),
+        Line::from(vec![Span::styled(
+            "TRIGGER DIAGNOSTIC REASON:",
+            app.theme.cyan,
+        )]),
+        Line::from(vec![Span::styled(
+            format!("  \"{}\"", ev.trigger_reason),
+            app.theme.title,
+        )]),
+        Line::from(vec![Span::styled(
+            "────────────────────────────────────────────────────────────",
+            app.theme.border,
+        )]),
+        Line::from(vec![Span::styled(
+            "Press [Enter] or [Esc] to return to Cockpit View",
+            app.theme.muted,
+        )]),
     ];
 
     let block = Block::default()
@@ -973,7 +1432,9 @@ fn render_event_modal(f: &mut Frame, app: &App, area: Rect) {
         .border_type(BorderType::Double)
         .border_style(app.theme.border_active);
 
-    let p = Paragraph::new(lines).block(block).alignment(Alignment::Left);
+    let p = Paragraph::new(lines)
+        .block(block)
+        .alignment(Alignment::Left);
     f.render_widget(p, modal_area);
 }
 
@@ -982,29 +1443,97 @@ fn render_help_overlay(f: &mut Frame, app: &App, area: Rect) {
     f.render_widget(Clear, modal_area);
 
     let lines = vec![
-        Line::from(vec![Span::styled("⚡ HYPERVECTOR ULTIMATE REGIME ENGINE RULES & KEYBINDINGS", app.theme.title)]),
-        Line::from(vec![Span::styled("───────────────────────────────────────────────────────────────────", app.theme.border)]),
-        Line::from(vec![Span::styled("🏛️ 5-TIER MICROSTRUCTURE REGIME CLASSIFICATION RULES:", app.theme.gold)]),
-        Line::from(vec![Span::styled("  🔥 TREND_UP       : 15m/5m Bull MTF + ADX > 25 + OPI >= 0.0", app.theme.bull)]),
-        Line::from(vec![Span::styled("  🔻 TREND_DOWN     : 15m/5m Bear MTF + ADX > 25 + OPI <= 0.0", app.theme.bear)]),
-        Line::from(vec![Span::styled("  ⚡ BREAKOUT       : BBWP Compression Percentile < 20.0 (Coiling)", app.theme.coiling)]),
-        Line::from(vec![Span::styled("  💰 TRANSITION     : Funding Rate Z-Score |Z| >= 1.8 (Carry Reversal)", app.theme.carry)]),
-        Line::from(vec![Span::styled("  🛡️ RANGE          : Choppiness Index > 55 or Spread > 6.0 bps", app.theme.chop)]),
-        Line::from(vec![Span::styled("───────────────────────────────────────────────────────────────────", app.theme.border)]),
-        Line::from(vec![Span::styled("📊 DYNAMIC LEVERAGE SCALING (HYPERTRADER 1M IMPULSE ML):", app.theme.gold)]),
-        Line::from(vec![Span::raw("  L_dynamic = clamp(L_cap * conviction * (1 + |OPI| * 0.5), 1.0, L_cap)")]),
-        Line::from(vec![Span::styled("───────────────────────────────────────────────────────────────────", app.theme.border)]),
-        Line::from(vec![Span::styled("⌨️ INTERACTIVE KEYBOARD CONTROLS:", app.theme.cyan)]),
-        Line::from(vec![Span::styled("  [Tab / 1-3]   ", app.theme.gold), Span::raw("Switch View Screen (1: Regime Engine, 2: Dashboard, 3: Config)")]),
-        Line::from(vec![Span::styled("  [Space]       ", app.theme.gold), Span::raw("Toggle Play / Pause Real-time Stream")]),
-        Line::from(vec![Span::styled("  [← / →]       ", app.theme.gold), Span::raw("Step Backwards / Forwards through History")]),
-        Line::from(vec![Span::styled("  [↑ / ↓ j/k]   ", app.theme.gold), Span::raw("Navigate Recent Transition Event Rows")]),
-        Line::from(vec![Span::styled("  [Enter]       ", app.theme.gold), Span::raw("Open Transition Event Diagnostic Inspector Modal")]),
-        Line::from(vec![Span::styled("  [s]           ", app.theme.gold), Span::raw("Cycle Playback Speed (1.0x -> 2.0x -> 5.0x -> 10.0x)")]),
-        Line::from(vec![Span::styled("  [t]           ", app.theme.gold), Span::raw("Cycle Timeframe (1m -> 5m -> 15m)")]),
-        Line::from(vec![Span::styled("  [r]           ", app.theme.gold), Span::raw("Reset Scrub Position to Start")]),
-        Line::from(vec![Span::styled("  [? / h]       ", app.theme.gold), Span::raw("Toggle this Help & Rules Overlay Window")]),
-        Line::from(vec![Span::styled("  [q / Esc]     ", app.theme.gold), Span::raw("Dismiss Overlay / Quit Cockpit")]),
+        Line::from(vec![Span::styled(
+            "⚡ HYPERVECTOR ULTIMATE REGIME ENGINE RULES & KEYBINDINGS",
+            app.theme.title,
+        )]),
+        Line::from(vec![Span::styled(
+            "───────────────────────────────────────────────────────────────────",
+            app.theme.border,
+        )]),
+        Line::from(vec![Span::styled(
+            "🏛️ 5-TIER MICROSTRUCTURE REGIME CLASSIFICATION RULES:",
+            app.theme.gold,
+        )]),
+        Line::from(vec![Span::styled(
+            "  🔥 TREND_UP       : 15m/5m Bull MTF + ADX > 25 + OPI >= 0.0",
+            app.theme.bull,
+        )]),
+        Line::from(vec![Span::styled(
+            "  🔻 TREND_DOWN     : 15m/5m Bear MTF + ADX > 25 + OPI <= 0.0",
+            app.theme.bear,
+        )]),
+        Line::from(vec![Span::styled(
+            "  ⚡ BREAKOUT       : BBWP Compression Percentile < 20.0 (Coiling)",
+            app.theme.coiling,
+        )]),
+        Line::from(vec![Span::styled(
+            "  💰 TRANSITION     : Funding Rate Z-Score |Z| >= 1.8 (Carry Reversal)",
+            app.theme.carry,
+        )]),
+        Line::from(vec![Span::styled(
+            "  🛡️ RANGE          : Choppiness Index > 55 or Spread > 6.0 bps",
+            app.theme.chop,
+        )]),
+        Line::from(vec![Span::styled(
+            "───────────────────────────────────────────────────────────────────",
+            app.theme.border,
+        )]),
+        Line::from(vec![Span::styled(
+            "📊 DYNAMIC LEVERAGE SCALING (HYPERTRADER 1M IMPULSE ML):",
+            app.theme.gold,
+        )]),
+        Line::from(vec![Span::raw(
+            "  L_dynamic = clamp(L_cap * conviction * (1 + |OPI| * 0.5), 1.0, L_cap)",
+        )]),
+        Line::from(vec![Span::styled(
+            "───────────────────────────────────────────────────────────────────",
+            app.theme.border,
+        )]),
+        Line::from(vec![Span::styled(
+            "⌨️ INTERACTIVE KEYBOARD CONTROLS:",
+            app.theme.cyan,
+        )]),
+        Line::from(vec![
+            Span::styled("  [Tab / 1-3]   ", app.theme.gold),
+            Span::raw("Switch View Screen (1: Regime Engine, 2: Dashboard, 3: Config)"),
+        ]),
+        Line::from(vec![
+            Span::styled("  [Space]       ", app.theme.gold),
+            Span::raw("Toggle Play / Pause Real-time Stream"),
+        ]),
+        Line::from(vec![
+            Span::styled("  [← / →]       ", app.theme.gold),
+            Span::raw("Step Backwards / Forwards through History"),
+        ]),
+        Line::from(vec![
+            Span::styled("  [↑ / ↓ j/k]   ", app.theme.gold),
+            Span::raw("Navigate Recent Transition Event Rows"),
+        ]),
+        Line::from(vec![
+            Span::styled("  [Enter]       ", app.theme.gold),
+            Span::raw("Open Transition Event Diagnostic Inspector Modal"),
+        ]),
+        Line::from(vec![
+            Span::styled("  [s]           ", app.theme.gold),
+            Span::raw("Cycle Playback Speed (1.0x -> 2.0x -> 5.0x -> 10.0x)"),
+        ]),
+        Line::from(vec![
+            Span::styled("  [t]           ", app.theme.gold),
+            Span::raw("Cycle Timeframe (1m -> 5m -> 15m)"),
+        ]),
+        Line::from(vec![
+            Span::styled("  [r]           ", app.theme.gold),
+            Span::raw("Reset Scrub Position to Start"),
+        ]),
+        Line::from(vec![
+            Span::styled("  [? / h]       ", app.theme.gold),
+            Span::raw("Toggle this Help & Rules Overlay Window"),
+        ]),
+        Line::from(vec![
+            Span::styled("  [q / Esc]     ", app.theme.gold),
+            Span::raw("Dismiss Overlay / Quit Cockpit"),
+        ]),
     ];
 
     let block = Block::default()
@@ -1014,7 +1543,9 @@ fn render_help_overlay(f: &mut Frame, app: &App, area: Rect) {
         .border_type(BorderType::Double)
         .border_style(app.theme.border_active);
 
-    let p = Paragraph::new(lines).block(block).alignment(Alignment::Left);
+    let p = Paragraph::new(lines)
+        .block(block)
+        .alignment(Alignment::Left);
     f.render_widget(p, modal_area);
 }
 
@@ -1036,141 +1567,4 @@ fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
             Constraint::Percentage((100 - percent_x) / 2),
         ])
         .split(popup_layout[1])[1]
-}
-
-// ============================================================================
-// SCREEN 3: INTERACTIVE ENGINE & RISK CONFIGURATION
-// ============================================================================
-fn render_screen_engine_config(f: &mut Frame, app: &App, area: Rect) {
-    let main_chunks = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([
-            Constraint::Length(3),  // Title Banner
-            Constraint::Min(18),    // Interactive Config Panel
-            Constraint::Length(4),  // Keyboard Guidance Bar
-        ])
-        .split(area);
-
-    let cfg = &app.config;
-
-    // 1. Title Banner
-    let banner_text = vec![
-        Line::from(vec![Span::styled("⚙️ HYPERVECTOR ENGINE & RISK SYSTEM CONFIGURATION", app.theme.title)]),
-    ];
-    let banner_block = Block::default()
-        .borders(Borders::ALL)
-        .border_style(app.theme.border_active);
-    f.render_widget(Paragraph::new(banner_text).block(banner_block), main_chunks[0]);
-
-    // 2. Interactive Config Options Table (6 rows)
-    let sel_idx = cfg.selected_option_index;
-    let max_coin_lev = get_coin_max_leverage(&app.symbol);
-
-    let lev_val_str = match cfg.leverage_mode {
-        LeverageMode::DynamicML => format!("DYNAMIC ML (Scaling 1.0x - {:.1}x Max for {})", max_coin_lev, app.symbol),
-        LeverageMode::StaticMultiplier(mult) => format!("STATIC MULTIPLIER ({:.1}x │ Max: {:.1}x for {})", mult, max_coin_lev, app.symbol),
-    };
-
-    let tpsl_val_str = match &cfg.tpsl_strategy {
-        TpSlStrategy::PineCompositeVolatility => "PINE COMPOSITE VOLATILITY (ATR 2.0x & BBWP Trailing Stop)".to_string(),
-        TpSlStrategy::FixedPercentage { tp_pct, sl_pct } => format!("FIXED % (TP: +{:.1}% price │ SL: -{:.1}% price)", tp_pct, sl_pct),
-        TpSlStrategy::ChandelierTrailing => "CHANDELIER EXIT (3.0x ATR Trailing High/Low)".to_string(),
-        TpSlStrategy::ParabolicSarTrail => "PARABOLIC SAR TRAIL (Acceleration Fact 0.02 - 0.20)".to_string(),
-        TpSlStrategy::HypervelocityTargetTrail { target_margin_pct } => format!("HYPERVELOCITY 40x TARGET TRAIL (+{:.1}% Margin TP / Dynamic ATR SL)", target_margin_pct),
-    };
-
-    let lev_approx = match cfg.leverage_mode {
-        LeverageMode::DynamicML => 2.0_f64.min(max_coin_lev),
-        LeverageMode::StaticMultiplier(mult) => mult.min(max_coin_lev),
-    };
-    let price_tp_pct = cfg.margin_tp_pct / lev_approx.max(1.0);
-    let price_sl_pct = cfg.margin_sl_pct / lev_approx.max(1.0);
-
-    let margin_tp_val = format!("{:.1}% MARGIN ({:.2}% PRICE at {:.1}x) — Cycle w/ Enter", cfg.margin_tp_pct, price_tp_pct, lev_approx);
-    let margin_sl_val = format!("{:.1}% MARGIN ({:.2}% PRICE at {:.1}x) — Cycle w/ Enter", cfg.margin_sl_pct, price_sl_pct, lev_approx);
-
-    let exec_val = format!(
-        "RISK {:.0}%  │  FILL {}  │  SPLIT {} ({:.0}% TP1)",
-        cfg.equity_risk_frac * 100.0,
-        match cfg.fill_mode { FillMode::MakerOnly => "MAKER", FillMode::TakerOk => "TAKER" },
-        cfg.split_position_mode.label(),
-        cfg.split_position_mode.tp1_ratio() * 100.0,
-    );
-
-    let risk_val_str = match &cfg.risk_sizing_mode {
-        RiskSizingMode::EquityPercentage(pct) => format!("EQUITY FRACTION ({:.1}% Account Equity Risk Cap)", pct),
-        RiskSizingMode::DynamicKellyPercent(pct) => format!("DYNAMIC KELLY CRITERION ({:.1}% Fractional Kelly)", pct),
-        RiskSizingMode::FixedUsdAmount(amt) => format!("FIXED USD AMOUNT (${:.2} Fixed Risk / Trade)", amt),
-        RiskSizingMode::VolatilityParity => "VOLATILITY PARITY (Inverse ATR Volatility Sizing)".to_string(),
-        RiskSizingMode::HypervelocityMarginParity { leverage, target_pct } => format!("HYPERVELOCITY MARGIN PARITY ({:.1}x Leverage / {:.1}% Target)", leverage, target_pct),
-    };
-
-    let lev_desc = format!("Dynamic ML vs Static Multiplier (1.0x → {:.1}x for {})", max_coin_lev, app.symbol);
-
-    let options: [(&str, String, &str); 6] = [
-        ("1. LEVERAGE MODE",        lev_val_str,       lev_desc.as_str()),
-        ("2. TP / SL ENGINE",       tpsl_val_str,      "Pine Composite Trails, Fixed %, Chandelier, or Parabolic SAR"),
-        ("3. MARGIN TP TARGET",     margin_tp_val,     "Margin return % at which tp1 fires (8.0% default for 40x strategy). Use ←→ to fine-tune."),
-        ("4. MARGIN SL STOP",       margin_sl_val,     "Margin return % at which stop-loss fires (2.0% default). Use ←→ to fine-tune."),
-        ("5. EXECUTION PARAMS",     exec_val,          "Risk fraction per trade, fill type, split-position ratio. Cycle fills & split w/ Enter, risk w/ ←→."),
-        ("6. RISK SIZING CALC",     risk_val_str,      "Equity %, Fractional Kelly, Fixed USD, or Volatility Parity"),
-    ];
-
-    let rows = options.iter().enumerate().map(|(idx, (name, val, desc))| {
-        let is_sel = idx == sel_idx;
-        let name_style = if is_sel { app.theme.highlight } else { app.theme.title };
-        let val_style = if is_sel { app.theme.gold } else { app.theme.cyan };
-        let desc_style = if is_sel { app.theme.highlight } else { app.theme.muted };
-        let pointer = if is_sel { "▶ " } else { "  " };
-
-        Row::new(vec![
-            Span::styled(format!("{}{}", pointer, name), name_style),
-            Span::styled(val.as_str(), val_style),
-            Span::styled(*desc, desc_style),
-        ])
-    });
-
-    let table = Table::new(
-        rows,
-        [
-            Constraint::Length(30),
-            Constraint::Length(60),
-            Constraint::Min(30),
-        ],
-    )
-    .header(Row::new(vec![
-        Span::styled("Parameter", app.theme.header),
-        Span::styled("Active Value", app.theme.header),
-        Span::styled("Description", app.theme.header),
-    ]))
-    .block(
-        Block::default()
-            .title(" INTERACTIVE ENGINE PARAMETERS ([↑/↓] or [j/k] Select, [Enter/c] Cycle, [←/→] Fine-Tune Value) ")
-            .title_style(app.theme.title)
-            .borders(Borders::ALL)
-            .border_style(app.theme.border),
-    );
-
-    f.render_widget(table, main_chunks[1]);
-
-    // 3. Guidance Footer
-    let guide_lines = vec![
-        Line::from(vec![
-            Span::styled("⌨️ CONTROLS: ", app.theme.gold),
-            Span::styled("[↑/↓ j/k]", app.theme.cyan), Span::raw(" Select Param │ "),
-            Span::styled("[Enter/c]", app.theme.cyan), Span::raw(" Cycle Setting │ "),
-            Span::styled("[←/→]", app.theme.cyan), Span::raw(" Adjust numeric value (rows 1, 3, 4, 5) │ "),
-            Span::styled("[Tab / 1-3]", app.theme.cyan), Span::raw(" Switch Tab"),
-        ]),
-        Line::from(vec![
-            Span::styled("💡 ", app.theme.title),
-            Span::raw("All config changes instantly re-calculate position sizing and trade outcomes in all dashboard views."),
-        ]),
-    ];
-
-    let guide_block = Block::default()
-        .borders(Borders::ALL)
-        .border_style(app.theme.border);
-
-    f.render_widget(Paragraph::new(guide_lines).block(guide_block), main_chunks[2]);
 }

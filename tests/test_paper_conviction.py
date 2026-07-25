@@ -76,6 +76,32 @@ def test_metalabel_scale_only_no_filter():
     assert r.conviction == 0.2
 
 
+def test_metalabel_observe_records_probability_without_changing_conviction():
+    """Observe mode annotates a signal without changing sizing or eligibility."""
+
+    class FakeML:
+        root = type("R", (), {"name": "hypervelocity-long-v001"})()
+        feature_names = ["a"]
+
+        def predict_probability(self, features):
+            return float(features["a"])
+
+    provider = MetalabelConvictionProvider(
+        FakeML(),
+        FeatureBuilder(),
+        fixed_fallback=0.5,
+        mode="observe",
+    )
+
+    result = provider.resolve(features={"a": 0.2})
+
+    assert result.conviction == 0.5
+    assert result.source == "metalabel_observe"
+    assert result.metalabel_p == 0.2
+    assert result.metalabel_bundle_id == "hypervelocity-long-v001"
+    assert result.allow_entry is True
+
+
 def test_metalabel_fail_closed_when_filtering():
     class FakeML:
         root = type("R", (), {"name": "bundle"})()
@@ -85,7 +111,11 @@ def test_metalabel_fail_closed_when_filtering():
             raise AssertionError("should not call")
 
     prov = MetalabelConvictionProvider(
-        FakeML(), FeatureBuilder(), fixed_fallback=0.5, filter_entries=True, fail_closed=True
+        FakeML(),
+        FeatureBuilder(),
+        fixed_fallback=0.5,
+        filter_entries=True,
+        fail_closed=True,
     )
     r = prov.resolve(features={"a": 0.1})  # missing b
     assert r.allow_entry is False
@@ -121,7 +151,9 @@ def test_higher_p_higher_risk_size():
 
 def test_feature_builder_mapping_path():
     fb = FeatureBuilder()
-    out = fb.build(feature_names=["x", "y"], bars=None, features={"x": 1.0, "y": 2.0, "z": 9.0})
+    out = fb.build(
+        feature_names=["x", "y"], bars=None, features={"x": 1.0, "y": 2.0, "z": 9.0}
+    )
     assert out == {"x": 1.0, "y": 2.0}
 
 

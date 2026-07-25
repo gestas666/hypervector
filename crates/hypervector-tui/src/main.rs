@@ -8,16 +8,14 @@ use color_eyre::Result;
 use crossterm::{
     event::{self, Event, KeyCode, KeyEventKind},
     execute,
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+    terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
 };
-use ratatui::backend::CrosstermBackend;
 use ratatui::Terminal;
+use ratatui::backend::CrosstermBackend;
 
 use hypervector_tui::{
-    app::App,
-    cli_args::CliArgs,
-    data_loader::load_snapshots_with_metadata,
-    ui,
+    app::App, backend_telemetry::BackendTelemetrySource, cli_args::CliArgs,
+    data_loader::load_snapshots_with_metadata, ui,
 };
 
 fn main() -> Result<()> {
@@ -25,7 +23,20 @@ fn main() -> Result<()> {
     let args = CliArgs::parse();
 
     let (snapshots, is_synthetic) = load_snapshots_with_metadata(&args);
-    let mut app = App::new(args.symbol, args.timeframe, snapshots, args.live, is_synthetic);
+    let mut app = App::new(
+        args.symbol,
+        args.timeframe,
+        snapshots,
+        args.live,
+        is_synthetic,
+    );
+    let decisions_path = args
+        .data_root
+        .join("paper")
+        .join("decisions")
+        .join("decisions.jsonl");
+    let mut backend_source = BackendTelemetrySource::new(decisions_path);
+    app.apply_backend_telemetry(backend_source.refresh());
 
     // Terminal Initialization
     enable_raw_mode()?;
@@ -34,7 +45,12 @@ fn main() -> Result<()> {
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
-    let res = run_app(&mut terminal, &mut app, args.refresh_ms);
+    let res = run_app(
+        &mut terminal,
+        &mut app,
+        &mut backend_source,
+        args.refresh_ms,
+    );
 
     // Terminal Cleanup
     disable_raw_mode()?;
@@ -51,9 +67,11 @@ fn main() -> Result<()> {
 fn run_app<B: ratatui::backend::Backend>(
     terminal: &mut Terminal<B>,
     app: &mut App,
+    backend_source: &mut BackendTelemetrySource,
     refresh_ms: u64,
 ) -> io::Result<()> {
     while !app.should_quit {
+        app.apply_backend_telemetry(backend_source.refresh());
         terminal.draw(|f| ui::draw(f, app))?;
 
         let timeout = Duration::from_millis((refresh_ms as f64 / app.playback_speed) as u64);
@@ -62,14 +80,22 @@ fn run_app<B: ratatui::backend::Backend>(
                 if key.kind == KeyEventKind::Press {
                     if app.show_help_overlay {
                         match key.code {
-                            KeyCode::Char('q') | KeyCode::Esc | KeyCode::Char('?') | KeyCode::Char('h') | KeyCode::Enter | KeyCode::Char(' ') => {
+                            KeyCode::Char('q')
+                            | KeyCode::Esc
+                            | KeyCode::Char('?')
+                            | KeyCode::Char('h')
+                            | KeyCode::Enter
+                            | KeyCode::Char(' ') => {
                                 app.show_help_overlay = false;
                             }
                             _ => {}
                         }
                     } else if app.show_event_detail_modal {
                         match key.code {
-                            KeyCode::Char('q') | KeyCode::Esc | KeyCode::Enter | KeyCode::Char(' ') => {
+                            KeyCode::Char('q')
+                            | KeyCode::Esc
+                            | KeyCode::Enter
+                            | KeyCode::Char(' ') => {
                                 app.show_event_detail_modal = false;
                             }
                             _ => {}

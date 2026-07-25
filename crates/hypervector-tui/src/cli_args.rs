@@ -1,7 +1,7 @@
 //! CLI argument parser for Quant TA & Microstructure Regime Detector Cockpit.
 
-use std::path::PathBuf;
 use clap::Parser;
+use std::path::PathBuf;
 
 #[derive(Debug, Clone, Parser)]
 #[command(

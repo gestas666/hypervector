@@ -2,6 +2,7 @@
 
 use hypervector_tui::{
     app::App,
+    backend_telemetry::parse_backend_telemetry,
     data_loader::{generate_synthetic_history, parse_snapshot_json},
     model::{RegimeSnapshot, RegimeState},
 };
@@ -111,83 +112,92 @@ fn test_parse_snapshot_json_uses_real_fields() {
 }
 
 #[test]
-fn test_playhead_aware_split_tp_trade() {
+fn test_snapshot_playback_never_creates_authoritative_trades() {
     // Bars 0-4 chop, bull transition at bar 5 (entry 100.0), TP barrier at
     // 100.2 (8% margin at 40x = 0.2% price move) crossed on bar 7.
     let mut snaps: Vec<RegimeSnapshot> = Vec::new();
     for i in 0..5 {
-        snaps.push(make_snapshot(100.0, 100.02, 99.98, RegimeState::RangeChop, &format!("2026-07-21 11:0{} :00 UTC", i)));
+        snaps.push(make_snapshot(
+            100.0,
+            100.02,
+            99.98,
+            RegimeState::RangeChop,
+            &format!("2026-07-21 11:0{} :00 UTC", i),
+        ));
     }
-    snaps.push(make_snapshot(100.0, 100.05, 99.97, RegimeState::BullMomentum, "2026-07-21 11:05:00 UTC"));
-    snaps.push(make_snapshot(100.1, 100.15, 100.0, RegimeState::BullMomentum, "2026-07-21 11:06:00 UTC"));
-    snaps.push(make_snapshot(100.22, 100.25, 100.05, RegimeState::BullMomentum, "2026-07-21 11:07:00 UTC"));
-    snaps.push(make_snapshot(100.2, 100.24, 100.1, RegimeState::BullMomentum, "2026-07-21 11:08:00 UTC"));
+    snaps.push(make_snapshot(
+        100.0,
+        100.05,
+        99.97,
+        RegimeState::BullMomentum,
+        "2026-07-21 11:05:00 UTC",
+    ));
+    snaps.push(make_snapshot(
+        100.1,
+        100.15,
+        100.0,
+        RegimeState::BullMomentum,
+        "2026-07-21 11:06:00 UTC",
+    ));
+    snaps.push(make_snapshot(
+        100.22,
+        100.25,
+        100.05,
+        RegimeState::BullMomentum,
+        "2026-07-21 11:07:00 UTC",
+    ));
+    snaps.push(make_snapshot(
+        100.2,
+        100.24,
+        100.1,
+        RegimeState::BullMomentum,
+        "2026-07-21 11:08:00 UTC",
+    ));
 
     let mut app = App::new("BTC".into(), "1m".into(), snaps, false, true);
 
-    // Playhead at bar 0: the transition has not happened yet, no trades.
+    // Regime snapshots are display telemetry, never an execution source.
     assert!(app.hv_trades.is_empty());
     assert!(app.paper_trades.is_empty());
     assert_eq!(app.paper_stats.total_trades, 0);
     assert!(!app.active_position.is_active());
 
-    // Move playhead to the end: exactly one long, closed by split TP.
+    // Moving the playhead must not manufacture paper trades.
     app.current_index = app.snapshots.len() - 1;
     app.refresh_playhead_state();
 
-    assert_eq!(app.hv_trades.len(), 1);
-    let trade = &app.hv_trades[0];
-    assert_eq!(trade.direction, "LONG");
-    assert_eq!(trade.exit_reason, "tp1+tp2");
-
-    // Blended margin: 0.63 * 8.0 + 0.37 * 6.5 = 7.445%
-    assert!((trade.margin_pnl_pct - 7.445).abs() < 0.01, "got {}", trade.margin_pnl_pct);
-
-    // PnL on 25% equity margin: 2500 * 7.445% = 186.125 USD
-    assert!((trade.pnl_usd - 186.125).abs() < 0.5, "got {}", trade.pnl_usd);
-    assert_eq!(app.paper_stats.total_trades, 1);
-    assert_eq!(app.paper_stats.wins, 1);
-    assert!(!app.active_position.is_active(), "closed trade must leave position flat");
-    assert_eq!(app.equity_history.len(), 2);
+    assert!(app.hv_trades.is_empty());
+    assert!(app.paper_trades.is_empty());
+    assert_eq!(app.paper_stats.total_trades, 0);
+    assert!(!app.active_position.is_active());
 }
 
 #[test]
-fn test_playhead_sl_then_open_position() {
-    // Bear transition at bar 2 (short entry 100.0, SL barrier 100.05 hit on
-    // bar 3), then bull transition at bar 4 whose long never hits a barrier
-    // and stays open at the playhead.
-    let snaps = vec![
-        make_snapshot(100.0, 100.01, 99.99, RegimeState::RangeChop, "2026-07-21 11:00:00 UTC"),
-        make_snapshot(100.0, 100.01, 99.99, RegimeState::RangeChop, "2026-07-21 11:01:00 UTC"),
-        make_snapshot(100.0, 100.02, 99.98, RegimeState::BearMomentum, "2026-07-21 11:02:00 UTC"),
-        make_snapshot(100.04, 100.06, 99.99, RegimeState::BearMomentum, "2026-07-21 11:03:00 UTC"),
-        make_snapshot(100.0, 100.02, 99.98, RegimeState::BullMomentum, "2026-07-21 11:04:00 UTC"),
-        make_snapshot(100.05, 100.08, 99.99, RegimeState::BullMomentum, "2026-07-21 11:05:00 UTC"),
-        make_snapshot(100.1, 100.12, 100.0, RegimeState::BullMomentum, "2026-07-21 11:06:00 UTC"),
-    ];
+fn test_app_applies_backend_telemetry_and_keeps_config_read_only() {
+    let telemetry = parse_backend_telemetry(
+        r#"{"feed_ts":"session_start","action":"session_start","run_id":"hv","strategy_name":"hypervelocity_1m_scalper_long","execution_mode":"shadow","metalabel_mode":"observe","init_cash":10000.0,"equity":10000.0,"position_qty":0.0}
+{"feed_ts":"2026-07-25T12:00:00Z","action":"enter_long","run_id":"hv","strategy_name":"hypervelocity_1m_scalper_long","symbol":"BTC","fill_px":100.0,"fill_qty":0.1,"position_qty":0.1,"position_avg_px":100.0,"equity":9998.0,"realized_pnl":-2.0,"unrealized_pnl":1.0,"conviction_source":"metalabel_observe","metalabel_p":0.62,"metalabel_bundle_id":"hypervelocity-long-v001"}"#,
+    )
+    .expect("telemetry");
+    let snapshots = vec![make_snapshot(
+        100.0,
+        100.1,
+        99.9,
+        RegimeState::BullMomentum,
+        "2026-07-25 12:00:00 UTC",
+    )];
+    let mut app = App::new("BTC".into(), "1m".into(), snapshots, true, false);
 
-    let mut app = App::new("BTC".into(), "1m".into(), snaps, false, true);
-    app.current_index = app.snapshots.len() - 1;
-    app.refresh_playhead_state();
+    app.apply_backend_telemetry(telemetry);
 
-    assert_eq!(app.hv_trades.len(), 2);
-    assert_eq!(app.hv_trades[0].direction, "SHORT");
-    assert_eq!(app.hv_trades[0].exit_reason, "SL");
-    assert!((app.hv_trades[0].margin_pnl_pct - (-2.0)).abs() < 0.01);
-
-    assert_eq!(app.hv_trades[1].direction, "LONG");
-    assert_eq!(app.hv_trades[1].exit_reason, "OPEN");
-
-    // Open trade stays unrealised: stats only count the closed short.
-    assert_eq!(app.paper_stats.total_trades, 1);
-    assert_eq!(app.paper_stats.losses, 1);
-    assert!(app.paper_stats.unrealized_pnl > 0.0);
     assert!(app.active_position.is_active());
     assert_eq!(app.active_position.direction, "LONG");
-
-    // Rewind before the bull transition: only the short remains visible.
-    app.current_index = 3;
-    app.refresh_playhead_state();
-    assert_eq!(app.hv_trades.len(), 1);
-    assert_eq!(app.hv_trades[0].exit_reason, "SL");
+    assert_eq!(app.paper_stats.current_equity, 9998.0);
+    assert_eq!(app.backend.latest_metalabel_p, Some(0.62));
+    let config_before = app.config.clone();
+    app.toggle_config_option();
+    app.increase_config_value();
+    app.decrease_config_value();
+    assert_eq!(app.config, config_before);
+    assert_eq!(app.paper_stats.current_equity, 9998.0);
 }

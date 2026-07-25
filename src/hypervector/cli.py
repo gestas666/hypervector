@@ -16,6 +16,7 @@ from hypervector.export.schema import ExportSchemaError, validate_export_dir
 from hypervector.infra import ensure_data_layout, layout_report
 from hypervector.nautilus.config_stub import phase2_check_report
 from hypervector.nautilus.runner import run_phase2_backtest
+from hypervector.paper.conviction import resolve_metalabel_mode
 from hypervector.paper.fill_models import (
     DEFAULT_MAX_BOOK_AGE_MS,
     FILL_MODEL_L2_WALK_V1,
@@ -30,6 +31,16 @@ from hypervector.live.runner import start_live_daemon
 from hypervector.paper.order_intent import NETWORK_MAINNET, ORDER_INTENT_SCHEMA
 from hypervector.paper.report import report_from_data_root
 from hypervector.paper.runner import start_paper_daemon
+from hypervector.regime.detectors import detect_regime_ema
+from hypervector.regime.metrics import regime_detection_metrics
+from hypervector.report import rank_trials
+from hypervector.runs.db import RunsDB, TrialRow
+from hypervector.strategies import register_all_strategies
+from hypervector.strategies.registry import get_strategy, list_strategies
+from hypervector.sweep.costs import resolve_cost_model
+from hypervector.sweep.exits import EXIT_MODES, ExitConfig
+from hypervector.sweep.search import run_grid_search
+from hypervector.sweep.sizing import RiskConfig
 
 # Phase 4c: discoverable command inventory (status command + tests).
 CLI_COMMANDS: tuple[str, ...] = (
@@ -56,16 +67,6 @@ CLI_COMMANDS: tuple[str, ...] = (
     "book-align",
     "regime-export",
 )
-from hypervector.regime.detectors import detect_regime_ema
-from hypervector.regime.metrics import regime_detection_metrics
-from hypervector.report import rank_trials
-from hypervector.runs.db import RunsDB, TrialRow
-from hypervector.strategies import register_all_strategies
-from hypervector.strategies.registry import get_strategy, list_strategies
-from hypervector.sweep.costs import resolve_cost_model
-from hypervector.sweep.exits import EXIT_MODES, ExitConfig
-from hypervector.sweep.search import run_grid_search
-from hypervector.sweep.sizing import RiskConfig
 
 # Phase 4 live secrets (paper public path works without keys; never print values).
 SECRET_ENV_WALLET = "HYPERVECTOR_HL_WALLET_ADDRESS"
@@ -139,7 +140,9 @@ def cmd_status(args: argparse.Namespace) -> int:
             "submit_wired": bool(ready.get("submit_wired")),
             "can_start": bool(ready.get("can_start")),
             "enabled_default": False,
-            "max_notional_usd": float(ready.get("max_notional_usd", DEFAULT_MAX_NOTIONAL_USD)),
+            "max_notional_usd": float(
+                ready.get("max_notional_usd", DEFAULT_MAX_NOTIONAL_USD)
+            ),
             "network": ready.get("network", NETWORK_MAINNET),
             "commands": ["live-check", "live-report", "live-run"],
             "requires_for_run": ["--enabled", "--i-accept-live-risk", "secrets"],
@@ -176,6 +179,8 @@ def _metalabel_status(data_root: Path | str) -> dict:
         "env_root_set": bool(p.get("env_root_set")),
         "error": p.get("error"),
         "enable_flag": "paper-run --metalabel",
+        "modes": ["off", "observe", "scale", "filter"],
+        "recommended_annotation_flag": "paper-run --metalabel-mode observe",
     }
 
 
@@ -227,6 +232,8 @@ def _paper_surface_flags(data_root: Path | str | None = None) -> dict:
         "l2_walk_available": l2_walk_ok,
         "metalabel_enabled": DEFAULT_METALABEL_ENABLED,
         "metalabel_default_off": True,
+        "metalabel_modes": ["off", "observe", "scale", "filter"],
+        "recommended_annotation_flag": "--metalabel-mode observe",
         # Ready-to-enable (bundle installed); still off until paper-run --metalabel.
         "metalabel_ready": bool(metalabel_probe.get("loadable")),
         "metalabel_bundle_root": metalabel_probe.get("bundle_root"),
@@ -275,9 +282,7 @@ def cmd_live_check(args: argparse.Namespace) -> int:
     paths = _ensure_root(args)
     enabled = bool(getattr(args, "enabled", False))
     armed = bool(getattr(args, "armed", False))
-    max_notional = float(
-        getattr(args, "max_notional_usd", DEFAULT_MAX_NOTIONAL_USD)
-    )
+    max_notional = float(getattr(args, "max_notional_usd", DEFAULT_MAX_NOTIONAL_USD))
     policy = live_policy_from_env(
         enabled=enabled,
         armed=armed,
@@ -331,9 +336,7 @@ def cmd_live_run(args: argparse.Namespace) -> int:
         )
         return 1
 
-    max_notional = float(
-        getattr(args, "max_notional_usd", DEFAULT_MAX_NOTIONAL_USD)
-    )
+    max_notional = float(getattr(args, "max_notional_usd", DEFAULT_MAX_NOTIONAL_USD))
     policy = live_policy_from_env(
         enabled=enabled,
         armed=armed,
@@ -369,7 +372,9 @@ def cmd_live_run(args: argparse.Namespace) -> int:
             max_live_bars=int(args.max_live_bars)
             if getattr(args, "max_live_bars", None) is not None
             else None,
-            lookback_days=int(args.lookback) if getattr(args, "lookback", None) else None,
+            lookback_days=int(args.lookback)
+            if getattr(args, "lookback", None)
+            else None,
         )
     except LivePolicyError as exc:
         print(f"live-run refused: {exc}", file=sys.stderr)
@@ -451,15 +456,27 @@ def cmd_paper_run(args: argparse.Namespace) -> int:
         return 1
 
     stop_file = Path(args.stop_file) if getattr(args, "stop_file", None) else None
-    preferred = str(
-        getattr(args, "preferred_fill_model", DEFAULT_PREFERRED_FILL_MODEL)
-    )
-    max_book_age_ms = float(
-        getattr(args, "max_book_age_ms", DEFAULT_MAX_BOOK_AGE_MS)
-    )
-    metalabel_enabled = bool(getattr(args, "metalabel", DEFAULT_METALABEL_ENABLED))
+    preferred = str(getattr(args, "preferred_fill_model", DEFAULT_PREFERRED_FILL_MODEL))
+    max_book_age_ms = float(getattr(args, "max_book_age_ms", DEFAULT_MAX_BOOK_AGE_MS))
+    legacy_metalabel = getattr(args, "metalabel", None)
     metalabel_min_p = float(getattr(args, "metalabel_min_p", 0.5))
     metalabel_filter = bool(getattr(args, "metalabel_filter", True))
+    requested_metalabel_mode = getattr(args, "metalabel_mode", None)
+    if requested_metalabel_mode not in (None, "off") and legacy_metalabel is False:
+        print(
+            "--no-metalabel conflicts with an active --metalabel-mode",
+            file=sys.stderr,
+        )
+        return 2
+    if requested_metalabel_mode == "off" and legacy_metalabel is True:
+        print("--metalabel conflicts with --metalabel-mode off", file=sys.stderr)
+        return 2
+    metalabel_mode = resolve_metalabel_mode(
+        enabled=bool(legacy_metalabel),
+        filter_entries=metalabel_filter,
+        requested=requested_metalabel_mode,
+    )
+    metalabel_enabled = metalabel_mode != "off"
     execution_mode = str(getattr(args, "mode", DEFAULT_EXECUTION_MODE)).lower().strip()
     if execution_mode not in ALLOWED_CLI_EXECUTION_MODES:
         print(
@@ -479,12 +496,15 @@ def cmd_paper_run(args: argparse.Namespace) -> int:
             max_live_bars=int(args.max_live_bars)
             if getattr(args, "max_live_bars", None) is not None
             else None,
-            lookback_days=int(args.lookback) if getattr(args, "lookback", None) else None,
+            lookback_days=int(args.lookback)
+            if getattr(args, "lookback", None)
+            else None,
             preferred_fill_model=preferred,
             max_book_age_ms=max_book_age_ms,
             metalabel_enabled=metalabel_enabled,
             metalabel_min_p=metalabel_min_p,
             metalabel_filter=metalabel_filter,
+            metalabel_mode=metalabel_mode,
             execution_mode=execution_mode,
         )
     except FileNotFoundError as exc:
@@ -510,6 +530,7 @@ def cmd_paper_run(args: argparse.Namespace) -> int:
         "preferred_fill_model": preferred,
         "max_book_age_ms": max_book_age_ms,
         "metalabel_enabled": metalabel_enabled,
+        "metalabel_mode": metalabel_mode,
         "metalabel_filter": metalabel_filter if metalabel_enabled else False,
         "metalabel_min_p": metalabel_min_p if metalabel_enabled else None,
         "secrets_present": _secrets_present(),
@@ -531,7 +552,9 @@ def cmd_book_record(args: argparse.Namespace) -> int:
         try:
             row = append_snapshot(paths.root, symbol)
         except Exception as exc:  # noqa: BLE001
-            print(json.dumps({"ok": False, "error": str(exc)}, indent=2), file=sys.stderr)
+            print(
+                json.dumps({"ok": False, "error": str(exc)}, indent=2), file=sys.stderr
+            )
             return 1
         print(json.dumps({"ok": True, "mode": "once", **row}, indent=2, default=str))
         return 0
@@ -1034,8 +1057,8 @@ def cmd_autotune(args: argparse.Namespace) -> int:
         timeframe=args.timeframe,
         lookback_days=args.lookback,
         n_trials=args.n_trials,
-        data_root=args.data_root,
-        cost_preset=args.fee_model,
+        data_root=Path(args.data_root),
+        fee_model=args.fee_model,
         export_best=not args.no_export,
         book_data_path=getattr(args, "book_path", None),
         sampler=getattr(args, "sampler", "hybrid"),
@@ -1064,11 +1087,14 @@ def cmd_regime_eval(args: argparse.Namespace) -> int:
     from hypervector.regime.evaluator import evaluate_regime_accuracy
 
     root = Path(args.data_root)
-    df_1m, _ = load_research_history(root, symbol=args.symbol, timeframe=args.timeframe, lookback_days=args.lookback)
+    df_1m, _ = load_research_history(
+        root, symbol=args.symbol, timeframe=args.timeframe, lookback_days=args.lookback
+    )
 
     book_path = getattr(args, "book_path", None)
     if book_path and Path(book_path).is_file():
         from hypervector.data.book_align import align_orderbook_to_ohlcv, load_l2_jsonl
+
         df_book = load_l2_jsonl(book_path)
         df_1m = align_orderbook_to_ohlcv(df_1m, df_book)
 
@@ -1133,6 +1159,7 @@ def cmd_backtest(args: argparse.Namespace) -> int:
     book_path = getattr(args, "book_path", None)
     if book_path and Path(book_path).is_file():
         from hypervector.data.book_align import align_orderbook_to_ohlcv, load_l2_jsonl
+
         df_book = load_l2_jsonl(book_path)
         df_bars = align_orderbook_to_ohlcv(df_bars, df_book)
 
@@ -1187,14 +1214,16 @@ def cmd_backtest(args: argparse.Namespace) -> int:
             "wins": m["wins"],
             "losses": m["losses"],
             "win_pct": round(m["win_pct"], 1),
-            "profit_factor": round(m["profit_factor"], 2) if m.get("profit_factor") is not None else None,
-            "avg_trade_pnl": round(m["net_pnl"] / m["trade_count"], 2) if m["trade_count"] > 0 else 0.0,
+            "profit_factor": round(m["profit_factor"], 2)
+            if m.get("profit_factor") is not None
+            else None,
+            "avg_trade_pnl": round(m["net_pnl"] / m["trade_count"], 2)
+            if m["trade_count"] > 0
+            else 0.0,
         },
     }
     print(json.dumps(out, indent=2, default=str))
     return 0
-
-
 
 
 def cmd_book_align(args: argparse.Namespace) -> int:
@@ -1232,7 +1261,9 @@ def cmd_book_align(args: argparse.Namespace) -> int:
         "bars_count": len(aligned),
         "book_records": len(df_book),
         "aligned_path": str(out_file),
-        "sample": aligned[["close", "spread_bps", "obi_5", "book_depth_ratio"]].tail(3).to_dict(orient="records"),
+        "sample": aligned[["close", "spread_bps", "obi_5", "book_depth_ratio"]]
+        .tail(3)
+        .to_dict(orient="records"),
     }
     print(json.dumps(out, indent=2, default=str))
     return 0
@@ -1532,10 +1563,19 @@ def build_parser() -> argparse.ArgumentParser:
     pr.add_argument(
         "--metalabel",
         action=argparse.BooleanOptionalAction,
-        default=DEFAULT_METALABEL_ENABLED,
+        default=None,
         help=(
             "enable LightGBM metalabel: scale conviction by p and "
             "filter entries below --metalabel-min-p (default: off)"
+        ),
+    )
+    pr.add_argument(
+        "--metalabel-mode",
+        choices=["off", "observe", "scale", "filter"],
+        default=None,
+        help=(
+            "explicit model policy: off, observe (annotate only), "
+            "scale (size by p), or filter (size and gate by p)"
         ),
     )
     pr.add_argument(
@@ -1567,7 +1607,9 @@ def build_parser() -> argparse.ArgumentParser:
     r.set_defaults(func=cmd_regime)
 
     for name, fn in (("sweep-up", cmd_sweep_up), ("sweep-down", cmd_sweep_down)):
-        s = sub.add_parser(name, help=f"Search {name} track on live/cached history (VectorBT engine)")
+        s = sub.add_parser(
+            name, help=f"Search {name} track on live/cached history (VectorBT engine)"
+        )
         _add_market_args(s)
         s.add_argument(
             "--strategy",
@@ -1586,8 +1628,12 @@ def build_parser() -> argparse.ArgumentParser:
             default="atr",
             help="TP/SL mode: fixed_rr | atr | trail (default: atr)",
         )
-        s.add_argument("--sl-pct", type=float, default=0.01, help="fixed_rr stop as fraction")
-        s.add_argument("--rr", type=float, default=2.0, help="reward:risk for fixed_rr/atr")
+        s.add_argument(
+            "--sl-pct", type=float, default=0.01, help="fixed_rr stop as fraction"
+        )
+        s.add_argument(
+            "--rr", type=float, default=2.0, help="reward:risk for fixed_rr/atr"
+        )
         s.add_argument("--atr-length", type=int, default=14)
         s.add_argument("--sl-atr-mult", type=float, default=1.5)
         s.add_argument("--trail-atr-mult", type=float, default=2.0)

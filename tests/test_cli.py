@@ -5,7 +5,6 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import pandas as pd
 import pytest
 
 from hypervector.cli import main
@@ -29,6 +28,7 @@ def inject_history(monkeypatch):
     def _install(df=None, prov=None):
         if df is None:
             df, prov = _live_shaped_history(Path("."))
+
         def fake_load(data_root, **kwargs):
             # still write cache as real pipeline would
             from hypervector.data.cache import ParquetCache
@@ -119,11 +119,17 @@ def test_cli_sweep_up_and_down(tmp_path: Path, capsys, inject_history):
     inject_history(df, summarize_provenance(df))
 
     data = tmp_path / "data"
-    assert main(["--data-root", str(data), "sweep-up", "--lookback", "30", "--export"]) == 0
+    assert (
+        main(["--data-root", str(data), "sweep-up", "--lookback", "30", "--export"])
+        == 0
+    )
     up_out = capsys.readouterr().out
     assert "net_pnl" in up_out or "ma_cross" in up_out
 
-    assert main(["--data-root", str(data), "sweep-down", "--lookback", "30", "--export"]) == 0
+    assert (
+        main(["--data-root", str(data), "sweep-down", "--lookback", "30", "--export"])
+        == 0
+    )
     assert (data / "runs" / "hypervector.db").is_file()
     assert main(["--data-root", str(data), "report", "--track", "uptrend"]) == 0
 
@@ -307,7 +313,12 @@ def _strict_export_for_phase2(exports_root: Path) -> Path:
             },
             "data_provenance": {"sources": {"fixture": 200}},
         },
-        params={"strategy": "ma_cross_long", "exit_mode": "fixed_rr", "fast": 5, "slow": 20},
+        params={
+            "strategy": "ma_cross_long",
+            "exit_mode": "fixed_rr",
+            "fast": 5,
+            "slow": 20,
+        },
         metrics={
             "net_pnl": 100.0,
             "total_return_pct": 1.0,
@@ -388,7 +399,9 @@ def test_cli_phase2_run_schema_error(tmp_path: Path, capsys):
     assert err["errors"]
 
 
-def test_cli_phase2_run_paper_flag_notes_not_implemented(tmp_path: Path, capsys, inject_history):
+def test_cli_phase2_run_paper_flag_notes_not_implemented(
+    tmp_path: Path, capsys, inject_history
+):
     """If --paper requested, redirect to paper-run on stderr; still run historical."""
     from hypervector.data.sources import fixture_ohlcv
 
@@ -417,3 +430,55 @@ def test_cli_phase2_run_paper_flag_notes_not_implemented(tmp_path: Path, capsys,
     assert summary["execution_mode"] == "phase2_historical"
     assert "paper-run" in captured.err
     assert "paper ran" not in captured.err.lower()
+
+
+def test_cli_autotune_wires_current_runner_arguments(
+    tmp_path: Path, capsys, monkeypatch
+):
+    """The CLI must use the current autotuner fee and path parameter names."""
+    captured: dict = {}
+
+    def fake_autotune(**kwargs):
+        captured.update(kwargs)
+        return type(
+            "Result",
+            (),
+            {
+                "strategy_name": kwargs["strategy_name"],
+                "symbol": kwargs["symbol"],
+                "timeframe": kwargs["timeframe"],
+                "lookback_days": kwargs["lookback_days"],
+                "n_trials": kwargs["n_trials"],
+                "sampler_used": "optuna_tpe",
+                "best_params": {},
+                "best_exit_cfg": {},
+                "best_metrics": {},
+                "export_dir": None,
+                "board_path": tmp_path / "board.json",
+            },
+        )()
+
+    monkeypatch.setattr("hypervector.sweep.autotune.run_optuna_autotune", fake_autotune)
+    data_root = tmp_path / "data"
+
+    rc = main(
+        [
+            "--data-root",
+            str(data_root),
+            "autotune",
+            "--strategy",
+            "hypervelocity_1m_scalper_long",
+            "--timeframe",
+            "1m",
+            "--fee-model",
+            "hl_taker_default",
+            "--n-trials",
+            "2",
+            "--no-export",
+        ]
+    )
+
+    assert rc == 0
+    assert json.loads(capsys.readouterr().out)["ok"] is True
+    assert captured["fee_model"] == "hl_taker_default"
+    assert captured["data_root"] == data_root

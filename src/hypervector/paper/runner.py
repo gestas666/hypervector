@@ -77,6 +77,7 @@ def start_paper_daemon(
     metalabel_enabled: bool = False,
     metalabel_min_p: float = 0.5,
     metalabel_filter: bool = True,
+    metalabel_mode: str | None = None,
     execution_mode: str = "shadow",
 ) -> PaperDaemonResult:
     """Start paper daemon: warm history, then process live bars until stop.
@@ -122,6 +123,8 @@ def start_paper_daemon(
         Minimum metalabel p to allow a new entry when filtering is on (default 0.5).
     metalabel_filter:
         When True with metalabel, skip entries with p < min_p (default True).
+    metalabel_mode:
+        Explicit policy: off, observe, scale, or filter. Overrides legacy booleans.
     execution_mode:
         ``shadow`` (default) or ``paper``; stamped on fills via session/engine.
     """
@@ -164,6 +167,7 @@ def start_paper_daemon(
         metalabel_enabled=bool(metalabel_enabled),
         metalabel_min_p=float(metalabel_min_p),
         metalabel_filter=bool(metalabel_filter),
+        metalabel_mode=metalabel_mode,
         execution_mode=mode,
     )
 
@@ -186,8 +190,7 @@ def start_paper_daemon(
 
     if warm_df is None or len(warm_df) == 0:
         raise RuntimeError(
-            f"no warm-up bars for {loadout.symbol} {loadout.timeframe} "
-            f"lookback={lb}d"
+            f"no warm-up bars for {loadout.symbol} {loadout.timeframe} lookback={lb}d"
         )
 
     warm_bars = session.process_frame(warm_df)
@@ -206,7 +209,9 @@ def start_paper_daemon(
                     snap.best_ask(),
                 )
             else:
-                logger.info("paper live book poll returned None; fills fall back until fresh")
+                logger.info(
+                    "paper live book poll returned None; fills fall back until fresh"
+                )
         except Exception as exc:  # noqa: BLE001 — never block live start
             logger.warning("paper live book arm failed: %s", exc)
         session.enable_book_poll = True
@@ -226,8 +231,13 @@ def start_paper_daemon(
 
     prev_handlers: dict[int, Any] = {}
     if install_signal_handlers:
+
         def _handle_signal(signum: int, _frame: Any) -> None:
-            name = signal.Signals(signum).name if signum in signal.Signals._value2member_map_ else str(signum)
+            name = (
+                signal.Signals(signum).name
+                if signum in signal.Signals._value2member_map_
+                else str(signum)
+            )
             logger.info("paper daemon received %s — stopping", name)
             _request_stop(f"signal_{name}")
 
@@ -258,22 +268,31 @@ def start_paper_daemon(
                 logger.warning("paper poll failed: %s", exc)
                 new_bars = None
 
-            if new_bars is None or not isinstance(new_bars, pd.DataFrame) or new_bars.empty:
+            if (
+                new_bars is None
+                or not isinstance(new_bars, pd.DataFrame)
+                or new_bars.empty
+            ):
                 empty_polls += 1
                 # Offline tests with max_live_bars=0 or exhausted mock: exit soon
                 if max_live_bars is not None and max_live_bars == 0:
                     _request_stop("max_live_bars")
                     break
-                if (
-                    max_live_bars is not None
-                    and live_bars >= max_live_bars
-                ):
+                if max_live_bars is not None and live_bars >= max_live_bars:
                     _request_stop("max_live_bars")
                     break
-                if max_live_bars is not None and empty_polls >= max_empty_when_capped and live_bars > 0:
+                if (
+                    max_live_bars is not None
+                    and empty_polls >= max_empty_when_capped
+                    and live_bars > 0
+                ):
                     _request_stop("poll_exhausted")
                     break
-                if max_live_bars is not None and empty_polls >= max_empty_when_capped and live_bars == 0:
+                if (
+                    max_live_bars is not None
+                    and empty_polls >= max_empty_when_capped
+                    and live_bars == 0
+                ):
                     # mock returned nothing; still "ran" live phase
                     _request_stop("poll_exhausted")
                     break
