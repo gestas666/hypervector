@@ -353,6 +353,9 @@ fn test_dashboard_uses_backend_margin_costs_and_mark_to_market_pnl() {
     assert!(rendered.contains("POSITION  #1  ▼ SHORT"));
     assert!(rendered.contains("RUN PNL   +$67.17"));
     assert!(rendered.contains("CLOSED TRADES: 0 | OPEN POSITIONS: 1"));
+    assert!(rendered.contains("2026-07-25 08:00:00 EDT"));
+    assert!(rendered.contains("Direction"));
+    assert!(rendered.contains("Leverage"));
     assert!(rendered.contains("UNREAL +109.17"));
     assert!(rendered.contains("AWAITING TP"));
     assert!(!rendered.contains("25% Cap"));

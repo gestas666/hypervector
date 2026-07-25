@@ -1393,15 +1393,15 @@ fn render_paper_journal_log(f: &mut Frame, app: &App, area: Rect) {
     let table = Table::new(
         rows,
         [
-            Constraint::Length(8),
-            Constraint::Length(19),
-            Constraint::Length(7),
-            Constraint::Length(11),
-            Constraint::Length(11),
-            Constraint::Length(10),
-            Constraint::Length(7),
-            Constraint::Length(18),
-            Constraint::Min(12),
+            Constraint::Length(12),
+            Constraint::Length(24),
+            Constraint::Length(9),
+            Constraint::Length(13),
+            Constraint::Length(13),
+            Constraint::Length(12),
+            Constraint::Length(9),
+            Constraint::Length(22),
+            Constraint::Min(16),
         ],
     )
     .header(header)
