@@ -21,4 +21,3 @@ class BreakoutDirection(str, Enum):
 
     UPWARD = "BK_UPWARD"
     DOWNWARD = "BK_DOWNWARD"
-

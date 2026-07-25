@@ -2,7 +2,6 @@
 
 import numpy as np
 import pandas as pd
-import pytest
 
 from hypervector.regime.ultimate import detect_ultimate_regime
 
