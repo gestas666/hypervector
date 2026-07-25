@@ -1,6 +1,8 @@
 //! Ultra High-Density 2-Screen Telemetry UI Rendering Engine for Hypervector Regime Cockpit v2.0.
 //! Implements visual telemetry spec from docs/enhancements/2026-07-24-tui-regime-cockpit-eyecandy.md.
 
+use chrono::{DateTime, NaiveDateTime, TimeZone, Utc};
+use chrono_tz::{America::New_York, Tz};
 use ratatui::{
     Frame,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
@@ -16,10 +18,10 @@ use crate::hypervelocity;
 use crate::model::RegimeState;
 
 pub fn format_timestamp_display(ts: &str) -> String {
-    let today = crate::data_loader::get_today_date_str();
-    let fixed_ts = ts
-        .replace("1969-12-31", &today)
-        .replace("1970-01-01", &today);
+    let fixed_ts = normalized_timestamp(ts);
+    if let Some(eastern) = eastern_timestamp(&fixed_ts) {
+        return eastern.format("%Y-%m-%d %H:%M:%S %Z").to_string();
+    }
     if fixed_ts.contains('T') {
         let parts: Vec<&str> = fixed_ts.split('T').collect();
         let date = parts[0];
@@ -37,10 +39,10 @@ pub fn format_timestamp_display(ts: &str) -> String {
 }
 
 pub fn format_time_display(ts: &str) -> String {
-    let today = crate::data_loader::get_today_date_str();
-    let fixed_ts = ts
-        .replace("1969-12-31", &today)
-        .replace("1970-01-01", &today);
+    let fixed_ts = normalized_timestamp(ts);
+    if let Some(eastern) = eastern_timestamp(&fixed_ts) {
+        return eastern.format("%H:%M:%S %Z").to_string();
+    }
     let time_str = if fixed_ts.contains('T') {
         fixed_ts.split('T').nth(1).unwrap_or("")
     } else if fixed_ts.contains(' ') {
@@ -58,6 +60,25 @@ pub fn format_time_display(ts: &str) -> String {
     } else {
         time_clean.to_string()
     }
+}
+
+fn normalized_timestamp(ts: &str) -> String {
+    let today = crate::data_loader::get_today_date_str();
+    ts.replace("1969-12-31", &today)
+        .replace("1970-01-01", &today)
+}
+
+fn eastern_timestamp(ts: &str) -> Option<DateTime<Tz>> {
+    DateTime::parse_from_rfc3339(ts)
+        .ok()
+        .map(|value| value.with_timezone(&New_York))
+        .or_else(|| eastern_from_utc_label(ts))
+}
+
+fn eastern_from_utc_label(ts: &str) -> Option<DateTime<Tz>> {
+    let raw = ts.strip_suffix(" UTC")?;
+    let naive = NaiveDateTime::parse_from_str(raw, "%Y-%m-%d %H:%M:%S").ok()?;
+    Some(Utc.from_utc_datetime(&naive).with_timezone(&New_York))
 }
 
 pub fn draw(f: &mut Frame, app: &App) {
@@ -337,7 +358,10 @@ fn render_screen_regime_detection(f: &mut Frame, app: &App, area: Rect) {
         ]),
         Line::from(vec![
             Span::raw("Timestamp: "),
-            Span::styled(&snap.timestamp_str, app.theme.muted),
+            Span::styled(
+                format_timestamp_display(&snap.timestamp_str),
+                app.theme.muted,
+            ),
             Span::raw(" │ Volume: "),
             Span::styled(format!("{:.1} BTC", snap.volume), app.theme.title),
         ]),
@@ -1417,7 +1441,7 @@ fn render_event_modal(f: &mut Frame, app: &App, area: Rect) {
         )]),
         Line::from(vec![
             Span::raw("Timestamp:           "),
-            Span::styled(&ev.timestamp_str, app.theme.muted),
+            Span::styled(format_timestamp_display(&ev.timestamp_str), app.theme.muted),
         ]),
         Line::from(vec![
             Span::raw("Origin State:        "),

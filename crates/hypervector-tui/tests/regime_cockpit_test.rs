@@ -8,6 +8,22 @@ use hypervector_tui::{
     model::{EngineConfig, RegimeSnapshot, RegimeState, SplitPositionMode},
 };
 
+#[test]
+fn test_backend_timestamps_display_in_us_eastern_with_dst() {
+    assert_eq!(
+        hypervector_tui::ui::format_timestamp_display("2026-07-25T15:39:50.724000+00:00"),
+        "2026-07-25 11:39:50 EDT"
+    );
+    assert_eq!(
+        hypervector_tui::ui::format_timestamp_display("2026-01-25T15:39:50Z"),
+        "2026-01-25 10:39:50 EST"
+    );
+    assert_eq!(
+        hypervector_tui::ui::format_time_display("2026-07-25T15:39:50Z"),
+        "11:39:50 EDT"
+    );
+}
+
 fn make_snapshot(price: f64, high: f64, low: f64, state: RegimeState, ts: &str) -> RegimeSnapshot {
     RegimeSnapshot {
         timestamp_str: ts.to_string(),
