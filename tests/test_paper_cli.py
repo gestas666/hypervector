@@ -400,11 +400,79 @@ def test_capped_live_rest_waits_for_next_completed_bar(
         sleep_fn=lambda _seconds: None,
         install_signal_handlers=False,
         enable_funding_refresh=False,
+        enforce_live_boundary=False,
     )
 
     assert calls["count"] == 4
     assert result.live_bars == 1
     assert result.stop_reason == "max_live_bars"
+
+
+def test_live_rest_seeds_stale_catchup_without_calling_execution(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Stale cache tails seed indicators; only post-activation closes execute."""
+    export = _write_strict_export(tmp_path)
+    warm = fixture_ohlcv(n_bars=20, drift=-1.0)
+    returned = pd.DataFrame(
+        {
+            "timestamp": pd.to_datetime(
+                [
+                    "2026-07-25T14:58:00Z",
+                    "2026-07-25T14:59:00Z",
+                    "2026-07-25T15:00:00Z",
+                    "2026-07-25T15:01:00Z",
+                ],
+                utc=True,
+            ),
+            "open": [100.0] * 4,
+            "high": [101.0] * 4,
+            "low": [99.0] * 4,
+            "close": [100.0] * 4,
+            "volume": [1.0] * 4,
+        }
+    )
+    monkeypatch.setattr(
+        "hypervector.paper.runner.make_rest_poll_fn",
+        lambda _symbol, _timeframe: (lambda **_kwargs: returned),
+    )
+    monkeypatch.setattr("hypervector.paper.book.BookFeed.poll", lambda _self: None)
+    observed: list[pd.Timestamp] = []
+    from hypervector.paper.session import PaperSession
+
+    original = PaperSession.on_bar
+
+    def record_live(self: PaperSession, row: pd.Series) -> str | None:
+        observed.append(pd.Timestamp(row["timestamp"]))
+        return original(self, row)
+
+    monkeypatch.setattr(PaperSession, "on_bar", record_live)
+    times = iter(
+        [
+            pd.Timestamp("2026-07-25T15:00:30Z"),
+            pd.Timestamp("2026-07-25T15:01:05Z"),
+        ]
+    )
+
+    result = start_paper_daemon(
+        export_dir=export,
+        data_root=tmp_path / "data",
+        warm_ohlcv=warm,
+        poll_fn=None,
+        max_live_bars=1,
+        poll_interval_secs=0.0,
+        sleep_fn=lambda _seconds: None,
+        install_signal_handlers=False,
+        enable_funding_refresh=False,
+        now_fn=lambda: next(times),
+    )
+
+    assert result.live_bars == 1
+    assert observed == [pd.Timestamp("2026-07-25T15:00:00Z")]
+    rows = [json.loads(line) for line in result.decisions_path.read_text().splitlines()]
+    identity = next(row for row in rows if row["action"] == "session_start")
+    assert identity["runtime"]["live_activated_at"] == "2026-07-25T15:00:30+00:00"
 
 
 def test_start_paper_daemon_stop_file(tmp_path: Path):

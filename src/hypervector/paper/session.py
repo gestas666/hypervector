@@ -16,6 +16,7 @@ from typing import Any
 
 import pandas as pd
 
+from hypervector.data.book_record import append_book_snapshot
 from hypervector.infra import ensure_data_layout
 from hypervector.nautilus.actor import (
     DEFAULT_MAX_LOOKBACK,
@@ -42,6 +43,7 @@ from hypervector.paper.conviction import (
     DEFAULT_METALABEL_MIN_P,
     ConvictionProvider,
     ConvictionResult,
+    DirectionalMetalabelConvictionProvider,
     FixedConvictionProvider,
     MetalabelConvictionProvider,
     MetalabelMode,
@@ -121,6 +123,7 @@ class PaperSession:
         conviction_provider: ConvictionProvider | None = None,
         execution_mode: str = "paper",
         hypervelocity_profile: HypervelocityProfile | None = None,
+        lookback_days: int | None = None,
     ) -> None:
         register_all_strategies()
         export_path = Path(export_dir)
@@ -130,6 +133,7 @@ class PaperSession:
         self.loadout = load_strategy_loadout(export_path, strict=True)
         self._is_hypervelocity = is_hypervelocity_strategy(self.loadout.strategy_name)
         self.hypervelocity_profile = hypervelocity_profile
+        self.lookback_days = lookback_days
         if hypervelocity_profile is not None and not self._is_hypervelocity:
             raise ValueError("Hypervelocity profile requires a Hypervelocity export")
         if self._is_hypervelocity and (
@@ -149,10 +153,19 @@ class PaperSession:
         self.book_min_imbalance = float(book_min_imbalance)
         self.max_book_age_ms = float(max_book_age_ms)
         self.preferred_fill_model = str(preferred_fill_model)
+        requested_metalabel_mode = (
+            hypervelocity_profile.metalabel_mode
+            if hypervelocity_profile is not None
+            else metalabel_mode
+        )
         self.metalabel_mode = resolve_metalabel_mode(
-            enabled=bool(metalabel_enabled),
+            enabled=(
+                hypervelocity_profile.metalabel_mode != "off"
+                if hypervelocity_profile is not None
+                else bool(metalabel_enabled)
+            ),
             filter_entries=bool(metalabel_filter),
-            requested=metalabel_mode,
+            requested=requested_metalabel_mode,
         )
         if self._is_hypervelocity and self.metalabel_mode in ("scale", "filter"):
             self.metalabel_mode = "observe"
@@ -160,16 +173,28 @@ class PaperSession:
         self.metalabel_min_p = float(metalabel_min_p)
         self.metalabel_filter = self.metalabel_mode == "filter"
         self.execution_mode = str(execution_mode)
-        self.conviction_provider = _build_conviction_provider(
-            conviction=self.conviction,
-            metalabel_enabled=self.metalabel_enabled,
-            metalabeler=metalabeler,
-            metalabel_min_p=self.metalabel_min_p,
-            metalabel_filter=self.metalabel_filter,
-            metalabel_mode=self.metalabel_mode,
-            conviction_provider=conviction_provider,
-            data_root=self.root,
-        )
+        if (
+            hypervelocity_profile is not None
+            and self.metalabel_mode == "observe"
+            and conviction_provider is None
+            and metalabeler is None
+        ):
+            self.conviction_provider = _build_hypervelocity_directional_provider(
+                hypervelocity_profile,
+                conviction=self.conviction,
+                metalabel_min_p=self.metalabel_min_p,
+            )
+        else:
+            self.conviction_provider = _build_conviction_provider(
+                conviction=self.conviction,
+                metalabel_enabled=self.metalabel_enabled,
+                metalabeler=metalabeler,
+                metalabel_min_p=self.metalabel_min_p,
+                metalabel_filter=self.metalabel_filter,
+                metalabel_mode=self.metalabel_mode,
+                conviction_provider=conviction_provider,
+                data_root=self.root,
+            )
 
         self.run_id = run_id or uuid.uuid4().hex[:12]
         self.export_id = self.loadout.run_id or export_path.name
@@ -220,6 +245,8 @@ class PaperSession:
         self._identity_written = False
         self._pending_maker_entry: PendingMakerEntry | None = None
         self._live_telemetry_enabled = False
+        self._live_activated_at: pd.Timestamp | None = None
+        self._last_hypervelocity_exit_at: pd.Timestamp | None = None
 
     @property
     def pending_maker_entry(self) -> PendingMakerEntry | None:
@@ -230,9 +257,10 @@ class PaperSession:
         """Inject a BookSnapshot for offline tests (no network)."""
         self.book_feed.update(snap)
 
-    def enable_live_telemetry(self) -> None:
+    def enable_live_telemetry(self, *, activated_at: pd.Timestamp | None = None) -> None:
         """Enable report-only per-bar telemetry after historical warm-up."""
         self._live_telemetry_enabled = True
+        self._live_activated_at = activated_at
 
     @property
     def last_timestamp(self) -> pd.Timestamp | None:
@@ -339,7 +367,14 @@ class PaperSession:
                 "submitted": False,
                 "place_attempted": False,
                 "position_qty": float(self.engine.position.qty),
+                "position_avg_px": float(self.engine.position.avg_px),
                 "mark_px": float(record["close"]),
+                "realized_pnl": float(self.engine.position.realized_pnl),
+                "unrealized_pnl": float(
+                    self.engine.position.qty
+                    * (float(record["close"]) - self.engine.position.avg_px)
+                ),
+                "equity": float(self.engine.equity(mark_px=float(record["close"]))),
             },
         )
 
@@ -383,6 +418,14 @@ class PaperSession:
         snapshot = self.book_feed.poll()
         if snapshot is None:
             return None
+        profile = self.hypervelocity_profile
+        if profile is not None and profile.orderbook_archive_enabled:
+            append_book_snapshot(
+                self.root,
+                snapshot,
+                depth_levels=profile.orderbook_archive_depth_levels,
+                run_id=self.run_id,
+            )
         if self._is_hypervelocity and self._live_telemetry_enabled:
             self._record_book_telemetry(snapshot)
         return snapshot
@@ -597,9 +640,28 @@ class PaperSession:
             tick_size=self._hypervelocity_tick(pending.limit_price),
         ):
             return self._fill_pending_entry(record, book)
-        if self._pending_maker_entry is None and allowed and direction is not None:
+        if (
+            self._pending_maker_entry is None
+            and allowed
+            and direction is not None
+            and not self._hypervelocity_reentry_cooling_down(record)
+        ):
             self._submit_pending_entry(record, direction, book)
         return None
+
+    def _hypervelocity_reentry_cooling_down(self, record: dict[str, Any]) -> bool:
+        """Return whether the explicit minimum completed-bar pause remains."""
+        profile = self.hypervelocity_profile
+        if profile is None or self._last_hypervelocity_exit_at is None:
+            return False
+        elapsed = self._hypervelocity_timestamp(record) - self._last_hypervelocity_exit_at
+        required = pd.Timedelta(
+            minutes=(
+                profile.reentry_cooldown_bars
+                * _timeframe_minutes(self.loadout.timeframe)
+            )
+        )
+        return elapsed < required
 
     def _fill_hypervelocity_target(
         self,
@@ -639,6 +701,7 @@ class PaperSession:
         )
         if rec.get("skipped"):
             return None
+        self._last_hypervelocity_exit_at = self._hypervelocity_timestamp(record)
         self.fills_count += 1
         return "close"
 
@@ -695,7 +758,7 @@ class PaperSession:
             return
         limit = entry_limit_price(direction, record, book=book)
         submitted_at = self._hypervelocity_timestamp(record)
-        cv = self.conviction_provider.resolve(bars=df)
+        cv = self.conviction_provider.resolve(bars=df, direction=direction)
         self._pending_maker_entry = PendingMakerEntry(
             direction=direction,
             qty=qty,
@@ -853,6 +916,27 @@ class PaperSession:
                 "risk": _effective_risk(self.loadout),
                 "execution": _effective_execution(self.loadout),
                 "costs": self._effective_costs(),
+                "runtime": {
+                    "lookback_days": self.lookback_days,
+                    "live_activated_at": (
+                        self._live_activated_at.isoformat()
+                        if self._live_activated_at is not None
+                        else None
+                    ),
+                },
+                "orderbook_archive": (
+                    {
+                        "enabled": self.hypervelocity_profile.orderbook_archive_enabled,
+                        "depth_levels": (
+                            self.hypervelocity_profile.orderbook_archive_depth_levels
+                        ),
+                        "path_pattern": (
+                            "data/cache/book/<SYMBOL>_l2_<UTC_DAY>.jsonl"
+                        ),
+                    }
+                    if self.hypervelocity_profile is not None
+                    else {"enabled": False}
+                ),
                 "bars_processed": self.bars_processed,
                 "execution_mode": self.execution_mode,
                 "submitted": False,
@@ -1027,6 +1111,7 @@ def _effective_exits(loadout: StrategyLoadout) -> dict[str, Any]:
         "mode": "strategy_target_only",
         "target_margin_pct": contract.target_margin_pct,
         "target_price_fraction": contract.target_price_fraction,
+        "target_basis": "gross_margin_return_before_costs",
         "stop": None,
         "range_policy": contract.open_position_range_policy,
     }
@@ -1054,6 +1139,7 @@ def _effective_execution(loadout: StrategyLoadout) -> dict[str, Any]:
         "fill_model": PostOnlyLimitFillModel.fill_model_id,
         "price_tick_mode": "hyperliquid_dynamic",
         "entry_ttl_seconds": DEFAULT_ENTRY_TTL_SECONDS,
+        "reentry_cooldown_bars": 1,
     }
 
 
@@ -1134,6 +1220,34 @@ def _build_conviction_provider(
             exc,
         )
         return FixedConvictionProvider(conviction)
+
+
+def _build_hypervelocity_directional_provider(
+    profile: HypervelocityProfile,
+    *,
+    conviction: float,
+    metalabel_min_p: float,
+) -> DirectionalMetalabelConvictionProvider:
+    """Load the configured long/short annotation-only model pair."""
+    from hypervector.ml.features import FeatureBuilder
+    from hypervector.ml.metalabel import Metalabeler
+
+    def provider(bundle: Path) -> MetalabelConvictionProvider:
+        model = Metalabeler.from_root(bundle)
+        return MetalabelConvictionProvider(
+            model,
+            FeatureBuilder(),
+            fixed_fallback=conviction,
+            min_p=metalabel_min_p,
+            filter_entries=False,
+            fail_closed=False,
+            mode="observe",
+        )
+
+    return DirectionalMetalabelConvictionProvider(
+        long_provider=provider(profile.model_long_bundle),
+        short_provider=provider(profile.model_short_bundle),
+    )
 
 
 def _conviction_fill_kwargs(cv: ConvictionResult) -> dict[str, Any]:

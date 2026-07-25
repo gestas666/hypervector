@@ -38,6 +38,8 @@ pub struct BackendTelemetrySnapshot {
     pub execution_policy: Value,
     pub position_policy: Value,
     pub costs: Value,
+    pub runtime: Value,
+    pub orderbook_archive: Value,
     pub latest_regime: Option<String>,
     pub entry_direction: Option<String>,
     pub entry_allowed: Option<bool>,
@@ -79,6 +81,8 @@ impl BackendTelemetrySnapshot {
             execution_policy: Value::Null,
             position_policy: Value::Null,
             costs: Value::Null,
+            runtime: Value::Null,
+            orderbook_archive: Value::Null,
             latest_regime: None,
             entry_direction: None,
             entry_allowed: None,
@@ -139,6 +143,8 @@ pub(crate) struct LedgerRow {
     execution: Option<Value>,
     position_policy: Option<Value>,
     costs: Option<Value>,
+    runtime: Option<Value>,
+    orderbook_archive: Option<Value>,
     exit_reason: Option<String>,
     pub(crate) mark_px: Option<f64>,
     #[serde(flatten)]
@@ -193,7 +199,6 @@ fn build_snapshot(run_id: String, rows: &[&LedgerRow]) -> BackendTelemetrySnapsh
         .iter()
         .find(|row| row.action == "session_start")
         .copied();
-    let latest = rows.last().copied();
     let configured_leverage = identity
         .and_then(|row| row.strategy_params.as_ref())
         .and_then(|params| params.get("leverage"))
@@ -202,7 +207,7 @@ fn build_snapshot(run_id: String, rows: &[&LedgerRow]) -> BackendTelemetrySnapsh
     let trades = build_trades(&run_id, rows, configured_leverage);
     let equity_history: Vec<f64> = rows.iter().filter_map(|row| row.equity).collect();
     let stats = build_stats(rows, &trades, &equity_history);
-    let active_position = build_active_position(rows, latest, configured_leverage);
+    let active_position = build_active_position(rows, configured_leverage);
     let regime_snapshots = build_regime_snapshots(rows, configured_leverage);
     let book = latest_book(rows);
     let latest_regime_row = rows
@@ -239,6 +244,12 @@ fn build_snapshot(run_id: String, rows: &[&LedgerRow]) -> BackendTelemetrySnapsh
             .unwrap_or(Value::Null),
         costs: identity
             .and_then(|row| row.costs.clone())
+            .unwrap_or(Value::Null),
+        runtime: identity
+            .and_then(|row| row.runtime.clone())
+            .unwrap_or(Value::Null),
+        orderbook_archive: identity
+            .and_then(|row| row.orderbook_archive.clone())
             .unwrap_or(Value::Null),
         latest_regime: latest_regime_row.and_then(|row| row.primary_regime.clone()),
         entry_direction: latest_regime_row
@@ -423,10 +434,14 @@ fn build_stats(rows: &[&LedgerRow], trades: &[PaperTradeRecord], equity: &[f64])
 
 fn build_active_position(
     rows: &[&LedgerRow],
-    latest: Option<&LedgerRow>,
     configured_leverage: f64,
 ) -> ActivePosition {
-    let Some(latest) = latest else {
+    let Some(latest) = rows
+        .iter()
+        .rev()
+        .find(|row| row.position_qty.is_some())
+        .copied()
+    else {
         return ActivePosition::flat();
     };
     let qty = latest.position_qty.unwrap_or(0.0);

@@ -9,16 +9,45 @@ from __future__ import annotations
 
 import json
 import time
-from dataclasses import asdict
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Protocol, Sequence
 
 from hypervector.data.hl import fetch_hl_l2_book
 from hypervector.infra import ensure_data_layout
 
 
-def _snapshot_to_row(snap: Any) -> dict[str, Any]:
+class BookLevelLike(Protocol):
+    """Structural type for one order-book level."""
+
+    price: float
+    size: float
+
+
+class BookSnapshotLike(Protocol):
+    """Structural type accepted by the storage-only archive."""
+
+    ts_recv_ms: float
+    ts_exchange_ms: float | None
+    symbol: str
+    source: str
+    bids: Sequence[BookLevelLike]
+    asks: Sequence[BookLevelLike]
+
+    def best_bid(self) -> float | None: ...
+
+    def best_ask(self) -> float | None: ...
+
+
+def snapshot_to_row(
+    snap: BookSnapshotLike,
+    *,
+    depth_levels: int = 20,
+    run_id: str | None = None,
+) -> dict[str, Any]:
+    """Serialize a fetched book snapshot for replay-compatible JSONL storage."""
+    if depth_levels <= 0:
+        raise ValueError("depth_levels must be positive")
     return {
         "ts_recv_ms": snap.ts_recv_ms,
         "ts_exchange_ms": snap.ts_exchange_ms,
@@ -28,8 +57,15 @@ def _snapshot_to_row(snap: Any) -> dict[str, Any]:
         "best_ask": snap.best_ask(),
         "n_bids": len(snap.bids),
         "n_asks": len(snap.asks),
-        "bids": [{"px": lv.price, "sz": lv.size} for lv in snap.bids[:20]],
-        "asks": [{"px": lv.price, "sz": lv.size} for lv in snap.asks[:20]],
+        "bids": [
+            {"px": level.price, "sz": level.size}
+            for level in snap.bids[:depth_levels]
+        ],
+        "asks": [
+            {"px": level.price, "sz": level.size}
+            for level in snap.asks[:depth_levels]
+        ],
+        "run_id": run_id,
         "recorded_at": datetime.now(timezone.utc).isoformat(),
     }
 
@@ -43,11 +79,26 @@ def record_path(data_root: Path | str, symbol: str) -> Path:
 def append_snapshot(data_root: Path | str, symbol: str = "BTC") -> dict[str, Any]:
     """Fetch one L2 snapshot and append to today's jsonl. Returns row dict."""
     snap = fetch_hl_l2_book(symbol)
-    row = _snapshot_to_row(snap)
-    path = record_path(data_root, symbol)
+    return append_book_snapshot(data_root, snap)
+
+
+def append_book_snapshot(
+    data_root: Path | str,
+    snapshot: BookSnapshotLike,
+    *,
+    depth_levels: int = 20,
+    run_id: str | None = None,
+) -> dict[str, Any]:
+    """Append an already-fetched snapshot without another venue request."""
+    row = snapshot_to_row(
+        snapshot,
+        depth_levels=depth_levels,
+        run_id=run_id,
+    )
+    path = record_path(data_root, snapshot.symbol)
     path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("a", encoding="utf-8") as f:
-        f.write(json.dumps(row, separators=(",", ":")) + "\n")
+    with path.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(row, separators=(",", ":")) + "\n")
     row["_path"] = str(path)
     return row
 

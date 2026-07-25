@@ -20,6 +20,54 @@ DEFAULT_POLL_INTERVAL_SECS = 5.0
 _POLL_LOOKBACK_DAYS = 1
 
 
+def timeframe_delta(timeframe: str) -> pd.Timedelta:
+    """Return the supported candle duration or fail on an unknown timeframe."""
+    durations = {
+        "1m": pd.Timedelta(minutes=1),
+        "5m": pd.Timedelta(minutes=5),
+        "15m": pd.Timedelta(minutes=15),
+        "1h": pd.Timedelta(hours=1),
+    }
+    try:
+        return durations[timeframe]
+    except KeyError as exc:
+        raise ValueError(f"unsupported live timeframe: {timeframe}") from exc
+
+
+def partition_live_bars(
+    frame: pd.DataFrame,
+    *,
+    timeframe: str,
+    activated_at: pd.Timestamp,
+    observed_at: pd.Timestamp,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Split completed bars into pre-activation seed and genuine live bars.
+
+    Candle timestamps are opens. A bar is complete only when its close is not
+    later than ``observed_at``. Bars closing at or before activation are seed
+    history and must never pass through execution.
+    """
+    normalized = filter_bars_after(frame, after_ts=None)
+    if normalized.empty:
+        return normalized.copy(), normalized.copy()
+    activation = _utc_timestamp(activated_at)
+    observed = _utc_timestamp(observed_at)
+    closes = normalized["timestamp"] + timeframe_delta(timeframe)
+    completed = normalized.loc[closes <= observed].copy()
+    completed_closes = closes.loc[completed.index]
+    catchup = completed.loc[completed_closes <= activation].reset_index(drop=True)
+    live = completed.loc[completed_closes > activation].reset_index(drop=True)
+    return catchup, live
+
+
+def _utc_timestamp(value: pd.Timestamp) -> pd.Timestamp:
+    """Normalize one timestamp to UTC."""
+    timestamp = pd.Timestamp(value)
+    if timestamp.tzinfo is None:
+        return timestamp.tz_localize("UTC")
+    return timestamp.tz_convert("UTC")
+
+
 def fetch_new_hl_bars(
     symbol: str,
     timeframe: str,

@@ -37,8 +37,13 @@ fill_rule = "through_one_tick"
 fill_model = "post_only_limit_through_v1"
 price_tick_mode = "hyperliquid_dynamic"
 entry_ttl_seconds = 300.0
+reentry_cooldown_bars = 1
 paper_submit_enabled = false
 live_enabled = false
+
+[orderbook]
+archive_enabled = true
+archive_depth_levels = 20
 
 [venue]
 name = "hyperliquid"
@@ -58,10 +63,12 @@ funding_refresh_seconds = 60.0
 funding_accrual = "hourly_boundary"
 
 [model]
-mode = "off"
+mode = "observe"
 may_filter = false
 may_scale = false
-installed_candidate = "none"
+installed_candidate = "hypervelocity_directional_runtime_20260725T081458Z"
+long_bundle = "data/models/metalabel/candidates/hypervelocity-l2-runtime-uptrend-long-20260725T081458Z"
+short_bundle = "data/models/metalabel/candidates/hypervelocity-l2-runtime-downtrend-short-20260725T081458Z"
 
 [runtime]
 mode = "shadow"
@@ -69,7 +76,7 @@ export_path = "data/exports/uptrend_hypervelocity_1m_scalper_long_784548f1"
 lookback_days = 30
 strict_hl_only = true
 poll_interval_seconds = 10.0
-metalabel_mode = "off"
+metalabel_mode = "observe"
 
 [regime]
 execution_timeframe = "1m"

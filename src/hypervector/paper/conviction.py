@@ -32,6 +32,7 @@ __all__ = [
     "FeatureBuildError",
     "FixedConvictionProvider",
     "MetalabelConvictionProvider",
+    "DirectionalMetalabelConvictionProvider",
     "MetalabelMode",
     "resolve_metalabel_mode",
 ]
@@ -58,6 +59,7 @@ class ConvictionProvider(Protocol):
         *,
         features: Mapping[str, float] | None = None,
         bars: pd.DataFrame | None = None,
+        direction: str | None = None,
     ) -> ConvictionResult: ...
 
 
@@ -77,8 +79,9 @@ class FixedConvictionProvider:
         *,
         features: Mapping[str, float] | None = None,
         bars: pd.DataFrame | None = None,
+        direction: str | None = None,
     ) -> ConvictionResult:
-        del features, bars
+        del features, bars, direction
         return ConvictionResult(
             conviction=self._conviction,
             source="fixed",
@@ -141,7 +144,9 @@ class MetalabelConvictionProvider:
         *,
         features: Mapping[str, float] | None = None,
         bars: pd.DataFrame | None = None,
+        direction: str | None = None,
     ) -> ConvictionResult:
+        del direction
         bundle = _bundle_id(self._metalabeler)
         try:
             feature_names = list(self._metalabeler.feature_names)
@@ -210,6 +215,37 @@ class MetalabelConvictionProvider:
             allow_entry=True,
             skip_reason=None,
         )
+
+
+class DirectionalMetalabelConvictionProvider:
+    """Route annotation inference to distinct long and short model bundles."""
+
+    def __init__(
+        self,
+        *,
+        long_provider: MetalabelConvictionProvider,
+        short_provider: MetalabelConvictionProvider,
+    ) -> None:
+        self._providers = {"long": long_provider, "short": short_provider}
+
+    @property
+    def bundle_id(self) -> str:
+        """Return both immutable directional bundle identities."""
+        long_id = self._providers["long"].bundle_id or "missing"
+        short_id = self._providers["short"].bundle_id or "missing"
+        return f"long={long_id};short={short_id}"
+
+    def resolve(
+        self,
+        *,
+        features: Mapping[str, float] | None = None,
+        bars: pd.DataFrame | None = None,
+        direction: str | None = None,
+    ) -> ConvictionResult:
+        """Resolve with the model matching the backend-requested direction."""
+        if direction not in self._providers:
+            raise ValueError("directional metalabel requires direction=long|short")
+        return self._providers[direction].resolve(features=features, bars=bars)
 
 
 def resolve_metalabel_mode(

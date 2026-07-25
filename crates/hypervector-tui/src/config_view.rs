@@ -90,6 +90,31 @@ fn runtime_rows(backend: &BackendTelemetrySnapshot) -> Vec<ConfigMenuRow> {
             option(&backend.metalabel_mode),
             "session_start",
         ),
+        number_row(
+            "Runtime",
+            "Lookback",
+            &backend.runtime,
+            "lookback_days",
+            "runtime",
+            "d",
+            1.0,
+        ),
+        json_row(
+            "Order book",
+            "Archive enabled",
+            &backend.orderbook_archive,
+            "enabled",
+            "orderbook_archive",
+        ),
+        number_row(
+            "Order book",
+            "Archive depth",
+            &backend.orderbook_archive,
+            "depth_levels",
+            "orderbook_archive",
+            " levels",
+            1.0,
+        ),
     ]
 }
 
@@ -138,6 +163,13 @@ fn strategy_rows(backend: &BackendTelemetrySnapshot) -> Vec<ConfigMenuRow> {
         ),
         json_row(
             "Exit",
+            "Target basis",
+            &backend.exits,
+            "target_basis",
+            "exits",
+        ),
+        json_row(
+            "Exit",
             "Range policy",
             &backend.exits,
             "range_policy",
@@ -169,6 +201,15 @@ fn execution_rows(backend: &BackendTelemetrySnapshot) -> Vec<ConfigMenuRow> {
             "entry_ttl_seconds",
             "execution",
             "s",
+            1.0,
+        ),
+        number_row(
+            "Orders",
+            "Re-entry cooldown",
+            &backend.execution_policy,
+            "reentry_cooldown_bars",
+            "execution",
+            " bars",
             1.0,
         ),
     ]

@@ -133,3 +133,19 @@ fn projects_backend_regime_history_and_measured_book_telemetry() {
     assert_eq!(book.bid_levels[0].price, 101.0);
     assert_eq!(book.ask_levels[0].size, 2.0);
 }
+
+#[test]
+fn later_book_row_does_not_erase_backend_position_or_mark_equity() {
+    let ledger = r#"{"feed_ts":"session_start","action":"session_start","run_id":"hv","strategy_params":{"leverage":40.0},"init_cash":10000.0,"equity":10000.0,"position_qty":0.0}
+{"feed_ts":"2026-07-25T15:00:00Z","action":"enter_long","run_id":"hv","symbol":"BTC","fill_px":100.0,"fill_qty":1.0,"position_qty":1.0,"position_avg_px":100.0,"equity":9998.5,"realized_pnl":-1.5,"unrealized_pnl":0.0,"leverage":40.0}
+{"feed_ts":"2026-07-25T15:01:00Z","action":"regime_observation","run_id":"hv","primary_regime":"RANGE","position_qty":1.0,"position_avg_px":100.0,"mark_px":102.0,"equity":10000.5,"realized_pnl":-1.5,"unrealized_pnl":2.0}
+{"feed_ts":"2026-07-25T15:01:05Z","action":"book_observation","run_id":"hv","mid_px":102.0,"spread_bps":1.0,"bids":[{"price":101.9,"size":1.0}],"asks":[{"price":102.1,"size":1.0}]}"#;
+
+    let telemetry = parse_backend_telemetry(ledger).expect("telemetry");
+
+    assert!(telemetry.active_position.is_active());
+    assert_eq!(telemetry.active_position.direction, "LONG");
+    assert!((telemetry.active_position.entry_price - 100.0).abs() < 1e-9);
+    assert!((telemetry.stats.current_equity - 10000.5).abs() < 1e-9);
+    assert!((telemetry.stats.unrealized_pnl - 2.0).abs() < 1e-9);
+}

@@ -34,7 +34,12 @@ def test_faithful_profile_enforces_one_way_bidirectional_runtime() -> None:
     assert profile.venue_max_leverage >= profile.leverage
     assert profile.runtime_mode == "shadow"
     assert profile.strict_hl_only is True
-    assert profile.metalabel_mode in {"off", "observe"}
+    assert profile.metalabel_mode == "observe"
+    assert profile.model_long_bundle.is_dir()
+    assert profile.model_short_bundle.is_dir()
+    assert profile.reentry_cooldown_bars == 1
+    assert profile.orderbook_archive_enabled is True
+    assert profile.orderbook_archive_depth_levels == 20
 
 
 @pytest.mark.parametrize(

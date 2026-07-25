@@ -23,7 +23,11 @@ from hypervector.paper.fill_models import (
     DEFAULT_MAX_BOOK_AGE_MS,
     FILL_MODEL_L2_WALK_V1,
 )
-from hypervector.paper.live_node import DEFAULT_POLL_INTERVAL_SECS, make_rest_poll_fn
+from hypervector.paper.live_node import (
+    DEFAULT_POLL_INTERVAL_SECS,
+    make_rest_poll_fn,
+    partition_live_bars,
+)
 from hypervector.paper.session import PaperSession
 from hypervector.strategies.hypervelocity_profile import HypervelocityProfile
 
@@ -81,6 +85,8 @@ def start_paper_daemon(
     metalabel_mode: str | None = None,
     execution_mode: str = "shadow",
     hypervelocity_profile: HypervelocityProfile | None = None,
+    now_fn: Callable[[], pd.Timestamp] | None = None,
+    enforce_live_boundary: bool | None = None,
 ) -> PaperDaemonResult:
     """Start paper daemon: warm history, then process live bars until stop.
 
@@ -133,6 +139,7 @@ def start_paper_daemon(
     mode = str(execution_mode)
     _print_banner(mode)
     sleep = sleep_fn if sleep_fn is not None else time.sleep
+    clock = now_fn if now_fn is not None else _utc_now
     export_path = Path(export_dir)
     root = Path(data_root)
 
@@ -155,6 +162,9 @@ def start_paper_daemon(
     # poll_fn keeps book off-network unless the caller sets enable_book_poll later.
     live_rest_feed = poll_fn is None
     live_book_enabled = live_rest_feed
+    enforce_boundary = live_rest_feed if enforce_live_boundary is None else bool(
+        enforce_live_boundary
+    )
 
     session = PaperSession(
         export_dir=export_path,
@@ -173,6 +183,7 @@ def start_paper_daemon(
         metalabel_mode=metalabel_mode,
         execution_mode=mode,
         hypervelocity_profile=hypervelocity_profile,
+        lookback_days=lb,
     )
     if hypervelocity_profile is not None:
         funding_rate = session.initialize_hypervelocity_venue()
@@ -205,8 +216,9 @@ def start_paper_daemon(
         )
 
     warm_bars = session.warm_up(warm_df)
+    activated_at = clock()
+    session.enable_live_telemetry(activated_at=activated_at)
     session.ensure_session_identity()
-    session.enable_live_telemetry()
     after_ts = session.last_timestamp
 
     # Live L2 refresh is backend-owned and runs independently of new candle arrival.
@@ -321,11 +333,27 @@ def start_paper_daemon(
                 sleep(float(poll_interval_secs))
                 continue
 
-            empty_polls = 0
-            # Process in timestamp order
+            # Process in timestamp order. Real REST may return a stale cache tail
+            # and the still-forming current candle; neither has execution authority.
             frame = new_bars
             if "timestamp" in frame.columns:
                 frame = frame.sort_values("timestamp")
+            if enforce_boundary:
+                catchup, frame = partition_live_bars(
+                    frame,
+                    timeframe=loadout.timeframe,
+                    activated_at=activated_at,
+                    observed_at=clock(),
+                )
+                if not catchup.empty:
+                    session.warm_up(catchup)
+                    after_ts = pd.Timestamp(catchup["timestamp"].iloc[-1])
+                    logger.info("paper catch-up seeded bars=%s", len(catchup))
+                if frame.empty:
+                    empty_polls += 1
+                    sleep(float(poll_interval_secs))
+                    continue
+            empty_polls = 0
             for _, row in frame.iterrows():
                 if max_live_bars is not None and live_bars >= max_live_bars:
                     _request_stop("max_live_bars")
@@ -380,3 +408,8 @@ def start_paper_daemon(
 
 def _print_banner(execution_mode: str = "shadow") -> None:
     print(banner_for_mode(execution_mode), file=sys.stderr, flush=True)
+
+
+def _utc_now() -> pd.Timestamp:
+    """Return the wall-clock UTC timestamp used for causal feed boundaries."""
+    return pd.Timestamp.now(tz="UTC")

@@ -38,12 +38,17 @@ class HypervelocityProfile:
     taker_fee_rate: float
     slippage_bps: float
     funding_refresh_seconds: float
+    reentry_cooldown_bars: int
+    orderbook_archive_enabled: bool
+    orderbook_archive_depth_levels: int
     runtime_mode: str
     export_path: Path
     lookback_days: int
     strict_hl_only: bool
     poll_interval_seconds: float
     metalabel_mode: str
+    model_long_bundle: Path
+    model_short_bundle: Path
     regime_config: RegimeClassifierConfig
 
     def position_policy(self) -> dict[str, object]:
@@ -73,8 +78,10 @@ def load_hypervelocity_profile(path: Path | str) -> HypervelocityProfile:
     runtime = _section(raw, "runtime")
     venue = _section(raw, "venue")
     costs = _section(raw, "costs")
+    orderbook = _section(raw, "orderbook")
     _validate_contract(allocation, exits, execution, model, contract)
     _validate_venue_costs(venue, costs, contract)
+    _validate_orderbook(orderbook)
     regime_config = _validated_regime(_section(raw, "regime"))
     metalabel_mode = _text(runtime, "metalabel_mode")
     if metalabel_mode not in {"off", "observe"}:
@@ -102,12 +109,17 @@ def load_hypervelocity_profile(path: Path | str) -> HypervelocityProfile:
         taker_fee_rate=_number(costs, "taker_fee_rate"),
         slippage_bps=_number(costs, "slippage_bps"),
         funding_refresh_seconds=_number(costs, "funding_refresh_seconds"),
+        reentry_cooldown_bars=_integer(execution, "reentry_cooldown_bars"),
+        orderbook_archive_enabled=_boolean(orderbook, "archive_enabled"),
+        orderbook_archive_depth_levels=_integer(orderbook, "archive_depth_levels"),
         runtime_mode=_text(runtime, "mode"),
         export_path=Path(_text(runtime, "export_path")),
         lookback_days=_integer(runtime, "lookback_days"),
         strict_hl_only=_boolean(runtime, "strict_hl_only"),
         poll_interval_seconds=_number(runtime, "poll_interval_seconds"),
         metalabel_mode=metalabel_mode,
+        model_long_bundle=Path(_text(model, "long_bundle")),
+        model_short_bundle=Path(_text(model, "short_bundle")),
         regime_config=regime_config,
     )
 
@@ -142,6 +154,7 @@ def _validate_contract(
     _expect(execution, "fill_rule", "through_one_tick")
     _expect(execution, "price_tick_mode", "hyperliquid_dynamic")
     _expect(execution, "paper_submit_enabled", False)
+    _expect(execution, "reentry_cooldown_bars", 1)
     _expect(model, "may_filter", False)
     _expect(model, "may_scale", False)
 
@@ -167,6 +180,12 @@ def _validate_venue_costs(
     _expect(costs, "funding_source", "live_meta_and_asset_contexts")
     _expect(costs, "funding_refresh_seconds", 60.0)
     _expect(costs, "funding_accrual", "hourly_boundary")
+
+
+def _validate_orderbook(orderbook: Mapping[str, object]) -> None:
+    """Validate the replay archive contract used by the live backend."""
+    _expect(orderbook, "archive_enabled", True)
+    _expect(orderbook, "archive_depth_levels", 20)
 
 
 def _validated_regime(section: Mapping[str, object]) -> RegimeClassifierConfig:

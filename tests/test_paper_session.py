@@ -264,6 +264,11 @@ def test_live_hypervelocity_bar_records_report_only_regime_observation(
     assert "bbwp_percentile" in observation
     assert observation["submitted"] is False
     assert observation["place_attempted"] is False
+    assert observation["position_qty"] == 0.0
+    assert observation["position_avg_px"] == 0.0
+    assert observation["realized_pnl"] == 0.0
+    assert observation["unrealized_pnl"] == 0.0
+    assert observation["equity"] == pytest.approx(10_000.0)
 
 
 def test_live_book_refresh_records_authoritative_microstructure(
@@ -272,16 +277,21 @@ def test_live_book_refresh_records_authoritative_microstructure(
 ) -> None:
     """A backend L2 refresh produces the record consumed by the TUI."""
     from hypervector.paper.book import BookLevel, BookSnapshot
+    from hypervector.strategies.hypervelocity_profile import (
+        load_hypervelocity_profile,
+    )
 
     export = _write_strict_export(
         tmp_path,
         strategy="hypervelocity_1m_scalper_long",
     )
+    profile = load_hypervelocity_profile("configs/hypervelocity_faithful.toml")
     session = PaperSession(
         export_dir=export,
         data_root=tmp_path / "data",
         execution_mode="shadow",
         enable_book_poll=True,
+        hypervelocity_profile=profile,
     )
     snapshot = BookSnapshot(
         symbol="BTC",
@@ -310,6 +320,11 @@ def test_live_book_refresh_records_authoritative_microstructure(
     assert telemetry["asks"][0] == {"price": 100.5, "size": 1.0}
     assert telemetry["submitted"] is False
     assert telemetry["place_attempted"] is False
+    archives = list((tmp_path / "data" / "cache" / "book").glob("BTC_l2_*.jsonl"))
+    assert len(archives) == 1
+    archived = json.loads(archives[0].read_text(encoding="utf-8").strip())
+    assert archived["run_id"] == session.run_id
+    assert archived["bids"][0] == {"px": 100.0, "sz": 3.0}
 
 
 def test_session_accepts_canonical_hourly_funding_with_null_legacy_rate(
@@ -449,6 +464,13 @@ def test_bidirectional_profile_holds_then_switches_only_after_exit(
         export_dir=export,
         data_root=tmp_path / "data",
         hypervelocity_profile=profile,
+    )
+    assert session.metalabel_mode == "observe"
+    assert "hypervelocity-l2-runtime-uptrend-long" in (
+        session.conviction_provider.bundle_id or ""
+    )
+    assert "hypervelocity-l2-runtime-downtrend-short" in (
+        session.conviction_provider.bundle_id or ""
     )
     directions = iter(("long", "long", "short", "short"))
 
