@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Literal
 
 import numpy as np
@@ -18,6 +19,16 @@ if TYPE_CHECKING:
     from hypervector.regime.classifier import RegimeClassifierConfig
 
 Direction = Literal["long", "short"]
+
+
+@dataclass(frozen=True)
+class HypervelocityRegimeObservation:
+    """Latest causal regime state used for a Hypervelocity entry decision."""
+
+    primary_regime: str
+    breakout_direction: str | None
+    direction: Direction
+    entry_allowed: bool
 
 
 def _classify_regimes(
@@ -74,8 +85,33 @@ def current_hypervelocity_entry_allowed(
     """Return whether the latest completed bar permits the requested side."""
     if df.empty:
         return False
+    observation = current_hypervelocity_regime(
+        df,
+        direction=direction,
+        regime_config=regime_config,
+    )
+    return observation.entry_allowed
+
+
+def current_hypervelocity_regime(
+    df: pd.DataFrame,
+    *,
+    direction: Direction,
+    regime_config: RegimeClassifierConfig | None = None,
+) -> HypervelocityRegimeObservation:
+    """Return the latest causal regime state and side-specific eligibility."""
+    if df.empty:
+        raise ValueError("Hypervelocity regime observation requires at least one bar")
     decisions = _classify_regimes(df, regime_config or faithful_regime_config())
-    return bool(_entry_eligibility(decisions, direction).iloc[-1])
+    latest = decisions.iloc[-1]
+    breakout = latest["breakout_direction"]
+    breakout_value = None if pd.isna(breakout) else str(breakout)
+    return HypervelocityRegimeObservation(
+        primary_regime=str(latest["primary_regime"]),
+        breakout_direction=breakout_value,
+        direction=direction,
+        entry_allowed=bool(_entry_eligibility(decisions, direction).iloc[-1]),
+    )
 
 
 def _entry_target_signals(

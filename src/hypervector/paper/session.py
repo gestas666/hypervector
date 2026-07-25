@@ -59,7 +59,10 @@ from hypervector.strategies.hypervelocity_contract import (
     HypervelocityContract,
     is_hypervelocity_strategy,
 )
-from hypervector.strategies.hypervelocity import current_hypervelocity_entry_allowed
+from hypervector.strategies.hypervelocity import (
+    current_hypervelocity_entry_allowed,
+    current_hypervelocity_regime,
+)
 from hypervector.strategies import register_all_strategies
 
 logger = logging.getLogger(__name__)
@@ -194,6 +197,7 @@ class PaperSession:
         self._last_funding_refresh_mono: float = 0.0
         self._identity_written = False
         self._pending_maker_entry: PendingMakerEntry | None = None
+        self._live_telemetry_enabled = False
 
     @property
     def pending_maker_entry(self) -> PendingMakerEntry | None:
@@ -203,6 +207,10 @@ class PaperSession:
     def inject_book(self, snap: BookSnapshot) -> None:
         """Inject a BookSnapshot for offline tests (no network)."""
         self.book_feed.update(snap)
+
+    def enable_live_telemetry(self) -> None:
+        """Enable report-only per-bar telemetry after historical warm-up."""
+        self._live_telemetry_enabled = True
 
     @property
     def last_timestamp(self) -> pd.Timestamp | None:
@@ -255,6 +263,9 @@ class PaperSession:
             except Exception as exc:  # noqa: BLE001 — never abort bar path
                 logger.warning("book poll failed for %s: %s", self.loadout.symbol, exc)
 
+        if self._is_hypervelocity and self._live_telemetry_enabled:
+            self._record_hypervelocity_regime(record)
+
         fill_action: str | None = None
         if len(self.buffer_rows) >= 2:
             fill_action = self._process_intent(record)
@@ -274,6 +285,35 @@ class PaperSession:
             )
 
         return fill_action
+
+    def _record_hypervelocity_regime(self, record: dict[str, Any]) -> None:
+        """Append the causal regime state used by the live entry decision."""
+        direction = self._hypervelocity_direction()
+        observation = current_hypervelocity_regime(
+            _buffer_to_df(self.buffer_rows),
+            direction=direction,
+        )
+        append_paper_decision(
+            self.root,
+            {
+                "feed_ts": self._hypervelocity_feed_ts(record),
+                "run_id": self.run_id,
+                "export_id": self.export_id,
+                "strategy_name": self.loadout.strategy_name,
+                "symbol": self.loadout.symbol,
+                "timeframe": self.loadout.timeframe,
+                "action": "regime_observation",
+                "primary_regime": observation.primary_regime,
+                "breakout_direction": observation.breakout_direction,
+                "entry_direction": observation.direction,
+                "entry_allowed": observation.entry_allowed,
+                "execution_mode": self.execution_mode,
+                "submitted": False,
+                "place_attempted": False,
+                "position_qty": float(self.engine.position.qty),
+                "mark_px": float(record["close"]),
+            },
+        )
 
     def _process_intent(self, record: dict[str, Any]) -> str | None:
         """Map strategy intent on the latest bar into a market fill, if any."""
@@ -628,6 +668,22 @@ class PaperSession:
             self.on_bar(row)
             n += 1
         return n
+
+    def warm_up(self, ohlcv: pd.DataFrame, *, max_bars: int | None = None) -> int:
+        """Seed the indicator buffer without simulating historical orders."""
+        frame = _prepare_ohlcv(ohlcv, max_bars=max_bars)
+        for _, row in frame.iterrows():
+            record = _row_to_buffer_record(row)
+            _append_bar_record(
+                self.buffer_rows,
+                record,
+                max_lookback=DEFAULT_MAX_LOOKBACK,
+            )
+            timestamp = record.get("timestamp")
+            if isinstance(timestamp, pd.Timestamp):
+                self._last_ts = timestamp
+        self.bars_processed += len(frame)
+        return len(frame)
 
     def ensure_session_identity(self) -> None:
         """Write exactly one session_start row for this backend run.

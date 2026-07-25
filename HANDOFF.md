@@ -219,6 +219,45 @@ uv run pytest tests/ -q -m "not network"
 
 Last agent PTY markers: SHADOW OPS, DRY-RUN READY, LIVE REFUSED, regime dominant RANGE, tape n=48, no module-not-found.
 
+### 2026-07-25 venue-matched shadow reconciliation pilot
+
+The backend now supports a report-only
+`hypervelocity-shadow-compare` command. It selects explicit shadow run IDs,
+defines the evidence window from live `regime_observation` rows, matches
+same-side entries one-to-one within a reported tolerance, and reports timing,
+direction, RANGE-at-real-entry, maker submit-to-fill, exit, and price
+discrepancies. A non-overlapping real log fails explicitly instead of
+returning a misleading zero-match result.
+
+Live daemon warm-up is now observation-only: historical bars seed the rolling
+indicator buffer but cannot create historical shadow orders or alter starting
+equity. Offline replay behavior remains unchanged. Capped real REST sessions
+also wait for completed bars; only injected test/replay feeds use the
+three-empty-poll exhaustion rule.
+
+First isolated pilot root:
+`data/experiments/shadow_20260725T1324Z`.
+
+- Warm history: 5,193 BTC 1m bars, 100% Hyperliquid provenance, zero detected
+  gaps, ending 2026-07-25 13:24 UTC.
+- Long run `3904919d8b03` and short run `e2f4043b6594`: five live observations
+  each from 13:26 through 13:30 UTC, zero fills, zero venue submit/place
+  attempts, clean `max_live_bars` stop.
+- All ten observations were `TREND_UP`; long eligibility was 5/5 and short
+  eligibility was 0/5. The long lane created one post-only `submit_entry`, but
+  no one-tick-through fill occurred before the window ended.
+- L2 recorder captured 71 Hyperliquid snapshots from 13:24:42 through
+  13:27:54 UTC, then stopped on HTTP 429. Maker evidence is therefore partial,
+  not a complete-window validation.
+- The available manual real-strategy log ends at 2026-07-24 15:06 UTC. The new
+  comparator correctly refused it because it does not overlap the July 25
+  shadow window. A same-window real log remains required for a match score.
+
+For the next paired collection, use a slower REST cadence (for example 10
+seconds for the two shadow daemons and 5 seconds for L2 recording) to reduce
+HTTP 429 risk. Rate limits, zero trades, performance, and mismatch counts remain
+reported observations rather than implicit gates.
+
 ---
 
 ## Locked decisions
@@ -235,8 +274,8 @@ Last agent PTY markers: SHADOW OPS, DRY-RUN READY, LIVE REFUSED, regime dominant
 
 ## NEXT
 
-1. Collect venue-matched point-in-time BTC bars plus explicit range/non-range labels; rerun the causal detector board without changing the fixed contract.
-2. Start bounded long and short shadow sessions with `--metalabel-mode observe`; visually confirm pending-order, fill, target, equity, and model telemetry in the TUI.
-3. Reconcile shadow submissions/fills against the next complete real-strategy log window. Use mismatches to tune detector unknowns, never the fixed 70%/40x/8% facts.
+1. Export a complete real-strategy log covering a new paired shadow UTC window; rerun collection at the documented lower request cadence.
+2. Run `hypervelocity-shadow-compare` with both explicit run IDs and retain the JSON report. Use mismatches to tune detector unknowns, never the fixed 70%/40x/8% facts.
+3. Visually confirm the same backend run IDs, pending-order, fill, target, equity, and model telemetry in the TUI.
 4. Add a per-strategy model map before testing multiple annotation candidates in one backend process.
 5. Consider a TCN only after the faithful label set beats simple past-only baselines and has enough independent events.

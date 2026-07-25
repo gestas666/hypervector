@@ -125,6 +125,25 @@ uv run python -m hypervector metalabel-train --path data/exports/<export_dir> --
 uv run python -m hypervector status
 ```
 
+### 8. Hypervelocity Shadow/Real Reconciliation
+
+Compare one or more explicit backend shadow run IDs with a real-strategy CSV
+covering the same UTC observation window:
+
+```bash
+uv run python -m hypervector hypervelocity-shadow-compare \
+  --shadow-ledger data/paper/decisions/decisions.jsonl \
+  --positions path/to/new_real_positions.csv \
+  --run-id <long-run-id> --run-id <short-run-id> \
+  --entry-tolerance-seconds 120 \
+  --out data/logs/research/hypervelocity_shadow_compare.json
+```
+
+The command is report-only. It uses live `regime_observation` rows to define
+the shadow window, refuses non-overlapping real logs, and reports entry,
+direction, RANGE-state, maker submit-to-fill, exit-timing, and price
+discrepancies without creating a promotion or execution gate.
+
 ---
 
 ## Dual Backtesting Architecture

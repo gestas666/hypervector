@@ -151,7 +151,8 @@ def start_paper_daemon(
     # Live REST path may use L2 book **only after warm-up**. Historical warm-up
     # must never poll live book (wrong prices + REST spam). Offline injected
     # poll_fn keeps book off-network unless the caller sets enable_book_poll later.
-    live_book_enabled = poll_fn is None
+    live_rest_feed = poll_fn is None
+    live_book_enabled = live_rest_feed
 
     session = PaperSession(
         export_dir=export_path,
@@ -193,8 +194,9 @@ def start_paper_daemon(
             f"no warm-up bars for {loadout.symbol} {loadout.timeframe} lookback={lb}d"
         )
 
-    warm_bars = session.process_frame(warm_df)
+    warm_bars = session.warm_up(warm_df)
     session.ensure_session_identity()
+    session.enable_live_telemetry()
     after_ts = session.last_timestamp
 
     # --- arm book for live phase only (design: one snapshot, not multi-day warm) ---
@@ -282,14 +284,16 @@ def start_paper_daemon(
                     _request_stop("max_live_bars")
                     break
                 if (
-                    max_live_bars is not None
+                    not live_rest_feed
+                    and max_live_bars is not None
                     and empty_polls >= max_empty_when_capped
                     and live_bars > 0
                 ):
                     _request_stop("poll_exhausted")
                     break
                 if (
-                    max_live_bars is not None
+                    not live_rest_feed
+                    and max_live_bars is not None
                     and empty_polls >= max_empty_when_capped
                     and live_bars == 0
                 ):

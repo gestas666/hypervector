@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pandas as pd
 import pytest
 
 from hypervector.cli import main
@@ -204,6 +205,37 @@ def test_daemon_default_shadow_mode_on_offline_path(tmp_path: Path):
     assert result.warm_bars == 20
 
 
+def test_hypervelocity_daemon_warmup_seeds_without_historical_orders(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    """Historical indicator seed data must not become fresh shadow orders."""
+    export = _write_strict_export(
+        tmp_path,
+        strategy="hypervelocity_1m_scalper_long",
+    )
+    warm = fixture_ohlcv(n_bars=20, drift=5.0, wave_period=10)
+    monkeypatch.setattr(
+        "hypervector.paper.session.PaperSession._hypervelocity_allowed",
+        lambda _self, _direction: True,
+    )
+
+    result = start_paper_daemon(
+        export_dir=export,
+        data_root=tmp_path / "data",
+        warm_ohlcv=warm,
+        poll_fn=lambda **_: warm.iloc[0:0].copy(),
+        max_live_bars=0,
+        poll_interval_secs=0.0,
+        sleep_fn=lambda _seconds: None,
+        install_signal_handlers=False,
+    )
+
+    rows = [json.loads(line) for line in result.decisions_path.read_text().splitlines()]
+    assert [row["action"] for row in rows] == ["session_start"]
+    assert result.fills_count == 0
+
+
 def test_start_paper_daemon_offline_injected_bars(tmp_path: Path, capsys):
     """Daemon warm-up + live poll mock; no network; stop after max live bars."""
     export = _write_strict_export(tmp_path)
@@ -324,6 +356,55 @@ def test_daemon_warmup_does_not_poll_book(tmp_path: Path, monkeypatch):
     assert result2.warm_bars == 30
     # Exactly one arm poll after warm-up (max_live_bars=0 → no live on_bar polls)
     assert book_polls["n"] == 1
+
+
+def test_capped_live_rest_waits_for_next_completed_bar(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    """Normal empty REST polls between candles must not mimic mock exhaustion."""
+    export = _write_strict_export(tmp_path)
+    warm = fixture_ohlcv(n_bars=20, drift=-1.0)
+    live = warm.iloc[[-1]].copy()
+    live["timestamp"] = warm["timestamp"].iloc[-1] + pd.Timedelta(minutes=1)
+    calls = {"count": 0}
+
+    def fake_rest_poll_fn(symbol: str, timeframe: str):
+        del symbol, timeframe
+
+        def poll(*, after_ts=None):
+            del after_ts
+            calls["count"] += 1
+            if calls["count"] <= 3:
+                return live.iloc[0:0].copy()
+            return live
+
+        return poll
+
+    monkeypatch.setattr(
+        "hypervector.paper.runner.make_rest_poll_fn",
+        fake_rest_poll_fn,
+    )
+    monkeypatch.setattr(
+        "hypervector.paper.book.BookFeed.poll",
+        lambda _self: None,
+    )
+
+    result = start_paper_daemon(
+        export_dir=export,
+        data_root=tmp_path / "data",
+        warm_ohlcv=warm,
+        poll_fn=None,
+        max_live_bars=1,
+        poll_interval_secs=0.0,
+        sleep_fn=lambda _seconds: None,
+        install_signal_handlers=False,
+        enable_funding_refresh=False,
+    )
+
+    assert calls["count"] == 4
+    assert result.live_bars == 1
+    assert result.stop_reason == "max_live_bars"
 
 
 def test_start_paper_daemon_stop_file(tmp_path: Path):

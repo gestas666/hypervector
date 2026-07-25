@@ -190,6 +190,8 @@ def test_hypervelocity_grid_runs():
     assert ok[0].metrics["position_notional_fraction"] == 28.0
     assert ok[0].metrics["strategy_managed_exits"] is True
     clear_registry()
+
+
 def test_current_entry_allowed_uses_latest_canonical_regime(monkeypatch) -> None:
     df = fixture_ohlcv(n_bars=80)
     decisions = pd.DataFrame(
@@ -207,3 +209,25 @@ def test_current_entry_allowed_uses_latest_canonical_regime(monkeypatch) -> None
 
     assert current_hypervelocity_entry_allowed(df, direction="short") is True
     assert current_hypervelocity_entry_allowed(df, direction="long") is False
+
+
+def test_current_regime_observation_reports_range_as_ineligible(monkeypatch) -> None:
+    from hypervector.strategies import hypervelocity as module
+
+    bars = fixture_ohlcv(n_bars=3)
+    decisions = _regime_decisions(
+        bars.index,
+        [PrimaryRegime.TREND_UP, PrimaryRegime.TREND_UP, PrimaryRegime.RANGE],
+    )
+    monkeypatch.setattr(
+        module,
+        "_classify_regimes",
+        lambda _bars, config: decisions,
+    )
+
+    observation = module.current_hypervelocity_regime(bars, direction="long")
+
+    assert observation.primary_regime == PrimaryRegime.RANGE.value
+    assert observation.breakout_direction is None
+    assert observation.direction == "long"
+    assert observation.entry_allowed is False

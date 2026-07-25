@@ -61,6 +61,7 @@ CLI_COMMANDS: tuple[str, ...] = (
     "hypervelocity-regime-eval",
     "hypervelocity-regime-autotune",
     "hypervelocity-maker-replay",
+    "hypervelocity-shadow-compare",
     "sweep-up",
     "sweep-down",
     "report",
@@ -1234,6 +1235,29 @@ def cmd_hypervelocity_maker_replay(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_hypervelocity_shadow_compare(args: argparse.Namespace) -> int:
+    """Reconcile explicit shadow run IDs with a same-window real log."""
+    from hypervector.research.shadow_compare import (
+        compare_shadow_to_positions,
+        load_real_positions,
+        load_shadow_ledger,
+    )
+
+    report = compare_shadow_to_positions(
+        load_shadow_ledger(args.shadow_ledger),
+        load_real_positions(args.positions),
+        run_ids=tuple(args.run_id),
+        entry_tolerance_seconds=args.entry_tolerance_seconds,
+    )
+    rendered = json.dumps(report, indent=2, default=str)
+    if args.out:
+        output_path = Path(args.out)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(rendered + "\n", encoding="utf-8")
+    print(rendered)
+    return 0
+
+
 def cmd_regime_export(args: argparse.Namespace) -> int:
     """Export real per-bar regime telemetry snapshots for the TUI cockpit."""
     from hypervector.regime.snapshot_export import export_regime_snapshots
@@ -2088,6 +2112,26 @@ def build_parser() -> argparse.ArgumentParser:
     hv_maker.add_argument("--entry-ttl-seconds", type=float, default=300.0)
     hv_maker.add_argument("--out", default=None)
     hv_maker.set_defaults(func=cmd_hypervelocity_maker_replay)
+
+    hv_compare = sub.add_parser(
+        "hypervelocity-shadow-compare",
+        help="Compare backend shadow runs with a same-window real-strategy log",
+    )
+    hv_compare.add_argument("--shadow-ledger", required=True)
+    hv_compare.add_argument("--positions", required=True)
+    hv_compare.add_argument(
+        "--run-id",
+        action="append",
+        required=True,
+        help="explicit backend run ID; repeat for long and short runs",
+    )
+    hv_compare.add_argument(
+        "--entry-tolerance-seconds",
+        type=float,
+        default=120.0,
+    )
+    hv_compare.add_argument("--out", default=None)
+    hv_compare.set_defaults(func=cmd_hypervelocity_shadow_compare)
 
     rex = sub.add_parser(
         "regime-export",

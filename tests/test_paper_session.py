@@ -204,6 +204,53 @@ def test_hypervelocity_identity_stamps_fixed_contract_and_observe_only(
     assert row["execution"]["entry_ttl_seconds"] == 300.0
 
 
+def test_live_hypervelocity_bar_records_report_only_regime_observation(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    export = _write_strict_export(
+        tmp_path,
+        strategy="hypervelocity_1m_scalper_long",
+    )
+    bars = fixture_ohlcv(n_bars=4)
+
+    def range_decisions(frame: pd.DataFrame, config) -> pd.DataFrame:
+        del config
+        return pd.DataFrame(
+            {
+                "primary_regime": ["RANGE"] * len(frame),
+                "breakout_direction": [None] * len(frame),
+            },
+            index=frame.index,
+        )
+
+    monkeypatch.setattr(
+        "hypervector.strategies.hypervelocity._classify_regimes",
+        range_decisions,
+    )
+    session = PaperSession(
+        export_dir=export,
+        data_root=tmp_path / "data",
+        execution_mode="shadow",
+    )
+    session.warm_up(bars.iloc[:3])
+
+    session.enable_live_telemetry()
+    session.on_bar(bars.iloc[3])
+
+    rows = [
+        json.loads(line) for line in session.decisions_path.read_text().splitlines()
+    ]
+    observation = next(row for row in rows if row["action"] == "regime_observation")
+    assert observation["run_id"] == session.run_id
+    assert observation["primary_regime"] == "RANGE"
+    assert observation["breakout_direction"] is None
+    assert observation["entry_direction"] == "long"
+    assert observation["entry_allowed"] is False
+    assert observation["submitted"] is False
+    assert observation["place_attempted"] is False
+
+
 def test_session_accepts_canonical_hourly_funding_with_null_legacy_rate(
     tmp_path: Path,
 ):
