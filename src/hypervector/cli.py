@@ -9,6 +9,8 @@ import sys
 import uuid
 from pathlib import Path
 
+import pandas as pd
+
 from hypervector.config import DEFAULT_LOOKBACK, FLOOR_LOOKBACK, PROMO_LOOKBACK
 from hypervector.data.pipeline import load_research_history
 from hypervector.export.phase2 import export_candidate
@@ -54,6 +56,7 @@ CLI_COMMANDS: tuple[str, ...] = (
     "live-run",
     "history",
     "regime",
+    "hypervelocity-regime-eval",
     "sweep-up",
     "sweep-down",
     "report",
@@ -1112,6 +1115,30 @@ def cmd_regime_eval(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_hypervelocity_regime_eval(args: argparse.Namespace) -> int:
+    """Report Hypervelocity regime fidelity without gating the experiment."""
+    from hypervector.regime.hypervelocity_eval import evaluate_hypervelocity_regimes
+
+    df, provenance = _load_bars(args)
+    positions_path = Path(args.positions)
+    if not positions_path.is_file():
+        raise FileNotFoundError(f"positions file not found: {positions_path}")
+    positions = pd.read_csv(positions_path)
+    report = evaluate_hypervelocity_regimes(
+        df,
+        positions,
+        forward_horizon=args.forward_horizon,
+    )
+    out = {
+        "ok": True,
+        "report_only": True,
+        "data_provenance": provenance,
+        **report.to_dict(),
+    }
+    print(json.dumps(out, indent=2, default=str))
+    return 0
+
+
 def cmd_regime_export(args: argparse.Namespace) -> int:
     """Export real per-bar regime telemetry snapshots for the TUI cockpit."""
     from hypervector.regime.snapshot_export import export_regime_snapshots
@@ -1909,6 +1936,24 @@ def build_parser() -> argparse.ArgumentParser:
         help="optional orderbook L2 data path (JSONL or SQLite)",
     )
     re_parser.set_defaults(func=cmd_regime_eval)
+
+    hv_re = sub.add_parser(
+        "hypervelocity-regime-eval",
+        help="Report Hypervelocity regime fidelity against recorded entries",
+    )
+    _add_market_args(hv_re)
+    hv_re.add_argument(
+        "--positions",
+        required=True,
+        help="CSV containing open_time_utc, side, and symbol",
+    )
+    hv_re.add_argument(
+        "--forward-horizon",
+        type=int,
+        default=30,
+        help="forward 1m bars used to report breakout target misses (default 30)",
+    )
+    hv_re.set_defaults(func=cmd_hypervelocity_regime_eval)
 
     rex = sub.add_parser(
         "regime-export",
