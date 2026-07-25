@@ -130,6 +130,17 @@ def _decision_directions(rows: pd.DataFrame) -> pd.Series:
     )
 
 
+def _available_decisions(
+    decisions: pd.DataFrame,
+    bar_duration: pd.Timedelta,
+) -> pd.DataFrame:
+    if bar_duration <= pd.Timedelta(0):
+        raise ValueError("bar_duration must be positive")
+    available = decisions.copy()
+    available.index = available.index + bar_duration
+    return available
+
+
 def _window_alignment(
     decisions: pd.DataFrame,
     positions: pd.DataFrame,
@@ -163,20 +174,22 @@ def evaluate_entry_alignment(
     *,
     lookback_minutes: tuple[int, ...] = (0, 1, 5, 10, 30),
     decision_cluster_seconds: float = 1.0,
+    bar_duration: pd.Timedelta = pd.Timedelta(minutes=1),
 ) -> EntryAlignmentReport:
     """Measure whether candidate states recover recorded entry directions."""
     unique = _unique_entry_decisions(
         positions,
         cluster_seconds=decision_cluster_seconds,
     )
-    aligned = decisions.reindex(pd.DatetimeIndex(unique["event_time"]), method="ffill")
+    available = _available_decisions(decisions, bar_duration)
+    aligned = available.reindex(pd.DatetimeIndex(unique["event_time"]), method="ffill")
     wanted = unique["side"].astype(str).str.lower().to_numpy()
     predicted = _decision_directions(aligned).to_numpy()
     primary = aligned["primary_regime"]
     matches = int((predicted == wanted).sum())
     total = len(unique)
     by_window = {
-        minutes: _window_alignment(decisions, unique, minutes)
+        minutes: _window_alignment(available, unique, minutes)
         for minutes in lookback_minutes
     }
     return EntryAlignmentReport(

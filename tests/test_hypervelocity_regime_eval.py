@@ -43,7 +43,11 @@ def _decisions() -> pd.DataFrame:
 def _positions(index: pd.DatetimeIndex) -> pd.DataFrame:
     return pd.DataFrame(
         {
-            "open_time_utc": [index[0], index[2], index[3]],
+            "open_time_utc": [
+                index[0] + pd.Timedelta(minutes=1),
+                index[2] + pd.Timedelta(minutes=1),
+                index[3] + pd.Timedelta(minutes=1),
+            ],
             "side": ["long", "short", "long"],
             "symbol": ["BTC", "BTC", "BTC"],
         }
@@ -69,9 +73,9 @@ def test_entry_alignment_clusters_split_fills_into_one_decision() -> None:
     positions = pd.DataFrame(
         {
             "open_time_utc": [
-                decisions.index[0],
-                decisions.index[0] + pd.Timedelta(milliseconds=500),
-                decisions.index[2],
+                decisions.index[0] + pd.Timedelta(minutes=1),
+                decisions.index[0] + pd.Timedelta(minutes=1, milliseconds=500),
+                decisions.index[2] + pd.Timedelta(minutes=1),
             ],
             "side": ["long", "long", "short"],
             "symbol": ["BTC", "BTC", "BTC"],
@@ -90,7 +94,7 @@ def test_entry_alignment_reports_resting_order_lookback_separately() -> None:
     decisions = _decisions()
     positions = pd.DataFrame(
         {
-            "open_time_utc": [decisions.index[3]],
+            "open_time_utc": [decisions.index[3] + pd.Timedelta(minutes=1)],
             "side": ["short"],
             "symbol": ["BTC"],
         }
@@ -102,11 +106,26 @@ def test_entry_alignment_reports_resting_order_lookback_separately() -> None:
     assert result.range_only_entries_by_lookback == {"0m": 1, "2m": 0}
 
 
-def test_zero_minute_window_uses_last_completed_bar_before_fill_seconds() -> None:
+def test_zero_minute_window_does_not_use_still_open_candle() -> None:
     decisions = _decisions()
     positions = pd.DataFrame(
         {
             "open_time_utc": [decisions.index[2] + pd.Timedelta(seconds=30)],
+            "side": ["short"],
+            "symbol": ["BTC"],
+        }
+    )
+
+    result = evaluate_entry_alignment(decisions, positions, lookback_minutes=(0,))
+
+    assert result.direction_recall_by_lookback_pct == {"0m": 0.0}
+
+
+def test_zero_minute_window_uses_candle_at_its_close_time() -> None:
+    decisions = _decisions()
+    positions = pd.DataFrame(
+        {
+            "open_time_utc": [decisions.index[2] + pd.Timedelta(minutes=1)],
             "side": ["short"],
             "symbol": ["BTC"],
         }
@@ -120,7 +139,7 @@ def test_zero_minute_window_uses_last_completed_bar_before_fill_seconds() -> Non
 def test_alignment_normalizes_microsecond_fill_against_millisecond_bars() -> None:
     decisions = _decisions()
     decisions.index = decisions.index.as_unit("ms")
-    fill = pd.Timestamp("2026-01-01T00:02:30.123456Z")
+    fill = pd.Timestamp("2026-01-01T00:03:00.123456Z")
     positions = pd.DataFrame(
         {"open_time_utc": [fill], "side": ["short"], "symbol": ["BTC"]}
     )
@@ -255,7 +274,11 @@ def test_full_report_records_source_limitations() -> None:
         index=index,
     )
     positions = pd.DataFrame(
-        {"open_time_utc": [index[-1]], "side": ["long"], "symbol": ["BTC"]}
+        {
+            "open_time_utc": [index[-1] + pd.Timedelta(minutes=1)],
+            "side": ["long"],
+            "symbol": ["BTC"],
+        }
     )
 
     result = evaluate_hypervelocity_regimes(bars, positions)
@@ -299,7 +322,11 @@ def test_cli_hypervelocity_regime_eval_is_report_only(
     )
     positions_path = tmp_path / "positions.csv"
     pd.DataFrame(
-        {"open_time_utc": [index[-1]], "side": ["long"], "symbol": ["BTC"]}
+        {
+            "open_time_utc": [index[-1] + pd.Timedelta(minutes=1)],
+            "side": ["long"],
+            "symbol": ["BTC"],
+        }
     ).to_csv(positions_path, index=False)
 
     rc = main(
