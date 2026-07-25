@@ -9,8 +9,19 @@ from hypervector.paper.maker_execution import (
     PendingMakerEntry,
     entry_limit_price,
     entry_was_filled,
+    hyperliquid_price_tick,
+    quantize_size_down,
+    round_price_to_tick,
     target_was_filled,
 )
+
+
+def test_hyperliquid_dynamic_btc_tick_and_size_precision() -> None:
+    assert hyperliquid_price_tick(64_000.0, size_decimals=5) == 1.0
+    assert hyperliquid_price_tick(9_999.0, size_decimals=5) == 0.1
+    assert round_price_to_tick(64_000.2, tick_size=1.0, upward=True) == 64_001.0
+    assert round_price_to_tick(64_000.8, tick_size=1.0, upward=False) == 64_000.0
+    assert quantize_size_down(0.123456, size_decimals=5) == 0.12345
 
 
 def _bar(*, high: float = 101.0, low: float = 99.0) -> dict[str, float]:

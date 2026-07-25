@@ -3,7 +3,7 @@
 **Saved:** 2026-07-25 — Faithful Hypervelocity backend contract, causal regime evaluation, maker replay/paper execution, and annotation-model comparison.
 **Project:** `/Users/gestas/Prototypes/hypervector`  
 **User:** Albert  
-**Branch:** `feature/hypervelocity-faithful-regime` (merge target: `main`)
+**Branch:** `main`
 **Prefer this HANDOFF over agentmemory for phase status.**
 
 ---
@@ -21,7 +21,7 @@
 | Holistic CLI↔TUI | **Agent assist PASS**; human on-screen confirm |
 | GUI | **Deferred** until Shadow Ops visual PASS |
 | Hypervelocity execution authority | **Python backend only**; TUI consumes ledger telemetry |
-| Hypervelocity execution contract | **BTC 1m, 70% margin, 40x, one 8% margin target, post-only** |
+| Hypervelocity execution contract | **One-way bidirectional BTC 1m, 70% margin, 40x, one 8% margin target, post-only** |
 | Hypervelocity entry states | **Trend up/down or direction-confirmed breakout only; no range entries** |
 | Hypervelocity model | **Observe-only enforced**; no candidate installed |
 | Hypervelocity 180d autotune | **Completed**; best long/short candle trials remained materially negative after costs |
@@ -30,6 +30,12 @@
 | Range 1m impulse LightGBM | **Runtime-compatible candidate trained**; not auto-installed |
 
 ### 2026-07-25 implementation status
+
+- `hypervelocity-shadow-run --config configs/hypervelocity_faithful.toml` starts one bidirectional backend. It permits one signed BTC position, cannot reverse while open, and may switch sides only after the 8% margin target closes the prior trade.
+- Startup validates current public Hyperliquid BTC metadata. On 2026-07-25 the live response reported `szDecimals=5`, `maxLeverage=40`, and hourly funding `0.0000125`.
+- Tier-0 fees are explicit: maker `0.00015`, taker `0.00045`. Qualified post-only fills use maker fees and no invented slippage; funding refreshes every 60 seconds and applies only at hourly settlement boundaries while a position is open.
+- Hyperliquid price ticks are calculated from venue precision rules rather than a permanently fixed `$1` assumption. At the observed BTC price near `$64k`, the effective tick is `$1`.
+- Verification: 421 offline Python tests passed, 8 Rust TUI tests passed, targeted Ruff passed, TOML parsed, and a real zero-live-bar startup wrote unified no-submit telemetry.
 
 - `paper-run --metalabel-mode observe` records model probability and bundle identity without changing conviction or entry eligibility.
 - Every backend run stamps its run/export/strategy/execution/model identity and effective strategy, exit, risk, and cost configuration in `session_start`.

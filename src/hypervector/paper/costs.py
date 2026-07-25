@@ -60,6 +60,17 @@ class CostSnapshot:
         return self.taker_fee if assume_taker else self.maker_fee
 
 
+@dataclass(frozen=True)
+class HyperliquidMarketState:
+    """Public venue contract fields required by the shadow backend."""
+
+    coin: str
+    size_decimals: int
+    max_leverage: float
+    funding_rate_hourly: float
+    oracle_px: float
+
+
 class CostProvider:
     def __init__(
         self,
@@ -106,6 +117,15 @@ class CostProvider:
         session: requests.Session | None = None,
     ) -> float:
         """Pull hourly funding for coin from public metaAndAssetCtxs."""
+        return self.refresh_market_state(coin, session=session).funding_rate_hourly
+
+    def refresh_market_state(
+        self,
+        coin: str,
+        *,
+        session: requests.Session | None = None,
+    ) -> HyperliquidMarketState:
+        """Pull current public instrument metadata and funding from Hyperliquid."""
         sess = session or requests.Session()
         resp = sess.post(
             HL_INFO_URL,
@@ -118,6 +138,14 @@ class CostProvider:
         universe = meta.get("universe") or []
         name = hl_coin(coin)
         idx = next(i for i, u in enumerate(universe) if u.get("name") == name)
-        rate = float(ctxs[idx]["funding"])
+        instrument = universe[idx]
+        context = ctxs[idx]
+        rate = float(context["funding"])
         self._funding_rate_hourly = rate
-        return rate
+        return HyperliquidMarketState(
+            coin=name,
+            size_decimals=int(instrument["szDecimals"]),
+            max_leverage=float(instrument["maxLeverage"]),
+            funding_rate_hourly=rate,
+            oracle_px=float(context["oraclePx"]),
+        )

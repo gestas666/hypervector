@@ -200,7 +200,7 @@ def test_hypervelocity_identity_stamps_fixed_contract_and_observe_only(
     assert row["execution"]["time_in_force"] == "post_only"
     assert row["execution"]["fill_rule"] == "through_one_tick"
     assert row["execution"]["fill_model"] == "post_only_limit_through_v1"
-    assert row["execution"]["tick_size"] == 1.0
+    assert row["execution"]["price_tick_mode"] == "hyperliquid_dynamic"
     assert row["execution"]["entry_ttl_seconds"] == 300.0
 
 
@@ -358,6 +358,69 @@ def test_hypervelocity_paper_waits_for_maker_through_then_exits_at_fixed_target(
     assert closes[0]["feed_ts"] == "2026-07-25T12:04:00+00:00"
 
 
+def test_bidirectional_profile_holds_then_switches_only_after_exit(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """One signed BTC position cannot reverse until its target closes."""
+    from types import SimpleNamespace
+
+    from hypervector.strategies.hypervelocity_profile import (
+        load_hypervelocity_profile,
+    )
+
+    export = _write_strict_export(
+        tmp_path,
+        strategy="hypervelocity_1m_scalper_long",
+    )
+    profile_text = Path("configs/hypervelocity_faithful.toml").read_text()
+    profile_path = tmp_path / "profile.toml"
+    profile_path.write_text(
+        profile_text.replace(
+            "data/exports/uptrend_hypervelocity_1m_scalper_long_784548f1",
+            str(export),
+        ),
+        encoding="utf-8",
+    )
+    profile = load_hypervelocity_profile(profile_path)
+    session = PaperSession(
+        export_dir=export,
+        data_root=tmp_path / "data",
+        hypervelocity_profile=profile,
+    )
+    directions = iter(("long", "long", "short", "short"))
+
+    def market(*_args: object, **_kwargs: object) -> SimpleNamespace:
+        return SimpleNamespace(entry_direction=next(directions))
+
+    monkeypatch.setattr("hypervector.paper.session.current_hypervelocity_market", market)
+
+    def bar(minute: int, *, high: float, low: float) -> dict[str, object]:
+        return {
+            "timestamp": pd.Timestamp(f"2026-07-25T13:{minute:02d}:00Z"),
+            "open": 100.0,
+            "high": high,
+            "low": low,
+            "close": 100.0,
+            "volume": 1.0,
+        }
+
+    session.on_bar(bar(0, high=100.0, low=100.0))
+    session.on_bar(bar(1, high=100.0, low=100.0))
+    assert session.on_bar(bar(2, high=100.0, low=99.9)) == "enter_long"
+    long_qty = session.engine.position.qty
+    assert long_qty > 0.0
+
+    assert session.on_bar(bar(3, high=100.1, low=99.9)) is None
+    assert session.engine.position.qty == long_qty
+    assert session.on_bar(bar(4, high=100.3, low=99.9)) == "close"
+    assert session.engine.position.qty == 0.0
+
+    session.on_bar(bar(5, high=100.0, low=100.0))
+    assert session.on_bar(bar(6, high=100.1, low=100.0)) == "enter_short"
+    assert session.engine.position.qty < 0.0
+
+
 def test_offline_session_rejects_bad_ohlcv(tmp_path: Path):
     export = _write_strict_export(tmp_path)
     import pandas as pd
@@ -401,7 +464,7 @@ def test_session_applies_funding_on_open_long(tmp_path: Path):
         mark_px=mark,
     )
     bar = {
-        "timestamp": pd.Timestamp("2026-07-22T00:01:00Z"),
+        "timestamp": pd.Timestamp("2026-07-22T00:59:00Z"),
         "open": mark,
         "high": mark,
         "low": mark,
@@ -418,11 +481,46 @@ def test_session_applies_funding_on_open_long(tmp_path: Path):
     funding_rows = [r for r in lines if r.get("action") == "funding"]
     assert len(funding_rows) == 1
     fre = funding_rows[0]
-    assert fre["funding_payment_usd"] == pytest.approx(qty * mark * rate / 60.0)
+    assert fre["funding_payment_usd"] == pytest.approx(qty * mark * rate)
     assert fre["funding_payment_usd"] > 0  # long pays when rate > 0
     assert fre["funding_rate_hourly"] == pytest.approx(rate)
     assert fre["side"] == "buy"
     assert session.engine.position.qty == qty
+
+
+def test_session_does_not_prorate_funding_between_hourly_boundaries(
+    tmp_path: Path,
+) -> None:
+    export = _write_strict_export(tmp_path)
+    session = PaperSession(
+        export_dir=export,
+        data_root=tmp_path / "data",
+        funding_rate_hourly=0.0001,
+        enable_funding_refresh=False,
+    )
+    session.engine.apply_market_fill(
+        feed_ts="t0",
+        action="enter_long",
+        side="buy",
+        qty=1.0,
+        mark_px=50_000.0,
+    )
+    session.on_bar(
+        {
+            "timestamp": pd.Timestamp("2026-07-22T00:01:00Z"),
+            "open": 50_000.0,
+            "high": 50_000.0,
+            "low": 50_000.0,
+            "close": 50_000.0,
+            "volume": 1.0,
+        }
+    )
+    rows = [
+        json.loads(line)
+        for line in session.decisions_path.read_text().splitlines()
+        if line.strip()
+    ]
+    assert not [row for row in rows if row.get("action") == "funding"]
 
 
 def test_session_funding_refresh_disabled_offline(tmp_path: Path, monkeypatch):

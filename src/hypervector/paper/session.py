@@ -48,11 +48,13 @@ from hypervector.paper.fills import ExplicitFillEngine
 from hypervector.paper.ledger import DECISIONS_FILENAME, append_paper_decision
 from hypervector.paper.maker_execution import (
     DEFAULT_ENTRY_TTL_SECONDS,
-    DEFAULT_MAKER_TICK_SIZE,
     PostOnlyLimitFillModel,
     PendingMakerEntry,
     entry_limit_price,
     entry_was_filled,
+    hyperliquid_price_tick,
+    quantize_size_down,
+    round_price_to_tick,
     target_was_filled,
 )
 from hypervector.strategies.hypervelocity_contract import (
@@ -61,8 +63,10 @@ from hypervector.strategies.hypervelocity_contract import (
 )
 from hypervector.strategies.hypervelocity import (
     current_hypervelocity_entry_allowed,
+    current_hypervelocity_market,
     current_hypervelocity_regime,
 )
+from hypervector.strategies.hypervelocity_profile import HypervelocityProfile
 from hypervector.strategies import register_all_strategies
 
 logger = logging.getLogger(__name__)
@@ -110,6 +114,7 @@ class PaperSession:
         metalabel_mode: str | None = None,
         conviction_provider: ConvictionProvider | None = None,
         execution_mode: str = "paper",
+        hypervelocity_profile: HypervelocityProfile | None = None,
     ) -> None:
         register_all_strategies()
         export_path = Path(export_dir)
@@ -118,6 +123,9 @@ class PaperSession:
 
         self.loadout = load_strategy_loadout(export_path, strict=True)
         self._is_hypervelocity = is_hypervelocity_strategy(self.loadout.strategy_name)
+        self.hypervelocity_profile = hypervelocity_profile
+        if hypervelocity_profile is not None and not self._is_hypervelocity:
+            raise ValueError("Hypervelocity profile requires a Hypervelocity export")
         if self._is_hypervelocity and (
             self.loadout.symbol != "BTC" or self.loadout.timeframe != "1m"
         ):
@@ -161,9 +169,12 @@ class PaperSession:
         self.export_id = self.loadout.run_id or export_path.name
         self.cost_provider = _cost_provider_from_loadout(
             self.loadout,
-            fee_tier=fee_tier,
+            fee_tier=(hypervelocity_profile.fee_tier if hypervelocity_profile else fee_tier),
             funding_rate_hourly=funding_rate_hourly,
         )
+        if hypervelocity_profile is not None:
+            self.cost_provider.slippage_bps = hypervelocity_profile.slippage_bps
+            self.cost_provider.funding_poll_secs = hypervelocity_profile.funding_refresh_seconds
         self.book_feed = (
             book_feed
             if book_feed is not None
@@ -174,12 +185,17 @@ class PaperSession:
             if self.loadout.init_cash is not None
             else 10_000.0
         )
+        self.strategy_name = (
+            hypervelocity_profile.strategy_id
+            if hypervelocity_profile is not None
+            else self.loadout.strategy_name
+        )
         self.engine = ExplicitFillEngine(
             self.root,
             cost_provider=self.cost_provider,
             run_id=self.run_id,
             export_id=str(self.export_id),
-            strategy_name=self.loadout.strategy_name,
+            strategy_name=self.strategy_name,
             symbol=self.loadout.symbol,
             timeframe=self.loadout.timeframe,
             conviction=self.conviction,
@@ -240,6 +256,19 @@ class PaperSession:
         self._last_funding_refresh_mono = now
         return rate
 
+    def initialize_hypervelocity_venue(self) -> float:
+        """Fetch and validate current venue precision, leverage, and funding."""
+        if self.hypervelocity_profile is None:
+            raise ValueError("validated Hypervelocity profile is required")
+        state = self.cost_provider.refresh_market_state(self.loadout.symbol)
+        profile = self.hypervelocity_profile
+        if state.size_decimals != profile.size_decimals:
+            raise RuntimeError("live size_decimals differs from Hypervelocity config")
+        if state.max_leverage < profile.leverage:
+            raise RuntimeError("live venue max leverage is below strategy leverage")
+        self._last_funding_refresh_mono = time.monotonic()
+        return state.funding_rate_hourly
+
     def on_bar(self, row: pd.Series | dict[str, Any]) -> str | None:
         """Process one OHLCV bar. Returns fill action or None.
 
@@ -270,43 +299,56 @@ class PaperSession:
         if len(self.buffer_rows) >= 2:
             fill_action = self._process_intent(record)
 
-        # Signed funding once per bar while open (fractional hourly rate per bar).
-        if self.engine.position.qty != 0.0:
+        # Hyperliquid funding settles hourly, not continuously between boundaries.
+        if self.engine.position.qty != 0.0 and _is_funding_boundary(
+            record,
+            timeframe=self.loadout.timeframe,
+        ):
             mark_px = float(record["close"])
-            bar_mins = (
-                1.0
-                if self.loadout.timeframe == "1m"
-                else (5.0 if self.loadout.timeframe == "5m" else 15.0)
-            )
             self.engine.apply_funding(
-                feed_ts=_feed_ts(record),
+                feed_ts=_bar_close_timestamp(
+                    record,
+                    timeframe=self.loadout.timeframe,
+                ).isoformat(),
                 oracle_px=mark_px,
-                hours=bar_mins / 60.0,
+                hours=1.0,
             )
 
         return fill_action
 
     def _record_hypervelocity_regime(self, record: dict[str, Any]) -> None:
         """Append the causal regime state used by the live entry decision."""
-        direction = self._hypervelocity_direction()
-        observation = current_hypervelocity_regime(
-            _buffer_to_df(self.buffer_rows),
-            direction=direction,
-        )
+        frame = _buffer_to_df(self.buffer_rows)
+        if self.hypervelocity_profile is None:
+            direction = self._hypervelocity_direction()
+            legacy = current_hypervelocity_regime(frame, direction=direction)
+            primary = legacy.primary_regime
+            breakout = legacy.breakout_direction
+            entry_direction: str | None = legacy.direction
+            entry_allowed = legacy.entry_allowed
+        else:
+            market = current_hypervelocity_market(
+                frame,
+                regime_config=self.hypervelocity_profile.regime_config,
+            )
+            primary = market.primary_regime
+            breakout = market.breakout_direction
+            entry_direction = market.entry_direction
+            entry_allowed = market.entry_direction is not None
         append_paper_decision(
             self.root,
             {
                 "feed_ts": self._hypervelocity_feed_ts(record),
                 "run_id": self.run_id,
                 "export_id": self.export_id,
-                "strategy_name": self.loadout.strategy_name,
+                "strategy_name": self.strategy_name,
                 "symbol": self.loadout.symbol,
                 "timeframe": self.loadout.timeframe,
                 "action": "regime_observation",
-                "primary_regime": observation.primary_regime,
-                "breakout_direction": observation.breakout_direction,
-                "entry_direction": observation.direction,
-                "entry_allowed": observation.entry_allowed,
+                "primary_regime": primary,
+                "breakout_direction": breakout,
+                "entry_direction": entry_direction,
+                "entry_allowed": entry_allowed,
                 "execution_mode": self.execution_mode,
                 "submitted": False,
                 "place_attempted": False,
@@ -491,21 +533,21 @@ class PaperSession:
         book = self._usable_book(record)
         if self.engine.position.qty != 0.0:
             return self._fill_hypervelocity_target(record, book)
-        direction = self._hypervelocity_direction()
-        allowed = self._hypervelocity_allowed(direction)
+        direction = self._desired_hypervelocity_direction()
+        allowed = direction is not None
         pending = self._pending_maker_entry
         if pending is not None and self._pending_expired(pending, record):
             self._cancel_pending(record, "entry_ttl_expired")
-        elif pending is not None and not allowed:
-            self._cancel_pending(record, "canonical_regime_no_longer_allows_entry")
+        elif pending is not None and pending.direction != direction:
+            self._cancel_pending(record, "canonical_regime_direction_changed")
         elif pending is not None and entry_was_filled(
             pending,
             record,
             book=book,
-            tick_size=DEFAULT_MAKER_TICK_SIZE,
+            tick_size=self._hypervelocity_tick(pending.limit_price),
         ):
             return self._fill_pending_entry(record, book)
-        if self._pending_maker_entry is None and allowed:
+        if self._pending_maker_entry is None and allowed and direction is not None:
             self._submit_pending_entry(record, direction, book)
         return None
 
@@ -520,13 +562,18 @@ class PaperSession:
         multiplier = 1.0 + contract.target_price_fraction
         if direction == "short":
             multiplier = 1.0 - contract.target_price_fraction
-        target = float(position.avg_px) * multiplier
+        raw_target = float(position.avg_px) * multiplier
+        target = round_price_to_tick(
+            raw_target,
+            tick_size=self._hypervelocity_tick(raw_target),
+            upward=direction == "long",
+        )
         if not target_was_filled(
             direction=direction,
             target_price=target,
             record=record,
             book=book,
-            tick_size=DEFAULT_MAKER_TICK_SIZE,
+            tick_size=self._hypervelocity_tick(target),
         ):
             return None
         side = "sell" if direction == "long" else "buy"
@@ -587,7 +634,13 @@ class PaperSession:
             conviction=self.conviction,
             mark_px=mark_px,
         )
-        if qty is None or qty <= 0.0:
+        size_decimals = (
+            self.hypervelocity_profile.size_decimals
+            if self.hypervelocity_profile
+            else 5
+        )
+        qty = quantize_size_down(qty or 0.0, size_decimals=size_decimals)
+        if qty <= 0.0:
             return
         limit = entry_limit_price(direction, record, book=book)
         submitted_at = self._hypervelocity_timestamp(record)
@@ -629,12 +682,35 @@ class PaperSession:
         self._pending_maker_entry = None
 
     def _hypervelocity_allowed(self, direction: str) -> bool:
+        frame = _buffer_to_df(self.buffer_rows)
+        if self.hypervelocity_profile is None:
+            return current_hypervelocity_entry_allowed(frame, direction=direction)
         return current_hypervelocity_entry_allowed(
-            _buffer_to_df(self.buffer_rows), direction=direction
+            frame,
+            direction=direction,
+            regime_config=self.hypervelocity_profile.regime_config,
         )
+
+    def _desired_hypervelocity_direction(self) -> str | None:
+        if self.hypervelocity_profile is None:
+            direction = self._hypervelocity_direction()
+            return direction if self._hypervelocity_allowed(direction) else None
+        observation = current_hypervelocity_market(
+            _buffer_to_df(self.buffer_rows),
+            regime_config=self.hypervelocity_profile.regime_config,
+        )
+        return observation.entry_direction
 
     def _hypervelocity_direction(self) -> str:
         return "short" if self.loadout.strategy_name.endswith("_short") else "long"
+
+    def _hypervelocity_tick(self, price: float) -> float:
+        size_decimals = (
+            self.hypervelocity_profile.size_decimals
+            if self.hypervelocity_profile
+            else 5
+        )
+        return hyperliquid_price_tick(price, size_decimals=size_decimals)
 
     def _pending_expired(
         self,
@@ -702,7 +778,7 @@ class PaperSession:
                 "feed_ts": "session_start",
                 "run_id": self.run_id,
                 "export_id": str(self.export_id),
-                "strategy_name": self.loadout.strategy_name,
+                "strategy_name": self.strategy_name,
                 "symbol": self.loadout.symbol,
                 "timeframe": self.loadout.timeframe,
                 "action": "session_start",
@@ -710,13 +786,22 @@ class PaperSession:
                 "metalabel_mode": self.metalabel_mode,
                 "metalabel_bundle_id": self.conviction_provider.bundle_id,
                 "strategy_params": {
-                    "strategy": self.loadout.strategy_name,
+                    "strategy": (
+                        self.hypervelocity_profile.strategy_id
+                        if self.hypervelocity_profile
+                        else self.loadout.strategy_name
+                    ),
                     **_effective_strategy_params(self.loadout),
                 },
+                "position_policy": (
+                    self.hypervelocity_profile.position_policy()
+                    if self.hypervelocity_profile
+                    else None
+                ),
                 "exits": _effective_exits(self.loadout),
                 "risk": _effective_risk(self.loadout),
                 "execution": _effective_execution(self.loadout),
-                "costs": dict(self.loadout.costs or {}),
+                "costs": self._effective_costs(),
                 "bars_processed": self.bars_processed,
                 "execution_mode": self.execution_mode,
                 "submitted": False,
@@ -731,6 +816,22 @@ class PaperSession:
             },
         )
         self._identity_written = True
+
+    def _effective_costs(self) -> dict[str, object]:
+        if self.hypervelocity_profile is None:
+            return dict(self.loadout.costs or {})
+        snapshot = self.cost_provider.snapshot()
+        return {
+            "fee_tier": snapshot.fee_tier,
+            "maker_fee_rate": snapshot.maker_fee,
+            "taker_fee_rate": snapshot.taker_fee,
+            "slippage_bps": snapshot.slippage_bps,
+            "funding_source": "live_meta_and_asset_contexts",
+            "funding_rate_hourly": snapshot.funding_rate_hourly,
+            "funding_asof_ts": snapshot.asof_ts,
+            "funding_refresh_seconds": self.cost_provider.funding_poll_secs,
+            "funding_accrual": "hourly_boundary",
+        }
 
     def result(self) -> PaperSessionResult:
         self.ensure_session_identity()
@@ -822,6 +923,32 @@ def _feed_ts(record: dict[str, Any]) -> str:
     return str(ts)
 
 
+def _timeframe_minutes(timeframe: str) -> int:
+    values = {"1m": 1, "5m": 5, "15m": 15}
+    if timeframe not in values:
+        raise ValueError(f"unsupported funding timeframe: {timeframe}")
+    return values[timeframe]
+
+
+def _bar_close_timestamp(
+    record: dict[str, Any],
+    *,
+    timeframe: str,
+) -> pd.Timestamp:
+    return pd.Timestamp(record["timestamp"]) + pd.Timedelta(
+        minutes=_timeframe_minutes(timeframe)
+    )
+
+
+def _is_funding_boundary(
+    record: dict[str, Any],
+    *,
+    timeframe: str,
+) -> bool:
+    closed_at = _bar_close_timestamp(record, timeframe=timeframe)
+    return closed_at.minute == 0 and closed_at.second == 0
+
+
 def _exits_dict(loadout: StrategyLoadout) -> dict[str, Any]:
     raw = dict(loadout.exits or {})
     if "mode" not in raw or raw.get("mode") is None:
@@ -831,12 +958,13 @@ def _exits_dict(loadout: StrategyLoadout) -> dict[str, Any]:
 
 
 def _effective_strategy_params(loadout: StrategyLoadout) -> dict[str, Any]:
-    params = dict(loadout.params or {})
-    if is_hypervelocity_strategy(loadout.strategy_name):
-        contract = HypervelocityContract()
-        params["leverage"] = contract.leverage
-        params["target_margin_pct"] = contract.target_margin_pct
-    return params
+    if not is_hypervelocity_strategy(loadout.strategy_name):
+        return dict(loadout.params or {})
+    contract = HypervelocityContract()
+    return {
+        "leverage": contract.leverage,
+        "target_margin_pct": contract.target_margin_pct,
+    }
 
 
 def _effective_exits(loadout: StrategyLoadout) -> dict[str, Any]:
@@ -872,7 +1000,7 @@ def _effective_execution(loadout: StrategyLoadout) -> dict[str, Any]:
         "time_in_force": contract.time_in_force,
         "fill_rule": "through_one_tick",
         "fill_model": PostOnlyLimitFillModel.fill_model_id,
-        "tick_size": DEFAULT_MAKER_TICK_SIZE,
+        "price_tick_mode": "hyperliquid_dynamic",
         "entry_ttl_seconds": DEFAULT_ENTRY_TTL_SECONDS,
     }
 

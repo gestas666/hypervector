@@ -70,6 +70,12 @@ trail_atr_mult = 2.0
 symbols = ["BTC"]
 timeframe = "1m"
 strategy_ids = ["hypervelocity_1m_scalper_long", "hypervelocity_1m_scalper_short"]
+strategy_id = "hypervelocity_1m_scalper"
+position_mode = "one_way"
+max_positions_per_symbol = 1
+direction_mode = "regime_bidirectional"
+allow_reversal_while_open = false
+switch_after_exit = true
 allowed_states = ["TREND_UP", "TREND_DOWN", "BREAKOUT_DIRECTION_CONFIRMED"]
 blocked_states = ["RANGE", "TRANSITION", "UNKNOWN"]
 margin_fraction = 0.70
@@ -84,11 +90,28 @@ order_type = "limit"
 time_in_force = "post_only"
 fill_rule = "through_one_tick"
 fill_model = "post_only_limit_through_v1"
-tick_size = 1.0
+price_tick_mode = "hyperliquid_dynamic"
 entry_ttl_seconds = 300.0
 
+[hypervelocity.venue]
+name = "hyperliquid"
+network = "mainnet"
+instrument_spec_source = "public_meta"
+size_decimals = 5
+venue_max_leverage = 40.0
+
+[hypervelocity.costs]
+fee_source = "hyperliquid_base_tier"
+fee_tier = 0
+maker_fee_rate = 0.00015
+taker_fee_rate = 0.00045
+slippage_bps = 0.0
+funding_source = "live_meta_and_asset_contexts"
+funding_refresh_seconds = 60.0
+funding_accrual = "hourly_boundary"
+
 [hypervelocity.ml]
-mode = "observe"
+mode = "off"
 may_filter = false
 may_scale = false
 
@@ -99,12 +122,15 @@ context_timeframe = "15m"
 context_is_hard_gate = false
 ema_fast = 5
 ema_slow = 13
+warmup_bars = 60
 structure_lookback = 120
 trend_strength_percentile = 70.0
 range_strength_percentile = 40.0
 minimum_trend_gap_bps = 0.5
 choppiness_range_threshold = 75.0
+choppiness_length = 14
 coiling_width_bps = 1.0
 breakout_lookback = 90
 breakout_clearance_bps = 8.0
 breakout_volume_multiple = 2.5
+breakout_volume_lookback = 20

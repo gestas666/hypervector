@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from decimal import Decimal, ROUND_CEILING, ROUND_FLOOR
+from math import floor, log10
 from typing import Any, Literal
 
 import pandas as pd
@@ -12,8 +14,44 @@ from hypervector.paper.fill_models import FillResult
 Direction = Literal["long", "short"]
 
 FILL_MODEL_POST_ONLY_LIMIT_THROUGH_V1 = "post_only_limit_through_v1"
-DEFAULT_MAKER_TICK_SIZE = 1.0
 DEFAULT_ENTRY_TTL_SECONDS = 300.0
+
+
+def hyperliquid_price_tick(price: float, *, size_decimals: int) -> float:
+    """Return the valid perp price step under Hyperliquid's precision rules."""
+    value = float(price)
+    if value <= 0.0:
+        raise ValueError("price must be positive")
+    if not 0 <= int(size_decimals) <= 6:
+        raise ValueError("size_decimals must be between 0 and 6")
+    significant_exponent = floor(log10(value)) - 4
+    decimal_cap_exponent = -(6 - int(size_decimals))
+    tick_exponent = min(0, max(significant_exponent, decimal_cap_exponent))
+    return float(10.0**tick_exponent)
+
+
+def round_price_to_tick(
+    price: float,
+    *,
+    tick_size: float,
+    upward: bool,
+) -> float:
+    """Round a price outward to an exact venue tick."""
+    tick = Decimal(str(tick_size))
+    if tick <= 0:
+        raise ValueError("tick_size must be positive")
+    rounding = ROUND_CEILING if upward else ROUND_FLOOR
+    units = (Decimal(str(price)) / tick).to_integral_value(rounding=rounding)
+    return float(units * tick)
+
+
+def quantize_size_down(qty: float, *, size_decimals: int) -> float:
+    """Round position size down to the venue's allowed size precision."""
+    if not 0 <= int(size_decimals) <= 18:
+        raise ValueError("size_decimals must be between 0 and 18")
+    quantum = Decimal(1).scaleb(-int(size_decimals))
+    value = Decimal(str(qty)).quantize(quantum, rounding=ROUND_FLOOR)
+    return float(value)
 
 
 @dataclass(frozen=True)

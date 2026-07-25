@@ -12,6 +12,32 @@ from hypervector.paper.costs import (
 )
 
 
+class _Response:
+    def raise_for_status(self) -> None:
+        return None
+
+    def json(self) -> list[object]:
+        return [
+            {"universe": [{"name": "BTC", "szDecimals": 5, "maxLeverage": 40}]},
+            [{"funding": "0.0000125", "oraclePx": "64195.0"}],
+        ]
+
+
+class _Session:
+    def post(self, *_args: object, **_kwargs: object) -> _Response:
+        return _Response()
+
+
+def test_refresh_market_state_uses_public_hyperliquid_fields() -> None:
+    provider = CostProvider()
+    state = provider.refresh_market_state("BTC", session=_Session())  # type: ignore[arg-type]
+
+    assert state.size_decimals == 5
+    assert state.max_leverage == 40.0
+    assert state.funding_rate_hourly == pytest.approx(0.0000125)
+    assert provider.snapshot().funding_rate_hourly == pytest.approx(0.0000125)
+
+
 def test_tier0_matches_official_base():
     taker, maker = fees_for_tier(0)
     assert taker == 0.00045

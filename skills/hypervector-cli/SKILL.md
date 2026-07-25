@@ -93,7 +93,32 @@ uv run python -m hypervector autotune --strategy crown_stack_long --sampler hybr
 uv run python -m hypervector autotune --strategy oi_divergence_long --sampler karpathy --n-trials 100
 ```
 
-### 5. 4-Screen Visual Microstructure Cockpit (`tui-regime-detector`)
+### 5. Hypervelocity Shadow Backend and Read-Only TUI
+
+Run one backend that selects long or short while flat, holds an open position
+through regime changes until its fixed target, refreshes public Hyperliquid
+funding, and writes authoritative telemetry without submitting venue orders:
+
+```bash
+uv run python -m hypervector \
+  --data-root data/ops/hypervelocity_visual_long \
+  hypervelocity-shadow-run \
+  --config configs/hypervelocity_faithful.toml
+```
+
+In a second terminal, display that backend ledger:
+
+```bash
+cargo run -q -p hypervector-tui --bin tui-regime-detector -- \
+  --symbol BTC --timeframe 1m --live --refresh-ms 500 \
+  --data-root data/ops/hypervelocity_visual_long
+```
+
+The TUI does not execute or reconstruct trades. Trade, position, PnL, cost,
+and policy fields come from the backend ledger. The current depth visualization
+is derived from cached regime snapshot ratios; it is not a raw L2 ladder.
+
+### 6. 4-Screen Visual Microstructure Cockpit (`tui-regime-detector`)
 
 Ratatui 0.29 interactive 4-screen cockpit featuring live stream playback, L2 orderbook depth stack, paper trade journal, and interactive engine configuration:
 
@@ -111,7 +136,7 @@ cargo run -p hypervector-tui --bin tui-regime-detector -- --symbol BTC --timefra
 - **`[3]`**: **Live Shadow Paper Trading Cockpit** ($10k starting capital, L2 orderbook stack, win/loss stats, execution journal).
 - **`[4]`**: **Engine & Risk Configuration** (Leverage mode, TP/SL trailing engines, position sizing rules).
 
-### 6. Walk-Forward LightGBM Metalabeling
+### 7. Walk-Forward LightGBM Metalabeling
 
 Train an Isotonic-calibrated LightGBM ensemble on strategy entries:
 
@@ -119,13 +144,13 @@ Train an Isotonic-calibrated LightGBM ensemble on strategy entries:
 uv run python -m hypervector metalabel-train --path data/exports/<export_dir> --install
 ```
 
-### 7. Inventory & System Status
+### 8. Inventory & System Status
 
 ```bash
 uv run python -m hypervector status
 ```
 
-### 8. Hypervelocity Shadow/Real Reconciliation
+### 9. Hypervelocity Shadow/Real Reconciliation
 
 Compare one or more explicit backend shadow run IDs with a real-strategy CSV
 covering the same UTC observation window:

@@ -25,6 +25,7 @@ from hypervector.paper.fill_models import (
 )
 from hypervector.paper.live_node import DEFAULT_POLL_INTERVAL_SECS, make_rest_poll_fn
 from hypervector.paper.session import PaperSession
+from hypervector.strategies.hypervelocity_profile import HypervelocityProfile
 
 logger = logging.getLogger(__name__)
 
@@ -79,6 +80,7 @@ def start_paper_daemon(
     metalabel_filter: bool = True,
     metalabel_mode: str | None = None,
     execution_mode: str = "shadow",
+    hypervelocity_profile: HypervelocityProfile | None = None,
 ) -> PaperDaemonResult:
     """Start paper daemon: warm history, then process live bars until stop.
 
@@ -170,7 +172,15 @@ def start_paper_daemon(
         metalabel_filter=bool(metalabel_filter),
         metalabel_mode=metalabel_mode,
         execution_mode=mode,
+        hypervelocity_profile=hypervelocity_profile,
     )
+    if hypervelocity_profile is not None:
+        funding_rate = session.initialize_hypervelocity_venue()
+        logger.info(
+            "validated Hyperliquid venue state symbol=%s funding_rate_hourly=%s",
+            loadout.symbol,
+            funding_rate,
+        )
 
     # --- warm-up (cache-first history or injected frame) ---
     if warm_ohlcv is not None:

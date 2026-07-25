@@ -31,6 +31,15 @@ class HypervelocityRegimeObservation:
     entry_allowed: bool
 
 
+@dataclass(frozen=True)
+class HypervelocityMarketObservation:
+    """Latest regime state and its single eligible entry direction."""
+
+    primary_regime: str
+    breakout_direction: str | None
+    entry_direction: Direction | None
+
+
 def _classify_regimes(
     df: pd.DataFrame,
     config: RegimeClassifierConfig,
@@ -111,6 +120,32 @@ def current_hypervelocity_regime(
         breakout_direction=breakout_value,
         direction=direction,
         entry_allowed=bool(_entry_eligibility(decisions, direction).iloc[-1]),
+    )
+
+
+def current_hypervelocity_market(
+    df: pd.DataFrame,
+    *,
+    regime_config: RegimeClassifierConfig | None = None,
+) -> HypervelocityMarketObservation:
+    """Return one causal direction, or none while no real trend is eligible."""
+    if df.empty:
+        raise ValueError("Hypervelocity market observation requires at least one bar")
+    decisions = _classify_regimes(df, regime_config or faithful_regime_config())
+    latest = decisions.iloc[-1]
+    breakout = latest["breakout_direction"]
+    breakout_value = None if pd.isna(breakout) else str(breakout)
+    long_allowed = bool(_entry_eligibility(decisions, "long").iloc[-1])
+    short_allowed = bool(_entry_eligibility(decisions, "short").iloc[-1])
+    direction: Direction | None = None
+    if long_allowed and not short_allowed:
+        direction = "long"
+    elif short_allowed and not long_allowed:
+        direction = "short"
+    return HypervelocityMarketObservation(
+        primary_regime=str(latest["primary_regime"]),
+        breakout_direction=breakout_value,
+        entry_direction=direction,
     )
 
 

@@ -40,6 +40,7 @@ from hypervector.report import rank_trials
 from hypervector.runs.db import RunsDB, TrialRow
 from hypervector.strategies import register_all_strategies
 from hypervector.strategies.hypervelocity_contract import is_hypervelocity_strategy
+from hypervector.strategies.hypervelocity_profile import load_hypervelocity_profile
 from hypervector.strategies.registry import get_strategy, list_strategies
 from hypervector.sweep.costs import resolve_cost_model
 from hypervector.sweep.exits import EXIT_MODES, ExitConfig
@@ -62,6 +63,7 @@ CLI_COMMANDS: tuple[str, ...] = (
     "hypervelocity-regime-autotune",
     "hypervelocity-maker-replay",
     "hypervelocity-shadow-compare",
+    "hypervelocity-shadow-run",
     "sweep-up",
     "sweep-down",
     "report",
@@ -557,6 +559,46 @@ def cmd_paper_run(args: argparse.Namespace) -> int:
         "network": NETWORK_MAINNET,
     }
     print(json.dumps(out, indent=2, default=str))
+    return 0
+
+
+def cmd_hypervelocity_shadow_run(args: argparse.Namespace) -> int:
+    """Run the validated one-position, bidirectional Hypervelocity backend."""
+    _ensure_root(args)
+    try:
+        profile = load_hypervelocity_profile(Path(args.config))
+        result = start_paper_daemon(
+            export_dir=profile.export_path,
+            data_root=Path(args.data_root),
+            fee_tier=profile.fee_tier,
+            poll_interval_secs=profile.poll_interval_seconds,
+            max_live_bars=args.max_live_bars,
+            lookback_days=profile.lookback_days,
+            enable_funding_refresh=True,
+            metalabel_enabled=profile.metalabel_mode != "off",
+            metalabel_filter=False,
+            metalabel_mode=profile.metalabel_mode,
+            execution_mode=profile.runtime_mode,
+            hypervelocity_profile=profile,
+        )
+    except (FileNotFoundError, OSError, RuntimeError, ValueError) as exc:
+        print(f"hypervelocity-shadow-run failed: {exc}", file=sys.stderr)
+        return 1
+    print(
+        json.dumps(
+            {
+                "ok": True,
+                "run_id": result.run_id,
+                "execution_mode": result.execution_mode,
+                "decisions_path": str(result.decisions_path),
+                "fills_count": result.fills_count,
+                "position_policy": profile.position_policy(),
+                "funding_refresh_enabled": True,
+                "fee_tier": profile.fee_tier,
+            },
+            indent=2,
+        )
+    )
     return 0
 
 
@@ -2132,6 +2174,23 @@ def build_parser() -> argparse.ArgumentParser:
     )
     hv_compare.add_argument("--out", default=None)
     hv_compare.set_defaults(func=cmd_hypervelocity_shadow_compare)
+
+    hv_shadow = sub.add_parser(
+        "hypervelocity-shadow-run",
+        help="Run validated one-way bidirectional Hypervelocity shadow backend",
+    )
+    hv_shadow.add_argument(
+        "--config",
+        default="configs/hypervelocity_faithful.toml",
+        help="validated Hypervelocity TOML profile",
+    )
+    hv_shadow.add_argument(
+        "--max-live-bars",
+        type=int,
+        default=None,
+        help="optional bounded smoke-run bar count",
+    )
+    hv_shadow.set_defaults(func=cmd_hypervelocity_shadow_run)
 
     rex = sub.add_parser(
         "regime-export",
