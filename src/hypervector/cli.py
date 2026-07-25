@@ -17,6 +17,7 @@ from hypervector.export.phase2 import export_candidate
 from hypervector.export.schema import ExportSchemaError, validate_export_dir
 from hypervector.infra import ensure_data_layout, layout_report
 from hypervector.nautilus.config_stub import phase2_check_report
+from hypervector.nautilus.load_export import load_strategy_loadout
 from hypervector.nautilus.runner import run_phase2_backtest
 from hypervector.paper.conviction import resolve_metalabel_mode
 from hypervector.paper.fill_models import (
@@ -38,6 +39,7 @@ from hypervector.regime.metrics import regime_detection_metrics
 from hypervector.report import rank_trials
 from hypervector.runs.db import RunsDB, TrialRow
 from hypervector.strategies import register_all_strategies
+from hypervector.strategies.hypervelocity_contract import is_hypervelocity_strategy
 from hypervector.strategies.registry import get_strategy, list_strategies
 from hypervector.sweep.costs import resolve_cost_model
 from hypervector.sweep.exits import EXIT_MODES, ExitConfig
@@ -481,6 +483,17 @@ def cmd_paper_run(args: argparse.Namespace) -> int:
         filter_entries=metalabel_filter,
         requested=requested_metalabel_mode,
     )
+    try:
+        strategy_name = load_strategy_loadout(path, strict=True).strategy_name
+    except (FileNotFoundError, ValueError, OSError) as exc:
+        print(f"paper-run failed: {exc}", file=sys.stderr)
+        return 1
+    if is_hypervelocity_strategy(strategy_name) and metalabel_mode in (
+        "scale",
+        "filter",
+    ):
+        metalabel_mode = "observe"
+        metalabel_filter = False
     metalabel_enabled = metalabel_mode != "off"
     execution_mode = str(getattr(args, "mode", DEFAULT_EXECUTION_MODE)).lower().strip()
     if execution_mode not in ALLOWED_CLI_EXECUTION_MODES:

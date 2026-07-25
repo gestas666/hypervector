@@ -489,6 +489,49 @@ def test_cli_paper_run_observe_mode_reaches_daemon(tmp_path: Path, monkeypatch):
     assert captured["metalabel_mode"] == "observe"
 
 
+def test_cli_forces_hypervelocity_model_policy_to_annotation_only(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    export = _write_strict_export(
+        tmp_path,
+        strategy="hypervelocity_1m_scalper_long",
+    )
+    captured: dict = {}
+
+    def fake_daemon(**kwargs):
+        captured.update(kwargs)
+        return PaperDaemonResult(
+            run_id="hv",
+            export_dir=Path(kwargs["export_dir"]),
+            decisions_path=tmp_path / "decisions.jsonl",
+            warm_bars=0,
+            live_bars=0,
+            bars_processed=0,
+            fills_count=0,
+            stop_reason="bounded",
+            execution_mode="shadow",
+        )
+
+    monkeypatch.setattr("hypervector.cli.start_paper_daemon", fake_daemon)
+    rc = main(
+        [
+            "--data-root",
+            str(tmp_path / "data"),
+            "paper-run",
+            "--path",
+            str(export),
+            "--metalabel-mode",
+            "filter",
+        ]
+    )
+
+    assert rc == 0
+    assert captured["metalabel_enabled"] is True
+    assert captured["metalabel_mode"] == "observe"
+    assert captured["metalabel_filter"] is False
+
+
 def test_cli_paper_run_mode_flag_wires_execution_mode(tmp_path: Path, monkeypatch):
     """paper-run --mode paper|shadow is forwarded to start_paper_daemon."""
     export = _write_strict_export(tmp_path)

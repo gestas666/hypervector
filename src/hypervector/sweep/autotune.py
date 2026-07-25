@@ -18,6 +18,10 @@ import numpy as np
 
 from hypervector.data.pipeline import load_research_history
 from hypervector.strategies import register_all_strategies
+from hypervector.strategies.hypervelocity_contract import (
+    HypervelocityContract,
+    is_hypervelocity_strategy,
+)
 from hypervector.strategies.registry import get_strategy
 from hypervector.sweep.costs import resolve_cost_model
 from hypervector.sweep.exits import ExitConfig
@@ -95,6 +99,58 @@ def _clamp_strategy_leverage(params: dict[str, Any], symbol: str) -> dict[str, A
     return clamped
 
 
+def _hypervelocity_exit_dict() -> dict[str, Any]:
+    """Return the fixed strategy-managed exit contract for trial reporting."""
+    contract = HypervelocityContract()
+    return {
+        "mode": "strategy_target_only",
+        "target_margin_pct": contract.target_margin_pct,
+        "target_price_fraction": contract.target_price_fraction,
+        "stop": None,
+        "leverage": contract.leverage,
+    }
+
+
+def _optuna_exit_dict(trial: Any, *, hypervelocity: bool) -> dict[str, Any]:
+    """Sample generic exits or return the immutable Hypervelocity lifecycle."""
+    if hypervelocity:
+        return _hypervelocity_exit_dict()
+    return {
+        "mode": trial.suggest_categorical(
+            "exit_mode", ["atr", "trail", "fixed_rr"]
+        ),
+        "sl_pct": trial.suggest_float("sl_pct", 0.003, 0.03, step=0.003),
+        "sl_atr_mult": trial.suggest_float("sl_atr_mult", 0.8, 4.0, step=0.4),
+        "rr": trial.suggest_float("rr", 1.2, 5.0, step=0.3),
+        "trail_atr_mult": trial.suggest_float(
+            "trail_atr_mult", 1.2, 5.0, step=0.3
+        ),
+        "leverage": trial.suggest_categorical(
+            "leverage", [1.0, 2.0, 3.0, 5.0]
+        ),
+    }
+
+
+def _random_exit_dict(rng: Any, *, hypervelocity: bool) -> dict[str, Any]:
+    """Sample generic exits or return the immutable Hypervelocity lifecycle."""
+    if hypervelocity:
+        return _hypervelocity_exit_dict()
+    return {
+        "mode": _sample_grid_params(
+            rng, {"mode": ["atr", "trail", "fixed_rr"]}
+        )["mode"],
+        "sl_pct": round(float(rng.uniform(0.003, 0.03)), 4),
+        "sl_atr_mult": round(
+            float(rng.uniform(_EXIT_SL_ATR_MIN, _EXIT_SL_ATR_MAX)), 1
+        ),
+        "rr": round(float(rng.uniform(1.5, 4.0)), 1),
+        "trail_atr_mult": round(float(rng.uniform(1.5, 4.0)), 1),
+        "leverage": _sample_grid_params(
+            rng, {"leverage": [1.0, 2.0, 3.0, 5.0]}
+        )["leverage"],
+    }
+
+
 def _export_autotune_candidate(
     *,
     root: Path,
@@ -113,10 +169,25 @@ def _export_autotune_candidate(
     """Write a strict Phase-2 bundle through the canonical exporter."""
     from hypervector.export.phase2 import export_candidate
 
-    exit_cfg = ExitConfig(
-        **{k: v for k, v in best_exit_dict.items() if k != "leverage"}
-    )
-    risk_cfg = RiskConfig(max_size_frac=float(best_exit_dict.get("leverage", 1.0)))
+    if is_hypervelocity_strategy(strategy_name):
+        contract = HypervelocityContract()
+        exit_cfg = ExitConfig(
+            mode="fixed_rr",
+            sl_pct=contract.target_price_fraction,
+            rr=1.0,
+        )
+        risk_cfg = RiskConfig(
+            risk_pct_min=contract.margin_fraction,
+            risk_pct_max=contract.margin_fraction,
+            max_size_frac=contract.notional_fraction,
+        )
+    else:
+        exit_cfg = ExitConfig(
+            **{k: v for k, v in best_exit_dict.items() if k != "leverage"}
+        )
+        risk_cfg = RiskConfig(
+            max_size_frac=float(best_exit_dict.get("leverage", 1.0))
+        )
     candidate_id = f"exp_{strategy_name}_{timeframe}_{stamp}"
     return export_candidate(
         root / "exports",
@@ -134,6 +205,11 @@ def _export_autotune_candidate(
             "apply_costs": True,
             "data_provenance": provenance,
             "fee_model": fee_model,
+            "hypervelocity_contract": (
+                _hypervelocity_exit_dict()
+                if is_hypervelocity_strategy(strategy_name)
+                else None
+            ),
         },
         params={
             "strategy": strategy_name,
@@ -187,7 +263,9 @@ def run_autotune(
 
     close = df["close"].astype(float)
     direction = "short" if "short" in strategy_name.lower() else "long"
-    cost = resolve_cost_model(fee_model)
+    hypervelocity = is_hypervelocity_strategy(strategy_name)
+    effective_fee_model = "hl_maker" if hypervelocity else fee_model
+    cost = resolve_cost_model(effective_fee_model)
     spec = get_strategy(strategy_name)
 
     trials_log: list[dict[str, Any]] = []
@@ -197,14 +275,22 @@ def run_autotune(
     ) -> float:
         try:
             entries, exits, _ = spec.build_signals(df, **params)
-            exit_cfg = ExitConfig(
-                mode=exit_dict.get("mode", "atr"),
-                sl_pct=exit_dict.get("sl_pct", 0.01),
-                sl_atr_mult=exit_dict.get("sl_atr_mult", 2.0),
-                rr=exit_dict.get("rr", 2.0),
-                trail_atr_mult=exit_dict.get("trail_atr_mult", 2.0),
-            )
-            leverage = float(exit_dict.get("leverage", 2.0))
+            if hypervelocity:
+                contract = HypervelocityContract()
+                exit_cfg = ExitConfig()
+                leverage = contract.leverage
+                reported_exit = _hypervelocity_exit_dict()
+            else:
+                contract = None
+                exit_cfg = ExitConfig(
+                    mode=exit_dict.get("mode", "atr"),
+                    sl_pct=exit_dict.get("sl_pct", 0.01),
+                    sl_atr_mult=exit_dict.get("sl_atr_mult", 2.0),
+                    rr=exit_dict.get("rr", 2.0),
+                    trail_atr_mult=exit_dict.get("trail_atr_mult", 2.0),
+                )
+                leverage = float(exit_dict.get("leverage", 2.0))
+                reported_exit = {**exit_cfg.to_dict(), "leverage": leverage}
             risk_cfg = RiskConfig(max_size_frac=leverage)
 
             m = compute_trial_metrics(
@@ -218,6 +304,13 @@ def run_autotune(
                 exit_cfg=exit_cfg,
                 risk_cfg=risk_cfg,
                 apply_costs=True,
+                fixed_notional_fraction=(
+                    contract.notional_fraction if contract is not None else None
+                ),
+                fixed_margin_fraction=(
+                    contract.margin_fraction if contract is not None else None
+                ),
+                strategy_managed_exits=hypervelocity,
             )
 
             trades = int(m.get("trade_count", m.get("trades", 0)))
@@ -230,7 +323,7 @@ def run_autotune(
                     "trial_number": trial_num,
                     "status": "ok",
                     "params": params,
-                    "exit_cfg": {**exit_cfg.to_dict(), "leverage": leverage},
+                    "exit_cfg": reported_exit,
                     "metrics": m,
                 }
             )
@@ -271,7 +364,7 @@ def run_autotune(
                     if isinstance(p_vals, list) and p_vals:
                         params[p_name] = trial.suggest_categorical(p_name, p_vals)
 
-            if (
+            if not hypervelocity and (
                 "spread_bps" in df.columns
                 or "obi_5" in df.columns
                 or book_data_path is not None
@@ -284,24 +377,7 @@ def run_autotune(
                 )
                 params["min_obi"] = trial.suggest_float("min_obi", -0.5, 0.4, step=0.1)
 
-            # Suggest Exit & Leverage Configuration
-            leverage = trial.suggest_categorical("leverage", [1.0, 2.0, 3.0, 5.0])
-            exit_mode = trial.suggest_categorical(
-                "exit_mode", ["atr", "trail", "fixed_rr"]
-            )
-            sl_atr_mult = trial.suggest_float("sl_atr_mult", 0.8, 4.0, step=0.4)
-            rr = trial.suggest_float("rr", 1.2, 5.0, step=0.3)
-            trail_atr_mult = trial.suggest_float("trail_atr_mult", 1.2, 5.0, step=0.3)
-            sl_pct = trial.suggest_float("sl_pct", 0.003, 0.03, step=0.003)
-
-            exit_dict = {
-                "mode": exit_mode,
-                "sl_pct": sl_pct,
-                "sl_atr_mult": sl_atr_mult,
-                "rr": rr,
-                "trail_atr_mult": trail_atr_mult,
-                "leverage": leverage,
-            }
+            exit_dict = _optuna_exit_dict(trial, hypervelocity=hypervelocity)
             params = _clamp_strategy_leverage(params, symbol)
             return evaluate_config(params, exit_dict, trial.number)
 
@@ -335,20 +411,7 @@ def run_autotune(
             else:
                 params = _sample_grid_params(rng, spec.param_grid)
 
-                exit_dict = {
-                    "mode": _sample_grid_params(
-                        rng, {"mode": ["atr", "trail", "fixed_rr"]}
-                    )["mode"],
-                    "sl_pct": round(float(rng.uniform(0.003, 0.03)), 4),
-                    "sl_atr_mult": round(
-                        float(rng.uniform(_EXIT_SL_ATR_MIN, _EXIT_SL_ATR_MAX)), 1
-                    ),
-                    "rr": round(float(rng.uniform(1.5, 4.0)), 1),
-                    "trail_atr_mult": round(float(rng.uniform(1.5, 4.0)), 1),
-                    "leverage": _sample_grid_params(
-                        rng, {"leverage": [1.0, 2.0, 3.0, 5.0]}
-                    )["leverage"],
-                }
+                exit_dict = _random_exit_dict(rng, hypervelocity=hypervelocity)
 
             params = _clamp_strategy_leverage(params, symbol)
             score = evaluate_config(params, exit_dict, t)
@@ -389,6 +452,7 @@ def run_autotune(
                 "timeframe": timeframe,
                 "lookback_days": lookback_days,
                 "sampler_used": sampler_label,
+                "fee_model": effective_fee_model,
                 "n_trials": len(trials_log),
                 "best_params": best_params,
                 "best_exit_cfg": best_exit_dict,
@@ -412,7 +476,7 @@ def run_autotune(
             symbol=symbol,
             timeframe=timeframe,
             lookback_days=lookback_days,
-            fee_model=fee_model,
+            fee_model=effective_fee_model,
             provenance=provenance,
             best_params=best_params,
             best_exit_dict=best_exit_dict,
