@@ -432,10 +432,7 @@ fn build_stats(rows: &[&LedgerRow], trades: &[PaperTradeRecord], equity: &[f64])
     }
 }
 
-fn build_active_position(
-    rows: &[&LedgerRow],
-    configured_leverage: f64,
-) -> ActivePosition {
+fn build_active_position(rows: &[&LedgerRow], configured_leverage: f64) -> ActivePosition {
     let Some(latest) = rows
         .iter()
         .rev()
@@ -453,6 +450,10 @@ fn build_active_position(
         .rev()
         .find(|row| matches!(row.action.as_str(), "enter_long" | "enter_short"));
     ActivePosition {
+        entry_timestamp: entry.map(|row| row.feed_ts.clone()).unwrap_or_default(),
+        symbol: entry
+            .and_then(|row| row.symbol.clone())
+            .unwrap_or_else(|| "UNKNOWN".to_string()),
         direction: if qty > 0.0 { "LONG" } else { "SHORT" }.to_string(),
         entry_price: latest
             .position_avg_px

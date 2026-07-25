@@ -7,6 +7,7 @@ use hypervector_tui::{
     data_loader::{generate_synthetic_history, parse_snapshot_json},
     model::{EngineConfig, RegimeSnapshot, RegimeState, SplitPositionMode},
 };
+use ratatui::{Terminal, backend::TestBackend};
 
 #[test]
 fn test_backend_timestamps_display_in_us_eastern_with_dst() {
@@ -311,4 +312,50 @@ fn test_backend_config_is_a_selectable_menu_not_raw_json() {
             .any(|row| row.option == "Position mode" && row.value == "one_way")
     );
     assert!(rows.iter().all(|row| !row.value.contains('{')));
+}
+
+#[test]
+fn test_dashboard_uses_backend_margin_costs_and_mark_to_market_pnl() {
+    let telemetry = parse_backend_telemetry(
+        r#"{"feed_ts":"session_start","action":"session_start","run_id":"hv","strategy_name":"hypervelocity_1m_scalper","execution_mode":"shadow","strategy_params":{"leverage":40.0},"risk":{"margin_fraction":0.7},"execution":{"order_type":"limit","time_in_force":"post_only"},"costs":{"maker_fee_rate":0.00015},"init_cash":10000.0,"equity":10000.0,"position_qty":0.0}
+{"feed_ts":"2026-07-25T12:00:00Z","action":"enter_short","run_id":"hv","symbol":"BTC","fill_px":64100.0,"fill_qty":4.36817,"position_qty":-4.36817,"position_avg_px":64100.0,"equity":9958.0,"realized_pnl":-42.0,"unrealized_pnl":0.0,"leverage":40.0}
+{"feed_ts":"2026-07-25T12:01:00Z","action":"regime_observation","run_id":"hv","primary_regime":"TREND_DOWN","state_1m":"TREND_DOWN","state_5m":"TREND_DOWN","context_15m":"TREND_DOWN","mark_px":64075.0,"position_qty":-4.36817,"position_avg_px":64100.0,"equity":10067.17,"realized_pnl":-42.0,"unrealized_pnl":109.17}"#,
+    )
+    .expect("telemetry");
+    let snapshots = vec![make_snapshot(
+        64075.0,
+        64100.0,
+        64050.0,
+        RegimeState::BearMomentum,
+        "2026-07-25T12:01:00Z",
+    )];
+    let mut app = App::new("BTC".into(), "1m".into(), snapshots, true, false);
+    app.apply_backend_telemetry(telemetry);
+    let backend = TestBackend::new(180, 50);
+    let mut terminal = Terminal::new(backend).expect("terminal");
+
+    terminal
+        .draw(|frame| hypervector_tui::ui::draw(frame, &app))
+        .expect("draw dashboard");
+    let buffer = terminal.backend().buffer();
+    let rendered = (0..buffer.area.height)
+        .map(|y| {
+            (0..buffer.area.width)
+                .map(|x| buffer[(x, y)].symbol())
+                .collect::<String>()
+        })
+        .collect::<Vec<_>>()
+        .join("\n");
+
+    assert!(rendered.contains("NET PNL:     +67.17 USD"));
+    assert!(rendered.contains("MARGIN: $6999.99 (70% Alloc)"));
+    assert!(rendered.contains("SHADOW | POST-ONLY MAKER | 1.50bps/side"));
+    assert!(rendered.contains("POSITION  #1  ▼ SHORT"));
+    assert!(rendered.contains("RUN PNL   +$67.17"));
+    assert!(rendered.contains("CLOSED TRADES: 0 | OPEN POSITIONS: 1"));
+    assert!(rendered.contains("UNREAL +109.17"));
+    assert!(rendered.contains("AWAITING TP"));
+    assert!(!rendered.contains("25% Cap"));
+    assert!(!rendered.contains("Taker Drag"));
+    assert!(!rendered.contains("+$-"));
 }

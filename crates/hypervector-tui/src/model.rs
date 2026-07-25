@@ -238,6 +238,8 @@ pub struct HypervelocityTrade {
 /// Live position state tracked by the hypervelocity strategy.
 #[derive(Debug, Clone)]
 pub struct ActivePosition {
+    pub entry_timestamp: String,
+    pub symbol: String,
     pub direction: String, // "LONG" or "SHORT"
     pub entry_price: f64,
     pub size_btc: f64,
@@ -249,6 +251,8 @@ pub struct ActivePosition {
 impl ActivePosition {
     pub fn flat() -> Self {
         Self {
+            entry_timestamp: String::new(),
+            symbol: String::new(),
             direction: "FLAT".to_string(),
             entry_price: 0.0,
             size_btc: 0.0,

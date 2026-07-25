@@ -92,7 +92,9 @@ def supervise_hypervelocity_tui(
             text=True,
         )
         try:
-            _wait_for_backend(child, decisions_path, initial_size, startup_timeout_seconds)
+            _wait_for_backend(
+                child, decisions_path, initial_size, startup_timeout_seconds
+            )
             tui = subprocess.run(list(tui_command), cwd=project_root, check=False)
         finally:
             backend_returncode = _stop_backend(child)
@@ -110,12 +112,16 @@ def _tui_prefix(tui_binary: Path | None) -> list[str]:
         if not path.is_file():
             raise FileNotFoundError(f"HYPERVECTOR_TUI_BIN not found: {path}")
         return [str(path.resolve())]
-    root = _project_root()
-    for relative in ("target/release/tui-regime-detector", "target/debug/tui-regime-detector"):
-        candidate = root / relative
-        if candidate.is_file():
-            return [str(candidate)]
-    return ["cargo", "run", "-q", "-p", "hypervector-tui", "--bin", "tui-regime-detector", "--"]
+    return [
+        "cargo",
+        "run",
+        "-q",
+        "-p",
+        "hypervector-tui",
+        "--bin",
+        "tui-regime-detector",
+        "--",
+    ]
 
 
 def _wait_for_backend(

@@ -879,10 +879,11 @@ fn render_bottom_performance_section(f: &mut Frame, app: &App, area: Rect) {
 
 fn render_screen3_portfolio_telemetry_box(f: &mut Frame, app: &App, area: Rect) {
     let stats = &app.paper_stats;
-    let (pnl_style, pnl_sign) = if stats.realized_pnl >= 0.0 {
-        (app.theme.bull, "+")
+    let net_pnl = stats.current_equity - stats.initial_capital;
+    let pnl_style = if net_pnl >= 0.0 {
+        app.theme.bull
     } else {
-        (app.theme.bear, "")
+        app.theme.bear
     };
     let eq_pct = (stats.current_equity - stats.initial_capital) / stats.initial_capital * 100.0;
 
@@ -892,25 +893,19 @@ fn render_screen3_portfolio_telemetry_box(f: &mut Frame, app: &App, area: Rect) 
             Span::styled(format!("${:.2}", stats.initial_capital), app.theme.title),
             Span::raw("  EQUITY: "),
             Span::styled(
-                format!("${:.2} ({}{:.2}%)", stats.current_equity, pnl_sign, eq_pct),
+                format!("${:.2} ({:+.2}%)", stats.current_equity, eq_pct),
                 pnl_style,
             ),
         ]),
         Line::from(vec![
             Span::raw("NET PNL:     "),
-            Span::styled(
-                format!("{}{:.2} USD", pnl_sign, stats.realized_pnl),
-                pnl_style,
-            ),
+            Span::styled(format!("{:+.2} USD", normalized_zero(net_pnl)), pnl_style),
             Span::raw("  MARGIN: "),
-            Span::styled(
-                format!("${:.2} (25% Cap)", stats.current_equity * 0.25),
-                app.theme.gold,
-            ),
+            Span::styled(portfolio_margin_display(app), app.theme.gold),
         ]),
         Line::from(vec![
             Span::raw("EXECUTION:   "),
-            Span::styled("LIVE PAPER SHADOW (0.06% Taker Drag)", app.theme.cyan),
+            Span::styled(execution_display(app), app.theme.cyan),
         ]),
         Line::from(vec![
             Span::raw("TOTAL TRADES: "),
@@ -937,6 +932,48 @@ fn render_screen3_portfolio_telemetry_box(f: &mut Frame, app: &App, area: Rect) 
         .border_style(app.theme.border_active);
 
     f.render_widget(Paragraph::new(text).block(block), area);
+}
+
+fn portfolio_margin_display(app: &App) -> String {
+    let Some(fraction) = backend_f64(&app.backend.risk, "margin_fraction") else {
+        return "not reported".to_string();
+    };
+    let allocated = if app.active_position.is_active() && app.active_position.leverage > 0.0 {
+        app.active_position.entry_price * app.active_position.size_btc
+            / app.active_position.leverage
+    } else {
+        app.paper_stats.current_equity * fraction
+    };
+    format!("${allocated:.2} ({:.0}% Alloc)", fraction * 100.0)
+}
+
+fn execution_display(app: &App) -> String {
+    let mode = app
+        .backend
+        .execution_mode
+        .as_deref()
+        .unwrap_or("not reported")
+        .to_uppercase();
+    let time_in_force = app
+        .backend
+        .execution_policy
+        .get("time_in_force")
+        .and_then(serde_json::Value::as_str);
+    let maker_fee = backend_f64(&app.backend.costs, "maker_fee_rate");
+    match (time_in_force, maker_fee) {
+        (Some("post_only"), Some(fee)) => {
+            format!("{mode} | POST-ONLY MAKER | {:.2}bps/side", fee * 10_000.0)
+        }
+        _ => format!("{mode} | backend execution costs not reported"),
+    }
+}
+
+fn backend_f64(value: &serde_json::Value, key: &str) -> Option<f64> {
+    value.get(key).and_then(serde_json::Value::as_f64)
+}
+
+fn normalized_zero(value: f64) -> f64 {
+    if value.abs() < 0.005 { 0.0 } else { value }
 }
 
 fn render_bottom_journal_and_trend_log(f: &mut Frame, app: &App, area: Rect) {
@@ -1284,8 +1321,43 @@ fn render_paper_journal_log(f: &mut Frame, app: &App, area: Rect) {
     let header = Row::new(header_cells).height(1);
 
     let max_rows = area.height.saturating_sub(3).max(1) as usize;
-    let recent_trades: Vec<_> = app.paper_trades.iter().rev().take(max_rows).collect();
-    let rows = recent_trades.iter().map(|trd| {
+    let open_count = usize::from(app.active_position.is_active());
+    let closed_limit = max_rows.saturating_sub(open_count);
+    let recent_trades: Vec<_> = app.paper_trades.iter().rev().take(closed_limit).collect();
+    let mut rows = Vec::with_capacity(recent_trades.len() + open_count);
+    if app.active_position.is_active() {
+        let position = &app.active_position;
+        let direction_style = if position.direction == "LONG" {
+            app.theme.bull
+        } else {
+            app.theme.bear
+        };
+        rows.push(Row::new(vec![
+            Span::styled("OPEN", app.theme.gold),
+            Span::styled(
+                format_timestamp_display(&position.entry_timestamp),
+                app.theme.muted,
+            ),
+            Span::styled(&position.direction, direction_style),
+            Span::styled(format!("${:.2}", position.entry_price), app.theme.title),
+            Span::styled("OPEN", app.theme.cyan),
+            Span::styled(format!("{:.4}", position.size_btc), app.theme.cyan),
+            Span::styled(format!("{:.1}x", position.leverage), app.theme.gold),
+            Span::styled(
+                format!(
+                    "UNREAL {:+.2}",
+                    normalized_zero(app.paper_stats.unrealized_pnl)
+                ),
+                if app.paper_stats.unrealized_pnl >= 0.0 {
+                    app.theme.bull
+                } else {
+                    app.theme.bear
+                },
+            ),
+            Span::styled("AWAITING TP", app.theme.gold),
+        ]));
+    }
+    rows.extend(recent_trades.iter().map(|trd| {
         let dir_style = if trd.direction == "LONG" {
             app.theme.bull
         } else {
@@ -1316,7 +1388,7 @@ fn render_paper_journal_log(f: &mut Frame, app: &App, area: Rect) {
             ),
             Span::styled(&trd.exit_reason, app.theme.muted),
         ])
-    });
+    }));
 
     let table = Table::new(
         rows,
@@ -1336,9 +1408,9 @@ fn render_paper_journal_log(f: &mut Frame, app: &App, area: Rect) {
     .block(
         Block::default()
             .title(format!(
-                " LIVE PAPER TRADE JOURNAL & EXECUTION LOG ({}/{} Trades Recorded) ",
-                recent_trades.len(),
-                app.paper_trades.len()
+                " LIVE PAPER JOURNAL (CLOSED TRADES: {} | OPEN POSITIONS: {}) ",
+                app.paper_trades.len(),
+                open_count
             ))
             .title_style(app.theme.title)
             .borders(Borders::ALL)

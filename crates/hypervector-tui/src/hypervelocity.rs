@@ -521,7 +521,9 @@ pub fn render_run_stats(f: &mut Frame, app: &App, area: Rect) {
         app.theme.muted
     };
 
-    let run_win_rate = if app.run_position_index > 0 {
+    let closed_positions = app.run_position_index;
+    let displayed_position = closed_positions + u32::from(app.active_position.is_active());
+    let run_win_rate = if closed_positions > 0 {
         (app.run_wins as f64 / app.run_position_index as f64) * 100.0
     } else {
         0.0
@@ -546,7 +548,7 @@ pub fn render_run_stats(f: &mut Frame, app: &App, area: Rect) {
     let text = vec![
         Line::from(vec![
             Span::raw("POSITION  "),
-            Span::styled(format!("#{}", app.run_position_index), app.theme.gold),
+            Span::styled(format!("#{displayed_position}"), app.theme.gold),
             Span::raw("  "),
             Span::styled(format!("{} {}", dir_icon, dir), dir_style),
         ]),
@@ -556,7 +558,7 @@ pub fn render_run_stats(f: &mut Frame, app: &App, area: Rect) {
                 format!(
                     "{}W / {}L  ",
                     app.run_wins,
-                    app.run_position_index.saturating_sub(app.run_wins)
+                    closed_positions.saturating_sub(app.run_wins)
                 ),
                 app.theme.title,
             ),
@@ -564,7 +566,10 @@ pub fn render_run_stats(f: &mut Frame, app: &App, area: Rect) {
         ]),
         Line::from(vec![
             Span::raw("RUN PNL   "),
-            Span::styled(format!("+${:.2}", app.run_pnl), app.theme.gold),
+            Span::styled(
+                signed_usd(app.paper_stats.current_equity - app.paper_stats.initial_capital),
+                app.theme.gold,
+            ),
         ]),
         Line::from(vec![
             Span::raw("AVG MARGIN "),
@@ -590,6 +595,12 @@ pub fn render_run_stats(f: &mut Frame, app: &App, area: Rect) {
         .border_style(app.theme.border);
 
     f.render_widget(Paragraph::new(text).block(block), area);
+}
+
+fn signed_usd(value: f64) -> String {
+    let normalized = if value.abs() < 0.005 { 0.0 } else { value };
+    let sign = if normalized >= 0.0 { "+" } else { "-" };
+    format!("{sign}${:.2}", normalized.abs())
 }
 
 pub fn render_return_distribution(f: &mut Frame, app: &App, area: Rect) {

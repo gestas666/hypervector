@@ -57,6 +57,29 @@ def test_commands_share_the_same_data_root(tmp_path: Path) -> None:
     assert tui[0] == "/tmp/tui-regime-detector"
 
 
+def test_default_tui_command_uses_cargo_freshness_check(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("HYPERVECTOR_TUI_BIN", raising=False)
+
+    tui = build_tui_command(
+        data_root=tmp_path / "ops",
+        symbol="BTC",
+        timeframe="1m",
+        refresh_ms=500,
+    )
+
+    assert tui[:6] == [
+        "cargo",
+        "run",
+        "-q",
+        "-p",
+        "hypervector-tui",
+        "--bin",
+    ]
+
+
 def test_supervisor_waits_for_ledger_then_stops_backend(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -109,7 +132,9 @@ def test_backend_early_failure_prevents_tui(
         del command, kwargs
         return child
 
-    def fake_run(command: list[str], **kwargs: object) -> subprocess.CompletedProcess[str]:
+    def fake_run(
+        command: list[str], **kwargs: object
+    ) -> subprocess.CompletedProcess[str]:
         del command, kwargs
         nonlocal tui_started
         tui_started = True
