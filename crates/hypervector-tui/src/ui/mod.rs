@@ -83,7 +83,7 @@ pub fn draw(f: &mut Frame, app: &App) {
     } else if app.active_tab == 1 {
         render_screen_regime_detection(f, app, chunks[2]);
     } else {
-        render_backend_configuration(f, app, chunks[2]);
+        crate::config_view::render_backend_configuration(f, app, chunks[2]);
     }
 
     render_footer(f, app, chunks[3]);
@@ -94,51 +94,6 @@ pub fn draw(f: &mut Frame, app: &App) {
 
     if app.show_help_overlay {
         render_help_overlay(f, app, f.area());
-    }
-}
-
-fn render_backend_configuration(f: &mut Frame, app: &App, area: Rect) {
-    let rows = vec![
-        Line::from(format!(
-            "run: {}   export: {}",
-            app.backend.run_id.as_deref().unwrap_or("unknown"),
-            app.backend.export_id.as_deref().unwrap_or("unknown"),
-        )),
-        Line::from(format!(
-            "strategy: {}   execution: {}   metalabel: {}",
-            app.backend.strategy_name.as_deref().unwrap_or("unknown"),
-            app.backend.execution_mode.as_deref().unwrap_or("unknown"),
-            app.backend.metalabel_mode.as_deref().unwrap_or("off"),
-        )),
-        Line::from(format!(
-            "model bundle: {}",
-            app.backend.metalabel_bundle_id.as_deref().unwrap_or("none"),
-        )),
-        Line::from(format!(
-            "strategy params: {}",
-            compact_json(&app.backend.strategy_params)
-        )),
-        Line::from(format!("exits: {}", compact_json(&app.backend.exits))),
-        Line::from(format!("risk: {}", compact_json(&app.backend.risk))),
-        Line::from(format!(
-            "order execution: {}",
-            compact_json(&app.backend.execution_policy)
-        )),
-        Line::from(format!("costs: {}", compact_json(&app.backend.costs))),
-        Line::from("Read only: change backend configuration through an acknowledged CLI workflow."),
-    ];
-    let block = Block::default()
-        .title(" EFFECTIVE BACKEND CONFIGURATION ")
-        .borders(Borders::ALL)
-        .border_style(app.theme.border_active);
-    f.render_widget(Paragraph::new(rows).block(block), area);
-}
-
-fn compact_json(value: &serde_json::Value) -> String {
-    if value.is_null() {
-        "not stamped by backend".to_string()
-    } else {
-        value.to_string()
     }
 }
 
@@ -472,9 +427,13 @@ fn render_screen_regime_detection(f: &mut Frame, app: &App, area: Rect) {
 
     f.render_widget(Paragraph::new(mtf_text).block(mtf_block), top_chunks[1]);
 
-    // SRS_TUI_EC7: Microstructure Bipolar Meters (OPI & Funding Z-score)
+    // SRS_TUI_EC7: Backend-published microstructure and funding telemetry
     let opi_bipolar = render_bipolar_str(snap.opi, 1.0, "OPI");
-    let funding_bipolar = render_bipolar_str(snap.funding_zscore / 3.0, 1.0, "Z-Score");
+    let funding = app
+        .backend
+        .funding_rate_hourly
+        .map(|rate| format!("{:+.6}% / hour", rate * 100.0))
+        .unwrap_or_else(|| "not reported".into());
 
     let micro_text = vec![
         Line::from(vec![
@@ -490,9 +449,8 @@ fn render_screen_regime_detection(f: &mut Frame, app: &App, area: Rect) {
             Span::styled(opi_bipolar, app.theme.cyan),
         ]),
         Line::from(vec![
-            Span::raw("Funding Rate Z: "),
-            Span::styled(format!("({:+.2}) ", snap.funding_zscore), app.theme.carry),
-            Span::styled(funding_bipolar, app.theme.gold),
+            Span::raw("Funding Rate: "),
+            Span::styled(funding, app.theme.carry),
         ]),
         Line::from(vec![
             Span::raw("Friction Spread: "),
@@ -1174,63 +1132,90 @@ fn render_event_log(f: &mut Frame, app: &App, area: Rect) {
         .rev()
         .take(max_rows)
         .collect();
-    let rows = recent_events.iter().enumerate().map(|(idx, ev)| {
-        let from_str = ev.from_state.display_name();
-        let to_str = ev.to_state.display_name();
-        let is_selected = idx
-            == app
-                .selected_event_index
-                .min(recent_events.len().saturating_sub(1));
+    let mut rows: Vec<Row> = recent_events
+        .iter()
+        .enumerate()
+        .map(|(idx, ev)| {
+            let from_str = ev.from_state.display_name();
+            let to_str = ev.to_state.display_name();
+            let is_selected = idx
+                == app
+                    .selected_event_index
+                    .min(recent_events.len().saturating_sub(1));
 
-        let to_style = if is_selected {
-            app.theme.highlight
-        } else {
-            match ev.to_state {
-                RegimeState::BullMomentum => app.theme.bull,
-                RegimeState::BearMomentum => app.theme.bear,
-                RegimeState::VolatilityCoiling => app.theme.coiling,
-                RegimeState::FundingCarry => app.theme.carry,
-                RegimeState::RangeChop => app.theme.chop,
-            }
-        };
+            let to_style = if is_selected {
+                app.theme.highlight
+            } else {
+                match ev.to_state {
+                    RegimeState::BullMomentum => app.theme.bull,
+                    RegimeState::BearMomentum => app.theme.bear,
+                    RegimeState::VolatilityCoiling => app.theme.coiling,
+                    RegimeState::FundingCarry => app.theme.carry,
+                    RegimeState::RangeChop => app.theme.chop,
+                }
+            };
 
-        let row_style = if is_selected {
-            app.theme.highlight
-        } else {
-            ratatui::style::Style::default()
-        };
-        let ts_display = format_timestamp_display(&ev.timestamp_str);
+            let row_style = if is_selected {
+                app.theme.highlight
+            } else {
+                ratatui::style::Style::default()
+            };
+            let ts_display = format_timestamp_display(&ev.timestamp_str);
 
-        Row::new(vec![
+            Row::new(vec![
+                Span::styled(
+                    ts_display,
+                    if is_selected {
+                        app.theme.highlight
+                    } else {
+                        app.theme.muted
+                    },
+                ),
+                Span::styled(from_str, row_style),
+                Span::styled(to_str, to_style),
+                Span::styled(
+                    format!("${:.2}", ev.price),
+                    if is_selected {
+                        app.theme.highlight
+                    } else {
+                        app.theme.gold
+                    },
+                ),
+                Span::styled(
+                    &ev.trigger_reason,
+                    if is_selected {
+                        app.theme.highlight
+                    } else {
+                        app.theme.cyan
+                    },
+                ),
+            ])
+            .style(row_style)
+        })
+        .collect();
+    if rows.is_empty() {
+        rows.push(Row::new(vec![
+            Span::styled("—", app.theme.muted),
+            Span::styled("NO CHANGE", app.theme.muted),
             Span::styled(
-                ts_display,
-                if is_selected {
-                    app.theme.highlight
-                } else {
-                    app.theme.muted
-                },
-            ),
-            Span::styled(from_str, row_style),
-            Span::styled(to_str, to_style),
-            Span::styled(
-                format!("${:.2}", ev.price),
-                if is_selected {
-                    app.theme.highlight
-                } else {
-                    app.theme.gold
-                },
+                app.current_snapshot().state.primary_label(),
+                app.theme.title,
             ),
             Span::styled(
-                &ev.trigger_reason,
-                if is_selected {
-                    app.theme.highlight
-                } else {
-                    app.theme.cyan
-                },
+                format!("${:.2}", app.current_snapshot().price),
+                app.theme.gold,
             ),
-        ])
-        .style(row_style)
-    });
+            Span::styled(
+                "No regime transition observed in this backend run",
+                app.theme.cyan,
+            ),
+        ]));
+    }
+    let selected_position = if recent_events.is_empty() {
+        0
+    } else {
+        app.selected_event_index.min(recent_events.len() - 1) + 1
+    };
 
     let table = Table::new(
         rows,
@@ -1247,7 +1232,7 @@ fn render_event_log(f: &mut Frame, app: &App, area: Rect) {
         Block::default()
             .title(format!(
                 " RECENT REGIME TRANSITION AUDIT LOG (Use [↑/↓] or [j/k] to navigate, [Enter] for details) [{}/{}] ",
-                app.selected_event_index.min(recent_events.len().saturating_sub(1)) + 1,
+                selected_position,
                 recent_events.len()
             ))
             .title_style(app.theme.title)
@@ -1340,6 +1325,35 @@ fn render_paper_journal_log(f: &mut Frame, app: &App, area: Rect) {
 }
 
 fn render_footer(f: &mut Frame, app: &App, area: Rect) {
+    if app.active_tab == 2 {
+        let rows = crate::config_view::backend_config_rows(&app.backend);
+        let selected = if rows.is_empty() {
+            0
+        } else {
+            app.config.selected_option_index.min(rows.len() - 1) + 1
+        };
+        let line = Line::from(vec![
+            Span::styled("[Tab / 1-3]", app.theme.gold),
+            Span::raw(" Switch Screen │ "),
+            Span::styled("[↑/↓ j/k]", app.theme.gold),
+            Span::raw(" Select Option │ "),
+            Span::styled("[q]", app.theme.gold),
+            Span::raw(" Quit │ "),
+            Span::styled(format!("Option {selected}/{}", rows.len()), app.theme.cyan),
+            Span::raw(" │ BACKEND READ ONLY"),
+        ]);
+        f.render_widget(
+            Paragraph::new(line)
+                .block(
+                    Block::default()
+                        .borders(Borders::ALL)
+                        .border_style(app.theme.border),
+                )
+                .alignment(Alignment::Center),
+            area,
+        );
+        return;
+    }
     let total = app.snapshots.len();
     let current = app.current_index + 1;
     let scrub_pct = ((current as f64 / total as f64) * 100.0).clamp(0.0, 100.0);

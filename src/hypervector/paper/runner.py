@@ -209,24 +209,20 @@ def start_paper_daemon(
     session.enable_live_telemetry()
     after_ts = session.last_timestamp
 
-    # --- arm book for live phase only (design: one snapshot, not multi-day warm) ---
+    # Live L2 refresh is backend-owned and runs independently of new candle arrival.
+    session.enable_book_poll = live_book_enabled
+    book_armed_logged = False
+    poll_book_in_loop = False
     if live_book_enabled:
-        try:
-            snap = session.book_feed.poll()
-            if snap is not None:
-                logger.info(
-                    "paper live book armed source=%s bid=%s ask=%s",
-                    snap.source,
-                    snap.best_bid(),
-                    snap.best_ask(),
-                )
-            else:
-                logger.info(
-                    "paper live book poll returned None; fills fall back until fresh"
-                )
-        except Exception as exc:  # noqa: BLE001 — never block live start
-            logger.warning("paper live book arm failed: %s", exc)
-        session.enable_book_poll = True
+        snapshot = session.refresh_book_telemetry()
+        if snapshot is not None:
+            logger.info(
+                "paper live book armed source=%s bid=%s ask=%s",
+                snapshot.source,
+                snapshot.best_bid(),
+                snapshot.best_ask(),
+            )
+            book_armed_logged = True
 
     # --- live feed (REST poll by default; injectable for tests) ---
     # TODO Phase3: prefer HyperliquidDataClient WS when stable
@@ -273,6 +269,18 @@ def start_paper_daemon(
             if max_live_bars is not None and live_bars >= max_live_bars:
                 _request_stop("max_live_bars")
                 break
+
+            if poll_book_in_loop:
+                snapshot = session.refresh_book_telemetry()
+                if snapshot is not None and not book_armed_logged:
+                    logger.info(
+                        "paper live book armed source=%s bid=%s ask=%s",
+                        snapshot.source,
+                        snapshot.best_bid(),
+                        snapshot.best_ask(),
+                    )
+                    book_armed_logged = True
+            poll_book_in_loop = True
 
             try:
                 new_bars = feed(after_ts=after_ts)

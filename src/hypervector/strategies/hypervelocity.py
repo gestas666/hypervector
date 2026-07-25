@@ -38,6 +38,11 @@ class HypervelocityMarketObservation:
     primary_regime: str
     breakout_direction: str | None
     entry_direction: Direction | None
+    state_1m: str
+    state_5m: str
+    context_15m: str
+    confidence: float
+    reason: str
 
 
 def _classify_regimes(
@@ -146,6 +151,11 @@ def current_hypervelocity_market(
         primary_regime=str(latest["primary_regime"]),
         breakout_direction=breakout_value,
         entry_direction=direction,
+        state_1m=str(latest.get("state_1m", latest["primary_regime"])),
+        state_5m=str(latest.get("state_5m", latest["primary_regime"])),
+        context_15m=str(latest.get("context_15m", PrimaryRegime.UNKNOWN.value)),
+        confidence=float(latest.get("confidence", 0.0)),
+        reason=str(latest.get("reason", "not_reported")),
     )
 
 

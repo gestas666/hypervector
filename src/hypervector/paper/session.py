@@ -26,7 +26,12 @@ from hypervector.nautilus.actor import (
 from hypervector.nautilus.load_export import StrategyLoadout, load_strategy_loadout
 from hypervector.nautilus.signals import last_bar_intent
 from hypervector.nautilus.sizing import position_size_frac
-from hypervector.paper.book import BookFeed, BookSnapshot, DEFAULT_MAX_BOOK_AGE_MS
+from hypervector.paper.book import (
+    DEFAULT_MAX_BOOK_AGE_MS,
+    BookFeed,
+    BookSnapshot,
+    summarize_book,
+)
 from hypervector.paper.book_gate import (
     DEFAULT_MAX_SPREAD_BPS,
     DEFAULT_MIN_IMBALANCE,
@@ -57,6 +62,7 @@ from hypervector.paper.maker_execution import (
     round_price_to_tick,
     target_was_filled,
 )
+from hypervector.paper.telemetry import bar_telemetry_payload, book_telemetry_payload
 from hypervector.strategies.hypervelocity_contract import (
     HypervelocityContract,
     is_hypervelocity_strategy,
@@ -286,11 +292,6 @@ class PaperSession:
             self._last_ts = ts
 
         self.maybe_refresh_funding()
-        if self.enable_book_poll:
-            try:
-                self.book_feed.poll()
-            except Exception as exc:  # noqa: BLE001 — never abort bar path
-                logger.warning("book poll failed for %s: %s", self.loadout.symbol, exc)
 
         if self._is_hypervelocity and self._live_telemetry_enabled:
             self._record_hypervelocity_regime(record)
@@ -320,22 +321,9 @@ class PaperSession:
     def _record_hypervelocity_regime(self, record: dict[str, Any]) -> None:
         """Append the causal regime state used by the live entry decision."""
         frame = _buffer_to_df(self.buffer_rows)
-        if self.hypervelocity_profile is None:
-            direction = self._hypervelocity_direction()
-            legacy = current_hypervelocity_regime(frame, direction=direction)
-            primary = legacy.primary_regime
-            breakout = legacy.breakout_direction
-            entry_direction: str | None = legacy.direction
-            entry_allowed = legacy.entry_allowed
-        else:
-            market = current_hypervelocity_market(
-                frame,
-                regime_config=self.hypervelocity_profile.regime_config,
-            )
-            primary = market.primary_regime
-            breakout = market.breakout_direction
-            entry_direction = market.entry_direction
-            entry_allowed = market.entry_direction is not None
+        payload = self._hypervelocity_regime_payload(frame)
+        payload.update(bar_telemetry_payload(frame, record))
+        payload["funding_rate_hourly"] = self.cost_provider.snapshot().funding_rate_hourly
         append_paper_decision(
             self.root,
             {
@@ -346,16 +334,77 @@ class PaperSession:
                 "symbol": self.loadout.symbol,
                 "timeframe": self.loadout.timeframe,
                 "action": "regime_observation",
-                "primary_regime": primary,
-                "breakout_direction": breakout,
-                "entry_direction": entry_direction,
-                "entry_allowed": entry_allowed,
+                **payload,
                 "execution_mode": self.execution_mode,
                 "submitted": False,
                 "place_attempted": False,
                 "position_qty": float(self.engine.position.qty),
                 "mark_px": float(record["close"]),
             },
+        )
+
+    def _hypervelocity_regime_payload(self, frame: pd.DataFrame) -> dict[str, Any]:
+        """Return the exact backend classification fields used for display."""
+        if self.hypervelocity_profile is None:
+            direction = self._hypervelocity_direction()
+            legacy = current_hypervelocity_regime(frame, direction=direction)
+            market = current_hypervelocity_market(frame)
+            return {
+                "primary_regime": legacy.primary_regime,
+                "breakout_direction": legacy.breakout_direction,
+                "entry_direction": legacy.direction,
+                "entry_allowed": legacy.entry_allowed,
+                "state_1m": market.state_1m,
+                "state_5m": market.state_5m,
+                "context_15m": market.context_15m,
+                "confidence": market.confidence,
+                "regime_reason": market.reason,
+            }
+        market = current_hypervelocity_market(
+            frame,
+            regime_config=self.hypervelocity_profile.regime_config,
+        )
+        return {
+            "primary_regime": market.primary_regime,
+            "breakout_direction": market.breakout_direction,
+            "entry_direction": market.entry_direction,
+            "entry_allowed": market.entry_direction is not None,
+            "state_1m": market.state_1m,
+            "state_5m": market.state_5m,
+            "context_15m": market.context_15m,
+            "confidence": market.confidence,
+            "regime_reason": market.reason,
+        }
+
+    def refresh_book_telemetry(self) -> BookSnapshot | None:
+        """Poll L2 once and publish a no-submit backend telemetry observation."""
+        if not self.enable_book_poll:
+            return None
+        snapshot = self.book_feed.poll()
+        if snapshot is None:
+            return None
+        if self._is_hypervelocity and self._live_telemetry_enabled:
+            self._record_book_telemetry(snapshot)
+        return snapshot
+
+    def _record_book_telemetry(self, snapshot: BookSnapshot) -> None:
+        """Append measured book levels and derived microstructure metrics."""
+        try:
+            metrics = summarize_book(snapshot)
+        except ValueError as exc:
+            logger.warning("invalid book telemetry for %s: %s", self.loadout.symbol, exc)
+            return
+        append_paper_decision(
+            self.root,
+            book_telemetry_payload(
+                snapshot=snapshot,
+                metrics=metrics,
+                run_id=self.run_id,
+                export_id=str(self.export_id),
+                strategy_name=self.strategy_name,
+                execution_mode=self.execution_mode,
+                timeframe=self.loadout.timeframe,
+            ),
         )
 
     def _process_intent(self, record: dict[str, Any]) -> str | None:

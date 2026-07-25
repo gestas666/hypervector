@@ -2,14 +2,14 @@
 name: hypervector-cli
 description: >
   Operate the Hypervector perpetuals quant engine CLI, VectorBT vectorized backtester,
-  Nautilus event-driven engine, Karpathy/Optuna autotuner, and 4-screen tui-regime-detector cockpit.
+  Nautilus event-driven engine, Karpathy/Optuna autotuner, and 3-screen tui-regime-detector cockpit.
   Use when running hypervector commands, backtesting, autotuning, regime evaluation,
   paper/shadow/live checks, metalabel training, or launching the Ratatui TUI cockpit.
 ---
 
 # Hypervector Perpetuals Quant Engine & Regime Detector CLI
 
-Comprehensive operator skill for **Hypervector** — VectorBT vectorized backtesting, Nautilus event-driven backtesting, Karpathy/Optuna autotuning, LightGBM metalabeling, and 4-Screen Ratatui TUI regime cockpit.
+Comprehensive operator skill for **Hypervector** — VectorBT vectorized backtesting, Nautilus event-driven backtesting, Karpathy/Optuna autotuning, LightGBM metalabeling, and 3-screen Ratatui TUI regime cockpit.
 
 ## Hard Safety Rules & Project Charter
 
@@ -126,9 +126,9 @@ Without `--yes`, the reset is a non-mutating dry run. Confirmed resets acquire
 the singleton backend lock, copy decisions and the backend log under
 `<data-root>/backups/shadow_reset_<UTC>/`, then clear only those two files.
 
-### 6. 4-Screen Visual Microstructure Cockpit (`tui-regime-detector`)
+### 6. 3-Screen Visual Microstructure Cockpit (`tui-regime-detector`)
 
-Ratatui 0.29 interactive 4-screen cockpit featuring live stream playback, L2 orderbook depth stack, paper trade journal, and interactive engine configuration:
+Ratatui 0.29 interactive 3-screen cockpit featuring backend telemetry, a live L2 depth stack, paper trade journal, and a navigable read-only configuration menu:
 
 ```bash
 # Interactive playback cockpit (1m BTC execution with 15m HTF lock)
@@ -139,10 +139,9 @@ cargo run -p hypervector-tui --bin tui-regime-detector -- --symbol BTC --timefra
 ```
 
 #### Cockpit Screen Navigation:
-- **`[1]`**: **Regime Classifier Engine** (15m HTF lock, continuous rolling transition audit log).
-- **`[2]`**: **Strategy Policy Matrix**.
-- **`[3]`**: **Live Shadow Paper Trading Cockpit** ($10k starting capital, L2 orderbook stack, win/loss stats, execution journal).
-- **`[4]`**: **Engine & Risk Configuration** (Leverage mode, TP/SL trailing engines, position sizing rules).
+- **`[1]`**: **Dashboard** (backend strategy, position, live L2, PnL, and execution journal).
+- **`[2]`**: **Regime Detection** (1m/5m/15m classification and transition audit log).
+- **`[3]`**: **Configuration** (selectable effective backend options; read-only).
 
 ### 7. Walk-Forward LightGBM Metalabeling
 

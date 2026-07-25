@@ -3,6 +3,7 @@
 use hypervector_tui::{
     app::App,
     backend_telemetry::parse_backend_telemetry,
+    config_view::backend_config_rows,
     data_loader::{generate_synthetic_history, parse_snapshot_json},
     model::{EngineConfig, RegimeSnapshot, RegimeState, SplitPositionMode},
 };
@@ -16,6 +17,7 @@ fn make_snapshot(price: f64, high: f64, low: f64, state: RegimeState, ts: &str) 
         low,
         volume: 10.0,
         state,
+        regime_reason: "fixture".into(),
         confidence: 0.6,
         opi: 0.1,
         spread_bps: 1.2,
@@ -224,4 +226,73 @@ fn test_display_fallback_matches_fixed_backend_contract() {
     assert_eq!(config.margin_sl_pct, 0.0);
     assert_eq!(config.equity_risk_frac, 0.70);
     assert_eq!(config.split_position_mode, SplitPositionMode::None);
+}
+
+#[test]
+fn test_live_app_follows_backend_regimes_transitions_and_book() {
+    let telemetry = parse_backend_telemetry(
+        r#"{"feed_ts":"session_start","action":"session_start","run_id":"hv","strategy_name":"hypervelocity_1m_scalper","strategy_params":{"leverage":40.0},"init_cash":10000.0,"equity":10000.0}
+{"feed_ts":"2026-07-25T14:00:00Z","action":"regime_observation","run_id":"hv","primary_regime":"RANGE","state_1m":"RANGE","state_5m":"RANGE","context_15m":"TREND_UP","confidence":0.60,"regime_reason":"range","mark_px":100.0,"high":101.0,"low":99.0,"volume":12.0}
+{"feed_ts":"2026-07-25T14:01:00Z","action":"regime_observation","run_id":"hv","primary_regime":"TREND_UP","state_1m":"TREND_UP","state_5m":"TREND_UP","context_15m":"TREND_UP","confidence":0.80,"regime_reason":"trend","mark_px":101.0,"high":102.0,"low":100.0,"volume":15.0}
+{"feed_ts":"2026-07-25T14:01:05Z","action":"book_observation","run_id":"hv","source":"hl_rest_l2","exchange_ts_ms":1784988065000.0,"recv_ts_ms":1784988065050.0,"mid_px":101.25,"spread_bps":4.9,"bid_depth_ratio":2.0,"opi":0.33,"bids":[{"price":101.0,"size":4.0}],"asks":[{"price":101.5,"size":2.0}]}"#,
+    )
+    .expect("telemetry");
+    let mut app = App::new("BTC".into(), "1m".into(), vec![], true, false);
+
+    app.apply_backend_telemetry(telemetry);
+
+    assert_eq!(app.snapshots.len(), 2);
+    assert_eq!(app.current_index, 1);
+    assert_eq!(app.events.len(), 1);
+    assert_eq!(app.events[0].from_state, RegimeState::RangeChop);
+    assert_eq!(app.events[0].to_state, RegimeState::BullMomentum);
+    assert_eq!(app.events[0].trigger_reason, "trend");
+    assert!((app.book_state.spread_bps - 4.9).abs() < 1e-9);
+    assert_eq!(app.book_state.bid_levels[0].price, 101.0);
+
+    app.on_tick();
+    assert_eq!(app.current_index, 1);
+    assert_eq!(app.book_state.bid_levels.len(), 1);
+    assert_eq!(app.book_state.bid_levels[0].price, 101.0);
+}
+
+#[test]
+fn test_live_app_does_not_invent_book_when_backend_has_none() {
+    let snapshots = vec![make_snapshot(
+        100.0,
+        101.0,
+        99.0,
+        RegimeState::RangeChop,
+        "2026-07-25T14:00:00Z",
+    )];
+    let app = App::new("BTC".into(), "1m".into(), snapshots, true, false);
+
+    assert!(app.book_state.bid_levels.is_empty());
+    assert!(app.book_state.ask_levels.is_empty());
+    assert!(!app.book_state.gate_ok);
+}
+
+#[test]
+fn test_backend_config_is_a_selectable_menu_not_raw_json() {
+    let telemetry = parse_backend_telemetry(
+        r#"{"feed_ts":"session_start","action":"session_start","run_id":"hv","strategy_name":"hypervelocity_1m_scalper","execution_mode":"shadow","metalabel_mode":"off","strategy_params":{"leverage":40.0,"target_margin_pct":8.0},"position_policy":{"position_mode":"one_way","max_positions_per_symbol":1},"risk":{"margin_fraction":0.7},"exits":{"target_margin_pct":8.0,"range_policy":"hold_until_target"},"execution":{"order_type":"limit","time_in_force":"post_only","entry_ttl_seconds":300.0},"costs":{"maker_fee_rate":0.00015,"funding_source":"live_meta_and_asset_contexts"},"init_cash":10000.0,"equity":10000.0}"#,
+    )
+    .expect("telemetry");
+
+    let rows = backend_config_rows(&telemetry);
+
+    assert!(rows.len() >= 10);
+    assert!(
+        rows.iter()
+            .any(|row| row.option == "Leverage" && row.value == "40.0x")
+    );
+    assert!(
+        rows.iter()
+            .any(|row| row.option == "Margin allocation" && row.value == "70.0%")
+    );
+    assert!(
+        rows.iter()
+            .any(|row| row.option == "Position mode" && row.value == "one_way")
+    );
+    assert!(rows.iter().all(|row| !row.value.contains('{')));
 }

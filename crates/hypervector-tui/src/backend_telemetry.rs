@@ -1,14 +1,14 @@
 //! Read-only projection of the authoritative Python paper/shadow ledger.
 
-use std::fs;
-use std::path::{Path, PathBuf};
-use std::time::SystemTime;
-
 use serde::Deserialize;
 use serde_json::Value;
+use std::collections::HashMap;
 use thiserror::Error;
 
-use crate::model::{ActivePosition, LivePaperStats, PaperTradeRecord};
+use crate::backend_market::{BackendBookTelemetry, build_regime_snapshots, latest_book};
+use crate::model::{ActivePosition, LivePaperStats, PaperTradeRecord, RegimeSnapshot};
+
+pub use crate::backend_source::BackendTelemetrySource;
 
 /// Health of the TUI's read-only connection to the backend ledger.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -36,8 +36,15 @@ pub struct BackendTelemetrySnapshot {
     pub exits: Value,
     pub risk: Value,
     pub execution_policy: Value,
+    pub position_policy: Value,
     pub costs: Value,
+    pub latest_regime: Option<String>,
+    pub entry_direction: Option<String>,
+    pub entry_allowed: Option<bool>,
+    pub funding_rate_hourly: Option<f64>,
     pub regime_history: Vec<String>,
+    pub regime_snapshots: Vec<RegimeSnapshot>,
+    pub book: Option<BackendBookTelemetry>,
     pub trades: Vec<PaperTradeRecord>,
     pub stats: LivePaperStats,
     pub active_position: ActivePosition,
@@ -50,7 +57,7 @@ impl BackendTelemetrySnapshot {
         Self::empty(BackendConnectionState::Disconnected, message)
     }
 
-    fn error(message: impl Into<String>) -> Self {
+    pub(crate) fn error(message: impl Into<String>) -> Self {
         Self::empty(BackendConnectionState::Error, message)
     }
 
@@ -70,8 +77,15 @@ impl BackendTelemetrySnapshot {
             exits: Value::Null,
             risk: Value::Null,
             execution_policy: Value::Null,
+            position_policy: Value::Null,
             costs: Value::Null,
+            latest_regime: None,
+            entry_direction: None,
+            entry_allowed: None,
+            funding_rate_hourly: None,
             regime_history: Vec::new(),
+            regime_snapshots: Vec::new(),
+            book: None,
             trades: Vec::new(),
             stats: empty_stats(),
             active_position: ActivePosition::flat(),
@@ -92,11 +106,11 @@ pub enum BackendTelemetryError {
 }
 
 #[derive(Debug, Clone, Deserialize)]
-struct LedgerRow {
+pub(crate) struct LedgerRow {
     #[serde(default)]
-    feed_ts: String,
+    pub(crate) feed_ts: String,
     #[serde(default)]
-    action: String,
+    pub(crate) action: String,
     #[serde(default)]
     skipped: bool,
     run_id: Option<String>,
@@ -108,7 +122,7 @@ struct LedgerRow {
     conviction_source: Option<String>,
     metalabel_p: Option<f64>,
     symbol: Option<String>,
-    fill_px: Option<f64>,
+    pub(crate) fill_px: Option<f64>,
     fill_qty: Option<f64>,
     qty: Option<f64>,
     leverage: Option<f64>,
@@ -118,12 +132,16 @@ struct LedgerRow {
     init_cash: Option<f64>,
     realized_pnl: Option<f64>,
     unrealized_pnl: Option<f64>,
-    primary_regime: Option<String>,
+    pub(crate) primary_regime: Option<String>,
     strategy_params: Option<Value>,
     exits: Option<Value>,
     risk: Option<Value>,
     execution: Option<Value>,
+    position_policy: Option<Value>,
     costs: Option<Value>,
+    pub(crate) mark_px: Option<f64>,
+    #[serde(flatten)]
+    pub(crate) extra: HashMap<String, Value>,
 }
 
 #[derive(Debug, Clone)]
@@ -184,6 +202,13 @@ fn build_snapshot(run_id: String, rows: &[&LedgerRow]) -> BackendTelemetrySnapsh
     let equity_history: Vec<f64> = rows.iter().filter_map(|row| row.equity).collect();
     let stats = build_stats(rows, &trades, &equity_history);
     let active_position = build_active_position(rows, latest, configured_leverage);
+    let regime_snapshots = build_regime_snapshots(rows, configured_leverage);
+    let book = latest_book(rows);
+    let latest_regime_row = rows
+        .iter()
+        .rev()
+        .find(|row| row.action == "regime_observation")
+        .copied();
     BackendTelemetrySnapshot {
         connection: BackendConnectionState::Connected,
         status_message: "backend ledger connected".to_string(),
@@ -208,14 +233,38 @@ fn build_snapshot(run_id: String, rows: &[&LedgerRow]) -> BackendTelemetrySnapsh
         execution_policy: identity
             .and_then(|row| row.execution.clone())
             .unwrap_or(Value::Null),
+        position_policy: identity
+            .and_then(|row| row.position_policy.clone())
+            .unwrap_or(Value::Null),
         costs: identity
             .and_then(|row| row.costs.clone())
             .unwrap_or(Value::Null),
+        latest_regime: latest_regime_row.and_then(|row| row.primary_regime.clone()),
+        entry_direction: latest_regime_row
+            .and_then(|row| row.extra.get("entry_direction"))
+            .and_then(Value::as_str)
+            .map(str::to_string),
+        entry_allowed: latest_regime_row
+            .and_then(|row| row.extra.get("entry_allowed"))
+            .and_then(Value::as_bool),
+        funding_rate_hourly: rows
+            .iter()
+            .rev()
+            .find_map(|row| row.extra.get("funding_rate_hourly"))
+            .and_then(Value::as_f64)
+            .or_else(|| {
+                identity
+                    .and_then(|row| row.costs.as_ref())
+                    .and_then(|costs| costs.get("funding_rate_hourly"))
+                    .and_then(Value::as_f64)
+            }),
         regime_history: rows
             .iter()
             .filter(|row| row.action == "regime_observation")
             .filter_map(|row| row.primary_regime.clone())
             .collect(),
+        regime_snapshots,
+        book,
         trades,
         stats,
         active_position,
@@ -442,83 +491,4 @@ fn max_drawdown_percent(equity: &[f64]) -> f64 {
         }
     }
     max_drawdown
-}
-
-/// File-backed, read-only telemetry source with last-known-good retention.
-pub struct BackendTelemetrySource {
-    path: PathBuf,
-    last_signature: Option<(u64, SystemTime)>,
-    cached: BackendTelemetrySnapshot,
-}
-
-impl BackendTelemetrySource {
-    /// Create a read-only source for one backend decisions ledger.
-    pub fn new(path: PathBuf) -> Self {
-        Self {
-            path,
-            last_signature: None,
-            cached: BackendTelemetrySnapshot::disconnected("backend ledger not loaded"),
-        }
-    }
-
-    /// Refresh when the ledger changes, retaining confirmed state on failure.
-    pub fn refresh(&mut self) -> BackendTelemetrySnapshot {
-        let metadata = match fs::metadata(&self.path) {
-            Ok(metadata) => metadata,
-            Err(error) if error.kind() == std::io::ErrorKind::NotFound => return self.missing(),
-            Err(error) => return self.failed(format!("backend ledger metadata error: {error}")),
-        };
-        let modified = metadata.modified().unwrap_or(SystemTime::UNIX_EPOCH);
-        let signature = (metadata.len(), modified);
-        if self.last_signature == Some(signature) {
-            return self.cached.clone();
-        }
-        self.load_changed(signature)
-    }
-
-    fn load_changed(&mut self, signature: (u64, SystemTime)) -> BackendTelemetrySnapshot {
-        let content = match fs::read_to_string(&self.path) {
-            Ok(content) => content,
-            Err(error) => return self.failed(format!("backend ledger read error: {error}")),
-        };
-        match parse_backend_telemetry(&content) {
-            Ok(snapshot) => {
-                self.last_signature = Some(signature);
-                self.cached = snapshot;
-                self.cached.clone()
-            }
-            Err(error) => self.failed(error.to_string()),
-        }
-    }
-
-    fn missing(&self) -> BackendTelemetrySnapshot {
-        if self.cached.run_id.is_some() {
-            let mut stale = self.cached.clone();
-            stale.connection = BackendConnectionState::Stale;
-            stale.status_message =
-                "backend ledger disappeared; showing last confirmed state".to_string();
-            stale
-        } else {
-            BackendTelemetrySnapshot::disconnected(format!(
-                "backend ledger not found: {}",
-                self.path.display()
-            ))
-        }
-    }
-
-    fn failed(&self, message: String) -> BackendTelemetrySnapshot {
-        if self.cached.run_id.is_some() {
-            let mut snapshot = self.cached.clone();
-            snapshot.connection = BackendConnectionState::Error;
-            snapshot.status_message = message;
-            snapshot
-        } else {
-            BackendTelemetrySnapshot::error(message)
-        }
-    }
-
-    /// Return the ledger path without mutating backend state.
-    pub fn path(&self) -> &Path {
-        &self.path
-    }
 }

@@ -1,0 +1,143 @@
+//! Backend regime and L2 ledger projection for the read-only TUI.
+
+use chrono::DateTime;
+use serde_json::Value;
+
+use crate::backend_telemetry::LedgerRow;
+use crate::model::{BookLevel, RegimeSnapshot, RegimeState};
+
+/// Latest measured L2 state published by the backend.
+#[derive(Debug, Clone)]
+pub struct BackendBookTelemetry {
+    pub source: String,
+    pub exchange_ts_ms: Option<f64>,
+    pub recv_ts_ms: f64,
+    pub mid_price: f64,
+    pub spread_bps: f64,
+    pub bid_depth_ratio: f64,
+    pub opi: f64,
+    pub bid_levels: Vec<BookLevel>,
+    pub ask_levels: Vec<BookLevel>,
+}
+
+pub(crate) fn build_regime_snapshots(
+    rows: &[&LedgerRow],
+    configured_leverage: f64,
+) -> Vec<RegimeSnapshot> {
+    rows.iter()
+        .filter(|row| row.action == "regime_observation")
+        .enumerate()
+        .filter_map(|(index, row)| regime_snapshot(row, index, configured_leverage))
+        .collect()
+}
+
+pub(crate) fn latest_book(rows: &[&LedgerRow]) -> Option<BackendBookTelemetry> {
+    let row = rows
+        .iter()
+        .rev()
+        .find(|row| row.action == "book_observation")?;
+    Some(BackendBookTelemetry {
+        source: text(row, "source").unwrap_or_else(|| "unknown".into()),
+        exchange_ts_ms: number(row, "exchange_ts_ms"),
+        recv_ts_ms: number(row, "recv_ts_ms")?,
+        mid_price: number(row, "mid_px")?,
+        spread_bps: number(row, "spread_bps")?,
+        bid_depth_ratio: number(row, "bid_depth_ratio")?,
+        opi: number(row, "opi")?,
+        bid_levels: levels(row, "bids"),
+        ask_levels: levels(row, "asks"),
+    })
+}
+
+fn regime_snapshot(
+    row: &LedgerRow,
+    index: usize,
+    configured_leverage: f64,
+) -> Option<RegimeSnapshot> {
+    let primary = row.primary_regime.as_deref()?;
+    let state = regime_state(primary);
+    let price = row.mark_px.or(row.fill_px).unwrap_or(0.0);
+    let eligible = boolean(row, "entry_allowed").unwrap_or(false);
+    let direction = text(row, "entry_direction");
+    Some(RegimeSnapshot {
+        timestamp_str: row.feed_ts.clone(),
+        timestamp_ms: timestamp_ms(&row.feed_ts, index),
+        price,
+        high: number(row, "high").unwrap_or(price),
+        low: number(row, "low").unwrap_or(price),
+        volume: number(row, "volume").unwrap_or(0.0),
+        state,
+        regime_reason: text(row, "regime_reason").unwrap_or_else(|| "not_reported".into()),
+        confidence: number(row, "confidence").unwrap_or(0.0),
+        opi: 0.0,
+        spread_bps: 0.0,
+        bid_depth_ratio: 0.0,
+        bbwp_percentile: number(row, "bbwp_percentile").unwrap_or(0.0),
+        rsi: number(row, "rsi").unwrap_or(50.0),
+        funding_zscore: number(row, "funding_zscore").unwrap_or(0.0),
+        trend_1m: trend_label(text(row, "state_1m").as_deref().unwrap_or(primary)),
+        trend_5m: trend_label(text(row, "state_5m").as_deref().unwrap_or(primary)),
+        trend_15m: trend_label(text(row, "context_15m").as_deref().unwrap_or("UNKNOWN")),
+        long_weight: weight(direction.as_deref(), "long"),
+        short_weight: weight(direction.as_deref(), "short"),
+        max_leverage: if eligible { configured_leverage } else { 0.0 },
+        dynamic_leverage: if eligible { configured_leverage } else { 0.0 },
+        taker_allowed: false,
+    })
+}
+
+fn regime_state(label: &str) -> RegimeState {
+    match label {
+        "TREND_UP" => RegimeState::BullMomentum,
+        "TREND_DOWN" => RegimeState::BearMomentum,
+        "BREAKOUT" => RegimeState::VolatilityCoiling,
+        "TRANSITION" => RegimeState::FundingCarry,
+        _ => RegimeState::RangeChop,
+    }
+}
+
+fn timestamp_ms(value: &str, index: usize) -> u64 {
+    DateTime::parse_from_rfc3339(value)
+        .ok()
+        .and_then(|timestamp| u64::try_from(timestamp.timestamp_millis()).ok())
+        .unwrap_or(index as u64 * 60_000)
+}
+
+fn weight(direction: Option<&str>, expected: &str) -> f64 {
+    if direction == Some(expected) {
+        1.0
+    } else {
+        0.0
+    }
+}
+
+fn trend_label(state: &str) -> String {
+    match state {
+        "TREND_UP" => "BULL".into(),
+        "TREND_DOWN" => "BEAR".into(),
+        _ => "NEUTRAL".into(),
+    }
+}
+
+fn number(row: &LedgerRow, key: &str) -> Option<f64> {
+    row.extra.get(key).and_then(Value::as_f64)
+}
+
+fn text(row: &LedgerRow, key: &str) -> Option<String> {
+    row.extra
+        .get(key)
+        .and_then(Value::as_str)
+        .map(str::to_string)
+}
+
+fn boolean(row: &LedgerRow, key: &str) -> Option<bool> {
+    row.extra.get(key).and_then(Value::as_bool)
+}
+
+fn levels(row: &LedgerRow, key: &str) -> Vec<BookLevel> {
+    row.extra
+        .get(key)
+        .cloned()
+        .and_then(|value| serde_json::from_value(value).ok())
+        .unwrap_or_default()
+}

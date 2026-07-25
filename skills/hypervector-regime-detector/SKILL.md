@@ -2,13 +2,13 @@
 name: hypervector-regime-detector
 description: >
   Operate the Ultimate 5-Tier Multi-Timeframe Microstructure Regime Engine and the
-  tui-regime-detector 4-Screen Ratatui terminal cockpit. Use when analyzing market regimes,
-  evaluating regime accuracy, operating the 4-screen TUI cockpit, or configuring strategy policy and risk parameters.
+  tui-regime-detector 3-screen Ratatui terminal cockpit. Use when analyzing market regimes,
+  evaluating regime accuracy, operating the 3-screen TUI cockpit, or reviewing strategy policy and risk parameters.
 ---
 
 # Hypervector Ultimate Regime Engine & Visual Cockpit Skill
 
-Dedicated skill for the **Ultimate 5-Tier Multi-Timeframe Microstructure Regime Engine** ([`src/hypervector/regime/ultimate.py`](file:///Users/gestas/Prototypes/hypervector/src/hypervector/regime/ultimate.py)) and the **`tui-regime-detector` 4-Screen Terminal Cockpit** ([`crates/hypervector-tui`](file:///Users/gestas/Prototypes/hypervector/crates/hypervector-tui)).
+Dedicated skill for the **Ultimate 5-Tier Multi-Timeframe Microstructure Regime Engine** ([`src/hypervector/regime/ultimate.py`](file:///Users/gestas/Prototypes/hypervector/src/hypervector/regime/ultimate.py)) and the **`tui-regime-detector` 3-screen Terminal Cockpit** ([`crates/hypervector-tui`](file:///Users/gestas/Prototypes/hypervector/crates/hypervector-tui)).
 
 ---
 
@@ -24,7 +24,7 @@ Dedicated skill for the **Ultimate 5-Tier Multi-Timeframe Microstructure Regime 
 
 ---
 
-## 🖥️ Launching the `tui-regime-detector` 4-Screen Cockpit
+## 🖥️ Launching the `tui-regime-detector` 3-Screen Cockpit
 
 ```bash
 # 1. Interactive playback cockpit (1m BTC execution with 15m HTF lock)
@@ -39,13 +39,13 @@ cargo run -p hypervector-tui --bin tui-regime-detector -- --symbol BTC --file da
 
 ---
 
-## ⌨️ 4-Screen Terminal Cockpit Keybindings
+## ⌨️ 3-Screen Terminal Cockpit Keybindings
 
 ### Global Screen Switcher & Controls
 | Key | Action |
 | :--- | :--- |
-| `[1]` / `[2]` / `[3]` / `[4]` | Jump directly to Screen 1, 2, 3, or 4 |
-| `[Tab]` | Cycle screens (`1 -> 2 -> 3 -> 4 -> 1`) |
+| `[1]` / `[2]` / `[3]` | Jump directly to Dashboard, Regime Detection, or Configuration |
+| `[Tab]` | Cycle screens (`1 -> 2 -> 3 -> 1`) |
 | `[Space]` | **Play / Pause** real-time stream or historical playback |
 | `[← / →]` | **Scrub Backwards / Forwards** through historical time |
 | `[s]` | **Cycle Playback Speed** ($1.0\times \to 2.0\times \to 5.0\times \to 10.0\times$) |
@@ -53,13 +53,12 @@ cargo run -p hypervector-tui --bin tui-regime-detector -- --symbol BTC --file da
 | `[r]` | **Reset** playback scrub position to start |
 | `[q / Esc]` | **Quit** terminal cockpit |
 
-### Screen `[4]` Engine & Risk Configuration Keybindings
+### Screen `[3]` Effective Backend Configuration Keybindings
 | Key | Action |
 | :--- | :--- |
 | `[↑ / ↓]` or `[j / k]` | **Select Parameter Option Row** |
-| `[Enter]` or `[c]` | **Cycle Active Setting Value** |
-| `[+]` or `[=]` / `[→]` | **Increase Leverage Multiplier** by +1.0x up to asset venue max cap |
-| `[-]` or `[←]` | **Decrease Leverage Multiplier** by -1.0x (returns to Dynamic ML when $\le 1.0\times$) |
+| `[Enter]` | No mutation; backend configuration remains authoritative |
+| `[+]` / `[-]` / `[←]` / `[→]` | No mutation; edit the TOML profile and restart the supervised process |
 
 ---
 

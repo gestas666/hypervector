@@ -95,7 +95,7 @@ impl App {
             backend: BackendTelemetrySnapshot::disconnected("backend ledger not loaded"),
         };
         app.rebuild_events();
-        if !app.snapshots.is_empty() {
+        if !app.is_live && !app.snapshots.is_empty() {
             app.update_book_state();
         }
         app
@@ -216,6 +216,12 @@ impl App {
 
     pub fn on_tick(&mut self) {
         self.tick_count += 1;
+        if self.is_live {
+            if !self.snapshots.is_empty() {
+                self.current_index = self.snapshots.len() - 1;
+            }
+            return;
+        }
         if self.is_playing {
             if self.current_index + 1 < self.snapshots.len() {
                 self.current_index += 1;
@@ -227,7 +233,7 @@ impl App {
         }
     }
 
-    fn rebuild_events(&mut self) {
+    pub(crate) fn rebuild_events(&mut self) {
         self.events.clear();
         if self.snapshots.len() < 2 {
             return;
@@ -236,12 +242,17 @@ impl App {
             let prev = &self.snapshots[i - 1];
             let curr = &self.snapshots[i];
             if prev.state != curr.state {
-                let reason = match curr.state {
+                let fallback_reason = match curr.state {
                     RegimeState::BullMomentum => "15m/5m MTF Bullish + OPI >= 0.0",
                     RegimeState::BearMomentum => "15m/5m MTF Bearish + OPI <= 0.0",
                     RegimeState::VolatilityCoiling => "BBWP Percentile < 20.0 (Coiling)",
                     RegimeState::FundingCarry => "Funding Rate Z-Score |Z| >= 1.8",
                     RegimeState::RangeChop => "Spread > 6.0bps / Choppiness > 55",
+                };
+                let reason = if curr.regime_reason.is_empty() {
+                    fallback_reason
+                } else {
+                    &curr.regime_reason
                 };
                 self.events.push(RegimeEvent {
                     timestamp_str: curr.timestamp_str.clone(),
@@ -256,7 +267,8 @@ impl App {
     }
 
     pub fn select_next_config(&mut self) {
-        if self.config.selected_option_index < 5 {
+        let count = crate::config_view::backend_config_rows(&self.backend).len();
+        if self.config.selected_option_index + 1 < count {
             self.config.selected_option_index += 1;
         }
     }
@@ -277,48 +289,6 @@ impl App {
 
     pub fn decrease_config_value(&mut self) {
         // Backend-owned configuration is intentionally immutable from the TUI.
-    }
-
-    /// Apply a confirmed backend ledger snapshot without recalculating trades.
-    pub fn apply_backend_telemetry(&mut self, telemetry: BackendTelemetrySnapshot) {
-        self.backend = telemetry;
-        self.apply_backend_state();
-    }
-
-    fn apply_backend_state(&mut self) {
-        self.paper_trades = self.backend.trades.clone();
-        self.paper_stats = self.backend.stats.clone();
-        self.active_position = self.backend.active_position.clone();
-        self.equity_history = self.backend.equity_history.clone();
-        self.hv_trades = self
-            .paper_trades
-            .iter()
-            .enumerate()
-            .map(|(index, trade)| HypervelocityTrade {
-                index: (index + 1) as u32,
-                tick_closed: 0,
-                direction: trade.direction.clone(),
-                pnl_usd: trade.pnl_usd,
-                margin_pnl_pct: trade.pnl_pct,
-                exit_reason: trade.exit_reason.clone(),
-                fill_type: "backend".to_string(),
-            })
-            .collect();
-        self.position_run_direction = if self.active_position.is_active() {
-            self.active_position.direction.clone()
-        } else {
-            self.hv_trades
-                .last()
-                .map(|trade| trade.direction.clone())
-                .unwrap_or_else(|| "FLAT".to_string())
-        };
-        self.run_position_index = self.hv_trades.len() as u32;
-        self.run_wins = self
-            .hv_trades
-            .iter()
-            .filter(|trade| trade.pnl_usd >= 0.0)
-            .count() as u32;
-        self.run_pnl = self.hv_trades.iter().map(|trade| trade.pnl_usd).sum();
     }
 
     pub fn update_book_state(&mut self) {
@@ -417,26 +387,5 @@ impl App {
             .iter()
             .map(|&v| (((v - min) / range) * 100.0) as u64)
             .collect()
-    }
-
-    pub fn compute_hypervelocity_signals(&self) -> Vec<bool> {
-        let snap = self.current_snapshot();
-        let rsi_val = snap.rsi;
-        let funding_z = snap.funding_zscore;
-        // EMA direction gate: directional momentum regime with MTF agreement
-        let is_directional = matches!(
-            snap.state,
-            RegimeState::BullMomentum | RegimeState::BearMomentum
-        );
-        let mtf_aligned = snap.trend_1m == snap.trend_15m;
-
-        vec![
-            is_directional && mtf_aligned,    // EMA direction gate
-            rsi_val > 30.0 && rsi_val < 70.0, // RSI filter (avoid extremes)
-            snap.bbwp_percentile > 20.0,      // Chop gate (proxy: BBWP above coiling floor)
-            snap.confidence > 0.55,           // Momentum pulse (proxy: regime conviction)
-            funding_z.abs() < 1.8,            // Funding gate
-            self.book_state.gate_ok,          // Orderbook gate
-        ]
     }
 }

@@ -13,6 +13,7 @@ from hypervector.paper.book import (
     BookLevel,
     BookSnapshot,
     parse_hl_l2_payload,
+    summarize_book,
 )
 
 FIX = Path(__file__).parent / "fixtures" / "hl_l2_sample.json"
@@ -135,6 +136,27 @@ def test_book_feed_poll_returns_none_on_error():
         out = feed.poll()
     assert out is None
     assert feed.latest() is None
+
+
+def test_summarize_book_reports_measured_depth_and_pressure() -> None:
+    """Backend telemetry derives microstructure only from observed L2 levels."""
+    snapshot = BookSnapshot(
+        symbol="BTC",
+        bids=(BookLevel(100.0, 3.0), BookLevel(99.5, 1.0)),
+        asks=(BookLevel(100.5, 1.0), BookLevel(101.0, 1.0)),
+        ts_recv_ms=2_000.0,
+        ts_exchange_ms=1_900.0,
+        source="fixture",
+    )
+
+    metrics = summarize_book(snapshot, depth_levels=2)
+
+    assert metrics.mid_price == pytest.approx(100.25)
+    assert metrics.spread_bps == pytest.approx(49.87531172)
+    assert metrics.bid_depth_ratio == pytest.approx(2.0)
+    assert metrics.order_pressure_index == pytest.approx(1.0 / 3.0)
+    assert metrics.bid_depth == pytest.approx(4.0)
+    assert metrics.ask_depth == pytest.approx(2.0)
 
 
 def test_fetch_hl_l2_book_posts_and_parses():

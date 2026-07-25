@@ -220,6 +220,11 @@ def test_live_hypervelocity_bar_records_report_only_regime_observation(
             {
                 "primary_regime": ["RANGE"] * len(frame),
                 "breakout_direction": [None] * len(frame),
+                "state_1m": ["RANGE"] * len(frame),
+                "state_5m": ["RANGE"] * len(frame),
+                "context_15m": ["TREND_UP"] * len(frame),
+                "confidence": [0.61] * len(frame),
+                "reason": ["5m_primary_state"] * len(frame),
             },
             index=frame.index,
         )
@@ -247,8 +252,64 @@ def test_live_hypervelocity_bar_records_report_only_regime_observation(
     assert observation["breakout_direction"] is None
     assert observation["entry_direction"] == "long"
     assert observation["entry_allowed"] is False
+    assert observation["state_1m"] == "RANGE"
+    assert observation["state_5m"] == "RANGE"
+    assert observation["context_15m"] == "TREND_UP"
+    assert observation["confidence"] == pytest.approx(0.61)
+    assert observation["regime_reason"] == "5m_primary_state"
+    assert observation["high"] == pytest.approx(float(bars.iloc[3]["high"]))
+    assert observation["low"] == pytest.approx(float(bars.iloc[3]["low"]))
+    assert observation["volume"] == pytest.approx(float(bars.iloc[3]["volume"]))
+    assert "rsi" in observation
+    assert "bbwp_percentile" in observation
     assert observation["submitted"] is False
     assert observation["place_attempted"] is False
+
+
+def test_live_book_refresh_records_authoritative_microstructure(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A backend L2 refresh produces the record consumed by the TUI."""
+    from hypervector.paper.book import BookLevel, BookSnapshot
+
+    export = _write_strict_export(
+        tmp_path,
+        strategy="hypervelocity_1m_scalper_long",
+    )
+    session = PaperSession(
+        export_dir=export,
+        data_root=tmp_path / "data",
+        execution_mode="shadow",
+        enable_book_poll=True,
+    )
+    snapshot = BookSnapshot(
+        symbol="BTC",
+        bids=(BookLevel(100.0, 3.0), BookLevel(99.5, 1.0)),
+        asks=(BookLevel(100.5, 1.0), BookLevel(101.0, 1.0)),
+        ts_recv_ms=2_000.0,
+        ts_exchange_ms=1_900.0,
+        source="fixture_l2",
+    )
+    monkeypatch.setattr(session.book_feed, "poll", lambda: snapshot)
+    session.enable_live_telemetry()
+
+    observed = session.refresh_book_telemetry()
+
+    assert observed is snapshot
+    rows = [
+        json.loads(line) for line in session.decisions_path.read_text().splitlines()
+    ]
+    telemetry = next(row for row in rows if row["action"] == "book_observation")
+    assert telemetry["source"] == "fixture_l2"
+    assert telemetry["mid_px"] == pytest.approx(100.25)
+    assert telemetry["spread_bps"] == pytest.approx(49.87531172)
+    assert telemetry["bid_depth_ratio"] == pytest.approx(2.0)
+    assert telemetry["opi"] == pytest.approx(1.0 / 3.0)
+    assert telemetry["bids"][0] == {"price": 100.0, "size": 3.0}
+    assert telemetry["asks"][0] == {"price": 100.5, "size": 1.0}
+    assert telemetry["submitted"] is False
+    assert telemetry["place_attempted"] is False
 
 
 def test_session_accepts_canonical_hourly_funding_with_null_legacy_rate(

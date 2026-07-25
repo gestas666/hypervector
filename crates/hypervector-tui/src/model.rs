@@ -52,6 +52,7 @@ pub struct RegimeSnapshot {
     pub low: f64,
     pub volume: f64,
     pub state: RegimeState,
+    pub regime_reason: String,
     pub confidence: f64,
     pub opi: f64,
     pub spread_bps: f64,
@@ -266,7 +267,7 @@ impl ActivePosition {
 // Live orderbook state for the hypervelocity depth ladder
 // ---------------------------------------------------------------------------
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BookLevel {
     pub price: f64,
     pub size: f64,
@@ -292,7 +293,7 @@ pub struct HypervelocityBookState {
 impl Default for HypervelocityBookState {
     fn default() -> Self {
         Self {
-            spread_bps: 1.8,
+            spread_bps: 0.0,
             opi: 0.0,
             depth_ratio: 1.0,
             age_ms: 0.0,
@@ -303,8 +304,8 @@ impl Default for HypervelocityBookState {
             ask_levels: vec![],
             bid_last_change: vec![],
             ask_last_change: vec![],
-            gate_ok: true,
-            gate_reason: String::new(),
+            gate_ok: false,
+            gate_reason: "LIVE L2 UNAVAILABLE".to_string(),
         }
     }
 }

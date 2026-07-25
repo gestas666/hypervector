@@ -101,3 +101,33 @@ fn exact_hypervelocity_trade_uses_backend_regime_leverage_and_net_margin_return(
     assert!((trade.pnl_usd - 479.4094968105).abs() < 1e-9);
     assert!((trade.pnl_pct - 6.8487142387).abs() < 1e-6);
 }
+
+#[test]
+fn projects_backend_regime_history_and_measured_book_telemetry() {
+    let ledger = r#"{"feed_ts":"session_start","action":"session_start","run_id":"hv","strategy_name":"hypervelocity_1m_scalper","strategy_params":{"leverage":40.0},"init_cash":10000.0,"equity":10000.0}
+{"feed_ts":"2026-07-25T14:00:00Z","action":"regime_observation","run_id":"hv","primary_regime":"RANGE","state_1m":"RANGE","state_5m":"RANGE","context_15m":"TREND_UP","confidence":0.61,"regime_reason":"5m_primary_state","mark_px":100.0,"high":101.0,"low":99.0,"volume":12.0,"rsi":48.0,"bbwp_percentile":22.0,"position_qty":0.0}
+{"feed_ts":"2026-07-25T14:01:00Z","action":"regime_observation","run_id":"hv","primary_regime":"TREND_UP","entry_direction":"long","entry_allowed":true,"state_1m":"TREND_UP","state_5m":"TREND_UP","context_15m":"TREND_UP","confidence":0.83,"regime_reason":"5m_primary_trend","mark_px":101.0,"high":102.0,"low":100.0,"volume":15.0,"rsi":62.0,"bbwp_percentile":44.0,"position_qty":0.0}
+{"feed_ts":"2026-07-25T14:01:05Z","action":"book_observation","run_id":"hv","source":"hl_rest_l2","exchange_ts_ms":1784988065000.0,"recv_ts_ms":1784988065050.0,"mid_px":101.25,"spread_bps":4.9382716,"bid_depth_ratio":2.0,"opi":0.3333333,"bids":[{"price":101.0,"size":4.0}],"asks":[{"price":101.5,"size":2.0}]}"#;
+
+    let telemetry = parse_backend_telemetry(ledger).expect("telemetry");
+
+    assert_eq!(telemetry.regime_snapshots.len(), 2);
+    assert_eq!(telemetry.latest_regime.as_deref(), Some("TREND_UP"));
+    assert_eq!(telemetry.entry_direction.as_deref(), Some("long"));
+    assert_eq!(telemetry.entry_allowed, Some(true));
+    assert_eq!(telemetry.regime_snapshots[0].state.primary_label(), "RANGE");
+    assert_eq!(
+        telemetry.regime_snapshots[1].state.primary_label(),
+        "TREND_UP"
+    );
+    assert_eq!(
+        telemetry.regime_snapshots[1].regime_reason,
+        "5m_primary_trend"
+    );
+    let book = telemetry.book.as_ref().expect("book telemetry");
+    assert_eq!(book.source, "hl_rest_l2");
+    assert!((book.spread_bps - 4.9382716).abs() < 1e-9);
+    assert!((book.opi - 0.3333333).abs() < 1e-9);
+    assert_eq!(book.bid_levels[0].price, 101.0);
+    assert_eq!(book.ask_levels[0].size, 2.0);
+}

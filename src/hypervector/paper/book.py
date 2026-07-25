@@ -46,6 +46,48 @@ class BookSnapshot:
         return float(now_ms) - float(base)
 
 
+@dataclass(frozen=True)
+class BookMicrostructure:
+    """Measured top-of-book and depth metrics for display telemetry."""
+
+    mid_price: float
+    spread_bps: float
+    bid_depth: float
+    ask_depth: float
+    bid_depth_ratio: float
+    order_pressure_index: float
+
+
+def summarize_book(
+    snapshot: BookSnapshot,
+    *,
+    depth_levels: int = 5,
+) -> BookMicrostructure:
+    """Calculate microstructure metrics from observed L2 levels."""
+    if depth_levels <= 0:
+        raise ValueError("depth_levels must be positive")
+    if not snapshot.bids or not snapshot.asks:
+        raise ValueError("book telemetry requires non-empty bid and ask sides")
+    best_bid = snapshot.bids[0].price
+    best_ask = snapshot.asks[0].price
+    mid_price = (best_bid + best_ask) / 2.0
+    if mid_price <= 0.0 or best_ask < best_bid:
+        raise ValueError("book telemetry requires a positive, non-crossed market")
+    bid_depth = sum(level.size for level in snapshot.bids[:depth_levels])
+    ask_depth = sum(level.size for level in snapshot.asks[:depth_levels])
+    total_depth = bid_depth + ask_depth
+    if bid_depth < 0.0 or ask_depth <= 0.0 or total_depth <= 0.0:
+        raise ValueError("book telemetry requires positive observed depth")
+    return BookMicrostructure(
+        mid_price=mid_price,
+        spread_bps=(best_ask - best_bid) / mid_price * 10_000.0,
+        bid_depth=bid_depth,
+        ask_depth=ask_depth,
+        bid_depth_ratio=bid_depth / ask_depth,
+        order_pressure_index=(bid_depth - ask_depth) / total_depth,
+    )
+
+
 def _parse_level(item: Any) -> BookLevel | None:
     try:
         if isinstance(item, dict):

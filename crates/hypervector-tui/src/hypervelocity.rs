@@ -32,12 +32,10 @@ pub fn render_screen_hypervelocity(f: &mut Frame, app: &App, area: Rect) {
 }
 
 // ============================================================================
-// ROW 1: Strategy Command Bar (6-Gate Cascade + Status)
+// ROW 1: Backend strategy decision and status
 // ============================================================================
 pub fn render_command_bar(f: &mut Frame, app: &App, area: Rect) {
     let snap = app.current_snapshot();
-    let signals = app.compute_hypervelocity_signals();
-    let all_green = signals.iter().all(|&s| s);
 
     let (state_style, state_label) = match snap.state {
         RegimeState::BullMomentum => (app.theme.bull, "BULL_MOMENTUM EXPANSION"),
@@ -47,52 +45,25 @@ pub fn render_command_bar(f: &mut Frame, app: &App, area: Rect) {
         RegimeState::RangeChop => (app.theme.chop, "RANGE CHOP / HIGH FRICTION"),
     };
 
-    // Gate cascade line with animated dots
-    let gate_names = ["EMA", "RSI", "CHOP", "MOM", "FUND", "BOOK"];
-    let mut gate_spans: Vec<Span> = Vec::new();
-    for (i, (&ok, name)) in signals.iter().zip(gate_names.iter()).enumerate() {
-        let pulse_val = animation::pulse(app.tick_count + i as u64 * 3, 30);
-        let dot = if ok {
-            Span::styled("●", app.theme.bull)
-        } else {
-            Span::styled("◉", app.theme.gate_blocked)
-        };
-        let label_style = if ok {
-            Style::default().fg(ratatui::style::Color::Rgb(
-                (180.0 + 75.0 * pulse_val) as u8,
-                (210.0 + 45.0 * pulse_val) as u8,
-                (180.0 + 75.0 * pulse_val) as u8,
-            ))
-        } else {
-            app.theme.muted
-        };
-        gate_spans.push(Span::styled(
-            format!("[{}] {} ", i + 1, name),
-            app.theme.muted,
-        ));
-        gate_spans.push(dot);
-        gate_spans.push(Span::styled(if ok { " OK " } else { " NO " }, label_style));
-    }
-
-    let status_line = if all_green {
+    let entry_line = if app.backend.entry_allowed == Some(true) {
+        let direction = app.backend.entry_direction.as_deref().unwrap_or("unknown");
         Span::styled(
-            "MARKET DIAGNOSTICS ALIGNED — BACKEND REMAINS AUTHORITATIVE",
+            format!("BACKEND ENTRY ELIGIBLE: {}", direction.to_uppercase()),
             app.theme.bull,
         )
     } else {
-        let blocked: Vec<&str> = signals
-            .iter()
-            .enumerate()
-            .filter(|(_, ok)| !**ok)
-            .map(|(i, _)| gate_names[i])
-            .collect();
         Span::styled(
-            format!(
-                "MARKET DIAGNOSTICS BLOCKED: {} — BACKEND REMAINS AUTHORITATIVE",
-                blocked.join(", ")
-            ),
-            app.theme.gate_blocked,
+            "BACKEND ENTRY INELIGIBLE: NO TREND / CONFIRMED BREAKOUT",
+            app.theme.muted,
         )
+    };
+    let book_line = if let Some(book) = &app.backend.book {
+        format!(
+            "L2 {}  spread {:.2}bps  OPI {:+.3}  depth {:.2}x",
+            book.source, book.spread_bps, book.opi, book.bid_depth_ratio
+        )
+    } else {
+        "L2 telemetry unavailable".to_string()
     };
 
     let text = vec![
@@ -112,8 +83,8 @@ pub fn render_command_bar(f: &mut Frame, app: &App, area: Rect) {
                 },
             ),
         ]),
-        Line::from(gate_spans),
-        Line::from(vec![status_line]),
+        Line::from(vec![entry_line]),
+        Line::from(Span::styled(book_line, app.theme.cyan)),
         Line::from(vec![backend_status_span(app)]),
     ];
 
@@ -122,11 +93,13 @@ pub fn render_command_bar(f: &mut Frame, app: &App, area: Rect) {
         .title_style(app.theme.title)
         .borders(Borders::ALL)
         .border_type(BorderType::Rounded)
-        .border_style(if all_green {
-            app.theme.bull
-        } else {
-            app.theme.border_active
-        });
+        .border_style(
+            if app.backend.connection == BackendConnectionState::Connected {
+                app.theme.bull
+            } else {
+                app.theme.border_active
+            },
+        );
 
     f.render_widget(Paragraph::new(text).block(block), area);
 }
@@ -394,7 +367,7 @@ fn render_book_ladder(f: &mut Frame, app: &App, area: Rect) {
         ]));
     }
 
-    // Footer with book quality dots
+    // Footer with backend book telemetry health
     let gate_dot = if bs.gate_ok {
         Span::styled("●", app.theme.bull)
     } else {
@@ -407,19 +380,19 @@ fn render_book_ladder(f: &mut Frame, app: &App, area: Rect) {
     };
 
     lines.push(Line::from(vec![
-        Span::raw("BOOK: "),
+        Span::raw("TELEMETRY: "),
         gate_dot,
         Span::styled(
             format!(
                 " {}  │  OPI {:.2} ",
-                if bs.gate_ok { "OK" } else { &bs.gate_reason },
+                if bs.gate_ok { "LIVE" } else { &bs.gate_reason },
                 bs.opi
             ),
             app.theme.muted,
         ),
         opi_arrow,
         Span::raw("  │  "),
-        Span::styled("MAKER FILLS", app.theme.bull),
+        Span::styled("BACKEND L2", app.theme.bull),
     ]));
 
     let block = Block::default()
