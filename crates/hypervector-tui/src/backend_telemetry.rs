@@ -139,6 +139,7 @@ pub(crate) struct LedgerRow {
     execution: Option<Value>,
     position_policy: Option<Value>,
     costs: Option<Value>,
+    exit_reason: Option<String>,
     pub(crate) mark_px: Option<f64>,
     #[serde(flatten)]
     pub(crate) extra: HashMap<String, Value>,
@@ -364,7 +365,10 @@ fn close_trade(run_id: &str, index: usize, entry: &OpenTrade, row: &LedgerRow) -
         leverage: row.leverage.unwrap_or(entry.leverage),
         pnl_usd: pnl,
         pnl_pct,
-        exit_reason: "backend_close".to_string(),
+        exit_reason: row
+            .exit_reason
+            .clone()
+            .unwrap_or_else(|| "exit_reason_not_recorded".to_string()),
     }
 }
 

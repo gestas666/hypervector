@@ -417,6 +417,7 @@ def test_hypervelocity_paper_waits_for_maker_through_then_exits_at_fixed_target(
     assert entries[0]["fill_model_id"] == "post_only_limit_through_v1"
     assert closes[0]["fill_px"] == pytest.approx(100.2)
     assert closes[0]["feed_ts"] == "2026-07-25T12:04:00+00:00"
+    assert closes[0]["exit_reason"] == "take_profit_8pct_margin"
 
 
 def test_bidirectional_profile_holds_then_switches_only_after_exit(

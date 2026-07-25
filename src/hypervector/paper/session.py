@@ -635,6 +635,7 @@ class PaperSession:
             mark_px=target,
             book=book,
             fill_model=PostOnlyLimitFillModel(),
+            exit_reason=f"take_profit_{contract.target_margin_pct:g}pct_margin",
         )
         if rec.get("skipped"):
             return None

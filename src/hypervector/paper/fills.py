@@ -112,6 +112,7 @@ class ExplicitFillEngine:
         conviction_source: str | None = None,
         metalabel_p: float | None = None,
         metalabel_bundle_id: str | None = None,
+        exit_reason: str | None = None,
     ) -> dict:
         side_n = str(side).lower().strip()
         if side_n not in _VALID_SIDES:
@@ -184,6 +185,8 @@ class ExplicitFillEngine:
             )
             if intent is not None:
                 skipped["intent"] = intent
+            if exit_reason is not None:
+                skipped["exit_reason"] = str(exit_reason)
             append_paper_decision(self._data_root, skipped)
             return skipped
 
@@ -214,6 +217,8 @@ class ExplicitFillEngine:
         )
         if intent is not None:
             record["intent"] = intent
+        if exit_reason is not None:
+            record["exit_reason"] = str(exit_reason)
         append_paper_decision(self._data_root, record)
         return record
 
