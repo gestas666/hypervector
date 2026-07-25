@@ -112,6 +112,19 @@ fn test_parse_snapshot_json_uses_real_fields() {
 }
 
 #[test]
+fn test_parse_snapshot_json_recognizes_canonical_trend_up() {
+    let val = serde_json::json!({
+        "timestamp_str": "2026-07-25 13:16:00 UTC",
+        "close": 64113.0,
+        "regime_state": "TREND_UP"
+    });
+
+    let snapshot = parse_snapshot_json(&val, 0).expect("snapshot should parse");
+
+    assert_eq!(snapshot.state, RegimeState::BullMomentum);
+}
+
+#[test]
 fn test_snapshot_playback_never_creates_authoritative_trades() {
     // Bars 0-4 chop, bull transition at bar 5 (entry 100.0), TP barrier at
     // 100.2 (8% margin at 40x = 0.2% price move) crossed on bar 7.

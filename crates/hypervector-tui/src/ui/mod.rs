@@ -774,40 +774,7 @@ fn render_distribution_bar(f: &mut Frame, app: &App, area: Rect) {
     if area.width < 10 || app.snapshots.is_empty() {
         return;
     }
-
-    let current_ts = &app.current_snapshot().timestamp_str;
-    let events_to_now: Vec<_> = app
-        .events
-        .iter()
-        .filter(|e| &e.timestamp_str <= current_ts)
-        .collect();
-
-    let mut bull_cnt = 0.0;
-    let mut bear_cnt = 0.0;
-    let mut coil_cnt = 0.0;
-    let mut carry_cnt = 0.0;
-    let mut chop_cnt = 0.0;
-
-    if events_to_now.is_empty() {
-        match app.current_snapshot().state {
-            RegimeState::BullMomentum => bull_cnt = 1.0,
-            RegimeState::BearMomentum => bear_cnt = 1.0,
-            RegimeState::VolatilityCoiling => coil_cnt = 1.0,
-            RegimeState::FundingCarry => carry_cnt = 1.0,
-            RegimeState::RangeChop => chop_cnt = 1.0,
-        }
-    } else {
-        for ev in &events_to_now {
-            match ev.to_state {
-                RegimeState::BullMomentum => bull_cnt += 1.0,
-                RegimeState::BearMomentum => bear_cnt += 1.0,
-                RegimeState::VolatilityCoiling => coil_cnt += 1.0,
-                RegimeState::FundingCarry => carry_cnt += 1.0,
-                RegimeState::RangeChop => chop_cnt += 1.0,
-            }
-        }
-    }
-
+    let [bull_cnt, bear_cnt, coil_cnt, carry_cnt, chop_cnt] = distribution_counts(app);
     let total = f64::max(bull_cnt + bear_cnt + coil_cnt + carry_cnt + chop_cnt, 1.0);
     let bull_pct = (bull_cnt / total) * 100.0;
     let bear_pct = (bear_cnt / total) * 100.0;
@@ -831,6 +798,49 @@ fn render_distribution_bar(f: &mut Frame, app: &App, area: Rect) {
     ]);
 
     f.render_widget(Paragraph::new(line).alignment(Alignment::Center), area);
+}
+
+fn distribution_counts(app: &App) -> [f64; 5] {
+    if !app.backend.regime_history.is_empty() {
+        let mut counts = [0.0; 5];
+        for regime in &app.backend.regime_history {
+            let index = match regime.as_str() {
+                "TREND_UP" => 0,
+                "TREND_DOWN" => 1,
+                "BREAKOUT" => 2,
+                "TRANSITION" => 3,
+                _ => 4,
+            };
+            counts[index] += 1.0;
+        }
+        return counts;
+    }
+    let current_ts = &app.current_snapshot().timestamp_str;
+    let states: Vec<RegimeState> = app
+        .events
+        .iter()
+        .filter(|event| &event.timestamp_str <= current_ts)
+        .map(|event| event.to_state)
+        .collect();
+    if states.is_empty() {
+        return counts_for_states(&[app.current_snapshot().state]);
+    }
+    counts_for_states(&states)
+}
+
+fn counts_for_states(states: &[RegimeState]) -> [f64; 5] {
+    let mut counts = [0.0; 5];
+    for state in states {
+        let index = match state {
+            RegimeState::BullMomentum => 0,
+            RegimeState::BearMomentum => 1,
+            RegimeState::VolatilityCoiling => 2,
+            RegimeState::FundingCarry => 3,
+            RegimeState::RangeChop => 4,
+        };
+        counts[index] += 1.0;
+    }
+    counts
 }
 
 // ============================================================================

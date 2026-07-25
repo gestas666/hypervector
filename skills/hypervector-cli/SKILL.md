@@ -114,6 +114,18 @@ The TUI does not execute or reconstruct trades. Trade, position, PnL, cost,
 and policy fields come from the backend ledger. The current depth visualization
 is derived from cached regime snapshot ratios; it is not a raw L2 ladder.
 
+Reset a completed shadow observation window with a recoverable backup:
+
+```bash
+uv run python -m hypervector \
+  --data-root data/ops/hypervelocity_visual \
+  hypervelocity-shadow-reset --yes
+```
+
+Without `--yes`, the reset is a non-mutating dry run. Confirmed resets acquire
+the singleton backend lock, copy decisions and the backend log under
+`<data-root>/backups/shadow_reset_<UTC>/`, then clear only those two files.
+
 ### 6. 4-Screen Visual Microstructure Cockpit (`tui-regime-detector`)
 
 Ratatui 0.29 interactive 4-screen cockpit featuring live stream playback, L2 orderbook depth stack, paper trade journal, and interactive engine configuration:

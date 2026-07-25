@@ -41,6 +41,7 @@ def test_all_cli_commands_registered():
     assert "status" in choices
     assert "live-report" in choices
     assert "hypervelocity-tui" in choices
+    assert "hypervelocity-shadow-reset" in choices
 
 
 def test_root_description_names_pipeline():

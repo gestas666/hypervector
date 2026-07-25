@@ -37,6 +37,7 @@ pub struct BackendTelemetrySnapshot {
     pub risk: Value,
     pub execution_policy: Value,
     pub costs: Value,
+    pub regime_history: Vec<String>,
     pub trades: Vec<PaperTradeRecord>,
     pub stats: LivePaperStats,
     pub active_position: ActivePosition,
@@ -70,6 +71,7 @@ impl BackendTelemetrySnapshot {
             risk: Value::Null,
             execution_policy: Value::Null,
             costs: Value::Null,
+            regime_history: Vec::new(),
             trades: Vec::new(),
             stats: empty_stats(),
             active_position: ActivePosition::flat(),
@@ -116,6 +118,7 @@ struct LedgerRow {
     init_cash: Option<f64>,
     realized_pnl: Option<f64>,
     unrealized_pnl: Option<f64>,
+    primary_regime: Option<String>,
     strategy_params: Option<Value>,
     exits: Option<Value>,
     risk: Option<Value>,
@@ -131,8 +134,8 @@ struct OpenTrade {
     entry_price: f64,
     size: f64,
     leverage: f64,
-    entry_equity: f64,
-    entry_realized: f64,
+    allocated_margin: f64,
+    realized_before_entry: f64,
 }
 
 /// Parse JSONL and project only the most recent identified backend run.
@@ -172,10 +175,15 @@ fn build_snapshot(run_id: String, rows: &[&LedgerRow]) -> BackendTelemetrySnapsh
         .find(|row| row.action == "session_start")
         .copied();
     let latest = rows.last().copied();
-    let trades = build_trades(&run_id, rows);
+    let configured_leverage = identity
+        .and_then(|row| row.strategy_params.as_ref())
+        .and_then(|params| params.get("leverage"))
+        .and_then(Value::as_f64)
+        .unwrap_or(0.0);
+    let trades = build_trades(&run_id, rows, configured_leverage);
     let equity_history: Vec<f64> = rows.iter().filter_map(|row| row.equity).collect();
     let stats = build_stats(rows, &trades, &equity_history);
-    let active_position = build_active_position(rows, latest);
+    let active_position = build_active_position(rows, latest, configured_leverage);
     BackendTelemetrySnapshot {
         connection: BackendConnectionState::Connected,
         status_message: "backend ledger connected".to_string(),
@@ -203,6 +211,11 @@ fn build_snapshot(run_id: String, rows: &[&LedgerRow]) -> BackendTelemetrySnapsh
         costs: identity
             .and_then(|row| row.costs.clone())
             .unwrap_or(Value::Null),
+        regime_history: rows
+            .iter()
+            .filter(|row| row.action == "regime_observation")
+            .filter_map(|row| row.primary_regime.clone())
+            .collect(),
         trades,
         stats,
         active_position,
@@ -214,13 +227,22 @@ fn latest_value<T>(rows: &[&LedgerRow], get: impl Fn(&LedgerRow) -> Option<T>) -
     rows.iter().rev().find_map(|row| get(row))
 }
 
-fn build_trades(run_id: &str, rows: &[&LedgerRow]) -> Vec<PaperTradeRecord> {
+fn build_trades(
+    run_id: &str,
+    rows: &[&LedgerRow],
+    configured_leverage: f64,
+) -> Vec<PaperTradeRecord> {
     let mut trades = Vec::new();
     let mut open: Option<OpenTrade> = None;
+    let mut latest_realized = 0.0;
     for row in rows {
         match row.action.as_str() {
             "enter_long" | "enter_short" if is_filled_entry(row) => {
-                open = Some(open_trade_from_row(row));
+                open = Some(open_trade_from_row(
+                    row,
+                    configured_leverage,
+                    latest_realized,
+                ));
             }
             "close" => {
                 if let Some(entry) = open.take() {
@@ -228,6 +250,9 @@ fn build_trades(run_id: &str, rows: &[&LedgerRow]) -> Vec<PaperTradeRecord> {
                 }
             }
             _ => {}
+        }
+        if let Some(realized) = row.realized_pnl {
+            latest_realized = realized;
         }
     }
     trades
@@ -238,7 +263,19 @@ fn is_filled_entry(row: &LedgerRow) -> bool {
     !row.skipped && quantity.abs() > f64::EPSILON
 }
 
-fn open_trade_from_row(row: &LedgerRow) -> OpenTrade {
+fn open_trade_from_row(
+    row: &LedgerRow,
+    configured_leverage: f64,
+    realized_before_entry: f64,
+) -> OpenTrade {
+    let leverage = row.leverage.unwrap_or(configured_leverage);
+    let entry_price = row.fill_px.or(row.position_avg_px).unwrap_or(0.0);
+    let size = row.fill_qty.or(row.qty).unwrap_or(0.0).abs();
+    let allocated_margin = if leverage > 0.0 {
+        entry_price * size / leverage
+    } else {
+        row.equity.unwrap_or(0.0)
+    };
     OpenTrade {
         timestamp: row.feed_ts.clone(),
         direction: if row.action == "enter_short" {
@@ -248,18 +285,18 @@ fn open_trade_from_row(row: &LedgerRow) -> OpenTrade {
         }
         .to_string(),
         symbol: row.symbol.clone().unwrap_or_else(|| "UNKNOWN".to_string()),
-        entry_price: row.fill_px.or(row.position_avg_px).unwrap_or(0.0),
-        size: row.fill_qty.or(row.qty).unwrap_or(0.0).abs(),
-        leverage: row.leverage.unwrap_or(0.0),
-        entry_equity: row.equity.unwrap_or(0.0),
-        entry_realized: row.realized_pnl.unwrap_or(0.0),
+        entry_price,
+        size,
+        leverage,
+        allocated_margin,
+        realized_before_entry,
     }
 }
 
 fn close_trade(run_id: &str, index: usize, entry: &OpenTrade, row: &LedgerRow) -> PaperTradeRecord {
-    let pnl = row.realized_pnl.unwrap_or(entry.entry_realized) - entry.entry_realized;
-    let pnl_pct = if entry.entry_equity.abs() > f64::EPSILON {
-        pnl / entry.entry_equity * 100.0
+    let pnl = row.realized_pnl.unwrap_or(entry.realized_before_entry) - entry.realized_before_entry;
+    let pnl_pct = if entry.allocated_margin.abs() > f64::EPSILON {
+        pnl / entry.allocated_margin * 100.0
     } else {
         0.0
     };
@@ -331,7 +368,11 @@ fn build_stats(rows: &[&LedgerRow], trades: &[PaperTradeRecord], equity: &[f64])
     }
 }
 
-fn build_active_position(rows: &[&LedgerRow], latest: Option<&LedgerRow>) -> ActivePosition {
+fn build_active_position(
+    rows: &[&LedgerRow],
+    latest: Option<&LedgerRow>,
+    configured_leverage: f64,
+) -> ActivePosition {
     let Some(latest) = latest else {
         return ActivePosition::flat();
     };
@@ -350,7 +391,9 @@ fn build_active_position(rows: &[&LedgerRow], latest: Option<&LedgerRow>) -> Act
             .or_else(|| entry.and_then(|row| row.fill_px))
             .unwrap_or(0.0),
         size_btc: qty.abs(),
-        leverage: entry.and_then(|row| row.leverage).unwrap_or(0.0),
+        leverage: entry
+            .and_then(|row| row.leverage)
+            .unwrap_or(configured_leverage),
         entry_equity: entry.and_then(|row| row.equity).unwrap_or(0.0),
         peak_margin_pct: 0.0,
     }

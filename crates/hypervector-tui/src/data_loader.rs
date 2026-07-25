@@ -78,10 +78,14 @@ pub fn parse_snapshot_json(val: &Value, idx: usize) -> Option<RegimeSnapshot> {
         .unwrap_or("BULL_MOMENTUM_EXPANSION");
 
     let state = match state_str {
-        s if s.contains("BULL") => RegimeState::BullMomentum,
-        s if s.contains("BEAR") => RegimeState::BearMomentum,
-        s if s.contains("COILING") || s.contains("COMPRESSION") => RegimeState::VolatilityCoiling,
-        s if s.contains("CARRY") || s.contains("FUNDING") => RegimeState::FundingCarry,
+        s if s == "TREND_UP" || s.contains("BULL") => RegimeState::BullMomentum,
+        s if s == "TREND_DOWN" || s.contains("BEAR") => RegimeState::BearMomentum,
+        s if s == "BREAKOUT" || s.contains("COILING") || s.contains("COMPRESSION") => {
+            RegimeState::VolatilityCoiling
+        }
+        s if s == "TRANSITION" || s.contains("CARRY") || s.contains("FUNDING") => {
+            RegimeState::FundingCarry
+        }
         _ => RegimeState::RangeChop,
     };
 

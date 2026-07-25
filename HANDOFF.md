@@ -31,13 +31,16 @@
 
 ### 2026-07-25 implementation status
 
+- TUI projection now recognizes canonical `TREND_UP`/`TREND_DOWN`/`BREAKOUT`/`TRANSITION` labels and uses live backend `regime_observation` history for the distribution bar. It falls back to session identity for 40x leverage and reports net trade PnL—including entry/exit fees and funding—as a percentage of actual allocated margin.
+- `hypervelocity-shadow-reset` is dry-run by default. `--yes` obtains the backend singleton lock, creates a timestamped audit backup, and clears only shadow decisions and the backend text log; cache, regime snapshots, models, and configuration remain intact.
 - `hypervelocity-tui` is the single operator entry point: Python supervises the no-submit backend, waits for fresh ledger telemetry, runs the Rust TUI in the foreground, and terminates/reaps the backend child when the TUI exits. Backend logs are isolated from the terminal screen under `<data-root>/paper/hypervelocity-shadow.log`.
 - A per-data-root advisory lock refuses a second Hypervelocity backend, preventing two independent BTC positions or competing latest-run telemetry.
 - `hypervelocity-shadow-run --config configs/hypervelocity_faithful.toml` starts one bidirectional backend. It permits one signed BTC position, cannot reverse while open, and may switch sides only after the 8% margin target closes the prior trade.
 - Startup validates current public Hyperliquid BTC metadata. On 2026-07-25 the live response reported `szDecimals=5`, `maxLeverage=40`, and hourly funding `0.0000125`.
 - Tier-0 fees are explicit: maker `0.00015`, taker `0.00045`. Qualified post-only fills use maker fees and no invented slippage; funding refreshes every 60 seconds and applies only at hourly settlement boundaries while a position is open.
 - Hyperliquid price ticks are calculated from venue precision rules rather than a permanently fixed `$1` assumption. At the observed BTC price near `$64k`, the effective tick is `$1`.
-- Verification: 427 offline Python tests passed, 8 Rust TUI tests passed, targeted Ruff passed, TOML parsed, and real PTY launch/quit smoke wrote unified no-submit telemetry and reaped the backend child.
+- Verification: 429 offline Python tests passed, 10 Rust TUI integration tests passed, targeted Ruff passed, TOML parsed, and real PTY launch/quit smoke wrote unified no-submit telemetry and reaped the backend child.
+- The unified shadow state was reset on 2026-07-25 after the first observation window. The prior decisions and backend log are recoverable under `data/ops/hypervelocity_visual/backups/shadow_reset_20260725T141543Z`; active decisions/log files were verified at zero bytes while cache and regime-snapshot checksums remained unchanged.
 
 - `paper-run --metalabel-mode observe` records model probability and bundle identity without changing conviction or entry eligibility.
 - Every backend run stamps its run/export/strategy/execution/model identity and effective strategy, exit, risk, and cost configuration in `session_start`.

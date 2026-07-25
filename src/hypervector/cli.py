@@ -64,6 +64,7 @@ CLI_COMMANDS: tuple[str, ...] = (
     "hypervelocity-maker-replay",
     "hypervelocity-shadow-compare",
     "hypervelocity-shadow-run",
+    "hypervelocity-shadow-reset",
     "hypervelocity-tui",
     "sweep-up",
     "sweep-down",
@@ -641,6 +642,22 @@ def cmd_hypervelocity_tui(args: argparse.Namespace) -> int:
         print(f"hypervelocity-tui failed: {exc}; backend log: {log_path}", file=sys.stderr)
         return 1
     print(json.dumps({"ok": True, "backend_log": str(result.backend_log)}, indent=2))
+    return 0
+
+
+def cmd_hypervelocity_shadow_reset(args: argparse.Namespace) -> int:
+    """Dry-run or perform a backed-up Hypervelocity shadow state reset."""
+    from hypervector.shadow_reset import reset_shadow_state
+
+    try:
+        report = reset_shadow_state(
+            Path(args.data_root),
+            confirmed=bool(args.yes),
+        )
+    except (FileExistsError, OSError, RuntimeError, ValueError) as exc:
+        print(f"hypervelocity-shadow-reset failed: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(report.as_dict(), indent=2))
     return 0
 
 
@@ -2233,6 +2250,17 @@ def build_parser() -> argparse.ArgumentParser:
         help="optional bounded smoke-run bar count",
     )
     hv_shadow.set_defaults(func=cmd_hypervelocity_shadow_run)
+
+    hv_reset = sub.add_parser(
+        "hypervelocity-shadow-reset",
+        help="Back up and reset shadow portfolio/trade telemetry",
+    )
+    hv_reset.add_argument(
+        "--yes",
+        action="store_true",
+        help="perform the reset; without this flag the command is a dry run",
+    )
+    hv_reset.set_defaults(func=cmd_hypervelocity_shadow_reset)
 
     hv_tui = sub.add_parser(
         "hypervelocity-tui",

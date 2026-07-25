@@ -46,7 +46,7 @@ fn parses_latest_run_into_authoritative_trade_and_model_state() {
     assert_eq!(telemetry.costs["slippage_bps"], 2.0);
     assert_eq!(telemetry.trades.len(), 1);
     assert_eq!(telemetry.trades[0].direction, "LONG");
-    assert!((telemetry.trades[0].pnl_usd - 20.0).abs() < 1e-9);
+    assert!((telemetry.trades[0].pnl_usd - 18.0).abs() < 1e-9);
     assert_eq!(telemetry.stats.total_trades, 1);
     assert_eq!(telemetry.stats.wins, 1);
     assert!((telemetry.stats.current_equity - 10018.0).abs() < 1e-9);
@@ -84,4 +84,20 @@ fn skipped_entry_is_not_reconstructed_as_a_trade() {
 
     assert!(telemetry.trades.is_empty());
     assert!(!telemetry.active_position.is_active());
+}
+
+#[test]
+fn exact_hypervelocity_trade_uses_backend_regime_leverage_and_net_margin_return() {
+    let ledger = r#"{"feed_ts":"session_start","action":"session_start","run_id":"7ea893372898","strategy_name":"hypervelocity_1m_scalper","strategy_params":{"leverage":40.0,"target_margin_pct":8.0},"risk":{"margin_fraction":0.7},"init_cash":10000.0,"equity":10000.0,"realized_pnl":0.0}
+{"feed_ts":"2026-07-25T13:37:00Z","action":"regime_observation","run_id":"7ea893372898","primary_regime":"TREND_UP","position_qty":0.0,"equity":10000.0,"realized_pnl":0.0}
+{"feed_ts":"2026-07-25T13:38:00Z","action":"enter_long","run_id":"7ea893372898","symbol":"BTC","fill_px":64100.0,"fill_qty":4.36817,"fee_usd":41.99995455,"position_qty":4.36817,"position_avg_px":64100.0,"equity":9958.00004545,"realized_pnl":-41.99995455}
+{"feed_ts":"2026-07-25T13:50:00Z","action":"close","run_id":"7ea893372898","symbol":"BTC","fill_px":64229.0,"fill_qty":4.36817,"fee_usd":42.0844786395,"position_qty":0.0,"equity":10479.4094968105,"realized_pnl":479.4094968105}"#;
+
+    let telemetry = parse_backend_telemetry(ledger).expect("telemetry");
+    let trade = &telemetry.trades[0];
+
+    assert_eq!(telemetry.regime_history, vec!["TREND_UP"]);
+    assert!((trade.leverage - 40.0).abs() < 1e-9);
+    assert!((trade.pnl_usd - 479.4094968105).abs() < 1e-9);
+    assert!((trade.pnl_pct - 6.8487142387).abs() < 1e-6);
 }
