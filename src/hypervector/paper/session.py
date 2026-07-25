@@ -792,6 +792,7 @@ def _effective_exits(loadout: StrategyLoadout) -> dict[str, Any]:
         "target_margin_pct": contract.target_margin_pct,
         "target_price_fraction": contract.target_price_fraction,
         "stop": None,
+        "range_policy": contract.open_position_range_policy,
     }
 
 

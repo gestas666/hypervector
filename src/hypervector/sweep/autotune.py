@@ -108,6 +108,7 @@ def _hypervelocity_exit_dict() -> dict[str, Any]:
         "target_price_fraction": contract.target_price_fraction,
         "stop": None,
         "leverage": contract.leverage,
+        "range_policy": contract.open_position_range_policy,
     }
 
 

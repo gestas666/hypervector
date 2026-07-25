@@ -22,6 +22,7 @@ target_margin_pct = 8.0
 target_price_fraction = 0.002
 stop_policy = "none_observed"
 split_exit = false
+open_position_range_policy = "hold_until_target"
 
 [execution]
 order_type = "limit"

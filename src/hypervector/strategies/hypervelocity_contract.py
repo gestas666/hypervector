@@ -15,6 +15,7 @@ EntryDirection = Literal["long", "short"]
 _MARGIN_FRACTION = 0.70
 _LEVERAGE = 40.0
 _TARGET_MARGIN_PCT = 8.0
+_OPEN_POSITION_RANGE_POLICY = "hold_until_target"
 _STRATEGY_NAMES = frozenset(
     {
         "hypervelocity_1m_scalper",
@@ -66,6 +67,7 @@ class HypervelocityContract:
     target_margin_pct: float = _TARGET_MARGIN_PCT
     order_type: str = "limit"
     time_in_force: str = "post_only"
+    open_position_range_policy: str = _OPEN_POSITION_RANGE_POLICY
 
     def __post_init__(self) -> None:
         if self.margin_fraction != _MARGIN_FRACTION:
@@ -76,6 +78,8 @@ class HypervelocityContract:
             raise ValueError("target_margin_pct must be 8.0 for the faithful baseline")
         if self.order_type != "limit" or self.time_in_force != "post_only":
             raise ValueError("faithful baseline execution must be limit post_only")
+        if self.open_position_range_policy != _OPEN_POSITION_RANGE_POLICY:
+            raise ValueError("open positions must hold through range until target")
 
     @property
     def target_price_fraction(self) -> float:

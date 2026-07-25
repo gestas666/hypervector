@@ -61,6 +61,7 @@ def test_autotune_exports_strict_bundle(tmp_path: Path, monkeypatch):
     assert "regime_filter" not in params
     assert result.best_exit_cfg["leverage"] == 40.0
     assert result.best_exit_cfg["mode"] == "strategy_target_only"
+    assert result.best_exit_cfg["range_policy"] == "hold_until_target"
     meta = json.loads((result.export_dir / "meta.json").read_text())
     assert meta["risk"]["risk_pct_min"] == 0.7
     assert meta["risk"]["risk_pct_max"] == 0.7

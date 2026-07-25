@@ -195,6 +195,7 @@ def test_hypervelocity_identity_stamps_fixed_contract_and_observe_only(
     }
     assert row["exits"]["mode"] == "strategy_target_only"
     assert row["exits"]["stop"] is None
+    assert row["exits"]["range_policy"] == "hold_until_target"
     assert row["execution"]["order_type"] == "limit"
     assert row["execution"]["time_in_force"] == "post_only"
     assert row["execution"]["fill_rule"] == "through_one_tick"

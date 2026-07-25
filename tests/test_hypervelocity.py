@@ -143,6 +143,33 @@ def test_adverse_move_does_not_invent_unobserved_stop(monkeypatch):
     assert not exits.any()
 
 
+def test_open_position_holds_through_range_until_fixed_target(monkeypatch):
+    index = pd.date_range("2026-01-01", periods=4, freq="1min", tz="UTC")
+    df = pd.DataFrame(
+        {
+            "open": [100.0] * 4,
+            "high": [100.0, 100.1, 100.19, 100.21],
+            "low": [100.0] * 4,
+            "close": [100.0] * 4,
+            "volume": [100.0] * 4,
+        },
+        index=index,
+    )
+    decisions = _regime_decisions(
+        index,
+        [PrimaryRegime.TREND_UP] + [PrimaryRegime.RANGE] * 3,
+    )
+    monkeypatch.setattr(
+        "hypervector.strategies.hypervelocity._classify_regimes",
+        lambda _bars, config: decisions,
+    )
+
+    entries, exits, _ = hypervelocity_long(df)
+
+    assert entries.tolist() == [True, False, False, False]
+    assert exits.tolist() == [False, False, False, True]
+
+
 def test_hypervelocity_grid_runs():
     clear_registry()
     register_hypervelocity()
