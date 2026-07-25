@@ -4,7 +4,7 @@ use hypervector_tui::{
     app::App,
     backend_telemetry::parse_backend_telemetry,
     data_loader::{generate_synthetic_history, parse_snapshot_json},
-    model::{RegimeSnapshot, RegimeState},
+    model::{EngineConfig, RegimeSnapshot, RegimeState, SplitPositionMode},
 };
 
 fn make_snapshot(price: f64, high: f64, low: f64, state: RegimeState, ts: &str) -> RegimeSnapshot {
@@ -200,4 +200,15 @@ fn test_app_applies_backend_telemetry_and_keeps_config_read_only() {
     app.decrease_config_value();
     assert_eq!(app.config, config_before);
     assert_eq!(app.paper_stats.current_equity, 9998.0);
+}
+
+#[test]
+fn test_display_fallback_matches_fixed_backend_contract() {
+    let config = EngineConfig::default();
+
+    assert_eq!(config.static_leverage_value, 40.0);
+    assert_eq!(config.margin_tp_pct, 8.0);
+    assert_eq!(config.margin_sl_pct, 0.0);
+    assert_eq!(config.equity_risk_frac, 0.70);
+    assert_eq!(config.split_position_mode, SplitPositionMode::None);
 }

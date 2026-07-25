@@ -156,6 +156,53 @@ def test_session_identity_stamps_effective_metalabel_policy(tmp_path: Path):
     assert "wallet" not in json.dumps(row).lower()
 
 
+def test_hypervelocity_identity_stamps_fixed_contract_and_observe_only(
+    tmp_path: Path,
+) -> None:
+    export = _write_strict_export(
+        tmp_path,
+        strategy="hypervelocity_1m_scalper_long",
+    )
+
+    class FakeML:
+        root = type("R", (), {"name": "hypervelocity-replay-v002"})()
+        feature_names = ["close"]
+
+        def predict_probability(self, features):
+            return 0.1
+
+    session = PaperSession(
+        export_dir=export,
+        data_root=tmp_path / "data",
+        metalabel_enabled=True,
+        metalabeler=FakeML(),
+        metalabel_mode="filter",
+        book_gate_enabled=True,
+    )
+
+    session.ensure_session_identity()
+    row = json.loads(session.decisions_path.read_text().splitlines()[-1])
+
+    assert session.metalabel_mode == "observe"
+    assert session.book_gate_enabled is False
+    assert row["metalabel_mode"] == "observe"
+    assert row["strategy_params"]["leverage"] == 40.0
+    assert row["strategy_params"]["target_margin_pct"] == 8.0
+    assert row["risk"] == {
+        "mode": "fixed_margin_fraction",
+        "margin_fraction": 0.7,
+        "notional_fraction": 28.0,
+    }
+    assert row["exits"]["mode"] == "strategy_target_only"
+    assert row["exits"]["stop"] is None
+    assert row["execution"]["order_type"] == "limit"
+    assert row["execution"]["time_in_force"] == "post_only"
+    assert row["execution"]["fill_rule"] == "through_one_tick"
+    assert row["execution"]["fill_model"] == "post_only_limit_through_v1"
+    assert row["execution"]["tick_size"] == 1.0
+    assert row["execution"]["entry_ttl_seconds"] == 300.0
+
+
 def test_session_accepts_canonical_hourly_funding_with_null_legacy_rate(
     tmp_path: Path,
 ):
@@ -206,6 +253,61 @@ def test_hypervelocity_paper_qty_is_70pct_margin_at_40x(tmp_path: Path) -> None:
     )
 
     assert qty == pytest.approx(5.6)
+
+
+def test_hypervelocity_paper_waits_for_maker_through_then_exits_at_fixed_target(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    export = _write_strict_export(
+        tmp_path,
+        strategy="hypervelocity_1m_scalper_long",
+    )
+    session = PaperSession(export_dir=export, data_root=tmp_path / "data")
+    monkeypatch.setattr(
+        "hypervector.paper.session.current_hypervelocity_entry_allowed",
+        lambda frame, direction: True,
+    )
+
+    def bar(minute: int, *, high: float, low: float) -> dict[str, object]:
+        return {
+            "timestamp": pd.Timestamp(f"2026-07-25T12:{minute:02d}:00Z"),
+            "open": 100.0,
+            "high": high,
+            "low": low,
+            "close": 100.0,
+            "volume": 1.0,
+        }
+
+    session.on_bar(bar(0, high=100.5, low=99.5))
+    session.on_bar(bar(1, high=100.5, low=99.5))
+
+    assert session.engine.position.qty == 0.0
+    assert session.pending_maker_entry is not None
+    assert session.pending_maker_entry.limit_price == 100.0
+
+    assert session.on_bar(bar(2, high=100.5, low=99.0)) == "enter_long"
+    assert session.engine.position.qty == pytest.approx(2800.0)
+    assert session.engine.position.avg_px == 100.0
+
+    assert session.on_bar(bar(3, high=101.21, low=100.0)) == "close"
+    assert session.engine.position.qty == 0.0
+
+    rows = [
+        json.loads(line)
+        for line in session.decisions_path.read_text().splitlines()
+        if line.strip()
+    ]
+    submitted = [row for row in rows if row["action"] == "submit_entry"]
+    entries = [row for row in rows if row["action"] == "enter_long"]
+    closes = [row for row in rows if row["action"] == "close"]
+    assert submitted[0]["order_intent"]["time_in_force"] == "post_only"
+    assert submitted[0]["feed_ts"] == "2026-07-25T12:02:00+00:00"
+    assert entries[0]["fill_px"] == 100.0
+    assert entries[0]["feed_ts"] == "2026-07-25T12:03:00+00:00"
+    assert entries[0]["fill_model_id"] == "post_only_limit_through_v1"
+    assert closes[0]["fill_px"] == pytest.approx(100.2)
+    assert closes[0]["feed_ts"] == "2026-07-25T12:04:00+00:00"
 
 
 def test_offline_session_rejects_bad_ohlcv(tmp_path: Path):

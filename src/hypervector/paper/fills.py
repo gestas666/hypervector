@@ -22,6 +22,10 @@ from hypervector.paper.fill_models import (
 )
 from hypervector.paper.ledger import ALLOWED_EXECUTION_MODES, append_paper_decision
 from hypervector.paper.order_intent import NETWORK_MAINNET, build_order_intent
+from hypervector.strategies.hypervelocity_contract import (
+    HypervelocityContract,
+    is_hypervelocity_strategy,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -175,8 +179,8 @@ class ExplicitFillEngine:
             skipped["requested_qty"] = float(result.requested_qty)
             skipped["shortfall_qty"] = float(result.shortfall_qty)
             # Intent is the requested order, not the zero fill_qty.
-            skipped["order_intent"] = build_order_intent(
-                symbol=self._symbol, side=side_n, qty=qty_f
+            skipped["order_intent"] = self._order_intent(
+                side=side_n, qty=qty_f, mark_px=mark, action=str(action)
             )
             if intent is not None:
                 skipped["intent"] = intent
@@ -205,11 +209,88 @@ class ExplicitFillEngine:
             metalabel_bundle_id=metalabel_bundle_id,
         )
         # Intent qty is what we wanted to send (requested), not filled qty.
-        record["order_intent"] = build_order_intent(
-            symbol=self._symbol, side=side_n, qty=qty_f
+        record["order_intent"] = self._order_intent(
+            side=side_n, qty=qty_f, mark_px=mark, action=str(action)
         )
         if intent is not None:
             record["intent"] = intent
+        append_paper_decision(self._data_root, record)
+        return record
+
+    def _order_intent(
+        self,
+        *,
+        side: str,
+        qty: float,
+        mark_px: float,
+        action: str,
+    ) -> dict[str, Any]:
+        if not is_hypervelocity_strategy(self._strategy_name):
+            return build_order_intent(
+                symbol=self._symbol,
+                side=side,
+                qty=qty,
+                reduce_only=action == "close",
+            )
+        contract = HypervelocityContract()
+        return build_order_intent(
+            symbol=self._symbol,
+            side=side,
+            qty=qty,
+            order_type=contract.order_type,
+            time_in_force=contract.time_in_force,
+            limit_px=mark_px,
+            reduce_only=action == "close",
+            notes="shadow post-only intent; not sent",
+        )
+
+    def record_order_event(
+        self,
+        *,
+        feed_ts: Any,
+        action: str,
+        side: str,
+        qty: float,
+        limit_px: float,
+        status: str,
+        reason: str | None = None,
+        conviction: float | None = None,
+        conviction_source: str | None = None,
+        metalabel_p: float | None = None,
+        metalabel_bundle_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Append a non-fill maker order lifecycle event to the paper ledger."""
+        snap = self._cost_provider.snapshot()
+        record = self._base_record(
+            feed_ts=feed_ts,
+            action=action,
+            side=side,
+            qty=0.0,
+            mark_px=limit_px,
+            fill_px=limit_px,
+            snap=snap,
+            fee_usd=0.0,
+            funding_payment_usd=0.0,
+            conviction=conviction,
+            conviction_source=conviction_source,
+            metalabel_p=metalabel_p,
+            metalabel_bundle_id=metalabel_bundle_id,
+        )
+        record.update(
+            {
+                "fill_qty": 0.0,
+                "requested_qty": float(qty),
+                "order_status": str(status),
+                "order_intent": self._order_intent(
+                    side=side,
+                    qty=qty,
+                    mark_px=limit_px,
+                    action="close" if action == "submit_target" else action,
+                ),
+            }
+        )
+        if reason is not None:
+            record["reason"] = str(reason)
         append_paper_decision(self._data_root, record)
         return record
 

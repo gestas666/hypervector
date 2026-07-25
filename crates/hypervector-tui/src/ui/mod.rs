@@ -120,6 +120,10 @@ fn render_backend_configuration(f: &mut Frame, app: &App, area: Rect) {
         )),
         Line::from(format!("exits: {}", compact_json(&app.backend.exits))),
         Line::from(format!("risk: {}", compact_json(&app.backend.risk))),
+        Line::from(format!(
+            "order execution: {}",
+            compact_json(&app.backend.execution_policy)
+        )),
         Line::from(format!("costs: {}", compact_json(&app.backend.costs))),
         Line::from("Read only: change backend configuration through an acknowledged CLI workflow."),
     ];

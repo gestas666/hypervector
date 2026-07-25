@@ -46,6 +46,20 @@ from hypervector.paper.costs import CostProvider
 from hypervector.paper.fill_models import FILL_MODEL_L2_WALK_V1
 from hypervector.paper.fills import ExplicitFillEngine
 from hypervector.paper.ledger import DECISIONS_FILENAME, append_paper_decision
+from hypervector.paper.maker_execution import (
+    DEFAULT_ENTRY_TTL_SECONDS,
+    DEFAULT_MAKER_TICK_SIZE,
+    PostOnlyLimitFillModel,
+    PendingMakerEntry,
+    entry_limit_price,
+    entry_was_filled,
+    target_was_filled,
+)
+from hypervector.strategies.hypervelocity_contract import (
+    HypervelocityContract,
+    is_hypervelocity_strategy,
+)
+from hypervector.strategies.hypervelocity import current_hypervelocity_entry_allowed
 from hypervector.strategies import register_all_strategies
 
 logger = logging.getLogger(__name__)
@@ -100,6 +114,11 @@ class PaperSession:
             raise FileNotFoundError(f"export_dir not found: {export_path}")
 
         self.loadout = load_strategy_loadout(export_path, strict=True)
+        self._is_hypervelocity = is_hypervelocity_strategy(self.loadout.strategy_name)
+        if self._is_hypervelocity and (
+            self.loadout.symbol != "BTC" or self.loadout.timeframe != "1m"
+        ):
+            raise ValueError("faithful Hypervelocity paper execution requires BTC 1m")
         self.root = Path(data_root)
         self.paths = ensure_data_layout(self.root)
         self.decisions_path = self.paths.paper_decisions / DECISIONS_FILENAME
@@ -107,7 +126,7 @@ class PaperSession:
         self.sandbox_enabled = bool(sandbox_enabled)
         self.enable_funding_refresh = bool(enable_funding_refresh)
         self.enable_book_poll = bool(enable_book_poll)
-        self.book_gate_enabled = bool(book_gate_enabled)
+        self.book_gate_enabled = bool(book_gate_enabled) and not self._is_hypervelocity
         self.book_max_spread_bps = float(book_max_spread_bps)
         self.book_min_touch_size = float(book_min_touch_size)
         self.book_min_imbalance = float(book_min_imbalance)
@@ -118,6 +137,8 @@ class PaperSession:
             filter_entries=bool(metalabel_filter),
             requested=metalabel_mode,
         )
+        if self._is_hypervelocity and self.metalabel_mode in ("scale", "filter"):
+            self.metalabel_mode = "observe"
         self.metalabel_enabled = self.metalabel_mode != "off"
         self.metalabel_min_p = float(metalabel_min_p)
         self.metalabel_filter = self.metalabel_mode == "filter"
@@ -172,6 +193,12 @@ class PaperSession:
         self._last_ts: pd.Timestamp | None = None
         self._last_funding_refresh_mono: float = 0.0
         self._identity_written = False
+        self._pending_maker_entry: PendingMakerEntry | None = None
+
+    @property
+    def pending_maker_entry(self) -> PendingMakerEntry | None:
+        """Return the current backend-owned pending maker entry, if any."""
+        return self._pending_maker_entry
 
     def inject_book(self, snap: BookSnapshot) -> None:
         """Inject a BookSnapshot for offline tests (no network)."""
@@ -250,6 +277,12 @@ class PaperSession:
 
     def _process_intent(self, record: dict[str, Any]) -> str | None:
         """Map strategy intent on the latest bar into a market fill, if any."""
+        if self._is_hypervelocity:
+            return self._process_hypervelocity(record)
+        return self._process_standard_intent(record)
+
+    def _process_standard_intent(self, record: dict[str, Any]) -> str | None:
+        """Apply the existing immediate-fill path for non-Hypervelocity strategies."""
         df = _buffer_to_df(self.buffer_rows)
         try:
             intent = last_bar_intent(
@@ -413,6 +446,180 @@ class PaperSession:
 
         return None
 
+    def _process_hypervelocity(self, record: dict[str, Any]) -> str | None:
+        """Advance causal maker entry and fixed-target state for Hypervelocity."""
+        book = self._usable_book(record)
+        if self.engine.position.qty != 0.0:
+            return self._fill_hypervelocity_target(record, book)
+        direction = self._hypervelocity_direction()
+        allowed = self._hypervelocity_allowed(direction)
+        pending = self._pending_maker_entry
+        if pending is not None and self._pending_expired(pending, record):
+            self._cancel_pending(record, "entry_ttl_expired")
+        elif pending is not None and not allowed:
+            self._cancel_pending(record, "canonical_regime_no_longer_allows_entry")
+        elif pending is not None and entry_was_filled(
+            pending,
+            record,
+            book=book,
+            tick_size=DEFAULT_MAKER_TICK_SIZE,
+        ):
+            return self._fill_pending_entry(record, book)
+        if self._pending_maker_entry is None and allowed:
+            self._submit_pending_entry(record, direction, book)
+        return None
+
+    def _fill_hypervelocity_target(
+        self,
+        record: dict[str, Any],
+        book: BookSnapshot | None,
+    ) -> str | None:
+        position = self.engine.position
+        direction = "long" if position.qty > 0.0 else "short"
+        contract = HypervelocityContract()
+        multiplier = 1.0 + contract.target_price_fraction
+        if direction == "short":
+            multiplier = 1.0 - contract.target_price_fraction
+        target = float(position.avg_px) * multiplier
+        if not target_was_filled(
+            direction=direction,
+            target_price=target,
+            record=record,
+            book=book,
+            tick_size=DEFAULT_MAKER_TICK_SIZE,
+        ):
+            return None
+        side = "sell" if direction == "long" else "buy"
+        rec = self.engine.apply_market_fill(
+            feed_ts=self._hypervelocity_feed_ts(record),
+            action="close",
+            side=side,
+            qty=abs(float(position.qty)),
+            mark_px=target,
+            book=book,
+            fill_model=PostOnlyLimitFillModel(),
+        )
+        if rec.get("skipped"):
+            return None
+        self.fills_count += 1
+        return "close"
+
+    def _fill_pending_entry(
+        self,
+        record: dict[str, Any],
+        book: BookSnapshot | None,
+    ) -> str | None:
+        pending = self._pending_maker_entry
+        if pending is None:
+            return None
+        rec = self.engine.apply_market_fill(
+            feed_ts=self._hypervelocity_feed_ts(record),
+            action=pending.action,
+            side=pending.side,
+            qty=pending.qty,
+            mark_px=pending.limit_price,
+            book=book,
+            fill_model=PostOnlyLimitFillModel(),
+            conviction=pending.conviction,
+            conviction_source=pending.conviction_source,
+            metalabel_p=pending.metalabel_p,
+            metalabel_bundle_id=pending.metalabel_bundle_id,
+        )
+        if rec.get("skipped"):
+            return None
+        self._pending_maker_entry = None
+        self.fills_count += 1
+        return pending.action
+
+    def _submit_pending_entry(
+        self,
+        record: dict[str, Any],
+        direction: str,
+        book: BookSnapshot | None,
+    ) -> None:
+        df = _buffer_to_df(self.buffer_rows)
+        mark_px = float(record["close"])
+        qty = _entry_qty(
+            df=df,
+            loadout=self.loadout,
+            exits=self.exits,
+            equity=self.engine.equity(mark_px=mark_px),
+            conviction=self.conviction,
+            mark_px=mark_px,
+        )
+        if qty is None or qty <= 0.0:
+            return
+        limit = entry_limit_price(direction, record, book=book)
+        submitted_at = self._hypervelocity_timestamp(record)
+        cv = self.conviction_provider.resolve(bars=df)
+        self._pending_maker_entry = PendingMakerEntry(
+            direction=direction,
+            qty=qty,
+            limit_price=limit,
+            submitted_at=submitted_at,
+            conviction=cv.conviction,
+            conviction_source=cv.source,
+            metalabel_p=cv.metalabel_p,
+            metalabel_bundle_id=cv.metalabel_bundle_id,
+        )
+        side = "buy" if direction == "long" else "sell"
+        self.engine.record_order_event(
+            feed_ts=self._hypervelocity_feed_ts(record),
+            action="submit_entry",
+            side=side,
+            qty=qty,
+            limit_px=limit,
+            status="pending",
+            **_conviction_fill_kwargs(cv),
+        )
+
+    def _cancel_pending(self, record: dict[str, Any], reason: str) -> None:
+        pending = self._pending_maker_entry
+        if pending is None:
+            return
+        self.engine.record_order_event(
+            feed_ts=self._hypervelocity_feed_ts(record),
+            action="cancel_entry",
+            side=pending.side,
+            qty=pending.qty,
+            limit_px=pending.limit_price,
+            status="canceled",
+            reason=reason,
+        )
+        self._pending_maker_entry = None
+
+    def _hypervelocity_allowed(self, direction: str) -> bool:
+        return current_hypervelocity_entry_allowed(
+            _buffer_to_df(self.buffer_rows), direction=direction
+        )
+
+    def _hypervelocity_direction(self) -> str:
+        return "short" if self.loadout.strategy_name.endswith("_short") else "long"
+
+    def _pending_expired(
+        self,
+        pending: PendingMakerEntry,
+        record: dict[str, Any],
+    ) -> bool:
+        age = self._hypervelocity_timestamp(record) - pending.submitted_at
+        return age.total_seconds() > DEFAULT_ENTRY_TTL_SECONDS
+
+    def _usable_book(self, record: dict[str, Any]) -> BookSnapshot | None:
+        book = self.book_feed.latest()
+        if book is None or book.is_empty():
+            return None
+        now_ms = self._hypervelocity_timestamp(record).timestamp() * 1000.0
+        age_ms = book.age_ms(now_ms)
+        if age_ms < 0.0 or age_ms > self.max_book_age_ms:
+            return None
+        return book
+
+    def _hypervelocity_timestamp(self, record: dict[str, Any]) -> pd.Timestamp:
+        return pd.Timestamp(record["timestamp"]) + pd.Timedelta(minutes=1)
+
+    def _hypervelocity_feed_ts(self, record: dict[str, Any]) -> str:
+        return self._hypervelocity_timestamp(record).isoformat()
+
     def process_frame(self, ohlcv: pd.DataFrame, *, max_bars: int | None = None) -> int:
         """Walk a DataFrame of bars; return count processed in this call."""
         frame = _prepare_ohlcv(ohlcv, max_bars=max_bars)
@@ -448,10 +655,11 @@ class PaperSession:
                 "metalabel_bundle_id": self.conviction_provider.bundle_id,
                 "strategy_params": {
                     "strategy": self.loadout.strategy_name,
-                    **dict(self.loadout.params or {}),
+                    **_effective_strategy_params(self.loadout),
                 },
-                "exits": dict(self.loadout.exits or {}),
-                "risk": dict(self.loadout.risk or {}),
+                "exits": _effective_exits(self.loadout),
+                "risk": _effective_risk(self.loadout),
+                "execution": _effective_execution(self.loadout),
                 "costs": dict(self.loadout.costs or {}),
                 "bars_processed": self.bars_processed,
                 "execution_mode": self.execution_mode,
@@ -566,6 +774,52 @@ def _exits_dict(loadout: StrategyLoadout) -> dict[str, Any]:
     return raw
 
 
+def _effective_strategy_params(loadout: StrategyLoadout) -> dict[str, Any]:
+    params = dict(loadout.params or {})
+    if is_hypervelocity_strategy(loadout.strategy_name):
+        contract = HypervelocityContract()
+        params["leverage"] = contract.leverage
+        params["target_margin_pct"] = contract.target_margin_pct
+    return params
+
+
+def _effective_exits(loadout: StrategyLoadout) -> dict[str, Any]:
+    if not is_hypervelocity_strategy(loadout.strategy_name):
+        return dict(loadout.exits or {})
+    contract = HypervelocityContract()
+    return {
+        "mode": "strategy_target_only",
+        "target_margin_pct": contract.target_margin_pct,
+        "target_price_fraction": contract.target_price_fraction,
+        "stop": None,
+    }
+
+
+def _effective_risk(loadout: StrategyLoadout) -> dict[str, Any]:
+    if not is_hypervelocity_strategy(loadout.strategy_name):
+        return dict(loadout.risk or {})
+    contract = HypervelocityContract()
+    return {
+        "mode": "fixed_margin_fraction",
+        "margin_fraction": contract.margin_fraction,
+        "notional_fraction": contract.notional_fraction,
+    }
+
+
+def _effective_execution(loadout: StrategyLoadout) -> dict[str, Any]:
+    if not is_hypervelocity_strategy(loadout.strategy_name):
+        return {"order_type": "market", "time_in_force": "ioc"}
+    contract = HypervelocityContract()
+    return {
+        "order_type": contract.order_type,
+        "time_in_force": contract.time_in_force,
+        "fill_rule": "through_one_tick",
+        "fill_model": PostOnlyLimitFillModel.fill_model_id,
+        "tick_size": DEFAULT_MAKER_TICK_SIZE,
+        "entry_ttl_seconds": DEFAULT_ENTRY_TTL_SECONDS,
+    }
+
+
 def _cost_provider_from_loadout(
     loadout: StrategyLoadout,
     *,
@@ -588,6 +842,7 @@ def _cost_provider_from_loadout(
         fee_tier=int(fee_tier),
         slippage_bps=slippage_bps,
         funding_rate_hourly=funding_hourly,
+        assume_taker=not is_hypervelocity_strategy(loadout.strategy_name),
     )
 
 

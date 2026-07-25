@@ -14,6 +14,7 @@ def build_order_intent(
     qty: float,
     order_type: str = "market",
     time_in_force: str = "ioc",
+    limit_px: float | None = None,
     reduce_only: bool = False,
     client_ts_ms: float | None = None,
     notes: str = "shadow-only; not sent",
@@ -25,6 +26,9 @@ def build_order_intent(
     if side_n not in ("buy", "sell"):
         raise ValueError(f"side must be buy|sell, got {side!r}")
     ts = float(client_ts_ms) if client_ts_ms is not None else time.time() * 1000.0
+    price = float(limit_px) if limit_px is not None else None
+    if price is not None and price <= 0.0:
+        raise ValueError(f"limit_px must be positive, got {limit_px!r}")
     return {
         "schema": ORDER_INTENT_SCHEMA,
         "network": NETWORK_MAINNET,
@@ -34,6 +38,7 @@ def build_order_intent(
         "qty": q,
         "order_type": str(order_type),
         "time_in_force": str(time_in_force),
+        "limit_px": price,
         "reduce_only": bool(reduce_only),
         "client_ts_ms": ts,
         "submit_enabled": False,  # structural: never true in 4b

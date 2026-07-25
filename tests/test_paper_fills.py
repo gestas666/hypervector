@@ -52,6 +52,28 @@ def test_engine_equity_includes_realized_fees_and_current_mark(tmp_path: Path):
     assert eng.equity(mark_px=110.0) == expected
 
 
+def test_hypervelocity_ledger_uses_post_only_intent_and_maker_fee(tmp_path: Path):
+    costs = CostProvider(fee_tier=0, slippage_bps=0.0, assume_taker=False)
+    eng = ExplicitFillEngine(
+        tmp_path / "data_maker",
+        cost_provider=costs,
+        run_id="r1",
+        export_id="e1",
+        strategy_name="hypervelocity_1m_scalper_short",
+        symbol="BTC",
+        timeframe="1m",
+        conviction=0.5,
+    )
+
+    record = eng.apply_market_fill(
+        feed_ts="t0", action="enter_short", side="sell", qty=1.0, mark_px=100.0
+    )
+
+    assert record["order_intent"]["order_type"] == "limit"
+    assert record["order_intent"]["time_in_force"] == "post_only"
+    assert record["fee_usd"] == record["fill_px"] * record["maker_fee"]
+
+
 def test_funding_on_open_long_drag(tmp_path: Path):
     cp = CostProvider(fee_tier=0, funding_rate_hourly=0.0001)
     eng = ExplicitFillEngine(

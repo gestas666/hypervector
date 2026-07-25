@@ -125,7 +125,7 @@ pub enum TpSlStrategy {
     FixedPercentage { tp_pct: f64, sl_pct: f64 },
     ChandelierTrailing,
     ParabolicSarTrail,
-    HypervelocityTargetTrail { target_margin_pct: f64 },
+    HypervelocityFixedTarget { target_margin_pct: f64 },
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -198,24 +198,22 @@ pub struct EngineConfig {
 
 impl Default for EngineConfig {
     fn default() -> Self {
-        // Defaults mirror the reverse-engineered external strategy
-        // (docs/external plan section 4.6): 8% margin TP, 2% margin SL,
-        // 40x leverage, ~25% equity risk, maker fills, 63/37 split TP.
+        // Display fallback only. Effective values come from backend telemetry.
         Self {
             leverage_mode: LeverageMode::StaticMultiplier(40.0),
             static_leverage_value: 40.0,
-            tpsl_strategy: TpSlStrategy::HypervelocityTargetTrail {
+            tpsl_strategy: TpSlStrategy::HypervelocityFixedTarget {
                 target_margin_pct: 8.0,
             },
             fixed_tp_pct: 0.2,
-            fixed_sl_pct: 0.05,
+            fixed_sl_pct: 0.0,
             margin_tp_pct: 8.0,
-            margin_sl_pct: 2.0,
-            risk_sizing_mode: RiskSizingMode::EquityPercentage(25.0),
-            fixed_risk_usd: 250.0,
-            equity_risk_frac: 0.25,
+            margin_sl_pct: 0.0,
+            risk_sizing_mode: RiskSizingMode::EquityPercentage(70.0),
+            fixed_risk_usd: 7000.0,
+            equity_risk_frac: 0.70,
             fill_mode: FillMode::MakerOnly,
-            split_position_mode: SplitPositionMode::Active { tp1_ratio: 0.63 },
+            split_position_mode: SplitPositionMode::None,
             selected_option_index: 0,
         }
     }
@@ -262,24 +260,6 @@ impl ActivePosition {
     pub fn is_active(&self) -> bool {
         self.direction != "FLAT"
     }
-}
-
-/// Shared intermediate: the raw outcome of simulating one trade through the
-/// position-sizing + PnL engine. Both the paper-trade journal and the
-/// hypervelocity dashboard consume these, so we compute once.
-pub struct SimulatedTrade {
-    pub index: u32,
-    pub timestamp_str: String,
-    pub direction: String,
-    pub entry_price: f64,
-    pub exit_price: f64,
-    pub size_btc: f64,
-    pub leverage: f64,
-    pub pnl_usd: f64,
-    pub margin_pnl_pct: f64,
-    /// Best favorable margin excursion observed during the trade's bar walk.
-    pub peak_margin_pct: f64,
-    pub exit_reason: String,
 }
 
 // ---------------------------------------------------------------------------

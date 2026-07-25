@@ -8,6 +8,7 @@ from hypervector.data.sources import fixture_ohlcv
 from hypervector.regime.models import BreakoutDirection, PrimaryRegime
 from hypervector.strategies.hypervelocity import (
     build_hypervelocity_signals,
+    current_hypervelocity_entry_allowed,
     hypervelocity_long,
     hypervelocity_short,
     register_hypervelocity,
@@ -162,3 +163,20 @@ def test_hypervelocity_grid_runs():
     assert ok[0].metrics["position_notional_fraction"] == 28.0
     assert ok[0].metrics["strategy_managed_exits"] is True
     clear_registry()
+def test_current_entry_allowed_uses_latest_canonical_regime(monkeypatch) -> None:
+    df = fixture_ohlcv(n_bars=80)
+    decisions = pd.DataFrame(
+        {
+            "primary_regime": [PrimaryRegime.RANGE.value] * 79
+            + [PrimaryRegime.TREND_DOWN.value],
+            "breakout_direction": [None] * 80,
+        },
+        index=df.index,
+    )
+    monkeypatch.setattr(
+        "hypervector.strategies.hypervelocity._classify_regimes",
+        lambda frame, config: decisions,
+    )
+
+    assert current_hypervelocity_entry_allowed(df, direction="short") is True
+    assert current_hypervelocity_entry_allowed(df, direction="long") is False

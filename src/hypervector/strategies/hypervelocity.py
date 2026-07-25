@@ -65,6 +65,19 @@ def _target_hit(
     return high >= target if direction == "long" else low <= target
 
 
+def current_hypervelocity_entry_allowed(
+    df: pd.DataFrame,
+    *,
+    direction: Direction,
+    regime_config: RegimeClassifierConfig | None = None,
+) -> bool:
+    """Return whether the latest completed bar permits the requested side."""
+    if df.empty:
+        return False
+    decisions = _classify_regimes(df, regime_config or faithful_regime_config())
+    return bool(_entry_eligibility(decisions, direction).iloc[-1])
+
+
 def _entry_target_signals(
     df: pd.DataFrame,
     eligible: pd.Series,

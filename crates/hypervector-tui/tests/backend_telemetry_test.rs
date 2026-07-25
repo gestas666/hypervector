@@ -11,7 +11,7 @@ fn parses_latest_run_into_authoritative_trade_and_model_state() {
     let jsonl = r#"
 {"feed_ts":"session_start","action":"session_start","run_id":"old","strategy_name":"crown_stack_long","execution_mode":"shadow","init_cash":10000.0,"equity":10000.0,"position_qty":0.0}
 {"feed_ts":"2026-07-01T00:01:00Z","action":"enter_long","run_id":"old","strategy_name":"crown_stack_long","equity":9999.0,"realized_pnl":-1.0,"position_qty":0.1,"position_avg_px":90.0}
-{"feed_ts":"session_start","action":"session_start","run_id":"hv-run","export_id":"hv-export","strategy_name":"hypervelocity_1m_scalper_long","execution_mode":"shadow","metalabel_mode":"observe","metalabel_bundle_id":"hypervelocity-long-v001","conviction":0.5,"strategy_params":{"strategy":"hypervelocity_1m_scalper_long","leverage":40.0,"target_margin_pct":8.0},"exits":{"mode":"atr","sl_atr_mult":1.5},"risk":{"risk_pct_max":0.05},"costs":{"slippage_bps":2.0},"init_cash":10000.0,"equity":10000.0,"realized_pnl":0.0,"unrealized_pnl":0.0,"position_qty":0.0,"position_avg_px":0.0}
+{"feed_ts":"session_start","action":"session_start","run_id":"hv-run","export_id":"hv-export","strategy_name":"hypervelocity_1m_scalper_long","execution_mode":"shadow","metalabel_mode":"observe","metalabel_bundle_id":"hypervelocity-long-v001","conviction":0.5,"strategy_params":{"strategy":"hypervelocity_1m_scalper_long","leverage":40.0,"target_margin_pct":8.0},"exits":{"mode":"strategy_target_only","target_margin_pct":8.0,"stop":null},"risk":{"mode":"fixed_margin_fraction","margin_fraction":0.7,"notional_fraction":28.0},"execution":{"order_type":"limit","time_in_force":"post_only","fill_rule":"through_one_tick","fill_model":"post_only_limit_through_v1","tick_size":1.0,"entry_ttl_seconds":300.0},"costs":{"slippage_bps":2.0},"init_cash":10000.0,"equity":10000.0,"realized_pnl":0.0,"unrealized_pnl":0.0,"position_qty":0.0,"position_avg_px":0.0}
 {"feed_ts":"2026-07-25T12:00:00Z","action":"enter_long","run_id":"hv-run","strategy_name":"hypervelocity_1m_scalper_long","symbol":"BTC","fill_px":100.0,"fill_qty":0.1,"position_qty":0.1,"position_avg_px":100.0,"equity":9998.0,"realized_pnl":-2.0,"unrealized_pnl":0.0,"conviction":0.5,"conviction_source":"metalabel_observe","metalabel_p":0.62,"metalabel_bundle_id":"hypervelocity-long-v001","leverage":40.0}
 {"feed_ts":"2026-07-25T12:01:00Z","action":"funding","run_id":"hv-run","strategy_name":"hypervelocity_1m_scalper_long","position_qty":0.1,"position_avg_px":100.0,"equity":10003.0,"realized_pnl":-1.0,"unrealized_pnl":4.0}
 {"feed_ts":"2026-07-25T12:02:00Z","action":"close","run_id":"hv-run","strategy_name":"hypervelocity_1m_scalper_long","symbol":"BTC","fill_px":102.0,"fill_qty":0.1,"position_qty":0.0,"position_avg_px":0.0,"equity":10018.0,"realized_pnl":18.0,"unrealized_pnl":0.0,"conviction":0.5,"conviction_source":"metalabel_observe","metalabel_p":0.64,"metalabel_bundle_id":"hypervelocity-long-v001","leverage":40.0}
@@ -38,8 +38,11 @@ fn parses_latest_run_into_authoritative_trade_and_model_state() {
     );
     assert_eq!(telemetry.latest_metalabel_p, Some(0.64));
     assert_eq!(telemetry.strategy_params["leverage"], 40.0);
-    assert_eq!(telemetry.exits["mode"], "atr");
-    assert_eq!(telemetry.risk["risk_pct_max"], 0.05);
+    assert_eq!(telemetry.exits["mode"], "strategy_target_only");
+    assert_eq!(telemetry.risk["margin_fraction"], 0.7);
+    assert_eq!(telemetry.execution_policy["order_type"], "limit");
+    assert_eq!(telemetry.execution_policy["time_in_force"], "post_only");
+    assert_eq!(telemetry.execution_policy["fill_rule"], "through_one_tick");
     assert_eq!(telemetry.costs["slippage_bps"], 2.0);
     assert_eq!(telemetry.trades.len(), 1);
     assert_eq!(telemetry.trades[0].direction, "LONG");

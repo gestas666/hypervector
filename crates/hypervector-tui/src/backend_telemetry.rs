@@ -35,6 +35,7 @@ pub struct BackendTelemetrySnapshot {
     pub strategy_params: Value,
     pub exits: Value,
     pub risk: Value,
+    pub execution_policy: Value,
     pub costs: Value,
     pub trades: Vec<PaperTradeRecord>,
     pub stats: LivePaperStats,
@@ -67,6 +68,7 @@ impl BackendTelemetrySnapshot {
             strategy_params: Value::Null,
             exits: Value::Null,
             risk: Value::Null,
+            execution_policy: Value::Null,
             costs: Value::Null,
             trades: Vec::new(),
             stats: empty_stats(),
@@ -117,6 +119,7 @@ struct LedgerRow {
     strategy_params: Option<Value>,
     exits: Option<Value>,
     risk: Option<Value>,
+    execution: Option<Value>,
     costs: Option<Value>,
 }
 
@@ -193,6 +196,9 @@ fn build_snapshot(run_id: String, rows: &[&LedgerRow]) -> BackendTelemetrySnapsh
             .unwrap_or(Value::Null),
         risk: identity
             .and_then(|row| row.risk.clone())
+            .unwrap_or(Value::Null),
+        execution_policy: identity
+            .and_then(|row| row.execution.clone())
             .unwrap_or(Value::Null),
         costs: identity
             .and_then(|row| row.costs.clone())
