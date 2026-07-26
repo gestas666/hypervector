@@ -16,6 +16,8 @@ _MARGIN_FRACTION = 0.70
 _LEVERAGE = 40.0
 _TARGET_MARGIN_PCT = 8.0
 _OPEN_POSITION_RANGE_POLICY = "hold_until_target"
+_ENTRY_TTL_SECONDS = 300.0
+_EXPIRED_ENTRY_REARM_POLICY = "regime_reset"
 _STRATEGY_NAMES = frozenset(
     {
         "hypervelocity_1m_scalper",
@@ -68,6 +70,8 @@ class HypervelocityContract:
     order_type: str = "limit"
     time_in_force: str = "post_only"
     open_position_range_policy: str = _OPEN_POSITION_RANGE_POLICY
+    entry_ttl_seconds: float = _ENTRY_TTL_SECONDS
+    expired_entry_rearm_policy: str = _EXPIRED_ENTRY_REARM_POLICY
 
     def __post_init__(self) -> None:
         if self.margin_fraction != _MARGIN_FRACTION:
@@ -80,6 +84,10 @@ class HypervelocityContract:
             raise ValueError("faithful baseline execution must be limit post_only")
         if self.open_position_range_policy != _OPEN_POSITION_RANGE_POLICY:
             raise ValueError("open positions must hold through range until target")
+        if self.entry_ttl_seconds != _ENTRY_TTL_SECONDS:
+            raise ValueError("entry_ttl_seconds must be 300.0")
+        if self.expired_entry_rearm_policy != _EXPIRED_ENTRY_REARM_POLICY:
+            raise ValueError("expired entries must re-arm after a regime reset")
 
     @property
     def target_price_fraction(self) -> float:

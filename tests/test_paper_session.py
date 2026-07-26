@@ -472,6 +472,7 @@ def test_hypervelocity_identity_stamps_fixed_contract_and_observe_only(
     assert row["execution"]["fill_model"] == "post_only_limit_through_v1"
     assert row["execution"]["price_tick_mode"] == "hyperliquid_dynamic"
     assert row["execution"]["entry_ttl_seconds"] == 300.0
+    assert row["execution"]["expired_entry_rearm_policy"] == "regime_reset"
 
 
 def test_live_hypervelocity_bar_records_report_only_regime_observation(
@@ -703,6 +704,57 @@ def test_hypervelocity_paper_waits_for_maker_through_then_exits_at_fixed_target(
     assert closes[0]["fill_px"] == pytest.approx(100.2)
     assert closes[0]["feed_ts"] == "2026-07-25T12:04:00+00:00"
     assert closes[0]["exit_reason"] == "take_profit_8pct_margin"
+
+
+def test_expired_hypervelocity_entry_waits_for_regime_reset_before_retry(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """An unfilled maker attempt cannot chase one uninterrupted trend."""
+    export = _write_strict_export(
+        tmp_path,
+        strategy="hypervelocity_1m_scalper_short",
+    )
+    session = PaperSession(export_dir=export, data_root=tmp_path / "data")
+    state = {"eligible": True}
+
+    def entry_allowed(_frame: pd.DataFrame, direction: str) -> bool:
+        assert direction == "short"
+        return state["eligible"]
+
+    monkeypatch.setattr(
+        "hypervector.paper.session.current_hypervelocity_entry_allowed",
+        entry_allowed,
+    )
+
+    def falling_bar(minute: int) -> dict[str, object]:
+        close = 100.0 - float(minute)
+        return {
+            "timestamp": pd.Timestamp(f"2026-07-25T12:{minute:02d}:00Z"),
+            "open": close,
+            "high": close,
+            "low": close - 0.05,
+            "close": close,
+            "volume": 1.0,
+        }
+
+    for minute in range(8):
+        session.on_bar(falling_bar(minute))
+
+    rows = _decision_rows(session.decisions_path)
+    submissions = [row for row in rows if row.get("action") == "submit_entry"]
+    assert len(submissions) == 1
+    assert session.pending_maker_entry is None
+
+    state["eligible"] = False
+    session.on_bar(falling_bar(8))
+    state["eligible"] = True
+    session.on_bar(falling_bar(9))
+
+    rows = _decision_rows(session.decisions_path)
+    submissions = [row for row in rows if row.get("action") == "submit_entry"]
+    assert len(submissions) == 2
+    assert submissions[-1]["fill_px"] == pytest.approx(91.0)
 
 
 def test_downtime_reconciliation_manages_open_target_and_historical_funding(

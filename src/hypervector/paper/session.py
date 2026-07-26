@@ -55,7 +55,6 @@ from hypervector.paper.fill_models import FILL_MODEL_L2_WALK_V1
 from hypervector.paper.fills import ExplicitFillEngine
 from hypervector.paper.ledger import DECISIONS_FILENAME, append_paper_decision
 from hypervector.paper.maker_execution import (
-    DEFAULT_ENTRY_TTL_SECONDS,
     PostOnlyLimitFillModel,
     PendingMakerEntry,
     entry_limit_price,
@@ -285,6 +284,9 @@ class PaperSession:
             pd.Timestamp(resume.last_exit_at)
             if resume and resume.last_exit_at
             else None
+        )
+        self._expired_entry_direction = (
+            resume.expired_entry_direction if resume is not None else None
         )
 
     def _load_shadow_resume(self) -> ShadowPortfolioResume | None:
@@ -695,12 +697,13 @@ class PaperSession:
         if self.engine.position.qty != 0.0:
             return self._fill_hypervelocity_target(record, book)
         direction = self._desired_hypervelocity_direction()
+        self._observe_entry_direction(direction)
         allowed = direction is not None
         pending = self._pending_maker_entry
-        if pending is not None and self._pending_expired(pending, record):
-            self._cancel_pending(record, "entry_ttl_expired")
-        elif pending is not None and pending.direction != direction:
+        if pending is not None and pending.direction != direction:
             self._cancel_pending(record, "canonical_regime_direction_changed")
+        elif pending is not None and self._pending_expired(pending, record):
+            self._expire_pending(record, "entry_ttl_expired")
         elif pending is not None and entry_was_filled(
             pending,
             record,
@@ -712,10 +715,28 @@ class PaperSession:
             self._pending_maker_entry is None
             and allowed
             and direction is not None
+            and direction != self._expired_entry_direction
             and not self._hypervelocity_reentry_cooling_down(record)
         ):
             self._submit_pending_entry(record, direction, book)
         return None
+
+    def _observe_entry_direction(self, direction: str | None) -> None:
+        """Re-arm an expired attempt after a causal non-matching regime."""
+        if (
+            self._expired_entry_direction is not None
+            and direction != self._expired_entry_direction
+        ):
+            self._expired_entry_direction = None
+
+    def _expire_pending(self, record: dict[str, Any], reason: str) -> None:
+        """Cancel an expired maker and consume its directional regime episode."""
+        pending = self._pending_maker_entry
+        if pending is None:
+            return
+        direction = pending.direction
+        self._cancel_pending(record, reason)
+        self._expired_entry_direction = direction
 
     def _hypervelocity_reentry_cooling_down(self, record: dict[str, Any]) -> bool:
         """Return whether the explicit minimum completed-bar pause remains."""
@@ -902,7 +923,12 @@ class PaperSession:
         record: dict[str, Any],
     ) -> bool:
         age = self._hypervelocity_timestamp(record) - pending.submitted_at
-        return age.total_seconds() > DEFAULT_ENTRY_TTL_SECONDS
+        ttl_seconds = (
+            self.hypervelocity_profile.entry_ttl_seconds
+            if self.hypervelocity_profile is not None
+            else HypervelocityContract().entry_ttl_seconds
+        )
+        return age.total_seconds() > ttl_seconds
 
     def _usable_book(self, record: dict[str, Any]) -> BookSnapshot | None:
         book = self.book_feed.latest()
@@ -1027,10 +1053,11 @@ class PaperSession:
         if pending is None:
             return None
         direction = self._desired_hypervelocity_direction()
-        if self._pending_expired(pending, record):
-            self._cancel_pending(record, "entry_ttl_expired_during_downtime")
-        elif pending.direction != direction:
+        self._observe_entry_direction(direction)
+        if pending.direction != direction:
             self._cancel_pending(record, "regime_changed_during_downtime")
+        elif self._pending_expired(pending, record):
+            self._expire_pending(record, "entry_ttl_expired_during_downtime")
         elif entry_was_filled(
             pending,
             record,
@@ -1089,7 +1116,9 @@ class PaperSession:
                 ),
                 "exits": _effective_exits(self.loadout),
                 "risk": _effective_risk(self.loadout),
-                "execution": _effective_execution(self.loadout),
+                "execution": _effective_execution(
+                    self.loadout, profile=self.hypervelocity_profile
+                ),
                 "costs": self._effective_costs(),
                 "runtime": {
                     "lookback_days": self.lookback_days,
@@ -1356,7 +1385,11 @@ def _effective_risk(loadout: StrategyLoadout) -> dict[str, Any]:
     }
 
 
-def _effective_execution(loadout: StrategyLoadout) -> dict[str, Any]:
+def _effective_execution(
+    loadout: StrategyLoadout,
+    *,
+    profile: HypervelocityProfile | None = None,
+) -> dict[str, Any]:
     if not is_hypervelocity_strategy(loadout.strategy_name):
         return {"order_type": "market", "time_in_force": "ioc"}
     contract = HypervelocityContract()
@@ -1366,7 +1399,16 @@ def _effective_execution(loadout: StrategyLoadout) -> dict[str, Any]:
         "fill_rule": "through_one_tick",
         "fill_model": PostOnlyLimitFillModel.fill_model_id,
         "price_tick_mode": "hyperliquid_dynamic",
-        "entry_ttl_seconds": DEFAULT_ENTRY_TTL_SECONDS,
+        "entry_ttl_seconds": (
+            profile.entry_ttl_seconds
+            if profile is not None
+            else contract.entry_ttl_seconds
+        ),
+        "expired_entry_rearm_policy": (
+            profile.expired_entry_rearm_policy
+            if profile is not None
+            else contract.expired_entry_rearm_policy
+        ),
         "reentry_cooldown_bars": 1,
     }
 
@@ -1390,7 +1432,7 @@ def _portfolio_spec(
         "position_policy": profile.position_policy() if profile is not None else None,
         "exits": _effective_exits(loadout),
         "risk": _effective_risk(loadout),
-        "execution": _effective_execution(loadout),
+        "execution": _effective_execution(loadout, profile=profile),
     }
 
 

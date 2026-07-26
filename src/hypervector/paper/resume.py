@@ -47,6 +47,7 @@ class ShadowPortfolioResume:
     state_asof: str
     last_exit_at: str | None
     pending_entry: PendingMakerResume | None
+    expired_entry_direction: Literal["long", "short"] | None
     portfolio_fingerprint: str | None
     portfolio_profile_changed_from: str | None
 
@@ -67,6 +68,7 @@ def load_shadow_portfolio_resume(
         return None
     run_rows = [row for row in rows if row.get("run_id") == selected_run_id]
     pending_entry = _latest_pending_entry(run_rows, selected_run_id)
+    expired_direction = _latest_expired_entry_direction(run_rows)
     state = _latest_portfolio_state(run_rows, selected_run_id)
     init_cash = _initial_cash(run_rows, selected_run_id)
     qty = _required_number(state, "position_qty", selected_run_id)
@@ -116,6 +118,7 @@ def load_shadow_portfolio_resume(
         state_asof=state_asof,
         last_exit_at=last_exit_at,
         pending_entry=pending_entry,
+        expired_entry_direction=expired_direction,
         portfolio_fingerprint=fingerprint,
         portfolio_profile_changed_from=changed_from,
     )
@@ -150,6 +153,8 @@ def _validate_portfolio_spec(
     recorded = portfolio_fingerprint(recorded_spec)
     if recorded == expected:
         return expected, None
+    if _is_expired_entry_policy_migration(recorded_spec, expected_spec):
+        return expected, recorded
     if abs(position_qty) > 0.0:
         raise ShadowResumeError(
             f"incompatible portfolio profile for open position in run {run_id!r}"
@@ -159,6 +164,29 @@ def _validate_portfolio_spec(
             f"incompatible portfolio profile for pending entry in run {run_id!r}"
         )
     return expected, recorded
+
+
+def _is_expired_entry_policy_migration(
+    recorded_spec: Mapping[str, object],
+    expected_spec: Mapping[str, object],
+) -> bool:
+    """Allow only the one entry-only policy added by this schema migration."""
+    recorded_execution = recorded_spec.get("execution")
+    expected_execution = expected_spec.get("execution")
+    if not isinstance(recorded_execution, dict) or not isinstance(
+        expected_execution, dict
+    ):
+        return False
+    if "expired_entry_rearm_policy" in recorded_execution:
+        return False
+    if expected_execution.get("expired_entry_rearm_policy") != "regime_reset":
+        return False
+    migrated_execution = {
+        **recorded_execution,
+        "expired_entry_rearm_policy": "regime_reset",
+    }
+    migrated_spec = {**recorded_spec, "execution": migrated_execution}
+    return portfolio_fingerprint(migrated_spec) == portfolio_fingerprint(expected_spec)
 
 
 def _legacy_portfolio_spec(identity: dict[str, object]) -> dict[str, object]:
@@ -296,6 +324,29 @@ def _latest_pending_entry(
         ):
             pending = None
     return pending
+
+
+def _latest_expired_entry_direction(
+    rows: list[dict[str, object]],
+) -> Literal["long", "short"] | None:
+    """Recover a consumed TTL attempt until a non-matching regime is observed."""
+    blocked: Literal["long", "short"] | None = None
+    ttl_reasons = {"entry_ttl_expired", "entry_ttl_expired_during_downtime"}
+    for row in rows:
+        action = row.get("action")
+        if action == "cancel_entry" and row.get("reason") in ttl_reasons:
+            side = row.get("side")
+            blocked = "long" if side == "buy" else "short" if side == "sell" else None
+        elif action in {"submit_entry", "enter_long", "enter_short"}:
+            blocked = None
+        elif (
+            action == "regime_observation"
+            and blocked is not None
+            and "entry_direction" in row
+            and row.get("entry_direction") != blocked
+        ):
+            blocked = None
+    return blocked
 
 
 def _parse_pending_entry(row: dict[str, object], run_id: str) -> PendingMakerResume:

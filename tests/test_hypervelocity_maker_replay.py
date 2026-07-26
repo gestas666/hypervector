@@ -120,6 +120,28 @@ def test_pending_entry_cancels_when_backend_moves_to_range() -> None:
     assert report.pending_orders == 0
 
 
+def test_expired_entry_retries_only_after_directional_regime_resets() -> None:
+    decisions = _decisions(
+        ["TREND_DOWN"] * 8 + ["RANGE", "TREND_DOWN", "TREND_DOWN"]
+    )
+    seconds = list(range(60, 661, 60))
+    bids = [100.0 - float(index) for index in range(len(seconds))]
+    asks = [bid + 1.0 for bid in bids]
+
+    report = replay_maker_orders(
+        _book(seconds, bids, asks),
+        decisions,
+        MakerReplayConfig(fill_rule="through", tick_size=1.0),
+    )
+
+    assert report.expired_entries == 1
+    assert report.submitted_entries == 2
+    assert report.submission_times_utc == (
+        "2026-01-01T00:01:00+00:00",
+        "2026-01-01T00:10:00+00:00",
+    )
+
+
 def test_cli_reports_touch_and_through_without_placing_orders(
     tmp_path: Path,
     capsys,

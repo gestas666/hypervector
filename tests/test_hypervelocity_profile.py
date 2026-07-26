@@ -38,6 +38,8 @@ def test_faithful_profile_enforces_one_way_bidirectional_runtime() -> None:
     assert profile.model_long_bundle.is_dir()
     assert profile.model_short_bundle.is_dir()
     assert profile.reentry_cooldown_bars == 1
+    assert getattr(profile, "entry_ttl_seconds", None) == pytest.approx(300.0)
+    assert getattr(profile, "expired_entry_rearm_policy", None) == "regime_reset"
     assert profile.orderbook_archive_enabled is True
     assert profile.orderbook_archive_depth_levels == 20
 

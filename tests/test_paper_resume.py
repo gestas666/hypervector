@@ -7,7 +7,11 @@ from pathlib import Path
 
 import pytest
 
-from hypervector.paper.resume import ShadowResumeError, load_shadow_portfolio_resume
+from hypervector.paper.resume import (
+    ShadowResumeError,
+    load_shadow_portfolio_resume,
+    portfolio_fingerprint,
+)
 
 
 def test_flat_filled_run_does_not_require_position_average(tmp_path: Path) -> None:
@@ -86,6 +90,63 @@ def test_resume_rejects_inconsistent_equity_identity(tmp_path: Path) -> None:
 
     with pytest.raises(ShadowResumeError, match="equity identity"):
         load_shadow_portfolio_resume(path, symbol="BTC", timeframe="1m")
+
+
+def test_open_position_accepts_explicit_expired_entry_policy_migration(
+    tmp_path: Path,
+) -> None:
+    """An entry-only policy addition cannot strand an existing position."""
+    path = tmp_path / "decisions.jsonl"
+    old_spec = {
+        "strategy_name": "hypervelocity_1m_scalper",
+        "execution": {"entry_ttl_seconds": 300.0},
+    }
+    new_spec = {
+        **old_spec,
+        "execution": {
+            "entry_ttl_seconds": 300.0,
+            "expired_entry_rearm_policy": "regime_reset",
+        },
+    }
+    common = {
+        "run_id": "migration-run",
+        "execution_mode": "shadow",
+        "strategy_name": "hypervelocity_1m_scalper",
+        "symbol": "BTC",
+        "timeframe": "1m",
+        "init_cash": 10_000.0,
+    }
+    rows = [
+        {
+            **common,
+            "feed_ts": "session_start",
+            "action": "session_start",
+            "portfolio_spec": old_spec,
+        },
+        {
+            **common,
+            "feed_ts": "2026-07-25T18:05:00Z",
+            "action": "enter_short",
+            "fill_qty": 2.0,
+            "position_qty": -2.0,
+            "position_avg_px": 100.0,
+            "realized_pnl": -0.1,
+            "unrealized_pnl": -4.0,
+            "equity": 9_995.9,
+        },
+    ]
+    path.write_text("".join(f"{json.dumps(row)}\n" for row in rows), encoding="utf-8")
+
+    resumed = load_shadow_portfolio_resume(
+        path,
+        symbol="BTC",
+        timeframe="1m",
+        expected_spec=new_spec,
+    )
+
+    assert resumed is not None
+    assert resumed.portfolio_fingerprint == portfolio_fingerprint(new_spec)
+    assert resumed.portfolio_profile_changed_from == portfolio_fingerprint(old_spec)
 
 
 def test_resume_restores_latest_unmatched_pending_entry(tmp_path: Path) -> None:
@@ -177,3 +238,103 @@ def test_resume_clears_pending_entry_after_cancel(tmp_path: Path) -> None:
 
     assert resumed is not None
     assert resumed.pending_entry is None
+
+
+def test_resume_restores_expired_entry_direction_until_regime_reset(
+    tmp_path: Path,
+) -> None:
+    """Restart cannot bypass a consumed maker attempt in the same trend."""
+    path = tmp_path / "decisions.jsonl"
+    common = {
+        "run_id": "expired-run",
+        "execution_mode": "shadow",
+        "strategy_name": "hypervelocity_1m_scalper",
+        "symbol": "BTC",
+        "timeframe": "1m",
+        "init_cash": 10_000.0,
+        "position_qty": 0.0,
+        "position_avg_px": 0.0,
+        "realized_pnl": 0.0,
+        "unrealized_pnl": 0.0,
+        "equity": 10_000.0,
+    }
+    rows = [
+        {**common, "feed_ts": "session_start", "action": "session_start"},
+        {
+            **common,
+            "feed_ts": "2026-07-25T18:05:00Z",
+            "action": "submit_entry",
+            "side": "sell",
+            "requested_qty": 2.0,
+            "fill_px": 100.0,
+        },
+        {
+            **common,
+            "feed_ts": "2026-07-25T18:11:00Z",
+            "action": "cancel_entry",
+            "side": "sell",
+            "reason": "entry_ttl_expired",
+        },
+        {
+            **common,
+            "feed_ts": "2026-07-25T18:12:00Z",
+            "action": "regime_observation",
+            "entry_direction": "short",
+        },
+    ]
+    path.write_text("".join(f"{json.dumps(row)}\n" for row in rows), encoding="utf-8")
+
+    resumed = load_shadow_portfolio_resume(path, symbol="BTC", timeframe="1m")
+
+    assert resumed is not None
+    assert getattr(resumed, "expired_entry_direction", None) == "short"
+
+
+def test_resume_clears_expired_direction_after_nonmatching_regime(
+    tmp_path: Path,
+) -> None:
+    """A directionless regime observation durably re-arms later attempts."""
+    path = tmp_path / "decisions.jsonl"
+    common = {
+        "run_id": "rearmed-run",
+        "execution_mode": "shadow",
+        "strategy_name": "hypervelocity_1m_scalper",
+        "symbol": "BTC",
+        "timeframe": "1m",
+        "init_cash": 10_000.0,
+        "position_qty": 0.0,
+        "position_avg_px": 0.0,
+        "realized_pnl": 0.0,
+        "unrealized_pnl": 0.0,
+        "equity": 10_000.0,
+    }
+    rows = [
+        {**common, "feed_ts": "session_start", "action": "session_start"},
+        {
+            **common,
+            "feed_ts": "2026-07-25T18:05:00Z",
+            "action": "submit_entry",
+            "side": "buy",
+            "requested_qty": 2.0,
+            "fill_px": 100.0,
+        },
+        {
+            **common,
+            "feed_ts": "2026-07-25T18:11:00Z",
+            "action": "cancel_entry",
+            "side": "buy",
+            "reason": "entry_ttl_expired",
+        },
+        {
+            **common,
+            "feed_ts": "2026-07-25T18:12:00Z",
+            "action": "regime_observation",
+            "entry_direction": None,
+        },
+    ]
+    path.write_text("".join(f"{json.dumps(row)}\n" for row in rows), encoding="utf-8")
+
+    resumed = load_shadow_portfolio_resume(path, symbol="BTC", timeframe="1m")
+
+    assert resumed is not None
+    assert getattr(resumed, "expired_entry_direction", None) is None

@@ -38,6 +38,8 @@ class HypervelocityProfile:
     taker_fee_rate: float
     slippage_bps: float
     funding_refresh_seconds: float
+    entry_ttl_seconds: float
+    expired_entry_rearm_policy: str
     reentry_cooldown_bars: int
     orderbook_archive_enabled: bool
     orderbook_archive_depth_levels: int
@@ -109,6 +111,10 @@ def load_hypervelocity_profile(path: Path | str) -> HypervelocityProfile:
         taker_fee_rate=_number(costs, "taker_fee_rate"),
         slippage_bps=_number(costs, "slippage_bps"),
         funding_refresh_seconds=_number(costs, "funding_refresh_seconds"),
+        entry_ttl_seconds=_number(execution, "entry_ttl_seconds"),
+        expired_entry_rearm_policy=_text(
+            execution, "expired_entry_rearm_policy"
+        ),
         reentry_cooldown_bars=_integer(execution, "reentry_cooldown_bars"),
         orderbook_archive_enabled=_boolean(orderbook, "archive_enabled"),
         orderbook_archive_depth_levels=_integer(orderbook, "archive_depth_levels"),
@@ -154,6 +160,12 @@ def _validate_contract(
     _expect(execution, "fill_rule", "through_one_tick")
     _expect(execution, "price_tick_mode", "hyperliquid_dynamic")
     _expect(execution, "paper_submit_enabled", False)
+    _expect(execution, "entry_ttl_seconds", contract.entry_ttl_seconds)
+    _expect(
+        execution,
+        "expired_entry_rearm_policy",
+        contract.expired_entry_rearm_policy,
+    )
     _expect(execution, "reentry_cooldown_bars", 1)
     _expect(model, "may_filter", False)
     _expect(model, "may_scale", False)

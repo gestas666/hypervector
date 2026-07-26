@@ -216,6 +216,13 @@ fn execution_rows(backend: &BackendTelemetrySnapshot) -> Vec<ConfigMenuRow> {
             "s",
             1.0,
         ),
+        json_row(
+            "Orders",
+            "Expired entry re-arm",
+            &backend.execution_policy,
+            "expired_entry_rearm_policy",
+            "execution",
+        ),
         number_row(
             "Orders",
             "Re-entry cooldown",

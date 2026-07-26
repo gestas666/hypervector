@@ -108,6 +108,7 @@ class _ReplayState:
     equity: float
     pending: _PendingEntry | None = None
     position: _OpenPosition | None = None
+    expired_direction: Direction | None = None
     last_signal: pd.Timestamp | None = None
     submitted: int = 0
     entry_fills: int = 0
@@ -290,6 +291,8 @@ def _replay_snapshot(
     config: MakerReplayConfig,
     contract: HypervelocityContract,
 ) -> None:
+    if state.expired_direction is not None and desired != state.expired_direction:
+        state.expired_direction = None
     pending = state.pending
     if pending is not None:
         age = (timestamp - pending.submitted_time).total_seconds()
@@ -297,6 +300,7 @@ def _replay_snapshot(
             state.pending, state.canceled = None, state.canceled + 1
         elif age > config.entry_ttl_seconds:
             state.pending, state.expired = None, state.expired + 1
+            state.expired_direction = pending.direction
         elif _entry_filled(pending, bid, ask, config):
             state.position = _open_position(pending, timestamp, state.equity, contract)
             state.pending, state.entry_fills = None, state.entry_fills + 1
@@ -309,7 +313,10 @@ def _replay_snapshot(
         state.position = None
         return
     can_submit = (
-        state.pending is None and state.position is None and desired is not None
+        state.pending is None
+        and state.position is None
+        and desired is not None
+        and desired != state.expired_direction
     )
     if can_submit and signal_time is not None and signal_time != state.last_signal:
         limit_price = bid if desired == "long" else ask
