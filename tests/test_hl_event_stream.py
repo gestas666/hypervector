@@ -12,7 +12,12 @@ from hypervector.data.hl_event_stream import (
     HyperliquidEventRecorder,
     subscription_messages,
 )
-from hypervector.data.hl_events import L2SnapshotEvent, PublicTradeEvent, StreamGap
+from hypervector.data.hl_events import (
+    AssetContextEvent,
+    L2SnapshotEvent,
+    PublicTradeEvent,
+    StreamGap,
+)
 
 FIXTURES = Path("tests/fixtures")
 RECEIVED_NS = 1_785_103_200_300_000_000
@@ -35,6 +40,10 @@ def test_subscribes_only_to_public_mainnet_execution_evidence() -> None:
             "method": "subscribe",
             "subscription": {"type": "trades", "coin": "BTC"},
         },
+        {
+            "method": "subscribe",
+            "subscription": {"type": "activeAssetCtx", "coin": "BTC"},
+        },
     )
 
 
@@ -47,15 +56,21 @@ def test_recorder_archives_and_drains_normalized_events(tmp_path: Path) -> None:
 
     recorder.record_message(payload("hl_ws_l2_sample.json"), RECEIVED_NS)
     recorder.record_message(payload("hl_ws_trades_sample.json"), RECEIVED_NS + 1)
+    recorder.record_message(
+        payload("hl_ws_active_asset_ctx_sample.json"),
+        RECEIVED_NS + 2,
+    )
     events = recorder.drain()
     recorder.close()
 
-    assert len(events) == 3
+    assert len(events) == 4
     assert isinstance(events[0], L2SnapshotEvent)
-    assert all(isinstance(item, PublicTradeEvent) for item in events[1:])
+    assert all(isinstance(item, PublicTradeEvent) for item in events[1:3])
+    assert isinstance(events[3], AssetContextEvent)
     archive = EventArchive(data_root=tmp_path, symbol="BTC", batch_size=10)
     assert len(archive.replay_l2()) == 1
     assert len(archive.replay_trades()) == 2
+    assert len(archive.replay_asset_contexts()) == 1
 
 
 def test_reconnect_gap_precedes_first_new_event_and_is_archived(

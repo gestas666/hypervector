@@ -18,7 +18,12 @@ from typing import Any, Mapping
 import pandas as pd
 
 from hypervector.data.book_record import append_book_snapshot
-from hypervector.data.hl_events import L2SnapshotEvent, PublicTradeEvent, StreamGap
+from hypervector.data.hl_events import (
+    AssetContextEvent,
+    L2SnapshotEvent,
+    PublicTradeEvent,
+    StreamGap,
+)
 from hypervector.infra import ensure_data_layout
 from hypervector.nautilus.actor import (
     DEFAULT_MAX_LOOKBACK,
@@ -68,7 +73,6 @@ from hypervector.paper.ledger import DECISIONS_FILENAME, append_paper_decision
 from hypervector.paper.liquidation_execution import (
     LIQUIDATION_EXECUTION_MODEL,
     PARTIAL_LIQUIDATION_SUPPORTED,
-    PARTIAL_LIQUIDATION_THRESHOLD_USD,
 )
 from hypervector.paper.maker_execution import (
     PostOnlyLimitFillModel,
@@ -417,13 +421,15 @@ class PaperSession:
 
     def ingest_hyperliquid_event(
         self,
-        event: L2SnapshotEvent | PublicTradeEvent | StreamGap,
+        event: L2SnapshotEvent | PublicTradeEvent | AssetContextEvent | StreamGap,
     ) -> str | None:
         """Consume one public event through the attached backend shadow runtime."""
         bridge = self._event_shadow_bridge
         if bridge is None:
             raise RuntimeError("Hypervelocity event shadow runtime is not attached")
         self.ensure_session_identity()
+        if isinstance(event, AssetContextEvent):
+            return self._ingest_asset_context(event)
         action = bridge.ingest(event)
         if isinstance(event, L2SnapshotEvent) and self._live_telemetry_enabled:
             snapshot = self.book_feed.latest()
@@ -431,6 +437,27 @@ class PaperSession:
                 self._record_book_telemetry(snapshot)
         self.fills_count += bridge.last_fill_count
         return action
+
+    def _ingest_asset_context(self, event: AssetContextEvent) -> str | None:
+        """Update live costs and apply a continuous no-submit venue mark."""
+        if event.symbol != self.loadout.symbol:
+            raise ValueError(
+                f"asset context symbol {event.symbol!r} != {self.loadout.symbol!r}"
+            )
+        observed_at = pd.Timestamp(
+            event.received_ts_ns,
+            unit="ns",
+            tz="UTC",
+        ).isoformat()
+        self.cost_provider.observe_market_context(
+            funding_rate_hourly=event.funding_rate_hourly,
+            oracle_px=event.oracle_price,
+            observed_at=observed_at,
+        )
+        return self.apply_hyperliquid_mark(
+            mark_price=event.mark_price,
+            observed_at=observed_at,
+        )
 
     def apply_hyperliquid_mark(
         self,
@@ -1491,7 +1518,7 @@ class PaperSession:
                     else "legacy_bar_through_v1"
                 ),
                 "execution_data_source": (
-                    "hyperliquid_public_ws_l2_trades"
+                    "hyperliquid_public_ws_l2_trades_active_asset_ctx"
                     if self.hypervelocity_profile is not None
                     else None
                 ),
@@ -1528,6 +1555,11 @@ class PaperSession:
                 ),
                 "partial_liquidation_supported": (
                     PARTIAL_LIQUIDATION_SUPPORTED
+                    if self.hypervelocity_profile is not None
+                    else None
+                ),
+                "backstop_liquidation_supported": (
+                    self.hypervelocity_profile.backstop_liquidation_supported
                     if self.hypervelocity_profile is not None
                     else None
                 ),
@@ -1576,7 +1608,7 @@ class PaperSession:
                         ),
                         "path_pattern": (
                             "cache/events/hyperliquid/<SYMBOL>/<UTC_DAY>/"
-                            "{l2.parquet,trades.parquet,gaps.jsonl}"
+                            "{l2.parquet,trades.parquet,asset_context.parquet,gaps.jsonl}"
                         ),
                     }
                     if self.hypervelocity_profile is not None
@@ -1876,9 +1908,16 @@ def _effective_execution(
             update_latency_ms=profile.execution_update_latency_ms,
             max_event_age_ms=profile.execution_max_event_age_ms,
             restart_queue_policy=profile.restart_queue_policy,
-            liquidation_execution_model=LIQUIDATION_EXECUTION_MODEL,
-            partial_liquidation_supported=PARTIAL_LIQUIDATION_SUPPORTED,
-            partial_liquidation_threshold_usd=PARTIAL_LIQUIDATION_THRESHOLD_USD,
+            liquidation_execution_model=profile.liquidation_execution_model,
+            partial_liquidation_supported=profile.partial_liquidation_supported,
+            partial_liquidation_threshold_usd=(
+                profile.partial_liquidation_threshold_usd
+            ),
+            partial_liquidation_fraction=profile.partial_liquidation_fraction,
+            liquidation_cooldown_ms=profile.liquidation_cooldown_ms,
+            backstop_liquidation_supported=(profile.backstop_liquidation_supported),
+            backstop_maintenance_fraction=profile.backstop_maintenance_fraction,
+            backstop_accounting_model=profile.backstop_accounting_model,
         )
     return execution
 

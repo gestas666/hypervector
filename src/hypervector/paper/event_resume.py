@@ -36,6 +36,7 @@ class EventResumeDetails:
     next_order_sequence: int
     open_position_fees_usd: float
     open_position_funding_net_usd: float
+    liquidation_cooldown_until_ms: int | None
 
 
 def event_resume_details(rows: list[dict[str, object]]) -> EventResumeDetails:
@@ -47,6 +48,7 @@ def event_resume_details(rows: list[dict[str, object]]) -> EventResumeDetails:
         next_order_sequence=_next_sequence(rows),
         open_position_fees_usd=fees,
         open_position_funding_net_usd=funding,
+        liquidation_cooldown_until_ms=_liquidation_cooldown(rows),
     )
 
 
@@ -78,8 +80,14 @@ def _active_targets(
             "rejected_target",
             "expired_target",
             "liquidation",
+            "partial_liquidation",
+            "backstop_liquidation",
         }:
-            if action == "liquidation":
+            if action in {
+                "liquidation",
+                "partial_liquidation",
+                "backstop_liquidation",
+            }:
                 active.clear()
             else:
                 active.pop(order_id, None)
@@ -146,6 +154,18 @@ def _open_costs(rows: list[dict[str, object]]) -> tuple[float, float]:
         fees += _number(row, "fee_usd") or 0.0
         funding -= _number(row, "funding_payment_usd") or 0.0
     return fees, funding
+
+
+def _liquidation_cooldown(rows: list[dict[str, object]]) -> int | None:
+    """Return the last active venue liquidation cooldown boundary."""
+    for row in reversed(rows):
+        position = _number(row, "position_qty")
+        if position == 0.0:
+            return None
+        value = _number(row, "liquidation_cooldown_until_ms")
+        if value is not None and value >= 0.0:
+            return int(value)
+    return None
 
 
 def _required_number(row: dict[str, object], key: str) -> float:

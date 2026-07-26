@@ -10,7 +10,11 @@ import pandas as pd
 import pytest
 
 from hypervector.data.hl_events import BookLevel as EventBookLevel
-from hypervector.data.hl_events import L2SnapshotEvent, PublicTradeEvent
+from hypervector.data.hl_events import (
+    AssetContextEvent,
+    L2SnapshotEvent,
+    PublicTradeEvent,
+)
 from hypervector.data.sources import fixture_ohlcv
 from hypervector.export.phase2 import export_candidate
 from hypervector.nautilus.hypervelocity_sim import HypervelocitySimulationConfig
@@ -801,26 +805,37 @@ def test_event_shadow_session_ledgers_partial_fill_and_proportional_target(
 
     liquidation_price = port.liquidation_price
     assert liquidation_price is not None
+    execution_mark = liquidation_price - 0.01
+    mark_ms = int(pd.Timestamp("2026-07-26T21:00:00.999Z").timestamp() * 1_000)
+    session.ingest_hyperliquid_event(
+        L2SnapshotEvent(
+            symbol="BTC",
+            exchange_ts_ms=mark_ms,
+            received_ts_ns=mark_ms * 1_000_000,
+            bids=(EventBookLevel(execution_mark, 1.0, 1),),
+            asks=(EventBookLevel(execution_mark + 1.0, 1.0, 1),),
+        )
+    )
     action = session.apply_hyperliquid_mark(
-        mark_price=liquidation_price - 0.01,
+        mark_price=execution_mark,
         observed_at="2026-07-26T21:00:01+00:00",
     )
     assert action == "liquidation"
     assert session.engine.position.qty == 0.0
     assert port.account_snapshot().position_quantity == 0.0
     assert port.account_snapshot().equity_usd == pytest.approx(
-        session.engine.equity(mark_px=liquidation_price - 0.01)
+        session.engine.equity(mark_px=execution_mark)
     )
     rows = _decision_rows(session.decisions_path)
     liquidation = next(row for row in rows if row.get("action") == "liquidation")
     assert liquidation["execution_model"] == "nautilus_event_v1"
-    assert liquidation["fee_usd"] == pytest.approx((liquidation_price - 0.01) * 0.00045)
+    assert liquidation["fee_usd"] == pytest.approx(execution_mark * 0.00045)
     assert liquidation["clearance_fee_usd"] == 0.0
     assert (
         liquidation["liquidation_execution_model"]
-        == "full_at_mark_shadow_approximation_v1"
+        == "hyperliquid_market_liquidation_v2"
     )
-    assert liquidation["fill_model_id"] == "liquidation_exact_mark_v1"
+    assert liquidation["fill_model_id"] == "liquidation_l2_vwap_v2"
     assert liquidation["order_intent"]["reduce_only"] is True
     assert liquidation["order_intent"]["order_type"] == "market"
     assert liquidation["order_intent"]["time_in_force"] == "ioc"
@@ -849,7 +864,10 @@ def test_profile_activates_event_runtime_and_stamps_authority(tmp_path: Path) ->
     assert session.downtime_reconciliation_enabled is False
     identity = _decision_rows(session.decisions_path)[-1]
     assert identity["execution_model"] == "nautilus_event_v1"
-    assert identity["execution_data_source"] == "hyperliquid_public_ws_l2_trades"
+    assert (
+        identity["execution_data_source"]
+        == "hyperliquid_public_ws_l2_trades_active_asset_ctx"
+    )
     assert identity["execution_evidence_fresh"] is False
     assert identity["execution_submit_latency_ms"] == 50
     assert identity["execution_cancel_latency_ms"] == 50
@@ -861,17 +879,194 @@ def test_profile_activates_event_runtime_and_stamps_authority(tmp_path: Path) ->
     assert identity["liquidity_side"] is None
     assert identity["margin_model"] == "hyperliquid_isolated_v1"
     assert (
-        identity["liquidation_execution_model"]
-        == "full_at_mark_shadow_approximation_v1"
+        identity["liquidation_execution_model"] == "hyperliquid_market_liquidation_v2"
     )
-    assert identity["partial_liquidation_supported"] is False
+    assert identity["partial_liquidation_supported"] is True
+    assert identity["backstop_liquidation_supported"] is True
     assert identity["execution"]["fill_model"] == "nautilus_event_v1"
     assert (
         identity["execution"]["restart_queue_policy"]
         == "requeue_behind_displayed_liquidity"
     )
     assert identity["execution"]["partial_liquidation_threshold_usd"] == 100_000.0
+    assert identity["execution"]["partial_liquidation_fraction"] == 0.20
+    assert identity["execution"]["liquidation_cooldown_ms"] == 30_000
+    assert identity["execution"]["backstop_liquidation_supported"] is True
+    assert identity["execution"]["backstop_maintenance_fraction"] == pytest.approx(
+        2.0 / 3.0
+    )
     assert identity["execution"]["legacy_comparator"] == "legacy_bar_through_v1"
+
+
+def test_event_shadow_backstop_transfer_preserves_ledger_parity(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    export = _write_strict_export(
+        tmp_path,
+        strategy="hypervelocity_1m_scalper_long",
+    )
+    session = PaperSession(
+        export_dir=export,
+        data_root=tmp_path / "data",
+        execution_mode="shadow",
+    )
+    port = NautilusShadowExecutionPort(
+        symbol="BTC",
+        initial_cash_usd=10_000.0,
+        simulation_config=HypervelocitySimulationConfig(
+            submit_latency_ms=0,
+            cancel_latency_ms=50,
+            update_latency_ms=0,
+        ),
+        maker_fee_rate=0.00015,
+        taker_fee_rate=0.00045,
+        leverage=40.0,
+        maintenance_rate=0.0125,
+        max_event_age_ms=3_000,
+    )
+    neutral = RuntimeMarketState(
+        symbol="BTC",
+        observed_at="2026-07-26T20:00:00+00:00",
+        entry_direction=None,
+        entry_quantity=1.0,
+        entry_limit_price=None,
+        evidence_fresh=False,
+        entry_ttl_seconds=300.0,
+        reentry_cooldown_seconds=60.0,
+        target_price_fraction=0.002,
+        price_tick=1.0,
+    )
+    session.attach_hypervelocity_event_controller(
+        HypervelocityShadowController(port=port, initial_market=neutral)
+    )
+    monkeypatch.setattr(
+        "hypervector.paper.session.current_hypervelocity_entry_allowed",
+        lambda _frame, direction: direction == "long",
+    )
+    base_ms = int(pd.Timestamp("2026-07-26T20:02:01Z").timestamp() * 1_000)
+    session.ingest_hyperliquid_event(
+        L2SnapshotEvent(
+            symbol="BTC",
+            exchange_ts_ms=base_ms,
+            received_ts_ns=(base_ms + 1) * 1_000_000,
+            bids=(EventBookLevel(64_500.0, 0.001, 1),),
+            asks=(EventBookLevel(64_501.0, 1.0, 1),),
+        )
+    )
+
+    def trend_bar(minute: int) -> dict[str, object]:
+        return {
+            "timestamp": pd.Timestamp(f"2026-07-26T20:{minute:02d}:00Z"),
+            "open": 64_500.0,
+            "high": 64_501.0,
+            "low": 64_499.0,
+            "close": 64_500.0,
+            "volume": 1.0,
+        }
+
+    session.on_bar(trend_bar(0))
+    session.on_bar(trend_bar(1))
+    pending = session.pending_maker_entry
+    assert pending is not None
+    assert pending.qty * pending.limit_price > 100_000.0
+    session.ingest_hyperliquid_event(
+        L2SnapshotEvent(
+            symbol="BTC",
+            exchange_ts_ms=base_ms + 60_001,
+            received_ts_ns=(base_ms + 60_002) * 1_000_000,
+            bids=(EventBookLevel(64_500.0, 0.001, 1),),
+            asks=(EventBookLevel(64_501.0, 1.0, 1),),
+        )
+    )
+    session.ingest_hyperliquid_event(
+        PublicTradeEvent(
+            symbol="BTC",
+            aggressor_side="sell",
+            price=64_500.0,
+            size=pending.qty + 0.001,
+            transaction_hash="0xbackstop",
+            exchange_ts_ms=base_ms + 60_002,
+            received_ts_ns=(base_ms + 60_003) * 1_000_000,
+            trade_id=100,
+            buyer="0xbuyer",
+            seller="0xseller",
+        )
+    )
+    boundary = port.liquidation_price
+    assert boundary is not None
+    deep_mark = boundary - 500.0
+    mark_ms = int(pd.Timestamp("2026-07-26T20:03:01.999Z").timestamp() * 1_000)
+    session.ingest_hyperliquid_event(
+        L2SnapshotEvent(
+            symbol="BTC",
+            exchange_ts_ms=mark_ms,
+            received_ts_ns=mark_ms * 1_000_000,
+            bids=(EventBookLevel(deep_mark, 0.01, 1),),
+            asks=(EventBookLevel(deep_mark + 1.0, 1.0, 1),),
+        )
+    )
+
+    action = session.apply_hyperliquid_mark(
+        mark_price=deep_mark,
+        observed_at="2026-07-26T20:03:02+00:00",
+    )
+
+    assert action == "backstop_liquidation"
+    assert port.account_snapshot().position_quantity == 0.0
+    assert session.engine.position.qty == 0.0
+    assert port.account_snapshot().equity_usd == pytest.approx(
+        session.engine.equity(mark_px=deep_mark)
+    )
+    row = next(
+        item
+        for item in _decision_rows(session.decisions_path)
+        if item.get("action") == "backstop_liquidation"
+    )
+    assert row["liquidation_method"] == "backstop"
+    assert row["liquidation_market_filled_qty"] == pytest.approx(0.01)
+    assert row["liquidation_backstop_qty"] > 0.0
+    assert row["order_intent"]["order_type"] == "backstop_transfer"
+
+
+def test_asset_context_updates_funding_and_continuous_mark_without_fill(
+    tmp_path: Path,
+) -> None:
+    export = _write_strict_export(
+        tmp_path,
+        strategy="hypervelocity_1m_scalper_long",
+    )
+    profile = load_hypervelocity_profile("configs/hypervelocity_faithful.toml")
+    session = PaperSession(
+        export_dir=export,
+        data_root=tmp_path / "data",
+        execution_mode="shadow",
+        hypervelocity_profile=profile,
+    )
+    controller = session.activate_hypervelocity_event_runtime(
+        observed_at="2026-07-26T20:00:00+00:00"
+    )
+    context = AssetContextEvent(
+        symbol="BTC",
+        observed_ts_ms=1_785_103_200_500,
+        received_ts_ns=1_785_103_200_500_000_000,
+        mark_price=64_501.0,
+        oracle_price=64_502.0,
+        funding_rate_hourly=0.0000125,
+        open_interest=36_000.0,
+        mid_price=64_500.5,
+    )
+
+    action = session.ingest_hyperliquid_event(context)
+
+    snapshot = session.cost_provider.snapshot()
+    expected_at = pd.Timestamp(context.received_ts_ns, unit="ns", tz="UTC").isoformat()
+    assert action is None
+    assert snapshot.funding_rate_hourly == pytest.approx(0.0000125)
+    assert snapshot.oracle_px == pytest.approx(64_502.0)
+    assert snapshot.asof_ts == expected_at
+    assert controller.port.account_snapshot().observed_at == expected_at
+    assert session.fills_count == 0
 
 
 def test_event_runtime_applies_boundary_funding_before_liquidation_mark(

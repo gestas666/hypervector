@@ -89,6 +89,7 @@ def _restore_port(
         funding_net_usd=resume.open_position_funding_net_usd,
         observed_at=resume.state_asof,
     )
+    port.restore_liquidation_cooldown(resume.liquidation_cooldown_until_ms)
     for order in _runtime_orders(state):
         port.restore_order(order.command, cumulative=order.cumulative_quantity)
 

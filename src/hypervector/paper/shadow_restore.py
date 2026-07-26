@@ -25,6 +25,7 @@ class ShadowRestoreMixin:
     _last_observed_at: str
     _latest_book: L2SnapshotEvent | None
     _max_event_age_ms: int
+    _liquidation_cooldown_until_ms: int | None
 
     def restore_position(
         self,
@@ -76,6 +77,12 @@ class ShadowRestoreMixin:
             activation_ms=timestamp_ms(command.submitted_at),
             cumulative_quantity=float(cumulative),
         )
+
+    def restore_liquidation_cooldown(self, cooldown_until_ms: int | None) -> None:
+        """Restore a validated 30-second partial-liquidation cooldown boundary."""
+        if cooldown_until_ms is not None and cooldown_until_ms < 0:
+            raise ValueError("liquidation cooldown must be non-negative")
+        self._liquidation_cooldown_until_ms = cooldown_until_ms
 
     @property
     def evidence_fresh(self) -> bool:

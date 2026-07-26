@@ -83,6 +83,15 @@ class ShadowLiquidation:
     execution_fee_usd: float
     clearance_fee_usd: float
     execution_model: str
+    method: Literal["market", "backstop"]
+    attempted_quantity: float
+    filled_quantity: float
+    remaining_quantity: float
+    execution_price: float
+    partial_rule_applied: bool
+    cooldown_until_ms: int | None
+    market_filled_quantity: float
+    backstop_quantity: float
     margin_mode: Literal["isolated"] = "isolated"
 
 

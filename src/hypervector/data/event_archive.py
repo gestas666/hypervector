@@ -13,6 +13,7 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 
 from hypervector.data.hl_events import (
+    AssetContextEvent,
     BookLevel,
     L2SnapshotEvent,
     PublicTradeEvent,
@@ -51,6 +52,20 @@ _TRADE_SCHEMA = pa.schema(
         pa.field("source", pa.string(), nullable=False),
     ]
 )
+_ASSET_CONTEXT_SCHEMA = pa.schema(
+    [
+        pa.field("symbol", pa.string(), nullable=False),
+        pa.field("observed_ts_ms", pa.int64(), nullable=False),
+        pa.field("received_ts_ns", pa.int64(), nullable=False),
+        pa.field("mark_price", pa.float64(), nullable=False),
+        pa.field("oracle_price", pa.float64(), nullable=False),
+        pa.field("funding_rate_hourly", pa.float64(), nullable=False),
+        pa.field("open_interest", pa.float64(), nullable=False),
+        pa.field("mid_price", pa.float64(), nullable=True),
+        pa.field("timestamp_source", pa.string(), nullable=False),
+        pa.field("source", pa.string(), nullable=False),
+    ]
+)
 
 
 class _RecentKeys:
@@ -82,13 +97,15 @@ class EventArchive:
         self._batch_size = batch_size
         self._l2: list[L2SnapshotEvent] = []
         self._trades: list[PublicTradeEvent] = []
+        self._asset_contexts: list[AssetContextEvent] = []
         dedup_capacity = max(batch_size * 4, 1_024)
         self._seen_l2 = _RecentKeys(dedup_capacity)
         self._seen_trades = _RecentKeys(dedup_capacity)
+        self._seen_asset_contexts = _RecentKeys(dedup_capacity)
 
     def append(
         self,
-        events: Iterable[L2SnapshotEvent | PublicTradeEvent],
+        events: Iterable[L2SnapshotEvent | PublicTradeEvent | AssetContextEvent],
     ) -> None:
         """Append normalized events, flushing bounded batches atomically."""
         for event in events:
@@ -97,9 +114,18 @@ class EventArchive:
             if isinstance(event, L2SnapshotEvent):
                 if self._seen_l2.add_if_new(event.event_key):
                     self._l2.append(event)
-            elif self._seen_trades.add_if_new(event.trade_key):
-                self._trades.append(event)
-            if len(self._l2) + len(self._trades) >= self._batch_size:
+            elif isinstance(event, PublicTradeEvent):
+                if self._seen_trades.add_if_new(event.trade_key):
+                    self._trades.append(event)
+            elif isinstance(event, AssetContextEvent):
+                if self._seen_asset_contexts.add_if_new(event.event_key):
+                    self._asset_contexts.append(event)
+            else:
+                raise TypeError(f"unsupported event type {type(event).__name__}")
+            if (
+                len(self._l2) + len(self._trades) + len(self._asset_contexts)
+                >= self._batch_size
+            ):
                 self.flush()
 
     def flush(self) -> None:
@@ -115,6 +141,14 @@ class EventArchive:
                 _TRADE_SCHEMA,
             )
             self._trades.clear()
+        if self._asset_contexts:
+            _write_groups(
+                self._root,
+                "asset_context.parquet",
+                self._asset_contexts,
+                _ASSET_CONTEXT_SCHEMA,
+            )
+            self._asset_contexts.clear()
 
     def record_gap(self, gap: StreamGap) -> None:
         """Append an explicit event-stream uncertainty interval."""
@@ -145,6 +179,14 @@ class EventArchive:
             sorted(events, key=lambda event: (event.exchange_ts_ms, event.trade_id))
         )
 
+    def replay_asset_contexts(self) -> tuple[AssetContextEvent, ...]:
+        """Return mark/oracle/funding observations ordered by receipt time."""
+        events = tuple(
+            _asset_context_from_row(row)
+            for row in _read_parts(self._root, "asset_context.parquet")
+        )
+        return tuple(sorted(events, key=lambda event: event.received_ts_ns))
+
     def replay_gaps(self) -> tuple[StreamGap, ...]:
         """Return declared event gaps ordered by detection time."""
         gaps: list[StreamGap] = []
@@ -158,7 +200,7 @@ class EventArchive:
 def _write_groups(
     root: Path,
     dataset: str,
-    events: Iterable[L2SnapshotEvent | PublicTradeEvent],
+    events: Iterable[L2SnapshotEvent | PublicTradeEvent | AssetContextEvent],
     schema: pa.Schema,
 ) -> None:
     groups: dict[str, list[dict[str, object]]] = defaultdict(list)
@@ -212,6 +254,24 @@ def _trade_from_row(row: Mapping[str, object]) -> PublicTradeEvent:
         trade_id=_integer(row, "trade_id"),
         buyer=_text(row, "buyer"),
         seller=_text(row, "seller"),
+        source=_text(row, "source"),
+    )
+
+
+def _asset_context_from_row(row: Mapping[str, object]) -> AssetContextEvent:
+    timestamp_source = _text(row, "timestamp_source")
+    if timestamp_source != "local_receive_no_exchange_timestamp":
+        raise ValueError("asset context timestamp source is invalid")
+    return AssetContextEvent(
+        symbol=_text(row, "symbol"),
+        observed_ts_ms=_integer(row, "observed_ts_ms"),
+        received_ts_ns=_integer(row, "received_ts_ns"),
+        mark_price=_number(row, "mark_price"),
+        oracle_price=_number(row, "oracle_price"),
+        funding_rate_hourly=_number(row, "funding_rate_hourly"),
+        open_interest=_number(row, "open_interest"),
+        mid_price=_optional_number(row, "mid_price"),
+        timestamp_source="local_receive_no_exchange_timestamp",
         source=_text(row, "source"),
     )
 
@@ -281,4 +341,13 @@ def _number(row: Mapping[str, object], key: str) -> float:
     value = row.get(key)
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         raise ValueError(f"{key} must be numeric")
+    return float(value)
+
+
+def _optional_number(row: Mapping[str, object], key: str) -> float | None:
+    value = row.get(key)
+    if value is None:
+        return None
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise ValueError(f"{key} must be numeric or null")
     return float(value)

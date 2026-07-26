@@ -57,9 +57,10 @@ def test_feed_subscribes_and_buffers_timestamped_message() -> None:
     items = feed.drain()
     feed.close()
 
-    assert len(connection.sent) == 2
+    assert len(connection.sent) == 3
     assert '"type":"l2Book"' in connection.sent[0]
     assert '"type":"trades"' in connection.sent[1]
+    assert '"type":"activeAssetCtx"' in connection.sent[2]
     assert items == (
         ReceivedMessage(
             payload='{"channel":"subscriptionResponse","data":{}}',

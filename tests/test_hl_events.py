@@ -10,6 +10,7 @@ import pytest
 
 from hypervector.data.event_archive import EventArchive, _trade_from_row
 from hypervector.data.hl_events import (
+    AssetContextEvent,
     L2SnapshotEvent,
     PublicTradeEvent,
     StreamGap,
@@ -71,6 +72,25 @@ def test_parse_public_trades_uses_venue_global_identity() -> None:
     assert buy.exchange_ts_ms * 1_000_000 < buy.received_ts_ns
 
 
+def test_parse_active_asset_context_declares_local_receive_timestamp() -> None:
+    events = parse_hl_message(
+        fixture("hl_ws_active_asset_ctx_sample.json"),
+        received_ts_ns=RECEIVED_NS,
+    )
+
+    assert len(events) == 1
+    event = events[0]
+    assert isinstance(event, AssetContextEvent)
+    assert event.symbol == "BTC"
+    assert event.observed_ts_ms == RECEIVED_NS // 1_000_000
+    assert event.timestamp_source == "local_receive_no_exchange_timestamp"
+    assert event.mark_price == pytest.approx(65_159.0)
+    assert event.oracle_price == pytest.approx(65_182.0)
+    assert event.funding_rate_hourly == pytest.approx(0.0000125)
+    assert event.open_interest == pytest.approx(36_677.63364)
+    assert event.mid_price == pytest.approx(65_152.5)
+
+
 def test_parser_rejects_invalid_price() -> None:
     message = fixture("hl_ws_l2_sample.json")
     data = message["data"]
@@ -110,6 +130,33 @@ def test_archive_deduplicates_and_replays_append_only_parts(tmp_path: Path) -> N
     root = tmp_path / "cache" / "events" / "hyperliquid" / "BTC" / day
     assert list((root / "l2.parquet").glob("part-*.parquet"))
     assert list((root / "trades.parquet").glob("part-*.parquet"))
+
+
+def test_archive_round_trips_asset_context_without_invented_exchange_time(
+    tmp_path: Path,
+) -> None:
+    archive = EventArchive(data_root=tmp_path, symbol="BTC", batch_size=10)
+    parsed = parse_hl_message(
+        fixture("hl_ws_active_asset_ctx_sample.json"),
+        received_ts_ns=RECEIVED_NS,
+    )
+    context = parsed[0]
+    assert isinstance(context, AssetContextEvent)
+
+    archive.append((context,))
+    archive.flush()
+
+    assert archive.replay_asset_contexts() == (context,)
+    directory = (
+        tmp_path
+        / "cache"
+        / "events"
+        / "hyperliquid"
+        / "BTC"
+        / context.utc_date
+        / "asset_context.parquet"
+    )
+    assert list(directory.glob("part-*.parquet"))
 
 
 def test_archive_rotates_by_exchange_utc_day(tmp_path: Path) -> None:

@@ -15,6 +15,7 @@ data/
         BTC/YYYY-MM-DD/
           l2.parquet/    # Immutable Parquet parts of full L2 snapshots
           trades.parquet/# Immutable Parquet parts of public matches
+          asset_context.parquet/ # Mark/oracle/funding observations by receipt time
           gaps.jsonl     # Declared reconnect/freshness uncertainty
   runs/                  # SQLite research trials (hypervector.db)
   exports/               # Phase 1 → Phase 2 bundles <id>/meta|params|metrics

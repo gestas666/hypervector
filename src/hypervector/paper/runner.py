@@ -105,10 +105,9 @@ def start_paper_daemon(
     Offline-testable via ``warm_ohlcv``, ``poll_fn``, ``max_live_bars``,
     ``stop_file``, and ``sleep_fn``. Never constructs a live order client.
 
-    Live funding poll (``CostProvider.refresh_funding``) is enabled by default
-    only when using the default REST feed (``poll_fn is None``). Injected
-    ``poll_fn`` offline tests keep refresh off unless ``enable_funding_refresh``
-    is set True. Open positions still receive funding from the configured rate.
+    Generic REST shadow may poll funding. The authoritative Hypervelocity event
+    runtime instead requires public ``activeAssetCtx`` observations and rejects
+    a competing REST refresh authority.
 
     Default ``execution_mode`` is ``shadow`` (mainnet-honest intents, no submit).
     Offline tests that need paper stamps may pass ``execution_mode="paper"``.
@@ -134,10 +133,6 @@ def start_paper_daemon(
         lb = int(meta_lb) if meta_lb is not None else DEFAULT_LOOKBACK
     lb = max(int(lb), FLOOR_LOOKBACK)
 
-    # Default: live REST path may refresh funding; injected poll_fn = offline tests.
-    if enable_funding_refresh is None:
-        enable_funding_refresh = poll_fn is None
-
     # Live REST path may use L2 book **only after warm-up**. Historical warm-up
     # must never poll live book (wrong prices + REST spam). Offline injected
     # poll_fn keeps book off-network unless the caller sets enable_book_poll later.
@@ -146,6 +141,14 @@ def start_paper_daemon(
         hypervelocity_profile is not None
         and hypervelocity_profile.shadow_execution_model == "nautilus_event_v1"
     )
+    if event_authority:
+        if enable_funding_refresh is True:
+            raise ValueError(
+                "nautilus_event_v1 funding/mark authority is activeAssetCtx"
+            )
+        enable_funding_refresh = False
+    elif enable_funding_refresh is None:
+        enable_funding_refresh = live_rest_feed
     live_book_enabled = live_rest_feed and not event_authority
     enforce_boundary = (
         live_rest_feed if enforce_live_boundary is None else bool(enforce_live_boundary)

@@ -89,11 +89,16 @@ def entry(
     )
 
 
-def port(*, submit_ms: int = 50, cancel_ms: int = 50) -> NautilusShadowExecutionPort:
+def port(
+    *,
+    submit_ms: int = 50,
+    cancel_ms: int = 50,
+    initial_cash_usd: float = 120.0,
+) -> NautilusShadowExecutionPort:
     """Return a deterministic isolated-margin shadow port."""
     return NautilusShadowExecutionPort(
         symbol="BTC",
-        initial_cash_usd=120.0,
+        initial_cash_usd=initial_cash_usd,
         simulation_config=HypervelocitySimulationConfig(
             submit_latency_ms=submit_ms,
             cancel_latency_ms=cancel_ms,
@@ -321,9 +326,18 @@ def test_hourly_funding_and_isolated_liquidation_are_accounted() -> None:
         )
         is False
     )
+    execution_mark = liquidation_price - 0.01
+    shadow.ingest(
+        book(
+            3_600_001,
+            bid_size=quantity,
+            bid=execution_mark,
+            ask=execution_mark + 1.0,
+        )
+    )
     assert (
         shadow.mark(
-            mark_price=liquidation_price - 0.01,
+            mark_price=execution_mark,
             observed_at=iso(3_600_002),
         )
         is True
@@ -332,13 +346,103 @@ def test_hourly_funding_and_isolated_liquidation_are_accounted() -> None:
     assert shadow.last_liquidation is not None
     assert shadow.last_liquidation.margin_mode == "isolated"
     assert shadow.last_liquidation.execution_fee_usd == pytest.approx(
-        quantity * (liquidation_price - 0.01) * 0.00045
+        quantity * execution_mark * 0.00045
     )
     assert shadow.last_liquidation.clearance_fee_usd == 0.0
     assert (
-        shadow.last_liquidation.execution_model
-        == "full_at_mark_shadow_approximation_v1"
+        shadow.last_liquidation.execution_model == "hyperliquid_market_liquidation_v2"
     )
     canceled = shadow.reconcile()
     assert [item.event_type for item in canceled] == ["canceled"]
     assert canceled[0].reason == "isolated_liquidation"
+
+
+def test_large_liquidation_uses_twenty_percent_then_full_cooldown_attempt() -> None:
+    shadow = port(submit_ms=0, initial_cash_usd=10_000.0)
+    quantity = 280_000.0 / 64_500.0
+    shadow.ingest(book(0, bid_size=0.001))
+    shadow.submit(entry(quantity=quantity))
+    shadow.ingest(book(1, bid_size=0.001))
+    shadow.reconcile()
+    shadow.ingest(trade(2, size=quantity + 0.001, trade_id=81))
+    shadow.reconcile()
+
+    first_boundary = shadow.liquidation_price
+    assert first_boundary is not None
+    first_mark = first_boundary - 0.01
+    first_quantity = quantity * 0.20
+    shadow.ingest(
+        book(
+            100,
+            bid_size=first_quantity,
+            bid=first_mark,
+            ask=first_mark + 1.0,
+        )
+    )
+
+    assert shadow.mark(mark_price=first_mark, observed_at=iso(101)) is True
+    first = shadow.last_liquidation
+    assert first is not None
+    assert first.method == "market"
+    assert first.partial_rule_applied is True
+    assert first.attempted_quantity == pytest.approx(first_quantity)
+    assert first.filled_quantity == pytest.approx(first_quantity)
+    assert first.remaining_quantity == pytest.approx(quantity * 0.80)
+    assert first.execution_price == pytest.approx(first_mark)
+    assert first.cooldown_until_ms == BASE_MS + 30_101
+    assert shadow.account_snapshot().position_quantity == pytest.approx(quantity * 0.80)
+
+    second_boundary = shadow.liquidation_price
+    assert second_boundary is not None
+    second_mark = second_boundary - 0.01
+    remaining = quantity * 0.80
+    shadow.ingest(
+        book(
+            1_000,
+            bid_size=remaining,
+            bid=second_mark,
+            ask=second_mark + 1.0,
+        )
+    )
+
+    assert shadow.mark(mark_price=second_mark, observed_at=iso(1_001)) is True
+    second = shadow.last_liquidation
+    assert second is not None
+    assert second.partial_rule_applied is False
+    assert second.attempted_quantity == pytest.approx(remaining)
+    assert second.filled_quantity == pytest.approx(remaining)
+    assert second.remaining_quantity == 0.0
+    assert shadow.account_snapshot().position_quantity == 0.0
+
+
+def test_deep_underwater_position_backstops_after_insufficient_market_depth() -> None:
+    shadow = port(submit_ms=0, initial_cash_usd=10_000.0)
+    quantity = 280_000.0 / 64_500.0
+    shadow.ingest(book(0, bid_size=0.001))
+    shadow.submit(entry(quantity=quantity))
+    shadow.ingest(book(1, bid_size=0.001))
+    shadow.reconcile()
+    shadow.ingest(trade(2, size=quantity + 0.001, trade_id=82))
+    shadow.reconcile()
+
+    boundary = shadow.liquidation_price
+    assert boundary is not None
+    deep_mark = boundary - 500.0
+    shadow.ingest(
+        book(
+            100,
+            bid_size=0.01,
+            bid=deep_mark,
+            ask=deep_mark + 1.0,
+        )
+    )
+
+    assert shadow.mark(mark_price=deep_mark, observed_at=iso(101)) is True
+    liquidation = shadow.last_liquidation
+    assert liquidation is not None
+    assert liquidation.method == "backstop"
+    assert liquidation.market_filled_quantity == pytest.approx(0.01)
+    assert liquidation.backstop_quantity == pytest.approx(quantity - 0.01)
+    assert liquidation.filled_quantity == pytest.approx(quantity)
+    assert liquidation.remaining_quantity == 0.0
+    assert shadow.account_snapshot().position_quantity == 0.0

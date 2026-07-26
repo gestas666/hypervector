@@ -70,7 +70,8 @@ Confidence is medium for exact live-venue friction outside the tested contract:
    full size. The normal $10,000 shadow portfolio at 70% margin and 40x is about
    $280,000 notional, so this path is material. The session explicitly stamps
    `partial_liquidation_supported=false` and
-   `full_at_mark_shadow_approximation_v1`.
+   `full_at_mark_shadow_approximation_v1`. This limitation is superseded by the
+   subsequent no-submit friction batch review.
 2. Liquidation execution price is the supplied mark, not a walk through the
    contemporaneous book. The configured taker fee is charged, but market impact
    remains unmeasured.

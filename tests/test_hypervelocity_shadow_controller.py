@@ -57,13 +57,17 @@ def trade(offset_ms: int, *, size: float, trade_id: int) -> PublicTradeEvent:
     )
 
 
-def market(offset_ms: int, direction: str | None = "long") -> RuntimeMarketState:
+def market(
+    offset_ms: int,
+    direction: str | None = "long",
+    quantity: float = 0.04,
+) -> RuntimeMarketState:
     """Return one already-classified backend market decision."""
     return RuntimeMarketState(
         symbol="BTC",
         observed_at=iso(offset_ms),
         entry_direction=direction,
-        entry_quantity=0.04,
+        entry_quantity=quantity,
         entry_limit_price=64_500.0 if direction is not None else None,
         evidence_fresh=True,
         entry_ttl_seconds=300.0,
@@ -180,3 +184,39 @@ def test_rejected_target_is_replaced_without_changing_strategy_eligibility() -> 
     assert rejected.commands[0].client_order_id != first_target.client_order_id
     assert rejected.commands[0].quantity == pytest.approx(0.02)
     assert runtime.state.position_quantity == pytest.approx(0.02)
+
+
+def test_partial_liquidation_replaces_target_for_remaining_position() -> None:
+    runtime = controller()
+    quantity = 280_000.0 / 64_500.0
+    runtime.ingest(l2(0))
+    runtime.on_market(market(1, quantity=quantity))
+    runtime.ingest(l2(2))
+    filled = runtime.ingest(trade(3, size=quantity + 0.001, trade_id=9))
+    first_target = filled.commands[0]
+    boundary = runtime.port.liquidation_price
+    assert boundary is not None
+    execution_mark = boundary - 0.01
+    partial_quantity = quantity * 0.20
+    runtime.ingest(
+        l2(
+            100,
+            bid_size=partial_quantity,
+            bid=execution_mark,
+            ask=execution_mark + 1.0,
+        )
+    )
+
+    assert runtime.port.mark(mark_price=execution_mark, observed_at=iso(101)) is True
+    cycle = runtime.reconcile_liquidation(iso(101))
+
+    assert any(
+        event.client_order_id == first_target.client_order_id
+        and event.event_type == "canceled"
+        for event in cycle.venue_events
+    )
+    replacement = cycle.commands[0]
+    assert replacement.order_role == "target"
+    assert replacement.client_order_id != first_target.client_order_id
+    assert replacement.quantity == pytest.approx(quantity * 0.80)
+    assert runtime.state.position_quantity == pytest.approx(quantity * 0.80)

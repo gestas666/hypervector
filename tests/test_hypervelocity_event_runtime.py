@@ -104,6 +104,18 @@ def test_event_runtime_restores_partial_entry_target_and_account() -> None:
     assert cycle.execution_records == ()
 
 
+def test_event_runtime_restores_liquidation_cooldown() -> None:
+    resume = replace(_resume(), liquidation_cooldown_until_ms=1_785_103_230_000)
+    controller = build_event_shadow_controller(
+        profile=load_hypervelocity_profile(PROFILE),
+        initial_cash_usd=10_000.0,
+        observed_at=OBSERVED_AT,
+        resume=resume,
+    )
+
+    assert controller.port.liquidation_cooldown_until_ms == 1_785_103_230_000
+
+
 def test_legacy_open_position_migrates_to_event_target_without_bar_fill() -> None:
     legacy = replace(
         _resume(),

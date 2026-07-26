@@ -114,7 +114,7 @@ class HypervelocityEventStreamPump:
         consumer.ingest_hyperliquid_event(
             StreamGap(
                 symbol=self._symbol,
-                channel="l2Book,trades",
+                channel="l2Book,trades,activeAssetCtx",
                 detected_ts_ns=item.detected_ts_ns,
                 reason=item.reason,
                 previous_exchange_ts_ms=None,

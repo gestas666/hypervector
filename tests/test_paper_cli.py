@@ -161,6 +161,69 @@ def test_daemon_activates_authoritative_event_stream_without_rest_book_poll(
     assert pump.pumps == 2
 
 
+def test_event_authority_defaults_to_websocket_context_not_rest_refresh(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    export = _write_strict_export(
+        tmp_path,
+        strategy="hypervelocity_1m_scalper_long",
+    )
+    profile_text = Path("configs/hypervelocity_faithful.toml").read_text()
+    profile_path = tmp_path / "profile.toml"
+    profile_path.write_text(
+        profile_text.replace(
+            "data/exports/uptrend_hypervelocity_1m_scalper_long_784548f1",
+            str(export),
+        ),
+        encoding="utf-8",
+    )
+    profile = load_hypervelocity_profile(profile_path)
+    warm = fixture_ohlcv(n_bars=5)
+    live = warm.iloc[-1:].copy()
+    live.loc[:, "timestamp"] = pd.Timestamp("2026-07-26T20:00:00Z")
+    returned = False
+
+    def feed(**_kwargs: object) -> pd.DataFrame:
+        nonlocal returned
+        if returned:
+            return live.iloc[0:0].copy()
+        returned = True
+        return live
+
+    refresh_checks: list[bool] = []
+
+    def assert_ws_authority(session: PaperSession) -> None:
+        refresh_checks.append(session.enable_funding_refresh)
+
+    monkeypatch.setattr(
+        PaperSession,
+        "initialize_hypervelocity_venue",
+        lambda _self: 0.0,
+    )
+    monkeypatch.setattr(PaperSession, "maybe_refresh_funding", assert_ws_authority)
+    monkeypatch.setattr(
+        "hypervector.paper.runner.make_rest_poll_fn",
+        lambda _symbol, _timeframe: feed,
+    )
+
+    result = start_paper_daemon(
+        export_dir=export,
+        data_root=tmp_path / "data",
+        warm_ohlcv=warm,
+        poll_fn=None,
+        max_live_bars=1,
+        install_signal_handlers=False,
+        hypervelocity_profile=profile,
+        event_stream_pump=_EventPump(),
+        enforce_live_boundary=False,
+        now_fn=lambda: pd.Timestamp("2026-07-26T20:00:00Z"),
+    )
+
+    assert result.live_bars == 1
+    assert refresh_checks == [False]
+
+
 def test_event_stream_start_failure_is_not_masked_by_cleanup(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

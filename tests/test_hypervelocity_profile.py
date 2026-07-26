@@ -41,6 +41,14 @@ def test_faithful_profile_enforces_one_way_bidirectional_runtime() -> None:
     assert profile.execution_update_latency_ms == 50
     assert profile.execution_max_event_age_ms == 3_000
     assert profile.restart_queue_policy == "requeue_behind_displayed_liquidity"
+    assert profile.liquidation_execution_model == "hyperliquid_market_liquidation_v2"
+    assert profile.partial_liquidation_supported is True
+    assert profile.partial_liquidation_threshold_usd == pytest.approx(100_000.0)
+    assert profile.partial_liquidation_fraction == pytest.approx(0.20)
+    assert profile.liquidation_cooldown_ms == 30_000
+    assert profile.backstop_liquidation_supported is True
+    assert profile.backstop_maintenance_fraction == pytest.approx(2.0 / 3.0)
+    assert profile.backstop_accounting_model == "isolated_margin_transfer_composite_v1"
     assert profile.strict_hl_only is True
     assert profile.metalabel_mode == "observe"
     assert profile.model_long_bundle.is_dir()
@@ -145,6 +153,21 @@ def test_profile_requires_positive_finite_live_canary_notional(
             'restart_queue_policy = "requeue_behind_displayed_liquidity"',
             'restart_queue_policy = "preserve_unknown_queue"',
             "restart_queue_policy",
+        ),
+        (
+            'liquidation_execution_model = "hyperliquid_market_liquidation_v2"',
+            'liquidation_execution_model = "full_at_mark_shadow_approximation_v1"',
+            "liquidation_execution_model",
+        ),
+        (
+            "partial_liquidation_supported = true",
+            "partial_liquidation_supported = false",
+            "partial_liquidation_supported",
+        ),
+        (
+            "backstop_liquidation_supported = true",
+            "backstop_liquidation_supported = false",
+            "backstop_liquidation_supported",
         ),
     ],
 )

@@ -11,6 +11,7 @@ from typing import Literal, Mapping
 
 from hypervector.strategies.hypervelocity_contract import is_hypervelocity_strategy
 from hypervector.paper.event_resume import PendingTargetResume, event_resume_details
+from hypervector.paper.portfolio_migration import migrated_portfolio_spec
 
 _EQUITY_ABS_TOLERANCE_USD = 0.01
 _EQUITY_REL_TOLERANCE = 1e-9
@@ -60,6 +61,7 @@ class ShadowPortfolioResume:
     next_order_sequence: int
     open_position_fees_usd: float
     open_position_funding_net_usd: float
+    liquidation_cooldown_until_ms: int | None = None
 
 
 def load_shadow_portfolio_resume(
@@ -108,11 +110,12 @@ def load_shadow_portfolio_resume(
         has_pending_entry=pending_entry is not None,
         expected_spec=expected_spec,
     )
+    terminal_actions = {"close", "liquidation", "backstop_liquidation"}
     last_exit_at = next(
         (
             str(row.get("feed_ts"))
             for row in reversed(run_rows)
-            if row.get("action") == "close" and row.get("feed_ts")
+            if row.get("action") in terminal_actions and row.get("feed_ts")
         ),
         None,
     )
@@ -139,6 +142,7 @@ def load_shadow_portfolio_resume(
         next_order_sequence=event_details.next_order_sequence,
         open_position_fees_usd=event_details.open_position_fees_usd,
         open_position_funding_net_usd=(event_details.open_position_funding_net_usd),
+        liquidation_cooldown_until_ms=(event_details.liquidation_cooldown_until_ms),
     )
 
 
@@ -171,7 +175,8 @@ def _validate_portfolio_spec(
     recorded = portfolio_fingerprint(recorded_spec)
     if recorded == expected:
         return expected, None
-    if _is_entry_policy_migration(recorded_spec, expected_spec):
+    migrated = migrated_portfolio_spec(recorded_spec, expected_spec)
+    if migrated is not None and portfolio_fingerprint(migrated) == expected:
         return expected, recorded
     if abs(position_qty) > 0.0:
         raise ShadowResumeError(
@@ -182,59 +187,6 @@ def _validate_portfolio_spec(
             f"incompatible portfolio profile for pending entry in run {run_id!r}"
         )
     return expected, recorded
-
-
-def _is_entry_policy_migration(
-    recorded_spec: Mapping[str, object],
-    expected_spec: Mapping[str, object],
-) -> bool:
-    """Allow only declared entry-policy and event-authority migrations."""
-    recorded_execution = recorded_spec.get("execution")
-    expected_execution = expected_spec.get("execution")
-    if not isinstance(recorded_execution, dict) or not isinstance(
-        expected_execution, dict
-    ):
-        return False
-    migrated_execution = dict(recorded_execution)
-    added = False
-    for key in (
-        "expired_entry_rearm_policy",
-        "same_direction_reentry_policy",
-    ):
-        if (
-            key not in migrated_execution
-            and expected_execution.get(key) == "regime_reset"
-        ):
-            migrated_execution[key] = "regime_reset"
-            added = True
-    if (
-        migrated_execution.get("fill_rule") == "through_one_tick"
-        and migrated_execution.get("fill_model") == "post_only_limit_through_v1"
-        and expected_execution.get("fill_rule") == "public_l2_trade_event_tape"
-        and expected_execution.get("fill_model") == "nautilus_event_v1"
-    ):
-        migrated_execution["fill_rule"] = "public_l2_trade_event_tape"
-        migrated_execution["fill_model"] = "nautilus_event_v1"
-        added = True
-    allowed_event_additions = {
-        "legacy_comparator": "legacy_bar_through_v1",
-        "submit_latency_ms": 50,
-        "cancel_latency_ms": 50,
-        "update_latency_ms": 50,
-        "max_event_age_ms": 3000,
-        "restart_queue_policy": "requeue_behind_displayed_liquidity",
-        "liquidation_execution_model": "full_at_mark_shadow_approximation_v1",
-        "partial_liquidation_supported": False,
-        "partial_liquidation_threshold_usd": 100_000.0,
-    }
-    for key, required in allowed_event_additions.items():
-        if key not in migrated_execution and expected_execution.get(key) == required:
-            migrated_execution[key] = required
-            added = True
-    if not added:
-        return False
-    migrated_spec = {**recorded_spec, "execution": migrated_execution}
-    return portfolio_fingerprint(migrated_spec) == portfolio_fingerprint(expected_spec)
 
 
 def _legacy_portfolio_spec(identity: dict[str, object]) -> dict[str, object]:
@@ -419,7 +371,15 @@ def _latest_completed_trade_direction(
     """Recover the completed side until a non-matching regime is observed."""
     blocked: Literal["long", "short"] | None = None
     for row in rows:
-        if row.get("action") == "close" and row.get("skipped") is not True:
+        if (
+            row.get("action")
+            in {
+                "close",
+                "liquidation",
+                "backstop_liquidation",
+            }
+            and row.get("skipped") is not True
+        ):
             side = row.get("side")
             blocked = "long" if side == "sell" else "short" if side == "buy" else None
         elif (

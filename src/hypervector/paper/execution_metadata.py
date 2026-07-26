@@ -24,6 +24,14 @@ _ALLOWED_FIELDS = frozenset(
         "margin_model",
         "clearance_fee_usd",
         "liquidation_execution_model",
+        "liquidation_method",
+        "liquidation_attempted_qty",
+        "liquidation_filled_qty",
+        "liquidation_remaining_qty",
+        "liquidation_partial_rule_applied",
+        "liquidation_cooldown_until_ms",
+        "liquidation_market_filled_qty",
+        "liquidation_backstop_qty",
     }
 )
 

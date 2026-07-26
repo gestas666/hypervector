@@ -102,30 +102,34 @@ class HypervelocityShadowController:
         direction = self._state.position_direction
         if direction is None or self._state.position_quantity <= 0.0:
             raise RuntimeError("runtime has no open position to liquidate")
+        liquidation = self._port.last_liquidation
+        remaining = liquidation.remaining_quantity
         terminal = list(self._state.terminal_order_ids)
         if self._state.pending_entry is not None:
             terminal.append(self._state.pending_entry.command.client_order_id)
         terminal.extend(
             target.command.client_order_id for target in self._state.active_targets
         )
-        self._state = replace(
+        state = replace(
             self._state,
             pending_entry=None,
             active_targets=(),
             terminal_order_ids=tuple(dict.fromkeys(terminal)),
-            position_direction=None,
-            position_quantity=0.0,
-            position_average_price=None,
-            completed_trade_direction=direction,
-            last_exit_at=observed_at,
+            position_direction=direction if remaining > 1e-12 else None,
+            position_quantity=remaining,
+            position_average_price=(
+                self._state.position_average_price if remaining > 1e-12 else None
+            ),
+            completed_trade_direction=(direction if remaining <= 1e-12 else None),
+            last_exit_at=(observed_at if remaining <= 1e-12 else None),
         )
         self._market = replace(self._market, observed_at=observed_at)
-        return ShadowCycle(
-            commands=(),
-            cancellations=(),
-            venue_events=self._port.reconcile(),
-            execution_records=(),
-            annotations=(),
+        venue_events = self._port.reconcile()
+        decision = advance_hypervelocity_runtime(state, self._market)
+        return self._execute(
+            decision,
+            venue_events,
+            (),
         )
 
     def _execute(

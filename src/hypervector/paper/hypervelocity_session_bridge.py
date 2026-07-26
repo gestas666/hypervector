@@ -21,6 +21,7 @@ from hypervector.paper.liquidation_execution import LiquidationExactMarkFillMode
 from hypervector.paper.maker_execution import PendingMakerEntry, PostOnlyLimitFillModel
 from hypervector.paper.shadow_execution_models import (
     ShadowExecutionRecord,
+    ShadowLiquidation,
     ShadowOrderTelemetry,
 )
 from hypervector.strategies.hypervelocity_runtime import RuntimeMarketState
@@ -171,29 +172,24 @@ class HypervelocitySessionBridge:
         liquidation = self._controller.port.last_liquidation
         if liquidation is None:
             raise RuntimeError("liquidation state disappeared before ledger write")
+        action = _liquidation_action(liquidation)
         self._engine.apply_market_fill(
             feed_ts=observed_at,
-            action="liquidation",
+            action=action,
             side="sell" if before > 0.0 else "buy",
-            qty=abs(before),
-            mark_px=mark_price,
+            qty=liquidation.filled_quantity,
+            mark_px=liquidation.execution_price,
             fill_model=LiquidationExactMarkFillModel(),
             fee_override_usd=liquidation.execution_fee_usd,
             exit_reason="isolated_mark_liquidation",
-            record_metadata={
-                "venue_event_type": "liquidated",
-                "execution_model": "nautilus_event_v1",
-                "execution_data_source": "hyperliquid_mark",
-                "execution_evidence_fresh": self._controller.port.evidence_fresh,
-                "liquidity_side": "taker",
-                "margin_model": "hyperliquid_isolated_v1",
-                "clearance_fee_usd": liquidation.clearance_fee_usd,
-                "liquidation_execution_model": liquidation.execution_model,
-            },
+            record_metadata=_liquidation_metadata(
+                liquidation,
+                evidence_fresh=self._controller.port.evidence_fresh,
+            ),
         )
         cycle = self._controller.reconcile_liquidation(observed_at)
         self._apply_cycle(cycle)
-        return "liquidation"
+        return action
 
     def _apply_cycle(self, cycle: ShadowCycle) -> str | None:
         self._inherit_target_annotations(cycle)
@@ -333,6 +329,39 @@ class HypervelocitySessionBridge:
             raise RuntimeError(
                 f"event shadow position mismatch ledger={actual} runtime={expected}"
             )
+
+
+def _liquidation_action(liquidation: ShadowLiquidation) -> str:
+    if liquidation.method == "backstop":
+        return "backstop_liquidation"
+    if liquidation.remaining_quantity > 1e-12:
+        return "partial_liquidation"
+    return "liquidation"
+
+
+def _liquidation_metadata(
+    liquidation: ShadowLiquidation,
+    *,
+    evidence_fresh: bool,
+) -> dict[str, object]:
+    return {
+        "venue_event_type": "liquidated",
+        "execution_model": "nautilus_event_v1",
+        "execution_data_source": "hyperliquid_mark",
+        "execution_evidence_fresh": evidence_fresh,
+        "liquidity_side": "taker",
+        "margin_model": "hyperliquid_isolated_v1",
+        "clearance_fee_usd": liquidation.clearance_fee_usd,
+        "liquidation_execution_model": liquidation.execution_model,
+        "liquidation_method": liquidation.method,
+        "liquidation_attempted_qty": liquidation.attempted_quantity,
+        "liquidation_filled_qty": liquidation.filled_quantity,
+        "liquidation_remaining_qty": liquidation.remaining_quantity,
+        "liquidation_partial_rule_applied": liquidation.partial_rule_applied,
+        "liquidation_cooldown_until_ms": liquidation.cooldown_until_ms,
+        "liquidation_market_filled_qty": liquidation.market_filled_quantity,
+        "liquidation_backstop_qty": liquidation.backstop_quantity,
+    }
 
 
 def book_snapshot_from_event(event: L2SnapshotEvent) -> BookSnapshot:

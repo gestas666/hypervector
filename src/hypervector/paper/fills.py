@@ -24,10 +24,9 @@ from hypervector.paper.fill_models import (
 from hypervector.paper.ledger import ALLOWED_EXECUTION_MODES, append_paper_decision
 from hypervector.paper.execution_metadata import validated_execution_metadata
 from hypervector.paper.fill_order_events import OrderEventLedgerMixin
-from hypervector.paper.order_intent import NETWORK_MAINNET, build_order_intent
-from hypervector.strategies.hypervelocity_contract import (
-    HypervelocityContract,
-    is_hypervelocity_strategy,
+from hypervector.paper.order_intent import (
+    NETWORK_MAINNET,
+    shadow_order_intent,
 )
 
 logger = logging.getLogger(__name__)
@@ -277,33 +276,13 @@ class ExplicitFillEngine(OrderEventLedgerMixin):
         mark_px: float,
         action: str,
     ) -> dict[str, Any]:
-        if action == "liquidation":
-            return build_order_intent(
-                symbol=self._symbol,
-                side=side,
-                qty=qty,
-                order_type="market",
-                time_in_force="ioc",
-                reduce_only=True,
-                notes="venue-enforced shadow liquidation; not sent",
-            )
-        if not is_hypervelocity_strategy(self._strategy_name):
-            return build_order_intent(
-                symbol=self._symbol,
-                side=side,
-                qty=qty,
-                reduce_only=action in {"close", "liquidation"},
-            )
-        contract = HypervelocityContract()
-        return build_order_intent(
+        return shadow_order_intent(
             symbol=self._symbol,
+            strategy_name=self._strategy_name,
             side=side,
             qty=qty,
-            order_type=contract.order_type,
-            time_in_force=contract.time_in_force,
-            limit_px=mark_px,
-            reduce_only=action in {"close", "liquidation"},
-            notes="shadow post-only intent; not sent",
+            mark_px=mark_px,
+            action=action,
         )
 
     def apply_funding(

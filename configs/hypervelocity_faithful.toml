@@ -49,6 +49,14 @@ cancel_latency_ms = 50
 update_latency_ms = 50
 max_event_age_ms = 3000
 restart_queue_policy = "requeue_behind_displayed_liquidity"
+liquidation_execution_model = "hyperliquid_market_liquidation_v2"
+partial_liquidation_supported = true
+partial_liquidation_threshold_usd = 100000.0
+partial_liquidation_fraction = 0.20
+liquidation_cooldown_ms = 30000
+backstop_liquidation_supported = true
+backstop_maintenance_fraction = 0.6666666666666666
+backstop_accounting_model = "isolated_margin_transfer_composite_v1"
 
 [orderbook]
 archive_enabled = true

@@ -10,6 +10,7 @@ from datetime import UTC, datetime
 from typing import Literal, Mapping, cast
 
 AggressorSide = Literal["buy", "sell"]
+TimestampSource = Literal["local_receive_no_exchange_timestamp"]
 
 
 @dataclass(frozen=True)
@@ -105,6 +106,52 @@ class PublicTradeEvent:
 
 
 @dataclass(frozen=True)
+class AssetContextEvent:
+    """One public perps mark/oracle/funding observation.
+
+    Hyperliquid's ``activeAssetCtx`` message has no exchange timestamp, so the
+    local transport receipt time is explicit and must not be presented as venue
+    event time.
+    """
+
+    symbol: str
+    observed_ts_ms: int
+    received_ts_ns: int
+    mark_price: float
+    oracle_price: float
+    funding_rate_hourly: float
+    open_interest: float
+    mid_price: float | None
+    timestamp_source: TimestampSource = "local_receive_no_exchange_timestamp"
+    source: str = "hyperliquid_ws_activeAssetCtx"
+
+    def __post_init__(self) -> None:
+        _nonempty(self.symbol, "symbol")
+        _positive_integer(self.observed_ts_ms, "observed_ts_ms")
+        _positive_integer(self.received_ts_ns, "received_ts_ns")
+        _positive(self.mark_price, "mark_price")
+        _positive(self.oracle_price, "oracle_price")
+        _finite(self.funding_rate_hourly, "funding_rate_hourly")
+        _nonnegative(self.open_interest, "open_interest")
+        if self.mid_price is not None:
+            _positive(self.mid_price, "mid_price")
+        if self.timestamp_source != "local_receive_no_exchange_timestamp":
+            raise ValueError("activeAssetCtx timestamp source must remain explicit")
+
+    @property
+    def utc_date(self) -> str:
+        """Return the local receipt timestamp's UTC calendar date."""
+        return _utc_date_ns(self.received_ts_ns)
+
+    @property
+    def event_key(self) -> str:
+        """Return a stable identity for one locally timestamped observation."""
+        identity = asdict(self)
+        payload = json.dumps(identity, sort_keys=True, separators=(",", ":"))
+        return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+@dataclass(frozen=True)
 class StreamGap:
     """Declared interval where public event completeness is unknown."""
 
@@ -137,7 +184,7 @@ def parse_hl_message(
     message: Mapping[str, object],
     *,
     received_ts_ns: int,
-) -> tuple[L2SnapshotEvent | PublicTradeEvent, ...]:
+) -> tuple[L2SnapshotEvent | PublicTradeEvent | AssetContextEvent, ...]:
     """Normalize one official-shape public WebSocket message."""
     _positive_integer(received_ts_ns, "received_ts_ns")
     channel = _text(message, "channel")
@@ -146,6 +193,8 @@ def parse_hl_message(
     if channel == "trades":
         rows = _sequence(message, "data")
         return tuple(_parse_trade(_as_mapping(row), received_ts_ns) for row in rows)
+    if channel == "activeAssetCtx":
+        return (_parse_asset_context(_mapping(message, "data"), received_ts_ns),)
     if channel in {"subscriptionResponse", "pong"}:
         return ()
     raise ValueError(f"unsupported Hyperliquid channel: {channel}")
@@ -196,6 +245,31 @@ def _parse_trade(data: Mapping[str, object], received_ts_ns: int) -> PublicTrade
     )
 
 
+def _parse_asset_context(
+    data: Mapping[str, object],
+    received_ts_ns: int,
+) -> AssetContextEvent:
+    ctx = _mapping(data, "ctx")
+    return AssetContextEvent(
+        symbol=_text(data, "coin"),
+        observed_ts_ms=received_ts_ns // 1_000_000,
+        received_ts_ns=received_ts_ns,
+        mark_price=_decimal_text(ctx, "markPx", "mark_price"),
+        oracle_price=_decimal_text(ctx, "oraclePx", "oracle_price"),
+        funding_rate_hourly=_finite_decimal_text(
+            ctx,
+            "funding",
+            "funding_rate_hourly",
+        ),
+        open_interest=_nonnegative_decimal_text(
+            ctx,
+            "openInterest",
+            "open_interest",
+        ),
+        mid_price=_optional_positive_decimal_text(ctx, "midPx", "mid_price"),
+    )
+
+
 def _mapping(values: Mapping[str, object], key: str) -> Mapping[str, object]:
     return _as_mapping(values.get(key))
 
@@ -242,9 +316,58 @@ def _decimal_text(values: Mapping[str, object], key: str, label: str) -> float:
     return parsed
 
 
+def _finite_decimal_text(
+    values: Mapping[str, object],
+    key: str,
+    label: str,
+) -> float:
+    value = values.get(key)
+    if not isinstance(value, str):
+        raise ValueError(f"{label} must be a decimal string")
+    try:
+        parsed = float(value)
+    except ValueError as exc:
+        raise ValueError(f"{label} must be numeric") from exc
+    _finite(parsed, label)
+    return parsed
+
+
+def _nonnegative_decimal_text(
+    values: Mapping[str, object],
+    key: str,
+    label: str,
+) -> float:
+    parsed = _finite_decimal_text(values, key, label)
+    _nonnegative(parsed, label)
+    return parsed
+
+
+def _optional_positive_decimal_text(
+    values: Mapping[str, object],
+    key: str,
+    label: str,
+) -> float | None:
+    if values.get(key) is None:
+        return None
+    parsed = _finite_decimal_text(values, key, label)
+    _positive(parsed, label)
+    return parsed
+
+
 def _positive(value: float, key: str) -> None:
     if isinstance(value, bool) or not math.isfinite(float(value)) or value <= 0.0:
         raise ValueError(f"{key} must be positive and finite")
+
+
+def _nonnegative(value: float, key: str) -> None:
+    _finite(value, key)
+    if value < 0.0:
+        raise ValueError(f"{key} must be non-negative")
+
+
+def _finite(value: float, key: str) -> None:
+    if isinstance(value, bool) or not math.isfinite(float(value)):
+        raise ValueError(f"{key} must be finite")
 
 
 def _positive_integer(value: int, key: str) -> None:

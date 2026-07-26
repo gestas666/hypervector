@@ -28,18 +28,17 @@ from hypervector.paper.shadow_execution_models import (
     queue_ahead,
     rate,
     shadow_marked_equity,
-    shadow_unrealized_pnl,
     state_event,
     timestamp_ms,
     would_cross,
 )
-from hypervector.paper.liquidation_execution import LIQUIDATION_EXECUTION_MODEL
+from hypervector.paper.shadow_liquidation import ShadowLiquidationMixin
 from hypervector.paper.shadow_restore import ShadowRestoreMixin
 
 _TRADE_DEDUP_CAPACITY = 10_000
 
 
-class NautilusShadowExecutionPort(ShadowRestoreMixin):
+class NautilusShadowExecutionPort(ShadowLiquidationMixin, ShadowRestoreMixin):
     """Consume normalized events with explicit Nautilus-aligned friction state."""
 
     def __init__(
@@ -87,6 +86,7 @@ class NautilusShadowExecutionPort(ShadowRestoreMixin):
         self._funding_net = 0.0
         self._last_mark: float | None = None
         self._last_liquidation: ShadowLiquidation | None = None
+        self._liquidation_cooldown_until_ms: int | None = None
 
     def submit(self, command: OrderCommand) -> VenueOrderEvent:
         """Schedule a command and return an immediate submitted event."""
@@ -202,6 +202,11 @@ class NautilusShadowExecutionPort(ShadowRestoreMixin):
         """Return the latest isolated liquidation record, if any."""
         return self._last_liquidation
 
+    @property
+    def liquidation_cooldown_until_ms(self) -> int | None:
+        """Return the restored or live partial-liquidation cooldown boundary."""
+        return self._liquidation_cooldown_until_ms
+
     def apply_funding(
         self,
         *,
@@ -222,44 +227,6 @@ class NautilusShadowExecutionPort(ShadowRestoreMixin):
         self._last_mark = mark_price
         self._last_observed_at = applied_at
         return funding
-
-    def mark(self, *, mark_price: float, observed_at: str) -> bool:
-        """Apply a venue mark and liquidate only at the isolated boundary."""
-        positive(mark_price, "mark_price")
-        timestamp_ms(observed_at)
-        self._last_mark = mark_price
-        self._last_observed_at = observed_at
-        position = self._margin_position()
-        if position is None:
-            return False
-        state = position.state(mark_price)
-        if not state.liquidatable:
-            return False
-        quantity = self._position_quantity
-        execution_fee = abs(quantity) * mark_price * self._taker_fee_rate
-        self._realized_equity += (
-            shadow_unrealized_pnl(
-                self._position_quantity,
-                self._position_average_price,
-                mark_price,
-            )
-            - execution_fee
-        )
-        self._last_liquidation = ShadowLiquidation(
-            symbol=self._symbol,
-            observed_at=observed_at,
-            mark_price=mark_price,
-            position_quantity=quantity,
-            isolated_margin_usd=position.isolated_margin,
-            position_equity_usd=state.equity_usd,
-            maintenance_margin_usd=state.maintenance_margin_usd,
-            execution_fee_usd=execution_fee,
-            clearance_fee_usd=0.0,
-            execution_model=LIQUIDATION_EXECUTION_MODEL,
-        )
-        self._cancel_liquidated_orders(observed_at)
-        self._clear_position()
-        return True
 
     def _ingest_book(self, event: L2SnapshotEvent) -> None:
         self._latest_book = event
@@ -437,21 +404,6 @@ class NautilusShadowExecutionPort(ShadowRestoreMixin):
         self._position_average_price = None
         self._position_fees = 0.0
         self._funding_net = 0.0
-
-    def _cancel_liquidated_orders(self, observed_at: str) -> None:
-        for order in self._orders.values():
-            if order.status == "terminal":
-                continue
-            order.status = "terminal"
-            self._events.append(
-                state_event(
-                    order.command.client_order_id,
-                    "canceled",
-                    observed_at,
-                    reason="isolated_liquidation",
-                    cumulative=order.cumulative_quantity,
-                )
-            )
 
     def _margin_position(self) -> IsolatedMarginPosition | None:
         if self._position_quantity == 0.0 or self._position_average_price is None:

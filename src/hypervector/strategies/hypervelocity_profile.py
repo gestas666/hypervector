@@ -47,6 +47,14 @@ class HypervelocityProfile:
     execution_update_latency_ms: int
     execution_max_event_age_ms: int
     restart_queue_policy: Literal["requeue_behind_displayed_liquidity"]
+    liquidation_execution_model: Literal["hyperliquid_market_liquidation_v2"]
+    partial_liquidation_supported: bool
+    partial_liquidation_threshold_usd: float
+    partial_liquidation_fraction: float
+    liquidation_cooldown_ms: int
+    backstop_liquidation_supported: bool
+    backstop_maintenance_fraction: float
+    backstop_accounting_model: Literal["isolated_margin_transfer_composite_v1"]
     expired_entry_rearm_policy: str
     same_direction_reentry_policy: str
     reentry_cooldown_bars: int
@@ -136,6 +144,35 @@ def load_hypervelocity_profile(path: Path | str) -> HypervelocityProfile:
             Literal["requeue_behind_displayed_liquidity"],
             _text(execution, "restart_queue_policy"),
         ),
+        liquidation_execution_model=cast(
+            Literal["hyperliquid_market_liquidation_v2"],
+            _text(execution, "liquidation_execution_model"),
+        ),
+        partial_liquidation_supported=_boolean(
+            execution,
+            "partial_liquidation_supported",
+        ),
+        partial_liquidation_threshold_usd=_number(
+            execution,
+            "partial_liquidation_threshold_usd",
+        ),
+        partial_liquidation_fraction=_number(
+            execution,
+            "partial_liquidation_fraction",
+        ),
+        liquidation_cooldown_ms=_integer(execution, "liquidation_cooldown_ms"),
+        backstop_liquidation_supported=_boolean(
+            execution,
+            "backstop_liquidation_supported",
+        ),
+        backstop_maintenance_fraction=_number(
+            execution,
+            "backstop_maintenance_fraction",
+        ),
+        backstop_accounting_model=cast(
+            Literal["isolated_margin_transfer_composite_v1"],
+            _text(execution, "backstop_accounting_model"),
+        ),
         expired_entry_rearm_policy=_text(execution, "expired_entry_rearm_policy"),
         same_direction_reentry_policy=_text(execution, "same_direction_reentry_policy"),
         reentry_cooldown_bars=_integer(execution, "reentry_cooldown_bars"),
@@ -198,6 +235,22 @@ def _validate_contract(
         execution,
         "restart_queue_policy",
         "requeue_behind_displayed_liquidity",
+    )
+    _expect(
+        execution,
+        "liquidation_execution_model",
+        "hyperliquid_market_liquidation_v2",
+    )
+    _expect(execution, "partial_liquidation_supported", True)
+    _expect(execution, "partial_liquidation_threshold_usd", 100_000.0)
+    _expect(execution, "partial_liquidation_fraction", 0.20)
+    _expect(execution, "liquidation_cooldown_ms", 30_000)
+    _expect(execution, "backstop_liquidation_supported", True)
+    _expect(execution, "backstop_maintenance_fraction", 2.0 / 3.0)
+    _expect(
+        execution,
+        "backstop_accounting_model",
+        "isolated_margin_transfer_composite_v1",
     )
     _expect(execution, "entry_ttl_seconds", contract.entry_ttl_seconds)
     _expect(

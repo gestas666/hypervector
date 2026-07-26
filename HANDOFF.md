@@ -95,11 +95,18 @@
 - Liquidation now charges configured taker commission, records zero separate
   clearance fee, and is identified as a venue-enforced market close. Funding is
   applied before the boundary mark check.
-- Known limitation: the current shadow liquidation is a full-at-mark
-  approximation. Hyperliquid's documented >$100,000 20% partial-liquidation
-  path, 30-second cooldown, L2 market walk, and continuous `activeAssetCtx`
-  mark stream remain the next no-submit friction batch. This is stamped in every
-  session as `partial_liquidation_supported=false`, not hidden.
+- The next no-submit friction batch now consumes and archives continuous
+  `activeAssetCtx` mark/oracle/funding observations, walks fresh displayed L2
+  for liquidations, applies the documented >$100,000 20% partial path and
+  30-second cooldown, and models isolated backstop transfer below two-thirds of
+  maintenance after insufficient market depth. Every component is stamped in
+  the session identity and faithful TOML; no live order client is constructed.
+- Batch-2 verification: 592 offline Python tests passed with 4 network tests
+  deselected; all 23 Rust TUI tests passed; changed-file Ruff/format, Cargo
+  format, CLI status, TOML/profile validation, Python compilation, diff checks,
+  and a bounded public-mainnet L2/trades/`activeAssetCtx` smoke passed.
+- Full batch-2 review:
+  `docs/reviews/2026-07-26-hypervelocity-friction-batch2-review.md`.
 - Verification: 579 offline Python tests passed with 4 network tests deselected;
   all 23 Rust TUI integration tests passed; CLI status, TOML/profile parsing,
   targeted Ruff/format, Python compilation, Cargo formatting, and diff checks

@@ -160,6 +160,9 @@ def test_open_position_accepts_explicit_event_execution_migration(
         "fill_rule": "through_one_tick",
         "fill_model": "post_only_limit_through_v1",
         "entry_ttl_seconds": 300.0,
+        "liquidation_execution_model": "full_at_mark_shadow_approximation_v1",
+        "partial_liquidation_supported": False,
+        "partial_liquidation_threshold_usd": 100_000.0,
     }
     new_execution = {
         **old_execution,
@@ -170,6 +173,13 @@ def test_open_position_accepts_explicit_event_execution_migration(
         "cancel_latency_ms": 50,
         "update_latency_ms": 50,
         "max_event_age_ms": 3000,
+        "liquidation_execution_model": "hyperliquid_market_liquidation_v2",
+        "partial_liquidation_supported": True,
+        "partial_liquidation_fraction": 0.20,
+        "liquidation_cooldown_ms": 30_000,
+        "backstop_liquidation_supported": True,
+        "backstop_maintenance_fraction": 2.0 / 3.0,
+        "backstop_accounting_model": "isolated_margin_transfer_composite_v1",
     }
     old_spec = {"strategy_name": "hypervelocity_1m_scalper", "execution": old_execution}
     new_spec = {**old_spec, "execution": new_execution}
@@ -374,6 +384,31 @@ def test_event_resume_drops_rejected_target() -> None:
     ]
 
     assert event_resume_details(rows).active_targets == ()
+
+
+def test_event_resume_preserves_open_partial_liquidation_cooldown() -> None:
+    rows = [
+        {
+            "action": "partial_liquidation",
+            "position_qty": 3.2,
+            "liquidation_cooldown_until_ms": 1_785_103_230_000,
+        },
+        {
+            "action": "submit_target",
+            "client_order_id": "hv-btc-target-00000003",
+            "side": "sell",
+            "feed_ts": "2026-07-26T20:00:01+00:00",
+            "requested_qty": 3.2,
+            "fill_px": 64_629.0,
+            "remaining_qty": 3.2,
+            "position_qty": 3.2,
+        },
+    ]
+
+    details = event_resume_details(rows)
+
+    assert details.liquidation_cooldown_until_ms == 1_785_103_230_000
+    assert len(details.active_targets) == 1
 
 
 def test_resume_clears_pending_entry_after_cancel(tmp_path: Path) -> None:

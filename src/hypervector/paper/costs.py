@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 
@@ -42,7 +43,12 @@ def funding_payment(
     Positive return = cash paid by the position (drag for that side).
     HL: payment ≈ position_size * oracle_price * funding_rate (hourly).
     """
-    return float(position_qty) * float(oracle_px) * float(funding_rate_hourly) * float(hours)
+    return (
+        float(position_qty)
+        * float(oracle_px)
+        * float(funding_rate_hourly)
+        * float(hours)
+    )
 
 
 @dataclass(frozen=True)
@@ -90,13 +96,13 @@ class CostProvider:
         self.funding_poll_secs = float(funding_poll_secs)
         self._funding_rate_hourly = float(funding_rate_hourly)
         self._oracle_px: float | None = None
+        self._asof_ts = datetime.now(timezone.utc).isoformat()
         self._taker, self._maker = fees_for_tier(self.fee_tier)
 
     def trade_fee_rate(self) -> float:
         return self._taker if self.assume_taker else self._maker
 
     def snapshot(self) -> CostSnapshot:
-        now = datetime.now(timezone.utc).isoformat()
         return CostSnapshot(
             taker_fee=self._taker,
             maker_fee=self._maker,
@@ -105,7 +111,7 @@ class CostProvider:
             oracle_px=self._oracle_px,
             fee_tier=self.fee_tier,
             fill_model_id=self.fill_model_id,
-            asof_ts=now,
+            asof_ts=self._asof_ts,
             sources={
                 "fees": "config_tier",
                 "slippage": "config",
@@ -121,6 +127,27 @@ class CostProvider:
     ) -> float:
         """Pull hourly funding for coin from public metaAndAssetCtxs."""
         return self.refresh_market_state(coin, session=session).funding_rate_hourly
+
+    def observe_market_context(
+        self,
+        *,
+        funding_rate_hourly: float,
+        oracle_px: float,
+        observed_at: str,
+    ) -> None:
+        """Apply one validated public WebSocket asset-context observation."""
+        rate = float(funding_rate_hourly)
+        oracle = float(oracle_px)
+        if not math.isfinite(rate):
+            raise ValueError("funding_rate_hourly must be finite")
+        if not math.isfinite(oracle) or oracle <= 0.0:
+            raise ValueError("oracle_px must be positive and finite")
+        parsed = datetime.fromisoformat(observed_at.replace("Z", "+00:00"))
+        if parsed.utcoffset() is None or parsed.utcoffset().total_seconds() != 0.0:
+            raise ValueError("observed_at must include an explicit UTC offset")
+        self._funding_rate_hourly = rate
+        self._oracle_px = oracle
+        self._asof_ts = parsed.isoformat()
 
     def refresh_market_state(
         self,
@@ -147,6 +174,7 @@ class CostProvider:
         oracle_px = float(context["oraclePx"])
         self._funding_rate_hourly = rate
         self._oracle_px = oracle_px
+        self._asof_ts = datetime.now(timezone.utc).isoformat()
         return HyperliquidMarketState(
             coin=name,
             size_decimals=int(instrument["szDecimals"]),

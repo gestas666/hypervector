@@ -9,13 +9,14 @@ from typing import Mapping, cast
 
 from hypervector.data.event_archive import EventArchive
 from hypervector.data.hl_events import (
+    AssetContextEvent,
     L2SnapshotEvent,
     PublicTradeEvent,
     StreamGap,
     parse_hl_message,
 )
 
-PublicEvent = L2SnapshotEvent | PublicTradeEvent
+PublicEvent = L2SnapshotEvent | PublicTradeEvent | AssetContextEvent
 RecordedEvent = PublicEvent | StreamGap
 _DEDUP_CAPACITY = 50_000
 
@@ -27,13 +28,14 @@ class _PendingGap:
     previous_exchange_ts_ms: int | None
 
 
-def subscription_messages(symbol: str) -> tuple[str, str]:
-    """Return official public L2 and trade subscription messages."""
+def subscription_messages(symbol: str) -> tuple[str, ...]:
+    """Return official public execution and perps-context subscriptions."""
     if not symbol.strip():
         raise ValueError("symbol must be non-empty")
     subscriptions = (
         {"type": "l2Book", "coin": symbol},
         {"type": "trades", "coin": symbol},
+        {"type": "activeAssetCtx", "coin": symbol},
     )
     return tuple(
         json.dumps(
@@ -76,13 +78,21 @@ class HyperliquidEventRecorder:
         events = tuple(event for event in parsed if self._accept(event))
         if not events:
             return 0
-        self._materialize_gap(events[0].exchange_ts_ms)
+        exchange_timestamp = _exchange_timestamp(events[0])
+        if exchange_timestamp is not None:
+            self._materialize_gap(exchange_timestamp)
         self._archive.append(events)
         self._buffer.extend(events)
-        latest = max(event.exchange_ts_ms for event in events)
-        if self._last_exchange_ts_ms is not None:
-            latest = max(latest, self._last_exchange_ts_ms)
-        self._last_exchange_ts_ms = latest
+        exchange_times = tuple(
+            timestamp
+            for event in events
+            if (timestamp := _exchange_timestamp(event)) is not None
+        )
+        if exchange_times:
+            latest = max(exchange_times)
+            if self._last_exchange_ts_ms is not None:
+                latest = max(latest, self._last_exchange_ts_ms)
+            self._last_exchange_ts_ms = latest
         return len(events)
 
     def declare_disconnect(self, *, detected_ts_ns: int, reason: str) -> None:
@@ -122,6 +132,8 @@ class HyperliquidEventRecorder:
             f"l2:{event.event_key}"
             if isinstance(event, L2SnapshotEvent)
             else f"trade:{event.trade_key}"
+            if isinstance(event, PublicTradeEvent)
+            else f"context:{event.event_key}"
         )
         if key in self._recent_keys:
             return False
@@ -136,7 +148,7 @@ class HyperliquidEventRecorder:
             return
         gap = StreamGap(
             symbol=self._symbol,
-            channel="l2Book,trades",
+            channel="l2Book,trades,activeAssetCtx",
             detected_ts_ns=pending.detected_ts_ns,
             reason=pending.reason,
             previous_exchange_ts_ms=pending.previous_exchange_ts_ms,
@@ -145,6 +157,13 @@ class HyperliquidEventRecorder:
         self._archive.record_gap(gap)
         self._buffer.append(gap)
         self._pending_gap = None
+
+
+def _exchange_timestamp(event: PublicEvent) -> int | None:
+    """Return genuine venue event time, never a local context receipt time."""
+    if isinstance(event, AssetContextEvent):
+        return None
+    return event.exchange_ts_ms
 
 
 def _json_object(payload: str | bytes) -> Mapping[str, object]:
