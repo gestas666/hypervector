@@ -11,7 +11,7 @@ import logging
 import math
 from dataclasses import asdict, dataclass, replace
 from pathlib import Path
-from typing import Any
+from typing import Any, Mapping
 
 from hypervector.paper.costs import CostProvider, CostSnapshot, funding_payment
 from hypervector.paper.fill_models import (
@@ -22,6 +22,8 @@ from hypervector.paper.fill_models import (
     select_fill_model,
 )
 from hypervector.paper.ledger import ALLOWED_EXECUTION_MODES, append_paper_decision
+from hypervector.paper.execution_metadata import validated_execution_metadata
+from hypervector.paper.fill_order_events import OrderEventLedgerMixin
 from hypervector.paper.order_intent import NETWORK_MAINNET, build_order_intent
 from hypervector.strategies.hypervelocity_contract import (
     HypervelocityContract,
@@ -42,7 +44,7 @@ class PaperPosition:
     realized_pnl: float = 0.0
 
 
-class ExplicitFillEngine:
+class ExplicitFillEngine(OrderEventLedgerMixin):
     """Apply market fills and funding to a paper position; append decisions."""
 
     def __init__(
@@ -145,7 +147,14 @@ class ExplicitFillEngine:
         metalabel_p: float | None = None,
         metalabel_bundle_id: str | None = None,
         exit_reason: str | None = None,
+        record_metadata: Mapping[str, object] | None = None,
+        fee_override_usd: float | None = None,
     ) -> dict:
+        execution_metadata = validated_execution_metadata(record_metadata)
+        if fee_override_usd is not None and (
+            not math.isfinite(fee_override_usd) or fee_override_usd < 0.0
+        ):
+            raise ValueError("fee_override_usd must be non-negative and finite")
         side_n = str(side).lower().strip()
         if side_n not in _VALID_SIDES:
             raise ValueError(f"side must be 'buy' or 'sell', got {side!r}")
@@ -219,10 +228,15 @@ class ExplicitFillEngine:
                 skipped["intent"] = intent
             if exit_reason is not None:
                 skipped["exit_reason"] = str(exit_reason)
+            skipped.update(execution_metadata)
             append_paper_decision(self._data_root, skipped)
             return skipped
 
-        fee_usd = abs(fill_qty) * fill_px * self._cost_provider.trade_fee_rate()
+        fee_usd = (
+            float(fee_override_usd)
+            if fee_override_usd is not None
+            else abs(fill_qty) * fill_px * self._cost_provider.trade_fee_rate()
+        )
         self._update_position(
             side=side_n, qty=fill_qty, fill_px=fill_px, fee_usd=fee_usd
         )
@@ -251,6 +265,7 @@ class ExplicitFillEngine:
             record["intent"] = intent
         if exit_reason is not None:
             record["exit_reason"] = str(exit_reason)
+        record.update(execution_metadata)
         append_paper_decision(self._data_root, record)
         return record
 
@@ -262,12 +277,22 @@ class ExplicitFillEngine:
         mark_px: float,
         action: str,
     ) -> dict[str, Any]:
+        if action == "liquidation":
+            return build_order_intent(
+                symbol=self._symbol,
+                side=side,
+                qty=qty,
+                order_type="market",
+                time_in_force="ioc",
+                reduce_only=True,
+                notes="venue-enforced shadow liquidation; not sent",
+            )
         if not is_hypervelocity_strategy(self._strategy_name):
             return build_order_intent(
                 symbol=self._symbol,
                 side=side,
                 qty=qty,
-                reduce_only=action == "close",
+                reduce_only=action in {"close", "liquidation"},
             )
         contract = HypervelocityContract()
         return build_order_intent(
@@ -277,59 +302,9 @@ class ExplicitFillEngine:
             order_type=contract.order_type,
             time_in_force=contract.time_in_force,
             limit_px=mark_px,
-            reduce_only=action == "close",
+            reduce_only=action in {"close", "liquidation"},
             notes="shadow post-only intent; not sent",
         )
-
-    def record_order_event(
-        self,
-        *,
-        feed_ts: Any,
-        action: str,
-        side: str,
-        qty: float,
-        limit_px: float,
-        status: str,
-        reason: str | None = None,
-        conviction: float | None = None,
-        conviction_source: str | None = None,
-        metalabel_p: float | None = None,
-        metalabel_bundle_id: str | None = None,
-    ) -> dict[str, Any]:
-        """Append a non-fill maker order lifecycle event to the paper ledger."""
-        snap = self._cost_provider.snapshot()
-        record = self._base_record(
-            feed_ts=feed_ts,
-            action=action,
-            side=side,
-            qty=0.0,
-            mark_px=limit_px,
-            fill_px=limit_px,
-            snap=snap,
-            fee_usd=0.0,
-            funding_payment_usd=0.0,
-            conviction=conviction,
-            conviction_source=conviction_source,
-            metalabel_p=metalabel_p,
-            metalabel_bundle_id=metalabel_bundle_id,
-        )
-        record.update(
-            {
-                "fill_qty": 0.0,
-                "requested_qty": float(qty),
-                "order_status": str(status),
-                "order_intent": self._order_intent(
-                    side=side,
-                    qty=qty,
-                    mark_px=limit_px,
-                    action="close" if action == "submit_target" else action,
-                ),
-            }
-        )
-        if reason is not None:
-            record["reason"] = str(reason)
-        append_paper_decision(self._data_root, record)
-        return record
 
     def apply_funding(
         self,
@@ -338,8 +313,10 @@ class ExplicitFillEngine:
         oracle_px: float,
         hours: float = 1.0,
         funding_rate_hourly: float | None = None,
+        record_metadata: Mapping[str, object] | None = None,
     ) -> dict | None:
         """Apply fractional/hourly funding on open position; return decision or None if flat."""
+        execution_metadata = validated_execution_metadata(record_metadata)
         pos = self._position
         if pos.qty == 0.0:
             return None
@@ -376,6 +353,7 @@ class ExplicitFillEngine:
             fee_usd=0.0,
             funding_payment_usd=payment,
         )
+        record.update(execution_metadata)
         append_paper_decision(self._data_root, record)
         return record
 

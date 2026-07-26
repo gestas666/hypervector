@@ -18,6 +18,7 @@ from typing import Any, Mapping
 import pandas as pd
 
 from hypervector.data.book_record import append_book_snapshot
+from hypervector.data.hl_events import L2SnapshotEvent, PublicTradeEvent, StreamGap
 from hypervector.infra import ensure_data_layout
 from hypervector.nautilus.actor import (
     DEFAULT_MAX_LOOKBACK,
@@ -53,7 +54,22 @@ from hypervector.paper.conviction import (
 from hypervector.paper.costs import CostProvider
 from hypervector.paper.fill_models import FILL_MODEL_L2_WALK_V1
 from hypervector.paper.fills import ExplicitFillEngine
+from hypervector.paper.hypervelocity_session_bridge import (
+    HypervelocitySessionBridge,
+    ShadowLedgerContext,
+    ShadowOrderAnnotation,
+)
+from hypervector.paper.hypervelocity_shadow_controller import (
+    HypervelocityShadowController,
+)
+from hypervector.paper.event_runtime import build_event_shadow_controller
+from hypervector.paper.event_resume import PendingTargetResume
 from hypervector.paper.ledger import DECISIONS_FILENAME, append_paper_decision
+from hypervector.paper.liquidation_execution import (
+    LIQUIDATION_EXECUTION_MODEL,
+    PARTIAL_LIQUIDATION_SUPPORTED,
+    PARTIAL_LIQUIDATION_THRESHOLD_USD,
+)
 from hypervector.paper.maker_execution import (
     PostOnlyLimitFillModel,
     PendingMakerEntry,
@@ -80,6 +96,7 @@ from hypervector.strategies.hypervelocity import (
     current_hypervelocity_regime,
 )
 from hypervector.strategies.hypervelocity_profile import HypervelocityProfile
+from hypervector.strategies.hypervelocity_runtime import RuntimeMarketState
 from hypervector.strategies import register_all_strategies
 
 logger = logging.getLogger(__name__)
@@ -266,6 +283,7 @@ class PaperSession:
                 realized_pnl=resume.realized_pnl,
                 init_cash=resume.init_cash,
             )
+        self._event_shadow_bridge: HypervelocitySessionBridge | None = None
         self.exits = _exits_dict(self.loadout)
         self.buffer_rows: list[dict[str, Any]] = []
         self.fills_count = 0
@@ -275,8 +293,16 @@ class PaperSession:
         self._identity_written = False
         self._pending_maker_entry = _restore_pending_maker_entry(resume)
         self._reconciled_through: pd.Timestamp | None = None
-        self._downtime_reconciliation_enabled = resume is not None and (
-            self.engine.position.qty != 0.0 or self._pending_maker_entry is not None
+        event_authority = (
+            hypervelocity_profile is not None
+            and hypervelocity_profile.shadow_execution_model == "nautilus_event_v1"
+        )
+        self._downtime_reconciliation_enabled = (
+            not event_authority
+            and resume is not None
+            and (
+                self.engine.position.qty != 0.0 or self._pending_maker_entry is not None
+            )
         )
         self._live_telemetry_enabled = False
         self._live_activated_at: pd.Timestamp | None = None
@@ -306,12 +332,134 @@ class PaperSession:
     @property
     def pending_maker_entry(self) -> PendingMakerEntry | None:
         """Return the current backend-owned pending maker entry, if any."""
+        if self._event_shadow_bridge is not None:
+            return self._event_shadow_bridge.pending_maker_entry
         return self._pending_maker_entry
+
+    def attach_hypervelocity_event_controller(
+        self,
+        controller: HypervelocityShadowController,
+    ) -> None:
+        """Attach the no-submit event runtime after validating portfolio parity."""
+        if not self._is_hypervelocity or self.execution_mode != "shadow":
+            raise RuntimeError("event shadow controller requires Hypervelocity shadow")
+        expected = controller.state.position_quantity
+        if controller.state.position_direction == "short":
+            expected = -expected
+        if not math.isclose(self.engine.position.qty, expected, abs_tol=1e-10):
+            raise RuntimeError("cannot attach event runtime with mismatched position")
+        self._event_shadow_bridge = HypervelocitySessionBridge(
+            controller=controller,
+            engine=self.engine,
+            data_root=self.root,
+            book_feed=self.book_feed,
+            context=ShadowLedgerContext(
+                run_id=self.run_id,
+                export_id=str(self.export_id),
+                strategy_name=self.strategy_name,
+                symbol=self.loadout.symbol,
+                timeframe=self.loadout.timeframe,
+            ),
+        )
+        self._restore_event_annotations()
+
+    def _restore_event_annotations(self) -> None:
+        bridge = self._event_shadow_bridge
+        resume = self._shadow_resume
+        pending = resume.pending_entry if resume is not None else None
+        if bridge is None or resume is None:
+            return
+        inherited = None
+        if pending is not None and pending.client_order_id is not None:
+            inherited = ShadowOrderAnnotation(
+                conviction=(
+                    pending.conviction
+                    if pending.conviction is not None
+                    else self.conviction
+                ),
+                conviction_source=pending.conviction_source or "fixed",
+                metalabel_p=pending.metalabel_p,
+                metalabel_bundle_id=pending.metalabel_bundle_id,
+            )
+            bridge.seed_order_annotation(pending.client_order_id, inherited)
+        self._seed_target_annotations(bridge, resume, inherited)
+
+    def _seed_target_annotations(
+        self,
+        bridge: HypervelocitySessionBridge,
+        resume: ShadowPortfolioResume,
+        inherited: ShadowOrderAnnotation | None,
+    ) -> None:
+        """Restore report-only context for every durable target."""
+        for target in resume.active_targets:
+            bridge.seed_order_annotation(
+                target.client_order_id,
+                _target_resume_annotation(target, inherited, self.conviction),
+            )
+
+    def activate_hypervelocity_event_runtime(
+        self,
+        *,
+        observed_at: str,
+    ) -> HypervelocityShadowController:
+        """Construct and attach the profile-authoritative event shadow runtime."""
+        profile = self.hypervelocity_profile
+        if profile is None:
+            raise RuntimeError("event shadow activation requires a validated profile")
+        controller = build_event_shadow_controller(
+            profile=profile,
+            initial_cash_usd=self.engine.initial_cash,
+            observed_at=observed_at,
+            resume=self._shadow_resume,
+        )
+        self.attach_hypervelocity_event_controller(controller)
+        return controller
+
+    def ingest_hyperliquid_event(
+        self,
+        event: L2SnapshotEvent | PublicTradeEvent | StreamGap,
+    ) -> str | None:
+        """Consume one public event through the attached backend shadow runtime."""
+        bridge = self._event_shadow_bridge
+        if bridge is None:
+            raise RuntimeError("Hypervelocity event shadow runtime is not attached")
+        self.ensure_session_identity()
+        action = bridge.ingest(event)
+        if isinstance(event, L2SnapshotEvent) and self._live_telemetry_enabled:
+            snapshot = self.book_feed.latest()
+            if snapshot is not None:
+                self._record_book_telemetry(snapshot)
+        self.fills_count += bridge.last_fill_count
+        return action
+
+    def apply_hyperliquid_mark(
+        self,
+        *,
+        mark_price: float,
+        observed_at: str,
+    ) -> str | None:
+        """Apply one backend venue mark to the attached isolated shadow runtime."""
+        bridge = self._event_shadow_bridge
+        if bridge is None:
+            raise RuntimeError("Hypervelocity event shadow runtime is not attached")
+        action = bridge.apply_mark(mark_price=mark_price, observed_at=observed_at)
+        if action is not None:
+            self.fills_count += 1
+        return action
 
     @property
     def downtime_reconciliation_enabled(self) -> bool:
         """Return whether restart began with an active target or maker entry."""
         return self._downtime_reconciliation_enabled
+
+    @property
+    def event_downtime_funding_enabled(self) -> bool:
+        """Return whether a restored event position needs missed funding."""
+        return (
+            self._event_shadow_bridge is not None
+            and self._shadow_resume is not None
+            and self.engine.position.qty != 0.0
+        )
 
     @property
     def resume_state_asof(self) -> str | None:
@@ -390,6 +538,11 @@ class PaperSession:
 
         self.maybe_refresh_funding()
 
+        event_funding_applied = self._event_shadow_bridge is not None
+        if event_funding_applied:
+            self._apply_hourly_funding(record)
+        liquidation_action = self._apply_event_mark(record)
+
         if self._is_hypervelocity and self._live_telemetry_enabled:
             self._record_hypervelocity_regime(record)
 
@@ -400,23 +553,43 @@ class PaperSession:
         if self._is_hypervelocity and self._live_telemetry_enabled:
             self._record_hypervelocity_entry_execution(record)
 
-        # Hyperliquid funding settles hourly, not continuously between boundaries.
-        if self.engine.position.qty != 0.0 and _is_funding_boundary(
-            record,
-            timeframe=self.loadout.timeframe,
-        ):
-            snapshot = self.cost_provider.snapshot()
-            oracle_px = snapshot.oracle_px or float(record["close"])
-            self.engine.apply_funding(
-                feed_ts=_bar_close_timestamp(
-                    record,
-                    timeframe=self.loadout.timeframe,
-                ).isoformat(),
-                oracle_px=oracle_px,
-                hours=1.0,
-            )
+        if not event_funding_applied:
+            self._apply_hourly_funding(record)
+        return fill_action or liquidation_action
 
-        return fill_action
+    def _apply_hourly_funding(self, record: dict[str, Any]) -> None:
+        """Apply funding only on an hourly Hyperliquid settlement boundary."""
+        if self.engine.position.qty == 0.0 or not _is_funding_boundary(
+            record, timeframe=self.loadout.timeframe
+        ):
+            return
+        snapshot = self.cost_provider.snapshot()
+        oracle_px = snapshot.oracle_px or float(record["close"])
+        applied_at = _bar_close_timestamp(
+            record, timeframe=self.loadout.timeframe
+        ).isoformat()
+        if self._event_shadow_bridge is not None:
+            self._event_shadow_bridge.apply_funding(
+                hourly_rate=snapshot.funding_rate_hourly,
+                oracle_price=oracle_px,
+                applied_at=applied_at,
+            )
+            return
+        self.engine.apply_funding(
+            feed_ts=applied_at,
+            oracle_px=oracle_px,
+            hours=1.0,
+        )
+
+    def _apply_event_mark(self, record: dict[str, Any]) -> str | None:
+        """Apply the latest public oracle mark only for event authority."""
+        if self._event_shadow_bridge is None:
+            return None
+        snapshot = self.cost_provider.snapshot()
+        return self.apply_hyperliquid_mark(
+            mark_price=snapshot.oracle_px or float(record["close"]),
+            observed_at=self._event_decision_timestamp(record).isoformat(),
+        )
 
     def _record_hypervelocity_regime(self, record: dict[str, Any]) -> None:
         """Append the causal regime state used by the live entry decision."""
@@ -475,7 +648,7 @@ class PaperSession:
         self, record: dict[str, Any]
     ) -> dict[str, str | bool | None]:
         """Return backend-owned maker, retry, and cooldown display state."""
-        pending = self._pending_maker_entry
+        pending = self.pending_maker_entry
         retry_state = self._hypervelocity_retry_state()
         return {
             "maker_entry_state": "pending" if pending is not None else "standby",
@@ -486,10 +659,16 @@ class PaperSession:
 
     def _hypervelocity_retry_state(self) -> str:
         """Return why a flat strategy may not retry the current direction."""
-        if self._completed_trade_direction is not None:
-            return f"awaiting_regime_reset_{self._completed_trade_direction}"
-        if self._expired_entry_direction is not None:
-            return f"blocked_{self._expired_entry_direction}"
+        completed = self._completed_trade_direction
+        expired = self._expired_entry_direction
+        if self._event_shadow_bridge is not None:
+            state = self._event_shadow_bridge.controller.state
+            completed = state.completed_trade_direction
+            expired = state.expired_entry_direction
+        if completed is not None:
+            return f"awaiting_regime_reset_{completed}"
+        if expired is not None:
+            return f"blocked_{expired}"
         return "ready"
 
     def _hypervelocity_regime_payload(self, frame: pd.DataFrame) -> dict[str, Any]:
@@ -739,6 +918,8 @@ class PaperSession:
 
     def _process_hypervelocity(self, record: dict[str, Any]) -> str | None:
         """Advance causal maker entry and fixed-target state for Hypervelocity."""
+        if self._event_shadow_bridge is not None:
+            return self._process_hypervelocity_event(record)
         book = self._usable_book(record)
         if self.engine.position.qty != 0.0:
             return self._fill_hypervelocity_target(record, book)
@@ -768,6 +949,97 @@ class PaperSession:
             self._submit_pending_entry(record, direction, book)
         return None
 
+    def _process_hypervelocity_event(self, record: dict[str, Any]) -> str | None:
+        """Submit classified intent to the event runtime without claiming a fill."""
+        bridge = self._event_shadow_bridge
+        if bridge is None:
+            raise RuntimeError("Hypervelocity event shadow runtime is not attached")
+        frame = _buffer_to_df(self.buffer_rows)
+        direction = self._desired_hypervelocity_direction()
+        market = self._event_market_state(record, frame, direction)
+        annotation = self._event_order_annotation(frame, direction)
+        return bridge.on_market(market, annotation=annotation)
+
+    def _event_market_state(
+        self,
+        record: dict[str, Any],
+        frame: pd.DataFrame,
+        direction: str | None,
+    ) -> RuntimeMarketState:
+        """Build one causal decision from regime state and fresh event evidence."""
+        bridge = self._event_shadow_bridge
+        if bridge is None:
+            raise RuntimeError("Hypervelocity event shadow runtime is not attached")
+        mark_px = float(record["close"])
+        size_decimals = (
+            self.hypervelocity_profile.size_decimals
+            if self.hypervelocity_profile is not None
+            else 5
+        )
+        quantity = self._event_entry_quantity(frame, mark_px, size_decimals)
+        decision_at = self._event_decision_timestamp(record)
+        book = self._usable_book_at(decision_at)
+        limit = (
+            entry_limit_price(direction, record, book=book)
+            if direction is not None
+            else None
+        )
+        profile = self.hypervelocity_profile
+        contract = HypervelocityContract()
+        return RuntimeMarketState(
+            symbol=self.loadout.symbol,
+            observed_at=decision_at.isoformat(),
+            entry_direction=direction,
+            entry_quantity=max(quantity, 10 ** (-size_decimals)),
+            entry_limit_price=limit,
+            evidence_fresh=bridge.controller.port.evidence_fresh,
+            entry_ttl_seconds=(
+                profile.entry_ttl_seconds
+                if profile is not None
+                else contract.entry_ttl_seconds
+            ),
+            reentry_cooldown_seconds=float(
+                (profile.reentry_cooldown_bars if profile is not None else 1)
+                * _timeframe_minutes(self.loadout.timeframe)
+                * 60
+            ),
+            target_price_fraction=contract.target_price_fraction,
+            price_tick=self._hypervelocity_tick(mark_px),
+        )
+
+    def _event_entry_quantity(
+        self,
+        frame: pd.DataFrame,
+        mark_px: float,
+        size_decimals: int,
+    ) -> float:
+        """Return fixed-contract size; model annotations cannot scale it."""
+        qty = _entry_qty(
+            df=frame,
+            loadout=self.loadout,
+            exits=self.exits,
+            equity=self.engine.equity(mark_px=mark_px),
+            conviction=self.conviction,
+            mark_px=mark_px,
+        )
+        return quantize_size_down(qty or 0.0, size_decimals=size_decimals)
+
+    def _event_order_annotation(
+        self,
+        frame: pd.DataFrame,
+        direction: str | None,
+    ) -> ShadowOrderAnnotation | None:
+        """Resolve report-only model context without filtering or scaling."""
+        if direction is None:
+            return None
+        resolved = self.conviction_provider.resolve(bars=frame, direction=direction)
+        return ShadowOrderAnnotation(
+            conviction=resolved.conviction,
+            conviction_source=resolved.source,
+            metalabel_p=resolved.metalabel_p,
+            metalabel_bundle_id=resolved.metalabel_bundle_id,
+        )
+
     def _observe_entry_direction(self, direction: str | None) -> None:
         """Re-arm consumed entry episodes after a non-matching regime."""
         if (
@@ -793,11 +1065,13 @@ class PaperSession:
     def _hypervelocity_reentry_cooling_down(self, record: dict[str, Any]) -> bool:
         """Return whether the explicit minimum completed-bar pause remains."""
         profile = self.hypervelocity_profile
-        if profile is None or self._last_hypervelocity_exit_at is None:
+        last_exit = self._last_hypervelocity_exit_at
+        if self._event_shadow_bridge is not None:
+            value = self._event_shadow_bridge.controller.state.last_exit_at
+            last_exit = pd.Timestamp(value) if value is not None else None
+        if profile is None or last_exit is None:
             return False
-        elapsed = (
-            self._hypervelocity_timestamp(record) - self._last_hypervelocity_exit_at
-        )
+        elapsed = self._hypervelocity_timestamp(record) - last_exit
         required = pd.Timedelta(
             minutes=(
                 profile.reentry_cooldown_bars
@@ -984,14 +1258,27 @@ class PaperSession:
         return age.total_seconds() > ttl_seconds
 
     def _usable_book(self, record: dict[str, Any]) -> BookSnapshot | None:
+        return self._usable_book_at(self._hypervelocity_timestamp(record))
+
+    def _usable_book_at(self, observed_at: pd.Timestamp) -> BookSnapshot | None:
+        """Return a book usable at the exact backend decision timestamp."""
         book = self.book_feed.latest()
         if book is None or book.is_empty():
             return None
-        now_ms = self._hypervelocity_timestamp(record).timestamp() * 1000.0
+        now_ms = observed_at.timestamp() * 1000.0
         age_ms = book.age_ms(now_ms)
         if age_ms < 0.0 or age_ms > self.max_book_age_ms:
             return None
         return book
+
+    def _event_decision_timestamp(self, record: dict[str, Any]) -> pd.Timestamp:
+        """Return the later of causal candle close and latest event evidence."""
+        bridge = self._event_shadow_bridge
+        if bridge is None:
+            raise RuntimeError("Hypervelocity event shadow runtime is not attached")
+        candle_close = self._hypervelocity_timestamp(record)
+        event_time = pd.Timestamp(bridge.controller.port.account_snapshot().observed_at)
+        return max(candle_close, event_time)
 
     def _hypervelocity_timestamp(self, record: dict[str, Any]) -> pd.Timestamp:
         return pd.Timestamp(record["timestamp"]) + pd.Timedelta(minutes=1)
@@ -1058,6 +1345,60 @@ class PaperSession:
             final_record, timeframe=self.loadout.timeframe
         )
         return len(missed)
+
+    def reconcile_event_downtime_funding(
+        self,
+        ohlcv: pd.DataFrame,
+        *,
+        funding_rates: Mapping[pd.Timestamp, float],
+    ) -> int:
+        """Reconcile only missed funding; candles have no fill authority."""
+        if not self.event_downtime_funding_enabled or self._shadow_resume is None:
+            raise RuntimeError("event funding reconciliation requires an open resume")
+        if isinstance(ohlcv, pd.DataFrame) and ohlcv.empty:
+            return 0
+        frame = _prepare_ohlcv(ohlcv, max_bars=None)
+        cutoff = _resume_timestamp(self._shadow_resume.state_asof)
+        missed = _bars_closing_after(
+            frame,
+            cutoff=cutoff,
+            timeframe=self.loadout.timeframe,
+        )
+        if missed.empty:
+            return 0
+        if "source" not in missed or not missed["source"].eq("hl").all():
+            raise RuntimeError("event funding reconciliation requires Hyperliquid bars")
+        rates = _normalized_funding_rates(funding_rates)
+        self._validate_reconciliation_funding(missed, rates)
+        self.ensure_session_identity()
+        for _, row in missed.iterrows():
+            self._reconcile_event_funding_bar(row, rates)
+        self._reconciled_through = _bar_close_timestamp(
+            _row_to_buffer_record(missed.iloc[-1]),
+            timeframe=self.loadout.timeframe,
+        )
+        return len(missed)
+
+    def _reconcile_event_funding_bar(
+        self,
+        row: pd.Series,
+        rates: Mapping[pd.Timestamp, float],
+    ) -> None:
+        record = _row_to_buffer_record(row)
+        _append_bar_record(self.buffer_rows, record, max_lookback=DEFAULT_MAX_LOOKBACK)
+        self.bars_processed += 1
+        self._last_ts = pd.Timestamp(record["timestamp"])
+        closed_at = _bar_close_timestamp(record, timeframe=self.loadout.timeframe)
+        if not _is_funding_boundary(record, timeframe=self.loadout.timeframe):
+            return
+        bridge = self._event_shadow_bridge
+        if bridge is None or closed_at not in rates:
+            raise RuntimeError("event funding reconciliation state is incomplete")
+        bridge.apply_funding(
+            hourly_rate=rates[closed_at],
+            oracle_price=float(record["close"]),
+            applied_at=closed_at.isoformat(),
+        )
 
     def _validate_reconciliation_funding(
         self,
@@ -1144,6 +1485,52 @@ class PaperSession:
                 "timeframe": self.loadout.timeframe,
                 "data_root": str(self.root.resolve()),
                 "action": "session_start",
+                "execution_model": (
+                    self.hypervelocity_profile.shadow_execution_model
+                    if self.hypervelocity_profile is not None
+                    else "legacy_bar_through_v1"
+                ),
+                "execution_data_source": (
+                    "hyperliquid_public_ws_l2_trades"
+                    if self.hypervelocity_profile is not None
+                    else None
+                ),
+                "execution_evidence_fresh": False,
+                "execution_submit_latency_ms": (
+                    self.hypervelocity_profile.execution_submit_latency_ms
+                    if self.hypervelocity_profile is not None
+                    else None
+                ),
+                "execution_cancel_latency_ms": (
+                    self.hypervelocity_profile.execution_cancel_latency_ms
+                    if self.hypervelocity_profile is not None
+                    else None
+                ),
+                "execution_update_latency_ms": (
+                    self.hypervelocity_profile.execution_update_latency_ms
+                    if self.hypervelocity_profile is not None
+                    else None
+                ),
+                "execution_queue_ahead_qty": None,
+                "execution_requested_qty": None,
+                "cumulative_filled_qty": None,
+                "remaining_qty": None,
+                "liquidity_side": None,
+                "margin_model": (
+                    "hyperliquid_isolated_v1"
+                    if self.hypervelocity_profile is not None
+                    else None
+                ),
+                "liquidation_execution_model": (
+                    LIQUIDATION_EXECUTION_MODEL
+                    if self.hypervelocity_profile is not None
+                    else None
+                ),
+                "partial_liquidation_supported": (
+                    PARTIAL_LIQUIDATION_SUPPORTED
+                    if self.hypervelocity_profile is not None
+                    else None
+                ),
                 "conviction": self.conviction,
                 "metalabel_mode": self.metalabel_mode,
                 "metalabel_bundle_id": self.conviction_provider.bundle_id,
@@ -1187,7 +1574,10 @@ class PaperSession:
                         "depth_levels": (
                             self.hypervelocity_profile.orderbook_archive_depth_levels
                         ),
-                        "path_pattern": ("data/cache/book/<SYMBOL>_l2_<UTC_DAY>.jsonl"),
+                        "path_pattern": (
+                            "cache/events/hyperliquid/<SYMBOL>/<UTC_DAY>/"
+                            "{l2.parquet,trades.parquet,gaps.jsonl}"
+                        ),
                     }
                     if self.hypervelocity_profile is not None
                     else {"enabled": False}
@@ -1446,11 +1836,19 @@ def _effective_execution(
     if not is_hypervelocity_strategy(loadout.strategy_name):
         return {"order_type": "market", "time_in_force": "ioc"}
     contract = HypervelocityContract()
-    return {
+    event_model = profile.shadow_execution_model if profile else "legacy_bar_through_v1"
+    execution: dict[str, Any] = {
         "order_type": contract.order_type,
         "time_in_force": contract.time_in_force,
-        "fill_rule": "through_one_tick",
-        "fill_model": PostOnlyLimitFillModel.fill_model_id,
+        "fill_rule": (
+            "public_l2_trade_event_tape"
+            if event_model == "nautilus_event_v1"
+            else "through_one_tick"
+        ),
+        "fill_model": (
+            event_model if profile is not None else PostOnlyLimitFillModel.fill_model_id
+        ),
+        "legacy_comparator": "legacy_bar_through_v1",
         "price_tick_mode": "hyperliquid_dynamic",
         "entry_ttl_seconds": (
             profile.entry_ttl_seconds
@@ -1471,6 +1869,18 @@ def _effective_execution(
             profile.reentry_cooldown_bars if profile is not None else 1
         ),
     }
+    if profile is not None:
+        execution.update(
+            submit_latency_ms=profile.execution_submit_latency_ms,
+            cancel_latency_ms=profile.execution_cancel_latency_ms,
+            update_latency_ms=profile.execution_update_latency_ms,
+            max_event_age_ms=profile.execution_max_event_age_ms,
+            restart_queue_policy=profile.restart_queue_policy,
+            liquidation_execution_model=LIQUIDATION_EXECUTION_MODEL,
+            partial_liquidation_supported=PARTIAL_LIQUIDATION_SUPPORTED,
+            partial_liquidation_threshold_usd=PARTIAL_LIQUIDATION_THRESHOLD_USD,
+        )
+    return execution
 
 
 def _portfolio_spec(
@@ -1512,6 +1922,38 @@ def _restore_pending_maker_entry(
         conviction_source=pending.conviction_source,
         metalabel_p=pending.metalabel_p,
         metalabel_bundle_id=pending.metalabel_bundle_id,
+    )
+
+
+def _target_resume_annotation(
+    target: PendingTargetResume,
+    inherited: ShadowOrderAnnotation | None,
+    default_conviction: float,
+) -> ShadowOrderAnnotation:
+    """Recover target annotation, falling back only to its parent entry."""
+    return ShadowOrderAnnotation(
+        conviction=(
+            target.conviction
+            if target.conviction is not None
+            else inherited.conviction
+            if inherited is not None
+            else default_conviction
+        ),
+        conviction_source=(
+            target.conviction_source
+            or (inherited.conviction_source if inherited is not None else "fixed")
+        ),
+        metalabel_p=(
+            target.metalabel_p
+            if target.metalabel_p is not None
+            else inherited.metalabel_p
+            if inherited is not None
+            else None
+        ),
+        metalabel_bundle_id=(
+            target.metalabel_bundle_id
+            or (inherited.metalabel_bundle_id if inherited is not None else None)
+        ),
     )
 
 

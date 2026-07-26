@@ -622,6 +622,7 @@ dependencies = [
     { name = "backtrader", extra = ["plotting"] },
     { name = "nautilus-trader" },
     { name = "vectorbt", extra = ["full", "rust"] },
+    { name = "websockets" },
 ]
 
 [package.optional-dependencies]
@@ -641,6 +642,7 @@ requires-dist = [
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=5.0" },
     { name = "vectorbt", extras = ["full", "rust"], specifier = "==1.1.0" },
+    { name = "websockets", specifier = ">=16.0,<17" },
 ]
 provides-extras = ["dev", "ml"]
 

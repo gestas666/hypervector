@@ -12,6 +12,7 @@ from hypervector.paper.resume import (
     load_shadow_portfolio_resume,
     portfolio_fingerprint,
 )
+from hypervector.paper.event_resume import event_resume_details
 
 
 def test_flat_filled_run_does_not_require_position_average(tmp_path: Path) -> None:
@@ -150,6 +151,69 @@ def test_open_position_accepts_explicit_entry_rearm_policy_migration(
     assert resumed.portfolio_profile_changed_from == portfolio_fingerprint(old_spec)
 
 
+def test_open_position_accepts_explicit_event_execution_migration(
+    tmp_path: Path,
+) -> None:
+    """The declared legacy comparator may migrate without fabricating fills."""
+    path = tmp_path / "decisions.jsonl"
+    old_execution = {
+        "fill_rule": "through_one_tick",
+        "fill_model": "post_only_limit_through_v1",
+        "entry_ttl_seconds": 300.0,
+    }
+    new_execution = {
+        **old_execution,
+        "fill_rule": "public_l2_trade_event_tape",
+        "fill_model": "nautilus_event_v1",
+        "legacy_comparator": "legacy_bar_through_v1",
+        "submit_latency_ms": 50,
+        "cancel_latency_ms": 50,
+        "update_latency_ms": 50,
+        "max_event_age_ms": 3000,
+    }
+    old_spec = {"strategy_name": "hypervelocity_1m_scalper", "execution": old_execution}
+    new_spec = {**old_spec, "execution": new_execution}
+    common = {
+        "run_id": "event-migration-run",
+        "execution_mode": "shadow",
+        "strategy_name": "hypervelocity_1m_scalper",
+        "symbol": "BTC",
+        "timeframe": "1m",
+        "init_cash": 10_000.0,
+    }
+    rows = [
+        {
+            **common,
+            "feed_ts": "session_start",
+            "action": "session_start",
+            "portfolio_spec": old_spec,
+        },
+        {
+            **common,
+            "feed_ts": "2026-07-26T18:05:00Z",
+            "action": "enter_long",
+            "fill_qty": 1.0,
+            "position_qty": 1.0,
+            "position_avg_px": 100.0,
+            "realized_pnl": -0.1,
+            "unrealized_pnl": 0.0,
+            "equity": 9_999.9,
+        },
+    ]
+    path.write_text("".join(f"{json.dumps(row)}\n" for row in rows), encoding="utf-8")
+
+    resumed = load_shadow_portfolio_resume(
+        path,
+        symbol="BTC",
+        timeframe="1m",
+        expected_spec=new_spec,
+    )
+
+    assert resumed is not None
+    assert resumed.execution_model == "legacy_bar_through_v1"
+    assert resumed.portfolio_fingerprint == portfolio_fingerprint(new_spec)
+
+
 def test_resume_restores_latest_unmatched_pending_entry(tmp_path: Path) -> None:
     """A submitted maker entry is durable even before the portfolio has a fill."""
     path = tmp_path / "decisions.jsonl"
@@ -194,6 +258,122 @@ def test_resume_restores_latest_unmatched_pending_entry(tmp_path: Path) -> None:
     assert resumed.pending_entry.submitted_at == "2026-07-25T18:05:00Z"
     assert resumed.pending_entry.metalabel_p == 0.62
     assert resumed.pending_entry.metalabel_bundle_id == "bundle-long"
+
+
+def test_event_resume_restores_partial_entry_target_and_open_costs(
+    tmp_path: Path,
+) -> None:
+    """Event runtime restart retains both unfilled entry and target coverage."""
+    path = tmp_path / "decisions.jsonl"
+    common: dict[str, object] = {
+        "run_id": "event-run",
+        "execution_mode": "shadow",
+        "execution_model": "nautilus_event_v1",
+        "strategy_name": "hypervelocity_1m_scalper",
+        "symbol": "BTC",
+        "timeframe": "1m",
+        "init_cash": 10_000.0,
+        "position_avg_px": 64_500.0,
+        "unrealized_pnl": 0.0,
+    }
+    rows = [
+        {
+            **common,
+            "feed_ts": "session_start",
+            "action": "session_start",
+            "position_qty": 0.0,
+            "position_avg_px": 0.0,
+            "realized_pnl": 0.0,
+            "equity": 10_000.0,
+        },
+        {
+            **common,
+            "feed_ts": "2026-07-26T20:00:00+00:00",
+            "action": "submit_entry",
+            "side": "buy",
+            "client_order_id": "hv-btc-entry-00000001",
+            "requested_qty": 4.0,
+            "fill_px": 64_500.0,
+            "cumulative_filled_qty": 0.0,
+            "remaining_qty": 4.0,
+            "position_qty": 0.0,
+            "realized_pnl": 0.0,
+            "equity": 10_000.0,
+        },
+        {
+            **common,
+            "feed_ts": "2026-07-26T20:00:01+00:00",
+            "action": "enter_long",
+            "side": "buy",
+            "client_order_id": "hv-btc-entry-00000001",
+            "fill_qty": 1.0,
+            "fee_usd": 9.675,
+            "cumulative_filled_qty": 1.0,
+            "remaining_qty": 3.0,
+            "position_qty": 1.0,
+            "realized_pnl": -9.675,
+            "equity": 9_990.325,
+        },
+        {
+            **common,
+            "feed_ts": "2026-07-26T20:00:01+00:00",
+            "action": "submit_target",
+            "side": "sell",
+            "client_order_id": "hv-btc-target-00000002",
+            "requested_qty": 1.0,
+            "fill_px": 64_629.0,
+            "cumulative_filled_qty": 0.0,
+            "remaining_qty": 1.0,
+            "position_qty": 1.0,
+            "realized_pnl": -9.675,
+            "equity": 9_990.325,
+        },
+        {
+            **common,
+            "feed_ts": "2026-07-26T21:00:00+00:00",
+            "action": "funding",
+            "funding_payment_usd": 6.45,
+            "position_qty": 1.0,
+            "realized_pnl": -16.125,
+            "equity": 9_983.875,
+        },
+    ]
+    path.write_text("".join(f"{json.dumps(row)}\n" for row in rows), encoding="utf-8")
+
+    resumed = load_shadow_portfolio_resume(path, symbol="BTC", timeframe="1m")
+
+    assert resumed is not None
+    assert resumed.execution_model == "nautilus_event_v1"
+    assert resumed.pending_entry is not None
+    assert resumed.pending_entry.client_order_id == "hv-btc-entry-00000001"
+    assert resumed.pending_entry.cumulative_quantity == pytest.approx(1.0)
+    assert len(resumed.active_targets) == 1
+    assert resumed.active_targets[0].client_order_id == "hv-btc-target-00000002"
+    assert resumed.next_order_sequence == 3
+    assert resumed.open_position_fees_usd == pytest.approx(9.675)
+    assert resumed.open_position_funding_net_usd == pytest.approx(-6.45)
+
+
+def test_event_resume_drops_rejected_target() -> None:
+    rows = [
+        {
+            "action": "submit_target",
+            "client_order_id": "hv-btc-target-00000002",
+            "side": "sell",
+            "feed_ts": "2026-07-26T20:00:01+00:00",
+            "requested_qty": 1.0,
+            "fill_px": 64_629.0,
+            "remaining_qty": 1.0,
+            "position_qty": 1.0,
+        },
+        {
+            "action": "rejected_target",
+            "client_order_id": "hv-btc-target-00000002",
+            "position_qty": 1.0,
+        },
+    ]
+
+    assert event_resume_details(rows).active_targets == ()
 
 
 def test_resume_clears_pending_entry_after_cancel(tmp_path: Path) -> None:

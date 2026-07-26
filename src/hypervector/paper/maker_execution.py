@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from decimal import Decimal, ROUND_CEILING, ROUND_FLOOR
+from decimal import Decimal, ROUND_FLOOR
 from math import floor, log10
 from typing import Any, Literal
 
 import pandas as pd
 
+from hypervector.execution.pricing import round_price_to_tick as round_price_to_tick
 from hypervector.paper.fill_models import FillResult
 
 Direction = Literal["long", "short"]
@@ -28,21 +29,6 @@ def hyperliquid_price_tick(price: float, *, size_decimals: int) -> float:
     decimal_cap_exponent = -(6 - int(size_decimals))
     tick_exponent = min(0, max(significant_exponent, decimal_cap_exponent))
     return float(10.0**tick_exponent)
-
-
-def round_price_to_tick(
-    price: float,
-    *,
-    tick_size: float,
-    upward: bool,
-) -> float:
-    """Round a price outward to an exact venue tick."""
-    tick = Decimal(str(tick_size))
-    if tick <= 0:
-        raise ValueError("tick_size must be positive")
-    rounding = ROUND_CEILING if upward else ROUND_FLOOR
-    units = (Decimal(str(price)) / tick).to_integral_value(rounding=rounding)
-    return float(units * tick)
 
 
 def quantize_size_down(qty: float, *, size_decimals: int) -> float:

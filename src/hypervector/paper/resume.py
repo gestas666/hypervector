@@ -5,11 +5,12 @@ from __future__ import annotations
 import hashlib
 import json
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Literal, Mapping
 
 from hypervector.strategies.hypervelocity_contract import is_hypervelocity_strategy
+from hypervector.paper.event_resume import PendingTargetResume, event_resume_details
 
 _EQUITY_ABS_TOLERANCE_USD = 0.01
 _EQUITY_REL_TOLERANCE = 1e-9
@@ -31,6 +32,9 @@ class PendingMakerResume:
     conviction_source: str | None
     metalabel_p: float | None
     metalabel_bundle_id: str | None
+    client_order_id: str | None = None
+    cumulative_quantity: float = 0.0
+    remaining_quantity: float | None = None
 
 
 @dataclass(frozen=True)
@@ -51,6 +55,11 @@ class ShadowPortfolioResume:
     completed_trade_direction: Literal["long", "short"] | None
     portfolio_fingerprint: str | None
     portfolio_profile_changed_from: str | None
+    execution_model: str
+    active_targets: tuple[PendingTargetResume, ...]
+    next_order_sequence: int
+    open_position_fees_usd: float
+    open_position_funding_net_usd: float
 
 
 def load_shadow_portfolio_resume(
@@ -71,6 +80,7 @@ def load_shadow_portfolio_resume(
     pending_entry = _latest_pending_entry(run_rows, selected_run_id)
     expired_direction = _latest_expired_entry_direction(run_rows)
     completed_direction = _latest_completed_trade_direction(run_rows)
+    event_details = event_resume_details(run_rows)
     state = _latest_portfolio_state(run_rows, selected_run_id)
     init_cash = _initial_cash(run_rows, selected_run_id)
     qty = _required_number(state, "position_qty", selected_run_id)
@@ -124,6 +134,11 @@ def load_shadow_portfolio_resume(
         completed_trade_direction=completed_direction,
         portfolio_fingerprint=fingerprint,
         portfolio_profile_changed_from=changed_from,
+        execution_model=event_details.execution_model,
+        active_targets=event_details.active_targets,
+        next_order_sequence=event_details.next_order_sequence,
+        open_position_fees_usd=event_details.open_position_fees_usd,
+        open_position_funding_net_usd=(event_details.open_position_funding_net_usd),
     )
 
 
@@ -173,7 +188,7 @@ def _is_entry_policy_migration(
     recorded_spec: Mapping[str, object],
     expected_spec: Mapping[str, object],
 ) -> bool:
-    """Allow only explicit regime-reset entry-policy schema additions."""
+    """Allow only declared entry-policy and event-authority migrations."""
     recorded_execution = recorded_spec.get("execution")
     expected_execution = expected_spec.get("execution")
     if not isinstance(recorded_execution, dict) or not isinstance(
@@ -191,6 +206,30 @@ def _is_entry_policy_migration(
             and expected_execution.get(key) == "regime_reset"
         ):
             migrated_execution[key] = "regime_reset"
+            added = True
+    if (
+        migrated_execution.get("fill_rule") == "through_one_tick"
+        and migrated_execution.get("fill_model") == "post_only_limit_through_v1"
+        and expected_execution.get("fill_rule") == "public_l2_trade_event_tape"
+        and expected_execution.get("fill_model") == "nautilus_event_v1"
+    ):
+        migrated_execution["fill_rule"] = "public_l2_trade_event_tape"
+        migrated_execution["fill_model"] = "nautilus_event_v1"
+        added = True
+    allowed_event_additions = {
+        "legacy_comparator": "legacy_bar_through_v1",
+        "submit_latency_ms": 50,
+        "cancel_latency_ms": 50,
+        "update_latency_ms": 50,
+        "max_event_age_ms": 3000,
+        "restart_queue_policy": "requeue_behind_displayed_liquidity",
+        "liquidation_execution_model": "full_at_mark_shadow_approximation_v1",
+        "partial_liquidation_supported": False,
+        "partial_liquidation_threshold_usd": 100_000.0,
+    }
+    for key, required in allowed_event_additions.items():
+        if key not in migrated_execution and expected_execution.get(key) == required:
+            migrated_execution[key] = required
             added = True
     if not added:
         return False
@@ -328,10 +367,24 @@ def _latest_pending_entry(
         action = row.get("action")
         if action == "submit_entry":
             pending = _parse_pending_entry(row, run_id)
-        elif action == "cancel_entry" or (
-            action in {"enter_long", "enter_short"} and row.get("skipped") is not True
-        ):
+        elif action in {"cancel_entry", "rejected_entry", "expired_entry"}:
             pending = None
+        elif action in {"enter_long", "enter_short"} and row.get("skipped") is not True:
+            remaining = _number(row, "remaining_qty")
+            order_id = row.get("client_order_id")
+            if (
+                pending is not None
+                and remaining is not None
+                and remaining > 0.0
+                and order_id == pending.client_order_id
+            ):
+                pending = replace(
+                    pending,
+                    cumulative_quantity=(_number(row, "cumulative_filled_qty") or 0.0),
+                    remaining_quantity=remaining,
+                )
+            else:
+                pending = None
     return pending
 
 
@@ -343,7 +396,9 @@ def _latest_expired_entry_direction(
     ttl_reasons = {"entry_ttl_expired", "entry_ttl_expired_during_downtime"}
     for row in rows:
         action = row.get("action")
-        if action == "cancel_entry" and row.get("reason") in ttl_reasons:
+        if (
+            action == "cancel_entry" and row.get("reason") in ttl_reasons
+        ) or action in {"rejected_entry", "expired_entry"}:
             side = row.get("side")
             blocked = "long" if side == "buy" else "short" if side == "sell" else None
         elif action in {"submit_entry", "enter_long", "enter_short"}:
@@ -396,6 +451,9 @@ def _parse_pending_entry(row: dict[str, object], run_id: str) -> PendingMakerRes
         conviction_source=_optional_string(row, "conviction_source"),
         metalabel_p=_number(row, "metalabel_p"),
         metalabel_bundle_id=_optional_string(row, "metalabel_bundle_id"),
+        client_order_id=_optional_string(row, "client_order_id"),
+        cumulative_quantity=_number(row, "cumulative_filled_qty") or 0.0,
+        remaining_quantity=_number(row, "remaining_qty"),
     )
 
 

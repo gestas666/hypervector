@@ -42,12 +42,18 @@ class HypervelocityProfile:
     slippage_bps: float
     funding_refresh_seconds: float
     entry_ttl_seconds: float
+    execution_submit_latency_ms: int
+    execution_cancel_latency_ms: int
+    execution_update_latency_ms: int
+    execution_max_event_age_ms: int
+    restart_queue_policy: Literal["requeue_behind_displayed_liquidity"]
     expired_entry_rearm_policy: str
     same_direction_reentry_policy: str
     reentry_cooldown_bars: int
     orderbook_archive_enabled: bool
     orderbook_archive_depth_levels: int
     runtime_mode: str
+    shadow_execution_model: Literal["nautilus_event_v1"]
     export_path: Path
     lookback_days: int
     strict_hl_only: bool
@@ -88,6 +94,7 @@ def load_hypervelocity_profile(path: Path | str) -> HypervelocityProfile:
     _validate_contract(allocation, exits, execution, model, contract)
     _validate_venue_costs(venue, costs, contract)
     _validate_orderbook(orderbook)
+    _expect(runtime, "shadow_execution_model", "nautilus_event_v1")
     regime_config = _validated_regime(_section(raw, "regime"))
     metalabel_mode = _text(runtime, "metalabel_mode")
     if metalabel_mode not in {"off", "observe"}:
@@ -121,12 +128,24 @@ def load_hypervelocity_profile(path: Path | str) -> HypervelocityProfile:
         slippage_bps=_number(costs, "slippage_bps"),
         funding_refresh_seconds=_number(costs, "funding_refresh_seconds"),
         entry_ttl_seconds=_number(execution, "entry_ttl_seconds"),
+        execution_submit_latency_ms=_integer(execution, "submit_latency_ms"),
+        execution_cancel_latency_ms=_integer(execution, "cancel_latency_ms"),
+        execution_update_latency_ms=_integer(execution, "update_latency_ms"),
+        execution_max_event_age_ms=_integer(execution, "max_event_age_ms"),
+        restart_queue_policy=cast(
+            Literal["requeue_behind_displayed_liquidity"],
+            _text(execution, "restart_queue_policy"),
+        ),
         expired_entry_rearm_policy=_text(execution, "expired_entry_rearm_policy"),
         same_direction_reentry_policy=_text(execution, "same_direction_reentry_policy"),
         reentry_cooldown_bars=_integer(execution, "reentry_cooldown_bars"),
         orderbook_archive_enabled=_boolean(orderbook, "archive_enabled"),
         orderbook_archive_depth_levels=_integer(orderbook, "archive_depth_levels"),
         runtime_mode=_text(runtime, "mode"),
+        shadow_execution_model=cast(
+            Literal["nautilus_event_v1"],
+            _text(runtime, "shadow_execution_model"),
+        ),
         export_path=Path(_text(runtime, "export_path")),
         lookback_days=_integer(runtime, "lookback_days"),
         strict_hl_only=_boolean(runtime, "strict_hl_only"),
@@ -165,9 +184,21 @@ def _validate_contract(
     _expect(exits, "open_position_range_policy", "hold_until_target")
     _expect(execution, "order_type", "limit")
     _expect(execution, "time_in_force", "post_only")
-    _expect(execution, "fill_rule", "through_one_tick")
+    _expect(execution, "fill_rule", "public_l2_trade_event_tape")
+    _expect(execution, "fill_model", "nautilus_event_v1")
+    _expect(execution, "legacy_comparator", "legacy_bar_through_v1")
+    _expect(execution, "legacy_fill_rule", "through_one_tick")
     _expect(execution, "price_tick_mode", "hyperliquid_dynamic")
     _expect(execution, "paper_submit_enabled", False)
+    _expect(execution, "submit_latency_ms", 50)
+    _expect(execution, "cancel_latency_ms", 50)
+    _expect(execution, "update_latency_ms", 50)
+    _expect(execution, "max_event_age_ms", 3000)
+    _expect(
+        execution,
+        "restart_queue_policy",
+        "requeue_behind_displayed_liquidity",
+    )
     _expect(execution, "entry_ttl_seconds", contract.entry_ttl_seconds)
     _expect(
         execution,

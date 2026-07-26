@@ -4,12 +4,20 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from unittest.mock import Mock
 
 import pandas as pd
 import pytest
 
+from hypervector.data.hl_events import BookLevel as EventBookLevel
+from hypervector.data.hl_events import L2SnapshotEvent, PublicTradeEvent
 from hypervector.data.sources import fixture_ohlcv
 from hypervector.export.phase2 import export_candidate
+from hypervector.nautilus.hypervelocity_sim import HypervelocitySimulationConfig
+from hypervector.paper.hypervelocity_shadow_controller import (
+    HypervelocityShadowController,
+)
+from hypervector.paper.nautilus_shadow import NautilusShadowExecutionPort
 from hypervector.paper.session import (
     PaperSession,
     PaperSessionResult,
@@ -19,6 +27,9 @@ from hypervector.paper.session import (
 from hypervector.paper.maker_execution import PostOnlyLimitFillModel
 from hypervector.paper.resume import ShadowResumeError
 from hypervector.nautilus.load_export import load_strategy_loadout
+from hypervector.strategies.hypervelocity_runtime import RuntimeMarketState
+from hypervector.strategies.hypervelocity_profile import load_hypervelocity_profile
+from hypervector.paper.conviction import ConvictionResult
 
 
 def _write_strict_export(root: Path, *, strategy: str = "crown_stack_short") -> Path:
@@ -99,6 +110,20 @@ def _decision_rows(path: Path) -> list[dict[str, object]]:
         for line in path.read_text(encoding="utf-8").splitlines()
         if line.strip()
     ]
+
+
+class _EventAnnotationProvider:
+    @property
+    def bundle_id(self) -> str:
+        return "event-observe-bundle"
+
+    def resolve(self, **_kwargs: object) -> ConvictionResult:
+        return ConvictionResult(
+            conviction=0.5,
+            source="metalabel_observe",
+            metalabel_p=0.73,
+            metalabel_bundle_id=self.bundle_id,
+        )
 
 
 def test_offline_session_writes_paper_decisions(tmp_path: Path):
@@ -655,6 +680,280 @@ def test_hypervelocity_paper_qty_is_70pct_margin_at_40x(tmp_path: Path) -> None:
     )
 
     assert qty == pytest.approx(5.6)
+
+
+def test_event_shadow_session_ledgers_partial_fill_and_proportional_target(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    export = _write_strict_export(
+        tmp_path,
+        strategy="hypervelocity_1m_scalper_long",
+    )
+    session = PaperSession(
+        export_dir=export,
+        data_root=tmp_path / "data",
+        execution_mode="shadow",
+        funding_rate_hourly=0.001,
+        conviction_provider=_EventAnnotationProvider(),
+    )
+    port = NautilusShadowExecutionPort(
+        symbol="BTC",
+        initial_cash_usd=10_000.0,
+        simulation_config=HypervelocitySimulationConfig(
+            submit_latency_ms=0,
+            cancel_latency_ms=50,
+            update_latency_ms=0,
+        ),
+        maker_fee_rate=0.00015,
+        taker_fee_rate=0.00045,
+        leverage=40.0,
+        maintenance_rate=0.0125,
+        max_event_age_ms=3_000,
+    )
+    neutral = RuntimeMarketState(
+        symbol="BTC",
+        observed_at="2026-07-26T20:00:00+00:00",
+        entry_direction=None,
+        entry_quantity=1.0,
+        entry_limit_price=None,
+        evidence_fresh=False,
+        entry_ttl_seconds=300.0,
+        reentry_cooldown_seconds=60.0,
+        target_price_fraction=0.002,
+        price_tick=1.0,
+    )
+    session.attach_hypervelocity_event_controller(
+        HypervelocityShadowController(port=port, initial_market=neutral)
+    )
+    monkeypatch.setattr(
+        "hypervector.paper.session.current_hypervelocity_entry_allowed",
+        lambda _frame, direction: direction == "long",
+    )
+    base_ms = int(pd.Timestamp("2026-07-26T20:02:01Z").timestamp() * 1_000)
+    session.ingest_hyperliquid_event(
+        L2SnapshotEvent(
+            symbol="BTC",
+            exchange_ts_ms=base_ms,
+            received_ts_ns=(base_ms + 1) * 1_000_000,
+            bids=(EventBookLevel(64_500.0, 0.001, 1),),
+            asks=(EventBookLevel(64_501.0, 0.5, 1),),
+        )
+    )
+
+    def bar(minute: int) -> dict[str, object]:
+        return {
+            "timestamp": pd.Timestamp(f"2026-07-26T20:{minute:02d}:00Z"),
+            "open": 64_500.0,
+            "high": 64_501.0,
+            "low": 64_499.0,
+            "close": 64_500.0,
+            "volume": 1.0,
+        }
+
+    session.on_bar(bar(0))
+    session.on_bar(bar(1))
+    assert session.pending_maker_entry is not None
+    session.ingest_hyperliquid_event(
+        L2SnapshotEvent(
+            symbol="BTC",
+            exchange_ts_ms=base_ms + 60_001,
+            received_ts_ns=(base_ms + 60_002) * 1_000_000,
+            bids=(EventBookLevel(64_500.0, 0.001, 1),),
+            asks=(EventBookLevel(64_501.0, 0.5, 1),),
+        )
+    )
+    session.ingest_hyperliquid_event(
+        PublicTradeEvent(
+            symbol="BTC",
+            aggressor_side="sell",
+            price=64_500.0,
+            size=1.001,
+            transaction_hash="0xpartial",
+            exchange_ts_ms=base_ms + 60_002,
+            received_ts_ns=(base_ms + 60_003) * 1_000_000,
+            trade_id=99,
+            buyer="0xbuyer",
+            seller="0xseller",
+        )
+    )
+
+    assert session.engine.position.qty == pytest.approx(1.0)
+    rows = _decision_rows(session.decisions_path)
+    entry = next(row for row in rows if row.get("action") == "enter_long")
+    target = next(row for row in rows if row.get("action") == "submit_target")
+    assert entry["execution_model"] == "nautilus_event_v1"
+    assert entry["liquidity_side"] == "maker"
+    assert entry["cumulative_filled_qty"] == pytest.approx(1.0)
+    assert entry["execution_requested_qty"] > entry["cumulative_filled_qty"]
+    assert entry["conviction_source"] == "metalabel_observe"
+    assert entry["metalabel_p"] == pytest.approx(0.73)
+    assert entry["metalabel_bundle_id"] == "event-observe-bundle"
+    assert target["requested_qty"] == pytest.approx(1.0)
+    assert target["execution_model"] == "nautilus_event_v1"
+
+    session.on_bar(bar(59))
+    assert port.funding_net_usd == pytest.approx(-64.5)
+    rows = _decision_rows(session.decisions_path)
+    funding_rows = [row for row in rows if row.get("action") == "funding"]
+    assert len(funding_rows) == 1
+    assert funding_rows[0]["execution_model"] == "nautilus_event_v1"
+
+    liquidation_price = port.liquidation_price
+    assert liquidation_price is not None
+    action = session.apply_hyperliquid_mark(
+        mark_price=liquidation_price - 0.01,
+        observed_at="2026-07-26T21:00:01+00:00",
+    )
+    assert action == "liquidation"
+    assert session.engine.position.qty == 0.0
+    assert port.account_snapshot().position_quantity == 0.0
+    assert port.account_snapshot().equity_usd == pytest.approx(
+        session.engine.equity(mark_px=liquidation_price - 0.01)
+    )
+    rows = _decision_rows(session.decisions_path)
+    liquidation = next(row for row in rows if row.get("action") == "liquidation")
+    assert liquidation["execution_model"] == "nautilus_event_v1"
+    assert liquidation["fee_usd"] == pytest.approx((liquidation_price - 0.01) * 0.00045)
+    assert liquidation["clearance_fee_usd"] == 0.0
+    assert (
+        liquidation["liquidation_execution_model"]
+        == "full_at_mark_shadow_approximation_v1"
+    )
+    assert liquidation["fill_model_id"] == "liquidation_exact_mark_v1"
+    assert liquidation["order_intent"]["reduce_only"] is True
+    assert liquidation["order_intent"]["order_type"] == "market"
+    assert liquidation["order_intent"]["time_in_force"] == "ioc"
+    assert liquidation["order_intent"]["limit_px"] is None
+
+
+def test_profile_activates_event_runtime_and_stamps_authority(tmp_path: Path) -> None:
+    export = _write_strict_export(
+        tmp_path,
+        strategy="hypervelocity_1m_scalper_long",
+    )
+    profile = load_hypervelocity_profile("configs/hypervelocity_faithful.toml")
+    session = PaperSession(
+        export_dir=export,
+        data_root=tmp_path / "data",
+        execution_mode="shadow",
+        hypervelocity_profile=profile,
+    )
+
+    controller = session.activate_hypervelocity_event_runtime(
+        observed_at="2026-07-26T20:00:00+00:00"
+    )
+    session.ensure_session_identity()
+
+    assert controller.port.execution_records() == ()
+    assert session.downtime_reconciliation_enabled is False
+    identity = _decision_rows(session.decisions_path)[-1]
+    assert identity["execution_model"] == "nautilus_event_v1"
+    assert identity["execution_data_source"] == "hyperliquid_public_ws_l2_trades"
+    assert identity["execution_evidence_fresh"] is False
+    assert identity["execution_submit_latency_ms"] == 50
+    assert identity["execution_cancel_latency_ms"] == 50
+    assert identity["execution_update_latency_ms"] == 50
+    assert identity["execution_queue_ahead_qty"] is None
+    assert identity["execution_requested_qty"] is None
+    assert identity["cumulative_filled_qty"] is None
+    assert identity["remaining_qty"] is None
+    assert identity["liquidity_side"] is None
+    assert identity["margin_model"] == "hyperliquid_isolated_v1"
+    assert (
+        identity["liquidation_execution_model"]
+        == "full_at_mark_shadow_approximation_v1"
+    )
+    assert identity["partial_liquidation_supported"] is False
+    assert identity["execution"]["fill_model"] == "nautilus_event_v1"
+    assert (
+        identity["execution"]["restart_queue_policy"]
+        == "requeue_behind_displayed_liquidity"
+    )
+    assert identity["execution"]["partial_liquidation_threshold_usd"] == 100_000.0
+    assert identity["execution"]["legacy_comparator"] == "legacy_bar_through_v1"
+
+
+def test_event_runtime_applies_boundary_funding_before_liquidation_mark(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    export = _write_strict_export(
+        tmp_path,
+        strategy="hypervelocity_1m_scalper_long",
+    )
+    session = PaperSession(export_dir=export, data_root=tmp_path / "data")
+    session._event_shadow_bridge = Mock()
+    calls: list[str] = []
+    monkeypatch.setattr(
+        session,
+        "_apply_hourly_funding",
+        lambda _record: calls.append("funding"),
+    )
+    monkeypatch.setattr(
+        session,
+        "_apply_event_mark",
+        lambda _record: calls.append("mark"),
+    )
+
+    session.on_bar(_hl_bar("2026-07-26T20:59:00Z", high=100.1, low=99.9))
+
+    assert calls == ["funding", "mark"]
+
+
+def test_event_restart_reconciles_funding_without_candle_fills(tmp_path: Path) -> None:
+    export = _write_strict_export(
+        tmp_path,
+        strategy="hypervelocity_1m_scalper_long",
+    )
+    profile_text = Path("configs/hypervelocity_faithful.toml").read_text()
+    profile_path = tmp_path / "profile.toml"
+    profile_path.write_text(
+        profile_text.replace(
+            "data/exports/uptrend_hypervelocity_1m_scalper_long_784548f1",
+            str(export),
+        ),
+        encoding="utf-8",
+    )
+    profile = load_hypervelocity_profile(profile_path)
+    data_root = tmp_path / "data"
+    original = PaperSession(
+        export_dir=export,
+        data_root=data_root,
+        execution_mode="shadow",
+        hypervelocity_profile=profile,
+    )
+    original.ensure_session_identity()
+    original.engine.apply_market_fill(
+        feed_ts="2026-07-26T20:58:00Z",
+        action="enter_long",
+        side="buy",
+        qty=1.0,
+        mark_px=100.0,
+        fill_model=PostOnlyLimitFillModel(),
+    )
+    resumed = PaperSession(
+        export_dir=export,
+        data_root=data_root,
+        execution_mode="shadow",
+        hypervelocity_profile=profile,
+    )
+    resumed.activate_hypervelocity_event_runtime(
+        observed_at="2026-07-26T21:00:30+00:00"
+    )
+    frame = pd.DataFrame([_hl_bar("2026-07-26T20:59:00Z", high=500.0, low=1.0)])
+
+    count = resumed.reconcile_event_downtime_funding(
+        frame,
+        funding_rates={pd.Timestamp("2026-07-26T21:00:00Z"): 0.001},
+    )
+
+    assert count == 1
+    assert resumed.engine.position.qty == pytest.approx(1.0)
+    rows = _decision_rows(resumed.decisions_path)
+    funding = [row for row in rows if row.get("action") == "funding"][-1]
+    assert funding["funding_payment_usd"] == pytest.approx(0.1)
+    assert funding["execution_model"] == "nautilus_event_v1"
 
 
 def test_hypervelocity_paper_waits_for_maker_through_then_exits_at_fixed_target(

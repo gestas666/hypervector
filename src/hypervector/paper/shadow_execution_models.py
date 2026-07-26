@@ -80,6 +80,9 @@ class ShadowLiquidation:
     isolated_margin_usd: float
     position_equity_usd: float
     maintenance_margin_usd: float
+    execution_fee_usd: float
+    clearance_fee_usd: float
+    execution_model: str
     margin_mode: Literal["isolated"] = "isolated"
 
 
@@ -108,6 +111,34 @@ def order_telemetry(
     )
 
 
+def shadow_unrealized_pnl(
+    quantity: float,
+    average_price: float | None,
+    mark_price: float,
+) -> float:
+    """Return signed linear-perpetual unrealized PnL."""
+    if average_price is None:
+        return 0.0
+    side = 1.0 if quantity > 0.0 else -1.0
+    return side * abs(quantity) * (mark_price - average_price)
+
+
+def shadow_marked_equity(
+    realized_equity: float,
+    quantity: float,
+    average_price: float | None,
+    mark_price: float | None,
+) -> float:
+    """Return equity at the latest available mark."""
+    if mark_price is None:
+        return realized_equity
+    return realized_equity + shadow_unrealized_pnl(
+        quantity,
+        average_price,
+        mark_price,
+    )
+
+
 def queue_ahead(
     order: ShadowOrder,
     book: L2SnapshotEvent,
@@ -118,9 +149,7 @@ def queue_ahead(
     if limit is None:
         return 0.0
     levels = book.bids if order.command.side == "buy" else book.asks
-    displayed = sum(
-        level.size for level in levels if abs(level.price - limit) <= 1e-12
-    )
+    displayed = sum(level.size for level in levels if abs(level.price - limit) <= 1e-12)
     earlier = sum(
         item.remaining_quantity
         for item in orders
@@ -130,6 +159,27 @@ def queue_ahead(
         and item.command.limit_price == limit
     )
     return displayed + earlier
+
+
+def matching_orders(
+    orders: Mapping[str, ShadowOrder],
+    trade: PublicTradeEvent,
+) -> tuple[ShadowOrder, ...]:
+    """Return active maker orders eligible for one aggressor trade."""
+    matches: list[ShadowOrder] = []
+    for order in orders.values():
+        limit = order.command.limit_price
+        if not order.activated or order.status not in {"active", "cancel_pending"}:
+            continue
+        if limit is None:
+            continue
+        buy_match = order.command.side == "buy" and trade.aggressor_side == "sell"
+        sell_match = order.command.side == "sell" and trade.aggressor_side == "buy"
+        if (buy_match and trade.price <= limit) or (
+            sell_match and trade.price >= limit
+        ):
+            matches.append(order)
+    return tuple(matches)
 
 
 def would_cross(command: OrderCommand, book: L2SnapshotEvent) -> bool:

@@ -24,6 +24,10 @@ from hypervector.paper.fill_models import (
     DEFAULT_MAX_BOOK_AGE_MS,
     FILL_MODEL_L2_WALK_V1,
 )
+from hypervector.paper.event_stream_pump import (
+    EventStreamPump,
+    HypervelocityEventStreamPump,
+)
 from hypervector.paper.live_node import (
     DEFAULT_POLL_INTERVAL_SECS,
     make_rest_poll_fn,
@@ -94,6 +98,7 @@ def start_paper_daemon(
     now_fn: Callable[[], pd.Timestamp] | None = None,
     enforce_live_boundary: bool | None = None,
     funding_history_fn: FundingHistoryFetcher | None = None,
+    event_stream_pump: EventStreamPump | None = None,
 ) -> PaperDaemonResult:
     """Start paper daemon: warm history, then process live bars until stop.
 
@@ -108,40 +113,8 @@ def start_paper_daemon(
     Default ``execution_mode`` is ``shadow`` (mainnet-honest intents, no submit).
     Offline tests that need paper stamps may pass ``execution_mode="paper"``.
 
-    Parameters
-    ----------
-    export_dir:
-        Strict Phase 1.5 export bundle path.
-    data_root:
-        I2 data root (paper decisions under ``data/paper/``).
-    warm_ohlcv:
-        If set, use this frame for warm-up instead of ``load_research_history``.
-    poll_fn:
-        Callable ``(*, after_ts=...) -> DataFrame`` of new bars. Default: HL REST.
-    max_live_bars:
-        Stop after this many live (post-warm) bars; None = run until signal/stop.
-    stop_file:
-        If this path exists, stop gracefully.
-    enable_funding_refresh:
-        When True, periodically refresh hourly funding from public HL API.
-        Default: True if ``poll_fn is None`` (live REST path), else False.
-    funding_rate_hourly:
-        Optional override for the starting hourly funding rate (no network).
-    preferred_fill_model:
-        Preferred FillModel id when book is fresh (default ``l2_walk_v1``).
-        Falls back to bar_close with logged reason when book missing/stale.
-    max_book_age_ms:
-        Stale book threshold in milliseconds (default 3000).
-    metalabel_enabled:
-        When True, Metalabeler scales conviction and (by default) filters entries.
-    metalabel_min_p:
-        Minimum metalabel p to allow a new entry when filtering is on (default 0.5).
-    metalabel_filter:
-        When True with metalabel, skip entries with p < min_p (default True).
-    metalabel_mode:
-        Explicit policy: off, observe, scale, or filter. Overrides legacy booleans.
-    execution_mode:
-        ``shadow`` (default) or ``paper``; stamped on fills via session/engine.
+    The injected feed, clock, sleeper, stream, and bounded bar count make the
+    lifecycle deterministic in tests without changing its no-submit contract.
     """
     mode = str(execution_mode)
     _print_banner(mode)
@@ -169,7 +142,11 @@ def start_paper_daemon(
     # must never poll live book (wrong prices + REST spam). Offline injected
     # poll_fn keeps book off-network unless the caller sets enable_book_poll later.
     live_rest_feed = poll_fn is None
-    live_book_enabled = live_rest_feed
+    event_authority = (
+        hypervelocity_profile is not None
+        and hypervelocity_profile.shadow_execution_model == "nautilus_event_v1"
+    )
+    live_book_enabled = live_rest_feed and not event_authority
     enforce_boundary = (
         live_rest_feed if enforce_live_boundary is None else bool(enforce_live_boundary)
     )
@@ -230,7 +207,32 @@ def start_paper_daemon(
 
     activated_at = clock()
     session.enable_live_telemetry(activated_at=activated_at)
-    if session.downtime_reconciliation_enabled:
+    if event_authority:
+        session.activate_hypervelocity_event_runtime(
+            observed_at=activated_at.isoformat()
+        )
+    if session.event_downtime_funding_enabled:
+        state_asof = session.resume_state_asof
+        if state_asof is None:
+            raise RuntimeError("active resumed state has no reconciliation timestamp")
+        seed, replay = split_resume_history(
+            warm_df,
+            state_asof=state_asof,
+            timeframe=loadout.timeframe,
+            observed_at=activated_at,
+        )
+        warm_bars = session.warm_up(seed) if not seed.empty else 0
+        rates = historical_funding_rates(
+            replay,
+            symbol=loadout.symbol,
+            timeframe=loadout.timeframe,
+            fetcher=funding_fetcher,
+        )
+        warm_bars += session.reconcile_event_downtime_funding(
+            replay,
+            funding_rates=rates,
+        )
+    elif session.downtime_reconciliation_enabled:
         state_asof = session.resume_state_asof
         if state_asof is None:
             raise RuntimeError("active resumed state has no reconciliation timestamp")
@@ -250,6 +252,15 @@ def start_paper_daemon(
         warm_bars += session.reconcile_downtime(replay, funding_rates=rates)
     else:
         warm_bars = session.warm_up(warm_df)
+    stream = event_stream_pump
+    if event_authority:
+        if stream is None:
+            stream = HypervelocityEventStreamPump(
+                data_root=root,
+                symbol=loadout.symbol,
+            )
+    elif stream is not None:
+        raise ValueError("event_stream_pump requires nautilus_event_v1 authority")
     session.ensure_session_identity()
     after_ts = session.last_timestamp
 
@@ -303,9 +314,15 @@ def start_paper_daemon(
     live_bars = 0
     empty_polls = 0
     max_empty_when_capped = 3
+    stream_started = False
 
     try:
+        if stream is not None:
+            stream.start()
+            stream_started = True
         while not stop_state["stop"]:
+            if stream is not None:
+                stream.pump(session)
             if stop_file is not None and Path(stop_file).exists():
                 _request_stop("stop_file")
                 break
@@ -417,6 +434,12 @@ def start_paper_daemon(
                 break
             sleep(float(poll_interval_secs))
     finally:
+        if stream is not None:
+            try:
+                if stream_started:
+                    stream.pump(session)
+            finally:
+                stream.close()
         for sig, handler in prev_handlers.items():
             try:
                 signal.signal(sig, handler)

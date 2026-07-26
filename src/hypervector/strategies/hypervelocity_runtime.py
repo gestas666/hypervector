@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 from typing import Literal
 
 from hypervector.execution import OrderCommand, VenueOrderEvent
-from hypervector.paper.maker_execution import round_price_to_tick
+from hypervector.execution.pricing import round_price_to_tick
 
 Direction = Literal["long", "short"]
 
@@ -78,7 +78,10 @@ class HypervelocityRuntimeState:
             raise ValueError("next_order_sequence must be positive")
         _nonnegative(self.position_quantity, "position_quantity")
         if self.position_quantity == 0.0:
-            if self.position_direction is not None or self.position_average_price is not None:
+            if (
+                self.position_direction is not None
+                or self.position_average_price is not None
+            ):
                 raise ValueError(
                     "flat position requires null position_direction and average price"
                 )
@@ -119,6 +122,8 @@ def advance_hypervelocity_runtime(
         annotations.append("execution_evidence_uncertain")
         return RuntimeDecision(current, tuple(commands), annotations=tuple(annotations))
     current, cancellations = _manage_pending_entry(current, market)
+    current, replacement = _ensure_position_target(current, market)
+    commands.extend(replacement)
     if _may_submit_entry(current, market):
         current, command = _new_entry(current, market)
         commands.append(command)
@@ -128,6 +133,48 @@ def advance_hypervelocity_runtime(
         tuple(cancellations),
         tuple(annotations),
     )
+
+
+def _ensure_position_target(
+    state: HypervelocityRuntimeState,
+    market: RuntimeMarketState,
+) -> tuple[HypervelocityRuntimeState, tuple[OrderCommand, ...]]:
+    if state.position_quantity <= 0.0:
+        return state, ()
+    covered = sum(
+        order.command.quantity - order.cumulative_quantity
+        for order in state.active_targets
+    )
+    missing = state.position_quantity - covered
+    if missing <= 1e-12:
+        return state, ()
+    direction = state.position_direction
+    average = state.position_average_price
+    if direction is None or average is None:
+        raise ValueError("open position requires direction and average price")
+    multiplier = 1.0 + market.target_price_fraction
+    if direction == "short":
+        multiplier = 1.0 - market.target_price_fraction
+    limit = round_price_to_tick(
+        average * multiplier,
+        tick_size=market.price_tick,
+        upward=direction == "long",
+    )
+    state, identity = _next_identity(state, market.symbol, "target")
+    command = OrderCommand(
+        client_order_id=identity,
+        symbol=market.symbol,
+        side="sell" if direction == "long" else "buy",
+        quantity=missing,
+        order_type="limit",
+        order_role="target",
+        limit_price=limit,
+        post_only=True,
+        reduce_only=True,
+        submitted_at=market.observed_at,
+    )
+    order = RuntimeOrder(command)
+    return replace(state, active_targets=state.active_targets + (order,)), (command,)
 
 
 def _apply_event(
@@ -186,22 +233,26 @@ def _apply_target_event(
         if remaining < -1e-12:
             raise ValueError("target fill exceeds open position quantity")
         if remaining <= 1e-12:
-            return _close_position(state, event.event_at, event.client_order_id), (), None
+            return (
+                _close_position(state, event.event_at, event.client_order_id),
+                (),
+                None,
+            )
         state = replace(state, position_quantity=remaining)
         targets = _replace_target(state.active_targets, target, event)
         state = replace(state, active_targets=targets)
         if event.event_type == "filled":
             state = replace(
                 state,
-                terminal_order_ids=state.terminal_order_ids + (
-                    event.client_order_id,
-                ),
+                terminal_order_ids=state.terminal_order_ids + (event.client_order_id,),
             )
         return state, (), None
     if event.event_type in {"rejected", "expired", "canceled"}:
         state = replace(
             state,
-            active_targets=tuple(item for item in state.active_targets if item != target),
+            active_targets=tuple(
+                item for item in state.active_targets if item != target
+            ),
             terminal_order_ids=state.terminal_order_ids + (event.client_order_id,),
         )
         return state, (), f"target_{event.event_type}"
@@ -258,7 +309,9 @@ def _new_target(
         reduce_only=True,
         submitted_at=event.event_at,
     )
-    return replace(state, active_targets=state.active_targets + (RuntimeOrder(command),)), command
+    return replace(
+        state, active_targets=state.active_targets + (RuntimeOrder(command),)
+    ), command
 
 
 def _manage_pending_entry(

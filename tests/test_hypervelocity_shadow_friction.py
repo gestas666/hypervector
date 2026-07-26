@@ -122,9 +122,9 @@ def test_latency_queue_ahead_partial_fill_and_account_fee() -> None:
 
     shadow.ingest(trade(60, size=0.02, trade_id=2))
     assert shadow.reconcile() == ()
-    assert shadow.order_telemetry(
-        "hv-entry-1"
-    ).queue_ahead_quantity == pytest.approx(0.01)
+    assert shadow.order_telemetry("hv-entry-1").queue_ahead_quantity == pytest.approx(
+        0.01
+    )
 
     shadow.ingest(trade(70, size=0.03, trade_id=3))
     partial = shadow.reconcile()
@@ -314,17 +314,31 @@ def test_hourly_funding_and_isolated_liquidation_are_accounted() -> None:
 
     liquidation_price = shadow.liquidation_price
     assert liquidation_price is not None
-    assert shadow.mark(
-        mark_price=liquidation_price + 0.01,
-        observed_at=iso(3_600_001),
-    ) is False
-    assert shadow.mark(
-        mark_price=liquidation_price - 0.01,
-        observed_at=iso(3_600_002),
-    ) is True
+    assert (
+        shadow.mark(
+            mark_price=liquidation_price + 0.01,
+            observed_at=iso(3_600_001),
+        )
+        is False
+    )
+    assert (
+        shadow.mark(
+            mark_price=liquidation_price - 0.01,
+            observed_at=iso(3_600_002),
+        )
+        is True
+    )
     assert shadow.account_snapshot().position_quantity == 0.0
     assert shadow.last_liquidation is not None
     assert shadow.last_liquidation.margin_mode == "isolated"
+    assert shadow.last_liquidation.execution_fee_usd == pytest.approx(
+        quantity * (liquidation_price - 0.01) * 0.00045
+    )
+    assert shadow.last_liquidation.clearance_fee_usd == 0.0
+    assert (
+        shadow.last_liquidation.execution_model
+        == "full_at_mark_shadow_approximation_v1"
+    )
     canceled = shadow.reconcile()
     assert [item.event_type for item in canceled] == ["canceled"]
     assert canceled[0].reason == "isolated_liquidation"

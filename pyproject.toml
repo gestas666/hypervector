@@ -8,6 +8,7 @@ dependencies = [
     "vectorbt[full,rust]==1.1.0",
     "nautilus_trader>=1.230.0",
     "backtrader[plotting]>=1.9.78.123",
+    "websockets>=16.0,<17",
 ]
 
 [project.optional-dependencies]

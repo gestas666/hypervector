@@ -20,26 +20,27 @@ from hypervector.paper.shadow_execution_models import (
     iso_ms,
     iso_ns,
     known_open_order,
+    matching_orders,
     nonempty,
     order_telemetry,
     positive,
     positive_rate,
     queue_ahead,
     rate,
+    shadow_marked_equity,
+    shadow_unrealized_pnl,
     state_event,
     timestamp_ms,
     would_cross,
 )
+from hypervector.paper.liquidation_execution import LIQUIDATION_EXECUTION_MODEL
+from hypervector.paper.shadow_restore import ShadowRestoreMixin
 
 _TRADE_DEDUP_CAPACITY = 10_000
 
-class NautilusShadowExecutionPort:
-    """Consume normalized event tapes with Nautilus venue-model semantics.
 
-    This consumes the same validated config and event types as Nautilus simulation.
-    Friction state stays explicit because the installed engine has no incremental
-    ``ExecutionPort`` interface; this class does not claim direct engine custody.
-    """
+class NautilusShadowExecutionPort(ShadowRestoreMixin):
+    """Consume normalized events with explicit Nautilus-aligned friction state."""
 
     def __init__(
         self,
@@ -182,9 +183,7 @@ class NautilusShadowExecutionPort:
         if self._position_average_price is None:
             return 0.0
         return (
-            abs(self._position_quantity)
-            * self._position_average_price
-            / self._leverage
+            abs(self._position_quantity) * self._position_average_price / self._leverage
         )
 
     @property
@@ -237,7 +236,15 @@ class NautilusShadowExecutionPort:
         if not state.liquidatable:
             return False
         quantity = self._position_quantity
-        self._realized_equity += self._unrealized_pnl(mark_price)
+        execution_fee = abs(quantity) * mark_price * self._taker_fee_rate
+        self._realized_equity += (
+            shadow_unrealized_pnl(
+                self._position_quantity,
+                self._position_average_price,
+                mark_price,
+            )
+            - execution_fee
+        )
         self._last_liquidation = ShadowLiquidation(
             symbol=self._symbol,
             observed_at=observed_at,
@@ -246,6 +253,9 @@ class NautilusShadowExecutionPort:
             isolated_margin_usd=position.isolated_margin,
             position_equity_usd=state.equity_usd,
             maintenance_margin_usd=state.maintenance_margin_usd,
+            execution_fee_usd=execution_fee,
+            clearance_fee_usd=0.0,
+            execution_model=LIQUIDATION_EXECUTION_MODEL,
         )
         self._cancel_liquidated_orders(observed_at)
         self._clear_position()
@@ -281,7 +291,7 @@ class NautilusShadowExecutionPort:
         freshness = max(freshness, receipt_lag)
         self._last_mark = event.price
         available = event.size
-        for order in self._matching_orders(event):
+        for order in matching_orders(self._orders, event):
             available = self._consume_trade(order, event, available, freshness)
             if available <= 1e-12:
                 break
@@ -312,9 +322,7 @@ class NautilusShadowExecutionPort:
                 continue
             order.activated = True
             order.status = (
-                "cancel_pending"
-                if order.cancel_effective_ms is not None
-                else "active"
+                "cancel_pending" if order.cancel_effective_ms is not None else "active"
             )
             order.queue_ahead_quantity = self._queue_ahead(order)
             self._events.append(
@@ -328,7 +336,11 @@ class NautilusShadowExecutionPort:
     def _process_effective_cancels(self, exchange_ms: int) -> None:
         for order in self._orders.values():
             effective = order.cancel_effective_ms
-            if order.status == "terminal" or effective is None or effective > exchange_ms:
+            if (
+                order.status == "terminal"
+                or effective is None
+                or effective > exchange_ms
+            ):
                 continue
             order.status = "terminal"
             self._events.append(
@@ -455,20 +467,6 @@ class NautilusShadowExecutionPort:
             funding_net_usd=self._funding_net,
         )
 
-    def _matching_orders(self, trade: PublicTradeEvent) -> tuple[ShadowOrder, ...]:
-        matches: list[ShadowOrder] = []
-        for order in self._orders.values():
-            if not order.activated or order.status not in {"active", "cancel_pending"}:
-                continue
-            limit = order.command.limit_price
-            if limit is None:
-                continue
-            buy_match = order.command.side == "buy" and trade.aggressor_side == "sell"
-            sell_match = order.command.side == "sell" and trade.aggressor_side == "buy"
-            if (buy_match and trade.price <= limit) or (sell_match and trade.price >= limit):
-                matches.append(order)
-        return tuple(matches)
-
     def _queue_ahead(self, order: ShadowOrder) -> float:
         book = self._latest_book
         if book is None:
@@ -483,17 +481,16 @@ class NautilusShadowExecutionPort:
         self._annotate_uncertain()
 
     def _annotate_uncertain(self) -> None:
-        if not self._annotations or self._annotations[-1] != "execution_evidence_uncertain":
+        if (
+            not self._annotations
+            or self._annotations[-1] != "execution_evidence_uncertain"
+        ):
             self._annotations.append("execution_evidence_uncertain")
 
     def _marked_equity(self) -> float:
-        if self._last_mark is None:
-            return self._realized_equity
-        return self._realized_equity + self._unrealized_pnl(self._last_mark)
-
-    def _unrealized_pnl(self, mark: float) -> float:
-        if self._position_average_price is None:
-            return 0.0
-        side = 1.0 if self._position_quantity > 0.0 else -1.0
-        delta = mark - self._position_average_price
-        return side * abs(self._position_quantity) * delta
+        return shadow_marked_equity(
+            self._realized_equity,
+            self._position_quantity,
+            self._position_average_price,
+            self._last_mark,
+        )

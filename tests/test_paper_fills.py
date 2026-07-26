@@ -2,8 +2,69 @@
 
 from pathlib import Path
 
+import pytest
+
 from hypervector.paper.costs import CostProvider
 from hypervector.paper.fills import ExplicitFillEngine
+
+
+def event_engine(tmp_path: Path) -> ExplicitFillEngine:
+    """Return one maker-fee Hypervelocity fill engine."""
+    return ExplicitFillEngine(
+        tmp_path / "event_data",
+        cost_provider=CostProvider(
+            fee_tier=0,
+            slippage_bps=0.0,
+            assume_taker=False,
+        ),
+        run_id="event-run",
+        export_id="event-export",
+        strategy_name="hypervelocity_1m_scalper",
+        symbol="BTC",
+        timeframe="1m",
+        conviction=0.5,
+        execution_mode="shadow",
+    )
+
+
+def test_fill_accepts_validated_execution_evidence_metadata(tmp_path: Path) -> None:
+    engine = event_engine(tmp_path)
+
+    record = engine.apply_market_fill(
+        feed_ts="2026-07-26T20:00:00+00:00",
+        action="enter_long",
+        side="buy",
+        qty=0.01,
+        mark_px=64_500.0,
+        record_metadata={
+            "execution_model": "nautilus_event_v1",
+            "client_order_id": "hv-btc-entry-00000001",
+            "cumulative_filled_qty": 0.01,
+            "remaining_qty": 0.0,
+            "liquidity_side": "maker",
+            "margin_model": "hyperliquid_isolated_v1",
+        },
+    )
+
+    assert record["execution_model"] == "nautilus_event_v1"
+    assert record["client_order_id"] == "hv-btc-entry-00000001"
+    assert record["liquidity_side"] == "maker"
+
+
+def test_execution_metadata_cannot_overwrite_accounting_fields(tmp_path: Path) -> None:
+    engine = event_engine(tmp_path)
+
+    with pytest.raises(ValueError, match="unsupported execution metadata"):
+        engine.apply_market_fill(
+            feed_ts="2026-07-26T20:00:00+00:00",
+            action="enter_long",
+            side="buy",
+            qty=0.01,
+            mark_px=64_500.0,
+            record_metadata={"fee_usd": 0.0},
+        )
+
+    assert engine.position.qty == 0.0
 
 
 def test_buy_fill_pays_slippage_and_fee(tmp_path: Path):

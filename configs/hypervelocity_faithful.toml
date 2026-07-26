@@ -33,8 +33,10 @@ open_position_range_policy = "hold_until_target"
 [execution]
 order_type = "limit"
 time_in_force = "post_only"
-fill_rule = "through_one_tick"
-fill_model = "post_only_limit_through_v1"
+fill_rule = "public_l2_trade_event_tape"
+fill_model = "nautilus_event_v1"
+legacy_comparator = "legacy_bar_through_v1"
+legacy_fill_rule = "through_one_tick"
 price_tick_mode = "hyperliquid_dynamic"
 entry_ttl_seconds = 300.0
 expired_entry_rearm_policy = "regime_reset"
@@ -42,6 +44,11 @@ same_direction_reentry_policy = "regime_reset"
 reentry_cooldown_bars = 1
 paper_submit_enabled = false
 live_enabled = false
+submit_latency_ms = 50
+cancel_latency_ms = 50
+update_latency_ms = 50
+max_event_age_ms = 3000
+restart_queue_policy = "requeue_behind_displayed_liquidity"
 
 [orderbook]
 archive_enabled = true
@@ -76,6 +83,7 @@ short_bundle = "data/models/metalabel/candidates/hypervelocity-l2-runtime-downtr
 
 [runtime]
 mode = "shadow"
+shadow_execution_model = "nautilus_event_v1"
 export_path = "data/exports/uptrend_hypervelocity_1m_scalper_long_784548f1"
 lookback_days = 30
 strict_hl_only = true

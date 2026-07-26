@@ -1,6 +1,6 @@
 # HANDOFF — hypervector
 
-**Saved:** 2026-07-25 — Faithful Hypervelocity backend contract, causal regime evaluation, maker replay/paper execution, and annotation-model comparison.
+**Saved:** 2026-07-26 — Faithful Hypervelocity backend contract, event-driven shadow friction, causal regime evaluation, and annotation-model comparison.
 **Project:** `/Users/gestas/Prototypes/hypervector`  
 **User:** Albert  
 **Branch:** `main`
@@ -22,6 +22,7 @@
 | GUI | **Deferred** until Shadow Ops visual PASS |
 | Hypervelocity execution authority | **Python backend only**; TUI consumes ledger telemetry |
 | Hypervelocity execution contract | **One-way bidirectional BTC 1m, 70% margin, 40x, one 8% margin target, post-only** |
+| Hypervelocity shadow execution | **`nautilus_event_v1` active in faithful config; public L2/trade evidence only** |
 | Hypervelocity entry states | **Trend up/down or direction-confirmed breakout only; no range entries** |
 | Hypervelocity model | **Observe-only enforced**; no candidate installed |
 | Hypervelocity 180d autotune | **Completed**; best long/short candle trials remained materially negative after costs |
@@ -78,6 +79,33 @@
 - A read-only audit of the current `data` ledger selected run `7e3887db6340` as
   the durable portfolio: flat, no pending maker entry, `$10,000` equity, state
   timestamp `2026-07-26T02:13:00Z`, and compatible with the faithful profile.
+
+### 2026-07-26 event-shadow friction review
+
+- The faithful backend now opens a bounded public Hyperliquid mainnet WebSocket
+  feed for L2 and trades, archives normalized events before consumption, and
+  routes them through the pure Hypervelocity coordinator and no-submit shadow
+  port. Candle data still drives regime decisions but has no fill authority.
+- The event port models submit/cancel latency, ALO rejection, displayed
+  queue-ahead, partial fills, proportional reduce-only targets, maker fees,
+  hourly funding, isolated maintenance margin, and explicit stream gaps.
+- Restart restores partial entry and target orders, costs, order IDs, and
+  episode/cooldown state. Because historical queue priority is unknowable,
+  restarted orders are explicitly requeued behind current displayed liquidity.
+- Liquidation now charges configured taker commission, records zero separate
+  clearance fee, and is identified as a venue-enforced market close. Funding is
+  applied before the boundary mark check.
+- Known limitation: the current shadow liquidation is a full-at-mark
+  approximation. Hyperliquid's documented >$100,000 20% partial-liquidation
+  path, 30-second cooldown, L2 market walk, and continuous `activeAssetCtx`
+  mark stream remain the next no-submit friction batch. This is stamped in every
+  session as `partial_liquidation_supported=false`, not hidden.
+- Verification: 579 offline Python tests passed with 4 network tests deselected;
+  all 23 Rust TUI integration tests passed; CLI status, TOML/profile parsing,
+  targeted Ruff/format, Python compilation, Cargo formatting, and diff checks
+  passed. Coverage instrumentation remains unverified because its Python 3.13
+  run caused a NumPy double-load error despite normal pytest passing.
+- Full review: `docs/reviews/2026-07-26-hypervelocity-event-shadow-review.md`.
 
 ### 2026-07-25 faithful-contract validation
 

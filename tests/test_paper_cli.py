@@ -14,6 +14,7 @@ from hypervector.export.phase2 import export_candidate
 from hypervector.paper.maker_execution import PostOnlyLimitFillModel
 from hypervector.paper.runner import PaperDaemonResult, start_paper_daemon
 from hypervector.paper.session import PaperSession
+from hypervector.strategies.hypervelocity_profile import load_hypervelocity_profile
 
 
 def _write_strict_export(root: Path, *, strategy: str = "crown_stack_short") -> Path:
@@ -79,6 +80,128 @@ def _venue_bar(timestamp: str, *, high: float) -> dict[str, object]:
         "volume": 1.0,
         "source": "hl",
     }
+
+
+class _EventPump:
+    """Deterministic no-network event pump for daemon activation tests."""
+
+    def __init__(self) -> None:
+        self.started = False
+        self.pumps = 0
+        self.closed = False
+
+    def start(self) -> None:
+        self.started = True
+
+    def pump(self, _consumer: object) -> int:
+        self.pumps += 1
+        return 0
+
+    def close(self) -> None:
+        self.closed = True
+
+
+class _FailingStartEventPump(_EventPump):
+    """Pump whose startup fails before it can accept a consumer."""
+
+    def start(self) -> None:
+        raise RuntimeError("public event stream unavailable")
+
+
+def test_daemon_activates_authoritative_event_stream_without_rest_book_poll(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    export = _write_strict_export(
+        tmp_path,
+        strategy="hypervelocity_1m_scalper_long",
+    )
+    profile_text = Path("configs/hypervelocity_faithful.toml").read_text()
+    profile_path = tmp_path / "profile.toml"
+    profile_path.write_text(
+        profile_text.replace(
+            "data/exports/uptrend_hypervelocity_1m_scalper_long_784548f1",
+            str(export),
+        ),
+        encoding="utf-8",
+    )
+    profile = load_hypervelocity_profile(profile_path)
+    warm = fixture_ohlcv(n_bars=5)
+    pump = _EventPump()
+    monkeypatch.setattr(
+        PaperSession,
+        "initialize_hypervelocity_venue",
+        lambda _self: 0.0,
+    )
+    monkeypatch.setattr(
+        "hypervector.paper.runner.make_rest_poll_fn",
+        lambda _symbol, _timeframe: (lambda **_kwargs: warm.iloc[0:0].copy()),
+    )
+
+    def reject_rest_book(_self: object) -> None:
+        raise AssertionError("event authority must not poll the REST book")
+
+    monkeypatch.setattr("hypervector.paper.book.BookFeed.poll", reject_rest_book)
+
+    result = start_paper_daemon(
+        export_dir=export,
+        data_root=tmp_path / "data",
+        warm_ohlcv=warm,
+        poll_fn=None,
+        max_live_bars=0,
+        install_signal_handlers=False,
+        enable_funding_refresh=False,
+        hypervelocity_profile=profile,
+        event_stream_pump=pump,
+        now_fn=lambda: pd.Timestamp("2026-07-26T20:00:00Z"),
+    )
+
+    assert result.stop_reason == "max_live_bars"
+    assert pump.started and pump.closed
+    assert pump.pumps == 2
+
+
+def test_event_stream_start_failure_is_not_masked_by_cleanup(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    export = _write_strict_export(
+        tmp_path,
+        strategy="hypervelocity_1m_scalper_long",
+    )
+    profile_text = Path("configs/hypervelocity_faithful.toml").read_text()
+    profile_path = tmp_path / "profile.toml"
+    profile_path.write_text(
+        profile_text.replace(
+            "data/exports/uptrend_hypervelocity_1m_scalper_long_784548f1",
+            str(export),
+        ),
+        encoding="utf-8",
+    )
+    profile = load_hypervelocity_profile(profile_path)
+    pump = _FailingStartEventPump()
+    monkeypatch.setattr(
+        PaperSession,
+        "initialize_hypervelocity_venue",
+        lambda _self: 0.0,
+    )
+
+    with pytest.raises(RuntimeError, match="public event stream unavailable"):
+        start_paper_daemon(
+            export_dir=export,
+            data_root=tmp_path / "data",
+            warm_ohlcv=fixture_ohlcv(n_bars=5),
+            poll_fn=lambda **_kwargs: fixture_ohlcv(n_bars=0),
+            max_live_bars=0,
+            install_signal_handlers=False,
+            enable_funding_refresh=False,
+            hypervelocity_profile=profile,
+            event_stream_pump=pump,
+            now_fn=lambda: pd.Timestamp("2026-07-26T20:00:00Z"),
+        )
+
+    assert pump.closed
+    assert pump.pumps == 0
 
 
 def test_paper_check_reports_mode(tmp_path: Path, capsys, monkeypatch):

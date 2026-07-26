@@ -35,6 +35,12 @@ def test_faithful_profile_enforces_one_way_bidirectional_runtime() -> None:
     assert profile.margin_mode == "isolated"
     assert profile.live_canary_max_notional_usd == pytest.approx(3_360.0)
     assert profile.runtime_mode == "shadow"
+    assert profile.shadow_execution_model == "nautilus_event_v1"
+    assert profile.execution_submit_latency_ms == 50
+    assert profile.execution_cancel_latency_ms == 50
+    assert profile.execution_update_latency_ms == 50
+    assert profile.execution_max_event_age_ms == 3_000
+    assert profile.restart_queue_policy == "requeue_behind_displayed_liquidity"
     assert profile.strict_hl_only is True
     assert profile.metalabel_mode == "observe"
     assert profile.model_long_bundle.is_dir()
@@ -124,6 +130,21 @@ def test_profile_requires_positive_finite_live_canary_notional(
             'same_direction_reentry_policy = "regime_reset"',
             'same_direction_reentry_policy = "immediate"',
             "same_direction_reentry_policy",
+        ),
+        (
+            'shadow_execution_model = "nautilus_event_v1"',
+            'shadow_execution_model = "legacy_bar_through_v1"',
+            "shadow_execution_model",
+        ),
+        (
+            'fill_model = "nautilus_event_v1"',
+            'fill_model = "post_only_limit_through_v1"',
+            "fill_model",
+        ),
+        (
+            'restart_queue_policy = "requeue_behind_displayed_liquidity"',
+            'restart_queue_policy = "preserve_unknown_queue"',
+            "restart_queue_policy",
         ),
     ],
 )
