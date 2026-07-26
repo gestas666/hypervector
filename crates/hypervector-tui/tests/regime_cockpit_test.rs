@@ -370,9 +370,81 @@ fn test_dashboard_uses_backend_margin_costs_and_mark_to_market_pnl() {
     assert!(rendered.contains("ENTRY FEE PAID $42.00"));
     assert!(rendered.contains("FUNDING PAID $0.00"), "{rendered}");
     assert!(rendered.contains("EST EXIT FEE"));
+    assert!(!rendered.contains("ENTRY READINESS"));
     assert!(!rendered.contains("25% Cap"));
     assert!(!rendered.contains("Taker Drag"));
     assert!(!rendered.contains("+$-"));
+}
+
+#[test]
+fn flat_position_shows_backend_readiness_and_freshness_state() {
+    let telemetry = parse_backend_telemetry(
+        r#"{"feed_ts":"session_start","action":"session_start","run_id":"hv","strategy_name":"hypervelocity_1m_scalper","execution_mode":"shadow","strategy_params":{"leverage":40.0},"init_cash":10000.0,"equity":10000.0,"position_qty":0.0}
+{"feed_ts":"2026-07-25T14:01:00Z","action":"regime_observation","run_id":"hv","primary_regime":"TREND_UP","entry_direction":"long","entry_allowed":true,"entry_retry_state":"blocked_short","entry_cooldown_active":true,"state_1m":"TREND_UP","state_5m":"TREND_UP","context_15m":"TREND_UP","confidence":0.83,"regime_reason":"5m_primary_trend","funding_rate_hourly":0.0000125,"mark_px":101.0,"position_qty":0.0,"equity":10000.0,"realized_pnl":0.0}
+{"feed_ts":"2026-07-25T14:01:01Z","action":"submit_entry","run_id":"hv","side":"buy","requested_qty":1.0,"fill_px":101.0,"order_status":"pending"}
+{"feed_ts":"2026-07-25T14:01:01Z","action":"entry_execution_observation","run_id":"hv","maker_entry_state":"pending","maker_entry_direction":"long","entry_retry_state":"ready","entry_cooldown_active":false}
+{"feed_ts":"2026-07-25T14:01:05Z","action":"book_observation","run_id":"hv","source":"hl_rest_l2","exchange_ts_ms":1784988065000.0,"recv_ts_ms":1784988065050.0,"mid_px":101.25,"spread_bps":4.9382716,"bid_depth_ratio":2.0,"opi":0.3333333,"bids":[{"price":101.0,"size":4.0}],"asks":[{"price":101.5,"size":2.0}]}"#,
+    )
+    .expect("flat readiness telemetry");
+    let snapshots = vec![make_snapshot(
+        101.0,
+        102.0,
+        100.0,
+        RegimeState::BullMomentum,
+        "2026-07-25T14:01:00Z",
+    )];
+    let mut app = App::new("BTC".into(), "1m".into(), snapshots, true, false);
+    app.apply_backend_telemetry(telemetry);
+    app.book_state.age_ms = 82.0;
+
+    let backend = TestBackend::new(180, 50);
+    let mut terminal = Terminal::new(backend).expect("terminal");
+    terminal
+        .draw(|frame| hypervector_tui::ui::draw(frame, &app))
+        .expect("draw flat readiness");
+    let buffer = terminal.backend().buffer();
+    let rendered = (0..buffer.area.height)
+        .map(|y| {
+            (0..buffer.area.width)
+                .map(|x| buffer[(x, y)].symbol())
+                .collect::<String>()
+        })
+        .collect::<Vec<_>>()
+        .join("\n");
+
+    assert!(rendered.contains("ENTRY READINESS"), "{rendered}");
+    assert!(rendered.contains("DIRECTION LONG"), "{rendered}");
+    assert!(rendered.contains("REGIME TREND_UP"), "{rendered}");
+    assert!(rendered.contains("MAKER PENDING LONG"), "{rendered}");
+    assert!(rendered.contains("RETRY READY"), "{rendered}");
+    assert!(rendered.contains("COOLDOWN CLEAR"), "{rendered}");
+    assert!(rendered.contains("SPREAD 4.9 bps"), "{rendered}");
+    assert!(rendered.contains("BOOK BIAS +33.3%"), "{rendered}");
+    assert!(rendered.contains("L2 AGE 82 ms"), "{rendered}");
+    assert!(rendered.contains("FUNDING +0.00125%/hr"), "{rendered}");
+    assert!(rendered.contains("RECENT DECISION"), "{rendered}");
+    assert!(rendered.contains("10:01:00 EDT"), "{rendered}");
+    assert!(rendered.contains("SCANNING LIVE"), "{rendered}");
+
+    app.book_state.age_ms = 31_000.0;
+    terminal
+        .draw(|frame| hypervector_tui::ui::draw(frame, &app))
+        .expect("draw stale readiness");
+    let stale = (0..terminal.backend().buffer().area.height)
+        .map(|y| {
+            (0..terminal.backend().buffer().area.width)
+                .map(|x| terminal.backend().buffer()[(x, y)].symbol())
+                .collect::<String>()
+        })
+        .collect::<Vec<_>>()
+        .join("\n");
+    assert!(stale.contains("TELEMETRY STALE"), "{stale}");
+
+    let narrow_backend = TestBackend::new(100, 40);
+    let mut narrow = Terminal::new(narrow_backend).expect("narrow terminal");
+    narrow
+        .draw(|frame| hypervector_tui::ui::draw(frame, &app))
+        .expect("draw narrow flat readiness");
 }
 
 #[test]

@@ -394,6 +394,9 @@ class PaperSession:
         if len(self.buffer_rows) >= 2:
             fill_action = self._process_intent(record)
 
+        if self._is_hypervelocity and self._live_telemetry_enabled:
+            self._record_hypervelocity_entry_execution(record)
+
         # Hyperliquid funding settles hourly, not continuously between boundaries.
         if self.engine.position.qty != 0.0 and _is_funding_boundary(
             record,
@@ -445,6 +448,44 @@ class PaperSession:
                 "equity": float(self.engine.equity(mark_px=float(record["close"]))),
             },
         )
+
+    def _record_hypervelocity_entry_execution(
+        self, record: dict[str, Any]
+    ) -> None:
+        """Publish entry execution state after the current bar is processed."""
+        append_paper_decision(
+            self.root,
+            {
+                "feed_ts": self._hypervelocity_feed_ts(record),
+                "run_id": self.run_id,
+                "export_id": self.export_id,
+                "strategy_name": self.strategy_name,
+                "symbol": self.loadout.symbol,
+                "timeframe": self.loadout.timeframe,
+                "action": "entry_execution_observation",
+                **self._hypervelocity_entry_execution_payload(record),
+                "execution_mode": self.execution_mode,
+                "submitted": False,
+                "place_attempted": False,
+            },
+        )
+
+    def _hypervelocity_entry_execution_payload(
+        self, record: dict[str, Any]
+    ) -> dict[str, str | bool | None]:
+        """Return backend-owned maker, retry, and cooldown display state."""
+        pending = self._pending_maker_entry
+        retry_state = (
+            f"blocked_{self._expired_entry_direction}"
+            if self._expired_entry_direction is not None
+            else "ready"
+        )
+        return {
+            "maker_entry_state": "pending" if pending is not None else "standby",
+            "maker_entry_direction": pending.direction if pending is not None else None,
+            "entry_retry_state": retry_state,
+            "entry_cooldown_active": self._hypervelocity_reentry_cooling_down(record),
+        }
 
     def _hypervelocity_regime_payload(self, frame: pd.DataFrame) -> dict[str, Any]:
         """Return the exact backend classification fields used for display."""

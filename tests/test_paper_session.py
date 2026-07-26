@@ -518,11 +518,18 @@ def test_live_hypervelocity_bar_records_report_only_regime_observation(
         json.loads(line) for line in session.decisions_path.read_text().splitlines()
     ]
     observation = next(row for row in rows if row["action"] == "regime_observation")
+    execution = next(
+        row for row in rows if row["action"] == "entry_execution_observation"
+    )
     assert observation["run_id"] == session.run_id
     assert observation["primary_regime"] == "RANGE"
     assert observation["breakout_direction"] is None
     assert observation["entry_direction"] == "long"
     assert observation["entry_allowed"] is False
+    assert execution["maker_entry_state"] == "standby"
+    assert execution["maker_entry_direction"] is None
+    assert execution["entry_retry_state"] == "ready"
+    assert execution["entry_cooldown_active"] is False
     assert observation["state_1m"] == "RANGE"
     assert observation["state_5m"] == "RANGE"
     assert observation["context_15m"] == "TREND_UP"
@@ -659,6 +666,7 @@ def test_hypervelocity_paper_waits_for_maker_through_then_exits_at_fixed_target(
         strategy="hypervelocity_1m_scalper_long",
     )
     session = PaperSession(export_dir=export, data_root=tmp_path / "data")
+    session.enable_live_telemetry()
     monkeypatch.setattr(
         "hypervector.paper.session.current_hypervelocity_entry_allowed",
         lambda frame, direction: True,
@@ -704,6 +712,11 @@ def test_hypervelocity_paper_waits_for_maker_through_then_exits_at_fixed_target(
     assert closes[0]["fill_px"] == pytest.approx(100.2)
     assert closes[0]["feed_ts"] == "2026-07-25T12:04:00+00:00"
     assert closes[0]["exit_reason"] == "take_profit_8pct_margin"
+    execution = [
+        row for row in rows if row["action"] == "entry_execution_observation"
+    ]
+    assert execution[-1]["maker_entry_state"] == "standby"
+    assert execution[-1]["entry_cooldown_active"] is False
 
 
 def test_expired_hypervelocity_entry_waits_for_regime_reset_before_retry(
@@ -716,6 +729,7 @@ def test_expired_hypervelocity_entry_waits_for_regime_reset_before_retry(
         strategy="hypervelocity_1m_scalper_short",
     )
     session = PaperSession(export_dir=export, data_root=tmp_path / "data")
+    session.enable_live_telemetry()
     state = {"eligible": True}
 
     def entry_allowed(_frame: pd.DataFrame, direction: str) -> bool:
@@ -745,6 +759,10 @@ def test_expired_hypervelocity_entry_waits_for_regime_reset_before_retry(
     submissions = [row for row in rows if row.get("action") == "submit_entry"]
     assert len(submissions) == 1
     assert session.pending_maker_entry is None
+    execution = [
+        row for row in rows if row.get("action") == "entry_execution_observation"
+    ]
+    assert execution[-1]["entry_retry_state"] == "blocked_short"
 
     state["eligible"] = False
     session.on_bar(falling_bar(8))
@@ -755,6 +773,11 @@ def test_expired_hypervelocity_entry_waits_for_regime_reset_before_retry(
     submissions = [row for row in rows if row.get("action") == "submit_entry"]
     assert len(submissions) == 2
     assert submissions[-1]["fill_px"] == pytest.approx(91.0)
+    execution = [
+        row for row in rows if row.get("action") == "entry_execution_observation"
+    ]
+    assert execution[-1]["entry_retry_state"] == "ready"
+    assert execution[-1]["maker_entry_state"] == "pending"
 
 
 def test_downtime_reconciliation_manages_open_target_and_historical_funding(
@@ -1096,6 +1119,10 @@ def test_bidirectional_profile_holds_then_switches_only_after_exit(
     assert session.engine.position.qty == long_qty
     assert session.on_bar(bar(4, high=100.3, low=99.9)) == "close"
     assert session.engine.position.qty == 0.0
+    execution = session._hypervelocity_entry_execution_payload(
+        bar(4, high=100.3, low=99.9)
+    )
+    assert execution["entry_cooldown_active"] is True
 
     session.on_bar(bar(5, high=100.0, low=100.0))
     assert session.on_bar(bar(6, high=100.1, low=100.0)) == "enter_short"

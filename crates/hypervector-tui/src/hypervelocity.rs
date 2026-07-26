@@ -141,6 +141,11 @@ fn render_position_panel(f: &mut Frame, app: &App, area: Rect) {
     let snap = app.current_snapshot();
     let pos = &app.active_position;
 
+    if !pos.is_active() {
+        crate::flat_readiness::render_flat_readiness(f, app, area);
+        return;
+    }
+
     let (direction, dir_style, lev, entry_price, size_btc) = if pos.is_active() {
         let dir_icon = if pos.direction == "LONG" {
             "▲ LONG"

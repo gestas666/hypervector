@@ -42,8 +42,14 @@ pub struct BackendTelemetrySnapshot {
     pub runtime: Value,
     pub orderbook_archive: Value,
     pub latest_regime: Option<String>,
+    pub latest_regime_feed_ts: Option<String>,
+    pub latest_regime_reason: Option<String>,
+    pub latest_regime_confidence: Option<f64>,
     pub entry_direction: Option<String>,
     pub entry_allowed: Option<bool>,
+    pub pending_entry_direction: Option<String>,
+    pub entry_retry_state: Option<String>,
+    pub entry_cooldown_active: Option<bool>,
     pub funding_rate_hourly: Option<f64>,
     pub regime_history: Vec<String>,
     pub regime_snapshots: Vec<RegimeSnapshot>,
@@ -86,8 +92,14 @@ impl BackendTelemetrySnapshot {
             runtime: Value::Null,
             orderbook_archive: Value::Null,
             latest_regime: None,
+            latest_regime_feed_ts: None,
+            latest_regime_reason: None,
+            latest_regime_confidence: None,
             entry_direction: None,
             entry_allowed: None,
+            pending_entry_direction: None,
+            entry_retry_state: None,
+            entry_cooldown_active: None,
             funding_rate_hourly: None,
             regime_history: Vec::new(),
             regime_snapshots: Vec::new(),
@@ -248,6 +260,11 @@ fn build_snapshot(run_id: String, rows: &[&LedgerRow]) -> BackendTelemetrySnapsh
         .rev()
         .find(|row| row.action == "regime_observation")
         .copied();
+    let latest_execution_row = rows
+        .iter()
+        .rev()
+        .find(|row| row.action == "entry_execution_observation")
+        .copied();
     BackendTelemetrySnapshot {
         connection: BackendConnectionState::Connected,
         status_message: "backend ledger connected".to_string(),
@@ -286,12 +303,30 @@ fn build_snapshot(run_id: String, rows: &[&LedgerRow]) -> BackendTelemetrySnapsh
             .and_then(|row| row.orderbook_archive.clone())
             .unwrap_or(Value::Null),
         latest_regime: latest_regime_row.and_then(|row| row.primary_regime.clone()),
+        latest_regime_feed_ts: latest_regime_row.map(|row| row.feed_ts.clone()),
+        latest_regime_reason: latest_regime_row
+            .and_then(|row| row.extra.get("regime_reason"))
+            .and_then(Value::as_str)
+            .map(str::to_string),
+        latest_regime_confidence: latest_regime_row
+            .and_then(|row| row.extra.get("confidence"))
+            .and_then(Value::as_f64),
         entry_direction: latest_regime_row
             .and_then(|row| row.extra.get("entry_direction"))
             .and_then(Value::as_str)
             .map(str::to_string),
         entry_allowed: latest_regime_row
             .and_then(|row| row.extra.get("entry_allowed"))
+            .and_then(Value::as_bool),
+        pending_entry_direction: latest_pending_entry_direction(rows),
+        entry_retry_state: latest_execution_row
+            .or(latest_regime_row)
+            .and_then(|row| row.extra.get("entry_retry_state"))
+            .and_then(Value::as_str)
+            .map(str::to_string),
+        entry_cooldown_active: latest_execution_row
+            .or(latest_regime_row)
+            .and_then(|row| row.extra.get("entry_cooldown_active"))
             .and_then(Value::as_bool),
         funding_rate_hourly: rows
             .iter()
@@ -315,6 +350,33 @@ fn build_snapshot(run_id: String, rows: &[&LedgerRow]) -> BackendTelemetrySnapsh
         stats,
         active_position,
         equity_history,
+    }
+}
+
+fn latest_pending_entry_direction(rows: &[&LedgerRow]) -> Option<String> {
+    let mut pending = None;
+    for row in rows {
+        match row.action.as_str() {
+            "submit_entry" => {
+                pending = row
+                    .extra
+                    .get("side")
+                    .and_then(Value::as_str)
+                    .and_then(entry_direction_from_side);
+            }
+            "cancel_entry" => pending = None,
+            "enter_long" | "enter_short" if is_filled_entry(row) => pending = None,
+            _ => {}
+        }
+    }
+    pending
+}
+
+fn entry_direction_from_side(side: &str) -> Option<String> {
+    match side {
+        "buy" => Some("long".to_string()),
+        "sell" => Some("short".to_string()),
+        _ => None,
     }
 }
 

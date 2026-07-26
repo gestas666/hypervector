@@ -108,7 +108,9 @@ fn exact_hypervelocity_trade_uses_backend_regime_leverage_and_net_margin_return(
 fn projects_backend_regime_history_and_measured_book_telemetry() {
     let ledger = r#"{"feed_ts":"session_start","action":"session_start","run_id":"hv","strategy_name":"hypervelocity_1m_scalper","strategy_params":{"leverage":40.0},"init_cash":10000.0,"equity":10000.0}
 {"feed_ts":"2026-07-25T14:00:00Z","action":"regime_observation","run_id":"hv","primary_regime":"RANGE","state_1m":"RANGE","state_5m":"RANGE","context_15m":"TREND_UP","confidence":0.61,"regime_reason":"5m_primary_state","mark_px":100.0,"high":101.0,"low":99.0,"volume":12.0,"rsi":48.0,"bbwp_percentile":22.0,"position_qty":0.0}
-{"feed_ts":"2026-07-25T14:01:00Z","action":"regime_observation","run_id":"hv","primary_regime":"TREND_UP","entry_direction":"long","entry_allowed":true,"state_1m":"TREND_UP","state_5m":"TREND_UP","context_15m":"TREND_UP","confidence":0.83,"regime_reason":"5m_primary_trend","mark_px":101.0,"high":102.0,"low":100.0,"volume":15.0,"rsi":62.0,"bbwp_percentile":44.0,"position_qty":0.0}
+{"feed_ts":"2026-07-25T14:01:00Z","action":"regime_observation","run_id":"hv","primary_regime":"TREND_UP","entry_direction":"long","entry_allowed":true,"entry_retry_state":"blocked_short","entry_cooldown_active":true,"state_1m":"TREND_UP","state_5m":"TREND_UP","context_15m":"TREND_UP","confidence":0.83,"regime_reason":"5m_primary_trend","mark_px":101.0,"high":102.0,"low":100.0,"volume":15.0,"rsi":62.0,"bbwp_percentile":44.0,"funding_rate_hourly":0.0000125,"position_qty":0.0}
+{"feed_ts":"2026-07-25T14:01:01Z","action":"submit_entry","run_id":"hv","side":"buy","requested_qty":1.0,"fill_px":101.0,"order_status":"pending"}
+{"feed_ts":"2026-07-25T14:01:01Z","action":"entry_execution_observation","run_id":"hv","maker_entry_state":"pending","maker_entry_direction":"long","entry_retry_state":"ready","entry_cooldown_active":false}
 {"feed_ts":"2026-07-25T14:01:05Z","action":"book_observation","run_id":"hv","source":"hl_rest_l2","exchange_ts_ms":1784988065000.0,"recv_ts_ms":1784988065050.0,"mid_px":101.25,"spread_bps":4.9382716,"bid_depth_ratio":2.0,"opi":0.3333333,"bids":[{"price":101.0,"size":4.0}],"asks":[{"price":101.5,"size":2.0}]}"#;
 
     let telemetry = parse_backend_telemetry(ledger).expect("telemetry");
@@ -117,6 +119,19 @@ fn projects_backend_regime_history_and_measured_book_telemetry() {
     assert_eq!(telemetry.latest_regime.as_deref(), Some("TREND_UP"));
     assert_eq!(telemetry.entry_direction.as_deref(), Some("long"));
     assert_eq!(telemetry.entry_allowed, Some(true));
+    assert_eq!(telemetry.pending_entry_direction.as_deref(), Some("long"));
+    assert_eq!(telemetry.entry_retry_state.as_deref(), Some("ready"));
+    assert_eq!(telemetry.entry_cooldown_active, Some(false));
+    assert_eq!(
+        telemetry.latest_regime_feed_ts.as_deref(),
+        Some("2026-07-25T14:01:00Z")
+    );
+    assert_eq!(
+        telemetry.latest_regime_reason.as_deref(),
+        Some("5m_primary_trend")
+    );
+    assert_eq!(telemetry.latest_regime_confidence, Some(0.83));
+    assert_eq!(telemetry.funding_rate_hourly, Some(0.0000125));
     assert_eq!(telemetry.regime_snapshots[0].state.primary_label(), "RANGE");
     assert_eq!(
         telemetry.regime_snapshots[1].state.primary_label(),
