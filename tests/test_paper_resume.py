@@ -92,7 +92,7 @@ def test_resume_rejects_inconsistent_equity_identity(tmp_path: Path) -> None:
         load_shadow_portfolio_resume(path, symbol="BTC", timeframe="1m")
 
 
-def test_open_position_accepts_explicit_expired_entry_policy_migration(
+def test_open_position_accepts_explicit_entry_rearm_policy_migration(
     tmp_path: Path,
 ) -> None:
     """An entry-only policy addition cannot strand an existing position."""
@@ -106,6 +106,7 @@ def test_open_position_accepts_explicit_expired_entry_policy_migration(
         "execution": {
             "entry_ttl_seconds": 300.0,
             "expired_entry_rearm_policy": "regime_reset",
+            "same_direction_reentry_policy": "regime_reset",
         },
     }
     common = {
@@ -338,3 +339,68 @@ def test_resume_clears_expired_direction_after_nonmatching_regime(
 
     assert resumed is not None
     assert getattr(resumed, "expired_entry_direction", None) is None
+
+
+def test_resume_restores_completed_direction_until_regime_reset(
+    tmp_path: Path,
+) -> None:
+    """Restart cannot bypass the re-arm requirement after a completed long."""
+    path = tmp_path / "decisions.jsonl"
+    common = {
+        "run_id": "completed-run",
+        "execution_mode": "shadow",
+        "strategy_name": "hypervelocity_1m_scalper",
+        "symbol": "BTC",
+        "timeframe": "1m",
+        "init_cash": 10_000.0,
+        "position_qty": 0.0,
+        "position_avg_px": 0.0,
+        "realized_pnl": 20.0,
+        "unrealized_pnl": 0.0,
+        "equity": 10_020.0,
+    }
+    rows = [
+        {**common, "feed_ts": "session_start", "action": "session_start"},
+        {
+            **common,
+            "feed_ts": "2026-07-25T18:00:00Z",
+            "action": "enter_long",
+            "fill_qty": 1.0,
+            "position_qty": 1.0,
+            "position_avg_px": 100.0,
+            "realized_pnl": -0.1,
+            "equity": 9_999.9,
+        },
+        {
+            **common,
+            "feed_ts": "2026-07-25T18:05:00Z",
+            "action": "close",
+            "side": "sell",
+        },
+        {
+            **common,
+            "feed_ts": "2026-07-25T18:06:00Z",
+            "action": "regime_observation",
+            "entry_direction": "long",
+        },
+    ]
+    path.write_text("".join(f"{json.dumps(row)}\n" for row in rows), encoding="utf-8")
+
+    resumed = load_shadow_portfolio_resume(path, symbol="BTC", timeframe="1m")
+
+    assert resumed is not None
+    assert resumed.completed_trade_direction == "long"
+
+    reset = {
+        **common,
+        "feed_ts": "2026-07-25T18:07:00Z",
+        "action": "regime_observation",
+        "entry_direction": None,
+    }
+    with path.open("a", encoding="utf-8") as handle:
+        handle.write(f"{json.dumps(reset)}\n")
+
+    rearmed = load_shadow_portfolio_resume(path, symbol="BTC", timeframe="1m")
+
+    assert rearmed is not None
+    assert rearmed.completed_trade_direction is None

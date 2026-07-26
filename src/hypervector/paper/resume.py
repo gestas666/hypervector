@@ -48,6 +48,7 @@ class ShadowPortfolioResume:
     last_exit_at: str | None
     pending_entry: PendingMakerResume | None
     expired_entry_direction: Literal["long", "short"] | None
+    completed_trade_direction: Literal["long", "short"] | None
     portfolio_fingerprint: str | None
     portfolio_profile_changed_from: str | None
 
@@ -69,6 +70,7 @@ def load_shadow_portfolio_resume(
     run_rows = [row for row in rows if row.get("run_id") == selected_run_id]
     pending_entry = _latest_pending_entry(run_rows, selected_run_id)
     expired_direction = _latest_expired_entry_direction(run_rows)
+    completed_direction = _latest_completed_trade_direction(run_rows)
     state = _latest_portfolio_state(run_rows, selected_run_id)
     init_cash = _initial_cash(run_rows, selected_run_id)
     qty = _required_number(state, "position_qty", selected_run_id)
@@ -119,6 +121,7 @@ def load_shadow_portfolio_resume(
         last_exit_at=last_exit_at,
         pending_entry=pending_entry,
         expired_entry_direction=expired_direction,
+        completed_trade_direction=completed_direction,
         portfolio_fingerprint=fingerprint,
         portfolio_profile_changed_from=changed_from,
     )
@@ -153,7 +156,7 @@ def _validate_portfolio_spec(
     recorded = portfolio_fingerprint(recorded_spec)
     if recorded == expected:
         return expected, None
-    if _is_expired_entry_policy_migration(recorded_spec, expected_spec):
+    if _is_entry_policy_migration(recorded_spec, expected_spec):
         return expected, recorded
     if abs(position_qty) > 0.0:
         raise ShadowResumeError(
@@ -166,25 +169,31 @@ def _validate_portfolio_spec(
     return expected, recorded
 
 
-def _is_expired_entry_policy_migration(
+def _is_entry_policy_migration(
     recorded_spec: Mapping[str, object],
     expected_spec: Mapping[str, object],
 ) -> bool:
-    """Allow only the one entry-only policy added by this schema migration."""
+    """Allow only explicit regime-reset entry-policy schema additions."""
     recorded_execution = recorded_spec.get("execution")
     expected_execution = expected_spec.get("execution")
     if not isinstance(recorded_execution, dict) or not isinstance(
         expected_execution, dict
     ):
         return False
-    if "expired_entry_rearm_policy" in recorded_execution:
+    migrated_execution = dict(recorded_execution)
+    added = False
+    for key in (
+        "expired_entry_rearm_policy",
+        "same_direction_reentry_policy",
+    ):
+        if (
+            key not in migrated_execution
+            and expected_execution.get(key) == "regime_reset"
+        ):
+            migrated_execution[key] = "regime_reset"
+            added = True
+    if not added:
         return False
-    if expected_execution.get("expired_entry_rearm_policy") != "regime_reset":
-        return False
-    migrated_execution = {
-        **recorded_execution,
-        "expired_entry_rearm_policy": "regime_reset",
-    }
     migrated_spec = {**recorded_spec, "execution": migrated_execution}
     return portfolio_fingerprint(migrated_spec) == portfolio_fingerprint(expected_spec)
 
@@ -343,6 +352,24 @@ def _latest_expired_entry_direction(
             action == "regime_observation"
             and blocked is not None
             and "entry_direction" in row
+            and row.get("entry_direction") != blocked
+        ):
+            blocked = None
+    return blocked
+
+
+def _latest_completed_trade_direction(
+    rows: list[dict[str, object]],
+) -> Literal["long", "short"] | None:
+    """Recover the completed side until a non-matching regime is observed."""
+    blocked: Literal["long", "short"] | None = None
+    for row in rows:
+        if row.get("action") == "close" and row.get("skipped") is not True:
+            side = row.get("side")
+            blocked = "long" if side == "sell" else "short" if side == "buy" else None
+        elif (
+            row.get("action") == "regime_observation"
+            and blocked is not None
             and row.get("entry_direction") != blocked
         ):
             blocked = None

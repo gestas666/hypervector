@@ -288,6 +288,9 @@ class PaperSession:
         self._expired_entry_direction = (
             resume.expired_entry_direction if resume is not None else None
         )
+        self._completed_trade_direction = (
+            resume.completed_trade_direction if resume is not None else None
+        )
 
     def _load_shadow_resume(self) -> ShadowPortfolioResume | None:
         """Return persistent Hypervelocity state for normal shadow restarts."""
@@ -449,9 +452,7 @@ class PaperSession:
             },
         )
 
-    def _record_hypervelocity_entry_execution(
-        self, record: dict[str, Any]
-    ) -> None:
+    def _record_hypervelocity_entry_execution(self, record: dict[str, Any]) -> None:
         """Publish entry execution state after the current bar is processed."""
         append_paper_decision(
             self.root,
@@ -475,17 +476,21 @@ class PaperSession:
     ) -> dict[str, str | bool | None]:
         """Return backend-owned maker, retry, and cooldown display state."""
         pending = self._pending_maker_entry
-        retry_state = (
-            f"blocked_{self._expired_entry_direction}"
-            if self._expired_entry_direction is not None
-            else "ready"
-        )
+        retry_state = self._hypervelocity_retry_state()
         return {
             "maker_entry_state": "pending" if pending is not None else "standby",
             "maker_entry_direction": pending.direction if pending is not None else None,
             "entry_retry_state": retry_state,
             "entry_cooldown_active": self._hypervelocity_reentry_cooling_down(record),
         }
+
+    def _hypervelocity_retry_state(self) -> str:
+        """Return why a flat strategy may not retry the current direction."""
+        if self._completed_trade_direction is not None:
+            return f"awaiting_regime_reset_{self._completed_trade_direction}"
+        if self._expired_entry_direction is not None:
+            return f"blocked_{self._expired_entry_direction}"
+        return "ready"
 
     def _hypervelocity_regime_payload(self, frame: pd.DataFrame) -> dict[str, Any]:
         """Return the exact backend classification fields used for display."""
@@ -757,18 +762,24 @@ class PaperSession:
             and allowed
             and direction is not None
             and direction != self._expired_entry_direction
+            and direction != self._completed_trade_direction
             and not self._hypervelocity_reentry_cooling_down(record)
         ):
             self._submit_pending_entry(record, direction, book)
         return None
 
     def _observe_entry_direction(self, direction: str | None) -> None:
-        """Re-arm an expired attempt after a causal non-matching regime."""
+        """Re-arm consumed entry episodes after a non-matching regime."""
         if (
             self._expired_entry_direction is not None
             and direction != self._expired_entry_direction
         ):
             self._expired_entry_direction = None
+        if (
+            self._completed_trade_direction is not None
+            and direction != self._completed_trade_direction
+        ):
+            self._completed_trade_direction = None
 
     def _expire_pending(self, record: dict[str, Any], reason: str) -> None:
         """Cancel an expired maker and consume its directional regime episode."""
@@ -834,6 +845,7 @@ class PaperSession:
         if rec.get("skipped"):
             return None
         self._last_hypervelocity_exit_at = self._hypervelocity_timestamp(record)
+        self._completed_trade_direction = direction
         self.fills_count += 1
         return "close"
 
@@ -1450,7 +1462,14 @@ def _effective_execution(
             if profile is not None
             else contract.expired_entry_rearm_policy
         ),
-        "reentry_cooldown_bars": 1,
+        "same_direction_reentry_policy": (
+            profile.same_direction_reentry_policy
+            if profile is not None
+            else contract.same_direction_reentry_policy
+        ),
+        "reentry_cooldown_bars": (
+            profile.reentry_cooldown_bars if profile is not None else 1
+        ),
     }
 
 
