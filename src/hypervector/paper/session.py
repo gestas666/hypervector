@@ -64,6 +64,7 @@ from hypervector.paper.maker_execution import (
     round_price_to_tick,
     target_was_filled,
 )
+from hypervector.paper.resume import ShadowPortfolioResume, load_shadow_portfolio_resume
 from hypervector.paper.telemetry import bar_telemetry_payload, book_telemetry_payload
 from hypervector.strategies.hypervelocity_contract import (
     HypervelocityContract,
@@ -196,30 +197,42 @@ class PaperSession:
                 data_root=self.root,
             )
 
-        self.run_id = run_id or uuid.uuid4().hex[:12]
+        self.strategy_name = (
+            hypervelocity_profile.strategy_id
+            if hypervelocity_profile is not None
+            else self.loadout.strategy_name
+        )
+        resume = self._load_shadow_resume()
+        self._shadow_resume: ShadowPortfolioResume | None = resume
+        self.run_id = (
+            resume.run_id if resume is not None else (run_id or uuid.uuid4().hex[:12])
+        )
         self.export_id = self.loadout.run_id or export_path.name
         self.cost_provider = _cost_provider_from_loadout(
             self.loadout,
-            fee_tier=(hypervelocity_profile.fee_tier if hypervelocity_profile else fee_tier),
+            fee_tier=(
+                hypervelocity_profile.fee_tier if hypervelocity_profile else fee_tier
+            ),
             funding_rate_hourly=funding_rate_hourly,
         )
         if hypervelocity_profile is not None:
             self.cost_provider.slippage_bps = hypervelocity_profile.slippage_bps
-            self.cost_provider.funding_poll_secs = hypervelocity_profile.funding_refresh_seconds
+            self.cost_provider.funding_poll_secs = (
+                hypervelocity_profile.funding_refresh_seconds
+            )
         self.book_feed = (
             book_feed
             if book_feed is not None
             else BookFeed(self.loadout.symbol, max_age_ms=self.max_book_age_ms)
         )
         self.equity = (
-            float(self.loadout.init_cash)
-            if self.loadout.init_cash is not None
-            else 10_000.0
-        )
-        self.strategy_name = (
-            hypervelocity_profile.strategy_id
-            if hypervelocity_profile is not None
-            else self.loadout.strategy_name
+            resume.init_cash
+            if resume is not None
+            else (
+                float(self.loadout.init_cash)
+                if self.loadout.init_cash is not None
+                else 10_000.0
+            )
         )
         self.engine = ExplicitFillEngine(
             self.root,
@@ -236,6 +249,13 @@ class PaperSession:
             execution_mode=self.execution_mode,
             init_cash=float(self.equity),
         )
+        if resume is not None:
+            self.engine.restore_position(
+                qty=resume.position_qty,
+                avg_px=resume.position_avg_px,
+                realized_pnl=resume.realized_pnl,
+                init_cash=resume.init_cash,
+            )
         self.exits = _exits_dict(self.loadout)
         self.buffer_rows: list[dict[str, Any]] = []
         self.fills_count = 0
@@ -246,7 +266,21 @@ class PaperSession:
         self._pending_maker_entry: PendingMakerEntry | None = None
         self._live_telemetry_enabled = False
         self._live_activated_at: pd.Timestamp | None = None
-        self._last_hypervelocity_exit_at: pd.Timestamp | None = None
+        self._last_hypervelocity_exit_at = (
+            pd.Timestamp(resume.last_exit_at)
+            if resume and resume.last_exit_at
+            else None
+        )
+
+    def _load_shadow_resume(self) -> ShadowPortfolioResume | None:
+        """Return persistent Hypervelocity state for normal shadow restarts."""
+        if not self._is_hypervelocity or self.execution_mode != "shadow":
+            return None
+        return load_shadow_portfolio_resume(
+            self.decisions_path,
+            symbol=self.loadout.symbol,
+            timeframe=self.loadout.timeframe,
+        )
 
     @property
     def pending_maker_entry(self) -> PendingMakerEntry | None:
@@ -257,7 +291,9 @@ class PaperSession:
         """Inject a BookSnapshot for offline tests (no network)."""
         self.book_feed.update(snap)
 
-    def enable_live_telemetry(self, *, activated_at: pd.Timestamp | None = None) -> None:
+    def enable_live_telemetry(
+        self, *, activated_at: pd.Timestamp | None = None
+    ) -> None:
         """Enable report-only per-bar telemetry after historical warm-up."""
         self._live_telemetry_enabled = True
         self._live_activated_at = activated_at
@@ -351,7 +387,9 @@ class PaperSession:
         frame = _buffer_to_df(self.buffer_rows)
         payload = self._hypervelocity_regime_payload(frame)
         payload.update(bar_telemetry_payload(frame, record))
-        payload["funding_rate_hourly"] = self.cost_provider.snapshot().funding_rate_hourly
+        payload["funding_rate_hourly"] = (
+            self.cost_provider.snapshot().funding_rate_hourly
+        )
         append_paper_decision(
             self.root,
             {
@@ -435,7 +473,9 @@ class PaperSession:
         try:
             metrics = summarize_book(snapshot)
         except ValueError as exc:
-            logger.warning("invalid book telemetry for %s: %s", self.loadout.symbol, exc)
+            logger.warning(
+                "invalid book telemetry for %s: %s", self.loadout.symbol, exc
+            )
             return
         append_paper_decision(
             self.root,
@@ -654,7 +694,9 @@ class PaperSession:
         profile = self.hypervelocity_profile
         if profile is None or self._last_hypervelocity_exit_at is None:
             return False
-        elapsed = self._hypervelocity_timestamp(record) - self._last_hypervelocity_exit_at
+        elapsed = (
+            self._hypervelocity_timestamp(record) - self._last_hypervelocity_exit_at
+        )
         required = pd.Timedelta(
             minutes=(
                 profile.reentry_cooldown_bars
@@ -886,6 +928,8 @@ class PaperSession:
             return
         from hypervector.paper.order_intent import NETWORK_MAINNET
 
+        position = self.engine.position
+        resume = self._shadow_resume
         append_paper_decision(
             self.root,
             {
@@ -930,9 +974,7 @@ class PaperSession:
                         "depth_levels": (
                             self.hypervelocity_profile.orderbook_archive_depth_levels
                         ),
-                        "path_pattern": (
-                            "data/cache/book/<SYMBOL>_l2_<UTC_DAY>.jsonl"
-                        ),
+                        "path_pattern": ("data/cache/book/<SYMBOL>_l2_<UTC_DAY>.jsonl"),
                     }
                     if self.hypervelocity_profile is not None
                     else {"enabled": False}
@@ -941,12 +983,20 @@ class PaperSession:
                 "execution_mode": self.execution_mode,
                 "submitted": False,
                 "network": NETWORK_MAINNET,
-                "position_qty": 0.0,
-                "position_avg_px": 0.0,
-                "realized_pnl": 0.0,
-                "unrealized_pnl": 0.0,
-                "equity": float(self.equity),
-                "init_cash": float(self.equity),
+                "position_qty": float(position.qty),
+                "position_avg_px": float(position.avg_px),
+                "realized_pnl": float(position.realized_pnl),
+                "unrealized_pnl": (
+                    float(resume.unrealized_pnl) if resume is not None else 0.0
+                ),
+                "equity": (
+                    float(resume.equity) if resume is not None else float(self.equity)
+                ),
+                "init_cash": float(self.engine.initial_cash),
+                "resumed_shadow_portfolio": resume is not None,
+                "portfolio_state_asof": (
+                    resume.state_asof if resume is not None else None
+                ),
                 "no_submit": True,
             },
         )

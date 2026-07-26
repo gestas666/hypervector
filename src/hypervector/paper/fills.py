@@ -8,6 +8,7 @@ Preferred default is l2_walk_v1; missing/stale book falls back to bar_close.
 from __future__ import annotations
 
 import logging
+import math
 from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 from typing import Any
@@ -87,6 +88,37 @@ class ExplicitFillEngine:
     @property
     def position(self) -> PaperPosition:
         return self._position
+
+    @property
+    def initial_cash(self) -> float:
+        """Return the immutable cash basis for portfolio equity."""
+        return self._init_cash
+
+    def restore_position(
+        self,
+        *,
+        qty: float,
+        avg_px: float,
+        realized_pnl: float,
+        init_cash: float,
+    ) -> None:
+        """Restore validated append-only shadow portfolio state."""
+        values = (float(qty), float(avg_px), float(realized_pnl), float(init_cash))
+        if not all(math.isfinite(value) for value in values):
+            raise ValueError("restored portfolio values must be finite")
+        qty_value, avg_value, realized_value, cash_value = values
+        if cash_value <= 0.0:
+            raise ValueError("restored portfolio initial cash must be positive")
+        if abs(qty_value) > 0.0 and avg_value <= 0.0:
+            raise ValueError("restored open position requires a positive average price")
+        if abs(qty_value) == 0.0:
+            avg_value = 0.0
+        self._init_cash = cash_value
+        self._position = PaperPosition(
+            qty=qty_value,
+            avg_px=avg_value,
+            realized_pnl=realized_value,
+        )
 
     def equity(self, *, mark_px: float) -> float:
         """Return current paper equity including fees, funding, and open PnL."""

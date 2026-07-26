@@ -26,6 +26,8 @@ pub struct App {
     pub show_help_overlay: bool,
     pub selected_event_index: usize,
     pub show_event_detail_modal: bool,
+    pub selected_trade_index: usize,
+    pub show_trade_detail_modal: bool,
     pub theme_mode: usize,
     pub active_tab: usize, // 0 = Dashboard, 1 = Regime Detection, 2 = Config
     // Hypervelocity state
@@ -81,6 +83,8 @@ impl App {
             show_help_overlay: false,
             selected_event_index: 0,
             show_event_detail_modal: false,
+            selected_trade_index: 0,
+            show_trade_detail_modal: false,
             theme_mode: 0,
             active_tab: 0,
             active_position: ActivePosition::flat(),
@@ -120,6 +124,25 @@ impl App {
     pub fn toggle_event_modal(&mut self) {
         if !self.events.is_empty() {
             self.show_event_detail_modal = !self.show_event_detail_modal;
+        }
+    }
+
+    pub fn select_next_trade(&mut self) {
+        if !self.paper_trades.is_empty() && self.selected_trade_index + 1 < self.paper_trades.len()
+        {
+            self.selected_trade_index += 1;
+        }
+    }
+
+    pub fn select_prev_trade(&mut self) {
+        if self.selected_trade_index > 0 {
+            self.selected_trade_index -= 1;
+        }
+    }
+
+    pub fn toggle_trade_modal(&mut self) {
+        if !self.paper_trades.is_empty() {
+            self.show_trade_detail_modal = !self.show_trade_detail_modal;
         }
     }
 
@@ -243,8 +266,8 @@ impl App {
             let curr = &self.snapshots[i];
             if prev.state != curr.state {
                 let fallback_reason = match curr.state {
-                    RegimeState::BullMomentum => "15m/5m MTF Bullish + OPI >= 0.0",
-                    RegimeState::BearMomentum => "15m/5m MTF Bearish + OPI <= 0.0",
+                    RegimeState::BullMomentum => "5m primary bullish (1m fallback possible)",
+                    RegimeState::BearMomentum => "5m primary bearish (1m fallback possible)",
                     RegimeState::VolatilityCoiling => "BBWP Percentile < 20.0 (Coiling)",
                     RegimeState::FundingCarry => "Funding Rate Z-Score |Z| >= 1.8",
                     RegimeState::RangeChop => "Spread > 6.0bps / Choppiness > 55",

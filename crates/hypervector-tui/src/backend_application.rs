@@ -32,6 +32,9 @@ impl App {
 
     fn apply_backend_state(&mut self) {
         self.paper_trades = self.backend.trades.clone();
+        self.selected_trade_index = self
+            .selected_trade_index
+            .min(self.paper_trades.len().saturating_sub(1));
         self.paper_stats = self.backend.stats.clone();
         self.active_position = self.backend.active_position.clone();
         self.equity_history = self.backend.equity_history.clone();

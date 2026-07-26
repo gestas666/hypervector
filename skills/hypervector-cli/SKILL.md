@@ -110,9 +110,15 @@ backend cleanly. Backend output is retained at
 `<data-root>/paper/hypervelocity-shadow.log`. A per-data-root process lock
 refuses a second Hypervelocity backend.
 
-The TUI does not execute or reconstruct trades. Trade, position, PnL, cost,
-and policy fields come from the backend ledger. The current depth visualization
-is derived from cached regime snapshot ratios; it is not a raw L2 ladder.
+Normal quit and restart preserves the latest filled Hypervelocity shadow run:
+cash, realized PnL, any open position, cooldown timestamp, and closed-trade
+journal are restored from the backend ledger. Empty accidental launches do not
+replace that portfolio identity. Reset is explicit and recoverable only through
+the command below.
+
+The TUI does not execute trades. Trade, position, PnL, cost, policy, regime,
+and five-level depth fields are projections of backend ledger telemetry. The
+backend remains the execution and persistence authority.
 
 Reset a completed shadow observation window with a recoverable backup:
 
@@ -131,7 +137,7 @@ the singleton backend lock, copy decisions and the backend log under
 Ratatui 0.29 interactive 3-screen cockpit featuring backend telemetry, a live L2 depth stack, paper trade journal, and a navigable read-only configuration menu:
 
 ```bash
-# Interactive playback cockpit (1m BTC execution with 15m HTF lock)
+# Interactive playback cockpit (1m execution, 5m primary, 15m context)
 cargo run -p hypervector-tui --bin tui-regime-detector -- --symbol BTC --timeframe 1m
 
 # Real-time live mode (250ms refresh rate)
@@ -142,6 +148,9 @@ cargo run -p hypervector-tui --bin tui-regime-detector -- --symbol BTC --timefra
 - **`[1]`**: **Dashboard** (backend strategy, position, live L2, PnL, and execution journal).
 - **`[2]`**: **Regime Detection** (1m/5m/15m classification and transition audit log).
 - **`[3]`**: **Configuration** (selectable effective backend options; read-only).
+- On Dashboard, **`[↑/↓]`** or **`[j/k]`** selects a closed trade and **`[Enter]`** opens entry/exit regime, fee, funding, and PnL details.
+- On Regime Detection, the same keys select and inspect transition events.
+- The canonical regime uses 5m as primary, allows the implemented 1m directional fallback, confirms breakouts on 1m+5m, and reports 15m as non-veto context.
 
 ### 7. Walk-Forward LightGBM Metalabeling
 

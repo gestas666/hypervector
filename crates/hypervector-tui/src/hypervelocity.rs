@@ -57,34 +57,26 @@ pub fn render_command_bar(f: &mut Frame, app: &App, area: Rect) {
             app.theme.muted,
         )
     };
-    let book_line = if let Some(book) = &app.backend.book {
-        format!(
-            "L2 {}  spread {:.2}bps  OPI {:+.3}  depth {:.2}x",
-            book.source, book.spread_bps, book.opi, book.bid_depth_ratio
-        )
-    } else {
-        "L2 telemetry unavailable".to_string()
-    };
-
     let text = vec![
         Line::from(vec![
             Span::styled("█ HYPERVELOCITY 40x █", app.theme.gold),
             Span::raw("  "),
             Span::styled(state_label, state_style),
-            Span::raw("  "),
-            Span::styled(
-                format!("15m {} LOCK", snap.trend_15m),
-                if snap.trend_15m == "BULL" {
-                    app.theme.bull
-                } else if snap.trend_15m == "BEAR" {
-                    app.theme.bear
-                } else {
-                    app.theme.chop
-                },
-            ),
         ]),
+        Line::from(vec![Span::styled(
+            format!(
+                "5m PRIMARY [{}] | 15m CONTEXT [{}]",
+                snap.trend_5m, snap.trend_15m
+            ),
+            if snap.trend_5m == "BULL" {
+                app.theme.bull
+            } else if snap.trend_5m == "BEAR" {
+                app.theme.bear
+            } else {
+                app.theme.chop
+            },
+        )]),
         Line::from(vec![entry_line]),
-        Line::from(Span::styled(book_line, app.theme.cyan)),
         Line::from(vec![backend_status_span(app)]),
     ];
 
@@ -222,6 +214,24 @@ fn render_position_panel(f: &mut Frame, app: &App, area: Rect) {
     } else {
         Span::styled("0.00000 BTC", app.theme.muted)
     };
+    let fee_display = if pos.is_active() {
+        let funding_payment = if pos.funding_payment_usd.abs() < 0.005 {
+            0.0
+        } else {
+            pos.funding_payment_usd
+        };
+        let funding = if funding_payment >= 0.0 {
+            format!("FUNDING PAID ${funding_payment:.2}")
+        } else {
+            format!("FUNDING RECEIVED ${:.2}", funding_payment.abs())
+        };
+        format!(
+            "ENTRY FEE PAID ${:.2}  |  {}  |  EST EXIT FEE ${:.2}",
+            pos.entry_fee_usd, funding, pos.estimated_exit_fee_usd
+        )
+    } else {
+        "ENTRY FEE N/A  |  FUNDING N/A  |  EST EXIT FEE N/A".to_string()
+    };
 
     let text = vec![
         Line::from(vec![
@@ -264,6 +274,7 @@ fn render_position_panel(f: &mut Frame, app: &App, area: Rect) {
             ),
             app.theme.muted,
         )]),
+        Line::from(vec![Span::styled(fee_display, app.theme.cyan)]),
     ];
 
     let block = Block::default()

@@ -136,6 +136,8 @@ pub(crate) struct LedgerRow {
     init_cash: Option<f64>,
     realized_pnl: Option<f64>,
     unrealized_pnl: Option<f64>,
+    fee_usd: Option<f64>,
+    funding_payment_usd: Option<f64>,
     pub(crate) primary_regime: Option<String>,
     strategy_params: Option<Value>,
     exits: Option<Value>,
@@ -161,6 +163,28 @@ struct OpenTrade {
     leverage: f64,
     allocated_margin: f64,
     realized_before_entry: f64,
+    entry_fee_usd: f64,
+    funding_payment_usd: f64,
+    entry_regime: TradeRegime,
+}
+
+#[derive(Debug, Clone)]
+struct TradeRegime {
+    primary: String,
+    state_1m: String,
+    state_5m: String,
+    context_15m: String,
+}
+
+impl TradeRegime {
+    fn unknown() -> Self {
+        Self {
+            primary: "UNKNOWN".to_string(),
+            state_1m: "UNKNOWN".to_string(),
+            state_5m: "UNKNOWN".to_string(),
+            context_15m: "UNKNOWN".to_string(),
+        }
+    }
 }
 
 /// Parse JSONL and project only the most recent identified backend run.
@@ -197,6 +221,7 @@ fn parse_rows(content: &str) -> Result<Vec<LedgerRow>, BackendTelemetryError> {
 fn build_snapshot(run_id: String, rows: &[&LedgerRow]) -> BackendTelemetrySnapshot {
     let identity = rows
         .iter()
+        .rev()
         .find(|row| row.action == "session_start")
         .copied();
     let configured_leverage = identity
@@ -207,7 +232,12 @@ fn build_snapshot(run_id: String, rows: &[&LedgerRow]) -> BackendTelemetrySnapsh
     let trades = build_trades(&run_id, rows, configured_leverage);
     let equity_history: Vec<f64> = rows.iter().filter_map(|row| row.equity).collect();
     let stats = build_stats(rows, &trades, &equity_history);
-    let active_position = build_active_position(rows, configured_leverage);
+    let maker_fee_rate = identity
+        .and_then(|row| row.costs.as_ref())
+        .and_then(|costs| costs.get("maker_fee_rate"))
+        .and_then(Value::as_f64)
+        .unwrap_or(0.0);
+    let active_position = build_active_position(rows, configured_leverage, maker_fee_rate);
     let regime_snapshots = build_regime_snapshots(rows, configured_leverage);
     let book = latest_book(rows);
     let latest_regime_row = rows
@@ -296,18 +326,32 @@ fn build_trades(
     let mut trades = Vec::new();
     let mut open: Option<OpenTrade> = None;
     let mut latest_realized = 0.0;
+    let mut latest_regime = TradeRegime::unknown();
     for row in rows {
         match row.action.as_str() {
+            "regime_observation" => latest_regime = regime_from_row(row),
             "enter_long" | "enter_short" if is_filled_entry(row) => {
                 open = Some(open_trade_from_row(
                     row,
                     configured_leverage,
                     latest_realized,
+                    latest_regime.clone(),
                 ));
+            }
+            "funding" => {
+                if let Some(entry) = open.as_mut() {
+                    entry.funding_payment_usd += row.funding_payment_usd.unwrap_or(0.0);
+                }
             }
             "close" => {
                 if let Some(entry) = open.take() {
-                    trades.push(close_trade(run_id, trades.len(), &entry, row));
+                    trades.push(close_trade(
+                        run_id,
+                        trades.len(),
+                        &entry,
+                        row,
+                        &latest_regime,
+                    ));
                 }
             }
             _ => {}
@@ -328,6 +372,7 @@ fn open_trade_from_row(
     row: &LedgerRow,
     configured_leverage: f64,
     realized_before_entry: f64,
+    entry_regime: TradeRegime,
 ) -> OpenTrade {
     let leverage = row.leverage.unwrap_or(configured_leverage);
     let entry_price = row.fill_px.or(row.position_avg_px).unwrap_or(0.0);
@@ -351,16 +396,27 @@ fn open_trade_from_row(
         leverage,
         allocated_margin,
         realized_before_entry,
+        entry_fee_usd: row.fee_usd.unwrap_or(0.0),
+        funding_payment_usd: 0.0,
+        entry_regime,
     }
 }
 
-fn close_trade(run_id: &str, index: usize, entry: &OpenTrade, row: &LedgerRow) -> PaperTradeRecord {
+fn close_trade(
+    run_id: &str,
+    index: usize,
+    entry: &OpenTrade,
+    row: &LedgerRow,
+    exit_regime: &TradeRegime,
+) -> PaperTradeRecord {
     let pnl = row.realized_pnl.unwrap_or(entry.realized_before_entry) - entry.realized_before_entry;
     let pnl_pct = if entry.allocated_margin.abs() > f64::EPSILON {
         pnl / entry.allocated_margin * 100.0
     } else {
         0.0
     };
+    let exit_fee_usd = row.fee_usd.unwrap_or(0.0);
+    let total_cost_usd = entry.entry_fee_usd + exit_fee_usd + entry.funding_payment_usd;
     PaperTradeRecord {
         trade_id: format!("{run_id}-{:04}", index + 1),
         timestamp_str: if row.feed_ts.is_empty() {
@@ -368,6 +424,8 @@ fn close_trade(run_id: &str, index: usize, entry: &OpenTrade, row: &LedgerRow) -
         } else {
             row.feed_ts.clone()
         },
+        entry_timestamp_str: entry.timestamp.clone(),
+        exit_timestamp_str: row.feed_ts.clone(),
         symbol: row.symbol.clone().unwrap_or_else(|| entry.symbol.clone()),
         direction: entry.direction.clone(),
         entry_price: entry.entry_price,
@@ -376,10 +434,50 @@ fn close_trade(run_id: &str, index: usize, entry: &OpenTrade, row: &LedgerRow) -
         leverage: row.leverage.unwrap_or(entry.leverage),
         pnl_usd: pnl,
         pnl_pct,
+        gross_pnl_usd: pnl + total_cost_usd,
+        entry_fee_usd: entry.entry_fee_usd,
+        exit_fee_usd,
+        funding_payment_usd: entry.funding_payment_usd,
+        total_cost_usd,
+        entry_primary_regime: entry.entry_regime.primary.clone(),
+        entry_regime_1m: entry.entry_regime.state_1m.clone(),
+        entry_regime_5m: entry.entry_regime.state_5m.clone(),
+        entry_context_15m: entry.entry_regime.context_15m.clone(),
+        exit_primary_regime: exit_regime.primary.clone(),
+        exit_regime_1m: exit_regime.state_1m.clone(),
+        exit_regime_5m: exit_regime.state_5m.clone(),
+        exit_context_15m: exit_regime.context_15m.clone(),
         exit_reason: row
             .exit_reason
             .clone()
             .unwrap_or_else(|| "exit_reason_not_recorded".to_string()),
+    }
+}
+
+fn regime_from_row(row: &LedgerRow) -> TradeRegime {
+    TradeRegime {
+        primary: row
+            .primary_regime
+            .clone()
+            .unwrap_or_else(|| "UNKNOWN".to_string()),
+        state_1m: row
+            .extra
+            .get("state_1m")
+            .and_then(Value::as_str)
+            .unwrap_or("UNKNOWN")
+            .to_string(),
+        state_5m: row
+            .extra
+            .get("state_5m")
+            .and_then(Value::as_str)
+            .unwrap_or("UNKNOWN")
+            .to_string(),
+        context_15m: row
+            .extra
+            .get("context_15m")
+            .and_then(Value::as_str)
+            .unwrap_or("UNKNOWN")
+            .to_string(),
     }
 }
 
@@ -432,7 +530,11 @@ fn build_stats(rows: &[&LedgerRow], trades: &[PaperTradeRecord], equity: &[f64])
     }
 }
 
-fn build_active_position(rows: &[&LedgerRow], configured_leverage: f64) -> ActivePosition {
+fn build_active_position(
+    rows: &[&LedgerRow],
+    configured_leverage: f64,
+    maker_fee_rate: f64,
+) -> ActivePosition {
     let Some(latest) = rows
         .iter()
         .rev()
@@ -445,10 +547,25 @@ fn build_active_position(rows: &[&LedgerRow], configured_leverage: f64) -> Activ
     if qty.abs() <= f64::EPSILON {
         return ActivePosition::flat();
     }
-    let entry = rows
+    let entry_index = rows
         .iter()
-        .rev()
-        .find(|row| matches!(row.action.as_str(), "enter_long" | "enter_short"));
+        .rposition(|row| matches!(row.action.as_str(), "enter_long" | "enter_short"));
+    let entry = entry_index.map(|index| rows[index]);
+    let funding_payment_usd = entry_index
+        .map(|index| {
+            rows[index + 1..]
+                .iter()
+                .filter(|row| row.action == "funding")
+                .filter_map(|row| row.funding_payment_usd)
+                .sum()
+        })
+        .unwrap_or(0.0);
+    let estimated_exit_price = latest.mark_px.unwrap_or_else(|| {
+        latest
+            .position_avg_px
+            .or_else(|| entry.and_then(|row| row.fill_px))
+            .unwrap_or(0.0)
+    });
     ActivePosition {
         entry_timestamp: entry.map(|row| row.feed_ts.clone()).unwrap_or_default(),
         symbol: entry
@@ -465,6 +582,9 @@ fn build_active_position(rows: &[&LedgerRow], configured_leverage: f64) -> Activ
             .unwrap_or(configured_leverage),
         entry_equity: entry.and_then(|row| row.equity).unwrap_or(0.0),
         peak_margin_pct: 0.0,
+        entry_fee_usd: entry.and_then(|row| row.fee_usd).unwrap_or(0.0),
+        funding_payment_usd,
+        estimated_exit_fee_usd: qty.abs() * estimated_exit_price * maker_fee_rate,
     }
 }
 

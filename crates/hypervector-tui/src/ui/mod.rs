@@ -113,6 +113,10 @@ pub fn draw(f: &mut Frame, app: &App) {
         render_event_modal(f, app, f.area());
     }
 
+    if app.show_trade_detail_modal {
+        render_trade_modal(f, app, f.area());
+    }
+
     if app.show_help_overlay {
         render_help_overlay(f, app, f.area());
     }
@@ -244,8 +248,9 @@ fn render_timeline_ribbon(f: &mut Frame, app: &App, area: Rect) {
 
     let snap = app.current_snapshot();
     let title_str = format!(
-        " 🎞️ REGIME TIMELINE (Playhead: █ Inverted) │ Active: [{}] │ HTF Lock: 15m [{}] ",
+        " REGIME TIMELINE (Playhead: Inverted) | Active: [{}] | 5m PRIMARY [{}] | 15m CONTEXT [{}] ",
         snap.state.primary_label(),
+        snap.trend_5m,
         snap.trend_15m
     );
 
@@ -325,9 +330,9 @@ fn render_screen_regime_detection(f: &mut Frame, app: &App, area: Rect) {
     let banner_text = vec![
         Line::from(vec![Span::styled(state_label, state_style)]),
         Line::from(vec![
-            Span::raw("HTF Regime Lock: "),
-            Span::styled("15m (3x-15x Filter)", app.theme.gold),
-            Span::raw(" │ Active HTF Trend: "),
+            Span::raw("Canonical Primary: "),
+            Span::styled("5m (1m directional fallback)", app.theme.gold),
+            Span::raw(" | Context Only: "),
             Span::styled(
                 format!("15m [{}]", snap.trend_15m),
                 if snap.trend_15m == "BULL" {
@@ -379,7 +384,7 @@ fn render_screen_regime_detection(f: &mut Frame, app: &App, area: Rect) {
         top_chunks[0],
     );
 
-    // SRS_TUI_EC13: MTF Hysteresis Matrix with state dots & explicit HTF Lock
+    // SRS_TUI_EC13: MTF matrix with canonical primary and non-veto context.
     let mtf_text = vec![
         Line::from(vec![
             Span::styled(
@@ -407,13 +412,13 @@ fn render_screen_regime_detection(f: &mut Frame, app: &App, area: Rect) {
                     app.theme.chop
                 },
             ),
-            Span::raw(" 5m Trend: "),
+            Span::raw(" 5m PRIMARY: "),
             Span::styled(format!(" [{}] ", snap.trend_5m), app.theme.title),
-            Span::styled("ZLEMA Hysteresis", app.theme.muted),
+            Span::styled("CANONICAL (1m fallback)", app.theme.muted),
         ]),
         Line::from(vec![
-            Span::styled("★ ", app.theme.gold),
-            Span::styled("15m HTF Lock: ", app.theme.gold),
+            Span::styled("* ", app.theme.gold),
+            Span::styled("15m CONTEXT: ", app.theme.gold),
             Span::styled(
                 format!(" [{}] ", snap.trend_15m),
                 if snap.trend_15m == "BULL" {
@@ -424,7 +429,7 @@ fn render_screen_regime_detection(f: &mut Frame, app: &App, area: Rect) {
                     app.theme.chop
                 },
             ),
-            Span::styled("[MACRO REGIME LOCK]", app.theme.title),
+            Span::styled("[NON-VETO CONTEXT]", app.theme.title),
         ]),
         Line::from(vec![
             Span::raw("Alignment: "),
@@ -834,7 +839,7 @@ fn render_screen_strategy_policy(f: &mut Frame, app: &App, area: Rect) {
         .constraints([
             Constraint::Length(6), // Row 1: Strategy Command Box (42%) + Dynamic Leverage Panel (58%)
             Constraint::Length(4), // Row 2: Loaded Strategy Portfolio Matrix (Hypervelocity Only)
-            Constraint::Length(10), // Row 3: Active Position Telemetry + L2 Depth Ladder Stack
+            Constraint::Length(14), // Row 3: Active Position Telemetry + full 5x5 L2 ladder
             Constraint::Length(6), // Row 4: Performance Summary Section
             Constraint::Min(6),    // Row 5: Paper Trade Journal Log (60%) + Trend State Log (40%)
         ])
@@ -1323,7 +1328,17 @@ fn render_paper_journal_log(f: &mut Frame, app: &App, area: Rect) {
     let max_rows = area.height.saturating_sub(3).max(1) as usize;
     let open_count = usize::from(app.active_position.is_active());
     let closed_limit = max_rows.saturating_sub(open_count);
-    let recent_trades: Vec<_> = app.paper_trades.iter().rev().take(closed_limit).collect();
+    let selected_trade = app
+        .selected_trade_index
+        .min(app.paper_trades.len().saturating_sub(1));
+    let window_start = selected_trade.saturating_sub(closed_limit.saturating_sub(1));
+    let recent_trades: Vec<_> = app
+        .paper_trades
+        .iter()
+        .rev()
+        .skip(window_start)
+        .take(closed_limit)
+        .collect();
     let mut rows = Vec::with_capacity(recent_trades.len() + open_count);
     if app.active_position.is_active() {
         let position = &app.active_position;
@@ -1357,7 +1372,7 @@ fn render_paper_journal_log(f: &mut Frame, app: &App, area: Rect) {
             Span::styled("AWAITING TP", app.theme.gold),
         ]));
     }
-    rows.extend(recent_trades.iter().map(|trd| {
+    rows.extend(recent_trades.iter().enumerate().map(|(index, trd)| {
         let dir_style = if trd.direction == "LONG" {
             app.theme.bull
         } else {
@@ -1371,7 +1386,7 @@ fn render_paper_journal_log(f: &mut Frame, app: &App, area: Rect) {
 
         let ts_display = format_timestamp_display(&trd.timestamp_str);
 
-        Row::new(vec![
+        let row = Row::new(vec![
             Span::styled(&trd.trade_id, app.theme.gold),
             Span::styled(ts_display, app.theme.muted),
             Span::styled(&trd.direction, dir_style),
@@ -1387,7 +1402,12 @@ fn render_paper_journal_log(f: &mut Frame, app: &App, area: Rect) {
                 pnl_color,
             ),
             Span::styled(&trd.exit_reason, app.theme.muted),
-        ])
+        ]);
+        if window_start + index == selected_trade {
+            row.style(app.theme.highlight)
+        } else {
+            row
+        }
     }));
 
     let table = Table::new(
@@ -1408,9 +1428,14 @@ fn render_paper_journal_log(f: &mut Frame, app: &App, area: Rect) {
     .block(
         Block::default()
             .title(format!(
-                " LIVE PAPER JOURNAL (CLOSED TRADES: {} | OPEN POSITIONS: {}) ",
+                " LIVE PAPER JOURNAL (CLOSED TRADES: {} | OPEN POSITIONS: {} | SELECTED: {}/{}) ",
                 app.paper_trades.len(),
-                open_count
+                open_count,
+                usize::from(!app.paper_trades.is_empty())
+                    + app
+                        .selected_trade_index
+                        .min(app.paper_trades.len().saturating_sub(1)),
+                app.paper_trades.len()
             ))
             .title_style(app.theme.title)
             .borders(Borders::ALL)
@@ -1457,6 +1482,11 @@ fn render_footer(f: &mut Frame, app: &App, area: Rect) {
     let fill = "█".repeat(bar_len);
     let empty = "░".repeat(16 - bar_len);
 
+    let selection_label = match app.active_tab {
+        0 => " Select Trade | ",
+        1 => " Select Event | ",
+        _ => " Select Option | ",
+    };
     let help_text = Line::from(vec![
         Span::styled("[Tab / 1-3]", app.theme.gold),
         Span::raw(" Switch Screen View │ "),
@@ -1465,7 +1495,7 @@ fn render_footer(f: &mut Frame, app: &App, area: Rect) {
         Span::styled("[←/→]", app.theme.gold),
         Span::raw(" Scrub │ "),
         Span::styled("[↑/↓ j/k]", app.theme.gold),
-        Span::raw(" Select Event │ "),
+        Span::raw(selection_label),
         Span::styled("[Enter]", app.theme.gold),
         Span::raw(" Details │ "),
         Span::styled("[?]", app.theme.gold),
@@ -1562,6 +1592,109 @@ fn render_event_modal(f: &mut Frame, app: &App, area: Rect) {
     f.render_widget(p, modal_area);
 }
 
+fn render_trade_modal(f: &mut Frame, app: &App, area: Rect) {
+    let modal_area = centered_rect(72, 68, area);
+    f.render_widget(Clear, modal_area);
+    let Some(trade) = app.paper_trades.iter().rev().nth(app.selected_trade_index) else {
+        return;
+    };
+    let block = Block::default()
+        .title(" TRADE DETAIL INSPECTOR ")
+        .title_style(app.theme.title)
+        .borders(Borders::ALL)
+        .border_type(BorderType::Double)
+        .border_style(app.theme.border_active);
+    f.render_widget(
+        Paragraph::new(trade_detail_lines(app, trade))
+            .block(block)
+            .alignment(Alignment::Left),
+        modal_area,
+    );
+}
+
+fn trade_detail_lines(app: &App, trade: &crate::model::PaperTradeRecord) -> Vec<Line<'static>> {
+    let pnl_style = if trade.pnl_usd >= 0.0 {
+        app.theme.bull
+    } else {
+        app.theme.bear
+    };
+    let mut lines = trade_identity_lines(trade);
+    lines.extend(trade_cost_lines(trade));
+    lines.extend([
+        Line::from(vec![Span::styled(
+            format!(
+                "Gross PnL: {} | Net PnL: {} ({:+.2}%)",
+                signed_usd(trade.gross_pnl_usd),
+                signed_usd(trade.pnl_usd),
+                trade.pnl_pct
+            ),
+            pnl_style,
+        )]),
+        Line::from(format!("Exit Trigger: {}", trade.exit_reason)),
+        Line::from("Press [Enter] or [Esc] to return to the journal"),
+    ]);
+    lines
+}
+
+fn trade_identity_lines(trade: &crate::model::PaperTradeRecord) -> Vec<Line<'static>> {
+    vec![
+        Line::from(format!(
+            "Trade ID: {} | {} {}",
+            trade.trade_id, trade.symbol, trade.direction
+        )),
+        Line::from(format!(
+            "Entry Time: {}",
+            format_timestamp_display(&trade.entry_timestamp_str)
+        )),
+        Line::from(format!(
+            "Exit Time:  {}",
+            format_timestamp_display(&trade.exit_timestamp_str)
+        )),
+        Line::from(format!(
+            "ENTRY  PRIMARY {} | 1m {} | 5m {} | 15m CONTEXT {}",
+            trade.entry_primary_regime,
+            trade.entry_regime_1m,
+            trade.entry_regime_5m,
+            trade.entry_context_15m
+        )),
+        Line::from(format!(
+            "EXIT   PRIMARY {} | 1m {} | 5m {} | 15m CONTEXT {}",
+            trade.exit_primary_regime,
+            trade.exit_regime_1m,
+            trade.exit_regime_5m,
+            trade.exit_context_15m
+        )),
+        Line::from(format!(
+            "Entry Price: ${:.2} | Exit Price: ${:.2} | Size: {:.5} BTC | {:.1}x",
+            trade.entry_price, trade.exit_price, trade.size_btc, trade.leverage
+        )),
+    ]
+}
+
+fn trade_cost_lines(trade: &crate::model::PaperTradeRecord) -> Vec<Line<'static>> {
+    let funding = if trade.funding_payment_usd >= 0.0 {
+        format!("Funding Paid: ${:.2}", trade.funding_payment_usd)
+    } else {
+        format!("Funding Received: ${:.2}", trade.funding_payment_usd.abs())
+    };
+    vec![
+        Line::from(format!(
+            "Entry Fee: ${:.2} | Exit Fee: ${:.2}",
+            trade.entry_fee_usd, trade.exit_fee_usd
+        )),
+        Line::from(funding),
+        Line::from(format!("Total Net Costs: ${:.2}", trade.total_cost_usd)),
+    ]
+}
+
+fn signed_usd(value: f64) -> String {
+    if value >= 0.0 {
+        format!("+${value:.2}")
+    } else {
+        format!("-${:.2}", value.abs())
+    }
+}
+
 fn render_help_overlay(f: &mut Frame, app: &App, area: Rect) {
     let modal_area = centered_rect(65, 75, area);
     f.render_widget(Clear, modal_area);
@@ -1580,11 +1713,11 @@ fn render_help_overlay(f: &mut Frame, app: &App, area: Rect) {
             app.theme.gold,
         )]),
         Line::from(vec![Span::styled(
-            "  🔥 TREND_UP       : 15m/5m Bull MTF + ADX > 25 + OPI >= 0.0",
+            "  TREND_UP       : 5m primary trend (1m directional fallback possible)",
             app.theme.bull,
         )]),
         Line::from(vec![Span::styled(
-            "  🔻 TREND_DOWN     : 15m/5m Bear MTF + ADX > 25 + OPI <= 0.0",
+            "  TREND_DOWN     : 5m primary trend (1m directional fallback possible)",
             app.theme.bear,
         )]),
         Line::from(vec![Span::styled(

@@ -311,6 +311,11 @@ fn test_backend_config_is_a_selectable_menu_not_raw_json() {
         rows.iter()
             .any(|row| row.option == "Position mode" && row.value == "one_way")
     );
+    assert!(rows.iter().any(|row| {
+        row.option == "Shadow reset"
+            && row.value == "explicit CLI only"
+            && row.source == "hypervelocity-shadow-reset --yes"
+    }));
     assert!(rows.iter().all(|row| !row.value.contains('{')));
 }
 
@@ -318,7 +323,7 @@ fn test_backend_config_is_a_selectable_menu_not_raw_json() {
 fn test_dashboard_uses_backend_margin_costs_and_mark_to_market_pnl() {
     let telemetry = parse_backend_telemetry(
         r#"{"feed_ts":"session_start","action":"session_start","run_id":"hv","strategy_name":"hypervelocity_1m_scalper","execution_mode":"shadow","strategy_params":{"leverage":40.0},"risk":{"margin_fraction":0.7},"execution":{"order_type":"limit","time_in_force":"post_only"},"costs":{"maker_fee_rate":0.00015},"init_cash":10000.0,"equity":10000.0,"position_qty":0.0}
-{"feed_ts":"2026-07-25T12:00:00Z","action":"enter_short","run_id":"hv","symbol":"BTC","fill_px":64100.0,"fill_qty":4.36817,"position_qty":-4.36817,"position_avg_px":64100.0,"equity":9958.0,"realized_pnl":-42.0,"unrealized_pnl":0.0,"leverage":40.0}
+{"feed_ts":"2026-07-25T12:00:00Z","action":"enter_short","run_id":"hv","symbol":"BTC","fill_px":64100.0,"fill_qty":4.36817,"position_qty":-4.36817,"position_avg_px":64100.0,"equity":9958.0,"realized_pnl":-42.0,"unrealized_pnl":0.0,"leverage":40.0,"fee_usd":42.0}
 {"feed_ts":"2026-07-25T12:01:00Z","action":"regime_observation","run_id":"hv","primary_regime":"TREND_DOWN","state_1m":"TREND_DOWN","state_5m":"TREND_DOWN","context_15m":"TREND_DOWN","mark_px":64075.0,"position_qty":-4.36817,"position_avg_px":64100.0,"equity":10067.17,"realized_pnl":-42.0,"unrealized_pnl":109.17}"#,
     )
     .expect("telemetry");
@@ -358,7 +363,135 @@ fn test_dashboard_uses_backend_margin_costs_and_mark_to_market_pnl() {
     assert!(rendered.contains("Leverage"));
     assert!(rendered.contains("UNREAL +109.17"));
     assert!(rendered.contains("AWAITING TP"));
+    assert!(rendered.contains("ENTRY FEE PAID $42.00"));
+    assert!(rendered.contains("FUNDING PAID $0.00"), "{rendered}");
+    assert!(rendered.contains("EST EXIT FEE"));
     assert!(!rendered.contains("25% Cap"));
     assert!(!rendered.contains("Taker Drag"));
     assert!(!rendered.contains("+$-"));
+}
+
+#[test]
+fn journal_selection_opens_fee_and_regime_details() {
+    let telemetry = parse_backend_telemetry(
+        r#"{"feed_ts":"session_start","action":"session_start","run_id":"hv","strategy_name":"hypervelocity_1m_scalper","execution_mode":"shadow","strategy_params":{"leverage":40.0},"costs":{"maker_fee_rate":0.00015},"init_cash":10000.0,"equity":10000.0,"position_qty":0.0}
+{"feed_ts":"2026-07-25T12:00:00Z","action":"regime_observation","run_id":"hv","primary_regime":"TREND_UP","state_1m":"TREND_UP","state_5m":"TREND_UP","context_15m":"RANGE","mark_px":100.0,"position_qty":0.0,"realized_pnl":0.0,"equity":10000.0}
+{"feed_ts":"2026-07-25T12:01:00Z","action":"enter_long","run_id":"hv","symbol":"BTC","fill_px":100.0,"fill_qty":1.0,"position_qty":1.0,"position_avg_px":100.0,"realized_pnl":-1.5,"equity":9998.5,"fee_usd":1.5}
+{"feed_ts":"2026-07-25T13:00:00Z","action":"funding","run_id":"hv","position_qty":1.0,"position_avg_px":100.0,"realized_pnl":-1.7,"unrealized_pnl":5.0,"equity":10003.3,"funding_payment_usd":0.2}
+{"feed_ts":"2026-07-25T13:01:00Z","action":"regime_observation","run_id":"hv","primary_regime":"RANGE","state_1m":"RANGE","state_5m":"RANGE","context_15m":"TREND_UP","mark_px":108.0,"position_qty":1.0,"position_avg_px":100.0,"realized_pnl":-1.7,"unrealized_pnl":8.0,"equity":10006.3}
+{"feed_ts":"2026-07-25T13:02:00Z","action":"close","run_id":"hv","symbol":"BTC","fill_px":108.0,"fill_qty":1.0,"position_qty":0.0,"position_avg_px":0.0,"realized_pnl":4.68,"unrealized_pnl":0.0,"equity":10004.68,"fee_usd":1.62,"exit_reason":"take_profit_8pct_margin"}"#,
+    )
+    .expect("trade telemetry");
+    let snapshots = vec![make_snapshot(
+        108.0,
+        109.0,
+        99.0,
+        RegimeState::RangeChop,
+        "2026-07-25T13:01:00Z",
+    )];
+    let mut app = App::new("BTC".into(), "1m".into(), snapshots, true, false);
+    app.apply_backend_telemetry(telemetry);
+    app.selected_event_index = 3;
+    let seed_trade = app.paper_trades[0].clone();
+    app.paper_trades = (1..=12)
+        .map(|index| {
+            let mut trade = seed_trade.clone();
+            trade.trade_id = format!("trade-{index:02}");
+            trade
+        })
+        .collect();
+
+    for _ in 0..11 {
+        app.select_next_trade();
+    }
+    assert_eq!(app.selected_trade_index, 11);
+    assert_eq!(app.selected_event_index, 3);
+    let backend = TestBackend::new(180, 50);
+    let mut terminal = Terminal::new(backend).expect("terminal");
+    terminal
+        .draw(|frame| hypervector_tui::ui::draw(frame, &app))
+        .expect("draw selected journal row");
+    let journal = (0..terminal.backend().buffer().area.height)
+        .map(|y| {
+            (0..terminal.backend().buffer().area.width)
+                .map(|x| terminal.backend().buffer()[(x, y)].symbol())
+                .collect::<String>()
+        })
+        .collect::<Vec<_>>()
+        .join("\n");
+    assert!(journal.contains("trade-01"));
+
+    app.toggle_trade_modal();
+    assert!(app.show_trade_detail_modal);
+    terminal
+        .draw(|frame| hypervector_tui::ui::draw(frame, &app))
+        .expect("draw trade details");
+    let rendered = (0..terminal.backend().buffer().area.height)
+        .map(|y| {
+            (0..terminal.backend().buffer().area.width)
+                .map(|x| terminal.backend().buffer()[(x, y)].symbol())
+                .collect::<String>()
+        })
+        .collect::<Vec<_>>()
+        .join("\n");
+
+    assert!(rendered.contains("TRADE DETAIL INSPECTOR"));
+    assert!(rendered.contains("Entry Time"));
+    assert!(rendered.contains("2026-07-25 08:01:00 EDT"));
+    assert!(rendered.contains("Exit Time"));
+    assert!(rendered.contains("2026-07-25 09:02:00 EDT"));
+    assert!(
+        rendered
+            .contains("ENTRY  PRIMARY TREND_UP | 1m TREND_UP | 5m TREND_UP | 15m CONTEXT RANGE")
+    );
+    assert!(rendered.contains("EXIT   PRIMARY RANGE | 1m RANGE | 5m RANGE | 15m CONTEXT TREND_UP"));
+    assert!(rendered.contains("Entry Fee: $1.50"));
+    assert!(rendered.contains("Exit Fee: $1.62"));
+    assert!(rendered.contains("Funding Paid: $0.20"));
+    assert!(rendered.contains("Total Net Costs: $3.32"));
+    assert!(rendered.contains("Gross PnL: +$8.00"));
+    assert!(rendered.contains("Net PnL: +$4.68"));
+}
+
+#[test]
+fn dashboard_shows_full_ladder_and_truthful_regime_roles() {
+    let telemetry = parse_backend_telemetry(
+        r#"{"feed_ts":"session_start","action":"session_start","run_id":"hv","strategy_name":"hypervelocity_1m_scalper","execution_mode":"shadow","strategy_params":{"leverage":40.0},"init_cash":10000.0,"equity":10000.0,"position_qty":0.0}
+{"feed_ts":"2026-07-25T14:01:00Z","action":"regime_observation","run_id":"hv","primary_regime":"TREND_UP","state_1m":"TREND_UP","state_5m":"TREND_UP","context_15m":"TREND_DOWN","mark_px":100.5,"position_qty":0.0,"equity":10000.0,"realized_pnl":0.0}
+{"feed_ts":"2026-07-25T14:01:05Z","action":"book_observation","run_id":"hv","source":"hl_rest_l2","exchange_ts_ms":1784988065000.0,"recv_ts_ms":1784988065050.0,"mid_px":100.5,"spread_bps":9.95,"bid_depth_ratio":1.0,"opi":0.0,"bids":[{"price":100.0,"size":5.0},{"price":99.0,"size":4.0},{"price":98.0,"size":3.0},{"price":97.0,"size":2.0},{"price":96.0,"size":1.0}],"asks":[{"price":101.0,"size":5.0},{"price":102.0,"size":4.0},{"price":103.0,"size":3.0},{"price":104.0,"size":2.0},{"price":105.0,"size":1.0}]}"#,
+    )
+    .expect("five-level telemetry");
+    let snapshots = vec![make_snapshot(
+        100.5,
+        101.0,
+        100.0,
+        RegimeState::BullMomentum,
+        "2026-07-25T14:01:00Z",
+    )];
+    let mut app = App::new("BTC".into(), "1m".into(), snapshots, true, false);
+    app.apply_backend_telemetry(telemetry);
+    let backend = TestBackend::new(180, 50);
+    let mut terminal = Terminal::new(backend).expect("terminal");
+    terminal
+        .draw(|frame| hypervector_tui::ui::draw(frame, &app))
+        .expect("draw ladder");
+    let rendered = (0..terminal.backend().buffer().area.height)
+        .map(|y| {
+            (0..terminal.backend().buffer().area.width)
+                .map(|x| terminal.backend().buffer()[(x, y)].symbol())
+                .collect::<String>()
+        })
+        .collect::<Vec<_>>()
+        .join("\n");
+
+    for price in [105.0, 104.0, 103.0, 102.0, 101.0] {
+        assert!(rendered.contains(&format!("ASK  ${price:.2}")));
+    }
+    for price in [100.0, 99.0, 98.0, 97.0, 96.0] {
+        assert!(rendered.contains(&format!("BID  ${price:.2}")));
+    }
+    assert!(rendered.contains("5m PRIMARY [BULL]"));
+    assert!(rendered.contains("15m CONTEXT [BEAR]"));
+    assert!(!rendered.contains("15m BEAR LOCK"));
+    assert!(!rendered.contains("HTF Lock: 15m"));
 }

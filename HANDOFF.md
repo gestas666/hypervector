@@ -32,6 +32,9 @@
 ### 2026-07-25 implementation status
 
 - TUI projection now recognizes canonical `TREND_UP`/`TREND_DOWN`/`BREAKOUT`/`TRANSITION` labels and uses live backend `regime_observation` history for the distribution bar. It falls back to session identity for 40x leverage and reports net trade PnL—including entry/exit fees and funding—as a percentage of actual allocated margin.
+- Normal TUI/backend quit no longer resets shadow state. The backend resumes the latest filled Hypervelocity run from its ledger, including initial cash, realized PnL, open position, and last exit cooldown; only the explicit backed-up reset command starts a fresh portfolio.
+- Closed journal trades are selectable and expose Eastern entry/exit times, entry/exit 1m/5m/15m regime context, entry/exit fees, funding, gross PnL, and net PnL. The active-position box reports paid entry fee, accrued funding, and estimated maker exit fee.
+- The dashboard now allocates enough height to display five backend-published bid levels and five ask levels. Labels match the implemented composite: 5m primary, optional 1m directional fallback, confirmed 1m+5m breakouts, and 15m non-veto context.
 - `hypervelocity-shadow-reset` is dry-run by default. `--yes` obtains the backend singleton lock, creates a timestamped audit backup, and clears only shadow decisions and the backend text log; cache, regime snapshots, models, and configuration remain intact.
 - `hypervelocity-tui` is the single operator entry point: Python supervises the no-submit backend, waits for fresh ledger telemetry, runs the Rust TUI in the foreground, and terminates/reaps the backend child when the TUI exits. Backend logs are isolated from the terminal screen under `<data-root>/paper/hypervelocity-shadow.log`.
 - A per-data-root advisory lock refuses a second Hypervelocity backend, preventing two independent BTC positions or competing latest-run telemetry.
@@ -39,12 +42,12 @@
 - Startup validates current public Hyperliquid BTC metadata. On 2026-07-25 the live response reported `szDecimals=5`, `maxLeverage=40`, and hourly funding `0.0000125`.
 - Tier-0 fees are explicit: maker `0.00015`, taker `0.00045`. Qualified post-only fills use maker fees and no invented slippage; funding refreshes every 60 seconds and applies only at hourly settlement boundaries while a position is open.
 - Hyperliquid price ticks are calculated from venue precision rules rather than a permanently fixed `$1` assumption. At the observed BTC price near `$64k`, the effective tick is `$1`.
-- Verification: 429 offline Python tests passed, 10 Rust TUI integration tests passed, targeted Ruff passed, TOML parsed, and real PTY launch/quit smoke wrote unified no-submit telemetry and reaped the backend child.
+- Verification: 439 offline Python tests passed, 20 Rust TUI integration tests passed, targeted Ruff passed, the TUI binary built, TOML parsed, and the prior real PTY launch/quit smoke wrote unified no-submit telemetry and reaped the backend child.
 - The unified shadow state was reset on 2026-07-25 after the first observation window. The prior decisions and backend log are recoverable under `data/ops/hypervelocity_visual/backups/shadow_reset_20260725T141543Z`; active decisions/log files were verified at zero bytes while cache and regime-snapshot checksums remained unchanged.
 
 - `paper-run --metalabel-mode observe` records model probability and bundle identity without changing conviction or entry eligibility.
 - Every backend run stamps its run/export/strategy/execution/model identity and effective strategy, exit, risk, and cost configuration in `session_start`.
-- The TUI reads `data/paper/decisions/decisions.jsonl`, isolates the latest run, and reconstructs only backend-confirmed trades, position, PnL, equity, and model annotations.
+- The TUI reads `data/paper/decisions/decisions.jsonl`, follows the persistent filled Hypervelocity run across supervised restarts, and projects only backend-confirmed trades, position, PnL, equity, and model annotations.
 - Missing or invalid telemetry is shown as disconnected/stale/error; the TUI does not synthesize replacement trades.
 - Research, sweep, backtest, autotune, and model-training CLI commands remain separate from both the backend daemon and TUI process.
 - Candidate bundles are retained under `data/models/metalabel/candidates/`; neither 2026-07-25 Hypervelocity candidate was installed because chronological OOS log loss did not beat the constant-probability baseline.

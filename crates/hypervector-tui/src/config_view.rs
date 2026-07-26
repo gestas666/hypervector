@@ -59,14 +59,13 @@ pub fn render_backend_configuration(f: &mut Frame, app: &App, area: Rect) {
                 .border_style(app.theme.border_active),
         );
     f.render_widget(table, chunks[0]);
-    let help = Paragraph::new(
-        "[↑/↓] Select option  │  Read only: edit configs/hypervelocity_faithful.toml, then restart",
-    )
-    .block(
-        Block::default()
-            .borders(Borders::ALL)
-            .border_style(app.theme.border),
-    );
+    let help =
+        Paragraph::new("[↑/↓] Select  │  Read only  │  Reset: hypervelocity-shadow-reset --yes")
+            .block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .border_style(app.theme.border),
+            );
     f.render_widget(help, chunks[1]);
 }
 
@@ -89,6 +88,12 @@ fn runtime_rows(backend: &BackendTelemetrySnapshot) -> Vec<ConfigMenuRow> {
             "Metalabel mode",
             option(&backend.metalabel_mode),
             "session_start",
+        ),
+        row(
+            "Lifecycle",
+            "Shadow reset",
+            "explicit CLI only".into(),
+            "hypervelocity-shadow-reset --yes",
         ),
         number_row(
             "Runtime",

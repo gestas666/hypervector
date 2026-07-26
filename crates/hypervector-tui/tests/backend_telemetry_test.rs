@@ -149,3 +149,36 @@ fn later_book_row_does_not_erase_backend_position_or_mark_equity() {
     assert!((telemetry.stats.current_equity - 10000.5).abs() < 1e-9);
     assert!((telemetry.stats.unrealized_pnl - 2.0).abs() < 1e-9);
 }
+
+#[test]
+fn continued_shadow_run_preserves_trade_details() {
+    let ledger = r#"{"feed_ts":"session_start","action":"session_start","run_id":"persistent","strategy_name":"hypervelocity_1m_scalper","execution_mode":"shadow","strategy_params":{"leverage":40.0},"costs":{"maker_fee_rate":0.00015},"position_qty":0.0,"position_avg_px":0.0,"realized_pnl":0.0,"equity":10000.0,"init_cash":10000.0}
+{"feed_ts":"2026-07-25T12:00:00Z","action":"regime_observation","run_id":"persistent","primary_regime":"TREND_UP","state_1m":"TREND_UP","state_5m":"TREND_UP","context_15m":"RANGE","position_qty":0.0,"realized_pnl":0.0,"equity":10000.0}
+{"feed_ts":"2026-07-25T12:01:00Z","action":"enter_long","run_id":"persistent","symbol":"BTC","fill_px":100.0,"fill_qty":1.0,"position_qty":1.0,"position_avg_px":100.0,"realized_pnl":-1.5,"unrealized_pnl":0.0,"equity":9998.5,"fee_usd":1.5}
+{"feed_ts":"2026-07-25T13:00:00Z","action":"funding","run_id":"persistent","position_qty":1.0,"position_avg_px":100.0,"realized_pnl":-1.7,"unrealized_pnl":5.0,"equity":10003.3,"funding_payment_usd":0.2}
+{"feed_ts":"session_start","action":"session_start","run_id":"persistent","strategy_name":"hypervelocity_1m_scalper","execution_mode":"shadow","strategy_params":{"leverage":40.0},"costs":{"maker_fee_rate":0.00015},"position_qty":1.0,"position_avg_px":100.0,"realized_pnl":-1.7,"unrealized_pnl":5.0,"equity":10003.3,"init_cash":10000.0,"resumed_shadow_portfolio":true}
+{"feed_ts":"2026-07-25T13:01:00Z","action":"regime_observation","run_id":"persistent","primary_regime":"RANGE","state_1m":"RANGE","state_5m":"RANGE","context_15m":"TREND_UP","position_qty":1.0,"position_avg_px":100.0,"realized_pnl":-1.7,"unrealized_pnl":8.0,"equity":10006.3}
+{"feed_ts":"2026-07-25T13:02:00Z","action":"close","run_id":"persistent","symbol":"BTC","fill_px":108.0,"fill_qty":1.0,"position_qty":0.0,"position_avg_px":0.0,"realized_pnl":4.68,"unrealized_pnl":0.0,"equity":10004.68,"fee_usd":1.62,"exit_reason":"take_profit_8pct_margin"}"#;
+
+    let telemetry = parse_backend_telemetry(ledger).expect("continued telemetry");
+    let trade = &telemetry.trades[0];
+
+    assert_eq!(telemetry.run_id.as_deref(), Some("persistent"));
+    assert_eq!(telemetry.trades.len(), 1);
+    assert_eq!(trade.entry_timestamp_str, "2026-07-25T12:01:00Z");
+    assert_eq!(trade.exit_timestamp_str, "2026-07-25T13:02:00Z");
+    assert_eq!(trade.entry_primary_regime, "TREND_UP");
+    assert_eq!(trade.entry_regime_1m, "TREND_UP");
+    assert_eq!(trade.entry_regime_5m, "TREND_UP");
+    assert_eq!(trade.entry_context_15m, "RANGE");
+    assert_eq!(trade.exit_primary_regime, "RANGE");
+    assert_eq!(trade.exit_regime_1m, "RANGE");
+    assert_eq!(trade.exit_regime_5m, "RANGE");
+    assert_eq!(trade.exit_context_15m, "TREND_UP");
+    assert!((trade.entry_fee_usd - 1.5).abs() < 1e-9);
+    assert!((trade.exit_fee_usd - 1.62).abs() < 1e-9);
+    assert!((trade.funding_payment_usd - 0.2).abs() < 1e-9);
+    assert!((trade.total_cost_usd - 3.32).abs() < 1e-9);
+    assert!((trade.gross_pnl_usd - 8.0).abs() < 1e-9);
+    assert!((trade.pnl_usd - 4.68).abs() < 1e-9);
+}

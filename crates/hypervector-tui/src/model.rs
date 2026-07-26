@@ -87,6 +87,8 @@ pub struct RegimeEvent {
 pub struct PaperTradeRecord {
     pub trade_id: String,
     pub timestamp_str: String,
+    pub entry_timestamp_str: String,
+    pub exit_timestamp_str: String,
     pub symbol: String,
     pub direction: String, // "LONG" or "SHORT"
     pub entry_price: f64,
@@ -95,6 +97,19 @@ pub struct PaperTradeRecord {
     pub leverage: f64,
     pub pnl_usd: f64,
     pub pnl_pct: f64,
+    pub gross_pnl_usd: f64,
+    pub entry_fee_usd: f64,
+    pub exit_fee_usd: f64,
+    pub funding_payment_usd: f64,
+    pub total_cost_usd: f64,
+    pub entry_primary_regime: String,
+    pub entry_regime_1m: String,
+    pub entry_regime_5m: String,
+    pub entry_context_15m: String,
+    pub exit_primary_regime: String,
+    pub exit_regime_1m: String,
+    pub exit_regime_5m: String,
+    pub exit_context_15m: String,
     pub exit_reason: String,
 }
 
@@ -246,6 +261,9 @@ pub struct ActivePosition {
     pub leverage: f64,
     pub entry_equity: f64,
     pub peak_margin_pct: f64,
+    pub entry_fee_usd: f64,
+    pub funding_payment_usd: f64,
+    pub estimated_exit_fee_usd: f64,
 }
 
 impl ActivePosition {
@@ -259,6 +277,9 @@ impl ActivePosition {
             leverage: 0.0,
             entry_equity: 0.0,
             peak_margin_pct: 0.0,
+            entry_fee_usd: 0.0,
+            funding_payment_usd: 0.0,
+            estimated_exit_fee_usd: 0.0,
         }
     }
 

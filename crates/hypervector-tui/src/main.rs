@@ -90,13 +90,14 @@ fn run_app<B: ratatui::backend::Backend>(
                             }
                             _ => {}
                         }
-                    } else if app.show_event_detail_modal {
+                    } else if app.show_event_detail_modal || app.show_trade_detail_modal {
                         match key.code {
                             KeyCode::Char('q')
                             | KeyCode::Esc
                             | KeyCode::Enter
                             | KeyCode::Char(' ') => {
                                 app.show_event_detail_modal = false;
+                                app.show_trade_detail_modal = false;
                             }
                             _ => {}
                         }
@@ -111,6 +112,8 @@ fn run_app<B: ratatui::backend::Backend>(
                             KeyCode::Enter => {
                                 if app.active_tab == 2 {
                                     app.toggle_config_option();
+                                } else if app.active_tab == 0 {
+                                    app.toggle_trade_modal();
                                 } else {
                                     app.toggle_event_modal();
                                 }
@@ -142,6 +145,8 @@ fn run_app<B: ratatui::backend::Backend>(
                             KeyCode::Down | KeyCode::Char('j') => {
                                 if app.active_tab == 2 {
                                     app.select_next_config();
+                                } else if app.active_tab == 0 {
+                                    app.select_next_trade();
                                 } else {
                                     app.select_next_event();
                                 }
@@ -149,6 +154,8 @@ fn run_app<B: ratatui::backend::Backend>(
                             KeyCode::Up | KeyCode::Char('k') => {
                                 if app.active_tab == 2 {
                                     app.select_prev_config();
+                                } else if app.active_tab == 0 {
+                                    app.select_prev_trade();
                                 } else {
                                     app.select_prev_event();
                                 }

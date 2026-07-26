@@ -116,6 +116,79 @@ def test_session_passes_execution_mode_to_engine(tmp_path: Path):
     assert rec["submitted"] is False
 
 
+def test_hypervelocity_shadow_session_resumes_latest_filled_run(
+    tmp_path: Path,
+) -> None:
+    """Normal restart preserves the shadow portfolio until explicit reset."""
+    export = _write_strict_export(
+        tmp_path,
+        strategy="hypervelocity_1m_scalper_long",
+    )
+    data_root = tmp_path / "data"
+    first = PaperSession(
+        export_dir=export,
+        data_root=data_root,
+        run_id="persistent-run",
+        execution_mode="shadow",
+    )
+    first.ensure_session_identity()
+    entry = first.engine.apply_market_fill(
+        feed_ts="2026-07-25T18:05:00Z",
+        action="enter_long",
+        side="buy",
+        qty=2.0,
+        mark_px=100.0,
+    )
+
+    resumed = PaperSession(
+        export_dir=export,
+        data_root=data_root,
+        run_id="discarded-new-run",
+        execution_mode="shadow",
+    )
+
+    assert resumed.run_id == "persistent-run"
+    assert resumed.engine.position.qty == pytest.approx(2.0)
+    assert resumed.engine.position.avg_px == pytest.approx(entry["position_avg_px"])
+    assert resumed.engine.position.realized_pnl == pytest.approx(entry["realized_pnl"])
+
+    resumed.ensure_session_identity()
+    latest = json.loads(resumed.decisions_path.read_text().splitlines()[-1])
+    assert latest["run_id"] == "persistent-run"
+    assert latest["position_qty"] == pytest.approx(2.0)
+    assert latest["position_avg_px"] == pytest.approx(entry["position_avg_px"])
+    assert latest["realized_pnl"] == pytest.approx(entry["realized_pnl"])
+    assert latest["resumed_shadow_portfolio"] is True
+
+
+def test_hypervelocity_shadow_session_without_fills_starts_new_run(
+    tmp_path: Path,
+) -> None:
+    """Empty prior launches do not become persistent portfolio epochs."""
+    export = _write_strict_export(
+        tmp_path,
+        strategy="hypervelocity_1m_scalper_long",
+    )
+    data_root = tmp_path / "data"
+    abandoned = PaperSession(
+        export_dir=export,
+        data_root=data_root,
+        run_id="empty-run",
+        execution_mode="shadow",
+    )
+    abandoned.ensure_session_identity()
+
+    fresh = PaperSession(
+        export_dir=export,
+        data_root=data_root,
+        run_id="fresh-run",
+        execution_mode="shadow",
+    )
+
+    assert fresh.run_id == "fresh-run"
+    assert fresh.engine.position.qty == 0.0
+
+
 def test_session_identity_stamps_effective_metalabel_policy(tmp_path: Path):
     """Every backend run identifies its immutable strategy and model policy."""
     export = _write_strict_export(tmp_path, strategy="crown_stack_long")
@@ -477,7 +550,9 @@ def test_bidirectional_profile_holds_then_switches_only_after_exit(
     def market(*_args: object, **_kwargs: object) -> SimpleNamespace:
         return SimpleNamespace(entry_direction=next(directions))
 
-    monkeypatch.setattr("hypervector.paper.session.current_hypervelocity_market", market)
+    monkeypatch.setattr(
+        "hypervector.paper.session.current_hypervelocity_market", market
+    )
 
     def bar(minute: int, *, high: float, low: float) -> dict[str, object]:
         return {
