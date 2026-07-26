@@ -199,6 +199,8 @@ def _l2_from_row(row: Mapping[str, object]) -> L2SnapshotEvent:
 
 def _trade_from_row(row: Mapping[str, object]) -> PublicTradeEvent:
     side = _text(row, "aggressor_side")
+    if side not in {"buy", "sell"}:
+        raise ValueError("aggressor_side must be buy|sell")
     return PublicTradeEvent(
         symbol=_text(row, "symbol"),
         aggressor_side="buy" if side == "buy" else "sell",

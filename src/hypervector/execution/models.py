@@ -120,6 +120,15 @@ class VenueOrderEvent:
         if self.event_type in {"partially_filled", "filled"}:
             if self.fill_price is None or self.last_quantity <= 0.0:
                 raise ValueError("fill events require positive quantity and price")
+            if self.liquidity_side is None:
+                raise ValueError("fill events require liquidity_side")
+        elif (
+            self.last_quantity != 0.0
+            or self.fill_price is not None
+            or self.fee_usd != 0.0
+            or self.liquidity_side is not None
+        ):
+            raise ValueError("non-fill events cannot carry fill-specific fields")
 
     def to_json(self) -> str:
         """Serialize this validated event to stable JSON."""

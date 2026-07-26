@@ -113,6 +113,35 @@ def test_venue_event_json_round_trip() -> None:
 @pytest.mark.parametrize(
     "overrides",
     [
+        {"event_type": "accepted", "last_quantity": 0.01},
+        {"event_type": "accepted", "fill_price": 64_500.0},
+        {"event_type": "accepted", "fee_usd": 0.01},
+        {"event_type": "accepted", "liquidity_side": "maker"},
+        {"event_type": "filled", "liquidity_side": None},
+    ],
+)
+def test_venue_event_rejects_success_shaped_non_fill_fields(
+    overrides: dict[str, object],
+) -> None:
+    payload: dict[str, object] = json.loads(fill_event().to_json())
+    if overrides["event_type"] == "accepted":
+        payload.update(
+            {
+                "last_quantity": 0.0,
+                "fill_price": None,
+                "fee_usd": 0.0,
+                "liquidity_side": None,
+            }
+        )
+    payload.update(overrides)
+
+    with pytest.raises(ValueError):
+        VenueOrderEvent.from_json(json.dumps(payload))
+
+
+@pytest.mark.parametrize(
+    "overrides",
+    [
         {"client_order_id": ""},
         {"venue_order_id": " "},
         {"event_at": "2026-07-26T20:00:00"},

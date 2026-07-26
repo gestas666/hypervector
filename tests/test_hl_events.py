@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import json
-from dataclasses import replace
+from dataclasses import asdict, replace
 from pathlib import Path
 
 import pytest
 
-from hypervector.data.event_archive import EventArchive
+from hypervector.data.event_archive import EventArchive, _trade_from_row
 from hypervector.data.hl_events import (
     L2SnapshotEvent,
     PublicTradeEvent,
@@ -85,6 +85,14 @@ def test_parser_rejects_invalid_price() -> None:
 
     with pytest.raises(ValueError, match="price"):
         parse_hl_message(message, received_ts_ns=RECEIVED_NS)
+
+
+def test_archive_replay_rejects_corrupt_trade_side() -> None:
+    row: dict[str, object] = asdict(trade_events()[0])
+    row["aggressor_side"] = "unknown"
+
+    with pytest.raises(ValueError, match="aggressor_side"):
+        _trade_from_row(row)
 
 
 def test_archive_deduplicates_and_replays_append_only_parts(tmp_path: Path) -> None:
