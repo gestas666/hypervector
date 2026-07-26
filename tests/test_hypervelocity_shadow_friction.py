@@ -1,0 +1,330 @@
+"""Deterministic event-friction tests for Hypervelocity shadow execution."""
+
+from __future__ import annotations
+
+from dataclasses import replace
+from datetime import UTC, datetime
+
+import pytest
+
+from hypervector.data.hl_events import (
+    AggressorSide,
+    BookLevel,
+    L2SnapshotEvent,
+    PublicTradeEvent,
+    StreamGap,
+)
+from hypervector.execution import OrderCommand
+from hypervector.nautilus.hypervelocity_sim import HypervelocitySimulationConfig
+from hypervector.paper.nautilus_shadow import NautilusShadowExecutionPort
+
+BASE_MS = 1_785_103_200_000
+
+
+def iso(offset_ms: int) -> str:
+    """Return a UTC timestamp offset from the deterministic tape origin."""
+    return datetime.fromtimestamp((BASE_MS + offset_ms) / 1_000, tz=UTC).isoformat()
+
+
+def book(
+    offset_ms: int,
+    *,
+    bid_size: float = 0.03,
+    bid: float = 64_500.0,
+    ask: float = 64_501.0,
+) -> L2SnapshotEvent:
+    """Return one complete BTC L2 snapshot."""
+    exchange_ms = BASE_MS + offset_ms
+    return L2SnapshotEvent(
+        symbol="BTC",
+        exchange_ts_ms=exchange_ms,
+        received_ts_ns=(exchange_ms + 1) * 1_000_000,
+        bids=(BookLevel(bid, bid_size, 1),),
+        asks=(BookLevel(ask, 0.5, 1),),
+    )
+
+
+def trade(
+    offset_ms: int,
+    *,
+    side: AggressorSide = "sell",
+    price: float = 64_500.0,
+    size: float = 0.01,
+    trade_id: int = 1,
+) -> PublicTradeEvent:
+    """Return one public aggressor trade."""
+    exchange_ms = BASE_MS + offset_ms
+    return PublicTradeEvent(
+        symbol="BTC",
+        aggressor_side=side,
+        price=price,
+        size=size,
+        transaction_hash=f"0x{trade_id}",
+        exchange_ts_ms=exchange_ms,
+        received_ts_ns=(exchange_ms + 1) * 1_000_000,
+        trade_id=trade_id,
+        buyer="0xbuyer",
+        seller="0xseller",
+    )
+
+
+def entry(
+    *,
+    quantity: float = 0.04,
+    limit: float = 64_500.0,
+    submitted_ms: int = 0,
+) -> OrderCommand:
+    """Return one post-only long entry command."""
+    return OrderCommand(
+        client_order_id="hv-entry-1",
+        symbol="BTC",
+        side="buy",
+        quantity=quantity,
+        order_type="limit",
+        order_role="entry",
+        limit_price=limit,
+        post_only=True,
+        reduce_only=False,
+        submitted_at=iso(submitted_ms),
+    )
+
+
+def port(*, submit_ms: int = 50, cancel_ms: int = 50) -> NautilusShadowExecutionPort:
+    """Return a deterministic isolated-margin shadow port."""
+    return NautilusShadowExecutionPort(
+        symbol="BTC",
+        initial_cash_usd=120.0,
+        simulation_config=HypervelocitySimulationConfig(
+            submit_latency_ms=submit_ms,
+            cancel_latency_ms=cancel_ms,
+            update_latency_ms=50,
+        ),
+        maker_fee_rate=0.00015,
+        taker_fee_rate=0.00045,
+        leverage=40.0,
+        maintenance_rate=0.0125,
+        max_event_age_ms=3_000,
+    )
+
+
+def test_latency_queue_ahead_partial_fill_and_account_fee() -> None:
+    shadow = port()
+    shadow.ingest(book(0))
+    assert shadow.submit(entry()).event_type == "submitted"
+
+    shadow.ingest(trade(25, size=1.0))
+    assert shadow.reconcile() == ()
+
+    shadow.ingest(book(50))
+    accepted = shadow.reconcile()
+    assert [item.event_type for item in accepted] == ["accepted"]
+    assert shadow.order_telemetry("hv-entry-1").queue_ahead_quantity == 0.03
+
+    shadow.ingest(trade(60, size=0.02, trade_id=2))
+    assert shadow.reconcile() == ()
+    assert shadow.order_telemetry(
+        "hv-entry-1"
+    ).queue_ahead_quantity == pytest.approx(0.01)
+
+    shadow.ingest(trade(70, size=0.03, trade_id=3))
+    partial = shadow.reconcile()
+    assert len(partial) == 1
+    assert partial[0].event_type == "partially_filled"
+    assert partial[0].last_quantity == pytest.approx(0.02)
+    assert partial[0].fee_usd == pytest.approx(0.1935)
+    assert shadow.account_snapshot().position_quantity == pytest.approx(0.02)
+
+    record = shadow.execution_records()[-1]
+    assert record.execution_model == "nautilus_event_v1"
+    assert record.requested_quantity == pytest.approx(0.04)
+    assert record.cumulative_filled_quantity == pytest.approx(0.02)
+    assert record.remaining_quantity == pytest.approx(0.02)
+    assert record.liquidity_side == "maker"
+
+
+def test_post_only_cross_rejects_after_submit_latency() -> None:
+    shadow = port()
+    shadow.ingest(book(0))
+    shadow.submit(entry(limit=64_501.0))
+
+    shadow.ingest(book(50))
+    events = shadow.reconcile()
+
+    assert len(events) == 1
+    assert events[0].event_type == "rejected"
+    assert events[0].reason == "post_only_would_cross"
+    assert shadow.account_snapshot().position_quantity == 0.0
+
+
+def test_trade_through_fills_resting_order_at_its_limit_not_later_print() -> None:
+    shadow = port(submit_ms=0)
+    shadow.ingest(book(0, bid_size=0.001))
+    shadow.submit(entry(quantity=0.01))
+    shadow.ingest(book(1, bid_size=0.001))
+    shadow.reconcile()
+
+    shadow.ingest(trade(2, price=64_499.0, size=0.011, trade_id=12))
+    events = shadow.reconcile()
+
+    assert events[0].fill_price == pytest.approx(64_500.0)
+
+
+def test_cancel_latency_allows_fill_before_cancel_becomes_effective() -> None:
+    shadow = port(submit_ms=0, cancel_ms=50)
+    shadow.ingest(book(0, bid_size=0.0 + 0.001))
+    shadow.submit(entry(quantity=0.01))
+    shadow.ingest(book(1, bid_size=0.001))
+    shadow.reconcile()
+
+    pending = shadow.cancel("hv-entry-1", requested_at=iso(10))
+    assert pending.event_type == "cancel_pending"
+    shadow.ingest(trade(20, size=0.02, trade_id=4))
+    events = shadow.reconcile()
+
+    assert [item.event_type for item in events] == ["filled"]
+    assert shadow.account_snapshot().position_quantity == pytest.approx(0.01)
+
+
+def test_effective_cancel_prevents_later_trade_fill() -> None:
+    shadow = port(submit_ms=0, cancel_ms=50)
+    shadow.ingest(book(0, bid_size=0.001))
+    shadow.submit(entry(quantity=0.01))
+    shadow.ingest(book(1, bid_size=0.001))
+    shadow.reconcile()
+    shadow.cancel("hv-entry-1", requested_at=iso(10))
+
+    shadow.ingest(book(60, bid_size=0.001))
+    shadow.ingest(trade(70, size=1.0, trade_id=5))
+    events = shadow.reconcile()
+
+    assert [item.event_type for item in events] == ["canceled"]
+    assert shadow.account_snapshot().position_quantity == 0.0
+
+
+def test_cancel_requested_before_ack_still_allows_pre_cancel_fill() -> None:
+    shadow = port(submit_ms=50, cancel_ms=100)
+    shadow.ingest(book(0, bid_size=0.001))
+    shadow.submit(entry(quantity=0.01))
+    shadow.cancel("hv-entry-1", requested_at=iso(10))
+
+    shadow.ingest(book(60, bid_size=0.001))
+    shadow.ingest(trade(70, size=0.011, trade_id=9))
+    events = shadow.reconcile()
+
+    assert [item.event_type for item in events] == ["accepted", "filled"]
+    assert shadow.account_snapshot().position_quantity == pytest.approx(0.01)
+
+
+def test_gap_and_stale_book_preserve_order_without_claiming_fill() -> None:
+    shadow = port(submit_ms=0)
+    shadow.ingest(book(0, bid_size=0.001))
+    shadow.submit(entry(quantity=0.01))
+    shadow.ingest(book(1, bid_size=0.001))
+    shadow.reconcile()
+    shadow.ingest(
+        StreamGap(
+            symbol="BTC",
+            channel="trades",
+            detected_ts_ns=(BASE_MS + 2) * 1_000_000,
+            reason="websocket_reconnect",
+            previous_exchange_ts_ms=BASE_MS + 1,
+            next_exchange_ts_ms=BASE_MS + 100,
+        )
+    )
+    shadow.ingest(trade(50, size=1.0, trade_id=6))
+
+    assert shadow.reconcile() == ()
+    telemetry = shadow.order_telemetry("hv-entry-1")
+    assert telemetry.remaining_quantity == pytest.approx(0.01)
+    assert telemetry.evidence_fresh is False
+    assert shadow.execution_annotations()[-1] == "execution_evidence_uncertain"
+
+    shadow.ingest(book(100, bid_size=0.001))
+    shadow.ingest(trade(110, size=0.011, trade_id=7))
+    assert [item.event_type for item in shadow.reconcile()] == ["filled"]
+
+
+def test_late_or_duplicate_trade_evidence_cannot_double_fill() -> None:
+    shadow = port(submit_ms=0)
+    shadow.ingest(book(0, bid_size=0.001))
+    shadow.submit(entry(quantity=0.02))
+    shadow.ingest(book(1, bid_size=0.001))
+    shadow.reconcile()
+    late = replace(
+        trade(2, size=1.0, trade_id=10),
+        received_ts_ns=(BASE_MS + 4_002) * 1_000_000,
+    )
+    shadow.ingest(late)
+    assert shadow.reconcile() == ()
+
+    shadow.ingest(book(3, bid_size=0.001))
+    partial = trade(4, size=0.011, trade_id=11)
+    shadow.ingest(partial)
+    shadow.ingest(partial)
+    events = shadow.reconcile()
+
+    assert len(events) == 1
+    assert events[0].last_quantity == pytest.approx(0.01)
+    assert shadow.account_snapshot().position_quantity == pytest.approx(0.01)
+
+
+def test_stale_book_cannot_acknowledge_or_fill_a_delayed_submission() -> None:
+    shadow = port(submit_ms=5_000)
+    shadow.ingest(book(0, bid_size=0.001))
+    shadow.submit(entry(quantity=0.01))
+
+    shadow.ingest(trade(5_001, size=1.0, trade_id=13))
+
+    assert shadow.reconcile() == ()
+    telemetry = shadow.order_telemetry("hv-entry-1")
+    assert telemetry.status == "pending"
+    assert telemetry.evidence_fresh is False
+    assert telemetry.cumulative_filled_quantity == 0.0
+
+
+def test_hourly_funding_and_isolated_liquidation_are_accounted() -> None:
+    shadow = port(submit_ms=0)
+    quantity = 3_360.0 / 64_500.0
+    shadow.ingest(book(0, bid_size=0.001))
+    shadow.submit(entry(quantity=quantity))
+    shadow.ingest(book(1, bid_size=0.001))
+    shadow.reconcile()
+    shadow.ingest(trade(2, size=quantity + 0.001, trade_id=8))
+    shadow.reconcile()
+    target = replace(
+        entry(quantity=quantity),
+        client_order_id="hv-target-1",
+        side="sell",
+        order_role="target",
+        limit_price=64_629.0,
+        reduce_only=True,
+    )
+    shadow.submit(target)
+    shadow.ingest(book(3, bid_size=0.001))
+    shadow.reconcile()
+
+    assert shadow.position_margin_usd == pytest.approx(84.0)
+    funding = shadow.apply_funding(
+        hourly_rate=0.0001,
+        mark_price=64_500.0,
+        applied_at=iso(3_600_000),
+    )
+    assert funding == pytest.approx(-0.336)
+    assert shadow.funding_net_usd == pytest.approx(-0.336)
+
+    liquidation_price = shadow.liquidation_price
+    assert liquidation_price is not None
+    assert shadow.mark(
+        mark_price=liquidation_price + 0.01,
+        observed_at=iso(3_600_001),
+    ) is False
+    assert shadow.mark(
+        mark_price=liquidation_price - 0.01,
+        observed_at=iso(3_600_002),
+    ) is True
+    assert shadow.account_snapshot().position_quantity == 0.0
+    assert shadow.last_liquidation is not None
+    assert shadow.last_liquidation.margin_mode == "isolated"
+    canceled = shadow.reconcile()
+    assert [item.event_type for item in canceled] == ["canceled"]
+    assert canceled[0].reason == "isolated_liquidation"
