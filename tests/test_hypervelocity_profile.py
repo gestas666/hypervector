@@ -32,6 +32,8 @@ def test_faithful_profile_enforces_one_way_bidirectional_runtime() -> None:
     assert profile.funding_refresh_seconds == 60.0
     assert profile.size_decimals == 5
     assert profile.venue_max_leverage >= profile.leverage
+    assert profile.margin_mode == "isolated"
+    assert profile.live_canary_max_notional_usd == pytest.approx(3_360.0)
     assert profile.runtime_mode == "shadow"
     assert profile.strict_hl_only is True
     assert profile.metalabel_mode == "observe"
@@ -43,6 +45,63 @@ def test_faithful_profile_enforces_one_way_bidirectional_runtime() -> None:
     assert profile.same_direction_reentry_policy == "regime_reset"
     assert profile.orderbook_archive_enabled is True
     assert profile.orderbook_archive_depth_levels == 20
+
+
+def _venue_profile_text(
+    *,
+    margin_mode: str | None,
+    max_notional: str | None,
+) -> str:
+    """Return profile text with controlled venue-friction fields."""
+    lines = [
+        line
+        for line in PROFILE.read_text(encoding="utf-8").splitlines()
+        if not line.startswith(("margin_mode =", "live_canary_max_notional_usd ="))
+    ]
+    additions = [line for line in (margin_mode, max_notional) if line is not None]
+    marker = 'network = "mainnet"'
+    index = lines.index(marker) + 1
+    lines[index:index] = additions
+    return "\n".join(lines) + "\n"
+
+
+@pytest.mark.parametrize(
+    "margin_mode",
+    [None, 'margin_mode = "cross"', 'margin_mode = "portfolio"'],
+)
+def test_profile_requires_isolated_margin(
+    tmp_path: Path,
+    margin_mode: str | None,
+) -> None:
+    path = tmp_path / "invalid-margin.toml"
+    path.write_text(
+        _venue_profile_text(
+            margin_mode=margin_mode,
+            max_notional="live_canary_max_notional_usd = 3360.0",
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="margin_mode must be 'isolated'"):
+        load_hypervelocity_profile(path)
+
+
+@pytest.mark.parametrize("value", ["0.0", "-1.0", "nan"])
+def test_profile_requires_positive_finite_live_canary_notional(
+    tmp_path: Path,
+    value: str,
+) -> None:
+    path = tmp_path / "invalid-canary-cap.toml"
+    path.write_text(
+        _venue_profile_text(
+            margin_mode='margin_mode = "isolated"',
+            max_notional=f"live_canary_max_notional_usd = {value}",
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="live_canary_max_notional_usd"):
+        load_hypervelocity_profile(path)
 
 
 @pytest.mark.parametrize(

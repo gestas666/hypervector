@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import tomllib
+import math
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Mapping, cast
+from typing import Literal, Mapping, cast
 
 from hypervector.regime.classifier import RegimeClassifierConfig
 from hypervector.strategies.hypervelocity_contract import (
@@ -31,6 +32,8 @@ class HypervelocityProfile:
     leverage: float
     target_margin_pct: float
     open_position_range_policy: str
+    margin_mode: Literal["isolated"]
+    live_canary_max_notional_usd: float
     size_decimals: int
     venue_max_leverage: float
     fee_tier: int
@@ -105,6 +108,11 @@ def load_hypervelocity_profile(path: Path | str) -> HypervelocityProfile:
         leverage=_number(allocation, "leverage"),
         target_margin_pct=_number(exits, "target_margin_pct"),
         open_position_range_policy=_text(exits, "open_position_range_policy"),
+        margin_mode=cast(Literal["isolated"], _text(venue, "margin_mode")),
+        live_canary_max_notional_usd=_positive_number(
+            venue,
+            "live_canary_max_notional_usd",
+        ),
         size_decimals=_integer(venue, "size_decimals"),
         venue_max_leverage=_number(venue, "venue_max_leverage"),
         fee_tier=_integer(costs, "fee_tier"),
@@ -183,6 +191,8 @@ def _validate_venue_costs(
 ) -> None:
     _expect(venue, "name", "hyperliquid")
     _expect(venue, "network", "mainnet")
+    _expect(venue, "margin_mode", contract.margin_mode)
+    _positive_number(venue, "live_canary_max_notional_usd")
     _expect(venue, "instrument_spec_source", "public_meta")
     _expect(venue, "size_decimals", 5)
     _expect(venue, "venue_max_leverage", 40.0)
@@ -251,6 +261,13 @@ def _number(section: Mapping[str, object], key: str) -> float:
     if not isinstance(value, (int, float)) or isinstance(value, bool):
         raise ValueError(f"{key} must be numeric")
     return float(value)
+
+
+def _positive_number(section: Mapping[str, object], key: str) -> float:
+    value = _number(section, key)
+    if not math.isfinite(value) or value <= 0.0:
+        raise ValueError(f"{key} must be positive and finite")
+    return value
 
 
 def _boolean(section: Mapping[str, object], key: str) -> bool:

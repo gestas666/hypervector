@@ -59,6 +59,11 @@ def test_fixed_contract_converts_equity_and_margin_target() -> None:
     assert contract.notional_fraction == pytest.approx(28.0)
     assert contract.order_type == "limit"
     assert contract.time_in_force == "post_only"
+    assert contract.margin_mode == "isolated"
+
+    canary = contract.allocate(equity=120.0)
+    assert canary.margin == pytest.approx(84.0)
+    assert canary.notional == pytest.approx(3_360.0)
 
 
 def test_faithful_regime_config_matches_zero_false_range_training_candidate() -> None:
@@ -92,3 +97,6 @@ def test_allocation_rejects_non_positive_equity(equity: float) -> None:
 def test_contract_rejects_mutating_fixed_baseline() -> None:
     with pytest.raises(ValueError, match="margin_fraction must be 0.70"):
         HypervelocityContract(margin_fraction=0.50)
+
+    with pytest.raises(ValueError, match="margin_mode must be isolated"):
+        HypervelocityContract(margin_mode="cross")
