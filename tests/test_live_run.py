@@ -24,7 +24,9 @@ class RecordingTransport:
     ) -> None:
         self.calls: list[dict[str, Any]] = []
         self.cancel_calls: list[dict[str, Any]] = []
-        self._response = response if response is not None else {"status": "ok", "oid": "live-1"}
+        self._response = (
+            response if response is not None else {"status": "ok", "oid": "live-1"}
+        )
         self._error = error
         self._cancel_error = cancel_error
 
@@ -176,6 +178,34 @@ def test_start_live_daemon_refuses_without_secrets_flag(tmp_path: Path):
     assert transport.calls == []
 
 
+def test_generic_live_daemon_refuses_hypervelocity_export(tmp_path: Path) -> None:
+    """Market-IOC live routing cannot execute the post-only strategy contract."""
+    from hypervector.live.runner import start_live_daemon
+
+    export = _write_strict_export(
+        tmp_path,
+        strategy="hypervelocity_1m_scalper_long",
+    )
+    transport = RecordingTransport()
+
+    with pytest.raises(RuntimeError, match="use hypervelocity-live-run"):
+        start_live_daemon(
+            export_dir=export,
+            data_root=tmp_path / "data",
+            policy=_armed_policy(),
+            wallet_address="0xabc",
+            private_key="k",
+            transport=transport,
+            warm_ohlcv=fixture_ohlcv(n_bars=50, drift=5.0),
+            poll_fn=lambda after_ts=None: pd.DataFrame(),
+            max_live_bars=0,
+            install_signal_handlers=False,
+            sleep_fn=lambda _s: None,
+        )
+
+    assert transport.calls == []
+
+
 def test_start_live_daemon_writes_live_ledger_and_places_on_live_phase(
     tmp_path: Path,
 ):
@@ -270,7 +300,9 @@ def test_live_fill_engine_place_failure_stamps_error(tmp_path: Path):
     )
     engine = LiveFillEngine(
         tmp_path / "data",
-        cost_provider=CostProvider(fee_tier=0, slippage_bps=2.0, funding_rate_hourly=0.0),
+        cost_provider=CostProvider(
+            fee_tier=0, slippage_bps=2.0, funding_rate_hourly=0.0
+        ),
         run_id="r1",
         export_id="e1",
         strategy_name="crown_stack_short",
@@ -309,7 +341,9 @@ def test_live_fill_engine_warm_no_place(tmp_path: Path):
     )
     engine = LiveFillEngine(
         tmp_path / "data",
-        cost_provider=CostProvider(fee_tier=0, slippage_bps=2.0, funding_rate_hourly=0.0),
+        cost_provider=CostProvider(
+            fee_tier=0, slippage_bps=2.0, funding_rate_hourly=0.0
+        ),
         run_id="r1",
         export_id="e1",
         strategy_name="crown_stack_short",
@@ -354,7 +388,11 @@ def test_cli_live_run_refuses_without_arm(tmp_path: Path, capsys, monkeypatch):
     )
     assert rc == 1
     err = capsys.readouterr().err
-    assert "arm" in err.lower() or "accept-live-risk" in err.lower() or "risk" in err.lower()
+    assert (
+        "arm" in err.lower()
+        or "accept-live-risk" in err.lower()
+        or "risk" in err.lower()
+    )
 
 
 def test_cli_live_run_refuses_without_enabled(tmp_path: Path, capsys, monkeypatch):

@@ -25,6 +25,7 @@ from hypervector.live.policy import LivePolicy
 from hypervector.live.session import LiveSession
 from hypervector.nautilus.load_export import load_strategy_loadout
 from hypervector.paper.live_node import DEFAULT_POLL_INTERVAL_SECS, make_rest_poll_fn
+from hypervector.strategies.hypervelocity_contract import is_hypervelocity_strategy
 
 logger = logging.getLogger(__name__)
 
@@ -78,6 +79,16 @@ def start_live_daemon(
     if wallet_address is None or private_key is None:
         raise ValueError("wallet_address and private_key required for live daemon")
 
+    export_path = Path(export_dir)
+    if not export_path.is_dir():
+        raise FileNotFoundError(f"export_dir not found: {export_path}")
+    loadout = load_strategy_loadout(export_path, strict=True)
+    if is_hypervelocity_strategy(loadout.strategy_name):
+        raise RuntimeError(
+            "generic live-run uses market IOC execution and cannot execute "
+            "Hypervelocity; use hypervelocity-live-run"
+        )
+
     client = create_live_exec_client(
         policy,
         wallet_address=wallet_address,
@@ -87,13 +98,7 @@ def start_live_daemon(
 
     print(LIVE_BANNER, file=sys.stderr, flush=True)
     sleep = sleep_fn if sleep_fn is not None else time.sleep
-    export_path = Path(export_dir)
     root = Path(data_root)
-
-    if not export_path.is_dir():
-        raise FileNotFoundError(f"export_dir not found: {export_path}")
-
-    loadout = load_strategy_loadout(export_path, strict=True)
     lb = lookback_days
     if lb is None:
         meta_lb = (loadout.meta or {}).get("lookback_days")
@@ -183,7 +188,11 @@ def start_live_daemon(
                 logger.warning("live poll failed: %s", exc)
                 new_bars = None
 
-            if new_bars is None or not isinstance(new_bars, pd.DataFrame) or new_bars.empty:
+            if (
+                new_bars is None
+                or not isinstance(new_bars, pd.DataFrame)
+                or new_bars.empty
+            ):
                 empty_polls += 1
                 if max_live_bars is not None and max_live_bars == 0:
                     _request_stop("max_live_bars")
@@ -240,7 +249,9 @@ def start_live_daemon(
             cancel_ok = bool(cancel_result.submitted)
             cancel_error = cancel_result.error
             if cancel_ok:
-                logger.info("live kill cancel_all ok oid=%s", cancel_result.venue_order_id)
+                logger.info(
+                    "live kill cancel_all ok oid=%s", cancel_result.venue_order_id
+                )
             else:
                 logger.warning("live kill cancel_all failed: %s", cancel_error)
         except Exception as exc:  # noqa: BLE001 — never block stop summary
