@@ -152,7 +152,7 @@ fn later_book_row_does_not_erase_backend_position_or_mark_equity() {
 
 #[test]
 fn continued_shadow_run_preserves_trade_details() {
-    let ledger = r#"{"feed_ts":"session_start","action":"session_start","run_id":"persistent","strategy_name":"hypervelocity_1m_scalper","execution_mode":"shadow","strategy_params":{"leverage":40.0},"costs":{"maker_fee_rate":0.00015},"position_qty":0.0,"position_avg_px":0.0,"realized_pnl":0.0,"equity":10000.0,"init_cash":10000.0}
+    let ledger = r#"{"feed_ts":"session_start","action":"session_start","run_id":"persistent","strategy_name":"hypervelocity_1m_scalper","execution_mode":"shadow","data_root":"/tmp/hyper vector's data","strategy_params":{"leverage":40.0},"costs":{"maker_fee_rate":0.00015},"position_qty":0.0,"position_avg_px":0.0,"realized_pnl":0.0,"equity":10000.0,"init_cash":10000.0}
 {"feed_ts":"2026-07-25T12:00:00Z","action":"regime_observation","run_id":"persistent","primary_regime":"TREND_UP","state_1m":"TREND_UP","state_5m":"TREND_UP","context_15m":"RANGE","position_qty":0.0,"realized_pnl":0.0,"equity":10000.0}
 {"feed_ts":"2026-07-25T12:01:00Z","action":"enter_long","run_id":"persistent","symbol":"BTC","fill_px":100.0,"fill_qty":1.0,"position_qty":1.0,"position_avg_px":100.0,"realized_pnl":-1.5,"unrealized_pnl":0.0,"equity":9998.5,"fee_usd":1.5}
 {"feed_ts":"2026-07-25T13:00:00Z","action":"funding","run_id":"persistent","position_qty":1.0,"position_avg_px":100.0,"realized_pnl":-1.7,"unrealized_pnl":5.0,"equity":10003.3,"funding_payment_usd":0.2}
@@ -164,6 +164,10 @@ fn continued_shadow_run_preserves_trade_details() {
     let trade = &telemetry.trades[0];
 
     assert_eq!(telemetry.run_id.as_deref(), Some("persistent"));
+    assert_eq!(
+        telemetry.data_root.as_deref(),
+        Some("/tmp/hyper vector's data")
+    );
     assert_eq!(telemetry.trades.len(), 1);
     assert_eq!(trade.entry_timestamp_str, "2026-07-25T12:01:00Z");
     assert_eq!(trade.exit_timestamp_str, "2026-07-25T13:02:00Z");

@@ -29,7 +29,9 @@ def live_hl_fetcher(symbol: str, timeframe: str, lookback_days: int) -> pd.DataF
     return fetch_hl_ohlcv(symbol, timeframe, lookback_days)
 
 
-def live_binance_fetcher(symbol: str, timeframe: str, lookback_days: int) -> pd.DataFrame:
+def live_binance_fetcher(
+    symbol: str, timeframe: str, lookback_days: int
+) -> pd.DataFrame:
     return fetch_binance_ohlcv(symbol, timeframe, lookback_days)
 
 
@@ -70,11 +72,16 @@ def load_research_history(
     if not force_refresh and cache.exists(key):
         df = cache.load(key)
         assert df is not None
-        return df, summarize_provenance(df)
+        cache_is_hl_only = "source" in df and df["source"].eq("hl").all()
+        if not strict_hl_only or cache_is_hl_only:
+            return df, summarize_provenance(df)
+        logger.info("strict HL load bypassing incompatible mixed-venue cache %s", key)
 
     hl_df = live_hl_fetcher(symbol, timeframe, lookback_days)
     if hl_df is not None and len(hl_df):
-        hl_df = normalize_ohlcv(hl_df, source="hl" if "source" not in hl_df.columns else None)
+        hl_df = normalize_ohlcv(
+            hl_df, source="hl" if "source" not in hl_df.columns else None
+        )
     else:
         hl_df = None
 

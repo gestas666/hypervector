@@ -8,6 +8,7 @@ full range and keep whatever HL returns (recent tail is the usual result).
 from __future__ import annotations
 
 import logging
+import math
 import time
 from typing import TYPE_CHECKING, Any
 
@@ -34,7 +35,9 @@ def hl_coin(symbol: str) -> str:
     return s or "BTC"
 
 
-def bars_from_hl_payload(raw: list[dict[str, Any]], *, source: str = "hl") -> pd.DataFrame:
+def bars_from_hl_payload(
+    raw: list[dict[str, Any]], *, source: str = "hl"
+) -> pd.DataFrame:
     """Parse candleSnapshot JSON list into OHLCV + source."""
     rows: list[dict[str, Any]] = []
     for item in raw:
@@ -55,11 +58,86 @@ def bars_from_hl_payload(raw: list[dict[str, Any]], *, source: str = "hl") -> pd
     if not rows:
         return normalize_ohlcv(
             pd.DataFrame(
-                columns=["timestamp", "open", "high", "low", "close", "volume", "source"]
+                columns=[
+                    "timestamp",
+                    "open",
+                    "high",
+                    "low",
+                    "close",
+                    "volume",
+                    "source",
+                ]
             ),
             source=source,
         )
     return normalize_ohlcv(pd.DataFrame(rows), source=source)
+
+
+def funding_from_hl_payload(raw: list[dict[str, Any]]) -> pd.DataFrame:
+    """Parse public funding-history rows into UTC hourly observations."""
+    rows: list[dict[str, Any]] = []
+    for item in raw:
+        try:
+            timestamp = pd.to_datetime(int(item["time"]), unit="ms", utc=True).floor(
+                "h"
+            )
+            rate = float(item["fundingRate"])
+        except (KeyError, TypeError, ValueError, OverflowError):
+            continue
+        if not math.isfinite(rate):
+            continue
+        rows.append(
+            {
+                "timestamp": timestamp,
+                "funding_rate": rate,
+                "source": "hl_funding_history",
+            }
+        )
+    columns = ["timestamp", "funding_rate", "source"]
+    if not rows:
+        return pd.DataFrame(columns=columns)
+    return (
+        pd.DataFrame(rows, columns=columns)
+        .sort_values("timestamp")
+        .drop_duplicates(subset=["timestamp"], keep="last")
+        .reset_index(drop=True)
+    )
+
+
+def fetch_hl_funding_history(
+    symbol: str,
+    *,
+    start_time: pd.Timestamp,
+    end_time: pd.Timestamp,
+    session: requests.Session | None = None,
+) -> pd.DataFrame:
+    """Fetch public Hyperliquid hourly funding rows for an inclusive interval."""
+    start_ms = _timestamp_millis(start_time)
+    end_ms = _timestamp_millis(end_time)
+    if end_ms < start_ms:
+        raise ValueError("funding-history end_time must not precede start_time")
+    sess = session or requests.Session()
+    payload = {
+        "type": "fundingHistory",
+        "coin": hl_coin(symbol),
+        "startTime": start_ms,
+        "endTime": end_ms,
+    }
+    response = sess.post(HL_INFO_URL, json=payload, timeout=30)
+    response.raise_for_status()
+    raw = response.json()
+    if not isinstance(raw, list):
+        raise RuntimeError("HL fundingHistory response must be a list")
+    return funding_from_hl_payload(raw)
+
+
+def _timestamp_millis(value: pd.Timestamp) -> int:
+    timestamp = pd.Timestamp(value)
+    if timestamp.tzinfo is None:
+        timestamp = timestamp.tz_localize("UTC")
+    else:
+        timestamp = timestamp.tz_convert("UTC")
+    return int(timestamp.value // 1_000_000)
 
 
 def fetch_hl_ohlcv(
@@ -124,7 +202,9 @@ def fetch_hl_ohlcv(
             ts <= pd.to_datetime(end, unit="ms", utc=True)
         )
         df = df.loc[mask].drop_duplicates(subset=["timestamp"]).reset_index(drop=True)
-    logger.info("HL %s %s lookback=%sd → %d bars", coin, timeframe, lookback_days, len(df))
+    logger.info(
+        "HL %s %s lookback=%sd → %d bars", coin, timeframe, lookback_days, len(df)
+    )
     return df
 
 

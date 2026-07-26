@@ -8,11 +8,12 @@ configured/last hourly rate offline; optional live refresh is opt-in.
 from __future__ import annotations
 
 import logging
+import math
 import time
 import uuid
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Mapping
 
 import pandas as pd
 
@@ -64,7 +65,11 @@ from hypervector.paper.maker_execution import (
     round_price_to_tick,
     target_was_filled,
 )
-from hypervector.paper.resume import ShadowPortfolioResume, load_shadow_portfolio_resume
+from hypervector.paper.resume import (
+    ShadowPortfolioResume,
+    load_shadow_portfolio_resume,
+    portfolio_fingerprint,
+)
 from hypervector.paper.telemetry import bar_telemetry_payload, book_telemetry_payload
 from hypervector.strategies.hypervelocity_contract import (
     HypervelocityContract,
@@ -202,6 +207,12 @@ class PaperSession:
             if hypervelocity_profile is not None
             else self.loadout.strategy_name
         )
+        self._portfolio_spec = _portfolio_spec(
+            self.loadout,
+            profile=hypervelocity_profile,
+            strategy_name=self.strategy_name,
+        )
+        self._portfolio_fingerprint = portfolio_fingerprint(self._portfolio_spec)
         resume = self._load_shadow_resume()
         self._shadow_resume: ShadowPortfolioResume | None = resume
         self.run_id = (
@@ -263,7 +274,11 @@ class PaperSession:
         self._last_ts: pd.Timestamp | None = None
         self._last_funding_refresh_mono: float = 0.0
         self._identity_written = False
-        self._pending_maker_entry: PendingMakerEntry | None = None
+        self._pending_maker_entry = _restore_pending_maker_entry(resume)
+        self._reconciled_through: pd.Timestamp | None = None
+        self._downtime_reconciliation_enabled = resume is not None and (
+            self.engine.position.qty != 0.0 or self._pending_maker_entry is not None
+        )
         self._live_telemetry_enabled = False
         self._live_activated_at: pd.Timestamp | None = None
         self._last_hypervelocity_exit_at = (
@@ -280,12 +295,25 @@ class PaperSession:
             self.decisions_path,
             symbol=self.loadout.symbol,
             timeframe=self.loadout.timeframe,
+            expected_spec=self._portfolio_spec,
         )
 
     @property
     def pending_maker_entry(self) -> PendingMakerEntry | None:
         """Return the current backend-owned pending maker entry, if any."""
         return self._pending_maker_entry
+
+    @property
+    def downtime_reconciliation_enabled(self) -> bool:
+        """Return whether restart began with an active target or maker entry."""
+        return self._downtime_reconciliation_enabled
+
+    @property
+    def resume_state_asof(self) -> str | None:
+        """Return the persisted market-state timestamp used for replay splitting."""
+        return (
+            self._shadow_resume.state_asof if self._shadow_resume is not None else None
+        )
 
     def inject_book(self, snap: BookSnapshot) -> None:
         """Inject a BookSnapshot for offline tests (no network)."""
@@ -917,6 +945,101 @@ class PaperSession:
         self.bars_processed += len(frame)
         return len(frame)
 
+    def reconcile_downtime(
+        self,
+        ohlcv: pd.DataFrame,
+        *,
+        funding_rates: Mapping[pd.Timestamp, float],
+    ) -> int:
+        """Replay missed HL bars only against state active before restart."""
+        if self._shadow_resume is None or not self._is_hypervelocity:
+            raise RuntimeError(
+                "downtime reconciliation requires resumed Hypervelocity state"
+            )
+        if isinstance(ohlcv, pd.DataFrame) and ohlcv.empty:
+            return 0
+        frame = _prepare_ohlcv(ohlcv, max_bars=None)
+        cutoff = self._reconciled_through or _resume_timestamp(
+            self._shadow_resume.state_asof
+        )
+        missed = _bars_closing_after(
+            frame, cutoff=cutoff, timeframe=self.loadout.timeframe
+        )
+        if missed.empty:
+            return 0
+        if "source" not in missed or not missed["source"].eq("hl").all():
+            raise RuntimeError("downtime reconciliation requires Hyperliquid bars")
+        rates = _normalized_funding_rates(funding_rates)
+        self._validate_reconciliation_funding(missed, rates)
+        self.ensure_session_identity()
+        for _, row in missed.iterrows():
+            self._reconcile_downtime_bar(row, rates)
+        final_record = _row_to_buffer_record(missed.iloc[-1])
+        self._reconciled_through = _bar_close_timestamp(
+            final_record, timeframe=self.loadout.timeframe
+        )
+        return len(missed)
+
+    def _validate_reconciliation_funding(
+        self,
+        frame: pd.DataFrame,
+        rates: Mapping[pd.Timestamp, float],
+    ) -> None:
+        if self.engine.position.qty == 0.0 and self._pending_maker_entry is None:
+            return
+        for _, row in frame.iterrows():
+            record = _row_to_buffer_record(row)
+            if _is_funding_boundary(record, timeframe=self.loadout.timeframe):
+                closed_at = _bar_close_timestamp(
+                    record, timeframe=self.loadout.timeframe
+                )
+                if closed_at not in rates:
+                    raise RuntimeError(
+                        f"missing Hyperliquid funding history at {closed_at.isoformat()}"
+                    )
+
+    def _reconcile_downtime_bar(
+        self,
+        row: pd.Series,
+        rates: Mapping[pd.Timestamp, float],
+    ) -> None:
+        record = _row_to_buffer_record(row)
+        _append_bar_record(self.buffer_rows, record, max_lookback=DEFAULT_MAX_LOOKBACK)
+        self.bars_processed += 1
+        self._last_ts = pd.Timestamp(record["timestamp"])
+        self._process_hypervelocity_reconciliation(record)
+        closed_at = _bar_close_timestamp(record, timeframe=self.loadout.timeframe)
+        if self.engine.position.qty != 0.0 and closed_at in rates:
+            self.engine.apply_funding(
+                feed_ts=closed_at.isoformat(),
+                oracle_px=float(record["close"]),
+                funding_rate_hourly=rates[closed_at],
+            )
+
+    def _process_hypervelocity_reconciliation(
+        self, record: dict[str, Any]
+    ) -> str | None:
+        """Manage an existing target/order without creating offline entries."""
+        book = self._usable_book(record)
+        if self.engine.position.qty != 0.0:
+            return self._fill_hypervelocity_target(record, book)
+        pending = self._pending_maker_entry
+        if pending is None:
+            return None
+        direction = self._desired_hypervelocity_direction()
+        if self._pending_expired(pending, record):
+            self._cancel_pending(record, "entry_ttl_expired_during_downtime")
+        elif pending.direction != direction:
+            self._cancel_pending(record, "regime_changed_during_downtime")
+        elif entry_was_filled(
+            pending,
+            record,
+            book=book,
+            tick_size=self._hypervelocity_tick(pending.limit_price),
+        ):
+            return self._fill_pending_entry(record, book)
+        return None
+
     def ensure_session_identity(self) -> None:
         """Write exactly one session_start row for this backend run.
 
@@ -939,6 +1062,7 @@ class PaperSession:
                 "strategy_name": self.strategy_name,
                 "symbol": self.loadout.symbol,
                 "timeframe": self.loadout.timeframe,
+                "data_root": str(self.root.resolve()),
                 "action": "session_start",
                 "conviction": self.conviction,
                 "metalabel_mode": self.metalabel_mode,
@@ -954,6 +1078,13 @@ class PaperSession:
                 "position_policy": (
                     self.hypervelocity_profile.position_policy()
                     if self.hypervelocity_profile
+                    else None
+                ),
+                "portfolio_spec": self._portfolio_spec,
+                "portfolio_fingerprint": self._portfolio_fingerprint,
+                "portfolio_profile_changed_from": (
+                    resume.portfolio_profile_changed_from
+                    if resume is not None
                     else None
                 ),
                 "exits": _effective_exits(self.loadout),
@@ -1135,6 +1266,53 @@ def _is_funding_boundary(
     return closed_at.minute == 0 and closed_at.second == 0
 
 
+def _resume_timestamp(value: str) -> pd.Timestamp:
+    """Parse an authoritative ledger timestamp or fail closed."""
+    try:
+        timestamp = pd.Timestamp(value)
+    except (TypeError, ValueError) as exc:
+        raise RuntimeError(
+            f"invalid shadow portfolio state timestamp: {value!r}"
+        ) from exc
+    if timestamp.tzinfo is None:
+        return timestamp.tz_localize("UTC")
+    return timestamp.tz_convert("UTC")
+
+
+def _bars_closing_after(
+    frame: pd.DataFrame,
+    *,
+    cutoff: pd.Timestamp,
+    timeframe: str,
+) -> pd.DataFrame:
+    """Return timestamp-ordered bars whose close follows persisted state."""
+    normalized = frame.copy()
+    timestamps = pd.to_datetime(normalized["timestamp"], utc=True)
+    normalized = normalized.assign(timestamp=timestamps).sort_values("timestamp")
+    closes = normalized["timestamp"] + pd.Timedelta(
+        minutes=_timeframe_minutes(timeframe)
+    )
+    return normalized.loc[closes > cutoff].reset_index(drop=True)
+
+
+def _normalized_funding_rates(
+    rates: Mapping[pd.Timestamp, float],
+) -> dict[pd.Timestamp, float]:
+    """Normalize historical funding keys to exact UTC timestamps."""
+    normalized: dict[pd.Timestamp, float] = {}
+    for raw_timestamp, raw_rate in rates.items():
+        timestamp = pd.Timestamp(raw_timestamp)
+        if timestamp.tzinfo is None:
+            timestamp = timestamp.tz_localize("UTC")
+        else:
+            timestamp = timestamp.tz_convert("UTC")
+        rate = float(raw_rate)
+        if not math.isfinite(rate):
+            raise RuntimeError(f"non-finite funding history at {timestamp.isoformat()}")
+        normalized[timestamp] = rate
+    return normalized
+
+
 def _exits_dict(loadout: StrategyLoadout) -> dict[str, Any]:
     raw = dict(loadout.exits or {})
     if "mode" not in raw or raw.get("mode") is None:
@@ -1191,6 +1369,48 @@ def _effective_execution(loadout: StrategyLoadout) -> dict[str, Any]:
         "entry_ttl_seconds": DEFAULT_ENTRY_TTL_SECONDS,
         "reentry_cooldown_bars": 1,
     }
+
+
+def _portfolio_spec(
+    loadout: StrategyLoadout,
+    *,
+    profile: HypervelocityProfile | None,
+    strategy_name: str,
+) -> dict[str, object]:
+    return {
+        "strategy_name": strategy_name,
+        "symbol": loadout.symbol,
+        "timeframe": loadout.timeframe,
+        "strategy_params": {
+            "strategy": profile.strategy_id
+            if profile is not None
+            else loadout.strategy_name,
+            **_effective_strategy_params(loadout),
+        },
+        "position_policy": profile.position_policy() if profile is not None else None,
+        "exits": _effective_exits(loadout),
+        "risk": _effective_risk(loadout),
+        "execution": _effective_execution(loadout),
+    }
+
+
+def _restore_pending_maker_entry(
+    resume: ShadowPortfolioResume | None,
+) -> PendingMakerEntry | None:
+    """Translate validated ledger state into the runtime maker-order type."""
+    pending = resume.pending_entry if resume is not None else None
+    if pending is None:
+        return None
+    return PendingMakerEntry(
+        direction=pending.direction,
+        qty=pending.qty,
+        limit_price=pending.limit_price,
+        submitted_at=pd.Timestamp(pending.submitted_at),
+        conviction=pending.conviction,
+        conviction_source=pending.conviction_source,
+        metalabel_p=pending.metalabel_p,
+        metalabel_bundle_id=pending.metalabel_bundle_id,
+    )
 
 
 def _cost_provider_from_loadout(

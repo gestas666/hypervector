@@ -11,7 +11,9 @@ import pytest
 from hypervector.cli import main
 from hypervector.data.sources import fixture_ohlcv
 from hypervector.export.phase2 import export_candidate
+from hypervector.paper.maker_execution import PostOnlyLimitFillModel
 from hypervector.paper.runner import PaperDaemonResult, start_paper_daemon
+from hypervector.paper.session import PaperSession
 
 
 def _write_strict_export(root: Path, *, strategy: str = "crown_stack_short") -> Path:
@@ -64,6 +66,19 @@ def _write_strict_export(root: Path, *, strategy: str = "crown_stack_short") -> 
         candidate_id="paper_cli_crown",
         strict=True,
     )
+
+
+def _venue_bar(timestamp: str, *, high: float) -> dict[str, object]:
+    """Build one Hyperliquid candle for daemon restart tests."""
+    return {
+        "timestamp": pd.Timestamp(timestamp),
+        "open": 100.0,
+        "high": high,
+        "low": 99.9,
+        "close": 100.0,
+        "volume": 1.0,
+        "source": "hl",
+    }
 
 
 def test_paper_check_reports_mode(tmp_path: Path, capsys, monkeypatch):
@@ -473,6 +488,82 @@ def test_live_rest_seeds_stale_catchup_without_calling_execution(
     rows = [json.loads(line) for line in result.decisions_path.read_text().splitlines()]
     identity = next(row for row in rows if row["action"] == "session_start")
     assert identity["runtime"]["live_activated_at"] == "2026-07-25T15:00:30+00:00"
+
+
+def test_daemon_reconciles_resumed_target_with_historical_funding(
+    tmp_path: Path,
+) -> None:
+    """Startup splits seed history from venue-matched missed execution bars."""
+    export = _write_strict_export(
+        tmp_path,
+        strategy="hypervelocity_1m_scalper_long",
+    )
+    data_root = tmp_path / "data"
+    original = PaperSession(
+        export_dir=export,
+        data_root=data_root,
+        run_id="restart-run",
+        execution_mode="shadow",
+    )
+    original.ensure_session_identity()
+    original.engine.apply_market_fill(
+        feed_ts="2026-07-25T12:58:00Z",
+        action="enter_long",
+        side="buy",
+        qty=1.0,
+        mark_px=100.0,
+        fill_model=PostOnlyLimitFillModel(),
+    )
+    warm = pd.DataFrame(
+        [
+            _venue_bar("2026-07-25T12:57:00Z", high=100.1),
+            _venue_bar("2026-07-25T12:58:00Z", high=100.1),
+            _venue_bar("2026-07-25T12:59:00Z", high=100.1),
+        ]
+    )
+    calls: list[tuple[pd.Timestamp, pd.Timestamp]] = []
+
+    def funding_history(
+        symbol: str,
+        *,
+        start_time: pd.Timestamp,
+        end_time: pd.Timestamp,
+    ) -> pd.DataFrame:
+        assert symbol == "BTC"
+        calls.append((start_time, end_time))
+        return pd.DataFrame(
+            {
+                "timestamp": [pd.Timestamp("2026-07-25T13:00:00Z")],
+                "funding_rate": [0.001],
+                "source": ["hl_funding_history"],
+            }
+        )
+
+    result = start_paper_daemon(
+        export_dir=export,
+        data_root=data_root,
+        warm_ohlcv=warm,
+        poll_fn=lambda **_kwargs: warm.iloc[0:0].copy(),
+        funding_history_fn=funding_history,
+        max_live_bars=0,
+        poll_interval_secs=0.0,
+        sleep_fn=lambda _seconds: None,
+        install_signal_handlers=False,
+        execution_mode="shadow",
+        now_fn=lambda: pd.Timestamp("2026-07-25T13:00:30Z"),
+    )
+
+    assert result.run_id == "restart-run"
+    assert result.warm_bars == 3
+    assert calls == [
+        (
+            pd.Timestamp("2026-07-25T13:00:00Z"),
+            pd.Timestamp("2026-07-25T13:01:00Z"),
+        )
+    ]
+    rows = [json.loads(line) for line in result.decisions_path.read_text().splitlines()]
+    funding = [row for row in rows if row.get("action") == "funding"]
+    assert funding[-1]["funding_rate_hourly"] == 0.001
 
 
 def test_start_paper_daemon_stop_file(tmp_path: Path):

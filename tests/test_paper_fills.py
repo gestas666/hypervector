@@ -95,6 +95,35 @@ def test_funding_on_open_long_drag(tmp_path: Path):
     assert fre["funding_payment_usd"] == 5.0  # 1 * 50000 * 0.0001
 
 
+def test_historical_funding_rate_overrides_current_snapshot(tmp_path: Path) -> None:
+    """Downtime accounting records and applies the explicit historical rate."""
+    cp = CostProvider(fee_tier=0, funding_rate_hourly=0.5)
+    eng = ExplicitFillEngine(
+        tmp_path / "historical",
+        cost_provider=cp,
+        run_id="r1",
+        export_id="e1",
+        strategy_name="hypervelocity_1m_scalper_long",
+        symbol="BTC",
+        timeframe="1m",
+        conviction=0.5,
+    )
+    eng.apply_market_fill(
+        feed_ts="t0", action="enter_long", side="buy", qty=1.0, mark_px=100.0
+    )
+
+    record = eng.apply_funding(
+        feed_ts="2026-07-25T13:00:00Z",
+        oracle_px=100.0,
+        funding_rate_hourly=0.001,
+    )
+
+    assert record is not None
+    assert record["funding_rate_hourly"] == 0.001
+    assert record["funding_payment_usd"] == 0.1
+    assert record["costs_source"] == "historical_hl_funding"
+
+
 def test_sandbox_flag_on_record_does_not_change_fill(tmp_path: Path):
     """sandbox_enabled is shadow-only: fill_px stays explicit-model truth."""
     mark = 100_000.0

@@ -2,12 +2,17 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import math
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Literal, Mapping
 
 from hypervector.strategies.hypervelocity_contract import is_hypervelocity_strategy
+
+_EQUITY_ABS_TOLERANCE_USD = 0.01
+_EQUITY_REL_TOLERANCE = 1e-9
 
 
 class ShadowResumeError(ValueError):
@@ -15,8 +20,22 @@ class ShadowResumeError(ValueError):
 
 
 @dataclass(frozen=True)
+class PendingMakerResume:
+    """Durable state for one unmatched post-only entry order."""
+
+    direction: Literal["long", "short"]
+    qty: float
+    limit_price: float
+    submitted_at: str
+    conviction: float | None
+    conviction_source: str | None
+    metalabel_p: float | None
+    metalabel_bundle_id: str | None
+
+
+@dataclass(frozen=True)
 class ShadowPortfolioResume:
-    """Authoritative portfolio state recovered from one filled shadow run."""
+    """Authoritative portfolio and maker-order state recovered from shadow."""
 
     run_id: str
     init_cash: float
@@ -27,6 +46,9 @@ class ShadowPortfolioResume:
     equity: float
     state_asof: str
     last_exit_at: str | None
+    pending_entry: PendingMakerResume | None
+    portfolio_fingerprint: str | None
+    portfolio_profile_changed_from: str | None
 
 
 def load_shadow_portfolio_resume(
@@ -34,15 +56,17 @@ def load_shadow_portfolio_resume(
     *,
     symbol: str,
     timeframe: str,
+    expected_spec: Mapping[str, object] | None = None,
 ) -> ShadowPortfolioResume | None:
-    """Load the latest Hypervelocity shadow run that contains a filled entry."""
+    """Load the latest Hypervelocity shadow run with durable trading state."""
     if not ledger_path.is_file():
         return None
     rows = _read_matching_rows(ledger_path, symbol=symbol, timeframe=timeframe)
-    selected_run_id = _latest_filled_run_id(rows)
+    selected_run_id = _latest_persistent_run_id(rows)
     if selected_run_id is None:
         return None
     run_rows = [row for row in rows if row.get("run_id") == selected_run_id]
+    pending_entry = _latest_pending_entry(run_rows, selected_run_id)
     state = _latest_portfolio_state(run_rows, selected_run_id)
     init_cash = _initial_cash(run_rows, selected_run_id)
     qty = _required_number(state, "position_qty", selected_run_id)
@@ -56,6 +80,20 @@ def load_shadow_portfolio_resume(
         raise ShadowResumeError(
             f"filled shadow run {selected_run_id!r} has inconsistent portfolio state"
         )
+    _validate_equity_identity(
+        run_id=selected_run_id,
+        init_cash=init_cash,
+        realized=realized,
+        unrealized=unrealized,
+        equity=equity,
+    )
+    fingerprint, changed_from = _validate_portfolio_spec(
+        run_rows,
+        run_id=selected_run_id,
+        position_qty=qty,
+        has_pending_entry=pending_entry is not None,
+        expected_spec=expected_spec,
+    )
     last_exit_at = next(
         (
             str(row.get("feed_ts"))
@@ -64,6 +102,9 @@ def load_shadow_portfolio_resume(
         ),
         None,
     )
+    state_asof = str(state.get("feed_ts") or "unknown")
+    if state.get("action") == "session_start" and state.get("portfolio_state_asof"):
+        state_asof = str(state["portfolio_state_asof"])
     return ShadowPortfolioResume(
         run_id=selected_run_id,
         init_cash=init_cash,
@@ -72,9 +113,86 @@ def load_shadow_portfolio_resume(
         realized_pnl=realized,
         unrealized_pnl=unrealized,
         equity=equity,
-        state_asof=str(state.get("feed_ts") or "unknown"),
+        state_asof=state_asof,
         last_exit_at=last_exit_at,
+        pending_entry=pending_entry,
+        portfolio_fingerprint=fingerprint,
+        portfolio_profile_changed_from=changed_from,
     )
+
+
+def portfolio_fingerprint(spec: Mapping[str, object]) -> str:
+    """Return a stable digest of execution-affecting portfolio settings."""
+    payload = json.dumps(spec, sort_keys=True, separators=(",", ":"), allow_nan=False)
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+def _validate_portfolio_spec(
+    rows: list[dict[str, object]],
+    *,
+    run_id: str,
+    position_qty: float,
+    has_pending_entry: bool,
+    expected_spec: Mapping[str, object] | None,
+) -> tuple[str | None, str | None]:
+    if expected_spec is None:
+        return None, None
+    expected = portfolio_fingerprint(expected_spec)
+    identity = next(
+        (row for row in reversed(rows) if row.get("action") == "session_start"),
+        None,
+    )
+    if identity is None:
+        raise ShadowResumeError(f"filled shadow run {run_id!r} has no session identity")
+    recorded_spec = identity.get("portfolio_spec")
+    if not isinstance(recorded_spec, dict):
+        recorded_spec = _legacy_portfolio_spec(identity)
+    recorded = portfolio_fingerprint(recorded_spec)
+    if recorded == expected:
+        return expected, None
+    if abs(position_qty) > 0.0:
+        raise ShadowResumeError(
+            f"incompatible portfolio profile for open position in run {run_id!r}"
+        )
+    if has_pending_entry:
+        raise ShadowResumeError(
+            f"incompatible portfolio profile for pending entry in run {run_id!r}"
+        )
+    return expected, recorded
+
+
+def _legacy_portfolio_spec(identity: dict[str, object]) -> dict[str, object]:
+    keys = (
+        "strategy_name",
+        "symbol",
+        "timeframe",
+        "strategy_params",
+        "position_policy",
+        "exits",
+        "risk",
+        "execution",
+    )
+    return {key: identity.get(key) for key in keys}
+
+
+def _validate_equity_identity(
+    *,
+    run_id: str,
+    init_cash: float,
+    realized: float,
+    unrealized: float,
+    equity: float,
+) -> None:
+    expected = init_cash + realized + unrealized
+    if not math.isclose(
+        equity,
+        expected,
+        rel_tol=_EQUITY_REL_TOLERANCE,
+        abs_tol=_EQUITY_ABS_TOLERANCE_USD,
+    ):
+        raise ShadowResumeError(
+            f"filled shadow run {run_id!r} violates portfolio equity identity"
+        )
 
 
 def _latest_portfolio_state(
@@ -146,20 +264,66 @@ def _read_matching_rows(
     return rows
 
 
-def _latest_filled_run_id(rows: list[dict[str, object]]) -> str | None:
+def _latest_persistent_run_id(rows: list[dict[str, object]]) -> str | None:
     selected: str | None = None
     for row in rows:
-        if row.get("action") not in {"enter_long", "enter_short"}:
-            continue
-        if row.get("skipped") is True:
-            continue
-        quantity = _number(row, "fill_qty")
-        if quantity is None:
-            quantity = _number(row, "qty")
+        action = row.get("action")
+        quantity = _persistent_quantity(row, action)
         run_id = row.get("run_id")
         if quantity is not None and abs(quantity) > 0.0 and isinstance(run_id, str):
             selected = run_id
     return selected
+
+
+def _persistent_quantity(row: dict[str, object], action: object) -> float | None:
+    if action == "submit_entry":
+        return _number(row, "requested_qty")
+    if action not in {"enter_long", "enter_short"} or row.get("skipped") is True:
+        return None
+    return _number(row, "fill_qty") or _number(row, "qty")
+
+
+def _latest_pending_entry(
+    rows: list[dict[str, object]], run_id: str
+) -> PendingMakerResume | None:
+    pending: PendingMakerResume | None = None
+    for row in rows:
+        action = row.get("action")
+        if action == "submit_entry":
+            pending = _parse_pending_entry(row, run_id)
+        elif action == "cancel_entry" or (
+            action in {"enter_long", "enter_short"} and row.get("skipped") is not True
+        ):
+            pending = None
+    return pending
+
+
+def _parse_pending_entry(row: dict[str, object], run_id: str) -> PendingMakerResume:
+    side = row.get("side")
+    qty = _required_number(row, "requested_qty", run_id)
+    limit_price = _required_number(row, "fill_px", run_id)
+    submitted_at = row.get("feed_ts")
+    if side not in {"buy", "sell"} or qty <= 0.0 or limit_price <= 0.0:
+        raise ShadowResumeError(
+            f"shadow run {run_id!r} has inconsistent pending entry state"
+        )
+    if not isinstance(submitted_at, str) or not submitted_at:
+        raise ShadowResumeError(f"shadow run {run_id!r} pending entry has no timestamp")
+    return PendingMakerResume(
+        direction="long" if side == "buy" else "short",
+        qty=qty,
+        limit_price=limit_price,
+        submitted_at=submitted_at,
+        conviction=_number(row, "conviction"),
+        conviction_source=_optional_string(row, "conviction_source"),
+        metalabel_p=_number(row, "metalabel_p"),
+        metalabel_bundle_id=_optional_string(row, "metalabel_bundle_id"),
+    )
+
+
+def _optional_string(row: dict[str, object], key: str) -> str | None:
+    value = row.get(key)
+    return value if isinstance(value, str) and value else None
 
 
 def _number(row: dict[str, object], key: str) -> float | None:

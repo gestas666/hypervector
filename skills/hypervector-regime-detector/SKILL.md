@@ -65,6 +65,10 @@ Detection screen uses the same keys for transition-event inspection.
 | `[Enter]` | No mutation; backend configuration remains authoritative |
 | `[+]` / `[-]` / `[←]` / `[→]` | No mutation; edit the TOML profile and restart the supervised process |
 
+Screen 3 must show the `data_root` reported by the active backend session. Its
+reset guidance must include that exact root; a rootless reset command is not
+safe because it can operate on a different ledger than the TUI is displaying.
+
 ---
 
 ## 📊 Running Regime Forward Accuracy Evaluator

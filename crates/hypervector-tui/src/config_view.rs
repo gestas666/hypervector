@@ -59,13 +59,15 @@ pub fn render_backend_configuration(f: &mut Frame, app: &App, area: Rect) {
                 .border_style(app.theme.border_active),
         );
     f.render_widget(table, chunks[0]);
-    let help =
-        Paragraph::new("[↑/↓] Select  │  Read only  │  Reset: hypervelocity-shadow-reset --yes")
-            .block(
-                Block::default()
-                    .borders(Borders::ALL)
-                    .border_style(app.theme.border),
-            );
+    let help = Paragraph::new(format!(
+        "[↑/↓] Select  │  Read only  │  Reset uses active root: {}",
+        active_data_root(&app.backend)
+    ))
+    .block(
+        Block::default()
+            .borders(Borders::ALL)
+            .border_style(app.theme.border),
+    );
     f.render_widget(help, chunks[1]);
 }
 
@@ -93,7 +95,13 @@ fn runtime_rows(backend: &BackendTelemetrySnapshot) -> Vec<ConfigMenuRow> {
             "Lifecycle",
             "Shadow reset",
             "explicit CLI only".into(),
-            "hypervelocity-shadow-reset --yes",
+            &shadow_reset_command(backend),
+        ),
+        row(
+            "Lifecycle",
+            "Active data root",
+            active_data_root(backend),
+            "session_start",
         ),
         number_row(
             "Runtime",
@@ -288,6 +296,28 @@ fn json_value(value: Option<&Value>) -> String {
 
 fn option(value: &Option<String>) -> String {
     value.clone().unwrap_or_else(|| "not reported".into())
+}
+
+fn active_data_root(backend: &BackendTelemetrySnapshot) -> String {
+    backend
+        .data_root
+        .clone()
+        .unwrap_or_else(|| "not reported".into())
+}
+
+fn shadow_reset_command(backend: &BackendTelemetrySnapshot) -> String {
+    let root = active_data_root(backend);
+    if root == "not reported" {
+        return "active data root not reported".into();
+    }
+    format!(
+        "uv run python -m hypervector --data-root {} hypervelocity-shadow-reset --yes",
+        shell_quote(&root)
+    )
+}
+
+fn shell_quote(value: &str) -> String {
+    format!("'{}'", value.replace('\'', "'\"'\"'"))
 }
 
 fn menu_constraints() -> [Constraint; 4] {

@@ -53,6 +53,32 @@
 - Candidate bundles are retained under `data/models/metalabel/candidates/`; neither 2026-07-25 Hypervelocity candidate was installed because chronological OOS log loss did not beat the constant-probability baseline.
 - Paper cost resolution now accepts the canonical exported `funding_rate_1h` when the legacy `funding_rate_8h` field is null; this was validated with the real Hypervelocity export.
 
+### 2026-07-26 restart-fidelity update
+
+- The canonical unified launch/reset root is now `data`. Screen 3 projects the
+  resolved root from backend `session_start` telemetry and renders the complete
+  shell-quoted same-root reset command.
+- Shadow resume now validates the portfolio equity identity and a canonical
+  fingerprint of execution-affecting strategy, risk, exit, order, and position
+  policy. An incompatible open position or pending entry fails closed; a flat
+  portfolio may adopt the new profile and records the prior fingerprint.
+- An unmatched `submit_entry` is durable before the first fill. Restart restores
+  its side, quantity, exact limit, submission time/TTL, conviction, and model
+  annotations; a later cancel or fill remains authoritative.
+- If active state spans downtime, only completed `source=hl` candles after the
+  persisted state timestamp may reconcile it. Replay can manage that existing
+  maker order or fixed target but cannot synthesize a new entry. Hourly funding
+  uses public `fundingHistory` observations and fails before replay when a
+  required settlement row is absent.
+- `strict_hl_only` now bypasses and refreshes an incompatible mixed-venue cache
+  rather than silently returning it.
+- Verification on 2026-07-26: 457 offline Python tests and all 20 Rust TUI
+  integration tests passed; targeted Ruff and formatting checks passed; the
+  `tui-regime-detector` binary built successfully.
+- A read-only audit of the current `data` ledger selected run `7e3887db6340` as
+  the durable portfolio: flat, no pending maker entry, `$10,000` equity, state
+  timestamp `2026-07-26T02:13:00Z`, and compatible with the faithful profile.
+
 ### 2026-07-25 faithful-contract validation
 
 The recorded strategy facts supplied by Albert supersede the speculative

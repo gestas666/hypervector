@@ -292,7 +292,7 @@ fn test_live_app_does_not_invent_book_when_backend_has_none() {
 #[test]
 fn test_backend_config_is_a_selectable_menu_not_raw_json() {
     let telemetry = parse_backend_telemetry(
-        r#"{"feed_ts":"session_start","action":"session_start","run_id":"hv","strategy_name":"hypervelocity_1m_scalper","execution_mode":"shadow","metalabel_mode":"off","strategy_params":{"leverage":40.0,"target_margin_pct":8.0},"position_policy":{"position_mode":"one_way","max_positions_per_symbol":1},"risk":{"margin_fraction":0.7},"exits":{"target_margin_pct":8.0,"range_policy":"hold_until_target"},"execution":{"order_type":"limit","time_in_force":"post_only","entry_ttl_seconds":300.0},"costs":{"maker_fee_rate":0.00015,"funding_source":"live_meta_and_asset_contexts"},"init_cash":10000.0,"equity":10000.0}"#,
+        r#"{"feed_ts":"session_start","action":"session_start","run_id":"hv","strategy_name":"hypervelocity_1m_scalper","execution_mode":"shadow","data_root":"/tmp/hyper vector's data","metalabel_mode":"off","strategy_params":{"leverage":40.0,"target_margin_pct":8.0},"position_policy":{"position_mode":"one_way","max_positions_per_symbol":1},"risk":{"margin_fraction":0.7},"exits":{"target_margin_pct":8.0,"range_policy":"hold_until_target"},"execution":{"order_type":"limit","time_in_force":"post_only","entry_ttl_seconds":300.0},"costs":{"maker_fee_rate":0.00015,"funding_source":"live_meta_and_asset_contexts"},"init_cash":10000.0,"equity":10000.0}"#,
     )
     .expect("telemetry");
 
@@ -314,7 +314,11 @@ fn test_backend_config_is_a_selectable_menu_not_raw_json() {
     assert!(rows.iter().any(|row| {
         row.option == "Shadow reset"
             && row.value == "explicit CLI only"
-            && row.source == "hypervelocity-shadow-reset --yes"
+            && row.source
+                == "uv run python -m hypervector --data-root '/tmp/hyper vector'\"'\"'s data' hypervelocity-shadow-reset --yes"
+    }));
+    assert!(rows.iter().any(|row| {
+        row.option == "Active data root" && row.value == "/tmp/hyper vector's data"
     }));
     assert!(rows.iter().all(|row| !row.value.contains('{')));
 }

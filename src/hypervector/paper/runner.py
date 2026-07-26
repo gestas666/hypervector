@@ -17,6 +17,7 @@ from typing import Any, Callable
 import pandas as pd
 
 from hypervector.config import DEFAULT_LOOKBACK, FLOOR_LOOKBACK
+from hypervector.data.hl import fetch_hl_funding_history
 from hypervector.data.pipeline import load_research_history
 from hypervector.nautilus.load_export import load_strategy_loadout
 from hypervector.paper.fill_models import (
@@ -27,6 +28,11 @@ from hypervector.paper.live_node import (
     DEFAULT_POLL_INTERVAL_SECS,
     make_rest_poll_fn,
     partition_live_bars,
+)
+from hypervector.paper.replay import (
+    FundingHistoryFetcher,
+    historical_funding_rates,
+    split_resume_history,
 )
 from hypervector.paper.session import PaperSession
 from hypervector.strategies.hypervelocity_profile import HypervelocityProfile
@@ -87,6 +93,7 @@ def start_paper_daemon(
     hypervelocity_profile: HypervelocityProfile | None = None,
     now_fn: Callable[[], pd.Timestamp] | None = None,
     enforce_live_boundary: bool | None = None,
+    funding_history_fn: FundingHistoryFetcher | None = None,
 ) -> PaperDaemonResult:
     """Start paper daemon: warm history, then process live bars until stop.
 
@@ -140,6 +147,7 @@ def start_paper_daemon(
     _print_banner(mode)
     sleep = sleep_fn if sleep_fn is not None else time.sleep
     clock = now_fn if now_fn is not None else _utc_now
+    funding_fetcher = funding_history_fn or fetch_hl_funding_history
     export_path = Path(export_dir)
     root = Path(data_root)
 
@@ -162,8 +170,8 @@ def start_paper_daemon(
     # poll_fn keeps book off-network unless the caller sets enable_book_poll later.
     live_rest_feed = poll_fn is None
     live_book_enabled = live_rest_feed
-    enforce_boundary = live_rest_feed if enforce_live_boundary is None else bool(
-        enforce_live_boundary
+    enforce_boundary = (
+        live_rest_feed if enforce_live_boundary is None else bool(enforce_live_boundary)
     )
 
     session = PaperSession(
@@ -202,6 +210,11 @@ def start_paper_daemon(
             symbol=loadout.symbol,
             timeframe=loadout.timeframe,
             lookback_days=lb,
+            strict_hl_only=(
+                hypervelocity_profile.strict_hl_only
+                if hypervelocity_profile is not None
+                else False
+            ),
             force_refresh=False,
         )
         logger.info(
@@ -215,9 +228,28 @@ def start_paper_daemon(
             f"no warm-up bars for {loadout.symbol} {loadout.timeframe} lookback={lb}d"
         )
 
-    warm_bars = session.warm_up(warm_df)
     activated_at = clock()
     session.enable_live_telemetry(activated_at=activated_at)
+    if session.downtime_reconciliation_enabled:
+        state_asof = session.resume_state_asof
+        if state_asof is None:
+            raise RuntimeError("active resumed state has no reconciliation timestamp")
+        seed, replay = split_resume_history(
+            warm_df,
+            state_asof=state_asof,
+            timeframe=loadout.timeframe,
+            observed_at=activated_at,
+        )
+        warm_bars = session.warm_up(seed) if not seed.empty else 0
+        rates = historical_funding_rates(
+            replay,
+            symbol=loadout.symbol,
+            timeframe=loadout.timeframe,
+            fetcher=funding_fetcher,
+        )
+        warm_bars += session.reconcile_downtime(replay, funding_rates=rates)
+    else:
+        warm_bars = session.warm_up(warm_df)
     session.ensure_session_identity()
     after_ts = session.last_timestamp
 
@@ -346,7 +378,16 @@ def start_paper_daemon(
                     observed_at=clock(),
                 )
                 if not catchup.empty:
-                    session.warm_up(catchup)
+                    if session.downtime_reconciliation_enabled:
+                        rates = historical_funding_rates(
+                            catchup,
+                            symbol=loadout.symbol,
+                            timeframe=loadout.timeframe,
+                            fetcher=funding_fetcher,
+                        )
+                        session.reconcile_downtime(catchup, funding_rates=rates)
+                    else:
+                        session.warm_up(catchup)
                     after_ts = pd.Timestamp(catchup["timestamp"].iloc[-1])
                     logger.info("paper catch-up seeded bars=%s", len(catchup))
                 if frame.empty:

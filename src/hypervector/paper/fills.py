@@ -332,7 +332,12 @@ class ExplicitFillEngine:
         return record
 
     def apply_funding(
-        self, *, feed_ts: Any, oracle_px: float, hours: float = 1.0
+        self,
+        *,
+        feed_ts: Any,
+        oracle_px: float,
+        hours: float = 1.0,
+        funding_rate_hourly: float | None = None,
     ) -> dict | None:
         """Apply fractional/hourly funding on open position; return decision or None if flat."""
         pos = self._position
@@ -340,6 +345,15 @@ class ExplicitFillEngine:
             return None
 
         snap = self._cost_provider.snapshot()
+        if funding_rate_hourly is not None:
+            rate = float(funding_rate_hourly)
+            if not math.isfinite(rate):
+                raise ValueError("funding_rate_hourly must be finite")
+            snap = replace(
+                snap,
+                funding_rate_hourly=rate,
+                sources={**snap.sources, "funding": "historical_hl"},
+            )
         oracle = float(oracle_px)
         payment = funding_payment(
             position_qty=pos.qty,
@@ -499,4 +513,6 @@ def _costs_source(snap: CostSnapshot) -> str:
     funding = (snap.sources or {}).get("funding", "unset")
     if funding.startswith("live"):
         return "live_funding"
+    if funding == "historical_hl":
+        return "historical_hl_funding"
     return "config"

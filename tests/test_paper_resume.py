@@ -5,7 +5,9 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from hypervector.paper.resume import load_shadow_portfolio_resume
+import pytest
+
+from hypervector.paper.resume import ShadowResumeError, load_shadow_portfolio_resume
 
 
 def test_flat_filled_run_does_not_require_position_average(tmp_path: Path) -> None:
@@ -59,3 +61,119 @@ def test_flat_filled_run_does_not_require_position_average(tmp_path: Path) -> No
     assert resumed.position_qty == 0.0
     assert resumed.position_avg_px == 0.0
     assert resumed.realized_pnl == 19.8
+
+
+def test_resume_rejects_inconsistent_equity_identity(tmp_path: Path) -> None:
+    """Finite but internally inconsistent portfolio state is not authoritative."""
+    path = tmp_path / "decisions.jsonl"
+    row = {
+        "run_id": "broken-run",
+        "execution_mode": "shadow",
+        "strategy_name": "hypervelocity_1m_scalper",
+        "symbol": "BTC",
+        "timeframe": "1m",
+        "feed_ts": "2026-07-25T18:00:00Z",
+        "action": "enter_long",
+        "fill_qty": 1.0,
+        "init_cash": 10_000.0,
+        "position_qty": 1.0,
+        "position_avg_px": 100.0,
+        "realized_pnl": -1.0,
+        "unrealized_pnl": 5.0,
+        "equity": 50_000.0,
+    }
+    path.write_text(f"{json.dumps(row)}\n", encoding="utf-8")
+
+    with pytest.raises(ShadowResumeError, match="equity identity"):
+        load_shadow_portfolio_resume(path, symbol="BTC", timeframe="1m")
+
+
+def test_resume_restores_latest_unmatched_pending_entry(tmp_path: Path) -> None:
+    """A submitted maker entry is durable even before the portfolio has a fill."""
+    path = tmp_path / "decisions.jsonl"
+    common = {
+        "run_id": "pending-run",
+        "execution_mode": "shadow",
+        "strategy_name": "hypervelocity_1m_scalper",
+        "symbol": "BTC",
+        "timeframe": "1m",
+        "init_cash": 10_000.0,
+        "position_qty": 0.0,
+        "position_avg_px": 0.0,
+        "realized_pnl": 0.0,
+        "unrealized_pnl": 0.0,
+        "equity": 10_000.0,
+    }
+    rows = [
+        {**common, "feed_ts": "session_start", "action": "session_start"},
+        {
+            **common,
+            "feed_ts": "2026-07-25T18:05:00Z",
+            "action": "submit_entry",
+            "side": "buy",
+            "requested_qty": 2.0,
+            "fill_px": 100.0,
+            "order_status": "pending",
+            "conviction": 0.75,
+            "conviction_source": "fixed",
+            "metalabel_p": 0.62,
+            "metalabel_bundle_id": "bundle-long",
+        },
+    ]
+    path.write_text("".join(f"{json.dumps(row)}\n" for row in rows), encoding="utf-8")
+
+    resumed = load_shadow_portfolio_resume(path, symbol="BTC", timeframe="1m")
+
+    assert resumed is not None
+    assert resumed.pending_entry is not None
+    assert resumed.pending_entry.direction == "long"
+    assert resumed.pending_entry.qty == 2.0
+    assert resumed.pending_entry.limit_price == 100.0
+    assert resumed.pending_entry.submitted_at == "2026-07-25T18:05:00Z"
+    assert resumed.pending_entry.metalabel_p == 0.62
+    assert resumed.pending_entry.metalabel_bundle_id == "bundle-long"
+
+
+def test_resume_clears_pending_entry_after_cancel(tmp_path: Path) -> None:
+    """A later cancel is authoritative over a prior pending submit."""
+    path = tmp_path / "decisions.jsonl"
+    common = {
+        "run_id": "pending-run",
+        "execution_mode": "shadow",
+        "strategy_name": "hypervelocity_1m_scalper",
+        "symbol": "BTC",
+        "timeframe": "1m",
+        "init_cash": 10_000.0,
+        "position_qty": 0.0,
+        "position_avg_px": 0.0,
+        "realized_pnl": 0.0,
+        "unrealized_pnl": 0.0,
+        "equity": 10_000.0,
+    }
+    rows = [
+        {**common, "feed_ts": "session_start", "action": "session_start"},
+        {
+            **common,
+            "feed_ts": "2026-07-25T18:05:00Z",
+            "action": "submit_entry",
+            "side": "sell",
+            "requested_qty": 2.0,
+            "fill_px": 100.0,
+            "order_status": "pending",
+        },
+        {
+            **common,
+            "feed_ts": "2026-07-25T18:06:00Z",
+            "action": "cancel_entry",
+            "side": "sell",
+            "requested_qty": 2.0,
+            "fill_px": 100.0,
+            "order_status": "canceled",
+        },
+    ]
+    path.write_text("".join(f"{json.dumps(row)}\n" for row in rows), encoding="utf-8")
+
+    resumed = load_shadow_portfolio_resume(path, symbol="BTC", timeframe="1m")
+
+    assert resumed is not None
+    assert resumed.pending_entry is None

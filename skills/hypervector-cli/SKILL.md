@@ -99,7 +99,7 @@ Use one command to supervise the backend and display its telemetry in the TUI:
 
 ```bash
 uv run python -m hypervector \
-  --data-root data/ops/hypervelocity_visual \
+  --data-root data \
   hypervelocity-tui \
   --config configs/hypervelocity_faithful.toml
 ```
@@ -110,11 +110,18 @@ backend cleanly. Backend output is retained at
 `<data-root>/paper/hypervelocity-shadow.log`. A per-data-root process lock
 refuses a second Hypervelocity backend.
 
-Normal quit and restart preserves the latest filled Hypervelocity shadow run:
-cash, realized PnL, any open position, cooldown timestamp, and closed-trade
-journal are restored from the backend ledger. Empty accidental launches do not
-replace that portfolio identity. Reset is explicit and recoverable only through
-the command below.
+Normal quit and restart preserves the latest durable Hypervelocity shadow run:
+cash, realized PnL, any open position, pending maker entry, cooldown timestamp,
+and closed-trade journal are restored from the backend ledger. The backend
+validates the execution-spec fingerprint and portfolio equity identity before
+restoring active state. Empty accidental launches do not replace that portfolio
+identity. Reset is explicit and recoverable only through the command below.
+
+When an open target or pending maker entry spans downtime, startup reconciles
+only completed, venue-matched Hyperliquid candles after the ledger timestamp.
+It may fund, fill, cancel, or close that already-active state, but it cannot
+create a new historical entry. Hourly boundaries require the matching public
+Hyperliquid funding-history row; missing evidence fails startup explicitly.
 
 The TUI does not execute trades. Trade, position, PnL, cost, policy, regime,
 and five-level depth fields are projections of backend ledger telemetry. The
@@ -124,13 +131,15 @@ Reset a completed shadow observation window with a recoverable backup:
 
 ```bash
 uv run python -m hypervector \
-  --data-root data/ops/hypervelocity_visual \
+  --data-root data \
   hypervelocity-shadow-reset --yes
 ```
 
 Without `--yes`, the reset is a non-mutating dry run. Confirmed resets acquire
 the singleton backend lock, copy decisions and the backend log under
 `<data-root>/backups/shadow_reset_<UTC>/`, then clear only those two files.
+Screen 3 displays the backend-reported active data root and the complete,
+shell-quoted reset command for that same root.
 
 ### 6. 3-Screen Visual Microstructure Cockpit (`tui-regime-detector`)
 

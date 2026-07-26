@@ -16,6 +16,8 @@ from hypervector.paper.session import (
     _entry_qty,
     run_paper_session_offline,
 )
+from hypervector.paper.maker_execution import PostOnlyLimitFillModel
+from hypervector.paper.resume import ShadowResumeError
 from hypervector.nautilus.load_export import load_strategy_loadout
 
 
@@ -70,6 +72,33 @@ def _write_strict_export(root: Path, *, strategy: str = "crown_stack_short") -> 
         candidate_id="paper_session_crown",
         strict=True,
     )
+
+
+def _hl_bar(
+    timestamp: str,
+    *,
+    high: float,
+    low: float,
+) -> dict[str, object]:
+    """Build one venue-identified completed bar for restart tests."""
+    return {
+        "timestamp": pd.Timestamp(timestamp),
+        "open": 100.0,
+        "high": high,
+        "low": low,
+        "close": 100.0,
+        "volume": 1.0,
+        "source": "hl",
+    }
+
+
+def _decision_rows(path: Path) -> list[dict[str, object]]:
+    """Read the append-only test ledger."""
+    return [
+        json.loads(line)
+        for line in path.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
 
 
 def test_offline_session_writes_paper_decisions(tmp_path: Path):
@@ -187,6 +216,174 @@ def test_hypervelocity_shadow_session_without_fills_starts_new_run(
 
     assert fresh.run_id == "fresh-run"
     assert fresh.engine.position.qty == 0.0
+
+
+def test_hypervelocity_open_position_rejects_incompatible_profile(
+    tmp_path: Path,
+) -> None:
+    """An open portfolio cannot silently switch execution specifications."""
+    long_export = _write_strict_export(
+        tmp_path,
+        strategy="hypervelocity_1m_scalper_long",
+    )
+    data_root = tmp_path / "data"
+    original = PaperSession(
+        export_dir=long_export,
+        data_root=data_root,
+        run_id="persistent-run",
+        execution_mode="shadow",
+    )
+    original.ensure_session_identity()
+    original.engine.apply_market_fill(
+        feed_ts="2026-07-25T18:05:00Z",
+        action="enter_long",
+        side="buy",
+        qty=2.0,
+        mark_px=100.0,
+    )
+    short_export = _write_strict_export(
+        tmp_path,
+        strategy="hypervelocity_1m_scalper_short",
+    )
+
+    with pytest.raises(ShadowResumeError, match="incompatible.*open position"):
+        PaperSession(
+            export_dir=short_export,
+            data_root=data_root,
+            execution_mode="shadow",
+        )
+
+
+def test_hypervelocity_flat_portfolio_records_compatible_profile_change(
+    tmp_path: Path,
+) -> None:
+    """A flat portfolio keeps its PnL while explicitly changing profile identity."""
+    long_export = _write_strict_export(
+        tmp_path,
+        strategy="hypervelocity_1m_scalper_long",
+    )
+    data_root = tmp_path / "data"
+    original = PaperSession(
+        export_dir=long_export,
+        data_root=data_root,
+        run_id="persistent-run",
+        execution_mode="shadow",
+    )
+    original.ensure_session_identity()
+    original.engine.apply_market_fill(
+        feed_ts="2026-07-25T18:05:00Z",
+        action="enter_long",
+        side="buy",
+        qty=2.0,
+        mark_px=100.0,
+    )
+    close = original.engine.apply_market_fill(
+        feed_ts="2026-07-25T18:10:00Z",
+        action="close",
+        side="sell",
+        qty=2.0,
+        mark_px=101.0,
+    )
+    short_export = _write_strict_export(
+        tmp_path,
+        strategy="hypervelocity_1m_scalper_short",
+    )
+
+    changed = PaperSession(
+        export_dir=short_export,
+        data_root=data_root,
+        execution_mode="shadow",
+    )
+    changed.ensure_session_identity()
+    identity = json.loads(changed.decisions_path.read_text().splitlines()[-1])
+
+    assert changed.run_id == "persistent-run"
+    assert changed.engine.position.qty == 0.0
+    assert changed.engine.position.realized_pnl == pytest.approx(close["realized_pnl"])
+    assert identity["portfolio_profile_changed_from"]
+    assert identity["portfolio_fingerprint"]
+
+
+def test_repeated_resume_preserves_market_state_timestamp(tmp_path: Path) -> None:
+    """A synthetic session_start never replaces the last market as-of timestamp."""
+    export = _write_strict_export(
+        tmp_path,
+        strategy="hypervelocity_1m_scalper_long",
+    )
+    data_root = tmp_path / "data"
+    original = PaperSession(
+        export_dir=export,
+        data_root=data_root,
+        run_id="persistent-run",
+        execution_mode="shadow",
+    )
+    original.ensure_session_identity()
+    original.engine.apply_market_fill(
+        feed_ts="2026-07-25T18:05:00Z",
+        action="enter_long",
+        side="buy",
+        qty=2.0,
+        mark_px=100.0,
+    )
+    second = PaperSession(
+        export_dir=export,
+        data_root=data_root,
+        execution_mode="shadow",
+    )
+    second.ensure_session_identity()
+
+    third = PaperSession(
+        export_dir=export,
+        data_root=data_root,
+        execution_mode="shadow",
+    )
+
+    assert third._shadow_resume is not None
+    assert third._shadow_resume.state_asof == "2026-07-25T18:05:00Z"
+
+
+def test_hypervelocity_session_restores_pending_maker_entry(tmp_path: Path) -> None:
+    """The backend restores the exact unmatched post-only order state."""
+    export = _write_strict_export(
+        tmp_path,
+        strategy="hypervelocity_1m_scalper_long",
+    )
+    data_root = tmp_path / "data"
+    original = PaperSession(
+        export_dir=export,
+        data_root=data_root,
+        run_id="pending-run",
+        execution_mode="shadow",
+    )
+    original.ensure_session_identity()
+    original.engine.record_order_event(
+        feed_ts="2026-07-25T18:05:00Z",
+        action="submit_entry",
+        side="buy",
+        qty=2.0,
+        limit_px=100.0,
+        status="pending",
+        conviction=0.75,
+        conviction_source="fixed",
+        metalabel_p=0.62,
+        metalabel_bundle_id="bundle-long",
+    )
+
+    resumed = PaperSession(
+        export_dir=export,
+        data_root=data_root,
+        execution_mode="shadow",
+    )
+    pending = resumed.pending_maker_entry
+
+    assert resumed.run_id == "pending-run"
+    assert pending is not None
+    assert pending.direction == "long"
+    assert pending.qty == 2.0
+    assert pending.limit_price == 100.0
+    assert pending.submitted_at == pd.Timestamp("2026-07-25T18:05:00Z")
+    assert pending.metalabel_p == 0.62
+    assert pending.metalabel_bundle_id == "bundle-long"
 
 
 def test_session_identity_stamps_effective_metalabel_policy(tmp_path: Path):
@@ -506,6 +703,279 @@ def test_hypervelocity_paper_waits_for_maker_through_then_exits_at_fixed_target(
     assert closes[0]["fill_px"] == pytest.approx(100.2)
     assert closes[0]["feed_ts"] == "2026-07-25T12:04:00+00:00"
     assert closes[0]["exit_reason"] == "take_profit_8pct_margin"
+
+
+def test_downtime_reconciliation_manages_open_target_and_historical_funding(
+    tmp_path: Path,
+) -> None:
+    """Missed HL bars fund and close existing state without current-rate leakage."""
+    export = _write_strict_export(
+        tmp_path,
+        strategy="hypervelocity_1m_scalper_long",
+    )
+    data_root = tmp_path / "data"
+    original = PaperSession(
+        export_dir=export,
+        data_root=data_root,
+        run_id="resume-open",
+        execution_mode="shadow",
+    )
+    original.ensure_session_identity()
+    original.engine.apply_market_fill(
+        feed_ts="2026-07-25T12:58:00Z",
+        action="enter_long",
+        side="buy",
+        qty=1.0,
+        mark_px=100.0,
+        fill_model=PostOnlyLimitFillModel(),
+    )
+    resumed = PaperSession(
+        export_dir=export,
+        data_root=data_root,
+        execution_mode="shadow",
+    )
+    missed = pd.DataFrame(
+        [
+            _hl_bar("2026-07-25T12:58:00Z", high=100.1, low=99.9),
+            _hl_bar("2026-07-25T12:59:00Z", high=100.1, low=99.9),
+            _hl_bar("2026-07-25T13:00:00Z", high=100.3, low=99.9),
+        ]
+    )
+
+    count = resumed.reconcile_downtime(
+        missed,
+        funding_rates={pd.Timestamp("2026-07-25T13:00:00Z"): 0.001},
+    )
+
+    assert count == 3
+    assert resumed.engine.position.qty == 0.0
+    rows = _decision_rows(resumed.decisions_path)
+    funding = [row for row in rows if row.get("action") == "funding"]
+    closes = [row for row in rows if row.get("action") == "close"]
+    assert funding[-1]["funding_rate_hourly"] == 0.001
+    assert closes[-1]["feed_ts"] == "2026-07-25T13:01:00+00:00"
+
+
+def test_downtime_reconciliation_rejects_non_hl_bars(tmp_path: Path) -> None:
+    """An active target is not reconciled against another venue's candles."""
+    export = _write_strict_export(
+        tmp_path,
+        strategy="hypervelocity_1m_scalper_long",
+    )
+    data_root = tmp_path / "data"
+    original = PaperSession(
+        export_dir=export,
+        data_root=data_root,
+        run_id="resume-open",
+        execution_mode="shadow",
+    )
+    original.ensure_session_identity()
+    original.engine.apply_market_fill(
+        feed_ts="2026-07-25T12:58:00Z",
+        action="enter_long",
+        side="buy",
+        qty=1.0,
+        mark_px=100.0,
+        fill_model=PostOnlyLimitFillModel(),
+    )
+    resumed = PaperSession(
+        export_dir=export,
+        data_root=data_root,
+        execution_mode="shadow",
+    )
+    missed = pd.DataFrame(
+        [{**_hl_bar("2026-07-25T12:59:00Z", high=100.1, low=99.9), "source": "binance"}]
+    )
+
+    with pytest.raises(RuntimeError, match="Hyperliquid bars"):
+        resumed.reconcile_downtime(missed, funding_rates={})
+
+
+def test_downtime_reconciliation_requires_hourly_funding_evidence(
+    tmp_path: Path,
+) -> None:
+    """An hourly boundary cannot be replayed using an unrelated current rate."""
+    export = _write_strict_export(
+        tmp_path,
+        strategy="hypervelocity_1m_scalper_long",
+    )
+    data_root = tmp_path / "data"
+    original = PaperSession(
+        export_dir=export,
+        data_root=data_root,
+        run_id="resume-open",
+        execution_mode="shadow",
+    )
+    original.ensure_session_identity()
+    original.engine.apply_market_fill(
+        feed_ts="2026-07-25T12:58:00Z",
+        action="enter_long",
+        side="buy",
+        qty=1.0,
+        mark_px=100.0,
+        fill_model=PostOnlyLimitFillModel(),
+    )
+    resumed = PaperSession(
+        export_dir=export,
+        data_root=data_root,
+        execution_mode="shadow",
+    )
+
+    with pytest.raises(RuntimeError, match="missing Hyperliquid funding history"):
+        resumed.reconcile_downtime(
+            pd.DataFrame([_hl_bar("2026-07-25T12:59:00Z", high=100.1, low=99.9)]),
+            funding_rates={},
+        )
+
+    assert resumed.engine.position.qty == 1.0
+
+
+def test_downtime_reconciliation_accepts_no_completed_missed_bars(
+    tmp_path: Path,
+) -> None:
+    """An immediate restart with no completed candle is a valid no-op."""
+    export = _write_strict_export(
+        tmp_path,
+        strategy="hypervelocity_1m_scalper_long",
+    )
+    data_root = tmp_path / "data"
+    original = PaperSession(
+        export_dir=export,
+        data_root=data_root,
+        run_id="resume-open",
+        execution_mode="shadow",
+    )
+    original.ensure_session_identity()
+    original.engine.apply_market_fill(
+        feed_ts="2026-07-25T12:58:00Z",
+        action="enter_long",
+        side="buy",
+        qty=1.0,
+        mark_px=100.0,
+        fill_model=PostOnlyLimitFillModel(),
+    )
+    resumed = PaperSession(
+        export_dir=export,
+        data_root=data_root,
+        execution_mode="shadow",
+    )
+    empty = pd.DataFrame(
+        columns=["timestamp", "open", "high", "low", "close", "volume", "source"]
+    )
+
+    assert resumed.reconcile_downtime(empty, funding_rates={}) == 0
+
+
+def test_downtime_reconciliation_never_synthesizes_new_entry(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Offline bars cannot create a trade after an existing position closes."""
+    export = _write_strict_export(
+        tmp_path,
+        strategy="hypervelocity_1m_scalper_long",
+    )
+    data_root = tmp_path / "data"
+    original = PaperSession(
+        export_dir=export,
+        data_root=data_root,
+        run_id="resume-flat",
+        execution_mode="shadow",
+    )
+    original.ensure_session_identity()
+    original.engine.apply_market_fill(
+        feed_ts="2026-07-25T12:57:00Z",
+        action="enter_long",
+        side="buy",
+        qty=1.0,
+        mark_px=100.0,
+        fill_model=PostOnlyLimitFillModel(),
+    )
+    original.engine.apply_market_fill(
+        feed_ts="2026-07-25T12:58:00Z",
+        action="close",
+        side="sell",
+        qty=1.0,
+        mark_px=100.2,
+        fill_model=PostOnlyLimitFillModel(),
+    )
+    resumed = PaperSession(
+        export_dir=export,
+        data_root=data_root,
+        execution_mode="shadow",
+    )
+    monkeypatch.setattr(
+        "hypervector.paper.session.current_hypervelocity_entry_allowed",
+        lambda frame, direction: True,
+    )
+
+    resumed.reconcile_downtime(
+        pd.DataFrame(
+            [
+                _hl_bar("2026-07-25T12:58:00Z", high=100.5, low=99.5),
+                _hl_bar("2026-07-25T12:59:00Z", high=100.5, low=99.5),
+            ]
+        ),
+        funding_rates={},
+    )
+
+    assert resumed.engine.position.qty == 0.0
+    assert resumed.pending_maker_entry is None
+    new_rows = _decision_rows(resumed.decisions_path)
+    assert len([row for row in new_rows if row.get("action") == "submit_entry"]) == 0
+
+
+def test_downtime_reconciliation_fills_restored_pending_entry(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A pre-restart maker order keeps its original limit and annotations."""
+    export = _write_strict_export(
+        tmp_path,
+        strategy="hypervelocity_1m_scalper_long",
+    )
+    data_root = tmp_path / "data"
+    original = PaperSession(
+        export_dir=export,
+        data_root=data_root,
+        run_id="resume-pending",
+        execution_mode="shadow",
+    )
+    original.ensure_session_identity()
+    original.engine.record_order_event(
+        feed_ts="2026-07-25T12:58:00Z",
+        action="submit_entry",
+        side="buy",
+        qty=2.0,
+        limit_px=100.0,
+        status="pending",
+        metalabel_p=0.62,
+        metalabel_bundle_id="long-bundle",
+    )
+    resumed = PaperSession(
+        export_dir=export,
+        data_root=data_root,
+        execution_mode="shadow",
+    )
+    monkeypatch.setattr(
+        "hypervector.paper.session.current_hypervelocity_entry_allowed",
+        lambda frame, direction: True,
+    )
+
+    resumed.reconcile_downtime(
+        pd.DataFrame([_hl_bar("2026-07-25T12:58:00Z", high=100.1, low=99.9)]),
+        funding_rates={},
+    )
+
+    assert resumed.pending_maker_entry is None
+    assert resumed.engine.position.qty == 2.0
+    entries = [
+        row
+        for row in _decision_rows(resumed.decisions_path)
+        if row.get("action") == "enter_long"
+    ]
+    assert entries[-1]["fill_px"] == 100.0
+    assert entries[-1]["metalabel_p"] == 0.62
 
 
 def test_bidirectional_profile_holds_then_switches_only_after_exit(
