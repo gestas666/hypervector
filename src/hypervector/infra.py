@@ -13,6 +13,7 @@ from pathlib import Path
 DATA_SUBDIRS: tuple[str, ...] = (
     "cache",
     "cache/book",
+    "cache/events/hyperliquid",
     "runs",
     "exports",
     "logs/research",
@@ -34,6 +35,7 @@ class DataPaths:
     root: Path
     cache: Path
     cache_book: Path
+    cache_events_hyperliquid: Path
     runs: Path
     runs_db: Path
     exports: Path
@@ -56,6 +58,7 @@ def paths_for(root: Path | str) -> DataPaths:
         root=r,
         cache=r / "cache",
         cache_book=r / "cache" / "book",
+        cache_events_hyperliquid=r / "cache" / "events" / "hyperliquid",
         runs=r / "runs",
         runs_db=r / "runs" / "hypervector.db",
         exports=r / "exports",
@@ -86,6 +89,7 @@ def layout_report(root: Path | str) -> dict[str, object]:
     paths = paths_for(root)
     dirs = {
         "cache": paths.cache,
+        "cache_events_hyperliquid": paths.cache_events_hyperliquid,
         "runs": paths.runs,
         "exports": paths.exports,
         "logs_research": paths.logs_research,

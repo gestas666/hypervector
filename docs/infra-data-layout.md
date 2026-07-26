@@ -9,7 +9,13 @@ The repo root `/data/` is **gitignored**. Do not commit market data, ledgers, or
 
 ```text
 data/
-  cache/                 # Parquet OHLCV (+ future book features under cache/book/)
+  cache/                 # Parquet OHLCV and public market evidence
+    events/
+      hyperliquid/
+        BTC/YYYY-MM-DD/
+          l2.parquet/    # Immutable Parquet parts of full L2 snapshots
+          trades.parquet/# Immutable Parquet parts of public matches
+          gaps.jsonl     # Declared reconnect/freshness uncertainty
   runs/                  # SQLite research trials (hypervector.db)
   exports/               # Phase 1 → Phase 2 bundles <id>/meta|params|metrics
   models/

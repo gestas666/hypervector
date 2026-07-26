@@ -1,0 +1,25 @@
+{
+  "channel": "trades",
+  "data": [
+    {
+      "coin": "BTC",
+      "side": "B",
+      "px": "64501.0",
+      "sz": "0.01234",
+      "hash": "0xabc123",
+      "time": 1785103200100,
+      "tid": 987654321,
+      "users": ["0xbuyer", "0xseller"]
+    },
+    {
+      "coin": "BTC",
+      "side": "A",
+      "px": "64500.0",
+      "sz": "0.02000",
+      "hash": "0xdef456",
+      "time": 1785103200200,
+      "tid": 987654322,
+      "users": ["0xbuyer2", "0xseller2"]
+    }
+  ]
+}

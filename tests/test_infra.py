@@ -23,6 +23,8 @@ def test_ensure_data_layout_creates_all_subdirs(tmp_path: Path):
     assert paths.live_ledger == root / "live" / "ledger"
     assert paths.models_metalabel == root / "models" / "metalabel"
     assert paths.models_metalabel.is_dir()
+    assert paths.cache_events_hyperliquid == root / "cache" / "events" / "hyperliquid"
+    assert paths.cache_events_hyperliquid.is_dir()
 
 
 def test_ensure_data_layout_idempotent(tmp_path: Path):
