@@ -70,6 +70,14 @@ class HypervelocityProfile:
     model_long_bundle: Path
     model_short_bundle: Path
     regime_config: RegimeClassifierConfig
+    execution_timeframe: Literal["1m"]
+    primary_timeframe: Literal["5m"]
+    context_timeframe: Literal["15m"]
+    context_is_hard_gate: bool
+    allowed_entry_states: tuple[str, ...]
+    blocked_entry_states: tuple[str, ...]
+    breakout_requires_direction: bool
+    confidence_is_gate: bool
 
     def position_policy(self) -> dict[str, object]:
         """Return the effective position invariant for backend telemetry."""
@@ -79,6 +87,19 @@ class HypervelocityProfile:
             "direction_mode": self.direction_mode,
             "allow_reversal_while_open": self.allow_reversal_while_open,
             "switch_after_exit": self.switch_after_exit,
+        }
+
+    def regime_policy(self) -> dict[str, object]:
+        """Return the validated point-in-time regime execution policy."""
+        return {
+            "execution_timeframe": self.execution_timeframe,
+            "primary_timeframe": self.primary_timeframe,
+            "context_timeframe": self.context_timeframe,
+            "context_is_hard_gate": self.context_is_hard_gate,
+            "allowed_entry_states": list(self.allowed_entry_states),
+            "blocked_entry_states": list(self.blocked_entry_states),
+            "breakout_requires_direction": self.breakout_requires_direction,
+            "confidence_is_gate": self.confidence_is_gate,
         }
 
 
@@ -94,6 +115,7 @@ def load_hypervelocity_profile(path: Path | str) -> HypervelocityProfile:
     allocation = _section(raw, "allocation")
     exits = _section(raw, "exit")
     execution = _section(raw, "execution")
+    entry = _section(raw, "entry")
     model = _section(raw, "model")
     runtime = _section(raw, "runtime")
     venue = _section(raw, "venue")
@@ -103,7 +125,9 @@ def load_hypervelocity_profile(path: Path | str) -> HypervelocityProfile:
     _validate_venue_costs(venue, costs, contract)
     _validate_orderbook(orderbook)
     _expect(runtime, "shadow_execution_model", "nautilus_event_v1")
-    regime_config = _validated_regime(_section(raw, "regime"))
+    regime = _section(raw, "regime")
+    regime_config = _validated_regime(regime)
+    policy = _validated_regime_policy(entry, regime)
     metalabel_mode = _text(runtime, "metalabel_mode")
     if metalabel_mode not in {"off", "observe"}:
         raise ValueError("runtime.metalabel_mode must be off|observe")
@@ -191,6 +215,14 @@ def load_hypervelocity_profile(path: Path | str) -> HypervelocityProfile:
         model_long_bundle=Path(_text(model, "long_bundle")),
         model_short_bundle=Path(_text(model, "short_bundle")),
         regime_config=regime_config,
+        execution_timeframe=cast(Literal["1m"], policy["execution_timeframe"]),
+        primary_timeframe=cast(Literal["5m"], policy["primary_timeframe"]),
+        context_timeframe=cast(Literal["15m"], policy["context_timeframe"]),
+        context_is_hard_gate=cast(bool, policy["context_is_hard_gate"]),
+        allowed_entry_states=cast(tuple[str, ...], policy["allowed_entry_states"]),
+        blocked_entry_states=cast(tuple[str, ...], policy["blocked_entry_states"]),
+        breakout_requires_direction=True,
+        confidence_is_gate=cast(bool, policy["confidence_is_gate"]),
     )
 
 
@@ -308,6 +340,32 @@ def _validated_regime(section: Mapping[str, object]) -> RegimeClassifierConfig:
             raise ValueError(f"regime.{key} must be {expected_value!r}, got {actual!r}")
         parameters[key] = cast(int | float, actual)
     return RegimeClassifierConfig(**parameters)
+
+
+def _validated_regime_policy(
+    entry: Mapping[str, object],
+    regime: Mapping[str, object],
+) -> dict[str, object]:
+    _expect(
+        entry,
+        "allowed_states",
+        ["TREND_UP", "TREND_DOWN", "BREAKOUT_DIRECTION_CONFIRMED"],
+    )
+    _expect(entry, "blocked_states", ["RANGE", "TRANSITION", "UNKNOWN"])
+    _expect(entry, "confidence_is_gate", False)
+    _expect(regime, "execution_timeframe", "1m")
+    _expect(regime, "primary_timeframe", "5m")
+    _expect(regime, "context_timeframe", "15m")
+    _expect(regime, "context_is_hard_gate", False)
+    return {
+        "execution_timeframe": "1m",
+        "primary_timeframe": "5m",
+        "context_timeframe": "15m",
+        "context_is_hard_gate": False,
+        "allowed_entry_states": ("TREND_UP", "TREND_DOWN", "BREAKOUT"),
+        "blocked_entry_states": ("RANGE", "TRANSITION", "UNKNOWN"),
+        "confidence_is_gate": False,
+    }
 
 
 def _section(raw: Mapping[str, object], name: str) -> Mapping[str, object]:

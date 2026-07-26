@@ -7,14 +7,17 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import pytest
 
 from hypervector.cli import main
 from hypervector.regime.hypervelocity_eval import (
+    _hard_30m_state,
     evaluate_breakout_quality,
     evaluate_entry_alignment,
     evaluate_hypervelocity_regimes,
     evaluate_range_quality,
 )
+from hypervector.strategies.hypervelocity_contract import faithful_regime_config
 
 
 def _decisions() -> pd.DataFrame:
@@ -295,6 +298,112 @@ def test_full_report_records_source_limitations() -> None:
         "hard_15m",
         "hard_30m",
     }
+    assert result.position_regime_performance["status"] == "unavailable"
+    assert result.cost_sensitivity["status"] == "unavailable"
+
+    unknown_source = evaluate_hypervelocity_regimes(
+        bars.drop(columns="source"),
+        positions,
+    )
+    assert unknown_source.bar_sources == ()
+    assert unknown_source.source_limited is True
+
+
+def test_report_slices_realized_positions_and_execution_cost_scenarios() -> None:
+    n = 240
+    index = pd.date_range("2026-01-01", periods=n, freq="1min", tz="UTC")
+    close = np.linspace(100.0, 110.0, n)
+    bars = pd.DataFrame(
+        {
+            "open": close,
+            "high": close + 0.05,
+            "low": close - 0.05,
+            "close": close,
+            "volume": 100.0,
+            "source": "hl",
+        },
+        index=index,
+    )
+    positions = pd.DataFrame(
+        {
+            "open_time_utc": [index[-1] + pd.Timedelta(minutes=1)],
+            "side": ["long"],
+            "symbol": ["BTC"],
+            "net_margin_pnl_pct": [8.0],
+            "fees_usd": [3.0],
+            "approx_margin_usd": [1_000.0],
+            "leverage": [40.0],
+        }
+    )
+
+    result = evaluate_hypervelocity_regimes(bars, positions)
+
+    performance = result.position_regime_performance
+    assert performance["status"] == "completed"
+    states = performance["states"]
+    assert isinstance(states, dict)
+    assert sum(state["positions"] for state in states.values()) == 1
+    scenarios = result.cost_sensitivity["scenarios"]
+    assert scenarios["maker_1_5bps_per_side"][
+        "mean_net_margin_pnl_pct"
+    ] == pytest.approx(7.1)
+    assert scenarios["taker_4_5bps_per_side"][
+        "mean_net_margin_pnl_pct"
+    ] == pytest.approx(4.7)
+
+
+def test_default_evaluation_uses_deployed_faithful_profile() -> None:
+    n = 240
+    index = pd.date_range("2026-01-01", periods=n, freq="1min", tz="UTC")
+    close = np.linspace(100.0, 110.0, n)
+    bars = pd.DataFrame(
+        {
+            "open": close,
+            "high": close + 0.05,
+            "low": close - 0.05,
+            "close": close,
+            "volume": 100.0,
+            "source": "hl",
+        },
+        index=index,
+    )
+    positions = pd.DataFrame(
+        {
+            "open_time_utc": [index[-1] + pd.Timedelta(minutes=1)],
+            "side": ["long"],
+            "symbol": ["BTC"],
+        }
+    )
+
+    implicit = evaluate_hypervelocity_regimes(bars, positions)
+    explicit = evaluate_hypervelocity_regimes(
+        bars,
+        positions,
+        config=faithful_regime_config(),
+    )
+
+    assert implicit == explicit
+
+
+def test_hard_30m_state_is_available_after_last_constituent_bar() -> None:
+    n = 1800
+    index = pd.date_range("2026-01-01", periods=n, freq="1min", tz="UTC")
+    close = np.linspace(100.0, 130.0, n)
+    bars = pd.DataFrame(
+        {
+            "open": close,
+            "high": close + 0.05,
+            "low": close - 0.05,
+            "close": close,
+            "volume": 100.0,
+        },
+        index=index,
+    )
+
+    state = _hard_30m_state(bars)
+
+    assert state.iloc[-2] == "UNKNOWN"
+    assert state.iloc[-1] == "TREND_UP"
 
 
 def test_cli_hypervelocity_regime_eval_is_report_only(

@@ -42,6 +42,8 @@ class HypervelocityMarketObservation:
     state_5m: str
     context_15m: str
     confidence: float
+    regime_strength_score: float
+    regime_score_source: str
     reason: str
 
 
@@ -63,6 +65,24 @@ def _classify_regimes(
     decisions = classify_multitimeframe(indexed, config=config)
     decisions.index = df.index
     return decisions
+
+
+def _latest_contiguous_bars(df: pd.DataFrame) -> pd.DataFrame:
+    """Return the latest uninterrupted one-minute segment for live inference."""
+    if isinstance(df.index, pd.DatetimeIndex):
+        timestamps = df.index
+    elif "timestamp" in df.columns:
+        timestamps = pd.DatetimeIndex(pd.to_datetime(df["timestamp"], utc=True))
+    else:
+        raise ValueError(
+            "Hypervelocity bars require a DatetimeIndex or timestamp column"
+        )
+    if len(timestamps) < 2:
+        return df
+    gaps = pd.Series(timestamps).diff().ne(pd.Timedelta(minutes=1)).to_numpy()
+    gap_positions = np.flatnonzero(gaps)
+    start = int(gap_positions[-1]) if len(gap_positions) else 0
+    return df.iloc[start:]
 
 
 def _entry_eligibility(decisions: pd.DataFrame, direction: Direction) -> pd.Series:
@@ -116,7 +136,10 @@ def current_hypervelocity_regime(
     """Return the latest causal regime state and side-specific eligibility."""
     if df.empty:
         raise ValueError("Hypervelocity regime observation requires at least one bar")
-    decisions = _classify_regimes(df, regime_config or faithful_regime_config())
+    decisions = _classify_regimes(
+        _latest_contiguous_bars(df),
+        regime_config or faithful_regime_config(),
+    )
     latest = decisions.iloc[-1]
     breakout = latest["breakout_direction"]
     breakout_value = None if pd.isna(breakout) else str(breakout)
@@ -136,7 +159,10 @@ def current_hypervelocity_market(
     """Return one causal direction, or none while no real trend is eligible."""
     if df.empty:
         raise ValueError("Hypervelocity market observation requires at least one bar")
-    decisions = _classify_regimes(df, regime_config or faithful_regime_config())
+    decisions = _classify_regimes(
+        _latest_contiguous_bars(df),
+        regime_config or faithful_regime_config(),
+    )
     latest = decisions.iloc[-1]
     breakout = latest["breakout_direction"]
     breakout_value = None if pd.isna(breakout) else str(breakout)
@@ -155,6 +181,12 @@ def current_hypervelocity_market(
         state_5m=str(latest.get("state_5m", latest["primary_regime"])),
         context_15m=str(latest.get("context_15m", PrimaryRegime.UNKNOWN.value)),
         confidence=float(latest.get("confidence", 0.0)),
+        regime_strength_score=float(
+            latest.get("regime_strength_score", latest.get("confidence", 0.0))
+        ),
+        regime_score_source=str(
+            latest.get("regime_score_source", "legacy_confidence_alias")
+        ),
         reason=str(latest.get("reason", "not_reported")),
     )
 

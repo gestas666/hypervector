@@ -119,7 +119,8 @@ def advance_hypervelocity_runtime(
             annotations.append(note)
     current = _rearm_consumed_direction(current, market.entry_direction)
     if not market.evidence_fresh:
-        annotations.append("execution_evidence_uncertain")
+        if _execution_uncertainty_is_actionable(current, market):
+            annotations.append("execution_evidence_uncertain")
         return RuntimeDecision(current, tuple(commands), annotations=tuple(annotations))
     current, cancellations = _manage_pending_entry(current, market)
     current, replacement = _ensure_position_target(current, market)
@@ -132,6 +133,17 @@ def advance_hypervelocity_runtime(
         tuple(commands),
         tuple(cancellations),
         tuple(annotations),
+    )
+
+
+def _execution_uncertainty_is_actionable(
+    state: HypervelocityRuntimeState,
+    market: RuntimeMarketState,
+) -> bool:
+    return (
+        market.entry_direction is not None
+        or state.pending_entry is not None
+        or state.position_quantity > 0.0
     )
 
 

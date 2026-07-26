@@ -25,6 +25,7 @@ impl App {
             latest.spread_bps = book.spread_bps;
             latest.opi = book.opi;
             latest.bid_depth_ratio = book.bid_depth_ratio;
+            latest.microstructure_source = book.source.clone();
         }
         self.current_index = self.snapshots.len() - 1;
         self.rebuild_events();

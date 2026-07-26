@@ -52,8 +52,8 @@ def test_candidate_generation_is_seeded_and_includes_baseline() -> None:
 
     assert first == second
     assert len(first) == 4
-    assert first[0]["ema_fast"] == 20
-    assert first[0]["ema_slow"] == 50
+    assert first[0]["ema_fast"] == 5
+    assert first[0]["ema_slow"] == 13
 
 
 def test_tuner_reports_every_trial_and_keeps_holdout_out_of_selection() -> None:
@@ -90,7 +90,7 @@ def test_tuner_reports_every_trial_and_keeps_holdout_out_of_selection() -> None:
     assert board.trials[1].status == "technical_failure"
     assert "ema_fast" in str(board.trials[1].error)
     assert board.selected_trial_id == 0
-    assert board.contract_candidate_trial_id == 0
+    assert board.contract_candidate_trial_id is None
 
 
 def test_tuner_does_not_abort_when_performance_is_poor() -> None:

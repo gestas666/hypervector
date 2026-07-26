@@ -958,6 +958,48 @@ def test_cli_forces_hypervelocity_model_policy_to_annotation_only(
     assert captured["metalabel_filter"] is False
 
 
+def test_hypervelocity_shadow_cli_uses_websocket_funding_authority(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    captured: dict[str, object] = {}
+
+    def fake_daemon(**kwargs: object) -> PaperDaemonResult:
+        captured.update(kwargs)
+        return PaperDaemonResult(
+            run_id="hv",
+            export_dir=Path("data/exports"),
+            decisions_path=tmp_path / "decisions.jsonl",
+            warm_bars=0,
+            live_bars=0,
+            bars_processed=0,
+            fills_count=0,
+            stop_reason="bounded",
+            execution_mode="shadow",
+        )
+
+    monkeypatch.setattr("hypervector.cli.start_paper_daemon", fake_daemon)
+
+    result = main(
+        [
+            "--data-root",
+            str(tmp_path / "data"),
+            "hypervelocity-shadow-run",
+            "--config",
+            "configs/hypervelocity_faithful.toml",
+            "--max-live-bars",
+            "0",
+        ]
+    )
+
+    assert result == 0
+    assert captured["enable_funding_refresh"] is False
+    output = json.loads(capsys.readouterr().out)
+    assert output["funding_authority"] == "hyperliquid_ws_activeAssetCtx"
+    assert output["rest_funding_refresh_enabled"] is False
+
+
 def test_cli_paper_run_mode_flag_wires_execution_mode(tmp_path: Path, monkeypatch):
     """paper-run --mode paper|shadow is forwarded to start_paper_daemon."""
     export = _write_strict_export(tmp_path)

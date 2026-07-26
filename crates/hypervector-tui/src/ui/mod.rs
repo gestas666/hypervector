@@ -1,5 +1,4 @@
-//! Ultra High-Density 2-Screen Telemetry UI Rendering Engine for Hypervector Regime Cockpit v2.0.
-//! Implements visual telemetry spec from docs/enhancements/2026-07-24-tui-regime-cockpit-eyecandy.md.
+//! Three-screen read-only renderer for authoritative backend telemetry.
 
 use chrono::{DateTime, NaiveDateTime, TimeZone, Utc};
 use chrono_tz::{America::New_York, Tz};
@@ -15,7 +14,7 @@ use ratatui::{
 use crate::app::App;
 use crate::backend_telemetry::BackendConnectionState;
 use crate::hypervelocity;
-use crate::model::RegimeState;
+use crate::model::{RegimeSnapshot, RegimeState};
 
 pub fn format_timestamp_display(ts: &str) -> String {
     let fixed_ts = normalized_timestamp(ts);
@@ -183,7 +182,7 @@ fn render_header(f: &mut Frame, app: &App, area: Rect) {
     };
 
     let text = vec![Line::from(vec![
-        Span::styled(" ⚡ HYPERVECTOR ENGINE ", app.theme.title),
+        Span::styled(" HYPERVECTOR ENGINE ", app.theme.title),
         Span::raw("│ "),
         Span::styled(" [1] DASHBOARD ", tab1_style),
         Span::raw("│ "),
@@ -219,11 +218,7 @@ fn render_timeline_ribbon(f: &mut Frame, app: &App, area: Rect) {
     }
     let total = app.snapshots.len();
     let inner_width = area.width.saturating_sub(2) as usize;
-    let start = if app.current_index > inner_width / 2 {
-        app.current_index - inner_width / 2
-    } else {
-        0
-    };
+    let start = app.current_index.saturating_sub(inner_width / 2);
     let end = (start + inner_width).min(total);
 
     let spans: Vec<Span> = app.snapshots[start..end]
@@ -236,7 +231,7 @@ fn render_timeline_ribbon(f: &mut Frame, app: &App, area: Rect) {
                 RegimeState::BearMomentum => app.theme.bear,
                 RegimeState::VolatilityCoiling => app.theme.coiling,
                 RegimeState::FundingCarry => app.theme.carry,
-                RegimeState::RangeChop => app.theme.chop,
+                RegimeState::RangeChop | RegimeState::Unknown => app.theme.chop,
             };
             if idx == app.current_index {
                 Span::styled("█", style.add_modifier(ratatui::style::Modifier::REVERSED))
@@ -291,16 +286,14 @@ fn render_screen_regime_detection(f: &mut Frame, app: &App, area: Rect) {
         ])
         .split(main_chunks[0]);
 
-    let (state_style, state_label) = match snap.state {
-        RegimeState::BullMomentum => (app.theme.bull, "🔥 TREND_UP (BULL MOMENTUM EXPANSION)"),
-        RegimeState::BearMomentum => (app.theme.bear, "🔻 TREND_DOWN (BEAR MOMENTUM EXPANSION)"),
-        RegimeState::VolatilityCoiling => (
-            app.theme.coiling,
-            "⚡ BREAKOUT (VOLATILITY COILING COMPRESSION)",
-        ),
-        RegimeState::FundingCarry => (app.theme.carry, "💰 TRANSITION (FUNDING CARRY REVERSAL)"),
-        RegimeState::RangeChop => (app.theme.chop, "🛡️ RANGE (RANGE CHOP / HIGH FRICTION)"),
+    let state_style = match snap.state {
+        RegimeState::BullMomentum => app.theme.bull,
+        RegimeState::BearMomentum => app.theme.bear,
+        RegimeState::VolatilityCoiling => app.theme.coiling,
+        RegimeState::FundingCarry => app.theme.carry,
+        RegimeState::RangeChop | RegimeState::Unknown => app.theme.chop,
     };
+    let state_label = snap.state.display_name();
 
     let conf_pct = (snap.confidence * 100.0).clamp(0.0, 100.0);
     let conf_bar_len = ((conf_pct / 100.0) * 16.0) as usize;
@@ -331,15 +324,15 @@ fn render_screen_regime_detection(f: &mut Frame, app: &App, area: Rect) {
         Line::from(vec![Span::styled(state_label, state_style)]),
         Line::from(vec![
             Span::raw("Canonical Primary: "),
-            Span::styled("5m (1m directional fallback)", app.theme.gold),
+            Span::styled("5m authoritative", app.theme.gold),
         ]),
         Line::from(vec![
             Span::raw("Context Only: "),
             Span::styled(
                 format!("15m [{}]", snap.trend_15m),
-                if snap.trend_15m == "BULL" {
+                if matches!(snap.trend_15m.as_str(), "TREND_UP" | "BULL") {
                     app.theme.bull
-                } else if snap.trend_15m == "BEAR" {
+                } else if matches!(snap.trend_15m.as_str(), "TREND_DOWN" | "BEAR") {
                     app.theme.bear
                 } else {
                     app.theme.chop
@@ -347,7 +340,7 @@ fn render_screen_regime_detection(f: &mut Frame, app: &App, area: Rect) {
             ),
         ]),
         Line::from(vec![
-            Span::raw("Model Conviction: "),
+            Span::raw("Structure Strength: "),
             Span::styled(
                 format!("[{}{}] {:.1}%", conf_fill, conf_empty, conf_pct),
                 app.theme.cyan,
@@ -391,9 +384,9 @@ fn render_screen_regime_detection(f: &mut Frame, app: &App, area: Rect) {
         Line::from(vec![
             Span::styled(
                 "● ",
-                if snap.trend_1m == "BULL" {
+                if matches!(snap.trend_1m.as_str(), "TREND_UP" | "BULL") {
                     app.theme.bull
-                } else if snap.trend_1m == "BEAR" {
+                } else if matches!(snap.trend_1m.as_str(), "TREND_DOWN" | "BEAR") {
                     app.theme.bear
                 } else {
                     app.theme.chop
@@ -406,9 +399,9 @@ fn render_screen_regime_detection(f: &mut Frame, app: &App, area: Rect) {
         Line::from(vec![
             Span::styled(
                 "● ",
-                if snap.trend_5m == "BULL" {
+                if matches!(snap.trend_5m.as_str(), "TREND_UP" | "BULL") {
                     app.theme.bull
-                } else if snap.trend_5m == "BEAR" {
+                } else if matches!(snap.trend_5m.as_str(), "TREND_DOWN" | "BEAR") {
                     app.theme.bear
                 } else {
                     app.theme.chop
@@ -416,16 +409,16 @@ fn render_screen_regime_detection(f: &mut Frame, app: &App, area: Rect) {
             ),
             Span::raw(" 5m PRIMARY: "),
             Span::styled(format!(" [{}] ", snap.trend_5m), app.theme.title),
-            Span::styled("CANONICAL (1m fallback)", app.theme.muted),
+            Span::styled("CANONICAL AUTHORITY", app.theme.muted),
         ]),
         Line::from(vec![
             Span::styled("* ", app.theme.gold),
             Span::styled("15m CONTEXT: ", app.theme.gold),
             Span::styled(
                 format!(" [{}] ", snap.trend_15m),
-                if snap.trend_15m == "BULL" {
+                if matches!(snap.trend_15m.as_str(), "TREND_UP" | "BULL") {
                     app.theme.bull
-                } else if snap.trend_15m == "BEAR" {
+                } else if matches!(snap.trend_15m.as_str(), "TREND_DOWN" | "BEAR") {
                     app.theme.bear
                 } else {
                     app.theme.chop
@@ -446,7 +439,7 @@ fn render_screen_regime_detection(f: &mut Frame, app: &App, area: Rect) {
         ]),
         Line::from(vec![
             Span::raw("Lookahead Guard: "),
-            Span::styled("ACTIVE (Shift+Right)", app.theme.bull),
+            Span::styled("COMPLETED BARS ONLY", app.theme.bull),
         ]),
     ];
 
@@ -458,63 +451,7 @@ fn render_screen_regime_detection(f: &mut Frame, app: &App, area: Rect) {
 
     f.render_widget(Paragraph::new(mtf_text).block(mtf_block), top_chunks[1]);
 
-    // SRS_TUI_EC7: Backend-published microstructure and funding telemetry
-    let opi_bipolar = render_bipolar_str(snap.opi, 1.0, "OPI");
-    let funding = app
-        .backend
-        .funding_rate_hourly
-        .map(|rate| format!("{:+.6}% / hour", rate * 100.0))
-        .unwrap_or_else(|| "not reported".into());
-
-    let micro_text = vec![
-        Line::from(vec![
-            Span::raw("OPI Order Flow: "),
-            Span::styled(
-                format!("({:+.2}) ", snap.opi),
-                if snap.opi >= 0.0 {
-                    app.theme.bull
-                } else {
-                    app.theme.bear
-                },
-            ),
-            Span::styled(opi_bipolar, app.theme.cyan),
-        ]),
-        Line::from(vec![
-            Span::raw("Funding Rate: "),
-            Span::styled(funding, app.theme.carry),
-        ]),
-        Line::from(vec![
-            Span::raw("Friction Spread: "),
-            Span::styled(format!("{:.1} bps ", snap.spread_bps), app.theme.title),
-            Span::styled(
-                if snap.spread_bps > 6.0 {
-                    "[HIGH FRICTION]"
-                } else {
-                    "[PASS]"
-                },
-                if snap.spread_bps > 6.0 {
-                    app.theme.chop
-                } else {
-                    app.theme.bull
-                },
-            ),
-        ]),
-        Line::from(vec![
-            Span::raw("Orderbook Depth: "),
-            Span::styled(
-                format!("{:.2}x Ratio ", snap.bid_depth_ratio),
-                app.theme.gold,
-            ),
-            Span::styled(
-                if snap.bid_depth_ratio >= 1.0 {
-                    "(Bids Dominant)"
-                } else {
-                    "(Asks Dominant)"
-                },
-                app.theme.muted,
-            ),
-        ]),
-    ];
+    let micro_text = microstructure_lines(app, snap);
 
     let micro_block = Block::default()
         .title(" MICROSTRUCTURE TELEMETRY ")
@@ -526,11 +463,7 @@ fn render_screen_regime_detection(f: &mut Frame, app: &App, area: Rect) {
 
     // 2. Real-time Price Action Range & Impulse Conviction Telemetry Panel
     let count = app.snapshots.len();
-    let start = if app.current_index > 60 {
-        app.current_index - 60
-    } else {
-        0
-    };
+    let start = app.current_index.saturating_sub(60);
     let end = (app.current_index + 1).min(count);
     let view_snaps = &app.snapshots[start..end];
 
@@ -570,13 +503,13 @@ fn render_screen_regime_detection(f: &mut Frame, app: &App, area: Rect) {
 
     f.render_widget(px_gauge, px_chunks[0]);
 
-    let conv_pct = (snap.confidence * 100.0).clamp(0.0, 100.0);
-    let conv_gauge = Gauge::default()
+    let strength_pct = (snap.confidence * 100.0).clamp(0.0, 100.0);
+    let strength_gauge = Gauge::default()
         .block(
             Block::default()
                 .title(format!(
-                    " IMPULSE CONVICTION & DYNAMIC LEVERAGE ENGINE ({:.1}%) ",
-                    conv_pct
+                    " REGIME STRUCTURE STRENGTH - REPORT ONLY ({:.1}%) ",
+                    strength_pct
                 ))
                 .title_style(app.theme.title)
                 .borders(Borders::ALL)
@@ -587,13 +520,17 @@ fn render_screen_regime_detection(f: &mut Frame, app: &App, area: Rect) {
         } else {
             app.theme.coiling
         })
-        .percent(conv_pct as u16)
+        .percent(strength_pct as u16)
         .label(format!(
-            "Conviction: {:.1}% │ Dyn Lev: {:.2}x / {:.1}x",
-            conv_pct, snap.dynamic_leverage, snap.max_leverage
+            "Structure score: {:.1}% │ Source: {}",
+            strength_pct,
+            app.backend
+                .latest_regime_score_source
+                .as_deref()
+                .unwrap_or("snapshot_not_reported")
         ));
 
-    f.render_widget(conv_gauge, px_chunks[1]);
+    f.render_widget(strength_gauge, px_chunks[1]);
 
     // 3. Visual Graphics Row (Orderbook BarChart + Regime Histogram BarChart)
     let graphic_chunks = Layout::default()
@@ -604,8 +541,14 @@ fn render_screen_regime_detection(f: &mut Frame, app: &App, area: Rect) {
         ])
         .split(main_chunks[2]);
 
-    let bid_val = (snap.bid_depth_ratio * 100.0) as u64;
-    let ask_val = (100.0 / snap.bid_depth_ratio.max(0.1)) as u64;
+    let (bid_val, ask_val) = if snap.microstructure_source == "not_available" {
+        (0, 0)
+    } else {
+        (
+            (snap.bid_depth_ratio * 100.0) as u64,
+            (100.0 / snap.bid_depth_ratio.max(0.1)) as u64,
+        )
+    };
 
     let ob_barchart = BarChart::default()
         .block(
@@ -623,47 +566,14 @@ fn render_screen_regime_detection(f: &mut Frame, app: &App, area: Rect) {
 
     f.render_widget(ob_barchart, graphic_chunks[0]);
 
+    let counts = distribution_counts(app);
     let regime_hist_data = [
-        (
-            "TREND_UP",
-            if snap.state == RegimeState::BullMomentum {
-                90
-            } else {
-                30
-            },
-        ),
-        (
-            "TREND_DOWN",
-            if snap.state == RegimeState::BearMomentum {
-                90
-            } else {
-                20
-            },
-        ),
-        (
-            "BREAKOUT",
-            if snap.state == RegimeState::VolatilityCoiling {
-                90
-            } else {
-                15
-            },
-        ),
-        (
-            "TRANSITION",
-            if snap.state == RegimeState::FundingCarry {
-                90
-            } else {
-                25
-            },
-        ),
-        (
-            "RANGE",
-            if snap.state == RegimeState::RangeChop {
-                90
-            } else {
-                40
-            },
-        ),
+        ("TREND_UP", counts[0] as u64),
+        ("TREND_DOWN", counts[1] as u64),
+        ("BREAKOUT", counts[2] as u64),
+        ("TRANSITION", counts[3] as u64),
+        ("RANGE", counts[4] as u64),
+        ("UNKNOWN", counts[5] as u64),
     ];
 
     let regime_barchart = BarChart::default()
@@ -735,27 +645,34 @@ fn render_screen_regime_detection(f: &mut Frame, app: &App, area: Rect) {
     render_event_log(f, app, main_chunks[5]);
 }
 
-// SRS_TUI_EC7 Helper: Bipolar center-zero meter string
-fn render_bipolar_str(val: f64, max_val: f64, _label: &str) -> String {
-    let width = 10;
-    let norm = (val / max_val).clamp(-1.0, 1.0);
-    let center = width / 2;
-    let offset = (norm * (center as f64)).round() as i32;
-
-    let mut chars = vec!['─'; width];
-    chars[center] = '│';
-
-    if offset > 0 {
-        for i in (center + 1)..=(center + offset as usize).min(width - 1) {
-            chars[i] = '█';
-        }
-    } else if offset < 0 {
-        let left_idx = (center as i32 + offset).max(0) as usize;
-        for i in left_idx..center {
-            chars[i] = '█';
-        }
+fn microstructure_lines(app: &App, snap: &RegimeSnapshot) -> Vec<Line<'static>> {
+    let funding = app
+        .backend
+        .funding_rate_hourly
+        .map(|rate| format!("{:+.6}% / hour", rate * 100.0))
+        .unwrap_or_else(|| "not reported".into());
+    if snap.microstructure_source == "not_available" {
+        return vec![
+            Line::from("Orderbook telemetry: not available"),
+            Line::from(vec![
+                Span::raw("Funding Rate: "),
+                Span::styled(funding, app.theme.carry),
+            ]),
+            Line::from("OPI / spread / depth: not reported"),
+        ];
     }
-    format!("[{}]", chars.into_iter().collect::<String>())
+    vec![
+        Line::from(format!("Source: {}", snap.microstructure_source)),
+        Line::from(format!(
+            "OPI {:+.2} | Spread {:.1} bps",
+            snap.opi, snap.spread_bps
+        )),
+        Line::from(format!("Bid/ask depth ratio {:.2}x", snap.bid_depth_ratio)),
+        Line::from(vec![
+            Span::raw("Funding Rate: "),
+            Span::styled(funding, app.theme.carry),
+        ]),
+    ]
 }
 
 // SRS_TUI_EC8: Horizontal State Distribution Bar
@@ -763,13 +680,24 @@ fn render_distribution_bar(f: &mut Frame, app: &App, area: Rect) {
     if area.width < 10 || app.snapshots.is_empty() {
         return;
     }
-    let [bull_cnt, bear_cnt, coil_cnt, carry_cnt, chop_cnt] = distribution_counts(app);
-    let total = f64::max(bull_cnt + bear_cnt + coil_cnt + carry_cnt + chop_cnt, 1.0);
+    let [
+        bull_cnt,
+        bear_cnt,
+        breakout_cnt,
+        transition_cnt,
+        range_cnt,
+        unknown_cnt,
+    ] = distribution_counts(app);
+    let total = f64::max(
+        bull_cnt + bear_cnt + breakout_cnt + transition_cnt + range_cnt + unknown_cnt,
+        1.0,
+    );
     let bull_pct = (bull_cnt / total) * 100.0;
     let bear_pct = (bear_cnt / total) * 100.0;
-    let coil_pct = (coil_cnt / total) * 100.0;
-    let carry_pct = (carry_cnt / total) * 100.0;
-    let chop_pct = (chop_cnt / total) * 100.0;
+    let breakout_pct = (breakout_cnt / total) * 100.0;
+    let transition_pct = (transition_cnt / total) * 100.0;
+    let range_pct = (range_cnt / total) * 100.0;
+    let unknown_pct = (unknown_cnt / total) * 100.0;
 
     let line = Line::from(vec![
         Span::styled(
@@ -779,26 +707,32 @@ fn render_distribution_bar(f: &mut Frame, app: &App, area: Rect) {
         Span::styled("│ ", app.theme.border),
         Span::styled(format!("TREND_DOWN {:.0}% ", bear_pct), app.theme.bear),
         Span::styled("│ ", app.theme.border),
-        Span::styled(format!("BREAKOUT {:.0}% ", coil_pct), app.theme.coiling),
+        Span::styled(format!("BREAKOUT {:.0}% ", breakout_pct), app.theme.coiling),
         Span::styled("│ ", app.theme.border),
-        Span::styled(format!("TRANSITION {:.0}% ", carry_pct), app.theme.carry),
+        Span::styled(
+            format!("TRANSITION {:.0}% ", transition_pct),
+            app.theme.carry,
+        ),
         Span::styled("│ ", app.theme.border),
-        Span::styled(format!("RANGE {:.0}%", chop_pct), app.theme.chop),
+        Span::styled(format!("RANGE {:.0}% ", range_pct), app.theme.chop),
+        Span::styled("│ ", app.theme.border),
+        Span::styled(format!("UNKNOWN {:.0}%", unknown_pct), app.theme.muted),
     ]);
 
     f.render_widget(Paragraph::new(line).alignment(Alignment::Center), area);
 }
 
-fn distribution_counts(app: &App) -> [f64; 5] {
+fn distribution_counts(app: &App) -> [f64; 6] {
     if !app.backend.regime_history.is_empty() {
-        let mut counts = [0.0; 5];
+        let mut counts = [0.0; 6];
         for regime in &app.backend.regime_history {
             let index = match regime.as_str() {
                 "TREND_UP" => 0,
                 "TREND_DOWN" => 1,
                 "BREAKOUT" => 2,
                 "TRANSITION" => 3,
-                _ => 4,
+                "RANGE" => 4,
+                _ => 5,
             };
             counts[index] += 1.0;
         }
@@ -817,8 +751,8 @@ fn distribution_counts(app: &App) -> [f64; 5] {
     counts_for_states(&states)
 }
 
-fn counts_for_states(states: &[RegimeState]) -> [f64; 5] {
-    let mut counts = [0.0; 5];
+fn counts_for_states(states: &[RegimeState]) -> [f64; 6] {
+    let mut counts = [0.0; 6];
     for state in states {
         let index = match state {
             RegimeState::BullMomentum => 0,
@@ -826,6 +760,7 @@ fn counts_for_states(states: &[RegimeState]) -> [f64; 5] {
             RegimeState::VolatilityCoiling => 2,
             RegimeState::FundingCarry => 3,
             RegimeState::RangeChop => 4,
+            RegimeState::Unknown => 5,
         };
         counts[index] += 1.0;
     }
@@ -1000,28 +935,32 @@ fn render_dynamic_leverage_panel(f: &mut Frame, app: &App, area: Rect) {
     let snap = app.current_snapshot();
     let stats = &app.paper_stats;
 
-    let lev_pct = ((snap.dynamic_leverage / snap.max_leverage) * 100.0).clamp(0.0, 100.0);
+    let lev_pct = if snap.max_leverage > 0.0 {
+        ((snap.dynamic_leverage / snap.max_leverage) * 100.0).clamp(0.0, 100.0)
+    } else {
+        0.0
+    };
     let lev_bar_len = ((lev_pct / 100.0) * 12.0) as usize;
     let lev_fill = "█".repeat(lev_bar_len);
     let lev_empty = "░".repeat(12 - lev_bar_len);
 
-    let lw_pct = (snap.long_weight / 2.0).clamp(0.0, 1.0);
+    let lw_pct = snap.long_weight.clamp(0.0, 1.0);
     let lw_len = (lw_pct * 10.0) as usize;
     let lw_fill = "█".repeat(lw_len);
     let lw_empty = "░".repeat(10 - lw_len);
 
-    let sw_pct = (snap.short_weight / 2.0).clamp(0.0, 1.0);
+    let sw_pct = snap.short_weight.clamp(0.0, 1.0);
     let sw_len = (sw_pct * 10.0) as usize;
     let sw_fill = "█".repeat(sw_len);
     let sw_empty = "░".repeat(10 - sw_len);
 
     let net_weight = snap.long_weight - snap.short_weight;
     let (net_str, net_style) = if net_weight > 0.0 {
-        (format!("+{:.2}x NET LONG", net_weight), app.theme.bull)
+        ("LONG".to_string(), app.theme.bull)
     } else if net_weight < 0.0 {
-        (format!("{:.2}x NET SHORT", net_weight), app.theme.bear)
+        ("SHORT".to_string(), app.theme.bear)
     } else {
-        ("0.00x FLAT".into(), app.theme.gold)
+        ("NONE".into(), app.theme.gold)
     };
 
     let pnl_sign = if stats.realized_pnl >= 0.0 { "+" } else { "" };
@@ -1033,7 +972,7 @@ fn render_dynamic_leverage_panel(f: &mut Frame, app: &App, area: Rect) {
 
     let policy_text = vec![
         Line::from(vec![
-            Span::raw("Dynamic Leverage: "),
+            Span::raw("Eligible Leverage: "),
             Span::styled(
                 format!(
                     "[{}{}] {:.2}x / {:.1}x",
@@ -1041,44 +980,26 @@ fn render_dynamic_leverage_panel(f: &mut Frame, app: &App, area: Rect) {
                 ),
                 app.theme.gold,
             ),
-            Span::raw(" │ Net Position: "),
+            Span::raw(" │ Eligible Side: "),
             Span::styled(net_str, net_style),
         ]),
         Line::from(vec![
-            Span::raw("Long Alloc: "),
+            Span::raw("Long Eligible: "),
             Span::styled(
-                format!("[{}{}] {:.2}x", lw_fill, lw_empty, snap.long_weight),
+                format!("[{}{}] {:.0}%", lw_fill, lw_empty, lw_pct * 100.0),
                 app.theme.bull,
             ),
-            Span::raw(" │ Short Alloc: "),
+            Span::raw(" │ Short Eligible: "),
             Span::styled(
-                format!("[{}{}] {:.2}x", sw_fill, sw_empty, snap.short_weight),
+                format!("[{}{}] {:.0}%", sw_fill, sw_empty, sw_pct * 100.0),
                 app.theme.bear,
             ),
         ]),
-        Line::from(vec![
-            Span::raw("OPI Flow: "),
-            Span::styled(
-                format!("({:+.2}) ", snap.opi),
-                if snap.opi >= 0.0 {
-                    app.theme.bull
-                } else {
-                    app.theme.bear
-                },
-            ),
-            Span::styled(
-                if snap.opi >= 0.0 {
-                    "BULLISH_FLOW"
-                } else {
-                    "BEARISH_FLOW"
-                },
-                app.theme.cyan,
-            ),
-            Span::raw(" │ Funding Z: "),
-            Span::styled(format!("{:.2}", snap.funding_zscore), app.theme.carry),
-            Span::raw(" │ RSI (14): "),
-            Span::styled(format!("{:.1}", snap.rsi), app.theme.cyan),
-        ]),
+        Line::from(if snap.microstructure_source == "not_available" {
+            format!("OPI Flow: not reported │ RSI (14): {:.1}", snap.rsi)
+        } else {
+            format!("OPI Flow: {:+.2} │ RSI (14): {:.1}", snap.opi, snap.rsi)
+        }),
         Line::from(vec![
             Span::raw("Account: "),
             Span::raw("Equity "),
@@ -1102,7 +1023,7 @@ fn render_dynamic_leverage_panel(f: &mut Frame, app: &App, area: Rect) {
     ];
 
     let policy_block = Block::default()
-        .title(" DYNAMIC LEVERAGE & NET POSITION SIZING ENGINE ")
+        .title(" BACKEND ENTRY POLICY & ACCOUNT TELEMETRY ")
         .title_style(app.theme.title)
         .borders(Borders::ALL)
         .border_style(app.theme.border_active);
@@ -1219,7 +1140,7 @@ fn render_event_log(f: &mut Frame, app: &App, area: Rect) {
                     RegimeState::BearMomentum => app.theme.bear,
                     RegimeState::VolatilityCoiling => app.theme.coiling,
                     RegimeState::FundingCarry => app.theme.carry,
-                    RegimeState::RangeChop => app.theme.chop,
+                    RegimeState::RangeChop | RegimeState::Unknown => app.theme.chop,
                 }
             };
 
@@ -1703,7 +1624,7 @@ fn render_help_overlay(f: &mut Frame, app: &App, area: Rect) {
 
     let lines = vec![
         Line::from(vec![Span::styled(
-            "⚡ HYPERVECTOR ULTIMATE REGIME ENGINE RULES & KEYBINDINGS",
+            "HYPERVECTOR CANONICAL REGIME POLICY & KEYBINDINGS",
             app.theme.title,
         )]),
         Line::from(vec![Span::styled(
@@ -1711,51 +1632,56 @@ fn render_help_overlay(f: &mut Frame, app: &App, area: Rect) {
             app.theme.border,
         )]),
         Line::from(vec![Span::styled(
-            "🏛️ 5-TIER MICROSTRUCTURE REGIME CLASSIFICATION RULES:",
+            "BACKEND REGIME CLASSIFICATION ROLES:",
             app.theme.gold,
         )]),
         Line::from(vec![Span::styled(
-            "  TREND_UP       : 5m primary trend (1m directional fallback possible)",
+            "  TREND_UP       : authoritative 5m positive trend structure",
             app.theme.bull,
         )]),
         Line::from(vec![Span::styled(
-            "  TREND_DOWN     : 5m primary trend (1m directional fallback possible)",
+            "  TREND_DOWN     : authoritative 5m negative trend structure",
             app.theme.bear,
         )]),
         Line::from(vec![Span::styled(
-            "  ⚡ BREAKOUT       : BBWP Compression Percentile < 20.0 (Coiling)",
+            "  BREAKOUT       : matching directional 1m and 5m breakout confirmation",
             app.theme.coiling,
         )]),
         Line::from(vec![Span::styled(
-            "  💰 TRANSITION     : Funding Rate Z-Score |Z| >= 1.8 (Carry Reversal)",
+            "  TRANSITION     : mixed 5m structure; entry blocked",
             app.theme.carry,
         )]),
         Line::from(vec![Span::styled(
-            "  🛡️ RANGE          : Choppiness Index > 55 or Spread > 6.0 bps",
+            "  RANGE          : 5m range/chop/compression structure; entry blocked",
             app.theme.chop,
         )]),
         Line::from(vec![Span::styled(
-            "───────────────────────────────────────────────────────────────────",
-            app.theme.border,
+            "  UNKNOWN        : incomplete warmup; entry blocked",
+            app.theme.muted,
         )]),
         Line::from(vec![Span::styled(
-            "📊 DYNAMIC LEVERAGE SCALING (HYPERTRADER 1M IMPULSE ML):",
+            "  15m context is reported but is not an entry veto",
             app.theme.gold,
         )]),
+        Line::from(vec![Span::styled(
+            "───────────────────────────────────────────────────────────────────",
+            app.theme.border,
+        )]),
+        Line::from(vec![Span::styled("SCORE SEMANTICS:", app.theme.gold)]),
         Line::from(vec![Span::raw(
-            "  L_dynamic = clamp(L_cap * conviction * (1 + |OPI| * 0.5), 1.0, L_cap)",
+            "  Structure strength is an EMA-gap percentile diagnostic, not an ML probability or gate.",
         )]),
         Line::from(vec![Span::styled(
             "───────────────────────────────────────────────────────────────────",
             app.theme.border,
         )]),
         Line::from(vec![Span::styled(
-            "⌨️ INTERACTIVE KEYBOARD CONTROLS:",
+            "INTERACTIVE KEYBOARD CONTROLS:",
             app.theme.cyan,
         )]),
         Line::from(vec![
             Span::styled("  [Tab / 1-3]   ", app.theme.gold),
-            Span::raw("Switch View Screen (1: Regime Engine, 2: Dashboard, 3: Config)"),
+            Span::raw("Switch View Screen (1: Dashboard, 2: Regime, 3: Config)"),
         ]),
         Line::from(vec![
             Span::styled("  [Space]       ", app.theme.gold),

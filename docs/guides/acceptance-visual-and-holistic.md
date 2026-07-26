@@ -1,363 +1,143 @@
-# Acceptance Guide — Visual Pass (tickrs bar) + Holistic CLI ↔ TUI
+# Hypervelocity TUI visual and backend-parity acceptance
 
-**Audience:** Albert (ops owner) + agents assisting review  
-**When:** After Phase 5 `hypervector-tui` implementation (Tasks 1–9 done)  
-**Outcome:** Signed visual + holistic acceptance **before** any GUI work  
-**Status:** Shadow Ops Floor bar (2026-07-23) — thin projector rejected  
-**Related:** `docs/superpowers/specs/2026-07-23-phase5-tui-design.md`, `docs/superpowers/specs/2026-07-23-phase4c-cli-completeness-design.md`, `HANDOFF.md`
+## Scope and success criteria
 
----
+The TUI is a read-only projection of the Python shadow backend. Acceptance
+requires all three screens to show the same run, portfolio, regime, execution,
+cost, and L2 facts found in the active backend ledger. The TUI must not create
+orders, trades, labels, probabilities, distributions, or fallback market data.
 
-## 0. What “ready” means
-
-| Gate | Owner | Pass criteria |
-|------|--------|----------------|
-| **A. Automated** | CI / agent | `cargo test -p hypervector-tui` green; offline pytest green; no network required |
-| **B. Visual (tickrs bar)** | Albert | Floor density, mode banner, KPI craft meet peer bar (not default ratatui demo) |
-| **C. Holistic CLI ↔ TUI** | Albert (+ agent assist) | Same truth: status/gates/tape/regime match CLI JSON within one refresh; safety rules hold |
-| **D. GUI reopen** | Albert | Only after B + C signed — GUI remains **deferred** until then |
-
-This guide is the playbook for **B** and **C**. Gate A was already exercised on implementation.
-
----
-
-## 1. Pre-flight (5 minutes)
+Automated acceptance:
 
 ```bash
-cd /Users/gestas/Prototypes/hypervector   # or your clone
-git checkout main && git pull
-uv sync --all-extras
 uv run pytest tests/ -q -m "not network"
-cargo test -p hypervector-tui
-cargo build -p hypervector-tui --release
-uv run python -m hypervector status
-```
-
-**Expect:** offline pytest ~279+; TUI tests 28; status JSON `ok: true`, honesty flags true, no secret strings.
-
-**Terminal:** Prefer a truecolor emulator (Ghostty, Kitty, WezTerm, modern iTerm2). Size ≥ **120×32** (absolute minimum **80×24** for banner visibility).
-
-**Optional demo tape** (if paper decisions empty):
-
-```bash
-mkdir -p data/paper/decisions
-cp crates/hypervector-tui/tests/fixtures/decisions_paper.jsonl \
-   data/paper/decisions/decisions.jsonl
-```
-
----
-
-## 2. Visual pass — tickrs / density bar
-
-### 2.1 Reference peers (what “good” looks like)
-
-| Peer | Steal for hypervector-tui | Do **not** copy |
-|------|---------------------------|-----------------|
-| **[tickrs](https://github.com/tarkah/tickrs)** | Dense market-style numbers, readable sparklines, summary collapse, cadence feel | Full Yahoo watchlist product |
-| **btop** | Card packing, notched titles, right-aligned metrics | System-monitor module soup |
-| **k9s** | Mode/context always obvious; keyboard-first | Cluster admin chrome |
-| **bottom** | Clean multi-panel resize | Generic status bars only |
-
-**One-sentence bar:**  
-*“At a glance I know mode, DRY-RUN READY vs LIVE REFUSED, regime mix, price/activity charts, and last decisions — without squinting or hunting menus.”*
-
-### 2.2 Launch surfaces
-
-```bash
-# Primary
-./target/release/hypervector-tui --data-root data
-
-# Dev
-cargo run -p hypervector-tui -- --data-root data --refresh-ms 1000 --tape auto
-```
-
-Keys reminder: `?` help · `Tab` focus card · `Enter` focus view · `Esc` floor · `r` refresh · `R` regime · `p`/`l`/`a` tape · `q` quit.
-
-### 2.3 Visual checklist (tick every row)
-
-Score each: **PASS / FAIL / N/A**. Failures need a note (screenshot path optional).
-
-#### Mode & stress clarity (k9s / safety)
-
-| # | Check | PASS criteria |
-|---|--------|----------------|
-| V1 | Mode banner always visible | Full-width; no scroll needed on ≥24 rows; shows SHADOW / PAPER / LIVE |
-| V2 | LIVE danger | LIVE uses high-contrast (e.g. white on red); still read-only |
-| V3 | Network | Banner or gates show **mainnet** (no testnet path) |
-| V4 | Read-only obvious | Footer or banner signals monitor-only / no arm from TUI |
-
-#### Density & craft (tickrs / btop)
-
-| # | Check | PASS criteria |
-|---|--------|----------------|
-| V5 | Card packing | Gates \| KPI mid row; Regime \| Tape lower; no large empty voids on 120×32 |
-| V6 | KPI primary | Decision count large (big-text) when height allows; compact bold when short |
-| V7 | Sparkline / gauge | Tape activity sparkline readable; notional/utilization gauge not raw dump |
-| V8 | Tape table | Columns aligned (time, mode, action, side, sub, px); newest-first feels ops-grade |
-| V9 | Theme | Semantic colors (live danger, up/down regime, muted chrome); not greyscale default boxes |
-| V10 | Rounded chrome | Cards use rounded borders / clear titles; focused card border stronger |
-
-#### Empty & error states
-
-| # | Check | PASS criteria |
-|---|--------|----------------|
-| V11 | Cold empty | Empty tape shows designed copy, not panic/blank panel |
-| V12 | Regime cold | “press R” / no metrics hint when regime unavailable |
-| V13 | Toast | Soft CLI/probe errors toast without secrets |
-| V14 | Quit restore | After `q` / Ctrl+C, shell is normal (no stuck raw mode / garbled prompt) |
-
-#### Motion (optional design goals)
-
-| # | Check | PASS criteria |
-|---|--------|----------------|
-| V15 | Sparse motion | Skeleton on first load OK; no rain/particles/carnival |
-| V16 | Focus only two views | Enter → Focus; Esc → Floor; **no third screen** |
-| V17 | Charts present | KPI card shows price + activity sparklines (and equity when derivable); not empty when tape has marks |
-| V18 | Dry-run chip | Banner shows DRY-RUN READY for honest shadow/paper; LIVE REFUSED when live cannot start |
-
-### 2.4 Visual sign-off block (copy into HANDOFF or PR)
-
-```text
-VISUAL PASS — hypervector-tui
-Date:
-Terminal:
-Size:
-Tape mode used: paper / live / auto
-V1–V16: (list FAIL only)
-Overall: PASS | FAIL
-Reviewer:
-Notes:
-```
-
-**PASS rule:** No FAIL on V1–V4, V11–V14, V16–V18. Soft fails on V15 only if still non-carnival. Density V5–V10: at most one minor nit if still ops-usable.
-
----
-
-## 3. Holistic CLI ↔ TUI acceptance
-
-Goal: TUI is a **projection** of CLI/ledger truth — not a second brain.
-
-### 3.1 Safety invariants (hard fail if broken)
-
-| ID | Invariant | How to verify |
-|----|-----------|---------------|
-| S1 | TUI never spawns `paper-run` / `live-run` | Source allowlist + `cargo test -p hypervector-tui read_only` / static guard |
-| S2 | No secret values on screen | Set dummy env names present; open TUI; only `secrets present=true/false` — never key material |
-| S3 | Paper tape cannot bind live path | `p` vs `l` toggles; path footer shows correct segment |
-| S4 | Live fail-closed honesty | `status` / footer: live fail-closed; paper no_submit |
-| S5 | Terminal restore | Quit leaves usable shell |
-
-### 3.2 Parity protocol (CLI truth → TUI)
-
-Run CLI and TUI against the **same** `--data-root`.
-
-#### Step C1 — Status / honesty
-
-```bash
-uv run python -m hypervector --data-root data status | tee /tmp/hv-status.json
-```
-
-In TUI (after `r`):
-
-| CLI field | TUI location | Match? |
-|-----------|--------------|--------|
-| `live.submit_wired` | Gates card | |
-| `live.can_start` | Gates card | |
-| `live.max_notional_usd` | Gates / KPI gauge context | |
-| `live.network` | Banner / gates | |
-| `paper.no_submit` | Gates / health | |
-| `honesty.*` | Health footer | |
-
-#### Step C2 — Paper gates
-
-```bash
-uv run python -m hypervector --data-root data paper-check | tee /tmp/hv-paper-check.json
-```
-
-| CLI field | TUI | Match? |
-|-----------|-----|--------|
-| `paper.execution_mode` / `mode` | Mode banner default / gates | |
-| `paper.book_feed`, `l2_walk_available` | Gates bools | |
-| `paper.secrets_present` | Gates (bool only) | |
-| `live.readiness.can_start` / nested live | Gates live section | |
-
-#### Step C3 — Live gates
-
-```bash
-uv run python -m hypervector --data-root data live-check | tee /tmp/hv-live-check.json
-```
-
-| CLI field | TUI | Match? |
-|-----------|-----|--------|
-| `live.enabled`, `armed`, `can_start` | Gates | |
-| `start_gate` / reason | Gates (if shown) | |
-| `submit_wired` | Gates | |
-| `venue_submit` must be false on check | Never shows as actively submitting | |
-
-#### Step C4 — Decision tape
-
-```bash
-# Ensure sample or real paper decisions exist
-uv run python -m hypervector --data-root data paper-report --last 5 | tee /tmp/hv-paper-report.json
-```
-
-In TUI: press `p` (paper). Confirm:
-
-- Row count on tape ≥ min(rows, display window)  
-- Actions / modes consistent with report `action` / `execution_mode` histograms  
-- `submitted` column shows N/false for paper/shadow honesty  
-
-Toggle `l` (live): path footer must use `live/decisions`; empty state if no live file.
-
-#### Step C4b — Effective Hypervelocity backend contract
-
-Start a bounded shadow run and open the TUI backend-configuration screen. The
-TUI values must equal the latest `session_start` row; it must not substitute its
-display fallback when telemetry is connected.
-
-| Backend ledger field | Required displayed value |
-|----------------------|--------------------------|
-| `strategy_params.leverage` | `40.0` |
-| `strategy_params.target_margin_pct` | `8.0` |
-| `risk.margin_fraction` | `0.7` |
-| `risk.notional_fraction` | `28.0` |
-| `exits.mode` | `strategy_target_only` |
-| `exits.stop` | `null` |
-| `execution.order_type` / `time_in_force` | `limit` / `post_only` |
-| `execution.fill_rule` | `through_one_tick` |
-| `metalabel_mode` | `off` or `observe`; never `scale`/`filter` for Hypervelocity |
-
-In the decision tape, `submit_entry` is a pending order and must not create a
-trade or position. Only a later backend `enter_long`/`enter_short` row with
-positive `fill_qty` may do so. A `cancel_entry` row remains a non-trade event.
-
-#### Step C5 — Regime
-
-```bash
-# May hit network/cache; for offline inject fixture via --fixture-regime in advanced runs
-uv run python -m hypervector --data-root data regime 2>/dev/null | tee /tmp/hv-regime.json
-```
-
-In TUI: press `R` (or wait for timer). Compare:
-
-| CLI `metrics.*` | TUI Regime card |
-|-----------------|-----------------|
-| `pct_up`, `pct_down`, `pct_range` | Percent labels / bars |
-| `flip_rate`, `mean_duration`, `n_bars` | Meta line / focus table |
-| Dominant label | Badge matches largest share |
-
-**Hard rule:** TUI must not invent EMA labels in Rust — only display probe/fixture metrics.
-
-#### Step C6 — Focus navigation
-
-1. `Tab` through cards — focus border moves  
-2. `Enter` on Regime / Tape / Gates — full height content  
-3. `Esc` always returns Floor  
-4. Confirm enum/UI: **only two views**
-
-#### Step C7 — Cross-surface honesty (paper vs live)
-
-| Surface | Expect |
-|---------|--------|
-| Paper report | `no_submit` / submitted false or absent |
-| Live report | Can show submitted when live ran; still no secrets |
-| TUI health | paper_no_submit · live_fail_closed · secrets never printed |
-
-### 3.3 Holistic sign-off block
-
-```text
-HOLISTIC CLI↔TUI ACCEPTANCE
-Date:
-data-root:
-C1 status parity: PASS|FAIL
-C2 paper-check: PASS|FAIL
-C3 live-check: PASS|FAIL
-C4 tape/config vs backend ledger: PASS|FAIL
-C5 regime: PASS|FAIL|SKIP (reason)
-C6 two views: PASS|FAIL
-C7 honesty: PASS|FAIL
-S1–S5 safety: PASS|FAIL
-Overall: PASS|FAIL
-Reviewer:
-Blockers:
-```
-
-**PASS rule:** All S1–S5 PASS; C1–C4, C6–C7 PASS; C5 PASS or SKIP only if offline/no cache with documented reason.
-
----
-
-## 4. Agent assist (how agents should help)
-
-Agents **may**:
-
-- Run Gate A and C1–C5 CLI captures  
-- Diff CLI JSON vs TUI model parsers / fixtures  
-- File a structured FAIL report against V#/C#/S# IDs  
-- Seed fixtures; never invent live secrets  
-
-Agents **must not**:
-
-- Claim visual PASS for Albert (V1–V16 needs human eyes)  
-- Run `live-run --enabled --i-accept-live-risk` without explicit Albert order + secrets  
-- Push GUI work before B+C signed  
-
-Use skill: **`hypervector-cli`** for correct CLI invocation; **`hypervector-acceptance`** for this checklist workflow.
-
----
-
-## 5. After both gates PASS
-
-1. Update `HANDOFF.md`: Visual **PASS**, Holistic **PASS**, Phase 5 **accepted**.  
-2. Optional: tag `phase5-tui-accepted`.  
-3. **Only then** open GUI design (separate epic).  
-4. Do not weaken read-only TUI control plane without a new design pass.
-
----
-
-## 6. Quick reference — commands
-
-```bash
-# Inventory
-uv run python -m hypervector --data-root data status
-
-# Gates
-uv run python -m hypervector --data-root data paper-check
-uv run python -m hypervector --data-root data live-check
-
-# Ledgers (read-only)
-uv run python -m hypervector --data-root data paper-report --last 10
-uv run python -m hypervector --data-root data live-report --last 10
-
-# Regime (display-only metrics source)
-uv run python -m hypervector --data-root data regime
-
-# TUI
-./target/release/hypervector-tui --data-root data
-
-# Offline regression
-uv run pytest tests/ -q -m "not network"
+cargo fmt --check
+cargo clippy -p hypervector-tui --all-targets -- -D warnings
 cargo test -p hypervector-tui
 ```
 
----
+Human acceptance uses a terminal at least 120 columns wide. Any mismatch with
+the ledger is a failure even when the display looks plausible.
 
-## 7. Anti-patterns (reject)
+## Launch
 
-- “Looks fine” without V1–V16 / C1–C7 IDs  
-- Accepting greyscale default ratatui skin as tickrs-grade  
-- TUI re-running alpha / EMA detector with different params  
-- Third navigation root (tabs forest, research browser)  
-- Secret values in toast, logs, or screenshots committed to git  
-- Starting GUI design while B or C is FAIL  
+Use the supervised command so one lifecycle owns the backend and foreground
+TUI:
 
----
+```bash
+uv run python -m hypervector \
+  --data-root data \
+  hypervelocity-tui \
+  --config configs/hypervelocity_faithful.toml
+```
 
-## 8. Record location
+Normal quit preserves the durable shadow portfolio and journal. Do not use a
+reset merely to restart the display. A deliberately fresh observation window
+uses the recoverable command shown on screen 3:
 
-| Artifact | Path |
-|----------|------|
-| This guide | `docs/guides/acceptance-visual-and-holistic.md` |
-| Sign-off notes (optional) | `docs/superpowers/notes/YYYY-MM-DD-phase5-acceptance.md` |
-| Phase status | `HANDOFF.md` |
-| Agent CLI skill | `.grok/skills/hypervector-cli/SKILL.md` |
-| Agent acceptance skill | `.grok/skills/hypervector-acceptance/SKILL.md` |
+```bash
+uv run python -m hypervector \
+  --data-root data \
+  hypervelocity-shadow-reset --yes
+```
+
+## Screen 1: Dashboard
+
+Verify the following against the latest run in
+`data/paper/decisions/decisions.jsonl`:
+
+- Run ID, strategy ID, shadow mode, model mode, and model probability match.
+- One BTC position maximum is shown; pending maker orders are not positions.
+- Entry, mark, size, 40x leverage, unrealized PnL, paid entry fee, funding, and
+  estimated exit fee match backend rows.
+- Initial capital, equity, realized/unrealized/net PnL, closed trade count, and
+  win/loss counts persist across normal quit and restart.
+- Five bid and five ask levels are visible when the backend publishes them.
+- The journal is selectable. Details include Eastern entry/exit times, entry
+  and exit 1m/5m/15m states, entry/exit fees, funding, gross PnL, and net PnL.
+- Flat readiness shows backend entry direction, canonical state, maker status,
+  retry/cooldown state, funding, L2 age, and structure score.
+
+## Screen 2: Regime Detection
+
+The exact backend vocabulary is
+`TREND_UP`, `TREND_DOWN`, `BREAKOUT`, `RANGE`, `TRANSITION`, and `UNKNOWN`.
+
+- `Canonical Primary` says `5m authoritative`.
+- `Context Only` is immediately below it and shows 15m non-veto context.
+- 1m is execution telemetry and breakout confirmation; no text may advertise
+  a 1m directional fallback over 5m.
+- A 5m breakout is direction-eligible only after matching 1m confirmation.
+- `Structure Strength` is separate from `Model p`; it is an EMA-gap percentile
+  diagnostic and is not an execution gate.
+- The distribution uses observed backend history, includes `UNKNOWN`, and is
+  not a current-state-shaped constant profile.
+- The transition audit uses backend timestamps and reasons.
+- Missing L2, funding, or playback features say `not available` or
+  `not reported`; zero must not be presented as a measured neutral value.
+
+## Screen 3: Effective configuration
+
+Rows are selectable and read-only. Verify these identity fields:
+
+| Field | Expected faithful value |
+|---|---|
+| Position mode / max per symbol | `one_way` / `1` |
+| Margin allocation / leverage | `70%` / `40x` |
+| Target | `8%` margin return, strategy-target only |
+| Order | post-only limit, event-driven public L2/trade evidence |
+| Execution / primary / context timeframe | `1m` / `5m` / `15m` |
+| Allowed states | `TREND_UP`, `TREND_DOWN`, `BREAKOUT` |
+| Blocked states | `RANGE`, `TRANSITION`, `UNKNOWN` |
+| Breakout direction required | `true` |
+| Context hard gate / strength-score gate | `false` / `false` |
+| Metalabel mode | `off` or `observe`, never a hidden filter |
+
+The displayed reset command must quote and reuse the backend-reported active
+data root.
+
+## Persistence and honesty protocol
+
+1. Record the current run ID, equity, journal count, and open/pending state.
+2. Quit with `q` and verify the shell returns normally.
+3. Relaunch the same supervised command.
+4. Confirm the same durable run and portfolio resume unless a new backend run
+   identity is explicitly required by an incompatible execution fingerprint.
+5. Confirm shadow mode never writes a live decision or constructs a live venue
+   execution client.
+6. Inspect regime rows and assert no `submit_entry` occurs when `state_5m` is
+   `RANGE`, `TRANSITION`, or `UNKNOWN`.
+
+## File-playback parity
+
+```bash
+uv run python -m hypervector \
+  --data-root data \
+  regime-export --symbol BTC --timeframe 1m --bars 1500
+
+cargo run -p hypervector-tui --bin tui-regime-detector -- \
+  --symbol BTC --timeframe 1m \
+  --file data/exports/regime_snapshots.json
+```
+
+Playback states, reasons, timeframe labels, and structure scores must match
+`classify_multitimeframe(..., faithful_regime_config())` for the same rows.
+Incomplete snapshots are rejected instead of backfilled with synthetic values.
+
+## Sign-off record
+
+```text
+Date:
+Commit:
+Terminal and dimensions:
+Backend run ID:
+Screen 1 dashboard parity: PASS | FAIL
+Screen 2 regime parity: PASS | FAIL
+Screen 3 config parity: PASS | FAIL
+Quit/restart persistence: PASS | FAIL
+No-submit shadow honesty: PASS | FAIL
+Reviewer notes:
+```
+
+Automated green tests increase confidence in parsing and rendering. They do not
+replace human visual inspection or a fresh venue-matched shadow/real comparison.

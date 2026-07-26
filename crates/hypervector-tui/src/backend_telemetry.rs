@@ -38,6 +38,7 @@ pub struct BackendTelemetrySnapshot {
     pub risk: Value,
     pub execution_policy: Value,
     pub position_policy: Value,
+    pub regime_policy: Value,
     pub costs: Value,
     pub runtime: Value,
     pub orderbook_archive: Value,
@@ -45,6 +46,8 @@ pub struct BackendTelemetrySnapshot {
     pub latest_regime_feed_ts: Option<String>,
     pub latest_regime_reason: Option<String>,
     pub latest_regime_confidence: Option<f64>,
+    pub latest_regime_strength_score: Option<f64>,
+    pub latest_regime_score_source: Option<String>,
     pub entry_direction: Option<String>,
     pub entry_allowed: Option<bool>,
     pub pending_entry_direction: Option<String>,
@@ -88,6 +91,7 @@ impl BackendTelemetrySnapshot {
             risk: Value::Null,
             execution_policy: Value::Null,
             position_policy: Value::Null,
+            regime_policy: Value::Null,
             costs: Value::Null,
             runtime: Value::Null,
             orderbook_archive: Value::Null,
@@ -95,6 +99,8 @@ impl BackendTelemetrySnapshot {
             latest_regime_feed_ts: None,
             latest_regime_reason: None,
             latest_regime_confidence: None,
+            latest_regime_strength_score: None,
+            latest_regime_score_source: None,
             entry_direction: None,
             entry_allowed: None,
             pending_entry_direction: None,
@@ -159,6 +165,7 @@ pub(crate) struct LedgerRow {
     risk: Option<Value>,
     execution: Option<Value>,
     position_policy: Option<Value>,
+    regime_policy: Option<Value>,
     costs: Option<Value>,
     runtime: Option<Value>,
     orderbook_archive: Option<Value>,
@@ -181,6 +188,14 @@ struct OpenTrade {
     entry_fee_usd: f64,
     funding_payment_usd: f64,
     entry_regime: TradeRegime,
+}
+
+struct ActivePositionCycle<'a> {
+    latest: &'a LedgerRow,
+    entry: Option<&'a LedgerRow>,
+    qty: f64,
+    entry_fee_usd: f64,
+    funding_payment_usd: f64,
 }
 
 #[derive(Debug, Clone)]
@@ -293,6 +308,9 @@ fn build_snapshot(run_id: String, rows: &[&LedgerRow]) -> BackendTelemetrySnapsh
         position_policy: identity
             .and_then(|row| row.position_policy.clone())
             .unwrap_or(Value::Null),
+        regime_policy: identity
+            .and_then(|row| row.regime_policy.clone())
+            .unwrap_or(Value::Null),
         costs: identity
             .and_then(|row| row.costs.clone())
             .unwrap_or(Value::Null),
@@ -311,6 +329,24 @@ fn build_snapshot(run_id: String, rows: &[&LedgerRow]) -> BackendTelemetrySnapsh
         latest_regime_confidence: latest_regime_row
             .and_then(|row| row.extra.get("confidence"))
             .and_then(Value::as_f64),
+        latest_regime_strength_score: latest_regime_row
+            .and_then(|row| row.extra.get("regime_strength_score"))
+            .and_then(Value::as_f64)
+            .or_else(|| {
+                latest_regime_row
+                    .and_then(|row| row.extra.get("confidence"))
+                    .and_then(Value::as_f64)
+            }),
+        latest_regime_score_source: latest_regime_row
+            .and_then(|row| row.extra.get("regime_score_source"))
+            .and_then(Value::as_str)
+            .map(str::to_string)
+            .or_else(|| {
+                latest_regime_row
+                    .and_then(|row| row.extra.get("confidence"))
+                    .and_then(Value::as_f64)
+                    .map(|_| "legacy_confidence_alias".to_string())
+            }),
         entry_direction: latest_regime_row
             .and_then(|row| row.extra.get("entry_direction"))
             .and_then(Value::as_str)
@@ -364,7 +400,7 @@ fn latest_pending_entry_direction(rows: &[&LedgerRow]) -> Option<String> {
                     .and_then(Value::as_str)
                     .and_then(entry_direction_from_side);
             }
-            "cancel_entry" => pending = None,
+            "cancel_entry" | "rejected_entry" => pending = None,
             "enter_long" | "enter_short" if is_filled_entry(row) => pending = None,
             _ => {}
         }
@@ -397,12 +433,16 @@ fn build_trades(
         match row.action.as_str() {
             "regime_observation" => latest_regime = regime_from_row(row),
             "enter_long" | "enter_short" if is_filled_entry(row) => {
-                open = Some(open_trade_from_row(
-                    row,
-                    configured_leverage,
-                    latest_realized,
-                    latest_regime.clone(),
-                ));
+                if let Some(entry) = open.as_mut() {
+                    merge_entry_fill(entry, row, configured_leverage);
+                } else {
+                    open = Some(open_trade_from_row(
+                        row,
+                        configured_leverage,
+                        latest_realized,
+                        latest_regime.clone(),
+                    ));
+                }
             }
             "funding" => {
                 if let Some(entry) = open.as_mut() {
@@ -466,6 +506,22 @@ fn open_trade_from_row(
         funding_payment_usd: 0.0,
         entry_regime,
     }
+}
+
+fn merge_entry_fill(entry: &mut OpenTrade, row: &LedgerRow, configured_leverage: f64) {
+    let fill_size = row.fill_qty.or(row.qty).unwrap_or(0.0).abs();
+    let fill_price = row.fill_px.or(row.position_avg_px).unwrap_or(0.0);
+    if fill_size <= f64::EPSILON || fill_price <= 0.0 {
+        return;
+    }
+    let total_size = entry.size + fill_size;
+    entry.entry_price = (entry.entry_price * entry.size + fill_price * fill_size) / total_size;
+    entry.size = total_size;
+    let leverage = row.leverage.unwrap_or(configured_leverage);
+    if leverage > 0.0 {
+        entry.allocated_margin += fill_price * fill_size / leverage;
+    }
+    entry.entry_fee_usd += row.fee_usd.unwrap_or(0.0);
 }
 
 fn close_trade(
@@ -601,57 +657,80 @@ fn build_active_position(
     configured_leverage: f64,
     maker_fee_rate: f64,
 ) -> ActivePosition {
-    let Some(latest) = rows
-        .iter()
-        .rev()
-        .find(|row| row.position_qty.is_some())
-        .copied()
-    else {
+    let Some(cycle) = active_position_cycle(rows) else {
         return ActivePosition::flat();
     };
-    let qty = latest.position_qty.unwrap_or(0.0);
-    if qty.abs() <= f64::EPSILON {
-        return ActivePosition::flat();
-    }
-    let entry_index = rows
-        .iter()
-        .rposition(|row| matches!(row.action.as_str(), "enter_long" | "enter_short"));
-    let entry = entry_index.map(|index| rows[index]);
-    let funding_payment_usd = entry_index
-        .map(|index| {
-            rows[index + 1..]
-                .iter()
-                .filter(|row| row.action == "funding")
-                .filter_map(|row| row.funding_payment_usd)
-                .sum()
-        })
-        .unwrap_or(0.0);
-    let estimated_exit_price = latest.mark_px.unwrap_or_else(|| {
-        latest
+    let estimated_exit_price = cycle.latest.mark_px.unwrap_or_else(|| {
+        cycle
+            .latest
             .position_avg_px
-            .or_else(|| entry.and_then(|row| row.fill_px))
+            .or_else(|| cycle.entry.and_then(|row| row.fill_px))
             .unwrap_or(0.0)
     });
     ActivePosition {
-        entry_timestamp: entry.map(|row| row.feed_ts.clone()).unwrap_or_default(),
-        symbol: entry
+        entry_timestamp: cycle
+            .entry
+            .map(|row| row.feed_ts.clone())
+            .unwrap_or_default(),
+        symbol: cycle
+            .entry
             .and_then(|row| row.symbol.clone())
             .unwrap_or_else(|| "UNKNOWN".to_string()),
-        direction: if qty > 0.0 { "LONG" } else { "SHORT" }.to_string(),
-        entry_price: latest
+        direction: if cycle.qty > 0.0 { "LONG" } else { "SHORT" }.to_string(),
+        entry_price: cycle
+            .latest
             .position_avg_px
-            .or_else(|| entry.and_then(|row| row.fill_px))
+            .or_else(|| cycle.entry.and_then(|row| row.fill_px))
             .unwrap_or(0.0),
-        size_btc: qty.abs(),
-        leverage: entry
+        size_btc: cycle.qty.abs(),
+        leverage: cycle
+            .entry
             .and_then(|row| row.leverage)
             .unwrap_or(configured_leverage),
-        entry_equity: entry.and_then(|row| row.equity).unwrap_or(0.0),
+        entry_equity: cycle.entry.and_then(|row| row.equity).unwrap_or(0.0),
         peak_margin_pct: 0.0,
-        entry_fee_usd: entry.and_then(|row| row.fee_usd).unwrap_or(0.0),
-        funding_payment_usd,
-        estimated_exit_fee_usd: qty.abs() * estimated_exit_price * maker_fee_rate,
+        entry_fee_usd: cycle.entry_fee_usd,
+        funding_payment_usd: cycle.funding_payment_usd,
+        estimated_exit_fee_usd: cycle.qty.abs() * estimated_exit_price * maker_fee_rate,
     }
+}
+
+fn active_position_cycle<'a>(rows: &[&'a LedgerRow]) -> Option<ActivePositionCycle<'a>> {
+    let (latest_index, latest) = rows
+        .iter()
+        .enumerate()
+        .rev()
+        .find(|(_, row)| row.position_qty.is_some())
+        .map(|(index, row)| (index, *row))?;
+    let qty = latest.position_qty.unwrap_or(0.0);
+    if qty.abs() <= f64::EPSILON {
+        return None;
+    }
+    let cycle_start = rows[..=latest_index]
+        .iter()
+        .rposition(|row| {
+            row.position_qty
+                .is_some_and(|value| value.abs() <= f64::EPSILON)
+        })
+        .map_or(0, |index| index + 1);
+    let cycle_rows = &rows[cycle_start..=latest_index];
+    let entries: Vec<&LedgerRow> = cycle_rows
+        .iter()
+        .filter(|row| matches!(row.action.as_str(), "enter_long" | "enter_short"))
+        .filter(|row| is_filled_entry(row))
+        .copied()
+        .collect();
+    Some(ActivePositionCycle {
+        latest,
+        entry: entries.first().copied(),
+        qty,
+        entry_fee_usd: entries.iter().filter_map(|row| row.fee_usd).sum(),
+        funding_payment_usd: cycle_rows
+            .iter()
+            .filter(|row| row.action == "funding")
+            .filter_map(|row| row.funding_payment_usd)
+            .sum(),
+    })
 }
 
 fn empty_stats() -> LivePaperStats {

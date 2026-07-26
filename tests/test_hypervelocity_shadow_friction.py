@@ -222,6 +222,7 @@ def test_cancel_requested_before_ack_still_allows_pre_cancel_fill() -> None:
 
 def test_gap_and_stale_book_preserve_order_without_claiming_fill() -> None:
     shadow = port(submit_ms=0)
+    assert shadow.liquidation_cooldown_until_ms is None
     shadow.ingest(book(0, bid_size=0.001))
     shadow.submit(entry(quantity=0.01))
     shadow.ingest(book(1, bid_size=0.001))

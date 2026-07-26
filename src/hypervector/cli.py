@@ -61,6 +61,7 @@ CLI_COMMANDS: tuple[str, ...] = (
     "regime",
     "hypervelocity-regime-eval",
     "hypervelocity-regime-autotune",
+    "hypervelocity-regime-challengers",
     "hypervelocity-maker-replay",
     "hypervelocity-shadow-compare",
     "hypervelocity-shadow-run",
@@ -579,7 +580,7 @@ def cmd_hypervelocity_shadow_run(args: argparse.Namespace) -> int:
                 poll_interval_secs=profile.poll_interval_seconds,
                 max_live_bars=args.max_live_bars,
                 lookback_days=profile.lookback_days,
-                enable_funding_refresh=True,
+                enable_funding_refresh=False,
                 metalabel_enabled=profile.metalabel_mode != "off",
                 metalabel_filter=False,
                 metalabel_mode=profile.metalabel_mode,
@@ -598,7 +599,9 @@ def cmd_hypervelocity_shadow_run(args: argparse.Namespace) -> int:
                 "decisions_path": str(result.decisions_path),
                 "fills_count": result.fills_count,
                 "position_policy": profile.position_policy(),
-                "funding_refresh_enabled": True,
+                "regime_policy": profile.regime_policy(),
+                "funding_authority": "hyperliquid_ws_activeAssetCtx",
+                "rest_funding_refresh_enabled": False,
                 "fee_tier": profile.fee_tier,
             },
             indent=2,
@@ -639,7 +642,9 @@ def cmd_hypervelocity_tui(args: argparse.Namespace) -> int:
         return 130
     except (FileNotFoundError, OSError, RuntimeError, ValueError) as exc:
         log_path = root / "paper" / BACKEND_LOG_NAME
-        print(f"hypervelocity-tui failed: {exc}; backend log: {log_path}", file=sys.stderr)
+        print(
+            f"hypervelocity-tui failed: {exc}; backend log: {log_path}", file=sys.stderr
+        )
         return 1
     print(json.dumps({"ok": True, "backend_log": str(result.backend_log)}, indent=2))
     return 0
@@ -1252,7 +1257,12 @@ def cmd_hypervelocity_regime_eval(args: argparse.Namespace) -> int:
         "data_provenance": provenance,
         **report.to_dict(),
     }
-    print(json.dumps(out, indent=2, default=str))
+    rendered = json.dumps(out, indent=2, default=str)
+    if args.out:
+        output_path = Path(args.out)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(rendered + "\n", encoding="utf-8")
+    print(rendered)
     return 0
 
 
@@ -1283,6 +1293,29 @@ def cmd_hypervelocity_regime_autotune(args: argparse.Namespace) -> int:
         "tuning_board": board.to_dict(),
     }
     rendered = json.dumps(out, indent=2, default=str)
+    if args.out:
+        output_path = Path(args.out)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(rendered + "\n", encoding="utf-8")
+    print(rendered)
+    return 0
+
+
+def cmd_hypervelocity_regime_challengers(args: argparse.Namespace) -> int:
+    """Run point-in-time statistical regimes as annotations only."""
+    from hypervector.regime.challengers import evaluate_regime_challengers
+
+    bars, provenance = _load_bars(args)
+    report = evaluate_regime_challengers(
+        bars,
+        forward_horizon=args.forward_horizon,
+        random_state=args.seed,
+        n_splits=args.n_splits,
+        wasserstein_window=args.wasserstein_window,
+        wasserstein_sample_cap=args.wasserstein_sample_cap,
+    )
+    output = {"data_provenance": provenance, **report}
+    rendered = json.dumps(output, indent=2, default=str)
     if args.out:
         output_path = Path(args.out)
         output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -2173,6 +2206,7 @@ def build_parser() -> argparse.ArgumentParser:
         default=30,
         help="forward 1m bars used to report breakout target misses (default 30)",
     )
+    hv_re.add_argument("--out", default=None)
     hv_re.set_defaults(func=cmd_hypervelocity_regime_eval)
 
     hv_tune = sub.add_parser(
@@ -2195,6 +2229,23 @@ def build_parser() -> argparse.ArgumentParser:
         help="optional path for the complete JSON tuning board",
     )
     hv_tune.set_defaults(func=cmd_hypervelocity_regime_autotune)
+
+    hv_challengers = sub.add_parser(
+        "hypervelocity-regime-challengers",
+        help="Evaluate annotation-only point-in-time regime challengers",
+    )
+    _add_market_args(hv_challengers)
+    hv_challengers.add_argument("--forward-horizon", type=int, default=30)
+    hv_challengers.add_argument("--seed", type=int, default=42)
+    hv_challengers.add_argument("--n-splits", type=int, default=3)
+    hv_challengers.add_argument("--wasserstein-window", type=int, default=60)
+    hv_challengers.add_argument(
+        "--wasserstein-sample-cap",
+        type=int,
+        default=1_000,
+    )
+    hv_challengers.add_argument("--out", default=None)
+    hv_challengers.set_defaults(func=cmd_hypervelocity_regime_challengers)
 
     hv_maker = sub.add_parser(
         "hypervelocity-maker-replay",

@@ -9,16 +9,18 @@ pub enum RegimeState {
     VolatilityCoiling,
     FundingCarry,
     RangeChop,
+    Unknown,
 }
 
 impl RegimeState {
     pub fn display_name(&self) -> &'static str {
         match self {
-            RegimeState::BullMomentum => "TREND_UP (BULL MOMENTUM EXPANSION)",
-            RegimeState::BearMomentum => "TREND_DOWN (BEAR MOMENTUM EXPANSION)",
-            RegimeState::VolatilityCoiling => "BREAKOUT (VOLATILITY COILING COMPRESSION)",
-            RegimeState::FundingCarry => "TRANSITION (FUNDING CARRY REVERSAL)",
-            RegimeState::RangeChop => "RANGE (RANGE CHOP / HIGH FRICTION)",
+            RegimeState::BullMomentum => "TREND_UP",
+            RegimeState::BearMomentum => "TREND_DOWN",
+            RegimeState::VolatilityCoiling => "BREAKOUT",
+            RegimeState::FundingCarry => "TRANSITION",
+            RegimeState::RangeChop => "RANGE",
+            RegimeState::Unknown => "UNKNOWN",
         }
     }
 
@@ -29,16 +31,18 @@ impl RegimeState {
             RegimeState::VolatilityCoiling => "BREAKOUT",
             RegimeState::FundingCarry => "TRANSITION",
             RegimeState::RangeChop => "RANGE",
+            RegimeState::Unknown => "UNKNOWN",
         }
     }
 
     pub fn icon(&self) -> &'static str {
         match self {
-            RegimeState::BullMomentum => "🔥",
-            RegimeState::BearMomentum => "🔻",
-            RegimeState::VolatilityCoiling => "⚡",
-            RegimeState::FundingCarry => "💰",
-            RegimeState::RangeChop => "🛡️",
+            RegimeState::BullMomentum => "UP",
+            RegimeState::BearMomentum => "DOWN",
+            RegimeState::VolatilityCoiling => "BREAK",
+            RegimeState::FundingCarry => "TRANS",
+            RegimeState::RangeChop => "RANGE",
+            RegimeState::Unknown => "UNKNOWN",
         }
     }
 }
@@ -54,12 +58,15 @@ pub struct RegimeSnapshot {
     pub state: RegimeState,
     pub regime_reason: String,
     pub confidence: f64,
+    pub regime_score_source: String,
     pub opi: f64,
     pub spread_bps: f64,
     pub bid_depth_ratio: f64,
+    pub microstructure_source: String,
     pub bbwp_percentile: f64,
     pub rsi: f64,
     pub funding_zscore: f64,
+    pub funding_source: String,
     pub trend_1m: String,
     pub trend_5m: String,
     pub trend_15m: String,

@@ -76,96 +76,93 @@ fn run_app<B: ratatui::backend::Backend>(
 
         let timeout = Duration::from_millis((refresh_ms as f64 / app.playback_speed) as u64);
         if event::poll(timeout)? {
-            if let Event::Key(key) = event::read()? {
-                if key.kind == KeyEventKind::Press {
-                    if app.show_help_overlay {
-                        match key.code {
-                            KeyCode::Char('q')
-                            | KeyCode::Esc
-                            | KeyCode::Char('?')
-                            | KeyCode::Char('h')
-                            | KeyCode::Enter
-                            | KeyCode::Char(' ') => {
-                                app.show_help_overlay = false;
-                            }
-                            _ => {}
+            if let Event::Key(key) = event::read()?
+                && key.kind == KeyEventKind::Press
+            {
+                if app.show_help_overlay {
+                    match key.code {
+                        KeyCode::Char('q')
+                        | KeyCode::Esc
+                        | KeyCode::Char('?')
+                        | KeyCode::Char('h')
+                        | KeyCode::Enter
+                        | KeyCode::Char(' ') => {
+                            app.show_help_overlay = false;
                         }
-                    } else if app.show_event_detail_modal || app.show_trade_detail_modal {
-                        match key.code {
-                            KeyCode::Char('q')
-                            | KeyCode::Esc
-                            | KeyCode::Enter
-                            | KeyCode::Char(' ') => {
-                                app.show_event_detail_modal = false;
-                                app.show_trade_detail_modal = false;
-                            }
-                            _ => {}
+                        _ => {}
+                    }
+                } else if app.show_event_detail_modal || app.show_trade_detail_modal {
+                    match key.code {
+                        KeyCode::Char('q') | KeyCode::Esc | KeyCode::Enter | KeyCode::Char(' ') => {
+                            app.show_event_detail_modal = false;
+                            app.show_trade_detail_modal = false;
                         }
-                    } else {
-                        match key.code {
-                            KeyCode::Char('q') | KeyCode::Esc => app.should_quit = true,
-                            KeyCode::Tab => app.toggle_tab(),
-                            KeyCode::Char('1') => app.active_tab = 0,
-                            KeyCode::Char('2') => app.active_tab = 1,
-                            KeyCode::Char('3') => app.active_tab = 2,
-                            KeyCode::Char('?') | KeyCode::Char('h') => app.toggle_help_overlay(),
-                            KeyCode::Enter => {
-                                if app.active_tab == 2 {
-                                    app.toggle_config_option();
-                                } else if app.active_tab == 0 {
-                                    app.toggle_trade_modal();
-                                } else {
-                                    app.toggle_event_modal();
-                                }
+                        _ => {}
+                    }
+                } else {
+                    match key.code {
+                        KeyCode::Char('q') | KeyCode::Esc => app.should_quit = true,
+                        KeyCode::Tab => app.toggle_tab(),
+                        KeyCode::Char('1') => app.active_tab = 0,
+                        KeyCode::Char('2') => app.active_tab = 1,
+                        KeyCode::Char('3') => app.active_tab = 2,
+                        KeyCode::Char('?') | KeyCode::Char('h') => app.toggle_help_overlay(),
+                        KeyCode::Enter => {
+                            if app.active_tab == 2 {
+                                app.toggle_config_option();
+                            } else if app.active_tab == 0 {
+                                app.toggle_trade_modal();
+                            } else {
+                                app.toggle_event_modal();
                             }
-                            KeyCode::Char('+') | KeyCode::Char('=') => {
-                                if app.active_tab == 2 {
-                                    app.increase_config_value();
-                                }
-                            }
-                            KeyCode::Char('-') => {
-                                if app.active_tab == 2 {
-                                    app.decrease_config_value();
-                                }
-                            }
-                            KeyCode::Left => {
-                                if app.active_tab == 2 {
-                                    app.decrease_config_value();
-                                } else {
-                                    app.step_backward();
-                                }
-                            }
-                            KeyCode::Right => {
-                                if app.active_tab == 2 {
-                                    app.increase_config_value();
-                                } else {
-                                    app.step_forward();
-                                }
-                            }
-                            KeyCode::Down | KeyCode::Char('j') => {
-                                if app.active_tab == 2 {
-                                    app.select_next_config();
-                                } else if app.active_tab == 0 {
-                                    app.select_next_trade();
-                                } else {
-                                    app.select_next_event();
-                                }
-                            }
-                            KeyCode::Up | KeyCode::Char('k') => {
-                                if app.active_tab == 2 {
-                                    app.select_prev_config();
-                                } else if app.active_tab == 0 {
-                                    app.select_prev_trade();
-                                } else {
-                                    app.select_prev_event();
-                                }
-                            }
-                            KeyCode::Char(' ') => app.toggle_play_pause(),
-                            KeyCode::Char('s') => app.cycle_speed(),
-                            KeyCode::Char('t') => app.cycle_timeframe(),
-                            KeyCode::Char('r') => app.reset_playhead(),
-                            _ => {}
                         }
+                        KeyCode::Char('+') | KeyCode::Char('=') => {
+                            if app.active_tab == 2 {
+                                app.increase_config_value();
+                            }
+                        }
+                        KeyCode::Char('-') => {
+                            if app.active_tab == 2 {
+                                app.decrease_config_value();
+                            }
+                        }
+                        KeyCode::Left => {
+                            if app.active_tab == 2 {
+                                app.decrease_config_value();
+                            } else {
+                                app.step_backward();
+                            }
+                        }
+                        KeyCode::Right => {
+                            if app.active_tab == 2 {
+                                app.increase_config_value();
+                            } else {
+                                app.step_forward();
+                            }
+                        }
+                        KeyCode::Down | KeyCode::Char('j') => {
+                            if app.active_tab == 2 {
+                                app.select_next_config();
+                            } else if app.active_tab == 0 {
+                                app.select_next_trade();
+                            } else {
+                                app.select_next_event();
+                            }
+                        }
+                        KeyCode::Up | KeyCode::Char('k') => {
+                            if app.active_tab == 2 {
+                                app.select_prev_config();
+                            } else if app.active_tab == 0 {
+                                app.select_prev_trade();
+                            } else {
+                                app.select_prev_event();
+                            }
+                        }
+                        KeyCode::Char(' ') => app.toggle_play_pause(),
+                        KeyCode::Char('s') => app.cycle_speed(),
+                        KeyCode::Char('t') => app.cycle_timeframe(),
+                        KeyCode::Char('r') => app.reset_playhead(),
+                        _ => {}
                     }
                 }
             }

@@ -20,6 +20,7 @@ from hypervector.regime.hypervelocity_eval import (
     evaluate_entry_alignment,
     evaluate_range_quality,
 )
+from hypervector.strategies.hypervelocity_contract import faithful_regime_config
 
 CandidateValue = int | float
 TrialStatus = Literal["completed", "technical_failure"]
@@ -104,7 +105,7 @@ def generate_candidate_parameters(
         raise ValueError("n_trials must be positive")
     baseline = {
         key: value
-        for key, value in asdict(RegimeClassifierConfig()).items()
+        for key, value in asdict(faithful_regime_config()).items()
         if isinstance(value, (int, float))
     }
     rng = np.random.default_rng(seed)

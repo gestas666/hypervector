@@ -1,80 +1,107 @@
 ---
 name: hypervector-regime-detector
 description: >
-  Operate the Ultimate 5-Tier Multi-Timeframe Microstructure Regime Engine and the
-  tui-regime-detector 3-screen Ratatui terminal cockpit. Use when analyzing market regimes,
-  evaluating regime accuracy, operating the 3-screen TUI cockpit, or reviewing strategy policy and risk parameters.
+  Operate and validate the canonical 1m/5m/15m Hypervelocity regime engine and
+  its read-only three-screen Ratatui telemetry view.
 ---
 
-# Hypervector Ultimate Regime Engine & Visual Cockpit Skill
+# Hypervector Canonical Regime Engine
 
-Dedicated skill for the **Ultimate 5-Tier Multi-Timeframe Microstructure Regime Engine** ([`src/hypervector/regime/ultimate.py`](file:///Users/gestas/Prototypes/hypervector/src/hypervector/regime/ultimate.py)) and the **`tui-regime-detector` 3-screen Terminal Cockpit** ([`crates/hypervector-tui`](file:///Users/gestas/Prototypes/hypervector/crates/hypervector-tui)).
+## Authority contract
 
----
+The production classifier is implemented in `src/hypervector/regime/` and the
+faithful thresholds are defined by `faithful_regime_config()`. Hyperliquid
+candles are open-timestamped. A 5m or 15m aggregate becomes available at the
+last constituent one-minute open timestamp; future values must never be shifted
+into an earlier decision row.
 
-## 🏛️ 5-Tier Regime Architecture & Hypertrader Label Mapping
+| State | Backend meaning | Entry effect |
+|---|---|---|
+| `TREND_UP` | Authoritative 5m positive trend structure | Long eligible |
+| `TREND_DOWN` | Authoritative 5m negative trend structure | Short eligible |
+| `BREAKOUT` | 5m breakout state | Eligible only when 1m confirms the same direction |
+| `RANGE` | 5m range/chop/compression structure | Entry blocked |
+| `TRANSITION` | Mixed 5m structure | Entry blocked |
+| `UNKNOWN` | Warmup incomplete | Entry blocked |
 
-| Primary TA Label | Microstructure State | Trigger Condition | Policy Sizing ($W_{\text{Long}}, W_{\text{Short}}$) | Hyperliquid Max Leverage Cap |
-| :--- | :--- | :--- | :--- | :--- |
-| `TREND_UP` | `BULL_MOMENTUM_EXPANSION` | 5m primary trend, with implemented 1m directional fallback | $W_{\text{Long}} = 2.0\times, W_{\text{Short}} = 0.0\times$ | **40.0× (BTC)** / **25.0× (ETH)** |
-| `TREND_DOWN` | `BEAR_MOMENTUM_EXPANSION` | 5m primary trend, with implemented 1m directional fallback | $W_{\text{Long}} = 0.0\times, W_{\text{Short}} = 2.0\times$ | **40.0× (BTC)** / **25.0× (ETH)** |
-| `BREAKOUT` | `VOLATILITY_COILING_COMPRESSION` | Direction-confirmed breakout on both 1m and 5m | $W_{\text{Long}} = 1.5\times, W_{\text{Short}} = 1.5\times$ | **20.0× (SOL)** / **15.0× (Alts)** |
-| `TRANSITION` | `FUNDING_CARRY_REVERSAL` | Funding Z-Score $|Z| \ge 1.8$ | $W_{\text{Long}} = 2.0\times$ (if negative Z) or $W_{\text{Short}} = 2.0\times$ | **20.0× (SOL)** / **15.0× (Alts)** |
-| `RANGE` | `RANGE_CHOP_HIGH_FRICTION` | Choppiness > 55 or Spread > 6.0 bps | $W_{\text{Long}} = 0.25\times, W_{\text{Short}} = 0.25\times$ (0.0x if spread > 6bps) | **10.0× (Default)** |
+The 1m state is execution-timeframe telemetry and breakout confirmation; it
+cannot replace a non-directional 5m primary state. The 15m state is context and
+is not a hard veto. `regime_strength_score` is the mean 1m/5m/15m EMA-gap
+strength percentile rank normalized to `[0, 1]`. It is a report-only technical
+diagnostic, not a model probability or execution gate.
 
----
-
-## 🖥️ Launching the `tui-regime-detector` 3-Screen Cockpit
+## Unified live shadow view
 
 ```bash
-# 1. Interactive playback cockpit (1m execution, 5m primary, 15m context)
-cargo run -p hypervector-tui --bin tui-regime-detector -- --symbol BTC --timeframe 1m
-
-# 2. Real-time live mode (250ms tick refresh rate)
-cargo run -p hypervector-tui --bin tui-regime-detector -- --symbol BTC --timeframe 1m --live --refresh-ms 250
-
-# 3. Playback historical parquet or JSON snapshot file
-cargo run -p hypervector-tui --bin tui-regime-detector -- --symbol BTC --file data/exports/regime_snapshots.json
+uv run python -m hypervector \
+  --data-root data \
+  hypervelocity-tui \
+  --config configs/hypervelocity_faithful.toml
 ```
 
----
-
-## ⌨️ 3-Screen Terminal Cockpit Keybindings
-
-### Global Screen Switcher & Controls
-| Key | Action |
-| :--- | :--- |
-| `[1]` / `[2]` / `[3]` | Jump directly to Dashboard, Regime Detection, or Configuration |
-| `[Tab]` | Cycle screens (`1 -> 2 -> 3 -> 1`) |
-| `[Space]` | **Play / Pause** real-time stream or historical playback |
-| `[← / →]` | **Scrub Backwards / Forwards** through historical time |
-| `[s]` | **Cycle Playback Speed** ($1.0\times \to 2.0\times \to 5.0\times \to 10.0\times$) |
-| `[t]` | **Cycle Timeframe** ($1\text{m} \to 5\text{m} \to 15\text{m}$) |
-| `[r]` | **Reset** playback scrub position to start |
-| `[q / Esc]` | **Quit** terminal cockpit |
-
-The 15m state is displayed as non-veto context, not an HTF entry lock. On the
-Dashboard, `[↑/↓]` or `[j/k]` selects a closed journal trade and `[Enter]`
-opens its entry/exit times, regime states, fees, funding, and PnL. The Regime
-Detection screen uses the same keys for transition-event inspection.
-
-### Screen `[3]` Effective Backend Configuration Keybindings
-| Key | Action |
-| :--- | :--- |
-| `[↑ / ↓]` or `[j / k]` | **Select Parameter Option Row** |
-| `[Enter]` | No mutation; backend configuration remains authoritative |
-| `[+]` / `[-]` / `[←]` / `[→]` | No mutation; edit the TOML profile and restart the supervised process |
-
-Screen 3 must show the `data_root` reported by the active backend session. Its
-reset guidance must include that exact root; a rootless reset command is not
-safe because it can operate on a different ledger than the TUI is displaying.
-
----
-
-## 📊 Running Regime Forward Accuracy Evaluator
-
-Evaluate classification precision, forward return edge, Sharpe ratio, and persistence across market states:
+The Python command owns the backend lifecycle. The Rust TUI reads the backend
+ledger and does not simulate trades. Normal quit preserves the durable shadow
+portfolio. A fresh start is explicit and recoverably backed up:
 
 ```bash
-uv run python -m hypervector regime-eval --symbol BTC --timeframe 5m --lookback 180
+uv run python -m hypervector \
+  --data-root data \
+  hypervelocity-shadow-reset --yes
 ```
+
+## File playback
+
+Export snapshots through the canonical classifier, then open them read-only:
+
+```bash
+uv run python -m hypervector \
+  --data-root data \
+  regime-export --symbol BTC --timeframe 1m --bars 1500
+
+cargo run -p hypervector-tui --bin tui-regime-detector -- \
+  --symbol BTC --timeframe 1m \
+  --file data/exports/regime_snapshots.json
+```
+
+Snapshot playback must not manufacture missing prices, OHLCV, timestamps,
+microstructure, funding, regime labels, or policy weights. Missing optional
+microstructure and funding are explicitly marked unavailable.
+
+## Evaluation and tuning
+
+```bash
+uv run python -m hypervector hypervelocity-regime-eval \
+  --positions docs/external/manual_positions_unified_2026-07-09_to_today_20260724_150845.csv
+
+uv run python -m hypervector hypervelocity-regime-autotune \
+  --positions docs/external/manual_positions_unified_2026-07-09_to_today_20260724_150845.csv \
+  --n-trials 100 --seed 42 \
+  --out data/logs/research/hypervelocity_regime_autotune.json
+
+uv run python -m hypervector hypervelocity-regime-challengers \
+  --symbol BTC --timeframe 1m --lookback 180 \
+  --forward-horizon 30 --seed 42 --n-splits 3 \
+  --out data/logs/research/hypervelocity_regime_challengers.json
+```
+
+Evaluation is chronological and report-only. Retain every valid trial result,
+including losses, sparse trades, weak scores, and poor drawdown. Only a
+technical failure may mark a trial as an error. Expanding volatility terciles,
+walk-forward GMM, and training-only Wasserstein states are annotation-only.
+Optional HMM/MS-AR arms report a missing dependency instead of silently
+substituting a non-causal model. Challengers remain non-executable until a
+separate decision explicitly changes that policy.
+
+## Verification
+
+```bash
+uv run pytest tests/test_regime_classifier.py \
+  tests/test_hypervelocity_regime_eval.py \
+  tests/test_regime_snapshot_export.py -q
+cargo test -p hypervector-tui
+```
+
+Falsifiers include prefix non-invariance, disagreement with a venue-native 5m
+candle, a 1m trend overriding 5m `RANGE`/`TRANSITION`/`UNKNOWN`, unconfirmed
+breakout direction, fabricated TUI values, or a technical score labeled as a
+model probability.

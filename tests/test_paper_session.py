@@ -563,6 +563,8 @@ def test_live_hypervelocity_bar_records_report_only_regime_observation(
     assert observation["state_5m"] == "RANGE"
     assert observation["context_15m"] == "TREND_UP"
     assert observation["confidence"] == pytest.approx(0.61)
+    assert observation["regime_strength_score"] == pytest.approx(0.61)
+    assert observation["regime_score_source"] == "legacy_confidence_alias"
     assert observation["regime_reason"] == "5m_primary_state"
     assert observation["high"] == pytest.approx(float(bars.iloc[3]["high"]))
     assert observation["low"] == pytest.approx(float(bars.iloc[3]["low"]))
@@ -883,6 +885,17 @@ def test_profile_activates_event_runtime_and_stamps_authority(tmp_path: Path) ->
     )
     assert identity["partial_liquidation_supported"] is True
     assert identity["backstop_liquidation_supported"] is True
+    assert identity["regime_policy"] == {
+        "execution_timeframe": "1m",
+        "primary_timeframe": "5m",
+        "context_timeframe": "15m",
+        "context_is_hard_gate": False,
+        "allowed_entry_states": ["TREND_UP", "TREND_DOWN", "BREAKOUT"],
+        "blocked_entry_states": ["RANGE", "TRANSITION", "UNKNOWN"],
+        "breakout_requires_direction": True,
+        "confidence_is_gate": False,
+    }
+    assert identity["portfolio_spec"]["regime_policy"] == identity["regime_policy"]
     assert identity["execution"]["fill_model"] == "nautilus_event_v1"
     assert (
         identity["execution"]["restart_queue_policy"]

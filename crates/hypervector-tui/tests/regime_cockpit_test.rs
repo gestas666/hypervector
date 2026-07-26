@@ -36,12 +36,15 @@ fn make_snapshot(price: f64, high: f64, low: f64, state: RegimeState, ts: &str) 
         state,
         regime_reason: "fixture".into(),
         confidence: 0.6,
+        regime_score_source: "fixture".into(),
         opi: 0.1,
         spread_bps: 1.2,
         bid_depth_ratio: 1.1,
+        microstructure_source: "fixture".into(),
         bbwp_percentile: 50.0,
         rsi: 55.0,
         funding_zscore: 0.1,
+        funding_source: "fixture".into(),
         trend_1m: "BULL".into(),
         trend_5m: "BULL".into(),
         trend_15m: "BULL".into(),
@@ -92,6 +95,11 @@ fn screen_two_places_context_directly_below_canonical_primary() {
         .expect("context-only row");
 
     assert_eq!(context_row, canonical_row + 1);
+    let rendered = rows.join("\n");
+    assert!(rendered.contains("5m authoritative"), "{rendered}");
+    assert!(rendered.contains("Structure Strength"), "{rendered}");
+    assert!(!rendered.contains("1m directional fallback"), "{rendered}");
+    assert!(!rendered.contains("Model Conviction"), "{rendered}");
 }
 
 #[test]
@@ -123,6 +131,9 @@ fn test_regime_cockpit_app_state() {
 
     let initial_snap = app.current_snapshot();
     assert_eq!(initial_snap.state, RegimeState::BullMomentum);
+    assert!(app.book_state.bid_levels.is_empty());
+    assert!(app.book_state.ask_levels.is_empty());
+    assert!(!app.book_state.gate_ok);
 
     // Test playback navigation
     app.step_forward();
@@ -149,7 +160,7 @@ fn test_parse_snapshot_json_uses_real_fields() {
         "high": 66320.0,
         "low": 66290.0,
         "volume": 12.4,
-        "regime_state": "BEAR_MOMENTUM_EXPANSION",
+        "regime_state": "TREND_DOWN",
         "confidence": 0.61,
         "opi": -0.22,
         "spread_bps": 2.4,
@@ -195,9 +206,23 @@ fn test_parse_snapshot_json_recognizes_canonical_trend_up() {
         "regime_state": "TREND_UP"
     });
 
-    let snapshot = parse_snapshot_json(&val, 0).expect("snapshot should parse");
+    assert!(parse_snapshot_json(&val, 0).is_none());
+}
 
-    assert_eq!(snapshot.state, RegimeState::BullMomentum);
+#[test]
+fn backend_exposes_regime_policy_and_non_model_strength_score() {
+    let telemetry = parse_backend_telemetry(
+        r#"{"feed_ts":"session_start","action":"session_start","run_id":"hv","regime_policy":{"execution_timeframe":"1m","primary_timeframe":"5m","context_timeframe":"15m","context_is_hard_gate":false,"allowed_entry_states":["TREND_UP","TREND_DOWN","BREAKOUT"],"blocked_entry_states":["RANGE","TRANSITION","UNKNOWN"],"breakout_requires_direction":true,"confidence_is_gate":false}}
+{"feed_ts":"2026-07-26T12:00:00Z","action":"regime_observation","run_id":"hv","primary_regime":"TREND_UP","regime_strength_score":0.73,"regime_score_source":"mean_multitimeframe_ema_gap_strength_percentile_rank","mark_px":100.0,"high":101.0,"low":99.0,"volume":5.0,"state_1m":"TREND_UP","state_5m":"TREND_UP","context_15m":"TREND_UP","regime_reason":"5m_primary_trend"}"#,
+    )
+    .expect("regime telemetry");
+
+    assert_eq!(telemetry.regime_policy["primary_timeframe"], "5m");
+    assert_eq!(telemetry.latest_regime_strength_score, Some(0.73));
+    assert_eq!(
+        telemetry.latest_regime_score_source.as_deref(),
+        Some("mean_multitimeframe_ema_gap_strength_percentile_rank")
+    );
 }
 
 #[test]
@@ -349,7 +374,7 @@ fn test_live_app_does_not_invent_book_when_backend_has_none() {
 #[test]
 fn test_backend_config_is_a_selectable_menu_not_raw_json() {
     let telemetry = parse_backend_telemetry(
-        r#"{"feed_ts":"session_start","action":"session_start","run_id":"hv","strategy_name":"hypervelocity_1m_scalper","execution_mode":"shadow","data_root":"/tmp/hyper vector's data","metalabel_mode":"off","strategy_params":{"leverage":40.0,"target_margin_pct":8.0},"position_policy":{"position_mode":"one_way","max_positions_per_symbol":1},"risk":{"margin_fraction":0.7},"exits":{"target_margin_pct":8.0,"range_policy":"hold_until_target"},"execution":{"order_type":"limit","time_in_force":"post_only","entry_ttl_seconds":300.0,"same_direction_reentry_policy":"regime_reset"},"costs":{"maker_fee_rate":0.00015,"funding_source":"live_meta_and_asset_contexts"},"init_cash":10000.0,"equity":10000.0}"#,
+        r#"{"feed_ts":"session_start","action":"session_start","run_id":"hv","strategy_name":"hypervelocity_1m_scalper","execution_mode":"shadow","data_root":"/tmp/hyper vector's data","metalabel_mode":"off","strategy_params":{"leverage":40.0,"target_margin_pct":8.0},"position_policy":{"position_mode":"one_way","max_positions_per_symbol":1},"regime_policy":{"execution_timeframe":"1m","primary_timeframe":"5m","context_timeframe":"15m","context_is_hard_gate":false,"allowed_entry_states":["TREND_UP","TREND_DOWN","BREAKOUT"],"blocked_entry_states":["RANGE","TRANSITION","UNKNOWN"],"breakout_requires_direction":true,"confidence_is_gate":false},"risk":{"margin_fraction":0.7},"exits":{"target_margin_pct":8.0,"range_policy":"hold_until_target"},"execution":{"order_type":"limit","time_in_force":"post_only","entry_ttl_seconds":300.0,"same_direction_reentry_policy":"regime_reset"},"costs":{"maker_fee_rate":0.00015,"funding_source":"live_meta_and_asset_contexts"},"init_cash":10000.0,"equity":10000.0}"#,
     )
     .expect("telemetry");
 
@@ -372,6 +397,13 @@ fn test_backend_config_is_a_selectable_menu_not_raw_json() {
         rows.iter()
             .any(|row| { row.option == "Same-side re-entry" && row.value == "regime_reset" })
     );
+    assert!(
+        rows.iter()
+            .any(|row| { row.option == "Primary regime timeframe" && row.value == "5m" })
+    );
+    assert!(rows.iter().any(|row| {
+        row.option == "Blocked entry states" && row.value == "RANGE, TRANSITION, UNKNOWN"
+    }));
     assert!(rows.iter().any(|row| {
         row.option == "Shadow reset"
             && row.value == "explicit CLI only"
@@ -627,8 +659,8 @@ fn dashboard_shows_full_ladder_and_truthful_regime_roles() {
     for price in [100.0, 99.0, 98.0, 97.0, 96.0] {
         assert!(rendered.contains(&format!("BID  ${price:.2}")));
     }
-    assert!(rendered.contains("5m PRIMARY [BULL]"));
-    assert!(rendered.contains("15m CONTEXT [BEAR]"));
+    assert!(rendered.contains("5m PRIMARY [TREND_UP]"));
+    assert!(rendered.contains("15m CONTEXT [TREND_DOWN]"));
     assert!(!rendered.contains("15m BEAR LOCK"));
     assert!(!rendered.contains("HTF Lock: 15m"));
 }

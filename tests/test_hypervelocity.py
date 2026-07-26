@@ -9,6 +9,7 @@ from hypervector.regime.models import BreakoutDirection, PrimaryRegime
 from hypervector.strategies.hypervelocity import (
     build_hypervelocity_signals,
     current_hypervelocity_entry_allowed,
+    current_hypervelocity_market,
     hypervelocity_long,
     hypervelocity_short,
     register_hypervelocity,
@@ -231,3 +232,17 @@ def test_current_regime_observation_reports_range_as_ineligible(monkeypatch) -> 
     assert observation.breakout_direction is None
     assert observation.direction == "long"
     assert observation.entry_allowed is False
+
+
+def test_live_observation_fails_closed_after_bar_gap() -> None:
+    bars = fixture_ohlcv(n_bars=80)
+    latest = bars.iloc[-1:].copy()
+    latest.loc[:, "timestamp"] = pd.Timestamp(
+        bars["timestamp"].iloc[-1]
+    ) + pd.Timedelta(hours=2)
+    gapped = pd.concat([bars, latest], ignore_index=True)
+
+    observation = current_hypervelocity_market(gapped)
+
+    assert observation.primary_regime == PrimaryRegime.UNKNOWN.value
+    assert observation.entry_direction is None

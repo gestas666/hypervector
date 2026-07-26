@@ -49,7 +49,12 @@ fn wide_lines(app: &App, status_style: Style, fresh: bool) -> Vec<Line<'static>>
         columns("REGIME", &regime(app), "BOOK BIAS", &book_bias(app)),
         columns("MAKER", &maker(app), "L2 AGE", &book_age(app)),
         columns("RETRY", &retry(app), "FUNDING", &funding(app)),
-        columns("COOLDOWN", &cooldown(app), "CONF", &confidence(app)),
+        columns(
+            "COOLDOWN",
+            &cooldown(app),
+            "STRUCTURE",
+            &structure_score(app),
+        ),
         Line::from(recent_decision(app)),
         Line::from(Span::styled(status_label(fresh), status_style)),
     ]
@@ -164,9 +169,9 @@ fn funding(app: &App) -> String {
         .unwrap_or_else(|| "N/A".to_string())
 }
 
-fn confidence(app: &App) -> String {
+fn structure_score(app: &App) -> String {
     app.backend
-        .latest_regime_confidence
+        .latest_regime_strength_score
         .map(|value| format!("{:.1}%", value * 100.0))
         .unwrap_or_else(|| "N/A".to_string())
 }

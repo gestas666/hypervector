@@ -167,7 +167,9 @@ cargo run -p hypervector-tui --bin tui-regime-detector -- --symbol BTC --timefra
 - **`[3]`**: **Configuration** (selectable effective backend options; read-only).
 - On Dashboard, **`[↑/↓]`** or **`[j/k]`** selects a closed trade and **`[Enter]`** opens entry/exit regime, fee, funding, and PnL details.
 - On Regime Detection, the same keys select and inspect transition events.
-- The canonical regime uses 5m as primary, allows the implemented 1m directional fallback, confirms breakouts on 1m+5m, and reports 15m as non-veto context.
+- The canonical regime uses 5m as the authoritative primary. The 1m state
+  cannot override 5m `RANGE`, `TRANSITION`, or `UNKNOWN`; it confirms the same
+  direction for 5m breakouts. The 15m state is non-veto context.
 
 ### 7. Walk-Forward LightGBM Metalabeling
 
@@ -201,6 +203,29 @@ The command is report-only. It uses live `regime_observation` rows to define
 the shadow window, refuses non-overlapping real logs, and reports entry,
 direction, RANGE-state, maker submit-to-fill, exit-timing, and price
 discrepancies without creating a promotion or execution gate.
+
+### 10. Hypervelocity Regime Evaluation, Retuning, and Challengers
+
+Use chronological evaluation and tuning against explicit recorded-position
+labels. Statistical challengers are annotation-only and cannot filter, size,
+route, or exit trades:
+
+```bash
+uv run python -m hypervector hypervelocity-regime-eval \
+  --symbol BTC --timeframe 1m --lookback 180 \
+  --positions path/to/positions.csv \
+  --out data/logs/research/hypervelocity_regime_eval.json
+
+uv run python -m hypervector hypervelocity-regime-autotune \
+  --symbol BTC --timeframe 1m --lookback 180 \
+  --positions path/to/positions.csv --n-trials 100 --seed 42 \
+  --out data/logs/research/hypervelocity_regime_autotune.json
+
+uv run python -m hypervector hypervelocity-regime-challengers \
+  --symbol BTC --timeframe 1m --lookback 180 \
+  --forward-horizon 30 --seed 42 --n-splits 3 \
+  --out data/logs/research/hypervelocity_regime_challengers.json
+```
 
 ---
 

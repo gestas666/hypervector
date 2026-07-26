@@ -88,6 +88,50 @@ fn skipped_entry_is_not_reconstructed_as_a_trade() {
 }
 
 #[test]
+fn rejected_post_only_entry_is_not_displayed_as_pending() {
+    let ledger = r#"{"feed_ts":"session_start","action":"session_start","run_id":"hv","init_cash":10000.0,"equity":10000.0}
+{"feed_ts":"2026-07-26T12:00:00Z","action":"submit_entry","run_id":"hv","side":"buy","requested_qty":1.0}
+{"feed_ts":"2026-07-26T12:00:01Z","action":"rejected_entry","run_id":"hv","side":"buy","reason":"post_only_would_cross"}"#;
+
+    let telemetry = parse_backend_telemetry(ledger).expect("valid rejected entry");
+
+    assert_eq!(telemetry.pending_entry_direction, None);
+}
+
+#[test]
+fn partial_entry_fills_aggregate_into_one_position_and_trade() {
+    let ledger = r#"{"feed_ts":"session_start","action":"session_start","run_id":"hv","strategy_params":{"leverage":40.0},"costs":{"maker_fee_rate":0.00015},"init_cash":10000.0,"equity":10000.0,"position_qty":0.0,"realized_pnl":0.0}
+{"feed_ts":"2026-07-26T12:00:00Z","action":"regime_observation","run_id":"hv","primary_regime":"TREND_UP","state_1m":"TREND_UP","state_5m":"TREND_UP","context_15m":"TREND_UP"}
+{"feed_ts":"2026-07-26T12:00:01Z","action":"enter_long","run_id":"hv","symbol":"BTC","fill_px":100.0,"fill_qty":0.4,"fee_usd":0.006,"position_qty":0.4,"position_avg_px":100.0,"equity":9999.994,"realized_pnl":-0.006,"leverage":40.0}
+{"feed_ts":"2026-07-26T12:00:02Z","action":"enter_long","run_id":"hv","symbol":"BTC","fill_px":101.0,"fill_qty":0.6,"fee_usd":0.00909,"position_qty":1.0,"position_avg_px":100.6,"equity":9999.98491,"realized_pnl":-0.01509,"leverage":40.0}
+{"feed_ts":"2026-07-26T12:02:00Z","action":"close","run_id":"hv","symbol":"BTC","fill_px":102.0,"fill_qty":1.0,"fee_usd":0.0153,"position_qty":0.0,"equity":10001.36961,"realized_pnl":1.36961,"leverage":40.0,"exit_reason":"take_profit_8pct_margin"}"#;
+
+    let telemetry = parse_backend_telemetry(ledger).expect("partial-fill telemetry");
+    let trade = &telemetry.trades[0];
+
+    assert_eq!(telemetry.trades.len(), 1);
+    assert_eq!(trade.entry_timestamp_str, "2026-07-26T12:00:01Z");
+    assert!((trade.entry_price - 100.6).abs() < 1e-9);
+    assert!((trade.size_btc - 1.0).abs() < 1e-9);
+    assert!((trade.entry_fee_usd - 0.01509).abs() < 1e-9);
+}
+
+#[test]
+fn active_partial_entry_reports_first_fill_and_cumulative_fee() {
+    let ledger = r#"{"feed_ts":"session_start","action":"session_start","run_id":"hv","strategy_params":{"leverage":40.0},"costs":{"maker_fee_rate":0.00015},"init_cash":10000.0,"equity":10000.0,"position_qty":0.0,"realized_pnl":0.0}
+{"feed_ts":"2026-07-26T12:00:01Z","action":"enter_long","run_id":"hv","symbol":"BTC","fill_px":100.0,"fill_qty":0.4,"fee_usd":0.006,"position_qty":0.4,"position_avg_px":100.0,"equity":9999.994,"realized_pnl":-0.006,"leverage":40.0}
+{"feed_ts":"2026-07-26T12:00:02Z","action":"enter_long","run_id":"hv","symbol":"BTC","fill_px":101.0,"fill_qty":0.6,"fee_usd":0.00909,"position_qty":1.0,"position_avg_px":100.6,"equity":9999.98491,"realized_pnl":-0.01509,"leverage":40.0}"#;
+
+    let telemetry = parse_backend_telemetry(ledger).expect("active partial-fill telemetry");
+    let position = &telemetry.active_position;
+
+    assert_eq!(position.entry_timestamp, "2026-07-26T12:00:01Z");
+    assert!((position.size_btc - 1.0).abs() < 1e-9);
+    assert!((position.entry_price - 100.6).abs() < 1e-9);
+    assert!((position.entry_fee_usd - 0.01509).abs() < 1e-9);
+}
+
+#[test]
 fn exact_hypervelocity_trade_uses_backend_regime_leverage_and_net_margin_return() {
     let ledger = r#"{"feed_ts":"session_start","action":"session_start","run_id":"7ea893372898","strategy_name":"hypervelocity_1m_scalper","strategy_params":{"leverage":40.0,"target_margin_pct":8.0},"risk":{"margin_fraction":0.7},"init_cash":10000.0,"equity":10000.0,"realized_pnl":0.0}
 {"feed_ts":"2026-07-25T13:37:00Z","action":"regime_observation","run_id":"7ea893372898","primary_regime":"TREND_UP","position_qty":0.0,"equity":10000.0,"realized_pnl":0.0}

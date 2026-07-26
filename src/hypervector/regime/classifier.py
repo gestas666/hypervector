@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 
 import numpy as np
@@ -36,18 +37,56 @@ class RegimeClassifierConfig:
     breakout_volume_multiple: float = 2.0
 
     def __post_init__(self) -> None:
+        _require_integer("ema_fast", self.ema_fast, minimum=1)
+        _require_integer("ema_slow", self.ema_slow, minimum=2)
         if not 1 <= self.ema_fast < self.ema_slow:
             raise ValueError("require 1 <= ema_fast < ema_slow")
+        _require_integer("warmup_bars", self.warmup_bars, minimum=1)
         if self.warmup_bars < self.ema_slow:
             raise ValueError("warmup_bars must be >= ema_slow")
-        if self.breakout_lookback < 2:
-            raise ValueError("breakout_lookback must be >= 2")
-        if self.breakout_volume_multiple <= 0.0:
-            raise ValueError("breakout_volume_multiple must be positive")
+        _require_integer("structure_lookback", self.structure_lookback, minimum=5)
+        _require_percentile("trend_strength_percentile", self.trend_strength_percentile)
+        _require_percentile("range_strength_percentile", self.range_strength_percentile)
+        if self.range_strength_percentile > self.trend_strength_percentile:
+            raise ValueError(
+                "range_strength_percentile must be <= trend_strength_percentile"
+            )
+        _require_non_negative("minimum_trend_gap_bps", self.minimum_trend_gap_bps)
+        _require_integer("choppiness_length", self.choppiness_length, minimum=2)
+        _require_percentile(
+            "choppiness_range_threshold", self.choppiness_range_threshold
+        )
+        _require_non_negative("coiling_width_bps", self.coiling_width_bps)
+        _require_integer("breakout_lookback", self.breakout_lookback, minimum=2)
+        _require_non_negative("breakout_clearance_bps", self.breakout_clearance_bps)
+        _require_integer(
+            "breakout_volume_lookback", self.breakout_volume_lookback, minimum=1
+        )
+        _require_positive("breakout_volume_multiple", self.breakout_volume_multiple)
+
+
+def _require_integer(name: str, value: int, *, minimum: int) -> None:
+    if not isinstance(value, int) or isinstance(value, bool) or value < minimum:
+        raise ValueError(f"{name} must be an integer >= {minimum}")
+
+
+def _require_percentile(name: str, value: float) -> None:
+    if not math.isfinite(value) or not 0.0 <= value <= 100.0:
+        raise ValueError(f"{name} must be finite and within [0, 100]")
+
+
+def _require_non_negative(name: str, value: float) -> None:
+    if not math.isfinite(value) or value < 0.0:
+        raise ValueError(f"{name} must be finite and non-negative")
+
+
+def _require_positive(name: str, value: float) -> None:
+    if not math.isfinite(value) or value <= 0.0:
+        raise ValueError(f"{name} must be finite and positive")
 
 
 def _validate_bars(df: pd.DataFrame) -> None:
-    required = {"high", "low", "close", "volume"}
+    required = {"open", "high", "low", "close", "volume"}
     missing = required.difference(df.columns)
     if missing:
         raise ValueError(f"regime bars missing columns: {sorted(missing)}")
@@ -55,6 +94,32 @@ def _validate_bars(df: pd.DataFrame) -> None:
         raise ValueError("regime bars require a DatetimeIndex")
     if not df.index.is_monotonic_increasing or df.index.has_duplicates:
         raise ValueError("regime bar index must be unique and increasing")
+    values = _numeric_ohlcv(df)
+    if not np.isfinite(values.to_numpy()).all():
+        raise ValueError("regime bars contain non-finite OHLCV values")
+    prices = values[["open", "high", "low", "close"]]
+    if (prices <= 0.0).to_numpy().any():
+        raise ValueError("regime bar prices must be positive")
+    if (values["volume"] < 0.0).any():
+        raise ValueError("regime bar volume must be non-negative")
+    _validate_ohlc_bounds(values)
+
+
+def _numeric_ohlcv(df: pd.DataFrame) -> pd.DataFrame:
+    columns = ["open", "high", "low", "close", "volume"]
+    try:
+        return df.loc[:, columns].astype(float)
+    except (TypeError, ValueError) as exc:
+        raise ValueError("regime bars require numeric OHLCV values") from exc
+
+
+def _validate_ohlc_bounds(values: pd.DataFrame) -> None:
+    upper = values[["open", "low", "close"]].max(axis=1)
+    lower = values[["open", "high", "close"]].min(axis=1)
+    invalid = (values["high"] < upper) | (values["low"] > lower)
+    if invalid.any():
+        timestamp = values.index[invalid][0]
+        raise ValueError(f"regime bar OHLC bounds are inconsistent at {timestamp}")
 
 
 def _breakout_features(
@@ -65,13 +130,12 @@ def _breakout_features(
     prior_high = df["high"].shift(1).rolling(cfg.breakout_lookback).max()
     prior_low = df["low"].shift(1).rolling(cfg.breakout_lookback).min()
     prior_volume = (
-        df["volume"].astype(float)
-        .shift(1)
-        .rolling(cfg.breakout_volume_lookback)
-        .mean()
+        df["volume"].astype(float).shift(1).rolling(cfg.breakout_volume_lookback).mean()
     )
     clearance = cfg.breakout_clearance_bps / 10_000.0
-    volume_ok = df["volume"].astype(float) >= prior_volume * cfg.breakout_volume_multiple
+    volume_ok = (
+        df["volume"].astype(float) >= prior_volume * cfg.breakout_volume_multiple
+    )
     upward = (close > prior_high * (1.0 + clearance)) & volume_ok
     downward = (close < prior_low * (1.0 - clearance)) & volume_ok
     return upward.fillna(False), downward.fillna(False)
@@ -82,7 +146,9 @@ def _structure_features(
     cfg: RegimeClassifierConfig,
 ) -> pd.DataFrame:
     close = df["close"].astype(float)
-    gap = (ema(close, cfg.ema_fast) - ema(close, cfg.ema_slow)) / close.replace(0.0, np.nan)
+    gap = (ema(close, cfg.ema_fast) - ema(close, cfg.ema_slow)) / close.replace(
+        0.0, np.nan
+    )
     strength_bps = gap.abs() * 10_000.0
     width = bollinger_width(close, length=max(5, cfg.choppiness_length))
     width_rank = percentile_rank(width, cfg.structure_lookback)
@@ -94,7 +160,8 @@ def _structure_features(
             "choppiness": choppiness_index(
                 df["high"], df["low"], close, cfg.choppiness_length
             ),
-            "coiling": (width * 10_000.0 <= cfg.coiling_width_bps) | (width_rank <= 20.0),
+            "coiling": (width * 10_000.0 <= cfg.coiling_width_bps)
+            | (width_rank <= 20.0),
         },
         index=df.index,
     )
@@ -106,11 +173,13 @@ def _assign_primary(
     breakout_down: pd.Series,
     cfg: RegimeClassifierConfig,
 ) -> pd.Series:
-    primary = pd.Series(PrimaryRegime.TRANSITION.value, index=features.index, dtype=object)
+    primary = pd.Series(
+        PrimaryRegime.TRANSITION.value, index=features.index, dtype=object
+    )
     strong = features["strength_rank"] >= cfg.trend_strength_percentile
     enough_gap = features["strength_bps"] >= cfg.minimum_trend_gap_bps
     not_choppy = features["choppiness"] < cfg.choppiness_range_threshold
-    trend = (strong | (features["strength_bps"] >= 2.0 * cfg.minimum_trend_gap_bps))
+    trend = strong | (features["strength_bps"] >= 2.0 * cfg.minimum_trend_gap_bps)
     trend &= enough_gap & not_choppy
     range_state = (
         features["coiling"]
@@ -119,8 +188,12 @@ def _assign_primary(
         | (~not_choppy)
     )
     primary = primary.mask(range_state, PrimaryRegime.RANGE.value)
-    primary = primary.mask(trend & (features["gap"] > 0.0), PrimaryRegime.TREND_UP.value)
-    primary = primary.mask(trend & (features["gap"] < 0.0), PrimaryRegime.TREND_DOWN.value)
+    primary = primary.mask(
+        trend & (features["gap"] > 0.0), PrimaryRegime.TREND_UP.value
+    )
+    primary = primary.mask(
+        trend & (features["gap"] < 0.0), PrimaryRegime.TREND_DOWN.value
+    )
     primary = primary.mask(breakout_up | breakout_down, PrimaryRegime.BREAKOUT.value)
     if cfg.warmup_bars > 1:
         primary.iloc[: cfg.warmup_bars - 1] = PrimaryRegime.UNKNOWN.value
@@ -141,7 +214,8 @@ def classify_timeframe(
     direction = direction.mask(breakout_up, BreakoutDirection.UPWARD.value)
     direction = direction.mask(breakout_down, BreakoutDirection.DOWNWARD.value)
     direction = direction.where(primary == PrimaryRegime.BREAKOUT.value, None)
-    confidence = (features["strength_rank"] / 100.0).clip(0.0, 1.0).fillna(0.0)
+    strength_percentile = features["strength_rank"].clip(0.0, 100.0).fillna(0.0)
+    strength_score = strength_percentile / 100.0
     reason = primary.map(
         {
             PrimaryRegime.TREND_UP.value: "positive_trend_structure",
@@ -156,7 +230,10 @@ def classify_timeframe(
         {
             "primary_regime": primary,
             "breakout_direction": direction,
-            "confidence": confidence,
+            "confidence": strength_score,
+            "regime_strength_score": strength_score,
+            "regime_strength_percentile": strength_percentile,
+            "regime_score_source": "ema_gap_strength_percentile_rank",
             "reason": reason,
             "coiling": features["coiling"].fillna(False).astype(bool),
         },

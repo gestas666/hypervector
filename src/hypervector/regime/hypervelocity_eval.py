@@ -6,9 +6,10 @@ from dataclasses import asdict, dataclass
 
 import pandas as pd
 
-from hypervector.regime.classifier import RegimeClassifierConfig, classify_timeframe
-from hypervector.regime.composite import classify_multitimeframe
+from hypervector.regime.classifier import RegimeClassifierConfig
+from hypervector.regime.composite import _completed_context, classify_multitimeframe
 from hypervector.regime.models import BreakoutDirection, PrimaryRegime
+from hypervector.strategies.hypervelocity_contract import faithful_regime_config
 
 
 @dataclass(frozen=True)
@@ -61,6 +62,8 @@ class HypervelocityRegimeReport:
     bar_sources: tuple[str, ...]
     source_limited: bool
     context_direction_recall_pct: dict[str, float]
+    position_regime_performance: dict[str, object]
+    cost_sensitivity: dict[str, object]
 
     def to_dict(self) -> dict[str, object]:
         """Return a JSON-safe nested representation."""
@@ -75,7 +78,9 @@ def _datetime_bars(bars: pd.DataFrame) -> pd.DataFrame:
         result.index = pd.DatetimeIndex(pd.to_datetime(result["timestamp"], utc=True))
     else:
         raise ValueError("bars require a DatetimeIndex or timestamp column")
-    return result[~result.index.duplicated(keep="last")].sort_index()
+    if result.index.has_duplicates or not result.index.is_monotonic_increasing:
+        raise ValueError("bars require a unique, increasing timestamp index")
+    return result
 
 
 def _position_times(positions: pd.DataFrame) -> pd.DatetimeIndex:
@@ -306,25 +311,13 @@ def _state_decisions(index: pd.Index, state: pd.Series) -> pd.DataFrame:
 
 
 def _hard_30m_state(bars: pd.DataFrame) -> pd.Series:
-    aggregated = (
-        bars.resample("30min", label="right", closed="right")
-        .agg(
-            {
-                "open": "first",
-                "high": "max",
-                "low": "min",
-                "close": "last",
-                "volume": "sum",
-            }
-        )
-        .dropna()
+    context = _completed_context(
+        bars,
+        bars.index,
+        30,
+        RegimeClassifierConfig(),
     )
-    classified = classify_timeframe(aggregated, RegimeClassifierConfig()).shift(1)
-    return (
-        classified["primary_regime"]
-        .reindex(bars.index, method="ffill")
-        .fillna(PrimaryRegime.UNKNOWN.value)
-    )
+    return context["primary_regime"]
 
 
 def _context_recalls(
@@ -344,6 +337,92 @@ def _context_recalls(
     }
 
 
+def _aligned_position_rows(
+    decisions: pd.DataFrame,
+    positions: pd.DataFrame,
+) -> pd.DataFrame:
+    available = _available_decisions(decisions, pd.Timedelta(minutes=1))
+    aligned = available.reindex(_position_times(positions), method="ffill")
+    result = positions.reset_index(drop=True).copy()
+    result["primary_regime"] = aligned["primary_regime"].to_numpy()
+    result["predicted_direction"] = _decision_directions(aligned).to_numpy()
+    return result
+
+
+def _position_regime_performance(
+    decisions: pd.DataFrame,
+    positions: pd.DataFrame,
+) -> dict[str, object]:
+    if "net_margin_pnl_pct" not in positions.columns:
+        return {"status": "unavailable", "reason": "net_margin_pnl_pct not reported"}
+    aligned = _aligned_position_rows(decisions, positions)
+    aligned["net_margin_pnl_pct"] = pd.to_numeric(
+        aligned["net_margin_pnl_pct"], errors="raise"
+    )
+    aligned["direction_match"] = aligned["predicted_direction"].eq(
+        aligned["side"].astype(str).str.lower()
+    )
+    return {
+        "status": "completed",
+        "annotation_only": True,
+        "states": {
+            str(state): _position_group_metrics(group)
+            for state, group in aligned.groupby("primary_regime", dropna=False)
+        },
+    }
+
+
+def _position_group_metrics(group: pd.DataFrame) -> dict[str, object]:
+    returns = group["net_margin_pnl_pct"].astype(float)
+    return {
+        "positions": len(group),
+        "mean_net_margin_pnl_pct": float(returns.mean()),
+        "median_net_margin_pnl_pct": float(returns.median()),
+        "win_rate_pct": float((returns > 0.0).mean() * 100.0),
+        "direction_match_pct": float(group["direction_match"].mean() * 100.0),
+    }
+
+
+def _cost_sensitivity(positions: pd.DataFrame) -> dict[str, object]:
+    required = {"net_margin_pnl_pct", "fees_usd", "approx_margin_usd", "leverage"}
+    missing = required.difference(positions.columns)
+    if missing:
+        return {"status": "unavailable", "missing_columns": sorted(missing)}
+    frame = positions.loc[:, sorted(required)].apply(pd.to_numeric, errors="raise")
+    if (frame["approx_margin_usd"] <= 0.0).any():
+        raise ValueError("approx_margin_usd must be positive for cost sensitivity")
+    fee_drag = frame["fees_usd"] / frame["approx_margin_usd"] * 100.0
+    gross = frame["net_margin_pnl_pct"] + fee_drag
+    scenarios = {
+        "maker_1_5bps_per_side": 0.00030,
+        "taker_4_5bps_per_side": 0.00090,
+        "maker_plus_1bps_slippage_per_side": 0.00050,
+    }
+    return {
+        "status": "completed",
+        "basis": "gross reconstructed from reported net plus reported fees",
+        "funding": "unchanged from recorded position outcome",
+        "scenarios": {
+            name: _cost_scenario(gross, frame["leverage"], rate)
+            for name, rate in scenarios.items()
+        },
+    }
+
+
+def _cost_scenario(
+    gross_margin_pct: pd.Series,
+    leverage: pd.Series,
+    roundtrip_notional_rate: float,
+) -> dict[str, object]:
+    adjusted = gross_margin_pct - roundtrip_notional_rate * leverage * 100.0
+    return {
+        "roundtrip_notional_rate": roundtrip_notional_rate,
+        "mean_net_margin_pnl_pct": float(adjusted.mean()),
+        "median_net_margin_pnl_pct": float(adjusted.median()),
+        "win_rate_pct": float((adjusted > 0.0).mean() * 100.0),
+    }
+
+
 def evaluate_hypervelocity_regimes(
     bars: pd.DataFrame,
     positions: pd.DataFrame,
@@ -354,7 +433,10 @@ def evaluate_hypervelocity_regimes(
 ) -> HypervelocityRegimeReport:
     """Evaluate canonical regimes without accepting or rejecting a trial."""
     indexed = _datetime_bars(bars)
-    decisions = classify_multitimeframe(indexed, config=config)
+    decisions = classify_multitimeframe(
+        indexed,
+        config=config or faithful_regime_config(),
+    )
     alignment = evaluate_entry_alignment(decisions, positions)
     breakout = evaluate_breakout_quality(
         indexed,
@@ -383,6 +465,11 @@ def evaluate_hypervelocity_regimes(
         label_churn=int(primary.ne(primary.shift()).sum() - (1 if len(primary) else 0)),
         mean_transition_latency_bars=_mean_transition_latency(decisions),
         bar_sources=sources,
-        source_limited=sources != ("bitget",),
+        source_limited=not sources or any(source != "hl" for source in sources),
         context_direction_recall_pct=_context_recalls(indexed, decisions, positions),
+        position_regime_performance=_position_regime_performance(
+            decisions,
+            positions,
+        ),
+        cost_sensitivity=_cost_sensitivity(positions),
     )

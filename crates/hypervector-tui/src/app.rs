@@ -2,8 +2,8 @@
 
 use crate::backend_telemetry::BackendTelemetrySnapshot;
 use crate::model::{
-    ActivePosition, BookLevel, EngineConfig, HypervelocityBookState, HypervelocityTrade,
-    LivePaperStats, PaperTradeRecord, RegimeEvent, RegimeSnapshot, RegimeState,
+    ActivePosition, EngineConfig, HypervelocityBookState, HypervelocityTrade, LivePaperStats,
+    PaperTradeRecord, RegimeEvent, RegimeSnapshot, RegimeState,
 };
 use crate::theme::CockpitTheme;
 
@@ -159,11 +159,7 @@ impl App {
     }
 
     pub fn sparkline_price_data(&self) -> Vec<u64> {
-        let start = if self.current_index > 60 {
-            self.current_index - 60
-        } else {
-            0
-        };
+        let start = self.current_index.saturating_sub(60);
         let end = (self.current_index + 1).min(self.snapshots.len());
         let window = &self.snapshots[start..end];
         let (min, max) = window.iter().fold((f64::MAX, f64::MIN), |(mn, mx), s| {
@@ -177,11 +173,7 @@ impl App {
     }
 
     pub fn sparkline_bbwp_data(&self) -> Vec<u64> {
-        let start = if self.current_index > 60 {
-            self.current_index - 60
-        } else {
-            0
-        };
+        let start = self.current_index.saturating_sub(60);
         let end = (self.current_index + 1).min(self.snapshots.len());
         self.snapshots[start..end]
             .iter()
@@ -266,11 +258,11 @@ impl App {
             let curr = &self.snapshots[i];
             if prev.state != curr.state {
                 let fallback_reason = match curr.state {
-                    RegimeState::BullMomentum => "5m primary bullish (1m fallback possible)",
-                    RegimeState::BearMomentum => "5m primary bearish (1m fallback possible)",
-                    RegimeState::VolatilityCoiling => "BBWP Percentile < 20.0 (Coiling)",
-                    RegimeState::FundingCarry => "Funding Rate Z-Score |Z| >= 1.8",
-                    RegimeState::RangeChop => "Spread > 6.0bps / Choppiness > 55",
+                    RegimeState::BullMomentum | RegimeState::BearMomentum => "5m_primary_trend",
+                    RegimeState::VolatilityCoiling => "breakout_reason_not_reported",
+                    RegimeState::FundingCarry => "transition_reason_not_reported",
+                    RegimeState::RangeChop => "range_reason_not_reported",
+                    RegimeState::Unknown => "unknown_reason_not_reported",
                 };
                 let reason = if curr.regime_reason.is_empty() {
                     fallback_reason
@@ -315,83 +307,16 @@ impl App {
     }
 
     pub fn update_book_state(&mut self) {
-        let spread_bps = self.current_snapshot().spread_bps;
-        let opi = self.current_snapshot().opi;
-        let bid_depth_ratio = self.current_snapshot().bid_depth_ratio;
-        let price = self.current_snapshot().price;
-        let volume = self.current_snapshot().volume;
-
-        let bs = &mut self.book_state;
-
-        bs.spread_bps = spread_bps;
-        bs.opi = opi;
-        bs.depth_ratio = bid_depth_ratio;
-        // Microprice tilt derived from order-book pressure imbalance:
-        // positive OPI pulls the microprice toward the ask side.
-        bs.microprice_delta_bps = opi * spread_bps * 0.5;
-
-        let spread_ok = spread_bps <= 5.0;
-        let depth_ok = bid_depth_ratio >= 0.5 && bid_depth_ratio <= 2.0;
-
-        bs.gate_ok = spread_ok && depth_ok;
-        bs.gate_reason = if !spread_ok {
-            format!("SPREAD {:.1}bps WIDE", spread_bps)
-        } else if !depth_ok {
-            "DEPTH IMBALANCED".to_string()
-        } else {
-            String::new()
-        };
-
-        let spread_dollars = spread_bps * price / 10000.0;
-        let base_size = volume.max(0.5);
-        let mid = price;
-
-        let old_bids: Vec<f64> = bs.bid_levels.iter().map(|l| l.size).collect();
-        let old_asks: Vec<f64> = bs.ask_levels.iter().map(|l| l.size).collect();
-
-        bs.bid_levels.clear();
-        bs.ask_levels.clear();
-
-        let mut bid_changes: Vec<u64> = Vec::with_capacity(5);
-        let mut ask_changes: Vec<u64> = Vec::with_capacity(5);
-        let now = self.tick_count;
-
-        for i in 0..5 {
-            let offset = spread_dollars * 0.5 + i as f64 * spread_dollars * 0.8;
-            let bid_sz = base_size * bid_depth_ratio * (1.0 - i as f64 * 0.18).max(0.1);
-            let ask_sz = base_size / bid_depth_ratio.max(0.1) * (1.0 - i as f64 * 0.18).max(0.1);
-
-            // Flash a level only when its size actually moved vs the prior tick
-            let old_bid = old_bids.get(i).copied().unwrap_or(0.0);
-            let old_ask = old_asks.get(i).copied().unwrap_or(0.0);
-
-            bid_changes.push(if (bid_sz - old_bid).abs() > old_bid.max(0.001) * 0.01 {
-                now
-            } else {
-                bs.bid_last_change.get(i).copied().unwrap_or(0)
-            });
-            ask_changes.push(if (ask_sz - old_ask).abs() > old_ask.max(0.001) * 0.01 {
-                now
-            } else {
-                bs.ask_last_change.get(i).copied().unwrap_or(0)
-            });
-
-            bs.bid_levels.push(BookLevel {
-                price: mid - offset,
-                size: bid_sz,
-            });
-            bs.ask_levels.push(BookLevel {
-                price: mid + offset,
-                size: ask_sz,
-            });
-        }
-
-        bs.bid_last_change = bid_changes;
-        bs.ask_last_change = ask_changes;
-
-        if let (Some(b), Some(a)) = (bs.bid_levels.first(), bs.ask_levels.first()) {
-            bs.touch_bid_sz = b.size;
-            bs.touch_ask_sz = a.size;
+        let snapshot = self.current_snapshot().clone();
+        self.book_state = HypervelocityBookState::default();
+        if snapshot.microstructure_source != "not_available" {
+            self.book_state.spread_bps = snapshot.spread_bps;
+            self.book_state.opi = snapshot.opi;
+            self.book_state.depth_ratio = snapshot.bid_depth_ratio;
+            self.book_state.gate_reason = format!(
+                "{} AGGREGATES; L2 LEVELS NOT RECORDED",
+                snapshot.microstructure_source
+            );
         }
     }
 
@@ -400,7 +325,7 @@ impl App {
             return vec![50];
         }
         let len = self.equity_history.len();
-        let start = if len > 60 { len - 60 } else { 0 };
+        let start = len.saturating_sub(60);
         let window = &self.equity_history[start..];
         let (min, max) = window
             .iter()

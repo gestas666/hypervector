@@ -59,6 +59,30 @@ def test_faithful_profile_enforces_one_way_bidirectional_runtime() -> None:
     assert profile.same_direction_reentry_policy == "regime_reset"
     assert profile.orderbook_archive_enabled is True
     assert profile.orderbook_archive_depth_levels == 20
+    assert profile.execution_timeframe == "1m"
+    assert profile.primary_timeframe == "5m"
+    assert profile.context_timeframe == "15m"
+    assert profile.context_is_hard_gate is False
+    assert profile.allowed_entry_states == ("TREND_UP", "TREND_DOWN", "BREAKOUT")
+    assert profile.blocked_entry_states == ("RANGE", "TRANSITION", "UNKNOWN")
+    assert profile.breakout_requires_direction is True
+    assert profile.confidence_is_gate is False
+
+
+def test_faithful_profile_exposes_authoritative_regime_policy() -> None:
+    """The backend exposes the exact policy that config validation enforces."""
+    profile = load_hypervelocity_profile(PROFILE)
+
+    assert profile.regime_policy() == {
+        "execution_timeframe": "1m",
+        "primary_timeframe": "5m",
+        "context_timeframe": "15m",
+        "context_is_hard_gate": False,
+        "allowed_entry_states": ["TREND_UP", "TREND_DOWN", "BREAKOUT"],
+        "blocked_entry_states": ["RANGE", "TRANSITION", "UNKNOWN"],
+        "breakout_requires_direction": True,
+        "confidence_is_gate": False,
+    }
 
 
 def _venue_profile_text(
@@ -168,6 +192,26 @@ def test_profile_requires_positive_finite_live_canary_notional(
             "backstop_liquidation_supported = true",
             "backstop_liquidation_supported = false",
             "backstop_liquidation_supported",
+        ),
+        (
+            'primary_timeframe = "5m"',
+            'primary_timeframe = "15m"',
+            "primary_timeframe",
+        ),
+        (
+            'context_timeframe = "15m"',
+            'context_timeframe = "5m"',
+            "context_timeframe",
+        ),
+        (
+            'allowed_states = ["TREND_UP", "TREND_DOWN", "BREAKOUT_DIRECTION_CONFIRMED"]',
+            'allowed_states = ["TREND_UP", "TREND_DOWN", "RANGE"]',
+            "allowed_states",
+        ),
+        (
+            'blocked_states = ["RANGE", "TRANSITION", "UNKNOWN"]',
+            'blocked_states = ["TRANSITION", "UNKNOWN"]',
+            "blocked_states",
         ),
     ],
 )

@@ -37,13 +37,14 @@ pub fn render_screen_hypervelocity(f: &mut Frame, app: &App, area: Rect) {
 pub fn render_command_bar(f: &mut Frame, app: &App, area: Rect) {
     let snap = app.current_snapshot();
 
-    let (state_style, state_label) = match snap.state {
-        RegimeState::BullMomentum => (app.theme.bull, "BULL_MOMENTUM EXPANSION"),
-        RegimeState::BearMomentum => (app.theme.bear, "BEAR_MOMENTUM EXPANSION"),
-        RegimeState::VolatilityCoiling => (app.theme.coiling, "VOLATILITY COILING COMPRESSION"),
-        RegimeState::FundingCarry => (app.theme.carry, "FUNDING CARRY REVERSAL"),
-        RegimeState::RangeChop => (app.theme.chop, "RANGE CHOP / HIGH FRICTION"),
+    let state_style = match snap.state {
+        RegimeState::BullMomentum => app.theme.bull,
+        RegimeState::BearMomentum => app.theme.bear,
+        RegimeState::VolatilityCoiling => app.theme.coiling,
+        RegimeState::FundingCarry => app.theme.carry,
+        RegimeState::RangeChop | RegimeState::Unknown => app.theme.chop,
     };
+    let state_label = snap.state.display_name();
 
     let entry_line = if app.backend.entry_allowed == Some(true) {
         let direction = app.backend.entry_direction.as_deref().unwrap_or("unknown");
@@ -68,9 +69,9 @@ pub fn render_command_bar(f: &mut Frame, app: &App, area: Rect) {
                 "5m PRIMARY [{}] | 15m CONTEXT [{}]",
                 snap.trend_5m, snap.trend_15m
             ),
-            if snap.trend_5m == "BULL" {
+            if matches!(snap.trend_5m.as_str(), "TREND_UP" | "BULL") {
                 app.theme.bull
-            } else if snap.trend_5m == "BEAR" {
+            } else if matches!(snap.trend_5m.as_str(), "TREND_DOWN" | "BEAR") {
                 app.theme.bear
             } else {
                 app.theme.chop
@@ -598,7 +599,9 @@ pub fn render_run_stats(f: &mut Frame, app: &App, area: Rect) {
                 match snap.state {
                     RegimeState::BullMomentum => app.theme.bull,
                     RegimeState::BearMomentum => app.theme.bear,
-                    _ => app.theme.muted,
+                    RegimeState::VolatilityCoiling => app.theme.coiling,
+                    RegimeState::FundingCarry => app.theme.carry,
+                    RegimeState::RangeChop | RegimeState::Unknown => app.theme.muted,
                 },
             ),
         ]),

@@ -24,9 +24,72 @@ pub struct ConfigMenuRow {
 pub fn backend_config_rows(backend: &BackendTelemetrySnapshot) -> Vec<ConfigMenuRow> {
     let mut rows = runtime_rows(backend);
     rows.extend(strategy_rows(backend));
+    rows.extend(regime_rows(backend));
     rows.extend(execution_rows(backend));
     rows.extend(cost_rows(backend));
     rows
+}
+
+fn regime_rows(backend: &BackendTelemetrySnapshot) -> Vec<ConfigMenuRow> {
+    let policy = &backend.regime_policy;
+    vec![
+        json_row(
+            "Regime",
+            "Execution timeframe",
+            policy,
+            "execution_timeframe",
+            "regime_policy",
+        ),
+        json_row(
+            "Regime",
+            "Primary regime timeframe",
+            policy,
+            "primary_timeframe",
+            "regime_policy",
+        ),
+        json_row(
+            "Regime",
+            "Context timeframe",
+            policy,
+            "context_timeframe",
+            "regime_policy",
+        ),
+        json_row(
+            "Regime",
+            "Context hard gate",
+            policy,
+            "context_is_hard_gate",
+            "regime_policy",
+        ),
+        json_row(
+            "Regime",
+            "Allowed entry states",
+            policy,
+            "allowed_entry_states",
+            "regime_policy",
+        ),
+        json_row(
+            "Regime",
+            "Blocked entry states",
+            policy,
+            "blocked_entry_states",
+            "regime_policy",
+        ),
+        json_row(
+            "Regime",
+            "Breakout direction required",
+            policy,
+            "breakout_requires_direction",
+            "regime_policy",
+        ),
+        json_row(
+            "Regime",
+            "Strength score is gate",
+            policy,
+            "confidence_is_gate",
+            "regime_policy",
+        ),
+    ]
 }
 
 /// Render effective settings as menu rows without mutating backend state.
@@ -304,6 +367,11 @@ fn json_value(value: Option<&Value>) -> String {
         Some(Value::String(text)) => text.clone(),
         Some(Value::Number(number)) => number.to_string(),
         Some(Value::Bool(flag)) => flag.to_string(),
+        Some(Value::Array(values)) => values
+            .iter()
+            .filter_map(Value::as_str)
+            .collect::<Vec<_>>()
+            .join(", "),
         _ => "not reported".into(),
     }
 }

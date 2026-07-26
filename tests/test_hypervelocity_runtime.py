@@ -91,10 +91,18 @@ def test_range_or_uncertain_execution_evidence_never_claims_entry() -> None:
     assert uncertain.annotations == ("execution_evidence_uncertain",)
 
 
-def test_partial_entry_releases_proportional_reduce_only_target() -> None:
-    submitted = advance_hypervelocity_runtime(
-        HypervelocityRuntimeState(), market()
+def test_flat_no_signal_does_not_emit_repeated_execution_warning() -> None:
+    decision = advance_hypervelocity_runtime(
+        HypervelocityRuntimeState(),
+        market(direction=None, fresh=False),
     )
+
+    assert decision.commands == ()
+    assert decision.annotations == ()
+
+
+def test_partial_entry_releases_proportional_reduce_only_target() -> None:
+    submitted = advance_hypervelocity_runtime(HypervelocityRuntimeState(), market())
     entry = submitted.commands[0]
 
     accepted = advance_hypervelocity_runtime(
@@ -127,9 +135,7 @@ def test_partial_entry_releases_proportional_reduce_only_target() -> None:
 
 
 def test_open_position_holds_through_range_and_opposite_regime() -> None:
-    submitted = advance_hypervelocity_runtime(
-        HypervelocityRuntimeState(), market()
-    )
+    submitted = advance_hypervelocity_runtime(HypervelocityRuntimeState(), market())
     entry = submitted.commands[0]
     filled = advance_hypervelocity_runtime(
         submitted.state,
@@ -162,9 +168,7 @@ def test_open_position_holds_through_range_and_opposite_regime() -> None:
 
 
 def test_target_fill_closes_then_enforces_cooldown_and_regime_reset() -> None:
-    submitted = advance_hypervelocity_runtime(
-        HypervelocityRuntimeState(), market()
-    )
+    submitted = advance_hypervelocity_runtime(HypervelocityRuntimeState(), market())
     entry = submitted.commands[0]
     filled = advance_hypervelocity_runtime(
         submitted.state,
@@ -212,9 +216,7 @@ def test_target_fill_closes_then_enforces_cooldown_and_regime_reset() -> None:
 
 
 def test_pending_direction_change_requests_cancel_before_switching() -> None:
-    submitted = advance_hypervelocity_runtime(
-        HypervelocityRuntimeState(), market()
-    )
+    submitted = advance_hypervelocity_runtime(HypervelocityRuntimeState(), market())
     entry = submitted.commands[0]
 
     changed = advance_hypervelocity_runtime(
@@ -235,9 +237,7 @@ def test_pending_direction_change_requests_cancel_before_switching() -> None:
 
 
 def test_ttl_expiry_consumes_episode_until_regime_reset() -> None:
-    submitted = advance_hypervelocity_runtime(
-        HypervelocityRuntimeState(), market()
-    )
+    submitted = advance_hypervelocity_runtime(HypervelocityRuntimeState(), market())
     entry = submitted.commands[0]
     expired = advance_hypervelocity_runtime(
         submitted.state,
@@ -269,15 +269,11 @@ def test_event_for_unknown_order_fails_closed() -> None:
     unknown = event("unknown", "accepted")
 
     with pytest.raises(ValueError, match="unknown order"):
-        advance_hypervelocity_runtime(
-            HypervelocityRuntimeState(), market(), (unknown,)
-        )
+        advance_hypervelocity_runtime(HypervelocityRuntimeState(), market(), (unknown,))
 
 
 def test_duplicate_partial_fill_is_idempotent() -> None:
-    submitted = advance_hypervelocity_runtime(
-        HypervelocityRuntimeState(), market()
-    )
+    submitted = advance_hypervelocity_runtime(HypervelocityRuntimeState(), market())
     entry = submitted.commands[0]
     partial_event = event(
         entry.client_order_id,
@@ -303,9 +299,7 @@ def test_duplicate_partial_fill_is_idempotent() -> None:
 
 
 def test_inconsistent_cumulative_fill_fails_closed() -> None:
-    submitted = advance_hypervelocity_runtime(
-        HypervelocityRuntimeState(), market()
-    )
+    submitted = advance_hypervelocity_runtime(HypervelocityRuntimeState(), market())
     entry = submitted.commands[0]
     inconsistent = event(
         entry.client_order_id,

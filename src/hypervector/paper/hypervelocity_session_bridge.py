@@ -67,6 +67,7 @@ class HypervelocitySessionBridge:
         self._context = context
         self._last_fill_count = 0
         self._order_annotations: dict[str, ShadowOrderAnnotation] = {}
+        self._last_annotation: str | None = None
 
     @property
     def controller(self) -> HypervelocityShadowController:
@@ -211,7 +212,11 @@ class HypervelocitySessionBridge:
                 fill_count += 1
             else:
                 self._record_order_event(command, event)
-        for annotation in cycle.annotations:
+        annotations, self._last_annotation = _new_annotations(
+            self._last_annotation,
+            cycle.annotations,
+        )
+        for annotation in annotations:
             self._record_annotation(annotation)
         self._validate_position_parity()
         self._last_fill_count = fill_count
@@ -329,6 +334,22 @@ class HypervelocitySessionBridge:
             raise RuntimeError(
                 f"event shadow position mismatch ledger={actual} runtime={expected}"
             )
+
+
+def _new_annotations(
+    previous: str | None,
+    annotations: tuple[str, ...],
+) -> tuple[tuple[str, ...], str | None]:
+    """Return annotation state changes and the latest active annotation."""
+    if not annotations:
+        return (), None
+    emitted: list[str] = []
+    latest = previous
+    for annotation in annotations:
+        if annotation != latest:
+            emitted.append(annotation)
+        latest = annotation
+    return tuple(emitted), latest
 
 
 def _liquidation_action(liquidation: ShadowLiquidation) -> str:

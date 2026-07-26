@@ -8,8 +8,27 @@ from hypervector.regime.classifier import RegimeClassifierConfig, classify_timef
 from hypervector.regime.models import PrimaryRegime
 
 
+def _validate_cadence(df: pd.DataFrame, minutes: int, label: str) -> None:
+    if df.empty:
+        return
+    expected = pd.Timedelta(minutes=minutes)
+    aligned = df.index.floor(f"{minutes}min").equals(df.index)
+    regular = (
+        len(df.index) < 2 or df.index.to_series().diff().iloc[1:].eq(expected).all()
+    )
+    if not aligned or not regular:
+        raise ValueError(
+            f"{label} regime bars require exact {minutes}m open-time cadence"
+        )
+
+
+def _strength_score(frame: pd.DataFrame) -> pd.Series:
+    return frame.get("regime_strength_score", frame["confidence"]).astype(float)
+
+
 def _resample_bars(df: pd.DataFrame, minutes: int) -> pd.DataFrame:
-    return df.resample(f"{minutes}min", label="right", closed="right").agg(
+    grouped = df.resample(f"{minutes}min", label="left", closed="left")
+    aggregated = grouped.agg(
         {
             "open": "first",
             "high": "max",
@@ -17,7 +36,11 @@ def _resample_bars(df: pd.DataFrame, minutes: int) -> pd.DataFrame:
             "close": "last",
             "volume": "sum",
         }
-    ).dropna()
+    )
+    complete = grouped["close"].count().eq(minutes)
+    aggregated = aggregated.loc[complete].dropna()
+    aggregated.index = aggregated.index + pd.Timedelta(minutes=minutes - 1)
+    return aggregated
 
 
 def _completed_context(
@@ -26,11 +49,13 @@ def _completed_context(
     minutes: int,
     config: RegimeClassifierConfig,
 ) -> pd.DataFrame:
-    classified = classify_timeframe(_resample_bars(df, minutes), config).shift(1)
+    classified = classify_timeframe(_resample_bars(df, minutes), config)
     return classified.reindex(index, method="ffill").fillna(
         {
             "primary_regime": PrimaryRegime.UNKNOWN.value,
             "confidence": 0.0,
+            "regime_strength_score": 0.0,
+            "regime_strength_percentile": 0.0,
             "reason": "warmup_incomplete",
             "coiling": False,
         }
@@ -41,12 +66,17 @@ def _completed_supplied_context(
     bars: pd.DataFrame,
     index: pd.DatetimeIndex,
     config: RegimeClassifierConfig,
+    *,
+    minutes: int,
 ) -> pd.DataFrame:
-    classified = classify_timeframe(bars, config).shift(1)
+    classified = classify_timeframe(bars, config)
+    classified.index = classified.index + pd.Timedelta(minutes=minutes - 1)
     return classified.reindex(index, method="ffill").fillna(
         {
             "primary_regime": PrimaryRegime.UNKNOWN.value,
             "confidence": 0.0,
+            "regime_strength_score": 0.0,
+            "regime_strength_percentile": 0.0,
             "reason": "warmup_incomplete",
             "coiling": False,
         }
@@ -72,21 +102,21 @@ def compose_regimes(
         raise ValueError("regime frames must share the same index")
     breakout = _confirmed_breakout(tf_1m, tf_5m)
     primary = tf_5m["primary_regime"].copy()
-    direction = tf_5m["breakout_direction"].copy()
+    direction = pd.Series(None, index=tf_1m.index, dtype=object)
     reason = pd.Series("5m_primary_state", index=tf_1m.index, dtype=object)
-    directional_states = [PrimaryRegime.TREND_UP.value, PrimaryRegime.TREND_DOWN.value]
-    fallback = ~primary.isin(directional_states + [PrimaryRegime.BREAKOUT.value])
-    fallback &= tf_1m["primary_regime"].isin(directional_states)
-    primary = primary.mask(fallback, tf_1m["primary_regime"])
-    reason = reason.mask(fallback, "1m_directional_fallback")
     trend = primary.isin([PrimaryRegime.TREND_UP.value, PrimaryRegime.TREND_DOWN.value])
-    reason = reason.mask(trend & ~fallback, "5m_primary_trend")
+    reason = reason.mask(trend, "5m_primary_trend")
+    awaiting_breakout = primary.eq(PrimaryRegime.BREAKOUT.value) & ~breakout
+    reason = reason.mask(
+        awaiting_breakout,
+        "5m_breakout_awaiting_1m_confirmation",
+    )
     primary = primary.mask(breakout, PrimaryRegime.BREAKOUT.value)
     direction = direction.mask(breakout, tf_1m["breakout_direction"])
-    direction = direction.where(primary == PrimaryRegime.BREAKOUT.value, None)
     reason = reason.mask(breakout, "confirmed_1m_5m_breakout")
-    confidence = pd.concat(
-        [tf_1m["confidence"], tf_5m["confidence"], tf_15m["confidence"]], axis=1
+    strength_score = pd.concat(
+        [_strength_score(tf_1m), _strength_score(tf_5m), _strength_score(tf_15m)],
+        axis=1,
     ).mean(axis=1)
     return pd.DataFrame(
         {
@@ -95,7 +125,12 @@ def compose_regimes(
             "state_1m": tf_1m["primary_regime"],
             "state_5m": tf_5m["primary_regime"],
             "context_15m": tf_15m["primary_regime"],
-            "confidence": confidence,
+            "confidence": strength_score,
+            "regime_strength_score": strength_score,
+            "regime_strength_percentile": strength_score * 100.0,
+            "regime_score_source": (
+                "mean_multitimeframe_ema_gap_strength_percentile_rank"
+            ),
             "reason": reason,
         },
         index=tf_1m.index,
@@ -110,15 +145,20 @@ def classify_multitimeframe(
 ) -> pd.DataFrame:
     """Classify 1m execution bars with completed 5m and 15m context."""
     cfg = config or RegimeClassifierConfig()
+    _validate_cadence(df_1m, 1, "1m")
+    if df_5m is not None:
+        _validate_cadence(df_5m, 5, "5m")
+    if df_15m is not None:
+        _validate_cadence(df_15m, 15, "15m")
     tf_1m = classify_timeframe(df_1m, cfg)
     tf_5m = (
         _completed_context(df_1m, df_1m.index, 5, cfg)
         if df_5m is None
-        else _completed_supplied_context(df_5m, df_1m.index, cfg)
+        else _completed_supplied_context(df_5m, df_1m.index, cfg, minutes=5)
     )
     tf_15m = (
         _completed_context(df_1m, df_1m.index, 15, cfg)
         if df_15m is None
-        else _completed_supplied_context(df_15m, df_1m.index, cfg)
+        else _completed_supplied_context(df_15m, df_1m.index, cfg, minutes=15)
     )
     return compose_regimes(tf_1m, tf_5m, tf_15m)

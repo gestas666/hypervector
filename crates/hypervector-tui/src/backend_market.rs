@@ -68,16 +68,22 @@ fn regime_snapshot(
         volume: number(row, "volume").unwrap_or(0.0),
         state,
         regime_reason: text(row, "regime_reason").unwrap_or_else(|| "not_reported".into()),
-        confidence: number(row, "confidence").unwrap_or(0.0),
+        confidence: number(row, "regime_strength_score")
+            .or_else(|| number(row, "confidence"))
+            .unwrap_or(0.0),
+        regime_score_source: text(row, "regime_score_source")
+            .unwrap_or_else(|| "legacy_confidence_alias".into()),
         opi: 0.0,
         spread_bps: 0.0,
         bid_depth_ratio: 0.0,
+        microstructure_source: "not_available".into(),
         bbwp_percentile: number(row, "bbwp_percentile").unwrap_or(0.0),
         rsi: number(row, "rsi").unwrap_or(50.0),
         funding_zscore: number(row, "funding_zscore").unwrap_or(0.0),
-        trend_1m: trend_label(text(row, "state_1m").as_deref().unwrap_or(primary)),
-        trend_5m: trend_label(text(row, "state_5m").as_deref().unwrap_or(primary)),
-        trend_15m: trend_label(text(row, "context_15m").as_deref().unwrap_or("UNKNOWN")),
+        funding_source: text(row, "funding_source").unwrap_or_else(|| "not_available".into()),
+        trend_1m: text(row, "state_1m").unwrap_or_else(|| primary.to_string()),
+        trend_5m: text(row, "state_5m").unwrap_or_else(|| primary.to_string()),
+        trend_15m: text(row, "context_15m").unwrap_or_else(|| "UNKNOWN".into()),
         long_weight: weight(direction.as_deref(), "long"),
         short_weight: weight(direction.as_deref(), "short"),
         max_leverage: if eligible { configured_leverage } else { 0.0 },
@@ -92,7 +98,8 @@ fn regime_state(label: &str) -> RegimeState {
         "TREND_DOWN" => RegimeState::BearMomentum,
         "BREAKOUT" => RegimeState::VolatilityCoiling,
         "TRANSITION" => RegimeState::FundingCarry,
-        _ => RegimeState::RangeChop,
+        "RANGE" => RegimeState::RangeChop,
+        _ => RegimeState::Unknown,
     }
 }
 
@@ -108,14 +115,6 @@ fn weight(direction: Option<&str>, expected: &str) -> f64 {
         1.0
     } else {
         0.0
-    }
-}
-
-fn trend_label(state: &str) -> String {
-    match state {
-        "TREND_UP" => "BULL".into(),
-        "TREND_DOWN" => "BEAR".into(),
-        _ => "NEUTRAL".into(),
     }
 }
 

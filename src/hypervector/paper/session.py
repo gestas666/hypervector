@@ -713,6 +713,8 @@ class PaperSession:
                 "state_5m": market.state_5m,
                 "context_15m": market.context_15m,
                 "confidence": market.confidence,
+                "regime_strength_score": market.regime_strength_score,
+                "regime_score_source": market.regime_score_source,
                 "regime_reason": market.reason,
             }
         market = current_hypervelocity_market(
@@ -728,6 +730,8 @@ class PaperSession:
             "state_5m": market.state_5m,
             "context_15m": market.context_15m,
             "confidence": market.confidence,
+            "regime_strength_score": market.regime_strength_score,
+            "regime_score_source": market.regime_score_source,
             "regime_reason": market.reason,
         }
 
@@ -1579,6 +1583,11 @@ class PaperSession:
                     if self.hypervelocity_profile
                     else None
                 ),
+                "regime_policy": (
+                    self.hypervelocity_profile.regime_policy()
+                    if self.hypervelocity_profile
+                    else None
+                ),
                 "portfolio_spec": self._portfolio_spec,
                 "portfolio_fingerprint": self._portfolio_fingerprint,
                 "portfolio_profile_changed_from": (
@@ -1939,6 +1948,7 @@ def _portfolio_spec(
             **_effective_strategy_params(loadout),
         },
         "position_policy": profile.position_policy() if profile is not None else None,
+        "regime_policy": profile.regime_policy() if profile is not None else None,
         "exits": _effective_exits(loadout),
         "risk": _effective_risk(loadout),
         "execution": _effective_execution(loadout, profile=profile),

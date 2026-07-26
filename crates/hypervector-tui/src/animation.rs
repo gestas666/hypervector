@@ -34,11 +34,11 @@ pub fn slide_in(tick: u64, start_tick: u64) -> f64 {
     }
     let elapsed = tick - start_tick;
     if elapsed == 0 {
-        return 0.3;
+        0.3
     } else if elapsed == 1 {
-        return 0.6;
+        0.6
     } else {
-        return 1.0;
+        1.0
     }
 }
 
