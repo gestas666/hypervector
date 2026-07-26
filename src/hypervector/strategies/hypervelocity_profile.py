@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-import tomllib
 import math
+import tomllib
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Literal, Mapping, cast

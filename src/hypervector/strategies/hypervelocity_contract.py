@@ -19,7 +19,7 @@ _OPEN_POSITION_RANGE_POLICY = "hold_until_target"
 _ENTRY_TTL_SECONDS = 300.0
 _EXPIRED_ENTRY_REARM_POLICY = "regime_reset"
 _SAME_DIRECTION_REENTRY_POLICY = "regime_reset"
-_MARGIN_MODE = "isolated"
+_MARGIN_MODE: Literal["isolated"] = "isolated"
 _STRATEGY_NAMES = frozenset(
     {
         "hypervelocity_1m_scalper",
