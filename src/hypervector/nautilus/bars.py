@@ -66,7 +66,7 @@ def synthetic_btc_perp_instrument(
         max_price=Price.from_str("1000000.0"),
         min_price=Price.from_str("0.1"),
         margin_init=Decimal("0.025"),
-        margin_maint=Decimal("0.015"),
+        margin_maint=Decimal("0.0125"),
         maker_fee=Decimal("0.00015"),
         taker_fee=Decimal("0.00045"),
         ts_event=0,

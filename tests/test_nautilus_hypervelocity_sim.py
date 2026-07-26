@@ -8,8 +8,8 @@ import pytest
 from nautilus_trader.backtest.models import (
     FillModel,
     LatencyModel,
-    LeveragedMarginModel,
     MakerTakerFeeModel,
+    StandardMarginModel,
 )
 from nautilus_trader.model.enums import (
     AccountType,
@@ -62,7 +62,7 @@ def test_hypervelocity_venue_enables_deterministic_event_friction() -> None:
     assert args["oto_trigger_mode"] == OtoTriggerMode.PARTIAL
     assert isinstance(args["fill_model"], FillModel)
     assert isinstance(args["fee_model"], MakerTakerFeeModel)
-    assert isinstance(args["margin_model"], LeveragedMarginModel)
+    assert isinstance(args["margin_model"], StandardMarginModel)
 
     latency = args["latency_model"]
     assert isinstance(latency, LatencyModel)

@@ -16,8 +16,8 @@ from nautilus_trader.backtest.engine import BacktestEngine
 from nautilus_trader.backtest.models import (
     FillModel,
     LatencyModel,
-    LeveragedMarginModel,
     MakerTakerFeeModel,
+    StandardMarginModel,
 )
 from nautilus_trader.model.currencies import USDT
 from nautilus_trader.model.enums import (
@@ -109,7 +109,7 @@ def build_hypervelocity_venue(
         starting_balances=[Money(init_cash, USDT)],
         base_currency=USDT,
         default_leverage=Decimal(settings.default_leverage),
-        margin_model=LeveragedMarginModel(),
+        margin_model=StandardMarginModel(),
         fill_model=fill,
         fee_model=MakerTakerFeeModel(),
         latency_model=latency,
