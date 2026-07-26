@@ -53,6 +53,63 @@ fn make_snapshot(price: f64, high: f64, low: f64, state: RegimeState, ts: &str) 
     }
 }
 
+fn render_rows(app: &App, width: u16, height: u16) -> Vec<String> {
+    let backend = TestBackend::new(width, height);
+    let mut terminal = Terminal::new(backend).expect("terminal");
+    terminal
+        .draw(|frame| hypervector_tui::ui::draw(frame, app))
+        .expect("draw cockpit");
+    let buffer = terminal.backend().buffer();
+    (0..buffer.area.height)
+        .map(|y| {
+            (0..buffer.area.width)
+                .map(|x| buffer[(x, y)].symbol())
+                .collect::<String>()
+        })
+        .collect()
+}
+
+#[test]
+fn screen_two_places_context_directly_below_canonical_primary() {
+    let snapshots = vec![make_snapshot(
+        64_500.0,
+        64_510.0,
+        64_490.0,
+        RegimeState::BullMomentum,
+        "2026-07-26T12:00:00Z",
+    )];
+    let mut app = App::new("BTC".into(), "1m".into(), snapshots, true, false);
+    app.active_tab = 1;
+
+    let rows = render_rows(&app, 120, 50);
+    let canonical_row = rows
+        .iter()
+        .position(|row| row.contains("Canonical Primary:"))
+        .expect("canonical primary row");
+    let context_row = rows
+        .iter()
+        .position(|row| row.contains("Context Only: 15m [BULL]"))
+        .expect("context-only row");
+
+    assert_eq!(context_row, canonical_row + 1);
+}
+
+#[test]
+fn active_position_preserves_negative_unrealized_pnl_sign() {
+    let telemetry = parse_backend_telemetry(
+        r#"{"feed_ts":"session_start","action":"session_start","run_id":"hv","strategy_params":{"leverage":40.0},"init_cash":10000.0,"equity":10000.0,"position_qty":0.0}
+{"feed_ts":"2026-07-26T12:00:00Z","action":"enter_long","run_id":"hv","symbol":"BTC","fill_px":100.0,"fill_qty":1.0,"position_qty":1.0,"position_avg_px":100.0,"equity":9998.5,"realized_pnl":-1.5,"unrealized_pnl":0.0,"fee_usd":1.5,"leverage":40.0}
+{"feed_ts":"2026-07-26T12:01:00Z","action":"regime_observation","run_id":"hv","primary_regime":"TREND_UP","state_1m":"TREND_UP","state_5m":"TREND_UP","context_15m":"TREND_UP","mark_px":99.0,"position_qty":1.0,"position_avg_px":100.0,"equity":9997.5,"realized_pnl":-1.5,"unrealized_pnl":-1.0}"#,
+    )
+    .expect("negative unrealized telemetry");
+    let mut app = App::new("BTC".into(), "1m".into(), vec![], true, false);
+    app.apply_backend_telemetry(telemetry);
+
+    let rendered = render_rows(&app, 180, 50).join("\n");
+
+    assert!(rendered.contains("U/PNL -1.00"), "{rendered}");
+}
+
 #[test]
 fn test_regime_cockpit_app_state() {
     let snapshots = generate_synthetic_history(100);
@@ -292,7 +349,7 @@ fn test_live_app_does_not_invent_book_when_backend_has_none() {
 #[test]
 fn test_backend_config_is_a_selectable_menu_not_raw_json() {
     let telemetry = parse_backend_telemetry(
-        r#"{"feed_ts":"session_start","action":"session_start","run_id":"hv","strategy_name":"hypervelocity_1m_scalper","execution_mode":"shadow","data_root":"/tmp/hyper vector's data","metalabel_mode":"off","strategy_params":{"leverage":40.0,"target_margin_pct":8.0},"position_policy":{"position_mode":"one_way","max_positions_per_symbol":1},"risk":{"margin_fraction":0.7},"exits":{"target_margin_pct":8.0,"range_policy":"hold_until_target"},"execution":{"order_type":"limit","time_in_force":"post_only","entry_ttl_seconds":300.0},"costs":{"maker_fee_rate":0.00015,"funding_source":"live_meta_and_asset_contexts"},"init_cash":10000.0,"equity":10000.0}"#,
+        r#"{"feed_ts":"session_start","action":"session_start","run_id":"hv","strategy_name":"hypervelocity_1m_scalper","execution_mode":"shadow","data_root":"/tmp/hyper vector's data","metalabel_mode":"off","strategy_params":{"leverage":40.0,"target_margin_pct":8.0},"position_policy":{"position_mode":"one_way","max_positions_per_symbol":1},"risk":{"margin_fraction":0.7},"exits":{"target_margin_pct":8.0,"range_policy":"hold_until_target"},"execution":{"order_type":"limit","time_in_force":"post_only","entry_ttl_seconds":300.0,"same_direction_reentry_policy":"regime_reset"},"costs":{"maker_fee_rate":0.00015,"funding_source":"live_meta_and_asset_contexts"},"init_cash":10000.0,"equity":10000.0}"#,
     )
     .expect("telemetry");
 
@@ -310,6 +367,10 @@ fn test_backend_config_is_a_selectable_menu_not_raw_json() {
     assert!(
         rows.iter()
             .any(|row| row.option == "Position mode" && row.value == "one_way")
+    );
+    assert!(
+        rows.iter()
+            .any(|row| { row.option == "Same-side re-entry" && row.value == "regime_reset" })
     );
     assert!(rows.iter().any(|row| {
         row.option == "Shadow reset"

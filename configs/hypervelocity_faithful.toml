@@ -38,6 +38,7 @@ fill_model = "post_only_limit_through_v1"
 price_tick_mode = "hyperliquid_dynamic"
 entry_ttl_seconds = 300.0
 expired_entry_rearm_policy = "regime_reset"
+same_direction_reentry_policy = "regime_reset"
 reentry_cooldown_bars = 1
 paper_submit_enabled = false
 live_enabled = false

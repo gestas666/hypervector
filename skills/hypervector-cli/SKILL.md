@@ -117,6 +117,14 @@ validates the execution-spec fingerprint and portfolio equity identity before
 restoring active state. Empty accidental launches do not replace that portfolio
 identity. Reset is explicit and recoverable only through the command below.
 
+After a target closes, the completed direction is consumed for the current
+regime episode. A persistent `TREND_UP` cannot immediately create another long,
+and a persistent `TREND_DOWN` cannot immediately create another short. A
+non-matching canonical regime must be observed before a later fresh same-side
+signal can re-arm. This state is durable across normal restarts and is additive
+to the one-completed-bar minimum cooldown. An eligible opposite side after exit
+remains available after that minimum cooldown.
+
 When an open target or pending maker entry spans downtime, startup reconciles
 only completed, venue-matched Hyperliquid candles after the ledger timestamp.
 It may fund, fill, cancel, or close that already-active state, but it cannot

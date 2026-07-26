@@ -712,11 +712,57 @@ def test_hypervelocity_paper_waits_for_maker_through_then_exits_at_fixed_target(
     assert closes[0]["fill_px"] == pytest.approx(100.2)
     assert closes[0]["feed_ts"] == "2026-07-25T12:04:00+00:00"
     assert closes[0]["exit_reason"] == "take_profit_8pct_margin"
-    execution = [
-        row for row in rows if row["action"] == "entry_execution_observation"
-    ]
+    execution = [row for row in rows if row["action"] == "entry_execution_observation"]
     assert execution[-1]["maker_entry_state"] == "standby"
     assert execution[-1]["entry_cooldown_active"] is False
+
+
+def test_completed_hypervelocity_trade_requires_regime_reset_before_same_side_reentry(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A completed long consumes that directional episode until it resets."""
+    export = _write_strict_export(
+        tmp_path,
+        strategy="hypervelocity_1m_scalper_long",
+    )
+    session = PaperSession(export_dir=export, data_root=tmp_path / "data")
+    session.enable_live_telemetry()
+    state = {"eligible": True}
+
+    monkeypatch.setattr(
+        "hypervector.paper.session.current_hypervelocity_entry_allowed",
+        lambda _frame, direction: state["eligible"],
+    )
+
+    def bar(
+        minute: int, *, high: float = 100.0, low: float = 99.9
+    ) -> dict[str, object]:
+        return {
+            "timestamp": pd.Timestamp(f"2026-07-25T12:{minute:02d}:00Z"),
+            "open": 100.0,
+            "high": high,
+            "low": low,
+            "close": 100.0,
+            "volume": 1.0,
+        }
+
+    session.on_bar(bar(0))
+    session.on_bar(bar(1))
+    assert session.on_bar(bar(2, low=99.0)) == "enter_long"
+    assert session.on_bar(bar(3, high=100.3)) == "close"
+
+    session.on_bar(bar(4))
+    assert session.pending_maker_entry is None
+    blocked = session._hypervelocity_entry_execution_payload(bar(4))
+    assert blocked["entry_retry_state"] == "awaiting_regime_reset_long"
+
+    state["eligible"] = False
+    session.on_bar(bar(5))
+    state["eligible"] = True
+    session.on_bar(bar(6))
+    assert session.pending_maker_entry is not None
+    assert session.pending_maker_entry.direction == "long"
 
 
 def test_expired_hypervelocity_entry_waits_for_regime_reset_before_retry(

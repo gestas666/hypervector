@@ -182,7 +182,7 @@ fn render_position_panel(f: &mut Frame, app: &App, area: Rect) {
         (0.0, 0.0, 0.0)
     };
 
-    let pnl_sign = if unrealized_pnl >= 0.0 { "+" } else { "" };
+    let pnl_sign = if unrealized_pnl >= 0.0 { "+" } else { "-" };
 
     // Margin return bar with gradient
     let bar_width = 40usize;

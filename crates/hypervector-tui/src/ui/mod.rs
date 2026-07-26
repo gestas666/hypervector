@@ -332,7 +332,9 @@ fn render_screen_regime_detection(f: &mut Frame, app: &App, area: Rect) {
         Line::from(vec![
             Span::raw("Canonical Primary: "),
             Span::styled("5m (1m directional fallback)", app.theme.gold),
-            Span::raw(" | Context Only: "),
+        ]),
+        Line::from(vec![
+            Span::raw("Context Only: "),
             Span::styled(
                 format!("15m [{}]", snap.trend_15m),
                 if snap.trend_15m == "BULL" {

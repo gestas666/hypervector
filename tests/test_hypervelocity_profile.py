@@ -40,6 +40,7 @@ def test_faithful_profile_enforces_one_way_bidirectional_runtime() -> None:
     assert profile.reentry_cooldown_bars == 1
     assert getattr(profile, "entry_ttl_seconds", None) == pytest.approx(300.0)
     assert getattr(profile, "expired_entry_rearm_policy", None) == "regime_reset"
+    assert profile.same_direction_reentry_policy == "regime_reset"
     assert profile.orderbook_archive_enabled is True
     assert profile.orderbook_archive_depth_levels == 20
 
@@ -48,8 +49,8 @@ def test_faithful_profile_enforces_one_way_bidirectional_runtime() -> None:
     ("old", "new", "message"),
     [
         (
-            'max_positions_per_symbol = 1',
-            'max_positions_per_symbol = 2',
+            "max_positions_per_symbol = 1",
+            "max_positions_per_symbol = 2",
             "max_positions_per_symbol must be 1",
         ),
         ('position_mode = "one_way"', 'position_mode = "hedge"', "one_way"),
@@ -59,7 +60,12 @@ def test_faithful_profile_enforces_one_way_bidirectional_runtime() -> None:
             "allow_reversal_while_open must be false",
         ),
         ("margin_fraction = 0.70", "margin_fraction = 0.50", "margin_fraction"),
-        ('may_filter = false', 'may_filter = true', "may_filter must be false"),
+        ("may_filter = false", "may_filter = true", "may_filter must be false"),
+        (
+            'same_direction_reentry_policy = "regime_reset"',
+            'same_direction_reentry_policy = "immediate"',
+            "same_direction_reentry_policy",
+        ),
     ],
 )
 def test_profile_rejects_unfaithful_runtime_values(
