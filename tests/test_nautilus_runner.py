@@ -169,3 +169,24 @@ def test_run_phase2_backtest_respects_max_bars(tmp_path: Path) -> None:
 
     summary = json.loads(result.report_path.read_text())
     assert summary["bars"] == 80
+
+
+def test_hypervelocity_runner_reports_dedicated_venue_model(tmp_path: Path) -> None:
+    export_dir = _write_strict_export(
+        tmp_path,
+        strategy="hypervelocity_1m_scalper",
+    )
+    result = run_phase2_backtest(
+        export_dir=export_dir,
+        data_root=tmp_path / "data",
+        ohlcv=fixture_ohlcv(n_bars=80, drift=2.0, wave_period=20),
+        max_bars=80,
+    )
+
+    summary = json.loads(result.report_path.read_text())
+    assert summary["data_fidelity"] == "ohlcv_bar"
+    assert summary["venue_model"] == "phase2_bar_only"
+    assert summary["event_venue_model_available"] == "hypervelocity_event_friction_v1"
+    assert summary["event_venue_model_ready"] is False
+    assert "native_liquidation" in summary["event_venue_model_gaps"]
+    assert "proportional_target_resize" in summary["event_venue_model_gaps"]

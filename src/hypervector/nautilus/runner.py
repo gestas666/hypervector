@@ -105,6 +105,7 @@ def run_phase2_backtest(
     paths = ensure_data_layout(data_root)
 
     loadout = load_strategy_loadout(export_path, strict=True)
+    hypervelocity = is_hypervelocity_strategy(loadout.strategy_name)
     df = _resolve_ohlcv(
         ohlcv=ohlcv,
         data_root=paths.root,
@@ -181,6 +182,17 @@ def run_phase2_backtest(
         "venue": venue,
         "instrument_id": str(instrument.id),
         "bar_type": bar_type,
+        "data_fidelity": "ohlcv_bar",
+        "venue_model": "phase2_bar_only",
+        "event_venue_model_available": (
+            "hypervelocity_event_friction_v1" if hypervelocity else None
+        ),
+        "event_venue_model_ready": False if hypervelocity else None,
+        "event_venue_model_gaps": (
+            ["native_liquidation", "proportional_target_resize"]
+            if hypervelocity
+            else []
+        ),
         "bars": len(bars),
         "conviction": float(conviction),
         "init_cash": init_cash,
