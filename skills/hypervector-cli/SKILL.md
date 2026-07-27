@@ -296,9 +296,31 @@ uv run python -m hypervector --data-root data oxa-candle-fetch \
   --limit 10000 --max-pages 20 --install-research-cache
 ```
 
-Use `hypervelocity-maker-replay --fill-rule all` with repeated `--book-path`
-and `--trade-path` arguments to compare touch, one-tick book-through, and
-conservative public-trade-through fills. The command is report-only.
+Replay a verified archive window without constructing thousands of path
+arguments:
+
+```bash
+uv run python -m hypervector --data-root data hypervelocity-maker-replay \
+  --symbol BTC --timeframe 1m --lookback 90 --strict-hl-only \
+  --archive-start 2026-04-28T00:00:00Z \
+  --archive-end 2026-07-27T00:00:00Z \
+  --fill-rule all --initial-equity 10000 \
+  --maker-fee-rate 0.00015 --entry-ttl-seconds 300 \
+  --labels-out data/logs/research/hypervelocity_oxa_90d_labels.parquet \
+  --out data/logs/research/hypervelocity_oxa_90d_fill_comparison.json
+```
+
+The archive form verifies manifest identity and SHA-256 before replay, loads
+one hourly pair at a time, carries order/position/equity state across hour
+boundaries, and compares touch, one-tick book-through, and public-trade-through
+fills. Explicit repeated `--book-path` and `--trade-path` arguments remain
+available for bounded investigations. The command is report-only.
+
+Conservative labels require the same signal to resolve identically under all
+three fill assumptions. Disagreement and right-censored positions stay
+unresolved. This maker comparator does not model historical funding,
+liquidation, authentic queue rank/cancellations, or genuine local receipt
+latency; do not interpret its compounded equity as a portfolio forecast.
 
 ---
 

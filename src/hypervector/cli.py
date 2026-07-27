@@ -8,8 +8,13 @@ import os
 import sys
 import uuid
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pandas as pd
+
+if TYPE_CHECKING:
+    from hypervector.data.oxa_archive_audit import OxaArchiveBundle
+    from hypervector.research.maker_replay import MakerReplayConfig, MakerReplayReport
 
 from hypervector.config import DEFAULT_LOOKBACK, FLOOR_LOOKBACK, PROMO_LOOKBACK
 from hypervector.data.pipeline import load_research_history
@@ -1330,7 +1335,6 @@ def cmd_hypervelocity_regime_challengers(args: argparse.Namespace) -> int:
 def cmd_hypervelocity_maker_replay(args: argparse.Namespace) -> int:
     """Replay backend decisions against recorded post-only book paths."""
     from hypervector.regime.composite import classify_multitimeframe
-    from hypervector.research.maker_replay import MakerReplayConfig, replay_maker_orders
     from hypervector.strategies.hypervelocity_contract import faithful_regime_config
 
     bars, provenance = _load_bars(args)
@@ -1338,34 +1342,30 @@ def cmd_hypervelocity_maker_replay(args: argparse.Namespace) -> int:
     if not isinstance(indexed.index, pd.DatetimeIndex):
         indexed.index = pd.DatetimeIndex(pd.to_datetime(indexed["timestamp"], utc=True))
     decisions = classify_multitimeframe(indexed, config=faithful_regime_config())
+    bundles = _verified_replay_archive(args)
     trade_paths = args.trade_path or []
-    book, trades = _load_maker_replay_evidence(args.book_path, trade_paths)
-    rules = {
-        "both": ("touch", "through"),
-        "all": ("touch", "through", "trade-through"),
-    }.get(args.fill_rule, (args.fill_rule,))
-    reports = {
-        rule: replay_maker_orders(
-            book,
-            decisions,
-            MakerReplayConfig(
-                initial_equity=args.initial_equity,
-                maker_fee_rate=args.maker_fee_rate,
-                fill_rule=rule,
-                tick_size=args.tick_size,
-                entry_ttl_seconds=args.entry_ttl_seconds,
-            ),
-            trades=trades,
-        ).to_dict()
-        for rule in rules
-    }
+    book_paths = args.book_path or []
+    archive: dict[str, object] | None = None
+    if bundles is not None:
+        report_objects = _archive_replay_reports(args, decisions, bundles)
+        archive = _archive_replay_provenance(args, bundles)
+    else:
+        if not book_paths:
+            raise ValueError("maker replay requires --book-path or an archive window")
+        book, trades = _load_maker_replay_evidence(book_paths, trade_paths)
+        report_objects = _explicit_replay_reports(args, decisions, book, trades)
+    labels = None
+    if args.labels_out is not None:
+        labels = _write_replay_labels(report_objects, args.labels_out)
     out = {
         "ok": True,
         "report_only": True,
         "data_provenance": provenance,
-        "book_paths": [str(Path(path)) for path in args.book_path],
+        "book_paths": [str(Path(path)) for path in book_paths],
         "trade_paths": [str(Path(path)) for path in trade_paths],
-        "reports": reports,
+        "archive": archive,
+        "labels": labels,
+        "reports": {rule: report.to_dict() for rule, report in report_objects.items()},
     }
     rendered = json.dumps(out, indent=2, default=str)
     if args.out:
@@ -1374,6 +1374,114 @@ def cmd_hypervelocity_maker_replay(args: argparse.Namespace) -> int:
         output_path.write_text(rendered + "\n", encoding="utf-8")
     print(rendered)
     return 0
+
+
+def _replay_rules(fill_rule: str) -> tuple[str, ...]:
+    return {
+        "both": ("touch", "through"),
+        "all": ("touch", "through", "trade-through"),
+    }.get(fill_rule, (fill_rule,))
+
+
+def _maker_replay_config(args: argparse.Namespace, fill_rule: str) -> MakerReplayConfig:
+    from hypervector.research.maker_replay import MakerReplayConfig
+
+    return MakerReplayConfig(
+        initial_equity=args.initial_equity,
+        maker_fee_rate=args.maker_fee_rate,
+        fill_rule=fill_rule,
+        tick_size=args.tick_size,
+        entry_ttl_seconds=args.entry_ttl_seconds,
+    )
+
+
+def _explicit_replay_reports(
+    args: argparse.Namespace,
+    decisions: pd.DataFrame,
+    book: pd.DataFrame,
+    trades: pd.DataFrame | None,
+) -> dict[str, MakerReplayReport]:
+    from hypervector.research.maker_replay import replay_maker_orders
+
+    return {
+        rule: replay_maker_orders(
+            book,
+            decisions,
+            _maker_replay_config(args, rule),
+            trades=trades,
+        )
+        for rule in _replay_rules(args.fill_rule)
+    }
+
+
+def _verified_replay_archive(
+    args: argparse.Namespace,
+) -> tuple[OxaArchiveBundle, ...] | None:
+    from hypervector.data.oxa_archive_audit import (
+        OxaArchiveAuditConfig,
+        verified_archive_bundles,
+    )
+
+    start = args.archive_start
+    end = args.archive_end
+    if start is None and end is None:
+        return None
+    if start is None or end is None:
+        raise ValueError(
+            "archive replay requires both --archive-start and --archive-end"
+        )
+    if args.book_path or args.trade_path:
+        raise ValueError(
+            "archive replay cannot be combined with explicit evidence paths"
+        )
+    config = OxaArchiveAuditConfig(args.symbol, start, end, Path(args.data_root))
+    return verified_archive_bundles(config)
+
+
+def _archive_replay_reports(
+    args: argparse.Namespace,
+    decisions: pd.DataFrame,
+    bundles: tuple[OxaArchiveBundle, ...],
+) -> dict[str, MakerReplayReport]:
+    from hypervector.research.maker_replay_stream import (
+        archive_evidence_chunks,
+        replay_maker_order_chunks,
+    )
+
+    return {
+        rule: replay_maker_order_chunks(
+            archive_evidence_chunks(bundles, include_trades=rule == "trade-through"),
+            decisions,
+            _maker_replay_config(args, rule),
+        )
+        for rule in _replay_rules(args.fill_rule)
+    }
+
+
+def _archive_replay_provenance(
+    args: argparse.Namespace,
+    bundles: tuple[OxaArchiveBundle, ...],
+) -> dict[str, object]:
+    return {
+        "start": args.archive_start.isoformat(),
+        "end": args.archive_end.isoformat(),
+        "bundle_count": len(bundles),
+        "empty_book_hours": sum(bundle.book_path is None for bundle in bundles),
+        "empty_trade_hours": sum(bundle.trade_path is None for bundle in bundles),
+        "checksums_verified": True,
+    }
+
+
+def _write_replay_labels(
+    reports: dict[str, MakerReplayReport],
+    output_path: Path,
+) -> dict[str, object]:
+    from hypervector.research.replay_labels import build_conservative_replay_labels
+
+    result = build_conservative_replay_labels(reports)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    result.rows.to_parquet(output_path, index=False)
+    return {**result.summary(), "path": str(output_path.resolve())}
 
 
 def _load_maker_replay_evidence(
@@ -1901,7 +2009,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_market_args(h)
     h.set_defaults(func=cmd_history)
 
-    from hypervector.cli_oxa import add_oxa_parsers
+    from hypervector.cli_oxa import _parse_utc_datetime, add_oxa_parsers
 
     add_oxa_parsers(sub)
 
@@ -2278,8 +2386,10 @@ def build_parser() -> argparse.ArgumentParser:
         help="Replay canonical Hypervelocity decisions against recorded L2 books",
     )
     _add_market_args(hv_maker)
-    hv_maker.add_argument("--book-path", action="append", required=True)
+    hv_maker.add_argument("--book-path", action="append", default=None)
     hv_maker.add_argument("--trade-path", action="append", default=None)
+    hv_maker.add_argument("--archive-start", type=_parse_utc_datetime, default=None)
+    hv_maker.add_argument("--archive-end", type=_parse_utc_datetime, default=None)
     hv_maker.add_argument(
         "--fill-rule",
         choices=("both", "all", "touch", "through", "trade-through"),
@@ -2289,6 +2399,7 @@ def build_parser() -> argparse.ArgumentParser:
     hv_maker.add_argument("--maker-fee-rate", type=float, default=0.00015)
     hv_maker.add_argument("--tick-size", type=float, default=1.0)
     hv_maker.add_argument("--entry-ttl-seconds", type=float, default=300.0)
+    hv_maker.add_argument("--labels-out", type=Path, default=None)
     hv_maker.add_argument("--out", default=None)
     hv_maker.set_defaults(func=cmd_hypervelocity_maker_replay)
 

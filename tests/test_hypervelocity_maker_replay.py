@@ -3,13 +3,19 @@
 from __future__ import annotations
 
 import json
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pandas as pd
 import pytest
 
 from hypervector.cli import main
+from hypervector.data.oxa_archive_audit import OxaArchiveBundle
 from hypervector.research.maker_replay import MakerReplayConfig, replay_maker_orders
+from hypervector.research.maker_replay_stream import (
+    MakerReplayEvidenceChunk,
+    replay_maker_order_chunks,
+)
 from hypervector.research.maker_replay_validation import validate_book, validate_trades
 
 
@@ -82,6 +88,127 @@ def test_touch_replay_compounds_70pct_margin_at_40x() -> None:
     assert trade.entry_price == pytest.approx(100.0)
     assert trade.exit_price == pytest.approx(100.2)
     assert report.final_equity == pytest.approx(105.6)
+    assert len(report.lifecycles) == 1
+    assert report.lifecycles[0].status == "target_completed"
+    assert report.lifecycles[0].entry_time_utc == "2026-01-01T00:01:10+00:00"
+    assert report.lifecycles[0].outcome_time_utc == "2026-01-01T00:01:20+00:00"
+
+
+def test_streaming_replay_carries_pending_entry_across_chunks() -> None:
+    """An hourly boundary cannot reset a still-live maker entry."""
+    chunks = (
+        MakerReplayEvidenceChunk(_book([60], [100.0], [101.0])),
+        MakerReplayEvidenceChunk(_book([70, 80], [99.0, 100.2], [100.0, 100.3])),
+    )
+
+    report = replay_maker_order_chunks(
+        chunks,
+        _decisions(["TREND_UP", "TREND_UP", "TREND_UP"]),
+        MakerReplayConfig(
+            initial_equity=100.0,
+            maker_fee_rate=0.0,
+            fill_rule="touch",
+        ),
+    )
+
+    assert report.submitted_entries == 1
+    assert report.entry_fills == 1
+    assert report.completed_trades == 1
+
+
+def test_streaming_replay_carries_open_position_across_chunks() -> None:
+    """A position opened before a boundary may close after that boundary."""
+    chunks = (
+        MakerReplayEvidenceChunk(_book([60, 70], [100.0, 99.0], [101.0, 100.0])),
+        MakerReplayEvidenceChunk(_book([80], [100.2], [100.3])),
+    )
+
+    report = replay_maker_order_chunks(
+        chunks,
+        _decisions(["TREND_UP", "TREND_UP", "TREND_UP"]),
+        MakerReplayConfig(
+            initial_equity=100.0,
+            maker_fee_rate=0.0,
+            fill_rule="touch",
+        ),
+    )
+
+    assert report.completed_trades == 1
+    assert report.open_positions == 0
+
+
+def test_streaming_replay_deduplicates_exact_book_boundary() -> None:
+    """An inclusive hourly boundary contributes one identical book event."""
+    boundary = _book([70], [99.0], [100.0])
+    chunks = (
+        MakerReplayEvidenceChunk(
+            pd.concat((_book([60], [100.0], [101.0]), boundary), ignore_index=True)
+        ),
+        MakerReplayEvidenceChunk(
+            pd.concat((boundary, _book([80], [100.2], [100.3])), ignore_index=True)
+        ),
+    )
+
+    report = replay_maker_order_chunks(
+        chunks,
+        _decisions(["TREND_UP", "TREND_UP", "TREND_UP"]),
+        MakerReplayConfig(initial_equity=100.0, fill_rule="touch"),
+    )
+
+    assert report.snapshots == 3
+
+
+def test_streaming_replay_rejects_conflicting_book_boundary() -> None:
+    """A repeated boundary timestamp with changed prices is corrupt evidence."""
+    chunks = (
+        MakerReplayEvidenceChunk(_book([60, 70], [100.0, 99.0], [101.0, 100.0])),
+        MakerReplayEvidenceChunk(_book([70, 80], [98.0, 100.2], [99.0, 100.3])),
+    )
+
+    with pytest.raises(ValueError, match="conflicting book chunk boundary"):
+        replay_maker_order_chunks(
+            chunks,
+            _decisions(["TREND_UP", "TREND_UP", "TREND_UP"]),
+            MakerReplayConfig(initial_equity=100.0, fill_rule="touch"),
+        )
+
+
+def test_streaming_replay_deduplicates_exact_trade_boundary() -> None:
+    """An inclusive hourly boundary contributes one identical public print."""
+    first = _trades([61], ["sell"], [99.0], [10.0])
+    second = _trades([62], ["sell"], [99.0], [18.0])
+    second["trade_id"] = 2
+    chunks = (
+        MakerReplayEvidenceChunk(_book([60], [100.0], [101.0]), first),
+        MakerReplayEvidenceChunk(None, pd.concat((first, second), ignore_index=True)),
+    )
+
+    report = replay_maker_order_chunks(
+        chunks,
+        _decisions(["TREND_UP", "TREND_UP"]),
+        MakerReplayConfig(initial_equity=100.0, fill_rule="trade-through"),
+    )
+
+    assert report.market_trade_prints == 2
+    assert report.entry_fills == 1
+
+
+def test_streaming_replay_rejects_conflicting_trade_boundary() -> None:
+    """A repeated boundary trade ID with changed fields is corrupt evidence."""
+    first = _trades([61], ["sell"], [99.0], [10.0])
+    changed = first.copy()
+    changed.loc[0, "price"] = 98.0
+    chunks = (
+        MakerReplayEvidenceChunk(_book([60], [100.0], [101.0]), first),
+        MakerReplayEvidenceChunk(None, changed),
+    )
+
+    with pytest.raises(ValueError, match="conflicting trade chunk boundary"):
+        replay_maker_order_chunks(
+            chunks,
+            _decisions(["TREND_UP", "TREND_UP"]),
+            MakerReplayConfig(initial_equity=100.0, fill_rule="trade-through"),
+        )
 
 
 def test_through_rule_does_not_claim_touch_only_fill() -> None:
@@ -346,6 +473,8 @@ def test_expired_entry_retries_only_after_directional_regime_resets() -> None:
         "2026-01-01T00:01:00+00:00",
         "2026-01-01T00:10:00+00:00",
     )
+    assert [row.status for row in report.lifecycles] == ["expired", "pending"]
+    assert report.lifecycles[0].outcome_time_utc == "2026-01-01T00:07:00+00:00"
 
 
 def test_cli_reports_touch_and_through_without_placing_orders(
@@ -396,6 +525,72 @@ def test_cli_reports_touch_and_through_without_placing_orders(
     assert rc == 0
     assert payload["report_only"] is True
     assert set(payload["reports"]) == {"touch", "through"}
+    assert payload["reports"]["touch"]["completed_trades"] == 1
+
+
+def test_cli_streams_verified_archive_window_without_path_arguments(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A verified archive window avoids thousands of repeated CLI arguments."""
+    decisions = _decisions(["TREND_UP", "TREND_UP", "TREND_UP"])
+    bars = pd.DataFrame(
+        {
+            "timestamp": decisions.index,
+            "open": [100.0] * 3,
+            "high": [101.0] * 3,
+            "low": [99.0] * 3,
+            "close": [100.0] * 3,
+            "volume": [1.0] * 3,
+        }
+    )
+    book = _book([60, 70, 80], [100.0, 99.0, 100.2], [101.0, 100.0, 100.3])
+    start = datetime(2026, 1, 1, tzinfo=UTC)
+    end = datetime(2026, 1, 1, 1, tzinfo=UTC)
+    bundle = OxaArchiveBundle(
+        start,
+        end,
+        tmp_path / "books.jsonl.gz",
+        tmp_path / "trades.jsonl.gz",
+        3,
+        0,
+    )
+    monkeypatch.setattr(
+        "hypervector.cli._load_bars", lambda _args: (bars, {"source": "fixture"})
+    )
+    monkeypatch.setattr(
+        "hypervector.regime.composite.classify_multitimeframe",
+        lambda _bars, config: decisions,
+    )
+    monkeypatch.setattr(
+        "hypervector.data.oxa_archive_audit.verified_archive_bundles",
+        lambda _config: (bundle,),
+    )
+    monkeypatch.setattr("hypervector.data.book_align.load_l2_jsonl", lambda _path: book)
+
+    rc = main(
+        [
+            "--data-root",
+            str(tmp_path / "data"),
+            "hypervelocity-maker-replay",
+            "--archive-start",
+            start.isoformat(),
+            "--archive-end",
+            end.isoformat(),
+            "--fill-rule",
+            "touch",
+            "--initial-equity",
+            "100",
+            "--maker-fee-rate",
+            "0",
+        ]
+    )
+
+    payload = json.loads(capsys.readouterr().out)
+    assert rc == 0
+    assert payload["archive"]["bundle_count"] == 1
+    assert payload["archive"]["checksums_verified"] is True
     assert payload["reports"]["touch"]["completed_trades"] == 1
 
 

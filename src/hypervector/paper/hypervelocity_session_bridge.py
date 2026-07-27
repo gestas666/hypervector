@@ -301,11 +301,12 @@ class HypervelocitySessionBridge:
 
     def _record_annotation(self, annotation: str) -> None:
         position = self._engine.position
-        mark = position.avg_px if position.avg_px > 0.0 else 1.0
+        account = self._controller.port.account_snapshot()
+        realized_equity = self._engine.initial_cash + position.realized_pnl
         append_paper_decision(
             self._root,
             {
-                "feed_ts": self._controller.port.account_snapshot().observed_at,
+                "feed_ts": account.observed_at,
                 "run_id": self._context.run_id,
                 "export_id": self._context.export_id,
                 "strategy_name": self._context.strategy_name,
@@ -319,8 +320,8 @@ class HypervelocitySessionBridge:
                 "position_qty": position.qty,
                 "position_avg_px": position.avg_px,
                 "realized_pnl": position.realized_pnl,
-                "unrealized_pnl": 0.0,
-                "equity": self._engine.equity(mark_px=mark),
+                "unrealized_pnl": account.equity_usd - realized_equity,
+                "equity": account.equity_usd,
                 "init_cash": self._engine.initial_cash,
             },
         )

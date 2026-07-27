@@ -11,10 +11,12 @@ import lightgbm as lgb
 import numpy as np
 import pandas as pd
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import brier_score_loss, log_loss
+from sklearn.metrics import brier_score_loss, log_loss, roc_auc_score
 from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
+
+from hypervector.ml.feature_matrix import FEATURE_NAMES
 
 REPLAY_FEATURE_NAMES: tuple[str, ...] = (
     "impulse_score",
@@ -47,7 +49,22 @@ class ReplayCandidateResult:
     temporal_logistic_path: Path
     lagged_logistic_path: Path
     metadata_path: Path
-    metrics: dict[str, dict[str, float | int]]
+    metrics: dict[str, dict[str, float | int | None]]
+
+
+@dataclass(frozen=True)
+class RuntimeReplayCandidateResult:
+    """Outcome of runtime-compatible replay candidate training."""
+
+    status: str
+    direction: str
+    n_samples: int
+    positive_rate: float | None
+    lightgbm_path: Path | None
+    temporal_logistic_path: Path | None
+    lagged_logistic_path: Path | None
+    metadata_path: Path
+    metrics: dict[str, dict[str, float | int | None]]
 
 
 def chronological_replay_folds(
@@ -150,14 +167,38 @@ def _metric_summary(
     log_losses: list[float],
     briers: list[float],
     baselines: list[float],
-) -> dict[str, float | int]:
+    aucs: list[float],
+    calibration_biases: list[float],
+    sample_counts: list[int],
+) -> dict[str, float | int | None]:
     """Aggregate fold metrics without applying a promotion gate."""
     return {
         "folds_used": len(log_losses),
         "log_loss_mean": float(np.mean(log_losses)),
         "brier_mean": float(np.mean(briers)),
         "baseline_log_loss_mean": float(np.mean(baselines)),
+        "worst_fold_log_loss": float(np.max(log_losses)),
+        "auc_mean": float(np.mean(aucs)) if aucs else None,
+        "calibration_bias_mean": float(np.mean(calibration_biases)),
+        "oos_samples": int(sum(sample_counts)),
     }
+
+
+def _record_fold_score(
+    values: dict[str, list[float] | list[int]],
+    labels: np.ndarray,
+    predicted: np.ndarray,
+    baseline: float,
+) -> None:
+    """Record one candidate's proper scores and calibration diagnostics."""
+    ll, br = _score_predictions(labels, predicted)
+    values["log_losses"].append(ll)
+    values["briers"].append(br)
+    values["baselines"].append(baseline)
+    values["calibration_biases"].append(float(np.mean(predicted) - np.mean(labels)))
+    values["sample_counts"].append(len(labels))
+    if len(np.unique(labels)) > 1:
+        values["aucs"].append(float(roc_auc_score(labels, predicted)))
 
 
 def _walk_forward_metrics(
@@ -167,10 +208,17 @@ def _walk_forward_metrics(
     *,
     n_splits: int,
     embargo_minutes: int,
-) -> dict[str, dict[str, float | int]]:
+) -> dict[str, dict[str, float | int | None]]:
     """Evaluate LightGBM and logistic on identical chronological folds."""
     scores = {
-        name: {"ll": [], "br": [], "base": []}
+        name: {
+            "log_losses": [],
+            "briers": [],
+            "baselines": [],
+            "aucs": [],
+            "calibration_biases": [],
+            "sample_counts": [],
+        }
         for name in ("lightgbm", "temporal_logistic", "lagged_logistic")
     }
     lagged = _lagged_feature_frame(features)
@@ -198,16 +246,10 @@ def _walk_forward_metrics(
             log_loss(labels[test], np.full(len(test), base_p), labels=[0, 1])
         )
         for name, predicted in predictions.items():
-            ll, br = _score_predictions(labels[test], predicted)
-            scores[name]["ll"].append(ll)
-            scores[name]["br"].append(br)
-            scores[name]["base"].append(baseline)
-    if not scores["lightgbm"]["ll"]:
+            _record_fold_score(scores[name], labels[test], predicted, baseline)
+    if not scores["lightgbm"]["log_losses"]:
         raise RuntimeError("no chronological replay folds contained both label classes")
-    return {
-        name: _metric_summary(values["ll"], values["br"], values["base"])
-        for name, values in scores.items()
-    }
+    return {name: _metric_summary(**values) for name, values in scores.items()}
 
 
 def _write_metadata(
@@ -216,7 +258,7 @@ def _write_metadata(
     n_samples: int,
     positive_rate: float,
     embargo_minutes: int,
-    metrics: dict[str, dict[str, float | int]],
+    metrics: dict[str, dict[str, float | int | None]],
 ) -> None:
     """Write the candidate contract and empirical scores."""
     metadata = {
@@ -233,6 +275,175 @@ def _write_metadata(
     path.write_text(
         json.dumps(metadata, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
+    )
+
+
+def _write_runtime_metadata(
+    path: Path,
+    *,
+    status: str,
+    direction: str,
+    n_samples: int,
+    positive_rate: float | None,
+    embargo_minutes: int,
+    metrics: dict[str, dict[str, float | int | None]],
+    reason: str | None,
+) -> None:
+    """Write an annotation-only runtime candidate or insufficiency contract."""
+    metadata = {
+        "status": status,
+        "reason": reason,
+        "direction": direction,
+        "n_samples": n_samples,
+        "positive_rate": positive_rate,
+        "label": "maker outcomes resolved identically under all fill challengers",
+        "feature_names": list(FEATURE_NAMES),
+        "embargo_minutes": embargo_minutes,
+        "metrics": metrics,
+        "installed": False,
+        "decision_policy": "annotation_only",
+        "candidate_models": ["lightgbm", "temporal_logistic", "lagged_logistic"],
+    }
+    path.write_text(
+        json.dumps(metadata, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+
+def _runtime_result(
+    destination: Path,
+    *,
+    status: str,
+    direction: str,
+    rows: pd.DataFrame,
+    embargo_minutes: int,
+    metrics: dict[str, dict[str, float | int | None]],
+    reason: str | None,
+) -> RuntimeReplayCandidateResult:
+    """Persist and return a runtime training assessment."""
+    metadata_path = destination / "metalabel_metadata.json"
+    positive_rate = None if rows.empty else float(rows["label"].mean())
+    _write_runtime_metadata(
+        metadata_path,
+        status=status,
+        direction=direction,
+        n_samples=len(rows),
+        positive_rate=positive_rate,
+        embargo_minutes=embargo_minutes,
+        metrics=metrics,
+        reason=reason,
+    )
+    trained = status == "trained_annotation_only"
+    return RuntimeReplayCandidateResult(
+        status=status,
+        direction=direction,
+        n_samples=len(rows),
+        positive_rate=positive_rate,
+        lightgbm_path=(destination / "metalabel_lgbm.txt").resolve()
+        if trained
+        else None,
+        temporal_logistic_path=(destination / "temporal_logistic.joblib").resolve()
+        if trained
+        else None,
+        lagged_logistic_path=(destination / "lagged_logistic.joblib").resolve()
+        if trained
+        else None,
+        metadata_path=metadata_path.resolve(),
+        metrics=metrics,
+    )
+
+
+def _prepare_runtime_rows(
+    rows: pd.DataFrame, direction: str
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, np.ndarray]:
+    """Validate and order one direction's runtime replay evidence."""
+    required = {"signal_ts_ms", "outcome_ts_ms", "direction", "label", *FEATURE_NAMES}
+    missing = required.difference(rows.columns)
+    if missing:
+        raise ValueError(f"runtime replay rows missing fields: {sorted(missing)}")
+    ordered = (
+        rows.loc[rows["direction"] == direction]
+        .sort_values("signal_ts_ms")
+        .reset_index(drop=True)
+    )
+    chronology = ordered.rename(
+        columns={"signal_ts_ms": "entry_ts_ms", "outcome_ts_ms": "exit_ts_ms"}
+    )
+    return (
+        ordered,
+        chronology,
+        ordered[FEATURE_NAMES].astype(float),
+        ordered["label"].astype(int).to_numpy(),
+    )
+
+
+def _fit_runtime_models(
+    destination: Path, features: pd.DataFrame, labels: np.ndarray
+) -> None:
+    """Fit and save the three annotation-only runtime challengers."""
+    booster = lgb.train(
+        _lgbm_params(labels), lgb.Dataset(features, label=labels), num_boost_round=150
+    )
+    booster.save_model(str(destination / "metalabel_lgbm.txt"))
+    joblib.dump(
+        _temporal_logistic().fit(features, labels),
+        destination / "temporal_logistic.joblib",
+    )
+    joblib.dump(
+        _temporal_logistic().fit(_lagged_feature_frame(features), labels),
+        destination / "lagged_logistic.joblib",
+    )
+
+
+def train_runtime_replay_candidates(
+    rows: pd.DataFrame,
+    out_dir: Path | str,
+    *,
+    direction: str,
+    n_splits: int = 4,
+    embargo_minutes: int = 60,
+) -> RuntimeReplayCandidateResult:
+    """Train runtime-schema replay challengers, or persist why training is undefined."""
+    ordered, chronology, features, labels = _prepare_runtime_rows(rows, direction)
+    destination = Path(out_dir)
+    destination.mkdir(parents=True, exist_ok=True)
+    if ordered.empty or len(np.unique(labels)) < 2:
+        return _runtime_result(
+            destination,
+            status="insufficient_resolved_labels",
+            direction=direction,
+            rows=ordered,
+            embargo_minutes=embargo_minutes,
+            metrics={},
+            reason="resolved labels do not contain both outcome classes",
+        )
+    try:
+        metrics = _walk_forward_metrics(
+            chronology,
+            features,
+            labels,
+            n_splits=n_splits,
+            embargo_minutes=embargo_minutes,
+        )
+    except RuntimeError as exc:
+        return _runtime_result(
+            destination,
+            status="insufficient_resolved_labels",
+            direction=direction,
+            rows=ordered,
+            embargo_minutes=embargo_minutes,
+            metrics={},
+            reason=str(exc),
+        )
+    _fit_runtime_models(destination, features, labels)
+    return _runtime_result(
+        destination,
+        status="trained_annotation_only",
+        direction=direction,
+        rows=ordered,
+        embargo_minutes=embargo_minutes,
+        metrics=metrics,
+        reason=None,
     )
 
 

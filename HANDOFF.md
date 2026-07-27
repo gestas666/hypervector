@@ -24,12 +24,12 @@
 | Hypervelocity execution contract | **One-way bidirectional BTC 1m, 70% margin, 40x, one 8% margin target, post-only** |
 | Hypervelocity shadow execution | **`nautilus_event_v1` active in faithful config; public L2/trade evidence only** |
 | Hypervelocity entry states | **Trend up/down or direction-confirmed breakout only; no range entries** |
-| Hypervelocity model | **Observe-only enforced**; no candidate installed |
+| Hypervelocity model | **Observe-only enforced**; older directional candidates remain selected, while the 90-day archive assessment was insufficient for retraining |
 | Hypervelocity 180d autotune | **Completed**; best long/short candle trials remained materially negative after costs |
 | L2 replay archive | **Operational**; 4,219 paired BTC trades and 32,209 L2-derived 1m bars |
 | Range 1m impulse research | **Autotuned from 681 L2 replay trades** (339 long, 342 short) |
 | Range 1m impulse LightGBM | **Runtime-compatible candidate trained**; not auto-installed |
-| 0xArchive venue evidence | **90-day BTC audit PASS**; 4,320/4,320 hourly L2/trade bundles |
+| 0xArchive venue evidence | **90-day BTC audit and full replay PASS**; 2,160 hourly L2/trade pairs (4,320 individual evidence bundles) |
 
 ### 2026-07-27 Hyperliquid-native archive and replay update
 
@@ -60,6 +60,40 @@
 - A July 26 measured comparison produced five touch/through submissions and
   six trade-through submissions; both completed three trades, left one open,
   and ended at `$11,496.77`. This is one sample, not proof of general edge.
+- The full-window streaming replay completed across all 2,160 hourly pairs and
+  exactly 12,013,542 L2 snapshots. Public-trade-through consumed 36,591,762
+  deduplicated prints; the 18-row difference from the archive audit is exact
+  inclusive-boundary duplicate removal, not missing evidence. The report and
+  conservative labels are `hypervelocity_oxa_90d_fill_comparison.json` and
+  `hypervelocity_oxa_90d_labels.parquet` under `data/logs/research/`.
+- Touch, one-tick-through, and trade-through produced 46/53/67 submissions,
+  39/50/40 completed targets, and one right-censored open long each. Their
+  path-dependent entry identities diverged: only 2 of 125 nominal signals had
+  resolved outcomes under all three assumptions; 123 were disagreements. The
+  two labels were one long negative and one short positive, so each directional
+  training lane was one-class. Structured `insufficient_resolved_labels`
+  assessments were written under
+  `data/models/metalabel/candidates/hypervelocity-oxa-90d-runtime-{long,short}-20260727/`.
+- No new model was fabricated or installed. The historical maker comparator
+  does not model funding, liquidation, authentic queue rank, cancellations, or
+  local receipt latency. Each fill path eventually held a 40x long that never
+  reached its target, preventing later entries; therefore its compounded final
+  equity is a fill-assumption bound, not a credible portfolio forecast. The
+  live event-shadow path separately models funding, isolated liquidation,
+  partial fills, queue-ahead, latency, and backstop behavior.
+- `execution_evidence_uncertain` telemetry now derives marked equity and
+  unrealized PnL from the same event-account snapshot. The regression case of
+  a long marked below entry previously emitted zero unrealized PnL.
+- Final readiness verification passed 746 offline Python tests (4 network
+  tests deselected) and all 27 Rust TUI integration tests. A real unified
+  `hypervelocity-tui` smoke created one backend run (`bb6d6f9276de`), populated
+  live 5m/15m regime and five-level L2 telemetry, and recorded zero venue submit
+  or place attempts. Normal `q` exit reaped the TUI and backend with exit zero.
+- The pre-readiness ledger/log are recoverable under
+  `data/backups/shadow_reset_20260727T060828Z`. The bounded smoke is recoverable
+  under `data/backups/shadow_reset_20260727T060946Z`. Active decisions and log
+  files are zero bytes, so the next unified launch starts a new `$10,000`
+  shadow portfolio; archive-audit and strict-candle-cache hashes are unchanged.
 
 ### 2026-07-25 implementation status
 

@@ -14,6 +14,7 @@ from hypervector.data.hl_events import (
     AssetContextEvent,
     L2SnapshotEvent,
     PublicTradeEvent,
+    StreamGap,
 )
 from hypervector.data.sources import fixture_ohlcv
 from hypervector.export.phase2 import export_candidate
@@ -797,6 +798,37 @@ def test_event_shadow_session_ledgers_partial_fill_and_proportional_target(
     assert entry["metalabel_bundle_id"] == "event-observe-bundle"
     assert target["requested_qty"] == pytest.approx(1.0)
     assert target["execution_model"] == "nautilus_event_v1"
+
+    marked_ms = base_ms + 60_003
+    session.ingest_hyperliquid_event(
+        L2SnapshotEvent(
+            symbol="BTC",
+            exchange_ts_ms=marked_ms,
+            received_ts_ns=(marked_ms + 1) * 1_000_000,
+            bids=(EventBookLevel(64_400.0, 1.0, 1),),
+            asks=(EventBookLevel(64_401.0, 1.0, 1),),
+        )
+    )
+    session.ingest_hyperliquid_event(
+        StreamGap(
+            symbol="BTC",
+            channel="l2Book,trades",
+            detected_ts_ns=(marked_ms + 1) * 1_000_000,
+            reason="test_disconnect",
+            previous_exchange_ts_ms=marked_ms,
+            next_exchange_ts_ms=marked_ms + 2,
+        )
+    )
+    uncertain = next(
+        row
+        for row in reversed(_decision_rows(session.decisions_path))
+        if row.get("action") == "execution_evidence_uncertain"
+    )
+    marked_equity = port.account_snapshot().equity_usd
+    realized_equity = session.engine.initial_cash + session.engine.position.realized_pnl
+    assert uncertain["unrealized_pnl"] == pytest.approx(marked_equity - realized_equity)
+    assert uncertain["unrealized_pnl"] < 0.0
+    assert uncertain["equity"] == pytest.approx(marked_equity)
 
     session.on_bar(bar(59))
     assert port.funding_net_usd == pytest.approx(-64.5)

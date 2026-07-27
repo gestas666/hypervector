@@ -34,6 +34,18 @@ class OxaArchiveAuditConfig:
 
 
 @dataclass(frozen=True)
+class OxaArchiveBundle:
+    """One checksum-verified hourly book/trade evidence pair."""
+
+    start: datetime
+    end: datetime
+    book_path: Path | None
+    trade_path: Path | None
+    book_rows: int
+    trade_rows: int
+
+
+@dataclass(frozen=True)
 class OxaArchiveAuditReport:
     """Aggregate coverage and checksum evidence for one requested window."""
 
@@ -88,6 +100,32 @@ def audit_oxa_archive(config: OxaArchiveAuditConfig) -> OxaArchiveAuditReport:
     )
 
 
+def verified_archive_bundles(
+    config: OxaArchiveAuditConfig,
+) -> tuple[OxaArchiveBundle, ...]:
+    """Return chronological replay paths after identity and checksum validation."""
+    bundles: list[OxaArchiveBundle] = []
+    for start, end in _iter_windows(config):
+        book_dir, trade_dir = _bundle_paths(config, start, end)
+        book = _verified_manifest(book_dir, "book", config, start, end)
+        trade = _verified_manifest(trade_dir, "trade", config, start, end)
+        book_stats = _bundle_stats(book, "book", book_dir)
+        trade_stats = _bundle_stats(trade, "trade", trade_dir)
+        bundles.append(
+            OxaArchiveBundle(
+                start=start,
+                end=end,
+                book_path=_normalized_path(book_dir, book, "books", book_stats.rows),
+                trade_path=_normalized_path(
+                    trade_dir, trade, "trades", trade_stats.rows
+                ),
+                book_rows=book_stats.rows,
+                trade_rows=trade_stats.rows,
+            )
+        )
+    return tuple(bundles)
+
+
 def _iter_windows(
     config: OxaArchiveAuditConfig,
 ) -> tuple[tuple[datetime, datetime], ...]:
@@ -125,13 +163,48 @@ def _collect_bundle(
     if not directory.is_dir():
         missing.append(str(directory.resolve()))
         return
+    manifest = _verified_manifest(directory, kind, config, start, end)
+    output.append(_bundle_stats(manifest, kind, directory))
+
+
+def _verified_manifest(
+    directory: Path,
+    kind: str,
+    config: OxaArchiveAuditConfig,
+    start: datetime,
+    end: datetime,
+) -> dict[str, object]:
+    if not directory.is_dir():
+        raise FileNotFoundError(f"archive bundle directory is missing: {directory}")
     manifest_path = directory / "manifest.json"
     if not manifest_path.is_file():
         raise ValueError(f"archive bundle has no manifest: {directory}")
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     _validate_identity(manifest, kind, config, start, end, directory)
     verify_file_evidence(directory, manifest.get("files"))
-    output.append(_bundle_stats(manifest, kind, directory))
+    return manifest
+
+
+def _normalized_path(
+    directory: Path,
+    manifest: dict[str, object],
+    stem: str,
+    rows: int,
+) -> Path | None:
+    if rows == 0:
+        return None
+    files = manifest.get("files")
+    if not isinstance(files, dict):
+        raise ValueError(f"archive manifest has invalid file evidence: {directory}")
+    candidates = [
+        name for name in (f"{stem}.jsonl.gz", f"{stem}.jsonl") if name in files
+    ]
+    if len(candidates) != 1:
+        raise ValueError(
+            f"archive manifest has ambiguous normalized evidence: {directory}"
+        )
+    path = directory / candidates[0]
+    return path
 
 
 def _validate_identity(

@@ -10,6 +10,7 @@ from pathlib import Path
 from hypervector.data.oxa_archive_audit import (
     OxaArchiveAuditConfig,
     audit_oxa_archive,
+    verified_archive_bundles,
 )
 from hypervector.data.oxa_history import OxaBookRequest, output_directory
 from hypervector.data.oxa_trades import OxaTradeRequest, trade_output_directory
@@ -71,15 +72,94 @@ def test_audit_verifies_complete_hour_and_aggregates_counts(tmp_path: Path) -> N
     assert report.evidence_bytes == 16
 
 
+def test_verified_archive_bundles_return_replay_paths(tmp_path: Path) -> None:
+    """Replay discovery returns typed, checksum-verified hourly evidence."""
+    config = _config(tmp_path)
+    book = OxaBookRequest(
+        config.symbol,
+        config.start,
+        config.end,
+        config.depth,
+        1000,
+        20,
+        30.0,
+    )
+    trade = OxaTradeRequest(config.symbol, config.start, config.end, 1000, 500, 30.0)
+    book_dir = output_directory(tmp_path, book)
+    trade_dir = trade_output_directory(tmp_path, trade)
+    _write_bundle(
+        book_dir,
+        source="0xarchive_hyperliquid_native_l2",
+        config=config,
+        counts={"row_count": 0, "coalesced_same_ms": 0},
+        evidence_name="books.jsonl",
+    )
+    _write_bundle(
+        trade_dir,
+        source="0xarchive_hyperliquid_public_trades",
+        config=config,
+        counts={"trade_count": 7, "raw_fill_count": 14},
+        evidence_name="trades.jsonl.gz",
+    )
+
+    bundles = verified_archive_bundles(config)
+
+    assert len(bundles) == 1
+    assert bundles[0].start == config.start
+    assert bundles[0].end == config.end
+    assert bundles[0].book_path is None
+    assert bundles[0].trade_path == trade_dir / "trades.jsonl.gz"
+    assert bundles[0].book_rows == 0
+    assert bundles[0].trade_rows == 7
+
+
+def test_verified_archive_bundles_use_manifest_normalized_filename(
+    tmp_path: Path,
+) -> None:
+    """Legacy uncompressed evidence remains replayable when manifest-verified."""
+    config = _config(tmp_path)
+    book = OxaBookRequest(
+        config.symbol,
+        config.start,
+        config.end,
+        config.depth,
+        1000,
+        20,
+        30.0,
+    )
+    trade = OxaTradeRequest(config.symbol, config.start, config.end, 1000, 500, 30.0)
+    book_dir = output_directory(tmp_path, book)
+    trade_dir = trade_output_directory(tmp_path, trade)
+    _write_bundle(
+        book_dir,
+        source="0xarchive_hyperliquid_native_l2",
+        config=config,
+        counts={"row_count": 12, "coalesced_same_ms": 0},
+        evidence_name="books.jsonl",
+    )
+    _write_bundle(
+        trade_dir,
+        source="0xarchive_hyperliquid_public_trades",
+        config=config,
+        counts={"trade_count": 7, "raw_fill_count": 14},
+        evidence_name="trades.jsonl.gz",
+    )
+
+    bundles = verified_archive_bundles(config)
+
+    assert bundles[0].book_path == book_dir / "books.jsonl"
+
+
 def _write_bundle(
     directory: Path,
     *,
     source: str,
     config: OxaArchiveAuditConfig,
     counts: dict[str, int],
+    evidence_name: str = "evidence.bin",
 ) -> None:
     directory.mkdir(parents=True)
-    evidence = directory / "evidence.bin"
+    evidence = directory / evidence_name
     evidence.write_bytes(b"verified")
     manifest: dict[str, object] = {
         "complete": True,
