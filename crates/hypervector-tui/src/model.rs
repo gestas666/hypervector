@@ -271,6 +271,7 @@ pub struct ActivePosition {
     pub entry_fee_usd: f64,
     pub funding_payment_usd: f64,
     pub estimated_exit_fee_usd: f64,
+    pub liquidation_price: Option<f64>,
 }
 
 impl ActivePosition {
@@ -287,6 +288,7 @@ impl ActivePosition {
             entry_fee_usd: 0.0,
             funding_payment_usd: 0.0,
             estimated_exit_fee_usd: 0.0,
+            liquidation_price: None,
         }
     }
 

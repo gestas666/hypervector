@@ -153,6 +153,7 @@ pub(crate) struct LedgerRow {
     leverage: Option<f64>,
     position_qty: Option<f64>,
     position_avg_px: Option<f64>,
+    liquidation_price: Option<f64>,
     equity: Option<f64>,
     init_cash: Option<f64>,
     realized_pnl: Option<f64>,
@@ -196,6 +197,7 @@ struct ActivePositionCycle<'a> {
     qty: f64,
     entry_fee_usd: f64,
     funding_payment_usd: f64,
+    liquidation_price: Option<f64>,
 }
 
 #[derive(Debug, Clone)]
@@ -692,6 +694,7 @@ fn build_active_position(
         entry_fee_usd: cycle.entry_fee_usd,
         funding_payment_usd: cycle.funding_payment_usd,
         estimated_exit_fee_usd: cycle.qty.abs() * estimated_exit_price * maker_fee_rate,
+        liquidation_price: cycle.liquidation_price,
     }
 }
 
@@ -730,6 +733,11 @@ fn active_position_cycle<'a>(rows: &[&'a LedgerRow]) -> Option<ActivePositionCyc
             .filter(|row| row.action == "funding")
             .filter_map(|row| row.funding_payment_usd)
             .sum(),
+        liquidation_price: cycle_rows
+            .iter()
+            .rev()
+            .find_map(|row| row.liquidation_price)
+            .filter(|price| *price > 0.0),
     })
 }
 

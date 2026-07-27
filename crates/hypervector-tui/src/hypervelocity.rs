@@ -238,6 +238,13 @@ fn render_position_panel(f: &mut Frame, app: &App, area: Rect) {
     } else {
         "ENTRY FEE N/A  |  FUNDING N/A  |  EST EXIT FEE N/A".to_string()
     };
+    let liquidation_display = if !pos.is_active() {
+        "LIQ PRICE  N/A".to_string()
+    } else if let Some(price) = pos.liquidation_price {
+        format!("LIQ PRICE  ${price:.2}  │  SOURCE  BACKEND ISOLATED")
+    } else {
+        "LIQ PRICE  UNAVAILABLE  │  SOURCE  BACKEND TELEMETRY MISSING".to_string()
+    };
 
     let text = vec![
         Line::from(vec![
@@ -281,6 +288,7 @@ fn render_position_panel(f: &mut Frame, app: &App, area: Rect) {
             app.theme.muted,
         )]),
         Line::from(vec![Span::styled(fee_display, app.theme.cyan)]),
+        Line::from(vec![Span::styled(liquidation_display, app.theme.cyan)]),
     ];
 
     let block = Block::default()

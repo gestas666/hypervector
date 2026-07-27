@@ -733,6 +733,7 @@ def test_event_shadow_session_ledgers_partial_fill_and_proportional_target(
     session.attach_hypervelocity_event_controller(
         HypervelocityShadowController(port=port, initial_market=neutral)
     )
+    session.enable_live_telemetry()
     monkeypatch.setattr(
         "hypervector.paper.session.current_hypervelocity_entry_allowed",
         lambda _frame, direction: direction == "long",
@@ -796,6 +797,7 @@ def test_event_shadow_session_ledgers_partial_fill_and_proportional_target(
     assert entry["conviction_source"] == "metalabel_observe"
     assert entry["metalabel_p"] == pytest.approx(0.73)
     assert entry["metalabel_bundle_id"] == "event-observe-bundle"
+    assert entry["liquidation_price"] == pytest.approx(port.liquidation_price)
     assert target["requested_qty"] == pytest.approx(1.0)
     assert target["execution_model"] == "nautilus_event_v1"
 
@@ -836,6 +838,9 @@ def test_event_shadow_session_ledgers_partial_fill_and_proportional_target(
     funding_rows = [row for row in rows if row.get("action") == "funding"]
     assert len(funding_rows) == 1
     assert funding_rows[0]["execution_model"] == "nautilus_event_v1"
+    assert funding_rows[0]["liquidation_price"] == pytest.approx(port.liquidation_price)
+    regime_rows = [row for row in rows if row.get("action") == "regime_observation"]
+    assert regime_rows[-1]["liquidation_price"] == pytest.approx(port.liquidation_price)
 
     liquidation_price = port.liquidation_price
     assert liquidation_price is not None
@@ -912,6 +917,7 @@ def test_profile_activates_event_runtime_and_stamps_authority(tmp_path: Path) ->
     assert identity["remaining_qty"] is None
     assert identity["liquidity_side"] is None
     assert identity["margin_model"] == "hyperliquid_isolated_v1"
+    assert identity["liquidation_price"] is None
     assert (
         identity["liquidation_execution_model"] == "hyperliquid_market_liquidation_v2"
     )

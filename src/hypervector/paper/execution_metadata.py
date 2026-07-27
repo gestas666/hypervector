@@ -22,6 +22,7 @@ _ALLOWED_FIELDS = frozenset(
         "remaining_qty",
         "liquidity_side",
         "margin_model",
+        "liquidation_price",
         "clearance_fee_usd",
         "liquidation_execution_model",
         "liquidation_method",

@@ -95,6 +95,11 @@ class HypervelocitySessionBridge:
         """Return the exact fill-event count from the latest controller cycle."""
         return self._last_fill_count
 
+    @property
+    def liquidation_price(self) -> float | None:
+        """Return the backend-authoritative isolated liquidation boundary."""
+        return self._controller.port.liquidation_price
+
     def on_market(
         self,
         market: RuntimeMarketState,
@@ -149,6 +154,7 @@ class HypervelocitySessionBridge:
                 "execution_data_source": "live_meta_and_asset_contexts",
                 "execution_evidence_fresh": self._controller.port.evidence_fresh,
                 "margin_model": "hyperliquid_isolated_v1",
+                "liquidation_price": self.liquidation_price,
             },
         )
         if record is None:
@@ -186,6 +192,7 @@ class HypervelocitySessionBridge:
             record_metadata=_liquidation_metadata(
                 liquidation,
                 evidence_fresh=self._controller.port.evidence_fresh,
+                liquidation_price=self.liquidation_price,
             ),
         )
         cycle = self._controller.reconcile_liquidation(observed_at)
@@ -261,7 +268,11 @@ class HypervelocitySessionBridge:
             fill_model=PostOnlyLimitFillModel(),
             fee_override_usd=event.fee_usd,
             exit_reason="take_profit_8pct_margin" if action == "close" else None,
-            record_metadata=_fill_metadata(event, evidence),
+            record_metadata=_fill_metadata(
+                event,
+                evidence,
+                liquidation_price=self.liquidation_price,
+            ),
             **self._annotation_kwargs(command.client_order_id),
         )
         return action
@@ -284,6 +295,7 @@ class HypervelocitySessionBridge:
             record_metadata=_order_metadata(
                 event,
                 self._controller.port.order_telemetry(event.client_order_id),
+                liquidation_price=self.liquidation_price,
             ),
             **self._annotation_kwargs(command.client_order_id),
         )
@@ -319,6 +331,7 @@ class HypervelocitySessionBridge:
                 "place_attempted": False,
                 "position_qty": position.qty,
                 "position_avg_px": position.avg_px,
+                "liquidation_price": self.liquidation_price,
                 "realized_pnl": position.realized_pnl,
                 "unrealized_pnl": account.equity_usd - realized_equity,
                 "equity": account.equity_usd,
@@ -365,6 +378,7 @@ def _liquidation_metadata(
     liquidation: ShadowLiquidation,
     *,
     evidence_fresh: bool,
+    liquidation_price: float | None,
 ) -> dict[str, object]:
     return {
         "venue_event_type": "liquidated",
@@ -373,6 +387,7 @@ def _liquidation_metadata(
         "execution_evidence_fresh": evidence_fresh,
         "liquidity_side": "taker",
         "margin_model": "hyperliquid_isolated_v1",
+        "liquidation_price": liquidation_price,
         "clearance_fee_usd": liquidation.clearance_fee_usd,
         "liquidation_execution_model": liquidation.execution_model,
         "liquidation_method": liquidation.method,
@@ -401,6 +416,8 @@ def book_snapshot_from_event(event: L2SnapshotEvent) -> BookSnapshot:
 def _fill_metadata(
     event: VenueOrderEvent,
     evidence: ShadowExecutionRecord,
+    *,
+    liquidation_price: float | None,
 ) -> dict[str, object]:
     return {
         "client_order_id": event.client_order_id,
@@ -417,12 +434,15 @@ def _fill_metadata(
         "remaining_qty": evidence.remaining_quantity,
         "liquidity_side": evidence.liquidity_side,
         "margin_model": evidence.margin_model,
+        "liquidation_price": liquidation_price,
     }
 
 
 def _order_metadata(
     event: VenueOrderEvent,
     telemetry: ShadowOrderTelemetry,
+    *,
+    liquidation_price: float | None,
 ) -> dict[str, object]:
     return {
         "client_order_id": event.client_order_id,
@@ -437,6 +457,7 @@ def _order_metadata(
         "cumulative_filled_qty": telemetry.cumulative_filled_quantity,
         "remaining_qty": telemetry.remaining_quantity,
         "margin_model": telemetry.margin_model,
+        "liquidation_price": liquidation_price,
     }
 
 

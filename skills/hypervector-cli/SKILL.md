@@ -132,8 +132,10 @@ create a new historical entry. Hourly boundaries require the matching public
 Hyperliquid funding-history row; missing evidence fails startup explicitly.
 
 The TUI does not execute trades. Trade, position, PnL, cost, policy, regime,
-and five-level depth fields are projections of backend ledger telemetry. The
-backend remains the execution and persistence authority.
+isolated liquidation price, and five-level depth fields are projections of
+backend ledger telemetry. The TUI displays `LIQ PRICE UNAVAILABLE` when an
+older ledger lacks that field; it never derives a substitute from leverage or
+entry price. The backend remains the execution and persistence authority.
 
 Reset a completed shadow observation window with a recoverable backup:
 

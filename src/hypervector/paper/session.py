@@ -340,6 +340,11 @@ class PaperSession:
             return self._event_shadow_bridge.pending_maker_entry
         return self._pending_maker_entry
 
+    def _current_liquidation_price(self) -> float | None:
+        """Return the attached event backend's isolated liquidation boundary."""
+        bridge = self._event_shadow_bridge
+        return bridge.liquidation_price if bridge is not None else None
+
     def attach_hypervelocity_event_controller(
         self,
         controller: HypervelocityShadowController,
@@ -642,6 +647,7 @@ class PaperSession:
                 "place_attempted": False,
                 "position_qty": float(self.engine.position.qty),
                 "position_avg_px": float(self.engine.position.avg_px),
+                "liquidation_price": self._current_liquidation_price(),
                 "mark_px": float(record["close"]),
                 "realized_pnl": float(self.engine.position.realized_pnl),
                 "unrealized_pnl": float(
@@ -1629,6 +1635,7 @@ class PaperSession:
                 "network": NETWORK_MAINNET,
                 "position_qty": float(position.qty),
                 "position_avg_px": float(position.avg_px),
+                "liquidation_price": self._current_liquidation_price(),
                 "realized_pnl": float(position.realized_pnl),
                 "unrealized_pnl": (
                     float(resume.unrealized_pnl) if resume is not None else 0.0

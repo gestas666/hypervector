@@ -31,6 +31,7 @@
 | Range 1m impulse LightGBM | **Runtime-compatible candidate trained**; not auto-installed |
 | 0xArchive venue evidence | **90-day BTC audit and full replay PASS**; 2,160 hourly L2/trade pairs (4,320 individual evidence bundles) |
 | Hypervelocity regime retune | **Applied trial 60** from strict 90-day Hyperliquid candles; fewer false-RANGE/no-entry states and 55% lower churn, with slower transition latency |
+| Liquidation telemetry | **Backend-authoritative boundary projected to TUI**; entry, funding, regime, resume, and liquidation rows carry the isolated price, with no TUI-side fallback calculation |
 
 ### 2026-07-27 Hyperliquid-native archive and replay update
 
