@@ -7,7 +7,6 @@ import json
 import os
 import sys
 import uuid
-from datetime import UTC, datetime
 from pathlib import Path
 
 import pandas as pd
@@ -60,6 +59,8 @@ CLI_COMMANDS: tuple[str, ...] = (
     "live-run",
     "history",
     "oxa-book-fetch",
+    "oxa-candle-fetch",
+    "oxa-trade-fetch",
     "regime",
     "hypervelocity-regime-eval",
     "hypervelocity-regime-autotune",
@@ -127,50 +128,6 @@ def _load_bars(args: argparse.Namespace):
 def cmd_infra_init(args: argparse.Namespace) -> int:
     paths = _ensure_root(args)
     report = layout_report(paths.root)
-    print(json.dumps(report, indent=2))
-    return 0
-
-
-def _parse_utc_datetime(value: str) -> datetime:
-    """Parse a timezone-explicit ISO-8601 CLI value and normalize it to UTC."""
-    try:
-        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
-    except ValueError as exc:
-        raise argparse.ArgumentTypeError(
-            f"invalid ISO-8601 timestamp: {value}"
-        ) from exc
-    if parsed.utcoffset() is None:
-        raise argparse.ArgumentTypeError("timestamp must include a UTC offset or Z")
-    return parsed.astimezone(UTC)
-
-
-def cmd_oxa_book_fetch(args: argparse.Namespace) -> int:
-    """Acquire one explicitly bounded Hyperliquid-native L2 history window."""
-    from hypervector.data.oxa_history import (
-        OxaBookRequest,
-        OxaHistoryError,
-        acquire_and_store_orderbooks,
-    )
-
-    try:
-        request = OxaBookRequest(
-            symbol=args.symbol,
-            start=args.start,
-            end=args.end,
-            depth=args.depth,
-            limit=args.limit,
-            max_pages=args.max_pages,
-            timeout_seconds=args.timeout,
-        )
-        report = acquire_and_store_orderbooks(
-            data_root=args.data_root,
-            api_key=os.environ.get("OXA_API_KEY", ""),
-            request=request,
-        )
-    except (OxaHistoryError, ValueError, OSError) as exc:
-        print(json.dumps({"ok": False, "error": str(exc)}), file=sys.stderr)
-        return 1
-    report["venue"] = "hyperliquid"
     print(json.dumps(report, indent=2))
     return 0
 
@@ -1372,7 +1329,6 @@ def cmd_hypervelocity_regime_challengers(args: argparse.Namespace) -> int:
 
 def cmd_hypervelocity_maker_replay(args: argparse.Namespace) -> int:
     """Replay backend decisions against recorded post-only book paths."""
-    from hypervector.data.book_align import load_l2_jsonl
     from hypervector.regime.composite import classify_multitimeframe
     from hypervector.research.maker_replay import MakerReplayConfig, replay_maker_orders
     from hypervector.strategies.hypervelocity_contract import faithful_regime_config
@@ -1382,9 +1338,12 @@ def cmd_hypervelocity_maker_replay(args: argparse.Namespace) -> int:
     if not isinstance(indexed.index, pd.DatetimeIndex):
         indexed.index = pd.DatetimeIndex(pd.to_datetime(indexed["timestamp"], utc=True))
     decisions = classify_multitimeframe(indexed, config=faithful_regime_config())
-    books = [load_l2_jsonl(Path(path)) for path in args.book_path]
-    book = pd.concat(books, ignore_index=True).sort_values("ts_ms")
-    rules = ("touch", "through") if args.fill_rule == "both" else (args.fill_rule,)
+    trade_paths = args.trade_path or []
+    book, trades = _load_maker_replay_evidence(args.book_path, trade_paths)
+    rules = {
+        "both": ("touch", "through"),
+        "all": ("touch", "through", "trade-through"),
+    }.get(args.fill_rule, (args.fill_rule,))
     reports = {
         rule: replay_maker_orders(
             book,
@@ -1396,6 +1355,7 @@ def cmd_hypervelocity_maker_replay(args: argparse.Namespace) -> int:
                 tick_size=args.tick_size,
                 entry_ttl_seconds=args.entry_ttl_seconds,
             ),
+            trades=trades,
         ).to_dict()
         for rule in rules
     }
@@ -1404,6 +1364,7 @@ def cmd_hypervelocity_maker_replay(args: argparse.Namespace) -> int:
         "report_only": True,
         "data_provenance": provenance,
         "book_paths": [str(Path(path)) for path in args.book_path],
+        "trade_paths": [str(Path(path)) for path in trade_paths],
         "reports": reports,
     }
     rendered = json.dumps(out, indent=2, default=str)
@@ -1413,6 +1374,21 @@ def cmd_hypervelocity_maker_replay(args: argparse.Namespace) -> int:
         output_path.write_text(rendered + "\n", encoding="utf-8")
     print(rendered)
     return 0
+
+
+def _load_maker_replay_evidence(
+    book_paths: list[str], trade_paths: list[str]
+) -> tuple[pd.DataFrame, pd.DataFrame | None]:
+    from hypervector.data.book_align import load_l2_jsonl
+    from hypervector.data.oxa_trades import load_trade_jsonl
+
+    books = [load_l2_jsonl(Path(path)) for path in book_paths]
+    book = pd.concat(books, ignore_index=True).sort_values("ts_ms")
+    trade_frames = [load_trade_jsonl(Path(path)) for path in trade_paths]
+    if not trade_frames:
+        return book, None
+    trades = pd.concat(trade_frames, ignore_index=True).sort_values("ts_ms")
+    return book, trades
 
 
 def cmd_hypervelocity_shadow_compare(args: argparse.Namespace) -> int:
@@ -1925,18 +1901,9 @@ def build_parser() -> argparse.ArgumentParser:
     _add_market_args(h)
     h.set_defaults(func=cmd_history)
 
-    oxa = sub.add_parser(
-        "oxa-book-fetch",
-        help="Fetch bounded Hyperliquid-native L2 history from 0xArchive",
-    )
-    oxa.add_argument("--symbol", default="BTC", help="Hyperliquid core asset")
-    oxa.add_argument("--start", required=True, type=_parse_utc_datetime)
-    oxa.add_argument("--end", required=True, type=_parse_utc_datetime)
-    oxa.add_argument("--depth", type=int, default=20, choices=range(1, 21))
-    oxa.add_argument("--limit", type=int, default=1000, choices=range(1, 1001))
-    oxa.add_argument("--max-pages", type=int, default=1)
-    oxa.add_argument("--timeout", type=float, default=30.0)
-    oxa.set_defaults(func=cmd_oxa_book_fetch)
+    from hypervector.cli_oxa import add_oxa_parsers
+
+    add_oxa_parsers(sub)
 
     r = sub.add_parser("regime", help="Run regime detector on live/cached history")
     _add_market_args(r)
@@ -2312,9 +2279,10 @@ def build_parser() -> argparse.ArgumentParser:
     )
     _add_market_args(hv_maker)
     hv_maker.add_argument("--book-path", action="append", required=True)
+    hv_maker.add_argument("--trade-path", action="append", default=None)
     hv_maker.add_argument(
         "--fill-rule",
-        choices=("both", "touch", "through"),
+        choices=("both", "all", "touch", "through", "trade-through"),
         default="both",
     )
     hv_maker.add_argument("--initial-equity", type=float, default=10_000.0)

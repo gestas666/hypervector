@@ -2,16 +2,20 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from typing import Literal
 
 import pandas as pd
 
 from hypervector.regime.models import BreakoutDirection, PrimaryRegime
+from hypervector.research.maker_replay_validation import (
+    validate_book,
+    validate_trades,
+)
 from hypervector.strategies.hypervelocity_contract import HypervelocityContract
 
 Direction = Literal["long", "short"]
-FillRule = Literal["touch", "through"]
+FillRule = Literal["touch", "through", "trade-through"]
 
 
 @dataclass(frozen=True)
@@ -29,8 +33,8 @@ class MakerReplayConfig:
             raise ValueError("initial_equity must be positive")
         if self.maker_fee_rate < 0.0:
             raise ValueError("maker_fee_rate must be non-negative")
-        if self.fill_rule not in ("touch", "through"):
-            raise ValueError("fill_rule must be touch|through")
+        if self.fill_rule not in ("touch", "through", "trade-through"):
+            raise ValueError("fill_rule must be touch|through|trade-through")
         if self.tick_size <= 0.0:
             raise ValueError("tick_size must be positive")
         if self.entry_ttl_seconds <= 0.0:
@@ -39,7 +43,7 @@ class MakerReplayConfig:
 
 @dataclass(frozen=True)
 class MakerReplayTrade:
-    """One completed maker-to-maker trade reconstructed from L2 snapshots."""
+    """One completed maker-to-maker trade reconstructed from market evidence."""
 
     direction: Direction
     signal_time_utc: str
@@ -64,6 +68,7 @@ class MakerReplayReport:
 
     fill_rule: FillRule
     snapshots: int
+    market_trade_prints: int
     submitted_entries: int
     entry_fills: int
     expired_entries: int
@@ -88,6 +93,7 @@ class _PendingEntry:
     signal_time: pd.Timestamp
     submitted_time: pd.Timestamp
     limit_price: float
+    trade_through_volume: float = 0.0
 
 
 @dataclass
@@ -101,6 +107,7 @@ class _OpenPosition:
     margin: float
     notional: float
     target_price: float
+    exit_trade_through_volume: float = 0.0
 
 
 @dataclass
@@ -114,28 +121,8 @@ class _ReplayState:
     entry_fills: int = 0
     expired: int = 0
     canceled: int = 0
-    submissions: list[str] | None = None
-    trades: list[MakerReplayTrade] | None = None
-
-    def __post_init__(self) -> None:
-        self.submissions = [] if self.submissions is None else self.submissions
-        self.trades = [] if self.trades is None else self.trades
-
-
-def _validate_book(book: pd.DataFrame) -> pd.DataFrame:
-    required = {"ts_ms", "best_bid", "best_ask"}
-    missing = required.difference(book.columns)
-    if missing:
-        raise ValueError(f"maker replay book missing columns: {sorted(missing)}")
-    frame = book.loc[:, ["ts_ms", "best_bid", "best_ask"]].copy()
-    frame = frame.sort_values("ts_ms").drop_duplicates("ts_ms", keep="last")
-    if frame.empty:
-        raise ValueError("maker replay requires at least one book snapshot")
-    if (frame[["best_bid", "best_ask"]].astype(float) <= 0.0).any().any():
-        raise ValueError("maker replay book prices must be positive")
-    if (frame["best_bid"].astype(float) >= frame["best_ask"].astype(float)).any():
-        raise ValueError("maker replay book must have best_bid < best_ask")
-    return frame.reset_index(drop=True)
+    submissions: list[str] = field(default_factory=list)
+    trades: list[MakerReplayTrade] = field(default_factory=list)
 
 
 def _direction_rows(decisions: pd.DataFrame) -> pd.Series:
@@ -172,9 +159,7 @@ def _desired_at(
     directions: pd.Series,
     timestamp: pd.Timestamp,
 ) -> tuple[Direction | None, pd.Timestamp | None]:
-    position = (
-        int(directions.index.as_unit("ns").searchsorted(timestamp, side="right")) - 1
-    )
+    position = int(directions.index.searchsorted(timestamp, side="right")) - 1
     if position < 0:
         return None, None
     value = directions.iloc[position]
@@ -190,10 +175,24 @@ def _fill_reached(
     ask: float,
     config: MakerReplayConfig,
 ) -> bool:
+    if config.fill_rule == "trade-through":
+        return False
     clearance = config.tick_size if config.fill_rule == "through" else 0.0
     if side == "buy":
         return ask <= limit_price - clearance
     return bid >= limit_price + clearance
+
+
+def _trade_reached(
+    *,
+    side: Literal["buy", "sell"],
+    limit_price: float,
+    aggressor_side: str,
+    trade_price: float,
+) -> bool:
+    if side == "buy":
+        return aggressor_side == "sell" and trade_price < limit_price
+    return aggressor_side == "buy" and trade_price > limit_price
 
 
 def _entry_filled(
@@ -307,7 +306,6 @@ def _replay_snapshot(
             return
     if state.position is not None and _exit_filled(state.position, bid, ask, config):
         trade = _close_trade(state.position, timestamp, config.maker_fee_rate)
-        assert state.trades is not None
         state.trades.append(trade)
         state.equity += trade.net_pnl
         state.position = None
@@ -323,32 +321,154 @@ def _replay_snapshot(
         state.pending = _PendingEntry(desired, signal_time, timestamp, limit_price)
         state.last_signal = signal_time
         state.submitted += 1
-        assert state.submissions is not None
         state.submissions.append(timestamp.isoformat())
+
+
+def _replay_pending_trade(
+    state: _ReplayState,
+    pending: _PendingEntry,
+    timestamp: pd.Timestamp,
+    aggressor_side: str,
+    trade_price: float,
+    trade_size: float,
+    desired: Direction | None,
+    config: MakerReplayConfig,
+    contract: HypervelocityContract,
+) -> bool:
+    age = (timestamp - pending.submitted_time).total_seconds()
+    side: Literal["buy", "sell"] = "buy" if pending.direction == "long" else "sell"
+    qualifies = timestamp > pending.submitted_time and _trade_reached(
+        side=side,
+        limit_price=pending.limit_price,
+        aggressor_side=aggressor_side,
+        trade_price=trade_price,
+    )
+    if qualifies:
+        pending.trade_through_volume += trade_size
+    required = contract.allocate(state.equity).notional / pending.limit_price
+    if desired != pending.direction:
+        state.pending, state.canceled = None, state.canceled + 1
+    elif age > config.entry_ttl_seconds:
+        state.pending, state.expired = None, state.expired + 1
+        state.expired_direction = pending.direction
+    elif pending.trade_through_volume >= required:
+        state.position = _open_position(pending, timestamp, state.equity, contract)
+        state.pending, state.entry_fills = None, state.entry_fills + 1
+        return True
+    return False
+
+
+def _replay_trade(
+    state: _ReplayState,
+    timestamp: pd.Timestamp,
+    aggressor_side: str,
+    trade_price: float,
+    trade_size: float,
+    desired: Direction | None,
+    config: MakerReplayConfig,
+    contract: HypervelocityContract,
+) -> None:
+    if state.expired_direction is not None and desired != state.expired_direction:
+        state.expired_direction = None
+    pending = state.pending
+    if pending is not None and _replay_pending_trade(
+        state,
+        pending,
+        timestamp,
+        aggressor_side,
+        trade_price,
+        trade_size,
+        desired,
+        config,
+        contract,
+    ):
+        return
+    position = state.position
+    if position is None or timestamp <= position.entry_time:
+        return
+    exit_side: Literal["buy", "sell"] = (
+        "sell" if position.direction == "long" else "buy"
+    )
+    if _trade_reached(
+        side=exit_side,
+        limit_price=position.target_price,
+        aggressor_side=aggressor_side,
+        trade_price=trade_price,
+    ):
+        position.exit_trade_through_volume += trade_size
+    if position.exit_trade_through_volume >= position.quantity:
+        trade = _close_trade(position, timestamp, config.maker_fee_rate)
+        state.trades.append(trade)
+        state.equity += trade.net_pnl
+        state.position = None
+
+
+def _event_tape(
+    snapshots: pd.DataFrame,
+    trades: pd.DataFrame,
+) -> pd.DataFrame:
+    books = snapshots.assign(event_kind="book", event_priority=0)
+    prints = trades.assign(event_kind="trade", event_priority=1)
+    return (
+        pd.concat((books, prints), ignore_index=True)
+        .sort_values(["ts_ms", "event_priority"])
+        .reset_index(drop=True)
+    )
+
+
+def _execute_tape(
+    tape: pd.DataFrame,
+    directions: pd.Series,
+    config: MakerReplayConfig,
+) -> _ReplayState:
+    state = _ReplayState(equity=config.initial_equity)
+    contract = HypervelocityContract()
+    for row in tape.itertuples(index=False):
+        timestamp = pd.Timestamp(int(row.ts_ms), unit="ms", tz="UTC")
+        desired, signal_time = _desired_at(directions, timestamp)
+        if getattr(row, "event_kind", "book") == "trade":
+            _replay_trade(
+                state,
+                timestamp,
+                str(row.aggressor_side),
+                float(row.price),
+                float(row.size),
+                desired,
+                config,
+                contract,
+            )
+        else:
+            _replay_snapshot(
+                state,
+                timestamp,
+                float(row.best_bid),
+                float(row.best_ask),
+                desired,
+                signal_time,
+                config,
+                contract,
+            )
+    return state
 
 
 def replay_maker_orders(
     book: pd.DataFrame,
     decisions: pd.DataFrame,
     config: MakerReplayConfig | None = None,
+    *,
+    trades: pd.DataFrame | None = None,
 ) -> MakerReplayReport:
-    """Replay post-only entries and fixed targets without inventing trade prints."""
+    """Replay post-only entries and fixed targets from causal market evidence."""
     cfg = config or MakerReplayConfig()
-    snapshots = _validate_book(book)
+    snapshots = validate_book(book)
+    prints = validate_trades(trades) if cfg.fill_rule == "trade-through" else None
+    tape = _event_tape(snapshots, prints) if prints is not None else snapshots
     directions = _available_directions(decisions)
-    contract = HypervelocityContract()
-    state = _ReplayState(equity=cfg.initial_equity)
-    for row in snapshots.itertuples(index=False):
-        timestamp = pd.Timestamp(int(row.ts_ms), unit="ms", tz="UTC")
-        bid, ask = float(row.best_bid), float(row.best_ask)
-        desired, signal_time = _desired_at(directions, timestamp)
-        _replay_snapshot(
-            state, timestamp, bid, ask, desired, signal_time, cfg, contract
-        )
-    assert state.submissions is not None and state.trades is not None
+    state = _execute_tape(tape, directions, cfg)
     return MakerReplayReport(
         cfg.fill_rule,
         len(snapshots),
+        0 if prints is None else len(prints),
         state.submitted,
         state.entry_fills,
         state.expired,
@@ -361,8 +481,12 @@ def replay_maker_orders(
         tuple(state.submissions),
         tuple(state.trades),
         (
-            "snapshots contain displayed books, not executed trade prints",
+            (
+                "trade-through requires cumulative volume beyond limits but cannot observe queue rank"
+                if prints is not None
+                else "book-only fill rules do not observe executed trade prints"
+            ),
             "queue position, cancellations, and partial maker fills are unknown",
-            "touch is optimistic; through is conservative but not guaranteed",
+            "touch and book-through remain assumption challengers, not guarantees",
         ),
     )

@@ -242,11 +242,63 @@ uv run python -m hypervector oxa-book-fetch \
 
 The command is fixed to Hyperliquid core and stores raw response envelopes,
 vendor request IDs, SHA-256 checksums, a manifest, and replay-compatible
-`books.jsonl` below `data/cache/vendor/0xarchive/`. It never adds a fabricated
+`books.jsonl.gz` below `data/cache/vendor/0xarchive/`. It never adds a fabricated
 local receive timestamp. A non-null `continuation_cursor` means the explicit
 page bound truncated the requested window; it is not success-shaped full
-coverage. Use the 0xArchive Data Catalog for broad backfills unless a measured
-API trial establishes acceptable pagination cost and duration.
+coverage. The measured resumable REST backfill uses compressed hourly bundles;
+completed manifests are skipped on restart and incomplete windows fail before
+publication.
+
+Acquire matching public trades for the same explicit UTC window:
+
+```bash
+uv run python -m hypervector oxa-trade-fetch \
+  --symbol BTC \
+  --start 2026-07-26T23:50:00Z \
+  --end 2026-07-26T23:51:00Z \
+  --limit 1000 --max-pages 1
+```
+
+Recent 0xArchive trade responses contain participant-side maker and taker
+fills. Hypervector preserves every raw row but emits one public trade per
+venue `trade_id`, using the `crossed=true` taker row for aggressor direction.
+A truncated maker-only participant group is reported as unresolved rather
+than guessed. Historical trades never receive a fabricated local receipt time.
+
+Acquire a paired 90-day BTC L2/trade archive with bounded workers:
+
+```bash
+set -a; source .env; set +a
+uv run python scripts/oxa_backfill.py \
+  --start 2026-04-28T00:00:00Z \
+  --end 2026-07-27T00:00:00Z \
+  --workers 4
+```
+
+Verify all expected hourly bundles and each declared SHA-256 after acquisition:
+
+```bash
+uv run python scripts/oxa_archive_audit.py \
+  --start 2026-04-28T00:00:00Z \
+  --end 2026-07-27T00:00:00Z \
+  --out data/logs/research/oxa_btc_90d_archive_audit.json
+```
+
+Acquire venue candles and install an exact strict-Hyperliquid research cache.
+Missing vendor minutes are continuity-filled only in the installed cache as
+`hl_gap_fill` zero-volume bars; the immutable vendor bundle remains unchanged.
+
+```bash
+uv run python -m hypervector --data-root data oxa-candle-fetch \
+  --symbol BTC --interval 1m \
+  --start 2026-04-28T00:00:00Z \
+  --end 2026-07-27T00:00:00Z \
+  --limit 10000 --max-pages 20 --install-research-cache
+```
+
+Use `hypervelocity-maker-replay --fill-rule all` with repeated `--book-path`
+and `--trade-path` arguments to compare touch, one-tick book-through, and
+conservative public-trade-through fills. The command is report-only.
 
 ---
 

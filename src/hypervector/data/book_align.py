@@ -20,6 +20,8 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
+from hypervector.data.oxa_storage import open_text_reader
+
 
 def load_l2_jsonl(path: Path | str) -> pd.DataFrame:
     """Load raw L2 orderbook snapshot JSONL into a clean DataFrame."""
@@ -28,7 +30,7 @@ def load_l2_jsonl(path: Path | str) -> pd.DataFrame:
         raise FileNotFoundError(f"L2 JSONL file not found: {p}")
 
     rows: list[dict[str, Any]] = []
-    with p.open("r", encoding="utf-8") as f:
+    with open_text_reader(p) as f:
         for line in f:
             if not line.strip():
                 continue

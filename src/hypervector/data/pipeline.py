@@ -72,7 +72,9 @@ def load_research_history(
     if not force_refresh and cache.exists(key):
         df = cache.load(key)
         assert df is not None
-        cache_is_hl_only = "source" in df and df["source"].eq("hl").all()
+        cache_is_hl_only = (
+            "source" in df and df["source"].isin(("hl", "hl_gap_fill")).all()
+        )
         if not strict_hl_only or cache_is_hl_only:
             return df, summarize_provenance(df)
         logger.info("strict HL load bypassing incompatible mixed-venue cache %s", key)

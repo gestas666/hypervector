@@ -19,10 +19,18 @@ data/
           gaps.jsonl     # Declared reconnect/freshness uncertainty
     vendor/
       0xarchive/
-        hyperliquid/BTC/<utc-window>/
-          raw/           # Unmodified REST envelopes with request IDs
-          books.jsonl    # Validated replay-compatible native L2 snapshots
+        hyperliquid/BTC/<utc-window>_d20/
+          raw/           # Gzip REST envelopes with request IDs
+          books.jsonl.gz # Compressed replay-compatible native L2 snapshots
           manifest.json  # Bounds, coverage, cursors, and SHA-256 checksums
+        hyperliquid/BTC/<utc-window>_trades/
+          raw/           # Gzip participant fills (maker and taker rows)
+          trades.jsonl.gz # One compressed public match per venue trade_id
+          manifest.json  # Raw/normalized counts, bounds, cursors, checksums
+        hyperliquid/BTC/<utc-window>_candles_1m/
+          raw/           # Gzip inclusive vendor candle pages
+          candles.parquet # Half-open venue-native research bars
+          manifest.json  # Bounds, request IDs, cursors, and checksums
   runs/                  # SQLite research trials (hypervector.db)
   exports/               # Phase 1 → Phase 2 bundles <id>/meta|params|metrics
   models/

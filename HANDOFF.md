@@ -1,6 +1,6 @@
 # HANDOFF — hypervector
 
-**Saved:** 2026-07-26 — Faithful Hypervelocity backend contract, event-driven shadow friction, causal regime evaluation, and annotation-model comparison.
+**Saved:** 2026-07-27 — Hyperliquid-native 90-day archive, trade-aware maker replay, and faithful shadow continuity.
 **Project:** `/Users/gestas/Prototypes/hypervector`  
 **User:** Albert  
 **Branch:** `main`
@@ -29,6 +29,37 @@
 | L2 replay archive | **Operational**; 4,219 paired BTC trades and 32,209 L2-derived 1m bars |
 | Range 1m impulse research | **Autotuned from 681 L2 replay trades** (339 long, 342 short) |
 | Range 1m impulse LightGBM | **Runtime-compatible candidate trained**; not auto-installed |
+| 0xArchive venue evidence | **90-day BTC audit PASS**; 4,320/4,320 hourly L2/trade bundles |
+
+### 2026-07-27 Hyperliquid-native archive and replay update
+
+- A resumable, bounded 0xArchive importer now stores immutable gzip evidence,
+  manifest identity, request IDs, byte counts, and SHA-256 checksums for native
+  Hyperliquid L2 books and public trades. Participant-side fills are preserved
+  raw and normalized to one public match per venue `trade_id` using the
+  `crossed=true` taker row.
+- The exact 90-day BTC window is `2026-04-28T00:00:00Z` through
+  `2026-07-27T00:00:00Z`: 4,320/4,320 expected hourly bundles, 12,013,542 L2
+  snapshots, 36,591,780 public trades from 73,289,898 participant fills, and
+  9,465,157,545 declared evidence bytes. The durable audit is
+  `data/logs/research/oxa_btc_90d_archive_audit.json`.
+- Every declared evidence checksum passed. A streaming cross-hour check found
+  zero timestamp regressions, zero conflicting repeated identities, and ten
+  exact trade-ID repeats at inclusive hourly boundaries; replay validation
+  deduplicates those exact repeats and rejects conflicts.
+- Twenty-one book hours are complete vendor responses with zero L2 rows; all
+  21 independently reproduced as zero with new request IDs. Trade coverage is
+  nonzero for every hour. These remain explicit vendor coverage gaps and are
+  not synthetically filled.
+- The strict Hyperliquid 1m research cache contains 129,600 exact-cadence bars:
+  129,532 native venue bars plus 68 explicit zero-volume `hl_gap_fill` bars.
+  Raw vendor candles remain unchanged.
+- Maker replay can now compare touch, one-tick book-through, and cumulative
+  public-trade-through fills. Trade-through is report-only and causal, but
+  queue rank and cancellations remain unknowable from public historical data.
+- A July 26 measured comparison produced five touch/through submissions and
+  six trade-through submissions; both completed three trades, left one open,
+  and ended at `$11,496.77`. This is one sample, not proof of general edge.
 
 ### 2026-07-25 implementation status
 

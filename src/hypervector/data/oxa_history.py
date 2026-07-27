@@ -2,43 +2,29 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
-import re
-import shutil
-import tempfile
 from dataclasses import dataclass
-from datetime import UTC, datetime
-from decimal import Decimal, InvalidOperation
+from datetime import datetime
+from decimal import Decimal
 from pathlib import Path
-from typing import Protocol
 
-import requests
-
-
-API_ROOT = "https://api.0xarchive.io/v1/hyperliquid"
-_SYMBOL_PATTERN = re.compile(r"^[A-Z0-9][A-Z0-9._:-]{0,63}$")
-
-
-class OxaHistoryError(RuntimeError):
-    """An actionable 0xArchive transport or HTTP boundary failure."""
-
-
-class _HttpResponse(Protocol):
-    status_code: int
-
-    def json(self) -> object: ...
-
-
-class _HttpSession(Protocol):
-    def get(
-        self,
-        url: str,
-        *,
-        headers: dict[str, str],
-        params: dict[str, int | str],
-        timeout: float,
-    ) -> _HttpResponse: ...
+from hypervector.data.oxa_api import (
+    API_ROOT,
+    HttpSession,
+    OxaHistoryError as OxaHistoryError,
+    OxaRestClient,
+    parse_utc_timestamp_ms,
+    positive_decimal,
+    validate_symbol,
+    validate_window,
+)
+from hypervector.data.oxa_storage import (
+    file_evidence,
+    gzip_text_writer,
+    publish_immutable_directory,
+    write_gzip_json,
+    write_json,
+)
 
 
 @dataclass(frozen=True)
@@ -54,12 +40,8 @@ class OxaBookRequest:
     timeout_seconds: float = 30.0
 
     def __post_init__(self) -> None:
-        if not _SYMBOL_PATTERN.fullmatch(self.symbol):
-            raise ValueError("symbol must be an uppercase Hyperliquid asset identifier")
-        if self.start.tzinfo is not UTC or self.end.tzinfo is not UTC:
-            raise ValueError("start and end must use the UTC timezone")
-        if self.end <= self.start:
-            raise ValueError("end must be after start")
+        validate_symbol(self.symbol)
+        validate_window(self.start, self.end)
         if not 1 <= self.depth <= 20:
             raise ValueError("depth must be between 1 and 20")
         if not 1 <= self.limit <= 1000:
@@ -128,6 +110,7 @@ class OxaBookPage:
     request_id: str
     next_cursor: str | None
     snapshots: tuple[OxaBookSnapshot, ...]
+    coalesced_same_ms: int
     raw_payload: dict[str, object]
 
 
@@ -139,6 +122,7 @@ class OxaBookFetch:
     snapshots: tuple[OxaBookSnapshot, ...]
     complete: bool
     continuation_cursor: str | None
+    coalesced_same_ms: int
 
     @property
     def request_ids(self) -> tuple[str, ...]:
@@ -162,13 +146,9 @@ class OxaHistoryClient:
         self,
         *,
         api_key: str,
-        session: _HttpSession | None = None,
+        session: HttpSession | None = None,
     ) -> None:
-        key = api_key.strip()
-        if not key:
-            raise ValueError("OXA_API_KEY is required")
-        self._api_key = key
-        self._session = session or requests.Session()
+        self._client = OxaRestClient(api_key=api_key, session=session)
 
     def fetch_page(
         self,
@@ -177,23 +157,12 @@ class OxaHistoryClient:
         cursor: str | None = None,
     ) -> OxaBookPage:
         """Fetch one bounded page and retain its raw evidence envelope."""
-        try:
-            response = self._session.get(
-                f"{API_ROOT}/orderbook/{request.symbol}/history",
-                headers={"X-API-Key": self._api_key},
-                params=request.params(cursor),
-                timeout=request.timeout_seconds,
-            )
-        except requests.RequestException as exc:
-            name = type(exc).__name__
-            raise OxaHistoryError(
-                f"0xArchive network request failed ({name})"
-            ) from None
-        if response.status_code != 200:
-            raise OxaHistoryError(
-                f"0xArchive request failed with HTTP {response.status_code}"
-            )
-        return _parse_page(response.json(), request)
+        payload = self._client.get(
+            f"/orderbook/{request.symbol}/history",
+            params=request.params(cursor),
+            timeout=request.timeout_seconds,
+        )
+        return _parse_page(payload, request)
 
 
 def fetch_orderbook_history(
@@ -208,12 +177,13 @@ def fetch_orderbook_history(
         cursor = page.next_cursor
         if cursor is None:
             break
-    snapshots = _merge_page_snapshots(pages)
+    snapshots, coalesced = _merge_page_snapshots(pages)
     return OxaBookFetch(
         pages=tuple(pages),
         snapshots=snapshots,
         complete=cursor is None,
         continuation_cursor=cursor,
+        coalesced_same_ms=coalesced,
     )
 
 
@@ -239,29 +209,20 @@ def store_orderbook_history(
 ) -> OxaStoredHistory:
     """Atomically publish raw pages, checksums, manifest, and replay JSONL."""
     final = output_directory(data_root, request)
-    if final.exists():
-        raise FileExistsError(f"0xArchive output already exists: {final}")
-    final.parent.mkdir(parents=True, exist_ok=True)
-    staging = Path(tempfile.mkdtemp(prefix=f".{final.name}.", dir=final.parent))
-    published = False
-    try:
+
+    def write_bundle(staging: Path) -> None:
         raw_dir = staging / "raw"
         raw_dir.mkdir()
         files = _write_raw_pages(raw_dir, result.pages)
-        books_path = staging / "books.jsonl"
+        books_path = staging / "books.jsonl.gz"
         _write_books(books_path, result)
-        files["books.jsonl"] = _file_evidence(books_path)
-        manifest_path = staging / "manifest.json"
-        manifest = _manifest(request, result, files)
-        _write_json(manifest_path, manifest)
-        staging.rename(final)
-        published = True
-    finally:
-        if not published:
-            shutil.rmtree(staging, ignore_errors=True)
+        files["books.jsonl.gz"] = file_evidence(books_path)
+        write_json(staging / "manifest.json", _manifest(request, result, files))
+
+    publish_immutable_directory(final, write_bundle)
     return OxaStoredHistory(
         directory=final,
-        books_path=final / "books.jsonl",
+        books_path=final / "books.jsonl.gz",
         manifest_path=final / "manifest.json",
     )
 
@@ -288,6 +249,7 @@ def acquire_and_store_orderbooks(
         "request_ids": list(result.request_ids),
         "page_count": len(result.pages),
         "row_count": len(result.snapshots),
+        "coalesced_same_ms": result.coalesced_same_ms,
         "observed_start": observed_start,
         "observed_end": observed_end,
         "complete": result.complete,
@@ -297,17 +259,16 @@ def acquire_and_store_orderbooks(
 
 def _merge_page_snapshots(
     pages: list[OxaBookPage],
-) -> tuple[OxaBookSnapshot, ...]:
+) -> tuple[tuple[OxaBookSnapshot, ...], int]:
     observed: dict[int, OxaBookSnapshot] = {}
+    coalesced = sum(page.coalesced_same_ms for page in pages)
     for page in pages:
         for snapshot in page.snapshots:
-            existing = observed.get(snapshot.ts_exchange_ms)
-            if existing is not None and existing != snapshot:
-                raise ValueError(
-                    "conflicting duplicate exchange timestamp across pages"
-                )
+            if snapshot.ts_exchange_ms in observed:
+                coalesced += 1
             observed[snapshot.ts_exchange_ms] = snapshot
-    return tuple(observed[timestamp] for timestamp in sorted(observed))
+    snapshots = tuple(observed[timestamp] for timestamp in sorted(observed))
+    return snapshots, coalesced
 
 
 def _window_stamp(value: datetime) -> str:
@@ -319,18 +280,21 @@ def _write_raw_pages(
 ) -> dict[str, dict[str, object]]:
     evidence: dict[str, dict[str, object]] = {}
     for index, page in enumerate(pages, start=1):
-        path = raw_dir / f"page-{index:04d}.json"
-        _write_json(path, page.raw_payload)
-        evidence[f"raw/{path.name}"] = _file_evidence(path)
+        path = raw_dir / f"page-{index:04d}.json.gz"
+        write_gzip_json(path, page.raw_payload)
+        evidence[f"raw/{path.name}"] = file_evidence(path)
     return evidence
 
 
 def _write_books(path: Path, result: OxaBookFetch) -> None:
-    with path.open("x", encoding="utf-8") as handle:
+    request_ids = {
+        snapshot.ts_exchange_ms: page.request_id
+        for page in result.pages
+        for snapshot in page.snapshots
+    }
+    with gzip_text_writer(path) as handle:
         for snapshot in result.snapshots:
-            request_id = next(
-                page.request_id for page in result.pages if snapshot in page.snapshots
-            )
+            request_id = request_ids[snapshot.ts_exchange_ms]
             row = snapshot.to_replay_row(request_id=request_id)
             handle.write(json.dumps(row, separators=(",", ":"), sort_keys=True) + "\n")
 
@@ -356,22 +320,13 @@ def _manifest(
         "request_ids": list(result.request_ids),
         "page_count": len(result.pages),
         "row_count": len(result.snapshots),
+        "coalesced_same_ms": result.coalesced_same_ms,
         "observed_start": observed_start,
         "observed_end": observed_end,
         "complete": result.complete,
         "continuation_cursor": result.continuation_cursor,
         "files": files,
     }
-
-
-def _write_json(path: Path, payload: object) -> None:
-    content = json.dumps(payload, indent=2, sort_keys=True) + "\n"
-    path.write_text(content, encoding="utf-8")
-
-
-def _file_evidence(path: Path) -> dict[str, object]:
-    content = path.read_bytes()
-    return {"sha256": hashlib.sha256(content).hexdigest(), "bytes": len(content)}
 
 
 def _parse_page(payload: object, request: OxaBookRequest) -> OxaBookPage:
@@ -387,28 +342,30 @@ def _parse_page(payload: object, request: OxaBookRequest) -> OxaBookPage:
     next_cursor = meta.get("next_cursor")
     if next_cursor is not None and not isinstance(next_cursor, str):
         raise ValueError("0xArchive meta.next_cursor must be a string or null")
-    snapshots = _parse_snapshots(data, request)
+    snapshots, coalesced = _parse_snapshots(data, request)
     return OxaBookPage(
         request_id=request_id,
         next_cursor=next_cursor,
         snapshots=snapshots,
+        coalesced_same_ms=coalesced,
         raw_payload=payload,
     )
 
 
 def _parse_snapshots(
     records: list[object], request: OxaBookRequest
-) -> tuple[OxaBookSnapshot, ...]:
+) -> tuple[tuple[OxaBookSnapshot, ...], int]:
     by_timestamp: dict[int, OxaBookSnapshot] = {}
+    coalesced = 0
     for record in records:
         if not isinstance(record, dict):
             raise ValueError("0xArchive data must contain JSON objects")
         snapshot = _parse_snapshot(record, request)
-        existing = by_timestamp.get(snapshot.ts_exchange_ms)
-        if existing is not None and existing != snapshot:
-            raise ValueError("conflicting duplicate exchange timestamp")
+        if snapshot.ts_exchange_ms in by_timestamp:
+            coalesced += 1
         by_timestamp[snapshot.ts_exchange_ms] = snapshot
-    return tuple(by_timestamp[timestamp] for timestamp in sorted(by_timestamp))
+    snapshots = tuple(by_timestamp[timestamp] for timestamp in sorted(by_timestamp))
+    return snapshots, coalesced
 
 
 def _parse_snapshot(
@@ -420,7 +377,7 @@ def _parse_snapshot(
             f"snapshot symbol {observed_symbol!r} does not match {request.symbol!r}"
         )
     timestamp = _required_str(record, "timestamp")
-    ts_exchange_ms = _parse_timestamp_ms(timestamp)
+    ts_exchange_ms = parse_utc_timestamp_ms(timestamp, label="snapshot timestamp")
     bounds = request.params()
     if not bounds["start"] <= ts_exchange_ms <= bounds["end"]:
         raise ValueError("snapshot timestamp is outside requested window")
@@ -445,16 +402,6 @@ def _required_str(record: dict[str, object], field: str) -> str:
     return value
 
 
-def _parse_timestamp_ms(value: str) -> int:
-    try:
-        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
-    except ValueError as exc:
-        raise ValueError(f"invalid snapshot timestamp: {value!r}") from exc
-    if parsed.utcoffset() is None or parsed.utcoffset().total_seconds() != 0:
-        raise ValueError("snapshot timestamp must be UTC")
-    return int(parsed.timestamp() * 1000)
-
-
 def _parse_levels(value: object, side: str, depth: int) -> tuple[OxaLevel, ...]:
     if not isinstance(value, list) or not value:
         raise ValueError(f"{side} orderbook side is empty")
@@ -474,21 +421,11 @@ def _parse_level(raw: dict[str, object], side: str) -> OxaLevel:
     count = raw.get("n")
     if not isinstance(px, str) or not isinstance(sz, str):
         raise ValueError(f"{side} price and size must be decimal strings")
-    if _decimal(px, side) <= 0 or _decimal(sz, side) <= 0:
-        raise ValueError(f"{side} price and size must be positive")
+    positive_decimal(px, label=f"{side} price")
+    positive_decimal(sz, label=f"{side} size")
     if not isinstance(count, int) or isinstance(count, bool) or count < 0:
         raise ValueError(f"{side} order count must be a non-negative integer")
     return OxaLevel(px=px, sz=sz, n=count)
-
-
-def _decimal(value: str, side: str) -> Decimal:
-    try:
-        number = Decimal(value)
-    except InvalidOperation as exc:
-        raise ValueError(f"{side} contains an invalid decimal") from exc
-    if not number.is_finite():
-        raise ValueError(f"{side} contains a non-finite decimal")
-    return number
 
 
 def _validate_sorting(bids: tuple[OxaLevel, ...], asks: tuple[OxaLevel, ...]) -> None:

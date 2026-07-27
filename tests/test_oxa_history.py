@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import copy
+import gzip
 import json
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta, timezone
@@ -10,7 +11,11 @@ from pathlib import Path
 
 import pytest
 
-from hypervector.data.oxa_history import OxaBookRequest, OxaHistoryClient
+from hypervector.data.oxa_history import (
+    OxaBookRequest,
+    OxaHistoryClient,
+    OxaHistoryError,
+)
 from hypervector.data.oxa_history import (
     fetch_orderbook_history,
     output_directory,
@@ -103,10 +108,31 @@ class SequenceSession(FakeSession):
         return FakeResponse(next(self._payloads))
 
 
+class InvalidJsonResponse(FakeResponse):
+    """Model a successful HTTP response with an invalid JSON body."""
+
+    def json(self) -> dict[str, object]:
+        """Raise the decoder boundary error produced by requests."""
+        raise ValueError("invalid JSON body")
+
+
 def test_client_requires_nonempty_api_key() -> None:
     """The vendor client must fail before making an unauthenticated request."""
     with pytest.raises(ValueError, match="OXA_API_KEY is required"):
         OxaHistoryClient(api_key="")
+
+
+def test_client_wraps_invalid_json_as_retryable_transport_failure() -> None:
+    """Malformed successful responses must be actionable and retryable."""
+    session = FakeSession(VALID_PAGE)
+    session.response = InvalidJsonResponse(VALID_PAGE)
+
+    with pytest.raises(OxaHistoryError, match="invalid JSON") as raised:
+        OxaHistoryClient(api_key="test-key", session=session).fetch_page(
+            _valid_request()
+        )
+
+    assert raised.value.status_code is None
 
 
 def test_client_sends_secret_only_in_header_and_preserves_request_id() -> None:
@@ -198,17 +224,20 @@ def test_snapshot_validation_rejects_invalid_native_books(
         )
 
 
-def test_conflicting_duplicate_exchange_timestamp_is_rejected() -> None:
-    """Two different books cannot claim the same exchange timestamp."""
+def test_same_millisecond_updates_coalesce_to_last_vendor_state() -> None:
+    """Sub-millisecond updates use the last ordered state without false timing."""
     payload = copy.deepcopy(VALID_PAGE)
     duplicate = copy.deepcopy(payload["data"][0])  # type: ignore[index]
     duplicate["bids"][0]["sz"] = "99.0"  # type: ignore[index]
     payload["data"].append(duplicate)  # type: ignore[union-attr]
 
-    with pytest.raises(ValueError, match="conflicting duplicate"):
-        OxaHistoryClient(api_key="test-key", session=FakeSession(payload)).fetch_page(
-            _valid_request()
-        )
+    page = OxaHistoryClient(
+        api_key="test-key", session=FakeSession(payload)
+    ).fetch_page(_valid_request())
+
+    assert len(page.snapshots) == 1
+    assert page.snapshots[0].bids[0].sz == "99.0"
+    assert page.coalesced_same_ms == 1
 
 
 def test_missing_request_id_is_rejected() -> None:
@@ -277,7 +306,8 @@ def test_normalized_rows_retain_their_originating_page_request_id(
     )
 
     stored = store_orderbook_history(tmp_path, request, result)
-    rows = [json.loads(line) for line in stored.books_path.read_text().splitlines()]
+    with gzip.open(stored.books_path, "rt", encoding="utf-8") as handle:
+        rows = [json.loads(line) for line in handle]
 
     assert [row["vendor_request_id"] for row in rows] == [
         "request-1",
@@ -304,7 +334,8 @@ def test_storage_is_atomic_auditable_and_does_not_overwrite(tmp_path: Path) -> N
     assert manifest["source"] == "0xarchive_hyperliquid_native_l2"
     assert manifest["request_ids"] == ["request-1"]
     assert manifest["row_count"] == 1
-    assert manifest["files"]["raw/page-0001.json"]["sha256"]
+    assert stored.books_path.name == "books.jsonl.gz"
+    assert manifest["files"]["raw/page-0001.json.gz"]["sha256"]
     assert load_l2_jsonl(stored.books_path).shape[0] == 1
     with pytest.raises(FileExistsError, match="already exists"):
         store_orderbook_history(tmp_path, request, result)

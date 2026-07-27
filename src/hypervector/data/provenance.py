@@ -16,7 +16,7 @@ OHLCV_COLUMNS = [
     "source",
 ]
 
-REQUIRED_SOURCES = frozenset({"hl", "binance", "bybit", "fixture"})
+REQUIRED_SOURCES = frozenset({"hl", "hl_gap_fill", "binance", "bybit", "fixture"})
 
 
 def normalize_ohlcv(df: pd.DataFrame, source: str | None = None) -> pd.DataFrame:
