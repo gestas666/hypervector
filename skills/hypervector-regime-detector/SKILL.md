@@ -30,6 +30,13 @@ is not a hard veto. `regime_strength_score` is the mean 1m/5m/15m EMA-gap
 strength percentile rank normalized to `[0, 1]`. It is a report-only technical
 diagnostic, not a model probability or execution gate.
 
+The faithful thresholds are the strict-Hyperliquid stability Pareto candidate:
+EMA 20/50, 240-bar structure lookback, trend/range percentiles 50/40, 1 bp
+minimum trend gap, choppiness threshold 85, 3 bp coiling width, and a 90-bar
+breakout requiring 5 bp clearance and 2x prior volume. These parameters reduce
+false-RANGE/no-entry classifications and churn on the measured 90-day window;
+their slower transition response is an explicit monitored trade-off.
+
 ## Unified live shadow view
 
 ```bash

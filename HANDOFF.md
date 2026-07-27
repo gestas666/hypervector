@@ -30,6 +30,7 @@
 | Range 1m impulse research | **Autotuned from 681 L2 replay trades** (339 long, 342 short) |
 | Range 1m impulse LightGBM | **Runtime-compatible candidate trained**; not auto-installed |
 | 0xArchive venue evidence | **90-day BTC audit and full replay PASS**; 2,160 hourly L2/trade pairs (4,320 individual evidence bundles) |
+| Hypervelocity regime retune | **Applied trial 60** from strict 90-day Hyperliquid candles; fewer false-RANGE/no-entry states and 55% lower churn, with slower transition latency |
 
 ### 2026-07-27 Hyperliquid-native archive and replay update
 
@@ -94,6 +95,29 @@
   under `data/backups/shadow_reset_20260727T060946Z`. Active decisions and log
   files are zero bytes, so the next unified launch starts a new `$10,000`
   shadow portfolio; archive-audit and strict-candle-cache hashes are unchanged.
+
+### 2026-07-27 Hyperliquid-native regime retune
+
+- Baseline evaluation and 100 deterministic chronological trials used the
+  strict 90-day cache: 129,532 native Hyperliquid bars plus 68 explicit
+  zero-volume gap bars. Selection used 24 training entries; 11 later entries
+  remained holdout evidence.
+- The raw score winner was rejected because it increased full-window regime
+  churn by about 72%. Stability Pareto trial 60 was applied instead. It improves
+  exact direction alignment from 24/35 to 25/35, false-RANGE real entries from
+  3 to 1, no-entry states from 6 to 4, and label churn from 4,054 to 1,811.
+- Holdout direction remains 8/11 and false-RANGE remains zero. The explicit
+  trade-off is slower mean transition latency (4.38 to 7.54 bars) and a 3.58
+  percentage-point worse holdout one-sided RANGE diagnostic.
+- Full evidence and rollback details are in
+  `docs/reviews/2026-07-27-hyperliquid-regime-retune-review.md`. No confidence,
+  model, performance, or drawdown gate was introduced.
+- Acceptance: 746 offline Python tests and 27 Rust integration tests pass. A
+  unified live-feed smoke produced Hyperliquid L2 plus canonical `TREND_UP`
+  telemetry with zero `submitted:true` or `place_attempted:true` events. It was
+  reset to zero-byte active state; the evidence backup is
+  `data/backups/shadow_reset_20260727T063937Z`, and the strict cache checksum
+  remains `7ecfcf42cafe4143c6bfe525a47209a40f23fd3e53d31f8be572dbb5d4e29e43`.
 
 ### 2026-07-25 implementation status
 

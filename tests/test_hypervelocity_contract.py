@@ -66,13 +66,19 @@ def test_fixed_contract_converts_equity_and_margin_target() -> None:
     assert canary.notional == pytest.approx(3_360.0)
 
 
-def test_faithful_regime_config_matches_zero_false_range_training_candidate() -> None:
+def test_faithful_regime_config_matches_hl_stability_candidate() -> None:
     config = faithful_regime_config()
 
-    assert (config.ema_fast, config.ema_slow) == (5, 13)
-    assert config.minimum_trend_gap_bps == pytest.approx(0.5)
-    assert config.breakout_clearance_bps == pytest.approx(8.0)
-    assert config.breakout_volume_multiple == pytest.approx(2.5)
+    assert (config.ema_fast, config.ema_slow) == (20, 50)
+    assert config.structure_lookback == 240
+    assert config.trend_strength_percentile == pytest.approx(50.0)
+    assert config.range_strength_percentile == pytest.approx(40.0)
+    assert config.minimum_trend_gap_bps == pytest.approx(1.0)
+    assert config.choppiness_range_threshold == pytest.approx(85.0)
+    assert config.coiling_width_bps == pytest.approx(3.0)
+    assert config.breakout_lookback == 90
+    assert config.breakout_clearance_bps == pytest.approx(5.0)
+    assert config.breakout_volume_multiple == pytest.approx(2.0)
 
 
 @pytest.mark.parametrize(

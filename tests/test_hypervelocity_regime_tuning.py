@@ -52,8 +52,8 @@ def test_candidate_generation_is_seeded_and_includes_baseline() -> None:
 
     assert first == second
     assert len(first) == 4
-    assert first[0]["ema_fast"] == 5
-    assert first[0]["ema_slow"] == 13
+    assert first[0]["ema_fast"] == 20
+    assert first[0]["ema_slow"] == 50
 
 
 def test_tuner_reports_every_trial_and_keeps_holdout_out_of_selection() -> None:

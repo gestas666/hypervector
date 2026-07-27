@@ -35,22 +35,22 @@ def is_hypervelocity_strategy(strategy_name: str) -> bool:
 
 
 def faithful_regime_config() -> RegimeClassifierConfig:
-    """Return the training Pareto candidate with no RANGE/no-entry logged states."""
+    """Return the stability-aware Hyperliquid-native Pareto candidate."""
     from hypervector.regime.classifier import RegimeClassifierConfig
 
     return RegimeClassifierConfig(
-        ema_fast=5,
-        ema_slow=13,
+        ema_fast=20,
+        ema_slow=50,
         warmup_bars=60,
-        structure_lookback=120,
-        trend_strength_percentile=70.0,
+        structure_lookback=240,
+        trend_strength_percentile=50.0,
         range_strength_percentile=40.0,
-        minimum_trend_gap_bps=0.5,
-        choppiness_range_threshold=75.0,
-        coiling_width_bps=1.0,
+        minimum_trend_gap_bps=1.0,
+        choppiness_range_threshold=85.0,
+        coiling_width_bps=3.0,
         breakout_lookback=90,
-        breakout_clearance_bps=8.0,
-        breakout_volume_multiple=2.5,
+        breakout_clearance_bps=5.0,
+        breakout_volume_multiple=2.0,
     )
 
 

@@ -67,6 +67,14 @@ def test_faithful_profile_enforces_one_way_bidirectional_runtime() -> None:
     assert profile.blocked_entry_states == ("RANGE", "TRANSITION", "UNKNOWN")
     assert profile.breakout_requires_direction is True
     assert profile.confidence_is_gate is False
+    assert (profile.regime_config.ema_fast, profile.regime_config.ema_slow) == (
+        20,
+        50,
+    )
+    assert profile.regime_config.structure_lookback == 240
+    assert profile.regime_config.minimum_trend_gap_bps == pytest.approx(1.0)
+    assert profile.regime_config.choppiness_range_threshold == pytest.approx(85.0)
+    assert profile.regime_config.breakout_clearance_bps == pytest.approx(5.0)
 
 
 def test_faithful_profile_exposes_authoritative_regime_policy() -> None:
