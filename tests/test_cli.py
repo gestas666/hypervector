@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 
 from hypervector.cli import main
+from hypervector.data.oxa_history import OxaBookRequest
 from hypervector.data.sources import split_source_frames
 from hypervector.data.history import merge_history
 from hypervector.data.provenance import summarize_provenance
@@ -145,6 +146,101 @@ def test_cli_rejects_lookback_below_floor(tmp_path: Path):
         ]
     )
     assert rc == 2
+
+
+def test_cli_oxa_book_fetch_is_bounded_and_secret_safe(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The acquisition CLI fixes venue and keeps credentials out of output."""
+    captured: dict[str, object] = {}
+    secret = "configured-test-secret"
+
+    def fake_acquire(
+        *, data_root: Path | str, api_key: str, request: OxaBookRequest
+    ) -> dict[str, object]:
+        captured.update(data_root=data_root, api_key=api_key, request=request)
+        return {
+            "ok": True,
+            "directory": str(tmp_path / "evidence"),
+            "books_path": str(tmp_path / "evidence" / "books.jsonl"),
+            "request_ids": ["request-1"],
+            "row_count": 1,
+            "complete": False,
+            "continuation_cursor": "more",
+        }
+
+    monkeypatch.setenv("OXA_API_KEY", secret)
+    monkeypatch.setattr(
+        "hypervector.data.oxa_history.acquire_and_store_orderbooks", fake_acquire
+    )
+
+    rc = main(
+        [
+            "--data-root",
+            str(tmp_path / "data"),
+            "oxa-book-fetch",
+            "--symbol",
+            "BTC",
+            "--start",
+            "2026-07-26T23:50:00Z",
+            "--end",
+            "2026-07-26T23:51:00Z",
+        ]
+    )
+
+    output = capsys.readouterr().out
+    report = json.loads(output)
+    request = captured["request"]
+    assert rc == 0
+    assert captured["api_key"] == secret
+    assert request.limit == 1000
+    assert request.max_pages == 1
+    assert request.depth == 20
+    assert report["venue"] == "hyperliquid"
+    assert secret not in output
+
+
+def test_cli_oxa_book_fetch_reports_technical_failure(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A vendor failure returns non-success with no fabricated acquisition."""
+    from hypervector.data.oxa_history import OxaHistoryError
+
+    def fail_acquire(
+        *, data_root: Path | str, api_key: str, request: OxaBookRequest
+    ) -> dict[str, object]:
+        raise OxaHistoryError("0xArchive request failed with HTTP 503")
+
+    monkeypatch.setenv("OXA_API_KEY", "configured-test-secret")
+    monkeypatch.setattr(
+        "hypervector.data.oxa_history.acquire_and_store_orderbooks", fail_acquire
+    )
+
+    rc = main(
+        [
+            "--data-root",
+            str(tmp_path / "data"),
+            "oxa-book-fetch",
+            "--symbol",
+            "BTC",
+            "--start",
+            "2026-07-26T23:50:00Z",
+            "--end",
+            "2026-07-26T23:51:00Z",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    report = json.loads(captured.err)
+    assert rc == 1
+    assert captured.out == ""
+    assert report["ok"] is False
+    assert report["error"] == "0xArchive request failed with HTTP 503"
+    assert "books_path" not in report
 
 
 def test_cli_export_validate_and_phase2_check(tmp_path: Path, capsys, inject_history):

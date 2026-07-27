@@ -7,6 +7,7 @@ import json
 import os
 import sys
 import uuid
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pandas as pd
@@ -58,6 +59,7 @@ CLI_COMMANDS: tuple[str, ...] = (
     "live-report",
     "live-run",
     "history",
+    "oxa-book-fetch",
     "regime",
     "hypervelocity-regime-eval",
     "hypervelocity-regime-autotune",
@@ -125,6 +127,50 @@ def _load_bars(args: argparse.Namespace):
 def cmd_infra_init(args: argparse.Namespace) -> int:
     paths = _ensure_root(args)
     report = layout_report(paths.root)
+    print(json.dumps(report, indent=2))
+    return 0
+
+
+def _parse_utc_datetime(value: str) -> datetime:
+    """Parse a timezone-explicit ISO-8601 CLI value and normalize it to UTC."""
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(
+            f"invalid ISO-8601 timestamp: {value}"
+        ) from exc
+    if parsed.utcoffset() is None:
+        raise argparse.ArgumentTypeError("timestamp must include a UTC offset or Z")
+    return parsed.astimezone(UTC)
+
+
+def cmd_oxa_book_fetch(args: argparse.Namespace) -> int:
+    """Acquire one explicitly bounded Hyperliquid-native L2 history window."""
+    from hypervector.data.oxa_history import (
+        OxaBookRequest,
+        OxaHistoryError,
+        acquire_and_store_orderbooks,
+    )
+
+    try:
+        request = OxaBookRequest(
+            symbol=args.symbol,
+            start=args.start,
+            end=args.end,
+            depth=args.depth,
+            limit=args.limit,
+            max_pages=args.max_pages,
+            timeout_seconds=args.timeout,
+        )
+        report = acquire_and_store_orderbooks(
+            data_root=args.data_root,
+            api_key=os.environ.get("OXA_API_KEY", ""),
+            request=request,
+        )
+    except (OxaHistoryError, ValueError, OSError) as exc:
+        print(json.dumps({"ok": False, "error": str(exc)}), file=sys.stderr)
+        return 1
+    report["venue"] = "hyperliquid"
     print(json.dumps(report, indent=2))
     return 0
 
@@ -1878,6 +1924,19 @@ def build_parser() -> argparse.ArgumentParser:
     h = sub.add_parser("history", help="Fetch/cache HL-max + Binance/Bybit backfill")
     _add_market_args(h)
     h.set_defaults(func=cmd_history)
+
+    oxa = sub.add_parser(
+        "oxa-book-fetch",
+        help="Fetch bounded Hyperliquid-native L2 history from 0xArchive",
+    )
+    oxa.add_argument("--symbol", default="BTC", help="Hyperliquid core asset")
+    oxa.add_argument("--start", required=True, type=_parse_utc_datetime)
+    oxa.add_argument("--end", required=True, type=_parse_utc_datetime)
+    oxa.add_argument("--depth", type=int, default=20, choices=range(1, 21))
+    oxa.add_argument("--limit", type=int, default=1000, choices=range(1, 1001))
+    oxa.add_argument("--max-pages", type=int, default=1)
+    oxa.add_argument("--timeout", type=float, default=30.0)
+    oxa.set_defaults(func=cmd_oxa_book_fetch)
 
     r = sub.add_parser("regime", help="Run regime detector on live/cached history")
     _add_market_args(r)

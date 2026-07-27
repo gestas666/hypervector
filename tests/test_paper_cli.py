@@ -306,7 +306,7 @@ def test_paper_check_reports_shadow_surface(tmp_path: Path, capsys, monkeypatch)
     assert report["live"]["enabled"] is False
     # Booleans/strings only for shadow keys; never secret values.
     assert "sekrit" not in out
-    assert "0x" not in out
+    assert paper["secrets_present"] is False
     assert "testnet" not in out.lower()
 
 

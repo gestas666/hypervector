@@ -17,6 +17,12 @@ data/
           trades.parquet/# Immutable Parquet parts of public matches
           asset_context.parquet/ # Mark/oracle/funding observations by receipt time
           gaps.jsonl     # Declared reconnect/freshness uncertainty
+    vendor/
+      0xarchive/
+        hyperliquid/BTC/<utc-window>/
+          raw/           # Unmodified REST envelopes with request IDs
+          books.jsonl    # Validated replay-compatible native L2 snapshots
+          manifest.json  # Bounds, coverage, cursors, and SHA-256 checksums
   runs/                  # SQLite research trials (hypervector.db)
   exports/               # Phase 1 → Phase 2 bundles <id>/meta|params|metrics
   models/
@@ -50,6 +56,8 @@ data/
 3. **Configs** stay tracked under `configs/` (costs, risk, exits, fee_model).
 4. **Secrets** only via environment / `.env` (gitignored); not in exports.
 5. **No** Postgres / Redis / k8s for MVP (design non-goal).
+6. **Vendor history is separate from live events** — no fabricated local receive
+   timestamp is added to historical 0xArchive snapshots.
 
 ## CLI (once Task 2 lands)
 

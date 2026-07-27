@@ -227,6 +227,27 @@ uv run python -m hypervector hypervelocity-regime-challengers \
   --out data/logs/research/hypervelocity_regime_challengers.json
 ```
 
+### 11. Bounded Hyperliquid L2 History from 0xArchive
+
+Configure `OXA_API_KEY` in the gitignored `.env`, then qualify a small UTC
+window before widening it:
+
+```bash
+uv run python -m hypervector oxa-book-fetch \
+  --symbol BTC \
+  --start 2026-07-26T23:50:00Z \
+  --end 2026-07-26T23:51:00Z \
+  --depth 20 --limit 1000 --max-pages 1
+```
+
+The command is fixed to Hyperliquid core and stores raw response envelopes,
+vendor request IDs, SHA-256 checksums, a manifest, and replay-compatible
+`books.jsonl` below `data/cache/vendor/0xarchive/`. It never adds a fabricated
+local receive timestamp. A non-null `continuation_cursor` means the explicit
+page bound truncated the requested window; it is not success-shaped full
+coverage. Use the 0xArchive Data Catalog for broad backfills unless a measured
+API trial establishes acceptable pagination cost and duration.
+
 ---
 
 ## Dual Backtesting Architecture

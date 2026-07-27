@@ -14,6 +14,7 @@ DATA_SUBDIRS: tuple[str, ...] = (
     "cache",
     "cache/book",
     "cache/events/hyperliquid",
+    "cache/vendor/0xarchive",
     "runs",
     "exports",
     "logs/research",
@@ -36,6 +37,7 @@ class DataPaths:
     cache: Path
     cache_book: Path
     cache_events_hyperliquid: Path
+    cache_vendor_0xarchive: Path
     runs: Path
     runs_db: Path
     exports: Path
@@ -59,6 +61,7 @@ def paths_for(root: Path | str) -> DataPaths:
         cache=r / "cache",
         cache_book=r / "cache" / "book",
         cache_events_hyperliquid=r / "cache" / "events" / "hyperliquid",
+        cache_vendor_0xarchive=r / "cache" / "vendor" / "0xarchive",
         runs=r / "runs",
         runs_db=r / "runs" / "hypervector.db",
         exports=r / "exports",
@@ -90,6 +93,7 @@ def layout_report(root: Path | str) -> dict[str, object]:
     dirs = {
         "cache": paths.cache,
         "cache_events_hyperliquid": paths.cache_events_hyperliquid,
+        "cache_vendor_0xarchive": paths.cache_vendor_0xarchive,
         "runs": paths.runs,
         "exports": paths.exports,
         "logs_research": paths.logs_research,
