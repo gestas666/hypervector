@@ -33,11 +33,15 @@ def _ma_cross_signals(
     return entries.astype(bool), exits.astype(bool), direction
 
 
-def ma_cross_long(df: pd.DataFrame, fast: int = 10, slow: int = 30) -> tuple[pd.Series, pd.Series, str]:
+def ma_cross_long(
+    df: pd.DataFrame, fast: int = 10, slow: int = 30
+) -> tuple[pd.Series, pd.Series, str]:
     return _ma_cross_signals(df, fast=fast, slow=slow, direction="long")
 
 
-def ma_cross_short(df: pd.DataFrame, fast: int = 10, slow: int = 30) -> tuple[pd.Series, pd.Series, str]:
+def ma_cross_short(
+    df: pd.DataFrame, fast: int = 10, slow: int = 30
+) -> tuple[pd.Series, pd.Series, str]:
     return _ma_cross_signals(df, fast=fast, slow=slow, direction="short")
 
 

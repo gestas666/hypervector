@@ -1,7 +1,7 @@
 # Audit profile for the backend-enforced Hypervelocity contract.
 # The Python contract remains authoritative; this file makes effective values
 # reviewable and supplies a stable reference for external orchestration.
-profile = "hypervelocity_faithful_v1"
+profile = "hypervelocity_faithful_v2"
 symbol = "BTC"
 timeframe = "1m"
 strategy_id = "hypervelocity_1m_scalper"
@@ -19,13 +19,13 @@ confidence_is_gate = false
 
 [allocation]
 margin_fraction = 0.70
-leverage = 40.0
-notional_fraction = 28.0
+leverage = 30.0
+notional_fraction = 21.0
 
 [exit]
 mode = "single_fixed_target"
 target_margin_pct = 8.0
-target_price_fraction = 0.002
+target_price_fraction = 0.0026666666666666666
 stop_policy = "none_observed"
 split_exit = false
 open_position_range_policy = "hold_until_target"
@@ -47,7 +47,7 @@ live_enabled = false
 submit_latency_ms = 50
 cancel_latency_ms = 50
 update_latency_ms = 50
-max_event_age_ms = 3000
+max_event_age_ms = 6000
 restart_queue_policy = "requeue_behind_displayed_liquidity"
 liquidation_execution_model = "hyperliquid_market_liquidation_v2"
 partial_liquidation_supported = true
@@ -66,7 +66,7 @@ archive_depth_levels = 20
 name = "hyperliquid"
 network = "mainnet"
 margin_mode = "isolated"
-live_canary_max_notional_usd = 3360.0
+live_canary_max_notional_usd = 2520.0
 instrument_spec_source = "public_meta"
 size_decimals = 5
 venue_max_leverage = 40.0
@@ -89,9 +89,20 @@ installed_candidate = "hypervelocity_directional_runtime_20260725T081458Z"
 long_bundle = "data/models/metalabel/candidates/hypervelocity-l2-runtime-uptrend-long-20260725T081458Z"
 short_bundle = "data/models/metalabel/candidates/hypervelocity-l2-runtime-downtrend-short-20260725T081458Z"
 
+[peak_observer]
+mode = "observe"
+candidate_id = "source_peak_activation7_v1"
+activation_margin_pct = 7.0
+lock_ratio = 0.55
+minimum_stop_move_fraction = 0.0005
+update_cooldown_seconds = 60.0
+sample_interval_seconds = 5.0
+execution_authority = "none"
+
 [runtime]
 mode = "shadow"
 shadow_execution_model = "nautilus_event_v1"
+initial_cash_usd = 15000.0
 export_path = "data/exports/uptrend_hypervelocity_1m_scalper_long_784548f1"
 lookback_days = 30
 strict_hl_only = true
@@ -103,17 +114,21 @@ execution_timeframe = "1m"
 primary_timeframe = "5m"
 context_timeframe = "15m"
 context_is_hard_gate = false
-ema_fast = 20
-ema_slow = 50
+ema_fast = 21
+ema_slow = 55
 warmup_bars = 60
 structure_lookback = 240
 trend_strength_percentile = 50.0
 range_strength_percentile = 40.0
 minimum_trend_gap_bps = 1.0
-choppiness_range_threshold = 85.0
-choppiness_length = 14
+range_filter = "bbwp"
+bbwp_length = 20
+bbwp_lookback = 240
+bbwp_compression_threshold = 25.0
+rsi_length = 14
+rsi_signal_length = 7
 coiling_width_bps = 3.0
 breakout_lookback = 90
-breakout_clearance_bps = 5.0
-breakout_volume_multiple = 2.0
+breakout_clearance_bps = 8.0
+breakout_volume_multiple = 2.5
 breakout_volume_lookback = 20

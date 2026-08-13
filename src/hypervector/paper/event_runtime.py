@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import math
 
 from hypervector.execution import OrderCommand
 from hypervector.nautilus.hyperliquid_margin import maintenance_rate_for_max_leverage
@@ -16,13 +17,20 @@ from hypervector.paper.maker_execution import (
     round_price_to_tick,
 )
 from hypervector.paper.nautilus_shadow import NautilusShadowExecutionPort
-from hypervector.paper.resume import PendingMakerResume, ShadowPortfolioResume
+from hypervector.paper.resume import (
+    PendingMakerResume,
+    ShadowPortfolioResume,
+    normalize_shadow_portfolio_resume,
+)
 from hypervector.strategies.hypervelocity_contract import HypervelocityContract
 from hypervector.strategies.hypervelocity_profile import HypervelocityProfile
 from hypervector.strategies.hypervelocity_runtime import (
     HypervelocityRuntimeState,
     RuntimeMarketState,
     RuntimeOrder,
+)
+from hypervector.strategies.source_follow_profile import (
+    SourceFollowHypervelocityProfile,
 )
 
 
@@ -43,9 +51,12 @@ def build_event_shadow_controller(
     if profile.shadow_execution_model != "nautilus_event_v1":
         raise ValueError("event controller requires nautilus_event_v1")
     port = _event_port(profile, initial_cash_usd)
-    restored = _restore_runtime(profile, resume)
-    if resume is not None:
-        _restore_port(port, resume, restored.state)
+    normalized_resume = (
+        normalize_shadow_portfolio_resume(resume) if resume is not None else None
+    )
+    restored = _restore_runtime(profile, normalized_resume)
+    if normalized_resume is not None:
+        _restore_port(port, normalized_resume, restored.state)
     return HypervelocityShadowController(
         port=port,
         initial_market=_initial_market(profile, observed_at, restored.state),
@@ -110,6 +121,13 @@ def _initial_market(
             if pending is not None
             else None
         ),
+        structural_direction=(
+            "long"
+            if pending is not None and pending.command.side == "buy"
+            else "short"
+            if pending is not None
+            else None
+        ),
         entry_quantity=pending.command.quantity if pending is not None else 1.0,
         entry_limit_price=pending.command.limit_price if pending is not None else None,
         evidence_fresh=False,
@@ -117,6 +135,11 @@ def _initial_market(
         reentry_cooldown_seconds=profile.reentry_cooldown_bars * 60.0,
         target_price_fraction=HypervelocityContract().target_price_fraction,
         price_tick=1.0,
+        maximum_hold_seconds=(
+            profile.maximum_hold_seconds
+            if isinstance(profile, SourceFollowHypervelocityProfile)
+            else None
+        ),
     )
 
 
@@ -140,6 +163,7 @@ def _restore_runtime(
         direction = "long"
     elif resume.position_qty < 0.0:
         direction = "short"
+    opened_at, maximum_hold = _restored_hold_state(profile, resume, direction)
     state = HypervelocityRuntimeState(
         next_order_sequence=sequence,
         pending_entry=pending,
@@ -152,9 +176,34 @@ def _restore_runtime(
         expired_entry_direction=resume.expired_entry_direction,
         completed_trade_direction=resume.completed_trade_direction,
         last_exit_at=resume.last_exit_at,
+        position_opened_at=opened_at,
+        maximum_hold_seconds=maximum_hold,
     )
     commands = tuple(order.command for order in _runtime_orders(state))
     return _RestoredRuntime(state, commands)
+
+
+def _restored_hold_state(
+    profile: HypervelocityProfile,
+    resume: ShadowPortfolioResume,
+    direction: str | None,
+) -> tuple[str | None, float | None]:
+    if direction is None:
+        return None, None
+    if not isinstance(profile, SourceFollowHypervelocityProfile):
+        return resume.position_opened_at, None
+    if resume.position_opened_at is None:
+        raise ValueError("source-follow open resume requires position-open timestamp")
+    persisted = resume.maximum_hold_seconds
+    if persisted is not None and not math.isclose(
+        persisted,
+        profile.maximum_hold_seconds,
+        abs_tol=1e-9,
+    ):
+        raise ValueError(
+            "source-follow maximum-hold policy changed while position open"
+        )
+    return resume.position_opened_at, profile.maximum_hold_seconds
 
 
 def _pending_order(

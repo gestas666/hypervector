@@ -1,0 +1,416 @@
+#!/usr/bin/env python3
+"""Publish a fixed report-only comparison of HIP-3 route authority subsets."""
+
+from __future__ import annotations
+
+import argparse
+from collections.abc import Mapping
+from datetime import UTC, datetime
+import json
+from pathlib import Path
+
+import pandas as pd
+
+from hypervector.data.oxa_storage import file_evidence, write_immutable_json
+from hypervector.live.hip3_cohort_providers import (
+    HIP3_BREAKOUT_COMMODITY_STRATEGY as BREAKOUT_COMMODITY,
+    HIP3_BREAKOUT_INDEX_STRATEGY as BREAKOUT_INDEX,
+    HIP3_SWING_COMMODITY_STRATEGY as SWING_COMMODITY,
+    HIP3_SWING_INDEX_STRATEGY as SWING_INDEX,
+)
+from hypervector.live.multi_asset_live_config import load_multi_asset_live_config
+from hypervector.research.current_cohort_shared_portfolio import (
+    CohortOutcome,
+    CohortTradeSpec,
+)
+from hypervector.research.evidence_selected_portfolio import PrioritizedPortfolioConfig
+from hypervector.research.evidence_selected_portfolio_inputs import (
+    adapt_hip3_sidecar,
+)
+from hypervector.research.lean_successor_portfolio import (
+    EvidenceWindow,
+    RouteKey,
+    SuccessorVariant,
+    evaluate_successor_comparison,
+)
+
+_PROFILE_ID = "multi_asset_bidirectional_complete_portfolio_canary_v25"
+_CONFIG = Path("configs/multi_asset_bidirectional_complete_portfolio_canary_v25.toml")
+_SOURCE_REPORT = Path(
+    "data/logs/research/hip3_v25_lifecycle_bar_diagnostic_20260807.json"
+)
+_SIDECAR = Path(
+    "data/logs/research/hip3_v25_lifecycle_bar_diagnostic_20260807.trades.parquet"
+)
+_LIVE_AUDIT = Path(
+    "data/logs/research/bidirectional_cohort/v25_live_audit_20260809T180500Z.json"
+)
+_OUTPUT = Path("data/logs/research/hip3_route_authority_pruning_20260809.json")
+_INDEX_ROUTES = (
+    (SWING_INDEX, "xyz:SP500"),
+    (SWING_INDEX, "xyz:SPCX"),
+    (BREAKOUT_INDEX, "xyz:SP500"),
+    (BREAKOUT_INDEX, "xyz:SPCX"),
+)
+_SWING_ROUTES = (
+    (SWING_COMMODITY, "xyz:SNDK"),
+    (SWING_COMMODITY, "xyz:GOLD"),
+    (SWING_COMMODITY, "xyz:BRENTOIL"),
+)
+_BREAKOUT_ROUTES = (
+    (BREAKOUT_COMMODITY, "xyz:SNDK"),
+    (BREAKOUT_COMMODITY, "xyz:GOLD"),
+    (BREAKOUT_COMMODITY, "xyz:BRENTOIL"),
+)
+_ALL_ROUTES = _INDEX_ROUTES + _SWING_ROUTES + _BREAKOUT_ROUTES
+
+
+def build_parser() -> argparse.ArgumentParser:
+    """Return the immutable report-only command parser."""
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--config", type=Path, default=_CONFIG)
+    parser.add_argument("--source-report", type=Path, default=_SOURCE_REPORT)
+    parser.add_argument("--sidecar", type=Path, default=_SIDECAR)
+    parser.add_argument("--live-audit", type=Path, default=_LIVE_AUDIT)
+    parser.add_argument("--out", type=Path, default=_OUTPUT)
+    return parser
+
+
+def fixed_variants() -> tuple[SuccessorVariant, ...]:
+    """Return the frozen, previously motivated HIP-3 authority subsets."""
+    weak_swing = _INDEX_ROUTES + ((_SWING_ROUTES[1]),) + _BREAKOUT_ROUTES
+    weak_sndk = tuple(route for route in weak_swing if route != _BREAKOUT_ROUTES[0])
+    return (
+        SuccessorVariant("full_v25_hip3", _ALL_ROUTES),
+        SuccessorVariant(
+            "weak_swing_pruned",
+            weak_swing,
+            baseline_variant_id="full_v25_hip3",
+        ),
+        SuccessorVariant(
+            "weak_swing_sndk_breakout_pruned",
+            weak_sndk,
+            baseline_variant_id="weak_swing_pruned",
+        ),
+        SuccessorVariant(
+            "v29_hip3",
+            (
+                (SWING_INDEX, "xyz:SPCX"),
+                (BREAKOUT_INDEX, "xyz:SP500"),
+                (SWING_COMMODITY, "xyz:GOLD"),
+            ),
+            baseline_variant_id="full_v25_hip3",
+        ),
+        SuccessorVariant(
+            "v30_spcx_core",
+            ((SWING_INDEX, "xyz:SPCX"),),
+            baseline_variant_id="full_v25_hip3",
+        ),
+    )
+
+
+def build_live_reconciliation(
+    audit: Mapping[str, object],
+    variants: tuple[SuccessorVariant, ...],
+) -> dict[str, object]:
+    """Attribute immutable v25 closed outcomes to each exact route subset."""
+    _validate_live_audit(audit)
+    scorecard = _mapping(
+        _mapping(audit.get("strategy_scorecard"), "strategy scorecard").get(
+            "by_provider_symbol"
+        ),
+        "provider scorecard",
+    )
+    rows = {
+        variant.variant_id: _live_variant_summary(scorecard, variant.routes)
+        for variant in variants
+    }
+    reflections = _mapping(
+        audit.get("open_trade_reflections"),
+        "open trade reflections",
+    )
+    return {
+        "scope": "closed_provider_symbol_lifecycles_only",
+        "open_marks_included": False,
+        "source_open_lifecycles": _integer(
+            reflections.get("open_lifecycles"),
+            "open lifecycles",
+        ),
+        "variants": rows,
+        "limitations": [
+            "closed live outcomes are sparse and were generated by the full v25 router",
+            "candidate route absence cannot reconstruct displaced same-symbol intents",
+            "open marks are provisional and excluded",
+        ],
+    }
+
+
+def run_command(args: argparse.Namespace) -> dict[str, object]:
+    """Build and publish the fixed comparison without execution authority."""
+    if args.out.exists():
+        raise FileExistsError(f"immutable HIP-3 route report exists: {args.out}")
+    sources = (args.config, args.source_report, args.sidecar, args.live_audit)
+    _require_files(sources)
+    config = load_multi_asset_live_config(args.config, mode="observe")
+    if config.profile_id != _PROFILE_ID:
+        raise ValueError("HIP-3 pruning requires the exact v25 source profile")
+    source = _load_json(args.source_report)
+    sidecar = pd.read_parquet(args.sidecar)
+    scenarios = _scenarios(sidecar)
+    priorities = (SWING_INDEX, BREAKOUT_INDEX, SWING_COMMODITY, BREAKOUT_COMMODITY)
+    comparison = evaluate_successor_comparison(
+        scenarios,
+        fixed_variants(),
+        evidence_windows(source),
+        PrioritizedPortfolioConfig(500.0, config.maximum_positions, priorities),
+    )
+    report = {
+        "schema_version": "hip3_route_authority_pruning_v1",
+        "generated_at_utc": datetime.now(UTC).isoformat(),
+        "report_only": True,
+        "execution_authority": "none",
+        "automatic_promotion": False,
+        "runtime_strategy_changed": False,
+        "epistemic_status": "descriptive_opened_windows_not_sealed_confirmation",
+        "source_profile": {
+            "profile_id": config.profile_id,
+            "profile_fingerprint": config.profile_fingerprint,
+            "maximum_positions": config.maximum_positions,
+        },
+        "comparison": comparison,
+        "source_window_contract": _source_window_contract(source),
+        "live_reconciliation": build_live_reconciliation(
+            _load_json(args.live_audit),
+            fixed_variants(),
+        ),
+        "input_route_counts": _input_counts(scenarios),
+        "source_evidence": _evidence(sources),
+        "generator_identity": _generator_identity(),
+        "decision": "evidence_pending_review_no_automatic_live_change",
+    }
+    write_immutable_json(args.out, report)
+    return report
+
+
+def _scenarios(
+    sidecar: pd.DataFrame,
+) -> dict[str, dict[RouteKey, tuple[CohortOutcome, ...]]]:
+    specs = {
+        route: CohortTradeSpec(route[0], route[1], 75.0, 5.0, 0.0, 500.0)
+        for route in _ALL_ROUTES
+    }
+    return {
+        friction: _group_routes(adapt_hip3_sidecar(sidecar, specs, friction=friction))
+        for friction in ("nominal", "stress")
+    }
+
+
+def _group_routes(
+    rows: tuple[CohortOutcome, ...],
+) -> dict[RouteKey, tuple[CohortOutcome, ...]]:
+    return {
+        route: tuple(
+            row for row in rows if (row.strategy_id, row.outcome.symbol) == route
+        )
+        for route in _ALL_ROUTES
+    }
+
+
+def evidence_windows(source: Mapping[str, object]) -> tuple[EvidenceWindow, ...]:
+    """Return causal wall-clock intersections for misaligned source phases."""
+    values = list(_source_window_contract(source).values())
+    starts = [timestamp_ms(value["development_start_utc"]) for value in values]
+    splits = [timestamp_ms(value["development_end_utc"]) for value in values]
+    ends = [timestamp_ms(value["validation_end_utc"]) for value in values]
+    common_start = max(starts)
+    common_split = min(splits)
+    common_end = min(ends)
+    if not common_start < common_split < common_end:
+        raise ValueError("HIP-3 source cases lack usable common causal windows")
+    return (
+        EvidenceWindow("common_early", common_start, common_split),
+        EvidenceWindow(
+            "common_later_descriptive",
+            common_split,
+            common_end,
+        ),
+        EvidenceWindow("common_full", common_start, common_end),
+    )
+
+
+def _source_window_contract(
+    source: Mapping[str, object],
+) -> dict[str, Mapping[str, object]]:
+    cases = _mapping(source.get("cases"), "source cases")
+    output: dict[str, Mapping[str, object]] = {}
+    strategies = (SWING_INDEX, BREAKOUT_INDEX, SWING_COMMODITY, BREAKOUT_COMMODITY)
+    for strategy in strategies:
+        case = _mapping(cases.get(strategy), f"source case {strategy}")
+        window = _mapping(case.get("windows"), f"source windows {strategy}")
+        output[strategy] = window
+        for field in (
+            "development_start_utc",
+            "development_end_utc",
+            "validation_end_utc",
+            "holdout_end_utc",
+        ):
+            timestamp_ms(window.get(field))
+    return output
+
+
+def _live_variant_summary(
+    scorecard: Mapping[str, object],
+    routes: tuple[RouteKey, ...],
+) -> dict[str, object]:
+    performances: list[Mapping[str, object]] = []
+    repeatability: list[Mapping[str, object]] = []
+    for strategy, symbol in routes:
+        row = _mapping(scorecard.get(f"{strategy}|{symbol}", {}), "route scorecard")
+        performance = row.get("execution_performance")
+        if performance is None:
+            continue
+        performances.append(_mapping(performance, "execution performance"))
+        repeatability.append(
+            _mapping(row.get("repeatability_evidence"), "repeatability evidence")
+        )
+    gross_profit = sum(_number(row.get("gross_profit_usd")) for row in repeatability)
+    gross_loss = sum(_number(row.get("gross_loss_usd")) for row in repeatability)
+    largest = max(
+        (
+            _optional_number(row.get("largest_winner_usd")) or 0.0
+            for row in repeatability
+        ),
+        default=0.0,
+    )
+    net = sum(_number(row.get("net_pnl_usd")) for row in performances)
+    return {
+        "closed_trades": sum(
+            _integer(row.get("closed_trades"), "closed trades") for row in performances
+        ),
+        "wins": sum(_integer(row.get("wins"), "wins") for row in performances),
+        "losses": sum(_integer(row.get("losses"), "losses") for row in performances),
+        "net_pnl_usd": net,
+        "profit_factor": gross_profit / gross_loss if gross_loss else None,
+        "net_pnl_excluding_largest_winner_usd": net - largest,
+        "routes_with_closed_evidence": len(performances),
+    }
+
+
+def _validate_live_audit(audit: Mapping[str, object]) -> None:
+    explicit = audit.get("execution_authority")
+    contract = _mapping(audit.get("experiment_contract", {}), "experiment contract")
+    authority = (
+        explicit if explicit is not None else contract.get("execution_authority")
+    )
+    if authority != "none":
+        raise ValueError("route reconciliation source must have no execution authority")
+    run = _mapping(audit.get("run"), "audit run")
+    if run.get("profile_id") != _PROFILE_ID:
+        raise ValueError("route reconciliation requires the exact v25 profile")
+    for field in ("profile_fingerprint", "run_id"):
+        _text(run.get(field), field)
+
+
+def _input_counts(
+    scenarios: Mapping[str, Mapping[RouteKey, tuple[CohortOutcome, ...]]],
+) -> dict[str, object]:
+    return {
+        friction: {
+            f"{strategy}|{symbol}": len(rows)
+            for (strategy, symbol), rows in sorted(routes.items())
+        }
+        for friction, routes in sorted(scenarios.items())
+    }
+
+
+def _evidence(paths: tuple[Path, ...]) -> dict[str, object]:
+    return {
+        str(path): {"path": str(path.resolve()), **file_evidence(path)}
+        for path in paths
+    }
+
+
+def _generator_identity() -> dict[str, object]:
+    root = Path(__file__).resolve().parents[1]
+    paths = (
+        Path(__file__).resolve(),
+        root / "src/hypervector/research/evidence_selected_portfolio.py",
+        root / "src/hypervector/research/evidence_selected_portfolio_inputs.py",
+        root / "src/hypervector/research/lean_successor_portfolio.py",
+    )
+    return {str(path.relative_to(root)): file_evidence(path) for path in paths}
+
+
+def _require_files(paths: tuple[Path, ...]) -> None:
+    for path in paths:
+        if not path.is_file():
+            raise FileNotFoundError(f"HIP-3 route source is missing: {path}")
+
+
+def _load_json(path: Path) -> dict[str, object]:
+    value = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(value, dict):
+        raise ValueError(f"HIP-3 route JSON must be an object: {path}")
+    return value
+
+
+def _mapping(value: object, label: str) -> Mapping[str, object]:
+    if not isinstance(value, Mapping):
+        raise ValueError(f"{label} must be an object")
+    return value
+
+
+def _text(value: object, label: str) -> str:
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError(f"{label} must be non-empty text")
+    return value
+
+
+def timestamp_ms(value: object) -> int:
+    """Convert one timezone-aware evidence timestamp to Unix milliseconds."""
+    if not isinstance(value, str):
+        raise ValueError("HIP-3 evidence timestamp must be text")
+    timestamp = pd.Timestamp(value)
+    if timestamp.tzinfo is None:
+        raise ValueError("HIP-3 evidence timestamp must include a timezone")
+    return int(timestamp.timestamp() * 1_000)
+
+
+def _number(value: object) -> float:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise ValueError("HIP-3 route metric must be numeric")
+    return float(value)
+
+
+def _optional_number(value: object) -> float | None:
+    if value is None:
+        return None
+    return _number(value)
+
+
+def _integer(value: object, label: str) -> int:
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise ValueError(f"{label} must be an integer")
+    return value
+
+
+def main() -> int:
+    """Run the comparison and print a bounded evidence identity."""
+    args = build_parser().parse_args()
+    report = run_command(args)
+    print(
+        json.dumps(
+            {
+                "ok": True,
+                "output": str(args.out.resolve()),
+                "variants": len(report["comparison"]["variants"]),
+                "execution_authority": "none",
+            },
+            indent=2,
+        )
+    )
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

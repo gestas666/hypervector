@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "current-cohort-shared-portfolio-v11-eth12",
+  "revision_number": 2,
+  "supersedes_revision_id": "f2e555f42779ba50317fce309b243839174bd41a9dd524ffa8beaf4a8bac7f2d",
+  "created_at_utc": "2026-08-06T08:41:45Z",
+  "strategy_id": "multi_asset_bidirectional_evidence_routed_v11_eth12",
+  "symbol": "PORTFOLIO",
+  "status": "reject",
+  "hypothesis": "The exact deployed v11 BTC/HYPE composition plus the staged ETH v12 candidate may produce positive after-cost results when replayed chronologically through one approximately $500 account at current fixed notional caps.",
+  "decision": "Supersede revision 1 with UTC-correct monthly attribution. Aggregate trades, PnL, profit factor, drawdown, capacity, and strategy/side attribution are unchanged. Reject the combined historical composition as an evidence-backed promotion candidate. Keep ETH as a prospective candidate because it remained positive in both reported blocks; retain BTC Hulk only as contradictory live research; treat HYPE as an unresolved live-versus-history conflict. This decision has no execution authority and does not change the running strategy.",
+  "confidence": "medium",
+  "falsifier": "Update this rejection if at least 30 fresh, non-overlapping, venue-executed compatible portfolio lifecycles produce positive net PnL and profit factor above one after exact fees, funding, slippage, and stop gaps, with positive contribution from at least two providers and no single lifecycle supplying more than half of gross profit; an authenticated event-level replay demonstrating a material bar-model bias would also require revision.",
+  "evidence": [
+    {
+      "path": "../../data/logs/research/current_cohort_shared_portfolio_v11_eth12_v2_20260806.json",
+      "role": "utc_corrected_exact_cap_chronological_shared_portfolio_replay",
+      "sha256": "abb6c1cb64179e837a984f04614c6799ce42d5300fbd2ba17180a0c2f6694cca",
+      "bytes": 1571336
+    }
+  ],
+  "metrics": {
+    "development": {
+      "trades": 1329,
+      "net_pnl_usd": -59.636030342989805,
+      "profit_factor": 0.8819522802625874,
+      "maximum_realized_drawdown_pct": 14.395876378383365
+    },
+    "opened_final_60d": {
+      "trades": 273,
+      "net_pnl_usd": -5.014817692050559,
+      "profit_factor": 0.9541385687350776,
+      "maximum_realized_drawdown_pct": 4.4825601868201375,
+      "monthly_net_pnl_usd_utc": {
+        "2026-05": 2.6284074269004263,
+        "2026-06": 8.068122796075876,
+        "2026-07": -15.711347915026863
+      }
+    },
+    "opened_final_60d_by_strategy": {
+      "eth_breakout_precompression_pullback_bidirectional_v1": {
+        "trades": 56,
+        "net_pnl_usd": 0.8015641079376579,
+        "profit_factor": 1.1202942309474302
+      },
+      "hulk_expansion_bidirectional_tuned_v2": {
+        "trades": 17,
+        "net_pnl_usd": -2.007922735211633,
+        "profit_factor": 0.200204691795226
+      },
+      "hype_breakout_onset_bidirectional_v1": {
+        "trades": 200,
+        "net_pnl_usd": -3.808459064776584,
+        "profit_factor": 0.9619812808715809
+      }
+    }
+  },
+  "limitations": [
+    "The final 60-day block had already been opened and is descriptive rather than a newly sealed holdout.",
+    "One-minute and 30-minute OHLC bars cannot reproduce private queue position or exact intrabar path.",
+    "Fixed slippage cannot reproduce every live IOC fill or gap-through-stop event.",
+    "Realized-equity drawdown omits concurrent intratrade mark-to-market paths.",
+    "BTC history begins later than ETH and HYPE, and the common purge excludes six boundary lifecycles.",
+    "Fourteen same-bar BTC exits use a disclosed one-millisecond ordering normalization because the source artifact stores entry and intrabar exit at the same bar-open timestamp.",
+    "The small favorable HYPE live archive contradicts the broad historical result and requires prospective resolution rather than post-hoc selection.",
+    "Revision 1 used host-local monthly buckets; revision 2 changes only month labels to UTC and preserves all economic aggregates."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

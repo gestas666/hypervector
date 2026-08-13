@@ -132,6 +132,41 @@ def test_compare_reports_real_entry_during_shadow_range_without_gating() -> None
     assert report["real_unmatched"][0]["nearest_entry_allowed"] is False
 
 
+def test_compare_reconciles_duplicate_peak_and_trade_records() -> None:
+    shadow = [
+        _observation("2026-07-25T10:00:00Z", regime="TREND_UP", allowed=True),
+        _observation("2026-07-25T10:05:00Z", regime="TREND_UP", allowed=True),
+    ]
+    positions = pd.DataFrame(
+        {
+            "record_source": ["position_peak_only", "trade_only"],
+            "symbol": ["BTC", "BTC"],
+            "side": ["long", "long"],
+            "open_time_utc": [
+                "2026-07-25T10:01:00Z",
+                "2026-07-25T10:02:00Z",
+            ],
+            "close_time_utc": [
+                "2026-07-25T10:04:00Z",
+                "2026-07-25T10:04:05Z",
+            ],
+            "entry_price": [100.0, 100.0],
+            "exit_price": [None, 100.2],
+            "quantity": [0.01, 0.01],
+            "fill_type": ["", "maker"],
+        }
+    )
+
+    report = compare_shadow_to_positions(
+        shadow,
+        positions,
+        run_ids=("run-long",),
+    )
+
+    assert report["summary"]["real_entries"] == 1
+    assert report["summary"]["real_maker_entries"] == 1
+
+
 def test_compare_reports_nearby_opposite_direction_as_mismatch() -> None:
     long_start = _observation(
         "2026-07-25T10:00:00Z",

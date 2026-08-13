@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "btc-hype-breakout-transfer",
+  "revision_number": 1,
+  "supersedes_revision_id": null,
+  "created_at_utc": "2026-08-05T17:20:26Z",
+  "strategy_id": "hype_breakout_onset_bidirectional_v1",
+  "symbol": "BTC",
+  "status": "observe",
+  "hypothesis": "The exact HYPE five-minute breakout-onset rule may transfer to BTC without asset-specific tuning.",
+  "decision": "Keep only the BTC short side as a report-only prospective observer. Do not grant BTC execution authority because its positive final-60-day result reverses a materially negative development result.",
+  "confidence": "low",
+  "falsifier": "A new forward BTC-short block with profit factor at or below one or negative after-cost net return falsifies the recent challenger; positive results across multiple distinct regimes would increase confidence but would still require a separate promotion decision.",
+  "evidence": [
+    {
+      "path": "../reviews/2026-08-05-hype-breakout-cross-asset-transfer.md",
+      "role": "cross_asset_transfer_review",
+      "sha256": "075d059c31429f464e48fc9a5ed33880de7d8936af93b5340dcc288d61ea8c26",
+      "bytes": 4871
+    },
+    {
+      "path": "../../data/logs/research/btc_hype_breakout_transfer_fixed8_vs_extension_hl365d_20260805.json",
+      "role": "immutable_btc_transfer_replay",
+      "sha256": "3fb1efef604f7ce68eabb65ff8918fe4ecbe926763aa3fb90e8253f619e5c246",
+      "bytes": 4570
+    }
+  ],
+  "metrics": {
+    "development_trades": 669,
+    "development_profit_factor": 0.7872575181,
+    "development_net_bps": -7068.0176204464,
+    "holdout_trades": 121,
+    "holdout_profit_factor": 1.2211061410,
+    "holdout_net_bps": 1064.8349235869,
+    "holdout_short_trades": 63,
+    "holdout_short_profit_factor": 1.4831165256,
+    "holdout_short_net_bps": 1230.3953483996,
+    "development_short_trades": 339,
+    "development_short_profit_factor": 0.7776770188,
+    "development_short_net_bps": -3930.9545569266
+  },
+  "limitations": [
+    "The final 60-day block was previously opened and is descriptive rather than newly sealed.",
+    "The positive BTC result is confined to recent shorts and reverses the development result.",
+    "One-minute OHLC and fixed slippage do not reproduce live IOC latency or private queue state.",
+    "No live BTC execution authority was added."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "eth-breakout-precompression-pullback",
+  "revision_number": 3,
+  "supersedes_revision_id": "0c539f296c42929f048c91f62ed061ec582fc425b408f861781c04c45f11696d",
+  "created_at_utc": "2026-08-06T14:22:00Z",
+  "strategy_id": "eth_breakout_precompression_pullback_bidirectional_v1",
+  "symbol": "ETH",
+  "status": "candidate",
+  "hypothesis": "Fresh completed-five-minute ETH breakout onsets filtered by prior one-minute BBWP compression and a directional pullback may retain a small repeatable edge after live taker friction with a 60-bps protective stop and 12-hour maximum hold.",
+  "decision": "Retain the exact ETH v12 candidate in report-only observation. Its first non-overlapping forward path resolved positive after modeled round-trip friction and official funding, and it was compatible with the observed shared-portfolio state. One counterfactual path is insufficient to estimate repeatability, drawdown, side robustness, or venue execution quality, so it receives no execution authority and is not promoted by this revision.",
+  "confidence": "low",
+  "falsifier": "The hypothesis is weakened or rejected if subsequent profile-matched, non-overlapping long and short paths erase the 40.96-bps initial surplus, or if actual venue fills show materially worse friction than the 13-bps model. Runtime parity is falsified by any mismatch in completed-bar onset identity, prior compression, directional pullback, one-position-per-coin routing, stop placement, funding attribution, or maximum-hold timing.",
+  "evidence": [
+    {
+      "path": "../../data/logs/research/bidirectional_checkpoint_v11_eth_forward_resolution_20260806T1420Z.json",
+      "role": "immutable_v11_bound_eth_forward_resolution_and_portfolio_compatibility",
+      "sha256": "211e7e5b86da6b989815797815ccbf1134657c9b5db02fbd1ef2021cb336138e",
+      "bytes": 5404017
+    }
+  ],
+  "metrics": {
+    "candidate_profile_id": "multi_asset_bidirectional_evidence_routed_hype75_eth25_canary_v12",
+    "candidate_max_notional_usd": 25.0,
+    "candidate_leverage": 5.0,
+    "candidate_stop_bps": 60.0,
+    "candidate_maximum_hold_seconds": 43200,
+    "forward_attempts": 1,
+    "forward_resolved": 1,
+    "forward_pending": 0,
+    "forward_wins": 1,
+    "forward_losses": 0,
+    "forward_side": "long",
+    "forward_entry_price": 1896.5,
+    "forward_exit_price": 1907.0,
+    "forward_exit_reason": "maximum_hold",
+    "forward_gross_return_bps": 55.365146322172706,
+    "forward_modeled_round_trip_friction_bps": 13.0,
+    "forward_funding_bps": -1.408155,
+    "forward_net_return_bps": 40.956991322172705,
+    "forward_simulated_net_pnl_usd": 0.10239247830543176,
+    "forward_mfe_bps": 116.00316372264663,
+    "forward_mae_bps": -23.72791985235989,
+    "portfolio_classification": "deployable_flat_entry",
+    "available_position_slots_at_entry": 3,
+    "open_portfolio_positions_at_entry": 1,
+    "eth_state_at_entry": "FLAT",
+    "venue_portfolio_value_usd_at_resolution": 507.71396569,
+    "backend_faults_at_resolution": 0
+  },
+  "limitations": [
+    "The single resolved candidate cannot establish a stable win rate, profit factor, drawdown, cadence, or side-specific edge.",
+    "The observation used completed one-minute candles and cannot reproduce intrabar stop ordering or actual IOC fill slippage.",
+    "The decision reference is not proof that a real order would have filled at the modeled entry price.",
+    "The simulated outcome is non-additive and is excluded from live portfolio performance.",
+    "The historical entry and stop/hold selections were post-hoc; this forward path tests implementation consistency but does not remove selection bias.",
+    "No strategy, live position, order, allocation, or execution authority changed in this revision."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

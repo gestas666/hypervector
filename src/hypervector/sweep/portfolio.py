@@ -9,12 +9,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-import numpy as np
 import pandas as pd
 
 from hypervector.regime.adaptive import detect_4state_regime
 from hypervector.strategies.registry import get_strategy
-from hypervector.sweep.costs import CostModel, resolve_cost_model
+from hypervector.sweep.costs import resolve_cost_model
 from hypervector.sweep.exits import ExitConfig
 from hypervector.sweep.metrics import compute_trial_metrics
 
@@ -76,14 +75,30 @@ def run_long_short_portfolio(
 
     # Metrics computation
     m_long = compute_trial_metrics(
-        close, entries_l_final, exits_l, direction="long", init_cash=init_cash, df=df, cost=cost, exit_cfg=exit_cfg
+        close,
+        entries_l_final,
+        exits_l,
+        direction="long",
+        init_cash=init_cash,
+        df=df,
+        cost=cost,
+        exit_cfg=exit_cfg,
     )
     m_short = compute_trial_metrics(
-        close, entries_s_final, exits_s, direction="short", init_cash=init_cash, df=df, cost=cost, exit_cfg=exit_cfg
+        close,
+        entries_s_final,
+        exits_s,
+        direction="short",
+        init_cash=init_cash,
+        df=df,
+        cost=cost,
+        exit_cfg=exit_cfg,
     )
 
     # Combined Portfolio metrics
-    net_pnl_comb = float(m_long.get("net_pnl", 0.0)) + float(m_short.get("net_pnl", 0.0))
+    net_pnl_comb = float(m_long.get("net_pnl", 0.0)) + float(
+        m_short.get("net_pnl", 0.0)
+    )
     trades_comb = int(m_long.get("trade_count", 0)) + int(m_short.get("trade_count", 0))
     wins_comb = int(m_long.get("wins", 0)) + int(m_short.get("wins", 0))
     win_pct_comb = (wins_comb / trades_comb * 100.0) if trades_comb > 0 else 0.0

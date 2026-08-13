@@ -50,17 +50,13 @@ def test_reject_wide_spread():
 
 
 def test_reject_missing_when_required():
-    r = evaluate_book_entry(
-        None, side="buy", now_ms=1.0, require_fresh=True
-    )
+    r = evaluate_book_entry(None, side="buy", now_ms=1.0, require_fresh=True)
     assert r.allow is False
     assert r.reason == "book_missing"
 
 
 def test_allow_missing_when_not_required():
-    r = evaluate_book_entry(
-        None, side="buy", now_ms=1.0, require_fresh=False
-    )
+    r = evaluate_book_entry(None, side="buy", now_ms=1.0, require_fresh=False)
     assert r.allow is True
 
 

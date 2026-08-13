@@ -48,7 +48,10 @@ def purged_kfold_split(
             if e <= test_outcome_max and o >= test_entry_min:
                 train_mask[i] = False
             # embargo around test
-            if abs(e - test_entry_min) < embargo_ms or abs(e - test_outcome_max) < embargo_ms:
+            if (
+                abs(e - test_entry_min) < embargo_ms
+                or abs(e - test_outcome_max) < embargo_ms
+            ):
                 train_mask[i] = False
             if o > test_entry_min - embargo_ms and e < test_outcome_max + embargo_ms:
                 # already covered; keep simple extra embargo on entry near test

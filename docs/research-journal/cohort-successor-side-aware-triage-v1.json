@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "cohort-successor-side-aware-triage",
+  "revision_number": 1,
+  "supersedes_revision_id": null,
+  "created_at_utc": "2026-08-08T21:54:50Z",
+  "strategy_id": "multi_asset_portfolio_research_process",
+  "symbol": "PORTFOLIO",
+  "status": "observe",
+  "hypothesis": "A point-in-time, provider-symbol-side triage that separates historical signal evidence, after-cost live translation, concentration, forward paths, and unresolved marks may select a more coherent portfolio successor than aggregate-PnL route ranking.",
+  "decision": "Adopt the side-aware triage as the report-only successor research baseline. On the immutable v25 prefix it classifies zero of 24 routes as ready for shared-portfolio interaction, ten as REVISE, and fourteen unchanged exact contracts as STOP. STOP means the existing exact mechanic has adverse source-backed evidence and requires a genuinely new mechanic version before another confirmatory trial; it does not stop, filter, pause, resize, or alter the running v25 trial. REVISE identifies the missing experiment: side-specific mechanism separation, both-side live coverage, or source-backed mechanism evidence. A single profitable live trade cannot erase adverse development evidence, and an open marked gain cannot become a resolved outcome. Keep v25 armed and collecting both-side after-cost evidence while designing successor mechanisms rather than relaunching retired v29.",
+  "confidence": "medium_high",
+  "falsifier": "The research process is falsified by route identity mismatch, executable authority in any input or output, an open mark affecting triage, a single live winner overriding an adverse exact-contract classification, direction evidence being collapsed, non-exclusive artifact publication, or a route satisfying the predeclared supportive-history, both-side after-cost, positive-ex-largest-winner, and independent-forward-path conditions without reaching the portfolio-interaction stage. Economic classifications update when a new immutable audit adds resolved evidence; they do not hot-mutate execution.",
+  "evidence": [
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v25_successor_triage_20260808T215410Z.json",
+      "role": "immutable_first_24_route_side_aware_successor_triage",
+      "sha256": "ffa9b12da4b5ee22485693273dc676f3c2b6e7e95adaf3757ecfb9db46f28786",
+      "bytes": 27834
+    },
+    {
+      "path": "../../src/hypervector/research/cohort_successor_triage.py",
+      "role": "report_only_successor_triage_business_logic",
+      "sha256": "42ce48f46c524f4cb7ac501ca8ed942853aa7bb25125e3f9b1e4b242746fca1f",
+      "bytes": 13948
+    },
+    {
+      "path": "../../scripts/cohort_successor_triage.py",
+      "role": "immutable_source_bound_triage_publisher",
+      "sha256": "69ad2bb97ee2c552ffc6c34f5dd29c5270d38f2243cfcb52917e359a7d3fde0f",
+      "bytes": 2223
+    },
+    {
+      "path": "../../tests/test_cohort_successor_triage.py",
+      "role": "side_cost_concentration_and_open_mark_contract_tests",
+      "sha256": "5183ee62ae1ec8eef82bff8048fb4aa39c99afdc6d21dcb5cd4d18c957508e58",
+      "bytes": 8165
+    },
+    {
+      "path": "../../tests/test_cohort_successor_triage_script.py",
+      "role": "source_identity_and_exclusive_publication_tests",
+      "sha256": "b83d1a79efb86ffccc375cd977495de81b873c304a17f2c436b0c78b36312581",
+      "bytes": 2924
+    }
+  ],
+  "metrics": {
+    "source_profile_id": "multi_asset_bidirectional_complete_portfolio_canary_v25",
+    "source_profile_fingerprint": "ec7715f671fa369d0a415d8941061eb9a577b232bbd4e06367a7342267ff7ecc",
+    "source_run_id": "bidirectional-live-1786182011216",
+    "source_audit_as_of_utc": "2026-08-08T21:17:30.912249+00:00",
+    "routes": 24,
+    "proceed": 0,
+    "revise": 10,
+    "stop_exact_contract": 14,
+    "routes_with_both_side_live_execution": 0,
+    "routes_with_resolved_live_execution": 5,
+    "resolved_live_provider_symbol_samples": 5,
+    "resolved_live_sides": [
+      "long"
+    ],
+    "open_lifecycles_kept_provisional": 3,
+    "execution_authority": "none",
+    "runtime_changed_by_this_revision": false
+  },
+  "limitations": [
+    "The triage is an evidence-routing process rather than a profitability model or an execution gate.",
+    "The historical evidence states were produced by prior heterogeneous experiments; the triage preserves their provenance but does not make their samples statistically homogeneous.",
+    "Only five compatible-profile live lifecycles are resolved, every provider-symbol has one result, and all observed sides are long.",
+    "Forward candle paths are not private fills or after-cost trades and therefore cannot independently promote a route.",
+    "The triage does not calculate Deflated Sharpe Ratio because a complete historical trial count and statistically comparable return series do not yet exist.",
+    "PROCEED means eligible for shared-portfolio interaction replay, not live promotion.",
+    "No live route, process, order, position, stop, target, allocation, transition drain, or protection changed in this revision."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

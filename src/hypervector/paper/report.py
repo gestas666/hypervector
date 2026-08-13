@@ -80,12 +80,6 @@ def summarize_paper_decisions(
         How many recent market rows to sample (not funding).
     """
     n = max(0, int(last_n))
-    market = [
-        r
-        for r in rows
-        if str(r.get("action") or "") in _MARKET_ACTIONS
-        or (r.get("fill_model_id") and r.get("action") != "funding")
-    ]
     # Prefer explicit market actions; if fill_model without action, keep those too.
     market_fills = [
         r
@@ -132,8 +126,16 @@ def summarize_paper_decisions(
         "all_intent_submit_enabled_false": intent_submit_true == 0,
         "live_files": live_files,
         "no_live_files": live_files == 0,
-        "modes_seen": sorted({str(r.get("execution_mode")) for r in rows if r.get("execution_mode") is not None}),
-        "networks_seen": sorted({str(r.get("network")) for r in rows if r.get("network") is not None}),
+        "modes_seen": sorted(
+            {
+                str(r.get("execution_mode"))
+                for r in rows
+                if r.get("execution_mode") is not None
+            }
+        ),
+        "networks_seen": sorted(
+            {str(r.get("network")) for r in rows if r.get("network") is not None}
+        ),
     }
 
     return {
@@ -189,7 +191,11 @@ def report_from_data_root(
 ) -> dict[str, Any]:
     """Load default (or override) decisions path and summarize."""
     root = Path(data_root)
-    path = Path(decisions_path) if decisions_path is not None else default_decisions_path(root)
+    path = (
+        Path(decisions_path)
+        if decisions_path is not None
+        else default_decisions_path(root)
+    )
     live_root = paths_for(root).live
     if _is_under(path, live_root):
         raise ValueError(f"refusing paper-report on path under live/: {path}")

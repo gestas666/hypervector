@@ -30,6 +30,7 @@ from hypervector.paper.event_stream_pump import (
 )
 from hypervector.paper.live_node import (
     DEFAULT_POLL_INTERVAL_SECS,
+    completed_bars_at,
     make_rest_poll_fn,
     partition_live_bars,
 )
@@ -40,6 +41,9 @@ from hypervector.paper.replay import (
 )
 from hypervector.paper.session import PaperSession
 from hypervector.strategies.hypervelocity_profile import HypervelocityProfile
+from hypervector.strategies.source_follow_profile import (
+    SourceFollowHypervelocityProfile,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -68,6 +72,10 @@ class PaperDaemonResult:
     fills_count: int
     stop_reason: str
     execution_mode: str = "paper"
+
+
+def _requires_fresh_warmup(profile: HypervelocityProfile | None) -> bool:
+    return isinstance(profile, SourceFollowHypervelocityProfile)
 
 
 def start_paper_daemon(
@@ -172,6 +180,11 @@ def start_paper_daemon(
         execution_mode=mode,
         hypervelocity_profile=hypervelocity_profile,
         lookback_days=lb,
+        initial_cash_usd=(
+            hypervelocity_profile.initial_cash_usd
+            if hypervelocity_profile is not None
+            else None
+        ),
     )
     if hypervelocity_profile is not None:
         funding_rate = session.initialize_hypervelocity_venue()
@@ -195,7 +208,7 @@ def start_paper_daemon(
                 if hypervelocity_profile is not None
                 else False
             ),
-            force_refresh=False,
+            force_refresh=_requires_fresh_warmup(hypervelocity_profile),
         )
         logger.info(
             "paper warm-up loaded bars=%s provenance=%s",
@@ -209,6 +222,20 @@ def start_paper_daemon(
         )
 
     activated_at = clock()
+    if enforce_boundary:
+        loaded_warm_bars = len(warm_df)
+        warm_df = completed_bars_at(
+            warm_df,
+            timeframe=loadout.timeframe,
+            observed_at=activated_at,
+        )
+        logger.info(
+            "paper warm-up causal boundary retained=%s excluded=%s",
+            len(warm_df),
+            loaded_warm_bars - len(warm_df),
+        )
+        if warm_df.empty:
+            raise RuntimeError("warm-up has no causally completed bars at activation")
     session.enable_live_telemetry(activated_at=activated_at)
     if event_authority:
         session.activate_hypervelocity_event_runtime(

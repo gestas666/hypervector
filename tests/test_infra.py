@@ -14,6 +14,8 @@ def test_ensure_data_layout_creates_all_subdirs(tmp_path: Path):
     for rel in DATA_SUBDIRS:
         assert (root / rel).is_dir(), rel
     assert paths.runs_db == root / "runs" / "hypervector.db"
+    assert paths.research_db == root / "research" / "market.duckdb"
+    assert paths.research_db.parent.is_dir()
     assert paths.paper_db == root / "paper" / "paper.db"
     # paper and live are distinct
     assert paths.paper_ledger != paths.live

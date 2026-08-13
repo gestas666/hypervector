@@ -89,7 +89,7 @@ HL_VIP2_TAKER = CostModel(
 
 HL_MAKER = CostModel(
     taker_fee=0.00015,  # 1.5 bps base maker
-    slippage_bps=0.0,   # Passive fill on book
+    slippage_bps=0.0,  # Passive fill on book
     funding_rate_1h=0.0000125,
 )
 

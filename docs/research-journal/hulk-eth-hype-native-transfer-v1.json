@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "hulk-eth-hype-native-transfer",
+  "revision_number": 1,
+  "supersedes_revision_id": null,
+  "created_at_utc": "2026-08-08T06:00:42Z",
+  "strategy_id": "hulk_expansion_bidirectional_tuned_v2",
+  "symbol": "ETH,HYPE",
+  "status": "reject",
+  "hypothesis": "The frozen bidirectional Hulk v2 rule selected on BTC/SOL may transfer to ETH or HYPE when evaluated on venue-native Hyperliquid candles with unchanged signal, risk, exit, fee, slippage, and funding assumptions.",
+  "decision": "Reject both ETH and HYPE Hulk v2 mappings for the next executable portfolio profile. Every chronological segment was after-cost negative on both assets, and both long and short directions were negative over the continuous window. Preserve the deterministic rule and evidence for research, but do not interpret configuration presence as evidence of edge. This record does not mutate the active v25 runtime.",
+  "confidence": "medium_high",
+  "falsifier": "A prospectively declared exact-route sample with at least 20 independently resolved live lifecycles per asset, at least 30 calendar days of coverage, positive after-fee and after-funding net PnL, profit factor above 1.0 on both sides combined, and no single trade contributing more than half of gross profit would trigger a new revision. Any source hash mismatch invalidates this decision.",
+  "evidence": [
+    {
+      "path": "../../data/logs/research/20260808_hulk_bidirectional_tuned_v2_HYPE_development_native_candles_v1.json",
+      "role": "hype_chronological_development",
+      "sha256": "bfc9c8f353097d1c9373f4bf1107d83b3e06149e0d524d4a640a3067bdaceb4c",
+      "bytes": 71259
+    },
+    {
+      "path": "../../data/logs/research/20260808_hulk_bidirectional_tuned_v2_HYPE_validation_native_candles_v1.json",
+      "role": "hype_chronological_validation",
+      "sha256": "db4b7075ee7eed97623b95f75a38205bf282029aa3cc68dc5dd93c42d2a3c573",
+      "bytes": 54292
+    },
+    {
+      "path": "../../data/logs/research/20260808_hulk_bidirectional_tuned_v2_HYPE_pseudo_holdout_native_candles_v1.json",
+      "role": "hype_chronological_pseudo_holdout",
+      "sha256": "3b3fe7c5be1dd2a644b39c67592df58df52f8d38026066f551318d9931c5c737",
+      "bytes": 30083
+    },
+    {
+      "path": "../../data/logs/research/20260808_hulk_bidirectional_tuned_v2_HYPE_continuous_native_candles_v1.json",
+      "role": "hype_continuous_path_and_drawdown",
+      "sha256": "b91dc3a6463bd3c7dfd52dddca3ca5780c6b239df0be6f1a4f288e4b0b87a725",
+      "bytes": 143745
+    },
+    {
+      "path": "../../data/logs/research/20260808_hulk_bidirectional_tuned_v2_ETH_development_native_candles_v1.json",
+      "role": "eth_chronological_development",
+      "sha256": "cd1137559eebe5f9dd65054fa4823518642ef5fbf42cfe5733dc253d4ec9c5ce",
+      "bytes": 72991
+    },
+    {
+      "path": "../../data/logs/research/20260808_hulk_bidirectional_tuned_v2_ETH_validation_native_candles_v1.json",
+      "role": "eth_chronological_validation",
+      "sha256": "5b4237a34e0afa683b59432a24861d56e5588b7b35bd518f4563391120b11999",
+      "bytes": 40151
+    },
+    {
+      "path": "../../data/logs/research/20260808_hulk_bidirectional_tuned_v2_ETH_pseudo_holdout_native_candles_v1.json",
+      "role": "eth_chronological_pseudo_holdout",
+      "sha256": "6107c4985778cf20db0abab5e946b1727dfbf986bd4fc48814295e657bace9df",
+      "bytes": 47608
+    },
+    {
+      "path": "../../data/logs/research/20260808_hulk_bidirectional_tuned_v2_ETH_continuous_native_candles_v1.json",
+      "role": "eth_continuous_path_and_drawdown",
+      "sha256": "58d3500135699eddba31182871ec650cc7f01a07b6d902d3e47a0b7924489989",
+      "bytes": 148868
+    }
+  ],
+  "metrics": {
+    "hype_continuous_trades": 97,
+    "hype_continuous_wins": 16,
+    "hype_continuous_losses": 81,
+    "hype_continuous_net_pnl_usd": -1819.2984275931337,
+    "hype_continuous_profit_factor": 0.4638821956580381,
+    "hype_continuous_maximum_drawdown_pct": 12.12865618395419,
+    "hype_long_trades": 59,
+    "hype_long_net_pnl_usd": -940.8447952923736,
+    "hype_long_profit_factor": 0.5357932884940839,
+    "hype_short_trades": 38,
+    "hype_short_net_pnl_usd": -878.4536323007602,
+    "hype_short_profit_factor": 0.3572390045481106,
+    "eth_continuous_trades": 100,
+    "eth_continuous_wins": 21,
+    "eth_continuous_losses": 79,
+    "eth_continuous_net_pnl_usd": -1394.2354309342593,
+    "eth_continuous_profit_factor": 0.5918723490999175,
+    "eth_continuous_maximum_drawdown_pct": 11.391404682796512,
+    "eth_long_trades": 49,
+    "eth_long_net_pnl_usd": -774.5057878071133,
+    "eth_long_profit_factor": 0.5378112051138877,
+    "eth_short_trades": 51,
+    "eth_short_net_pnl_usd": -619.7296431271461,
+    "eth_short_profit_factor": 0.6439236247021962,
+    "liquidations": 0,
+    "chronological_segments_positive": 0,
+    "chronological_segments_tested": 6,
+    "runtime_changed_by_this_revision": false
+  },
+  "limitations": [
+    "The Hulk parameters were frozen from BTC/SOL research, so ETH/HYPE are cross-asset transfer tests rather than locally tuned models.",
+    "The one-minute 0xArchive candle bundles contain bounded no-trade gaps repaired as labeled zero-volume continuity bars; the HYPE continuous window used 183 total repaired minutes and ETH used 164 across the source year.",
+    "Thirty-minute OHLC replay uses pessimistic ordering but cannot reproduce queue position, sub-bar path, or private-order latency.",
+    "The replay uses a $15,000 research portfolio, 0.25% equity risk per trade, 5x leverage, structural stops clamped to 20-75 bps, a 3R target, a 24-hour maximum hold, modeled fees/slippage, and official hourly funding; live cohort sizing differs.",
+    "The windows have been used by other project research and are not pristine market-data holdouts, although the exact ETH/HYPE Hulk mapping was not selected on them.",
+    "No order, close, resize, route filter, restart, or live-profile mutation is authorized by this record."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

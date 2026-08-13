@@ -486,12 +486,12 @@ def test_hypervelocity_identity_stamps_fixed_contract_and_observe_only(
     assert session.metalabel_mode == "observe"
     assert session.book_gate_enabled is False
     assert row["metalabel_mode"] == "observe"
-    assert row["strategy_params"]["leverage"] == 40.0
+    assert row["strategy_params"]["leverage"] == 30.0
     assert row["strategy_params"]["target_margin_pct"] == 8.0
     assert row["risk"] == {
         "mode": "fixed_margin_fraction",
         "margin_fraction": 0.7,
-        "notional_fraction": 28.0,
+        "notional_fraction": 21.0,
     }
     assert row["exits"]["mode"] == "strategy_target_only"
     assert row["exits"]["stop"] is None
@@ -503,6 +503,66 @@ def test_hypervelocity_identity_stamps_fixed_contract_and_observe_only(
     assert row["execution"]["price_tick_mode"] == "hyperliquid_dynamic"
     assert row["execution"]["entry_ttl_seconds"] == 300.0
     assert row["execution"]["expired_entry_rearm_policy"] == "regime_reset"
+
+
+def test_fresh_profile_session_uses_configured_initial_cash(tmp_path: Path) -> None:
+    export = _write_strict_export(
+        tmp_path,
+        strategy="hypervelocity_1m_scalper_long",
+    )
+    profile_text = Path("configs/hypervelocity_faithful.toml").read_text()
+    profile_path = tmp_path / "profile.toml"
+    profile_path.write_text(
+        profile_text.replace(
+            "data/exports/uptrend_hypervelocity_1m_scalper_long_784548f1",
+            str(export),
+        ),
+        encoding="utf-8",
+    )
+    profile = load_hypervelocity_profile(profile_path)
+
+    session = PaperSession(
+        export_dir=export,
+        data_root=tmp_path / "data",
+        hypervelocity_profile=profile,
+        initial_cash_usd=profile.initial_cash_usd,
+    )
+
+    assert session.engine.initial_cash == pytest.approx(15_000.0)
+    assert session.equity == pytest.approx(15_000.0)
+
+
+def test_resume_preserves_ledger_initial_cash_over_new_default(tmp_path: Path) -> None:
+    export = _write_strict_export(
+        tmp_path,
+        strategy="hypervelocity_1m_scalper_long",
+    )
+    data_root = tmp_path / "data"
+    original = PaperSession(
+        export_dir=export,
+        data_root=data_root,
+        initial_cash_usd=10_000.0,
+        execution_mode="shadow",
+    )
+    original.ensure_session_identity()
+    original.engine.apply_market_fill(
+        feed_ts="2026-07-29T12:00:00Z",
+        action="enter_long",
+        side="buy",
+        qty=1.0,
+        mark_px=100.0,
+        fill_model=PostOnlyLimitFillModel(),
+    )
+
+    resumed = PaperSession(
+        export_dir=export,
+        data_root=data_root,
+        initial_cash_usd=15_000.0,
+        execution_mode="shadow",
+    )
+
+    assert resumed.engine.initial_cash == pytest.approx(10_000.0)
+    assert resumed.equity == pytest.approx(10_000.0)
 
 
 def test_live_hypervelocity_bar_records_report_only_regime_observation(
@@ -521,11 +581,23 @@ def test_live_hypervelocity_bar_records_report_only_regime_observation(
             {
                 "primary_regime": ["RANGE"] * len(frame),
                 "breakout_direction": [None] * len(frame),
+                "structural_direction": [None] * len(frame),
+                "entry_direction": [None] * len(frame),
                 "state_1m": ["RANGE"] * len(frame),
                 "state_5m": ["RANGE"] * len(frame),
                 "context_15m": ["TREND_UP"] * len(frame),
                 "confidence": [0.61] * len(frame),
                 "reason": ["5m_primary_state"] * len(frame),
+                "bbwp_percentile": [20.0] * len(frame),
+                "compression_ready": [True] * len(frame),
+                "ema_gap_bps_signed": [1.5] * len(frame),
+                "rsi": [55.0] * len(frame),
+                "rsi_ema": [50.0] * len(frame),
+                "rsi_cross_direction": ["BK_UPWARD"] * len(frame),
+                "tactical_breakout_direction": [None] * len(frame),
+                "breakout_volume_ratio": [2.4] * len(frame),
+                "prior_range_high": [101.0] * len(frame),
+                "prior_range_low": [99.0] * len(frame),
             },
             index=frame.index,
         )
@@ -554,10 +626,12 @@ def test_live_hypervelocity_bar_records_report_only_regime_observation(
     assert observation["run_id"] == session.run_id
     assert observation["primary_regime"] == "RANGE"
     assert observation["breakout_direction"] is None
-    assert observation["entry_direction"] == "long"
+    assert observation["entry_direction"] is None
+    assert observation["structural_direction"] is None
     assert observation["entry_allowed"] is False
     assert execution["maker_entry_state"] == "standby"
     assert execution["maker_entry_direction"] is None
+    assert execution["pending_maker_limit_price"] is None
     assert execution["entry_retry_state"] == "ready"
     assert execution["entry_cooldown_active"] is False
     assert observation["state_1m"] == "RANGE"
@@ -567,11 +641,21 @@ def test_live_hypervelocity_bar_records_report_only_regime_observation(
     assert observation["regime_strength_score"] == pytest.approx(0.61)
     assert observation["regime_score_source"] == "legacy_confidence_alias"
     assert observation["regime_reason"] == "5m_primary_state"
+    assert observation["open"] == pytest.approx(float(bars.iloc[3]["open"]))
     assert observation["high"] == pytest.approx(float(bars.iloc[3]["high"]))
+    assert observation["active_target_prices"] == []
     assert observation["low"] == pytest.approx(float(bars.iloc[3]["low"]))
     assert observation["volume"] == pytest.approx(float(bars.iloc[3]["volume"]))
-    assert "rsi" in observation
-    assert "bbwp_percentile" in observation
+    assert observation["rsi"] == pytest.approx(55.0)
+    assert observation["rsi_ema"] == pytest.approx(50.0)
+    assert observation["rsi_cross_direction"] == "BK_UPWARD"
+    assert observation["bbwp_percentile"] == pytest.approx(20.0)
+    assert observation["bbwp_compression_threshold"] == pytest.approx(25.0)
+    assert observation["compression_ready"] is True
+    assert observation["ema_gap_bps_signed"] == pytest.approx(1.5)
+    assert observation["breakout_volume_ratio"] == pytest.approx(2.4)
+    assert observation["prior_range_high"] == pytest.approx(101.0)
+    assert observation["prior_range_low"] == pytest.approx(99.0)
     assert observation["submitted"] is False
     assert observation["place_attempted"] is False
     assert observation["position_qty"] == 0.0
@@ -669,7 +753,7 @@ def test_offline_session_no_trade_before_two_bars(tmp_path: Path):
     assert result.fills_count == 0
 
 
-def test_hypervelocity_paper_qty_is_70pct_margin_at_40x(tmp_path: Path) -> None:
+def test_hypervelocity_paper_qty_is_70pct_margin_at_30x(tmp_path: Path) -> None:
     export = _write_strict_export(
         tmp_path,
         strategy="hypervelocity_1m_scalper_long",
@@ -686,7 +770,7 @@ def test_hypervelocity_paper_qty_is_70pct_margin_at_40x(tmp_path: Path) -> None:
         mark_px=50_000.0,
     )
 
-    assert qty == pytest.approx(5.6)
+    assert qty == pytest.approx(4.2)
 
 
 def test_event_shadow_session_ledgers_partial_fill_and_proportional_target(
@@ -722,6 +806,7 @@ def test_event_shadow_session_ledgers_partial_fill_and_proportional_target(
         symbol="BTC",
         observed_at="2026-07-26T20:00:00+00:00",
         entry_direction=None,
+        structural_direction=None,
         entry_quantity=1.0,
         entry_limit_price=None,
         evidence_fresh=False,
@@ -868,6 +953,11 @@ def test_event_shadow_session_ledgers_partial_fill_and_proportional_target(
     rows = _decision_rows(session.decisions_path)
     liquidation = next(row for row in rows if row.get("action") == "liquidation")
     assert liquidation["execution_model"] == "nautilus_event_v1"
+    assert liquidation["liquidation_price"] == pytest.approx(liquidation_price)
+    assert liquidation["liquidation_trigger_mark"] == pytest.approx(execution_mark)
+    assert liquidation["liquidation_isolated_margin_usd"] > 0.0
+    assert liquidation["liquidation_position_equity_usd"] > 0.0
+    assert liquidation["liquidation_maintenance_margin_usd"] > 0.0
     assert liquidation["fee_usd"] == pytest.approx(execution_mark * 0.00045)
     assert liquidation["clearance_fee_usd"] == 0.0
     assert (
@@ -928,6 +1018,23 @@ def test_profile_activates_event_runtime_and_stamps_authority(tmp_path: Path) ->
         "primary_timeframe": "5m",
         "context_timeframe": "15m",
         "context_is_hard_gate": False,
+        "entry_trigger": "5m_structure_or_confirmed_breakout",
+        "tactical_setup": "bbwp_rsi_breakout_annotation",
+        "tactical_setup_is_gate": False,
+        "ema_fast": 21,
+        "ema_slow": 55,
+        "structure_lookback": 240,
+        "minimum_trend_gap_bps": 1.0,
+        "range_filter": "bbwp_compression",
+        "bbwp_length": 20,
+        "bbwp_lookback": 240,
+        "bbwp_compression_threshold": 25.0,
+        "rsi_length": 14,
+        "rsi_signal_length": 7,
+        "breakout_lookback": 90,
+        "breakout_clearance_bps": 8.0,
+        "breakout_volume_lookback": 20,
+        "breakout_volume_multiple": 2.5,
         "allowed_entry_states": ["TREND_UP", "TREND_DOWN", "BREAKOUT"],
         "blocked_entry_states": ["RANGE", "TRANSITION", "UNKNOWN"],
         "breakout_requires_direction": True,
@@ -947,6 +1054,49 @@ def test_profile_activates_event_runtime_and_stamps_authority(tmp_path: Path) ->
         2.0 / 3.0
     )
     assert identity["execution"]["legacy_comparator"] == "legacy_bar_through_v1"
+
+
+def test_peak_observer_is_outside_portfolio_fingerprint(tmp_path: Path) -> None:
+    """Report-only observer mode cannot change execution portfolio identity."""
+    export = _write_strict_export(
+        tmp_path,
+        strategy="hypervelocity_1m_scalper_long",
+    )
+    config = Path("configs/hypervelocity_faithful.toml").read_text()
+    assert '[peak_observer]\nmode = "observe"' in config
+    configured = config.replace(
+        "data/exports/uptrend_hypervelocity_1m_scalper_long_784548f1",
+        str(export),
+    )
+    observe_path = tmp_path / "observe.toml"
+    off_path = tmp_path / "off.toml"
+    observe_path.write_text(configured, encoding="utf-8")
+    off_path.write_text(
+        configured.replace(
+            '[peak_observer]\nmode = "observe"',
+            '[peak_observer]\nmode = "off"',
+        ),
+        encoding="utf-8",
+    )
+    observed = PaperSession(
+        export_dir=export,
+        data_root=tmp_path / "observed",
+        hypervelocity_profile=load_hypervelocity_profile(observe_path),
+    )
+    disabled = PaperSession(
+        export_dir=export,
+        data_root=tmp_path / "disabled",
+        hypervelocity_profile=load_hypervelocity_profile(off_path),
+    )
+
+    assert observed._portfolio_spec == disabled._portfolio_spec
+    assert observed._portfolio_fingerprint == disabled._portfolio_fingerprint
+    observed.ensure_session_identity()
+    identity = _decision_rows(observed.decisions_path)[-1]
+    assert identity["peak_observer"]["mode"] == "observe"
+    assert identity["peak_observer"]["execution_authority"] == "none"
+    assert identity["peak_observer"]["report_only"] is True
+    assert "peak_observer" not in identity["portfolio_spec"]
 
 
 def test_event_shadow_backstop_transfer_preserves_ledger_parity(
@@ -980,6 +1130,7 @@ def test_event_shadow_backstop_transfer_preserves_ledger_parity(
         symbol="BTC",
         observed_at="2026-07-26T20:00:00+00:00",
         entry_direction=None,
+        structural_direction=None,
         entry_quantity=1.0,
         entry_limit_price=None,
         evidence_fresh=False,
@@ -1235,7 +1386,7 @@ def test_hypervelocity_paper_waits_for_maker_through_then_exits_at_fixed_target(
     assert session.pending_maker_entry.limit_price == 100.0
 
     assert session.on_bar(bar(2, high=100.5, low=99.0)) == "enter_long"
-    assert session.engine.position.qty == pytest.approx(2800.0)
+    assert session.engine.position.qty == pytest.approx(2100.0)
     assert session.engine.position.avg_px == 100.0
 
     assert session.on_bar(bar(3, high=101.21, low=100.0)) == "close"
@@ -1254,12 +1405,23 @@ def test_hypervelocity_paper_waits_for_maker_through_then_exits_at_fixed_target(
     assert entries[0]["fill_px"] == 100.0
     assert entries[0]["feed_ts"] == "2026-07-25T12:03:00+00:00"
     assert entries[0]["fill_model_id"] == "post_only_limit_through_v1"
-    assert closes[0]["fill_px"] == pytest.approx(100.2)
+    assert closes[0]["fill_px"] == pytest.approx(100.3)
     assert closes[0]["feed_ts"] == "2026-07-25T12:04:00+00:00"
     assert closes[0]["exit_reason"] == "take_profit_8pct_margin"
     execution = [row for row in rows if row["action"] == "entry_execution_observation"]
     assert execution[-1]["maker_entry_state"] == "standby"
     assert execution[-1]["entry_cooldown_active"] is False
+    pending = [row for row in execution if row["maker_entry_state"] == "pending"]
+    assert pending[0]["pending_maker_limit_price"] == pytest.approx(100.0)
+    active_execution = [row for row in execution if row["active_target_prices"]]
+    assert active_execution[0]["active_target_prices"] == pytest.approx([100.3])
+    active_regime = next(
+        row
+        for row in rows
+        if row.get("action") == "regime_observation"
+        and float(row.get("position_qty", 0.0)) > 0.0
+    )
+    assert active_regime["active_target_prices"] == pytest.approx([100.3])
 
 
 def test_completed_hypervelocity_trade_requires_regime_reset_before_same_side_reentry(
@@ -1295,7 +1457,7 @@ def test_completed_hypervelocity_trade_requires_regime_reset_before_same_side_re
     session.on_bar(bar(0))
     session.on_bar(bar(1))
     assert session.on_bar(bar(2, low=99.0)) == "enter_long"
-    assert session.on_bar(bar(3, high=100.3)) == "close"
+    assert session.on_bar(bar(3, high=100.4)) == "close"
 
     session.on_bar(bar(4))
     assert session.pending_maker_entry is None
@@ -1404,7 +1566,7 @@ def test_downtime_reconciliation_manages_open_target_and_historical_funding(
         [
             _hl_bar("2026-07-25T12:58:00Z", high=100.1, low=99.9),
             _hl_bar("2026-07-25T12:59:00Z", high=100.1, low=99.9),
-            _hl_bar("2026-07-25T13:00:00Z", high=100.3, low=99.9),
+            _hl_bar("2026-07-25T13:00:00Z", high=100.4, low=99.9),
         ]
     )
 
@@ -1684,7 +1846,11 @@ def test_bidirectional_profile_holds_then_switches_only_after_exit(
     directions = iter(("long", "long", "short", "short"))
 
     def market(*_args: object, **_kwargs: object) -> SimpleNamespace:
-        return SimpleNamespace(entry_direction=next(directions))
+        direction = next(directions)
+        return SimpleNamespace(
+            entry_direction=direction,
+            structural_direction=direction,
+        )
 
     monkeypatch.setattr(
         "hypervector.paper.session.current_hypervelocity_market", market
@@ -1708,10 +1874,10 @@ def test_bidirectional_profile_holds_then_switches_only_after_exit(
 
     assert session.on_bar(bar(3, high=100.1, low=99.9)) is None
     assert session.engine.position.qty == long_qty
-    assert session.on_bar(bar(4, high=100.3, low=99.9)) == "close"
+    assert session.on_bar(bar(4, high=100.4, low=99.9)) == "close"
     assert session.engine.position.qty == 0.0
     execution = session._hypervelocity_entry_execution_payload(
-        bar(4, high=100.3, low=99.9)
+        bar(4, high=100.4, low=99.9)
     )
     assert execution["entry_cooldown_active"] is True
 

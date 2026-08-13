@@ -18,6 +18,8 @@ from hypervector.regime.composite import (
     classify_multitimeframe,
     compose_regimes,
 )
+from hypervector.regime.ultimate import detect_ultimate_regime
+from hypervector.strategies.hypervelocity_contract import faithful_regime_config
 
 
 def _bars(close: np.ndarray, volume: np.ndarray | None = None) -> pd.DataFrame:
@@ -45,8 +47,11 @@ def _config() -> RegimeClassifierConfig:
         trend_strength_percentile=50.0,
         range_strength_percentile=20.0,
         minimum_trend_gap_bps=1.0,
-        choppiness_length=5,
-        choppiness_range_threshold=65.0,
+        bbwp_length=5,
+        bbwp_lookback=10,
+        bbwp_compression_threshold=25.0,
+        rsi_length=5,
+        rsi_signal_length=3,
         breakout_lookback=5,
         breakout_clearance_bps=1.0,
         breakout_volume_lookback=5,
@@ -181,6 +186,72 @@ def test_classifier_labels_technical_score_as_non_model_telemetry() -> None:
     assert latest.regime_score_source == "ema_gap_strength_percentile_rank"
 
 
+def test_classifier_reports_causal_bbwp_momentum_and_structure_evidence() -> None:
+    close = 100.0 + np.sin(np.arange(80) / 2.0) * np.linspace(2.0, 0.001, 80)
+
+    result = classify_timeframe(_bars(close), _config())
+
+    expected = {
+        "bbwp_percentile",
+        "compression_ready",
+        "ema_gap_bps_signed",
+        "rsi",
+        "rsi_ema",
+        "rsi_cross_direction",
+        "tactical_breakout_direction",
+        "breakout_volume_ratio",
+        "prior_range_high",
+        "prior_range_low",
+    }
+    assert expected.issubset(result.columns)
+    assert result.bbwp_percentile.iloc[-1] < 25.0
+    assert bool(result.compression_ready.iloc[-1]) is True
+
+
+def test_classifier_reports_exact_range_cause_inputs_without_changing_state() -> None:
+    close = 100.0 + np.sin(np.arange(80) * np.pi / 2.0) * 0.002
+
+    result = classify_timeframe(_bars(close), _config())
+    latest = result.iloc[-1]
+
+    assert latest.primary_regime == "RANGE"
+    assert bool(latest.range_cause_coiling) is True
+    assert bool(latest.range_cause_gap) is True
+    assert bool(latest.range_cause_filter) is bool(latest.bbwp_percentile < 25.0)
+    assert latest.range_filter_name == "bbwp"
+    assert latest.bbwp_compression_threshold == pytest.approx(25.0)
+    assert latest.minimum_trend_gap_bps == pytest.approx(1.0)
+    assert latest.range_strength_threshold == pytest.approx(20.0)
+    assert latest.trend_strength_threshold == pytest.approx(50.0)
+
+
+def test_breakout_requires_eight_bps_clearance_and_two_point_five_x_volume() -> None:
+    base = np.full(40, 100.0)
+    config = replace(
+        _config(),
+        breakout_clearance_bps=8.0,
+        breakout_volume_multiple=2.5,
+    )
+    insufficient_clearance = base.copy()
+    insufficient_clearance[-1] = 100.08
+    insufficient_volume = base.copy()
+    insufficient_volume[-1] = 100.20
+    confirmed = insufficient_volume.copy()
+    low_volume = np.full(40, 100.0)
+    high_volume = low_volume.copy()
+    high_volume[-1] = 250.0
+
+    clearance_result = classify_timeframe(
+        _bars(insufficient_clearance, high_volume), config
+    )
+    volume_result = classify_timeframe(_bars(insufficient_volume, low_volume), config)
+    confirmed_result = classify_timeframe(_bars(confirmed, high_volume), config)
+
+    assert clearance_result.iloc[-1].primary_regime != "BREAKOUT"
+    assert volume_result.iloc[-1].primary_regime != "BREAKOUT"
+    assert confirmed_result.iloc[-1].primary_regime == "BREAKOUT"
+
+
 @pytest.mark.parametrize(
     ("field", "value", "message"),
     [
@@ -188,8 +259,11 @@ def test_classifier_labels_technical_score_as_non_model_telemetry() -> None:
         ("trend_strength_percentile", 101.0, "trend_strength_percentile"),
         ("range_strength_percentile", -1.0, "range_strength_percentile"),
         ("minimum_trend_gap_bps", -0.1, "minimum_trend_gap_bps"),
-        ("choppiness_length", 1, "choppiness_length"),
-        ("choppiness_range_threshold", 101.0, "choppiness_range_threshold"),
+        ("bbwp_length", 1, "bbwp_length"),
+        ("bbwp_lookback", 4, "bbwp_lookback"),
+        ("bbwp_compression_threshold", 101.0, "bbwp_compression_threshold"),
+        ("rsi_length", 1, "rsi_length"),
+        ("rsi_signal_length", 1, "rsi_signal_length"),
         ("coiling_width_bps", -0.1, "coiling_width_bps"),
         ("breakout_clearance_bps", -0.1, "breakout_clearance_bps"),
         ("breakout_volume_lookback", 0, "breakout_volume_lookback"),
@@ -258,11 +332,13 @@ def _state_frame(
     index: pd.DatetimeIndex,
     primary: str,
     breakout: str | None = None,
+    tactical: str | None = None,
 ) -> pd.DataFrame:
     return pd.DataFrame(
         {
             "primary_regime": primary,
             "breakout_direction": breakout,
+            "tactical_breakout_direction": tactical,
             "confidence": 1.0,
             "reason": "fixture",
             "coiling": False,
@@ -289,7 +365,7 @@ def test_confirmed_1m_and_5m_breakout_overrides_stale_15m() -> None:
     index = pd.date_range("2026-01-01", periods=3, freq="1min", tz="UTC")
 
     result = compose_regimes(
-        _state_frame(index, "BREAKOUT", "BK_UPWARD"),
+        _state_frame(index, "BREAKOUT", "BK_UPWARD", "BK_UPWARD"),
         _state_frame(index, "BREAKOUT", "BK_UPWARD"),
         _state_frame(index, "TREND_DOWN"),
     )
@@ -297,6 +373,103 @@ def test_confirmed_1m_and_5m_breakout_overrides_stale_15m() -> None:
     assert set(result.primary_regime) == {"BREAKOUT"}
     assert set(result.breakout_direction) == {"BK_UPWARD"}
     assert set(result.reason) == {"confirmed_1m_5m_breakout"}
+
+
+def test_5m_trend_remains_eligible_without_tactical_overgate() -> None:
+    index = pd.date_range("2026-01-01", periods=3, freq="1min", tz="UTC")
+
+    waiting = compose_regimes(
+        _state_frame(index, "TREND_UP"),
+        _state_frame(index, "TREND_UP"),
+        _state_frame(index, "TREND_DOWN"),
+    )
+    triggered = compose_regimes(
+        _state_frame(index, "BREAKOUT", "BK_UPWARD", "BK_UPWARD"),
+        _state_frame(index, "TREND_UP"),
+        _state_frame(index, "TREND_DOWN"),
+    )
+
+    assert set(waiting.structural_direction) == {"long"}
+    assert set(waiting.entry_direction) == {"long"}
+    assert set(triggered.structural_direction) == {"long"}
+    assert set(triggered.entry_direction) == {"long"}
+
+
+def test_opposite_1m_tactical_annotation_cannot_reverse_5m_structure() -> None:
+    index = pd.date_range("2026-01-01", periods=3, freq="1min", tz="UTC")
+
+    result = compose_regimes(
+        _state_frame(index, "BREAKOUT", "BK_DOWNWARD", "BK_DOWNWARD"),
+        _state_frame(index, "TREND_UP"),
+        _state_frame(index, "TREND_UP"),
+    )
+
+    assert set(result.structural_direction) == {"long"}
+    assert set(result.entry_direction) == {"long"}
+
+
+def test_real_features_emit_long_trigger_only_after_full_tactical_alignment() -> None:
+    count = 1_800
+    compression_bars = 140
+    close = np.linspace(100.0, 110.0, count)
+    start = count - compression_bars
+    center = close[start]
+    phase = np.arange(compression_bars) / 2.0 + 2.5
+    close[start:] = center + np.sin(phase) * np.linspace(0.5, 0.001, compression_bars)
+    close[-1] = center + 1.0
+    volume = np.full(count, 100.0)
+    volume[-1] = 300.0
+
+    result = classify_multitimeframe(
+        _bars(close, volume),
+        faithful_regime_config(),
+    )
+    latest = result.iloc[-1]
+
+    assert latest.state_5m == "TREND_UP"
+    assert latest.structural_direction == "long"
+    assert latest.compression_ready
+    assert latest.rsi_cross_direction == "BK_UPWARD"
+    assert latest.breakout_volume_ratio == pytest.approx(3.0)
+    assert latest.tactical_breakout_direction == "BK_UPWARD"
+    assert latest.entry_direction == "long"
+
+
+def test_ultimate_policy_weights_backend_canonical_entry_direction(monkeypatch) -> None:
+    bars = _bars(np.array([100.0, 100.1]))
+    classified = pd.DataFrame(
+        {
+            "primary_regime": ["TREND_UP", "TREND_UP"],
+            "breakout_direction": [None, "BK_UPWARD"],
+            "structural_direction": ["long", "long"],
+            "entry_direction": ["long", "long"],
+            "state_1m": ["TREND_UP", "BREAKOUT"],
+            "state_5m": ["TREND_UP", "TREND_UP"],
+            "context_15m": ["TREND_UP", "TREND_UP"],
+            "reason": ["5m_primary_trend", "5m_primary_trend"],
+            "confidence": [0.5, 0.6],
+            "bbwp_percentile": [30.0, 20.0],
+            "compression_ready": [False, True],
+            "ema_gap_bps_signed": [1.5, 2.0],
+            "rsi": [55.0, 62.0],
+            "rsi_ema": [54.0, 60.0],
+            "rsi_cross_direction": [None, "BK_UPWARD"],
+            "tactical_breakout_direction": [None, "BK_UPWARD"],
+            "breakout_volume_ratio": [1.0, 2.7],
+            "prior_range_high": [100.0, 100.0],
+            "prior_range_low": [99.0, 99.0],
+        },
+        index=bars.index,
+    )
+    monkeypatch.setattr(
+        "hypervector.regime.ultimate.classify_multitimeframe",
+        lambda *_args, **_kwargs: classified,
+    )
+
+    result = detect_ultimate_regime(bars)
+
+    assert result.long_weight.tolist() == [1.0, 1.0]
+    assert result.short_weight.tolist() == [0.0, 0.0]
 
 
 def test_5m_breakout_without_1m_confirmation_is_not_directional() -> None:
@@ -350,6 +523,35 @@ def test_multitimeframe_context_uses_only_completed_htf_bars() -> None:
 
     assert original.iloc[-1].state_5m == mutated.iloc[-1].state_5m
     assert original.iloc[-1].context_15m == mutated.iloc[-1].context_15m
+
+
+def test_multitimeframe_reports_prefixed_range_anatomy_for_each_causal_frame() -> None:
+    bars = _bars(100.0 + np.sin(np.arange(180) / 7.0))
+
+    result = classify_multitimeframe(bars, _config())
+
+    expected = {
+        f"regime_{timeframe}_{metric}"
+        for timeframe in ("1m", "5m", "15m")
+        for metric in (
+            "reason",
+            "strength_percentile",
+            "bbwp_percentile",
+            "ema_gap_bps",
+            "rsi",
+            "rsi_ema",
+            "rsi_cross_direction",
+            "coiling",
+            "range_cause_coiling",
+            "range_cause_strength",
+            "range_cause_gap",
+            "range_cause_filter",
+            "breakout_volume_ratio",
+        )
+    }
+    assert expected.issubset(result.columns)
+    assert result["regime_5m_reason"].notna().all()
+    assert result["regime_5m_strength_percentile"].between(0.0, 100.0).all()
 
 
 def test_multitimeframe_score_counts_unavailable_context_as_zero() -> None:

@@ -16,7 +16,9 @@ from hypervector.sweep.search import run_grid_search
 
 def test_supertrend_chops_vortex_shapes():
     df = fixture_ohlcv(n_bars=500, drift=3.0, wave_period=50)
-    st, d = supertrend(df["high"], df["low"], df["close"], atr_period=10, multiplier=3.0)
+    st, d = supertrend(
+        df["high"], df["low"], df["close"], atr_period=10, multiplier=3.0
+    )
     assert len(st) == len(df)
     assert set(d.unique()).issubset({-1, 0, 1})
     chop = choppiness_index(df["high"], df["low"], df["close"], 14)

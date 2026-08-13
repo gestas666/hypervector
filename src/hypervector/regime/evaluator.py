@@ -59,7 +59,11 @@ def evaluate_regime_accuracy(
 
         mean_ret = float(np.mean(rets))
         std_ret = float(np.std(rets)) if len(rets) > 1 else 1.0
-        sharpe = (mean_ret / std_ret * np.sqrt(365 * 24 * 60 / forward_horizon)) if std_ret > 0 else 0.0
+        sharpe = (
+            (mean_ret / std_ret * np.sqrt(365 * 24 * 60 / forward_horizon))
+            if std_ret > 0
+            else 0.0
+        )
 
         if state == "BULL_MOMENTUM_EXPANSION":
             wins = int((rets > 0).sum())

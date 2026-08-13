@@ -1,4 +1,4 @@
-"""Resumable paired 0xArchive L2 and public-trade backfills."""
+"""Resumable 0xArchive L2, trade, and optional mark-price backfills."""
 
 from __future__ import annotations
 
@@ -11,7 +11,12 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Literal
 
-from hypervector.data.oxa_api import OxaHistoryError, validate_symbol, validate_window
+from hypervector.data.oxa_api import (
+    MarketFamily,
+    OxaHistoryError,
+    validate_market_symbol,
+    validate_window,
+)
 from hypervector.data.oxa_history import (
     OxaBookRequest,
     OxaHistoryClient,
@@ -19,16 +24,25 @@ from hypervector.data.oxa_history import (
     output_directory,
     store_orderbook_history,
 )
+from hypervector.data.oxa_prices import (
+    OxaPriceClient,
+    OxaPriceRequest,
+    fetch_price_history,
+    price_output_directory,
+    store_price_history,
+)
 from hypervector.data.oxa_trades import (
     OxaTradeClient,
     OxaTradeRequest,
+    TRADE_NORMALIZATION_VERSION,
     fetch_trade_history,
     store_trade_history,
     trade_output_directory,
 )
 from hypervector.data.oxa_storage import verify_file_evidence
 
-DataKind = Literal["book", "trade"]
+DataKind = Literal["book", "trade", "price"]
+DEFAULT_RETRIES = 10
 
 
 @dataclass(frozen=True)
@@ -42,13 +56,18 @@ class OxaBackfillConfig:
     chunk: timedelta = timedelta(hours=1)
     depth: int = 20
     workers: int = 4
-    retries: int = 3
+    retries: int = DEFAULT_RETRIES
     timeout_seconds: float = 30.0
     book_max_pages: int = 20
     trade_max_pages: int = 500
+    price_max_pages: int = 20
+    include_prices: bool = False
+    price_only: bool = False
+    market_family: MarketFamily = "core"
+    book_only: bool = False
 
     def __post_init__(self) -> None:
-        validate_symbol(self.symbol)
+        validate_market_symbol(self.symbol, self.market_family)
         validate_window(self.start, self.end)
         if self.chunk <= timedelta(0):
             raise ValueError("chunk must be positive")
@@ -64,6 +83,16 @@ class OxaBackfillConfig:
             raise ValueError("book_max_pages must be at least 1")
         if self.trade_max_pages < 1:
             raise ValueError("trade_max_pages must be at least 1")
+        if self.price_max_pages < 1:
+            raise ValueError("price_max_pages must be at least 1")
+        if not isinstance(self.include_prices, bool):
+            raise ValueError("include_prices must be boolean")
+        if not isinstance(self.price_only, bool):
+            raise ValueError("price_only must be boolean")
+        if not isinstance(self.book_only, bool):
+            raise ValueError("book_only must be boolean")
+        if self.book_only and (self.include_prices or self.price_only):
+            raise ValueError("book_only cannot include price tasks")
 
 
 @dataclass(frozen=True)
@@ -94,8 +123,13 @@ def iter_backfill_tasks(config: OxaBackfillConfig) -> Iterator[OxaBackfillTask]:
     start = config.start
     while start < config.end:
         end = min(start + config.chunk, config.end)
-        yield OxaBackfillTask("book", start, end)
-        yield OxaBackfillTask("trade", start, end)
+        if config.book_only:
+            yield OxaBackfillTask("book", start, end)
+        elif not config.price_only:
+            yield OxaBackfillTask("book", start, end)
+            yield OxaBackfillTask("trade", start, end)
+        if config.include_prices or config.price_only:
+            yield OxaBackfillTask("price", start, end)
         start = end
 
 
@@ -107,6 +141,18 @@ def run_oxa_backfill(
 ) -> tuple[OxaBackfillResult, ...]:
     """Run a bounded worker pool and fail if any required window is incomplete."""
     tasks = tuple(iter_backfill_tasks(config))
+    return run_oxa_tasks(config, tasks=tasks, api_key=api_key, progress=progress)
+
+
+def run_oxa_tasks(
+    config: OxaBackfillConfig,
+    *,
+    tasks: tuple[OxaBackfillTask, ...],
+    api_key: str,
+    progress: ProgressSink,
+) -> tuple[OxaBackfillResult, ...]:
+    """Run only explicit, validated tasks using the resumable worker boundary."""
+    _validate_explicit_tasks(config, tasks)
     results: list[OxaBackfillResult] = []
     executor = ThreadPoolExecutor(max_workers=config.workers)
     try:
@@ -123,6 +169,23 @@ def run_oxa_backfill(
     return tuple(sorted(results, key=lambda item: (item.task.start, item.task.kind)))
 
 
+def _validate_explicit_tasks(
+    config: OxaBackfillConfig,
+    tasks: tuple[OxaBackfillTask, ...],
+) -> None:
+    if not tasks:
+        raise ValueError("explicit backfill tasks cannot be empty")
+    identities: set[tuple[str, datetime, datetime]] = set()
+    for task in tasks:
+        validate_window(task.start, task.end)
+        if task.start < config.start or task.end > config.end:
+            raise ValueError("explicit backfill task exceeds configured bounds")
+        identity = (task.kind, task.start, task.end)
+        if identity in identities:
+            raise ValueError("explicit backfill tasks contain a duplicate window")
+        identities.add(identity)
+
+
 def _execute_with_retry(
     config: OxaBackfillConfig,
     task: OxaBackfillTask,
@@ -136,7 +199,11 @@ def _execute_with_retry(
             return _acquire_task(config, task, api_key)
         except OxaHistoryError as exc:
             if attempt == config.retries or not _retryable(exc):
-                raise
+                raise OxaHistoryError(
+                    f"{task.kind} backfill failed for {task.start.isoformat()} "
+                    f"to {task.end.isoformat()}: {exc}",
+                    status_code=exc.status_code,
+                ) from exc
             time.sleep(min(2 ** (attempt - 1), 8))
     raise RuntimeError("unreachable retry state")
 
@@ -154,11 +221,11 @@ def _existing_result(
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     if manifest.get("complete") is not True:
         raise ValueError(f"existing backfill window is incomplete: {directory}")
-    expected_source = (
-        "0xarchive_hyperliquid_native_l2"
-        if task.kind == "book"
-        else "0xarchive_hyperliquid_public_trades"
-    )
+    expected_source = {
+        "book": _book_source(config.market_family),
+        "trade": "0xarchive_hyperliquid_public_trades",
+        "price": "0xarchive_hyperliquid_prices",
+    }[task.kind]
     identity = (
         manifest.get("source") == expected_source
         and manifest.get("symbol") == config.symbol
@@ -167,7 +234,12 @@ def _existing_result(
     )
     if not identity:
         raise ValueError(f"existing backfill manifest identity mismatch: {directory}")
-    rows_key = "row_count" if task.kind == "book" else "trade_count"
+    if (
+        task.kind == "trade"
+        and manifest.get("normalization_version") != TRADE_NORMALIZATION_VERSION
+    ):
+        raise ValueError(f"existing trade normalization is stale: {directory}")
+    rows_key = "trade_count" if task.kind == "trade" else "row_count"
     rows = manifest.get(rows_key)
     pages = manifest.get("page_count")
     if not isinstance(rows, int) or not isinstance(pages, int):
@@ -190,6 +262,23 @@ def _acquire_task(
         return OxaBackfillResult(
             task, stored.directory, False, len(fetched.snapshots), len(fetched.pages)
         )
+    if task.kind == "trade":
+        return _acquire_trade_task(config, task, api_key)
+    request = _price_request(config, task)
+    fetched = fetch_price_history(OxaPriceClient(api_key=api_key), request)
+    if not fetched.complete:
+        raise ValueError(f"price max-pages exhausted for {task.start.isoformat()}")
+    stored = store_price_history(config.data_root, request, fetched)
+    return OxaBackfillResult(
+        task, stored.directory, False, len(fetched.snapshots), len(fetched.pages)
+    )
+
+
+def _acquire_trade_task(
+    config: OxaBackfillConfig,
+    task: OxaBackfillTask,
+    api_key: str,
+) -> OxaBackfillResult:
     request = _trade_request(config, task)
     fetched = fetch_trade_history(OxaTradeClient(api_key=api_key), request)
     if not fetched.complete:
@@ -213,6 +302,7 @@ def _book_request(config: OxaBackfillConfig, task: OxaBackfillTask) -> OxaBookRe
         1000,
         config.book_max_pages,
         config.timeout_seconds,
+        market_family=config.market_family,
     )
 
 
@@ -224,14 +314,35 @@ def _trade_request(config: OxaBackfillConfig, task: OxaBackfillTask) -> OxaTrade
         1000,
         config.trade_max_pages,
         config.timeout_seconds,
+        market_family=config.market_family,
+    )
+
+
+def _price_request(config: OxaBackfillConfig, task: OxaBackfillTask) -> OxaPriceRequest:
+    return OxaPriceRequest(
+        config.symbol,
+        task.start,
+        task.end,
+        1000,
+        config.price_max_pages,
+        config.timeout_seconds,
+        market_family=config.market_family,
     )
 
 
 def _task_directory(config: OxaBackfillConfig, task: OxaBackfillTask) -> Path:
     if task.kind == "book":
         return output_directory(config.data_root, _book_request(config, task))
-    return trade_output_directory(config.data_root, _trade_request(config, task))
+    if task.kind == "trade":
+        return trade_output_directory(config.data_root, _trade_request(config, task))
+    return price_output_directory(config.data_root, _price_request(config, task))
 
 
 def _retryable(exc: OxaHistoryError) -> bool:
     return exc.status_code is None or exc.status_code == 429 or exc.status_code >= 500
+
+
+def _book_source(market_family: MarketFamily) -> str:
+    if market_family == "hip3":
+        return "0xarchive_hyperliquid_hip3_l2"
+    return "0xarchive_hyperliquid_native_l2"

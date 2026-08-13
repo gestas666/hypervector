@@ -60,7 +60,10 @@ def test_hyperliquid_live_factories_expose_create():
         HyperliquidLiveDataClientFactory,
         HyperliquidLiveExecClientFactory,
     )
-    from nautilus_trader.live.factories import LiveDataClientFactory, LiveExecClientFactory
+    from nautilus_trader.live.factories import (
+        LiveDataClientFactory,
+        LiveExecClientFactory,
+    )
 
     assert issubclass(HyperliquidLiveDataClientFactory, LiveDataClientFactory)
     assert issubclass(HyperliquidLiveExecClientFactory, LiveExecClientFactory)

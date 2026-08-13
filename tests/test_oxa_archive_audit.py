@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import hashlib
 import json
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
+
+import pytest
 
 from hypervector.data.oxa_archive_audit import (
     OxaArchiveAuditConfig,
@@ -13,7 +15,11 @@ from hypervector.data.oxa_archive_audit import (
     verified_archive_bundles,
 )
 from hypervector.data.oxa_history import OxaBookRequest, output_directory
-from hypervector.data.oxa_trades import OxaTradeRequest, trade_output_directory
+from hypervector.data.oxa_trades import (
+    OxaTradeRequest,
+    TRADE_NORMALIZATION_VERSION,
+    trade_output_directory,
+)
 
 
 def _config(tmp_path: Path) -> OxaArchiveAuditConfig:
@@ -64,6 +70,12 @@ def test_audit_verifies_complete_hour_and_aggregates_counts(tmp_path: Path) -> N
     report = audit_oxa_archive(config)
 
     assert report.complete is True
+    assert report.symbol == "BTC"
+    assert report.market_family == "core"
+    assert report.requested_start_utc == config.start.isoformat()
+    assert report.requested_end_utc == config.end.isoformat()
+    assert report.chunk_seconds == 3_600
+    assert report.book_only is False
     assert report.present_bundles == 2
     assert report.book_snapshots == 12
     assert report.public_trades == 7
@@ -112,6 +124,12 @@ def test_verified_archive_bundles_return_replay_paths(tmp_path: Path) -> None:
     assert bundles[0].book_rows == 0
     assert bundles[0].trade_rows == 7
 
+    report = audit_oxa_archive(config)
+    assert report.empty_book_ranges_utc == (
+        (config.start.isoformat(), config.end.isoformat()),
+    )
+    assert report.empty_trade_ranges_utc == ()
+
 
 def test_verified_archive_bundles_use_manifest_normalized_filename(
     tmp_path: Path,
@@ -150,6 +168,82 @@ def test_verified_archive_bundles_use_manifest_normalized_filename(
     assert bundles[0].book_path == book_dir / "books.jsonl"
 
 
+def test_audit_coalesces_adjacent_empty_book_windows(tmp_path: Path) -> None:
+    """Consecutive provider gaps are reported as one exact UTC interval."""
+    start = datetime(2026, 7, 26, tzinfo=UTC)
+    config = OxaArchiveAuditConfig("BTC", start, start + timedelta(hours=2), tmp_path)
+    for offset in range(2):
+        window_start = start + timedelta(hours=offset)
+        window = OxaArchiveAuditConfig(
+            "BTC", window_start, window_start + timedelta(hours=1), tmp_path
+        )
+        book = OxaBookRequest(
+            window.symbol,
+            window.start,
+            window.end,
+            window.depth,
+            1000,
+            20,
+            30.0,
+        )
+        trade = OxaTradeRequest(
+            window.symbol, window.start, window.end, 1000, 500, 30.0
+        )
+        _write_bundle(
+            output_directory(tmp_path, book),
+            source="0xarchive_hyperliquid_native_l2",
+            config=window,
+            counts={"row_count": 0, "coalesced_same_ms": 0},
+        )
+        _write_bundle(
+            trade_output_directory(tmp_path, trade),
+            source="0xarchive_hyperliquid_public_trades",
+            config=window,
+            counts={"trade_count": 7, "raw_fill_count": 14},
+        )
+
+    report = audit_oxa_archive(config)
+
+    assert report.empty_book_ranges_utc == (
+        (config.start.isoformat(), config.end.isoformat()),
+    )
+
+
+def test_audit_rejects_stale_trade_normalization(tmp_path: Path) -> None:
+    """Archive replay must fail closed on pre-taker-only trade bundles."""
+    config = _config(tmp_path)
+    book = OxaBookRequest(
+        config.symbol,
+        config.start,
+        config.end,
+        config.depth,
+        1000,
+        20,
+        30.0,
+    )
+    trade = OxaTradeRequest(config.symbol, config.start, config.end, 1000, 500, 30.0)
+    _write_bundle(
+        output_directory(tmp_path, book),
+        source="0xarchive_hyperliquid_native_l2",
+        config=config,
+        counts={"row_count": 1, "coalesced_same_ms": 0},
+    )
+    directory = trade_output_directory(tmp_path, trade)
+    _write_bundle(
+        directory,
+        source="0xarchive_hyperliquid_public_trades",
+        config=config,
+        counts={"trade_count": 7, "raw_fill_count": 14},
+    )
+    manifest_path = directory / "manifest.json"
+    manifest = json.loads(manifest_path.read_text())
+    del manifest["normalization_version"]
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="normalization"):
+        verified_archive_bundles(config)
+
+
 def _write_bundle(
     directory: Path,
     *,
@@ -175,6 +269,8 @@ def _write_bundle(
             }
         },
     }
+    if source == "0xarchive_hyperliquid_public_trades":
+        manifest["normalization_version"] = TRADE_NORMALIZATION_VERSION
     manifest.update(counts)
     (directory / "manifest.json").write_text(
         json.dumps(manifest),

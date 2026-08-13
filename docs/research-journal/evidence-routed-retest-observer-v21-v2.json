@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "evidence-routed-retest-observer-v21",
+  "revision_number": 2,
+  "supersedes_revision_id": "d7631a573baf6d8d8e7052a43e8fe10e2ed476a1bcfe87c7a8bc318e8eb3d655",
+  "created_at_utc": "2026-08-07T11:13:16Z",
+  "strategy_id": "multi_asset_bidirectional_evidence_routed_retest_observer_candidate_v21",
+  "symbol": "PORTFOLIO",
+  "status": "candidate",
+  "hypothesis": "A hash-bound v14-to-v21 transition can preserve every active v14 lifecycle until a completed drain, then start the exact evidence-routed portfolio with retest v2 observation but no retest execution authority.",
+  "decision": "Keep v21 inactive and bind its future transition to the machine-tested runbook. Require the exact v14 identity, completed transition drain, all assets flat, no owned orders, recoverable archive, report-only v21 reconciliation, exact v21 profile and source hashes, a fresh verified pre-start backup, and new explicit live approval. This revision records a reproducible path; it does not request or initiate the drain and does not alter the active v14 process.",
+  "confidence": "medium",
+  "falsifier": "The transition contract is falsified by any mismatch in current or candidate profile bytes, fingerprints, v1/v2/ETH source hashes, executable routes, retest observe-only scope, flat/order-free state, completed drain, or backup identity. Mechanical correctness does not establish economic edge and must not be interpreted as a profitability claim.",
+  "evidence": [
+    {
+      "path": "../../configs/multi_asset_bidirectional_evidence_routed_retest_observer_candidate_v21.toml",
+      "role": "exact_inactive_v21_candidate",
+      "sha256": "4c84d6f3b1c29c5d188342572ae056527e8cce1234a8c8906a121d40e98a7995",
+      "bytes": 3815
+    },
+    {
+      "path": "../guides/cohort-live-transition-and-rollback-v21.md",
+      "role": "hash_bound_flat_transition_backup_acceptance_and_rollback_procedure",
+      "sha256": "4b600d80cf57efb6b1ece248586ff6a785f32261cf9a3438d3790e91e5274f4e",
+      "bytes": 8563
+    },
+    {
+      "path": "../../tests/test_evidence_routed_v21_transition_runbook.py",
+      "role": "machine_contract_for_identity_routes_observer_and_explicit_arm",
+      "sha256": "d068c34e072389e96e211a244459091c8e1adf43a05c3b413a8cccde7595dd8d",
+      "bytes": 4067
+    }
+  ],
+  "metrics": {
+    "candidate_profile_fingerprint": "0b0d4a841241f60814eef68fb52adcf93fb323744978f7427ec8372a819518a0",
+    "candidate_executable_provider_symbols": 3,
+    "candidate_retest_observe_only_symbols": 4,
+    "candidate_retest_executable_symbols": 0,
+    "candidate_maximum_positions": 4,
+    "candidate_max_positions_per_asset": 1,
+    "transition_contract_tests_passed": 3,
+    "requires_completed_transition_drain": true,
+    "requires_flat_no_orders": true,
+    "automatic_restart": false,
+    "execution_authority": "none",
+    "runtime_changed_by_this_revision": false
+  },
+  "limitations": [
+    "The transition has not occurred and is not authorized by this record.",
+    "BTC, ETH, and SOL remain active v14 lifecycles at the time of preparation, so the flat-boundary predicates are not satisfied.",
+    "The runbook validates mechanics and traceability, not profitability or route expectancy.",
+    "A future start requires fresh runtime and venue evidence; passing static tests cannot substitute for flat/order-free reconciliation.",
+    "No live strategy, position, order, stop, sizing policy, backend process, checkpoint process, or portfolio configuration changed as a result of this revision."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

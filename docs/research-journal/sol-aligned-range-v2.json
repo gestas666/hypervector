@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "sol-aligned-range-relaxation",
+  "revision_number": 2,
+  "supersedes_revision_id": "c4b63d327e8925bd3dd5adea975e0bcea772a750b6bfd960cdce45f7f7ea32e7",
+  "created_at_utc": "2026-08-08T22:26:36Z",
+  "strategy_id": "sol_aligned_range_relaxed_fixed60_bidirectional_v1",
+  "symbol": "SOL",
+  "status": "reject",
+  "hypothesis": "Relaxing only SOL range-onset's hourly-cross blocker when side-adjusted OPI is aligned may add profitable bidirectional, portfolio-compatible range opportunities at a fixed 60-minute horizon.",
+  "decision": "Reaffirm rejection of the exact frozen v1 mechanic and correct the report-only scorecard from the stale four-path positive prefix to the authoritative nine-path prospective result. The exact provider resolved nine deployable all-long paths at 4 wins, 5 losses, -113.085491 bps, and PF 0.347245. A current v25 source-route matrix contains four favorable aligned all-long paths, but it does not reproduce the exact provider's 75-minute accepted-entry rearm and therefore is not identity-equivalent evidence. Keep canonical SOL range-onset active in v25, do not remove its hourly-cross condition, and do not reactivate or relabel the rejected aligned fixed-60 provider. Any new relaxation requires a new mechanism identity and prospective cutoff.",
+  "confidence": "medium_high",
+  "falsifier": "This revision is invalidated by a source hash mismatch, incorrect N9 transcription, proof that the current matrix exactly reproduces the frozen provider's accepted-entry clock, or causal-lineage failure. The economic rejection would be updated by a separately frozen new mechanism with positive after-cost results excluding its largest winner across independent windows and both directions; a four-path all-long prefix is insufficient.",
+  "evidence": [
+    {
+      "path": "../reviews/2026-08-08-v25-sol-range-cadence-and-relaxation.md",
+      "role": "canonical_cadence_and_exact_mechanic_reconciliation",
+      "sha256": "b4776f67ea4653070cfb81b256c7032f3b9c6a97f646fb3a428a3a9f51f297b4",
+      "bytes": 5808
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v25_execution_opportunity_matrix_exlargest_20260808T2216Z.json",
+      "role": "current_source_route_after_cost_matrix_with_concentration",
+      "sha256": "cf6909170336fd05ff004d664e8c15a6e5c726bb859fd2bcea18305066c1f59a",
+      "bytes": 162891
+    },
+    {
+      "path": "../../src/hypervector/research/cohort_execution_opportunity_matrix.py",
+      "role": "report_only_matrix_business_logic",
+      "sha256": "e00ac00e76ab36782faf77a61b730005de00ef6fcd1590d537876ca2e38a5957",
+      "bytes": 10268
+    },
+    {
+      "path": "../../tests/test_cohort_execution_opportunity_matrix.py",
+      "role": "matrix_concentration_regression_tests",
+      "sha256": "89e3984b2328b3f67730d8d6bcd10bebba0ea5d63b1c7b2424b0893934b7707c",
+      "bytes": 4952
+    },
+    {
+      "path": "../../src/hypervector/live/multi_asset_strategy_evidence_recent.py",
+      "role": "authoritative_n9_scorecard_projection",
+      "sha256": "2f3f00c074d9e4ab33122ce4394ce1fc8f5a36b8edc52315f1ee4e47da3b1f8e",
+      "bytes": 3423
+    },
+    {
+      "path": "../../tests/test_cohort_strategy_scorecard.py",
+      "role": "stale_n4_to_n9_projection_regression_test",
+      "sha256": "04d495acdc29b56398ab8f49dc96f72574f618d7f50426be28438ec5655f4228",
+      "bytes": 13527
+    },
+    {
+      "path": "sol-aligned-range-v1.json",
+      "role": "immutable_prior_exact_provider_decision",
+      "sha256": "b586b033582e2d654625940bf3f141af7aa688f0a7d258290a8da4c2e63bf7a2",
+      "bytes": 2649
+    }
+  ],
+  "metrics": {
+    "canonical_live_window_hours": 12.38696,
+    "canonical_provider_evaluations": 744,
+    "canonical_eligible_signals": 0,
+    "canonical_historical_trades": 42,
+    "canonical_historical_days": 201,
+    "poisson_expected_trades_in_live_window": 0.10785,
+    "poisson_probability_zero_trades": 0.89777,
+    "exact_provider_resolved": 9,
+    "exact_provider_wins": 4,
+    "exact_provider_losses": 5,
+    "exact_provider_long_resolved": 9,
+    "exact_provider_short_resolved": 0,
+    "exact_provider_profit_factor": 0.347245,
+    "exact_provider_total_net_return_bps": -113.085491,
+    "current_generic_aligned_resolved": 4,
+    "current_generic_aligned_pending": 1,
+    "current_generic_aligned_net_return_bps": 37.6079,
+    "current_generic_aligned_net_excluding_largest_winner_bps": 9.9882,
+    "current_generic_aligned_long_resolved": 4,
+    "current_generic_aligned_short_resolved": 0,
+    "current_generic_matrix_identity_equivalent": false,
+    "execution_authority": "none",
+    "runtime_changed_by_this_revision": false
+  },
+  "limitations": [
+    "The current favorable generic aligned cohort has four resolved all-long paths from one approximately twelve-hour market window.",
+    "The generic source-route matrix does not reproduce the exact provider's 75-minute accepted-entry rearm and cannot revise its N9 decision.",
+    "Recorded adverse BBO estimates are not authenticated private venue fills or queue outcomes.",
+    "The Poisson cadence approximation assumes independent arrivals and may understate regime clustering.",
+    "No live process, route, order, position, stop, target, allocation, transition drain, or protection changed in this revision."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

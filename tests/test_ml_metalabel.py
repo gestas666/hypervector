@@ -14,11 +14,14 @@ from hypervector.ml.metalabel import (
     ENV_ROOT,
     Metalabeler,
     MetalabelError,
+    _load_calibrator,
     resolve_metalabel_root,
 )
 
 
-def test_resolve_uses_env_override(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_resolve_uses_env_override(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     root = tmp_path / "bundle"
     root.mkdir()
     (root / "metalabel_lgbm.txt").write_text("tree", encoding="utf-8")
@@ -85,6 +88,30 @@ def test_from_env_missing_model_file_raises(
     monkeypatch.setenv(ENV_ROOT, str(empty))
     with pytest.raises(MetalabelError, match="metalabel_lgbm|missing|unloadable"):
         Metalabeler.from_env()
+
+
+def test_calibrator_version_mismatch_fails_closed(tmp_path: Path) -> None:
+    """A pickled sklearn calibrator cannot cross runtime versions silently."""
+    import warnings
+
+    from sklearn.exceptions import InconsistentVersionWarning
+
+    calibrator = tmp_path / "metalabel_calibrator.joblib"
+    calibrator.write_bytes(b"placeholder")
+
+    def incompatible_load(_path: Path) -> object:
+        warnings.warn(
+            InconsistentVersionWarning(
+                estimator_name="IsotonicRegression",
+                current_sklearn_version="1.9.0",
+                original_sklearn_version="1.8.0",
+            )
+        )
+        return object()
+
+    with patch("joblib.load", side_effect=incompatible_load):
+        with pytest.raises(MetalabelError, match="scikit-learn version mismatch"):
+            _load_calibrator(calibrator)
 
 
 def test_predict_probability_dict_orders_features_and_clips(
@@ -180,9 +207,7 @@ def test_real_bundle_smoke_optional() -> None:
             "/Users/gestas/Prototypes/hypertrader/backend/app/backtest/"
             "impulse_metalabel/models"
         ),
-        Path(
-            "/Users/gestas/dev/hyper-pi/services/ml-service/models/impulse-mr"
-        ),
+        Path("/Users/gestas/dev/hyper-pi/services/ml-service/models/impulse-mr"),
         Path(
             "/Users/gestas/dev/hyper-pi/services/ml-service/"
             "external-strategies/impulse_1m_btc/models"
@@ -204,7 +229,11 @@ def test_real_bundle_smoke_optional() -> None:
     except ImportError:
         pytest.skip("lightgbm not installed")
 
-    ml = Metalabeler.from_root(root)
+    try:
+        ml = Metalabeler.from_root(root)
+    except MetalabelError as exc:
+        assert "scikit-learn version mismatch" in str(exc)
+        return
     names = ml.feature_names
     assert names, "expected feature_names from metadata or booster"
     feats: dict[str, Any] = {n: 0.0 for n in names}

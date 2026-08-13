@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "evidence-selected-portfolio-v29",
+  "revision_number": 2,
+  "supersedes_revision_id": "1ce47cb52c836359566e6221afdbb87cf2851f59a7d69c0aba48b2886c196a99",
+  "created_at_utc": "2026-08-08T06:30:39Z",
+  "strategy_id": "multi_asset_bidirectional_evidence_selected_portfolio_canary_v29",
+  "symbol": "PORTFOLIO",
+  "status": "candidate",
+  "hypothesis": "A five-asset shared-account canary restricted to six explicitly selected bidirectional routes may produce cleaner and more frequent forward evidence than v28's mixture of 23 executable mappings, while preserving one-position-per-asset isolation and exact backend telemetry.",
+  "decision": "Retain the inactive v29 candidate and supersede only its implementation-source baseline. Revision 1's first verified bundle preceded the final route-evidence telemetry confidence normalization. Preserve that bundle, create a new independently verified bundle over the current Python source set, and bind all future transition guidance to the new implementation identity. The profile bytes, six routes, both-direction scope, risk contracts, economic confidence, and lack of live authority are unchanged.",
+  "confidence": "medium",
+  "falsifier": "A mismatch in the candidate profile, current implementation source set, new backup manifest, prior-revision hash, route scope, side scope, or runtime boundary invalidates this revision. Economic falsifiers remain those declared in revision 1 and require another append-only revision rather than automatic promotion or mutation.",
+  "evidence": [
+    {
+      "path": "evidence-selected-portfolio-v29-v1.json",
+      "role": "prior_candidate_economic_and_route_decision",
+      "sha256": "b3f3b2da20e0733844360b6b78a57bb44b38b4dbb76a4e68848c31e2f57e877a",
+      "bytes": 6459
+    },
+    {
+      "path": "../../configs/multi_asset_bidirectional_evidence_selected_portfolio_canary_v29.toml",
+      "role": "unchanged_exact_inactive_v29_configuration",
+      "sha256": "bb62f0cd492bfeb332fd6e53cdd2a45205f3e7b6580fc5f18768ddecee3b40e1",
+      "bytes": 3327
+    },
+    {
+      "path": "../../data/backups/bidirectional_cohort/prestart_20260808T063006.680522Z_d1f4cd3b0319/manifest.json",
+      "role": "current_verified_credential_free_v29_source_and_runtime_baseline",
+      "sha256": "b8fb79507951a3a069c53a824c2ec123322d0f12add745a929b6b642827687ea",
+      "bytes": 607373
+    }
+  ],
+  "metrics": {
+    "candidate_profile_id": "multi_asset_bidirectional_evidence_selected_portfolio_canary_v29",
+    "candidate_profile_fingerprint": "d1f4cd3b03197e9e7a9899ab32e2b198fd4bd2a4117f1ea64261824fcdc4a393",
+    "candidate_executable_routes": 6,
+    "candidate_observe_only_routes": 0,
+    "candidate_both_sides_routes": 6,
+    "prior_implementation_sha256": "65beeb0fd6bcc00d942d40b985b431be5fa2acbb7f4c57f1cc0d0652544a4974",
+    "current_implementation_file_count": 1249,
+    "current_implementation_sha256": "dd087439b9f3c9bc6c07dcabc9982dd397d7e0b4eae69bbf494895cc5492c199",
+    "profile_bytes_changed_from_revision_1": false,
+    "route_scope_changed_from_revision_1": false,
+    "runtime_changed_by_this_revision": false
+  },
+  "limitations": [
+    "The new bundle is a credential-free observe-mode implementation baseline and does not replace the mandatory backup created by a later authorized live startup.",
+    "The economic evidence and low-to-medium profitability confidence remain unchanged from revision 1.",
+    "No live route, process, order, position, stop, target, or allocation changed in this revision."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

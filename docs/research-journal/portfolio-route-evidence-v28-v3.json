@@ -1,0 +1,107 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "portfolio-route-evidence-v28",
+  "revision_number": 3,
+  "supersedes_revision_id": "0a1805c3ea8a7b392553c0f441970f12de7fe21fd3e472aa118df2a302bb0604",
+  "created_at_utc": "2026-08-08T06:23:58Z",
+  "strategy_id": "multi_asset_bidirectional_portfolio",
+  "symbol": "PORTFOLIO",
+  "status": "reject",
+  "hypothesis": "The inactive v28 portfolio can preserve broad bidirectional live research while making its route evidence quality explicit and removing only the independently rejected SOL HT-Breakout transfer.",
+  "decision": "Retain the v28 rejection and correct revision 2's overly broad supportive-route label after reading the exact segment and direction tables. Three executable routes are supportive-but-fragile candidates, seven are contradictory across segments or directions, and thirteen are negative. In particular, baseline ETH Range Onset is not the stronger dual-MTF v29 mechanism; SP500 breakout and GOLD Swing/HA reversed from negative development to positive validation; and only SPCX Swing/HA stayed aggregate-positive in development and validation stress. Preserve every route result without silently gating a running trial. This revision has no runtime authority.",
+  "confidence": "medium_high",
+  "falsifier": "Any bound source hash mismatch, a route count other than 23 executable plus one observe-only mapping, an omitted provider-symbol pair, or a classification inconsistent with the cited aggregate segment tables invalidates this correction. Fresh non-overlapping after-cost evidence may update a route only through another explicit revision.",
+  "evidence": [
+    {
+      "path": "portfolio-route-evidence-v28-v2.json",
+      "role": "prior_complete_route_inventory_and_initial_classification",
+      "sha256": "cd99181e778e8b2677c5cd8a9598fe50b6d7b9ed44fad43b7aa135a77a1e3981",
+      "bytes": 5630
+    },
+    {
+      "path": "evidence-selected-portfolio-v29-v1.json",
+      "role": "follow_on_selection_with_explicit_hip3_contradiction_disclosure",
+      "sha256": "b3f3b2da20e0733844360b6b78a57bb44b38b4dbb76a4e68848c31e2f57e877a",
+      "bytes": 6459
+    },
+    {
+      "path": "../../data/logs/research/hip3_v25_lifecycle_bar_diagnostic_20260807.json",
+      "role": "hip3_exact_entry_fixed80_24h_segment_and_direction_tables",
+      "sha256": "584fbab9565afc54672903a98a8c0fb346d8b5bd68444eaee4fe2d6a79a6ba4a",
+      "bytes": 93780
+    },
+    {
+      "path": "../../data/logs/research/range_onset_context_challenger_ETH_20250728_20260728_v2.json",
+      "role": "eth_baseline_and_dual_mtf_segment_direction_evidence",
+      "sha256": "0f09a44db3a027678710a46056edaf17b8ac5a325ad8ac72e99a2703a75e0a93",
+      "bytes": 728985
+    },
+    {
+      "path": "../reviews/2026-08-06-eth-breakout-transfer-canary-qualification.md",
+      "role": "eth_pullback_aggregate_and_direction_rotation_evidence",
+      "sha256": "3df1387e3bb7896bcbe3a13185c25821a10e337be2a38cb52571c95c4e3cb0b2",
+      "bytes": 4937
+    },
+    {
+      "path": "../reviews/2026-07-31-sol-range-onset-backward-validation.md",
+      "role": "sol_range_earlier_and_later_exact_route_evidence",
+      "sha256": "e1a469aa9b669b39b2764c412124a1c97bf16e0fca9e03123eacd6c8fa089d40",
+      "bytes": 11034
+    }
+  ],
+  "metrics": {
+    "candidate_profile_id": "multi_asset_bidirectional_complete_portfolio_canary_v28",
+    "candidate_profile_fingerprint": "90285e71220a7eca53e7791da9cb48ddcdc58e36a398c12a1485082c0f50f30f",
+    "candidate_observed_routes": 24,
+    "candidate_executable_routes": 23,
+    "candidate_observe_only_routes": 1,
+    "classified_executable_routes": 23,
+    "unreviewed_exact_mapping_routes": [],
+    "supportive_candidate_route_count": 3,
+    "supportive_candidate_routes": [
+      "range_onset_bidirectional_v1|SOL",
+      "eth_breakout_precompression_pullback_bidirectional_v1|ETH",
+      "hip3_swing_ha_sp500_spcx_bidirectional_v2|xyz:SPCX"
+    ],
+    "contradictory_route_count": 7,
+    "contradictory_routes": [
+      "hulk_expansion_bidirectional_tuned_v2|BTC",
+      "hulk_expansion_bidirectional_tuned_v2|SOL",
+      "range_onset_bidirectional_v1|ETH",
+      "range_onset_bidirectional_v1|HYPE",
+      "hype_breakout_onset_bidirectional_v1|BTC",
+      "hip3_breakout_pressure_sp500_spcx_bidirectional_v1|xyz:SP500",
+      "hip3_swing_ha_sndk_gold_brent_bidirectional_v1|xyz:GOLD"
+    ],
+    "negative_route_count": 13,
+    "negative_routes": [
+      "hypervelocity_source_follow_bidirectional_5m_v1|BTC",
+      "hulk_expansion_bidirectional_tuned_v2|ETH",
+      "hulk_expansion_bidirectional_tuned_v2|HYPE",
+      "hype_breakout_onset_bidirectional_v1|ETH",
+      "hype_breakout_onset_bidirectional_v1|HYPE",
+      "range_onset_bidirectional_v1|BTC",
+      "hip3_swing_ha_sp500_spcx_bidirectional_v2|xyz:SP500",
+      "hip3_breakout_pressure_sp500_spcx_bidirectional_v1|xyz:SPCX",
+      "hip3_swing_ha_sndk_gold_brent_bidirectional_v1|xyz:SNDK",
+      "hip3_swing_ha_sndk_gold_brent_bidirectional_v1|xyz:BRENTOIL",
+      "hip3_breakout_pressure_sndk_gold_brent_bidirectional_v1|xyz:SNDK",
+      "hip3_breakout_pressure_sndk_gold_brent_bidirectional_v1|xyz:GOLD",
+      "hip3_breakout_pressure_sndk_gold_brent_bidirectional_v1|xyz:BRENTOIL"
+    ],
+    "observe_only_routes": [
+      "hype_breakout_onset_bidirectional_v1|SOL"
+    ],
+    "runtime_changed_by_this_revision": false
+  },
+  "limitations": [
+    "Supportive-but-fragile describes aggregate historical slices and does not establish a live executable edge.",
+    "Contradictory routes may still be useful bounded live-research trials under an explicitly authorized profile; the label is not an automatic gate.",
+    "HIP-3 diagnostics omit shared-account interactions and use bar approximations rather than private live fills.",
+    "ETH pullback and SOL Range Onset remain selection-contaminated and winner-concentrated despite positive aggregate evidence.",
+    "No live order, position, route, process, or allocation changed in this correction."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

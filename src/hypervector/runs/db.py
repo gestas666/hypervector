@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -70,13 +70,10 @@ class RunsDB:
         )
         # Migrate DBs created before research_meta_json existed
         cols = {
-            r[1]
-            for r in self._conn.execute("PRAGMA table_info(trials)").fetchall()
+            r[1] for r in self._conn.execute("PRAGMA table_info(trials)").fetchall()
         }
         if "research_meta_json" not in cols:
-            self._conn.execute(
-                "ALTER TABLE trials ADD COLUMN research_meta_json TEXT"
-            )
+            self._conn.execute("ALTER TABLE trials ADD COLUMN research_meta_json TEXT")
         self._conn.commit()
 
     def insert_trial(self, trial: TrialRow) -> int:

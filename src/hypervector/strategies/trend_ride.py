@@ -64,8 +64,12 @@ def trend_ride_signals(
         raise ValueError("direction must be long|short")
     high, low, close = _ohlc(df)
 
-    st_line, st_dir = supertrend(high, low, close, atr_period=st_atr, multiplier=st_mult)
-    zlema, zl_dir = zero_lag_trend_ohlc(high, low, close, length=zl_length, mult=zl_mult)
+    st_line, st_dir = supertrend(
+        high, low, close, atr_period=st_atr, multiplier=st_mult
+    )
+    zlema, zl_dir = zero_lag_trend_ohlc(
+        high, low, close, length=zl_length, mult=zl_mult
+    )
     chop = choppiness_index(high, low, close, chop_length)
     vip, vim = vortex(high, low, close, vortex_length)
     mom, sqz_on, sqz_off = squeeze_momentum(
@@ -102,7 +106,10 @@ def trend_ride_signals(
 
     if regime_filter:
         reg = detect_regime_ema(
-            close, fast=int(regime_fast), slow=int(regime_slow), range_band=float(regime_band)
+            close,
+            fast=int(regime_fast),
+            slow=int(regime_slow),
+            range_band=float(regime_band),
         )
         regime_long_ok = reg == "up"
         regime_short_ok = reg == "down"

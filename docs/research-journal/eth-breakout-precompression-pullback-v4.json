@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "eth-breakout-precompression-pullback",
+  "revision_number": 4,
+  "supersedes_revision_id": "c072e30b467d9960ba234738ffff31a5956e6bc19055b1889916f78bb1d26e5c",
+  "created_at_utc": "2026-08-09T12:58:13Z",
+  "strategy_id": "eth_breakout_precompression_pullback_bidirectional_v1",
+  "symbol": "ETH",
+  "status": "candidate",
+  "hypothesis": "Fresh completed-five-minute ETH breakout onsets filtered by prior one-minute BBWP compression and a directional pullback may retain a small repeatable edge after live taker friction with a 60-bps protective stop and 12-hour maximum hold.",
+  "decision": "Keep the exact live ETH pullback contract unchanged and continue side-specific prospective observation. Reject an immediate static long/short, continuation/fade, or profit-lock update. Exact causal attribution shows complete mechanism rotation: development favored long-aligned and short-opposed entries, while the opened final 60-day block favored long-opposed and short-aligned entries. The current v25 ETH short is an opposed-breakout fade with favorable provisional excursion, but it remains open and cannot select a rule. At the next source-bound successor, separate long/short and aligned/opposed identities in telemetry and research so their economics remain attributable; retain execution semantics until independent after-cost evidence identifies a stable mechanism. No route, position, order, stop, sizing, exit, or runtime process changes under this revision.",
+  "confidence": "medium",
+  "falsifier": "The attribution is invalidated by failure to reproduce the authoritative 282-development and 56-opened-final lifecycle totals, a signal timestamp or side mismatch, non-causal breakout direction, changed evidence bytes, or execution authority. The no-static-gate decision should be revised if independent prospective long/short and aligned/opposed lifecycles show stable after-cost separation across non-adjacent windows without dependence on the largest winner. The no-profit-lock decision should be revised only if an ETH-specific preregistered policy outperforms the unchanged control after fees, funding, slippage, and stop precedence in both historical segments and later live evidence.",
+  "evidence": [
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/eth_pullback_mechanism_attribution_exact_v4_20260809T123838Z.json",
+      "role": "exact_side_breakout_relation_and_eth_profit_lock_attribution",
+      "sha256": "a677ed5fb62338bbc9984fdc8c8b5d9e3957fe0a2ec2f37dc5f0ee434d41f899",
+      "bytes": 26646
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v25_live_audit_goal_continuation_20260809T123838Z.json",
+      "role": "immutable_v25_prefix_with_current_eth_short_lifecycle",
+      "sha256": "4df2df54b54a493d78dbafae310425c70fcd173065d9c40ebe22d535d99878be",
+      "bytes": 14925749
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v25_live_delta_20260809T120850Z_to_20260809T123838Z.json",
+      "role": "same_run_delta_proving_no_resolved_economic_change",
+      "sha256": "2035f2317bf1cd2a91a22e68079cd1d4a83be9cbc014cc93a4dd18a85dd965e9",
+      "bytes": 185717
+    }
+  ],
+  "metrics": {
+    "development_trades": 282,
+    "development_net_bps": 1657.9804255885545,
+    "development_profit_factor": 1.1110897477996182,
+    "opened_final_trades": 56,
+    "opened_final_net_bps": 322.33121773480485,
+    "opened_final_profit_factor": 1.1207652329357494,
+    "development_long_aligned_net_bps": 970.7047989971398,
+    "development_long_opposed_net_bps": -716.004754401279,
+    "development_short_aligned_net_bps": -291.0094210103847,
+    "development_short_opposed_net_bps": 1694.2898020030784,
+    "opened_final_long_aligned_net_bps": -288.39657437528246,
+    "opened_final_long_opposed_net_bps": 633.5764444032516,
+    "opened_final_short_aligned_net_bps": 525.8246490378747,
+    "opened_final_short_opposed_net_bps": -548.673301331039,
+    "development_a25_profit_lock_net_bps": -3461.0662115037567,
+    "opened_final_a25_profit_lock_net_bps": -671.2308167128294,
+    "development_a40_profit_lock_net_bps": -3119.6934108618498,
+    "opened_final_a40_profit_lock_net_bps": -551.1619808880716,
+    "development_a60_profit_lock_net_bps": -1962.8088029013445,
+    "opened_final_a60_profit_lock_net_bps": 257.683163187839,
+    "opened_final_control_net_bps": 322.33121773480485,
+    "current_live_side": "short",
+    "current_live_breakout_side_relation": "opposed",
+    "current_live_breakout_side": "long",
+    "current_live_mfe_bps": 50.45776113191902,
+    "current_live_mae_bps": 1.040366208904242,
+    "current_live_directional_return_bps": 26.529338327090368,
+    "current_live_marked_net_pnl_usd": 0.056312,
+    "current_live_resolved": false,
+    "current_profile_closed_eth_pullback_longs": 1,
+    "current_profile_closed_eth_pullback_shorts": 0,
+    "runtime_strategy_changed": false
+  },
+  "limitations": [
+    "The exact entry policy and 60-bps/12-hour exit shape were selected after multiple historical trials.",
+    "The final 60-day block was previously opened and is descriptive rather than sealed evidence.",
+    "Every side-by-relation subgroup is smaller than the pooled route, and its leadership reversed between segments.",
+    "The current ETH short is open; its mark, MFE, MAE, funding, and final exit can still change.",
+    "The profit-lock comparison uses completed one-minute bars and cannot reproduce private IOC latency or every intrabar activation and stop ordering detail.",
+    "The first two superseded attribution artifacts remain on disk as transparent boundary-debug evidence and are not cited as economic evidence.",
+    "This revision is report-only and cannot route, size, enter, close, restart, pause, or promote a strategy."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

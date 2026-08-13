@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "hip3-sndk-gold-brent-transfer",
+  "revision_number": 4,
+  "supersedes_revision_id": "d0e467a01fd928c5a07512beb2833ea53f317779d68b51b5d7b9d8a30f7418e7",
+  "created_at_utc": "2026-08-09T14:28:49Z",
+  "strategy_id": "hip3_bidirectional_15m_transfer_families",
+  "symbol": "xyz:SNDK,xyz:GOLD,xyz:BRENTOIL",
+  "status": "reject",
+  "hypothesis": "The exact GOLD 4-bar, 21/55 EMA, absolute-imbalance 0.50, 80-bps-stop breakout-pressure recipe retained conditionally in revision 3 remains positive after the standard fee rate observed on actual account fills.",
+  "decision": "Reject the conditional GOLD breakout-pressure challenger for promotion under the observed execution path. Three actual GOLD taker fills each charged approximately 8.64 bps per side, matching the standard-fee sensitivity rather than the reduced-fee sensitivity. With that exact fee and the recipe held fixed, the untouched validation produced 28 trades, +$0.351928 and PF 1.047544 nominal, but -$0.342307 and PF 0.956911 under stress; the long side was negative under both conditions. Do not add this recipe to a successor portfolio, do not build an executable forward observer for it, and do not access the sealed holdout. Continue v25 unchanged. Redirect research toward exact both-side SOL range-onset evidence, separate ETH pullback mechanisms by side and breakout relation, and separate SPCX Swing mechanisms by side and entry timing.",
+  "confidence": "medium_high",
+  "falsifier": "Reconsider the GOLD recipe only if authenticated fills on the intended execution path establish a materially lower effective fee, or a separately pre-registered causal recipe is positive under nominal and stress standard-fee friction, both directions contribute, and the result remains positive without its largest winner. This revision is invalidated by changed evidence bytes, incorrect fill notional or fee arithmetic, validation-driven retuning, holdout access, or execution authority.",
+  "evidence": [
+    {
+      "path": "../../data/logs/research/hip3_gold_standard_fee_fixed_candidate_20260809T142849Z.json",
+      "role": "immutable_actual_fee_and_fixed_candidate_standard_fee_validation",
+      "sha256": "80d71d92002b359e15cb13b503ea8efd016ec0b3aec4aaae3fc7a230d43b4986",
+      "bytes": 5415
+    }
+  ],
+  "metrics": {
+    "actual_account_gold_fill_count": 3,
+    "actual_effective_taker_fee_bps_per_side": 8.64,
+    "official_growth_mode_field_present": false,
+    "official_deployer_fee_scale": 1.0,
+    "fixed_candidate_breakout_lookback_bars": 4,
+    "fixed_candidate_fast_ema": 21,
+    "fixed_candidate_slow_ema": 55,
+    "fixed_candidate_minimum_abs_imbalance": 0.5,
+    "fixed_candidate_maximum_stop_bps": 80.0,
+    "standard_fee_validation_trades": 28,
+    "standard_fee_validation_nominal_net_pnl_usd": 0.35192839233349105,
+    "standard_fee_validation_nominal_profit_factor": 1.047543736677462,
+    "standard_fee_validation_nominal_maximum_drawdown_pct": -0.735123293609044,
+    "standard_fee_validation_nominal_long_net_pnl_usd": -0.24878408300504892,
+    "standard_fee_validation_nominal_short_net_pnl_usd": 0.600712475338613,
+    "standard_fee_validation_stress_net_pnl_usd": -0.3423073267942982,
+    "standard_fee_validation_stress_profit_factor": 0.9569109632646755,
+    "standard_fee_validation_stress_maximum_drawdown_pct": -0.7892724591893933,
+    "standard_fee_validation_stress_long_net_pnl_usd": -0.5719388850310216,
+    "standard_fee_validation_stress_short_net_pnl_usd": 0.22963155823661113,
+    "standard_fee_validation_liquidations": 0,
+    "reduced_fee_validation_nominal_net_pnl_usd": 3.629683759225202,
+    "reduced_fee_validation_nominal_profit_factor": 1.7309982653795213,
+    "reduced_fee_validation_stress_net_pnl_usd": 2.931100843411457,
+    "reduced_fee_validation_stress_profit_factor": 1.538255770855352,
+    "holdout_metrics_accessed": false,
+    "execution_authority": "none",
+    "runtime_changed_by_this_revision": false
+  },
+  "limitations": [
+    "The fixed sensitivity reuses a recipe selected in the reduced-fee development world; it is a fee robustness check rather than a new parameter search.",
+    "Twenty-eight validation trades occupy one chronological window and do not establish future performance.",
+    "The three actual fills establish the current observed account fee rate for GOLD, not an immutable future venue schedule.",
+    "L2 midpoint OHLC approximates the price path but does not reproduce private queue position or every intrabar event.",
+    "The final chronological holdout remains sealed and was not used to rescue or reject the recipe.",
+    "No live process, configuration, route, order, position, stop, target, allocation, or protection changed in this revision."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

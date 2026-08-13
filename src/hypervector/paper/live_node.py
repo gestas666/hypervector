@@ -47,17 +47,35 @@ def partition_live_bars(
     later than ``observed_at``. Bars closing at or before activation are seed
     history and must never pass through execution.
     """
-    normalized = filter_bars_after(frame, after_ts=None)
-    if normalized.empty:
-        return normalized.copy(), normalized.copy()
     activation = _utc_timestamp(activated_at)
     observed = _utc_timestamp(observed_at)
-    closes = normalized["timestamp"] + timeframe_delta(timeframe)
-    completed = normalized.loc[closes <= observed].copy()
+    completed = completed_bars_at(
+        frame,
+        timeframe=timeframe,
+        observed_at=observed,
+    )
+    if completed.empty:
+        return completed.copy(), completed.copy()
+    closes = completed["timestamp"] + timeframe_delta(timeframe)
     completed_closes = closes.loc[completed.index]
     catchup = completed.loc[completed_closes <= activation].reset_index(drop=True)
     live = completed.loc[completed_closes > activation].reset_index(drop=True)
     return catchup, live
+
+
+def completed_bars_at(
+    frame: pd.DataFrame,
+    *,
+    timeframe: str,
+    observed_at: pd.Timestamp,
+) -> pd.DataFrame:
+    """Return only candles causally complete at one observation timestamp."""
+    normalized = filter_bars_after(frame, after_ts=None)
+    if normalized.empty:
+        return normalized.copy()
+    observed = _utc_timestamp(observed_at)
+    closes = normalized["timestamp"] + timeframe_delta(timeframe)
+    return normalized.loc[closes <= observed].copy()
 
 
 def _utc_timestamp(value: pd.Timestamp) -> pd.Timestamp:
@@ -99,7 +117,15 @@ def filter_bars_after(
     if df is None or not isinstance(df, pd.DataFrame) or df.empty:
         if df is None:
             return pd.DataFrame(
-                columns=["timestamp", "open", "high", "low", "close", "volume", "source"]
+                columns=[
+                    "timestamp",
+                    "open",
+                    "high",
+                    "low",
+                    "close",
+                    "volume",
+                    "source",
+                ]
             )
         return df.copy()
 

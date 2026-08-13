@@ -40,9 +40,7 @@ _DEFAULT_DISCOVERY: tuple[Path, ...] = (
         "/Users/gestas/Prototypes/hypertrader/backend/app/backtest/"
         "impulse_metalabel/models"
     ),
-    Path(
-        "/Users/gestas/dev/hyper-pi/services/ml-service/models/impulse-mr"
-    ),
+    Path("/Users/gestas/dev/hyper-pi/services/ml-service/models/impulse-mr"),
     Path(
         "/Users/gestas/dev/hyper-pi/services/ml-service/"
         "external-strategies/impulse_1m_btc"
@@ -171,16 +169,7 @@ def probe_metalabel(
         out["error"] = f"{_MODEL_NAME} missing or unloadable at {root}"
         return out
     try:
-        import warnings
-
-        with warnings.catch_warnings():
-            # Bundle may predate current sklearn; still usable for inference.
-            warnings.filterwarnings(
-                "ignore",
-                category=UserWarning,
-                module=r"sklearn\.base",
-            )
-            ml = Metalabeler.from_root(root)
+        ml = Metalabeler.from_root(root)
         out["loadable"] = True
         out["n_features"] = len(ml.feature_names)
     except MetalabelError as exc:
@@ -223,12 +212,33 @@ def _load_calibrator(cal_path: Path) -> Any | None:
         return None
     try:
         import joblib
+        from sklearn.exceptions import InconsistentVersionWarning
     except ImportError as exc:
         raise MetalabelError(
-            "joblib is required to load metalabel calibrator"
+            "joblib and scikit-learn are required to load metalabel calibrator"
         ) from exc
     try:
-        return joblib.load(cal_path)
+        import warnings
+
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always", InconsistentVersionWarning)
+            calibrator = joblib.load(cal_path)
+        mismatch = next(
+            (
+                warning
+                for warning in caught
+                if issubclass(warning.category, InconsistentVersionWarning)
+            ),
+            None,
+        )
+        if mismatch is not None:
+            raise MetalabelError(
+                "metalabel calibrator scikit-learn version mismatch: "
+                f"{mismatch.message}; retrain the bundle in this runtime"
+            )
+        return calibrator
+    except MetalabelError:
+        raise
     except Exception as exc:
         raise MetalabelError(
             f"failed to load calibrator from {cal_path}: {exc}"
@@ -315,9 +325,7 @@ class Metalabeler:
         root = resolve_metalabel_root(env, data_root=data_root)
         model_path = root / _MODEL_NAME
         if not model_path.is_file():
-            raise MetalabelError(
-                f"metalabel bundle missing {_MODEL_NAME} at {root}"
-            )
+            raise MetalabelError(f"metalabel bundle missing {_MODEL_NAME} at {root}")
         return cls.from_root(root)
 
     def _features_to_matrix(
@@ -344,15 +352,13 @@ class Metalabeler:
             raise MetalabelError("features must be a Mapping or pandas DataFrame")
         return np.asarray([values], dtype=float)
 
-    def predict_probability(
-        self, features: pd.DataFrame | Mapping[str, Any]
-    ) -> float:
+    def predict_probability(self, features: pd.DataFrame | Mapping[str, Any]) -> float:
         """Calibrated metalabel probability in ``[0, 1]`` for one feature row."""
         X = self._features_to_matrix(features)
         try:
-            raw = self._booster.predict(
-                X, num_iteration=self._booster.best_iteration
-            )[0]
+            raw = self._booster.predict(X, num_iteration=self._booster.best_iteration)[
+                0
+            ]
             if self._calibrator is not None:
                 p = float(self._calibrator.predict([raw])[0])
             else:
@@ -363,8 +369,6 @@ class Metalabeler:
             raise MetalabelError(f"metalabel predict failed: {exc}") from exc
         return float(np.clip(p, 0.0, 1.0))
 
-    def predict_conviction(
-        self, features: pd.DataFrame | Mapping[str, Any]
-    ) -> float:
+    def predict_conviction(self, features: pd.DataFrame | Mapping[str, Any]) -> float:
         """Alias of :meth:`predict_probability` for hypervector risk sizing."""
         return self.predict_probability(features)

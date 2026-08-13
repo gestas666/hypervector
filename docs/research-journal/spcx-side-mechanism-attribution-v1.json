@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "hip3-spcx-side-mechanism-attribution",
+  "revision_number": 1,
+  "supersedes_revision_id": null,
+  "created_at_utc": "2026-08-09T21:23:15Z",
+  "strategy_id": "hip3_swing_ha_sp500_spcx_bidirectional_v2",
+  "symbol": "xyz:SPCX",
+  "status": "reject",
+  "hypothesis": "Separating the existing SPCX Swing/HA entry rows by long and short direction or shifting their causal entry clock may produce a repeatable after-cost mechanism across development and validation without dependence on one winner.",
+  "decision": "Reject the tested static side and entry-timing set. Provider-exact, alignment-onset, next-bar-confirmation, and first-fast-EMA-pullback arms produced no timing/side combination that remained nonempty, net-positive, above PF 1, and positive after removing its largest winner in both development and validation under nominal and stress friction. Do not queue another generic long/short split of this route. Any further SPCX Swing challenger must declare a new causal mechanism identity and use a preregistered test; this revision does not alter the current v25 runtime.",
+  "confidence": "medium",
+  "falsifier": "This decision is invalidated by source-hash mismatch, altered trade rows, leakage from the sealed holdout, a changed fill clock or friction contract, or failure to reproduce all 32 timing-side-partition-friction cells. A new causal SPCX mechanism may update the conclusion only if it is specified before evaluation and survives after costs, chronological partitions, and largest-winner removal; the result does not establish that no SPCX strategy can work.",
+  "evidence": [
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/spcx_side_mechanism_attribution_20260809T212208Z.json",
+      "role": "exact_side_timing_partition_and_concentration_attribution",
+      "sha256": "2f640cb4fecef6886cd346d47bfb74b1b4944125c239725157dfcdfc9522ba56",
+      "bytes": 17458
+    },
+    {
+      "path": "../../data/logs/research/hip3_entry_timing_challenger_v3_20260809T134637Z.json",
+      "role": "frozen_entry_timing_source_report",
+      "sha256": "cca68ee2d26cb1d29bdb8718f2893649fb1166f62355c3830c875cf9087130f4",
+      "bytes": 181448
+    },
+    {
+      "path": "../../data/logs/research/hip3_entry_timing_challenger_v3_20260809T134637Z.trades.parquet",
+      "role": "frozen_after_cost_trade_sidecar",
+      "sha256": "450d534c2fb015786c98a8dde63f824cef0d99742286dd294763877976010a97",
+      "bytes": 234408
+    }
+  ],
+  "metrics": {
+    "source_trade_rows": 2082,
+    "exact_spcx_trade_rows": 317,
+    "timing_modes": 4,
+    "side_timing_arms": 8,
+    "partition_friction_cells": 32,
+    "stable_side_timing_arms": 0,
+    "provider_long_development_stress_net_usd": 14.264718175484361,
+    "provider_long_development_stress_net_excluding_largest_usd": -0.9191752653035419,
+    "provider_long_validation_stress_net_usd": -1.9681985489649416,
+    "provider_short_development_stress_net_usd": -3.873154022944205,
+    "provider_short_validation_stress_net_usd": 3.155963638803518,
+    "provider_short_validation_stress_net_excluding_largest_usd": -0.33668093223808837,
+    "confirmation_long_development_stress_net_usd": 16.755904165697512,
+    "confirmation_long_development_stress_net_excluding_largest_usd": 0.7010269732457921,
+    "confirmation_long_validation_stress_net_usd": -1.9619099772777728,
+    "sealed_holdout_accessed": false,
+    "runtime_strategy_changed": false
+  },
+  "limitations": [
+    "Development and validation were already opened and cannot serve as a sealed promotion test.",
+    "The sealed holdout remains unread; no holdout metric was used.",
+    "The results are independent-asset 15-minute approximations rather than a shared-router replay.",
+    "Visible-book and latency friction are modeled rather than realized venue fills.",
+    "The test exhausts four existing entry clocks and two sides, not the space of all possible SPCX mechanisms.",
+    "This revision is report-only and cannot route, size, enter, close, restart, pause, or promote a strategy."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

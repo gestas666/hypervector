@@ -33,6 +33,7 @@ def test_snapshot_states_and_score_match_canonical_backend(tmp_path: Path) -> No
 
     latest = build_regime_snapshots(bars, data_root=tmp_path, max_bars=1)[0]
 
+    assert latest["open"] == pytest.approx(float(bars["open"].iloc[-1]))
     assert latest["regime_state"] == canonical["primary_regime"]
     assert latest["trend_1m"] == canonical["state_1m"]
     assert latest["trend_5m"] == canonical["state_5m"]
@@ -46,6 +47,15 @@ def test_snapshot_states_and_score_match_canonical_backend(tmp_path: Path) -> No
         == "mean_multitimeframe_ema_gap_strength_percentile_rank"
     )
     assert latest["confidence_is_gate"] is False
+    assert latest["bbwp_percentile"] == pytest.approx(
+        canonical["bbwp_percentile"], abs=0.005
+    )
+    assert latest["rsi"] == pytest.approx(canonical["rsi"], abs=0.005)
+    assert latest["rsi_ema"] == pytest.approx(canonical["rsi_ema"], abs=0.005)
+    assert latest["compression_ready"] is bool(canonical["compression_ready"])
+    assert latest["ema_gap_bps_signed"] == pytest.approx(
+        canonical["ema_gap_bps_signed"], abs=0.005
+    )
 
 
 def test_snapshot_does_not_invent_missing_microstructure_or_funding(

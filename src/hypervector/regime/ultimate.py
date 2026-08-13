@@ -9,7 +9,6 @@ import pandas as pd
 
 from hypervector.regime.classifier import RegimeClassifierConfig
 from hypervector.regime.composite import classify_multitimeframe
-from hypervector.regime.models import BreakoutDirection, PrimaryRegime
 
 UltimateRegimeState = Literal[
     "TREND_UP",
@@ -34,16 +33,9 @@ class RegimePolicy:
 
 
 def _entry_weights(classified: pd.DataFrame) -> tuple[pd.Series, pd.Series]:
-    primary = classified["primary_regime"]
-    breakout = classified["breakout_direction"]
-    long_allowed = primary.eq(PrimaryRegime.TREND_UP.value) | (
-        primary.eq(PrimaryRegime.BREAKOUT.value)
-        & breakout.eq(BreakoutDirection.UPWARD.value)
-    )
-    short_allowed = primary.eq(PrimaryRegime.TREND_DOWN.value) | (
-        primary.eq(PrimaryRegime.BREAKOUT.value)
-        & breakout.eq(BreakoutDirection.DOWNWARD.value)
-    )
+    direction = classified["entry_direction"]
+    long_allowed = direction.eq("long")
+    short_allowed = direction.eq("short")
     return long_allowed.astype(float), short_allowed.astype(float)
 
 
@@ -75,6 +67,18 @@ def detect_ultimate_regime(
             "context_15m": classified["context_15m"],
             "regime_reason": classified["reason"],
             "confidence": classified["confidence"],
+            "structural_direction": classified["structural_direction"],
+            "entry_direction": classified["entry_direction"],
+            "bbwp_percentile": classified["bbwp_percentile"],
+            "compression_ready": classified["compression_ready"],
+            "ema_gap_bps_signed": classified["ema_gap_bps_signed"],
+            "rsi": classified["rsi"],
+            "rsi_ema": classified["rsi_ema"],
+            "rsi_cross_direction": classified["rsi_cross_direction"],
+            "tactical_breakout_direction": classified["tactical_breakout_direction"],
+            "breakout_volume_ratio": classified["breakout_volume_ratio"],
+            "prior_range_high": classified["prior_range_high"],
+            "prior_range_low": classified["prior_range_low"],
             "long_weight": long_weight,
             "short_weight": short_weight,
             "max_leverage": allowed.astype(float) * 40.0,

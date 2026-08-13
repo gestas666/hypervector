@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "hip3-swing-profit-lock",
+  "revision_number": 2,
+  "supersedes_revision_id": "ac5e8d86c55f9d68504377dce94cfaa361f090ab206ee0e343df3f86ba57a5a1",
+  "created_at_utc": "2026-08-09T04:52:30Z",
+  "strategy_id": "hip3_swing_ha_sp500_spcx_bidirectional_v2",
+  "symbol": "xyz:SPCX",
+  "status": "observe",
+  "hypothesis": "A causal 60-bps activation, 15-bps floor, and 30-bps trailing profit lock may retain more after-cost profit on later HIP-3 Swing/HA lifecycles than their bound exits.",
+  "decision": "Install a report-only prospective scorer in every live-audit document while preserving the v25 runtime exit contract. Count only exact HIP-3 Swing/HA provider-symbol lifecycles entered at or after 2026-08-09T04:04:06Z. Exclude both resolved predeclaration lifecycles and the still-open SPCX discovery lifecycle when it eventually resolves. No prospective lifecycle has resolved yet, so this revision records measurement readiness rather than confirmation.",
+  "confidence": "low_medium",
+  "falsifier": "Reject the 60/30 HIP-3 challenger if later post-cutoff eligible lifecycles show negative normalized after-cost delta versus their actual bound exits, if the advantage disappears after actual funding and measured fill friction, or if favorable results depend on one outlier or one HIP-3 symbol. Increase confidence only from independently resolved post-cutoff entries.",
+  "evidence": [
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v25_live_prefix_hip3_60_30_prospective_bootstrap_20260809T0445Z.json",
+      "role": "immutable_live_audit_with_frozen_prospective_cutoff_and_zero_post_cutoff_resolutions",
+      "sha256": "8acc3afbb7165df53275a837ffe04bc558349bd551b226c6c67bf757c87db635",
+      "bytes": 12407790
+    }
+  ],
+  "metrics": {
+    "entry_cutoff_timestamp_ms": 1786248246000,
+    "source_matching_resolved_lifecycles": 2,
+    "excluded_predeclaration_resolved_lifecycles": 2,
+    "prospective_resolved_lifecycles": 0,
+    "prospective_eligible_lifecycles": 0,
+    "prospective_triggered_lifecycles": 0,
+    "policy_activation_bps": 60.0,
+    "policy_floor_bps": 15.0,
+    "policy_trailing_giveback_bps": 30.0,
+    "execution_authority": "none",
+    "runtime_changed_by_this_revision": false
+  },
+  "limitations": [
+    "The active SPCX lifecycle entered before the predeclared cutoff and remains discovery evidence even if it closes after the cutoff.",
+    "There are zero independently resolved post-cutoff HIP-3 Swing/HA lifecycles, so no edge estimate exists yet.",
+    "Counterfactual fills reuse each lifecycle's measured exit fill/reference ratio and fee rate; they cannot recreate private queue state.",
+    "Overlapping lifecycles are normalized mechanism evidence, not a counterfactual shared-portfolio equity curve.",
+    "The scorer cannot close, retain, resize, route, promote, or otherwise modify a live lifecycle."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

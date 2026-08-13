@@ -1,0 +1,19 @@
+# Explicitly capped mainnet wrapper for the bidirectional BTC forward candidate.
+# Loading this file does not arm execution; both CLI risk flags remain required.
+profile = "hypervelocity_source_follow_bidirectional_minrange12_alloc35_live_canary_v1"
+strategy_profile = "hypervelocity_source_follow_bidirectional_minrange12_alloc35_shadow.toml"
+
+[venue]
+network = "mainnet"
+margin_mode = "isolated"
+expected_max_leverage = 40
+
+[risk]
+max_notional_usd = 1700.0
+max_positions_per_symbol = 1
+
+[live]
+backend_ledger = "data/live/hypervelocity_source_follow/decisions.jsonl"
+stop_file = "data/live/hypervelocity_source_follow/STOP"
+capital_source = "standalone_canary"
+portfolio_purpose = "canary_validation"

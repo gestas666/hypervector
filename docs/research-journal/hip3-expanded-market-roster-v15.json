@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "hip3-expanded-market-roster",
+  "revision_number": 15,
+  "supersedes_revision_id": "6cd7e3f4d9293c3740eeb39b54885c927a0136a6d3237a2f68c92b08b429e3c6",
+  "created_at_utc": "2026-08-08T02:39:10Z",
+  "strategy_id": "unassigned_hip3_research",
+  "symbol": "PORTFOLIO",
+  "status": "candidate",
+  "hypothesis": "Requiring the v26 transition test to compare every frozen implementation-source hash with the current source tree will detect post-baseline source drift before live activation.",
+  "decision": "Supersede the first v26 source baseline after the new current-source regression correctly detected that multi_asset_live_config.py had been mechanically reformatted after the bundle was created. Retain the old bundle as immutable historical evidence, but bind activation only to the new verified baseline and updated runbook. Keep v25 active and v26 inactive while SOL and GOLD remain open. Require the same flat drain and first-decision HIP-3 telemetry probes before accepting v26.",
+  "confidence": "high",
+  "falsifier": "The source-drift control is falsified if any discovered current implementation file differs in path, byte count, or SHA-256 from the bound manifest while the runbook test passes, or if live startup uses a bundle other than the exact verified v26 identity. Profitability remains outside this mechanical claim.",
+  "evidence": [
+    {
+      "path": "../../docs/research-journal/hip3-expanded-market-roster-v14.json",
+      "role": "superseded_first_v26_source_baseline_revision",
+      "sha256": "9327c88c31b579c95dc97881c08fa103c54220db903d22e2791928c4299957f7",
+      "bytes": 3986
+    },
+    {
+      "path": "../../docs/guides/cohort-live-transition-and-rollback-v26.md",
+      "role": "rebound_machine_tested_v25_to_v26_transition_contract",
+      "sha256": "027b64278be16a4eaf5cf48b0174c757b054aa1ae9140453ea38c9dc30447eb7",
+      "bytes": 11454
+    },
+    {
+      "path": "../../data/backups/bidirectional_cohort/prestart_20260808T023732.159368Z_2e5a46960175/manifest.json",
+      "role": "current_source_matching_verified_v26_implementation_baseline_manifest",
+      "sha256": "ad983fa184e91d8ef1b5a52822c5bd1d263b36a60a8aeef58ccb0efbf7bf2198",
+      "bytes": 605092
+    },
+    {
+      "path": "../../tests/test_complete_portfolio_v26_transition_runbook.py",
+      "role": "exact_config_route_boundary_and_current_source_hash_regression_tests",
+      "sha256": "45e3cdd7084c28cc6738ec86d1857a3d1c61fb19d92c784f18ce7b3b26ab4eb8",
+      "bytes": 5305
+    }
+  ],
+  "metrics": {
+    "source_drift_failures_detected_before_rebind": 1,
+    "current_implementation_sources_compared": 1243,
+    "current_implementation_source_mismatches_after_rebind": 0,
+    "current_implementation_sha256": "0864f9a5c09b2d71462268c97e0fa01e8b5001147ce0573600bd9871c3527e09",
+    "runbook_tests_passed": 4,
+    "focused_python_tests_passed": 51,
+    "full_rust_tui_suite_passed": true,
+    "configured_assets": 9,
+    "configured_provider_symbol_routes": 24,
+    "running_open_lifecycles": 2,
+    "candidate_active": false,
+    "execution_authority": "none",
+    "runtime_changed_by_this_revision": false
+  },
+  "limitations": [
+    "The source comparison is point-in-time; any later implementation edit must fail the test and require another explicitly reviewed baseline.",
+    "The credential-free baseline still does not claim an armed live run identity; v26 startup must create its own mandatory verified pre-start bundle.",
+    "The reformat was mechanically non-semantic, but accepting a stale source identity would still violate reproducibility.",
+    "V25 remains loaded with earlier code and cannot validate the staged v26 telemetry repairs.",
+    "Mechanical source consistency does not establish strategy edge or economic readiness."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

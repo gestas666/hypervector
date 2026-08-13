@@ -82,6 +82,13 @@ class ShadowLiquidationMixin:
     _last_liquidation: ShadowLiquidation | None
     _liquidation_cooldown_until_ms: int | None
 
+    def _scale_open_cost_basis(
+        self,
+        *,
+        before_quantity: float,
+        remaining_quantity: float,
+    ) -> None: ...
+
     def mark(self, *, mark_price: float, observed_at: str) -> bool:
         """Apply a mark and execute a supported isolated liquidation attempt."""
         positive(mark_price, "mark_price")
@@ -150,6 +157,7 @@ class ShadowLiquidationMixin:
             symbol=self._symbol,
             observed_at=observed_at,
             mark_price=mark_price,
+            boundary_price=position.liquidation_price(),
             position_quantity=before,
             isolated_margin_usd=position.isolated_margin,
             position_equity_usd=state.equity_usd,
@@ -188,9 +196,13 @@ class ShadowLiquidationMixin:
         )
         fee = fill.filled_quantity * (price or 0.0) * self._taker_fee_rate
         self._realized_equity += market_pnl - fee
-        self._position_fees += fee
         remaining = max(0.0, abs(before) - fill.filled_quantity)
         self._position_quantity = side * remaining
+        if remaining > 1e-12:
+            self._scale_open_cost_basis(
+                before_quantity=abs(before),
+                remaining_quantity=remaining,
+            )
         backstop = (
             remaining > 1e-12
             and fill.filled_quantity < fill.requested_quantity

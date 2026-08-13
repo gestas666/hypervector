@@ -70,6 +70,7 @@ def train_metalabel_bundle(
 ) -> TrainResult:
     """Fit LGBM on labeled samples; write metalabel_lgbm.txt + calibrator + metadata."""
     lgb, joblib, IsotonicRegression = _require_ml()
+    import sklearn
     from sklearn.metrics import brier_score_loss, log_loss, roc_auc_score
 
     out = Path(out_dir)
@@ -119,10 +120,8 @@ def train_metalabel_bundle(
         oof[te] = preds
         log_losses.append(float(log_loss(y[te], preds, labels=[0, 1])))
         briers.append(float(brier_score_loss(y[te], preds)))
-        try:
+        if len(np.unique(y[te])) > 1:
             aucs.append(float(roc_auc_score(y[te], preds)))
-        except ValueError:
-            pass
 
     # Final fit on full data
     dall = lgb.Dataset(X, label=y)
@@ -151,7 +150,7 @@ def train_metalabel_bundle(
         "lgbm_log_loss_mean": float(np.mean(log_losses)) if log_losses else None,
         "lgbm_log_loss_std": float(np.std(log_losses)) if log_losses else None,
         "lgbm_brier_mean": float(np.mean(briers)) if briers else None,
-        "lgbm_auc_mean": float(np.nanmean(aucs)) if aucs else None,
+        "lgbm_auc_mean": float(np.mean(aucs)) if aucs else None,
         "baseline_log_loss": baseline_ll,
         "n_cv_folds_used": len(log_losses),
     }
@@ -164,12 +163,19 @@ def train_metalabel_bundle(
         "params": p,
         "cv": cv,
         "feature_importance_gain": importance,
+        "training_versions": {
+            "joblib": joblib.__version__,
+            "lightgbm": lgb.__version__,
+            "scikit_learn": sklearn.__version__,
+        },
     }
     if extra_meta:
         meta["source"] = extra_meta
 
     meta_path = out / _METADATA_NAME
-    meta_path.write_text(json.dumps(meta, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    meta_path.write_text(
+        json.dumps(meta, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
 
     return TrainResult(
         out_dir=out.resolve(),

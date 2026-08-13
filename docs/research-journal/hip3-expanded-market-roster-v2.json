@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "hip3-expanded-market-roster",
+  "revision_number": 2,
+  "supersedes_revision_id": "0f91598b1d8f56ad95fdfc63b024578e2650afb5a082ce1a669a22d8e1bd1fdd",
+  "created_at_utc": "2026-08-06T15:51:10Z",
+  "strategy_id": "unassigned_hip3_research",
+  "symbol": "PORTFOLIO",
+  "status": "observe",
+  "hypothesis": "Venue-native HIP-3 data for SP500, SPCX, SNDK, GOLD, and an explicitly identified oil market may support additional bidirectional portfolio strategies after namespace, fee, margin, data, and execution semantics are validated independently from native crypto perps.",
+  "decision": "Retain the five active XYZ markets in observation and chronological research. The new least-privilege reader now binds metadata, mids, clearinghouse state, open orders, and books to the exact xyz namespace, and a five-market mainnet smoke passed without constructing a signing client. This advances read telemetry only: do not add HIP-3 execution authority or claim strategy transfer until archive audits, missing fee and margin inputs, backend/TUI integration, and signed-order reconciliation are separately validated. Continue treating delisted cash:WTI as historical WTI and xyz:BRENTOIL as a different active oil market.",
+  "confidence": "low_medium",
+  "falsifier": "The read-path assessment is falsified by any native-scope fallback, symbol/dex mismatch, duplicate or missing namespaced position, crossed or empty active book, account-source mismatch, or a signing client constructed by the read-only factory. Economic value remains unproven and is weakened by chronological after-cost profit factor at or below one or unstable long/short transfer.",
+  "evidence": [
+    {
+      "path": "../../data/logs/research/hip3_read_only_adapter_smoke_20260806T1549Z.json",
+      "role": "immutable_five_market_mainnet_info_account_and_l2_smoke",
+      "sha256": "180f45ede45356d9cdd93e78083c30bf95de458dd2b14d01d81fa45817fe11d5",
+      "bytes": 3199
+    },
+    {
+      "path": "../../data/logs/research/xyz_active_roster_qualification_20260806T1524Z.json",
+      "role": "immutable_public_metadata_and_market_data_qualification",
+      "sha256": "b2a1c8a96be69a982960c334019253326c801a263abe689ddfe11657f1ca70f5",
+      "bytes": 10182
+    },
+    {
+      "path": "../../src/hypervector/live/hyperliquid_hip3_factory.py",
+      "role": "least_privilege_info_only_namespaced_factory",
+      "sha256": "171b6e9b6467217d408c0b16ef28fffff0452766e3daa5c7027b15ed605c0dde",
+      "bytes": 1757
+    },
+    {
+      "path": "../../src/hypervector/live/hyperliquid_perp_reader.py",
+      "role": "exact_dex_scoped_perpetual_read_boundary",
+      "sha256": "6ffff4cd890187597ba3ccb6a3b703926ba51144e3a9ca7420b74ca1a57ad63f",
+      "bytes": 7722
+    },
+    {
+      "path": "../../tests/test_hyperliquid_hip3_reader.py",
+      "role": "namespace_mismatch_and_info_only_factory_regression_tests",
+      "sha256": "d45cc7a9a67fdbc136ab5dbd8059bd0c8e495c5cd506c88481d8fdeff11fce0c",
+      "bytes": 6909
+    }
+  ],
+  "metrics": {
+    "active_observation_symbols": 5,
+    "mainnet_smoke_markets_passed": 5,
+    "mainnet_smoke_markets_failed": 0,
+    "mainnet_smoke_open_positions": 0,
+    "mainnet_smoke_open_orders": 0,
+    "smoke_l2_depth_per_side": 5,
+    "namespace_regression_tests": 6,
+    "focused_reader_and_native_regression_tests": 45,
+    "signing_client_constructed": false,
+    "execution_authority": "none",
+    "backend_telemetry_integrated": false,
+    "tui_telemetry_integrated": false,
+    "strategy_transfer_validated": false,
+    "historical_archive_audits_complete": false,
+    "runtime_changed_by_this_revision": false
+  },
+  "limitations": [
+    "The mainnet smoke is one point-in-time read and does not prove continuous availability or stable spread and depth.",
+    "The reader validates account state and orders but does not validate authenticated HIP-3 order placement, cancellation, protection, fills, or restart adoption.",
+    "SPCX, SNDK, GOLD, and BRENTOIL margin tier definitions remain unresolved, and GOLD's growthMode fee input remains absent.",
+    "Historical L2 acquisition is still in progress and strategy transfer has no chronological results.",
+    "The active crypto v14 backend and TUI do not consume this new HIP-3 read path yet.",
+    "No strategy, position, order, running process, or execution scope changed in this revision."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

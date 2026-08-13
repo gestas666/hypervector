@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Literal
 import numpy as np
 import pandas as pd
 
-from hypervector.regime.models import BreakoutDirection, PrimaryRegime
+from hypervector.regime.models import PrimaryRegime
 from hypervector.strategies.hypervelocity_contract import (
     HypervelocityContract,
     faithful_regime_config,
@@ -37,6 +37,7 @@ class HypervelocityMarketObservation:
 
     primary_regime: str
     breakout_direction: str | None
+    structural_direction: Direction | None
     entry_direction: Direction | None
     state_1m: str
     state_5m: str
@@ -45,6 +46,16 @@ class HypervelocityMarketObservation:
     regime_strength_score: float
     regime_score_source: str
     reason: str
+    bbwp_percentile: float | None
+    compression_ready: bool
+    ema_gap_bps_signed: float | None
+    rsi: float | None
+    rsi_ema: float | None
+    rsi_cross_direction: str | None
+    tactical_breakout_direction: str | None
+    breakout_volume_ratio: float | None
+    prior_range_high: float | None
+    prior_range_low: float | None
 
 
 def _classify_regimes(
@@ -86,19 +97,27 @@ def _latest_contiguous_bars(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def _entry_eligibility(decisions: pd.DataFrame, direction: Direction) -> pd.Series:
-    required = {"primary_regime", "breakout_direction"}
+    required = {"primary_regime", "breakout_direction", "entry_direction"}
     missing = required.difference(decisions.columns)
     if missing:
         raise ValueError(f"regime decisions missing columns: {sorted(missing)}")
-    primary = decisions["primary_regime"].astype(str)
-    breakout = decisions["breakout_direction"].astype(object)
-    if direction == "long":
-        trend = primary.eq(PrimaryRegime.TREND_UP.value)
-        confirmed = breakout.eq(BreakoutDirection.UPWARD.value)
-    else:
-        trend = primary.eq(PrimaryRegime.TREND_DOWN.value)
-        confirmed = breakout.eq(BreakoutDirection.DOWNWARD.value)
-    return (trend | (primary.eq(PrimaryRegime.BREAKOUT.value) & confirmed)).astype(bool)
+    return decisions["entry_direction"].eq(direction).astype(bool)
+
+
+def _optional_direction(value: object) -> Direction | None:
+    if value == "long":
+        return "long"
+    if value == "short":
+        return "short"
+    return None
+
+
+def _optional_text(value: object) -> str | None:
+    return None if value is None or pd.isna(value) else str(value)
+
+
+def _optional_float(value: object) -> float | None:
+    return None if value is None or pd.isna(value) else float(value)
 
 
 def _target_hit(
@@ -166,16 +185,12 @@ def current_hypervelocity_market(
     latest = decisions.iloc[-1]
     breakout = latest["breakout_direction"]
     breakout_value = None if pd.isna(breakout) else str(breakout)
-    long_allowed = bool(_entry_eligibility(decisions, "long").iloc[-1])
-    short_allowed = bool(_entry_eligibility(decisions, "short").iloc[-1])
-    direction: Direction | None = None
-    if long_allowed and not short_allowed:
-        direction = "long"
-    elif short_allowed and not long_allowed:
-        direction = "short"
+    direction = _optional_direction(latest.get("entry_direction"))
+    structural = _optional_direction(latest.get("structural_direction"))
     return HypervelocityMarketObservation(
         primary_regime=str(latest["primary_regime"]),
         breakout_direction=breakout_value,
+        structural_direction=structural,
         entry_direction=direction,
         state_1m=str(latest.get("state_1m", latest["primary_regime"])),
         state_5m=str(latest.get("state_5m", latest["primary_regime"])),
@@ -188,6 +203,18 @@ def current_hypervelocity_market(
             latest.get("regime_score_source", "legacy_confidence_alias")
         ),
         reason=str(latest.get("reason", "not_reported")),
+        bbwp_percentile=_optional_float(latest.get("bbwp_percentile")),
+        compression_ready=bool(latest.get("compression_ready", False)),
+        ema_gap_bps_signed=_optional_float(latest.get("ema_gap_bps_signed")),
+        rsi=_optional_float(latest.get("rsi")),
+        rsi_ema=_optional_float(latest.get("rsi_ema")),
+        rsi_cross_direction=_optional_text(latest.get("rsi_cross_direction")),
+        tactical_breakout_direction=_optional_text(
+            latest.get("tactical_breakout_direction")
+        ),
+        breakout_volume_ratio=_optional_float(latest.get("breakout_volume_ratio")),
+        prior_range_high=_optional_float(latest.get("prior_range_high")),
+        prior_range_low=_optional_float(latest.get("prior_range_low")),
     )
 
 
@@ -230,7 +257,7 @@ def build_hypervelocity_signals(
     *,
     direction: Direction = "long",
     target_margin_pct: float = 8.0,
-    leverage: float = 40.0,
+    leverage: float = 30.0,
     regime_config: RegimeClassifierConfig | None = None,
 ) -> tuple[pd.Series, pd.Series, str]:
     """Build TP-only signals from authoritative trend and confirmed-breakout states."""
@@ -254,7 +281,7 @@ def hypervelocity_long(
     df: pd.DataFrame,
     *,
     target_margin_pct: float = 8.0,
-    leverage: float = 40.0,
+    leverage: float = 30.0,
     regime_config: RegimeClassifierConfig | None = None,
 ) -> tuple[pd.Series, pd.Series, str]:
     """Build the faithful long-side Hypervelocity signals."""
@@ -271,7 +298,7 @@ def hypervelocity_short(
     df: pd.DataFrame,
     *,
     target_margin_pct: float = 8.0,
-    leverage: float = 40.0,
+    leverage: float = 30.0,
     regime_config: RegimeClassifierConfig | None = None,
 ) -> tuple[pd.Series, pd.Series, str]:
     """Build the faithful short-side Hypervelocity signals."""
@@ -286,7 +313,7 @@ def hypervelocity_short(
 
 _PARAM_GRID: dict[str, list[float]] = {
     "target_margin_pct": [8.0],
-    "leverage": [40.0],
+    "leverage": [30.0],
 }
 
 
@@ -294,7 +321,7 @@ def register_hypervelocity() -> None:
     """Register fixed-contract Hypervelocity strategy specs."""
     shared = {
         "description": (
-            "BTC 1m canonical-regime scalper, fixed 40x and 8% margin target"
+            "BTC 1m canonical-regime scalper, fixed 30x and 8% margin target"
         ),
         "param_grid": dict(_PARAM_GRID),
     }

@@ -90,9 +90,7 @@ class LivePolicy:
             "secret_env_names": [SECRET_ENV_WALLET, SECRET_ENV_API_KEY],
             "network": "mainnet",
             "submit_wired": wired,
-            "can_start": bool(
-                self.enabled and self.armed and self.secrets_present
-            ),
+            "can_start": bool(self.enabled and self.armed and self.secrets_present),
             "note": (
                 "Live exec client present (F2). "
                 "live-run / venue place only when enabled+armed+secrets (F3)."

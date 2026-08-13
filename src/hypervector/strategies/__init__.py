@@ -7,7 +7,13 @@ from hypervector.strategies.hypervelocity import register_hypervelocity
 from hypervector.strategies.impulse_1m import register_impulse_1m
 from hypervector.strategies.oi_divergence import register_oi_divergence
 from hypervector.strategies.pine_composite import register_pine_composite
-from hypervector.strategies.registry import StrategySpec, get_strategy, list_strategies, register
+from hypervector.strategies.registry import (
+    StrategySpec,
+    get_strategy,
+    list_strategies,
+    register,
+)
+from hypervector.strategies.source_derived import register_source_derived
 from hypervector.strategies.trend_ride import register_trend_ride
 
 
@@ -19,6 +25,7 @@ def register_all_strategies() -> None:
     register_oi_divergence()
     register_funding_momentum()
     register_impulse_1m()
+    register_source_derived()
     register_hypervelocity()
 
 
@@ -34,5 +41,6 @@ __all__ = [
     "register_pine_composite",
     "register_oi_divergence",
     "register_funding_momentum",
+    "register_source_derived",
     "register_hypervelocity",
 ]

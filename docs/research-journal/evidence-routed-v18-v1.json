@@ -1,0 +1,121 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "evidence-routed-v18",
+  "revision_number": 1,
+  "supersedes_revision_id": null,
+  "created_at_utc": "2026-08-07T07:01:19Z",
+  "strategy_id": "multi_asset_bidirectional_evidence_routed_candidate_v18",
+  "symbol": "MULTI",
+  "status": "candidate",
+  "hypothesis": "Replacing v14's unchanged cross-asset HYPE breakout execution routes with one attributable provider per executable coin may improve portfolio experiment quality: BTC Hulk, ETH precompression-pullback, and native HYPE breakout, while SOL and all non-selected mappings continue bidirectional observation. This is an isolation and routing hypothesis, not a claim that the remaining portfolio has established positive edge.",
+  "decision": "Freeze v18 as an inactive post-v14 candidate. Remove generic HYPE breakout execution from BTC, ETH, and SOL; retain it only on HYPE; grant ETH only to the distinct precompression-pullback provider; retain BTC Hulk unchanged; preserve both directions, 5x isolated leverage, existing asset notional caps, four shared portfolio slots, and one position per coin. Do not activate, restart, close, place, or modify any live order while the v14 HYPE lifecycle is open. Any future transition requires a final immutable v14 audit, verified venue-flat and order-free state, exact backup, passing contract tests, and explicit operator approval.",
+  "confidence": "low_medium",
+  "falsifier": "Implementation isolation is invalidated by any execution route outside Hulk|BTC, ETH-pullback|ETH, and HYPE-breakout|HYPE; overlapping executable providers on one coin; one-sided authority; changed risk, exit, or portfolio limits; missing stop protection; fingerprint drift; or activation before a verified-flat boundary. The economic hypothesis is weakened or rejected by materially negative prospective after-cost lifecycles, persistent losses on both sides, friction consuming the thin ETH surplus, continued negative native HYPE results, or no practical eligible-signal cadence. A zero-signal window tests liveness and cadence but does not establish PnL edge.",
+  "evidence": [
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/multi_asset_live_audit_bidirectional-live-1786028939765_prefix_20260807T0656Z.json",
+      "role": "immutable_complete_v14_prefix_with_one_sol_close_and_protected_open_hype_lifecycle",
+      "sha256": "a606580c9540db3971d3a29e70a5d6590bfeba2c3179ec9f1a514a92c4ccd76f",
+      "bytes": 5348719
+    },
+    {
+      "path": "../../configs/multi_asset_bidirectional_hype75_all_asset_breakout_canary_v14.toml",
+      "role": "exact_active_predecessor_generation",
+      "sha256": "f6098f1f553a81b6731eb5d5e0897c96b7da8c3bc25295a276d9cbed44c2e007",
+      "bytes": 3366
+    },
+    {
+      "path": "../../configs/multi_asset_bidirectional_evidence_routed_candidate_v18.toml",
+      "role": "inactive_exact_next_flat_candidate_generation",
+      "sha256": "0f08062468c4b6e358cc60b3cf0b6f52aae00a46449b3f27f17b254e5f26f70e",
+      "bytes": 3343
+    },
+    {
+      "path": "../../tests/test_evidence_routed_candidate_v18_config.py",
+      "role": "route_risk_collector_and_fail_closed_contract_tests",
+      "sha256": "5fa26692f47992a2a7581786c6879363c08486d237f9eef3cc3da772379bb4fc",
+      "bytes": 3681
+    },
+    {
+      "path": "../reviews/2026-08-07-evidence-routed-v18-candidate.md",
+      "role": "systems_decision_tradeoffs_failure_modes_and_validation_plan",
+      "sha256": "b86b6b467e3c0dfbf82e32fa89480596cc37718194ce3556177cccada5fb55cd",
+      "bytes": 6523
+    },
+    {
+      "path": "../reviews/2026-08-05-hype-breakout-cross-asset-transfer.md",
+      "role": "equal_window_generic_cross_asset_transfer_rejection",
+      "sha256": "075d059c31429f464e48fc9a5ed33880de7d8936af93b5340dcc288d61ea8c26",
+      "bytes": 4871
+    },
+    {
+      "path": "../reviews/2026-08-06-eth-breakout-transfer-canary-qualification.md",
+      "role": "distinct_eth_pullback_reproduction_and_candidate_limitations",
+      "sha256": "3df1387e3bb7896bcbe3a13185c25821a10e337be2a38cb52571c95c4e3cb0b2",
+      "bytes": 4937
+    }
+  ],
+  "metrics": {
+    "source_run_id": "bidirectional-live-1786028939765",
+    "active_profile_id": "multi_asset_bidirectional_hype75_all_asset_breakout_canary_v14",
+    "active_profile_fingerprint": "e27a8cb63b1713e68e8bdafc3d09f4c4cbabfc27cb1af11db673f7ad18df8900",
+    "candidate_profile_id": "multi_asset_bidirectional_evidence_routed_candidate_v18",
+    "candidate_profile_fingerprint": "3dcf69329639bc10eaa8d20561c391419494d37e7686370bf3ea0cab29b1f158",
+    "audit_last_observed_at_utc": "2026-08-07T06:56:38.431328+00:00",
+    "audit_row_count": 11862,
+    "audit_coverage_complete": true,
+    "audit_faults": 0,
+    "current_run_completed_trades": 1,
+    "current_run_net_pnl_usd": -0.095959,
+    "current_run_fees_usd": 0.064723,
+    "current_run_funding_usd": 0.001724,
+    "current_run_open_hype_lifecycles": 1,
+    "current_open_hype_protected": true,
+    "generic_btc_development_profit_factor": 0.7873,
+    "generic_btc_development_net_bps": -7068.02,
+    "generic_btc_opened_final_profit_factor": 1.2211,
+    "generic_btc_opened_final_net_bps": 1064.83,
+    "generic_eth_development_profit_factor": 0.8426,
+    "generic_eth_development_net_bps": -7679.54,
+    "generic_eth_opened_final_profit_factor": 0.822,
+    "generic_eth_opened_final_net_bps": -1593.88,
+    "generic_sol_development_profit_factor": 0.8336,
+    "generic_sol_development_net_bps": -8948.62,
+    "generic_sol_opened_final_profit_factor": 0.6344,
+    "generic_sol_opened_final_net_bps": -3596.19,
+    "eth_pullback_development_trades": 282,
+    "eth_pullback_development_profit_factor": 1.1111,
+    "eth_pullback_development_net_bps": 1657.98,
+    "eth_pullback_opened_final_trades": 56,
+    "eth_pullback_opened_final_profit_factor": 1.1208,
+    "eth_pullback_opened_final_net_bps": 322.33,
+    "eth_pullback_current_forward_evaluations": 946,
+    "eth_pullback_current_eligible_signals": 0,
+    "execution_routes_before": [
+      "hulk_expansion_bidirectional_tuned_v2|BTC",
+      "hype_breakout_onset_bidirectional_v1|BTC",
+      "hype_breakout_onset_bidirectional_v1|ETH",
+      "hype_breakout_onset_bidirectional_v1|HYPE",
+      "hype_breakout_onset_bidirectional_v1|SOL"
+    ],
+    "execution_routes_after": [
+      "eth_breakout_precompression_pullback_bidirectional_v1|ETH",
+      "hulk_expansion_bidirectional_tuned_v2|BTC",
+      "hype_breakout_onset_bidirectional_v1|HYPE"
+    ],
+    "execution_authority": "none",
+    "runtime_changed_by_this_revision": false
+  },
+  "limitations": [
+    "The v14 live prefix contains only one closed SOL trade and one unresolved HYPE lifecycle, so it cannot estimate v14 repeatability or portfolio expectancy.",
+    "The separate ETH pullback provider has no eligible signal in the current forward prefix and was selected from a multiple-tested stop and hold surface.",
+    "Native HYPE historical deployed-shape and currently identifiable exact live execution histories are negative; retaining HYPE is continued bounded research, not promotion evidence.",
+    "BTC Hulk has contradictory historical blocks and no eligible outcome in the current prefix.",
+    "Historical one-minute bars model fees, slippage, and funding but cannot reproduce intrabar ordering, IOC latency, private queue state, stop gap-through, or rate-limit failures.",
+    "SOL remains fully observed but has no execution route in v18; this may reduce cadence until a distinct SOL mechanism earns its own explicit hypothesis.",
+    "No live strategy, position, order, stop, target, sizing policy, backend process, checkpoint process, or portfolio configuration changed as a result of this revision."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

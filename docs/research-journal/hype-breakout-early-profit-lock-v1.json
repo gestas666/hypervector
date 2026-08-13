@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "hype-breakout-early-profit-lock",
+  "revision_number": 1,
+  "supersedes_revision_id": null,
+  "created_at_utc": "2026-08-05T16:57:05+00:00",
+  "strategy_id": "hype_breakout_onset_bidirectional_v1",
+  "symbol": "HYPE",
+  "status": "reject",
+  "hypothesis": "A generic profit floor and trailing stop activated before HYPE's eight-hour soft boundary may retain more after-cost profit than the active no-target contract.",
+  "decision": "Reject the frozen 25/15/10, 40/15/20, and 60/15/30 bps activation/floor/trail policies for canonical HYPE. Preserve their telemetry as negative mechanism evidence and do not apply them to the current open lifecycle or a future profile. This rejection is limited to these exact policies.",
+  "confidence": "medium",
+  "falsifier": "A prospectively frozen pre-soft profit-protection policy that improves actual after-cost exits across multiple non-adjacent profile-matched live windows without increasing loss concentration would update this rejection; changed source-prefix hashes would invalidate the present audit.",
+  "evidence": [
+    {
+      "path": "../reviews/2026-08-05-hype-profit-retention-audit.md",
+      "role": "live_and_historical_profit_retention_decision",
+      "sha256": "be6f1578124bd1103c934a46bbf5c138313dba3fac8d96dc39482ddea25d66ba",
+      "bytes": 5804
+    },
+    {
+      "path": "../../data/logs/research/hype_breakout_profit_protection_development_v2_20260803.json",
+      "role": "post_hoc_development_mechanism_evidence",
+      "sha256": "98cc915687fe4c7f17476514ad45689cdc4b9d86274874175cdc711dfe08545c",
+      "bytes": 11445
+    }
+  ],
+  "metrics": {
+    "live_resolved_closes": 6,
+    "actual_live_net_pnl_usd": 2.099489,
+    "policy_results": {
+      "a25_floor15_trail10": {
+        "triggered": 5,
+        "estimated_net_pnl_usd": 0.137787,
+        "estimated_minus_actual_net_usd": -1.961702,
+        "profit_factor": 1.6154
+      },
+      "a40_floor15_trail20": {
+        "triggered": 5,
+        "estimated_net_pnl_usd": 0.134087,
+        "estimated_minus_actual_net_usd": -1.965402,
+        "profit_factor": 1.5988
+      },
+      "a60_floor15_trail30": {
+        "triggered": 5,
+        "estimated_net_pnl_usd": 0.417465,
+        "estimated_minus_actual_net_usd": -1.682024,
+        "profit_factor": 2.8644
+      }
+    },
+    "development_control_trades": 1011,
+    "development_control_profit_factor": 0.8911,
+    "development_challenger_profit_factors": [
+      0.5255,
+      0.6237,
+      0.7265
+    ]
+  },
+  "limitations": [
+    "Six live HYPE closes remain sparse and span non-independent process windows.",
+    "Completed one-minute bars cannot reconstruct intraminute trigger ordering.",
+    "Counterfactual fills reuse measured exit friction rather than submitted orders.",
+    "The negative historical control does not establish that canonical HYPE entries are durable.",
+    "Rejecting these exact policies does not reject every possible profit-protection design."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

@@ -1,0 +1,1086 @@
+{
+  "manifest": {
+    "blocks": [
+      {
+        "body": "# Hypervector Strategy Regression and v47 Repair Plan\n\nEvidence cutoff: `2026-08-12T15:26:22.312071+00:00`. Active v39 remains live; v47 is staged report-only.",
+        "id": "title",
+        "type": "markdown"
+      },
+      {
+        "cardIds": [
+          "live-card",
+          "defect-card",
+          "candidate-card"
+        ],
+        "id": "headline",
+        "type": "metric-strip"
+      },
+      {
+        "body": "## Technical summary\n\nThe evidence does **not** support treating every prior strategy as bad. One material live/research mismatch is confirmed: HIP-3 v1 accepted 30-second-old pressure while the archive contract allowed 15 seconds. Range Onset inactivity is statistically plausible for a sparse signal, and the BTC/HYPE survivors retain limited positive evidence. Conversely, unchanged ETH/SOL HT-onset transfers and commodity Swing routes remain negative or winner-concentrated after friction. v47 repairs the confirmed contract, restores selected sparse mechanisms, removes weak transfers, and increases meaningful exposure with fixed 10x leverage and 12% margin per asset.",
+        "id": "technical-summary",
+        "type": "markdown"
+      },
+      {
+        "chartId": "all-time-route-pnl",
+        "id": "route-chart",
+        "type": "chart"
+      },
+      {
+        "body": "## Scope, data, and definitions\n\nThis report reconciles the fresh live checkpoint, immutable research artifacts, the versioned HIP-3 parity journal, the v47 TOML contract, and its venue-friction stress. A **defect** means live behavior violated the frozen researched contract. **Weak edge** means the tested contract itself was negative or unstable. **Sparse-valid** means infrequent signals are consistent with the mechanism and absence of trades is not evidence of a runtime failure.",
+        "id": "scope",
+        "type": "markdown"
+      },
+      {
+        "id": "strategy-table",
+        "tableId": "strategy-decisions",
+        "type": "table"
+      },
+      {
+        "body": "## Methodology\n\nEach strategy was traced through provider identity, entry decision, live eligibility, execution contract, exits, fees, funding, and chronological evidence. Arithmetic was reconciled to the live route totals. Robustness checks prioritize chronological folds and results after removing the largest winner. No performance threshold silently grants or removes execution authority; dispositions describe the next experiment.",
+        "id": "methodology",
+        "type": "markdown"
+      },
+      {
+        "body": "## Repaired $5K candidate\n\nv47 contains six routes across five assets. Ten positions remain account capacity, but one-position-per-asset routing makes five the current simultaneous maximum. Each filled asset uses 12% isolated margin and 10x leverage, or $6,000 notional at $5,000 equity. Mechanism-specific exits are preserved; timer exits remain secondary fallbacks.",
+        "id": "candidate",
+        "type": "markdown"
+      },
+      {
+        "id": "candidate-table",
+        "tableId": "candidate-routes",
+        "type": "table"
+      },
+      {
+        "chartId": "candidate-slot-risk",
+        "id": "risk-chart-block",
+        "type": "chart"
+      },
+      {
+        "body": "## Limitations and robustness\n\nThe 5.74% modeled p99 stop wave is a stack of marginal venue-friction estimates, not a joint probability or loss ceiling. Gaps, depth cancellation, correlated entries, and stop slippage can exceed it. v47 has no compatible live closes, ETH's range context change is post-hoc, HYPE confirmation has four trades and becomes negative without its largest winner, and SP500 uses limited/proxy exit evidence. These facts reduce confidence but do not justify reverting to known-bad transfers.",
+        "id": "limitations",
+        "type": "markdown"
+      },
+      {
+        "body": "## Regime detector\n\nCanonical core regime telemetry is causal and populated, but pooled observations overlap and independent episode counts remain sparse. HIP-3 still lacks canonical regime parity. Regime is therefore retained as telemetry, conflict attribution, and exit context\u2014not a universal entry veto or leverage multiplier.",
+        "id": "regime",
+        "type": "markdown"
+      },
+      {
+        "chartId": "regime-accuracy",
+        "id": "regime-chart-block",
+        "type": "chart"
+      },
+      {
+        "id": "open-table",
+        "tableId": "open-positions",
+        "type": "table"
+      },
+      {
+        "body": "## Next steps\n\n1. Let v39 manage every protected open lifecycle to a verified flat, order-free boundary.\n2. Generate a fresh v47 preflight and stage its exact fingerprint in the TUI.\n3. Start v47 only with explicit live-risk authorization; journal every eligible, withheld, opened, and closed event.\n4. Compare realized fill, fee, funding, stop, and deadline behavior with the stress model after every close.\n5. Treat a first close as plumbing evidence. Reassess economics only after a predeclared compatible window and largest-winner sensitivity.\n6. Investigate missed qualified signals as aggressively as losses so overly restrictive gates are visible.",
+        "id": "next",
+        "type": "markdown"
+      },
+      {
+        "body": "## Further questions\n\nThe main unknown is whether the repaired mechanisms retain edge at the larger notional under actual co-triggering and slippage. Confidence is **high** that HIP-3 v1 violated its contract and that v47 removes the weak HT transfers; **medium** that Range Onset and BTC Hulk deserve renewed forward testing; **low-to-medium** that the full v47 portfolio will be profitable before compatible live outcomes exist. Falsifiers include fresh15 HIP-3 entries reproducing the same losses, Range Onset remaining negative across independent periods, realized stop waves materially exceeding the model, or v47 route outcomes remaining negative after complete friction.",
+        "id": "questions",
+        "type": "markdown"
+      }
+    ],
+    "cards": [
+      {
+        "dataset": "all_time",
+        "id": "live-card",
+        "metrics": [
+          {
+            "field": "closed_trades",
+            "format": "number",
+            "label": "All-time closes"
+          },
+          {
+            "field": "net_pnl_usd",
+            "format": "currency",
+            "label": "Net",
+            "signed": true
+          },
+          {
+            "field": "profit_factor",
+            "format": "number",
+            "label": "PF"
+          }
+        ],
+        "sourceId": "live-checkpoint"
+      },
+      {
+        "dataset": "defect_summary",
+        "id": "defect-card",
+        "metrics": [
+          {
+            "field": "affected_closed_trades",
+            "format": "number",
+            "label": "Invalid-contract closes"
+          },
+          {
+            "field": "affected_net_pnl_usd",
+            "format": "currency",
+            "label": "Attributed net",
+            "signed": true
+          },
+          {
+            "field": "affected_loss_fraction",
+            "format": "percent",
+            "label": "Run-loss share"
+          }
+        ],
+        "sourceId": "hip3-parity"
+      },
+      {
+        "dataset": "candidate_capacity",
+        "id": "candidate-card",
+        "metrics": [
+          {
+            "field": "usable_asset_slots",
+            "format": "number",
+            "label": "Usable assets"
+          },
+          {
+            "field": "p99_stop_wave_loss_usd",
+            "format": "currency",
+            "label": "$5K p99 wave"
+          },
+          {
+            "field": "p99_stop_wave_fraction",
+            "format": "percent",
+            "label": "p99 / equity"
+          }
+        ],
+        "sourceId": "v47-stress"
+      }
+    ],
+    "charts": [
+      {
+        "dataset": "all_time_routes",
+        "encodings": {
+          "x": {
+            "field": "route_label",
+            "type": "nominal"
+          },
+          "y": {
+            "field": "net_pnl_usd",
+            "format": "currency",
+            "type": "quantitative"
+          }
+        },
+        "id": "all-time-route-pnl",
+        "layout": "full",
+        "maxRows": 24,
+        "referenceLines": [
+          {
+            "axis": "y",
+            "label": "Breakeven",
+            "value": 0
+          }
+        ],
+        "sourceId": "live-checkpoint",
+        "title": "All-time route PnL exposes both survivors and broken transfers",
+        "type": "horizontalBar"
+      },
+      {
+        "dataset": "candidate_slot_risk",
+        "encodings": {
+          "x": {
+            "field": "asset",
+            "type": "nominal"
+          },
+          "y": {
+            "field": "p99_stop_loss_usd",
+            "format": "currency",
+            "type": "quantitative"
+          }
+        },
+        "id": "candidate-slot-risk",
+        "layout": "full",
+        "maxRows": 8,
+        "sourceId": "v47-stress",
+        "title": "$5K modeled p99 stop-wave contribution by asset",
+        "type": "horizontalBar"
+      },
+      {
+        "dataset": "regime_accuracy",
+        "encodings": {
+          "color": {
+            "field": "series",
+            "type": "nominal"
+          },
+          "x": {
+            "field": "horizon",
+            "type": "ordinal"
+          },
+          "y": {
+            "field": "accuracy_pct",
+            "type": "quantitative",
+            "unit": "%"
+          }
+        },
+        "id": "regime-accuracy",
+        "layout": "full",
+        "maxRows": 20,
+        "referenceLines": [
+          {
+            "axis": "y",
+            "label": "Chance",
+            "lineStyle": "dashed",
+            "value": 50
+          }
+        ],
+        "sourceId": "regime-forward",
+        "title": "Regime accuracy: pooled observations versus independent onsets",
+        "type": "bar"
+      }
+    ],
+    "description": "Source-reconciled diagnosis of live defects, strategy evidence, exits, regime telemetry, and $5K successor risk.",
+    "generatedAt": "2026-08-12T15:28:02.985553+00:00",
+    "sources": [
+      {
+        "id": "live-checkpoint",
+        "label": "Fresh live checkpoint",
+        "path": "data/runtime/bidirectional_cohort/latest_checkpoint.json",
+        "query": {
+          "description": "Loads Fresh live checkpoint.",
+          "engine": "duckdb",
+          "sql": "SELECT * FROM read_json_auto('data/runtime/bidirectional_cohort/latest_checkpoint.json')"
+        }
+      },
+      {
+        "id": "v47-config",
+        "label": "v47 repaired configuration",
+        "path": "configs/multi_asset_growth_first_5000_repaired_candidate_v47.toml",
+        "query": {
+          "description": "Loads v47 repaired configuration.",
+          "engine": "duckdb",
+          "sql": "SELECT * FROM read_text('configs/multi_asset_growth_first_5000_repaired_candidate_v47.toml')"
+        }
+      },
+      {
+        "id": "v47-stress",
+        "label": "v47 route-aware friction stress",
+        "path": "data/logs/research/bidirectional_cohort/v47_growth_sizing_stress_20260812_v3.json",
+        "query": {
+          "description": "Loads v47 route-aware friction stress.",
+          "engine": "duckdb",
+          "sql": "SELECT * FROM read_json_auto('data/logs/research/bidirectional_cohort/v47_growth_sizing_stress_20260812_v3.json')"
+        }
+      },
+      {
+        "id": "hip3-parity",
+        "label": "HIP3 live/research freshness parity",
+        "path": "docs/research-journal/hip3-live-pressure-freshness-parity-v2.json",
+        "query": {
+          "description": "Loads HIP3 live/research freshness parity.",
+          "engine": "duckdb",
+          "sql": "SELECT * FROM read_json_auto('docs/research-journal/hip3-live-pressure-freshness-parity-v2.json')"
+        }
+      },
+      {
+        "id": "hulk-validation",
+        "label": "BTC Hulk short validation",
+        "path": "data/logs/research/20260801_hulk_short_robust_v3_btc_validation.json",
+        "query": {
+          "description": "Loads BTC Hulk short validation.",
+          "engine": "duckdb",
+          "sql": "SELECT * FROM read_json_auto('data/logs/research/20260801_hulk_short_robust_v3_btc_validation.json')"
+        }
+      },
+      {
+        "id": "hulk-holdout",
+        "label": "BTC Hulk pseudo-holdout",
+        "path": "data/logs/research/20260801_hulk_short_robust_v3_btc_pseudo_holdout.json",
+        "query": {
+          "description": "Loads BTC Hulk pseudo-holdout.",
+          "engine": "duckdb",
+          "sql": "SELECT * FROM read_json_auto('data/logs/research/20260801_hulk_short_robust_v3_btc_pseudo_holdout.json')"
+        }
+      },
+      {
+        "id": "hype-compression",
+        "label": "HYPE compression challenger",
+        "path": "data/logs/research/hype_compression_breakout_challenger_20260811_v4/report.json",
+        "query": {
+          "description": "Loads HYPE compression challenger.",
+          "engine": "duckdb",
+          "sql": "SELECT * FROM read_json_auto('data/logs/research/hype_compression_breakout_challenger_20260811_v4/report.json')"
+        }
+      },
+      {
+        "id": "eth-range",
+        "label": "ETH Range context challenger",
+        "path": "data/logs/research/range_onset_context_challenger_ETH_20250728_20260728_v2.json",
+        "query": {
+          "description": "Loads ETH Range context challenger.",
+          "engine": "duckdb",
+          "sql": "SELECT * FROM read_json_auto('data/logs/research/range_onset_context_challenger_ETH_20250728_20260728_v2.json')"
+        }
+      },
+      {
+        "id": "sol-range",
+        "label": "SOL Range exact audit",
+        "path": "data/logs/research/sol_range_onset_backward_exact_audit_20250302_20250727_v2.json",
+        "query": {
+          "description": "Loads SOL Range exact audit.",
+          "engine": "duckdb",
+          "sql": "SELECT * FROM read_json_auto('data/logs/research/sol_range_onset_backward_exact_audit_20250302_20250727_v2.json')"
+        }
+      },
+      {
+        "id": "regime-forward",
+        "label": "Canonical regime forward accuracy",
+        "path": "data/logs/research/bidirectional_cohort/v39_regime_forward_accuracy_20260812T152631Z_v4.json",
+        "query": {
+          "description": "Loads Canonical regime forward accuracy.",
+          "engine": "duckdb",
+          "sql": "SELECT * FROM read_json_auto('data/logs/research/bidirectional_cohort/v39_regime_forward_accuracy_20260812T152631Z_v4.json')"
+        }
+      },
+      {
+        "id": "strategy-disposition",
+        "label": "Strategy diagnosis synthesis",
+        "path": "docs/research-journal/v47-strategy-regression-disposition.json",
+        "query": {
+          "description": "Loads Strategy diagnosis synthesis.",
+          "engine": "duckdb",
+          "sql": "SELECT * FROM read_json_auto('docs/research-journal/v47-strategy-regression-disposition.json')"
+        }
+      }
+    ],
+    "surface": "report",
+    "tables": [
+      {
+        "columns": [
+          {
+            "field": "strategy",
+            "label": "Strategy"
+          },
+          {
+            "field": "diagnosis",
+            "label": "Diagnosis"
+          },
+          {
+            "field": "evidence",
+            "label": "Observed evidence"
+          },
+          {
+            "field": "decision",
+            "label": "Decision"
+          },
+          {
+            "field": "confidence",
+            "label": "Confidence"
+          }
+        ],
+        "dataset": "strategy_decisions",
+        "id": "strategy-decisions",
+        "layout": "full",
+        "sourceId": "strategy-disposition",
+        "title": "Strategy diagnosis and disposition"
+      },
+      {
+        "columns": [
+          {
+            "field": "route_label",
+            "label": "Route"
+          },
+          {
+            "field": "timeframe",
+            "label": "TF"
+          },
+          {
+            "field": "sides",
+            "label": "Sides"
+          },
+          {
+            "field": "notional_usd",
+            "format": "currency",
+            "label": "Notional"
+          },
+          {
+            "field": "risk_contract",
+            "label": "Stop / primary exit / fallback"
+          }
+        ],
+        "dataset": "candidate_routes",
+        "id": "candidate-routes",
+        "layout": "full",
+        "sourceId": "v47-stress",
+        "title": "v47 route, exit, and sizing contract"
+      },
+      {
+        "columns": [
+          {
+            "field": "position",
+            "label": "Position"
+          },
+          {
+            "field": "strategy_label",
+            "label": "Strategy"
+          },
+          {
+            "field": "marked_net_pnl_usd",
+            "format": "currency",
+            "label": "Marked net"
+          },
+          {
+            "field": "protection",
+            "label": "Protection"
+          },
+          {
+            "field": "contract_note",
+            "label": "Contract note"
+          }
+        ],
+        "dataset": "open_positions",
+        "id": "open-positions",
+        "layout": "full",
+        "sourceId": "live-checkpoint",
+        "title": "Live v39 positions at report cutoff"
+      }
+    ],
+    "title": "Hypervector Strategy Regression and v47 Repair Plan",
+    "version": 1
+  },
+  "snapshot": {
+    "datasets": {
+      "all_time": [
+        {
+          "closed_trades": 66,
+          "fees_usd": 2.345307,
+          "funding_usd": 0.053751999999999994,
+          "losses": 38,
+          "maximum_drawdown_usd": 4.684876,
+          "net_ex_largest_usd": -4.336926999999999,
+          "net_pnl_usd": -2.2827029999999997,
+          "profit_factor": 0.8410066044127348,
+          "wins": 28
+        }
+      ],
+      "all_time_routes": [
+        {
+          "closed_trades": 2,
+          "net_ex_largest_usd": null,
+          "net_pnl_usd": -1.691751,
+          "profit_factor": 0.0,
+          "route": "hip3_swing_ha_sndk_gold_brent_bidirectional_v1|xyz:SNDK",
+          "route_label": "HIP3 Swing | xyz:SNDK"
+        },
+        {
+          "closed_trades": 3,
+          "net_ex_largest_usd": null,
+          "net_pnl_usd": -1.197088,
+          "profit_factor": 0.0,
+          "route": "hip3_swing_ha_sndk_gold_brent_bidirectional_v1|xyz:GOLD",
+          "route_label": "HIP3 Swing | xyz:GOLD"
+        },
+        {
+          "closed_trades": 14,
+          "net_ex_largest_usd": -1.8731,
+          "net_pnl_usd": -0.9736120000000001,
+          "profit_factor": 0.7191952053806796,
+          "route": "hype_breakout_onset_bidirectional_v1|HYPE",
+          "route_label": "HT Onset | HYPE"
+        },
+        {
+          "closed_trades": 1,
+          "net_ex_largest_usd": null,
+          "net_pnl_usd": -0.726696,
+          "profit_factor": 0.0,
+          "route": "hip3_breakout_pressure_sndk_gold_brent_bidirectional_v1|xyz:SNDK",
+          "route_label": "HIP3 Pressure | xyz:SNDK"
+        },
+        {
+          "closed_trades": 1,
+          "net_ex_largest_usd": null,
+          "net_pnl_usd": -0.606889,
+          "profit_factor": 0.0,
+          "route": "hip3_breakout_pressure_sp500_spcx_bidirectional_v1|xyz:SPCX",
+          "route_label": "HIP3 Pressure | xyz:SPCX"
+        },
+        {
+          "closed_trades": 7,
+          "net_ex_largest_usd": -0.604433,
+          "net_pnl_usd": -0.40001,
+          "profit_factor": 0.4905830258866499,
+          "route": "hype_breakout_onset_bidirectional_v1|ETH",
+          "route_label": "HT Onset | ETH"
+        },
+        {
+          "closed_trades": 7,
+          "net_ex_largest_usd": -0.325084,
+          "net_pnl_usd": -0.28077599999999997,
+          "profit_factor": 0.22879838275524894,
+          "route": "hype_breakout_onset_bidirectional_v1|BTC",
+          "route_label": "HT Onset | BTC"
+        },
+        {
+          "closed_trades": 8,
+          "net_ex_largest_usd": -1.853497,
+          "net_pnl_usd": -0.27061999999999975,
+          "profit_factor": 0.9028189053175606,
+          "route": "hype_breakout_onset_bidirectional_v1|SOL",
+          "route_label": "HT Onset | SOL"
+        },
+        {
+          "closed_trades": 2,
+          "net_ex_largest_usd": -0.687962,
+          "net_pnl_usd": -0.23246899999999998,
+          "profit_factor": 0.6620903480134077,
+          "route": "hip3_breakout_pressure_sndk_gold_brent_bidirectional_v1|xyz:BRENTOIL",
+          "route_label": "HIP3 Pressure | xyz:BRENTOIL"
+        },
+        {
+          "closed_trades": 1,
+          "net_ex_largest_usd": null,
+          "net_pnl_usd": -0.17438,
+          "profit_factor": 0.0,
+          "route": "range_onset_bidirectional_v1|ETH",
+          "route_label": "Range Onset | ETH"
+        },
+        {
+          "closed_trades": 5,
+          "net_ex_largest_usd": -0.23975999999999997,
+          "net_pnl_usd": -0.104597,
+          "profit_factor": 0.6950542562434038,
+          "route": "hypervelocity_source_follow_bidirectional_5m_v1|BTC",
+          "route_label": "HV Source 5m | BTC"
+        },
+        {
+          "closed_trades": 1,
+          "net_ex_largest_usd": null,
+          "net_pnl_usd": -0.075541,
+          "profit_factor": 0.0,
+          "route": "hip3_breakout_pressure_sp500_spcx_bidirectional_v1|xyz:SP500",
+          "route_label": "HIP3 Pressure | xyz:SP500"
+        },
+        {
+          "closed_trades": 2,
+          "net_ex_largest_usd": -0.006099000000000002,
+          "net_pnl_usd": 0.004715999999999998,
+          "profit_factor": 1.7732415150024587,
+          "route": "eth_breakout_precompression_pullback_bidirectional_v1|ETH",
+          "route_label": "eth_breakout_precompression_pullback_bidirectional_v1 | ETH"
+        },
+        {
+          "closed_trades": 4,
+          "net_ex_largest_usd": -0.046943999999999986,
+          "net_pnl_usd": 0.16315800000000003,
+          "profit_factor": 1.9026372422644768,
+          "route": "hulk_expansion_bidirectional_tuned_v2|BTC",
+          "route_label": "Hulk Expansion | BTC"
+        },
+        {
+          "closed_trades": 1,
+          "net_ex_largest_usd": 0.0,
+          "net_pnl_usd": 0.552777,
+          "profit_factor": null,
+          "route": "hulk_expansion_bidirectional_tuned_v2|HYPE",
+          "route_label": "Hulk Expansion | HYPE"
+        },
+        {
+          "closed_trades": 2,
+          "net_ex_largest_usd": -0.003310000000000035,
+          "net_pnl_usd": 0.677814,
+          "profit_factor": 205.77764350453097,
+          "route": "hulk_expansion_bidirectional_tuned_v2|SOL",
+          "route_label": "Hulk Expansion | SOL"
+        },
+        {
+          "closed_trades": 4,
+          "net_ex_largest_usd": -0.568665,
+          "net_pnl_usd": 0.999037,
+          "profit_factor": 1.7913045269021692,
+          "route": "hip3_swing_ha_sp500_spcx_bidirectional_v2|xyz:SPCX",
+          "route_label": "HIP3 Swing | xyz:SPCX"
+        },
+        {
+          "closed_trades": 1,
+          "net_ex_largest_usd": 0.0,
+          "net_pnl_usd": 2.054224,
+          "profit_factor": null,
+          "route": "hip3_swing_ha_sndk_gold_brent_bidirectional_v1|xyz:BRENTOIL",
+          "route_label": "HIP3 Swing | xyz:BRENTOIL"
+        }
+      ],
+      "candidate_capacity": [
+        {
+          "account_position_capacity": 10,
+          "leverage": 10.0,
+          "margin_fraction_per_asset": 0.12,
+          "maximum_margin_fraction": 0.6,
+          "p99_stop_wave_fraction": 0.05738766869961269,
+          "p99_stop_wave_loss_usd": 286.9383434980635,
+          "profile_id": "multi_asset_growth_first_5000_repaired_candidate_v47",
+          "usable_asset_slots": 5
+        }
+      ],
+      "candidate_routes": [
+        {
+          "asset": "BTC",
+          "leverage": 10.0,
+          "margin_fraction": 0.12,
+          "notional_usd": 6000.0,
+          "p99_stop_loss_usd": 60.3525234686032,
+          "risk_contract": "75 bps stop / 3R target / 24h fallback",
+          "route_label": "BTC Hulk Short v3 | BTC",
+          "sides": "short",
+          "strategy_id": "hulk_expansion_short_robust_v3",
+          "timeframe": "30m"
+        },
+        {
+          "asset": "BTC",
+          "leverage": 10.0,
+          "margin_fraction": 0.12,
+          "notional_usd": 6000.0,
+          "p99_stop_loss_usd": 51.35252346860321,
+          "risk_contract": "60 bps stop / 60 bps target / 24h fallback",
+          "route_label": "BTC Sweep Long | BTC",
+          "sides": "long",
+          "strategy_id": "liquidity_sweep_long_1h_stop60_target60_v2",
+          "timeframe": "1h"
+        },
+        {
+          "asset": "ETH",
+          "leverage": 10.0,
+          "margin_fraction": 0.12,
+          "notional_usd": 6000.0,
+          "p99_stop_loss_usd": 53.20644587554281,
+          "risk_contract": "60 bps stop / strategy/opposite exit / 48h fallback",
+          "route_label": "Range Onset | ETH",
+          "sides": "long/short",
+          "strategy_id": "range_onset_bidirectional_v1",
+          "timeframe": "1m"
+        },
+        {
+          "asset": "HYPE",
+          "leverage": 10.0,
+          "margin_fraction": 0.12,
+          "notional_usd": 6000.0,
+          "p99_stop_loss_usd": 66.52256621478023,
+          "risk_contract": "80 bps stop / strategy/opposite exit / 8h soft / 24h hard",
+          "route_label": "HYPE Compression | HYPE",
+          "sides": "long/short",
+          "strategy_id": "hype_breakout_compression_pullback_bidirectional_v1",
+          "timeframe": "1m"
+        },
+        {
+          "asset": "SOL",
+          "leverage": 10.0,
+          "margin_fraction": 0.12,
+          "notional_usd": 6000.0,
+          "p99_stop_loss_usd": 55.644202027507326,
+          "risk_contract": "60 bps stop / strategy/opposite exit / 48h fallback",
+          "route_label": "Range Onset | SOL",
+          "sides": "long/short",
+          "strategy_id": "range_onset_bidirectional_v1",
+          "timeframe": "1m"
+        },
+        {
+          "asset": "xyz:SP500",
+          "leverage": 10.0,
+          "margin_fraction": 0.12,
+          "notional_usd": 6000.0,
+          "p99_stop_loss_usd": 51.21260591162993,
+          "risk_contract": "80 bps stop / strategy/opposite exit / 24h fallback",
+          "route_label": "HIP3 Pressure | xyz:SP500",
+          "sides": "long/short",
+          "strategy_id": "hip3_breakout_pressure_sp500_spcx_fresh15s_bidirectional_v2",
+          "timeframe": "15m"
+        }
+      ],
+      "candidate_slot_risk": [
+        {
+          "asset": "BTC",
+          "p99_stop_loss_usd": 60.3525234686032
+        },
+        {
+          "asset": "ETH",
+          "p99_stop_loss_usd": 53.20644587554281
+        },
+        {
+          "asset": "HYPE",
+          "p99_stop_loss_usd": 66.52256621478023
+        },
+        {
+          "asset": "SOL",
+          "p99_stop_loss_usd": 55.644202027507326
+        },
+        {
+          "asset": "xyz:SP500",
+          "p99_stop_loss_usd": 51.21260591162993
+        }
+      ],
+      "current_run": [
+        {
+          "closed_trades": 14,
+          "fees_usd": 0.394347,
+          "funding_usd": -0.008271999999999998,
+          "losses": 11,
+          "maximum_drawdown_usd": 3.6415070000000003,
+          "net_ex_largest_usd": -3.8110749999999998,
+          "net_pnl_usd": -3.641507,
+          "profit_factor": 0.07386058875547093,
+          "wins": 3
+        }
+      ],
+      "defect_summary": [
+        {
+          "affected_closed_trades": 4,
+          "affected_loss_fraction": 0.6726003975135677,
+          "affected_net_pnl_usd": -2.097088
+        }
+      ],
+      "open_positions": [
+        {
+          "contract_note": "legacy HIP3 v1 freshness unresolved",
+          "marked_net_pnl_usd": -0.323937,
+          "position": "xyz:SNDK LONG",
+          "protection": "stop 515253558401 @ 1369.06",
+          "strategy_label": "HIP3 Pressure"
+        },
+        {
+          "contract_note": "legacy HIP3 v1 freshness unresolved",
+          "marked_net_pnl_usd": 0.897682,
+          "position": "xyz:SPCX LONG",
+          "protection": "stop 515227374235 @ 136.717",
+          "strategy_label": "HIP3 Pressure"
+        }
+      ],
+      "regime_accuracy": [
+        {
+          "accuracy_pct": 49.914236706689536,
+          "horizon": "5m",
+          "observations": 2332,
+          "series": "up pooled"
+        },
+        {
+          "accuracy_pct": 51.03957075788062,
+          "horizon": "5m",
+          "observations": 1491,
+          "series": "down pooled"
+        },
+        {
+          "accuracy_pct": 41.1764705882353,
+          "horizon": "5m",
+          "observations": 17,
+          "series": "up onsets"
+        },
+        {
+          "accuracy_pct": 58.8235294117647,
+          "horizon": "5m",
+          "observations": 17,
+          "series": "down onsets"
+        },
+        {
+          "accuracy_pct": 43.75,
+          "horizon": "5m",
+          "observations": 16,
+          "series": "up clusters"
+        },
+        {
+          "accuracy_pct": 58.333333333333336,
+          "horizon": "5m",
+          "observations": 12,
+          "series": "down clusters"
+        },
+        {
+          "accuracy_pct": 50.3875968992248,
+          "horizon": "15m",
+          "observations": 2322,
+          "series": "up pooled"
+        },
+        {
+          "accuracy_pct": 48.87063655030801,
+          "horizon": "15m",
+          "observations": 1461,
+          "series": "down pooled"
+        },
+        {
+          "accuracy_pct": 23.529411764705884,
+          "horizon": "15m",
+          "observations": 17,
+          "series": "up onsets"
+        },
+        {
+          "accuracy_pct": 52.94117647058823,
+          "horizon": "15m",
+          "observations": 17,
+          "series": "down onsets"
+        },
+        {
+          "accuracy_pct": 25.0,
+          "horizon": "15m",
+          "observations": 16,
+          "series": "up clusters"
+        },
+        {
+          "accuracy_pct": 66.66666666666667,
+          "horizon": "15m",
+          "observations": 12,
+          "series": "down clusters"
+        },
+        {
+          "accuracy_pct": 53.09926311226701,
+          "horizon": "30m",
+          "observations": 2307,
+          "series": "up pooled"
+        },
+        {
+          "accuracy_pct": 48.940677966101696,
+          "horizon": "30m",
+          "observations": 1416,
+          "series": "down pooled"
+        },
+        {
+          "accuracy_pct": 23.529411764705884,
+          "horizon": "30m",
+          "observations": 17,
+          "series": "up onsets"
+        },
+        {
+          "accuracy_pct": 64.70588235294117,
+          "horizon": "30m",
+          "observations": 17,
+          "series": "down onsets"
+        },
+        {
+          "accuracy_pct": 25.0,
+          "horizon": "30m",
+          "observations": 16,
+          "series": "up clusters"
+        },
+        {
+          "accuracy_pct": 75.0,
+          "horizon": "30m",
+          "observations": 12,
+          "series": "down clusters"
+        },
+        {
+          "accuracy_pct": 54.50153711023276,
+          "horizon": "60m",
+          "observations": 2277,
+          "series": "up pooled"
+        },
+        {
+          "accuracy_pct": 46.90799396681749,
+          "horizon": "60m",
+          "observations": 1326,
+          "series": "down pooled"
+        },
+        {
+          "accuracy_pct": 52.94117647058823,
+          "horizon": "60m",
+          "observations": 17,
+          "series": "up onsets"
+        },
+        {
+          "accuracy_pct": 76.47058823529412,
+          "horizon": "60m",
+          "observations": 17,
+          "series": "down onsets"
+        },
+        {
+          "accuracy_pct": 50.0,
+          "horizon": "60m",
+          "observations": 16,
+          "series": "up clusters"
+        },
+        {
+          "accuracy_pct": 83.33333333333333,
+          "horizon": "60m",
+          "observations": 12,
+          "series": "down clusters"
+        }
+      ],
+      "strategy_decisions": [
+        {
+          "affected_closed_trades": 4,
+          "affected_net_pnl_usd": -2.097088,
+          "confidence": "high",
+          "decision": "replace with fresh15s v2",
+          "diagnosis": "confirmed contract defect",
+          "evidence": "30s live pressure vs 15s researched; four closed invalid-contract entries",
+          "falsifier": "Any linked v1 entry was at or below 15s, or v2 accepts pressure older than 15s.",
+          "strategy": "HIP3 pressure v1"
+        },
+        {
+          "confidence": "medium",
+          "decision": "repair and retain",
+          "diagnosis": "sparse-valid plus context weakness",
+          "evidence": "zero short live window was statistically plausible; SOL history fragile; ETH dual-MTF filter post-hoc",
+          "falsifier": "Independent forward periods remain negative after complete friction or the provider misses a valid completed hourly cross.",
+          "strategy": "Range Onset"
+        },
+        {
+          "confidence": "low-medium",
+          "decision": "retain BTC short only",
+          "diagnosis": "promising but holdout-sensitive",
+          "evidence": "positive validation; pseudo-holdout near breakeven and delay-sensitive",
+          "falsifier": "Compatible forward shorts remain negative or a one-bar delay consistently destroys the edge.",
+          "strategy": "BTC Hulk short v3"
+        },
+        {
+          "confidence": "low",
+          "decision": "retain complementary long",
+          "diagnosis": "valid but very sparse",
+          "evidence": "five resolved historical wins of six signals; one resolved forward win",
+          "falsifier": "Additional resolved signals fail after exact fill, stop, fee, and funding accounting.",
+          "strategy": "BTC sweep long"
+        },
+        {
+          "confidence": "low-medium",
+          "decision": "retain exact frozen challenger",
+          "diagnosis": "entry repair improved weak onset",
+          "evidence": "development PF 1.115; later PF 2.41 on four trades but negative without largest winner",
+          "falsifier": "A predeclared compatible window is non-positive or remains dependent on one winner.",
+          "strategy": "HYPE compression"
+        },
+        {
+          "confidence": "high",
+          "decision": "remove unchanged transfer",
+          "diagnosis": "tested transfer is negative",
+          "evidence": "both development and final partitions below PF 1 after costs",
+          "falsifier": "A newly defined causal mechanism, not the unchanged transfer, passes chronological after-cost testing.",
+          "strategy": "HT onset ETH/SOL"
+        },
+        {
+          "confidence": "high",
+          "decision": "retire unchanged route",
+          "diagnosis": "winner-concentrated or negative",
+          "evidence": "Brent depends on one winner; GOLD and SNDK routes negative",
+          "falsifier": "A versioned mechanism produces independent forward edge without its largest winner.",
+          "strategy": "HIP3 Swing commodity"
+        },
+        {
+          "confidence": "medium",
+          "decision": "retain telemetry, no leverage gate",
+          "diagnosis": "telemetry useful; universal gate unproven",
+          "evidence": "core causal coverage; episode evidence sparse; HIP3 provider-only",
+          "falsifier": "Predeclared route-specific regime interactions remain stable across independent episodes.",
+          "strategy": "Regime detector"
+        }
+      ]
+    },
+    "generatedAt": "2026-08-12T15:28:02.985553+00:00",
+    "status": "ready",
+    "version": 1
+  },
+  "sources": [
+    {
+      "id": "live-checkpoint",
+      "label": "Fresh live checkpoint",
+      "path": "data/runtime/bidirectional_cohort/latest_checkpoint.json",
+      "query": {
+        "description": "Loads Fresh live checkpoint.",
+        "engine": "duckdb",
+        "sql": "SELECT * FROM read_json_auto('data/runtime/bidirectional_cohort/latest_checkpoint.json')"
+      }
+    },
+    {
+      "id": "v47-config",
+      "label": "v47 repaired configuration",
+      "path": "configs/multi_asset_growth_first_5000_repaired_candidate_v47.toml",
+      "query": {
+        "description": "Loads v47 repaired configuration.",
+        "engine": "duckdb",
+        "sql": "SELECT * FROM read_text('configs/multi_asset_growth_first_5000_repaired_candidate_v47.toml')"
+      }
+    },
+    {
+      "id": "v47-stress",
+      "label": "v47 route-aware friction stress",
+      "path": "data/logs/research/bidirectional_cohort/v47_growth_sizing_stress_20260812_v3.json",
+      "query": {
+        "description": "Loads v47 route-aware friction stress.",
+        "engine": "duckdb",
+        "sql": "SELECT * FROM read_json_auto('data/logs/research/bidirectional_cohort/v47_growth_sizing_stress_20260812_v3.json')"
+      }
+    },
+    {
+      "id": "hip3-parity",
+      "label": "HIP3 live/research freshness parity",
+      "path": "docs/research-journal/hip3-live-pressure-freshness-parity-v2.json",
+      "query": {
+        "description": "Loads HIP3 live/research freshness parity.",
+        "engine": "duckdb",
+        "sql": "SELECT * FROM read_json_auto('docs/research-journal/hip3-live-pressure-freshness-parity-v2.json')"
+      }
+    },
+    {
+      "id": "hulk-validation",
+      "label": "BTC Hulk short validation",
+      "path": "data/logs/research/20260801_hulk_short_robust_v3_btc_validation.json",
+      "query": {
+        "description": "Loads BTC Hulk short validation.",
+        "engine": "duckdb",
+        "sql": "SELECT * FROM read_json_auto('data/logs/research/20260801_hulk_short_robust_v3_btc_validation.json')"
+      }
+    },
+    {
+      "id": "hulk-holdout",
+      "label": "BTC Hulk pseudo-holdout",
+      "path": "data/logs/research/20260801_hulk_short_robust_v3_btc_pseudo_holdout.json",
+      "query": {
+        "description": "Loads BTC Hulk pseudo-holdout.",
+        "engine": "duckdb",
+        "sql": "SELECT * FROM read_json_auto('data/logs/research/20260801_hulk_short_robust_v3_btc_pseudo_holdout.json')"
+      }
+    },
+    {
+      "id": "hype-compression",
+      "label": "HYPE compression challenger",
+      "path": "data/logs/research/hype_compression_breakout_challenger_20260811_v4/report.json",
+      "query": {
+        "description": "Loads HYPE compression challenger.",
+        "engine": "duckdb",
+        "sql": "SELECT * FROM read_json_auto('data/logs/research/hype_compression_breakout_challenger_20260811_v4/report.json')"
+      }
+    },
+    {
+      "id": "eth-range",
+      "label": "ETH Range context challenger",
+      "path": "data/logs/research/range_onset_context_challenger_ETH_20250728_20260728_v2.json",
+      "query": {
+        "description": "Loads ETH Range context challenger.",
+        "engine": "duckdb",
+        "sql": "SELECT * FROM read_json_auto('data/logs/research/range_onset_context_challenger_ETH_20250728_20260728_v2.json')"
+      }
+    },
+    {
+      "id": "sol-range",
+      "label": "SOL Range exact audit",
+      "path": "data/logs/research/sol_range_onset_backward_exact_audit_20250302_20250727_v2.json",
+      "query": {
+        "description": "Loads SOL Range exact audit.",
+        "engine": "duckdb",
+        "sql": "SELECT * FROM read_json_auto('data/logs/research/sol_range_onset_backward_exact_audit_20250302_20250727_v2.json')"
+      }
+    },
+    {
+      "id": "regime-forward",
+      "label": "Canonical regime forward accuracy",
+      "path": "data/logs/research/bidirectional_cohort/v39_regime_forward_accuracy_20260812T152631Z_v4.json",
+      "query": {
+        "description": "Loads Canonical regime forward accuracy.",
+        "engine": "duckdb",
+        "sql": "SELECT * FROM read_json_auto('data/logs/research/bidirectional_cohort/v39_regime_forward_accuracy_20260812T152631Z_v4.json')"
+      }
+    },
+    {
+      "id": "strategy-disposition",
+      "label": "Strategy diagnosis synthesis",
+      "path": "docs/research-journal/v47-strategy-regression-disposition.json",
+      "query": {
+        "description": "Loads Strategy diagnosis synthesis.",
+        "engine": "duckdb",
+        "sql": "SELECT * FROM read_json_auto('docs/research-journal/v47-strategy-regression-disposition.json')"
+      }
+    }
+  ],
+  "surface": "report"
+}

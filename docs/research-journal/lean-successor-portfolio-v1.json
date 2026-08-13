@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "lean-successor-portfolio",
+  "revision_number": 1,
+  "supersedes_revision_id": null,
+  "created_at_utc": "2026-08-09T16:18:56Z",
+  "strategy_id": "multi_asset_lean_successor_portfolio",
+  "symbol": "PORTFOLIO",
+  "status": "candidate",
+  "hypothesis": "A lean shared-account portfolio containing bidirectional SOL Range Onset, ETH dual-MTF Range Onset, and SPCX Swing/HA may preserve more after-cost edge than either the broad retired v29 mix or a comparable portfolio using dense ETH pullback.",
+  "decision": "Prepare the lean SOL Range Onset, ETH dual_mtf_not_opposed Range Onset, and SPCX Swing/HA composition as an inactive next-canary candidate with both directions, one position per asset, $75/$25/$75 fixed notionals, 5x isolated leverage, venue-native stops, and existing provider-exit ignore semantics. Reject ETH pullback for this successor because the dual-MTF composition beat it in every nominal and stress window and by $7.285181 in full opened stress while using 268 fewer trades. Treat the candidate as live research rather than established edge because the development and opened-final stressed common windows become slightly negative after removing their largest winner. Keep active v25 and every current position, stop, order, route, size, and exit policy unchanged. A transition requires verified flat-and-order-free venue state, current source and profile fingerprints, rollback evidence, passing tests, and renewed explicit live-risk authorization.",
+  "confidence": "low_medium",
+  "falsifier": "This revision is invalidated by changed evidence bytes, an incorrect 13-to-20-bps crypto stress transformation, missing route outcomes, timestamp or side mismatch, PnL failing to reconcile to shared equity, sealed holdout access, or any execution side effect. The candidate hypothesis should be weakened or rejected if exact prospective venue outcomes are negative after fees, slippage, funding, and stop gaps on represented sides; if runtime/provider parity fails; or if repeatable net PnL remains dependent on one large winner.",
+  "evidence": [
+    {
+      "path": "../../data/logs/research/lean_successor_portfolio_comparison_20260809T161609Z.json",
+      "role": "immutable_fixed_ablation_shared_account_artifact",
+      "sha256": "a507537566cacb1a256e61f5f70abc8a5f0212514787e93367a8ef5727127bee",
+      "bytes": 1421828
+    },
+    {
+      "path": "../reviews/2026-08-09-lean-successor-portfolio-comparison.md",
+      "role": "systems_decision_route_attribution_and_falsification_review",
+      "sha256": "90e658be14da5c4230bbe6a5eff23d5472555dad42d450c8d4fae3ad4bb9aaf5",
+      "bytes": 7039
+    },
+    {
+      "path": "../plans/2026-08-09-lean-successor-portfolio-comparison.md",
+      "role": "preregistered_fixed_variant_and_validation_contract",
+      "sha256": "5c1bbfbc20b632bc903969ea48d749204e75c6f4455f5917c50ae3b5a59d5c64",
+      "bytes": 2957
+    },
+    {
+      "path": "cohort-successor-side-aware-triage-v6.json",
+      "role": "predecessor_route_family_triage_and_new_generation_requirement",
+      "sha256": "4063b90cd6675dce344b2173c32c3ffcf71acc949bbd96f22467009199450166",
+      "bytes": 5355
+    }
+  ],
+  "metrics": {
+    "active_source_profile_id": "multi_asset_bidirectional_complete_portfolio_canary_v25",
+    "active_source_profile_fingerprint": "ec7715f671fa369d0a415d8941061eb9a577b232bbd4e06367a7342267ff7ecc",
+    "candidate_routes": [
+      "range_onset_bidirectional_v1|SOL",
+      "range_onset_bidirectional_v1|ETH|dual_mtf_not_opposed",
+      "hip3_swing_ha_sp500_spcx_bidirectional_v2|xyz:SPCX"
+    ],
+    "candidate_maximum_positions": 3,
+    "candidate_leverage": 5.0,
+    "development_stress_trades": 42,
+    "development_stress_net_pnl_usd": 14.055024942740033,
+    "development_stress_profit_factor": 1.6575567607729247,
+    "development_stress_maximum_drawdown_pct": 1.0765338959357815,
+    "development_stress_net_excluding_largest_winner_usd": -1.12303749657967,
+    "opened_final_stress_trades": 30,
+    "opened_final_stress_net_pnl_usd": 3.2220773128174756,
+    "opened_final_stress_profit_factor": 1.2552580941364555,
+    "opened_final_stress_maximum_drawdown_pct": 1.8805018393280308,
+    "opened_final_stress_net_excluding_largest_winner_usd": -0.2758464416337838,
+    "full_opened_stress_trades": 171,
+    "full_opened_stress_net_pnl_usd": 58.61777351496289,
+    "full_opened_stress_profit_factor": 2.020901123616169,
+    "full_opened_stress_maximum_drawdown_pct": 2.352804241913232,
+    "full_opened_stress_net_excluding_largest_winner_usd": 43.2928596922119,
+    "full_opened_stress_dual_mtf_minus_pullback_net_pnl_usd": 7.2851808543280185,
+    "full_opened_dual_mtf_fewer_trades_than_pullback": 268,
+    "execution_authority": "none",
+    "automatic_promotion": false,
+    "runtime_changed_by_this_revision": false
+  },
+  "limitations": [
+    "All evidence windows are opened and selection-contaminated rather than sealed holdouts.",
+    "Both stressed common-window portfolios become slightly negative after removing the largest winner.",
+    "The full source union has asynchronous route coverage start dates.",
+    "Completed outcomes cannot reproduce opposite-intent close interactions or private IOC queue position.",
+    "Realized-equity drawdown omits concurrent intratrade mark-to-market paths.",
+    "Current compatible-profile live evidence is too small to estimate durable route-side profit factor.",
+    "No candidate configuration is active and no live process, route, order, position, stop, target, allocation, transition, or protection changed in this revision."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

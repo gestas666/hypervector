@@ -1,0 +1,212 @@
+{
+  "schema_version": "v49_cross_restart_filter_disposition_v1",
+  "generated_at_utc": "2026-08-13T02:35:00Z",
+  "mode": "report_only",
+  "execution_authority": "none",
+  "automatic_strategy_change": false,
+  "runtime_strategy_changed": false,
+  "live_fills_claimed": false,
+  "native_lifecycle_evaluated": false,
+  "profile_id": "multi_asset_growth_first_5000_repaired_candidate_v49",
+  "profile_fingerprint": "fddd3497f060950e45b598e735b8d0c40f7987161e78c7493f19ccfbf1e60a47",
+  "current_config_fingerprint_at_disposition": "0be937a1a50ca56becefb330f96d770e39863727d1e2832d025474afc489ae5e",
+  "compatible_run_ids": [
+    "bidirectional-observe-1786555674002",
+    "bidirectional-observe-1786572851373",
+    "bidirectional-observe-1786573011551"
+  ],
+  "portfolio_decision": "retain_current_entry_filters",
+  "btc_sweep_disposition": "not_isolated_retain_unchanged",
+  "decision_basis": "Every resolved exact one-blocker relaxation was net negative after visible-depth taker friction except ETH hourly-cross at 60 minutes. That ETH slice had only two outcomes and became negative after removing its single winner. The evidence therefore supplies no empirical support for relaxing a current entry condition.",
+  "evidence": [
+    {
+      "id": "sol_hourly_cross_15m",
+      "path": "data/logs/research/bidirectional_cohort/v49_observer_sol_hourly_cross_nearmiss_exact_depth_15m_20260813_v3.json",
+      "sha256": "b9bf07d9bc2b0299a44536b70522313cf096e3f371e2d596b958ebc76d406fd0",
+      "symbol": "SOL",
+      "strategy_id": "range_onset_bidirectional_v1",
+      "blocker": "awaiting_hourly_sma_cross",
+      "horizon_minutes": 15,
+      "resolved": 20,
+      "pending": 0,
+      "wins": 6,
+      "losses": 14,
+      "total_net_return_bps": -150.9280465150627,
+      "long_net_return_bps": -112.71215464464967,
+      "short_net_return_bps": -38.21589187041303,
+      "decision": "retain_filter"
+    },
+    {
+      "id": "hype_compression_60m",
+      "path": "data/logs/research/bidirectional_cohort/v49_observer_hype_compression_nearmiss_exact_depth_60m_20260813_v3.json",
+      "sha256": "0ad305f7ec50bb2923d957036194887813cf113c4090e941df55678d5cc5a40a",
+      "symbol": "HYPE",
+      "strategy_id": "hype_breakout_compression_pullback_bidirectional_v1",
+      "blocker": "authoritative_5m_compression_absent",
+      "horizon_minutes": 60,
+      "resolved": 1,
+      "pending": 0,
+      "wins": 0,
+      "losses": 1,
+      "total_net_return_bps": -99.17895529881524,
+      "stop_proxy_crosses": 1,
+      "decision": "retain_filter"
+    },
+    {
+      "id": "hype_onset_15m",
+      "path": "data/logs/research/bidirectional_cohort/v49_observer_hype_onset_nearmiss_exact_depth_15m_20260813_v3.json",
+      "sha256": "1b21e966a8c59bb7a996fc4e4d49f273bce9104accdc9b8b61f2bde700bdacc6",
+      "symbol": "HYPE",
+      "strategy_id": "hype_breakout_compression_pullback_bidirectional_v1",
+      "blocker": "canonical_breakout_onset_absent",
+      "horizon_minutes": 15,
+      "resolved": 19,
+      "pending": 1,
+      "wins": 7,
+      "losses": 12,
+      "total_net_return_bps": -85.24588377776666,
+      "profit_factor": 0.5923272826299688,
+      "decision": "retain_filter"
+    },
+    {
+      "id": "hype_onset_60m",
+      "path": "data/logs/research/bidirectional_cohort/v49_observer_hype_onset_nearmiss_exact_depth_60m_20260813_v3.json",
+      "sha256": "b1d212d2614fa08fef27673324e3bdd278b0a07ee00d858493f2df8533575861",
+      "symbol": "HYPE",
+      "strategy_id": "hype_breakout_compression_pullback_bidirectional_v1",
+      "blocker": "canonical_breakout_onset_absent",
+      "horizon_minutes": 60,
+      "resolved": 7,
+      "pending": 1,
+      "wins": 2,
+      "losses": 5,
+      "total_net_return_bps": -85.97336702309119,
+      "profit_factor": 0.5654247871720863,
+      "decision": "retain_filter"
+    },
+    {
+      "id": "btc_hulk_expansion_60m",
+      "path": "data/logs/research/bidirectional_cohort/v49_observer_hulk_expansion_nearmiss_exact_depth_60m_20260813_v1.json",
+      "sha256": "1e0a032c7ae603fa701a4eb47e06523a3e4de3ea9e2291d711e36962995a150e",
+      "symbol": "BTC",
+      "strategy_id": "hulk_expansion_short_robust_v3",
+      "blocker": "expansion_trigger_not_present",
+      "horizon_minutes": 60,
+      "resolved": 1,
+      "pending": 0,
+      "wins": 0,
+      "losses": 1,
+      "total_net_return_bps": -17.192047293142206,
+      "decision": "retain_filter"
+    },
+    {
+      "id": "eth_hourly_cross_15m",
+      "path": "data/logs/research/bidirectional_cohort/v49_observer_eth_hourly_cross_nearmiss_exact_depth_15m_20260813_v1.json",
+      "sha256": "e4730e7050eeb324eeaa27ff3f5a047586ab79cf646c098c6cdc2dc6d02fcb7f",
+      "symbol": "ETH",
+      "strategy_id": "range_onset_bidirectional_v1",
+      "blocker": "awaiting_hourly_sma_cross",
+      "horizon_minutes": 15,
+      "resolved": 8,
+      "pending": 1,
+      "wins": 0,
+      "losses": 8,
+      "total_net_return_bps": -38.74739521287732,
+      "decision": "retain_filter"
+    },
+    {
+      "id": "eth_hourly_cross_60m",
+      "path": "data/logs/research/bidirectional_cohort/v49_observer_eth_hourly_cross_nearmiss_exact_depth_60m_20260813_v1.json",
+      "sha256": "f0896908f38bcec579a2135c03aade0894fcced02c38bcbf4ef82d781a1196bb",
+      "symbol": "ETH",
+      "strategy_id": "range_onset_bidirectional_v1",
+      "blocker": "awaiting_hourly_sma_cross",
+      "horizon_minutes": 60,
+      "resolved": 2,
+      "pending": 1,
+      "wins": 1,
+      "losses": 1,
+      "total_net_return_bps": 10.614998877258728,
+      "net_excluding_largest_winner_bps": -5.326541485180471,
+      "profit_factor": 2.9928501273841253,
+      "decision": "retain_filter"
+    },
+    {
+      "id": "eth_regime_15m",
+      "path": "data/logs/research/bidirectional_cohort/v49_observer_eth_regime_nearmiss_exact_depth_15m_20260813_v1.json",
+      "sha256": "56d94c8843135a82df6db568b1a36479c5f7a11ebe119c17e4e7085d88ef2e2e",
+      "symbol": "ETH",
+      "strategy_id": "range_onset_bidirectional_v1",
+      "blocker": "5m_regime_not_admitted",
+      "horizon_minutes": 15,
+      "resolved": 1,
+      "pending": 0,
+      "wins": 0,
+      "losses": 1,
+      "total_net_return_bps": -1.6955082704234492,
+      "decision": "retain_filter"
+    },
+    {
+      "id": "eth_regime_60m",
+      "path": "data/logs/research/bidirectional_cohort/v49_observer_eth_regime_nearmiss_exact_depth_60m_20260813_v1.json",
+      "sha256": "2afa23ac9bff5df2e9f12272ba4e648c4f4f59f12f31ef79fac6791ad19cc810",
+      "symbol": "ETH",
+      "strategy_id": "range_onset_bidirectional_v1",
+      "blocker": "5m_regime_not_admitted",
+      "horizon_minutes": 60,
+      "resolved": 1,
+      "pending": 0,
+      "wins": 0,
+      "losses": 1,
+      "total_net_return_bps": -13.842397625007383,
+      "decision": "retain_filter"
+    }
+  ],
+  "decisions": [
+    {
+      "route": "SOL Range Onset",
+      "decision": "retain hourly-cross filter",
+      "reason": "Both long and short one-blocker paths were net negative across 20 resolved 15-minute outcomes."
+    },
+    {
+      "route": "HYPE compression breakout/pullback",
+      "decision": "retain compression and onset filters",
+      "reason": "All three tested relaxations were net negative; the sole missing-compression path crossed the 80-bps stop proxy."
+    },
+    {
+      "route": "BTC Hulk short v3",
+      "decision": "retain expansion trigger",
+      "reason": "The one isolated missing-trigger path lost after exact visible-depth friction."
+    },
+    {
+      "route": "ETH Range Onset",
+      "decision": "retain hourly-cross and 5m-regime filters",
+      "reason": "The 15-minute hourly-cross sample lost all eight resolved paths; the two-trade 60-minute sample was positive only because of its largest winner; both isolated regime paths lost."
+    },
+    {
+      "route": "BTC liquidity-sweep long",
+      "decision": "retain unchanged without an isolation claim",
+      "reason": "No evaluation had exactly one missing Sweep condition, so this window cannot identify the marginal value of an individual Sweep filter."
+    }
+  ],
+  "confidence": {
+    "arithmetic": "high",
+    "source_identity": "high",
+    "filter_direction_for_observed_window": "medium",
+    "future_profitability": "low"
+  },
+  "limitations": [
+    "The reports are fixed-horizon counterfactual executions, not venue fills or native strategy lifecycles.",
+    "One-blocker selection is conditional on all other prerequisites and does not estimate an unconditional strategy effect.",
+    "Repeated evaluations are autocorrelated; non-overlap spacing reduces but does not eliminate dependence.",
+    "The evidence covers three compatible observer restarts under fingerprint fddd3497; it does not claim full identity with the currently edited 0be937 candidate.",
+    "Pending paths are excluded from resolved economics and may update only through a newly versioned report.",
+    "A negative relaxation result supports retaining the specified mechanism but does not prove the retained strategy is profitable."
+  ],
+  "falsifiers": [
+    "A later independent compatible window produces positive after-friction one-blocker economics that remain positive after largest-winner removal and chronological slicing.",
+    "Recomputing any bound source report changes its checksum, compatible runs, execution contract, or recorded totals.",
+    "A provider decision disagrees with its causal completed-bar blocker state or the visible-depth replay cannot consume the declared notional.",
+    "A native resolved lifecycle demonstrates that the fixed-horizon sign systematically reverses under the strategy's actual exit contract."
+  ]
+}

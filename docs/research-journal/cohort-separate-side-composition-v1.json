@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "cohort-separate-side-composition",
+  "revision_number": 1,
+  "supersedes_revision_id": null,
+  "created_at_utc": "2026-08-09T05:40:59Z",
+  "strategy_id": "multi_asset_portfolio_research_process",
+  "symbol": "MULTI",
+  "status": "observe",
+  "hypothesis": "Selecting distinct provider-symbol mechanisms for long and short exposure may produce a stronger bidirectional shared-capital portfolio than requiring every provider route to work symmetrically on both sides.",
+  "decision": "Adopt the separate-side composition report as a report-only research baseline, keep the armed v25 runtime unchanged, and do not revive retired v29. The current frontier is not ready to define a successor portfolio: HYPE HT-Breakout long is the only component with repeated positive mixed-profile live history, its eight closes conflict with adverse historical route-shape evidence, and no short component has repeated positive live evidence. Across all mixed-profile history, 22 long closes net +$2.250476 while 11 short closes net -$2.128212, leaving only +$0.122264 overall; one single-trade SOL long contributes +$1.582877, so the pooled result is outlier-dependent. Preserve all long and short candidates in the research ledger, but require a new-generation interaction experiment to keep current-profile outcomes, mixed-profile outcomes, execution costs, and shared-capital overlap separate before any future explicit authorization decision.",
+  "confidence": "low_medium",
+  "falsifier": "This decision is invalidated by evidence hash or scope drift, side-identity collisions, pooling current-profile and mixed-profile outcomes, omission of fees or funding from claimed net results, or any report-only code changing runtime state. The weak-short conclusion would update after repeated independent after-friction short lifecycles. The HYPE-long priority would weaken if additional compatible closes make its net PnL or median return on margin nonpositive, or if shared-capital replay shows adverse overlap dominates its standalone contribution.",
+  "evidence": [
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v25_live_prefix_goal_continuation_20260809T051708Z.json",
+      "role": "immutable_v25_live_audit_with_current_profile_and_mixed_profile_economics",
+      "sha256": "bda8d9473d6ccac860560d9793136dd6fd487910a2c22ea43cd5c1bde57c5978",
+      "bytes": 12496199
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v25_successor_triage_goal_20260809T052136Z.json",
+      "role": "immutable_strict_exact_route_successor_triage",
+      "sha256": "03b4291e518d345366935a2f9fcf816852964b24113036a5d141bb86459246be",
+      "bytes": 28371
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v25_side_composition_final_20260809T052848Z.json",
+      "role": "immutable_provider_symbol_side_composition_ranking",
+      "sha256": "a97796089ca52fba0be0110f4d9258efe279f74c550e4074fcf3774da4faabc1",
+      "bytes": 30376
+    },
+    {
+      "path": "../../src/hypervector/research/cohort_side_composition.py",
+      "role": "report_only_side_composition_business_logic",
+      "sha256": "df013f770ba3c1cf503ed812bdcb69c4c7544698c2b1e3a0a3c55c752052cbfe",
+      "bytes": 13587
+    },
+    {
+      "path": "../../scripts/cohort_side_composition.py",
+      "role": "exclusive_output_side_composition_cli",
+      "sha256": "2663e98d977cf7f9e782d89ecbf48d34ae7fd31e6e49d677e8cccdc7e45ed785",
+      "bytes": 2288
+    },
+    {
+      "path": "../../tests/test_cohort_side_composition.py",
+      "role": "side_composition_scope_and_ranking_regression_tests",
+      "sha256": "8d1245cb8440e0beca739b53e98c2fe4bbc157296eec3d948f3ff05f29ee6f76",
+      "bytes": 5850
+    },
+    {
+      "path": "../../tests/test_cohort_side_composition_script.py",
+      "role": "side_composition_cli_exclusive_output_regression_tests",
+      "sha256": "db399bfaf68f3ac8c7b65dd56d6a8332357942e35fb7251947a9bf8dbafc1868",
+      "bytes": 3246
+    }
+  ],
+  "metrics": {
+    "source_run_id": "bidirectional-live-1786182011216",
+    "source_profile_id": "multi_asset_bidirectional_complete_portfolio_canary_v25",
+    "exact_routes_triaged": 24,
+    "strict_proceed_routes": 0,
+    "strict_revise_routes": 10,
+    "strict_stop_exact_contract_routes": 14,
+    "routes_with_both_side_live_execution": 0,
+    "side_components": 24,
+    "long_frontier_components": 7,
+    "short_frontier_components": 2,
+    "repeated_positive_mixed_profile_components": 1,
+    "positive_sparse_mixed_profile_components": 6,
+    "historical_supportive_no_live_components": 2,
+    "nonpositive_mixed_profile_components": 8,
+    "unobserved_live_components": 7,
+    "mixed_profile_trades": 33,
+    "mixed_profile_net_pnl_usd": 0.12226400000000007,
+    "mixed_profile_positive_component_net_pnl_usd": 3.6990839999999996,
+    "mixed_profile_negative_component_net_pnl_usd": -3.57682,
+    "mixed_profile_long_trades": 22,
+    "mixed_profile_long_net_pnl_usd": 2.2504759999999995,
+    "mixed_profile_short_trades": 11,
+    "mixed_profile_short_net_pnl_usd": -2.128212,
+    "largest_positive_component_trades": 1,
+    "largest_positive_component_net_pnl_usd": 1.582877,
+    "current_profile_trades": 7,
+    "current_profile_long_trades": 7,
+    "current_profile_short_trades": 0,
+    "current_profile_net_pnl_usd": 1.8182430000000003,
+    "current_profile_fees_usd": 0.33604999999999996,
+    "current_profile_funding_usd": -0.030367,
+    "hype_ht_breakout_long_mixed_profile_trades": 8,
+    "hype_ht_breakout_long_mixed_profile_wins": 5,
+    "hype_ht_breakout_long_mixed_profile_losses": 3,
+    "hype_ht_breakout_long_mixed_profile_net_pnl_usd": 0.5024579999999998,
+    "hype_ht_breakout_long_mixed_profile_profit_factor": 3.079127589843834,
+    "hype_ht_breakout_long_mixed_profile_median_return_on_margin_pct": 1.5934112183779863,
+    "repeated_positive_short_components": 0,
+    "execution_authority": "none",
+    "runtime_changed_by_this_revision": false
+  },
+  "limitations": [
+    "All-live history spans multiple profile generations and therefore cannot establish current-v25 route edge.",
+    "The only repeated-positive component, HYPE HT-Breakout long, has no compatible current-v25 close and conflicts with adverse historical route-shape evidence.",
+    "The short frontier contains one single-trade positive mixed-profile observation and one historically supportive route with zero compatible live closes.",
+    "The largest positive mixed-profile component is a single SOL long whose +$1.582877 exceeds the +$0.122264 total mixed-profile net, so aggregate profitability is highly outlier-dependent.",
+    "Every resolved current-v25 close at this cutoff is long; current-profile short-side economics remain unobserved.",
+    "Standalone component rankings do not model simultaneous signals, slot contention, correlated exposure, leverage utilization, or shared-capital path dependence.",
+    "The ranking does not estimate an allocator, risk contribution, turnover, break-even cost, or portfolio drawdown distribution.",
+    "A positive net field is accepted only within the source audit's stated fee and funding scope; hidden liquidity, queue position, latency, and opportunity cost remain unmodeled.",
+    "The descriptive threshold of five closes is a reporting convention, not a statistical significance or promotion gate.",
+    "No live route, position, order, stop, target, size, exit, transition drain, or protection changed in this revision."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

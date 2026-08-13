@@ -8,6 +8,9 @@ from unittest.mock import Mock
 
 import pandas as pd
 import pytest
+import requests
+
+import hypervector.data.hl as hl_data
 
 from hypervector.data.backfill import (
     bars_from_binance_klines,
@@ -37,6 +40,155 @@ def test_parse_hl_real_sample():
     assert (df["source"] == "hl").all()
     assert df["close"].notna().all()
     assert df["timestamp"].is_monotonic_increasing
+
+
+def test_live_snapshot_fetch_uses_one_candle_request() -> None:
+    """Live warmup asks for the venue tail once instead of paging by day."""
+    raw = json.loads((FIX / "hl_candle_sample.json").read_text())
+    response = Mock(status_code=200, headers={})
+    response.json.return_value = raw
+    session = Mock()
+    session.post.return_value = response
+
+    frame = hl_data.fetch_hl_ohlcv_snapshot(
+        "BTC-PERP",
+        "1m",
+        14,
+        session=session,
+        end_ms=1_785_585_600_000,
+    )
+
+    session.post.assert_called_once()
+    payload = session.post.call_args.kwargs["json"]
+    assert payload["type"] == "candleSnapshot"
+    assert payload["req"]["coin"] == "BTC"
+    assert payload["req"]["endTime"] == 1_785_585_600_000
+    assert payload["req"]["startTime"] == 1_784_376_000_000
+    assert len(frame) == len(raw)
+
+
+def test_hip3_symbol_preserves_lowercase_dex_namespace() -> None:
+    """HIP-3 requests use the venue's exact dex:ASSET identity."""
+    assert hl_data.hl_coin("xyz:SP500") == "xyz:SP500"
+    assert hl_data.hl_coin("xyz:SPCX") == "xyz:SPCX"
+
+
+def test_live_snapshot_fetch_uses_exact_hip3_coin() -> None:
+    """Read-only candles must not uppercase the case-sensitive dex prefix."""
+    response = Mock(status_code=200, headers={})
+    response.json.return_value = []
+    session = Mock()
+    session.post.return_value = response
+
+    hl_data.fetch_hl_ohlcv_snapshot(
+        "xyz:SP500",
+        "15m",
+        14,
+        session=session,
+        end_ms=1_785_585_600_000,
+    )
+
+    payload = session.post.call_args.kwargs["json"]
+    assert payload["req"]["coin"] == "xyz:SP500"
+
+
+def test_live_snapshot_fetch_retries_429_with_bounded_delay() -> None:
+    """A transient venue throttle is explicit, bounded, and recoverable."""
+    raw = json.loads((FIX / "hl_candle_sample.json").read_text())
+    limited = Mock(status_code=429, headers={"Retry-After": "1"})
+    limited.raise_for_status.side_effect = requests.HTTPError("rate limited")
+    healthy = Mock(status_code=200, headers={})
+    healthy.json.return_value = raw
+    session = Mock()
+    session.post.side_effect = [limited, healthy]
+    delays: list[float] = []
+
+    frame = hl_data.fetch_hl_ohlcv_snapshot(
+        "BTC",
+        "1m",
+        14,
+        session=session,
+        end_ms=1_785_585_600_000,
+        sleep_fn=delays.append,
+    )
+
+    assert session.post.call_count == 2
+    assert delays == [1.0]
+    assert len(frame) == len(raw)
+
+
+def test_live_snapshot_429_retry_exhaustion_preserves_http_error() -> None:
+    """Four venue throttles exhaust bounded delays and surface HTTP 429."""
+    responses = []
+    for _ in range(4):
+        response = Mock(status_code=429, headers={})
+        error = requests.HTTPError("429 rate limited", response=response)
+        response.raise_for_status.side_effect = error
+        responses.append(response)
+    session = Mock()
+    session.post.side_effect = responses
+    delays: list[float] = []
+
+    with pytest.raises(requests.HTTPError) as caught:
+        hl_data.fetch_hl_ohlcv_snapshot(
+            "BTC",
+            "1m",
+            14,
+            session=session,
+            end_ms=1_785_585_600_000,
+            sleep_fn=delays.append,
+        )
+
+    assert caught.value.response is responses[-1]
+    assert caught.value.response.status_code == 429
+    assert session.post.call_count == 4
+    assert delays == [1.0, 2.0, 4.0]
+
+
+def test_live_snapshot_fetch_retries_transient_transport_failure() -> None:
+    """A pre-response connection reset retries the idempotent candle read."""
+    raw = json.loads((FIX / "hl_candle_sample.json").read_text())
+    healthy = Mock(status_code=200, headers={})
+    healthy.json.return_value = raw
+    session = Mock()
+    session.post.side_effect = [
+        requests.ConnectionError("connection reset by peer"),
+        healthy,
+    ]
+    delays: list[float] = []
+
+    frame = hl_data.fetch_hl_ohlcv_snapshot(
+        "BTC",
+        "1m",
+        14,
+        session=session,
+        end_ms=1_785_585_600_000,
+        sleep_fn=delays.append,
+    )
+
+    assert session.post.call_count == 2
+    assert delays == [1.0]
+    assert len(frame) == len(raw)
+
+
+def test_live_snapshot_transport_retry_exhaustion_is_explicit() -> None:
+    """Exhausted candle-read retries preserve the transport failure."""
+    session = Mock()
+    session.post.side_effect = requests.ConnectionError("venue unavailable")
+    delays: list[float] = []
+
+    with pytest.raises(requests.ConnectionError, match="venue unavailable"):
+        hl_data.fetch_hl_ohlcv_snapshot(
+            "BTC",
+            "1m",
+            14,
+            session=session,
+            end_ms=1_785_585_600_000,
+            sleep_fn=delays.append,
+        )
+
+    assert session.post.call_count == 4
+    assert delays == [1.0, 2.0, 4.0]
 
 
 def test_parse_hl_funding_history_normalizes_utc_hours() -> None:
@@ -87,6 +239,72 @@ def test_fetch_hl_funding_history_uses_public_info_request() -> None:
     )
     response.raise_for_status.assert_called_once_with()
     assert frame.empty
+
+
+def test_fetch_hl_funding_history_paginates_until_end_coverage() -> None:
+    """Funding pagination advances past the last raw settlement timestamp."""
+    first = [
+        {
+            "coin": "BTC",
+            "fundingRate": "0.00001",
+            "premium": "0.00002",
+            "time": 1_784_980_800_030,
+        },
+        {
+            "coin": "BTC",
+            "fundingRate": "0.00002",
+            "premium": "0.00003",
+            "time": 1_784_984_400_030,
+        },
+    ]
+    second = [
+        {
+            "coin": "BTC",
+            "fundingRate": "0.00003",
+            "premium": "0.00004",
+            "time": 1_784_988_000_030,
+        }
+    ]
+    responses = [Mock(), Mock()]
+    responses[0].json.return_value = first
+    responses[1].json.return_value = second
+    session = Mock()
+    session.post.side_effect = responses
+
+    frame = fetch_hl_funding_history(
+        "BTC",
+        start_time=pd.Timestamp("2026-07-25T12:00:00Z"),
+        end_time=pd.Timestamp("2026-07-25T15:00:00Z"),
+        session=session,
+    )
+
+    assert len(frame) == 3
+    assert session.post.call_count == 2
+    second_payload = session.post.call_args_list[1].kwargs["json"]
+    assert second_payload["startTime"] == 1_784_984_400_031
+
+
+def test_fetch_hl_funding_history_fails_on_nonprogressing_page() -> None:
+    """A vendor page that cannot advance must fail instead of truncating."""
+    response = Mock()
+    response.json.return_value = [
+        {
+            "coin": "BTC",
+            "fundingRate": "0.00001",
+            "premium": "0.00002",
+            "time": 1_784_980_799_999,
+        }
+    ]
+    session = Mock()
+    session.post.return_value = response
+
+    with pytest.raises(RuntimeError, match="did not advance"):
+        fetch_hl_funding_history(
+            "BTC",
+            start_time=pd.Timestamp("2026-07-25T12:00:00Z"),
+            end_time=pd.Timestamp("2026-07-25T15:00:00Z"),
+            session=session,
+        )
 
 
 def test_parse_binance_real_sample():

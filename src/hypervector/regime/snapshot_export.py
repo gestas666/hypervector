@@ -10,7 +10,6 @@ import pandas as pd
 
 from hypervector.regime.ultimate import detect_ultimate_regime
 from hypervector.strategies.hypervelocity_contract import faithful_regime_config
-from hypervector.strategies.indicators import bbwp, rsi
 
 SnapshotValue = str | int | float | bool | None
 Snapshot = dict[str, SnapshotValue]
@@ -126,9 +125,6 @@ def build_regime_snapshots(
         indexed,
         config=faithful_regime_config(),
     )
-    close = indexed["close"].astype(float)
-    rsi_values = rsi(close, 14)
-    bbwp_values, _ = bbwp(close, bb_length=20, lookback=180)
     opi, spread, depth, microstructure_source = _microstructure(indexed)
     funding_zscore, funding_source = _funding_zscore(indexed)
     start = max(0, len(indexed) - max_bars)
@@ -136,8 +132,6 @@ def build_regime_snapshots(
         _snapshot_row(
             indexed,
             regime,
-            rsi_values,
-            bbwp_values,
             opi,
             spread,
             depth,
@@ -153,8 +147,6 @@ def build_regime_snapshots(
 def _snapshot_row(
     bars: pd.DataFrame,
     regime: pd.DataFrame,
-    rsi_values: pd.Series,
-    bbwp_values: pd.Series,
     opi: pd.Series,
     spread: pd.Series,
     depth: pd.Series,
@@ -164,26 +156,60 @@ def _snapshot_row(
     position: int,
 ) -> Snapshot:
     timestamp = bars.index[position]
+    snapshot = _bar_snapshot(bars, timestamp, position)
+    snapshot.update(_regime_snapshot(regime, position))
+    snapshot.update(
+        {
+            "opi": _rounded(opi.iloc[position], 4),
+            "spread_bps": _rounded(spread.iloc[position], 3),
+            "bid_depth_ratio": _rounded(depth.iloc[position], 3),
+            "microstructure_source": microstructure_source,
+            "funding_zscore": _rounded(funding_zscore.iloc[position], 3),
+            "funding_source": funding_source,
+        }
+    )
+    return snapshot
+
+
+def _bar_snapshot(
+    bars: pd.DataFrame,
+    timestamp: pd.Timestamp,
+    position: int,
+) -> Snapshot:
     return {
         "timestamp_str": timestamp.strftime("%Y-%m-%d %H:%M:%S UTC"),
         "timestamp_ms": int(timestamp.value // 1_000_000),
+        "open": round(float(bars["open"].iloc[position]), 2),
         "close": round(float(bars["close"].iloc[position]), 2),
         "high": round(float(bars["high"].iloc[position]), 2),
         "low": round(float(bars["low"].iloc[position]), 2),
         "volume": round(float(bars["volume"].iloc[position]), 5),
+    }
+
+
+def _regime_snapshot(regime: pd.DataFrame, position: int) -> Snapshot:
+    return {
         "regime_state": str(regime["regime_state"].iloc[position]),
         "regime_reason": str(regime["regime_reason"].iloc[position]),
         "regime_strength_score": _rounded(regime["confidence"].iloc[position], 4),
         "regime_score_source": ("mean_multitimeframe_ema_gap_strength_percentile_rank"),
         "confidence_is_gate": False,
-        "opi": _rounded(opi.iloc[position], 4),
-        "spread_bps": _rounded(spread.iloc[position], 3),
-        "bid_depth_ratio": _rounded(depth.iloc[position], 3),
-        "microstructure_source": microstructure_source,
-        "bbwp_percentile": _rounded(bbwp_values.iloc[position], 2),
-        "rsi": _rounded(rsi_values.iloc[position], 2),
-        "funding_zscore": _rounded(funding_zscore.iloc[position], 3),
-        "funding_source": funding_source,
+        "bbwp_percentile": _rounded(regime["bbwp_percentile"].iloc[position], 2),
+        "compression_ready": bool(regime["compression_ready"].iloc[position]),
+        "ema_gap_bps_signed": _rounded(regime["ema_gap_bps_signed"].iloc[position], 2),
+        "rsi": _rounded(regime["rsi"].iloc[position], 2),
+        "rsi_ema": _rounded(regime["rsi_ema"].iloc[position], 2),
+        "rsi_cross_direction": _optional_text(
+            regime["rsi_cross_direction"].iloc[position]
+        ),
+        "tactical_breakout_direction": _optional_text(
+            regime["tactical_breakout_direction"].iloc[position]
+        ),
+        "breakout_volume_ratio": _rounded(
+            regime["breakout_volume_ratio"].iloc[position], 3
+        ),
+        "prior_range_high": _rounded(regime["prior_range_high"].iloc[position], 2),
+        "prior_range_low": _rounded(regime["prior_range_low"].iloc[position], 2),
         "trend_1m": str(regime["state_1m"].iloc[position]),
         "trend_5m": str(regime["state_5m"].iloc[position]),
         "trend_15m": str(regime["context_15m"].iloc[position]),
@@ -198,6 +224,10 @@ def _snapshot_row(
 def _rounded(value: object, decimals: int) -> float | None:
     number = float(value)
     return round(number, decimals) if np.isfinite(number) else None
+
+
+def _optional_text(value: object) -> str | None:
+    return None if pd.isna(value) else str(value)
 
 
 def export_regime_snapshots(

@@ -55,5 +55,9 @@ def test_paper_package_has_no_exchange_submit_imports():
         text = path.read_text(encoding="utf-8")
         for needle in forbidden:
             if needle in text:
-                offenders.append(f"{path.relative_to(paper_root.parent.parent)}: {needle}")
-    assert not offenders, "forbidden submit-client imports in paper:\n" + "\n".join(offenders)
+                offenders.append(
+                    f"{path.relative_to(paper_root.parent.parent)}: {needle}"
+                )
+    assert not offenders, "forbidden submit-client imports in paper:\n" + "\n".join(
+        offenders
+    )

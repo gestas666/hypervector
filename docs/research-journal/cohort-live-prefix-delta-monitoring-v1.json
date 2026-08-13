@@ -1,0 +1,121 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "cohort-live-prefix-delta-monitoring",
+  "revision_number": 1,
+  "supersedes_revision_id": null,
+  "created_at_utc": "2026-08-08T17:18:52Z",
+  "strategy_id": "multi_asset_bidirectional_complete_portfolio_canary_v25",
+  "symbol": "PORTFOLIO",
+  "status": "retain",
+  "hypothesis": "A strict same-run immutable prefix delta can make continuous live-canary review reproducible by separating resolved execution economics, provisional open-lifecycle paths, and technical coverage changes without creating strategy or execution authority.",
+  "decision": "Adopt the report-only prefix-delta workflow and retain the running v25 strategy unchanged. The measured 43.22-minute prefix added 327 ledger rows but no close, fill, fee, funding, or resolved PnL change. Four open lifecycles remained continuously identified and protected; their mark and path changes remain provisional. The existing HIP-3 provider metric defect accumulated 20 additional null values while its technical-gap identity stayed unchanged. This warrants continued observation and the already-staged future clock-repair acceptance test, not an economic strategy revision, live exit-policy change, restart, drain, route change, order mutation, resize, or promotion.",
+  "confidence": "high",
+  "falsifier": "The monitoring method is falsified by accepting different run or profile identities, backward row or time movement, an overwritten output, a removed open lifecycle without explicitly distinguishing a matching close from an unresolved disappearance, arithmetic disagreement with source audits, changed or missing source evidence, execution authority, runtime strategy mutation, or treating provisional marks or known metric-gap growth as resolved economic edge. Its current economic decision is updated by a newly resolved lifecycle, a new technical-gap identity, unexplained lifecycle disappearance, or materially different after-cost forward evidence.",
+  "evidence": [
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v25_live_prefix_bidirectional-live-1786182011216_20260808T162430Z.json",
+      "role": "immutable_before_live_audit_prefix",
+      "sha256": "7e0e05803c0942fd407481227c96ad663eb6bae9e7f351384c76f7dd135e4fb9",
+      "bytes": 7261272
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v25_live_prefix_bidirectional-live-1786182011216_20260808T170753Z.json",
+      "role": "immutable_after_live_audit_prefix",
+      "sha256": "1ff290fc60528c96e6488c27993b5f7f1aa66309a53df809baa089c039b04f7f",
+      "bytes": 7303596
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v25_live_prefix_delta_20260808T162430Z_20260808T170753Z.json",
+      "role": "immutable_same_run_resolved_provisional_and_technical_delta",
+      "sha256": "8f7cd5917c9220dcc323ce23db42c28476eee76b2975135618dc773e57dd60e8",
+      "bytes": 5427
+    },
+    {
+      "path": "../../src/hypervector/research/cohort_live_audit_delta.py",
+      "role": "strict_delta_business_logic",
+      "sha256": "fd03e7e4e80e80d4a5083fbcdd67d6edab79f8e9fecb0b99014a2fb7db5f8a9c",
+      "bytes": 16027
+    },
+    {
+      "path": "../../scripts/cohort_live_audit_delta.py",
+      "role": "immutable_report_only_operator_command",
+      "sha256": "21771fdea2adcb033761d5ead409f4961ef6c0a89db41fc666e9c5573f453eab",
+      "bytes": 3050
+    },
+    {
+      "path": "../../tests/test_cohort_live_audit_delta.py",
+      "role": "identity_arithmetic_lifecycle_and_immutability_contract_tests",
+      "sha256": "25b8dcc6f2063ebd99aa71d8b3aa072835129cfa8f99c09c245d8b799775a00f",
+      "bytes": 9596
+    },
+    {
+      "path": "../../src/hypervector/cli_cohort.py",
+      "role": "first_class_report_only_cli_routing",
+      "sha256": "8ab1b8e2ea5f12b7886b868f02e91396a11c9f8d85308c83148ba178db947754",
+      "bytes": 7799
+    },
+    {
+      "path": "../../tests/test_cli_cohort.py",
+      "role": "cli_authority_and_skill_discoverability_tests",
+      "sha256": "38ecb9ed0ada7bf77eb973ef09d6ad4124d73a43579a404e735351ba69fdaa85",
+      "bytes": 6238
+    },
+    {
+      "path": "../../skills/hypervector-cli/SKILL.md",
+      "role": "operator_evidence_boundary_documentation",
+      "sha256": "c0eaa131230efd5a4f21a6917b3e43c7a68d4f1b23519487dea6d8ea76447965",
+      "bytes": 68644
+    }
+  ],
+  "metrics": {
+    "run_id": "bidirectional-live-1786182011216",
+    "profile_fingerprint": "ec7715f671fa369d0a415d8941061eb9a577b232bbd4e06367a7342267ff7ecc",
+    "before_last_observed_at_utc": "2026-08-08T16:24:38.826174+00:00",
+    "after_last_observed_at_utc": "2026-08-08T17:07:51.789291+00:00",
+    "elapsed_minutes": 43.21605108333333,
+    "ledger_row_count_delta": 327,
+    "closed_trades_delta": 0,
+    "wins_delta": 0,
+    "losses_delta": 0,
+    "fills_delta": 0,
+    "net_pnl_usd_delta": 0.0,
+    "fees_usd_delta": 0.0,
+    "funding_usd_delta": 0.0,
+    "metric_value_gaps_delta": 20,
+    "right_censored_observations_delta": -15,
+    "technical_gaps_added": 0,
+    "technical_gaps_removed": 0,
+    "matched_open_lifecycles": 4,
+    "added_open_lifecycles": 0,
+    "removed_open_lifecycles": 0,
+    "removed_without_close": 0,
+    "btc_marked_net_pnl_usd_delta": -0.004869000000000005,
+    "btc_directional_return_bps_delta": -1.8430348640752214,
+    "sol_marked_net_pnl_usd_delta": -0.020953999999999917,
+    "sol_directional_return_bps_delta": -2.6861141329881377,
+    "gold_marked_net_pnl_usd_delta": -0.043417999999999984,
+    "gold_directional_return_bps_delta": -5.741450979489526,
+    "gold_ignored_exit_path_return_bps_delta": -5.754137224662781,
+    "gold_ignored_signal_count_delta": 3,
+    "spcx_marked_net_pnl_usd_delta": 0.032128000000000045,
+    "spcx_directional_return_bps_delta": 4.503152206543078,
+    "spcx_ignored_exit_path_return_bps_delta": 4.50585761489819,
+    "spcx_ignored_signal_count_delta": 3,
+    "resolved_economic_change": false,
+    "known_technical_gap_count_changed": true,
+    "provisional_open_change": true,
+    "economic_journal_revision_recommended": false,
+    "runtime_changed_by_this_revision": false
+  },
+  "limitations": [
+    "The measured window is one 43.22-minute prefix of one running process and is not an independent market sample.",
+    "Open-lifecycle marks, excursions, ignored-exit paths, and profit-lock states can reverse before venue close.",
+    "The delta attributes arithmetic changes but does not estimate causal strategy edge, counterfactual fills, or future profit.",
+    "The 20 additional null pressure values come from the already-loaded old runner and do not test the staged source repair.",
+    "Right-censored count reduction reflects path maturation and does not imply favorable outcomes.",
+    "No route, process, order, position, stop, target, allocation, drain, or protection changed in this revision."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

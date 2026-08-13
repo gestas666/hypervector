@@ -1,0 +1,104 @@
+{
+  "schema_version": "retired_strategy_reexamination_v1",
+  "mode": "report_only",
+  "execution_authority": "none",
+  "runtime_strategy_changed": false,
+  "problem": "Re-examine previously used strategy families without pooling incompatible versions or assuming every loss is strategy failure.",
+  "decision": "Preserve mechanisms with confirmed implementation defects or competitive same-clock evidence, but do not restore an unchanged route solely from a favorable live slice. Every restored route requires a distinct strategy identity, exact contract parity, and a prospective scorecard scoped to that version and symbol set.",
+  "cases": [
+    {
+      "strategy": "HYPE native breakout/onset",
+      "classification": "experiment_identity_contamination",
+      "finding": "The same hype_breakout_onset_bidirectional_v1 identity represented both the HYPE-only contract and later BTC/ETH/SOL/HYPE transfers. It also crossed different sizing generations. Aggregating those results as one strategy scorecard is invalid even when the signal source code was unchanged.",
+      "economic_evidence": "The early HYPE-only live slice was favorable, but the generic historical control was negative and later live generations were mixed. Universal early locks and the tested 5-minute momentum exit reduced returns. The promising observation is therefore mechanism-specific, not evidence that every route carrying the reused ID should be restored.",
+      "action": "Keep the generic reused identity out of the successor. Retain the separately named HYPE compression breakout/pullback challenger and require any native-onset retest to receive a new HYPE-only identity and independent forward ledger.",
+      "confidence": "high on identity contamination; low-medium on recoverable HYPE edge",
+      "falsifier": "A source-bound reconstruction proves the reused identity had one invariant symbol, sizing, entry, and exit contract, or a new predeclared HYPE-only version remains non-positive after exact costs and largest-winner removal."
+    },
+    {
+      "strategy": "HIP-3 pressure v1/v2",
+      "classification": "confirmed_defect",
+      "finding": "V1 used a 30-second freshness contract rather than the researched 15-second contract. V2 narrowed the number but still used receipt age, allowed one-snapshot evidence, and reconstructed prior onset state in a way delayed receipts could rewrite.",
+      "economic_evidence": "Five linked v1 live closes lost $2.713721, but those outcomes cannot qualify the corrected pressure mechanism because all five used stale decision pressure under the frozen research contract.",
+      "action": "Keep v1/v2 retired. Continue v3 exact exchange-boundary, multi-snapshot, persisted-onset prospective capture under distinct report-only identities before routing.",
+      "confidence": "high",
+      "falsifier": "Exact raw ledgers prove the linked v1 decisions met the 15-second contract, or v3 decisions fail raw-book parity."
+    },
+    {
+      "strategy": "SOL Range Onset",
+      "classification": "confirmed_stop_defect_and_valid_sparse_signal",
+      "finding": "The shared ETH/SOL provider incorrectly applied ETH's 60-bps stop to SOL although the frozen SOL recommendation used 80 bps. Signal parity checks found no missing-trigger defect; its hourly-cross entry mechanism is genuinely sparse.",
+      "economic_evidence": "The 80-bps cross-era variant led the compared stop contracts, while five exact missing-hourly-cross counterfactuals lost 62.91 bps in aggregate. Relaxing the cross would therefore have worsened the observed sample.",
+      "action": "Retain SOL Range with the repaired 80-bps override. Do not loosen the hourly cross merely to increase frequency; audit every future completed cross against the ledger.",
+      "confidence": "high on defect and liveness; low-medium on expectancy",
+      "falsifier": "A valid completed cross is absent from the provider ledger, or independent 60-bps outcomes outperform 80 bps after identical costs and path evidence."
+    },
+    {
+      "strategy": "ETH precompression pullback",
+      "classification": "valid_but_inferior_same_clock_alternative",
+      "finding": "The implementation produced a real, tradable signal family rather than random entries. Its 12-hour exit was the least contradicted tested duration, but neither side nor alignment subgroup was stable in both development and opened-final partitions.",
+      "economic_evidence": "In the shared-capital, same-clock comparison, ETH dual-MTF Range exceeded pullback net PnL under nominal and stress friction in development, opened-final, and full opened descriptive windows. The respective nominal deltas were +$1.1085, +$1.3556, and +$2.5886.",
+      "action": "Preserve pullback research and exact 12-hour contract, but keep ETH dual-MTF Range in the successor. Reopen pullback only through a new causal mechanism rather than another post-hoc side split.",
+      "confidence": "medium",
+      "falsifier": "A predeclared pullback revision beats dual-MTF Range on the same timestamps, capital, costs, chronological partitions, and largest-winner sensitivity."
+    },
+    {
+      "strategy": "BTC Source Follow",
+      "classification": "negative_economics",
+      "finding": "The exact deployed-shape replay produced signals and exits normally; the observed weakness is not explained by a dead provider or absent order path.",
+      "economic_evidence": "The one-year deployed-shape replay completed 782 trades, lost $17.8237 on $500, produced PF 0.6193, and paid $13.0824 in modeled fees. Alternative stop/target geometry tested during re-examination remained negative across chronological partitions.",
+      "action": "Do not restore the unchanged Source Follow contract. Any successor must introduce a new causal entry mechanism, not only a payoff-grid change.",
+      "confidence": "high on deployed-shape failure; medium on broader family conclusion",
+      "falsifier": "A source-identical replay with corrected venue evidence materially changes these results, or a new predeclared entry mechanism is positive across untouched partitions after exact friction."
+    },
+    {
+      "strategy": "HIP-3 Swing/HA",
+      "classification": "negative_economics",
+      "finding": "The literal 9/21 EMA plus Heikin-Ashi color and buy/sell alignment was tested, as were separately tuned 50/200 variants. Both were validation-negative across the evaluated HIP-3 assets; isolated live winners were largest-winner dependent.",
+      "economic_evidence": "The existing validation reports are negative for SP500, SPCX, SNDK, GOLD, and BRENTOIL under both the literal control and tuned candidate families.",
+      "action": "Keep the unchanged Swing/HA identity retired. A future version must add a genuinely new causal mechanism and receive a new identity.",
+      "confidence": "high for the unchanged identity",
+      "falsifier": "An exact translation discrepancy is demonstrated, or a new mechanism survives independent validation and largest-winner removal."
+    }
+  ],
+  "portfolio_implications": {
+    "retain_in_v49": [
+      "BTC Hulk short v3",
+      "BTC liquidity-sweep long",
+      "ETH dual-MTF Range Onset",
+      "SOL Range Onset with 80-bps stop",
+      "HYPE compression breakout/pullback"
+    ],
+    "continue_report_only": [
+      "HIP-3 pressure v3",
+      "a future distinctly named HYPE-only onset challenger"
+    ],
+    "do_not_restore_unchanged": [
+      "BTC Source Follow",
+      "HIP-3 Swing/HA",
+      "generic multi-asset hype_breakout_onset_bidirectional_v1"
+    ],
+    "live_transition": "No running position, order, backend, profile, or execution authority is changed by this review. The repaired successor remains subject to flat-and-order-free transition validation."
+  },
+  "evidence_paths": [
+    "configs/multi_asset_bidirectional_canary.toml",
+    "configs/multi_asset_bidirectional_hype75_all_asset_breakout_canary_v14.toml",
+    "docs/reviews/2026-08-05-hype-breakout-strategy-contract.md",
+    "docs/reviews/2026-08-05-hype-profit-retention-audit.md",
+    "docs/research-journal/hype-breakout-5m-momentum-exit-v1.json",
+    "docs/research-journal/hip3-live-pressure-freshness-parity-v3.json",
+    "data/logs/research/sol_range_onset_cross_era_stop_reconciliation_20250302_20260730_v1.json",
+    "data/logs/research/lean_successor_portfolio_comparison_20260809T161609Z.json",
+    "docs/research-journal/eth-breakout-precompression-pullback-v6.json",
+    "data/logs/research/source_follow_deployed_shape_btc_1y_20260804.json",
+    "data/logs/research/hip3_swing_ha_transfer_sndk_gold_disabled_brent_v1.json",
+    "data/logs/research/hip3_swing_ha_transfer_sp500_spcx_v2.json",
+    "docs/research-journal/v49-strategy-repair-disposition.json"
+  ],
+  "limitations": [
+    "Historical replays, live closes, and prospective observer rows use different windows and cannot be pooled into one expectancy estimate.",
+    "Correcting software or identity defects does not prove profitability.",
+    "A favorable live slice with few trades remains vulnerable to regime luck and largest-winner concentration.",
+    "The running v39 backend remains authoritative until a separately approved flat and order-free transition."
+  ]
+}

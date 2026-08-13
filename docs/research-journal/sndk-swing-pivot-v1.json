@@ -1,0 +1,86 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "sndk-swing-pivot-after-alignment",
+  "revision_number": 1,
+  "supersedes_revision_id": null,
+  "created_at_utc": "2026-08-09T08:58:48Z",
+  "strategy_id": "sndk_swing_pivot_relaxed_fixed60_bidirectional_v1",
+  "symbol": "xyz:SNDK",
+  "status": "observe",
+  "hypothesis": "A SNDK Swing/HA source evaluation blocked only by pivot_break_state_missing may retain a repeatable after-cost directional opportunity. Measure both long and short sides after the frozen 2026-08-09T09:00:00Z cutoff with a 75-minute accepted-entry spacing, adverse recorded BBO entry and exit, observed funding and taker fees, an 80-bps stop proxy, no target, no order-pressure cohort gate, and a fixed 60-minute horizon.",
+  "decision": "Freeze a report-only prospective observer at the next completed 15-minute boundary after hypothesis formation. Do not change the live v25 pivot requirement and do not execute the candidate. The discovery evidence is one independent short path that returned +34.4065 bps at 15 minutes with +36.0449 bps favorable excursion, but the same path was -8.2203 bps at five minutes. That contradiction is sufficient to justify prospective measurement, not route promotion. Future evidence must retain both-side attribution, independent spacing, adverse BBO capacity, fees, funding, and the exact v25 source contract.",
+  "confidence": "low",
+  "falsifier": "Reject or materially revise the challenger if post-cutoff after-cost return is nonpositive excluding the largest winner, independent episodes do not recur, evidence remains one-sided, long outcomes are adverse, the result depends on an OPI subset selected after observation, visible-book capacity fails, or source/profile/cutoff identity changes. Evidence strengthens only through independent both-side post-cutoff paths with positive after-cost economics excluding the largest winner; no observation grants live authority automatically.",
+  "evidence": [
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v25_live_audit_continuation_20260809T085111Z.json",
+      "role": "immutable_hypothesis_formation_live_prefix",
+      "sha256": "8a3d91f92d4abb5e9b9c3de08dcbae712dee554a13b80490f071d704d97bf084",
+      "bytes": 13948052
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v25_live_delta_20260809T083821Z_to_20260809T085111Z.json",
+      "role": "immutable_delta_with_new_independent_sndk_short_path",
+      "sha256": "1a9d4d57714c0e09c30225916c6220d98f72ea32dafb55e4ea29bb195a9003be",
+      "bytes": 156704
+    },
+    {
+      "path": "../../configs/multi_asset_bidirectional_complete_portfolio_canary_v25.toml",
+      "role": "both_side_source_execution_and_risk_contract",
+      "sha256": "362763638541baf75d5121f0b59e1afc8091bda7aaa1aaea0f8b42aead3c3bdd",
+      "bytes": 6214
+    },
+    {
+      "path": "../../src/hypervector/research/cohort_forward_experiments.py",
+      "role": "frozen_candidate_identity_and_cutoff",
+      "sha256": "26efd727282bea07c3b43ff07410d6da49e91935e225d28b2fdeb7298cc82281",
+      "bytes": 6773
+    },
+    {
+      "path": "../../tests/test_sndk_swing_pivot_experiment.py",
+      "role": "identity_cutoff_both_side_and_source_authority_regression_tests",
+      "sha256": "67e5f97d24a2f84b212c4034d73bffeda98fe5418b3f23e31ace99d5f65369ac",
+      "bytes": 2084
+    },
+    {
+      "path": "../../scripts/cohort_forward_one_blocker_challenger.py",
+      "role": "execution_incapable_forward_observer",
+      "sha256": "36480074bcdd0a221bed42ffeca6fe9eb9476e236fc2849c35d9186e407019d3",
+      "bytes": 15241
+    }
+  ],
+  "metrics": {
+    "prospective_cutoff_utc": "2026-08-09T09:00:00Z",
+    "prospective_cutoff_time_ms": 1786266000000,
+    "source_strategy_id": "hip3_swing_ha_sndk_gold_brent_bidirectional_v1",
+    "source_blocker": "pivot_break_state_missing",
+    "source_profile_id": "multi_asset_bidirectional_complete_portfolio_canary_v25",
+    "source_profile_fingerprint": "ec7715f671fa369d0a415d8941061eb9a577b232bbd4e06367a7342267ff7ecc",
+    "source_run_id": "bidirectional-live-1786182011216",
+    "opi_cohort": "all",
+    "minimum_entry_spacing_minutes": 75,
+    "fixed_horizon_minutes": 60,
+    "stop_proxy_bps": 80.0,
+    "target_proxy_bps": null,
+    "notional_usd": 75.0,
+    "hypothesis_formation_independent_paths": 1,
+    "hypothesis_formation_long_paths": 0,
+    "hypothesis_formation_short_paths": 1,
+    "hypothesis_formation_5m_close_return_bps": -8.220304151254076,
+    "hypothesis_formation_15m_close_return_bps": 34.40648808060942,
+    "hypothesis_formation_15m_favorable_excursion_bps": 36.04489227492458,
+    "execution_authority": "none",
+    "runtime_changed_by_this_revision": false
+  },
+  "limitations": [
+    "Hypothesis formation is one independent short-side path from one live market window.",
+    "The favorable 15-minute result conflicts with the adverse five-minute result and does not establish a stable holding horizon.",
+    "The observer changes one source blocker and therefore is not the deployed Swing/HA contract.",
+    "Recorded BBO feasibility is not authenticated private queue position or a counterfactual venue fill.",
+    "The fixed 60-minute horizon isolates entry quality and is not an adaptive production exit policy.",
+    "The candidate is report-only and cannot enter, close, resize, gate, rank, pause, or promote a live strategy."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

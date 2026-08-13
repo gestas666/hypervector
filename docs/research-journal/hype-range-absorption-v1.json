@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "hype-range-absorption",
+  "revision_number": 1,
+  "supersedes_revision_id": null,
+  "created_at_utc": "2026-08-05T17:05:13+00:00",
+  "strategy_id": "hype_range_absorption_fixed60_bidirectional_v1",
+  "symbol": "HYPE",
+  "status": "observe",
+  "hypothesis": "Relaxing only HYPE range-onset's hourly-cross blocker under opposed side-adjusted OPI may capture profitable bidirectional range-absorption paths at a fixed 60-minute horizon.",
+  "decision": "Continue the frozen observer without execution authority. The mechanism aggregate is positive, but six resolved paths overlapped canonical HYPE and the sole resolved portfolio-deployable attempt lost. Do not label overlapping paths as missed portfolio trades or promote the candidate before HYPE-flat evidence resolves.",
+  "confidence": "low",
+  "falsifier": "Additional portfolio-deployable losses or deployable profit factor at or below one would reject this hypothesis. Positive deployable net return and profit factor above one across multiple non-adjacent HYPE-flat windows, including shorts, would strengthen it; source-prefix hash failure invalidates the current decision.",
+  "evidence": [
+    {
+      "path": "../reviews/2026-08-05-forward-challenger-portfolio-resolution.md",
+      "role": "prospective_mechanism_and_portfolio_resolution",
+      "sha256": "1aab33a5cda2032ec418e0ed658ce8ef0b12019f9aa227392419fda0cf79f8f2",
+      "bytes": 6816
+    }
+  ],
+  "metrics": {
+    "prospective_cutoff_utc": "2026-08-05T01:45:00+00:00",
+    "resolved": 6,
+    "pending": 1,
+    "wins": 3,
+    "losses": 3,
+    "long_resolved": 6,
+    "short_resolved": 0,
+    "profit_factor": 2.08473,
+    "total_net_return_bps": 89.463185,
+    "largest_abs_contribution_fraction": 0.505493,
+    "portfolio_deployable_resolved": 1,
+    "portfolio_deployable_wins": 0,
+    "portfolio_deployable_losses": 1,
+    "portfolio_deployable_profit_factor": 0.0,
+    "portfolio_deployable_total_net_return_bps": -74.546353,
+    "existing_hype_position_conflicts": 6,
+    "fixed_horizon_minutes": 60
+  },
+  "limitations": [
+    "The positive mechanism aggregate is not a shared-portfolio result.",
+    "Only one resolved attempt was portfolio-deployable and one attempt remained pending.",
+    "All resolved paths are long.",
+    "Recorded adverse BBO estimates are not venue fills."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

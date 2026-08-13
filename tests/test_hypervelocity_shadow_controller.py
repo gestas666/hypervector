@@ -61,12 +61,14 @@ def market(
     offset_ms: int,
     direction: str | None = "long",
     quantity: float = 0.04,
+    maximum_hold_seconds: float | None = None,
 ) -> RuntimeMarketState:
     """Return one already-classified backend market decision."""
     return RuntimeMarketState(
         symbol="BTC",
         observed_at=iso(offset_ms),
         entry_direction=direction,
+        structural_direction=direction,
         entry_quantity=quantity,
         entry_limit_price=64_500.0 if direction is not None else None,
         evidence_fresh=True,
@@ -74,6 +76,7 @@ def market(
         reentry_cooldown_seconds=60.0,
         target_price_fraction=0.002,
         price_tick=1.0,
+        maximum_hold_seconds=maximum_hold_seconds,
     )
 
 
@@ -117,6 +120,31 @@ def test_partial_entry_fill_immediately_submits_proportional_target() -> None:
     assert target.order_role == "target"
     assert target.quantity == pytest.approx(0.02)
     assert runtime.state.position_quantity == pytest.approx(0.02)
+
+
+def test_maximum_hold_closes_at_first_fresh_bbo_in_one_controller_cycle() -> None:
+    """Coordinator, event port, and runtime settle a deadline exit atomically."""
+    runtime = controller()
+    runtime.ingest(l2(0))
+    runtime.on_market(market(1, quantity=0.01, maximum_hold_seconds=0.010))
+    runtime.ingest(l2(2))
+    filled = runtime.ingest(trade(3, size=0.011, trade_id=40))
+    assert runtime.state.position_quantity == pytest.approx(0.01)
+    assert filled.commands[0].order_role == "target"
+
+    deadline = runtime.ingest(l2(13))
+
+    assert [event.event_type for event in deadline.venue_events] == [
+        "accepted",
+        "canceled",
+        "filled",
+    ]
+    assert deadline.commands[-1].order_role == "exit"
+    assert deadline.venue_events[-1].liquidity_side == "taker"
+    assert deadline.execution_records[-1].liquidity_side == "taker"
+    assert deadline.annotations == ("maximum_hold_exit_due", "target_canceled")
+    assert runtime.state.position_quantity == 0.0
+    assert runtime.port.account_snapshot().position_quantity == 0.0
 
 
 def test_declared_gap_preserves_pending_order_without_fill() -> None:
@@ -220,3 +248,48 @@ def test_partial_liquidation_replaces_target_for_remaining_position() -> None:
     assert replacement.client_order_id != first_target.client_order_id
     assert replacement.quantity == pytest.approx(quantity * 0.80)
     assert runtime.state.position_quantity == pytest.approx(quantity * 0.80)
+
+
+def test_terminal_liquidation_normalizes_machine_epsilon_residue() -> None:
+    """A port-flat liquidation residue must leave the runtime exactly flat."""
+    runtime = controller()
+    quantity = 280_000.0 / 64_500.0
+    runtime.ingest(l2(0))
+    runtime.on_market(market(1, quantity=quantity))
+    runtime.ingest(l2(2))
+    runtime.ingest(trade(3, size=quantity + 0.001, trade_id=10))
+    first_boundary = runtime.port.liquidation_price
+    assert first_boundary is not None
+    first_mark = first_boundary - 0.01
+    runtime.ingest(
+        l2(
+            100,
+            bid_size=quantity * 0.20,
+            bid=first_mark,
+            ask=first_mark + 1.0,
+        )
+    )
+    assert runtime.port.mark(mark_price=first_mark, observed_at=iso(101)) is True
+    runtime.reconcile_liquidation(iso(101))
+
+    remaining = runtime.state.position_quantity
+    second_boundary = runtime.port.liquidation_price
+    assert second_boundary is not None
+    second_mark = second_boundary - 0.01
+    runtime.ingest(
+        l2(
+            102,
+            bid_size=remaining - 5e-13,
+            bid=second_mark,
+            ask=second_mark + 1.0,
+        )
+    )
+    assert runtime.port.mark(mark_price=second_mark, observed_at=iso(103)) is True
+
+    runtime.reconcile_liquidation(iso(103))
+
+    assert runtime.port.last_liquidation is not None
+    assert 0.0 < runtime.port.last_liquidation.remaining_quantity <= 1e-12
+    assert runtime.state.position_quantity == 0.0
+    assert runtime.state.position_direction is None
+    assert runtime.port.account_snapshot().position_quantity == 0.0

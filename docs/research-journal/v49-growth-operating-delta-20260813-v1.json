@@ -1,0 +1,299 @@
+{
+  "schema_version": "v49_growth_operating_delta_v1",
+  "profile_id": "multi_asset_growth_first_5000_repaired_candidate_v49",
+  "profile_fingerprint": "0be937a1a50ca56becefb330f96d770e39863727d1e2832d025474afc489ae5e",
+  "contract": {
+    "automatic_live_promotion": false,
+    "automatic_roster_change": false,
+    "automatic_strategy_change": false,
+    "execution_authority": "none",
+    "performance_gate": false,
+    "report_only": true,
+    "runtime_strategy_changed": false
+  },
+  "evidence": {
+    "base_disposition": {
+      "path": "docs/research-journal/v49-strategy-repair-disposition.json",
+      "sha256": "c83bc76adeb98cc6e42dd9b92bd282a86716910a9338f88bbcccd0f8ac1f09da"
+    },
+    "config": {
+      "path": "configs/multi_asset_growth_first_5000_repaired_candidate_v49.toml",
+      "sha256": "ea0a758869b5af09f1d5aea79c67ee8f6cf6b895bbbec6b99c14c28c4fc108d4"
+    },
+    "expansion": {
+      "path": "data/logs/research/hip3_expansion_forward_disposition_20260813T0436Z_v3.json",
+      "sha256": "f6feb7230c7b96df4c16fb3fbb6bbb3e3694f32ab14628feac78e89d2c4f3fb2"
+    },
+    "regime": {
+      "path": "data/logs/research/bidirectional_cohort/v49_observer_regime_forward_accuracy_20260813T0450Z_v6.json",
+      "sha256": "26806ef74ed93a252e84c96b882697a9d432721af56da38ff35a8c6dac4a684f"
+    },
+    "sol_forward": {
+      "path": "data/logs/research/v49_sol_profit_lock_forward_20260813_v3.json",
+      "sha256": "ff67e0725246b8b7662cc314f5d93761272531e92239f6f49f35f589225c2bb5"
+    },
+    "stress": {
+      "path": "data/logs/research/bidirectional_cohort/v49_growth_sizing_stress_20260812_v1.json",
+      "sha256": "ee2472e09b7f38eccfc61ce9485dbb13d7b47d7196bc277464173411ab2d19b6"
+    },
+    "v39_snapshot": {
+      "path": "data/logs/research/bidirectional_cohort/v39_route_portfolio_review_20260813T0452Z_v1.json",
+      "sha256": "7aad5d3a9d24dce5299a13fba667dc5e8c55bb4eb1912bd032a315cc75f91a23"
+    }
+  },
+  "current_live_v39": {
+    "checkpoint_generated_at_utc": "2026-08-13T04:49:17.598018+00:00",
+    "run_id": "bidirectional-live-1786453934555",
+    "profile_id": "multi_asset_bidirectional_hype_compression_range_retired_current_canary_v39",
+    "closed_trades": 15,
+    "wins": 3,
+    "losses": 12,
+    "closed_net_pnl_usd": -4.25814,
+    "closed_profit_factor": 0.06384754363694484,
+    "open_positions": 4,
+    "open_marked_net_pnl_usd": 5.559419999999999,
+    "provisional_combined_net_pnl_usd": 1.3012799999999993,
+    "provisional_warning": "open marks are not realized exits and can change before venue execution",
+    "routes": [
+      {
+        "strategy_id": "eth_breakout_precompression_pullback_bidirectional_v1",
+        "symbol": "ETH",
+        "closed_trades": 0,
+        "closed_net_pnl_usd": 0.0,
+        "open_positions": 1,
+        "open_marked_net_pnl_usd": 0.169932
+      },
+      {
+        "strategy_id": "hip3_breakout_pressure_sndk_gold_brent_bidirectional_v1",
+        "symbol": "xyz:BRENTOIL",
+        "closed_trades": 1,
+        "closed_net_pnl_usd": -0.687962,
+        "open_positions": 0,
+        "open_marked_net_pnl_usd": 0.0
+      },
+      {
+        "strategy_id": "hip3_breakout_pressure_sndk_gold_brent_bidirectional_v1",
+        "symbol": "xyz:SNDK",
+        "closed_trades": 2,
+        "closed_net_pnl_usd": -1.343329,
+        "open_positions": 0,
+        "open_marked_net_pnl_usd": 0.0
+      },
+      {
+        "strategy_id": "hip3_breakout_pressure_sp500_spcx_bidirectional_v1",
+        "symbol": "xyz:SP500",
+        "closed_trades": 1,
+        "closed_net_pnl_usd": -0.075541,
+        "open_positions": 0,
+        "open_marked_net_pnl_usd": 0.0
+      },
+      {
+        "strategy_id": "hip3_breakout_pressure_sp500_spcx_bidirectional_v1",
+        "symbol": "xyz:SPCX",
+        "closed_trades": 1,
+        "closed_net_pnl_usd": -0.606889,
+        "open_positions": 1,
+        "open_marked_net_pnl_usd": 5.162655
+      },
+      {
+        "strategy_id": "hulk_expansion_bidirectional_tuned_v2",
+        "symbol": "BTC",
+        "closed_trades": 1,
+        "closed_net_pnl_usd": -0.070712,
+        "open_positions": 0,
+        "open_marked_net_pnl_usd": 0.0
+      },
+      {
+        "strategy_id": "hulk_expansion_bidirectional_tuned_v2",
+        "symbol": "HYPE",
+        "closed_trades": 0,
+        "closed_net_pnl_usd": 0.0,
+        "open_positions": 1,
+        "open_marked_net_pnl_usd": 0.262947
+      },
+      {
+        "strategy_id": "hype_breakout_onset_bidirectional_v1",
+        "symbol": "BTC",
+        "closed_trades": 3,
+        "closed_net_pnl_usd": -0.122158,
+        "open_positions": 0,
+        "open_marked_net_pnl_usd": 0.0
+      },
+      {
+        "strategy_id": "hype_breakout_onset_bidirectional_v1",
+        "symbol": "ETH",
+        "closed_trades": 3,
+        "closed_net_pnl_usd": -0.155692,
+        "open_positions": 0,
+        "open_marked_net_pnl_usd": 0.0
+      },
+      {
+        "strategy_id": "hype_breakout_onset_bidirectional_v1",
+        "symbol": "SOL",
+        "closed_trades": 3,
+        "closed_net_pnl_usd": -1.195857,
+        "open_positions": 1,
+        "open_marked_net_pnl_usd": -0.036114
+      }
+    ],
+    "diagnosis": "Every route with a resolved v39 close was negative in the current run. The v49 roster replaces the generic onset routes and excludes the failing HIP-3 identities rather than scaling them. The provisional SPCX winner can recover the closed run but does not reverse the resolved-route diagnosis until it exits."
+  },
+  "v49_forward_window": {
+    "ledger_prefix_sha256": "4bdccce4feb3c5f29e2f2b86f3d8b2756e42f7dc84885457ce118995313dd649",
+    "compatible_run_ids": [
+      "bidirectional-observe-1786555674002",
+      "bidirectional-observe-1786572851373",
+      "bidirectional-observe-1786573011551"
+    ],
+    "observed_hours": 11.32323366888889,
+    "provider_evaluations": 2086,
+    "pre_activation_evaluations_excluded": 15,
+    "eligible_signals": 1,
+    "eligible_route": "range_onset_bidirectional_v1|SOL|short",
+    "resolved_lifecycles": 0,
+    "frequency_claim": "forward_frequency_not_established",
+    "interpretation": "One eligible setup across 11.32 observed hours proves prospective route liveness, not a stable daily or weekly cadence."
+  },
+  "historical_route_frequency": {
+    "scope": "historical_candidate_cadence_not_forward_forecast",
+    "routes": [
+      {
+        "route": "hulk_expansion_short_robust_v3|BTC",
+        "gross_weekly_range": [0.7, 1.4]
+      },
+      {
+        "route": "liquidity_sweep_long_1h_stop60_target60_v2|BTC",
+        "development_signals": 6,
+        "development_days": 92,
+        "separate_forward_signals": 1,
+        "separate_forward_days": 12.5
+      },
+      {
+        "route": "range_onset_bidirectional_v1|ETH",
+        "trades": 70,
+        "covered_days": 365,
+        "gross_weekly_rate": 1.3424657534246576
+      },
+      {
+        "route": "range_onset_bidirectional_v1|SOL",
+        "trades": 42,
+        "covered_days": 201,
+        "gross_weekly_rate": 1.462686567164179
+      },
+      {
+        "route": "hype_breakout_compression_pullback_bidirectional_v1|HYPE",
+        "development_trades": 138,
+        "approximate_development_weekly_rate": 3.2,
+        "later_confirmation_trades": 4
+      }
+    ],
+    "portfolio_gross_weekly_range": [7.1, 7.9],
+    "limitations": [
+      "route opportunities may overlap and cannot be added as independent trades",
+      "HYPE development folds were unstable and later confirmation was largest-winner dependent",
+      "current forward observation is too short to validate the historical rate"
+    ]
+  },
+  "v49_sizing": {
+    "account_value_usd": 5000.0,
+    "configured_assets": 4,
+    "account_position_capacity": 10,
+    "maximum_simultaneous_positions": 4,
+    "unused_capacity_slots": 6,
+    "leverage_per_asset": 10.0,
+    "margin_fraction_per_asset": 0.15,
+    "route_aware_maximum_margin_fraction": 0.6,
+    "planned_notional_usd_per_asset": 7500.0,
+    "maximum_gross_notional_usd": 30000.0,
+    "maximum_gross_account_exposure_multiple": 6.0,
+    "p99_stop_wave_loss_usd": 309.2979241166026,
+    "p99_stop_wave_loss_pct_equity": 6.185958482332052,
+    "sizing_state": "meaningful_growth_sizing_edge_not_yet_forward_established"
+  },
+  "regime_disposition": {
+    "report": "v49_observer_regime_forward_accuracy_20260813T0450Z_v6",
+    "candidate_observations": 2071,
+    "canonical_observations": 782,
+    "btc_60m_context_trend_down_repeated": {
+      "observations": 268,
+      "directional_accuracy_pct": 35.07462686567164
+    },
+    "hype_60m_context_trend_up_repeated": {
+      "observations": 331,
+      "directional_accuracy_pct": 71.29909365558912
+    },
+    "hype_provider_window_60m_context_trend_up_repeated": {
+      "observations": 618,
+      "directional_accuracy_pct": 44.66019417475728
+    },
+    "maximum_directional_episode_onset_observations_per_state": 3,
+    "variable_leverage_authorized": false,
+    "reason": "independent_episode_evidence_insufficient",
+    "interpretation": "Repeated-row rates are autocorrelated and change materially across source windows. HYPE's canonical and provider-window context rates disagree, while directional episode-onset samples remain one to three. Regime remains telemetry and conflict preference, not universal leverage authority.",
+    "falsifier": "Predeclared route-specific interactions remain calibrated after costs across independent eligible episodes and later frozen windows."
+  },
+  "exit_disposition": {
+    "current_contract": "route_specific",
+    "btc_hulk": "structural stop clamped to 20-75 bps, 225-bps target, 24-hour fallback",
+    "btc_sweep": "60-bps stop, 60-bps target, 24-hour fallback",
+    "eth_range": "60-bps stop and 48-hour maximum hold without fixed target",
+    "sol_range": "80-bps stop and 48-hour maximum hold without fixed target",
+    "hype_compression": "80-bps stop, 8-hour soft hold extendable to a 24-hour hard limit, no fixed target",
+    "decision": "retain_route_specific_v49_first_window",
+    "mature_profit_floor": "report_only_index_and_open_lifecycle_challenger",
+    "spcx_observation": "The open v39 SPCX winner shows why an early fixed target could cap a strong breakout, while its original stop protects none of the marked profit. This supports later mature-winner floor research, not a universal tight trail or a v49 exit mutation.",
+    "confidence": "low-medium",
+    "falsifier": "A predeclared exit challenger improves chronological stability and after-cost net results across independent route-specific lifecycles."
+  },
+  "expansion_disposition": {
+    "priority_order": [
+      "xyz:MU",
+      "xyz:SKHX",
+      "xyz:SILVER",
+      "xyz:CL"
+    ],
+    "next_candidate": "xyz:MU",
+    "live_roster_changes": [],
+    "mu_state": "positive development and 15m/60m prospective economics, but live/archive pressure transport parity unresolved",
+    "skhx_state": "positive development but prospective signal parity remains vacuous and sample sparse",
+    "silver_state": "forward 15m/60m economics weak after largest-observation removal",
+    "cl_state": "sparse and development stress becomes negative after largest-winner removal"
+  },
+  "operating_decision": {
+    "entry_contract": "retain_frozen_v49",
+    "exit_contract": "retain_route_specific_v49_first_window",
+    "sizing_contract": "retain_equal_15pct_first_window",
+    "variable_leverage": "not_authorized_from_current_regime_evidence",
+    "roster_expansion": "none_automatic_mu_research_first",
+    "successor_state": "forward_evidence_incomplete",
+    "next_live_transition_requires": [
+      "explicit_user_authorization",
+      "verified_flat_and_order_free_boundary",
+      "recoverable_accounting_epoch_backup",
+      "fresh_v49_technical_preflight"
+    ],
+    "next_evidence_actions": [
+      "resolve the pending SOL v49 lifecycle under its frozen native exit",
+      "continue exact v49 forward capture through independent eligible episodes",
+      "compare route-specific native exits with predeclared challengers without live mutation",
+      "continue MU pressure transport and candle parity capture",
+      "refresh this disposition after resolved outcomes rather than repeated readiness rows"
+    ]
+  },
+  "confidence": {
+    "source_identity_and_arithmetic": "high",
+    "technical_v49_observer_operation": "high",
+    "forward_frequency": "low",
+    "strategy_profitability": "low-medium by route and unproven as a portfolio",
+    "exit_optimality": "low-medium",
+    "variable_leverage": "low and not authorized"
+  },
+  "limitations": [
+    "The live v39 open PnL is provisional and cannot be treated as a resolved recovery.",
+    "The v49 observer constructs no execution client and therefore produces no venue fills.",
+    "Historical route cadence does not establish future trade frequency.",
+    "The p99 stop-wave is a modeled simultaneous loss scenario rather than a probability guarantee or worst case.",
+    "Four configured assets can use only four of the ten account position slots.",
+    "No evidence in this report authorizes automatic deployment, resizing, retuning, or exit changes."
+  ]
+}

@@ -1,4 +1,4 @@
-"""Run one resumable paired 0xArchive history backfill."""
+"""Run one resumable 0xArchive market-evidence backfill."""
 
 from __future__ import annotations
 
@@ -10,6 +10,7 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 from hypervector.data.oxa_backfill import (
+    DEFAULT_RETRIES,
     OxaBackfillConfig,
     OxaBackfillResult,
     run_oxa_backfill,
@@ -28,6 +29,10 @@ def main() -> int:
             chunk=timedelta(minutes=args.chunk_minutes),
             workers=args.workers,
             retries=args.retries,
+            include_prices=args.include_prices,
+            price_only=args.prices_only,
+            market_family=args.market_family,
+            book_only=args.books_only,
         )
         key = os.environ.get("OXA_API_KEY", "")
         results = run_oxa_backfill(config, api_key=key, progress=_print_progress)
@@ -48,7 +53,11 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--data-root", type=Path, default=Path("data"))
     parser.add_argument("--chunk-minutes", type=int, default=60)
     parser.add_argument("--workers", type=int, default=4)
-    parser.add_argument("--retries", type=int, default=3)
+    parser.add_argument("--retries", type=int, default=DEFAULT_RETRIES)
+    parser.add_argument("--include-prices", action="store_true")
+    parser.add_argument("--prices-only", action="store_true")
+    parser.add_argument("--market-family", choices=("core", "hip3"), default="core")
+    parser.add_argument("--books-only", action="store_true")
     return parser
 
 

@@ -7,12 +7,15 @@ import gzip
 import io
 import json
 import logging
+import os
 import shutil
 import tempfile
 from collections.abc import Callable
 from contextlib import contextmanager
 from pathlib import Path
 from typing import IO, Iterator, TextIO
+
+import pandas as pd
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +50,43 @@ def write_json(path: Path, payload: object) -> None:
     """Write deterministic formatted JSON to a new bundle file."""
     content = json.dumps(payload, indent=2, sort_keys=True) + "\n"
     path.write_text(content, encoding="utf-8")
+
+
+def write_immutable_json(path: Path, payload: object) -> None:
+    """Publish deterministic JSON without replacing an existing artifact."""
+    if path.exists():
+        raise FileExistsError(f"immutable JSON output exists: {path}")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile(
+        dir=path.parent,
+        prefix=f".{path.name}.",
+        delete=False,
+    ) as handle:
+        staging = Path(handle.name)
+    try:
+        write_json(staging, payload)
+        os.link(staging, path)
+    finally:
+        staging.unlink(missing_ok=True)
+
+
+def write_immutable_parquet(path: Path, frame: pd.DataFrame) -> None:
+    """Publish a Parquet sidecar without replacing existing evidence."""
+    if path.exists():
+        raise FileExistsError(f"immutable parquet output exists: {path}")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    descriptor, raw_staging = tempfile.mkstemp(
+        dir=path.parent,
+        prefix=f".{path.name}.",
+        suffix=".parquet",
+    )
+    os.close(descriptor)
+    staging = Path(raw_staging)
+    try:
+        frame.to_parquet(staging, index=False)
+        os.link(staging, path)
+    finally:
+        staging.unlink(missing_ok=True)
 
 
 @contextmanager

@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "eth-hype-breakout-transfer",
+  "revision_number": 1,
+  "supersedes_revision_id": null,
+  "created_at_utc": "2026-08-05T17:20:26Z",
+  "strategy_id": "hype_breakout_onset_bidirectional_v1",
+  "symbol": "ETH",
+  "status": "reject",
+  "hypothesis": "The exact HYPE five-minute breakout-onset rule may transfer to ETH without asset-specific tuning.",
+  "decision": "Reject the unchanged ETH transfer for execution. Both long and short directions are negative after costs in development and the final 60-day block.",
+  "confidence": "medium",
+  "falsifier": "Only a causally changed ETH mechanism with a new identity and prospectively positive after-cost evidence across multiple windows would update this rejection; it would be a new hypothesis, not a promotion of this revision.",
+  "evidence": [
+    {
+      "path": "../reviews/2026-08-05-hype-breakout-cross-asset-transfer.md",
+      "role": "cross_asset_transfer_review",
+      "sha256": "075d059c31429f464e48fc9a5ed33880de7d8936af93b5340dcc288d61ea8c26",
+      "bytes": 4871
+    },
+    {
+      "path": "../../data/logs/research/eth_hype_breakout_transfer_fixed8_vs_extension_hl365d_20260805.json",
+      "role": "immutable_eth_transfer_replay",
+      "sha256": "8ba93a9d0ebc27a096ea12270c67fd57d794b804bebb1c89edc7e0043b34fe30",
+      "bytes": 4650
+    }
+  ],
+  "metrics": {
+    "development_trades": 797,
+    "development_profit_factor": 0.8425608209,
+    "development_net_bps": -7679.5386622224,
+    "holdout_trades": 154,
+    "holdout_profit_factor": 0.8219525210,
+    "holdout_net_bps": -1593.8753746735,
+    "holdout_long_profit_factor": 0.8400,
+    "holdout_long_net_bps": -735.0488,
+    "holdout_short_profit_factor": 0.8029,
+    "holdout_short_net_bps": -858.8266
+  },
+  "limitations": [
+    "The final 60-day block was previously opened and is descriptive rather than newly sealed.",
+    "This rejects only the unchanged transfer and does not evaluate every possible ETH breakout design.",
+    "One-minute OHLC and fixed slippage do not reproduce live IOC latency or private queue state.",
+    "No live ETH execution authority was added."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

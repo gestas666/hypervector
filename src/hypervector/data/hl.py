@@ -10,11 +10,13 @@ from __future__ import annotations
 import logging
 import math
 import time
+from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
 
 import pandas as pd
 import requests
 
+from hypervector.data.oxa_api import validate_hip3_symbol
 from hypervector.data.provenance import normalize_ohlcv
 
 if TYPE_CHECKING:
@@ -25,13 +27,22 @@ logger = logging.getLogger(__name__)
 HL_INFO_URL = "https://api.hyperliquid.xyz/info"
 # HL candleSnapshot pages: walk forward in ~1d chunks
 _CHUNK_MS = 24 * 60 * 60 * 1000
+_FUNDING_CADENCE_MS = 60 * 60 * 1000
+_FUNDING_MAX_PAGES = 100
 _INTERVAL_MS = {"1m": 60_000, "5m": 300_000, "15m": 900_000, "1h": 3_600_000}
 _SLEEP_S = 0.05
+_MILLIS_PER_DAY = 24 * 60 * 60 * 1000
+_SNAPSHOT_RETRY_DELAYS = (1.0, 2.0, 4.0)
+_MAX_RETRY_AFTER_SECONDS = 15.0
 
 
 def hl_coin(symbol: str) -> str:
-    """Map research symbol to HL coin id (BTC-PERP → BTC)."""
-    s = symbol.upper().replace("-PERP", "").replace("USDT", "").replace("USD", "")
+    """Map native aliases while preserving an exact HIP-3 ``dex:ASSET`` name."""
+    raw = symbol.strip()
+    if ":" in raw:
+        validate_hip3_symbol(raw)
+        return raw
+    s = raw.upper().replace("-PERP", "").replace("USDT", "").replace("USD", "")
     return s or "BTC"
 
 
@@ -111,24 +122,77 @@ def fetch_hl_funding_history(
     end_time: pd.Timestamp,
     session: requests.Session | None = None,
 ) -> pd.DataFrame:
-    """Fetch public Hyperliquid hourly funding rows for an inclusive interval."""
+    """Fetch complete public Hyperliquid funding rows for an inclusive interval."""
+    pages = fetch_hl_funding_pages(
+        symbol,
+        start_time=start_time,
+        end_time=end_time,
+        session=session,
+    )
+    raw = [row for page in pages for row in page]
+    return funding_from_hl_payload(raw)
+
+
+def fetch_hl_funding_pages(
+    symbol: str,
+    *,
+    start_time: pd.Timestamp,
+    end_time: pd.Timestamp,
+    session: requests.Session | None = None,
+) -> tuple[tuple[dict[str, Any], ...], ...]:
+    """Return complete raw funding pages for immutable evidence storage."""
     start_ms = _timestamp_millis(start_time)
     end_ms = _timestamp_millis(end_time)
     if end_ms < start_ms:
         raise ValueError("funding-history end_time must not precede start_time")
     sess = session or requests.Session()
+    pages = _fetch_hl_funding_pages(sess, hl_coin(symbol), start_ms, end_ms)
+    return tuple(tuple(page) for page in pages)
+
+
+def _fetch_hl_funding_pages(
+    session: requests.Session, coin: str, start_ms: int, end_ms: int
+) -> list[list[dict[str, Any]]]:
+    pages: list[list[dict[str, Any]]] = []
+    cursor = start_ms
+    for _ in range(_FUNDING_MAX_PAGES):
+        page = _request_hl_funding_page(session, coin, cursor, end_ms)
+        if not page:
+            return pages
+        last_ms = _last_funding_ms(page)
+        if last_ms < cursor:
+            raise RuntimeError("HL funding-history page did not advance")
+        pages.append(page)
+        if last_ms >= end_ms - _FUNDING_CADENCE_MS:
+            return pages
+        cursor = last_ms + 1
+    raise RuntimeError("HL funding-history max pages exhausted before end coverage")
+
+
+def _request_hl_funding_page(
+    session: requests.Session, coin: str, start_ms: int, end_ms: int
+) -> list[dict[str, Any]]:
     payload = {
         "type": "fundingHistory",
-        "coin": hl_coin(symbol),
-        "startTime": start_ms,
+        "coin": coin,
+        "startTime": int(start_ms),
         "endTime": end_ms,
     }
-    response = sess.post(HL_INFO_URL, json=payload, timeout=30)
+    response = session.post(HL_INFO_URL, json=payload, timeout=30)
     response.raise_for_status()
     raw = response.json()
     if not isinstance(raw, list):
         raise RuntimeError("HL fundingHistory response must be a list")
-    return funding_from_hl_payload(raw)
+    if not all(isinstance(row, dict) for row in raw):
+        raise RuntimeError("HL fundingHistory rows must be objects")
+    return raw
+
+
+def _last_funding_ms(raw: list[dict[str, Any]]) -> int:
+    try:
+        return max(int(row["time"]) for row in raw)
+    except (KeyError, TypeError, ValueError) as exc:
+        raise RuntimeError("HL fundingHistory row has invalid time") from exc
 
 
 def _timestamp_millis(value: pd.Timestamp) -> int:
@@ -206,6 +270,100 @@ def fetch_hl_ohlcv(
         "HL %s %s lookback=%sd → %d bars", coin, timeframe, lookback_days, len(df)
     )
     return df
+
+
+def fetch_hl_ohlcv_snapshot(
+    symbol: str,
+    timeframe: str,
+    lookback_days: float,
+    *,
+    session: requests.Session | None = None,
+    end_ms: int | None = None,
+    sleep_fn: Callable[[float], None] = time.sleep,
+) -> pd.DataFrame:
+    """Fetch one bounded recent candle snapshot for latency-sensitive polling."""
+    if timeframe not in _INTERVAL_MS:
+        raise ValueError(f"unsupported HL timeframe: {timeframe}")
+    if isinstance(lookback_days, bool) or lookback_days <= 0.0:
+        raise ValueError("HL snapshot lookback_days must be positive")
+    end = end_ms if end_ms is not None else int(time.time() * 1000)
+    start = end - int(float(lookback_days) * _MILLIS_PER_DAY)
+    payload = {
+        "type": "candleSnapshot",
+        "req": {
+            "coin": hl_coin(symbol),
+            "interval": timeframe,
+            "startTime": start,
+            "endTime": end,
+        },
+    }
+    response = _request_hl_candle_snapshot(
+        session or requests.Session(),
+        payload,
+        sleep_fn,
+    )
+    raw = response.json()
+    if not isinstance(raw, list):
+        raise RuntimeError("HL candleSnapshot response must be a list")
+    frame = bars_from_hl_payload(raw, source="hl")
+    return _bounded_candle_frame(frame, start, end)
+
+
+def _request_hl_candle_snapshot(
+    session: requests.Session,
+    payload: dict[str, object],
+    sleep_fn: Callable[[float], None],
+) -> requests.Response:
+    attempts = len(_SNAPSHOT_RETRY_DELAYS) + 1
+    for attempt in range(attempts):
+        try:
+            response = session.post(HL_INFO_URL, json=payload, timeout=30)
+        except requests.RequestException as exc:
+            if attempt == attempts - 1:
+                raise
+            delay = _SNAPSHOT_RETRY_DELAYS[attempt]
+            logger.warning(
+                "HL candle snapshot transport %s; retrying in %.1fs",
+                type(exc).__name__,
+                delay,
+            )
+            sleep_fn(delay)
+            continue
+        if response.status_code != 429:
+            response.raise_for_status()
+            return response
+        if attempt == attempts - 1:
+            response.raise_for_status()
+        delay = _snapshot_retry_delay(response, attempt)
+        logger.warning("HL candle snapshot throttled; retrying in %.1fs", delay)
+        sleep_fn(delay)
+    raise RuntimeError("HL candle snapshot retry loop exhausted")
+
+
+def _snapshot_retry_delay(response: requests.Response, attempt: int) -> float:
+    raw = response.headers.get("Retry-After")
+    try:
+        requested = float(raw) if raw is not None else 0.0
+    except ValueError:
+        requested = 0.0
+    fallback = _SNAPSHOT_RETRY_DELAYS[attempt]
+    return min(max(requested, fallback), _MAX_RETRY_AFTER_SECONDS)
+
+
+def _bounded_candle_frame(
+    frame: pd.DataFrame,
+    start_ms: int,
+    end_ms: int,
+) -> pd.DataFrame:
+    if frame.empty:
+        return frame
+    times = pd.to_datetime(frame["timestamp"], utc=True)
+    within = (times >= pd.to_datetime(start_ms, unit="ms", utc=True)) & (
+        times <= pd.to_datetime(end_ms, unit="ms", utc=True)
+    )
+    return (
+        frame.loc[within].drop_duplicates(subset=["timestamp"]).reset_index(drop=True)
+    )
 
 
 def fetch_hl_l2_book(

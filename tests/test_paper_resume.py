@@ -68,6 +68,56 @@ def test_flat_filled_run_does_not_require_position_average(tmp_path: Path) -> No
     assert resumed.realized_pnl == 19.8
 
 
+def test_closed_fill_residue_resumes_as_flat(tmp_path: Path) -> None:
+    """Sub-epsilon target-fill residue must not reopen as a tiny short."""
+    path = tmp_path / "decisions.jsonl"
+    common: dict[str, object] = {
+        "run_id": "residual-close",
+        "execution_mode": "shadow",
+        "strategy_name": "hypervelocity_1m_scalper",
+        "symbol": "BTC",
+        "timeframe": "1m",
+        "init_cash": 10_000.0,
+    }
+    rows = [
+        {
+            **common,
+            "feed_ts": "2026-07-29T00:11:38Z",
+            "action": "enter_long",
+            "fill_qty": 4.37301,
+            "fee_usd": 41.9999185935,
+            "position_qty": 4.37301,
+            "position_avg_px": 64_029.0,
+            "realized_pnl": -41.9999185935,
+            "unrealized_pnl": 0.0,
+            "equity": 9_958.0000814065,
+        },
+        {
+            **common,
+            "feed_ts": "2026-07-29T00:45:57Z",
+            "action": "close",
+            "fee_usd": 2.227611609,
+            "position_qty": -4.440892098500626e-16,
+            "position_avg_px": 64_158.0,
+            "realized_pnl": 480.0338350694,
+            "unrealized_pnl": 1.0e-13,
+            "equity": 10_480.0338350694,
+        },
+    ]
+    path.write_text("".join(f"{json.dumps(row)}\n" for row in rows), encoding="utf-8")
+
+    resumed = load_shadow_portfolio_resume(path, symbol="BTC", timeframe="1m")
+
+    assert resumed is not None
+    assert resumed.position_qty == 0.0
+    assert resumed.position_avg_px == 0.0
+    assert resumed.unrealized_pnl == 0.0
+    assert resumed.active_targets == ()
+    assert resumed.open_position_fees_usd == 0.0
+    assert resumed.open_position_funding_net_usd == 0.0
+    assert resumed.liquidation_cooldown_until_ms is None
+
+
 def test_resume_rejects_inconsistent_equity_identity(tmp_path: Path) -> None:
     """Finite but internally inconsistent portfolio state is not authoritative."""
     path = tmp_path / "decisions.jsonl"
@@ -362,6 +412,95 @@ def test_event_resume_restores_partial_entry_target_and_open_costs(
     assert resumed.next_order_sequence == 3
     assert resumed.open_position_fees_usd == pytest.approx(9.675)
     assert resumed.open_position_funding_net_usd == pytest.approx(-6.45)
+
+
+def test_resume_restores_first_fill_time_and_configured_maximum_hold(
+    tmp_path: Path,
+) -> None:
+    """Restart must retain the original hold deadline across partial fills."""
+    path = tmp_path / "decisions.jsonl"
+    common: dict[str, object] = {
+        "run_id": "source-hold-run",
+        "execution_mode": "shadow",
+        "execution_model": "nautilus_event_v1",
+        "strategy_name": "hypervelocity_1m_scalper",
+        "symbol": "BTC",
+        "timeframe": "1m",
+        "init_cash": 10_000.0,
+        "position_avg_px": 64_500.0,
+        "unrealized_pnl": 0.0,
+    }
+    rows = [
+        {
+            **common,
+            "feed_ts": "session_start",
+            "action": "session_start",
+            "portfolio_spec": {"regime_policy": {"maximum_hold_seconds": 86_400.0}},
+            "position_qty": 0.0,
+            "position_avg_px": 0.0,
+            "realized_pnl": 0.0,
+            "equity": 10_000.0,
+        },
+        {
+            **common,
+            "feed_ts": "2026-07-26T20:00:01+00:00",
+            "action": "enter_short",
+            "side": "sell",
+            "fill_qty": 1.0,
+            "fee_usd": 9.675,
+            "position_qty": -1.0,
+            "realized_pnl": -9.675,
+            "equity": 9_990.325,
+        },
+        {
+            **common,
+            "feed_ts": "2026-07-26T20:00:04+00:00",
+            "action": "enter_short",
+            "side": "sell",
+            "fill_qty": 1.0,
+            "fee_usd": 9.675,
+            "position_qty": -2.0,
+            "realized_pnl": -19.35,
+            "equity": 9_980.65,
+        },
+    ]
+    path.write_text("".join(f"{json.dumps(row)}\n" for row in rows), encoding="utf-8")
+
+    resumed = load_shadow_portfolio_resume(path, symbol="BTC", timeframe="1m")
+
+    assert resumed is not None
+    assert resumed.position_opened_at == "2026-07-26T20:00:01+00:00"
+    assert resumed.maximum_hold_seconds == 86_400.0
+
+
+def test_event_resume_releases_cost_basis_after_partial_target() -> None:
+    """Restart restores only fees and funding assigned to the open residue."""
+    rows = [
+        {"action": "session_start", "position_qty": 0.0},
+        {
+            "action": "enter_long",
+            "position_qty": 4.0,
+            "fee_usd": 38.7,
+            "funding_payment_usd": 0.0,
+        },
+        {
+            "action": "funding",
+            "position_qty": 4.0,
+            "fee_usd": 0.0,
+            "funding_payment_usd": 25.8,
+        },
+        {
+            "action": "reduce_target",
+            "position_qty": 0.05,
+            "fee_usd": 38.295,
+            "funding_payment_usd": 0.0,
+        },
+    ]
+
+    details = event_resume_details(rows)
+
+    assert details.open_position_fees_usd == pytest.approx(0.48375)
+    assert details.open_position_funding_net_usd == pytest.approx(-0.3225)
 
 
 def test_event_resume_drops_rejected_target() -> None:

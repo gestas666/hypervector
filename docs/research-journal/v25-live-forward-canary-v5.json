@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v25-live-forward-canary",
+  "revision_number": 5,
+  "supersedes_revision_id": "ad9577a52768461cd25059e04955eee747d1c945c5550a9e0b8e8617d4e91486",
+  "created_at_utc": "2026-08-08T15:44:40Z",
+  "strategy_id": "multi_asset_bidirectional_complete_portfolio_canary_v25",
+  "symbol": "MULTI",
+  "status": "observe",
+  "hypothesis": "The complete v25 live portfolio can produce mechanically valid protected lifecycles while causal execution, missed-opportunity, orderbook, and provider-clock telemetry identifies repeatable provider-symbol behavior that clears measured live friction.",
+  "decision": "Keep the running v25 strategy and its four protected open lifecycles unchanged. Correct report-only provider-contract attribution by treating an omitted provider_recipe_exit_policy as its typed runtime default, ignore. The corrected audit identifies three compatible closed lifecycles across the current effective v25 contract history, but their combined after-cost result is economically inconclusive. Preserve the HIP-3 pressure-clock repair for a future verified-flat restart; do not erase the 224 historical missing metric values, infer edge, change sizing, or promote any provider from this small sample.",
+  "confidence": "medium",
+  "falsifier": "The compatibility correction is falsified if source-run reconstruction shows that an omitted provider_recipe_exit_policy had semantics other than the typed ignore default, or if normalized contracts pool a trade with a different stop, target, hold, sizing, routing, or authority contract. The portfolio hypothesis remains unvalidated unless independent forward windows produce repeatable positive after-cost outcomes. The HIP-3 clock diagnosis remains falsified by post-restart null pressure despite an in-window causal book.",
+  "evidence": [
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v25_live_audit_20260808T153944Z.json",
+      "role": "immutable_report_only_v25_audit_with_normalized_provider_contract_attribution",
+      "sha256": "a49917ef4858152547389c1afc9be8410a98ce769d59653a682a8d2bb0c52eac",
+      "bytes": 7136506
+    },
+    {
+      "path": "../../configs/multi_asset_bidirectional_complete_portfolio_canary_v25.toml",
+      "role": "exact_running_profile_configuration",
+      "sha256": "362763638541baf75d5121f0b59e1afc8091bda7aaa1aaea0f8b42aead3c3bdd",
+      "bytes": 6214
+    }
+  ],
+  "metrics": {
+    "source_run_id": "bidirectional-live-1786182011216",
+    "observed_through_utc": "2026-08-08T15:39:44.778431+00:00",
+    "configured_provider_symbol_routes": 24,
+    "compatible_closed_lifecycles": 3,
+    "compatible_wins": 2,
+    "compatible_losses": 1,
+    "compatible_net_pnl_usd": 0.03506700000000005,
+    "compatible_net_return_on_margin_pct": 0.10081742991827325,
+    "compatible_profit_factor": 1.0533848299212023,
+    "compatible_fees_usd": 0.077358,
+    "compatible_funding_usd": -0.005875,
+    "pressure_metric_value_gaps": 224,
+    "pressure_unavailable_evaluations": 112,
+    "pressure_unavailable_with_causal_book": 112,
+    "open_lifecycles": 4,
+    "protected_open_lifecycles": 4,
+    "running_backend_faults": 0,
+    "execution_authority": "none",
+    "runtime_changed_by_this_revision": false
+  },
+  "limitations": [
+    "The three compatible closes span compatible v25 process windows; they are not three independent strategy experiments and do not establish edge.",
+    "The combined net result is only 0.1008 percent of summed entry margin and is dominated by one SOL win offsetting one SPCX loss.",
+    "The ETH maximum-hold close was positive after costs by only 0.010815 USD and is not evidence for a stable ETH edge.",
+    "The four open lifecycles remain provisional and are excluded from resolved performance conclusions.",
+    "The loaded v25 process still predates the tested HIP-3 pressure-clock ordering repair.",
+    "The 224 metric gaps are preserved historical evidence and will not disappear until a future process produces post-restart observations.",
+    "Four unrelated full-suite transition/runbook failures remain outstanding and are not evidence against this isolated report-only correction."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

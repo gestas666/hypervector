@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "eth-sol-shared-live-canary-v23",
+  "revision_number": 1,
+  "supersedes_revision_id": null,
+  "created_at_utc": "2026-08-07T12:20:43Z",
+  "strategy_id": "multi_asset_bidirectional_eth_sol_canary_v23",
+  "symbol": "PORTFOLIO",
+  "status": "candidate",
+  "hypothesis": "Distinct bidirectional ETH precompression-pullback and SOL range-onset mechanisms can produce positive after-friction portfolio outcomes at fixed live-sized caps more reliably than extending the failed generic HYPE breakout route across assets.",
+  "decision": "Select v23 for the next authorized live canary only after the active v14 generation completes a normal transition drain and venue reconciliation proves all positions and owned orders absent. V23 executes ETH pullback and SOL range onset in both directions, with no observer-only provider and no BTC or HYPE route. The selection authorizes a bounded empirical trial, not automatic economic promotion.",
+  "confidence": "medium",
+  "falsifier": "Identity drift, incomplete v14 drain, inherited venue exposure, missing reduce-only stop protection, replay/live friction divergence, or ledger/TUI/config disagreement invalidates mechanical readiness. The economic hypothesis weakens if prospectively reconciled after-friction outcomes turn negative, either mechanism ceases contributing positively across independent outcomes, or SOL's sparse block evidence fails under continuous live sampling.",
+  "evidence": [
+    {
+      "path": "../../data/logs/research/eth_sol_shared_canary_falsification_20260807_v1.json",
+      "role": "immutable_fixed_cap_shared_portfolio_replay",
+      "sha256": "7944dd2611c3b22307b718e9dd35c9aab03831018cf6c01613c53811c381c1b0",
+      "bytes": 374548
+    },
+    {
+      "path": "../../configs/multi_asset_bidirectional_eth_sol_canary_v23.toml",
+      "role": "exact_live_candidate_profile",
+      "sha256": "4f335e94e6977a2a2445a93594fa584a170a3e2cfbd69db4d2387696bb918322",
+      "bytes": 1440
+    },
+    {
+      "path": "../guides/cohort-live-transition-and-rollback-v23.md",
+      "role": "machine_bound_transition_backup_and_rollback_contract",
+      "sha256": "4e81d4fb1874e2bee29d00ae3333b484586f3a5beb051932e66a722c1c512cb9",
+      "bytes": 9022
+    }
+  ],
+  "metrics": {
+    "candidate_profile_fingerprint": "a5d3619c80a875a205afafef6263985f9a0b3a23061d2dc34468751acd5fe453",
+    "development": {
+      "trades": 312,
+      "net_pnl_usd": 42.21351402955834,
+      "profit_factor": 1.873581703162306,
+      "maximum_realized_drawdown_pct": 1.1952497313765666
+    },
+    "opened_final_60d": {
+      "trades": 66,
+      "net_pnl_usd": 6.073515060958306,
+      "profit_factor": 1.6107481713605598,
+      "maximum_realized_drawdown_pct": 0.5207111206175636
+    },
+    "opened_final_60d_by_strategy": {
+      "eth_breakout_precompression_pullback_bidirectional_v1": {
+        "trades": 56,
+        "net_pnl_usd": 0.8032525914611194,
+        "profit_factor": 1.1203879864161508
+      },
+      "range_onset_bidirectional_v1": {
+        "trades": 10,
+        "net_pnl_usd": 5.270262469497188,
+        "profit_factor": 2.6106242245561324
+      }
+    },
+    "opened_final_60d_by_side": {
+      "ETH_long": {
+        "trades": 26,
+        "net_pnl_usd": 0.863075331624165,
+        "profit_factor": 1.310989550041851
+      },
+      "ETH_short": {
+        "trades": 30,
+        "net_pnl_usd": -0.05982274016304559,
+        "profit_factor": 0.984648806100646
+      },
+      "SOL_long": {
+        "trades": 5,
+        "net_pnl_usd": 2.56282152198181,
+        "profit_factor": 2.4173503433248267
+      },
+      "SOL_short": {
+        "trades": 5,
+        "net_pnl_usd": 2.7074409475153773,
+        "profit_factor": 2.849334299339475
+      }
+    }
+  },
+  "limitations": [
+    "The final 60-day block was previously inspected and is descriptive rather than sealed holdout evidence.",
+    "SOL evidence is twelve measured blocks with gaps rather than continuous coverage.",
+    "One-minute bar replay cannot reproduce private queue position, every stop gap, or exact IOC slippage.",
+    "Realized-equity drawdown omits concurrent intratrade mark-to-market paths.",
+    "ETH's final short slice was slightly negative and requires explicit prospective monitoring.",
+    "Positive aggregate historical results do not establish durable live edge."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

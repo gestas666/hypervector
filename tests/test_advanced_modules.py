@@ -2,7 +2,6 @@
 
 import numpy as np
 import pandas as pd
-import pytest
 
 from hypervector.data.book_flow import compute_advanced_book_features
 from hypervector.ml.ensemble import EnsembleMetalabeler
@@ -44,7 +43,9 @@ def test_adaptive_4state_regime():
     df = _make_dummy_df(150)
     regimes = detect_4state_regime(df)
     assert len(regimes) == len(df)
-    assert set(regimes.unique()).issubset({"BULL_TREND", "BEAR_TREND", "HIGH_VOL_COMPRESSION", "LOW_VOL_CHOP"})
+    assert set(regimes.unique()).issubset(
+        {"BULL_TREND", "BEAR_TREND", "HIGH_VOL_COMPRESSION", "LOW_VOL_CHOP"}
+    )
 
 
 def test_ensemble_metalabeler():

@@ -57,9 +57,13 @@ def _read_json(path: Path) -> Any:
     try:
         return json.loads(path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
-        raise ExportSchemaError(path.parent, [f"{path.name}: invalid JSON ({exc})"]) from exc
+        raise ExportSchemaError(
+            path.parent, [f"{path.name}: invalid JSON ({exc})"]
+        ) from exc
     except OSError as exc:
-        raise ExportSchemaError(path.parent, [f"{path.name}: unreadable ({exc})"]) from exc
+        raise ExportSchemaError(
+            path.parent, [f"{path.name}: unreadable ({exc})"]
+        ) from exc
 
 
 def _check_costs(costs: Any, errors: list[str], *, prefix: str = "meta.costs") -> None:

@@ -8,6 +8,7 @@ from datetime import UTC, datetime
 from hypervector.data.hl_events import L2SnapshotEvent, PublicTradeEvent, StreamGap
 from hypervector.execution import OrderCommand, VenueOrderEvent
 from hypervector.paper.nautilus_shadow import NautilusShadowExecutionPort
+from hypervector.paper.position_math import normalized_position_quantity
 from hypervector.paper.shadow_execution_models import ShadowExecutionRecord
 from hypervector.strategies.hypervelocity_runtime import (
     HypervelocityRuntimeState,
@@ -103,7 +104,7 @@ class HypervelocityShadowController:
         if direction is None or self._state.position_quantity <= 0.0:
             raise RuntimeError("runtime has no open position to liquidate")
         liquidation = self._port.last_liquidation
-        remaining = liquidation.remaining_quantity
+        remaining = normalized_position_quantity(liquidation.remaining_quantity)
         terminal = list(self._state.terminal_order_ids)
         if self._state.pending_entry is not None:
             terminal.append(self._state.pending_entry.command.client_order_id)
@@ -119,6 +120,12 @@ class HypervelocityShadowController:
             position_quantity=remaining,
             position_average_price=(
                 self._state.position_average_price if remaining > 1e-12 else None
+            ),
+            position_opened_at=(
+                self._state.position_opened_at if remaining > 1e-12 else None
+            ),
+            maximum_hold_seconds=(
+                self._state.maximum_hold_seconds if remaining > 1e-12 else None
             ),
             completed_trade_direction=(direction if remaining <= 1e-12 else None),
             last_exit_at=(observed_at if remaining <= 1e-12 else None),
@@ -140,6 +147,7 @@ class HypervelocityShadowController:
     ) -> ShadowCycle:
         self._state = decision.state
         immediate: list[VenueOrderEvent] = []
+        immediate_records: list[ShadowExecutionRecord] = []
         for client_order_id in decision.cancellations:
             immediate.append(
                 self._port.cancel(
@@ -149,13 +157,33 @@ class HypervelocityShadowController:
             )
         for command in decision.commands:
             self._commands[command.client_order_id] = command
-            immediate.append(self._port.submit(command))
+            if command.order_type == "market":
+                events, record = self._port.execute_market(
+                    command,
+                    observed_at=self._market.observed_at,
+                )
+                immediate.extend(events)
+                immediate_records.append(record)
+            else:
+                immediate.append(self._port.submit(command))
+        annotations = decision.annotations
+        if immediate_records:
+            settled = advance_hypervelocity_runtime(
+                self._state,
+                self._market,
+                tuple(event for event in immediate if event.event_type != "submitted"),
+            )
+            if settled.commands or settled.cancellations:
+                raise RuntimeError("immediate market exit produced follow-up commands")
+            self._state = settled.state
+            annotations += settled.annotations
+            self._record_count = len(self._port.execution_records())
         return ShadowCycle(
             commands=decision.commands,
             cancellations=decision.cancellations,
             venue_events=venue_events + tuple(immediate),
-            execution_records=execution_records,
-            annotations=decision.annotations,
+            execution_records=execution_records + tuple(immediate_records),
+            annotations=annotations,
         )
 
 

@@ -28,6 +28,7 @@ from hypervector.paper.order_intent import (
     NETWORK_MAINNET,
     shadow_order_intent,
 )
+from hypervector.paper.position_math import normalized_position_quantity
 
 logger = logging.getLogger(__name__)
 
@@ -108,6 +109,7 @@ class ExplicitFillEngine(OrderEventLedgerMixin):
         if not all(math.isfinite(value) for value in values):
             raise ValueError("restored portfolio values must be finite")
         qty_value, avg_value, realized_value, cash_value = values
+        qty_value = normalized_position_quantity(qty_value)
         if cash_value <= 0.0:
             raise ValueError("restored portfolio initial cash must be positive")
         if abs(qty_value) > 0.0 and avg_value <= 0.0:
@@ -138,6 +140,7 @@ class ExplicitFillEngine(OrderEventLedgerMixin):
         qty: float,
         mark_px: float,
         intent: dict | None = None,
+        order_intent_override: Mapping[str, object] | None = None,
         book: Any | None = None,
         fill_model: FillModel | None = None,
         now_ms: float | None = None,
@@ -220,8 +223,12 @@ class ExplicitFillEngine(OrderEventLedgerMixin):
             skipped["requested_qty"] = float(result.requested_qty)
             skipped["shortfall_qty"] = float(result.shortfall_qty)
             # Intent is the requested order, not the zero fill_qty.
-            skipped["order_intent"] = self._order_intent(
-                side=side_n, qty=qty_f, mark_px=mark, action=str(action)
+            skipped["order_intent"] = (
+                dict(order_intent_override)
+                if order_intent_override
+                else self._order_intent(
+                    side=side_n, qty=qty_f, mark_px=mark, action=str(action)
+                )
             )
             if intent is not None:
                 skipped["intent"] = intent
@@ -257,8 +264,12 @@ class ExplicitFillEngine(OrderEventLedgerMixin):
             metalabel_bundle_id=metalabel_bundle_id,
         )
         # Intent qty is what we wanted to send (requested), not filled qty.
-        record["order_intent"] = self._order_intent(
-            side=side_n, qty=qty_f, mark_px=mark, action=str(action)
+        record["order_intent"] = (
+            dict(order_intent_override)
+            if order_intent_override
+            else self._order_intent(
+                side=side_n, qty=qty_f, mark_px=mark, action=str(action)
+            )
         )
         if intent is not None:
             record["intent"] = intent
@@ -452,8 +463,8 @@ class ExplicitFillEngine(OrderEventLedgerMixin):
         else:
             pos.realized_pnl += close_qty * (pos.avg_px - fill_px)
 
-        remaining = abs(pos.qty) - close_qty
-        open_qty = abs(signed) - close_qty
+        remaining = normalized_position_quantity(abs(pos.qty) - close_qty)
+        open_qty = normalized_position_quantity(abs(signed) - close_qty)
         if remaining == 0.0 and open_qty == 0.0:
             pos.qty = 0.0
             pos.avg_px = 0.0

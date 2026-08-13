@@ -5,7 +5,7 @@ from __future__ import annotations
 import pandas as pd
 
 from hypervector.regime.classifier import RegimeClassifierConfig, classify_timeframe
-from hypervector.regime.models import PrimaryRegime
+from hypervector.regime.models import BreakoutDirection, PrimaryRegime
 
 
 def _validate_cadence(df: pd.DataFrame, minutes: int, label: str) -> None:
@@ -84,12 +84,143 @@ def _completed_supplied_context(
 
 
 def _confirmed_breakout(tf_1m: pd.DataFrame, tf_5m: pd.DataFrame) -> pd.Series:
-    same_direction = tf_1m["breakout_direction"].eq(tf_5m["breakout_direction"])
-    directional = tf_1m["breakout_direction"].notna()
+    direction_1m = tf_1m["breakout_direction"]
+    same_direction = direction_1m.eq(tf_5m["breakout_direction"])
+    directional = direction_1m.notna()
     both_breakout = tf_1m["primary_regime"].eq(PrimaryRegime.BREAKOUT.value) & tf_5m[
         "primary_regime"
     ].eq(PrimaryRegime.BREAKOUT.value)
     return both_breakout & same_direction & directional
+
+
+def _column(frame: pd.DataFrame, name: str, default: object) -> pd.Series:
+    if name in frame.columns:
+        return frame[name]
+    return pd.Series(default, index=frame.index)
+
+
+def _structural_direction(tf_5m: pd.DataFrame) -> pd.Series:
+    primary = tf_5m["primary_regime"]
+    breakout = tf_5m["breakout_direction"]
+    direction = pd.Series(None, index=tf_5m.index, dtype=object)
+    direction = direction.mask(primary.eq(PrimaryRegime.TREND_UP.value), "long")
+    direction = direction.mask(primary.eq(PrimaryRegime.TREND_DOWN.value), "short")
+    is_breakout = primary.eq(PrimaryRegime.BREAKOUT.value)
+    direction = direction.mask(
+        is_breakout & breakout.eq(BreakoutDirection.UPWARD.value), "long"
+    )
+    return direction.mask(
+        is_breakout & breakout.eq(BreakoutDirection.DOWNWARD.value), "short"
+    )
+
+
+def _entry_direction(
+    tf_5m: pd.DataFrame,
+    structural: pd.Series,
+    confirmed_breakout: pd.Series,
+) -> pd.Series:
+    primary = tf_5m["primary_regime"]
+    trend = primary.isin([PrimaryRegime.TREND_UP.value, PrimaryRegime.TREND_DOWN.value])
+    return structural.where(trend | confirmed_breakout, None)
+
+
+def _tactical_columns(tf_1m: pd.DataFrame) -> dict[str, pd.Series]:
+    return {
+        "bbwp_percentile": _column(tf_1m, "bbwp_percentile", float("nan")),
+        "compression_ready": _column(tf_1m, "compression_ready", False),
+        "ema_gap_bps_signed": _column(tf_1m, "ema_gap_bps_signed", float("nan")),
+        "rsi": _column(tf_1m, "rsi", float("nan")),
+        "rsi_ema": _column(tf_1m, "rsi_ema", float("nan")),
+        "rsi_cross_direction": _column(tf_1m, "rsi_cross_direction", None),
+        "tactical_breakout_direction": _column(
+            tf_1m, "tactical_breakout_direction", None
+        ),
+        "breakout_volume_ratio": _column(tf_1m, "breakout_volume_ratio", float("nan")),
+        "prior_range_high": _column(tf_1m, "prior_range_high", float("nan")),
+        "prior_range_low": _column(tf_1m, "prior_range_low", float("nan")),
+    }
+
+
+def _regime_diagnostic_columns(
+    frame: pd.DataFrame,
+    timeframe: str,
+) -> dict[str, pd.Series]:
+    """Prefix one causal classifier frame for unambiguous telemetry."""
+    fields: tuple[tuple[str, str, object], ...] = (
+        ("reason", "reason", "unavailable"),
+        ("regime_strength_percentile", "strength_percentile", float("nan")),
+        ("bbwp_percentile", "bbwp_percentile", float("nan")),
+        ("ema_gap_bps_signed", "ema_gap_bps", float("nan")),
+        ("rsi", "rsi", float("nan")),
+        ("rsi_ema", "rsi_ema", float("nan")),
+        ("rsi_cross_direction", "rsi_cross_direction", None),
+        ("coiling", "coiling", False),
+        ("range_cause_coiling", "range_cause_coiling", False),
+        ("range_cause_strength", "range_cause_strength", False),
+        ("range_cause_gap", "range_cause_gap", False),
+        ("range_cause_filter", "range_cause_filter", False),
+        ("breakout_volume_ratio", "breakout_volume_ratio", float("nan")),
+    )
+    return {
+        f"regime_{timeframe}_{target}": _column(frame, source, default)
+        for source, target, default in fields
+    }
+
+
+def _regime_contract_columns(tf_5m: pd.DataFrame) -> dict[str, pd.Series]:
+    """Expose classifier thresholds once from the authoritative 5m frame."""
+    fields: tuple[tuple[str, str, object], ...] = (
+        ("range_filter_name", "regime_range_filter_name", "unavailable"),
+        ("bbwp_compression_threshold", "regime_bbwp_threshold_pct", float("nan")),
+        ("minimum_trend_gap_bps", "regime_minimum_gap_bps", float("nan")),
+        (
+            "range_strength_threshold",
+            "regime_range_strength_threshold_pct",
+            float("nan"),
+        ),
+        (
+            "trend_strength_threshold",
+            "regime_trend_strength_threshold_pct",
+            float("nan"),
+        ),
+        ("breakout_volume_multiple", "regime_breakout_volume_multiple", float("nan")),
+    )
+    return {
+        target: _column(tf_5m, source, default) for source, target, default in fields
+    }
+
+
+def _composite_frame(
+    tf_1m: pd.DataFrame,
+    tf_5m: pd.DataFrame,
+    tf_15m: pd.DataFrame,
+    primary: pd.Series,
+    direction: pd.Series,
+    structural: pd.Series,
+    entry_direction: pd.Series,
+    strength_score: pd.Series,
+    reason: pd.Series,
+) -> pd.DataFrame:
+    columns: dict[str, object] = {
+        "primary_regime": primary,
+        "breakout_direction": direction,
+        "structural_direction": structural,
+        "entry_direction": entry_direction,
+        "state_1m": tf_1m["primary_regime"],
+        "state_5m": tf_5m["primary_regime"],
+        "context_15m": tf_15m["primary_regime"],
+        "confidence": strength_score,
+        "regime_strength_score": strength_score,
+        "regime_strength_percentile": strength_score * 100.0,
+        "regime_score_source": "mean_multitimeframe_ema_gap_strength_percentile_rank",
+        "reason": reason,
+    }
+    columns.update(_tactical_columns(tf_1m))
+    columns.update(_regime_diagnostic_columns(tf_1m, "1m"))
+    columns.update(_regime_diagnostic_columns(tf_5m, "5m"))
+    columns.update(_regime_diagnostic_columns(tf_15m, "15m"))
+    columns.update(_regime_contract_columns(tf_5m))
+    return pd.DataFrame(columns, index=tf_1m.index)
 
 
 def compose_regimes(
@@ -102,6 +233,8 @@ def compose_regimes(
         raise ValueError("regime frames must share the same index")
     breakout = _confirmed_breakout(tf_1m, tf_5m)
     primary = tf_5m["primary_regime"].copy()
+    structural = _structural_direction(tf_5m)
+    entry_direction = _entry_direction(tf_5m, structural, breakout)
     direction = pd.Series(None, index=tf_1m.index, dtype=object)
     reason = pd.Series("5m_primary_state", index=tf_1m.index, dtype=object)
     trend = primary.isin([PrimaryRegime.TREND_UP.value, PrimaryRegime.TREND_DOWN.value])
@@ -118,22 +251,16 @@ def compose_regimes(
         [_strength_score(tf_1m), _strength_score(tf_5m), _strength_score(tf_15m)],
         axis=1,
     ).mean(axis=1)
-    return pd.DataFrame(
-        {
-            "primary_regime": primary,
-            "breakout_direction": direction,
-            "state_1m": tf_1m["primary_regime"],
-            "state_5m": tf_5m["primary_regime"],
-            "context_15m": tf_15m["primary_regime"],
-            "confidence": strength_score,
-            "regime_strength_score": strength_score,
-            "regime_strength_percentile": strength_score * 100.0,
-            "regime_score_source": (
-                "mean_multitimeframe_ema_gap_strength_percentile_rank"
-            ),
-            "reason": reason,
-        },
-        index=tf_1m.index,
+    return _composite_frame(
+        tf_1m,
+        tf_5m,
+        tf_15m,
+        primary,
+        direction,
+        structural,
+        entry_direction,
+        strength_score,
+        reason,
     )
 
 

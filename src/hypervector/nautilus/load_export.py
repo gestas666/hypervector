@@ -76,14 +76,14 @@ def load_strategy_loadout(
     role = str(raw_role) if raw_role is not None else None
 
     # Strategy hyperparams only — drop identity keys duplicated on loadout
-    strategy_params = {
-        k: v for k, v in params.items() if k not in ("strategy", "role")
-    }
+    strategy_params = {k: v for k, v in params.items() if k not in ("strategy", "role")}
 
     costs = meta.get("costs") if isinstance(meta.get("costs"), dict) else None
     risk = meta.get("risk") if isinstance(meta.get("risk"), dict) else None
     exits = meta.get("exits") if isinstance(meta.get("exits"), dict) else None
-    exit_mode = meta.get("tp_sl_mode") or (exits or {}).get("mode") or params.get("exit_mode")
+    exit_mode = (
+        meta.get("tp_sl_mode") or (exits or {}).get("mode") or params.get("exit_mode")
+    )
     if exit_mode is not None:
         exit_mode = str(exit_mode)
 
@@ -106,5 +106,7 @@ def load_strategy_loadout(
         symbol=str(meta.get("symbol") or "BTC"),
         timeframe=str(meta.get("timeframe") or "1m"),
         init_cash=init_cash,
-        schema_version=str(meta.get("schema_version")) if meta.get("schema_version") else None,
+        schema_version=str(meta.get("schema_version"))
+        if meta.get("schema_version")
+        else None,
     )

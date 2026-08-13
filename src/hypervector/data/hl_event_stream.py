@@ -116,6 +116,12 @@ class HyperliquidEventRecorder:
         self._buffer.clear()
         return events
 
+    def flush(self) -> None:
+        """Persist the currently buffered archive tail without stopping capture."""
+        if self._closed:
+            raise RuntimeError("event recorder is closed")
+        self._archive.flush()
+
     def close(self) -> None:
         """Flush durable evidence and persist an unresolved terminal gap."""
         if self._closed:

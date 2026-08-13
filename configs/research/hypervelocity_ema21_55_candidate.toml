@@ -1,0 +1,33 @@
+# Research-only snapshot of the strongest single-change archive candidate.
+# This file is not accepted by the live/shadow profile loader and does not
+# change configs/hypervelocity_faithful.toml.
+
+[candidate]
+candidate_id = "single_ema"
+purpose = "archive_failure_diagnosis"
+runtime_promoted = false
+fingerprint = "1bba69a8bb22473a3e6da314f71c201c762c79f0a01e19cbc111d869e900f270"
+source_report = "data/logs/research/hypervelocity_archive_parameter_comparison_20260727.json"
+primary_fill_assumption = "trade-through"
+
+[regime]
+ema_fast = 21
+ema_slow = 55
+warmup_bars = 60
+structure_lookback = 240
+trend_strength_percentile = 50.0
+range_strength_percentile = 40.0
+minimum_trend_gap_bps = 1.0
+range_filter = "choppiness"
+choppiness_length = 14
+choppiness_range_threshold = 85.0
+bbwp_length = 20
+bbwp_lookback = 240
+bbwp_compression_threshold = 25.0
+rsi_length = 14
+rsi_signal_length = 7
+coiling_width_bps = 3.0
+breakout_lookback = 90
+breakout_clearance_bps = 5.0
+breakout_volume_lookback = 20
+breakout_volume_multiple = 2.0

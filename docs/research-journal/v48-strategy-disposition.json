@@ -1,0 +1,111 @@
+{
+  "schema_version": "v48_strategy_disposition_v1",
+  "profile_id": "multi_asset_growth_first_5000_repaired_candidate_v48",
+  "profile_fingerprint": "badda60d549db4fcce9c6a6883198dd71a22f91b58a8073fa5f502c459716f22",
+  "mode": "report_only",
+  "execution_authority": "none",
+  "runtime_strategy_changed": false,
+  "assets": [
+    "BTC",
+    "ETH",
+    "SOL",
+    "HYPE"
+  ],
+  "provider_symbol_routes": 5,
+  "directional_scopes": 8,
+  "maximum_margin_fraction": 0.6,
+  "modeled_p99_stop_wave_usd": 294.7042017546197,
+  "modeled_p99_stop_wave_pct": 5.894084035092394,
+  "decisions": [
+    {
+      "strategy": "HIP3 pressure v1",
+      "diagnosis": "confirmed contract defect",
+      "evidence": "The live provider admitted 30-second pressure while the researched contract required 15 seconds; five linked closes lost $2.713721. Every linked closed entry used pressure older than 15 seconds.",
+      "decision": "retire defective identity",
+      "confidence": "high",
+      "falsifier": "Any linked v1 entry used pressure no older than 15 seconds, or the frozen v1 implementation proves an equivalent 15-second gate."
+    },
+    {
+      "strategy": "SP500 pressure v2",
+      "diagnosis": "freshness repaired; unchanged mechanism remains negative",
+      "evidence": "On the exact 22.36-day common window, 19 nominal trades produced PF 0.634 and -$1.567; stress PF was 0.560 and net was -$2.014. The long slice was near breakeven and the short slice was materially negative.",
+      "decision": "remove from v48",
+      "confidence": "medium-high",
+      "falsifier": "A new predeclared causal mechanism, rather than the unchanged v2 route, produces positive after-cost validation and independent forward results without largest-winner dependence."
+    },
+    {
+      "strategy": "Range Onset",
+      "diagnosis": "research/live parity confirmed; sparse and unstable evidence",
+      "evidence": "The live provider imports the research builder. Its observed inactivity is plausible at about 0.35 combined opportunities per day. ETH partitions conflict and SOL is positive only weakly after costs and largest-winner removal.",
+      "decision": "retain as measured forward experiment",
+      "confidence": "low-medium",
+      "falsifier": "A valid completed setup is missed by live collection, or a compatible forward sample remains negative after fees, funding, slippage, and largest-winner removal."
+    },
+    {
+      "strategy": "BTC Hulk short v3",
+      "diagnosis": "target is 3R; historical 2R label is naming debt",
+      "evidence": "The replay target price, frozen configuration, and runtime controller all use 3R. Validation was positive, but pseudo-holdout was slightly negative and winner-sensitive.",
+      "decision": "retain short-only under exact identity",
+      "confidence": "low-medium",
+      "falsifier": "A replay of the same price path produces a 2R exit, or compatible forward shorts remain negative after exact friction."
+    },
+    {
+      "strategy": "BTC sweep long",
+      "diagnosis": "report accounting corrected; runtime rule unchanged",
+      "evidence": "Development contains four resolved wins, one resolved loss, and one unresolved apparent win; one separate forward win is resolved.",
+      "resolved_development_trades": 5,
+      "unresolved_development_trades": 1,
+      "decision": "retain complementary long with low confidence",
+      "confidence": "low",
+      "falsifier": "Additional resolved forward signals fail after exact fill, stop, fee, funding, and timestamp accounting."
+    },
+    {
+      "strategy": "HYPE compression",
+      "diagnosis": "research/live parity confirmed; deliberately rare and winner-sensitive",
+      "evidence": "Development produced PF 1.115 across 138 trades but only two of five folds were positive. A later four-trade sample produced PF 2.41 but became negative after removing its largest winner.",
+      "decision": "retain exact frozen challenger",
+      "confidence": "low-medium",
+      "falsifier": "Live collection misses an eligible completed setup, or a predeclared compatible window is non-positive or largest-winner dependent."
+    },
+    {
+      "strategy": "HT onset ETH/SOL",
+      "diagnosis": "unchanged transfer is economically negative",
+      "evidence": "Development and final partitions remain below PF 1 after costs.",
+      "decision": "keep removed",
+      "confidence": "high",
+      "falsifier": "A versioned causal redesign, not the unchanged transfer, passes chronological after-cost validation."
+    },
+    {
+      "strategy": "HIP3 Swing",
+      "diagnosis": "no implementation defect found; validation is negative",
+      "evidence": "Both 9/21 and 50/200 Swing/Heikin-Ashi variants were validation-negative across SP500, SPCX, SNDK, GOLD, and BRENTOIL; isolated live winners were winner-concentrated.",
+      "decision": "keep retired unchanged",
+      "confidence": "high",
+      "falsifier": "A genuinely new versioned mechanism produces independent forward edge without its largest winner."
+    },
+    {
+      "strategy": "Regime detector",
+      "diagnosis": "causal telemetry is useful; universal profitability gate remains unproven",
+      "evidence": "Core routes have causal canonical telemetry, while route-specific outcome samples remain too sparse or contradictory to calibrate leverage from regime confidence.",
+      "decision": "retain telemetry and attribution; do not enable variable leverage",
+      "confidence": "medium",
+      "falsifier": "Predeclared route-specific regime interactions remain stable across independent forward episodes and calibrate to realized win probability."
+    }
+  ],
+  "evidence_paths": [
+    "docs/research-journal/v47-strategy-regression-disposition.json",
+    "docs/research-journal/hip3-live-pressure-freshness-parity-v3.json",
+    "data/logs/research/20260801_hulk_short_robust_v3_btc_validation.json",
+    "data/logs/research/20260801_hulk_short_robust_v3_btc_pseudo_holdout.json",
+    "data/logs/research/hype_compression_breakout_challenger_20260811_v4/report.json",
+    "data/logs/research/range_onset_context_challenger_ETH_20250728_20260728_v2.json",
+    "data/logs/research/sol_range_onset_backward_exact_audit_20250302_20250727_v2.json",
+    "data/logs/research/bidirectional_cohort/v48_growth_sizing_stress_20260812_v1.json"
+  ],
+  "limitations": [
+    "The disposition combines historical, live, and report-only evidence with different windows and sample sizes.",
+    "Retain means continued prospective measurement is warranted; it does not establish positive expectancy.",
+    "The Trade Oracle was used only as a challenger and returned no source citations for its proposed redesign thresholds.",
+    "No v48 live closes exist yet, so profitability confidence remains low-to-medium."
+  ]
+}

@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "venue-native-1m-orderflow-impulse",
+  "revision_number": 1,
+  "supersedes_revision_id": null,
+  "created_at_utc": "2026-08-09T16:51:42Z",
+  "strategy_id": "orderflow_impulse_1m_bidirectional_v1",
+  "symbol": "BTC,SOL",
+  "status": "reject",
+  "hypothesis": "A completed one-minute same-asset price shock with aligned public-trade flow and causal terminal L2 state may contain continuation or reversal movement large enough to survive Hyperliquid friction, and fixed Ridge or shallow LightGBM annotations may identify an after-cost event tail.",
+  "decision": "Reject the exact deterministic and ML family. All four predeclared arms were negative at 13-bps nominal and 20-bps stress costs; every BTC/SOL long/short cell was negative; Ridge and LightGBM OOS selections were also deeply negative. Do not add the family to v30, retune nearby thresholds on the opened development interval, increase leverage, or give either model execution authority. Preserve v25 while its protected positions remain open and keep the inactive lean v30 candidate unchanged.",
+  "confidence": "high",
+  "falsifier": "The decision is invalidated by changed artifact bytes, future market input entering a decision row, signal-bar entry, hidden gap filling, incorrect fee/slippage/funding arithmetic, missing side pairs, or overlapping lifecycles counted independently. A materially different preregistered venue mechanism with positive after-cost non-adjacent folds, positive net excluding its largest winner, and prospective repetition would update only the broader order-flow assessment, not this exact contract.",
+  "evidence": [
+    {
+      "path": "../plans/2026-08-09-venue-native-1m-orderflow-impulse.md",
+      "role": "predeclared_causal_event_barrier_friction_and_model_contract",
+      "sha256": "8deda8ef34679d15fd02efd667eff5cd4e5fd87ca4e1f5f8eb75385f4bc699e4",
+      "bytes": 3871
+    },
+    {
+      "path": "../reviews/2026-08-09-venue-native-1m-orderflow-impulse.md",
+      "role": "decision_review_results_limitations_and_next_actions",
+      "sha256": "f7cb388f476312fc09d1a02cee8dd531816bcd186f85993a4e857a69dbe08e64",
+      "bytes": 7066
+    },
+    {
+      "path": "../../data/logs/research/orderflow_impulse_development_20260809T163500Z.json",
+      "role": "immutable_deterministic_development_report",
+      "sha256": "2098f749aa95c9416f9a35c135c3d597cb2e9e24ac961bea7a9cc847cb975608",
+      "bytes": 52170
+    },
+    {
+      "path": "../../data/logs/research/orderflow_impulse_development_20260809T163500Z.parquet",
+      "role": "complete_deterministic_arm_lifecycle_sidecar",
+      "sha256": "b4f50769c20a19e4d5bc61158dc50c1a6159751632bc4f52a03147ef7cc78757",
+      "bytes": 1063823
+    },
+    {
+      "path": "../../data/logs/research/orderflow_impulse_ml_challenger_20260809T164500Z.json",
+      "role": "immutable_purged_annotation_model_report",
+      "sha256": "d1a553a83b131d4edd04f082ea10f31fc4763857ff7a15eef536519a6ac2fb44",
+      "bytes": 5210
+    },
+    {
+      "path": "../../data/logs/research/orderflow_impulse_ml_challenger_20260809T164500Z.predictions.parquet",
+      "role": "complete_oos_prediction_sidecar",
+      "sha256": "84e0391120e11723d1377b62361d65199663571860f0c5e0c637e6180d17d86b",
+      "bytes": 183401
+    },
+    {
+      "path": "../../data/logs/research/orderflow_impulse_ml_challenger_20260809T164500Z.selected.parquet",
+      "role": "training_threshold_selected_and_serialized_oos_annotations",
+      "sha256": "524b606c8f269eb9ac348e9a6a44af848d3dd80cccb0cbd51c47efb62c02def7",
+      "bytes": 52914
+    }
+  ],
+  "metrics": {
+    "development_days": 184,
+    "btc_base_events": 2765,
+    "sol_base_events": 877,
+    "accepted_arm_lifecycles": 7295,
+    "continuation_nominal_trades": 2234,
+    "continuation_nominal_mean_bps": -12.59493623674171,
+    "continuation_nominal_pf": 0.29509065667045586,
+    "l2_continuation_nominal_trades": 1275,
+    "l2_continuation_nominal_mean_bps": -11.65020513471141,
+    "l2_continuation_nominal_pf": 0.33012186890457745,
+    "reversion_nominal_trades": 2337,
+    "reversion_nominal_mean_bps": -12.912434090220934,
+    "reversion_nominal_pf": 0.27407937750173367,
+    "l2_reversion_nominal_trades": 1449,
+    "l2_reversion_nominal_mean_bps": -12.27152994429016,
+    "l2_reversion_nominal_pf": 0.29084436566261873,
+    "ridge_daily_rank_ic_mean": -0.03371649017780915,
+    "ridge_selected_trades": 488,
+    "ridge_selected_net_bps": -6008.283477161098,
+    "lightgbm_daily_rank_ic_mean": -0.042719879266510864,
+    "lightgbm_selected_trades": 385,
+    "lightgbm_selected_net_bps": -4179.477880247972,
+    "eth_archive_l2_rows": 0,
+    "hype_archive_l2_rows": 0,
+    "execution_authority": "none",
+    "automatic_promotion": false,
+    "runtime_changed": false
+  },
+  "limitations": [
+    "BTC and SOL archive gaps reduced the causally warm feature population because seven days of history were re-earned after every discontinuity.",
+    "ETH and HYPE lack historical archive L2/trade coverage in the research database and were not inferred from two days of live data.",
+    "One-minute bars cannot reconstruct sub-minute barrier order, private IOC queue position, or cancel dynamics; simultaneous target and stop touches were resolved stop-first.",
+    "The development interval is opened and unsuitable for nearby threshold tuning or a confirmation claim.",
+    "The models used a fixed feature and hyperparameter family and remain annotation-only.",
+    "No live process, profile, route, order, position, stop, target, size, leverage, transition drain, or protection changed."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

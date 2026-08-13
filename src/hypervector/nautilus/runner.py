@@ -57,7 +57,7 @@ class Phase2Result:
 
 
 def _default_leverage(loadout: StrategyLoadout) -> int:
-    return 40 if is_hypervelocity_strategy(loadout.strategy_name) else 1
+    return 30 if is_hypervelocity_strategy(loadout.strategy_name) else 1
 
 
 def run_phase2_backtest(

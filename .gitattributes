@@ -1,0 +1,2 @@
+*.pdf binary
+docs/**/*.md whitespace=-trailing-space,-blank-at-eof

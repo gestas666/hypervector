@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import threading
 
+import pytest
+
 from hypervector.data.hl_ws_feed import (
     FeedDisconnect,
     HyperliquidWebSocketFeed,
@@ -67,6 +69,33 @@ def test_feed_subscribes_and_buffers_timestamped_message() -> None:
             received_ts_ns=123_000_000,
         ),
     )
+
+
+def test_feed_sends_explicit_subscription_messages_unchanged() -> None:
+    connection = _BlockingConnection()
+    messages = (
+        '{"method":"subscribe","subscription":{"coin":"BTC","type":"l2Book"}}',
+        '{"method":"subscribe","subscription":{"user":"0xmasked","type":"openOrders"}}',
+    )
+    feed = HyperliquidWebSocketFeed(
+        symbol="BTC",
+        subscription_payloads=messages,
+        connector=lambda _url: connection,
+        clock_ns=lambda: 321_000_000,
+        reconnect_seconds=60.0,
+    )
+
+    feed.start()
+    assert feed.wait_for_item(timeout_seconds=1.0)
+    feed.drain()
+    feed.close()
+
+    assert connection.sent == list(messages)
+
+
+def test_feed_refuses_empty_explicit_subscriptions() -> None:
+    with pytest.raises(ValueError, match="subscription_payloads"):
+        HyperliquidWebSocketFeed(symbol="BTC", subscription_payloads=())
 
 
 def test_connection_failure_is_explicit_gap_evidence() -> None:

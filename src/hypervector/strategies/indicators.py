@@ -22,13 +22,13 @@ def rsi(close: pd.Series, length: int = 14) -> pd.Series:
     loss = (-delta).clip(lower=0.0)
     avg_gain = gain.ewm(alpha=1.0 / length, min_periods=length, adjust=False).mean()
     avg_loss = loss.ewm(alpha=1.0 / length, min_periods=length, adjust=False).mean()
-    
+
     out = pd.Series(50.0, index=c.index)
     both_zero = (avg_gain == 0.0) & (avg_loss == 0.0)
     zero_loss = (avg_loss == 0.0) & (avg_gain > 0.0)
     zero_gain = (avg_gain == 0.0) & (avg_loss > 0.0)
     normal = (avg_loss > 0.0) & (avg_gain > 0.0)
-    
+
     rs = avg_gain[normal] / avg_loss[normal]
     out.loc[normal] = 100.0 - (100.0 / (1.0 + rs))
     out.loc[zero_loss] = 100.0
@@ -37,7 +37,9 @@ def rsi(close: pd.Series, length: int = 14) -> pd.Series:
     return out
 
 
-def bollinger_width(close: pd.Series, length: int = 20, n_std: float = 2.0) -> pd.Series:
+def bollinger_width(
+    close: pd.Series, length: int = 20, n_std: float = 2.0
+) -> pd.Series:
     mid = sma(close, length)
     std = close.astype(float).rolling(length, min_periods=length).std()
     upper = mid + n_std * std
@@ -148,17 +150,23 @@ def crown_emas(close: pd.Series, fast: int = 9, mid: int = 21, slow: int = 55):
 
 def true_range(high: pd.Series, low: pd.Series, close: pd.Series) -> pd.Series:
     h = high.astype(float)
-    l = low.astype(float)
+    lows = low.astype(float)
     c = close.astype(float)
     prev_c = c.shift(1)
-    tr = pd.concat([(h - l), (h - prev_c).abs(), (l - prev_c).abs()], axis=1).max(axis=1)
+    tr = pd.concat([(h - lows), (h - prev_c).abs(), (lows - prev_c).abs()], axis=1).max(
+        axis=1
+    )
     return tr
 
 
 def atr(
     high: pd.Series, low: pd.Series, close: pd.Series, length: int = 10
 ) -> pd.Series:
-    return true_range(high, low, close).ewm(alpha=1.0 / length, min_periods=length, adjust=False).mean()
+    return (
+        true_range(high, low, close)
+        .ewm(alpha=1.0 / length, min_periods=length, adjust=False)
+        .mean()
+    )
 
 
 def supertrend(
@@ -171,12 +179,17 @@ def supertrend(
 ) -> tuple[pd.Series, pd.Series]:
     """Classic Supertrend (supetrend.pine). Returns (line, direction) dir=1 up / -1 down."""
     h = high.astype(float).to_numpy()
-    l = low.astype(float).to_numpy()
+    lows = low.astype(float).to_numpy()
     c = close.astype(float).to_numpy()
     n = len(c)
     tr = true_range(high, low, close).to_numpy()
-    atr_arr = pd.Series(tr).ewm(alpha=1.0 / atr_period, min_periods=atr_period, adjust=False).mean().to_numpy()
-    hl2 = (h + l) / 2.0
+    atr_arr = (
+        pd.Series(tr)
+        .ewm(alpha=1.0 / atr_period, min_periods=atr_period, adjust=False)
+        .mean()
+        .to_numpy()
+    )
+    hl2 = (h + lows) / 2.0
     upper = hl2 + multiplier * atr_arr
     lower = hl2 - multiplier * atr_arr
     st = np.full(n, np.nan)
@@ -188,9 +201,13 @@ def supertrend(
             continue
         # band ratchets
         if c[i - 1] > lower[i - 1] if not np.isnan(lower[i - 1]) else False:
-            lower[i] = max(lower[i], lower[i - 1]) if not np.isnan(lower[i - 1]) else lower[i]
+            lower[i] = (
+                max(lower[i], lower[i - 1]) if not np.isnan(lower[i - 1]) else lower[i]
+            )
         if c[i - 1] < upper[i - 1] if not np.isnan(upper[i - 1]) else False:
-            upper[i] = min(upper[i], upper[i - 1]) if not np.isnan(upper[i - 1]) else upper[i]
+            upper[i] = (
+                min(upper[i], upper[i - 1]) if not np.isnan(upper[i - 1]) else upper[i]
+            )
         prev_dir = direction[i - 1]
         if prev_dir == 1:
             direction[i] = -1 if c[i] < lower[i] else 1
@@ -285,12 +302,22 @@ def choppiness_index(
 ) -> pd.Series:
     """Choppiness Index (CIB) from choppines_indicator.pine. Low = trending."""
     h = high.astype(float)
-    l = low.astype(float)
+    lows = low.astype(float)
     c = close.astype(float)
-    tr = true_range(h, l, c)
+    tr = true_range(h, lows, c)
     tr_sum = tr.rolling(length, min_periods=length).sum()
-    hh = pd.concat([h, c.shift(1)], axis=1).max(axis=1).rolling(length, min_periods=length).max()
-    ll = pd.concat([l, c.shift(1)], axis=1).min(axis=1).rolling(length, min_periods=length).min()
+    hh = (
+        pd.concat([h, c.shift(1)], axis=1)
+        .max(axis=1)
+        .rolling(length, min_periods=length)
+        .max()
+    )
+    ll = (
+        pd.concat([lows, c.shift(1)], axis=1)
+        .min(axis=1)
+        .rolling(length, min_periods=length)
+        .min()
+    )
     rng = (hh - ll).replace(0.0, np.nan)
     cib = (np.log10(tr_sum / rng) / np.log10(float(length))) * 100.0
     return cib
@@ -309,13 +336,13 @@ def squeeze_momentum(
     """LazyBear squeeze: returns (mom_val, squeeze_on, squeeze_off)."""
     c = close.astype(float)
     h = high.astype(float)
-    l = low.astype(float)
+    lows = low.astype(float)
     basis = sma(c, bb_length)
     dev = c.rolling(bb_length, min_periods=bb_length).std() * bb_mult
     upper_bb = basis + dev
     lower_bb = basis - dev
     ma = sma(c, kc_length)
-    rangema = true_range(h, l, c).rolling(kc_length, min_periods=kc_length).mean()
+    rangema = true_range(h, lows, c).rolling(kc_length, min_periods=kc_length).mean()
     upper_kc = ma + rangema * kc_mult
     lower_kc = ma - rangema * kc_mult
     sqz_on = (lower_bb > lower_kc) & (upper_bb < upper_kc)
@@ -323,10 +350,11 @@ def squeeze_momentum(
     # linreg of (close - midline of highest/lowest/sma)
     mid = (
         h.rolling(kc_length, min_periods=kc_length).max()
-        + l.rolling(kc_length, min_periods=kc_length).min()
+        + lows.rolling(kc_length, min_periods=kc_length).min()
     ) / 2.0
     mid = (mid + sma(c, kc_length)) / 2.0
     delta = c - mid
+
     # rolling linear regression slope*x approx: use rolling cov with index
     # Pine linreg(src, length, 0) = fit value at end of window
     def _linreg_last(window: np.ndarray) -> float:
@@ -357,9 +385,14 @@ def vortex(
 ) -> tuple[pd.Series, pd.Series]:
     """Vortex VI+ / VI- from vortex.pine."""
     h = high.astype(float)
-    l = low.astype(float)
+    lows = low.astype(float)
     c = close.astype(float)
-    vmp = (h - l.shift(1)).abs().rolling(length, min_periods=length).sum()
-    vmm = (l - h.shift(1)).abs().rolling(length, min_periods=length).sum()
-    tr_sum = true_range(h, l, c).rolling(length, min_periods=length).sum().replace(0.0, np.nan)
+    vmp = (h - lows.shift(1)).abs().rolling(length, min_periods=length).sum()
+    vmm = (lows - h.shift(1)).abs().rolling(length, min_periods=length).sum()
+    tr_sum = (
+        true_range(h, lows, c)
+        .rolling(length, min_periods=length)
+        .sum()
+        .replace(0.0, np.nan)
+    )
     return vmp / tr_sum, vmm / tr_sum

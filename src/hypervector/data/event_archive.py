@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import json
+import re
 from collections import OrderedDict, defaultdict
 from dataclasses import asdict
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Iterable, Mapping
 from uuid import uuid4
@@ -89,10 +91,19 @@ class _RecentKeys:
 class EventArchive:
     """Buffer, deduplicate, rotate, and replay public event evidence."""
 
-    def __init__(self, *, data_root: Path | str, symbol: str, batch_size: int) -> None:
+    def __init__(
+        self,
+        *,
+        data_root: Path | str,
+        symbol: str,
+        batch_size: int,
+        namespace: str = "hyperliquid",
+    ) -> None:
         if batch_size <= 0:
             raise ValueError("batch_size must be positive")
-        self._root = Path(data_root) / "cache" / "events" / "hyperliquid" / symbol
+        if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", namespace):
+            raise ValueError("namespace must be one safe path component")
+        self._root = Path(data_root) / "cache" / "events" / namespace / symbol
         self._symbol = symbol
         self._batch_size = batch_size
         self._l2: list[L2SnapshotEvent] = []
@@ -196,6 +207,52 @@ class EventArchive:
                     gaps.append(_gap_from_row(_json_object(line)))
         return tuple(sorted(gaps, key=lambda gap: gap.detected_ts_ns))
 
+    def replay_window(
+        self,
+        start: datetime,
+        end: datetime,
+    ) -> tuple[L2SnapshotEvent | PublicTradeEvent | AssetContextEvent | StreamGap, ...]:
+        """Return persisted cross-channel evidence inside one UTC interval."""
+        _validate_window(start, end)
+        days = _utc_days(start, end)
+        start_ms = int(start.timestamp() * 1_000)
+        end_ms = int(end.timestamp() * 1_000)
+        start_ns = int(start.timestamp() * 1_000_000_000)
+        end_ns = int(end.timestamp() * 1_000_000_000)
+        events: list[
+            L2SnapshotEvent | PublicTradeEvent | AssetContextEvent | StreamGap
+        ] = []
+        events.extend(
+            _l2_from_row(row)
+            for row in _read_window_parts(
+                self._root, days, "l2.parquet", "exchange_ts_ms", start_ms, end_ms
+            )
+        )
+        events.extend(
+            _trade_from_row(row)
+            for row in _read_window_parts(
+                self._root,
+                days,
+                "trades.parquet",
+                "exchange_ts_ms",
+                start_ms,
+                end_ms,
+            )
+        )
+        events.extend(
+            _asset_context_from_row(row)
+            for row in _read_window_parts(
+                self._root,
+                days,
+                "asset_context.parquet",
+                "received_ts_ns",
+                start_ns,
+                end_ns,
+            )
+        )
+        events.extend(_read_window_gaps(self._root, days, start_ns, end_ns))
+        return tuple(sorted(events, key=_window_event_key))
+
 
 def _write_groups(
     root: Path,
@@ -226,6 +283,74 @@ def _read_parts(root: Path, dataset: str) -> tuple[Mapping[str, object], ...]:
         for row in pq.read_table(path).to_pylist():
             rows.append(_mapping(row))
     return tuple(rows)
+
+
+def _read_window_parts(
+    root: Path,
+    days: tuple[str, ...],
+    dataset: str,
+    timestamp_column: str,
+    start: int,
+    end: int,
+) -> tuple[Mapping[str, object], ...]:
+    rows: list[Mapping[str, object]] = []
+    filters = [(timestamp_column, ">=", start), (timestamp_column, "<", end)]
+    for day in days:
+        for path in sorted((root / day / dataset).glob("part-*.parquet")):
+            for row in pq.read_table(path, filters=filters).to_pylist():
+                rows.append(_mapping(row))
+    return tuple(rows)
+
+
+def _read_window_gaps(
+    root: Path,
+    days: tuple[str, ...],
+    start_ns: int,
+    end_ns: int,
+) -> tuple[StreamGap, ...]:
+    gaps: list[StreamGap] = []
+    for day in days:
+        path = root / day / "gaps.jsonl"
+        if not path.is_file():
+            continue
+        for line in path.read_text(encoding="utf-8").splitlines():
+            if not line.strip():
+                continue
+            gap = _gap_from_row(_json_object(line))
+            if start_ns <= gap.detected_ts_ns < end_ns:
+                gaps.append(gap)
+    return tuple(gaps)
+
+
+def _validate_window(start: datetime, end: datetime) -> None:
+    if start.tzinfo is None or end.tzinfo is None:
+        raise ValueError("archive replay window must be timezone-aware")
+    if start.utcoffset() != timedelta(0) or end.utcoffset() != timedelta(0):
+        raise ValueError("archive replay window must be UTC")
+    if start >= end:
+        raise ValueError("archive replay window must be positive")
+
+
+def _utc_days(start: datetime, end: datetime) -> tuple[str, ...]:
+    day = start.astimezone(UTC).date()
+    last = (end.astimezone(UTC) - timedelta(microseconds=1)).date()
+    result: list[str] = []
+    while day <= last:
+        result.append(day.isoformat())
+        day += timedelta(days=1)
+    return tuple(result)
+
+
+def _window_event_key(
+    event: L2SnapshotEvent | PublicTradeEvent | AssetContextEvent | StreamGap,
+) -> tuple[int, int, int]:
+    if isinstance(event, AssetContextEvent):
+        return event.observed_ts_ms, 0, 0
+    if isinstance(event, StreamGap):
+        return event.detected_ts_ns // 1_000_000, 1, 0
+    if isinstance(event, L2SnapshotEvent):
+        return event.exchange_ts_ms, 2, 0
+    return event.exchange_ts_ms, 3, event.trade_id
 
 
 def _l2_from_row(row: Mapping[str, object]) -> L2SnapshotEvent:

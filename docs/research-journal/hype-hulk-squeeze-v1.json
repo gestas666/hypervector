@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "hype-hulk-squeeze-relaxation",
+  "revision_number": 1,
+  "supersedes_revision_id": null,
+  "created_at_utc": "2026-08-05T17:05:13+00:00",
+  "strategy_id": "hype_hulk_squeeze_relaxed_fixed60_bidirectional_v1",
+  "symbol": "HYPE",
+  "status": "reject",
+  "hypothesis": "Relaxing only Hulk Smash's squeeze-not-armed blocker on HYPE may add bidirectional expansion opportunities without discarding the remaining Hulk structure.",
+  "decision": "Reject the frozen v1 rule as an execution candidate. Its six prospective paths are negative after estimated costs and all six overlapped the stronger canonical HYPE lifecycle. Preserve the observer only as diagnostic evidence; do not route or combine it with canonical HYPE.",
+  "confidence": "low_medium",
+  "falsifier": "A new prospectively frozen mechanism with genuinely non-overlapping HYPE-flat paths, positive after-cost profit factor and net return across multiple windows, and short-side coverage would update this rejection; source-prefix hash failure invalidates the current decision.",
+  "evidence": [
+    {
+      "path": "../reviews/2026-08-05-forward-challenger-portfolio-resolution.md",
+      "role": "prospective_mechanism_and_portfolio_resolution",
+      "sha256": "1aab33a5cda2032ec418e0ed658ce8ef0b12019f9aa227392419fda0cf79f8f2",
+      "bytes": 6816
+    }
+  ],
+  "metrics": {
+    "prospective_cutoff_utc": "2026-08-05T00:58:00+00:00",
+    "resolved": 6,
+    "wins": 3,
+    "losses": 3,
+    "long_resolved": 6,
+    "short_resolved": 0,
+    "profit_factor": 0.354074,
+    "total_net_return_bps": -133.183527,
+    "largest_abs_contribution_fraction": 0.330976,
+    "stop_proxy_crosses": 2,
+    "portfolio_deployable_resolved": 0,
+    "existing_hype_position_conflicts": 6,
+    "fixed_horizon_minutes": 60
+  },
+  "limitations": [
+    "Only six paths are resolved and all are long.",
+    "Every path overlapped an existing HYPE position.",
+    "Recorded adverse BBO estimates are not venue fills.",
+    "The observer does not reproduce the canonical HYPE maximum-hold exit."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

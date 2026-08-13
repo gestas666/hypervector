@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "hype-breakout-allocation75",
+  "revision_number": 2,
+  "supersedes_revision_id": "e2c16beac574cfd7f23461c6d4ab9ebdb4b2aec52496d74f61be7283d9a6d2ed",
+  "created_at_utc": "2026-08-05T17:43:43Z",
+  "strategy_id": "hype_breakout_onset_bidirectional_v1",
+  "symbol": "HYPE",
+  "status": "candidate",
+  "hypothesis": "Increasing only canonical HYPE breakout notional from $25 to $75 at unchanged 5x isolated leverage may improve research information and absolute returns without materially degrading execution friction.",
+  "decision": "Select multi_asset_bidirectional_range_retired_hype75_v8 as the inactive next-flat candidate. It preserves the active HYPE entry, 80-bps stop, and eight-to-24-hour regime-supported hold; raises only canonical HYPE breakout to $75; pins Hulk HYPE to $25; and removes Range Onset execution. Do not hot-mutate, restart, or arm while the current HYPE lifecycle is open.",
+  "confidence": "low_medium",
+  "falsifier": "Twenty to thirty new profile-matched HYPE closes with after-cost profit factor at or below one, negative cumulative net PnL, material single-trade concentration, materially worse $75 fill friction, or any loaded-profile, protection, ownership, or telemetry mismatch falsifies continued $75 allocation.",
+  "evidence": [
+    {
+      "path": "../../configs/multi_asset_bidirectional_range_retired_hype75_candidate.toml",
+      "role": "isolated_inactive_allocation_candidate",
+      "sha256": "31f5ba721c43b012d2f3c0313ffb03c60188e06532dcb5cdcb6e72e51117dad0",
+      "bytes": 3119
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/live_audit_bidirectional-live-1785826133777_20260805T1735Z.json",
+      "role": "immutable_live_execution_and_performance_audit",
+      "sha256": "90e56dbcba371214f9a40dd87215b525a4f8b65cc1fca63a2d6acb3fb1c1a987",
+      "bytes": 3761889
+    },
+    {
+      "path": "../reviews/2026-08-05-hype-profit-retention-audit.md",
+      "role": "exit_policy_noninterference_decision",
+      "sha256": "be6f1578124bd1103c934a46bbf5c138313dba3fac8d96dc39482ddea25d66ba",
+      "bytes": 5804
+    }
+  ],
+  "metrics": {
+    "resolved_live_hype_closes": 6,
+    "wins": 5,
+    "losses": 1,
+    "net_pnl_usd": 2.099489,
+    "profit_factor": 10.376192964357328,
+    "current_max_notional_usd": 25.0,
+    "candidate_max_notional_usd": 75.0,
+    "candidate_planned_margin_usd_at_cap": 15.0,
+    "candidate_margin_fraction_of_audit_equity_pct": 2.965087,
+    "candidate_leverage": 5.0,
+    "candidate_stop_bps": 80.0,
+    "candidate_soft_maximum_hold_seconds": 28800,
+    "candidate_hard_maximum_hold_seconds": 86400,
+    "candidate_maximum_hold_policy": "extend_while_regime_supported",
+    "candidate_execution_symbols": [
+      "hulk_expansion_bidirectional_tuned_v2|BTC",
+      "hulk_expansion_bidirectional_tuned_v2|ETH",
+      "hulk_expansion_bidirectional_tuned_v2|HYPE",
+      "hulk_expansion_bidirectional_tuned_v2|SOL",
+      "hype_breakout_onset_bidirectional_v1|HYPE",
+      "hypervelocity_source_follow_bidirectional_5m_v1|BTC"
+    ],
+    "range_onset_execution_symbols": []
+  },
+  "limitations": [
+    "Six resolved live HYPE closes are insufficient to establish durable edge.",
+    "The favorable live cluster conflicts with the negative broader historical control.",
+    "The candidate also retires Range Onset authority, but provider attribution keeps that routing change separable from HYPE lifecycle outcomes.",
+    "The modeled stop loss excludes gap risk and cannot guarantee a venue fill price.",
+    "The current open HYPE lifecycle belongs to the active $25 profile and cannot count as $75 evidence.",
+    "The candidate remains inactive and has no signing authority."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

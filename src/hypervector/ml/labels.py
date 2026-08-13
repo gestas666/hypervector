@@ -106,9 +106,9 @@ def build_strategy_labels(
     ent = entries.reindex(df.index).fillna(False).astype(bool)
     feats = feature_matrix if feature_matrix is not None else build_feature_matrix(df)
     sl_frac = stop_distance_frac(df, exit_cfg).to_numpy(dtype=float)
-    tp_frac = tp_distance_frac(
-        pd.Series(sl_frac, index=df.index), exit_cfg
-    ).to_numpy(dtype=float)
+    tp_frac = tp_distance_frac(pd.Series(sl_frac, index=df.index), exit_cfg).to_numpy(
+        dtype=float
+    )
     # trail mode has NaN TP — use rr * sl as soft target for metalabel
     if exit_cfg.mode == "trail":
         tp_frac = sl_frac * float(exit_cfg.rr)

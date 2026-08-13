@@ -2,7 +2,6 @@
 
 import numpy as np
 import pandas as pd
-import pytest
 
 from hypervector.strategies import get_strategy, register_all_strategies
 

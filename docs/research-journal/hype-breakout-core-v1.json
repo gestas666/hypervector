@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "hype-breakout-core",
+  "revision_number": 1,
+  "supersedes_revision_id": null,
+  "created_at_utc": "2026-08-05T14:50:00+00:00",
+  "strategy_id": "hype_breakout_onset_bidirectional_v1",
+  "symbol": "HYPE",
+  "status": "retain",
+  "hypothesis": "Fresh completed five-minute breakout onsets, directed by the completed one-hour SMA10/SMA30 relation, may retain a positive after-cost live edge on HYPE.",
+  "decision": "Retain the current $25-notional, 5x-isolated HYPE breakout contract while profile-matched live evidence accumulates. This preserves the signal for observation and execution under its current active profile; it is not a durability claim and does not authorize a restart or promotion.",
+  "confidence": "low_medium",
+  "falsifier": "Twenty to thirty additional profile-matched live closes with aggregate after-cost profit factor at or below one, negative net PnL, material single-trade concentration, or a ledger entry that violates the completed five-minute onset and completed-hour direction contract would falsify retention or implementation fidelity.",
+  "evidence": [
+    {
+      "path": "../reviews/2026-08-05-hype-breakout-strategy-contract.md",
+      "role": "audited_strategy_and_live_evidence_contract",
+      "sha256": "d7b0ab671692271313a761da68980ea9368d6e9d2bd3725a31c0f2cac9568775",
+      "bytes": 9457
+    },
+    {
+      "path": "../../configs/multi_asset_bidirectional_canary.toml",
+      "role": "active_profile_source",
+      "sha256": "ed5bf604d75cf82eb0422a9b400aaaf38a821bd6e4ab324c728b9e16403c7704",
+      "bytes": 3212
+    }
+  ],
+  "metrics": {
+    "resolved_live_closes": 6,
+    "wins": 5,
+    "losses": 1,
+    "net_pnl_usd": 2.099489,
+    "profit_factor": 10.3762,
+    "mean_trade_return_on_margin_pct": 7.0633,
+    "current_max_notional_usd": 25.0,
+    "leverage": 5.0,
+    "stop_bps": 80.0,
+    "soft_maximum_hold_seconds": 28800,
+    "hard_maximum_hold_seconds": 86400,
+    "development_control": {
+      "trades": 1011,
+      "profit_factor": 0.8911,
+      "net_return_bps": -7625.83
+    },
+    "final_holdout_control": {
+      "trades": 214,
+      "profit_factor": 0.875,
+      "net_return_bps": -1795.12
+    }
+  },
+  "limitations": [
+    "Six live closes are sparse and span non-independent process windows.",
+    "The favorable live cluster conflicts with the negative broader historical control.",
+    "The observed fade subset was identified post hoc and was not stable between development and holdout.",
+    "Retention does not imply automatic sizing, exit-policy, or execution-scope changes."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

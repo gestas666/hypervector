@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 from dataclasses import dataclass
 from datetime import datetime
@@ -13,10 +14,11 @@ import pandas as pd
 from hypervector.data.oxa_api import (
     API_ROOT,
     HttpSession,
+    MarketFamily,
     OxaRestClient,
     parse_utc_timestamp_ms,
     positive_decimal,
-    validate_symbol,
+    validate_market_symbol,
     validate_window,
 )
 from hypervector.data.oxa_storage import (
@@ -29,6 +31,10 @@ from hypervector.data.oxa_storage import (
 )
 
 AggressorSide = Literal["buy", "sell"]
+TradeIdSource = Literal["vendor", "derived_null_id_v1"]
+TRADE_NORMALIZATION_VERSION = "taker_only_v2"
+_SURROGATE_NAMESPACE = 1 << 62
+_SURROGATE_MASK = _SURROGATE_NAMESPACE - 1
 
 
 @dataclass(frozen=True)
@@ -41,9 +47,10 @@ class OxaTradeRequest:
     limit: int = 1000
     max_pages: int = 1
     timeout_seconds: float = 30.0
+    market_family: MarketFamily = "core"
 
     def __post_init__(self) -> None:
-        validate_symbol(self.symbol)
+        validate_market_symbol(self.symbol, self.market_family)
         validate_window(self.start, self.end)
         if not 1 <= self.limit <= 1000:
             raise ValueError("limit must be between 1 and 1000")
@@ -74,9 +81,12 @@ class OxaParticipantFill:
     size: str
     timestamp: str
     ts_exchange_ms: int
-    trade_id: int
+    trade_id: int | None
     crossed: bool | None
     request_id: str
+    tx_hash: str | None
+    order_id: int | None
+    user_address: str | None
 
     @property
     def market_signature(self) -> tuple[object, ...]:
@@ -103,6 +113,7 @@ class OxaPublicTrade:
     ts_exchange_ms: int
     trade_id: int
     request_id: str
+    trade_id_source: TradeIdSource
 
     def to_replay_row(self) -> dict[str, object]:
         """Return replay JSON without participant costs or receive time."""
@@ -114,6 +125,7 @@ class OxaPublicTrade:
             "price": self.price,
             "size": self.size,
             "vendor_request_id": self.request_id,
+            "trade_id_source": self.trade_id_source,
             "source": "0xarchive_hyperliquid_public_trades",
         }
 
@@ -172,11 +184,11 @@ class OxaTradeClient:
     ) -> OxaTradePage:
         """Fetch and validate one bounded participant-fill page."""
         payload = self._client.get(
-            f"/trades/{request.symbol}",
+            _trade_route(request),
             params=request.params(cursor),
             timeout=request.timeout_seconds,
         )
-        return _parse_page(payload, request)
+        return parse_trade_page(payload, request)
 
 
 def fetch_trade_history(
@@ -192,9 +204,19 @@ def fetch_trade_history(
         cursor = page.next_cursor
         if cursor is None:
             break
-    trades, unresolved = _normalize_fills(pages, incomplete=cursor is not None)
+    return normalize_trade_pages(tuple(pages))
+
+
+def normalize_trade_pages(
+    pages: tuple[OxaTradePage, ...],
+) -> OxaTradeFetch:
+    """Normalize validated stored or freshly fetched participant pages."""
+    if not pages:
+        raise ValueError("at least one trade page is required")
+    cursor = pages[-1].next_cursor
+    trades, unresolved = _normalize_fills(list(pages), incomplete=cursor is not None)
     return OxaTradeFetch(
-        pages=tuple(pages),
+        pages=pages,
         trades=trades,
         complete=cursor is None,
         continuation_cursor=cursor,
@@ -233,7 +255,7 @@ def store_trade_history(
         raw_dir.mkdir()
         files = _write_raw_pages(raw_dir, result.pages)
         trades_path = staging / "trades.jsonl.gz"
-        _write_trades(trades_path, result.trades)
+        write_trade_jsonl(trades_path, result.trades)
         files["trades.jsonl.gz"] = file_evidence(trades_path)
         write_json(staging / "manifest.json", _manifest(request, result, files))
 
@@ -264,6 +286,8 @@ def acquire_and_store_trades(
         "page_count": len(result.pages),
         "raw_fill_count": sum(len(page.fills) for page in result.pages),
         "trade_count": len(result.trades),
+        "normalization_version": TRADE_NORMALIZATION_VERSION,
+        "surrogate_trade_id_count": _surrogate_count(result.trades),
         "unresolved_fill_groups": result.unresolved_fill_groups,
         "observed_start": first,
         "observed_end": last,
@@ -304,7 +328,8 @@ def _write_raw_pages(
     return evidence
 
 
-def _write_trades(path: Path, trades: tuple[OxaPublicTrade, ...]) -> None:
+def write_trade_jsonl(path: Path, trades: tuple[OxaPublicTrade, ...]) -> None:
+    """Write normalized public taker trades as deterministic gzip JSONL."""
     with gzip_text_writer(path) as handle:
         for trade in trades:
             row = trade.to_replay_row()
@@ -321,8 +346,9 @@ def _manifest(
     return {
         "schema_version": 1,
         "source": "0xarchive_hyperliquid_public_trades",
-        "source_api": f"{API_ROOT}/trades/{{symbol}}",
+        "source_api": f"{API_ROOT}{_trade_route(request, symbol='{symbol}')}",
         "venue": "hyperliquid",
+        "market_family": request.market_family,
         "symbol": request.symbol,
         "requested_start": request.start.isoformat(),
         "requested_end": request.end.isoformat(),
@@ -332,6 +358,8 @@ def _manifest(
         "page_count": len(result.pages),
         "raw_fill_count": sum(len(page.fills) for page in result.pages),
         "trade_count": len(result.trades),
+        "normalization_version": TRADE_NORMALIZATION_VERSION,
+        "surrogate_trade_id_count": _surrogate_count(result.trades),
         "unresolved_fill_groups": result.unresolved_fill_groups,
         "observed_start": first,
         "observed_end": last,
@@ -341,7 +369,14 @@ def _manifest(
     }
 
 
-def _parse_page(payload: object, request: OxaTradeRequest) -> OxaTradePage:
+def _trade_route(request: OxaTradeRequest, *, symbol: str | None = None) -> str:
+    """Return the route-family-correct participant-fill endpoint."""
+    prefix = "/hip3" if request.market_family == "hip3" else ""
+    return f"{prefix}/trades/{symbol or request.symbol}"
+
+
+def parse_trade_page(payload: object, request: OxaTradeRequest) -> OxaTradePage:
+    """Validate one persisted or live 0xArchive trade response page."""
     if not isinstance(payload, dict):
         raise ValueError("0xArchive response must be a JSON object")
     data = payload.get("data")
@@ -384,7 +419,18 @@ def _parse_fill(
     if crossed is not None and not isinstance(crossed, bool):
         raise ValueError("trade crossed must be boolean or null")
     return OxaParticipantFill(
-        symbol, side, price, size, timestamp, exchange_ms, trade_id, crossed, request_id
+        symbol,
+        side,
+        price,
+        size,
+        timestamp,
+        exchange_ms,
+        trade_id,
+        crossed,
+        request_id,
+        _optional_text(value, "tx_hash"),
+        _optional_integer(value, "order_id"),
+        _optional_text(value, "user_address"),
     )
 
 
@@ -394,25 +440,55 @@ def _normalize_fills(
     incomplete: bool,
 ) -> tuple[tuple[OxaPublicTrade, ...], int]:
     groups: dict[int, list[OxaParticipantFill]] = {}
+    legacy: list[OxaParticipantFill] = []
     for page in pages:
         for fill in page.fills:
-            groups.setdefault(fill.trade_id, []).append(fill)
+            if fill.trade_id is None:
+                legacy.append(fill)
+            else:
+                groups.setdefault(fill.trade_id, []).append(fill)
     trades: list[OxaPublicTrade] = []
     unresolved = 0
     for fills in groups.values():
-        selected = _select_taker(fills, incomplete=incomplete)
+        selected = _select_participant(fills)
         if selected is None:
-            unresolved += 1
+            unresolved += int(incomplete)
         else:
-            trades.append(_public_trade(selected))
+            trades.append(_native_public_trade(selected))
+    legacy_trades, legacy_unresolved = _normalize_legacy_null_ids(legacy)
+    trades.extend(legacy_trades)
+    unresolved += legacy_unresolved
     trades.sort(key=lambda trade: (trade.ts_exchange_ms, trade.trade_id))
     return tuple(trades), unresolved
 
 
-def _select_taker(
+def _normalize_legacy_null_ids(
     fills: list[OxaParticipantFill],
-    *,
-    incomplete: bool,
+) -> tuple[tuple[OxaPublicTrade, ...], int]:
+    if not fills:
+        return (), 0
+    takers = [fill for fill in fills if fill.crossed is True]
+    if not takers:
+        return (), 0
+    for fill in takers:
+        _validate_surrogate_provenance(fill)
+    unique = {_legacy_identity(fill): fill for fill in takers}
+    takers = sorted(unique.values(), key=_legacy_identity)
+    trades = tuple(
+        _public_trade(
+            fill,
+            trade_id=_surrogate_trade_id(fill),
+            trade_id_source="derived_null_id_v1",
+        )
+        for fill in takers
+    )
+    if len({trade.trade_id for trade in trades}) != len(trades):
+        raise ValueError("legacy null trade IDs produced a surrogate collision")
+    return trades, 0
+
+
+def _select_participant(
+    fills: list[OxaParticipantFill],
 ) -> OxaParticipantFill | None:
     if len({fill.market_signature for fill in fills}) != 1:
         raise ValueError("conflicting participant fills for one trade_id")
@@ -423,12 +499,25 @@ def _select_taker(
         return takers[0]
     if len(fills) == 1 and fills[0].crossed is None:
         return fills[0]
-    if incomplete:
+    if all(fill.crossed is False for fill in fills):
         return None
-    raise ValueError("trade_id has no unambiguous taker fill")
+    raise ValueError("trade_id has no participant with an inferable aggressor side")
 
 
-def _public_trade(fill: OxaParticipantFill) -> OxaPublicTrade:
+def _native_public_trade(fill: OxaParticipantFill) -> OxaPublicTrade:
+    if fill.trade_id is None:
+        raise ValueError("native public trade requires a vendor trade_id")
+    return _public_trade(fill, trade_id=fill.trade_id, trade_id_source="vendor")
+
+
+def _public_trade(
+    fill: OxaParticipantFill,
+    *,
+    trade_id: int,
+    trade_id_source: TradeIdSource,
+) -> OxaPublicTrade:
+    if fill.crossed is False:
+        raise ValueError("maker participant fill cannot become a public taker trade")
     aggressor: AggressorSide = "buy" if fill.side == "B" else "sell"
     return OxaPublicTrade(
         fill.symbol,
@@ -437,9 +526,44 @@ def _public_trade(fill: OxaParticipantFill) -> OxaPublicTrade:
         fill.size,
         fill.timestamp,
         fill.ts_exchange_ms,
-        fill.trade_id,
+        trade_id,
         fill.request_id,
+        trade_id_source,
     )
+
+
+def _validate_surrogate_provenance(fill: OxaParticipantFill) -> None:
+    """Reject null-ID takers that cannot receive a repeatable identity."""
+    if fill.tx_hash is None or fill.order_id is None or fill.user_address is None:
+        raise ValueError("legacy null-ID taker lacks stable order provenance")
+
+
+def _surrogate_trade_id(fill: OxaParticipantFill) -> int:
+    _validate_surrogate_provenance(fill)
+    identity = _legacy_identity(fill)
+    encoded = json.dumps(identity, separators=(",", ":")).encode("utf-8")
+    value = int.from_bytes(hashlib.sha256(encoded).digest()[:8], "big")
+    return _SURROGATE_NAMESPACE | (value & _SURROGATE_MASK)
+
+
+def _legacy_identity(fill: OxaParticipantFill) -> tuple[object, ...]:
+    return (
+        "oxa_null_trade_id_v1",
+        fill.symbol,
+        fill.timestamp,
+        fill.ts_exchange_ms,
+        fill.price,
+        fill.size,
+        fill.side,
+        fill.crossed,
+        fill.tx_hash,
+        fill.order_id,
+        fill.user_address,
+    )
+
+
+def _surrogate_count(trades: tuple[OxaPublicTrade, ...]) -> int:
+    return sum(trade.trade_id_source == "derived_null_id_v1" for trade in trades)
 
 
 def _text(values: dict[str, object], key: str) -> str:
@@ -449,7 +573,27 @@ def _text(values: dict[str, object], key: str) -> str:
     return value
 
 
-def _trade_id(value: object) -> int:
+def _trade_id(value: object) -> int | None:
+    if value is None:
+        return None
     if isinstance(value, bool) or not isinstance(value, int) or value < 0:
-        raise ValueError("trade_id must be a non-negative integer")
+        raise ValueError("trade_id must be null or a non-negative integer")
+    return value
+
+
+def _optional_text(values: dict[str, object], key: str) -> str | None:
+    value = values.get(key)
+    if value is None:
+        return None
+    if not isinstance(value, str) or not value:
+        raise ValueError(f"trade {key} must be null or a non-empty string")
+    return value
+
+
+def _optional_integer(values: dict[str, object], key: str) -> int | None:
+    value = values.get(key)
+    if value is None:
+        return None
+    if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+        raise ValueError(f"trade {key} must be null or a non-negative integer")
     return value

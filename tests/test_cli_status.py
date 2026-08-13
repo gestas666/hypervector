@@ -42,6 +42,10 @@ def test_all_cli_commands_registered():
     assert "live-report" in choices
     assert "hypervelocity-tui" in choices
     assert "hypervelocity-shadow-reset" in choices
+    assert "cohort-tui" in choices
+    assert "cohort-live" in choices
+    assert "cohort-live-audit" in choices
+    assert "cohort-research-import" in choices
 
 
 def test_root_description_names_pipeline():

@@ -33,12 +33,17 @@ from hypervector.paper.shadow_execution_models import (
     would_cross,
 )
 from hypervector.paper.shadow_liquidation import ShadowLiquidationMixin
+from hypervector.paper.shadow_market_exit import ShadowMarketExitMixin
 from hypervector.paper.shadow_restore import ShadowRestoreMixin
 
 _TRADE_DEDUP_CAPACITY = 10_000
 
 
-class NautilusShadowExecutionPort(ShadowLiquidationMixin, ShadowRestoreMixin):
+class NautilusShadowExecutionPort(
+    ShadowMarketExitMixin,
+    ShadowLiquidationMixin,
+    ShadowRestoreMixin,
+):
     """Consume normalized events with explicit Nautilus-aligned friction state."""
 
     def __init__(
@@ -367,9 +372,9 @@ class NautilusShadowExecutionPort(ShadowLiquidationMixin, ShadowRestoreMixin):
         fee: float,
     ) -> None:
         self._realized_equity -= fee
-        self._position_fees += fee
         signed = quantity if command.side == "buy" else -quantity
         if command.order_role == "entry":
+            self._position_fees += fee
             self._increase_position(signed, price)
             return
         self._reduce_position(signed, price)
@@ -390,6 +395,7 @@ class NautilusShadowExecutionPort(ShadowLiquidationMixin, ShadowRestoreMixin):
             raise ValueError("target fill must reduce an open position")
         if abs(signed) > abs(self._position_quantity) + 1e-12:
             raise ValueError("target fill exceeds open position")
+        before_quantity = abs(self._position_quantity)
         side = 1.0 if self._position_quantity > 0.0 else -1.0
         entry = self._position_average_price
         if entry is None:
@@ -398,6 +404,26 @@ class NautilusShadowExecutionPort(ShadowLiquidationMixin, ShadowRestoreMixin):
         self._position_quantity += signed
         if abs(self._position_quantity) <= 1e-12:
             self._clear_position()
+            return
+        self._scale_open_cost_basis(
+            before_quantity=before_quantity,
+            remaining_quantity=abs(self._position_quantity),
+        )
+
+    def _scale_open_cost_basis(
+        self,
+        *,
+        before_quantity: float,
+        remaining_quantity: float,
+    ) -> None:
+        """Retain only fee and funding basis attributable to open quantity."""
+        if before_quantity <= 0.0:
+            raise ValueError("cost-basis reduction requires an open position")
+        if not 0.0 <= remaining_quantity <= before_quantity:
+            raise ValueError("remaining quantity must not exceed prior quantity")
+        retained_fraction = remaining_quantity / before_quantity
+        self._position_fees *= retained_fraction
+        self._funding_net *= retained_fraction
 
     def _clear_position(self) -> None:
         self._position_quantity = 0.0

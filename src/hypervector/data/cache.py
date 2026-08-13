@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from hypervector.data.provenance import OHLCV_COLUMNS, normalize_ohlcv
+from hypervector.data.provenance import normalize_ohlcv
 
 
 class ParquetCache:

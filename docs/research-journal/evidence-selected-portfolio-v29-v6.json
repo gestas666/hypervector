@@ -1,0 +1,109 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "evidence-selected-portfolio-v29",
+  "revision_number": 6,
+  "supersedes_revision_id": "3597c01b791b10d2600362dfcdffd436e81747745b464b6c3437a8ef2bdfdd53",
+  "created_at_utc": "2026-08-08T16:38:27Z",
+  "strategy_id": "multi_asset_bidirectional_evidence_selected_portfolio_canary_v29",
+  "symbol": "PORTFOLIO",
+  "status": "candidate",
+  "hypothesis": "A five-asset shared-account canary restricted to six explicitly selected bidirectional routes may produce cleaner and more frequent forward evidence than v28's mixture of 23 executable mappings, while preserving one-position-per-asset isolation and exact backend telemetry.",
+  "decision": "Retain v29 as inactive and economically unchanged. Refresh only its credential-free implementation baseline and transition provenance so a future explicitly authorized flat and order-free launch contains the staged causal pressure-clock repair. The running v25 process predates that repair and remains untouched. Its historical HIP-3 provider metric gaps remain visible and are not backfilled. The repaired runner ordering has focused unit coverage, but it is not live-accepted until a future process produces numeric pressure_age_seconds and imbalance_10 for an applicable HIP-3 decision backed by a causal book inside the 30-second window. Revision 5's concentrated and contradictory economic conclusion is unchanged; this revision authorizes no drain, restart, route, order, close, resize, risk, or protection mutation.",
+  "confidence": "low_medium",
+  "falsifier": "The provenance refresh is invalidated by a mismatch in the frozen v29 profile fingerprint, implementation manifest identity, repaired runner source hashes, or regression tests. The ordering repair is falsified if a future process loaded from the refreshed implementation repeatedly records an applicable completed HIP-3 decision with a causal book inside the 30-second window but null pressure_age_seconds or imbalance_10, or if it changes provider thresholds, direction, entry authority, order behavior, or existing lifecycle ownership. The economic hypothesis remains subject to revision 5's route concentration, directional imbalance, friction, drawdown, and fresh after-cost forward evidence falsifiers.",
+  "evidence": [
+    {
+      "path": "evidence-selected-portfolio-v29-v5.json",
+      "role": "prior_economic_and_common_window_revision",
+      "sha256": "7dcc31b2d658b72b5d3fc6372505ba2e612678118628dea5c6db8b9e3767704a",
+      "bytes": 8864
+    },
+    {
+      "path": "../../data/backups/bidirectional_cohort/prestart_20260808T163708.093622Z_d1f4cd3b0319/manifest.json",
+      "role": "verified_report_only_v29_implementation_baseline",
+      "sha256": "ee60373354d57b28ac6507dcd559781e8aba673ee8f03ed1e919ead3d103793b",
+      "bytes": 612164
+    },
+    {
+      "path": "../../src/hypervector/live/multi_asset_live_runner.py",
+      "role": "staged_live_reconcile_then_causal_clock_runner",
+      "sha256": "693a5e1948602a70e533a87357ff6ba91ff6d03005690830617ab284720084a7",
+      "bytes": 18177
+    },
+    {
+      "path": "../../src/hypervector/live/multi_asset_observer_runner.py",
+      "role": "staged_observer_book_capture_then_causal_clock_runner",
+      "sha256": "b1892ec25e94b6ad04b11094c41b487f1b9b2c745d565e51a9fbabd57de430d0",
+      "bytes": 8847
+    },
+    {
+      "path": "../../tests/test_multi_asset_live_runner.py",
+      "role": "live_clock_order_regression_test",
+      "sha256": "03a78e4c8c33f549f1c3aec74c9261177b357b9a6512c80828747e34a91c8960",
+      "bytes": 30524
+    },
+    {
+      "path": "../../tests/test_multi_asset_observer_runner.py",
+      "role": "observer_clock_order_regression_test",
+      "sha256": "9a12424f6ff1428d4e214741762a01f7e527df710b39e657e811870e0a8470b2",
+      "bytes": 8135
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v25_hip3_pressure_clock_diagnostic_20260808T1441Z.json",
+      "role": "report_only_clock_order_root_cause_diagnostic",
+      "sha256": "574c5541cf9c244ff75cb6cdbf628e9c52b92e2c28aa0a765eb87e58b03b3daa",
+      "bytes": 2747
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v25_live_prefix_bidirectional-live-1786182011216_20260808T162430Z.json",
+      "role": "immutable_current_run_prefix_audit_with_historical_metric_gap",
+      "sha256": "7e0e05803c0942fd407481227c96ad663eb6bae9e7f351384c76f7dd135e4fb9",
+      "bytes": 7261272
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v25_transition_readiness_bidirectional-live-1786182011216_20260808T162644Z.json",
+      "role": "immutable_current_live_ownership_and_protection_checkpoint",
+      "sha256": "02f5baaf9292bf368aa6d5466cfc6082c2d24199bf9f05ad730f34bdb901ef82",
+      "bytes": 7627371
+    }
+  ],
+  "metrics": {
+    "candidate_profile_id": "multi_asset_bidirectional_evidence_selected_portfolio_canary_v29",
+    "candidate_profile_fingerprint": "d1f4cd3b03197e9e7a9899ab32e2b198fd4bd2a4117f1ea64261824fcdc4a393",
+    "candidate_assets": 5,
+    "candidate_executable_routes": 6,
+    "candidate_observe_only_routes": 0,
+    "maximum_positions": 5,
+    "previous_v29_implementation_file_count": 1249,
+    "previous_v29_implementation_sha256": "dd087439b9f3c9bc6c07dcabc9982dd397d7e0b4eae69bbf494895cc5492c199",
+    "refreshed_v29_implementation_file_count": 1257,
+    "refreshed_v29_implementation_sha256": "914c62b7efaa5b8d18d6833c79299ecfb3a3f84f9f6000d23f129e34da5d068a",
+    "staged_live_runner_sha256": "693a5e1948602a70e533a87357ff6ba91ff6d03005690830617ab284720084a7",
+    "staged_observer_runner_sha256": "b1892ec25e94b6ad04b11094c41b487f1b9b2c745d565e51a9fbabd57de430d0",
+    "running_v25_run_id": "bidirectional-live-1786182011216",
+    "running_v25_implementation_sha256": "072653bdf42439cae34c5ec43906c5b43d9402b540e075aba7b664ce9fc1cef9",
+    "running_v25_loaded_clock_repair": false,
+    "historical_provider_metric_value_gaps": 244,
+    "affected_hip3_pressure_routes": 5,
+    "diagnostic_hip3_symbol_evaluations": 105,
+    "diagnostic_books_within_30_seconds": 100,
+    "diagnostic_recoverable_pressure_rows": 92,
+    "post_restart_live_acceptance_observations": 0,
+    "technical_provenance_confidence": "high",
+    "economic_confidence": "low_medium",
+    "runtime_changed_by_this_revision": false
+  },
+  "limitations": [
+    "The refreshed baseline proves source identity and report-only backup integrity; it does not prove future profitability or live venue parity.",
+    "The active v25 process loaded its older startup bundle and cannot acquire the staged clock-order repair without a later safe restart.",
+    "Historical provider metric gaps are immutable evidence and cannot be repaired or interpreted as pressure confirmation after the fact.",
+    "A causal book inside 30 seconds is not evidence that its imbalance confirms either direction or produces a fill or profit.",
+    "The clock-order regression tests use controlled inputs and cannot establish live scheduling, API latency, or venue data availability.",
+    "The first post-restart eligible HIP-3 decision may still lack a causal book; that outcome is a market-data coverage result rather than immediate falsification.",
+    "Revision 5's 22.36-day common-window result remains materially concentrated in SPCX longs, with negative components and sparse SOL directional coverage.",
+    "No live route, process, order, position, stop, target, allocation, transition drain, or protection changed in this revision."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

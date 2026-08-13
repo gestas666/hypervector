@@ -12,6 +12,8 @@ from typing import Literal, Mapping
 from hypervector.strategies.hypervelocity_contract import is_hypervelocity_strategy
 from hypervector.paper.event_resume import PendingTargetResume, event_resume_details
 from hypervector.paper.portfolio_migration import migrated_portfolio_spec
+from hypervector.paper.position_hold_resume import recover_position_hold_resume
+from hypervector.paper.position_math import normalized_position_quantity
 
 _EQUITY_ABS_TOLERANCE_USD = 0.01
 _EQUITY_REL_TOLERANCE = 1e-9
@@ -62,6 +64,28 @@ class ShadowPortfolioResume:
     open_position_fees_usd: float
     open_position_funding_net_usd: float
     liquidation_cooldown_until_ms: int | None = None
+    position_opened_at: str | None = None
+    maximum_hold_seconds: float | None = None
+
+
+def normalize_shadow_portfolio_resume(
+    resume: ShadowPortfolioResume,
+) -> ShadowPortfolioResume:
+    """Normalize sub-epsilon closed-fill residue to an authoritative flat state."""
+    if normalized_position_quantity(resume.position_qty) != 0.0:
+        return resume
+    return replace(
+        resume,
+        position_qty=0.0,
+        position_avg_px=0.0,
+        unrealized_pnl=0.0,
+        active_targets=(),
+        open_position_fees_usd=0.0,
+        open_position_funding_net_usd=0.0,
+        liquidation_cooldown_until_ms=None,
+        position_opened_at=None,
+        maximum_hold_seconds=None,
+    )
 
 
 def load_shadow_portfolio_resume(
@@ -85,8 +109,16 @@ def load_shadow_portfolio_resume(
     event_details = event_resume_details(run_rows)
     state = _latest_portfolio_state(run_rows, selected_run_id)
     init_cash = _initial_cash(run_rows, selected_run_id)
-    qty = _required_number(state, "position_qty", selected_run_id)
+    qty = normalized_position_quantity(
+        _required_number(state, "position_qty", selected_run_id)
+    )
     avg_px = _position_average(state, qty=qty, run_id=selected_run_id)
+    try:
+        hold = recover_position_hold_resume(run_rows, final_position_qty=qty)
+    except ValueError as exc:
+        raise ShadowResumeError(
+            f"shadow run {selected_run_id!r} has invalid hold state: {exc}"
+        ) from exc
     realized = _required_number(state, "realized_pnl", selected_run_id)
     unrealized = _number(state, "unrealized_pnl") or 0.0
     equity = _number(state, "equity")
@@ -122,7 +154,7 @@ def load_shadow_portfolio_resume(
     state_asof = str(state.get("feed_ts") or "unknown")
     if state.get("action") == "session_start" and state.get("portfolio_state_asof"):
         state_asof = str(state["portfolio_state_asof"])
-    return ShadowPortfolioResume(
+    resume = ShadowPortfolioResume(
         run_id=selected_run_id,
         init_cash=init_cash,
         position_qty=qty,
@@ -143,7 +175,10 @@ def load_shadow_portfolio_resume(
         open_position_fees_usd=event_details.open_position_fees_usd,
         open_position_funding_net_usd=(event_details.open_position_funding_net_usd),
         liquidation_cooldown_until_ms=(event_details.liquidation_cooldown_until_ms),
+        position_opened_at=hold.position_opened_at,
+        maximum_hold_seconds=hold.maximum_hold_seconds,
     )
+    return normalize_shadow_portfolio_resume(resume)
 
 
 def portfolio_fingerprint(spec: Mapping[str, object]) -> str:
@@ -175,7 +210,13 @@ def _validate_portfolio_spec(
     recorded = portfolio_fingerprint(recorded_spec)
     if recorded == expected:
         return expected, None
-    migrated = migrated_portfolio_spec(recorded_spec, expected_spec)
+    migrated = migrated_portfolio_spec(
+        recorded_spec,
+        expected_spec,
+        allow_pending_event_age_upgrade=(
+            has_pending_entry and abs(position_qty) <= 1e-12
+        ),
+    )
     if migrated is not None and portfolio_fingerprint(migrated) == expected:
         return expected, recorded
     if abs(position_qty) > 0.0:
@@ -251,11 +292,11 @@ def _initial_cash(rows: list[dict[str, object]], run_id: str) -> float:
 
 
 def _position_average(row: dict[str, object], *, qty: float, run_id: str) -> float:
+    if qty == 0.0:
+        return 0.0
     value = _number(row, "position_avg_px")
     if value is not None:
         return value
-    if abs(qty) == 0.0:
-        return 0.0
     raise ShadowResumeError(
         f"filled shadow run {run_id!r} has no finite position_avg_px"
     )

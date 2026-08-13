@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pandas as pd
 
-from hypervector.paper.live_node import partition_live_bars
+from hypervector.paper.live_node import completed_bars_at, partition_live_bars
 
 
 def _bars(*timestamps: str) -> pd.DataFrame:
@@ -55,3 +55,18 @@ def test_partition_releases_first_post_activation_completed_candle() -> None:
         pd.to_datetime(["2026-07-25T15:00:00Z"], utc=True)
     )
 
+
+def test_completed_bars_excludes_forming_warmup_candle() -> None:
+    """A REST snapshot captured mid-candle cannot seed causal regime state."""
+    frame = _bars(
+        "2026-07-25T14:59:00Z",
+        "2026-07-25T15:00:00Z",
+    )
+
+    completed = completed_bars_at(
+        frame,
+        timeframe="1m",
+        observed_at=pd.Timestamp("2026-07-25T15:00:30Z"),
+    )
+
+    assert completed["timestamp"].tolist() == [pd.Timestamp("2026-07-25T14:59:00Z")]

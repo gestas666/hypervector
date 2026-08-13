@@ -56,6 +56,7 @@ class HyperliquidWebSocketFeed:
         self,
         *,
         symbol: str,
+        subscription_payloads: tuple[str, ...] | None = None,
         connector: Connector | None = None,
         clock_ns: Callable[[], int] = time.time_ns,
         reconnect_seconds: float = 1.0,
@@ -67,7 +68,15 @@ class HyperliquidWebSocketFeed:
             raise ValueError("reconnect_seconds must be positive")
         if max_buffered_items <= 1:
             raise ValueError("max_buffered_items must exceed one")
+        subscriptions = (
+            subscription_messages(symbol)
+            if subscription_payloads is None
+            else tuple(subscription_payloads)
+        )
+        if not subscriptions or any(not payload.strip() for payload in subscriptions):
+            raise ValueError("subscription_payloads must contain non-empty messages")
         self._symbol = symbol
+        self._subscription_payloads = subscriptions
         self._connector = connector or _connect_mainnet
         self._clock_ns = clock_ns
         self._reconnect_seconds = reconnect_seconds
@@ -144,7 +153,7 @@ class HyperliquidWebSocketFeed:
 
     def _receive(self, connection: WebSocketConnection) -> None:
         try:
-            for message in subscription_messages(self._symbol):
+            for message in self._subscription_payloads:
                 connection.send(message)
             while not self._stop.is_set():
                 try:

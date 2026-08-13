@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "contract": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_promotion": false,
+    "runtime_strategy_changed": false
+  },
+  "routes": {
+    "eth_breakout_precompression_pullback_bidirectional_v1|ETH": {
+      "triage": "REVISE",
+      "next_experiment": "new_side_mechanic_version_required",
+      "historical_assessment": "tested_side_relation_set_falsified",
+      "decision_source": "docs/research-journal/eth-breakout-precompression-pullback-v6.json"
+    },
+    "hip3_swing_ha_sndk_gold_brent_bidirectional_v1|xyz:GOLD": {
+      "triage": "REVISE",
+      "next_experiment": "new_side_mechanic_version_required",
+      "historical_assessment": "tested_side_timing_set_falsified",
+      "decision_source": "docs/research-journal/hip3-entry-timing-challenger-v3.json"
+    },
+    "hip3_swing_ha_sp500_spcx_bidirectional_v2|xyz:SPCX": {
+      "triage": "REVISE",
+      "next_experiment": "new_side_mechanic_version_required",
+      "historical_assessment": "tested_side_timing_set_falsified",
+      "decision_source": "docs/research-journal/spcx-side-mechanism-attribution-v1.json"
+    }
+  },
+  "evidence": [
+    {
+      "path": "../../docs/research-journal/eth-breakout-precompression-pullback-v6.json",
+      "sha256": "b0c6dbee5b9b87dfae1838b8ae6090dcc26e88d044587e6d176fe04e0addc488",
+      "bytes": 4477
+    },
+    {
+      "path": "../../docs/research-journal/spcx-side-mechanism-attribution-v1.json",
+      "sha256": "bcaaeb232f02516e2a5d7226853c6735e5d1cc2145de8fccc41d515c1e8d4827",
+      "bytes": 4170
+    },
+    {
+      "path": "../../docs/research-journal/hip3-entry-timing-challenger-v3.json",
+      "sha256": "a2202fe27218dd51d8a3308a0d02fc58cdf0557d6eada538b07f9b2dc2254191",
+      "bytes": 4961
+    }
+  ]
+}

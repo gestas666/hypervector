@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v39-live-forward-canary",
+  "revision_number": 3,
+  "supersedes_revision_id": "fd1884f39099c9a6851738e7bfb8a2c2568590b63ec47e3ab10a5c66660b53a6",
+  "created_at_utc": "2026-08-11T20:15:28Z",
+  "strategy_id": "multi_asset_bidirectional_hype_compression_range_retired_current_canary_v39",
+  "symbol": "MULTI",
+  "status": "observe",
+  "hypothesis": "The exact v39 route set can produce technically valid protected live lifecycles while point-in-time route, regime, execution-friction, effective-episode, and predeclared exit-policy evidence distinguishes repeatable after-cost behavior from whipsaw, profit surrender, and correlated opportunity duplication before a separately versioned $5,000 successor is authorized.",
+  "decision": "Keep the authorized v39 runtime, routes, sizing, stops, and bound exits unchanged. Record the aligned SOL HT short as a third closed lifecycle in the ongoing correlated episode and a resolved cleared-cost-hurdle-then-surrendered path. Preserve all three profit-lock policies as report-only challengers because their four-close estimated totals remain negative and one overlapping episode cannot establish an exit edge. Continue exact route-side, regime, friction, missed-opportunity, and effective-episode collection before changing the separately versioned $5,000 successor.",
+  "confidence": "low_medium",
+  "falsifier": "The technical conclusion is invalidated by changed source identity, unreconciled lifecycle or fill accounting, missing venue protection, non-causal joins, or a technical-gap identity. The no-change decision should be revised by later point-in-time route-specific outcomes showing stable after-cost improvement across non-overlapping episodes and positive performance without the largest winner. The profit-lock hypothesis is falsified if predeclared policies underperform unchanged exits after realized fees, funding, exit friction, multiplicity disclosure, stop precedence, and correlation-aware episode accounting.",
+  "evidence": [
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v39_live_prefix_audit_20260811T201318Z.json",
+      "role": "immutable_exact_v39_four_close_prefix_audit",
+      "sha256": "aff4ee1068170dcb8e74513f08108c1c7ded726564a20e763c78c617d8938565",
+      "bytes": 8735389
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v39_live_prefix_delta_20260811T195200Z_201318Z.json",
+      "role": "immutable_same_run_delta_with_exact_sol_resolution",
+      "sha256": "121667c25f0e89e3fcd5d01056a748cf4bfaa5abcb3b2d082ecb01baec0a3026",
+      "bytes": 116201
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v39_regime_forward_accuracy_20260811T200500Z_v3.json",
+      "role": "immutable_expanded_left_censored_regime_onset_evidence",
+      "sha256": "c76e8e7b33e4d5f6e6279a1731a34ef48a5d0035fa673b1cbe7bad710a45a14c",
+      "bytes": 249364
+    }
+  ],
+  "metrics": {
+    "source_run_id": "bidirectional-live-1786453934555",
+    "profile_fingerprint": "8785a2618d4e06d7b23886ee39a4c05caed6326641efe101ff52ab47bbdae6e5",
+    "observed_through_utc": "2026-08-11T20:13:18.150632+00:00",
+    "provider_symbol_routes": 14,
+    "directional_scopes": 28,
+    "current_run_closed_trades": 4,
+    "current_run_wins": 0,
+    "current_run_losses": 4,
+    "current_run_net_pnl_usd": -2.229934,
+    "current_run_fees_usd": 0.11209,
+    "current_run_funding_usd": 0.003056,
+    "provisional_open_lifecycles": 3,
+    "raw_lifecycles": 7,
+    "effective_episode_clusters": 2,
+    "completed_effective_episodes": 1,
+    "ongoing_effective_episodes": 1,
+    "independence_established": false,
+    "sol_net_pnl_usd": -0.68004,
+    "sol_holding_time_ms": 20321082,
+    "sol_maximum_favorable_excursion_bps": 122.32577843677261,
+    "sol_maximum_adverse_excursion_bps": 82.60961660665033,
+    "sol_observed_cost_hurdle_bps": 8.32835878377077,
+    "sol_peak_giveback_bps": 204.93539504342294,
+    "sol_exit_component_alignment_score": -1.0,
+    "sol_profit_lock_a25_estimated_net_pnl_usd": 0.04051582422253403,
+    "sol_profit_lock_a40_estimated_net_pnl_usd": 0.268645603260135,
+    "sol_profit_lock_a60_estimated_net_pnl_usd": 0.1945485759180862,
+    "a25_estimated_current_run_net_pnl_usd": -0.5246777351523116,
+    "a40_estimated_current_run_net_pnl_usd": -0.09731207694500513,
+    "a60_estimated_current_run_net_pnl_usd": -0.244498410355116,
+    "runtime_faults": 0,
+    "protected_open_lifecycles": 3,
+    "execution_authority": "none",
+    "runtime_changed_by_this_revision": false
+  },
+  "limitations": [
+    "Four raw closes are not four independent observations: SOL, ETH, and SPCX belong to one ongoing six-lifecycle episode with BTC, ETH, and SP500 opens.",
+    "Only the isolated SNDK episode is completed; independence is not established and open marks are excluded from resolved decisions.",
+    "SNDK, SP500, and SPCX lack canonical core-regime telemetry; provider-native context cannot be relabeled with a core-asset regime after the fact.",
+    "The SOL profit-lock estimates are counterfactual completed-bar references, not submitted orders, and exclude unknown private-order execution differences.",
+    "Selecting one policy from this episode would incur discovery-sample and multiple-testing bias; all three policies remain frozen measurements.",
+    "No live route, position, order, stop, target, size, exit, transition, protection, or execution process changed in this revision."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

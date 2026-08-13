@@ -5,12 +5,17 @@ from __future__ import annotations
 import re
 from datetime import UTC, datetime
 from decimal import Decimal, InvalidOperation
-from typing import Protocol
+from typing import Literal, Protocol
 
 import requests
 
 API_ROOT = "https://api.0xarchive.io/v1/hyperliquid"
-_SYMBOL_PATTERN = re.compile(r"^[A-Z0-9][A-Z0-9._:-]{0,63}$")
+MarketFamily = Literal["core", "hip3"]
+_SYMBOL_PATTERN = re.compile(r"^[A-Z0-9][A-Z0-9._-]{0,63}$")
+_HIP3_SYMBOL_PATTERN = re.compile(
+    r"^(?P<dex>[a-z0-9][a-z0-9._-]{0,31}):"
+    r"(?P<asset>[A-Z0-9][A-Z0-9._-]{0,63})$"
+)
 
 
 class OxaHistoryError(RuntimeError):
@@ -89,6 +94,25 @@ def validate_symbol(symbol: str) -> None:
     """Reject identifiers that are unsafe or outside core venue syntax."""
     if not _SYMBOL_PATTERN.fullmatch(symbol):
         raise ValueError("symbol must be an uppercase Hyperliquid asset identifier")
+
+
+def validate_hip3_symbol(symbol: str) -> tuple[str, str]:
+    """Validate and split one exact builder-deployed ``dex:ASSET`` identity."""
+    match = _HIP3_SYMBOL_PATTERN.fullmatch(symbol)
+    if match is None:
+        raise ValueError("HIP-3 symbol must use exact lower-dex:UPPER-ASSET identity")
+    return match.group("dex"), match.group("asset")
+
+
+def validate_market_symbol(symbol: str, market_family: MarketFamily) -> None:
+    """Require a symbol whose syntax matches its explicit venue family."""
+    if market_family == "core":
+        validate_symbol(symbol)
+        return
+    if market_family == "hip3":
+        validate_hip3_symbol(symbol)
+        return
+    raise ValueError(f"unsupported 0xArchive market family: {market_family!r}")
 
 
 def validate_window(start: datetime, end: datetime) -> None:

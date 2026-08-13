@@ -1,0 +1,97 @@
+{
+  "schema_version": "hip3_live_pressure_freshness_parity_v1",
+  "generated_at_utc": "2026-08-12T13:22:05.535771+00:00",
+  "contract": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_strategy_changes": false,
+    "runtime_strategy_changed": false
+  },
+  "source": {
+    "run_id": "bidirectional-live-1786453934555",
+    "run_fingerprint": "7de6e979fcee62165e742e372f406dccf1e53cdb0e4c49a05907669084fb51bb",
+    "profile_id": "multi_asset_bidirectional_hype_compression_range_retired_current_canary_v39",
+    "profile_fingerprint": "8785a2618d4e06d7b23886ee39a4c05caed6326641efe101ff52ab47bbdae6e5",
+    "checkpoint_sha256": "014b252a9f585b8a20cbec4a6d238df8471ef7779133cb247c5490d7966249b5",
+    "decision_ledger_prefix_rows": 145432,
+    "decision_ledger_prefix_sha256": "8e6cf345ee63d4b98b64f0c104dbb25c4c49156d8a6384bfc245efec9f519b33"
+  },
+  "freshness_contract": {
+    "legacy_live_provider_maximum_age_ms": 30000,
+    "archive_replay_maximum_age_ms": 15000,
+    "corrected_provider_maximum_age_ms": 15000,
+    "corrected_index_provider_id": "hip3_breakout_pressure_sp500_spcx_fresh15s_bidirectional_v2",
+    "corrected_commodity_provider_id": "hip3_breakout_pressure_sndk_gold_brent_fresh15s_bidirectional_v2"
+  },
+  "eligible_evaluations": {
+    "total": 8,
+    "older_than_15_seconds": 7,
+    "entry_actions": 4,
+    "entry_actions_older_than_15_seconds": 4,
+    "withheld_same_direction": 3,
+    "withheld_same_direction_older_than_15_seconds": 3,
+    "fresh_opposite_close_actions": 1
+  },
+  "closed_entry_actions_older_than_15_seconds": [
+    {
+      "lifecycle_id": "xyz:SNDK:514493969633",
+      "symbol": "xyz:SNDK",
+      "side": "long",
+      "decision_time_ms": 1786455900000,
+      "pressure_age_seconds": 21.945,
+      "exit_reason": "protective_stop",
+      "net_pnl_usd": -0.726696
+    },
+    {
+      "lifecycle_id": "xyz:SP500:514594244788",
+      "symbol": "xyz:SP500",
+      "side": "short",
+      "decision_time_ms": 1786463100000,
+      "pressure_age_seconds": 15.611,
+      "exit_reason": "opposite_strategy_intent",
+      "net_pnl_usd": -0.075541
+    },
+    {
+      "lifecycle_id": "xyz:SPCX:514623149761",
+      "symbol": "xyz:SPCX",
+      "side": "short",
+      "decision_time_ms": 1786465800000,
+      "pressure_age_seconds": 19.125,
+      "exit_reason": "protective_stop",
+      "net_pnl_usd": -0.606889
+    },
+    {
+      "lifecycle_id": "xyz:BRENTOIL:515067965974",
+      "symbol": "xyz:BRENTOIL",
+      "side": "short",
+      "decision_time_ms": 1786527000000,
+      "pressure_age_seconds": 16.294,
+      "exit_reason": "protective_stop",
+      "net_pnl_usd": -0.687962
+    }
+  ],
+  "closed_pnl_attribution": {
+    "current_run_closed_trades": 11,
+    "current_run_wins": 2,
+    "current_run_losses": 9,
+    "current_run_net_pnl_usd": -3.117881,
+    "affected_hip3_closed_trades": 4,
+    "affected_hip3_net_pnl_usd": -2.097088,
+    "affected_share_of_absolute_run_loss_pct": 67.26003975135677
+  },
+  "assessment": {
+    "technical_verdict": "live_research_freshness_contract_mismatch_confirmed",
+    "economic_verdict": "legacy_live_losses_are_not_archive_parity_evidence",
+    "confidence": "high_for_contract_and_trade_attribution_low_for_future_edge",
+    "limitations": [
+      "Withholding the four entries does not imply that the corrected portfolio would gain 2.097088 USD because capital could be reallocated or later signals could differ.",
+      "The corrected 15-second contract removes the observed stale entries but does not prove positive expectancy.",
+      "The currently running v39 process retains the legacy v1 provider until an explicitly approved flat restart into a versioned successor."
+    ],
+    "falsifiers": [
+      "Any linked entry evaluation has pressure_age_seconds less than or equal to 15.0.",
+      "The archived replay accepts end-boundary pressure older than 15 seconds.",
+      "A v2 boundary regression accepts 15001 milliseconds or rejects exactly 15000 milliseconds."
+    ]
+  }
+}

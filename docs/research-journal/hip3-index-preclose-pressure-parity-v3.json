@@ -1,0 +1,139 @@
+{
+  "schema_version": "hip3_index_preclose_pressure_parity_v3",
+  "generated_at_utc": "2026-08-12T20:46:00Z",
+  "mode": "report_only",
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false,
+  "symbols": [
+    "xyz:SP500",
+    "xyz:SPCX"
+  ],
+  "provider_id": "hip3_breakout_pressure_sp500_spcx_fresh15s_bidirectional_v3",
+  "signal_contract": {
+    "timeframe": "15m",
+    "breakout_lookback_bars": 32,
+    "fast_ema": 21,
+    "slow_ema": 55,
+    "minimum_abs_imbalance": 0.1,
+    "maximum_signal_stop_bps": 120.0,
+    "execution_stop_bps": null,
+    "minimum_canonical_snapshots": 2,
+    "maximum_exchange_boundary_age_ms": 15000,
+    "maximum_prospective_decision_delay_ms": 15000,
+    "signal_ohlc_source": "hyperliquid_public_candleSnapshot_15m",
+    "pressure_source": "hyperliquid_mainnet_l2_rest_depth10"
+  },
+  "retired_v2_defect": {
+    "provider_id": "hip3_breakout_pressure_sp500_spcx_fresh15s_bidirectional_v2",
+    "findings": [
+      "freshness used local receipt time instead of exchange time relative to the completed-bar boundary",
+      "one visible-book observation was sufficient even though the archive pressure contract requires at least two canonical snapshots",
+      "prior pressure rows were rebuilt as zero, so a continuing raw state could be mislabeled as a fresh onset"
+    ],
+    "disposition": "not valid qualification evidence and not restored to execution"
+  },
+  "source_identity": {
+    "src/hypervector/live/hip3_breakout_shadow_specs.py": "ba37f2204e859db2c0a7c41e7f8a4d38d6bfe6edc5f0f39de84d97390ba6f790",
+    "src/hypervector/live/mu_hip3_preclose_pressure.py": "aaacf0fc690fe3d6e0eab50d15c401ab08f0dbfd41338b70f9c22a81dedc238e",
+    "src/hypervector/live/mu_hip3_breakout_shadow.py": "9101a7d48726de3d5f09dacfca43c00a06630b17ae412ef7bfdf25661ca2ee54",
+    "src/hypervector/live/hip3_breakout_shadow_observer.py": "56e120fba81e57a2077e64aa24c06997618dd336ccb161b2491978a83393567d",
+    "scripts/index_hip3_breakout_shadow_observe.py": "10757419718357c8a55b870ada7320fe631573b1cdb6c4087445d6b1eccb2281",
+    "tests/test_index_hip3_breakout_shadow.py": "d04fc739c834d7c93e1d11d1d1e5fdf659963a22d1403de098a6df5e690f25d4"
+  },
+  "prospective_prefix_evidence": {
+    "first_decision_time_ms": 1786566600000,
+    "first_decision_disposition": "censored_truncated_ledger_tail",
+    "reason": "observer capture began inside the prior 15-minute bar, so pre-open scan coverage and prior raw onset state were unavailable",
+    "first_complete_decision_time_ms": 1786567500000,
+    "first_complete_bar_open_ms": 1786566600000,
+    "first_complete_bar_history_disposition": "pressure_fresh_but_prior_onset_state_unavailable",
+    "sp500": {
+      "profile_id": "sp500_fresh15_pressure_shadow_research_v3",
+      "snapshot_count": 155,
+      "last_exchange_ts_ms": 1786567494614,
+      "last_recv_ts_ms": 1786567495119,
+      "end_boundary_age_ms": 5386,
+      "decision_imbalance_10": -0.38232609092568925,
+      "pressure_scan_complete": true,
+      "pressure_fresh": true,
+      "eligible": false,
+      "decision_log_prefix_bytes": 1983,
+      "decision_log_prefix_sha256": "3a7e007f9230ff423238486c713ce092e2195fcb22ca0953ae4b623c4117dc0b"
+    },
+    "spcx": {
+      "profile_id": "spcx_fresh15_pressure_shadow_research_v3",
+      "snapshot_count": 155,
+      "last_exchange_ts_ms": 1786567494614,
+      "last_recv_ts_ms": 1786567494998,
+      "end_boundary_age_ms": 5386,
+      "decision_imbalance_10": -0.19151579219146944,
+      "pressure_scan_complete": true,
+      "pressure_fresh": true,
+      "eligible": false,
+      "decision_log_prefix_bytes": 1975,
+      "decision_log_prefix_sha256": "ed1f0a51a85ffd125a9b9ab33a2d33899b0872a283904d0fed6451e4236bd880"
+    },
+    "raw_reconciliation": "exact match for snapshot count, exchange timestamp, receipt timestamp, boundary age, and depth-10 imbalance on both symbols"
+  },
+  "open_spcx_v1_forensic": {
+    "lifecycle_id": "xyz:SPCX:515227334762",
+    "entry_decision_time_ms": 1786543200000,
+    "entry_price": 137.82,
+    "source_profile_id": "multi_asset_bidirectional_hype_compression_range_retired_current_canary_v39_xyz:spcx",
+    "prior_bar": {
+      "bar_open_ms": 1786541400000,
+      "close": 136.47,
+      "prior_breakout_high": 136.0,
+      "fast_ema": 134.77345066413952,
+      "slow_ema": 134.19510985129267,
+      "snapshot_count": 28,
+      "end_boundary_age_ms": 16993,
+      "raw_imbalance_10": -0.6919915044594064,
+      "pressure_fresh": false,
+      "long_raw": false
+    },
+    "entry_bar": {
+      "bar_open_ms": 1786542300000,
+      "close": 137.82,
+      "prior_breakout_high": 137.43,
+      "fast_ema": 135.05040969467228,
+      "slow_ema": 134.3245702137465,
+      "snapshot_count": 28,
+      "last_exchange_ts_ms": 1786543187578,
+      "last_recv_ts_ms": 1786543188327,
+      "end_boundary_age_ms": 12422,
+      "decision_imbalance_10": 0.10260397335173788,
+      "pressure_fresh": true,
+      "long_raw": true
+    },
+    "fresh_onset_under_v3_signal_math": true,
+    "live_decision_delay_ms": 28445,
+    "prospective_v3_decision_delay_admitted": false,
+    "interpretation": "the setup mechanics were valid, but the live v1 decision was later than the corrected v3 prospective timing contract"
+  },
+  "current_disposition": {
+    "strategy_mechanism": "repairable and not falsified by the open SPCX entry",
+    "v1_and_v2_execution": "retired",
+    "v3_execution": "not authorized",
+    "v3_observer": "active report-only prospective capture",
+    "promotion_blockers": [
+      "a second full prospective bar is required before prior raw onset state is complete",
+      "archive public-trade OHLC versus live candleSnapshot row parity remains unverified",
+      "prospective eligible onsets and venue-costed outcomes are not yet sufficient to estimate repeatability"
+    ]
+  },
+  "confidence": {
+    "implementation_defect": "high",
+    "first_complete_bar_reconciliation": "high",
+    "open_spcx_signal_reconstruction": "high",
+    "future_profitability": "low"
+  },
+  "falsifiers": [
+    "a future v3 row differs from its exact canonical raw-book prefix",
+    "v3 admits fewer than two snapshots or exchange-boundary age above 15 seconds",
+    "delayed receipts rewrite a previously persisted raw onset state",
+    "prospective after-cost outcomes remain non-positive or largest-winner dependent",
+    "live and archive signal OHLC cannot be reconciled row-for-row"
+  ]
+}

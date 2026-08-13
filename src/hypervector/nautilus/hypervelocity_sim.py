@@ -50,7 +50,7 @@ class HypervelocitySimulationConfig:
     maker_fill_probability: float = 1.0
     slippage_probability: float = 0.0
     random_seed: int = 7
-    default_leverage: int = 40
+    default_leverage: int = 30
 
     def __post_init__(self) -> None:
         """Reject settings Nautilus cannot interpret safely."""

@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "hip3-expanded-market-roster",
+  "revision_number": 10,
+  "supersedes_revision_id": "2e4ac30296195c971bb9643567fc94ea6aa2d5c01def4628776ddadb6ad4e62d",
+  "created_at_utc": "2026-08-07T23:57:35Z",
+  "strategy_id": "unassigned_hip3_research",
+  "symbol": "PORTFOLIO",
+  "status": "observe",
+  "hypothesis": "Selecting the newest exact-symbol HIP-3 L2 observation at or before the causal cycle cutoff will restore the breakout providers' intended depth-ten pressure input without admitting future or stale books.",
+  "decision": "Stage the causal-cutoff reader repair for the next safe backend generation. The live v25 ledger and source order demonstrate that post-reconciliation books can hide a preceding causal observation under the old newest-only reader. The repair searches backward to the newest book at or before the cycle cutoff, retains the existing 30-second freshness check, and retains exact-symbol Hyperliquid-mainnet depth-ten validation. Do not restart or hot-mutate the currently armed v25 process while SOL and GOLD lifecycles remain open. This is a data-availability correction, not evidence that the breakout route has positive economic edge.",
+  "confidence": "high",
+  "falsifier": "The implementation diagnosis is falsified if a post-restart completed HIP-3 decision still reports order_pressure_unavailable while an exact-symbol Hyperliquid-mainnet book exists at or before the cycle cutoff and is no older than 30 seconds. The economic hypothesis remains unproven until reconciled breakout lifecycles exist; valid pressure availability alone cannot establish edge.",
+  "evidence": [
+    {
+      "path": "../../docs/research-journal/hip3-expanded-market-roster-v9.json",
+      "role": "superseded_cockpit_evidence_binding_revision",
+      "sha256": "dfb7ba2d798f66b58fed8124b348cf22b60c9ccb8659612b8207bffe7bb0f5f5",
+      "bytes": 4003
+    },
+    {
+      "path": "../../src/hypervector/live/hip3_ledger_pressure.py",
+      "role": "causal_exact_symbol_pressure_reader_implementation",
+      "sha256": "f3dc9ecc890d7580460d3e8f6b6a72a25a5b674656ea3a58573335b33372b6ae",
+      "bytes": 6545
+    },
+    {
+      "path": "../../src/hypervector/live/hip3_cohort_providers.py",
+      "role": "provider_cutoff_handoff_implementation",
+      "sha256": "657a109b124e26af95bcee648311e5ad787d9c9eb0701aca3e3d1a0f3f8d266b",
+      "bytes": 16275
+    },
+    {
+      "path": "../../tests/test_hip3_cohort_providers.py",
+      "role": "causal_selection_future_rejection_and_staleness_regression_tests",
+      "sha256": "56d41857411611f52eabf6902ffff037c68cb1a7ea246e1a4db79e02618f4ff0",
+      "bytes": 11647
+    },
+    {
+      "path": "../../data/logs/research/hip3_l2_causal_cutoff_diagnostic_20260807.json",
+      "role": "source_order_live_ledger_and_validation_diagnostic",
+      "sha256": "86965f33e56e3198cc37ff01b0a1daba21925b452d8b1f84328404516540b914",
+      "bytes": 3870
+    }
+  ],
+  "metrics": {
+    "affected_breakout_provider_symbol_routes": 5,
+    "causal_books_recovered_at_conservative_cutoff": 5,
+    "maximum_pressure_age_seconds": 30,
+    "focused_tests_passed": 28,
+    "future_pressure_rejected": true,
+    "stale_pressure_rejected": true,
+    "running_open_lifecycles": 2,
+    "execution_authority": "none",
+    "runtime_changed_by_this_revision": false
+  },
+  "limitations": [
+    "The exact pre-reconciliation cycle timestamp is not persisted, so diagnosis combines source-order proof, deterministic reproduction, and a conservative historical ledger cutoff.",
+    "This repair makes intended L2 evidence available; it does not relax breakout, EMA, or pressure-direction conditions.",
+    "No HIP-3 breakout lifecycle has yet closed under the repaired input path, so route economics remain unverified live.",
+    "The running Python backend retains the old loaded implementation until a flat, explicitly controlled transition.",
+    "No position, order, sizing rule, execution scope, or live process changed as a result of this revision."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

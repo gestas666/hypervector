@@ -9,6 +9,10 @@ from typing import Mapping, Sequence
 
 import pandas as pd
 
+from hypervector.data.source_position_records import (
+    reconcile_source_position_records,
+)
+
 
 @dataclass(frozen=True)
 class _Observation:
@@ -71,7 +75,7 @@ def compare_shadow_to_positions(
     observations = _parse_observations(selected)
     window_start = min(item.timestamp for item in observations)
     window_end = max(item.timestamp for item in observations)
-    real_trades = _parse_real_trades(positions)
+    real_trades = _parse_real_trades(reconcile_source_position_records(positions))
     _validate_overlap(real_trades, window_start, window_end)
     covered = {item.direction for item in observations}
     real_window = [

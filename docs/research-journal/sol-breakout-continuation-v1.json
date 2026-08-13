@@ -1,0 +1,86 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "sol-breakout-continuation-after-onset",
+  "revision_number": 1,
+  "supersedes_revision_id": null,
+  "created_at_utc": "2026-08-08T22:37:16Z",
+  "strategy_id": "sol_breakout_continuation_aligned_fixed60_bidirectional_v1",
+  "symbol": "SOL",
+  "status": "observe",
+  "hypothesis": "After a SOL five-minute breakout onset has already occurred, a later source evaluation blocked only by awaiting_new_5m_breakout_onset may identify a tradable continuation when side-adjusted visible-book pressure remains aligned. Measure both directions with a 75-minute accepted-entry spacing, adverse recorded BBO entry and exit, observed funding and taker fees, an 80-bps stop proxy, no target, and a fixed 60-minute horizon.",
+  "decision": "Freeze a report-only prospective observer at 2026-08-08T22:50:00Z. Do not remove the live v25 fresh-onset requirement, do not execute the candidate, and do not pool its outcomes with the older HYPE cooldown or SOL 5m-not-breakout experiments. Hypothesis-formation evidence contains two resolved all-long paths at +45.9418 bps total and +16.3241 bps after removing the largest winner, which is insufficient for promotion but sufficient to measure the exact missed-continuation class prospectively. Future results must retain both-side attribution, concentration, adverse BBO capacity, fees, funding, and the frozen entry-spacing clock.",
+  "confidence": "low",
+  "falsifier": "Reject or materially revise the observer if post-cutoff after-cost return is nonpositive excluding the largest winner, if independent episodes do not recur, if the result depends on only one side, if short outcomes are adverse, if visible-book capacity fails, or if source/profile/cutoff identity drifts. Evidence would strengthen only through independent both-side post-cutoff paths with positive after-cost economics excluding the largest winner; no observation grants live authority automatically.",
+  "evidence": [
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v25_execution_opportunity_matrix_exlargest_20260808T2216Z.json",
+      "role": "hypothesis_formation_after_cost_exact_one_blocker_matrix",
+      "sha256": "cf6909170336fd05ff004d664e8c15a6e5c726bb859fd2bcea18305066c1f59a",
+      "bytes": 162891
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v25_live_prefix_post_sol_reconcile_20260808T2230Z.json",
+      "role": "prospective_cutoff_predecessor_live_prefix",
+      "sha256": "5e17700f0247f110a0cc01b2f7a433a9d1a1887c3840df7456ab5e4f40c5fd4f",
+      "bytes": 9980942
+    },
+    {
+      "path": "../../src/hypervector/research/cohort_forward_experiments.py",
+      "role": "frozen_candidate_identity_and_cutoff",
+      "sha256": "26198260889ffaf838ad423cbde8df2bbc0d1893377261c7d7b59519a1b26640",
+      "bytes": 6391
+    },
+    {
+      "path": "../../tests/test_sol_breakout_continuation_experiment.py",
+      "role": "identity_cutoff_side_and_source_authority_regression_tests",
+      "sha256": "6ab280324afec362a6325c28b68302f57076b5a2eee119e11c05afcb07d26dde",
+      "bytes": 1968
+    },
+    {
+      "path": "../../scripts/cohort_forward_one_blocker_challenger.py",
+      "role": "execution_incapable_forward_observer",
+      "sha256": "36480074bcdd0a221bed42ffeca6fe9eb9476e236fc2849c35d9186e407019d3",
+      "bytes": 15241
+    },
+    {
+      "path": "hype-breakout-fresh-onset-cooldown-v1.json",
+      "role": "separate_asset_cooldown_control_and_non_pooling_context",
+      "sha256": "8a432b01486be75b91d435902f3782467dc1a44bf6fce24b868dc1b90f015566",
+      "bytes": 3534
+    }
+  ],
+  "metrics": {
+    "prospective_cutoff_utc": "2026-08-08T22:50:00Z",
+    "prospective_cutoff_time_ms": 1786229400000,
+    "source_strategy_id": "hype_breakout_onset_bidirectional_v1",
+    "source_blocker": "awaiting_new_5m_breakout_onset",
+    "source_profile_id": "multi_asset_bidirectional_complete_portfolio_canary_v25",
+    "source_profile_fingerprint": "ec7715f671fa369d0a415d8941061eb9a577b232bbd4e06367a7342267ff7ecc",
+    "source_run_id": "bidirectional-live-1786182011216",
+    "opi_cohort": "aligned",
+    "minimum_entry_spacing_minutes": 75,
+    "fixed_horizon_minutes": 60,
+    "stop_proxy_bps": 80.0,
+    "target_proxy_bps": null,
+    "notional_usd": 75.0,
+    "hypothesis_formation_resolved": 2,
+    "hypothesis_formation_wins": 2,
+    "hypothesis_formation_losses": 0,
+    "hypothesis_formation_long_resolved": 2,
+    "hypothesis_formation_short_resolved": 0,
+    "hypothesis_formation_total_net_return_bps": 45.9418,
+    "hypothesis_formation_net_excluding_largest_winner_bps": 16.3241,
+    "execution_authority": "none",
+    "runtime_changed_by_this_revision": false
+  },
+  "limitations": [
+    "Hypothesis formation uses only two resolved all-long paths from one live market window.",
+    "The observer changes one source blocker and therefore measures a continuation class rather than the deployed fresh-onset contract.",
+    "Recorded BBO feasibility is not authenticated private queue position or a counterfactual venue fill.",
+    "The fixed 60-minute horizon isolates entry quality and is not an adaptive production exit policy.",
+    "The candidate is report-only and cannot enter, close, resize, gate, rank, pause, or promote a live strategy."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

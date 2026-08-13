@@ -43,14 +43,14 @@ def _wilder_dmi(
 ) -> tuple[pd.Series, pd.Series, pd.Series]:
     """Return (+DI, -DI, ADX) Wilder-smoothed."""
     h = high.astype(float)
-    l = low.astype(float)
+    lows = low.astype(float)
     c = close.astype(float)
     up = h.diff()
-    down = -l.diff()
+    down = -lows.diff()
     plus_dm = up.where((up > down) & (up > 0.0), 0.0)
     minus_dm = down.where((down > up) & (down > 0.0), 0.0)
     tr = pd.concat(
-        [(h - l), (h - c.shift(1)).abs(), (l - c.shift(1)).abs()],
+        [(h - lows), (h - c.shift(1)).abs(), (lows - c.shift(1)).abs()],
         axis=1,
     ).max(axis=1)
     alpha = 1.0 / float(length)
@@ -59,11 +59,7 @@ def _wilder_dmi(
     minus_sm = minus_dm.ewm(alpha=alpha, min_periods=length, adjust=False).mean()
     plus_di = 100.0 * plus_sm / atr_w.replace(0.0, np.nan)
     minus_di = 100.0 * minus_sm / atr_w.replace(0.0, np.nan)
-    dx = (
-        100.0
-        * (plus_di - minus_di).abs()
-        / (plus_di + minus_di).replace(0.0, np.nan)
-    )
+    dx = 100.0 * (plus_di - minus_di).abs() / (plus_di + minus_di).replace(0.0, np.nan)
     adx = dx.ewm(alpha=alpha, min_periods=length, adjust=False).mean()
     return plus_di.fillna(20.0), minus_di.fillna(20.0), adx.fillna(20.0)
 
@@ -102,17 +98,17 @@ def build_feature_matrix(df: pd.DataFrame, include_book: bool = True) -> pd.Data
 
     o = df["open"].astype(float)
     h = df["high"].astype(float)
-    l = df["low"].astype(float)
+    lows = df["low"].astype(float)
     c = df["close"].astype(float)
 
     ema21 = ema(c, 21)
     close_vs_ema21_bps = (c - ema21) / ema21.replace(0.0, np.nan) * 10_000.0
-    plus_di, minus_di, adx = _wilder_dmi(h, l, c, 14)
+    plus_di, minus_di, adx = _wilder_dmi(h, lows, c, 14)
     roc_5 = c.pct_change(5) * 100.0
     r = rsi(c, 14)
     log_ret = np.log(c / c.shift(1))
     realized_vol_24 = log_ret.rolling(24, min_periods=12).std() * math.sqrt(525_600)
-    atr14 = atr(h, l, c, 14)
+    atr14 = atr(h, lows, c, 14)
     atr_14_pct = atr14 / c.replace(0.0, np.nan) * 100.0
     mid = c.rolling(20, min_periods=10).mean()
     std = c.rolling(20, min_periods=10).std()
@@ -120,8 +116,8 @@ def build_feature_matrix(df: pd.DataFrame, include_book: bool = True) -> pd.Data
     lower = mid - 2.0 * std
     bb_position_20 = ((c - lower) / (upper - lower).replace(0.0, np.nan)).clip(0.0, 1.0)
     gap_from_low_30_pct = (
-        (c - l.rolling(30, min_periods=10).min())
-        / l.rolling(30, min_periods=10).min().replace(0.0, np.nan)
+        (c - lows.rolling(30, min_periods=10).min())
+        / lows.rolling(30, min_periods=10).min().replace(0.0, np.nan)
         * 100.0
     )
     gap_from_high_30_pct = (
@@ -212,6 +208,7 @@ def build_feature_matrix(df: pd.DataFrame, include_book: bool = True) -> pd.Data
         if col in out.columns:
             out[col] = out[col].fillna(d)
 
-    cols_order = list(FEATURE_NAMES) + [c for c in book_cols_to_use if c not in FEATURE_NAMES]
+    cols_order = list(FEATURE_NAMES) + [
+        c for c in book_cols_to_use if c not in FEATURE_NAMES
+    ]
     return out[cols_order]
-

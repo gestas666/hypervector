@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "evidence-selected-portfolio-v29",
+  "revision_number": 1,
+  "supersedes_revision_id": null,
+  "created_at_utc": "2026-08-08T06:22:06Z",
+  "strategy_id": "multi_asset_bidirectional_evidence_selected_portfolio_canary_v29",
+  "symbol": "PORTFOLIO",
+  "status": "candidate",
+  "hypothesis": "A five-asset shared-account canary restricted to six explicitly selected bidirectional routes may produce cleaner and more frequent forward evidence than v28's mixture of 23 executable mappings, while preserving one-position-per-asset isolation and exact backend telemetry.",
+  "decision": "Freeze v29 as an inactive low-to-medium-confidence live-research candidate. Execute only ETH dual-MTF Range Onset, SOL Range Onset, ETH precompression pullback, SPCX Swing/HA, SP500 breakout pressure, and GOLD Swing/HA, with long and short capability on every route. Remove observation-only filler and all mappings classified negative in the complete v28 audit. Treat the three HIP-3 routes as aggressive contradictory diagnostics—not established edges—because their positive validation/stress slices contain negative development or directional slices. Do not restart, drain, arm, place, close, or resize the running portfolio from this record.",
+  "confidence": "low_medium",
+  "falsifier": "Implementation parity is falsified by any profile, backup, provider, side, timing, sizing, stop, hold, or evidence hash mismatch. The portfolio hypothesis is weakened by a prospectively resolved after-cost sample with nonpositive net PnL and profit factor at or below one, failure to exercise both directions, one event supplying more than half of gross profit, or live friction materially exceeding the modeled route surplus. Such outcomes require a new journal revision; they are reported results rather than implicit runtime aborts.",
+  "evidence": [
+    {
+      "path": "../../configs/multi_asset_bidirectional_evidence_selected_portfolio_canary_v29.toml",
+      "role": "exact_inactive_v29_candidate_configuration",
+      "sha256": "bb62f0cd492bfeb332fd6e53cdd2a45205f3e7b6580fc5f18768ddecee3b40e1",
+      "bytes": 3327
+    },
+    {
+      "path": "portfolio-route-evidence-v28-v2.json",
+      "role": "complete_v28_route_audit_and_rejection",
+      "sha256": "cd99181e778e8b2677c5cd8a9598fe50b6d7b9ed44fad43b7aa135a77a1e3981",
+      "bytes": 5630
+    },
+    {
+      "path": "eth-sol-evidence-routed-v15-v1.json",
+      "role": "eth_sol_route_risk_cadence_and_evidence_contract",
+      "sha256": "44a4a7175b64654ac3116b2e1cd2c4769fe7430fa573759ae5bf82fe1ed1f263",
+      "bytes": 5317
+    },
+    {
+      "path": "../../data/logs/research/hip3_v25_lifecycle_bar_diagnostic_20260807.json",
+      "role": "exact_entry_fixed80_24h_hip3_route_diagnostic",
+      "sha256": "584fbab9565afc54672903a98a8c0fb346d8b5bd68444eaee4fe2d6a79a6ba4a",
+      "bytes": 93780
+    },
+    {
+      "path": "../../data/backups/bidirectional_cohort/prestart_20260808T062206.660911Z_d1f4cd3b0319/manifest.json",
+      "role": "verified_credential_free_v29_source_and_runtime_baseline",
+      "sha256": "f216dae6325de127cbbffc53bb128ac65416535cc00e012b918ff436ed3bfc9f",
+      "bytes": 607373
+    }
+  ],
+  "metrics": {
+    "candidate_profile_id": "multi_asset_bidirectional_evidence_selected_portfolio_canary_v29",
+    "candidate_profile_fingerprint": "d1f4cd3b03197e9e7a9899ab32e2b198fd4bd2a4117f1ea64261824fcdc4a393",
+    "candidate_run_fingerprint_observe": "072bcf4d8a74d987ee2c9c8475029fe691d235b387aff70ac1eaefd399d8e976",
+    "candidate_assets": [
+      "ETH",
+      "SOL",
+      "xyz:SP500",
+      "xyz:SPCX",
+      "xyz:GOLD"
+    ],
+    "candidate_maximum_positions": 5,
+    "candidate_executable_routes": 6,
+    "candidate_observe_only_routes": 0,
+    "candidate_both_sides_routes": 6,
+    "candidate_execution_scope": [
+      "range_onset_bidirectional_v1|ETH",
+      "range_onset_bidirectional_v1|SOL",
+      "eth_breakout_precompression_pullback_bidirectional_v1|ETH",
+      "hip3_swing_ha_sp500_spcx_bidirectional_v2|xyz:SPCX",
+      "hip3_breakout_pressure_sp500_spcx_bidirectional_v1|xyz:SP500",
+      "hip3_swing_ha_sndk_gold_brent_bidirectional_v1|xyz:GOLD"
+    ],
+    "maximum_concurrent_notional_usd": 325.0,
+    "maximum_concurrent_margin_usd_at_configured_leverage": 65.0,
+    "crypto_estimated_historical_opportunities_per_day": 1.14,
+    "eth_range_dual_mtf_continuous_trades": 70,
+    "eth_range_dual_mtf_continuous_profit_factor": 1.8408539683303562,
+    "eth_range_dual_mtf_continuous_net_pnl_usd": 2307.0367452239952,
+    "eth_pullback_development_profit_factor": 1.1111,
+    "eth_pullback_opened_final_profit_factor": 1.1208,
+    "sol_range_later_clean_block_trades": 42,
+    "sol_range_later_clean_block_profit_factor": 3.8597,
+    "spcx_swing_validation_stress_trades": 22,
+    "spcx_swing_validation_stress_profit_factor": 1.1124431975628581,
+    "sp500_breakout_validation_stress_trades": 13,
+    "sp500_breakout_validation_stress_profit_factor": 1.4539459067850165,
+    "gold_swing_validation_stress_trades": 19,
+    "gold_swing_validation_stress_profit_factor": 1.0530155756621735,
+    "joint_shared_portfolio_replay_published": false,
+    "runtime_changed_by_this_revision": false
+  },
+  "limitations": [
+    "V29 is a live-research candidate and not a profitability-promoted portfolio.",
+    "ETH Range Onset and ETH pullback were selected after prior experimentation; their later windows are descriptive rather than pristine holdouts.",
+    "SOL Range Onset is positive but winner-concentrated, and the configured 60-bps route is weaker in the earlier exact window than the separate 80-bps challenger.",
+    "The three HIP-3 mappings are selected from per-symbol lifecycle diagnostics; development or one direction was negative for each, shared-account priority interactions are omitted, and live parity is unproven.",
+    "The HIP-3 final chronological holdouts remain sealed and are not accessed by this selection.",
+    "No exact six-route shared-portfolio replay is published; concurrency, same-asset ETH conflicts, and realized-equity interaction require forward telemetry.",
+    "The historical replay cannot prove private IOC fills, stop gap behavior, latency, rate limits, or future funding and slippage.",
+    "No live route, process, order, position, stop, target, or allocation changed in this revision."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

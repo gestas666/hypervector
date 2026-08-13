@@ -213,7 +213,9 @@ class LiveFillEngine:
         append_live_decision(self._data_root, record)
         return record
 
-    def apply_funding(self, *, feed_ts: Any, oracle_px: float, hours: float = 1.0) -> dict | None:
+    def apply_funding(
+        self, *, feed_ts: Any, oracle_px: float, hours: float = 1.0
+    ) -> dict | None:
         pos = self._position
         if pos.qty == 0.0:
             return None
@@ -275,7 +277,9 @@ class LiveFillEngine:
             "qty": qty,
             "mark_px": mark_px,
             "fill_px": fill_px,
-            "fill_model_id": "live_venue_v1" if self.place_enabled else "live_warm_synthetic_v1",
+            "fill_model_id": "live_venue_v1"
+            if self.place_enabled
+            else "live_warm_synthetic_v1",
             "slippage_bps": snap.slippage_bps,
             "taker_fee": snap.taker_fee,
             "maker_fee": snap.maker_fee,
@@ -317,9 +321,9 @@ class LiveFillEngine:
         same_direction = (pos.qty > 0 and signed > 0) or (pos.qty < 0 and signed < 0)
         if same_direction:
             new_qty = pos.qty + signed
-            pos.avg_px = (
-                abs(pos.qty) * pos.avg_px + abs(signed) * fill_px
-            ) / abs(new_qty)
+            pos.avg_px = (abs(pos.qty) * pos.avg_px + abs(signed) * fill_px) / abs(
+                new_qty
+            )
             pos.qty = new_qty
             return
 

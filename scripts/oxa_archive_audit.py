@@ -24,6 +24,8 @@ def main() -> int:
             args.end,
             args.data_root,
             depth=args.depth,
+            market_family=args.market_family,
+            book_only=args.books_only,
         )
         report = audit_oxa_archive(config)
     except (OSError, ValueError) as exc:
@@ -44,6 +46,8 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--end", type=_utc, required=True)
     parser.add_argument("--data-root", type=Path, default=Path("data"))
     parser.add_argument("--depth", type=int, default=20)
+    parser.add_argument("--market-family", choices=("core", "hip3"), default="core")
+    parser.add_argument("--books-only", action="store_true")
     parser.add_argument("--out", type=Path, default=None)
     return parser
 

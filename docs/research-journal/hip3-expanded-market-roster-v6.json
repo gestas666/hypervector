@@ -1,0 +1,104 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "hip3-expanded-market-roster",
+  "revision_number": 6,
+  "supersedes_revision_id": "32115eb1a26751ca58a214bd58cb20b6c2b954c7045c696ffde6fecb40d4eb0f",
+  "created_at_utc": "2026-08-06T23:58:46Z",
+  "strategy_id": "unassigned_hip3_research",
+  "symbol": "PORTFOLIO",
+  "status": "observe",
+  "hypothesis": "Venue-native HIP-3 data for SP500, SPCX, SNDK, GOLD, and explicitly identified oil markets may support additional bidirectional portfolio strategies after namespace, fee, margin, data, and execution semantics are validated independently from native crypto perps.",
+  "decision": "Replace revision 5's stale acquisition-pending state: exact archive audits now show every expected SNDK, GOLD, and BRENTOIL bundle present and materialized for research. Reject the tested Swing/Heikin-Ashi transfer on all three markets. Reject the tested breakout-pressure transfer for BRENTOIL and for all three markets under the growth-disabled fee sensitivity. Retain only GOLD's 4-bar, 21/55 EMA, absolute-imbalance 0.50, 80-bps-stop breakout-pressure recipe as a report-only conditional forward challenger under the growth-enabled fee sensitivity because untouched validation was positive after nominal and stress friction with both directions contributing. Keep SNDK's stress-positive short component as a separate hypothesis rather than a bidirectional roster candidate. Keep SP500/SPCX observation-only, cash:WTI historical-only, the final holdouts sealed, and all HIP-3 execution authority disabled.",
+  "confidence": "medium",
+  "falsifier": "The archive-completion claim is falsified by checksum drift, a missing expected bundle, or failed database reproducibility. The conditional GOLD challenger is rejected if authoritative venue evidence establishes the growth-disabled fee schedule for the evaluated path, if fresh after-cost forward outcomes have profit factor at or below one or negative net PnL under nominal or stress friction, if either direction stops contributing without a preregistered explanation, or if one event dominates. A new mechanism or unsealed holdout is new evidence rather than validation of this revision.",
+  "evidence": [
+    {
+      "path": "../../data/logs/research/xyz_sndk_l2_archive_audit_20260806.json",
+      "role": "checksum_complete_sndk_l2_archive_audit",
+      "sha256": "a5f102b7612122fd258c9ddcbc269858f2dcb683b5302a144453ab14382af498",
+      "bytes": 4397
+    },
+    {
+      "path": "../../data/logs/research/xyz_gold_l2_archive_audit_20260806.json",
+      "role": "checksum_complete_gold_l2_archive_audit",
+      "sha256": "fcd9cb26217a51e2dbdb39b48e5169c46fa4305554a2df50f1e80901885b8db2",
+      "bytes": 2674
+    },
+    {
+      "path": "../../data/logs/research/xyz_brentoil_l2_archive_audit_20260806.json",
+      "role": "checksum_complete_brentoil_l2_archive_audit",
+      "sha256": "050f852380e379d982f2f612235a5684178466d3243130e6de515367401b804b",
+      "bytes": 2592
+    },
+    {
+      "path": "../../data/logs/research/hip3_breakout_pressure_transfer_sndk_gold_enabled_brent_v1.json",
+      "role": "growth_enabled_breakout_pressure_development_and_untouched_validation",
+      "sha256": "88fc8cf4a29ccd5a95e3585cb044dd94bdf70fe917281e3f177adb47e687418b",
+      "bytes": 2384183
+    },
+    {
+      "path": "../../data/logs/research/hip3_breakout_pressure_transfer_sndk_gold_disabled_brent_v1.json",
+      "role": "growth_disabled_breakout_pressure_fee_sensitivity",
+      "sha256": "9065246208c30485537d9092f3aba03e0852157432df7398abe0e75826b7b09e",
+      "bytes": 2383512
+    },
+    {
+      "path": "../../data/logs/research/hip3_swing_ha_transfer_sndk_gold_enabled_brent_v1.json",
+      "role": "growth_enabled_swing_heikin_ashi_rejection_evidence",
+      "sha256": "db0285590296ffa6c7aca4f621a1f0c5ff47409f08fc541ca2da169b270192b7",
+      "bytes": 1213739
+    },
+    {
+      "path": "../../data/logs/research/hip3_swing_ha_transfer_sndk_gold_disabled_brent_v1.json",
+      "role": "growth_disabled_swing_heikin_ashi_rejection_evidence",
+      "sha256": "f198b275a832a1ff23c19259714f82535014f631857fe95e1e442c6befb67fa1",
+      "bytes": 1213740
+    }
+  ],
+  "metrics": {
+    "sndk_archive_complete": true,
+    "sndk_expected_bundles": 3862,
+    "sndk_present_bundles": 3862,
+    "sndk_book_snapshots": 22201458,
+    "sndk_empty_book_windows": 147,
+    "gold_archive_complete": true,
+    "gold_expected_bundles": 3862,
+    "gold_present_bundles": 3862,
+    "gold_book_snapshots": 22882656,
+    "gold_empty_book_windows": 78,
+    "brentoil_archive_complete": true,
+    "brentoil_expected_bundles": 3713,
+    "brentoil_present_bundles": 3713,
+    "brentoil_book_snapshots": 21987445,
+    "brentoil_empty_book_windows": 76,
+    "public_trade_rows": 0,
+    "gold_growth_enabled_validation_trades": 28,
+    "gold_growth_enabled_nominal_net_pnl_usd": 3.629683759225202,
+    "gold_growth_enabled_nominal_profit_factor": 1.7309982653795213,
+    "gold_growth_enabled_stress_net_pnl_usd": 2.931100843411457,
+    "gold_growth_enabled_stress_profit_factor": 1.538255770855352,
+    "gold_growth_enabled_long_net_pnl_usd": 1.277566282267594,
+    "gold_growth_enabled_short_net_pnl_usd": 2.3521174769574644,
+    "gold_growth_disabled_nominal_net_pnl_usd": -2.2483882335353087,
+    "sndk_growth_enabled_nominal_net_pnl_usd": 3.5888249563989802,
+    "sndk_growth_enabled_stress_net_pnl_usd": -5.132465661646165,
+    "brentoil_growth_enabled_nominal_net_pnl_usd": -1.3321947217830257,
+    "brentoil_growth_enabled_stress_net_pnl_usd": -4.3118231543588195,
+    "holdout_metrics_accessed": false,
+    "execution_authority": "none",
+    "runtime_changed_by_this_revision": false
+  },
+  "limitations": [
+    "Archive completeness means every requested bundle is present; it does not mean every hourly window contains a usable two-sided book.",
+    "The archives contain L2 snapshots but no public trades, private fills, cancellations, queue position, or adverse-selection labels.",
+    "GOLD's official public metadata omitted growthMode, so the effective fee state for the evaluated execution path remains unresolved.",
+    "Current account fee inputs applied to historical books are sensitivities rather than historical private fee records.",
+    "Twenty-eight GOLD validation closes are informative but sparse and occur in one chronological validation window.",
+    "The final chronological holdouts remain sealed and were not used to select, rescue, or report a recipe.",
+    "No live profile, strategy, order, position, execution scope, backend process, or current crypto portfolio configuration changed as a result of this revision.",
+    "Two evidence files cited by earlier roster revisions remain reported as changed; revision 6 preserves rather than conceals that historical integrity drift."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

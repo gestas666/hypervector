@@ -135,7 +135,7 @@ def test_run_phase2_backtest_creates_data_layout(tmp_path: Path) -> None:
     assert (data_root / "exports").is_dir()
 
 
-def test_backend_arms_40x_sim_leverage_only_for_hypervelocity() -> None:
+def test_backend_arms_30x_sim_leverage_only_for_hypervelocity() -> None:
     base = {
         "role": None,
         "params": {},
@@ -151,7 +151,7 @@ def test_backend_arms_40x_sim_leverage_only_for_hypervelocity() -> None:
     )
     ordinary = StrategyLoadout(strategy_name="ma_cross_long", **base)
 
-    assert _default_leverage(hypervelocity) == 40
+    assert _default_leverage(hypervelocity) == 30
     assert _default_leverage(ordinary) == 1
 
 

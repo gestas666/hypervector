@@ -117,18 +117,12 @@ def _optuna_exit_dict(trial: Any, *, hypervelocity: bool) -> dict[str, Any]:
     if hypervelocity:
         return _hypervelocity_exit_dict()
     return {
-        "mode": trial.suggest_categorical(
-            "exit_mode", ["atr", "trail", "fixed_rr"]
-        ),
+        "mode": trial.suggest_categorical("exit_mode", ["atr", "trail", "fixed_rr"]),
         "sl_pct": trial.suggest_float("sl_pct", 0.003, 0.03, step=0.003),
         "sl_atr_mult": trial.suggest_float("sl_atr_mult", 0.8, 4.0, step=0.4),
         "rr": trial.suggest_float("rr", 1.2, 5.0, step=0.3),
-        "trail_atr_mult": trial.suggest_float(
-            "trail_atr_mult", 1.2, 5.0, step=0.3
-        ),
-        "leverage": trial.suggest_categorical(
-            "leverage", [1.0, 2.0, 3.0, 5.0]
-        ),
+        "trail_atr_mult": trial.suggest_float("trail_atr_mult", 1.2, 5.0, step=0.3),
+        "leverage": trial.suggest_categorical("leverage", [1.0, 2.0, 3.0, 5.0]),
     }
 
 
@@ -137,18 +131,16 @@ def _random_exit_dict(rng: Any, *, hypervelocity: bool) -> dict[str, Any]:
     if hypervelocity:
         return _hypervelocity_exit_dict()
     return {
-        "mode": _sample_grid_params(
-            rng, {"mode": ["atr", "trail", "fixed_rr"]}
-        )["mode"],
+        "mode": _sample_grid_params(rng, {"mode": ["atr", "trail", "fixed_rr"]})[
+            "mode"
+        ],
         "sl_pct": round(float(rng.uniform(0.003, 0.03)), 4),
-        "sl_atr_mult": round(
-            float(rng.uniform(_EXIT_SL_ATR_MIN, _EXIT_SL_ATR_MAX)), 1
-        ),
+        "sl_atr_mult": round(float(rng.uniform(_EXIT_SL_ATR_MIN, _EXIT_SL_ATR_MAX)), 1),
         "rr": round(float(rng.uniform(1.5, 4.0)), 1),
         "trail_atr_mult": round(float(rng.uniform(1.5, 4.0)), 1),
-        "leverage": _sample_grid_params(
-            rng, {"leverage": [1.0, 2.0, 3.0, 5.0]}
-        )["leverage"],
+        "leverage": _sample_grid_params(rng, {"leverage": [1.0, 2.0, 3.0, 5.0]})[
+            "leverage"
+        ],
     }
 
 
@@ -186,9 +178,7 @@ def _export_autotune_candidate(
         exit_cfg = ExitConfig(
             **{k: v for k, v in best_exit_dict.items() if k != "leverage"}
         )
-        risk_cfg = RiskConfig(
-            max_size_frac=float(best_exit_dict.get("leverage", 1.0))
-        )
+        risk_cfg = RiskConfig(max_size_frac=float(best_exit_dict.get("leverage", 1.0)))
     candidate_id = f"exp_{strategy_name}_{timeframe}_{stamp}"
     return export_candidate(
         root / "exports",

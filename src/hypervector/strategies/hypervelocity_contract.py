@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 EntryDirection = Literal["long", "short"]
 
 _MARGIN_FRACTION = 0.70
-_LEVERAGE = 40.0
+_LEVERAGE = 30.0
 _TARGET_MARGIN_PCT = 8.0
 _OPEN_POSITION_RANGE_POLICY = "hold_until_target"
 _ENTRY_TTL_SECONDS = 300.0
@@ -39,18 +39,23 @@ def faithful_regime_config() -> RegimeClassifierConfig:
     from hypervector.regime.classifier import RegimeClassifierConfig
 
     return RegimeClassifierConfig(
-        ema_fast=20,
-        ema_slow=50,
+        ema_fast=21,
+        ema_slow=55,
         warmup_bars=60,
         structure_lookback=240,
         trend_strength_percentile=50.0,
         range_strength_percentile=40.0,
         minimum_trend_gap_bps=1.0,
-        choppiness_range_threshold=85.0,
+        range_filter="bbwp",
+        bbwp_length=20,
+        bbwp_lookback=240,
+        bbwp_compression_threshold=25.0,
+        rsi_length=14,
+        rsi_signal_length=7,
         coiling_width_bps=3.0,
         breakout_lookback=90,
-        breakout_clearance_bps=5.0,
-        breakout_volume_multiple=2.0,
+        breakout_clearance_bps=8.0,
+        breakout_volume_multiple=2.5,
     )
 
 
@@ -81,7 +86,7 @@ class HypervelocityContract:
         if self.margin_fraction != _MARGIN_FRACTION:
             raise ValueError("margin_fraction must be 0.70 for the faithful baseline")
         if self.leverage != _LEVERAGE:
-            raise ValueError("leverage must be 40.0 for the faithful baseline")
+            raise ValueError("leverage must be 30.0 for the faithful baseline")
         if self.target_margin_pct != _TARGET_MARGIN_PCT:
             raise ValueError("target_margin_pct must be 8.0 for the faithful baseline")
         if self.order_type != "limit" or self.time_in_force != "post_only":
@@ -108,7 +113,7 @@ class HypervelocityContract:
         return self.margin_fraction * self.leverage
 
     def allocate(self, equity: float) -> HypervelocityAllocation:
-        """Allocate 70% of positive equity as margin at 40x leverage."""
+        """Allocate 70% of positive equity as margin at 30x leverage."""
         equity_value = float(equity)
         if equity_value <= 0.0:
             raise ValueError(f"equity must be positive, got {equity!r}")

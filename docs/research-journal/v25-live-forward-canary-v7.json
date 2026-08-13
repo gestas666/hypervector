@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v25-live-forward-canary",
+  "revision_number": 7,
+  "supersedes_revision_id": "47bf1222b080a5e185a4fdbbddd826c9ff6935e018703dbbdd5dd8b77fb3bc28",
+  "created_at_utc": "2026-08-08T16:12:41Z",
+  "strategy_id": "multi_asset_bidirectional_complete_portfolio_canary_v25",
+  "symbol": "MULTI",
+  "status": "observe",
+  "hypothesis": "The complete v25 live portfolio can produce mechanically valid protected lifecycles while causal execution, missed-opportunity, orderbook, and provider-clock telemetry identifies repeatable provider-symbol behavior that clears measured live friction.",
+  "decision": "Keep the armed v25 runtime and its protected lifecycles unchanged. Accept the report-only HIP-3 funding identity repair because exact xyz:SPCX funding acquisition, manifest verification, and BBO replay now complete without weakening native-symbol validation. Treat the positive SPCX pivot-break-state-missing discovery replay only as hypothesis formation: freeze v13-spcx-swing-pivot-fixed at the post-selection 2026-08-08T16:00:00Z cutoff, refresh it prospectively with official funding and causal BBO, and expose it through the current-run TUI checkpoint. Do not promote, resize, filter, route, or alter exits from the three discovery-window long executions.",
+  "confidence": "low",
+  "falsifier": "The SPCX candidate is falsified by nonpositive aggregate after-cost performance as future non-overlapping post-cutoff executions resolve, by failure to produce bidirectional evidence, by BBO capacity or funding-coverage failures, or by concentration in one move. The infrastructure repair is invalidated by a future exact HIP-3 identity mismatch, changed evidence hash, incomplete funding manifest, or a regression in native-symbol behavior. Any changed evidence hash invalidates this revision.",
+  "evidence": [
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v25_spcx_swing_pivot_one_blocker_execution_20260808T160000Z.json",
+      "role": "immutable_spcx_discovery_window_aligned_opi_bbo_replay",
+      "sha256": "f7e0f11ee8ea1a6a84ec0e57e9a3e3e710afb31015dec331b05d63a0f9f5e5ef",
+      "bytes": 8532
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v25_execution_opportunity_matrix_20260808T160000Z.json",
+      "role": "immutable_current_run_nine_asset_execution_opportunity_matrix",
+      "sha256": "b18592d290a8339fde6322c35ec52b3ce2993d201b90d8eb88e482b7a8159f1f",
+      "bytes": 123706
+    },
+    {
+      "path": "../../data/cache/vendor/hyperliquid/xyz:SPCX/20260808T090000000000Z_20260808T160000000000Z_funding/funding.parquet",
+      "role": "official_complete_spcx_funding_rows",
+      "sha256": "b2ccabf46ba4ced88f259551598969f4ea7658e5e00a10cd63d2a06c39a5c7f3",
+      "bytes": 3200
+    },
+    {
+      "path": "../../data/cache/vendor/hyperliquid/xyz:SPCX/20260808T090000000000Z_20260808T160000000000Z_funding/manifest.json",
+      "role": "official_spcx_funding_manifest",
+      "sha256": "79d571ad2ea28b50c0f997d5cce11d4b424a3c8b3ab07f7152193d2d2e6ab5bf",
+      "bytes": 773
+    },
+    {
+      "path": "../../configs/multi_asset_bidirectional_complete_portfolio_canary_v25.toml",
+      "role": "exact_running_profile_configuration",
+      "sha256": "362763638541baf75d5121f0b59e1afc8091bda7aaa1aaea0f8b42aead3c3bdd",
+      "bytes": 6214
+    }
+  ],
+  "metrics": {
+    "source_run_id": "bidirectional-live-1786182011216",
+    "matrix_hypotheses": 25,
+    "matrix_comparisons": 75,
+    "matrix_resolved_comparisons": 62,
+    "discovery_contract": "spcx_pivot_break_state_missing_aligned_opi_60m_bbo",
+    "discovery_resolved_executions": 3,
+    "discovery_wins": 2,
+    "discovery_losses": 1,
+    "discovery_long_executions": 3,
+    "discovery_short_executions": 0,
+    "discovery_mean_net_return_bps": 5.309131942139757,
+    "discovery_total_net_return_bps": 15.927395826419271,
+    "discovery_profit_factor": 2.8302092302693795,
+    "discovery_simulated_net_pnl_usd": 0.11945546869814455,
+    "discovery_notional_usd": 75.0,
+    "discovery_entry_capacity_failures": 0,
+    "discovery_exit_capacity_failures": 0,
+    "discovery_stop_proxy_crosses": 0,
+    "prospective_experiment": "v13-spcx-swing-pivot-fixed",
+    "prospective_cutoff_time_ms": 1786204800000,
+    "prospective_resolved_executions": 0,
+    "prospective_state": "awaiting_executable_resolution",
+    "execution_authority": "none",
+    "runtime_changed_by_this_revision": false
+  },
+  "limitations": [
+    "The three positive/negative SPCX executions are the same discovery-window paths that selected the candidate, so their profit factor is not confirmation evidence.",
+    "All three resolved discovery executions are long and occurred in one short live window; there is no short-side replication or independent market-regime sample.",
+    "The candidate combines blocker relaxation, aligned OPI, an 80 bps stop proxy, and a fixed 60-minute exit; it does not isolate pivot-state removal or represent the deployed 24-hour Swing/HA lifecycle.",
+    "The BBO replay requires the full notional at the recorded top level but cannot prove identical future IOC fills, hidden depth, or queue behavior.",
+    "The 75 opportunity-matrix comparisons overlap by blocker and OPI cohort and cannot be pooled into portfolio PnL or treated as independent trials.",
+    "The prospective observer has zero resolved post-cutoff executions and therefore establishes no forward edge yet.",
+    "The running v25 process still predates the HIP-3 pressure-clock repair and must not be hot-restarted while protected positions remain open."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

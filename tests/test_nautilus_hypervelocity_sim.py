@@ -53,7 +53,7 @@ def test_hypervelocity_venue_enables_deterministic_event_friction() -> None:
     args = engine.arguments
     assert args["account_type"] == AccountType.MARGIN
     assert args["oms_type"] == OmsType.NETTING
-    assert args["default_leverage"] == Decimal("40")
+    assert args["default_leverage"] == Decimal("30")
     assert args["book_type"] == BookType.L2_MBP
     assert args["liquidity_consumption"] is True
     assert args["queue_position"] is True

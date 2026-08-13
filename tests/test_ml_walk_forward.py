@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
+import joblib
 import numpy as np
 import pandas as pd
 import pytest
+import sklearn
 
 from hypervector.ml.feature_matrix import FEATURE_NAMES, build_feature_matrix
 from hypervector.ml.labels import build_strategy_labels, resolve_barrier_outcome
@@ -148,3 +151,10 @@ def test_train_bundle_smoke(tmp_path: Path):
     assert res.model_path.is_file()
     assert res.metadata_path.is_file()
     assert res.n_samples == len(labels)
+    metadata = json.loads(res.metadata_path.read_text(encoding="utf-8"))
+    assert metadata["training_versions"] == {
+        "joblib": joblib.__version__,
+        "lightgbm": lightgbm.__version__,
+        "scikit_learn": sklearn.__version__,
+    }
+    assert metadata["cv"]["lgbm_auc_mean"] is None

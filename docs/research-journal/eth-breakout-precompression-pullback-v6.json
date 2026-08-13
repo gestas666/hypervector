@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "eth-breakout-precompression-pullback",
+  "revision_number": 6,
+  "supersedes_revision_id": "593324a4ee4acac7bbd6caf51e28b6bae6caec5f663bb5ea10121eb11b7774e4",
+  "created_at_utc": "2026-08-09T21:42:39Z",
+  "strategy_id": "eth_breakout_precompression_pullback_bidirectional_v1",
+  "symbol": "ETH",
+  "status": "candidate",
+  "hypothesis": "The exact ETH precompression-pullback route may contain distinct long and short mechanisms when each side is separated by whether entry follows or opposes the preceding breakout direction, under the retained 60-bps stop and 12-hour hold.",
+  "decision": "Retain the exact 12-hour exit as the least contradicted tested duration, but reject the tested static side and breakout-relation split as a successor mechanism. Neither pooled side and none of long-aligned, long-opposed, short-aligned, or short-opposed remained nonempty, net-positive, above PF 1, and positive without its largest winner in both the 282-trade development and 56-trade opened-final partitions. Do not queue another generic side/relation split. Any further ETH challenger must declare a new causal mechanism identity before evaluation. This revision changes no live route, entry, exit, stop, size, order, or authority.",
+  "confidence": "medium",
+  "falsifier": "This decision is invalidated by source-hash drift, a mismatch between the exact attribution and fixed-720-minute side economics, altered partition boundaries, costs, stop, hold, side labels, or breakout relation, or any execution authority. A preregistered new ETH mechanism would update it only if it survives after costs in both chronological partitions and later independent long and short live lifecycles without largest-winner dependence.",
+  "evidence": [
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/eth_side_mechanism_decision_20260809T214223Z.json",
+      "role": "exact_side_and_breakout_relation_partition_decision",
+      "sha256": "89728cb06c24247e27091817346201a7140ac6ca67b02c3314bd2fe4383643a9",
+      "bytes": 6821
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/eth_pullback_mechanism_attribution_exact_v4_20260809T123838Z.json",
+      "role": "frozen_338_trade_side_relation_attribution",
+      "sha256": "a677ed5fb62338bbc9984fdc8c8b5d9e3957fe0a2ec2f37dc5f0ee434d41f899",
+      "bytes": 26646
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/eth_pullback_mechanism_duration_20260809T203358Z.json",
+      "role": "fixed_entry_duration_and_720_minute_identity_check",
+      "sha256": "b1fd27c748b169243472ff69e96269fa58b950c61933d9dd8b20341f86d250b9",
+      "bytes": 34622
+    }
+  ],
+  "metrics": {
+    "development_trades": 282,
+    "opened_final_trades": 56,
+    "tested_side_arms": 2,
+    "stable_side_arms": 0,
+    "tested_side_relation_arms": 4,
+    "stable_side_relation_arms": 0,
+    "retained_maximum_hold_minutes": 720,
+    "long_development_net_bps": 254.70004459586082,
+    "long_development_net_excluding_largest_bps": -405.49945796472025,
+    "long_opened_final_net_bps": 345.1798700279692,
+    "long_opened_final_net_excluding_largest_bps": 16.82124813304597,
+    "short_development_net_bps": 1403.2803809926936,
+    "short_development_net_excluding_largest_bps": 232.97438750697302,
+    "short_opened_final_net_bps": -22.848652293164278,
+    "long_aligned_development_net_bps": 970.7047989971398,
+    "long_aligned_opened_final_net_bps": -288.39657437528246,
+    "long_opposed_development_net_bps": -716.004754401279,
+    "long_opposed_opened_final_net_bps": 633.5764444032516,
+    "short_opposed_development_net_bps": 1694.2898020030784,
+    "short_opposed_opened_final_net_bps": -548.673301331039,
+    "runtime_strategy_changed": false
+  },
+  "limitations": [
+    "The opened final 60-day block was previously inspected and is descriptive rather than sealed evidence.",
+    "The exact entry and 60-bps stop/12-hour hold shape followed prior trials.",
+    "One-minute bars cannot reproduce private IOC latency or intrabar stop ordering.",
+    "The test exhausts static side and breakout relation, not all possible causal ETH mechanisms.",
+    "The current-profile live sample contains only one resolved long and one resolved short.",
+    "This revision is report-only and cannot route, size, enter, close, restart, pause, or promote a strategy."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

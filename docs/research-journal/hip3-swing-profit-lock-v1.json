@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "hip3-swing-profit-lock",
+  "revision_number": 1,
+  "supersedes_revision_id": null,
+  "created_at_utc": "2026-08-09T04:04:06Z",
+  "strategy_id": "hip3_swing_ha_sp500_spcx_bidirectional_v2",
+  "symbol": "xyz:SPCX",
+  "status": "observe",
+  "hypothesis": "A causal 60-bps activation, 15-bps floor, and 30-bps trailing profit lock may retain more after-cost profit on HIP-3 Swing/HA lifecycles than either the first alignment-loss signal or the fixed 24-hour maximum hold.",
+  "decision": "Keep the current protected SPCX lifecycle and v25 exit contract unchanged. The first alignment-loss signal occurred near -6 bps and was followed by a +566-bps favorable excursion, so blindly honoring the first provider exit is not supported. The tighter 25/10 and 40/20 locks would have exited too early on this path. The 60/30 lock is the only useful provisional challenger: it would have triggered near 139.37 with an estimated $3.419611 net before counterfactual funding, about $1.551066 more than an exit at the 136.60 audit mark on the same fee-only basis. Treat the observed SPCX path as post-hoc discovery and measure later eligible lifecycles prospectively.",
+  "confidence": "low_medium",
+  "falsifier": "Reject the 60/30 HIP-3 challenger if later independently observed eligible lifecycles show its causal trigger capturing less after-cost PnL than the actual bound exit, repeatedly truncating subsequent continuation, or producing worse downside-adjusted outcomes across more than one HIP-3 symbol. Upgrade confidence only after resolved prospective triggers retain the advantage after actual funding, exit fees, and venue slippage.",
+  "evidence": [
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v25_live_prefix_open_lock_economics_20260809T040249Z.json",
+      "role": "immutable_open_spcx_path_provider_exit_and_causal_profit_lock_counterfactual",
+      "sha256": "9647c303123c1ed1bb9881a3d416c801a2b8a0351687db90034a02e47741e960",
+      "bytes": 12263207
+    }
+  ],
+  "metrics": {
+    "spcx_entry_price": 133.24,
+    "spcx_audit_mark_price": 136.59999999999997,
+    "spcx_marked_net_pnl_usd": 1.815015,
+    "spcx_estimated_exit_now_net_usd": 1.808406447012909,
+    "spcx_current_exit_net_excluding_funding_usd": 1.868545447012885,
+    "spcx_maximum_favorable_excursion_bps": 559.8919243470424,
+    "spcx_peak_giveback_bps": 307.7154007805483,
+    "ignored_provider_exit_signals": 52,
+    "first_provider_exit_entry_directional_return_bps": -6.004202942060388,
+    "maximum_favorable_excursion_after_first_exit_signal_bps": 566.2361069390198,
+    "a25_floor15_trail10_estimated_net_excluding_funding_usd": 0.22575938092764622,
+    "a25_floor15_trail10_delta_vs_current_excluding_funding_usd": -1.642786066085239,
+    "a40_floor15_trail20_estimated_net_excluding_funding_usd": 0.15083785401982222,
+    "a40_floor15_trail20_delta_vs_current_excluding_funding_usd": -1.7177075929930627,
+    "a60_floor15_trail30_trigger_reference_price": 139.37,
+    "a60_floor15_trail30_gross_return_bps": 460.0720504353051,
+    "a60_floor15_trail30_estimated_net_excluding_funding_usd": 3.419611437556287,
+    "a60_floor15_trail30_delta_vs_current_excluding_funding_usd": 1.5510659905434019,
+    "execution_authority": "none",
+    "runtime_changed_by_this_revision": false
+  },
+  "limitations": [
+    "The SPCX lifecycle remains open, so its eventual actual exit and full realized costs are unknown.",
+    "The 60/30 policy was selected after inspecting this path and this lifecycle cannot validate it prospectively.",
+    "Counterfactual economics exclude funding accrued before each hypothetical exit and additional venue slippage.",
+    "The policy parameters originated in HYPE research and are not fitted to HIP-3 markets.",
+    "One lifecycle cannot establish an exit edge or a transferable policy across SP500, SPCX, SNDK, GOLD, and BRENTOIL.",
+    "This journal revision cannot close, retain, resize, route, promote, or otherwise modify a live lifecycle."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

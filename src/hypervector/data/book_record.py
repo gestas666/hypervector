@@ -58,12 +58,10 @@ def snapshot_to_row(
         "n_bids": len(snap.bids),
         "n_asks": len(snap.asks),
         "bids": [
-            {"px": level.price, "sz": level.size}
-            for level in snap.bids[:depth_levels]
+            {"px": level.price, "sz": level.size} for level in snap.bids[:depth_levels]
         ],
         "asks": [
-            {"px": level.price, "sz": level.size}
-            for level in snap.asks[:depth_levels]
+            {"px": level.price, "sz": level.size} for level in snap.asks[:depth_levels]
         ],
         "run_id": run_id,
         "recorded_at": datetime.now(timezone.utc).isoformat(),

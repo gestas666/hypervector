@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "hype-breakout-allocation75",
+  "revision_number": 1,
+  "supersedes_revision_id": null,
+  "created_at_utc": "2026-08-05T14:50:00+00:00",
+  "strategy_id": "hype_breakout_onset_bidirectional_v1",
+  "symbol": "HYPE",
+  "status": "candidate",
+  "hypothesis": "Increasing only canonical HYPE breakout notional from $25 to $75 at unchanged 5x isolated leverage may improve research information and absolute returns without materially degrading execution friction.",
+  "decision": "Preserve the evidence-routed $75 profile as an inactive candidate. Do not stage or activate it automatically. Because this exact candidate also changes HYPE to a fixed eight-hour exit, treat any future run as a joint allocation-and-exit experiment unless those variables are separated before activation.",
+  "confidence": "low_medium",
+  "falsifier": "Profile-matched HYPE profit factor at or below one, negative after-cost PnL over twenty to thirty closes, material outcome concentration, incomplete visible $75 depth, or realized entry and exit friction materially worse than the $25 sample would falsify the allocation hypothesis.",
+  "evidence": [
+    {
+      "path": "../../configs/multi_asset_bidirectional_evidence_routed_hype75_fixed8_candidate.toml",
+      "role": "exact_inactive_allocation_candidate",
+      "sha256": "936ec127645c4e07f1fde77f8571f60b8daae720746471fc966d2a97008048fd",
+      "bytes": 2863
+    },
+    {
+      "path": "../reviews/2026-08-05-hype-breakout-strategy-contract.md",
+      "role": "strategy_allocation_and_uncertainty_audit",
+      "sha256": "d7b0ab671692271313a761da68980ea9368d6e9d2bd3725a31c0f2cac9568775",
+      "bytes": 9457
+    }
+  ],
+  "metrics": {
+    "current_max_notional_usd": 25.0,
+    "candidate_max_notional_usd": 75.0,
+    "candidate_planned_margin_usd_at_cap": 15.0,
+    "candidate_leverage": 5.0,
+    "candidate_margin_fraction": 0.03,
+    "candidate_stop_bps": 80.0,
+    "candidate_maximum_hold_seconds": 28800,
+    "candidate_execution_symbols": [
+      "hulk_expansion_bidirectional_tuned_v2|BTC",
+      "hype_breakout_onset_bidirectional_v1|HYPE"
+    ]
+  },
+  "limitations": [
+    "The six-close live HYPE sample is insufficient to establish durable edge at either allocation.",
+    "The candidate changes allocation and exit policy together, confounding causal attribution.",
+    "Displayed public depth can cancel before an IOC reaches the venue.",
+    "The candidate is neither staged nor active and has no signing authority."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

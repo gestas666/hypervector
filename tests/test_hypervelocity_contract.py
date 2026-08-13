@@ -51,34 +51,39 @@ def test_fixed_contract_converts_equity_and_margin_target() -> None:
     allocation = contract.allocate(equity=100.0)
 
     assert allocation.margin == pytest.approx(70.0)
-    assert allocation.notional == pytest.approx(2_800.0)
-    assert contract.target_price_fraction == pytest.approx(0.002)
+    assert allocation.notional == pytest.approx(2_100.0)
+    assert contract.target_price_fraction == pytest.approx(8.0 / 30.0 / 100.0)
     assert contract.margin_fraction == pytest.approx(0.70)
-    assert contract.leverage == pytest.approx(40.0)
+    assert contract.leverage == pytest.approx(30.0)
     assert contract.target_margin_pct == pytest.approx(8.0)
-    assert contract.notional_fraction == pytest.approx(28.0)
+    assert contract.notional_fraction == pytest.approx(21.0)
     assert contract.order_type == "limit"
     assert contract.time_in_force == "post_only"
     assert contract.margin_mode == "isolated"
 
     canary = contract.allocate(equity=120.0)
     assert canary.margin == pytest.approx(84.0)
-    assert canary.notional == pytest.approx(3_360.0)
+    assert canary.notional == pytest.approx(2_520.0)
 
 
 def test_faithful_regime_config_matches_hl_stability_candidate() -> None:
     config = faithful_regime_config()
 
-    assert (config.ema_fast, config.ema_slow) == (20, 50)
+    assert (config.ema_fast, config.ema_slow) == (21, 55)
     assert config.structure_lookback == 240
     assert config.trend_strength_percentile == pytest.approx(50.0)
     assert config.range_strength_percentile == pytest.approx(40.0)
     assert config.minimum_trend_gap_bps == pytest.approx(1.0)
-    assert config.choppiness_range_threshold == pytest.approx(85.0)
+    assert config.bbwp_length == 20
+    assert config.bbwp_lookback == 240
+    assert config.bbwp_compression_threshold == pytest.approx(25.0)
+    assert config.rsi_length == 14
+    assert config.rsi_signal_length == 7
+    assert config.range_filter == "bbwp"
     assert config.coiling_width_bps == pytest.approx(3.0)
     assert config.breakout_lookback == 90
-    assert config.breakout_clearance_bps == pytest.approx(5.0)
-    assert config.breakout_volume_multiple == pytest.approx(2.0)
+    assert config.breakout_clearance_bps == pytest.approx(8.0)
+    assert config.breakout_volume_multiple == pytest.approx(2.5)
 
 
 @pytest.mark.parametrize(
@@ -106,3 +111,6 @@ def test_contract_rejects_mutating_fixed_baseline() -> None:
 
     with pytest.raises(ValueError, match="margin_mode must be isolated"):
         HypervelocityContract(margin_mode="cross")
+
+    with pytest.raises(ValueError, match="leverage must be 30.0"):
+        HypervelocityContract(leverage=40.0)

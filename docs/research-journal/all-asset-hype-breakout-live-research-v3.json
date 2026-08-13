@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "all-asset-hype-breakout-live-research",
+  "revision_number": 3,
+  "supersedes_revision_id": "770f611e7fb9634a0a4daa8024cd80cf38dabc500582f9ccc1256b1aba25a72b",
+  "created_at_utc": "2026-08-06T15:31:04Z",
+  "strategy_id": "hype_breakout_onset_bidirectional_v1",
+  "symbol": "PORTFOLIO",
+  "status": "observe",
+  "hypothesis": "The unchanged bidirectional breakout-onset provider can be evaluated as a shared-account live-research mechanism on BTC, ETH, SOL, and HYPE while preserving one position per coin, exact venue protection, and full opportunity accounting.",
+  "decision": "Record the authorized v14 activation as technically live and identity-correct, without claiming an economic edge. Preserve the active profile while it is healthy and collect prospective fills, missed opportunities, friction, direction, regime, and order-book evidence. Treat the range-onset provider's hourly-cross dependency as a measured cadence hypothesis for later review: every one of its first 72 provider-symbol evaluations lacked a fresh hourly SMA cross, but this short prefix is not evidence to alter the live strategy.",
+  "confidence": "low_medium",
+  "falsifier": "The technical assessment is falsified by a profile or run identity mismatch, a live fault, duplicate same-coin exposure, an unprotected open position, stale intent admission, or an executable provider-symbol outside the five configured routes. The economic hypothesis remains unproven until reconciled live closes exist; it is weakened by after-cost profit factor at or below one or direction-specific loss concentration, and strengthened only provisionally by a non-adjacent prospective sample with complete fee, funding, slippage, regime, and missed-opportunity attribution.",
+  "evidence": [
+    {
+      "path": "../../data/logs/research/multi_asset_live_audit_bidirectional-live-1786028939765_prefix_20260806T1527Z.json",
+      "role": "immutable_v14_initial_live_prefix_with_identity_health_routing_readiness_and_zero_fill_accounting",
+      "sha256": "183234ec3bae417ccaf5f419490f5437e5d5b5e4d4f3ee630ccd8930a193d478",
+      "bytes": 2935726
+    },
+    {
+      "path": "../../configs/multi_asset_bidirectional_hype75_all_asset_breakout_canary_v14.toml",
+      "role": "exact_active_v14_profile",
+      "sha256": "f6098f1f553a81b6731eb5d5e0897c96b7da8c3bc25295a276d9cbed44c2e007",
+      "bytes": 3366
+    },
+    {
+      "path": "../../src/hypervector/live/hype_breakout_cohort_provider.py",
+      "role": "unchanged_canonical_breakout_provider_source",
+      "sha256": "3210a0f85d62a13ef8f5d99277d62ae02b496cea5200fbf897196365a48d270d",
+      "bytes": 8643
+    }
+  ],
+  "metrics": {
+    "source_run_id": "bidirectional-live-1786028939765",
+    "active_profile_id": "multi_asset_bidirectional_hype75_all_asset_breakout_canary_v14",
+    "active_profile_fingerprint": "e27a8cb63b1713e68e8bdafc3d09f4c4cbabfc27cb1af11db673f7ad18df8900",
+    "prestart_backup_status": "verified",
+    "prestart_backup_manifest_sha256": "d7741273b8cbc9ce1b2bf86d4178d571b85b4f324147e45b3d5b3af52dfbb653",
+    "observed_seconds": 1039.715278,
+    "poll_cycles": 68,
+    "observed_provider_symbols": 14,
+    "executable_provider_symbols": 5,
+    "provider_symbol_evaluations": 170,
+    "eligible_evaluations": 0,
+    "strategy_intents": 0,
+    "fills": 0,
+    "closed_trades": 0,
+    "faults": 0,
+    "maximum_open_positions": 0,
+    "portfolio_equity_change_usd": 0.0,
+    "range_onset_evaluations": 72,
+    "range_onset_awaiting_hourly_sma_cross": 72,
+    "active_runtime_changed_before_revision": true,
+    "runtime_changed_by_this_revision": false
+  },
+  "limitations": [
+    "The prefix spans about 17 minutes and contains zero fills or closed trades, so it validates technical liveness rather than profitability, trade frequency, or live friction.",
+    "Setup readiness is prerequisite completion rather than win probability, and sampled markouts cannot reveal private queue position.",
+    "The hourly-cross observation is only an initial cadence measurement; a longer prospective window could show acceptable range-onset frequency.",
+    "The active profile has not yet exercised duplicate-position prevention, venue-stop placement, stop replacement, timed exits, or restart adoption in this run because no entry occurred.",
+    "No strategy, position, order, sizing policy, execution scope, or running process changed as a result of this journal revision."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

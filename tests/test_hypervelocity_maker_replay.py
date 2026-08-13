@@ -9,9 +9,15 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
+import hypervector.research.maker_replay_stream as maker_replay_stream
 from hypervector.cli import main
 from hypervector.data.oxa_archive_audit import OxaArchiveBundle
 from hypervector.research.maker_replay import MakerReplayConfig, replay_maker_orders
+from hypervector.research.maker_replay_models import (
+    MakerReplayLifecycle,
+    OpenPosition,
+    ReplayState,
+)
 from hypervector.research.maker_replay_stream import (
     MakerReplayEvidenceChunk,
     replay_maker_order_chunks,
@@ -23,6 +29,17 @@ def _decisions(states: list[str]) -> pd.DataFrame:
     index = pd.date_range("2026-01-01", periods=len(states), freq="1min", tz="UTC")
     return pd.DataFrame(
         {"primary_regime": states, "breakout_direction": [None] * len(states)},
+        index=index,
+    )
+
+
+def _entry_decisions(
+    entries: list[str | None],
+    structural: list[str | None],
+) -> pd.DataFrame:
+    index = pd.date_range("2026-01-01", periods=len(entries), freq="1min", tz="UTC")
+    return pd.DataFrame(
+        {"entry_direction": entries, "structural_direction": structural},
         index=index,
     )
 
@@ -62,6 +79,75 @@ def _trades(
     )
 
 
+@pytest.mark.parametrize("field", ["maker_fee_rate", "taker_fee_rate"])
+def test_replay_config_rejects_invalid_fee_rates(field: str) -> None:
+    with pytest.raises(ValueError, match=field):
+        MakerReplayConfig(**{field: -0.0001})
+    with pytest.raises(ValueError, match=field):
+        MakerReplayConfig(**{field: 1.0})
+
+
+@pytest.mark.parametrize("value", [0.0, -1.0, float("inf"), float("nan"), True])
+def test_replay_config_rejects_invalid_entry_spread_cap(value: object) -> None:
+    with pytest.raises(ValueError, match="maximum_entry_spread_bps"):
+        MakerReplayConfig(maximum_entry_spread_bps=value)
+
+
+def test_entry_spread_cap_consumes_dislocated_signal_once() -> None:
+    report = replay_maker_orders(
+        _book(
+            [60, 61, 70],
+            [100.0, 100.0, 100.0],
+            [100.04, 100.001, 100.001],
+        ),
+        _entry_decisions(["short"] * 3, ["short"] * 3),
+        MakerReplayConfig(
+            fill_rule="touch",
+            maximum_entry_spread_bps=1.0,
+        ),
+    )
+
+    assert report.spread_rejected_entries == 1
+    assert report.submitted_entries == 0
+    assert report.entry_fills == 0
+    assert report.lifecycles == ()
+
+
+@pytest.mark.parametrize("depth", [-1, 1.5, True])
+def test_replay_config_rejects_invalid_entry_depth_ticks(depth: object) -> None:
+    with pytest.raises(ValueError, match="entry_depth_ticks"):
+        MakerReplayConfig(entry_depth_ticks=depth)
+
+
+@pytest.mark.parametrize(
+    ("state", "bids", "asks", "expected_entry"),
+    [
+        ("TREND_UP", [100.0, 98.0, 99.2], [101.0, 99.0, 99.3], 99.0),
+        ("TREND_DOWN", [100.0, 102.0, 101.6], [101.0, 103.0, 101.7], 102.0),
+    ],
+)
+def test_one_tick_entry_depth_moves_limit_in_passive_direction(
+    state: str,
+    bids: list[float],
+    asks: list[float],
+    expected_entry: float,
+) -> None:
+    report = replay_maker_orders(
+        _book([60, 70, 80], bids, asks),
+        _decisions([state] * 3),
+        MakerReplayConfig(
+            initial_equity=100.0,
+            maker_fee_rate=0.0,
+            fill_rule="touch",
+            tick_size=1.0,
+            entry_depth_ticks=1,
+        ),
+    )
+
+    assert report.completed_trades == 1
+    assert report.trades[0].entry_price == pytest.approx(expected_entry)
+
+
 def test_touch_replay_compounds_70pct_margin_at_40x() -> None:
     decisions = _decisions(["TREND_UP", "TREND_UP", "TREND_UP"])
     book = _book(
@@ -92,6 +178,931 @@ def test_touch_replay_compounds_70pct_margin_at_40x() -> None:
     assert report.lifecycles[0].status == "target_completed"
     assert report.lifecycles[0].entry_time_utc == "2026-01-01T00:01:10+00:00"
     assert report.lifecycles[0].outcome_time_utc == "2026-01-01T00:01:20+00:00"
+
+
+def test_replay_liquidates_at_isolated_boundary_and_marks_drawdown() -> None:
+    decisions = _decisions(["TREND_UP"] * 3)
+    book = _book(
+        [60, 70, 80],
+        [100.0, 99.0, 98.0],
+        [101.0, 100.0, 98.1],
+    )
+
+    report = replay_maker_orders(
+        book,
+        decisions,
+        MakerReplayConfig(
+            initial_equity=100.0,
+            maker_fee_rate=0.0,
+            taker_fee_rate=0.00045,
+            fill_rule="touch",
+        ),
+    )
+
+    assert report.liquidations == 1
+    assert report.completed_trades == 1
+    assert report.open_positions == 0
+    assert report.trades[0].status == "liquidated"
+    assert report.lifecycles[0].status == "liquidated"
+    assert report.final_equity == pytest.approx(42.7652)
+    assert report.maximum_drawdown_pct == pytest.approx(-57.2348)
+
+
+@pytest.mark.parametrize(
+    ("states", "expected_exits"),
+    [
+        (["TREND_UP", "TREND_UP", "RANGE", "RANGE"], 0),
+        (["TREND_UP", "TREND_UP", "TREND_UP", "TREND_UP"], 0),
+        (["TREND_UP", "TREND_UP", "TREND_DOWN", "TREND_DOWN"], 1),
+    ],
+)
+def test_opposite_regime_exit_ignores_range_and_same_side_structure(
+    states: list[str],
+    expected_exits: int,
+) -> None:
+    report = replay_maker_orders(
+        _book(
+            [60, 70, 120, 180],
+            [100.0, 99.0, 99.5, 99.5],
+            [101.0, 100.0, 100.5, 100.5],
+        ),
+        _decisions(states),
+        MakerReplayConfig(
+            initial_equity=100.0,
+            maker_fee_rate=0.0,
+            taker_fee_rate=0.001,
+            fill_rule="touch",
+            opposite_regime_exit=True,
+        ),
+    )
+
+    assert report.regime_exits == expected_exits
+    assert report.open_positions == 1 - expected_exits
+
+
+@pytest.mark.parametrize(
+    ("states", "bids", "asks", "expected_exit", "expected_equity"),
+    [
+        (
+            ["TREND_UP", "TREND_UP", "TREND_DOWN", "TREND_DOWN"],
+            [100.0, 99.0, 99.5, 99.5],
+            [101.0, 100.0, 100.5, 100.5],
+            99.5,
+            83.214,
+        ),
+        (
+            ["TREND_DOWN", "TREND_DOWN", "TREND_UP", "TREND_UP"],
+            [99.0, 100.0, 99.5, 99.5],
+            [100.0, 101.0, 100.5, 100.5],
+            100.5,
+            83.186,
+        ),
+    ],
+)
+def test_opposite_regime_exit_uses_adverse_bbo_and_taker_fee(
+    states: list[str],
+    bids: list[float],
+    asks: list[float],
+    expected_exit: float,
+    expected_equity: float,
+) -> None:
+    report = replay_maker_orders(
+        _book([60, 70, 120, 180], bids, asks),
+        _decisions(states),
+        MakerReplayConfig(
+            initial_equity=100.0,
+            maker_fee_rate=0.0,
+            taker_fee_rate=0.001,
+            fill_rule="touch",
+            opposite_regime_exit=True,
+        ),
+    )
+
+    assert report.regime_exits == 1
+    assert report.completed_trades == 1
+    assert report.trades[0].status == "regime_exited"
+    assert report.trades[0].exit_price == pytest.approx(expected_exit)
+    assert report.lifecycles[0].status == "regime_exited"
+    assert report.final_equity == pytest.approx(expected_equity)
+
+
+def test_liquidation_precedes_opposite_regime_exit_on_same_snapshot() -> None:
+    report = replay_maker_orders(
+        _book(
+            [60, 70, 120, 180],
+            [100.0, 99.0, 99.0, 98.0],
+            [101.0, 100.0, 100.0, 98.1],
+        ),
+        _decisions(["TREND_UP", "TREND_UP", "TREND_DOWN", "TREND_DOWN"]),
+        MakerReplayConfig(
+            initial_equity=100.0,
+            maker_fee_rate=0.0,
+            taker_fee_rate=0.001,
+            fill_rule="touch",
+            opposite_regime_exit=True,
+        ),
+    )
+
+    assert report.liquidations == 1
+    assert report.regime_exits == 0
+    assert report.trades[0].status == "liquidated"
+
+
+def test_replay_config_rejects_non_boolean_opposite_entry_close_reverse() -> None:
+    with pytest.raises(ValueError, match="opposite_entry_close_reverse"):
+        MakerReplayConfig(opposite_entry_close_reverse=1)
+
+
+@pytest.mark.parametrize(
+    ("entries", "structural"),
+    [
+        (["long", "long", None, None], ["long", "long", None, None]),
+        (["long", "long", None, None], ["long", "long", "short", "short"]),
+        (["long", "long", "long", "long"], ["long"] * 4),
+        (["long", "long", "short", "short"], ["long", "long", "short", "short"]),
+    ],
+)
+def test_opposite_entry_close_reverse_is_disabled_by_default(
+    entries: list[str | None],
+    structural: list[str | None],
+) -> None:
+    report = replay_maker_orders(
+        _book(
+            [60, 70, 180, 181],
+            [100.0, 99.0, 99.5, 99.5],
+            [101.0, 100.0, 100.5, 100.5],
+        ),
+        _entry_decisions(entries, structural),
+        MakerReplayConfig(
+            initial_equity=100.0,
+            maker_fee_rate=0.0,
+            taker_fee_rate=0.001,
+            fill_rule="touch",
+        ),
+    )
+
+    assert report.close_reversals == 0
+    assert report.open_positions == 1
+    assert report.submitted_entries == 1
+
+
+@pytest.mark.parametrize(
+    ("entries", "structural"),
+    [
+        (["long", "long", None, None], ["long", "long", None, None]),
+        (["long", "long", None, None], ["long", "long", "short", "short"]),
+        (["long", "long", "long", "long"], ["long"] * 4),
+        (["long", "long", "short", "short"], ["long"] * 4),
+    ],
+)
+def test_opposite_entry_close_reverse_requires_entry_and_structure_agreement(
+    entries: list[str | None],
+    structural: list[str | None],
+) -> None:
+    report = replay_maker_orders(
+        _book(
+            [60, 70, 180, 181],
+            [100.0, 99.0, 99.5, 99.5],
+            [101.0, 100.0, 100.5, 100.5],
+        ),
+        _entry_decisions(entries, structural),
+        MakerReplayConfig(
+            initial_equity=100.0,
+            maker_fee_rate=0.0,
+            taker_fee_rate=0.001,
+            fill_rule="touch",
+            opposite_entry_close_reverse=True,
+        ),
+    )
+
+    assert report.close_reversals == 0
+    assert report.open_positions == 1
+    assert report.submitted_entries == 1
+
+
+def test_opposite_entry_closes_and_submits_atomic_reverse_without_same_tick_fill() -> (
+    None
+):
+    report = replay_maker_orders(
+        _book(
+            [60, 70, 180, 181],
+            [100.0, 99.0, 99.5, 101.0],
+            [101.0, 100.0, 100.5, 101.1],
+        ),
+        _entry_decisions(
+            ["long", "long", "short", "short"],
+            ["long", "long", "short", "short"],
+        ),
+        MakerReplayConfig(
+            initial_equity=100.0,
+            maker_fee_rate=0.0,
+            taker_fee_rate=0.001,
+            fill_rule="touch",
+            reentry_cooldown_seconds=60.0,
+            opposite_entry_close_reverse=True,
+        ),
+    )
+
+    assert report.close_reversals == 1
+    assert report.completed_trades == 1
+    assert report.submitted_entries == 2
+    assert report.entry_fills == 2
+    assert report.open_positions == 1
+    assert report.pending_orders == 0
+    assert report.trades[0].status == "reversed"
+    assert report.trades[0].exit_price == pytest.approx(99.5)
+    assert report.trades[0].fees == pytest.approx(2.786)
+    assert report.lifecycles[0].status == "reversed"
+    assert report.lifecycles[1].direction == "short"
+    assert report.lifecycles[1].submitted_time_utc == "2026-01-01T00:03:00+00:00"
+    assert report.lifecycles[1].entry_time_utc == "2026-01-01T00:03:01+00:00"
+
+
+def test_liquidation_precedes_opposite_entry_close_reverse() -> None:
+    report = replay_maker_orders(
+        _book(
+            [60, 70, 180, 181],
+            [100.0, 99.0, 98.0, 101.0],
+            [101.0, 100.0, 98.1, 101.1],
+        ),
+        _entry_decisions(
+            ["long", "long", "short", "short"],
+            ["long", "long", "short", "short"],
+        ),
+        MakerReplayConfig(
+            initial_equity=100.0,
+            maker_fee_rate=0.0,
+            taker_fee_rate=0.001,
+            fill_rule="touch",
+            opposite_entry_close_reverse=True,
+        ),
+    )
+
+    assert report.liquidations == 1
+    assert report.close_reversals == 0
+    assert report.submitted_entries == 1
+    assert report.trades[0].status == "liquidated"
+
+
+def _open_replay_state() -> ReplayState:
+    lifecycle = MakerReplayLifecycle(
+        0,
+        "long",
+        "2026-01-01T00:00:00+00:00",
+        "2026-01-01T00:00:01+00:00",
+        "2026-01-01T00:02:00+00:00",
+        None,
+        "open",
+        100.0,
+        None,
+        28.0,
+        None,
+        None,
+    )
+    position = OpenPosition(
+        0,
+        "long",
+        pd.Timestamp("2026-01-01T00:00:00Z"),
+        pd.Timestamp("2026-01-01T00:00:01Z"),
+        pd.Timestamp("2026-01-01T00:02:00Z"),
+        100.0,
+        28.0,
+        70.0,
+        2_800.0,
+        100.2,
+        initial_quantity=28.0,
+        funding_cashflow=3.0,
+    )
+    return ReplayState(
+        equity=103.0,
+        position=position,
+        lifecycles=[lifecycle],
+        peak_equity=103.0,
+    )
+
+
+def test_opposite_entry_signal_must_be_newer_than_position_fill() -> None:
+    from hypervector.research.maker_replay_risk import (
+        apply_book_entry_close_reverse,
+    )
+
+    state = _open_replay_state()
+    closed = apply_book_entry_close_reverse(
+        state,
+        pd.Timestamp("2026-01-01T00:03:00Z"),
+        99.5,
+        100.5,
+        "short",
+        "short",
+        pd.Timestamp("2026-01-01T00:01:00Z"),
+        MakerReplayConfig(opposite_entry_close_reverse=True),
+    )
+
+    assert closed is False
+    assert state.position is not None
+    assert state.close_reversals == 0
+
+
+def test_opposite_entry_close_retains_funding_and_charges_taker_fee() -> None:
+    from hypervector.research.maker_replay_risk import (
+        apply_book_entry_close_reverse,
+    )
+
+    state = _open_replay_state()
+    closed = apply_book_entry_close_reverse(
+        state,
+        pd.Timestamp("2026-01-01T00:03:01Z"),
+        99.5,
+        100.5,
+        "short",
+        "short",
+        pd.Timestamp("2026-01-01T00:03:00Z"),
+        MakerReplayConfig(
+            maker_fee_rate=0.0,
+            taker_fee_rate=0.001,
+            opposite_entry_close_reverse=True,
+        ),
+    )
+
+    assert closed is True
+    assert state.position is None
+    assert state.close_reversals == 1
+    assert state.equity == pytest.approx(86.214)
+    assert state.trades[0].fees == pytest.approx(2.786)
+    assert state.trades[0].funding_cashflow == pytest.approx(3.0)
+    assert state.trades[0].net_pnl == pytest.approx(-13.786)
+
+
+def test_large_replay_position_partially_liquidates_then_closes_in_cooldown() -> None:
+    report = replay_maker_orders(
+        _book(
+            [60, 70, 80, 90],
+            [100.0, 99.0, 98.7, 98.7],
+            [101.0, 100.0, 98.71, 98.71],
+        ),
+        _decisions(["TREND_UP"] * 4),
+        MakerReplayConfig(
+            initial_equity=10_000.0,
+            maker_fee_rate=0.0,
+            taker_fee_rate=0.00045,
+            fill_rule="touch",
+        ),
+    )
+
+    assert report.partial_liquidations == 1
+    assert report.liquidations == 1
+    assert report.trades[0].quantity == pytest.approx(2_800.0)
+    assert report.final_equity == pytest.approx(6_235.638)
+
+
+def test_partial_liquidation_scales_only_open_cost_basis() -> None:
+    """Partial liquidation must not load all historical costs onto residue."""
+    from hypervector.research.maker_replay_risk import (
+        apply_book_liquidation,
+        position_liquidation_price,
+    )
+
+    position = OpenPosition(
+        lifecycle_id=0,
+        direction="long",
+        signal_time=pd.Timestamp("2026-01-01T00:00:00Z"),
+        submitted_time=pd.Timestamp("2026-01-01T00:00:01Z"),
+        entry_time=pd.Timestamp("2026-01-01T00:00:02Z"),
+        entry_price=100.0,
+        quantity=2_800.0,
+        margin=7_000.0,
+        notional=280_000.0,
+        target_price=100.2,
+        initial_quantity=2_800.0,
+        entry_fee=42.0,
+        funding_cashflow=-28.0,
+    )
+    state = ReplayState(
+        equity=9_930.0,
+        position=position,
+        peak_equity=10_000.0,
+    )
+    boundary = position_liquidation_price(position)
+
+    applied = apply_book_liquidation(
+        state,
+        pd.Timestamp("2026-01-01T00:01:00Z"),
+        boundary - 0.01,
+        boundary + 0.01,
+        MakerReplayConfig(taker_fee_rate=0.00045),
+        trigger_mark=boundary,
+    )
+
+    assert applied is True
+    assert state.partial_liquidations == 1
+    assert position.quantity == pytest.approx(2_240.0)
+    assert position.funding_cashflow == pytest.approx(-28.0)
+    assert position.open_fee_basis == pytest.approx(33.6)
+    assert position.open_funding_basis == pytest.approx(-22.4)
+    assert position_liquidation_price(position) == pytest.approx(boundary)
+
+
+def test_replay_does_not_repeat_same_direction_without_regime_reset() -> None:
+    decisions = _decisions(
+        ["TREND_UP", "TREND_UP", "TREND_UP", "TREND_UP", "RANGE", "TREND_UP"]
+    )
+    book = _book(
+        [60, 70, 80, 90, 120, 300, 360],
+        [100.0, 99.0, 100.2, 100.2, 100.2, 100.0, 100.0],
+        [101.0, 100.0, 100.3, 100.3, 100.3, 101.0, 101.0],
+    )
+
+    report = replay_maker_orders(
+        book,
+        decisions,
+        MakerReplayConfig(initial_equity=100.0, maker_fee_rate=0.0, fill_rule="touch"),
+    )
+
+    assert report.completed_trades == 1
+    assert report.submitted_entries == 2
+    assert report.submission_times_utc == (
+        "2026-01-01T00:01:00+00:00",
+        "2026-01-01T00:06:00+00:00",
+    )
+
+
+def test_cooldown_only_reentry_waits_then_reuses_same_direction() -> None:
+    decisions = _decisions(["TREND_UP"] * 5)
+    book = _book(
+        [60, 70, 80, 90, 139, 140],
+        [100.0, 99.0, 100.2, 100.0, 100.0, 100.0],
+        [101.0, 100.0, 100.3, 101.0, 101.0, 101.0],
+    )
+
+    report = replay_maker_orders(
+        book,
+        decisions,
+        MakerReplayConfig(
+            initial_equity=100.0,
+            maker_fee_rate=0.0,
+            fill_rule="touch",
+            reentry_cooldown_seconds=60.0,
+            same_direction_reentry_policy="cooldown_only",
+        ),
+    )
+
+    assert report.completed_trades == 1
+    assert report.submitted_entries == 2
+    assert report.submission_times_utc == (
+        "2026-01-01T00:01:00+00:00",
+        "2026-01-01T00:02:20+00:00",
+    )
+
+
+def test_cooldown_only_does_not_rearm_expired_entry_in_same_regime() -> None:
+    decisions = _decisions(["TREND_DOWN"] * 11)
+    seconds = list(range(60, 661, 60))
+    bids = [100.0 - float(index) for index in range(len(seconds))]
+    asks = [bid + 1.0 for bid in bids]
+
+    report = replay_maker_orders(
+        _book(seconds, bids, asks),
+        decisions,
+        MakerReplayConfig(
+            fill_rule="through",
+            tick_size=1.0,
+            same_direction_reentry_policy="cooldown_only",
+        ),
+    )
+
+    assert report.expired_entries == 1
+    assert report.submitted_entries == 1
+    assert [row.status for row in report.lifecycles] == ["expired"]
+
+
+def test_replay_config_rejects_unknown_same_direction_reentry_policy() -> None:
+    with pytest.raises(ValueError, match="same_direction_reentry_policy"):
+        MakerReplayConfig(same_direction_reentry_policy="immediate")
+
+
+def test_target_continuation_requires_cooldown_and_fresh_clearance() -> None:
+    decisions = _decisions(["TREND_UP"] * 6)
+    book = _book(
+        [60, 70, 80, 140, 149, 150],
+        [100.0, 99.0, 100.2, 100.22, 100.23, 100.24],
+        [101.0, 100.0, 100.3, 101.0, 101.0, 101.0],
+    )
+
+    report = replay_maker_orders(
+        book,
+        decisions,
+        MakerReplayConfig(
+            initial_equity=100.0,
+            maker_fee_rate=0.0,
+            fill_rule="touch",
+            reentry_cooldown_seconds=60.0,
+            same_direction_reentry_policy="target_continuation",
+            same_direction_reentry_clearance_bps=3.0,
+        ),
+    )
+
+    assert report.completed_trades == 1
+    assert report.submission_times_utc == (
+        "2026-01-01T00:01:00+00:00",
+        "2026-01-01T00:02:30+00:00",
+    )
+
+
+def test_target_continuation_does_not_rearm_after_liquidation() -> None:
+    decisions = _decisions(["TREND_UP"] * 5)
+    book = _book(
+        [60, 70, 80, 140, 180],
+        [100.0, 99.0, 98.0, 100.0, 101.0],
+        [101.0, 100.0, 98.1, 101.0, 102.0],
+    )
+
+    report = replay_maker_orders(
+        book,
+        decisions,
+        MakerReplayConfig(
+            initial_equity=100.0,
+            maker_fee_rate=0.0,
+            fill_rule="touch",
+            reentry_cooldown_seconds=60.0,
+            same_direction_reentry_policy="target_continuation",
+        ),
+    )
+
+    assert report.liquidations == 1
+    assert report.submitted_entries == 1
+
+
+def test_liquidation_cooldown_consumes_fresh_signal_without_stale_submission() -> None:
+    """A signal inside the liquidation cooldown cannot submit after it expires."""
+    decisions = _entry_decisions(
+        ["long", None, "long"],
+        ["long", None, "long"],
+    )
+    book = _book(
+        [60, 70, 80, 120, 180, 330],
+        [100.0, 99.0, 98.0, 100.0, 100.0, 100.0],
+        [101.0, 100.0, 98.1, 101.0, 101.0, 101.0],
+    )
+
+    control = replay_maker_orders(
+        book,
+        decisions,
+        MakerReplayConfig(initial_equity=100.0, fill_rule="touch"),
+    )
+    cooled = replay_maker_orders(
+        book,
+        decisions,
+        MakerReplayConfig(
+            initial_equity=100.0,
+            fill_rule="touch",
+            liquidation_reentry_cooldown_seconds=240.0,
+        ),
+    )
+
+    assert control.submitted_entries == 2
+    assert cooled.liquidations == 1
+    assert cooled.submitted_entries == 1
+
+
+def test_liquidation_cooldown_allows_fresh_opposite_direction_signal() -> None:
+    """A long liquidation cooldown does not suppress a fresh short signal."""
+    report = replay_maker_orders(
+        _book(
+            [60, 70, 80, 120, 180],
+            [100.0, 99.0, 98.0, 100.0, 100.0],
+            [101.0, 100.0, 98.1, 101.0, 101.0],
+        ),
+        _entry_decisions(
+            ["long", None, "short"],
+            ["long", None, "short"],
+        ),
+        MakerReplayConfig(
+            initial_equity=100.0,
+            fill_rule="touch",
+            liquidation_reentry_cooldown_seconds=240.0,
+        ),
+    )
+
+    assert report.liquidations == 1
+    assert report.submitted_entries == 2
+
+
+def test_liquidation_cooldown_does_not_block_signal_after_target() -> None:
+    """Only liquidation exits activate the extended cooldown."""
+    report = replay_maker_orders(
+        _book(
+            [60, 70, 80, 120, 180],
+            [100.0, 99.0, 100.2, 100.0, 100.0],
+            [101.0, 100.0, 100.3, 101.0, 101.0],
+        ),
+        _entry_decisions(
+            ["long", None, "long"],
+            ["long", None, "long"],
+        ),
+        MakerReplayConfig(
+            initial_equity=100.0,
+            maker_fee_rate=0.0,
+            fill_rule="touch",
+            liquidation_reentry_cooldown_seconds=240.0,
+        ),
+    )
+
+    assert report.completed_trades == 1
+    assert report.trades[0].status == "target_completed"
+    assert report.submitted_entries == 2
+
+
+@pytest.mark.parametrize("seconds", [-1.0, float("inf"), float("nan"), True])
+def test_replay_config_rejects_invalid_liquidation_cooldown(seconds: object) -> None:
+    """Liquidation cooldowns must be finite non-negative durations."""
+    with pytest.raises(ValueError, match="liquidation_reentry_cooldown_seconds"):
+        MakerReplayConfig(liquidation_reentry_cooldown_seconds=seconds)
+
+
+def test_replay_config_rejects_negative_reentry_clearance() -> None:
+    with pytest.raises(ValueError, match="same_direction_reentry_clearance_bps"):
+        MakerReplayConfig(same_direction_reentry_clearance_bps=-0.1)
+
+
+@pytest.mark.parametrize("limit", [0, -1, 1.5, True])
+def test_replay_config_rejects_invalid_target_continuation_limit(
+    limit: object,
+) -> None:
+    with pytest.raises(ValueError, match="target_continuation_limit_per_episode"):
+        MakerReplayConfig(
+            same_direction_reentry_policy="target_continuation",
+            target_continuation_limit_per_episode=limit,
+        )
+
+
+def test_replay_config_rejects_target_limit_for_other_policy() -> None:
+    with pytest.raises(ValueError, match="requires a target re-entry policy"):
+        MakerReplayConfig(target_continuation_limit_per_episode=2)
+
+
+@pytest.mark.parametrize("minimum_seconds", [-1.0, float("nan"), True])
+def test_replay_config_rejects_invalid_mature_continuation_duration(
+    minimum_seconds: object,
+) -> None:
+    with pytest.raises(
+        ValueError,
+        match="target_continuation_minimum_episode_seconds",
+    ):
+        MakerReplayConfig(
+            same_direction_reentry_policy="target_continuation",
+            target_continuation_minimum_episode_seconds=minimum_seconds,
+        )
+
+
+def test_replay_config_rejects_mature_duration_for_other_policy() -> None:
+    with pytest.raises(ValueError, match="requires a target re-entry policy"):
+        MakerReplayConfig(target_continuation_minimum_episode_seconds=1_800.0)
+
+
+def test_target_continuation_waits_for_mature_structural_episode() -> None:
+    report = replay_maker_orders(
+        _book(
+            [60, 70, 80, 140, 179, 180],
+            [100.0, 99.0, 100.2, 100.2, 100.2, 100.2],
+            [101.0, 100.0, 100.3, 101.0, 101.0, 101.0],
+        ),
+        _decisions(["TREND_UP"] * 5),
+        MakerReplayConfig(
+            initial_equity=100.0,
+            maker_fee_rate=0.0,
+            fill_rule="touch",
+            reentry_cooldown_seconds=0.0,
+            same_direction_reentry_policy="target_continuation",
+            target_continuation_minimum_episode_seconds=120.0,
+        ),
+    )
+
+    assert report.submission_times_utc == (
+        "2026-01-01T00:01:00+00:00",
+        "2026-01-01T00:03:00+00:00",
+    )
+
+
+def test_target_ladder_cap_blocks_third_target_in_one_episode() -> None:
+    report = replay_maker_orders(
+        _book(
+            [60, 70, 80, 140, 150, 160, 220],
+            [100.0, 99.0, 100.2, 100.2, 99.2, 100.41, 100.41],
+            [101.0, 100.0, 100.3, 101.0, 100.2, 100.5, 101.0],
+        ),
+        _decisions(["TREND_UP"] * 5),
+        MakerReplayConfig(
+            initial_equity=100.0,
+            maker_fee_rate=0.0,
+            fill_rule="touch",
+            same_direction_reentry_policy="target_continuation",
+            target_continuation_limit_per_episode=2,
+        ),
+    )
+
+    assert report.completed_trades == 2
+    assert report.submitted_entries == 2
+
+
+def test_target_ladder_count_resets_on_new_structural_episode() -> None:
+    report = replay_maker_orders(
+        _book(
+            [60, 70, 80, 140, 150, 160, 180, 240, 250, 260],
+            [100.0, 99.0, 100.2, 100.2, 99.2, 100.41, 100.41, 100.4, 99.4, 100.61],
+            [101.0, 100.0, 100.3, 101.0, 100.2, 100.5, 101.0, 101.0, 100.4, 100.7],
+        ),
+        _decisions(["TREND_UP", "TREND_UP", "RANGE", "TREND_UP", "TREND_UP"]),
+        MakerReplayConfig(
+            initial_equity=100.0,
+            maker_fee_rate=0.0,
+            fill_rule="touch",
+            same_direction_reentry_policy="target_continuation",
+            target_continuation_limit_per_episode=2,
+        ),
+    )
+
+    assert report.completed_trades == 3
+    assert report.submitted_entries == 3
+
+
+def test_target_ladder_does_not_rearm_after_liquidation() -> None:
+    report = replay_maker_orders(
+        _book(
+            [60, 70, 80, 140, 180],
+            [100.0, 99.0, 98.0, 100.0, 101.0],
+            [101.0, 100.0, 98.1, 101.0, 102.0],
+        ),
+        _decisions(["TREND_UP"] * 5),
+        MakerReplayConfig(
+            initial_equity=100.0,
+            maker_fee_rate=0.0,
+            fill_rule="touch",
+            same_direction_reentry_policy="target_continuation",
+            target_continuation_limit_per_episode=2,
+        ),
+    )
+
+    assert report.liquidations == 1
+    assert report.submitted_entries == 1
+
+
+@pytest.mark.parametrize("fraction", [0.0, 1.0, float("nan")])
+def test_replay_config_rejects_invalid_liquidation_stop_fraction(
+    fraction: float,
+) -> None:
+    with pytest.raises(ValueError, match="liquidation_proximity_stop_fraction"):
+        MakerReplayConfig(liquidation_proximity_stop_fraction=fraction)
+
+
+@pytest.mark.parametrize("margin_pct", [0.0, 100.0, float("nan")])
+def test_replay_config_rejects_invalid_fixed_margin_stop(
+    margin_pct: float,
+) -> None:
+    with pytest.raises(ValueError, match="fixed_margin_stop_pct"):
+        MakerReplayConfig(fixed_margin_stop_pct=margin_pct)
+
+
+def test_replay_config_rejects_two_stop_models() -> None:
+    with pytest.raises(ValueError, match="only one maker-replay stop"):
+        MakerReplayConfig(
+            liquidation_proximity_stop_fraction=0.75,
+            fixed_margin_stop_pct=2.0,
+        )
+
+
+def test_fixed_margin_stop_converts_levered_loss_and_uses_adverse_bbo() -> None:
+    report = replay_maker_orders(
+        _book(
+            [60, 70, 80],
+            [100.0, 99.0, 99.94],
+            [101.0, 100.0, 100.04],
+        ),
+        _decisions(["TREND_UP"] * 3),
+        MakerReplayConfig(
+            initial_equity=100.0,
+            maker_fee_rate=0.0,
+            taker_fee_rate=0.0,
+            fill_rule="touch",
+            fixed_margin_stop_pct=2.0,
+        ),
+    )
+
+    assert report.stops == 1
+    assert report.liquidations == 0
+    assert report.trades[0].status == "stopped"
+    assert report.trades[0].exit_price == pytest.approx(99.94)
+    assert report.lifecycles[0].stop_price == pytest.approx(99.95)
+    assert report.final_equity == pytest.approx(98.32)
+
+
+def test_fixed_margin_stop_is_symmetric_for_short_positions() -> None:
+    report = replay_maker_orders(
+        _book(
+            [60, 70, 80],
+            [100.0, 101.0, 100.96],
+            [101.0, 102.0, 101.06],
+        ),
+        _decisions(["TREND_DOWN"] * 3),
+        MakerReplayConfig(
+            initial_equity=100.0,
+            maker_fee_rate=0.0,
+            taker_fee_rate=0.0,
+            fill_rule="touch",
+            fixed_margin_stop_pct=2.0,
+        ),
+    )
+
+    assert report.stops == 1
+    assert report.trades[0].direction == "short"
+    assert report.trades[0].exit_price == pytest.approx(101.06)
+    assert report.lifecycles[0].stop_price == pytest.approx(101.0505)
+    assert report.final_equity == pytest.approx(98.3366336634)
+
+
+def test_decision_stop_freezes_at_submission_and_uses_adverse_bbo() -> None:
+    decisions = _decisions(["TREND_UP"] * 3)
+    decisions["entry_stop_price"] = 99.5
+    report = replay_maker_orders(
+        _book(
+            [60, 70, 80],
+            [100.0, 99.8, 99.4],
+            [101.0, 100.0, 99.5],
+        ),
+        decisions,
+        MakerReplayConfig(
+            initial_equity=100.0,
+            maker_fee_rate=0.0,
+            taker_fee_rate=0.0,
+            fill_rule="touch",
+        ),
+    )
+
+    assert report.stops == 1
+    assert report.lifecycles[0].stop_price == pytest.approx(99.5)
+    assert report.trades[0].exit_price == pytest.approx(99.4)
+    assert report.final_equity == pytest.approx(83.2)
+
+
+def test_decision_stop_outside_entry_and_liquidation_is_ignored() -> None:
+    decisions = _decisions(["TREND_UP"] * 3)
+    decisions["entry_stop_price"] = 100.5
+    report = replay_maker_orders(
+        _book(
+            [60, 70, 80],
+            [100.0, 99.8, 99.6],
+            [101.0, 100.0, 99.7],
+        ),
+        decisions,
+        MakerReplayConfig(
+            initial_equity=100.0,
+            maker_fee_rate=0.0,
+            taker_fee_rate=0.0,
+            fill_rule="touch",
+        ),
+    )
+
+    assert report.stops == 0
+    assert report.open_positions == 1
+    assert report.lifecycles[0].stop_price is None
+
+
+def test_decision_stop_rejects_static_stop_model_conflict() -> None:
+    decisions = _decisions(["TREND_UP"] * 2)
+    decisions["entry_stop_price"] = 99.5
+
+    with pytest.raises(ValueError, match="decision stop cannot coexist"):
+        replay_maker_orders(
+            _book([60, 70], [100.0, 99.8], [101.0, 100.0]),
+            decisions,
+            MakerReplayConfig(fill_rule="touch", fixed_margin_stop_pct=2.0),
+        )
+
+
+def test_liquidation_proximity_stop_closes_at_adverse_bbo_with_taker_fee() -> None:
+    report = replay_maker_orders(
+        _book(
+            [60, 70, 80],
+            [100.0, 99.0, 98.7],
+            [101.0, 100.0, 98.8],
+        ),
+        _decisions(["TREND_UP"] * 3),
+        MakerReplayConfig(
+            initial_equity=100.0,
+            maker_fee_rate=0.0,
+            taker_fee_rate=0.00045,
+            fill_rule="touch",
+            liquidation_proximity_stop_fraction=0.75,
+        ),
+    )
+
+    assert report.stops == 1
+    assert report.liquidations == 0
+    assert report.completed_trades == 1
+    assert report.trades[0].status == "stopped"
+    assert report.trades[0].exit_price == pytest.approx(98.7)
+    assert report.lifecycles[0].status == "stopped"
+    assert report.lifecycles[0].stop_price is not None
+    assert report.final_equity == pytest.approx(62.35638)
 
 
 def test_streaming_replay_carries_pending_entry_across_chunks() -> None:
@@ -135,6 +1146,105 @@ def test_streaming_replay_carries_open_position_across_chunks() -> None:
 
     assert report.completed_trades == 1
     assert report.open_positions == 0
+
+
+def test_streaming_grid_matches_independent_candidate_replays() -> None:
+    """One validated tape must preserve isolated per-candidate replay results."""
+    assert hasattr(maker_replay_stream, "replay_maker_order_grid_chunks")
+    replay_grid = maker_replay_stream.replay_maker_order_grid_chunks
+    chunks = (
+        MakerReplayEvidenceChunk(_book([60, 70], [100.0, 99.0], [101.0, 100.0])),
+        MakerReplayEvidenceChunk(_book([80], [99.7], [99.8])),
+    )
+    decisions = _decisions(["TREND_UP", "TREND_UP", "TREND_UP"])
+    configs = {
+        "control": MakerReplayConfig(
+            initial_equity=100.0,
+            maker_fee_rate=0.0,
+            taker_fee_rate=0.0,
+            fill_rule="touch",
+        ),
+        "stop_10": MakerReplayConfig(
+            initial_equity=100.0,
+            maker_fee_rate=0.0,
+            taker_fee_rate=0.0,
+            fill_rule="touch",
+            fixed_margin_stop_pct=10.0,
+        ),
+    }
+    expected = {
+        name: replay_maker_order_chunks(chunks, decisions, config)
+        for name, config in configs.items()
+    }
+
+    actual = replay_grid(chunks, decisions, configs)
+
+    assert {name: report.to_dict() for name, report in actual.items()} == {
+        name: report.to_dict() for name, report in expected.items()
+    }
+
+
+def test_streaming_decision_grid_matches_independent_replays() -> None:
+    """Candidate decisions may differ while consuming one physical tape."""
+    assert hasattr(maker_replay_stream, "replay_maker_order_decision_grid_chunks")
+    replay_grid = maker_replay_stream.replay_maker_order_decision_grid_chunks
+    chunks = (
+        MakerReplayEvidenceChunk(_book([60, 70], [100.0, 99.0], [101.0, 100.0])),
+        MakerReplayEvidenceChunk(_book([80], [102.0], [103.0])),
+    )
+    decisions = {
+        "long": _decisions(["TREND_UP"] * 3),
+        "short": _decisions(["TREND_DOWN"] * 3),
+    }
+    configs = {
+        name: MakerReplayConfig(
+            initial_equity=100.0,
+            maker_fee_rate=0.0,
+            taker_fee_rate=0.0,
+            fill_rule="touch",
+        )
+        for name in decisions
+    }
+    expected = {
+        name: replay_maker_order_chunks(chunks, decisions[name], configs[name])
+        for name in configs
+    }
+
+    actual = replay_grid(chunks, decisions, configs)
+
+    assert {name: report.to_dict() for name, report in actual.items()} == {
+        name: report.to_dict() for name, report in expected.items()
+    }
+
+
+def test_streaming_decision_grid_rejects_candidate_name_mismatch() -> None:
+    replay_grid = maker_replay_stream.replay_maker_order_decision_grid_chunks
+    decisions = {"control": _decisions(["TREND_UP"])}
+    configs = {"candidate": MakerReplayConfig(fill_rule="touch")}
+
+    with pytest.raises(ValueError, match="decision and config candidate names"):
+        replay_grid((), decisions, configs)
+
+
+@pytest.mark.parametrize("index_kind", ["duplicate", "descending", "naive"])
+def test_streaming_decision_grid_rejects_invalid_decision_index(
+    index_kind: str,
+) -> None:
+    replay_grid = maker_replay_stream.replay_maker_order_decision_grid_chunks
+    decisions = _decisions(["TREND_UP", "TREND_UP"])
+    if index_kind == "duplicate":
+        decisions.index = pd.DatetimeIndex([decisions.index[0], decisions.index[0]])
+    elif index_kind == "descending":
+        decisions = decisions.sort_index(ascending=False)
+    else:
+        decisions.index = decisions.index.tz_localize(None)
+
+    with pytest.raises(ValueError, match="unique, chronological, and timezone-aware"):
+        replay_grid(
+            (),
+            {"candidate": decisions},
+            {"candidate": MakerReplayConfig(fill_rule="touch")},
+        )
 
 
 def test_streaming_replay_deduplicates_exact_book_boundary() -> None:
@@ -524,6 +1634,9 @@ def test_cli_reports_touch_and_through_without_placing_orders(
     payload = json.loads(capsys.readouterr().out)
     assert rc == 0
     assert payload["report_only"] is True
+    assert payload["candidate"]["candidate_id"] == "bbwp_blueprint_full"
+    assert payload["candidate"]["parameters"]["range_filter"] == "bbwp"
+    assert len(payload["candidate"]["fingerprint"]) == 64
     assert set(payload["reports"]) == {"touch", "through"}
     assert payload["reports"]["touch"]["completed_trades"] == 1
 

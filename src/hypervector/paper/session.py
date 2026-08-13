@@ -84,28 +84,70 @@ from hypervector.paper.maker_execution import (
     round_price_to_tick,
     target_was_filled,
 )
+from hypervector.paper.peak_observer_persistence import load_peak_observer_state
+from hypervector.paper.peak_protection_observer import PeakProtectionObserver
 from hypervector.paper.resume import (
     ShadowPortfolioResume,
     load_shadow_portfolio_resume,
     portfolio_fingerprint,
 )
 from hypervector.paper.telemetry import bar_telemetry_payload, book_telemetry_payload
+from hypervector.regime.source_follow_runtime import SourceFollowDecision
+from hypervector.regime.source_follow_session import SourceFollowSessionSignal
 from hypervector.strategies.hypervelocity_contract import (
     HypervelocityContract,
+    faithful_regime_config,
     is_hypervelocity_strategy,
 )
 from hypervector.strategies.hypervelocity import (
+    HypervelocityMarketObservation,
     current_hypervelocity_entry_allowed,
     current_hypervelocity_market,
-    current_hypervelocity_regime,
 )
 from hypervector.strategies.hypervelocity_profile import HypervelocityProfile
 from hypervector.strategies.hypervelocity_runtime import RuntimeMarketState
+from hypervector.strategies.source_follow_profile import (
+    SourceFollowHypervelocityProfile,
+)
 from hypervector.strategies import register_all_strategies
 
 logger = logging.getLogger(__name__)
 
 _OHLCV_REQUIRED = ("open", "high", "low", "close", "volume")
+
+
+def _source_follow_reason(
+    decision: SourceFollowDecision | None,
+    *,
+    entry_session_active: bool,
+) -> str:
+    if decision is None:
+        return "source_follow_warming"
+    if not entry_session_active:
+        return "source_follow_outside_entry_session"
+    if decision.entry_eligible:
+        return "source_follow_entry_pulse"
+    return f"source_follow_{decision.exclusion_reason or 'inactive'}"
+
+
+def _market_trigger_payload(
+    market: HypervelocityMarketObservation,
+    compression_threshold: float,
+) -> dict[str, object]:
+    """Serialize backend-authored tactical trigger evidence."""
+    return {
+        "bbwp_percentile": market.bbwp_percentile,
+        "bbwp_compression_threshold": compression_threshold,
+        "compression_ready": market.compression_ready,
+        "ema_gap_bps_signed": market.ema_gap_bps_signed,
+        "rsi": market.rsi,
+        "rsi_ema": market.rsi_ema,
+        "rsi_cross_direction": market.rsi_cross_direction,
+        "tactical_breakout_direction": market.tactical_breakout_direction,
+        "breakout_volume_ratio": market.breakout_volume_ratio,
+        "prior_range_high": market.prior_range_high,
+        "prior_range_low": market.prior_range_low,
+    }
 
 
 @dataclass(frozen=True)
@@ -149,7 +191,9 @@ class PaperSession:
         conviction_provider: ConvictionProvider | None = None,
         execution_mode: str = "paper",
         hypervelocity_profile: HypervelocityProfile | None = None,
+        source_follow_signal: SourceFollowSessionSignal | None = None,
         lookback_days: int | None = None,
+        initial_cash_usd: float | None = None,
     ) -> None:
         register_all_strategies()
         export_path = Path(export_dir)
@@ -157,8 +201,13 @@ class PaperSession:
             raise FileNotFoundError(f"export_dir not found: {export_path}")
 
         self.loadout = load_strategy_loadout(export_path, strict=True)
+        requested_initial_cash = _validated_initial_cash(initial_cash_usd)
         self._is_hypervelocity = is_hypervelocity_strategy(self.loadout.strategy_name)
         self.hypervelocity_profile = hypervelocity_profile
+        self._source_follow_signal = self._resolve_source_follow_signal(
+            hypervelocity_profile,
+            source_follow_signal,
+        )
         self.lookback_days = lookback_days
         if hypervelocity_profile is not None and not self._is_hypervelocity:
             raise ValueError("Hypervelocity profile requires a Hypervelocity export")
@@ -260,9 +309,13 @@ class PaperSession:
             resume.init_cash
             if resume is not None
             else (
-                float(self.loadout.init_cash)
-                if self.loadout.init_cash is not None
-                else 10_000.0
+                requested_initial_cash
+                if requested_initial_cash is not None
+                else (
+                    float(self.loadout.init_cash)
+                    if self.loadout.init_cash is not None
+                    else 10_000.0
+                )
             )
         )
         self.engine = ExplicitFillEngine(
@@ -322,6 +375,28 @@ class PaperSession:
             resume.completed_trade_direction if resume is not None else None
         )
 
+    @staticmethod
+    def _resolve_source_follow_signal(
+        profile: HypervelocityProfile | None,
+        provided: SourceFollowSessionSignal | None,
+    ) -> SourceFollowSessionSignal | None:
+        """Build the pinned source signal only for its distinct shadow profile."""
+        if not isinstance(profile, SourceFollowHypervelocityProfile):
+            if provided is not None:
+                raise ValueError("source_follow_signal requires the source profile")
+            return None
+        if provided is not None:
+            return provided
+        return SourceFollowSessionSignal.from_pinned_backend(
+            profile.source_backend_root,
+            minimum_confidence=profile.minimum_confidence,
+            minimum_range_bps=profile.minimum_range_bps,
+            maximum_range_bps=profile.maximum_range_bps,
+            maximum_hold_seconds=profile.maximum_hold_seconds,
+            entry_pulse_seconds=profile.entry_pulse_seconds,
+            entry_session_utc=profile.entry_session_utc,
+        )
+
     def _load_shadow_resume(self) -> ShadowPortfolioResume | None:
         """Return persistent Hypervelocity state for normal shadow restarts."""
         if not self._is_hypervelocity or self.execution_mode != "shadow":
@@ -369,8 +444,31 @@ class PaperSession:
                 symbol=self.loadout.symbol,
                 timeframe=self.loadout.timeframe,
             ),
+            peak_observer=self._configured_peak_observer(),
+        )
+        self._event_shadow_bridge.sync_peak_observer(
+            observed_at=controller.port.account_snapshot().observed_at,
+            coverage_complete_since_entry=False,
         )
         self._restore_event_annotations()
+
+    def _configured_peak_observer(self) -> PeakProtectionObserver | None:
+        """Build the configured report-only observer from durable state."""
+        profile = self.hypervelocity_profile
+        if profile is None:
+            return None
+        config = profile.peak_observer
+        initial_state = load_peak_observer_state(
+            self.decisions_path,
+            run_id=self.run_id,
+            candidate_id=config.candidate_id,
+        )
+        return PeakProtectionObserver(
+            config=config,
+            leverage=profile.leverage,
+            taker_fee_rate=profile.taker_fee_rate,
+            initial_state=initial_state,
+        )
 
     def _restore_event_annotations(self) -> None:
         bridge = self._event_shadow_bridge
@@ -436,6 +534,13 @@ class PaperSession:
         if isinstance(event, AssetContextEvent):
             return self._ingest_asset_context(event)
         action = bridge.ingest(event)
+        if (
+            isinstance(event, L2SnapshotEvent)
+            and self._source_follow_signal is not None
+            and self.buffer_rows
+        ):
+            source_action = self._process_hypervelocity_event(self.buffer_rows[-1])
+            action = source_action or action
         if isinstance(event, L2SnapshotEvent) and self._live_telemetry_enabled:
             snapshot = self.book_feed.latest()
             if snapshot is not None:
@@ -552,6 +657,23 @@ class PaperSession:
         self._last_funding_refresh_mono = time.monotonic()
         return state.funding_rate_hourly
 
+    def _advance_source_follow(self, record: Mapping[str, object]) -> None:
+        """Advance the pinned 5m classifier from one completed backend 1m bar."""
+        signal = self._source_follow_signal
+        if signal is None:
+            return
+        stamp = pd.Timestamp(record["timestamp"])
+        if stamp.tz is None:
+            raise ValueError("source-follow candle timestamps must be timezone-aware")
+        signal.update_minute(
+            timestamp_utc=stamp.tz_convert("UTC").to_pydatetime(),
+            open=float(record["open"]),
+            high=float(record["high"]),
+            low=float(record["low"]),
+            close=float(record["close"]),
+            volume=float(record["volume"]),
+        )
+
     def on_bar(self, row: pd.Series | dict[str, Any]) -> str | None:
         """Process one OHLCV bar. Returns fill action or None.
 
@@ -563,6 +685,7 @@ class PaperSession:
             row if isinstance(row, pd.Series) else pd.Series(row)
         )
         _append_bar_record(self.buffer_rows, record, max_lookback=DEFAULT_MAX_LOOKBACK)
+        self._advance_source_follow(record)
         self.bars_processed += 1
         ts = record.get("timestamp")
         if isinstance(ts, pd.Timestamp):
@@ -627,7 +750,7 @@ class PaperSession:
         """Append the causal regime state used by the live entry decision."""
         frame = _buffer_to_df(self.buffer_rows)
         payload = self._hypervelocity_regime_payload(frame)
-        payload.update(bar_telemetry_payload(frame, record))
+        payload.update(bar_telemetry_payload(record))
         payload["funding_rate_hourly"] = (
             self.cost_provider.snapshot().funding_rate_hourly
         )
@@ -638,6 +761,11 @@ class PaperSession:
                 "run_id": self.run_id,
                 "export_id": self.export_id,
                 "strategy_name": self.strategy_name,
+                "profile_id": (
+                    self.hypervelocity_profile.profile_id
+                    if self.hypervelocity_profile is not None
+                    else None
+                ),
                 "symbol": self.loadout.symbol,
                 "timeframe": self.loadout.timeframe,
                 "action": "regime_observation",
@@ -648,6 +776,7 @@ class PaperSession:
                 "position_qty": float(self.engine.position.qty),
                 "position_avg_px": float(self.engine.position.avg_px),
                 "liquidation_price": self._current_liquidation_price(),
+                "active_target_prices": self._current_active_target_prices(),
                 "mark_px": float(record["close"]),
                 "realized_pnl": float(self.engine.position.realized_pnl),
                 "unrealized_pnl": float(
@@ -679,13 +808,17 @@ class PaperSession:
 
     def _hypervelocity_entry_execution_payload(
         self, record: dict[str, Any]
-    ) -> dict[str, str | bool | None]:
+    ) -> dict[str, str | bool | float | list[float] | None]:
         """Return backend-owned maker, retry, and cooldown display state."""
         pending = self.pending_maker_entry
         retry_state = self._hypervelocity_retry_state()
         return {
             "maker_entry_state": "pending" if pending is not None else "standby",
             "maker_entry_direction": pending.direction if pending is not None else None,
+            "pending_maker_limit_price": (
+                float(pending.limit_price) if pending is not None else None
+            ),
+            "active_target_prices": self._current_active_target_prices(),
             "entry_retry_state": retry_state,
             "entry_cooldown_active": self._hypervelocity_reentry_cooling_down(record),
         }
@@ -706,30 +839,24 @@ class PaperSession:
 
     def _hypervelocity_regime_payload(self, frame: pd.DataFrame) -> dict[str, Any]:
         """Return the exact backend classification fields used for display."""
-        if self.hypervelocity_profile is None:
-            direction = self._hypervelocity_direction()
-            legacy = current_hypervelocity_regime(frame, direction=direction)
-            market = current_hypervelocity_market(frame)
-            return {
-                "primary_regime": legacy.primary_regime,
-                "breakout_direction": legacy.breakout_direction,
-                "entry_direction": legacy.direction,
-                "entry_allowed": legacy.entry_allowed,
-                "state_1m": market.state_1m,
-                "state_5m": market.state_5m,
-                "context_15m": market.context_15m,
-                "confidence": market.confidence,
-                "regime_strength_score": market.regime_strength_score,
-                "regime_score_source": market.regime_score_source,
-                "regime_reason": market.reason,
-            }
+        config = (
+            self.hypervelocity_profile.regime_config
+            if self.hypervelocity_profile is not None
+            else faithful_regime_config()
+        )
         market = current_hypervelocity_market(
             frame,
-            regime_config=self.hypervelocity_profile.regime_config,
+            regime_config=config,
         )
-        return {
+        if self._source_follow_signal is not None:
+            return self._source_follow_regime_payload(
+                market,
+                config.bbwp_compression_threshold,
+            )
+        payload = {
             "primary_regime": market.primary_regime,
             "breakout_direction": market.breakout_direction,
+            "structural_direction": market.structural_direction,
             "entry_direction": market.entry_direction,
             "entry_allowed": market.entry_direction is not None,
             "state_1m": market.state_1m,
@@ -740,6 +867,56 @@ class PaperSession:
             "regime_score_source": market.regime_score_source,
             "regime_reason": market.reason,
         }
+        payload.update(
+            _market_trigger_payload(market, config.bbwp_compression_threshold)
+        )
+        return payload
+
+    def _source_follow_regime_payload(
+        self,
+        annotation: HypervelocityMarketObservation,
+        compression_threshold: float,
+    ) -> dict[str, object]:
+        """Project pinned source authority plus canonical annotation telemetry."""
+        signal = self._source_follow_signal
+        if signal is None:
+            raise RuntimeError("source-follow telemetry requires source authority")
+        latest = signal.latest_decision
+        observed_at = (
+            self._source_follow_observed_at().tz_convert("UTC").to_pydatetime()
+        )
+        direction, structural = signal.directions_at(observed_at)
+        entry_session_active = signal.entry_session_active_at(observed_at)
+        primary = latest.primary if latest is not None else "UNKNOWN"
+        confidence = latest.confidence if latest is not None else 0.0
+        payload: dict[str, object] = {
+            "primary_regime": primary,
+            "breakout_direction": None,
+            "structural_direction": structural,
+            "entry_direction": direction,
+            "entry_allowed": direction is not None,
+            "state_1m": annotation.state_1m,
+            "state_5m": primary,
+            "context_15m": annotation.context_15m,
+            "confidence": confidence,
+            "regime_strength_score": confidence,
+            "regime_score_source": "pinned_hypertrader_rule_agreement",
+            "regime_reason": _source_follow_reason(
+                latest,
+                entry_session_active=entry_session_active,
+            ),
+            "source_follow_label_time_utc": (
+                latest.label_time_utc.isoformat() if latest is not None else None
+            ),
+            "source_follow_available_at_utc": (
+                latest.available_at_utc.isoformat() if latest is not None else None
+            ),
+            "source_follow_signal_range_bps": (
+                latest.signal_range_bps if latest is not None else None
+            ),
+        }
+        payload.update(_market_trigger_payload(annotation, compression_threshold))
+        return payload
 
     def refresh_book_telemetry(self) -> BookSnapshot | None:
         """Poll L2 once and publish a no-submit backend telemetry observation."""
@@ -992,8 +1169,12 @@ class PaperSession:
         if bridge is None:
             raise RuntimeError("Hypervelocity event shadow runtime is not attached")
         frame = _buffer_to_df(self.buffer_rows)
-        direction = self._desired_hypervelocity_direction()
-        market = self._event_market_state(record, frame, direction)
+        decision_at = self._event_decision_timestamp(record)
+        direction, structural = self._hypervelocity_directions(
+            frame,
+            observed_at=decision_at,
+        )
+        market = self._event_market_state(record, frame, direction, structural)
         annotation = self._event_order_annotation(frame, direction)
         return bridge.on_market(market, annotation=annotation)
 
@@ -1002,6 +1183,7 @@ class PaperSession:
         record: dict[str, Any],
         frame: pd.DataFrame,
         direction: str | None,
+        structural_direction: str | None,
     ) -> RuntimeMarketState:
         """Build one causal decision from regime state and fresh event evidence."""
         bridge = self._event_shadow_bridge
@@ -1013,7 +1195,6 @@ class PaperSession:
             if self.hypervelocity_profile is not None
             else 5
         )
-        quantity = self._event_entry_quantity(frame, mark_px, size_decimals)
         decision_at = self._event_decision_timestamp(record)
         book = self._usable_book_at(decision_at)
         limit = (
@@ -1022,11 +1203,23 @@ class PaperSession:
             else None
         )
         profile = self.hypervelocity_profile
+        sizing_price = (
+            limit
+            if isinstance(profile, SourceFollowHypervelocityProfile) and limit
+            else mark_px
+        )
+        quantity = self._event_entry_quantity(frame, sizing_price, size_decimals)
         contract = HypervelocityContract()
+        maximum_hold = (
+            profile.maximum_hold_seconds
+            if isinstance(profile, SourceFollowHypervelocityProfile)
+            else None
+        )
         return RuntimeMarketState(
             symbol=self.loadout.symbol,
             observed_at=decision_at.isoformat(),
             entry_direction=direction,
+            structural_direction=structural_direction,
             entry_quantity=max(quantity, 10 ** (-size_decimals)),
             entry_limit_price=limit,
             evidence_fresh=bridge.controller.port.evidence_fresh,
@@ -1042,6 +1235,7 @@ class PaperSession:
             ),
             target_price_fraction=contract.target_price_fraction,
             price_tick=self._hypervelocity_tick(mark_px),
+            maximum_hold_seconds=maximum_hold,
         )
 
     def _event_entry_quantity(
@@ -1051,6 +1245,14 @@ class PaperSession:
         size_decimals: int,
     ) -> float:
         """Return fixed-contract size; model annotations cannot scale it."""
+        profile = self.hypervelocity_profile
+        bridge = self._event_shadow_bridge
+        if isinstance(profile, SourceFollowHypervelocityProfile):
+            if bridge is None:
+                raise RuntimeError("source-follow sizing requires event authority")
+            equity = bridge.controller.port.account_snapshot().equity_usd
+            quantity = equity * profile.margin_fraction * profile.leverage / mark_px
+            return quantize_size_down(quantity, size_decimals=size_decimals)
         qty = _entry_qty(
             df=frame,
             loadout=self.loadout,
@@ -1125,15 +1327,7 @@ class PaperSession:
         position = self.engine.position
         direction = "long" if position.qty > 0.0 else "short"
         contract = HypervelocityContract()
-        multiplier = 1.0 + contract.target_price_fraction
-        if direction == "short":
-            multiplier = 1.0 - contract.target_price_fraction
-        raw_target = float(position.avg_px) * multiplier
-        target = round_price_to_tick(
-            raw_target,
-            tick_size=self._hypervelocity_tick(raw_target),
-            upward=direction == "long",
-        )
+        target = self._hypervelocity_target_price(direction, float(position.avg_px))
         if not target_was_filled(
             direction=direction,
             target_price=target,
@@ -1159,6 +1353,28 @@ class PaperSession:
         self._completed_trade_direction = direction
         self.fills_count += 1
         return "close"
+
+    def _current_active_target_prices(self) -> list[float]:
+        """Return backend-authored target levels for read-only consumers."""
+        if self.engine.position.qty == 0.0:
+            return []
+        if self._event_shadow_bridge is not None:
+            return list(self._event_shadow_bridge.active_target_prices)
+        direction = "long" if self.engine.position.qty > 0.0 else "short"
+        return [
+            self._hypervelocity_target_price(direction, self.engine.position.avg_px)
+        ]
+
+    def _hypervelocity_target_price(self, direction: str, average: float) -> float:
+        """Return the backend strategy's tick-aligned fixed target."""
+        fraction = HypervelocityContract().target_price_fraction
+        multiplier = 1.0 + fraction if direction == "long" else 1.0 - fraction
+        raw_target = float(average) * multiplier
+        return round_price_to_tick(
+            raw_target,
+            tick_size=self._hypervelocity_tick(raw_target),
+            upward=direction == "long",
+        )
 
     def _fill_pending_entry(
         self,
@@ -1261,14 +1477,43 @@ class PaperSession:
         )
 
     def _desired_hypervelocity_direction(self) -> str | None:
+        direction, _ = self._hypervelocity_directions(_buffer_to_df(self.buffer_rows))
+        return direction
+
+    def _hypervelocity_directions(
+        self,
+        frame: pd.DataFrame,
+        *,
+        observed_at: pd.Timestamp | None = None,
+    ) -> tuple[str | None, str | None]:
+        """Return tactical trigger and persistent structural directions."""
+        if self._source_follow_signal is not None:
+            timestamp = observed_at or self._source_follow_observed_at()
+            if timestamp.tz is None:
+                raise ValueError("source-follow decision timestamp requires timezone")
+            return self._source_follow_signal.directions_at(
+                timestamp.tz_convert("UTC").to_pydatetime()
+            )
         if self.hypervelocity_profile is None:
             direction = self._hypervelocity_direction()
-            return direction if self._hypervelocity_allowed(direction) else None
+            allowed = direction if self._hypervelocity_allowed(direction) else None
+            return allowed, allowed
         observation = current_hypervelocity_market(
-            _buffer_to_df(self.buffer_rows),
+            frame,
             regime_config=self.hypervelocity_profile.regime_config,
         )
-        return observation.entry_direction
+        return observation.entry_direction, observation.structural_direction
+
+    def _source_follow_observed_at(self) -> pd.Timestamp:
+        """Return the latest causal candle/event timestamp for source authority."""
+        if not self.buffer_rows:
+            raise RuntimeError("source-follow direction requires warm candle state")
+        candle_close = self._hypervelocity_timestamp(self.buffer_rows[-1])
+        bridge = self._event_shadow_bridge
+        if bridge is None:
+            return candle_close
+        event_time = pd.Timestamp(bridge.controller.port.account_snapshot().observed_at)
+        return max(candle_close, event_time)
 
     def _hypervelocity_direction(self) -> str:
         return "short" if self.loadout.strategy_name.endswith("_short") else "long"
@@ -1337,6 +1582,7 @@ class PaperSession:
         frame = _prepare_ohlcv(ohlcv, max_bars=max_bars)
         for _, row in frame.iterrows():
             record = _row_to_buffer_record(row)
+            self._advance_source_follow(record)
             _append_bar_record(
                 self.buffer_rows,
                 record,
@@ -1518,6 +1764,11 @@ class PaperSession:
                 "run_id": self.run_id,
                 "export_id": str(self.export_id),
                 "strategy_name": self.strategy_name,
+                "profile_id": (
+                    self.hypervelocity_profile.profile_id
+                    if self.hypervelocity_profile is not None
+                    else None
+                ),
                 "symbol": self.loadout.symbol,
                 "timeframe": self.loadout.timeframe,
                 "data_root": str(self.root.resolve()),
@@ -1575,6 +1826,9 @@ class PaperSession:
                 ),
                 "conviction": self.conviction,
                 "metalabel_mode": self.metalabel_mode,
+                "metalabel_policy": _source_follow_metalabel_policy(
+                    self.hypervelocity_profile
+                ),
                 "metalabel_bundle_id": self.conviction_provider.bundle_id,
                 "strategy_params": {
                     "strategy": (
@@ -1582,7 +1836,10 @@ class PaperSession:
                         if self.hypervelocity_profile
                         else self.loadout.strategy_name
                     ),
-                    **_effective_strategy_params(self.loadout),
+                    **_effective_strategy_params(
+                        self.loadout,
+                        profile=self.hypervelocity_profile,
+                    ),
                 },
                 "position_policy": (
                     self.hypervelocity_profile.position_policy()
@@ -1594,6 +1851,11 @@ class PaperSession:
                     if self.hypervelocity_profile
                     else None
                 ),
+                "peak_observer": (
+                    self.hypervelocity_profile.peak_observer.telemetry()
+                    if self.hypervelocity_profile
+                    else None
+                ),
                 "portfolio_spec": self._portfolio_spec,
                 "portfolio_fingerprint": self._portfolio_fingerprint,
                 "portfolio_profile_changed_from": (
@@ -1601,8 +1863,14 @@ class PaperSession:
                     if resume is not None
                     else None
                 ),
-                "exits": _effective_exits(self.loadout),
-                "risk": _effective_risk(self.loadout),
+                "exits": _effective_exits(
+                    self.loadout,
+                    profile=self.hypervelocity_profile,
+                ),
+                "risk": _effective_risk(
+                    self.loadout,
+                    profile=self.hypervelocity_profile,
+                ),
                 "execution": _effective_execution(
                     self.loadout, profile=self.hypervelocity_profile
                 ),
@@ -1613,6 +1881,14 @@ class PaperSession:
                         self._live_activated_at.isoformat()
                         if self._live_activated_at is not None
                         else None
+                    ),
+                    **(
+                        self.hypervelocity_profile.research_evidence()
+                        if isinstance(
+                            self.hypervelocity_profile,
+                            SourceFollowHypervelocityProfile,
+                        )
+                        else {}
                     ),
                 },
                 "orderbook_archive": (
@@ -1647,6 +1923,16 @@ class PaperSession:
                 "resumed_shadow_portfolio": resume is not None,
                 "portfolio_state_asof": (
                     resume.state_asof if resume is not None else None
+                ),
+                "position_opened_at": (
+                    self._event_shadow_bridge.controller.state.position_opened_at
+                    if self._event_shadow_bridge is not None
+                    else None
+                ),
+                "maximum_hold_seconds": (
+                    self._event_shadow_bridge.controller.state.maximum_hold_seconds
+                    if self._event_shadow_bridge is not None
+                    else None
                 ),
                 "no_submit": True,
             },
@@ -1708,6 +1994,15 @@ def run_paper_session_offline(
     )
     session.process_frame(ohlcv, max_bars=max_bars)
     return session.result()
+
+
+def _validated_initial_cash(value: float | None) -> float | None:
+    if value is None:
+        return None
+    initial_cash = float(value)
+    if not math.isfinite(initial_cash) or initial_cash <= 0.0:
+        raise ValueError("initial_cash_usd must be finite and positive")
+    return initial_cash
 
 
 def _prepare_ohlcv(ohlcv: pd.DataFrame, *, max_bars: int | None) -> pd.DataFrame:
@@ -1841,9 +2136,18 @@ def _exits_dict(loadout: StrategyLoadout) -> dict[str, Any]:
     return raw
 
 
-def _effective_strategy_params(loadout: StrategyLoadout) -> dict[str, Any]:
+def _effective_strategy_params(
+    loadout: StrategyLoadout,
+    *,
+    profile: HypervelocityProfile | None = None,
+) -> dict[str, Any]:
     if not is_hypervelocity_strategy(loadout.strategy_name):
         return dict(loadout.params or {})
+    if profile is not None:
+        return {
+            "leverage": profile.leverage,
+            "target_margin_pct": profile.target_margin_pct,
+        }
     contract = HypervelocityContract()
     return {
         "leverage": contract.leverage,
@@ -1851,9 +2155,43 @@ def _effective_strategy_params(loadout: StrategyLoadout) -> dict[str, Any]:
     }
 
 
-def _effective_exits(loadout: StrategyLoadout) -> dict[str, Any]:
+def _source_follow_metalabel_policy(
+    profile: HypervelocityProfile | None,
+) -> dict[str, object] | None:
+    if not isinstance(profile, SourceFollowHypervelocityProfile):
+        return None
+    return {
+        "observation_type": "annotation_collection",
+        "inference_active": False,
+        "bundle_id": None,
+        "probabilities_emitted": False,
+        "may_filter": False,
+        "may_scale": False,
+        "execution_authority": "none",
+    }
+
+
+def _effective_exits(
+    loadout: StrategyLoadout,
+    *,
+    profile: HypervelocityProfile | None = None,
+) -> dict[str, Any]:
     if not is_hypervelocity_strategy(loadout.strategy_name):
         return dict(loadout.exits or {})
+    if profile is not None:
+        exits: dict[str, Any] = {
+            "mode": "strategy_target_only",
+            "target_margin_pct": profile.target_margin_pct,
+            "target_price_fraction": (
+                profile.target_margin_pct / profile.leverage / 100.0
+            ),
+            "target_basis": "gross_margin_return_before_costs",
+            "stop": None,
+            "range_policy": profile.open_position_range_policy,
+        }
+        if isinstance(profile, SourceFollowHypervelocityProfile):
+            exits["maximum_hold_seconds"] = profile.maximum_hold_seconds
+        return exits
     contract = HypervelocityContract()
     return {
         "mode": "strategy_target_only",
@@ -1865,9 +2203,19 @@ def _effective_exits(loadout: StrategyLoadout) -> dict[str, Any]:
     }
 
 
-def _effective_risk(loadout: StrategyLoadout) -> dict[str, Any]:
+def _effective_risk(
+    loadout: StrategyLoadout,
+    *,
+    profile: HypervelocityProfile | None = None,
+) -> dict[str, Any]:
     if not is_hypervelocity_strategy(loadout.strategy_name):
         return dict(loadout.risk or {})
+    if profile is not None:
+        return {
+            "mode": "fixed_margin_fraction",
+            "margin_fraction": profile.margin_fraction,
+            "notional_fraction": profile.margin_fraction * profile.leverage,
+        }
     contract = HypervelocityContract()
     return {
         "mode": "fixed_margin_fraction",
@@ -1935,6 +2283,11 @@ def _effective_execution(
             backstop_maintenance_fraction=profile.backstop_maintenance_fraction,
             backstop_accounting_model=profile.backstop_accounting_model,
         )
+        if isinstance(profile, SourceFollowHypervelocityProfile):
+            execution.update(
+                maximum_hold_exit="first_fresh_bbo_taker",
+                execution_authority="shadow_only",
+            )
     return execution
 
 
@@ -1952,12 +2305,12 @@ def _portfolio_spec(
             "strategy": profile.strategy_id
             if profile is not None
             else loadout.strategy_name,
-            **_effective_strategy_params(loadout),
+            **_effective_strategy_params(loadout, profile=profile),
         },
         "position_policy": profile.position_policy() if profile is not None else None,
         "regime_policy": profile.regime_policy() if profile is not None else None,
-        "exits": _effective_exits(loadout),
-        "risk": _effective_risk(loadout),
+        "exits": _effective_exits(loadout, profile=profile),
+        "risk": _effective_risk(loadout, profile=profile),
         "execution": _effective_execution(loadout, profile=profile),
     }
 

@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "cohort-asymmetric-shared-portfolio",
+  "revision_number": 2,
+  "supersedes_revision_id": "c7227307868288fb115253e034fc5559a9d57cc3d5437a53ada99649c0b6c4b8",
+  "created_at_utc": "2026-08-09T06:12:49Z",
+  "strategy_id": "multi_asset_portfolio_research_process",
+  "symbol": "MULTI",
+  "status": "candidate",
+  "hypothesis": "A predeclared asymmetric portfolio that permits HYPE breakout long, ETH precompression-pullback long, and SOL range-onset long and short may improve after-friction shared-capital performance over enabling every source symmetrically on both sides.",
+  "decision": "Keep the asymmetric shared-portfolio hypothesis active as a report-only candidate and begin prospective scoring from the revision-1 declaration time. The bounded observer is operational and currently has zero qualifying post-cutoff resolved lifecycles, so it makes no new profitability claim. It separately reports HYPE-short and ETH-short controls, excludes pre-cutoff and open lifecycles, and leaves live v25 unchanged.",
+  "confidence": "low",
+  "falsifier": "The observer contract is invalidated by accepting a pre-cutoff entry, an open mark, a mismatched profile, a malformed lifecycle, or a side outside the frozen route map; by claiming counterfactual fills or capital reallocation; or by gaining execution authority. The portfolio hypothesis weakens if new after-friction candidate lifecycles become nonpositive, lose their advantage over the separately reported symmetric controls, or remain dependent on one winner.",
+  "evidence": [
+    {
+      "path": "cohort-asymmetric-shared-portfolio-v1.json",
+      "role": "predeclared_hypothesis_cutoff_and_shared_capital_comparison_decision",
+      "sha256": "917e513a5fa44fd4ed5837861f320a2a23de4a0603aaefa4b3e6bbe99717979d",
+      "bytes": 7710
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/cohort_asymmetric_forward_observer_initialized_20260809T061221Z.json",
+      "role": "initialized_post_cutoff_report_only_observer_snapshot",
+      "sha256": "97936a4b920aaac2f1879198e9656eb2ec6bf6bb579cf1d15f622ce9674578c6",
+      "bytes": 6253
+    },
+    {
+      "path": "../../src/hypervector/research/cohort_asymmetric_forward_observer.py",
+      "role": "strict_route_side_cutoff_and_after_cost_economics_logic",
+      "sha256": "8a8c58b4d01a58bcadb3df77eff998413d9acf401eea82568a2ddbf5cb23388a",
+      "bytes": 8467
+    },
+    {
+      "path": "../../scripts/cohort_asymmetric_forward_observer.py",
+      "role": "bounded_checkpoint_and_journal_bound_observer_command",
+      "sha256": "a16f9438202cabb15d1dfa9d4a2aaedd0d7e7b0885369d1a88894c6088e96be3",
+      "bytes": 6135
+    },
+    {
+      "path": "../../tests/test_cohort_asymmetric_forward_observer.py",
+      "role": "cutoff_route_side_economics_and_malformed_lifecycle_tests",
+      "sha256": "8d27cbb7a4b93507c761e80c3b65d943fb8408c880d2799c706b0433b8ebb639",
+      "bytes": 4715
+    },
+    {
+      "path": "../../tests/test_cohort_asymmetric_forward_observer_script.py",
+      "role": "checkpoint_contract_journal_binding_and_concise_output_tests",
+      "sha256": "aa4e02f6192f24b953472ad99a9d47e8292306ee5c2baae775b9e577e948e230",
+      "bytes": 5403
+    },
+    {
+      "path": "../../skills/hypervector-cli/SKILL.md",
+      "role": "repeatable_operator_workflow_for_shared_replay_and_forward_observer",
+      "sha256": "82090ccf9d74dba7ee8ba4395f51b5db264f0282d90f7a87ef62918c23643d7f",
+      "bytes": 80078
+    }
+  ],
+  "metrics": {
+    "predeclared_at_utc": "2026-08-09T06:02:47Z",
+    "entry_cutoff_timestamp_ms": 1786255367000,
+    "source_profile_id": "multi_asset_bidirectional_complete_portfolio_canary_v25",
+    "source_profile_fingerprint": "ec7715f671fa369d0a415d8941061eb9a577b232bbd4e06367a7342267ff7ecc",
+    "source_run_id": "bidirectional-live-1786182011216",
+    "candidate_post_cutoff": 0,
+    "excluded_symmetric_post_cutoff": 0,
+    "pre_cutoff_in_scope": 1,
+    "profile_mismatch_in_scope": 0,
+    "unrelated_resolved_lifecycles": 6,
+    "candidate_closed_trades": 0,
+    "candidate_net_pnl_usd": 0.0,
+    "candidate_fees_usd": 0.0,
+    "candidate_funding_usd": 0.0,
+    "candidate_profit_factor": null,
+    "execution_authority": "none",
+    "automatic_promotion": false,
+    "runtime_changed_by_this_revision": false
+  },
+  "limitations": [
+    "No qualifying post-cutoff lifecycle has resolved, so this revision does not update the profitability estimate.",
+    "The running v25 router may allocate capital differently from the frozen candidate and can displace otherwise eligible opportunities.",
+    "Only actual resolved venue lifecycles are scored; missed and unfilled opportunities are not simulated.",
+    "Excluded HYPE-short and ETH-short lifecycles are descriptive controls and cannot be interpreted as losses the candidate would certainly have avoided.",
+    "Open BTC, ETH, and SPCX marks at initialization remain provisional and are excluded.",
+    "The observer does not modify the live profile, order routing, size, leverage, stops, targets, exits, or transition state."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

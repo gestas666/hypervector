@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "hip3-route-authority-pruning",
+  "revision_number": 3,
+  "supersedes_revision_id": "ec25c0b3a4ce9fb5151a1dc0d23e88b4e917ce0c50c1664e68b79ba4c627fbf4",
+  "created_at_utc": "2026-08-09T22:16:50Z",
+  "strategy_id": "hip3_swing_ha_sndk_gold_brent_bidirectional_v1",
+  "symbol": "HIP3_SHARED_PORTFOLIO",
+  "status": "candidate",
+  "hypothesis": "Moving all three SNDK, GOLD, and BRENTOIL commodity Swing mappings to observation-only while retaining both-side telemetry and commodity breakout-pressure controls will remove a tested unstable route family without changing unrelated portfolio contracts.",
+  "decision": "Supersede inactive v31 with inactive v32. V32 changes only the commodity Swing execution symbols from GOLD-only to empty, leaving SNDK, GOLD, and BRENTOIL visible in both directions and preserving every other provider, asset, side, priority, risk, sizing, stop, target, hold, margin, capacity, ledger, and polling contract. Do not arm or transition v32 automatically. Live v25 remains authoritative with five protected open positions. A future v32 transition requires a new exact-fingerprint transition contract, verified flat and order-free boundary, archived drain, prechange backup, placement-free reconciliation, explicit live-risk authorization, and post-start acceptance. The existing v31 tracker remains report-only historical evidence and is not restarted or repointed by this revision.",
+  "confidence": "medium",
+  "falsifier": "Invalidate v32 if its parsed diff changes anything beyond GOLD Swing execution authority relative to v31, if commodity Swing observation or either side disappears, if evidence hashes drift, or if the candidate gains automatic transition or execution authority. Revise the economic recommendation if a preregistered new GOLD mechanism or independent both-side commodity Swing evidence survives observed costs, stress, largest-winner removal, and shared-portfolio interaction.",
+  "evidence": [
+    {
+      "path": "../../configs/multi_asset_bidirectional_commodity_swing_retired_candidate_v32.toml",
+      "role": "inactive_exact_delta_v32_candidate",
+      "sha256": "df1cd68c8e8c86a635e5c6763eb0231b6e40156b8d0eb86f855bd2b88a4546cb",
+      "bytes": 6184
+    },
+    {
+      "path": "../../configs/multi_asset_bidirectional_swing_pruned_candidate_v31.toml",
+      "role": "superseded_inactive_v31_comparison_profile",
+      "sha256": "7a9e0f3de94a2f2c4fdd3b68c97bb60e55cba63335c5a41ef85f2e78813e8d2f",
+      "bytes": 6183
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/gold_side_mechanism_attribution_20260809T215535Z.json",
+      "role": "immutable_gold_side_timing_decision_evidence",
+      "sha256": "09a6ca6483a9e9aea718b731c40a56b0c985722f466483bb49eb9cebd2e31a89",
+      "bytes": 17660
+    },
+    {
+      "path": "hip3-entry-timing-challenger-v3.json",
+      "role": "append_only_gold_mechanism_decision",
+      "sha256": "a2202fe27218dd51d8a3308a0d02fc58cdf0557d6eada538b07f9b2dc2254191",
+      "bytes": 4961
+    },
+    {
+      "path": "../reviews/2026-08-09-v32-commodity-swing-retirement.md",
+      "role": "candidate_delta_risks_and_transition_review",
+      "sha256": "9d5418c36cd4aff4f873893ac4ff77783f6c857d24ac07877de116b639b2393b",
+      "bytes": 3435
+    },
+    {
+      "path": "../../tests/test_swing_pruned_candidate_v31_config.py",
+      "role": "machine_checked_v31_to_v32_exact_diff_contract",
+      "sha256": "58a119bd1fb9e727e3300164e627e78cfc50320f52c0b008ff0ee793fed8aa69",
+      "bytes": 4511
+    }
+  ],
+  "metrics": {
+    "candidate_profile_fingerprint": "6c14d3a11e55f2e63175036e4f50cfa4c1404d570fe2e37558084affb6785cf3",
+    "candidate_run_fingerprint_observe": "610bebe7c03afe8f3f24d6d73fffa8d833c25942bcef77fb1bceee1fccc79e9f",
+    "assets": 9,
+    "providers": 9,
+    "maximum_positions": 9,
+    "executable_provider_symbol_routes": 21,
+    "commodity_swing_observed_symbols": 3,
+    "commodity_swing_observed_sides": 2,
+    "commodity_swing_executable_symbols": 0,
+    "removed_execution_routes_from_v25": 3,
+    "removed_execution_routes_from_v31": 1,
+    "live_open_positions_at_decision": 5,
+    "all_live_open_positions_protected": true,
+    "automatic_transition": false,
+    "runtime_changed_by_this_revision": false
+  },
+  "limitations": [
+    "V32 is an inactive candidate and has not been reconciled, launched, or tested as a new live run.",
+    "The current live GOLD sample is sparse and one-sided even though historical attribution covers both sides.",
+    "Removing one provider route can expose or displace later same-symbol opportunities; shared-router economics are not inferred from isolated route sums.",
+    "The v31 tracker describes the superseded v31 candidate until a separately authorized report-only tracker transition occurs.",
+    "Five protected v25 positions remain open, so no flat transition boundary currently exists.",
+    "No live process, profile, route, order, stop, target, position, size, leverage, or protection changed."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

@@ -13,6 +13,8 @@ Roles:
 
 from __future__ import annotations
 
+from typing import Any
+
 import pandas as pd
 
 from hypervector.regime.detectors import detect_regime_ema
@@ -80,7 +82,10 @@ def _stack_signals(
 
     if regime_filter:
         reg = detect_regime_ema(
-            close, fast=int(regime_fast), slow=int(regime_slow), range_band=float(regime_band)
+            close,
+            fast=int(regime_fast),
+            slow=int(regime_slow),
+            range_band=float(regime_band),
         )
         regime_long_ok = reg == "up"
         regime_short_ok = reg == "down"
@@ -129,6 +134,7 @@ def _stack_signals(
     book_gate = kwargs.get("book_gate", False)
     if book_gate:
         from hypervector.data.book_align import gate_signals_by_orderbook
+
         entries = gate_signals_by_orderbook(
             entries,
             df,
@@ -140,7 +146,6 @@ def _stack_signals(
     entries = entries.fillna(False).astype(bool)
     exits = exits.fillna(False).astype(bool) & (~entries)
     return entries, exits, direction
-
 
 
 def crown_stack_long(

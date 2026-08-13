@@ -13,6 +13,7 @@ import pytest
 from hypervector.data.oxa_trades import (
     OxaTradeClient,
     OxaTradeRequest,
+    TRADE_NORMALIZATION_VERSION,
     fetch_trade_history,
     load_trade_jsonl,
     store_trade_history,
@@ -116,6 +117,48 @@ def test_trade_client_is_bounded_authenticated_and_secret_safe() -> None:
     assert secret not in repr(page)
 
 
+def test_hip3_trade_history_uses_namespaced_route_without_rewriting_symbol() -> None:
+    """HIP-3 trade history must use its family route and exact venue identity."""
+    payload = copy.deepcopy(VALID_PAGE)
+    for row in payload["data"]:  # type: ignore[index]
+        row["symbol"] = "xyz:MU"
+        row["coin"] = "xyz:MU"
+    session = FakeSession([payload])
+    request = OxaTradeRequest(
+        "xyz:MU",
+        datetime(2026, 7, 26, 23, 50, tzinfo=UTC),
+        datetime(2026, 7, 26, 23, 51, tzinfo=UTC),
+        market_family="hip3",
+    )
+
+    OxaTradeClient(api_key="test", session=session).fetch_page(request)
+
+    assert session.calls[0]["url"].endswith("/v1/hyperliquid/hip3/trades/xyz:MU")
+
+
+def test_hip3_trade_manifest_records_route_family(tmp_path: Path) -> None:
+    """Stored HIP-3 trades must retain their exact route-family provenance."""
+    payload = copy.deepcopy(VALID_PAGE)
+    for row in payload["data"]:  # type: ignore[index]
+        row["symbol"] = "xyz:MU"
+        row["coin"] = "xyz:MU"
+    request = OxaTradeRequest(
+        "xyz:MU",
+        datetime(2026, 7, 26, 23, 50, tzinfo=UTC),
+        datetime(2026, 7, 26, 23, 51, tzinfo=UTC),
+        market_family="hip3",
+    )
+    result = fetch_trade_history(
+        OxaTradeClient(api_key="test", session=FakeSession([payload])), request
+    )
+
+    stored = store_trade_history(tmp_path, request, result)
+    manifest = json.loads(stored.manifest_path.read_text(encoding="utf-8"))
+
+    assert manifest["market_family"] == "hip3"
+    assert manifest["source_api"].endswith("/v1/hyperliquid/hip3/trades/{symbol}")
+
+
 def test_recent_participant_fills_normalize_to_one_taker_trade() -> None:
     """Maker and taker participant rows must not double-count one match."""
     result = fetch_trade_history(
@@ -196,6 +239,76 @@ def test_sole_legacy_fill_is_accepted_without_inventing_a_counterparty() -> None
     assert result.trades[0].aggressor_side == "sell"
 
 
+def test_sole_maker_fill_is_not_invented_as_a_public_taker_trade() -> None:
+    """Maker participant rows must not inflate the public taker tape."""
+    payload = copy.deepcopy(VALID_PAGE)
+    payload["data"] = [payload["data"][0]]  # type: ignore[index]
+
+    result = fetch_trade_history(
+        OxaTradeClient(api_key="test-key", session=FakeSession([payload])),
+        _request(),
+    )
+
+    assert result.trades == ()
+    assert result.unresolved_fill_groups == 0
+
+
+def test_legacy_null_ids_keep_only_takers_with_stable_surrogate_ids() -> None:
+    """Legacy null-ID participant rows must reproduce the taker-only tape."""
+    payload = copy.deepcopy(VALID_PAGE)
+    for index, row in enumerate(payload["data"]):  # type: ignore[index]
+        row["trade_id"] = None
+        row["tx_hash"] = f"0xlegacy{index}"
+        row["user_address"] = f"0xuser{index}"
+
+    first = fetch_trade_history(
+        OxaTradeClient(api_key="test-key", session=FakeSession([payload])),
+        _request(),
+    )
+    second = fetch_trade_history(
+        OxaTradeClient(
+            api_key="test-key",
+            session=FakeSession([copy.deepcopy(payload)]),
+        ),
+        _request(),
+    )
+
+    assert len(first.trades) == 1
+    assert first.trades[0].aggressor_side == "sell"
+    assert first.trades[0].trade_id >= 2**62
+    assert first.trades[0].trade_id == second.trades[0].trade_id
+    assert first.trades[0].to_replay_row()["trade_id_source"] == "derived_null_id_v1"
+
+
+def test_legacy_null_id_maker_rows_are_not_public_taker_trades() -> None:
+    """Null-ID maker participant rows must remain raw evidence only."""
+    payload = copy.deepcopy(VALID_PAGE)
+    payload["data"] = [payload["data"][0]]  # type: ignore[index]
+    payload["data"][0]["trade_id"] = None  # type: ignore[index]
+
+    result = fetch_trade_history(
+        OxaTradeClient(api_key="test-key", session=FakeSession([payload])),
+        _request(),
+    )
+
+    assert result.trades == ()
+    assert result.unresolved_fill_groups == 0
+
+
+def test_legacy_null_id_taker_without_stable_provenance_is_rejected() -> None:
+    """A null-ID taker must fail closed when its surrogate cannot be stable."""
+    payload = copy.deepcopy(VALID_PAGE)
+    payload["data"] = [payload["data"][1]]  # type: ignore[index]
+    payload["data"][0]["trade_id"] = None  # type: ignore[index]
+    payload["data"][0]["user_address"] = None  # type: ignore[index]
+
+    with pytest.raises(ValueError, match="stable order provenance"):
+        fetch_trade_history(
+            OxaTradeClient(api_key="test-key", session=FakeSession([payload])),
+            _request(),
+        )
+
+
 def test_conflicting_participant_fill_identity_is_rejected() -> None:
     """Both sides of a match must agree on timestamp, price, and size."""
     payload = copy.deepcopy(VALID_PAGE)
@@ -228,6 +341,7 @@ def test_trade_storage_is_atomic_auditable_and_replay_loadable(
     manifest = json.loads(stored.manifest_path.read_text(encoding="utf-8"))
     assert manifest["raw_fill_count"] == 2
     assert manifest["trade_count"] == 1
+    assert manifest["normalization_version"] == TRADE_NORMALIZATION_VERSION
     assert manifest["request_ids"] == ["request-1"]
     assert stored.trades_path.name == "trades.jsonl.gz"
     assert manifest["files"]["raw/page-0001.json.gz"]["sha256"]
@@ -256,7 +370,7 @@ def test_missing_trade_request_id_is_rejected() -> None:
         ("side", "X", "side"),
         ("price", "0", "positive"),
         ("size", "-1", "positive"),
-        ("trade_id", None, "trade_id"),
+        ("trade_id", -1, "trade_id"),
         ("crossed", "yes", "crossed"),
         ("timestamp", "2026-07-26T23:49:59Z", "outside requested"),
     ],

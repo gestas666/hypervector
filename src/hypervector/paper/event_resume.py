@@ -143,6 +143,7 @@ def _next_sequence(rows: list[dict[str, object]]) -> int:
 def _open_costs(rows: list[dict[str, object]]) -> tuple[float, float]:
     fees = 0.0
     funding = 0.0
+    previous_position = 0.0
     for row in rows:
         position = _number(row, "position_qty")
         if position is None:
@@ -150,9 +151,22 @@ def _open_costs(rows: list[dict[str, object]]) -> tuple[float, float]:
         if position == 0.0:
             fees = 0.0
             funding = 0.0
+            previous_position = 0.0
             continue
-        fees += _number(row, "fee_usd") or 0.0
-        funding -= _number(row, "funding_payment_usd") or 0.0
+        fee = _number(row, "fee_usd") or 0.0
+        payment = _number(row, "funding_payment_usd") or 0.0
+        direction_changed = previous_position * position < 0.0
+        if previous_position == 0.0 or direction_changed:
+            fees = fee
+            funding = -payment
+        elif abs(position) < abs(previous_position):
+            retained_fraction = abs(position / previous_position)
+            fees *= retained_fraction
+            funding *= retained_fraction
+        else:
+            fees += fee
+            funding -= payment
+        previous_position = position
     return fees, funding
 
 

@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v25-live-forward-canary",
+  "revision_number": 12,
+  "supersedes_revision_id": "59a989505bad0f033e8fb6063c600ba2f7b432bc4a31e3b43c14b03ce4322e24",
+  "created_at_utc": "2026-08-09T08:40:32Z",
+  "strategy_id": "multi_asset_bidirectional_complete_portfolio_canary_v25",
+  "symbol": "MULTI",
+  "status": "observe",
+  "hypothesis": "The complete v25 live portfolio can produce mechanically valid protected lifecycles while causal execution, missed-opportunity, orderbook, provider-clock, and after-cost capture telemetry identifies repeatable provider-symbol behavior that clears measured live friction.",
+  "decision": "Keep v25 armed and unchanged. Record the newly resolved BTC HT-Breakout long as economically too small rather than directionally catastrophic: it realized +7.7102 bps gross, reached only +8.7896 bps completed-candle MFE, faced a 9.1086 bps actual fee-and-funding hurdle, and closed at -$0.003446 net. Across nine compatible-profile closes, five were profitable after costs, three never cleared their observed cost hurdle, and one cleared the hurdle before surrendering it. This decomposition identifies different failure mechanisms but does not justify a route, gate, size, exit, or runtime change from nine all-long lifecycles. Continue collecting resolved short-side execution and use the new classification in subsequent entry-versus-exit attribution.",
+  "confidence": "medium",
+  "falsifier": "The accounting conclusion is invalidated by changed evidence bytes, inconsistent fill or lifecycle cost identities, a non-causal holding path, incorrect funding sign, or failure to reconcile authoritative venue gross PnL with net PnL plus fees and funding. The route-level interpretation would change if independent both-side lifecycles show a different after-cost outcome distribution or if executable intrabar fills demonstrate that completed-candle extremes materially overstate attainable excursion.",
+  "evidence": [
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v25_live_audit_economic_capture_20260809T083821Z.json",
+      "role": "immutable_same_run_audit_with_after_cost_capture_classification",
+      "sha256": "d658d6b8dbe5d743b3e6f2f2313c728cf39a543b73fecefede7d37b433937155",
+      "bytes": 13690778
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v25_live_delta_20260809T074526Z_to_20260809T082503Z.json",
+      "role": "immutable_same_run_delta_with_new_btc_resolution_and_opportunity_maturity",
+      "sha256": "e5b78a72a65be77f720b9d5fe451b25a3fe447ad6eff7e7f75e7c54b34465b1b",
+      "bytes": 231983
+    },
+    {
+      "path": "v25-live-forward-canary-v11.json",
+      "role": "immutable_prior_v25_forward_revision",
+      "sha256": "ec30da21e08f6a318ef78bb4a64bff1275a4909e46b15d6c14c560bc49a27f1e",
+      "bytes": 4995
+    }
+  ],
+  "metrics": {
+    "source_run_id": "bidirectional-live-1786182011216",
+    "profile_id": "multi_asset_bidirectional_complete_portfolio_canary_v25",
+    "observed_through_utc": "2026-08-09T08:38:30.066939+00:00",
+    "compatible_closed_trades": 9,
+    "compatible_wins": 5,
+    "compatible_losses": 4,
+    "compatible_net_pnl_usd": 1.826027,
+    "compatible_profit_factor": 2.8029563702858225,
+    "compatible_net_return_on_margin_pct": 1.9376842735964646,
+    "current_process_closed_trades": 4,
+    "current_process_wins": 2,
+    "current_process_losses": 2,
+    "current_process_net_pnl_usd": 0.45051599999999997,
+    "all_time_closed_trades": 35,
+    "all_time_net_pnl_usd": 0.1300480000000001,
+    "all_time_profit_factor": 1.021950278015813,
+    "profitable_after_costs": 5,
+    "never_cleared_observed_cost_hurdle": 3,
+    "cleared_cost_hurdle_then_surrendered": 1,
+    "resolved_short_lifecycles": 0,
+    "provisional_open_lifecycles": 4,
+    "btc_lifecycle_id": "BTC:512992075180",
+    "btc_side": "long",
+    "btc_exit_reason": "opposite_strategy_intent",
+    "btc_net_pnl_usd": -0.0034459999999999977,
+    "btc_authoritative_gross_return_bps": 7.710219124427516,
+    "btc_maximum_favorable_excursion_bps": 8.789649801848043,
+    "btc_observed_cost_hurdle_bps": 9.108609392994737,
+    "btc_maximum_net_excursion_bps": -0.3189595911466938,
+    "btc_realized_net_return_bps": -1.3983902685672212,
+    "btc_economic_outcome": "never_cleared_observed_cost_hurdle",
+    "running_backend_faults": 0,
+    "execution_authority": "none",
+    "runtime_changed_by_this_revision": false
+  },
+  "limitations": [
+    "All nine compatible-profile resolved lifecycles are long; the currently open ETH short is provisional and cannot establish short-side economics.",
+    "The observed cost hurdle uses each lifecycle's actual fees and signed funding divided by filled entry notional; it is not a fixed forward cost forecast.",
+    "Maximum net excursion subtracts actual lifecycle costs from a completed-candle extreme and is explicitly not an executable exit fill or queue-position claim.",
+    "Nine compatible closes span multiple providers and process windows and are too sparse to estimate durable portfolio edge, expected income, or drawdown.",
+    "All-time history combines materially different profile generations; its 35 trades and PF 1.022 do not establish current-v25 edge.",
+    "Four live lifecycles remained open and protected at the cutoff; their marked economics are excluded from the resolved classification counts.",
+    "The ongoing prefix reports known provider metric-value gaps from the loaded pre-repair runtime, although no new technical-gap identity appeared in the compared delta.",
+    "No live route, position, order, stop, target, size, exit, transition drain, protection, or execution process changed in this revision."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

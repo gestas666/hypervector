@@ -44,6 +44,9 @@ class EventStreamPump(Protocol):
     def pump(self, consumer: EventConsumer) -> int:
         """Deliver currently buffered public evidence."""
 
+    def flush(self) -> None:
+        """Persist accepted evidence without stopping capture."""
+
     def close(self) -> None:
         """Stop capture and flush durable evidence."""
 
@@ -101,6 +104,12 @@ class HypervelocityEventStreamPump:
         self._feed.close()
         self._recorder.close()
         self._closed = True
+
+    def flush(self) -> None:
+        """Persist accepted evidence while leaving the public feed active."""
+        if not self._started or self._closed:
+            raise RuntimeError("event stream pump is not active")
+        self._recorder.flush()
 
     def _declare_disconnect(
         self,

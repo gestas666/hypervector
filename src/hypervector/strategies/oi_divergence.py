@@ -10,11 +10,10 @@ from __future__ import annotations
 
 from typing import Any
 
-import numpy as np
 import pandas as pd
 
 from hypervector.data.book_align import gate_signals_by_orderbook
-from hypervector.strategies.indicators import atr, ema, rsi
+from hypervector.strategies.indicators import ema, rsi
 from hypervector.strategies.registry import StrategySpec, register
 
 
@@ -34,8 +33,16 @@ def build_oi_divergence_long_signals(
 ) -> tuple[pd.Series, pd.Series, str]:
     """Build OI Agreement Long Signals with Acceleration and Volume Conviction."""
     c = df["close"].astype(float)
-    v = df["volume"].astype(float) if "volume" in df.columns else pd.Series(1.0, index=df.index)
-    oi = df["open_interest"].astype(float) if "open_interest" in df.columns else pd.Series(0.0, index=df.index)
+    v = (
+        df["volume"].astype(float)
+        if "volume" in df.columns
+        else pd.Series(1.0, index=df.index)
+    )
+    oi = (
+        df["open_interest"].astype(float)
+        if "open_interest" in df.columns
+        else pd.Series(0.0, index=df.index)
+    )
 
     # 1. Price Momentum Return
     price_ret = c.pct_change(lookback).fillna(0.0)
@@ -65,7 +72,11 @@ def build_oi_divergence_long_signals(
 
     if book_gate and ({"spread_bps", "obi_5"}.issubset(df.columns)):
         entries = gate_signals_by_orderbook(
-            raw_entries, df, direction="long", max_spread_bps=max_spread_bps, min_obi=min_obi
+            raw_entries,
+            df,
+            direction="long",
+            max_spread_bps=max_spread_bps,
+            min_obi=min_obi,
         )
     else:
         entries = raw_entries
@@ -94,8 +105,16 @@ def build_oi_divergence_short_signals(
 ) -> tuple[pd.Series, pd.Series, str]:
     """Build OI Agreement Short Signals with Acceleration."""
     c = df["close"].astype(float)
-    v = df["volume"].astype(float) if "volume" in df.columns else pd.Series(1.0, index=df.index)
-    oi = df["open_interest"].astype(float) if "open_interest" in df.columns else pd.Series(0.0, index=df.index)
+    v = (
+        df["volume"].astype(float)
+        if "volume" in df.columns
+        else pd.Series(1.0, index=df.index)
+    )
+    oi = (
+        df["open_interest"].astype(float)
+        if "open_interest" in df.columns
+        else pd.Series(0.0, index=df.index)
+    )
 
     price_ret = c.pct_change(lookback).fillna(0.0)
     price_down = price_ret < -mom_threshold
@@ -121,7 +140,11 @@ def build_oi_divergence_short_signals(
 
     if book_gate and ({"spread_bps", "obi_5"}.issubset(df.columns)):
         entries = gate_signals_by_orderbook(
-            raw_entries, df, direction="short", max_spread_bps=max_spread_bps, min_obi=min_obi
+            raw_entries,
+            df,
+            direction="short",
+            max_spread_bps=max_spread_bps,
+            min_obi=min_obi,
         )
     else:
         entries = raw_entries

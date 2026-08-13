@@ -10,7 +10,7 @@ from typing import Literal, Mapping, cast
 
 OrderSide = Literal["buy", "sell"]
 OrderType = Literal["limit", "market"]
-OrderRole = Literal["entry", "target"]
+OrderRole = Literal["entry", "target", "exit"]
 EventType = Literal[
     "submitted",
     "accepted",
@@ -46,15 +46,15 @@ class OrderCommand:
         _member(self.side, "side", ("buy", "sell"))
         _positive(self.quantity, "quantity")
         _member(self.order_type, "order_type", ("limit", "market"))
-        _member(self.order_role, "order_role", ("entry", "target"))
+        _member(self.order_role, "order_role", ("entry", "target", "exit"))
         if self.order_type == "limit":
             _positive(self.limit_price, "limit_price")
         elif self.limit_price is not None:
             raise ValueError("market commands cannot carry limit_price")
         if self.post_only and self.order_type != "limit":
             raise ValueError("post_only commands must use order_type='limit'")
-        if self.order_role == "target" and not self.reduce_only:
-            raise ValueError("target commands must set reduce_only=True")
+        if self.order_role in {"target", "exit"} and not self.reduce_only:
+            raise ValueError("target and exit commands must set reduce_only=True")
         if self.order_role == "entry" and self.reduce_only:
             raise ValueError("entry commands cannot set reduce_only=True")
         _utc_timestamp(self.submitted_at, "submitted_at")
@@ -78,7 +78,7 @@ class OrderCommand:
             ),
             order_role=cast(
                 OrderRole,
-                _choice(raw, "order_role", ("entry", "target")),
+                _choice(raw, "order_role", ("entry", "target", "exit")),
             ),
             limit_price=_optional_number(raw, "limit_price"),
             post_only=_boolean(raw, "post_only"),

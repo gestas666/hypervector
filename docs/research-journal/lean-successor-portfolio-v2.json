@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "lean-successor-portfolio",
+  "revision_number": 2,
+  "supersedes_revision_id": "a97034d76756d80a7ae18e6765ea2e91b2d828f331ec4ea962c5d6ed9e39c9ef",
+  "created_at_utc": "2026-08-09T16:23:43Z",
+  "strategy_id": "multi_asset_lean_successor_portfolio",
+  "symbol": "PORTFOLIO",
+  "status": "candidate",
+  "hypothesis": "A lean shared-account portfolio containing bidirectional SOL Range Onset, ETH dual-MTF Range Onset, and SPCX Swing/HA may preserve more after-cost edge than either the broad retired v29 mix or a comparable portfolio using dense ETH pullback.",
+  "decision": "Bind revision 1's selected route composition to the new inactive multi_asset_bidirectional_lean_successor_canary_v30 profile and its fail-closed transition guide. V30 has exactly three assets, three slots, three executable provider-symbol pairs, both long and short authority, $75/$25/$75 notionals, 5x isolated leverage, one position per asset, venue-native stops, and provider-exit ignore semantics. Do not stage or activate it while v25 owns positions or orders. The guide intentionally leaves the flat-boundary snapshot and prechange backup unassigned so they must be generated from the future authoritative venue state. Keep v25 and every current position, stop, order, route, size, and exit policy unchanged. This revision prepares reconstructable files but grants no transition or execution authority.",
+  "confidence": "medium",
+  "falsifier": "The configuration binding is invalidated by a profile fingerprint other than 4cb3ca7905b8d5817066cc7f4cdb5e28f04f93ce298c55fe34d96d5065eecf54, any executable route outside the exact ETH/SOL Range Onset and SPCX Swing mappings, missing long or short authority, changed sizing or lifecycle mechanics, a non-null stale flat snapshot or backup, or any live side effect. The economic hypothesis retains revision 1's low-medium confidence and should be revised by exact prospective after-cost venue outcomes or source/provider parity failure.",
+  "evidence": [
+    {
+      "path": "lean-successor-portfolio-v1.json",
+      "role": "predecessor_economic_selection_and_concentration_decision",
+      "sha256": "088f49e6271b7e8a6fc74f852d119f08305fda307d39dfccede5dc0722e2860d",
+      "bytes": 5707
+    },
+    {
+      "path": "../../configs/multi_asset_bidirectional_lean_successor_canary_v30.toml",
+      "role": "inactive_exact_route_risk_and_lifecycle_contract",
+      "sha256": "303c8e9ae1c8947481ab64e2894cffb964c9de4b17811bb44ae6d8ce9dd3d81c",
+      "bytes": 1748
+    },
+    {
+      "path": "../guides/cohort-live-transition-and-rollback-v30.md",
+      "role": "fail_closed_transition_prerequisites_and_rollback_contract",
+      "sha256": "8693327496aaeed2f739ee5bb6a85a6a137e0d5b60263b776e3083ca3b6e50cc",
+      "bytes": 6177
+    },
+    {
+      "path": "../../data/logs/research/lean_successor_portfolio_comparison_20260809T161609Z.json",
+      "role": "immutable_fixed_ablation_shared_account_artifact",
+      "sha256": "a507537566cacb1a256e61f5f70abc8a5f0212514787e93367a8ef5727127bee",
+      "bytes": 1421828
+    }
+  ],
+  "metrics": {
+    "active_profile_id": "multi_asset_bidirectional_complete_portfolio_canary_v25",
+    "active_profile_fingerprint": "ec7715f671fa369d0a415d8941061eb9a577b232bbd4e06367a7342267ff7ecc",
+    "candidate_profile_id": "multi_asset_bidirectional_lean_successor_canary_v30",
+    "candidate_profile_fingerprint": "4cb3ca7905b8d5817066cc7f4cdb5e28f04f93ce298c55fe34d96d5065eecf54",
+    "candidate_run_fingerprint_observe": "eee2b798be090ebfa99a21df2d2430925d3bb5906216f850e20f1b7ae237dbc7",
+    "candidate_assets": 3,
+    "candidate_maximum_positions": 3,
+    "candidate_executable_routes": 3,
+    "candidate_both_side_routes": 3,
+    "candidate_observe_only_routes": 0,
+    "candidate_active": false,
+    "transition_authorized": false,
+    "flat_and_order_free_verified": false,
+    "transition_readiness_snapshot_assigned": false,
+    "prechange_bundle_assigned": false,
+    "execution_authority": "none",
+    "automatic_promotion": false,
+    "runtime_changed_by_this_revision": false
+  },
+  "limitations": [
+    "The candidate configuration has not been staged, launched, or reconciled against a flat venue boundary.",
+    "The transition guide cannot bind a future flat checkpoint or backup before those states exist.",
+    "The economic evidence remains opened, selection-contaminated, and winner-sensitive in common windows.",
+    "The current v25 process and positions remain the only authoritative live generation.",
+    "A passing observe-mode configuration load does not prove future private IOC fills or execution quality.",
+    "No live process, profile, staged profile, route, order, position, stop, target, allocation, transition drain, or protection changed in this revision."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v25-live-forward-canary",
+  "revision_number": 10,
+  "supersedes_revision_id": "85f6eaee52e415bd9bb304f034eb85c7ba2e442cad7a077571d22fd3d1bc932a",
+  "created_at_utc": "2026-08-09T02:43:45Z",
+  "strategy_id": "multi_asset_bidirectional_complete_portfolio_canary_v25",
+  "symbol": "MULTI",
+  "status": "observe",
+  "hypothesis": "The complete v25 live portfolio can produce mechanically valid protected lifecycles while causal execution, missed-opportunity, orderbook, and provider-clock telemetry identifies repeatable provider-symbol behavior that clears measured live friction.",
+  "decision": "Keep v25 armed and unchanged. Record one exact BTC HT-Breakout long episode as negative report-only entry-quality evidence: its executable-BBO path was -11.6131, -15.6198, and -19.0101 bps after modeled friction at 15, 30, and 60 minutes. The episode had aligned order pressure but neutral 5m and 15m context. No live lifecycle resolved in the same-run delta and no new provider evaluation became eligible. Continue collecting independent both-side episodes and resolved live outcomes; do not route, resize, gate, pause, or alter v25 from one path.",
+  "confidence": "low",
+  "falsifier": "This revision is invalidated by source-run or profile drift, changed artifact bytes, a pre-publication BBO, incomplete path identity, inconsistent fee or slippage arithmetic, or report-only code changing runtime state. The entry-quality concern would weaken if materially more independent BTC long and short episodes retain positive after-friction median and leave-largest results and agree with resolved live lifecycles.",
+  "evidence": [
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v25_live_audit_bbo_paths_20260809T023911Z.json",
+      "role": "immutable_same_run_after_prefix_with_complete_executable_bbo_paths",
+      "sha256": "8ceaff8637b58f5476050c91c12cc0d0231f4f723906296b5f7dcb84e25b452e",
+      "bytes": 11840548
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v25_live_delta_bbo_paths_20260809T014925Z_20260809T023911Z.json",
+      "role": "immutable_same_run_executable_bbo_maturity_delta",
+      "sha256": "f877457434e2fdc760ab570f1056dbb3ccaccf84a26c3c97ee70e9ffc2181fbf",
+      "bytes": 215979
+    },
+    {
+      "path": "../reviews/2026-08-08-v25-btc-ht-breakout-bbo-maturity.md",
+      "role": "btc_episode_interpretation_limits_and_falsifiers",
+      "sha256": "f8d5b720531078def11255a34507148a0495ba211ede9f76a66ed6fe27bf30b2",
+      "bytes": 3019
+    },
+    {
+      "path": "v25-live-forward-canary-v9.json",
+      "role": "immutable_prior_v25_forward_revision",
+      "sha256": "6543bcaab9f3043e190026363a425254c8c606678b5ba91728ae03ddf5d5350b",
+      "bytes": 4837
+    }
+  ],
+  "metrics": {
+    "source_run_id": "bidirectional-live-1786182011216",
+    "profile_id": "multi_asset_bidirectional_complete_portfolio_canary_v25",
+    "delta_row_count": 341,
+    "new_closed_trades": 0,
+    "new_fills": 0,
+    "new_eligible_evaluations": 0,
+    "new_directional_evaluations": 491,
+    "btc_episode_side": "long",
+    "btc_episode_pressure_stance": "aligned",
+    "btc_episode_state_5m_stance": "neutral",
+    "btc_episode_context_15m_stance": "neutral",
+    "btc_episode_15m_after_modeled_friction_bps": -11.613062653240384,
+    "btc_episode_30m_after_modeled_friction_bps": -15.619770543879156,
+    "btc_episode_60m_after_modeled_friction_bps": -19.010061835957604,
+    "compatible_closed_trades": 7,
+    "compatible_wins": 4,
+    "compatible_losses": 3,
+    "compatible_net_pnl_usd": 1.818243,
+    "provisional_open_lifecycles": 3,
+    "technical_gap_identities_added": 0,
+    "technical_gap_identities_removed": 0,
+    "execution_authority": "none",
+    "runtime_changed_by_this_revision": false
+  },
+  "limitations": [
+    "The BTC observation is one long episode from one intraday window; there is no short-side replication or regime diversity.",
+    "Executable-BBO markouts model visible top-of-book capacity, fees, and residual slippage but cannot reproduce private latency, hidden liquidity, or queue position.",
+    "The episode is signal-path evidence, not a submitted order, fill, funding result, owned PnL, or shared-capital portfolio replay.",
+    "The broader opportunity stream is highly overlapping; raw matured annotations must not be counted as independent trials.",
+    "Provider metric telemetry remains incomplete under the known loaded pre-repair runtime; the technical-gap identity did not change in this delta.",
+    "Three live lifecycles remained provisional at the audit cutoff, so their marked economics are excluded from resolved performance.",
+    "No live route, position, order, stop, target, size, exit, transition drain, or protection changed in this revision."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

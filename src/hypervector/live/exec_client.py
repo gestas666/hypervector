@@ -89,6 +89,7 @@ class LiveExecClient(Protocol):
 
     def cancel_all(self, *, symbol: str | None = None) -> PlaceResult: ...
 
+
 def is_submit_wired() -> bool:
     """True when the live exec client module is present (F2+)."""
     return True
@@ -104,7 +105,9 @@ def _parse_oid(response: dict[str, Any]) -> str | None:
     # Nested HL-style response.statuses[0].resting.oid etc.
     statuses = response.get("response") or response.get("statuses")
     if isinstance(statuses, dict):
-        data = statuses.get("data") if isinstance(statuses.get("data"), dict) else statuses
+        data = (
+            statuses.get("data") if isinstance(statuses.get("data"), dict) else statuses
+        )
         st_list = data.get("statuses") if isinstance(data, dict) else None
         if isinstance(st_list, list) and st_list:
             first = st_list[0]
@@ -127,7 +130,9 @@ def _check_venue_error(response: dict[str, Any]) -> str | None:
     # Check nested Hyperliquid response.data.statuses[0].error
     statuses = response.get("response") or response.get("statuses")
     if isinstance(statuses, dict):
-        data = statuses.get("data") if isinstance(statuses.get("data"), dict) else statuses
+        data = (
+            statuses.get("data") if isinstance(statuses.get("data"), dict) else statuses
+        )
         st_list = data.get("statuses") if isinstance(data, dict) else None
         if isinstance(st_list, list) and st_list:
             first = st_list[0]
@@ -331,7 +336,10 @@ class _SdkPlaceTransport:
             if hasattr(exchange, "cancel_all"):
                 raw = exchange.cancel_all(coin)
             else:
-                raw = {"status": "ok", "note": "no cancel_all on SDK; open orders untouched"}
+                raw = {
+                    "status": "ok",
+                    "note": "no cancel_all on SDK; open orders untouched",
+                }
         elif hasattr(exchange, "cancel_all"):
             raw = exchange.cancel_all()
         else:
@@ -371,8 +379,7 @@ def create_live_exec_client_from_env(
     key = (env.get(SECRET_ENV_API_KEY) or "").strip()
     if not wallet or not key:
         raise LivePolicyError(
-            "live secrets missing — set "
-            f"{SECRET_ENV_WALLET} and {SECRET_ENV_API_KEY}"
+            f"live secrets missing — set {SECRET_ENV_WALLET} and {SECRET_ENV_API_KEY}"
         )
     return create_live_exec_client(
         policy,

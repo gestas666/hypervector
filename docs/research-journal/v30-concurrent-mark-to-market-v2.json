@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v30-concurrent-mark-to-market",
+  "revision_number": 2,
+  "supersedes_revision_id": "0a4e92a3256e0202b2e5c654ddbf829ca3d1649ad68d4c22703e4f87ba368661",
+  "created_at_utc": "2026-08-09T17:47:01Z",
+  "strategy_id": "lean_successor_v30",
+  "symbol": "ETH,SOL,XYZ:SPCX",
+  "status": "candidate",
+  "hypothesis": "The fixed lean v30 composition may retain its opened historical and concurrent mark-to-market advantage when evaluated against exact prospective route evidence emitted by the running v25 backend.",
+  "decision": "Retain the exact v30 bytes as an inactive canary candidate, but lower immediate activation confidence from low-medium to low. At this frozen prefix, ETH and SOL Range Onset each have 1,922 forward evaluations but zero eligible signals or exact closes; SPCX Swing has 21 eligible paths with negative mean direction at every reported horizon and two long closes totaling +$0.910830, but becomes -$0.656872 after removing its only winner. Keep v25 unchanged while six venue-stopped positions remain open. Continue exact route collection without increasing leverage, notional, slots, routes, or adding an ML/regime gate. This is a recommendation rather than a hidden performance gate: a future v30 canary still requires explicit operator authority and the existing flat-and-order-free transition contract.",
+  "confidence": "low",
+  "falsifier": "The revision is invalidated if its checkpoint or decisions prefix cannot be reproduced, a selected provider-symbol route was substituted, eligible paths were represented as fills, future evidence entered an earlier decision, open positions or venue stops were omitted, or candidate bytes changed. Independent after-cost ETH and SOL outcomes on both sides and SPCX profitability excluding its largest winner would raise confidence; continued negative eligible paths, adverse route closes, or worse live friction would lower it.",
+  "evidence": [
+    {
+      "path": "../plans/2026-08-09-v30-live-forward-readiness-prefix.md",
+      "role": "predeclared_exact_route_prefix_and_readiness_contract",
+      "sha256": "cffa131d7862eb68279bdcc1e2f732f7c08298225e6fb1cd998c0bdbde97c54f",
+      "bytes": 2152
+    },
+    {
+      "path": "../reviews/2026-08-09-v30-live-forward-readiness-prefix.md",
+      "role": "forward_route_results_updated_confidence_and_recommendation",
+      "sha256": "5780099aca15f427b7f0cf73cdf78b54b849a813c86df40aeddeed87700891c2",
+      "bytes": 5083
+    },
+    {
+      "path": "../../data/logs/research/v30_live_forward_readiness_20260809T174500Z.json",
+      "role": "immutable_checkpoint_and_decisions_prefix_readiness_artifact",
+      "sha256": "6e718386c177b53da04f364e2732b870d3adf4ef93d65601572db7bdbafb9b5a",
+      "bytes": 118145
+    },
+    {
+      "path": "../../configs/multi_asset_bidirectional_lean_successor_canary_v30.toml",
+      "role": "exact_inactive_candidate_profile",
+      "sha256": "303c8e9ae1c8947481ab64e2894cffb964c9de4b17811bb44ae6d8ce9dd3d81c",
+      "bytes": 1748
+    }
+  ],
+  "metrics": {
+    "checkpoint_observed_at_utc": "2026-08-09T17:45:33.191946+00:00",
+    "decisions_prefix_bytes": 880077104,
+    "v25_closed_trades": 11,
+    "v25_net_pnl_usd": 3.063513,
+    "v25_fees_usd": 0.456238,
+    "v25_funding_usd": -0.082829,
+    "v25_open_positions": 6,
+    "v25_unprotected_open_positions": 0,
+    "v25_faults": 0,
+    "eth_forward_evaluations": 1922,
+    "eth_eligible_signals": 0,
+    "eth_exact_closes": 0,
+    "sol_forward_evaluations": 1922,
+    "sol_eligible_signals": 0,
+    "sol_exact_closes": 0,
+    "spcx_forward_evaluations": 128,
+    "spcx_eligible_signals": 21,
+    "spcx_exact_closes": 2,
+    "spcx_exact_net_pnl_usd": 0.9108299999999999,
+    "spcx_net_excluding_largest_winner_usd": -0.656872,
+    "spcx_5m_mean_directional_return_bps": -4.446811294649939,
+    "spcx_15m_mean_directional_return_bps": -0.9307557255707385,
+    "spcx_30m_mean_directional_return_bps": -2.5213168730293356,
+    "spcx_60m_mean_directional_return_bps": -10.085550820812088,
+    "execution_authority": "none",
+    "automatic_promotion": false,
+    "runtime_changed": false
+  },
+  "limitations": [
+    "ETH and SOL have no eligible forward signal or exact live close in this prefix.",
+    "SPCX exact execution contains only two long closes and depends on one winner.",
+    "Eligible directional paths are not fills and do not include private queue or acknowledgement behavior.",
+    "V25 and v30 allocate capital differently, so current v25 execution is not a counterfactual v30 portfolio.",
+    "The source interval is opened and cannot establish independent confirmation.",
+    "No live process, profile, route, position, order, stop, leverage, notional, transition drain, or protection changed."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

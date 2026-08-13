@@ -52,8 +52,12 @@ def test_candidate_generation_is_seeded_and_includes_baseline() -> None:
 
     assert first == second
     assert len(first) == 4
-    assert first[0]["ema_fast"] == 20
-    assert first[0]["ema_slow"] == 50
+    assert first[0]["ema_fast"] == 21
+    assert first[0]["ema_slow"] == 55
+    assert first[0]["bbwp_compression_threshold"] == 25.0
+    assert all("choppiness_length" not in candidate for candidate in first)
+    assert all("choppiness_range_threshold" not in candidate for candidate in first)
+    assert all("bbwp_compression_threshold" in candidate for candidate in first)
 
 
 def test_tuner_reports_every_trial_and_keeps_holdout_out_of_selection() -> None:
@@ -65,7 +69,11 @@ def test_tuner_reports_every_trial_and_keeps_holdout_out_of_selection() -> None:
             "warmup_bars": 60,
             "structure_lookback": 180,
             "minimum_trend_gap_bps": 0.5,
-            "choppiness_range_threshold": 85.0,
+            "bbwp_length": 20,
+            "bbwp_lookback": 180,
+            "bbwp_compression_threshold": 25.0,
+            "rsi_length": 14,
+            "rsi_signal_length": 7,
             "coiling_width_bps": 0.5,
             "breakout_clearance_bps": 3.0,
         },
@@ -100,8 +108,8 @@ def test_tuner_does_not_abort_when_performance_is_poor() -> None:
         _positions(bars.index),
         [
             {
-                "ema_fast": 20,
-                "ema_slow": 50,
+                "ema_fast": 21,
+                "ema_slow": 55,
                 "minimum_trend_gap_bps": 500.0,
             }
         ],

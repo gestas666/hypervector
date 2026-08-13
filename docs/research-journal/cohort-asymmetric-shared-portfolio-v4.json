@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "cohort-asymmetric-shared-portfolio",
+  "revision_number": 4,
+  "supersedes_revision_id": "5e7e8679927c0cea7c7f2f67c29f3cb88774b8a5113a36c8f139277e2a0c0dd2",
+  "created_at_utc": "2026-08-09T12:11:39Z",
+  "strategy_id": "multi_asset_portfolio_research_process",
+  "symbol": "MULTI",
+  "status": "candidate",
+  "hypothesis": "A predeclared asymmetric portfolio that permits HYPE breakout long, ETH precompression-pullback long, and SOL range-onset long and short may improve after-friction shared-capital performance over enabling every source symmetrically on both sides.",
+  "decision": "Keep the asymmetric portfolio as a report-only candidate, but do not promote it or increase HYPE allocation. Its first genuinely post-cutoff candidate lifecycle is a HYPE long that lost $0.330216 after fees and funding, or 2.2181% of entry margin. No frozen symmetric-control lifecycle has resolved, and ETH-pullback plus both SOL range sides still have zero prospective closes, so one HYPE loss weakens the historical case without resolving the portfolio hypothesis. Live v25 remains unchanged while four venue-protected positions are open. The next decision should compare new candidate routes separately, preserve exact side attribution, and distinguish signal failure from shared-capital displacement rather than fitting another global gate.",
+  "confidence": "low",
+  "falsifier": "The prospective observer is invalidated by profile or cutoff drift, accepting an open mark or pre-cutoff lifecycle, missing route-side attribution, unreconciled source counts, or any execution authority. The asymmetric economic hypothesis weakens further if additional independent candidate lifecycles remain nonpositive after actual costs, if HYPE long becomes nonpositive across mixed-profile history, or if the symmetric controls outperform once they resolve. It strengthens if independently resolved ETH or SOL candidate routes make the post-cutoff portfolio positive without dependence on one winner and with stable venue friction.",
+  "evidence": [
+    {
+      "path": "cohort-asymmetric-shared-portfolio-v3.json",
+      "role": "prior_checkpoint_integration_revision",
+      "sha256": "a2544b1190b1272c61fa7c66e6ca7556a013e64d9c11f0dc88700c7632c542f5",
+      "bytes": 6947
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/multi_asset_live_audit_bidirectional-live-1786182011216.json",
+      "role": "immutable_current_v25_live_audit_with_resolved_trade_and_opportunity_paths",
+      "sha256": "843107f83de8fe95f30cb5a674e6e3baa62dba0170f631ea510444c44ee210e9",
+      "bytes": 14882493
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v25_live_delta_goal_continuation_20260809T120850Z.json",
+      "role": "same_run_prefix_delta_with_two_new_resolved_lifecycles",
+      "sha256": "d7d5b237549b5a7fd212c2758c235af1e68d8d87af044944665a69d5f1e4c694",
+      "bytes": 456564
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/cohort_asymmetric_forward_observer_20260809T120850Z.json",
+      "role": "post_cutoff_candidate_and_symmetric_control_forward_economics",
+      "sha256": "062e704de3e8a0878f781b6358c076f517419f6b796b77f468b48ad143952842",
+      "bytes": 6386
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v25_side_composition_goal_continuation_20260809T120850Z.json",
+      "role": "current_profile_and_mixed_profile_exact_route_side_composition",
+      "sha256": "086c0a2b031780827e24fb230ebbb91a3046bee0fe852d4e4d647e3811094df6",
+      "bytes": 35586
+    }
+  ],
+  "metrics": {
+    "predeclared_at_utc": "2026-08-09T06:02:47Z",
+    "entry_cutoff_timestamp_ms": 1786255367000,
+    "source_profile_id": "multi_asset_bidirectional_complete_portfolio_canary_v25",
+    "source_profile_fingerprint": "ec7715f671fa369d0a415d8941061eb9a577b232bbd4e06367a7342267ff7ecc",
+    "source_run_id": "bidirectional-live-1786182011216",
+    "candidate_post_cutoff": 1,
+    "excluded_symmetric_post_cutoff": 0,
+    "pre_cutoff_in_scope": 1,
+    "profile_mismatch_in_scope": 0,
+    "unrelated_resolved_lifecycles": 9,
+    "candidate_closed_trades": 1,
+    "candidate_wins": 0,
+    "candidate_losses": 1,
+    "candidate_net_pnl_usd": -0.330216,
+    "candidate_net_return_on_margin_pct": -2.2180564963068665,
+    "candidate_profit_factor": 0.0,
+    "candidate_hype_long_closed_trades": 1,
+    "candidate_hype_long_net_pnl_usd": -0.330216,
+    "candidate_eth_long_closed_trades": 0,
+    "candidate_sol_long_closed_trades": 0,
+    "candidate_sol_short_closed_trades": 0,
+    "mixed_profile_hype_long_closed_trades": 9,
+    "mixed_profile_hype_long_wins": 5,
+    "mixed_profile_hype_long_losses": 4,
+    "mixed_profile_hype_long_net_pnl_usd": 0.1722419999999999,
+    "mixed_profile_hype_long_profit_factor": 1.0869862083210655,
+    "mixed_profile_hype_long_median_return_on_margin_pct": 1.234953582945494,
+    "same_run_newly_closed_trades": 2,
+    "same_run_new_wins": 1,
+    "same_run_new_losses": 1,
+    "same_run_net_pnl_delta_usd": 1.2374859999999999,
+    "same_run_fees_delta_usd": 0.07735900000000001,
+    "same_run_funding_delta_usd": -0.048975,
+    "metric_value_gaps_delta": 120,
+    "live_open_positions": 4,
+    "live_faults": 0,
+    "execution_authority": "none",
+    "automatic_promotion": false,
+    "runtime_changed_by_this_revision": false
+  },
+  "limitations": [
+    "One post-cutoff candidate loss cannot identify the full four-route shared-capital portfolio or estimate stable expectancy.",
+    "No HYPE-short or ETH-short symmetric control has resolved after the cutoff, so candidate-versus-control economics remain unavailable.",
+    "ETH-pullback long and both SOL range sides have no prospective candidate closes; the current result is entirely HYPE-dependent.",
+    "The live prefix added 120 known metric-value gaps from the loaded HIP-3 pressure-clock defect; the validated repair remains staged for a flat restart.",
+    "Mixed-profile HYPE history combines different strategy generations and conflicts with its negative current-profile outcome.",
+    "Matured BBO and signal paths measure opportunity direction and cost clearance, not hypothetical fills or realized portfolio PnL.",
+    "The observer cannot route, size, enter, close, pause, restart, or promote a strategy."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

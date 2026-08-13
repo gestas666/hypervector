@@ -1,7 +1,7 @@
-"""I2 local data layout: Parquet cache, SQLite runs, exports, paper/live separation.
+"""Local data layout: raw evidence, DuckDB research, and runtime separation.
 
 All runtime paths hang off a configurable data root (default ``./data``).
-Never mix paper and live ledgers. No Postgres/Redis/k8s for MVP.
+Never mix paper and live ledgers. DuckDB is analytical, not a live event bus.
 """
 
 from __future__ import annotations
@@ -15,6 +15,7 @@ DATA_SUBDIRS: tuple[str, ...] = (
     "cache/book",
     "cache/events/hyperliquid",
     "cache/vendor/0xarchive",
+    "research",
     "runs",
     "exports",
     "logs/research",
@@ -38,6 +39,8 @@ class DataPaths:
     cache_book: Path
     cache_events_hyperliquid: Path
     cache_vendor_0xarchive: Path
+    research: Path
+    research_db: Path
     runs: Path
     runs_db: Path
     exports: Path
@@ -62,6 +65,8 @@ def paths_for(root: Path | str) -> DataPaths:
         cache_book=r / "cache" / "book",
         cache_events_hyperliquid=r / "cache" / "events" / "hyperliquid",
         cache_vendor_0xarchive=r / "cache" / "vendor" / "0xarchive",
+        research=r / "research",
+        research_db=r / "research" / "market.duckdb",
         runs=r / "runs",
         runs_db=r / "runs" / "hypervector.db",
         exports=r / "exports",
@@ -94,6 +99,7 @@ def layout_report(root: Path | str) -> dict[str, object]:
         "cache": paths.cache,
         "cache_events_hyperliquid": paths.cache_events_hyperliquid,
         "cache_vendor_0xarchive": paths.cache_vendor_0xarchive,
+        "research": paths.research,
         "runs": paths.runs,
         "exports": paths.exports,
         "logs_research": paths.logs_research,
@@ -110,6 +116,7 @@ def layout_report(root: Path | str) -> dict[str, object]:
         "root": str(paths.root.resolve()),
         "dirs": {k: {"path": str(p), "exists": p.is_dir()} for k, p in dirs.items()},
         "runs_db": str(paths.runs_db),
+        "research_db": str(paths.research_db),
         "paper_db": str(paths.paper_db),
         "rules": {
             "paper_live_separated": True,

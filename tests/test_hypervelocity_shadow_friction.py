@@ -89,6 +89,22 @@ def entry(
     )
 
 
+def maximum_hold_exit(*, quantity: float = 0.01) -> OrderCommand:
+    """Return one immediate reduce-only maximum-hold exit command."""
+    return OrderCommand(
+        client_order_id="hv-exit-1",
+        symbol="BTC",
+        side="sell",
+        quantity=quantity,
+        order_type="market",
+        order_role="exit",
+        limit_price=None,
+        post_only=False,
+        reduce_only=True,
+        submitted_at=iso(3),
+    )
+
+
 def port(
     *,
     submit_ms: int = 50,
@@ -145,6 +161,91 @@ def test_latency_queue_ahead_partial_fill_and_account_fee() -> None:
     assert record.cumulative_filled_quantity == pytest.approx(0.02)
     assert record.remaining_quantity == pytest.approx(0.02)
     assert record.liquidity_side == "maker"
+
+
+def test_maximum_hold_market_exit_uses_fresh_bbo_taker_and_cancels_target() -> None:
+    """A deadline exit consumes BBO and atomically retires passive targets."""
+    shadow = port(submit_ms=0, initial_cash_usd=10_000.0)
+    shadow.ingest(book(0, bid_size=0.001))
+    shadow.submit(entry(quantity=0.01))
+    shadow.ingest(book(1, bid_size=0.001))
+    shadow.reconcile()
+    shadow.ingest(trade(2, size=0.011, trade_id=30))
+    shadow.reconcile()
+    target = replace(
+        entry(quantity=0.01),
+        client_order_id="hv-target-1",
+        side="sell",
+        order_role="target",
+        limit_price=64_629.0,
+        reduce_only=True,
+    )
+    shadow.submit(target)
+    shadow.ingest(book(3, bid_size=0.001))
+    shadow.reconcile()
+
+    events, record = shadow.execute_market(
+        maximum_hold_exit(),
+        observed_at=iso(3),
+    )
+
+    assert [event.event_type for event in events] == ["canceled", "filled"]
+    assert events[0].client_order_id == "hv-target-1"
+    assert events[1].client_order_id == "hv-exit-1"
+    assert events[1].fill_price == pytest.approx(64_500.0)
+    assert events[1].liquidity_side == "taker"
+    assert events[1].fee_usd == pytest.approx(0.01 * 64_500.0 * 0.00045)
+    assert record.liquidity_side == "taker"
+    assert record.queue_ahead_quantity == 0.0
+    assert shadow.account_snapshot().position_quantity == 0.0
+
+
+def test_partial_target_releases_closed_cost_basis_before_liquidation() -> None:
+    """A profitable partial target must not leave all costs on the residue."""
+    shadow = port(submit_ms=0, initial_cash_usd=10_000.0)
+    quantity = 4.0
+    remaining = 0.05
+    shadow.ingest(book(0, bid_size=0.001))
+    shadow.submit(entry(quantity=quantity))
+    shadow.ingest(book(1, bid_size=0.001))
+    shadow.reconcile()
+    shadow.ingest(trade(2, size=quantity + 0.001, trade_id=20))
+    shadow.reconcile()
+    shadow.apply_funding(
+        hourly_rate=0.0001,
+        mark_price=64_500.0,
+        applied_at=iso(3),
+    )
+    target = replace(
+        entry(quantity=quantity - remaining),
+        client_order_id="hv-target-residual",
+        side="sell",
+        order_role="target",
+        limit_price=64_629.0,
+        reduce_only=True,
+    )
+    shadow.submit(target)
+    shadow.ingest(book(4, bid=64_628.0, ask=64_629.0))
+    shadow.reconcile()
+    shadow.ingest(
+        trade(
+            5,
+            side="buy",
+            price=64_629.0,
+            size=quantity - remaining + 0.5,
+            trade_id=21,
+        )
+    )
+    shadow.reconcile()
+
+    assert shadow.account_snapshot().position_quantity == pytest.approx(remaining)
+    assert shadow.funding_net_usd == pytest.approx(-0.3225)
+    boundary = shadow.liquidation_price
+    assert boundary is not None
+    assert boundary < 64_500.0
+    shadow.ingest(book(6, bid=64_628.0, ask=64_629.0))
+    assert shadow.mark(mark_price=64_629.0, observed_at=iso(7)) is False
+    assert shadow.last_liquidation is None
 
 
 def test_post_only_cross_rejects_after_submit_latency() -> None:
@@ -346,6 +447,8 @@ def test_hourly_funding_and_isolated_liquidation_are_accounted() -> None:
     assert shadow.account_snapshot().position_quantity == 0.0
     assert shadow.last_liquidation is not None
     assert shadow.last_liquidation.margin_mode == "isolated"
+    assert shadow.last_liquidation.boundary_price == pytest.approx(liquidation_price)
+    assert shadow.last_liquidation.mark_price == pytest.approx(execution_mark)
     assert shadow.last_liquidation.execution_fee_usd == pytest.approx(
         quantity * execution_mark * 0.00045
     )

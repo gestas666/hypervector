@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "hulk-eth-hype-native-transfer",
+  "revision_number": 2,
+  "supersedes_revision_id": "62c397c3dd1f022bf61acd11b53d30fde46cd926e7e2abce1f84fea8aa15424e",
+  "created_at_utc": "2026-08-08T21:07:37Z",
+  "strategy_id": "hulk_expansion_bidirectional_tuned_v2",
+  "symbol": "ETH,HYPE",
+  "status": "reject",
+  "hypothesis": "The frozen bidirectional Hulk v2 rule selected on BTC/SOL may transfer to ETH or HYPE when evaluated on venue-native Hyperliquid candles with unchanged signal, risk, exit, fee, slippage, and funding assumptions.",
+  "decision": "Retain the rejection of a durable ETH/HYPE Hulk v2 transfer edge while preserving the first contradictory live result. The exact HYPE long reached its venue target for +$0.552777 after fees and funding, but it is one winner over 1.53 hours and contributes 100% of this route's live gross profit. It cannot overturn the 97-trade HYPE and 100-trade ETH negative historical transfer evidence. Continue prospective exact-route measurement without changing, gating, or promoting the active runtime from this record.",
+  "confidence": "medium",
+  "falsifier": "Update this rejection after a prospectively declared exact-route sample reaches at least 20 independently resolved live lifecycles per asset and 30 calendar days of coverage, with positive after-fee and after-funding net PnL, profit factor above 1.0 on both sides combined, both long and short represented, and no single trade contributing more than half of gross profit. A source hash mismatch, unresolved lifecycle economics, or a provider-contract change invalidates the comparison.",
+  "evidence": [
+    {
+      "path": "hulk-eth-hype-native-transfer-v1.json",
+      "role": "superseded_historical_transfer_decision",
+      "sha256": "bcae3a1d3c664aa4a879a8487a8e04788f57636e8b8fac0d14e90e8f3a80f1b6",
+      "bytes": 6071
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v25_live_prefix_20260808T210508Z.json",
+      "role": "immutable_v25_live_prefix_with_resolved_hype_target",
+      "sha256": "cd5048959139198be21d526539c288f430a279f3648b7be69849c4241122b320",
+      "bytes": 9878378
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v25_live_prefix_delta_20260808T202339Z_20260808T210508Z.json",
+      "role": "immutable_same_run_resolved_economic_delta",
+      "sha256": "34c10eb42a054c68264ca87bad437d73c4909e4d1bc52aa95ece7b4bede4dc33",
+      "bytes": 179442
+    }
+  ],
+  "metrics": {
+    "live_hype_closed_trades": 1,
+    "live_hype_wins": 1,
+    "live_hype_losses": 0,
+    "live_hype_net_pnl_usd": 0.552777,
+    "live_hype_fees_usd": 0.042981,
+    "live_hype_funding_usd": 0.000078,
+    "live_hype_net_return_on_margin_pct": 3.7193293947710293,
+    "live_hype_price_return_pct": 0.7998539079620226,
+    "live_hype_holding_time_ms": 5510079,
+    "live_hype_maximum_favorable_excursion_bps": 79.98539079620227,
+    "live_hype_maximum_adverse_excursion_bps": 7.121986851716944,
+    "live_hype_peak_giveback_bps": 0.0,
+    "live_hype_gross_mfe_capture_ratio": 1.0,
+    "live_hype_post_exit_5m_directional_bps": -8.33363527664055,
+    "live_hype_post_exit_15m_directional_bps": -1.0869959056492018,
+    "live_hype_post_exit_30m_directional_bps": -15.036776694807852,
+    "live_hype_largest_winner_share_pct": 100.0,
+    "hype_historical_continuous_trades": 97,
+    "hype_historical_continuous_net_pnl_usd": -1819.2984275931337,
+    "hype_historical_continuous_profit_factor": 0.4638821956580381,
+    "eth_historical_continuous_trades": 100,
+    "eth_historical_continuous_net_pnl_usd": -1394.2354309342593,
+    "eth_historical_continuous_profit_factor": 0.5918723490999175,
+    "v25_current_run_closed_trades": 5,
+    "v25_current_run_net_pnl_usd": 2.170721,
+    "delta_journal_revision_recommended": true,
+    "delta_metric_value_gaps": 30,
+    "runtime_changed_by_this_revision": false
+  },
+  "limitations": [
+    "The new exact-route evidence is one HYPE long winner; there is no live short outcome and no repeatability estimate.",
+    "The resolved lifecycle belongs to hulk_expansion_bidirectional_tuned_v2 on HYPE, not the HT-Breakout provider.",
+    "The venue target fill and realized costs are authoritative, while completed-candle MFE, MAE, giveback, and post-exit paths remain path diagnostics rather than counterfactual fills.",
+    "The same-run audit remains evidence-incomplete because known metric-value gaps grew by 30, although no technical-gap identity was added or removed and the resolved lifecycle economics reconcile.",
+    "Historical transfer replay and live cohort sizing differ, so the result updates execution evidence without proving parameter-level historical parity.",
+    "This record has no order, close, resize, route, filter, restart, or automatic-promotion authority."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

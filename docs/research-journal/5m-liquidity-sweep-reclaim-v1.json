@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "5m-liquidity-sweep-reclaim",
+  "revision_number": 1,
+  "supersedes_revision_id": null,
+  "created_at_utc": "2026-08-09T17:35:48Z",
+  "strategy_id": "liquidity_sweep_5m_bidirectional_v1",
+  "symbol": "BTC,SOL",
+  "status": "reject",
+  "hypothesis": "A completed five-minute sweep of a causal one-hour structural high or low may predict enough next-open continuation or reclaim reversal to survive Hyperliquid fees, slippage, and funding with a candle-extreme structural stop, 2R target, and six-hour maximum hold.",
+  "decision": "Reject both exact arms. Acceptance continuation and reclaim reversal were negative before fees, after nominal and stress friction, in every chronological fold, every BTC/SOL long/short cell, and every causal 15-minute regime slice. Do not tune nearby thresholds on the opened interval, train a model to rescue the negative base event, add either arm to v30, or increase leverage. Preserve live v25 while it owns positions; retain the fixed inactive v30 candidate at 1.00x for a separately authorized flat-boundary transition.",
+  "confidence": "high",
+  "falsifier": "The exact rejection is invalidated by changed evidence bytes, future input entering a decision row, structural history bridging an archive gap, signal-bar entry, incorrect barrier or stop-first ordering, overlapping lifecycles counted independently, or disproven fee/slippage/funding arithmetic. A materially different preregistered liquidity mechanism may update the broader research direction but would not falsify this exact contract.",
+  "evidence": [
+    {
+      "path": "../plans/2026-08-09-5m-liquidity-sweep-reclaim-challenger.md",
+      "role": "predeclared_event_barrier_friction_fold_and_decision_contract",
+      "sha256": "ea3cfe48c9a81d50f031a331caa5ed2f2a6df744105555372332666e90f4d9de",
+      "bytes": 3056
+    },
+    {
+      "path": "../reviews/2026-08-09-5m-liquidity-sweep-reclaim-challenger.md",
+      "role": "decision_review_results_failure_modes_and_next_actions",
+      "sha256": "3975389635df60867f69cac877bba46601961f9347d21233386048c67ac724f6",
+      "bytes": 6698
+    },
+    {
+      "path": "../../data/logs/research/liquidity_sweep_development_20260809T180000Z.json",
+      "role": "immutable_deterministic_development_report",
+      "sha256": "06499d270de5a6067d7d24b30824db6df60940785791ed2349a3054ec5ae4993",
+      "bytes": 53018
+    },
+    {
+      "path": "../../data/logs/research/liquidity_sweep_development_20260809T180000Z.parquet",
+      "role": "complete_event_lifecycle_and_path_sidecar",
+      "sha256": "57d756e244cbd75cc86db29298bfad600efea3b4f2799fc707dcfca3bf1281c3",
+      "bytes": 5785472
+    }
+  ],
+  "metrics": {
+    "development_days": 184,
+    "emitted_events": 29274,
+    "accepted_lifecycles": 15321,
+    "dual_sweep_ambiguous": 58,
+    "missing_spread_invalid_barriers": 2804,
+    "continuation_nominal_trades": 6396,
+    "continuation_pre_fee_mean_bps": -4.360914762681295,
+    "continuation_nominal_mean_bps": -13.374680646827784,
+    "continuation_nominal_profit_factor": 0.5291689369910877,
+    "continuation_stress_mean_bps": -20.37468064682778,
+    "reclaim_nominal_trades": 8925,
+    "reclaim_pre_fee_mean_bps": -2.998602752792717,
+    "reclaim_nominal_mean_bps": -11.997295664625858,
+    "reclaim_nominal_profit_factor": 0.4278974373829824,
+    "reclaim_stress_mean_bps": -18.99729566462586,
+    "negative_chronological_fold_cells": 6,
+    "chronological_fold_cells": 6,
+    "negative_symbol_side_cells": 8,
+    "symbol_side_cells": 8,
+    "execution_authority": "none",
+    "automatic_promotion": false,
+    "runtime_changed": false
+  },
+  "limitations": [
+    "Five-minute OHLC cannot recover sub-bar event order; simultaneous target and stop touches were resolved stop-first.",
+    "Terminal public L2 is not private IOC queue evidence; missing observed spread made a frozen structural barrier invalid rather than being silently filled.",
+    "Completed-bar fills cannot reproduce private acknowledgement latency or stop gaps.",
+    "The opened interval cannot support nearby threshold tuning or a confirmation claim.",
+    "Sampled mark-to-market drawdown uses five-minute extrema and can understate live discontinuous gaps.",
+    "BTC and SOL archive gaps reset structural warmup and were not filled.",
+    "No live process, route, profile, position, order, stop, leverage, notional, transition drain, or protection changed."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

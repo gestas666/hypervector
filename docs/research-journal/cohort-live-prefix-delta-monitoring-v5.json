@@ -1,0 +1,126 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "cohort-live-prefix-delta-monitoring",
+  "revision_number": 5,
+  "supersedes_revision_id": "08dde4b98986e6bb13ae3e19cbd4c4c4204a1d68b711993eca055c42684d8710",
+  "created_at_utc": "2026-08-08T18:43:24Z",
+  "strategy_id": "multi_asset_bidirectional_complete_portfolio_canary_v25",
+  "symbol": "PORTFOLIO",
+  "status": "retain",
+  "hypothesis": "Source-run-aware cadence and episode-onset attribution can prevent persistent one-blocker annotations and single extreme moves from masquerading as repeatable portfolio entry opportunities while retaining zero execution authority.",
+  "decision": "Retain the running v25 strategy and extend the report-only portfolio opportunity audit with exact attribution cadence, consecutive annotation episodes, episode-onset forward paths, and leave-largest-close sensitivity. SOL HT-Breakout 5m_not_breakout appeared on 519 of 534 minute boundaries but collapsed to four episodes; three non-overlapping 60-minute episode onsets resolved, all cleared the fixed 13 bps hurdle, and their mean after hurdle was +14.90 bps or +4.71 bps after removing the largest close. This is a positive low-sample hypothesis, not a promotion: it is one intraday run and the exact live provider has no resolved lifecycle. SPCX pivot_break_state_missing produced six non-overlapping 60-minute paths, but its +37.24 bps mean becomes -1.74 bps after removing the largest close and its exact provider has one resolved live loss. Continue causal observation without a route, blocker, restart, drain, order, close, resize, risk, exit-policy, or promotion change.",
+  "confidence": "high",
+  "falsifier": "The monitoring method is falsified by mixing source runs within an attribution, failing to split a missing-minute discontinuity, counting persistent minutes as distinct actionable episodes, merging opposing directions, resolving conflicting references, changing immutable evidence, introducing execution authority, or mutating live runtime state. The economic decision is updated by materially more independent episode onsets with positive after-friction and leave-largest results that agree with resolved exact-provider venue lifecycles.",
+  "evidence": [
+    {
+      "path": "cohort-live-prefix-delta-monitoring-v4.json",
+      "role": "prior_append_only_monitoring_revision",
+      "sha256": "a04401bb29e128c85c978c16f4ce16cbf821736d5b0519b98574b9d4c1151870",
+      "bytes": 7488
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v25_live_prefix_episode_onsets_bidirectional-live-1786182011216_20260808T183622Z.json",
+      "role": "immutable_source_run_attribution_cadence_and_episode_onset_audit",
+      "sha256": "d1d340ae3eec51bd86ebb43050cd1ebc72456ad43b705c2c950af793d8221c6f",
+      "bytes": 9017600
+    },
+    {
+      "path": "../../src/hypervector/research/cohort_portfolio_opportunity_dedup.py",
+      "role": "source_run_attribution_cadence_episode_and_onset_business_logic",
+      "sha256": "76febf6ed7cad4095bdf84d45577629ead0ca5668927df1d2283c7cf1d0c3b42",
+      "bytes": 13724
+    },
+    {
+      "path": "../../src/hypervector/research/cohort_opportunity_capture.py",
+      "role": "after_hurdle_leave_largest_sensitivity",
+      "sha256": "b0b574fd57977031d5a1179725600049ceff0a5c05f0173f5c013217a095cbde",
+      "bytes": 4104
+    },
+    {
+      "path": "../../src/hypervector/research/cohort_signal_outcomes.py",
+      "role": "provider_forward_diagnostics_and_portfolio_report_integration",
+      "sha256": "2263e7eaa653b16c997d93fb4429114f6119eccd7e8e28b43abe55462a262227",
+      "bytes": 15240
+    },
+    {
+      "path": "../../tests/test_cohort_signal_outcomes.py",
+      "role": "source_run_cadence_discontinuity_episode_and_exact_path_tests",
+      "sha256": "d8b901b5c338124c113f9f752cc58dcbc60f241787486c48771330d07715cc93",
+      "bytes": 27508
+    },
+    {
+      "path": "../../tests/test_cohort_independent_opportunity_capture.py",
+      "role": "leave_largest_outcome_sensitivity_tests",
+      "sha256": "5e25fcb9e7590d8d5e134e50a86a66169f32205128ebcf0cc2d55c06de2b4950",
+      "bytes": 3788
+    },
+    {
+      "path": "../../skills/hypervector-cli/SKILL.md",
+      "role": "operator_episode_onset_and_execution_boundary_documentation",
+      "sha256": "a083184b2152144bfff464f1bef94b6e679a2c9df789a6ed9f56c49293d5268e",
+      "bytes": 70279
+    },
+    {
+      "path": "../reviews/2026-08-08-v25-attribution-cadence-episode-onsets.md",
+      "role": "technical_acceptance_economic_interpretation_and_falsifiers",
+      "sha256": "43c8850a225b9ba48e4f8ed2d5c930d1154c09016c798e090c63abe7e88c5094",
+      "bytes": 6113
+    },
+    {
+      "path": "../../HANDOFF.md",
+      "role": "current_phase_status_validation_and_live_protection_acceptance",
+      "sha256": "d8600ffbb55b36e884b502647d65552e7df9315d3fd42582709e7ab4e9ac22ec",
+      "bytes": 531729
+    }
+  ],
+  "metrics": {
+    "run_id": "bidirectional-live-1786182011216",
+    "profile_fingerprint": "ec7715f671fa369d0a415d8941061eb9a577b232bbd4e06367a7342267ff7ecc",
+    "provider_observations": 3374,
+    "unique_directional_paths": 2213,
+    "duplicate_provider_observations_removed": 1161,
+    "cross_provider_path_groups": 1019,
+    "direction_competition_groups": 1,
+    "reference_price_conflict_groups": 0,
+    "independent_5m_resolved": 502,
+    "independent_5m_cost_clearing_close_count": 23,
+    "independent_5m_robust_mfe_count": 13,
+    "independent_5m_mean_close_after_hurdle_bps": -12.852118527568756,
+    "independent_60m_resolved": 57,
+    "independent_60m_cost_clearing_close_count": 14,
+    "independent_60m_mean_close_after_hurdle_bps": -6.102288233787542,
+    "independent_60m_leave_largest_mean_after_hurdle_bps": -10.356650577061172,
+    "sol_not_breakout_annotation_minutes": 519,
+    "sol_not_breakout_minute_boundaries": 534,
+    "sol_not_breakout_coverage_rate": 0.9719101123595506,
+    "sol_not_breakout_episode_count": 4,
+    "sol_not_breakout_independent_60m_episode_onsets": 3,
+    "sol_not_breakout_60m_cost_clearing_episode_onsets": 3,
+    "sol_not_breakout_60m_mean_after_hurdle_bps": 14.902983057286335,
+    "sol_not_breakout_60m_leave_largest_mean_after_hurdle_bps": 4.706878160036467,
+    "spcx_pivot_episode_count": 20,
+    "spcx_pivot_independent_60m_episode_onsets": 6,
+    "spcx_pivot_60m_cost_clearing_episode_onsets": 3,
+    "spcx_pivot_60m_mean_after_hurdle_bps": 37.23753612566055,
+    "spcx_pivot_60m_leave_largest_mean_after_hurdle_bps": -1.7433572471144827,
+    "compatible_closed_trades": 3,
+    "compatible_wins": 2,
+    "compatible_losses": 1,
+    "compatible_net_pnl_usd": 0.03506700000000005,
+    "focused_tests_passed": 46,
+    "full_non_network_tests_passed": 4118,
+    "runtime_changed_by_this_revision": false
+  },
+  "limitations": [
+    "Episode-onset paths are completed-candle counterfactuals and do not model orders, queue position, exact fills, per-path fees, funding, liquidation, or shared-capital contention.",
+    "The fixed 13 bps hurdle is an explicit approximation rather than exact executable friction for each path.",
+    "SOL's three independent episode onsets come from one intraday run and cannot establish regime or calendar robustness.",
+    "SPCX's positive mean is concentrated in one move and its prospective observer still lacks resolved forward executions.",
+    "The running v25 process contains the older implementation, so this audit improvement does not alter its decisions or test the staged provider-clock repair.",
+    "Four open lifecycle marks remain provisional until venue close.",
+    "No live process, route, order, position, stop, target, size, allocation, drain, protection, or runtime strategy changed in this revision."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

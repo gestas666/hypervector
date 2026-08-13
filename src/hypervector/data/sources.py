@@ -22,8 +22,9 @@ Fetcher = Callable[[str, str, int], pd.DataFrame]
 class HistorySource(Protocol):
     name: str
 
-    def fetch(self, symbol: str, timeframe: str, lookback_days: int) -> pd.DataFrame:
-        ...
+    def fetch(
+        self, symbol: str, timeframe: str, lookback_days: int
+    ) -> pd.DataFrame: ...
 
 
 def fixture_ohlcv(

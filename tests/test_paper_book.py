@@ -119,7 +119,9 @@ def test_book_feed_poll_updates_and_returns_snapshot():
     raw = json.loads(FIX.read_text())
     snap = parse_hl_l2_payload(raw, symbol="BTC-PERP", ts_recv_ms=1700000001000)
     feed = BookFeed("BTC-PERP", max_age_ms=3000)
-    with patch("hypervector.paper.book.fetch_hl_l2_book", return_value=snap) as mock_fetch:
+    with patch(
+        "hypervector.paper.book.fetch_hl_l2_book", return_value=snap
+    ) as mock_fetch:
         out = feed.poll()
     mock_fetch.assert_called_once()
     assert out is snap

@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "sp500-breakout-profit-lock-l2-proxy",
+  "revision_number": 1,
+  "supersedes_revision_id": null,
+  "created_at_utc": "2026-08-12T10:28:14Z",
+  "strategy_id": "hip3_breakout_pressure_sp500_spcx_bidirectional_v1",
+  "symbol": "xyz:SP500",
+  "status": "reject",
+  "hypothesis": "A causal L2-midpoint profit lock activated after 25, 40, or 60 bps of favorable SP500 breakout-pressure movement may preserve more after-cost profit than the current provider exit.",
+  "decision": "Reject the 25/15/10 and 40/15/20 activation-floor-giveback policies because each produced negative validation net and PF below 1 under the frozen stress lifecycle set. Withhold the 60/15/30 policy because its positive validation result was not supported in development, where it remained negative at every tested L2 completeness threshold. Keep the current SP500 exit contract unchanged. Any later profit-lock challenger must declare a new causal policy before evaluation and must survive development plus untouched forward evidence after fees, funding, exit slippage, and largest-winner removal.",
+  "confidence": "medium",
+  "falsifier": "This rejection must be revisited if the evidence hash or selected lifecycle identity does not reproduce, if exact venue trade/mark paths materially reverse the L2-midpoint proxy result, or if a preregistered policy produces positive after-cost net, PF above 1, and positive net excluding its largest winner in both chronological development and forward validation. The result rejects only these three fixed policies; it does not establish that no SP500 profit-management rule can work.",
+  "evidence": [
+    {
+      "path": "../../data/logs/research/xyz_sp500_breakout_profit_lock_l2_proxy_20260812_v2.json",
+      "role": "causal_l2_midpoint_profit_lock_development_validation_proxy",
+      "sha256": "15bfa0261e0fddcd6573f185a06a48e636d37e3c34cf10e016e669530c811666",
+      "bytes": 399106
+    }
+  ],
+  "metrics": {
+    "selected_lifecycles": 43,
+    "development_lifecycles": 30,
+    "validation_lifecycles": 13,
+    "l2_minute_bars": 81380,
+    "completeness_threshold_ms": 15000,
+    "a25_validation_resolved": 13,
+    "a25_validation_triggered": 7,
+    "a25_validation_estimated_net_ex_funding_usd": -0.097812,
+    "a25_validation_actual_net_ex_funding_same_rows_usd": 0.648375,
+    "a25_validation_delta_usd": -0.746186,
+    "a25_validation_profit_factor": 0.915135,
+    "a25_validation_net_excluding_largest_winner_usd": -0.318413,
+    "a40_validation_estimated_net_ex_funding_usd": -0.285848,
+    "a40_validation_delta_usd": -0.934223,
+    "a40_validation_profit_factor": 0.806678,
+    "a60_development_estimated_net_ex_funding_usd": -1.634826,
+    "a60_development_profit_factor": 0.670445,
+    "a60_validation_estimated_net_ex_funding_usd": 0.874091,
+    "a60_validation_net_excluding_largest_winner_usd": 0.171582,
+    "runtime_strategy_changed": false
+  },
+  "limitations": [
+    "L2 midpoint OHLC is a causal proxy rather than exact venue trade or mark OHLC.",
+    "Counterfactual economics include the source lifecycle fee contract but exclude funding and additional exit slippage.",
+    "A trigger after the first incomplete one-minute prefix is withheld rather than imputed.",
+    "The three activation/floor/giveback policies were predeclared; the test does not cover every possible exit policy.",
+    "Development and validation are already opened research partitions and are not a new prospective live test.",
+    "This revision is report-only and cannot route, size, enter, close, restart, pause, or promote a strategy."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

@@ -21,7 +21,9 @@ class RecordingTransport:
     ) -> None:
         self.calls: list[dict[str, Any]] = []
         self.cancel_calls: list[dict[str, Any]] = []
-        self._response = response if response is not None else {"status": "ok", "oid": "oid-1"}
+        self._response = (
+            response if response is not None else {"status": "ok", "oid": "oid-1"}
+        )
         self._error = error
 
     def place_market(

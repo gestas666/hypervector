@@ -75,7 +75,9 @@ def test_top_bps_buy_uses_ask():
         ts_exchange_ms=1.0,
         source="t",
     )
-    r = TopBpsFillModel().fill(side="buy", qty=1.0, mark_px=100.0, book=book, slippage_bps=0.0)
+    r = TopBpsFillModel().fill(
+        side="buy", qty=1.0, mark_px=100.0, book=book, slippage_bps=0.0
+    )
     assert r.fill_model_id == FILL_MODEL_TOP_BPS_V1
     assert abs(r.fill_px - 100.1) < 1e-9
     assert r.bbo_ask == 100.1 and r.bbo_bid == 100.0
@@ -96,7 +98,9 @@ def test_top_bps_sell_uses_bid():
         ts_exchange_ms=1.0,
         source="t",
     )
-    r = TopBpsFillModel().fill(side="sell", qty=0.5, mark_px=100.0, book=book, slippage_bps=10.0)
+    r = TopBpsFillModel().fill(
+        side="sell", qty=0.5, mark_px=100.0, book=book, slippage_bps=10.0
+    )
     # sell = best_bid * (1 - slip) = 100.0 * 0.999
     assert abs(r.fill_px - 100.0 * 0.999) < 1e-9
     assert r.bbo_bid == 100.0 and r.bbo_ask == 100.1
@@ -115,7 +119,9 @@ def test_top_bps_empty_book_zero_qty():
         ts_exchange_ms=1.0,
         source="t",
     )
-    r = TopBpsFillModel().fill(side="buy", qty=1.0, mark_px=100.0, book=book, slippage_bps=0.0)
+    r = TopBpsFillModel().fill(
+        side="buy", qty=1.0, mark_px=100.0, book=book, slippage_bps=0.0
+    )
     assert r.fill_qty == 0.0
     assert r.shortfall_qty == 1.0
     assert r.levels_used == 0
@@ -133,7 +139,9 @@ def test_top_bps_one_sided_missing_ask_zero_qty():
         ts_exchange_ms=1.0,
         source="t",
     )
-    r = TopBpsFillModel().fill(side="buy", qty=1.0, mark_px=100.0, book=book, slippage_bps=0.0)
+    r = TopBpsFillModel().fill(
+        side="buy", qty=1.0, mark_px=100.0, book=book, slippage_bps=0.0
+    )
     assert r.fill_qty == 0.0
     assert r.shortfall_qty == 1.0
 
@@ -259,7 +267,9 @@ def test_l2_walk_buy_vwap_two_levels():
         ts_exchange_ms=1.0,
         source="t",
     )
-    r = L2WalkFillModel().fill(side="buy", qty=3.0, mark_px=100.0, book=book, slippage_bps=0.0)
+    r = L2WalkFillModel().fill(
+        side="buy", qty=3.0, mark_px=100.0, book=book, slippage_bps=0.0
+    )
     assert r.fill_model_id == FILL_MODEL_L2_WALK_V1
     # VWAP = (2*100.1 + 1*100.2) / 3 = 100.1333...
     assert abs(r.fill_px - (2 * 100.1 + 1 * 100.2) / 3.0) < 1e-9
@@ -280,7 +290,9 @@ def test_l2_walk_shortfall_no_invented_depth():
         ts_exchange_ms=1.0,
         source="t",
     )
-    r = L2WalkFillModel().fill(side="buy", qty=5.0, mark_px=100.0, book=book, slippage_bps=0.0)
+    r = L2WalkFillModel().fill(
+        side="buy", qty=5.0, mark_px=100.0, book=book, slippage_bps=0.0
+    )
     assert r.fill_qty == 1.0
     assert r.shortfall_qty == 4.0
     assert r.levels_used == 1

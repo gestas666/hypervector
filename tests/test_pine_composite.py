@@ -2,7 +2,6 @@
 
 import numpy as np
 import pandas as pd
-import pytest
 
 from hypervector.strategies.pine_composite import (
     pine_composite_long,

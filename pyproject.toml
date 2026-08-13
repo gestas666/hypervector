@@ -9,6 +9,8 @@ dependencies = [
     "nautilus_trader>=1.230.0",
     "backtrader[plotting]>=1.9.78.123",
     "websockets>=16.0,<17",
+    "duckdb>=1.5.5",
+    "hyperliquid-python-sdk==0.24.0",
 ]
 
 [project.optional-dependencies]

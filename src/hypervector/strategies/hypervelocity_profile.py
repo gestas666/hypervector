@@ -8,6 +8,9 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Literal, Mapping, cast
 
+from hypervector.strategies.peak_observer_contract import (
+    PeakObserverConfig,
+)
 from hypervector.regime.classifier import RegimeClassifierConfig
 from hypervector.strategies.hypervelocity_contract import (
     HypervelocityContract,
@@ -62,6 +65,7 @@ class HypervelocityProfile:
     orderbook_archive_depth_levels: int
     runtime_mode: str
     shadow_execution_model: Literal["nautilus_event_v1"]
+    initial_cash_usd: float
     export_path: Path
     lookback_days: int
     strict_hl_only: bool
@@ -78,6 +82,7 @@ class HypervelocityProfile:
     blocked_entry_states: tuple[str, ...]
     breakout_requires_direction: bool
     confidence_is_gate: bool
+    peak_observer: PeakObserverConfig
 
     def position_policy(self) -> dict[str, object]:
         """Return the effective position invariant for backend telemetry."""
@@ -91,11 +96,29 @@ class HypervelocityProfile:
 
     def regime_policy(self) -> dict[str, object]:
         """Return the validated point-in-time regime execution policy."""
+        config = self.regime_config
         return {
             "execution_timeframe": self.execution_timeframe,
             "primary_timeframe": self.primary_timeframe,
             "context_timeframe": self.context_timeframe,
             "context_is_hard_gate": self.context_is_hard_gate,
+            "entry_trigger": "5m_structure_or_confirmed_breakout",
+            "tactical_setup": "bbwp_rsi_breakout_annotation",
+            "tactical_setup_is_gate": False,
+            "ema_fast": config.ema_fast,
+            "ema_slow": config.ema_slow,
+            "structure_lookback": config.structure_lookback,
+            "minimum_trend_gap_bps": config.minimum_trend_gap_bps,
+            "range_filter": "bbwp_compression",
+            "bbwp_length": config.bbwp_length,
+            "bbwp_lookback": config.bbwp_lookback,
+            "bbwp_compression_threshold": config.bbwp_compression_threshold,
+            "rsi_length": config.rsi_length,
+            "rsi_signal_length": config.rsi_signal_length,
+            "breakout_lookback": config.breakout_lookback,
+            "breakout_clearance_bps": config.breakout_clearance_bps,
+            "breakout_volume_lookback": config.breakout_volume_lookback,
+            "breakout_volume_multiple": config.breakout_volume_multiple,
             "allowed_entry_states": list(self.allowed_entry_states),
             "blocked_entry_states": list(self.blocked_entry_states),
             "breakout_requires_direction": self.breakout_requires_direction,
@@ -117,6 +140,7 @@ def load_hypervelocity_profile(path: Path | str) -> HypervelocityProfile:
     execution = _section(raw, "execution")
     entry = _section(raw, "entry")
     model = _section(raw, "model")
+    peak_observer = _validated_peak_observer(_section(raw, "peak_observer"))
     runtime = _section(raw, "runtime")
     venue = _section(raw, "venue")
     costs = _section(raw, "costs")
@@ -207,6 +231,7 @@ def load_hypervelocity_profile(path: Path | str) -> HypervelocityProfile:
             Literal["nautilus_event_v1"],
             _text(runtime, "shadow_execution_model"),
         ),
+        initial_cash_usd=_positive_number(runtime, "initial_cash_usd"),
         export_path=Path(_text(runtime, "export_path")),
         lookback_days=_integer(runtime, "lookback_days"),
         strict_hl_only=_boolean(runtime, "strict_hl_only"),
@@ -223,11 +248,12 @@ def load_hypervelocity_profile(path: Path | str) -> HypervelocityProfile:
         blocked_entry_states=cast(tuple[str, ...], policy["blocked_entry_states"]),
         breakout_requires_direction=True,
         confidence_is_gate=cast(bool, policy["confidence_is_gate"]),
+        peak_observer=peak_observer,
     )
 
 
 def _validate_identity(raw: Mapping[str, object]) -> None:
-    _expect(raw, "profile", "hypervelocity_faithful_v1")
+    _expect(raw, "profile", "hypervelocity_faithful_v2")
     _expect(raw, "symbol", "BTC")
     _expect(raw, "timeframe", "1m")
     _expect(raw, "strategy_id", "hypervelocity_1m_scalper")
@@ -262,7 +288,7 @@ def _validate_contract(
     _expect(execution, "submit_latency_ms", 50)
     _expect(execution, "cancel_latency_ms", 50)
     _expect(execution, "update_latency_ms", 50)
-    _expect(execution, "max_event_age_ms", 3000)
+    _expect(execution, "max_event_age_ms", 6000)
     _expect(
         execution,
         "restart_queue_policy",
@@ -333,13 +359,17 @@ def _validate_orderbook(orderbook: Mapping[str, object]) -> None:
 
 def _validated_regime(section: Mapping[str, object]) -> RegimeClassifierConfig:
     expected = asdict(faithful_regime_config())
-    parameters: dict[str, int | float] = {}
+    inactive = {"choppiness_length", "choppiness_range_threshold"}
+    parameters: dict[str, object] = {}
     for key, expected_value in expected.items():
+        if key in inactive:
+            parameters[key] = expected_value
+            continue
         actual = section.get(key)
         if actual != expected_value:
             raise ValueError(f"regime.{key} must be {expected_value!r}, got {actual!r}")
-        parameters[key] = cast(int | float, actual)
-    return RegimeClassifierConfig(**parameters)
+        parameters[key] = actual
+    return RegimeClassifierConfig(**cast(dict[str, object], parameters))
 
 
 def _validated_regime_policy(
@@ -366,6 +396,26 @@ def _validated_regime_policy(
         "blocked_entry_states": ("RANGE", "TRANSITION", "UNKNOWN"),
         "confidence_is_gate": False,
     }
+
+
+def _validated_peak_observer(section: Mapping[str, object]) -> PeakObserverConfig:
+    """Return the frozen report-only peak observer configuration."""
+    return PeakObserverConfig(
+        mode=cast(Literal["off", "observe"], _text(section, "mode")),
+        candidate_id=_text(section, "candidate_id"),
+        activation_margin_pct=_number(section, "activation_margin_pct"),
+        lock_ratio=_number(section, "lock_ratio"),
+        minimum_stop_move_fraction=_number(
+            section,
+            "minimum_stop_move_fraction",
+        ),
+        update_cooldown_seconds=_number(section, "update_cooldown_seconds"),
+        sample_interval_seconds=_number(section, "sample_interval_seconds"),
+        execution_authority=cast(
+            Literal["none"],
+            _text(section, "execution_authority"),
+        ),
+    )
 
 
 def _section(raw: Mapping[str, object], name: str) -> Mapping[str, object]:

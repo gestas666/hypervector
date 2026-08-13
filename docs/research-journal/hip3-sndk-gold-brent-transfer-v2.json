@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "hip3-sndk-gold-brent-transfer",
+  "revision_number": 2,
+  "supersedes_revision_id": "0592b44b806ec3de084cc8cbbcf6dae8bf0289ac3aec5db5c10b5dd39f897f96",
+  "created_at_utc": "2026-08-06T21:18:31Z",
+  "strategy_id": "hip3_bidirectional_15m_transfer_families",
+  "symbol": "xyz:SNDK,xyz:GOLD,xyz:BRENTOIL",
+  "status": "observe",
+  "hypothesis": "At least one of two causally implemented 15-minute bidirectional mechanisms—Swing/Heikin-Ashi alignment or fresh breakout plus visible-book pressure—has positive, non-concentrated, after-cost validation performance on SNDK, GOLD, or BRENTOIL after selection only on chronological development data.",
+  "decision": "Retain revision 1's frozen markets, two strategy families, trial counts, completed-bar decisions, next-bar execution, visible-book friction, latency stresses, both directions, 5x leverage, 60/20/20 chronology, GOLD dual-fee sensitivity, and sealed holdout. Correct only the official-funding input boundary before any strategy result is produced: validate the complete hourly source interval, exclude and count settlements before the first observable strategy bar, exclude and count settlements after the last observable strategy bar, and assign every in-window settlement to the first observable bar at or after its timestamp. The first attempted run failed during source preparation before outputs or strategy outcomes existed. Do not access holdout metrics, retune on validation, grant execution authority, or change the running portfolio.",
+  "confidence": "low",
+  "falsifier": "The research hypothesis is weakened or rejected when untouched validation is nonpositive after nominal costs, worsens materially under stress, has profit factor at or below one, lacks either direction without a predeclared market-structure explanation, or is dominated by one event or asset. The revised experiment contract is invalidated by evidence hash drift, incomplete source-hour coverage, charging an out-of-window settlement, assigning an in-window settlement before it becomes observable, unreported trials, validation-driven tuning, holdout access, a single assumed GOLD fee state, or any execution-capable client.",
+  "evidence": [
+    {
+      "path": "../../data/logs/research/xyz_sndk_gold_brentoil_qualification_20260806T1611EDT.json",
+      "role": "immutable_exact_symbol_public_venue_qualification_before_strategy_results",
+      "sha256": "ba78b5e7d18fce2984a249cf602eb7165d40ea156fd9b58f0e293c99907dd595",
+      "bytes": 6624
+    },
+    {
+      "path": "../../scripts/hip3_swing_ha_transfer.py",
+      "role": "pre_registered_swing_transfer_orchestrator",
+      "sha256": "d8dfb5198ce342d677ed0433c8f000fa9d5fd393b5f09fb85c97fe4f4d282388",
+      "bytes": 16783
+    },
+    {
+      "path": "../../src/hypervector/research/hip3_swing_transfer.py",
+      "role": "pre_registered_swing_selection_and_sealed_split_logic",
+      "sha256": "728567ec604af782441425de5b407d078bfd1d23d09ffa02a44e450a4cd929b3",
+      "bytes": 12266
+    },
+    {
+      "path": "../../scripts/hip3_breakout_pressure_transfer.py",
+      "role": "pre_registered_breakout_transfer_orchestrator",
+      "sha256": "cd614cdbcbfaf4ce749f52fa1795bb0eef5772b377f994fdf2d63f39289c80f3",
+      "bytes": 9174
+    },
+    {
+      "path": "../../src/hypervector/research/hip3_breakout_pressure_transfer.py",
+      "role": "pre_registered_breakout_selection_and_sealed_split_logic",
+      "sha256": "c388c7ac9fc2fe72a1f0859435c82d49b3a158ea88847cda1e1775a4d67839be",
+      "bytes": 9443
+    },
+    {
+      "path": "../../src/hypervector/research/hip3_breakout_pressure_signals.py",
+      "role": "pre_registered_causal_bidirectional_breakout_signal_logic",
+      "sha256": "c7664f14a5730fa92cc8e90684ff3845b60b37249badd4cfed25c1ae508309d4",
+      "bytes": 7551
+    },
+    {
+      "path": "../../src/hypervector/research/hip3_transfer_sources.py",
+      "role": "revised_causal_official_funding_boundary",
+      "sha256": "bf16cdc5cd7a5fc28888bdd379ac376f058c938626f13cdd9adbaf6ffe89b786",
+      "bytes": 7592
+    },
+    {
+      "path": "../../tests/test_hip3_transfer_sources.py",
+      "role": "funding_prefix_suffix_assignment_and_gap_regressions",
+      "sha256": "74f13767afca075e494caf8756903cb49bca9223eb35366d3488ec0039daf6e4",
+      "bytes": 3775
+    }
+  ],
+  "metrics": {
+    "candidate_markets": 3,
+    "strategy_families": 2,
+    "swing_searched_trial_count": 85,
+    "breakout_searched_trial_count": 192,
+    "reference_equity_usd": 500.0,
+    "reference_notional_usd": 75.0,
+    "reference_leverage": 5.0,
+    "development_fraction": 0.6,
+    "validation_fraction": 0.2,
+    "sealed_holdout_fraction": 0.2,
+    "failed_source_preparation_attempts": 1,
+    "strategy_outcomes_accessed_before_revision": false,
+    "holdout_metrics_accessed": false,
+    "gold_fee_sensitivity_states": 2,
+    "execution_authority": "none",
+    "runtime_changed_by_this_revision": false
+  },
+  "limitations": [
+    "The funding repair establishes causal accounting boundaries; it does not establish profitability or historical funding completeness beyond the validated requested interval.",
+    "Qualification proves exact current market identity and observable books, not profitability, fill quality, or continuous availability.",
+    "The archives are book-only and cannot reconstruct public trades, private queue position, passive fill probability, cancellations, or adverse selection.",
+    "Current account fee inputs applied to historical books are sensitivities rather than historical private fee records.",
+    "GOLD has no authoritative single growth-mode value in the observed metadata, so enabled and disabled results remain conditional rather than promotable fee truth.",
+    "The two families are prior mechanisms transferred to new markets; failure rejects these transfers, not every possible SNDK, GOLD, or Brent strategy.",
+    "Independent reference-account screens do not establish shared-portfolio diversification or capital-allocation value.",
+    "No strategy result, holdout metric, order, position, execution scope, live process, or active portfolio configuration was changed before this revision."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "all-asset-hype-breakout-live-research",
+  "revision_number": 15,
+  "supersedes_revision_id": "a641d70e4ad24bdc0b6a40002e83ac8c26170045fbaaabd161bd8058892d59a4",
+  "created_at_utc": "2026-08-07T04:26:00Z",
+  "strategy_id": "hype_breakout_onset_bidirectional_v1",
+  "symbol": "PORTFOLIO",
+  "status": "observe",
+  "hypothesis": "The exact five-minute breakout requirement should remain active while the post-cutoff aligned-book relaxation continues to produce negative after-friction SOL paths. The separately frozen aligned-zero-opposition five-minute exit extension and SOL support-decay observers remain prospective hypotheses and must accumulate post-cutoff lifecycle evidence without changing live execution.",
+  "decision": "Keep the authorized v14 runtime, bidirectional execution scope, sizing, exact five-minute breakout requirement, venue protection, and maximum-hold controller unchanged. Reject relaxing 5m_not_breakout: the newly resolved fourth SOL path increased the frozen aligned-book challenger to one win and three losses, -87.37 bps, and profit factor 0.0021. Continue both exit observers unchanged; neither has a post-cutoff qualifying lifecycle yet. Preserve every zero-signal interval, actual cost, withheld intent, and resolved missed-opportunity path without treating readiness annotations as trades.",
+  "confidence": "low",
+  "falsifier": "The decision against the current SOL breakout relaxation must be revisited if later independent long and short paths under the same frozen contract produce stable positive after-friction return without one observation dominating. The exit-extension hypotheses remain unvalidated until post-cutoff eligible lifecycles exist; a retained-stop touch, nonpositive median incremental after-cost return, or materially worse tail excursion weakens them. Any changed entry blocker, OPI cohort, horizon, sizing, stop treatment, alignment definition, or cost model is a new trial and cannot be pooled with these results.",
+  "evidence": [
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/multi_asset_live_audit_bidirectional-live-1786028939765_prefix_20260807T0424Z.json",
+      "role": "immutable_complete_v14_prefix_with_current_execution_costs_zero_new_exit_observer_samples_and_full_opportunity_accounting",
+      "sha256": "83bd2eea751302c98c11086211ad91a6d39b37c67ffe35f8b777af6f88e937bf",
+      "bytes": 5183826
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/hype_aligned_breakout_relaxation_forward_20260807T0346Z.json",
+      "role": "immutable_hype_forward_challenger_rejecting_relaxation_of_5m_not_breakout",
+      "sha256": "923fa3f25b2dc96420db28e090612e763559d220faa112358f7c7cac1dae61e9",
+      "bytes": 62356
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/sol_aligned_breakout_relaxation_forward_20260807T0424Z.json",
+      "role": "immutable_updated_sol_forward_challenger_with_four_resolved_after_friction_paths",
+      "sha256": "f773f7b44294eee0ee411a9c706715f703e6f9714ba18e9ae1873f32aa27e2dd",
+      "bytes": 59131
+    },
+    {
+      "path": "../../src/hypervector/research/cohort_aligned_timer_extension.py",
+      "role": "frozen_report_only_five_minute_aligned_zero_opposition_observer",
+      "sha256": "8421e29a9b1b34e80df42b81b61d7cf481bf7baf46506c9263401729b7bb7a4b",
+      "bytes": 7991
+    },
+    {
+      "path": "../../src/hypervector/research/cohort_exit_extension_projection.py",
+      "role": "shared_retained_venue_stop_incremental_gross_projection",
+      "sha256": "0ffba4c595babc531f2a53a035757e8e0b8f75192da8de05e5615bf41d11b494",
+      "bytes": 1728
+    }
+  ],
+  "metrics": {
+    "source_run_id": "bidirectional-live-1786028939765",
+    "active_profile_id": "multi_asset_bidirectional_hype75_all_asset_breakout_canary_v14",
+    "profile_fingerprint": "e27a8cb63b1713e68e8bdafc3d09f4c4cbabfc27cb1af11db673f7ad18df8900",
+    "audit_last_observed_at_utc": "2026-08-07T04:24:52.245318+00:00",
+    "audit_row_count": 10018,
+    "audit_coverage_complete": true,
+    "audit_faults": 0,
+    "current_run_closed_trades": 1,
+    "current_run_wins": 0,
+    "current_run_losses": 1,
+    "current_run_net_pnl_usd": -0.095959,
+    "current_run_fees_usd": 0.064723,
+    "current_run_funding_usd": 0.0017239999999999998,
+    "current_run_open_lifecycles": 0,
+    "new_evaluations_since_prior_audit": 307,
+    "new_eligible_evaluations_since_prior_audit": 0,
+    "new_fills_since_prior_audit": 0,
+    "new_closed_lifecycles_since_prior_audit": 0,
+    "hype_5m_not_breakout_relaxation_resolved": 4,
+    "hype_5m_not_breakout_relaxation_wins": 2,
+    "hype_5m_not_breakout_relaxation_losses": 2,
+    "hype_5m_not_breakout_relaxation_total_net_return_bps": -34.59236832500166,
+    "hype_5m_not_breakout_relaxation_profit_factor": 0.26468277622910574,
+    "sol_5m_not_breakout_relaxation_resolved": 4,
+    "sol_5m_not_breakout_relaxation_long_resolved": 0,
+    "sol_5m_not_breakout_relaxation_short_resolved": 4,
+    "sol_5m_not_breakout_relaxation_wins": 1,
+    "sol_5m_not_breakout_relaxation_losses": 3,
+    "sol_5m_not_breakout_relaxation_total_net_return_bps": -87.37410778073118,
+    "sol_5m_not_breakout_relaxation_profit_factor": 0.0020895784504393277,
+    "aligned_extension_prospective_cutoff_time_ms": 1786075083000,
+    "aligned_extension_post_cutoff_qualifying_lifecycles": 0,
+    "support_decay_prospective_cutoff_time_ms": 1786072487000,
+    "support_decay_post_cutoff_qualifying_lifecycles": 0,
+    "live_all_time_closed_trades": 18,
+    "live_all_time_wins": 11,
+    "live_all_time_losses": 7,
+    "live_all_time_net_pnl_usd": 1.238185,
+    "live_all_time_profit_factor": 1.7161394169483368,
+    "strategy_edge_identifiable": false,
+    "execution_authority": "none",
+    "runtime_changed_by_this_revision": false
+  },
+  "limitations": [
+    "The current v14 run contains one completed SOL short and no long-side executable lifecycle, so it cannot establish repeatability, bidirectional behavior, or cross-asset transfer.",
+    "The updated SOL relaxation sample contains four shorts and no longs; its negative result rejects the current relaxation but does not prove every alternative entry mechanism is unprofitable.",
+    "The aligned-book challenger uses recorded BBO, top-level capacity, modeled taker fees, and public funding rather than private IOC latency or guaranteed historical fills.",
+    "Neither prospective exit observer has a post-cutoff qualifying lifecycle; their prior SOL and HYPE examples remain hypothesis-formation evidence only.",
+    "The five-minute extension projection is gross of hypothetical later exit fees, funding changes, slippage, latency, and gap-through.",
+    "The all-live performance row combines multiple historical profiles and is descriptive mechanism history rather than current-v14 portfolio evidence.",
+    "No live strategy, position, order, stop, target, sizing policy, backend process, checkpoint process, or portfolio configuration changed as a result of this revision."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

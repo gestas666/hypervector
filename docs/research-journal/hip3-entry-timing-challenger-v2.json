@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "hip3-entry-timing-challenger",
+  "revision_number": 2,
+  "supersedes_revision_id": "5f6baf776bae0fab9856caec346d2afd4e8cf91f28f1111f62e442530ba1aefd",
+  "created_at_utc": "2026-08-09T14:18:34Z",
+  "strategy_id": "hip3_swing_portfolio",
+  "symbol": "PORTFOLIO",
+  "status": "observe",
+  "hypothesis": "SPCX state-recipe entries repeated inside one exact routed provider-alignment episode may have worse after-cost economics than the first entry, while onset-mode commodity entries and separate episodes remain unchanged.",
+  "decision": "Keep v25 live timing unchanged and retain the SPCX one-entry-per-alignment-episode arm as annotation-only. The exact v25 prefix contains three resolved HIP-3 Swing entries, but every one is a first entry and the repeat-entry sample is zero, so live evidence has not tested the cooldown hypothesis. Continue causal episode and ordinal attribution on future immutable audits. Do not promote, gate, resize, close, restart, or otherwise mutate execution from this revision.",
+  "confidence": "low_medium",
+  "falsifier": "Reject the SPCX onset candidate if independently resolved live repeat entries are profitable after costs, capture winners unavailable to first entries, or prove to belong to separate causal provider episodes. Increase confidence only after both first and repeat cohorts have exact source-run, profile, side, friction, and largest-winner-sensitive evidence. Missing decision telemetry, profile mixing, open-mark pooling, changed evidence bytes, or execution authority invalidates this revision.",
+  "evidence": [
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v25_live_audit_provider_episode_reentry_v2_20260809T141415Z.json",
+      "role": "immutable_v25_live_provider_episode_and_reentry_attribution",
+      "sha256": "1c240994922bc94393c06bd8a94e387e085fa46d8a66cbb28cf866e30b77ac30",
+      "bytes": 15171196
+    },
+    {
+      "path": "../reviews/2026-08-09-hip3-live-episode-reentry-attribution.md",
+      "role": "live_results_decision_uncertainty_and_falsification_review",
+      "sha256": "92f1e505bc52fd0241b45db17a35c16518c76359c870efb81bbcb881dd740bfa",
+      "bytes": 4425
+    },
+    {
+      "path": "../../src/hypervector/research/cohort_provider_episode_reentry.py",
+      "role": "causal_episode_restart_profile_gap_and_entry_ordinal_attribution",
+      "sha256": "d3f486a54c188e577b2b06d92620e8d8128520b03f774dbf6c3c949a82749a2e",
+      "bytes": 17072
+    },
+    {
+      "path": "../../src/hypervector/research/cohort_provider_episode_reporting.py",
+      "role": "first_repeat_resolved_and_provisional_open_economic_reporting",
+      "sha256": "c0068b6c4b1acc1a25b6ec1270d6a20351765cf01fef97280fc8c61b1f457dc4",
+      "bytes": 6741
+    },
+    {
+      "path": "../../src/hypervector/research/cohort_provider_episode_values.py",
+      "role": "strict_provider_episode_evidence_value_validation",
+      "sha256": "63a26fd0de16d1c7c4a6a77174e451505d156f71cc9dd9b0dddeed4c22a4e2bf",
+      "bytes": 3726
+    },
+    {
+      "path": "../../src/hypervector/research/cohort_live_audit.py",
+      "role": "stopped_and_prefix_live_audit_integration",
+      "sha256": "548db7f32733f0ae8baa56be84694a865f47c16897776bae0b020c264bee3e5b",
+      "bytes": 14440
+    },
+    {
+      "path": "../../tests/test_cohort_provider_episode_reentry.py",
+      "role": "restart_profile_gap_onset_warmup_conflict_and_open_separation_regressions",
+      "sha256": "0bf40d5d619266d2743596e63c37baacf7da46b892800badc9c18729de196dd1",
+      "bytes": 10205
+    }
+  ],
+  "metrics": {
+    "matching_provider_rows": 810,
+    "deduplicated_provider_decisions": 810,
+    "unavailable_provider_rows": 0,
+    "technical_warmup_boundaries": 14,
+    "provider_episodes": 10,
+    "restart_spanning_episodes": 0,
+    "resolved_hip3_swing_trades": 3,
+    "resolved_first_entries": 3,
+    "resolved_repeat_entries": 0,
+    "first_entry_net_pnl_usd": 0.6683969999999999,
+    "first_entry_profit_factor": 1.7432372776755383,
+    "first_entry_net_ex_largest_winner_usd": -0.899305,
+    "spcx_first_entries": 2,
+    "spcx_first_entry_net_pnl_usd": 0.9108299999999999,
+    "spcx_first_entry_profit_factor": 2.386617179602723,
+    "spcx_first_entry_net_ex_largest_winner_usd": -0.656872,
+    "gold_first_entries": 1,
+    "gold_first_entry_net_pnl_usd": -0.24243299999999998,
+    "provisional_open_first_entries": 2,
+    "provisional_open_combined_marked_net_pnl_usd": -0.299722,
+    "runtime_strategy_changed": false
+  },
+  "limitations": [
+    "No resolved repeat entry exists in the measured live prefix, so the live first-versus-repeat comparison is not estimable.",
+    "The three resolved entries are sparse and the positive total becomes negative after removing the largest winner.",
+    "The two open positions are provisional and excluded from resolved economics.",
+    "Ninety-one all-history routing rows omit the evaluations array; they do not create an unavailable matching HIP-3 row but prevent complete routing-cycle telemetry coverage.",
+    "Episode ordinals cover reflected executed lifecycles rather than hypothetical entries displaced by routing or existing positions.",
+    "No live process, profile, provider, route, entry, exit, size, leverage, stop, target, or position was changed."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

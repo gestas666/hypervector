@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "hype-breakout-early-profit-lock",
+  "revision_number": 2,
+  "supersedes_revision_id": "6c2d0affb7a22afdbe2d0c3f5f0be1b25da33f37b25083c8334e5b8fffe01c5b",
+  "created_at_utc": "2026-08-06T01:42:13Z",
+  "strategy_id": "hype_breakout_onset_bidirectional_v1",
+  "symbol": "HYPE",
+  "status": "reject",
+  "hypothesis": "A generic profit floor and trailing stop activated before HYPE's eight-hour soft boundary may retain more after-cost profit than the active no-target contract.",
+  "decision": "Reaffirm rejection of the frozen 25/15/10, 40/15/20, and 60/15/30 bps activation/floor/trail policies. Seven resolved HYPE lifecycles now show that every policy reduced mean after-cost return after normalizing each trade by its own entry notional. Preserve the current exit contract while prospective exit evidence accumulates; do not apply these challengers to the open lifecycle or a future profile.",
+  "confidence": "medium",
+  "falsifier": "A prospectively frozen pre-soft profit-protection policy that improves actual after-cost exits across multiple non-adjacent profile-matched live windows without increasing loss concentration would update this rejection; changed source-prefix hashes would invalidate the present audit.",
+  "evidence": [
+    {
+      "path": "../../data/logs/research/hype_breakout_profit_lock_all_live_prefix_20260806T0140Z.json",
+      "role": "immutable_all_live_normalized_profit_lock_prefix_audit",
+      "sha256": "3748cea7b35610d4b690903ff67a00f1c37451b03892c8b0fe26a1553fa3f494",
+      "bytes": 3618934
+    }
+  ],
+  "metrics": {
+    "all_live_lifecycles": 15,
+    "source_profile_count": 3,
+    "source_run_count": 6,
+    "hype_resolved_closes": 7,
+    "hype_actual_mean_net_return_bps": 124.34840983003248,
+    "hype_policy_results": {
+      "a25_floor15_trail10": {
+        "triggered": 6,
+        "mean_estimated_net_return_bps": 16.150863042040587,
+        "mean_delta_net_return_bps": -108.1975467879919,
+        "normalized_profit_factor": 2.252655201859013
+      },
+      "a40_floor15_trail20": {
+        "triggered": 6,
+        "mean_estimated_net_return_bps": 16.580254781565564,
+        "mean_delta_net_return_bps": -107.76815504846692,
+        "normalized_profit_factor": 2.2859586726859993
+      },
+      "a60_floor15_trail30": {
+        "triggered": 6,
+        "mean_estimated_net_return_bps": 31.497103993348844,
+        "mean_delta_net_return_bps": -92.85130583668364,
+        "normalized_profit_factor": 3.4429042001075483
+      }
+    },
+    "current_v11_closed_lifecycles": 0,
+    "current_v11_open_lifecycles": 1
+  },
+  "limitations": [
+    "Seven resolved HYPE closes remain sparse and are not independent market samples.",
+    "The all-live mechanism sample spans three source profiles and six process runs with differing sizing contracts.",
+    "Basis-point normalization removes notional scale but does not construct a counterfactual shared-portfolio equity path.",
+    "Completed one-minute bars cannot reconstruct intraminute trigger ordering.",
+    "Counterfactual fills reuse each actual exit fill/reference ratio and fee rate rather than submitted orders.",
+    "The current v11 HYPE lifecycle is open and excluded from resolved policy comparisons."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

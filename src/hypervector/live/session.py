@@ -118,9 +118,7 @@ class LiveSession:
         record = _row_to_buffer_record(
             row if isinstance(row, pd.Series) else pd.Series(row)
         )
-        _append_bar_record(
-            self.buffer_rows, record, max_lookback=DEFAULT_MAX_LOOKBACK
-        )
+        _append_bar_record(self.buffer_rows, record, max_lookback=DEFAULT_MAX_LOOKBACK)
         self.bars_processed += 1
         ts = record.get("timestamp")
         if isinstance(ts, pd.Timestamp):
@@ -131,7 +129,11 @@ class LiveSession:
             fill_action = self._process_intent(record)
 
         if self.engine.position.qty != 0.0:
-            bar_mins = 1.0 if self.loadout.timeframe == "1m" else (5.0 if self.loadout.timeframe == "5m" else 15.0)
+            bar_mins = (
+                1.0
+                if self.loadout.timeframe == "1m"
+                else (5.0 if self.loadout.timeframe == "5m" else 15.0)
+            )
             self.engine.apply_funding(
                 feed_ts=_feed_ts(record),
                 oracle_px=float(record["close"]),
@@ -228,9 +230,7 @@ class LiveSession:
 
         return None
 
-    def process_frame(
-        self, ohlcv: pd.DataFrame, *, max_bars: int | None = None
-    ) -> int:
+    def process_frame(self, ohlcv: pd.DataFrame, *, max_bars: int | None = None) -> int:
         frame = _prepare_ohlcv(ohlcv, max_bars=max_bars)
         n = 0
         for _, row in frame.iterrows():

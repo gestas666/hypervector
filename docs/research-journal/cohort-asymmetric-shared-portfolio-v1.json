@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "cohort-asymmetric-shared-portfolio",
+  "revision_number": 1,
+  "supersedes_revision_id": null,
+  "created_at_utc": "2026-08-09T06:02:47Z",
+  "strategy_id": "multi_asset_portfolio_research_process",
+  "symbol": "MULTI",
+  "status": "candidate",
+  "hypothesis": "A predeclared asymmetric portfolio that permits HYPE breakout long, ETH precompression-pullback long, and SOL range-onset long and short may improve after-friction shared-capital performance over enabling every source symmetrically on both sides.",
+  "decision": "Advance sol_symmetric_sensitivity as the next report-only portfolio challenger, not as live execution authority. It improved both the development and already-opened final block versus the fully symmetric source baseline, remained positive after removing its largest winner in both blocks, and reduced maximum drawdown. Keep live v25 unchanged while its positions remain open. A future executable successor requires a genuinely new forward window, continued exact route-side attribution, and explicit user authorization at a flat and order-free transition boundary.",
+  "confidence": "low_medium",
+  "falsifier": "The side-specific recommendation is invalidated if a new untouched after-friction forward window makes the challenger nonpositive, removes its profit-factor advantage over the symmetric baseline, makes net PnL excluding the largest winner nonpositive, or shows that shared-capital overlap, venue friction, or route identity differs from this replay contract. It must also be revised if additional HYPE-long evidence confirms the adverse development regime or if the sparse SOL-long or SOL-short contributions cease to repeat.",
+  "evidence": [
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/cohort_separate_side_portfolio_20260809T054900Z.json",
+      "role": "immutable_shared_capital_asymmetric_and_symmetric_variant_comparison",
+      "sha256": "c437e3c2ab5bf7b498b75c4e2feefef9d9654b22a9e6922f0495c95d58b8c1ce",
+      "bytes": 3909694
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v25_side_composition_final_20260809T052848Z.json",
+      "role": "upstream_exact_provider_symbol_side_composition_evidence",
+      "sha256": "a97796089ca52fba0be0110f4d9258efe279f74c550e4074fcf3774da4faabc1",
+      "bytes": 30376
+    },
+    {
+      "path": "../../src/hypervector/research/cohort_separate_side_portfolio.py",
+      "role": "report_only_shared_capital_variant_business_logic",
+      "sha256": "eea2cb74e27aadc7dc073656ffdd4a6b9a3f1bfd51b21b306ca32d1a18870eab",
+      "bytes": 12253
+    },
+    {
+      "path": "../../src/hypervector/research/current_cohort_shared_portfolio.py",
+      "role": "shared_source_adapters_partitioning_and_exact_sol_artifact_contract",
+      "sha256": "150bb0ad9ac6bf43c4c94cdc8062b416209a3898e9dc09f6e9218adff7a86cf6",
+      "bytes": 17985
+    },
+    {
+      "path": "../../scripts/cohort_separate_side_portfolio.py",
+      "role": "immutable_local_source_experiment_and_concise_cli",
+      "sha256": "8707b3f771bc3f31ca515bae41cfe4befff0504939ffe8d1f00be4252d742ea4",
+      "bytes": 8085
+    },
+    {
+      "path": "../../tests/test_cohort_separate_side_portfolio.py",
+      "role": "variant_identity_shared_capital_and_evidence_validation_tests",
+      "sha256": "dee48fd5e44e4c08312b6932b3498e1e84eb192eebc0e1ca2f468d9ad600d491",
+      "bytes": 4153
+    },
+    {
+      "path": "../../tests/test_cohort_separate_side_portfolio_script.py",
+      "role": "source_contract_fail_fast_and_concise_output_tests",
+      "sha256": "77d5de9a98fb6158a23e2155b2f7f3d299b850676f682c98d55030cb0f7c0e8b",
+      "bytes": 4408
+    },
+    {
+      "path": "../../tests/test_current_cohort_shared_portfolio.py",
+      "role": "shared_source_adapter_and_exact_sol_artifact_regression_tests",
+      "sha256": "9e0091ff443c7e4b2493cf44263e95ffc07554612103949a23e9a7b8bd11ad9f",
+      "bytes": 10165
+    }
+  ],
+  "metrics": {
+    "initial_equity_usd": 500.0,
+    "maximum_positions": 3,
+    "hype_notional_usd": 75.0,
+    "eth_notional_usd": 25.0,
+    "sol_notional_usd": 75.0,
+    "leverage": 5.0,
+    "source_friction_scope": "source_lifecycle_net_after_stated_fees_funding_slippage",
+    "friction_recomputed": false,
+    "development_end_exclusive_utc": "2026-05-28T00:00:00+00:00",
+    "opened_final_block_start_utc": "2026-05-29T00:00:00+00:00",
+    "opened_final_block_end_exclusive_utc": "2026-07-28T00:00:00+00:00",
+    "purge_minutes": 1440,
+    "challenger_development_trades": 665,
+    "challenger_development_net_pnl_usd": 16.323769953024225,
+    "challenger_development_return_pct": 3.2647539906048446,
+    "challenger_development_profit_factor": 1.0563816158991806,
+    "challenger_development_maximum_drawdown_pct": 7.634641150697082,
+    "challenger_development_net_without_largest_win_usd": 3.8373800611884175,
+    "challenger_opened_final_trades": 135,
+    "challenger_opened_final_net_pnl_usd": 13.088671431075227,
+    "challenger_opened_final_return_pct": 2.6177342862150454,
+    "challenger_opened_final_profit_factor": 1.2346542490500918,
+    "challenger_opened_final_maximum_drawdown_pct": 3.0328265670162926,
+    "challenger_opened_final_net_without_largest_win_usd": 3.93630876433736,
+    "baseline_development_trades": 1268,
+    "baseline_development_net_pnl_usd": -32.55327091042676,
+    "baseline_development_return_pct": -6.510654182085353,
+    "baseline_development_profit_factor": 0.9370192740666464,
+    "baseline_development_maximum_drawdown_pct": 10.511074443718353,
+    "baseline_development_net_without_largest_win_usd": -44.47344867323645,
+    "baseline_opened_final_trades": 266,
+    "baseline_opened_final_net_pnl_usd": 2.259617975308629,
+    "baseline_opened_final_return_pct": 0.45192359506172575,
+    "baseline_opened_final_profit_factor": 1.0205142816577935,
+    "baseline_opened_final_maximum_drawdown_pct": 4.323178373762397,
+    "baseline_opened_final_net_without_largest_win_usd": -6.882810100827896,
+    "hype_long_development_net_pnl_usd": -22.166172018865918,
+    "hype_long_opened_final_net_pnl_usd": 6.955239677526472,
+    "sol_long_development_trades": 14,
+    "sol_long_opened_final_trades": 5,
+    "sol_short_development_trades": 17,
+    "sol_short_opened_final_trades": 5,
+    "execution_authority": "none",
+    "automatic_variant_selection": false,
+    "runtime_changed_by_this_revision": false
+  },
+  "limitations": [
+    "The final block was already inspected before this comparison and is not a sealed holdout.",
+    "The development profit factor of 1.056 is thin enough that modest unmodeled friction or regime drift could erase the aggregate advantage.",
+    "HYPE long was materially negative in development and positive in the opened final block, indicating unresolved regime dependence or instability.",
+    "SOL long has 14 development and five opened-final trades; SOL short has 17 development and five opened-final trades, so both favorable contributions remain sparse.",
+    "The replay consumes source lifecycle net outcomes after each source's stated fees, funding, and slippage; it does not recompute one harmonized queue-position, latency, or market-impact model.",
+    "Fixed caps and five-times leverage are comparison inputs, not an optimized allocation or claim of risk optimality.",
+    "The shared replay models one position per symbol, three total slots, overlap, and priority; it does not establish cross-margin liquidation behavior under every venue path.",
+    "No live route, order, position, stop, target, size, exit, transition drain, or protection changed in this revision."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

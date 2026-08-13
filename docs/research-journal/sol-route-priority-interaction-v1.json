@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "sol-route-priority-interaction",
+  "revision_number": 1,
+  "supersedes_revision_id": null,
+  "created_at_utc": "2026-08-09T15:31:08Z",
+  "strategy_id": "sol_multi_provider_router",
+  "symbol": "SOL",
+  "status": "reject",
+  "hypothesis": "Giving canonical SOL Range Onset higher static fallback priority than HT-Breakout may improve the shared SOL lifecycle path without adding a gate or evicting an open position.",
+  "decision": "Reject the static-priority-only update. The current and Range-Onset-first arms accepted identical lifecycle IDs and produced identical economics in development and the already-opened descriptive final block because HT-Breakout and Range Onset had zero shared entry timestamps. Keep v25 priorities and protected live positions unchanged. The next bounded SOL experiment is an exact historical-to-live HT-Breakout decision-parity audit followed, only if parity holds, by one minimal causal entry-timing challenger under unchanged exits and costs. Preserve canonical Range Onset without relaxation as a separately attributed sparse route. Do not increase leverage, notional, or hold duration to offset the reconstructed dense route's negative economics.",
+  "confidence": "medium_high",
+  "falsifier": "The no-priority-effect conclusion is invalidated by omitted or changed source lifecycles, evidence hash mismatch, a nonzero accepted-trade symmetric difference, or a runtime contract that permits priority-based eviction or slot reservation. The HT-Breakout component diagnosis must be revised if exact historical/live decision parity fails or if sufficiently sized after-cost forward evidence becomes positive on both sides without largest-winner dependence. Execution authority or any runtime mutation invalidates this record.",
+  "evidence": [
+    {
+      "path": "../../data/logs/research/sol_route_priority_interaction_20260809T152921Z.json",
+      "role": "immutable_two_arm_exact_source_priority_interaction",
+      "sha256": "f561a4f5732604837fad129bd3177389cffa8aaac86a9e2fa6b5152bce431a08",
+      "bytes": 1387020
+    },
+    {
+      "path": "../reviews/2026-08-09-sol-route-priority-interaction.md",
+      "role": "source_bound_interpretation_recommendation_and_falsifiers",
+      "sha256": "34375dd004ac8d89aceffb9032a1da3c273cdabdfd797533c7a6ea9fc588a0d2",
+      "bytes": 6254
+    }
+  ],
+  "metrics": {
+    "source_profile_id": "multi_asset_bidirectional_complete_portfolio_canary_v25",
+    "source_profile_fingerprint": "ec7715f671fa369d0a415d8941061eb9a577b232bbd4e06367a7342267ff7ecc",
+    "priority_arms": 2,
+    "development_input_lifecycles": 933,
+    "development_accepted_lifecycles_per_arm": 832,
+    "development_accepted_symmetric_difference": 0,
+    "development_shared_ht_range_entry_timestamps": 0,
+    "development_net_pnl_usd_per_arm": -64.2805053271178,
+    "development_profit_factor_per_arm": 0.8288692156842453,
+    "development_maximum_drawdown_pct_per_arm": 15.570160972264086,
+    "development_net_ex_largest_winner_usd_per_arm": -74.8099456904918,
+    "development_ht_breakout_trades": 781,
+    "development_ht_breakout_net_pnl_usd": -79.39244936442402,
+    "development_ht_breakout_profit_factor": 0.7765818874459302,
+    "development_range_onset_trades": 19,
+    "development_range_onset_net_pnl_usd": 24.110769815658035,
+    "development_range_onset_profit_factor": 4.795590534051237,
+    "opened_final_input_lifecycles": 178,
+    "opened_final_accepted_lifecycles_per_arm": 149,
+    "opened_final_accepted_symmetric_difference": 0,
+    "opened_final_shared_ht_range_entry_timestamps": 0,
+    "opened_final_net_pnl_usd_per_arm": -19.831107456729285,
+    "opened_final_profit_factor_per_arm": 0.6887942386615764,
+    "opened_final_ht_breakout_net_pnl_usd": -24.966379211904673,
+    "opened_final_range_onset_net_pnl_usd": 4.067209314296383,
+    "execution_authority": "none",
+    "automatic_promotion": false,
+    "runtime_changed_by_this_revision": false
+  },
+  "limitations": [
+    "The opened final block was previously inspected and is descriptive rather than a sealed holdout.",
+    "Static fallback priority does not reproduce causal live regime-aware arbitration.",
+    "One-minute bars and fixed slippage cannot reproduce private IOC queue position, every fill, or stop gaps.",
+    "Canonical Range Onset is sparse and its aggregate historical profit remains winner-concentrated.",
+    "The experiment cannot determine the optimal SOL route mix because it tested priority, not a new signal mechanism.",
+    "No live process, configuration, signal, order, position, stop, target, size, leverage, allocation, priority, transition drain, or protection changed."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

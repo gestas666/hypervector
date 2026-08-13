@@ -67,6 +67,31 @@ def test_execution_metadata_cannot_overwrite_accounting_fields(tmp_path: Path) -
     assert engine.position.qty == 0.0
 
 
+def test_close_normalizes_sub_epsilon_overfill_residue(tmp_path: Path) -> None:
+    """Floating target aggregation must close flat instead of flipping position."""
+    engine = event_engine(tmp_path)
+    engine.apply_market_fill(
+        feed_ts="2026-07-29T00:11:38Z",
+        action="enter_long",
+        side="buy",
+        qty=4.37301,
+        mark_px=64_029.0,
+    )
+
+    record = engine.apply_market_fill(
+        feed_ts="2026-07-29T00:45:57Z",
+        action="close",
+        side="sell",
+        qty=4.373010000000001,
+        mark_px=64_158.0,
+    )
+
+    assert engine.position.qty == 0.0
+    assert engine.position.avg_px == 0.0
+    assert record["position_qty"] == 0.0
+    assert record["position_avg_px"] == 0.0
+
+
 def test_buy_fill_pays_slippage_and_fee(tmp_path: Path):
     cp = CostProvider(fee_tier=0, slippage_bps=10.0)  # 10 bps
     eng = ExplicitFillEngine(

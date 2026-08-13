@@ -76,7 +76,7 @@ class _SplitData:
 
 
 def _sample_parameters(rng: np.random.Generator) -> dict[str, CandidateValue]:
-    ema_fast, ema_slow = [(3, 8), (5, 13), (8, 21), (10, 30), (20, 50)][
+    ema_fast, ema_slow = [(3, 8), (5, 13), (8, 21), (10, 30), (21, 55)][
         int(rng.integers(0, 5))
     ]
     return {
@@ -87,7 +87,11 @@ def _sample_parameters(rng: np.random.Generator) -> dict[str, CandidateValue]:
         "trend_strength_percentile": float(rng.choice([50.0, 60.0, 70.0])),
         "range_strength_percentile": float(rng.choice([20.0, 30.0, 40.0])),
         "minimum_trend_gap_bps": float(rng.choice([0.5, 1.0, 2.0, 3.0, 5.0])),
-        "choppiness_range_threshold": float(rng.choice([55.0, 65.0, 75.0, 85.0])),
+        "bbwp_length": 20,
+        "bbwp_lookback": int(rng.choice([120, 180, 240])),
+        "bbwp_compression_threshold": float(rng.choice([15.0, 20.0, 25.0, 30.0])),
+        "rsi_length": 14,
+        "rsi_signal_length": 7,
         "coiling_width_bps": float(rng.choice([0.5, 1.0, 3.0, 5.0])),
         "breakout_lookback": int(rng.choice([30, 60, 90])),
         "breakout_clearance_bps": float(rng.choice([3.0, 5.0, 8.0])),
@@ -103,10 +107,11 @@ def generate_candidate_parameters(
     """Generate a deterministic search led by the current baseline."""
     if n_trials < 1:
         raise ValueError("n_trials must be positive")
+    inactive = {"choppiness_length", "choppiness_range_threshold"}
     baseline = {
         key: value
         for key, value in asdict(faithful_regime_config()).items()
-        if isinstance(value, (int, float))
+        if key not in inactive and isinstance(value, (int, float))
     }
     rng = np.random.default_rng(seed)
     return [baseline, *[_sample_parameters(rng) for _ in range(n_trials - 1)]]

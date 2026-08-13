@@ -10,7 +10,9 @@ from hypervector.data.book_record import append_book_snapshot
 from hypervector.paper.book import BookLevel, BookSnapshot
 
 
-def test_append_existing_snapshot_writes_twenty_levels_and_reloads(tmp_path: Path) -> None:
+def test_append_existing_snapshot_writes_twenty_levels_and_reloads(
+    tmp_path: Path,
+) -> None:
     bids = tuple(BookLevel(100.0 - index, 1.0 + index) for index in range(25))
     asks = tuple(BookLevel(101.0 + index, 2.0 + index) for index in range(25))
     snapshot = BookSnapshot(
@@ -33,4 +35,3 @@ def test_append_existing_snapshot_writes_twenty_levels_and_reloads(tmp_path: Pat
     assert len(replay) == 1
     assert replay.iloc[0]["best_bid"] == 100.0
     assert replay.iloc[0]["best_ask"] == 101.0
-

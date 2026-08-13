@@ -23,7 +23,6 @@ def compute_advanced_book_features(df_book: pd.DataFrame) -> pd.DataFrame:
     # 1. Microprice Rate of Change / Velocity (bps)
     if "micro_price" in df.columns:
         micro = df["micro_price"].astype(float)
-        mid = df["mid"].astype(float) if "mid" in df.columns else micro
         df["micro_price_velocity_1s"] = (micro.pct_change(1) * 10_000.0).fillna(0.0)
         df["micro_price_velocity_5s"] = (micro.pct_change(5) * 10_000.0).fillna(0.0)
         df["micro_price_accel"] = (df["micro_price_velocity_1s"].diff()).fillna(0.0)
@@ -38,8 +37,12 @@ def compute_advanced_book_features(df_book: pd.DataFrame) -> pd.DataFrame:
         ask_d = df["ask_depth_10"].astype(float)
         tot_d = (bid_d + ask_d).replace(0.0, np.nan)
         raw_opi = (bid_d - ask_d) / tot_d
-        df["order_pressure_index"] = raw_opi.fillna(0.0).ewm(span=10, adjust=False).mean()
-        df["book_skew"] = (bid_d / ask_d.replace(0.0, np.nan)).fillna(1.0).clip(0.05, 20.0)
+        df["order_pressure_index"] = (
+            raw_opi.fillna(0.0).ewm(span=10, adjust=False).mean()
+        )
+        df["book_skew"] = (
+            (bid_d / ask_d.replace(0.0, np.nan)).fillna(1.0).clip(0.05, 20.0)
+        )
     else:
         df["order_pressure_index"] = 0.0
         df["book_skew"] = 1.0
@@ -47,7 +50,9 @@ def compute_advanced_book_features(df_book: pd.DataFrame) -> pd.DataFrame:
     # 3. Dynamic Spread Regime Filter Threshold (rolling 90th percentile of spread)
     if "spread_bps" in df.columns:
         s_bps = df["spread_bps"].astype(float)
-        df["spread_regime_limit"] = s_bps.rolling(60, min_periods=10).quantile(0.90).fillna(8.0)
+        df["spread_regime_limit"] = (
+            s_bps.rolling(60, min_periods=10).quantile(0.90).fillna(8.0)
+        )
         df["spread_compressed"] = s_bps < df["spread_regime_limit"]
     else:
         df["spread_regime_limit"] = 8.0

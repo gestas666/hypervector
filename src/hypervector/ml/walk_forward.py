@@ -153,7 +153,11 @@ def run_walk_forward_metalabel(
         )
 
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    out = Path(out_dir) if out_dir else root / "models" / "metalabel" / f"wf_{loadout.strategy_name}_{stamp}"
+    out = (
+        Path(out_dir)
+        if out_dir
+        else root / "models" / "metalabel" / f"wf_{loadout.strategy_name}_{stamp}"
+    )
     out.mkdir(parents=True, exist_ok=True)
     labels_path = out / "labels.csv"
     labels.to_csv(labels_path, index=False)

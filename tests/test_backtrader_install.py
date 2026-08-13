@@ -5,7 +5,6 @@ from __future__ import annotations
 from importlib.metadata import version
 
 import numpy as np
-import pytest
 
 
 def test_backtrader_version_is_installed():
@@ -90,7 +89,9 @@ def test_minimal_offline_backtest_runs():
                 "volume": volumes,
                 "openinterest": openinterest,
             },
-            index=__import__("pandas").date_range("2020-01-01", periods=len(closes), freq="B"),
+            index=__import__("pandas").date_range(
+                "2020-01-01", periods=len(closes), freq="B"
+            ),
         )
     )
 

@@ -65,8 +65,12 @@ def pine_composite_signals(
 
     high, low, close = _ohlc(df)
 
-    st_line, st_dir = supertrend(high, low, close, atr_period=st_atr, multiplier=st_mult)
-    zlema, zl_dir = zero_lag_trend_ohlc(high, low, close, length=zl_length, mult=zl_mult)
+    st_line, st_dir = supertrend(
+        high, low, close, atr_period=st_atr, multiplier=st_mult
+    )
+    zlema, zl_dir = zero_lag_trend_ohlc(
+        high, low, close, length=zl_length, mult=zl_mult
+    )
     chop = choppiness_index(high, low, close, chop_length)
     vip, vim = vortex(high, low, close, vortex_length)
     mom, sqz_on, sqz_off = squeeze_momentum(
@@ -80,15 +84,9 @@ def pine_composite_signals(
     st_flip_up = (st_dir == 1) & (st_dir.shift(1) == -1)
     st_flip_dn = (st_dir == -1) & (st_dir.shift(1) == 1)
 
-    zl_reclaim_up = (
-        (st_dir == 1)
-        & (close > zlema)
-        & (close.shift(1) <= zlema.shift(1))
-    )
+    zl_reclaim_up = (st_dir == 1) & (close > zlema) & (close.shift(1) <= zlema.shift(1))
     zl_reclaim_dn = (
-        (st_dir == -1)
-        & (close < zlema)
-        & (close.shift(1) >= zlema.shift(1))
+        (st_dir == -1) & (close < zlema) & (close.shift(1) >= zlema.shift(1))
     )
 
     if use_squeeze:
@@ -100,7 +98,10 @@ def pine_composite_signals(
 
     if regime_filter:
         reg = detect_regime_ema(
-            close, fast=int(regime_fast), slow=int(regime_slow), range_band=float(regime_band)
+            close,
+            fast=int(regime_fast),
+            slow=int(regime_slow),
+            range_band=float(regime_band),
         )
         regime_long_ok = reg == "up"
         regime_short_ok = reg == "down"
@@ -144,6 +145,7 @@ def pine_composite_signals(
     # Optional Orderbook Gate
     if book_gate:
         from hypervector.data.book_align import gate_signals_by_orderbook
+
         entries = gate_signals_by_orderbook(
             entries,
             df,
@@ -161,7 +163,9 @@ def pine_composite_long(df: pd.DataFrame, **kwargs) -> tuple[pd.Series, pd.Serie
     return pine_composite_signals(df, direction="long", **kwargs)
 
 
-def pine_composite_short(df: pd.DataFrame, **kwargs) -> tuple[pd.Series, pd.Series, str]:
+def pine_composite_short(
+    df: pd.DataFrame, **kwargs
+) -> tuple[pd.Series, pd.Series, str]:
     return pine_composite_signals(df, direction="short", **kwargs)
 
 

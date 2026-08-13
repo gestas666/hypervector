@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "cohort-live-prefix-delta-monitoring",
+  "revision_number": 7,
+  "supersedes_revision_id": "ade9d97701ea15807ce0e16cc7a4e5a1fa44509785f06ba0b3d8787cf4eaafc2",
+  "created_at_utc": "2026-08-08T19:38:00Z",
+  "strategy_id": "multi_asset_bidirectional_complete_portfolio_canary_v25",
+  "symbol": "PORTFOLIO",
+  "status": "retain",
+  "hypothesis": "Sampling the provider causal cutoff after same-cycle asset reconciliation should preserve point-in-time order-pressure evidence while a separate reconciliation boundary preserves complete, non-overlapping funding windows.",
+  "decision": "Retain the currently protected v25 runtime unchanged and stage the validated post-reconciliation provider-clock repair for the next verified terminal activation boundary. The loaded pre-start runner is proven to sample observed_at before reconciliation, causing fresh same-cycle HIP-3 books to be correctly rejected as future evidence. The staged runner reverses that ordering and preserves the earlier exact funding boundary on no-action cycles. This revision authorizes no route, recipe, side, blocker, sizing, allocation, leverage, stop, target, order, position, drain, restart, promotion, or execution change.",
+  "confidence": "high",
+  "falsifier": "The technical hypothesis is falsified if, after verified activation of the staged runner, an exact-symbol HIP-3 breakout evaluation still emits null imbalance_10 or pressure_age_seconds while an authoritative mainnet book exists between its completed-bar decision time and provider cutoff, or if funding windows overlap or skip. Operational acceptance is falsified by profile drift, failed position adoption, a duplicate order, missing venue stop, runtime fault, or any report-only live mutation.",
+  "evidence": [
+    {
+      "path": "cohort-live-prefix-delta-monitoring-v6.json",
+      "role": "prior_append_only_monitoring_revision",
+      "sha256": "60f6094bb27410a65fe4ad829b9cc0ebfd11c1a6cecc5d058ed2df63ac332d22",
+      "bytes": 8981
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v25_hip3_pressure_clock_root_cause_20260808T193618Z.json",
+      "role": "immutable_clock_root_cause_activation_and_protection_contract",
+      "sha256": "aa24bb752350511f6d20ed492d1a992897a1d070abe5a4c845ed8ba8179fae78",
+      "bytes": 4667
+    },
+    {
+      "path": "../../data/backups/bidirectional_cohort/prestart_20260808T094011.216799Z_ec7715f671fa/manifest.json",
+      "role": "verified_loaded_runtime_implementation_identity",
+      "sha256": "280c4437aef2aba372dad55cdc0f183fcabab3512777f207cf2dfc8cf8e82751",
+      "bytes": 609914
+    },
+    {
+      "path": "../../src/hypervector/live/multi_asset_live_runner.py",
+      "role": "staged_post_reconciliation_provider_clock_and_funding_cursor_repair",
+      "sha256": "31500a60f9c99fba036969ca5dba6de4a56539c92a82178dc50df82a139dad33",
+      "bytes": 18238
+    },
+    {
+      "path": "../../tests/test_multi_asset_live_runner.py",
+      "role": "clock_order_funding_cursor_and_orchestration_regressions",
+      "sha256": "1b7dc58e2ab4ab5b3aabf88528350a0f8d49b06a193cc173da2b6f1f7452b91a",
+      "bytes": 30480
+    },
+    {
+      "path": "../../src/hypervector/live/hip3_ledger_pressure.py",
+      "role": "causal_exact_symbol_depth_ten_pressure_source",
+      "sha256": "f3dc9ecc890d7580460d3e8f6b6a72a25a5b674656ea3a58573335b33372b6ae",
+      "bytes": 6545
+    },
+    {
+      "path": "../../tests/test_hip3_cohort_providers.py",
+      "role": "hip3_pressure_source_age_cutoff_and_provider_regressions",
+      "sha256": "cb8787c09b432e4548e917547ab232c2de8ff0b7a8f43ed3f74d0ec1281525ce",
+      "bytes": 15726
+    },
+    {
+      "path": "../reviews/2026-08-08-v25-hip3-pressure-clock-root-cause.md",
+      "role": "technical_diagnosis_validation_activation_risk_and_falsifiers",
+      "sha256": "44e8573a14bf1c007ba143ba52d3d90dd517889ad5b0a1088ea623c1b4cc6130",
+      "bytes": 6476
+    }
+  ],
+  "metrics": {
+    "run_id": "bidirectional-live-1786182011216",
+    "profile_fingerprint": "ec7715f671fa369d0a415d8941061eb9a577b232bbd4e06367a7342267ff7ecc",
+    "affected_provider_symbol_routes": 5,
+    "affected_metric_fields": 2,
+    "metric_value_gaps_at_19_03_57_utc": 324,
+    "metric_value_gaps_at_19_35_57_utc": 344,
+    "evaluations_without_metrics": 0,
+    "missing_market_data_observations": 0,
+    "focused_tests_passed": 47,
+    "full_non_network_tests_passed": 4122,
+    "full_non_network_tests_deselected": 4,
+    "known_warnings": 27,
+    "live_open_positions": 4,
+    "live_protected_open_positions": 4,
+    "runtime_changed_by_this_revision": false
+  },
+  "limitations": [
+    "PID 37897 still runs the pre-repair implementation; offline validation does not prove future live activation.",
+    "Historical null pressure values cannot be backfilled as decision-time evidence.",
+    "A genuinely absent or older-than-30-second book should continue to produce unavailable pressure and is not evidence that the repair failed.",
+    "The repair improves technical coverage but does not establish economic edge for any HIP-3 provider.",
+    "The live portfolio has four open positions, so activation was deferred rather than introducing position-adoption and duplicate-order risk.",
+    "No live process, route, order, position, stop, target, size, allocation, drain, protection, or runtime strategy changed in this revision."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

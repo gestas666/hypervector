@@ -10,7 +10,6 @@ _EVENT_ADDITIONS: dict[str, object] = {
     "submit_latency_ms": 50,
     "cancel_latency_ms": 50,
     "update_latency_ms": 50,
-    "max_event_age_ms": 3000,
     "restart_queue_policy": "requeue_behind_displayed_liquidity",
     "liquidation_execution_model": "hyperliquid_market_liquidation_v2",
     "partial_liquidation_supported": True,
@@ -26,6 +25,8 @@ _EVENT_ADDITIONS: dict[str, object] = {
 def migrated_portfolio_spec(
     recorded_spec: Mapping[str, object],
     expected_spec: Mapping[str, object],
+    *,
+    allow_pending_event_age_upgrade: bool = False,
 ) -> dict[str, object] | None:
     """Return a declared safe migration, or None for an incompatible change."""
     recorded = recorded_spec.get("execution")
@@ -36,10 +37,37 @@ def migrated_portfolio_spec(
     changed = _add_entry_policies(execution, expected)
     changed |= _migrate_event_authority(execution, expected)
     changed |= _add_expected_event_fields(execution, expected)
+    changed |= _add_expected_event_age(execution, expected)
     changed |= _migrate_liquidation_model(execution, expected)
+    changed |= _upgrade_pending_event_age(
+        execution,
+        expected,
+        allowed=allow_pending_event_age_upgrade,
+    )
     if not changed:
         return None
     return {**recorded_spec, "execution": execution}
+
+
+def _upgrade_pending_event_age(
+    execution: dict[str, object],
+    expected: Mapping[str, object],
+    *,
+    allowed: bool,
+) -> bool:
+    """Upgrade measured event freshness only for a flat, requeued maker entry."""
+    if not allowed:
+        return False
+    if execution.get("restart_queue_policy") != "requeue_behind_displayed_liquidity":
+        return False
+    if expected.get("restart_queue_policy") != "requeue_behind_displayed_liquidity":
+        return False
+    if execution.get("max_event_age_ms") != 3000:
+        return False
+    if expected.get("max_event_age_ms") != 6000:
+        return False
+    execution["max_event_age_ms"] = 6000
+    return True
 
 
 def _add_entry_policies(
@@ -83,6 +111,18 @@ def _add_expected_event_fields(
             execution[key] = required
             changed = True
     return changed
+
+
+def _add_expected_event_age(
+    execution: dict[str, object],
+    expected: Mapping[str, object],
+) -> bool:
+    """Add a previously absent supported event freshness field."""
+    event_age = expected.get("max_event_age_ms")
+    if "max_event_age_ms" in execution or event_age not in {3000, 6000}:
+        return False
+    execution["max_event_age_ms"] = event_age
+    return True
 
 
 def _migrate_liquidation_model(

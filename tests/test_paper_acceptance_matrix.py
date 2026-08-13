@@ -8,7 +8,6 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import pytest
 
 from hypervector.data.sources import fixture_ohlcv
 from hypervector.export.phase2 import export_candidate
@@ -84,9 +83,11 @@ def _run_daemon(
     warm = fixture_ohlcv(n_bars=80, drift=-5.0, wave_period=20)
     live = fixture_ohlcv(n_bars=max(max_live_bars + 2, 10), drift=-5.0, wave_period=20)
     live = live.copy()
-    live["timestamp"] = warm["timestamp"].iloc[-1] + (
-        live["timestamp"] - live["timestamp"].iloc[0]
-    ) + (warm["timestamp"].iloc[1] - warm["timestamp"].iloc[0])
+    live["timestamp"] = (
+        warm["timestamp"].iloc[-1]
+        + (live["timestamp"] - live["timestamp"].iloc[0])
+        + (warm["timestamp"].iloc[1] - warm["timestamp"].iloc[0])
+    )
     calls = {"n": 0}
 
     def poll_fn(*, after_ts=None, **_kwargs):
@@ -129,9 +130,9 @@ def test_matrix_shadow_default_stamps_and_intents(tmp_path: Path):
     assert result.execution_mode == "shadow"
     assert result.decisions_path.is_file()
     rows = [
-        json.loads(l)
-        for l in result.decisions_path.read_text(encoding="utf-8").splitlines()
-        if l.strip()
+        json.loads(line)
+        for line in result.decisions_path.read_text(encoding="utf-8").splitlines()
+        if line.strip()
     ]
     assert rows
     # Every stamped row (including session_start) must carry the daemon mode.
@@ -177,9 +178,9 @@ def test_matrix_forced_paper_mode(tmp_path: Path):
     result, data = _run_daemon(tmp_path, execution_mode="paper")
     assert result.execution_mode == "paper"
     rows = [
-        json.loads(l)
-        for l in result.decisions_path.read_text(encoding="utf-8").splitlines()
-        if l.strip()
+        json.loads(line)
+        for line in result.decisions_path.read_text(encoding="utf-8").splitlines()
+        if line.strip()
     ]
     assert rows
     assert all(r.get("execution_mode") == "paper" for r in rows)
@@ -194,7 +195,12 @@ def test_matrix_stop_file_stops_daemon(tmp_path: Path):
     result, data = _run_daemon(
         tmp_path, execution_mode="shadow", stop_file=stop, max_live_bars=50
     )
-    assert result.stop_reason in ("stop_file", "max_live_bars", "poll_exhausted", "stop")
+    assert result.stop_reason in (
+        "stop_file",
+        "max_live_bars",
+        "poll_exhausted",
+        "stop",
+    )
     # Pre-existing stop file should stop without requiring many live bars.
     assert result.stop_reason == "stop_file" or result.live_bars <= 50
     _assert_no_live_files(data)

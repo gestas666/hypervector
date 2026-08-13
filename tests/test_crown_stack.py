@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 import pandas as pd
-import pytest
 
 from hypervector.data.sources import fixture_ohlcv
-from hypervector.strategies.crown_stack import crown_stack_long, crown_stack_short, register_crown_stack
+from hypervector.strategies.crown_stack import crown_stack_long, register_crown_stack
 from hypervector.strategies.indicators import bbwp, ema, ema_bias, pmarp, rsi
 from hypervector.strategies.registry import clear_registry, get_strategy
 from hypervector.sweep.search import run_grid_search
@@ -41,7 +40,9 @@ def test_ema_bias_is_chart_tf_not_daily_resample():
 
 def test_crown_stack_long_returns_bool_series():
     df = fixture_ohlcv(n_bars=60 * 24 * 50, drift=8.0, wave_period=120)
-    entries, exits, direction = crown_stack_long(df, bbwp_lookback=50, pmarp_lookback=50)
+    entries, exits, direction = crown_stack_long(
+        df, bbwp_lookback=50, pmarp_lookback=50
+    )
     assert direction == "long"
     assert entries.dtype == bool
     assert exits.dtype == bool
@@ -56,7 +57,11 @@ def test_crown_stack_grid_runs():
     results = run_grid_search(
         df,
         strat,
-        param_grid={"bbwp_lookback": [50], "bbwp_threshold": [25.0], "pmarp_exit_hi": [90.0]},
+        param_grid={
+            "bbwp_lookback": [50],
+            "bbwp_threshold": [25.0],
+            "pmarp_exit_hi": [90.0],
+        },
     )
     assert results
     assert results[0].status in ("ok", "error")

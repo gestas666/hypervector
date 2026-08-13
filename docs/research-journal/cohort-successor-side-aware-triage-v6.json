@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "cohort-successor-side-aware-triage",
+  "revision_number": 6,
+  "supersedes_revision_id": "11254fa001fd8a0a5502640984c0122b6b1c3be8444680b8e43449fe67fbc5e4",
+  "created_at_utc": "2026-08-09T15:09:25Z",
+  "strategy_id": "multi_asset_portfolio_research_process",
+  "symbol": "PORTFOLIO",
+  "status": "candidate",
+  "hypothesis": "A point-in-time, provider-symbol-side triage that separates historical signal evidence, after-cost live translation, concentration, forward paths, and unresolved marks may select a more coherent portfolio successor than aggregate-PnL route ranking.",
+  "decision": "Refine the successor sequence using two completed negative route-family decisions. Keep v25 unchanged while its current protected lifecycles remain open. For the eventual new source-bound successor generation, retain the three experiment priorities: canonical both-side SOL range onset; the exact ETH pullback route with long/short and aligned/opposed attribution but no Ridge or LightGBM gate; and canonical-pivot SPCX Swing with separate side and entry-episode attribution. Reject the fixed ETH bar-model family and omit the tested SNDK/GOLD/BRENTOIL breakout-pressure transfer family from successor execution. Do not replace them with a broad parameter sweep, global regime veto, static side gate, portfolio-wide profit lock, or leverage increase. Any executable successor still requires a new generation, current implementation backup, flat-and-order-free transition proof, rollback contract, append-only decision, and renewed explicit live-risk authorization.",
+  "confidence": "medium_high",
+  "falsifier": "This revision is invalidated by an incorrect predecessor identity, changed evidence bytes, execution authority, open marks counted as closes, or a retired profile represented as launchable. The ETH model exclusion should be revised only if a separately predeclared venue-native route-side model clears stable development ranking and after-cost economics without largest-winner dependence and repeats prospectively. The commodity exclusion should be revised if the intended account execution path demonstrates materially lower fees or a genuinely new predeclared mechanism is positive under nominal and stress standard-fee friction on both sides. The three experiment priorities update when new exact route-side after-cost closes contradict their current evidence.",
+  "evidence": [
+    {
+      "path": "cohort-successor-side-aware-triage-v5.json",
+      "role": "authoritative_predecessor_and_new_generation_lineage_contract",
+      "sha256": "8ff3f11a9b10ed8b0e2e6916f34bdcdff1fe20c5286c3812380bc9ea5a0f59bf",
+      "bytes": 5096
+    },
+    {
+      "path": "eth-pullback-metalabel-v1.json",
+      "role": "fixed_ridge_and_lightgbm_route_family_rejection",
+      "sha256": "365d291d08bdbad4072bd37b5f72c6f044afa8bc76589bf71e75e9a4f6675cd3",
+      "bytes": 4971
+    },
+    {
+      "path": "hip3-sndk-gold-brent-transfer-v4.json",
+      "role": "actual_fee_standard_friction_commodity_transfer_rejection",
+      "sha256": "64d89e522fbe5382cf575061506e808cf790d1c8859fa69fed31b79363f780f5",
+      "bytes": 4856
+    },
+    {
+      "path": "../reviews/2026-08-09-portfolio-successor-experiment-sequence.md",
+      "role": "ordered_flat_boundary_and_route_specific_successor_protocol",
+      "sha256": "39d8f240b70c97d7ad0d1a6ae0d80145100c3de21184b679dbbdae6cc0c063c2",
+      "bytes": 8150
+    }
+  ],
+  "metrics": {
+    "source_profile_id": "multi_asset_bidirectional_complete_portfolio_canary_v25",
+    "source_profile_fingerprint": "ec7715f671fa369d0a415d8941061eb9a577b232bbd4e06367a7342267ff7ecc",
+    "source_run_id": "bidirectional-live-1786182011216",
+    "routes": 24,
+    "proceed": 0,
+    "revise": 10,
+    "stop_exact_contract": 14,
+    "successor_priority_routes": [
+      "range_onset_bidirectional_v1|SOL",
+      "eth_breakout_precompression_pullback_bidirectional_v1|ETH",
+      "hip3_swing_ha_sp500_spcx_bidirectional_v2|xyz:SPCX"
+    ],
+    "eth_tested_model_candidates": 2,
+    "eth_supported_model_candidates": 0,
+    "eth_model_hyperparameter_sweeps": 0,
+    "commodity_standard_fee_validation_trades": 28,
+    "commodity_standard_fee_stress_profit_factor": 0.9569109632646755,
+    "current_authorized_successor_profile": null,
+    "successor_requires_new_generation": true,
+    "execution_authority": "none",
+    "automatic_promotion": false,
+    "runtime_changed_by_this_revision": false
+  },
+  "limitations": [
+    "This revision adds research-family decisions but no newly resolved v25 lifecycle.",
+    "No exact route has compatible-profile resolved live evidence on both sides.",
+    "SOL range onset has supportive both-side historical evidence but no compatible-profile live close.",
+    "ETH and SPCX remain mechanism experiments rather than established portfolio edge.",
+    "The commodity decision uses the observed current account fee path and may require revision if venue or account fees change materially.",
+    "The successor generation, exact route authority, notional allocation, and launch time remain unassigned.",
+    "No live process, configuration, route, order, position, stop, target, allocation, transition drain, or protection changed in this revision."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

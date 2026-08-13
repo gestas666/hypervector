@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "all-asset-hype-breakout-forward-observer",
+  "revision_number": 5,
+  "supersedes_revision_id": "717a984b06a54316f756b2bd0848d7151e0605b6ce335588ebd731964e72d646",
+  "created_at_utc": "2026-08-06T12:53:00Z",
+  "strategy_id": "hype_breakout_onset_bidirectional_v1",
+  "symbol": "PORTFOLIO",
+  "status": "observe",
+  "hypothesis": "Prospective venue-matched observation on BTC, ETH, SOL, and HYPE can determine whether the exact HYPE breakout-onset rule produces repeatable after-cost signal paths outside HYPE without granting order authority or treating reference-price proxies as actual fills.",
+  "decision": "Continue the staged all-asset breakout trial without changing the active v11 process. The policy-parity observer now reconciles exact source-profile fills where they exist: one HYPE long resolved for -98.34 bps after recorded fees and funding, 5.34 bps worse than its reference-price proxy, and the current HYPE short is matched to its actual open fill. BTC, ETH, and SOL remain explicitly counterfactual because v11 did not authorize their breakout execution. The three resolved proxies remain net negative in aggregate, while BTC long and HYPE short remain unresolved. Preserve the current structural-side and exit contracts until more independent, policy-complete outcomes exist.",
+  "confidence": "low",
+  "falsifier": "Update this decision after multiple non-adjacent and directionally balanced policy-complete outcomes exist for each symbol with actual IOC fills, stop slippage, fees, funding, and portfolio occupancy. A material mismatch between reconciled fill identity and the asset ledger, a changed source or candidate profile hash, incomplete candle coverage, or any execution authority in the observer invalidates this revision.",
+  "evidence": [
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/breakout_policy_forward_v14_20260806T125217Z.json",
+      "role": "immutable_current_run_policy_parity_with_actual_source_fill_reconciliation",
+      "sha256": "292ff0fc50716069f6e4187cac16daf33027c97c7911711606a1fe95e6c61b85",
+      "bytes": 9282
+    },
+    {
+      "path": "../reviews/2026-08-05-hype-breakout-cross-asset-transfer.md",
+      "role": "historical_transfer_development_and_opened_final_block_review",
+      "sha256": "075d059c31429f464e48fc9a5ed33880de7d8936af93b5340dcc288d61ea8c26",
+      "bytes": 4871
+    }
+  ],
+  "metrics": {
+    "source_run_id": "bidirectional-live-1785976389611",
+    "eligible_signals": 7,
+    "selected_lifecycles": 5,
+    "same_side_occupied_signals": 2,
+    "resolved_lifecycles": 3,
+    "pending_lifecycles": 2,
+    "missing_data_lifecycles": 0,
+    "source_profile_actual_entries_matched": 2,
+    "source_profile_actual_resolved": 1,
+    "source_profile_actual_open": 1,
+    "candidate_only_counterfactual_lifecycles": 3,
+    "resolved_sum_estimated_net_return_bps": -95.64019545251975,
+    "resolved_sum_estimated_net_pnl_usd": -0.8684891801042899,
+    "hype_long_proxy_net_return_bps": -92.99999999999896,
+    "hype_long_actual_net_return_bps": -98.33615145766069,
+    "hype_long_actual_minus_proxy_bps": -5.336151457661728,
+    "hype_long_actual_net_pnl_usd": -0.73208,
+    "hype_long_actual_fees_usd": 0.064033,
+    "hype_long_actual_funding_usd": -0.002767,
+    "eth_long_estimated_net_return_bps": 30.23754284207837,
+    "sol_long_estimated_net_return_bps": -32.877738294599155,
+    "btc_long_current_estimated_net_return_bps": -84.61558601570972,
+    "hype_short_current_estimated_net_return_bps": 125.88888888888951,
+    "execution_authority": "none",
+    "runtime_strategy_changed": false
+  },
+  "limitations": [
+    "Only three policy proxies are resolved and two remain open, so profit factor, repeatability, and side robustness are not identifiable.",
+    "Only HYPE had execution authority in the source profile; BTC, ETH, and SOL lifecycles remain reference-price counterfactuals without private IOC fills.",
+    "The open HYPE short has an exact entry but cannot have realized exit costs or PnL until it closes.",
+    "One-minute candles cannot resolve sub-minute stop sequence or gap slippage, and counterfactual paths still exclude funding.",
+    "The resolved entries were all breakout-side opposed, while the two aligned entries are still pending, so relation groups cannot yet be compared fairly.",
+    "The resolved net returns span different symbols and notionals and are descriptive sums, not a shared-account equity curve.",
+    "No strategy, order, position, execution scope, or live process changed in this revision."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

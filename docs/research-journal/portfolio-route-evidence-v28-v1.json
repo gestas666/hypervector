@@ -1,0 +1,116 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "portfolio-route-evidence-v28",
+  "revision_number": 1,
+  "supersedes_revision_id": null,
+  "created_at_utc": "2026-08-08T05:38:33Z",
+  "strategy_id": "multi_asset_bidirectional_portfolio",
+  "symbol": "PORTFOLIO",
+  "status": "candidate",
+  "hypothesis": "The inactive v28 portfolio can preserve broad bidirectional live research while making its route evidence quality explicit and removing only the independently rejected SOL HT-Breakout transfer.",
+  "decision": "Keep v25 unchanged while its three protected lifecycles remain open. Retain v28 as an inactive aggressive live-research candidate, not as a profitability-promoted portfolio. Its 23 executable routes include six historically supportive candidates, three contradictory mappings, ten negative mappings, and four exact mappings without accepted evidence. Do not turn those labels into hidden runtime gates. Continue all declared trials at their explicit canary scope, keep SOL HT-Breakout observation-only in v28, and focus the next mechanism experiment on the negative HT-Breakout short side without suppressing bidirectional research.",
+  "confidence": "medium",
+  "falsifier": "Any profile or evidence hash mismatch, a route count other than 24 observed and 23 executable, an execution route absent from the scorecard, or a research-state classification inconsistent with the bound audit invalidates this record. Fresh independently resolved after-cost evidence can update an individual route, but it must trigger a new journal revision rather than an automatic gate, size change, or promotion.",
+  "evidence": [
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v25_route_scope_audit_20260808T0541Z.json",
+      "role": "immutable_v25_live_route_and_execution_audit",
+      "sha256": "9242388951c596b7d10c01a1eca44f9f2f26887ed600a32e3190a08cd1eb121d",
+      "bytes": 6359780
+    },
+    {
+      "path": "../../configs/multi_asset_bidirectional_complete_portfolio_canary_v28.toml",
+      "role": "inactive_v28_candidate_configuration",
+      "sha256": "7db6d87a87f3b69234421fa9b1838c6be18c5c162f1d76bd2e4ed7a7baa9f07e",
+      "bytes": 6207
+    },
+    {
+      "path": "../../data/backups/bidirectional_cohort/prestart_20260808T052126.703591Z_90285e71220a/manifest.json",
+      "role": "verified_credential_free_v28_source_baseline",
+      "sha256": "45e807298be4eb240683e593dc6fdff6cf7c5ae36706d50ae9ee61a3c930c2bf",
+      "bytes": 606993
+    },
+    {
+      "path": "ht-breakout-side-market-transfer-v1.json",
+      "role": "predeclared_ht_breakout_side_market_challenger",
+      "sha256": "b67e19eba139619f7d92105fbd1ad898eb053f339cf4de5440ba1accc4376801",
+      "bytes": 4206
+    },
+    {
+      "path": "sol-ht-breakout-transfer-v2.json",
+      "role": "sol_ht_breakout_route_rejection",
+      "sha256": "5362e1b473fff4774bceff793def95516cff5c2330918b5f0f6a403a86846473",
+      "bytes": 4887
+    }
+  ],
+  "metrics": {
+    "active_profile_id": "multi_asset_bidirectional_complete_portfolio_canary_v25",
+    "active_run_id": "bidirectional-live-1786137154835",
+    "active_profile_fingerprint": "ec7715f671fa369d0a415d8941061eb9a577b232bbd4e06367a7342267ff7ecc",
+    "candidate_profile_id": "multi_asset_bidirectional_complete_portfolio_canary_v28",
+    "candidate_profile_fingerprint": "90285e71220a7eca53e7791da9cb48ddcdc58e36a398c12a1485082c0f50f30f",
+    "candidate_observed_routes": 24,
+    "candidate_executable_routes": 23,
+    "candidate_observe_only_routes": 1,
+    "candidate_both_sides_routes": 23,
+    "supportive_candidate_routes": [
+      "range_onset_bidirectional_v1|ETH",
+      "range_onset_bidirectional_v1|SOL",
+      "eth_breakout_precompression_pullback_bidirectional_v1|ETH",
+      "hip3_swing_ha_sp500_spcx_bidirectional_v2|xyz:SPCX",
+      "hip3_breakout_pressure_sp500_spcx_bidirectional_v1|xyz:SP500",
+      "hip3_swing_ha_sndk_gold_brent_bidirectional_v1|xyz:GOLD"
+    ],
+    "contradictory_routes": [
+      "hulk_expansion_bidirectional_tuned_v2|BTC",
+      "hulk_expansion_bidirectional_tuned_v2|SOL",
+      "hype_breakout_onset_bidirectional_v1|BTC"
+    ],
+    "negative_routes": [
+      "hypervelocity_source_follow_bidirectional_5m_v1|BTC",
+      "hype_breakout_onset_bidirectional_v1|ETH",
+      "hype_breakout_onset_bidirectional_v1|HYPE",
+      "hip3_swing_ha_sp500_spcx_bidirectional_v2|xyz:SP500",
+      "hip3_breakout_pressure_sp500_spcx_bidirectional_v1|xyz:SPCX",
+      "hip3_swing_ha_sndk_gold_brent_bidirectional_v1|xyz:SNDK",
+      "hip3_swing_ha_sndk_gold_brent_bidirectional_v1|xyz:BRENTOIL",
+      "hip3_breakout_pressure_sndk_gold_brent_bidirectional_v1|xyz:SNDK",
+      "hip3_breakout_pressure_sndk_gold_brent_bidirectional_v1|xyz:GOLD",
+      "hip3_breakout_pressure_sndk_gold_brent_bidirectional_v1|xyz:BRENTOIL"
+    ],
+    "unreviewed_exact_mapping_routes": [
+      "hulk_expansion_bidirectional_tuned_v2|ETH",
+      "hulk_expansion_bidirectional_tuned_v2|HYPE",
+      "range_onset_bidirectional_v1|BTC",
+      "range_onset_bidirectional_v1|HYPE"
+    ],
+    "observe_only_routes": [
+      "hype_breakout_onset_bidirectional_v1|SOL"
+    ],
+    "v25_current_profile_closed_trades": 2,
+    "v25_current_profile_net_pnl_usd": 0.024252,
+    "v25_current_profile_profit_factor": 1.036920435,
+    "all_live_mixed_profile_closed_trades": 28,
+    "all_live_mixed_profile_net_pnl_usd": -1.671727,
+    "all_live_mixed_profile_profit_factor": 0.699801517,
+    "all_live_ht_breakout_hype_long_trades": 8,
+    "all_live_ht_breakout_hype_long_net_pnl_usd": 0.502458,
+    "all_live_ht_breakout_hype_long_profit_factor": 1.304540118,
+    "all_live_ht_breakout_hype_short_trades": 4,
+    "all_live_ht_breakout_hype_short_net_pnl_usd": -1.254625,
+    "all_live_ht_breakout_hype_short_profit_factor": 0.156335127,
+    "runtime_changed_by_this_revision": false
+  },
+  "limitations": [
+    "The six supportive routes are candidates, not proven executable edges; three are HIP-3 bar diagnostics without live parity.",
+    "The all-live totals mix materially different profiles, notionals, and execution contracts and therefore cannot establish current-v25 expectancy.",
+    "Only two exact provider-symbol mappings have a resolved execution outcome under the current provider-contract scorecard, each with one trade.",
+    "The v25 run has produced only five routed actions and all were long, so current-run bidirectional behavior is not yet empirically demonstrated.",
+    "Regime alignment ranks only simultaneous same-asset conflicts; it does not gate lone signals or create regime-only exits.",
+    "The operator-facing HT-Breakout name retains a legacy internal strategy_id for ledger and checkpoint compatibility.",
+    "This record does not place, close, resize, filter, restart, promote, or otherwise mutate the running portfolio."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

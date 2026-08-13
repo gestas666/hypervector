@@ -68,7 +68,15 @@ def bars_from_binance_klines(
     if not rows:
         return normalize_ohlcv(
             pd.DataFrame(
-                columns=["timestamp", "open", "high", "low", "close", "volume", "source"]
+                columns=[
+                    "timestamp",
+                    "open",
+                    "high",
+                    "low",
+                    "close",
+                    "volume",
+                    "source",
+                ]
             ),
             source=source,
         )
@@ -98,7 +106,15 @@ def bars_from_bybit_list(
     if not rows:
         return normalize_ohlcv(
             pd.DataFrame(
-                columns=["timestamp", "open", "high", "low", "close", "volume", "source"]
+                columns=[
+                    "timestamp",
+                    "open",
+                    "high",
+                    "low",
+                    "close",
+                    "volume",
+                    "source",
+                ]
             ),
             source=source,
         )

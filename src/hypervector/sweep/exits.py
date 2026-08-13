@@ -109,7 +109,7 @@ def _trail_exits(
     n = len(close)
     c = close.to_numpy(dtype=float)
     h = high.to_numpy(dtype=float)
-    l = low.to_numpy(dtype=float)
+    lows = low.to_numpy(dtype=float)
     e = entries.to_numpy(dtype=bool)
     tr = trail_dist.to_numpy(dtype=float)
     out = np.zeros(n, dtype=bool)
@@ -119,7 +119,7 @@ def _trail_exits(
     for i in range(n):
         if e[i] and not in_pos:
             in_pos = True
-            extreme = h[i] if direction == "long" else l[i]
+            extreme = h[i] if direction == "long" else lows[i]
             stop = extreme - tr[i] if direction == "long" else extreme + tr[i]
             continue
         if not in_pos:
@@ -132,7 +132,7 @@ def _trail_exits(
                 in_pos = False
                 extreme = stop = np.nan
         else:
-            extreme = min(extreme, l[i])
+            extreme = min(extreme, lows[i])
             stop = min(stop, extreme + tr[i]) if not np.isnan(tr[i]) else stop
             if c[i] > stop:
                 out[i] = True

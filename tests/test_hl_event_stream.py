@@ -73,6 +73,23 @@ def test_recorder_archives_and_drains_normalized_events(tmp_path: Path) -> None:
     assert len(archive.replay_asset_contexts()) == 1
 
 
+def test_recorder_flush_persists_tail_without_closing_capture(tmp_path: Path) -> None:
+    recorder = HyperliquidEventRecorder(
+        data_root=tmp_path,
+        symbol="BTC",
+        archive_batch_size=2_000,
+    )
+    recorder.record_message(payload("hl_ws_l2_sample.json"), RECEIVED_NS)
+
+    recorder.flush()
+
+    archive = EventArchive(data_root=tmp_path, symbol="BTC", batch_size=10)
+    assert len(archive.replay_l2()) == 1
+    recorder.record_message(payload("hl_ws_trades_sample.json"), RECEIVED_NS + 1)
+    assert len(recorder.drain()) == 3
+    recorder.close()
+
+
 def test_reconnect_gap_precedes_first_new_event_and_is_archived(
     tmp_path: Path,
 ) -> None:

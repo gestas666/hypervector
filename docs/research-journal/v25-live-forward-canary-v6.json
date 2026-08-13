@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v25-live-forward-canary",
+  "revision_number": 6,
+  "supersedes_revision_id": "077b125f777d9bb9f6a01108ebd0ce2c26dc6857fd681ae45a9e4dcd2e4881cd",
+  "created_at_utc": "2026-08-08T15:52:51Z",
+  "strategy_id": "multi_asset_bidirectional_complete_portfolio_canary_v25",
+  "symbol": "MULTI",
+  "status": "observe",
+  "hypothesis": "The complete v25 live portfolio can produce mechanically valid protected lifecycles while causal execution, missed-opportunity, orderbook, and provider-clock telemetry identifies repeatable provider-symbol behavior that clears measured live friction.",
+  "decision": "Keep the running v25 strategy and its four protected open lifecycles unchanged. Reject a portfolio-wide removal of the range-onset hourly-SMA blocker: the frozen 60-minute aligned-OPI BBO replay was negative after observed-style taker fees and official funding across BTC, ETH, SOL, and HYPE. Preserve only the exact SOL composite as a bounded candidate for a later separately identified canary because its two executions were positive; do not describe that as evidence for the deployed 48-hour range-onset recipe, do not transfer it to other coins, and do not change the current runtime while positions remain open.",
+  "confidence": "medium",
+  "falsifier": "The portfolio-wide rejection would be weakened by a later independent point-in-time window in which the identical predeclared 60-minute aligned-OPI contract is positive after complete funding and BBO-capacity costs across several assets or both sides. The SOL candidate would be falsified by nonpositive aggregate after-cost performance as additional non-overlapping SOL executions resolve, by inability to reproduce causal BBO capacity, or by evidence that its two wins are duplicate exposure to one move. Any changed evidence hash invalidates this revision.",
+  "evidence": [
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v25_btc_range_one_blocker_execution_20260808T155110Z.json",
+      "role": "immutable_btc_60m_aligned_opi_bbo_near_miss_replay",
+      "sha256": "67f3c5edd7ed6172820ac92f95b54e3a0cb98ea6058ad326038e8d135ddb23c6",
+      "bytes": 10422
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v25_eth_range_one_blocker_execution_20260808T155110Z.json",
+      "role": "immutable_eth_60m_aligned_opi_bbo_near_miss_replay",
+      "sha256": "06bee324ee0b257c1d9d165e43c12099e7e9dbe070a17daf8cf05028236677b8",
+      "bytes": 8706
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v25_sol_range_one_blocker_execution_20260808T154959Z.json",
+      "role": "immutable_sol_60m_aligned_opi_bbo_near_miss_replay",
+      "sha256": "e72da22dc593a313597aaebf03aec7279d7f2dae95135e4da3cb5adb13ea2d47",
+      "bytes": 6987
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v25_hype_range_one_blocker_execution_20260808T155110Z.json",
+      "role": "immutable_hype_60m_aligned_opi_bbo_near_miss_replay",
+      "sha256": "b10342938db103846c39046853f0d13eb3e5ccc8e628f9c7db2647869b8bf60b",
+      "bytes": 8722
+    },
+    {
+      "path": "../../configs/multi_asset_bidirectional_complete_portfolio_canary_v25.toml",
+      "role": "exact_running_profile_configuration",
+      "sha256": "362763638541baf75d5121f0b59e1afc8091bda7aaa1aaea0f8b42aead3c3bdd",
+      "bytes": 6214
+    }
+  ],
+  "metrics": {
+    "source_run_id": "bidirectional-live-1786182011216",
+    "candidate_contract": "awaiting_hourly_sma_cross_only_aligned_opi_60m_bbo",
+    "candidate_executions": 12,
+    "candidate_wins": 6,
+    "candidate_losses": 6,
+    "candidate_total_notional_usd": 550.0,
+    "candidate_simulated_net_pnl_usd": -0.059762556492140045,
+    "candidate_notional_weighted_net_return_bps": -1.0865919362207281,
+    "candidate_unweighted_mean_net_return_bps": -1.801650458928415,
+    "candidate_gross_return_bps_sum": 82.40785697855802,
+    "candidate_fee_bps_sum": 103.727521485699,
+    "candidate_funding_bps_sum": -0.300141,
+    "btc_executions": 4,
+    "btc_mean_net_return_bps": -2.864951851385971,
+    "eth_executions": 3,
+    "eth_mean_net_return_bps": -3.0057965189131934,
+    "sol_executions": 2,
+    "sol_mean_net_return_bps": 19.103071585319853,
+    "hype_executions": 3,
+    "hype_mean_net_return_bps": -13.116250571832408,
+    "running_backend_faults": 0,
+    "execution_authority": "none",
+    "runtime_changed_by_this_revision": false
+  },
+  "limitations": [
+    "The 12 executions share one short live window and correlated market moves, so they are not 12 independent experiments.",
+    "SOL has only two long executions and no short execution; its positive result is a candidate, not an established bidirectional edge.",
+    "The replay uses first recorded executable BBO with top-level capacity and bounded delays; it cannot guarantee an identical future fill or model hidden queue effects.",
+    "The tested composite includes aligned OPI and a fixed 60-minute exit. It does not isolate hourly-SMA removal and does not represent the deployed 48-hour range-onset exit contract.",
+    "Simulated PnL is normalized research evidence rather than owned live PnL, and no portfolio capital competition was replayed.",
+    "The running v25 process still predates the HIP-3 pressure-clock repair and retains four provisional open lifecycles."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

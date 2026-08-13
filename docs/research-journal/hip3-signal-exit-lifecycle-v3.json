@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "hip3-signal-exit-lifecycle",
+  "revision_number": 3,
+  "supersedes_revision_id": "01ae852db327e0a38f9fba3fad5ff38271723f30af70c2e37c3dce47c9e8e3cc",
+  "created_at_utc": "2026-08-09T18:08:00Z",
+  "strategy_id": "hip3_portfolio",
+  "symbol": "PORTFOLIO",
+  "status": "reject",
+  "hypothesis": "Honoring each production HIP-3 signal frame's long_exit and short_exit columns while retaining the deployed fixed 80-bps stop and 24-hour maximum hold will improve validation economics relative to ignoring those exits.",
+  "decision": "Continue rejecting unconditional provider-recipe exit execution. The new SNDK short stop demonstrates one lifecycle where the first ignored HA flip preceded another -124.651468 bps of adverse continuation, but the frozen 2,252-row validation challenger found unconditional honoring materially worse for both commodity and index Swing families. The live resolved ignored-exit sample is only three and remains mode-conflicted. Preserve v25 unchanged and test any early-adverse commodity HA-flip rule under a new identity and cutoff rather than relabeling the rejected mechanism.",
+  "confidence": "medium_high",
+  "falsifier": "Update this rejection only if a separately frozen mode-specific or unconditional exit mechanism improves after-cost shared-account profit factor and drawdown across independent windows and both directions without excessive churn. Invalidate this revision if the SNDK lifecycle, first-signal identity, actual fill economics, source hashes, or causal path lineage do not reproduce.",
+  "evidence": [
+    {
+      "path": "../reviews/2026-08-09-v25-sndk-close-and-hip3-exit-reconciliation.md",
+      "role": "new_live_close_and_prior_exit_evidence_reconciliation",
+      "sha256": "3cce9d5691ca2d2df52a7cad7e6913f99e0ad6c26064632202e80ea0c1f14a82",
+      "bytes": 4142
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v25_live_audit_20260809T180500Z.json",
+      "role": "immutable_v25_live_audit_with_sndk_close_and_exit_attribution",
+      "sha256": "a060f79e03478957d32e17bb414784e3706a6589e4afd0e4663ee673991bf7dc",
+      "bytes": 15835553
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v25_live_audit_delta_20260809T143259Z_180500Z.json",
+      "role": "same_run_material_close_and_signal_maturity_delta",
+      "sha256": "177ae681d1d8355ddc7adf4fc5a79ecddcd98a3a4b59afb51997e935c7f25892",
+      "bytes": 383732
+    },
+    {
+      "path": "../../data/logs/research/hip3_signal_exit_lifecycle_challenger_20260808.json",
+      "role": "frozen_unconditional_exit_validation_challenger",
+      "sha256": "5d3b60d9551d7382369fa548b398d69c32e823a7737439bb80819d1190ac12ad",
+      "bytes": 94264
+    },
+    {
+      "path": "hip3-signal-exit-lifecycle-v2.json",
+      "role": "superseded_direct_exit_policy_decision",
+      "sha256": "510b794903e8a6dfebe0bdb689213bbf2d43315a7ab34806ec7cb60fea644187",
+      "bytes": 4812
+    }
+  ],
+  "metrics": {
+    "v25_closed_trades": 12,
+    "v25_wins": 6,
+    "v25_losses": 6,
+    "v25_net_pnl_usd": 1.970335,
+    "v25_profit_factor": 1.8087772300190053,
+    "sndk_net_pnl_usd": -1.093178,
+    "sndk_first_ignored_exit_continuation_bps": -124.65146793504856,
+    "resolved_ignored_exit_lifecycles": 3,
+    "resolved_ha_flip_lifecycles": 2,
+    "resolved_ha_flip_mean_continuation_bps": -58.297837910259446,
+    "resolved_alignment_loss_lifecycles": 1,
+    "resolved_alignment_loss_mean_continuation_bps": 224.54190447581902,
+    "minimum_resolved_lifecycles_for_policy_analysis": 5,
+    "historical_challenger_trade_rows": 2252,
+    "historical_commodity_swing_ignore_profit_factor": 0.7097734874126385,
+    "historical_commodity_swing_honor_profit_factor": 0.3497914564948758,
+    "historical_index_swing_ignore_profit_factor": 0.9997538874138057,
+    "historical_index_swing_honor_profit_factor": 0.2197214936519985,
+    "execution_authority": "none",
+    "runtime_changed_by_this_revision": false
+  },
+  "limitations": [
+    "The live ignored-exit sample contains only three resolved lifecycles and one resolved alignment-loss example.",
+    "SNDK's counterfactual signal-exit fill, fee, and slippage are unavailable; only the actual stop economics are authoritative.",
+    "The historical challenger is an independent-asset 15-minute approximation rather than exact combined live portfolio parity.",
+    "The new early-adverse HA-flip idea is post-SNDK and requires a new identity, cutoff, and untouched validation evidence.",
+    "Open GOLD and SPCX marks remain provisional and are excluded from the economic decision.",
+    "No live position, order, route, exit policy, size, leverage, or execution authority changed."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

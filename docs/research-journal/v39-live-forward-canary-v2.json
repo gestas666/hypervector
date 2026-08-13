@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v39-live-forward-canary",
+  "revision_number": 2,
+  "supersedes_revision_id": "2a467aeacd42310deaec2783d9be1775250eac33ae9717d7c384a97d0ee1196a",
+  "created_at_utc": "2026-08-11T19:56:25Z",
+  "strategy_id": "multi_asset_bidirectional_hype_compression_range_retired_current_canary_v39",
+  "symbol": "MULTI",
+  "status": "observe",
+  "hypothesis": "The exact v39 route set can produce technically valid protected live lifecycles while point-in-time route, regime, execution-friction, effective-episode, and predeclared exit-policy evidence distinguishes repeatable after-cost behavior from whipsaw, profit surrender, and correlated opportunity duplication before a separately versioned $5,000 successor is authorized.",
+  "decision": "Keep the authorized v39 runtime, routes, entries, position sizing, venue stops, and bound exits unchanged. Record the ETH HT short as a second cleared-cost-hurdle-then-surrendered lifecycle, but treat ETH and SPCX as members of the same still-open five-lifecycle market episode rather than independent confirmations. Preserve the three declared profit-lock policies as report-only measurements; do not install a universal trail or retune the route from this correlated discovery evidence. Continue exact route-side observation, protected-open reconciliation, regime attribution, missed-opportunity accounting, and effective-episode collection before revising the separately versioned $5,000 successor.",
+  "confidence": "low_medium",
+  "falsifier": "The technical conclusion is invalidated by changed source identity, unreconciled lifecycle or fill accounting, missing venue protection, a non-causal regime join, or a new technical-gap identity. The no-change decision should be revised by later point-in-time route-specific outcomes showing stable after-cost improvement across non-overlapping episodes, side coverage where supported, and positive performance without the largest winner. The route-specific profit-lock hypothesis is falsified if predeclared policies underperform unchanged provider exits after realized fees, funding, measured exit friction, multiplicity disclosure, stop precedence, and correlation-aware episode accounting.",
+  "evidence": [
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v39_live_prefix_audit_20260811T195200Z.json",
+      "role": "immutable_exact_v39_three_close_prefix_audit",
+      "sha256": "5f99bf8a466eaf5592b91d07e38291ea4ff097798a8e1f634a2531c856f4edc4",
+      "bytes": 8498588
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v39_live_prefix_delta_20260811T192046Z_195200Z.json",
+      "role": "immutable_same_run_delta_with_exact_eth_resolution",
+      "sha256": "e8c0ab2f810d5506c12099b1bccdf95c9cdbcf919f0a8d007432b78dc99d33e3",
+      "bytes": 93872
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v39_regime_forward_accuracy_20260811T192900Z_v2.json",
+      "role": "immutable_corrected_left_censored_regime_onset_evidence",
+      "sha256": "2a9a0258f46600624ce6aad55b5660ec4e173fec51adebc0941b8889ae5e0fc5",
+      "bytes": 241769
+    }
+  ],
+  "metrics": {
+    "source_run_id": "bidirectional-live-1786453934555",
+    "profile_fingerprint": "8785a2618d4e06d7b23886ee39a4c05caed6326641efe101ff52ab47bbdae6e5",
+    "observed_through_utc": "2026-08-11T19:52:00.975156+00:00",
+    "provider_symbol_routes": 14,
+    "directional_scopes": 28,
+    "current_run_closed_trades": 3,
+    "current_run_wins": 0,
+    "current_run_losses": 3,
+    "current_run_net_pnl_usd": -1.549894,
+    "current_run_fees_usd": 0.047213,
+    "current_run_funding_usd": 0.000459,
+    "provisional_open_lifecycles": 3,
+    "raw_lifecycles": 6,
+    "effective_episode_clusters": 2,
+    "completed_effective_episodes": 1,
+    "ongoing_effective_episodes": 1,
+    "independence_established": false,
+    "eth_net_pnl_usd": -0.216309,
+    "eth_holding_time_ms": 14767969,
+    "eth_entry_slippage_bps": -2.1516944593872562,
+    "eth_exit_slippage_bps": -1.4683009197382972,
+    "eth_maximum_favorable_excursion_bps": 36.033128966332924,
+    "eth_resolved_240m_adverse_excursion_bps": 67.22598687748827,
+    "eth_resolved_240m_directional_close_return_bps": -55.93202108206796,
+    "eth_exit_component_alignment_score": -1.0,
+    "eth_exit_structure_support_score": 0.08333333333333333,
+    "eth_regime_opposed_decisions": 0,
+    "eth_ignored_provider_exit_signals": 0,
+    "a25_estimated_current_run_net_pnl_usd": -0.5651935593748457,
+    "a40_estimated_current_run_net_pnl_usd": -0.3659576802051401,
+    "a60_estimated_current_run_net_pnl_usd": -0.43904698627320216,
+    "runtime_faults": 0,
+    "protected_open_lifecycles": 3,
+    "execution_authority": "none",
+    "runtime_changed_by_this_revision": false
+  },
+  "limitations": [
+    "Three raw closes are not three independent observations: ETH and SPCX belong to the same five-lifecycle episode that still contains BTC, SOL, and SP500 opens.",
+    "Only the isolated SNDK episode is completed; independence is not established and open marks are excluded from resolved decisions.",
+    "SNDK and SPCX lack canonical core-regime telemetry; provider-native context cannot be relabeled with a core-asset regime after the fact.",
+    "ETH exit context opposed the short at the component level, but the frozen regime-opposition episode recorded zero qualifying opposed decisions, so it does not establish an executable regime exit.",
+    "Selecting a profit-lock policy after these correlated losses would incur discovery-sample and multiple-testing bias; all three policies remain declared measurements.",
+    "Counterfactual exits cannot reproduce an unsubmitted private order and remain sensitive to future exit slippage, fees, and funding.",
+    "No live route, position, order, stop, target, size, exit, transition, protection, or execution process changed in this revision."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

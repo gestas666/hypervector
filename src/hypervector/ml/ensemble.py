@@ -13,9 +13,9 @@ import pandas as pd
 
 try:
     import lightgbm as lgb
-    from sklearn.calibration import CalibratedClassifierCV
     from sklearn.ensemble import HistGradientBoostingClassifier
     from sklearn.isotonic import IsotonicRegression
+
     HAVE_ML = True
 except ImportError:
     HAVE_ML = False
@@ -34,13 +34,17 @@ class EnsembleMetalabeler:
     def fit(self, X: pd.DataFrame, y: np.ndarray) -> EnsembleMetalabeler:
         """Fit ensemble model on feature matrix X and target labels y."""
         if not HAVE_ML:
-            raise RuntimeError("lightgbm and scikit-learn are required for EnsembleMetalabeler")
+            raise RuntimeError(
+                "lightgbm and scikit-learn are required for EnsembleMetalabeler"
+            )
 
         X_mat = X[self.feature_names].astype(float).to_numpy()
         y_arr = np.asarray(y, dtype=int)
 
         if len(np.unique(y_arr)) < 2:
-            raise ValueError("Training labels y must contain at least two classes (0 and 1)")
+            raise ValueError(
+                "Training labels y must contain at least two classes (0 and 1)"
+            )
 
         # 1. Train LightGBM Booster
         dtrain = lgb.Dataset(X_mat, label=y_arr)

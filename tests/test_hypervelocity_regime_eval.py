@@ -2,14 +2,10 @@
 
 from __future__ import annotations
 
-import json
-from pathlib import Path
-
 import numpy as np
 import pandas as pd
 import pytest
 
-from hypervector.cli import main
 from hypervector.regime.hypervelocity_eval import (
     _hard_30m_state,
     evaluate_breakout_quality,
@@ -91,6 +87,66 @@ def test_entry_alignment_clusters_split_fills_into_one_decision() -> None:
     assert result.unique_entry_decisions == 2
     assert result.total_entries == 2
     assert result.direction_matches == 2
+
+
+def test_entry_alignment_accepts_mixed_iso_timestamp_precision() -> None:
+    decisions = _decisions()
+    positions = pd.DataFrame(
+        {
+            "open_time_utc": [
+                "2026-01-01T00:01:00.250000+00:00",
+                "2026-01-01T00:03:00+00:00",
+            ],
+            "side": ["long", "short"],
+            "symbol": ["BTC", "BTC"],
+        }
+    )
+
+    result = evaluate_entry_alignment(decisions, positions)
+
+    assert result.total_entries == 2
+    assert result.direction_matches == 2
+
+
+def test_entry_alignment_reconciles_peak_and_trade_duplicate() -> None:
+    decisions = _decisions()
+    positions = pd.DataFrame(
+        {
+            "record_source": ["position_peak_only", "trade_only"],
+            "symbol": ["BTC", "BTC"],
+            "side": ["long", "long"],
+            "open_time_utc": [decisions.index[0], decisions.index[1]],
+            "close_time_utc": [decisions.index[4], decisions.index[4]],
+            "entry_price": [100.0, 100.0],
+            "quantity": [0.01, 0.01],
+        }
+    )
+
+    result = evaluate_entry_alignment(decisions, positions)
+
+    assert result.recorded_positions == 2
+    assert result.unique_entry_decisions == 1
+
+
+def test_entry_alignment_uses_tactical_direction_when_backend_publishes_it() -> None:
+    decisions = _decisions()
+    decisions["primary_regime"] = "TREND_UP"
+    decisions["entry_direction"] = [None, None, "short", None, None, None]
+    positions = pd.DataFrame(
+        {
+            "open_time_utc": [
+                decisions.index[0] + pd.Timedelta(minutes=1),
+                decisions.index[2] + pd.Timedelta(minutes=1),
+            ],
+            "side": ["long", "short"],
+            "symbol": ["BTC", "BTC"],
+        }
+    )
+
+    result = evaluate_entry_alignment(decisions, positions)
+
+    assert result.direction_matches == 1
+    assert result.no_entry_state_at_entries == 1
 
 
 def test_entry_alignment_reports_resting_order_lookback_separately() -> None:
@@ -216,6 +272,35 @@ def test_breakout_quality_counts_consecutive_labels_as_one_episode() -> None:
     assert result.breakout_bars == 2
     assert result.breakout_events == 1
     assert result.false_breakouts == 0
+
+
+def test_breakout_quality_ignores_awaiting_direction_confirmation() -> None:
+    decisions = _decisions()
+    decisions["primary_regime"] = "BREAKOUT"
+    decisions["breakout_direction"] = None
+    close = np.full(len(decisions), 100.0)
+    bars = pd.DataFrame(
+        {
+            "open": close,
+            "high": close + 1.0,
+            "low": close - 1.0,
+            "close": close,
+            "volume": 100.0,
+        },
+        index=decisions.index,
+    )
+
+    result = evaluate_breakout_quality(
+        bars,
+        decisions,
+        target_price_fraction=0.002,
+        forward_horizon=2,
+    )
+
+    assert result.breakout_bars == 0
+    assert result.breakout_events == 0
+    assert result.false_breakouts == 0
+    assert result.false_breakout_pct == 0.0
 
 
 def test_range_quality_separates_directional_oscillating_and_quiet_outcomes() -> None:
@@ -352,6 +437,45 @@ def test_report_slices_realized_positions_and_execution_cost_scenarios() -> None
     ] == pytest.approx(4.7)
 
 
+def test_report_slices_exclude_superseded_peak_record() -> None:
+    n = 240
+    index = pd.date_range("2026-01-01", periods=n, freq="1min", tz="UTC")
+    close = np.linspace(100.0, 110.0, n)
+    bars = pd.DataFrame(
+        {
+            "open": close,
+            "high": close + 0.05,
+            "low": close - 0.05,
+            "close": close,
+            "volume": 100.0,
+            "source": "hl",
+        },
+        index=index,
+    )
+    positions = pd.DataFrame(
+        {
+            "record_source": ["position_peak_only", "trade_only"],
+            "open_time_utc": [index[-3], index[-2]],
+            "close_time_utc": [index[-1], index[-1]],
+            "side": ["long", "long"],
+            "symbol": ["BTC", "BTC"],
+            "entry_price": [109.0, 109.0],
+            "quantity": [0.01, 0.01],
+            "net_margin_pnl_pct": [float("nan"), 8.0],
+            "fees_usd": [float("nan"), 3.0],
+            "approx_margin_usd": [float("nan"), 1_000.0],
+            "leverage": [40.0, 40.0],
+        }
+    )
+
+    result = evaluate_hypervelocity_regimes(bars, positions)
+
+    states = result.position_regime_performance["states"]
+    assert sum(state["positions"] for state in states.values()) == 1
+    maker = result.cost_sensitivity["scenarios"]["maker_1_5bps_per_side"]
+    assert maker["win_rate_pct"] == 100.0
+
+
 def test_default_evaluation_uses_deployed_faithful_profile() -> None:
     n = 240
     index = pd.date_range("2026-01-01", periods=n, freq="1min", tz="UTC")
@@ -404,58 +528,3 @@ def test_hard_30m_state_is_available_after_last_constituent_bar() -> None:
 
     assert state.iloc[-2] == "UNKNOWN"
     assert state.iloc[-1] == "TREND_UP"
-
-
-def test_cli_hypervelocity_regime_eval_is_report_only(
-    tmp_path: Path,
-    capsys,
-    monkeypatch,
-) -> None:
-    n = 240
-    index = pd.date_range("2026-01-01", periods=n, freq="1min", tz="UTC")
-    close = np.linspace(100.0, 110.0, n)
-    bars = pd.DataFrame(
-        {
-            "timestamp": index,
-            "open": close,
-            "high": close + 0.05,
-            "low": close - 0.05,
-            "close": close,
-            "volume": 100.0,
-            "source": "binance",
-        }
-    )
-    monkeypatch.setattr(
-        "hypervector.cli._load_bars",
-        lambda _args: (bars, {"source": "fixture"}),
-    )
-    positions_path = tmp_path / "positions.csv"
-    pd.DataFrame(
-        {
-            "open_time_utc": [index[-1] + pd.Timedelta(minutes=1)],
-            "side": ["long"],
-            "symbol": ["BTC"],
-        }
-    ).to_csv(positions_path, index=False)
-
-    rc = main(
-        [
-            "--data-root",
-            str(tmp_path / "data"),
-            "hypervelocity-regime-eval",
-            "--symbol",
-            "BTC",
-            "--timeframe",
-            "1m",
-            "--lookback",
-            "30",
-            "--positions",
-            str(positions_path),
-        ]
-    )
-
-    output = json.loads(capsys.readouterr().out)
-    assert rc == 0
-    assert output["ok"] is True
-    assert output["report_only"] is True
-    assert output["entry_alignment"]["total_entries"] == 1

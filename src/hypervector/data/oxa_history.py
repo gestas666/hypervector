@@ -11,11 +11,12 @@ from pathlib import Path
 from hypervector.data.oxa_api import (
     API_ROOT,
     HttpSession,
+    MarketFamily,
     OxaHistoryError as OxaHistoryError,
     OxaRestClient,
     parse_utc_timestamp_ms,
     positive_decimal,
-    validate_symbol,
+    validate_market_symbol,
     validate_window,
 )
 from hypervector.data.oxa_storage import (
@@ -38,9 +39,10 @@ class OxaBookRequest:
     limit: int = 1000
     max_pages: int = 1
     timeout_seconds: float = 30.0
+    market_family: MarketFamily = "core"
 
     def __post_init__(self) -> None:
-        validate_symbol(self.symbol)
+        validate_market_symbol(self.symbol, self.market_family)
         validate_window(self.start, self.end)
         if not 1 <= self.depth <= 20:
             raise ValueError("depth must be between 1 and 20")
@@ -62,6 +64,18 @@ class OxaBookRequest:
         if cursor is not None:
             values["cursor"] = cursor
         return values
+
+    @property
+    def source(self) -> str:
+        """Return the immutable source identity for this market family."""
+        if self.market_family == "hip3":
+            return "0xarchive_hyperliquid_hip3_l2"
+        return "0xarchive_hyperliquid_native_l2"
+
+    @property
+    def route_prefix(self) -> str:
+        """Return the route-family prefix below the Hyperliquid API root."""
+        return "/hip3" if self.market_family == "hip3" else ""
 
 
 @dataclass(frozen=True)
@@ -87,12 +101,14 @@ class OxaBookSnapshot:
     bids: tuple[OxaLevel, ...]
     asks: tuple[OxaLevel, ...]
 
-    def to_replay_row(self, *, request_id: str) -> dict[str, object]:
+    def to_replay_row(
+        self, *, request_id: str, source: str = "0xarchive_hyperliquid_native_l2"
+    ) -> dict[str, object]:
         """Return replay-compatible JSON without a fabricated receive time."""
         return {
             "ts_exchange_ms": self.ts_exchange_ms,
             "symbol": self.symbol,
-            "source": "0xarchive_hyperliquid_native_l2",
+            "source": source,
             "vendor_request_id": request_id,
             "best_bid": self.bids[0].px,
             "best_ask": self.asks[0].px,
@@ -158,7 +174,7 @@ class OxaHistoryClient:
     ) -> OxaBookPage:
         """Fetch one bounded page and retain its raw evidence envelope."""
         payload = self._client.get(
-            f"/orderbook/{request.symbol}/history",
+            f"{request.route_prefix}/orderbook/{request.symbol}/history",
             params=request.params(cursor),
             timeout=request.timeout_seconds,
         )
@@ -191,14 +207,14 @@ def output_directory(data_root: Path | str, request: OxaBookRequest) -> Path:
     """Return the deterministic immutable directory for one requested window."""
     start, end = map(_window_stamp, (request.start, request.end))
     window = f"{start}_{end}_d{request.depth}"
+    family = ("hip3",) if request.market_family == "hip3" else ()
     return (
         Path(data_root)
         / "cache"
         / "vendor"
         / "0xarchive"
         / "hyperliquid"
-        / request.symbol
-        / window
+        / Path(*family, request.symbol, window)
     )
 
 
@@ -215,7 +231,7 @@ def store_orderbook_history(
         raw_dir.mkdir()
         files = _write_raw_pages(raw_dir, result.pages)
         books_path = staging / "books.jsonl.gz"
-        _write_books(books_path, result)
+        _write_books(books_path, result, source=request.source)
         files["books.jsonl.gz"] = file_evidence(books_path)
         write_json(staging / "manifest.json", _manifest(request, result, files))
 
@@ -240,8 +256,9 @@ def acquire_and_store_orderbooks(
     observed_end = result.snapshots[-1].timestamp if result.snapshots else None
     return {
         "ok": True,
-        "source": "0xarchive_hyperliquid_native_l2",
+        "source": request.source,
         "venue": "hyperliquid",
+        "market_family": request.market_family,
         "symbol": request.symbol,
         "directory": str(stored.directory.resolve()),
         "books_path": str(stored.books_path.resolve()),
@@ -286,7 +303,7 @@ def _write_raw_pages(
     return evidence
 
 
-def _write_books(path: Path, result: OxaBookFetch) -> None:
+def _write_books(path: Path, result: OxaBookFetch, *, source: str) -> None:
     request_ids = {
         snapshot.ts_exchange_ms: page.request_id
         for page in result.pages
@@ -295,7 +312,7 @@ def _write_books(path: Path, result: OxaBookFetch) -> None:
     with gzip_text_writer(path) as handle:
         for snapshot in result.snapshots:
             request_id = request_ids[snapshot.ts_exchange_ms]
-            row = snapshot.to_replay_row(request_id=request_id)
+            row = snapshot.to_replay_row(request_id=request_id, source=source)
             handle.write(json.dumps(row, separators=(",", ":"), sort_keys=True) + "\n")
 
 
@@ -308,9 +325,12 @@ def _manifest(
     observed_end = result.snapshots[-1].timestamp if result.snapshots else None
     return {
         "schema_version": 1,
-        "source": "0xarchive_hyperliquid_native_l2",
-        "source_api": f"{API_ROOT}/orderbook/{{symbol}}/history",
+        "source": request.source,
+        "source_api": (
+            f"{API_ROOT}{request.route_prefix}/orderbook/{{symbol}}/history"
+        ),
         "venue": "hyperliquid",
+        "market_family": request.market_family,
         "symbol": request.symbol,
         "requested_start": request.start.isoformat(),
         "requested_end": request.end.isoformat(),

@@ -1,0 +1,120 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "cohort-separate-side-composition",
+  "revision_number": 2,
+  "supersedes_revision_id": "a54bf376a3c0576cff56e2efb916f5a6b44e28361f871121d25f92b6f97db86a",
+  "created_at_utc": "2026-08-09T07:47:43Z",
+  "strategy_id": "multi_asset_portfolio_research_process",
+  "symbol": "MULTI",
+  "status": "observe",
+  "hypothesis": "Selecting distinct provider-symbol mechanisms for long and short exposure may produce a stronger bidirectional shared-capital portfolio than requiring every provider route to work symmetrically on both sides.",
+  "decision": "Retain the report-only separate-side research frontier and the unchanged armed v25 runtime, but supersede revision 1's ambiguous profit-factor label. Mixed-profile ranking uses return-on-entry-margin-normalized profit factor, while ordinary USD profit factor is now published separately. HYPE HT-Breakout long remains the only repeated-positive mixed-profile component: eight closes, five wins, three losses, +$0.502458 net, USD profit factor 1.304540, normalized profit factor 3.079128, and median return on entry margin 1.593411%. Its positive economics remain descriptive because they span incompatible profile generations and conflict with adverse historical route-shape evidence. HYPE HT-Breakout short remains adverse: four closes, one win, three losses, -$1.254625 net, USD profit factor 0.156335, and normalized profit factor 0.469534. No strategy, route, position, size, gate, exit, protection, or live process changed.",
+  "confidence": "low_medium",
+  "falsifier": "This revision is invalidated by evidence hash or scope drift, a generic profit_factor field reappearing in the schema-v2 side-composition economics, normalized and USD denominators being pooled, side counts or net PnL failing to reconcile with the source audit, or any report-only code changing runtime state. HYPE-long priority would weaken if additional compatible closes make either its net PnL or median return on margin nonpositive, or if shared-capital interaction replay shows its standalone contribution is consumed by overlap and costs. The weak-short assessment would update after repeated independent after-friction short lifecycles.",
+  "evidence": [
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v25_live_audit_pf_contract_v2_20260809T074526Z.json",
+      "role": "immutable_v25_live_audit_with_explicit_usd_and_normalized_profit_factor",
+      "sha256": "be8437b764e745a278326a1a61eaa9d1cb73fce344ff662764c44e3dabf74fbc",
+      "bytes": 13149821
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v25_side_composition_pf_contract_v2_20260809T074743Z.json",
+      "role": "immutable_schema_v2_provider_symbol_side_composition_ranking",
+      "sha256": "9faf1ca115dfd2ec011c954c1b3b416f9808d2da2263a098fce11f35c1490f02",
+      "bytes": 34797
+    },
+    {
+      "path": "../../src/hypervector/research/cohort_entry_alignment_mechanism.py",
+      "role": "report_only_dual_denominator_alignment_economics",
+      "sha256": "f50a2d45eed43cb20bf6a2a24f836720146ebac95df7887dcf5f33434ee313d9",
+      "bytes": 8020
+    },
+    {
+      "path": "../../src/hypervector/research/cohort_side_composition.py",
+      "role": "report_only_explicit_profit_factor_composition_logic",
+      "sha256": "637bbf17078bd8a82525daad4a6c841c08586474bced5f13bc6f8aae24373452",
+      "bytes": 13970
+    },
+    {
+      "path": "../../scripts/cohort_side_composition.py",
+      "role": "exclusive_output_side_composition_cli",
+      "sha256": "2663e98d977cf7f9e782d89ecbf48d34ae7fd31e6e49d677e8cccdc7e45ed785",
+      "bytes": 2288
+    },
+    {
+      "path": "../../tests/test_cohort_entry_alignment_mechanism.py",
+      "role": "dual_denominator_alignment_regression_tests",
+      "sha256": "a12b5e3890f5bbb9d7ed319a20f8b1bc865808836f91a8d21adef8a5a5736e40",
+      "bytes": 4821
+    },
+    {
+      "path": "../../tests/test_cohort_side_composition.py",
+      "role": "schema_v2_metric_identity_and_ranking_regression_tests",
+      "sha256": "a9982b2b4072372e65c258f93ebe49bea77016fbea3a999b08222e63d328b6ad",
+      "bytes": 7148
+    },
+    {
+      "path": "../../tests/test_cohort_side_composition_script.py",
+      "role": "side_composition_cli_immutability_regression_tests",
+      "sha256": "db399bfaf68f3ac8c7b65dd56d6a8332357942e35fb7251947a9bf8dbafc1868",
+      "bytes": 3246
+    }
+  ],
+  "metrics": {
+    "source_run_id": "bidirectional-live-1786182011216",
+    "source_profile_id": "multi_asset_bidirectional_complete_portfolio_canary_v25",
+    "source_profile_fingerprint": "ec7715f671fa369d0a415d8941061eb9a577b232bbd4e06367a7342267ff7ecc",
+    "source_audit_evidence_complete": false,
+    "source_audit_open_positions": 3,
+    "side_components": 25,
+    "long_frontier_components": 8,
+    "short_frontier_components": 2,
+    "repeated_positive_mixed_profile_components": 1,
+    "positive_sparse_mixed_profile_components": 7,
+    "historical_supportive_no_live_components": 2,
+    "nonpositive_mixed_profile_components": 8,
+    "unobserved_live_components": 7,
+    "current_profile_trades": 8,
+    "current_profile_wins": 5,
+    "current_profile_losses": 3,
+    "current_profile_net_pnl_usd": 1.8294730000000001,
+    "current_profile_usd_profit_factor": 2.8125258829940063,
+    "current_run_trades": 3,
+    "current_run_wins": 2,
+    "current_run_losses": 1,
+    "current_run_net_pnl_usd": 0.453962,
+    "current_run_usd_profit_factor": 5.125239674678539,
+    "all_live_trades": 34,
+    "all_live_wins": 18,
+    "all_live_losses": 16,
+    "all_live_net_pnl_usd": 0.1334940000000001,
+    "all_live_usd_profit_factor": 1.0225450274833705,
+    "hype_ht_breakout_long_mixed_profile_trades": 8,
+    "hype_ht_breakout_long_mixed_profile_wins": 5,
+    "hype_ht_breakout_long_mixed_profile_losses": 3,
+    "hype_ht_breakout_long_mixed_profile_net_pnl_usd": 0.5024579999999998,
+    "hype_ht_breakout_long_mixed_profile_usd_profit_factor": 1.3045401181047718,
+    "hype_ht_breakout_long_mixed_profile_normalized_profit_factor": 3.079127589843834,
+    "hype_ht_breakout_long_mixed_profile_median_return_on_margin_pct": 1.5934112183779863,
+    "hype_ht_breakout_short_mixed_profile_trades": 4,
+    "hype_ht_breakout_short_mixed_profile_net_pnl_usd": -1.254625,
+    "hype_ht_breakout_short_mixed_profile_usd_profit_factor": 0.15633512718939316,
+    "hype_ht_breakout_short_mixed_profile_normalized_profit_factor": 0.46953351701265517,
+    "execution_authority": "none",
+    "runtime_changed_by_this_revision": false
+  },
+  "limitations": [
+    "All-live history combines materially different strategy profiles and does not establish current-v25 route edge.",
+    "The current audit is a live prefix with three provisional open positions, so evidence_complete is false.",
+    "HYPE HT-Breakout long has no compatible current-v25 close and conflicts with adverse historical route-shape evidence.",
+    "The only repeated-positive component has eight closes; that is descriptive rather than statistically durable evidence.",
+    "USD profit factor weights trades by dollar PnL, while normalized profit factor gives each trade's return on entry margin its own contribution; neither denominator is universally superior.",
+    "Standalone component ranking does not model simultaneous signals, slot contention, correlated exposure, shared-capital path dependence, or missed opportunity cost.",
+    "The report does not estimate an allocator, portfolio drawdown distribution, or future profit.",
+    "No live route, position, order, stop, target, size, exit, transition drain, or protection changed in this revision."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

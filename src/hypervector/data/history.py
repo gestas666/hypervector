@@ -24,7 +24,9 @@ def merge_history(
     """
     pieces: list[pd.DataFrame] = []
     if hl_df is not None and len(hl_df):
-        pieces.append(normalize_ohlcv(hl_df, source=None if "source" in hl_df.columns else "hl"))
+        pieces.append(
+            normalize_ohlcv(hl_df, source=None if "source" in hl_df.columns else "hl")
+        )
 
     claimed: set[pd.Timestamp] = set()
     if pieces:
@@ -33,7 +35,9 @@ def merge_history(
     for name, frame in backfills:
         if frame is None or len(frame) == 0:
             continue
-        bf = normalize_ohlcv(frame, source=name if "source" not in frame.columns else None)
+        bf = normalize_ohlcv(
+            frame, source=name if "source" not in frame.columns else None
+        )
         if "source" not in frame.columns:
             bf["source"] = name
         else:
@@ -65,7 +69,9 @@ def merge_history(
 
     out = pd.concat(pieces, ignore_index=True)
     out["timestamp"] = pd.to_datetime(out["timestamp"], utc=True)
-    out = out.sort_values("timestamp").drop_duplicates(subset=["timestamp"], keep="first")
+    out = out.sort_values("timestamp").drop_duplicates(
+        subset=["timestamp"], keep="first"
+    )
     return out.reset_index(drop=True)
 
 

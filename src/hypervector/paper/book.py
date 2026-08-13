@@ -42,7 +42,9 @@ class BookSnapshot:
 
     def age_ms(self, now_ms: float) -> float:
         """Age relative to exchange ts when set, else receive ts."""
-        base = self.ts_exchange_ms if self.ts_exchange_ms is not None else self.ts_recv_ms
+        base = (
+            self.ts_exchange_ms if self.ts_exchange_ms is not None else self.ts_recv_ms
+        )
         return float(now_ms) - float(base)
 
 
@@ -155,7 +157,9 @@ def parse_hl_l2_payload(
 class BookFeed:
     """Latest-book holder with freshness tracking (max_age_ms default 3000)."""
 
-    def __init__(self, symbol: str, *, max_age_ms: float = DEFAULT_MAX_BOOK_AGE_MS) -> None:
+    def __init__(
+        self, symbol: str, *, max_age_ms: float = DEFAULT_MAX_BOOK_AGE_MS
+    ) -> None:
         self.symbol = symbol
         self.max_age_ms = float(max_age_ms)
         self._latest: BookSnapshot | None = None

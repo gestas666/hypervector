@@ -2,177 +2,53 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict
-from typing import Literal
-
 import pandas as pd
 
-from hypervector.regime.models import BreakoutDirection, PrimaryRegime
+from hypervector.research.maker_replay_context import (
+    MakerReplayContext,
+    apply_funding_event,
+    apply_price_event,
+    mark_for_book,
+    remember_book,
+)
+from hypervector.research.maker_replay_contract import (
+    MakerReplayPositionContract,
+    maker_replay_contract,
+)
 from hypervector.research.maker_replay_models import (
     Direction,
     MakerReplayConfig,
     MakerReplayLifecycle,
     MakerReplayReport,
-    MakerReplayTrade,
-    OpenPosition as _OpenPosition,
     PendingEntry as _PendingEntry,
     ReplayState as _ReplayState,
 )
-from hypervector.strategies.hypervelocity_contract import HypervelocityContract
-
-
-def _direction_rows(decisions: pd.DataFrame) -> pd.Series:
-    required = {"primary_regime", "breakout_direction"}
-    missing = required.difference(decisions.columns)
-    if missing:
-        raise ValueError(f"maker replay decisions missing columns: {sorted(missing)}")
-    primary = decisions["primary_regime"].astype(str)
-    breakout = decisions["breakout_direction"].astype(object)
-    result = pd.Series(None, index=decisions.index, dtype=object)
-    result = result.mask(primary.eq(PrimaryRegime.TREND_UP.value), "long")
-    result = result.mask(primary.eq(PrimaryRegime.TREND_DOWN.value), "short")
-    result = result.mask(
-        primary.eq(PrimaryRegime.BREAKOUT.value)
-        & breakout.eq(BreakoutDirection.UPWARD.value),
-        "long",
-    )
-    return result.mask(
-        primary.eq(PrimaryRegime.BREAKOUT.value)
-        & breakout.eq(BreakoutDirection.DOWNWARD.value),
-        "short",
-    )
-
-
-def _available_directions(decisions: pd.DataFrame) -> pd.Series:
-    if not isinstance(decisions.index, pd.DatetimeIndex):
-        raise ValueError("maker replay decisions require a DatetimeIndex")
-    directions = _direction_rows(decisions)
-    directions.index = directions.index + pd.Timedelta(minutes=1)
-    return directions
-
-
-def _fill_reached(
-    *,
-    side: Literal["buy", "sell"],
-    limit_price: float,
-    bid: float,
-    ask: float,
-    config: MakerReplayConfig,
-) -> bool:
-    if config.fill_rule == "trade-through":
-        return False
-    clearance = config.tick_size if config.fill_rule == "through" else 0.0
-    if side == "buy":
-        return ask <= limit_price - clearance
-    return bid >= limit_price + clearance
-
-
-def _trade_reached(
-    *,
-    side: Literal["buy", "sell"],
-    limit_price: float,
-    aggressor_side: str,
-    trade_price: float,
-) -> bool:
-    if side == "buy":
-        return aggressor_side == "sell" and trade_price < limit_price
-    return aggressor_side == "buy" and trade_price > limit_price
-
-
-def _entry_filled(
-    pending: _PendingEntry,
-    bid: float,
-    ask: float,
-    config: MakerReplayConfig,
-) -> bool:
-    side: Literal["buy", "sell"] = "buy" if pending.direction == "long" else "sell"
-    return _fill_reached(
-        side=side,
-        limit_price=pending.limit_price,
-        bid=bid,
-        ask=ask,
-        config=config,
-    )
-
-
-def _open_position(
-    pending: _PendingEntry,
-    timestamp: pd.Timestamp,
-    equity: float,
-    contract: HypervelocityContract,
-) -> _OpenPosition:
-    allocation = contract.allocate(equity)
-    quantity = allocation.notional / pending.limit_price
-    multiplier = (
-        1.0 + contract.target_price_fraction
-        if pending.direction == "long"
-        else 1.0 - contract.target_price_fraction
-    )
-    return _OpenPosition(
-        pending.lifecycle_id,
-        pending.direction,
-        pending.signal_time,
-        pending.submitted_time,
-        timestamp,
-        pending.limit_price,
-        quantity,
-        allocation.margin,
-        allocation.notional,
-        pending.limit_price * multiplier,
-    )
-
-
-def _replace_lifecycle(
-    state: _ReplayState,
-    lifecycle_id: int,
-    **changes: object,
-) -> None:
-    current = state.lifecycles[lifecycle_id]
-    state.lifecycles[lifecycle_id] = MakerReplayLifecycle(
-        **{**asdict(current), **changes}
-    )
-
-
-def _resolve_pending(
-    state: _ReplayState,
-    pending: _PendingEntry,
-    timestamp: pd.Timestamp,
-    status: Literal["expired", "canceled"],
-) -> None:
-    _replace_lifecycle(
-        state,
-        pending.lifecycle_id,
-        outcome_time_utc=timestamp.isoformat(),
-        status=status,
-    )
-
-
-def _mark_open(
-    state: _ReplayState,
-    position: _OpenPosition,
-) -> None:
-    _replace_lifecycle(
-        state,
-        position.lifecycle_id,
-        entry_time_utc=position.entry_time.isoformat(),
-        status="open",
-        entry_price=position.entry_price,
-        quantity=position.quantity,
-    )
-
-
-def _mark_closed(
-    state: _ReplayState, position: _OpenPosition, trade: MakerReplayTrade
-) -> None:
-    _replace_lifecycle(
-        state,
-        position.lifecycle_id,
-        outcome_time_utc=trade.exit_time_utc,
-        status="target_completed",
-        exit_price=trade.exit_price,
-        fees=trade.fees,
-        net_pnl=trade.net_pnl,
-    )
+from hypervector.research.maker_replay_lifecycle import (
+    mark_open as _mark_open,
+    resolve_pending as _resolve_pending,
+)
+from hypervector.research.maker_replay_orders import (
+    entry_filled as _entry_filled,
+    entry_limit_price as _entry_limit_price,
+    exit_filled as _exit_filled,
+    open_position as _open_position,
+)
+from hypervector.research.maker_replay_risk import (
+    apply_book_entry_close_reverse,
+    apply_book_liquidation,
+    apply_book_regime_exit,
+    apply_book_stop,
+    apply_book_time_exit,
+    complete_target,
+    update_drawdown,
+)
+from hypervector.research.maker_replay_signals import (
+    DecisionProjection,
+    consume_liquidation_cooldown_signal,
+    decision_projection,
+    projected_market_at,
+)
+from hypervector.research.maker_replay_trades import replay_trade
 
 
 def _submit_entry(
@@ -181,6 +57,10 @@ def _submit_entry(
     signal_time: pd.Timestamp,
     timestamp: pd.Timestamp,
     limit_price: float,
+    maximum_hold_seconds: float | None,
+    stop_price: float | None,
+    stop_margin_pct: float | None,
+    allocation_multiplier: float,
 ) -> None:
     lifecycle_id = len(state.lifecycles)
     state.lifecycles.append(
@@ -200,54 +80,194 @@ def _submit_entry(
         )
     )
     state.pending = _PendingEntry(
-        lifecycle_id, direction, signal_time, timestamp, limit_price
+        lifecycle_id,
+        direction,
+        signal_time,
+        timestamp,
+        limit_price,
+        allocation_multiplier=allocation_multiplier,
+        stop_price=stop_price,
+        stop_margin_pct=stop_margin_pct,
+        maximum_hold_seconds=maximum_hold_seconds,
     )
     state.last_signal = signal_time
     state.submitted += 1
     state.submissions.append(timestamp.isoformat())
 
 
-def _exit_filled(
-    position: _OpenPosition,
-    bid: float,
-    ask: float,
+def _rearm_consumed(
+    state: _ReplayState,
+    structural: Direction | None,
+    timestamp: pd.Timestamp,
+) -> None:
+    if structural != state.structural_episode_direction:
+        state.structural_episode_direction = structural
+        state.structural_episode_started_at = timestamp
+        state.target_completions_in_episode = 0
+    if state.expired_direction is not None and structural != state.expired_direction:
+        state.expired_direction = None
+    if (
+        state.completed_direction is not None
+        and structural != state.completed_direction
+    ):
+        state.completed_direction = None
+        state.completed_status = None
+        state.completed_reference_price = None
+
+
+def _cooldown_complete(
+    state: _ReplayState,
+    timestamp: pd.Timestamp,
     config: MakerReplayConfig,
 ) -> bool:
-    side: Literal["buy", "sell"] = "sell" if position.direction == "long" else "buy"
-    return _fill_reached(
-        side=side,
-        limit_price=position.target_price,
-        bid=bid,
-        ask=ask,
-        config=config,
-    )
+    if state.last_exit_time is None:
+        return True
+    elapsed = (timestamp - state.last_exit_time).total_seconds()
+    return elapsed >= config.reentry_cooldown_seconds
 
 
-def _close_trade(
-    position: _OpenPosition,
+def _completed_direction_available(
+    state: _ReplayState,
+    desired: Direction,
+    limit_price: float,
     timestamp: pd.Timestamp,
-    fee_rate: float,
-) -> MakerReplayTrade:
-    sign = 1.0 if position.direction == "long" else -1.0
-    gross = position.quantity * (position.target_price - position.entry_price) * sign
-    fees = position.quantity * (position.entry_price + position.target_price) * fee_rate
-    return MakerReplayTrade(
-        position.direction,
-        position.signal_time.isoformat(),
-        position.submitted_time.isoformat(),
-        position.entry_time.isoformat(),
-        timestamp.isoformat(),
-        position.entry_price,
-        position.target_price,
-        position.quantity,
-        position.margin,
-        position.notional,
-        gross,
-        fees,
-        gross - fees,
-        (position.entry_time - position.submitted_time).total_seconds(),
-        (timestamp - position.entry_time).total_seconds(),
+    signal_time: pd.Timestamp | None,
+    reentry_event: Direction | None,
+    config: MakerReplayConfig,
+) -> bool:
+    if desired != state.completed_direction:
+        return True
+    if config.same_direction_reentry_policy == "cooldown_only":
+        return True
+    if (
+        config.same_direction_reentry_policy
+        not in ("target_continuation", "target_pullback_transition")
+        or state.completed_status != "target_completed"
+    ):
+        return False
+    limit = config.target_continuation_limit_per_episode
+    if limit is not None and state.target_completions_in_episode >= limit:
+        return False
+    started_at = state.structural_episode_started_at
+    minimum = config.target_continuation_minimum_episode_seconds
+    if started_at is None or (timestamp - started_at).total_seconds() < minimum:
+        return False
+    if config.same_direction_reentry_policy == "target_pullback_transition":
+        if signal_time is None or state.last_exit_time is None:
+            return False
+        event_age = (signal_time - state.last_exit_time).total_seconds()
+        return (
+            reentry_event == desired
+            and signal_time > state.last_exit_time
+            and event_age >= config.reentry_cooldown_seconds
+        )
+    reference = state.completed_reference_price
+    if reference is None:
+        return False
+    clearance = config.same_direction_reentry_clearance_bps / 10_000.0
+    if desired == "long":
+        return limit_price >= reference * (1.0 + clearance)
+    return limit_price <= reference * (1.0 - clearance)
+
+
+def _update_pending_from_book(
+    state: _ReplayState,
+    timestamp: pd.Timestamp,
+    bid: float,
+    ask: float,
+    structural: Direction | None,
+    mark: float | None,
+    config: MakerReplayConfig,
+    contract: MakerReplayPositionContract,
+) -> bool:
+    pending = state.pending
+    if pending is None:
+        return False
+    age = (timestamp - pending.submitted_time).total_seconds()
+    if structural != pending.direction:
+        _resolve_pending(state, pending, timestamp, "canceled")
+        state.pending, state.canceled = None, state.canceled + 1
+    elif age > config.entry_ttl_seconds:
+        _resolve_pending(state, pending, timestamp, "expired")
+        state.pending, state.expired = None, state.expired + 1
+        state.expired_direction = pending.direction
+    elif _entry_filled(pending, bid, ask, config):
+        state.position = _open_position(
+            pending, timestamp, state.equity, contract, config
+        )
+        state.equity -= state.position.entry_fee
+        _mark_open(state, state.position)
+        state.pending, state.entry_fills = None, state.entry_fills + 1
+        if mark is not None:
+            update_drawdown(state, mark)
+        return True
+    return False
+
+
+def _submit_from_book(
+    state: _ReplayState,
+    desired: Direction | None,
+    signal_time: pd.Timestamp | None,
+    reentry_event: Direction | None,
+    timestamp: pd.Timestamp,
+    bid: float,
+    ask: float,
+    maximum_hold_seconds: float | None,
+    stop_price: float | None,
+    stop_margin_pct: float | None,
+    allocation_multiplier: float,
+    config: MakerReplayConfig,
+    *,
+    atomic_reverse: bool = False,
+) -> None:
+    if desired is None:
+        return
+    if consume_liquidation_cooldown_signal(
+        state,
+        desired,
+        signal_time,
+        timestamp,
+        config,
+    ):
+        return
+    limit_price = _entry_limit_price(desired, bid, ask, config)
+    can_submit = (
+        state.pending is None
+        and state.position is None
+        and (atomic_reverse or desired != state.expired_direction)
+        and (
+            atomic_reverse
+            or _completed_direction_available(
+                state,
+                desired,
+                limit_price,
+                timestamp,
+                signal_time,
+                reentry_event,
+                config,
+            )
+        )
+        and (atomic_reverse or _cooldown_complete(state, timestamp, config))
     )
+    if can_submit and signal_time is not None and signal_time != state.last_signal:
+        cap = config.maximum_entry_spread_bps
+        midpoint = (bid + ask) / 2.0
+        spread_bps = 10_000.0 * (ask - bid) / midpoint
+        if cap is not None and spread_bps > cap:
+            state.last_signal = signal_time
+            state.spread_rejected_entries += 1
+            return
+        _submit_entry(
+            state,
+            desired,
+            signal_time,
+            timestamp,
+            limit_price,
+            maximum_hold_seconds,
+            stop_price,
+            stop_margin_pct,
+            allocation_multiplier,
+        )
 
 
 def _replay_snapshot(
@@ -256,184 +276,199 @@ def _replay_snapshot(
     bid: float,
     ask: float,
     desired: Direction | None,
+    structural: Direction | None,
     signal_time: pd.Timestamp | None,
+    reentry_event: Direction | None,
+    maximum_hold_seconds: float | None,
+    stop_price: float | None,
+    stop_margin_pct: float | None,
+    allocation_multiplier: float,
     config: MakerReplayConfig,
-    contract: HypervelocityContract,
+    contract: MakerReplayPositionContract,
 ) -> None:
-    if state.expired_direction is not None and desired != state.expired_direction:
-        state.expired_direction = None
-    pending = state.pending
-    if pending is not None:
-        age = (timestamp - pending.submitted_time).total_seconds()
-        if desired != pending.direction:
-            _resolve_pending(state, pending, timestamp, "canceled")
-            state.pending, state.canceled = None, state.canceled + 1
-        elif age > config.entry_ttl_seconds:
-            _resolve_pending(state, pending, timestamp, "expired")
-            state.pending, state.expired = None, state.expired + 1
-            state.expired_direction = pending.direction
-        elif _entry_filled(pending, bid, ask, config):
-            state.position = _open_position(pending, timestamp, state.equity, contract)
-            _mark_open(state, state.position)
-            state.pending, state.entry_fills = None, state.entry_fills + 1
-            return
-    if state.position is not None and _exit_filled(state.position, bid, ask, config):
-        position = state.position
-        trade = _close_trade(position, timestamp, config.maker_fee_rate)
-        _mark_closed(state, position, trade)
-        state.trades.append(trade)
-        state.equity += trade.net_pnl
-        state.position = None
+    remember_book(state, timestamp, bid, ask)
+    mark = mark_for_book(state, timestamp, bid, ask, config)
+    if _update_pending_from_book(
+        state, timestamp, bid, ask, structural, mark, config, contract
+    ):
         return
-    can_submit = (
-        state.pending is None
-        and state.position is None
-        and desired is not None
-        and desired != state.expired_direction
+    if mark is not None and apply_book_liquidation(
+        state, timestamp, bid, ask, config, trigger_mark=mark
+    ):
+        return
+    if apply_book_entry_close_reverse(
+        state, timestamp, bid, ask, desired, structural, signal_time, config
+    ):
+        _submit_from_book(
+            state,
+            desired,
+            signal_time,
+            reentry_event,
+            timestamp,
+            bid,
+            ask,
+            maximum_hold_seconds,
+            stop_price,
+            stop_margin_pct,
+            allocation_multiplier,
+            config,
+            atomic_reverse=True,
+        )
+        return
+    if apply_book_regime_exit(state, timestamp, bid, ask, structural, config):
+        return
+    if apply_book_time_exit(state, timestamp, bid, ask, config):
+        return
+    if apply_book_stop(state, timestamp, bid, ask, config):
+        return
+    if state.position is not None and _exit_filled(state.position, bid, ask, config):
+        complete_target(state, timestamp, config.maker_fee_rate, (bid + ask) / 2.0)
+        return
+    _submit_from_book(
+        state,
+        desired,
+        signal_time,
+        reentry_event,
+        timestamp,
+        bid,
+        ask,
+        maximum_hold_seconds,
+        stop_price,
+        stop_margin_pct,
+        allocation_multiplier,
+        config,
     )
-    if can_submit and signal_time is not None and signal_time != state.last_signal:
-        limit_price = bid if desired == "long" else ask
-        _submit_entry(state, desired, signal_time, timestamp, limit_price)
+    if mark is not None:
+        update_drawdown(state, mark)
 
 
-def _replay_pending_trade(
+def _apply_context_event(
     state: _ReplayState,
-    pending: _PendingEntry,
+    row: object,
     timestamp: pd.Timestamp,
-    aggressor_side: str,
-    trade_price: float,
-    trade_size: float,
-    desired: Direction | None,
+    event_kind: object,
     config: MakerReplayConfig,
-    contract: HypervelocityContract,
 ) -> bool:
-    age = (timestamp - pending.submitted_time).total_seconds()
-    side: Literal["buy", "sell"] = "buy" if pending.direction == "long" else "sell"
-    qualifies = timestamp > pending.submitted_time and _trade_reached(
-        side=side,
-        limit_price=pending.limit_price,
-        aggressor_side=aggressor_side,
-        trade_price=trade_price,
-    )
-    if qualifies:
-        pending.trade_through_volume += trade_size
-    required = contract.allocate(state.equity).notional / pending.limit_price
-    if desired != pending.direction:
-        _resolve_pending(state, pending, timestamp, "canceled")
-        state.pending, state.canceled = None, state.canceled + 1
-    elif age > config.entry_ttl_seconds:
-        _resolve_pending(state, pending, timestamp, "expired")
-        state.pending, state.expired = None, state.expired + 1
-        state.expired_direction = pending.direction
-    elif pending.trade_through_volume >= required:
-        state.position = _open_position(pending, timestamp, state.equity, contract)
-        _mark_open(state, state.position)
-        state.pending, state.entry_fills = None, state.entry_fills + 1
+    if event_kind == "price":
+        apply_price_event(
+            state, timestamp, float(row.mark_price), float(row.oracle_price), config
+        )
+        return True
+    if event_kind == "funding":
+        apply_funding_event(state, timestamp, float(row.funding_rate), config)
         return True
     return False
 
 
-def _replay_trade(
+def _occupied_structural_direction(
     state: _ReplayState,
-    timestamp: pd.Timestamp,
-    aggressor_side: str,
-    trade_price: float,
-    trade_size: float,
-    desired: Direction | None,
+    structural: Direction | None,
+    signal_time: pd.Timestamp | None,
     config: MakerReplayConfig,
-    contract: HypervelocityContract,
-) -> None:
-    if state.expired_direction is not None and desired != state.expired_direction:
-        state.expired_direction = None
+) -> Direction | None:
+    """Consume but otherwise ignore new signals while portfolio state is occupied."""
     pending = state.pending
-    if pending is not None and _replay_pending_trade(
-        state,
-        pending,
-        timestamp,
-        aggressor_side,
-        trade_price,
-        trade_size,
-        desired,
-        config,
-        contract,
-    ):
-        return
     position = state.position
-    if position is None or timestamp <= position.entry_time:
-        return
-    exit_side: Literal["buy", "sell"] = (
-        "sell" if position.direction == "long" else "buy"
-    )
-    if _trade_reached(
-        side=exit_side,
-        limit_price=position.target_price,
-        aggressor_side=aggressor_side,
-        trade_price=trade_price,
+    if config.occupied_signal_policy != "ignore" or (
+        pending is None and position is None
     ):
-        position.exit_trade_through_volume += trade_size
-    if position.exit_trade_through_volume >= position.quantity:
-        trade = _close_trade(position, timestamp, config.maker_fee_rate)
-        _mark_closed(state, position, trade)
-        state.trades.append(trade)
-        state.equity += trade.net_pnl
-        state.position = None
+        return structural
+    if signal_time is not None and signal_time != state.last_signal:
+        state.last_signal = signal_time
+    return pending.direction if pending is not None else position.direction
 
 
-def _event_tape(
-    snapshots: pd.DataFrame,
-    trades: pd.DataFrame,
-) -> pd.DataFrame:
-    books = snapshots.assign(event_kind="book", event_priority=0)
-    prints = trades.assign(event_kind="trade", event_priority=1)
-    return (
-        pd.concat((books, prints), ignore_index=True)
-        .sort_values(["ts_ms", "event_priority"])
-        .reset_index(drop=True)
+def _execute_tape_event(
+    state: _ReplayState,
+    row: object,
+    timestamp: pd.Timestamp,
+    position: int,
+    projection: DecisionProjection,
+    config: MakerReplayConfig,
+    contract: MakerReplayPositionContract,
+) -> None:
+    (
+        desired,
+        structural,
+        signal_time,
+        reentry_event,
+        maximum_hold_seconds,
+        stop_price,
+        stop_margin_pct,
+        allocation_multiplier,
+    ) = projected_market_at(position, projection)
+    structural = _occupied_structural_direction(
+        state,
+        structural,
+        signal_time,
+        config,
     )
+    event_kind = getattr(row, "event_kind", "book")
+    if _apply_context_event(state, row, timestamp, event_kind, config):
+        return
+    _rearm_consumed(state, structural, timestamp)
+    if event_kind == "trade":
+        replay_trade(
+            state,
+            timestamp,
+            str(row.aggressor_side),
+            float(row.price),
+            float(row.size),
+            structural,
+            config,
+            contract,
+        )
+    else:
+        _replay_snapshot(
+            state,
+            timestamp,
+            float(row.best_bid),
+            float(row.best_ask),
+            desired,
+            structural,
+            signal_time,
+            reentry_event,
+            maximum_hold_seconds,
+            stop_price,
+            stop_margin_pct,
+            allocation_multiplier,
+            config,
+            contract,
+        )
 
 
 def _execute_tape(
     tape: pd.DataFrame,
     directions: pd.Series,
+    structural_directions: pd.Series,
+    reentry_events: pd.Series,
+    maximum_holds: pd.Series,
+    entry_stops: pd.Series,
+    entry_stop_margin_pcts: pd.Series,
+    allocation_multipliers: pd.Series,
     config: MakerReplayConfig,
     state: _ReplayState | None = None,
 ) -> _ReplayState:
     active = state or _ReplayState(equity=config.initial_equity)
-    contract = HypervelocityContract()
+    active.peak_equity = max(active.peak_equity, config.initial_equity)
+    contract = maker_replay_contract(config)
     timestamps = pd.to_datetime(tape["ts_ms"], unit="ms", utc=True)
     positions = directions.index.searchsorted(timestamps, side="right") - 1
-    values = directions.to_numpy(dtype=object)
+    projection = decision_projection(
+        directions,
+        structural_directions,
+        reentry_events,
+        maximum_holds,
+        entry_stops,
+        entry_stop_margin_pcts,
+        allocation_multipliers,
+    )
     for row, timestamp, position in zip(
         tape.itertuples(index=False), timestamps, positions, strict=True
     ):
-        desired: Direction | None = None
-        signal_time: pd.Timestamp | None = None
-        if position >= 0:
-            value = values[position]
-            desired = value if value in ("long", "short") else None
-            signal_time = pd.Timestamp(directions.index[position])
-        if getattr(row, "event_kind", "book") == "trade":
-            _replay_trade(
-                active,
-                timestamp,
-                str(row.aggressor_side),
-                float(row.price),
-                float(row.size),
-                desired,
-                config,
-                contract,
-            )
-        else:
-            _replay_snapshot(
-                active,
-                timestamp,
-                float(row.best_bid),
-                float(row.best_ask),
-                desired,
-                signal_time,
-                config,
-                contract,
-            )
+        _execute_tape_event(
+            active, row, timestamp, int(position), projection, config, contract
+        )
     return active
 
 
@@ -443,6 +478,7 @@ def replay_maker_orders(
     config: MakerReplayConfig | None = None,
     *,
     trades: pd.DataFrame | None = None,
+    context: MakerReplayContext | None = None,
 ) -> MakerReplayReport:
     """Replay post-only entries and fixed targets from causal market evidence."""
     from hypervector.research.maker_replay_stream import (
@@ -454,4 +490,5 @@ def replay_maker_orders(
         (MakerReplayEvidenceChunk(book, trades),),
         decisions,
         config,
+        context=context,
     )

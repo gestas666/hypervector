@@ -16,7 +16,9 @@ def test_vectorbt_and_rust_versions_compatible():
 
     vbt_mm = ".".join(vbt.__version__.split(".")[:2])
     rust_mm = ".".join(vectorbt_rust.__version__.split(".")[:2])
-    assert vbt_mm == rust_mm, f"version mismatch: vectorbt={vbt.__version__} rust={vectorbt_rust.__version__}"
+    assert vbt_mm == rust_mm, (
+        f"version mismatch: vectorbt={vbt.__version__} rust={vectorbt_rust.__version__}"
+    )
     assert version("vectorbt") == "1.1.0"
     assert version("vectorbt-rust") == "1.1.0"
 
@@ -120,7 +122,7 @@ def test_indicator_integrations_execute_through_vectorbt():
 
 
 def test_quantstats_adapter_executes_through_vectorbt():
-    import vectorbt as vbt
+    import vectorbt as vbt  # noqa: F401
 
     returns = pd.Series([0.01, -0.005, 0.02, -0.01, 0.015])
     assert np.isfinite(returns.vbt.returns.qs.sharpe(periods=252))
@@ -144,7 +146,7 @@ def test_telegram_adapter_builds_without_network():
 
 
 def test_ray_adapter_executes_through_vectorbt():
-    import vectorbt as vbt
+    import vectorbt as vbt  # noqa: F401
 
     def add_iteration(iteration: int, values: np.ndarray) -> np.ndarray:
         return values + iteration

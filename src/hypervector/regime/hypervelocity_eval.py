@@ -6,6 +6,9 @@ from dataclasses import asdict, dataclass
 
 import pandas as pd
 
+from hypervector.data.source_position_records import (
+    reconcile_source_position_records,
+)
 from hypervector.regime.classifier import RegimeClassifierConfig
 from hypervector.regime.composite import _completed_context, classify_multitimeframe
 from hypervector.regime.models import BreakoutDirection, PrimaryRegime
@@ -88,7 +91,9 @@ def _position_times(positions: pd.DataFrame) -> pd.DatetimeIndex:
     missing = required.difference(positions.columns)
     if missing:
         raise ValueError(f"positions missing columns: {sorted(missing)}")
-    return pd.DatetimeIndex(pd.to_datetime(positions["open_time_utc"], utc=True))
+    return pd.DatetimeIndex(
+        pd.to_datetime(positions["open_time_utc"], utc=True, format="ISO8601")
+    )
 
 
 def _unique_entry_decisions(
@@ -98,8 +103,9 @@ def _unique_entry_decisions(
 ) -> pd.DataFrame:
     if cluster_seconds < 0.0:
         raise ValueError("cluster_seconds must be non-negative")
+    reconciled = reconcile_source_position_records(positions)
     timed = (
-        positions.assign(event_time=_position_times(positions))
+        reconciled.assign(event_time=_position_times(reconciled))
         .sort_values("event_time")
         .reset_index(drop=True)
     )
@@ -117,6 +123,9 @@ def _unique_entry_decisions(
 
 
 def _decision_directions(rows: pd.DataFrame) -> pd.Series:
+    if "entry_direction" in rows.columns:
+        tactical = rows["entry_direction"].astype(object)
+        return tactical.where(tactical.isin(["long", "short"]), None)
     directions = pd.Series(None, index=rows.index, dtype=object)
     directions = directions.mask(
         rows["primary_regime"].eq(PrimaryRegime.TREND_UP.value), "long"
@@ -235,8 +244,13 @@ def evaluate_breakout_quality(
     future_high = _future_extreme(bars["high"].astype(float), forward_horizon, "max")
     future_low = _future_extreme(bars["low"].astype(float), forward_horizon, "min")
     close = bars["close"].astype(float)
-    breakout = decisions["primary_regime"].eq(PrimaryRegime.BREAKOUT.value)
     direction = decisions["breakout_direction"]
+    directional = direction.isin(
+        [BreakoutDirection.UPWARD.value, BreakoutDirection.DOWNWARD.value]
+    )
+    breakout = (
+        decisions["primary_regime"].eq(PrimaryRegime.BREAKOUT.value) & directional
+    )
     onset = breakout & (
         ~breakout.shift(fill_value=False) | direction.ne(direction.shift())
     )
@@ -355,7 +369,8 @@ def _position_regime_performance(
 ) -> dict[str, object]:
     if "net_margin_pnl_pct" not in positions.columns:
         return {"status": "unavailable", "reason": "net_margin_pnl_pct not reported"}
-    aligned = _aligned_position_rows(decisions, positions)
+    reconciled = reconcile_source_position_records(positions)
+    aligned = _aligned_position_rows(decisions, reconciled)
     aligned["net_margin_pnl_pct"] = pd.to_numeric(
         aligned["net_margin_pnl_pct"], errors="raise"
     )
@@ -388,7 +403,8 @@ def _cost_sensitivity(positions: pd.DataFrame) -> dict[str, object]:
     missing = required.difference(positions.columns)
     if missing:
         return {"status": "unavailable", "missing_columns": sorted(missing)}
-    frame = positions.loc[:, sorted(required)].apply(pd.to_numeric, errors="raise")
+    reconciled = reconcile_source_position_records(positions)
+    frame = reconciled.loc[:, sorted(required)].apply(pd.to_numeric, errors="raise")
     if (frame["approx_margin_usd"] <= 0.0).any():
         raise ValueError("approx_margin_usd must be positive for cost sensitivity")
     fee_drag = frame["fees_usd"] / frame["approx_margin_usd"] * 100.0

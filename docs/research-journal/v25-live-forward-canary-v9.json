@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v25-live-forward-canary",
+  "revision_number": 9,
+  "supersedes_revision_id": "8a34d7808c9732b0a217a98231d4849d8711a7ce3100d2b9adb0b623509f6521",
+  "created_at_utc": "2026-08-08T23:24:15Z",
+  "strategy_id": "multi_asset_bidirectional_complete_portfolio_canary_v25",
+  "symbol": "MULTI",
+  "status": "observe",
+  "hypothesis": "The complete v25 live portfolio can produce mechanically valid protected lifecycles while causal execution, missed-opportunity, orderbook, and provider-clock telemetry identifies repeatable provider-symbol behavior that clears measured live friction.",
+  "decision": "Keep v25 armed and unchanged. Record the adopted GOLD Swing/HA long as a resolved adverse entry-quality observation: it exited at its 24-hour maximum hold for -$0.242433 net, never crossed its protective stop, and achieved only +7.8084 bps MFE, below measured round-trip friction. The first ignored recipe-exit signal was approximately 12 hours after entry at a worse gross price than the eventual close, so this path does not support promoting the earlier recipe exit. It also does not establish that the 24-hour hold is optimal. Preserve the live result as control evidence and test order-pressure plus causal multi-timeframe context as a report-only entry annotation; do not route, resize, gate, pause, or alter v25.",
+  "confidence": "low",
+  "falsifier": "This revision is invalidated by source/profile drift, changed artifact bytes, inconsistent venue fills or costs, a protective-stop cross before the recorded exit, or non-causal reconstructed context. The entry-quality concern would weaken if independent both-side GOLD, SNDK, and BRENTOIL Swing/HA lifecycles repeatedly clear live friction without one-episode concentration; an exit-policy claim requires executable counterfactual costs rather than gross reference prices.",
+  "evidence": [
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v25_live_prefix_post_checkpoint_repair_20260808T2307Z.json",
+      "role": "immutable_live_prefix_with_resolved_gold_lifecycle",
+      "sha256": "5d9b2e3b53c793df07b296ce6e60a24c140e93a04654a5ed7b4edb82dddc620f",
+      "bytes": 10239996
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v25_live_delta_2230_to_2307_20260808T2307Z.json",
+      "role": "immutable_same_run_gold_resolution_delta",
+      "sha256": "e7462e14cce7be93e8235b1f82856f0e1d2a11349d0576a4c3216bf664b45a3d",
+      "bytes": 168685
+    },
+    {
+      "path": "../reviews/2026-08-08-v25-gold-maximum-hold-resolution.md",
+      "role": "gold_entry_exit_and_uncertainty_review",
+      "sha256": "01fa8490d404d35001e2ade4558fdb3965b70de7e5f2369e4f53c3954faa5e44",
+      "bytes": 4919
+    },
+    {
+      "path": "v25-live-forward-canary-v8.json",
+      "role": "immutable_prior_v25_forward_revision",
+      "sha256": "f8c92c958de2f84e3b3e80f073ad126a77d4921c22123e7c4e61ee5f94606b40",
+      "bytes": 4805
+    }
+  ],
+  "metrics": {
+    "source_run_id": "bidirectional-live-1786182011216",
+    "resolved_lifecycle_id": "xyz:GOLD:512544506543",
+    "resolved_strategy_id": "hip3_swing_ha_sndk_gold_brent_bidirectional_v1",
+    "resolved_side": "long",
+    "holding_time_ms": 86411114,
+    "price_return_pct": -0.1400914038996004,
+    "net_pnl_usd": -0.24243299999999998,
+    "net_return_on_margin_pct": -1.6257931033372772,
+    "fees_usd": 0.129325,
+    "funding_usd": -0.008188,
+    "maximum_favorable_excursion_bps": 7.80837333210771,
+    "maximum_adverse_excursion_bps": 38.81220862136381,
+    "protective_stop_crossed": false,
+    "first_ignored_exit_gross_return_bps": -22.04717176124804,
+    "gross_continuation_after_ignored_exit_bps": 8.05579211452967,
+    "compatible_closed_trades": 6,
+    "compatible_wins": 4,
+    "compatible_losses": 2,
+    "compatible_net_pnl_usd": 1.9282880000000002,
+    "compatible_profit_factor": 3.1441980195817885,
+    "known_metric_value_gaps_delta": 20,
+    "execution_authority": "none",
+    "runtime_changed_by_this_revision": false
+  },
+  "limitations": [
+    "Only one GOLD lifecycle has resolved and it is long; no GOLD short-side result exists.",
+    "Canonical regime context is unavailable for this HIP-3 lifecycle, so no regime-cause claim is supportable.",
+    "The ignored recipe-exit price is a reference observation, not a counterfactual venue fill with measured fees and slippage.",
+    "The loaded v25 process retains the known HIP-3 pressure-clock telemetry gap until a verified-flat restart loads the staged repair.",
+    "Six compatible closes span multiple providers and are sparse and non-independent.",
+    "No live route, position, order, stop, target, size, exit, transition drain, or protection changed in this revision."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

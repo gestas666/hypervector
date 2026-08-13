@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "hype-breakout-fixed8-exit",
+  "revision_number": 1,
+  "supersedes_revision_id": null,
+  "created_at_utc": "2026-08-05T15:00:00+00:00",
+  "strategy_id": "hype_breakout_onset_bidirectional_v1",
+  "symbol": "HYPE",
+  "status": "candidate",
+  "hypothesis": "A fixed eight-hour exit may retain more HYPE breakout profit than the active regime-supported extension while reducing post-soft-boundary giveback.",
+  "decision": "Preserve the exact $25-notional fixed-eight-hour profile as a staged but inactive candidate. Do not activate it until every venue position and owned order is reconciled flat and a future live start receives explicit authority; compare its subsequent outcomes with the active extension contract without treating the staged file as runtime state.",
+  "confidence": "low_medium",
+  "falsifier": "Causally complete profile-matched extension observations that consistently outperform their estimated fixed-eight-hour exits after fees, funding, and measured close friction would falsify the fixed-eight-hour hypothesis.",
+  "evidence": [
+    {
+      "path": "../../configs/multi_asset_bidirectional_range_retired_hype_fixed8_candidate.toml",
+      "role": "exact_inactive_candidate_profile",
+      "sha256": "5015b0b55e0737dfcd1b8d19c443a7d7d70ea82b88ae588401dc63b8feab7158",
+      "bytes": 2974
+    },
+    {
+      "path": "../reviews/2026-08-05-hype-breakout-strategy-contract.md",
+      "role": "active_and_candidate_exit_contract_audit",
+      "sha256": "d7b0ab671692271313a761da68980ea9368d6e9d2bd3725a31c0f2cac9568775",
+      "bytes": 9457
+    }
+  ],
+  "metrics": {
+    "candidate_max_notional_usd": 25.0,
+    "candidate_leverage": 5.0,
+    "candidate_stop_bps": 80.0,
+    "candidate_maximum_hold_seconds": 28800,
+    "candidate_hard_maximum_hold_seconds": null,
+    "candidate_target_policy": "none",
+    "staged_profile_sha256": "5015b0b55e0737dfcd1b8d19c443a7d7d70ea82b88ae588401dc63b8feab7158"
+  },
+  "limitations": [
+    "The extension comparison is sparse and contains contradictory resolved and unresolved observations.",
+    "An estimated historical soft-boundary close is not an actual submitted venue order.",
+    "A staged profile is not evidence that the running backend uses the candidate.",
+    "Activation requires a new mandatory pre-start backup and explicit live authority."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

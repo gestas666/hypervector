@@ -16,7 +16,9 @@ import pandas as pd
 
 from hypervector.strategies.indicators import bbwp, choppiness_index, ema, rsi
 
-RegimeState = Literal["BULL_TREND", "BEAR_TREND", "HIGH_VOL_COMPRESSION", "LOW_VOL_CHOP"]
+RegimeState = Literal[
+    "BULL_TREND", "BEAR_TREND", "HIGH_VOL_COMPRESSION", "LOW_VOL_CHOP"
+]
 
 
 def detect_4state_regime(
@@ -31,12 +33,12 @@ def detect_4state_regime(
     """Classify bars into 4 actionable regimes with zero lookahead."""
     c = df["close"].astype(float)
     h = df["high"].astype(float)
-    l = df["low"].astype(float)
+    lows = df["low"].astype(float)
 
     ef = ema(c, ema_fast)
     es = ema(c, ema_slow)
     bb_pct, _ = bbwp(c, bb_length=20, lookback=180)
-    chop = choppiness_index(h, l, c, length=14)
+    chop = choppiness_index(h, lows, c, length=14)
     r = rsi(c, 14)
 
     n = len(c)

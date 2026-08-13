@@ -7,10 +7,18 @@ from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
 
-from hypervector.data.oxa_api import validate_symbol, validate_window
+from hypervector.data.oxa_api import (
+    MarketFamily,
+    validate_market_symbol,
+    validate_window,
+)
 from hypervector.data.oxa_history import OxaBookRequest, output_directory
 from hypervector.data.oxa_storage import verify_file_evidence
-from hypervector.data.oxa_trades import OxaTradeRequest, trade_output_directory
+from hypervector.data.oxa_trades import (
+    OxaTradeRequest,
+    TRADE_NORMALIZATION_VERSION,
+    trade_output_directory,
+)
 
 
 @dataclass(frozen=True)
@@ -23,9 +31,11 @@ class OxaArchiveAuditConfig:
     data_root: Path
     chunk: timedelta = timedelta(hours=1)
     depth: int = 20
+    market_family: MarketFamily = "core"
+    book_only: bool = False
 
     def __post_init__(self) -> None:
-        validate_symbol(self.symbol)
+        validate_market_symbol(self.symbol, self.market_family)
         validate_window(self.start, self.end)
         if self.chunk <= timedelta(0):
             raise ValueError("archive audit chunk must be positive")
@@ -49,6 +59,12 @@ class OxaArchiveBundle:
 class OxaArchiveAuditReport:
     """Aggregate coverage and checksum evidence for one requested window."""
 
+    symbol: str
+    market_family: MarketFamily
+    requested_start_utc: str
+    requested_end_utc: str
+    chunk_seconds: int
+    book_only: bool
     complete: bool
     expected_bundles: int
     present_bundles: int
@@ -59,6 +75,8 @@ class OxaArchiveAuditReport:
     coalesced_book_snapshots: int
     empty_book_windows: int
     empty_trade_windows: int
+    empty_book_ranges_utc: tuple[tuple[str, str], ...]
+    empty_trade_ranges_utc: tuple[tuple[str, str], ...]
     evidence_bytes: int
 
     def to_dict(self) -> dict[str, object]:
@@ -79,13 +97,28 @@ def audit_oxa_archive(config: OxaArchiveAuditConfig) -> OxaArchiveAuditReport:
     missing: list[str] = []
     books: list[_BundleStats] = []
     trades: list[_BundleStats] = []
+    empty_books: list[tuple[datetime, datetime]] = []
+    empty_trades: list[tuple[datetime, datetime]] = []
     windows = _iter_windows(config)
     for start, end in windows:
         book_path, trade_path = _bundle_paths(config, start, end)
+        prior_book_count = len(books)
         _collect_bundle(book_path, "book", config, start, end, books, missing)
-        _collect_bundle(trade_path, "trade", config, start, end, trades, missing)
-    expected = 2 * len(windows)
+        if len(books) > prior_book_count and books[-1].rows == 0:
+            empty_books.append((start, end))
+        if trade_path is not None:
+            prior_trade_count = len(trades)
+            _collect_bundle(trade_path, "trade", config, start, end, trades, missing)
+            if len(trades) > prior_trade_count and trades[-1].rows == 0:
+                empty_trades.append((start, end))
+    expected = (1 if config.book_only else 2) * len(windows)
     return OxaArchiveAuditReport(
+        symbol=config.symbol,
+        market_family=config.market_family,
+        requested_start_utc=config.start.isoformat(),
+        requested_end_utc=config.end.isoformat(),
+        chunk_seconds=int(config.chunk.total_seconds()),
+        book_only=config.book_only,
         complete=not missing,
         expected_bundles=expected,
         present_bundles=expected - len(missing),
@@ -96,8 +129,23 @@ def audit_oxa_archive(config: OxaArchiveAuditConfig) -> OxaArchiveAuditReport:
         coalesced_book_snapshots=sum(item.coalesced for item in books),
         empty_book_windows=sum(item.rows == 0 for item in books),
         empty_trade_windows=sum(item.rows == 0 for item in trades),
+        empty_book_ranges_utc=_coalesced_utc_ranges(empty_books),
+        empty_trade_ranges_utc=_coalesced_utc_ranges(empty_trades),
         evidence_bytes=sum(item.evidence_bytes for item in books + trades),
     )
+
+
+def _coalesced_utc_ranges(
+    windows: list[tuple[datetime, datetime]],
+) -> tuple[tuple[str, str], ...]:
+    """Coalesce adjacent empty evidence windows into explicit UTC ranges."""
+    ranges: list[tuple[datetime, datetime]] = []
+    for start, end in windows:
+        if ranges and ranges[-1][1] == start:
+            ranges[-1] = (ranges[-1][0], end)
+        else:
+            ranges.append((start, end))
+    return tuple((start.isoformat(), end.isoformat()) for start, end in ranges)
 
 
 def verified_archive_bundles(
@@ -108,9 +156,8 @@ def verified_archive_bundles(
     for start, end in _iter_windows(config):
         book_dir, trade_dir = _bundle_paths(config, start, end)
         book = _verified_manifest(book_dir, "book", config, start, end)
-        trade = _verified_manifest(trade_dir, "trade", config, start, end)
         book_stats = _bundle_stats(book, "book", book_dir)
-        trade_stats = _bundle_stats(trade, "trade", trade_dir)
+        trade, trade_stats = _optional_trade_bundle(trade_dir, config, start, end)
         bundles.append(
             OxaArchiveBundle(
                 start=start,
@@ -142,13 +189,44 @@ def _bundle_paths(
     config: OxaArchiveAuditConfig,
     start: datetime,
     end: datetime,
-) -> tuple[Path, Path]:
-    book = OxaBookRequest(config.symbol, start, end, config.depth, 1000, 20, 30.0)
-    trade = OxaTradeRequest(config.symbol, start, end, 1000, 500, 30.0)
+) -> tuple[Path, Path | None]:
+    book = OxaBookRequest(
+        config.symbol,
+        start,
+        end,
+        config.depth,
+        1000,
+        20,
+        30.0,
+        market_family=config.market_family,
+    )
+    if config.book_only:
+        return output_directory(config.data_root, book), None
+    trade = OxaTradeRequest(
+        config.symbol,
+        start,
+        end,
+        1000,
+        500,
+        30.0,
+        market_family=config.market_family,
+    )
     return (
         output_directory(config.data_root, book),
         trade_output_directory(config.data_root, trade),
     )
+
+
+def _optional_trade_bundle(
+    directory: Path | None,
+    config: OxaArchiveAuditConfig,
+    start: datetime,
+    end: datetime,
+) -> tuple[dict[str, object], _BundleStats]:
+    if directory is None:
+        return {}, _BundleStats(0, 0, 0, 0)
+    manifest = _verified_manifest(directory, "trade", config, start, end)
+    return manifest, _bundle_stats(manifest, "trade", directory)
 
 
 def _collect_bundle(
@@ -186,13 +264,15 @@ def _verified_manifest(
 
 
 def _normalized_path(
-    directory: Path,
+    directory: Path | None,
     manifest: dict[str, object],
     stem: str,
     rows: int,
 ) -> Path | None:
     if rows == 0:
         return None
+    if directory is None:
+        raise ValueError("non-empty archive evidence has no directory")
     files = manifest.get("files")
     if not isinstance(files, dict):
         raise ValueError(f"archive manifest has invalid file evidence: {directory}")
@@ -217,11 +297,7 @@ def _validate_identity(
 ) -> None:
     if not isinstance(manifest, dict):
         raise ValueError(f"archive manifest must be an object: {directory}")
-    expected_source = (
-        "0xarchive_hyperliquid_native_l2"
-        if kind == "book"
-        else "0xarchive_hyperliquid_public_trades"
-    )
+    expected_source = _expected_source(kind, config.market_family)
     expected = {
         "complete": True,
         "source": expected_source,
@@ -231,6 +307,22 @@ def _validate_identity(
     }
     if any(manifest.get(key) != value for key, value in expected.items()):
         raise ValueError(f"archive manifest identity mismatch: {directory}")
+    if (
+        kind == "trade"
+        and manifest.get("normalization_version") != TRADE_NORMALIZATION_VERSION
+    ):
+        raise ValueError(f"archive trade normalization is stale: {directory}")
+    if kind == "book" and config.market_family == "hip3":
+        if manifest.get("market_family") != "hip3":
+            raise ValueError(f"archive manifest market family mismatch: {directory}")
+
+
+def _expected_source(kind: str, market_family: MarketFamily) -> str:
+    if kind == "trade":
+        return "0xarchive_hyperliquid_public_trades"
+    if market_family == "hip3":
+        return "0xarchive_hyperliquid_hip3_l2"
+    return "0xarchive_hyperliquid_native_l2"
 
 
 def _bundle_stats(

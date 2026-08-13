@@ -106,3 +106,121 @@ def test_cli_live_report(tmp_path: Path, capsys):
     assert rep["ok"] is True
     assert rep["ledger"] == "live"
     assert rep["rows"] == 1
+
+
+def test_event_sourced_live_report_scores_latest_bidirectional_run() -> None:
+    rows = [
+        {
+            "event_type": "configuration_identity",
+            "run_id": "bidir",
+            "profile_id": "bidir-profile",
+            "execution_mode": "live",
+            "observed_at_utc": "2026-07-31T16:00:00+00:00",
+            "payload": {
+                "network": "mainnet",
+                "execution_sides": ["long", "short"],
+            },
+        },
+        {
+            "event_type": "regime_decision",
+            "run_id": "bidir",
+            "execution_mode": "live",
+            "observed_at_utc": "2026-07-31T16:05:00+00:00",
+            "payload": {"long_entry": True, "short_entry": False},
+        },
+        {
+            "event_type": "order_acknowledgement",
+            "run_id": "bidir",
+            "execution_mode": "live",
+            "payload": {"operation": "entry", "accepted": True, "oid": 101},
+        },
+        {
+            "event_type": "fill",
+            "run_id": "bidir",
+            "execution_mode": "live",
+            "payload": {
+                "oid": 101,
+                "direction": "Open Long",
+                "price": 100.0,
+                "size": 1.0,
+                "closed_pnl_usd": 0.0,
+            },
+        },
+        {
+            "event_type": "fee",
+            "run_id": "bidir",
+            "execution_mode": "live",
+            "payload": {"source": "fill", "oid": 101, "fee_usd": 0.10},
+        },
+        {
+            "event_type": "funding",
+            "run_id": "bidir",
+            "execution_mode": "live",
+            "payload": {"usdc_delta": 0.02},
+        },
+        {
+            "event_type": "fill",
+            "run_id": "bidir",
+            "execution_mode": "live",
+            "payload": {
+                "oid": 202,
+                "direction": "Close Long",
+                "price": 101.0,
+                "size": 1.0,
+                "closed_pnl_usd": 1.0,
+            },
+        },
+        {
+            "event_type": "fee",
+            "run_id": "bidir",
+            "execution_mode": "live",
+            "payload": {"source": "fill", "oid": 202, "fee_usd": 0.10},
+        },
+        {
+            "event_type": "close",
+            "run_id": "bidir",
+            "execution_mode": "live",
+            "payload": {"reason": "target", "oid": 202, "verified_flat": True},
+        },
+        {
+            "event_type": "reconciliation",
+            "run_id": "bidir",
+            "execution_mode": "live",
+            "payload": {"account_value_usd": 154.43, "open_order_ids": []},
+        },
+        {
+            "event_type": "position",
+            "run_id": "bidir",
+            "execution_mode": "live",
+            "payload": {"size_signed": 0.0},
+        },
+        {
+            "event_type": "state_transition",
+            "run_id": "bidir",
+            "execution_mode": "live",
+            "payload": {"state": "FLAT", "last_fault": None},
+        },
+    ]
+
+    report = summarize_live_decisions(rows, last_n=5)
+
+    assert report["market_fills"] == 2
+    score = report["event_sourced"]
+    assert score["run_id"] == "bidir"
+    assert score["profile_id"] == "bidir-profile"
+    assert score["network"] == "mainnet"
+    assert score["execution_sides"] == ["long", "short"]
+    assert score["regime_decisions"] == 1
+    assert score["entry_signals"] == {"long": 1, "short": 0}
+    assert score["order_intents"] == {"entry": 0, "target": 0, "close": 0}
+    assert score["order_acknowledgements"] == {"accepted": 1, "rejected": 0}
+    assert score["fills"] == {"open_long": 1, "close_long": 1}
+    assert score["verified_target_closes"] == 1
+    assert score["gross_closed_pnl_usd"] == 1.0
+    assert score["fees_usd"] == 0.20
+    assert score["funding_usd"] == 0.02
+    assert score["net_realized_usd"] == 0.82
+    assert score["account_value_usd"] == 154.43
+    assert score["position_size_signed"] == 0.0
+    assert score["state"] == "FLAT"
+    assert score["last_fault"] is None

@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v25-live-forward-canary",
+  "revision_number": 4,
+  "supersedes_revision_id": "de5d960da253c8982b74548801a6d558dc62449bba78a06e7c85d16bb1f42690",
+  "created_at_utc": "2026-08-08T15:01:52Z",
+  "strategy_id": "multi_asset_bidirectional_complete_portfolio_canary_v25",
+  "symbol": "MULTI",
+  "status": "observe",
+  "hypothesis": "The complete v25 live portfolio can produce mechanically valid protected lifecycles while causal execution, missed-opportunity, orderbook, and provider-clock telemetry identifies repeatable provider-symbol behavior that clears measured live friction.",
+  "decision": "Keep the running v25 strategy and its four protected open lifecycles unchanged. Treat the 97 of 97 pressure-unavailable HIP-3 evaluations with a fresh same-cycle book before routing publication as strong evidence that the loaded v25 runtime excluded causally available orderbook pressure because it sampled the provider cutoff before reconciliation. Preserve the tested clock-ordering repair for a future safe restart and require the first applicable post-restart HIP-3 decisions to publish numeric pressure from an in-window book. Do not infer strategy edge, loosen an entry blocker, change sizing, or grant orderbook pressure new execution authority from this telemetry diagnosis.",
+  "confidence": "medium",
+  "falsifier": "The clock diagnosis is falsified if a future process that loads the repair repeatedly publishes null pressure for completed HIP-3 decisions despite a book received from decision close through routing publication within the configured 30-second freshness window. Any changed evidence hash, lifecycle inconsistency, missing venue protection, or execution-authority mismatch invalidates this revision. Positive pressure coverage alone does not validate economic edge; resolved after-cost route outcomes must do that separately.",
+  "evidence": [
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v25_live_audit_20260808T145648Z.json",
+      "role": "immutable_report_only_v25_audit_with_permanent_provider_pressure_clock_attribution",
+      "sha256": "a55d6a474e30097df9f50cd51281c57d3dff7c7d98d28114122a1f6202c6ff2f",
+      "bytes": 6878011
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v25_hip3_pressure_clock_diagnostic_20260808T1441Z.json",
+      "role": "independent_bounded_raw_ledger_clock_diagnostic",
+      "sha256": "574c5541cf9c244ff75cb6cdbf628e9c52b92e2c28aa0a765eb87e58b03b3daa",
+      "bytes": 2747
+    },
+    {
+      "path": "../../configs/multi_asset_bidirectional_complete_portfolio_canary_v25.toml",
+      "role": "exact_running_profile_configuration",
+      "sha256": "362763638541baf75d5121f0b59e1afc8091bda7aaa1aaea0f8b42aead3c3bdd",
+      "bytes": 6214
+    }
+  ],
+  "metrics": {
+    "source_run_id": "bidirectional-live-1786182011216",
+    "observed_through_utc": "2026-08-08T14:56:48.295007+00:00",
+    "configured_provider_symbol_routes": 24,
+    "readiness_evaluations": 3163,
+    "pressure_unavailable_evaluations": 97,
+    "pressure_unavailable_with_causal_book": 97,
+    "pressure_unavailable_without_causal_book": 0,
+    "pressure_clock_maximum_book_age_ms": 30000,
+    "pressure_clock_provider_symbol_routes": 5,
+    "open_lifecycles": 4,
+    "protected_open_lifecycles": 4,
+    "running_backend_faults": 0,
+    "execution_authority": "none",
+    "runtime_changed_by_this_revision": false
+  },
+  "limitations": [
+    "The 97 evaluations diagnose data availability only; they do not show that the observed imbalance confirmed the candidate side or would have produced an eligible trade.",
+    "The loaded v25 process predates the clock-ordering source repair, so this revision does not claim repaired live behavior.",
+    "The current process has no resolved trade sample; compatible historical closes do not establish current-run edge, income, or drawdown.",
+    "The four open lifecycles remain provisional and are excluded from resolved performance conclusions.",
+    "The fixed 30-second window is the deployed freshness contract, not a newly selected threshold.",
+    "The four unrelated full-suite transition/runbook failures remain outstanding and are not evidence against this isolated diagnostic path."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

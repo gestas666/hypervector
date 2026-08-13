@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "cohort-successor-side-aware-triage",
+  "revision_number": 2,
+  "supersedes_revision_id": "21ebe1f7f91d3f95c8962ea1d8a6828b04be2cef9cb18f937c1c9933467d2faf",
+  "created_at_utc": "2026-08-08T22:07:52Z",
+  "strategy_id": "multi_asset_portfolio_research_process",
+  "symbol": "PORTFOLIO",
+  "status": "observe",
+  "hypothesis": "A point-in-time, provider-symbol-side triage that separates historical signal evidence, after-cost live translation, concentration, forward paths, and unresolved marks may select a more coherent portfolio successor than aggregate-PnL route ranking.",
+  "decision": "Retain the report-only triage baseline and replace missing directional labels with source-bound evidence. The revised immutable v25 prefix still sends zero of 24 routes to portfolio-interaction replay, ten to REVISE, and fourteen unchanged adverse exact contracts to STOP. SOL range-onset is the only route in this prefix with supportive historical evidence for both long and short, but it has no resolved compatible-profile live execution and therefore remains a both-side forward-data experiment. ETH precompression long is historically supportive while short is contradictory. SP500 breakout long and short, GOLD swing short, and SPCX swing long and short reverse sign between development and validation; GOLD swing long is negative in both stress phases. Aggregate route gains may not override those side results. Keep v25 unchanged while collecting actual after-cost outcomes; design future experiments by side rather than promoting an aggregate route.",
+  "confidence": "medium",
+  "falsifier": "This revision is invalidated by a source hash mismatch, route identity mismatch, incorrect transcription of side trade counts or net results, executable authority in the evidence layer, provisional open marks affecting a decision, or failure to reproduce the scorecard and triage from the immutable audit. Economic conclusions update if independent forward outcomes show stable same-side after-cost performance, positive economics without the largest winner, and both-side live coverage; one isolated trade is insufficient to establish that update.",
+  "evidence": [
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v25_live_prefix_directional_evidence_20260808T220554Z.json",
+      "role": "immutable_v25_live_prefix_with_side_evidence",
+      "sha256": "6f40e2fbcfe80948c412b044be80dcab300906fdd117cc1b13244ab7d9880087",
+      "bytes": 9966308
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v25_successor_triage_directional_20260808T220656Z.json",
+      "role": "immutable_enriched_24_route_successor_triage",
+      "sha256": "7d56f988980aa884e098dca7fbdaa25f1b5adf5183e2a59ffc461632367d3ed4",
+      "bytes": 28237
+    },
+    {
+      "path": "../../src/hypervector/live/multi_asset_strategy_directional_evidence.py",
+      "role": "typed_side_specific_evidence_inventory",
+      "sha256": "23b0660ca02c098b50cdfa5b6e723337d637d6fe5a0d627475b7d995824b20cd",
+      "bytes": 4297
+    },
+    {
+      "path": "../../src/hypervector/live/multi_asset_strategy_evidence_models.py",
+      "role": "typed_report_only_evidence_records",
+      "sha256": "ef187f7bccaec2e161ab49a58de5311099bc1792c0924291ccfb47c5db7cd96d",
+      "bytes": 1244
+    },
+    {
+      "path": "../../src/hypervector/live/multi_asset_strategy_evidence.py",
+      "role": "provider_symbol_evidence_projection",
+      "sha256": "ac3f05ce943f070392bddf5be92a31f4d5f3a9a118cd501dbfb8cf3aacdb362e",
+      "bytes": 21208
+    },
+    {
+      "path": "../../tests/test_cohort_strategy_scorecard.py",
+      "role": "directional_projection_regression_tests",
+      "sha256": "ddc607151257e22715dadb1bdba37ba04b59c3a10448bae557d1180d8bad39d5",
+      "bytes": 13419
+    },
+    {
+      "path": "../reviews/2026-07-31-sol-range-onset-direction-stability.md",
+      "role": "sol_range_side_and_concentration_source",
+      "sha256": "b68a81184b9303b03dd5fa1da35cd1011ba24c2acd8ca544f9ae3ab3ae3a4980",
+      "bytes": 4085
+    },
+    {
+      "path": "../reviews/2026-08-06-eth-breakout-transfer-canary-qualification.md",
+      "role": "eth_precompression_side_rotation_source",
+      "sha256": "3df1387e3bb7896bcbe3a13185c25821a10e337be2a38cb52571c95c4e3cb0b2",
+      "bytes": 4937
+    },
+    {
+      "path": "../../data/logs/research/hip3_v25_lifecycle_bar_diagnostic_20260807.json",
+      "role": "hip3_development_validation_stress_side_source",
+      "sha256": "584fbab9565afc54672903a98a8c0fb346d8b5bd68444eaee4fe2d6a79a6ba4a",
+      "bytes": 93780
+    }
+  ],
+  "metrics": {
+    "source_profile_id": "multi_asset_bidirectional_complete_portfolio_canary_v25",
+    "source_profile_fingerprint": "ec7715f671fa369d0a415d8941061eb9a577b232bbd4e06367a7342267ff7ecc",
+    "source_run_id": "bidirectional-live-1786182011216",
+    "source_audit_as_of_utc": "2026-08-08T22:05:55.741239+00:00",
+    "routes": 24,
+    "proceed": 0,
+    "revise": 10,
+    "stop_exact_contract": 14,
+    "routes_with_directional_research": 8,
+    "routes_with_both_historical_sides": 8,
+    "routes_supportive_on_both_historical_sides": 1,
+    "routes_with_both_side_live_execution": 0,
+    "routes_with_resolved_live_execution": 5,
+    "resolved_live_sides": [
+      "long"
+    ],
+    "open_lifecycles_kept_provisional": 3,
+    "execution_authority": "none",
+    "runtime_changed_by_this_revision": false
+  },
+  "limitations": [
+    "The directional histories are heterogeneous: SOL uses clean replay blocks, ETH uses development plus an opened final block, and HIP-3 uses an independent-asset 15-minute approximation.",
+    "HIP-3 stress results are not shared-account live parity and omit portfolio interaction.",
+    "Only five compatible-profile v25 lifecycles are resolved, each exact provider-symbol route has at most one close, and every resolved live side is long.",
+    "SOL long historical profit is concentrated in three winners despite leave-one-block-out positivity.",
+    "No route yet combines supportive both-side history, both-side live execution, positive net PnL excluding its largest winner, and independent positive forward paths.",
+    "No live route, process, order, position, stop, target, allocation, transition drain, or protection changed in this revision."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

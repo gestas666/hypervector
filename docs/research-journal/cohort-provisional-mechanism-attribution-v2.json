@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "cohort-provisional-mechanism-attribution",
+  "revision_number": 2,
+  "supersedes_revision_id": "566004a84becf974dcc06ab929678ff62cfc1d629b3e4f701be83d7dfc3d8efa",
+  "created_at_utc": "2026-08-09T13:20:50Z",
+  "strategy_id": "multi_asset_portfolio_research_process",
+  "symbol": "PORTFOLIO",
+  "status": "retain",
+  "hypothesis": "Separating open provider-symbol-side mechanisms by causal entry identity, marked economics, path excursion, and venue protection can improve portfolio research decisions without contaminating resolved performance or changing execution.",
+  "decision": "Retain the provisional mechanism audit and add exact provider-native HIP-3 Swing attribution. Current GOLD-long and SNDK-short entries were provider-aligned across EMA, Heikin-Ashi, order-block, and eligible pivot state, so their adverse marks are not explained by random directional routing. Keep v25 execution, risk, sizing, and exits unchanged while both paths resolve. The next report-only strategy experiment should hold the eligible HIP-3 identity fixed and compare provider-onset entry with first-pullback and next-completed-bar confirmation, separated by asset and side with after-cost, missed-fill, and concentration evidence. This revision cannot place, close, resize, route, rank, gate, restart, or promote a strategy.",
+  "confidence": "medium",
+  "falsifier": "The attribution is invalidated by any mismatch between recorded provider metrics and the normalized identity, treating legacy null HA or order-block values as aligned, a non-eligible pivot label, open marks entering resolved performance, changed evidence bytes, or execution authority. The timing recommendation should be revised if the current paths resolve favorably without timing-related adverse excursion, or if a causal timing comparison fails to improve after-cost outcomes across assets and both sides without largest-winner dependence.",
+  "evidence": [
+    {
+      "path": "cohort-provisional-mechanism-attribution-v1.json",
+      "role": "prior_append_only_provisional_attribution_revision",
+      "sha256": "382dc0e5b1373f94dc2412a3bdcb8f77dad1fedc9df0cca420ba3d5d92ee7b80",
+      "bytes": 4529
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v25_live_audit_provider_native_mechanisms_20260809T131632Z.json",
+      "role": "immutable_v25_prefix_with_closed_and_open_hip3_native_identity",
+      "sha256": "788a9d76492462d8b5a3fdfa71de7907e3831484582a7f6d1daaf1822e269737",
+      "bytes": 15006793
+    },
+    {
+      "path": "../reviews/2026-08-09-v25-hip3-provider-native-attribution.md",
+      "role": "provider_native_findings_exit_context_and_next_experiment",
+      "sha256": "4c4beb9434ab4f1c524e885821375103dc09187c7dd8efa814d8237bd738d988",
+      "bytes": 4449
+    },
+    {
+      "path": "../../src/hypervector/research/cohort_entry_alignment_mechanism.py",
+      "role": "report_only_provider_native_identity_and_legacy_coverage_contract",
+      "sha256": "b8ffae4a1234ad28397322e12996e76475dbc6a876b86066cac41b32c223e695",
+      "bytes": 17990
+    },
+    {
+      "path": "../../tests/test_cohort_entry_alignment_mechanism.py",
+      "role": "native_identity_provisional_separation_and_legacy_partial_regressions",
+      "sha256": "4176524ffec38cd89475f39ab1b27e18c6d69e90b72d4793c5240eddeb6a7eba",
+      "bytes": 11652
+    }
+  ],
+  "metrics": {
+    "run_id": "bidirectional-live-1786182011216",
+    "profile_id": "multi_asset_bidirectional_complete_portfolio_canary_v25",
+    "resolved_trades": 11,
+    "resolved_net_pnl_usd": 3.063513,
+    "portfolio_maximum_drawdown_pct": 0.3034986594008314,
+    "protected_open_positions": 4,
+    "hip3_resolved_native_attributable": 3,
+    "spcx_full_native_resolved_trades": 1,
+    "spcx_full_native_net_pnl_usd": 1.567702,
+    "spcx_legacy_partial_resolved_trades": 1,
+    "spcx_legacy_partial_net_pnl_usd": -0.656872,
+    "gold_legacy_partial_resolved_trades": 1,
+    "gold_legacy_partial_net_pnl_usd": -0.24243299999999998,
+    "gold_full_native_open_marked_net_pnl_usd": -0.08500300000000001,
+    "gold_full_native_open_mfe_bps": 3.672925944631089,
+    "gold_full_native_open_mae_bps": 17.216840365456008,
+    "sndk_full_native_open_marked_net_pnl_usd": -0.176236,
+    "sndk_full_native_open_mfe_bps": 0.0,
+    "sndk_full_native_open_mae_bps": 29.58579881657153,
+    "open_ignored_ha_flip_lifecycles": 2,
+    "open_ignored_ha_flip_mean_continuation_bps": 3.7763577209204424,
+    "open_ignored_ha_flip_mean_excluding_largest_bps": -1.640150893882364,
+    "runtime_strategy_changed": false
+  },
+  "limitations": [
+    "Only three resolved HIP-3 Swing lifecycles have provider-native attribution.",
+    "The full-metric SPCX winner and legacy partial loss occurred at different times and do not isolate a feature effect.",
+    "GOLD and SNDK are open and their marked economics can reverse.",
+    "Pivot confirmation is derived from an eligible provider decision because the legacy readiness payload does not expose pivot state as a structured metric.",
+    "The ignored HA-flip evidence contains two open and one resolved commodity lifecycle and cannot select an exit policy.",
+    "No live process, route, order, stop, target, position, size, allocation, leverage, or exit policy changed."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

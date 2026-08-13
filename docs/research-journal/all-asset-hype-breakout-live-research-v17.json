@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "all-asset-hype-breakout-live-research",
+  "revision_number": 17,
+  "supersedes_revision_id": "942d00e81667ac63558a9b675d544ca7b36b6220cf5822dee25852b74cdd6f11",
+  "created_at_utc": "2026-08-07T07:06:00Z",
+  "strategy_id": "hype_breakout_onset_bidirectional_v1",
+  "symbol": "PORTFOLIO",
+  "status": "observe",
+  "hypothesis": "The exact five-minute breakout requirement should remain unchanged for the unresolved v14 HYPE lifecycle, while newer non-overlapping one-blocker paths test whether aligned public order-book pressure can rescue entries that lack the canonical five-minute breakout onset. A later portfolio generation may improve experimental attribution by removing historically rejected cross-asset transfers without altering the active lifecycle.",
+  "decision": "Keep the authorized v14 runtime, HYPE position, venue stop, entry contract, sizing, and maximum-hold controller unchanged while HYPE remains open. Reject relaxing 5m_not_breakout under the frozen aligned-book contract: the HYPE challenger is now 3W/3L, -76.01 bps, PF 0.44 over six resolved shorts, while SOL is 2W/3L, -70.29 bps, PF 0.20 over five resolved shorts. Preserve both challengers in observation because neither contains a long. Prepare, but do not activate, evidence-routed v18 for the next verified-flat boundary; it removes generic BTC/ETH/SOL breakout transfer authority, retains native HYPE, and assigns ETH to its distinct pullback mechanism. This revision does not gate, close, place, resize, restart, or promote anything.",
+  "confidence": "low",
+  "falsifier": "The rejection of this exact aligned-book relaxation must be revisited if later independent long and short paths under the same frozen contract produce stable positive after-friction return without one path dominating. The v18 preparation is invalidated by execution scope outside Hulk|BTC, ETH-pullback|ETH, and HYPE-breakout|HYPE; route overlap; risk drift; missing protection; or activation before verified flat and explicit approval. The active HYPE profit-lock comparison remains unresolved until the actual after-cost lifecycle close can be compared with its predeclared theoretical triggers.",
+  "evidence": [
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/multi_asset_live_audit_bidirectional-live-1786028939765_prefix_20260807T0656Z.json",
+      "role": "immutable_complete_v14_prefix_with_protected_open_hype_lifecycle_and_current_profit_lock_states",
+      "sha256": "a606580c9540db3971d3a29e70a5d6590bfeba2c3179ec9f1a514a92c4ccd76f",
+      "bytes": 5348719
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/hype_aligned_breakout_challenger_prefix_20260807T0703Z.json",
+      "role": "immutable_hype_aligned_book_one_blocker_forward_challenger",
+      "sha256": "f0e913069f71e8c338054c05ebe8c4f920747d02eeb586adfa815f11b2b2d81d",
+      "bytes": 74632
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/sol_aligned_breakout_challenger_prefix_20260807T0703Z.json",
+      "role": "immutable_sol_aligned_book_one_blocker_forward_challenger",
+      "sha256": "c238f99999dc8fbc122a69c47c826cb75bf65991041954fc9c39bf2824e6d549",
+      "bytes": 66671
+    },
+    {
+      "path": "../../configs/multi_asset_bidirectional_evidence_routed_candidate_v18.toml",
+      "role": "inactive_post_v14_evidence_routed_candidate",
+      "sha256": "0f08062468c4b6e358cc60b3cf0b6f52aae00a46449b3f27f17b254e5f26f70e",
+      "bytes": 3343
+    },
+    {
+      "path": "../reviews/2026-08-07-evidence-routed-v18-candidate.md",
+      "role": "candidate_systems_review_tradeoffs_and_validation_boundary",
+      "sha256": "b86b6b467e3c0dfbf82e32fa89480596cc37718194ce3556177cccada5fb55cd",
+      "bytes": 6523
+    }
+  ],
+  "metrics": {
+    "source_run_id": "bidirectional-live-1786028939765",
+    "active_profile_id": "multi_asset_bidirectional_hype75_all_asset_breakout_canary_v14",
+    "active_profile_fingerprint": "e27a8cb63b1713e68e8bdafc3d09f4c4cbabfc27cb1af11db673f7ad18df8900",
+    "audit_last_observed_at_utc": "2026-08-07T06:56:38.431328+00:00",
+    "audit_row_count": 11862,
+    "audit_coverage_complete": true,
+    "audit_faults": 0,
+    "current_run_closed_trades": 1,
+    "current_run_losses": 1,
+    "current_run_net_pnl_usd": -0.095959,
+    "current_run_open_lifecycles": 1,
+    "open_symbol": "HYPE",
+    "open_side": "short",
+    "open_entry_price": 55.333,
+    "open_entry_slippage_bps": 6.862798215673152,
+    "open_mark_price": 55.592,
+    "open_marked_net_pnl_usd": -0.381583,
+    "open_liquidation_price": 63.2243294533,
+    "open_liquidation_distance_pct": 13.729186669484822,
+    "open_stop_oid": 511973207990,
+    "open_protected": true,
+    "open_profit_lock_a25_status": "triggered_before_current_boundary",
+    "open_profit_lock_a40_status": "triggered_before_current_boundary",
+    "open_profit_lock_a60_status": "triggered_before_current_boundary",
+    "hype_relaxation_resolved": 6,
+    "hype_relaxation_wins": 3,
+    "hype_relaxation_losses": 3,
+    "hype_relaxation_total_net_bps": -76.01183895848968,
+    "hype_relaxation_profit_factor": 0.442329667114204,
+    "hype_relaxation_long_resolved": 0,
+    "hype_relaxation_short_resolved": 6,
+    "sol_relaxation_resolved": 5,
+    "sol_relaxation_wins": 2,
+    "sol_relaxation_losses": 3,
+    "sol_relaxation_total_net_bps": -70.29310893618117,
+    "sol_relaxation_profit_factor": 0.1971737651780261,
+    "sol_relaxation_long_resolved": 0,
+    "sol_relaxation_short_resolved": 5,
+    "candidate_profile_id": "multi_asset_bidirectional_evidence_routed_candidate_v18",
+    "candidate_profile_fingerprint": "3dcf69329639bc10eaa8d20561c391419494d37e7686370bf3ea0cab29b1f158",
+    "candidate_executable_provider_symbols": 3,
+    "execution_authority": "none",
+    "runtime_changed_by_this_revision": false
+  },
+  "limitations": [
+    "Both newly frozen aligned-book challenger samples are short-only, so their adverse results reject the present relaxation but do not establish long-side behavior.",
+    "The challengers use recorded BBO capacity, modeled taker fees, public funding, and fixed-horizon exits; they do not prove private IOC fills or actual stop execution.",
+    "The HYPE lifecycle remains open, so marked PnL and every exit comparison can change before its actual close.",
+    "The v14 run contains only one closed SOL short and no completed long, so it cannot establish repeatability, bidirectional edge, or portfolio expectancy.",
+    "V18 removes two executable coins from the generic transfer and may reduce cadence; all removed routes remain fully observed for distinct future hypotheses.",
+    "No live strategy, position, order, stop, target, sizing policy, backend process, checkpoint process, or portfolio configuration changed as a result of this revision."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import asdict, replace
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -132,6 +133,36 @@ def test_archive_deduplicates_and_replays_append_only_parts(tmp_path: Path) -> N
     assert list((root / "trades.parquet").glob("part-*.parquet"))
 
 
+def test_archive_supports_an_explicit_safe_transport_namespace(tmp_path: Path) -> None:
+    """A REST research feed cannot mix silently with WebSocket evidence."""
+    archive = EventArchive(
+        data_root=tmp_path,
+        symbol="BTC",
+        batch_size=2,
+        namespace="hyperliquid_rest_1s",
+    )
+    archive.append((l2_event(),))
+    archive.flush()
+
+    root = (
+        tmp_path
+        / "cache"
+        / "events"
+        / "hyperliquid_rest_1s"
+        / "BTC"
+        / l2_event().utc_date
+    )
+    assert list((root / "l2.parquet").glob("part-*.parquet"))
+
+    with pytest.raises(ValueError, match="namespace"):
+        EventArchive(
+            data_root=tmp_path,
+            symbol="BTC",
+            batch_size=2,
+            namespace="../unsafe",
+        )
+
+
 def test_archive_round_trips_asset_context_without_invented_exchange_time(
     tmp_path: Path,
 ) -> None:
@@ -201,3 +232,36 @@ def test_archive_records_reconnect_gap_without_fabricating_events(
         / "gaps.jsonl"
     )
     assert gap_file.is_file()
+
+
+def test_archive_replays_only_a_bounded_cross_channel_window(tmp_path: Path) -> None:
+    archive = EventArchive(data_root=tmp_path, symbol="BTC", batch_size=10)
+    book = l2_event()
+    trade = trade_events()[0]
+    context = parse_hl_message(
+        fixture("hl_ws_active_asset_ctx_sample.json"),
+        received_ts_ns=RECEIVED_NS,
+    )[0]
+    assert isinstance(context, AssetContextEvent)
+    later = replace(book, exchange_ts_ms=book.exchange_ts_ms + 86_400_000)
+    gap = StreamGap(
+        "BTC",
+        "l2Book,trades,activeAssetCtx",
+        RECEIVED_NS,
+        "test",
+        book.exchange_ts_ms - 1,
+        book.exchange_ts_ms,
+    )
+    archive.append((book, trade, context, later))
+    archive.record_gap(gap)
+    archive.flush()
+    start = datetime.fromtimestamp((book.exchange_ts_ms - 1) / 1_000, tz=UTC)
+    end = datetime.fromtimestamp((book.exchange_ts_ms + 1_000) / 1_000, tz=UTC)
+
+    replay = archive.replay_window(start, end)
+
+    assert book in replay
+    assert trade in replay
+    assert context in replay
+    assert gap in replay
+    assert later not in replay

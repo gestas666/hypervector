@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "hip3-expanded-market-roster",
+  "revision_number": 7,
+  "supersedes_revision_id": "d476a1117d8a7d29da654a48bc609409dcbf8139b2b2edf2196b781dc2a37865",
+  "created_at_utc": "2026-08-07T22:52:26Z",
+  "strategy_id": "unassigned_hip3_research",
+  "symbol": "PORTFOLIO",
+  "status": "observe",
+  "hypothesis": "Operator-authorized HIP-3 live research may reveal executable behavior that differs from the venue-matched transfer screens, provided every route remains bound to its actual prior evidence and no live result is represented as established edge.",
+  "decision": "Supersede revision 6 only to record the actual v25 live-research state; do not reverse any prior economic rejection. The two SP500/SPCX entry recipes match their selected reports but both failed untouched validation. Commodity Swing/HA also failed untouched validation under both GOLD fee sensitivities. The active commodity breakout recipe is the 32-bar, 21/55 EMA, 0.35 imbalance, 120-bps structural-stop selection from the GOLD growth-disabled sensitivity, which failed untouched validation on SNDK, GOLD, and BRENTOIL; it is not the separate 4-bar GOLD-only conditional challenger. Moreover, none of the four v25 routes is an exact end-to-end transfer because v25 replaces the evaluated signal or structural exits with a fixed 80-bps stop and 24-hour maximum hold. Retain all ten HIP-3 provider-symbol mappings only as explicitly requested ungated live research, report their rejected or unsupported status in checkpoint and TUI telemetry, and make no execution change from this revision.",
+  "confidence": "medium_high",
+  "falsifier": "The static route assessment is updated if the active configuration or collector recipe no longer matches the cited v25 files. The economic rejection is updated only by a pre-registered non-overlapping replay of the exact deployed fixed-80-bps and 24-hour lifecycle with authoritative per-market fees, executable quotes, funding, and latency, followed by fresh after-cost forward evidence that is positive under nominal and stress conditions with represented directions and without one-event concentration. A changed entry or exit mechanism is a new hypothesis rather than validation of these transfers.",
+  "evidence": [
+    {
+      "path": "../../configs/multi_asset_bidirectional_complete_portfolio_canary_v25.toml",
+      "role": "exact_operator_authorized_v25_execution_scope_and_lifecycle",
+      "sha256": "362763638541baf75d5121f0b59e1afc8091bda7aaa1aaea0f8b42aead3c3bdd",
+      "bytes": 6214
+    },
+    {
+      "path": "../../src/hypervector/live/hip3_provider_recipes.py",
+      "role": "exact_active_hip3_entry_recipe_binding",
+      "sha256": "548e4847df7fc362be376eead4d261c55abdef50188ef1e80ff01b5194507d25",
+      "bytes": 2318
+    },
+    {
+      "path": "../../src/hypervector/research/cohort_friction_contracts.py",
+      "role": "report_only_per_symbol_modeled_execution_contract",
+      "sha256": "33d3bec44a6b1b770bfc589ca3ea7de130df7de9121199ba2b92e5a3c420bc4e",
+      "bytes": 14251
+    },
+    {
+      "path": "../../data/logs/research/hip3_swing_ha_transfer_sp500_spcx_v2.json",
+      "role": "rejected_index_swing_entry_recipe_and_lifecycle_evidence",
+      "sha256": "3cebd10df8c5f2496cee7dddfe4c1652a0f1b2bfec734f35500dc5dc9797ee8e",
+      "bytes": 832125
+    },
+    {
+      "path": "../../data/logs/research/hip3_breakout_pressure_transfer_sp500_spcx_v1.json",
+      "role": "rejected_index_breakout_entry_recipe_and_lifecycle_evidence",
+      "sha256": "b6c58952460e569488f1c8ea92a8a28fcd2d635389405968a8b6381d20740668",
+      "bytes": 1592467
+    },
+    {
+      "path": "../../data/logs/research/hip3_swing_ha_transfer_sndk_gold_disabled_brent_v1.json",
+      "role": "rejected_commodity_swing_growth_disabled_sensitivity",
+      "sha256": "f198b275a832a1ff23c19259714f82535014f631857fe95e1e442c6befb67fa1",
+      "bytes": 1213740
+    },
+    {
+      "path": "../../data/logs/research/hip3_breakout_pressure_transfer_sndk_gold_disabled_brent_v1.json",
+      "role": "exact_active_commodity_breakout_recipe_rejection_evidence",
+      "sha256": "9065246208c30485537d9092f3aba03e0852157432df7398abe0e75826b7b09e",
+      "bytes": 2383512
+    }
+  ],
+  "metrics": {
+    "v25_hip3_provider_symbol_routes": 10,
+    "exact_end_to_end_supported_routes": 0,
+    "index_swing_validation_trades": 76,
+    "index_swing_nominal_net_pnl_usd": -8.328506719346876,
+    "index_swing_stress_net_pnl_usd": -12.021316528872944,
+    "index_breakout_validation_trades": 34,
+    "index_breakout_nominal_net_pnl_usd": -1.9922077256107968,
+    "index_breakout_stress_net_pnl_usd": -3.5753845516512115,
+    "commodity_swing_growth_disabled_validation_trades": 195,
+    "commodity_swing_growth_disabled_nominal_net_pnl_usd": -26.740078171000903,
+    "commodity_swing_growth_disabled_stress_net_pnl_usd": -49.18723821197182,
+    "commodity_breakout_growth_disabled_validation_trades": 74,
+    "commodity_breakout_growth_disabled_nominal_net_pnl_usd": -10.592904906165074,
+    "commodity_breakout_growth_disabled_stress_net_pnl_usd": -19.487817866834746,
+    "holdout_metrics_accessed": false,
+    "execution_authority": "none",
+    "runtime_changed_by_this_revision": false
+  },
+  "limitations": [
+    "The v25 operator authorization permits an ungated live trial; it does not convert rejected research into evidence of edge.",
+    "The transfer reports use L2 midpoint OHLC and modeled executable quotes but contain no public trades, private queue rank, cancellations, or historical private fills.",
+    "GOLD's effective growth-mode fee state remains unresolved; the active recipe corresponds to the higher-fee selection while the distinct conditional GOLD challenger depends on the lower-fee sensitivity.",
+    "The deployed fixed 80-bps stop and 24-hour hold differ from every cited transfer lifecycle, so the reports do not estimate the exact deployed strategy.",
+    "The final chronological holdouts remain sealed and were not used to rescue or promote any recipe.",
+    "Report-only evidence corrections do not pause, gate, retune, resize, or otherwise mutate the live backend.",
+    "Fresh live samples remain necessary to estimate actual per-symbol acknowledgements, fees, slippage, stop behavior, and forward outcome repeatability."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

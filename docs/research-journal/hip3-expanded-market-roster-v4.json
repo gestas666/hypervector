@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "hip3-expanded-market-roster",
+  "revision_number": 4,
+  "supersedes_revision_id": "6b5d60afcade0435182e4e9f327933ec2a767cb5dfc70064278279c821a33138",
+  "created_at_utc": "2026-08-06T17:36:20Z",
+  "strategy_id": "unassigned_hip3_research",
+  "symbol": "PORTFOLIO",
+  "status": "observe",
+  "hypothesis": "Venue-native HIP-3 data for SP500, SPCX, SNDK, GOLD, and an explicitly identified oil market may support additional bidirectional portfolio strategies after namespace, fee, margin, data, and execution semantics are validated independently from native crypto perps.",
+  "decision": "Retain all five active XYZ markets in report-only research and prioritize xyz:SP500 ahead of xyz:SPCX for the first bidirectional strategy-transfer experiment after the remaining archives finish. SP500 and SPCX now have exact-bound checksum-complete L2 archives and causal visible-book profiles. At $75, SP500 has materially lower current-input taker round-trip displayed cost at the median, p90, and p99. This is market-capacity evidence only: do not grant execution authority, infer alpha, or treat the current fee sensitivity as historical fee truth. Continue SNDK, GOLD, BRENTOIL, and historical WTI acquisition and preserve Brent/WTI non-equivalence.",
+  "confidence": "low_medium",
+  "falsifier": "The SP500 execution-capacity preference is falsified by an exact rerun that fails manifest identity or checksum validation, by causal book profiles that no longer reconcile to the imported archive, or by prospective fills showing queue loss, adverse selection, or realized round-trip friction materially worse than SPCX. Economic usefulness remains unproven and is weakened by chronological bidirectional after-cost profit factor at or below one, unstable long or short transfer, or returns concentrated in one event window.",
+  "evidence": [
+    {
+      "path": "../../data/logs/research/xyz_sp500_l2_archive_audit_20260806.json",
+      "role": "exact_bound_checksum_complete_sp500_l2_archive_audit",
+      "sha256": "7fca7702d63a73508c36fb877cb6594f3779aada1dfc1c8df6a57f4b5c9b2a8c",
+      "bytes": 4479
+    },
+    {
+      "path": "../../data/logs/research/xyz_sp500_liquidity_profile_20260806.json",
+      "role": "causal_sp500_visible_book_capacity_without_fees",
+      "sha256": "fcb19f9cb00ba59a55d5d53b9b0111b4ed399f0141660d52c0e4b376b02e8e4c",
+      "bytes": 4430
+    },
+    {
+      "path": "../../data/logs/research/xyz_sp500_liquidity_profile_fee_sensitivity_20260806.json",
+      "role": "sp500_current_input_fee_sensitivity_with_conservative_unaligned_quote",
+      "sha256": "af62e03bfc84b7eb0adaf5b328422388a7372afbc2a3aff499dfd04d66f255c1",
+      "bytes": 5340
+    },
+    {
+      "path": "../../data/logs/research/xyz_spcx_l2_archive_audit_20260806.json",
+      "role": "exact_bound_checksum_complete_spcx_l2_archive_audit",
+      "sha256": "6093d20ae5acb40315d4853aa47a97c486792a0c10dd1850fb5435a708b34e96",
+      "bytes": 3329
+    },
+    {
+      "path": "../../data/logs/research/xyz_spcx_liquidity_profile_fee_sensitivity_20260806.json",
+      "role": "spcx_current_input_fee_sensitivity_comparator",
+      "sha256": "cc4735b5832279df03c55486537f91184b30d3a45e4549bd7940e243cbe56014",
+      "bytes": 5307
+    }
+  ],
+  "metrics": {
+    "active_observation_symbols": 5,
+    "active_archive_audits_complete": 2,
+    "active_archive_audits_remaining": 3,
+    "sp500_archive_bundles": 3386,
+    "sp500_archive_book_rows": 19073915,
+    "sp500_empty_book_windows": 149,
+    "sp500_expected_five_minute_boundaries": 40632,
+    "sp500_timely_five_minute_samples": 38007,
+    "sp500_missing_five_minute_boundaries": 2342,
+    "sp500_75usd_visible_depth_completion_rate": 1.0,
+    "sp500_75usd_taker_round_trip_p50_bps": 1.8684859408693504,
+    "sp500_75usd_taker_round_trip_p90_bps": 2.530589689395949,
+    "sp500_75usd_taker_round_trip_p99_bps": 3.8285162149636207,
+    "spcx_75usd_taker_round_trip_p50_bps": 2.6222,
+    "spcx_75usd_taker_round_trip_p90_bps": 5.2095,
+    "spcx_75usd_taker_round_trip_p99_bps": 12.406,
+    "public_trade_rows_across_completed_hip3_archives": 0,
+    "strategy_transfer_validated": false,
+    "execution_authority": "none",
+    "runtime_changed_by_this_revision": false
+  },
+  "limitations": [
+    "Both completed HIP-3 archives are book-only and contain no public trades, so queue position, fill probability, cancellations, and adverse selection cannot be measured from this evidence.",
+    "The fee-inclusive profiles apply one current account and venue input set to historical books; they are sensitivities rather than historical fee records.",
+    "Displayed depth completion proves visible capacity at the sampled timestamp, not that a live IOC or maker order would receive the same fill.",
+    "The SP500 archive has 149 explicit empty hourly windows and 2,342 missing five-minute boundaries; no continuity fill was fabricated.",
+    "SNDK, GOLD, and BRENTOIL archives remain incomplete, GOLD effective fees remain unresolved because growthMode is absent, and historical cash:WTI cannot be traded as an active market.",
+    "No strategy, position, order, execution scope, live process, or active portfolio configuration changed in this revision."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

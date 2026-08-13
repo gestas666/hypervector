@@ -1,0 +1,127 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "cohort-live-prefix-delta-monitoring",
+  "revision_number": 4,
+  "supersedes_revision_id": "d2ff7bb4f35eefc81b9aeb95f856a26647affec7e1150bcfd913a9b85bd2f4d2",
+  "created_at_utc": "2026-08-08T18:13:50Z",
+  "strategy_id": "multi_asset_bidirectional_complete_portfolio_canary_v25",
+  "symbol": "PORTFOLIO",
+  "status": "retain",
+  "hypothesis": "A strict same-run immutable prefix workflow can count each directional one-blocker market path once across providers while preserving exact strategy and blocker attribution, separating raw from independent opportunity maturity, and retaining zero execution authority.",
+  "decision": "Retain the running v25 strategy and add portfolio-level opportunity deduplication to the report-only audit and prefix-delta workflow. The 14:08 EDT prefix contains 3,199 raw provider observations but 2,091 unique directional paths, removing 1,108 cross-provider duplicates. Independent five-minute evidence remains weak after the fixed 13 bps hurdle: 23 of 472 paths clear cost on close, 13 have robust MFE, and mean close after hurdle is -12.65 bps. The first real comparable 9.43-minute delta added 56 provider observations but only 38 unique paths; all seven newly independent five-minute paths failed the hurdle. This does not authorize broad blocker loosening, a route change, restart, drain, order, close, resize, risk change, exit-policy change, or promotion.",
+  "confidence": "high",
+  "falsifier": "The monitoring method is falsified by counting the same source-run, symbol, decision-minute, and side more than once; merging opposing directions; resolving conflicting reference prices; accepting backward cumulative counts; fabricating a delta when only one prefix has portfolio evidence; mismatched or missing current evidence; execution authority; or runtime strategy mutation. The economic decision is updated by materially larger provider-specific independent after-friction evidence that agrees with resolved venue lifecycles.",
+  "evidence": [
+    {
+      "path": "cohort-live-prefix-delta-monitoring-v3.json",
+      "role": "prior_append_only_monitoring_revision",
+      "sha256": "625b94fa68248738558c08eaf27840d239710d7fc680a983077c1da539bf09eb",
+      "bytes": 7203
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v25_live_prefix_portfolio_dedup_bidirectional-live-1786182011216_20260808T180817Z.json",
+      "role": "immutable_cumulative_portfolio_deduplicated_live_audit",
+      "sha256": "68bb0db6fc216fc761ed118edc2eb66760d9b952280c96cf068c04a4bf9b62b4",
+      "bytes": 7515848
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v25_live_prefix_delta_portfolio_dedup_v4_20260808T173226Z_20260808T175859Z.json",
+      "role": "immutable_first_introduction_noncomparable_prefix_delta",
+      "sha256": "7cfc08f51c84785ece9ac92757b089a068388ccf1fc945cbf5946697846716a8",
+      "bytes": 105725
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v25_live_prefix_delta_portfolio_dedup_comparable_v4_20260808T175859Z_20260808T180817Z.json",
+      "role": "immutable_comparable_unique_path_maturity_delta",
+      "sha256": "e026c1c06f15cc6b6910c596dab088dcfb9a0e50c061ccfd49ddea34583cc776",
+      "bytes": 112298
+    },
+    {
+      "path": "../../src/hypervector/research/cohort_portfolio_opportunity_dedup.py",
+      "role": "portfolio_causal_path_identity_and_overlap_attribution",
+      "sha256": "3675a84d790df330febfca5705c5579befa9f5c88767c81d89b7cb52f32ae4af",
+      "bytes": 7454
+    },
+    {
+      "path": "../../src/hypervector/research/cohort_signal_outcomes.py",
+      "role": "provider_forward_diagnostics_and_portfolio_report_integration",
+      "sha256": "2263e7eaa653b16c997d93fb4429114f6119eccd7e8e28b43abe55462a262227",
+      "bytes": 15240
+    },
+    {
+      "path": "../../src/hypervector/research/cohort_live_audit_signal_delta.py",
+      "role": "comparable_portfolio_opportunity_maturity_delta",
+      "sha256": "6204856827377f80557dd265c981c0bae35c1af0defa9ef6bf6805c9242767a2",
+      "bytes": 9821
+    },
+    {
+      "path": "../../tests/test_cohort_signal_outcomes.py",
+      "role": "deduplication_direction_competition_and_reference_conflict_tests",
+      "sha256": "ebc3d341e9d94c1f5b68d4b5999405898546c5835cc47a328c256c642602cfae",
+      "bytes": 22070
+    },
+    {
+      "path": "../../tests/test_cohort_live_audit_delta.py",
+      "role": "portfolio_maturity_and_first_introduction_delta_tests",
+      "sha256": "fab8421de4a098d5e0886e8c0678c494b8465f9fcf7d7feeaad77d4168014a54",
+      "bytes": 19022
+    },
+    {
+      "path": "../../skills/hypervector-cli/SKILL.md",
+      "role": "operator_portfolio_deduplication_and_execution_boundary_documentation",
+      "sha256": "c918159a09cc605ab84d5a6d510d6d05c5fb05c7aaf3e5650a53ffbd2bebab06",
+      "bytes": 69901
+    },
+    {
+      "path": "../reviews/2026-08-08-v25-portfolio-opportunity-dedup.md",
+      "role": "technical_acceptance_and_economic_interpretation",
+      "sha256": "98a3182595ed4eb1e028af78d8453e48e5a266c2e11189ea3eea4c28f0202f95",
+      "bytes": 7169
+    },
+    {
+      "path": "../../HANDOFF.md",
+      "role": "current_phase_status_and_live_protection_acceptance",
+      "sha256": "bbce4f76af4492b2f07938c8c56babf4138a481f916144826f1d3b67c7683e5e",
+      "bytes": 528707
+    }
+  ],
+  "metrics": {
+    "run_id": "bidirectional-live-1786182011216",
+    "profile_fingerprint": "ec7715f671fa369d0a415d8941061eb9a577b232bbd4e06367a7342267ff7ecc",
+    "provider_observations": 3199,
+    "unique_directional_paths": 2091,
+    "duplicate_provider_observations_removed": 1108,
+    "duplicate_provider_observations_removed_pct": 34.63582369490466,
+    "cross_provider_path_groups": 966,
+    "direction_competition_groups": 1,
+    "reference_price_conflict_groups": 0,
+    "independent_5m_resolved": 472,
+    "independent_5m_cost_clearing_close_count": 23,
+    "independent_5m_robust_mfe_count": 13,
+    "independent_5m_mean_close_after_hurdle_bps": -12.653702682606156,
+    "comparable_window_minutes": 9.4341006,
+    "comparable_provider_observations_delta": 56,
+    "comparable_unique_directional_paths_delta": 38,
+    "comparable_duplicate_observations_delta": 18,
+    "comparable_independent_5m_paths_delta": 7,
+    "comparable_independent_5m_cost_clearing_close_delta": 0,
+    "closed_trades_delta": 0,
+    "fills_delta": 0,
+    "net_pnl_usd_delta": 0.0,
+    "metric_value_gaps_delta": 10,
+    "full_non_network_tests_passed": 4115,
+    "focused_tests_passed": 37,
+    "runtime_changed_by_this_revision": false
+  },
+  "limitations": [
+    "Portfolio paths are completed-candle counterfactuals and do not model orders, queue position, fills, exact fees, funding, liquidation, realized PnL, or cross-symbol capital contention.",
+    "Independence is measured within source run, symbol, and direction; opposing directions remain competing hypotheses.",
+    "The fixed 13 bps hurdle is an explicit approximation rather than exact per-path executable friction.",
+    "The running v25 process still contains the older implementation, so newly accumulated pressure-metric gaps do not test the staged clock repair.",
+    "Four open lifecycle marks remain provisional until venue close.",
+    "No live process, route, order, position, stop, target, size, allocation, drain, protection, or runtime strategy changed in this revision."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

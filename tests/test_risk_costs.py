@@ -9,7 +9,11 @@ from hypervector.data.sources import fixture_ohlcv
 from hypervector.sweep.costs import CostModel, resolve_cost_model
 from hypervector.sweep.exits import ExitConfig, stop_distance_frac
 from hypervector.sweep.metrics import compute_trial_metrics
-from hypervector.sweep.sizing import RiskConfig, risk_pct_from_conviction, size_frac_from_risk
+from hypervector.sweep.sizing import (
+    RiskConfig,
+    risk_pct_from_conviction,
+    size_frac_from_risk,
+)
 
 
 def test_conviction_maps_1_to_5_pct():

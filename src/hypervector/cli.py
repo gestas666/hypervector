@@ -8,7 +8,7 @@ import os
 import sys
 import uuid
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import pandas as pd
 
@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from hypervector.research.maker_replay import MakerReplayConfig, MakerReplayReport
 
 from hypervector.config import DEFAULT_LOOKBACK, FLOOR_LOOKBACK, PROMO_LOOKBACK
+from hypervector.cli_cohort import register_cohort_commands
 from hypervector.data.pipeline import load_research_history
 from hypervector.export.phase2 import export_candidate
 from hypervector.export.schema import ExportSchemaError, validate_export_dir
@@ -42,10 +43,11 @@ from hypervector.paper.runner import start_paper_daemon
 from hypervector.regime.detectors import detect_regime_ema
 from hypervector.regime.metrics import regime_detection_metrics
 from hypervector.report import rank_trials
+from hypervector.runtime_env import load_dotenv_if_present
 from hypervector.runs.db import RunsDB, TrialRow
 from hypervector.strategies import register_all_strategies
 from hypervector.strategies.hypervelocity_contract import is_hypervelocity_strategy
-from hypervector.strategies.hypervelocity_profile import load_hypervelocity_profile
+from hypervector.strategies.runtime_profile import load_hypervelocity_runtime_profile
 from hypervector.strategies.registry import get_strategy, list_strategies
 from hypervector.sweep.costs import resolve_cost_model
 from hypervector.sweep.exits import EXIT_MODES, ExitConfig
@@ -63,18 +65,36 @@ CLI_COMMANDS: tuple[str, ...] = (
     "live-report",
     "live-run",
     "history",
+    "hl-funding-fetch",
     "oxa-book-fetch",
     "oxa-candle-fetch",
+    "oxa-price-fetch",
     "oxa-trade-fetch",
+    "research-db-build",
+    "research-db-live-event-import",
+    "research-db-journal-append",
+    "research-db-journal-report",
+    "research-db-regime-compare",
+    "research-db-regime-label-import",
+    "research-db-shadow-import",
+    "research-db-shadow-trades",
+    "research-db-status",
+    "research-hip3-liquidity-profile",
     "regime",
     "hypervelocity-regime-eval",
     "hypervelocity-regime-autotune",
     "hypervelocity-regime-challengers",
     "hypervelocity-maker-replay",
+    "hypervelocity-archive-compare",
     "hypervelocity-shadow-compare",
     "hypervelocity-shadow-run",
     "hypervelocity-shadow-reset",
     "hypervelocity-tui",
+    "cohort-tui",
+    "cohort-live",
+    "cohort-live-audit",
+    "cohort-live-audit-delta",
+    "cohort-research-import",
     "sweep-up",
     "sweep-down",
     "report",
@@ -579,7 +599,7 @@ def cmd_hypervelocity_shadow_run(args: argparse.Namespace) -> int:
 
     _ensure_root(args)
     try:
-        profile = load_hypervelocity_profile(Path(args.config))
+        profile = load_hypervelocity_runtime_profile(Path(args.config))
         with hypervelocity_runtime_lock(Path(args.data_root)):
             result = start_paper_daemon(
                 export_dir=profile.export_path,
@@ -630,7 +650,7 @@ def cmd_hypervelocity_tui(args: argparse.Namespace) -> int:
     root = Path(args.data_root)
     config = Path(args.config)
     try:
-        profile = load_hypervelocity_profile(config)
+        profile = load_hypervelocity_runtime_profile(config)
         backend_command = build_backend_command(data_root=root, config_path=config)
         tui_command = build_tui_command(
             data_root=root,
@@ -1335,6 +1355,9 @@ def cmd_hypervelocity_regime_challengers(args: argparse.Namespace) -> int:
 def cmd_hypervelocity_maker_replay(args: argparse.Namespace) -> int:
     """Replay backend decisions against recorded post-only book paths."""
     from hypervector.regime.composite import classify_multitimeframe
+    from hypervector.regime.hypervelocity_candidates import (
+        hypervelocity_candidate_matrix,
+    )
     from hypervector.strategies.hypervelocity_contract import faithful_regime_config
 
     bars, provenance = _load_bars(args)
@@ -1360,6 +1383,7 @@ def cmd_hypervelocity_maker_replay(args: argparse.Namespace) -> int:
     out = {
         "ok": True,
         "report_only": True,
+        "candidate": hypervelocity_candidate_matrix()[-1].to_dict(),
         "data_provenance": provenance,
         "book_paths": [str(Path(path)) for path in book_paths],
         "trade_paths": [str(Path(path)) for path in trade_paths],
@@ -1372,6 +1396,84 @@ def cmd_hypervelocity_maker_replay(args: argparse.Namespace) -> int:
         output_path = Path(args.out)
         output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_text(rendered + "\n", encoding="utf-8")
+    print(rendered)
+    return 0
+
+
+def _candidate_l2_replays(
+    args: argparse.Namespace,
+    indexed: pd.DataFrame,
+    bundles: tuple[OxaArchiveBundle, ...],
+    shortlist: tuple[dict[str, object], ...],
+) -> dict[str, object]:
+    from hypervector.regime.composite import classify_multitimeframe
+    from hypervector.regime.hypervelocity_candidates import (
+        hypervelocity_candidate_matrix,
+    )
+    from hypervector.research.hypervelocity_archive_compare import (
+        summarize_execution_reports,
+    )
+
+    candidates = {
+        candidate.candidate_id: candidate
+        for candidate in hypervelocity_candidate_matrix()
+    }
+    results: dict[str, object] = {}
+    for screening in shortlist:
+        identity = cast(dict[str, object], screening["candidate"])
+        candidate_id = str(identity["candidate_id"])
+        candidate = candidates[candidate_id]
+        decisions = classify_multitimeframe(indexed, config=candidate.config)
+        reports = _archive_replay_reports(args, decisions, bundles)
+        results[candidate_id] = {
+            "candidate": candidate.to_dict(),
+            "execution_summary": summarize_execution_reports(reports),
+            "reports": {rule: report.to_dict() for rule, report in reports.items()},
+        }
+    return results
+
+
+def cmd_hypervelocity_archive_compare(args: argparse.Namespace) -> int:
+    """Compare bounded regime candidates using bars and verified L2 evidence."""
+    from hypervector.research.hypervelocity_archive_compare import (
+        screen_candidate_matrix,
+        select_archive_shortlist,
+    )
+
+    bars, provenance = _load_bars(args)
+    indexed = bars.copy()
+    if not isinstance(indexed.index, pd.DatetimeIndex):
+        indexed.index = pd.DatetimeIndex(pd.to_datetime(indexed["timestamp"], utc=True))
+    positions_path = Path(args.positions)
+    if not positions_path.is_file():
+        raise FileNotFoundError(f"positions file not found: {positions_path}")
+    screenings = screen_candidate_matrix(indexed, pd.read_csv(positions_path))
+    shortlist = select_archive_shortlist(screenings)
+    bundles = _verified_replay_archive(args)
+    if bundles is None:
+        raise ValueError("archive comparison requires an explicit archive window")
+    output = {
+        "ok": True,
+        "report_only": True,
+        "data_provenance": provenance,
+        "archive": _archive_replay_provenance(args, bundles),
+        "screenings": screenings,
+        "shortlist": shortlist,
+        "l2_replay": _candidate_l2_replays(args, indexed, bundles, shortlist),
+        "limitations": {
+            "funding": "not_available",
+            "barrier_execution": "next_bar_open_diagnostic_not_l2_fill",
+            "l2_liquidation": "bbo_mark_proxy_partial_liquidation_v1",
+            "l2_drawdown": "event_marked_available",
+            "liquidation_mark": "book_midpoint_proxy_not_venue_mark_price",
+            "liquidation_depth": "bbo_execution_without_depth_optimistic",
+            "queue_rank": "not_observable_from_public_history",
+        },
+    }
+    rendered = json.dumps(output, indent=2, default=str)
+    output_path = Path(args.out)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(rendered + "\n", encoding="utf-8")
     print(rendered)
     return 0
 
@@ -1389,6 +1491,7 @@ def _maker_replay_config(args: argparse.Namespace, fill_rule: str) -> MakerRepla
     return MakerReplayConfig(
         initial_equity=args.initial_equity,
         maker_fee_rate=args.maker_fee_rate,
+        taker_fee_rate=args.taker_fee_rate,
         fill_rule=fill_rule,
         tick_size=args.tick_size,
         entry_ttl_seconds=args.entry_ttl_seconds,
@@ -1430,7 +1533,7 @@ def _verified_replay_archive(
         raise ValueError(
             "archive replay requires both --archive-start and --archive-end"
         )
-    if args.book_path or args.trade_path:
+    if getattr(args, "book_path", None) or getattr(args, "trade_path", None):
         raise ValueError(
             "archive replay cannot be combined with explicit evidence paths"
         )
@@ -1700,6 +1803,30 @@ def _add_market_args(p: argparse.ArgumentParser) -> None:
     )
 
 
+def _add_archive_window_args(p: argparse.ArgumentParser) -> None:
+    from hypervector.cli_oxa import _parse_utc_datetime
+
+    p.add_argument("--archive-start", type=_parse_utc_datetime, default=None)
+    p.add_argument("--archive-end", type=_parse_utc_datetime, default=None)
+
+
+def _add_replay_assumption_args(
+    p: argparse.ArgumentParser,
+    *,
+    default_fill_rule: str,
+) -> None:
+    p.add_argument(
+        "--fill-rule",
+        choices=("both", "all", "touch", "through", "trade-through"),
+        default=default_fill_rule,
+    )
+    p.add_argument("--initial-equity", type=float, default=10_000.0)
+    p.add_argument("--maker-fee-rate", type=float, default=0.00015)
+    p.add_argument("--taker-fee-rate", type=float, default=0.00045)
+    p.add_argument("--tick-size", type=float, default=1.0)
+    p.add_argument("--entry-ttl-seconds", type=float, default=300.0)
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="hypervector",
@@ -1739,6 +1866,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p.add_argument("--data-root", default=str(_default_data_root()))
     sub = p.add_subparsers(dest="command", required=True)
+    register_cohort_commands(sub)
 
     infra = sub.add_parser(
         "infra-init",
@@ -2009,7 +2137,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_market_args(h)
     h.set_defaults(func=cmd_history)
 
-    from hypervector.cli_oxa import _parse_utc_datetime, add_oxa_parsers
+    from hypervector.cli_oxa import add_oxa_parsers
 
     add_oxa_parsers(sub)
 
@@ -2388,20 +2516,22 @@ def build_parser() -> argparse.ArgumentParser:
     _add_market_args(hv_maker)
     hv_maker.add_argument("--book-path", action="append", default=None)
     hv_maker.add_argument("--trade-path", action="append", default=None)
-    hv_maker.add_argument("--archive-start", type=_parse_utc_datetime, default=None)
-    hv_maker.add_argument("--archive-end", type=_parse_utc_datetime, default=None)
-    hv_maker.add_argument(
-        "--fill-rule",
-        choices=("both", "all", "touch", "through", "trade-through"),
-        default="both",
-    )
-    hv_maker.add_argument("--initial-equity", type=float, default=10_000.0)
-    hv_maker.add_argument("--maker-fee-rate", type=float, default=0.00015)
-    hv_maker.add_argument("--tick-size", type=float, default=1.0)
-    hv_maker.add_argument("--entry-ttl-seconds", type=float, default=300.0)
+    _add_archive_window_args(hv_maker)
+    _add_replay_assumption_args(hv_maker, default_fill_rule="both")
     hv_maker.add_argument("--labels-out", type=Path, default=None)
     hv_maker.add_argument("--out", default=None)
     hv_maker.set_defaults(func=cmd_hypervelocity_maker_replay)
+
+    hv_archive_compare = sub.add_parser(
+        "hypervelocity-archive-compare",
+        help="Compare original, BBWP, and hybrid Hypervelocity candidates",
+    )
+    _add_market_args(hv_archive_compare)
+    _add_archive_window_args(hv_archive_compare)
+    _add_replay_assumption_args(hv_archive_compare, default_fill_rule="all")
+    hv_archive_compare.add_argument("--positions", required=True)
+    hv_archive_compare.add_argument("--out", required=True)
+    hv_archive_compare.set_defaults(func=cmd_hypervelocity_archive_compare)
 
     hv_compare = sub.add_parser(
         "hypervelocity-shadow-compare",
@@ -2574,42 +2704,13 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def _load_dotenv_if_present() -> None:
-    """Load repo-root ``.env`` KEY=VALUE into os.environ without overwriting.
-
-    Minimal parser (no python-dotenv dependency). Skips blank/comment lines.
-    Secrets stay local (``.env`` is gitignored).
-    """
-    candidates = (
-        Path.cwd() / ".env",
-        Path(__file__).resolve().parents[2] / ".env",
-    )
-    seen: set[Path] = set()
-    for path in candidates:
-        try:
-            resolved = path.resolve()
-        except OSError:
-            continue
-        if resolved in seen or not path.is_file():
-            continue
-        seen.add(resolved)
-        try:
-            lines = path.read_text(encoding="utf-8").splitlines()
-        except OSError:
-            continue
-        for raw in lines:
-            line = raw.strip()
-            if not line or line.startswith("#") or "=" not in line:
-                continue
-            key, _, val = line.partition("=")
-            key = key.strip()
-            if not key or key in os.environ:
-                continue
-            val = val.strip().strip("'").strip('"')
-            os.environ[key] = val
+    """Load local dotenv files without replacing process environment values."""
+    load_dotenv_if_present()
 
 
 def main(argv: list[str] | None = None) -> int:
-    _load_dotenv_if_present()
+    if argv is None:
+        _load_dotenv_if_present()
     parser = build_parser()
     args = parser.parse_args(argv)
     if hasattr(args, "lookback") and args.lookback is not None:

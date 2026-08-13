@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "portfolio-one-position-occupancy",
+  "revision_number": 1,
+  "supersedes_revision_id": null,
+  "created_at_utc": "2026-08-07T07:47:40Z",
+  "strategy_id": "multi_asset_bidirectional_portfolio",
+  "symbol": "MULTI",
+  "status": "retain",
+  "hypothesis": "The predeclared one-position-per-coin portfolio invariant reduces clustered same-symbol exposure when nearby signals repeat while an earlier lifecycle is still open, without requiring a new entry filter or cooldown.",
+  "decision": "Retain one open position per coin and the four-coin shared portfolio ceiling. Do not pyramid, average, or open a duplicate same-symbol lifecycle from this evidence. Do not interpret the retained invariant as proof that the underlying entry signal has edge, and do not add a new cooldown or performance gate. In the frozen forward window, candidate paths classified prospectively as deployable were slightly positive while paths blocked by an existing same-symbol position were materially negative; the sample is too small and one-sided to estimate a durable economic effect, but it supports preserving the existing exposure-control invariant while more live evidence accumulates.",
+  "confidence": "low_medium",
+  "falsifier": "Update this decision after a larger prospective, directionally balanced sample if existing-position candidate paths produce materially higher after-cost return than deployable paths and their opportunity benefit exceeds the avoided concentration and liquidation risk. Runtime evidence that two independent positions can exist for one coin, a portfolio classification made after observing the outcome, or a failure to reconcile candidate timestamps with the authoritative cohort snapshot would invalidate this revision.",
+  "evidence": [
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/cohort_opportunity_matrix_v14_occupancy_20260807T074018Z.json",
+      "role": "immutable_forward_matrix_with_pre_outcome_portfolio_occupancy_classification",
+      "sha256": "6178d5911ba75231b8c47059eceb4d63bb1f3b06149d91124e5ee7c9ea7c86a9",
+      "bytes": 125761
+    },
+    {
+      "path": "../../configs/multi_asset_bidirectional_hype75_all_asset_breakout_canary_v14.toml",
+      "role": "active_profile_with_one_position_per_coin_and_four_shared_slots",
+      "sha256": "f6098f1f553a81b6731eb5d5e0897c96b7da8c3bc25295a276d9cbed44c2e007",
+      "bytes": 3366
+    },
+    {
+      "path": "../../tests/test_cohort_candidate_portfolio_journal.py",
+      "role": "portfolio_classification_causality_and_report_only_contract_tests",
+      "sha256": "f1068fbfaeb390b502664e333cab5f3066d3122a8ae4f30767c8d4e73b7275a0",
+      "bytes": 8321
+    }
+  ],
+  "metrics": {
+    "source_run_id": "bidirectional-live-1786028939765",
+    "symbols_observed": 2,
+    "direction_scope_observed": "short_only",
+    "candidate_attempts": 14,
+    "resolved_candidate_paths": 11,
+    "pending_candidate_paths": 3,
+    "deployable_resolved": 7,
+    "deployable_wins": 4,
+    "deployable_losses": 3,
+    "deployable_total_net_return_bps": 22.501452865404796,
+    "existing_position_resolved": 4,
+    "existing_position_wins": 1,
+    "existing_position_losses": 3,
+    "existing_position_total_net_return_bps": -168.80640076007564,
+    "all_resolved_total_net_return_bps": -146.30494789467085,
+    "hype_deployable_resolved": 5,
+    "hype_deployable_total_net_return_bps": 13.246479736046016,
+    "hype_existing_position_resolved": 1,
+    "hype_existing_position_total_net_return_bps": -89.25831869453569,
+    "sol_deployable_resolved": 2,
+    "sol_deployable_total_net_return_bps": 9.25497312935878,
+    "sol_existing_position_resolved": 3,
+    "sol_existing_position_total_net_return_bps": -79.54808206553995,
+    "execution_authority": "none",
+    "runtime_strategy_changed": false
+  },
+  "limitations": [
+    "Only eleven candidate paths are resolved; all are shorts and only HYPE and SOL are represented.",
+    "The candidate paths use recorded top-of-book executable estimates, an 80-bps stop proxy, a fixed 60-minute horizon, and measured fees and funding where available; they are not proof of actual IOC fills.",
+    "Candidate outcomes are non-additive and are not a reconstructed shared-account equity curve.",
+    "The apparent benefit is dominated by one blocked HYPE loss and two blocked SOL losses, so concentration and sign instability remain material.",
+    "The rule prevents duplicate same-symbol exposure; it does not validate the HYPE breakout entry mechanism on BTC, ETH, SOL, or HYPE.",
+    "The current open HYPE lifecycle is not treated as a resolved outcome, and no live position, order, stop, backend, profile, or execution authority changed.",
+    "Portfolio capacity did not bind in this window, so this revision evaluates the per-coin occupancy rule rather than the four-position ceiling."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

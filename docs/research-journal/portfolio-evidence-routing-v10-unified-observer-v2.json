@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "portfolio-evidence-routing-v10-unified-observer",
+  "revision_number": 2,
+  "supersedes_revision_id": "01ccdbf78f6049c9d545674034d8192970df31909ef750c97927d41796332e4c",
+  "created_at_utc": "2026-08-05T19:50:07Z",
+  "strategy_id": "multi_asset_bidirectional_evidence_routed_hype75_all_asset_observe_v10",
+  "symbol": "PORTFOLIO",
+  "status": "candidate",
+  "hypothesis": "The selected evidence-routed portfolio can unify four-asset HYPE-breakout observation into the account-owning backend and TUI without widening its two executable mappings, adding per-provider venue candle requests, or allowing observe-only conflicts to alter executable routing.",
+  "decision": "Retain v10 as the preferred inactive next-flat candidate. Source tracing and focused integration tests now establish that unauthorized provider-symbol intents are removed before same-symbol conflict ranking and portfolio-capacity accounting. A deliberately higher-priority observe-only HYPE/BTC short neither suppressed an executable Hulk/BTC long nor closed an existing executable long. The current live runtime remains unchanged while HYPE is open.",
+  "confidence": "medium",
+  "falsifier": "A changed candidate or runner source identity, any executable mapping beyond Hulk/BTC and HYPE-breakout/HYPE, any observe-only intent changing an executable action, position capacity, or close decision, added per-provider venue fetching, missing four-asset collector coverage, or a failed next-flat transition invalidates selection or routing isolation.",
+  "evidence": [
+    {
+      "path": "../reviews/2026-08-05-evidence-routed-v10-unified-observer.md",
+      "role": "v9_v10_tradeoff_and_selection_record",
+      "sha256": "bca8b048f131f9370e668907a8e8bfc7d9672e41aa190843020e0c7ea7162a4d",
+      "bytes": 4617
+    },
+    {
+      "path": "../guides/cohort-live-transition-and-rollback-v10.md",
+      "role": "machine_bound_v10_transition_and_rollback_runbook",
+      "sha256": "40ec176b0d7056c4686adb7d7222783da07516801dba6ea21e09078b3e305a1c",
+      "bytes": 11128
+    },
+    {
+      "path": "../../configs/multi_asset_bidirectional_evidence_routed_hype75_all_asset_observe_candidate.toml",
+      "role": "exact_inactive_v10_candidate_profile",
+      "sha256": "aa5bf4d1b3261c7ff7defe5cf1fe6701ecac39052579553eeb53419dfbbf1197",
+      "bytes": 2993
+    },
+    {
+      "path": "../../tests/test_evidence_routed_hype75_all_asset_observe_candidate_config.py",
+      "role": "v10_execution_and_observation_scope_contract_tests",
+      "sha256": "fdb4f3f30ec512163c27bf324632667d2214bf4287e24c3e4b2b8b56def08302",
+      "bytes": 3753
+    },
+    {
+      "path": "../../tests/test_evidence_routed_v10_transition_runbook.py",
+      "role": "v10_transition_identity_and_safety_contract_tests",
+      "sha256": "feedbc3a50168a93f4209e3e028222c2c450e78c70cedf849c8c86fca1844cfd",
+      "bytes": 3055
+    },
+    {
+      "path": "../../src/hypervector/live/multi_asset_live_runner.py",
+      "role": "authority_filter_before_conflict_and_capacity_routing_source",
+      "sha256": "2a5a5f6225288c2a0533ccb0e0b6ad90ca493580a9af65d477df5066a8bdead7",
+      "bytes": 18363
+    },
+    {
+      "path": "../../tests/test_observe_only_routing_isolation.py",
+      "role": "same_symbol_observe_only_entry_and_close_isolation_tests",
+      "sha256": "50f6ec60145ffa6ca30890a3502263d40b6ee6cfa4645f509b11da3401fa9186",
+      "bytes": 8083
+    }
+  ],
+  "metrics": {
+    "active_profile_id": "multi_asset_bidirectional_canary_v2",
+    "active_profile_fingerprint": "c992cb2f958ed607d25d6be76a52a37070278061c0e8c186723dc574e6938f6b",
+    "preserved_v9_profile_fingerprint": "750b2df619db858446ded8dd96ce4f679607c6965c789b0fdfcec56a2090fc4e",
+    "candidate_profile_fingerprint": "a7dde9ae84c18620476a7c8dc491ac12915a9f111515584bcd98e19e2265cf08",
+    "candidate_execution_provider_symbols": [
+      "hulk_expansion_bidirectional_tuned_v2|BTC",
+      "hype_breakout_onset_bidirectional_v1|HYPE"
+    ],
+    "hype_breakout_observation_symbols": [
+      "BTC",
+      "ETH",
+      "SOL",
+      "HYPE"
+    ],
+    "candidate_hype_notional_usd": 75,
+    "candidate_hype_leverage": 5,
+    "candidate_soft_maximum_hold_seconds": 28800,
+    "candidate_hard_maximum_hold_seconds": 86400,
+    "candidate_automatic_restart": false,
+    "unique_focused_contract_tests_passed": 39,
+    "routing_isolation_scenarios_passed": 2
+  },
+  "limitations": [
+    "V10 has not run as the authenticated account-owning backend.",
+    "The routing tests use deterministic protocol fakes rather than venue orders.",
+    "Four-asset observation does not establish transferable strategy edge or profitability.",
+    "Historical unchanged transfers remain negative for ETH and SOL and contradictory for BTC.",
+    "The current open HYPE lifecycle remains governed by its original profile and in-memory implementation.",
+    "The one-time legacy cutover retains a documented flat-to-STOP entry race because the current process lacks transition-drain support."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

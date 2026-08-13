@@ -32,11 +32,17 @@ def build_funding_momentum_long_signals(
 ) -> tuple[pd.Series, pd.Series, str]:
     """Build Funding Rate Z-score Long Signals with Carry Yield confirmation."""
     c = df["close"].astype(float)
-    fr = df["funding_rate"].astype(float) if "funding_rate" in df.columns else pd.Series(0.0, index=df.index)
+    fr = (
+        df["funding_rate"].astype(float)
+        if "funding_rate" in df.columns
+        else pd.Series(0.0, index=df.index)
+    )
 
     # Funding Z-score
     fr_mean = fr.rolling(lookback, min_periods=10).mean()
-    fr_std = fr.rolling(lookback, min_periods=10).std().replace(0.0, np.nan).fillna(1e-6)
+    fr_std = (
+        fr.rolling(lookback, min_periods=10).std().replace(0.0, np.nan).fillna(1e-6)
+    )
     zscore = (fr - fr_mean) / fr_std
 
     # Trend confirmation
@@ -49,7 +55,11 @@ def build_funding_momentum_long_signals(
 
     if book_gate and ({"spread_bps", "obi_5"}.issubset(df.columns)):
         entries = gate_signals_by_orderbook(
-            raw_entries, df, direction="long", max_spread_bps=max_spread_bps, min_obi=min_obi
+            raw_entries,
+            df,
+            direction="long",
+            max_spread_bps=max_spread_bps,
+            min_obi=min_obi,
         )
     else:
         entries = raw_entries
@@ -73,10 +83,16 @@ def build_funding_momentum_short_signals(
 ) -> tuple[pd.Series, pd.Series, str]:
     """Build Funding Rate Z-score Short Signals."""
     c = df["close"].astype(float)
-    fr = df["funding_rate"].astype(float) if "funding_rate" in df.columns else pd.Series(0.0, index=df.index)
+    fr = (
+        df["funding_rate"].astype(float)
+        if "funding_rate" in df.columns
+        else pd.Series(0.0, index=df.index)
+    )
 
     fr_mean = fr.rolling(lookback, min_periods=10).mean()
-    fr_std = fr.rolling(lookback, min_periods=10).std().replace(0.0, np.nan).fillna(1e-6)
+    fr_std = (
+        fr.rolling(lookback, min_periods=10).std().replace(0.0, np.nan).fillna(1e-6)
+    )
     zscore = (fr - fr_mean) / fr_std
 
     ef = ema(c, 12)
@@ -87,7 +103,11 @@ def build_funding_momentum_short_signals(
 
     if book_gate and ({"spread_bps", "obi_5"}.issubset(df.columns)):
         entries = gate_signals_by_orderbook(
-            raw_entries, df, direction="short", max_spread_bps=max_spread_bps, min_obi=min_obi
+            raw_entries,
+            df,
+            direction="short",
+            max_spread_bps=max_spread_bps,
+            min_obi=min_obi,
         )
     else:
         entries = raw_entries

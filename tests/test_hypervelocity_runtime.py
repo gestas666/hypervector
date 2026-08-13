@@ -21,13 +21,16 @@ def market(
     *,
     observed_at: str = T0,
     direction: str | None = "long",
+    context: str | None = None,
     fresh: bool = True,
+    maximum_hold_seconds: float | None = None,
 ) -> RuntimeMarketState:
     """Return one pre-classified backend market observation."""
     return RuntimeMarketState(
         symbol="BTC",
         observed_at=observed_at,
         entry_direction=direction,
+        structural_direction=direction if context is None else context,
         entry_quantity=0.04,
         entry_limit_price=64_500.0 if direction is not None else None,
         evidence_fresh=fresh,
@@ -35,6 +38,7 @@ def market(
         reentry_cooldown_seconds=60.0,
         target_price_fraction=0.002,
         price_tick=1.0,
+        maximum_hold_seconds=maximum_hold_seconds,
     )
 
 
@@ -134,6 +138,42 @@ def test_partial_entry_releases_proportional_reduce_only_target() -> None:
     assert target.reduce_only is True
 
 
+def test_final_entry_fill_tolerates_machine_epsilon_cumulative_residue() -> None:
+    """A terminal fill must not persist its discard-only rounded order state."""
+    submitted = advance_hypervelocity_runtime(HypervelocityRuntimeState(), market())
+    entry = submitted.commands[0]
+    partial = advance_hypervelocity_runtime(
+        submitted.state,
+        market(observed_at="2026-07-26T20:00:01+00:00"),
+        (
+            event(
+                entry.client_order_id,
+                "partially_filled",
+                last=0.01,
+                cumulative=0.01,
+                price=64_500.0,
+            ),
+        ),
+    )
+
+    filled = advance_hypervelocity_runtime(
+        partial.state,
+        market(observed_at="2026-07-26T20:00:02+00:00"),
+        (
+            event(
+                entry.client_order_id,
+                "filled",
+                last=0.030000000000000006,
+                cumulative=0.04000000000000001,
+                price=64_500.0,
+            ),
+        ),
+    )
+
+    assert filled.state.pending_entry is None
+    assert filled.state.position_quantity == pytest.approx(0.04)
+
+
 def test_open_position_holds_through_range_and_opposite_regime() -> None:
     submitted = advance_hypervelocity_runtime(HypervelocityRuntimeState(), market())
     entry = submitted.commands[0]
@@ -165,6 +205,77 @@ def test_open_position_holds_through_range_and_opposite_regime() -> None:
     assert ranged.cancellations == ()
     assert opposite.commands == ()
     assert opposite.state.position_direction == "long"
+
+
+def test_maximum_hold_emits_one_immediate_reduce_only_exit() -> None:
+    """The stored per-entry deadline exits at the first fresh market boundary."""
+    initial = market(maximum_hold_seconds=10.0)
+    submitted = advance_hypervelocity_runtime(HypervelocityRuntimeState(), initial)
+    entry = submitted.commands[0]
+    filled = advance_hypervelocity_runtime(
+        submitted.state,
+        market(
+            observed_at="2026-07-26T20:00:02+00:00",
+            maximum_hold_seconds=10.0,
+        ),
+        (
+            event(
+                entry.client_order_id,
+                "filled",
+                at="2026-07-26T20:00:02+00:00",
+                last=0.04,
+                cumulative=0.04,
+                price=64_500.0,
+            ),
+        ),
+    )
+
+    before = advance_hypervelocity_runtime(
+        filled.state,
+        market(
+            observed_at="2026-07-26T20:00:11+00:00",
+            direction=None,
+            maximum_hold_seconds=10.0,
+        ),
+    )
+    due = advance_hypervelocity_runtime(
+        before.state,
+        market(
+            observed_at="2026-07-26T20:00:12+00:00",
+            direction=None,
+            maximum_hold_seconds=10.0,
+        ),
+    )
+
+    assert before.commands == ()
+    exits = [command for command in due.commands if command.order_role == "exit"]
+    assert len(exits) == 1
+    assert exits[0].order_type == "market"
+    assert exits[0].side == "sell"
+    assert exits[0].reduce_only is True
+    assert due.annotations == ("maximum_hold_exit_due",)
+
+    closed = advance_hypervelocity_runtime(
+        due.state,
+        market(
+            observed_at="2026-07-26T20:00:12+00:00",
+            direction=None,
+            maximum_hold_seconds=10.0,
+        ),
+        (
+            event(
+                exits[0].client_order_id,
+                "filled",
+                at="2026-07-26T20:00:12+00:00",
+                last=0.04,
+                cumulative=0.04,
+                price=64_400.0,
+            ),
+        ),
+    )
+    assert closed.state.position_quantity == 0.0
+    assert closed.state.position_opened_at is None
+    assert closed.state.maximum_hold_seconds is None
 
 
 def test_target_fill_closes_then_enforces_cooldown_and_regime_reset() -> None:
@@ -234,6 +345,28 @@ def test_pending_direction_change_requests_cancel_before_switching() -> None:
     )
     assert len(canceled.commands) == 1
     assert canceled.commands[0].side == "sell"
+
+
+def test_pending_entry_survives_trigger_pulse_but_not_invalid_structure() -> None:
+    submitted = advance_hypervelocity_runtime(HypervelocityRuntimeState(), market())
+    entry = submitted.commands[0]
+
+    pulse_ended = advance_hypervelocity_runtime(
+        submitted.state,
+        market(
+            observed_at="2026-07-26T20:00:10+00:00",
+            direction=None,
+            context="long",
+        ),
+    )
+    invalidated = advance_hypervelocity_runtime(
+        pulse_ended.state,
+        market(observed_at="2026-07-26T20:00:11+00:00", direction=None),
+    )
+
+    assert pulse_ended.cancellations == ()
+    assert pulse_ended.state.pending_entry is not None
+    assert invalidated.cancellations == (entry.client_order_id,)
 
 
 def test_ttl_expiry_consumes_episode_until_regime_reset() -> None:

@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "hip3-expanded-market-roster",
+  "revision_number": 13,
+  "supersedes_revision_id": "33402db7387d10dbc6c72f9d2fec8099ca23b25390191ce92bbf3f78c75c4757",
+  "created_at_utc": "2026-08-08T00:26:47Z",
+  "strategy_id": "unassigned_hip3_research",
+  "symbol": "PORTFOLIO",
+  "status": "candidate",
+  "hypothesis": "Accepting finite Decimal direction states in HIP-3 readiness telemetry will make the displayed Heikin-Ashi color and order-block agreement match the predicates used for live eligibility without altering strategy semantics.",
+  "decision": "Repair the shared HIP-3 numeric telemetry conversion for staged v26. A live GOLD entry proved that Decimal +1 values satisfied all four Swing/HA conditions while the same HA and order-block values were serialized as null and displayed as N/A. The regression first reproduced that contradiction and then passed after Decimal support was added. Keep the armed v25 backend and its two protected positions unchanged; verify the repair on the first completed HIP-3 Swing decision after the safe flat v26 transition.",
+  "confidence": "high",
+  "falsifier": "Falsify this repair if a v26 completed HIP-3 Swing decision with a numeric HA or order-block direction still emits null/N/A, if the displayed value disagrees with the eligibility predicate for that same decision, or if the change alters intent eligibility in a paired pre/post replay.",
+  "evidence": [
+    {
+      "path": "../../data/logs/research/hip3_decimal_readiness_telemetry_repair_20260808.json",
+      "role": "immutable_live_contradiction_root_cause_and_validation_record",
+      "sha256": "269ee3f2c2762e9de5a30b1c94582e533cad4676745b0eb91d7dc55cb55fa306",
+      "bytes": 2638
+    },
+    {
+      "path": "../../src/hypervector/live/hip3_cohort_providers.py",
+      "role": "decimal_aware_readiness_telemetry_implementation",
+      "sha256": "7df35099170710fcc98b83f5e74201c425f2a040192b297c9530a6f7aea4ea5b",
+      "bytes": 16314
+    },
+    {
+      "path": "../../tests/test_hip3_cohort_providers.py",
+      "role": "red_green_decimal_execution_and_telemetry_parity_regression",
+      "sha256": "61e8e58658c06140ff876da0e7c3cb6013397890a6a6790b83e6a41b80e2f4aa",
+      "bytes": 13015
+    }
+  ],
+  "metrics": {
+    "live_contradictions_observed": 1,
+    "hip3_provider_tests_passed": 13,
+    "lint_passed": true,
+    "entry_thresholds_changed": 0,
+    "execution_plans_changed": 0,
+    "live_positions_or_orders_mutated": 0,
+    "execution_authority": "none",
+    "runtime_changed_by_this_revision": false
+  },
+  "limitations": [
+    "This revision repairs evidence visibility and does not establish signal profitability.",
+    "The running v25 process retains its loaded pre-repair code until the portfolio is flat.",
+    "The first v26 HIP-3 decision remains the required end-to-end TUI and ledger acceptance check.",
+    "No position, order, route, sizing rule, risk limit, or execution authority changed."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

@@ -17,9 +17,7 @@ DEFAULT_BACKFILL_PRIORITY = ("binance", "bybit")
 def validate_lookback(days: int) -> int:
     """Return lookback days if >= floor; raise ValueError otherwise."""
     if days < FLOOR_LOOKBACK:
-        raise ValueError(
-            f"lookback_days must be >= {FLOOR_LOOKBACK} (got {days})"
-        )
+        raise ValueError(f"lookback_days must be >= {FLOOR_LOOKBACK} (got {days})")
     return days
 
 

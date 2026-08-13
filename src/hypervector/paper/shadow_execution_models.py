@@ -76,6 +76,7 @@ class ShadowLiquidation:
     symbol: str
     observed_at: str
     mark_price: float
+    boundary_price: float
     position_quantity: float
     isolated_margin_usd: float
     position_equity_usd: float

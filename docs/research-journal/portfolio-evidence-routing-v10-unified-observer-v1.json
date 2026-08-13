@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "portfolio-evidence-routing-v10-unified-observer",
+  "revision_number": 1,
+  "supersedes_revision_id": null,
+  "created_at_utc": "2026-08-05T19:40:00Z",
+  "strategy_id": "multi_asset_bidirectional_evidence_routed_hype75_all_asset_observe_v10",
+  "symbol": "PORTFOLIO",
+  "status": "candidate",
+  "hypothesis": "The selected evidence-routed portfolio can unify four-asset HYPE-breakout observation into the account-owning backend and TUI without widening its two executable mappings or adding per-provider venue candle requests.",
+  "decision": "Preserve v9 as an inactive rollback profile and select v10 as the preferred next-flat candidate. V10 executes only Hulk/BTC and HYPE-breakout/HYPE, observes the unchanged HYPE-breakout rule on BTC, ETH, SOL, and HYPE, keeps both sides, retains HYPE $75 notional at isolated 5x and the eight-to-24-hour extension, and requires the machine-bound flat-only transition runbook. Do not stage, restart, or activate while the current HYPE lifecycle is open.",
+  "confidence": "medium",
+  "falsifier": "A changed candidate file or fingerprint, any executable mapping beyond Hulk/BTC and HYPE-breakout/HYPE, added per-provider venue fetching, missing four-asset collector coverage, open venue position or order at transition, concurrent checkpoint writers, failed fresh pre-start backup, TUI/checkpoint mismatch, or first-position protection disagreement invalidates selection or transition readiness.",
+  "evidence": [
+    {
+      "path": "../reviews/2026-08-05-evidence-routed-v10-unified-observer.md",
+      "role": "v9_v10_tradeoff_and_selection_record",
+      "sha256": "bca8b048f131f9370e668907a8e8bfc7d9672e41aa190843020e0c7ea7162a4d",
+      "bytes": 4617
+    },
+    {
+      "path": "../guides/cohort-live-transition-and-rollback-v10.md",
+      "role": "machine_bound_v10_transition_and_rollback_runbook",
+      "sha256": "40ec176b0d7056c4686adb7d7222783da07516801dba6ea21e09078b3e305a1c",
+      "bytes": 11128
+    },
+    {
+      "path": "../../configs/multi_asset_bidirectional_evidence_routed_hype75_all_asset_observe_candidate.toml",
+      "role": "exact_inactive_v10_candidate_profile",
+      "sha256": "aa5bf4d1b3261c7ff7defe5cf1fe6701ecac39052579553eeb53419dfbbf1197",
+      "bytes": 2993
+    },
+    {
+      "path": "../../tests/test_evidence_routed_hype75_all_asset_observe_candidate_config.py",
+      "role": "v10_execution_and_observation_scope_contract_tests",
+      "sha256": "fdb4f3f30ec512163c27bf324632667d2214bf4287e24c3e4b2b8b56def08302",
+      "bytes": 3753
+    },
+    {
+      "path": "../../tests/test_evidence_routed_v10_transition_runbook.py",
+      "role": "v10_transition_identity_and_safety_contract_tests",
+      "sha256": "feedbc3a50168a93f4209e3e028222c2c450e78c70cedf849c8c86fca1844cfd",
+      "bytes": 3055
+    }
+  ],
+  "metrics": {
+    "active_profile_id": "multi_asset_bidirectional_canary_v2",
+    "active_profile_fingerprint": "c992cb2f958ed607d25d6be76a52a37070278061c0e8c186723dc574e6938f6b",
+    "preserved_v9_profile_fingerprint": "750b2df619db858446ded8dd96ce4f679607c6965c789b0fdfcec56a2090fc4e",
+    "candidate_profile_fingerprint": "a7dde9ae84c18620476a7c8dc491ac12915a9f111515584bcd98e19e2265cf08",
+    "candidate_execution_provider_symbols": [
+      "hulk_expansion_bidirectional_tuned_v2|BTC",
+      "hype_breakout_onset_bidirectional_v1|HYPE"
+    ],
+    "hype_breakout_observation_symbols": ["BTC", "ETH", "SOL", "HYPE"],
+    "candidate_hype_notional_usd": 75,
+    "candidate_hype_leverage": 5,
+    "candidate_soft_maximum_hold_seconds": 28800,
+    "candidate_hard_maximum_hold_seconds": 86400,
+    "candidate_automatic_restart": false,
+    "unique_focused_contract_tests_passed": 37
+  },
+  "limitations": [
+    "V10 has not run as the authenticated account-owning backend.",
+    "Four-asset observer startup proves collector compatibility but no prospective eligible signal has resolved in the new run.",
+    "Historical unchanged transfers are negative for ETH and SOL and development-to-holdout contradictory for BTC shorts.",
+    "Unified observer paths do not establish executable fills, costs, queue position, or profitability.",
+    "The current open HYPE lifecycle remains governed by its original profile and in-memory implementation.",
+    "The one-time legacy cutover retains a documented flat-to-STOP entry race because the current process lacks transition-drain support."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

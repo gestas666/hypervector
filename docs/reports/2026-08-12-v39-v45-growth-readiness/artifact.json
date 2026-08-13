@@ -1,0 +1,1177 @@
+{
+  "manifest": {
+    "blocks": [
+      {
+        "body": "# Hypervector v39 \u2192 v45 $5,000 Growth Readiness\n\nEvidence cutoff: `2026-08-12T11:55:26.662334+00:00`. v39 remains the active runtime; v45 remains inactive and report-only.",
+        "id": "title",
+        "type": "markdown"
+      },
+      {
+        "cardIds": [
+          "current-card",
+          "all-time-card",
+          "v45-card"
+        ],
+        "id": "headline",
+        "type": "metric-strip"
+      },
+      {
+        "body": "## Decision\n\nKeep v45 at fixed 5x isolated leverage. Use notional\u2014not leverage\u2014as the future adaptive control. The 0.75\u00d7/1.00\u00d7/1.25\u00d7 tiers remain counterfactual until compatible v45 after-cost closes demonstrate route-specific repeatability. Do not hot-swap v39 while positions or owned orders remain.",
+        "id": "decision",
+        "type": "markdown"
+      },
+      {
+        "body": "## Why fixed leverage and variable notional\n\nAt fixed notional, changing leverage changes posted isolated margin and liquidation distance, but not directional PnL, fees, or funding dollars. At fixed margin, raising leverage increases notional and therefore scales both gains and losses while shrinking liquidation headroom. Keeping 5x fixed makes every outcome comparable; varying notional is the auditable way to express stronger or weaker evidence.",
+        "id": "why",
+        "type": "markdown"
+      },
+      {
+        "chartId": "all-time-pnl",
+        "id": "all-time-chart",
+        "type": "chart"
+      },
+      {
+        "body": "## Live evidence\n\nThe all-time archive is complete but mixes strategy revisions. Current v39 is separately exact. Aggregate all-time net and leave-largest-winner net are both negative, so capital scaling is not justified by historical headline PnL alone.",
+        "id": "live",
+        "type": "markdown"
+      },
+      {
+        "id": "current-table",
+        "tableId": "current-routes",
+        "type": "table"
+      },
+      {
+        "id": "open-table",
+        "tableId": "open-positions",
+        "type": "table"
+      },
+      {
+        "body": "## v45 successor\n\nv45 removes Range Onset, HIP-3 Swing, transferred core onset routes, and the broader weak roster. It retains only BTC side-specific specialists, HYPE compression, and SP500 pressure. Ten positions remain account capacity; three assets are the actual simultaneous limit.",
+        "id": "successor",
+        "type": "markdown"
+      },
+      {
+        "id": "v45-table",
+        "tableId": "v45-routes",
+        "type": "table"
+      },
+      {
+        "chartId": "v45-slot-risk",
+        "id": "risk-chart",
+        "type": "chart"
+      },
+      {
+        "body": "The $69.68 p99 stop wave is a deterministic stack of marginal friction estimates at $5,000, not a joint probability or loss ceiling. Gaps, outages, correlated entries, and stop slippage can exceed it. The BTC long target has the thinnest modeled reward after friction and therefore cannot earn the 1.25\u00d7 tier from readiness alone.",
+        "id": "risk",
+        "type": "markdown"
+      },
+      {
+        "body": "## Regime detector\n\nThe canonical detector is useful telemetry, conflict attribution, and exit context. Pooled observations overlap; episode onsets are the more honest independence check and remain sparse. No universal regime score is authorized to resize v45.",
+        "id": "regime",
+        "type": "markdown"
+      },
+      {
+        "chartId": "regime-accuracy",
+        "id": "regime-chart",
+        "type": "chart"
+      },
+      {
+        "body": "## Validation plan\n\nBase tier success means exact v45 route identity, venue stop and deadline coverage, after-cost closes, and no accounting or execution drift. A route can earn 1.25\u00d7 only after a predeclared compatible window is positive after fees/funding/slippage and remains positive without its largest winner; adverse or technically incomplete evidence maps to 0.75\u00d7. These are proposed experiment criteria, not active gates.",
+        "id": "validation",
+        "type": "markdown"
+      },
+      {
+        "body": "## Confidence and falsifiers\n\n**High confidence** in the accounting reconciliation, Hyperliquid margin mechanics, and v45 sizing arithmetic. **Medium confidence** that v45 is a cleaner experiment than v39 because demonstrated weak routes were removed. **Low confidence** in v45 profitability because it has no compatible closes. Revise this recommendation if fixed-notional leverage changes measured execution economics, v45 route outcomes remain negative, realized loss exceeds the model materially, or episode-level regime evidence becomes stable enough to support a route-specific sizing interaction.",
+        "id": "falsifiers",
+        "type": "markdown"
+      },
+      {
+        "body": "## Next actions\n\n1. Let v39 manage its protected open lifecycles to a verified flat/order-free boundary.\n2. Continue v45 observer collection and journal every eligible/non-eligible decision.\n3. Run fresh venue preflight at the transition boundary; request explicit live authority before starting v45.\n4. Start v45 at base notional. Do not activate variable tiers on readiness alone.\n5. Review each compatible close, missed opportunity, regime interaction, and realized friction before accepting 0.75\u00d7/1.25\u00d7 sizing.",
+        "id": "next",
+        "type": "markdown"
+      }
+    ],
+    "cards": [
+      {
+        "dataset": "current_run",
+        "id": "current-card",
+        "metrics": [
+          {
+            "field": "closed_trades",
+            "format": "number",
+            "label": "Closes"
+          },
+          {
+            "field": "net_pnl_usd",
+            "format": "currency",
+            "label": "Net",
+            "signed": true
+          },
+          {
+            "field": "profit_factor",
+            "format": "number",
+            "label": "PF"
+          }
+        ],
+        "sourceId": "v39-checkpoint"
+      },
+      {
+        "dataset": "all_time",
+        "id": "all-time-card",
+        "metrics": [
+          {
+            "field": "closed_trades",
+            "format": "number",
+            "label": "All-time closes"
+          },
+          {
+            "field": "net_pnl_usd",
+            "format": "currency",
+            "label": "All-time net",
+            "signed": true
+          },
+          {
+            "field": "net_ex_largest_usd",
+            "format": "currency",
+            "label": "Ex-largest",
+            "signed": true
+          }
+        ],
+        "sourceId": "v39-checkpoint"
+      },
+      {
+        "dataset": "v45_capacity",
+        "id": "v45-card",
+        "metrics": [
+          {
+            "field": "actual_asset_slots",
+            "format": "number",
+            "label": "Actual slots"
+          },
+          {
+            "field": "p99_stop_wave_usd",
+            "format": "currency",
+            "label": "$5K p99 wave"
+          },
+          {
+            "field": "p99_stop_wave_fraction",
+            "format": "percent",
+            "label": "p99 / equity"
+          }
+        ],
+        "sourceId": "v45-stress"
+      }
+    ],
+    "charts": [
+      {
+        "dataset": "all_time_routes",
+        "encodings": {
+          "x": {
+            "field": "route_label",
+            "type": "nominal"
+          },
+          "y": {
+            "field": "net_pnl_usd",
+            "format": "currency",
+            "type": "quantitative"
+          }
+        },
+        "id": "all-time-pnl",
+        "layout": "full",
+        "maxRows": 20,
+        "referenceLines": [
+          {
+            "axis": "y",
+            "label": "Breakeven",
+            "value": 0
+          }
+        ],
+        "sourceId": "v39-checkpoint",
+        "title": "All-time route economics are mixed and aggregate-negative",
+        "type": "horizontalBar"
+      },
+      {
+        "dataset": "regime_accuracy",
+        "encodings": {
+          "color": {
+            "field": "series",
+            "type": "nominal"
+          },
+          "x": {
+            "field": "horizon",
+            "type": "ordinal"
+          },
+          "y": {
+            "field": "accuracy_pct",
+            "type": "quantitative",
+            "unit": "%"
+          }
+        },
+        "id": "regime-accuracy",
+        "layout": "full",
+        "maxRows": 20,
+        "referenceLines": [
+          {
+            "axis": "y",
+            "label": "Chance",
+            "lineStyle": "dashed",
+            "value": 50
+          }
+        ],
+        "sourceId": "v39-regime",
+        "title": "Pooled regime accuracy weakens after episode de-duplication",
+        "type": "bar"
+      },
+      {
+        "dataset": "v45_slot_risk",
+        "encodings": {
+          "x": {
+            "field": "asset",
+            "type": "nominal"
+          },
+          "y": {
+            "field": "p99_stop_loss_usd",
+            "format": "currency",
+            "type": "quantitative"
+          }
+        },
+        "id": "v45-slot-risk",
+        "layout": "full",
+        "maxRows": 5,
+        "sourceId": "v45-stress",
+        "title": "$5K modeled p99 stop-wave contribution by asset slot",
+        "type": "horizontalBar"
+      }
+    ],
+    "description": "Reconciled live strategy, regime, friction, exit, and adaptive-sizing evidence.",
+    "generatedAt": "2026-08-12T11:55:50.037242+00:00",
+    "sources": [
+      {
+        "id": "v39-checkpoint",
+        "label": "Fresh v39 live checkpoint",
+        "path": "data/runtime/bidirectional_cohort/latest_checkpoint.json",
+        "query": {
+          "description": "Loads the exact local JSON source for Fresh v39 live checkpoint.",
+          "engine": "duckdb",
+          "sql": "SELECT * FROM read_json_auto('data/runtime/bidirectional_cohort/latest_checkpoint.json')"
+        }
+      },
+      {
+        "id": "v39-routes",
+        "label": "v39 exact route review",
+        "path": "data/logs/research/bidirectional_cohort/v39_route_portfolio_review_20260812T112929Z_v1.json",
+        "query": {
+          "description": "Loads the exact local JSON source for v39 exact route review.",
+          "engine": "duckdb",
+          "sql": "SELECT * FROM read_json_auto('data/logs/research/bidirectional_cohort/v39_route_portfolio_review_20260812T112929Z_v1.json')"
+        }
+      },
+      {
+        "id": "v39-regime",
+        "label": "v39 canonical regime accuracy",
+        "path": "data/logs/research/bidirectional_cohort/v39_regime_forward_accuracy_20260812T112929Z_v1.json",
+        "query": {
+          "description": "Loads the exact local JSON source for v39 canonical regime accuracy.",
+          "engine": "duckdb",
+          "sql": "SELECT * FROM read_json_auto('data/logs/research/bidirectional_cohort/v39_regime_forward_accuracy_20260812T112929Z_v1.json')"
+        }
+      },
+      {
+        "id": "v45-risk",
+        "label": "v45 successor risk contract",
+        "path": "data/logs/research/bidirectional_cohort/v45_btc_specialist_successor_risk_20260812_v1.json",
+        "query": {
+          "description": "Loads the exact local JSON source for v45 successor risk contract.",
+          "engine": "duckdb",
+          "sql": "SELECT * FROM read_json_auto('data/logs/research/bidirectional_cohort/v45_btc_specialist_successor_risk_20260812_v1.json')"
+        }
+      },
+      {
+        "id": "v45-stress",
+        "label": "v45 route-aware friction stress",
+        "path": "data/logs/research/bidirectional_cohort/v45_growth_sizing_stress_20260812_v2.json",
+        "query": {
+          "description": "Loads the exact local JSON source for v45 route-aware friction stress.",
+          "engine": "duckdb",
+          "sql": "SELECT * FROM read_json_auto('data/logs/research/bidirectional_cohort/v45_growth_sizing_stress_20260812_v2.json')"
+        }
+      },
+      {
+        "id": "v45-sizing",
+        "label": "v45 adaptive sizing observer",
+        "path": "data/runtime/research/v45_variable_sizing_latest.json",
+        "query": {
+          "description": "Loads the exact local JSON source for v45 adaptive sizing observer.",
+          "engine": "duckdb",
+          "sql": "SELECT * FROM read_json_auto('data/runtime/research/v45_variable_sizing_latest.json')"
+        }
+      }
+    ],
+    "surface": "report",
+    "tables": [
+      {
+        "columns": [
+          {
+            "field": "route_label",
+            "label": "Route"
+          },
+          {
+            "field": "planned_notional_usd",
+            "format": "currency",
+            "label": "Notional"
+          },
+          {
+            "field": "risk_contract",
+            "label": "Protection / exit"
+          },
+          {
+            "field": "p99_stop_loss_usd",
+            "format": "currency",
+            "label": "p99 stop"
+          }
+        ],
+        "dataset": "v45_routes",
+        "id": "v45-routes",
+        "layout": "full",
+        "sourceId": "v45-stress",
+        "title": "v45 exact $5K route and exit contract"
+      },
+      {
+        "columns": [
+          {
+            "field": "route_label",
+            "label": "Route"
+          },
+          {
+            "field": "closed_trades",
+            "label": "Closed"
+          },
+          {
+            "field": "net_pnl_usd",
+            "format": "currency",
+            "label": "Net"
+          },
+          {
+            "field": "v45_action",
+            "label": "v45"
+          }
+        ],
+        "dataset": "current_routes",
+        "id": "current-routes",
+        "layout": "full",
+        "sourceId": "v39-routes",
+        "title": "Every configured v39 route"
+      },
+      {
+        "columns": [
+          {
+            "field": "position_label",
+            "label": "Position"
+          },
+          {
+            "field": "strategy_label",
+            "label": "Strategy"
+          },
+          {
+            "field": "marked_net_pnl_usd",
+            "format": "currency",
+            "label": "Marked net"
+          },
+          {
+            "field": "protection",
+            "label": "Protection"
+          }
+        ],
+        "dataset": "open_positions",
+        "id": "open-positions",
+        "layout": "full",
+        "sourceId": "v39-checkpoint",
+        "title": "Protected v39 open lifecycles at report cutoff"
+      }
+    ],
+    "title": "Hypervector v39 \u2192 v45 $5,000 Growth Readiness",
+    "version": 1
+  },
+  "snapshot": {
+    "datasets": {
+      "all_time": [
+        {
+          "closed_trades": 62,
+          "fees_usd": 2.226003,
+          "funding_usd": 0.05848699999999999,
+          "losses": 35,
+          "maximum_drawdown_usd": 4.684876,
+          "net_ex_largest_usd": -3.7377599999999997,
+          "net_pnl_usd": -1.6835359999999997,
+          "profit_factor": 0.8761056788969248,
+          "win_rate_fraction": 0.43548387096774194,
+          "wins": 27
+        }
+      ],
+      "all_time_routes": [
+        {
+          "closed_trades": 2,
+          "fees_usd": 0.025754,
+          "funding_usd": 0.003903,
+          "losses": 2,
+          "maximum_drawdown_usd": 1.691751,
+          "net_ex_largest_usd": null,
+          "net_pnl_usd": -1.691751,
+          "profit_factor": 0.0,
+          "route": "hip3_swing_ha_sndk_gold_brent_bidirectional_v1|xyz:SNDK",
+          "route_label": "HIP3 Swing Commodity | xyz:SNDK",
+          "strategy": "hip3_swing_ha_sndk_gold_brent_bidirectional_v1",
+          "symbol": "xyz:SNDK",
+          "win_rate_fraction": 0.0,
+          "wins": 0
+        },
+        {
+          "closed_trades": 3,
+          "fees_usd": 0.387108,
+          "funding_usd": -0.034480000000000004,
+          "losses": 3,
+          "maximum_drawdown_usd": 1.197088,
+          "net_ex_largest_usd": null,
+          "net_pnl_usd": -1.197088,
+          "profit_factor": 0.0,
+          "route": "hip3_swing_ha_sndk_gold_brent_bidirectional_v1|xyz:GOLD",
+          "route_label": "HIP3 Swing Commodity | xyz:GOLD",
+          "strategy": "hip3_swing_ha_sndk_gold_brent_bidirectional_v1",
+          "symbol": "xyz:GOLD",
+          "win_rate_fraction": 0.0,
+          "wins": 0
+        },
+        {
+          "closed_trades": 14,
+          "fees_usd": 0.601869,
+          "funding_usd": 0.006877,
+          "losses": 7,
+          "maximum_drawdown_usd": 3.243303,
+          "net_ex_largest_usd": -1.8731,
+          "net_pnl_usd": -0.9736120000000001,
+          "profit_factor": 0.7191952053806796,
+          "route": "hype_breakout_onset_bidirectional_v1|HYPE",
+          "route_label": "Breakout Onset | HYPE",
+          "strategy": "hype_breakout_onset_bidirectional_v1",
+          "symbol": "HYPE",
+          "win_rate_fraction": 0.5,
+          "wins": 7
+        },
+        {
+          "closed_trades": 1,
+          "fees_usd": 0.012796,
+          "funding_usd": 0.0,
+          "losses": 1,
+          "maximum_drawdown_usd": 0.726696,
+          "net_ex_largest_usd": null,
+          "net_pnl_usd": -0.726696,
+          "profit_factor": 0.0,
+          "route": "hip3_breakout_pressure_sndk_gold_brent_bidirectional_v1|xyz:SNDK",
+          "route_label": "HIP3 Pressure Commodity | xyz:SNDK",
+          "strategy": "hip3_breakout_pressure_sndk_gold_brent_bidirectional_v1",
+          "symbol": "xyz:SNDK",
+          "win_rate_fraction": 0.0,
+          "wins": 0
+        },
+        {
+          "closed_trades": 1,
+          "fees_usd": 0.012806,
+          "funding_usd": -0.00048300000000000003,
+          "losses": 1,
+          "maximum_drawdown_usd": 0.606889,
+          "net_ex_largest_usd": null,
+          "net_pnl_usd": -0.606889,
+          "profit_factor": 0.0,
+          "route": "hip3_breakout_pressure_sp500_spcx_bidirectional_v1|xyz:SPCX",
+          "route_label": "HIP3 Pressure Index | xyz:SPCX",
+          "strategy": "hip3_breakout_pressure_sp500_spcx_bidirectional_v1",
+          "symbol": "xyz:SPCX",
+          "win_rate_fraction": 0.0,
+          "wins": 0
+        },
+        {
+          "closed_trades": 6,
+          "fees_usd": 0.129086,
+          "funding_usd": -0.00023199999999999978,
+          "losses": 4,
+          "maximum_drawdown_usd": 0.569578,
+          "net_ex_largest_usd": -0.774001,
+          "net_pnl_usd": -0.569578,
+          "profit_factor": 0.27463638088664355,
+          "route": "hype_breakout_onset_bidirectional_v1|ETH",
+          "route_label": "Breakout Onset | ETH",
+          "strategy": "hype_breakout_onset_bidirectional_v1",
+          "symbol": "ETH",
+          "win_rate_fraction": 0.33333333333333326,
+          "wins": 2
+        },
+        {
+          "closed_trades": 2,
+          "fees_usd": 0.025804,
+          "funding_usd": -0.014535,
+          "losses": 1,
+          "maximum_drawdown_usd": 0.687962,
+          "net_ex_largest_usd": -0.687962,
+          "net_pnl_usd": -0.23246899999999998,
+          "profit_factor": 0.6620903480134077,
+          "route": "hip3_breakout_pressure_sndk_gold_brent_bidirectional_v1|xyz:BRENTOIL",
+          "route_label": "HIP3 Pressure Commodity | xyz:BRENTOIL",
+          "strategy": "hip3_breakout_pressure_sndk_gold_brent_bidirectional_v1",
+          "symbol": "xyz:BRENTOIL",
+          "win_rate_fraction": 0.5,
+          "wins": 1
+        },
+        {
+          "closed_trades": 6,
+          "fees_usd": 0.128327,
+          "funding_usd": -0.0026769999999999997,
+          "losses": 3,
+          "maximum_drawdown_usd": 0.221411,
+          "net_ex_largest_usd": -0.251492,
+          "net_pnl_usd": -0.20718399999999998,
+          "profit_factor": 0.28676278211536615,
+          "route": "hype_breakout_onset_bidirectional_v1|BTC",
+          "route_label": "Breakout Onset | BTC",
+          "strategy": "hype_breakout_onset_bidirectional_v1",
+          "symbol": "BTC",
+          "win_rate_fraction": 0.5,
+          "wins": 3
+        },
+        {
+          "closed_trades": 1,
+          "fees_usd": 0.0215,
+          "funding_usd": -0.00011999999999999999,
+          "losses": 1,
+          "maximum_drawdown_usd": 0.17438,
+          "net_ex_largest_usd": null,
+          "net_pnl_usd": -0.17438,
+          "profit_factor": 0.0,
+          "route": "range_onset_bidirectional_v1|ETH",
+          "route_label": "Range Onset | ETH",
+          "strategy": "range_onset_bidirectional_v1",
+          "symbol": "ETH",
+          "win_rate_fraction": 0.0,
+          "wins": 0
+        },
+        {
+          "closed_trades": 5,
+          "fees_usd": 0.09203800000000001,
+          "funding_usd": 0.001651,
+          "losses": 2,
+          "maximum_drawdown_usd": 0.29103,
+          "net_ex_largest_usd": -0.23975999999999997,
+          "net_pnl_usd": -0.104597,
+          "profit_factor": 0.6950542562434038,
+          "route": "hypervelocity_source_follow_bidirectional_5m_v1|BTC",
+          "route_label": "HV Source 5m | BTC",
+          "strategy": "hypervelocity_source_follow_bidirectional_5m_v1",
+          "symbol": "BTC",
+          "win_rate_fraction": 0.6,
+          "wins": 3
+        },
+        {
+          "closed_trades": 2,
+          "fees_usd": 0.042977,
+          "funding_usd": 0.000983,
+          "losses": 1,
+          "maximum_drawdown_usd": 0.006099000000000002,
+          "net_ex_largest_usd": -0.006099000000000002,
+          "net_pnl_usd": 0.004715999999999998,
+          "profit_factor": 1.7732415150024587,
+          "route": "eth_breakout_precompression_pullback_bidirectional_v1|ETH",
+          "route_label": "ETH Pullback | ETH",
+          "strategy": "eth_breakout_precompression_pullback_bidirectional_v1",
+          "symbol": "ETH",
+          "win_rate_fraction": 0.5,
+          "wins": 1
+        },
+        {
+          "closed_trades": 4,
+          "fees_usd": 0.07869599999999999,
+          "funding_usd": -0.003806,
+          "losses": 2,
+          "maximum_drawdown_usd": 0.180757,
+          "net_ex_largest_usd": -0.046943999999999986,
+          "net_pnl_usd": 0.16315800000000003,
+          "profit_factor": 1.9026372422644768,
+          "route": "hulk_expansion_bidirectional_tuned_v2|BTC",
+          "route_label": "Hulk Expansion | BTC",
+          "strategy": "hulk_expansion_bidirectional_tuned_v2",
+          "symbol": "BTC",
+          "win_rate_fraction": 0.5,
+          "wins": 2
+        },
+        {
+          "closed_trades": 7,
+          "fees_usd": 0.45256599999999997,
+          "funding_usd": -0.016281999999999998,
+          "losses": 4,
+          "maximum_drawdown_usd": 1.3624079999999998,
+          "net_ex_largest_usd": -1.233895,
+          "net_pnl_usd": 0.34898200000000024,
+          "profit_factor": 1.1611854624460072,
+          "route": "hype_breakout_onset_bidirectional_v1|SOL",
+          "route_label": "Breakout Onset | SOL",
+          "strategy": "hype_breakout_onset_bidirectional_v1",
+          "symbol": "SOL",
+          "win_rate_fraction": 0.42857142857142855,
+          "wins": 3
+        },
+        {
+          "closed_trades": 1,
+          "fees_usd": 0.042981,
+          "funding_usd": 7.8e-05,
+          "losses": 0,
+          "maximum_drawdown_usd": 0.0,
+          "net_ex_largest_usd": 0.0,
+          "net_pnl_usd": 0.552777,
+          "profit_factor": null,
+          "route": "hulk_expansion_bidirectional_tuned_v2|HYPE",
+          "route_label": "Hulk Expansion | HYPE",
+          "strategy": "hulk_expansion_bidirectional_tuned_v2",
+          "symbol": "HYPE",
+          "win_rate_fraction": 1.0,
+          "wins": 1
+        },
+        {
+          "closed_trades": 2,
+          "fees_usd": 0.10713400000000001,
+          "funding_usd": 0.006788000000000001,
+          "losses": 1,
+          "maximum_drawdown_usd": 0.003310000000000035,
+          "net_ex_largest_usd": -0.003310000000000035,
+          "net_pnl_usd": 0.677814,
+          "profit_factor": 205.77764350453097,
+          "route": "hulk_expansion_bidirectional_tuned_v2|SOL",
+          "route_label": "Hulk Expansion | SOL",
+          "strategy": "hulk_expansion_bidirectional_tuned_v2",
+          "symbol": "SOL",
+          "win_rate_fraction": 0.5,
+          "wins": 1
+        },
+        {
+          "closed_trades": 4,
+          "fees_usd": 0.05146,
+          "funding_usd": -0.037703,
+          "losses": 2,
+          "maximum_drawdown_usd": 0.656872,
+          "net_ex_largest_usd": -0.568665,
+          "net_pnl_usd": 0.999037,
+          "profit_factor": 1.7913045269021692,
+          "route": "hip3_swing_ha_sp500_spcx_bidirectional_v2|xyz:SPCX",
+          "route_label": "HIP3 Swing Index | xyz:SPCX",
+          "strategy": "hip3_swing_ha_sp500_spcx_bidirectional_v2",
+          "symbol": "xyz:SPCX",
+          "win_rate_fraction": 0.5,
+          "wins": 2
+        },
+        {
+          "closed_trades": 1,
+          "fees_usd": 0.013101,
+          "funding_usd": 0.148525,
+          "losses": 0,
+          "maximum_drawdown_usd": 0.0,
+          "net_ex_largest_usd": 0.0,
+          "net_pnl_usd": 2.054224,
+          "profit_factor": null,
+          "route": "hip3_swing_ha_sndk_gold_brent_bidirectional_v1|xyz:BRENTOIL",
+          "route_label": "HIP3 Swing Commodity | xyz:BRENTOIL",
+          "strategy": "hip3_swing_ha_sndk_gold_brent_bidirectional_v1",
+          "symbol": "xyz:BRENTOIL",
+          "win_rate_fraction": 1.0,
+          "wins": 1
+        }
+      ],
+      "current_routes": [
+        {
+          "closed_trades": 1,
+          "eligible": 1,
+          "evaluations": 88,
+          "evidence_state": "resolved_current_run_close",
+          "net_pnl_usd": -0.726696,
+          "route": "hip3_breakout_pressure_sndk_gold_brent_bidirectional_v1|xyz:SNDK",
+          "route_label": "HIP3 Pressure Commodity | xyz:SNDK",
+          "v45_action": "removed"
+        },
+        {
+          "closed_trades": 1,
+          "eligible": 1,
+          "evaluations": 88,
+          "evidence_state": "resolved_current_run_close",
+          "net_pnl_usd": -0.687962,
+          "route": "hip3_breakout_pressure_sndk_gold_brent_bidirectional_v1|xyz:BRENTOIL",
+          "route_label": "HIP3 Pressure Commodity | xyz:BRENTOIL",
+          "v45_action": "removed"
+        },
+        {
+          "closed_trades": 1,
+          "eligible": 2,
+          "evaluations": 88,
+          "evidence_state": "resolved_current_run_close",
+          "net_pnl_usd": -0.606889,
+          "route": "hip3_breakout_pressure_sp500_spcx_bidirectional_v1|xyz:SPCX",
+          "route_label": "HIP3 Pressure Index | xyz:SPCX",
+          "v45_action": "retained/replaced"
+        },
+        {
+          "closed_trades": 2,
+          "eligible": 7,
+          "evaluations": 1333,
+          "evidence_state": "resolved_current_run_close",
+          "net_pnl_usd": -0.576255,
+          "route": "hype_breakout_onset_bidirectional_v1|SOL",
+          "route_label": "Breakout Onset | SOL",
+          "v45_action": "removed"
+        },
+        {
+          "closed_trades": 2,
+          "eligible": 4,
+          "evaluations": 1333,
+          "evidence_state": "resolved_current_run_close",
+          "net_pnl_usd": -0.32526,
+          "route": "hype_breakout_onset_bidirectional_v1|ETH",
+          "route_label": "Breakout Onset | ETH",
+          "v45_action": "removed"
+        },
+        {
+          "closed_trades": 1,
+          "eligible": 1,
+          "evaluations": 44,
+          "evidence_state": "resolved_current_run_close",
+          "net_pnl_usd": -0.070712,
+          "route": "hulk_expansion_bidirectional_tuned_v2|BTC",
+          "route_label": "Hulk Expansion | BTC",
+          "v45_action": "removed"
+        },
+        {
+          "closed_trades": 2,
+          "eligible": 3,
+          "evaluations": 1333,
+          "evidence_state": "resolved_current_run_close",
+          "net_pnl_usd": -0.048566,
+          "route": "hype_breakout_onset_bidirectional_v1|BTC",
+          "route_label": "Breakout Onset | BTC",
+          "v45_action": "removed"
+        },
+        {
+          "closed_trades": 0,
+          "eligible": 0,
+          "evaluations": 1333,
+          "evidence_state": "no_eligible_or_resolved_current_run_evidence",
+          "net_pnl_usd": 0.0,
+          "route": "eth_breakout_precompression_pullback_bidirectional_v1|ETH",
+          "route_label": "ETH Pullback | ETH",
+          "v45_action": "removed"
+        },
+        {
+          "closed_trades": 0,
+          "eligible": 3,
+          "evaluations": 88,
+          "evidence_state": "provisional_open_no_resolved_close",
+          "net_pnl_usd": 0.0,
+          "route": "hip3_breakout_pressure_sp500_spcx_bidirectional_v1|xyz:SP500",
+          "route_label": "HIP3 Pressure Index | xyz:SP500",
+          "v45_action": "retained/replaced"
+        },
+        {
+          "closed_trades": 0,
+          "eligible": 0,
+          "evaluations": 44,
+          "evidence_state": "no_eligible_or_resolved_current_run_evidence",
+          "net_pnl_usd": 0.0,
+          "route": "hulk_expansion_bidirectional_tuned_v2|ETH",
+          "route_label": "Hulk Expansion | ETH",
+          "v45_action": "removed"
+        },
+        {
+          "closed_trades": 0,
+          "eligible": 0,
+          "evaluations": 44,
+          "evidence_state": "no_eligible_or_resolved_current_run_evidence",
+          "net_pnl_usd": 0.0,
+          "route": "hulk_expansion_bidirectional_tuned_v2|HYPE",
+          "route_label": "Hulk Expansion | HYPE",
+          "v45_action": "removed"
+        },
+        {
+          "closed_trades": 0,
+          "eligible": 2,
+          "evaluations": 44,
+          "evidence_state": "eligible_without_open_or_resolved_close",
+          "net_pnl_usd": 0.0,
+          "route": "hulk_expansion_bidirectional_tuned_v2|SOL",
+          "route_label": "Hulk Expansion | SOL",
+          "v45_action": "removed"
+        },
+        {
+          "closed_trades": 0,
+          "eligible": 0,
+          "evaluations": 1333,
+          "evidence_state": "no_eligible_or_resolved_current_run_evidence",
+          "net_pnl_usd": 0.0,
+          "route": "hype_breakout_compression_pullback_bidirectional_v1|HYPE",
+          "route_label": "HYPE Compression | HYPE",
+          "v45_action": "removed"
+        },
+        {
+          "closed_trades": 0,
+          "eligible": 2,
+          "evaluations": 266,
+          "evidence_state": "eligible_without_open_or_resolved_close",
+          "net_pnl_usd": 0.0,
+          "route": "hypervelocity_source_follow_bidirectional_5m_v1|BTC",
+          "route_label": "HV Source 5m | BTC",
+          "v45_action": "removed"
+        }
+      ],
+      "current_run": [
+        {
+          "closed_trades": 10,
+          "fees_usd": 0.275043,
+          "funding_usd": -0.0035369999999999993,
+          "losses": 8,
+          "maximum_drawdown_usd": 3.0423400000000003,
+          "net_ex_largest_usd": -3.1461249999999996,
+          "net_pnl_usd": -3.04234,
+          "profit_factor": 0.038203886840672656,
+          "win_rate_fraction": 0.2,
+          "wins": 2
+        }
+      ],
+      "open_positions": [
+        {
+          "liquidation_distance_pct": 19.278007976499236,
+          "marked_net_pnl_usd": 0.28376399999999996,
+          "maximum_hold_policy": "extend_while_regime_supported",
+          "position_label": "ETH LONG",
+          "protection": "stop 514940062631 / liq 19.3%",
+          "side": "long",
+          "stop_oid": 514940062631,
+          "stop_price": 1876.368,
+          "strategy": "hype_breakout_onset_bidirectional_v1",
+          "strategy_label": "Breakout Onset",
+          "symbol": "ETH"
+        },
+        {
+          "liquidation_distance_pct": 18.66514901252572,
+          "marked_net_pnl_usd": 0.6572800000000001,
+          "maximum_hold_policy": "extend_while_regime_supported",
+          "position_label": "SOL LONG",
+          "protection": "stop 514990555079 / liq 18.7%",
+          "side": "long",
+          "stop_oid": 514990555079,
+          "stop_price": 75.48534719999999,
+          "strategy": "hype_breakout_onset_bidirectional_v1",
+          "strategy_label": "Breakout Onset",
+          "symbol": "SOL"
+        },
+        {
+          "liquidation_distance_pct": 18.739119035129548,
+          "marked_net_pnl_usd": -0.043852,
+          "maximum_hold_policy": "fixed",
+          "position_label": "xyz:SP500 SHORT",
+          "protection": "stop 514594287001 / liq 18.7%",
+          "side": "short",
+          "stop_oid": 514594287001,
+          "stop_price": 7803.1296,
+          "strategy": "hip3_breakout_pressure_sp500_spcx_bidirectional_v1",
+          "strategy_label": "HIP3 Pressure Index",
+          "symbol": "xyz:SP500"
+        }
+      ],
+      "regime_accuracy": [
+        {
+          "accuracy_pct": 49.62793360045793,
+          "horizon": "5m",
+          "observations": 1747,
+          "sample": "pooled",
+          "series": "up pool",
+          "state": "TREND_UP"
+        },
+        {
+          "accuracy_pct": 49.88326848249027,
+          "horizon": "5m",
+          "observations": 1285,
+          "sample": "pooled",
+          "series": "down pool",
+          "state": "TREND_DOWN"
+        },
+        {
+          "accuracy_pct": 42.857142857142854,
+          "horizon": "5m",
+          "observations": 14,
+          "sample": "episode_onsets",
+          "series": "up episodes",
+          "state": "TREND_UP"
+        },
+        {
+          "accuracy_pct": 61.53846153846154,
+          "horizon": "5m",
+          "observations": 13,
+          "sample": "episode_onsets",
+          "series": "down episodes",
+          "state": "TREND_DOWN"
+        },
+        {
+          "accuracy_pct": 50.08766803039158,
+          "horizon": "15m",
+          "observations": 1711,
+          "sample": "pooled",
+          "series": "up pool",
+          "state": "TREND_UP"
+        },
+        {
+          "accuracy_pct": 47.159533073929964,
+          "horizon": "15m",
+          "observations": 1285,
+          "sample": "pooled",
+          "series": "down pool",
+          "state": "TREND_DOWN"
+        },
+        {
+          "accuracy_pct": 21.428571428571427,
+          "horizon": "15m",
+          "observations": 14,
+          "sample": "episode_onsets",
+          "series": "up episodes",
+          "state": "TREND_UP"
+        },
+        {
+          "accuracy_pct": 46.15384615384615,
+          "horizon": "15m",
+          "observations": 13,
+          "sample": "episode_onsets",
+          "series": "down episodes",
+          "state": "TREND_DOWN"
+        },
+        {
+          "accuracy_pct": 54.149000605693516,
+          "horizon": "30m",
+          "observations": 1651,
+          "sample": "pooled",
+          "series": "up pool",
+          "state": "TREND_UP"
+        },
+        {
+          "accuracy_pct": 46.9260700389105,
+          "horizon": "30m",
+          "observations": 1285,
+          "sample": "pooled",
+          "series": "down pool",
+          "state": "TREND_DOWN"
+        },
+        {
+          "accuracy_pct": 28.571428571428573,
+          "horizon": "30m",
+          "observations": 14,
+          "sample": "episode_onsets",
+          "series": "up episodes",
+          "state": "TREND_UP"
+        },
+        {
+          "accuracy_pct": 53.84615384615385,
+          "horizon": "30m",
+          "observations": 13,
+          "sample": "episode_onsets",
+          "series": "down episodes",
+          "state": "TREND_DOWN"
+        },
+        {
+          "accuracy_pct": 58.463541666666664,
+          "horizon": "60m",
+          "observations": 1536,
+          "sample": "pooled",
+          "series": "up pool",
+          "state": "TREND_UP"
+        },
+        {
+          "accuracy_pct": 45.29182879377432,
+          "horizon": "60m",
+          "observations": 1285,
+          "sample": "pooled",
+          "series": "down pool",
+          "state": "TREND_DOWN"
+        },
+        {
+          "accuracy_pct": 53.84615384615385,
+          "horizon": "60m",
+          "observations": 13,
+          "sample": "episode_onsets",
+          "series": "up episodes",
+          "state": "TREND_UP"
+        },
+        {
+          "accuracy_pct": 76.92307692307692,
+          "horizon": "60m",
+          "observations": 13,
+          "sample": "episode_onsets",
+          "series": "down episodes",
+          "state": "TREND_DOWN"
+        }
+      ],
+      "v45_capacity": [
+        {
+          "actual_asset_slots": 3,
+          "maximum_positions_capacity": 10,
+          "p99_stop_wave_fraction": 0.013936385274363371,
+          "p99_stop_wave_usd": 69.68192637181686
+        }
+      ],
+      "v45_policy": [
+        {
+          "candidate_tiers": "0.75x/1.00x/1.25x",
+          "leverage_policy": "fixed_5x",
+          "regime_is_sizing_score": false,
+          "sizing_policy": "adaptive_notional_only"
+        }
+      ],
+      "v45_routes": [
+        {
+          "asset": "BTC",
+          "leverage": 5.0,
+          "margin_pct": 13.333333333333334,
+          "p99_stop_loss_usd": 33.349080190746875,
+          "planned_notional_usd": 3333.333333333333,
+          "risk_contract": "stop 75 / target 225 bps",
+          "route": "hulk_expansion_short_robust_v3",
+          "route_label": "Hulk Short v3",
+          "side": "short",
+          "stop_bps": 75.0,
+          "target_net_usd": 70.5489017412892,
+          "target_policy": "225 bps"
+        },
+        {
+          "asset": "BTC",
+          "leverage": 5.0,
+          "margin_pct": 16.666666666666664,
+          "p99_stop_loss_usd": 35.4363502384336,
+          "planned_notional_usd": 4166.666666666666,
+          "risk_contract": "stop 60 / target 60 bps",
+          "route": "liquidity_sweep_long_1h_stop60_target60_v2",
+          "route_label": "BTC Sweep Long",
+          "side": "long",
+          "stop_bps": 60.0,
+          "target_net_usd": 19.436127176611503,
+          "target_policy": "60 bps"
+        },
+        {
+          "asset": "HYPE",
+          "leverage": 5.0,
+          "margin_pct": 7.000000000000001,
+          "p99_stop_loss_usd": 19.226317157295792,
+          "planned_notional_usd": 1750.0,
+          "risk_contract": "stop 80 / strategy exit",
+          "route": "hype_breakout_compression_pullback_bidirectional_v1",
+          "route_label": "HYPE Compression",
+          "side": "long/short",
+          "stop_bps": 80.0,
+          "target_net_usd": null,
+          "target_policy": "strategy/opposite intent"
+        },
+        {
+          "asset": "xyz:SP500",
+          "leverage": 5.0,
+          "margin_pct": 7.000000000000001,
+          "p99_stop_loss_usd": 15.01925897608747,
+          "planned_notional_usd": 1750.0,
+          "risk_contract": "stop 80 / strategy exit",
+          "route": "hip3_breakout_pressure_sp500_spcx_bidirectional_v1",
+          "route_label": "HIP3 Pressure Index",
+          "side": "long/short",
+          "stop_bps": 80.0,
+          "target_net_usd": null,
+          "target_policy": "strategy/opposite intent"
+        }
+      ],
+      "v45_slot_risk": [
+        {
+          "asset": "BTC",
+          "p99_stop_loss_usd": 35.4363502384336
+        },
+        {
+          "asset": "HYPE",
+          "p99_stop_loss_usd": 19.226317157295792
+        },
+        {
+          "asset": "xyz:SP500",
+          "p99_stop_loss_usd": 15.01925897608747
+        }
+      ],
+      "variable_sizing_status": [
+        {
+          "eligible_candidates": 0,
+          "evaluations": 222,
+          "execution_authority": "none",
+          "selected_tier_policy": "withheld_pending_forward_outcomes",
+          "tier_authority": "counterfactual_only"
+        }
+      ]
+    },
+    "generatedAt": "2026-08-12T11:55:50.037242+00:00",
+    "status": "ready",
+    "version": 1
+  },
+  "sources": [
+    {
+      "id": "v39-checkpoint",
+      "label": "Fresh v39 live checkpoint",
+      "path": "data/runtime/bidirectional_cohort/latest_checkpoint.json",
+      "query": {
+        "description": "Loads the exact local JSON source for Fresh v39 live checkpoint.",
+        "engine": "duckdb",
+        "sql": "SELECT * FROM read_json_auto('data/runtime/bidirectional_cohort/latest_checkpoint.json')"
+      }
+    },
+    {
+      "id": "v39-routes",
+      "label": "v39 exact route review",
+      "path": "data/logs/research/bidirectional_cohort/v39_route_portfolio_review_20260812T112929Z_v1.json",
+      "query": {
+        "description": "Loads the exact local JSON source for v39 exact route review.",
+        "engine": "duckdb",
+        "sql": "SELECT * FROM read_json_auto('data/logs/research/bidirectional_cohort/v39_route_portfolio_review_20260812T112929Z_v1.json')"
+      }
+    },
+    {
+      "id": "v39-regime",
+      "label": "v39 canonical regime accuracy",
+      "path": "data/logs/research/bidirectional_cohort/v39_regime_forward_accuracy_20260812T112929Z_v1.json",
+      "query": {
+        "description": "Loads the exact local JSON source for v39 canonical regime accuracy.",
+        "engine": "duckdb",
+        "sql": "SELECT * FROM read_json_auto('data/logs/research/bidirectional_cohort/v39_regime_forward_accuracy_20260812T112929Z_v1.json')"
+      }
+    },
+    {
+      "id": "v45-risk",
+      "label": "v45 successor risk contract",
+      "path": "data/logs/research/bidirectional_cohort/v45_btc_specialist_successor_risk_20260812_v1.json",
+      "query": {
+        "description": "Loads the exact local JSON source for v45 successor risk contract.",
+        "engine": "duckdb",
+        "sql": "SELECT * FROM read_json_auto('data/logs/research/bidirectional_cohort/v45_btc_specialist_successor_risk_20260812_v1.json')"
+      }
+    },
+    {
+      "id": "v45-stress",
+      "label": "v45 route-aware friction stress",
+      "path": "data/logs/research/bidirectional_cohort/v45_growth_sizing_stress_20260812_v2.json",
+      "query": {
+        "description": "Loads the exact local JSON source for v45 route-aware friction stress.",
+        "engine": "duckdb",
+        "sql": "SELECT * FROM read_json_auto('data/logs/research/bidirectional_cohort/v45_growth_sizing_stress_20260812_v2.json')"
+      }
+    },
+    {
+      "id": "v45-sizing",
+      "label": "v45 adaptive sizing observer",
+      "path": "data/runtime/research/v45_variable_sizing_latest.json",
+      "query": {
+        "description": "Loads the exact local JSON source for v45 adaptive sizing observer.",
+        "engine": "duckdb",
+        "sql": "SELECT * FROM read_json_auto('data/runtime/research/v45_variable_sizing_latest.json')"
+      }
+    }
+  ],
+  "surface": "report"
+}

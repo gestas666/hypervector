@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "portfolio-evidence-routing",
+  "revision_number": 1,
+  "supersedes_revision_id": null,
+  "created_at_utc": "2026-08-05T17:53:48Z",
+  "strategy_id": "multi_asset_bidirectional_evidence_routed_hype75_v9",
+  "symbol": "PORTFOLIO",
+  "status": "candidate",
+  "hypothesis": "Concentrating next-flat execution authority in bidirectional Hulk/BTC and canonical HYPE-breakout/HYPE while retaining all other providers as observers may improve after-cost portfolio evidence and avoid negative or unreviewed route displacement.",
+  "decision": "Preserve v9 as a separate inactive next-flat candidate. It executes only Hulk/BTC and canonical HYPE-breakout/HYPE, keeps both directions, retains the current HYPE eight-to-24-hour extension contract, raises canonical HYPE to $75, and leaves every other provider-symbol pair observe-only. Do not stage, restart, or activate while the current HYPE lifecycle is open.",
+  "confidence": "low_medium",
+  "falsifier": "Profile-matched HYPE PF at or below one over twenty to thirty closes, Hulk/BTC negative after-cost PnL or PF at or below one over ten to twenty closes, a material missed-opportunity advantage from an observe-only route, or any scope, lifecycle, protection, ownership, or telemetry mismatch falsifies the portfolio candidate.",
+  "evidence": [
+    {
+      "path": "../../configs/multi_asset_bidirectional_evidence_routed_hype75_extension_candidate.toml",
+      "role": "exact_inactive_portfolio_candidate",
+      "sha256": "b97217b921fbd73d8ac9ac76b4ffe3a594a91890b9d8bf6945b05625ec06997b",
+      "bytes": 2953
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/live_audit_bidirectional-live-1785826133777_20260805T1735Z.json",
+      "role": "immutable_live_portfolio_audit",
+      "sha256": "90e56dbcba371214f9a40dd87215b525a4f8b65cc1fca63a2d6acb3fb1c1a987",
+      "bytes": 3761889
+    },
+    {
+      "path": "../../data/logs/research/source_follow_deployed_shape_btc_1y_20260804.json",
+      "role": "source_follow_one_year_deployed_shape",
+      "sha256": "ddc095ab93a1c0d15a9eb3c8ad93a349b8330b767e5c49bab1927404ca6b22bc",
+      "bytes": 608659
+    },
+    {
+      "path": "../reviews/2026-08-01-market-cipher-strategy-rehabilitation.md",
+      "role": "hulk_historical_validation_context",
+      "sha256": "300e014fed139f553df62d40cfd7f3095ea3c2d88cffabd1dac67886f5d65d05",
+      "bytes": 12084
+    }
+  ],
+  "metrics": {
+    "candidate_executable_provider_symbols": [
+      "hulk_expansion_bidirectional_tuned_v2|BTC",
+      "hype_breakout_onset_bidirectional_v1|HYPE"
+    ],
+    "candidate_maximum_positions": 4,
+    "candidate_effective_executable_symbols": 2,
+    "candidate_maximum_concurrent_notional_usd": 100.0,
+    "candidate_maximum_concurrent_margin_usd": 20.0,
+    "hype_max_notional_usd": 75.0,
+    "hype_leverage": 5.0,
+    "hype_live_closes": 6,
+    "hype_live_net_pnl_usd": 2.099489,
+    "hype_live_profit_factor": 10.376192964357328,
+    "hulk_btc_live_closes": 2,
+    "hulk_btc_live_net_pnl_usd": 0.343915,
+    "source_follow_live_closes": 5,
+    "source_follow_live_net_pnl_usd": -0.104597,
+    "source_follow_live_profit_factor": 0.6950542562434038,
+    "source_follow_historical_trades": 782,
+    "source_follow_historical_net_pnl_usd": -17.82,
+    "source_follow_historical_profit_factor": 0.6193
+  },
+  "limitations": [
+    "Neither executable mechanism has enough mutually independent live evidence to establish durable edge.",
+    "HYPE live outcomes contradict the negative deployed-shape historical replay.",
+    "Hulk BTC has only two resolved live trades and contradictory historical blocks.",
+    "Observe-only routes may recover before the next manual review; missed-opportunity telemetry is therefore required.",
+    "The candidate is neither staged nor active and has no signing authority."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

@@ -9,7 +9,11 @@ from hypervector.data.sources import fixture_ohlcv
 from hypervector.regime.detectors import REGIME_LABELS, detect_regime_ema
 from hypervector.regime.metrics import regime_detection_metrics
 from hypervector.strategies.classic import register_classic_baselines
-from hypervector.strategies.registry import clear_registry, get_strategy, list_strategies
+from hypervector.strategies.registry import (
+    clear_registry,
+    get_strategy,
+    list_strategies,
+)
 from hypervector.sweep.metrics import REQUIRED_METRIC_KEYS, compute_trial_metrics
 from hypervector.sweep.search import run_grid_search
 
@@ -31,7 +35,9 @@ def test_regime_labels_only_up_down_range():
     metrics = regime_detection_metrics(labels)
     assert metrics["n_bars"] == 200
     assert 0.0 <= metrics["pct_up"] <= 1.0
-    assert abs(metrics["pct_up"] + metrics["pct_down"] + metrics["pct_range"] - 1.0) < 1e-9
+    assert (
+        abs(metrics["pct_up"] + metrics["pct_down"] + metrics["pct_range"] - 1.0) < 1e-9
+    )
 
 
 def test_regime_downtrend_detects_down():

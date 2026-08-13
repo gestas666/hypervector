@@ -1,0 +1,137 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "cohort-asymmetric-shared-portfolio",
+  "revision_number": 3,
+  "supersedes_revision_id": "2773232eda9503d7f715bcfb966da8014bfdcb3867191fae1084fa77a28ea90d",
+  "created_at_utc": "2026-08-09T06:36:57Z",
+  "strategy_id": "multi_asset_portfolio_research_process",
+  "symbol": "MULTI",
+  "status": "candidate",
+  "hypothesis": "A predeclared asymmetric portfolio that permits HYPE breakout long, ETH precompression-pullback long, and SOL range-onset long and short may improve after-friction shared-capital performance over enabling every source symmetrically on both sides.",
+  "decision": "Keep the hypothesis report-only and leave live v25 unchanged. The rolling checkpoint and TUI now project the frozen candidate-versus-symmetric-control contract automatically, but the first integration probe still has zero qualifying post-cutoff resolved lifecycles. This revision validates observability and contract isolation, not profitability or promotion.",
+  "confidence": "low",
+  "falsifier": "The integration is invalidated if the checkpoint accepts execution authority, a different cutoff or route map, malformed economics, unreconciled source counts, or a state inconsistent with its candidate trade count. The economic hypothesis weakens if new after-friction candidate lifecycles become nonpositive, underperform the symmetric controls, or depend on one winner.",
+  "evidence": [
+    {
+      "path": "cohort-asymmetric-shared-portfolio-v2.json",
+      "role": "prior_observer_initialization_revision",
+      "sha256": "f53f452daa2f165ceec7c336a00c8a65a8c653f30cb7879c10b2e37e7b4bd27e",
+      "bytes": 5189
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/cohort_asymmetric_checkpoint_integration_20260809T0635Z.json",
+      "role": "read_only_live_ledger_checkpoint_integration_probe",
+      "sha256": "3cfab919fcea147d5432032ae8844b0d0a7f621bbd117fd07342ba88a7b464f1",
+      "bytes": 13346703
+    },
+    {
+      "path": "../../src/hypervector/research/cohort_asymmetric_forward_observer.py",
+      "role": "frozen_declaration_loader_and_strict_forward_scoring",
+      "sha256": "318d113a24b877c72b8af429dac2bec5eecc830dc95bf319ae9d49ca53befd26",
+      "bytes": 11611
+    },
+    {
+      "path": "../../src/hypervector/research/cohort_live_checkpoint.py",
+      "role": "read_only_live_checkpoint_projection_boundary",
+      "sha256": "93e47c69d0e570ce4f49d1e6f693fe66b68df09fe4edda9d3c96933d8f1acef3",
+      "bytes": 20196
+    },
+    {
+      "path": "../../src/hypervector/research/cohort_rolling_checkpoint.py",
+      "role": "rolling_checkpoint_forwarding_contract",
+      "sha256": "a1b32c63132f4d9713f3cb3313a75c5b46603b75875f8c6cbb87c04517855861",
+      "bytes": 5850
+    },
+    {
+      "path": "../../scripts/multi_asset_bidirectional_live_checkpoint.py",
+      "role": "default_journal_bound_checkpoint_launcher",
+      "sha256": "26ef52b153e1a77493dfe0a18ffe2a027a41106877e13e71c2a24be054e06c5a",
+      "bytes": 16836
+    },
+    {
+      "path": "../../tests/test_cohort_live_checkpoint.py",
+      "role": "python_checkpoint_projection_contract_tests",
+      "sha256": "9d99ad70c53485ee5d8aaa17f10b5dda9f89a2b8546a06dba7fd8025967a7faa",
+      "bytes": 32955
+    },
+    {
+      "path": "../../tests/test_multi_asset_bidirectional_live_checkpoint_script.py",
+      "role": "python_launcher_forwarding_regression_tests",
+      "sha256": "421e38701707261314d9aa301221603ff63cefaa27b2b2b5508a7783e7d4e0ec",
+      "bytes": 20692
+    },
+    {
+      "path": "../../crates/hypervector-tui/src/backend_cohort_asymmetric_forward.rs",
+      "role": "fail_closed_tui_observer_projection",
+      "sha256": "012be6863e76b674bc1743537d584a1709751421954c95a960a5c6fcbe554a55",
+      "bytes": 9517
+    },
+    {
+      "path": "../../crates/hypervector-tui/src/backend_cohort_checkpoint.rs",
+      "role": "tui_checkpoint_observer_attachment",
+      "sha256": "fd168dfa65a1e8ce8433863ed85a7610202aa8049ec7b2f927abd7f5d439e026",
+      "bytes": 19663
+    },
+    {
+      "path": "../../crates/hypervector-tui/src/backend_cohort_checkpoint_live.rs",
+      "role": "tui_live_audit_wire_contract",
+      "sha256": "24a2f1e6357a47c1b59ec7b38a19bcea77ecade101b2b07621967938bbf297cb",
+      "bytes": 3993
+    },
+    {
+      "path": "../../crates/hypervector-tui/src/cohort_research_asymmetric.rs",
+      "role": "compact_candidate_control_research_widget",
+      "sha256": "1a92dcca5c7b43311d787c0f4f82745d9573cab810facfbfdd8c670d893be5ff",
+      "bytes": 5519
+    },
+    {
+      "path": "../../crates/hypervector-tui/src/cohort_research.rs",
+      "role": "screen_six_research_workspace_integration",
+      "sha256": "1b27594ee52d5f65f91ac3fa8df7798b536ed5c0ee4edf4924c7b6b76b26f3a5",
+      "bytes": 20823
+    },
+    {
+      "path": "../../crates/hypervector-tui/tests/cohort_checkpoint_test.rs",
+      "role": "strict_rust_projection_and_authority_rejection_tests",
+      "sha256": "6ed2495a166aea0cae8f766f3c7e01a55f06921cd3be41de44aebb39bd6a8591",
+      "bytes": 84502
+    },
+    {
+      "path": "../../skills/hypervector-cli/SKILL.md",
+      "role": "operator_contract_and_safe_restart_boundary",
+      "sha256": "83efcd77e96240828b5a82a401e8f945914c00212c74b80430917a22b4118bf7",
+      "bytes": 80624
+    }
+  ],
+  "metrics": {
+    "predeclared_at_utc": "2026-08-09T06:02:47Z",
+    "entry_cutoff_timestamp_ms": 1786255367000,
+    "source_profile_id": "multi_asset_bidirectional_complete_portfolio_canary_v25",
+    "source_profile_fingerprint": "ec7715f671fa369d0a415d8941061eb9a577b232bbd4e06367a7342267ff7ecc",
+    "source_run_id": "bidirectional-live-1786182011216",
+    "candidate_post_cutoff": 0,
+    "excluded_symmetric_post_cutoff": 0,
+    "pre_cutoff_in_scope": 1,
+    "profile_mismatch_in_scope": 0,
+    "unrelated_resolved_lifecycles": 6,
+    "candidate_closed_trades": 0,
+    "candidate_net_pnl_usd": 0.0,
+    "candidate_profit_factor": null,
+    "checkpoint_lifecycle_state": "running_consistent",
+    "live_open_positions": 4,
+    "live_faults": 0,
+    "execution_authority": "none",
+    "automatic_promotion": false,
+    "runtime_changed_by_this_revision": false
+  },
+  "limitations": [
+    "No qualifying post-cutoff candidate or control lifecycle has resolved, so this revision does not update the profitability estimate.",
+    "The integration probe is a read-only snapshot and does not prove future sidecar freshness or terminal layout at every size.",
+    "The currently loaded checkpoint process predates these source changes; restarting it solely for this panel while positions are open would add avoidable operational risk.",
+    "Only actual resolved venue lifecycles are scored; missed and unfilled opportunities remain outside this observer.",
+    "The observer does not modify routing, allocation, leverage, entries, stops, targets, exits, or transition state."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

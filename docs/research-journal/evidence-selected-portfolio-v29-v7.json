@@ -1,0 +1,104 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "evidence-selected-portfolio-v29",
+  "revision_number": 7,
+  "supersedes_revision_id": "48065e346de21ffb45e7d58de7e4c2de4173966755480214283e3db16805321e",
+  "created_at_utc": "2026-08-08T21:41:38Z",
+  "strategy_id": "multi_asset_bidirectional_evidence_selected_portfolio_canary_v29",
+  "symbol": "PORTFOLIO",
+  "status": "retire",
+  "hypothesis": "A five-asset shared-account canary restricted to six explicitly selected bidirectional routes may produce cleaner and more frequent forward evidence than v28's mixture of 23 executable mappings, while preserving one-position-per-asset isolation and exact backend telemetry.",
+  "decision": "Retire exact v29 as the default future transition target while preserving its configuration, evidence, and transition guide as forensic artifacts. Its fixed common-window aggregate is positive under nominal and stressed modeled friction, but the result remains concentrated in SPCX longs; SPCX shorts, ETH precompression pullback, and SP500 breakout pressure are negative, and SOL Range Onset has no short sample. The latest immutable v25 prefix adds only five compatible-profile closes, all long and one per provider-symbol: the two v29-selected resolved routes net -$0.646057, while three profitable but historically contradictory routes excluded from v29 net +$2.816778. Those single-live-trade observations do not establish replacement edge, but they do not repair v29's route concentration or side coverage. In addition, the current live runner and its regression test no longer match v29 revision 6's frozen implementation hashes. Keep armed v25 unchanged. Any successor must use a new generation contract, a fresh verified source baseline, exact shared-capital routing, both-side authority, and evidence updated after the current v25 lifecycles resolve. This revision authorizes no drain, restart, route, order, close, resize, protection, or risk mutation.",
+  "confidence": "medium_high",
+  "falsifier": "This retirement decision would be updated by a newly frozen exact-profile implementation identity plus fresh after-cost bidirectional evidence that supplies the missing SOL short sample, removes the SPCX-long profit concentration, reverses or removes the negative ETH-pullback and SP500 components, and demonstrates live execution parity without ownership or protection defects. A successor requires a new append-only revision and explicit flat-boundary live authorization; a source refresh alone cannot establish economic edge.",
+  "evidence": [
+    {
+      "path": "evidence-selected-portfolio-v29-v6.json",
+      "role": "prior_inactive_candidate_and_frozen_implementation_revision",
+      "sha256": "10a046b0f0e400a5386f498869d848066e2d30816eb7bee1bcdce1eeb33d6a1d",
+      "bytes": 7580
+    },
+    {
+      "path": "../../configs/multi_asset_bidirectional_evidence_selected_portfolio_canary_v29.toml",
+      "role": "retired_exact_v29_configuration",
+      "sha256": "bb62f0cd492bfeb332fd6e53cdd2a45205f3e7b6580fc5f18768ddecee3b40e1",
+      "bytes": 3327
+    },
+    {
+      "path": "../../data/logs/research/evidence_selected_portfolio_v29_common_window_20260808T080301Z.json",
+      "role": "fixed_common_window_route_side_and_friction_evidence",
+      "sha256": "9a203016eafc66815a762396367929485f442413cac959852add6412a33bb763",
+      "bytes": 158635
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v25_live_prefix_open_paths_20260808T2116Z.json",
+      "role": "immutable_latest_v25_resolved_and_open_lifecycle_prefix",
+      "sha256": "30f4c216060c7b73f660d616726f134c1c611e753ae4f20da87177d08c81350a",
+      "bytes": 9894448
+    },
+    {
+      "path": "../../src/hypervector/live/multi_asset_live_runner.py",
+      "role": "current_live_runner_identity_after_v29_revision_6",
+      "sha256": "31500a60f9c99fba036969ca5dba6de4a56539c92a82178dc50df82a139dad33",
+      "bytes": 18238
+    },
+    {
+      "path": "../../tests/test_multi_asset_live_runner.py",
+      "role": "current_live_runner_regression_identity_after_v29_revision_6",
+      "sha256": "1b7dc58e2ab4ab5b3aabf88528350a0f8d49b06a193cc173da2b6f1f7452b91a",
+      "bytes": 30480
+    }
+  ],
+  "metrics": {
+    "candidate_profile_id": "multi_asset_bidirectional_evidence_selected_portfolio_canary_v29",
+    "candidate_profile_fingerprint": "d1f4cd3b03197e9e7a9899ab32e2b198fd4bd2a4117f1ea64261824fcdc4a393",
+    "candidate_assets": 5,
+    "candidate_executable_routes": 6,
+    "candidate_observe_only_routes": 0,
+    "candidate_both_side_routes": 6,
+    "maximum_positions": 5,
+    "common_window_duration_days": 22.364583333333332,
+    "common_window_nominal_trades": 97,
+    "common_window_nominal_net_pnl_usd": 16.52382952608116,
+    "common_window_nominal_profit_factor": 1.5217993092198663,
+    "common_window_stress_trades": 98,
+    "common_window_stress_net_pnl_usd": 13.64318604435698,
+    "common_window_stress_profit_factor": 1.402067336088461,
+    "common_window_nominal_spcx_long_net_pnl_usd": 14.850613439265551,
+    "common_window_nominal_spcx_short_net_pnl_usd": -2.145127466828092,
+    "common_window_nominal_eth_pullback_net_pnl_usd": -1.3134509479579564,
+    "common_window_nominal_sp500_breakout_net_pnl_usd": -1.567483095068979,
+    "common_window_sol_range_longs": 2,
+    "common_window_sol_range_shorts": 0,
+    "latest_v25_compatible_profile_closed_trades": 5,
+    "latest_v25_compatible_profile_resolved_sides": [
+      "long"
+    ],
+    "latest_v25_v29_selected_resolved_trades": 2,
+    "latest_v25_v29_selected_resolved_net_pnl_usd": -0.646057,
+    "latest_v25_v29_excluded_profitable_resolved_trades": 3,
+    "latest_v25_v29_excluded_profitable_resolved_net_pnl_usd": 2.816778,
+    "latest_v25_open_assets": [
+      "BTC",
+      "xyz:GOLD",
+      "xyz:SPCX"
+    ],
+    "revision_6_live_runner_sha256": "693a5e1948602a70e533a87357ff6ba91ff6d03005690830617ab284720084a7",
+    "current_live_runner_sha256": "31500a60f9c99fba036969ca5dba6de4a56539c92a82178dc50df82a139dad33",
+    "revision_6_live_runner_test_sha256": "03a78e4c8c33f549f1c3aec74c9261177b357b9a6512c80828747e34a91c8960",
+    "current_live_runner_test_sha256": "1b7dc58e2ab4ab5b3aabf88528350a0f8d49b06a193cc173da2b6f1f7452b91a",
+    "runtime_changed_by_this_revision": false
+  },
+  "limitations": [
+    "The 22.36-day common window is opened, post-hoc evidence rather than an independent sealed holdout.",
+    "The v25 execution sample has only five resolved compatible-profile lifecycles, each from a different provider-symbol and all long; it cannot estimate repeatability, short-side behavior, or a durable profit factor.",
+    "Three profitable resolved v25 routes excluded from v29 each have only one live trade and remain historically contradictory; their positive outcomes do not justify automatic inclusion in a successor.",
+    "The current BTC, GOLD, and SPCX lifecycles are unresolved and cannot be counted as wins, losses, or final economic evidence.",
+    "Completed-bar common-window replay cannot establish private IOC fill, acknowledgement latency, stop gaps, future funding, or live portfolio mark-to-market drawdown.",
+    "Retiring v29 as a transition target is an operator research decision, not an implicit performance abort gate for the running v25 trial.",
+    "No live route, process, order, position, stop, target, allocation, transition drain, or protection changed in this revision."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

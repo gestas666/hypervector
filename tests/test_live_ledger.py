@@ -75,11 +75,17 @@ def test_live_and_paper_ledgers_separated(tmp_path: Path):
         },
     )
     paper_lines = (
-        root / "paper" / "decisions" / "decisions.jsonl"
-    ).read_text(encoding="utf-8").strip().splitlines()
+        (root / "paper" / "decisions" / "decisions.jsonl")
+        .read_text(encoding="utf-8")
+        .strip()
+        .splitlines()
+    )
     live_lines = (
-        root / "live" / "decisions" / "decisions.jsonl"
-    ).read_text(encoding="utf-8").strip().splitlines()
+        (root / "live" / "decisions" / "decisions.jsonl")
+        .read_text(encoding="utf-8")
+        .strip()
+        .splitlines()
+    )
     assert len(paper_lines) == 1
     assert len(live_lines) == 1
     assert json.loads(paper_lines[0])["execution_mode"] == "shadow"

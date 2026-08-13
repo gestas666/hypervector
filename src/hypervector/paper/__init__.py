@@ -30,7 +30,11 @@ from hypervector.paper.report import (
     summarize_paper_decisions,
 )
 from hypervector.paper.runner import PaperDaemonResult, start_paper_daemon
-from hypervector.paper.session import PaperSession, PaperSessionResult, run_paper_session_offline
+from hypervector.paper.session import (
+    PaperSession,
+    PaperSessionResult,
+    run_paper_session_offline,
+)
 
 __all__ = [
     "DEFAULT_MAX_BOOK_AGE_MS",
