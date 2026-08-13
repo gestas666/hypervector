@@ -13,10 +13,18 @@ def test_provider_cadence_comes_from_declared_minute_timeframes() -> None:
     }
 
 
-def test_provider_cadence_rejects_nonminute_timeframe() -> None:
+def test_provider_cadence_normalizes_whole_hour_timeframe() -> None:
+    """A valid hourly provider clock is represented in whole minutes."""
+    assert provider_cadence_minutes(_identity("1h", "15m")) == {
+        "provider_a": 60,
+        "provider_b": 15,
+    }
+
+
+def test_provider_cadence_rejects_unsupported_timeframe() -> None:
     """An unsupported clock cannot silently receive a guessed cadence."""
-    with pytest.raises(ValueError, match="whole minutes"):
-        provider_cadence_minutes(_identity("1h", "15m"))
+    with pytest.raises(ValueError, match="whole minutes or hours"):
+        provider_cadence_minutes(_identity("90s", "15m"))
 
 
 def test_provider_cadence_is_unavailable_when_identity_omits_a_clock() -> None:

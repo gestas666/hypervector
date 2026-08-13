@@ -46,7 +46,7 @@ def provider_cadence_minutes(identity: Record) -> dict[str, int] | None:
         if "timeframe" not in provider:
             return None
         strategy = text(provider.get("strategy_id"), "provider strategy")
-        cadence = _minute_timeframe(
+        cadence = _timeframe_minutes(
             text(provider.get("timeframe"), "provider timeframe")
         )
         prior = result.get(strategy)
@@ -194,10 +194,14 @@ def _integer_value(value: object, label: str) -> int:
     return value
 
 
-def _minute_timeframe(value: str) -> int:
-    if not value.endswith("m") or not value[:-1].isdigit():
-        raise ValueError("provider timeframe must be expressed in whole minutes")
-    minutes = int(value[:-1])
+def _timeframe_minutes(value: str) -> int:
+    unit_multipliers = {"m": 1, "h": 60}
+    multiplier = unit_multipliers.get(value[-1:])
+    if multiplier is None or not value[:-1].isdigit():
+        raise ValueError(
+            "provider timeframe must be expressed in whole minutes or hours"
+        )
+    minutes = int(value[:-1]) * multiplier
     if minutes < 1:
         raise ValueError("provider timeframe minutes must be positive")
     return minutes
