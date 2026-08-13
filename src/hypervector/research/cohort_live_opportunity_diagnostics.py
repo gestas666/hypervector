@@ -64,19 +64,52 @@ def _route_record(
     eligible = _mapping(evidence.get("eligible_signal"), "eligible evidence")
     evaluations = _nonnegative_int(outcomes.get("evaluations"), "evaluations")
     eligible_count = _nonnegative_int(eligible.get("evaluations"), "eligible count")
+    readiness_count = _nonnegative_int(readiness.get("count"), "readiness")
+    combinations = _blocker_combinations(
+        readiness.get("blocker_combinations"), readiness_count
+    )
     return {
         "route": route,
         "outcome_evaluations": evaluations,
-        "readiness_evaluations": _nonnegative_int(readiness.get("count"), "readiness"),
+        "readiness_evaluations": readiness_count,
         "eligible_evaluations": eligible_count,
         "latest_readiness_fraction": _probability(
             readiness.get("latest_fraction"), "readiness fraction"
         ),
         "latest_blockers": _text_list(readiness.get("latest_blockers"), "blockers"),
         "blocker_counts": _counts(readiness.get("blockers"), "blocker counts"),
+        "blocker_combinations": combinations,
+        "blocker_combination_status": (
+            "available" if combinations else "unavailable_legacy_audit"
+        ),
         "historical_cadence": _optional_text(score.get("historical_cadence")),
         "scarcity_interpretation": _scarcity(evaluations, eligible_count),
         "one_blocker_paths": _one_blocker_paths(route, outcomes),
+    }
+
+
+def _blocker_combinations(value: object, expected: int) -> list[dict[str, object]]:
+    """Validate exact blocker-set counts when supplied by the live audit."""
+    if value is None:
+        return []
+    if not isinstance(value, list):
+        raise ValueError("blocker combinations must be an array")
+    rows = [_blocker_combination(row) for row in value]
+    if sum(row["evaluations"] for row in rows) != expected:
+        raise ValueError("blocker combination counts do not match readiness")
+    return rows
+
+
+def _blocker_combination(value: object) -> dict[str, object]:
+    record = _mapping(value, "blocker combination")
+    blockers = _text_list(record.get("blockers"), "combination blockers")
+    if blockers != sorted(set(blockers)):
+        raise ValueError("combination blockers must be sorted and unique")
+    return {
+        "blockers": blockers,
+        "evaluations": _nonnegative_int(
+            record.get("evaluations"), "combination evaluations"
+        ),
     }
 
 

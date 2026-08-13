@@ -24,6 +24,9 @@ def test_diagnostics_surface_mature_one_blocker_paths_without_promoting() -> Non
         "zero_eligible_signal_observed_no_frequency_conclusion"
     )
     assert route["latest_blockers"] == ["gate_absent"]
+    assert route["blocker_combinations"] == [
+        {"blockers": ["gate_absent", "regime_blocked"], "evaluations": 12}
+    ]
     path = route["one_blocker_paths"][0]
     assert path["horizon_minutes"] == 30
     assert path["independent_resolved"] == 3
@@ -65,6 +68,12 @@ def _audit() -> dict[str, object]:
                     "latest_fraction": 0.5,
                     "latest_blockers": ["gate_absent"],
                     "blockers": {"gate_absent": 12},
+                    "blocker_combinations": [
+                        {
+                            "blockers": ["gate_absent", "regime_blocked"],
+                            "evaluations": 12,
+                        }
+                    ],
                 }
             }
         },

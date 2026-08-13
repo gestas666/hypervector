@@ -1,0 +1,160 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v51-live-translation:range_onset_bidirectional_v1|SOL",
+  "revision_number": 1,
+  "supersedes_revision_id": null,
+  "created_at_utc": "2026-08-13T23:04:35.140940+00:00",
+  "strategy_id": "range_onset_bidirectional_v1",
+  "symbol": "SOL",
+  "status": "continue_unchanged_collect_forward_evidence",
+  "hypothesis": "The exact v51 canonical SOL Range Onset route retains after-cost edge in its intended completed-hour crossover and admitted 5-minute RANGE/BREAKOUT conditions.",
+  "decision": "Continue the exact v51 route unchanged. Do not remove either entry condition and do not reactivate the rejected aligned-range relaxation. The first v51 window contains no eligible canonical setup and therefore neither confirms nor falsifies live profitability.",
+  "confidence": "medium_for_implementation_and_scarcity_diagnosis_low_for_forward_profitability",
+  "falsifier": "An attributable canonical decision that is suppressed outside documented routing rules, a provider/regime mismatch, a technical data gap, or route-matched forward results with profit factor at or below one and negative net after actual costs would weaken or falsify the corresponding implementation, scarcity, or edge claim.",
+  "live_identity": {
+    "run_id": "bidirectional-live-1786656816144",
+    "profile_id": "multi_asset_growth_first_5000_six_asset_profit_lock_candidate_v51",
+    "profile_fingerprint": "30cd54bb5b5b17249ae0a6a3b01d5702b276d51f8dc5ddd6b4d36ab6aa7d1908",
+    "run_fingerprint": "d0141d4171da53ca1fe3c06d56459c6281e44218bf9c22429945460aea4e2fa1"
+  },
+  "frozen_live_prefix": {
+    "start_utc": "2026-08-13T21:36:35.282350+00:00",
+    "end_utc": "2026-08-13T23:04:26.300576+00:00",
+    "duration_seconds": 5271.018226,
+    "cohort_bytes": 1314399307,
+    "cohort_sha256": "f62db47d700dde26732f152c5a492fcc70a4475b771476655650b91a81c59714",
+    "sol_bytes": 165699847,
+    "sol_sha256": "f732df7c869861044aa0dfafeb82ec88136ae10a989458a212440465555649fa",
+    "dropped_tail_bytes": 0
+  },
+  "exact_live_route": {
+    "sides": [
+      "long",
+      "short"
+    ],
+    "signal_timeframe": "1h",
+    "execution_poll_seconds": 15.0,
+    "entry_conditions": [
+      "fresh completed SMA10/30 hourly crossover",
+      "completed 5-minute state is RANGE or BREAKOUT"
+    ],
+    "leverage": 10.0,
+    "margin_fraction": 0.1,
+    "planned_notional_usd_at_5000_equity": 5000.0,
+    "stop_bps": 80.0,
+    "target_policy": "none",
+    "maximum_hold_seconds": 172800
+  },
+  "current_window_metrics": {
+    "readiness_evaluations": 89,
+    "eligible_evaluations": 0,
+    "readiness_fraction": 0.3333333333333333,
+    "blocker_combinations": [
+      {
+        "blockers": [
+          "5m_regime_not_admitted",
+          "awaiting_hourly_sma_cross"
+        ],
+        "evaluations": 89
+      }
+    ],
+    "latest_5m_state": "TREND_UP",
+    "latest_structural_direction": "long",
+    "historical_cadence_trades": 42,
+    "historical_cadence_covered_days": 201,
+    "poisson_expected_trades_in_window": 0.012747763813571032,
+    "poisson_probability_zero_trades": 0.9873331447615031
+  },
+  "current_condition_sensitivity": {
+    "scope": "both blockers absent counterfactuals; report-only adverse-BBO estimates",
+    "five_minute_independent_resolved": 14,
+    "five_minute_mean_after_estimated_friction_bps": -10.880992386899107,
+    "five_minute_mean_excluding_largest_bps": -11.626722889572337,
+    "fifteen_minute_independent_resolved": 4,
+    "fifteen_minute_mean_after_estimated_friction_bps": -5.257064915227027,
+    "fifteen_minute_mean_excluding_largest_bps": -6.7448619834823305,
+    "thirty_minute_independent_resolved": 2,
+    "thirty_minute_mean_after_estimated_friction_bps": 2.4927310988206557,
+    "thirty_minute_mean_excluding_largest_bps": -3.9547343444793377,
+    "sixty_minute_independent_resolved": 1,
+    "sixty_minute_mean_after_estimated_friction_bps": 18.005307688265482,
+    "sixty_minute_mean_excluding_largest_bps": null
+  },
+  "recommendation": {
+    "recommendation": "Keep canonical SOL Range Onset unchanged and collect exact long/short forward lifecycles.",
+    "why_now": "The first v51 window is sparse and entirely outside the route's intended entry conditions; changing parameters would confuse expected selectivity with a defect.",
+    "evidence_reviewed": [
+      "current v51 stable live-ledger prefix",
+      "historical 42-trade direction-stability audit",
+      "earlier exact public-trade backward validation",
+      "prospective rejection of the relaxed hourly-cross identity",
+      "v51 route-aware friction and stop-wave model"
+    ],
+    "observed_problem_or_opportunity": "Zero live entries, but no eligible setup, missing data, routing suppression, or true one-blocker near miss was observed.",
+    "applicable_market_regime": "The measured window was a 5-minute TREND_UP state; the route is intended for completed 5-minute RANGE or BREAKOUT states at a fresh hourly cross.",
+    "alternatives_considered": [
+      "remove the hourly cross",
+      "remove 5-minute regime admission",
+      "reactivate the aligned fixed-60 relaxation",
+      "leave the exact route unchanged"
+    ],
+    "proposed_live_change": "none",
+    "expected_upside": "Preserves the historically supported selective mechanic and avoids paying friction on currently negative dual-blocked counterfactual entries.",
+    "main_risks_and_failure_modes": "The route may remain too sparse, historical profit is winner-concentrated, and a selective rule can still lack durable forward edge.",
+    "validation_completed": "Exact live identity and blocker combination reconciled; complete current route telemetry; realistic current-window counterfactual friction; historical side and stop-shape evidence reviewed; rejected relaxation preserved.",
+    "validation_still_required": "Attributable eligible signals and fully resolved long and short v51 lifecycles with exact fees, funding, slippage, latency, stop behavior, excursions, and non-adjacent time-window stability.",
+    "success_metrics": "Positive route-matched after-cost net and profit factor above one by side and combined, positive excluding the largest winner, no unexplained suppression, and execution parity with the frozen contract.",
+    "failure_or_rollback_triggers": "Technical route mismatch or unprotected exposure is an incident; negative route-matched forward economics across a predeclared review window triggers a new-mechanism review rather than silent parameter relaxation.",
+    "confidence_level": "medium for no-change now; low for durable profitability",
+    "explicit_approval_requested": false
+  },
+  "single_highest_value_next_investigation": "Capture the first exact canonical SOL eligible signal and lifecycle for each side; if frequency remains materially below the historical range after 201 live covered days or a predeclared shorter sequential test, investigate a genuinely new mechanism identity rather than the rejected relaxation.",
+  "evidence": [
+    {
+      "path": "../reviews/2026-08-08-v25-sol-range-cadence-and-relaxation.md",
+      "role": "prior_live_scarcity_and_relaxation_reconciliation",
+      "sha256": "b4776f67ea4653070cfb81b256c7032f3b9c6a97f646fb3a428a3a9f51f297b4",
+      "bytes": 5808
+    },
+    {
+      "path": "../reviews/2026-07-31-sol-range-onset-direction-stability.md",
+      "role": "historical_side_stability",
+      "sha256": "b68a81184b9303b03dd5fa1da35cd1011ba24c2acd8ca544f9ae3ab3ae3a4980",
+      "bytes": 4085
+    },
+    {
+      "path": "../reviews/2026-07-31-sol-range-onset-backward-validation.md",
+      "role": "earlier_exact_stop_shape_validation",
+      "sha256": "e1a469aa9b669b39b2764c412124a1c97bf16e0fca9e03123eacd6c8fa089d40",
+      "bytes": 11034
+    },
+    {
+      "path": "../reviews/2026-08-05-forward-challenger-portfolio-resolution.md",
+      "role": "prospective_relaxation_rejection",
+      "sha256": "1aab33a5cda2032ec418e0ed658ce8ef0b12019f9aa227392419fda0cf79f8f2",
+      "bytes": 6816
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v51_growth_sizing_stress_20260813_v1.json",
+      "role": "v51_route_aware_friction_and_sizing",
+      "sha256": "445a7864a543fc87e6a95c46385813c78651c498cb1314469382e9f272918715",
+      "bytes": 40047
+    },
+    {
+      "path": "../../configs/multi_asset_growth_first_5000_six_asset_profit_lock_candidate_v51.toml",
+      "role": "live_route_contract",
+      "sha256": "f0f0fef087eb0a3412c2a917d2d9bd8f578b17e4a40d7c3729519a33cf4f9ab4",
+      "bytes": 3917
+    }
+  ],
+  "limitations": [
+    "The Poisson calculation is descriptive and may be wrong for clustered regime arrivals.",
+    "Counterfactual BBO paths are not fills and omit unknown queue and market-impact effects.",
+    "The first live window has no eligible signal or resolved lifecycle and cannot estimate live expectancy.",
+    "Historical long profitability depends heavily on rare large winners.",
+    "No live strategy, route, parameter, leverage, sizing, exit, or authority changed from this review."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

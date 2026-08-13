@@ -227,8 +227,24 @@ def _provider_summary(evaluations: Sequence[Record]) -> dict[str, object]:
             latest_readiness.get("indicators"), "readiness indicators"
         ),
         "blockers": dict(sorted(blockers.items())),
+        "blocker_combinations": _blocker_combinations(evaluations),
         "reasons": dict(sorted(reasons.items())),
     }
+
+
+def _blocker_combinations(evaluations: Sequence[Record]) -> list[dict[str, object]]:
+    """Count canonical simultaneous blocker sets across readiness evaluations."""
+    counts: Counter[tuple[str, ...]] = Counter()
+    for evaluation in evaluations:
+        readiness = mapping(evaluation.get("readiness"), "readiness")
+        blockers = text_list(readiness.get("blockers"), "readiness blockers")
+        if len(set(blockers)) != len(blockers):
+            raise ValueError("readiness blockers must be unique per evaluation")
+        counts[tuple(sorted(blockers))] += 1
+    return [
+        {"blockers": list(blockers), "evaluations": count}
+        for blockers, count in sorted(counts.items())
+    ]
 
 
 def _maximum_drawdown_pct(values: Sequence[float]) -> float:
