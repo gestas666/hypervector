@@ -264,7 +264,52 @@ def _material_digest(value: Record) -> str:
     if isinstance(evidence_health, dict):
         evidence_health.pop("right_censored_observations", None)
         evidence_health.pop("metric_value_gaps", None)
+    _normalize_live_diagnostic_material(material)
     return _digest(material)
+
+
+def _normalize_live_diagnostic_material(material: dict[str, object]) -> None:
+    diagnostics = material.get("live_opportunity_diagnostics")
+    if not isinstance(diagnostics, dict):
+        return
+    window = diagnostics.get("observation_window")
+    if isinstance(window, dict):
+        window.pop("end_utc", None)
+        window.pop("duration_seconds", None)
+    totals = diagnostics.get("totals")
+    if isinstance(totals, dict):
+        totals.pop("evaluations", None)
+        totals.pop("directional_evaluations", None)
+        totals.pop("right_censored_observations", None)
+    routes = diagnostics.get("routes")
+    if not isinstance(routes, list):
+        return
+    for route in routes:
+        if not isinstance(route, dict):
+            continue
+        for field in (
+            "outcome_evaluations",
+            "readiness_evaluations",
+            "latest_readiness_fraction",
+            "latest_blockers",
+            "blocker_counts",
+        ):
+            route.pop(field, None)
+        paths = route.get("one_blocker_paths")
+        if isinstance(paths, list):
+            for path in paths:
+                if isinstance(path, dict):
+                    _normalize_path_material(path)
+    leads = diagnostics.get("robust_report_only_leads")
+    if isinstance(leads, list):
+        for lead in leads:
+            if isinstance(lead, dict):
+                _normalize_path_material(lead)
+
+
+def _normalize_path_material(path: dict[str, object]) -> None:
+    path.pop("blocker_evaluations", None)
+    path.pop("censored", None)
 
 
 def _digest(value: Record) -> str:

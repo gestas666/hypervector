@@ -57,6 +57,22 @@ def test_report_exposes_traceable_hypotheses_and_approval_boundary() -> None:
     ]
 
 
+def test_report_surfaces_live_paths_even_without_opportunity_matrix() -> None:
+    """Current-run readiness paths must reach the continuous report."""
+    checkpoint = _checkpoint()
+    _attach_live_diagnostics(checkpoint)
+
+    report = build_continuous_improvement_report(checkpoint, _digest())
+
+    diagnostics = report["live_opportunity_diagnostics"]
+    assert diagnostics["status"] == "available"
+    assert len(diagnostics["routes"]) == 5
+    assert diagnostics["routes"][0]["scarcity_interpretation"] == (
+        "zero_eligible_signal_observed_no_frequency_conclusion"
+    )
+    assert diagnostics["contract"]["automatic_live_change"] is False
+
+
 def test_report_rejects_route_scope_missing_from_live_checkpoint() -> None:
     """A digest cannot silently analyze a route absent from live configuration."""
     checkpoint = _checkpoint()
@@ -141,6 +157,46 @@ def _score(state: str, directional: dict[str, object]) -> dict[str, object]:
         "execution_outcomes_identifiable": False,
         "eligible_signals": 0,
         "evidence_source": "evidence.json",
+    }
+
+
+def _attach_live_diagnostics(checkpoint: dict[str, object]) -> None:
+    audit = checkpoint["audit"]
+    routes = checkpoint["configuration_generation"]
+    route_names = routes["current_provider_execution_directions"]
+    audit["run"].update(
+        {
+            "first_observed_at_utc": "2026-08-13T21:00:00+00:00",
+            "last_observed_at_utc": "2026-08-13T22:00:00+00:00",
+        }
+    )
+    audit["readiness"] = {
+        "by_provider_symbol": {route: _readiness() for route in route_names}
+    }
+    audit["signal_outcomes"] = {
+        "evaluations": len(route_names),
+        "eligible_evaluations": 0,
+        "directional_evaluations": len(route_names),
+        "coverage": {"right_censored_observations": 0},
+        "by_provider_symbol": {route: _outcomes() for route in route_names},
+    }
+
+
+def _readiness() -> dict[str, object]:
+    return {
+        "count": 1,
+        "eligible": 0,
+        "latest_fraction": 0.5,
+        "latest_blockers": ["gate_absent"],
+        "blockers": {"gate_absent": 1},
+    }
+
+
+def _outcomes() -> dict[str, object]:
+    return {
+        "evaluations": 1,
+        "by_evidence_class": {"eligible_signal": {"evaluations": 0}},
+        "one_blocker_near_misses": {"by_blocker": {}},
     }
 
 

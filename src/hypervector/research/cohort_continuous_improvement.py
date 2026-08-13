@@ -4,6 +4,10 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
+from hypervector.research.cohort_live_opportunity_diagnostics import (
+    build_live_opportunity_diagnostics,
+)
+
 Record = Mapping[str, object]
 
 _SIDES = frozenset({"long", "short"})
@@ -57,12 +61,29 @@ def build_continuous_improvement_report(
             "hypothesis_ledger": _hypothesis_ledger(queue, scores),
             "highest_value_next_investigation": _highest_value(queue),
             "baseline_comparison": _baseline_comparison(digest),
+            "live_opportunity_diagnostics": _live_diagnostics(audit),
             "change_proposals": [],
             "proposal_contract": {"required_fields": list(_PROPOSAL_FIELDS)},
             "human_approval_boundary": _approval_boundary(),
         }
     )
     return report
+
+
+def _live_diagnostics(audit: Record) -> dict[str, object]:
+    required = ("readiness", "signal_outcomes", "strategy_scorecard")
+    missing = [field for field in required if audit.get(field) is None]
+    if missing:
+        return {
+            "status": "unavailable_missing_legacy_sources",
+            "missing_sources": missing,
+            "contract": {
+                "report_only": True,
+                "execution_authority": "none",
+                "automatic_live_change": False,
+            },
+        }
+    return build_live_opportunity_diagnostics(audit)
 
 
 def _validate_contract(source: Record, field: str) -> None:

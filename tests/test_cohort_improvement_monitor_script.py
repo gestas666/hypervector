@@ -76,6 +76,59 @@ def test_material_hash_ignores_poll_clock_but_not_research_state() -> None:
     assert module._material_digest(first) != module._material_digest(second)
 
 
+def test_material_hash_ignores_live_path_clock_but_keeps_path_assessment() -> None:
+    """Routine path maturation must not flood the material hypothesis history."""
+    module = _load()
+    first = _live_diagnostic_report(10, "insufficient_independent_paths")
+    second = _live_diagnostic_report(11, "insufficient_independent_paths")
+
+    assert module._material_digest(first) == module._material_digest(second)
+    path = second["live_opportunity_diagnostics"]["routes"][0]
+    path["one_blocker_paths"][0]["assessment"] = "robust_report_only_research_lead"
+    assert module._material_digest(first) != module._material_digest(second)
+
+    first = _live_diagnostic_report(10, "robust_report_only_research_lead")
+    second = _live_diagnostic_report(11, "robust_report_only_research_lead")
+    assert module._material_digest(first) == module._material_digest(second)
+
+
+def _live_diagnostic_report(count: int, assessment: str) -> dict[str, object]:
+    path = {
+        "assessment": assessment,
+        "censored": count,
+        "blocker_evaluations": count,
+        "independent_resolved": 3,
+    }
+    return {
+        "live_opportunity_diagnostics": {
+            "observation_window": {
+                "start_utc": "2026-08-13T20:00:00+00:00",
+                "end_utc": f"2026-08-13T20:{count:02d}:00+00:00",
+                "duration_seconds": float(count * 60),
+            },
+            "totals": {
+                "evaluations": count,
+                "eligible_evaluations": 0,
+                "directional_evaluations": count,
+                "right_censored_observations": count,
+            },
+            "routes": [
+                {
+                    "route": "range|SOL",
+                    "outcome_evaluations": count,
+                    "readiness_evaluations": count,
+                    "eligible_evaluations": 0,
+                    "blocker_counts": {"gate_absent": count},
+                    "one_blocker_paths": [dict(path)],
+                }
+            ],
+            "robust_report_only_leads": [dict(path)]
+            if assessment == "robust_report_only_research_lead"
+            else [],
+        }
+    }
+
+
 def test_failed_once_preserves_last_good_output(tmp_path: Path) -> None:
     """Malformed evidence must fail without replacing the last valid digest."""
     module = _load()

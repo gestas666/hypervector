@@ -1,0 +1,272 @@
+"""Exact current-run signal scarcity and missed-opportunity diagnostics."""
+
+from __future__ import annotations
+
+from collections.abc import Mapping
+from datetime import datetime
+from math import isfinite
+
+Record = Mapping[str, object]
+
+_MINIMUM_INDEPENDENT_PATHS = 3
+_CONTRACT: dict[str, object] = {
+    "report_only": True,
+    "execution_authority": "none",
+    "automatic_live_change": False,
+    "performance_gate": False,
+}
+
+
+def build_live_opportunity_diagnostics(audit: Record) -> dict[str, object]:
+    """Expose exact route readiness paths without claiming hypothetical fills."""
+    signal = _mapping(audit.get("signal_outcomes"), "signal outcomes")
+    outcomes = _mapping(signal.get("by_provider_symbol"), "route outcomes")
+    readiness = _route_mapping(audit, "readiness")
+    scorecard = _route_mapping(audit, "strategy_scorecard")
+    if set(outcomes) != set(readiness) or set(outcomes) != set(scorecard):
+        raise ValueError("live diagnostic route scope is inconsistent")
+    routes = [
+        _route_record(route, outcomes[route], readiness[route], scorecard[route])
+        for route in sorted(outcomes)
+    ]
+    leads = [
+        path
+        for route in routes
+        for path in route["one_blocker_paths"]
+        if path["assessment"] == "robust_report_only_research_lead"
+    ]
+    return {
+        "status": "available" if routes else "unavailable_no_route_outcomes",
+        "contract": dict(_CONTRACT),
+        "observation_window": _observation_window(audit),
+        "totals": _totals(signal),
+        "routes": routes,
+        "robust_report_only_leads": leads,
+        "limitations": _limitations(),
+    }
+
+
+def _route_mapping(audit: Record, field: str) -> Record:
+    section = _mapping(audit.get(field), field.replace("_", " "))
+    return _mapping(section.get("by_provider_symbol"), f"{field} routes")
+
+
+def _route_record(
+    route: str,
+    raw_outcomes: object,
+    raw_readiness: object,
+    raw_score: object,
+) -> dict[str, object]:
+    outcomes = _mapping(raw_outcomes, f"route outcomes {route}")
+    readiness = _mapping(raw_readiness, f"route readiness {route}")
+    score = _mapping(raw_score, f"route scorecard {route}")
+    evidence = _mapping(outcomes.get("by_evidence_class"), "evidence classes")
+    eligible = _mapping(evidence.get("eligible_signal"), "eligible evidence")
+    evaluations = _nonnegative_int(outcomes.get("evaluations"), "evaluations")
+    eligible_count = _nonnegative_int(eligible.get("evaluations"), "eligible count")
+    return {
+        "route": route,
+        "outcome_evaluations": evaluations,
+        "readiness_evaluations": _nonnegative_int(readiness.get("count"), "readiness"),
+        "eligible_evaluations": eligible_count,
+        "latest_readiness_fraction": _probability(
+            readiness.get("latest_fraction"), "readiness fraction"
+        ),
+        "latest_blockers": _text_list(readiness.get("latest_blockers"), "blockers"),
+        "blocker_counts": _counts(readiness.get("blockers"), "blocker counts"),
+        "historical_cadence": _optional_text(score.get("historical_cadence")),
+        "scarcity_interpretation": _scarcity(evaluations, eligible_count),
+        "one_blocker_paths": _one_blocker_paths(route, outcomes),
+    }
+
+
+def _one_blocker_paths(route: str, outcomes: Record) -> list[dict[str, object]]:
+    section = _mapping(outcomes.get("one_blocker_near_misses", {}), "near misses")
+    blockers = _mapping(section.get("by_blocker", {}), "near-miss blockers")
+    rows: list[dict[str, object]] = []
+    for blocker, raw in sorted(blockers.items()):
+        record = _mapping(raw, f"near-miss blocker {blocker}")
+        horizons = _mapping(record.get("horizons"), "near-miss horizons")
+        for horizon, raw_horizon in sorted(horizons.items(), key=_horizon_key):
+            rows.append(_path_record(route, blocker, horizon, raw_horizon, record))
+    return rows
+
+
+def _path_record(
+    route: str,
+    blocker: str,
+    horizon: str,
+    raw_horizon: object,
+    blocker_record: Record,
+) -> dict[str, object]:
+    values = _mapping(raw_horizon, f"near-miss horizon {horizon}")
+    capture = _mapping(
+        values.get("independent_opportunity_capture"), "independent capture"
+    )
+    resolved = _nonnegative_int(capture.get("resolved"), "independent resolved")
+    mean = _optional_number(capture.get("mean_close_after_estimated_friction_bps"))
+    ex_largest = _optional_number(
+        capture.get("mean_excluding_largest_close_after_estimated_friction_bps")
+    )
+    missing = _nonnegative_int(values.get("missing_data"), "missing data")
+    return {
+        "route": route,
+        "blocker": blocker,
+        "horizon_minutes": _positive_int_text(horizon, "horizon"),
+        "blocker_evaluations": _nonnegative_int(
+            blocker_record.get("evaluations"), "blocker evaluations"
+        ),
+        "independent_resolved": resolved,
+        "censored": _nonnegative_int(values.get("censored"), "censored"),
+        "missing_data": missing,
+        "mean_after_estimated_friction_bps": mean,
+        "mean_excluding_largest_bps": ex_largest,
+        "cost_clearing_close_rate": _optional_probability(
+            capture.get("cost_clearing_close_rate"), "cost-clearing rate"
+        ),
+        "assessment": _path_assessment(resolved, missing, mean, ex_largest),
+        "execution_claim": False,
+        "automatic_live_change": False,
+    }
+
+
+def _path_assessment(
+    resolved: int,
+    missing: int,
+    mean: float | None,
+    ex_largest: float | None,
+) -> str:
+    if missing:
+        return "technical_gaps_present"
+    if resolved < _MINIMUM_INDEPENDENT_PATHS:
+        return "insufficient_independent_paths"
+    if mean is None or ex_largest is None or mean <= 0.0 or ex_largest <= 0.0:
+        return "negative_or_concentrated_after_estimated_friction"
+    return "robust_report_only_research_lead"
+
+
+def _scarcity(evaluations: int, eligible: int) -> str:
+    if eligible:
+        return "eligible_signal_observed"
+    if not evaluations:
+        return "no_completed_route_evaluations"
+    return "zero_eligible_signal_observed_no_frequency_conclusion"
+
+
+def _observation_window(audit: Record) -> dict[str, object]:
+    run = _mapping(audit.get("run"), "audit run")
+    start = _timestamp(run.get("first_observed_at_utc"), "window start")
+    end = _timestamp(run.get("last_observed_at_utc"), "window end")
+    if end < start:
+        raise ValueError("live diagnostic observation window is reversed")
+    return {
+        "start_utc": start.isoformat(),
+        "end_utc": end.isoformat(),
+        "duration_seconds": (end - start).total_seconds(),
+    }
+
+
+def _totals(signal: Record) -> dict[str, int]:
+    coverage = _mapping(signal.get("coverage"), "signal coverage")
+    return {
+        "evaluations": _nonnegative_int(signal.get("evaluations"), "evaluations"),
+        "eligible_evaluations": _nonnegative_int(
+            signal.get("eligible_evaluations"), "eligible evaluations"
+        ),
+        "directional_evaluations": _nonnegative_int(
+            signal.get("directional_evaluations"), "directional evaluations"
+        ),
+        "right_censored_observations": _nonnegative_int(
+            coverage.get("right_censored_observations"), "right censored"
+        ),
+    }
+
+
+def _limitations() -> list[str]:
+    return [
+        "readiness paths are completed-candle counterfactuals, not orders or fills",
+        "zero eligible signals over one window does not estimate long-run frequency",
+        "friction estimates omit unknown counterfactual queue and impact effects",
+        "a research lead cannot route, resize, retune, or promote a live strategy",
+    ]
+
+
+def _horizon_key(item: tuple[str, object]) -> int:
+    return _positive_int_text(item[0], "horizon")
+
+
+def _mapping(value: object, label: str) -> Record:
+    if not isinstance(value, Mapping):
+        raise ValueError(f"{label} must be an object")
+    return value
+
+
+def _counts(value: object, label: str) -> dict[str, int]:
+    raw = _mapping(value, label)
+    return {str(key): _nonnegative_int(count, label) for key, count in raw.items()}
+
+
+def _text_list(value: object, label: str) -> list[str]:
+    if not isinstance(value, list) or not all(isinstance(item, str) for item in value):
+        raise ValueError(f"{label} must be an array of text")
+    return list(value)
+
+
+def _optional_text(value: object) -> str | None:
+    if value is None:
+        return None
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError("optional text must be non-empty")
+    return value.strip()
+
+
+def _nonnegative_int(value: object, label: str) -> int:
+    if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+        raise ValueError(f"{label} must be a nonnegative integer")
+    return value
+
+
+def _positive_int_text(value: str, label: str) -> int:
+    try:
+        parsed = int(value)
+    except ValueError as exc:
+        raise ValueError(f"{label} must be positive integer text") from exc
+    if parsed <= 0:
+        raise ValueError(f"{label} must be positive integer text")
+    return parsed
+
+
+def _probability(value: object, label: str) -> float:
+    parsed = _number(value, label)
+    if not 0.0 <= parsed <= 1.0:
+        raise ValueError(f"{label} must be between zero and one")
+    return parsed
+
+
+def _optional_probability(value: object, label: str) -> float | None:
+    return None if value is None else _probability(value, label)
+
+
+def _optional_number(value: object) -> float | None:
+    return None if value is None else _number(value, "optional number")
+
+
+def _number(value: object, label: str) -> float:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise ValueError(f"{label} must be numeric")
+    parsed = float(value)
+    if not isfinite(parsed):
+        raise ValueError(f"{label} must be finite")
+    return parsed
+
+
+def _timestamp(value: object, label: str) -> datetime:
+    if not isinstance(value, str):
+        raise ValueError(f"{label} must be an ISO timestamp")
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise ValueError(f"{label} must be an ISO timestamp") from exc
+    if parsed.tzinfo is None:
+        raise ValueError(f"{label} must include timezone")
+    return parsed
