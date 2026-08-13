@@ -72,6 +72,23 @@ def test_digest_rejects_execution_capable_opportunity_input(
         digest.build_cohort_improvement_digest(audit)
 
 
+def test_digest_reports_missing_opportunity_matrix_without_losing_queue(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A new live profile must remain observable before paths have matured."""
+    monkeypatch.setattr(digest, "build_successor_triage", lambda audit: _triage())
+    monkeypatch.setattr(digest, "build_side_composition", lambda audit: _sides())
+    audit = _audit()
+    audit["execution_opportunity_matrix"] = None
+
+    report = digest.build_cohort_improvement_digest(audit)
+
+    assert len(report["experiment_queue"]) == 3
+    assert report["opportunity_matrix_status"] == "unavailable_awaiting_evidence"
+    assert report["robust_near_misses"] == []
+    assert report["evidence_health"]["opportunity_matrix_available"] is False
+
+
 def test_rejected_timing_set_updates_research_queue_without_promotion(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

@@ -8,6 +8,7 @@ from collections.abc import Callable, Mapping, Sequence
 from datetime import UTC, datetime
 from hashlib import sha256
 import json
+import math
 from pathlib import Path
 import sys
 import time
@@ -16,6 +17,10 @@ from hypervector.research.checkpoint_storage import write_atomic_json
 from hypervector.research.cohort_improvement_digest import (
     build_cohort_improvement_digest,
 )
+from hypervector.research.cohort_improvement_history import append_material_report
+from hypervector.research.cohort_continuous_improvement import (
+    build_continuous_improvement_report,
+)
 from hypervector.data.oxa_storage import file_evidence
 
 Record = Mapping[str, object]
@@ -23,8 +28,10 @@ SleepFn = Callable[[float], None]
 
 _CHECKPOINT = Path("data/runtime/bidirectional_cohort/latest_checkpoint.json")
 _OUTPUT = Path("data/runtime/bidirectional_cohort/latest_improvement_digest.json")
+_HISTORY = Path("data/live/research/v51_continuous_improvement.jsonl")
+_MAXIMUM_CHECKPOINT_AGE_SECONDS = 180.0
 _DECISION_OVERRIDES = Path(
-    "configs/research/cohort_improvement_decision_overrides_v1.json"
+    "configs/research/cohort_improvement_decision_overrides_v51.json"
 )
 
 
@@ -33,12 +40,18 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--checkpoint", type=Path, default=_CHECKPOINT)
     parser.add_argument("--out", type=Path, default=_OUTPUT)
+    parser.add_argument("--history", type=Path, default=_HISTORY)
     parser.add_argument(
         "--decision-overrides",
         type=Path,
         default=_DECISION_OVERRIDES,
     )
     parser.add_argument("--interval-seconds", type=float, default=120.0)
+    parser.add_argument(
+        "--maximum-checkpoint-age-seconds",
+        type=float,
+        default=_MAXIMUM_CHECKPOINT_AGE_SECONDS,
+    )
     parser.add_argument("--max-cycles", type=int, default=0)
     parser.add_argument("--once", action="store_true")
     return parser
@@ -49,13 +62,20 @@ def refresh(args: argparse.Namespace) -> dict[str, object]:
     raw = args.checkpoint.read_bytes()
     checkpoint = _mapping(json.loads(raw), "improvement checkpoint")
     _validate_checkpoint(checkpoint)
+    _validate_checkpoint_freshness(
+        checkpoint,
+        datetime.now(UTC),
+        args.maximum_checkpoint_age_seconds,
+    )
     audit = _mapping(checkpoint.get("audit"), "improvement checkpoint audit")
     overrides, override_raw = _load_decision_overrides(args.decision_overrides)
-    report = build_cohort_improvement_digest(
+    _validate_override_identity(overrides, audit)
+    digest = build_cohort_improvement_digest(
         audit,
         experiment_overrides=overrides,
     )
-    material_hash = _digest(report)
+    report = build_continuous_improvement_report(checkpoint, digest)
+    material_hash = _material_digest(report)
     report.update(
         {
             "generated_at_utc": datetime.now(UTC).isoformat(),
@@ -78,6 +98,7 @@ def refresh(args: argparse.Namespace) -> dict[str, object]:
         }
     )
     write_atomic_json(args.out, report)
+    append_material_report(args.history, report)
     return report
 
 
@@ -128,11 +149,50 @@ def _validate_checkpoint(checkpoint: Record) -> None:
             raise ValueError(f"improvement checkpoint has invalid {field}")
 
 
+def _validate_override_identity(overrides: Record, audit: Record) -> None:
+    run = _mapping(audit.get("run"), "improvement audit run")
+    expected = (
+        ("source_profile_id", "profile_id"),
+        ("source_profile_fingerprint", "profile_fingerprint"),
+    )
+    mismatches = [
+        source
+        for source, target in expected
+        if _text(overrides.get(source), source) != _text(run.get(target), target)
+    ]
+    if mismatches:
+        raise ValueError(f"decision override profile identity mismatch: {mismatches}")
+
+
+def _validate_checkpoint_freshness(
+    checkpoint: Record,
+    observed_at: datetime,
+    maximum_age_seconds: float,
+) -> None:
+    if not math.isfinite(maximum_age_seconds) or maximum_age_seconds <= 0.0:
+        raise ValueError("maximum checkpoint age must be positive and finite")
+    generated_at = _timestamp(
+        checkpoint.get("generated_at_utc"), "checkpoint generation time"
+    )
+    age = (observed_at - generated_at).total_seconds()
+    if age < 0.0:
+        raise ValueError("checkpoint generation time is in the future")
+    if age > maximum_age_seconds:
+        raise ValueError(
+            f"checkpoint is stale: age={age:.3f}s limit={maximum_age_seconds:.3f}s"
+        )
+
+
 def _validate_loop_args(args: argparse.Namespace) -> None:
-    if args.interval_seconds <= 0.0:
-        raise ValueError("improvement monitor interval must be positive")
+    if not math.isfinite(args.interval_seconds) or args.interval_seconds <= 0.0:
+        raise ValueError("improvement monitor interval must be positive and finite")
     if args.max_cycles < 0:
         raise ValueError("improvement monitor max cycles cannot be negative")
+    if (
+        not math.isfinite(args.maximum_checkpoint_age_seconds)
+        or args.maximum_checkpoint_age_seconds <= 0.0
+    ):
+        raise ValueError("maximum checkpoint age must be positive and finite")
 
 
 def _emit_success(report: Record) -> None:
@@ -179,6 +239,32 @@ def _text(value: object, label: str) -> str:
     if not isinstance(value, str) or not value.strip():
         raise ValueError(f"{label} must be non-empty text")
     return value.strip()
+
+
+def _timestamp(value: object, label: str) -> datetime:
+    text = _text(value, label)
+    try:
+        parsed = datetime.fromisoformat(text.replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise ValueError(f"{label} must be ISO-8601") from exc
+    if parsed.tzinfo is None:
+        raise ValueError(f"{label} must include a timezone")
+    return parsed.astimezone(UTC)
+
+
+def _material_digest(value: Record) -> str:
+    material = json.loads(json.dumps(value))
+    source = material.get("source")
+    if isinstance(source, dict):
+        source.pop("last_observed_at_utc", None)
+    operational = material.get("operational_assessment")
+    if isinstance(operational, dict):
+        operational.pop("heartbeat_age_seconds", None)
+    evidence_health = material.get("evidence_health")
+    if isinstance(evidence_health, dict):
+        evidence_health.pop("right_censored_observations", None)
+        evidence_health.pop("metric_value_gaps", None)
+    return _digest(material)
 
 
 def _digest(value: Record) -> str:

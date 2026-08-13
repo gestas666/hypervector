@@ -41,6 +41,7 @@ def build_cohort_improvement_digest(
     triage = build_successor_triage(audit)
     sides = build_side_composition(audit)
     matrix = _validated_matrix(audit)
+    matrix_status = _text(matrix.get("availability_status"), "matrix status")
     queue = _experiment_queue(triage)
     queue, override_summary = _apply_experiment_overrides(queue, experiment_overrides)
     near_misses = _robust_near_misses(matrix, triage)
@@ -51,7 +52,8 @@ def build_cohort_improvement_digest(
         "contract": dict(_CONTRACT),
         "source": source,
         "performance": _performance(audit),
-        "evidence_health": _evidence_health(audit),
+        "evidence_health": _evidence_health(audit, matrix_status),
+        "opportunity_matrix_status": matrix_status,
         "triage_summary": dict(_mapping(triage.get("summary"), "triage summary")),
         "experiment_queue": queue,
         "research_decision_overrides": override_summary,
@@ -184,7 +186,13 @@ def _experiment_sort_key(row: Record) -> tuple[int, int, int, str]:
 
 
 def _validated_matrix(audit: Record) -> Record:
-    matrix = _mapping(audit.get("execution_opportunity_matrix"), "opportunity matrix")
+    raw = audit.get("execution_opportunity_matrix")
+    if raw is None:
+        return {
+            "availability_status": "unavailable_awaiting_evidence",
+            "results": [],
+        }
+    matrix = _mapping(raw, "opportunity matrix")
     contract = _mapping(matrix.get("contract"), "opportunity matrix contract")
     if contract.get("report_only") is not True:
         raise ValueError("opportunity matrix must be report-only")
@@ -192,7 +200,7 @@ def _validated_matrix(audit: Record) -> Record:
         raise ValueError("opportunity matrix execution authority must equal none")
     if contract.get("live_strategy_changed") is not False:
         raise ValueError("opportunity matrix cannot change the live strategy")
-    return matrix
+    return {**matrix, "availability_status": "available"}
 
 
 def _robust_near_misses(matrix: Record, triage: Record) -> list[dict[str, object]]:
@@ -273,7 +281,7 @@ def _performance(audit: Record) -> dict[str, object]:
     }
 
 
-def _evidence_health(audit: Record) -> dict[str, object]:
+def _evidence_health(audit: Record, matrix_status: str) -> dict[str, object]:
     coverage = _mapping(audit.get("coverage"), "audit coverage")
     signal = _mapping(audit.get("signal_outcomes"), "signal outcomes")
     signal_coverage = _mapping(signal.get("coverage"), "signal coverage")
@@ -293,6 +301,7 @@ def _evidence_health(audit: Record) -> dict[str, object]:
             signal_coverage.get("right_censored_observations"), "censored observations"
         ),
         "faults": _nonnegative_int(health.get("faults"), "faults"),
+        "opportunity_matrix_available": matrix_status == "available",
     }
 
 

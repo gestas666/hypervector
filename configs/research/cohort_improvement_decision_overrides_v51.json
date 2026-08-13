@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "contract": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_promotion": false,
+    "runtime_strategy_changed": false
+  },
+  "source_profile_id": "multi_asset_growth_first_5000_six_asset_profit_lock_candidate_v51",
+  "source_profile_fingerprint": "30cd54bb5b5b17249ae0a6a3b01d5702b276d51f8dc5ddd6b4d36ab6aa7d1908",
+  "routes": {},
+  "evidence": []
+}
