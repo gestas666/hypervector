@@ -6,6 +6,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from math import isfinite
 
+from hypervector.live.multi_asset_live_config import MultiAssetLiveConfig
 from hypervector.research.cohort_live_audit_values import nonnegative_int, number
 from hypervector.research.cohort_one_blocker_execution_feasibility import (
     OneBlockerExecutionContract,
@@ -42,6 +43,34 @@ class ProviderReplaySettings:
         ):
             if not isfinite(value) or value <= 0.0:
                 raise ValueError(f"{label} must be positive and finite")
+
+
+def provider_replay_settings(
+    config: MultiAssetLiveConfig,
+) -> dict[Pair, ProviderReplaySettings]:
+    """Project exact provider-symbol execution settings for replay."""
+    assets = {asset.symbol: asset for asset in config.assets}
+    output: dict[Pair, ProviderReplaySettings] = {}
+    for provider in config.providers:
+        for symbol in provider.execution_symbols:
+            contract = provider.execution_for(symbol)
+            if contract.entry_liquidity != "taker_ioc":
+                raise ValueError("BBO opportunity matrix currently requires taker IOC")
+            stop = contract.stop_bps or contract.maximum_stop_bps
+            if stop is None:
+                raise ValueError(f"provider {provider.strategy_id} has no stop proxy")
+            sizing = provider.entry_sizing(symbol)
+            notional = (
+                sizing.max_notional_usd
+                if sizing is not None
+                else assets[symbol].max_notional_usd
+            )
+            output[(provider.strategy_id, symbol)] = ProviderReplaySettings(
+                provider.maximum_entry_delay_seconds * 1_000,
+                notional,
+                stop,
+            )
+    return output
 
 
 def build_execution_opportunity_matrix(

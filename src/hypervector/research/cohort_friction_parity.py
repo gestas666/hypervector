@@ -12,6 +12,7 @@ from hypervector.research.cohort_friction_contracts import (
     contract_mismatches,
     modeled_contract,
     runtime_contract,
+    symbol_override_modeled_contract,
 )
 
 Record = Mapping[str, object]
@@ -65,8 +66,13 @@ def _provider_parity(
     asset: Record,
     fills: Sequence[Record],
 ) -> dict[str, object]:
-    modeled = modeled_contract(strategy, _text(asset.get("symbol"), "asset symbol"))
+    symbol = _text(asset.get("symbol"), "asset symbol")
     runtime, runtime_source = runtime_contract(provider, asset)
+    modeled = (
+        symbol_override_modeled_contract(strategy, symbol)
+        if runtime_source == "provider_execution_symbol_override"
+        else modeled_contract(strategy, symbol)
+    )
     if runtime is None:
         state, mismatches = "runtime_contract_missing", ["runtime_contract_missing"]
     elif modeled is None:

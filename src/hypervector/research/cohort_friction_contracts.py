@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 import math
 
 from hypervector.live.cohort_execution_plan import ProviderExecutionContract
@@ -72,6 +72,20 @@ def modeled_contract(
     return exact or _modeled_contracts().get(strategy)
 
 
+def symbol_override_modeled_contract(
+    strategy: str,
+    symbol: str,
+) -> ModeledExecutionContract | None:
+    """Return cited mechanics for an explicit deployed symbol override."""
+    if (strategy, symbol) != (RANGE_STRATEGY, "SOL"):
+        return None
+    return replace(
+        _range_modeled_contract(),
+        stop_bps=80.0,
+        evidence_source=V51_GROWTH_STRESS_EVIDENCE,
+    )
+
+
 def runtime_contract(
     provider: Record,
     asset: Record,
@@ -80,8 +94,29 @@ def runtime_contract(
     execution = provider.get("execution")
     if execution is not None:
         contract = ProviderExecutionContract.from_payload(execution)
-        return _provider_runtime_contract(contract), "provider_execution"
+        contract, source = _apply_symbol_stop_override(contract, provider, asset)
+        return _provider_runtime_contract(contract), source
     return _asset_runtime_contract(asset), "asset_fallback"
+
+
+def _apply_symbol_stop_override(
+    contract: ProviderExecutionContract,
+    provider: Record,
+    asset: Record,
+) -> tuple[ProviderExecutionContract, str]:
+    """Apply the same exact symbol stop precedence as the live runner."""
+    overrides = provider.get("stop_bps_overrides", {})
+    if not isinstance(overrides, Mapping):
+        raise ValueError("provider stop_bps_overrides must be an object")
+    symbol = _nonempty_text(asset.get("symbol"), "asset symbol")
+    if symbol not in overrides:
+        return contract, "provider_execution"
+    payload = contract.as_payload()
+    payload["stop_bps"] = overrides[symbol]
+    return (
+        ProviderExecutionContract.from_payload(payload),
+        "provider_execution_symbol_override",
+    )
 
 
 def contract_mismatches(
@@ -455,3 +490,9 @@ def _positive_integer(value: object, label: str) -> int:
 
 def _rate_bps(rate: float) -> float:
     return round(rate * 10_000.0, 10)
+
+
+def _nonempty_text(value: object, label: str) -> str:
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError(f"{label} must be non-empty text")
+    return value.strip()

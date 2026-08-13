@@ -20,8 +20,8 @@ from hypervector.live.multi_asset_live_config import (
     load_multi_asset_live_config,
 )
 from hypervector.research.cohort_execution_opportunity_matrix import (
-    ProviderReplaySettings,
     build_execution_opportunity_matrix,
+    provider_replay_settings,
 )
 from hypervector.research.cohort_live_audit_values import run_id
 from hypervector.research.cohort_live_run_selection import select_armed_live_run
@@ -60,7 +60,7 @@ def _publish(args: argparse.Namespace) -> tuple[dict[str, object], Path]:
             selected,
             assets,
             {symbol: evidence.rows for symbol, evidence in funding.items()},
-            settings_by_pair=_provider_settings(config),
+            settings_by_pair=provider_replay_settings(config),
             horizon_minutes=args.horizon_minutes,
             taker_fee_rate=args.taker_fee_rate,
         )
@@ -116,36 +116,6 @@ def _funding_evidence(
         symbol: read_complete_hl_funding_evidence(paths[symbol], symbol)
         for symbol in symbols
     }
-
-
-def _provider_settings(
-    config: MultiAssetLiveConfig,
-) -> dict[tuple[str, str], ProviderReplaySettings]:
-    assets = {asset.symbol: asset for asset in config.assets}
-    output: dict[tuple[str, str], ProviderReplaySettings] = {}
-    for provider in config.providers:
-        if provider.execution.entry_liquidity != "taker_ioc":
-            raise ValueError("BBO opportunity matrix currently requires taker IOC")
-        stop = (
-            provider.execution.stop_bps
-            if provider.execution.stop_policy == "fixed_bps"
-            else provider.execution.maximum_stop_bps
-        )
-        if stop is None:
-            raise ValueError(f"provider {provider.strategy_id} has no stop proxy")
-        for symbol in provider.execution_symbols:
-            sizing = provider.entry_sizing(symbol)
-            notional = (
-                sizing.max_notional_usd
-                if sizing is not None
-                else assets[symbol].max_notional_usd
-            )
-            output[(provider.strategy_id, symbol)] = ProviderReplaySettings(
-                maximum_entry_delay_ms=provider.maximum_entry_delay_seconds * 1_000,
-                notional_usd=notional,
-                stop_proxy_bps=stop,
-            )
-    return output
 
 
 def _validate_funding_bounds(

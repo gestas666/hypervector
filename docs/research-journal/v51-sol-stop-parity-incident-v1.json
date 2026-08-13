@@ -1,0 +1,53 @@
+{
+  "schema_version": "v51_sol_stop_parity_incident_v1",
+  "recorded_at_utc": "2026-08-13T23:24:54Z",
+  "profile_id": "multi_asset_growth_first_5000_six_asset_profit_lock_candidate_v51",
+  "profile_fingerprint": "30cd54bb5b5b17249ae0a6a3b01d5702b276d51f8dc5ddd6b4d36ab6aa7d1908",
+  "run_id": "bidirectional-live-1786656816144",
+  "hypothesis_key": "range_onset_bidirectional_v1|SOL|symbol_stop_projection",
+  "problem": "The report-only friction parity row projected the provider default 60-bps stop for SOL despite the deployed symbol override being 80 bps.",
+  "root_cause": "Two report-only consumers read provider.execution directly instead of applying provider.execution_for(symbol) precedence.",
+  "live_execution_impact": "none_observed",
+  "live_execution_evidence": {
+    "configured_stop_bps": 80.0,
+    "automatic_plan_selector_stop_bps": 80.0,
+    "manual_attribution_selector_stop_bps": 80.0,
+    "active_identity_stop_bps_overrides": {
+      "SOL": 80.0
+    },
+    "open_positions_at_verification": 0
+  },
+  "affected_outputs": [
+    "friction parity runtime contract",
+    "friction parity modeled contract",
+    "execution opportunity matrix stop proxy"
+  ],
+  "change": "Apply exact symbol-stop precedence to friction parity and opportunity-matrix settings; bind the 80-bps modeled SOL contract to the v51 growth-stress evidence only when the deployed symbol override is present.",
+  "execution_authority": "none",
+  "runtime_strategy_changed": false,
+  "verification": {
+    "focused_tests": "33 passed",
+    "full_non_network_tests": "5380 passed, 4 deselected, 0 failed",
+    "published_checkpoint": {
+      "modeled_stop_bps": 80.0,
+      "runtime_stop_bps": 80.0,
+      "runtime_contract_source": "provider_execution_symbol_override",
+      "parity_state": "runtime_shape_aligned",
+      "mismatches": []
+    },
+    "backend_state": "running_consistent",
+    "faulted_assets": [],
+    "asset_states": {
+      "BTC": "FLAT",
+      "ETH": "FLAT",
+      "SOL": "FLAT",
+      "HYPE": "FLAT",
+      "xyz:SP500": "FLAT",
+      "xyz:SPCX": "FLAT"
+    }
+  },
+  "confidence": "high",
+  "uncertainties": "No v51 SOL entry has occurred yet, so a persisted real bound-plan row is not available; code-path tests and the active serialized identity agree on 80 bps.",
+  "falsifier": "Any v51 SOL entry whose persisted bound execution plan reports 60 bps, or any fresh checkpoint that reverts to a 60-bps SOL runtime projection, invalidates this conclusion and requires immediate fail-closed handling.",
+  "recommendation": "Keep the live strategy contract unchanged, continue monitoring, and inspect the first real SOL bound-plan row against 80 bps."
+}
