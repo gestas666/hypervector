@@ -28,6 +28,7 @@ def test_runbook_requires_flat_zero_epoch_and_poststart_audit() -> None:
     assert "ALL-TIME 0/0" in text
     assert "CURRENT RUN 0/0" in text
     assert "scripts/cohort_accounting_rollover.py" in text
+    assert "accounting_epochs/v51_first_live_d022a8a" in text
     assert text.count("--accounting-epoch-bundle") >= 2
     assert "--i-accept-live-risk" in text
     assert "scripts/v51_poststart_acceptance.py" in text

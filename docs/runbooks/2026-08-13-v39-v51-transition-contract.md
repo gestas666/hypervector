@@ -119,7 +119,7 @@ uv run python scripts/cohort_accounting_rollover.py \
   --preflight data/logs/research/bidirectional_cohort/v51_final_flat_preflight.json \
   --prestart-bundle <BUNDLE_FROM_PREVIOUS_JSON> \
   --epoch-id v51_first_live \
-  --out data/backups/bidirectional_cohort/accounting_epochs/v51_first_live
+  --out data/backups/bidirectional_cohort/accounting_epochs/v51_first_live_d022a8a
 
 uv run python scripts/cohort_accounting_rollover.py \
   --prior-config configs/multi_asset_bidirectional_hype_compression_range_retired_current_canary_v39.toml \
@@ -128,7 +128,7 @@ uv run python scripts/cohort_accounting_rollover.py \
   --preflight data/logs/research/bidirectional_cohort/v51_final_flat_preflight.json \
   --prestart-bundle <BUNDLE_FROM_PREVIOUS_JSON> \
   --epoch-id v51_first_live \
-  --out data/backups/bidirectional_cohort/accounting_epochs/v51_first_live \
+  --out data/backups/bidirectional_cohort/accounting_epochs/v51_first_live_d022a8a \
   --yes
 ```
 
@@ -139,7 +139,7 @@ uv run python scripts/multi_asset_bidirectional_canary_tui.py \
   --mode monitor \
   --config configs/multi_asset_bidirectional_hype_compression_range_retired_current_canary_v39.toml \
   --staged-config configs/multi_asset_growth_first_5000_six_asset_profit_lock_candidate_v51.toml \
-  --accounting-epoch-bundle data/backups/bidirectional_cohort/accounting_epochs/v51_first_live \
+  --accounting-epoch-bundle data/backups/bidirectional_cohort/accounting_epochs/v51_first_live_d022a8a \
   --growth-preflight data/logs/research/bidirectional_cohort/v51_final_flat_preflight.json
 ```
 
@@ -149,7 +149,7 @@ uv run python scripts/multi_asset_bidirectional_canary_tui.py \
 uv run python scripts/multi_asset_bidirectional_canary_tui.py \
   --mode live \
   --config configs/multi_asset_growth_first_5000_six_asset_profit_lock_candidate_v51.toml \
-  --accounting-epoch-bundle data/backups/bidirectional_cohort/accounting_epochs/v51_first_live \
+  --accounting-epoch-bundle data/backups/bidirectional_cohort/accounting_epochs/v51_first_live_d022a8a \
   --enabled \
   --i-accept-live-risk
 ```
