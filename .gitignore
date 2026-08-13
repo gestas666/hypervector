@@ -64,5 +64,11 @@ audio/
 
 # Agent / review scratch (never ship)
 .tmp-nt-review/
+/.playwright-cli/
+/output/
+docs/reports/**/report.html.tmp-*.verification-failure.png
+docs/reports/**/artifact.invalid-*.json
+docs/reports/**/artifact.reader-fallback.json
+docs/reports/**/artifact.rejected-*.json
 
 .pytest-*.txt
