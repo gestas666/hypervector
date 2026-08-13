@@ -1,95 +1,56 @@
 //! Navigable read-only view of effective backend configuration.
 
+#[path = "config_view_execution_rows.rs"]
+mod config_view_execution_rows;
+#[path = "config_view_format.rs"]
+mod config_view_format;
+#[path = "config_view_runtime_rows.rs"]
+mod config_view_runtime_rows;
+#[path = "config_view_strategy_rows.rs"]
+mod config_view_strategy_rows;
+
 use ratatui::{
     Frame,
     layout::{Constraint, Direction, Layout, Rect},
     text::Span,
     widgets::{Block, Borders, Paragraph, Row, Table},
 };
-use serde_json::Value;
 
+use self::config_view_execution_rows::{cost_rows, execution_rows};
+use self::config_view_runtime_rows::{
+    apex_mm_runtime_rows, observer_rows, runtime_rows, source_follow_evidence_rows,
+};
+use self::config_view_strategy_rows::strategy_rows;
 use crate::app::App;
 use crate::backend_telemetry::BackendTelemetrySnapshot;
+use crate::config_pine_stack::pine_stack_config_rows;
+use crate::config_regime::regime_rows;
 
-/// One human-readable effective backend setting.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ConfigMenuRow {
-    pub category: String,
-    pub option: String,
-    pub value: String,
-    pub source: String,
-}
+pub use self::config_view_format::ConfigMenuRow;
+pub(crate) use self::config_view_format::{json_row, json_value, number_row, row};
 
 /// Flatten backend identity fields into selectable menu rows.
 pub fn backend_config_rows(backend: &BackendTelemetrySnapshot) -> Vec<ConfigMenuRow> {
+    if backend.is_apex_mm() {
+        let mut rows = apex_mm_runtime_rows(backend);
+        rows.extend(strategy_rows(backend));
+        rows.extend(execution_rows(backend));
+        rows.extend(cost_rows(backend));
+        return rows;
+    }
+    if backend.is_pine_stack() {
+        return pine_stack_config_rows(backend);
+    }
     let mut rows = runtime_rows(backend);
     rows.extend(strategy_rows(backend));
+    if backend.is_source_follow() {
+        rows.extend(source_follow_evidence_rows(backend));
+    }
     rows.extend(regime_rows(backend));
+    rows.extend(observer_rows(backend));
     rows.extend(execution_rows(backend));
     rows.extend(cost_rows(backend));
     rows
-}
-
-fn regime_rows(backend: &BackendTelemetrySnapshot) -> Vec<ConfigMenuRow> {
-    let policy = &backend.regime_policy;
-    vec![
-        json_row(
-            "Regime",
-            "Execution timeframe",
-            policy,
-            "execution_timeframe",
-            "regime_policy",
-        ),
-        json_row(
-            "Regime",
-            "Primary regime timeframe",
-            policy,
-            "primary_timeframe",
-            "regime_policy",
-        ),
-        json_row(
-            "Regime",
-            "Context timeframe",
-            policy,
-            "context_timeframe",
-            "regime_policy",
-        ),
-        json_row(
-            "Regime",
-            "Context hard gate",
-            policy,
-            "context_is_hard_gate",
-            "regime_policy",
-        ),
-        json_row(
-            "Regime",
-            "Allowed entry states",
-            policy,
-            "allowed_entry_states",
-            "regime_policy",
-        ),
-        json_row(
-            "Regime",
-            "Blocked entry states",
-            policy,
-            "blocked_entry_states",
-            "regime_policy",
-        ),
-        json_row(
-            "Regime",
-            "Breakout direction required",
-            policy,
-            "breakout_requires_direction",
-            "regime_policy",
-        ),
-        json_row(
-            "Regime",
-            "Strength score is gate",
-            policy,
-            "confidence_is_gate",
-            "regime_policy",
-        ),
-    ]
 }
 
 /// Render effective settings as menu rows without mutating backend state.
@@ -99,8 +60,15 @@ pub fn render_backend_configuration(f: &mut Frame, app: &App, area: Rect) {
         .constraints([Constraint::Min(8), Constraint::Length(3)])
         .split(area);
     let menu = backend_config_rows(&app.backend);
-    let rows = menu.iter().enumerate().map(|(index, item)| {
-        let style = if index == app.config.selected_option_index {
+    let selected = app
+        .config
+        .selected_option_index
+        .min(menu.len().saturating_sub(1));
+    let visible_rows = chunks[0].height.saturating_sub(3) as usize;
+    let (start, end) = config_viewport(selected, menu.len(), visible_rows);
+    let rows = menu[start..end].iter().enumerate().map(|(offset, item)| {
+        let index = start + offset;
+        let style = if index == selected {
             app.theme.highlight
         } else {
             ratatui::style::Style::default()
@@ -117,16 +85,19 @@ pub fn render_backend_configuration(f: &mut Frame, app: &App, area: Rect) {
         .header(config_header(app))
         .block(
             Block::default()
-                .title(" EFFECTIVE BACKEND CONFIGURATION MENU ")
+                .title(format!(
+                    " EFFECTIVE BACKEND CONFIGURATION | SELECTED {}/{} | SHOWING {}-{} ",
+                    selected + usize::from(!menu.is_empty()),
+                    menu.len(),
+                    start + usize::from(!menu.is_empty()),
+                    end
+                ))
                 .borders(Borders::ALL)
                 .border_style(app.theme.border_active),
         );
     f.render_widget(table, chunks[0]);
-    let help = Paragraph::new(format!(
-        "[↑/↓] Select  │  Read only  │  Reset uses active root: {}",
-        active_data_root(&app.backend)
-    ))
-    .block(
+    let help_text = selected_config_detail(menu.get(selected));
+    let help = Paragraph::new(help_text).block(
         Block::default()
             .borders(Borders::ALL)
             .border_style(app.theme.border),
@@ -134,272 +105,24 @@ pub fn render_backend_configuration(f: &mut Frame, app: &App, area: Rect) {
     f.render_widget(help, chunks[1]);
 }
 
-fn runtime_rows(backend: &BackendTelemetrySnapshot) -> Vec<ConfigMenuRow> {
-    vec![
-        row(
-            "Runtime",
-            "Execution mode",
-            option(&backend.execution_mode),
-            "session_start",
-        ),
-        row(
-            "Runtime",
-            "Strategy",
-            option(&backend.strategy_name),
-            "session_start",
-        ),
-        row(
-            "Model",
-            "Metalabel mode",
-            option(&backend.metalabel_mode),
-            "session_start",
-        ),
-        row(
-            "Lifecycle",
-            "Shadow reset",
-            "explicit CLI only".into(),
-            &shadow_reset_command(backend),
-        ),
-        row(
-            "Lifecycle",
-            "Active data root",
-            active_data_root(backend),
-            "session_start",
-        ),
-        number_row(
-            "Runtime",
-            "Lookback",
-            &backend.runtime,
-            "lookback_days",
-            "runtime",
-            "d",
-            1.0,
-        ),
-        json_row(
-            "Order book",
-            "Archive enabled",
-            &backend.orderbook_archive,
-            "enabled",
-            "orderbook_archive",
-        ),
-        number_row(
-            "Order book",
-            "Archive depth",
-            &backend.orderbook_archive,
-            "depth_levels",
-            "orderbook_archive",
-            " levels",
-            1.0,
-        ),
-    ]
-}
-
-fn strategy_rows(backend: &BackendTelemetrySnapshot) -> Vec<ConfigMenuRow> {
-    vec![
-        json_row(
-            "Position",
-            "Position mode",
-            &backend.position_policy,
-            "position_mode",
-            "position_policy",
-        ),
-        json_row(
-            "Position",
-            "Max per symbol",
-            &backend.position_policy,
-            "max_positions_per_symbol",
-            "position_policy",
-        ),
-        number_row(
-            "Risk",
-            "Leverage",
-            &backend.strategy_params,
-            "leverage",
-            "strategy_params",
-            "x",
-            1.0,
-        ),
-        number_row(
-            "Risk",
-            "Margin allocation",
-            &backend.risk,
-            "margin_fraction",
-            "risk",
-            "%",
-            100.0,
-        ),
-        number_row(
-            "Exit",
-            "Take-profit target",
-            &backend.exits,
-            "target_margin_pct",
-            "exits",
-            "%",
-            1.0,
-        ),
-        json_row(
-            "Exit",
-            "Target basis",
-            &backend.exits,
-            "target_basis",
-            "exits",
-        ),
-        json_row(
-            "Exit",
-            "Range policy",
-            &backend.exits,
-            "range_policy",
-            "exits",
-        ),
-    ]
-}
-
-fn execution_rows(backend: &BackendTelemetrySnapshot) -> Vec<ConfigMenuRow> {
-    vec![
-        json_row(
-            "Orders",
-            "Order type",
-            &backend.execution_policy,
-            "order_type",
-            "execution",
-        ),
-        json_row(
-            "Orders",
-            "Time in force",
-            &backend.execution_policy,
-            "time_in_force",
-            "execution",
-        ),
-        number_row(
-            "Orders",
-            "Entry TTL",
-            &backend.execution_policy,
-            "entry_ttl_seconds",
-            "execution",
-            "s",
-            1.0,
-        ),
-        json_row(
-            "Orders",
-            "Expired entry re-arm",
-            &backend.execution_policy,
-            "expired_entry_rearm_policy",
-            "execution",
-        ),
-        json_row(
-            "Orders",
-            "Same-side re-entry",
-            &backend.execution_policy,
-            "same_direction_reentry_policy",
-            "execution",
-        ),
-        number_row(
-            "Orders",
-            "Re-entry cooldown",
-            &backend.execution_policy,
-            "reentry_cooldown_bars",
-            "execution",
-            " bars",
-            1.0,
-        ),
-    ]
-}
-
-fn cost_rows(backend: &BackendTelemetrySnapshot) -> Vec<ConfigMenuRow> {
-    vec![
-        number_row(
-            "Costs",
-            "Maker fee",
-            &backend.costs,
-            "maker_fee_rate",
-            "costs",
-            "bps",
-            10_000.0,
-        ),
-        json_row(
-            "Costs",
-            "Funding source",
-            &backend.costs,
-            "funding_source",
-            "costs",
-        ),
-    ]
-}
-
-fn row(category: &str, option: &str, value: String, source: &str) -> ConfigMenuRow {
-    ConfigMenuRow {
-        category: category.into(),
-        option: option.into(),
-        value,
-        source: source.into(),
+fn config_viewport(selected: usize, total: usize, capacity: usize) -> (usize, usize) {
+    if total == 0 || capacity == 0 {
+        return (0, 0);
     }
+    let end = (selected + 1).max(capacity).min(total);
+    (end.saturating_sub(capacity), end)
 }
 
-fn json_row(
-    category: &str,
-    option_name: &str,
-    object: &Value,
-    key: &str,
-    source: &str,
-) -> ConfigMenuRow {
-    row(category, option_name, json_value(object.get(key)), source)
-}
-
-fn number_row(
-    category: &str,
-    option_name: &str,
-    object: &Value,
-    key: &str,
-    source: &str,
-    suffix: &str,
-    multiplier: f64,
-) -> ConfigMenuRow {
-    let value = object
-        .get(key)
-        .and_then(Value::as_f64)
-        .map(|number| format!("{:.1}{suffix}", number * multiplier))
-        .unwrap_or_else(|| "not reported".into());
-    row(category, option_name, value, source)
-}
-
-fn json_value(value: Option<&Value>) -> String {
-    match value {
-        Some(Value::String(text)) => text.clone(),
-        Some(Value::Number(number)) => number.to_string(),
-        Some(Value::Bool(flag)) => flag.to_string(),
-        Some(Value::Array(values)) => values
-            .iter()
-            .filter_map(Value::as_str)
-            .collect::<Vec<_>>()
-            .join(", "),
-        _ => "not reported".into(),
-    }
-}
-
-fn option(value: &Option<String>) -> String {
-    value.clone().unwrap_or_else(|| "not reported".into())
-}
-
-fn active_data_root(backend: &BackendTelemetrySnapshot) -> String {
-    backend
-        .data_root
-        .clone()
-        .unwrap_or_else(|| "not reported".into())
-}
-
-fn shadow_reset_command(backend: &BackendTelemetrySnapshot) -> String {
-    let root = active_data_root(backend);
-    if root == "not reported" {
-        return "active data root not reported".into();
-    }
-    format!(
-        "uv run python -m hypervector --data-root {} hypervelocity-shadow-reset --yes",
-        shell_quote(&root)
+fn selected_config_detail(selected: Option<&ConfigMenuRow>) -> String {
+    selected.map_or_else(
+        || "SELECTED none | BACKEND CONFIGURATION NOT REPORTED".into(),
+        |row| {
+            format!(
+                "SELECTED {} / {} = {} | SOURCE {} | READ ONLY",
+                row.category, row.option, row.value, row.source
+            )
+        },
     )
-}
-
-fn shell_quote(value: &str) -> String {
-    format!("'{}'", value.replace('\'', "'\"'\"'"))
 }
 
 fn menu_constraints() -> [Constraint; 4] {

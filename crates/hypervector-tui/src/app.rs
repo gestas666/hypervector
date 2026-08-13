@@ -1,11 +1,15 @@
 //! Application state and event loop controller for Quant TA Regime Cockpit.
 
 use crate::backend_telemetry::BackendTelemetrySnapshot;
+use crate::cohort_config_state::CohortConfigEditor;
+use crate::cohort_operator::CohortOperatorDraft;
+use crate::cohort_trade_selection::CohortTradeFocus;
 use crate::model::{
     ActivePosition, EngineConfig, HypervelocityBookState, HypervelocityTrade, LivePaperStats,
     PaperTradeRecord, RegimeEvent, RegimeSnapshot, RegimeState,
 };
 use crate::theme::CockpitTheme;
+use std::path::PathBuf;
 
 pub struct App {
     pub symbol: String,
@@ -23,13 +27,34 @@ pub struct App {
     pub theme: CockpitTheme,
     pub tick_count: u64,
     pub should_quit: bool,
+    pub detached_lifecycle: bool,
     pub show_help_overlay: bool,
     pub selected_event_index: usize,
     pub show_event_detail_modal: bool,
     pub selected_trade_index: usize,
     pub show_trade_detail_modal: bool,
     pub theme_mode: usize,
-    pub active_tab: usize, // 0 = Dashboard, 1 = Regime Detection, 2 = Config
+    pub active_tab: usize,
+    pub selected_cohort_setup_index: usize,
+    pub show_cohort_setup_modal: bool,
+    pub show_cohort_chart_modal: bool,
+    pub selected_cohort_chart_provider_index: usize,
+    pub selected_cohort_symbol_index: usize,
+    pub cohort_trade_focus: CohortTradeFocus,
+    pub selected_cohort_lifecycle_index: usize,
+    pub selected_cohort_fill_index: usize,
+    pub show_cohort_fill_modal: bool,
+    pub selected_cohort_journal_index: usize,
+    pub show_cohort_journal_modal: bool,
+    pub cohort_command_inbox: Option<PathBuf>,
+    pub selected_cohort_provider_index: usize,
+    pub cohort_operator_side: String,
+    pub cohort_control_focus: usize,
+    pub cohort_confirmation: Option<CohortOperatorDraft>,
+    pub cohort_notice: Option<String>,
+    pub(crate) cohort_config_editor: Option<CohortConfigEditor>,
+    pub cohort_config_selected_index: usize,
+    pub cohort_config_context_offset: usize,
     // Hypervelocity state
     pub active_position: ActivePosition,
     pub previous_margin_pct: f64,
@@ -43,22 +68,16 @@ pub struct App {
     pub backend: BackendTelemetrySnapshot,
 }
 
-impl App {
-    pub fn new(
-        symbol: String,
-        timeframe: String,
-        snapshots: Vec<RegimeSnapshot>,
-        is_live: bool,
-        is_synthetic: bool,
-    ) -> Self {
-        let mut app = Self {
-            symbol,
-            timeframe,
-            snapshots,
+macro_rules! initial_app_state {
+    ($symbol:expr, $timeframe:expr, $snapshots:expr, $is_live:expr, $is_synthetic:expr) => {
+        App {
+            symbol: $symbol,
+            timeframe: $timeframe,
+            snapshots: $snapshots,
             current_index: 0,
             is_playing: true,
-            is_live,
-            is_synthetic,
+            is_live: $is_live,
+            is_synthetic: $is_synthetic,
             playback_speed: 1.0,
             events: Vec::new(),
             paper_trades: Vec::new(),
@@ -80,6 +99,7 @@ impl App {
             theme: CockpitTheme::default(),
             tick_count: 0,
             should_quit: false,
+            detached_lifecycle: false,
             show_help_overlay: false,
             selected_event_index: 0,
             show_event_detail_modal: false,
@@ -87,6 +107,26 @@ impl App {
             show_trade_detail_modal: false,
             theme_mode: 0,
             active_tab: 0,
+            selected_cohort_setup_index: 0,
+            show_cohort_setup_modal: false,
+            show_cohort_chart_modal: false,
+            selected_cohort_chart_provider_index: 0,
+            selected_cohort_symbol_index: 0,
+            cohort_trade_focus: CohortTradeFocus::Lifecycles,
+            selected_cohort_lifecycle_index: 0,
+            selected_cohort_fill_index: 0,
+            show_cohort_fill_modal: false,
+            selected_cohort_journal_index: 0,
+            show_cohort_journal_modal: false,
+            cohort_command_inbox: None,
+            selected_cohort_provider_index: 0,
+            cohort_operator_side: "long".into(),
+            cohort_control_focus: 0,
+            cohort_confirmation: None,
+            cohort_notice: None,
+            cohort_config_editor: None,
+            cohort_config_selected_index: 0,
+            cohort_config_context_offset: 0,
             active_position: ActivePosition::flat(),
             previous_margin_pct: 0.0,
             hv_trades: Vec::new(),
@@ -97,7 +137,19 @@ impl App {
             equity_history: Vec::new(),
             book_state: HypervelocityBookState::default(),
             backend: BackendTelemetrySnapshot::disconnected("backend ledger not loaded"),
-        };
+        }
+    };
+}
+
+impl App {
+    pub fn new(
+        symbol: String,
+        timeframe: String,
+        snapshots: Vec<RegimeSnapshot>,
+        is_live: bool,
+        is_synthetic: bool,
+    ) -> Self {
+        let mut app = initial_app_state!(symbol, timeframe, snapshots, is_live, is_synthetic);
         app.rebuild_events();
         if !app.is_live && !app.snapshots.is_empty() {
             app.update_book_state();
@@ -106,7 +158,92 @@ impl App {
     }
 
     pub fn toggle_tab(&mut self) {
-        self.active_tab = (self.active_tab + 1) % 3;
+        let count = if self.backend.is_multi_asset_cohort() {
+            9
+        } else {
+            4
+        };
+        self.active_tab = (self.active_tab + 1) % count;
+    }
+
+    /// Select the next backend-authored cohort setup row.
+    pub fn select_next_cohort_setup(&mut self) {
+        let count = self.backend.cohort.evaluations.len();
+        if self.selected_cohort_setup_index + 1 < count {
+            self.selected_cohort_setup_index += 1;
+        }
+    }
+
+    /// Select the previous backend-authored cohort setup row.
+    pub fn select_prev_cohort_setup(&mut self) {
+        self.selected_cohort_setup_index = self.selected_cohort_setup_index.saturating_sub(1);
+    }
+
+    /// Open setup details only when a real backend row is selected.
+    pub fn toggle_cohort_setup_modal(&mut self) {
+        if self.selected_cohort_setup_index < self.backend.cohort.evaluations.len() {
+            self.show_cohort_setup_modal = !self.show_cohort_setup_modal;
+        }
+    }
+
+    /// Move the shared coin selector by one bounded step.
+    pub fn move_cohort_symbol(&mut self, delta: isize) {
+        let count = self.backend.cohort.enabled_symbols.len();
+        if count == 0 {
+            self.selected_cohort_symbol_index = 0;
+            return;
+        }
+        self.selected_cohort_symbol_index = self
+            .selected_cohort_symbol_index
+            .saturating_add_signed(delta)
+            .min(count - 1);
+    }
+
+    /// Return the selected cohort symbol without manufacturing a default.
+    pub fn selected_cohort_symbol(&self) -> Option<&str> {
+        self.backend
+            .cohort
+            .enabled_symbols
+            .get(self.selected_cohort_symbol_index)
+            .map(String::as_str)
+    }
+
+    /// Select the next backend-authored research evidence row.
+    pub fn select_next_cohort_journal(&mut self) {
+        let count = self
+            .backend
+            .cohort_checkpoint
+            .observer_provider_journal
+            .len();
+        if self.selected_cohort_journal_index + 1 < count {
+            self.selected_cohort_journal_index += 1;
+        }
+    }
+
+    /// Select the previous backend-authored research evidence row.
+    pub fn select_prev_cohort_journal(&mut self) {
+        self.selected_cohort_journal_index = self.selected_cohort_journal_index.saturating_sub(1);
+    }
+
+    /// Open exact path evidence only when a backend journal row exists.
+    pub fn toggle_cohort_journal_modal(&mut self) {
+        if self.selected_cohort_journal_index
+            < self
+                .backend
+                .cohort_checkpoint
+                .observer_provider_journal
+                .len()
+        {
+            self.show_cohort_journal_modal = !self.show_cohort_journal_modal;
+        }
+    }
+
+    /// Close every cohort-specific modal without changing backend state.
+    pub fn close_cohort_modals(&mut self) {
+        self.show_cohort_setup_modal = false;
+        self.show_cohort_chart_modal = false;
+        self.show_cohort_fill_modal = false;
+        self.show_cohort_journal_modal = false;
     }
 
     pub fn select_next_event(&mut self) {

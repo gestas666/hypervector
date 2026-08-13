@@ -1,0 +1,152 @@
+//! Pending provider exit-policy formatting for the cohort config screen.
+
+use crate::app::App;
+use crate::backend_cohort_configuration::CohortPendingExitPolicy;
+use crate::cohort_widgets::provider_alias;
+use std::collections::BTreeMap;
+
+/// Return the selected pending provider and its exact exit contract.
+pub(crate) fn pending_provider_exit_label(app: &App) -> Option<(String, String)> {
+    let generation = app
+        .backend
+        .cohort_checkpoint
+        .configuration_generation
+        .as_ref()?;
+    let policies = generation.current_provider_exit_policies.as_ref()?;
+    let selected = app
+        .backend
+        .cohort
+        .providers
+        .get(app.selected_cohort_provider_index)
+        .and_then(|provider| policies.get_key_value(&provider.strategy_id));
+    let (strategy, policy) = selected.or_else(|| policies.iter().next())?;
+    let directional = directional_profit_locks(
+        generation
+            .current_provider_directional_exit_policies
+            .as_ref(),
+        strategy,
+        app.selected_cohort_symbol(),
+    );
+    Some((
+        provider_alias(strategy).to_string(),
+        format!(
+            "{} / RECIPE EXIT {} / {}{}",
+            hold_contract(policy),
+            policy.provider_recipe_exit_policy.to_uppercase(),
+            pending_profit_lock(policy),
+            directional,
+        ),
+    ))
+}
+
+fn directional_profit_locks(
+    policies: Option<&BTreeMap<String, CohortPendingExitPolicy>>,
+    strategy: &str,
+    symbol: Option<&str>,
+) -> String {
+    let (Some(policies), Some(symbol)) = (policies, symbol) else {
+        return String::new();
+    };
+    let labels = ["long", "short"]
+        .into_iter()
+        .filter_map(|side| {
+            policies
+                .get(&format!("{strategy}|{symbol}|{side}"))
+                .map(|policy| format!("{} {side}", pending_profit_lock(policy)))
+        })
+        .collect::<Vec<_>>();
+    if labels.is_empty() {
+        String::new()
+    } else {
+        format!(" / {symbol} {}", labels.join(" / "))
+    }
+}
+
+fn hold_contract(policy: &CohortPendingExitPolicy) -> String {
+    let soft = duration_label(policy.maximum_hold_seconds);
+    if policy.maximum_hold_policy == "fixed" {
+        return format!("FIXED {soft}");
+    }
+    let hard = policy
+        .hard_maximum_hold_seconds
+        .map_or_else(|| "N/A".into(), duration_label);
+    format!("REGIME EXTEND {soft} → HARD {hard}")
+}
+
+fn pending_profit_lock(policy: &CohortPendingExitPolicy) -> String {
+    profit_lock_label(
+        &policy.profit_lock_policy,
+        policy.profit_lock_activation_bps,
+        policy.profit_lock_floor_bps,
+        policy.profit_lock_giveback_bps,
+    )
+}
+
+fn profit_lock_label(
+    policy: &str,
+    activation: Option<f64>,
+    floor: Option<f64>,
+    giveback: Option<f64>,
+) -> String {
+    if policy == "none" {
+        return "PROFIT LOCK OFF".into();
+    }
+    match (activation, floor, giveback) {
+        (Some(activation), Some(floor), Some(giveback)) => {
+            format!("PROFIT LOCK {activation:.0}/{floor:.0}/{giveback:.0}bps")
+        }
+        _ => "PROFIT LOCK INVALID".into(),
+    }
+}
+
+fn duration_label(seconds: u64) -> String {
+    if seconds.is_multiple_of(3_600) {
+        format!("{}H", seconds / 3_600)
+    } else {
+        format!("{seconds}S")
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{directional_profit_locks, profit_lock_label};
+    use crate::backend_cohort_configuration::CohortPendingExitPolicy;
+    use std::collections::BTreeMap;
+
+    #[test]
+    fn profit_lock_labels_are_explicit() {
+        assert_eq!(
+            profit_lock_label("none", None, None, None),
+            "PROFIT LOCK OFF"
+        );
+        assert_eq!(
+            profit_lock_label("completed_bar_trailing", Some(25.0), Some(8.0), Some(6.0)),
+            "PROFIT LOCK 25/8/6bps",
+        );
+        assert_eq!(
+            profit_lock_label("completed_bar_trailing", Some(25.0), None, Some(6.0)),
+            "PROFIT LOCK INVALID",
+        );
+    }
+
+    #[test]
+    fn directional_labels_preserve_symbol_and_side() {
+        let policy = CohortPendingExitPolicy {
+            maximum_hold_seconds: 28_800,
+            maximum_hold_policy: "fixed".into(),
+            hard_maximum_hold_seconds: None,
+            provider_recipe_exit_policy: "ignore".into(),
+            profit_lock_policy: "completed_bar_trailing".into(),
+            profit_lock_activation_bps: Some(30.0),
+            profit_lock_floor_bps: Some(12.0),
+            profit_lock_giveback_bps: Some(7.0),
+        };
+        let policies = BTreeMap::from([("provider|HYPE|long".into(), policy)]);
+
+        assert_eq!(
+            directional_profit_locks(Some(&policies), "provider", Some("HYPE")),
+            " / HYPE PROFIT LOCK 30/12/7bps long",
+        );
+        assert!(directional_profit_locks(Some(&policies), "provider", Some("BTC")).is_empty());
+    }
+}

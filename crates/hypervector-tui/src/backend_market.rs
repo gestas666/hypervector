@@ -6,6 +6,8 @@ use serde_json::Value;
 use crate::backend_telemetry::LedgerRow;
 use crate::model::{BookLevel, RegimeSnapshot, RegimeState};
 
+const MAX_MM_BOOK_DISPLAY_SNAPSHOTS: usize = 600;
+
 /// Latest measured L2 state published by the backend.
 #[derive(Debug, Clone)]
 pub struct BackendBookTelemetry {
@@ -24,11 +26,68 @@ pub(crate) fn build_regime_snapshots(
     rows: &[&LedgerRow],
     configured_leverage: f64,
 ) -> Vec<RegimeSnapshot> {
-    rows.iter()
-        .filter(|row| row.action == "regime_observation")
+    let classified: Vec<RegimeSnapshot> = rows
+        .iter()
+        .filter(|row| matches!(row.action.as_str(), "regime_observation" | "regime_history"))
         .enumerate()
         .filter_map(|(index, row)| regime_snapshot(row, index, configured_leverage))
+        .collect();
+    if !classified.is_empty() || !is_apex_mm(rows) {
+        return classified;
+    }
+    let books: Vec<&LedgerRow> = rows
+        .iter()
+        .filter(|row| row.action == "book_observation")
+        .copied()
+        .collect();
+    let start = books.len().saturating_sub(MAX_MM_BOOK_DISPLAY_SNAPSHOTS);
+    books[start..]
+        .iter()
+        .enumerate()
+        .filter_map(|(index, row)| mm_book_display_snapshot(row, index))
         .collect()
+}
+
+fn is_apex_mm(rows: &[&LedgerRow]) -> bool {
+    rows.iter().any(|row| {
+        row.strategy_name.as_deref() == Some("apex_regime_mm_v2")
+            || row.extra.get("strategy_id").and_then(Value::as_str) == Some("apex_regime_mm_v2")
+            || row.extra.get("strategy_name").and_then(Value::as_str) == Some("apex_regime_mm_v2")
+    })
+}
+
+fn mm_book_display_snapshot(row: &LedgerRow, index: usize) -> Option<RegimeSnapshot> {
+    let midpoint = number(row, "mid_px")?;
+    Some(RegimeSnapshot {
+        timestamp_str: row.feed_ts.clone(),
+        timestamp_ms: timestamp_ms(&row.feed_ts, index),
+        price: midpoint,
+        open: Some(midpoint),
+        high: midpoint,
+        low: midpoint,
+        volume: 0.0,
+        state: RegimeState::Unknown,
+        regime_reason: "backend_book_display_only_not_classified".into(),
+        confidence: 0.0,
+        regime_score_source: "not_classified".into(),
+        source_diagnostics: None,
+        opi: number(row, "opi").unwrap_or(0.0),
+        spread_bps: number(row, "spread_bps").unwrap_or(0.0),
+        bid_depth_ratio: number(row, "bid_depth_ratio").unwrap_or(0.0),
+        microstructure_source: text(row, "source").unwrap_or_else(|| "not_reported".into()),
+        bbwp_percentile: 0.0,
+        rsi: 0.0,
+        funding_zscore: 0.0,
+        funding_source: "venue_payments_only".into(),
+        trend_1m: "NOT_CLASSIFIED".into(),
+        trend_5m: "NOT_CLASSIFIED".into(),
+        trend_15m: "NOT_CLASSIFIED".into(),
+        long_weight: 0.0,
+        short_weight: 0.0,
+        max_leverage: 0.0,
+        dynamic_leverage: 0.0,
+        taker_allowed: false,
+    })
 }
 
 pub(crate) fn latest_book(rows: &[&LedgerRow]) -> Option<BackendBookTelemetry> {
@@ -63,6 +122,7 @@ fn regime_snapshot(
         timestamp_str: row.feed_ts.clone(),
         timestamp_ms: timestamp_ms(&row.feed_ts, index),
         price,
+        open: number(row, "open"),
         high: number(row, "high").unwrap_or(price),
         low: number(row, "low").unwrap_or(price),
         volume: number(row, "volume").unwrap_or(0.0),
@@ -73,6 +133,7 @@ fn regime_snapshot(
             .unwrap_or(0.0),
         regime_score_source: text(row, "regime_score_source")
             .unwrap_or_else(|| "legacy_confidence_alias".into()),
+        source_diagnostics: row.regime_diagnostics.clone(),
         opi: 0.0,
         spread_bps: 0.0,
         bid_depth_ratio: 0.0,

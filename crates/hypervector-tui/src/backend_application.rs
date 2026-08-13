@@ -9,6 +9,10 @@ impl App {
     /// Apply a confirmed backend ledger snapshot without recalculating trades.
     pub fn apply_backend_telemetry(&mut self, telemetry: BackendTelemetrySnapshot) {
         self.backend = telemetry;
+        if self.cohort_config_editor.is_none() {
+            self.cohort_config_editor =
+                crate::cohort_config_state::CohortConfigEditor::from_backend(&self.backend.cohort);
+        }
         self.apply_backend_regimes();
         self.apply_backend_state();
     }
@@ -32,6 +36,11 @@ impl App {
     }
 
     fn apply_backend_state(&mut self) {
+        if let Some(symbol) = self.backend.symbol.as_ref()
+            && !symbol.trim().is_empty()
+        {
+            self.symbol = symbol.clone();
+        }
         self.paper_trades = self.backend.trades.clone();
         self.selected_trade_index = self
             .selected_trade_index

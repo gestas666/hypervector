@@ -41,22 +41,34 @@ fn wide_lines(app: &App, status_style: Style, fresh: bool) -> Vec<Line<'static>>
     let snap = app.current_snapshot();
     vec![
         Line::from(format!(
-            "SIZE  0.00000 BTC  |  MARK  ${:.2}  |  FLAT",
-            snap.price
+            "SIZE  0.00000 {}  |  MARK  ${:.2}  |  FLAT",
+            app.symbol, snap.price
         )),
         heading_line(app),
         columns("DIRECTION", &direction(app), "SPREAD", &spread(app)),
-        columns("REGIME", &regime(app), "BOOK BIAS", &book_bias(app)),
+        columns(
+            if app.backend.is_hulk_smash() {
+                "SIGNAL"
+            } else {
+                "REGIME"
+            },
+            &regime(app),
+            "BOOK BIAS",
+            &book_bias(app),
+        ),
         columns("MAKER", &maker(app), "L2 AGE", &book_age(app)),
         columns("RETRY", &retry(app), "FUNDING", &funding(app)),
         columns(
             "COOLDOWN",
             &cooldown(app),
-            "STRUCTURE",
-            &structure_score(app),
+            regime_score_label(app),
+            &regime_score(app),
         ),
         Line::from(recent_decision(app)),
-        Line::from(Span::styled(status_label(fresh), status_style)),
+        Line::from(Span::styled(
+            status_label(app.tick_count, fresh),
+            status_style,
+        )),
     ]
 }
 
@@ -71,7 +83,10 @@ fn compact_lines(app: &App, status_style: Style, fresh: bool) -> Vec<Line<'stati
         Line::from(format!("SPREAD {} | BIAS {}", spread(app), book_bias(app))),
         Line::from(format!("L2 {} | FUNDING {}", book_age(app), funding(app))),
         Line::from(recent_decision(app)),
-        Line::from(Span::styled(status_label(fresh), status_style)),
+        Line::from(Span::styled(
+            status_label(app.tick_count, fresh),
+            status_style,
+        )),
     ]
 }
 
@@ -105,6 +120,19 @@ fn direction(app: &App) -> String {
 }
 
 fn regime(app: &App) -> String {
+    if app.backend.is_hulk_smash() {
+        return format!(
+            "SCORE {}/{}",
+            app.backend
+                .hulk_smash
+                .score
+                .map_or_else(|| "N/A".into(), |value| value.to_string()),
+            app.backend
+                .hulk_smash
+                .minimum_score
+                .map_or_else(|| "N/A".into(), |value| value.to_string())
+        );
+    }
     app.backend
         .latest_regime
         .clone()
@@ -169,9 +197,36 @@ fn funding(app: &App) -> String {
         .unwrap_or_else(|| "N/A".to_string())
 }
 
-fn structure_score(app: &App) -> String {
-    app.backend
-        .latest_regime_strength_score
+fn regime_score_label(app: &App) -> &'static str {
+    if app.backend.is_hulk_smash() {
+        "HULK SCORE"
+    } else if app.backend.is_source_follow() {
+        "SOURCE CONF"
+    } else {
+        "STRUCTURE"
+    }
+}
+
+fn regime_score(app: &App) -> String {
+    if app.backend.is_hulk_smash() {
+        return format!(
+            "{}/{}",
+            app.backend
+                .hulk_smash
+                .score
+                .map_or_else(|| "N/A".into(), |value| value.to_string()),
+            app.backend
+                .hulk_smash
+                .minimum_score
+                .map_or_else(|| "N/A".into(), |value| value.to_string())
+        );
+    }
+    let value = if app.backend.is_source_follow() {
+        app.backend.latest_regime_confidence
+    } else {
+        app.backend.latest_regime_strength_score
+    };
+    value
         .map(|value| format!("{:.1}%", value * 100.0))
         .unwrap_or_else(|| "N/A".to_string())
 }
@@ -198,12 +253,20 @@ fn telemetry_is_fresh(app: &App) -> bool {
         && app.book_state.age_ms <= DISPLAY_FRESHNESS_MS
 }
 
-fn status_label(fresh: bool) -> &'static str {
-    if fresh {
-        "<> SCANNING LIVE <>"
-    } else {
-        "-- TELEMETRY STALE --"
+fn status_label(tick: u64, fresh: bool) -> &'static str {
+    if !fresh {
+        return "-- TELEMETRY STALE --";
     }
+    const FRAMES: [&str; 7] = [
+        "· SCANNING LIVE ·",
+        "‹ SCANNING LIVE ›",
+        "◁ SCANNING LIVE ▷",
+        "◀ SCANNING LIVE ▶",
+        "◁ SCANNING LIVE ▷",
+        "‹ SCANNING LIVE ›",
+        "· SCANNING LIVE ·",
+    ];
+    FRAMES[(tick as usize / 2) % FRAMES.len()]
 }
 
 fn scanning_style(tick: u64) -> Style {

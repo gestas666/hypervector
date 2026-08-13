@@ -24,7 +24,7 @@ fn render_dashboard(app: &App) -> String {
 fn active_position_displays_backend_liquidation_price() {
     let ledger = r#"{"feed_ts":"session_start","action":"session_start","run_id":"hv","strategy_params":{"leverage":40.0},"costs":{"maker_fee_rate":0.00015},"init_cash":10000.0,"equity":10000.0,"position_qty":0.0}
 {"feed_ts":"2026-07-27T12:00:00Z","action":"enter_long","run_id":"hv","symbol":"BTC","fill_px":100.0,"fill_qty":1.0,"position_qty":1.0,"position_avg_px":100.0,"liquidation_price":97.5,"equity":9998.5,"realized_pnl":-1.5,"unrealized_pnl":0.0,"fee_usd":1.5,"leverage":40.0}
-{"feed_ts":"2026-07-27T12:01:00Z","action":"regime_observation","run_id":"hv","primary_regime":"TREND_UP","state_1m":"TREND_UP","state_5m":"TREND_UP","context_15m":"TREND_UP","mark_px":101.0,"position_qty":1.0,"position_avg_px":100.0,"liquidation_price":97.5,"equity":9999.5,"realized_pnl":-1.5,"unrealized_pnl":1.0}"#;
+{"feed_ts":"2026-07-27T12:01:00Z","action":"regime_observation","run_id":"hv","primary_regime":"TREND_UP","state_1m":"TREND_UP","state_5m":"TREND_UP","context_15m":"TREND_UP","open":100.0,"high":101.5,"low":99.5,"volume":2.0,"active_target_prices":[100.2],"mark_px":101.0,"position_qty":1.0,"position_avg_px":100.0,"liquidation_price":97.5,"equity":9999.5,"realized_pnl":-1.5,"unrealized_pnl":1.0}"#;
     let telemetry = parse_backend_telemetry(ledger).expect("liquidation telemetry");
     let mut app = App::new("BTC".into(), "1m".into(), vec![], true, false);
     app.apply_backend_telemetry(telemetry);
@@ -33,6 +33,14 @@ fn active_position_displays_backend_liquidation_price() {
 
     assert!(rendered.contains("LIQ PRICE  $97.50"), "{rendered}");
     assert!(rendered.contains("SOURCE  BACKEND ISOLATED"), "{rendered}");
+
+    app.active_tab = 2;
+    let chart = render_dashboard(&app);
+    assert!(chart.contains("BACKEND CANDLE TAPE"), "{chart}");
+    assert!(chart.contains("ENTRY $100.00"), "{chart}");
+    assert!(chart.contains("TP $100.20"), "{chart}");
+    assert!(chart.contains("LIQ $97.50"), "{chart}");
+    assert!(chart.contains("SOURCE BACKEND ONLY"), "{chart}");
 }
 
 #[test]

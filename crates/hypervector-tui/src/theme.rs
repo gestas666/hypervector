@@ -35,59 +35,49 @@ impl Default for CockpitTheme {
     fn default() -> Self {
         Self {
             bg: Color::Reset,
-            border: Style::default().fg(Color::Rgb(110, 140, 185)),
-            border_active: Style::default()
-                .fg(Color::Rgb(0, 240, 255))
-                .add_modifier(Modifier::BOLD),
-            title: Style::default()
-                .fg(Color::Rgb(0, 240, 255))
-                .add_modifier(Modifier::BOLD),
-            header: Style::default()
-                .fg(Color::Rgb(255, 255, 255))
-                .bg(Color::Rgb(25, 38, 65))
-                .add_modifier(Modifier::BOLD),
-            bull: Style::default()
-                .fg(Color::Rgb(0, 255, 128))
-                .add_modifier(Modifier::BOLD),
-            bear: Style::default()
-                .fg(Color::Rgb(255, 45, 85))
-                .add_modifier(Modifier::BOLD),
-            coiling: Style::default()
-                .fg(Color::Rgb(255, 200, 0))
-                .add_modifier(Modifier::BOLD),
-            carry: Style::default()
-                .fg(Color::Rgb(190, 80, 255))
-                .add_modifier(Modifier::BOLD),
-            chop: Style::default()
-                .fg(Color::Rgb(190, 205, 225))
-                .add_modifier(Modifier::BOLD),
-            muted: Style::default().fg(Color::Rgb(180, 195, 215)),
-            gold: Style::default()
-                .fg(Color::Rgb(255, 215, 0))
-                .add_modifier(Modifier::BOLD),
-            cyan: Style::default()
-                .fg(Color::Rgb(0, 240, 255))
-                .add_modifier(Modifier::BOLD),
-            highlight: Style::default()
-                .fg(Color::Rgb(255, 255, 255))
-                .bg(Color::Rgb(0, 120, 210))
-                .add_modifier(Modifier::BOLD),
-            zone_danger: Style::default().fg(Color::Rgb(255, 60, 60)),
-            zone_warming: Style::default().fg(Color::Rgb(255, 170, 40)),
-            zone_building: Style::default().fg(Color::Rgb(80, 220, 80)),
-            zone_target: Style::default()
-                .fg(Color::Rgb(255, 215, 0))
-                .add_modifier(Modifier::BOLD),
-            zone_climax: Style::default()
-                .fg(Color::Rgb(100, 255, 255))
-                .add_modifier(Modifier::BOLD),
-            bar_ghost: Style::default().fg(Color::Rgb(100, 120, 140)),
-            bar_neutral: Style::default().fg(Color::Rgb(140, 150, 165)),
-            depth_bid: Style::default().fg(Color::Rgb(0, 200, 100)),
-            depth_ask: Style::default().fg(Color::Rgb(220, 50, 70)),
-            gate_blocked: Style::default()
-                .fg(Color::Rgb(255, 80, 80))
-                .add_modifier(Modifier::BOLD),
+            border: colored(110, 140, 185),
+            border_active: accented(0, 240, 255),
+            title: accented(0, 240, 255),
+            header: header_style(),
+            bull: accented(0, 255, 128),
+            bear: accented(255, 45, 85),
+            coiling: accented(255, 200, 0),
+            carry: accented(190, 80, 255),
+            chop: accented(190, 205, 225),
+            muted: colored(180, 195, 215),
+            gold: accented(255, 215, 0),
+            cyan: accented(0, 240, 255),
+            highlight: highlight_style(),
+            zone_danger: colored(255, 60, 60),
+            zone_warming: colored(255, 170, 40),
+            zone_building: colored(80, 220, 80),
+            zone_target: accented(255, 215, 0),
+            zone_climax: accented(100, 255, 255),
+            bar_ghost: colored(100, 120, 140),
+            bar_neutral: colored(140, 150, 165),
+            depth_bid: colored(0, 200, 100),
+            depth_ask: colored(220, 50, 70),
+            gate_blocked: accented(255, 80, 80),
         }
     }
+}
+
+fn colored(red: u8, green: u8, blue: u8) -> Style {
+    Style::default().fg(Color::Rgb(red, green, blue))
+}
+
+fn accented(red: u8, green: u8, blue: u8) -> Style {
+    colored(red, green, blue).add_modifier(Modifier::BOLD)
+}
+
+fn header_style() -> Style {
+    colored(105, 214, 235)
+        .bg(Color::Rgb(9, 19, 33))
+        .add_modifier(Modifier::BOLD)
+}
+
+fn highlight_style() -> Style {
+    colored(118, 224, 242)
+        .bg(Color::Rgb(10, 25, 42))
+        .add_modifier(Modifier::BOLD)
 }

@@ -48,10 +48,30 @@ impl RegimeState {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SourceRegimeDiagnostics {
+    pub authority: String,
+    pub raw_primary: String,
+    pub raw_secondary: Option<String>,
+    pub raw_confidence: f64,
+    pub confirmed_primary: String,
+    pub state_filtered: bool,
+    pub adx: Option<f64>,
+    pub adx_percentile_rank: Option<f64>,
+    pub adx_range_percentile_threshold: f64,
+    pub adx_weak_percentile_threshold: f64,
+    pub ema_alignment: String,
+    pub rsi: Option<f64>,
+    pub volume_ratio: Option<f64>,
+    pub range_break_up: bool,
+    pub range_break_down: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RegimeSnapshot {
     pub timestamp_str: String,
     pub timestamp_ms: u64,
     pub price: f64,
+    pub open: Option<f64>,
     pub high: f64,
     pub low: f64,
     pub volume: f64,
@@ -59,6 +79,8 @@ pub struct RegimeSnapshot {
     pub regime_reason: String,
     pub confidence: f64,
     pub regime_score_source: String,
+    #[serde(default)]
+    pub source_diagnostics: Option<SourceRegimeDiagnostics>,
     pub opi: f64,
     pub spread_bps: f64,
     pub bid_depth_ratio: f64,
@@ -223,8 +245,8 @@ impl Default for EngineConfig {
     fn default() -> Self {
         // Display fallback only. Effective values come from backend telemetry.
         Self {
-            leverage_mode: LeverageMode::StaticMultiplier(40.0),
-            static_leverage_value: 40.0,
+            leverage_mode: LeverageMode::StaticMultiplier(30.0),
+            static_leverage_value: 30.0,
             tpsl_strategy: TpSlStrategy::HypervelocityFixedTarget {
                 target_margin_pct: 8.0,
             },
@@ -272,6 +294,7 @@ pub struct ActivePosition {
     pub funding_payment_usd: f64,
     pub estimated_exit_fee_usd: f64,
     pub liquidation_price: Option<f64>,
+    pub mark_price: Option<f64>,
 }
 
 impl ActivePosition {
@@ -289,6 +312,7 @@ impl ActivePosition {
             funding_payment_usd: 0.0,
             estimated_exit_fee_usd: 0.0,
             liquidation_price: None,
+            mark_price: None,
         }
     }
 
