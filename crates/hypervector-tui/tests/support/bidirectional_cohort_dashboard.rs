@@ -370,6 +370,7 @@ fn dashboard_prefers_durable_archive_and_labels_observation_only_assets() {
             },
             by_strategy: performance.by_strategy.clone(),
         },
+        accounting_epoch: None,
     });
     app.backend.cohort_checkpoint = checkpoint;
 

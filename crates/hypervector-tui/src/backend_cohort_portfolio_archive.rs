@@ -17,6 +17,15 @@ pub struct CohortPortfolioArchive {
     pub symbols: Vec<String>,
     pub observed_through_utc: Option<String>,
     pub performance: CohortAllTimeTradePerformance,
+    pub accounting_epoch: Option<CohortAccountingEpoch>,
+}
+
+/// Exact clean-accounting boundary carried by an epoch-scoped archive.
+#[derive(Debug, Clone, Default, PartialEq, Deserialize)]
+pub struct CohortAccountingEpoch {
+    pub epoch_id: String,
+    pub profile_fingerprint: String,
+    pub start_venue_timestamp_ms: u64,
 }
 
 #[derive(Debug, Deserialize)]
@@ -27,6 +36,8 @@ pub(crate) struct PortfolioArchiveRaw {
     symbols: Vec<String>,
     #[serde(default)]
     observed_through_utc: Option<String>,
+    #[serde(default)]
+    accounting_epoch: Option<CohortAccountingEpoch>,
     coverage: ArchiveCoverageRaw,
     performance: ArchivePerformanceRaw,
 }
@@ -74,6 +85,7 @@ pub(crate) fn project_portfolio_archive(
         symbols: value.symbols,
         observed_through_utc: value.observed_through_utc,
         performance: CohortAllTimeTradePerformance { total, by_strategy },
+        accounting_epoch: value.accounting_epoch,
     }))
 }
 
@@ -90,6 +102,10 @@ fn validate_contract(value: &PortfolioArchiveRaw) -> Result<(), String> {
         || value.performance.scope != "all_live_history"
         || value.performance.return_basis != RETURN_BASIS
         || value
+            .accounting_epoch
+            .as_ref()
+            .is_some_and(|epoch| !valid_epoch(epoch))
+        || value
             .observed_through_utc
             .as_ref()
             .is_some_and(|timestamp| chrono::DateTime::parse_from_rfc3339(timestamp).is_err())
@@ -97,4 +113,14 @@ fn validate_contract(value: &PortfolioArchiveRaw) -> Result<(), String> {
         return Err("portfolio archive contract is invalid".into());
     }
     Ok(())
+}
+
+fn valid_epoch(epoch: &CohortAccountingEpoch) -> bool {
+    !epoch.epoch_id.trim().is_empty()
+        && epoch.profile_fingerprint.len() == 64
+        && epoch
+            .profile_fingerprint
+            .bytes()
+            .all(|value| value.is_ascii_hexdigit())
+        && epoch.start_venue_timestamp_ms > 0
 }

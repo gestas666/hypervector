@@ -134,6 +134,13 @@ impl CohortCheckpointTelemetry {
             .trade_performance
             .as_ref()
             .and_then(|value| value.all_time_live.as_ref());
+        if self
+            .portfolio_archive
+            .as_ref()
+            .is_some_and(|value| value.accounting_epoch.is_some())
+        {
+            return archive;
+        }
         match (archive, reflected) {
             (Some(archived), Some(value))
                 if value.total.closed_trades > archived.total.closed_trades =>

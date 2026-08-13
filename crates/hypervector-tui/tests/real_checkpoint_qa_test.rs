@@ -140,6 +140,32 @@ fn active_v39_renders_all_nine_screens_at_160x50() {
     assert_rendered_screen(tab, &screen, &expectations);
 }
 
+#[test]
+#[ignore = "requires the local staged v51 accounting checkpoint"]
+fn staged_v51_epoch_renders_zero_all_time_without_erasing_prior_rows() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let mut source = BackendTelemetrySource::with_checkpoint_path(
+        root.join(ACTIVE_LEDGER),
+        Some(root.join(ACTIVE_CHECKPOINT)),
+    );
+    let backend = source.refresh();
+    let all_time = backend
+        .cohort_checkpoint
+        .all_time_performance()
+        .expect("epoch performance");
+
+    assert_eq!(all_time.total.closed_trades, 0);
+    assert!(
+        backend.cohort_checkpoint.user_trade_reflections().len() >= 73,
+        "prior reflection history must remain inspectable"
+    );
+    let mut app = App::new("MULTI".into(), "1m".into(), vec![], true, false);
+    app.detached_lifecycle = true;
+    app.apply_backend_telemetry(backend);
+    let screen = render(&app, 160, 50);
+    assert!(screen.contains("ALL-TIME 0 CLOSED"), "{screen}");
+}
+
 fn runtime_expectations(
     all_closed: usize,
     run_closed: usize,

@@ -74,6 +74,11 @@ fn projects_four_asset_portfolio_archive_without_inflating_current_run() {
             "runtime_strategy_changed": false
         },
         "symbols": ["BTC", "ETH", "SOL", "HYPE"],
+        "accounting_epoch": {
+            "epoch_id": "growth_5000_v51",
+            "profile_fingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "start_venue_timestamp_ms": 1786648891318_u64
+        },
         "coverage": {
             "complete": true,
             "closed_orders": 26,
@@ -105,6 +110,10 @@ fn projects_four_asset_portfolio_archive_without_inflating_current_run() {
     assert_eq!(archive.performance.total.closed_trades, 26);
     assert_eq!(archive.performance.total.wins, 13);
     assert_eq!(archive.performance.total.losses, 13);
+    assert_eq!(
+        archive.accounting_epoch.expect("accounting epoch").epoch_id,
+        "growth_5000_v51"
+    );
     assert_eq!(parsed.closed_trades, Some(0));
 }
 
