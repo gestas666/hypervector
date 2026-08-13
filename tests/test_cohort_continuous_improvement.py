@@ -57,6 +57,28 @@ def test_report_exposes_traceable_hypotheses_and_approval_boundary() -> None:
     ]
 
 
+def test_report_preserves_a_source_bound_research_decision_override() -> None:
+    """A frozen research decision must outrank generic scorecard normalization."""
+    digest = _digest()
+    hype = next(
+        row for row in digest["experiment_queue"] if row["route"] == "hype|HYPE"
+    )
+    hype.update(
+        {
+            "next_experiment": "new_mechanic_version_required",
+            "decision_source": "hype-decision.json",
+        }
+    )
+
+    report = build_continuous_improvement_report(_checkpoint(), digest)
+
+    actual = next(
+        row for row in report["experiment_queue"] if row["route"] == "hype|HYPE"
+    )
+    assert actual["next_experiment"] == "new_mechanic_version_required"
+    assert actual["side_scope_adjusted"] is False
+
+
 def test_report_surfaces_live_paths_even_without_opportunity_matrix() -> None:
     """Current-run readiness paths must reach the continuous report."""
     checkpoint = _checkpoint()

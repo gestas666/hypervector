@@ -14,8 +14,8 @@ import pytest
 SCRIPT = Path(__file__).parents[1] / "scripts" / "cohort_improvement_monitor.py"
 
 
-def test_default_override_is_bound_to_v51_without_route_decisions() -> None:
-    """A new profile cannot inherit retired-route research decisions."""
+def test_default_override_is_bound_to_v51_and_immutable_route_evidence() -> None:
+    """The v51 override may use only its exact source-bound research decision."""
     module = _load()
 
     args = module.build_parser().parse_args([])
@@ -30,7 +30,15 @@ def test_default_override_is_bound_to_v51_without_route_decisions() -> None:
     assert payload["source_profile_fingerprint"] == (
         "30cd54bb5b5b17249ae0a6a3b01d5702b276d51f8dc5ddd6b4d36ab6aa7d1908"
     )
-    assert payload["routes"] == {}
+    route = payload["routes"][
+        "hype_breakout_compression_pullback_bidirectional_v1|HYPE"
+    ]
+    assert route["triage"] == "REVISE"
+    assert route["next_experiment"] == "new_mechanic_version_required"
+    assert route["decision_source"].endswith(
+        "v51-hype-compression-first-window-v1.json"
+    )
+    assert len(payload["evidence"]) == 1
     assert args.maximum_checkpoint_age_seconds == 180.0
 
 

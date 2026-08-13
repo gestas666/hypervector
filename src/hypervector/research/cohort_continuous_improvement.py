@@ -177,6 +177,9 @@ def _route_experiment(
     configured: list[str],
     original: str,
 ) -> str:
+    if row.get("decision_source") is not None:
+        _text(row.get("decision_source"), "decision source")
+        return original
     closed = _nonnegative_int(row.get("current_profile_closed_trades"), "closed trades")
     if closed > 0:
         return original

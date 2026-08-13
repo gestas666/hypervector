@@ -8,6 +8,19 @@
   },
   "source_profile_id": "multi_asset_growth_first_5000_six_asset_profit_lock_candidate_v51",
   "source_profile_fingerprint": "30cd54bb5b5b17249ae0a6a3b01d5702b276d51f8dc5ddd6b4d36ab6aa7d1908",
-  "routes": {},
-  "evidence": []
+  "routes": {
+    "hype_breakout_compression_pullback_bidirectional_v1|HYPE": {
+      "triage": "REVISE",
+      "next_experiment": "new_mechanic_version_required",
+      "historical_assessment": "tested_gate_relaxation_and_profit_lock_families_falsified_exact_live_translation_continues",
+      "decision_source": "docs/research-journal/v51-hype-compression-first-window-v1.json"
+    }
+  },
+  "evidence": [
+    {
+      "path": "../../docs/research-journal/v51-hype-compression-first-window-v1.json",
+      "sha256": "41c66e9a6cba120eb5974e3742e1d49ee2106a3aa5d5f47b9f0dcdb08ddfd2c4",
+      "bytes": 8798
+    }
+  ]
 }
