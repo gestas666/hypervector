@@ -8,7 +8,10 @@ import math
 
 from hypervector.live.canonical_regime_telemetry import (
     CANONICAL_REGIME_TELEMETRY_STRATEGY,
+    LEGACY_CANONICAL_REGIME_STRATEGY,
+    canonical_regime_symbols,
 )
+from hypervector.live.multi_asset_live_config import MultiAssetLiveConfig
 from hypervector.live.sol_range_onset_decision_source import (
     CANONICAL_COMPONENT_CATEGORICAL_FIELDS,
     CANONICAL_COMPONENT_METRIC_FIELDS,
@@ -49,11 +52,24 @@ _REQUIRED_METRICS = (
 )
 
 
+def independent_regime_symbols(config: MultiAssetLiveConfig) -> frozenset[str]:
+    """Return core symbols not already covered by executable Range telemetry."""
+    supported = frozenset(canonical_regime_symbols(config.symbols))
+    legacy = frozenset(
+        symbol
+        for provider in config.providers
+        if provider.strategy_id == LEGACY_CANONICAL_REGIME_STRATEGY
+        for symbol in provider.execution_symbols
+    )
+    return supported.difference(legacy)
+
+
 def build_canonical_regime_check(
     checkpoint: Record,
     audit: Record,
     *,
     maximum_age_seconds: float,
+    expected_symbols: frozenset[str] = _SYMBOLS,
 ) -> dict[str, object]:
     """Require fresh, causal, complete telemetry-only rows for four symbols."""
     raw = audit.get("canonical_regime_telemetry")
@@ -65,9 +81,9 @@ def build_canonical_regime_check(
     if not isinstance(by_symbol, Mapping):
         reasons.append("canonical_regime_symbol_coverage_mismatch")
         return _check(reasons, symbols=0)
-    if set(by_symbol) != _SYMBOLS:
+    if set(by_symbol) != expected_symbols:
         reasons.append("canonical_regime_symbol_coverage_mismatch")
-    for symbol in sorted(_SYMBOLS.intersection(by_symbol)):
+    for symbol in sorted(expected_symbols.intersection(by_symbol)):
         reasons.extend(
             _symbol_reasons(
                 symbol,

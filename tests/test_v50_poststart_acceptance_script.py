@@ -44,4 +44,5 @@ def test_v51_parser_binds_profit_protected_identity_and_flat_preflight() -> None
     assert args.config.name.endswith("six_asset_profit_lock_candidate_v51.toml")
     assert args.friction.name == "v51_growth_sizing_stress_20260813_v1.json"
     assert args.preflight == Path("flat.json")
+    assert args.maximum_pressure_age_seconds == pytest.approx(15.0)
     assert "--enabled" not in module.build_parser().format_help()

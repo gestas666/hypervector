@@ -45,7 +45,7 @@ _SPEC = PoststartPublicationSpec(
 
 def build_parser() -> argparse.ArgumentParser:
     """Require exact v51 friction evidence and a fresh flat preflight."""
-    return add_publication_arguments(
+    parser = add_publication_arguments(
         argparse.ArgumentParser(description=__doc__),
         config=Path(
             "configs/"
@@ -56,6 +56,8 @@ def build_parser() -> argparse.ArgumentParser:
             "preflight": None,
         },
     )
+    parser.set_defaults(maximum_pressure_age_seconds=15.0)
+    return parser
 
 
 def run_report(args: argparse.Namespace) -> dict[str, object]:

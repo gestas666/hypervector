@@ -79,6 +79,28 @@ def test_rejects_an_unprotected_open_position() -> None:
     assert "open_position_unprotected:SOL" in report["reasons"]
 
 
+def test_accepts_causal_startup_readiness_before_first_provider_bar() -> None:
+    """Slow-clock routes can prove startup health without claiming OOS outcomes."""
+    config = _config()
+    checkpoint = _checkpoint(config)
+    routes = _routes(config)
+    pressure_route = _pressure_routes(config)[0]
+    outcomes = checkpoint["audit"]["signal_outcomes"]
+    outcomes["by_provider_symbol"].pop(pressure_route)
+    outcomes["coverage"]["metric_value_gaps"] = 6
+    checkpoint["audit"]["readiness"] = {
+        "by_provider_symbol": {
+            route: _startup_readiness(route == pressure_route) for route in routes
+        }
+    }
+
+    report = build_v39_poststart_acceptance(checkpoint, config, now_utc=_NOW)
+
+    assert report["accepted"] is True
+    pressure = report["checks"]["hip3_pressure"]["routes"][pressure_route]
+    assert pressure["evidence_source"] == "startup_readiness"
+
+
 def _config() -> MultiAssetLiveConfig:
     return load_multi_asset_live_config(_CONFIG, mode="observe")
 
@@ -131,6 +153,9 @@ def _audit(
             "maximum_concurrent_positions": config.maximum_positions,
         },
         "routing": {"executable_provider_symbols": routes},
+        "readiness": {
+            "by_provider_symbol": {route: _startup_readiness(False) for route in routes}
+        },
         "canonical_regime_telemetry": canonical_regime_summary(
             _NOW - timedelta(seconds=10)
         ),
@@ -244,6 +269,27 @@ def _numeric_metric(minimum: float, maximum: float) -> dict[str, object]:
         "minimum": minimum,
         "mean": (minimum + maximum) / 2,
         "maximum": maximum,
+    }
+
+
+def _startup_readiness(pressure: bool) -> dict[str, object]:
+    metrics = (
+        {
+            "pressure_status": "available",
+            "imbalance_10": -0.25,
+            "pressure_age_seconds": 1.5,
+            "pressure_history_complete": True,
+            "pressure_scan_complete": True,
+            "pressure_snapshot_count": 12,
+            "pressure_source": "hyperliquid_mainnet_l2_rest",
+        }
+        if pressure
+        else {}
+    )
+    return {
+        "count": 1,
+        "latest_backend_non_action_reason": "pre_activation_readiness_seed",
+        "latest_metrics": metrics,
     }
 
 

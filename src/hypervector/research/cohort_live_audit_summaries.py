@@ -203,6 +203,7 @@ def _provider_summary(evaluations: Sequence[Record]) -> dict[str, object]:
         reasons.update([text(evaluation.get("reason"), "evaluation reason")])
     latest = evaluations[-1]
     latest_readiness = mapping(latest.get("readiness"), "latest readiness")
+    backend_reason = latest.get("backend_non_action_reason")
     return {
         "count": len(evaluations),
         "eligible": sum(
@@ -213,6 +214,12 @@ def _provider_summary(evaluations: Sequence[Record]) -> dict[str, object]:
         "mean_fraction": sum(fractions) / len(fractions),
         "latest_side": latest_readiness.get("side"),
         "latest_reason": text(latest.get("reason"), "latest evaluation reason"),
+        "latest_backend_non_action_reason": (
+            None if backend_reason is None else text(backend_reason, "backend reason")
+        ),
+        "latest_metrics": dict(
+            mapping(latest_readiness.get("metrics", {}), "latest readiness metrics")
+        ),
         "latest_blockers": text_list(
             latest_readiness.get("blockers"), "latest readiness blockers"
         ),

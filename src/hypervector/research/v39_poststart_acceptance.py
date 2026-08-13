@@ -15,6 +15,10 @@ from hypervector.research.cohort_live_audit_values import (
 )
 from hypervector.research.v39_canonical_regime_acceptance import (
     build_canonical_regime_check,
+    independent_regime_symbols,
+)
+from hypervector.research.cohort_startup_pressure_acceptance import (
+    startup_pressure_route,
 )
 
 Record = Mapping[str, object]
@@ -92,6 +96,7 @@ def _acceptance_checks(
             checkpoint,
             audit,
             maximum_age_seconds=checkpoint_age,
+            expected_symbols=independent_regime_symbols(config),
         ),
         "hip3_pressure": _pressure_check(audit, config, pressure_age),
         "open_position_protection": _protection_check(checkpoint, audit, config),
@@ -220,12 +225,18 @@ def _route_check(audit: Record, config: MultiAssetLiveConfig) -> dict[str, objec
     )
     outcomes = mapping(audit.get("signal_outcomes"), "signal outcomes")
     by_route = mapping(outcomes.get("by_provider_symbol"), "provider outcomes")
+    readiness = mapping(audit.get("readiness"), "audit readiness")
+    ready_routes = mapping(readiness.get("by_provider_symbol"), "provider readiness")
     reasons: list[str] = []
-    if routed != expected or set(by_route) != expected:
+    if (
+        routed != expected
+        or set(ready_routes) != expected
+        or not set(by_route).issubset(expected)
+    ):
         reasons.append("provider_route_coverage_mismatch")
-    for route in sorted(expected.intersection(by_route)):
-        report = mapping(by_route[route], f"{route} outcome")
-        if nonnegative_int(report.get("evaluations"), f"{route} evaluations") == 0:
+    for route in sorted(expected.intersection(ready_routes)):
+        report = mapping(ready_routes[route], f"{route} readiness")
+        if nonnegative_int(report.get("count"), f"{route} evaluations") == 0:
             reasons.append(f"provider_route_not_evaluated:{route}")
     return _check(
         reasons,
@@ -246,10 +257,10 @@ def _pressure_check(
     explained = 0
     for route in _pressure_routes(config):
         raw = by_route.get(route)
-        if not isinstance(raw, Mapping):
-            reasons.append(f"pressure_route_missing:{route}")
-            continue
-        report, route_reasons = _pressure_route(route, raw, maximum_age)
+        if isinstance(raw, Mapping):
+            report, route_reasons = _pressure_route(route, raw, maximum_age)
+        else:
+            report, route_reasons = startup_pressure_route(route, audit, maximum_age)
         reports[route] = report
         reasons.extend(route_reasons)
         explained += int(report["explained_numeric_gaps"])

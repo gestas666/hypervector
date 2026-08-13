@@ -7,9 +7,12 @@ from datetime import timedelta
 
 import pytest
 
-from hypervector.research.v39_poststart_acceptance import (
-    build_v39_poststart_acceptance,
+from hypervector.research.v39_poststart_acceptance import build_v39_poststart_acceptance
+from hypervector.research.v39_canonical_regime_acceptance import (
+    independent_regime_symbols,
 )
+from hypervector.live.multi_asset_live_config import load_multi_asset_live_config
+from pathlib import Path
 from test_v39_poststart_acceptance import _NOW, _checkpoint, _config
 
 
@@ -104,3 +107,16 @@ def test_accepts_three_timeframe_bias_sum_at_its_declared_bounds() -> None:
     report = build_v39_poststart_acceptance(checkpoint, config, now_utc=_NOW)
 
     assert report["accepted"] is True
+
+
+def test_range_execution_symbols_do_not_require_duplicate_regime_rows() -> None:
+    """Independent telemetry excludes symbols already evaluated by Range."""
+    config = load_multi_asset_live_config(
+        Path(
+            "configs/"
+            "multi_asset_growth_first_5000_six_asset_profit_lock_candidate_v51.toml"
+        ),
+        mode="observe",
+    )
+
+    assert independent_regime_symbols(config) == frozenset(("BTC", "HYPE"))

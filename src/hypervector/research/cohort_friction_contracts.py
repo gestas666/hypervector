@@ -17,16 +17,24 @@ from hypervector.research.source_follow_live_shape_models import SourceLiveShape
 
 Record = Mapping[str, object]
 HULK_STRATEGY = "hulk_expansion_bidirectional_tuned_v2"
+HULK_ROBUST_SHORT_STRATEGY = "hulk_expansion_short_robust_v3"
 RANGE_STRATEGY = "range_onset_bidirectional_v1"
+LIQUIDITY_SWEEP_TARGET60_STRATEGY = "liquidity_sweep_long_1h_stop60_target60_v2"
 SOURCE_STRATEGY = "hypervelocity_source_follow_bidirectional_5m_v1"
 HYPE_STRATEGY = "hype_breakout_onset_bidirectional_v1"
 HYPE_COMPRESSION_STRATEGY = "hype_breakout_compression_pullback_bidirectional_v1"
 HIP3_SWING_INDEX = "hip3_swing_ha_sp500_spcx_bidirectional_v2"
 HIP3_BREAKOUT_INDEX = "hip3_breakout_pressure_sp500_spcx_bidirectional_v1"
+HIP3_BREAKOUT_FRESH15_INDEX = (
+    "hip3_breakout_pressure_sp500_spcx_fresh15s_bidirectional_v3"
+)
 HIP3_SWING_COMMODITY = "hip3_swing_ha_sndk_gold_brent_bidirectional_v1"
 HIP3_BREAKOUT_COMMODITY = "hip3_breakout_pressure_sndk_gold_brent_bidirectional_v1"
 HIP3_V25_LIFECYCLE_EVIDENCE = (
     "data/logs/research/hip3_v25_lifecycle_bar_diagnostic_20260807.json"
+)
+V51_GROWTH_STRESS_EVIDENCE = (
+    "data/logs/research/bidirectional_cohort/v51_growth_sizing_stress_20260813_v1.json"
 )
 
 
@@ -93,7 +101,9 @@ def contract_mismatches(
 def _modeled_contracts() -> dict[str, ModeledExecutionContract]:
     return {
         HULK_STRATEGY: _hulk_modeled_contract(),
+        HULK_ROBUST_SHORT_STRATEGY: _hulk_modeled_contract(),
         RANGE_STRATEGY: _range_modeled_contract(),
+        LIQUIDITY_SWEEP_TARGET60_STRATEGY: _liquidity_sweep_target60_contract(),
         SOURCE_STRATEGY: _source_modeled_contract(),
         HYPE_STRATEGY: _hype_modeled_contract(),
         HYPE_COMPRESSION_STRATEGY: _hype_modeled_contract(),
@@ -112,11 +122,17 @@ def _hip3_modeled_contracts() -> dict[tuple[str, str | None], ModeledExecutionCo
     groups = {
         HIP3_SWING_INDEX: ("xyz:SP500", "xyz:SPCX"),
         HIP3_BREAKOUT_INDEX: ("xyz:SP500", "xyz:SPCX"),
+        HIP3_BREAKOUT_FRESH15_INDEX: ("xyz:SP500", "xyz:SPCX"),
         HIP3_SWING_COMMODITY: ("xyz:SNDK", "xyz:GOLD", "xyz:BRENTOIL"),
         HIP3_BREAKOUT_COMMODITY: ("xyz:SNDK", "xyz:GOLD", "xyz:BRENTOIL"),
     }
     return {
-        (strategy, symbol): _hip3_modeled_contract(costs[symbol])
+        (strategy, symbol): _hip3_modeled_contract(
+            costs[symbol],
+            V51_GROWTH_STRESS_EVIDENCE
+            if strategy == HIP3_BREAKOUT_FRESH15_INDEX
+            else HIP3_V25_LIFECYCLE_EVIDENCE,
+        )
         for strategy, symbols in groups.items()
         for symbol in symbols
     }
@@ -124,6 +140,7 @@ def _hip3_modeled_contracts() -> dict[tuple[str, str | None], ModeledExecutionCo
 
 def _hip3_modeled_contract(
     costs: tuple[float, float],
+    evidence_source: str,
 ) -> ModeledExecutionContract:
     fee_bps, slippage_bps = costs
     return ModeledExecutionContract(
@@ -141,7 +158,7 @@ def _hip3_modeled_contract(
         None,
         None,
         None,
-        HIP3_V25_LIFECYCLE_EVIDENCE,
+        evidence_source,
     )
 
 
@@ -184,6 +201,27 @@ def _range_modeled_contract() -> ModeledExecutionContract:
         None,
         None,
         "docs/reviews/2026-07-31-sol-range-onset-clean-extension.md",
+    )
+
+
+def _liquidity_sweep_target60_contract() -> ModeledExecutionContract:
+    return ModeledExecutionContract(
+        "taker",
+        4.5,
+        2.0,
+        "fixed_bps",
+        60.0,
+        None,
+        None,
+        86_400,
+        "fixed",
+        None,
+        "fixed_bps",
+        "maker",
+        60.0,
+        None,
+        "data/logs/research/bidirectional_cohort/"
+        "btc_liquidity_sweep_taker_parity_20260811_v2.json",
     )
 
 
