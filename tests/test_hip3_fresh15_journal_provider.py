@@ -182,6 +182,7 @@ def test_stale_observer_status_fails_before_live_intent(tmp_path: Path) -> None:
     collector = Hip3Fresh15JournalCollector(
         journals={"xyz:SP500": path},
         observer_states={"xyz:SP500": state},
+        health_now_fn=lambda: pd.Timestamp(observed_at_ms, unit="ms", tz="UTC"),
     )
 
     with pytest.raises(ValueError, match="observer status is stale"):
@@ -191,6 +192,33 @@ def test_stale_observer_status_fails_before_live_intent(tmp_path: Path) -> None:
             observed_at=pd.Timestamp(observed_at_ms, unit="ms", tz="UTC"),
             after_decision_time_ms=_CLOSE_MS - 1,
         )
+
+
+def test_health_clock_accepts_status_refreshed_during_slow_market_fetch(
+    tmp_path: Path,
+) -> None:
+    """Observer health uses read time while decisions retain the poll cutoff."""
+    path = tmp_path / "sp500.jsonl"
+    _journal(path, _decision("xyz:SP500"))
+    poll_started_ms = _CLOSE_MS + 10_000
+    status_refreshed_ms = poll_started_ms + 12_000
+    health_checked_ms = status_refreshed_ms + 1_000
+    state = _observer_state(tmp_path, observed_at_ms=status_refreshed_ms)
+    collector = Hip3Fresh15JournalCollector(
+        journals={"xyz:SP500": path},
+        observer_states={"xyz:SP500": state},
+        health_now_fn=lambda: pd.Timestamp(health_checked_ms, unit="ms", tz="UTC"),
+    )
+
+    batch = collector(
+        _bars(),
+        symbol="xyz:SP500",
+        observed_at=pd.Timestamp(poll_started_ms, unit="ms", tz="UTC"),
+        after_decision_time_ms=_CLOSE_MS - 1,
+    )
+
+    assert len(batch.intents) == 1
+    assert batch.latest_decision_time_ms == _CLOSE_MS
 
 
 def test_observer_status_cursor_and_journal_must_share_boundary(
@@ -208,6 +236,7 @@ def test_observer_status_cursor_and_journal_must_share_boundary(
     collector = Hip3Fresh15JournalCollector(
         journals={"xyz:SP500": path},
         observer_states={"xyz:SP500": state},
+        health_now_fn=lambda: pd.Timestamp(observed_at_ms, unit="ms", tz="UTC"),
     )
 
     with pytest.raises(ValueError, match="observer boundaries disagree"):

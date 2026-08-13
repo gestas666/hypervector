@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 import json
 import math
@@ -47,6 +47,11 @@ _DEFAULT_OBSERVER_STATES = {
 }
 
 
+def _utc_now() -> pd.Timestamp:
+    """Return the health-check instant independently of a poll's data cutoff."""
+    return pd.Timestamp.now(tz="UTC")
+
+
 @dataclass(frozen=True)
 class _Decision:
     provider_id: str
@@ -78,6 +83,7 @@ class Hip3Fresh15JournalCollector:
         *,
         journals: Mapping[str, Path] | None = None,
         observer_states: Mapping[str, tuple[Path, Path]] | None = None,
+        health_now_fn: Callable[[], pd.Timestamp] = _utc_now,
     ) -> None:
         """Bind both exact index identities to append-only observer journals."""
         selected = dict(_DEFAULT_JOURNALS if journals is None else journals)
@@ -90,6 +96,7 @@ class Hip3Fresh15JournalCollector:
         if not set(states).issubset(selected):
             raise ValueError("HIP-3 v3 observer states must match bound journals")
         self._observer_states = states
+        self._health_now_fn = health_now_fn
 
     def __call__(
         self,
@@ -107,7 +114,7 @@ class Hip3Fresh15JournalCollector:
         if symbol in self._observer_states:
             _require_observer_health(
                 self._observer_states[symbol],
-                observed_at,
+                self._health_now_fn(),
                 loaded,
                 _SPECS[symbol],
             )
