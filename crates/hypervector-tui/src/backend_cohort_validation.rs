@@ -147,12 +147,14 @@ pub(super) fn validate_identity(
     if enabled != asset_symbols || symbols.is_empty() || providers.is_empty() {
         return Err("cohort identity symbols, assets, and providers disagree".into());
     }
-    if assets.iter().any(|asset| asset.sides != ["long", "short"])
-        || providers
-            .iter()
-            .any(|provider| provider.sides != ["long", "short"])
+    if assets.iter().any(|asset| asset.sides != ["long", "short"]) {
+        return Err("cohort assets must declare long and short".into());
+    }
+    if providers
+        .iter()
+        .any(|provider| !provider_sides_valid(&provider.sides))
     {
-        return Err("cohort identity must declare long and short everywhere".into());
+        return Err("cohort provider sides are invalid".into());
     }
     if providers.iter().any(|provider| {
         provider.execution_symbols.as_ref().is_some_and(|symbols| {
@@ -196,6 +198,11 @@ pub(super) fn validate_identity(
         return Err("cohort identity has an invalid position policy".into());
     }
     Ok(())
+}
+
+fn provider_sides_valid(sides: &[String]) -> bool {
+    matches!(sides, [side] if side == "long" || side == "short")
+        || matches!(sides, [long, short] if long == "long" && short == "short")
 }
 
 fn invalid_direction_scope(provider: &CohortProvider) -> bool {
@@ -374,7 +381,7 @@ mod direction_scope_tests {
     }
 
     #[test]
-    fn accepts_one_sided_execution_without_losing_bidirectional_observation() {
+    fn accepts_one_sided_provider_without_losing_bidirectional_asset() {
         let symbols = vec!["ETH".into()];
         let assets = vec![CohortAssetConfig {
             symbol: "ETH".into(),
@@ -389,7 +396,7 @@ mod direction_scope_tests {
         let providers = vec![CohortProvider {
             strategy_id: "range_onset_bidirectional_v1".into(),
             symbols: symbols.clone(),
-            sides: vec!["long".into(), "short".into()],
+            sides: vec!["long".into()],
             priority: 20,
             timeframe: "1m".into(),
             maximum_entry_delay_seconds: 60,
