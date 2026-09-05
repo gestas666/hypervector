@@ -368,7 +368,10 @@ def _exit_terms(
     config: SharedPortfolioConfig,
 ) -> tuple[float, float]:
     if reason == "target":
-        return raw_exit, opened.quantity * raw_exit * config.target_fee_rate
+        price = adverse_price(
+            raw_exit, opened.direction, config.target_slippage_bps, entering=False
+        )
+        return price, opened.quantity * price * config.target_fee_rate
     if reason == "liquidation":
         price = adverse_price(
             raw_exit,

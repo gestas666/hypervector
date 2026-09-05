@@ -68,6 +68,7 @@ class SharedPortfolioConfig:
     signal_exit_min_adverse_bps: float | None = None
     completed_bar_profit_lock: ProfitLockPolicy | None = None
     completed_bar_peak_lock: CompletedBarPeakLockPolicy | None = None
+    target_slippage_bps: float = 0.0
 
     def __post_init__(self) -> None:
         """Reject unsafe, non-finite, or venue-incompatible assumptions."""
@@ -223,6 +224,7 @@ _FEE_FIELDS = (
 )
 _SLIPPAGE_FIELDS = (
     "entry_slippage_bps",
+    "target_slippage_bps",
     "market_exit_slippage_bps",
     "liquidation_slippage_bps",
 )
