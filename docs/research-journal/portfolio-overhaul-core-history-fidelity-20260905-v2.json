@@ -1,0 +1,113 @@
+{
+  "automatic_promotion": false,
+  "confidence": "low_medium",
+  "created_at_utc": "2026-09-05T19:25:25.923533+00:00",
+  "decision": "The 71-day four-core shared marking reconciles twenty conditional lifecycles, costs and funding. All current caps bind along the modeled path. Positive net is dominated by one HYPE winner; treat that as concentration evidence rather than proof of a broken trend strategy or permission to increase caps. Complete the unchanged longer-history experiment already preregistered; maintain full source/latency and final-universe limitations.",
+  "evidence": [
+    {
+      "bytes": 47258,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/overhaul_four_core_joint_marking_20260905_v1.json",
+      "role": "reconciled_conditional_joint_path",
+      "sha256": "71a11b7c4633817290b6213c9f3441d88d6ce2c989daf760f08f1f71bfc19deb"
+    },
+    {
+      "bytes": 3173,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/overhaul_four_core_sampling_uncertainty_20260905_v1.json",
+      "role": "weekly_resampling_diagnostic",
+      "sha256": "f052ce112237dc6c214d5accf5b43763fb2ef4f98ae9959ca76aa196829c74ba"
+    },
+    {
+      "bytes": 267,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/overhaul_hype_soft_hard_hold_policy_parity_20260905_v1.json",
+      "role": "bounded_production_hold_parity",
+      "sha256": "546829cd3c41c2bcde1be6fde0e92ca5ba249696de08eb178cfbccde42b4d88b"
+    },
+    {
+      "bytes": 3726,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/overhaul_hype_largest_winner_entry_depth_20260905_v1.json",
+      "role": "native_largest_winner_entry_depth_only",
+      "sha256": "455da7176a49806e772baec579948736f8d756ba05e892ed36c9fc225187c1ee"
+    },
+    {
+      "bytes": 2007,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/overhaul_four_core_year_hourly_funding_20260905_v1.json",
+      "role": "extended_native_funding_chronology",
+      "sha256": "7b910bc0bfeb1465989be3dce214a694dfa874b845e113b4f01b46ed4d64e224"
+    },
+    {
+      "bytes": 12540,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/overhaul_target_friction_full_tests_20260905_v1.txt",
+      "role": "complete_offline_regressions",
+      "sha256": "d0211c9032630397ca07682c94db0259b2ad6880699dbc10192f52810c37e3c6"
+    }
+  ],
+  "execution_authority": "none",
+  "falsifier": "A source or production decision mismatch invalidates affected results. Larger history with nonrepeatable after-cost returns, severe largest-winner dependence or materially adverse joint marked exposure weakens the retention/cap hypothesis; results are reported rather than used as implicit runtime gates.",
+  "hypothesis": "The four unchanged core providers retain their conditional after-cost behavior across the available longer chronology and actual shared sizing, rather than depending primarily on a few winners in the 71-day panel.",
+  "hypothesis_id": "portfolio-overhaul-core-history-fidelity-20260905",
+  "limitations": [
+    "Retrospective data already available during strategy development; do not claim pristine OOS or remove selection bias.",
+    "Minute trade OHLC are conditional execution/mark proxies; native price/depth/latency coverage and tagged source gaps remain explicit.",
+    "HIP3 source quality and final live-ready retained universe remain separate unresolved work.",
+    "Four-core joint reconstruction excludes SNDK and SPCX and is not the complete six-route account.",
+    "The largest HYPE winner has visible entry depth within the cap at approximately0,1and5seconds, but lacks complete native stop/mark/exit depth coverage.",
+    "Weekly resamples assume exchangeability and are not future loss probabilities."
+  ],
+  "metrics": {
+    "caps_changed": false,
+    "conditional_cap_binding_verified": true,
+    "cost_cases": {
+      "additional_adverse_slippage_bps_per_side": [
+        2.5,
+        5.5
+      ],
+      "fee_bps_per_side": 4.32
+    },
+    "entry_side_by_symbol": {
+      "BTC": "long",
+      "ETH": "long",
+      "HYPE": "long",
+      "SOL": "short"
+    },
+    "experiment_status": "being tested",
+    "extended_decision_extraction_complete": false,
+    "full_offline_tests_passed": 7985,
+    "hype_soft_hard_policy_comparisons": 2036,
+    "hype_soft_hard_policy_differences": 0,
+    "initial_equity_usd": 4857.58724349,
+    "network_tests_deselected": 4,
+    "next_step": "Complete immutable expanded decision extraction while analyzing the existing 71-day shared-account reconstruction.",
+    "parameters_optimized": false,
+    "short_panel_maximum_margin_at_minute_close_usd": 283.3333333333333,
+    "short_panel_maximum_positions_at_minute_close": 2,
+    "short_panel_nominal_close_marked_drawdown_usd": 123.10917886746574,
+    "short_panel_nominal_joint_net_usd": 448.41746216131446,
+    "short_panel_nominal_net_without_largest_usd": -53.62559668105524,
+    "short_panel_stress_close_marked_drawdown_usd": 127.99329880397363,
+    "short_panel_stress_joint_net_usd": 435.5717687719215,
+    "source_window_end_inclusive_utc": "2026-07-28T00:00:00Z",
+    "source_window_start_exclusive_utc": "2025-08-11T00:00:00Z",
+    "symbols": [
+      "BTC",
+      "ETH",
+      "SOL",
+      "HYPE"
+    ],
+    "validation": [
+      "frozen production collector extraction",
+      "every batch-actionable and daily noon rolling parity",
+      "complete native hourly funding chronology",
+      "provider-specific fixed stops, targets, recipe exits and HYPE soft/hard hold",
+      "monthly and quarterly chronological slices without parameter refitting",
+      "largest-trade concentration and censoring sensitivity",
+      "shared marked equity, overlapping losses, margin and sizing-cap binding"
+    ]
+  },
+  "revision_number": 2,
+  "runtime_strategy_changed": false,
+  "schema_version": 1,
+  "status": "candidate",
+  "strategy_id": "current_core_provider_portfolio_v86",
+  "supersedes_revision_id": "aa2b172e6bf32506f5a49f460a36ecf0132f0d01c04937c2fbf03241e3c30be3",
+  "symbol": "MULTI"
+}

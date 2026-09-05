@@ -1,0 +1,85 @@
+{
+  "automatic_promotion": false,
+  "confidence": "low_medium",
+  "created_at_utc": "2026-09-05T19:06:30.446202+00:00",
+  "decision": "Expand fixed-identity diagnostic replay to decision times (2025-08-11T00:00Z,2026-07-28T00:00Z], with fourteen days of source warmup, without selecting parameters or increasing caps. This informs the retained-universe proposal; it does not abandon the six-route source review or grant live authority.",
+  "evidence": [
+    {
+      "bytes": 116726,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/overhaul_core_fixed_lifecycle_screen_20260905_v2.json",
+      "role": "current_three_fixed_routes",
+      "sha256": "086a8520d5b38b3ba8d7ab7f17a88a26dd905ff06f1167e58a18b261d3576005"
+    },
+    {
+      "bytes": 41234,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/overhaul_hype_current_lifecycle_screen_20260905_v1.json",
+      "role": "current_hype_soft_hard_hold",
+      "sha256": "2513508104fa21cc87e617120ccd5e049c23a5a58d252a55d6c1cf873c6ee897"
+    },
+    {
+      "bytes": 107699,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/overhaul_sndk_onset_lifecycle_sensitivity_20260905_v2.json",
+      "role": "hip3_conditional_gap_sensitivity",
+      "sha256": "4e43aff7a547aed21d64e2443350deff0722db2e3447f7136482d2c15bd1c5fb"
+    },
+    {
+      "bytes": 6812,
+      "path": "/Users/gestas/Prototypes/hypervector-overhaul-20260905/configs/multi_asset_growth_first_5000_seven_asset_failed_routes_retired_v86.toml",
+      "role": "frozen_current_core_configuration",
+      "sha256": "3476ebcc9ad8459c24940eecece6fb8492ab3582f7b06e2928f4ac98de51e69a"
+    }
+  ],
+  "execution_authority": "none",
+  "falsifier": "A source or production decision mismatch invalidates affected results. Larger history with nonrepeatable after-cost returns, severe largest-winner dependence or materially adverse joint marked exposure weakens the retention/cap hypothesis; results are reported rather than used as implicit runtime gates.",
+  "hypothesis": "The four unchanged core providers retain their conditional after-cost behavior across the available longer chronology and actual shared sizing, rather than depending primarily on a few winners in the 71-day panel.",
+  "hypothesis_id": "portfolio-overhaul-core-history-fidelity-20260905",
+  "limitations": [
+    "Retrospective data already available during strategy development; do not claim pristine OOS or remove selection bias.",
+    "Minute trade OHLC are conditional execution/mark proxies; native price/depth/latency coverage and tagged source gaps remain explicit.",
+    "HIP3 source quality and final live-ready retained universe remain separate unresolved work."
+  ],
+  "metrics": {
+    "caps_changed": false,
+    "cost_cases": {
+      "additional_adverse_slippage_bps_per_side": [
+        2.5,
+        5.5
+      ],
+      "fee_bps_per_side": 4.32
+    },
+    "entry_side_by_symbol": {
+      "BTC": "long",
+      "ETH": "long",
+      "HYPE": "long",
+      "SOL": "short"
+    },
+    "experiment_status": "being tested",
+    "initial_equity_usd": 4857.58724349,
+    "next_step": "Complete immutable expanded decision extraction while analyzing the existing 71-day shared-account reconstruction.",
+    "parameters_optimized": false,
+    "source_window_end_inclusive_utc": "2026-07-28T00:00:00Z",
+    "source_window_start_exclusive_utc": "2025-08-11T00:00:00Z",
+    "symbols": [
+      "BTC",
+      "ETH",
+      "SOL",
+      "HYPE"
+    ],
+    "validation": [
+      "frozen production collector extraction",
+      "every batch-actionable and daily noon rolling parity",
+      "complete native hourly funding chronology",
+      "provider-specific fixed stops, targets, recipe exits and HYPE soft/hard hold",
+      "monthly and quarterly chronological slices without parameter refitting",
+      "largest-trade concentration and censoring sensitivity",
+      "shared marked equity, overlapping losses, margin and sizing-cap binding"
+    ]
+  },
+  "revision_number": 1,
+  "runtime_strategy_changed": false,
+  "schema_version": 1,
+  "status": "candidate",
+  "strategy_id": "current_core_provider_portfolio_v86",
+  "supersedes_revision_id": null,
+  "symbol": "MULTI"
+}
