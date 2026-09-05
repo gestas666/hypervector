@@ -1,0 +1,45 @@
+{
+  "automatic_promotion": false,
+  "confidence": "high",
+  "created_at_utc": "2026-09-05T19:43:01.346234+00:00",
+  "decision": "Accept the bounded technical correction in the candidate worktree. Regressions reproduce the auxiliary dependency failure and wrong-mode observer reuse. Explicit candidate mode preserves legacy capture defaults and future configured profit locks; wrong-mode reuse fails with actionable instructions. Full offline regressions pass. The first new cohort audit retains its missing SNDK initial readiness; current prospective acceptance remains pending.",
+  "evidence": [
+    {
+      "bytes": 12540,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/overhaul_signal_only_full_tests_20260905_v1.txt",
+      "role": "full_offline_regressions",
+      "sha256": "ae9c0818c448f498afebe3a7551781f3877b0992e1ab0d1c5e426ad220900848"
+    },
+    {
+      "bytes": 27248,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/overhaul_v87_signal_only_observer_audit_20260905_v1.json",
+      "role": "initial_readiness_failure",
+      "sha256": "0c986c89b98d7069afa1a271e1bba2a933cc9472b05f07abafa76a1beddad815"
+    }
+  ],
+  "execution_authority": "none",
+  "falsifier": "Signal-only mode requesting one-minute auxiliary candles, changed primary decisions, stale-source acceptance, a profit-lock route losing required capture, or reuse of a wrong-mode observer would invalidate the fix.",
+  "hypothesis": "An explicitly declared signal-only observer can preserve required fifteen-minute pressure/candle publication when the unused one-minute profit-lock research source is delayed, without weakening freshness or affecting routes that require profit-lock capture.",
+  "hypothesis_id": "portfolio-overhaul-spcx-source-dependency-20260905",
+  "limitations": [
+    "No live deployment or configuration was changed.",
+    "Legacy callers preserve the auxiliary capture dependency unless they explicitly select signal-only.",
+    "No SNDK or SPCX economic benefit or private-fill quality is inferred from source-health tests.",
+    "First prospective readiness and earlier source outages are preserved, not recast as clean acceptance."
+  ],
+  "metrics": {
+    "experiment_status": "accepted",
+    "focused_new_tests": 7,
+    "full_offline_tests_passed": 7992,
+    "network_tests_deselected": 4,
+    "next_step": "Observe a genuine SNDK prospective boundary, then run and audit the disarmed candidate and verify all TUI screens.",
+    "prospective_candidate_cohort_complete": false,
+    "technical_correction_only": true
+  },
+  "revision_number": 1,
+  "runtime_strategy_changed": false,
+  "schema_version": 1,
+  "status": "candidate",
+  "strategy_id": "hip3_spcx_cash_session_fresh15_long_v4",
+  "symbol": "xyz:SPCX"
+}

@@ -5,6 +5,8 @@ from __future__ import annotations
 from hyperliquid.utils.error import ClientError, ServerError  # type: ignore[import-untyped]
 from requests import ConnectionError, HTTPError, RequestException, Timeout
 
+from hypervector.live.multi_asset_market_bars import TransientCohortMarketDataError
+
 
 def transient_read_failure_reason(exc: Exception) -> str | None:
     """Return a retry reason only for transport failures safe to retry later."""
@@ -26,3 +28,18 @@ def transient_read_failure_reason(exc: Exception) -> str | None:
     if isinstance(exc, ServerError) and exc.status_code >= 500:
         return "http_server_retry_exhausted"
     return None
+
+
+def raise_if_transient_read_failure(error: Exception, source: str) -> None:
+    """Classify an exhausted transport failure anywhere in its cause chain."""
+    current: BaseException | None = error
+    visited: set[int] = set()
+    while isinstance(current, Exception) and id(current) not in visited:
+        visited.add(id(current))
+        reason = transient_read_failure_reason(current)
+        if reason is not None:
+            raise TransientCohortMarketDataError(
+                source=source,
+                reason=reason,
+            ) from error
+        current = current.__cause__ or current.__context__

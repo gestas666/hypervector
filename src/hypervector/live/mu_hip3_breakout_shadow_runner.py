@@ -42,12 +42,11 @@ from hypervector.live.mu_hip3_shadow_journal import (
     mu_shadow_journal_summary,
 )
 from hypervector.live.mu_hip3_shadow_book import mu_shadow_book_row
-from hypervector.live.multi_asset_market_bars import TransientCohortMarketDataError
 from hypervector.live.hip3_profit_lock_candle_capture import (
     Hip3ProfitLockCandleCapture,
     profit_lock_candle_path,
 )
-from hypervector.live.transient_transport import transient_read_failure_reason
+from hypervector.live.transient_transport import raise_if_transient_read_failure
 from hypervector.paper.book import BookSnapshot
 from hypervector.research.checkpoint_storage import write_atomic_json
 from hypervector.research.hip3_breakout_pressure_signals import (
@@ -87,7 +86,7 @@ class MuHip3PublicRestSource:
         try:
             return fetch_hl_l2_book(self._spec.symbol)
         except (RuntimeError, OSError) as exc:
-            _raise_if_transient(exc, "hyperliquid_public_l2")
+            raise_if_transient_read_failure(exc, "hyperliquid_public_l2")
             raise
 
     def completed_candle_history(
@@ -104,7 +103,7 @@ class MuHip3PublicRestSource:
             frame.attrs["received_at_ms"] = time.time_ns() // 1_000_000
             return frame
         except (RuntimeError, OSError) as exc:
-            _raise_if_transient(exc, "hyperliquid_public_candles")
+            raise_if_transient_read_failure(exc, "hyperliquid_public_candles")
             raise
 
 
@@ -162,8 +161,11 @@ class MuHip3BreakoutShadowRunner:
         source: MuHip3PublicSourceProtocol,
         paths: MuHip3ShadowPaths,
         spec: Hip3BreakoutShadowSpec = MU_SHADOW_SPEC,
+        capture_profit_lock_candles: bool = True,
     ) -> None:
         """Bind unsigned venue reads to isolated durable research files."""
+        if not isinstance(capture_profit_lock_candles, bool):
+            raise ValueError("capture_profit_lock_candles must be boolean")
         self._source = source
         self._paths = paths
         self._spec = spec
@@ -185,7 +187,7 @@ class MuHip3BreakoutShadowRunner:
             Hip3ProfitLockCandleCapture(
                 source, spec.symbol, profit_lock_candle_path(paths.journal)
             )
-            if spec.symbol in {"xyz:SP500", "xyz:SPCX"}
+            if capture_profit_lock_candles and spec.symbol in {"xyz:SP500", "xyz:SPCX"}
             else None
         )
 
@@ -212,7 +214,12 @@ class MuHip3BreakoutShadowRunner:
             )
         else:
             result = self._advance(cursor, observed)
-        _write_status(self._paths, result, self._spec)
+        _write_status(
+            self._paths,
+            result,
+            self._spec,
+            profit_lock_capture_enabled=self._profit_lock_capture is not None,
+        )
         return result
 
     def _bootstrap(self, observed_at_ms: int) -> MuHip3ShadowPollResult:
@@ -376,6 +383,8 @@ def _write_status(
     paths: MuHip3ShadowPaths,
     result: MuHip3ShadowPollResult,
     spec: Hip3BreakoutShadowSpec = MU_SHADOW_SPEC,
+    *,
+    profit_lock_capture_enabled: bool = False,
 ) -> None:
     journal = mu_shadow_journal_summary(
         paths.journal,
@@ -418,6 +427,7 @@ def _write_status(
             "profit_lock_candles": candle_summary(
                 profit_lock_candle_path(paths.journal)
             ),
+            "profit_lock_capture_enabled": profit_lock_capture_enabled,
             **revisions,
         },
     )
@@ -467,21 +477,6 @@ def _ceiling_integer(value: object, label: str) -> int:
     if not math.isfinite(numeric) or numeric < 0.0:
         raise ValueError(f"MU shadow {label} must be finite and nonnegative")
     return math.ceil(numeric)
-
-
-def _raise_if_transient(error: Exception, source: str) -> None:
-    """Classify an exhausted transport failure anywhere in its cause chain."""
-    current: BaseException | None = error
-    visited: set[int] = set()
-    while isinstance(current, Exception) and id(current) not in visited:
-        visited.add(id(current))
-        reason = transient_read_failure_reason(current)
-        if reason is not None:
-            raise TransientCohortMarketDataError(
-                source=source,
-                reason=reason,
-            ) from error
-        current = current.__cause__ or current.__context__
 
 
 def _timestamp(value: int) -> pd.Timestamp:

@@ -21,6 +21,7 @@ from hypervector.live.hip3_fresh15_journal_provider import (
     require_fresh_index_observer,
 )
 from hypervector.live.hip3_provider_availability import Hip3ObserverUnavailableError
+from hypervector.live.hip3_fresh15_journal_contracts import DEFAULT_OBSERVER_STATES
 from hypervector.live.multi_asset_live_config import (
     MultiAssetLiveConfig,
     MultiAssetLiveConfigError,
@@ -57,7 +58,21 @@ def pressure_dependency_commands(
             sys.executable,
             "scripts/sndk_hip3_breakout_shadow_observe.py",
         )
+        if _spcx_signal_only(config, strategies):
+            output["xyz:SPCX"] += ("--signal-only",)
     return output
+
+
+def _spcx_signal_only(config: MultiAssetLiveConfig, strategies: set[str]) -> bool:
+    if SPCX_CASH_SESSION_LONG_STRATEGY not in strategies:
+        return False
+    plans = [
+        provider.execution_for("xyz:SPCX", side)
+        for provider in config.providers
+        if "xyz:SPCX" in provider.execution_symbols
+        for side in provider.executable_sides("xyz:SPCX")
+    ]
+    return bool(plans) and all(plan.profit_lock_policy == "none" for plan in plans)
 
 
 def run_pressure_dependencies(
@@ -93,8 +108,18 @@ def run_pressure_dependencies(
             time.sleep(_HEALTH_POLL_SECONDS)
 
 
-def _require_symbol_health(symbol: str, _config: MultiAssetLiveConfig) -> None:
+def _require_symbol_health(symbol: str, config: MultiAssetLiveConfig) -> None:
     require_fresh_index_observer(symbol, datetime.now(UTC))
+    if symbol not in {"xyz:SP500", "xyz:SPCX"}:
+        return
+    command = pressure_dependency_commands(config)[symbol]
+    expected_capture = "--signal-only" not in command
+    status = json.loads(DEFAULT_OBSERVER_STATES[symbol][0].read_text(encoding="utf-8"))
+    if status.get("profit_lock_capture_enabled", True) is not expected_capture:
+        raise MultiAssetLiveConfigError(
+            f"{symbol} observer capture mode differs from the configured dependency; "
+            "stop the existing unsigned observer and relaunch the dependency command"
+        )
 
 
 def _observe_symbol_health(

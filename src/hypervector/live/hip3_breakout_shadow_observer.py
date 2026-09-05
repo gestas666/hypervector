@@ -44,6 +44,7 @@ class ObserverConfig:
     max_polls: int | None = None
     execution_authority: str = "none"
     report_only: bool = True
+    capture_profit_lock_candles: bool = True
 
     def __post_init__(self) -> None:
         """Reject invalid loops or any attempted authority escalation."""
@@ -53,6 +54,8 @@ class ObserverConfig:
             raise ValueError("HIP-3 shadow max_polls must be positive")
         if self.execution_authority != "none" or self.report_only is not True:
             raise ValueError("HIP-3 shadow observer must remain report-only")
+        if not isinstance(self.capture_profit_lock_candles, bool):
+            raise ValueError("capture_profit_lock_candles must be boolean")
 
 
 @dataclass
@@ -76,6 +79,11 @@ def build_parser(defaults: ObserverDefaults) -> argparse.ArgumentParser:
     parser.add_argument("--status", type=Path, default=defaults.status)
     parser.add_argument("--poll-seconds", type=float, default=5.0)
     parser.add_argument("--max-polls", type=int)
+    parser.add_argument(
+        "--signal-only",
+        action="store_true",
+        help="Capture primary signal data without auxiliary profit-lock minute candles",
+    )
     return parser
 
 
@@ -91,6 +99,7 @@ def config_from_args(args: argparse.Namespace) -> ObserverConfig:
         ),
         poll_seconds=args.poll_seconds,
         max_polls=args.max_polls,
+        capture_profit_lock_candles=not args.signal_only,
     )
 
 
@@ -163,7 +172,10 @@ def main_for(
     }
     try:
         runner = MuHip3BreakoutShadowRunner(
-            source=MuHip3PublicRestSource(spec), paths=config.paths, spec=spec
+            source=MuHip3PublicRestSource(spec),
+            paths=config.paths,
+            spec=spec,
+            capture_profit_lock_candles=config.capture_profit_lock_candles,
         )
         with cohort_checkpoint_runtime_lock(config.paths.status):
             return run_observer(
