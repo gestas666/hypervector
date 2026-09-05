@@ -62,6 +62,35 @@ def recent_route_evidence_rows() -> tuple[EvidenceRow, ...]:
         + _hype_native_rows()
         + _v58_commodity_rows()
         + _research_pending_market_rows()
+        + _sndk_onset_correction_rows()
+    )
+
+
+def _sndk_onset_correction_rows() -> tuple[EvidenceRow, ...]:
+    return (
+        (
+            _HIP3_SNDK_FRESH15,
+            "xyz:SNDK",
+            "entry_contract_discrepancy_confirmed",
+            "high",
+            "predecessor n2; exact v3 n0; four synthetic boundary mismatches",
+            "Current v3 resets prior pressure and can refire a continuing breakout. "
+            "The canonical research onset engine disagrees at all four tested "
+            "boundaries. This establishes a technical defect, not realized loss attribution.",
+            "docs/research-journal/portfolio-overhaul-sndk-onset-fidelity-20260905-v1.json",
+        ),
+        (
+            "hip3_breakout_pressure_sndk_fresh15s_bidirectional_v4",
+            "xyz:SNDK",
+            "durable_onset_correction_economics_pending",
+            "medium",
+            "synthetic continuation/reset/restart validation; exact live n0",
+            "V4 preserves prior pressure state and verifies exchange age and book "
+            "coverage. Short direction, sizing, stop and hold remain frozen. "
+            "Technical tests do not establish profitability; lifecycle and portfolio "
+            "validation remain pending.",
+            "docs/research-journal/portfolio-overhaul-sndk-durable-correction-20260905-v1.json",
+        ),
     )
 
 

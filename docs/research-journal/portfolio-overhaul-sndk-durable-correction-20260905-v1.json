@@ -1,0 +1,81 @@
+{
+  "automatic_promotion": false,
+  "confidence": "medium_high",
+  "created_at_utc": "2026-09-05T18:28:28.338047+00:00",
+  "decision": "Continue testing one corrective candidate, V87. Its SNDK v4 source uses persisted prior raw state, exchange-boundary freshness, at least two snapshots and complete pre-close source scans. Current short direction, recipe, sizing, stop and hold settings remain fixed. Do not inherit V86 approval or predecessor economic evidence.",
+  "evidence": [
+    {
+      "bytes": 6798,
+      "path": "/Users/gestas/Prototypes/hypervector-overhaul-20260905/configs/multi_asset_growth_first_5000_seven_asset_sndk_durable_onset_candidate_v87.toml",
+      "role": "draft_candidate_configuration",
+      "sha256": "28443782216775b2941819613da8906359b63691a9dfbbd7773ded5f3edcc77e"
+    },
+    {
+      "bytes": 10641,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/overhaul_sndk_current_onset_discrepancy_20260905_v1.json",
+      "role": "frozen_current_control_discrepancy",
+      "sha256": "01bd7a9d15324e3960423e8a2050f77d78d6e9b0f479305695e37e6f4f83916b"
+    },
+    {
+      "bytes": 12540,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/overhaul_sndk_v4_full_tests_20260905_v1.txt",
+      "role": "full_offline_validation_before_final_metadata",
+      "sha256": "24102765de2280dbc10509ce0fb1db573f239b1639e61ef419d85dbccc2cf49b"
+    },
+    {
+      "bytes": 4188,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/overhaul_sndk_v4_startup_observation_20260905_v1.json",
+      "role": "initial_unsigned_source_observation",
+      "sha256": "21240ca6c3bb53110847ed4ee216ace3cddf1093d88d4f57196bc2f6f4adc7d3"
+    },
+    {
+      "bytes": 2713,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/overhaul_hip3_midpoint_inputs_20260905_v1.json",
+      "role": "explicit_proxy_source_panel",
+      "sha256": "009901ae8a8981e7332c111e520b135bfe14e49f9a30bf2e9f1de0f9bb7e61e8"
+    },
+    {
+      "bytes": 2617,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/overhaul_six_asset_hourly_funding_20260905_v1.json",
+      "role": "native_hourly_funding_panel",
+      "sha256": "102a122fdb1e057ef16afda3ea4056d61ad37d7edb785d5957478e2c709a3e47"
+    }
+  ],
+  "execution_authority": "none",
+  "falsifier": "Continuation refires, genuine false-to-true onset disappears under complete identical inputs, restart changes the raw state, late or incomplete data gains entry authority, dependencies leak or stop an externally owned observer, risk fields drift, or conditional lifecycle costs invalidate the proposed benefit.",
+  "hypothesis": "Reusing the existing durable prospective pressure/cursor engine for SNDK removes repeated continuation onsets while preserving genuine fresh short entries and the current risk contract.",
+  "hypothesis_id": "portfolio-overhaul-sndk-durable-correction-20260905",
+  "limitations": [
+    "Synthetic technical tests do not establish profit improvement.",
+    "The initial real source record correctly has incomplete startup pressure history.",
+    "The seven-asset control candidate still includes observational ZEC and is not the final every-retained-route-live-ready roster.",
+    "HIP-3 midpoint proxies, source gaps and conditional fills must remain explicit in economics."
+  ],
+  "metrics": {
+    "approval_record_exists": false,
+    "approval_requested": false,
+    "candidate_profile_fingerprint": "f0c27106da3204a13e4e1bfef5e13858c70f9fdc2691484784cc4f727c6fa046",
+    "changed_source_semantics": [
+      "durable prior raw state",
+      "exchange-boundary rather than receipt-only age",
+      "minimum two snapshots and complete pre-close scan"
+    ],
+    "correction_and_adapter_tests": 9,
+    "experiment_status": "being tested",
+    "full_offline_tests_passed": 7972,
+    "full_source_health_acceptance": "pending",
+    "live_deployment_changed": false,
+    "network_tests_deselected": 4,
+    "next_step": "Finish prospective source and TUI acceptance, then compare current and corrected SNDK lifecycle outcomes and shared-account economics using the bound source panels and explicit proxy limitations.",
+    "post_candidate_configuration_and_dependency_tests_passed": 13,
+    "profitability_evaluated": false,
+    "risk_contract_changed": false
+  },
+  "revision_number": 1,
+  "runtime_strategy_changed": false,
+  "schema_version": 1,
+  "status": "candidate",
+  "strategy_id": "hip3_breakout_pressure_sndk_fresh15s_bidirectional_v4",
+  "supersedes_revision_id": null,
+  "symbol": "xyz:SNDK"
+}

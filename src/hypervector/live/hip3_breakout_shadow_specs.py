@@ -72,6 +72,13 @@ SPCX_SHADOW_SPEC = Hip3BreakoutShadowSpec(
     "index_fresh15_shadow_xyz:spcx",
     Hip3BreakoutPressureConfig(32, 21, 55, 0.1, 120.0),
 )
+SNDK_SHADOW_SPEC = Hip3BreakoutShadowSpec(
+    "xyz:SNDK",
+    "hip3_breakout_pressure_sndk_fresh15s_bidirectional_v4",
+    "sndk_fresh15_pressure_shadow_research_v4",
+    "sndk_fresh15_shadow_xyz:sndk",
+    Hip3BreakoutPressureConfig(32, 21, 55, 0.35, 120.0),
+)
 HIP3_SHADOW_SPECS = (
     MU_SHADOW_SPEC,
     SKHX_SHADOW_SPEC,
@@ -79,4 +86,5 @@ HIP3_SHADOW_SPECS = (
     SILVER_SHADOW_SPEC,
     SP500_SHADOW_SPEC,
     SPCX_SHADOW_SPEC,
+    SNDK_SHADOW_SPEC,
 )

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
-from dataclasses import dataclass
 import json
 import math
 from pathlib import Path
@@ -13,16 +12,23 @@ import pandas as pd
 
 from hypervector.live.bidirectional_intents import StrategyIntent
 from hypervector.live.hip3_breakout_shadow_specs import (
-    SP500_SHADOW_SPEC,
-    SPCX_SHADOW_SPEC,
     Hip3BreakoutShadowSpec,
 )
 from hypervector.live.hip3_fresh15_condition_telemetry import (
-    Hip3Fresh15ConditionTelemetry,
     canonical_pressure_status,
     condition_readiness_indicators,
     condition_readiness_metrics,
     parse_condition_telemetry,
+)
+from hypervector.live.hip3_fresh15_journal_contracts import (
+    CONFIRMATION_REASONS,
+    INDEX_SYMBOLS,
+    DEFAULT_JOURNALS as _DEFAULT_JOURNALS,
+    DEFAULT_OBSERVER_STATES as _DEFAULT_OBSERVER_STATES,
+    JOURNAL_SPECS as _SPECS,
+    Hip3Fresh15Decision as _Decision,
+    HIP3_INDEX_FRESH15_V3_STRATEGY as HIP3_INDEX_FRESH15_V3_STRATEGY,
+    HIP3_SNDK_FRESH15_V4_STRATEGY as HIP3_SNDK_FRESH15_V4_STRATEGY,
 )
 from hypervector.live.hip3_provider_inputs import completed_hip3_inputs
 from hypervector.live.hip3_provider_availability import Hip3ObserverUnavailableError
@@ -30,28 +36,9 @@ from hypervector.live.multi_asset_signal_source import IntentBatch, ProviderEval
 from hypervector.live.provider_readiness import SignalReadiness
 from hypervector.research.live_ledger_snapshot import snapshot_decision_ledger
 
-HIP3_INDEX_FRESH15_V3_STRATEGY = SP500_SHADOW_SPEC.provider_id
 _MAXIMUM_DECISION_DELAY_MS = 15_000
 _MAXIMUM_OBSERVER_STATUS_AGE_MS = 30_000
 _MAXIMUM_OBSERVER_CLOCK_SKEW_MS = 1_000
-_SPECS = {
-    SP500_SHADOW_SPEC.symbol: SP500_SHADOW_SPEC,
-    SPCX_SHADOW_SPEC.symbol: SPCX_SHADOW_SPEC,
-}
-_DEFAULT_JOURNALS = {
-    "xyz:SP500": Path("data/live/research/xyz_sp500_fresh15_v3_decisions.jsonl"),
-    "xyz:SPCX": Path("data/live/research/xyz_spcx_fresh15_v3_decisions.jsonl"),
-}
-_DEFAULT_OBSERVER_STATES = {
-    "xyz:SP500": (
-        Path("data/runtime/research/xyz_sp500_fresh15_v3_latest.json"),
-        Path("data/runtime/research/xyz_sp500_fresh15_v3_cursor.json"),
-    ),
-    "xyz:SPCX": (
-        Path("data/runtime/research/xyz_spcx_fresh15_v3_latest.json"),
-        Path("data/runtime/research/xyz_spcx_fresh15_v3_cursor.json"),
-    ),
-}
 
 
 def _utc_now() -> pd.Timestamp:
@@ -59,32 +46,8 @@ def _utc_now() -> pd.Timestamp:
     return pd.Timestamp.now(tz="UTC")
 
 
-@dataclass(frozen=True)
-class _Decision:
-    provider_id: str
-    profile_id: str
-    symbol: str
-    decision_time_ms: int
-    side: str | None
-    eligible: bool
-    imbalance: float
-    pressure_fresh: bool
-    pressure_status: str
-    pressure_source: str
-    pressure_scan_complete: bool
-    pressure_exchange_ts_ms: int | None
-    pressure_recv_ts_ms: int | None
-    snapshot_count: int
-    boundary_age_ms: int | None
-    observed_at_ms: int
-    decision_delay_ms: int
-    prospective: bool
-    history_complete: bool
-    condition_anatomy: Hip3Fresh15ConditionTelemetry | None
-
-
 class Hip3Fresh15JournalCollector:
-    """Translate exact prospective v3 journal rows into attributed intents."""
+    """Translate exact prospective pressure journal rows into attributed intents."""
 
     def __init__(
         self,
@@ -93,7 +56,7 @@ class Hip3Fresh15JournalCollector:
         observer_states: Mapping[str, tuple[Path, Path]] | None = None,
         health_now_fn: Callable[[], pd.Timestamp] = _utc_now,
     ) -> None:
-        """Bind both exact index identities to append-only observer journals."""
+        """Bind validated index and SNDK identities to append-only observer journals."""
         selected = dict(_DEFAULT_JOURNALS if journals is None else journals)
         if not selected or not set(selected).issubset(_SPECS):
             raise ValueError("HIP-3 v3 journals contain an unsupported symbol")
@@ -147,13 +110,13 @@ class Hip3Fresh15JournalCollector:
 
 
 def default_index_fresh15_journals() -> Mapping[str, Path]:
-    """Return the exact prospective journal paths used by the live adapter."""
-    return dict(_DEFAULT_JOURNALS)
+    """Return the two exact index journal paths without adding SNDK dependencies."""
+    return {symbol: _DEFAULT_JOURNALS[symbol] for symbol in INDEX_SYMBOLS}
 
 
 def require_fresh_index_observers(observed_at: pd.Timestamp) -> None:
     """Fail unless both default index observers are fresh and coherent."""
-    for symbol in _DEFAULT_JOURNALS:
+    for symbol in INDEX_SYMBOLS:
         require_fresh_index_observer(symbol, observed_at)
 
 
@@ -161,7 +124,7 @@ def require_fresh_index_observer(
     symbol: str,
     observed_at: pd.Timestamp,
 ) -> None:
-    """Fail unless one exact default index observer is fresh and coherent."""
+    """Fail unless one exact default pressure observer is fresh and coherent."""
     if symbol not in _SPECS:
         raise ValueError(f"unsupported HIP-3 v3 observer symbol: {symbol}")
     decisions = _load_decisions(_DEFAULT_JOURNALS[symbol], _SPECS[symbol])
@@ -429,7 +392,7 @@ def _evaluation(value: _Decision, frame: pd.DataFrame) -> ProviderEvaluation:
         reference_price=reference,
         decision_action=f"enter_{value.side}" if value.eligible else "hold",
         eligible=value.eligible,
-        reason="fresh15_v3_breakout_pressure_confirmed"
+        reason=CONFIRMATION_REASONS[value.provider_id]
         if value.eligible
         else blockers[0],
         side=value.side,
@@ -469,7 +432,7 @@ def _intent(value: _Decision, reference_price: float) -> StrategyIntent:
         side=value.side,
         decision_time_ms=value.decision_time_ms,
         reference_price=reference_price,
-        reason=f"fresh15_v3_breakout_pressure_confirmed:{value.side}",
+        reason=f"{CONFIRMATION_REASONS[value.provider_id]}:{value.side}",
     )
 
 

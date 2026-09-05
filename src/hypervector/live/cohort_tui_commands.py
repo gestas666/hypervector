@@ -17,6 +17,7 @@ from hypervector.live.hype_breakout_cohort_provider import (
 )
 from hypervector.live.hip3_fresh15_journal_provider import (
     HIP3_INDEX_FRESH15_V3_STRATEGY,
+    HIP3_SNDK_FRESH15_V4_STRATEGY,
     require_fresh_index_observer,
     require_fresh_index_observers,
 )
@@ -127,12 +128,27 @@ def require_live_provider_dependencies(config: MultiAssetLiveConfig) -> None:
         for provider in config.providers
     ):
         require_fresh_index_observer("xyz:SPCX", datetime.now(UTC))
+    if any(
+        provider.strategy_id == HIP3_SNDK_FRESH15_V4_STRATEGY
+        for provider in config.providers
+    ):
+        require_fresh_index_observer("xyz:SNDK", datetime.now(UTC))
 
 
 def index_observer_dependency_command(
     config: MultiAssetLiveConfig,
 ) -> tuple[str, ...] | None:
-    """Return the unsigned SPCX observer supervisor needed by V79."""
+    """Return an unsigned source supervisor for SPCX and corrected SNDK routes."""
+    if any(
+        provider.strategy_id == HIP3_SNDK_FRESH15_V4_STRATEGY
+        for provider in config.providers
+    ):
+        return (
+            sys.executable,
+            "scripts/hip3_pressure_dependency_group.py",
+            "--config",
+            str(config.source_path),
+        )
     required = any(
         provider.strategy_id == SPCX_CASH_SESSION_LONG_STRATEGY
         for provider in config.providers

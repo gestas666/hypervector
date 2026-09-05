@@ -1,0 +1,99 @@
+{
+  "automatic_promotion": false,
+  "confidence": "medium",
+  "created_at_utc": "2026-09-05T18:54:37.303239+00:00",
+  "decision": "Retain the SNDK correction as a tested technical candidate, without claiming economic improvement. Prospective prior/current pressure continuity passed at 18:45 UTC. Same-input midpoint lifecycle sensitivity removes two signals but changes no trades. Its nominal positive result depends on unresolved gap exits and cannot justify promotion. Proceed to native-source core lifecycles and shared-account economics; SNDK native-source supplementation remains required.",
+  "evidence": [
+    {
+      "bytes": 3418,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/overhaul_hip3_midpoint_inputs_20260905_v2.json",
+      "role": "corrected_timestamp_source_export",
+      "sha256": "45ac672f445b9577b419851034c8aae626e326027156f6ee28e1947a2382dda4"
+    },
+    {
+      "bytes": 107699,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/overhaul_sndk_onset_lifecycle_sensitivity_20260905_v2.json",
+      "role": "controlled_conditional_economics",
+      "sha256": "4e43aff7a547aed21d64e2443350deff0722db2e3447f7136482d2c15bd1c5fb"
+    },
+    {
+      "bytes": 8271,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/overhaul_sndk_v4_continuity_observation_20260905_v1.json",
+      "role": "bounded_prospective_continuity",
+      "sha256": "d635eccaa41c5e0d80709420fa94967f946366e5421b4232130b5808866529b3"
+    },
+    {
+      "bytes": 1226190,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/overhaul_v87_sndk_observer_audit_20260905_v1.json",
+      "role": "initial_runtime_failure",
+      "sha256": "8637e440238ea0a94584537330fba11335ba266ac6e983b2afa0c99a412391b5"
+    },
+    {
+      "bytes": 838737,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/overhaul_v87_sndk_observer_audit_20260905_v2.json",
+      "role": "recovery_run_gap_preserved",
+      "sha256": "ef9b8f195d60e0162fa1b53adcceede89b743bdbfae4115a55799cee39861211"
+    },
+    {
+      "bytes": 8814,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/overhaul_v87_sndk_tui_inspection_20260905_v1.json",
+      "role": "focused_tui_inspector",
+      "sha256": "2bdc82022ef14e86caf52af77dfb98b8aef41884f4003f92590f520deee14b92"
+    },
+    {
+      "bytes": 16287,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/overhaul_sndk_v4_final_full_tests_20260905_v1.txt",
+      "role": "full_suite_with_legacy_metadata_failures",
+      "sha256": "b3de94f7a71d783dd4ad42b6c43e40043d427dec3e904dda81364341bc9f8d58"
+    },
+    {
+      "bytes": 99,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/overhaul_sndk_v4_updated_metadata_tests_20260905_v1.txt",
+      "role": "updated_metadata_regressions",
+      "sha256": "84f266d70a865c2ab237939d910d729b91d5ba85eaf5641c24f6ccc59ff6440e"
+    }
+  ],
+  "execution_authority": "none",
+  "falsifier": "Continuation refires, genuine false-to-true onset disappears under complete identical inputs, restart changes the raw state, late or incomplete data gains entry authority, dependencies leak or stop an externally owned observer, risk fields drift, or conditional lifecycle costs invalidate the proposed benefit.",
+  "hypothesis": "Reusing the existing durable prospective pressure/cursor engine for SNDK removes repeated continuation onsets while preserving genuine fresh short entries and the current risk contract.",
+  "hypothesis_id": "portfolio-overhaul-sndk-durable-correction-20260905",
+  "limitations": [
+    "V1 midpoint exports omitted timestamp index and are superseded by validated v2 files.",
+    "Midpoint sensitivity is not exact V3 receipt-time or V4 prospective source replay.",
+    "Two gap exits, one intrabar stop/liquidation ambiguity and 138 unmatched hourly funding events prevent an exact expectancy claim.",
+    "Original failed cohort audits remain incomplete; successful source recovery does not erase outages.",
+    "Technical correction, economic retention and explicit live approval are separate decisions."
+  ],
+  "metrics": {
+    "approval_requested": false,
+    "candidate_profile_fingerprint": "f0c27106da3204a13e4e1bfef5e13858c70f9fdc2691484784cc4f727c6fa046",
+    "cohort_audits_complete": false,
+    "experiment_status": "being tested",
+    "full_suite_failed_tests": 2,
+    "full_suite_failure_reason": "legacy SNDK evidence-state expectations superseded by confirmed defect",
+    "full_suite_passed_tests": 7978,
+    "live_deployment_changed": false,
+    "next_step": "Native-source core-provider lifecycles and exact shared-account reconstruction; keep SNDK technical and economic claims separate.",
+    "nominal_conditional_net_each_usd": 69.58147084437678,
+    "nominal_midpoint_onset_signals": 27,
+    "nominal_midpoint_state_signals": 29,
+    "nominal_midpoint_trades_each": 19,
+    "nominal_net_excluding_gap_exits_usd": -22.44716555539495,
+    "profit_improvement_demonstrated": false,
+    "prospective_1845_pressure_history_complete": true,
+    "prospective_1845_publication_delay_ms": 4096,
+    "prospective_1845_snapshot_count": 161,
+    "risk_contract_changed": false,
+    "spcx_transient_source_recovery_observed": true,
+    "trade_records_identical_across_mechanisms": true,
+    "unmatched_hourly_funding_events": 138,
+    "updated_metadata_regression_tests_passed": 35
+  },
+  "revision_number": 2,
+  "runtime_strategy_changed": false,
+  "schema_version": 1,
+  "status": "candidate",
+  "strategy_id": "hip3_breakout_pressure_sndk_fresh15s_bidirectional_v4",
+  "supersedes_revision_id": "6e3fa6af77b487b6f0fdd37efa426b43e8978a2637e7c90c8258f07a1404a7f4",
+  "symbol": "xyz:SNDK"
+}

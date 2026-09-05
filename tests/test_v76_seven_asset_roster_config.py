@@ -173,9 +173,10 @@ def test_v76_sndk_evidence_distinguishes_predecessor_from_exact_v3() -> None:
         "xyz:SNDK",
     )
 
-    assert evidence.research_state == "predecessor_n2_positive_exact_v3_n0"
+    assert evidence.research_state == "entry_contract_discrepancy_confirmed"
+    assert "predecessor n2; exact v3 n0" in evidence.cadence
     assert evidence.evidence_source.endswith(
-        "v84_active_route_tui_evidence_refresh_20260903_v1.json"
+        "portfolio-overhaul-sndk-onset-fidelity-20260905-v1.json"
     )
 
 

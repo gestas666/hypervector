@@ -229,9 +229,9 @@ def test_v79_btc_tuned_evidence_uses_only_exact_btc_rows() -> None:
         (
             "hip3_breakout_pressure_sndk_fresh15s_bidirectional_v3",
             "xyz:SNDK",
-            "predecessor_n2_positive_exact_v3_n0",
-            "zero exact v3 closes",
-            "semantic predecessor",
+            "entry_contract_discrepancy_confirmed",
+            "predecessor n2; exact v3 n0",
+            "not realized loss attribution",
         ),
     ],
 )

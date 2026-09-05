@@ -22,6 +22,7 @@ from hypervector.live import hype_relaxed_one_blocker_provider as relaxed
 from hypervector.live.hip3_cohort_providers import HIP3_STRATEGIES
 from hypervector.live.hip3_fresh15_journal_provider import (
     HIP3_INDEX_FRESH15_V3_STRATEGY,
+    HIP3_SNDK_FRESH15_V4_STRATEGY,
 )
 from hypervector.live.hip3_cash_open_gap_provider import (
     HIP3_SPCX_CASH_OPEN_STRATEGY,
@@ -62,6 +63,7 @@ SOURCE_TIMEFRAMES = {
     SOL_ALIGNED_RANGE_FIXED60_STRATEGY: "1m",
     **{strategy: "15m" for strategy in HIP3_STRATEGIES},
     HIP3_INDEX_FRESH15_V3_STRATEGY: "15m",
+    HIP3_SNDK_FRESH15_V4_STRATEGY: "15m",
     HIP3_SPCX_CASH_OPEN_STRATEGY: "15m",
     SPCX_CASH_SESSION_LONG_STRATEGY: "15m",
     ZEC_DONCHIAN_LONG_STRATEGY: "15m",
@@ -91,6 +93,7 @@ READINESS_SEED_LOOKBACK_MINUTES = {
     SOL_ALIGNED_RANGE_FIXED60_STRATEGY: 2,
     **{strategy: 16 for strategy in HIP3_STRATEGIES},
     HIP3_INDEX_FRESH15_V3_STRATEGY: 16,
+    HIP3_SNDK_FRESH15_V4_STRATEGY: 16,
     HIP3_SPCX_CASH_OPEN_STRATEGY: _CASH_OPEN_SEED_LOOKBACK_MINUTES,
     SPCX_CASH_SESSION_LONG_STRATEGY: 375,
     ZEC_DONCHIAN_LONG_STRATEGY: 30 * _MINUTES_PER_DAY,

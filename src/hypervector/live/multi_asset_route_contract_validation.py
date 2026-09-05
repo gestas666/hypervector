@@ -9,6 +9,7 @@ from hypervector.live.hip3_cohort_providers import (
 )
 from hypervector.live.hip3_fresh15_journal_provider import (
     HIP3_INDEX_FRESH15_V3_STRATEGY,
+    HIP3_SNDK_FRESH15_V4_STRATEGY,
 )
 from hypervector.live.multi_asset_live_config_parsing import MultiAssetLiveConfigError
 
@@ -38,6 +39,24 @@ def validate_reused_route_contract(provider: StrategyProviderConfig) -> None:
         _validate_commodity_fresh15(provider)
     elif provider.strategy_id == HIP3_INDEX_FRESH15_V3_STRATEGY:
         _validate_index_fresh15_v3(provider)
+    elif provider.strategy_id == HIP3_SNDK_FRESH15_V4_STRATEGY:
+        _validate_sndk_fresh15_v4(provider)
+
+
+def _validate_sndk_fresh15_v4(provider: StrategyProviderConfig) -> None:
+    valid = (
+        _valid_fresh15_base(provider, {"xyz:SNDK"})
+        and provider.execution.profit_lock_policy == "none"
+        and (
+            not provider.execution_symbols
+            or provider.executable_sides("xyz:SNDK") == frozenset({"short"})
+        )
+    )
+    if not valid:
+        raise MultiAssetLiveConfigError(
+            "SNDK v4 requires 15m both-side observation, short-only execution, "
+            "30s entry delay, fixed 80 bps stop, no target/lock, and 24h hold"
+        )
 
 
 def _validate_hulk_bidirectional(provider: StrategyProviderConfig) -> None:

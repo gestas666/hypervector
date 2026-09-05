@@ -89,6 +89,8 @@ pub(crate) fn provider_alias(strategy_id: &str) -> &str {
         "SPCX CASH LONG"
     } else if strategy_id == "hip3_breakout_pressure_sndk_fresh15s_bidirectional_v3" {
         "SNDK BK15 SHORT"
+    } else if strategy_id == "hip3_breakout_pressure_sndk_fresh15s_bidirectional_v4" {
+        "SNDK BK15 V4"
     } else if strategy_id == "eth_range_onset_long_dual_mtf_v2" {
         "ETH RANGE LONG"
     } else if strategy_id == "sol_range_onset_short_dual_mtf_v2" {
@@ -376,6 +378,10 @@ mod tests {
         assert_eq!(
             provider_alias("hip3_breakout_pressure_sndk_fresh15s_bidirectional_v3"),
             "SNDK BK15 SHORT"
+        );
+        assert_eq!(
+            provider_alias("hip3_breakout_pressure_sndk_fresh15s_bidirectional_v4"),
+            "SNDK BK15 V4"
         );
         assert_eq!(
             provider_alias("hype_breakout_relaxed_target20_60m_bidirectional_v3"),

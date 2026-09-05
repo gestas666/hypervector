@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from contextlib import ExitStack
 from pathlib import Path
 import signal
 import subprocess
@@ -37,18 +38,31 @@ def start_owned_dependency(
             stderr=subprocess.STDOUT,
             start_new_session=True,
         )
+    with ExitStack() as cleanup:
+        cleanup.callback(stop_owned_dependency, process)
+        _wait_until_healthy(process, config, timeout_seconds, log_path, health_check)
+        cleanup.pop_all()
+        return process
+
+
+def _wait_until_healthy(
+    process: subprocess.Popen[bytes],
+    config: MultiAssetLiveConfig,
+    timeout_seconds: float,
+    log_path: Path,
+    health_check: HealthCheck,
+) -> None:
     deadline = time.monotonic() + timeout_seconds
     while time.monotonic() < deadline:
         if process.poll() is not None:
             raise MultiAssetLiveConfigError(
-                f"SPCX observer exited with {process.returncode}; inspect {log_path}"
+                f"pressure observer exited with {process.returncode}; inspect {log_path}"
             )
         if _healthy_or_startable(config, health_check):
-            return process
+            return
         time.sleep(0.5)
-    stop_owned_dependency(process)
     raise MultiAssetLiveConfigError(
-        f"SPCX observer was not fresh within {timeout_seconds:g}s; inspect {log_path}"
+        f"pressure observer was not fresh within {timeout_seconds:g}s; inspect {log_path}"
     )
 
 

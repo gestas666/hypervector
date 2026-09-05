@@ -26,6 +26,7 @@ from hypervector.live.hip3_cohort_providers import (
 )
 from hypervector.live.hip3_fresh15_journal_provider import (
     HIP3_INDEX_FRESH15_V3_STRATEGY,
+    HIP3_SNDK_FRESH15_V4_STRATEGY,
     Hip3Fresh15JournalCollector,
 )
 from hypervector.live.hip3_cash_open_gap_provider import (
@@ -101,7 +102,7 @@ def build_default_collector(
     collector = _native_collector(provider, config)
     if collector is not None:
         return collector
-    if strategy == HIP3_INDEX_FRESH15_V3_STRATEGY:
+    if strategy in {HIP3_INDEX_FRESH15_V3_STRATEGY, HIP3_SNDK_FRESH15_V4_STRATEGY}:
         return Hip3Fresh15JournalCollector()
     if strategy == HIP3_SPCX_CASH_OPEN_STRATEGY:
         archive = EventArchive(
