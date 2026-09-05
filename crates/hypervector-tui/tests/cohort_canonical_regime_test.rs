@@ -120,11 +120,7 @@ fn independent_canonical_regime_is_visible_without_becoming_a_provider() {
         telemetry.cohort.providers[0].strategy_id,
         "fixture_bidirectional_v1"
     );
-    assert_eq!(telemetry.cohort.evaluations.len(), 1);
-    assert_eq!(
-        telemetry.cohort.evaluations[0].strategy_id,
-        "canonical_regime_telemetry_v1"
-    );
+    assert!(telemetry.cohort.evaluations.is_empty());
     assert_eq!(telemetry.cohort.regime_history.len(), 1);
     assert_eq!(
         telemetry.cohort.regime_history[0].primary_regime.as_deref(),
@@ -169,4 +165,61 @@ fn staged_canonical_regime_populates_every_screen_eight_diagnostic() {
     assert!(screen.contains("MOVE STRENGTH 80.0%"), "{screen}");
     assert!(screen.contains("TREND STACK // BTC // NEUTRAL"), "{screen}");
     assert!(!screen.contains("PROVIDER ONLY READY"), "{screen}");
+}
+
+#[test]
+fn canonical_telemetry_cannot_appear_as_a_strategy_setup() {
+    let ledger = format!("{}\n{}\n", identity(), canonical());
+    let telemetry = parse_backend_telemetry(&ledger).expect("canonical ledger should parse");
+    let mut app = App::new("MULTI".into(), "1m".into(), vec![], true, false);
+    app.apply_backend_telemetry(telemetry);
+    app.active_tab = 1;
+    let mut terminal = Terminal::new(TestBackend::new(120, 36)).expect("terminal");
+    terminal
+        .draw(|frame| hypervector_tui::ui::draw(frame, &app))
+        .expect("setup draw");
+    let buffer = terminal.backend().buffer();
+    let screen = (0..buffer.area.height)
+        .map(|y| {
+            (0..buffer.area.width)
+                .map(|x| buffer[(x, y)].symbol())
+                .collect::<String>()
+        })
+        .collect::<Vec<_>>()
+        .join("\n");
+    assert!(!screen.contains("canonical_regime"), "{screen}");
+}
+
+#[test]
+fn canonical_history_supersedes_same_time_legacy_regime_without_losing_its_route() {
+    let mut configuration: Value = serde_json::from_str(&identity()).expect("identity");
+    configuration["payload"]["providers"][0]["strategy_id"] = json!("range_onset_bidirectional_v1");
+    let canonical_event: Value = serde_json::from_str(&canonical()).expect("canonical");
+    let mut legacy = canonical_event["payload"]["evaluations"][0].clone();
+    legacy["strategy_id"] = json!("range_onset_bidirectional_v1");
+    legacy["decision_action"] = json!("hold");
+    legacy["primary_regime"] = json!("RANGE");
+    let routed = row(
+        2,
+        "intent_routing",
+        json!({
+            "actions": [], "withheld": [], "evaluations": [legacy]
+        }),
+    );
+    let ledger = format!("{configuration}\n{routed}\n{}\n", canonical());
+    let telemetry = parse_backend_telemetry(&ledger).expect("mixed regime ledger");
+    assert_eq!(telemetry.cohort.evaluations.len(), 1);
+    assert_eq!(
+        telemetry.cohort.evaluations[0].strategy_id,
+        "range_onset_bidirectional_v1"
+    );
+    assert_eq!(telemetry.cohort.regime_history.len(), 1);
+    assert_eq!(
+        telemetry.cohort.regime_history[0].strategy_id,
+        "canonical_regime_telemetry_v1"
+    );
+    assert_eq!(
+        telemetry.cohort.regime_history[0].primary_regime.as_deref(),
+        Some("TREND_UP")
+    );
 }

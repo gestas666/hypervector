@@ -263,8 +263,9 @@ pub(crate) fn latest_regime<'a>(
 ) -> Option<&'a CohortProviderEvaluation> {
     app.backend
         .cohort
-        .evaluations
+        .regime_history
         .iter()
+        .chain(app.backend.cohort.evaluations.iter())
         .filter(|value| is_regime_provider(&value.strategy_id) && value.symbol == symbol)
         .max_by_key(|value| (value.decision_time_ms, value.strategy_id == REGIME_PROVIDER))
 }

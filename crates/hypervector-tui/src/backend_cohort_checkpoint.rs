@@ -332,6 +332,7 @@ fn parse_observer(document: CheckpointDocument) -> Result<CohortCheckpointTeleme
         generated_at_utc: Some(document.generated_at_utc),
         run_id: Some(observer.run_id),
         analysis_mode: Some("forward_observer".into()),
+        stale: observer.state == "stale_source",
         lifecycle_state: Some(observer.state),
         coverage_complete: Some(audit.technical.complete),
         technical_gaps: audit.technical.technical_gaps,

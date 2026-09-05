@@ -221,8 +221,7 @@ fn append_canonical_evaluations(
     for mut evaluation in payload.evaluations {
         evaluation.observed_at.clone_from(&row.feed_ts);
         validate_evaluation(cohort, &evaluation, true)?;
-        append_regime_history(&mut cohort.regime_history, evaluation.clone());
-        upsert_evaluation(&mut cohort.evaluations, evaluation);
+        append_regime_history(&mut cohort.regime_history, evaluation);
     }
     Ok(())
 }
@@ -231,10 +230,14 @@ fn append_regime_history(
     history: &mut Vec<CohortProviderEvaluation>,
     candidate: CohortProviderEvaluation,
 ) {
-    let duplicate = history.iter().any(|value| {
+    let duplicate = history.iter().position(|value| {
         value.symbol == candidate.symbol && value.decision_time_ms == candidate.decision_time_ms
     });
-    if !duplicate {
+    if let Some(index) = duplicate {
+        if candidate.strategy_id == CANONICAL_REGIME_STRATEGY {
+            history[index] = candidate;
+        }
+    } else {
         history.push(candidate);
     }
 }

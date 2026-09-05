@@ -53,8 +53,10 @@ pub(super) fn validate_observer(
     audit: &ObserverAuditEvidence,
 ) -> Result<(), String> {
     let last_observed_valid = DateTime::parse_from_rfc3339(&observer.last_observed_at_utc).is_ok();
-    if observer.state != "setup_process_observation"
-        || observer.run_id.trim().is_empty()
+    if !matches!(
+        observer.state.as_str(),
+        "setup_process_observation" | "stale_source"
+    ) || observer.run_id.trim().is_empty()
         || !last_observed_valid
         || audit.runtime.poll_cycles == 0
         || audit.learning.evidence_state != "setup_and_signal_paths_only_no_execution_outcomes"

@@ -288,3 +288,26 @@ fn rejects_a_ready_shape_without_audit_evidence() {
 
     assert!(error.contains("audit"), "{error}");
 }
+
+#[test]
+fn stale_observer_retains_diagnostics_and_explicit_no_execution_semantics() {
+    let checkpoint = INVALID_OBSERVER_PATH_CHECKPOINT
+        .replace("setup_process_observation", "stale_source")
+        .replace("\"positive_directional_rate\": 1.5", "\"positive_directional_rate\": 0.5");
+    let parsed = parse_cohort_checkpoint(&checkpoint).expect("valid stale observer");
+    assert!(parsed.available);
+    assert!(parsed.stale);
+    assert_eq!(parsed.analysis_mode.as_deref(), Some("forward_observer"));
+    assert_eq!(parsed.lifecycle_state.as_deref(), Some("stale_source"));
+    assert_eq!(parsed.readiness_evaluations, Some(1));
+    assert_eq!(parsed.closed_trades, None);
+    assert_eq!(parsed.net_pnl_usd, None);
+}
+
+#[test]
+fn unknown_observer_state_remains_invalid() {
+    let checkpoint = INVALID_OBSERVER_PATH_CHECKPOINT
+        .replace("setup_process_observation", "invented_ready")
+        .replace("\"positive_directional_rate\": 1.5", "\"positive_directional_rate\": 0.5");
+    assert!(parse_cohort_checkpoint(&checkpoint).is_err());
+}
