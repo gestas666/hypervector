@@ -115,6 +115,7 @@ class MultiAssetObserverRunner:
         operator_commands: OperatorCommandSourceProtocol | None = None,
         profile_stage: Callable[[CohortProfileSettings], str] | None = None,
         monotonic_fn: Callable[[], float] = time.monotonic,
+        emit_configuration_on_start: bool = True,
     ) -> None:
         _validate_configuration(symbols, expected_provider_symbols, poll_seconds)
         self._symbols = symbols
@@ -128,6 +129,9 @@ class MultiAssetObserverRunner:
         self._poll_seconds = poll_seconds
         self._signal_stop_requested = signal_stop_requested
         self._monotonic_fn = monotonic_fn
+        if not isinstance(emit_configuration_on_start, bool):
+            raise ValueError("observer configuration emission flag must be boolean")
+        self._emit_configuration_on_start = emit_configuration_on_start
         if (operator_commands is None) != (profile_stage is None):
             raise ValueError("observer profile staging requires source and handler")
         self._profile_commands = (
@@ -149,7 +153,8 @@ class MultiAssetObserverRunner:
             )
         activation = _aware(self._now_fn())
         self._intent_poller.activate(int(activation.timestamp() * 1_000))
-        self._telemetry.emit_configuration()
+        if self._emit_configuration_on_start:
+            self._telemetry.emit_configuration()
         polls = 0
         while not self._shutdown_requested():
             cycle_started = self._monotonic_fn()
@@ -196,7 +201,9 @@ class MultiAssetObserverRunner:
             self._telemetry.emit_canonical_regimes(poll.regime_evaluations)
         if self._profile_commands is not None:
             self._profile_commands.process()
-        self._telemetry.emit_routing(poll.all_intents, report, poll.evaluations)
+        self._telemetry.emit_routing(
+            poll.all_intents, report, poll.telemetry_evaluations
+        )
         self._telemetry.emit_heartbeat()
 
     def _shutdown_requested(self) -> bool:
@@ -226,7 +233,7 @@ def _validate_poll(
         not poll.market_bars[symbol] for symbol in symbols
     ):
         raise MultiAssetObserverRunnerError("initial market coverage is incomplete")
-    pairs = [(value.strategy_id, value.symbol) for value in poll.evaluations]
+    pairs = [(value.strategy_id, value.symbol) for value in poll.telemetry_evaluations]
     if len(pairs) != len(set(pairs)):
         raise MultiAssetObserverRunnerError(
             "provider readiness coverage has duplicates"

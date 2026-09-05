@@ -26,6 +26,8 @@ pub struct CohortRoutingAction {
     pub decision_time_ms: u64,
     pub reference_price: f64,
     #[serde(default)]
+    pub target_anchor: Option<f64>,
+    #[serde(default)]
     pub regime_alignment_score: Option<f64>,
     #[serde(default)]
     pub regime_alignment_stance: Option<String>,
@@ -47,6 +49,8 @@ pub struct CohortWithheldIntent {
     pub side: String,
     pub decision_time_ms: u64,
     pub reference_price: f64,
+    #[serde(default)]
+    pub target_anchor: Option<f64>,
     pub source_reason: String,
     pub reason: String,
     #[serde(default)]

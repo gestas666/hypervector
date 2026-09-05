@@ -2,14 +2,52 @@
 
 use crate::backend_cohort_exit_plan::CohortOpenExitPlan;
 
+#[derive(Clone, Copy)]
+enum ProfitLockLabelMode {
+    Compact,
+    Detailed,
+    Plan,
+}
+
 /// Format the compact open-position profit-lock contract.
 pub(crate) fn compact_profit_lock_label(plan: &CohortOpenExitPlan) -> String {
-    format_profit_lock(
+    compact_profit_lock_contract_label(
         &plan.profit_lock_policy,
         plan.profit_lock_activation_bps,
         plan.profit_lock_floor_bps,
         plan.profit_lock_giveback_bps,
-        true,
+    )
+}
+
+/// Format compact profit-lock fields shared by checkpoint and ledger projections.
+pub(crate) fn compact_profit_lock_contract_label(
+    policy: &str,
+    activation: Option<f64>,
+    floor: Option<f64>,
+    giveback: Option<f64>,
+) -> String {
+    format_profit_lock(
+        policy,
+        activation,
+        floor,
+        giveback,
+        ProfitLockLabelMode::Compact,
+    )
+}
+
+/// Format a profit-lock token that fits the fixed-width execution-plan column.
+pub(crate) fn plan_profit_lock_label(
+    policy: &str,
+    activation: Option<f64>,
+    floor: Option<f64>,
+    giveback: Option<f64>,
+) -> String {
+    format_profit_lock(
+        policy,
+        activation,
+        floor,
+        giveback,
+        ProfitLockLabelMode::Plan,
     )
 }
 
@@ -20,7 +58,7 @@ pub(crate) fn profit_lock_label(plan: &CohortOpenExitPlan) -> String {
         plan.profit_lock_activation_bps,
         plan.profit_lock_floor_bps,
         plan.profit_lock_giveback_bps,
-        false,
+        ProfitLockLabelMode::Detailed,
     )
 }
 
@@ -29,30 +67,64 @@ fn format_profit_lock(
     activation: Option<f64>,
     floor: Option<f64>,
     giveback: Option<f64>,
-    compact: bool,
+    mode: ProfitLockLabelMode,
 ) -> String {
     if policy == "none" {
-        return if compact { "PL:OFF" } else { "PROFIT LOCK OFF" }.into();
-    }
-    match (activation, floor, giveback, compact) {
-        (Some(a), Some(f), Some(g), true) => format!("PL:{a:.0}/{f:.0}/{g:.0}"),
-        (Some(a), Some(f), Some(g), false) => {
-            format!("PROFIT LOCK ON ACT {a:.1}bps FLOOR {f:.1}bps GIVEBACK {g:.1}bps")
+        return match mode {
+            ProfitLockLabelMode::Compact => "PL:OFF",
+            ProfitLockLabelMode::Detailed => "PROFIT LOCK OFF",
+            ProfitLockLabelMode::Plan => "OFF",
         }
-        (_, _, _, true) => "PL:INVALID".into(),
-        _ => "PROFIT LOCK INVALID".into(),
+        .into();
+    }
+    if policy == "btc_hulk_delayed_component_floor_v1" {
+        return match mode {
+            ProfitLockLabelMode::Compact => "PL:DELAYED COMPONENT FLOOR",
+            ProfitLockLabelMode::Detailed => "PROFIT LOCK DELAYED COMPONENT FLOOR",
+            ProfitLockLabelMode::Plan => "DCF",
+        }
+        .into();
+    }
+    if policy == "btc_hulk_delayed_component_exit_v2" {
+        return match mode {
+            ProfitLockLabelMode::Compact => "PL:DELAYED COMPONENT EXIT",
+            ProfitLockLabelMode::Detailed => "PROFIT LOCK FLOOR/REVERSAL CONTAINMENT",
+            ProfitLockLabelMode::Plan => "DCE",
+        }
+        .into();
+    }
+    match (activation, floor, giveback) {
+        (Some(a), Some(f), Some(g)) => match mode {
+            ProfitLockLabelMode::Compact => format!("PL:{a:.0}/{f:.0}/{g:.0}"),
+            ProfitLockLabelMode::Detailed => {
+                format!("PROFIT LOCK ON ACT {a:.1}bps FLOOR {f:.1}bps GIVEBACK {g:.1}bps")
+            }
+            ProfitLockLabelMode::Plan => "TR".into(),
+        },
+        _ => match mode {
+            ProfitLockLabelMode::Compact => "PL:INVALID",
+            ProfitLockLabelMode::Detailed => "PROFIT LOCK INVALID",
+            ProfitLockLabelMode::Plan => "!",
+        }
+        .into(),
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::format_profit_lock;
+    use super::{ProfitLockLabelMode, format_profit_lock};
 
     #[test]
     fn open_profit_lock_labels_preserve_exact_parameters() {
         let values = (Some(25.0), Some(8.0), Some(6.0));
         assert_eq!(
-            format_profit_lock("completed_bar_trailing", values.0, values.1, values.2, true),
+            format_profit_lock(
+                "completed_bar_trailing",
+                values.0,
+                values.1,
+                values.2,
+                ProfitLockLabelMode::Compact,
+            ),
             "PL:25/8/6",
         );
         assert_eq!(
@@ -61,9 +133,49 @@ mod tests {
                 values.0,
                 values.1,
                 values.2,
-                false
+                ProfitLockLabelMode::Detailed,
             ),
             "PROFIT LOCK ON ACT 25.0bps FLOOR 8.0bps GIVEBACK 6.0bps",
+        );
+        assert_eq!(
+            format_profit_lock(
+                "btc_hulk_delayed_component_floor_v1",
+                None,
+                None,
+                None,
+                ProfitLockLabelMode::Compact,
+            ),
+            "PL:DELAYED COMPONENT FLOOR",
+        );
+        assert_eq!(
+            format_profit_lock(
+                "btc_hulk_delayed_component_floor_v1",
+                None,
+                None,
+                None,
+                ProfitLockLabelMode::Detailed,
+            ),
+            "PROFIT LOCK DELAYED COMPONENT FLOOR",
+        );
+        assert_eq!(
+            format_profit_lock(
+                "btc_hulk_delayed_component_exit_v2",
+                None,
+                None,
+                None,
+                ProfitLockLabelMode::Compact,
+            ),
+            "PL:DELAYED COMPONENT EXIT",
+        );
+        assert_eq!(
+            format_profit_lock(
+                "btc_hulk_delayed_component_exit_v2",
+                None,
+                None,
+                None,
+                ProfitLockLabelMode::Detailed,
+            ),
+            "PROFIT LOCK FLOOR/REVERSAL CONTAINMENT",
         );
     }
 }

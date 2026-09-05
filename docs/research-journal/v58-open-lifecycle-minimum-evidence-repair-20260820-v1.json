@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "mode": "v58_open_lifecycle_minimum_evidence_repair_v1",
+  "generated_at_utc": "2026-08-20T19:23:18.113440+00:00",
+  "status": "ACCEPTED_REPORT_ONLY_TECHNICAL_REPAIR",
+  "problem": {
+    "observed": "The exact open BRENTOIL lifecycle was attached to the V58 hypothesis ledger while next_action and minimum_additional_evidence remained null.",
+    "impact": "The continuous report preserved current state but did not state the evidence required to update the inconclusive exit hypothesis.",
+    "live_execution_impact": false
+  },
+  "repair": {
+    "behavior": "Every exact open lifecycle receives a generic authoritative-close action and explicit diagnostic/live-change evidence requirements when no stronger route-specific requirement already exists.",
+    "route_specific_precedence": "Existing route-specific next_action and minimum_additional_evidence values are preserved.",
+    "next_action": "reconcile_authoritative_close_then_compare_frozen_exit_alternatives",
+    "minimum_additional_evidence": {
+      "diagnostic_update": "one technically complete authoritative close with exact exit fill, fees, funding, completed-path MFE/MAE/giveback, and frozen profit-lock comparisons",
+      "live_change": "a preregistered source-compatible sample covering both configured sides with positive after-cost and largest-winner-removed results"
+    }
+  },
+  "current_evidence": {
+    "report": "data/runtime/research/v58_continuous_improvement_latest.json",
+    "report_generated_at_utc": "2026-08-20T19:23:18.113440+00:00",
+    "route": "hip3_breakout_pressure_sndk_gold_brent_fresh15s_bidirectional_v2|xyz:BRENTOIL",
+    "lifecycle_id": "xyz:BRENTOIL:520642502465",
+    "evidence_state": "open_exact_live_lifecycle",
+    "actual_exit_fill_claim": false,
+    "live_profit_lock_policy": "none",
+    "frozen_challenger": {
+      "policy_origin": "existing_predeclared_hype_profit_research_v1",
+      "execution_authority": "none",
+      "actual_exit_fill_claim": false,
+      "a25_floor15_trail10_estimated_net_pnl_excluding_funding_usd": 1.9267462928106416,
+      "a40_floor15_trail20_estimated_net_pnl_excluding_funding_usd": 1.645854023635404,
+      "a60_floor15_trail30_estimated_net_pnl_excluding_funding_usd": 5.41763887815758
+    }
+  },
+  "validation": {
+    "red_test": "The focused open-lifecycle projection test failed with KeyError: next_action before implementation.",
+    "focused_and_broader_tests": "59 passed",
+    "ruff_check": "passed",
+    "ruff_format_check": "passed",
+    "git_diff_check": "passed",
+    "files_over_500_lines": 0,
+    "functions_over_50_lines": 0,
+    "supervisor_reload": "The in-flight generator-drift cycle aborted, the wrapper restarted, and the rolling report published the repaired fields."
+  },
+  "source_identity": {
+    "src/hypervector/research/v58_current_investigation.py": "47863a5312bc480e3386a0839f55e8b425c9f4ef3fe3295cd69a8ee7f43afab5",
+    "tests/test_v58_live_open_hypothesis_context.py": "dded0abb569512092674034cec2245daa89a4e660d8b06f3b30f38eaae29a303"
+  },
+  "authority": {
+    "report_only": true,
+    "execution_authority": "none",
+    "orders_supported": false,
+    "automatic_live_change": false,
+    "automatic_promotion": false,
+    "runtime_strategy_changed": false
+  },
+  "assessment": {
+    "live_change_supported": false,
+    "recommendation": "Continue the frozen lifecycle until authoritative close, then compare actual after-cost economics with the preregistered alternatives.",
+    "confidence": {
+      "technical_repair": "high",
+      "exit_edge": "low"
+    },
+    "failure_modes": [
+      "A single open lifecycle can overstate or understate exit-policy value.",
+      "The challenger estimates exclude funding and additional exit slippage until the actual close is reconciled.",
+      "Route-lifecycle and venue research sources can transiently fail freshness checks; the supervisor retains the last valid report and retries fail-closed."
+    ],
+    "falsifiers": [
+      "A future rolling report drops the non-null action or evidence requirement for this open lifecycle.",
+      "A route-specific evidence requirement is overwritten by the generic fallback.",
+      "The authoritative close does not retain exact fills, fees, funding, excursion, and frozen profit-lock comparisons.",
+      "A preregistered compatible multi-lifecycle sample contradicts the current no-change disposition."
+    ]
+  }
+}

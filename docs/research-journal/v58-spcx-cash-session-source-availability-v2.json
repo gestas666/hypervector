@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v58-spcx-cash-session-source-availability",
+  "revision_number": 2,
+  "supersedes_revision_id": "e1ca4dadb975ada51e543e35b7c62501adde3613d80453723a2f868d7482b4b6",
+  "created_at_utc": "2026-08-21T04:30:15Z",
+  "strategy_id": "hip3_spcx_cash_open_gap_reversal_bidirectional_15m_v1",
+  "symbol": "xyz:SPCX",
+  "status": "candidate",
+  "hypothesis": "A canonically aligned, scheduled U.S. cash-session exact-trade source can restore SPCX evaluation without changing strategy behavior when exact and combined trade gaps remain per-bar provenance, future receipts are excluded, and both the current opening and prior cash close fail closed when unresolved.",
+  "decision": "The repair is implemented and passes focused, historical-parity, frozen-gap, provider/config, and TUI validation. Retain it as a report-only worktree candidate. Do not restart the active V58 backend while BRENTOIL and SP500 remain open. Require one future cash-open observation, a fresh final prestart bundle, flat/order-free reconciliation, and an explicit restart transaction before cutover.",
+  "confidence": "medium_high",
+  "falsifier": "Reject or revise the candidate if a future scheduled cash-open remains technically unavailable despite complete required evidence; if any opening or prior-close gap reaches an eligible entry; if a complete-window signal, target, stop, exit, risk, sizing, or decision time differs; if the cursor duplicates or advances without an observed scheduled bar; or if post-cutover runtime, venue, protection, fingerprint, or TUI reconciliation fails.",
+  "evidence": [
+    {
+      "path": "v58-spcx-cash-session-source-availability-repair-proposal-20260821-v2.json",
+      "role": "implementation_validation_cutover_and_rollback_contract",
+      "sha256": "de7700f456088bc5c7932547c59be785ff535f6431d2ddcc996a364a4aeaaab2",
+      "bytes": 9040
+    },
+    {
+      "path": "../reports/2026-08-21-v58-active-route-attribution/evidence.json",
+      "role": "immutable_route_archive_and_vendor_reconciliation_evidence",
+      "sha256": "073f1571f1a65575029257e2c138efd5b16cfa52624f1d6caa56931cbf6bbfc1",
+      "bytes": 19614
+    },
+    {
+      "path": "../../src/hypervector/live/hip3_cash_open_trade_source.py",
+      "role": "receipt_causal_live_source_candidate",
+      "sha256": "b48f5897572193754abc07af84876260d727d748e3ef357ab35b9a6a21816724",
+      "bytes": 3610
+    },
+    {
+      "path": "../../src/hypervector/live/hip3_cash_open_gap_provider.py",
+      "role": "session_aware_collector_and_readiness_candidate",
+      "sha256": "cbb776b7ba65352bdfdda8e23311ed6e3e8be8583fceee438824be73d117aad3",
+      "bytes": 9555
+    },
+    {
+      "path": "../../src/hypervector/research/hip3_cash_open_gap_reversal_signals.py",
+      "role": "calendar_prior_close_and_signal_contract",
+      "sha256": "c25ec51ac1815fe1547ad006fd274333e08856dbc3f8f28582ba046b19647085",
+      "bytes": 9641
+    },
+    {
+      "path": "../../src/hypervector/research/hip3_cash_open_prospective.py",
+      "role": "scheduled_sparse_gap_provenance_builder",
+      "sha256": "c74b778d0f7e396b2c58af625ec204a549ff5c0e4f3240195601fdbb6628410b",
+      "bytes": 11723
+    },
+    {
+      "path": "../../tests/test_hip3_cash_open_trade_source.py",
+      "role": "source_receipt_schedule_and_gap_regressions",
+      "sha256": "c8642dce9a5c288a8a67e1bfcb254046fa614d15f93df48d913974fb4c59e6df",
+      "bytes": 11866
+    },
+    {
+      "path": "../../tests/test_hip3_cash_open_gap_provider.py",
+      "role": "collector_cursor_entry_exit_and_readiness_regressions",
+      "sha256": "65b541ce429c3a035c4fa8589fc6adc5e8d79a012479ae09cef5d0a28422b647",
+      "bytes": 10141
+    },
+    {
+      "path": "../../tests/test_hip3_cash_open_gap_reversal_signals.py",
+      "role": "signal_fail_closed_and_complete_window_parity_regressions",
+      "sha256": "7323d531a092a6731dfa432c384f65b09db895722cb70b0182486b9cfd4d1d58",
+      "bytes": 7525
+    }
+  ],
+  "metrics": {
+    "focused_tests_passed": 51,
+    "focused_tests_failed": 0,
+    "full_nonnetwork_tests_passed": 6901,
+    "full_nonnetwork_tests_failed_unrelated": 2,
+    "full_nonnetwork_tests_deselected": 4,
+    "rust_tui_suite_passed": true,
+    "rust_clippy_warnings_denied_passed": true,
+    "active_v58_all_nine_screens_passed": true,
+    "frozen_cash_bars_expected": 130,
+    "frozen_cash_bars_observed": 130,
+    "frozen_declared_gap_count": 13,
+    "frozen_affected_bar_count": 12,
+    "oxa_manifests_hash_verified": 13,
+    "oxa_complete_page_chains": 13,
+    "oxa_unresolved_fill_groups": 0,
+    "oxa_vendor_trades_missing_locally": 619,
+    "affected_opening_ohlc_equal": true,
+    "current_live_runtime_changed": false,
+    "current_live_faults": 0,
+    "current_live_profile_matches_runtime": true,
+    "forward_cash_open_observations": 0
+  },
+  "limitations": [
+    "No future cash-open boundary has yet been observed with the repaired report-only path.",
+    "The active runtime still uses the already-loaded pre-repair implementation and must not be hot-restarted while positions remain open.",
+    "Two unrelated repository tests remain red, so repository-wide all-green status is not established.",
+    "0xArchive remains validation-only and is not an automatic live data merge.",
+    "Technical availability and historical behavior preservation do not establish positive live expectancy or trade frequency."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

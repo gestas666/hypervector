@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from copy import deepcopy
 from datetime import datetime, timezone
 import json
 from pathlib import Path
@@ -93,9 +94,10 @@ def test_checkpoint_reports_consistent_running_assets() -> None:
     assert checkpoint["lifecycle"]["all_assets_terminal"] is False
     risk = checkpoint["audit"]["risk_utilization"]
     assert risk["summary"]["cap_bound_assets"] == 4
+    assert risk["summary"]["executable_assets"] == 2
     assert risk["summary"][
         "maximum_simultaneous_effective_margin_fraction"
-    ] == pytest.approx(4 * 5.0 / 503.16)
+    ] == pytest.approx(2 * 5.0 / 503.16)
     assert risk["by_asset"]["BTC"]["configured_margin_fraction"] == 0.03
     assert risk["by_asset"]["BTC"]["effective_margin_fraction"] == pytest.approx(
         5.0 / 503.16
@@ -191,6 +193,41 @@ def test_checkpoint_keeps_current_run_separate_from_portfolio_archive() -> None:
             generated_at=_GENERATED_AT,
             portfolio_archive=unsafe,
         )
+
+
+def test_checkpoint_does_not_downgrade_epoch_archive_from_bounded_reflections() -> None:
+    """An append-only durable archive outranks a shorter reflection window."""
+    fingerprint = "a" * 64
+    archive = {
+        "schema_version": 1,
+        "mode": "cohort_live_portfolio_archive_v1",
+        "contract": {
+            "report_only": True,
+            "execution_authority": "none",
+            "runtime_strategy_changed": False,
+        },
+        "accounting_epoch": {
+            "epoch_id": "growth_5000",
+            "profile_fingerprint": fingerprint,
+            "start_venue_timestamp_ms": 1,
+        },
+        "coverage": {
+            "complete": True,
+            "closed_orders": 9,
+            "leverage_matches": 9,
+        },
+        "performance": {"scope": "all_live_history"},
+    }
+
+    checkpoint = build_live_checkpoint(
+        _cohort_rows(),
+        {symbol: _active_asset_rows(symbol) for symbol in _SYMBOLS},
+        run_id=_RUN_ID,
+        generated_at=_GENERATED_AT,
+        portfolio_archive=archive,
+    )
+
+    assert checkpoint["audit"]["portfolio_archive"] == archive
 
 
 def test_full_checkpoint_rejects_divergent_archive_performance() -> None:
@@ -590,6 +627,8 @@ def test_checkpoint_discloses_stale_runtime_configuration() -> None:
         "source_path": "configs/cohort.toml",
         "source_modified_at_utc": "2026-08-03T11:16:04+00:00",
         "current_asset_sizing": {},
+        "current_asset_entry_slippage_caps": {},
+        "current_asset_market_slippage_caps": {},
         "current_entry_context_overrides": {},
         "current_provider_sizing_overrides": {},
         "current_provider_directional_sizing_overrides": {},
@@ -658,6 +697,49 @@ def test_publish_atomically_replaces_one_bounded_latest_checkpoint(
     assert second["generated_at_utc"] == second_time.isoformat()
     assert json.loads(destination.read_text(encoding="utf-8")) == second
     assert [path.name for path in destination.parent.iterdir()] == [destination.name]
+
+
+def test_publish_attaches_profile_acceptance_before_atomic_write(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The exact report verdict must be present in the published checkpoint."""
+    ledger_root = tmp_path / "ledgers"
+    ledger_root.mkdir()
+    _write_rows(ledger_root / "decisions.jsonl", _cohort_rows())
+    for symbol in _SYMBOLS:
+        _write_rows(ledger_root / f"{symbol.lower()}.jsonl", _asset_rows(symbol))
+    destination = tmp_path / "runtime" / "latest_checkpoint.json"
+    calls: list[tuple[Path, datetime]] = []
+
+    def attach(
+        checkpoint: dict[str, object],
+        config_path: Path,
+        *,
+        observed_at: datetime,
+    ) -> bool:
+        checkpoint["poststart_acceptance"] = {"accepted": True}
+        calls.append((config_path, observed_at))
+        return True
+
+    monkeypatch.setattr(
+        cohort_live_checkpoint,
+        "attach_seven_asset_poststart_acceptance",
+        attach,
+    )
+    config_path = Path("configs/multi_asset_bidirectional_canary.toml")
+
+    checkpoint = publish_live_checkpoint(
+        ledger_root,
+        destination,
+        run_id=_RUN_ID,
+        generated_at=_GENERATED_AT,
+        config_path=config_path,
+    )
+
+    assert calls == [(config_path, _GENERATED_AT)]
+    assert checkpoint["poststart_acceptance"] == {"accepted": True}
+    assert json.loads(destination.read_text(encoding="utf-8")) == checkpoint
 
 
 def test_publish_retains_retired_history_without_runtime_authority(
@@ -745,6 +827,69 @@ def test_publish_bounded_execution_history_preserves_complete_projection(
     assert json.loads(destination.read_text(encoding="utf-8")) == bounded
 
 
+def test_publish_current_run_only_starts_at_exact_run_identity(tmp_path: Path) -> None:
+    """Pending archive sync must not rescan compatible prior-run history."""
+    ledger_root = tmp_path / "ledgers"
+    ledger_root.mkdir()
+    current_cohort = _cohort_rows()
+    prior_cohort = deepcopy(current_cohort)
+    _set_prior_run(prior_cohort, "cohort-live-prior")
+    _continue_sequences(current_cohort, len(prior_cohort))
+    _write_rows(
+        ledger_root / "decisions.jsonl",
+        [*prior_cohort, *current_cohort],
+    )
+    for symbol in _SYMBOLS:
+        current_asset = _active_asset_rows(symbol)
+        prior_asset = deepcopy(current_asset)
+        _set_prior_run(prior_asset, "cohort-live-prior")
+        _continue_sequences(current_asset, len(prior_asset))
+        _write_rows(
+            ledger_root / f"{symbol.lower()}.jsonl",
+            [*prior_asset, *current_asset],
+        )
+    retired_asset = _active_asset_rows("DOGE")
+    _set_prior_run(retired_asset, "cohort-live-retired")
+    _write_rows(ledger_root / "doge.jsonl", retired_asset)
+    archive = {
+        "schema_version": 1,
+        "mode": "cohort_live_portfolio_archive_v1",
+        "contract": {
+            "report_only": True,
+            "execution_authority": "none",
+            "runtime_strategy_changed": False,
+        },
+        "accounting_epoch": {
+            "epoch_id": "growth_5000",
+            "profile_fingerprint": "a" * 64,
+            "start_venue_timestamp_ms": 1,
+        },
+        "coverage": {
+            "complete": True,
+            "closed_orders": 0,
+            "leverage_matches": 0,
+        },
+        "performance": {"scope": "all_live_history"},
+    }
+
+    checkpoint = publish_live_checkpoint(
+        ledger_root,
+        tmp_path / "runtime" / "latest_checkpoint.json",
+        run_id=_RUN_ID,
+        generated_at=_GENERATED_AT,
+        portfolio_archive=archive,
+        current_run_only=True,
+    )
+
+    assert checkpoint["evidence"]["cohort"]["source_start_offset"] > 0
+    assert all(
+        item["source_start_offset"] > 0
+        for item in checkpoint["evidence"]["assets"].values()
+    )
+    assert checkpoint["audit"]["portfolio_archive"] == archive
+    assert checkpoint["evidence"]["retired_assets"] == {}
+
+
 def test_bounded_checkpoint_retains_verified_complete_historical_projection() -> None:
     """Current telemetry stays fresh while all-time evidence keeps full coverage."""
     candidate = _historical_projection_fixture("2026-08-08T10:30:00+00:00")
@@ -784,7 +929,7 @@ def test_bounded_checkpoint_retains_verified_complete_historical_projection() ->
         "marker": "complete"
     }
     assert merged["audit"]["entry_alignment_mechanism"] == {"marker": "complete"}
-    assert merged["audit"]["side_composition"]["marker"] == "complete"
+    assert merged["audit"]["side_composition"]["marker"] == "bounded"
     assert merged["audit"]["side_composition"]["contract"] == {
         "report_only": True,
         "execution_authority": "none",
@@ -811,6 +956,83 @@ def test_bounded_checkpoint_retains_verified_complete_historical_projection() ->
     )
 
 
+def test_bounded_checkpoint_keeps_scorecard_aligned_with_cached_provider_history() -> (
+    None
+):
+    """Cached provider outcomes retain matching scorecard execution evidence."""
+    candidate = _historical_projection_fixture("2026-08-08T10:30:00+00:00")
+    complete = _historical_projection_fixture("2026-08-08T10:00:00+00:00")
+    candidate_score = {
+        "summary": {"mappings": 1, "mappings_with_live_outcomes": 0},
+        "by_provider_symbol": {
+            "strategy|BTC": {
+                "forward_evaluations": 12,
+                "execution_outcomes_identifiable": False,
+            }
+        },
+    }
+    complete_score = {
+        "summary": {"mappings": 1, "mappings_with_live_outcomes": 1},
+        "by_provider_symbol": {
+            "strategy|BTC": {
+                "forward_evaluations": 8,
+                "execution_outcomes_identifiable": True,
+                "execution_performance_scope": "provider_execution_contract_history",
+                "execution_performance": {"closed_trades": 2},
+                "execution_performance_by_side": {"long": {"closed_trades": 2}},
+                "repeatability_evidence": {"closed_trades": 2},
+            }
+        },
+    }
+    candidate["audit"]["strategy_scorecard"] = candidate_score
+    complete["audit"]["strategy_scorecard"] = complete_score
+    complete["audit"]["trade_reflections"]["provider_contract_history"] = {
+        "compatible_trades": 2,
+        "performance": {"total": {"closed_trades": 2}},
+    }
+
+    merged = cohort_live_checkpoint.merge_complete_historical_projection(
+        candidate,
+        complete,
+    )
+
+    scorecard = merged["audit"]["strategy_scorecard"]
+    record = scorecard["by_provider_symbol"]["strategy|BTC"]
+    assert record["forward_evaluations"] == 12
+    assert record["execution_outcomes_identifiable"] is True
+    assert record["execution_performance"] == {"closed_trades": 2}
+    assert record["execution_performance_by_side"] == {"long": {"closed_trades": 2}}
+    assert record["repeatability_evidence"] == {"closed_trades": 2}
+    assert scorecard["summary"]["mappings_with_live_outcomes"] == 1
+
+
+def test_bounded_checkpoint_rebuilds_inconsistent_cached_scorecard_history() -> None:
+    """A poisoned scorecard cache cannot survive a rolling historical merge."""
+    candidate = _historical_projection_fixture("2026-08-08T10:30:00+00:00")
+    complete = _historical_projection_fixture("2026-08-08T10:00:00+00:00")
+    empty_scorecard = {
+        "summary": {"mappings": 1, "mappings_with_live_outcomes": 0},
+        "by_provider_symbol": {
+            "strategy|BTC": {"execution_outcomes_identifiable": False}
+        },
+    }
+    candidate["audit"]["strategy_scorecard"] = deepcopy(empty_scorecard)
+    complete["audit"]["strategy_scorecard"] = deepcopy(empty_scorecard)
+    complete["audit"]["trade_reflections"]["provider_contract_history"] = {
+        "compatible_trades": 2,
+        "performance": {"total": {"closed_trades": 2}},
+    }
+
+    with pytest.raises(
+        cohort_live_checkpoint.HistoricalProjectionStale,
+        match="scorecard outcomes differ from provider history",
+    ):
+        cohort_live_checkpoint.merge_complete_historical_projection(
+            candidate,
+            complete,
+        )
+
+
 def test_bounded_checkpoint_refuses_stale_historical_execution_signature() -> None:
     """A new venue fill requires a fresh complete-ledger historical projection."""
     candidate = _historical_projection_fixture("2026-08-08T10:30:00+00:00")
@@ -828,6 +1050,26 @@ def test_bounded_checkpoint_refuses_stale_historical_execution_signature() -> No
             candidate,
             complete,
         )
+
+
+def test_bounded_checkpoint_accepts_exact_profile_restart_without_new_fills() -> None:
+    """A process run-id change alone cannot force a full-ledger hot-loop rebuild."""
+    candidate = _historical_projection_fixture("2026-08-08T10:30:00+00:00")
+    complete = _historical_projection_fixture("2026-08-08T10:00:00+00:00")
+    candidate["audit"]["run"]["run_id"] = "run-restarted"
+    candidate["audit"]["execution"]["history_run_ids"].append("run-restarted")
+    candidate["audit"]["side_composition"]["marker"] = "bounded-restart"
+
+    merged = cohort_live_checkpoint.merge_complete_historical_projection(
+        candidate,
+        complete,
+    )
+
+    assert merged["audit"]["run"]["run_id"] == "run-restarted"
+    assert merged["audit"]["side_composition"]["marker"] == "bounded-restart"
+    assert merged["audit"]["historical_projection"]["status"] == (
+        "current_by_execution_signature"
+    )
 
 
 def test_bounded_checkpoint_refuses_archive_ahead_of_complete_history() -> None:
@@ -918,10 +1160,10 @@ def test_bounded_checkpoint_rejects_unsafe_historical_lineage_contract() -> None
 
 
 def test_bounded_checkpoint_rejects_unsafe_side_composition_contract() -> None:
-    """Cached route-side evidence cannot carry execution authority."""
+    """Fresh route-side evidence cannot carry execution authority."""
     candidate = _historical_projection_fixture("2026-08-08T10:30:00+00:00")
     complete = _historical_projection_fixture("2026-08-08T10:20:00+00:00")
-    complete["audit"]["side_composition"]["contract"]["execution_authority"] = (
+    candidate["audit"]["side_composition"]["contract"]["execution_authority"] = (
         "hyperliquid_mainnet"
     )
 
@@ -939,6 +1181,18 @@ def _active_asset_rows(symbol: str) -> list[dict[str, object]]:
     payload["state"] = "FLAT"
     payload["stop_reason"] = None
     return rows
+
+
+def _set_prior_run(rows: list[dict[str, object]], run_id: str) -> None:
+    for row in rows:
+        row["run_id"] = run_id
+
+
+def _continue_sequences(rows: list[dict[str, object]], offset: int) -> None:
+    for row in rows:
+        sequence = row.get("sequence")
+        assert isinstance(sequence, int) and not isinstance(sequence, bool)
+        row["sequence"] = sequence + offset
 
 
 def _historical_projection_fixture(generated_at: str) -> dict[str, object]:

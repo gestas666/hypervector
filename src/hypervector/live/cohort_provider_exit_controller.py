@@ -13,7 +13,15 @@ from hypervector.live.multi_asset_live_runner_support import (
     entry_provider_strategy_id,
     position_side,
 )
+from hypervector.live.multi_asset_readiness_seed import (
+    RECOVERY_SCAN_END_METRIC,
+    RECOVERY_SCAN_START_METRIC,
+)
+from hypervector.live.multi_asset_signal_source import ProviderEvaluation
 from hypervector.live.sol_range_onset_state import SolLiveState
+
+_PREACTIVATION_READINESS_REASON = "pre_activation_readiness_seed"
+_RECOVERY_GAP_EXIT_REASON = "provider_recipe_exit_recovery_unverified"
 
 
 class CohortProviderExitController:
@@ -131,14 +139,10 @@ class CohortProviderExitController:
             )
             return recorded
         evaluation = evaluations.get((provider, symbol))
-        if evaluation is None or side not in evaluation.exit_sides:
+        exit_fact = _new_exit_fact(evaluation, side, opened_at_ms, observed_ms, symbol)
+        if exit_fact is None:
             return None
-        if evaluation.decision_time_ms < opened_at_ms:
-            return None
-        if evaluation.decision_time_ms > observed_ms:
-            raise MultiAssetLiveRunnerError(
-                f"{symbol} provider recipe exit lies in the future"
-            )
+        decision_time_ms, exit_reason = exit_fact
         payload: dict[str, object] = {
             "decision_id": decision_id,
             "lifecycle_id": f"{symbol}:{entry_oid}",
@@ -146,11 +150,46 @@ class CohortProviderExitController:
             "symbol": symbol,
             "side": side,
             "outcome": "exit",
-            "exit_reason": evaluation.exit_reason,
-            "decision_time_ms": evaluation.decision_time_ms,
+            "exit_reason": exit_reason,
+            "decision_time_ms": decision_time_ms,
         }
         self._telemetry.emit_provider_exit_decision(payload)
         return payload
+
+
+def _new_exit_fact(
+    evaluation: object,
+    side: str,
+    opened_at_ms: int,
+    observed_ms: int,
+    symbol: str,
+) -> tuple[int, str] | None:
+    if not isinstance(evaluation, ProviderEvaluation):
+        return None
+    if evaluation.decision_time_ms > observed_ms:
+        raise MultiAssetLiveRunnerError(
+            f"{symbol} provider recipe exit lies in the future"
+        )
+    if side in evaluation.exit_sides and evaluation.decision_time_ms >= opened_at_ms:
+        return evaluation.decision_time_ms, _text(evaluation.exit_reason, "exit_reason")
+    return _recovery_gap_exit(evaluation, opened_at_ms, observed_ms)
+
+
+def _recovery_gap_exit(
+    evaluation: ProviderEvaluation,
+    opened_at_ms: int,
+    observed_ms: int,
+) -> tuple[int, str] | None:
+    if evaluation.backend_non_action_reason != _PREACTIVATION_READINESS_REASON:
+        return None
+    metrics = evaluation.readiness.metrics
+    start = _recovery_integer(metrics.get(RECOVERY_SCAN_START_METRIC))
+    end = _recovery_integer(metrics.get(RECOVERY_SCAN_END_METRIC))
+    if start > end or end > observed_ms:
+        raise MultiAssetLiveRunnerError(
+            "provider recipe exit recovery scan boundary is invalid"
+        )
+    return (end, _RECOVERY_GAP_EXIT_REASON) if opened_at_ms < start else None
 
 
 def _validate_recorded(
@@ -186,6 +225,14 @@ def _integer(value: object, label: str) -> int:
     if isinstance(value, bool) or not isinstance(value, int):
         raise MultiAssetLiveRunnerError(
             f"persisted provider recipe exit {label} must be an integer"
+        )
+    return value
+
+
+def _recovery_integer(value: object) -> int:
+    if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+        raise MultiAssetLiveRunnerError(
+            "provider recipe exit recovery scan boundary must be nonnegative integer"
         )
     return value
 

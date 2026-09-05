@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v58-sp500-open-lifecycle-exit-path-audit",
+  "revision_number": 1,
+  "recorded_at_utc": "2026-08-21T19:28:37Z",
+  "status": "open_protected_no_exit_trigger_observed",
+  "recommendation": "Continue the frozen SP500 lifecycle while preserving the full reduce-only protective stop and exact lifecycle capture. Do not force a discretionary close or alter its exit contract from this single unresolved path.",
+  "why_now": "SP500 is the sole live exposure and therefore the highest-value current diagnostic. It is near breakeven, has not activated native or preregistered profit locks, and has not emitted an eligible opposite signal.",
+  "evidence_reviewed": [
+    "Current live checkpoint and read-only venue preflight.",
+    "Exact SP500 route lifecycle status and future-only lower-activation profit-lock registration.",
+    "Twenty-one route evaluations at or after the active entry boundary.",
+    "Actual completed one-minute price path, entry execution quality, fees, funding, current mark, and protective-stop state."
+  ],
+  "observed_problem_or_opportunity": {
+    "lifecycle_id": "xyz:SP500:521918499754",
+    "side": "long",
+    "entry_time_ms": 1787312729079,
+    "entry_price": 7677.0,
+    "entry_size": 0.223,
+    "entry_notional_usd": 1711.971,
+    "leverage": 5,
+    "margin_mode": "isolated",
+    "maximum_hold_deadline_utc": "2026-08-22T11:45:00Z",
+    "maximum_favorable_excursion_bps": 22.144066692717512,
+    "maximum_adverse_excursion_bps": 28.52676826885503,
+    "peak_giveback_bps": 23.96769571447188,
+    "marked_net_pnl_usd": -0.398532,
+    "estimated_exit_now_net_usd": -0.5464190259736876,
+    "estimated_stop_net_usd": -13.928830688000039,
+    "marked_to_stop_giveback_usd": 13.382411662026351,
+    "post_entry_route_evaluations": 21,
+    "post_entry_eligible_long": 2,
+    "post_entry_eligible_short": 0,
+    "latest_route_eligible": false,
+    "opposite_exit_triggered": false,
+    "native_profit_lock_activation_bps": 100.0,
+    "first_preregistered_challenger_activation_bps": 25.0,
+    "profit_lock_triggered": false
+  },
+  "applicable_market_regime": "Low net displacement after a fresh 15-minute upside breakout, with the completed path oscillating around entry and no later confirmed short breakout-pressure onset.",
+  "alternatives_considered": [
+    {
+      "alternative": "discretionary_close_now",
+      "expected_upside": "Avoid the remaining distance to the fixed protective stop and release one portfolio slot.",
+      "main_risk": "Introduces an untested exit selected from one open path and can truncate a valid 24-hour breakout lifecycle.",
+      "decision": "not_supported_by_current_evidence"
+    },
+    {
+      "alternative": "lower_profit_lock_on_current_position",
+      "expected_upside": "Potentially protect smaller favorable excursions.",
+      "main_risk": "The first preregistered 25-bps challenger has not activated because observed MFE is only 22.14 bps; retroactive activation would violate the frozen experiment.",
+      "decision": "reject_for_current_lifecycle"
+    },
+    {
+      "alternative": "continue_frozen_exit_contract",
+      "expected_upside": "Preserves causal evidence and allows stop, eligible opposite, completed-bar trailing lock, or maximum hold to resolve the path as configured.",
+      "main_risk": "The position can still lose approximately the estimated $13.93 net at the current protective stop, excluding future funding or slippage.",
+      "decision": "selected"
+    }
+  ],
+  "proposed_live_change": "none",
+  "expected_upside": "Avoid an outcome-driven exit mutation while retaining complete protection and an identifiable exact lifecycle.",
+  "main_risks_and_failure_modes": [
+    "The fixed 80-bps stop permits materially more loss than the current near-breakeven close estimate.",
+    "A 24-hour hold can consume capital and opportunity without producing positive displacement.",
+    "One unresolved lifecycle cannot identify whether the native 100/40/80 completed-bar trailing lock is too loose.",
+    "The lifecycle watcher reports one additional eligible long while the symbol was occupied; this is expected occupancy suppression, but it must not be misclassified as a missing entry or opposite exit."
+  ],
+  "validation_completed": {
+    "venue_ledger_reconciled": true,
+    "position_size_matches": true,
+    "owned_order_ids_match": true,
+    "protective_stop_oid": 521918558447,
+    "protective_stop_trigger_price": 7615.6,
+    "protective_stop_reduce_only": true,
+    "protective_stop_covered_size": 0.223,
+    "full_reduce_only_stop_coverage": true,
+    "entry_slippage_bps": -1.3024225058611005,
+    "entry_acknowledgement_latency_ms": 1364,
+    "completed_path_bars": 460,
+    "missing_lifecycle_evidence_fields": 0
+  },
+  "validation_still_required": "Wait for an actual stop, eligible opposite, completed-bar profit lock, or maximum-hold close. Then reconcile exact exit decision, submission, fill, fees, funding, net PnL, MFE, MAE, giveback, stop cleanup, and each preregistered challenger without changing the active contract.",
+  "success_metrics": [
+    "Position and stop remain venue-ledger reconciled until close.",
+    "Any eligible short closes the long under the configured opposite-intent arbitration.",
+    "Any native profit-lock activation and trigger are persisted from completed bars.",
+    "Final close and protection cleanup reconcile exactly with no orphan order or residual position."
+  ],
+  "failure_or_rollback_triggers": [
+    "Missing, undersized, non-reduce-only, duplicated, or mismatched protective stop.",
+    "Eligible short signal without the configured close action.",
+    "Profit-lock activation or trigger that disagrees with completed-bar evidence.",
+    "Position, order, fee, funding, fill, deadline, or ledger identity contradiction.",
+    "Backend or checkpoint staleness while live exposure remains open."
+  ],
+  "confidence_level": {
+    "current_position_and_protection_state": "high",
+    "no_opposite_or_profit_lock_trigger_yet": "high",
+    "continuing_is_more_profitable_than_closing_now": "low_and_not_claimed",
+    "exit_contract_optimality": "low_pending_resolved_lifecycles"
+  },
+  "explicit_approval_requested": false,
+  "evidence": [
+    {
+      "path": "configs/multi_asset_growth_first_5000_eight_asset_incremental_v58.toml",
+      "sha256": "1c1c1656233b074df2ed3adcee8cb8cb2c58f0d191cc9f9ac34799478fca3378"
+    },
+    {
+      "path": "data/runtime/research/v58_current_venue_preflight_latest.json",
+      "sha256_at_review": "64d01a570023be3e2f8ae1aa8f02079d5cd4c811925b6609dd872f30534653a8"
+    },
+    {
+      "path": "data/runtime/research/v58_sp500_lower_activation_profit_lock_future_only_latest.json",
+      "sha256_at_review": "d1143b4ae9f78284f6d8488d6d81c00135e5dc7ec041bdd0609b267a83bffec9"
+    },
+    {
+      "path": "docs/research-journal/v58-sp500-lower-activation-profit-lock-future-only-preregistration-20260821-v4.json",
+      "sha256": "e8745f4750a7def53395a847da7bd56ec17f60e7e19ecc14e43e1af6aab4ef6e"
+    }
+  ],
+  "single_highest_value_next_investigation": "Continue exact SP500 lifecycle reconciliation until the frozen exit contract resolves; immediately escalate any protection, opposite-exit, profit-lock, deadline, or cleanup contradiction."
+}

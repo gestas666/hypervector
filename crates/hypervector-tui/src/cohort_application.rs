@@ -13,6 +13,25 @@ use crate::cohort_operator::{
 };
 use crate::cohort_widgets::provider_alias;
 
+fn provider_execution_sides<'a>(
+    provider: &'a crate::backend_cohort::CohortProvider,
+    symbol: &str,
+) -> Option<&'a [String]> {
+    let executable = provider
+        .execution_symbols
+        .as_ref()
+        .is_some_and(|symbols| symbols.iter().any(|value| value == symbol));
+    if !executable {
+        return None;
+    }
+    Some(
+        provider
+            .execution_side_overrides
+            .get(symbol)
+            .unwrap_or(&provider.sides),
+    )
+}
+
 impl App {
     /// Configure the local inbox used only by an already-armed Python backend.
     pub fn set_cohort_command_inbox(&mut self, path: Option<PathBuf>) {
@@ -25,6 +44,16 @@ impl App {
             .cohort
             .providers
             .get(self.selected_cohort_provider_index)
+    }
+
+    /// Return an execution-authorized manual side for the current route.
+    pub(crate) fn selected_cohort_operator_side(&self) -> Option<&str> {
+        let symbol = self.selected_cohort_symbol()?;
+        let sides = provider_execution_sides(self.selected_cohort_provider()?, symbol)?;
+        if sides.iter().any(|side| side == &self.cohort_operator_side) {
+            return Some(self.cohort_operator_side.as_str());
+        }
+        sides.first().map(String::as_str)
     }
 
     /// Open the selected coin's read-only strategy chart inspector.
@@ -121,11 +150,18 @@ impl App {
 
     /// Toggle the requested manual entry direction.
     pub fn toggle_cohort_operator_side(&mut self) {
-        self.cohort_operator_side = if self.cohort_operator_side == "long" {
-            "short".into()
-        } else {
-            "long".into()
+        let sides = self
+            .selected_cohort_symbol()
+            .and_then(|symbol| provider_execution_sides(self.selected_cohort_provider()?, symbol))
+            .map(<[String]>::to_vec);
+        let Some(sides) = sides else {
+            return;
         };
+        let current = sides
+            .iter()
+            .position(|side| side == &self.cohort_operator_side)
+            .unwrap_or(0);
+        self.cohort_operator_side = sides[(current + 1) % sides.len()].clone();
     }
 
     /// Move between entry, close, and portfolio transition-drain controls.
@@ -297,9 +333,12 @@ impl App {
         if !executable {
             return Err("selected provider cannot execute this coin".into());
         }
+        let side = self
+            .selected_cohort_operator_side()
+            .ok_or_else(|| "selected provider has no authorized entry side".to_string())?;
         Ok(CohortOperatorAction::ManualEnter {
             provider: provider.strategy_id.clone(),
-            side: self.cohort_operator_side.clone(),
+            side: side.into(),
         })
     }
 
@@ -402,4 +441,40 @@ pub(crate) fn cohort_backend_accepts_operator_requests(app: &App) -> bool {
     app.backend.connection == BackendConnectionState::Connected
         && app.backend.live_armed == Some(true)
         && app.backend.execution_authority.as_deref() == Some("hyperliquid_mainnet")
+}
+
+#[cfg(test)]
+mod tests {
+    use std::collections::BTreeMap;
+
+    use super::provider_execution_sides;
+    use crate::backend_cohort::CohortProvider;
+
+    #[test]
+    fn operator_sides_honor_symbol_override_and_execution_scope() {
+        let provider = CohortProvider {
+            strategy_id: "pressure".into(),
+            symbols: vec!["xyz:SNDK".into(), "xyz:BRENTOIL".into()],
+            sides: vec!["long".into(), "short".into()],
+            priority: 1,
+            timeframe: "15m".into(),
+            maximum_entry_delay_seconds: 30,
+            execution_symbols: Some(vec!["xyz:SNDK".into(), "xyz:BRENTOIL".into()]),
+            execution_side_overrides: BTreeMap::from([("xyz:SNDK".into(), vec!["short".into()])]),
+            entry_context_overrides: BTreeMap::new(),
+            sizing_overrides: BTreeMap::new(),
+            source_profile: None,
+            execution: None,
+        };
+
+        assert_eq!(
+            provider_execution_sides(&provider, "xyz:SNDK"),
+            Some(&["short".into()][..])
+        );
+        assert_eq!(
+            provider_execution_sides(&provider, "xyz:BRENTOIL"),
+            Some(&["long".into(), "short".into()][..]),
+        );
+        assert_eq!(provider_execution_sides(&provider, "xyz:GOLD"), None);
+    }
 }

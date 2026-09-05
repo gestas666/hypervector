@@ -57,10 +57,44 @@ FROM cohort_live_fills
 WHERE starts_with(direction, 'Close');
 
 CREATE OR REPLACE VIEW cohort_live_attributed_fills AS
-WITH expanded AS (
+WITH snapshot_revisions AS (
     SELECT
         event_id AS snapshot_event_id,
         observed_at_utc AS snapshot_observed_at_utc,
+        json_extract(payload, '$.recent_fills') AS recent_fills
+    FROM cohort_live_events
+    WHERE event_type = 'cohort_snapshot'
+      AND coalesce(json_array_length(payload, '$.recent_fills'), 0) > 0
+), snapshots AS (
+    SELECT
+        sha256(CAST(recent_fills AS VARCHAR)) AS revision_sha256,
+        arg_max(
+            snapshot_event_id,
+            struct_pack(
+                observed := snapshot_observed_at_utc,
+                identity := snapshot_event_id
+            )
+        ) AS snapshot_event_id,
+        arg_max(
+            snapshot_observed_at_utc,
+            struct_pack(
+                observed := snapshot_observed_at_utc,
+                identity := snapshot_event_id
+            )
+        ) AS snapshot_observed_at_utc,
+        arg_max(
+            recent_fills,
+            struct_pack(
+                observed := snapshot_observed_at_utc,
+                identity := snapshot_event_id
+            )
+        ) AS recent_fills
+    FROM snapshot_revisions
+    GROUP BY revision_sha256
+), expanded AS (
+    SELECT
+        event.snapshot_event_id,
+        event.snapshot_observed_at_utc,
         CAST(json_extract_string(fill.value, '$.trade_id') AS UBIGINT)
             AS trade_id,
         json_extract_string(fill.value, '$.symbol') AS symbol,
@@ -102,9 +136,8 @@ WITH expanded AS (
             AS entry_price,
         CAST(json_extract_string(fill.value, '$.entry_venue_timestamp_ms') AS UBIGINT)
             AS entry_venue_timestamp_ms
-    FROM cohort_live_events AS event,
-         json_each(event.payload, '$.recent_fills') AS fill
-    WHERE event.event_type = 'cohort_snapshot'
+    FROM snapshots AS event,
+         json_each(event.recent_fills) AS fill
 ), ranked AS (
     SELECT *, row_number() OVER (
         PARTITION BY symbol, trade_id

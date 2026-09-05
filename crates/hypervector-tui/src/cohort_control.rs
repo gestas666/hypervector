@@ -100,7 +100,12 @@ fn render_entry(frame: &mut Frame, app: &App, area: Rect) {
             Span::styled(symbol, app.theme.title),
         ]),
         Line::from(format!("PROVIDER {provider}")),
-        Line::from(format!("SIDE {}", app.cohort_operator_side.to_uppercase())),
+        Line::from(format!(
+            "SIDE {}",
+            app.selected_cohort_operator_side()
+                .unwrap_or("N/A")
+                .to_uppercase()
+        )),
         Line::from("BYPASS: strategy prerequisites only"),
         Line::from("RETAIN: capacity, isolated risk, stop, venue checks"),
         Line::from(if selected {

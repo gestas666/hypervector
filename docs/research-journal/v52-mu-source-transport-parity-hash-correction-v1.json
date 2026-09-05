@@ -1,0 +1,42 @@
+{
+  "schema_version": "v52_mu_source_hash_correction_v1",
+  "generated_at_utc": "2026-08-16T23:37:50Z",
+  "hypothesis_id": "MU_BREAKOUT_PRESSURE_TRANSPORT_PARITY_FORWARD_V1",
+  "contract": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_live_change": false,
+    "runtime_strategy_changed": false,
+    "corrects_hash_only": true
+  },
+  "source_journal": {
+    "path": "/Users/gestas/Prototypes/hypervector/docs/research-journal/v52-mu-source-transport-parity-v1.json",
+    "sha256": "e3c57d42c15a1a8df169464fcbafba9ef87634886480a22d7e161afdf762397c",
+    "bytes": 7269
+  },
+  "field": "refreshed_evidence.strategy_signal_source.sha256",
+  "incorrect_sha256": "c9fb0044a9bd295cb6292243e71de000bbfd058a32e6488aa20b18ada37e1b",
+  "correct_artifact": {
+    "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/xyz_mu_prospective_signal_parity_20260816T1835Z_v2.json",
+    "sha256": "c9fb0044a9bd295cb6292243e71de000bbfdcd058a32e6488aa20b18ada37e1b",
+    "bytes": 125504
+  },
+  "cross_binding_artifact": {
+    "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/xyz_mu_shadow_observer_decision_parity_20260816T1835Z_v3.json",
+    "sha256": "723658cd720597408bd053e19e8c8a19ee02fc04b3077b9a3e0be5673f4cab2b",
+    "bytes": 13679
+  },
+  "cross_binding_field": "input_evidence.signal_parity",
+  "scope_statement": {
+    "window_changed": false,
+    "source_artifact_changed": false,
+    "strategy_parameter_changed": false,
+    "live_authority_changed": false,
+    "explanation": "The frozen source journal omitted the two hexadecimal characters cd from the direct signal-parity SHA. The correctly hashed observer-parity artifact independently binds the unchanged signal artifact by exact path, SHA-256, and byte count."
+  },
+  "confidence": {
+    "level": "high",
+    "basis": "The frozen source journal, signal artifact, and observer cross-binding artifact are all bound by exact immutable byte evidence.",
+    "falsifier": "Any mismatch in the source-journal checksum, artifact path, corrected SHA-256, byte count, observer-artifact checksum, or nested signal-parity binding invalidates this correction."
+  }
+}

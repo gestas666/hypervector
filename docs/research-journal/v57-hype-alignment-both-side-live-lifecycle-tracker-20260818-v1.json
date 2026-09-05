@@ -1,0 +1,150 @@
+{
+  "schema_version": 1,
+  "mode": "v57_exact_route_lifecycle_tracker_activation",
+  "hypothesis_id": "v57-hype-alignment-both-side-live-lifecycle-v1",
+  "revision_number": 1,
+  "created_at_utc": "2026-08-18T20:22:37.551980Z",
+  "problem_restatement": "The live V57 HYPE compression-alignment route has no attributable current-run lifecycle evidence. A portfolio-wide first-event collector could falsely credit a BTC or SPCX event to HYPE and cannot prove the required long-side and short-side evidence independently.",
+  "decision": "Run an exact-identity, report-only prospective tracker for the active V57 HYPE compression-alignment provider. Freeze a final immutable artifact only after at least one technically resolved attributable lifecycle exists on each configured side. Do not relax, retune, resize, promote, or otherwise change the live route from this tracker.",
+  "highest_value_next_investigation": "Collect exact source-native HYPE compression-alignment long and short execution lifecycles under the active V57 identity, including entry attribution, venue protection, costs, exit attribution, excursion, giveback, and net PnL.",
+  "live_identity": {
+    "run_id": "bidirectional-live-1787065473571",
+    "run_first_observed_at_utc": "2026-08-18T15:07:53.605394Z",
+    "profile_id": "multi_asset_growth_first_5000_spcx_short_containment_v57",
+    "profile_fingerprint": "724c259bd94be60d80ffc2e6b9a760412b9729ab1f8fea403e61d266f0d9cb8d",
+    "symbol": "HYPE",
+    "provider_id": "hype_breakout_compression_alignment_bidirectional_v2",
+    "signal_strategy_id": "hype_breakout_compression_pullback_bidirectional_v1",
+    "route": "hype_breakout_compression_alignment_bidirectional_v2|HYPE",
+    "required_sides": [
+      "long",
+      "short"
+    ]
+  },
+  "prospective_boundary": {
+    "tracker_activated_at_or_before_utc": "2026-08-18T20:22:37.551980Z",
+    "source_run_is_fixed": true,
+    "profile_identity_is_fixed": true,
+    "pre_activation_lifecycles_may_not_satisfy_the_minimum": true,
+    "validation_or_holdout_relabeling": false
+  },
+  "initial_observation": {
+    "observed_at_utc": "2026-08-18T20:22:37.551980Z",
+    "state": "awaiting_both_sides",
+    "route_evaluations": 316,
+    "eligible_evaluations": 0,
+    "unattributed_eligible_evaluations": 0,
+    "long": {
+      "attributable_entries": 0,
+      "open_lifecycles": 0,
+      "closed_lifecycles": 0,
+      "resolved_lifecycles": 0,
+      "minimum_met": false
+    },
+    "short": {
+      "attributable_entries": 0,
+      "open_lifecycles": 0,
+      "closed_lifecycles": 0,
+      "resolved_lifecycles": 0,
+      "minimum_met": false
+    },
+    "interpretation": "The zero-eligible observation is cadence evidence only. It does not establish profitability, non-profitability, or that the strategy is broken."
+  },
+  "minimum_diagnostic_evidence": {
+    "per_side": "At least one attributable eligible decision and one fully resolved lifecycle for long and independently for short.",
+    "required_entry_evidence": [
+      "exact provider and internal signal identity",
+      "decision timestamp and side",
+      "entry order and fill",
+      "venue stop protection"
+    ],
+    "required_lifecycle_evidence": [
+      "entry and exit prices and timestamps",
+      "exit reason and provider attribution",
+      "fees, funding, and slippage",
+      "margin, leverage, and holding duration",
+      "maximum favorable and adverse excursion",
+      "profit giveback",
+      "net PnL"
+    ],
+    "interpretation": "This is a diagnostic minimum, not a promotion, profitability, or parameter-change threshold."
+  },
+  "outputs": {
+    "mutable_status": "data/runtime/bidirectional_cohort/v57_hype_alignment_both_side_lifecycle_latest.json",
+    "immutable_final": "data/logs/research/bidirectional_cohort/v57_hype_alignment_both_side_first_complete_20260818_v1.json",
+    "immutable_final_exists_at_activation": false,
+    "publication_rule": "The final artifact is written once only after both sides satisfy the exact technical evidence contract; an existing artifact must reconcile byte-for-byte on restart."
+  },
+  "validation_completed": {
+    "test_driven_development": true,
+    "focused_tests": "13 passed",
+    "broader_relevant_tests": "47 passed",
+    "ruff_check": "passed",
+    "ruff_format_check": "passed",
+    "file_limit_check": "all implementation and test files are at most 500 lines",
+    "function_limit_check": "all functions are at most 50 lines",
+    "real_one_poll_check": "passed with exact V57 identity, 316 evaluations, zero eligible, no false lifecycle attribution, and no final publication"
+  },
+  "implementation_evidence": [
+    {
+      "path": "src/hypervector/research/cohort_route_lifecycle_evidence.py",
+      "sha256": "b8e07352ae6202db033ade3509a6cf713436ec2a5aeded085d85b1da87389221",
+      "bytes": 18383
+    },
+    {
+      "path": "src/hypervector/research/cohort_route_lifecycle_values.py",
+      "sha256": "463de6b3ee34d18cd71a42f22421e952a67540ba05801595f68d45983a1c393c",
+      "bytes": 5382
+    },
+    {
+      "path": "scripts/cohort_route_lifecycle_watch.py",
+      "sha256": "8b15c2b42f9faf68defc247d3b17e59436cda5e84bbcc3dee794bd97db0577b5",
+      "bytes": 8180
+    },
+    {
+      "path": "tests/test_cohort_route_lifecycle_evidence.py",
+      "sha256": "2888095063541f8c6fff2da3571241d8515881369b11c54a7152de889eb17189",
+      "bytes": 9138
+    },
+    {
+      "path": "tests/test_cohort_route_lifecycle_watch_script.py",
+      "sha256": "85410fc1bd243ae9369e43342a127cc6f4beecff201a3cf685de30cc5fb14413",
+      "bytes": 5826
+    }
+  ],
+  "uncertainties_and_failure_modes": [
+    "The active HYPE route may remain naturally sparse; elapsed time alone cannot establish that its logic is defective.",
+    "One resolved lifecycle per side is too small to establish repeatable profitability and is only the minimum needed to update the diagnosis.",
+    "An eligible evaluation without a matching lifecycle is treated as unattributed evidence and cannot be credited to either side.",
+    "Missing costs, protection, signal identity, excursion, or exit attribution leaves a lifecycle unresolved rather than success-shaped.",
+    "A runtime restart, profile change, provider replacement, or route-direction change invalidates this fixed tracker identity and requires a new preregistered evidence window."
+  ],
+  "falsifiers": [
+    "The checkpoint run, profile, fingerprint, provider, symbol, signal strategy, or required direction set differs from the frozen identity.",
+    "The checkpoint becomes stale, unhealthy, faulted, or internally inconsistent.",
+    "More than one executable HYPE provider makes entry attribution ambiguous.",
+    "A lifecycle is credited without an exact matching eligible decision and entry signal identity.",
+    "A supposedly resolved lifecycle lacks venue protection, exact costs, exit attribution, excursion, giveback, or net PnL.",
+    "The tracker changes live configuration, constructs an execution client, submits an order, or claims promotion authority.",
+    "Independent verification does not reproduce the final artifact from the frozen checkpoint evidence."
+  ],
+  "recommendation": {
+    "action": "Continue prospective collection without modifying the live HYPE route.",
+    "why_now": "The exact active route has no compatible current-run outcomes, while previously rejected relaxations and replacement mechanisms do not justify another configuration change.",
+    "approval_requested": false,
+    "next_review": "Immediately after a resolved lifecycle appears on either side, and formally after the diagnostic minimum is met on both sides."
+  },
+  "confidence": {
+    "tracker_mechanics": "high",
+    "route_edge": "low pending exact live lifecycles",
+    "reason": "Tests and a real report-only poll validate identity and failure behavior, but no current-run eligible HYPE decision or lifecycle exists yet."
+  },
+  "contract": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_live_change": false,
+    "automatic_retuning": false,
+    "automatic_promotion": false,
+    "runtime_strategy_changed": false
+  }
+}

@@ -1,0 +1,90 @@
+{
+  "schema_version": "v53_mu_observer_repair_first_prospective_boundary_v1",
+  "created_at_utc": "2026-08-17T19:15:44Z",
+  "hypothesis_id": "V53_MU_OBSERVER_DURABILITY_REPAIR_V1",
+  "state": "first_prospective_boundary_pass",
+  "execution_authority": "none",
+  "report_only": true,
+  "automatic_live_change": false,
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false,
+  "live_v53_effect": "none",
+  "repair_result": {
+    "observer_lifecycle": "running",
+    "consecutive_transient_failures": 0,
+    "total_transient_failures": 0,
+    "fatal_exception_type": null,
+    "bounded_restart_stop_reason": "bounded_completion",
+    "persistent_restart_survived_completed_boundary": true,
+    "cursor_advanced_exactly_once": true
+  },
+  "first_new_decision": {
+    "symbol": "xyz:MU",
+    "provider_id": "hip3_mu_full_l2_breakout_pressure_bidirectional_15m_v1",
+    "profile_id": "mu_full_l2_breakout_pressure_bidirectional_15m_research_v1",
+    "decision_time_ms": 1786994100000,
+    "observed_at_ms": 1786994103533,
+    "decision_delay_ms": 3533,
+    "prospective": true,
+    "eligible": false,
+    "side": null,
+    "pressure_source": "hyperliquid_mainnet_l2_rest",
+    "pressure_exchange_ts_ms": 1786994097117,
+    "pressure_recv_ts_ms": 1786994097880,
+    "pressure_end_boundary_age_ms": 2883,
+    "pressure_snapshot_count": 159,
+    "pressure_fresh": true,
+    "pressure_scan_complete": true,
+    "pressure_state_history_complete": true,
+    "decision_imbalance_10": 0.043287948766713755,
+    "condition_anatomy": {
+      "close": 1009.8,
+      "fast_ema": 1017.6309685471216,
+      "slow_ema": 1018.3001767624739,
+      "prior_breakout_high": 1035.3,
+      "prior_breakout_low": 992.7,
+      "long_raw": false,
+      "short_raw": false
+    }
+  },
+  "evidence": {
+    "decision_journal": {
+      "path": "data/live/research/mu_hip3_breakout_shadow.jsonl",
+      "prefix_bytes_after_append": 547913,
+      "decision_row_bytes": 1177,
+      "decision_row_sha256": "c8e6ee59a2f12caf0404ab4f74c8f60a2fc19f85d8c5a0fee5098675e1231499"
+    },
+    "cursor": {
+      "path": "data/runtime/research/mu_hip3_breakout_shadow_cursor.json",
+      "bytes": 929,
+      "sha256": "0c9db17494aa82751d8d443edf53c01ba7239aaaf98ee3aa9fd2a3f3fd1959e0",
+      "decision_time_ms": 1786994100000
+    },
+    "repair_result_journal": {
+      "path": "docs/research-journal/v53-mu-transport-window-final-result-and-observer-repair-v1.json",
+      "sha256": "6b5cd06f918e74085331dc6e696b150da945365e14e5685fd832d6ad2eaa4f89"
+    }
+  },
+  "validation_completed": [
+    "The repaired process survived more than 75 successful public-data polls before the boundary.",
+    "The first newly completed 15-minute candle produced one and only one prospective decision row.",
+    "The durable cursor advanced from 1786993200000 to 1786994100000.",
+    "Pressure evidence was fresh, scan-complete, history-complete, and used 159 unique snapshots.",
+    "The observer retained no signer, order support, execution authority, or live strategy effect."
+  ],
+  "limits": [
+    "One successful boundary does not establish long-duration network reliability.",
+    "The decision was ineligible and provides no trade or profitability evidence.",
+    "The prior frozen 24-hour window remains FAIL and is not repaired or replaced by this row.",
+    "Archive/live candle and pressure parity blockers remain unresolved."
+  ],
+  "next_validation": "Continue report-only collection and preregister a distinctly new fixed window only after its bounds are future-only; require exact coverage and source parity before any promotion discussion.",
+  "confidence": {
+    "first_boundary_identity_and_causality": "high",
+    "durability_for_tested_transient_classes": "high",
+    "long_run_observer_reliability": "medium_pending_more_boundaries",
+    "mu_profitability": "unknown"
+  },
+  "falsifier": "A duplicate decision at 1786994100000, a later revision marking this row nonprospective, any cursor regression, or any signer/order construction would invalidate this PASS.",
+  "approval_requested": false
+}

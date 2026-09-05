@@ -30,6 +30,9 @@ from hypervector.live.multi_asset_strategy_evidence_models import (
 from hypervector.live.multi_asset_strategy_evidence_recent import (
     recent_route_evidence_rows,
 )
+from hypervector.live.multi_asset_strategy_evidence_v79 import (
+    v79_route_evidence_rows,
+)
 from hypervector.live.sol_aligned_range_contract import (
     SOL_ALIGNED_RANGE_FIXED60_STRATEGY,
 )
@@ -437,6 +440,12 @@ _EVIDENCE.update(
     {
         (row[0], row[1]): StrategyResearchEvidence(*row)
         for row in recent_route_evidence_rows()
+    }
+)
+_EVIDENCE.update(
+    {
+        (row[0], row[1]): StrategyResearchEvidence(*row)
+        for row in v79_route_evidence_rows()
     }
 )
 

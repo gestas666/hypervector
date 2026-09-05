@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 import argparse
-from collections import Counter
-import hashlib
 import math
 from dataclasses import asdict, dataclass, replace
 from datetime import UTC, datetime
@@ -14,6 +12,11 @@ import pandas as pd
 
 from hypervector.data.oxa_api import validate_symbol
 from hypervector.data.oxa_storage import write_immutable_json
+from hypervector.research.causal_screen_inputs import (
+    load_causal_minute_window as load_causal_window,
+    resample_complete_execution_bars as resample_execution_bars,
+    timeframe_minutes as _timeframe_minutes,
+)
 from hypervector.research.apex_directional_signals import (
     build_apex_breakout_entries,
     build_apex_ensemble_entries,
@@ -27,7 +30,9 @@ from hypervector.research.shared_hypervelocity_signals import (
 from hypervector.research.shared_portfolio_models import (
     SharedPortfolioConfig,
     SharedPortfolioReport,
-    SharedPortfolioTrade,
+)
+from hypervector.research.shared_portfolio_attribution import (
+    trade_attribution as _trade_attribution,
 )
 from hypervector.research.shared_strategy_signals import (
     build_registered_strategy_pair_signals,
@@ -46,6 +51,8 @@ class ScreenProfile:
     target_bps: float | None
     stop_bps: float | None
     max_hold_minutes: int | None
+    entry_slippage_bps: float = 2.0
+    market_exit_slippage_bps: float = 2.0
 
 
 @dataclass(frozen=True)
@@ -84,6 +91,19 @@ SOURCE_CANDIDATES = (
 SOURCE_LONG_ISOLATION_V1_CANDIDATES = tuple(
     CandidatePair(f"{candidate.name}_long", candidate.long_strategy, None)
     for candidate in SOURCE_CANDIDATES
+)
+
+SOURCE_SHORT_ISOLATION_V1_CANDIDATES = tuple(
+    CandidatePair(f"{candidate.name}_short", None, candidate.short_strategy)
+    for candidate in SOURCE_CANDIDATES
+)
+
+DONCHIAN_SHORT_MANAGED_V1_CANDIDATES = (
+    CandidatePair("donchian_trend_short", None, "donchian_trend_short"),
+)
+
+SOL_MA_CROSS_MANAGED_V1_CANDIDATES = (
+    CandidatePair("ma_cross", "ma_cross_long", "ma_cross_short"),
 )
 
 SOURCE_MANAGED_V1_CANDIDATES = tuple(
@@ -135,6 +155,32 @@ PROFILES = (
 )
 
 SOURCE_MANAGED_V1_PROFILES = (PROFILES[-1],)
+
+DONCHIAN_SHORT_MANAGED_V1_PROFILES = (
+    replace(
+        SOURCE_MANAGED_V1_PROFILES[0],
+        name="managed_60bps_stop_nominal",
+    ),
+    replace(
+        SOURCE_MANAGED_V1_PROFILES[0],
+        name="managed_60bps_stop_stress",
+        entry_slippage_bps=5.0,
+        market_exit_slippage_bps=5.0,
+    ),
+)
+
+SOL_MA_CROSS_MANAGED_V1_PROFILES = (
+    replace(
+        SOURCE_MANAGED_V1_PROFILES[0],
+        name="managed_60bps_stop_nominal",
+    ),
+    replace(
+        SOURCE_MANAGED_V1_PROFILES[0],
+        name="managed_60bps_stop_stress20rt",
+        entry_slippage_bps=5.5,
+        market_exit_slippage_bps=5.5,
+    ),
+)
 
 HYPERVELOCITY_PROFILES = (
     ScreenProfile("hypervelocity_faithful", 0.70, 40.0, 20.0, None, None),
@@ -188,6 +234,9 @@ def build_parser() -> argparse.ArgumentParser:
             "source",
             "source-managed-v1",
             "source-long-isolation-v1",
+            "source-short-isolation-v1",
+            "donchian-short-managed-v1",
+            "sol-ma-cross-managed-v1",
             "zero-lag-short-managed-v1",
             "liquidity-sweep-long-managed-v1",
             "liquidity-sweep-long-hv-v1",
@@ -274,6 +323,12 @@ def _trial_design(
         return SOURCE_MANAGED_V1_CANDIDATES, SOURCE_MANAGED_V1_PROFILES
     if cohort == "source-long-isolation-v1":
         return SOURCE_LONG_ISOLATION_V1_CANDIDATES, SOURCE_MANAGED_V1_PROFILES
+    if cohort == "source-short-isolation-v1":
+        return SOURCE_SHORT_ISOLATION_V1_CANDIDATES, SOURCE_MANAGED_V1_PROFILES
+    if cohort == "donchian-short-managed-v1":
+        return DONCHIAN_SHORT_MANAGED_V1_CANDIDATES, DONCHIAN_SHORT_MANAGED_V1_PROFILES
+    if cohort == "sol-ma-cross-managed-v1":
+        return SOL_MA_CROSS_MANAGED_V1_CANDIDATES, SOL_MA_CROSS_MANAGED_V1_PROFILES
     if cohort == "zero-lag-short-managed-v1":
         return ZERO_LAG_SHORT_MANAGED_V1_CANDIDATES, SOURCE_MANAGED_V1_PROFILES
     if cohort == "liquidity-sweep-long-managed-v1":
@@ -388,6 +443,41 @@ def _development_selection(cohort: str) -> dict[str, object] | None:
             "rule": "managed profile with development profit factor above 1 and no liquidation",
             "parameters_changed_after_selection": False,
         }
+    if cohort == "source-short-isolation-v1":
+        return {
+            "source_artifact": (
+                "data/logs/research/"
+                "multi_asset_screen_ETH_development_1h_source_v1.json"
+            ),
+            "rule": "source-managed short sides isolated before later-window review",
+            "parameters_changed_after_selection": False,
+        }
+    if cohort == "donchian-short-managed-v1":
+        return {
+            "source_artifact": (
+                "data/logs/research/"
+                "eth_source_short_isolation_development_20250901_v1.json"
+            ),
+            "rule": (
+                "highest development net among the frozen source-short cohort; "
+                "later partitions must not substitute another candidate"
+            ),
+            "parameters_changed_after_selection": False,
+        }
+    if cohort == "sol-ma-cross-managed-v1":
+        return {
+            "source_artifacts": [
+                "data/logs/research/multi_asset_screen_SOL_development_1h_legacy_v1.json",
+                "data/logs/research/multi_asset_screen_SOL_validation_1h_legacy_v1.json",
+                "data/logs/research/multi_asset_screen_SOL_pseudo_holdout_1h_legacy_v1.json",
+            ],
+            "rule": (
+                "the only exact candidate/profile with net PnL and profit factor "
+                "above zero and one in all three previously opened SOL partitions"
+            ),
+            "parameters_changed_after_selection": False,
+            "holdout_status": "no_longer_pristine_historical_reconstruction",
+        }
     if cohort == "zero-lag-short-managed-v1":
         return {
             "source_artifacts": [
@@ -479,24 +569,6 @@ def _development_selection(cohort: str) -> dict[str, object] | None:
     return None
 
 
-def load_causal_window(
-    bars_path: Path,
-    funding_paths: list[Path],
-    start: datetime,
-    end: datetime,
-) -> tuple[pd.DataFrame, dict[str, object]]:
-    """Load one gap-free bar interval with complete exact-hour funding."""
-    if end <= start:
-        raise ValueError("screen end must be after start")
-    bars = _indexed_parquet(bars_path)
-    bars = bars.loc[(bars.index >= start) & (bars.index < end)].copy()
-    _validate_minute_cadence(bars, start, end)
-    funding = _funding_series(funding_paths, start, end)
-    bars["funding_rate"] = 0.0
-    bars.loc[funding.index, "funding_rate"] = funding
-    return bars, _data_evidence(bars_path, funding_paths, bars, funding)
-
-
 def profile_config(
     profile: ScreenProfile,
     *,
@@ -533,8 +605,8 @@ def profile_config(
         target_fee_rate=0.00015,
         market_exit_fee_rate=0.00045,
         liquidation_fee_rate=0.00045,
-        entry_slippage_bps=2.0,
-        market_exit_slippage_bps=2.0,
+        entry_slippage_bps=profile.entry_slippage_bps,
+        market_exit_slippage_bps=profile.market_exit_slippage_bps,
         max_hold_bars=_scaled_max_hold(profile.max_hold_minutes, bar_minutes),
         reentry_cooldown_bars=1,
         close_on_opposite_signal=True,
@@ -557,102 +629,10 @@ def _margin_return_pct(target_bps: float | None, leverage: float) -> float | Non
     return target_bps * leverage / 100.0
 
 
-def resample_execution_bars(
-    bars: pd.DataFrame,
-    timeframe: str,
-) -> pd.DataFrame:
-    """Build fully completed execution bars without forward information."""
-    minutes = _timeframe_minutes(timeframe)
-    if minutes == 1:
-        return bars.copy()
-    grouped = bars.resample(timeframe, label="left", closed="left")
-    result = grouped.agg(
-        open=("open", "first"),
-        high=("high", "max"),
-        low=("low", "min"),
-        close=("close", "last"),
-        volume=("volume", "sum"),
-        funding_rate=("funding_rate", "sum"),
-    )
-    complete = grouped.size().eq(minutes)
-    return result.loc[complete].dropna()
-
-
-def _timeframe_minutes(timeframe: str) -> int:
-    delta = pd.Timedelta(timeframe)
-    minute = pd.Timedelta(minutes=1)
-    if delta < minute or delta % minute != pd.Timedelta(0):
-        raise ValueError("execution timeframe must be whole positive minutes")
-    return int(delta / minute)
-
-
 def _scaled_max_hold(minutes: int | None, bar_minutes: int) -> int | None:
     if minutes is None:
         return None
     return math.ceil(minutes / bar_minutes)
-
-
-def _indexed_parquet(path: Path) -> pd.DataFrame:
-    if not path.is_file():
-        raise FileNotFoundError(f"screen input is missing: {path}")
-    frame = pd.read_parquet(path)
-    if "timestamp" not in frame:
-        raise ValueError(f"screen input has no timestamp: {path}")
-    frame["timestamp"] = pd.to_datetime(frame["timestamp"], utc=True)
-    return frame.set_index("timestamp").sort_index()
-
-
-def _validate_minute_cadence(
-    bars: pd.DataFrame,
-    start: datetime,
-    end: datetime,
-) -> None:
-    expected = int((end - start).total_seconds() / 60.0)
-    if len(bars) != expected or not bars.index.is_unique:
-        raise ValueError("screen bar window is not complete at one-minute cadence")
-    if (
-        len(bars) < 2
-        or bars.index.to_series().diff().iloc[1:].ne(pd.Timedelta(minutes=1)).any()
-    ):
-        raise ValueError("screen bar window contains a timestamp gap")
-
-
-def _funding_series(
-    paths: list[Path],
-    start: datetime,
-    end: datetime,
-) -> pd.Series:
-    frames = [_indexed_parquet(path) for path in paths]
-    funding = pd.concat(frames).sort_index()
-    if funding.index.duplicated().any():
-        duplicates = funding.loc[funding.index.duplicated(keep=False), "funding_rate"]
-        if duplicates.groupby(level=0).nunique().gt(1).any():
-            raise ValueError("funding bundles contain conflicting duplicate rates")
-        funding = funding.loc[~funding.index.duplicated(keep="first")]
-    expected = pd.date_range(start, end, freq="1h", inclusive="left")
-    series = funding["funding_rate"].astype(float).reindex(expected)
-    if series.isna().any() or not series.map(math.isfinite).all():
-        raise ValueError("screen funding is incomplete or non-finite")
-    return series
-
-
-def _data_evidence(
-    bars_path: Path,
-    funding_paths: list[Path],
-    bars: pd.DataFrame,
-    funding: pd.Series,
-) -> dict[str, object]:
-    return {
-        "bars_path": str(bars_path.resolve()),
-        "bars_sha256": _sha256(bars_path),
-        "funding_paths": [str(path.resolve()) for path in funding_paths],
-        "funding_sha256": [_sha256(path) for path in funding_paths],
-        "bar_rows": len(bars),
-        "gap_fill_rows": int(
-            bars.get("source", pd.Series(dtype=str)).eq("hl_gap_fill").sum()
-        ),
-        "funding_events": len(funding),
-    }
 
 
 def _trial_summary(
@@ -687,48 +667,6 @@ def _trial_summary(
         "metrics": {key: report_values[key] for key in keep},
         "attribution": _trade_attribution(report.trades),
     }
-
-
-def _trade_attribution(
-    trades: tuple[SharedPortfolioTrade, ...],
-) -> dict[str, object]:
-    """Attribute one shared account's completed trades by side and exit reason."""
-    reasons = Counter(trade.exit_reason for trade in trades)
-    return {
-        "long": _direction_attribution(trades, "long"),
-        "short": _direction_attribution(trades, "short"),
-        "exit_reasons": dict(sorted(reasons.items())),
-    }
-
-
-def _direction_attribution(
-    trades: tuple[SharedPortfolioTrade, ...],
-    direction: str,
-) -> dict[str, int | float | None]:
-    selected = tuple(trade for trade in trades if trade.direction == direction)
-    profits = tuple(trade.net_pnl_usd for trade in selected if trade.net_pnl_usd > 0.0)
-    losses = tuple(-trade.net_pnl_usd for trade in selected if trade.net_pnl_usd <= 0.0)
-    gross_profit = sum(profits)
-    gross_loss = sum(losses)
-    return {
-        "completed_trades": len(selected),
-        "wins": len(profits),
-        "losses": len(losses),
-        "net_pnl_usd": sum(trade.net_pnl_usd for trade in selected),
-        "gross_profit_usd": gross_profit,
-        "gross_loss_usd": gross_loss,
-        "profit_factor": gross_profit / gross_loss if gross_loss > 0.0 else None,
-        "fees_usd": sum(trade.fees_usd for trade in selected),
-        "funding_cashflow_usd": sum(trade.funding_cashflow_usd for trade in selected),
-    }
-
-
-def _sha256(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        while chunk := handle.read(1024 * 1024):
-            digest.update(chunk)
-    return digest.hexdigest()
 
 
 def _utc_datetime(value: str) -> datetime:

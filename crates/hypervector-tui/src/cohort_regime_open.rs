@@ -310,7 +310,7 @@ fn path_primary_line<'a>(app: &'a App, trade: &'a CohortOpenTradeReflection) -> 
     let path = &trade.path_since_entry;
     Line::from(Span::styled(
         format!(
-            "PATH NOW {} | MFE {}",
+            "PATH NOW {} | 1M CANDLE MFE {}",
             signed_bps(path.current_directional_return_bps),
             signed_bps(path.maximum_favorable_excursion_bps),
         ),
@@ -322,7 +322,7 @@ fn path_risk_line<'a>(app: &'a App, trade: &'a CohortOpenTradeReflection) -> Lin
     let path = &trade.path_since_entry;
     Line::from(Span::styled(
         format!(
-            "GIVE {} | MAE {} | BARS {} | {}",
+            "GIVE {} | 1M CANDLE MAE {} | BARS {} | {}",
             unsigned_bps(path.peak_giveback_bps),
             unsigned_bps(path.maximum_adverse_excursion_bps),
             path.completed_bars,
@@ -336,7 +336,7 @@ fn compact_path_line<'a>(app: &'a App, trade: &'a CohortOpenTradeReflection) -> 
     let path = &trade.path_since_entry;
     Line::from(Span::styled(
         format!(
-            "NOW{} MFE{} MAE{} G{} {}",
+            "N{} CMFE{} CMAE{} G{} {}",
             compact_bps(path.current_directional_return_bps, true),
             compact_bps(path.maximum_favorable_excursion_bps, true),
             compact_bps(path.maximum_adverse_excursion_bps, false),

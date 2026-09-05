@@ -8,6 +8,7 @@ from datetime import datetime
 Record = Mapping[str, object]
 Evaluation = tuple[Record, Record]
 Pair = tuple[str, str]
+_PREACTIVATION_READINESS_REASON = "pre_activation_readiness_seed"
 
 
 def _symbols(identity: Record) -> tuple[str, ...]:
@@ -67,6 +68,12 @@ def _evaluation_identities(
         (*_pair(value), _integer(value.get("decision_time_ms"), "decision time"))
         for _, value in evaluations
     ]
+
+
+def _is_preactivation_seed(evaluation: Record) -> bool:
+    return (
+        evaluation.get("backend_non_action_reason") == _PREACTIVATION_READINESS_REASON
+    )
 
 
 def _is_future(arrival: Record, evaluation: Record) -> bool:

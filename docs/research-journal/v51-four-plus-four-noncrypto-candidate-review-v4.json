@@ -1,0 +1,92 @@
+{
+  "schema_version": "v51_four_plus_four_noncrypto_candidate_review_v4",
+  "generated_at_utc": "2026-08-15T16:08:04Z",
+  "mode": "report_only",
+  "execution_authority": "none",
+  "automatic_live_change": false,
+  "automatic_promotion": false,
+  "performance_gate": false,
+  "runtime_strategy_changed": false,
+  "supersedes": {
+    "path": "docs/research-journal/v51-four-plus-four-noncrypto-candidate-review-v3.json",
+    "sha256": "594ff25b13918ff5d572396554a422374b8f8a002f53fdc9770c8f36cd349a47",
+    "bytes": 9729
+  },
+  "decision_update": {
+    "source": "explicit_user_direction",
+    "instruction": "Do not add xyz:SKHX because xyz:MU and xyz:SKHX represent the same semiconductor industry exposure.",
+    "interpretation": "Exclude SKHX from the planned live roster and candidate-promotion queue. Continue evaluating MU as the sole semiconductor research candidate without granting it live authority.",
+    "runtime_impact": "none",
+    "config_impact": "none",
+    "observer_impact": "The SKHX observer is not running and will not be restarted for promotion work under this decision."
+  },
+  "hypothesis": {
+    "id": "FOUR_CRYPTO_FOUR_NONCRYPTO_DIVERSIFIED_ROSTER_V2",
+    "revision": 4,
+    "state": "being_tested_no_live_change",
+    "claim": "Use at most one semiconductor candidate so the remaining non-crypto slot can add a distinct economic exposure rather than duplicate semiconductor concentration.",
+    "confidence": "high_on_roster_intent_low_on_unqualified_candidate_profitability",
+    "falsifier_or_update": "Only an explicit user reversal can return SKHX to the candidate queue. MU still requires its predeclared forward-evidence threshold before any approval-ready live proposal."
+  },
+  "target_roster": {
+    "crypto_controls": [
+      "BTC",
+      "ETH",
+      "SOL",
+      "HYPE"
+    ],
+    "live_noncrypto_controls": [
+      "xyz:SP500",
+      "xyz:SPCX"
+    ],
+    "sole_semiconductor_research_candidate": "xyz:MU",
+    "excluded_semiconductor_candidate": "xyz:SKHX",
+    "uncorrelated_fourth_slot": "open_pending_distinct_mechanism_evidence",
+    "live_roster_changed": false
+  },
+  "mu_status": {
+    "mode": "report_only",
+    "execution_authority": "none",
+    "decision_rows": 327,
+    "eligible_onsets": 8,
+    "eligible_long": 8,
+    "eligible_short": 0,
+    "promotion_blockers": [
+      "archive_public_trade_ohlc_vs_live_candleSnapshot_parity_unverified",
+      "archive_ws_l2Book_vs_live_rest_pressure_decision_parity_unresolved",
+      "both_side_forward_evidence_absent"
+    ],
+    "next_evidence_trigger": "Reassess at 20 independent paths or the first short-side onset, whichever occurs first.",
+    "profitability_conclusion": "not_established"
+  },
+  "portfolio_reasoning": {
+    "benefit": "Reserves the final non-crypto slot for a different industry or return mechanism and avoids intentional duplication of semiconductor exposure.",
+    "risk": "Excluding SKHX could forgo an asset-specific edge that later evidence might reveal, but no such qualified edge is currently established.",
+    "validation": "The current v51 live config contains neither MU nor SKHX. Process inspection found the MU report-only observer running and no SKHX observer process.",
+    "good_enough": "SKHX remains absent from live and candidate-promotion configurations; MU remains observation-only until its declared evidence threshold is met."
+  },
+  "single_highest_value_next_investigation": "Resolve the current SPCX lifecycle and capture the first attributable SP500 long under v51 while MU continues report-only toward 20 independent paths or its first short onset.",
+  "source_evidence": [
+    {
+      "path": "docs/research-journal/v51-four-plus-four-noncrypto-candidate-review-v3.json",
+      "sha256": "594ff25b13918ff5d572396554a422374b8f8a002f53fdc9770c8f36cd349a47",
+      "bytes": 9729
+    },
+    {
+      "path": "docs/research-journal/v51-mu-shadow-forward-markouts-v2.json",
+      "sha256": "8a9202983d33318af09c79b9be2da473f29d324796ec413b887187abfcebb4fa",
+      "bytes": 9389
+    },
+    {
+      "path": "docs/research-journal/v51-skhx-shadow-forward-v2.json",
+      "sha256": "b22461e19431f0c00b7d508129d2985cbb6010313b41e50cee65d93e9041b975",
+      "bytes": 3411
+    }
+  ],
+  "limitations": [
+    "This is a portfolio-composition decision, not evidence that MU is profitable or that SKHX cannot be profitable.",
+    "No live strategy, asset, route, sizing, leverage, stop, exit, execution, process, or deployment setting changed.",
+    "MU has only long-side eligible forward onsets so far; bidirectional robustness is unmeasured.",
+    "The fourth non-crypto slot remains unfilled until a distinct mechanism produces qualified evidence."
+  ]
+}

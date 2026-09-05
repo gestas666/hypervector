@@ -1,0 +1,146 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "V53_SP500_SPCX_EXACT_MARK_SEGMENT_ACQUISITION_V1",
+  "status": "accepted_for_report_only_development_replay",
+  "created_at_utc": "2026-08-17T18:18:00Z",
+  "execution_authority": "none",
+  "runtime_strategy_changed": false,
+  "live_configuration_changed": false,
+  "bounds": {
+    "start_inclusive_utc": "2026-06-08T08:00:00+00:00",
+    "end_exclusive_utc": "2026-08-06T15:00:00+00:00",
+    "hour_count": 1423
+  },
+  "sources": {
+    "books_and_public_trades": "0xarchive_hyperliquid_hip3",
+    "mark_and_oracle_prices": "0xarchive_hyperliquid_prices",
+    "funding": "hyperliquid_public_funding_history"
+  },
+  "symbols": {
+    "xyz:SP500": {
+      "paired_archive_audit": {
+        "path": "data/logs/research/xyz_sp500_exact_mark_paired_archive_audit_20260817_v1.json",
+        "sha256": "d6f42683330d2df2a06c807c8763e3e42679fe02d3196ab8c4b2633d77205ac4",
+        "complete": true,
+        "expected_bundles": 2846,
+        "present_bundles": 2846,
+        "book_snapshots": 7371743,
+        "public_trades": 3422293,
+        "raw_participant_fills": 6844586,
+        "empty_book_hours": 7,
+        "empty_trade_hours": 0,
+        "evidence_bytes": 1274289440
+      },
+      "price_audit": {
+        "partition_count": 1423,
+        "row_count": 1695434,
+        "mark_rows": 1695434,
+        "missing_mark_rows": 0,
+        "oracle_rows": 1695434,
+        "missing_oracle_rows": 0,
+        "empty_partitions": 0,
+        "maximum_mark_gap_ms": 3339070,
+        "mark_gaps_gt_5000ms": 4044,
+        "mark_gaps_gt_7500ms": 85,
+        "mark_gaps_gt_10000ms": 76,
+        "mark_gaps_gt_15000ms": 24,
+        "mark_gaps_gt_60000ms": 21
+      },
+      "funding_manifest": {
+        "path": "data/cache/vendor/hyperliquid/xyz:SP500/20260608T080000000000Z_20260806T150000000000Z_funding/manifest.json",
+        "sha256": "63480311d373c5a06d48e361d20320538347e99349fc270930d305f640722729",
+        "complete": true,
+        "expected_hours": 1423,
+        "observed_hours": 1423,
+        "missing_hours": 0
+      }
+    },
+    "xyz:SPCX": {
+      "paired_archive_audit": {
+        "path": "data/logs/research/xyz_spcx_exact_mark_paired_archive_audit_20260817_v1.json",
+        "sha256": "88715f334250a33c92bed2b6b088463dbf34720b6e0a563a7ab3b7dc6f35a6e9",
+        "complete": true,
+        "expected_bundles": 2846,
+        "present_bundles": 2846,
+        "book_snapshots": 7146912,
+        "public_trades": 6733557,
+        "raw_participant_fills": 13467114,
+        "empty_book_hours": 7,
+        "empty_trade_hours": 0,
+        "evidence_bytes": 1903971394
+      },
+      "price_audit": {
+        "partition_count": 1423,
+        "row_count": 1695434,
+        "mark_rows": 1695434,
+        "missing_mark_rows": 0,
+        "oracle_rows": 1695434,
+        "missing_oracle_rows": 0,
+        "empty_partitions": 0,
+        "maximum_mark_gap_ms": 3339070,
+        "mark_gaps_gt_5000ms": 4044,
+        "mark_gaps_gt_7500ms": 85,
+        "mark_gaps_gt_10000ms": 76,
+        "mark_gaps_gt_15000ms": 24,
+        "mark_gaps_gt_60000ms": 21
+      },
+      "funding_manifest": {
+        "path": "data/cache/vendor/hyperliquid/xyz:SPCX/20260608T080000000000Z_20260806T150000000000Z_funding/manifest.json",
+        "sha256": "dc090565b6b3bcda7ceae2cd19843975072088e3c7be5d21a194fa0c806bc4ab",
+        "complete": true,
+        "expected_hours": 1423,
+        "observed_hours": 1423,
+        "missing_hours": 0
+      }
+    }
+  },
+  "shared_empty_book_ranges_utc": [
+    [
+      "2026-06-08T19:00:00+00:00",
+      "2026-06-09T00:00:00+00:00"
+    ],
+    [
+      "2026-06-10T04:00:00+00:00",
+      "2026-06-10T06:00:00+00:00"
+    ]
+  ],
+  "database_reconciliation": {
+    "path": "data/research/hip3_market.duckdb",
+    "scope": "report_only_research_database",
+    "book_bundle_identity_note": "book-only and paired archives retain separate raw bundle identities; replay_book_snapshots canonicalizes identical copies by symbol and exchange timestamp",
+    "xyz:SP500": {
+      "canonical_replay_book_rows": 7371742,
+      "canonical_replay_trade_rows": 3422293,
+      "duplicate_trade_ids": 0
+    },
+    "xyz:SPCX": {
+      "canonical_replay_book_rows": 7146911,
+      "canonical_replay_trade_rows": 6733555,
+      "duplicate_trade_ids": 2,
+      "conflicting_duplicate_trade_ids": 0
+    },
+    "validation": "raw archive counts remain immutable; exact duplicate copies are removed only in canonical replay views"
+  },
+  "technical_disposition": {
+    "archive_identity": "complete",
+    "trade_coverage": "complete_with_zero_empty_trade_hours",
+    "price_source": "exact_mark_and_oracle_observations_present_for_every_price_row",
+    "path_rule": "mark_or_l2_outages_overlapping_a_selected_lifecycle remain unresolved and cannot be numerically filled",
+    "candidate_authority": "development_only_report"
+  },
+  "next_experiment": {
+    "preregistration": "docs/research-journal/v53-sp500-spcx-opening-range-breakout-development-v1.json",
+    "preregistration_sha256": "1f853bba076afa08742476a53116bf1fded2bebae295dccdd80feca8057828e3",
+    "description": "independent 15m US cash-session opening-range breakout development evaluation with exact costs, mark risk, funding, both directions, and sealed chronological OOS"
+  },
+  "confidence": {
+    "archive_integrity": "high",
+    "strategy_profitability": "unknown_until_preregistered_development_replay",
+    "falsifiers": [
+      "any declared audit or funding hash fails verification",
+      "database ingestion does not reconcile the audited canonical row counts",
+      "a selected lifecycle overlaps unresolved mark or L2 path evidence",
+      "the frozen development candidate fails after realistic costs or largest-winner removal"
+    ]
+  }
+}

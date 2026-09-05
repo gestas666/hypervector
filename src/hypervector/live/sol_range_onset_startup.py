@@ -62,7 +62,7 @@ def prepare_sol_live_startup(
     poller: SolReconciliationPoller,
 ) -> RecoveredPendingEntry | None:
     """Preflight venue state and return any filled entry needing protection."""
-    prior_records = _profile_records(ledger.read_all(), config.profile_fingerprint)
+    prior_records = _profile_records(ledger, config.profile_fingerprint)
     machine.begin_preflight()
     events.emit("session_start", {"state": "PREFLIGHT"})
     events.emit_state()
@@ -490,11 +490,9 @@ def _fault_and_raise(events: SolLiveEngineEvents, error: Exception) -> NoReturn:
 
 
 def _profile_records(
-    records: list[dict[str, object]],
+    ledger: SolLiveLedger,
     expected_profile_fingerprint: str,
 ) -> list[dict[str, object]]:
-    return [
-        record
-        for record in records
-        if record.get("profile_fingerprint") == expected_profile_fingerprint
-    ]
+    return ledger.read_matching(
+        lambda record: record.get("profile_fingerprint") == expected_profile_fingerprint
+    )

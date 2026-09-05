@@ -21,6 +21,7 @@ from hypervector.research.cohort_live_audit_values import (
 
 Record = Mapping[str, object]
 _MINUTE_MS = 60_000
+_READINESS_SEED_REASON = "pre_activation_readiness_seed"
 
 
 @dataclass(frozen=True)
@@ -147,6 +148,8 @@ def _index_evaluations(
         decision_ms = nonnegative_int(
             evaluation.get("decision_time_ms"), "evaluation decision time"
         )
+        if evaluation.get("backend_non_action_reason") == _READINESS_SEED_REASON:
+            continue
         key = (run_id, strategy, symbol, decision_ms)
         prior = evaluations.get(key)
         if prior is not None:

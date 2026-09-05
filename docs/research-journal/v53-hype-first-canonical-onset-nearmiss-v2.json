@@ -1,0 +1,123 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v53-hype-first-canonical-onset-nearmiss-v2",
+  "revision_number": 2,
+  "supersedes_revision_id": "v53-hype-first-canonical-onset-nearmiss-v1",
+  "created_at_utc": "2026-08-17T14:06:00Z",
+  "status": "resolved_counterfactual_stop_proxy_no_live_change",
+  "scope": "report_only_first_exact_v53_fresh_onset_nearmiss",
+  "contract": {
+    "report_only": true,
+    "execution_authority": "none",
+    "counterfactual_only": true,
+    "automatic_live_change": false,
+    "runtime_strategy_changed": false,
+    "performance_gate": false
+  },
+  "problem_restatement": {
+    "question": "Did the first exact-v53 HYPE fresh-onset near miss become a missed profitable native-policy trade after its earlier mixed fixed-horizon path?",
+    "decision_under_review": "Whether to remove either the five-minute compression or directional-pullback prerequisite.",
+    "success_criterion": "A relaxation remains closed unless a preregistered independent sample survives the exact 80-bps risk path, realistic costs, both-side coverage, median sensitivity, and largest-winner removal."
+  },
+  "live_identity": {
+    "run_id": "bidirectional-live-1786942233732",
+    "profile_id": "multi_asset_growth_first_5000_hype_freshness_repair_v53",
+    "profile_fingerprint": "f6378e473088b962724176f1b4aaf0857d4e2a6c3bf0103c2d1794d6bfd46a82",
+    "strategy_id": "hype_breakout_compression_alignment_bidirectional_v2",
+    "symbol": "HYPE",
+    "side": "long",
+    "decision_time_ms": 1786951500000,
+    "reference_price": 59.457,
+    "configured_stop_bps": 80.0,
+    "soft_maximum_hold_seconds": 28800,
+    "hard_maximum_hold_seconds": 86400
+  },
+  "observed_path": {
+    "technical_complete": true,
+    "completed_one_minute_candles": 401,
+    "candle_gaps": 0,
+    "duplicate_candles": 0,
+    "conflicting_candles": 0,
+    "stop_price": 58.981344,
+    "maximum_favorable_excursion_bps_before_stop_proxy": 70.13471920884085,
+    "maximum_adverse_excursion_bps_at_first_candle_cross": 82.41249978976461,
+    "first_trade_candle_stop_proxy_open_ms": 1786971900000,
+    "first_trade_candle_low": 58.967,
+    "first_observed_executable_bbo_cross_ms": 1786972659832,
+    "first_observed_executable_bid": 58.958,
+    "first_observed_executable_ask": 58.959,
+    "gross_exit_proxy_bps": -83.9261987654949,
+    "modeled_round_trip_hurdle_bps": 13.0,
+    "after_hurdle_exit_proxy_bps": -96.9261987654949,
+    "after_hurdle_exit_proxy_usd_at_5000_notional": -48.46309938274745,
+    "actual_hyperliquid_mark_trigger_observed": false,
+    "actual_order_or_fill_observed": false
+  },
+  "analysis": {
+    "finding": "The omitted long first advanced 70.13 bps, then crossed the configured 80-bps stop threshold in completed trade-candle data and later traded through that level at an observed executable bid. It did not mature into a missed profitable native-policy lifecycle.",
+    "data_quality_interpretation": "The candle and BBO sources agree that market price moved through the stop level, but neither source proves the exact Hyperliquid mark trigger time or a venue stop fill because no position existed.",
+    "counterfactual_economics_interpretation": "The minus 48.46-dollar figure uses the first later sampled executable bid and the frozen 13-bps modeled hurdle. It is a risk proxy, not realized PnL or a precise fill estimate.",
+    "relationship_to_prior_rejection": "This new path evidence strengthens the existing rejection of immediate compression or pullback relaxation. It does not prove every future relaxed setup loses or establish the active route's positive expectancy.",
+    "selection_bias_control": "Revision one was published before the stop proxy occurred, so the decision identity and tested risk geometry were not selected after observing this loss."
+  },
+  "recommendation": {
+    "recommendation": "Keep the exact v53 HYPE compression and directional-pullback prerequisites unchanged.",
+    "why_now": "The first fresh-onset near miss has now resolved adversely under the configured stop geometry, while the exact v53 route still has no eligible entry or resolved live lifecycle.",
+    "evidence_reviewed": [
+      "frozen revision-one decision identity",
+      "exact current-run completed one-minute candles",
+      "exact current-run sampled executable BBO",
+      "exact v53 stop and maximum-hold contract"
+    ],
+    "observed_problem_or_opportunity": "Entry scarcity exists, but this omitted setup is evidence of avoided downside rather than missed repeatable profit.",
+    "applicable_market_regime": "HYPE structurally long with a fresh aligned five-minute breakout onset, prior compression, no authoritative current compression, and no directional pullback.",
+    "alternatives_considered": [
+      "remove current compression",
+      "remove directional pullback",
+      "install a post-hoc fixed target",
+      "preserve the exact route and continue prospective collection"
+    ],
+    "proposed_live_change": null,
+    "expected_upside": "Avoids admitting a setup that crossed the current stop proxy while retaining the ability to collect exact eligible v53 trades.",
+    "main_risks_and_failure_modes": "One adverse counterfactual can overstate filter value; trade candles and sampled BBO do not reproduce mark-trigger or fill semantics.",
+    "validation_completed": "Decision identity, run/profile identity, candle continuity, duplicate/conflict checks, stop threshold, first candle cross, first sampled executable BBO cross, excursion, and modeled economics were recomputed from immutable ledger prefixes.",
+    "validation_still_required": "Collect attributable exact-v53 eligible fills and resolved long and short lifecycles with exact fees, funding, slippage, latency, protection, and largest-winner sensitivity.",
+    "success_metrics": "The existing twenty-independent-path reopen contract remains unchanged; any future proposal must be positive after realistic costs in mean, median, and largest-winner-removed terms with both-side and exact stop/exit evidence.",
+    "failure_or_rollback_triggers": "Not applicable because no live change is proposed. A prefix hash mismatch, candle conflict, incorrect stop calculation, or exact mark-path evidence contradicting the proxy invalidates this revision.",
+    "confidence_level": "high_on_source_identity_and_proxy_arithmetic_medium_on_avoided_loss_low_on_route_expectancy",
+    "explicit_approval_requested": false
+  },
+  "falsifiers": [
+    "The immutable source prefixes no longer reproduce the candle or BBO stop crosses.",
+    "Exact historical mark data proves the venue stop condition never occurred and a complete native exit replay remains profitable after costs.",
+    "A preregistered independent same-blocker sample satisfies every existing reopen criterion.",
+    "Exact v53 live lifecycles show the retained filters systematically reject profitable native-policy trades without compensating loss avoidance."
+  ],
+  "limitations": [
+    "This was a readiness decision, not an order, fill, or position.",
+    "Hyperliquid protective stops trigger from mark price; trade candles and BBO are conservative market-path proxies rather than exact trigger truth.",
+    "The first BBO observation below the stop occurred after the first candle low and does not identify the intraminute crossing order.",
+    "The modeled 13-bps hurdle is not measured v53 execution friction.",
+    "One path cannot establish positive or negative population expectancy."
+  ],
+  "evidence": [
+    {
+      "path": "data/logs/research/bidirectional_cohort/v53_hype_first_onset_nearmiss_stop_path_20260817T1404Z_v1.json",
+      "role": "immutable_exact_current_run_stop_path",
+      "sha256": "436a2ffe5472964f7d22381636cc73c6f1b1b3dd177bc05612d91fdbd1ee2795",
+      "bytes": 3131
+    },
+    {
+      "path": "docs/research-journal/v53-hype-first-canonical-onset-nearmiss-v1.json",
+      "role": "pre_stop_decision_and_fixed_horizon_revision",
+      "sha256": "7a8c22c682a40a8218063c15114293ebc2ad55dd8c240b3ff9df39d2ca26f81b",
+      "bytes": 11015
+    },
+    {
+      "path": "configs/multi_asset_growth_first_5000_hype_freshness_repair_v53.toml",
+      "role": "exact_live_configuration",
+      "sha256": "d1f6a4e6eb77ba9d8ad1069e703e54611feeaacec6242ac0000eb6f0f0ee4f2b",
+      "bytes": 2038
+    }
+  ]
+}

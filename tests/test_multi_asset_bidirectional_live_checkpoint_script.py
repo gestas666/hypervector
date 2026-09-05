@@ -17,6 +17,9 @@ from requests import RequestException
 from hypervector.research.cohort_checkpoint_history import (
     HistoricalProjectionStale,
 )
+from hypervector.research.cohort_live_portfolio_archive import (
+    PORTFOLIO_ARCHIVE_PROJECTION_REVISION,
+)
 import hypervector.runtime_lock as runtime_lock
 
 SCRIPT = (
@@ -305,6 +308,7 @@ def test_research_sync_forwards_worker_archive_without_in_process_database_read(
     archive = {
         "schema_version": 1,
         "mode": "cohort_live_portfolio_archive_v1",
+        "projection_revision": PORTFOLIO_ARCHIVE_PROJECTION_REVISION,
     }
     forwarded: list[object] = []
 
@@ -341,6 +345,7 @@ def test_research_sync_runs_database_work_in_isolated_worker(
     archive = {
         "schema_version": 1,
         "mode": "cohort_live_portfolio_archive_v1",
+        "projection_revision": PORTFOLIO_ARCHIVE_PROJECTION_REVISION,
     }
     calls: list[list[str]] = []
 
@@ -420,6 +425,7 @@ def test_background_research_sync_does_not_block_checkpoint_publication(
         args.ledger_root,
         args.research_sync_interval_seconds,
         slow_sync,
+        minimum_free_bytes=0,
     )
     before = time.monotonic()
 

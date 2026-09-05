@@ -1,0 +1,117 @@
+{
+  "schema_version": "v58_live_outage_index_observer_recovery_v1",
+  "status": "technical_recovery_verified_live_restart_not_authorized",
+  "observed_window_utc": {
+    "last_running_heartbeat": "2026-08-19T07:41:40.774888+00:00",
+    "first_degraded_heartbeat": "2026-08-19T07:44:04.291540+00:00",
+    "runtime_fault": "2026-08-19T07:54:57.610334+00:00",
+    "fresh_preflight": "2026-08-19T07:59:36.519230+00:00"
+  },
+  "authority": {
+    "execution_authority": "none",
+    "live_backend_restarted": false,
+    "live_configuration_changed": false,
+    "orders_attempted_during_outage": false,
+    "report_only_observers_restarted": true
+  },
+  "live_state": {
+    "profile_id": "multi_asset_growth_first_5000_spcx_short_containment_v57",
+    "run_id": "bidirectional-live-1787065473571",
+    "runtime_fault_exception_type": "ValueError",
+    "last_reconciliation": {
+      "BTC": {
+        "observed_at_utc": "2026-08-19T07:54:53.651491+00:00",
+        "position_size_signed": 0.0,
+        "owned_order_ids": []
+      },
+      "HYPE": {
+        "observed_at_utc": "2026-08-19T07:54:54.590327+00:00",
+        "position_size_signed": 0.0,
+        "owned_order_ids": []
+      },
+      "xyz:SPCX": {
+        "observed_at_utc": "2026-08-19T07:54:55.515480+00:00",
+        "position_size_signed": 0.0,
+        "owned_order_ids": []
+      }
+    },
+    "fresh_preflight": {
+      "path": "../../data/logs/research/bidirectional_cohort/v57_recovery_preflight_20260819T075935Z.json",
+      "sha256": "5883b0cae7209fd08495f8129b1ff2d5f2e1d73d7a30b8b261d2164016e2a282",
+      "flat_no_orders": true,
+      "ledger_reconciled": true,
+      "technically_ready_for_profile_transition": true
+    }
+  },
+  "incident_evidence": {
+    "public_api_probe_before_recovery": {
+      "result": "connect_timeout",
+      "http_status": 0,
+      "timeout_seconds": 8
+    },
+    "public_api_probe_after_recovery": {
+      "result": "success",
+      "http_status": 200,
+      "total_seconds": 0.70744
+    },
+    "backend_outage_heartbeats": 4,
+    "backend_outage_heartbeat_reason": "transport_timeout_retry_exhausted",
+    "backend_outage_heartbeats_all_orders_attempted_false": true
+  },
+  "repairs": [
+    {
+      "component": "hip3_index_observer_supervisor",
+      "source": "../../src/hypervector/live/hip3_index_observer_supervisor.py",
+      "sha256": "5b9fae9a179672c9e8052f6cf061cc757b908430a618627729ec9b7ca317483d",
+      "change": "reset the cumulative restart budget only after 300 seconds of stable child operation",
+      "safety": "rapid crash loops still exhaust and stop; report-only children retain no execution authority"
+    },
+    {
+      "component": "sp500_first_lifecycle_watch",
+      "source": "../../src/hypervector/research/sp500_fresh15_lifecycle_watch.py",
+      "sha256": "2843586bfbaef4e305fa45f6fc4547eb1d4dd10d89f3f86f479939c49b3dd8f8",
+      "change": "ignore explicitly retrospective observer recovery rows while preserving exact identity validation and contiguous prospective-prefix requirements",
+      "safety": "the 13-minute source outage remains an explicit gap and no lifecycle PnL is resolved"
+    },
+    {
+      "component": "hip3_fresh15_live_adapter",
+      "source": "../../src/hypervector/live/hip3_fresh15_journal_provider.py",
+      "sha256": "e3bbed4d5c5d2571174f32d7c572bd49af246203ca891e38391343ca3dc55c76",
+      "change": "classify journal-cursor-status publication skew as observer_checkpoint_publication_incomplete",
+      "safety": "the provider becomes technically unavailable with no entry and retries later; source identity mismatch remains fatal"
+    }
+  ],
+  "research_state": {
+    "sp500_lifecycle_watch_state": "LIFECYCLE_REPLAY_CANDIDATE_DUE",
+    "trigger_reasons": [
+      "profit_lock_source_gap",
+      "profit_lock_source_stale"
+    ],
+    "resolved_lifecycles": 0,
+    "censored_lifecycles": 1,
+    "live_change_supported": false,
+    "observer_supervisor_status": "ready",
+    "observer_routes_ready": [
+      "xyz:SP500",
+      "xyz:SPCX"
+    ]
+  },
+  "uncertainties": [
+    "The live process log containing the full ValueError traceback was not retained in a durable artifact.",
+    "Publication skew is a high-plausibility cause because the writer publishes journal, cursor, and status separately and the fault occurred during observer recovery, but the exact historical stack is not proven.",
+    "The SP500 lifecycle cannot be economically resolved from the interrupted candle prefix without exact external path evidence."
+  ],
+  "confidence": {
+    "flat_order_free_shutdown_state": "high",
+    "observer_recovery_and_current_health": "high",
+    "publication_skew_as_exact_historical_fault_cause": "medium",
+    "sp500_lifecycle_economics": "withheld_unresolved"
+  },
+  "falsifiers": [
+    "a venue reconciliation showing any nonzero position or owned order after the recorded flat timestamps",
+    "a retained traceback proving the ValueError arose from an unrelated invariant",
+    "a mixed observer checkpoint that still escapes as a fatal exception or authorizes an intent",
+    "a rapid child crash loop that no longer exhausts the supervisor budget",
+    "a lifecycle report that resolves PnL across the recorded prospective candle gap"
+  ]
+}

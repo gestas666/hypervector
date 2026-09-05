@@ -137,10 +137,10 @@ fn validate_distribution(
     if resolved == 0 && present != 0 {
         return Err("empty opportunity capture cannot carry a distribution".into());
     }
-    if let [Some(median), Some(minimum), Some(maximum)] = distribution {
-        if minimum > median || median > maximum {
-            return Err("opportunity-capture distribution order is invalid".into());
-        }
+    if let [Some(median), Some(minimum), Some(maximum)] = distribution
+        && (minimum > median || median > maximum)
+    {
+        return Err("opportunity-capture distribution order is invalid".into());
     }
     Ok(())
 }

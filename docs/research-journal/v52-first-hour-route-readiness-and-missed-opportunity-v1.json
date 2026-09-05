@@ -1,0 +1,173 @@
+{
+  "schema_version": "v52_first_hour_route_readiness_and_missed_opportunity_v1",
+  "generated_at_utc": "2026-08-16T14:10:24Z",
+  "hypothesis_id": "v52-live-translation-first-hour-readiness",
+  "status": "superseded",
+  "superseded_by": "docs/research-journal/v52-first-hour-route-readiness-and-missed-opportunity-v2.json",
+  "supersession_reason": "Forward paths began at the decision-minute boundary even when provider evidence became available seconds later. That consumed pre-availability candle extrema and closes. The v2 journal reconstructs the identical ledger cutoff with the first-full-minute-after-availability contract.",
+  "execution_authority": "none",
+  "report_only": true,
+  "automatic_live_change": false,
+  "runtime_strategy_changed": false,
+  "problem_restatement": "Determine whether the first live v52 hour contains a technical routing defect, an obviously valuable missed entry, or only valid ineligible market conditions under the frozen BTC and HYPE routes.",
+  "runtime_identity": {
+    "run_id": "bidirectional-live-1786885252328",
+    "profile_id": "multi_asset_growth_first_5000_evidence_bound_successor_v52",
+    "profile_fingerprint": "662d28b352cfc4f09e08c71ee67c8f044421483f2932539b09ea082b5e4f27f7",
+    "observation_start_utc": "2026-08-16T13:03:40.441507+00:00",
+    "observation_end_utc": "2026-08-16T14:10:15.903886+00:00",
+    "checkpoint_generated_at_utc": "2026-08-16T14:10:24.710750+00:00",
+    "checkpoint_sha256": "7344adc49c85e2df1182acfeb3e222af44c8ae942534b90aebf2bbc35b54b953"
+  },
+  "system_reconciliation": {
+    "poll_cycles": 267,
+    "provider_readiness_rows_including_seeds": 73,
+    "runtime_provider_evaluations": 70,
+    "pre_activation_readiness_seeds": 3,
+    "eligible_evaluations": 0,
+    "strategy_intents": 0,
+    "actions": 0,
+    "withheld": 0,
+    "fills": 0,
+    "closed_trades": 0,
+    "net_pnl_usd": 0.0,
+    "faults": 0,
+    "positions": {
+      "BTC": "FLAT",
+      "HYPE": "FLAT"
+    },
+    "owned_orders": 0,
+    "assessment": "Every configured route produced readiness telemetry and reconciled to an explicit ineligible state. No missing action, technical rejection, stale submission, unexplained order, or position was observed."
+  },
+  "route_evidence": [
+    {
+      "route": "hulk_expansion_short_robust_v3|BTC",
+      "signal_timeframe": "30m",
+      "readiness_rows": 3,
+      "eligible": 0,
+      "latest_fraction": 0.0,
+      "latest_state": {
+        "entry_score": 0,
+        "entry_score_required": 7,
+        "adx": 12.005902359438737,
+        "adx_required": 16.0,
+        "squeeze_release": false,
+        "entry_side": null
+      },
+      "diagnosis": "The route correctly remained inactive: expansion, usable ADX, score, and entry side were all absent. This is not evidence that the route is over-gated because only three readiness rows and no one-blocker near miss exist."
+    },
+    {
+      "route": "liquidity_sweep_long_1h_stop60_target60_v2|BTC",
+      "signal_timeframe": "1h",
+      "readiness_rows": 2,
+      "eligible": 0,
+      "latest_fraction": 0.5,
+      "latest_state": {
+        "sweep_clearance_bps": -7.149439166216516,
+        "minimum_sweep_clearance_bps": 2.0,
+        "reclaim_close": 63040.0,
+        "ema55": 63085.95604682386,
+        "volume_multiple": 1.3720779619912495,
+        "volume_multiple_required": 1.2
+      },
+      "diagnosis": "Volume and reclaim magnitude were present, but price never swept below the prior low and closed below EMA55. The first causal hourly decision therefore confirms route telemetry, not an entry opportunity."
+    },
+    {
+      "route": "hype_breakout_compression_alignment_bidirectional_v2|HYPE",
+      "signal_timeframe": "completed 5m onset evaluated each 1m",
+      "readiness_rows": 68,
+      "signal_outcome_evaluations": 67,
+      "eligible": 0,
+      "latest_fraction": 0.6,
+      "blocker_counts": {
+        "canonical_breakout_onset_absent": 67,
+        "directional_pullback_absent": 30,
+        "prior_compression_absent": 27,
+        "breakout_side_opposed": 1
+      },
+      "latest_state": {
+        "structural_direction": "long",
+        "state_5m": "RANGE",
+        "breakout_onset": false,
+        "breakout_side": null,
+        "prior_bbwp_min_15m": 23.333333333333332,
+        "maximum_prior_bbwp_min_15m": 40.0,
+        "directional_body_bps": -0.8736065974779272,
+        "maximum_directional_body_bps": 0.0,
+        "breakout_clearance_20m_bps": -2.795003930473605,
+        "volume_ratio_20m": 0.3405525944342186
+      },
+      "diagnosis": "Compression and a pullback were present on the latest row, but no fresh completed-5m breakout onset existed. Across the window, the missing-onset annotations were negative after estimated round-trip friction on every independent 5m, 15m, and 30m path, supporting the decision not to manufacture entries from ordinary RANGE observations."
+    }
+  ],
+  "hype_missed_opportunity_analysis": {
+    "estimated_round_trip_friction_bps": 13.0,
+    "all_readiness_annotations": {
+      "5m": {
+        "resolved": 62,
+        "non_overlapping_resolved": 13,
+        "mean_after_friction_bps": -12.817001829996283,
+        "mean_excluding_largest_after_friction_bps": -13.101102431326375,
+        "independent_mean_after_friction_bps": -12.809792610172213,
+        "independent_cost_clearing_close_count": 0
+      },
+      "15m": {
+        "resolved": 52,
+        "non_overlapping_resolved": 4,
+        "mean_after_friction_bps": -13.377794436355263,
+        "mean_excluding_largest_after_friction_bps": -13.76996606965378,
+        "independent_mean_after_friction_bps": -14.13470504695068,
+        "independent_cost_clearing_close_count": 0
+      },
+      "30m": {
+        "resolved": 37,
+        "non_overlapping_resolved": 2,
+        "mean_after_friction_bps": -15.553585563345143,
+        "mean_excluding_largest_after_friction_bps": -16.25694833000258,
+        "independent_mean_after_friction_bps": -15.269271383243954,
+        "independent_cost_clearing_close_count": 0
+      }
+    },
+    "only_one_blocker_near_miss": {
+      "blocker": "breakout_side_opposed",
+      "side": "long",
+      "independent_paths": 1,
+      "5m_after_friction_bps": -0.9144553623033786,
+      "15m_after_friction_bps": -13.525458462508066,
+      "30m_after_friction_bps": 0.8370728460568415,
+      "30m_mfe_bps": 21.543796962850692,
+      "robust_mfe_count": 0,
+      "interpretation": "One path briefly cleared estimated cost by 0.84 bps at 30 minutes but failed at 5 and 15 minutes and has no robust-MFE evidence. It is insufficient to challenge the side-alignment rule."
+    }
+  },
+  "uncertainties_and_failure_modes": [
+    "The observation window is only about 67 minutes and contains no eligible signal or trade.",
+    "Readiness markouts estimate opportunity after a fixed friction hurdle; they are not executable fill replays.",
+    "Overlapping one-minute annotations are highly dependent, so non-overlapping counts are the primary diagnostic sample.",
+    "The HYPE route historically occurs around weekly cadence; one quiet hour cannot establish that it is too sparse or broken.",
+    "No short structural direction occurred in this window, so the missing configured HYPE short evidence remains unresolved."
+  ],
+  "decision": {
+    "classification": "no_live_change_proposal",
+    "reason": "No defect or high-confidence missed edge is present. The only one-blocker path is a single mixed-horizon observation, while broader missing-onset annotations lose after estimated friction.",
+    "do_nothing_comparison": "Keeping the frozen routes avoided entries whose independent missing-condition paths did not clear estimated costs. Changing thresholds now would be post-window overfitting.",
+    "confidence": "high that no technical action was lost in this window; medium that the HYPE gates avoided poor immediate opportunities; low on future profitability because no eligible lifecycle exists",
+    "falsifiers": [
+      "An eligible provider decision without an action, withholding, conflict, occupancy reason, or technical rejection.",
+      "Repeated independent one-blocker paths clearing realistic friction and remaining robust after largest-winner removal.",
+      "A source, side-alignment, regime, or timing mismatch between readiness telemetry and the provider decision.",
+      "Live fills whose fees, slippage, funding, stop, target, opposite signal, or timer behavior contradict the frozen route contract."
+    ]
+  },
+  "minimum_evidence_before_reconsidering_parameters": [
+    "The first fully resolved exact v52 HYPE lifecycle on each side, with fees, slippage, funding, MFE, MAE, stop, opposite-signal, and timer attribution.",
+    "Or at least 20 non-overlapping one-blocker near-miss paths for the same blocker and side, evaluated under a predeclared cost and horizon contract.",
+    "Any technical inconsistency overrides the sample threshold and is investigated immediately."
+  ],
+  "highest_value_next_investigation": {
+    "rank": 1,
+    "experiment": "prospective_v52_hype_both_side_live_execution",
+    "reason": "The configured HYPE short scope remains absent from compatible exact live evidence; the first eligible lifecycle on either side will also exercise the entire v52 execution and exit projection chain.",
+    "change_authority": "none"
+  }
+}

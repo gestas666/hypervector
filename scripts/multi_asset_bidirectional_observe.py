@@ -37,6 +37,10 @@ from hypervector.live.cohort_operator_commands import (
     CohortOperatorInboxError,
 )
 from hypervector.live.cohort_profile_stage import stage_cohort_profile
+from hypervector.live.cohort_profit_lock_history import profit_lock_history_limits
+from hypervector.live.completed_candle_snapshot_cache import (
+    CompletedCandleSnapshotCache,
+)
 from hypervector.live.hyperliquid_sol_factory import (
     OfficialSolReadOnlySdkBuilder,
     SolSdkFactoryError,
@@ -86,6 +90,10 @@ def build_parser() -> argparse.ArgumentParser:
         type=Path,
         help="Rebind every observe-only ledger below an isolated directory.",
     )
+    parser.add_argument(
+        "--resume-run-id",
+        help="Resume only an existing observer ledger with this exact run ID.",
+    )
     parser.add_argument("--max-polls", type=int)
     return parser
 
@@ -97,25 +105,13 @@ def run_observer(args: argparse.Namespace) -> int:
         config = with_observer_ledger_root(config, args.ledger_root)
     poller = _build_observer_poller(
         config,
-        fetch_bars=fetch_hl_ohlcv_snapshot,
+        fetch_bars=_observer_candle_fetcher(config, fetch_hl_ohlcv_snapshot),
         backtest_lab_root=args.backtest_lab_root.resolve(),
     )
-    public_books = MultiAssetPublicBookCollector(
-        info=OfficialSolReadOnlySdkBuilder().build(
-            perp_dexes=configured_perp_dexes(config.symbols)
-        ),
-        symbols=config.symbols,
-    )
+    public_books = _build_public_books(config)
     with bidirectional_observer_runtime_lock(config.cohort_ledger):
         now = datetime.now(UTC)
-        ledger = SolLiveLedger(
-            path=config.cohort_ledger,
-            profile_id=config.profile_id,
-            profile_fingerprint=config.profile_fingerprint,
-            run_fingerprint=config.run_fingerprint,
-            run_id=f"bidirectional-observe-{int(now.timestamp() * 1_000)}",
-            execution_mode="observe",
-        )
+        ledger = _build_observer_ledger(config, args.resume_run_id, now)
         telemetry = MultiAssetCohortTelemetry(
             config=config,
             ledger=ledger,
@@ -137,6 +133,7 @@ def run_observer(args: argparse.Namespace) -> int:
             sleep_fn=time.sleep,
             poll_seconds=config.poll_seconds,
             signal_stop_requested=lambda: stop.requested,
+            emit_configuration_on_start=args.resume_run_id is None,
             operator_commands=CohortOperatorInbox(
                 root=config.cohort_ledger.parent / "operator_commands",
                 run_id=ledger.run_id,
@@ -150,6 +147,75 @@ def run_observer(args: argparse.Namespace) -> int:
             ),
         )
         return runner.run(max_polls=args.max_polls)
+
+
+def _observer_candle_fetcher(
+    config: MultiAssetLiveConfig,
+    fetch: CohortBarFetcherProtocol,
+) -> CompletedCandleSnapshotCache:
+    """Cache entry candles while retaining every profit-lock candle observation."""
+    lock_symbols = frozenset(profit_lock_history_limits(config.providers))
+    return CompletedCandleSnapshotCache(fetch, uncached_symbols=lock_symbols)
+
+
+def _build_public_books(config: MultiAssetLiveConfig) -> MultiAssetPublicBookCollector:
+    info = OfficialSolReadOnlySdkBuilder().build(
+        perp_dexes=configured_perp_dexes(config.symbols)
+    )
+    return MultiAssetPublicBookCollector(info=info, symbols=config.symbols)
+
+
+def _build_observer_ledger(
+    config: MultiAssetLiveConfig,
+    resume_run_id: str | None,
+    now: datetime,
+) -> SolLiveLedger:
+    run_id = resume_run_id or f"bidirectional-observe-{int(now.timestamp() * 1_000)}"
+    ledger = SolLiveLedger(
+        path=config.cohort_ledger,
+        profile_id=config.profile_id,
+        profile_fingerprint=config.profile_fingerprint,
+        run_fingerprint=config.run_fingerprint,
+        run_id=run_id,
+        execution_mode="observe",
+    )
+    rows = ledger.read_all()
+    if not rows:
+        if resume_run_id is not None:
+            raise SolLiveLedgerError("observer resume requires an existing ledger")
+        return ledger
+    if resume_run_id is None:
+        raise SolLiveLedgerError("existing observer ledger requires explicit resume")
+    _require_resume_identity(rows, config, run_id)
+    return ledger
+
+
+def _require_resume_identity(
+    rows: list[dict[str, object]],
+    config: MultiAssetLiveConfig,
+    run_id: str,
+) -> None:
+    expected = {
+        "schema_version": 1,
+        "execution_mode": "observe",
+        "effective_mode": "OBSERVE ONLY",
+        "live_armed": False,
+        "execution_authority": "none",
+        "profile_id": config.profile_id,
+        "profile_fingerprint": config.profile_fingerprint,
+        "run_fingerprint": config.run_fingerprint,
+    }
+    if any(
+        any(row.get(field) != value for field, value in expected.items())
+        for row in rows
+    ):
+        raise SolLiveLedgerError("observer resume identity mismatch")
+    run_ids = [row.get("run_id") for row in rows]
+    if run_ids[-1] != run_id:
+        raise SolLiveLedgerError("observer resume identity mismatch")
+    first = run_ids.index(run_id)
+    if any(value != run_id for value in run_ids[first:]):
+        raise SolLiveLedgerError("observer resume identity mismatch")
 
 
 _with_observer_ledger_root = with_observer_ledger_root

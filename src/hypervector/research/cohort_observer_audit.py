@@ -16,6 +16,7 @@ from hypervector.research.cohort_observer_audit_values import (
     _expected_pairs,
     _initial_candle_symbols,
     _integer,
+    _is_preactivation_seed,
     _is_disarmed,
     _is_future,
     _mapping,
@@ -34,14 +35,14 @@ from hypervector.research.cohort_observer_audit_values import (
 from hypervector.research.cohort_signal_outcomes import (
     build_provider_forward_diagnostics,
 )
-from hypervector.research.cohort_canonical_regime_telemetry import (
-    build_canonical_regime_telemetry_summary,
-)
 from hypervector.research.cohort_observer_regime_forward_accuracy import (
     build_selected_observer_regime_forward_accuracy,
 )
-from hypervector.research.cohort_strategy_scorecard import (
-    build_strategy_scorecard,
+from hypervector.research.cohort_observer_identity import canonical_observer_run
+from hypervector.research.cohort_observer_report import observer_audit_payload
+from hypervector.research.cohort_observer_runtime_health import (
+    observer_runtime_coverage_gaps,
+    successful_poll_streak,
 )
 
 _STRATEGY_NAME = "multi_asset_bidirectional_cohort"
@@ -91,29 +92,19 @@ def audit_cohort_observer_run(
         expected,
         signals,
         signal_outcomes,
+        identity,
     )
-    return {
-        "schema_version": 3,
-        "mode": "multi_asset_bidirectional_observer_audit",
-        "observer_contract": _observer_contract(),
-        "run": _run_summary(selected, identity, symbols),
-        "runtime": _runtime_summary(selected, cycles, evaluations),
-        "technical": technical,
-        "signals": signals,
-        "readiness": readiness,
-        "canonical_regime_telemetry": build_canonical_regime_telemetry_summary(
-            selected
-        ),
-        "signal_outcomes": signal_outcomes,
-        "regime_forward_accuracy": regime_accuracy,
-        "strategy_scorecard": build_strategy_scorecard(
-            expected,
-            _mapping(readiness.get("by_provider_symbol"), "readiness providers"),
-            signal_outcomes,
-        ),
-        "learning": _learning_summary(),
-        "limitations": _limitations(),
-    }
+    return observer_audit_payload(
+        selected,
+        _run_summary(selected, identity, symbols),
+        _runtime_summary(selected, cycles, evaluations),
+        technical,
+        signals,
+        readiness,
+        signal_outcomes,
+        regime_accuracy,
+        expected,
+    )
 
 
 def _validated_records(records: Sequence[Record]) -> tuple[Record, ...]:
@@ -146,8 +137,8 @@ def _select_observer_run(
     selected = tuple(row for row in records if row.get("run_id") == chosen)
     if not selected or not all(_is_disarmed(row) for row in selected):
         raise ValueError(f"run {chosen} is not a disarmed observer run")
-    run_identities = _event_rows(selected, "configuration_identity")
-    if len(run_identities) != 1 or _strategy_name(run_identities[0]) != _STRATEGY_NAME:
+    selected, identity = canonical_observer_run(selected, chosen)
+    if _strategy_name(identity) != _STRATEGY_NAME:
         raise ValueError(f"run {chosen} has invalid observer configuration identity")
     execution_events = sorted(
         str(row.get("event_type"))
@@ -156,19 +147,7 @@ def _select_observer_run(
     )
     if execution_events:
         raise ValueError(f"observer run contains execution events: {execution_events}")
-    return selected, run_identities[0]
-
-
-def _observer_contract() -> dict[str, object]:
-    return {
-        "report_only": True,
-        "execution_authority": "none",
-        "orders_observed": False,
-        "fills_observed": False,
-        "profitability_measured": False,
-        "performance_gate": False,
-        "runtime_strategy_changed": False,
-    }
+    return selected, identity
 
 
 def _run_summary(
@@ -197,9 +176,10 @@ def _runtime_summary(
     evaluations: Sequence[Evaluation],
 ) -> dict[str, object]:
     heartbeats = _event_rows(records, "heartbeat")
-    degraded = [
-        _payload(row) for row in heartbeats if _payload(row).get("status") == "degraded"
+    degraded_rows = [
+        row for row in heartbeats if _payload(row).get("status") == "degraded"
     ]
+    degraded = [_payload(row) for row in degraded_rows]
     heartbeat_times = [_timestamp(row) for row in heartbeats]
     intervals = [
         (right - left).total_seconds()
@@ -226,6 +206,16 @@ def _runtime_summary(
                 ).items()
             )
         ),
+        "first_degraded_observed_at_utc": (
+            degraded_rows[0].get("observed_at_utc") if degraded_rows else None
+        ),
+        "last_degraded_observed_at_utc": (
+            degraded_rows[-1].get("observed_at_utc") if degraded_rows else None
+        ),
+        "successful_polls_since_last_degraded": successful_poll_streak(heartbeats),
+        "latest_poll_status": (
+            _payload(heartbeats[-1]).get("status") if heartbeats else "not_observed"
+        ),
         "routing_cycles": len(cycles),
         "evaluation_cycles": evaluation_cycles,
         "quiet_routing_cycles": len(cycles) - evaluation_cycles,
@@ -242,13 +232,11 @@ def _technical_summary(
     expected: frozenset[Pair],
     signals: Mapping[str, object],
     signal_outcomes: Mapping[str, object],
+    identity: Record,
 ) -> dict[str, object]:
     initial_pairs = _pairs(_cycle_evaluations(cycles[0])) if cycles else []
     observed_pairs = _pairs([value for _, value in evaluations])
-    duplicate_count = len(_evaluation_identities(evaluations)) - len(
-        set(_evaluation_identities(evaluations))
-    )
-    future_count = sum(_is_future(arrival, value) for arrival, value in evaluations)
+    duplicate_count, seed_duplicates, future_count = _evaluation_quality(evaluations)
     initial_candles = _initial_candle_symbols(records)
     gaps = _technical_gaps(
         initial_pairs,
@@ -265,7 +253,8 @@ def _technical_summary(
     )
     if _integer(outcome_coverage.get("direction_conflicts"), "direction conflicts"):
         gaps.append("provider_direction_telemetry_conflict")
-        gaps.sort()
+    gaps.extend(observer_runtime_coverage_gaps(records, identity))
+    gaps.sort()
     return {
         "complete": not gaps,
         "technical_gaps": gaps,
@@ -278,9 +267,22 @@ def _technical_summary(
         ],
         "initial_candle_symbols": sorted(initial_candles),
         "duplicate_evaluations": duplicate_count,
+        "preactivation_duplicate_evaluations": seed_duplicates,
         "future_decisions": future_count,
         "decision_timing_seconds": _decision_timing(cycles),
     }
+
+
+def _evaluation_quality(evaluations: Sequence[Evaluation]) -> tuple[int, int, int]:
+    seeded = [value for value in evaluations if _is_preactivation_seed(value[1])]
+    prospective = [value for value in evaluations if value not in seeded]
+    prospective_ids = _evaluation_identities(prospective)
+    seeded_ids = _evaluation_identities(seeded)
+    return (
+        len(prospective_ids) - len(set(prospective_ids)),
+        len(seeded_ids) - len(set(seeded_ids)),
+        sum(_is_future(arrival, value) for arrival, value in evaluations),
+    )
 
 
 def _technical_gaps(
@@ -370,6 +372,7 @@ def _provider_summary(evaluations: Sequence[Record]) -> dict[str, object]:
     return {
         "count": len(evaluations),
         "eligible": sum(value.get("eligible") is True for value in evaluations),
+        "eligible_by_side": _eligible_by_side(evaluations),
         "first_fraction": fractions[0],
         "latest_fraction": fractions[-1],
         "minimum_fraction": min(fractions),
@@ -391,6 +394,17 @@ def _provider_summary(evaluations: Sequence[Record]) -> dict[str, object]:
         ),
         "blockers": dict(sorted(blockers.items())),
         "reasons": dict(sorted(reasons.items())),
+    }
+
+
+def _eligible_by_side(evaluations: Sequence[Record]) -> dict[str, int]:
+    eligible = [value for value in evaluations if value.get("eligible") is True]
+    sides = [value.get("side") for value in eligible]
+    if any(side not in {"long", "short"} for side in sides):
+        raise ValueError("eligible observer evaluation must declare a valid side")
+    return {
+        "long": sum(side == "long" for side in sides),
+        "short": sum(side == "short" for side in sides),
     }
 
 
@@ -431,33 +445,11 @@ def _arrival_lags(evaluations: Sequence[Evaluation]) -> dict[str, object]:
 def _decision_timing(cycles: Sequence[Record]) -> dict[str, object]:
     """Separate startup seed age from post-start decision arrival lag."""
     startup = _evaluations(cycles[:1])
-    steady_state = _evaluations(cycles[1:])
+    steady_state = []
+    for evaluation in _evaluations(cycles[1:]):
+        target = startup if _is_preactivation_seed(evaluation[1]) else steady_state
+        target.append(evaluation)
     return {
         "startup_seed_age_by_provider": _arrival_lags(startup),
         "steady_state_arrival_lag_by_provider": _arrival_lags(steady_state),
     }
-
-
-def _learning_summary() -> dict[str, object]:
-    return {
-        "evidence_state": "setup_and_signal_paths_only_no_execution_outcomes",
-        "signal_path_descriptives_identifiable": True,
-        "strategy_edge_identifiable": False,
-        "profitability_identifiable": False,
-        "execution_quality_identifiable": False,
-        "valid_uses": [
-            "technical_parity",
-            "signal_cadence",
-            "setup_progression",
-            "blocker_attribution",
-        ],
-    }
-
-
-def _limitations() -> list[str]:
-    return [
-        "No orders, fills, fees, funding, slippage, markout, or realized PnL were observed.",
-        "Forward candle paths are counterfactual signal diagnostics, not execution outcomes.",
-        "Readiness is prerequisite completion, not win probability or expected return.",
-        "This audit cannot promote, filter, size, pause, or retune a strategy.",
-    ]

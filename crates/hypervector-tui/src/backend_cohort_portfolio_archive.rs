@@ -18,6 +18,15 @@ pub struct CohortPortfolioArchive {
     pub observed_through_utc: Option<String>,
     pub performance: CohortAllTimeTradePerformance,
     pub accounting_epoch: Option<CohortAccountingEpoch>,
+    pub preserved_history: Option<CohortPreservedHistory>,
+}
+
+/// Read-only backend history retained outside a fresh display epoch.
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct CohortPreservedHistory {
+    pub symbols: Vec<String>,
+    pub observed_through_utc: Option<String>,
+    pub performance: CohortAllTimeTradePerformance,
 }
 
 /// Exact clean-accounting boundary carried by an epoch-scoped archive.
@@ -26,6 +35,8 @@ pub struct CohortAccountingEpoch {
     pub epoch_id: String,
     pub profile_fingerprint: String,
     pub start_venue_timestamp_ms: u64,
+    #[serde(default)]
+    pub included_profile_fingerprints: Vec<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -38,6 +49,18 @@ pub(crate) struct PortfolioArchiveRaw {
     observed_through_utc: Option<String>,
     #[serde(default)]
     accounting_epoch: Option<CohortAccountingEpoch>,
+    #[serde(default)]
+    preserved_history: Option<PreservedHistoryRaw>,
+    coverage: ArchiveCoverageRaw,
+    performance: ArchivePerformanceRaw,
+}
+
+#[derive(Debug, Deserialize)]
+struct PreservedHistoryRaw {
+    scope: String,
+    symbols: Vec<String>,
+    #[serde(default)]
+    observed_through_utc: Option<String>,
     coverage: ArchiveCoverageRaw,
     performance: ArchivePerformanceRaw,
 }
@@ -81,12 +104,49 @@ pub(crate) fn project_portfolio_archive(
     {
         return Err("portfolio archive coverage disagrees with performance".into());
     }
+    let preserved_history = value
+        .preserved_history
+        .map(project_preserved_history)
+        .transpose()?;
     Ok(Some(CohortPortfolioArchive {
         symbols: value.symbols,
         observed_through_utc: value.observed_through_utc,
         performance: CohortAllTimeTradePerformance { total, by_strategy },
         accounting_epoch: value.accounting_epoch,
+        preserved_history,
     }))
+}
+
+fn project_preserved_history(raw: PreservedHistoryRaw) -> Result<CohortPreservedHistory, String> {
+    let symbols = raw.symbols.iter().collect::<BTreeSet<_>>();
+    if raw.scope != "full_backend_history"
+        || !raw.coverage.complete
+        || symbols.len() != raw.symbols.len()
+        || raw.symbols.iter().any(|symbol| symbol.trim().is_empty())
+        || raw.performance.scope != "all_live_history"
+        || raw.performance.return_basis != RETURN_BASIS
+        || raw
+            .observed_through_utc
+            .as_ref()
+            .is_some_and(|timestamp| chrono::DateTime::parse_from_rfc3339(timestamp).is_err())
+    {
+        return Err("preserved portfolio history contract is invalid".into());
+    }
+    let (total, by_strategy) = project_partition(
+        raw.performance.total,
+        raw.performance.by_strategy,
+        "preserved portfolio history",
+    )?;
+    if raw.coverage.closed_orders != total.closed_trades
+        || raw.coverage.leverage_matches != raw.coverage.closed_orders
+    {
+        return Err("preserved portfolio history coverage disagrees with performance".into());
+    }
+    Ok(CohortPreservedHistory {
+        symbols: raw.symbols,
+        observed_through_utc: raw.observed_through_utc,
+        performance: CohortAllTimeTradePerformance { total, by_strategy },
+    })
 }
 
 fn validate_contract(value: &PortfolioArchiveRaw) -> Result<(), String> {
@@ -117,10 +177,27 @@ fn validate_contract(value: &PortfolioArchiveRaw) -> Result<(), String> {
 
 fn valid_epoch(epoch: &CohortAccountingEpoch) -> bool {
     !epoch.epoch_id.trim().is_empty()
-        && epoch.profile_fingerprint.len() == 64
-        && epoch
-            .profile_fingerprint
-            .bytes()
-            .all(|value| value.is_ascii_hexdigit())
+        && valid_fingerprint(&epoch.profile_fingerprint)
         && epoch.start_venue_timestamp_ms > 0
+        && valid_profile_lineage(epoch)
+}
+
+fn valid_profile_lineage(epoch: &CohortAccountingEpoch) -> bool {
+    if epoch.included_profile_fingerprints.is_empty() {
+        return true;
+    }
+    let profiles = epoch
+        .included_profile_fingerprints
+        .iter()
+        .collect::<BTreeSet<_>>();
+    profiles.len() == epoch.included_profile_fingerprints.len()
+        && profiles.contains(&epoch.profile_fingerprint)
+        && profiles.iter().all(|value| valid_fingerprint(value))
+}
+
+fn valid_fingerprint(value: &str) -> bool {
+    value.len() == 64
+        && value
+            .bytes()
+            .all(|character| character.is_ascii_digit() || (b'a'..=b'f').contains(&character))
 }

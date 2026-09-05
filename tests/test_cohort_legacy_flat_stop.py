@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from hypervector.live import cohort_legacy_flat_stop as legacy_flat_stop
 from hypervector.live.cohort_legacy_flat_stop import (
     LegacyFlatStopError,
     LegacyFlatStopEvidence,
@@ -152,6 +153,66 @@ def test_watcher_treats_open_snapshot_as_pending_until_flat(tmp_path: Path) -> N
     assert evidence.source_sequence == 70002
 
 
+def test_existing_final_snapshot_recovers_the_latest_exact_armed_run(
+    tmp_path: Path,
+) -> None:
+    """A stopped cohort may recover its final strict flat snapshot without restart."""
+    ledger = tmp_path / "decisions.jsonl"
+    rows = [
+        _configuration_identity(
+            profile="d" * 64,
+            run_id="bidirectional-observe-old",
+            live_armed=False,
+        ),
+        _configuration_identity(),
+        _snapshot(),
+    ]
+    ledger.write_text(
+        "".join(json.dumps(row) + "\n" for row in rows),
+        encoding="utf-8",
+    )
+    loader = getattr(legacy_flat_stop, "load_existing_final_flat_boundary", None)
+    assert callable(loader), "offline final-snapshot recovery is missing"
+
+    evidence = loader(
+        ledger,
+        expected_profile_fingerprint=_PROFILE,
+        expected_run_id=_RUN_ID,
+        expected_symbols=_SYMBOLS,
+    )
+
+    assert evidence.source_sequence == 70000
+
+
+def test_existing_final_snapshot_rejects_a_superseded_armed_run(
+    tmp_path: Path,
+) -> None:
+    """Historical flat evidence cannot archive over a newer live identity."""
+    ledger = tmp_path / "decisions.jsonl"
+    rows = [
+        _configuration_identity(),
+        _snapshot(),
+        _configuration_identity(
+            profile="a" * 64,
+            run_id="bidirectional-live-newer",
+        ),
+    ]
+    ledger.write_text(
+        "".join(json.dumps(row) + "\n" for row in rows),
+        encoding="utf-8",
+    )
+    loader = getattr(legacy_flat_stop, "load_existing_final_flat_boundary", None)
+    assert callable(loader), "offline final-snapshot recovery is missing"
+
+    with pytest.raises(LegacyFlatStopError, match="latest armed run identity"):
+        loader(
+            ledger,
+            expected_profile_fingerprint=_PROFILE,
+            expected_run_id=_RUN_ID,
+            expected_symbols=_SYMBOLS,
+        )
+
+
 def _evaluate(row: dict[str, object]) -> LegacyFlatStopEvidence | None:
     return evaluate_legacy_flat_snapshot(
         row,
@@ -194,4 +255,21 @@ def _snapshot(*, sequence: int = 70000) -> dict[str, object]:
                 for symbol in _SYMBOLS
             ],
         },
+    }
+
+
+def _configuration_identity(
+    *,
+    profile: str = _PROFILE,
+    run_id: str = _RUN_ID,
+    live_armed: bool = True,
+) -> dict[str, object]:
+    return {
+        "schema_version": 1,
+        "sequence": 69999,
+        "event_type": "configuration_identity",
+        "execution_mode": "live",
+        "live_armed": live_armed,
+        "profile_fingerprint": profile,
+        "run_id": run_id,
     }

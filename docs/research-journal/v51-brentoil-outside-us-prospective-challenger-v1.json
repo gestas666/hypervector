@@ -1,0 +1,144 @@
+{
+  "schema_version": "v51_brentoil_outside_us_prospective_challenger_v1",
+  "generated_at_utc": "2026-08-15T21:58:20Z",
+  "hypothesis_id": "BRENTOIL_OUTSIDE_US_OIL_SHOCK_REVERSION_V1",
+  "status": "being_tested",
+  "mode": "report_only_prospective_classification",
+  "symbol": "xyz:BRENTOIL",
+  "execution_authority": "none",
+  "automatic_live_change": false,
+  "runtime_strategy_changed": false,
+  "problem_restatement": {
+    "known_input": "BRENTOIL has exact live-canary liquidity, fill, fee, funding, stop, and slippage evidence.",
+    "unknown_output": "Whether a repeatable oil-shock edge survives prospectively after realistic live-tail friction.",
+    "success_scope": "Measure a frozen session challenger without changing v51 execution, risk, routing, or capital authority."
+  },
+  "frozen_mechanism": {
+    "provider_id": "hip3_brentoil_oil_shock_reversion_bidirectional_5m_shadow_v1",
+    "profile_id": "brentoil_oil_shock_reversion_5m_shadow_v1",
+    "timeframe": "5m",
+    "direction": "bidirectional",
+    "return_lookback_bars": 12,
+    "threshold_lookback_bars": 2016,
+    "minimum_history_bars": 1000,
+    "shock_quantile": 0.95,
+    "entry": "fresh_reversion_onset_after_completed_source_candle",
+    "target_bps": 40.0,
+    "stop_bps": 30.0,
+    "opposite_signal_exit": true,
+    "maximum_hold_seconds": 3600,
+    "signal_ohlc_source": "hyperliquid_public_candleSnapshot_5m"
+  },
+  "frozen_session_classifier": {
+    "timezone": "America/New_York",
+    "us_regular_hours": "weekday 09:30 inclusive to 16:00 exclusive",
+    "challenger_subset": "all other timestamps",
+    "classification_basis": "entry decision timestamp",
+    "execution_gate": false
+  },
+  "prospective_boundary": {
+    "last_development_independent_shadow_decision_time_ms": 1786830900000,
+    "last_development_independent_shadow_decision_time_utc": "2026-08-15T21:55:00Z",
+    "first_eligible_prospective_decision_rule": "decision_time_ms greater than 1786830900000",
+    "retroactive_rows_allowed": false,
+    "selection_or_tuning_after_boundary": false
+  },
+  "evidence_reviewed": {
+    "live_canary": {
+      "closed_lifecycles": 3,
+      "wins": 2,
+      "losses": 1,
+      "net_pnl_usd": 1.821755,
+      "profit_factor": 3.648046,
+      "net_excluding_largest_winner_usd": -0.232469,
+      "maximum_absolute_observed_slippage_bps": 8.464583786205068,
+      "interpretation": "Execution feasibility is established; automatic strategy edge is not."
+    },
+    "full_development_mechanism": {
+      "nominal_trades": 44,
+      "nominal_net_pnl_usd_on_500": 4.238714539415753,
+      "nominal_profit_factor": 2.258517594642701,
+      "stress_trades": 42,
+      "stress_net_pnl_usd_on_500": -1.0684806496597048,
+      "stress_profit_factor": 0.8371562444832442,
+      "positive_stress_folds": 1,
+      "stress_folds": 3,
+      "technical_path": "unresolved"
+    },
+    "post_hoc_outside_us_slice": {
+      "stress_trades": 28,
+      "stress_net_pnl_usd_on_500": 0.7233845390868214,
+      "stress_profit_factor": 1.1997422223155756,
+      "stress_net_excluding_largest_winner_usd": 0.43504401909162727,
+      "warning": "This was selected after observing development outcomes and is not confirmatory evidence."
+    },
+    "current_shadow_at_registration": {
+      "decision_rows": 45,
+      "eligible_decisions": 0,
+      "last_non_action_reason": "no_shock_onset",
+      "promotion_blockers": [
+        "archive_public_trade_ohlc_vs_live_candleSnapshot_parity_unverified",
+        "mechanism_specific_live_fill_slippage_not_observed",
+        "historical_mark_path_incomplete",
+        "validation_and_holdout_unopened"
+      ]
+    }
+  },
+  "validation_plan": {
+    "diagnostic_update_minimum": "At least one fully attributable resolved lifecycle per side.",
+    "change_recommendation_minimum": "A predeclared compatible window with at least 30 resolved lifecycles, at least 10 per side, exact fees/funding/slippage/latency/stops, and no unresolved entry or exit path.",
+    "required_analysis": [
+      "nominal and live-tail stress economics",
+      "largest-winner removal",
+      "chronological fold or rolling-window stability",
+      "long and short results separately",
+      "inside-session no-action baseline",
+      "missed-opportunity and giveback review",
+      "comparison with unchanged v51 and no BRENTOIL route"
+    ],
+    "oos_rule": "Validation and holdout remain sealed until the frozen development-independent evidence contract is satisfied and explicitly reviewed."
+  },
+  "failure_modes": [
+    "The apparent session effect may be selection bias from one development window.",
+    "Sparse shock onsets may make 30 lifecycles slow to obtain.",
+    "The observed 8.46 bps slippage tail may understate future gaps or overstate typical cost.",
+    "Candle-source mismatch or unresolved mark/L2 paths can invalidate lifecycle economics.",
+    "Long and short performance may diverge even when pooled performance appears positive."
+  ],
+  "success_metrics": {
+    "primary": "positive live-tail-stress net after costs and after removing the largest winner",
+    "robustness": "both sides individually nonnegative under stress and a majority of chronological slices positive",
+    "technical": "all evaluated entry, barrier, exit, fee, funding, and quote paths resolved",
+    "portfolio": "incremental benefit versus leaving the oil slot unused"
+  },
+  "failure_or_invalidation_triggers": [
+    "provider/profile/config identity changes after the prospective boundary",
+    "any retroactively introduced eligible decision",
+    "unresolved entry or exit path used in an economic claim",
+    "stress net or stress ex-largest-winner net is nonpositive at the recommendation checkpoint",
+    "one direction supplies all positive economics while the frozen bidirectional claim remains unchanged"
+  ],
+  "source_evidence": [
+    {
+      "path": "data/logs/research/bidirectional_cohort/brentoil_live_canary_lifecycle_reconciliation_20260815_v1.json",
+      "sha256": "47ba7608ce7d7fd9b2ba2c7c64555d529abae1ff509971bfbc38a46a308534bc"
+    },
+    {
+      "path": "data/logs/research/xyz_brentoil_oil_shock_reversion_development_20260815_v4.json",
+      "sha256": "0711c0e56c746e43975fc19618d6ea952687e3ac11311a351f6fe047beefdb57"
+    },
+    {
+      "path": "data/runtime/research/brentoil_oil_shock_shadow_latest.json",
+      "sha256_at_registration": "ec719a7c6535606c6a215c3afd3302795a6a7514ed5fb57fa1727def80aee3a9",
+      "mutable_append_only_status": true
+    }
+  ],
+  "recommendation": "Continue the existing isolated observer and prospectively classify the frozen outside-U.S.-regular-hours challenger. Do not add BRENTOIL to v51 or alter any strategy parameter.",
+  "confidence": {
+    "execution_feasibility": "high",
+    "current_strategy_edge": "low",
+    "session_challenger_edge": "low",
+    "reason": "Canary execution is directly observed, but the session result is post-hoc and has no eligible prospective lifecycle yet."
+  },
+  "explicit_approval_requested": false
+}

@@ -14,6 +14,7 @@ from hypervector.live.hip3_cohort_providers import (
     HIP3_BREAKOUT_COMMODITY_FRESH15_STRATEGY,
     HIP3_BREAKOUT_INDEX_STRATEGY,
     HIP3_BREAKOUT_INDEX_FRESH15_STRATEGY,
+    HIP3_BREAKOUT_SNDK_FRESH15_STRATEGY,
     HIP3_STRATEGIES,
     HIP3_SWING_COMMODITY_STRATEGY,
     HIP3_SWING_INDEX_STRATEGY,
@@ -186,6 +187,11 @@ def test_shadow_uses_frozen_identity_and_emits_pressure_provenance() -> None:
     assert decision.prospective is True
     assert decision.pressure_state_history_complete is True
     assert decision.eligible is True
+    assert decision.condition_anatomy is not None
+    assert decision.condition_anatomy.close == pytest.approx(102.0)
+    assert decision.condition_anatomy.prior_breakout_high == pytest.approx(100.1)
+    assert decision.condition_anatomy.fast_ema > decision.condition_anatomy.slow_ema
+    assert decision.condition_anatomy.long_raw is True
     assert batch.next_cursor.decision_time_ms == decision.decision_time_ms
 
 
@@ -440,7 +446,7 @@ def test_delayed_ledger_receipt_cannot_rewrite_prior_raw_state(
     assert current.decisions[0].eligible is False
 
 
-def test_shadow_identity_is_not_registered_in_current_v25_factories() -> None:
+def test_shadow_identity_is_not_registered_in_current_factories() -> None:
     assert HIP3_STRATEGIES == frozenset(
         {
             HIP3_SWING_INDEX_STRATEGY,
@@ -449,6 +455,7 @@ def test_shadow_identity_is_not_registered_in_current_v25_factories() -> None:
             HIP3_SWING_COMMODITY_STRATEGY,
             HIP3_BREAKOUT_COMMODITY_STRATEGY,
             HIP3_BREAKOUT_COMMODITY_FRESH15_STRATEGY,
+            HIP3_BREAKOUT_SNDK_FRESH15_STRATEGY,
         }
     )
     assert MU_SHADOW_PROVIDER_ID not in HIP3_STRATEGIES

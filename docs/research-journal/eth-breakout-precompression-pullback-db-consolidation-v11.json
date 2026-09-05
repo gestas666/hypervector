@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false,
+  "hypothesis_id": "eth-breakout-precompression-pullback",
+  "revision_number": 11,
+  "supersedes_revision_id": "9e15c7c6275047af90793b8d198b9d45298d08b58742aa0d1f4bc7f7a4e447f5",
+  "created_at_utc": "2026-08-19T09:41:52Z",
+  "strategy_id": "eth_breakout_precompression_pullback_bidirectional_v1",
+  "symbol": "ETH",
+  "status": "observe",
+  "hypothesis": "The unchanged ETH compression-pullback route may add useful cadence only if source-compatible long and short lifecycles become positive after exact depth, fees, funding, native exits, and largest-winner sensitivity.",
+  "decision": "Correct the report-only exit evidence to model eligible opposite-intent closing without same-cycle reversal, alongside the stop proxy and maximum hold. Keep the second V58 ETH long unresolved and report-only; do not retune or grant live authority.",
+  "confidence": "low",
+  "falsifier": "Reject or revise this assessment if source-equivalent runtime and corrected replay disagree on stop/opposite/maximum-hold ordering, if the evidence hashes change, or when technically resolved both-side after-cost evidence materially updates route expectancy.",
+  "evidence": [
+    {
+      "path": "eth-breakout-precompression-pullback-v17.json",
+      "role": "immutable_human_journal_revision_17",
+      "sha256": "ba17203c251e96c85a30e8691dfc5ffda730e9377cd018f476f2094e1a6f21b7",
+      "bytes": 7345
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v58_eth_pullback_first_eligible_partial_lifecycle_20260819T0840Z_v6.json",
+      "role": "corrected_immutable_open_lifecycle_evidence",
+      "sha256": "e44ba6321b684a89f346b38b6c4357a9aedc4dbb1a00ea75cf3cb9348ebf4560",
+      "bytes": 6347
+    },
+    {
+      "path": "../../configs/multi_asset_growth_first_5000_eight_asset_incremental_v58.toml",
+      "role": "frozen_v58_candidate_contract",
+      "sha256": "1c1c1656233b074df2ed3adcee8cb8cb2c58f0d191cc9f9ac34799478fca3378",
+      "bytes": 6142
+    }
+  ],
+  "metrics": {
+    "candidate_notional_usd": 750.0,
+    "candidate_stop_bps": 60.0,
+    "candidate_maximum_hold_minutes": 720,
+    "compatible_resolved_lifecycles": 0,
+    "compatible_pending_lifecycles": 1,
+    "current_net_return_bps": -42.69640662153129,
+    "current_simulated_net_pnl_usd": -3.2022304966148467,
+    "current_status": "exit_pending",
+    "eligible_opposite_exit_observed": false,
+    "actual_orders_or_fills_claimed": false
+  },
+  "limitations": [
+    "The lifecycle is unresolved and can still stop, recover, close on an eligible opposite signal, or reach its maximum hold.",
+    "One additional long cannot establish win rate, profit factor, cadence, side robustness, or future expectancy.",
+    "Protective-stop timing uses the first adverse recorded BBO as a venue-mark proxy.",
+    "Recorded visible depth is not proof that a live IOC would receive the same fill.",
+    "The simulated PnL is descriptive and has no execution or promotion authority."
+  ]
+}

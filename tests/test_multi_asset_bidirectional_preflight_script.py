@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 from importlib.util import module_from_spec, spec_from_file_location
 import json
 from pathlib import Path
@@ -21,6 +22,12 @@ _V37 = Path("configs/multi_asset_bidirectional_growth_5000_candidate_v37.toml")
 _V51 = Path(
     "configs/multi_asset_growth_first_5000_six_asset_profit_lock_candidate_v51.toml"
 )
+_V53 = Path("configs/multi_asset_growth_first_5000_hype_freshness_repair_v53.toml")
+_V55 = Path("configs/multi_asset_growth_first_5000_spcx_cash_open_v55.toml")
+_V61 = Path(
+    "configs/"
+    "multi_asset_growth_first_5000_eight_asset_sndk_exit_preserved_candidate_v61.toml"
+)
 
 
 def _load_module() -> ModuleType:
@@ -30,6 +37,21 @@ def _load_module() -> ModuleType:
     sys.modules[spec.name] = module
     spec.loader.exec_module(module)
     return module
+
+
+@pytest.mark.parametrize("path", (_SCRIPT, Path(__file__)))
+def test_preflight_functions_respect_project_size_limit(path: Path) -> None:
+    """Keep the report-only orchestration within the project function limit."""
+    tree = ast.parse(path.read_text(encoding="utf-8"))
+    oversized = {
+        node.name: node.end_lineno - node.lineno + 1
+        for node in ast.walk(tree)
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+        and node.end_lineno is not None
+        and node.end_lineno - node.lineno + 1 > 50
+    }
+
+    assert oversized == {}
 
 
 def _checkpoint(path: Path) -> None:
@@ -59,6 +81,7 @@ def _checkpoint(path: Path) -> None:
                 },
                 "audit": {
                     "run": {
+                        "run_id": "active-run",
                         "profile_id": "multi_asset_bidirectional_all_live_canary_v35",
                         "profile_fingerprint": load_multi_asset_live_config(
                             _V35,
@@ -103,6 +126,10 @@ def test_command_has_no_live_flags_and_writes_atomic_report(
     monkeypatch.setattr(module, "collect_multi_asset_read_only_preflight", collect)
     args = module.build_parser().parse_args(
         [
+            "--config",
+            str(_V35),
+            "--active-config",
+            str(_V35),
             "--checkpoint",
             str(checkpoint),
             "--output",
@@ -152,6 +179,59 @@ def test_nonflat_preflight_returns_distinct_not_ready_status(
     assert result == 3
 
 
+def test_changed_profile_without_approval_is_visible_but_has_no_authority() -> None:
+    """Public preflight distinguishes technical checks from live approval."""
+    module = _load_module()
+    active = load_multi_asset_live_config(_V55, mode="observe")
+    candidate = load_multi_asset_live_config(_V61, mode="observe")
+
+    evidence = module._profile_change_approval_evidence(candidate, active)
+
+    assert evidence["state"] == "blocked_profile_change"
+    assert evidence["approval_required"] is True
+    assert evidence["execution_authority"] == "none"
+    assert "exact approval document" in evidence["reason"]
+
+
+def test_checkpoint_null_reconciliation_fields_use_explicit_state_evidence() -> None:
+    """Current checkpoints can derive flat/open expectations without guessing."""
+    module = _load_module()
+    flat = {
+        "final_state": "FLAT",
+        "position_size_signed": None,
+        "open_order_ids": None,
+        "stop_oid": None,
+    }
+    opened = {
+        "final_state": "OPEN",
+        "position_size_signed": None,
+        "open_order_ids": None,
+        "stop_oid": 91,
+    }
+    venue_positions = {"ETH": {"symbol": "ETH", "size_signed": -0.5}}
+
+    assert module._asset_expectation("BTC", flat, venue_positions) == (
+        module.AssetLedgerExpectation(0.0, frozenset())
+    )
+    assert module._asset_expectation("ETH", opened, venue_positions) == (
+        module.AssetLedgerExpectation(-0.5, frozenset({91}))
+    )
+
+
+def test_open_checkpoint_without_position_evidence_fails_closed() -> None:
+    """An OPEN state cannot be converted into a success-shaped flat expectation."""
+    module = _load_module()
+    opened = {
+        "final_state": "OPEN",
+        "position_size_signed": None,
+        "open_order_ids": None,
+        "stop_oid": 91,
+    }
+
+    with pytest.raises(ValueError, match="OPEN but has no execution position"):
+        module._asset_expectation("ETH", opened, {})
+
+
 def test_v51_stale_index_observer_aborts_before_venue_reads(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -188,6 +268,51 @@ def test_v51_stale_index_observer_aborts_before_venue_reads(
     assert venue_read is False
 
 
+def test_additive_candidate_reconciles_new_asset_outside_active_checkpoint(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A new flat asset must use its ledger plus venue instead of being impossible."""
+    module = _load_module()
+    checkpoint = tmp_path / "checkpoint.json"
+    _checkpoint_for_config(checkpoint, _V53)
+    candidate = load_multi_asset_live_config(_V55, mode="observe")
+    readers = {symbol: object() for symbol in candidate.symbols}
+    monkeypatch.setattr(module, "_readers", lambda config: readers)
+    monkeypatch.setattr(
+        module,
+        "_addition_expectation",
+        lambda asset: module.AssetLedgerExpectation(0.0, frozenset()),
+    )
+
+    def collect(**kwargs: object) -> dict[str, object]:
+        assert set(kwargs["readers"]) == set(candidate.symbols)
+        expectations = kwargs["ledger_expectations"]
+        assert expectations["xyz:SPCX"] == module.AssetLedgerExpectation(
+            0.0, frozenset()
+        )
+        return {"portfolio": {"technically_ready_for_profile_transition": True}}
+
+    monkeypatch.setattr(module, "collect_multi_asset_read_only_preflight", collect)
+    monkeypatch.setattr(
+        module,
+        "_attach_profile_change_evidence",
+        lambda report, *_args: report,
+    )
+    args = module.build_parser().parse_args(
+        [
+            "--config",
+            str(_V55),
+            "--active-config",
+            str(_V53),
+            "--checkpoint",
+            str(checkpoint),
+        ]
+    )
+
+    assert module.run_preflight(args) == 0
+
+
 def test_removed_gold_remains_a_transition_blocker(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -204,18 +329,7 @@ def test_removed_gold_remains_a_transition_blocker(
     monkeypatch.setattr(
         module,
         "collect_multi_asset_read_only_preflight",
-        lambda **_kwargs: {
-            "portfolio": {
-                "open_positions": 0,
-                "open_orders": 0,
-                "transition_blocking_assets": (),
-                "ledger_reconciled": True,
-                "sizing_technically_ready": True,
-                "technically_ready_for_profile_transition": True,
-                "readiness_reasons": (),
-            },
-            "assets": (),
-        },
+        lambda **_kwargs: _ready_transition_report(),
     )
     monkeypatch.setattr(
         module,
@@ -242,6 +356,49 @@ def test_removed_gold_remains_a_transition_blocker(
     result = module.run_preflight(args)
 
     assert result == 3
+
+
+def _ready_transition_report() -> dict[str, object]:
+    return {
+        "portfolio": {
+            "open_positions": 0,
+            "open_orders": 0,
+            "transition_blocking_assets": (),
+            "ledger_reconciled": True,
+            "sizing_technically_ready": True,
+            "technically_ready_for_profile_transition": True,
+            "readiness_reasons": (),
+        },
+        "assets": (),
+    }
+
+
+def _checkpoint_for_config(path: Path, config_path: Path) -> None:
+    config = load_multi_asset_live_config(config_path, mode="observe")
+    assets = {
+        symbol: {"position_size_signed": 0.0, "open_order_ids": []}
+        for symbol in config.symbols
+    }
+    path.write_text(
+        json.dumps(
+            {
+                "checkpoint_contract": {
+                    "report_only": True,
+                    "execution_authority": "none",
+                },
+                "audit": {
+                    "run": {
+                        "run_id": "active-run",
+                        "profile_id": config.profile_id,
+                        "profile_fingerprint": config.profile_fingerprint,
+                        "symbols": list(config.symbols),
+                    },
+                    "health": {"assets": assets},
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
 
 
 def test_main_reports_missing_public_wallet_without_traceback(

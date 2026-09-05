@@ -1,0 +1,66 @@
+{
+  "schema_version": "v52_first_eligible_lifecycle_audit_baseline_v2",
+  "hypothesis_id": "v52-first-eligible-lifecycle-audit-v1",
+  "generated_at_utc": "2026-08-17T01:22:55Z",
+  "status": "being_tested",
+  "experiment": "first_eligible_v52_intent_and_lifecycle_audit",
+  "supersedes": "docs/research-journal/v52-first-eligible-lifecycle-audit-baseline-v1.json",
+  "supersession_reason": "The stop-preserving live-exit remediation required a controlled same-profile restart and a new exact zero-event baseline. The prior journal remains immutable evidence for the prior process run.",
+  "problem_restatement": "Freeze the corrected v52 process before its first eligible event, then preserve both the immediate routing outcome and the first fully resolved lifecycle against the same immutable run-bound baseline.",
+  "baseline_identity": {
+    "run_id": "bidirectional-live-1786927506379",
+    "profile_id": "multi_asset_growth_first_5000_evidence_bound_successor_v52",
+    "profile_fingerprint": "662d28b352cfc4f09e08c71ee67c8f044421483f2932539b09ea082b5e4f27f7"
+  },
+  "baseline_counters": {
+    "eligible_evaluations": 0,
+    "strategy_intents": 0,
+    "actions": 0,
+    "withheld": 0,
+    "fills": 0,
+    "open_lifecycles": 0,
+    "closed_trades": 0
+  },
+  "baseline_evidence": {
+    "path": "data/logs/research/bidirectional_cohort/v52_pre_first_eligible_baseline_stopfix_20260817T0105Z.json",
+    "bytes": 6265755,
+    "sha256": "0184028ec11931493bfe95fb1d38124ed955600cf43c1db59c886256fafcb846"
+  },
+  "baseline_observation": {
+    "first_observed_at_utc": "2026-08-17T00:47:53.308499+00:00",
+    "last_observed_at_utc": "2026-08-17T01:07:58.584611+00:00",
+    "cohort_rows": 366,
+    "technical_coverage_complete": true,
+    "runtime_contracts_aligned": 3,
+    "runtime_contract_mismatches": 0
+  },
+  "capture_contract": {
+    "first_event_stage": "Capture the first increase in eligibility, intents, actions, withholding, fills, opens, or closes immediately.",
+    "resolved_lifecycle_stage": "Continue a separate identity-bound watcher until closed_trades increases, then publish a second immutable audit and strict delta from the same baseline.",
+    "economic_update": "A routed action, pending order, or open position is not a resolved result. Economic interpretation begins only after exact fills, fees, funding, protection, exit reason, and final PnL reconcile.",
+    "technical_escalation": "Escalate immediately for an unaccounted eligible decision, route-delay breach, out-of-scope action, absent protection, duplicate exposure, corrupted evidence, or venue-ledger disagreement."
+  },
+  "recommendation": {
+    "recommendation": "Continue the corrected v52 live routes unchanged while capturing the first immediate event and first resolved lifecycle as separate immutable milestones.",
+    "why_now": "The corrected process is technically healthy but has not yet exercised entry, protection, or exit under its exact run identity.",
+    "evidence_reviewed": "The zero-event same-run audit, exact runtime profile, checkpoint identity, venue projection, execution contracts, route readiness, and stop-preserving exit remediation.",
+    "observed_problem_or_opportunity": "The original watcher terminated at the first counter change, which could leave a routed or open event without a durable resolved-lifecycle artifact.",
+    "applicable_market_regime": "Any future completed-bar regime satisfying one of the frozen BTC or HYPE route contracts.",
+    "alternatives_considered": "Rely on the mutable checkpoint, manually reconstruct the close later, delay all evidence until a close, or preserve separate immediate and resolved milestones.",
+    "proposed_live_change": "none",
+    "expected_upside": "The evidence chain can distinguish signal, routing, submission, fill, protection, and close without conflating an open lifecycle with an economic result.",
+    "main_risks_and_failure_modes": "Sparse entries, a first withheld event with no lifecycle, run replacement, evidence-hash drift, incomplete ledger tails, or overinterpreting one resolved result.",
+    "validation_completed": "The new baseline is immutable, report-only, identity-bound, zero-event, technically complete, and reconciles all three runtime execution contracts.",
+    "validation_still_required": "The first eligible outcome, any entry acknowledgement and protection, the first exact resolved close, costs, excursions, and both HYPE directions across non-adjacent evidence.",
+    "success_metrics": "Every eligible event is accounted for; every filled entry is protected; the first close reconciles exact economics and exit attribution; both immutable stages remain hash-valid.",
+    "failure_or_rollback_triggers": "Identity mismatch, non-monotonic counters, missing action or withholding, late submission, missing stop, unexplained close, cost mismatch, evidence mutation, or venue-ledger divergence.",
+    "confidence_level": "high on technical baseline integrity and the need for a separate close milestone; low on strategy profitability until prospective lifecycles resolve",
+    "explicit_approval_requested": false
+  },
+  "single_highest_value_next_investigation": "Capture the first exact v52 lifecycle to resolution while continuing HYPE both-side prospective evidence collection.",
+  "falsifier": "A source hash mismatch, hidden pre-baseline event, run/profile mismatch, counter regression, or inability to reconcile the first close invalidates this baseline chain.",
+  "report_only": true,
+  "execution_authority": "none",
+  "automatic_live_change": false,
+  "runtime_strategy_changed": false
+}

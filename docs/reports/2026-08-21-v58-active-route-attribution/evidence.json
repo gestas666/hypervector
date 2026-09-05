@@ -1,0 +1,381 @@
+{
+  "schema_version": 1,
+  "evidence_id": "v58-active-route-attribution-20260821T032430Z-v1",
+  "generated_at_utc": "2026-08-21T03:24:30.193168+00:00",
+  "contract": {
+    "report_only": true,
+    "execution_authority": "none",
+    "live_runtime_changed": false,
+    "orders_changed": false,
+    "risk_or_strategy_configuration_changed": false
+  },
+  "problem_statement": {
+    "question": "Is the quiet V58 prefix caused by configured selectivity, a shared scheduler or router failure, or route-specific technical unavailability?",
+    "success_criteria": [
+      "attribute every configured route to completed evaluation, selectivity, or technical unavailability",
+      "identify the direct SPCX blocker using exact source evidence",
+      "preserve fail-closed behavior for missing cash-session evidence",
+      "propose no live change until the repair passes unit, integration, parity, and forward validation"
+    ]
+  },
+  "checkpoint": {
+    "path": "data/runtime/bidirectional_cohort/latest_checkpoint.json",
+    "sha256": "07f6e95e2d77dc24491c64987e5bc65584b02699e566b3d7cd0e367b8aa5756d",
+    "bytes": 8405501,
+    "generated_at_utc": "2026-08-21T03:23:58.945778+00:00",
+    "run_id": "bidirectional-live-1787272893887",
+    "profile_id": "multi_asset_growth_first_5000_eight_asset_incremental_v58",
+    "profile_fingerprint": "8a04636c9ff60a7eae141381cb540d7c6ceed081097cda7d5e465d48faa5022b",
+    "configuration_matches_runtime": true,
+    "coverage_complete": true,
+    "technical_gaps": [],
+    "routing_cycles": 504,
+    "routing_actions": 0,
+    "row_count": 1940
+  },
+  "observation_window": {
+    "start_utc": "2026-08-21T00:46:33.795977+00:00",
+    "end_utc": "2026-08-21T03:23:43.791281+00:00",
+    "duration_seconds": 9429.995304,
+    "signal_outcome_evaluations": 362,
+    "directional_evaluations": 352,
+    "eligible_evaluations": 0,
+    "right_censored_observations": 253,
+    "robust_report_only_leads": []
+  },
+  "same_run_completed_decision_clocks": {
+    "1m": 157,
+    "15m": 10,
+    "30m": 5,
+    "1h": 3,
+    "definition": "maximum completed outcome evaluations among available routes sharing the configured timeframe"
+  },
+  "routes": [
+    {
+      "route": "eth_breakout_precompression_pullback_bidirectional_v1|ETH",
+      "label": "ETH pullback",
+      "symbol": "ETH",
+      "timeframe": "1m",
+      "outcome_evaluations": 157,
+      "readiness_evaluations": 158,
+      "eligible_evaluations": 0,
+      "expected_completed_clocks": 157,
+      "availability_fraction": 1.0,
+      "availability_class": "selective_waiting",
+      "primary_blocker": "canonical_breakout_onset_absent",
+      "primary_blocker_evaluations": 157
+    },
+    {
+      "route": "hip3_breakout_pressure_sndk_gold_brent_fresh15s_bidirectional_v2|xyz:BRENTOIL",
+      "label": "BRENTOIL pressure",
+      "symbol": "xyz:BRENTOIL",
+      "timeframe": "15m",
+      "outcome_evaluations": 10,
+      "readiness_evaluations": 11,
+      "eligible_evaluations": 0,
+      "expected_completed_clocks": 10,
+      "availability_fraction": 1.0,
+      "availability_class": "selective_waiting",
+      "primary_blocker": "breakout_level_not_crossed",
+      "primary_blocker_evaluations": 11
+    },
+    {
+      "route": "hip3_breakout_pressure_sndk_gold_brent_fresh15s_bidirectional_v2|xyz:SNDK",
+      "label": "SNDK pressure",
+      "symbol": "xyz:SNDK",
+      "timeframe": "15m",
+      "outcome_evaluations": 10,
+      "readiness_evaluations": 11,
+      "eligible_evaluations": 0,
+      "expected_completed_clocks": 10,
+      "availability_fraction": 1.0,
+      "availability_class": "selective_waiting",
+      "primary_blocker": "breakout_level_not_crossed",
+      "primary_blocker_evaluations": 11
+    },
+    {
+      "route": "hip3_breakout_pressure_sp500_spcx_fresh15s_bidirectional_v3|xyz:SP500",
+      "label": "SP500 fresh-15",
+      "symbol": "xyz:SP500",
+      "timeframe": "15m",
+      "outcome_evaluations": 10,
+      "readiness_evaluations": 11,
+      "eligible_evaluations": 0,
+      "expected_completed_clocks": 10,
+      "availability_fraction": 1.0,
+      "availability_class": "selective_waiting",
+      "primary_blocker": "fresh_breakout_onset_absent",
+      "primary_blocker_evaluations": 11
+    },
+    {
+      "route": "hip3_spcx_cash_open_gap_reversal_bidirectional_15m_v1|xyz:SPCX",
+      "label": "SPCX cash open",
+      "symbol": "xyz:SPCX",
+      "timeframe": "15m",
+      "outcome_evaluations": 0,
+      "readiness_evaluations": 452,
+      "eligible_evaluations": 0,
+      "expected_completed_clocks": 10,
+      "availability_fraction": 0.0,
+      "availability_class": "persistent_technical_unavailability",
+      "primary_blocker": "cash_open_trade_bars_incomplete",
+      "primary_blocker_evaluations": 452
+    },
+    {
+      "route": "hulk_expansion_bidirectional_tuned_v2|SOL",
+      "label": "SOL Hulk",
+      "symbol": "SOL",
+      "timeframe": "30m",
+      "outcome_evaluations": 5,
+      "readiness_evaluations": 6,
+      "eligible_evaluations": 0,
+      "expected_completed_clocks": 5,
+      "availability_fraction": 1.0,
+      "availability_class": "selective_waiting",
+      "primary_blocker": "moderate_adx_not_present",
+      "primary_blocker_evaluations": 6
+    },
+    {
+      "route": "hulk_expansion_short_robust_v3|BTC",
+      "label": "BTC Hulk robust",
+      "symbol": "BTC",
+      "timeframe": "30m",
+      "outcome_evaluations": 5,
+      "readiness_evaluations": 6,
+      "eligible_evaluations": 0,
+      "expected_completed_clocks": 5,
+      "availability_fraction": 1.0,
+      "availability_class": "selective_waiting",
+      "primary_blocker": "moderate_adx_not_present",
+      "primary_blocker_evaluations": 6
+    },
+    {
+      "route": "hulk_expansion_short_tuned_v2|BTC",
+      "label": "BTC Hulk tuned",
+      "symbol": "BTC",
+      "timeframe": "30m",
+      "outcome_evaluations": 5,
+      "readiness_evaluations": 6,
+      "eligible_evaluations": 0,
+      "expected_completed_clocks": 5,
+      "availability_fraction": 1.0,
+      "availability_class": "selective_waiting",
+      "primary_blocker": "moderate_adx_not_present",
+      "primary_blocker_evaluations": 6
+    },
+    {
+      "route": "hype_breakout_compression_alignment_bidirectional_v2|HYPE",
+      "label": "HYPE compression",
+      "symbol": "HYPE",
+      "timeframe": "1m",
+      "outcome_evaluations": 157,
+      "readiness_evaluations": 158,
+      "eligible_evaluations": 0,
+      "expected_completed_clocks": 157,
+      "availability_fraction": 1.0,
+      "availability_class": "selective_waiting",
+      "primary_blocker": "canonical_breakout_onset_absent",
+      "primary_blocker_evaluations": 157
+    },
+    {
+      "route": "liquidity_sweep_long_1h_stop60_target60_v2|BTC",
+      "label": "BTC liquidity sweep",
+      "symbol": "BTC",
+      "timeframe": "1h",
+      "outcome_evaluations": 3,
+      "readiness_evaluations": 4,
+      "eligible_evaluations": 0,
+      "expected_completed_clocks": 3,
+      "availability_fraction": 1.0,
+      "availability_class": "selective_waiting",
+      "primary_blocker": "sweep_below_prior_low_absent",
+      "primary_blocker_evaluations": 4
+    }
+  ],
+  "spcx_public_trade_quality": {
+    "query_start_utc": "2026-08-14T03:15:00+00:00",
+    "query_end_utc": "2026-08-21T03:15:00+00:00",
+    "bar_interval_minutes": 15,
+    "raw_public_trade_rows": 483499,
+    "canonical_query_rows_including_gaps": 483560,
+    "canonical_query_rows_sha256": "666dbcdabaf561bf81ed52b3938c49be12d3652ca8c45ce13e996ad4586f470f",
+    "all_hours": {
+      "expected_bars": 672,
+      "observed_bars": 659,
+      "missing_bars": 13,
+      "completeness": 0.9806547619047619,
+      "missing_range_utc": [
+        "2026-08-21T00:00:00+00:00",
+        "2026-08-21T03:00:00+00:00"
+      ],
+      "interpretation": "all missing bars are after the U.S. cash close and contain no local public trade"
+    },
+    "cash_sessions": {
+      "expected_bars": 130,
+      "observed_bars": 130,
+      "missing_bars": 0,
+      "completeness": 1.0,
+      "session_dates_new_york": [
+        "2026-08-14",
+        "2026-08-17",
+        "2026-08-18",
+        "2026-08-19",
+        "2026-08-20"
+      ]
+    },
+    "transport": {
+      "declared_combined_channel_gaps": 61,
+      "cash_session_overlapping_gaps": 13,
+      "cash_session_overlapping_duration_ms": 113964,
+      "current_live_source_recognizes_combined_channel_gaps": false,
+      "current_diagnostic_recognizes_combined_channel_gaps": true
+    }
+  },
+  "oxa_gap_reconciliation": {
+    "source": "0xarchive_hyperliquid_public_trades",
+    "market_family": "hip3",
+    "window_count": 13,
+    "complete_page_chains": 13,
+    "incomplete_page_chains": 0,
+    "unresolved_participant_fill_groups": 0,
+    "vendor_interior_trades": 706,
+    "local_interior_trades": 87,
+    "matching_trade_ids": 87,
+    "vendor_trade_ids_missing_local": 619,
+    "local_trade_ids_missing_vendor": 0,
+    "vendor_surrogate_trade_ids": 0,
+    "windows_with_missing_local_trades": [10, 11],
+    "affected_bar_open_utc": "2026-08-20T13:30:00+00:00",
+    "affected_bar_reconciliation": {
+      "added_trade_ids": 619,
+      "local_trade_count": 5129,
+      "reconciled_trade_count": 5748,
+      "local_volume": 105261.9,
+      "reconciled_volume": 116753.99,
+      "local_ohlc": [137.34, 137.83, 135.27, 135.7],
+      "reconciled_ohlc": [137.34, 137.83, 135.27, 135.7],
+      "ohlc_equal": true,
+      "prior_cash_close": 139.55,
+      "opening_gap_bps": -158.366176997492,
+      "close_above_prior_cash_close": false,
+      "decision_input_interpretation": "the missing prints understate volume and count but do not alter open, high, low, close, gap direction, or close-versus-prior-close state"
+    },
+    "manifest_evidence": [
+      {"sha256": "d376091a1c5e0e03cd5b575a66c32681ef23042eeae6b79296bf748b4f84c2b1", "path": "data/cache/vendor/0xarchive/hyperliquid/xyz:SPCX/20260814T142229734000Z_20260814T142232419000Z_trades/manifest.json"},
+      {"sha256": "e992f26da9c7bfe8d29ff7f3351fd44551fd89921f75a02045e65806488c2e67", "path": "data/cache/vendor/0xarchive/hyperliquid/xyz:SPCX/20260814T171210959000Z_20260814T171212713000Z_trades/manifest.json"},
+      {"sha256": "a901560923967aec61b8c8b5700b635905838066cd976c33aea74c15ed50fec1", "path": "data/cache/vendor/0xarchive/hyperliquid/xyz:SPCX/20260817T150847428000Z_20260817T150849494000Z_trades/manifest.json"},
+      {"sha256": "586d7154320b24ee5b2deb49cb35da0464b9f0591bf650c016fa915537d27062", "path": "data/cache/vendor/0xarchive/hyperliquid/xyz:SPCX/20260817T180834551000Z_20260817T180838950000Z_trades/manifest.json"},
+      {"sha256": "5e76a8bbf37fb41acd56fe26f139cc3734e46fb7b9a75f0fc2527a863b9f1e5d", "path": "data/cache/vendor/0xarchive/hyperliquid/xyz:SPCX/20260818T143936014000Z_20260818T143937974000Z_trades/manifest.json"},
+      {"sha256": "4f56b6a21b9dcb2b38f936b73ec91be05a000adc56e5d8949defae4fdf477bf6", "path": "data/cache/vendor/0xarchive/hyperliquid/xyz:SPCX/20260818T174055810000Z_20260818T174059133000Z_trades/manifest.json"},
+      {"sha256": "7a8f079ad6b689ba05f4e5eaccf9bb5955d6863a504596f5e0502e91b6256a64", "path": "data/cache/vendor/0xarchive/hyperliquid/xyz:SPCX/20260819T135355048000Z_20260819T135357258000Z_trades/manifest.json"},
+      {"sha256": "fa8f241001cc7d3355c9a9ba7660a90926ec0f2b0234357e8e55f3cafa644b21", "path": "data/cache/vendor/0xarchive/hyperliquid/xyz:SPCX/20260819T165507459000Z_20260819T165512590000Z_trades/manifest.json"},
+      {"sha256": "a86fcb6f7e47e12b97c2b4fb05876263d01d14501ccd8ea6eb016f939bc06892", "path": "data/cache/vendor/0xarchive/hyperliquid/xyz:SPCX/20260819T194733329000Z_20260819T194736338000Z_trades/manifest.json"},
+      {"sha256": "df26748c6e0dba675252ad7ab135e3054e5f308c79e66b613941006d71b752be", "path": "data/cache/vendor/0xarchive/hyperliquid/xyz:SPCX/20260820T133054348000Z_20260820T133135233000Z_trades/manifest.json"},
+      {"sha256": "57cc16f4bdcf69ba87a56546367886f8a3fe4ed8cd767caf36ca154c45ac8662", "path": "data/cache/vendor/0xarchive/hyperliquid/xyz:SPCX/20260820T133256059000Z_20260820T133338179000Z_trades/manifest.json"},
+      {"sha256": "2270fe18c99f897433473c8e77da23cf686373a35ca0b24d1bf2d9af5bdfb5c1", "path": "data/cache/vendor/0xarchive/hyperliquid/xyz:SPCX/20260820T163605083000Z_20260820T163607430000Z_trades/manifest.json"},
+      {"sha256": "74d6c7b82541dc3da2d92f5bb772891096ff9d9373aa1b8cafe98442216c826a", "path": "data/cache/vendor/0xarchive/hyperliquid/xyz:SPCX/20260820T192348838000Z_20260820T192350913000Z_trades/manifest.json"}
+    ]
+  },
+  "hypotheses": [
+    {
+      "id": "shared_scheduler_or_router_failure",
+      "disposition": "falsified_for_observed_prefix",
+      "confidence": "high",
+      "evidence": "nine routes completed every same-timeframe decision clock while routing recorded zero eligible intents and zero actions",
+      "update_condition": "a route misses a completed clock without a route-specific availability reason"
+    },
+    {
+      "id": "all_routes_are_selectively_waiting",
+      "disposition": "falsified",
+      "confidence": "high",
+      "evidence": "SPCX recorded 452 readiness attempts and zero completed route evaluations with cash_open_trade_bars_incomplete",
+      "update_condition": "SPCX produces completed evaluations under the unchanged source"
+    },
+    {
+      "id": "spcx_cash_session_has_missing_15m_bars",
+      "disposition": "falsified_for_bar_presence",
+      "confidence": "high",
+      "evidence": "130 of 130 expected cash-session bars are present across five sessions",
+      "update_condition": "an eligible cash-session bar is absent in a newly frozen window"
+    },
+    {
+      "id": "spcx_all_hours_completeness_rejects_irrelevant_overnight_sparsity",
+      "disposition": "supported_as_immediate_blocker",
+      "confidence": "high",
+      "evidence": "the current builder requires all 672 all-hours bars; the only 13 absent bars are after the cash close",
+      "update_condition": "the unchanged builder succeeds on this exact frozen window"
+    },
+    {
+      "id": "combined_channel_disconnects_are_harmless",
+      "disposition": "falsified_as_a_general_claim",
+      "confidence": "high",
+      "evidence": "0xArchive found 619 public trades missing locally inside two declared opening-bar disconnects",
+      "update_condition": "independent replay shows the missing trade identities were vendor duplicates or invalid"
+    },
+    {
+      "id": "session_aware_gap_explicit_source_can_preserve_signal_inputs",
+      "disposition": "supported_for_one_reconciled_opening_bar_not_yet_live_validated",
+      "confidence": "medium",
+      "evidence": "the reconciled bar adds 619 trades but preserves exact OHLC and gap-reversal decision state",
+      "update_condition": "implementation parity differs on any complete historical window or a required current opening/prior-close bar remains unresolved"
+    }
+  ],
+  "source_code_evidence": [
+    {"path": "configs/multi_asset_growth_first_5000_eight_asset_incremental_v58.toml", "sha256": "1c1c1656233b074df2ed3adcee8cb8cb2c58f0d191cc9f9ac34799478fca3378", "bytes": 6142},
+    {"path": "src/hypervector/live/hip3_cash_open_trade_source.py", "sha256": "f4a11cb3c96dacfa2ae50935181e12467d0204b0852850fd98f23c9a5e284544", "bytes": 3822},
+    {"path": "src/hypervector/research/hip3_cash_open_prospective.py", "sha256": "f82ae8fd95eeda2c7eb7afe936e8df8cf6bded2da20bde1e15559d1feb007089", "bytes": 9411},
+    {"path": "src/hypervector/live/hip3_cash_open_gap_provider.py", "sha256": "bbaeb047e520778bd8d86a6cf5d8cbefdc46ddb3ee52c1c438da78c32263f101", "bytes": 8518},
+    {"path": "src/hypervector/research/spcx_cash_open_source_quality.py", "sha256": "7ded753f8c302c4f418d1b6f4b92e2952cddc0b2248395b52b9f2fca6116a189", "bytes": 6259, "role": "report_only_diagnostic_under_test"},
+    {"path": "tests/test_spcx_cash_open_source_quality.py", "sha256": "59736d6d113470ccefd1e7a2540ad564714362485d6dd7d7062547b3024aeb19", "bytes": 4984, "role": "report_only_diagnostic_tests"}
+  ],
+  "limitations": [
+    "The same-timeframe clock denominator is an observed-run comparison, not an independent exchange-calendar SLA.",
+    "Zero eligible evaluations over 2.62 hours do not establish that the nine selective routes trade too infrequently over their documented cadence windows.",
+    "The 0xArchive reconciliation validates exact trade IDs and the affected bar but has not yet been integrated into a receipt/provenance-aware live source.",
+    "OHLC invariance on one affected bar does not prove invariance for future disconnects.",
+    "No profitability claim follows from restoring technical availability."
+  ],
+  "recommendation": {
+    "rank": 1,
+    "decision": "prepare but do not yet cut over a cash-session-aware SPCX source repair",
+    "minimum_change": [
+      "stop requiring continuous overnight no-trade bars that the strategy never consumes",
+      "recognize combined-channel recorder gaps containing trades",
+      "retain explicit per-bar gap provenance and prevent entry when the current opening bar or prior cash close is unresolved",
+      "treat no newly completed scheduled cash bar as a clean empty collector batch rather than a source failure",
+      "do not forward-fill or fabricate OHLC",
+      "keep the current v58 process unchanged until explicit cutover approval"
+    ],
+    "validation_required": [
+      "unit tests for cash-session scheduling, holidays, early closes, missing bars, exact and combined-channel gaps",
+      "signal and exit parity on fully complete historical windows",
+      "replay of the 13 frozen gap windows with exact source provenance and the 619-trade reconciliation",
+      "fail-closed tests for a gap in the current opening bar and immediately prior cash-close bar",
+      "collector no-advance tests during overnight and between scheduled cash bars",
+      "next cash-open report-only forward observation before live cutover",
+      "full non-network suite, SPCX provider suite, TUI suite, and post-cutover flat/order-free reconciliation"
+    ],
+    "success_metrics": [
+      "SPCX emits one completed evaluation at each scheduled cash-open decision boundary when required bars are complete",
+      "zero evaluations use forward-filled, fabricated, or unresolved required OHLC",
+      "complete-window signal and exit decisions are byte-for-byte identical to the current strategy contract",
+      "combined-channel gaps are never silently ignored",
+      "all other nine routes and the TUI remain unchanged"
+    ],
+    "rollback_triggers": [
+      "any live/profile fingerprint mismatch",
+      "any unresolved current opening or prior-close source interval",
+      "any signal, target-anchor, stop, or exit parity difference on complete windows",
+      "any duplicate decision boundary or stale-entry emission",
+      "any missing owned protection or venue/ledger reconciliation failure"
+    ],
+    "alternatives": [
+      {"option": "do nothing", "tradeoff": "safest immediate state but SPCX remains technically disabled"},
+      {"option": "forward-fill overnight bars", "tradeoff": "rejected because it fabricates source evidence"},
+      {"option": "ignore all recorder gaps", "tradeoff": "rejected because independent evidence proves 619 missed prints"},
+      {"option": "replace the route with candle or L2 signals", "tradeoff": "larger strategy-contract change with new validation burden"}
+    ],
+    "confidence": "medium-high for diagnosis; medium for repair design until implementation and forward validation",
+    "explicit_approval_requested": "Approve implementation and report-only validation of the session-aware SPCX source repair; live cutover remains a separate approval after evidence gates pass."
+  }
+}

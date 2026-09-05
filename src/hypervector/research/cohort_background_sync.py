@@ -5,8 +5,10 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from concurrent.futures import Future, ThreadPoolExecutor
 from pathlib import Path
+import shutil
 
 SyncFn = Callable[[Path, Path], Mapping[str, object]]
+_MINIMUM_RESEARCH_SYNC_FREE_BYTES = 8 * 1024**3
 
 
 class ResearchSyncError(RuntimeError):
@@ -23,13 +25,17 @@ class BackgroundResearchSync:
         interval_seconds: float,
         sync_fn: SyncFn,
         *,
+        minimum_free_bytes: int = _MINIMUM_RESEARCH_SYNC_FREE_BYTES,
         portfolio_archive: Mapping[str, object] | None = None,
     ) -> None:
         if interval_seconds <= 0.0:
             raise ValueError("research sync interval must be positive")
+        if minimum_free_bytes < 0:
+            raise ValueError("research sync minimum free bytes cannot be negative")
         self._database_path = database_path
         self._ledger_root = ledger_root
         self._interval_seconds = interval_seconds
+        self._minimum_free_bytes = minimum_free_bytes
         self._sync_fn = sync_fn
         self._executor = ThreadPoolExecutor(max_workers=1)
         self._future: Future[Mapping[str, object]] | None = None
@@ -40,14 +46,32 @@ class BackgroundResearchSync:
 
     def poll(self, *, now: float) -> None:
         """Consume a completed worker and schedule another without waiting."""
-        self._consume_completed()
+        if self._consume_completed():
+            self._next_sync_at = now + self._interval_seconds
         if self._future is None and now >= self._next_sync_at:
+            if not self._has_disk_headroom():
+                self._next_sync_at = now + self._interval_seconds
+                return
             self._future = self._executor.submit(
                 self._sync_fn,
                 self._database_path,
                 self._ledger_root,
             )
             self._next_sync_at = now + self._interval_seconds
+
+    def _has_disk_headroom(self) -> bool:
+        try:
+            available = shutil.disk_usage(self._database_path.parent).free
+        except OSError as exc:
+            self.error = f"research sync deferred: disk headroom unavailable: {exc}"
+            return False
+        if available >= self._minimum_free_bytes:
+            return True
+        self.error = (
+            "research sync deferred: available disk space is below the "
+            f"required {self._minimum_free_bytes} bytes"
+        )
+        return False
 
     def wait_for_completion(self, *, timeout: float) -> None:
         """Wait explicitly for deterministic tests or bounded shutdown tooling."""
@@ -70,23 +94,24 @@ class BackgroundResearchSync:
         self.error = None
         return error
 
-    def _consume_completed(self) -> None:
+    def _consume_completed(self) -> bool:
         if self._future is None or not self._future.done():
-            return
+            return False
         future = self._future
         self._future = None
         try:
             result = future.result()
+            archive = _portfolio_archive(result)
         except ResearchSyncError as exc:
             self.error = str(exc)
-            return
-        archive = _portfolio_archive(result)
+            return True
         if archive is not None:
             self.portfolio_archive = archive
         self.report = {
             key: value for key, value in result.items() if key != "portfolio_archive"
         }
         self.error = None
+        return False
 
 
 def _portfolio_archive(

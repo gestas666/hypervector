@@ -1,0 +1,130 @@
+{
+  "schema_version": "v51_oil_lane_development_comparison_v1",
+  "generated_at_utc": "2026-08-15T17:52:56Z",
+  "mode": "report_only",
+  "execution_authority": "none",
+  "automatic_live_change": false,
+  "validation_accessed": false,
+  "holdout_accessed": false,
+  "frozen_mechanism": {
+    "timeframe": "5m",
+    "family": "oil_shock_reversion",
+    "direction": "bidirectional",
+    "return_lookback_bars": 12,
+    "threshold_lookback_bars": 2016,
+    "minimum_history_bars": 1000,
+    "shock_quantile": 0.95,
+    "target_bps": 40.0,
+    "stop_bps": 30.0,
+    "maximum_hold_bars": 12,
+    "maximum_hold_seconds": 3600,
+    "leverage": 5.0,
+    "scaled_account_equity_usd": 5000.0,
+    "scaled_notional_usd": 750.0
+  },
+  "live_canary_execution_baseline": {
+    "symbol": "xyz:BRENTOIL",
+    "closed_lifecycles": 3,
+    "wins": 2,
+    "losses": 1,
+    "net_pnl_usd": 1.821755,
+    "profit_factor": 3.648046,
+    "net_excluding_largest_winner_usd": -0.232469,
+    "maximum_absolute_observed_slippage_bps": 8.464583786205068,
+    "slippage_observations": 6,
+    "interpretation": "Venue execution is proven, but mixed strategies and two operator exits prevent strategy attribution. The maximum observed slippage is retained only as a sparse conservative sensitivity floor."
+  },
+  "development_results": {
+    "xyz:BRENTOIL": {
+      "depth_p99_stress": {
+        "completed_trades": 43,
+        "trades_per_week": 8.461493411420205,
+        "net_pnl_usd_normalized_500": 2.618166612188702,
+        "net_pnl_usd_scaled_5000": 26.18166612188702,
+        "profit_factor": 1.6598477929944393,
+        "return_pct": 0.5236333224377404,
+        "net_without_largest_winner_usd": 2.3297185949267236,
+        "long_net_without_largest_winner_usd": 1.9342546453547296,
+        "short_net_without_largest_winner_usd": 0.10741614376957008,
+        "positive_folds": 3,
+        "folds": 3
+      },
+      "live_max_slippage_every_side_sensitivity": {
+        "completed_trades": 42,
+        "trades_per_week": 8.264714494875548,
+        "net_pnl_usd_normalized_500": -1.0684806496597048,
+        "net_pnl_usd_scaled_5000": -10.684806496597048,
+        "profit_factor": 0.8371562444832442,
+        "return_pct": -0.21369612993194095,
+        "net_without_largest_winner_usd": -1.3568211696546817,
+        "long_net_without_largest_winner_usd": -1.0054721580227513,
+        "short_net_without_largest_winner_usd": -0.6387988872602988,
+        "positive_folds": 1,
+        "folds": 3,
+        "outside_us_regular_hours_net_usd": 0.7233845390868214,
+        "us_regular_hours_net_usd": -1.791865188746309
+      },
+      "technical_path": {
+        "status": "unresolved",
+        "nominal_unresolved_lifecycles": 24,
+        "nominal_completed_lifecycles": 44,
+        "unresolved_entry_bar_risk_lifecycles": 14
+      },
+      "disposition": "PROMISING_BUT_NOT_PROMOTABLE"
+    },
+    "xyz:CL": {
+      "depth_p99_stress": {
+        "completed_trades": 82,
+        "trades_per_week": 14.969845150774248,
+        "net_pnl_usd_normalized_500": -0.8262578377850218,
+        "net_pnl_usd_scaled_5000": -8.262578377850218,
+        "profit_factor": 0.9244809266136357,
+        "return_pct": -0.16525156755700438,
+        "net_without_largest_winner_usd": -1.1159414811674173,
+        "positive_folds": 1,
+        "folds": 3
+      },
+      "technical_path": {
+        "status": "unresolved",
+        "nominal_unresolved_lifecycles": 34,
+        "nominal_completed_lifecycles": 82,
+        "unresolved_entry_bar_risk_lifecycles": 18
+      },
+      "disposition": "REJECT_FROZEN_MECHANISM"
+    }
+  },
+  "conclusion": {
+    "brentoil_data_available": true,
+    "brentoil_live_edge_established": false,
+    "cl_mechanism_supported": false,
+    "brentoil_mechanism_supported_under_depth_stress": true,
+    "brentoil_mechanism_supported_under_sparse_live_tail_stress": false,
+    "live_addition_ready": false,
+    "highest_value_next_investigation": "Run the frozen BRENTOIL mechanism in an isolated prospective report-only shadow with exact public-trade decisions, L2 entry/exit quotes, and mark paths. Predeclare outside-US-hours performance as a descriptive challenger, not a gate, and require enough mechanism-specific slippage observations before estimating execution tails or opening untouched OOS."
+  },
+  "source_evidence": [
+    {
+      "path": "data/logs/research/bidirectional_cohort/brentoil_live_canary_lifecycle_reconciliation_20260815_v1.json",
+      "sha256": "47ba7608ce7d7fd9b2ba2c7c64555d529abae1ff509971bfbc38a46a308534bc"
+    },
+    {
+      "path": "data/logs/research/xyz_brentoil_oil_shock_reversion_development_20260815_v2.json",
+      "sha256": "00b066d044100c1b9f68d12a370f5a86405e592ca3153cac98104a728e0f9da9"
+    },
+    {
+      "path": "data/logs/research/xyz_brentoil_oil_shock_reversion_development_20260815_v4.json",
+      "sha256": "0711c0e56c746e43975fc19618d6ea952687e3ac11311a351f6fe047beefdb57"
+    },
+    {
+      "path": "data/logs/research/xyz_cl_oil_shock_reversion_development_20260815_v2.json",
+      "sha256": "12f72119919eed5600df128c5693f667bdd13eef85fc9f002a940a7fc9aa60f8"
+    }
+  ],
+  "limitations": [
+    "All strategy economics are development-only; validation and holdout remain sealed.",
+    "Historical path completeness fails the frozen five-second mark-cadence contract for many lifecycles.",
+    "Applying one maximum observed live slippage value to every entry and exit is deliberately conservative and not an expected-cost estimate.",
+    "The positive outside-US-hours slice is post-hoc descriptive evidence and cannot authorize a session gate.",
+    "No live asset, strategy, risk, sizing, leverage, stop, exit, configuration, or process changed."
+  ]
+}

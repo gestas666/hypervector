@@ -1,0 +1,302 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v58-eight-asset-opportunity-coverage-audit-v1",
+  "generated_at_utc": "2026-08-19T00:11:46Z",
+  "status": "complete_no_live_change_proposed",
+  "problem_restatement": {
+    "question": "Would the staged V58 eight-asset topology create materially more evidence-supported trade opportunity than active V57, or mainly add weak and technically incomplete exposure?",
+    "success_criteria": [
+      "bind every cadence and economic claim to the exact staged provider-symbol-side identity",
+      "separate technical route readiness from economic evidence",
+      "avoid summing overlapping or incompatible route rates into a portfolio forecast",
+      "retain adverse, sparse, and unresolved evidence",
+      "make no live strategy, sizing, route, or configuration change"
+    ]
+  },
+  "contract": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_promotion": false,
+    "performance_gate": false,
+    "runtime_strategy_changed": false,
+    "live_config_changed": false
+  },
+  "active_baseline": {
+    "profile_id": "multi_asset_growth_first_5000_spcx_short_containment_v57",
+    "profile_fingerprint": "724c259bd94be60d80ffc2e6b9a760412b9729ab1f8fea403e61d266f0d9cb8d",
+    "assets": [
+      "BTC",
+      "HYPE",
+      "xyz:SPCX"
+    ],
+    "state_at_latest_checkpoint": "running_consistent_flat_no_owned_orders",
+    "interpretation": "V57 remains the live baseline. This audit does not pause, restart, drain, or alter it."
+  },
+  "staged_candidate": {
+    "profile_id": "multi_asset_growth_first_5000_eight_asset_incremental_v58",
+    "profile_fingerprint": "8a04636c9ff60a7eae141381cb540d7c6ceed081097cda7d5e465d48faa5022b",
+    "config_sha256": "1c1c1656233b074df2ed3adcee8cb8cb2c58f0d191cc9f9ac34799478fca3378",
+    "assets": 8,
+    "maximum_positions": 10,
+    "maximum_configured_margin_fraction": 0.46,
+    "maximum_hypothetical_gross_notional_usd": 16500.0,
+    "preflight_observed_at_utc": "2026-08-18T23:39:08.171613+00:00",
+    "preflight_technical_state": "flat_order_free_ledger_reconciled_and_sizing_technically_ready",
+    "preflight_is_profit_forecast": false
+  },
+  "method": {
+    "cadence_definition": "completed trades or exact eligible signals per the named source window",
+    "economic_definition": "after-cost result under the named immutable replay or exact live lifecycle",
+    "portfolio_rate_policy": "do_not_sum_marginal_route_rates_when_signals_overlap_or_occupancy_competes",
+    "identity_policy": "older provider versions are descriptive priors only when the staged provider identity differs",
+    "sealed_data_policy": "no sealed validation or holdout was opened by this audit"
+  },
+  "route_assessments": [
+    {
+      "rank": 1,
+      "symbol": "BTC",
+      "staged_routes": [
+        "hulk_expansion_short_robust_v3|short",
+        "hulk_expansion_short_tuned_v2|short",
+        "liquidity_sweep_long_1h_stop60_target60_v2|long"
+      ],
+      "cadence_evidence": {
+        "robust_v3": "1 exact forward signal in the explicit 2026-07-30T12:00Z to 2026-08-10T23:00Z replay window",
+        "tuned_v2": "106 completed trades over 338 covered days, approximately 2.2 per week",
+        "sweep_long": "6 development signals over 92 days and 1 forward signal in the later 12.5-day evidence window",
+        "portfolio_frequency_identifiable": false,
+        "reason": "the three routes share one BTC position and can overlap or displace each other"
+      },
+      "economic_evidence": "Robust v3 and sweep each have only one exact forward signal. Tuned v2 was positive in three partitions but was delay-sensitive and its latest exact signal would have stopped.",
+      "evidence_tier": "retained_incumbent_low_confidence",
+      "v58_opportunity_contribution": "real_but_repeatability_unproven"
+    },
+    {
+      "rank": 2,
+      "symbol": "HYPE",
+      "staged_routes": [
+        "hype_breakout_compression_alignment_bidirectional_v2|long",
+        "hype_breakout_compression_alignment_bidirectional_v2|short"
+      ],
+      "cadence_evidence": {
+        "completed_development_trades": 41,
+        "development_start_utc": "2025-07-28T00:00:00+00:00",
+        "development_end_exclusive_utc": "2026-05-28T00:00:00+00:00",
+        "point_estimate_trades_per_week": 0.944,
+        "exact_live_v57_eligible_events_at_audit": 0
+      },
+      "economic_evidence": "Development was +2298.23 bps, PF 1.8569, 3/5 positive folds, and +289.26 bps excluding the largest winner. The short side was negative excluding its largest winner and later confirmation contains only one aligned long.",
+      "evidence_tier": "development_promising_forward_sparse",
+      "v58_opportunity_contribution": "low_cadence_conditional_incumbent"
+    },
+    {
+      "rank": 3,
+      "symbol": "xyz:SPCX",
+      "staged_routes": [
+        "hip3_spcx_cash_open_gap_reversal_bidirectional_15m_v1|short"
+      ],
+      "cadence_evidence": {
+        "development_short_trades": 11,
+        "development_short_trades_per_week": 2.164568081991215,
+        "prospective_short_lifecycles": 0
+      },
+      "economic_evidence": "Short development nominal was +$351.25, PF 2.6907, and +$180.38 excluding its largest winner; stress was +$300.33, PF 2.3163, and +$135.06 excluding its largest winner.",
+      "technical_contradiction": "The pooled development report is NOT_SUITABLE_TECHNICALLY_UNRESOLVED; 11 nominal and stress lifecycles have unresolved entry-bar risk evidence.",
+      "evidence_tier": "development_positive_technically_unresolved",
+      "v58_opportunity_contribution": "highest_cadence_noncrypto_candidate_but_not_resolved_edge"
+    },
+    {
+      "rank": 4,
+      "symbol": "xyz:SP500",
+      "staged_routes": [
+        "hip3_breakout_pressure_sp500_spcx_fresh15s_bidirectional_v3|long",
+        "hip3_breakout_pressure_sp500_spcx_fresh15s_bidirectional_v3|short"
+      ],
+      "cadence_evidence": {
+        "source_parity_window_completed_bars": 164,
+        "observer_eligible_decisions": 6,
+        "exact_live_resolved_lifecycles": 1,
+        "exact_live_long_lifecycles": 0,
+        "stable_weekly_frequency_identifiable": false
+      },
+      "economic_evidence": "The sole exact short earned +$3.229665 after costs. It is one winner, provides no long-side evidence, and cannot establish repeatability or a profit factor.",
+      "evidence_tier": "source_native_exact_n1_short_only",
+      "v58_opportunity_contribution": "potential_index_diversification_not_frequency_or_edge_proof"
+    },
+    {
+      "rank": 5,
+      "symbol": "SOL",
+      "staged_routes": [
+        "hulk_expansion_bidirectional_tuned_v2|short"
+      ],
+      "cadence_evidence": {
+        "historical_short_trades": 47,
+        "historical_window_start_utc": "2025-08-23T09:00:00+00:00",
+        "historical_window_end_utc": "2026-07-27T00:00:00+00:00",
+        "historical_short_trades_per_week": 0.974
+      },
+      "economic_evidence": {
+        "all_partitions_net_pnl_usd": 197.7497118205549,
+        "all_partitions_net_excluding_largest_winner_usd": 77.92226865802398,
+        "development_net_pnl_usd": 302.20769033309244,
+        "validation_net_pnl_usd": -354.58783940117974,
+        "pseudo_holdout_net_pnl_usd": 250.12986088864224,
+        "exact_v39_short_lifecycle": "one small loss closed manually, so native exit behavior was not validated"
+      },
+      "evidence_tier": "technically_executable_economically_contradictory",
+      "v58_opportunity_contribution": "adds_cadence_but_not_robust_confidence"
+    },
+    {
+      "rank": 6,
+      "symbol": "ETH",
+      "staged_routes": [
+        "eth_breakout_precompression_pullback_bidirectional_v1|long",
+        "eth_breakout_precompression_pullback_bidirectional_v1|short"
+      ],
+      "cadence_evidence": {
+        "historical_estimated_trades_per_week": 6.48219,
+        "forward_evaluations": 1272,
+        "forward_eligible_long": 1,
+        "forward_eligible_short": 0
+      },
+      "economic_evidence": "The first new exact eligible long hit the 60-bps stop for -69.1328 bps after exact visible-depth entry/exit, fees, and official funding. Three prior exact live lifecycles total only +$0.198733 and +$0.004716 excluding the largest winner.",
+      "evidence_tier": "high_historical_cadence_adverse_exact_forward",
+      "v58_opportunity_contribution": "largest_raw_frequency_increase_but_not_supported_economic_opportunity"
+    },
+    {
+      "rank": 7,
+      "symbol": "xyz:SNDK",
+      "staged_routes": [
+        "hip3_breakout_pressure_sndk_gold_brent_fresh15s_bidirectional_v2|short"
+      ],
+      "cadence_evidence": {
+        "exact_v58_identity_frequency_identifiable": false,
+        "older_v1_live_lifecycles": 2,
+        "older_v1_live_side": "long_only"
+      },
+      "economic_evidence": "The older non-fresh-v2 route produced two long protective-stop losses totaling -$1.343329. That side is not the staged short-only side and cannot validate V58 expectancy or cadence.",
+      "evidence_tier": "identity_and_side_mismatch_no_current_edge_evidence",
+      "v58_opportunity_contribution": "unquantified"
+    },
+    {
+      "rank": 8,
+      "symbol": "xyz:BRENTOIL",
+      "staged_routes": [
+        "hip3_breakout_pressure_sndk_gold_brent_fresh15s_bidirectional_v2|long",
+        "hip3_breakout_pressure_sndk_gold_brent_fresh15s_bidirectional_v2|short"
+      ],
+      "cadence_evidence": {
+        "exact_v58_identity_frequency_identifiable": false,
+        "older_v1_live_lifecycles": 2
+      },
+      "economic_evidence": "The older breakout route had 1 win and 1 loss, -$0.232469 net, PF 0.6621, and -$0.687962 excluding its largest winner. One close was an operator override. The separate oil-shock mechanism is not the staged route and failed stress evidence.",
+      "evidence_tier": "older_route_negative_and_current_identity_unmeasured",
+      "v58_opportunity_contribution": "unquantified"
+    }
+  ],
+  "portfolio_opportunity_assessment": {
+    "v57_known_marginal_route_cadence_per_week_arithmetic_only": 4.16,
+    "v58_added_known_marginal_route_cadence_per_week_arithmetic_only": 9.62,
+    "arithmetic_total_is_valid_portfolio_forecast": false,
+    "why_invalid": [
+      "BTC routes share one position and may overlap",
+      "ETH and SOL cadence comes with adverse or contradictory economics",
+      "SPCX development paths are technically unresolved",
+      "SP500, SNDK, and BRENTOIL lack stable exact-identity cadence",
+      "one-position-per-symbol occupancy changes later opportunities",
+      "historical windows and source contracts are not fully comparable"
+    ],
+    "accepted_diagnosis": "V58 would probably fire more often than V57, but the evidence does not establish that the added events are profitable opportunity rather than added loss exposure.",
+    "live_change_proposal_ready": false
+  },
+  "recommendation": {
+    "action": "keep_v57_live_unchanged_and_do_not_treat_v58_technical_preflight_as_economic_readiness",
+    "single_highest_value_next_investigation": "continue exact V57 HYPE alignment-v2 both-side lifecycle collection and reconcile the first eligible event end to end",
+    "why": "HYPE is already live, identity-exact, and development-promising; resolving its first active-window lifecycle has higher information value than adding economically contradicted or identity-unmeasured V58 routes.",
+    "parallel_report_only_followup": "resolve the SPCX short technical path and collect its first exact short lifecycle without changing the live route",
+    "explicit_approval_requested": false,
+    "proposed_live_change": null
+  },
+  "uncertainties_and_failure_modes": [
+    "Historical cadence can rotate materially by regime.",
+    "Sparse exact forward samples can make both positive and negative results misleading.",
+    "Point-in-time V58 liquidity preflight can become stale before a future cutover.",
+    "Provider overlap and one-position-per-symbol occupancy can reduce realized frequency below marginal route counts.",
+    "The V58 46% maximum isolated-margin topology magnifies the cost of adding a false-positive route.",
+    "No covariance or causal co-trigger model converts these route results into a joint portfolio expectancy."
+  ],
+  "confidence": {
+    "config_and_preflight_identity": "high",
+    "route_level_arithmetic": "high",
+    "relative_frequency_direction_v58_greater_than_v57": "medium",
+    "absolute_v58_trade_frequency": "low",
+    "future_profitability": "low_unverified",
+    "recommendation_priority": "medium_high"
+  },
+  "falsifiers": [
+    "An exact provider-symbol-side artifact contradicts a stated trade count, side, window, or after-cost result.",
+    "V57 HYPE produces repeated resolved losses or a technical contract mismatch that lowers its information priority.",
+    "A preregistered source-compatible V58 route produces positive both-side or justified one-side forward economics after exact costs and largest-winner removal.",
+    "SPCX development risk paths become fully resolved and its frozen short route remains positive under stress and prospective execution.",
+    "A portfolio-level causal replay with exact co-trigger timing shows V58 opportunity and risk materially differ from this route-by-route diagnosis.",
+    "The V58 config, profile fingerprint, route identity, leverage, sizing, or preflight evidence changes."
+  ],
+  "source_evidence": [
+    {
+      "path": "configs/multi_asset_growth_first_5000_eight_asset_incremental_v58.toml",
+      "sha256": "1c1c1656233b074df2ed3adcee8cb8cb2c58f0d191cc9f9ac34799478fca3378"
+    },
+    {
+      "path": "data/logs/research/bidirectional_cohort/v58_eight_asset_preflight_20260818_v1.json",
+      "sha256": "c59f1036305c35788a1a1916bf51720398dbe0283a5d65f4a6f18b10ae45a8ef"
+    },
+    {
+      "path": "data/logs/research/20260811_hulk_short_robust_v3_btc_forward_nominal.json",
+      "sha256": "385b7452043840f2e246409a4cdb32a0998b2be3fb742778a0cce159327364a6"
+    },
+    {
+      "path": "data/logs/research/bidirectional_cohort/btc_liquidity_sweep_taker_parity_20260811_v2.json",
+      "sha256": "e875fce1407701a53ae1bf8e42c0e751db77e01fee0fe72df539d7b2a5642c77"
+    },
+    {
+      "path": "data/logs/research/hype_compression_breakout_challenger_20260816_v6_alignment/report.json",
+      "sha256": "53c37e529f79223c5e7290a5cd07f5c95897be1850122bf091e5dfbcacb29354"
+    },
+    {
+      "path": "docs/research-journal/eth-breakout-precompression-pullback-v14.json",
+      "sha256": "d78cc8595f2348d6ef6000f37b52a479db0a16fdd4a4f5689580adc54e1bef4f"
+    },
+    {
+      "path": "docs/research-journal/v51-sp500-fresh15-v3-live-lifecycle-v2.json",
+      "sha256": "0164723389bbeb56d993b33505c0068661acb41d3cdd5a02d44f49ab311715b6"
+    },
+    {
+      "path": "docs/research-journal/v51-index-source-parity-forward-v1.json",
+      "sha256": "01e22ea5715c1f08014ca0fbe016f64346193f27fec612a95cb18affdc6afcd1"
+    },
+    {
+      "path": "data/logs/research/xyz_spcx_cash_open_gap_reversal_development_20260817_v2.json",
+      "sha256": "613475b27b2884f9b90346cb0c0f175a314e09dbcba4f628b972aba3ebb1c3b8"
+    },
+    {
+      "path": "data/logs/research/20260801_hulk_bidirectional_tuned_v2_development.trades.parquet",
+      "sha256": "8ea891cdf95c38ef2c867395e48e19935eb01646cdc38c4c4ad0500a274e5ee6"
+    },
+    {
+      "path": "data/logs/research/20260801_hulk_bidirectional_tuned_v2_validation.trades.parquet",
+      "sha256": "0dacf7dcaca6e5386d4a719c0537687f7e12596f4996aafff06d34abd38adf87"
+    },
+    {
+      "path": "data/logs/research/20260801_hulk_bidirectional_tuned_v2_pseudo_holdout.trades.parquet",
+      "sha256": "c4c8f4107c40dd3e12819858e7d9f5b751a4af7feca7245f2025103de179b8f5"
+    },
+    {
+      "path": "data/logs/research/bidirectional_cohort/v39_final_stopped_run_audit_20260813T112441Z.json",
+      "sha256": "f8b62882e1114c77aee52d32a8f13ef723d9ef9f862a3d883db416445d69fce4"
+    },
+    {
+      "path": "data/logs/research/bidirectional_cohort/brentoil_live_canary_lifecycle_reconciliation_20260815_v1.json",
+      "sha256": "47ba7608ce7d7fd9b2ba2c7c64555d529abae1ff509971bfbc38a46a308534bc"
+    }
+  ]
+}

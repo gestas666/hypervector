@@ -26,6 +26,12 @@ def _parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--ledger-root", type=Path, required=True)
     parser.add_argument("--run-id")
+    parser.add_argument(
+        "--history-scope",
+        choices=("all-time", "current-run"),
+        default="all-time",
+        help="Snapshot all compatible history or only the explicitly selected run.",
+    )
     destination = parser.add_mutually_exclusive_group(required=True)
     destination.add_argument("--out", type=Path)
     destination.add_argument("--out-dir", type=Path)
@@ -34,9 +40,14 @@ def _parser() -> argparse.ArgumentParser:
 
 def _publish(args: argparse.Namespace) -> tuple[dict[str, object], Path]:
     cohort_path = args.ledger_root / "decisions.jsonl"
+    history_scope = _history_scope(args)
+    selected_run = _snapshot_run_id(args, history_scope)
     with ExitStack() as stack:
         cohort_rows, cohort_evidence = stack.enter_context(
-            snapshot_decision_ledger(cohort_path)
+            snapshot_decision_ledger(cohort_path, run_id=selected_run)
+        )
+        cohort_rows, cohort_evidence = _rebased_current_run_snapshot(
+            cohort_rows, cohort_evidence, "cohort", selected_run
         )
         _, identity = select_armed_live_run(cohort_rows, args.run_id)
         asset_paths = _asset_paths(
@@ -44,19 +55,9 @@ def _publish(args: argparse.Namespace) -> tuple[dict[str, object], Path]:
             cohort_path,
             configured_symbols(identity),
         )
-        assets: dict[str, list[dict[str, object]]] = {}
-        evidence: dict[str, dict[str, object]] = {}
-        for symbol, path in asset_paths.items():
-            rows, facts = stack.enter_context(snapshot_decision_ledger(path))
-            assets[symbol] = rows
-            evidence[symbol] = {"path": str(path), **facts}
-        retired, retired_evidence = snapshot_retired_asset_ledgers(
-            stack,
-            args.ledger_root,
-            cohort_path,
-            active_symbols=tuple(asset_paths),
-            compatible_execution_history=False,
-            run_id=audit_run_id(identity),
+        assets, evidence = _snapshot_assets(stack, asset_paths, selected_run)
+        retired, retired_evidence = _retired_history(
+            stack, args, cohort_path, asset_paths, identity, history_scope
         )
         report = audit_multi_asset_live_run(
             cohort_rows,
@@ -65,6 +66,7 @@ def _publish(args: argparse.Namespace) -> tuple[dict[str, object], Path]:
             run_id=args.run_id,
         )
     report["evidence"] = {
+        "history_scope": history_scope,
         "cohort": {"path": str(cohort_path), **cohort_evidence},
         "assets": evidence,
         "retired_assets": retired_evidence,
@@ -74,6 +76,86 @@ def _publish(args: argparse.Namespace) -> tuple[dict[str, object], Path]:
         raise FileExistsError(f"immutable cohort audit output exists: {output}")
     write_immutable_json(output, report)
     return report, output
+
+
+def _history_scope(args: argparse.Namespace) -> str:
+    value = getattr(args, "history_scope", "all-time")
+    if value not in {"all-time", "current-run"}:
+        raise ValueError("history scope must be all-time or current-run")
+    return value
+
+
+def _snapshot_run_id(args: argparse.Namespace, history_scope: str) -> str | None:
+    if history_scope == "all-time":
+        return None
+    if not isinstance(args.run_id, str) or not args.run_id:
+        raise ValueError("current-run history scope requires --run-id")
+    return args.run_id
+
+
+def _snapshot_assets(
+    stack: ExitStack,
+    asset_paths: dict[str, Path],
+    run_id: str | None,
+) -> tuple[dict[str, list[dict[str, object]]], dict[str, dict[str, object]]]:
+    assets: dict[str, list[dict[str, object]]] = {}
+    evidence: dict[str, dict[str, object]] = {}
+    for symbol, path in asset_paths.items():
+        rows, facts = stack.enter_context(snapshot_decision_ledger(path, run_id=run_id))
+        rows, facts = _rebased_current_run_snapshot(rows, facts, symbol, run_id)
+        assets[symbol] = rows
+        evidence[symbol] = {"path": str(path), **facts}
+    return assets, evidence
+
+
+def _rebased_current_run_snapshot(
+    rows: list[dict[str, object]],
+    evidence: dict[str, object],
+    label: str,
+    run_id: str | None,
+) -> tuple[list[dict[str, object]], dict[str, object]]:
+    if run_id is None:
+        return rows, evidence
+    if not rows:
+        raise ValueError(f"{label} current-run snapshot contains no records")
+    source_start = rows[0].get("sequence")
+    if (
+        isinstance(source_start, bool)
+        or not isinstance(source_start, int)
+        or source_start < 1
+    ):
+        raise ValueError(f"{label} current-run source sequence is invalid")
+    for expected, row in enumerate(rows, source_start):
+        if row.get("sequence") != expected:
+            raise ValueError(f"{label} source sequence is not contiguous at {expected}")
+    rebased = [{**row, "sequence": index} for index, row in enumerate(rows, 1)]
+    facts = {
+        **evidence,
+        "source_sequence_start": source_start,
+        "source_sequence_end": source_start + len(rows) - 1,
+        "snapshot_sequence_rebased": True,
+    }
+    return rebased, facts
+
+
+def _retired_history(
+    stack: ExitStack,
+    args: argparse.Namespace,
+    cohort_path: Path,
+    asset_paths: dict[str, Path],
+    identity: dict[str, object],
+    history_scope: str,
+) -> tuple[dict[str, list[dict[str, object]]], dict[str, dict[str, object]]]:
+    if history_scope == "current-run":
+        return {}, {}
+    return snapshot_retired_asset_ledgers(
+        stack,
+        args.ledger_root,
+        cohort_path,
+        active_symbols=tuple(asset_paths),
+        compatible_execution_history=False,
+        run_id=audit_run_id(identity),
+    )
 
 
 def _asset_paths(

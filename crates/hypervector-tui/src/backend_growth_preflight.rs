@@ -8,28 +8,18 @@ use std::time::{Duration, SystemTime};
 use chrono::DateTime;
 use serde::Deserialize;
 
-use crate::backend_growth_preflight_retired::{RetiredAsset, valid_retired_asset};
+pub use crate::backend_growth_preflight_approval::GrowthPreflightApprovalTelemetry;
+use crate::backend_growth_preflight_approval::{
+    ProfileChangeApproval, project_profile_change_approval, validate_profile_change_approval,
+};
+pub use crate::backend_growth_preflight_asset::GrowthPreflightAssetTelemetry;
+pub use crate::backend_growth_preflight_retired::GrowthPreflightRetiredAssetTelemetry;
+use crate::backend_growth_preflight_retired::{
+    RetiredAsset, project_retired_asset, valid_retired_asset,
+};
 
 const STATUS_INACTIVITY_LIMIT: Duration = Duration::from_secs(120);
 const EXPECTED_OPERATION: &str = "multi_asset_read_only_preflight";
-
-/// Per-asset fee, sizing, and visible-depth readiness evidence.
-#[derive(Debug, Clone, Default, PartialEq)]
-pub struct GrowthPreflightAssetTelemetry {
-    pub symbol: String,
-    pub effective_fee_status: String,
-    pub one_way_taker_fee_bps: Option<f64>,
-    pub margin_fraction: f64,
-    pub leverage: f64,
-    pub planned_margin_usd: f64,
-    pub planned_notional_usd: f64,
-    pub above_minimum_lot: bool,
-    pub buy_complete: bool,
-    pub buy_visible_cost_bps: Option<f64>,
-    pub sell_complete: bool,
-    pub sell_visible_cost_bps: Option<f64>,
-    pub sizing_technically_ready: bool,
-}
 
 /// Latest validated report-only growth profile preflight.
 #[derive(Debug, Clone, Default, PartialEq)]
@@ -53,6 +43,8 @@ pub struct GrowthPreflightTelemetry {
     pub transition_blocking_assets: Vec<String>,
     pub readiness_reasons: Vec<String>,
     pub assets: Vec<GrowthPreflightAssetTelemetry>,
+    pub retired_assets: Vec<GrowthPreflightRetiredAssetTelemetry>,
+    pub profile_change_approval: Option<GrowthPreflightApprovalTelemetry>,
 }
 
 impl GrowthPreflightTelemetry {
@@ -132,6 +124,8 @@ struct Document {
     assets: Vec<Asset>,
     #[serde(default)]
     retired_assets: Vec<RetiredAsset>,
+    #[serde(default)]
+    profile_change_approval: Option<ProfileChangeApproval>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -245,6 +239,7 @@ fn validate_document(document: &Document) -> Result<(), String> {
         return Err("growth preflight candidate identity is invalid".into());
     }
     validate_assets(document)?;
+    validate_profile_change_approval(document.profile_change_approval.as_ref())?;
     validate_portfolio(document)
 }
 
@@ -329,19 +324,7 @@ fn validate_asset(asset: &Asset, reference: f64) -> Result<(), String> {
 
 fn validate_portfolio(document: &Document) -> Result<(), String> {
     let portfolio = &document.portfolio;
-    let mut blocking = document
-        .assets
-        .iter()
-        .filter(|asset| asset.position.size_signed != 0.0 || !asset.open_orders.is_empty())
-        .map(|asset| asset.symbol.as_str())
-        .collect::<Vec<_>>();
-    blocking.extend(
-        document
-            .retired_assets
-            .iter()
-            .filter(|asset| !asset.flat_no_orders)
-            .map(|asset| asset.symbol.as_str()),
-    );
+    let blocking = blocking_assets(document);
     let sizing_ready = document
         .assets
         .iter()
@@ -363,28 +346,8 @@ fn validate_portfolio(document: &Document) -> Result<(), String> {
                 .saturating_sub(document.assets.len())
         && finite_positive(portfolio.sizing_reference_equity_usd)
         && portfolio.sizing_reference_source == "explicit_scenario"
-        && portfolio.open_positions
-            == document
-                .assets
-                .iter()
-                .filter(|asset| asset.position.size_signed != 0.0)
-                .count()
-                + document
-                    .retired_assets
-                    .iter()
-                    .filter(|asset| asset.position_size_signed != 0.0)
-                    .count()
-        && portfolio.open_orders
-            == document
-                .assets
-                .iter()
-                .map(|asset| asset.open_orders.len())
-                .sum::<usize>()
-                + document
-                    .retired_assets
-                    .iter()
-                    .map(|asset| asset.open_order_ids.len())
-                    .sum::<usize>()
+        && portfolio.open_positions == expected_open_positions(document)
+        && portfolio.open_orders == expected_open_orders(document)
         && portfolio.flat_no_orders == blocking.is_empty()
         && portfolio.transition_blocking_assets == blocking
         && portfolio.ledger_reconciled == ledger_reconciled
@@ -398,6 +361,49 @@ fn validate_portfolio(document: &Document) -> Result<(), String> {
         return Err("growth preflight portfolio readiness is inconsistent".into());
     }
     Ok(())
+}
+
+fn blocking_assets(document: &Document) -> Vec<&str> {
+    let mut blocking = document
+        .assets
+        .iter()
+        .filter(|asset| asset.position.size_signed != 0.0 || !asset.open_orders.is_empty())
+        .map(|asset| asset.symbol.as_str())
+        .collect::<Vec<_>>();
+    blocking.extend(
+        document
+            .retired_assets
+            .iter()
+            .filter(|asset| !asset.flat_no_orders)
+            .map(|asset| asset.symbol.as_str()),
+    );
+    blocking
+}
+
+fn expected_open_positions(document: &Document) -> usize {
+    document
+        .assets
+        .iter()
+        .filter(|asset| asset.position.size_signed != 0.0)
+        .count()
+        + document
+            .retired_assets
+            .iter()
+            .filter(|asset| asset.position_size_signed != 0.0)
+            .count()
+}
+
+fn expected_open_orders(document: &Document) -> usize {
+    document
+        .assets
+        .iter()
+        .map(|asset| asset.open_orders.len())
+        .sum::<usize>()
+        + document
+            .retired_assets
+            .iter()
+            .map(|asset| asset.open_order_ids.len())
+            .sum::<usize>()
 }
 
 fn valid_depth_side(complete: bool, cost: Option<f64>) -> bool {
@@ -439,6 +445,14 @@ fn project(document: Document) -> GrowthPreflightTelemetry {
         transition_blocking_assets: document.portfolio.transition_blocking_assets,
         readiness_reasons: document.portfolio.readiness_reasons,
         assets: document.assets.into_iter().map(project_asset).collect(),
+        retired_assets: document
+            .retired_assets
+            .into_iter()
+            .map(project_retired_asset)
+            .collect(),
+        profile_change_approval: document
+            .profile_change_approval
+            .map(project_profile_change_approval),
         ..GrowthPreflightTelemetry::default()
     }
 }

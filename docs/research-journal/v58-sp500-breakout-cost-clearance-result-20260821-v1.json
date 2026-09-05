@@ -1,0 +1,255 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v58-sp500-breakout-cost-clearance-20260821-v1",
+  "created_at_utc": "2026-08-21T14:18:00Z",
+  "state": "rejected",
+  "contract": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_live_change": false,
+    "automatic_promotion": false,
+    "runtime_strategy_changed": false,
+    "live_configuration_changed": false,
+    "sealed_holdout_accessed": false
+  },
+  "problem_restatement": "Test whether the independently cost-derived 17.5005328604182-bps SP500 breakout clearance can remove marginal 32-bar pressure breakouts, including the current V58 long's 0.6512-bps clearance class, without choosing a threshold from PnL or opening the sealed holdout.",
+  "preregistration": {
+    "path": "docs/research-journal/v58-sp500-breakout-cost-clearance-preregistration-20260821-v1.json",
+    "sha256": "fd4cda6bc9244697938f518ff0ee92022feac51140da7769419669e027333bb2",
+    "bytes": 7122,
+    "recorded_before_candidate_pnl": true
+  },
+  "frozen_candidate": {
+    "symbol": "xyz:SP500",
+    "timeframe": "15m",
+    "breakout_lookback_bars": 32,
+    "fast_ema": 21,
+    "slow_ema": 55,
+    "minimum_abs_imbalance": 0.1,
+    "maximum_stop_bps": 120.0,
+    "minimum_breakout_clearance_bps": 17.5005328604182,
+    "parameter_selection_uses_pnl": false
+  },
+  "source_boundary": {
+    "development_start_utc": "2026-05-17T22:30:00+00:00",
+    "development_end_utc": "2026-07-05T08:15:00+00:00",
+    "validation_end_utc": "2026-07-21T11:30:00+00:00",
+    "holdout_end_utc": "2026-08-06T15:00:00+00:00",
+    "holdout_metrics_accessed": false,
+    "midpoint_bars": 12803,
+    "book_rows": 19073915,
+    "archive_bundles": 3386,
+    "missing_15m_bars": 741,
+    "funding_events": 3385,
+    "unassigned_funding_events": 0
+  },
+  "signal_onsets": {
+    "control_development": {
+      "long": 52,
+      "short": 41
+    },
+    "challenger_development": {
+      "long": 2,
+      "short": 7
+    },
+    "control_validation": {
+      "long": 21,
+      "short": 29
+    },
+    "challenger_validation": {
+      "long": 0,
+      "short": 0
+    }
+  },
+  "results": {
+    "control": {
+      "development": {
+        "completed_trades": 36,
+        "wins": 10,
+        "losses": 26,
+        "net_pnl_usd": -1.8796631295708721,
+        "profit_factor": 0.7057109459901482,
+        "net_pnl_excluding_largest_winner_usd": -3.1189780131337237,
+        "long_trades": 19,
+        "long_net_pnl_usd": -0.9671139124182546,
+        "short_trades": 17,
+        "short_net_pnl_usd": -0.9125492171527946,
+        "positive_folds": 2
+      },
+      "validation_nominal": {
+        "completed_trades": 17,
+        "wins": 5,
+        "losses": 12,
+        "net_pnl_usd": -0.8813957398226648,
+        "profit_factor": 0.6813870555245158,
+        "net_pnl_excluding_largest_winner_usd": -1.6898825017598869,
+        "long_trades": 8,
+        "long_net_pnl_usd": -0.7563444135479627,
+        "short_trades": 9,
+        "short_net_pnl_usd": -0.12505132627459895
+      },
+      "validation_stress": {
+        "completed_trades": 17,
+        "wins": 5,
+        "losses": 12,
+        "net_pnl_usd": -1.3008065192972253,
+        "profit_factor": 0.5751500045715715,
+        "net_pnl_excluding_largest_winner_usd": -2.0844562615403603,
+        "long_trades": 8,
+        "long_net_pnl_usd": -0.9534230429417099,
+        "short_trades": 9,
+        "short_net_pnl_usd": -0.3473834763556538
+      }
+    },
+    "challenger": {
+      "development": {
+        "completed_trades": 5,
+        "wins": 2,
+        "losses": 3,
+        "net_pnl_usd": 0.29851440207767155,
+        "profit_factor": 1.2645364259092968,
+        "largest_winner_usd": 0.8989820354334773,
+        "net_pnl_excluding_largest_winner_usd": -0.6004676333558058,
+        "long_trades": 2,
+        "long_net_pnl_usd": 0.02246894759899598,
+        "short_trades": 3,
+        "short_net_pnl_usd": 0.27604545447862416,
+        "positive_folds": 1,
+        "zero_trade_folds": 1,
+        "negative_folds": 1
+      },
+      "validation_nominal": {
+        "completed_trades": 0,
+        "wins": 0,
+        "losses": 0,
+        "net_pnl_usd": 0.0,
+        "profit_factor": null,
+        "long_trades": 0,
+        "short_trades": 0
+      },
+      "validation_stress": {
+        "completed_trades": 0,
+        "wins": 0,
+        "losses": 0,
+        "net_pnl_usd": 0.0,
+        "profit_factor": null,
+        "net_pnl_excluding_largest_winner_usd": 0.0,
+        "long_trades": 0,
+        "short_trades": 0,
+        "liquidations": 0,
+        "barrier_invalidated_entries": 0
+      }
+    }
+  },
+  "predeclared_decision_checks": {
+    "validation_nominal_net_positive": false,
+    "validation_nominal_profit_factor_above_one": false,
+    "validation_stress_net_positive": false,
+    "validation_stress_profit_factor_above_one": false,
+    "validation_stress_ex_largest_positive": false,
+    "validation_both_sides_represented": false,
+    "no_liquidation": true,
+    "no_barrier_invalidated_entry": true,
+    "more_than_one_positive_development_fold": false,
+    "all_required_checks_passed": false
+  },
+  "decision": {
+    "status": "reject",
+    "candidate": "17.5005328604182-bps cost-derived clearance on the selected 32-bar SP500 pressure route",
+    "reason": "The challenger over-filtered the mechanism: it produced only five development trades, depended on one winner, was positive in only one fold, and produced zero validation onsets or trades on either side. Zero activity is not breakeven economic evidence.",
+    "live_action": "none",
+    "exact_v58_exit_replay_required": false,
+    "sealed_holdout_action": "remain_sealed",
+    "reopen_rule": "Do not retune the clearance. Reopen only for a materially different preregistered causal mechanism or a new independent source-native window that changes the cost/market assumption."
+  },
+  "control_reproduction_audit": {
+    "trade_identity_join": {
+      "matched": 70,
+      "original_only": 0,
+      "current_only": 0,
+      "entry_price_changed_rows": 0
+    },
+    "differences": {
+      "exit_price_changed_rows": 7,
+      "maximum_absolute_exit_price_delta": 4.9004900000009,
+      "maximum_absolute_gross_pnl_delta_usd": 0.04888192346682385,
+      "maximum_absolute_funding_delta_usd": 0.004718476171978764,
+      "maximum_absolute_net_pnl_delta_usd": 0.04888634748138862
+    },
+    "assessment": "Signal, side, trade count, and entry-price identities reproduce exactly; some exit and accounting values do not byte-reproduce the original immutable report under the current source tree.",
+    "confidence": "high_for_signal_identity_medium_for_exact_economic_reproduction",
+    "unverified_cause": "I do not have verified information on the exact source revision responsible for the exit/accounting drift. Validating that cause would require restoring the original generator identity and comparing its exit/funding assignment code row by row.",
+    "impact_on_decision": "The challenger rejection does not depend on the drift because the candidate produced zero validation signal onsets before any entry, exit, fee, funding, or PnL calculation."
+  },
+  "change_proposal": {
+    "Recommendation": "Reject the cost-clearance challenger and make no V58 change from this experiment.",
+    "Why now": "The current V58 long exposed a marginal 0.6512-bps breakout, making cost-subscale clearance a direct causal question rather than an unrelated parameter search.",
+    "Evidence reviewed": "The pre-PnL $5,000 SP500 cost contract, the original 192-configuration transfer report, immutable funding sidecar, current historical projection, three development folds, already-opened validation, and exact current SP500 entry anatomy.",
+    "Observed problem or opportunity": "The active route can enter just beyond the prior extreme, but a conservative 17.5005-bps clearance suppresses every validation onset.",
+    "Applicable market regime": "Fresh 15-minute SP500 32-bar breakout with EMA21/55 alignment and same-boundary absolute top-ten pressure of at least 0.10.",
+    "Alternatives considered": "No action, short-only containment at a future flat boundary, full SP500 removal, lower clearance, pressure retuning, exit changes, and opening the sealed holdout.",
+    "Proposed live change": "none",
+    "Expected upside": "Avoids deploying a superficially intuitive filter that would eliminate observed validation cadence without establishing edge.",
+    "Main risks and failure modes": "The rejection uses an already-opened validation window, current generator economics do not byte-reproduce all original exits, and a future regime could behave differently.",
+    "Validation completed": "The threshold was frozen before candidate PnL; causal signal tests covered delayed onset, symmetry, gap reset, prefix invariance, and fail-fast inputs; the historical run preserved the holdout and evaluated nominal/stress friction with side splits.",
+    "Validation still required": "Reconcile the current V58 long's actual exit. No further clearance validation is justified under this hypothesis.",
+    "Success metrics": "The preregistered positive nominal/stress, ex-largest, both-side, and fold-stability requirements.",
+    "Failure / rollback triggers": "Already triggered: zero validation trades, no both-side representation, nonpositive ex-largest development, and only one positive development fold.",
+    "Confidence level": "High that this exact candidate must be rejected; low confidence about all possible alternative SP500 entry mechanisms.",
+    "Explicit approval requested": false
+  },
+  "single_highest_value_next_investigation": {
+    "rank": 1,
+    "experiment": "Resolve and reconcile the current exact SP500 long lifecycle xyz:SP500:521918499754 under its frozen V58 exit contract.",
+    "why": "It is actual open capital and the first exact long-side lifecycle; its native exit will update the side-containment recommendation without inventing another entry filter.",
+    "automatic_live_change": false
+  },
+  "uncertainties_and_falsifiers": [
+    "A future independent source-native window with materially changed cost or liquidity assumptions could justify a new preregistered mechanism, but not retuning this threshold.",
+    "A candidate-onset audit that finds any validation onset above the frozen threshold would falsify the zero-onset result.",
+    "A source-prefix or timestamp error crossing validation_end_utc would invalidate the holdout claim.",
+    "Restoring the original generator may update the small control PnL values but cannot create candidate validation onsets unless signal-source behavior also differs."
+  ],
+  "source_evidence": [
+    {
+      "path": "src/hypervector/research/hip3_breakout_cost_clearance.py",
+      "sha256": "0658995d0ec1f3a7baaf7a349336e1d986743ebc58249e7fd15013a5de607ff2",
+      "bytes": 13110
+    },
+    {
+      "path": "tests/test_hip3_breakout_cost_clearance.py",
+      "sha256": "d19503bd99f83e1232823aedfc8a96be368a06ad1a5455febf02c4483794c377",
+      "bytes": 7371
+    },
+    {
+      "path": "scripts/hip3_breakout_pressure_transfer.py",
+      "sha256": "a1ec633c8651c48426b10921581df667079b6d9f0806c914976c5f72eed72e8f",
+      "bytes": 9160
+    },
+    {
+      "path": "src/hypervector/research/hip3_breakout_pressure_transfer.py",
+      "sha256": "d81a8798613a103dbdce108eb05aac9706a8c70bbab71f68efa76f50fa32a08e",
+      "bytes": 9744
+    },
+    {
+      "path": "src/hypervector/research/hip3_breakout_pressure_signals.py",
+      "sha256": "4b4d29b3780b7b968f36e2fe7f326ff86634d46e920260fdb77235e8c4c926fb",
+      "bytes": 7843
+    },
+    {
+      "path": "data/logs/research/hip3_breakout_pressure_transfer_sp500_spcx_v1.json",
+      "sha256": "b6c58952460e569488f1c8ea92a8a28fcd2d635389405968a8b6381d20740668",
+      "bytes": 1592467
+    },
+    {
+      "path": "data/logs/research/hip3_swing_ha_transfer_sp500_spcx_v2.sources.parquet",
+      "sha256": "671c0be4b0e403937182e2d7f88839d34f365bf93e739dcbee047c2079cf8cfa",
+      "bytes": 106029
+    },
+    {
+      "path": "docs/research-journal/v53-sp500-spcx-opening-range-breakout-cost-contract-v1.json",
+      "sha256": "92940538608de40046ff39eba70d167b325f7c4f86d71faf902b90d797527dff",
+      "bytes": 3251
+    }
+  ]
+}

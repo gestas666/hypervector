@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v51-entry-submission-freshness-acceptance-v1",
+  "status": "accepted_guard_active_telemetry_successor_staged",
+  "recorded_at_utc": "2026-08-14T15:28:30Z",
+  "scope": {
+    "profile_id": "multi_asset_growth_first_5000_six_asset_profit_lock_candidate_v51",
+    "profile_fingerprint": "30cd54bb5b5b17249ae0a6a3b01d5702b276d51f8dc5ddd6b4d36ab6aa7d1908",
+    "run_id": "bidirectional-live-1786691478619",
+    "execution_authority": "none",
+    "live_runtime_changed": false
+  },
+  "problem": "The provider poller checks signal age before provider collection, but collection, routing, telemetry, and venue reconciliation can consume additional time. Without a second check, a technically fresh intent could become older than its route-specific maximum entry delay before order submission.",
+  "implemented_contract": {
+    "initial_gate": "Retain the provider-poller decision-age check.",
+    "submission_gate": "Read a fresh clock immediately before each entry execution and withhold when age exceeds the exact provider-symbol maximum_entry_delay_seconds.",
+    "withheld_reason": "stale_before_submission",
+    "deadline_semantics": "Age equal to the configured deadline remains executable; age greater than the deadline is withheld.",
+    "exit_semantics": "Close actions bypass the entry-age gate so protective, opposite-intent, profit-lock, timer, and operator exits are not delayed.",
+    "route_coverage": "Every executable provider-symbol route must have exactly one positive integer entry-delay contract."
+  },
+  "active_identity_proof": {
+    "prestart_manifest": "../../data/backups/bidirectional_cohort/prestart_20260814T071118.619065Z_30cd54bb5b5b/manifest.json",
+    "manifest_sha256": "1abc820a2fe485ec0116c4487e3b328daa223039393c2ae2ece0d629acbf3bb6",
+    "implementation_file_count": 1479,
+    "implementation_sha256": "f1f242d7cca6b059474ca86e12449f48f6abce44a38281c989dd7116d21989e6",
+    "guard_source_sha256_in_manifest": "d903fe873fb626c8a9485c3ce4a0bb5659a269035eccb5e8a0f3ef85d6f824b8",
+    "guard_source_sha256_current_successor": "6c3768a5490c043834ab9db993ee922e8ab03ec9bf07fe48cb1137104c46689b",
+    "interpretation": "The already-running v51 process started from an implementation snapshot containing the behavioral safeguard. The working-tree successor preserves that gate and adds exact accepted/stale submission timestamps, ages, and limits for checkpoint auditing. The behavioral safeguard needs no emergency restart; the additive telemetry will appear only after a safe flat and order-free deployment of the successor bytes."
+  },
+  "current_run_observation": {
+    "ledger_sequence_end": 168253,
+    "routed_action_count": 4,
+    "routed_entries": 3,
+    "routed_closes": 1,
+    "stale_before_submission_count": 0,
+    "interpretation": "The safeguard is active, but no current-run action has crossed its submission deadline. Runtime non-intervention is therefore expected rather than evidence that the gate is unused."
+  },
+  "validation": {
+    "focused_command": "uv run pytest -q tests/test_multi_asset_entry_submission_freshness.py tests/test_multi_asset_cohort_telemetry.py tests/test_cohort_entry_age_diagnostics.py tests/test_cohort_continuous_improvement.py tests/test_multi_asset_live_audit.py tests/test_multi_asset_live_audit_restart.py tests/test_multi_asset_live_runner.py tests/test_multi_asset_live_runner_transient.py tests/test_multi_asset_bidirectional_live_script.py -m 'not network'",
+    "focused_result": "105 passed in 3.78s",
+    "critical_scenario": "A 30-second route was fresh at the 25-second poll cutoff but reached 31 seconds immediately before submission; the entry was withheld and the engine received no entry call.",
+    "exit_regression": "Automatic close bypasses the entry freshness clock.",
+    "ruff_result": "passed",
+    "format_result": "passed"
+  },
+  "limitations": [
+    "The current live run has not produced a naturally stale-before-submission eligible intent, so forward evidence is presently non-vacuous only for ordinary execution and simulated for the stale edge case.",
+    "The gate prevents stale entry submission but cannot eliminate venue acknowledgement latency after the call begins.",
+    "This technical safeguard does not establish strategy profitability or improve a signal's economic edge."
+  ],
+  "falsifier": "Reject this acceptance if an entry older than its exact route deadline reaches engine.enter, if an exit is blocked by the entry freshness gate, if active implementation identity differs from the recorded prestart manifest, or if withheld telemetry cannot reconcile to the routed report.",
+  "change_proposal": {
+    "Recommendation": "Retain the immediate pre-submission entry freshness safeguard and its explicit stale_before_submission telemetry.",
+    "Why now": "v51 includes 30-second routes whose collection and routing work can consume the remaining signal-age headroom after the poller's initial gate.",
+    "Evidence reviewed": "Current v51 configuration, entry poller and runner call order, exact safeguard source, active prestart implementation manifest, focused tests, current-run routing rows through sequence 168253, and exit bypass behavior.",
+    "Observed problem or opportunity": "A route can be fresh at poll cutoff yet stale at actual submission; a second clock read removes this contract-enforcement gap without changing signal logic.",
+    "Applicable market regime": "All regimes because this is a technical entry-timing invariant, not a market-performance filter.",
+    "Alternatives considered": "Rely only on the initial poller gate, widen route deadlines, shorten the global polling interval, reject the entire cycle, or revalidate each entry immediately before execution.",
+    "Proposed live change": "Deploy the additive exact-submission telemetry successor at the next safe flat and order-free restart. The entry gate's behavior is already active; this successor does not change strategy, sizing, risk, or exit behavior.",
+    "Expected upside": "Prevents technically stale entries and makes every withheld late entry explicitly attributable while preserving prompt exits.",
+    "Main risks and failure modes": "Clock anomalies, route-map mismatch, telemetry divergence, or mistakenly applying the entry gate to closes.",
+    "Validation completed": "Red-green boundary and delayed-submission regressions, accepted and withheld exact telemetry serialization, audit arithmetic and reconciliation, material late-entry diagnosis, exit bypass test, exact route-coverage validation, 105 focused tests, Ruff and format checks, source hash reconciliation, and active prestart-manifest reconciliation.",
+    "Validation still required": "Continue forward monitoring for the first natural stale_before_submission event and reconcile its decision time, submission clock, non-execution, telemetry, and missed-opportunity path.",
+    "Success metrics": "Zero entries submitted after their route deadline, every late entry reported once as stale_before_submission, no exit delayed by the gate, and no routing-versus-engine divergence.",
+    "Failure / rollback triggers": "Any stale entry reaches the venue, any close is withheld, duplicate or missing withheld attribution, non-monotonic clock behavior, or an active source identity mismatch.",
+    "Confidence level": "High confidence in the code and active-identity proof; medium confidence in production edge-case behavior until a natural late eligible signal is observed.",
+    "Explicit approval requested": "Covered by the user's standing approval for technical defect fixes. Deployment remains deferred until the portfolio is flat and owned orders are absent; no live restart occurred in this task."
+  },
+  "single_highest_value_next_investigation": "Resolve every currently open v51 lifecycle, beginning with HYPE:516556857812 and xyz:SP500:516695933154, then reconcile actual exit triggers, MFE giveback, fees, funding, slippage, latency, venue protection, and missed or opposite signals."
+}

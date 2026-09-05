@@ -7,7 +7,13 @@ import json
 from pathlib import Path
 
 from hypervector.research.cohort_checkpoint_history import HistoricalProjectionStale
-from hypervector.research.cohort_live_portfolio_archive import CohortAccountingEpoch
+from hypervector.research.cohort_configuration_generation import (
+    load_configuration_expectation,
+)
+from hypervector.research.cohort_live_portfolio_archive import (
+    PORTFOLIO_ARCHIVE_PROJECTION_REVISION,
+    CohortAccountingEpoch,
+)
 
 PublishFn = Callable[..., dict[str, object]]
 
@@ -27,10 +33,13 @@ def publish_rolling_checkpoint(
     funding_evidence_fn: object,
     portfolio_archive: Mapping[str, object] | None,
     asymmetric_forward_journal_path: Path | None,
+    current_run_only: bool = False,
     accounting_epoch: CohortAccountingEpoch | None = None,
 ) -> bool:
     """Publish bounded history, falling back to full only when history changed."""
     complete = None if once else load_cached_complete_checkpoint(destination)
+    transition_seed = _cached_profile_differs_from_config(complete, config_path)
+    bounded_current_run = current_run_only or transition_seed
     selected_run_id = _selected_run_id(requested_run_id, complete)
     options = _publish_options(
         selected_run_id,
@@ -47,6 +56,7 @@ def publish_rolling_checkpoint(
         ),
         asymmetric_forward_journal_path,
         complete,
+        bounded_current_run,
     )
     try:
         publish_fn(ledger_root, destination, **options)
@@ -56,6 +66,22 @@ def publish_rolling_checkpoint(
         publish_fn(ledger_root, destination, **options)
         return True
     return False
+
+
+def _cached_profile_differs_from_config(
+    complete: Mapping[str, object] | None,
+    config_path: Path,
+) -> bool:
+    """Bound a first checkpoint when the cache belongs to a prior profile."""
+    if complete is None:
+        return False
+    audit = complete.get("audit")
+    run = audit.get("run") if isinstance(audit, Mapping) else None
+    cached = run.get("profile_fingerprint") if isinstance(run, Mapping) else None
+    if not isinstance(cached, str) or not cached.strip():
+        return False
+    current = load_configuration_expectation(config_path).profile_fingerprint
+    return cached.strip() != current
 
 
 def load_cached_complete_checkpoint(path: Path) -> Mapping[str, object] | None:
@@ -85,7 +111,14 @@ def load_cached_portfolio_archive(
     audit = document.get("audit")
     if not isinstance(audit, Mapping) or audit.get("portfolio_archive") is None:
         return None
-    archive = validated_portfolio_archive(audit.get("portfolio_archive"))
+    raw_archive = audit.get("portfolio_archive")
+    if (
+        isinstance(raw_archive, Mapping)
+        and raw_archive.get("projection_revision")
+        != PORTFOLIO_ARCHIVE_PROJECTION_REVISION
+    ):
+        return None
+    archive = validated_portfolio_archive(raw_archive)
     expected = None if accounting_epoch is None else accounting_epoch.to_dict()
     if archive.get("accounting_epoch") != expected:
         return None
@@ -112,6 +145,8 @@ def validated_portfolio_archive(value: object) -> Mapping[str, object]:
         raise ValueError("research worker portfolio archive schema is unsupported")
     if value.get("mode") != "cohort_live_portfolio_archive_v1":
         raise ValueError("research worker portfolio archive mode is unsupported")
+    if value.get("projection_revision") != PORTFOLIO_ARCHIVE_PROJECTION_REVISION:
+        raise ValueError("research worker portfolio archive revision is stale")
     return value
 
 
@@ -152,6 +187,7 @@ def _publish_options(
     portfolio_archive: Mapping[str, object] | None,
     asymmetric_forward_journal_path: Path | None,
     complete: Mapping[str, object] | None,
+    current_run_only: bool,
 ) -> dict[str, object]:
     return {
         "run_id": run_id,
@@ -162,7 +198,8 @@ def _publish_options(
         "eligible_policy_forward": eligible_policy_forward,
         "funding_evidence_fn": funding_evidence_fn,
         "portfolio_archive": portfolio_archive,
+        "current_run_only": current_run_only,
         "asymmetric_forward_journal_path": asymmetric_forward_journal_path,
-        "compatible_execution_history": complete is not None,
-        "complete_historical_checkpoint": complete,
+        "compatible_execution_history": (complete is not None and not current_run_only),
+        "complete_historical_checkpoint": (None if current_run_only else complete),
     }

@@ -8,12 +8,14 @@ from hypervector.research.cohort_friction_parity import build_friction_parity
 _SOURCE = "hypervelocity_source_follow_bidirectional_5m_v1"
 _HYPE = "hype_breakout_onset_bidirectional_v1"
 _HYPE_COMPRESSION = "hype_breakout_compression_pullback_bidirectional_v1"
+_HYPE_ALIGNMENT = "hype_breakout_compression_alignment_bidirectional_v2"
 _HULK = "hulk_expansion_bidirectional_tuned_v2"
 _RANGE = "range_onset_bidirectional_v1"
 _ETH = "eth_breakout_precompression_pullback_bidirectional_v1"
 _HIP3_SWING_INDEX = "hip3_swing_ha_sp500_spcx_bidirectional_v2"
 _HIP3_BREAKOUT_INDEX = "hip3_breakout_pressure_sp500_spcx_bidirectional_v1"
 _HIP3_BREAKOUT_COMMODITY = "hip3_breakout_pressure_sndk_gold_brent_bidirectional_v1"
+_SPCX_CASH_OPEN = "hip3_spcx_cash_open_gap_reversal_bidirectional_15m_v1"
 
 
 def test_source_follow_uses_frozen_deployed_shape_without_claiming_edge() -> None:
@@ -129,6 +131,35 @@ def test_hype_compression_reuses_the_frozen_hype_execution_shape() -> None:
     assert row["mismatches"] == []
     assert row["modeled_contract"]["evidence_source"].endswith(
         "hype_breakout_live_extension_parity_20260804.json"
+    )
+
+
+def test_hype_alignment_reuses_the_exact_v51_lifecycle_shape() -> None:
+    """The alignment repair changes entry admission, not stop or hold mechanics."""
+    identity = {
+        "assets": [{"symbol": "HYPE"}],
+        "providers": [
+            _provider(
+                _HYPE_ALIGNMENT,
+                "HYPE",
+                stop_policy="fixed_bps",
+                target_policy="none",
+                maximum_hold_seconds=28_800,
+                stop_bps=80.0,
+                maximum_hold_policy="extend_while_regime_supported",
+                hard_maximum_hold_seconds=86_400,
+            )
+        ],
+    }
+
+    row = build_friction_parity(identity, [])["by_provider_symbol"][
+        f"{_HYPE_ALIGNMENT}|HYPE"
+    ]
+
+    assert row["parity_state"] == "runtime_shape_aligned"
+    assert row["mismatches"] == []
+    assert row["modeled_contract"]["evidence_source"].endswith(
+        "hype_compression_breakout_challenger_20260816_v6_alignment/report.json"
     )
 
 
@@ -373,6 +404,36 @@ def test_hip3_swing_contract_matches_deployed_fixed_stop_and_hold() -> None:
     assert row["modeled_contract"]["maximum_hold_policy"] == "fixed"
     assert row["modeled_contract"]["maximum_hold_seconds"] == 86_400
     assert row["mismatches"] == []
+
+
+def test_spcx_cash_open_contract_matches_dynamic_target_and_session_hold() -> None:
+    """Checkpoint friction telemetry must understand the exact additive route."""
+    identity = {
+        "assets": [{"symbol": "xyz:SPCX"}],
+        "providers": [
+            _provider(
+                _SPCX_CASH_OPEN,
+                "xyz:SPCX",
+                stop_policy="fixed_bps",
+                stop_bps=80.0,
+                target_policy="absolute_anchor",
+                maximum_hold_seconds=22_500,
+                provider_recipe_exit_policy="honor",
+            )
+        ],
+    }
+
+    row = build_friction_parity(identity, [])["by_provider_symbol"][
+        f"{_SPCX_CASH_OPEN}|xyz:SPCX"
+    ]
+
+    assert row["parity_state"] == "runtime_shape_aligned"
+    assert row["mismatches"] == []
+    assert row["modeled_contract"]["target_policy"] == "absolute_anchor"
+    assert row["modeled_contract"]["maximum_hold_seconds"] == 22_500
+    assert row["modeled_contract"]["evidence_source"].endswith(
+        "xyz_spcx_cash_open_gap_reversal_development_20260817_v2.json"
+    )
 
 
 def _identity(

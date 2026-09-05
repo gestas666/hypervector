@@ -1,0 +1,194 @@
+{
+  "schema_version": "v51_brentoil_canary_source_parity_root_cause_v1",
+  "hypothesis_id": "v51_brentoil_canary_source_parity_root_cause",
+  "revision": 1,
+  "status": "being_tested",
+  "generated_at_utc": "2026-08-15T20:24:02Z",
+  "symbol": "xyz:BRENTOIL",
+  "mode": "report_only",
+  "execution_authority": "none",
+  "automatic_live_change": false,
+  "runtime_strategy_changed": false,
+  "problem_restatement": {
+    "question": "Does retained BRENTOIL canary and prospective source evidence support a viable non-crypto portfolio lane?",
+    "success_criteria": [
+      "retain exact canary fills, fees, funding, slippage, stops, and exits",
+      "establish source-native completed-candle behavior prospectively",
+      "show realistic stress economics before requesting a live route"
+    ]
+  },
+  "known_facts": {
+    "live_canary": {
+      "ledger_rows": 54848,
+      "book_observations": 13662,
+      "raw_fill_events": 7,
+      "closed_lifecycles": 3,
+      "wins": 2,
+      "losses": 1,
+      "net_pnl_usd": 1.821755,
+      "profit_factor": 3.648046,
+      "net_excluding_largest_winner_usd": -0.232469,
+      "maximum_observed_slippage_bps": 8.464584
+    },
+    "liquidity": {
+      "global_hip3_volume_rank": 6,
+      "day_notional_volume_usd": 49403551.84429,
+      "spread_bps": 0.116337,
+      "asset_liquidity_rejected": false
+    },
+    "strategy_attribution": {
+      "retired_swing_ha": {
+        "trades": 1,
+        "net_pnl_usd": 2.054224,
+        "exit": "operator_manual_close",
+        "repeatable_edge_established": false
+      },
+      "retired_breakout_pressure": {
+        "trades": 2,
+        "net_pnl_usd": -0.232469,
+        "profit_factor": 0.66209,
+        "repeatable_edge_established": false
+      }
+    }
+  },
+  "source_parity_experiment": {
+    "window": {
+      "start_ms": 1786817700000,
+      "end_ms": 1786825200000,
+      "timeframe_minutes": 5,
+      "completed_bars": 25
+    },
+    "path_coverage": {
+      "resolved_bars": 25,
+      "unresolved_bars": 0
+    },
+    "candle_comparison": {
+      "exact_ohlc_bars": 19,
+      "mismatched_ohlc_bars": 6,
+      "missing_trade_bars": 0,
+      "missing_candle_bars": 0,
+      "mismatch_fields": {
+        "open": 3,
+        "close": 3,
+        "high": 0,
+        "low": 0
+      }
+    },
+    "root_cause_evidence": {
+      "pattern": "Every mismatch occurs at a first or last exchange timestamp shared by multiple public trades.",
+      "retained_ordering": "The normalized archive orders equal-millisecond trades by numeric trade_id.",
+      "venue_behavior": "The official candle open or close is another price in the same equal-millisecond trade group.",
+      "assessment": "The retained public tape lacks a proven within-millisecond ordering contract for exact open and close reconstruction; this is not missing-trade evidence."
+    },
+    "signal_impact": {
+      "method": "Replace the 25 overlapping source-native candle rows with trade-reconstructed OHLC while keeping the same 2325-row causal warmup and frozen oil-shock parameters.",
+      "entry_direction_differences": 0,
+      "overlap_rows_with_trailing_return_changes": 4,
+      "maximum_absolute_trailing_return_delta_bps": 1.045115,
+      "interpretation": "No entry changed in this no-onset sample, but the source contract remains unresolved because future threshold-boundary decisions could change."
+    }
+  },
+  "development_baseline": {
+    "provider_id": "hip3_brentoil_oil_shock_reversion_bidirectional_5m_shadow_v1",
+    "nominal": {
+      "trades": 44,
+      "net_pnl_usd": 4.238715,
+      "profit_factor": 2.258518
+    },
+    "stress": {
+      "trades": 42,
+      "net_pnl_usd": -1.068481,
+      "profit_factor": 0.837156
+    },
+    "technical_path_status": "unresolved",
+    "validation_accessed": false,
+    "holdout_accessed": false
+  },
+  "recommendation": "Keep BRENTOIL as the highest-priority external oil candidate and continue exact source-native shadow capture. Do not restore either retired canary strategy or promote the oil-shock challenger yet.",
+  "why_now": "The user correctly identified that BRENTOIL already has live-canary evidence; the next decision must use it rather than requalify the asset from zero.",
+  "evidence_reviewed": [
+    "exact BRENTOIL canary ledger reconciliation",
+    "25 completed prospective five-minute L2/trade/mark paths",
+    "25 official candleSnapshot bars",
+    "oil-shock development replay with canary-derived friction",
+    "running source-native oil-shock observer"
+  ],
+  "observed_problem_or_opportunity": "BRENTOIL is liquid and executable, but the old routes are not validated and trade-tape open/close reconstruction is ambiguous within equal-millisecond batches.",
+  "applicable_market_regime": "large five-minute BRENTOIL shock onset followed by mean reversion; both directions remain configured for research",
+  "alternatives_considered": [
+    "restore retired Swing/HA: rejected because its only winner was manually closed",
+    "restore retired Breakout Pressure: rejected because two live trades lost in aggregate",
+    "treat trade_id order as venue order: rejected because 6 of 25 official candles falsify it",
+    "use official prospective candleSnapshot as the forward signal source: retained"
+  ],
+  "proposed_live_change": null,
+  "expected_upside": "A source-correct oil lane could diversify the crypto/index roster while reusing measured BRENTOIL execution friction.",
+  "main_risks_and_failure_modes": [
+    "no eligible prospective oil-shock onset has occurred yet",
+    "stress development economics are negative",
+    "historical mark paths remain incomplete",
+    "same-millisecond tape ordering can alter close-derived threshold values",
+    "three canary lifecycles are too sparse and largest-winner dependent"
+  ],
+  "validation_completed": [
+    "asset liquidity and live execution feasibility",
+    "three exact canary lifecycle reconciliation",
+    "25-bar prospective risk-path coverage",
+    "25-bar official-candle versus public-tape comparison",
+    "frozen-signal sensitivity over the same overlap"
+  ],
+  "validation_still_required": [
+    "at least one resolved eligible oil-shock lifecycle per configured direction",
+    "mechanism-specific fill and exit friction",
+    "resolved historical mark paths or a sufficiently long prospective source-native window",
+    "predeclared validation and untouched holdout"
+  ],
+  "success_metrics": [
+    "zero unresolved active-lifecycle path bars",
+    "positive stress net and profit factor above 1 after costs",
+    "positive stress economics excluding the largest winner",
+    "both directions independently nonnegative or an independently predeclared directional redesign"
+  ],
+  "failure_or_rollback_triggers": [
+    "prospective source-native lifecycles remain stress negative",
+    "execution slippage exceeds the canary-derived stress assumption",
+    "source or path gaps make lifecycle attribution unresolved",
+    "candidate depends on one outlier winner"
+  ],
+  "confidence_level": {
+    "asset_liquidity_and_execution": "high",
+    "source_mismatch_root_cause": "medium_high",
+    "strategy_profitability": "low",
+    "reason": "Live ledger and 25-bar path evidence are exact, but prospective eligible sample size is zero and stress development is negative."
+  },
+  "falsifiers": [
+    "A future raw transport capture with explicit within-message ordering reproduces official open and close using a different deterministic rule.",
+    "A mismatch appears in high or low, or without an equal-millisecond boundary group.",
+    "A source difference changes an oil-shock entry in the predeclared prospective window.",
+    "Resolved out-of-sample lifecycles show robust positive stress economics."
+  ],
+  "explicit_approval_requested": false,
+  "highest_value_next_investigation": "Collect the first exact source-native eligible BRENTOIL oil-shock lifecycle while preserving canary-derived friction and official candleSnapshot signals.",
+  "evidence": {
+    "canary": {
+      "path": "data/logs/research/bidirectional_cohort/brentoil_live_canary_lifecycle_reconciliation_20260815_v1.json",
+      "bytes": 8143,
+      "sha256": "47ba7608ce7d7fd9b2ba2c7c64555d529abae1ff509971bfbc38a46a308534bc"
+    },
+    "prospective_path": {
+      "path": "data/logs/research/xyz_brentoil_oil_shock_prospective_path_20260815T202402Z_v3.json",
+      "bytes": 18383,
+      "sha256": "8e19ec730a11eb61a4bc6d293d4444cd44a1d24f3c1f58dc95715058ec5de87a"
+    },
+    "candle_parity": {
+      "path": "data/logs/research/xyz_brentoil_oil_shock_candle_parity_20260815T202402Z_v4.json",
+      "bytes": 3058,
+      "sha256": "07ed9169016d3c9234c735a5d36b3809cd4f163e4f91695e07796402b18725e7"
+    },
+    "development": {
+      "path": "data/logs/research/xyz_brentoil_oil_shock_reversion_development_20260815_v4.json",
+      "bytes": 186480,
+      "sha256": "0711c0e56c746e43975fc19618d6ea952687e3ac11311a351f6fe047beefdb57"
+    }
+  }
+}

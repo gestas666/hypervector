@@ -284,7 +284,11 @@ def test_preflight_identity_contains_complete_read_only_tui_contract(
     assert effective_mode["account_abstraction_mode"] == "disabled"
 
 
-def _hip3_fee_event(tmp_path: Path, growth_mode: bool | None) -> dict[str, object]:
+def _hip3_fee_event(
+    tmp_path: Path,
+    growth_mode: bool | None,
+    deployer_fee_scale: float | None = 1.0,
+) -> dict[str, object]:
     path = tmp_path / "data/live/bidirectional_cohort/xyz:sndk.jsonl"
     config = replace(
         load_sol_range_onset_config(
@@ -313,7 +317,7 @@ def _hip3_fee_event(tmp_path: Path, growth_mode: bool | None) -> dict[str, objec
         account_value_usd=500.0,
         withdrawable_usd=485.0,
         position=flat,
-        hip3_fee_metadata=Hip3MarketFeeMetadata(1.0, growth_mode, 0),
+        hip3_fee_metadata=Hip3MarketFeeMetadata(deployer_fee_scale, growth_mode, 0),
     )
     venue = SolReconciliationSnapshot(
         SolAccountSnapshot(500.0, 485.0, 0.0, 0.0, flat), (), ()
@@ -353,6 +357,19 @@ def test_hip3_preflight_emits_effective_fee_evidence_for_tui(
     else:
         assert fee["maker_rate"] == pytest.approx(maker_rate)
         assert fee["taker_rate"] == pytest.approx(taker_rate)
+
+
+def test_hip3_missing_deployer_scale_is_explicitly_unresolved(
+    tmp_path: Path,
+) -> None:
+    """Startup can manage exposure without publishing invented fee economics."""
+    fee = _hip3_fee_event(tmp_path, True, None)
+
+    assert fee["source"] == "unresolved_hip3_fee_schedule"
+    assert fee["effective_fee_status"] == "unresolved_deployer_fee_scale"
+    assert fee["deployer_fee_scale"] is None
+    assert fee["maker_rate"] is None
+    assert fee["taker_rate"] is None
 
 
 def test_book_snapshot_is_projected_for_read_only_tui(tmp_path: Path) -> None:

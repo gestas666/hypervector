@@ -17,6 +17,8 @@ def asset_profile_values(config: AssetLiveConfig) -> dict[str, object]:
     values = asdict(config)
     for key in ("mode", "enabled", "accepts_live_risk"):
         values.pop(key)
+    if config.entry_slippage_cap_fraction is None:
+        values.pop("entry_slippage_cap_fraction")
     return values
 
 
@@ -40,6 +42,8 @@ def provider_profile_values(config: StrategyProviderConfig) -> dict[str, object]
         return values
     if config.execution.provider_recipe_exit_policy == "ignore":
         execution.pop("provider_recipe_exit_policy")
+    if config.execution.maximum_hold_evidence_maximum_age_seconds is None:
+        execution.pop("maximum_hold_evidence_maximum_age_seconds")
     if config.execution.profit_lock_policy == "none":
         for key in (
             "profit_lock_policy",

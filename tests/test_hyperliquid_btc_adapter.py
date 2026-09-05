@@ -544,3 +544,33 @@ def test_hulk_market_entry_and_native_stop_are_explicit_btc_orders() -> None:
     assert stop_call["order_type"] == {
         "trigger": {"triggerPx": 64_100.0, "isMarket": True, "tpsl": "sl"}
     }
+
+
+def test_hardened_ioc_cap_reaches_both_entry_and_forced_close() -> None:
+    """The V68 BTC cap must protect both SDK market mutation paths."""
+    exchange = _Exchange()
+    adapter = BtcHyperliquidAdapter(
+        info=_Info(),
+        exchange=exchange,
+        account_address=_ADDRESS,
+        max_notional_usd=1_700.0,
+        slippage_fraction=0.002,
+    )
+
+    entry = adapter.submit_market_entry(
+        side="long",
+        requested_notional_usd=150.0,
+        mark_price=64_000.0,
+        client_order_id=_CLOID,
+    )
+    close = adapter.close_position(
+        position_size_signed=0.00234,
+        mark_price=64_020.0,
+        client_order_id="0x00000000000000000000000000000002",
+    )
+
+    assert entry.accepted and close.accepted
+    assert exchange.calls[0][0] == "market_open"
+    assert exchange.calls[0][1]["slippage"] == pytest.approx(0.002)
+    assert exchange.calls[1][0] == "market_close"
+    assert exchange.calls[1][1]["slippage"] == pytest.approx(0.002)

@@ -1,0 +1,177 @@
+{
+  "schema_version": "sol_fixed_dollar_event_flow_triage_v1",
+  "generated_at_utc": "2026-08-16T07:36:05Z",
+  "hypothesis_id": "sol_fixed_dollar_event_flow_continuation_v1",
+  "mode": "report_only_research",
+  "report_only": true,
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "live_configuration_changed": false,
+  "problem": "Test a mechanism distinct from rejected Range Onset, time-bar impulse, sweep, absorption, flow-exhaustion, and cross-asset residual families: persistent aggressor flow sampled in fixed event time may continue far enough to overcome executable spread, fees, and adverse slippage.",
+  "pre_registered_contract": {
+    "symbol": "SOL",
+    "source_database": "data/research/market.duckdb",
+    "trade_source": "canonical_public_trades",
+    "quote_source": "book_snapshots",
+    "event_clock": "continuous fixed traded-notional bars",
+    "bar_notional_usd": 15000000.0,
+    "bar_threshold_source": "seven-day calibration only",
+    "calibration_start_utc": "2025-08-04T00:00:00Z",
+    "calibration_end_utc": "2025-08-11T00:00:00Z",
+    "calibration_complete_bars": 180,
+    "long_signed_notional_fraction_minimum": 0.5698069388336854,
+    "short_signed_notional_fraction_maximum": -0.5166437640375707,
+    "threshold_rule": "calibration 90th and 10th percentiles; frozen before development outcomes",
+    "decision_price": "first SOL BBO snapshot at or after the event-bar terminal trade",
+    "exit_price": "first SOL BBO snapshot at or after the frozen elapsed horizon",
+    "quote_freshness_maximum_ms": 1000,
+    "long_executable_return": "exit_bid / entry_ask - 1",
+    "short_executable_return": "entry_bid / exit_ask - 1",
+    "nominal_additional_round_trip_cost_bps": 13.0,
+    "stress_additional_round_trip_cost_bps": 20.0,
+    "horizons_minutes": [5, 15, 30, 60],
+    "searched_set_size": 8,
+    "searched_set_definition": "four frozen horizons multiplied by two symmetric sides",
+    "advance_rule": "A side and horizon must have positive mean after nominal and stress costs in every development fold, positive worst-fold performance, and nonnegative fold performance after removing the largest winner.",
+    "validation_access_rule": "Do not evaluate validation unless the development advance rule passes."
+  },
+  "development": {
+    "start_utc": "2025-08-11T00:00:00Z",
+    "end_utc": "2025-11-01T00:00:00Z",
+    "raw_trade_rows": 16608156,
+    "complete_event_bars": 3155,
+    "long_decisions": 235,
+    "short_decisions": 337,
+    "median_trades_per_event_bar": 2530.0,
+    "folds": [
+      "2025-08-11 through 2025-08-31",
+      "2025-09-01 through 2025-09-30",
+      "2025-10-01 through the pre-gap boundary",
+      "post-gap recovery through 2025-10-31"
+    ],
+    "data_quality": {
+      "status": "partial_fail_closed",
+      "material_l2_outage": "2025-10-16 approximately 10:00Z through 2025-10-23 approximately 00:00Z",
+      "long_fresh_5m_outcomes": 224,
+      "long_total_decisions": 235,
+      "short_fresh_5m_outcomes": 310,
+      "short_total_decisions": 337,
+      "handling": "Stale as-of matches were excluded. No interpolation or stale BBO was allowed to affect economic results.",
+      "failure_discovered": "An unrestricted as-of probe produced absurd October profits from multi-day stale quotes. The production triage was rerun with the frozen one-second freshness requirement."
+    },
+    "summary_by_side_horizon": [
+      {
+        "side": "long",
+        "horizon_minutes": 5,
+        "fresh_outcomes": 224,
+        "positive_nominal_folds": 1,
+        "positive_stress_folds": 0,
+        "median_fold_mean_nominal_bps": -14.3881,
+        "worst_fold_mean_nominal_bps": -47.5926,
+        "pooled_mean_nominal_bps": -13.3572,
+        "median_fold_ex_largest_nominal_bps": -26.4230
+      },
+      {
+        "side": "short",
+        "horizon_minutes": 5,
+        "fresh_outcomes": 310,
+        "positive_nominal_folds": 1,
+        "positive_stress_folds": 1,
+        "median_fold_mean_nominal_bps": -7.5395,
+        "worst_fold_mean_nominal_bps": -11.4721,
+        "pooled_mean_nominal_bps": -4.0631,
+        "median_fold_ex_largest_nominal_bps": -12.2624
+      },
+      {
+        "side": "long",
+        "horizon_minutes": 15,
+        "fresh_outcomes": 225,
+        "positive_nominal_folds": 1,
+        "positive_stress_folds": 1,
+        "median_fold_mean_nominal_bps": -15.5896,
+        "worst_fold_mean_nominal_bps": -45.2944,
+        "pooled_mean_nominal_bps": 54.3397,
+        "median_fold_ex_largest_nominal_bps": -16.8396,
+        "largest_single_nominal_bps": 2406.5316
+      },
+      {
+        "side": "short",
+        "horizon_minutes": 15,
+        "fresh_outcomes": 310,
+        "positive_nominal_folds": 1,
+        "positive_stress_folds": 1,
+        "median_fold_mean_nominal_bps": -10.9329,
+        "worst_fold_mean_nominal_bps": -20.1545,
+        "pooled_mean_nominal_bps": 2.9948,
+        "median_fold_ex_largest_nominal_bps": -13.5615,
+        "largest_single_nominal_bps": 1782.6250
+      },
+      {
+        "side": "long",
+        "horizon_minutes": 30,
+        "fresh_outcomes": 224,
+        "positive_nominal_folds": 1,
+        "positive_stress_folds": 1,
+        "median_fold_mean_nominal_bps": -12.8863,
+        "worst_fold_mean_nominal_bps": -42.7618,
+        "pooled_mean_nominal_bps": 97.2063,
+        "median_fold_ex_largest_nominal_bps": -15.2912,
+        "largest_single_nominal_bps": 2822.2281
+      },
+      {
+        "side": "short",
+        "horizon_minutes": 30,
+        "fresh_outcomes": 310,
+        "positive_nominal_folds": 1,
+        "positive_stress_folds": 1,
+        "median_fold_mean_nominal_bps": -9.7072,
+        "worst_fold_mean_nominal_bps": -27.1192,
+        "pooled_mean_nominal_bps": 6.1147,
+        "median_fold_ex_largest_nominal_bps": -14.0934,
+        "largest_single_nominal_bps": 1744.0281
+      },
+      {
+        "side": "long",
+        "horizon_minutes": 60,
+        "fresh_outcomes": 224,
+        "positive_nominal_folds": 1,
+        "positive_stress_folds": 1,
+        "median_fold_mean_nominal_bps": -11.1580,
+        "worst_fold_mean_nominal_bps": -49.1620,
+        "pooled_mean_nominal_bps": 89.0260,
+        "median_fold_ex_largest_nominal_bps": -14.6411,
+        "largest_single_nominal_bps": 2663.3457
+      },
+      {
+        "side": "short",
+        "horizon_minutes": 60,
+        "fresh_outcomes": 310,
+        "positive_nominal_folds": 2,
+        "positive_stress_folds": 2,
+        "median_fold_mean_nominal_bps": 8.6947,
+        "worst_fold_mean_nominal_bps": -34.0522,
+        "pooled_mean_nominal_bps": -7.6226,
+        "median_fold_ex_largest_nominal_bps": 2.5789,
+        "worst_fold_ex_largest_nominal_bps": -35.4835
+      }
+    ]
+  },
+  "decision": {
+    "status": "STOP_DEVELOPMENT_FAILED",
+    "validation_evaluated": false,
+    "holdout_evaluated": false,
+    "reason": "No side/horizon was positive in every development fold under nominal or stress friction. Apparent pooled gains at 15-60 minutes were concentrated in the October crash fold and reversed after fold-level and largest-winner analysis.",
+    "live_recommendation": "Do not route, shadow-promote, tune, invert, or add order-book gates to this exact event-flow family.",
+    "anti_circular_rule": "Changing the flow direction, threshold, event-bar size, horizon, or adding book conditions after these outcomes creates a new counted trial family and cannot inherit this result."
+  },
+  "confidence": {
+    "level": "high_for_rejecting_this_exact_contract",
+    "basis": "The signal was calibrated before development, both directions and four horizons were retained, executable BBO quotes and explicit costs were used, stale quote paths were excluded, and fold-level plus largest-winner diagnostics contradicted pooled outlier gains.",
+    "limits": "The result does not reject every event-time or market-microstructure strategy. It rejects this frozen SOL fixed-dollar aggressor-flow continuation mapping."
+  },
+  "falsifiers": [
+    "A reproducible query or code review finds a causality, bar-allocation, BBO-direction, fee, or fold-boundary defect that changes every development fold to positive.",
+    "An independently preregistered mechanism with a different economic mapping survives its own development and validation after executable costs.",
+    "Exact missing L2 recovery materially changes the fail-closed fold results without post-outcome parameter changes."
+  ]
+}

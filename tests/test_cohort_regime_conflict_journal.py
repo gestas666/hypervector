@@ -63,6 +63,7 @@ def test_opposite_direction_conflict_compares_regime_and_static_paths() -> None:
         "execution_authority": "none",
         "runtime_strategy_changed": False,
         "automatic_strategy_changes": False,
+        "path_start_policy": ("first_full_minute_at_or_after_intent_availability"),
     }
 
 
@@ -81,6 +82,23 @@ def test_same_direction_provider_change_does_not_claim_directional_edge() -> Non
     assert conflict["comparison"] == "same_direction_provider_only"
     assert conflict["horizons"] == {}
     assert report["horizons"]["5"]["resolved"] == 0
+
+
+def test_late_routing_availability_excludes_the_partial_candle() -> None:
+    """Regime counterfactuals cannot consume price path predating publication."""
+    rows = _records(candle_count=6)
+    rows[1]["observed_at_utc"] = _iso(_DECISION_MS + 5_000)
+    first = rows[2]["payload"]["bars"]["BTC"][0]
+    first["high"] = 1_000.0
+
+    report = build_regime_conflict_journal(rows, _identity())
+
+    conflict = report["journal"][0]
+    assert conflict["selected"]["available_time_ms"] == _DECISION_MS + 5_000
+    path = conflict["horizons"]["5"]
+    assert path["path_start_time_ms"] == _DECISION_MS + 60_000
+    assert path["regime_selected_return_bps"] == pytest.approx(600.0)
+    assert path["static_priority_return_bps"] == pytest.approx(-600.0)
 
 
 def test_right_edge_is_censored_without_using_partial_future_data() -> None:

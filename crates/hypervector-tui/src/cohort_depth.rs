@@ -272,8 +272,11 @@ fn hip3_summary_line(app: &App) -> Line<'static> {
         ));
     }
     let freshness = if status.stale { "STALE" } else { "LIVE" };
+    let enabled_count =
+        crate::cohort_hip3_roster::enabled_markets(status, &app.backend.cohort.enabled_symbols)
+            .count();
     Line::from(format!(
-        "HIP-3 {freshness}  //  {} MARKETS  //  WTI HISTORICAL ONLY  //  NO EXECUTION AUTHORITY",
+        "HIP-3 {freshness}  //  {enabled_count}/{} ENABLED MARKETS  //  NO EXECUTION AUTHORITY",
         status.markets.len(),
     ))
 }

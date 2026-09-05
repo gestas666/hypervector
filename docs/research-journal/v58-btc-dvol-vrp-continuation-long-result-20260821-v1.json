@@ -1,0 +1,186 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v58-btc-dvol-vrp-continuation-long",
+  "revision_number": 1,
+  "supersedes_revision_id": null,
+  "created_at_utc": "2026-08-21T23:18:48Z",
+  "strategy_id": "btc_dvol_vrp_bullish_breakout_long_v1",
+  "symbol": "BTC",
+  "status": "reject",
+  "hypothesis": "A bullish BTC hourly breakout beginning while Deribit 30-day implied variance is unusually high relative to trailing Hyperliquid realized variance may earn positive continuation returns because priced uncertainty compensates long risk.",
+  "decision": "Reject the exact preregistered DVOL-VRP continuation-long candidate without retuning and do not add it to V58. Validation produced only two trades, below the frozen minimum of ten. Pseudo-holdout produced eight completed trades, all losses, with minus 324.79 USD nominal net PnL and profit factor zero; the unchanged V58 sweep earned plus 20.33 USD in the same nominal pseudo-holdout. Both delayed out-of-sample cells failed. Do not reopen nearby quantile, lookback, breakout, stop, target, hold, exit, or delay variants on these opened partitions. No live strategy, route, configuration, risk, process, position, or order changed.",
+  "confidence": "high",
+  "falsifier": "Invalidate this exact rejection if any registered source or generator checksum does not match, if an independent replay from the same registered bytes is semantically different, or if verified historical DVOL revision or receipt-time evidence materially changes point-in-time availability. Such evidence requires a new preregistered experiment rather than reinterpretation.",
+  "evidence": [
+    {
+      "path": "v58-btc-dvol-vrp-continuation-long-preregistration-20260821-v1.json",
+      "role": "outcome_blind_frozen_hypothesis_strategy_economics_and_acceptance_contract",
+      "sha256": "b6ad9cbf6720537ce6ecac96dccad49e1573325e95c5c651dcc433c86b0fcd8e",
+      "bytes": 10561
+    },
+    {
+      "path": "v58-btc-dvol-vrp-continuation-long-input-registration-20260821-v1.json",
+      "role": "initial_pre_outcome_source_and_generator_registration",
+      "sha256": "432f0f770ae0792385c8b8dbaa0a75b2c85482b231835725211fa833e9d0a21d",
+      "bytes": 5071
+    },
+    {
+      "path": "v58-btc-dvol-vrp-continuation-long-technical-failure-addendum-20260821-v1.json",
+      "role": "pre_outcome_mixed_timestamp_precision_failure_root_cause_and_regression_evidence",
+      "sha256": "750f6486ab23988ee4ea547e8be583393e41ad286331b4fad2ac6b03c95b921d",
+      "bytes": 2036
+    },
+    {
+      "path": "v58-btc-dvol-vrp-continuation-long-input-registration-20260821-v2.json",
+      "role": "executed_source_and_corrected_generator_registration",
+      "sha256": "38f229f0351b0a882ca81454e35f1084b7cb0162c1954bdbe5b42aaf3d1769f2",
+      "bytes": 5614
+    },
+    {
+      "path": "../../data/cache/vendor/deribit/BTC_DVOL/20250728T000000Z_20260728T000000Z_hourly_v1/manifest.json",
+      "role": "official_deribit_raw_page_and_normalized_dvol_bundle_identity",
+      "sha256": "752018126dd42aa420541d011958c54d5708b36ecbeb918ae1117eb03468bf91",
+      "bytes": 4705
+    },
+    {
+      "path": "../../data/cache/vendor/deribit/BTC_DVOL/20250728T000000Z_20260728T000000Z_hourly_v1/dvol.parquet",
+      "role": "official_hourly_btc_dvol_normalized_source",
+      "sha256": "d64918d8eb65aa132c4bbff9231996e8e7c9cb0984953d851c5e0e7b4a09a617",
+      "bytes": 165348
+    },
+    {
+      "path": "../../data/cache/BTC_1m_365d.parquet",
+      "role": "hyperliquid_btc_one_minute_market_source",
+      "sha256": "b0742553ebeaa7cb4af6fabfd496f5462354cb541705fd0ca5ec222dc21e15d8",
+      "bytes": 13014449
+    },
+    {
+      "path": "../../data/cache/vendor/hyperliquid/BTC/20250728T000000000000Z_20260728T000000000000Z_funding/funding.parquet",
+      "role": "exact_hyperliquid_btc_hourly_funding_source",
+      "sha256": "1a222f783af9d5b52f500e259a89911e54c5f9c96dcab45dea466a166fc109c6",
+      "bytes": 184165
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v58_btc_dvol_vrp_continuation_long_20260821_v1/report.json",
+      "role": "registered_complete_experiment_report",
+      "sha256": "ae02bf567010b2ed34fd2e2481b176718917c480f004afbc22e5a6b65c82278b",
+      "bytes": 115456
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v58_btc_dvol_vrp_continuation_long_20260821_v1/trades.parquet",
+      "role": "registered_complete_trade_sidecar",
+      "sha256": "098035c8ca66130046f2bbc469cff66a48a0f43f7a05321cff12789fb112c3f4",
+      "bytes": 151509
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v58_btc_dvol_vrp_continuation_long_20260821_reproduction_v1/report.json",
+      "role": "independent_semantic_reproduction_report",
+      "sha256": "70b5a872492774a454b40f93f37cb1d8f149ff1dba5c0759eb50cdad5c233c1e",
+      "bytes": 115456
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v58_btc_dvol_vrp_continuation_long_20260821_reproduction_v1/trades.parquet",
+      "role": "byte_identical_reproduction_trade_sidecar",
+      "sha256": "098035c8ca66130046f2bbc469cff66a48a0f43f7a05321cff12789fb112c3f4",
+      "bytes": 151509
+    }
+  ],
+  "metrics": {
+    "registered_experiment_hypothesis_id": "V58_BTC_DVOL_VRP_CONTINUATION_LONG_V1",
+    "generator_aggregate_sha256": "319d2a702168ea2ce43ef9ddcfa0999c5e41c0d2a78bbf2c55550bc82939323d",
+    "source_audit": {
+      "dvol_rows": 8761,
+      "dvol_first_timestamp": "2025-07-28T00:00:00+00:00",
+      "dvol_last_timestamp": "2026-07-28T00:00:00+00:00",
+      "raw_pages": 9,
+      "hourly_gaps": 0,
+      "duplicate_timestamps": 0,
+      "finite_positive_valid_ohlc": true
+    },
+    "technical_retry": {
+      "initial_result_published": false,
+      "candidate_outcomes_inspected_before_fix": false,
+      "root_cause": "Equal UTC instants had microsecond BTC and millisecond DVOL storage precision; Series.equals rejected the dtype difference.",
+      "corrective_scope": "Timestamp identity validation only; Series.equals changed to DatetimeIndex.equals.",
+      "feature_formula_changed": false,
+      "strategy_or_economic_contract_changed": false,
+      "focused_tests_after_fix": 70
+    },
+    "reproduction": {
+      "semantic_reports_identical_after_generated_at_removal": true,
+      "semantic_report_sha256": "bb54606c780d4a2d22fe10b3e0686ed8ae65728400cd5d698bf2044f54860141",
+      "trades_byte_identical": true,
+      "trade_sha256": "098035c8ca66130046f2bbc469cff66a48a0f43f7a05321cff12789fb112c3f4"
+    },
+    "nominal_validation": {
+      "candidate_raw_signals": 2,
+      "candidate_completed_trades": 2,
+      "candidate_wins": 2,
+      "candidate_losses": 0,
+      "candidate_net_pnl_usd": 243.77914303692432,
+      "candidate_profit_factor": null,
+      "candidate_net_excluding_largest_winner_usd": 121.86167046816742,
+      "candidate_maximum_drawdown_pct": -1.8576964300990881,
+      "price_only_net_pnl_usd": -151.3644801258988,
+      "v58_sweep_net_pnl_usd": -95.77047886684431
+    },
+    "nominal_pseudo_holdout": {
+      "candidate_raw_signals": 9,
+      "candidate_completed_trades": 8,
+      "candidate_wins": 0,
+      "candidate_losses": 8,
+      "candidate_net_pnl_usd": -324.79081401420535,
+      "candidate_profit_factor": 0.0,
+      "candidate_net_excluding_largest_winner_usd": -324.79081401420535,
+      "candidate_maximum_drawdown_pct": -6.495816280284107,
+      "price_only_net_pnl_usd": -419.8909030917839,
+      "v58_sweep_net_pnl_usd": 20.33162386456752,
+      "candidate_minus_v58_sweep_usd": -345.12243787877287
+    },
+    "delayed_cost_headroom": {
+      "validation_net_pnl_usd": -38.95917153722257,
+      "pseudo_holdout_net_pnl_usd": -391.104000379677,
+      "both_oos_partitions_survived": false
+    },
+    "acceptance": {
+      "candidate_supported": false,
+      "failed_check_count": 16,
+      "failed_checks": [
+        "validation_nominal_minimum_ten_completed_trades",
+        "validation_delayed_positive_net",
+        "validation_delayed_profit_factor_above_one",
+        "validation_delayed_positive_ex_largest",
+        "pseudo_holdout_nominal_minimum_ten_completed_trades",
+        "pseudo_holdout_nominal_positive_net",
+        "pseudo_holdout_nominal_profit_factor_above_one",
+        "pseudo_holdout_nominal_positive_ex_largest",
+        "pseudo_holdout_stress_positive_net",
+        "pseudo_holdout_stress_profit_factor_above_one",
+        "pseudo_holdout_stress_positive_ex_largest",
+        "pseudo_holdout_delayed_positive_net",
+        "pseudo_holdout_delayed_profit_factor_above_one",
+        "pseudo_holdout_delayed_positive_ex_largest",
+        "pseudo_holdout_nominal_candidate_exceeds_no_action",
+        "pseudo_holdout_nominal_candidate_exceeds_v58_sweep"
+      ]
+    },
+    "shared_route_competition_run": false,
+    "live_change_supported": false
+  },
+  "analysis": {
+    "why_validation_does_not_override_rejection": "The plus 243.78 USD validation result came from only two trades, both targets. That is below the frozen ten-trade minimum and does not estimate robust expectancy.",
+    "decisive_failure": "Pseudo-holdout had eight completed trades, zero wins, eight losses, profit factor zero, and minus 324.79 USD nominal net PnL. The unchanged V58 sweep was positive in the same partition.",
+    "mechanism_interpretation": "The high-VRP plus bullish-breakout conjunction was sparse and did not remain directionally useful across OOS periods or latency stress. This exact construction does not solve V58's missing BTC continuation-long coverage.",
+    "recommended_follow_up": "Close this hypothesis family. If BTC-long research continues, require a materially distinct causal input, preregistration before outcome inspection, realistic costs, at least ten trades in both OOS partitions, positive ex-largest results, and superiority to no action and the unchanged sweep."
+  },
+  "limitations": [
+    "All BTC price partitions were previously opened; pseudo-holdout is not pristine evidence.",
+    "Deribit history lacks bitemporal revision and historical receipt-time metadata.",
+    "The one-year window is short for a slow options-risk-premium mechanism and produced only two validation trades.",
+    "One-minute bars cannot establish exact BBO ordering, depth, market impact, or cross-venue receipt latency.",
+    "This rejects one exact options-derived BTC-long construction, not every possible options-derived mechanism."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

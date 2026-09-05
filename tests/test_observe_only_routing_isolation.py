@@ -185,6 +185,7 @@ def _runner(
         signal_stop_requested=lambda: False,
         maximum_hold_seconds_by_symbol={"BTC": 28_800},
         execution_contracts={"hulk": execution_contract()},
+        maximum_entry_delay_ms_by_provider_symbol={("hulk", "BTC"): 60_000},
         executable_provider_symbols=frozenset({("hulk", "BTC")}),
     )
     return runner, telemetry

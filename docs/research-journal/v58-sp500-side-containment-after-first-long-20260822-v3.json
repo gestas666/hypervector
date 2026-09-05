@@ -1,0 +1,122 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v58-sp500-side-containment-after-first-long",
+  "revision_number": 3,
+  "supersedes_revision_id": "eb0ca426e16ba29d025986d2c6d057d07682e34096b03d5161cc66a8469b6390",
+  "created_at_utc": "2026-08-22T11:33:03Z",
+  "strategy_id": "hip3_breakout_pressure_sp500_spcx_fresh15s_bidirectional_v3",
+  "symbol": "xyz:SP500",
+  "status": "candidate",
+  "hypothesis": "Removing only future SP500 long execution authority at a verified flat and order-free boundary may contain an unsupported side while preserving observation, the exact short route, every V58 risk and exit parameter, and the complete funded-run accounting history.",
+  "decision": "Operator approval remains recorded for the exact V59 cutover. Preserve the protected current SP500 short and withhold new V58 entries. At the first verified flat and order-free boundary, preserve the original funded-run accounting start across the exact ordered V58-to-V59 fingerprint lineage, then require fresh preflight, backup, immutable continuation evidence, exact startup, checkpoint, SPCX source, and post-start acceptance checks.",
+  "confidence": "medium_high",
+  "falsifier": "Reject or roll back V59 if the candidate differs from V58 beyond profile identity and SP500 long execution authority; if the accounting start, V58/V59 lineage, parent evidence, inherited trade scope, SPCX source, sizing, exits, protection, ledger, preflight, backup, startup, checkpoint, post-start acceptance, or TUI projection differs; or if any live process starts before the flat and order-free boundary.",
+  "evidence": [
+    {
+      "path": "v58-sp500-side-containment-after-first-long-20260822-v2.json",
+      "role": "superseded approval and corrected-SPCX-source revision",
+      "sha256": "5ab5cfaba280c13b457a97da8f72392a5365337cb382749f20a58a996f91861b",
+      "bytes": 8243
+    },
+    {
+      "path": "../../configs/multi_asset_growth_first_5000_eight_asset_sp500_short_containment_candidate_v59.toml",
+      "role": "exact V59 candidate configuration",
+      "sha256": "1f3d4e122afa70c0fd63c161cf6cd68b54d6fe7d96df738d66f8a6e1a48d3a81",
+      "bytes": 6219
+    },
+    {
+      "path": "../../docs/plans/2026-08-22-v59-accounting-epoch-lineage.md",
+      "role": "validated accounting-lineage implementation and cutover plan",
+      "sha256": "212cc409993bf8c6033e293d9e355be2060474139303afafce1d52d469cf5c26",
+      "bytes": 8653
+    },
+    {
+      "path": "../../src/hypervector/live/cohort_accounting_continuation.py",
+      "role": "fail-closed V58-to-V59 continuation manifest builder and verifier",
+      "sha256": "6419fcb3b6b1487c952ce21428860a632eb3bc7d9feb7a8bd89fc6df4f7a30bc",
+      "bytes": 10808
+    },
+    {
+      "path": "../../src/hypervector/live/cohort_accounting_rollover.py",
+      "role": "mandatory V59 bundle loader and preserved-evidence verifier",
+      "sha256": "a03a2eafb2fe130f4fd1c8b39d473377a8c4214d42561f3d3d6f1593496a5b66",
+      "bytes": 18993
+    },
+    {
+      "path": "../../src/hypervector/research/v59_poststart_acceptance.py",
+      "role": "V59 post-start SPCX-source and accounting-lineage acceptance",
+      "sha256": "9665d73276d8b5246dc947e7aa01a248366af5f768609ae93a4caf05119ea942",
+      "bytes": 11348
+    },
+    {
+      "path": "../../crates/hypervector-tui/src/backend_cohort_portfolio_archive.rs",
+      "role": "legacy-compatible strict TUI accounting-lineage projection",
+      "sha256": "d9f49b55e637b96d8e1894ab82e5c503247f7a9ca9c54c7926ed3943f1700b2c",
+      "bytes": 4742
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v59_accounting_lineage_verification_20260822T1133Z.json",
+      "role": "fresh focused and complete technical verification record",
+      "sha256": "58b4e6d94aad2189f32b1224f85d5942b968ba7fe374527f96ae150813ae98c0",
+      "bytes": 6477
+    }
+  ],
+  "metrics": {
+    "recommendation": "Apply only the exact approved V59 SP500-long containment at the first verified flat and order-free boundary; retain the entire funded-run history through the exact V58/V59 lineage.",
+    "approval_state": "Approved by the operator; no repeated approval request is required for this exact scope. Technical boundary conditions remain mandatory.",
+    "accounting_defect_reproduced": "The V58 epoch bundle rejects V59 identity, while omitting a bundle removes the funded-run scope. Neither behavior is acceptable for the approved continuation.",
+    "accounting_fix": {
+      "original_start_venue_timestamp_ms": 1787164729837,
+      "current_profile_fingerprint": "c057882fdd0818831076685aa0fb0134b22889618f6c145ca8e1f9f33111ab78",
+      "included_profile_fingerprints": [
+        "8a04636c9ff60a7eae141381cb540d7c6ceed081097cda7d5e465d48faa5022b",
+        "c057882fdd0818831076685aa0fb0134b22889618f6c145ca8e1f9f33111ab78"
+      ],
+      "parent_manifest_copied_and_hashed": true,
+      "v59_bundle_required": true,
+      "poststart_acceptance_required": true,
+      "tui_validation_required": true
+    },
+    "proposed_live_change": "Remove only SP500 long execution authority. Preserve all eight assets, ten-position capacity, both-side observation telemetry, the exact SP500 short route, every sizing, stop, profit-lock, opposite-intent, and maximum-hold parameter, plus funded-run performance since the V58 epoch start.",
+    "current_boundary": {
+      "state": "draining_with_protected_open_sp500_short",
+      "size_signed": -0.222,
+      "protective_stop_oid": 522929314664,
+      "flat_and_order_free": false
+    },
+    "validation_completed": [
+      "Accounting model and isolated-worker lineage propagation",
+      "Immutable parent-manifest continuation publisher and loader",
+      "Mandatory V59 bundle boundary",
+      "V59 post-start lineage and SPCX-source acceptance",
+      "Legacy-compatible strict Rust TUI projection",
+      "Focused Python tests: 77 passed",
+      "Full Python non-network tests: 7456 passed, 4 deselected, 0 failed",
+      "Full Rust TUI tests: 457 passed, 4 ignored, 0 failed",
+      "Ruff, Rust format, diff integrity, and fail-closed CLI status"
+    ],
+    "validation_still_required": [
+      "Resolve and reconcile the current SP500 short",
+      "Verify every venue position and owned order is flat",
+      "Archive the completed V58 drain",
+      "Generate a fresh candidate-bound mainnet preflight",
+      "Create and verify a fresh prestart backup",
+      "Publish and independently reload the immutable V58-to-V59 continuation bundle",
+      "Start the exact V59 fingerprint and one checkpoint writer",
+      "Require actual V59 post-start acceptance with authentic SPCX source telemetry and exact accounting lineage"
+    ],
+    "rollback_triggers": {
+      "technical": "Any identity, lineage, inherited history, SPCX source, direction, exit, sizing, ledger, stop, preflight, backup, startup, post-start, or TUI mismatch",
+      "economic": "Economic evidence remains report-only and does not silently mutate or gate execution"
+    }
+  },
+  "limitations": [
+    "The current SP500 short remains open and protected, so V59 has not started.",
+    "The final inherited closed-trade count and venue equity are unknown until the position resolves and the final checkpoint is regenerated.",
+    "Only two comparable resolved SP500 shorts and one resolved long were available at the prior review.",
+    "Passing technical tests does not establish profitable expectancy or guarantee capital growth."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

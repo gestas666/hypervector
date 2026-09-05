@@ -23,6 +23,27 @@ def test_monitor_command_is_read_only_and_uses_current_launcher() -> None:
     assert "--i-accept-live-risk" not in command
 
 
+def test_monitor_command_forwards_accounting_epoch_bundle() -> None:
+    """The first-class monitor preserves the checkpoint accounting lineage."""
+    bundle = "data/backups/bidirectional_cohort/accounting_epochs/v61"
+    args = build_parser().parse_args(
+        [
+            "cohort-tui",
+            "--mode",
+            "monitor",
+            "--accounting-epoch-bundle",
+            bundle,
+        ]
+    )
+
+    command = cohort_command(args)
+
+    index = command.index("--accounting-epoch-bundle")
+    assert command[index + 1] == bundle
+    assert "--enabled" not in command
+    assert "--i-accept-live-risk" not in command
+
+
 def test_live_command_forwards_both_explicit_authority_flags() -> None:
     """Headless live execution remains double-armed at the script boundary."""
     args = build_parser().parse_args(

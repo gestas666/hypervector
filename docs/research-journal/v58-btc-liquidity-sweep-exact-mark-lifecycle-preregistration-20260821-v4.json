@@ -1,0 +1,48 @@
+{
+  "schema_version": "v58_btc_sweep_lifecycle_preregistration_v1",
+  "status": "prospective_collecting_cached_observer_epoch",
+  "hypothesis_id": "v58_btc_liquidity_sweep_exact_mark_lifecycle_v4",
+  "strategy_id": "liquidity_sweep_long_1h_stop60_target60_v2",
+  "symbol": "BTC",
+  "observer_run_id": "bidirectional-observe-1787279243093",
+  "observer_profile_id": "multi_asset_growth_first_5000_eight_asset_incremental_v58",
+  "observer_profile_fingerprint": "24820e4bfad8a978a7b617a29dc0326f8fc0e583389b67e0219ce4ab5789c874",
+  "observer_run_fingerprint": "1812cbfd3ad4b3f9b939c21c45caa38155e48ca78ddb205e68d68c9dd9b8f1d8",
+  "prospective_start_ms": 1787279460000,
+  "config": {
+    "path": "configs/multi_asset_growth_first_5000_eight_asset_incremental_v58.toml",
+    "bytes": 6142,
+    "sha256": "1c1c1656233b074df2ed3adcee8cb8cb2c58f0d191cc9f9ac34799478fca3378"
+  },
+  "ledger_prefix": {
+    "bytes": 423361,
+    "path": "/Users/gestas/Prototypes/hypervector/data/observe/v58_eight_asset_prospective_20260819_v1/decisions.jsonl",
+    "rows": 16,
+    "sha256": "9391c31aa9e8c31326ed4c17136a861d5908b25e5a6b29ff3268005cc72c2c18"
+  },
+  "frozen_contract": {
+    "side": "long",
+    "entry_liquidity": "taker_ioc",
+    "maximum_entry_delay_seconds": 30,
+    "stop_policy": "fixed_bps",
+    "stop_bps": 60.0,
+    "target_policy": "fixed_bps",
+    "target_bps": 60.0,
+    "maximum_hold_seconds": 86400,
+    "fee_model": "conservative_4.5_bps_taker_per_side",
+    "funding_source": "official_hyperliquid_funding_history_exact_entered_interval"
+  },
+  "analysis_contract": {
+    "performance_gate": false,
+    "automatic_promotion": false,
+    "automatic_retuning": false,
+    "pool_with_predecessor_epoch": false
+  },
+  "report_only": true,
+  "execution_authority": "none",
+  "orders_supported": false,
+  "signing_client_constructed": false,
+  "automatic_live_change": false,
+  "runtime_strategy_changed": false,
+  "approval_requested": false
+}

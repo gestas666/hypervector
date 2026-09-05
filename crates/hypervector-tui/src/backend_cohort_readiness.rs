@@ -41,6 +41,8 @@ pub struct CohortProviderEvaluation {
     pub reason: String,
     #[serde(default)]
     pub backend_non_action_reason: Option<String>,
+    #[serde(default)]
+    pub target_anchor: Option<f64>,
     pub side: Option<String>,
     pub score: Option<i64>,
     pub minimum_score: Option<i64>,

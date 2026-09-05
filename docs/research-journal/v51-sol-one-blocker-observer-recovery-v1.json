@@ -1,0 +1,136 @@
+{
+  "schema_version": "v51_sol_one_blocker_observer_recovery_v1",
+  "recorded_at_utc": "2026-08-15T19:44:36Z",
+  "profile_id": "multi_asset_growth_first_5000_six_asset_profit_lock_candidate_v51",
+  "profile_fingerprint": "30cd54bb5b5b17249ae0a6a3b01d5702b276d51f8dc5ddd6b4d36ab6aa7d1908",
+  "run_id": "bidirectional-live-1786801038311",
+  "hypothesis_key": "range_onset_bidirectional_v1|SOL|route_native_one_blocker_shadow_runtime",
+  "mode": "report_only",
+  "execution_authority": "none",
+  "automatic_live_change": false,
+  "runtime_strategy_changed": false,
+  "problem": {
+    "classification": "unbounded_historical_prefix_refresh_and_cross_clock_validation",
+    "observed_behavior": "The current-run SOL route-native observer remained alive but its artifact stopped refreshing for roughly 2.5 hours.",
+    "process_evidence_before_fix": {
+      "elapsed_time": "05:25:41",
+      "cpu_time": "00:56:40.91",
+      "physical_footprint_gib": 2.2,
+      "peak_physical_footprint_gib": 10.9,
+      "main_thread_state": "sleeping_between_refreshes"
+    },
+    "root_causes": [
+      "Every refresh read and hashed the complete 1.5GB cohort ledger and complete 189MB SOL asset ledger, including unrelated historical runs.",
+      "Twenty-three exact archived L2 rows had the exchange clock 1-15ms ahead of the local receipt clock; the adapter treated any negative local-minus-exchange lag as corruption."
+    ],
+    "live_execution_impact": "none",
+    "research_impact": "The priority-3 forward experiment was stale and the improvement digest could not update its SOL diagnosis."
+  },
+  "technical_change": {
+    "description": "Snapshot only the exact source-run suffix from each append-only ledger, retain source offset/hash evidence, and define causal L2 availability as the later of local receipt and exchange time when negative skew remains within a 1000ms sanity ceiling.",
+    "source_files": [
+      "src/hypervector/research/sol_route_native_one_blocker_command.py",
+      "tests/test_sol_route_native_one_blocker_command.py"
+    ],
+    "causal_clock_rule": "availability_ms=max(local_receipt_ms,exchange_ts_ms)",
+    "maximum_negative_clock_skew_ms": 1000,
+    "large_skew_behavior": "fail_closed",
+    "prior_run_rows_excluded": true,
+    "incomplete_live_tail_behavior": "drop_only_incomplete_final_row_and_disclose_bytes",
+    "live_strategy_changed": false,
+    "live_process_restarted": false,
+    "research_process_restarted": true
+  },
+  "production_shaped_probe": {
+    "elapsed_seconds": 5.17,
+    "exit_status": 0,
+    "cohort_source_total_bytes": 1507165941,
+    "cohort_exact_run_bytes": 33723570,
+    "cohort_exact_run_rows": 3399,
+    "asset_source_total_bytes": 189546013,
+    "asset_exact_run_bytes": 3212308,
+    "asset_exact_run_rows": 2685,
+    "public_events": 31145,
+    "l2_rows": 4051,
+    "mark_rows": 21377,
+    "clock_skew_adjusted_l2": 23,
+    "maximum_observed_negative_clock_skew_ms": 15,
+    "stream_gaps": 2,
+    "funding_events": 6,
+    "signing_client_constructed": false,
+    "orders_supported": false
+  },
+  "evidence_update": {
+    "previous_status": "candidate_lifecycle_pending",
+    "current_status": "candidate_technically_unresolved",
+    "exact_candidates": 4,
+    "attempts": 1,
+    "resolved_executions": 0,
+    "attempt_status": "technical_gap_unresolved",
+    "interpretation": "The earlier pending label predated a later explicit stream-gap record. The corrected refresh does not convert that uncertainty into a synthetic win or loss.",
+    "strategy_edge_updated": false
+  },
+  "process_reconciliation": {
+    "obsolete_report_only_processes_stopped": [
+      49481,
+      49482,
+      60604,
+      60605
+    ],
+    "replacement_processes": [
+      6812,
+      6813
+    ],
+    "replacement_command": "uv run python scripts/v51_sol_route_native_one_blocker_shadow.py --run-id bidirectional-live-1786801038311 --capture-start-ms 1786801233871 --out data/runtime/bidirectional_cohort/latest_v51_sol_route_native_one_blocker_shadow_current_run.json --interval-seconds 120",
+    "first_replacement_refresh_status": "candidate_technically_unresolved",
+    "live_backend_untouched": true,
+    "live_position_untouched": true,
+    "config_untouched": true
+  },
+  "hypothesis_ledger": [
+    {
+      "hypothesis": "The stale artifact was caused by a dead observer.",
+      "status": "rejected",
+      "evidence": "The process remained alive and slept between resource-intensive full-prefix refreshes."
+    },
+    {
+      "hypothesis": "Exact-run suffix snapshots materially reduce refresh cost without changing the experiment identity.",
+      "status": "accepted",
+      "evidence": "The production-shaped refresh completed in 5.17 seconds and retained the exact v51 profile, run, fee, funding, public-event, and candidate contracts."
+    },
+    {
+      "hypothesis": "Small negative L2 receipt lag is corrupt evidence.",
+      "status": "rejected",
+      "evidence": "All 23 cases were bounded cross-clock leads of 1-15ms. Using the later timestamp is causal and more conservative than either earlier clock."
+    },
+    {
+      "hypothesis": "The first SOL one-blocker shadow attempt can produce an execution result.",
+      "status": "rejected",
+      "evidence": "An explicit stream gap overlaps its lifecycle, so its outcome remains technically unresolved."
+    }
+  ],
+  "change_proposal": {
+    "recommendation": "Retain the bounded exact-run observer and continue collecting the next independent SOL one-blocker episode; do not infer performance from the unresolved first attempt.",
+    "why_now": "The previous observer architecture was too slow to support a continuous improvement loop and concealed newly arrived gap evidence.",
+    "evidence_reviewed": "Live process sample, exact current-run ledger suffixes, public SOL L2/mark/gap archive, funding rows, frozen v51 config, production-shaped timing probe, and report-only replay output.",
+    "observed_problem_or_opportunity": "A bounded reader makes the existing forward experiment operationally usable while retaining stricter causal evidence.",
+    "applicable_market_regime": "all SOL regimes; the candidate itself remains tied to its exact Range Onset one-blocker condition",
+    "alternatives_considered": [
+      "restart the unchanged full-history observer",
+      "increase the interval while keeping full scans",
+      "discard clock-skew rows",
+      "relax gap handling",
+      "bound reads to the exact source run and conservatively reconcile clocks"
+    ],
+    "proposed_live_change": "none",
+    "expected_upside": "Fresh forward diagnostics with substantially lower memory and latency, without changing entries, exits, size, leverage, stops, or live order behavior.",
+    "main_risks_and_failure_modes": "A reused run ID with a later configuration identity could create an unintended suffix boundary; a clock discrepancy above 1000ms aborts; an event gap can still leave a lifecycle unresolved.",
+    "validation_completed": "TDD red/green for prior-run exclusion, 15ms conservative clock reconciliation, and 1001ms fail-closed behavior; relevant unit/integration suite and production-shaped probe passed.",
+    "validation_still_required": "Observe at least two additional 120-second refreshes, verify monotonic source offsets and bounded memory, and reconcile the next independent candidate lifecycle.",
+    "success_metrics": "Refresh completes well below the 120-second interval; source bytes and rows advance monotonically; no prior-run rows, duplicate attempts, synthetic gap outcomes, signer, or orders; process memory remains bounded.",
+    "failure_or_rollback_triggers": "Any missed current-run row, source identity mismatch, duplicate attempt, non-monotonic prefix, refresh exceeding its interval, clock skew above the bound, or execution-capable dependency requires stopping the report-only observer and restoring the last good artifact.",
+    "confidence_level": "high for the operational diagnosis and bounded-read improvement; low for SOL strategy edge because no execution is resolved",
+    "explicit_approval_requested": false
+  },
+  "single_highest_value_next_investigation": "Keep SP500 source-native both-side lifecycle collection at priority 1 while the repaired SOL observer independently waits for a later technically resolved one-blocker episode."
+}

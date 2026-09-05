@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "authorization_id": "v51-standing-technical-remediation-authorization-v1",
+  "authorized_at_utc": "2026-08-14T12:55:00+00:00",
+  "status": "superseded",
+  "superseded_by": "v51-standing-remediation-authorization-v2",
+  "authorizer": "human_operator",
+  "authorized_agent_role": "continuous_v51_research_diagnostics_and_improvement_agent",
+  "authorization": "The agent may implement and deploy evidence-backed corrective changes without requesting a second approval when a confirmed error, bug, broken logic, missing technical control, corrupted data path, or execution defect is causing or is reasonably likely to cause avoidable capital loss or materially reduce realized profitability.",
+  "intent": "Prevent or stop avoidable capital bleeding while preserving empirical validation, human strategy authority, and complete traceability.",
+  "authorized_without_additional_approval": [
+    "pause or withhold new entries when a confirmed technical defect makes safe execution or attribution impossible",
+    "restore, replace, or verify a missing or incorrect reduce-only protective order without widening the operator-approved risk contract",
+    "close only the affected position reduce-only when exposure is unprotected, mis-sized, misrouted, duplicated, orphaned, or cannot be safely restored",
+    "correct symbol, side, provider, execution-plan, stop, target, timer, fee, funding, precision, reconciliation, or persistence logic so runtime behavior matches the already-approved configuration",
+    "correct stale, missing, corrupted, aliased, or contradictory market, order, position, portfolio, journal, or telemetry data that can impair execution or decision quality",
+    "repair retry, rate-limit, timeout, idempotence, restart-adoption, cache, logging, observability, and fail-closed behavior",
+    "restart or roll back an affected technical component when the change is required to load a verified corrective fix and the deployment boundary is safe",
+    "apply a minimal reversible technical correction that prevents a demonstrated implementation defect from reducing attainable profitability"
+  ],
+  "not_authorized_without_specific_approval": [
+    "change an alpha hypothesis, strategy family, or causal entry mechanism merely because recent PnL is disappointing",
+    "add or remove assets or execution routes for economic optimization rather than technical correctness",
+    "increase leverage, margin fraction, notional sizing, portfolio concentration, or venue risk",
+    "change a correctly implemented stop, target, profit lock, maximum hold, entry threshold, regime rule, or priority based only on modeled performance",
+    "silently retune parameters, select a backtest winner, promote an observer, or open a new live evidence window",
+    "treat ordinary variance, one loss, one missed move, or an unconfirmed hypothesis as a technical defect"
+  ],
+  "evidence_threshold": {
+    "required": [
+      "direct reproduction or authoritative runtime contradiction",
+      "identified approved contract or invariant that current behavior violates",
+      "bounded causal path from the defect to capital safety or realized-profitability harm",
+      "minimal corrective delta with explicit rollback",
+      "tests that fail before the fix and pass after it when code changes are involved",
+      "current venue, position, order, profile, and process reconciliation before deployment"
+    ],
+    "insufficient": [
+      "recent losses alone",
+      "backtest improvement without a reproduced implementation defect",
+      "readiness percentage or model conviction alone",
+      "a plausible but unverified failure theory"
+    ]
+  },
+  "severity_and_response": {
+    "P0_active_capital_incident": "Stabilize immediately: stop new exposure, preserve or restore reduce-only protection, and close only affected unsafe exposure if protection cannot be verified. Then patch, test, reconcile, and report.",
+    "P1_confirmed_capital_or_execution_defect": "Implement and verify the minimal correction immediately; deploy at the earliest boundary that creates less expected technical risk than waiting.",
+    "P2_noncritical_operational_or_telemetry_defect": "Implement and stage the correction, then deploy at a verified flat/order-free or otherwise isolated safe boundary.",
+    "economic_hypothesis": "Research and present the complete approval proposal; standing technical authorization does not apply."
+  },
+  "deployment_invariants": [
+    "create or verify a recoverable prechange backup",
+    "preserve the active profile and risk contract except for the proven corrective field",
+    "fail closed on unresolved position, order, profile, account, or source identity",
+    "never print or persist wallet or API secrets",
+    "use reduce-only semantics for emergency exits or protective-order replacement",
+    "run focused regression, integration, configuration, and preflight checks proportional to the affected path",
+    "verify venue state and authoritative telemetry after deployment",
+    "journal the defect, evidence, exact change, tests, deployment time, outcome, confidence, and falsifier",
+    "report the action and current exposure to the operator immediately"
+  ],
+  "rollback_triggers": [
+    "the corrected invariant still fails",
+    "position, order, profile, source, or accounting identity becomes unresolved",
+    "the patch changes strategy behavior outside the proven defect scope",
+    "new orders or exposure appear unexpectedly",
+    "backend health, latency, reconciliation, or protective-order state degrades",
+    "post-deployment evidence contradicts the causal diagnosis"
+  ],
+  "current_known_application": {
+    "checkpoint_epoch_cache": {
+      "classification": "P2_noncritical_operational_or_telemetry_defect",
+      "status": "fix_verified_not_loaded",
+      "observed_effect": "rolling checkpoint generation can lag and transiently consume high CPU and memory, making checkpoint-backed TUI panels appear stale",
+      "capital_state": "live backend remains healthy and the HYPE position is protected",
+      "authorized_next_action": "deploy the verified cache correction at the first safe flat/order-free transition, or earlier only if resource pressure becomes a material execution-health threat"
+    },
+    "entry_submission_freshness": {
+      "classification": "P1_confirmed_execution_contract_defect",
+      "status": "corrective source is already loaded in the active v51 prestart bundle",
+      "authorized_next_action": "continue telemetry validation; no duplicate deployment"
+    },
+    "active_HYPE_short": {
+      "classification": "no_confirmed_technical_defect",
+      "status": "open_protected_and_directionally_supported",
+      "authorized_next_action": "allow the frozen configured exit contract to manage the lifecycle; do not intervene solely because unrealized PnL fluctuates"
+    }
+  },
+  "authority_boundary": {
+    "standing_human_approval_for_corrective_technical_changes": true,
+    "automatic_backend_strategy_changes": false,
+    "automatic_retuning": false,
+    "automatic_asset_or_route_changes": false,
+    "automatic_leverage_or_sizing_changes": false,
+    "research_execution_authority": "none",
+    "live_backend_receives_autonomous_change_authority": false
+  },
+  "confidence": "high_that_the_authorization_scope_matches_the_operator_request_medium_on_future_incident_classification_until_each_case_is_empirically_reproduced",
+  "falsifier": "If the operator states that a category above was not intended to be preapproved, narrow the scope immediately. If a proposed correction cannot prove a violated technical invariant and causal harm path, classify it as an economic hypothesis and obtain specific approval.",
+  "execution_authority": "standing_human_authorization_for_agent_remediation_only",
+  "runtime_strategy_changed": false
+}

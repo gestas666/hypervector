@@ -59,6 +59,11 @@ fn invalid_record(record: &CohortStrategyEvidence) -> bool {
         record.evidence_source.as_str(),
     ];
     text.iter().any(|value| value.trim().is_empty())
-        || !matches!(record.confidence.as_str(), "high" | "medium" | "low")
+        || !valid_research_confidence(&record.confidence)
         || record.execution_effect != "report_only"
+}
+
+/// Return whether a backend research confidence label is supported.
+pub(crate) fn valid_research_confidence(value: &str) -> bool {
+    matches!(value, "high" | "medium" | "low_to_medium" | "low")
 }

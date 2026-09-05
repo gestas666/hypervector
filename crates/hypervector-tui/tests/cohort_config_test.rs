@@ -13,7 +13,10 @@ use hypervector_tui::{
     backend_cohort_risk_utilization::{
         CohortAssetRiskUtilization, CohortProviderRiskUtilization, CohortRiskUtilization,
     },
-    backend_growth_preflight::{GrowthPreflightAssetTelemetry, GrowthPreflightTelemetry},
+    backend_growth_preflight::{
+        GrowthPreflightAssetTelemetry, GrowthPreflightRetiredAssetTelemetry,
+        GrowthPreflightTelemetry,
+    },
     backend_telemetry::BackendTelemetrySnapshot,
 };
 use ratatui::{Terminal, backend::TestBackend};
@@ -22,3 +25,4 @@ use tempfile::tempdir;
 
 include!("support/cohort_config_profile.rs");
 include!("support/cohort_config_evidence.rs");
+include!("support/cohort_config_slippage.rs");

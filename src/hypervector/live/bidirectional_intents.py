@@ -61,6 +61,7 @@ class StrategyIntent:
     reference_price: float
     reason: str
     stop_anchor: float | None = None
+    target_anchor: float | None = None
     regime_alignment_score: float | None = None
     regime_alignment_stance: RegimeAlignmentStance | None = None
     regime_decision_time_ms: int | None = None
@@ -85,6 +86,10 @@ class StrategyIntent:
             not math.isfinite(self.stop_anchor) or self.stop_anchor <= 0.0
         ):
             raise ValueError("intent stop_anchor must be positive and finite")
+        if self.target_anchor is not None and (
+            not math.isfinite(self.target_anchor) or self.target_anchor <= 0.0
+        ):
+            raise ValueError("intent target_anchor must be positive and finite")
         _validate_regime_preference(self)
 
 
@@ -113,11 +118,15 @@ class RoutingAction:
     decision_time_ms: int
     reference_price: float
     stop_anchor: float | None = None
+    target_anchor: float | None = None
     regime_alignment_score: float | None = None
     regime_alignment_stance: RegimeAlignmentStance | None = None
     regime_decision_time_ms: int | None = None
     regime_alignment_basis: str | None = None
     exit_reason: str | None = None
+    submission_observed_at_ms: int | None = None
+    submission_age_ms: int | None = None
+    submission_limit_ms: int | None = None
 
 
 @dataclass(frozen=True)
@@ -126,6 +135,9 @@ class WithheldIntent:
 
     intent: StrategyIntent
     reason: str
+    submission_observed_at_ms: int | None = None
+    submission_age_ms: int | None = None
+    submission_limit_ms: int | None = None
 
 
 @dataclass(frozen=True)
@@ -176,7 +188,7 @@ class BidirectionalIntentRouter:
     ) -> IntentRoutingReport:
         """Select at most one deterministic action per symbol for this cycle."""
         _validate_positions(positions, self._symbols)
-        selected, withheld = self._select_intents(intents)
+        selected, withheld = self._select_intents(intents, positions)
         open_count = sum(position.side is not None for position in positions.values())
         actions: list[RoutingAction] = []
         for intent in selected:
@@ -199,6 +211,7 @@ class BidirectionalIntentRouter:
     def _select_intents(
         self,
         intents: tuple[StrategyIntent, ...],
+        positions: dict[str, PositionState],
     ) -> tuple[list[StrategyIntent], list[WithheldIntent]]:
         groups: dict[str, list[StrategyIntent]] = defaultdict(list)
         order: list[str] = []
@@ -210,7 +223,9 @@ class BidirectionalIntentRouter:
         selected: list[StrategyIntent] = []
         withheld: list[WithheldIntent] = []
         for symbol in order:
-            choice, alternatives = self._select_symbol(groups[symbol])
+            choice, alternatives = self._select_symbol(
+                groups[symbol], positions[symbol].side
+            )
             selected.append(choice)
             withheld.extend(alternatives)
         return selected, withheld
@@ -218,6 +233,7 @@ class BidirectionalIntentRouter:
     def _select_symbol(
         self,
         intents: list[StrategyIntent],
+        open_side: str | None,
     ) -> tuple[StrategyIntent, list[WithheldIntent]]:
         ranked = sorted(
             intents,
@@ -228,10 +244,29 @@ class BidirectionalIntentRouter:
             ),
             reverse=True,
         )
-        choice = ranked[0]
+        exits = [
+            intent
+            for intent in ranked
+            if open_side is not None
+            and intent.side != open_side
+            and self._position_policies[(intent.strategy_id, intent.symbol)]
+            == "enter_and_close"
+        ]
+        choice = exits[0] if exits else ranked[0]
+        exit_precedence = bool(exits) and choice is not ranked[0]
+        alternatives = list(ranked)
+        alternatives.remove(choice)
         alternatives = [
-            WithheldIntent(intent, _conflict_reason(choice, intent))
-            for intent in ranked[1:]
+            WithheldIntent(
+                intent,
+                _conflict_reason(
+                    choice,
+                    intent,
+                    exit_precedence=exit_precedence,
+                    open_side=open_side,
+                ),
+            )
+            for intent in alternatives
         ]
         return choice, alternatives
 
@@ -318,6 +353,7 @@ def _routing_action(
         decision_time_ms=intent.decision_time_ms,
         reference_price=intent.reference_price,
         stop_anchor=intent.stop_anchor,
+        target_anchor=intent.target_anchor,
         regime_alignment_score=intent.regime_alignment_score,
         regime_alignment_stance=intent.regime_alignment_stance,
         regime_decision_time_ms=intent.regime_decision_time_ms,
@@ -329,7 +365,15 @@ def _routing_regime_score(intent: StrategyIntent) -> float:
     return intent.regime_alignment_score or 0.0
 
 
-def _conflict_reason(choice: StrategyIntent, alternative: StrategyIntent) -> str:
+def _conflict_reason(
+    choice: StrategyIntent,
+    alternative: StrategyIntent,
+    *,
+    exit_precedence: bool = False,
+    open_side: str | None = None,
+) -> str:
+    if exit_precedence and alternative.side == open_side:
+        return "opposite_position_exit_precedence"
     if _routing_regime_score(choice) > _routing_regime_score(alternative):
         return "lower_regime_alignment"
     return "lower_provider_priority"

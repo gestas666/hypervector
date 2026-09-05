@@ -268,11 +268,8 @@ def _portfolio(
     )
     sizing_ready = all(bool(asset["sizing_technically_ready"]) for asset in assets)
     flat = not blocking
-    margin_fraction = sum(
-        sorted((asset.margin_fraction for asset in config.assets), reverse=True)[
-            : config.maximum_positions
-        ]
-    )
+    executable_symbols = _executable_asset_symbols(config)
+    margin_fraction = maximum_executable_margin_fraction(config)
     reasons = _portfolio_reasons(blocking, ledger_reconciled, sizing_ready)
     reference = (
         min(_asset_actual_equity(asset) for asset in assets)
@@ -282,7 +279,10 @@ def _portfolio(
     return {
         "configured_assets": len(config.assets),
         "maximum_positions": config.maximum_positions,
-        "unused_capacity_slots": max(config.maximum_positions - len(config.assets), 0),
+        "unused_capacity_slots": max(
+            config.maximum_positions - len(executable_symbols),
+            0,
+        ),
         "maximum_configured_margin_fraction": margin_fraction,
         "sizing_reference_equity_usd": reference,
         "sizing_reference_source": (
@@ -301,6 +301,24 @@ def _portfolio(
         "performance_gate": False,
         "balance_gate": False,
     }
+
+
+def maximum_executable_margin_fraction(config: MultiAssetLiveConfig) -> float:
+    """Return the reachable concurrent margin fraction under current authority."""
+    executable = _executable_asset_symbols(config)
+    fractions = sorted(
+        (
+            asset.margin_fraction
+            for asset in config.assets
+            if asset.symbol in executable
+        ),
+        reverse=True,
+    )
+    return sum(fractions[: config.maximum_positions])
+
+
+def _executable_asset_symbols(config: MultiAssetLiveConfig) -> frozenset[str]:
+    return frozenset(pair[1] for pair in config.executable_provider_symbols)
 
 
 def _portfolio_reasons(

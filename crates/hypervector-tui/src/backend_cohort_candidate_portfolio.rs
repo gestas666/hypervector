@@ -112,6 +112,11 @@ fn contract_valid(contract: &CandidatePortfolioContractRaw) -> bool {
 }
 
 fn candidate_identity_valid(source: &str, candidate: &str, symbol: &str) -> bool {
+    primary_candidate_identity_valid(source, candidate, symbol)
+        || secondary_candidate_identity_valid(source, candidate, symbol)
+}
+
+fn primary_candidate_identity_valid(source: &str, candidate: &str, symbol: &str) -> bool {
     matches!(
         (source, candidate, symbol),
         (
@@ -140,7 +145,14 @@ fn candidate_identity_valid(source: &str, candidate: &str, symbol: &str) -> bool
             "range_onset_bidirectional_v1",
             "hype_range_absorption_fixed60_bidirectional_v1",
             "HYPE",
-        ) | (
+        )
+    )
+}
+
+fn secondary_candidate_identity_valid(source: &str, candidate: &str, symbol: &str) -> bool {
+    matches!(
+        (source, candidate, symbol),
+        (
             "range_onset_bidirectional_v1",
             "sol_aligned_range_relaxed_fixed60_bidirectional_v1",
             "SOL",
@@ -201,25 +213,6 @@ fn deployable_summary_shape_valid(summary: &CandidatePortfolioSummaryRaw) -> boo
                     .is_none_or(|value| value.is_finite() && (0.0..=1.0).contains(&value))
         }
         _ => false,
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::candidate_identity_valid;
-
-    #[test]
-    fn recognizes_current_spcx_and_sol_candidate_portfolio_identities() {
-        assert!(candidate_identity_valid(
-            "hip3_swing_ha_sp500_spcx_bidirectional_v2",
-            "spcx_swing_pivot_relaxed_fixed60_bidirectional_v1",
-            "xyz:SPCX",
-        ));
-        assert!(candidate_identity_valid(
-            "hype_breakout_onset_bidirectional_v1",
-            "sol_breakout_continuation_aligned_fixed60_bidirectional_v1",
-            "SOL",
-        ));
     }
 }
 
@@ -445,5 +438,24 @@ fn close(left: Option<f64>, right: Option<f64>) -> bool {
         (None, None) => true,
         (Some(left), Some(right)) => (left - right).abs() <= 1e-9,
         _ => false,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::candidate_identity_valid;
+
+    #[test]
+    fn recognizes_current_spcx_and_sol_candidate_portfolio_identities() {
+        assert!(candidate_identity_valid(
+            "hip3_swing_ha_sp500_spcx_bidirectional_v2",
+            "spcx_swing_pivot_relaxed_fixed60_bidirectional_v1",
+            "xyz:SPCX",
+        ));
+        assert!(candidate_identity_valid(
+            "hype_breakout_onset_bidirectional_v1",
+            "sol_breakout_continuation_aligned_fixed60_bidirectional_v1",
+            "SOL",
+        ));
     }
 }

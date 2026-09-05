@@ -25,7 +25,9 @@ def add_oxa_parsers(subparsers: argparse._SubParsersAction) -> None:
 
 
 def _add_archive_fetch_parsers(subparsers: argparse._SubParsersAction) -> None:
-    """Register L2, trade, and price archive acquisition commands."""
+    """Register L2, trade, liquidation, and price acquisition commands."""
+    from hypervector.cli_oxa_liquidations import cmd_oxa_liquidation_fetch
+
     book = subparsers.add_parser(
         "oxa-book-fetch",
         help="Fetch bounded Hyperliquid-native L2 history from 0xArchive",
@@ -40,6 +42,13 @@ def _add_archive_fetch_parsers(subparsers: argparse._SubParsersAction) -> None:
     )
     _add_window_args(trades)
     trades.set_defaults(func=cmd_oxa_trade_fetch)
+
+    liquidations = subparsers.add_parser(
+        "oxa-liquidation-fetch",
+        help="Fetch bounded Hyperliquid liquidation labels from 0xArchive",
+    )
+    _add_window_args(liquidations)
+    liquidations.set_defaults(func=cmd_oxa_liquidation_fetch)
 
     prices = subparsers.add_parser(
         "oxa-price-fetch",

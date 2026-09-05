@@ -11,7 +11,6 @@ from hypervector.research.cohort_forward_paths import (
     MINUTE_MS,
     Candle,
     DirectionalPath,
-    non_overlapping_paths,
     resolve_directional_path,
 )
 from hypervector.research.cohort_opportunity_capture import (
@@ -58,6 +57,9 @@ def build_portfolio_opportunity_dedup(
                 "side",
             ],
             "scope": "directional_one_blocker_readiness_annotations",
+            "path_start_policy": (
+                "first_full_minute_at_or_after_latest_group_availability"
+            ),
         },
         "provider_observations": observations,
         "unique_directional_paths": len(groups),
@@ -76,6 +78,7 @@ def build_portfolio_opportunity_dedup(
             "opposing directions remain separate hypotheses rather than duplicates",
             "reference-price conflicts are excluded from resolved path statistics",
             "independence is measured within each run, symbol, and direction",
+            "cross-provider groups begin after every grouped candidate is available",
         ],
     }
 
@@ -337,6 +340,10 @@ def _path_evidence(
     return {
         "source_run_id": group.source_run_id,
         "decision_time_ms": group.decision_time_ms,
+        "latest_available_time_ms": max(
+            candidate.available_time_ms for candidate in group.candidates
+        ),
+        "path_start_time_ms": path.path_start_time_ms,
         "reference_price": group.candidates[0].reference_price,
         "directional_close_return_bps": path.directional_close_return_bps,
         "favorable_excursion_bps": path.favorable_excursion_bps,
@@ -354,6 +361,9 @@ def _resolve_group(
     candidate = group.candidates[0]
     return resolve_directional_path(
         decision_time_ms=group.decision_time_ms,
+        available_time_ms=max(
+            candidate.available_time_ms for candidate in group.candidates
+        ),
         reference_price=candidate.reference_price,
         side=group.side,
         candles=candles.get(group.symbol, {}),
@@ -370,23 +380,24 @@ def _independent_paths(
 def _independent_outcomes(
     outcomes: Sequence[tuple[_OpportunityGroup, DirectionalPath]], horizon: int
 ) -> tuple[tuple[_OpportunityGroup, DirectionalPath], ...]:
-    buckets: dict[tuple[str | None, str, str], list[DirectionalPath]] = defaultdict(
-        list
-    )
     indexed: dict[
         tuple[str | None, str, str], list[tuple[_OpportunityGroup, DirectionalPath]]
     ] = defaultdict(list)
     for group, path in outcomes:
         key = (group.source_run_id, group.symbol, group.side)
-        buckets[key].append(path)
         indexed[key].append((group, path))
     selected: list[tuple[_OpportunityGroup, DirectionalPath]] = []
-    for key in sorted(buckets, key=lambda value: (value[0] or "", *value[1:])):
-        selected_times = {
-            path.decision_time_ms
-            for path in non_overlapping_paths(buckets[key], horizon)
-        }
-        selected.extend(
-            item for item in indexed[key] if item[1].decision_time_ms in selected_times
-        )
+    for key in sorted(indexed, key=lambda value: (value[0] or "", *value[1:])):
+        next_available = -1
+        for item in sorted(
+            indexed[key],
+            key=lambda value: (
+                value[1].path_start_time_ms,
+                value[0].decision_time_ms,
+            ),
+        ):
+            if item[1].path_start_time_ms < next_available:
+                continue
+            selected.append(item)
+            next_available = item[1].path_start_time_ms + horizon * MINUTE_MS
     return tuple(selected)

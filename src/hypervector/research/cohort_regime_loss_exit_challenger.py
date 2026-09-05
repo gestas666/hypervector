@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
-from hypervector.live.canonical_regime_telemetry import CANONICAL_REGIME_STRATEGIES
 from hypervector.research.cohort_lifecycle_evidence import (
     FillAggregate,
     build_fill_index,
@@ -24,6 +23,7 @@ from hypervector.research.cohort_regime_loss_exit_economics import (
     regime_loss_exit_policy_id,
 )
 from hypervector.research.cohort_regime_assessment import build_regime_assessment
+from hypervector.research.cohort_signal_candidates import is_technical_unavailability
 from hypervector.research.cohort_regime_loss_exit_policy import (
     RegimeLossExitObservation,
 )
@@ -31,6 +31,7 @@ from hypervector.research.cohort_trade_reflection_index import (
     Candle,
     ReflectionEvidenceIndex,
     build_reflection_evidence_index,
+    canonical_timeline,
 )
 
 Record = Mapping[str, object]
@@ -174,9 +175,11 @@ def build_regime_loss_exit_observations(
     end_ms = _nonnegative_int(end_timestamp_ms, "loss-exit end timestamp")
     if end_ms <= entry_ms:
         raise ValueError("loss-exit lifecycle must end after entry")
+    provider = _available_evaluations(provider_evaluations)
+    canonical = _available_evaluations(canonical_evaluations)
     decisions = sorted(
         decision
-        for decision in set(provider_evaluations).union(canonical_evaluations)
+        for decision in set(provider).union(canonical)
         if entry_ms < decision < end_ms
     )
     observations: list[RegimeLossExitObservation] = []
@@ -190,8 +193,8 @@ def build_regime_loss_exit_observations(
             continue
         score = _support_score(
             side,
-            provider_evaluations.get(decision_ms),
-            canonical_evaluations.get(decision_ms),
+            provider.get(decision_ms),
+            canonical.get(decision_ms),
         )
         observations.append(
             RegimeLossExitObservation(
@@ -204,6 +207,14 @@ def build_regime_loss_exit_observations(
     return RegimeLossExitObservationCoverage(
         tuple(observations), len(decisions), missing_prices
     )
+
+
+def _available_evaluations(values: Mapping[int, Record]) -> dict[int, Record]:
+    return {
+        decision_ms: row
+        for decision_ms, row in values.items()
+        if not is_technical_unavailability(row)
+    }
 
 
 def summarize_regime_loss_exit_results(
@@ -259,7 +270,6 @@ def _closed_result(
     exit_record = mapping(trade.get("exit"), "closed loss-exit exit")
     coverage = _lifecycle_coverage(
         evidence,
-        run_id=identity[4],
         strategy_id=identity[2],
         symbol=identity[1],
         side=identity[3],
@@ -292,7 +302,6 @@ def _open_result(
     symbol = text(trade.get("symbol"), "open loss-exit symbol")
     strategy = text(trade.get("strategy_id"), "open loss-exit strategy")
     side = text(trade.get("side"), "open loss-exit side")
-    run_id = text(trade.get("source_run_id"), "open loss-exit run")
     _validate_side(side)
     entry = mapping(trade.get("entry"), "open loss-exit entry")
     episode = mapping(trade.get("regime_opposition_episode"), "open opposition episode")
@@ -300,7 +309,6 @@ def _open_result(
     end_ms = nonnegative_int(episode.get("end_timestamp_ms"), "open evidence end")
     coverage = _lifecycle_coverage(
         evidence,
-        run_id=run_id,
         strategy_id=strategy,
         symbol=symbol,
         side=side,
@@ -335,15 +343,17 @@ def _support_score(
 def _lifecycle_coverage(
     evidence: ReflectionEvidenceIndex,
     *,
-    run_id: str,
     strategy_id: str,
     symbol: str,
     side: str,
     entry_timestamp_ms: int,
     end_timestamp_ms: int,
 ) -> RegimeLossExitObservationCoverage:
-    provider = _evaluations(evidence, run_id, strategy_id, symbol)
-    canonical = _canonical_evaluations(evidence, run_id, symbol)
+    provider = _timeline_evaluations(evidence, strategy_id, symbol)
+    canonical = {
+        nonnegative_int(row.get("decision_time_ms"), "canonical decision time"): row
+        for row in canonical_timeline(evidence, symbol)
+    }
     return build_regime_loss_exit_observations(
         side=side,
         provider_evaluations=provider,
@@ -354,33 +364,12 @@ def _lifecycle_coverage(
     )
 
 
-def _canonical_evaluations(
-    evidence: ReflectionEvidenceIndex, run_id: str, symbol: str
-) -> dict[int, Record]:
-    values: dict[int, Record] = {}
-    for strategy_id in CANONICAL_REGIME_STRATEGIES:
-        for decision_ms, row in _evaluations(
-            evidence, run_id, strategy_id, symbol
-        ).items():
-            values.setdefault(decision_ms, row)
-    return values
-
-
-def _evaluations(
-    evidence: ReflectionEvidenceIndex,
-    run_id: str,
-    strategy_id: str,
-    symbol: str,
+def _timeline_evaluations(
+    evidence: ReflectionEvidenceIndex, strategy_id: str, symbol: str
 ) -> dict[int, Record]:
     return {
-        decision_ms: row
-        for (
-            source_run,
-            strategy,
-            asset,
-            decision_ms,
-        ), row in evidence.evaluations.items()
-        if source_run == run_id and strategy == strategy_id and asset == symbol
+        nonnegative_int(row.get("decision_time_ms"), "evaluation decision time"): row
+        for row in evidence.timelines.get((strategy_id, symbol), ())
     }
 
 

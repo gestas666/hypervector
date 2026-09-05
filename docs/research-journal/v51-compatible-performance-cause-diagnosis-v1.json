@@ -1,0 +1,232 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v51-compatible-performance-cause-diagnosis",
+  "revision_number": 1,
+  "supersedes_revision_id": null,
+  "created_at_utc": "2026-08-15T23:29:31Z",
+  "status": "being_tested",
+  "mode": "report_only",
+  "execution_authority": "none",
+  "automatic_live_change": false,
+  "runtime_strategy_changed": false,
+  "hypothesis": "The first five compatible v51 closes are more consistent with sparse high-variance strategy outcomes than with an execution or implementation failure, but the negative gross result and directional concentration require additional source-native lifecycles before that diagnosis is reliable.",
+  "problem_restatement": {
+    "input": "Five exact compatible-profile closes, two protected open lifecycles, route evaluations, fills, fees, funding, slippage, latency, stops, exit branches, and current technical coverage.",
+    "output": "A provisional cause classification that separates execution drag, implementation defects, strategy fit, regime mismatch, and sampling uncertainty without changing live behavior.",
+    "success_criteria": "Every lifecycle reconciles to one route and exit, gross and net economics reconcile, open exposure remains protected, and each causal claim has an explicit falsifier.",
+    "constraints": "Five closes cannot establish durable expectancy, and two open Range-Onset paths cannot be counted as wins or losses."
+  },
+  "known_facts": {
+    "profile_id": "multi_asset_growth_first_5000_six_asset_profit_lock_candidate_v51",
+    "profile_fingerprint": "30cd54bb5b5b17249ae0a6a3b01d5702b276d51f8dc5ddd6b4d36ab6aa7d1908",
+    "run_id": "bidirectional-live-1786801038311",
+    "audit_window_start_utc": "2026-08-15T13:40:33.871103+00:00",
+    "audit_window_end_utc": "2026-08-15T23:27:34.315790+00:00",
+    "compatible_closed_lifecycles": 5,
+    "wins": 3,
+    "losses": 2,
+    "open_lifecycles": 2,
+    "net_pnl_usd": -30.462405,
+    "gross_market_pnl_usd": -20.347675,
+    "fees_usd": 11.151612,
+    "funding_usd": 1.036882,
+    "net_execution_cash_drag_usd": 10.11473,
+    "profit_factor": 0.664506073535564,
+    "net_pnl_excluding_largest_winner_usd": -66.213461,
+    "median_acknowledgement_latency_ms": 1222.0,
+    "maximum_acknowledgement_latency_ms": 2012.0,
+    "median_slippage_bps": 2.8845460445658944,
+    "maximum_slippage_bps": 10.474907873000427,
+    "faults": 0,
+    "unprotected_open_assets": [],
+    "late_submitted_entries_proven": false,
+    "withheld_actions": 0
+  },
+  "closed_lifecycles": [
+    {
+      "lifecycle_id": "HYPE:516333204294",
+      "side": "long",
+      "entry_time_utc": "2026-08-14T03:10:26Z",
+      "exit_reason": "protective_stop",
+      "net_pnl_usd": -49.601406,
+      "entry_regime": "BREAKOUT",
+      "entry_state_1m": "TREND_DOWN",
+      "entry_state_5m": "BREAKOUT"
+    },
+    {
+      "lifecycle_id": "HYPE:516556857812",
+      "side": "short",
+      "entry_time_utc": "2026-08-14T11:55:12Z",
+      "exit_reason": "maximum_hold_seconds",
+      "net_pnl_usd": 35.751056,
+      "entry_regime": "BREAKOUT",
+      "entry_state_1m": "TREND_DOWN",
+      "entry_state_5m": "BREAKOUT"
+    },
+    {
+      "lifecycle_id": "xyz:SPCX:516639241871",
+      "side": "short",
+      "entry_time_utc": "2026-08-14T14:00:10Z",
+      "exit_reason": "completed_bar_profit_lock",
+      "net_pnl_usd": 21.355552
+    },
+    {
+      "lifecycle_id": "xyz:SP500:516695933154",
+      "side": "short",
+      "entry_time_utc": "2026-08-14T15:15:24Z",
+      "exit_reason": "maximum_hold_seconds",
+      "net_pnl_usd": 3.229665
+    },
+    {
+      "lifecycle_id": "xyz:SPCX:517022750282",
+      "side": "short",
+      "entry_time_utc": "2026-08-15T04:15:27Z",
+      "exit_reason": "protective_stop",
+      "net_pnl_usd": -41.197272
+    }
+  ],
+  "cause_assessment": {
+    "implementation_or_protection_defect": {
+      "assessment": "not_observed",
+      "confidence": "high",
+      "evidence": "Every close reconciles to its entry and exit controller; ETH and SOL remain protected by matching venue stops; faults and contract mismatches are zero.",
+      "falsifier": "Any missing stop, route identity mismatch, duplicate exposure, ignored eligible opposite exit, missed deadline, or unexplained fill invalidates this assessment."
+    },
+    "execution_degradation_as_primary_cause": {
+      "assessment": "unlikely_primary_but_material",
+      "confidence": "medium_high",
+      "evidence": "Execution and funding reduced results by $10.114730, but gross market PnL was already negative by $20.347675 before those costs.",
+      "falsifier": "A later compatible window with positive gross expectancy but negative net expectancy and materially worse fee, slippage, latency, or funding distributions would elevate execution degradation."
+    },
+    "normal_variance": {
+      "assessment": "plausible_not_proven",
+      "confidence": "low",
+      "evidence": "Only five lifecycles have closed, outcomes span three route-symbol cells, and the sample is too small for stable profit-factor or side estimates.",
+      "falsifier": "Repeated source-native losses across independent episodes, both configured sides, and exact costs would weaken a variance explanation."
+    },
+    "strategy_or_regime_mismatch": {
+      "assessment": "plausible_requires_more_evidence",
+      "confidence": "medium_low",
+      "evidence": "The HYPE long entered with one-minute TREND_DOWN beneath a five-minute BREAKOUT and stopped; the mirror HYPE short won. Both index winners and the later SPCX stop were shorts, so direction and regime cells remain concentrated.",
+      "falsifier": "Positive long and short results across later independent intended-condition episodes would weaken the mismatch hypothesis."
+    },
+    "parameter_or_exit_fragility": {
+      "assessment": "possible_not_actionable",
+      "confidence": "low",
+      "evidence": "Two stop-sized losses outweighed three winners. Previously tested generic HYPE exits and bidirectional SOL profit locks failed broader robustness checks, so the current five paths do not justify reopening them.",
+      "falsifier": "A predeclared causal challenger that beats the unchanged control after exact costs, by side, across chronological periods, and without its largest winner would support an exit revision."
+    }
+  },
+  "uncertainties_and_failure_modes": [
+    "Four of five closes are shorts, so the current result cannot evaluate configured bidirectional behavior.",
+    "HYPE short, SPCX short, and SP500 short entries occurred within approximately three hours and twenty minutes and are not guaranteed independent market episodes.",
+    "The compatible-profile audit retains 234 historical provider-metric value gaps from early SP500 rows; current index condition anatomy is populated, but full-prefix technical coverage remains honestly incomplete.",
+    "ETH and SOL marked economics remain provisional and can materially change the portfolio diagnosis when they close.",
+    "No five-trade sample can distinguish a modest negative edge from ordinary outcome variance with useful precision."
+  ],
+  "tradeoff_matrix": {
+    "continue_unchanged_and_collect": {
+      "upside": "Preserves attributable live evidence and avoids fitting parameters to five outcomes.",
+      "downside": "Additional stop losses can occur while uncertainty remains high.",
+      "disposition": "selected"
+    },
+    "reduce_or_pause_from_current_losses": {
+      "upside": "Limits immediate exposure if the early negative result reflects a real edge failure.",
+      "downside": "Would convert a five-trade result into an implicit performance gate and prevent the missing side and episode evidence from resolving.",
+      "disposition": "not_supported"
+    },
+    "retune_entries_or_exits_now": {
+      "upside": "Could improve the specific observed paths in hindsight.",
+      "downside": "High multiple-testing and post-hoc selection risk; existing nearby exit and entry relaxations have already been rejected.",
+      "disposition": "rejected_without_new_mechanism"
+    }
+  },
+  "recommendation": "Continue exact v51 execution and report-only collection without changing routes, sizing, leverage, stops, targets, or exits. Treat the current negative result as an unresolved warning rather than proof of failure or proof of normal variance.",
+  "why_now": "The fifth compatible close made gross and net performance negative, while the first ETH and SOL Range-Onset lifecycles remain open. A source-bound cause classification prevents both premature intervention and complacent dismissal.",
+  "evidence_reviewed": [
+    "immutable compatible-profile live audit through 2026-08-15T23:27:34Z",
+    "all five closed lifecycle reflections and exact costs",
+    "two protected open lifecycle plans and venue stops",
+    "entry-age, routing, latency, slippage, and technical coverage telemetry",
+    "prior HYPE, index, ETH, and SOL hypothesis journals"
+  ],
+  "observed_problem_or_opportunity": "The portfolio is negative despite three wins because two stop-sized losses exceeded the winners and execution costs added further drag. Missing long-side index evidence and unresolved Range-Onset closes are more informative next than another parameter search.",
+  "applicable_market_regime": "Mixed v51 intended conditions: HYPE five-minute compression breakouts, HIP-3 fifteen-minute breakout pressure, and open ETH/SOL Range-Onset states.",
+  "alternatives_considered": [
+    "take no action and collect attributable evidence",
+    "pause or reduce after five closes",
+    "retune stops, profit locks, or entry blockers",
+    "separate side-specific mechanisms only after predeclared evidence"
+  ],
+  "proposed_live_change": null,
+  "expected_upside": "Maintains a clean causal comparison while concentrating research on the missing side, episode, and resolved-lifecycle cells that can actually update the diagnosis.",
+  "main_risks_and_failure_modes": "Further losses, winner concentration, directional starvation, regime nonstationarity, and the possibility that a real negative edge is initially misclassified as variance.",
+  "validation_completed": [
+    "immutable profile/run/route identity reconciliation",
+    "gross-to-net fee and funding reconciliation",
+    "per-lifecycle entry, exit, side, and reason attribution",
+    "stop and open-position protection verification",
+    "submission-age, latency, slippage, and fault review",
+    "review of previously rejected adjacent entry and exit hypotheses"
+  ],
+  "validation_still_required": [
+    "resolve ETH and SOL with exact after-cost exits and frozen challenger comparisons",
+    "capture at least one attributable index lifecycle on each configured side to update the side diagnosis",
+    "collect additional independent HYPE long and short episodes",
+    "recompute gross/net, largest-winner, episode, regime, and side sensitivity on each new close",
+    "resolve or explicitly retain historical metric-coverage limitations without fabricating telemetry"
+  ],
+  "success_metrics": [
+    "all new lifecycles reconcile without protection or execution defects",
+    "gross and net expectancy become positive across independent episodes",
+    "results remain positive after largest-winner removal",
+    "each declared executable side has attributable evidence",
+    "execution drag remains inside the measured v51 distribution or is explicitly repriced"
+  ],
+  "failure_rollback_triggers": [
+    "any unprotected exposure, identity mismatch, late submitted entry, missed configured exit, or corrupted ledger triggers immediate technical intervention",
+    "repeated resolved after-cost losses across independent intended-condition episodes trigger an approval-ready route or sizing revision",
+    "a predeclared challenger that robustly beats the unchanged control triggers an explicit human approval request before any live change"
+  ],
+  "confidence_level": {
+    "technical_integrity": "high",
+    "execution_not_primary_cause": "medium_high",
+    "normal_variance_diagnosis": "low",
+    "strategy_mismatch_diagnosis": "medium_low",
+    "durable_v51_profitability": "low"
+  },
+  "explicit_approval_requested": false,
+  "single_highest_value_next_investigation": "Resolve SOL:517255982534 and ETH:516976976124, while passively collecting the first attributable long index lifecycle; whichever event occurs first receives immediate exact-cost and missed-opportunity reconciliation.",
+  "source_evidence": [
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v51_performance_cause_prefix_20260815T2325Z_v1.json",
+      "sha256": "154147b95b454b7fffd6571f0669df8d147e45e417785a0a53a4610b468d2473",
+      "bytes": 8256325
+    },
+    {
+      "path": "../../configs/multi_asset_growth_first_5000_six_asset_profit_lock_candidate_v51.toml",
+      "sha256": "f0f0fef087eb0a3412c2a917d2d9bd8f578b17e4a40d7c3729519a33cf4f9ab4",
+      "bytes": 3917
+    },
+    {
+      "path": "v51-hype-first-resolved-lifecycle-v1.json",
+      "sha256": "0ec6d44c35dc9c37843abfc4c90f06e685465794c122d767b6d53cf2792917e8",
+      "bytes": 8774
+    },
+    {
+      "path": "v51-spcx-open-stop-trigger-v2.json",
+      "sha256": "fc7063b1cc6c655e7351d42424908724cda0ec0a78c5d27e0850a80c6ff71425",
+      "bytes": 10136
+    },
+    {
+      "path": "v51-sol-range-onset-live-translation-v3.json",
+      "sha256": "567a9103337f474bc0fdcb466405c43595a1103782534b8fcdb4888bb04d49e2",
+      "bytes": 11198
+    },
+    {
+      "path": "v51-eth-range-onset-live-translation-v1.json",
+      "sha256": "fb0c90ec881e8bdb7fd1b2af25c4ba31ef55f9fc78ed6e69e74ca58a401ee7ea",
+      "bytes": 7817
+    }
+  ]
+}

@@ -71,6 +71,43 @@ def test_observation_coverage_reports_missing_next_open() -> None:
     assert coverage.missing_price_decisions == 1
 
 
+def test_observations_ignore_receipt_time_technical_unavailability() -> None:
+    """An off-grid outage receipt is not a completed strategy decision."""
+    unavailable = {
+        "strategy_id": "provider",
+        "symbol": "BTC",
+        "decision_time_ms": 90_123,
+        "reference_price": 100.0,
+        "decision_action": "technical_unavailable",
+        "eligible": False,
+        "reason": "observer_status_stale",
+        "side": None,
+        "backend_non_action_reason": "observer_status_stale",
+        "readiness": {
+            "side": None,
+            "blockers": ["observer_status_stale"],
+            "metrics": {"technical_availability": "unavailable"},
+        },
+    }
+    decision = 2 * _MINUTE_MS
+    coverage = build_regime_loss_exit_observations(
+        side="long",
+        provider_evaluations={90_123: unavailable},
+        canonical_evaluations={decision: _context(decision, "RANGE")},
+        candles={
+            _MINUTE_MS: Candle(_MINUTE_MS, 100.0, 100.1, 99.9, 100.0),
+            decision: Candle(decision, 100.0, 100.1, 99.9, 100.0),
+        },
+        entry_timestamp_ms=1,
+        end_timestamp_ms=3 * _MINUTE_MS,
+    )
+
+    assert len(coverage.observations) == 1
+    assert coverage.evaluated_decisions == 1
+    assert coverage.missing_price_decisions == 0
+    assert coverage.observations[0].structure_support_score is None
+
+
 def test_summary_uses_actual_exit_when_policy_does_not_trigger() -> None:
     """Non-triggering paths remain in the counterfactual portfolio unchanged."""
     rows = [
@@ -157,6 +194,80 @@ def test_full_challenger_uses_independent_canonical_regime_rows() -> None:
     assert challenger["closed_lifecycles"][0]["evaluated_decisions"] > 0
     policy = challenger["closed_lifecycles"][0]["policies"]["opp5_loss30"]
     assert policy["unavailable_decisions"] == 0
+
+
+def test_open_lifecycle_uses_recovery_run_evidence() -> None:
+    """A restarted backend cannot hide post-adoption opposition evidence."""
+    challenger = build_regime_loss_exit_challenger(
+        _recovery_run_rows(),
+        {"ETH": []},
+        closed_trades=(),
+        open_trades=(_open_eth_trade(),),
+        current_run_id="recovery-run",
+        current_profile_fingerprint="v51-fingerprint",
+        thresholds_bps=(30.0,),
+        persistence_decisions=5,
+    )
+
+    lifecycle = challenger["open_lifecycles"][0]
+    policy = lifecycle["policies"]["opp5_loss30"]
+    assert lifecycle["observed_decisions"] == 5
+    assert policy["status"] == "would_have_triggered_open_path"
+    assert policy["trigger_decision_time_ms"] == 5 * _MINUTE_MS
+
+
+def _recovery_run_rows() -> list[dict[str, object]]:
+    decisions = tuple(range(_MINUTE_MS, 6 * _MINUTE_MS, _MINUTE_MS))
+    evaluations: list[dict[str, object]] = []
+    for decision in decisions:
+        provider = _context(decision, "TREND_DOWN")
+        provider.update(strategy_id="range_onset_bidirectional_v1", symbol="ETH")
+        canonical = _context(decision, "TREND_DOWN")
+        canonical.update(strategy_id="canonical_regime_telemetry_v1", symbol="ETH")
+        evaluations.extend((provider, canonical))
+    bars = [
+        {
+            "timestamp_ms": minute * _MINUTE_MS,
+            "open": 99.55,
+            "high": 99.65,
+            "low": 99.45,
+            "close": 99.6,
+        }
+        for minute in range(6)
+    ]
+    return [
+        {
+            "event_type": "intent_routing",
+            "run_id": "recovery-run",
+            "payload": {"evaluations": evaluations},
+        },
+        {
+            "event_type": "market_candles",
+            "run_id": "recovery-run",
+            "payload": {"timeframe": "1m", "bars": {"ETH": bars}},
+        },
+    ]
+
+
+def _open_eth_trade() -> dict[str, object]:
+    return {
+        "lifecycle_id": "ETH:123",
+        "symbol": "ETH",
+        "strategy_id": "range_onset_bidirectional_v1",
+        "side": "long",
+        "source_run_id": "entry-run",
+        "entry": {
+            "price": 100.0,
+            "size": 1.0,
+            "slippage_bps": 1.0,
+            "venue_timestamp_ms": 1,
+        },
+        "marked_economics": {
+            "active_lifecycle_marked_net_pnl_usd": -0.5,
+            "fees_usd": 0.01,
+        },
+        "regime_opposition_episode": {"end_timestamp_ms": 6 * _MINUTE_MS},
+    }
 
 
 def _context(decision_time_ms: int, regime: str) -> dict[str, object]:

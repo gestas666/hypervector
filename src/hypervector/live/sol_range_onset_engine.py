@@ -26,7 +26,9 @@ from hypervector.live.sol_range_onset_execution_plan import entry_notional
 from hypervector.live.sol_range_onset_execution_plan import legacy_execution_plan
 from hypervector.live.sol_range_onset_execution_plan import validate_entry_direction
 from hypervector.live.sol_range_onset_engine_contract import (
+    SolEntryNotFilledError,
     SolLiveEngineError,
+    is_ioc_no_fill_error,
     require_started,
     resolve_decision_time_ms,
 )
@@ -176,6 +178,8 @@ class SolRangeOnsetLiveEngine:
         )
         self._events.emit_ack("entry", ack)
         if not ack.accepted or ack.oid is None:
+            if _is_expected_ioc_no_fill(plan, ack):
+                self._confirm_ioc_no_fill(ack)
             reason = f"entry rejected: {ack.error or ack.status}"
             self._events.fault(reason)
             raise SolLiveEngineError(reason)
@@ -184,6 +188,17 @@ class SolRangeOnsetLiveEngine:
             lambda snapshot: snapshot.position.size_signed != 0.0
         )
         return ack, venue
+
+    def _confirm_ioc_no_fill(self, ack: HyperliquidOrderAck) -> NoReturn:
+        venue = self._poller.wait_for(lambda snapshot: snapshot.is_flat)
+        self._events.emit_reconciliation(venue)
+        if not venue.is_flat:
+            reason = "IOC no-fill acknowledgement conflicts with venue exposure"
+            self._events.fault(reason)
+            raise SolLiveEngineError(reason)
+        reason = f"IOC entry not filled: {ack.error}"
+        self._events.confirm_entry_not_filled(reason=reason)
+        raise SolEntryNotFilledError(reason)
 
     def _protect_reconciled_entry(
         self,
@@ -265,7 +280,7 @@ class SolRangeOnsetLiveEngine:
             events=self._events,
             orders=self._orders,
             poller=self._poller,
-            reprotect=self._reprotect_after_close_failure,
+            restore_missing_protection=self._restore_missing_protection,
         )
 
     def stop(self, reason: str) -> SolLiveSnapshot:
@@ -356,7 +371,7 @@ class SolRangeOnsetLiveEngine:
                     reason=f"entry residual cancel rejected: {cancel.error or cancel.status}",
                 )
 
-    def _reprotect_after_close_failure(
+    def _restore_missing_protection(
         self,
         venue: SolReconciliationSnapshot,
         trigger_price: float | None,
@@ -368,37 +383,42 @@ class SolRangeOnsetLiveEngine:
             trigger_price=trigger_price,
         )
         self._events.emit_ack(
-            "replacement_protective_stop",
-            ack,
-            event_type="stop_order",
+            "replacement_protective_stop", ack, event_type="stop_order"
         )
-        if ack.accepted and ack.oid is not None:
-            protected = self._poller.wait_for(
-                lambda venue: protected_order_visible(
-                    venue,
-                    stop_oid=ack.oid,
-                    position_size_signed=venue.position.size_signed,
-                )
+        return self._finish_missing_protection(venue, ack)
+
+    def _finish_missing_protection(
+        self,
+        venue: SolReconciliationSnapshot,
+        ack: HyperliquidOrderAck,
+    ) -> bool:
+        if not ack.accepted or ack.oid is None or self.snapshot.entry_oid is None:
+            return False
+        protected = self._poller.wait_for(
+            lambda current: protected_order_visible(
+                current,
+                stop_oid=ack.oid or 0,
+                position_size_signed=venue.position.size_signed,
             )
-            snapshot = self.snapshot
-            if snapshot.entry_oid is None:
-                return False
-            try:
-                stop_filled = verify_protected_position(
-                    entry_oid=snapshot.entry_oid,
-                    stop_oid=ack.oid,
-                    position_size_signed=venue.position.size_signed,
-                    opened_at_ms=snapshot.opened_at_ms,
-                    venue=protected,
-                )
-            except SolStartupReconciliationError:
-                return False
-            if stop_filled:
-                self._events.emit_reconciliation(protected)
-                self._events.confirm_stop_fill_during_exit(stop_oid=ack.oid)
-                return True
-            self._machine.restore_protection_after_exit_failure(stop_oid=ack.oid)
-        return False
+            or current.position.size_signed == 0.0
+        )
+        try:
+            stop_filled = verify_protected_position(
+                entry_oid=self.snapshot.entry_oid or 0,
+                stop_oid=ack.oid,
+                position_size_signed=venue.position.size_signed,
+                opened_at_ms=self.snapshot.opened_at_ms,
+                venue=protected,
+            )
+        except SolStartupReconciliationError:
+            return False
+        self._events.emit_reconciliation(protected)
+        if stop_filled:
+            self._events.confirm_stop_fill_during_exit(stop_oid=ack.oid)
+            return True
+        self._machine.restore_protection_after_exit_failure(stop_oid=ack.oid)
+        self._events.emit_state()
+        return True
 
     def _emergency_flatten(
         self,
@@ -427,3 +447,18 @@ class SolRangeOnsetLiveEngine:
         failure = reason + suffix
         self._events.fault(failure)
         raise SolLiveEngineError(failure)
+
+
+def _is_expected_ioc_no_fill(
+    plan: BoundExecutionPlan,
+    ack: HyperliquidOrderAck,
+) -> bool:
+    """Recognize only Hyperliquid's definitive IOC no-match acknowledgement."""
+    return bool(
+        plan.entry_liquidity == "taker_ioc"
+        and not ack.accepted
+        and ack.oid is None
+        and ack.status == "error"
+        and ack.error is not None
+        and is_ioc_no_fill_error(ack.error)
+    )

@@ -1,0 +1,220 @@
+{
+  "schema_version": "v58_sol_hulk_native_candle_disposition_v1",
+  "hypothesis_id": "V58_SOL_HULK_TUNED_V2_SHORT_NATIVE_CANDLE_V1",
+  "recorded_at_utc": "2026-08-19T05:15:02Z",
+  "status": "tested_mixed_evidence",
+  "hypothesis": "The frozen SOL hulk_expansion_bidirectional_tuned_v2 provider, with V58 execution authority restricted to short signals, retains after-cost edge when replayed on the exact venue-native one-minute candle source used by the live collector.",
+  "decision": "Preserve the SOL short route only as an explicitly labeled low-confidence ungated trial candidate. The exact native-candle replay confirms positive development and pseudo-holdout short results, but the validation block is materially negative. Cost stress remains marginally positive only when the largest winner is retained. This record does not claim robust profitability, does not promote V58, and does not mutate live authority.",
+  "authority": {
+    "report_only": true,
+    "execution_authority": "none",
+    "place_attempted": false,
+    "runtime_strategy_changed": false,
+    "live_config_changed": false,
+    "automatic_promotion": false,
+    "explicit_live_approval_required": true
+  },
+  "frozen_contract": {
+    "provider_id": "hulk_expansion_bidirectional_tuned_v2",
+    "symbol": "SOL",
+    "provider_sides": [
+      "long",
+      "short"
+    ],
+    "v58_execution_sides": [
+      "short"
+    ],
+    "decision_timeframe": "30m",
+    "entry": "next completed 30-minute bar",
+    "entry_liquidity": "taker_ioc_live_market_model_in_replay",
+    "stop": "structural distance clamped to 20-75 bps",
+    "target": "3R reward-risk",
+    "maximum_hold_hours": 24,
+    "leverage": 5.0,
+    "research_initial_equity_usd": 15000.0,
+    "research_risk_fraction": 0.0025,
+    "note": "The research portfolio sizing differs from V58 account sizing. Absolute USD results are research-path outcomes, not a $5,000 portfolio forecast."
+  },
+  "source_contract": {
+    "live_ohlcv_family": "official Hyperliquid one-minute candles resampled to five and thirty minutes",
+    "replay_ohlcv_source": "0xarchive_hyperliquid_candles",
+    "candle_manifest": {
+      "path": "../../data/cache/vendor/0xarchive/hyperliquid/SOL/20250728T000000000000Z_20260728T000000000000Z_candles_1m/manifest.json",
+      "bytes": 10590,
+      "sha256": "dc8d8a94a68c46741daabddcd0b053ebde4da316c4820c73f46575a26e7ba4a4",
+      "complete": true,
+      "native_rows": 525389,
+      "total_gap_fill_rows": 211
+    },
+    "funding": {
+      "path": "../../data/cache/vendor/hyperliquid/SOL/20250728T000000000000Z_20260731T000000000000Z_funding/funding.parquet",
+      "bytes": 197416,
+      "sha256": "20aafa804a0968f2a0ff9b198f19b8aed21e279b498cb691a27e0e7e2b3c00c8",
+      "complete_manifest": true
+    },
+    "prior_source_mismatch": "The earlier canonical public-trade reconstruction was close but not row-identical to official candles. The frozen native-candle rerun replaces that source assumption for this disposition."
+  },
+  "windows": {
+    "development": {
+      "start_utc": "2025-08-23T09:00:00Z",
+      "end_utc": "2026-02-01T00:00:00Z"
+    },
+    "validation": {
+      "start_utc": "2026-02-01T00:00:00Z",
+      "end_utc": "2026-05-01T00:00:00Z"
+    },
+    "pseudo_holdout": {
+      "start_utc": "2026-05-01T00:00:00Z",
+      "end_utc": "2026-07-27T00:00:00Z"
+    }
+  },
+  "short_side_results": {
+    "nominal": {
+      "development": {
+        "trades": 21,
+        "wins": 8,
+        "losses": 13,
+        "net_pnl_usd": 286.864375343077,
+        "profit_factor": 1.4984796402302494,
+        "net_without_largest_winner_usd": 175.2712038127782,
+        "trades_per_week": 0.9095127610208816
+      },
+      "validation": {
+        "trades": 19,
+        "wins": 3,
+        "losses": 16,
+        "net_pnl_usd": -399.6782441742032,
+        "profit_factor": 0.44222813384441634,
+        "net_without_largest_winner_usd": -508.0322513956546,
+        "trades_per_week": 1.4943820224719102
+      },
+      "pseudo_holdout": {
+        "trades": 8,
+        "wins": 4,
+        "losses": 4,
+        "net_pnl_usd": 251.32255303627795,
+        "profit_factor": 2.332941020795846,
+        "net_without_largest_winner_usd": 140.3755767442551,
+        "trades_per_week": 0.6436781609195402
+      },
+      "pooled_descriptive": {
+        "trades": 48,
+        "wins": 15,
+        "losses": 33,
+        "net_pnl_usd": 138.5086842051517,
+        "profit_factor": 1.0935497673558094,
+        "net_without_largest_winner_usd": 26.915512674852934,
+        "trades_per_week": 0.9951869677897074
+      }
+    },
+    "cost_stress": {
+      "development": {
+        "trades": 21,
+        "wins": 8,
+        "losses": 13,
+        "net_pnl_usd": 247.65490364518786,
+        "profit_factor": 1.4151117821277883,
+        "net_without_largest_winner_usd": 137.5048540648559
+      },
+      "validation": {
+        "trades": 19,
+        "wins": 3,
+        "losses": 16,
+        "net_pnl_usd": -436.41782622054114,
+        "profit_factor": 0.4178810320791546,
+        "net_without_largest_winner_usd": -543.7588478805064
+      },
+      "pseudo_holdout": {
+        "trades": 8,
+        "wins": 4,
+        "losses": 4,
+        "net_pnl_usd": 236.7102363968915,
+        "profit_factor": 2.1918938372698915,
+        "net_without_largest_winner_usd": 126.86385408633915
+      },
+      "pooled_descriptive": {
+        "trades": 48,
+        "wins": 15,
+        "losses": 33,
+        "net_pnl_usd": 47.9473138215381,
+        "profit_factor": 1.031035793187557,
+        "net_without_largest_winner_usd": -62.202735758793864
+      }
+    }
+  },
+  "evidence": [
+    {
+      "path": "../../data/logs/research/20260819_hulk_bidirectional_tuned_v2_SOL_development_native_candles_v1.json",
+      "role": "nominal_development",
+      "bytes": 74599,
+      "sha256": "32f98f4f4bf55a39090fb92825883bde6b31d95a0d7510bfbf60f7126d3e911c"
+    },
+    {
+      "path": "../../data/logs/research/20260819_hulk_bidirectional_tuned_v2_SOL_validation_native_candles_v1.json",
+      "role": "nominal_validation",
+      "bytes": 56576,
+      "sha256": "1d6b025976d6ff495940044084bd3904954cc567adeae4beeb770c16bac550cd"
+    },
+    {
+      "path": "../../data/logs/research/20260819_hulk_bidirectional_tuned_v2_SOL_pseudo_holdout_native_candles_v1.json",
+      "role": "nominal_pseudo_holdout",
+      "bytes": 37751,
+      "sha256": "3877625547cb40f2df957ecf93e68607df46575f502bd1dc825af2e37db7e422"
+    },
+    {
+      "path": "../../data/logs/research/20260819_hulk_bidirectional_tuned_v2_SOL_development_native_candles_cost_stress_v1.json",
+      "role": "cost_stress_development",
+      "bytes": 74578,
+      "sha256": "684bc24bfd45bee903ca944ae9f8b89383d8cd0b7d5e6c65568ae68dc663c020"
+    },
+    {
+      "path": "../../data/logs/research/20260819_hulk_bidirectional_tuned_v2_SOL_validation_native_candles_cost_stress_v1.json",
+      "role": "cost_stress_validation",
+      "bytes": 56650,
+      "sha256": "1ba72a021de4c1c4d8a9fcec19feb318547d3b3298b8966175963ca83aeee67b"
+    },
+    {
+      "path": "../../data/logs/research/20260819_hulk_bidirectional_tuned_v2_SOL_pseudo_holdout_native_candles_cost_stress_v1.json",
+      "role": "cost_stress_pseudo_holdout",
+      "bytes": 37791,
+      "sha256": "48880936cbdcc38f4c1af7f5e6eac8ab27e715c1ff63352e32b6c366acfe1792"
+    }
+  ],
+  "data_quality_and_bias": {
+    "report_to_trade_sidecar_reconciliation": "passed_exactly_for_all_six_reports",
+    "technical_failures": 0,
+    "liquidations": 0,
+    "retuning_performed": false,
+    "parameter_grid_run": false,
+    "validation_used_for_parameter_selection": false,
+    "pseudo_holdout_used_for_parameter_selection": false,
+    "pseudo_holdout_pristine": false,
+    "reason_pseudo_holdout_not_pristine": "This historical interval has been used by prior project research; it is a frozen forward-style diagnostic, not a never-opened market-data holdout.",
+    "absolute_short_usd_limitation": "Short attribution comes from the exact bidirectional provider replay. Long trades affect the shared replay equity path, so absolute short USD is not a standalone short-only portfolio forecast."
+  },
+  "diagnosis": {
+    "supported": "The native-candle short route has intermittent positive periods and roughly one signal per week across the pooled frozen window.",
+    "not_supported": "A stable, cost-robust profitability claim. The validation block is negative under nominal and stress assumptions, and pooled stress becomes negative after removing the largest winner.",
+    "implementation_bug": "No signal-contract or replay implementation defect was found in the focused parity and exact route-validation tests. The prior OHLC source mismatch was an evidence-contract defect and is corrected by these source-native artifacts."
+  },
+  "success_update_condition": "A separately frozen, source-compatible future window with exact SOL short lifecycle attribution is positive after fees, funding, slippage, and largest-winner removal, with no identity, timing, stop, target, or hold mismatch.",
+  "failure_update_condition": "Additional exact-source SOL short lifecycles remain negative after costs or reveal live/replay decision, stop, target, hold, or fill-contract divergence.",
+  "confidence": {
+    "technical_source_contract": "high",
+    "historical_economic_description": "high",
+    "future_profitability": "low",
+    "basis": "Complete checksum-bound native candles and funding, unchanged frozen parameters, three chronological partitions, nominal plus predeclared cost stress, exact report-sidecar reconciliation, and largest-winner sensitivity."
+  },
+  "highest_value_next_investigation": {
+    "rank": 1,
+    "action": "If V58 is explicitly approved and technically accepted, collect source-compatible SOL short eligible decisions and resolved lifecycles under the exact provider, route-side, stop, target, hold, fee, funding, and fill contract.",
+    "why": "The principal uncertainty is future stability, not another in-sample parameter search."
+  },
+  "falsifiers": [
+    "Any evidence hash or byte count recorded here changes.",
+    "Independent recomputation does not reproduce the report totals or sidecar reconciliation.",
+    "The live SOL collector consumes a different completed-candle source or signal configuration than the frozen replay.",
+    "The V58 execution-side override permits a SOL long to route.",
+    "A future exact-source block materially changes the cost-stress and largest-winner diagnosis."
+  ]
+}

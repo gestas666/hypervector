@@ -79,6 +79,8 @@ fn staged_generation() -> CohortConfigurationGeneration {
         current_provider_execution_scopes: Some(v48_scopes()),
         current_provider_execution_directions: Some(v48_directions()),
         current_asset_sizing: Some(v48_sizing()),
+        current_asset_entry_slippage_caps: None,
+        current_asset_market_slippage_caps: None,
         current_entry_context_overrides: Some(BTreeMap::from([(
             "range_onset_bidirectional_v1|ETH".into(),
             "dual_mtf_not_opposed".into(),

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -150,6 +151,7 @@ def _books() -> dict[str, SolBookSnapshot]:
 def _poll(
     *,
     evaluations: tuple[ProviderEvaluation, ...] | None = None,
+    display_evaluations: tuple[ProviderEvaluation, ...] | None = None,
     regime_evaluations: tuple[ProviderEvaluation, ...] = (),
 ) -> CohortIntentPoll:
     fresh = _intent("BTC", "long")
@@ -162,6 +164,7 @@ def _poll(
         evaluations=evaluations
         if evaluations is not None
         else tuple(_evaluation(*pair) for pair in sorted(_EXPECTED)),
+        display_evaluations=display_evaluations,
         regime_evaluations=regime_evaluations,
     )
 
@@ -169,6 +172,8 @@ def _poll(
 def _runner(
     tmp_path: Path,
     poll: CohortIntentPoll,
+    *,
+    emit_configuration_on_start: bool = True,
 ) -> tuple[MultiAssetObserverRunner, _Poller, _Telemetry]:
     poller = _Poller(poll)
     telemetry = _Telemetry()
@@ -183,8 +188,23 @@ def _runner(
         sleep_fn=lambda _seconds: None,
         poll_seconds=15.0,
         signal_stop_requested=lambda: False,
+        emit_configuration_on_start=emit_configuration_on_start,
     )
     return runner, poller, telemetry
+
+
+def test_resumed_observer_does_not_duplicate_configuration_identity(
+    tmp_path: Path,
+) -> None:
+    """A continued run appends cycles under its existing frozen identity."""
+    runner, _poller, telemetry = _runner(
+        tmp_path,
+        _poll(),
+        emit_configuration_on_start=False,
+    )
+
+    assert runner.run(max_polls=1) == 1
+    assert telemetry.events == ["market_books", "market_bars", "routing", "heartbeat"]
 
 
 def test_observer_retries_transient_public_l2_failure(tmp_path: Path) -> None:
@@ -238,6 +258,29 @@ def test_observer_publishes_full_readiness_and_withholds_every_intent(
         "observe_mode_no_execution",
     }
     assert len(evaluations) == 8
+
+
+def test_observer_publishes_display_rows_instead_of_recovery_rows(
+    tmp_path: Path,
+) -> None:
+    """Startup recovery evidence must not replace fresher Screen 2 setup rows."""
+    recovery = tuple(_evaluation(*pair) for pair in sorted(_EXPECTED))
+    display = tuple(
+        replace(
+            row,
+            decision_time_ms=row.decision_time_ms + 1,
+            reason="current_setup",
+        )
+        for row in recovery
+    )
+    runner, _poller, telemetry = _runner(
+        tmp_path,
+        _poll(evaluations=recovery, display_evaluations=display),
+    )
+
+    assert runner.run(max_polls=1) == 1
+    assert telemetry.routing is not None
+    assert telemetry.routing[2] == display
 
 
 def test_observer_publishes_independent_canonical_regime_evidence(

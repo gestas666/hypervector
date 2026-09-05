@@ -19,6 +19,7 @@ from hypervector.live.sol_range_onset_bracket import (
     complete_bracket_visible,
     owned_exit_reason,
 )
+from hypervector.live.sol_range_onset_engine_contract import is_ioc_no_fill_error
 
 _VENUE_MUTATION_INTENTS = frozenset({"order_intent", "cancel_intent"})
 
@@ -67,10 +68,12 @@ def reconcile_sol_startup(
         return _reconcile_without_open_ownership(venue)
     state, ownership = local
     preflight_fault = state == "FAULTED" and _is_preflight_only_fault(scoped_records)
+    ioc_no_fill = state == "FAULTED" and _is_ioc_no_fill_fault(scoped_records)
     if (
         state in {"FLAT", "PREFLIGHT"}
         or (state == "STOPPED" and ownership is None)
         or preflight_fault
+        or ioc_no_fill
     ):
         return _reconcile_without_open_ownership(venue)
     if state not in {"OPEN", "STOPPED"}:
@@ -184,6 +187,49 @@ def _is_preflight_only_fault(records: Sequence[Mapping[str, object]]) -> bool:
     intervening = records[previous_index + 1 : fault_index + 1]
     return not any(
         record.get("event_type") in _VENUE_MUTATION_INTENTS for record in intervening
+    )
+
+
+def _is_ioc_no_fill_fault(records: Sequence[Mapping[str, object]]) -> bool:
+    state_indexes = [
+        index
+        for index, record in enumerate(records)
+        if record.get("event_type") == "state_transition"
+    ]
+    if len(state_indexes) < 2:
+        return False
+    pending_index, fault_index = state_indexes[-2:]
+    pending = _mapping(records[pending_index].get("payload"), "pending state")
+    if pending.get("state") != "ENTRY_PENDING":
+        return False
+    relevant = [
+        record
+        for record in records[pending_index + 1 : fault_index]
+        if record.get("event_type")
+        in {"order_intent", "order_acknowledgement", "fault"}
+    ]
+    if [record.get("event_type") for record in relevant] != [
+        "order_intent",
+        "order_acknowledgement",
+        "fault",
+    ]:
+        return False
+    intent, acknowledgement, fault = (
+        _mapping(record.get("payload"), "IOC no-fill evidence") for record in relevant
+    )
+    client_order_id = intent.get("client_order_id")
+    error = acknowledgement.get("error")
+    return bool(
+        intent.get("operation") == "entry"
+        and isinstance(client_order_id, str)
+        and acknowledgement.get("operation") == "entry"
+        and acknowledgement.get("accepted") is False
+        and acknowledgement.get("oid") is None
+        and acknowledgement.get("status") == "error"
+        and acknowledgement.get("client_order_id") == client_order_id
+        and isinstance(error, str)
+        and is_ioc_no_fill_error(error)
+        and fault.get("reason") == f"entry rejected: {error}"
     )
 
 

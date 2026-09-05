@@ -1,0 +1,98 @@
+{
+  "schema_version": "v56_spcx_long_side_containment_proposal_v1",
+  "created_at_utc": "2026-08-18T14:50:00Z",
+  "source_profile_id": "multi_asset_growth_first_5000_btc_tuned_v2_increment_v56",
+  "source_profile_fingerprint": "29a29ad11c9cc0613fd8fc93013758b8e093e96ff5f3698217b562b90f6e89c9",
+  "source_run_id": "bidirectional-live-1787057465219",
+  "proposal": {
+    "proposal_id": "v56-disable-spcx-long-retain-short-v1",
+    "approval_status": "pending_human_approval",
+    "execution_effect": "proposal_only",
+    "automatic_live_change": false,
+    "recommendation": "At the next verified flat and owned-order-free boundary, cut over to a successor profile that removes long authority from the SPCX cash-open provider while retaining its short authority and leaving every BTC and HYPE route unchanged.",
+    "why_now": "The first exact V56 SPCX long lost $42.08606; the frozen development long side had only 3 wins in 9 trades, two of three folds lost, and stress net became -$75.04559 after removing its largest winner. The pooled route was promoted primarily by the materially stronger short side.",
+    "evidence_reviewed": [
+      "Exact V56 SPCX decision, fill, protection, stop execution, costs, excursion, and final flat lifecycle audit",
+      "Frozen 2026-06-08 through 2026-07-13 SPCX development replay with nominal, stress, side, fold, and largest-winner diagnostics",
+      "Preregistered 40, 60, and 80 bps long fixed-target development challenger",
+      "Preregistered nine-trade causal long entry-quality diagnosis with technical-path attribution"
+    ],
+    "observed_problem_or_opportunity": "Bidirectional pooled economics masked a brittle long side: long stress PF was 1.4133 only because of one $192.8451 winner, PF without that winner was 0.7367, fold nets were -$44.6464, +$319.8025, and -$139.3610, and the first exact forward long lost. The live reason says reversal confirmed although the mechanism does not require an opening-bar reversal.",
+    "applicable_market_regime": "All observed regimes; this is a side-specific evidence and authority correction, not a directional macro forecast.",
+    "alternatives_considered": [
+      "Continue both SPCX sides unchanged and collect more losses or wins",
+      "Reduce only SPCX long size without evidence for a calibrated fraction",
+      "Require a positive opening-bar reversal, which left one losing development trade and today also lost",
+      "Require negative top-10 imbalance, a post-hoc five-trade subset whose wins cluster in one middle fold and whose later two trades both lost",
+      "Remove the entire SPCX route, which would discard the materially stronger short-side development evidence"
+    ],
+    "proposed_live_change": "Create and verify a new successor config with the SPCX provider sides set to [short] and executable direction limited to short; do not edit or hot-reload the active V56 file. Cut over only while venue and all strategy ledgers are flat and owned-order-free. Preserve BTC and HYPE routes, leverage, margin, stops, targets, and hold policies exactly.",
+    "expected_upside": "Prevents a weak, largest-winner-dependent long side from taking another approximately $5,000-notional 80-bps-stop exposure while preserving the route's stronger short-side opportunity and all other V56 opportunities.",
+    "main_risks_and_failure_modes": [
+      "Nine development longs plus one forward long remain a small sample and disabling may miss a future winner",
+      "Four of nine development long lifecycles have unresolved entry risk slices",
+      "The short side has no exact V56 resolved lifecycle yet and its own profitability remains provisional",
+      "A malformed successor could accidentally remove the whole provider or retain hidden long authority",
+      "Restarting away from a non-flat or order-held state could orphan risk and is prohibited"
+    ],
+    "validation_completed": [
+      "V56 first lifecycle reconciles exactly to one long stop loss and final flat/order-free state",
+      "Development long side is separated from pooled route economics",
+      "All three chronological long fold outcomes and largest-winner sensitivity are explicit",
+      "Fixed 40, 60, and 80 bps target family was preregistered and rejected after exact stress replay",
+      "Causal opening gap, reversal, spread, imbalance, trade count, volume, and L2 snapshot features reconcile one-to-one for all nine long entries",
+      "No entry filter or live mutation was selected from the descriptive diagnosis"
+    ],
+    "validation_still_required": [
+      "Explicit human approval of this exact side-authority proposal",
+      "TDD successor config proving exact BTC and HYPE identity preservation and SPCX short-only authority",
+      "Fresh flat, owned-order-free, venue/ledger/accounting preflight before cutover",
+      "Poststart acceptance proving no SPCX long executable scope or long action and intact SPCX short exit contract",
+      "Prospective exact-cost SPCX short lifecycle collection before any claim that the short side is profitable"
+    ],
+    "success_metrics": [
+      "Zero executable or manually routable SPCX long scope in the successor",
+      "Exact SPCX short route remains present with 80-bps stop and prior-cash-close target",
+      "All BTC and HYPE route identities and execution contracts remain byte-equivalent in parsed configuration",
+      "Cutover occurs only flat and order-free with healthy checkpoint and zero faults",
+      "Every later SPCX short decision receives complete action or withholding and lifecycle accounting"
+    ],
+    "failure_or_rollback_triggers": [
+      "Any open position or owned order at the proposed cutover boundary",
+      "Any successor diff beyond SPCX long authority and version/accounting identity",
+      "Any SPCX long intent becomes routable after cutover",
+      "SPCX short route, stop, target anchor, or session-close fallback is missing or changed",
+      "Backend/checkpoint identity mismatch, stale telemetry, protection defect, or accounting reconciliation failure"
+    ],
+    "confidence_level": "medium",
+    "explicit_approval_requested": true
+  },
+  "authority": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_live_change": false,
+    "live_configuration_changed": false
+  },
+  "evidence": [
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v56_spcx_cash_open_resolved_20260818T1420Z.json",
+      "sha256": "b5b151c78f246c322d9f561495bb423ab1fd90eaee827df37093aec467df01d5",
+      "bytes": 6819140
+    },
+    {
+      "path": "../../data/logs/research/xyz_spcx_cash_open_gap_reversal_development_20260817_v2.json",
+      "sha256": "613475b27b2884f9b90346cb0c0f175a314e09dbcba4f628b972aba3ebb1c3b8",
+      "bytes": 211473
+    },
+    {
+      "path": "../../data/logs/research/xyz_spcx_cash_open_long_exit_challenger_development_20260818_v1.json",
+      "sha256": "d307c5ea128dbfafc23533e35db228fe77014fd955e88c3ae38a6c70bfe1d844",
+      "bytes": 474588
+    },
+    {
+      "path": "../../data/logs/research/xyz_spcx_cash_open_long_entry_diagnosis_development_20260818_v1.json",
+      "sha256": "0b5eb1b410b6a654ca9146d61f1ec7b57031da02fd878d2fa4c77595a258033d",
+      "bytes": 170262
+    }
+  ]
+}

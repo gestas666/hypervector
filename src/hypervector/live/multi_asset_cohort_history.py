@@ -23,16 +23,22 @@ class _ExecutionContext:
 
 def compatible_execution_rows(ledger: SolLiveLedger) -> list[dict[str, object]]:
     """Return armed rows matching the current profile and execution contract."""
-    return [
-        row
-        for row in ledger.read_all()
-        if row.get("profile_id") == ledger.profile_id
+    return ledger.read_matching(lambda row: execution_row_is_compatible(row, ledger))
+
+
+def execution_row_is_compatible(
+    row: Mapping[str, object],
+    ledger: SolLiveLedger,
+) -> bool:
+    """Return whether one row belongs to the ledger's exact live contract."""
+    return (
+        row.get("profile_id") == ledger.profile_id
         and row.get("profile_fingerprint") == ledger.profile_fingerprint
         and row.get("run_fingerprint") == ledger.run_fingerprint
         and row.get("execution_mode") == "live"
         and row.get("live_armed") is True
         and row.get("execution_authority") == "hyperliquid_mainnet"
-    ]
+    )
 
 
 def current_run_rows(

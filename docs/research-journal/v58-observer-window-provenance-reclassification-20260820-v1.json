@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "generated_at_utc": "2026-08-20T06:44:00Z",
+  "status": "aggregate_window_invalid_exact_lifecycle_separately_attributable",
+  "authority": {
+    "report_only": true,
+    "execution_authority": "none",
+    "live_configuration_changed": false,
+    "runtime_strategy_changed": false,
+    "automatic_promotion": false
+  },
+  "observer_run": {
+    "run_id": "bidirectional-observe-1787127644202",
+    "profile_id": "multi_asset_growth_first_5000_eight_asset_incremental_v58",
+    "profile_fingerprint": "24820e4bfad8a978a7b617a29dc0326f8fc0e583389b67e0219ce4ab5789c874",
+    "run_fingerprint": "1812cbfd3ad4b3f9b939c21c45caa38155e48ca78ddb205e68d68c9dd9b8f1d8"
+  },
+  "technical_reclassification": {
+    "complete": false,
+    "technical_gaps": [
+      "observer_heartbeat_gap_exceeds_entry_delay"
+    ],
+    "maximum_heartbeat_gap_seconds": 4142.35276,
+    "minimum_entry_delay_seconds": 30.0,
+    "reclassification_evidence": {
+      "path": "data/logs/research/bidirectional_cohort/v58_eight_asset_observer_technical_reclassification_20260820_v1.json",
+      "bytes": 3941143,
+      "sha256": "3ab7aa929e175cb6e839ff0a0805c3ec477efeebac0c4d89d0bdf5832cb27063"
+    }
+  },
+  "implementation_continuity": {
+    "single_implementation_window": false,
+    "original_preregistration": {
+      "path": "docs/research-journal/v58-eight-asset-prospective-observer-preregistration-20260819-v1.json",
+      "bytes": 7531,
+      "sha256": "b1df357a9a387b9f16e9f5cef247e175b17b879dda402e8486de8b50cd6fc00d"
+    },
+    "changed_sources": [
+      "scripts/multi_asset_bidirectional_observe.py",
+      "src/hypervector/live/multi_asset_observer_runner.py"
+    ],
+    "source_changes": [
+      {
+        "path": "scripts/multi_asset_bidirectional_observe.py",
+        "preregistered_sha256": "44435fd777c6e45ad61569ce11e6961a41795cde06ad651bfa94380a2778a102",
+        "current_sha256": "55b662b2d20ed1cd9e07f22b62e971b7bb48e199713b2a30627e24a5c1f37562",
+        "current_bytes": 9122,
+        "change_scope": "explicit exact-run resume validation"
+      },
+      {
+        "path": "src/hypervector/live/multi_asset_observer_runner.py",
+        "preregistered_sha256": "cf2175aa5c8fb189d7f38fe0fa0e01945380cbfbaae66bc0d589406dc13a3dd5",
+        "current_sha256": "0fd96bf3c6259d7d85b2496f4c43cf676d8ebab32345d117a71974212a96d6d4",
+        "current_bytes": 10465,
+        "change_scope": "resume without duplicate configuration emission"
+      }
+    ],
+    "unchanged_config": {
+      "path": "configs/multi_asset_growth_first_5000_eight_asset_incremental_v58.toml",
+      "bytes": 6142,
+      "sha256": "1c1c1656233b074df2ed3adcee8cb8cb2c58f0d191cc9f9ac34799478fca3378"
+    },
+    "interpretation": "The resume repair did not intentionally change provider or route semantics, but the full observer run is not one immutable implementation window."
+  },
+  "claim_scope": {
+    "aggregate_profitability_claim_supported": false,
+    "aggregate_route_frequency_claim_supported": false,
+    "exact_lifecycle_comparison_supported": true,
+    "exact_lifecycle_requirements": [
+      "separately_frozen_identity",
+      "post_resume_decision",
+      "unchanged_route_and_config",
+      "exact_fills_fees_funding_and_cleanup",
+      "explicit_aggregate_window_limitation"
+    ],
+    "interpretation": "A separately frozen post-resume lifecycle may be reconciled as a diagnostic observation. It cannot rehabilitate or represent the incomplete aggregate observer window."
+  },
+  "next_action": {
+    "current_lifecycle": "Allow the already-open ETH lifecycle to resolve under its unchanged live exit contract and publish its separately bound reconciliation.",
+    "future_observation": "After ETH resolution, stop the old report-only bundle and preregister a new observer run against the exact current implementation hashes.",
+    "live_change_requested": false
+  },
+  "confidence": {
+    "heartbeat_gap_reclassification": "high",
+    "implementation_hash_discontinuity": "high",
+    "resume_change_preserved_route_semantics": "medium_high",
+    "individual_eth_lifecycle_economics": "pending_exact_close"
+  },
+  "falsifiers": [
+    "A recomputation of the immutable observer prefix yields no heartbeat gap above every configured entry-delay bound.",
+    "The preregistered and loaded observer implementation hashes are proven identical.",
+    "The exact ETH close cannot reconcile its frozen post-resume decision, live fills, fees, funding, exit reason, and flat order-free cleanup."
+  ]
+}

@@ -33,12 +33,17 @@ def compatible_run_ids(contract: Record) -> tuple[str, ...]:
 
 
 def validated_books(
-    records: Sequence[Record], *, symbol: str, run_ids: Sequence[str]
+    records: Sequence[Record],
+    *,
+    symbol: str,
+    run_ids: Sequence[str],
+    maximum_exchange_ahead_ms: int = 0,
 ) -> tuple[Record, ...]:
     """Validate and order books across exact-contract observer restarts."""
     allowed = tuple(run_ids)
     if not allowed or len(set(allowed)) != len(allowed):
         raise ValueError("asset book run ids must be unique and non-empty")
+    nonnegative_int(maximum_exchange_ahead_ms, "maximum exchange clock skew")
     rows = tuple(event_rows(records, "book_observation"))
     for row in rows:
         values = payload(row)
@@ -46,8 +51,8 @@ def validated_books(
             raise ValueError("asset book identity differs from policy contract")
         recv = book_time(row)
         exchange = nonnegative_int(values.get("exchange_ts_ms"), "exchange time")
-        if exchange > recv:
-            raise ValueError("asset book exchange time follows receive time")
+        if exchange - recv > maximum_exchange_ahead_ms:
+            raise ValueError("asset book exceeds maximum allowed clock skew")
         bids = _levels(values.get("bids"), "sell")
         asks = _levels(values.get("asks"), "buy")
         if bids[0].price >= asks[0].price:

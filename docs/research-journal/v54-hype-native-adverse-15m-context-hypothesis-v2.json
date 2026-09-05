@@ -1,0 +1,125 @@
+{
+  "schema_version": 1,
+  "generated_at_utc": "2026-08-18T05:32:11Z",
+  "hypothesis_id": "v54-hype-native-adverse-15m-context-v1",
+  "revision": 2,
+  "supersedes": "docs/research-journal/v54-hype-native-adverse-15m-context-hypothesis-v1.json",
+  "status": "rejected_report_only_not_live_authorized",
+  "contract": {
+    "report_only": true,
+    "execution_authority": "none",
+    "runtime_strategy_changed": false,
+    "automatic_promotion": false,
+    "performance_gate": false,
+    "explicit_human_approval_required_for_live_change": true
+  },
+  "problem_or_opportunity": "Test whether the later HYPE-native deterioration can be improved by censoring long entries initiated during an explicit completed 15-minute TREND_DOWN context while preserving native short-onset exits.",
+  "why_now": "The exact 14-trade live lineage showed all seven original entries in TREND_UP or RANGE and six of seven later entries in TREND_DOWN. That association was explicitly treated as post-observation and profile/time confounded rather than as a live rule.",
+  "evidence": {
+    "artifact": "data/logs/research/hype_hype_native_v54_adverse_15m_context_hl365d_20260818.json",
+    "sha256": "26bbd559c885dc7c7189eae3339eba9dc27d4faebcfcf53ab7d923ba88681872",
+    "bars_sha256": "3dba115ac49c71f4b52d69849eaf69ab1da23e82ebb0326e9738cf35b0d159d2",
+    "funding_sha256": "080415ac9cb16938abd154eccc04691da6c9c05bdf544d25312659cf905c5242",
+    "window": "2025-07-28T00:00:00Z through 2026-07-28T00:00:00Z",
+    "development_end_exclusive": "2026-05-28T16:00:00Z",
+    "purge_minutes": 480,
+    "opened_descriptive_start": "2026-05-29T00:00:00Z"
+  },
+  "frozen_execution_assumptions": {
+    "entry_sides": ["long"],
+    "native_short_onset_remains_exit_authoritative": true,
+    "protective_stop_bps": 80.0,
+    "maximum_hold_minutes": 480,
+    "maximum_hold_policy": "fixed",
+    "fee_bps_per_side": 4.32,
+    "slippage_bps_per_side": 2.0,
+    "parameter_sweep": false
+  },
+  "development_result": {
+    "control": {
+      "trades": 532,
+      "wins": 118,
+      "losses": 414,
+      "net_bps": -2387.886816,
+      "profit_factor": 0.935603,
+      "maximum_drawdown_bps": 7390.824852,
+      "net_excluding_largest_winner_bps": -3423.193372,
+      "fold_net_bps": [1284.641941, -1543.352854, -4109.044607, 1668.320151, 311.548552]
+    },
+    "challenger": {
+      "censored_long_signals": 107,
+      "trades": 459,
+      "wins": 100,
+      "losses": 359,
+      "net_bps": -3542.227495,
+      "profit_factor": 0.890166,
+      "maximum_drawdown_bps": 6784.048741,
+      "net_excluding_largest_winner_bps": -4577.534051,
+      "fold_net_bps": [369.392269, -1833.771641, -3298.997255, 1245.349541, -24.200409]
+    },
+    "challenger_minus_control": {
+      "net_bps": -1154.340679,
+      "maximum_drawdown_bps": -606.776111,
+      "trades": -73
+    }
+  },
+  "opened_descriptive_result": {
+    "control": {
+      "trades": 112,
+      "net_bps": 382.857298,
+      "profit_factor": 1.050478,
+      "net_excluding_largest_winner_bps": -553.485618
+    },
+    "challenger": {
+      "censored_long_signals": 27,
+      "trades": 97,
+      "net_bps": -1199.941514,
+      "profit_factor": 0.824382,
+      "net_excluding_largest_winner_bps": -2136.284429
+    },
+    "challenger_minus_control_net_bps": -1582.798812
+  },
+  "mechanism_diagnosis": {
+    "development_TREND_DOWN_control_trades": 85,
+    "development_TREND_DOWN_control_net_bps": 682.936082,
+    "development_TREND_DOWN_control_profit_factor": 1.119036,
+    "development_TREND_DOWN_control_excluding_largest_winner_bps": -327.734057,
+    "opened_TREND_DOWN_control_trades": 20,
+    "opened_TREND_DOWN_control_net_bps": 1154.6738,
+    "opened_TREND_DOWN_control_profit_factor": 1.978443,
+    "opened_TREND_DOWN_control_excluding_largest_winner_bps": 495.774323,
+    "interpretation": "The broader replay contradicts the 14-trade association: TREND_DOWN long entries were not the source of the aggregate loss and were materially profitable before largest-winner removal in the already-opened block. Censoring them damaged net return in both partitions. Development TREND_DOWN becomes negative after removing its largest winner, so this is not evidence to favor the context; it is evidence that the proposed censor is not justified."
+  },
+  "decision": {
+    "hypothesis": "rejected",
+    "live_filter": "do_not_implement",
+    "v53_change": "none",
+    "v54_long_challenger_change": "none",
+    "cross_asset_transfer": "remains_rejected",
+    "next_investigation": "Continue prospective HYPE-native long-entry/short-exit observation with completed 15-minute context annotated, without gating. Diagnose attributable live lifecycles before proposing another entry filter."
+  },
+  "risks_and_failure_modes": [
+    "Both control and challenger development economics remain negative after modeled costs.",
+    "The control's positive already-opened block becomes negative after removing its largest winner.",
+    "Context-conditioned trade attribution is retrospective and lifecycle occupancy differs after censoring.",
+    "A future prospective context sample can differ from this historical proxy.",
+    "One-minute bars do not reproduce private IOC fills or exact intrabar mark-stop order."
+  ],
+  "confidence": {
+    "reject_this_TREND_DOWN_censor": "high_within_the_frozen_replay",
+    "explain_the_original_live_strength": "low_because_N7_was_small_and_time_profile_confounded",
+    "cross_asset_transfer_rejection": "high",
+    "absolute_HYPE_long_profitability": "low"
+  },
+  "falsifiers": [
+    "The artifact, bar, or funding checksum changes.",
+    "A code-parity replay with identical inputs does not reproduce the same artifact bytes and economics.",
+    "A predeclared compatible prospective sample shows TREND_DOWN long entries are consistently negative after exact fees, funding, slippage, and largest-winner removal.",
+    "The HYPE-native signal, side authority, stop, or exit contract changes, making the comparison non-comparable."
+  ],
+  "explicit_approval": {
+    "requested": false,
+    "decision": "not_requested",
+    "scope": "No live strategy, route, asset, parameter, leverage, sizing, risk, or execution authority is granted."
+  }
+}

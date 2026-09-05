@@ -1,0 +1,162 @@
+{
+  "schema_version": 1,
+  "mode": "v58_spcx_cash_session_source_availability_repair_proposal_v1",
+  "created_at_utc": "2026-08-21T03:33:34Z",
+  "contract": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_live_change": false,
+    "runtime_strategy_changed": false,
+    "orders_supported": false,
+    "explicit_human_approval_required_for_live_cutover": true
+  },
+  "recommendation": "Approve implementation and report-only validation of a cash-session-aware SPCX public-trade source. Keep V58 live unchanged until the repaired source passes exact signal/exit parity, required-bar fail-closed tests, collector no-advance tests, a forward cash-open observation, and a separate reconciled cutover approval.",
+  "why_now": "The active V58 checkpoint shows nine routes completing their configured decision clocks while the SPCX cash-open route alone has 452 readiness attempts, zero completed route evaluations, and a persistent cash_open_trade_bars_incomplete blocker. The source requires every 15-minute all-hours bar even though the strategy consumes U.S. cash-session bars. Thirteen absent bars are all after the cash close, so the current contract will remain unavailable at the next cash open without repair.",
+  "evidence_reviewed": [
+    {
+      "path": "docs/reports/2026-08-21-v58-active-route-attribution/evidence.json",
+      "bytes": 19614,
+      "sha256": "073f1571f1a65575029257e2c138efd5b16cfa52624f1d6caa56931cbf6bbfc1",
+      "role": "immutable route attribution, local archive quality, independent gap reconciliation, hypotheses, and validation contract"
+    },
+    {
+      "path": "src/hypervector/live/hip3_cash_open_trade_source.py",
+      "bytes": 3822,
+      "sha256": "f4a11cb3c96dacfa2ae50935181e12467d0204b0852850fd98f23c9a5e284544",
+      "role": "current all-hours live source and exact-channel gap predicate"
+    },
+    {
+      "path": "src/hypervector/research/hip3_cash_open_prospective.py",
+      "bytes": 9411,
+      "sha256": "f82ae8fd95eeda2c7eb7afe936e8df8cf6bded2da20bde1e15559d1feb007089",
+      "role": "current continuous all-hours expected-index validator"
+    },
+    {
+      "path": "src/hypervector/live/hip3_cash_open_gap_provider.py",
+      "bytes": 8518,
+      "sha256": "bbaeb047e520778bd8d86a6cf5d8cbefdc46ddb3ee52c1c438da78c32263f101",
+      "role": "current opening-bar, previous-close, gap-aware entry and exit consumer"
+    },
+    {
+      "path": "src/hypervector/research/spcx_cash_open_source_quality.py",
+      "bytes": 6259,
+      "sha256": "7ded753f8c302c4f418d1b6f4b92e2952cddc0b2248395b52b9f2fca6116a189",
+      "role": "new report-only cash versus non-cash and combined-gap diagnostic"
+    },
+    {
+      "path": "tests/test_spcx_cash_open_source_quality.py",
+      "bytes": 4984,
+      "sha256": "59736d6d113470ccefd1e7a2540ad564714362485d6dd7d7062547b3024aeb19",
+      "role": "test-first diagnostic validation"
+    }
+  ],
+  "observed_problem_or_opportunity": {
+    "active_run_id": "bidirectional-live-1787272893887",
+    "active_profile": "multi_asset_growth_first_5000_eight_asset_incremental_v58",
+    "spcx_readiness_attempts": 452,
+    "spcx_completed_outcome_evaluations": 0,
+    "spcx_primary_blocker": "cash_open_trade_bars_incomplete",
+    "same_run_15m_completed_decision_clocks": 10,
+    "cash_session_bars_present": 130,
+    "cash_session_bars_expected": 130,
+    "irrelevant_after_close_bars_absent": 13,
+    "combined_channel_gaps_ignored_by_current_live_source": 61,
+    "cash_session_overlapping_combined_gaps": 13,
+    "independent_vendor_trades_missing_locally": 619,
+    "affected_opening_bar_ohlc_changed_after_reconciliation": false,
+    "profitability_established_by_repair": false
+  },
+  "applicable_market_regime": "all_market_regimes_during_scheduled_us_cash_sessions; transport_and_source_contract_only",
+  "alternatives_considered": [
+    {
+      "alternative": "do_nothing",
+      "tradeoff": "preserves the exact current fail-closed process but leaves SPCX technically disabled"
+    },
+    {
+      "alternative": "forward_fill_overnight_no_trade_bars",
+      "tradeoff": "rejected because it fabricates OHLC evidence and can alter prior-close or entry state"
+    },
+    {
+      "alternative": "ignore_all_declared_gaps",
+      "tradeoff": "rejected because independent 0xArchive evidence proves 619 local prints were missed in two opening-bar disconnects"
+    },
+    {
+      "alternative": "replace_public_trades_with_candles_or_l2",
+      "tradeoff": "larger strategy-source change with a new signal and execution validation burden"
+    },
+    {
+      "alternative": "scheduled_session_exact_trades_with_gap_provenance",
+      "tradeoff": "smallest evidence-preserving repair; requires careful prior-close and current-opening-bar completeness propagation"
+    }
+  ],
+  "proposed_live_change": {
+    "files_expected_to_change": [
+      "src/hypervector/research/hip3_cash_open_prospective.py",
+      "src/hypervector/live/hip3_cash_open_trade_source.py",
+      "src/hypervector/live/hip3_cash_open_gap_provider.py",
+      "tests/test_hip3_cash_open_trade_source.py",
+      "tests/test_hip3_cash_open_gap_provider.py"
+    ],
+    "behavior": [
+      "construct only scheduled eligible U.S. cash-session 15-minute bars from exact public trades",
+      "recognize both exact trades gaps and combined-channel gaps containing trades",
+      "retain per-bar gap provenance rather than silently dropping it",
+      "withhold entry when the current opening bar or immediately prior cash-close bar is unresolved",
+      "emit source-recovery exits when a new held-position bar contains a declared gap",
+      "return a clean empty collector batch when no new scheduled cash bar has completed",
+      "never forward-fill or fabricate OHLC"
+    ],
+    "activation": "separate_explicitly_approved_reconciled_restart_only",
+    "current_runtime_changed_by_this_proposal": false
+  },
+  "expected_upside": "Restore the SPCX route's ability to evaluate the one scheduled cash-open decision without weakening required-bar integrity. The repair can recover one of ten configured routes; it does not by itself establish trading frequency or profitability.",
+  "main_risks_and_failure_modes": [
+    "A session-calendar error can admit holidays, miss early closes, or select the wrong prior close.",
+    "Treating a historical gap as irrelevant when it affects the immediately prior close can generate a wrong target anchor.",
+    "Merging vendor data without explicit receipt and source provenance can create hindsight contamination.",
+    "Returning no new scheduled bar as an error can reproduce the rapid overnight unavailability loop.",
+    "Changing sparse-frame indexing can alter historical exits or replay startup decisions.",
+    "A technically restored route can still have negative live economics."
+  ],
+  "validation_completed": [
+    "Four report-only diagnostic tests pass, including missing cash bars, exact trade gaps, and combined-channel gaps.",
+    "The focused diagnostic plus existing SPCX source, provider, and cohort opportunity suite previously passed 24 tests before the combined-gap extension; the full focused suite must be rerun after final report changes.",
+    "The frozen seven-day archive contains all 130 required cash-session bars and 13 irrelevant post-close no-trade bars.",
+    "Thirteen bounded 0xArchive page chains completed with zero unresolved participant groups and zero surrogate trade IDs.",
+    "The affected opening bar preserves exact OHLC, opening-gap direction, and close-versus-prior-close state after adding 619 independently observed trades."
+  ],
+  "validation_still_required": [
+    "Add implementation tests before changing production behavior.",
+    "Validate the full 2026 holiday and early-close calendar at timezone and DST boundaries.",
+    "Prove complete-window signal, target-anchor, stop, and exit parity against the current strategy contract.",
+    "Prove fail-closed behavior for missing or gapped current opening and immediately prior close bars.",
+    "Prove collector no-advance behavior overnight, between session bars, and across restart seeding.",
+    "Run the 13-window exact vendor reconciliation through the proposed source-provenance model.",
+    "Observe the next cash-open decision in report-only mode before live cutover.",
+    "Run the full non-network Python suite, Rust TUI suite, and reconciled post-cutover acceptance."
+  ],
+  "success_metrics": [
+    "One and only one completed SPCX evaluation is emitted for each valid scheduled cash-open boundary.",
+    "Zero entries use fabricated, forward-filled, missing, or unresolved required OHLC.",
+    "Complete-window signal, target-anchor, stop, and exit results match the unchanged strategy contract.",
+    "Combined-channel trade gaps are never silently ignored.",
+    "No duplicate, stale, or startup-replayed entry is emitted.",
+    "All other nine routes, open positions, protective stops, and TUI telemetry remain unchanged."
+  ],
+  "failure_or_rollback_triggers": [
+    "Any live/profile fingerprint mismatch.",
+    "Any unresolved current opening or immediately prior cash-close interval.",
+    "Any signal, target, stop, exit, or decision-time parity mismatch on complete evidence.",
+    "Any duplicate evaluation, stale entry, runtime fault, position mismatch, or protective-stop mismatch.",
+    "Any implicit vendor fallback without explicit source and receipt provenance.",
+    "Rollback requires a separate explicitly approved reconciled restart."
+  ],
+  "confidence_level": {
+    "route_attribution": "high",
+    "immediate_all_hours_blocker": "high",
+    "independent_gap_reconciliation": "high_for_frozen_windows",
+    "repair_behavior_preservation": "medium_not_implemented_or_forward_validated",
+    "profitability_after_repair": "unknown"
+  },
+  "explicit_approval_requested": "Approve implementation and report-only validation only. Live cutover remains a separate approval after all evidence gates pass."
+}

@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v58-live-completed-candle-read-coalescing",
+  "revision_number": 1,
+  "supersedes_revision_id": null,
+  "created_at_utc": "2026-08-21T03:03:00Z",
+  "strategy_id": "multi_asset_growth_first_5000_eight_asset_incremental_v58",
+  "symbol": "PORTFOLIO",
+  "status": "candidate",
+  "hypothesis": "Reusing each verified completed one-minute candle snapshot within its unchanged minute boundary in the V58 live poller can materially reduce shared-IP Hyperliquid REST weight and HTTP 429 evidence gaps without changing any provider output for identical completed-bar inputs.",
+  "decision": "Request explicit approval to add the already-tested completed-minute candle cache to the live poller on a reconciled restart. Do not change the active process, strategy logic, routes, exits, sizing, leverage, stops, or poll cadence from this revision. Before cutover, add live-launch construction and all-route raw-versus-cached parity tests. After cutover, retain explicit missing-bar, route-parity, HTTP 429, runtime-fault, position, and protective-stop monitoring with no automatic promotion or rollback authority.",
+  "confidence": "medium",
+  "falsifier": "Reject or roll back the candidate if any provider evaluation, intent, or withholding decision differs for identical completed-bar inputs, if a stale or missing completed bar is reused, if restart reconciliation changes position or owned-stop identity, or if the 500-cycle post-change diagnostic shows no material HTTP 429 reduction. The rate-limit diagnosis must also be updated if request instrumentation attributes the remaining 429s to a different source.",
+  "evidence": [
+    {
+      "path": "v58-live-completed-candle-read-coalescing-proposal-20260821-v1.json",
+      "role": "approval_ready_change_proposal_weight_model_validation_and_rollback_contract",
+      "sha256": "d06898ed048a59ab6e4dabd86dc4291d7895ce8cf31c22e31a2c7a545ed860ff",
+      "bytes": 8235
+    },
+    {
+      "path": "../../data/logs/research/v58_observer_retired_http429_final_audit_20260821T0259Z_v1.json",
+      "role": "retired_observer_final_http429_baseline",
+      "sha256": "7da8386dd5c6349a2b13c5a854921350aa0c76ab371856eb774d21f26e58413e",
+      "bytes": 1627851
+    },
+    {
+      "path": "../../data/logs/research/v58_observer_transport_prefix_20260821T0257Z_v1.json",
+      "role": "successor_observer_cache_only_transport_prefix",
+      "sha256": "56caafff91890a805ef5046462a3a3eb84c36d2d53108a9cd0cb2db3b8f413ff",
+      "bytes": 1404235
+    }
+  ],
+  "metrics": {
+    "retired_observer_poll_cycles": 213,
+    "retired_observer_http429_cycles": 10,
+    "successor_observer_poll_cycles": 124,
+    "successor_observer_http429_cycles": 2,
+    "active_live_symbols": 8,
+    "configured_poll_seconds": 15.0,
+    "configured_live_candle_calls_per_minute": 32,
+    "proposed_live_candle_calls_per_minute_maximum_after_warmup": 8,
+    "minimum_configured_base_weight_saved_per_minute": 480,
+    "estimated_observed_minimum_base_weight_saved_per_minute": 358.4389605905165,
+    "focused_cache_observer_poller_tests_passed": 28,
+    "current_live_runtime_changed": false,
+    "explicit_approval_requested": true
+  },
+  "limitations": [
+    "The per-IP request budget includes processes not yet instrumented with exact request-weight counters.",
+    "The venue documentation specifies additional candle-response weight per 60 items but the proposal uses only the documented base weight for its minimum savings estimate.",
+    "The active live process has not loaded this cache and remains unchanged.",
+    "A restart while positions are open requires explicit adopted-position and reduce-only protective-stop reconciliation.",
+    "A same-minute upstream candle correction would be observed at the next minute boundary rather than immediately."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

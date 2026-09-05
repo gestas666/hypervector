@@ -30,6 +30,7 @@ from hypervector.live.sol_range_onset_config import (
     load_sol_range_onset_config,
 )
 from hypervector.live.sol_range_onset_engine import (
+    SolEntryNotFilledError,
     SolLiveEngineError,
     SolRangeOnsetLiveEngine,
 )
@@ -750,6 +751,36 @@ def test_partial_fill_cancels_only_residual_entry_then_protects_actual_size(
     assert not any(name == "cancel_all" for name, _ in adapter.calls)
 
 
+def test_ioc_no_match_reconciles_flat_without_faulting_the_engine(
+    tmp_path: Path,
+) -> None:
+    """A definitive IOC no-fill must release the slot and remain nonfatal."""
+    config, ledger = _runtime(tmp_path)
+    adapter = FakeSolAdapter([_venue(0.0), _venue(0.0), _venue(0.0)])
+    adapter.entry_ack = HyperliquidOrderAck(
+        False,
+        None,
+        "error",
+        error="Order could not immediately match against any resting orders. asset=214",
+    )
+    engine = SolRangeOnsetLiveEngine(
+        config=config,
+        adapter=adapter,
+        ledger=ledger,
+        credentials_present=True,
+        now_fn=_now,
+    )
+
+    engine.start()
+    with pytest.raises(SolEntryNotFilledError, match="IOC entry not filled"):
+        engine.enter(side="long", mark_price=73.0)
+
+    assert engine.snapshot.state is SolLiveState.FLAT
+    records = ledger.read_all()
+    assert any(row["event_type"] == "entry_not_filled" for row in records)
+    assert not any(row["event_type"] == "fault" for row in records)
+
+
 def test_stop_rejection_emergency_closes_reconciles_flat_and_faults(
     tmp_path: Path,
 ) -> None:
@@ -793,6 +824,7 @@ def test_exact_stop_cancel_reduce_only_close_and_flat_before_next_entry(
             _venue(0.30),
             _venue(0.30, (stop,)),
             _venue(0.30, (stop,)),
+            _venue(0.0, (stop,)),
             _venue(0.0),
         ]
     )
@@ -811,6 +843,9 @@ def test_exact_stop_cancel_reduce_only_close_and_flat_before_next_entry(
     assert result.state is SolLiveState.FLAT
     assert ("cancel_order", 202) in adapter.calls
     assert any(name == "close_position" for name, _ in adapter.calls)
+    assert [name for name, _ in adapter.calls].index("close_position") < (
+        adapter.calls.index(("cancel_order", 202))
+    )
     close_records = [
         record for record in ledger.read_all() if record["event_type"] == "close"
     ]
@@ -912,7 +947,10 @@ def test_lost_stop_response_that_filled_immediately_confirms_flat(
     assert closes[-1]["payload"]["reason"] == "protective_stop_during_protection"
 
 
-def test_restart_restores_only_ledger_owned_position_and_stop(tmp_path: Path) -> None:
+def test_restart_restores_only_ledger_owned_position_and_stop(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """Known protected exposure resumes without submitting or changing leverage."""
     config, ledger = _runtime(tmp_path)
     ledger.append(
@@ -937,6 +975,11 @@ def test_restart_restores_only_ledger_owned_position_and_stop(tmp_path: Path) ->
         ledger=ledger,
         credentials_present=True,
         now_fn=_now,
+    )
+    monkeypatch.setattr(
+        ledger,
+        "read_all",
+        lambda: pytest.fail("startup recovery must stream profile history"),
     )
 
     result = engine.start()
@@ -1669,7 +1712,7 @@ def test_restart_recognizes_committed_stop_that_filled_during_crash(
 
 
 def test_restart_recovers_committed_close_without_resubmission(tmp_path: Path) -> None:
-    """A filled reduce-only close is adopted and verified flat after restart."""
+    """A filled close cleans its still-armed owned stop after restart."""
     config, ledger = _runtime(tmp_path)
     close_client_id = "0x33333333333333333333333333333333"
     ledger.append(
@@ -1698,7 +1741,8 @@ def test_restart_recovers_committed_close_without_resubmission(tmp_path: Path) -
             "mark_price": 73.0,
         },
     )
-    adapter = FakeSolAdapter([_venue(0.0)])
+    stop = _order(202, size=0.30, reduce_only=True, trigger=True)
+    adapter = FakeSolAdapter([_venue(0.0, (stop,)), _venue(0.0)])
     adapter.client_statuses[close_client_id] = HyperliquidOrderStatus(
         303,
         "SOL",
@@ -1713,12 +1757,14 @@ def test_restart_recovers_committed_close_without_resubmission(tmp_path: Path) -
         ledger=ledger,
         credentials_present=True,
         now_fn=_now,
+        reconciliation_attempts=1,
     )
 
     result = engine.start()
 
     assert result.state is SolLiveState.FLAT
     assert ("order_status_by_client_id", close_client_id) in adapter.calls
+    assert ("cancel_order", 202) in adapter.calls
     assert not any(name == "close_position" for name, _ in adapter.calls)
 
 
@@ -2120,13 +2166,12 @@ def test_wrong_direction_fill_is_emergency_closed_before_fault(tmp_path: Path) -
     assert any(name == "close_position" for name, _ in adapter.calls)
 
 
-def test_close_rejection_replaces_and_verifies_stop_before_fault(
+def test_close_rejection_retains_original_stop_and_restores_open(
     tmp_path: Path,
 ) -> None:
-    """A rejected exit returns residual exposure to protected fault state."""
+    """A rejected exit leaves the original stop armed and resumes OPEN."""
     config, ledger = _runtime(tmp_path)
     stop = _order(202, size=0.30, reduce_only=True, trigger=True)
-    replacement = _order(204, size=0.30, reduce_only=True, trigger=True)
     adapter = FakeSolAdapter(
         [
             _venue(0.0),
@@ -2134,7 +2179,7 @@ def test_close_rejection_replaces_and_verifies_stop_before_fault(
             _venue(0.30),
             _venue(0.30, (stop,)),
             _venue(0.30, (stop,)),
-            _venue(0.30, (replacement,)),
+            _venue(0.30, (stop,)),
         ]
     )
     adapter.close_ack = HyperliquidOrderAck(
@@ -2152,25 +2197,59 @@ def test_close_rejection_replaces_and_verifies_stop_before_fault(
     )
     engine.start()
     engine.enter(side="long", mark_price=73.0)
+
+    result = engine.exit(mark_price=73.2, reason="signal_exit")
+
+    assert result.state is SolLiveState.OPEN
+    assert result.stop_oid == 202
+    assert adapter.reconciliations == []
+    assert sum(name == "place_protective_stop" for name, _ in adapter.calls) == 1
+    assert not any(name == "cancel_order" for name, _ in adapter.calls)
+
+
+def test_missing_stop_after_rejected_close_is_replaced(tmp_path: Path) -> None:
+    """A rejected close cannot leave unexplained residual exposure naked."""
+    config, ledger = _runtime(tmp_path)
+    stop = _order(202, size=0.30, reduce_only=True, trigger=True)
+    replacement = _order(204, size=0.30, reduce_only=True, trigger=True)
+    adapter = FakeSolAdapter(
+        [
+            _venue(0.0),
+            _venue(0.0),
+            _venue(0.30),
+            _venue(0.30, (stop,)),
+            _venue(0.30, (stop,)),
+            _venue(0.30),
+            _venue(0.30, (replacement,)),
+        ]
+    )
+    adapter.close_ack = HyperliquidOrderAck(
+        False, None, "error", error="close rejected"
+    )
+    engine = SolRangeOnsetLiveEngine(
+        config=config,
+        adapter=adapter,
+        ledger=ledger,
+        credentials_present=True,
+        now_fn=_now,
+        reconciliation_attempts=1,
+    )
+    engine.start()
+    engine.enter(side="long", mark_price=73.0)
     adapter.stop_ack = HyperliquidOrderAck(True, 204, "resting")
 
-    with pytest.raises(SolLiveEngineError, match="close rejected"):
-        engine.exit(mark_price=73.2, reason="signal_exit")
+    result = engine.exit(mark_price=73.2, reason="signal_exit")
 
-    assert engine.snapshot.state is SolLiveState.FAULTED
-    assert engine.snapshot.stop_oid == 204
-    assert adapter.reconciliations == []
-    replacement_call = [
-        value for name, value in adapter.calls if name == "place_protective_stop"
-    ][-1]
-    assert isinstance(replacement_call, dict)
-    assert replacement_call["position_size_signed"] == pytest.approx(0.30)
+    assert result.state is SolLiveState.OPEN
+    assert result.stop_oid == 204
+    assert sum(name == "place_protective_stop" for name, _ in adapter.calls) == 2
+    assert not any(name == "cancel_order" for name, _ in adapter.calls)
 
 
-def test_lost_cancel_response_recovers_oid_before_reduce_only_close(
+def test_unverified_replacement_stop_faults_instead_of_restoring_open(
     tmp_path: Path,
 ) -> None:
-    """The engine verifies a lost cancel response before submitting its close."""
+    """A replacement acknowledgement alone cannot claim venue protection."""
     config, ledger = _runtime(tmp_path)
     stop = _order(202, size=0.30, reduce_only=True, trigger=True)
     adapter = FakeSolAdapter(
@@ -2181,6 +2260,45 @@ def test_lost_cancel_response_recovers_oid_before_reduce_only_close(
             _venue(0.30, (stop,)),
             _venue(0.30, (stop,)),
             _venue(0.30),
+            _venue(0.30),
+        ]
+    )
+    adapter.close_ack = HyperliquidOrderAck(
+        False, None, "error", error="close rejected"
+    )
+    engine = SolRangeOnsetLiveEngine(
+        config=config,
+        adapter=adapter,
+        ledger=ledger,
+        credentials_present=True,
+        now_fn=_now,
+        reconciliation_attempts=1,
+    )
+    engine.start()
+    engine.enter(side="long", mark_price=73.0)
+    adapter.stop_ack = HyperliquidOrderAck(True, 204, "resting")
+
+    with pytest.raises(SolLiveEngineError, match="requires exactly its owned stop"):
+        engine.exit(mark_price=73.2, reason="signal_exit")
+
+    assert engine.snapshot.state is SolLiveState.FAULTED
+    assert sum(name == "place_protective_stop" for name, _ in adapter.calls) == 2
+
+
+def test_lost_residual_cancel_response_recovers_oid_after_close(
+    tmp_path: Path,
+) -> None:
+    """A lost residual-stop cancel is recovered only after the close."""
+    config, ledger = _runtime(tmp_path)
+    stop = _order(202, size=0.30, reduce_only=True, trigger=True)
+    adapter = FakeSolAdapter(
+        [
+            _venue(0.0),
+            _venue(0.0),
+            _venue(0.30),
+            _venue(0.30, (stop,)),
+            _venue(0.30, (stop,)),
+            _venue(0.0, (stop,)),
             _venue(0.0),
         ]
     )
@@ -2205,10 +2323,13 @@ def test_lost_cancel_response_recovers_oid_before_reduce_only_close(
     assert sum(name == "cancel_order" for name, _ in adapter.calls) == 1
     assert ("order_status", 202) in adapter.calls
     assert sum(name == "close_position" for name, _ in adapter.calls) == 1
+    assert [name for name, _ in adapter.calls].index("close_position") < (
+        adapter.calls.index(("cancel_order", 202))
+    )
 
 
-def test_replacement_stop_fill_during_failed_exit_confirms_flat(tmp_path: Path) -> None:
-    """An immediate replacement-stop fill cannot be restored as false OPEN."""
+def test_original_stop_fill_during_rejected_exit_confirms_flat(tmp_path: Path) -> None:
+    """An original-stop fill during a rejected close resolves exact FLAT."""
     config, ledger = _runtime(tmp_path)
     stop = _order(202, size=0.30, reduce_only=True, trigger=True)
     adapter = FakeSolAdapter(
@@ -2218,7 +2339,7 @@ def test_replacement_stop_fill_during_failed_exit_confirms_flat(tmp_path: Path) 
             _venue(0.30),
             _venue(0.30, (stop,)),
             _venue(0.30, (stop,)),
-            _venue(0.0, fills=(_stop_fill(oid=204),)),
+            _venue(0.0, fills=(_stop_fill(oid=202),)),
         ]
     )
     adapter.close_ack = HyperliquidOrderAck(
@@ -2237,15 +2358,11 @@ def test_replacement_stop_fill_during_failed_exit_confirms_flat(tmp_path: Path) 
     )
     engine.start()
     engine.enter(side="long", mark_price=73.0)
-    adapter.stop_ack = HyperliquidOrderAck(True, 204, "filled", 0.30, 72.5152)
-
     result = engine.exit(mark_price=73.2, reason="signal_exit")
 
     assert result.state is SolLiveState.FLAT
     closes = [row for row in ledger.read_all() if row["event_type"] == "close"]
-    assert closes[-1]["payload"]["reason"] == (
-        "replacement_protective_stop_during_exit"
-    )
+    assert closes[-1]["payload"]["reason"] == ("protective_stop_during_rejected_exit")
 
 
 def test_monitoring_reconciles_flat_and_records_exact_funding(tmp_path: Path) -> None:

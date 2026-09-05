@@ -11,9 +11,11 @@ import sys
 
 from hypervector.live.cohort_legacy_flat_stop import (
     LegacyFlatStopError,
+    load_existing_final_flat_boundary,
     watch_legacy_flat_boundary,
     write_legacy_stop_request,
 )
+from hypervector.runtime_lock import RuntimeLockError, bidirectional_live_runtime_lock
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -31,34 +33,56 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--poll-seconds", type=float, default=0.1)
     parser.add_argument("--timeout-seconds", type=float)
-    parser.add_argument(
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument(
         "--write-stop",
         action="store_true",
         help="exclusively create STOP after the exact boundary is observed",
+    )
+    mode.add_argument(
+        "--archive-existing-final-snapshot",
+        type=Path,
+        help="archive the latest exact final snapshot while the account lock is free",
     )
     return parser
 
 
 def run(args: argparse.Namespace) -> int:
     """Observe the next exact boundary and optionally request a clean stop."""
-    evidence = watch_legacy_flat_boundary(
-        args.ledger,
-        expected_profile_fingerprint=str(args.expected_profile_fingerprint),
-        expected_run_id=str(args.expected_run_id),
-        expected_symbols=tuple(args.expected_symbol),
-        poll_seconds=float(args.poll_seconds),
-        timeout_seconds=args.timeout_seconds,
-    )
-    if args.write_stop:
+    if args.archive_existing_final_snapshot is not None:
+        with bidirectional_live_runtime_lock(args.ledger):
+            evidence = load_existing_final_flat_boundary(
+                args.ledger,
+                expected_profile_fingerprint=str(args.expected_profile_fingerprint),
+                expected_run_id=str(args.expected_run_id),
+                expected_symbols=tuple(args.expected_symbol),
+            )
+            write_legacy_stop_request(args.archive_existing_final_snapshot, evidence)
+    else:
+        evidence = watch_legacy_flat_boundary(
+            args.ledger,
+            expected_profile_fingerprint=str(args.expected_profile_fingerprint),
+            expected_run_id=str(args.expected_run_id),
+            expected_symbols=tuple(args.expected_symbol),
+            poll_seconds=float(args.poll_seconds),
+            timeout_seconds=args.timeout_seconds,
+        )
+    if args.write_stop and args.archive_existing_final_snapshot is None:
         write_legacy_stop_request(args.stop_file, evidence)
+    archived = args.archive_existing_final_snapshot is not None
     print(
         json.dumps(
             {
                 "ok": True,
                 "status": (
-                    "stop_requested" if args.write_stop else "flat_boundary_observed"
+                    "final_snapshot_archived"
+                    if archived
+                    else "stop_requested"
+                    if args.write_stop
+                    else "flat_boundary_observed"
                 ),
                 "stop_written": bool(args.write_stop),
+                "archive_written": archived,
                 "execution_authority": "none",
                 "automatic_order_action": False,
                 "evidence": asdict(evidence),
@@ -73,7 +97,7 @@ def main() -> int:
     """Report a concise refusal without weakening the exact-run contract."""
     try:
         return run(build_parser().parse_args())
-    except LegacyFlatStopError as exc:
+    except (LegacyFlatStopError, RuntimeLockError) as exc:
         print(f"legacy flat-stop watcher refused: {exc}", file=sys.stderr)
         return 2
 

@@ -193,6 +193,13 @@ class SolLiveStateMachine:
         self._require(SolLiveState.ENTRY_PENDING, "acknowledge_entry")
         self._snapshot = replace(self._snapshot, entry_oid=_oid(entry_oid, "entry_oid"))
 
+    def confirm_entry_not_filled(self) -> None:
+        """Release an unfilled entry slot only after venue-flat verification."""
+        self._require(SolLiveState.ENTRY_PENDING, "confirm_entry_not_filled")
+        if self._snapshot.entry_oid is not None or self._snapshot.position_size_signed:
+            raise SolLiveStateError("unfilled entry cannot retain venue ownership")
+        self._snapshot = SolLiveSnapshot(state=SolLiveState.FLAT)
+
     def begin_protection(
         self,
         *,

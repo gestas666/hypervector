@@ -1,0 +1,215 @@
+{
+  "schema_version": "v51_four_plus_four_noncrypto_candidate_review_v2",
+  "generated_at_utc": "2026-08-14T19:36:00Z",
+  "mode": "report_only",
+  "execution_authority": "none",
+  "automatic_live_change": false,
+  "automatic_promotion": false,
+  "performance_gate": false,
+  "runtime_strategy_changed": false,
+  "supersedes": {
+    "path": "docs/research-journal/v51-four-plus-four-noncrypto-candidate-review-v1.json",
+    "sha256": "11504aae8877cb1b6ec7065dc311ae184b69bb0c94292e1f7e6a2be75c6b0480",
+    "bytes": 9470
+  },
+  "correction": {
+    "prior_error": "Revision 1 provisionally selected both MU and SKHX even though both are semiconductor exposures.",
+    "reason": "The user correctly required one semiconductor candidate rather than mistaking two liquid correlated equities for portfolio diversification.",
+    "runtime_impact": "none"
+  },
+  "hypothesis": {
+    "id": "FOUR_CRYPTO_FOUR_NONCRYPTO_DIVERSIFIED_ROSTER_V2",
+    "state": "being_tested_no_live_change",
+    "claim": "MU is the stronger single semiconductor candidate; the fourth non-crypto slot should remain unfilled until an uncorrelated route establishes prospective after-cost edge.",
+    "live_authority": false
+  },
+  "target_roster": {
+    "crypto_controls": [
+      "BTC",
+      "ETH",
+      "SOL",
+      "HYPE"
+    ],
+    "live_noncrypto_controls": [
+      "xyz:SP500",
+      "xyz:SPCX"
+    ],
+    "selected_semiconductor_research_candidate": "xyz:MU",
+    "uncorrelated_fourth_slot": "open_pending_evidence",
+    "highest_priority_fourth_slot_research_track": "xyz:CL",
+    "live_roster_changed": false
+  },
+  "semiconductor_decision": {
+    "selected": "xyz:MU",
+    "deferred": "xyz:SKHX",
+    "liquidity": {
+      "xyz:MU": {
+        "day_notional_volume_usd": 173154114.83846965,
+        "spread_bps": 0.10354056978366136,
+        "bid_depth_usd": 543507.729555,
+        "ask_depth_usd": 880671.2208599999,
+        "max_leverage": 10
+      },
+      "xyz:SKHX": {
+        "day_notional_volume_usd": 547610784.9484997,
+        "spread_bps": 0.863073404394221,
+        "bid_depth_usd": 1293259.6397000002,
+        "ask_depth_usd": 1382265.97405,
+        "max_leverage": 10
+      }
+    },
+    "decision_basis": "Both books materially exceed intended portfolio size. MU wins on tighter spread, eight prospective onsets, and positive 15m and 60m two-largest-winner sensitivity. SKHX has greater raw capacity but only one prospective all-long onset.",
+    "confidence": "medium_on_research_priority_low_on_live_profitability",
+    "falsifier": "Defer MU behind SKHX if the frozen MU prospective window becomes non-positive after friction and winner removal while a predeclared SKHX window becomes positive with both directions and resolved route-native lifecycles."
+  },
+  "uncorrelated_candidate_screen": [
+    {
+      "rank": 1,
+      "symbol": "xyz:CL",
+      "market": "WTI crude oil reference perpetual",
+      "disposition": "new_prospective_research_track_only",
+      "venue_observation": {
+        "day_notional_volume_usd": 143032622.94324595,
+        "spread_bps": 0.9832237448528932,
+        "bid_depth_usd": 520055.3004100001,
+        "ask_depth_usd": 346184.80461000005,
+        "max_leverage": 20
+      },
+      "historical_observation": {
+        "bidirectional_development_trades": 81,
+        "bidirectional_stress_net_pnl_usd": 3.3135890863378563,
+        "bidirectional_stress_without_largest_winner_usd": -1.0609129312990413,
+        "long_stress_net_pnl_usd": 4.9139,
+        "long_stress_without_largest_winner_usd": 1.2946,
+        "short_stress_net_pnl_usd": -1.6003,
+        "technically_unresolved_lifecycles": 59
+      },
+      "selection_warning": "The long slice was identified after inspecting a failed bidirectional development result and is not qualification evidence. It may only seed a new predeclared prospective hypothesis.",
+      "prospective_cutoff": {
+        "observer_cursor_decision_time_ms": 1786734900000,
+        "retroactive_decisions_censored": 155,
+        "reuse_old_short_rows_for_selection": false,
+        "execution_authority": "none"
+      },
+      "promotion_status": "not_live_ready"
+    },
+    {
+      "rank": 2,
+      "symbol": "xyz:BRENTOIL",
+      "market": "Brent crude oil reference perpetual",
+      "disposition": "alternative_new_mechanism_required",
+      "venue_observation": {
+        "day_notional_volume_usd": 128466044.1309,
+        "spread_bps": 0.11578161272263644,
+        "bid_depth_usd": 294508.766965,
+        "ask_depth_usd": 1161006.45724,
+        "max_leverage": 20
+      },
+      "reason_not_first": "Venue quality is strong, but the prior Swing/HA and pressure identities were rejected and isolated live winners did not survive largest-winner removal."
+    },
+    {
+      "rank": 3,
+      "symbol": "xyz:GOLD",
+      "market": "gold reference perpetual",
+      "disposition": "alternative_new_mechanism_and_fee_evidence_required",
+      "venue_observation": {
+        "day_notional_volume_usd": 65854961.07438,
+        "spread_bps": 0.22857404084701266,
+        "bid_depth_usd": 1030627.533765,
+        "ask_depth_usd": 994755.13124,
+        "max_leverage": 25
+      },
+      "reason_not_first": "Prior entries and both tested mechanism families were adverse; current fee-growth metadata is also unresolved."
+    },
+    {
+      "rank": 4,
+      "symbol": "xyz:SILVER",
+      "market": "silver reference perpetual",
+      "disposition": "rejected_current_mechanism",
+      "venue_observation": {
+        "day_notional_volume_usd": 74645872.54696,
+        "spread_bps": 0.3088564589599782,
+        "bid_depth_usd": 519329.27205,
+        "ask_depth_usd": 647753.3306999999,
+        "max_leverage": 25
+      },
+      "prospective_observation": {
+        "eligible_onsets": 10,
+        "long_onsets": 1,
+        "short_onsets": 9,
+        "mean_15m_after_friction_bps": -10.067966214012348,
+        "mean_15m_without_largest_winner_bps": -13.748919019737395,
+        "mean_60m_after_friction_bps": -26.11567735813177,
+        "mean_60m_without_largest_winner_bps": -35.78718927918309,
+        "mean_240m_after_friction_bps": -34.80926117621358,
+        "mean_240m_without_largest_winner_bps": -71.68512358328933
+      },
+      "reason_rejected": "All resolved forward horizons and largest-winner sensitivities are negative under the frozen breakout-pressure mechanism."
+    }
+  ],
+  "diversification_diagnostic": {
+    "source": "direct official public 15m candle query",
+    "window": "approximately the latest 5000 completed rows through 2026-08-14T19:25Z",
+    "correlation_to_existing_six_asset_equal_weight_returns": {
+      "xyz:MU": 0.495261,
+      "xyz:SKHX": 0.435846,
+      "xyz:SILVER": 0.36927,
+      "xyz:GOLD": 0.313845,
+      "xyz:CL": -0.155872,
+      "xyz:BRENTOIL": -0.154513
+    },
+    "authority": "diagnostic_only_not_immutable_qualification_evidence",
+    "limitation": "Asset-price correlation does not establish strategy-return correlation or future diversification. A follow-up pairwise request was rate-limited and was not retried."
+  },
+  "proposal_contract": {
+    "recommendation": "Select MU as the sole semiconductor research candidate. Leave the fourth live slot open while prospectively collecting the existing execution-incapable CL observer as the highest-priority cross-industry challenger.",
+    "why_now": "The user identified the semiconductor concentration correctly; fresh SILVER outcomes are negative, while oil offers lower observed asset correlation and adequate venue capacity but lacks qualified strategy evidence.",
+    "evidence_reviewed": "Current official public books, venue contexts and candle coverage; MU and SKHX prospective journals; exact CL development-only diagnostics; current SILVER prospective BBO markouts; and prior rejected HIP-3 mechanism dispositions.",
+    "observed_problem_or_opportunity": "Taking both MU and SKHX would concentrate the non-crypto expansion in semiconductors. MU has the better strategy lead, while WTI offers a different risk driver and sufficient liquidity for a prospective challenger.",
+    "applicable_market_regime": "MU applies only to its frozen 15m upward breakout-pressure conditions. The CL hypothesis is prospective and must not claim a regime edge until new long and short observations resolve.",
+    "alternatives_considered": "Use both semiconductor names, select SILVER, revive Gold or Brent, add CL bidirectionally, or leave the slot open. Both semiconductors concentrate risk; SILVER is forward-negative; Gold and Brent require new mechanisms; failed CL shorts cannot be silently retained.",
+    "proposed_live_change": null,
+    "expected_upside": "A single semiconductor plus a commodity mechanism could increase opportunity breadth without duplicating the same industry exposure.",
+    "main_risks_and_failure_modes": "Post-hoc long-side selection, unresolved historical CL mark paths, observer source-transport mismatch, sparse prospective episodes, oil-specific gap and roll behavior, funding and fee changes, and correlation instability.",
+    "validation_completed": "Current venue liquidity and candle continuity were observed; MU versus SKHX was compared at intended-size capacity; SILVER was re-evaluated on ten exact forward onsets; CL restarted from a fresh no-hindsight cursor with no signer or order surface.",
+    "validation_still_required": "Predeclared CL prospective long and short onsets, route-native stop and exit lifecycle replay, exact fee/funding/depth-sized friction, roll/session analysis, source parity, strategy-return correlation, stress and largest-winner sensitivity, and untouched confirmation.",
+    "success_metrics": "MU remains positive after friction and winner removal with both sides represented; CL produces positive prospective route-native economics without selecting away adverse shorts; both resolve all source and lifecycle evidence; combined portfolio stress remains acceptable.",
+    "failure_or_rollback_triggers": "Negative MU expanded-window robustness, no MU shorts, negative or winner-dependent CL prospective economics, source mismatch, roll/session anomalies, excessive intended-size slippage, or correlated losses inconsistent with the diversification hypothesis.",
+    "confidence_level": "medium_on_mu_selection_low_on_cl_profitability",
+    "explicit_approval_requested": false
+  },
+  "single_highest_value_next_investigation": "Collect the first new post-cutoff CL long onset and its exact route-native lifecycle while continuing MU to the predeclared 20 independent paths or first short onset.",
+  "source_evidence": [
+    {
+      "path": "data/logs/research/xyz_noncrypto_candidate_qualification_20260814T1930Z_v2.json",
+      "sha256": "ca0802ebbeab85fc1205191bc87518e597d01fd91f49d258b0ae50746ac461da",
+      "bytes": 11816
+    },
+    {
+      "path": "data/logs/research/xyz_silver_shadow_signal_markouts_20260814T1935Z_v2.json",
+      "sha256": "9f41bf83ffe2121bd0cc6a0a8146485257a17a1b8bf4044cb6b9d7163519813c",
+      "bytes": 32640
+    },
+    {
+      "path": "data/logs/research/xyz_cl_development_only_diagnostic_20260811_v1.json",
+      "sha256": "fca63ef8dd933037159a7171ec3f58d0a349d10983f6afc5d6762f036e223327",
+      "bytes": 1442655
+    },
+    {
+      "path": "docs/research-journal/v51-mu-shadow-forward-markouts-v2.json",
+      "sha256": "8a9202983d33318af09c79b9be2da473f29d324796ec413b887187abfcebb4fa",
+      "bytes": 9389
+    },
+    {
+      "path": "docs/research-journal/v51-skhx-shadow-forward-v2.json",
+      "sha256": "b22461e19431f0c00b7d508129d2985cbb6010313b41e50cee65d93e9041b975",
+      "bytes": 3411
+    }
+  ],
+  "limitations": [
+    "No asset, strategy, route, side, sizing, leverage, stop, exit, execution, or deployment setting changed.",
+    "The active CL observer remains the old bidirectional signal identity and cannot itself validate a newly hypothesized long-only live route.",
+    "Starting an execution-incapable observer is data collection, not promotion or a performance claim.",
+    "The fourth slot remains open until evidence supports a live proposal."
+  ]
+}

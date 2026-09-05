@@ -1,0 +1,104 @@
+{
+  "schema_version": "v52_brentoil_krown_trend_resumption_development_v1",
+  "created_at_utc": "2026-08-16T21:56:00Z",
+  "hypothesis_id": "BRENTOIL_KROWN_TREND_RESUMPTION_15M_V1",
+  "status": "proposed",
+  "mode": "report_only",
+  "execution_authority": "none",
+  "automatic_live_change": false,
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false,
+  "hypothesis": "A fresh Krown RSI-EMA color turn aligned with the default 21/55 EMA trend can identify bidirectional BRENTOIL trend resumption after costs without reusing Range Onset, Swing/HA, breakout-pressure, EMA55-touch, or oil-shock reversion.",
+  "why_this_is_distinct": [
+    "the trigger is a fresh RSI-EMA slope/color transition rather than a persistent RSI value",
+    "the entry does not require BBWP, PMARP, an EMA55 touch, a range boundary, a price shock, or L2 pressure",
+    "the primary exit is the opposite completed RSI-EMA color transition rather than a fixed take-profit or the retired provider exits"
+  ],
+  "source_contract": {
+    "rsi_source": "completed_trade_close",
+    "rsi_length": 14,
+    "rsi_ema_length": 12,
+    "rsi_midline": 50.0,
+    "price_ema_fast": 21,
+    "price_ema_slow": 55,
+    "minimum_gap_free_history_bars": 55,
+    "source_files": [
+      {
+        "path": "reference/pine-scripts/krown_rsi_ema.pine",
+        "sha256": "f621cdbbff719f2a9931590e8d54b45cb286007b8f586ffc251d9cb03903fd8d"
+      },
+      {
+        "path": "reference/pine-scripts/krown_moving_averages.pine",
+        "sha256": "c9e1fca88f75c58084f44ed3dc0a1af0b8bf3fc080e7ab3062d18e05f223687c"
+      }
+    ],
+    "translation_disclosure": "The Pine files define indicators, not an executable strategy. The conjunction, entry timing, exits, stop, and maximum hold below are predeclared research hypotheses rather than source-authored rules."
+  },
+  "frozen_strategy": {
+    "symbol": "xyz:BRENTOIL",
+    "timeframe": "15m",
+    "direction": "bidirectional",
+    "long_entry": "completed close above EMA21 above EMA55; RSI above RSI-EMA; RSI-EMA at or above 50; RSI-EMA slope turns from non-positive to positive",
+    "short_entry": "completed close below EMA21 below EMA55; RSI below RSI-EMA; RSI-EMA at or below 50; RSI-EMA slope turns from non-negative to negative",
+    "entry_execution": "first exact executable L2 quote of the next completed 15m bucket",
+    "long_exit": "first completed bar whose RSI-EMA slope turns non-positive or EMA21 is no longer above EMA55, then next executable quote",
+    "short_exit": "first completed bar whose RSI-EMA slope turns non-negative or EMA21 is no longer below EMA55, then next executable quote",
+    "protective_stop_bps": 80.0,
+    "fixed_take_profit": false,
+    "maximum_hold_bars": 96,
+    "maximum_hold_seconds": 86400,
+    "opposite_signal_exit": true,
+    "reentry_cooldown_bars": 1,
+    "same_direction_reentry_requires_reset": true,
+    "leverage": 5.0,
+    "normalized_account_equity_usd": 500.0,
+    "normalized_notional_usd": 75.0,
+    "scaled_account_equity_usd": 5000.0,
+    "scaled_notional_usd": 750.0
+  },
+  "frozen_friction": {
+    "effective_taker_fee_bps_per_side": 0.864,
+    "nominal_residual_bps_per_side": 1.2230537631076595,
+    "stress_residual_bps_per_side": 8.464583786205068,
+    "stress_basis": "maximum absolute observed BRENTOIL live-canary slippage across six mixed-strategy fill observations",
+    "funding": "exact locally frozen hourly venue funding",
+    "fills": "next-bar exact L2 bid/ask with venue mark path for stop/liquidation risk"
+  },
+  "evaluation_protocol": {
+    "selection_mode": "single_predeclared_mechanism_no_parameter_sweep",
+    "development_only": true,
+    "validation_accessed": false,
+    "holdout_accessed": false,
+    "chronology": "reuse the canonical 60/20/20 HIP-3 archive windows but evaluate development only",
+    "folds": 3,
+    "required_reporting": [
+      "nominal and stress economics",
+      "long and short attribution",
+      "profit factor",
+      "maximum drawdown",
+      "largest-winner removal",
+      "fold stability",
+      "fees and funding",
+      "liquidations",
+      "exact lifecycle path resolution",
+      "trade frequency per week"
+    ],
+    "technical_failure_behavior": "abort without evaluating validation or holdout and without selecting a replacement",
+    "economic_failure_behavior": "publish the losing result and mark the hypothesis rejected; do not retune"
+  },
+  "comparison_baselines": [
+    "do nothing and continue v52 unchanged",
+    "continue passive BRENTOIL oil-shock shadow collection",
+    "retired BRENTOIL Swing/HA and breakout-pressure evidence",
+    "previous crypto Krown pullback and EMA55-touch development failures"
+  ],
+  "success_interpretation": "Positive development stress economics, both-side robustness, majority-positive folds, positive stress net without the largest winner, zero liquidations, and resolved lifecycle paths would support opening a separately approved untouched validation step; it would not support live activation.",
+  "falsifier": "Any negative stress net, non-positive stress result without the largest winner, one-sided failure, majority-negative folds, liquidation, unresolved selected lifecycle path, or source/hash mismatch rejects or technically invalidates this frozen development hypothesis.",
+  "limitations": [
+    "BRENTOIL history is short and development evidence is hypothesis formation",
+    "the stress tail comes from only six mixed-strategy live slippage observations",
+    "no fixed take-profit is assumed; the opposite-turn exit can surrender open profit",
+    "a positive development result would still be vulnerable to selection bias and requires untouched validation plus prospective execution parity",
+    "this record grants no live asset, strategy, sizing, leverage, risk, exit, configuration, or deployment authority"
+  ]
+}

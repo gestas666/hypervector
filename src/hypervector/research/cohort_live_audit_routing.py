@@ -4,6 +4,9 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 
+from hypervector.research.cohort_entry_age_diagnostics import (
+    build_entry_age_diagnostics,
+)
 from hypervector.research.cohort_live_audit_values import (
     configured_symbols,
     event_rows,
@@ -41,13 +44,31 @@ def build_routing_summary(
         raise ValueError(
             f"live actions exceed configured execution scope: {unauthorized}"
         )
-    return _summary(
+    summary = _summary(
         cycles,
         actions,
         withheld,
         executable,
         len(event_rows(records, "strategy_intent")),
     )
+    summary["entry_age_diagnostics"] = _entry_age_summary(records, identity)
+    return summary
+
+
+def _entry_age_summary(
+    records: Sequence[Record], identity: Record
+) -> dict[str, object]:
+    if not event_rows(records, "funding_reconciliation_window"):
+        return {
+            "status": "unavailable_legacy_evidence",
+            "reason": "funding_boundaries_not_recorded",
+            "contract": {
+                "report_only": True,
+                "execution_authority": "none",
+                "entry_enforcement_changed": False,
+            },
+        }
+    return build_entry_age_diagnostics(records, identity)
 
 
 def _action_is_authorized(

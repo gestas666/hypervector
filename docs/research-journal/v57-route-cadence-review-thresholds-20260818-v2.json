@@ -1,0 +1,157 @@
+{
+  "schema_version": 1,
+  "mode": "v57_route_zero_signal_review_thresholds",
+  "hypothesis_id": "v57-route-zero-signal-cadence-review",
+  "revision_number": 1,
+  "supersedes_revision_id": null,
+  "created_at_utc": "2026-08-18T22:13:39Z",
+  "strategy_id": "v57-route-cadence-review-clocks",
+  "symbol": "PORTFOLIO",
+  "status": "retain",
+  "hypothesis": "Exact-route zero-signal clocks should use the historical cadence of each route's active V57 execution directions.",
+  "decision": "Retain every predeclared clock duration. Correct the SPCX sensitivity from the retired both-side cadence to the active short-only cadence of 2.164568081991215 trades per week. The seven-day threshold still represents approximately two expected short trades and therefore does not change.",
+  "confidence": "medium_high",
+  "falsifier": "Replace this revision if exact prospective V57 evidence materially changes a route's attributable arrival process, if the live directional scope changes, or if checkpoint coverage becomes incomplete.",
+  "problem_restatement": "The first cadence artifact used all SPCX development trades even though V57 authorizes only SPCX shorts. This changed descriptive expected-event and zero-event sensitivities but did not invalidate the seven-day review duration.",
+  "live_identity": {
+    "profile_id": "multi_asset_growth_first_5000_spcx_short_containment_v57",
+    "profile_fingerprint": "724c259bd94be60d80ffc2e6b9a760412b9729ab1f8fea403e61d266f0d9cb8d"
+  },
+  "superseded_source_artifact": {
+    "path": "docs/research-journal/v57-route-cadence-review-thresholds-20260818-v1.json",
+    "reason": "SPCX sensitivity used both-side rather than active short-only development cadence"
+  },
+  "selection_rule": {
+    "description": "Choose a bounded review horizon corresponding to roughly two or more events under the frozen active-direction historical cadence where feasible.",
+    "poisson_values_are_sensitivity_only": true,
+    "performance_gate": false,
+    "trade_count_gate": false
+  },
+  "route_thresholds": {
+    "hype_breakout_compression_alignment_bidirectional_v2|HYPE": {
+      "priority": 1,
+      "active_execution_directions": [
+        "long",
+        "short"
+      ],
+      "threshold_days": 14,
+      "historical_trades_per_week": 0.944,
+      "historical_cadence": "41 causal development trades over approximately 304 days; later evidence remains sparse",
+      "expected_events_at_threshold_sensitivity": 1.888,
+      "stationary_poisson_zero_event_probability_sensitivity": 0.1513,
+      "action": "route_cadence_deviation_investigation"
+    },
+    "hip3_spcx_cash_open_gap_reversal_bidirectional_15m_v1|xyz:SPCX": {
+      "priority": 2,
+      "active_execution_directions": [
+        "short"
+      ],
+      "threshold_days": 7,
+      "historical_trades_per_week": 2.164568081991215,
+      "historical_cadence": "11 development short trades over the frozen 35.57-day development window; long authority is contained in V57",
+      "expected_events_at_threshold_sensitivity": 2.164568081991215,
+      "stationary_poisson_zero_event_probability_sensitivity": 0.1148,
+      "action": "route_cadence_deviation_investigation"
+    },
+    "hulk_expansion_short_tuned_v2|BTC": {
+      "priority": 3,
+      "active_execution_directions": [
+        "short"
+      ],
+      "threshold_days": 7,
+      "historical_trades_per_week": 2.2,
+      "historical_cadence": "106 completed trades over 338 covered days, approximately 2.2 per week",
+      "expected_events_at_threshold_sensitivity": 2.2,
+      "stationary_poisson_zero_event_probability_sensitivity": 0.1108,
+      "action": "route_cadence_deviation_investigation"
+    },
+    "hulk_expansion_short_robust_v3|BTC": {
+      "priority": 4,
+      "active_execution_directions": [
+        "short"
+      ],
+      "threshold_days": 25,
+      "historical_cadence": "one exact forward signal over 12.5 covered days",
+      "expected_events_at_threshold_sensitivity": 2.0,
+      "stationary_poisson_zero_event_probability_sensitivity": 0.1353,
+      "action": "route_cadence_deviation_investigation"
+    },
+    "liquidity_sweep_long_1h_stop60_target60_v2|BTC": {
+      "priority": 5,
+      "active_execution_directions": [
+        "long"
+      ],
+      "threshold_days": 25,
+      "historical_cadence": "six development signals over 92 days and one forward signal over 12.5 days",
+      "expected_events_at_threshold_sensitivity": 2.0,
+      "stationary_poisson_zero_event_probability_sensitivity": 0.1353,
+      "action": "route_cadence_deviation_investigation"
+    }
+  },
+  "metrics": {
+    "spcx_prior_both_side_trades_per_week": 3.9355783308931187,
+    "spcx_active_short_trades": 11,
+    "spcx_active_short_trades_per_week": 2.164568081991215,
+    "spcx_threshold_days": 7,
+    "spcx_expected_events_at_threshold_sensitivity": 2.164568081991215,
+    "spcx_zero_event_probability_sensitivity": 0.1148,
+    "threshold_changed": false,
+    "runtime_changed": false
+  },
+  "evidence": [
+    {
+      "path": "../../configs/multi_asset_growth_first_5000_spcx_short_containment_v57.toml",
+      "role": "exact_active_v57_directional_scope",
+      "sha256": "c4b7f50422952cf7d1628e3969b272bd4413ca3aba356f105e5146f006306335",
+      "bytes": 3161
+    },
+    {
+      "path": "../../data/logs/research/xyz_spcx_cash_open_gap_reversal_development_20260817_v2.json",
+      "role": "spcx_side_specific_development_cadence",
+      "sha256": "613475b27b2884f9b90346cb0c0f175a314e09dbcba4f628b972aba3ebb1c3b8",
+      "bytes": 211473
+    },
+    {
+      "path": "../../data/logs/research/hype_compression_breakout_challenger_20260816_v6_alignment/report.json",
+      "role": "hype_aligned_route_cadence",
+      "sha256": "53c37e529f79223c5e7290a5cd07f5c95897be1850122bf091e5dfbcacb29354",
+      "bytes": 211167
+    },
+    {
+      "path": "../../data/logs/research/20260811_hulk_short_robust_v3_btc_forward_nominal.json",
+      "role": "btc_robust_short_forward_cadence",
+      "sha256": "385b7452043840f2e246409a4cdb32a0998b2be3fb742778a0cce159327364a6",
+      "bytes": 7183
+    },
+    {
+      "path": "../reviews/2026-08-01-market-cipher-strategy-rehabilitation.md",
+      "role": "btc_tuned_short_historical_cadence",
+      "sha256": "300e014fed139f553df62d40cfd7f3095ea3c2d88cffabd1dac67886f5d65d05",
+      "bytes": 12084
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/btc_liquidity_sweep_taker_parity_20260811_v2.json",
+      "role": "btc_sweep_historical_and_forward_cadence",
+      "sha256": "e875fce1407701a53ae1bf8e42c0e751db77e01fee0fe72df539d7b2a5642c77",
+      "bytes": 74606
+    }
+  ],
+  "limitations": [
+    "Historical cadence may not remain stationary under the current regime.",
+    "The Poisson calculation is a transparent sensitivity, not a validated arrival model or rejection threshold.",
+    "Cash-session holidays and shared-asset route overlap are not modeled by elapsed wall-clock time.",
+    "A due review requests diagnosis only; it is not evidence that a strategy is broken.",
+    "An observed eligible signal closes the zero-signal clock but does not establish execution quality or profitability."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false,
+  "contract": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_live_change": false,
+    "automatic_retuning": false,
+    "automatic_promotion": false,
+    "runtime_strategy_changed": false
+  }
+}

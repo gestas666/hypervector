@@ -57,8 +57,8 @@ def test_v44_corrected_long_has_runtime_collector_and_clock_contract() -> None:
     assert READINESS_SEED_LOOKBACK_MINUTES[LIQUIDITY_SWEEP_LONG_TARGET60_STRATEGY] == 61
 
 
-def test_v44_evidence_discloses_taker_challenger_and_unresolved_path() -> None:
-    """Cockpit evidence cannot relabel maker fills as causal taker execution."""
+def test_btc_sweep_evidence_separates_pre_cap_losses_from_current_contract() -> None:
+    """Pre-cap outcomes cannot masquerade as current 20-bps contract evidence."""
     config = load_multi_asset_live_config(_PROFILE, mode="observe")
     rows = {
         (str(row["strategy_id"]), str(row["symbol"])): row
@@ -66,10 +66,13 @@ def test_v44_evidence_discloses_taker_challenger_and_unresolved_path() -> None:
     }
     evidence = rows[(LIQUIDITY_SWEEP_LONG_TARGET60_STRATEGY, "BTC")]
 
-    assert evidence["research_state"] == "taker_parity_promising_path_unresolved"
+    assert evidence["research_state"] == (
+        "historical_candidate_current_20bp_entry_contract_unmeasured"
+    )
     assert "5W/1L" in str(evidence["summary"])
     assert "maker" in str(evidence["summary"]).lower()
-    assert "unresolved" in str(evidence["summary"]).lower()
+    assert "-$8.37" in str(evidence["summary"])
+    assert "31.44 bps" in str(evidence["summary"])
     assert str(evidence["evidence_source"]).endswith(
-        "btc_liquidity_sweep_taker_parity_20260811_v2.json"
+        "v86_btc_sweep_contract_evidence_correction_20260904_v1.json"
     )

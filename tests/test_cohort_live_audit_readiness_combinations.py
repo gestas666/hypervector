@@ -17,6 +17,39 @@ def test_readiness_preserves_exact_blocker_combinations() -> None:
     ]
 
 
+def test_readiness_separates_poll_rows_from_contiguous_blocker_episodes() -> None:
+    """Repeated backend polls must remain raw rows, not independent episodes."""
+    combinations = [
+        ["observer_status_stale"],
+        ["observer_status_stale"],
+        ["observer_status_stale"],
+        ["cross_absent"],
+        ["observer_status_stale"],
+    ]
+    records = [
+        {
+            "event_type": "intent_routing",
+            "payload": {"evaluations": [_evaluation(blockers)]},
+        }
+        for blockers in combinations
+    ]
+
+    route = readiness_summary(records, _identity())["by_provider_symbol"]["range|SOL"]
+
+    assert route["readiness_sampling_basis"] == "backend_poll_evaluations"
+    assert route["blocker_episode_basis"] == (
+        "maximal_consecutive_identical_blocker_sets"
+    )
+    assert route["blocker_episode_combinations"] == [
+        {"blockers": ["cross_absent"], "episodes": 1, "evaluations": 1},
+        {
+            "blockers": ["observer_status_stale"],
+            "episodes": 2,
+            "evaluations": 4,
+        },
+    ]
+
+
 def _records() -> list[dict[str, object]]:
     combinations = [
         ["regime_blocked", "cross_absent"],

@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v57-continuous-improvement-baseline-20260818-v1",
+  "revision_number": 4,
+  "supersedes_revision_id": "8059fd50abaf90ebc19c6ae36efd7629bebccdf2f65e0431ef70e477a4f70b09",
+  "created_at_utc": "2026-08-18T21:35:44Z",
+  "strategy_id": "v57_continuous_improvement_portfolio",
+  "symbol": "PORTFOLIO",
+  "status": "observe",
+  "hypothesis": "The exact V57 routes remain technically operational. The first true HYPE breakout onset in the armed run was opposed to the structural entry side and failed the frozen compression and pullback prerequisites; causal completed-candle and sampled-BBO evidence indicate that withholding this specific long avoided an 80-bps protective-stop proxy, without establishing the active route's durable expectancy.",
+  "decision": "Retain V57 unchanged. Do not relax HYPE compression, pullback, or alignment requirements from this event. Continue the preregistered collection of the first attributable eligible and fully resolved HYPE lifecycle in each configured direction. The event-specific filter success is not authority to tighten, loosen, resize, route, or promote the strategy.",
+  "confidence": "medium_high",
+  "falsifier": "The event-specific assessment would be invalidated by conflicting source identity or candles, evidence that the pre-availability minute influenced the result, or an exact mark/fill reconstruction contradicting the sampled stop proxy. The broader decision against relaxation should be revisited only if a preregistered independent same-mechanism sample is positive after exact costs and largest-winner removal, or if compression-qualified V57 lifecycles repeatedly underperform the rejected onsets.",
+  "evidence": [
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v57_hype_first_true_onset_stop_path_20260818_v2.json",
+      "role": "exact_v57_first_true_hype_onset_causal_stop_and_bbo_proxy",
+      "sha256": "4e6e624b8703cd988af34c162e3f9e74e9fe6f27dbc539f98fed21d3e5a307a6",
+      "bytes": 4826
+    }
+  ],
+  "metrics": {
+    "run_id": "bidirectional-live-1787065473571",
+    "profile_fingerprint": "724c259bd94be60d80ffc2e6b9a760412b9729ab1f8fea403e61d266f0d9cb8d",
+    "route": "hype_breakout_compression_alignment_bidirectional_v2|HYPE",
+    "decision_time_ms": 1787070000000,
+    "available_time_ms": 1787070015545,
+    "causal_path_start_time_ms": 1787070060000,
+    "candidate_side": "long",
+    "canonical_breakout_side": "short",
+    "breakout_side_relation": "opposed",
+    "eligible": false,
+    "blockers": [
+      "authoritative_5m_compression_absent",
+      "directional_pullback_absent"
+    ],
+    "authoritative_5m_bbwp_percentile": 69.58333333333333,
+    "maximum_5m_bbwp_percentile": 50.0,
+    "directional_bar_body_bps": 6.803415314489136,
+    "maximum_directional_body_bps": 0.0,
+    "stop_bps": 80.0,
+    "stop_price": 58.363328,
+    "first_candle_stop_proxy_timestamp_ms": 1787070180000,
+    "first_executable_bid_stop_proxy_timestamp_ms": 1787070326484,
+    "first_executable_bid_stop_proxy_price": 58.356,
+    "maximum_favorable_excursion_to_proxy_bps": 0.0,
+    "maximum_adverse_excursion_to_proxy_bps": 81.92541727572555,
+    "modeled_round_trip_hurdle_bps": 13.0,
+    "gross_exit_proxy_bps": -81.24553829418346,
+    "after_hurdle_exit_proxy_bps": -94.24553829418346,
+    "counterfactual_notional_usd": 4875.83799849,
+    "after_hurdle_exit_proxy_usd": -45.95259768029242,
+    "actual_order_or_fill": false,
+    "active_v57_live_change": false
+  },
+  "limitations": [
+    "This was an ineligible readiness event, not an order, fill, position, or realized PnL observation.",
+    "The decision occurred before the V4 prospective lifecycle-tracker boundary and therefore does not advance its long-side evidence requirement.",
+    "The reference-price counterfactual is not a private entry fill, and the fixed 13-bps hurdle is not realized execution cost.",
+    "Completed trade candles do not prove an authentic Hyperliquid mark trigger; the sampled bid proves only that an executable quote later crossed the configured stop level.",
+    "One filtered onset can validate this event-specific decision but cannot estimate strategy expectancy, both-side behavior, or portfolio growth.",
+    "The alignment wrapper remains fail-closed: opposition was not repeated in the blocker list because the upstream compression source was already ineligible; an otherwise eligible opposed source is separately regression-tested and cannot emit an intent.",
+    "No opportunity matrix or capital-allocation inference is available until compatible realized route lifecycles exist."
+  ],
+  "highest_value_next_investigation": {
+    "route": "hype_breakout_compression_alignment_bidirectional_v2|HYPE",
+    "experiment": "collect_both_side_live_execution",
+    "status": "being_tested",
+    "minimum_evidence_to_update_diagnosis": "At least one post-boundary attributable eligible signal and one fully resolved lifecycle for each configured direction, long and short.",
+    "minimum_evidence_for_change_recommendation": "A predeclared compatible window with exact fees, funding, slippage, latency, venue stop behavior, native exit behavior, missed-opportunity review, and largest-winner sensitivity.",
+    "execution_effect": "report_only"
+  },
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false,
+  "change_proposal": null
+}

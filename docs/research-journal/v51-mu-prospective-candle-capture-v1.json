@@ -1,0 +1,121 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v51-mu-prospective-candle-capture",
+  "revision_number": 1,
+  "supersedes_revision_id": null,
+  "created_at_utc": "2026-08-16T00:00:58Z",
+  "status": "being_tested",
+  "execution_authority": "none",
+  "report_only": true,
+  "automatic_promotion": false,
+  "automatic_live_change": false,
+  "runtime_strategy_changed": false,
+  "hypothesis": "Persisting the exact public candleSnapshot row consumed by every prospective MU decision will make archive-versus-live OHLC source parity directly testable without changing the frozen signal, pressure, or execution contract.",
+  "decision": "Accept the report-only evidence-capture repair and continue prospective MU observation. Do not add MU to v51 and do not claim archive/live parity from one row.",
+  "confidence": {
+    "implementation_correctness": "high",
+    "runtime_capture_health": "high",
+    "archive_live_ohlc_parity": "low",
+    "mu_strategy_edge": "low"
+  },
+  "problem_restatement": {
+    "input": "The MU shadow fetched public 15-minute candleSnapshot history for each decision but previously persisted only the derived decision and REST pressure evidence.",
+    "output": "An append-only exact source-candle ledger with first-observation timing, historical-warmup classification, prospective classification, identity validation, and conflict rejection.",
+    "success_criteria": "At the first new completed boundary, one matching prospective candle and decision are persisted within 15 seconds, with no signer, order surface, retroactive decision, or v51 runtime mutation.",
+    "constraint": "This repair may collect evidence only; it cannot promote, route, size, enter, close, or alter a live strategy."
+  },
+  "runtime_acceptance": {
+    "symbol": "xyz:MU",
+    "provider_id": "hip3_mu_full_l2_breakout_pressure_bidirectional_15m_v1",
+    "profile_id": "mu_full_l2_breakout_pressure_bidirectional_15m_research_v1",
+    "signal_source": "hyperliquid_public_candleSnapshot_15m",
+    "first_new_decision_time_ms": 1786838400000,
+    "first_new_bar_open_ms": 1786837500000,
+    "first_new_bar_close_ms": 1786838400000,
+    "first_new_observed_at_ms": 1786838403246,
+    "first_new_observation_delay_ms": 3246,
+    "candle_rows_total": 191,
+    "historical_warmup_rows": 190,
+    "prospective_rows": 1,
+    "decision_rows_total": 344,
+    "first_new_decision_eligible": false,
+    "first_new_decision_side": null,
+    "first_new_pressure_fresh": true,
+    "retroactive_decisions_censored": 0,
+    "execution_authority": "none",
+    "signing_client_constructed": false,
+    "orders_supported": false
+  },
+  "live_v51_invariant": {
+    "checkpoint_generated_at_utc": "2026-08-16T00:00:41.807331+00:00",
+    "run_id": "bidirectional-live-1786801038311",
+    "profile_id": "multi_asset_growth_first_5000_six_asset_profit_lock_candidate_v51",
+    "profile_fingerprint": "30cd54bb5b5b17249ae0a6a3b01d5702b276d51f8dc5ddd6b4d36ab6aa7d1908",
+    "lifecycle_state": "running_consistent",
+    "faulted_assets": [],
+    "open_assets": [
+      "ETH",
+      "SOL"
+    ]
+  },
+  "validation_completed": [
+    "TDD red/green for historical warmup capture, one-time prospective append, cumulative status counts, and changed-candle rejection.",
+    "Thirty-five shared MU, HIP-3, CL/SILVER/SKHX observer, and BRENTOIL recorder tests passed without network access.",
+    "Ruff check and format passed; all changed files and functions satisfy the 500-line and 50-line limits.",
+    "A bounded unsigned mainnet probe captured 191 exact MU candles and no decisions or orders.",
+    "The durable MU observer restarted on its preserved cursor and produced one source candle plus one decision at the first new 15-minute boundary.",
+    "The existing BRENTOIL candle recorder was refactored onto the shared storage implementation and its regression suite remained green."
+  ],
+  "validation_still_required": [
+    "Accumulate a predeclared prospective live candle window rather than relying on one row.",
+    "Reconstruct matching archive public-trade OHLC for the same exact bars and compare open, high, low, close, volume, timestamp, and gap semantics row for row.",
+    "Compare archived websocket L2 pressure with prospective REST pressure at each identical decision boundary.",
+    "Require both long and short MU onset/lifecycle evidence with exact mark, fee, funding, fill, and path coverage before any live-route proposal."
+  ],
+  "uncertainties_and_failure_modes": [
+    "One prospective row cannot establish stable source parity or strategy edge.",
+    "Public candleSnapshot history may revise an already observed bar; the recorder now fails closed on any changed OHLCV identity.",
+    "The first 190 rows were retrieved after their close and are labeled historical warmup, not prospective evidence.",
+    "The separate mark recorder began after the first nine MU long onsets, so older censored lifecycles remain unresolved.",
+    "No MU short onset has yet been observed, leaving directional coverage one-sided."
+  ],
+  "falsifier": "A changed or duplicate candle identity, missing prospective bar, observation delay above 15 seconds on an eligible decision, non-MU source row, cursor regression, signer/order capability, source-hash mismatch, or any mutation of the v51 runtime invalidates this capture acceptance.",
+  "evidence": [
+    {
+      "path": "../../src/hypervector/live/hip3_shadow_candle_storage.py",
+      "role": "shared_fail_closed_candle_storage",
+      "sha256": "1f2ea213cacc385d59fac4aacb23f5168e1976bc02073c3d5930908c3ab4840a",
+      "bytes": 6438
+    },
+    {
+      "path": "../../src/hypervector/live/mu_hip3_breakout_shadow_runner.py",
+      "role": "mu_report_only_runner",
+      "sha256": "3e4261c7918de348faae2655984fdcd7d2892d24d71edc7fb82fc884aa41d77b",
+      "bytes": 17083
+    },
+    {
+      "path": "../../data/logs/research/xyz_mu_prospective_candle_capture_acceptance_20260816T000058Z_v1.json",
+      "role": "immutable_runtime_acceptance_and_exact_prefix_evidence",
+      "sha256": "56c450b9532a2e91c36c7b5da3576ef4ef5506f35228e230ddf08202fd374769",
+      "bytes": 3914
+    }
+  ],
+  "recommendation": {
+    "Recommendation": "Continue the repaired MU report-only observer and open no live route from this evidence.",
+    "Why now": "The missing source-candle evidence defect is closed and the next bars can finally test the exact archive/live signal-source assumption.",
+    "Evidence reviewed": "Runner/storage source, focused tests, bounded public-mainnet probe, durable restart, first prospective candle and decision, and unchanged v51 checkpoint identity.",
+    "Observed problem or opportunity": "MU development economics were promising but technically unresolved and its live signal source could not previously be audited row for row.",
+    "Applicable market regime": "All prospective completed 15-minute MU bars; no regime or side is promoted from the first row.",
+    "Alternatives considered": "Leave decisions without source candles, treat retrospective API history as prospective, or persist exact first-observed rows with conflict rejection.",
+    "Proposed live change": "none",
+    "Expected upside": "Future MU onset and lifecycle evidence becomes source-attributable, reproducible, and capable of falsifying the archive transfer assumption.",
+    "Main risks and failure modes": "Sparse onsets, no short coverage, source revisions, mark-path gaps, REST/websocket mismatch, and selection bias from the development winner.",
+    "Validation completed": "TDD, shared regressions, lint/format/size checks, mainnet probe, durable restart, and first-boundary runtime acceptance.",
+    "Validation still required": "A predeclared row-parity window, exact pressure parity, exact resolved both-side lifecycles, realistic costs, and untouched forward evaluation.",
+    "Success metrics": "No source conflicts or missing prospective rows; row-for-row OHLC parity or an explicitly quantified mismatch; both-side resolved outcomes; positive after-cost performance excluding the largest winner.",
+    "Failure / rollback triggers": "Stop the research observer on source conflict, cursor regression, incorrect symbol/source, missing bar, authority drift, or repeated recorder faults. No live rollback exists because no live change was made.",
+    "Confidence level": "High on capture correctness; low on MU source parity and profitability until prospective evidence matures.",
+    "Explicit approval requested": false
+  },
+  "single_highest_value_next_investigation": "At the predeclared MU evidence threshold, compare the exact prospective candleSnapshot rows and REST pressure rows with independently reconstructed archive public-trade OHLC and websocket L2 pressure for identical 15-minute decisions; do not rerun strategy selection."
+}

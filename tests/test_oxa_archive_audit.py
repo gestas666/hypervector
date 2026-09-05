@@ -58,7 +58,11 @@ def test_audit_verifies_complete_hour_and_aggregates_counts(tmp_path: Path) -> N
         output_directory(tmp_path, book),
         source="0xarchive_hyperliquid_native_l2",
         config=config,
-        counts={"row_count": 12, "coalesced_same_ms": 2},
+        counts={
+            "row_count": 12,
+            "coalesced_same_ms": 2,
+            "censored_zero_size_snapshots": 3,
+        },
     )
     _write_bundle(
         trade_output_directory(tmp_path, trade),
@@ -81,6 +85,7 @@ def test_audit_verifies_complete_hour_and_aggregates_counts(tmp_path: Path) -> N
     assert report.public_trades == 7
     assert report.raw_participant_fills == 14
     assert report.coalesced_book_snapshots == 2
+    assert report.censored_zero_size_book_snapshots == 3
     assert report.evidence_bytes == 16
 
 

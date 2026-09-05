@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from datetime import datetime
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
 from hypervector.data.oxa_api import (
@@ -128,6 +128,7 @@ class OxaBookPage:
     snapshots: tuple[OxaBookSnapshot, ...]
     coalesced_same_ms: int
     raw_payload: dict[str, object]
+    censored_zero_size_snapshots: int = 0
 
 
 @dataclass(frozen=True)
@@ -139,6 +140,7 @@ class OxaBookFetch:
     complete: bool
     continuation_cursor: str | None
     coalesced_same_ms: int
+    censored_zero_size_snapshots: int = 0
 
     @property
     def request_ids(self) -> tuple[str, ...]:
@@ -200,6 +202,9 @@ def fetch_orderbook_history(
         complete=cursor is None,
         continuation_cursor=cursor,
         coalesced_same_ms=coalesced,
+        censored_zero_size_snapshots=sum(
+            page.censored_zero_size_snapshots for page in pages
+        ),
     )
 
 
@@ -267,6 +272,7 @@ def acquire_and_store_orderbooks(
         "page_count": len(result.pages),
         "row_count": len(result.snapshots),
         "coalesced_same_ms": result.coalesced_same_ms,
+        "censored_zero_size_snapshots": result.censored_zero_size_snapshots,
         "observed_start": observed_start,
         "observed_end": observed_end,
         "complete": result.complete,
@@ -341,6 +347,7 @@ def _manifest(
         "page_count": len(result.pages),
         "row_count": len(result.snapshots),
         "coalesced_same_ms": result.coalesced_same_ms,
+        "censored_zero_size_snapshots": result.censored_zero_size_snapshots,
         "observed_start": observed_start,
         "observed_end": observed_end,
         "complete": result.complete,
@@ -362,30 +369,45 @@ def _parse_page(payload: object, request: OxaBookRequest) -> OxaBookPage:
     next_cursor = meta.get("next_cursor")
     if next_cursor is not None and not isinstance(next_cursor, str):
         raise ValueError("0xArchive meta.next_cursor must be a string or null")
-    snapshots, coalesced = _parse_snapshots(data, request)
+    snapshots, coalesced, censored = _parse_snapshots(data, request)
     return OxaBookPage(
         request_id=request_id,
         next_cursor=next_cursor,
         snapshots=snapshots,
         coalesced_same_ms=coalesced,
         raw_payload=payload,
+        censored_zero_size_snapshots=censored,
     )
 
 
 def _parse_snapshots(
     records: list[object], request: OxaBookRequest
-) -> tuple[tuple[OxaBookSnapshot, ...], int]:
+) -> tuple[tuple[OxaBookSnapshot, ...], int, int]:
     by_timestamp: dict[int, OxaBookSnapshot] = {}
+    censored_timestamps: set[int] = set()
     coalesced = 0
+    censored = 0
     for record in records:
         if not isinstance(record, dict):
             raise ValueError("0xArchive data must contain JSON objects")
-        snapshot = _parse_snapshot(record, request)
+        try:
+            snapshot = _parse_snapshot(record, request)
+        except _ZeroSizeLevel:
+            timestamp = _required_str(record, "timestamp")
+            ts_exchange_ms = parse_utc_timestamp_ms(
+                timestamp, label="snapshot timestamp"
+            )
+            by_timestamp.pop(ts_exchange_ms, None)
+            censored_timestamps.add(ts_exchange_ms)
+            censored += 1
+            continue
+        if snapshot.ts_exchange_ms in censored_timestamps:
+            continue
         if snapshot.ts_exchange_ms in by_timestamp:
             coalesced += 1
         by_timestamp[snapshot.ts_exchange_ms] = snapshot
     snapshots = tuple(by_timestamp[timestamp] for timestamp in sorted(by_timestamp))
-    return snapshots, coalesced
+    return snapshots, coalesced, censored
 
 
 def _parse_snapshot(
@@ -442,10 +464,24 @@ def _parse_level(raw: dict[str, object], side: str) -> OxaLevel:
     if not isinstance(px, str) or not isinstance(sz, str):
         raise ValueError(f"{side} price and size must be decimal strings")
     positive_decimal(px, label=f"{side} price")
+    _reject_zero_size(sz, side)
     positive_decimal(sz, label=f"{side} size")
     if not isinstance(count, int) or isinstance(count, bool) or count < 0:
         raise ValueError(f"{side} order count must be a non-negative integer")
     return OxaLevel(px=px, sz=sz, n=count)
+
+
+class _ZeroSizeLevel(ValueError):
+    """Identify an anomalous vendor zero-size level without masking defects."""
+
+
+def _reject_zero_size(value: str, side: str) -> None:
+    try:
+        number = Decimal(value)
+    except InvalidOperation:
+        return
+    if number.is_finite() and number == 0:
+        raise _ZeroSizeLevel(f"{side} size is zero")
 
 
 def _validate_sorting(bids: tuple[OxaLevel, ...], asks: tuple[OxaLevel, ...]) -> None:

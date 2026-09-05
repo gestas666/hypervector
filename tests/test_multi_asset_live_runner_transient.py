@@ -79,6 +79,9 @@ def test_exhausted_public_candle_429_skips_cycle_without_stopping_runner(
         signal_stop_requested=lambda: False,
         maximum_hold_seconds_by_symbol={symbol: 28_800 for symbol in _SYMBOLS},
         execution_contracts={"hulk": _contract()},
+        maximum_entry_delay_ms_by_provider_symbol={
+            ("hulk", symbol): 60_000 for symbol in _SYMBOLS
+        },
         executable_provider_symbols=frozenset(("hulk", symbol) for symbol in _SYMBOLS),
     )
 
@@ -163,5 +166,8 @@ def _runner(
         signal_stop_requested=lambda: False,
         maximum_hold_seconds_by_symbol={symbol: 28_800 for symbol in _SYMBOLS},
         execution_contracts={"hulk": _contract()},
+        maximum_entry_delay_ms_by_provider_symbol={
+            ("hulk", symbol): 60_000 for symbol in _SYMBOLS
+        },
         executable_provider_symbols=frozenset(("hulk", symbol) for symbol in _SYMBOLS),
     )

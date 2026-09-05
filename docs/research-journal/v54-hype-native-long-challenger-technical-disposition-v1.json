@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "generated_at_utc": "2026-08-18T05:58:00Z",
+  "hypothesis_id": "v54-hype-native-long-challenger-technical-disposition-v1",
+  "status": "technically_verified_economically_deferred_report_only",
+  "recommendation": "Retain the isolated HYPE-native long challenger in continuous report-only observation. Do not restore live authority yet, do not enable its short entries, and do not transfer it to another asset.",
+  "why_now": "The original HYPE-only live seed was strong and the cross-asset transfer was harmful, but the restored long-only mechanism remains negative in development and has only two winner-dependent report-only forward paths.",
+  "evidence_reviewed": [
+    "docs/research-journal/v54-hype-breakout-transfer-incident-reconciliation-v1.json",
+    "docs/research-journal/v54-hype-native-historical-source-parity-v1.json",
+    "docs/research-journal/v54-hype-native-exit-lineage-reconciliation-v1.json",
+    "docs/research-journal/v54-hype-native-directional-authority-challenger-v1.json",
+    "docs/research-journal/v54-hype-native-adverse-15m-context-hypothesis-v2.json",
+    "data/logs/research/hype_native_v54_prospective_lifecycle_baseline_20260818_v2.json"
+  ],
+  "observed_problem_or_opportunity": "Unsupported cross-asset reuse obscured the strongest HYPE-only lineage. Exact reconstruction can preserve that lineage without repeating the transfer, but current evidence does not establish durable positive expectancy.",
+  "applicable_market_regime": "Completed five-minute native breakout onsets across all recorded regimes; fifteen-minute state remains context because the tested adverse-context gate made results worse.",
+  "alternatives_considered": [
+    "Restore the original bidirectional route immediately; rejected because short-only evidence is materially weaker.",
+    "Restore the route on BTC, ETH, or SOL; rejected because every transferred symbol was negative excluding its largest winner.",
+    "Add a fifteen-minute trend-down veto; rejected because it reduced development and recent-window results.",
+    "Add a generic profit lock or fixed target; rejected by prior profit-retention tests.",
+    "Keep collecting the isolated long-entry route with native short-onset exits; selected."
+  ],
+  "proposed_live_change": "None. Candidate identity hype_native_breakout_onset_long_v3 remains report-only and HYPE-only.",
+  "expected_upside": "Preserves the only promising native HYPE side, retains opposite-onset profit exits, prevents cross-asset contamination, and produces attributable forward evidence at economically meaningful modeled notional.",
+  "main_risks_and_failure_modes": [
+    "Original 7-trade performance may be favorable variance rather than edge.",
+    "Development long-only performance remains negative after costs.",
+    "Forward N=2 becomes negative after removing its largest winner.",
+    "Sampled BBO stops do not prove venue mark-trigger timing.",
+    "An eight-hour fallback can still surrender profit before exit."
+  ],
+  "validation_completed": {
+    "python_tests_passed": 146,
+    "rust_transition_tests_passed": 1,
+    "provider_and_config": "HYPE-only collection and long-only execution authority verified",
+    "opposite_exit": "short native onset closes an applicable long and cannot open a short",
+    "execution_plan": "stop, fixed hold, provider exit, restart, and operator paths verified",
+    "prospective_tracker": "immutable report-only baseline published with zero actions and zero eligible entries",
+    "live_runtime_mutated": false
+  },
+  "validation_still_required": [
+    "At least one complete prospective v54 eligible-long lifecycle.",
+    "A preregistered compatible sample large enough to assess after-cost PF and largest-winner dependence.",
+    "Exact hourly funding and venue mark evidence for every lifecycle.",
+    "A fresh flat and order-free preflight only if later evidence supports requesting live approval."
+  ],
+  "success_metrics": [
+    "Zero short entry actions and zero non-HYPE native intents.",
+    "Positive after-cost PnL and PF above one after largest-winner removal in a preregistered prospective window.",
+    "No unresolved book gaps, abnormal stop behavior, exit mismatch, or identity drift.",
+    "Meaningful prospective cadence without relaxing the native onset."
+  ],
+  "failure_or_rollback_triggers": "Any wrong-side/non-HYPE intent or technical contract mismatch fails closed. A negative winner-robust prospective sample rejects restoration. If a later approved live trial fails economically, return it to report-only only through a separately approved flat and order-free transition.",
+  "confidence_level": "High on isolation and runtime mechanics; high that cross-asset transfer should remain rejected; low on absolute profitability pending prospective lifecycle evidence.",
+  "explicit_approval_requested": false
+}

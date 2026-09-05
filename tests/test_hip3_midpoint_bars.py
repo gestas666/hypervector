@@ -165,6 +165,30 @@ def test_accepts_checksum_ingested_paired_hip3_provenance(tmp_path: Path) -> Non
     assert result.archive_book_rows == 4
 
 
+def test_metadata_prefers_paired_copy_over_duplicate_book_only_bundle(
+    tmp_path: Path,
+) -> None:
+    """One source hour cannot be counted twice after paired evidence arrives."""
+    database = tmp_path / "paired-copy.duckdb"
+    _database(database)
+    with duckdb.connect(str(database)) as connection:
+        connection.execute(
+            """
+            INSERT INTO archive_bundles
+            SELECT 'paired', symbol, start_utc, end_utc, book_rows
+            FROM archive_bundles WHERE bundle_id = 'bundle'
+            """
+        )
+        connection.execute(
+            "INSERT INTO archive_bundle_provenance VALUES ('paired', 'hip3', false)"
+        )
+
+    result = build_hip3_midpoint_bars(database, symbol="xyz:SP500")
+
+    assert result.archive_bundles == 1
+    assert result.archive_book_rows == 4
+
+
 def test_explicit_scope_excludes_later_checksum_complete_bundles(
     tmp_path: Path,
 ) -> None:

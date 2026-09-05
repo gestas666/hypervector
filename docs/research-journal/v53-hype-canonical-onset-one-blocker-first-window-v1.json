@@ -1,0 +1,205 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v53-hype-canonical-onset-one-blocker-first-window-v1",
+  "generated_at_utc": "2026-08-17T12:28:00Z",
+  "status": "rejected_relaxation_remains_closed",
+  "mode": "report_only_prospective_one_blocker_review",
+  "contract": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_live_change": false,
+    "runtime_strategy_changed": false,
+    "fills_assumed": false,
+    "pnl_claimed": false
+  },
+  "problem_restatement": {
+    "question": "Does the first exact-v53 prospective window justify removing the HYPE canonical breakout-onset requirement?",
+    "route": "hype_breakout_compression_alignment_bidirectional_v2|HYPE",
+    "candidate": "remove_only_canonical_breakout_onset",
+    "success_criterion": "Meet the existing reopen condition without selecting a horizon after observing its outcome."
+  },
+  "runtime_identity": {
+    "run_id": "bidirectional-live-1786942233732",
+    "profile_id": "multi_asset_growth_first_5000_hype_freshness_repair_v53",
+    "profile_fingerprint": "f6378e473088b962724176f1b4aaf0857d4e2a6c3bf0103c2d1794d6bfd46a82",
+    "run_fingerprint": "e11b54a50622b2b4bd01c827b7ac2fc3ace13c85fb6206b8e0e91ce89d850379",
+    "observation_start_utc": "2026-08-17T04:53:14.509964+00:00",
+    "observation_end_utc": "2026-08-17T12:27:10.950768+00:00",
+    "cohort_rows": 8175
+  },
+  "technical_reconciliation": {
+    "executable_provider_symbols": 3,
+    "expected_provider_symbols": 3,
+    "route_coverage_complete": true,
+    "faults": 0,
+    "open_positions": 0,
+    "owned_orders": 0,
+    "eligible_v53_signals": 0,
+    "fills": 0,
+    "closed_lifecycles": 0,
+    "final_equity_usd": 4917.92405849,
+    "maximum_margin_used_usd": 0.0,
+    "maximum_notional_usd": 0.0,
+    "prestart_backup_status": "verified"
+  },
+  "experiment_contract": {
+    "configured_side": "long",
+    "blocker": "canonical_breakout_onset_absent",
+    "path_start_policy": "first_full_minute_at_or_after_latest_group_availability",
+    "estimated_round_trip_friction_bps": 13.0,
+    "robust_gross_move_bps": 26.0,
+    "independence_policy": "episode_onsets_and_non_overlapping_paths_within_run_symbol_direction",
+    "minimum_independent_paths_for_reassessment": 20,
+    "reopen_required_metrics": [
+      "positive_after_cost_mean",
+      "positive_after_cost_median",
+      "positive_largest_winner_removed_mean",
+      "nonzero_robust_mfe_breadth"
+    ],
+    "thresholds_selected_in_this_window": false
+  },
+  "prospective_evidence": {
+    "decision_minutes": 44,
+    "one_blocker_episode_count": 24,
+    "single_minute_episodes": 14,
+    "maximum_episode_duration_minutes": 8,
+    "median_episode_duration_minutes": 1.0,
+    "median_interepisode_minutes": 2.0,
+    "maximum_interepisode_minutes": 186.0,
+    "five_minute": {
+      "resolved_independent_paths": 14,
+      "cost_clearing_closes": 2,
+      "cost_clearing_mfe_paths": 4,
+      "robust_mfe_paths": 2,
+      "mean_after_friction_bps": -8.701957111755101,
+      "median_after_friction_bps": -13.000294184955285,
+      "mean_excluding_largest_after_friction_bps": -11.893719193505413,
+      "minimum_after_friction_bps": -26.905375614718942,
+      "maximum_after_friction_bps": 32.79094995099897
+    },
+    "fifteen_minute": {
+      "resolved_independent_paths": 8,
+      "cost_clearing_closes": 3,
+      "cost_clearing_mfe_paths": 5,
+      "robust_mfe_paths": 3,
+      "mean_after_friction_bps": -4.55874103454869,
+      "median_after_friction_bps": -12.324595293600515,
+      "mean_excluding_largest_after_friction_bps": -10.147564783782002,
+      "minimum_after_friction_bps": -30.152949967731423,
+      "maximum_after_friction_bps": 34.56302521008449
+    },
+    "thirty_minute": {
+      "resolved_independent_paths": 5,
+      "cost_clearing_closes": 3,
+      "cost_clearing_mfe_paths": 4,
+      "robust_mfe_paths": 2,
+      "mean_after_friction_bps": 11.327942378998602,
+      "median_after_friction_bps": 1.5968056757816989,
+      "mean_excluding_largest_after_friction_bps": -3.7045802271268737,
+      "minimum_after_friction_bps": -18.434598009578238,
+      "maximum_after_friction_bps": 71.4580328035005
+    },
+    "sixty_minute": {
+      "resolved_independent_paths": 3,
+      "cost_clearing_closes": 2,
+      "cost_clearing_mfe_paths": 3,
+      "robust_mfe_paths": 3,
+      "mean_after_friction_bps": 27.990275353528133,
+      "median_after_friction_bps": 56.24996181068232,
+      "mean_excluding_largest_after_friction_bps": 10.579763484484758,
+      "minimum_after_friction_bps": -35.090434841712806,
+      "maximum_after_friction_bps": 62.811299091614885
+    }
+  },
+  "comparison_with_prior_rejection": {
+    "prior_hypothesis_id": "v52-hype-remove-canonical-breakout-onset-v1",
+    "prior_five_minute_independent_paths": 22,
+    "prior_five_minute_mean_after_friction_bps": -14.62546248254004,
+    "prior_five_minute_median_after_friction_bps": -13.864674341550797,
+    "prior_five_minute_mean_excluding_largest_bps": -15.437701820574727,
+    "prior_sixty_minute_independent_paths": 4,
+    "prior_sixty_minute_mean_after_friction_bps": 4.248240532855562,
+    "prior_sixty_minute_median_after_friction_bps": -11.77626969935096,
+    "prior_sixty_minute_mean_excluding_largest_bps": -23.081759844887316,
+    "pooling_policy": "not_pooled_because_runs_and_regime_windows_are_distinct",
+    "interpretation": "Both windows show weak populated short horizons and a sparse favorable sixty-minute tail. That recurring shape is interesting for future preregistration but does not validate gate removal."
+  },
+  "analysis": {
+    "reopen_condition_met": false,
+    "confidence": "medium",
+    "reason": "The populated five- and fifteen-minute horizons remain negative after the fixed friction hurdle and largest-winner removal. Thirty minutes turns negative after removing its largest winner. Sixty minutes satisfies the sign criteria but has only three resolved paths versus the predeclared minimum of twenty.",
+    "normal_variance_or_defect": "No route coverage, metric, position, protection, or execution defect is present in the immutable prefix. The question remains economic and statistically sparse.",
+    "selection_risk": "Selecting the favorable sixty-minute horizon after observing outcomes would be multiple-testing and horizon-selection bias.",
+    "market_regime_scope": "Prospective HYPE long-structural readiness observations without a fresh canonical breakout onset during the exact v53 prefix.",
+    "counterfactual_boundary": "These are completed-candle paths after a fixed estimated hurdle, not orders, fills, funding, realized PnL, or a capital-allocation replay."
+  },
+  "recommendation": {
+    "recommendation": "Keep the exact v53 canonical breakout-onset requirement unchanged.",
+    "why_now": "The first v53 readiness-only paths are mature enough to check whether prior rejected evidence has materially changed.",
+    "evidence_reviewed": [
+      "exact immutable v53 live prefix",
+      "prior v52 onset-relaxation rejection",
+      "exact v53 configuration",
+      "final v51 loss disposition"
+    ],
+    "observed_problem_or_opportunity": "A sparse sixty-minute tail is favorable, but the more populated horizons are weak and the reopen sample threshold is not met.",
+    "applicable_market_regime": "HYPE long-structural compression/pullback readiness without fresh breakout onset.",
+    "alternatives_considered": [
+      "remove the onset requirement now",
+      "select a fixed sixty-minute exit now",
+      "keep the route and continue prospective collection"
+    ],
+    "proposed_live_change": "none",
+    "expected_upside": "Avoids admitting a historically and prospectively weak broad setup while preserving exact forward evidence collection.",
+    "main_risks_and_failure_modes": "The gate may exclude a real longer-horizon opportunity; sparse evidence can also create false confidence in the favorable tail.",
+    "validation_completed": "Exact identity, coverage, causal path timing, fixed hurdle, episode independence, horizon summaries, and largest-winner sensitivity were reconciled.",
+    "validation_still_required": "A materially distinct preregistered window with at least twenty independent same-side paths must satisfy every reopen metric; any live change would then require exact stop and exit replay.",
+    "success_metrics": "Positive after-cost mean, median, largest-winner-removed mean, and nonzero robust-MFE breadth at the preregistered horizon with at least twenty independent paths.",
+    "failure_or_rollback_triggers": "Not applicable because no live change is proposed. Any technical discrepancy in the serialized path counts invalidates this report.",
+    "confidence_level": "medium_on_rejection_low_on_future_edge",
+    "explicit_approval_requested": false
+  },
+  "hypothesis_ledger_update": {
+    "prior_status": "rejected",
+    "current_status": "rejected",
+    "new_evidence_changes_status": false,
+    "reopen_condition": "A separately versioned causal mechanism or materially different preregistered regime window must produce at least twenty independent same-side paths with positive after-cost mean and median, positive largest-winner-removed mean, and nonzero robust-MFE breadth."
+  },
+  "highest_value_next_investigation": {
+    "rank": 1,
+    "experiment": "prospective_v53_hype_both_side_live_execution",
+    "minimum_evidence": "At least one attributable eligible decision and one fully resolved lifecycle for each configured side with exact fee, slippage, funding, stop, opposite-signal, and maximum-hold attribution.",
+    "reason": "The onset-relaxation status remains closed; exact v53 live translation remains the highest-value unresolved question.",
+    "change_authority": "none"
+  },
+  "limitations": [
+    "No exact v53 eligible event or fill occurred in this prefix.",
+    "The 13 bps hurdle is modeled rather than measured from v53 fills.",
+    "Only long-side one-blocker evidence exists.",
+    "Longer horizons have materially smaller independent samples.",
+    "The report does not evaluate a fixed sixty-minute live exit contract.",
+    "No live strategy, asset, route, parameter, leverage, sizing, risk, execution, or deployment configuration changed."
+  ],
+  "source_evidence": [
+    {
+      "path": "data/logs/research/bidirectional_cohort/v53_live_prefix_20260817T1227Z_v1.json",
+      "sha256": "58af1c65c7f813498547d288a0b242d62736dba6f399a00432b5a6714bb3acf2",
+      "bytes": 6478243
+    },
+    {
+      "path": "docs/research-journal/v52-hype-canonical-onset-relaxation-forward-v1.json",
+      "sha256": "eb3cfd314739add8da76bb2fc096e9ddf5598b9d099aff2c740336f0f90189cf",
+      "bytes": 9139
+    },
+    {
+      "path": "configs/multi_asset_growth_first_5000_hype_freshness_repair_v53.toml",
+      "sha256": "d1f6a4e6eb77ba9d8ad1069e703e54611feeaacec6242ac0000eb6f0f0ee4f2b",
+      "bytes": 2038
+    },
+    {
+      "path": "docs/research-journal/v53-v51-final-loss-disposition-v1.json",
+      "sha256": "bd7e76a978c3d92696ac0da30d17126244327f80f1baa57f5fdc4a8de4dd36bc",
+      "bytes": 16933
+    }
+  ]
+}

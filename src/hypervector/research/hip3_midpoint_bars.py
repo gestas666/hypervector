@@ -87,11 +87,26 @@ def _archive_metadata(
 ) -> tuple[pd.Timestamp, pd.Timestamp, int, int]:
     row = connection.execute(
         """
-        SELECT min(b.start_utc), max(b.end_utc), count(*), sum(b.book_rows),
-               count(*) FILTER (WHERE p.market_family = 'hip3')
-        FROM archive_bundles AS b
-        LEFT JOIN archive_bundle_provenance AS p USING (bundle_id)
-        WHERE b.symbol = ? AND b.start_utc >= ? AND b.end_utc <= ?
+        WITH scoped AS (
+            SELECT b.*, p.market_family, p.book_only,
+                   min(b.book_rows) OVER source_hour AS minimum_book_rows,
+                   max(b.book_rows) OVER source_hour AS maximum_book_rows,
+                   row_number() OVER (
+                       source_hour ORDER BY p.book_only ASC, b.bundle_id
+                   ) AS source_priority
+            FROM archive_bundles AS b
+            LEFT JOIN archive_bundle_provenance AS p USING (bundle_id)
+            WHERE b.symbol = ? AND b.start_utc >= ? AND b.end_utc <= ?
+            WINDOW source_hour AS (PARTITION BY b.symbol, b.start_utc, b.end_utc)
+        ), canonical AS (
+            SELECT * FROM scoped WHERE source_priority = 1
+        )
+        SELECT min(start_utc), max(end_utc), count(*), sum(book_rows),
+               count(*) FILTER (WHERE market_family = 'hip3'),
+               (SELECT count(*) FROM scoped),
+               (SELECT count(*) FILTER (WHERE market_family = 'hip3') FROM scoped),
+               max(CASE WHEN minimum_book_rows != maximum_book_rows THEN 1 ELSE 0 END)
+        FROM canonical
         """,
         [symbol, start_utc, end_utc],
     ).fetchone()
@@ -101,6 +116,8 @@ def _archive_metadata(
         or _utc(row[0]) != start_utc
         or _utc(row[1]) != end_utc
         or int(row[2]) != int(row[4])
+        or int(row[5]) != int(row[6])
+        or int(row[7]) != 0
     ):
         raise ValueError(f"{symbol} does not have complete HIP-3 provenance")
     return _utc(row[0]), _utc(row[1]), int(row[2]), int(row[3])

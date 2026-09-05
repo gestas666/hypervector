@@ -21,7 +21,6 @@ def cohort_risk_utilization(
         "account value",
     )
     assets = _object_list(identity.get("assets"), "configured assets")
-    maximum_positions = _maximum_positions(identity, len(assets))
     projections = [_asset_projection(asset, account_value) for asset in assets]
     by_asset = _indexed_assets(projections)
     by_provider, by_provider_side = _provider_projections(
@@ -29,10 +28,13 @@ def cohort_risk_utilization(
         assets,
         account_value,
     )
+    execution_symbols = _execution_symbols(identity, by_asset, by_provider)
+    maximum_positions = _maximum_positions(identity, len(execution_symbols))
     maximum_margin = _maximum_margin_fraction(
         by_asset,
         by_provider,
         by_provider_side,
+        execution_symbols,
         maximum_positions,
     )
     return {
@@ -40,21 +42,40 @@ def cohort_risk_utilization(
         "mode": "cohort_runtime_risk_utilization_v1",
         "contract": _contract(),
         "account_value_usd": account_value,
-        "summary": {
-            "configured_assets": len(projections),
-            "cap_bound_assets": sum(bool(row["cap_binding"]) for _, row in projections),
-            "configured_maximum_positions": maximum_positions,
-            "provider_symbols": len(by_provider),
-            "provider_symbol_overrides": sum(
-                row["sizing_source"] == "provider_override"
-                for row in by_provider.values()
-            ),
-            "provider_direction_overrides": len(by_provider_side),
-            "maximum_simultaneous_effective_margin_fraction": maximum_margin,
-        },
+        "summary": _summary(
+            projections,
+            execution_symbols,
+            maximum_positions,
+            by_provider,
+            by_provider_side,
+            maximum_margin,
+        ),
         "by_asset": by_asset,
         "by_provider_symbol": by_provider,
         "by_provider_symbol_side": by_provider_side,
+    }
+
+
+def _summary(
+    projections: Sequence[tuple[str, dict[str, object]]],
+    execution_symbols: frozenset[str],
+    maximum_positions: int,
+    by_provider: Record,
+    by_provider_side: Record,
+    maximum_margin: float,
+) -> dict[str, object]:
+    return {
+        "configured_assets": len(projections),
+        "executable_assets": len(execution_symbols),
+        "cap_bound_assets": sum(bool(row["cap_binding"]) for _, row in projections),
+        "configured_maximum_positions": maximum_positions,
+        "provider_symbols": len(by_provider),
+        "provider_symbol_overrides": sum(
+            _mapping(row, "provider sizing").get("sizing_source") == "provider_override"
+            for row in by_provider.values()
+        ),
+        "provider_direction_overrides": len(by_provider_side),
+        "maximum_simultaneous_effective_margin_fraction": maximum_margin,
     }
 
 
@@ -174,14 +195,24 @@ def _provider_projection(
     return row
 
 
-def _maximum_positions(identity: Record, asset_count: int) -> int:
+def _maximum_positions(identity: Record, executable_asset_count: int) -> int:
     policy = _mapping(identity.get("position_policy"), "position policy")
     value = policy.get("maximum_concurrent_positions")
     if isinstance(value, bool) or not isinstance(value, int):
         raise ValueError("maximum concurrent positions must be an integer")
-    if value < asset_count:
-        raise ValueError("maximum concurrent positions must cover configured assets")
+    if value < executable_asset_count:
+        raise ValueError("maximum concurrent positions must cover executable assets")
     return value
+
+
+def _execution_symbols(
+    identity: Record,
+    by_asset: Record,
+    by_provider: Record,
+) -> frozenset[str]:
+    if identity.get("providers") is None:
+        return frozenset(_text(symbol, "asset symbol") for symbol in by_asset)
+    return frozenset(_provider_symbol(key) for key in by_provider)
 
 
 def _indexed_assets(
@@ -199,12 +230,14 @@ def _maximum_margin_fraction(
     by_asset: Record,
     by_provider: Record,
     by_provider_side: Record,
+    execution_symbols: frozenset[str],
     maximum_positions: int,
 ) -> float:
     margins = {
         symbol: _positive_number(row.get("effective_margin_fraction"), symbol)
         for symbol, raw in by_asset.items()
         for row in (_mapping(raw, f"asset sizing {symbol}"),)
+        if symbol in execution_symbols
     }
     for providers in (by_provider, by_provider_side):
         for key, raw in providers.items():

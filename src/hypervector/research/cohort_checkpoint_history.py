@@ -20,6 +20,13 @@ _HISTORICAL_MECHANISM_KEYS = (
     "support_decay_all_time_live_mechanism",
     "support_decay_retrace_all_time_live_mechanism",
 )
+_SCORECARD_EXECUTION_KEYS = (
+    "execution_outcomes_identifiable",
+    "execution_performance_scope",
+    "execution_performance",
+    "execution_performance_by_side",
+    "repeatability_evidence",
+)
 
 
 class HistoricalProjectionStale(ValueError):
@@ -33,6 +40,7 @@ def merge_complete_historical_projection(
     """Join fresh bounded telemetry with signature-matched complete history."""
     bounded_audit = _validated_checkpoint_audit(bounded, "bounded")
     complete_audit = _validated_checkpoint_audit(complete, "complete")
+    _validated_side_composition(bounded_audit.get("side_composition"))
     signature = _require_matching_execution_history(bounded_audit, complete_audit)
     closed = _require_matching_archive_history(bounded_audit, complete_audit)
     result = deepcopy(dict(bounded))
@@ -94,9 +102,12 @@ def _require_matching_execution_history(
 ) -> str:
     bounded_run = _mapping(bounded.get("run"), "bounded run")
     complete_run = _mapping(complete.get("run"), "complete run")
-    for key in ("run_id", "profile_fingerprint"):
-        if bounded_run.get(key) != complete_run.get(key):
-            raise HistoricalProjectionStale(f"execution history changed: {key}")
+    if bounded_run.get("profile_fingerprint") != complete_run.get(
+        "profile_fingerprint"
+    ):
+        raise HistoricalProjectionStale(
+            "execution history changed: profile_fingerprint"
+        )
     current = _execution_history_signature(bounded)
     prior = _execution_history_signature(complete)
     if current != prior:
@@ -109,7 +120,6 @@ def _execution_history_signature(audit: Mapping[str, object]) -> str:
     evidence = {
         "fills": execution.get("fills"),
         "closed_trades": execution.get("closed_trades"),
-        "history_run_ids": execution.get("history_run_ids"),
         "fill_details": execution.get("fill_details"),
     }
     encoded = json.dumps(
@@ -124,8 +134,8 @@ def _require_matching_archive_history(
     bounded: Mapping[str, object],
     complete: Mapping[str, object],
 ) -> int:
-    archive_total = _archive_total(bounded)
-    archive_closed = _closed_lifecycles(archive_total, "archive")
+    if not isinstance(complete.get("portfolio_archive"), Mapping):
+        raise HistoricalProjectionStale("complete portfolio archive is unavailable")
     complete_reflections = _mapping(
         _mapping(complete.get("trade_reflections"), "complete reflections").get(
             "all_time_live"
@@ -137,6 +147,10 @@ def _require_matching_archive_history(
         != ALL_TIME_REFLECTION_HISTORY_SCHEMA_VERSION
     ):
         raise HistoricalProjectionStale("historical reflection schema changed")
+    if _archive(bounded).get("accounting_epoch") is not None:
+        return _require_matching_epoch_archive(bounded, complete)
+    archive_total = _archive_total(bounded)
+    archive_closed = _closed_lifecycles(archive_total, "archive")
     reflected_closed = complete_reflections.get("closed_trades")
     if reflected_closed != archive_closed:
         raise HistoricalProjectionStale(
@@ -161,14 +175,47 @@ def _require_matching_archive_history(
     return archive_closed
 
 
+def _require_matching_epoch_archive(
+    bounded: Mapping[str, object],
+    complete: Mapping[str, object],
+) -> int:
+    """Reconcile like-for-like reset epochs without conflating older history."""
+    bounded_archive = _archive(bounded)
+    complete_archive = _archive(complete)
+    if bounded_archive.get("accounting_epoch") != complete_archive.get(
+        "accounting_epoch"
+    ):
+        raise HistoricalProjectionStale("portfolio accounting epoch changed")
+    bounded_total = _archive_total(bounded)
+    complete_total = _archive_total(complete)
+    bounded_closed = _closed_lifecycles(bounded_total, "archive")
+    complete_closed = _closed_lifecycles(complete_total, "complete archive")
+    if bounded_closed != complete_closed:
+        raise HistoricalProjectionStale(
+            "archive closed lifecycle count differs from complete history"
+        )
+    for field in ("net_pnl_usd", "maximum_closed_sequence_drawdown_usd"):
+        bounded_value = _number(bounded_total.get(field), f"archive {field}")
+        complete_value = _number(complete_total.get(field), f"complete archive {field}")
+        if not math.isclose(bounded_value, complete_value, abs_tol=1e-9):
+            raise HistoricalProjectionStale(
+                f"archive {field} differs from complete history"
+            )
+    return bounded_closed
+
+
 def _archive_closed_lifecycles(audit: Mapping[str, object]) -> int:
     return _closed_lifecycles(_archive_total(audit), "archive")
 
 
 def _archive_total(audit: Mapping[str, object]) -> Mapping[str, object]:
-    archive = _mapping(audit.get("portfolio_archive"), "portfolio archive")
+    archive = _archive(audit)
     performance = _mapping(archive.get("performance"), "archive performance")
     return _mapping(performance.get("total"), "archive total")
+
+
+def _archive(audit: Mapping[str, object]) -> Mapping[str, object]:
+    return _mapping(audit.get("portfolio_archive"), "portfolio archive")
 
 
 def _closed_lifecycles(total: Mapping[str, object], label: str) -> int:
@@ -179,13 +226,19 @@ def _closed_lifecycles(total: Mapping[str, object], label: str) -> int:
 
 
 def _copy_historical_sections(
-    target: dict[str, object],
-    source: Mapping[str, object],
+    target: dict[str, object], source: Mapping[str, object]
 ) -> None:
-    for key in ("entry_alignment_mechanism", "hulk_entry_quality_challenger"):
-        target[key] = deepcopy(source.get(key))
-    target["side_composition"] = deepcopy(
-        _validated_side_composition(source.get("side_composition"))
+    _copy_historical_section(
+        target,
+        source,
+        "entry_alignment_mechanism",
+        current_keys=("provisional_open",),
+    )
+    _copy_historical_section(
+        target,
+        source,
+        "hulk_entry_quality_challenger",
+        current_keys=("open_trades", "open_observations"),
     )
     target_trade = _mutable_mapping(
         target.get("trade_reflections"), "trade reflections"
@@ -202,7 +255,103 @@ def _copy_historical_sections(
     target_performance["all_time_live"] = deepcopy(
         source_performance.get("all_time_live")
     )
+    _copy_scorecard_execution_history(target, source)
     _copy_historical_mechanisms(target, source)
+
+
+def _copy_scorecard_execution_history(
+    target: dict[str, object], source: Mapping[str, object]
+) -> None:
+    """Keep cached provider outcomes and scorecard execution evidence atomic."""
+    target_scorecard = target.get("strategy_scorecard")
+    source_scorecard = source.get("strategy_scorecard")
+    if target_scorecard is None and source_scorecard is None:
+        return
+    target_score = _mutable_mapping(target_scorecard, "current strategy scorecard")
+    source_score = _mapping(source_scorecard, "complete strategy scorecard")
+    target_records = _mutable_mapping(
+        target_score.get("by_provider_symbol"), "current scorecard providers"
+    )
+    source_records = _mapping(
+        source_score.get("by_provider_symbol"), "complete scorecard providers"
+    )
+    if set(target_records) != set(source_records):
+        raise HistoricalProjectionStale("strategy scorecard provider coverage changed")
+    source_reflections = _mapping(
+        source.get("trade_reflections"), "complete trade reflections"
+    )
+    _require_matching_scorecard_history(
+        source_records,
+        _mapping(
+            source_reflections.get("provider_contract_history"),
+            "complete provider contract history",
+        ),
+    )
+    for key, target_value in target_records.items():
+        target_record = _mutable_mapping(target_value, f"current scorecard {key}")
+        source_record = _mapping(source_records[key], f"complete scorecard {key}")
+        for field in _SCORECARD_EXECUTION_KEYS:
+            if field in source_record:
+                target_record[field] = deepcopy(source_record[field])
+            else:
+                target_record.pop(field, None)
+    summary = _mutable_mapping(target_score.get("summary"), "current scorecard summary")
+    summary["mappings_with_live_outcomes"] = sum(
+        _mapping(record, f"complete scorecard {key}").get(
+            "execution_outcomes_identifiable"
+        )
+        is True
+        for key, record in source_records.items()
+    )
+
+
+def _require_matching_scorecard_history(
+    records: Mapping[str, object], provider_history: Mapping[str, object]
+) -> None:
+    """Reject a cache whose scorecard lost provider-contract outcomes."""
+    compatible = provider_history.get("compatible_trades")
+    if compatible is None:
+        return
+    if (
+        isinstance(compatible, bool)
+        or not isinstance(compatible, int)
+        or compatible < 0
+    ):
+        raise HistoricalProjectionStale("provider history trade count is invalid")
+    scorecard_closed = 0
+    for key, value in records.items():
+        record = _mapping(value, f"complete scorecard {key}")
+        identifiable = record.get("execution_outcomes_identifiable")
+        if identifiable is False:
+            continue
+        if identifiable is not True:
+            raise HistoricalProjectionStale("scorecard outcome identity is invalid")
+        performance = _mapping(
+            record.get("execution_performance"), f"complete scorecard {key} performance"
+        )
+        closed = performance.get("closed_trades")
+        if isinstance(closed, bool) or not isinstance(closed, int) or closed < 1:
+            raise HistoricalProjectionStale("scorecard closed trade count is invalid")
+        scorecard_closed += closed
+    if scorecard_closed != compatible:
+        raise HistoricalProjectionStale(
+            "scorecard outcomes differ from provider history"
+        )
+
+
+def _copy_historical_section(
+    target: dict[str, object],
+    source: Mapping[str, object],
+    key: str,
+    *,
+    current_keys: tuple[str, ...],
+) -> None:
+    current = _mapping(target.get(key), f"current {key}")
+    merged = deepcopy(dict(_mapping(source.get(key), f"historical {key}")))
+    for current_key in current_keys:
+        if current_key in current:
+            merged[current_key] = deepcopy(current[current_key])
+    target[key] = merged
 
 
 def _copy_historical_mechanisms(
@@ -231,6 +380,19 @@ def _history_source_time(checkpoint: Mapping[str, object]) -> str:
     return _text(checkpoint.get("generated_at_utc"), "complete generation time")
 
 
+def _validate_historical_lineage(lineage: Mapping[str, object]) -> None:
+    contract = _mapping(lineage.get("contract"), "historical projection contract")
+    if (
+        lineage.get("schema_version") != 1
+        or lineage.get("mode") != "cached_complete_ledger_history_v1"
+        or lineage.get("status") != "current_by_execution_signature"
+    ):
+        raise ValueError("complete historical projection identity is invalid")
+    expected = _historical_projection_contract()
+    if any(contract.get(key) != value for key, value in expected.items()):
+        raise ValueError("historical projection contract is invalid")
+
+
 def _validated_side_composition(value: object) -> Mapping[str, object]:
     composition = _mapping(value, "side composition")
     contract = _mapping(composition.get("contract"), "side composition contract")
@@ -243,19 +405,6 @@ def _validated_side_composition(value: object) -> Mapping[str, object]:
     ):
         raise ValueError("side composition contract is invalid")
     return composition
-
-
-def _validate_historical_lineage(lineage: Mapping[str, object]) -> None:
-    contract = _mapping(lineage.get("contract"), "historical projection contract")
-    if (
-        lineage.get("schema_version") != 1
-        or lineage.get("mode") != "cached_complete_ledger_history_v1"
-        or lineage.get("status") != "current_by_execution_signature"
-    ):
-        raise ValueError("complete historical projection identity is invalid")
-    expected = _historical_projection_contract()
-    if any(contract.get(key) != value for key, value in expected.items()):
-        raise ValueError("historical projection contract is invalid")
 
 
 def _historical_projection_contract() -> dict[str, object]:

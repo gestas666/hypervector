@@ -5,6 +5,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 import math
 
+from hypervector.live.btc_hulk_delayed_component_floor import (
+    BTC_HULK_DELAYED_COMPONENT_POLICY_IDS,
+)
+from hypervector.live.btc_hulk_robust_short_provider import (
+    HULK_ROBUST_SHORT_STRATEGY,
+)
 from hypervector.live.multi_asset_live_config import MultiAssetLiveConfig
 
 
@@ -16,6 +22,7 @@ class ProviderExitExpectation:
     maximum_hold_seconds: int
     maximum_hold_policy: str
     hard_maximum_hold_seconds: int | None
+    maximum_hold_evidence_maximum_age_seconds: int | None
     provider_recipe_exit_policy: str
     profit_lock_policy: str
     profit_lock_activation_bps: float | None = None
@@ -106,6 +113,7 @@ def _expectation(strategy_id: str, contract: object) -> ProviderExitExpectation:
         contract.maximum_hold_seconds,
         contract.maximum_hold_policy,
         contract.hard_maximum_hold_seconds,
+        contract.maximum_hold_evidence_maximum_age_seconds,
         contract.provider_recipe_exit_policy,
         contract.profit_lock_policy,
         contract.profit_lock_activation_bps,
@@ -119,6 +127,9 @@ def _policy_payload(row: ProviderExitExpectation) -> dict[str, object]:
         "maximum_hold_seconds": row.maximum_hold_seconds,
         "maximum_hold_policy": row.maximum_hold_policy,
         "hard_maximum_hold_seconds": row.hard_maximum_hold_seconds,
+        "maximum_hold_evidence_maximum_age_seconds": (
+            row.maximum_hold_evidence_maximum_age_seconds
+        ),
         "provider_recipe_exit_policy": row.provider_recipe_exit_policy,
         "profit_lock_policy": row.profit_lock_policy,
         "profit_lock_activation_bps": row.profit_lock_activation_bps,
@@ -139,6 +150,10 @@ def _validate_exit_policy(
     valid_hard = hard is None or (
         not isinstance(hard, bool) and hard > row.maximum_hold_seconds
     )
+    evidence_age = row.maximum_hold_evidence_maximum_age_seconds
+    valid_evidence_age = evidence_age is None or (
+        not isinstance(evidence_age, bool) and evidence_age > 0
+    )
     fixed = row.maximum_hold_policy == "fixed" and hard is None
     extended = row.maximum_hold_policy == "extend_while_regime_supported" and hard
     if (
@@ -147,6 +162,7 @@ def _validate_exit_policy(
         or strategy in evidence
         or not valid_hold
         or not valid_hard
+        or not valid_evidence_age
         or not (fixed or bool(extended))
         or row.provider_recipe_exit_policy not in {"ignore", "honor"}
         or not _profit_lock_valid(row)
@@ -162,6 +178,10 @@ def _profit_lock_valid(row: ProviderExitExpectation) -> bool:
     )
     if row.profit_lock_policy == "none":
         return all(value is None for value in values)
+    if row.profit_lock_policy in BTC_HULK_DELAYED_COMPONENT_POLICY_IDS:
+        return row.strategy_id == HULK_ROBUST_SHORT_STRATEGY and all(
+            value is None for value in values
+        )
     if row.profit_lock_policy != "completed_bar_trailing":
         return False
     if any(value is None for value in values):

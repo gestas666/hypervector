@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v58-spcx-active-runtime-drift-flat-cutover",
+  "revision_number": 2,
+  "supersedes_revision_id": "2a374410020b5e16df69d8a2b593aa453eb58fd0582817f5393c273a0b4fd473",
+  "created_at_utc": "2026-08-22T09:17:00Z",
+  "strategy_id": "hip3_spcx_cash_open_gap_reversal_bidirectional_15m_v1",
+  "symbol": "xyz:SPCX",
+  "status": "candidate",
+  "hypothesis": "A controlled same-profile V58 restart from the corrected current source at a verified flat and order-free boundary will restore the configured SPCX cash-session route without changing strategy, exit, sizing, leverage, risk, or accounting identity.",
+  "decision": "Retain the approval-gated flat-boundary cutover candidate. The current report-only audit is now internally complete after excluding nine explicitly prior-run rolling fills, and a fresh venue preflight reconciles all eight ledgers with all configured sizes technically ready. Do not restart because SP500 remains open with one reconciled reduce-only stop. At a later verified flat and order-free boundary, require the existing exact approval, create a fresh final bundle, run the full validation gates, reuse accounting epoch r2, and accept only a clean action-free SPCX startup seed.",
+  "confidence": "medium_high",
+  "falsifier": "Reject or revise the cutover if the current source fails final validation; if SP500 or any other asset or order remains at the boundary; if drain, venue, ledger, profile, epoch, bundle, or process identity fails reconciliation; if startup replays a historical SPCX intent; if SPCX remains unavailable despite complete scheduled evidence; or if any route, side, exit, sizing, leverage, risk, checkpoint, protection, cursor, accounting, audit, or TUI invariant differs after restart.",
+  "evidence": [
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v58_spcx_repair_interim_audit_20260822T0913Z.json",
+      "role": "complete_current_run_audit_with_exact_fill_projection_reconciliation",
+      "sha256": "64bd3e3afe35a62b12d9460fd0179d5c3339972b2f7b9007773a31bb8598dd4b",
+      "bytes": 4398558
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v58_spcx_repair_interim_preflight_20260822T0914Z.json",
+      "role": "fresh_read_only_venue_and_ledger_preflight_showing_sp500_boundary_blocker",
+      "sha256": "c64c72ace7b91246456db8be8fb14a30ee58b49155b401c37e3ce10a86ed5afe",
+      "bytes": 22237
+    },
+    {
+      "path": "../../data/backups/bidirectional_cohort/prestart_20260822T090723.490616Z_8a04636c9ff6/manifest.json",
+      "role": "verified_report_only_complete_current_worktree_identity_candidate",
+      "sha256": "531722013c576c3f4be82aad1e93b1146511abdde957652ad6d704a40ab93585",
+      "bytes": 883470
+    },
+    {
+      "path": "v58-current-run-audit-projected-fill-scope-repair-20260822-v1.json",
+      "role": "append_only_audit_scope_defect_and_repair_record",
+      "sha256": "4cdbb3ba9d2bc3091c717f7d8a4140ccfc872251fc6cc19097e3ea6fc086b0f3",
+      "bytes": 3639
+    }
+  ],
+  "metrics": {
+    "current_run_closed_trades": 3,
+    "current_run_fills": 12,
+    "current_run_net_pnl_usd": -18.057494000000002,
+    "current_run_fees_usd": 1.557395,
+    "current_run_funding_usd": -0.153059,
+    "audit_technical_gaps": 0,
+    "active_open_positions": 1,
+    "active_open_orders": 1,
+    "active_open_asset": "xyz:SP500",
+    "active_sp500_size_signed": -0.222,
+    "active_sp500_stop_oid": 522929314664,
+    "active_sp500_stop_coverage_full": true,
+    "ledger_reconciled": true,
+    "configured_assets": 8,
+    "sizing_technically_ready": true,
+    "transition_ready": false,
+    "next_spcx_opening_bar_utc": "2026-08-24T13:30:00Z",
+    "next_spcx_decision_utc": "2026-08-24T13:45:00Z",
+    "candidate_implementation_files": 1797,
+    "candidate_implementation_sha256": "c08e59b98688f3d6ef2525cfc589f7df9f13d1d53776adb641d487c5878c68da",
+    "automatic_restart": false,
+    "runtime_strategy_changed": false
+  },
+  "limitations": [
+    "SP500 remains open and protected, so the required flat and order-free restart boundary does not exist.",
+    "The transition drain and corrected cutover still require the operator's exact explicit approval; earlier general authorization is not substituted for the runbook's operation-specific phrase.",
+    "The report-only candidate bundle is staging evidence; a fresh complete bundle and identical startup implementation identity are still required at the final boundary.",
+    "The active runtime still uses the sealed pre-repair implementation until a separately authorized successful restart.",
+    "The corrected collector has not crossed the next genuinely future SPCX cash-open boundary.",
+    "Restoring technical availability does not establish positive SPCX expectancy, cadence, or portfolio contribution.",
+    "Focused audit tests and a fresh preflight do not replace the runbook's full Python, Rust, lint, format, bundle, startup, and post-start acceptance gates."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

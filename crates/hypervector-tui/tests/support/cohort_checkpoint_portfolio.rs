@@ -100,6 +100,33 @@ fn projects_four_asset_portfolio_archive_without_inflating_current_run() {
             },
             "by_provider_symbol": {},
             "limitations": []
+        },
+        "preserved_history": {
+            "scope": "full_backend_history",
+            "symbols": ["BTC", "ETH", "SOL", "HYPE", "ZEC", "xyz:SPCX", "xyz:SNDK"],
+            "observed_through_utc": "2026-09-03T19:05:00+00:00",
+            "coverage": {
+                "complete": true,
+                "closed_orders": 123,
+                "leverage_matches": 123
+            },
+            "performance": {
+                "scope": "all_live_history",
+                "return_basis": "net_pnl_divided_by_sum_entry_margin",
+                "total": performance_summary(123, 50, 73, -316.779764, 1000.0, Some(0.5)),
+                "by_strategy": {
+                    "strategy": performance_summary(
+                        123,
+                        50,
+                        73,
+                        -316.779764,
+                        1000.0,
+                        Some(0.5),
+                    )
+                },
+                "by_provider_symbol": {},
+                "limitations": []
+            }
         }
     });
 
@@ -110,11 +137,92 @@ fn projects_four_asset_portfolio_archive_without_inflating_current_run() {
     assert_eq!(archive.performance.total.closed_trades, 26);
     assert_eq!(archive.performance.total.wins, 13);
     assert_eq!(archive.performance.total.losses, 13);
+    let preserved = archive.preserved_history.expect("preserved backend history");
+    assert_eq!(preserved.performance.total.closed_trades, 123);
+    assert_eq!(preserved.performance.total.wins, 50);
+    assert_eq!(preserved.performance.total.losses, 73);
     assert_eq!(
         archive.accounting_epoch.expect("accounting epoch").epoch_id,
         "growth_5000_v51"
     );
     assert_eq!(parsed.closed_trades, Some(0));
+}
+
+#[test]
+fn projects_exact_accounting_epoch_profile_lineage() {
+    let current = "b".repeat(64);
+    let parent = "a".repeat(64);
+    let mut checkpoint = minimal_checkpoint();
+    checkpoint["audit"]["portfolio_archive"] = portfolio_archive_with_epoch(
+        serde_json::json!({
+            "epoch_id": "v58_v59_growth_5000",
+            "profile_fingerprint": current,
+            "start_venue_timestamp_ms": 1787164729837_u64,
+            "included_profile_fingerprints": [parent, current]
+        }),
+    );
+
+    let parsed = parse_cohort_checkpoint(&checkpoint.to_string()).expect("valid lineage");
+    let epoch = parsed
+        .portfolio_archive
+        .expect("portfolio archive")
+        .accounting_epoch
+        .expect("accounting epoch");
+
+    assert_eq!(epoch.included_profile_fingerprints, ["a".repeat(64), "b".repeat(64)]);
+}
+
+#[test]
+fn rejects_invalid_accounting_epoch_profile_lineages() {
+    let current = "b".repeat(64);
+    let invalid = [
+        serde_json::json!(["a".repeat(64), current, current]),
+        serde_json::json!(["not-a-fingerprint", current]),
+        serde_json::json!(["a".repeat(64)]),
+    ];
+    for included in invalid {
+        let mut checkpoint = minimal_checkpoint();
+        checkpoint["audit"]["portfolio_archive"] = portfolio_archive_with_epoch(
+            serde_json::json!({
+                "epoch_id": "v58_v59_growth_5000",
+                "profile_fingerprint": current,
+                "start_venue_timestamp_ms": 1787164729837_u64,
+                "included_profile_fingerprints": included
+            }),
+        );
+
+        let error = parse_cohort_checkpoint(&checkpoint.to_string())
+            .expect_err("invalid lineage must fail closed");
+
+        assert!(error.contains("portfolio archive contract is invalid"));
+    }
+}
+
+fn portfolio_archive_with_epoch(epoch: serde_json::Value) -> serde_json::Value {
+    serde_json::json!({
+        "schema_version": 1,
+        "mode": "cohort_live_portfolio_archive_v1",
+        "contract": {
+            "report_only": true,
+            "execution_authority": "none",
+            "runtime_strategy_changed": false
+        },
+        "symbols": ["BTC", "ETH", "SOL", "HYPE"],
+        "accounting_epoch": epoch,
+        "coverage": {
+            "complete": true,
+            "closed_orders": 0,
+            "leverage_matches": 0
+        },
+        "performance": {
+            "scope": "all_live_history",
+            "return_basis": "net_pnl_divided_by_sum_entry_margin",
+            "total": performance_summary(0, 0, 0, 0.0, 0.0, None),
+            "by_strategy": {},
+            "by_provider_symbol": {},
+            "limitations": []
+        }
+    })
 }
 
 fn asymmetric_observer() -> serde_json::Value {

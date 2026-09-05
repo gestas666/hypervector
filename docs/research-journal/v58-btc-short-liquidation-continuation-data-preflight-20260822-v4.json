@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v58-btc-short-liquidation-continuation-long-data-preflight",
+  "revision_number": 4,
+  "supersedes_revision_id": "a8348b9dba0b14e6e9a4e237a6fafa5eeeaac00fbef290f33887aa891cdb241f",
+  "created_at_utc": "2026-08-22T02:26:26Z",
+  "strategy_id": "btc-short-liquidation-continuation-long-data-preflight",
+  "symbol": "BTC",
+  "status": "candidate",
+  "hypothesis": "Explicit BTC forced-liquidation labels may recover a selective long opportunity absent from V58: forced short-liquidation buying may continue when post-burst price and public flow persist, while forced long-liquidation selling may produce a distinct exhaustion-reclaim long. These are competing causal mechanisms and neither edge is established.",
+  "decision": "Accept the authenticated 0xArchive liquidation endpoint as a materially new, non-live research input and qualify only the frozen one-hour bundle for schema, provenance, and exact public-tape row parity. Permit bounded historical acquisition and the preregistered continuation-versus-exhaustion experiment below. Do not infer direction from the all-long-liquidation qualification episode, inspect forward outcomes outside the contract, change V58, or promote either branch without separate after-cost validation and an approval-ready change proposal.",
+  "confidence": "low_medium",
+  "falsifier": "Reject the source if immutable hashes drift, cross-source field parity fails, label direction semantics are disproven, or vendor recall is materially incomplete. Reject a branch if its untouched after-cost primary horizon has a nonpositive block-bootstrap lower confidence bound, fewer than 100 independent burst episodes, unstable monthly sign, or more than 30% of gross profit from its largest episode. Update only with a new append-only revision after evidence is frozen.",
+  "evidence": [
+    {
+      "path": "v58-btc-short-liquidation-continuation-data-preflight-20260822-v3.json",
+      "role": "superseded public-recorder-only source state",
+      "sha256": "1347f9b24797ad9e20ed496e88b01a45f2c8f970516e74d07483366afaf79e87",
+      "bytes": 5228
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v58_btc_oxa_liquidation_source_qualification_20260822_v1.json",
+      "role": "bounded source qualification and independent public-tape parity",
+      "sha256": "95cdb8d077e5182432ded5f1a2f69ce58e5c2ca102c3d1e47a4b5b61c9b5dc9b",
+      "bytes": 3815
+    },
+    {
+      "path": "../../data/cache/vendor/0xarchive/hyperliquid/BTC/20260822T000000000000Z_20260822T010000000000Z_liquidations/manifest.json",
+      "role": "authenticated bounded acquisition manifest",
+      "sha256": "fae3f56f2a69eaf112164215537ab67b40a96534c236b0b43b15331a892f5f84",
+      "bytes": 896
+    },
+    {
+      "path": "../../data/cache/vendor/0xarchive/hyperliquid/BTC/20260822T000000000000Z_20260822T010000000000Z_liquidations/liquidations.jsonl.gz",
+      "role": "normalized explicit liquidation labels",
+      "sha256": "9ec632e1edeb165024d0fd5a52baa1ec8f41ddcfdd72dfc017b874980b1c92bc",
+      "bytes": 15272
+    },
+    {
+      "path": "../../configs/multi_asset_growth_first_5000_eight_asset_incremental_v58.toml",
+      "role": "unchanged active V58 route and direction contract",
+      "sha256": "1c1c1656233b074df2ed3adcee8cb8cb2c58f0d191cc9f9ac34799478fca3378",
+      "bytes": 6142
+    }
+  ],
+  "metrics": {
+    "stage": "qualified_source_and_preregistered_experiment",
+    "qualified_window_event_count": 285,
+    "qualified_window_distinct_trade_ids": 285,
+    "qualified_window_exact_notional_usd": "2094213.86788",
+    "qualified_window_long_liquidations": 285,
+    "qualified_window_short_liquidations": 0,
+    "public_tape_id_matches": 285,
+    "public_tape_timestamp_mismatches": 0,
+    "public_tape_price_mismatches": 0,
+    "public_tape_size_mismatches": 0,
+    "declared_gap_overlap_events": 0,
+    "strategy_outcomes_inspected": false,
+    "live_change_supported": false
+  },
+  "experiment_contract": {
+    "data_start_utc": "2025-12-01T00:00:00Z",
+    "development_end_exclusive_utc": "2026-06-01T00:00:00Z",
+    "validation_start_utc": "2026-06-01T00:00:00Z",
+    "validation_end_exclusive_utc": "2026-08-01T00:00:00Z",
+    "pseudo_holdout_start_utc": "2026-08-01T00:00:00Z",
+    "pseudo_holdout_end_exclusive_utc": "2026-08-21T00:00:00Z",
+    "prospective_holdout_start_utc": "2026-08-22T03:00:00Z",
+    "episode_definition": "Cluster same-direction liquidation fills separated by no more than 2 seconds. At each episode end, use only labels, public trades, and L2 updates observable at or before that timestamp.",
+    "burst_features": "Compute exact liquidation notional over trailing 5-second and 15-second windows. Define a burst using the prior 30 calendar days only at the 95th and 99th empirical percentiles, with at least 3 distinct liquidation trade IDs. Percentiles update strictly out of sample.",
+    "continuation_branch": "After a liquidated-short burst, evaluate a long only when the midpoint is at or above episode VWAP and trailing 5-second public-trade notional imbalance is positive 10 seconds after episode end.",
+    "exhaustion_branch": "After a liquidated-long burst, evaluate a long only when the midpoint has reclaimed episode VWAP and trailing 5-second public-trade notional imbalance is positive 10 seconds after episode end.",
+    "entry_model": "Enter at the first independently observed executable ask after the 10-second decision timestamp; reject snapshots that predate the decision.",
+    "outcomes": "Report net executable returns at 30 seconds, 2 minutes, 5 minutes, and 15 minutes. The 5-minute horizon is primary; the others are diagnostic and cannot replace a failed primary endpoint.",
+    "cost_model": "Deduct contemporaneous taker fee, spread, depth-walk slippage at candidate notional, and funding when applicable. Also report a doubled-slippage stress.",
+    "dependence_control": "Collapse overlapping episodes into one position-equivalent observation and compute stationary block-bootstrap confidence intervals by UTC day. Report monthly and regime strata without selecting a branch from strata alone.",
+    "data_quality_exclusions": "Exclude windows touching any declared recorder gap from 60 seconds before entry through the full 15-minute outcome horizon, any missing or hash-invalid source partition, and any label lacking trade-ID parity.",
+    "promotion_evidence_minimum": "At least 100 independent qualifying episodes in untouched partitions, positive net primary-horizon point estimate and block-bootstrap lower bound, no materially negative validation month, doubled-slippage survival, and largest profitable episode contribution at or below 30% of gross profit.",
+    "portfolio_test": "Only after standalone survival, replay the candidate beside the unchanged eight-asset V58 roster with actual concurrency, exposure, and venue caps. Report incremental return, drawdown, turnover, correlation, rejected signals, and portfolio profit-factor delta.",
+    "automatic_promotion": false
+  },
+  "limitations": [
+    "The bounded qualification page proves row identity and pagination exhaustion, not vendor-wide liquidation-label recall.",
+    "The first qualified hour is directionally one-sided and cannot validate short-liquidation coverage.",
+    "Historical price data has been used elsewhere; the pseudo-holdout is weaker than the prospective holdout and must be labeled accordingly.",
+    "The 100-episode minimum may require a long historical acquisition and may falsify practical trade-frequency viability even if conditional returns are positive.",
+    "The experiment can reject both branches; it is not evidence that a BTC long should be added now.",
+    "This revision cannot pause, retune, route, size, enter, close, restart, or promote a live strategy or lifecycle."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

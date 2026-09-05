@@ -171,6 +171,14 @@ def _fee_payload(
         "collateral_token_index": metadata.collateral_token_index,
         "aligned_quote_status": "unresolved_conservative_false",
     }
+    if metadata.deployer_fee_scale is None:
+        return {
+            **common,
+            "effective_fee_status": "unresolved_deployer_fee_scale",
+            "maker_fee_rate": None,
+            "taker_fee_rate": None,
+            "fee_formula_source": None,
+        }
     if metadata.growth_mode is None:
         return {
             **common,

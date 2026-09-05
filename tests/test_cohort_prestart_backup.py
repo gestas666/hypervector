@@ -63,7 +63,7 @@ priority = 10
 timeframe = "30m"
 maximum_entry_delay_seconds = 60
 execution_symbols = ["BTC", "HYPE"]
-execution = {{ entry_liquidity = "taker_ioc", stop_policy = "fixed_bps", stop_bps = 80.0, target_policy = "none", maximum_hold_seconds = 28800 }}
+execution = {{ entry_liquidity = "taker_ioc", stop_policy = "structural_clamped_bps", minimum_stop_bps = 20.0, maximum_stop_bps = 75.0, target_policy = "reward_risk", target_r_multiple = 3.0, maximum_hold_seconds = 86400 }}
 ''',
         encoding="utf-8",
     )
@@ -133,6 +133,42 @@ def test_backup_is_immutable_hash_verified_and_recovers_exact_bytes(
     archive = result.path / records["cohort_ledger"]["archive_path"]
     with gzip.open(archive, "rb") as handle:
         assert handle.read() == decisions.read_bytes()
+
+
+def test_backup_preserves_exact_transition_approval_bytes(tmp_path: Path) -> None:
+    """A changed-profile approval is part of the recoverable startup evidence."""
+    previous = _write_config(tmp_path, profile="previous-profile")
+    target = _write_config(tmp_path, profile="target-profile")
+    approval = tmp_path / "docs" / "transition-approval.json"
+    approval.parent.mkdir(parents=True)
+    approval.write_text('{"approval_status":"fixture"}\n', encoding="utf-8")
+    target.write_text(
+        target.read_text(encoding="utf-8").replace(
+            "lookback_days = 14\n",
+            f'lookback_days = 14\ntransition_approval = "{approval}"\n',
+            1,
+        ),
+        encoding="utf-8",
+    )
+    _seed_state(tmp_path, previous)
+    config = load_multi_asset_live_config(
+        target,
+        mode="live",
+        enabled=True,
+        accepts_live_risk=True,
+    )
+
+    result = create_cohort_prestart_backup(
+        config,
+        now=datetime(2026, 8, 5, 12, 31, tzinfo=UTC),
+        implementation_sources=_implementation_sources(tmp_path),
+    )
+    manifest = verify_cohort_prestart_backup(result.path)
+    records = {record["role"]: record for record in manifest["files"]}
+
+    archive = result.path / records["transition_approval"]["archive_path"]
+    with gzip.open(archive, "rb") as handle:
+        assert handle.read() == approval.read_bytes()
 
 
 def test_observe_identity_cannot_hide_previous_armed_live_profile(

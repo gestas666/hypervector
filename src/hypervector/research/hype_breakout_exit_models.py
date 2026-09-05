@@ -16,6 +16,7 @@ HypeExitReason = Literal[
     "momentum_reversal_5m",
     "maximum_hold",
     "hard_maximum_hold",
+    "opposite_strategy_intent",
     "end_of_data",
 ]
 
@@ -63,15 +64,20 @@ class HypeExitReplayConfig:
     """Frozen unit-notional execution assumptions for HYPE exit comparison."""
 
     stop_bps: float = 80.0
+    stop_anchor_column: str | None = None
+    minimum_stop_bps: float | None = None
+    maximum_stop_bps: float | None = None
     maximum_hold_minutes: int = 480
     maximum_hold_policy: HypeMaximumHoldPolicy = "fixed"
     hard_maximum_hold_minutes: int | None = None
     fee_bps_per_side: float = 4.5
     slippage_bps_per_side: float = 2.0
+    exit_on_opposite_signal: bool = False
 
     def __post_init__(self) -> None:
         """Reject non-finite or non-positive economic assumptions."""
         _positive(self.stop_bps, "stop_bps")
+        _validate_structural_stop(self)
         _positive_integer(self.maximum_hold_minutes, "maximum_hold_minutes")
         if self.maximum_hold_policy not in {"fixed", "extend_while_regime_supported"}:
             raise ValueError("unsupported HYPE maximum hold policy")
@@ -85,6 +91,30 @@ class HypeExitReplayConfig:
             raise ValueError("HYPE extension requires a later hard maximum hold")
         _nonnegative(self.fee_bps_per_side, "fee_bps_per_side")
         _nonnegative(self.slippage_bps_per_side, "slippage_bps_per_side")
+        if not isinstance(self.exit_on_opposite_signal, bool):
+            raise ValueError("exit_on_opposite_signal must be boolean")
+
+
+def _validate_structural_stop(config: HypeExitReplayConfig) -> None:
+    values = (
+        config.stop_anchor_column,
+        config.minimum_stop_bps,
+        config.maximum_stop_bps,
+    )
+    if all(value is None for value in values):
+        return
+    if any(value is None for value in values):
+        raise ValueError("structural stop contract requires anchor and clamp bounds")
+    if not isinstance(config.stop_anchor_column, str) or not config.stop_anchor_column:
+        raise ValueError("structural stop anchor column must be non-empty")
+    minimum = config.minimum_stop_bps
+    maximum = config.maximum_stop_bps
+    if minimum is None or maximum is None:
+        raise RuntimeError("validated structural stop clamp is incomplete")
+    _positive(minimum, "minimum_stop_bps")
+    _positive(maximum, "maximum_stop_bps")
+    if minimum > maximum:
+        raise ValueError("minimum_stop_bps must not exceed maximum_stop_bps")
 
 
 @dataclass(frozen=True)

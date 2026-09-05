@@ -75,26 +75,22 @@ pub(crate) fn markout(value: Option<f64>, horizon_ms: Option<u64>) -> String {
 }
 
 pub(crate) fn fill_time(value: u64) -> String {
-    i64::try_from(value)
-        .ok()
-        .and_then(DateTime::<Utc>::from_timestamp_millis)
-        .map(|time| {
-            time.with_timezone(&New_York)
-                .format("%H:%M:%S %Z")
-                .to_string()
-        })
-        .unwrap_or_else(|| "INVALID".into())
+    eastern_timestamp(value, "%H:%M:%S %Z")
 }
 
 pub(crate) fn fill_date_time(value: u64) -> String {
+    eastern_timestamp(value, "%m-%d %H:%M %Z")
+}
+
+pub(crate) fn fill_full_date_time(value: u64) -> String {
+    eastern_timestamp(value, "%m-%d %H:%M:%S %Z")
+}
+
+fn eastern_timestamp(value: u64, format: &str) -> String {
     i64::try_from(value)
         .ok()
         .and_then(DateTime::<Utc>::from_timestamp_millis)
-        .map(|time| {
-            time.with_timezone(&New_York)
-                .format("%m-%d %H:%M %Z")
-                .to_string()
-        })
+        .map(|time| time.with_timezone(&New_York).format(format).to_string())
         .unwrap_or_else(|| "INVALID".into())
 }
 

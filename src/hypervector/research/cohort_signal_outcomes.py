@@ -11,6 +11,7 @@ from hypervector.research.cohort_forward_paths import (
     Candle,
     DirectionalPath,
     build_candle_index,
+    causal_path_start_ms,
     non_overlapping_count,
     non_overlapping_paths,
     resolve_directional_path,
@@ -51,6 +52,7 @@ class _ProviderEvidence:
     evaluations: int = 0
     eligible_evaluations: int = 0
     readiness_annotations: int = 0
+    configured_direction_annotations: int = 0
     no_direction: int = 0
     side_evaluations: dict[str, int] = field(
         default_factory=lambda: {"long": 0, "short": 0}
@@ -125,6 +127,10 @@ def _build_report(
             "execution_authority": "none",
             "model_trained": False,
             "thresholds_selected": False,
+            "configured_direction_attribution": "counterfactual_only",
+            "path_start_policy": (
+                "first_full_minute_at_or_after_candidate_availability"
+            ),
         },
         "horizons_minutes": list(horizons),
         "opportunity_hurdles_bps": hurdles.as_payload(),
@@ -150,6 +156,8 @@ def _build_report(
             "diagnostics assume no order, fill, fee, funding, sizing, or realized PnL",
             "metric-conditioned outcomes are descriptive and do not select thresholds",
             "cost hurdles are fixed assumptions, not exact executable fill economics",
+            "a partial availability minute is excluded from forward candle paths",
+            "a single configured side may attribute an ineligible readiness path but cannot create an eligible signal or fill",
         ],
     }
 
@@ -209,11 +217,17 @@ def _observe_candidate(
     candles: Mapping[int, Candle],
 ) -> None:
     bucket.evaluations += 1
-    bucket.metric_diagnostics.observe_evaluation(candidate.metrics)
+    unavailable = _conditional_unavailable_metrics(candidate)
+    bucket.metric_diagnostics.observe_evaluation(
+        candidate.metrics,
+        explicitly_unavailable=unavailable,
+    )
     if candidate.eligible:
         bucket.eligible_evaluations += 1
     elif candidate.side is not None:
         bucket.readiness_annotations += 1
+        if candidate.side_source == "single_configured_direction":
+            bucket.configured_direction_annotations += 1
     if candidate.side is None:
         bucket.no_direction += 1
         return
@@ -229,14 +243,33 @@ def _observe_candidate(
             candidate.metrics,
             horizon_minutes=horizon,
             decision_time_ms=candidate.decision_time_ms,
+            path_start_time_ms=(
+                outcome.path_start_time_ms
+                if outcome is not None
+                else causal_path_start_ms(
+                    candidate.decision_time_ms, candidate.available_time_ms
+                )
+            ),
             status=status,
             directional_return_bps=(
                 outcome.directional_close_return_bps if outcome is not None else None
             ),
+            explicitly_unavailable=unavailable,
         )
         _record_outcome(evidence, status, outcome)
         _record_outcome(class_horizons[horizon], status, outcome)
         _record_blockers(bucket, candidate, horizon, status, outcome)
+
+
+def _conditional_unavailable_metrics(candidate: SignalCandidate) -> frozenset[str]:
+    """Declare entry-only metrics unavailable when no entry is eligible."""
+    if (
+        not candidate.eligible
+        and "stop_price" in candidate.metrics
+        and candidate.metrics.get("stop_price") is None
+    ):
+        return frozenset({"stop_price"})
+    return frozenset()
 
 
 def _record_blockers(
@@ -311,6 +344,7 @@ def _resolve(
         raise RuntimeError("directional path resolution requires a side")
     return resolve_directional_path(
         decision_time_ms=candidate.decision_time_ms,
+        available_time_ms=candidate.available_time_ms,
         reference_price=candidate.reference_price,
         side=candidate.side,
         candles=candles,
@@ -326,6 +360,7 @@ def _provider_summary(
         "evaluations": evidence.evaluations,
         "eligible_evaluations": evidence.eligible_evaluations,
         "readiness_annotations": evidence.readiness_annotations,
+        "configured_direction_annotations": evidence.configured_direction_annotations,
         "no_direction": evidence.no_direction,
         "by_side": _directional_counts(evidence),
         "horizons": {
@@ -443,7 +478,7 @@ def _non_overlapping_count(
     outcomes: Sequence[DirectionalPath], horizon_minutes: int
 ) -> int:
     return non_overlapping_count(
-        [outcome.decision_time_ms for outcome in outcomes], horizon_minutes
+        [outcome.path_start_time_ms for outcome in outcomes], horizon_minutes
     )
 
 

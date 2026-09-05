@@ -13,6 +13,7 @@ from hypervector.research.cohort_live_audit_values import (
 
 Record = Mapping[str, object]
 _MINUTE_MS = 60_000
+_EXCURSION_PRICE_SOURCE = "completed_1m_candle_high_low"
 
 
 class _CandleLike(Protocol):
@@ -52,6 +53,7 @@ def build_open_trade_path(
     favorable, adverse = _excursions(direction, entry_price, highest, lowest)
     return {
         "status": "observed",
+        "excursion_price_source": _EXCURSION_PRICE_SOURCE,
         "completed_bars": len(eligible),
         "first_timestamp_ms": eligible[0].timestamp_ms,
         "last_timestamp_ms": eligible[-1].timestamp_ms,
@@ -203,6 +205,7 @@ def _unavailable_path(
 ) -> dict[str, object]:
     return {
         "status": "unavailable",
+        "excursion_price_source": _EXCURSION_PRICE_SOURCE,
         "completed_bars": 0,
         "first_timestamp_ms": None,
         "last_timestamp_ms": None,

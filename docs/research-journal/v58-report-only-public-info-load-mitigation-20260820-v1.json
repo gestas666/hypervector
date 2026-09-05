@@ -1,0 +1,123 @@
+{
+  "schema_version": "hypervector.v58_report_only_public_info_load_mitigation.v1",
+  "generated_at_utc": "2026-08-20T19:56:00Z",
+  "hypothesis_id": "v58-report-only-public-info-load-mitigation-v1",
+  "status": "ACCEPTED_BOUNDED_PARTIAL_MITIGATION",
+  "contract": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_live_change": false,
+    "runtime_strategy_changed": false,
+    "live_configuration_changed": false,
+    "orders_or_positions_changed": false
+  },
+  "problem_restatement": {
+    "observed_problem": "Concurrent report-only public-info collectors intermittently exhausted the shared HTTP retry budget.",
+    "visible_effects": [
+      "The BTC exact-mark watcher accumulated repeated http_429_retry_exhausted cycles.",
+      "The ETH lifecycle watcher accumulated repeated http_429_retry_exhausted cycles and became stale.",
+      "The HIP-3 roster was transiently unavailable on TUI Screen 4.",
+      "The continuous improvement report failed closed while required lifecycle evidence was stale."
+    ],
+    "live_execution_effect_observed": false,
+    "success_criterion": "Reduce optional BTC mark request load while preserving the frozen 120-second maximum mark-gap contract and leaving the live backend unchanged."
+  },
+  "root_cause_evidence": {
+    "report_only_processes": [
+      "The V58 multi-asset observer polls eight symbols and ten provider-symbol routes.",
+      "The MU, SP500, and SPCX pressure observers separately retain five-second public L2 collection for their causal pre-close contracts.",
+      "The original BTC mark watcher polled public mark data every three seconds."
+    ],
+    "pre_mitigation_degraded_events": {
+      "btc_mark_watcher_log": {
+        "path": "data/runtime/research/process_logs/v58_btc_sweep_lifecycle_v2.log",
+        "http_429_retry_exhausted_count": 212
+      },
+      "eth_lifecycle_watcher_log": {
+        "path": "data/runtime/research/process_logs/v58_eth_pullback_lifecycle_v2.log",
+        "http_429_retry_exhausted_count": 26
+      }
+    }
+  },
+  "mitigation": {
+    "process_scope": "v58_btc_sweep_lifecycle_watch.py only",
+    "prior_poll_seconds": 3,
+    "intermediate_poll_seconds": 15,
+    "current_poll_seconds": 30,
+    "prior_report_every_polls": 20,
+    "current_report_every_polls": 2,
+    "report_interval_seconds_preserved": 60,
+    "request_rate_reduction_from_original_pct": 90.0,
+    "frozen_maximum_mark_gap_ms": 120000,
+    "current_process_ids_at_acceptance": [
+      78157,
+      78158
+    ],
+    "live_backend_process_ids_unchanged": [
+      34221,
+      34222
+    ]
+  },
+  "source_evidence": [
+    {
+      "path": "scripts/v58_btc_sweep_lifecycle_watch.py",
+      "bytes": 15905,
+      "sha256": "642bdd187a9d58cdb80d4ea40965b5aa4d070eef9eb8582aedc2aa30f0e32eca"
+    },
+    {
+      "path": "src/hypervector/research/v58_btc_sweep_lifecycle.py",
+      "bytes": 16680,
+      "sha256": "9d00ccec8a0b0f0fc9245cb08fe512961631635d911434cc0a157a7918cff6a4"
+    },
+    {
+      "path": "docs/research-journal/v58-btc-liquidity-sweep-exact-mark-lifecycle-preregistration-20260820-v2.json",
+      "bytes": 1940,
+      "sha256": "b2dcdb5237d8af1e48d0562ab45a24f78ba30850cd652121a89ef10dd8167d77"
+    },
+    {
+      "path": "configs/multi_asset_growth_first_5000_eight_asset_incremental_v58.toml",
+      "bytes": 6142,
+      "sha256": "1c1c1656233b074df2ed3adcee8cb8cb2c58f0d191cc9f9ac34799478fca3378"
+    }
+  ],
+  "bounded_acceptance": {
+    "current_watcher_started_at_utc": "2026-08-20T19:52:40Z",
+    "acceptance_end_utc": "2026-08-20T19:56:00Z",
+    "new_http_429_events_observed_in_current_process_output": 0,
+    "btc_status_observed_at_utc": "2026-08-20T19:54:15.585392+00:00",
+    "eth_status_observed_at_utc": "2026-08-20T19:54:22.747027+00:00",
+    "continuous_report_recovered_at_utc": "2026-08-20T19:54:33.494457+00:00",
+    "hip3_roster_status": "available",
+    "hip3_market_count": 5,
+    "live_backend_state": "running_consistent",
+    "live_backend_process_health": "healthy",
+    "runtime_configuration_matches": true
+  },
+  "residual_risks": [
+    "The bounded zero-error window is short and does not prove future HTTP 429 elimination.",
+    "The intermediate 15-second process still observed two HTTP 429 events after its initial clean window.",
+    "A status and its exact side-reconciliation sidecar can transiently belong to different refresh generations; the continuous report fails closed and later recovers after the sidecar catches up.",
+    "The public venue preflight can remain stale during retry exhaustion even while the live checkpoint and venue stops remain healthy.",
+    "No BTC sweep entry occurred, so an entered lifecycle has not yet falsified or confirmed the 120-second mark-path requirement."
+  ],
+  "interpretation": {
+    "technical_conclusion": "The optional BTC watcher request rate was reduced by 90 percent and all required report statuses recovered during the bounded acceptance window.",
+    "economic_conclusion": "No profitability or strategy conclusion follows from this operational mitigation.",
+    "completion_claim": "partial_mitigation_not_error_elimination",
+    "live_change_supported": false
+  },
+  "confidence": {
+    "request_rate_reduction": "high",
+    "bounded_status_recovery": "high",
+    "future_rate_limit_elimination": "low_unverified",
+    "live_execution_isolation": "high"
+  },
+  "falsifiers": [
+    "The current BTC watcher exits or stops refreshing its status.",
+    "A new sequence of HTTP 429 events makes required lifecycle statuses older than their 300-second fail-closed limit.",
+    "An entered BTC sweep lifecycle contains a mark observation gap above 120000 milliseconds.",
+    "The HIP-3 roster remains unavailable across multiple 120-second roster cycles.",
+    "The live backend process identity, V58 configuration fingerprint, orders, positions, or execution behavior changes as a result of this report-only mitigation."
+  ],
+  "next_step": "Continue the 30-second BTC mark collection, alert on the first new retry-exhaustion burst or mark-gap breach, and keep the SP500 open-lifecycle exit reconciliation as the highest-value capital investigation."
+}

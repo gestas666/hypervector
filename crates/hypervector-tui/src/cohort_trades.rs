@@ -253,7 +253,7 @@ fn render_compact_fill_journal(frame: &mut Frame, app: &App, area: Rect) {
             "SIZE",
             "FEE",
             "SLIPPAGE",
-            "MARKOUT",
+            "RESULT",
         ])
         .style(app.theme.header),
     )
@@ -278,7 +278,7 @@ fn compact_fill_row<'a>(fill: &'a CohortFill, app: &App) -> Row<'a> {
         Cell::from(format!("{:.6}", fill.size)),
         Cell::from(money(fill.fee_usd)),
         Cell::from(optional_bps(fill.slippage_bps)),
-        Cell::from(optional_bps(fill.markout_bps)),
+        Cell::from(compact_fill_result(fill)),
     ])
 }
 
@@ -315,11 +315,69 @@ fn fill_journal_title(app: &App) -> String {
             .filter(|fill| fill.origin_run_id.as_deref() == Some(run_id))
             .count()
     });
-    let focus = app.effective_cohort_trade_focus() == CohortTradeFocus::Fills;
+    let focus = if app.effective_cohort_trade_focus() == CohortTradeFocus::Fills {
+        "ACTIVE"
+    } else {
+        "VIEW"
+    };
+    let Some(epoch) = app
+        .backend
+        .cohort_checkpoint
+        .portfolio_archive
+        .as_ref()
+        .and_then(|archive| archive.accounting_epoch.as_ref())
+    else {
+        return format!(
+            " VENUE FILL LEGS // NOT COMPLETED TRADES // {focus} // CURRENT RUN {current} HISTORY {} // [←/→] FOCUS ",
+            app.backend.cohort.fills.len().saturating_sub(current),
+        );
+    };
+    epoch_fill_journal_title(app, epoch.start_venue_timestamp_ms, focus)
+}
+
+fn epoch_fill_journal_title(app: &App, epoch_start_ms: u64, focus: &str) -> String {
+    let epoch_legs = app
+        .backend
+        .cohort
+        .fills
+        .iter()
+        .filter(|fill| fill.venue_timestamp_ms >= epoch_start_ms)
+        .count();
+    let closed = app
+        .backend
+        .cohort
+        .fills
+        .iter()
+        .filter(|fill| fill.net_pnl_usd.is_some())
+        .count();
     format!(
-        " VENUE FILL LEGS // NOT COMPLETED TRADES // {} // CURRENT RUN {current} HISTORY {} // [←/→] FOCUS ",
-        if focus { "ACTIVE" } else { "VIEW" },
-        app.backend.cohort.fills.len().saturating_sub(current),
+        " VENUE FILL LEGS // DISPLAY EPOCH {epoch_legs} LEGS // PRE-EPOCH {} LEGS // CLOSED RESULTS {closed} // {focus} // [←/→] FOCUS ",
+        app.backend.cohort.fills.len().saturating_sub(epoch_legs),
+    )
+}
+
+fn compact_fill_result(fill: &CohortFill) -> String {
+    fill.net_pnl_usd.map_or_else(
+        || markout(fill.markout_bps, fill.markout_horizon_ms),
+        |value| format!("NET {}", signed_dollars(value)),
+    )
+}
+
+fn fill_exit_result(fill: &CohortFill) -> String {
+    match (fill.exit_reason.as_deref(), fill.net_pnl_usd) {
+        (Some(reason), Some(value)) => {
+            format!("{} NET {}", reason.to_uppercase(), signed_dollars(value))
+        }
+        (Some(reason), None) => reason.to_uppercase(),
+        _ => "-".into(),
+    }
+}
+
+fn signed_dollars(value: f64) -> String {
+    format!(
+        "{}{:.2}",
+        if value < 0.0 { "-$" } else { "+$" },
+        value.abs()
     )
 }
 
@@ -393,7 +451,7 @@ fn wide_fill_row<'a>(fill: &'a CohortFill, app: &App, full_ids: bool) -> Row<'a>
                 .map_or_else(|| "N/A".into(), |value| format!("{value}ms")),
         ),
         Cell::from(markout(fill.markout_bps, fill.markout_horizon_ms)),
-        Cell::from(fill.exit_reason.as_deref().unwrap_or("-")),
+        Cell::from(fill_exit_result(fill)),
     ]);
     Row::new(cells)
 }

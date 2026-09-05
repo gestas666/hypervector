@@ -64,7 +64,23 @@ def _install_run_stubs(
         "file_evidence",
         lambda path: {"sha256": f"sha-{path.name}", "bytes": len(path.name)},
     )
-    for name in ("_profit_lock_comparison", "_duration_comparison"):
+    monkeypatch.setattr(
+        script,
+        "_generator_identity",
+        lambda: {"tree_sha256": "generator-sha", "files": {"script.py": {}}},
+    )
+    monkeypatch.setattr(script, "require_unchanged_file", lambda path, expected: None)
+    monkeypatch.setattr(
+        script,
+        "require_unchanged_dependencies",
+        lambda expected, root: None,
+    )
+    for name in (
+        "_profit_lock_comparison",
+        "_risk_normalized_profit_lock_comparison",
+        "_duration_comparison",
+        "_stop_width_comparison",
+    ):
         monkeypatch.setattr(
             script, name, lambda market, trades: {"marker": len(trades)}
         )
@@ -146,11 +162,20 @@ def _assert_exact_run_artifact(
         },
     }
     assert artifact["data_evidence"][str(bars)]["sha256"] == "sha-bars.parquet"
+    assert artifact["generator_identity"]["tree_sha256"] == "generator-sha"
     assert artifact["profit_lock_comparison"] == {
         "development": {"marker": 1},
         "opened_final_60d": {"marker": 1},
     }
     assert artifact["duration_comparison"] == {
+        "development": {"marker": 1},
+        "opened_final_60d": {"marker": 1},
+    }
+    assert artifact["risk_normalized_profit_lock_comparison"] == {
+        "development": {"marker": 1},
+        "opened_final_60d": {"marker": 1},
+    }
+    assert artifact["stop_width_comparison"] == {
         "development": {"marker": 1},
         "opened_final_60d": {"marker": 1},
     }
@@ -235,6 +260,159 @@ def test_duration_comparison_preserves_entries_costs_and_side_attribution(
     assert comparison["fixed_240m"]["by_side"]["short"]["trades"] == 1
     assert comparison["fixed_240m"]["by_side"]["long"]["trades"] == 0
     assert comparison["fixed_240m"]["net_excluding_largest_winner_bps"] == 0.0
+
+
+def test_risk_normalized_comparison_uses_frozen_r_contract(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The R screen must vary only the two frozen profit-lock triplets."""
+    script = _load()
+    market = pd.DataFrame({"entry_side": ["long"]})
+    trade = _trade("2026-06-01T00:00:00Z", "long")
+    configs: list[object] = []
+    policies: list[object] = []
+    monkeypatch.setattr(
+        script, "freeze_hype_entry_cohort", lambda source, trades: source
+    )
+
+    def replay_policy(source: object, policy: object, config: object) -> object:
+        configs.append(config)
+        policies.append(policy)
+        return SimpleNamespace(
+            completed_trades=1,
+            wins=1,
+            losses=0,
+            net_return_bps=11.0,
+            profit_factor=None,
+            maximum_drawdown_bps=0.0,
+            exit_reasons={"maximum_hold": 1},
+            monthly_net_bps={"2026-06": 11.0},
+            trades=(trade,),
+        )
+
+    monkeypatch.setattr(script, "replay_hype_breakout_exits", replay_policy)
+
+    comparison = script._risk_normalized_profit_lock_comparison(market, (trade,))
+
+    assert set(comparison) == {
+        "native_12h_control",
+        "r2_floor1_trail1",
+        "r5_floor2_trail2",
+    }
+    assert all(config.stop_bps == 60.0 for config in configs)
+    assert all(config.maximum_hold_minutes == 720 for config in configs)
+    assert all(config.fee_bps_per_side == 4.5 for config in configs)
+    assert all(config.slippage_bps_per_side == 2.0 for config in configs)
+    assert policies[1].profit_activation_bps == 120.0
+    assert policies[1].profit_floor_bps == 60.0
+    assert policies[1].trailing_giveback_bps == 60.0
+    assert policies[2].profit_activation_bps == 300.0
+    assert policies[2].profit_floor_bps == 120.0
+    assert policies[2].trailing_giveback_bps == 120.0
+    assert comparison["r5_floor2_trail2"]["by_side"]["long"]["trades"] == 1
+
+
+def test_stop_width_comparison_holds_dollar_barrier_risk_equal(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Wider ETH stops must reduce notional relative to the 60-bps control."""
+    script = _load()
+    market = pd.DataFrame({"entry_side": ["long"]})
+    trade = _trade("2026-06-01T00:00:00Z", "long")
+    configs: list[object] = []
+    monkeypatch.setattr(
+        script, "freeze_hype_entry_cohort", lambda source, trades: source
+    )
+
+    def replay_policy(source: object, policy: object, config: object) -> object:
+        configs.append(config)
+        return SimpleNamespace(
+            completed_trades=1,
+            wins=1,
+            losses=0,
+            net_return_bps=config.stop_bps,
+            profit_factor=None,
+            maximum_drawdown_bps=config.stop_bps / 2.0,
+            exit_reasons={"maximum_hold": 1},
+            monthly_net_bps={"2026-06": config.stop_bps},
+            trades=(trade,),
+        )
+
+    monkeypatch.setattr(script, "replay_hype_breakout_exits", replay_policy)
+
+    comparison = script._stop_width_comparison(market, (trade,))
+
+    assert list(comparison) == [
+        "60bps",
+        "80bps",
+        "100bps",
+        "120bps",
+        "150bps",
+        "180bps",
+    ]
+    assert [config.stop_bps for config in configs] == [60, 80, 100, 120, 150, 180]
+    assert comparison["60bps"]["notional_scale_vs_control"] == 1.0
+    assert comparison["120bps"]["notional_scale_vs_control"] == 0.5
+    assert comparison["120bps"]["equal_risk_net_return_bps"] == 60.0
+    assert comparison["120bps"]["equal_risk_maximum_drawdown_bps"] == 30.0
+
+
+def test_main_publishes_nothing_when_generator_changes(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A source mutation must abort before the immutable artifact write."""
+    script = _load()
+    args, _ = _install_run_stubs(tmp_path, script, monkeypatch)
+    output = tmp_path / "report.json"
+
+    def reject_change(expected: object, root: Path) -> None:
+        raise RuntimeError("dependency changed")
+
+    monkeypatch.setattr(script, "require_unchanged_dependencies", reject_change)
+
+    with pytest.raises(RuntimeError, match="dependency changed"):
+        script.main(
+            [
+                "--bars",
+                str(args.bars),
+                "--funding",
+                str(args.funding),
+                "--out",
+                str(output),
+            ]
+        )
+
+    assert not output.exists()
+
+
+def test_main_publishes_nothing_when_input_changes(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """An input mutation must abort before the immutable artifact write."""
+    script = _load()
+    args, _ = _install_run_stubs(tmp_path, script, monkeypatch)
+    output = tmp_path / "report.json"
+
+    def reject_change(path: Path, expected: object) -> None:
+        raise ValueError(f"input changed: {path}")
+
+    monkeypatch.setattr(script, "require_unchanged_file", reject_change)
+
+    with pytest.raises(ValueError, match="input changed"):
+        script.main(
+            [
+                "--bars",
+                str(args.bars),
+                "--funding",
+                str(args.funding),
+                "--out",
+                str(output),
+            ]
+        )
+
+    assert not output.exists()
 
 
 def _load() -> ModuleType:

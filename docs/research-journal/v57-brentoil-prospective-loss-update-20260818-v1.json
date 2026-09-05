@@ -1,0 +1,123 @@
+{
+  "schema_version": 1,
+  "mode": "v57_brentoil_prospective_loss_update_report_only",
+  "generated_at_utc": "2026-08-18T17:51:16Z",
+  "hypothesis_id": "v57-brentoil-oil-shock-external-candidate-v1",
+  "revision": 2,
+  "supersedes": "v57-brentoil-external-pipeline-recovery-20260818-v1.json",
+  "status": "complete_deferred",
+  "contract": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_live_change": false,
+    "runtime_strategy_changed": false,
+    "orders_or_fills_claimed": false,
+    "realized_pnl_claimed": false
+  },
+  "problem_restatement": "Incorporate the first technically resolved prospective BRENTOIL oil-shock lifecycle into the existing V57 promotion decision without retuning after observing its result.",
+  "known_facts": {
+    "active_profile_id": "multi_asset_growth_first_5000_spcx_short_containment_v57",
+    "active_profile_fingerprint": "724c259bd94be60d80ffc2e6b9a760412b9729ab1f8fea403e61d266f0d9cb8d",
+    "candidate_route": "hip3_brentoil_oil_shock_reversion_bidirectional_5m_shadow_v1|xyz:BRENTOIL",
+    "candidate_execution_authority": "none",
+    "candidate_live_authorized": false,
+    "validation_accessed": false,
+    "holdout_accessed": false
+  },
+  "prospective_lifecycle": {
+    "decision_time_ms": 1787066700000,
+    "signal_available_time_ms": 1787066701542,
+    "side": "short",
+    "notional_usd": 750.0,
+    "entry_price": 90.054,
+    "exit_price": 90.34823113968,
+    "exit_reason": "stop",
+    "stop_bps": 30.0,
+    "target_bps": 40.0,
+    "maximum_hold_minutes": 60,
+    "nominal": {
+      "modeled_net_usd_excluding_funding": -2.7640253782506203,
+      "modeled_net_return_bps_excluding_funding": -36.85367171000827,
+      "profit_factor_excluding_funding": 0.0
+    },
+    "stress": {
+      "modeled_net_usd_excluding_funding": -3.8520293867053397,
+      "modeled_net_return_bps_excluding_funding": -51.36039182273787,
+      "profit_factor_excluding_funding": 0.0
+    },
+    "technical_path_resolved": true,
+    "funding_included": false,
+    "realized_pnl": false
+  },
+  "evidence_update": {
+    "prior_development_nominal_positive": true,
+    "prior_development_stress_positive": false,
+    "prior_source_parity_resolved": false,
+    "prospective_resolved_lifecycles": 1,
+    "prospective_wins": 0,
+    "prospective_losses": 1,
+    "prospective_both_sides_observed": false,
+    "promotion_case_strengthened": false,
+    "defer_case_strengthened": true
+  },
+  "uncertainties_and_failure_modes": [
+    "One prospective short cannot estimate repeatable expectancy or rule out a profitable BRENTOIL mechanism.",
+    "Modeled net excludes funding and is not realized venue PnL.",
+    "Mark-triggered exits use the next complete recorded REST depth rather than a submitted order fill.",
+    "Archive public-trade OHLC and live candleSnapshot OHLC remain mismatched on part of their overlap.",
+    "Validation and holdout remain unopened and historical mark paths remain incomplete.",
+    "Continuing the same post-result parameter search would increase selection bias."
+  ],
+  "recommendation": {
+    "1_recommendation": "Keep the current BRENTOIL oil-shock candidate deferred and do not add it to V57.",
+    "2_why_now": "The first technically resolved prospective lifecycle is now available and stopped out under both nominal and stress friction.",
+    "3_evidence_reviewed": "The prior immutable V57 BRENTOIL pipeline decision and the immutable first prospective lifecycle snapshot.",
+    "4_observed_problem_or_opportunity": "The candidate remains liquid and executable in visible depth, but development stress is negative and its first resolved prospective short lost after modeled costs.",
+    "5_applicable_market_regime": "Five-minute BRENTOIL oil-shock mean reversion under the frozen 30-bps stop, 40-bps target, and 60-minute maximum hold.",
+    "6_alternatives": "Promote now, retune after seeing the loss, keep collecting the frozen mechanism, or preregister a materially different mechanism. Promotion and post-result tuning remain unsupported.",
+    "7_proposed_live_change": "none",
+    "8_expected_upside": "Avoid allocating live capital to a stress-negative candidate whose first resolved prospective lifecycle also lost.",
+    "9_main_risks": "Deferral may miss a later profitable regime; one short is sparse; excluded funding can change the exact modeled loss; a different BRENTOIL mechanism may work.",
+    "10_validation_completed": "Exact immutable lifecycle identity, causal signal and entry timestamps, visible-depth entry and exit, nominal and stress friction, stop attribution, and technical-path resolution.",
+    "11_validation_still_required": "Exact live/archive candle parity, complete mark paths, funding, both-side prospective evidence, unopened validation and holdout, and positive stress excluding the largest winner.",
+    "12_success_metrics": "Positive after-cost stress, profit factor above one, positive net excluding the largest winner, complete technical paths, source parity, and resolved long and short forward evidence.",
+    "13_failure_or_rollback_triggers": "No rollback applies because no live change is proposed. Reopen only under the existing preregistered condition or for a materially different mechanism specified before observing results.",
+    "14_confidence": "High confidence that this frozen candidate is not approval-ready; low confidence about all possible BRENTOIL strategies because the prospective sample is one short.",
+    "15_explicit_approval_requested": false
+  },
+  "hypothesis_decision": {
+    "hypothesis_id": "v57-brentoil-oil-shock-external-candidate-v1",
+    "route": "hip3_brentoil_oil_shock_reversion_bidirectional_5m_shadow_v1|xyz:BRENTOIL",
+    "experiment": "promote_current_oil_shock_candidate",
+    "status": "deferred",
+    "decision_reason": "Development stress remains negative, source parity remains unresolved, and the first technically resolved prospective short stopped out under both nominal and stress friction.",
+    "reopen_condition": "A preregistered independent window resolves source and mark paths and remains positive after realistic costs and largest-winner removal, or a materially different mechanism is specified before results.",
+    "execution_effect": "report_only",
+    "automatic_live_change": false
+  },
+  "next_investigation": {
+    "priority": 1,
+    "route": "hype_breakout_compression_alignment_bidirectional_v2|HYPE",
+    "experiment": "collect_both_side_live_execution",
+    "minimum_evidence_to_update_diagnosis": "At least one attributable eligible signal and one fully resolved lifecycle for each configured direction.",
+    "automatic_live_change": false
+  },
+  "evidence": [
+    {
+      "path": "v57-brentoil-external-pipeline-recovery-20260818-v1.json",
+      "bytes": 7861,
+      "sha256": "c50d5439daa072c5f04369d7f83472356a748cd55e36f5c463c120dc0df9a9bd"
+    },
+    {
+      "path": "../../data/logs/research/brentoil_oil_shock_lifecycle_v2/brentoil_0001_0001_6260867a61cf.json",
+      "bytes": 765640,
+      "sha256": "0d2782ff020c74f9dc4fb68e615a7ccb8ead65bd889d6896c1d3125ca1122de3"
+    }
+  ],
+  "claim_falsifiers": [
+    "The immutable lifecycle snapshot does not reproduce the stated identity, side, stop exit, modeled nominal and stress losses, or resolved technical path.",
+    "Funding reconstruction reverses the loss and the remaining preregistered evidence becomes positive after costs and largest-winner removal.",
+    "Exact source parity or complete mark-path reconstruction materially changes the prospective lifecycle result.",
+    "A materially different mechanism specified before its outcomes produces independent both-side positive stress evidence."
+  ]
+}

@@ -1,0 +1,211 @@
+{
+  "schema_version": "v53_first_14h_readiness_and_missed_opportunity_audit_v1",
+  "created_at_utc": "2026-08-17T19:11:48.262973Z",
+  "hypothesis_id": "V53_FIRST_14H_SELECTIVITY_VS_MISSED_OPPORTUNITY_V1",
+  "state": "live_evidence_pending_no_change_recommended",
+  "execution_authority": "none",
+  "report_only": true,
+  "automatic_live_change": false,
+  "runtime_strategy_changed": false,
+  "recommendation": "Keep v53 unchanged while waiting for the first attributable eligible lifecycle. Current bounded evidence favors correct selectivity over a hidden entry failure and does not support relaxing any trigger.",
+  "scope": {
+    "run_id": "bidirectional-live-1786942233732",
+    "profile_id": "multi_asset_growth_first_5000_hype_freshness_repair_v53",
+    "profile_fingerprint": "f6378e473088b962724176f1b4aaf0857d4e2a6c3bf0103c2d1794d6bfd46a82",
+    "run_fingerprint": "e11b54a50622b2b4bd01c827b7ac2fc3ace13c85fb6206b8e0e91ce89d850379",
+    "first_observed_at_utc": "2026-08-17T04:53:14.509964Z",
+    "last_observed_at_utc": "2026-08-17T19:11:47.674987Z",
+    "duration_seconds": 51513.165023,
+    "poll_cycles": 3434,
+    "symbols": [
+      "BTC",
+      "HYPE"
+    ],
+    "routes": [
+      "hulk_expansion_short_robust_v3|BTC",
+      "hype_breakout_compression_alignment_bidirectional_v2|HYPE",
+      "liquidity_sweep_long_1h_stop60_target60_v2|BTC"
+    ]
+  },
+  "source_identity": {
+    "config": {
+      "path": "configs/multi_asset_growth_first_5000_hype_freshness_repair_v53.toml",
+      "bytes": 2038,
+      "sha256": "d1f6a4e6eb77ba9d8ad1069e703e54611feeaacec6242ac0000eb6f0f0ee4f2b"
+    },
+    "cohort_prefix": {
+      "path": "data/live/bidirectional_cohort/decisions.jsonl",
+      "selected_bytes": 35105998,
+      "sha256": "f89d22b60d700914244c7d71db05c72b5b2b01cc55035db5e9b07675b6946a1e",
+      "source_sequence_start": 209606,
+      "source_sequence_end": 225060,
+      "dropped_tail_bytes": 0
+    },
+    "btc_prefix": {
+      "path": "data/live/bidirectional_cohort/btc.jsonl",
+      "selected_bytes": 19762955,
+      "sha256": "423d01cb098e3c99a18d7096fe445d6c5cabe00554b4960aa843289ec6423f29",
+      "source_sequence_start": 208722,
+      "source_sequence_end": 222464,
+      "dropped_tail_bytes": 0
+    },
+    "hype_prefix": {
+      "path": "data/live/bidirectional_cohort/hype.jsonl",
+      "selected_bytes": 17811145,
+      "sha256": "d803c6dcdab1eb4dff3f00af780c07a2a4896804323c058aa478fee16679e7ab",
+      "source_sequence_start": 208720,
+      "source_sequence_end": 222462,
+      "dropped_tail_bytes": 0
+    }
+  },
+  "runtime_health": {
+    "state": "running_consistent",
+    "backend_process_health": "healthy",
+    "faulted_assets": [],
+    "asset_states": {
+      "BTC": "FLAT",
+      "HYPE": "FLAT"
+    },
+    "eligible_evaluations": 0,
+    "entry_actions": 0,
+    "fills": 0,
+    "closed_trades": 0,
+    "maximum_open_positions": 0,
+    "maximum_margin_used_usd": 0.0,
+    "equity_change_usd": 0.0,
+    "entry_timing_breaches": 0
+  },
+  "friction_contract": {
+    "estimated_round_trip_friction_bps": 13.0,
+    "robust_gross_move_bps": 26.0,
+    "interpretation": "Counterfactual closes below zero after 13 bps are not evidence that an omitted entry would have been profitable."
+  },
+  "route_findings": {
+    "hulk_expansion_short_robust_v3|BTC": {
+      "independent_evaluations": 29,
+      "eligible_evaluations": 0,
+      "one_blocker_near_misses": 0,
+      "latest_readiness_fraction": 0.0,
+      "maximum_readiness_fraction": 0.5,
+      "mean_nonentry_close_after_friction_bps": {
+        "5m": -12.638272772823719,
+        "15m": -13.400439499683912,
+        "30m": -17.296238739663895,
+        "60m": -18.54843180991465
+      },
+      "assessment": "No evidence that the absent expansion trigger suppressed a robust short opportunity in this prefix."
+    },
+    "hype_breakout_compression_alignment_bidirectional_v2|HYPE": {
+      "independent_evaluations": 858,
+      "eligible_evaluations": 0,
+      "latest_readiness_fraction": 0.6,
+      "maximum_readiness_fraction": 0.6,
+      "latest_blocker": "canonical_breakout_onset_absent",
+      "mean_all_nonentry_close_after_friction_bps": {
+        "5m": -12.914076822895847,
+        "15m": -12.510862646523929,
+        "30m": -11.679458008442884,
+        "60m": -9.944037043122064
+      },
+      "one_blocker_independent_outcomes": {
+        "5m": {
+          "resolved": 47,
+          "mean_close_after_friction_bps": -12.147756869531355,
+          "mean_excluding_largest_bps": -13.234565789966782
+        },
+        "15m": {
+          "resolved": 19,
+          "mean_close_after_friction_bps": -10.986602099611915,
+          "mean_excluding_largest_bps": -15.596527682708903
+        },
+        "30m": {
+          "resolved": 12,
+          "mean_close_after_friction_bps": -3.520546455320302,
+          "mean_excluding_largest_bps": -10.994812777359606
+        },
+        "60m": {
+          "resolved": 6,
+          "mean_close_after_friction_bps": 10.006592223279535,
+          "mean_excluding_largest_bps": -0.5543491503875344
+        }
+      },
+      "assessment": "Removing the canonical breakout onset would have admitted many repeated near-misses whose independent short-horizon economics were negative. The only positive mean is six 60-minute paths and becomes negative after removing the largest winner, so it does not justify relaxation."
+    },
+    "liquidity_sweep_long_1h_stop60_target60_v2|BTC": {
+      "independent_evaluations": 15,
+      "eligible_evaluations": 0,
+      "latest_readiness_fraction": 0.75,
+      "maximum_readiness_fraction": 0.75,
+      "latest_blocker": "sweep_below_prior_low_absent",
+      "one_blocker_independent_outcomes": {
+        "5m": {
+          "resolved": 5,
+          "mean_close_after_friction_bps": -20.626173964728533,
+          "mean_excluding_largest_bps": -22.18278433201886
+        },
+        "15m": {
+          "resolved": 4,
+          "mean_close_after_friction_bps": -17.84547140702868,
+          "mean_excluding_largest_bps": -23.022497685917937
+        },
+        "30m": {
+          "resolved": 4,
+          "mean_close_after_friction_bps": -17.353524470779025,
+          "mean_excluding_largest_bps": -26.269939270732134
+        },
+        "60m": {
+          "resolved": 4,
+          "mean_close_after_friction_bps": -10.24560832735698,
+          "mean_excluding_largest_bps": -20.798791628098968
+        }
+      },
+      "assessment": "The missing sweep condition filtered negative counterfactual outcomes across every measured horizon; relaxing it would be contrary to this prefix."
+    }
+  },
+  "analysis": {
+    "supported_hypothesis": "The zero-trade prefix is more consistent with selective triggers avoiding weak opportunities than with a technical entry failure.",
+    "confidence": "medium",
+    "why_not_high": [
+      "The run is only about 14.3 hours and has no eligible events or completed lifecycles.",
+      "Counterfactual close marks are diagnostic and do not reproduce full strategy stop and exit paths.",
+      "Repeated poll evaluations are correlated; only explicitly labeled independent outcomes are used for near-miss conclusions.",
+      "A selective strategy can still be unprofitable when its rare full trigger finally occurs."
+    ]
+  },
+  "alternatives_considered": [
+    {
+      "option": "Relax HYPE canonical onset immediately",
+      "decision": "rejected",
+      "reason": "Short-horizon one-blocker outcomes are negative and the six-path 60-minute mean is largest-winner dependent."
+    },
+    {
+      "option": "Relax BTC sweep-below-prior-low",
+      "decision": "rejected",
+      "reason": "Every measured one-blocker horizon is negative after estimated friction."
+    },
+    {
+      "option": "Assume no trades proves a runtime bug",
+      "decision": "rejected_for_current_prefix",
+      "reason": "All routes evaluate, readiness metrics are populated, data coverage is complete, and no entry-timing or routing breach is observed."
+    }
+  ],
+  "validation_still_required": [
+    "Capture the first eligible intent and reconcile decision, route, submission timestamp, venue acknowledgement, fill, stop, funding, exit reason, fees, slippage, and net PnL.",
+    "Compare that lifecycle against its frozen modeled contract and the no-action baseline.",
+    "Continue causal missed-opportunity measurement; reassess only if omitted paths repeatedly clear realistic costs without largest-winner dependence.",
+    "Do not infer profitability from correct non-entry behavior alone."
+  ],
+  "falsifiers": [
+    "An eligible provider evaluation produces no action or explicit withheld reason.",
+    "A submitted action exceeds its configured decision-age limit or binds the wrong strategy, symbol, side, sizing, stop, or exit contract.",
+    "Repeated independent omitted paths clear realistic costs with stable positive ex-largest economics.",
+    "The first attributable v53 lifecycles materially underperform their frozen assumptions after observed friction."
+  ],
+  "highest_value_next_investigation": "Audit the first exact attributable v53 live lifecycle end to end; no active parameter change is currently evidence-supported.",
+  "confidence": {
+    "runtime_health_and_prefix_identity": "high",
+    "no_current_trigger_relaxation": "medium_high",
+    "future_v53_profitability": "unknown"
+  },
+  "approval_requested": false
+}

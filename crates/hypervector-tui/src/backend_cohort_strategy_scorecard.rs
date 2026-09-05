@@ -7,6 +7,7 @@ use serde::Deserialize;
 use crate::backend_cohort_repeatability::{
     CohortRepeatabilityEvidence, RawRepeatabilityEvidence, project_repeatability,
 };
+use crate::backend_cohort_strategy_evidence::valid_research_confidence;
 use crate::backend_cohort_trade_performance::{
     CohortTradePerformanceSummary, RawTradePerformanceSummary, project_summary, validate_aggregate,
 };
@@ -111,7 +112,7 @@ fn validate_record(key: &str, value: &ObserverProviderScorecardEvidence) -> Resu
     if strategy_id != value.strategy_id
         || symbol != value.symbol
         || labels.iter().any(|label| label.trim().is_empty())
-        || !matches!(value.confidence.as_str(), "high" | "medium" | "low")
+        || !valid_research_confidence(&value.confidence)
         || value.strategy_edge_identifiable
         || value.performance_gate
         || value.execution_effect != "report_only"
@@ -232,7 +233,7 @@ fn validate_directional_record(
     if !matches!(side, "long" | "short")
         || value.side != side
         || labels.iter().any(|label| label.trim().is_empty())
-        || !matches!(value.confidence.as_str(), "high" | "medium" | "low")
+        || !valid_research_confidence(&value.confidence)
         || value.execution_effect != "report_only"
     {
         return Err("observer directional research record is invalid".into());

@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v58-spcx-active-runtime-drift-flat-cutover",
+  "revision_number": 1,
+  "supersedes_revision_id": null,
+  "created_at_utc": "2026-08-21T07:43:58Z",
+  "strategy_id": "hip3_spcx_cash_open_gap_reversal_bidirectional_15m_v1",
+  "symbol": "xyz:SPCX",
+  "status": "candidate",
+  "hypothesis": "A controlled same-profile V58 restart from the corrected current source at a verified flat and order-free boundary will restore the configured SPCX cash-session route without changing strategy, exit, sizing, leverage, risk, or accounting identity.",
+  "decision": "Prepare but do not activate the exact transition-drain and same-profile restart procedure. Require explicit approval, authoritative closure of BRENTOIL and SP500, venue-plus-ledger flat and order-free reconciliation, completed-drain archival, fresh full validation, a newly verified implementation bundle, reuse of V58 accounting epoch r2, an action-free SPCX readiness seed, and accepted post-start telemetry. No current live process, position, order, stop, route, parameter, or risk setting changes under this revision.",
+  "confidence": "medium_high",
+  "falsifier": "Reject or revise the cutover if the current source fails any final test; if drain, venue, ledger, order, profile, epoch, bundle, or process identity fails reconciliation; if startup replays a historical SPCX intent; if SPCX remains unavailable despite complete scheduled evidence; or if any route, side, exit, sizing, leverage, risk, checkpoint, protection, cursor, or TUI invariant differs after restart.",
+  "evidence": [
+    {
+      "path": "v58-spcx-active-runtime-drift-flat-cutover-20260821-v1.json",
+      "role": "root_cause_implementation_drift_and_cutover_proposal",
+      "sha256": "14be3ab4bacebd48e07bba9d106296d5d8a59a459c666609b3a3665c0806992a",
+      "bytes": 13834
+    },
+    {
+      "path": "../runbooks/2026-08-21-v58-spcx-technical-repair-restart.md",
+      "role": "approval_gated_same_profile_restart_contract",
+      "sha256": "b01fecbf3886cb33edf782ff2ca7fea9063ab2b57c2ba57d089952ed5ea7a07b",
+      "bytes": 10298
+    },
+    {
+      "path": "../../tests/test_v58_spcx_technical_repair_restart_runbook.py",
+      "role": "machine_checked_approval_epoch_drain_start_and_acceptance_invariants",
+      "sha256": "9dc43b9c02fffe5eb7536052a85896bede69479e13b5d25de6e856653a741524",
+      "bytes": 2810
+    }
+  ],
+  "metrics": {
+    "focused_spcx_and_restart_tests_passed": 70,
+    "focused_spcx_and_restart_tests_failed": 0,
+    "active_open_positions": 2,
+    "active_runtime_faults": 0,
+    "profile_fingerprint_matches": true,
+    "accounting_epoch_r2_reused": true,
+    "automatic_restart": false,
+    "runtime_strategy_changed": false
+  },
+  "limitations": [
+    "The active BRENTOIL and SP500 lifecycles remain open, so the flat restart boundary does not yet exist.",
+    "The transition drain and corrected cutover still require the operator's exact explicit approval.",
+    "Focused tests do not replace the required fresh full non-network Python, Rust, lint, format, mainnet preflight, bundle, and post-start checks.",
+    "The corrected collector has not yet crossed a genuinely future SPCX cash-open boundary.",
+    "Restoring technical availability does not establish positive SPCX expectancy, cadence, or portfolio contribution."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

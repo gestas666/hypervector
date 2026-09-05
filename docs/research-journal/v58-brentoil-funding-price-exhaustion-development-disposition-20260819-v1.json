@@ -1,0 +1,128 @@
+{
+  "schema_version": 1,
+  "recorded_at_utc": "2026-08-19T03:55:58Z",
+  "hypothesis_id": "V58_BRENTOIL_FUNDING_PRICE_EXHAUSTION_DEVELOPMENT_V1",
+  "symbol": "xyz:BRENTOIL",
+  "status": "terminal_rejected_development_only",
+  "contract": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_live_change": false,
+    "automatic_promotion": false,
+    "runtime_strategy_changed": false,
+    "validation_accessed": false,
+    "holdout_accessed": false
+  },
+  "evidence_chain": {
+    "preregistration": {
+      "path": "v58-brentoil-funding-price-exhaustion-development-preregistration-20260819-v1.json",
+      "sha256": "81c0316bf14ac4d10d5c612f57ded29f44e0918b8d3c1ae0a3659eb181f99e9e"
+    },
+    "superseded_result": {
+      "path": "../../data/logs/research/xyz_brentoil_funding_price_exhaustion_development_20260819_v1.json",
+      "sha256": "e76b926006df78a79b107d34048d94b3d6bdc2495923efc6df2c4fc798c6b529",
+      "reason": "The 1,440-minute horizon was serialized as 1d rather than the preregistered 24h label. Metrics were unaffected."
+    },
+    "authoritative_result": {
+      "path": "../../data/logs/research/xyz_brentoil_funding_price_exhaustion_development_20260819_v2.json",
+      "bytes": 105867,
+      "sha256": "47fbaecccca56f1af906e83af3e9f0af159cc7dbb46e5fcb095e9ad1687f4b18"
+    },
+    "correction_parity": "The v1 and v2 development_result objects are equal after renaming only the v1 1d key to 24h."
+  },
+  "technical_evidence": {
+    "observed_completed_5m_bars": 17051,
+    "expected_bars_inside_bounds": 17076,
+    "explicit_missing_bars": 25,
+    "contiguous_blocks": 26,
+    "gap_policy": "split, reset EMA/clean-history/onset state, and censor any unresolved fixed-horizon path",
+    "raw_signals": 49,
+    "long_signals": 27,
+    "short_signals": 22,
+    "censored_selected_signal_paths": 0,
+    "source_hashes_verified": 7,
+    "generator_files_verified": 454
+  },
+  "primary_non_overlapping_results": {
+    "15m": {
+      "observations": 45,
+      "nominal_net_bps": -146.03950707129593,
+      "stress_net_bps": -797.7772091500628,
+      "stress_excluding_largest_winner_bps": -830.5254755310592,
+      "stress_profit_factor": 0.17401927101018555,
+      "positive_stress_folds": 0
+    },
+    "1h": {
+      "observations": 28,
+      "nominal_net_bps": -259.70585716628557,
+      "stress_net_bps": -665.2315384597405,
+      "stress_excluding_largest_winner_bps": -756.2975927261973,
+      "stress_profit_factor": 0.44606229426466226,
+      "positive_stress_folds": 3
+    },
+    "4h": {
+      "observations": 18,
+      "nominal_net_bps": -186.90538180234748,
+      "stress_net_bps": -447.6004626338542,
+      "stress_excluding_largest_winner_bps": -645.4186309120221,
+      "stress_profit_factor": 0.585457057952,
+      "positive_stress_folds": 2
+    },
+    "8h": {
+      "observations": 17,
+      "nominal_net_bps": 83.35352536995231,
+      "stress_net_bps": -162.85849541535964,
+      "stress_excluding_largest_winner_bps": -623.5926142354674,
+      "stress_profit_factor": 0.8386515682341363,
+      "positive_stress_folds": 3
+    },
+    "24h": {
+      "observations": 12,
+      "nominal_net_bps": -1484.1789963858755,
+      "stress_net_bps": -1657.9757169402133,
+      "stress_excluding_largest_winner_bps": -2268.5457547217457,
+      "stress_profit_factor": 0.297624120579482,
+      "positive_stress_folds": 1
+    }
+  },
+  "directional_selection_warning": {
+    "finding": "Some short-only 1h, 4h, and 8h summaries were positive under stress while the corresponding long sides and pooled frozen mechanism were negative.",
+    "interpretation": "Selecting the short side or a horizon after reading this development window would be post-hoc retuning and is not accepted as evidence for a new route.",
+    "reopen_policy": "Require a materially distinct preregistered mechanism or a new untouched source-complete window; do not relabel this rejected transport as a short-only success."
+  },
+  "assessment": {
+    "disposition": "REJECTED_DEVELOPMENT_ONLY",
+    "reason": "No predeclared horizon had positive stress net, positive stress net after removing its largest winner, stress profit factor above one, and at least three positive chronological folds.",
+    "live_change_supported": false,
+    "v58_topology_change_supported": false,
+    "confidence": "High on technical identity and rejection under the frozen contract; low on generalizing to materially different BRENTOIL mechanisms.",
+    "failure_modes": [
+      "The fixed-horizon screen does not model a deployable stop, target, liquidation path, or order queue.",
+      "The archive is development-only and cannot estimate future expectancy.",
+      "Sparse historical canary slippage may understate future adverse execution."
+    ],
+    "falsifier": "Corrected source identity that changes the frozen outcomes, or a materially distinct preregistered mechanism evaluated on a new untouched source-complete window with positive stress and largest-winner-excluded evidence."
+  },
+  "recommendation": {
+    "1_recommendation": "Keep BRENTOIL as a report-only V58 placeholder and do not add live authority from this mechanism.",
+    "2_why_now": "The frozen transport had adequate signal count but failed all robustness criteria.",
+    "3_evidence_reviewed": "Exact public-trade bars, official funding, frozen fees/depth/slippage, gap resets, fixed horizons, non-overlap, five folds, and largest-winner sensitivity.",
+    "4_observed_problem_or_opportunity": "BRENTOIL remains a desirable diversification lane without a validated source-native entry/exit edge.",
+    "5_applicable_market_regime": "Funding-extreme price extension followed by a completed five-minute reversal.",
+    "6_alternatives_considered": "No action, post-hoc short-only selection, horizon retuning, and continued source-native prospective collection.",
+    "7_proposed_live_change": null,
+    "8_expected_upside": "Prevent a weak cross-asset transfer from consuming capital while preserving BRENTOIL data collection.",
+    "9_main_risks_and_failure_modes": "A genuinely distinct BRENTOIL mechanism may be missed; continued random retuning would create false discovery risk.",
+    "10_validation_completed": "Preregistration, immutable source binding, causal signals, exact funding, gap censorship, non-overlap, folds, stress, and independent arithmetic reconciliation.",
+    "11_validation_still_required": "A new preregistered mechanism and future-only source-complete window before any BRENTOIL route proposal.",
+    "12_success_metrics": "Positive exact-cost stress economics, positive ex-largest result, fold stability, technical completeness, and a deployable lifecycle contract.",
+    "13_failure_or_rollback_triggers": "No rollback is required because no live state changed; reject any attempt to promote the post-hoc short slices.",
+    "14_confidence_level": "High technical confidence; low economic confidence outside this exact rejected hypothesis.",
+    "15_explicit_approval_requested": false
+  },
+  "highest_value_next_investigation": {
+    "action": "Continue the already-running exact source-native V58 lifecycle collection, led by HYPE alignment-v2 and SP500 fresh15-v3, rather than inventing another BRENTOIL variant from the rejected window.",
+    "success_update": "Attributable eligible signals and fully resolved lifecycles under unchanged identities, exact costs, and route-native exits.",
+    "tradeoff": "This is slower than forcing eight live routes, but it preserves the eight-asset evidence topology without converting roster completeness into unsupported capital exposure."
+  }
+}

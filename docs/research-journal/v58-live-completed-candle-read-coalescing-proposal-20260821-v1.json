@@ -1,0 +1,133 @@
+{
+  "schema_version": 1,
+  "mode": "v58_live_completed_candle_read_coalescing_proposal_v1",
+  "created_at_utc": "2026-08-21T03:02:00Z",
+  "contract": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_live_change": false,
+    "runtime_strategy_changed": false,
+    "orders_supported": false,
+    "explicit_human_approval_required": true
+  },
+  "recommendation": "On an explicitly approved and reconciled live restart, wrap the V58 live poller's public candle fetcher with the already-tested CompletedCandleSnapshotCache. Do not change strategy logic, routes, entry thresholds, exits, sizing, leverage, stops, or the 15-second runtime cadence.",
+  "why_now": "The retired observer recorded 10 public-L2 HTTP 429 degraded cycles in 213 polls. After applying completed-minute reuse only to the observer, its successor still recorded 2 public-L2 HTTP 429 cycles in 124 polls. The remaining aggregate request budget includes an unchanged live poller that requests eight completed-candle snapshots every configured 15-second poll even though completed one-minute bars do not change within the minute.",
+  "evidence_reviewed": [
+    {
+      "path": "data/logs/research/v58_observer_retired_http429_final_audit_20260821T0259Z_v1.json",
+      "bytes": 1627851,
+      "sha256": "7da8386dd5c6349a2b13c5a854921350aa0c76ab371856eb774d21f26e58413e",
+      "role": "retired_observer_final_transport_audit"
+    },
+    {
+      "path": "data/logs/research/v58_observer_transport_prefix_20260821T0257Z_v1.json",
+      "bytes": 1404235,
+      "sha256": "56caafff91890a805ef5046462a3a3eb84c36d2d53108a9cd0cb2db3b8f413ff",
+      "role": "successor_observer_transport_prefix"
+    },
+    {
+      "path": "data/logs/research/v58_continuous_improvement_snapshot_20260821T0248Z_v1.json",
+      "bytes": 165603,
+      "sha256": "aa23474a8b7c3485e6e40974f184ae70c43f10a7d33fa524f551b42690ae12c0",
+      "role": "active_live_and_observer_runtime_cadence"
+    },
+    {
+      "path": "src/hypervector/live/completed_candle_snapshot_cache.py",
+      "bytes": 2348,
+      "sha256": "7ea96c089acd6481e2ef7b91f45145a720beb415adf7271c2fccacb89b70a2e6",
+      "role": "tested_completed_minute_cache_implementation"
+    },
+    {
+      "path": "configs/multi_asset_growth_first_5000_eight_asset_incremental_v58.toml",
+      "bytes": 6142,
+      "sha256": "1c1c1656233b074df2ed3adcee8cb8cb2c58f0d191cc9f9ac34799478fca3378",
+      "role": "active_v58_poll_and_asset_contract"
+    }
+  ],
+  "external_primary_source": {
+    "url": "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/rate-limits-and-user-limits",
+    "accessed_at_utc": "2026-08-21T03:01:00Z",
+    "facts_used": [
+      "REST requests share a per-IP aggregate weight limit of 1200 per minute.",
+      "L2 book info requests have weight 2.",
+      "Other documented info requests have base weight 20.",
+      "Candle snapshot responses add weight per 60 returned items.",
+      "WebSockets are recommended for lowest-latency real-time data."
+    ]
+  },
+  "observed_problem_or_opportunity": {
+    "problem": "The shared per-IP REST budget can be exhausted by repeated unchanged completed-candle reads, creating explicit observer gaps and potentially competing with live public-data reads.",
+    "configured_live_candle_calls_per_minute": 32,
+    "observed_live_mean_poll_interval_seconds": 18.517126855329952,
+    "estimated_observed_live_candle_calls_per_minute": 25.921948029525826,
+    "proposed_steady_state_live_candle_calls_per_minute_maximum": 8,
+    "minimum_configured_base_weight_saved_per_minute": 480,
+    "estimated_observed_minimum_base_weight_saved_per_minute": 358.4389605905165,
+    "weight_estimates_exclude_response_item_surcharges_and_other_processes": true
+  },
+  "applicable_market_regime": "all_market_regimes_transport_only",
+  "alternatives_considered": [
+    {
+      "alternative": "do_nothing_and_continue_measurement",
+      "tradeoff": "preserves the exact current process but leaves repeated HTTP 429 evidence gaps and shared-IP contention unresolved"
+    },
+    {
+      "alternative": "throttle_or_cache_L2_snapshots",
+      "tradeoff": "targets a weight-2 request class and can reduce exact-depth freshness while leaving the higher-weight repeated candle reads unchanged"
+    },
+    {
+      "alternative": "replace_L2_REST_with_websocket_subscriptions",
+      "tradeoff": "aligns with the venue's latency guidance but is a larger stateful transport change and does not address candle snapshot weight"
+    },
+    {
+      "alternative": "completed_minute_live_candle_reuse",
+      "tradeoff": "smallest change and preserves completed-bar inputs, but requires a live restart and suppresses same-minute upstream corrections until the next completed-minute boundary"
+    }
+  ],
+  "proposed_live_change": {
+    "file": "scripts/multi_asset_bidirectional_live.py",
+    "change": "Pass CompletedCandleSnapshotCache(fetch_hl_ohlcv_snapshot) to ConfiguredMultiAssetIntentPoller.with_default_collectors.",
+    "activation": "explicitly_approved_reconciled_restart_only",
+    "current_runtime_changed_by_this_proposal": false
+  },
+  "expected_upside": "Reduce redundant high-weight candle REST calls by approximately 69 percent at the observed live cadence and 75 percent at the configured cadence after warmup, increasing shared-IP headroom without changing completed-bar strategy inputs.",
+  "main_risks_and_failure_modes": [
+    "A same-minute upstream correction would not be seen until the next minute.",
+    "A restart creates an initial full-lookback request burst and must preserve adopted-position and owned-stop reconciliation.",
+    "The aggregate IP budget includes unknown external processes, so this change may reduce but not eliminate HTTP 429 responses.",
+    "A cache defect could freeze a response missing the just-completed bar; the implementation currently refuses to cache that condition.",
+    "Any strategy output drift under identical completed bars would falsify behavior preservation."
+  ],
+  "validation_completed": [
+    "Completed-minute reuse, next-minute refresh, defensive copying, and missing-bar retry unit tests pass.",
+    "The cache plus observer and intent-poller focused suite passes 28 tests.",
+    "The successor observer preserved all ten provider-symbol routes with no technical coverage gap in its immutable 124-poll prefix.",
+    "The proposed code path has not been loaded into or restarted on the active live process."
+  ],
+  "validation_still_required": [
+    "Add an exact live-launch construction test before changing the live script.",
+    "Run raw-versus-cached identical-completed-bar parity across all ten provider-symbol routes.",
+    "Perform a reconciled restart preflight that verifies both inherited positions and both reduce-only protective stops if positions remain open.",
+    "Observe at least 500 post-change cycles and report HTTP 429 rate, missing completed bars, provider-output parity, and runtime faults without treating the count as an automatic performance gate."
+  ],
+  "success_metrics": [
+    "No missing just-completed bar is cached.",
+    "No provider evaluation, intent, or withholding decision differs for identical completed-bar inputs.",
+    "Observed candle request frequency is at most one per symbol per completed minute after warmup.",
+    "HTTP 429 degraded-cycle frequency falls materially from the source-bound predecessor and successor baselines.",
+    "Runtime identity, open-position ownership, and protective-stop ownership remain reconciled."
+  ],
+  "failure_or_rollback_triggers": [
+    "Any provider-output parity mismatch.",
+    "Any stale or missing completed bar is reused.",
+    "Any runtime fault, identity mismatch, position mismatch, or protective-stop mismatch after restart.",
+    "No material HTTP 429 reduction after the 500-cycle diagnostic window.",
+    "Rollback requires another explicitly approved reconciled restart; no automatic rollback is authorized."
+  ],
+  "confidence_level": {
+    "request_reduction": "high_deterministic",
+    "strategy_behavior_preservation": "medium_high_unit_validated_not_live_loaded",
+    "rate_limit_resolution": "medium_aggregate_ip_sources_not_fully_instrumented"
+  },
+  "explicit_approval_requested": true
+}

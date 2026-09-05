@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "mode": "v57_exact_route_lifecycle_tracker_preregistration",
+  "hypothesis_id": "v58-sndk-pressure-short-exact-lifecycle-v1",
+  "revision_number": 1,
+  "created_at_utc": "2026-08-20T10:28:50.060225Z",
+  "live_identity": {
+    "run_id": "bidirectional-live-1787166474078",
+    "profile_id": "multi_asset_growth_first_5000_eight_asset_incremental_v58",
+    "profile_fingerprint": "8a04636c9ff60a7eae141381cb540d7c6ceed081097cda7d5e465d48faa5022b",
+    "provider_id": "hip3_breakout_pressure_sndk_gold_brent_fresh15s_bidirectional_v2",
+    "signal_strategy_id": "hip3_breakout_pressure_sndk_gold_brent_fresh15s_bidirectional_v2",
+    "symbol": "xyz:SNDK",
+    "route": "hip3_breakout_pressure_sndk_gold_brent_fresh15s_bidirectional_v2|xyz:SNDK",
+    "required_sides": ["short"]
+  },
+  "prospective_boundary": {
+    "capture_start_utc": "2026-08-20T10:28:50.060225Z",
+    "capture_start_ms": 1787221730060,
+    "baseline_route_evaluations": 62,
+    "baseline_eligible_evaluations": 0,
+    "selection_rule": "Subtract the frozen cumulative readiness baseline and accept only exact attributed decisions at or after capture_start_ms."
+  },
+  "minimum_diagnostic_evidence": {
+    "short": "At least one post-boundary attributable eligible pressure short decision and fully resolved short lifecycle.",
+    "promotion_threshold": false,
+    "performance_gate": false
+  },
+  "implementation_evidence": [
+    {"path": "src/hypervector/research/cohort_route_lifecycle_scope.py", "sha256": "8c290e1877967187e1c659da53786f723947c294e7e4cabc3d76e30a2ddfabfc", "bytes": 3246},
+    {"path": "src/hypervector/research/cohort_route_lifecycle_evidence.py", "sha256": "4b6323fe7f73705658535d0b6e77c75c643b0aef170635620e3988092735ca7b", "bytes": 18779},
+    {"path": "src/hypervector/research/cohort_route_lifecycle_values.py", "sha256": "9edf4dc4098da1a8d3b10a15111e39923099322affcfeddfb4fc7cc8d3520c71", "bytes": 5631},
+    {"path": "scripts/cohort_route_lifecycle_watch.py", "sha256": "f6d7a25b5263a0930482019fb775dde3936bc21d799297970f7c2111a1cb3f93", "bytes": 13369}
+  ],
+  "outputs": {
+    "mutable_status": "data/runtime/research/v58_sndk_pressure_short_lifecycle_latest.json",
+    "immutable_final": "data/logs/research/v58_sndk_pressure_short_first_complete_20260820_v1.json"
+  },
+  "decision": "Collect exact report-only V58 SNDK short lifecycle evidence without changing live behavior.",
+  "contract": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_live_change": false,
+    "automatic_retuning": false,
+    "automatic_promotion": false,
+    "runtime_strategy_changed": false
+  }
+}

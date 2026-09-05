@@ -90,6 +90,23 @@ def test_checkpoint_reports_setup_process_without_fake_outcomes() -> None:
     assert "net_pnl_usd" not in serialized
 
 
+def test_checkpoint_reports_preheartbeat_startup_without_crashing() -> None:
+    """A new observer remains explicitly unpolled before its first heartbeat."""
+    checkpoint = build_observer_checkpoint(
+        _ten_pair_rows()[:2],
+        run_id=_RUN_ID,
+        generated_at=_GENERATED_AT,
+    )
+
+    runtime = checkpoint["audit"]["runtime"]
+    assert runtime["poll_cycles"] == 0
+    assert runtime["successful_poll_cycles"] == 0
+    assert runtime["degraded_poll_cycles"] == 0
+    assert runtime["successful_polls_since_last_degraded"] == 0
+    assert runtime["latest_poll_status"] == "not_observed"
+    assert checkpoint["audit"]["technical"]["complete"] is False
+
+
 def test_checkpoint_marks_a_freshly_republished_stale_source() -> None:
     """Checkpoint liveness cannot mask a stopped observer producer."""
     generated_at = datetime(2026, 8, 1, 12, 35, tzinfo=timezone.utc)

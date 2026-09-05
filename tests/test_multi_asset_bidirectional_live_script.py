@@ -74,6 +74,7 @@ def _backup_result(
     strategy_changed: bool,
     previous_profile_fingerprint: str | None = None,
     previous_run_id: str | None = None,
+    previous_config_path: Path | None = None,
 ) -> object:
     manifest_path = tmp_path / "backup/manifest.json"
     manifest_path.parent.mkdir(parents=True, exist_ok=True)
@@ -81,6 +82,9 @@ def _backup_result(
         "previous_identity": {
             "profile_fingerprint": previous_profile_fingerprint,
             "run_id": previous_run_id,
+            "config_source_path": (
+                str(previous_config_path) if previous_config_path is not None else None
+            ),
         }
     }
     encoded = json.dumps(manifest).encode()
@@ -310,6 +314,70 @@ def test_changed_profile_requires_completed_prior_drain_before_adapter(
     assert adapter_constructed is False
 
 
+def test_changed_profile_requires_exact_approval_before_adapter(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """Completed drain evidence cannot substitute for operator change approval."""
+    live_script = _load_module()
+    previous = live_script.load_multi_asset_live_config(V25, mode="observe")
+    base = live_script.load_multi_asset_live_config(
+        "configs/multi_asset_bidirectional_canary.toml",
+        mode="live",
+        enabled=True,
+        accepts_live_risk=True,
+    )
+    config = replace(
+        base,
+        cohort_ledger=tmp_path / "data/live/bidirectional_cohort/decisions.jsonl",
+    )
+    backup = _backup_result(
+        live_script,
+        tmp_path,
+        strategy_changed=True,
+        previous_profile_fingerprint=previous.profile_fingerprint,
+        previous_run_id="prior-run",
+        previous_config_path=V25,
+    )
+    adapter_constructed = False
+    monkeypatch.setattr(
+        live_script,
+        "discover_cohort_implementation_sources",
+        lambda *_args: {"launcher": SCRIPT},
+    )
+    monkeypatch.setattr(
+        live_script,
+        "create_cohort_prestart_backup",
+        lambda *_args, **_kwargs: backup,
+    )
+    monkeypatch.setattr(live_script, "_announce_backup", lambda _backup: None)
+    monkeypatch.setattr(
+        live_script,
+        "_require_completed_profile_transition",
+        lambda _config, _backup: None,
+    )
+
+    def forbidden_adapter(*_args: object, **_kwargs: object) -> object:
+        nonlocal adapter_constructed
+        adapter_constructed = True
+        raise AssertionError("adapter constructed without exact approval")
+
+    monkeypatch.setattr(live_script, "_create_adapters", forbidden_adapter)
+
+    with pytest.raises(
+        live_script.ProfileChangeApprovalError,
+        match="changed profile requires an exact approval document",
+    ):
+        live_script._run_locked(
+            _args(enabled=True, i_accept_live_risk=True),
+            config,
+            live_script.CredentialPresence(True, True),
+            Mock(),
+        )
+
+    assert adapter_constructed is False
+
+
 def test_changed_profile_requires_fresh_flat_order_free_venue_boundary(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
@@ -384,8 +452,24 @@ def test_changed_profile_requires_fresh_flat_order_free_venue_boundary(
     monkeypatch.setattr(live_script, "_announce_backup", lambda _backup: None)
     monkeypatch.setattr(
         live_script,
+        "require_approved_profile_change",
+        lambda _config, _backup: None,
+    )
+    monkeypatch.setattr(
+        live_script,
         "_create_adapters",
         lambda _config: SimpleNamespace(by_symbol=adapters),
+    )
+    boundary = live_script._verify_profile_transition_venue_boundary
+    monkeypatch.setattr(
+        live_script,
+        "_verify_profile_transition_venue_boundary",
+        lambda current, current_backup, current_adapters: boundary(
+            current,
+            current_backup,
+            current_adapters,
+            previous_config=current,
+        ),
     )
 
     def forbidden_engines(*_args: object, **_kwargs: object) -> object:
@@ -476,8 +560,24 @@ def test_changed_profile_with_completed_drain_and_flat_boundary_reaches_engines(
     monkeypatch.setattr(live_script, "_announce_backup", lambda _backup: None)
     monkeypatch.setattr(
         live_script,
+        "require_approved_profile_change",
+        lambda _config, _backup: None,
+    )
+    monkeypatch.setattr(
+        live_script,
         "_create_adapters",
         lambda _config: SimpleNamespace(by_symbol=adapters),
+    )
+    boundary = live_script._verify_profile_transition_venue_boundary
+    monkeypatch.setattr(
+        live_script,
+        "_verify_profile_transition_venue_boundary",
+        lambda current, current_backup, current_adapters: boundary(
+            current,
+            current_backup,
+            current_adapters,
+            previous_config=current,
+        ),
     )
 
     def stop_at_engines(*_args: object, **_kwargs: object) -> object:

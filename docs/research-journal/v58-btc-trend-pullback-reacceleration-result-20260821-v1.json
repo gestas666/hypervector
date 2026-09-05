@@ -1,0 +1,89 @@
+{
+  "schema_version": "cohort_strategy_result_v1",
+  "hypothesis_id": "V58_BTC_15M_TREND_PULLBACK_REACCELERATION_LONG_V1",
+  "generated_at_utc": "2026-08-21T11:50:36Z",
+  "status": "rejected",
+  "supersedes": [
+    "V58_BTC_SWEEP_PRIMARY_RELAXATION_CAUSAL_REPLAY_V1"
+  ],
+  "authority": {
+    "report_only": true,
+    "execution_authority": "none",
+    "live_configuration_changed": false,
+    "live_process_changed": false,
+    "automatic_promotion": false,
+    "retuning_authorized": false
+  },
+  "problem_restatement": {
+    "observed": "V58's BTC long route remained selective because it requires an hourly downside sweep and reclaim. The frozen challenger tested an asset-specific trend pullback and four-bar reacceleration mechanism without changing the live route.",
+    "tested_correction": "Require completed one-hour EMA21 above EMA55 context, a completed fifteen-minute pullback, and a four-bar reacceleration; arm for eight bars without refresh; enter on the next one-minute bar; use fixed 60-bps stop and target with a twenty-four-hour fallback.",
+    "result": "The challenger generated adequate opportunity but lost after costs in development, validation, and pseudo-holdout, and reduced net PnL while increasing drawdown when competing with the current V58 BTC routes."
+  },
+  "decision": {
+    "accepted_for_next_validation_stage": false,
+    "disposition": "reject_frozen_candidate",
+    "retain_live_control_unchanged": true,
+    "reason": "Every preregistered validation and pseudo-holdout profitability, largest-winner robustness, stress, shared-route incremental-PnL, and drawdown check failed.",
+    "nearby_retuning_allowed": false,
+    "live_change_recommended": false
+  },
+  "chronological_results": {
+    "development": {
+      "days": 184,
+      "nominal_control": {"signals": 10, "trades": 10, "wins": 7, "losses": 3, "net_pnl_usd": 80.02250707401618, "profit_factor": 1.750559880973684, "net_ex_largest_winner_usd": 53.027007074016005, "maximum_drawdown_pct": -1.2150870608203743},
+      "nominal_candidate": {"signals": 85, "trades": 70, "wins": 33, "losses": 37, "net_pnl_usd": -426.3798148671831, "profit_factor": 0.6598530274062022, "net_ex_largest_winner_usd": -453.11586475146873, "maximum_drawdown_pct": -11.708306035333962},
+      "stress_control_net_pnl_usd": 75.54415346281621,
+      "stress_candidate_net_pnl_usd": -647.4479461843339,
+      "shared_current_v58_nominal_incremental_net_pnl_usd": -402.3177885315781,
+      "shared_current_v58_stress_incremental_net_pnl_usd": -634.2645999983142
+    },
+    "validation": {
+      "days": 90,
+      "nominal_control": {"signals": 6, "trades": 6, "wins": 4, "losses": 2, "net_pnl_usd": 36.151535132278696, "profit_factor": 1.5101259253501147, "net_ex_largest_winner_usd": 9.340979141360897, "maximum_drawdown_pct": -1.4381201353493527},
+      "nominal_candidate": {"signals": 48, "trades": 45, "wins": 23, "losses": 22, "net_pnl_usd": -162.78143188799731, "profit_factor": 0.7893828806908856, "net_ex_largest_winner_usd": -189.80401254378233, "maximum_drawdown_pct": -5.966639623380615},
+      "stress_control_net_pnl_usd": 33.14455007959987,
+      "stress_candidate_net_pnl_usd": -281.7657540589644,
+      "shared_current_v58_nominal_incremental_net_pnl_usd": -188.65977405803278,
+      "shared_current_v58_stress_incremental_net_pnl_usd": -308.77744183112736
+    },
+    "pseudo_holdout": {
+      "days": 91,
+      "nominal_control": {"signals": 6, "trades": 6, "wins": 5, "losses": 1, "net_pnl_usd": 99.02302580883861, "profit_factor": 3.7909492312800075, "net_ex_largest_winner_usd": 71.99047032707797, "maximum_drawdown_pct": -0.7781702668409592},
+      "nominal_candidate": {"signals": 36, "trades": 32, "wins": 13, "losses": 19, "net_pnl_usd": -318.834118218565, "profit_factor": 0.5181220833791018, "net_ex_largest_winner_usd": -345.89370237594613, "maximum_drawdown_pct": -8.066505146954697},
+      "stress_control_net_pnl_usd": 33.31191494177892,
+      "stress_candidate_net_pnl_usd": -345.6539761943177,
+      "shared_current_v58_nominal_incremental_net_pnl_usd": -311.17506633444464,
+      "shared_current_v58_stress_incremental_net_pnl_usd": -329.1136580558268
+    }
+  },
+  "interpretation": {
+    "high_confidence": "The exact frozen trend-pullback/reacceleration specification is unsuitable for live promotion: the negative result replicated independently, spans 147 nominal completed trades, persists under stress, and becomes worse in current-route competition.",
+    "medium_confidence": "The entry mechanism, rather than sparse sampling, is the primary failure because signal frequency was adequate and both win/loss balance and payoff after friction were unfavorable across all partitions.",
+    "not_established": "This result does not falsify every BTC continuation mechanism, does not prove future sweep-control profitability, and one-minute bars cannot establish exact mark/BBO ordering, executable depth, queue position, or sub-minute latency."
+  },
+  "failure_modes_and_falsifiers": [
+    "Independent reconstruction changes any trade row, source hash, partition count, or normalized report result.",
+    "The implementation is shown to differ from the preregistered hourly context, fifteen-minute pullback, four-bar reacceleration, eight-bar arm, next-minute entry, 60/60 exits, sizing, fee, funding, or slippage contract.",
+    "Exact mark and executable-depth replay reverses the large negative candidate-versus-control ranking.",
+    "A future test may update the broader BTC-long assessment only if it uses a materially distinct preregistered mechanism rather than nearby tuning of this rejected family."
+  ],
+  "single_highest_value_next_investigation": {
+    "priority": "Preserve the positive but selective sweep control and diagnose why the rejected continuation entries failed by regime and path before preregistering one materially distinct BTC-long mechanism.",
+    "excluded": "Do not relax the sweep route, tune this frozen trend-pullback family, or transfer HT-Breakout from HYPE.",
+    "success_criteria_before_any_live_proposal": "Positive after-cost validation and pseudo-holdout under nominal and stress friction, positive net excluding the largest winner, no worse shared-route drawdown, positive incremental current-V58 BTC net, exact executable-depth feasibility, prospective post-cutoff confirmation, implementation parity, and explicit human approval."
+  },
+  "evidence": {
+    "preregistration": {"path": "docs/research-journal/v58-btc-trend-pullback-reacceleration-preregistration-20260821-v1.json", "sha256": "065287345e970b1b27e5b31d0c15ab0799afd77e7cdb7a3849c88cfbdb8ebebe", "bytes": 12261},
+    "report": {"path": "data/logs/research/bidirectional_cohort/v58_btc_trend_pullback_reacceleration_20260821_v1/report.json", "sha256": "8160a37d818ccaeab5d2ee4700df119a2140e956191591838560ebbe1a8efef8", "bytes": 59789},
+    "trade_sidecar": {"path": "data/logs/research/bidirectional_cohort/v58_btc_trend_pullback_reacceleration_20260821_v1/trades.parquet", "sha256": "f42f7e334d336dcbe1f23e87e10076c243da251a0118e4acd6e209a5f3e47c82", "bytes": 167722, "rows": 1551},
+    "manifest": {"path": "data/logs/research/bidirectional_cohort/v58_btc_trend_pullback_reacceleration_20260821_v1/manifest.json", "sha256": "9bf862abfcdad9841199e14a866faed567993dde5c834638e626f0626d4415fc", "bytes": 344},
+    "previous_result": {"path": "docs/research-journal/v58-btc-sweep-primary-relaxation-causal-replay-result-20260821-v1.json", "sha256": "606eb5af242b6711b8f0ac709d2861fc45578df0dcae65f20a0bcbe3eeced0e2", "bytes": 7262},
+    "generator_aggregate_sha256": "3851bdc48ae2e4aac7a8375d02ba3ac54133c1de198a53e88a6b2e05cc596362",
+    "independent_reproduction": {
+      "report": {"path": "data/logs/research/bidirectional_cohort/v58_btc_trend_pullback_reacceleration_20260821_v2_reproduction/report.json", "sha256": "5061b0df021b88ff5d36b75612ad049f67f554d9aab79751d2ce29bc33a00a23", "bytes": 59789},
+      "trade_sidecar": {"path": "data/logs/research/bidirectional_cohort/v58_btc_trend_pullback_reacceleration_20260821_v2_reproduction/trades.parquet", "sha256": "f42f7e334d336dcbe1f23e87e10076c243da251a0118e4acd6e209a5f3e47c82", "bytes": 167722, "rows": 1551},
+      "manifest": {"path": "data/logs/research/bidirectional_cohort/v58_btc_trend_pullback_reacceleration_20260821_v2_reproduction/manifest.json", "sha256": "06222a8427f78f642649cd4c497efc0a3c8c6c996563713dfda826ef68c7c953", "bytes": 344},
+      "verification": "Trade sidecars are byte-identical; normalized reports match after excluding generated_at_utc."
+    }
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "generated_at_utc": "2026-08-18T05:25:03Z",
+  "hypothesis_id": "v54-hype-native-adverse-15m-context-v1",
+  "status": "being_tested_report_only_not_live_authorized",
+  "problem_or_opportunity": "The original HYPE-native breakout live seed was strongest before unsupported cross-asset transfer, while the later HYPE-native losses were concentrated in a different completed 15-minute context. Determine whether long entries initiated during explicit TREND_DOWN context explain a material part of that deterioration without changing the native signal or exit contract.",
+  "why_now": "The exact 14-trade HYPE lineage shows every original entry occurred in TREND_UP or RANGE, while six of seven later entries occurred in TREND_DOWN. This association is post-observation and profile/time confounded, so it requires one frozen mechanistic comparison before it can influence any proposal.",
+  "evidence_reviewed": [
+    "data/logs/research/bidirectional_cohort/v53_live_prefix_20260817T1227Z_v1.json",
+    "data/logs/research/hype_hype_native_v54_side_authority_hl365d_20260818.json",
+    "docs/research-journal/v54-hype-native-directional-authority-challenger-v1.json"
+  ],
+  "predeclared_experiment": {
+    "market": "HYPE",
+    "source_window": "data/cache/HYPE_1m_365d.parquet",
+    "funding_source": "data/cache/vendor/hyperliquid/HYPE/20250728T000000000000Z_20260728T000000000000Z_funding/funding.parquet",
+    "control": "long entry authority on every native long onset; native short onset remains exit-only",
+    "challenger": "identical control except native long entries with completed context_15m=TREND_DOWN are censored",
+    "unchanged_signals": "native short onsets remain present and may close an open long",
+    "protective_stop_bps": 80.0,
+    "maximum_hold_minutes": 480,
+    "exit_on_opposite_signal": true,
+    "fee_bps_per_side": 4.32,
+    "slippage_bps_per_side": 2.0,
+    "holdout_days": 60,
+    "purge_minutes": 480,
+    "parameter_sweep": false,
+    "automatic_promotion": false
+  },
+  "success_metrics": [
+    "development net return, profit factor, maximum drawdown, trade count, and net excluding largest winner",
+    "chronological development fold results for control and challenger",
+    "already-opened final 60-day descriptive results with no selection authority",
+    "exact count of censored long signals and preservation of short exit signals",
+    "separate long-side economics under identical fees, slippage, funding, stop, and fixed hold"
+  ],
+  "risks_and_failure_modes": [
+    "The hypothesis was selected after inspecting 14 live lifecycles, so apparent improvement can be selection bias.",
+    "Time, profile generation, direction, and regime are confounded in the small live sample.",
+    "Censoring entries changes lifecycle occupancy and therefore later signal availability.",
+    "One-minute bars cannot reproduce private IOC queue state or intrabar mark/stop ordering.",
+    "A positive already-opened block cannot be treated as untouched validation.",
+    "A regime filter may reduce cadence without establishing absolute positive expectancy."
+  ],
+  "validation_plan": [
+    "Write tests before implementation proving only TREND_DOWN long entries are censored.",
+    "Prove native short signals remain in the stream and retain opposite-onset exit authority.",
+    "Run one immutable comparison with no threshold or parameter search.",
+    "Verify output identity, report-only authority, largest-winner sensitivity, and chronological folds.",
+    "Do not change v53, v54 observer authority, sizing, leverage, routes, or exits from this experiment."
+  ],
+  "decision_rules": {
+    "reject": "Challenger does not materially improve development winner-robust economics or makes absolute economics worse.",
+    "defer": "Challenger improves development but remains negative, fold-unstable, or dependent on the largest winner.",
+    "prospective_observer_only": "Challenger is positive and winner-robust in development and consistent in the already-opened descriptive block; this still grants no live authority and must be frozen prospectively.",
+    "live_change": "not permitted by this experiment"
+  },
+  "confidence_before_test": {
+    "cross_asset_transfer_was_harmful": "high",
+    "TREND_DOWN_context_explains_later_HYPE_deterioration": "low_due_to_n14_and_time_profile_confounding",
+    "mechanical_test_is_well_scoped": "high"
+  },
+  "falsifiers": [
+    "A challenger output censors a non-TREND_DOWN long signal or removes a short exit signal.",
+    "Results change without changing the frozen market evidence or declared contract.",
+    "Development improvement disappears after removing the largest winner or is isolated to one fold.",
+    "A compatible prospective sample shows the censored context is profitable after exact costs.",
+    "Any live runtime, strategy, route, risk, leverage, or configuration changes during this report-only test."
+  ],
+  "explicit_approval": {
+    "requested": false,
+    "decision": "not_requested",
+    "scope": "No live strategy, route, asset, parameter, leverage, sizing, risk, or execution authority is granted."
+  }
+}

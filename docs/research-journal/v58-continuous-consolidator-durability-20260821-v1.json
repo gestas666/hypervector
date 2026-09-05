@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v58-continuous-consolidator-durability-20260821",
+  "revision_number": 1,
+  "supersedes_revision_id": null,
+  "created_at_utc": "2026-08-21T09:09:11Z",
+  "strategy_id": "v58_continuous_improvement",
+  "symbol": "PORTFOLIO",
+  "status": "retain",
+  "hypothesis": "The authority-none V58 continuous consolidator can remain available through exact atomic-status refresh races and can retain immutable terminal lifecycle evidence without weakening fail-closed handling for stale open evidence or unclassified logic errors.",
+  "decision": "Retain the exact-message concurrent-refresh retry and resolved-only BRENTOIL freshness exemption, keep the repaired recurring consolidator running, and continue escalating collector-health failures independently. This technical repair has no authority to change live strategy, risk, configuration, or orders.",
+  "confidence": "medium_high",
+  "falsifier": "Reject or revise this repair if an unclassified ValueError is retried, a stale open BRENTOIL lifecycle is accepted, the consolidator stops publishing while all required sources remain fresh, generator identity changes without a process restart, or any published authority/live-change contract differs from none/false.",
+  "evidence": [
+    {
+      "path": "../../data/logs/research/v58_continuous_consolidator_durability_20260821_v1.json",
+      "role": "immutable_incident_diagnosis_and_recurring_runtime_verification",
+      "sha256": "797e8fadec328511843c53fe0d3f1925214a7cfc0e13df76124730817d0ae46b",
+      "bytes": 4314
+    },
+    {
+      "path": "../../src/hypervector/research/v58_continuous_transient.py",
+      "role": "exact_transient_failure_classification",
+      "sha256": "30ea8a5e733cc9323b9393f8217b44fd632760b05a8cf0322753a8cd220d425b",
+      "bytes": 1409
+    },
+    {
+      "path": "../../src/hypervector/research/v58_brentoil_continuous_context.py",
+      "role": "terminal_lifecycle_freshness_contract",
+      "sha256": "c08f948ce87da4788f7194fb6873b55ac403c1063afef1260a5f867138aca39b",
+      "bytes": 10158
+    },
+    {
+      "path": "../../tests/test_v58_continuous_improvement_monitor.py",
+      "role": "retry_and_unclassified_failure_regression_tests",
+      "sha256": "174ae12191077bfa9841291e3ce864cdefeada86c874d380e0f28ee585e90191",
+      "bytes": 10625
+    },
+    {
+      "path": "../../tests/test_v58_brentoil_continuous_context.py",
+      "role": "resolved_and_open_freshness_regression_tests",
+      "sha256": "34da2b961382c4d75bc9b55690aa3b8cdc563617478ddddb24af689987ffd294",
+      "bytes": 6177
+    }
+  ],
+  "metrics": {
+    "red_regression_reproduced": true,
+    "focused_tests_passed": 18,
+    "focused_tests_failed": 0,
+    "ruff_check_passed": true,
+    "ruff_format_check_passed": true,
+    "successful_scheduled_publications": 2,
+    "latest_verified_publication_utc": "2026-08-21T09:07:45.380150+00:00",
+    "published_execution_authorities": [
+      "none"
+    ],
+    "route_watchers_attached": 10,
+    "eligible_routes_without_exact_capture": 0,
+    "brentoil_resolved_lifecycles": 1,
+    "live_change_proposals": 0,
+    "highest_value_next_lifecycle": "xyz:SP500:520755869955",
+    "runtime_strategy_changed": false
+  },
+  "limitations": [
+    "Two recurring publications do not prove indefinite availability; process and freshness telemetry remain required.",
+    "Exact-message classification depends on stable upstream error wording and deliberately does not catch novel failures.",
+    "Resolved terminal evidence remains bound to exact profile, fingerprint, run, route, side, and lifecycle identity but does not describe a later lifecycle under the same run.",
+    "This repair validates research telemetry availability, not strategy profitability."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

@@ -1,0 +1,120 @@
+{
+  "schema_version": "v53_mu_source_transport_parity_v2",
+  "generated_at_utc": "2026-08-17T19:21:35Z",
+  "hypothesis_id": "MU_BREAKOUT_PRESSURE_TRANSPORT_PARITY_FORWARD_V2",
+  "status": "report_only_new_generation_confirmation_required",
+  "scope": {
+    "symbol": "xyz:MU",
+    "provider_id": "hip3_mu_full_l2_breakout_pressure_bidirectional_15m_v1",
+    "profile_id": "mu_full_l2_breakout_pressure_bidirectional_15m_research_v1",
+    "timeframe": "15m"
+  },
+  "contract": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_live_change": false,
+    "automatic_promotion": false,
+    "runtime_strategy_changed": false,
+    "independent_of_failed_v1_window": true,
+    "prior_failure_preserved": true
+  },
+  "prior_window": {
+    "result": {
+      "path": "v53-mu-transport-window-final-result-and-observer-repair-v1.json",
+      "bytes": 6250,
+      "sha256": "6b5cd06f918e74085331dc6e696b150da945365e14e5685fd832d6ad2eaa4f89"
+    },
+    "verdict": "FAIL",
+    "failure_reasons": [
+      "missing_observer_decisions",
+      "unresolved_observer_decisions"
+    ],
+    "interpretation": "The v1 result is immutable and cannot be repaired, replaced, pooled, or relabeled by a later window."
+  },
+  "refreshed_evidence": {
+    "venue_path": {
+      "path": "../../data/logs/research/xyz_mu_prospective_path_audit_20260816T1835Z_v3.json",
+      "bytes": 300787,
+      "sha256": "9221e5f047d5c32d52dff34c67b01a00080029c8b4daeff8edf757dfad6408d2",
+      "completed_bars": 489,
+      "unresolved_bars": 15,
+      "resolved": false
+    },
+    "candle_source": {
+      "path": "../../data/logs/research/xyz_mu_prospective_candle_parity_20260816T1835Z_v2.json",
+      "bytes": 15113,
+      "sha256": "7889cb28be155a13a2872644d7dc02cec1613670535127c62699bcf4ad9b89f3",
+      "overlap_bars": 489,
+      "exact_ohlc_bars": 394,
+      "mismatched_ohlc_bars": 95,
+      "resolved": false
+    },
+    "strategy_signal_source": {
+      "path": "../../data/logs/research/xyz_mu_prospective_signal_parity_20260816T1835Z_v2.json",
+      "bytes": 125504,
+      "sha256": "c9fb0044a9bd295cb6292243e71de000bbfdcd058a32e6488aa20b18ada37e1b",
+      "decision_bars": 457,
+      "entry_events_per_source": 11,
+      "entry_disagreement_bars": 0,
+      "exit_disagreement_bars": 0,
+      "stop_disagreement_bars": 0,
+      "resolved": true
+    },
+    "observer_transport": {
+      "path": "../../data/logs/research/xyz_mu_shadow_observer_decision_parity_20260816T1835Z_v3.json",
+      "bytes": 13679,
+      "sha256": "723658cd720597408bd053e19e8c8a19ee02fc04b3077b9a3e0be5673f4cab2b",
+      "comparison_decisions": 457,
+      "overlapping_decisions": 364,
+      "missing_observer_decisions": 93,
+      "entry_decision_mismatches": 5,
+      "resolved": false
+    }
+  },
+  "observer_generation": {
+    "repair_validation": {
+      "path": "v53-mu-observer-repair-first-prospective-boundary-v1.json",
+      "bytes": 4064,
+      "sha256": "c2fc8dcdf8952c9e369bf422f84e6fa12b85df2ea840f56050005b3aee9fbd3a"
+    },
+    "first_postrepair_boundary": {
+      "decision_time_ms": 1786994100000,
+      "prospective": true,
+      "pressure_fresh": true,
+      "pressure_scan_complete": true,
+      "pressure_state_history_complete": true,
+      "decision_delay_ms": 3533,
+      "pressure_snapshot_count": 159
+    },
+    "decision_semantics_changed": false,
+    "durability_semantics_changed": true,
+    "generator_freeze_required_for_new_window": true
+  },
+  "decision": "Open only a distinctly new future-only fixed window under the repaired observer generation. Keep MU report-only and do not use the prior failed window as supporting evidence.",
+  "technical_success": {
+    "missing_observer_decisions": 0,
+    "unresolved_observer_decisions": 0,
+    "entry_decision_mismatches": 0,
+    "minimum_non_vacuous_entry_events": 1,
+    "identity_and_source_mismatches": 0,
+    "observer_generator_changes": 0
+  },
+  "economic_boundary": {
+    "profitability_claim": false,
+    "live_change_proposal": null,
+    "additional_evidence_required": "At least 20 independent technically resolved lifecycles with both sides represented, exact fees, funding, executable depth, and exits, plus positive stress net after largest-winner removal."
+  },
+  "risks": [
+    "A second technical failure would keep source transport unresolved rather than justify another selected window.",
+    "The historical candle mismatch can remain economically material even if entry decisions match in the new window.",
+    "A transport PASS does not establish edge, frequency, or portfolio value.",
+    "Any frozen observer-generator change during collection invalidates the new window."
+  ],
+  "confidence": {
+    "prior_failure_identity": "high",
+    "postrepair_first_boundary": "high",
+    "new_window_outcome": "unknown",
+    "mu_profitability": "unknown"
+  },
+  "approval_requested": false
+}

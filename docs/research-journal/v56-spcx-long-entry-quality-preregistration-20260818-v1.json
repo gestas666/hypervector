@@ -1,0 +1,112 @@
+{
+  "schema_version": "v56_spcx_long_entry_quality_preregistration_v1",
+  "hypothesis_id": "V56_SPCX_LONG_ENTRY_QUALITY_DIAGNOSIS_20260818_V1",
+  "route": "hip3_spcx_cash_open_gap_reversal_bidirectional_15m_v1|xyz:SPCX|long",
+  "created_at_utc": "2026-08-18T14:35:00Z",
+  "problem_statement": "The first exact V56 SPCX long was technically complete but lost $42.08606 after reaching +50.2548 bps MFE. Preregistered 40, 60, and 80 bps fixed targets all degraded development economics, so the next causal question is entry quality rather than another exit mutation.",
+  "frozen_scope": {
+    "symbol": "xyz:SPCX",
+    "timeframe": "15m",
+    "direction": "long_only",
+    "development_start_utc": "2026-06-08T08:00:00Z",
+    "development_end_utc": "2026-07-13T21:45:00Z",
+    "validation_accessed": false,
+    "holdout_accessed": false,
+    "outcome_based_entry_exclusion": false,
+    "threshold_search": false
+  },
+  "causal_feature_contract": [
+    {
+      "name": "opening_gap_bps",
+      "definition": "10000 * (opening_trade_price / previous_completed_cash_close - 1)",
+      "available_at_decision": true
+    },
+    {
+      "name": "opening_reversal_bps",
+      "definition": "10000 * (completed_opening_bar_close / opening_trade_price - 1)",
+      "available_at_decision": true
+    },
+    {
+      "name": "gap_recovery_fraction",
+      "definition": "(completed_opening_bar_close - opening_trade_price) / (previous_completed_cash_close - opening_trade_price)",
+      "available_at_decision": true
+    },
+    {
+      "name": "decision_spread_bps",
+      "definition": "exact final pre-close L2 spread for the completed opening bar",
+      "available_at_decision": true
+    },
+    {
+      "name": "decision_imbalance_10",
+      "definition": "exact final pre-close top-10 L2 imbalance for the completed opening bar",
+      "available_at_decision": true
+    },
+    {
+      "name": "public_trade_count",
+      "definition": "exact public-trade count in the completed opening bar",
+      "available_at_decision": true
+    },
+    {
+      "name": "signal_volume",
+      "definition": "exact public base-asset volume in the completed opening bar",
+      "available_at_decision": true
+    },
+    {
+      "name": "source_snapshot_count",
+      "definition": "exact L2 snapshot count in the completed opening bar",
+      "available_at_decision": true
+    }
+  ],
+  "analysis_contract": {
+    "primary_output": "one raw causal feature and nominal/stress outcome row per development long",
+    "summary": "descriptive stress win/loss medians and counts only",
+    "technical_evidence": "each lifecycle retains exact unresolved mark-entry and L2 cause flags",
+    "statistical_claim": "none_small_nine_trade_diagnostic",
+    "selection_rule": "no entry filter or parameter is selected in this pass",
+    "challenger_limit_after_review": "at_most_one_compact_preregistered_entry_challenger",
+    "largest_winner_policy": "must remain explicit in any later challenger",
+    "oos_policy": "validation_and_holdout_remain_sealed"
+  },
+  "success_criteria": {
+    "diagnostic_success": "all nine development longs reconcile one-to-one across causal signal features, nominal outcomes, stress outcomes, and technical-path status",
+    "economic_success": false,
+    "promotion_allowed": false
+  },
+  "failure_conditions": [
+    "entry identity mismatch between nominal and stress replay",
+    "feature timestamp later than the completed decision bar",
+    "validation or holdout access",
+    "unreported unresolved technical path",
+    "implicit threshold selection from the nine outcomes",
+    "any live strategy, risk, route, or configuration mutation"
+  ],
+  "authority": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_promotion": false,
+    "live_change": false,
+    "approval_requested": false
+  },
+  "evidence": [
+    {
+      "path": "v56-spcx-cash-open-first-long-resolution-20260818-v1.json",
+      "sha256": "026fc938233943f6364131122a97a6b192c1dfc2ffecce23cafde7c7c6ac5108",
+      "bytes": 9598
+    },
+    {
+      "path": "../../data/logs/research/xyz_spcx_cash_open_long_exit_challenger_development_20260818_v1.json",
+      "sha256": "d307c5ea128dbfafc23533e35db228fe77014fd955e88c3ae38a6c70bfe1d844",
+      "bytes": 474588
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v56_spcx_cash_open_resolved_20260818T1420Z.json",
+      "sha256": "b5b151c78f246c322d9f561495bb423ab1fd90eaee827df37093aec467df01d5",
+      "bytes": 6819140
+    },
+    {
+      "path": "../../data/logs/research/xyz_spcx_cash_open_gap_reversal_development_20260817_v2.json",
+      "sha256": "613475b27b2884f9b90346cb0c0f175a314e09dbcba4f628b972aba3ebb1c3b8",
+      "bytes": 211473
+    }
+  ]
+}

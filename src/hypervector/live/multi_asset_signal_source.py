@@ -103,6 +103,7 @@ class ProviderEvaluation:
     exit_sides: frozenset[str] = frozenset()
     exit_reason: str | None = None
     backend_non_action_reason: str | None = None
+    target_anchor: float | None = None
 
     def __post_init__(self) -> None:
         """Reject malformed provider identity, direction, and market evidence."""
@@ -134,6 +135,10 @@ class ProviderEvaluation:
             raise ValueError(
                 "backend non-action reason must be non-empty when reported"
             )
+        if self.target_anchor is not None and (
+            not math.isfinite(self.target_anchor) or self.target_anchor <= 0.0
+        ):
+            raise ValueError("provider target_anchor must be positive and finite")
         if self.confidence is not None and (
             not math.isfinite(self.confidence) or not 0.0 <= self.confidence <= 1.0
         ):
@@ -161,6 +166,7 @@ class ProviderEvaluation:
             "exit_sides": sorted(self.exit_sides),
             "exit_reason": self.exit_reason,
             "backend_non_action_reason": self.backend_non_action_reason,
+            "target_anchor": self.target_anchor,
             "readiness": self.readiness.as_payload(),
         }
 
@@ -307,6 +313,14 @@ def range_decision_evaluation(
         entry_context_policy=entry_context_policy,
         context_admitted=context_admitted,
     )
+    exit_sides = frozenset(
+        side
+        for side, exits in (
+            ("long", decision.long_exit),
+            ("short", decision.short_exit),
+        )
+        if exits
+    )
     return ProviderEvaluation(
         strategy_id=_RANGE_STRATEGY,
         symbol=symbol,
@@ -322,6 +336,8 @@ def range_decision_evaluation(
         state_5m=decision.state_5m,
         context_15m=decision.context_15m,
         confidence=decision.confidence,
+        exit_sides=exit_sides,
+        exit_reason="range_onset_signal" if exit_sides else None,
     )
 
 

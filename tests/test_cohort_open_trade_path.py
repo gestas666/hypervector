@@ -44,6 +44,7 @@ def test_open_path_is_directionally_symmetric_and_causal(
     )
 
     assert path["status"] == "observed"
+    assert path["excursion_price_source"] == "completed_1m_candle_high_low"
     assert path["completed_bars"] == 2
     assert path["first_timestamp_ms"] == 120_000
     assert path["last_timestamp_ms"] == 180_000

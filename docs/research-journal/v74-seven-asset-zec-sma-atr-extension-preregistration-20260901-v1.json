@@ -1,0 +1,146 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v74-seven-asset-zec-sma-atr-extension-20260901",
+  "created_at_utc": "2026-09-01T15:33:04Z",
+  "status": "preregistered_before_zec_return_replay",
+  "mode": "report_only",
+  "motivation": {
+    "operator_requirement": "Add ZEC while retaining the crypto roster and keeping only SPCX and SNDK from the non-crypto roster.",
+    "inherited_evidence": "V73 development supported opening unchanged validation for BTC, ETH, and HYPE; SOL remained largest-winner dependent and observe-only.",
+    "testable_extension": "Apply the unchanged completed-4h SMA/ATR lifecycle to ZEC without using ZEC outcomes to select parameters."
+  },
+  "roster_contract": {
+    "required_assets": [
+      "BTC",
+      "ETH",
+      "SOL",
+      "HYPE",
+      "ZEC",
+      "xyz:SPCX",
+      "xyz:SNDK"
+    ],
+    "excluded_assets": [
+      "xyz:GOLD",
+      "xyz:SP500",
+      "xyz:BRENTOIL"
+    ],
+    "asset_removal_authorized": true,
+    "unsupported_route_disposition": "visible_and_fail_closed_from_new_entries"
+  },
+  "inheritance_contract": {
+    "parent_hypothesis_id": "v73-eight-asset-sma-atr-trend-20260901",
+    "parent_preregistration": "docs/research-journal/v73-eight-asset-sma-atr-trend-preregistration-20260901-v1.json",
+    "parameter_changes": 0,
+    "legacy_asset_validation_remains_parent_scoped": true,
+    "removed_assets_are_not_reinterpreted_as_failed_strategy_trials": true
+  },
+  "zec_venue_contract": {
+    "venue": "Hyperliquid mainnet core perpetual",
+    "symbol": "ZEC",
+    "observed_at_utc": "2026-09-01T15:33:04Z",
+    "metadata_source": "public_metaAndAssetCtxs",
+    "observed_max_leverage": 10.0,
+    "observed_size_decimals": 2,
+    "strategy_leverage": 5.0,
+    "startup_requirement": "refresh metadata and fail closed on symbol, precision, or maximum-leverage mismatch",
+    "fee_requirement": "use exact current account perp fees at preflight and retain 4.5 bps per side as the conservative research assumption",
+    "metadata_is_not_execution_authority": true
+  },
+  "candidate_contract": {
+    "strategy_family": "completed_4h_sma_10_30_atr_stop_v1",
+    "signal_timeframe": "4h",
+    "execution_timeframe": "15m",
+    "fast_sma_bars": 10,
+    "slow_sma_bars": 30,
+    "entry": "fresh_fast_slow_cross_on_completed_4h_close_then_next_15m_open",
+    "sides": ["long", "short"],
+    "atr_period_bars": 14,
+    "atr_method": "sma_seeded_wilder_rma_on_raw_4h_true_range",
+    "stop": "signal_close_plus_or_minus_2_atr",
+    "minimum_stop_bps": 20.0,
+    "maximum_stop_bps": null,
+    "target": null,
+    "exit": "opposite_completed_4h_cross_then_next_15m_open",
+    "reverse_on_opposite": true,
+    "maximum_hold_seconds": 2592000,
+    "same_bar_risk_order": "liquidation_then_stop",
+    "gap_policy": "expire_pending_entry_or_censor_open_lifecycle_at_first_observed_quote"
+  },
+  "risk_contract": {
+    "initial_equity_usd": 5000.0,
+    "risk_fraction_per_position": 0.0075,
+    "isolated_leverage": 5.0,
+    "maximum_margin_fraction_per_position": 0.20,
+    "maximum_notional_usd_per_position": 5000.0,
+    "maximum_theoretical_seven_position_stop_loss_pct_equity_before_gap_and_costs": 5.25,
+    "entry_requires_stop_inside_liquidation_boundary": true
+  },
+  "friction_profiles": {
+    "nominal": {
+      "fee_bps_per_side": 4.5,
+      "slippage_bps_per_side": 2.5,
+      "round_trip_bps": 14.0
+    },
+    "stress": {
+      "fee_bps_per_side": 4.5,
+      "slippage_bps_per_side": 5.5,
+      "round_trip_bps": 20.0
+    }
+  },
+  "chronology": {
+    "zec_source_window": [
+      "2026-01-28T00:00:00Z",
+      "2026-09-01T12:00:00Z"
+    ],
+    "zec_development": [
+      "2026-02-02T00:00:00Z",
+      "2026-05-01T00:00:00Z"
+    ],
+    "zec_validation": [
+      "2026-05-01T00:00:00Z",
+      "2026-07-01T00:00:00Z"
+    ],
+    "zec_pseudo_holdout": [
+      "2026-07-01T00:00:00Z",
+      "2026-09-01T00:00:00Z"
+    ],
+    "warmup": "source window begins before the scored development interval for completed-4h SMA30 and ATR14 state",
+    "opening_rule": "Open ZEC development first; do not retune. Open validation once only if development clears nominal and stress support including largest-winner sensitivity."
+  },
+  "data_contract": {
+    "candles": "public Hyperliquid mainnet candleSnapshot 15m rows stored with immutable identity",
+    "funding": "official public Hyperliquid fundingHistory rows",
+    "required_candle_source": "hl",
+    "required_funding_source": "hl_funding_history",
+    "required_continuity": "explicitly measure missing 15m intervals; gaps reset completed-bar indicators",
+    "no_fabricated_funding": true,
+    "no_cross_venue_price_substitution": true
+  },
+  "trial_accounting": {
+    "sma_atr_family_trial_number": 2,
+    "parameter_variants": 1,
+    "new_asset_transfer_trials": 1,
+    "asset_slices_are_diagnostics_not_parameter_selection": true
+  },
+  "support_criteria": [
+    "ZEC nominal and stress net PnL and profit factor exceed zero and one in the opened partition",
+    "ZEC nominal and stress net remain positive after the largest winner is removed",
+    "no liquidation or insolvency",
+    "no-lookahead, append-invariance, gap reset, fixed-risk sizing, and timing tests pass",
+    "all seven assets are visible and excluded assets are absent on every TUI asset surface",
+    "unsupported asset-sides have no automatic entry authority",
+    "shared-account concurrency simulation passes before any live authority"
+  ],
+  "falsifiers": [
+    "ZEC development nominal or stress expectancy is non-positive",
+    "ZEC development depends on the largest winner",
+    "the requested mainnet history cannot support the frozen chronology",
+    "a future bar changes a prior entry, stop, size, or exit",
+    "any completed-4h decision is executed before its close",
+    "parameters are changed after viewing ZEC returns"
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "automatic_live_change": false,
+  "runtime_strategy_changed": false
+}

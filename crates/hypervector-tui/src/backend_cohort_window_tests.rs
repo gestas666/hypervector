@@ -251,3 +251,35 @@ fn cohort_window_retains_bounded_independent_regime_history() {
     assert_eq!(evaluations[0]["decision_time_ms"], 61);
     assert_eq!(evaluations[239]["decision_time_ms"], 300);
 }
+
+#[test]
+fn funding_windows_do_not_disable_bounded_cohort_projection() {
+    let mut rows = vec![identity()];
+    for index in 0..130 {
+        rows.push(row(
+            index * 2 + 2,
+            "funding_reconciliation_window",
+            json!({"window_index": index}),
+        ));
+        rows.push(row(
+            index * 2 + 3,
+            "cohort_snapshot",
+            json!({"snapshot_index": index}),
+        ));
+    }
+
+    let compact = compact_latest_cohort(&rows.join("\n"))
+        .expect("valid cohort")
+        .expect("funding evidence must not force an unbounded fallback");
+    let values = compact
+        .lines()
+        .map(|line| serde_json::from_str::<Value>(line).expect("compacted row"))
+        .collect::<Vec<_>>();
+
+    assert_eq!(values.len(), 91);
+    assert!(
+        values
+            .iter()
+            .all(|value| value["event_type"] != "funding_reconciliation_window")
+    );
+}

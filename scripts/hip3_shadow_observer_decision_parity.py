@@ -20,6 +20,18 @@ Record = Mapping[str, object]
 
 _GENERATOR_FILES = (
     Path(__file__).resolve(),
+    Path("src/hypervector/data/hl.py").resolve(),
+    Path("src/hypervector/live/hip3_breakout_shadow_observer.py").resolve(),
+    Path("src/hypervector/live/hip3_breakout_shadow_specs.py").resolve(),
+    Path("src/hypervector/live/hip3_fresh15_condition_telemetry.py").resolve(),
+    Path("src/hypervector/live/hip3_provider_inputs.py").resolve(),
+    Path("src/hypervector/live/hip3_shadow_candle_storage.py").resolve(),
+    Path("src/hypervector/live/mu_hip3_breakout_shadow.py").resolve(),
+    Path("src/hypervector/live/mu_hip3_breakout_shadow_runner.py").resolve(),
+    Path("src/hypervector/live/mu_hip3_preclose_pressure.py").resolve(),
+    Path("src/hypervector/live/mu_hip3_shadow_journal.py").resolve(),
+    Path("src/hypervector/paper/book.py").resolve(),
+    Path("src/hypervector/research/hip3_breakout_pressure_signals.py").resolve(),
     Path("src/hypervector/research/hip3_shadow_observer_decision_parity.py").resolve(),
     Path("src/hypervector/research/live_ledger_snapshot.py").resolve(),
     Path("src/hypervector/data/oxa_storage.py").resolve(),
@@ -32,6 +44,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--signal-parity", type=Path, required=True)
     parser.add_argument("--observer-journal", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--start-ms", type=int)
+    parser.add_argument("--end-ms", type=int)
     return parser
 
 
@@ -51,6 +65,8 @@ def run_report(args: argparse.Namespace) -> dict[str, object]:
         report = build_hip3_shadow_observer_decision_parity(
             signal_parity_report=signal,
             observer_rows=rows,
+            comparison_start_ms=args.start_ms,
+            comparison_end_ms=args.end_ms,
         )
     _require_unchanged(paths["signal_parity"], signal_evidence)
     report.update(

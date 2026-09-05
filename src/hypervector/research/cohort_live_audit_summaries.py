@@ -226,8 +226,11 @@ def _provider_summary(evaluations: Sequence[Record]) -> dict[str, object]:
         "latest_indicators": text_list(
             latest_readiness.get("indicators"), "readiness indicators"
         ),
+        "readiness_sampling_basis": "backend_poll_evaluations",
         "blockers": dict(sorted(blockers.items())),
         "blocker_combinations": _blocker_combinations(evaluations),
+        "blocker_episode_basis": "maximal_consecutive_identical_blocker_sets",
+        "blocker_episode_combinations": _blocker_episode_combinations(evaluations),
         "reasons": dict(sorted(reasons.items())),
     }
 
@@ -244,6 +247,30 @@ def _blocker_combinations(evaluations: Sequence[Record]) -> list[dict[str, objec
     return [
         {"blockers": list(blockers), "evaluations": count}
         for blockers, count in sorted(counts.items())
+    ]
+
+
+def _blocker_episode_combinations(
+    evaluations: Sequence[Record],
+) -> list[dict[str, object]]:
+    """Count maximal consecutive blocker states without hiding raw poll rows."""
+    rows: Counter[tuple[str, ...]] = Counter()
+    episodes: Counter[tuple[str, ...]] = Counter()
+    prior: tuple[str, ...] | None = None
+    for evaluation in evaluations:
+        readiness = mapping(evaluation.get("readiness"), "readiness")
+        blockers = tuple(sorted(text_list(readiness.get("blockers"), "blockers")))
+        rows[blockers] += 1
+        if blockers != prior:
+            episodes[blockers] += 1
+        prior = blockers
+    return [
+        {
+            "blockers": list(blockers),
+            "episodes": episodes[blockers],
+            "evaluations": count,
+        }
+        for blockers, count in sorted(rows.items())
     ]
 
 

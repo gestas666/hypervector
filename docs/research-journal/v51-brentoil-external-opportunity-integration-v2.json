@@ -1,0 +1,131 @@
+{
+  "schema_version": "v51_brentoil_external_opportunity_integration_v2",
+  "hypothesis_id": "v51-external:xyz:BRENTOIL:oil-shock-reversion-5m-v1",
+  "revision": 2,
+  "supersedes_revision": 1,
+  "generated_at_utc": "2026-08-16T11:13:34.065391+00:00",
+  "mode": "report_only_research_journal",
+  "status": "being_tested",
+  "contract": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_live_change": false,
+    "automatic_promotion": false,
+    "runtime_strategy_changed": false
+  },
+  "supersedes": {
+    "path": "docs/research-journal/v51-brentoil-external-opportunity-integration-v1.json",
+    "sha256": "89113b91face79ed7bc76ac8b1d23f0877f449f34557f42b414696677496be67",
+    "bytes": 8603
+  },
+  "operational_update": {
+    "observed_gap": "The mark and websocket recorders remained healthy, but the BRENTOIL decision observer was absent and its bounded status was stale.",
+    "action": "Restored the isolated unsigned observer without changing any live route, position, order, strategy, configuration, or execution authority.",
+    "verification": {
+      "focused_tests_passed": 20,
+      "ruff_status": "passed",
+      "decision_rows": 179,
+      "unique_event_ids": 179,
+      "duplicate_event_ids": 0,
+      "cursor_decision_time_ms": 1786878600000,
+      "first_restored_poll_decisions": 1,
+      "second_restored_poll_decisions": 0,
+      "execution_authority": "none",
+      "orders_supported": false,
+      "signing_client_constructed": false
+    },
+    "failure_mode": "Process liveness alone does not establish strategy edge. A stale status, duplicate event identity, signer/order surface, or authority change invalidates this restoration."
+  },
+  "hypothesis": "A distinct five-minute oil-shock reversion mechanism may convert BRENTOIL's top-ten liquidity into repeatable after-cost returns even though the retired Swing and breakout-pressure mechanisms failed.",
+  "current_evidence": {
+    "liquidity_rank": 6,
+    "day_notional_volume_usd": 49403551.84429,
+    "spread_bps": 0.116337,
+    "historical_live_canary_closed": 3,
+    "historical_live_canary_net_pnl_usd": 1.821755,
+    "historical_live_canary_profit_factor": 3.648046,
+    "historical_live_canary_net_excluding_largest_winner_usd": -0.232469,
+    "development_nominal_trades": 44,
+    "development_nominal_net_pnl_usd": 4.238715,
+    "development_stress_trades": 42,
+    "development_stress_net_pnl_usd": -1.068481,
+    "development_stress_profit_factor": 0.837156,
+    "prospective_decisions": 179,
+    "prospective_eligible_decisions": 0,
+    "source_parity_overlap_bars": 25,
+    "source_parity_mismatched_bars": 6,
+    "validation_accessed": false,
+    "holdout_accessed": false
+  },
+  "single_highest_value_next_investigation": "Continue the frozen observer until the first eligible source-native oil-shock onset can be followed through a fully resolved mark/L2 lifecycle; do not loosen the threshold merely to increase frequency.",
+  "change_proposal": {
+    "Recommendation": "Continue prospective BRENTOIL oil-shock collection and keep both retired BRENTOIL routes disabled.",
+    "Why now": "The missing observer created an avoidable evidence gap while v51 drains, and restoring it preserves forward learning without exposing capital.",
+    "Evidence reviewed": "Exact live-canary reconciliation, top-ten liquidity evidence, development nominal/stress replay, source-parity audit, restored prospective status, and duplicate-identity reconciliation.",
+    "Observed problem or opportunity": "BRENTOIL is liquid and executable, but the new mechanism has produced zero eligible entries and remains technically unresolved.",
+    "Applicable market regime": "Large five-minute oil-return shocks followed by the frozen reversion condition; ordinary quiet windows remain non-actions.",
+    "Alternatives considered": [
+      "Restore retired Swing or breakout pressure: rejected because compatible evidence is negative or largest-winner dependent.",
+      "Lower the shock threshold: rejected because it would be post-observation tuning and zero-onset windows are historically ordinary.",
+      "Drop BRENTOIL: deferred because liquidity and execution feasibility remain useful and observation has no capital exposure."
+    ],
+    "Proposed live change": "none",
+    "Expected upside": "Acquire mechanism-specific forward evidence for a liquid non-crypto lane without risking the live portfolio.",
+    "Main risks and failure modes": [
+      "rare onsets delay learning",
+      "source mismatch changes signal identity",
+      "mark or L2 gaps censor lifecycle risk",
+      "historical live results belong to different retired mechanisms",
+      "stress expectancy remains negative"
+    ],
+    "Validation completed": [
+      "observer runner and external pipeline tests",
+      "unsigned report-only runtime verification",
+      "cursor advancement and idempotent second poll",
+      "179 of 179 unique decision event identities",
+      "current liquidity and historical execution reconciliation"
+    ],
+    "Validation still required": [
+      "at least one resolved prospective lifecycle per configured direction",
+      "archive trade-OHLC versus live candleSnapshot parity",
+      "complete mark and executable-L2 lifecycle paths",
+      "predeclared validation and untouched holdout",
+      "positive stress result excluding the largest winner"
+    ],
+    "Success metrics": [
+      "zero duplicate or retroactively eligible decisions",
+      "fully resolved long and short prospective lifecycles",
+      "stress profit factor above one",
+      "positive stress net after removing the largest winner",
+      "realized friction within the declared live-derived envelope"
+    ],
+    "Failure / rollback triggers": [
+      "observer status becomes stale or identity changes",
+      "an eligible threshold crossing is missing",
+      "any signer, order, or execution-authority surface appears",
+      "resolved validation remains stress-negative or outlier-dependent",
+      "venue liquidity becomes incompatible with intended sizing"
+    ],
+    "Confidence level": "High confidence in restored report-only collection and exact current arithmetic; low confidence that the new mechanism has a repeatable edge.",
+    "Explicit approval requested": false
+  },
+  "evidence": {
+    "external_opportunity_snapshot": {
+      "path": "data/logs/research/bidirectional_cohort/brentoil_external_opportunity_20260816T1113Z_v1.json",
+      "sha256": "5195d46cb05e14dfd651c0ef07f19b8117f8697958076067b23ca7f9aeb0f78a",
+      "bytes": 4157
+    },
+    "decision_prefix": {
+      "path": "data/live/research/brentoil_oil_shock_shadow/decisions.jsonl",
+      "rows": 179,
+      "prefix_bytes": 181788,
+      "prefix_sha256": "486b3e23877bb9aebfda61a52dae0c6858e77a03171018dc17951fafdebe4cc6"
+    }
+  },
+  "falsifiers": [
+    "A replay of the exact prefix finds an eligible onset that the journal labeled non-action.",
+    "The first 181788 bytes no longer match the recorded decision-prefix hash.",
+    "Resolved forward/OOS evidence changes the stress or side-robustness conclusion.",
+    "A later representative liquidity audit moves BRENTOIL outside the required executable tier."
+  ]
+}

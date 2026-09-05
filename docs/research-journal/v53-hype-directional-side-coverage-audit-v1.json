@@ -1,0 +1,188 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "V53_HYPE_DIRECTIONAL_SIDE_COVERAGE_AUDIT_V1",
+  "revision_number": 1,
+  "created_at_utc": "2026-08-17T20:31:00Z",
+  "status": "accepted_diagnosis_no_live_change",
+  "scope": "exact_v53_hype_bidirectional_side_generation_and_missed_entry_audit",
+  "question": "Does the all-long HYPE evaluation window prove that the configured short side is broken or that an eligible short entry was missed?",
+  "live_identity": {
+    "run_id": "bidirectional-live-1786942233732",
+    "profile_id": "multi_asset_growth_first_5000_hype_freshness_repair_v53",
+    "profile_fingerprint": "f6378e473088b962724176f1b4aaf0857d4e2a6c3bf0103c2d1794d6bfd46a82",
+    "route": "hype_breakout_compression_alignment_bidirectional_v2|HYPE",
+    "configured_sides": [
+      "long",
+      "short"
+    ]
+  },
+  "observation_window": {
+    "start_utc": "2026-08-17T04:53:14.509964Z",
+    "end_utc": "2026-08-17T20:28:33.890668Z",
+    "audit_complete": true,
+    "technical_gaps": []
+  },
+  "source_evaluations_by_side": {
+    "long": 935,
+    "short": 0
+  },
+  "breakout_side_observations": {
+    "long": 5,
+    "short": 5,
+    "unavailable": 925
+  },
+  "breakout_side_relation_observations": {
+    "aligned": 5,
+    "opposed": 5,
+    "unavailable": 925
+  },
+  "fresh_breakout_onsets": 2,
+  "missed_eligible_entries": 0,
+  "fresh_onset_details": [
+    {
+      "decision_time_utc": "2026-08-17T07:25:00Z",
+      "source_side": "long",
+      "breakout_side": "long",
+      "side_relation": "aligned",
+      "eligible": false,
+      "reason": "authoritative_5m_compression_absent",
+      "blockers": [
+        "authoritative_5m_compression_absent",
+        "directional_pullback_absent"
+      ],
+      "authoritative_5m_bbwp_percentile": 88.75,
+      "maximum_5m_bbwp_percentile": 50.0,
+      "prior_bbwp_min_15m": 38.75,
+      "maximum_prior_bbwp_min_15m": 40.0,
+      "directional_bar_body_bps": 10.270051855343354,
+      "maximum_directional_body_bps": 0.0
+    },
+    {
+      "decision_time_utc": "2026-08-17T20:20:00Z",
+      "source_side": "long",
+      "breakout_side": "short",
+      "side_relation": "opposed",
+      "eligible": false,
+      "reason": "authoritative_5m_compression_absent",
+      "blockers": [
+        "authoritative_5m_compression_absent",
+        "prior_compression_absent"
+      ],
+      "authoritative_5m_bbwp_percentile": 65.41666666666667,
+      "maximum_5m_bbwp_percentile": 50.0,
+      "prior_bbwp_min_15m": 96.66666666666667,
+      "maximum_prior_bbwp_min_15m": 40.0,
+      "directional_bar_body_bps": -16.07029901013801,
+      "maximum_directional_body_bps": 0.0
+    }
+  ],
+  "diagnosis": {
+    "accepted": [
+      "The HYPE source side remained long for every audited outcome row because its frozen slower structural direction remained long.",
+      "Short breakout-side evidence reached the route: five rows were labeled short and opposed rather than missing or rewritten.",
+      "The production collector and focused tests retain executable long and short paths.",
+      "Neither fresh onset met the independent compression and pullback contract, so changing side alignment alone would not have created an eligible entry."
+    ],
+    "not_established": [
+      "long-run HYPE short frequency",
+      "prospective v53 profitability",
+      "economic value of removing or accelerating the slower structural side"
+    ],
+    "contradictory_evidence": [
+      "The first opposed short onset had a positive five-minute directional counterfactual, but it was one event, its longer horizons were censored at the audit cutoff, and it failed two independent entry conditions."
+    ]
+  },
+  "risk_and_failure_modes": [
+    "A persistent slow structural direction can materially reduce opposite-side opportunity density.",
+    "One favorable short counterfactual can create false confidence if treated as an executable missed trade.",
+    "A future structural short row that remains projected as long would contradict this diagnosis and indicate an implementation defect.",
+    "The current window is shorter than one day and cannot estimate stable side frequency."
+  ],
+  "validation": {
+    "completed": [
+      "immutable same-run live audit with complete coverage and zero technical gaps",
+      "source-side, breakout-side, and alignment-relation categorical reconciliation",
+      "exact inspection of both fresh onset conditions and thresholds",
+      "production call-chain inspection from completed decisions through compression and alignment collectors",
+      "focused synthetic tests covering both long and short execution paths"
+    ],
+    "still_required": [
+      "observe the first live structural short evaluation",
+      "capture the first attributable eligible HYPE event and resolved lifecycle for each side",
+      "compare exact realized fees, slippage, funding, stop behavior, and exit behavior with the frozen contract"
+    ]
+  },
+  "recommendation": {
+    "recommendation": "Keep the v53 HYPE route unchanged and continue exact side and lifecycle collection.",
+    "why_now": "The apparent all-long anomaly is explained by a persistent slower structural direction, while short breakout evidence demonstrably reached the alignment layer.",
+    "evidence_reviewed": "Exact immutable v53 audit, both fresh onset rows, live configuration, production collector chain, and focused bidirectional provider tests.",
+    "observed_problem_or_opportunity": "The current source produces sparse opposite-side opportunities, but there is no evidence of a disabled short path or a missed eligible short entry.",
+    "applicable_market_regime": "Current mixed 5-minute regimes under a still-long slower structural direction.",
+    "alternatives_considered": "Force breakout side authority, remove alignment, accelerate the structural side, loosen compression filters, or make no live change.",
+    "proposed_live_change": null,
+    "expected_upside": "Preserves the validated alignment contract while avoiding a side-selection change based on one noneligible counterfactual.",
+    "main_risks_and_failure_modes": "Opportunity scarcity can persist; the route can still lose when it finally trades; a future true structural short mismatch would invalidate this diagnosis.",
+    "validation_completed": "Current-window side generation, breakout-side transport, onset eligibility, code path, and both-side unit behavior were reconciled.",
+    "validation_still_required": "A true structural short live row and resolved long and short lifecycles under exact v53 execution.",
+    "success_metrics": "Both sides remain technically routable, every onset is fully attributed, eligible entries receive action or withholding provenance, and resolved lifecycles reconcile costs and exits.",
+    "failure_or_rollback_triggers": "A structural short source row projected as long, a short eligible intent suppressed without explicit provenance, incomplete telemetry, or repeated negative exact lifecycles requires immediate re-audit.",
+    "confidence_level": "high on no current side-generation defect or missed eligible entry; low on future side frequency and profitability",
+    "explicit_approval_requested": false
+  },
+  "single_highest_value_next_investigation": "Capture the first exact eligible v53 event and resolved lifecycle while the independent fixed MU-v2 window continues unchanged.",
+  "confidence": {
+    "current_window_source_and_arithmetic": "high",
+    "no_current_side_generation_bug": "high",
+    "no_missed_eligible_entry": "high",
+    "future_bidirectional_frequency": "low",
+    "future_profitability": "low_unverified"
+  },
+  "falsifiers": [
+    "A future exact structural_direction=short evaluation is emitted with source side long.",
+    "The focused short-side provider regression fails under the frozen v53 implementation.",
+    "An audited fresh short onset satisfies compression, pullback, and alignment but produces no eligible intent or explicit withholding.",
+    "Any evidence hash, run identity, side count, onset count, or threshold value fails re-verification."
+  ],
+  "live_change_proposed": false,
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false,
+  "evidence": [
+    {
+      "path": "data/logs/research/bidirectional_cohort/v53_hype_side_coverage_20260817T2027Z_v1.json",
+      "role": "immutable_exact_v53_live_audit",
+      "sha256": "cb708490d31de2de21f6022045d9e4c03d4fafc1f2f617e06f47c5e5276036d6",
+      "bytes": 6601605
+    },
+    {
+      "path": "configs/multi_asset_growth_first_5000_hype_freshness_repair_v53.toml",
+      "role": "exact_live_configuration",
+      "sha256": "d1f6a4e6eb77ba9d8ad1069e703e54611feeaacec6242ac0000eb6f0f0ee4f2b",
+      "bytes": 2038
+    },
+    {
+      "path": "src/hypervector/live/hype_breakout_cohort_provider.py",
+      "role": "canonical_bidirectional_onset_source",
+      "sha256": "e6a6736adc511e2f8b5583a447b3abf2b68ae3a8069c8dd0c57f13aa0402cb8b",
+      "bytes": 8639
+    },
+    {
+      "path": "src/hypervector/live/hype_breakout_compression_provider.py",
+      "role": "frozen_compression_and_pullback_filter",
+      "sha256": "a544c804f45dd42543b690c3128fe969971208199942af49c7ebc4d15983b16e",
+      "bytes": 1423
+    },
+    {
+      "path": "src/hypervector/live/hype_compression_alignment_provider.py",
+      "role": "breakout_side_alignment_projection",
+      "sha256": "262f3af23576bc1a52be8b8f4fa34092945ce84c46acba2c0ba36f72ac64a5d8",
+      "bytes": 3901
+    },
+    {
+      "path": "tests/test_hype_compression_breakout_provider.py",
+      "role": "focused_both_side_runtime_regressions",
+      "sha256": "50280404e083b90f4fdbd923ab86a928e8f5c61115abe7caba6dba27ba55f5c1",
+      "bytes": 8296
+    }
+  ]
+}

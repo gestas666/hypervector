@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v58-spcx-cash-session-source-availability",
+  "revision_number": 3,
+  "supersedes_revision_id": "995b53cd7fe80a59a1f0d4fa4cf6005b7102de72f8c5d235ad220cc73882068c",
+  "created_at_utc": "2026-08-21T04:40:00Z",
+  "strategy_id": "hip3_spcx_cash_open_gap_reversal_bidirectional_15m_v1",
+  "symbol": "xyz:SPCX",
+  "status": "candidate",
+  "hypothesis": "The session-aware exact-trade repair preserves the SPCX strategy contract and removes its false overnight availability dependency without creating cross-repository regressions; only genuinely future cash-open behavior and reconciled activation remain unproven.",
+  "decision": "Accept local validation closure: 6906 non-network Python tests pass, the focused SPCX suite and Rust/TUI gates pass, and the final implementation bundle independently verifies. Keep the candidate report-only and the active runtime unchanged until a future cash-open observation and later flat/order-free restart reconciliation.",
+  "confidence": "medium_high",
+  "falsifier": "Reject or revise the candidate if the next complete-evidence cash open is unavailable, if unresolved opening or prior-close evidence becomes eligible, if any cursor or complete-window parity invariant fails, or if an eventual cutover creates a profile, run, venue, owned-order, protection, or TUI mismatch.",
+  "evidence": [
+    {
+      "path": "v58-spcx-cash-session-source-availability-validation-closure-20260821-v3.json",
+      "role": "all_green_validation_backup_runtime_and_remaining_gate_closure",
+      "sha256": "6a169ab01d1c9cc7d034ea7bd97e740079e4605ae1b5ec5fc18ac8b2fe7089ae",
+      "bytes": 4473
+    },
+    {
+      "path": "../../data/backups/bidirectional_cohort/prestart_20260821T043810.645200Z_8a04636c9ff6/manifest.json",
+      "role": "independently_verified_final_candidate_implementation_bundle",
+      "sha256": "e4e04d6ffb776983894cf23b9b289d198c7b7e1a2804bd3ad4d904c9612b0764",
+      "bytes": 844669
+    },
+    {
+      "path": "../../src/hypervector/research/cohort_external_lifecycle_status.py",
+      "role": "producer_consistent_sp500_report_only_lifecycle_projection",
+      "sha256": "f82dbfd9e6fce58ac958817ac14cf7efe3dbd2069305f82d3705dd161992b3e4",
+      "bytes": 12069
+    },
+    {
+      "path": "../../tests/test_cohort_external_sp500_lifecycle_status.py",
+      "role": "cumulative_eligible_first_lifecycle_regression",
+      "sha256": "4e16beab1a14949b0fe7a326e6e94f7a2a1fb71857830be00aebbb3a24043d74",
+      "bytes": 4066
+    },
+    {
+      "path": "../../tests/test_v58_live_backend_context.py",
+      "role": "isolated_marked_pnl_component_reconciliation_regression",
+      "sha256": "5e9affd4845009a8ea86c26153487c9ad59af8c43b2218e77d7c2b6a867c19c8",
+      "bytes": 21350
+    }
+  ],
+  "metrics": {
+    "focused_spcx_tests_passed": 51,
+    "focused_spcx_tests_failed": 0,
+    "full_nonnetwork_python_passed": 6906,
+    "full_nonnetwork_python_failed": 0,
+    "full_nonnetwork_python_deselected": 4,
+    "rust_tui_suite_passed": true,
+    "rust_clippy_warnings_denied_passed": true,
+    "active_v58_all_nine_screens_passed": true,
+    "final_implementation_file_count": 1717,
+    "final_implementation_sha256": "bcd1891f917fbb32d6c2faf2133f00cfcf4dd63c7c8eeec51f570a35fc00ce54",
+    "final_bundle_verified": true,
+    "current_live_runtime_changed": false,
+    "current_live_faults": 0,
+    "current_live_profile_matches_runtime": true,
+    "forward_cash_open_observations": 0
+  },
+  "limitations": [
+    "No future cash-open boundary has yet been observed with the repaired report-only path.",
+    "The active process still uses its already-loaded pre-repair code and must not be hot-restarted while BRENTOIL and SP500 remain open.",
+    "Technical availability and behavior preservation do not establish positive live expectancy or cadence."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

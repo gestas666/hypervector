@@ -1,0 +1,186 @@
+{
+  "schema_version": 1,
+  "source_profile_id": "multi_asset_growth_first_5000_spcx_cash_open_v55",
+  "source_profile_fingerprint": "e918f81e55abb36ad207a1af69517dd4d8765b79eb972669195a6b180702d3c7",
+  "contract": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_promotion": false,
+    "runtime_strategy_changed": false
+  },
+  "routes": {
+    "hulk_expansion_short_robust_v3|BTC": {
+      "triage": "REVISE",
+      "next_experiment": "collect_side_specific_evidence",
+      "historical_assessment": "fixed_cap_forward_repeatability_unproven_and_current_range_state_has_no_expansion_trigger",
+      "decision_source": "docs/research-journal/v53-btc-hulk-fixed-cap-evidence-parity-v1.json",
+      "supporting_evidence": [
+        "docs/research-journal/v53-btc-hulk-fixed-cap-evidence-parity-v1.json",
+        "data/logs/research/bidirectional_cohort/v55_live_prefix_20260818T1045Z.json"
+      ]
+    },
+    "liquidity_sweep_long_1h_stop60_target60_v2|BTC": {
+      "triage": "REVISE",
+      "next_experiment": "collect_side_specific_evidence",
+      "historical_assessment": "sparse_sweep_qualified_route_retained_but_primary_trigger_relaxation_is_adverse",
+      "decision_source": "docs/research-journal/v53-btc-sweep-primary-trigger-relaxation-v2.json",
+      "supporting_evidence": [
+        "docs/research-journal/v53-btc-sweep-primary-trigger-relaxation-v2.json",
+        "data/logs/research/bidirectional_cohort/v55_live_prefix_20260818T1045Z.json"
+      ]
+    },
+    "hype_breakout_compression_alignment_bidirectional_v2|HYPE": {
+      "triage": "REVISE",
+      "next_experiment": "collect_both_side_live_execution",
+      "historical_assessment": "development_promising_but_forward_sparse_and_current_range_state_has_no_fresh_breakout_onset",
+      "decision_source": "docs/research-journal/v53-hype-canonical-onset-one-blocker-extended-window-v2.json",
+      "supporting_evidence": [
+        "docs/research-journal/v53-hype-canonical-onset-one-blocker-extended-window-v2.json",
+        "data/logs/research/bidirectional_cohort/v55_live_prefix_20260818T1045Z.json"
+      ]
+    },
+    "hip3_spcx_cash_open_gap_reversal_bidirectional_15m_v1|xyz:SPCX": {
+      "triage": "REVISE",
+      "next_experiment": "collect_both_side_live_execution",
+      "historical_assessment": "development_positive_exlargest_but_entry_paths_technically_unresolved_and_live_execution_absent",
+      "decision_source": "docs/research-journal/v53-sp500-spcx-cash-open-gap-reversal-development-result-v1.json",
+      "supporting_evidence": [
+        "data/logs/research/xyz_spcx_cash_open_gap_reversal_development_20260817_v2.json",
+        "data/logs/research/bidirectional_cohort/v55_poststart_acceptance_20260818T103754Z.json",
+        "data/logs/research/bidirectional_cohort/v55_live_prefix_20260818T1045Z.json"
+      ]
+    }
+  },
+  "active_hypotheses": [
+    {
+      "hypothesis_id": "v55-first-eligible-lifecycle-audit-v1",
+      "route": "prospective_v55_exact_live_route_collection|ALL",
+      "experiment": "first_eligible_v55_intent_and_lifecycle_audit",
+      "status": "being_tested",
+      "decision_source": "data/logs/research/bidirectional_cohort/v55_live_prefix_20260818T1045Z.json",
+      "evidence_baseline": "data/logs/research/bidirectional_cohort/v55_live_prefix_20260818T1045Z.json",
+      "baseline_identity": {
+        "run_id": "bidirectional-live-1787048825207",
+        "profile_id": "multi_asset_growth_first_5000_spcx_cash_open_v55",
+        "profile_fingerprint": "e918f81e55abb36ad207a1af69517dd4d8765b79eb972669195a6b180702d3c7"
+      },
+      "baseline_counters": {
+        "eligible_evaluations": 0,
+        "strategy_intents": 0,
+        "actions": 0,
+        "withheld": 0,
+        "fills": 0,
+        "open_lifecycles": 0,
+        "closed_trades": 0
+      },
+      "minimum_evidence": "One attributable eligible decision with an explicit action or withholding outcome; a fill additionally requires reconciled protection and a resolved lifecycle before economic interpretation.",
+      "execution_effect": "report_only",
+      "automatic_live_change": false
+    },
+    {
+      "hypothesis_id": "v55-first-spcx-live-lifecycle-v1",
+      "route": "hip3_spcx_cash_open_gap_reversal_bidirectional_15m_v1|xyz:SPCX",
+      "experiment": "first_source_native_cash_open_live_lifecycle",
+      "status": "being_tested",
+      "decision_source": "docs/research-journal/v53-sp500-spcx-cash-open-gap-reversal-development-result-v1.json",
+      "minimum_evidence": "One scorable cash-open decision and, when eligible, exact decision age, order acknowledgement, fill, fee, slippage, stop, dynamic target, recipe exit, funding, and resolved net PnL.",
+      "execution_effect": "report_only",
+      "automatic_live_change": false
+    }
+  ],
+  "hypothesis_decisions": [
+    {
+      "hypothesis_id": "v55-hype-onset-relaxation-v1",
+      "route": "hype_breakout_compression_alignment_bidirectional_v2|HYPE",
+      "status": "rejected",
+      "experiment": "remove_canonical_breakout_onset",
+      "decision_reason": "The mature v53 one-blocker window was adverse after costs, and the first v55 prefix again shows negative five-minute after-friction close paths without the onset. Zero live trades do not justify reopening it.",
+      "decision_source": "docs/research-journal/v53-hype-canonical-onset-one-blocker-extended-window-v2.json",
+      "reopen_condition": "A separately preregistered independent both-side window must show positive after-cost results and positive largest-winner-removed results under the exact v55 source and exit contract.",
+      "proposed_live_change": null
+    },
+    {
+      "hypothesis_id": "v55-btc-sweep-relaxation-v1",
+      "route": "liquidity_sweep_long_1h_stop60_target60_v2|BTC",
+      "status": "rejected",
+      "experiment": "remove_primary_sweep_requirement",
+      "decision_reason": "The exact prior one-blocker barrier path reached the configured stop before the target, and the current v55 prefix has neither sweep nor required volume. Silence does not make the relaxed entry viable.",
+      "decision_source": "docs/research-journal/v53-btc-sweep-primary-trigger-relaxation-v2.json",
+      "reopen_condition": "A new preregistered exact-route sample must demonstrate positive after-cost and largest-winner-removed results without worse stop behavior.",
+      "proposed_live_change": null
+    },
+    {
+      "hypothesis_id": "v55-btc-hulk-fixed-cap-v1",
+      "route": "hulk_expansion_short_robust_v3|BTC",
+      "status": "deferred",
+      "experiment": "retune_hulk_score_or_stop_surface",
+      "decision_reason": "Fixed-cap robustness remains unproven and the first v55 decision is structurally ineligible. No causal defect or supportive retuning evidence is present.",
+      "decision_source": "docs/research-journal/v53-btc-hulk-fixed-cap-evidence-parity-v1.json",
+      "reopen_condition": "Multiple exact v55 Hulk fills and resolved lifecycles or a new preregistered development study must support a specific change after costs and largest-winner sensitivity.",
+      "proposed_live_change": null
+    },
+    {
+      "hypothesis_id": "v55-eth-pullback-first-forward-v1",
+      "route": "eth_breakout_precompression_pullback_bidirectional_v1|ETH",
+      "status": "rejected",
+      "experiment": "add_unchanged_eth_pullback_for_cadence",
+      "decision_reason": "The first new source-compatible eligible long reached the frozen 60-bps stop and resolved at -69.13 bps after exact visible-depth fills, taker fees, and official funding. The prior three-live-trade aggregate was already nearly zero after removing its largest winner.",
+      "decision_source": "docs/research-journal/eth-breakout-precompression-pullback-v14.json",
+      "reopen_condition": "A preregistered compatible window must resolve both sides and remain positive after exact costs and largest-winner removal without technical gaps or side-selection changes.",
+      "proposed_live_change": null
+    }
+  ],
+  "change_proposals": [],
+  "evidence": [
+    {
+      "path": "../multi_asset_growth_first_5000_spcx_cash_open_v55.toml",
+      "sha256": "688d0dd225489e786a821372ede2ef4eda3cf5a56070cfdb56488156c5e689fb",
+      "bytes": 2687
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v55_live_prefix_20260818T1045Z.json",
+      "sha256": "81c73f1086d5eccb9107885db4e9a50f2288629e96bef5de87b14e37bab1f1ad",
+      "bytes": 6036689
+    },
+    {
+      "path": "../../data/logs/research/xyz_spcx_cash_open_gap_reversal_development_20260817_v2.json",
+      "sha256": "613475b27b2884f9b90346cb0c0f175a314e09dbcba4f628b972aba3ebb1c3b8",
+      "bytes": 211473
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v55_poststart_acceptance_20260818T103754Z.json",
+      "sha256": "3072a377ef107d3e70cdbb184a0f23f74e22a4143140c13c8eb00b7aeb75b0a3",
+      "bytes": 8118
+    },
+    {
+      "path": "../../docs/research-journal/v53-portfolio-cadence-and-growth-capacity-v2.json",
+      "sha256": "c61af5a0cfc223a705396e49be5d3e0ec643d4ef886b485791d7ddaa7e9bee4f",
+      "bytes": 13062
+    },
+    {
+      "path": "../../docs/research-journal/v53-btc-sweep-primary-trigger-relaxation-v2.json",
+      "sha256": "f5b1c781309740491ec96e2e9b9f8d85e97cf656310f09e1f352377fb00d32d0",
+      "bytes": 8574
+    },
+    {
+      "path": "../../docs/research-journal/v53-btc-hulk-fixed-cap-evidence-parity-v1.json",
+      "sha256": "500a4451876f16e326d8294add59f0a26b10ab25b3f9435362b0f0d3bb203a95",
+      "bytes": 10906
+    },
+    {
+      "path": "../../docs/research-journal/v53-hype-canonical-onset-one-blocker-extended-window-v2.json",
+      "sha256": "d1fe284ade57b3376c643a0aa249f3a4f40b03e0df51f1709c67c44a6368fdf0",
+      "bytes": 8244
+    },
+    {
+      "path": "../../docs/research-journal/v53-sp500-spcx-cash-open-gap-reversal-development-result-v1.json",
+      "sha256": "605eee3d4c63ffe76a66333f576f0149016e651375d3a744a09878db879cf125",
+      "bytes": 9973
+    },
+    {
+      "path": "../../docs/research-journal/eth-breakout-precompression-pullback-v14.json",
+      "sha256": "d78cc8595f2348d6ef6000f37b52a479db0a16fdd4a4f5689580adc54e1bef4f",
+      "bytes": 8035
+    }
+  ]
+}

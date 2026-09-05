@@ -1,0 +1,102 @@
+{
+  "schema_version": "v51_v52_incremental_ledger_telemetry_remediation_v1",
+  "generated_at_utc": "2026-08-16T12:05:06Z",
+  "hypothesis_id": "v51-v52-incremental-ledger-telemetry-remediation",
+  "status": "accepted_offline_pending_flat_deployment",
+  "execution_authority": "none",
+  "automatic_live_change": false,
+  "runtime_strategy_changed": false,
+  "problem_restatement": "The active v51 process intermittently consumes a full CPU core and has reached a 5.7 GB peak footprint because each cohort snapshot reparses complete append-only asset ledgers. Preserve exact fill, cost, markout, book, recovery, and corruption semantics while making later snapshots consume only validated appended rows.",
+  "observed_evidence": {
+    "live_run_id": "bidirectional-live-1786801038311",
+    "active_profile": "multi_asset_growth_first_5000_six_asset_profit_lock_candidate_v51",
+    "cpu_samples_pct": [
+      82.0,
+      95.4,
+      98.4,
+      98.9,
+      99.3,
+      99.1,
+      99.4,
+      99.4,
+      100.0
+    ],
+    "sample_physical_footprint": "1.6G",
+    "sample_peak_physical_footprint": "5.7G",
+    "native_sample_observation": "The hot sample is dominated by Python JSON scanner recursion and garbage collection while an asset ledger is open.",
+    "source_trace": "MultiAssetLiveRunner._finish_cycle calls MultiAssetCohortTelemetry.emit_snapshot; emit_snapshot called compatible_execution_rows for every asset; compatible_execution_rows called SolLiveLedger.read_all from byte zero.",
+    "live_impact_observed": "No missed order, fault, lost stop, or stale lifecycle was observed. The checkpoint remained running_consistent and SOL/SPCX retained owned venue stops.",
+    "live_risk_if_unfixed": "Growing ledgers can extend cycle latency or terminate the backend under memory pressure, which would leave venue stops intact but suspend timed/provider exits and new telemetry."
+  },
+  "raw_evidence": [
+    {
+      "path": "data/logs/research/bidirectional_cohort/v51_runtime_full_ledger_rescan_json_sample_20260816.txt",
+      "bytes": 224298,
+      "sha256": "dc1af89a860b6e86dee5932c1995f07e353d3762187e6f16a563f662b51f44c9"
+    },
+    {
+      "path": "data/logs/research/bidirectional_cohort/v51_runtime_full_ledger_rescan_sample_20260816.txt",
+      "bytes": 207555,
+      "sha256": "8baa2ac2c435893bb0a57c1c7624f71c63a73242cd7eb6689a93d7a3fe6ff6e3"
+    }
+  ],
+  "root_cause": {
+    "confidence": "high",
+    "cause": "Snapshot telemetry repeatedly performed O(total historical asset-ledger bytes) JSON decoding instead of O(new appended bytes) consumption.",
+    "contradictory_evidence": "A second sample caught public-network waits rather than JSON decoding, so not every high-latency interval is caused by ledger parsing. The first hot sample and direct code path establish that full rescans are nevertheless real.",
+    "falsifier": "A source-level or runtime trace showing that emit_snapshot does not call full read_all for each asset would invalidate this diagnosis; the red regression observed two complete reads per asset across two snapshots."
+  },
+  "experiment": {
+    "status": "accepted",
+    "red_results": [
+      "Repeated snapshots performed two complete read_all calls per asset instead of one initialization read.",
+      "Truncating an asset ledger after the first snapshot produced a success-shaped later snapshot instead of a fail-closed error."
+    ],
+    "implementation": [
+      "Add an exact byte-offset and next-sequence cursor to SolLiveLedger.",
+      "Load compatible history once and consume only rows appended by the active writer.",
+      "Reject truncation, incomplete suffixes, sequence drift, and a second writer.",
+      "Compact book history to the first post-fill markout book and latest current-run book while retaining all non-book execution evidence."
+    ],
+    "green_results": {
+      "focused_red_green_tests": "16 passed",
+      "expanded_live_recovery_and_telemetry_tests": "77 passed",
+      "lint": "Ruff passed on the scoped implementation",
+      "standards": "All scoped files remain at or below 500 lines and functions at or below 50 lines"
+    }
+  },
+  "deployment_contract": {
+    "current_v51_restart": "withheld_while_positions_open",
+    "reason": "Restarting the active v51 process would load a broad changed worktree while SOL/SPCX are open. Venue stops remain the safer protection boundary.",
+    "target": "Deploy the telemetry-only remediation with v52 after the exact flat/order-free preflight and clean accounting epoch.",
+    "strategy_risk_or_sizing_change": false,
+    "poststart_validation": [
+      "No repeated complete asset-ledger reads after initialization.",
+      "Snapshot books, fills, costs, funding, markouts, and lifecycle attribution reconcile with the append-only ledger.",
+      "Cycle latency and process footprint remain bounded as books accumulate.",
+      "Any truncation, suffix corruption, or second writer fails closed with a durable runtime fault."
+    ]
+  },
+  "recommendation": {
+    "recommendation": "Include the incremental ledger projection repair in the flat-boundary v52 deployment and do not hot-restart protected v51 solely for telemetry performance.",
+    "why_now": "The active process has already reached a 5.7 GB peak footprint and repeated full rescans will worsen as append-only ledgers grow.",
+    "evidence_reviewed": "Two native process samples, repeated CPU measurements, live checkpoint health/protection, the runner-to-telemetry call path, red/green regressions, and expanded recovery/telemetry tests.",
+    "observed_problem_or_opportunity": "Remove an avoidable O(history) operation from every cycle before the two-asset v52 live run begins.",
+    "applicable_market_regime": "All regimes; this is runtime infrastructure rather than a trading signal.",
+    "alternatives_considered": "Hot-restart v51, disable snapshots, increase poll time, retain all parsed rows forever, or use an incremental validated compact projection.",
+    "proposed_live_change": "No strategy or risk change. Load the repaired telemetry implementation only at the approved flat v52 process start.",
+    "expected_upside": "Lower cycle latency and memory churn, reducing the chance that operational load delays exits or terminates backend management.",
+    "main_risks_and_failure_modes": "Cursor drift, external writer collision, lost historical markout evidence, stale latest-book projection, or compaction changing fill attribution.",
+    "validation_completed": "TDD reproduced both full rescans and success-shaped truncation; focused and expanded suites cover append, restart, truncation, torn suffix, second writer, markout, costs, books, funding, provider exits, maximum holds, and regime recovery.",
+    "validation_still_required": "Fresh v52 post-start observation of CPU, memory, cycle latency, and exact checkpoint-versus-ledger projection equivalence.",
+    "success_metrics": "One complete read per asset at initialization, only appended-row reads afterward, bounded cached books, no projection mismatch, and no stale controller cycle attributable to telemetry.",
+    "failure_or_rollback_triggers": "Any missing fill/book/cost, cursor or sequence false positive, unexplained checkpoint difference, process memory growth inconsistent with compact history, or delayed lifecycle controller.",
+    "confidence_level": "high on root cause and offline correctness; medium-high on live operational benefit until v52 post-start measurements exist",
+    "explicit_approval_requested": "Approval remains required for the flat-boundary v52 live start; this report does not arm or restart a backend."
+  },
+  "highest_value_next_investigation": {
+    "rank": 1,
+    "experiment": "prospective_v52_exact_live_route_collection",
+    "reason": "After technical acceptance and telemetry latency verification, exact live route outcomes—especially HYPE short and BTC occupancy collisions—remain the largest unresolved economic evidence gap."
+  }
+}

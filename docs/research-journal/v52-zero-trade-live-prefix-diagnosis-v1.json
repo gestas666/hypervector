@@ -1,0 +1,155 @@
+{
+  "schema_version": "v52_zero_trade_live_prefix_diagnosis_v1",
+  "hypothesis_id": "v52-first-eligible-lifecycle-audit-v1",
+  "generated_at_utc": "2026-08-16T22:24:50Z",
+  "status": "being_tested",
+  "problem_restatement": "Determine whether the first approximately nine hours of zero v52 trades reflect a technical or routing defect, an excessively restrictive implementation, or expected signal scarcity under the frozen contracts, without changing live authority or strategy behavior.",
+  "identity": {
+    "run_id": "bidirectional-live-1786885252328",
+    "profile_id": "multi_asset_growth_first_5000_evidence_bound_successor_v52",
+    "profile_fingerprint": "662d28b352cfc4f09e08c71ee67c8f044421483f2932539b09ea082b5e4f27f7",
+    "config_sha256": "bcc46284503a2b38b43ee1f6dca473d32edfb7c9f2cb5cd50dd828f9dabe00fb"
+  },
+  "immutable_evidence": [
+    {
+      "path": "data/logs/research/bidirectional_cohort/v52_live_prefix_audit_20260816T221701Z.json",
+      "role": "latest exact same-run causal live-prefix audit",
+      "sha256": "fe077601ed0c0faeaf8b0f4df861589fb37aafd2f780e341efc01e147bf83010"
+    },
+    {
+      "path": "data/logs/research/bidirectional_cohort/v52_live_prefix_delta_20260816T175837Z_221701Z.json",
+      "role": "strict same-run prefix delta",
+      "sha256": "082bacac381784b9e09c12ecd01c45e5735f1ccfda8049e81456d65f7d049e6d"
+    },
+    {
+      "path": "docs/research-journal/v52-first-eligible-lifecycle-audit-baseline-v1.json",
+      "role": "preregistered first-eligible experiment baseline",
+      "sha256": "2a634546207f87c9ae09e24b5b3a5040027e61cf03d7048286755adc05f01e97"
+    },
+    {
+      "path": "docs/research-journal/v52-route-cadence-and-portfolio-opportunity-v1.json",
+      "role": "frozen cadence and portfolio-opportunity evidence",
+      "sha256": "cdb5ffd1a3ba685997f7776802894b3388709a85218e20f03e084a03ca58dd82"
+    }
+  ],
+  "live_prefix": {
+    "first_observed_at_utc": "2026-08-16T13:03:40.441507+00:00",
+    "last_observed_at_utc": "2026-08-16T22:17:10.638982+00:00",
+    "ledger_rows": 9966,
+    "poll_cycles": 2214,
+    "readiness_evaluations": 584,
+    "signal_outcome_evaluations": 581,
+    "eligible_evaluations": 0,
+    "actions": 0,
+    "withheld_intents": 0,
+    "fills": 0,
+    "open_lifecycles": 0,
+    "closed_trades": 0,
+    "technical_coverage_complete": true,
+    "technical_gaps": [],
+    "faults": 0
+  },
+  "route_diagnosis": [
+    {
+      "provider_symbol": "hulk_expansion_short_robust_v3|BTC",
+      "readiness_evaluations": 19,
+      "eligible": 0,
+      "latest_reason": "no_trigger",
+      "latest_blockers": [
+        "expansion_trigger_not_present",
+        "moderate_adx_not_present",
+        "signal_score_not_eligible",
+        "entry_side_unavailable"
+      ]
+    },
+    {
+      "provider_symbol": "liquidity_sweep_long_1h_stop60_target60_v2|BTC",
+      "readiness_evaluations": 10,
+      "eligible": 0,
+      "latest_reason": "entry_condition_absent",
+      "latest_blockers": [
+        "close_reclaim_absent",
+        "close_below_ema55"
+      ]
+    },
+    {
+      "provider_symbol": "hype_breakout_compression_alignment_bidirectional_v2|HYPE",
+      "readiness_evaluations": 555,
+      "eligible": 0,
+      "latest_reason": "canonical_breakout_onset_absent",
+      "latest_blockers": [
+        "canonical_breakout_onset_absent",
+        "authoritative_5m_compression_absent",
+        "prior_compression_absent",
+        "directional_pullback_absent"
+      ]
+    }
+  ],
+  "causal_assessment": {
+    "technical_defect_detected": false,
+    "hidden_router_rejection_detected": false,
+    "venue_or_ledger_disagreement_detected": false,
+    "diagnosis": "The zero-trade prefix is attributable to absent provider entry conditions under complete telemetry. It is consistent with the previously frozen one-to-two total entries per week planning range and does not by itself establish that the routes are correctly profitable.",
+    "confidence": "high that no technical action was lost in this prefix; medium that the quiet interval is normal cadence; low on strategy profitability because no exact v52 lifecycle has resolved",
+    "falsifier": "An eligible decision without an action or explicit withholding, a late submission, missing venue protection, a hidden pre-prefix eligible event, an evidence hash mismatch, or venue-ledger disagreement would invalidate the technical diagnosis. A materially longer prospective window with zero eligible signals would update the cadence assessment."
+  },
+  "hype_gate_sensitivity": {
+    "candidate_gate": "canonical_breakout_onset_absent",
+    "independent_paths": {
+      "5m": {
+        "resolved": 30,
+        "mean_after_estimated_friction_bps": -16.539759866540795,
+        "mean_excluding_largest_after_estimated_friction_bps": -17.193943434910768
+      },
+      "15m": {
+        "resolved": 14,
+        "mean_after_estimated_friction_bps": -15.604386743441655,
+        "mean_excluding_largest_after_estimated_friction_bps": -17.05657841018545
+      },
+      "30m": {
+        "resolved": 8,
+        "mean_after_estimated_friction_bps": -24.793884812748985,
+        "mean_excluding_largest_after_estimated_friction_bps": -28.103181307588905
+      },
+      "60m": {
+        "resolved": 5,
+        "mean_after_estimated_friction_bps": -3.539576519366971,
+        "mean_excluding_largest_after_estimated_friction_bps": -25.984031065729763
+      }
+    },
+    "decision": "Do not remove or loosen the canonical HYPE onset requirement from this prefix. The independent after-friction paths are negative at every measured horizon and the 60-minute mean is largest-winner dependent.",
+    "limitations": "These are causal missed-opportunity markouts rather than executable fills or complete strategy lifecycles. They can reject a simplistic gate-removal rationale but cannot establish the deployed route's positive expectancy."
+  },
+  "single_highest_value_next_investigation": {
+    "funded_live_portfolio": "Continue the frozen first-eligible lifecycle experiment and audit the first eligible HYPE event through routing, submission, fill, protection, exit, costs, and post-exit markout. If BTC triggers first, audit it immediately while retaining the first HYPE short as the highest-value unresolved route-side evidence.",
+    "external_candidate": "Complete the unchanged fixed 96-decision MU transport-parity window; do not shorten, relabel, retune, or promote it before the declared end."
+  },
+  "minimum_additional_evidence": [
+    "one attributable eligible decision with an explicit action or withholding outcome",
+    "one fully reconciled v52 lifecycle with exact fill, fees, funding, slippage, stop, exit reason, MFE, MAE, and peak giveback",
+    "at least one resolved HYPE short because that configured scope remains absent from compatible v52 evidence",
+    "any BTC provider-collision event with exact occupancy and displacement attribution",
+    "a materially longer prospective cadence window before concluding the entry contracts are too sparse"
+  ],
+  "recommendation": {
+    "recommendation": "Keep the exact v52 strategy and risk configuration unchanged while the preregistered first-eligible audit remains active.",
+    "why_now": "The latest immutable prefix is technically complete but contains no eligible intent or economic lifecycle, while the main HYPE gate-removal counterfactual is adverse after estimated costs.",
+    "evidence_reviewed": "Exact v52 live audit and delta, route readiness, causal signal markouts, technical coverage, runtime health, frozen cadence study, strategy ledger, and external MU preregistration.",
+    "observed_problem_or_opportunity": "The portfolio has not traded yet, but the evidence attributes that to absent setup conditions rather than a broken backend. The next eligible event has high information value because it will exercise the full v52 chain.",
+    "applicable_market_regime": "Any regime satisfying one of the frozen BTC or HYPE route contracts; the audited prefix mostly lacked fresh expansion, sweep reclaim, or canonical HYPE breakout onset.",
+    "alternatives_considered": "Loosen HYPE onset, relax BTC gates, add an unqualified higher-cadence route, rerun a rejected strategy, or continue the frozen prospective experiment.",
+    "proposed_live_change": "none",
+    "expected_upside": "Avoids forcing negative-expectancy near misses while obtaining attributable live evidence from the first actual signal.",
+    "main_risks_and_failure_modes": "Continued low cadence, sparse-sample overreaction, missing a latent routing bug that appears only on eligibility, or preserving a route that ultimately lacks positive expectancy.",
+    "validation_completed": "Same-run identity and hashes reconcile; 584 readiness evaluations cover all three routes; telemetry is complete; no technical gaps, faults, hidden withholds, fills, or open positions exist; gate-removal markouts were measured after estimated friction.",
+    "validation_still_required": "Attributable eligible intents, exact live fills and exits, repeated route-side outcomes, realistic realized costs, largest-winner robustness, BTC occupancy behavior, and the completed fixed MU transport window.",
+    "success_metrics": "Every eligible decision is accounted for, every entry is timely and protected, every lifecycle reconciles exact economics, HYPE short evidence becomes observable, and repeated independent results remain positive after costs without largest-winner dependence.",
+    "failure_or_rollback_triggers": "Any technical execution defect, unprotected exposure, identity mismatch, unexplained eligible non-action, cost breach, corrupted data, or repeated resolved losses inconsistent with the frozen route assumptions requires immediate escalation and a separate approval-ready change proposal.",
+    "confidence_level": "high on system health and zero-trade causality; medium on cadence consistency; low on durable profitability until live lifecycles resolve",
+    "explicit_approval_requested": false
+  },
+  "report_only": true,
+  "execution_authority": "none",
+  "automatic_live_change": false,
+  "runtime_strategy_changed": false
+}

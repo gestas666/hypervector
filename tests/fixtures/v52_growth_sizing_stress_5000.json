@@ -1,0 +1,20 @@
+{
+  "profile_id": "multi_asset_growth_first_5000_evidence_bound_successor_v52",
+  "profile_fingerprint": "662d28b352cfc4f09e08c71ee67c8f044421483f2932539b09ea082b5e4f27f7",
+  "source_report": {
+    "path": "data/logs/research/bidirectional_cohort/v52_growth_sizing_stress_20260816_v1.json",
+    "sha256": "20464719dc456725fea263338a72740b44aba11072e2cd18b6afb8c82710e902"
+  },
+  "scenario": {
+    "target_equity_usd": 5000.0,
+    "margin_fraction_per_slot": 0.1,
+    "planned_margin_usd_per_slot": 500.0,
+    "planned_notional_usd_per_slot": 5000.0,
+    "configured_assets": 2,
+    "maximum_positions": 10,
+    "actual_roster_maximum_margin_fraction": 0.2,
+    "actual_position_count": 2,
+    "actual_p99_stop_wave_loss_usd": 92.84753440041398,
+    "actual_p99_stop_wave_loss_pct_equity": 1.8569506880082793
+  }
+}

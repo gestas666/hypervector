@@ -257,10 +257,10 @@ def test_one_sided_asset_is_rejected(tmp_path: Path) -> None:
         load_multi_asset_live_config(profile, mode="observe")
 
 
-def test_position_capacity_must_cover_enabled_asset_count(
+def test_position_capacity_must_cover_executable_asset_count(
     tmp_path: Path,
 ) -> None:
-    """Every enabled asset must have a potential concurrent portfolio slot."""
+    """Every executable asset must have a potential concurrent portfolio slot."""
     text = _PROFILE.read_text(encoding="utf-8").replace(
         "maximum_positions = 4",
         "maximum_positions = 3",
@@ -270,7 +270,7 @@ def test_position_capacity_must_cover_enabled_asset_count(
 
     with pytest.raises(
         MultiAssetLiveConfigError,
-        match="must be at least enabled asset count",
+        match="must be at least executable asset count",
     ):
         load_multi_asset_live_config(profile, mode="observe")
 

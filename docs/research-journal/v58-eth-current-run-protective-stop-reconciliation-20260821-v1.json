@@ -1,0 +1,164 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v58-eth-current-run-protective-stop-reconciliation-20260821",
+  "revision_number": 1,
+  "recorded_at_utc": "2026-08-21T18:54:00Z",
+  "status": "resolved_diagnostic_no_live_change",
+  "authority": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_live_change": false,
+    "runtime_strategy_changed": false,
+    "live_change_proposed": false
+  },
+  "problem_restatement": "Reconcile the newly resolved V58 ETH long against its exact live identity, entry, protective stop, fees, funding, excursion path, venue cleanup, and frozen exit challengers without selecting a policy from the observed outcome.",
+  "success_criteria": [
+    "The lifecycle identity and V58 run/profile identity match across the immutable audit and delta.",
+    "Gross PnL, fees, funding, and net PnL reconcile arithmetically.",
+    "The full venue position closes through the owned reduce-only protective stop and no ETH order remains.",
+    "The exit challenger comparison remains report-only and preserves the preregistered minimum both-side evidence requirement.",
+    "No technical gap, runtime fault, or live configuration change accompanies the close."
+  ],
+  "identity": {
+    "run_id": "bidirectional-live-1787272893887",
+    "profile_id": "multi_asset_growth_first_5000_eight_asset_incremental_v58",
+    "profile_fingerprint": "8a04636c9ff60a7eae141381cb540d7c6ceed081097cda7d5e465d48faa5022b",
+    "strategy_id": "eth_breakout_precompression_pullback_bidirectional_v1",
+    "symbol": "ETH",
+    "side": "long",
+    "lifecycle_id": "ETH:522234293900"
+  },
+  "execution_reconciliation": {
+    "entry": {
+      "oid": 522234293900,
+      "venue_timestamp_ms": 1787332216101,
+      "price": 2417.4,
+      "size": 0.3038,
+      "notional_usd": 734.4061200000001,
+      "fee_usd": 0.317263,
+      "slippage_bps": 2.4826216484608032
+    },
+    "exit": {
+      "oid": 522234318812,
+      "venue_timestamp_ms": 1787337920927,
+      "reason": "protective_stop",
+      "controller_id": "eth_breakout_precompression_pullback_bidirectional_v1",
+      "expected_stop_price": 2402.8956000000003,
+      "price": 2402.6,
+      "size": 0.3038,
+      "fee_usd": 0.315321,
+      "slippage_bps": 1.2301824515403847,
+      "holding_time_ms": 5704826,
+      "holding_time_human": "1h35m04.826s"
+    },
+    "gross_market_pnl_usd": -4.49624,
+    "gross_market_pnl_formula": "0.3038 * (2402.6 - 2417.4)",
+    "total_fees_usd": 0.632584,
+    "funding_usd": -0.009203,
+    "net_pnl_usd": -5.138027,
+    "net_pnl_formula": "-4.49624 - 0.632584 - 0.009203",
+    "net_return_bps_on_entry_notional": -69.96165827158411,
+    "accounting_reconciled": true
+  },
+  "completed_path": {
+    "completed_bars": 94,
+    "maximum_favorable_excursion_bps": 64.53214197071233,
+    "maximum_adverse_excursion_bps": 61.22280135683056,
+    "peak_giveback_bps": 125.75494332754289,
+    "maximum_net_excursion_bps": 55.79328505595787,
+    "economic_outcome": "cleared_cost_hurdle_then_surrendered",
+    "observed_cost_hurdle_bps": 8.738856914754466
+  },
+  "venue_and_backend_cleanup": {
+    "close_event_verified_flat": true,
+    "final_backend_state": "FLAT",
+    "final_position_size_signed": 0.0,
+    "final_stop_oid": null,
+    "final_target_oid": null,
+    "final_close_oid": null,
+    "venue_position_present": false,
+    "venue_owned_orders": [],
+    "ledger_venue_reconciled_after_sequential_refresh": true,
+    "new_technical_gaps": 0,
+    "runtime_faults": 0
+  },
+  "frozen_profit_lock_diagnostics": {
+    "a25_floor15_trail10": {
+      "status": "triggered",
+      "estimated_net_pnl_usd": 1.5441136767758543,
+      "estimated_minus_actual_net_usd": 6.682140676775854
+    },
+    "a40_floor15_trail20": {
+      "status": "triggered",
+      "estimated_net_pnl_usd": 0.8071091755977874,
+      "estimated_minus_actual_net_usd": 5.945136175597788
+    },
+    "a60_floor15_trail30": {
+      "status": "triggered",
+      "estimated_net_pnl_usd": 1.7864085667463867,
+      "estimated_minus_actual_net_usd": 6.924435566746387
+    },
+    "limitations": [
+      "The challenger exits are completed-bar estimates, not actual submitted orders or fills.",
+      "Additional exit slippage and future funding are not included in the estimates.",
+      "All three policies were previously rejected as global ETH replacements in the frozen historical partitions.",
+      "This one resolved long does not meet the preregistered both-side minimum or largest-winner robustness requirement."
+    ]
+  },
+  "analysis": "The live safety mechanism behaved correctly: the owned 60-bps venue stop closed the full ETH size with 1.23 bps adverse stop-reference slippage, and the backend reconciled flat with no orphan order. Economically, the path is a meaningful profit-capture warning because it cleared the actual cost hurdle, reached 64.53 favorable bps, and then stopped at a 69.96-bps net loss. Each frozen low-activation challenger would have estimated a small positive result on this path. That observation increases the priority of prospective exit research but does not reverse the prior global-policy rejection: the historical policies failed the larger development partition, and the current prospective evidence still lacks an independent short lifecycle and robustness testing.",
+  "recommendation": "Keep the live ETH contract unchanged under this revision. Record this close as one prospective long diagnostic, retain the already rejected global profit locks as measured challengers rather than reopening them, and wait for the preregistered independent short-side evidence or a materially distinct state-aware exit before proposing a live ETH change.",
+  "alternatives_considered": [
+    {
+      "alternative": "install_the_best_apparent_profit_lock_from_this_trade",
+      "decision": "rejected_now",
+      "reason": "Selecting among three policies after observing one favorable outcome would be post-hoc and contradicts the frozen historical and both-side validation contract."
+    },
+    {
+      "alternative": "treat_the_close_as_a_technical_stop_failure",
+      "decision": "rejected",
+      "reason": "The exact owned stop filled the full position, arithmetic reconciles, the venue is ETH-flat/order-free, and no technical gap was added."
+    },
+    {
+      "alternative": "preserve_native_control_and_continue_future_only_exit_measurement",
+      "decision": "selected_control",
+      "reason": "This preserves causal attribution while retaining the observed giveback as a high-priority economic warning."
+    }
+  ],
+  "uncertainties_risks_and_failure_modes": [
+    "A 60-bps protective stop can realize a larger after-cost loss, and exceptional gaps or venue outages can exceed this observed slippage.",
+    "One long path cannot distinguish a reusable profit-lock advantage from normal path dependence.",
+    "The existing historical exit evidence is retrospective and does not establish that the native 12-hour contract is optimal.",
+    "Waiting for a short lifecycle may allow another long giveback before enough both-side evidence exists.",
+    "A state-aware exit may be more appropriate than a global trailing rule, but it has not yet passed preregistered historical and future-only validation."
+  ],
+  "falsifiers_and_update_conditions": [
+    "Any later audit shows the ETH position or owned stop remained at the venue after the recorded flat transition.",
+    "A provenance-correct replay changes the fill, fee, funding, excursion, or challenger arithmetic.",
+    "An independent exact short lifecycle and largest-winner sensitivity make one frozen policy robustly superior after costs.",
+    "A materially distinct preregistered state-aware exit beats the native control in both historical partitions and a later future-only window.",
+    "The live ETH route, stop, cost, duration, sizing, or execution identity changes."
+  ],
+  "confidence_level": {
+    "technical_close_and_cleanup": "high",
+    "accounting_and_excursion_reconciliation": "high",
+    "this_path_exhibited_harmful_profit_giveback": "high",
+    "a_specific_profit_lock_should_be_installed_live": "low_and_not_supported",
+    "native_12h_exit_is_economically_optimal": "low_and_not_claimed"
+  },
+  "single_highest_value_next_investigation": "Continue reconciling the still-open SP500 lifecycle under its frozen native exit because it is the only remaining live capital exposure; preserve the ETH giveback result for the next preregistered exit-policy update.",
+  "explicit_approval_requested": false,
+  "evidence": [
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v58_prefix_20260821T1850Z.json",
+      "sha256": "43c7f1308d3d2794edda2ac62b7604165fbb5f356e5044653edf071ef8635dc3"
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v58_delta_20260821T1825Z_to_1850Z.json",
+      "sha256": "4f5e6ceda34c0bbf6b44e70ec285d9c7d7d7abf96d67ff0990a82b10ad85e7f3"
+    },
+    {
+      "path": "v58-eth-risk-normalized-profit-lock-historical-disposition-20260819-v1.json",
+      "sha256": "4ef6e991ba4e852f7500bdf768d3aab8148bb899415418c7fff9d557793d6d06"
+    }
+  ]
+}

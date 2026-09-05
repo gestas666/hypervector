@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from dataclasses import asdict, dataclass
+from datetime import datetime
 import json
 import math
 from pathlib import Path
@@ -18,6 +19,17 @@ class LegacyFlatBoundaryPending(LegacyFlatStopError):
     """The exact cohort remains healthy but is not flat and order-free yet."""
 
 
+_ARCHIVE_FIELDS = {
+    "schema_version",
+    "reason",
+    "run_id",
+    "profile_fingerprint",
+    "observed_at_utc",
+    "symbols",
+    "source_sequence",
+}
+
+
 @dataclass(frozen=True)
 class LegacyFlatStopEvidence:
     """Exact venue-backed cohort identity observed flat and order-free."""
@@ -27,6 +39,56 @@ class LegacyFlatStopEvidence:
     observed_at_utc: str
     symbols: tuple[str, ...]
     source_sequence: int
+
+
+def load_legacy_flat_stop_archive(path: Path) -> LegacyFlatStopEvidence:
+    """Load one strict, execution-incapable legacy flat-stop artifact."""
+    try:
+        decoded = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise LegacyFlatStopError(
+            f"legacy flat-stop archive cannot be read: {path}"
+        ) from exc
+    record = _mapping(decoded, "legacy flat-stop archive")
+    if set(record) != _ARCHIVE_FIELDS:
+        raise LegacyFlatStopError("legacy flat-stop archive fields differ")
+    if record.get("schema_version") != 1:
+        raise LegacyFlatStopError("legacy flat-stop archive schema differs")
+    if record.get("reason") != "legacy_flat_transition":
+        raise LegacyFlatStopError("legacy flat-stop archive reason differs")
+    symbols = _archive_symbols(record.get("symbols"))
+    profile = _required_text(record.get("profile_fingerprint"), "profile fingerprint")
+    run_id = _required_text(record.get("run_id"), "run id")
+    _validate_expected_identity(profile, run_id, symbols)
+    observed = _required_text(record.get("observed_at_utc"), "observation time")
+    _aware_timestamp(observed)
+    return LegacyFlatStopEvidence(
+        run_id=run_id,
+        profile_fingerprint=profile,
+        observed_at_utc=observed,
+        symbols=symbols,
+        source_sequence=_positive_integer(
+            record.get("source_sequence"), "source sequence"
+        ),
+    )
+
+
+def verify_legacy_flat_stop_archive(
+    path: Path,
+    *,
+    expected_profile_fingerprint: str,
+    expected_run_id: str,
+    expected_symbols: tuple[str, ...],
+) -> LegacyFlatStopEvidence:
+    """Verify archived legacy evidence against one exact transition identity."""
+    evidence = load_legacy_flat_stop_archive(path)
+    if evidence.profile_fingerprint != expected_profile_fingerprint:
+        raise LegacyFlatStopError("legacy flat-stop archive profile differs")
+    if evidence.run_id != expected_run_id:
+        raise LegacyFlatStopError("legacy flat-stop archive run differs")
+    if evidence.symbols != expected_symbols:
+        raise LegacyFlatStopError("legacy flat-stop archive symbols differ")
+    return evidence
 
 
 def evaluate_legacy_flat_snapshot(
@@ -102,6 +164,60 @@ def watch_legacy_flat_boundary(
             sleep_fn(poll_seconds)
 
 
+def load_existing_final_flat_boundary(
+    ledger: Path,
+    *,
+    expected_profile_fingerprint: str,
+    expected_run_id: str,
+    expected_symbols: tuple[str, ...],
+) -> LegacyFlatStopEvidence:
+    """Recover the latest armed run's final strict flat snapshot while stopped."""
+    _validate_expected_identity(
+        expected_profile_fingerprint,
+        expected_run_id,
+        expected_symbols,
+    )
+    if not ledger.is_file():
+        raise LegacyFlatStopError(f"cohort ledger not found: {ledger}")
+    initial_size = ledger.stat().st_size
+    latest_identity: tuple[str, str] | None = None
+    latest_snapshot: Mapping[str, object] | None = None
+    with ledger.open("rb") as stream:
+        for line_number, raw in enumerate(stream, start=1):
+            if not raw.endswith(b"\n"):
+                raise LegacyFlatStopError("cohort ledger has an incomplete final row")
+            if not _relevant_existing_row(raw):
+                continue
+            record = _decode_record(raw.rstrip(b"\n"))
+            identity = _armed_identity(record, line_number)
+            if identity is not None:
+                latest_identity = identity
+            if (
+                record.get("event_type") == "cohort_snapshot"
+                and record.get("profile_fingerprint") == expected_profile_fingerprint
+                and record.get("run_id") == expected_run_id
+            ):
+                latest_snapshot = record
+    if ledger.stat().st_size != initial_size:
+        raise LegacyFlatStopError(
+            "cohort ledger changed during final snapshot recovery"
+        )
+    expected_identity = (expected_profile_fingerprint, expected_run_id)
+    if latest_identity != expected_identity:
+        raise LegacyFlatStopError("latest armed run identity differs")
+    if latest_snapshot is None:
+        raise LegacyFlatStopError("exact run has no existing cohort snapshot")
+    evidence = evaluate_legacy_flat_snapshot(
+        latest_snapshot,
+        expected_profile_fingerprint=expected_profile_fingerprint,
+        expected_run_id=expected_run_id,
+        expected_symbols=expected_symbols,
+    )
+    if evidence is None:
+        raise LegacyFlatStopError("exact run final row is not a cohort snapshot")
+    return evidence
+
+
 def write_legacy_stop_request(
     stop_path: Path,
     evidence: LegacyFlatStopEvidence,
@@ -128,6 +244,27 @@ def write_legacy_stop_request(
         raise LegacyFlatStopError(
             f"operator stop request is not writable: {stop_path}"
         ) from exc
+
+
+def _relevant_existing_row(raw: bytes) -> bool:
+    return b'"configuration_identity"' in raw or b'"cohort_snapshot"' in raw
+
+
+def _armed_identity(
+    record: Mapping[str, object], line_number: int
+) -> tuple[str, str] | None:
+    if record.get("event_type") != "configuration_identity":
+        return None
+    if record.get("live_armed") is not True:
+        return None
+    if record.get("execution_mode") != "live":
+        raise LegacyFlatStopError(
+            f"armed configuration identity is malformed at line {line_number}"
+        )
+    return (
+        _required_text(record.get("profile_fingerprint"), "profile fingerprint"),
+        _required_text(record.get("run_id"), "run id"),
+    )
 
 
 def _consume_append(
@@ -260,6 +397,31 @@ def _finite_number(value: object, label: str) -> float:
     if not math.isfinite(number):
         raise LegacyFlatStopError(f"{label} must be finite")
     return number
+
+
+def _archive_symbols(value: object) -> tuple[str, ...]:
+    if not isinstance(value, list):
+        raise LegacyFlatStopError("legacy flat-stop archive symbols must be a list")
+    symbols = tuple(_required_text(item, "archive symbol") for item in value)
+    if not symbols or len(set(symbols)) != len(symbols):
+        raise LegacyFlatStopError(
+            "legacy flat-stop archive symbols must be unique and non-empty"
+        )
+    return symbols
+
+
+def _aware_timestamp(value: str) -> datetime:
+    try:
+        parsed = datetime.fromisoformat(value)
+    except ValueError as exc:
+        raise LegacyFlatStopError(
+            "legacy flat-stop archive observation time is invalid"
+        ) from exc
+    if parsed.tzinfo is None or parsed.utcoffset() is None:
+        raise LegacyFlatStopError(
+            "legacy flat-stop archive observation time must be timezone-aware"
+        )
+    return parsed
 
 
 def _mapping(value: object, label: str) -> Mapping[str, object]:

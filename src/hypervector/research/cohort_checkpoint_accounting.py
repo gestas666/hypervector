@@ -31,7 +31,7 @@ def bind_sync_to_accounting_epoch(
 
 def accounting_epoch_worker_args(epoch: CohortAccountingEpoch) -> list[str]:
     """Serialize one exact epoch for the isolated DuckDB worker."""
-    return [
+    arguments = [
         "--accounting-epoch-id",
         epoch.epoch_id,
         "--accounting-epoch-profile-fingerprint",
@@ -39,6 +39,11 @@ def accounting_epoch_worker_args(epoch: CohortAccountingEpoch) -> list[str]:
         "--accounting-epoch-start-ms",
         str(epoch.start_venue_timestamp_ms),
     ]
+    for fingerprint in epoch.included_profile_fingerprints:
+        arguments.extend(
+            ["--accounting-epoch-included-profile-fingerprint", fingerprint]
+        )
+    return arguments
 
 
 def research_worker_command(

@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "mode": "v57_exact_route_lifecycle_tracker_preregistration",
+  "generated_at_utc": "2026-09-01T11:14:20Z",
+  "live_identity": {
+    "run_id": "bidirectional-live-1788260371688",
+    "profile_id": "multi_asset_growth_first_5000_three_asset_evidence_scope_repaired_candidate_v67",
+    "profile_fingerprint": "42afff8bd0dc871db2f6ef6321a6aacd14ec39c033105b6708a3208b96cfc12e",
+    "provider_id": "liquidity_sweep_long_1h_stop60_target60_v2",
+    "signal_strategy_id": "liquidity_sweep_long_1h_stop60_target60_v2",
+    "symbol": "BTC",
+    "route": "liquidity_sweep_long_1h_stop60_target60_v2|BTC",
+    "required_sides": ["long"]
+  },
+  "prospective_boundary": {
+    "capture_start_utc": "2026-09-01T11:14:20Z",
+    "capture_start_ms": 1788261260000,
+    "baseline_route_evaluations": 1,
+    "baseline_eligible_evaluations": 0,
+    "selection_rule": "Future-only exact V67 route lifecycle after monitor activation."
+  },
+  "contract": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_live_change": false,
+    "automatic_retuning": false,
+    "automatic_promotion": false,
+    "runtime_strategy_changed": false
+  },
+  "implementation_evidence": [
+    {"path": "src/hypervector/research/cohort_route_lifecycle_scope.py", "sha256": "8c290e1877967187e1c659da53786f723947c294e7e4cabc3d76e30a2ddfabfc", "bytes": 3246},
+    {"path": "src/hypervector/research/cohort_route_lifecycle_evidence.py", "sha256": "4b6323fe7f73705658535d0b6e77c75c643b0aef170635620e3988092735ca7b", "bytes": 18779},
+    {"path": "src/hypervector/research/cohort_route_lifecycle_values.py", "sha256": "9edf4dc4098da1a8d3b10a15111e39923099322affcfeddfb4fc7cc8d3520c71", "bytes": 5631},
+    {"path": "scripts/cohort_route_lifecycle_watch.py", "sha256": "191d6975762b06f14a2ca7a3aa03feea172d000c399d7869f0e85012b8437107", "bytes": 13829}
+  ],
+  "outputs": {
+    "mutable_status": "data/runtime/bidirectional_cohort/v67_btc_liquidity_sweep_long_lifecycle_latest.json",
+    "immutable_final": "data/logs/research/bidirectional_cohort/v67_btc_liquidity_sweep_long_first_complete_20260901_v1.json"
+  }
+}

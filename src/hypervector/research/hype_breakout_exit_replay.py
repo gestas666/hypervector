@@ -16,19 +16,13 @@ from hypervector.research.hype_breakout_exit_models import (
     HypeExitTrade,
     HypeSide,
 )
-
-_REQUIRED_COLUMNS = frozenset(
-    {
-        "open",
-        "high",
-        "low",
-        "close",
-        "entry_side",
-        "state_5m",
-        "structural_direction",
-        "funding_rate",
-    }
+from hypervector.research.hype_breakout_exit_reporting import (
+    summarize_hype_exit_replay,
 )
+from hypervector.research.hype_breakout_exit_validation import (
+    validate_hype_exit_market,
+)
+from hypervector.research.hype_breakout_stop_policy import resolve_replay_stop_price
 
 
 @dataclass
@@ -59,19 +53,22 @@ def replay_hype_breakout_exits(
     market: pd.DataFrame,
     policy: HypeExitPolicy,
     config: HypeExitReplayConfig | None = None,
+    *,
+    entry_sides: tuple[HypeSide, ...] = ("long", "short"),
 ) -> HypeExitReplayReport:
     """Replay one exit policy using next-open decisions and an active venue stop."""
     cfg = config or HypeExitReplayConfig()
-    _validate_market(market, cfg, policy)
+    _validate_entry_sides(entry_sides)
+    validate_hype_exit_market(market, cfg, policy)
     state = _ReplayState()
     trades: list[HypeExitTrade] = []
     for position in range(len(market)):
         _advance_open(market, position, state, trades, policy, cfg)
         _evaluate_intrabar_stop(market, position, state, trades, policy, cfg)
         _update_excursion_and_profit_stop(market, position, state, policy)
-        _schedule_close_known_actions(market, position, state, policy, cfg)
+        _schedule_close_known_actions(market, position, state, policy, cfg, entry_sides)
     _force_end_close(market, state, trades, cfg)
-    return _summarize(
+    return summarize_hype_exit_replay(
         policy.policy_id,
         trades,
         state.occupied_signals,
@@ -138,8 +135,13 @@ def _open(
     side, signal_position = pending
     raw_price = float(market["open"].iloc[position])
     entry = _adverse_price(raw_price, side, config.slippage_bps_per_side, True)
-    stop_fraction = config.stop_bps / 10_000.0
-    stop = entry * (1.0 - stop_fraction if side == "long" else 1.0 + stop_fraction)
+    stop = resolve_replay_stop_price(
+        market,
+        signal_position=signal_position,
+        entry_price=entry,
+        side=side,
+        config=config,
+    )
     state.position = _OpenPosition(
         side,
         signal_position,
@@ -242,12 +244,13 @@ def _schedule_close_known_actions(
     state: _ReplayState,
     policy: HypeExitPolicy,
     config: HypeExitReplayConfig,
+    entry_sides: tuple[HypeSide, ...],
 ) -> None:
     _release_reentry_block(market, position, state)
     side = _entry_side(market["entry_side"].iloc[position])
     opened = state.position
     if opened is None:
-        if side is not None and position + 1 < len(market):
+        if side in entry_sides and position + 1 < len(market):
             if side == state.reentry_blocked_side:
                 state.reset_blocked_signals += 1
             else:
@@ -255,6 +258,9 @@ def _schedule_close_known_actions(
         return
     if side is not None:
         state.occupied_signals += 1
+        if config.exit_on_opposite_signal and side != opened.side:
+            state.pending_exit = "opposite_strategy_intent"
+            return
     state.pending_exit = _policy_exit(market, position, opened, policy)
     if state.pending_exit is None:
         state.pending_exit = _maximum_hold_exit(market, position, opened, config)
@@ -463,59 +469,6 @@ def _force_end_close(
     state.position = None
 
 
-def _summarize(
-    policy_id: str,
-    trades: list[HypeExitTrade],
-    occupied_signals: int,
-    reset_blocked_signals: int,
-) -> HypeExitReplayReport:
-    net = [trade.net_return_bps for trade in trades]
-    profits = sum(value for value in net if value > 0.0)
-    losses = -sum(value for value in net if value <= 0.0)
-    return HypeExitReplayReport(
-        policy_id,
-        len(trades),
-        sum(value > 0.0 for value in net),
-        sum(value <= 0.0 for value in net),
-        sum(net),
-        profits,
-        losses,
-        profits / losses if losses else None,
-        _maximum_drawdown(net),
-        sum(trade.fee_bps for trade in trades),
-        sum(trade.funding_bps for trade in trades),
-        occupied_signals,
-        _exit_reason_counts(trades),
-        _monthly_net(trades),
-        tuple(trades),
-        reset_blocked_signals=reset_blocked_signals,
-    )
-
-
-def _maximum_drawdown(values: list[float]) -> float:
-    equity = peak = drawdown = 0.0
-    for value in values:
-        equity += value
-        peak = max(peak, equity)
-        drawdown = max(drawdown, peak - equity)
-    return drawdown
-
-
-def _exit_reason_counts(trades: list[HypeExitTrade]) -> dict[str, int]:
-    counts: dict[str, int] = {}
-    for trade in trades:
-        counts[trade.exit_reason] = counts.get(trade.exit_reason, 0) + 1
-    return counts
-
-
-def _monthly_net(trades: list[HypeExitTrade]) -> dict[str, float]:
-    values: dict[str, float] = {}
-    for trade in trades:
-        month = trade.exit_time_utc[:7]
-        values[month] = values.get(month, 0.0) + trade.net_return_bps
-    return values
-
-
 def _adverse_price(
     price: float,
     side: HypeSide,
@@ -537,36 +490,10 @@ def _entry_side(value: object) -> HypeSide | None:
     raise ValueError("HYPE entry_side must be long, short, or empty")
 
 
-def _validate_market(
-    market: pd.DataFrame,
-    config: HypeExitReplayConfig,
-    policy: HypeExitPolicy,
-) -> None:
-    missing = sorted(_REQUIRED_COLUMNS.difference(market.columns))
-    if missing:
-        raise ValueError(f"HYPE exit replay market missing columns: {missing}")
-    if config.maximum_hold_policy == "extend_while_regime_supported":
-        context_missing = sorted({"state_1m", "context_15m"}.difference(market.columns))
-        if context_missing:
-            raise ValueError(
-                f"HYPE extension market missing columns: {context_missing}"
-            )
-    if policy.exit_on_5m_rsi_reversal:
-        momentum_missing = sorted(
-            {"regime_5m_rsi", "regime_5m_rsi_ema"}.difference(market.columns)
-        )
-        if momentum_missing:
-            raise ValueError(
-                f"HYPE momentum exit market missing columns: {momentum_missing}"
-            )
-    if len(market) < 2 or not isinstance(market.index, pd.DatetimeIndex):
-        raise ValueError("HYPE exit replay requires at least two datetime bars")
-    if market.index.tz is None or not market.index.is_monotonic_increasing:
-        raise ValueError("HYPE exit replay index must be ordered and timezone-aware")
-    if market.index.has_duplicates:
-        raise ValueError("HYPE exit replay index must be unique")
-    numeric = market[["open", "high", "low", "close", "funding_rate"]].astype(float)
-    if not numeric.map(math.isfinite).to_numpy().all():
-        raise ValueError("HYPE exit replay market must be finite")
-    if (numeric[["open", "high", "low", "close"]] <= 0.0).to_numpy().any():
-        raise ValueError("HYPE exit replay prices must be positive")
+def _validate_entry_sides(entry_sides: tuple[HypeSide, ...]) -> None:
+    if (
+        not entry_sides
+        or len(set(entry_sides)) != len(entry_sides)
+        or not set(entry_sides) <= {"long", "short"}
+    ):
+        raise ValueError("entry_sides must contain unique supported sides")

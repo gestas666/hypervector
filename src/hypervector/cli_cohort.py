@@ -63,6 +63,7 @@ def _register_tui(
     parser.add_argument("--backtest-lab-root", type=Path)
     parser.add_argument("--enabled", action="store_true")
     parser.add_argument("--i-accept-live-risk", action="store_true")
+    parser.add_argument("--accounting-epoch-bundle", type=Path)
     parser.add_argument("--resume-transition-drain", action="store_true")
     parser.add_argument("--refresh-ms", type=int)
     parser.add_argument("--startup-timeout-seconds", type=float)
@@ -131,6 +132,10 @@ def _tui_command(args: argparse.Namespace) -> tuple[str, ...]:
     command = _base_command("multi_asset_bidirectional_canary_tui.py")
     command += _optional_path("--config", args.config)
     command += _optional_path("--backtest-lab-root", args.backtest_lab_root)
+    command += _optional_path(
+        "--accounting-epoch-bundle",
+        args.accounting_epoch_bundle,
+    )
     command += _optional_value("--refresh-ms", args.refresh_ms)
     command += _optional_value(
         "--startup-timeout-seconds", args.startup_timeout_seconds

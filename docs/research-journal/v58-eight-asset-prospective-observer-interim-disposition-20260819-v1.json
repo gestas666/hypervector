@@ -1,0 +1,192 @@
+{
+  "schema_version": "hypervector.v58_eight_asset_prospective_observer_interim_disposition.v1",
+  "generated_at_utc": "2026-08-19T05:59:11.214679+00:00",
+  "hypothesis_id": "v58-eight-asset-prospective-observer-v1",
+  "status": "INTERIM_INSUFFICIENT_CONTINUE_REPORT_ONLY_WINDOW",
+  "contract": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_promotion": false,
+    "performance_gate": false,
+    "runtime_strategy_changed": false,
+    "live_configuration_changed": false,
+    "approval_granted": false
+  },
+  "problem_restatement": {
+    "question": "Does the source-compatible V58 prospective window provide enough route-level evidence to update any pre-window disposition or recommend a live V58 cutover?",
+    "success_criterion": "Apply the preregistered route-level evidence thresholds without pooling routes, reopening rejected ideas, or using technical readiness as economic readiness."
+  },
+  "window": {
+    "decision_start_utc": "2026-08-19T03:00:00Z",
+    "deadline_utc": "2026-09-02T03:00:00Z",
+    "latest_immutable_prefix_end_utc": "2026-08-19T05:52:34.133328+00:00",
+    "window_complete": false,
+    "early_stop_triggered": false
+  },
+  "latest_prefix": {
+    "evaluations": 413,
+    "directional_evaluations": 403,
+    "eligible_evaluations": 0,
+    "preactivation_annotations_excluded": 9,
+    "unique_directional_paths": 166,
+    "duplicate_provider_observations_removed": 0,
+    "cross_provider_path_groups": 0,
+    "direction_competition_groups": 0,
+    "reference_price_conflict_groups": 0,
+    "technical_complete": true,
+    "technical_gaps": [],
+    "strategy_intents": 0,
+    "routed_actions": 0,
+    "orders_or_fills_claimed": false
+  },
+  "increment_from_prior_prefix": {
+    "evaluations": 40,
+    "directional_evaluations": 39,
+    "eligible_evaluations": 0,
+    "unique_directional_paths": 16,
+    "interpretation": "The added prefix increased technically valid observation coverage but produced no attributable eligible decision or resolved lifecycle."
+  },
+  "route_evidence": {
+    "ETH": {
+      "route": "eth_breakout_precompression_pullback_bidirectional_v1|ETH",
+      "evaluations": 173,
+      "eligible": 0,
+      "one_blocker": "canonical_breakout_onset_absent",
+      "one_blocker_observations": 92,
+      "independent_after_friction_result": "negative mean, median, and leave-largest mean at every 5m, 15m, 30m, and 60m horizon",
+      "disposition_update": "none"
+    },
+    "HYPE": {
+      "route": "hype_breakout_compression_alignment_bidirectional_v2|HYPE",
+      "evaluations": 173,
+      "eligible": 0,
+      "one_blocker": "canonical_breakout_onset_absent",
+      "one_blocker_observations": 59,
+      "independent_after_friction_result": "negative mean, median, and leave-largest mean at every 5m, 15m, 30m, and 60m horizon",
+      "disposition_update": "none"
+    },
+    "SOL": {
+      "route": "hulk_expansion_bidirectional_tuned_v2|SOL",
+      "evaluations": 6,
+      "eligible": 0,
+      "one_blocker": "expansion_trigger_not_present",
+      "one_blocker_observations": 1,
+      "independent_after_friction_result": "negative at every measured horizon",
+      "disposition_update": "none"
+    },
+    "BTC": {
+      "routes": 3,
+      "evaluations_by_route": [6, 6, 3],
+      "eligible": 0,
+      "one_blocker_observations": 0,
+      "disposition_update": "none"
+    },
+    "xyz:SP500": {
+      "route": "hip3_breakout_pressure_sp500_spcx_fresh15s_bidirectional_v3|xyz:SP500",
+      "evaluations": 10,
+      "eligible": 0,
+      "directional_evaluations": 0,
+      "one_blocker_observations": 0,
+      "disposition_update": "none"
+    },
+    "xyz:SPCX": {
+      "route": "hip3_spcx_cash_open_gap_reversal_bidirectional_15m_v1|xyz:SPCX",
+      "evaluations": 12,
+      "eligible": 0,
+      "one_blocker": "not_cash_open_decision",
+      "one_blocker_observations": 12,
+      "independent_after_friction_result": "negative at 5m, 15m, and 30m; positive at 60m on only two paths outside the cash-open identity",
+      "disposition_update": "none"
+    },
+    "xyz:SNDK": {
+      "evaluations": 12,
+      "eligible": 0,
+      "one_blocker_observations": 0,
+      "disposition_update": "none"
+    },
+    "xyz:BRENTOIL": {
+      "evaluations": 12,
+      "eligible": 0,
+      "one_blocker": "breakout_level_not_crossed",
+      "one_blocker_observations": 2,
+      "independent_after_friction_result": "two long paths are negative at 5m and 15m; one 30m path is insufficient",
+      "disposition_update": "none"
+    }
+  },
+  "threshold_reconciliation": {
+    "diagnostic_threshold": "at least one attributable eligible decision and one technically resolved lifecycle per configured side",
+    "diagnostic_threshold_met": false,
+    "change_threshold": "at least ten technically complete source-compatible lifecycles per route, at least three per configured side, exact after-cost nominal and stress results, and largest-winner sensitivity",
+    "change_threshold_met": false,
+    "eight_asset_portfolio_expectancy_identifiable": false
+  },
+  "fifteen_field_change_review": {
+    "1_recommendation": "Keep active V57 unchanged and continue the isolated V58 observer through its preregistered window or until a preregistered route-level evidence threshold is met.",
+    "2_why_now": "The latest prefix added observations without any eligible decision or resolved lifecycle and therefore does not falsify the prior no-cutover recommendation.",
+    "3_evidence_reviewed": "Exact V58 config, opportunity-coverage audit, observer preregistration and activation records, and immutable observer audit v2.",
+    "4_observed_problem_or_opportunity": "V57 has sparse opportunity, but V58 currently adds technically observable routes without prospective evidence that the added exposure is profitable.",
+    "5_applicable_market_regime": "The current prospective window only; route-specific regime telemetry is observed, but no eligible lifecycle exists from which to identify regime-conditioned expectancy.",
+    "6_alternatives_considered": [
+      "cut over to V58 from technical readiness alone",
+      "relax entry blockers to manufacture cadence",
+      "stop the observer early",
+      "continue the frozen report-only observer and retain V57"
+    ],
+    "7_proposed_live_change": null,
+    "8_expected_upside": "Preserves capital and causal evidence integrity while allowing the eight-asset route set to demonstrate actual source-compatible opportunity before live exposure changes.",
+    "9_main_risks_and_failure_modes": [
+      "The window may remain too sparse to resolve the question.",
+      "Observer markouts are not fills, PnL, or portfolio expectancy.",
+      "A technical outage, source revision, or config drift could invalidate later evidence.",
+      "Keeping V57 unchanged may incur opportunity cost if V58 has real but unobserved edge."
+    ],
+    "10_validation_completed": "The immutable prefix reports complete ten-route coverage, zero technical gaps, causal timing, no actions, no authority, and route-level near-miss attribution.",
+    "11_validation_still_required": "Attributable eligible decisions and technically resolved lifecycles under exact source, side, fee, funding, slippage, stop, and exit identity; the preregistered minimum remains one lifecycle per side for diagnosis and ten per route with at least three per side for a change recommendation.",
+    "12_success_metrics": "Meet the preregistered route-level thresholds with positive after-cost nominal and stress results, positive leave-largest sensitivity, and no unresolved technical paths or pooled-route inference.",
+    "13_failure_or_rollback_triggers": "Invalidate or restart the report-only window on config/source hash drift, armed/action/order evidence, preactivation leakage, technical gaps that break lifecycle attribution, or route pooling. No live rollback exists because no live change is proposed.",
+    "14_confidence_level": {
+      "technical_observer_integrity": "high",
+      "no_current_economic_update": "high",
+      "future_v58_profitability": "low_unverified"
+    },
+    "15_explicit_approval_requested": false
+  },
+  "single_highest_value_next_investigation": {
+    "investigation": "Continue exact HYPE alignment-v2 both-side lifecycle collection under the frozen V57/V58-compatible identity and reconcile the first eligible event end to end.",
+    "reason": "HYPE is already live, identity-exact, development-promising but forward-sparse; the current 59 onset-absent near misses are negative and therefore support waiting for the actual entry contract rather than loosening it.",
+    "parallel_report_only_collection": "Continue SP500 fresh15-v3 source-native observation, but do not rank it above HYPE until it produces a directional eligible decision."
+  },
+  "source_evidence": [
+    {
+      "path": "configs/multi_asset_growth_first_5000_eight_asset_incremental_v58.toml",
+      "bytes": 6142,
+      "sha256": "1c1c1656233b074df2ed3adcee8cb8cb2c58f0d191cc9f9ac34799478fca3378"
+    },
+    {
+      "path": "docs/research-journal/v58-eight-asset-opportunity-coverage-audit-20260819-v1.json",
+      "bytes": 16029,
+      "sha256": "c64ea1eca2f1bb2579872388117337e52ce98973b728ac51d36f790d5938c261"
+    },
+    {
+      "path": "docs/research-journal/v58-eight-asset-prospective-observer-preregistration-20260819-v1.json",
+      "bytes": 7531,
+      "sha256": "b1df357a9a387b9f16e9f5cef247e175b17b879dda402e8486de8b50cd6fc00d"
+    },
+    {
+      "path": "docs/research-journal/v58-eight-asset-prospective-observer-activation-20260819-v1.json",
+      "bytes": 3862,
+      "sha256": "2d856261dd1e8f29319b40d230496b11c5e02eda2237069900b8ba3a2234b28a"
+    },
+    {
+      "path": "data/logs/research/bidirectional_cohort/v58_eight_asset_observer_audit_20260819T0554Z_v2.json",
+      "bytes": 2207117,
+      "sha256": "65c35eaa2235839619e213b332d40878eee387af46703347b4fe7055c0a4da26"
+    }
+  ],
+  "falsifiers": [
+    "A source-compatible V58 route meets the preregistered change threshold with exact after-cost and leave-largest evidence.",
+    "The observer audit is found to include preactivation, future-received, duplicate, or technically unresolved evidence as resolved.",
+    "The active profile, candidate config, route identity, or source hashes change.",
+    "An exact portfolio replay with causal co-trigger timing demonstrates that the route-level no-change conclusion materially understates V58 opportunity."
+  ]
+}

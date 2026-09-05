@@ -73,6 +73,47 @@ def test_explicit_write_stop_uses_the_verified_evidence(
     assert payload["stop_written"] is True
 
 
+def test_existing_final_snapshot_mode_archives_without_active_stop(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Offline recovery writes only the immutable archive destination."""
+    module = _load_module()
+    evidence = _evidence()
+    monkeypatch.setattr(
+        module,
+        "load_existing_final_flat_boundary",
+        lambda *_a, **_k: evidence,
+        raising=False,
+    )
+    live_root = tmp_path / "data/live/bidirectional_cohort"
+    live_root.mkdir(parents=True)
+    ledger = live_root / "decisions.jsonl"
+    ledger.write_text("{}\n", encoding="utf-8")
+    stop = live_root / "STOP"
+    archive = tmp_path / "data/backups/bidirectional_cohort/legacy_STOP_v63.json"
+    archive.parent.mkdir(parents=True)
+    args = module.build_parser().parse_args(
+        [
+            *_args(tmp_path, stop),
+            "--ledger",
+            str(ledger),
+            "--archive-existing-final-snapshot",
+            str(archive),
+        ]
+    )
+
+    result = module.run(args)
+
+    assert result == 0
+    assert not stop.exists()
+    assert json.loads(archive.read_text(encoding="utf-8"))["run_id"] == _RUN_ID
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["status"] == "final_snapshot_archived"
+    assert payload["execution_authority"] == "none"
+
+
 def _args(root: Path, stop: Path) -> list[str]:
     return [
         "--ledger",

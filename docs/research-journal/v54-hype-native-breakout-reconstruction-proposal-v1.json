@@ -1,0 +1,278 @@
+{
+  "schema_version": 1,
+  "generated_at_utc": "2026-08-18T04:40:00Z",
+  "hypothesis_id": "v54-hype-native-breakout-reconstruction-v1",
+  "status": "superseded_by_directional_authority_audit_not_live_authorized",
+  "superseded_by": "docs/research-journal/v54-hype-native-directional-authority-challenger-v1.json",
+  "contract": {
+    "report_only": true,
+    "execution_authority": "none",
+    "runtime_strategy_changed": false,
+    "automatic_promotion": false,
+    "explicit_human_approval_required": true
+  },
+  "recommendation": "Do not arm this bidirectional candidate. The later full-occupancy directional audit materially weakened short entry authority. Continue with the distinct report-only long-entry challenger while retaining short native onset only as long-exit authority; leave both v53 BTC routes and live v53 authority unchanged.",
+  "why_now": "The original HYPE-only live slice was the strongest exact early route, while later size and cross-asset revisions reused its identity and contaminated the evidence. The active v53 HYPE route has produced no eligible events or closed lifecycles, so it supplies no counter-evidence for its continued execution priority.",
+  "evidence_reviewed": [
+    {
+      "path": "docs/reviews/2026-08-05-hype-breakout-strategy-contract.md",
+      "finding": "Six reconciled original-contract closes were 5W/1L, +$2.099489, PF 10.3762; the one-year generic control was negative."
+    },
+    {
+      "path": "docs/reviews/2026-08-05-hype-breakout-strategy-contract.md",
+      "finding": "Four original entries whose completed 5m breakout direction opposed the hourly structural side were 4W/0L and +$2.093364; the two direction-aligned entries were 1W/1L and +$0.006125. This is sparse, post-hoc evidence, but it directly rejects treating direction alignment as a harmless cleanup."
+    },
+    {
+      "path": "docs/reviews/2026-08-05-hype-profit-retention-audit.md",
+      "finding": "Three pre-soft profit-lock policies materially reduced the live result and worsened the historical control; no fixed take-profit or tight trailing lock is supported."
+    },
+    {
+      "path": "data/logs/research/bidirectional_cohort/v53_live_prefix_20260817T1227Z_v1.json",
+      "finding": "The first seven HYPE-only, approximately $25-notional closes across the three original fingerprints were 6W/1L, +$2.160920, PF 10.6505, and +$1.261432 excluding the largest winner."
+    },
+    {
+      "path": "data/logs/research/bidirectional_cohort/v53_live_prefix_20260817T1227Z_v1.json",
+      "finding": "The favorable seed was side-concentrated: long was 5W/1L, +$1.928432, PF 9.6123; short was one winner for +$0.232488. All six winners exited through maximum hold and the only loss used the protective stop."
+    },
+    {
+      "path": "data/logs/research/bidirectional_cohort/v53_live_prefix_20260817T1227Z_v1.json",
+      "finding": "A linear notional-normalized scenario maps those seven outcomes over 2.99 days to +$108.8049 at $1,250, or +$63.7480 without the largest winner; this is an economic-relevance sensitivity, not a forecast or a fill replay."
+    },
+    {
+      "path": "data/logs/research/bidirectional_cohort/v53_live_prefix_20260817T1227Z_v1.json",
+      "finding": "The first $75 HYPE-only profile then recorded 0W/2L and -$0.891714; the subsequent four-asset executable profile recorded HYPE 0W/3L and -$2.021373."
+    },
+    {
+      "path": "docs/research-journal/v53-canary-lineage-scale-up-audit-v1.json",
+      "finding": "The pooled reused legacy ID was negative across 38 trades, but pooling crosses different assets, sizing, profiles, and execution contracts and therefore cannot identify the original HYPE-only route."
+    },
+    {
+      "path": "docs/research-journal/v54-hype-breakout-transfer-incident-reconciliation-v1.json",
+      "sha256": "9352fe29410069f359f177adf214003ac2df72514d341b9e304aab43ab2dfe67",
+      "finding": "The immutable 38-trade legacy lineage decomposes into original HYPE-only 6W/1L +$2.160920, larger HYPE-only 0W/2L -$0.891714, and cross-asset generations 12W/17L -$2.735203. BTC, ETH, and SOL were each negative after removing their largest winner. The incident record proves the unsupported promotion and separately diagnoses the two larger HYPE rows as one ordinary protected reversal and one eight-hour profit giveback; it does not falsely attribute both directions to notional alone."
+    },
+    {
+      "path": "docs/research-journal/v54-hype-native-breakout-v53-window-parity-v1.json",
+      "finding": "Native v2 matched canonical v1 across 1,167 same-window decisions and exposed two candidate entries that v53 compression rejected; one later crossed the 80 bps stop and one remained favorably unresolved at the audit cutoff."
+    },
+    {
+      "path": "docs/research-journal/v54-hype-native-historical-source-parity-v1.json",
+      "sha256": "5a154ac337ba9c705943a291541a42233d645b69036c81db2598fc83545c8f8e",
+      "finding": "The exact 8,643-byte Aug 6 prestart provider was recovered from its compressed implementation bundle and independently from the Aug 7 agent transcript; both match frozen SHA-256 3210a0f8...270d. A frozen 640-file historical repository replay matched the current provider byte-for-byte across 10,080 HYPE evaluations and 38 intents. The historical v11 exit shape used an 8h soft extension and 24h hard boundary; the final candidate deliberately changes only that exit selection to fixed eight hours after separate policy evidence. The favorable first-seven slice spans three profile fingerprints, so this does not claim that all seven shared one exact exit runtime."
+    },
+    {
+      "path": "docs/research-journal/v54-hype-native-exit-lineage-reconciliation-v1.json",
+      "sha256": "96f6f33b06fe2a234ab1018bcea84020af3e25a5cf36a1cf5fe8ea4764d720fb",
+      "finding": "Both observed regime-supported extensions gave back profit versus estimated fixed-eight-hour closes. The second forward boundary independently returned EXIT under the production extension control. The final candidate therefore freezes fixed eight hours, while the split historical partitions and winner-dependent two-path forward result keep exit-confidence limited."
+    },
+    {
+      "path": "docs/research-journal/v54-hype-native-opposite-exit-replay-v1.json",
+      "sha256": "dc71b40b4ebda9bcc6cb792f914b4d7209fe3339fd18e41cf12e2a8570aa9e60",
+      "finding": "The complete v54 exit contract was replayed on one year of HYPE bars with exact 4.32 bps fees, 2 bps residual slippage, 80 bps stops, and opposite-native-onset exits. Across identical signal-time/side entries, development favored fixed by 2,398.52 bps, while the already-opened block favored extension by 1,447.28 bps and remained favorable after removing its largest advantage. Neither policy was profitable in development."
+    },
+    {
+      "path": "data/logs/research/bidirectional_cohort/v54_hype_native_20260817T0725_exact_depth_v1.json",
+      "sha256": "f5ab43c541daa008096893a8f38a26052ae96a7b4452342de5f9eb6757d5cfea",
+      "finding": "The first post-publication finite-depth entry was 59.453924 on $1,250; the first sampled executable BBO stop cross produced -$12.000250 before funding after modeled 4.32 bps fees and 2 bps residual slippage per side. This is a BBO proxy, not proof of a venue mark trigger or private fill."
+    },
+    {
+      "path": "data/logs/research/bidirectional_cohort/v54_hype_native_20260817T0725_funded_stop_v1.json",
+      "sha256": "8329f35fc74bcdc07b8884b07b0ee1ef91b7a4b7fafe4408ba39928654ac62e3",
+      "finding": "The first post-publication path lost $12.093905 after finite-depth fees, residual slippage, and six exact hourly funding events. The stop is a sampled executable-BBO proxy rather than proof of a private venue fill or mark trigger."
+    },
+    {
+      "path": "data/logs/research/bidirectional_cohort/v54_hype_native_20260817T2020_funded_fixed8_v1.json",
+      "sha256": "4dc72fdcfff6c297ae1e0de33d18fcd68482481472e5b0c6224b93431f27b543",
+      "finding": "The second post-publication path returned +$13.754459 at its fixed-eight-hour finite-depth boundary after fees, residual slippage, and eight exact hourly funding events. Combined forward N=2 is +$1.660554, PF 1.137305, but -$12.093905 without the largest winner."
+    },
+    {
+      "path": "data/logs/research/bidirectional_cohort/v54_hype_native_20260817T2020_soft_exit_policy_v1.json",
+      "sha256": "78f8e61d211f163220cd0ba56242c022648b5f03a323e8aa799654389fbe7d5d",
+      "finding": "At the same boundary, exact production policy evidence classified RANGE with support 0.166667 below the 0.5 extension threshold and independently returned EXIT."
+    },
+    {
+      "path": "data/logs/research/bidirectional_cohort/v54_fixed8_current_equity_preflight_20260818_v1.json",
+      "sha256": "2bc40cf0d2a8d9d32cf447378aec73332c85ac1017e554fcca484837d272596f",
+      "finding": "Unsigned final-candidate preflight found BTC/HYPE flat and order-free with exact ledger reconciliation, resolved 4.32 bps HYPE taker fee, complete visible depth, configured leverage below venue maximum, and no execution authority. It sized from actual execution collateral $4,917.924 rather than assuming $5,000."
+    },
+    {
+      "path": "data/logs/research/bidirectional_cohort/v54_candidate_source_manifest_20260818_v1.json",
+      "sha256": "660df4f073fe2b21d6c3d8e1667b92df831a5ec44d128b80a6d1c57f650f18dd",
+      "finding": "This pre-boundary report-only snapshot froze 1,572 implementation files under composite SHA-256 624c0d9b...bd7df. It is superseded by the final ledger-bearing prestart bundle below because the report-only HYPE path serializer later gained explicit horizon target/book/delay provenance."
+    },
+    {
+      "path": "data/backups/bidirectional_cohort/prestart_20260818T044112.112473Z_0d1473fcce90/manifest.json",
+      "sha256": "f389e050bb8e1e5206c41152519320393459e965f3a964573d1c8d5782e8b204",
+      "finding": "The final verified prestart bundle binds profile 0d1473fc...5058 to 1,575 implementation files under composite SHA-256 179ad401...19d8 and 1,617 archived entries. An independent pass rehashed every archive entry with zero failures. It carries no execution authority."
+    }
+  ],
+  "observed_problem_or_opportunity": {
+    "problem": "One strategy ID was reused for original HYPE-only execution, a threefold notional increase, cross-asset transfer, and later contract generations.",
+    "consequence": "Profile-specific edge, sizing effects, and transfer failure became indistinguishable in pooled scorecards and tuning decisions.",
+    "opportunity": "Restore the original HYPE mechanism without restoring the contaminated identity or unsupported all-asset scope."
+  },
+  "applicable_regime": {
+    "decision_clock": "completed_1m_poll_with_completed_5m_breakout_onset",
+    "trigger": "current completed 5m state enters BREAKOUT after a non-BREAKOUT completed 5m state",
+    "breakout_definition": "close beyond the prior 60 completed 5m extrema by at least 8 bps with volume at least 2.5 times the prior 20-bar mean",
+    "side": "completed 1h SMA10 versus SMA30 structural direction",
+    "alignment_policy": "both continuation and structural fade remain eligible; breakout direction is report-only attribution"
+  },
+  "alternatives_considered": [
+    {
+      "alternative": "leave_v53_hype_compression_executable",
+      "decision": "not_selected_for_successor",
+      "tradeoff": "avoids change but has zero v53 eligible events and no exact live outcome evidence"
+    },
+    {
+      "alternative": "reuse_hype_breakout_onset_bidirectional_v1",
+      "decision": "rejected",
+      "tradeoff": "preserves a familiar name but continues evidence pooling across incompatible generations"
+    },
+    {
+      "alternative": "apply_breakout_to_btc_eth_sol_again",
+      "decision": "rejected",
+      "tradeoff": "adds cadence but repeats a transfer whose symbol results were negative or largest-winner dependent"
+    },
+    {
+      "alternative": "require_breakout_direction_to_match_hourly_structural_side",
+      "decision": "rejected",
+      "tradeoff": "would have excluded all four opposed-direction winners that produced nearly all of the reconciled six-trade HYPE profit; breakout direction remains attribution telemetry rather than an execution gate"
+    },
+    {
+      "alternative": "restore_a_fixed_take_profit_or_tight_profit_lock",
+      "decision": "rejected",
+      "tradeoff": "may reduce giveback but the frozen live and historical audits materially worsened all tested pre-soft locks"
+    },
+    {
+      "alternative": "restore_at_original_relative_16_7_percent_notional",
+      "decision": "viable_lower_exposure_alternative",
+      "tradeoff": "closest sizing parity at about $835 notional on $5K, but lower economic impact per opportunity"
+    },
+    {
+      "alternative": "restore_at_50_or_100_percent_account_notional",
+      "decision": "rejected_for_initial_identity_reconstruction",
+      "tradeoff": "more meaningful PnL but simultaneously changes identity and repeats the exposure region where deterioration first appeared"
+    }
+  ],
+  "proposed_live_change": {
+    "candidate_config": "configs/multi_asset_growth_first_5000_hype_native_reconstruction_candidate_v54.toml",
+    "candidate_config_role": "final_fixed_eight_hour_hype_only_candidate",
+    "candidate_config_sha256": "d9f4c501d90b5bc1c92e584fed2e5835f6c5979742975a16950aed3335c1645e",
+    "candidate_profile_fingerprint": "0d1473fcce906f8c4efa864514590b5c484587ce1881d5785ec28f72529f5058",
+    "provider_implementation": "src/hypervector/live/hype_native_breakout_provider.py",
+    "provider_implementation_sha256": "ffac29726f229ab3ed477129b1daebceffdfec3cac0ea561a87528bac22f8ea8",
+    "new_strategy_id": "hype_native_breakout_onset_bidirectional_v2",
+    "execution_symbols": [
+      "HYPE"
+    ],
+    "observer_only_provider": "hype_breakout_compression_alignment_bidirectional_v2",
+    "unchanged_btc_providers": [
+      "hulk_expansion_short_robust_v3",
+      "liquidity_sweep_long_1h_stop60_target60_v2"
+    ],
+    "sizing": {
+      "account_reference_usd": 5000.0,
+      "leverage": 5.0,
+      "margin_fraction": 0.05,
+      "maximum_notional_usd": 1250.0,
+      "account_notional_fraction_at_reference": 0.25,
+      "planned_80bps_stop_loss_before_fees_slippage_and_gaps_usd": 10.0
+    },
+    "exits": {
+      "protective_stop_bps": 80.0,
+      "fixed_take_profit": false,
+      "opposite_selected_onset": "close_without_same_cycle_reverse",
+      "maximum_hold_policy": "fixed",
+      "fixed_maximum_hold_seconds": 28800,
+      "regime_extension": false,
+      "hard_extension": false,
+      "final_policy_status": "frozen_pending_explicit_live_approval",
+      "manual_and_technical_emergency_close": true
+    }
+  },
+  "expected_upside": {
+    "technical": "Restores exact provider attribution and prevents cross-asset execution by construction.",
+    "economic": "Reopens the strongest early HYPE live mechanism at 1.5 times its original relative account-notional exposure. Two post-publication finite-depth paths total +$1.660554 after fees, residual slippage, and exact funding, with PF 1.137305; excluding the winner is -$12.093905. The separate linear seed sensitivity is +$108.80 over seven trades at this notional and +$63.75 without its largest winner, but neither sensitivity is a forward forecast or proof of private fills.",
+    "confidence": "low_because_forward_n2_is_winner_dependent_and_historical_development_is_negative"
+  },
+  "risks_and_failure_modes": [
+    "The seven-trade favorable HYPE-only slice may be regime luck or small-sample noise.",
+    "The favorable seed was overwhelmingly long-side evidence; one short winner cannot establish a short-side edge.",
+    "The one-year generic replay was negative and directly contradicts a durable unconditional edge claim.",
+    "The first $75 profile lost before cross-asset execution, so transfer was not the only source of deterioration.",
+    "The favorable first-seven slice spans three historical profile fingerprints and more than one observed holding duration; entry parity is proven, but their pooled profit cannot validate one exact exit implementation.",
+    "Both historical live extensions favored estimated fixed-eight-hour closes, but those closes were counterfactual and both trades were long. The repaired complete-contract replay remains split by partition; the second forward boundary agreed with EXIT under the production extension control but cannot prove durable exit superiority.",
+    "The entry mechanism is source-verified, but current routing, protection, persistence, and exit infrastructure intentionally differ from the historical runtime and still require an exact transitive prestart freeze.",
+    "The strategy may remain too sparse to create meaningful monthly PnL.",
+    "The two report-only forward paths are positive only because of one winner; a small additional loss would reverse their pooled result.",
+    "An 80 bps trigger is not a guaranteed realized-loss ceiling under gaps, latency, venue failure, or thin liquidity.",
+    "The 25 percent initial notional tier may still be too large if current HYPE execution friction is materially worse than the canary sample."
+  ],
+  "validation_completed": [
+    "New strategy identity differs from the contaminated legacy identity.",
+    "An immutable symbol/profile incident reconciliation separates HYPE sizing deterioration from cross-asset transfer and records permanent transfer controls and falsifiers.",
+    "The promotion-governance audit distinguishes explicit execution authorization from economic validation and records that the v14 expansion proceeded despite documentation saying edge was unestablished and transfer evidence adverse or insufficient.",
+    "Provider rejects BTC, ETH, and SOL before invoking the canonical collector.",
+    "Long and short intents, completed decision time, reference evidence, and readiness are preserved except for strategy identity.",
+    "An opposite native onset closes an existing HYPE side without same-cycle reversal.",
+    "The final configuration preserves the 80 bps stop, no fixed target, and opposite-intent close while freezing maximum hold at eight hours with no extension.",
+    "Compression alignment remains configured observe-only and both v53 BTC routes remain executable and unchanged.",
+    "Two focused and adjacent Python validation slices passed 102 and 105 tests respectively after implementation.",
+    "A bounded real observe-only poll completed with exact native and compression evidence and no signing/order authority.",
+    "The final base candidate profile fingerprint is 0d1473fc...5058. Its isolated observer intentionally rebinds ledger paths and deterministically becomes profile c29d2860...969b / run bidirectional-observe-1787027088994; all emitted records retained that exact identity.",
+    "A fixed v53-window replay produced 1,167 canonical and 1,167 native decisions with identical normalized payloads and two identical eligible intents.",
+    "A staged TUI regression shows HYPE ALIGN removed, HYPE NATIVE added, four exact directional scopes, HYPE $1,250 sizing, FIXED 8H, no regime extension, profit lock off, and CLI-only arming.",
+    "Two immutable finite-depth reports use the first locally received post-publication top-20 book, finite-depth entry/exit VWAP, exact 4.32 bps fees, and a separately declared 2 bps residual-slippage model; neither claims a venue fill.",
+    "The retained ledger exposed local/server wall-clock skew. The report keeps local receipt time as the causal ordering clock, discloses 321 exchange-ahead rows with a 1,716 ms maximum, and aborts above the explicit 2,000 ms bound.",
+    "Official HYPE funding coverage and causal 0xArchive oracle references are complete for both forward paths; exact hourly cashflows are included in the funded path totals with zero missing oracle rows.",
+    "A broader 234-test Python routing, execution-plan, stop, maximum-hold, provider-exit, restart, preflight, and candidate suite passed on the exact candidate bytes.",
+    "The complete non-network Python suite passed 6,122 tests with four intentional deselections and only deprecation warnings on the final fixed-eight-hour candidate bytes.",
+    "The complete Rust/TUI crate exited successfully on the final fixed-eight-hour candidate bytes with three local-runtime QA tests intentionally ignored; the bounded build used debug=0, incremental=0, and one job.",
+    "The pre-boundary report-only source manifest is superseded; the final candidate config hash is d9f4c501...1645 and base profile fingerprint is 0d1473fc...5058.",
+    "The exact-depth horizon serializer now exposes target_time_ms, selected book_time_ms, and book_delay_ms after a regression first failed on the missing fields; six focused path/script tests and scoped Ruff checks pass.",
+    "A second TDD cycle added a distinct complete-contract historical replay with opposite-native-onset exits. Two initial tests failed on the absent module and CLI mode; 35 focused exit/replay/market/runner tests, scoped Ruff check, and format verification now pass.",
+    "The original provider was recovered from the Aug 6 v11 prestart bundle and independently from an Aug 7 transcript at the exact frozen 3210a0f8...270d hash. Its only two current-source differences are non-execution text; a frozen 640-file historical repository replay matched all 10,080 evaluations and 38 intents against the current provider on the same window.",
+    "A separate report-only soft-exit adapter delegated to the production maximum-hold policy and independently returned EXIT at the second eight-hour boundary; the final candidate no longer depends on that evidence path because fixed hold is frozen.",
+    "The final report-only observer emitted 16 exact-identity records, zero actions, and no signing authority; its decision ledger SHA-256 is b3875310...d3ea.",
+    "The final unsigned preflight used current collateral, exact fee/depth evidence, flat/order-free venue and ledger reconciliation, and no execution authority."
+  ],
+  "validation_required_before_live_start": [
+    "Complete scoped static checks and independently verify the final immutable prestart bundle after the final source freeze.",
+    "Require venue-flat HYPE, zero owned HYPE orders, exact account/ledger reconciliation, correct HYPE leverage ceiling, and current fee/depth evidence.",
+    "Arm only with a separate explicit user approval and the normal live-risk flags."
+  ],
+  "success_metrics": [
+    "Every eligible and ineligible decision is attributed only to hype_native_breakout_onset_bidirectional_v2|HYPE.",
+    "Every filled entry has a reconciled reduce-only venue stop and a persisted provider execution plan.",
+    "Closed after-cost PnL, PF, return on margin, maximum drawdown, fees, funding, MFE/MAE, exit reason, missed opportunities, and largest-winner-removed PnL are reported by side and regime.",
+    "No cross-asset intents, duplicate strategy identity, stale submission, unprotected exposure, or unexplained ledger gap occurs.",
+    "Economic results are evaluated prospectively and are not represented as proven from the seven-trade seed sample."
+  ],
+  "failure_and_rollback": {
+    "technical_failure": "Fail closed, preserve/reconcile the venue stop, close only through the existing verified reduce-only lifecycle when required, and do not restart until the defect is diagnosed.",
+    "economic_underperformance": "Report exact losses and mechanism diagnosis immediately; propose disable, repair, or resize with evidence and obtain explicit approval before changing live authority.",
+    "rollback_boundary": "Only transition while venue-flat and order-free to an independently verified prior config bundle; never relabel candidate trades as legacy HYPE evidence."
+  },
+  "confidence": {
+    "identity_and_scope_fix": "high",
+    "entry_contract_parity": "high_subject_to_full_transitive_prestart_hash",
+    "exit_contract_selection": "medium_low_fixed_eight_hours_selected_with_conflicting_historical_partition",
+    "initial_25_percent_notional_sizing": "medium_design_choice_not_edge_evidence",
+    "durable_profitability": "low_to_medium",
+    "cross_asset_transfer_should_remain_rejected": "high"
+  },
+  "falsifiers": [
+    "Any candidate intent or evaluation carries a symbol other than HYPE.",
+    "Any candidate entry differs from the canonical completed 5m onset and completed 1h structural-side decision on the same bars.",
+    "Any open candidate lifecycle lacks its reconciled reduce-only stop or persisted execution plan.",
+    "A stable exact-contract prospective sample is negative after costs or dependent on one winner, updating the economic thesis downward.",
+    "A source/config hash or venue/ledger preflight invariant changes before arming.",
+    "A materially different preregistered mechanism demonstrates stronger compatible forward evidence."
+  ],
+  "explicit_approval": {
+    "requested": false,
+    "decision": "superseded_before_approval",
+    "request": "No live cutover is requested for the bidirectional v2 candidate. Review the separate long-authority v3 report after its broader validation completes."
+  }
+}

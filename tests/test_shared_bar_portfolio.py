@@ -5,8 +5,12 @@ from __future__ import annotations
 import pandas as pd
 import pytest
 
+from hypervector.cohort_profit_lock_policy import ProfitLockPolicy
 from hypervector.research.shared_bar_portfolio import evaluate_shared_bar_portfolio
 from hypervector.research.mu_hip3_archive_reporting import report_summary
+from hypervector.research.shared_portfolio_completed_peak_lock import (
+    CompletedBarPeakLockPolicy,
+)
 from hypervector.research.shared_portfolio_models import SharedPortfolioConfig
 
 
@@ -63,6 +67,107 @@ def _zero_friction_config(**overrides: object) -> SharedPortfolioConfig:
     return SharedPortfolioConfig(**values)
 
 
+def test_completed_bar_profit_lock_closes_at_next_executable_open() -> None:
+    """A prior active lock may trigger on a completed bar, then exit causally."""
+    bars = _bars(
+        [100.0, 100.0, 99.0, 99.6, 99.6],
+        [100.0, 100.0, 99.5, 99.7, 99.6],
+        [100.0, 99.0, 98.8, 99.5, 99.6],
+    )
+    policy = ProfitLockPolicy("test_60_20_30", 60.0, 20.0, 30.0)
+
+    report = evaluate_shared_bar_portfolio(
+        bars,
+        _signals(bars, ["short", None, None, None, None]),
+        _zero_friction_config(
+            target_margin_pct=None,
+            stop_margin_pct=10.0,
+            completed_bar_profit_lock=policy,
+        ),
+    )
+
+    trade = report.trades[0]
+    assert trade.exit_reason == "profit_lock"
+    assert trade.exit_position == 3
+    assert trade.exit_price == pytest.approx(99.6)
+
+
+def test_completed_bar_profit_lock_cannot_activate_and_trigger_same_bar() -> None:
+    """The activation bar cannot use its own later path to claim a lock exit."""
+    bars = _bars(
+        [100.0, 100.0, 99.1, 99.1],
+        [100.0, 100.0, 99.1, 99.1],
+        [100.0, 99.0, 99.0, 99.1],
+    )
+    policy = ProfitLockPolicy("test_60_20_30", 60.0, 20.0, 30.0)
+
+    report = evaluate_shared_bar_portfolio(
+        bars,
+        _signals(bars, ["short", None, None, None]),
+        _zero_friction_config(
+            target_margin_pct=None,
+            stop_margin_pct=10.0,
+            completed_bar_profit_lock=policy,
+        ),
+    )
+
+    assert report.trades[0].exit_reason == "end_of_data"
+
+
+def test_completed_close_peak_lock_exits_at_next_open() -> None:
+    """A prior gate-close peak may trigger only after a later completed close."""
+    bars = _bars(
+        [100.0, 100.0, 100.5, 100.4],
+        [100.0, 100.5, 100.5, 100.4],
+        [100.0, 100.0, 100.4, 100.4],
+        [100.0, 100.5, 100.4, 100.4],
+    )
+    policy = CompletedBarPeakLockPolicy("gate_2pct_lock85", 2.0, 0.85)
+
+    report = evaluate_shared_bar_portfolio(
+        bars,
+        _signals(bars, ["long", None, None, None]),
+        _zero_friction_config(
+            leverage=5.0,
+            target_margin_pct=None,
+            stop_margin_pct=None,
+            completed_bar_peak_lock=policy,
+        ),
+    )
+
+    trade = report.trades[0]
+    assert trade.exit_reason == "profit_lock"
+    assert trade.exit_position == 3
+    assert trade.exit_price == pytest.approx(100.4)
+
+
+def test_completed_close_peak_lock_ignores_intrabar_wicks() -> None:
+    """An unclosed wick cannot activate the gate-basis ratchet."""
+    bars = _bars(
+        [100.0, 100.0, 100.0, 99.9],
+        [100.0, 110.0, 100.0, 99.9],
+        [100.0, 100.0, 99.9, 99.9],
+        [100.0, 100.0, 99.9, 99.9],
+    )
+
+    report = evaluate_shared_bar_portfolio(
+        bars,
+        _signals(bars, ["long", None, None, None]),
+        _zero_friction_config(
+            leverage=5.0,
+            target_margin_pct=None,
+            stop_margin_pct=None,
+            completed_bar_peak_lock=CompletedBarPeakLockPolicy(
+                "gate_2pct_lock85",
+                2.0,
+                0.85,
+            ),
+        ),
+    )
+
+    assert report.trades[0].exit_reason == "end_of_data"
+
+
 def test_entry_is_causal_and_uses_only_one_shared_equity_pool() -> None:
     bars = _bars(
         [100.0, 101.0, 102.0, 103.0],
@@ -82,6 +187,25 @@ def test_entry_is_causal_and_uses_only_one_shared_equity_pool() -> None:
     assert report.trades[0].entry_price == pytest.approx(101.0)
     assert report.trades[0].exit_reason == "target"
     assert report.final_equity == pytest.approx(15_150.0)
+
+
+def test_optional_notional_cap_limits_margin_without_changing_leverage() -> None:
+    """A venue/profile cap must bind before quantity and entry fees are derived."""
+    bars = _bars(
+        [100.0, 100.0, 100.0],
+        [100.0, 101.1, 100.0],
+        [100.0, 100.0, 100.0],
+    )
+    report = evaluate_shared_bar_portfolio(
+        bars,
+        _signals(bars, ["long", None, None]),
+        _zero_friction_config(maximum_notional_usd=5_000.0),
+    )
+
+    trade = report.trades[0]
+    assert trade.notional_usd == pytest.approx(5_000.0)
+    assert trade.margin_usd == pytest.approx(500.0)
+    assert trade.leverage == pytest.approx(10.0)
 
 
 def test_same_bar_stop_and_target_uses_conservative_stop_first() -> None:
@@ -228,6 +352,135 @@ def test_fill_time_stop_ceiling_clamps_structural_stop_after_adverse_gap(
     trade = report.trades[0]
     assert trade.exit_reason == "stop"
     assert trade.stop_price == pytest.approx(expected_stop)
+
+
+@pytest.mark.parametrize(
+    (
+        "direction",
+        "signal_stop",
+        "exit_high",
+        "exit_low",
+        "expected_stop",
+        "expected_target",
+    ),
+    [
+        ("long", 99.9, 100.7, 100.0, 99.8, 100.6),
+        ("short", 100.1, 100.0, 99.3, 100.2, 99.4),
+    ],
+)
+def test_fill_time_stop_band_derives_reward_risk_target(
+    direction: str,
+    signal_stop: float,
+    exit_high: float,
+    exit_low: float,
+    expected_stop: float,
+    expected_target: float,
+) -> None:
+    """The live-compatible stop band must set an exact fill-time R target."""
+    bars = _bars(
+        [100.0, 100.0, 100.0],
+        [100.0, 100.0, exit_high],
+        [100.0, 100.0, exit_low],
+    )
+    signals = _signals(bars, [direction, None, None])
+    signals["stop_price"] = [signal_stop, None, None]
+
+    report = evaluate_shared_bar_portfolio(
+        bars,
+        signals,
+        _zero_friction_config(
+            target_margin_pct=None,
+            stop_margin_pct=None,
+            minimum_stop_distance_bps=20.0,
+            maximum_stop_distance_bps=75.0,
+            target_r_multiple=3.0,
+        ),
+    )
+
+    trade = report.trades[0]
+    assert trade.stop_price == pytest.approx(expected_stop)
+    assert trade.target_price == pytest.approx(expected_target)
+    assert trade.exit_reason == "target"
+
+
+def test_reward_risk_contract_rejects_ambiguous_or_inverted_bounds() -> None:
+    """Malformed exit contracts must fail before the simulator runs."""
+    with pytest.raises(ValueError, match="target_margin_pct"):
+        _zero_friction_config(target_margin_pct=10.0, target_r_multiple=3.0)
+    with pytest.raises(ValueError, match="minimum_stop_distance_bps"):
+        _zero_friction_config(
+            minimum_stop_distance_bps=80.0,
+            maximum_stop_distance_bps=75.0,
+        )
+
+
+@pytest.mark.parametrize(
+    ("direction", "signal_stop"),
+    [("long", 98.0), ("short", 102.0)],
+)
+def test_native_stop_sizes_notional_from_fixed_equity_risk(
+    direction: str,
+    signal_stop: float,
+) -> None:
+    """Native stop distance, not leverage, must determine bankroll risk."""
+    bars = _bars(
+        [100.0, 100.0, 100.0],
+        [100.0, 100.0, 100.0],
+        [100.0, 100.0, 100.0],
+    )
+    signals = _signals(bars, [direction, None, None])
+    signals["stop_price"] = [signal_stop, None, None]
+
+    report = evaluate_shared_bar_portfolio(
+        bars,
+        signals,
+        _zero_friction_config(
+            target_margin_pct=None,
+            stop_margin_pct=None,
+            risk_fraction_per_position=0.0075,
+        ),
+    )
+
+    trade = report.trades[0]
+    assert trade.notional_usd == pytest.approx(5_625.0)
+    assert trade.margin_usd == pytest.approx(562.5)
+    assert trade.notional_usd * 0.02 == pytest.approx(112.5)
+
+
+def test_fixed_risk_sizing_still_obeys_margin_and_notional_caps() -> None:
+    """A tight native stop cannot enlarge exposure beyond operational caps."""
+    bars = _bars([100.0] * 3, [100.0] * 3, [100.0] * 3)
+    signals = _signals(bars, ["long", None, None])
+    signals["stop_price"] = [99.9, None, None]
+
+    report = evaluate_shared_bar_portfolio(
+        bars,
+        signals,
+        _zero_friction_config(
+            target_margin_pct=None,
+            stop_margin_pct=None,
+            risk_fraction_per_position=0.0075,
+            maximum_notional_usd=5_000.0,
+        ),
+    )
+
+    assert report.trades[0].notional_usd == pytest.approx(5_000.0)
+
+
+def test_fixed_risk_sizing_requires_a_resolved_adverse_stop() -> None:
+    """Risk sizing must fail closed when no price risk can be measured."""
+    bars = _bars([100.0] * 3, [100.0] * 3, [100.0] * 3)
+
+    with pytest.raises(ValueError, match="risk_fraction_per_position"):
+        evaluate_shared_bar_portfolio(
+            bars,
+            _signals(bars, ["long", None, None]),
+            _zero_friction_config(
+                target_margin_pct=None,
+                stop_margin_pct=None,
+                risk_fraction_per_position=0.0075,
+            ),
+        )
 
 
 def test_wall_clock_max_hold_exits_at_first_quote_after_archive_gap() -> None:

@@ -26,6 +26,7 @@ def test_orderbook_context_separates_aligned_and_opposed_independent_paths() -> 
         "orderbook_alignment_rule": (
             "directional_opi_above_zero_at_routing_publication"
         ),
+        "path_start_policy": ("first_full_minute_at_or_after_candidate_availability"),
     }
     assert report["coverage"] == {
         "exact_one_blocker_candidates": 2,
@@ -255,6 +256,40 @@ def test_eligible_signals_receive_causal_pressure_and_regime_annotations() -> No
     }
 
 
+def test_orderbook_diagnostic_reports_native_pressure_translation() -> None:
+    """The audit must expose provider pressure that flips before publication."""
+    evaluation = _eligible_evaluation(_DECISION_MS, side="long")
+    readiness = evaluation["readiness"]
+    assert isinstance(readiness, dict)
+    metrics = readiness["metrics"]
+    assert isinstance(metrics, dict)
+    metrics["imbalance_10"] = 0.20
+    report = build_orderbook_opportunity_diagnostics(
+        [
+            _row("configuration_identity", {}, _DECISION_MS - 60_000),
+            _row(
+                "intent_routing",
+                {"evaluations": [evaluation]},
+                _DECISION_MS + 2_000,
+            ),
+        ],
+        {
+            "HYPE": [
+                _row(
+                    "book_observation",
+                    _book(_DECISION_MS + 1_000, -0.40, 0.25),
+                    _DECISION_MS + 1_500,
+                )
+            ]
+        },
+        horizons_minutes=(5,),
+    )
+
+    translation = report["eligible_pressure_translation"]
+    provider = translation["by_provider_symbol"]["provider|HYPE"]
+    assert provider["translation_state"]["flipped"] == 1
+
+
 def _cohort_records() -> list[dict[str, object]]:
     return [
         _row(
@@ -357,6 +392,7 @@ def _bars() -> list[dict[str, object]]:
         100.70,
         100.60,
         100.50,
+        100.40,
     ]
     return [
         {

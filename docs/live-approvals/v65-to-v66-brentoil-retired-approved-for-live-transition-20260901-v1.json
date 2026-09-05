@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "document_type": "cohort_profile_change_approval",
+  "approval_status": "approved_for_live_transition",
+  "approved_at_utc": "2026-09-01T09:06:08Z",
+  "approved_by": "operator_in_conversation",
+  "operator_approval": "If something broken will likely lead to a negative portfolio effect, do not leave it broken; fix the strategy or replace it and keep the new TUI version live.",
+  "execution_authority": "none",
+  "previous_profile": {
+    "profile_id": "multi_asset_growth_first_5000_five_asset_bleeding_stopped_candidate_v65",
+    "profile_fingerprint": "167c090dc962b72f2e43c616f0f4cc8dfd9f70bda314ef0713a5a481a0590d0c"
+  },
+  "candidate_profile": {
+    "profile_id": "multi_asset_growth_first_5000_four_asset_brentoil_retired_candidate_v66",
+    "profile_fingerprint": "b5e744120de021e72f872e733db23f88b182451c8de05eb14d5ad9f81098a132"
+  },
+  "change_scopes": [
+    "retire_brentoil_after_rejected_transfer_and_largest_winner_dependent_live_evidence",
+    "remove_both_brentoil_execution_directions_without_post_hoc_short_only_replacement",
+    "preserve_every_retained_v65_execution_contract"
+  ],
+  "recommendation_evidence": [
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v66_brentoil_retirement_20260901_v1.json",
+      "sha256": "7acb76970d0e83f945d05ddb13f3e3a36d7e954b687b9a6bda53bf25ba88debb"
+    }
+  ],
+  "rollback": {
+    "config_path": "../../configs/multi_asset_growth_first_5000_five_asset_bleeding_stopped_candidate_v65.toml",
+    "profile_fingerprint": "167c090dc962b72f2e43c616f0f4cc8dfd9f70bda314ef0713a5a481a0590d0c",
+    "sha256": "ecc4955588be51f7ab579e173366309a4a2bdb3afdfd75de8307970db5775b07"
+  },
+  "retirements": [
+    {
+      "retired_scope": {
+        "strategy_id": "hip3_breakout_pressure_sndk_gold_brent_fresh15s_bidirectional_v2",
+        "symbol": "xyz:BRENTOIL",
+        "side": "long"
+      },
+      "replacement_scope": null
+    },
+    {
+      "retired_scope": {
+        "strategy_id": "hip3_breakout_pressure_sndk_gold_brent_fresh15s_bidirectional_v2",
+        "symbol": "xyz:BRENTOIL",
+        "side": "short"
+      },
+      "replacement_scope": null
+    }
+  ]
+}

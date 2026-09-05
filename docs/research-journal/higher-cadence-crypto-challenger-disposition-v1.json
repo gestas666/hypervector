@@ -1,0 +1,154 @@
+{
+  "schema_version": "higher_cadence_crypto_challenger_disposition_v1",
+  "hypothesis_id": "higher-cadence-crypto-challenger-disposition",
+  "generated_at_utc": "2026-08-16T19:06:00+00:00",
+  "mode": "report_only",
+  "problem": "Determine whether any previously tested 1m/5m crypto family supplies a distinct, realistically executable challenger to the three live v52 routes without reopening failed experiments or selecting on observed losses.",
+  "baseline": {
+    "profile_id": "multi_asset_growth_first_5000_evidence_bound_successor_v52",
+    "profile_fingerprint": "662d28b352cfc4f09e08c71ee67c8f044421483f2932539b09ea082b5e4f27f7",
+    "active_higher_cadence_route": "hype_breakout_compression_alignment_bidirectional_v2|HYPE",
+    "baseline_action": "continue unchanged and collect the first exact attributable v52 lifecycle"
+  },
+  "decision": "No distinct higher-cadence crypto challenger is ready for a live-change proposal. Keep v52 unchanged. Close the exact failed families below, preserve their reopening conditions, and continue the predeclared first-eligible v52 lifecycle audit. The fixed MU transport-parity forward window remains a separate report-only external-asset investigation and cannot alter v52 automatically.",
+  "highest_value_next_investigation": {
+    "rank": 1,
+    "hypothesis_id": "v52-first-eligible-lifecycle-audit-v1",
+    "reason": "v52 has no eligible decisions, fills, or closed lifecycles yet, so exact entry, protection, friction, and exit translation is the largest unresolved evidence gap for capital already exposed to the current design",
+    "minimum_update_evidence": "one attributable eligible v52 decision with action or withholding; any fill additionally requires reconciled protection and a resolved lifecycle",
+    "automatic_live_change": false
+  },
+  "candidate_dispositions": [
+    {
+      "hypothesis_id": "hypertrader-impulse-ml-v1",
+      "family": "Hypertrader 1m impulse ML mean-reversion fades",
+      "status": "rejected",
+      "finding": "The saved holdout had 288 long and 148 short production trades with PF 0.306 and 0.370 and strongly negative margin returns. Runtime and saved-evaluation barrier, hold, and leverage contracts also differ.",
+      "scope": "Reject the saved v1 model bundles and unchanged source contract, not every future range mean-reversion hypothesis.",
+      "confidence": "high for non-promotion of saved v1",
+      "reopen_condition": "A newly identified, exact causal source revision with matching runtime/replay exits must be positive after fees, funding, slippage, and largest-winner removal on frozen chronological and untouched evidence."
+    },
+    {
+      "hypothesis_id": "venue-native-1m-orderflow-impulse-v1",
+      "family": "BTC/SOL venue-native 1m continuation, reversion, L2, and ML impulse",
+      "status": "rejected",
+      "finding": "All four predeclared arms were negative at 13-bps nominal and 20-bps stress costs; every symbol-side cell was negative and the OOS Ridge and LightGBM selections were also negative.",
+      "scope": "Reject the exact frozen event, feature, label, and friction family.",
+      "confidence": "high",
+      "reopen_condition": "A materially different preregistered event mechanism must clear the gross cost hurdle before modeling and remain positive in untouched evidence."
+    },
+    {
+      "hypothesis_id": "five-minute-liquidity-sweep-reclaim-v1",
+      "family": "BTC/SOL 5m continuation and reclaim-reversal sweep events",
+      "status": "rejected",
+      "finding": "Across 15,321 exact lifecycles, both arms were negative before fees, after nominal and stress friction, in every chronological fold, every long/short cell, and every causal 15m regime slice.",
+      "scope": "Reject both exact arms and nearby threshold rescue on the opened interval.",
+      "confidence": "high",
+      "reopen_condition": "Only a materially new causal event definition with preregistered thresholds and positive pre-fee expectancy can reopen this family."
+    },
+    {
+      "hypothesis_id": "btc-five-minute-l2-expected-return-v2",
+      "family": "BTC 5m L2 expected-return Ridge and LightGBM",
+      "status": "rejected",
+      "finding": "Maximum selected predicted gross returns were 5.92 bps for Ridge and 3.56 bps for LightGBM, below the 13/20-bps execution hurdles, so both models produced zero qualifying trades.",
+      "scope": "Reject the exact V2 feature, label, model, and cost contract.",
+      "confidence": "high",
+      "reopen_condition": "A new causal feature/event family must show an OOS gross edge above measured execution costs before leverage or threshold changes are considered."
+    },
+    {
+      "hypothesis_id": "multi-asset-low-timeframe-matrix-v1",
+      "family": "BTC/ETH/SOL/HYPE bidirectional low-timeframe matrix",
+      "status": "rejected",
+      "finding": "No candidate was positive in all chronological segments. SOL long was positive in development and validation but negative in pseudo-holdout; BTC and HYPE candidates failed their evaluated segments.",
+      "scope": "Reject the exact tested strategy/parameter matrix, not all low-timeframe trading.",
+      "confidence": "medium-high",
+      "reopen_condition": "A separately preregistered mechanism must survive untouched chronological evidence, realistic friction, and largest-winner sensitivity without selecting a side after outcomes are visible."
+    },
+    {
+      "hypothesis_id": "hype-five-minute-not-breakout-v1",
+      "family": "HYPE 5m not-breakout exits",
+      "status": "rejected",
+      "finding": "Fixed 60m produced four longs, PF 0.6676, and -28.1350 bps; target-20-then-60m produced three longs, PF 0.6738, and -15.5073 bps. Later prefixes remained negative at every tested horizon across 128/42/21/10 resolutions.",
+      "scope": "Reject this exact not-breakout mechanism; it is not the live v52 HYPE alignment-v2 route.",
+      "confidence": "high",
+      "reopen_condition": "A distinct HYPE mechanism with new identity must beat alignment-v2 on shared timestamps and untouched evidence after exact costs."
+    },
+    {
+      "hypothesis_id": "sol-hourly-cross-relaxed-route-native-v1",
+      "family": "SOL hourly-cross one-blocker relaxation with route-native L2, mark, fee, and funding replay",
+      "status": "rejected",
+      "finding": "The corrected immutable prospective snapshot found one deployable resolved short at -12.3769 bps after costs. A second long was non-deployable because live SOL was already occupied and remained pending at approximately -46.84 bps. Earlier five exact missing-cross counterfactuals lost 62.91 bps in aggregate.",
+      "scope": "Reject removing the hourly cross under this exact frozen contract; do not infer that every future SOL mechanism is negative.",
+      "confidence": "medium-high for retaining the cross; low for broad SOL expectancy",
+      "reopen_condition": "A newly preregistered causal SOL entry mechanism, or at least 12 independent deployable one-blocker episodes, must remain positive after exact costs and largest-winner removal without using the pending non-deployable lifecycle as portfolio PnL."
+    },
+    {
+      "hypothesis_id": "oi-forced-deleveraging-exhaustion-v2",
+      "family": "BTC/SOL OI-conditioned forced-deleveraging exhaustion",
+      "status": "rejected",
+      "finding": "Thirty-three eligible events averaged -7.0365 bps nominal after costs. The fully exhausted subgroup occurred once and was 100% largest-winner dependent; confirmation remained sealed.",
+      "scope": "Reject the frozen thresholds and horizon without post-hoc inversion, subgroup selection, or ML rescue.",
+      "confidence": "medium-high for the base-event rejection; low for the one-event exhaustion subgroup",
+      "reopen_condition": "A prospective capture must accumulate at least 20 full exhaustion events with at least five per symbol under the same receipt-causal feature contract."
+    },
+    {
+      "hypothesis_id": "hype-breakout-retest-fade-v1",
+      "family": "HYPE breakout retest, continuation, and failed-breakout fade",
+      "status": "rejected",
+      "finding": "All confirmed retests lost 5,390.23 bps with PF 0.825. The least-bad failed-breakout fade still lost 1,752.37 bps with PF 0.880 and was positive in only two of five folds.",
+      "scope": "Reject the exact policy family and threshold neighborhood.",
+      "confidence": "high",
+      "reopen_condition": "A distinct preregistered mechanism must be fold-stable, positive after costs and largest-winner removal, and outperform live alignment-v2 on shared timestamps."
+    },
+    {
+      "hypothesis_id": "btc-source-follow-unchanged-v1",
+      "family": "BTC Hypervelocity Source Follow unchanged contract",
+      "status": "rejected",
+      "finding": "The one-year deployed-shape replay completed 782 trades, lost $17.8237 on $500, produced PF 0.6193, and paid $13.0824 in modeled fees. Alternative stop/target geometry remained negative.",
+      "scope": "Reject restoring the unchanged entry contract; payoff-grid changes alone are insufficient.",
+      "confidence": "high for unchanged deployed-shape failure",
+      "reopen_condition": "A new causal entry mechanism with a distinct identity must be positive across untouched partitions after exact friction and largest-winner sensitivity."
+    }
+  ],
+  "sol_mark_precision_repair": {
+    "defect": "The route-native adapter reduced activeAssetCtx receipt identity from nanoseconds to milliseconds and falsely rejected distinct venue updates as conflicting.",
+    "observed_rows": "Four millisecond buckets contained different marks but distinct received_ts_ns values; the frozen source window had 103,911 mark rows and 103,911 unique nanosecond receipts.",
+    "repair": "Preserve and order by received_ts_ns; deduplicate identical exact receipts and continue rejecting different prices at one exact nanosecond identity.",
+    "validation": "The new end-to-end regression failed before the repair, then 35 focused SOL shadow/command/monitor tests and Ruff passed. The real immutable snapshot subsequently published resolved_evidence_available.",
+    "live_effect": "none; the adapter and observer are report-only and v52 was not changed"
+  },
+  "evidence": [
+    {"path": "../reviews/2026-08-02-hypertrader-impulse-ml-v1.md", "sha256": "e209c2fa86df136c8912cc4ad5d352cd1a1845400d23b53202ca709167a5491f", "bytes": 2896},
+    {"path": "venue-native-1m-orderflow-impulse-v1.json", "sha256": "a9be02531d0b5cce988bfcb4db4b338147832217451b70de2925721e7d7b91d6", "bytes": 5704},
+    {"path": "5m-liquidity-sweep-reclaim-v1.json", "sha256": "05c01aab0c3aad58b4f3288045c30afee8d3df48495d518ae9939583c9f34115", "bytes": 4544},
+    {"path": "../reviews/2026-08-02-low-tf-l2-expected-return.md", "sha256": "c609341b42e845c718d58fb11b0200fa196d3b46678e6e0a57e2504e691314fd", "bytes": 3872},
+    {"path": "../reviews/2026-08-01-bidirectional-multi-asset-low-tf.md", "sha256": "5146dd90185141719ea5da9e0d918dafcd3041b999d6b852fa6487be0b4273d6", "bytes": 7776},
+    {"path": "../reviews/2026-08-04-live-portfolio-decision-range-retirement.md", "sha256": "b7dbb124574084149a9f657e3e60ca53d83e050fca6899a5af6f0cbb60148386", "bytes": 5061},
+    {"path": "../reviews/2026-08-08-v25-live-prefix-exit-trajectory.md", "sha256": "a8db32e84b3b99817722ce170ca9d49002c2abe7fad0f768c06163636cb216ca", "bytes": 6260},
+    {"path": "oi-forced-deleveraging-exhaustion-v2.json", "sha256": "28ba4a9c4320d64d966482e8b8791843592b3b918a38e4a524c3991e965a71da", "bytes": 3830},
+    {"path": "../reviews/2026-08-10-hype-breakout-retest-economic-diagnostic.md", "sha256": "b6a0a08f4bcc762af5a0ea172fc52d461af9572ff81b375becfe9127d1e2706a", "bytes": 2317},
+    {"path": "retired-strategy-reexamination-v1.json", "sha256": "ee3099f1238d4fe0729f685890e9c6c32d2047099dd59a117cf0078db1766310", "bytes": 9212},
+    {"path": "../../data/logs/research/bidirectional_cohort/v51_sol_route_native_one_blocker_shadow_20260816T1901Z_v1.json", "sha256": "c6babe37f7aa53506daa021cac3fe2ad8d0e30dd599cf787c8af740feebccf9b", "bytes": 13266},
+    {"path": "../../data/logs/research/hype_compression_breakout_challenger_20260816_v6_alignment/report.json", "sha256": "53c37e529f79223c5e7290a5cd07f5c95897be1850122bf091e5dfbcacb29354", "bytes": 211167},
+    {"path": "../../configs/multi_asset_growth_first_5000_evidence_bound_successor_v52.toml", "sha256": "bcc46284503a2b38b43ee1f6dca473d32edfb7c9f2cb5cd50dd828f9dabe00fb", "bytes": 1993}
+  ],
+  "limitations": [
+    "The evidence windows, symbols, and execution contracts differ and are not pooled into one expectancy estimate.",
+    "Rejected means the exact frozen hypothesis is closed; it does not prove every future strategy at the same timeframe is unprofitable.",
+    "The corrected SOL sample has one deployable resolved lifecycle, so its exact numeric expectancy remains highly uncertain even though the relaxation lacks supporting evidence.",
+    "v52 has not produced an eligible decision or lifecycle, so current live profitability remains unestablished."
+  ],
+  "authority": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_live_change": false,
+    "runtime_strategy_changed": false,
+    "change_proposals": []
+  },
+  "confidence": {
+    "technical_reconciliation": "high",
+    "exact_family_dispositions": "high except medium-high for SOL relaxation and the multi-asset matrix",
+    "v52_profitability": "not established"
+  },
+  "falsifier": "Update an individual disposition only if its source evidence fails checksum or causal recomputation, an implementation/parity defect changes its economics, or genuinely new preregistered evidence meets that row's reopening contract."
+}

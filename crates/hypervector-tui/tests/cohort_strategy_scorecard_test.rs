@@ -210,6 +210,21 @@ fn rejects_strategy_scorecard_without_exact_provider_coverage() {
 }
 
 #[test]
+fn accepts_low_to_medium_strategy_and_directional_confidence() {
+    let mut document = checkpoint();
+    let record = &mut document["audit"]["strategy_scorecard"]["by_provider_symbol"]["hype|HYPE"];
+    record["confidence"] = json!("low_to_medium");
+    record["directional_research"]["long"]["confidence"] = json!("low_to_medium");
+
+    let parsed =
+        parse_cohort_checkpoint(&document.to_string()).expect("supported scorecard confidence");
+    let row = &parsed.observer_provider_journal[0];
+
+    assert_eq!(row.confidence.as_deref(), Some("low_to_medium"));
+    assert_eq!(row.directional_research["long"].confidence, "low_to_medium");
+}
+
+#[test]
 fn rejects_directional_research_with_a_mismatched_side() {
     let mut document = checkpoint();
     document["audit"]["strategy_scorecard"]["by_provider_symbol"]["hype|HYPE"]["directional_research"]

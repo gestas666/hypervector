@@ -84,6 +84,36 @@ def test_recovery_decision_revision_preserves_first_causal_timeline() -> None:
     assert timeline[0]["primary_regime"] == "TREND_UP"
 
 
+def test_restart_readiness_seed_revisions_are_not_indexed() -> None:
+    """Startup-only annotations cannot alter trade-reflection evidence."""
+    first = _evaluation_row("live-run-1", "TREND_UP")
+    second = _evaluation_row("live-run-1", "TREND_DOWN")
+    for row in (first, second):
+        values = row["payload"]
+        assert isinstance(values, dict)
+        evaluations = values["evaluations"]
+        assert isinstance(evaluations, list)
+        evaluation = evaluations[0]
+        assert isinstance(evaluation, dict)
+        evaluation["backend_non_action_reason"] = "pre_activation_readiness_seed"
+
+    evidence = build_reflection_evidence_index([first, second])
+
+    assert evidence.evaluations == {}
+    assert evidence.timelines == {}
+
+
+def test_conflicting_real_evaluation_inside_one_run_fails_closed() -> None:
+    """A genuine same-run decision revision remains an evidence failure."""
+    with pytest.raises(ValueError, match="conflicting duplicate trade-reflection"):
+        build_reflection_evidence_index(
+            [
+                _evaluation_row("live-run-1", "TREND_UP"),
+                _evaluation_row("live-run-1", "TREND_DOWN"),
+            ]
+        )
+
+
 def test_independent_canonical_regime_events_are_indexed_for_reflections() -> None:
     """Trade journals retain canonical context after Range execution retires."""
     evidence = build_reflection_evidence_index(

@@ -8,18 +8,54 @@ from collections.abc import Callable, Mapping, Sequence
 from datetime import UTC, datetime
 from hashlib import sha256
 import json
-import math
 from pathlib import Path
-import sys
 import time
 
 from hypervector.research.checkpoint_storage import write_atomic_json
 from hypervector.research.cohort_improvement_digest import (
     build_cohort_improvement_digest,
 )
-from hypervector.research.cohort_improvement_history import append_material_report
-from hypervector.research.cohort_continuous_improvement import (
-    build_continuous_improvement_report,
+from hypervector.research.cohort_improvement_history import (
+    append_material_report,
+    material_state_sha256,
+)
+from hypervector.research.cohort_active_route_lifecycle_status import (
+    ActiveRouteLifecycleCollection,
+    load_active_route_lifecycle_statuses,
+)
+from hypervector.research.cohort_improvement_monitor_output import (
+    emit_failure as _emit_failure,
+    emit_success as _emit_success,
+)
+from hypervector.research.cohort_hype_native_lifecycle_status import (
+    HypeNativeLifecycleEvidence,
+    load_hype_native_for_profile,
+)
+from hypervector.research.cohort_index_signal_capture_health import (
+    SignalCaptureHealth,
+    load_v51_index_signal_capture_for_audit as _load_index_signals,
+)
+from hypervector.research.cohort_external_asset_pipeline import (
+    ExternalAssetPipeline,
+    load_external_asset_pipeline,
+)
+from hypervector.research.cohort_mark_capture_health import (
+    MarkCaptureHealth,
+    load_index_mark_capture_health as _load_index_mark_capture,
+)
+import hypervector.research.cohort_successor_observer_status as v58
+from hypervector.research.cohort_prospective_experiment_evidence import (
+    ObserverIdentity,
+    ProspectiveExperimentEvidence,
+    attach_prospective_experiment_evidence,
+    load_sol_route_native_observer,
+)
+from hypervector.research.cohort_cadence_review_clock import (
+    build_monitored_improvement_report as build_continuous_improvement_report,
+)
+from hypervector.research.cohort_improvement_monitor_validation import (
+    validate_checkpoint_freshness as _validate_checkpoint_freshness,
+    validate_loop_args as _validate_loop_args,
 )
 from hypervector.data.oxa_storage import file_evidence
 
@@ -30,9 +66,32 @@ _CHECKPOINT = Path("data/runtime/bidirectional_cohort/latest_checkpoint.json")
 _OUTPUT = Path("data/runtime/bidirectional_cohort/latest_improvement_digest.json")
 _HISTORY = Path("data/live/research/v51_continuous_improvement.jsonl")
 _MAXIMUM_CHECKPOINT_AGE_SECONDS = 180.0
+_MAXIMUM_SOL_OBSERVER_AGE_SECONDS = 360.0
+_MAXIMUM_INDEX_MARK_RECORDER_AGE_SECONDS = 90.0
+_V51 = "multi_asset_growth_first_5000_six_asset_profit_lock_candidate_v51"
+_V52 = "multi_asset_growth_first_5000_evidence_bound_successor_v52"
+_V53 = "multi_asset_growth_first_5000_hype_freshness_repair_v53"
+_V57 = "multi_asset_growth_first_5000_spcx_short_containment_v57"
+_EXTERNAL_ASSET_PROFILES = frozenset({_V51, _V52, _V53, _V57})
+_SOL_OBSERVER = Path(
+    "data/runtime/bidirectional_cohort/latest_v51_sol_route_native_one_blocker_shadow.json"
+)
+_SOL_ROUTE = "range_onset_bidirectional_v1|SOL"
+_SOL_EXPERIMENT = "collect_route_native_one_blocker_shadow"
 _DECISION_OVERRIDES = Path(
     "configs/research/cohort_improvement_decision_overrides_v51.json"
 )
+_INDEX_MARK_RECORDER_STATUS = Path(
+    "data/runtime/research/hip3_index_mark_recorder_latest.json"
+)
+_EXTERNAL_ASSET_CATALOG = Path("configs/research/v51_external_asset_pipeline.json")
+_MAXIMUM_EXTERNAL_OBSERVER_AGE_SECONDS = 120.0
+_HYPE_NATIVE_LIFECYCLE_STATUS = Path(
+    "data/runtime/research/hype_native_v54_prospective_lifecycle_latest.json"
+)
+_MAXIMUM_HYPE_NATIVE_LIFECYCLE_AGE_SECONDS = 90.0
+_MAXIMUM_ROUTE_LIFECYCLE_AGE_SECONDS = 300.0
+_PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -46,15 +105,56 @@ def build_parser() -> argparse.ArgumentParser:
         type=Path,
         default=_DECISION_OVERRIDES,
     )
+    parser.add_argument("--opportunity-matrix", type=Path)
+    parser.add_argument("--sol-one-blocker-observer", type=Path, default=_SOL_OBSERVER)
     parser.add_argument("--interval-seconds", type=float, default=120.0)
     parser.add_argument(
         "--maximum-checkpoint-age-seconds",
         type=float,
         default=_MAXIMUM_CHECKPOINT_AGE_SECONDS,
     )
+    parser.add_argument(
+        "--maximum-sol-observer-age-seconds",
+        type=float,
+        default=_MAXIMUM_SOL_OBSERVER_AGE_SECONDS,
+    )
+    _add_research_source_arguments(parser)
     parser.add_argument("--max-cycles", type=int, default=0)
     parser.add_argument("--once", action="store_true")
     return parser
+
+
+def _add_research_source_arguments(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--index-mark-recorder-status",
+        type=Path,
+        default=_INDEX_MARK_RECORDER_STATUS,
+    )
+    parser.add_argument(
+        "--maximum-index-mark-recorder-age-seconds",
+        type=float,
+        default=_MAXIMUM_INDEX_MARK_RECORDER_AGE_SECONDS,
+    )
+    parser.add_argument(
+        "--external-asset-catalog",
+        type=Path,
+        default=_EXTERNAL_ASSET_CATALOG,
+    )
+    parser.add_argument(
+        "--maximum-external-observer-age-seconds",
+        type=float,
+        default=_MAXIMUM_EXTERNAL_OBSERVER_AGE_SECONDS,
+    )
+    parser.add_argument(
+        "--hype-native-lifecycle-status",
+        type=Path,
+        default=_HYPE_NATIVE_LIFECYCLE_STATUS,
+    )
+    parser.add_argument(
+        "--maximum-hype-native-lifecycle-age-seconds",
+        type=float,
+        default=_MAXIMUM_HYPE_NATIVE_LIFECYCLE_AGE_SECONDS,
+    )
 
 
 def refresh(args: argparse.Namespace) -> dict[str, object]:
@@ -62,44 +162,254 @@ def refresh(args: argparse.Namespace) -> dict[str, object]:
     raw = args.checkpoint.read_bytes()
     checkpoint = _mapping(json.loads(raw), "improvement checkpoint")
     _validate_checkpoint(checkpoint)
+    observed_at = datetime.now(UTC)
     _validate_checkpoint_freshness(
-        checkpoint,
-        datetime.now(UTC),
-        args.maximum_checkpoint_age_seconds,
+        checkpoint, observed_at, args.maximum_checkpoint_age_seconds
     )
-    audit = _mapping(checkpoint.get("audit"), "improvement checkpoint audit")
+    mark_capture = _load_index_mark_capture(
+        args.index_mark_recorder_status,
+        observed_at=observed_at,
+        maximum_age_seconds=args.maximum_index_mark_recorder_age_seconds,
+    )
+    source_audit = _mapping(checkpoint.get("audit"), "improvement checkpoint audit")
+    audit, matrix_evidence = _attach_opportunity_matrix(
+        checkpoint, source_audit, args.opportunity_matrix
+    )
+    successor = v58.load_v58_successor_observer_for_profile(audit, observed_at)
     overrides, override_raw = _load_decision_overrides(args.decision_overrides)
     _validate_override_identity(overrides, audit)
-    digest = build_cohort_improvement_digest(
+    route_lifecycles = _load_route_lifecycles(args, overrides, audit, observed_at)
+    observer = _load_sol_observer(args, audit, overrides, observed_at)
+    external_assets = _external_assets_for_profile(args, audit, observed_at)
+    hype_native = load_hype_native_for_profile(
+        args.hype_native_lifecycle_status,
         audit,
-        experiment_overrides=overrides,
+        observed_at=observed_at,
+        maximum_age_seconds=args.maximum_hype_native_lifecycle_age_seconds,
     )
-    report = build_continuous_improvement_report(checkpoint, digest)
-    material_hash = _material_digest(report)
+    signal_capture = _load_index_signals(audit, observed_at=observed_at)
+    report = _build_report(checkpoint, audit, overrides, observer)
+    report["active_hypothesis_lifecycle_statuses"] = route_lifecycles.statuses
+    _attach_capture_statuses(report, mark_capture, signal_capture, external_assets)
+    if hype_native is not None:
+        report["hype_native_prospective_lifecycle"] = hype_native.status
+    evidence = _report_evidence(
+        args,
+        raw,
+        override_raw,
+        matrix_evidence,
+        None if observer is None else observer.source,
+        mark_capture,
+        signal_capture,
+        external_assets,
+        hype_native,
+    )
+    evidence["active_hypothesis_lifecycle_statuses"] = route_lifecycles.evidence
+    _attach_successor_observer(report, evidence, successor)
+    return _publish_report(args, checkpoint, report, evidence)
+
+
+def _load_route_lifecycles(
+    args: argparse.Namespace,
+    overrides: Record,
+    audit: Record,
+    observed_at: datetime,
+) -> ActiveRouteLifecycleCollection:
+    """Load exact active-route status under one bounded freshness contract."""
+    return load_active_route_lifecycle_statuses(
+        overrides,
+        audit,
+        overrides_path=args.decision_overrides,
+        project_root=_PROJECT_ROOT,
+        observed_at=observed_at,
+        maximum_age_seconds=_MAXIMUM_ROUTE_LIFECYCLE_AGE_SECONDS,
+    )
+
+
+def _publish_report(
+    args: argparse.Namespace,
+    checkpoint: Record,
+    report: dict[str, object],
+    evidence: dict[str, object],
+) -> dict[str, object]:
+    """Publish one atomic digest after all source validation succeeds."""
     report.update(
-        {
-            "generated_at_utc": datetime.now(UTC).isoformat(),
-            "source_checkpoint_generated_at_utc": _text(
-                checkpoint.get("generated_at_utc"), "checkpoint generation time"
-            ),
-            "material_state_sha256": material_hash,
-            "evidence": {
-                "checkpoint": {
-                    "path": str(args.checkpoint.resolve()),
-                    "sha256": sha256(raw).hexdigest(),
-                    "bytes": len(raw),
-                },
-                "decision_overrides": {
-                    "path": str(args.decision_overrides.resolve()),
-                    "sha256": sha256(override_raw).hexdigest(),
-                    "bytes": len(override_raw),
-                },
-            },
-        }
+        generated_at_utc=datetime.now(UTC).isoformat(),
+        source_checkpoint_generated_at_utc=_text(
+            checkpoint.get("generated_at_utc"), "checkpoint generation time"
+        ),
+        material_state_sha256=_material_digest(report),
+        evidence=evidence,
     )
     write_atomic_json(args.out, report)
     append_material_report(args.history, report)
     return report
+
+
+def _build_report(
+    checkpoint: Record,
+    audit: Record,
+    overrides: Record,
+    observer: ProspectiveExperimentEvidence | None,
+) -> dict[str, object]:
+    """Build the continuous report from one validated evidence snapshot."""
+    digest = build_cohort_improvement_digest(audit, experiment_overrides=overrides)
+    if observer is not None:
+        digest = attach_prospective_experiment_evidence(digest, observer)
+    return build_continuous_improvement_report(checkpoint, digest)
+
+
+def _attach_opportunity_matrix(
+    checkpoint: Record,
+    audit: Record,
+    path: Path | None,
+) -> tuple[dict[str, object], dict[str, object] | None]:
+    """Attach a current-run report-only matrix without mutating the checkpoint."""
+    output = dict(audit)
+    if path is None:
+        return output, None
+    raw = path.read_bytes()
+    matrix = _mapping(json.loads(raw), "opportunity matrix")
+    _validate_matrix_identity(matrix, checkpoint, audit)
+    output["execution_opportunity_matrix"] = dict(matrix)
+    return output, {
+        "path": str(path.resolve()),
+        "sha256": sha256(raw).hexdigest(),
+        "bytes": len(raw),
+    }
+
+
+def _validate_matrix_identity(
+    matrix: Record,
+    checkpoint: Record,
+    audit: Record,
+) -> None:
+    """Reject a matrix from another run or active configuration."""
+    evidence = _mapping(matrix.get("evidence"), "opportunity matrix evidence")
+    run = _mapping(audit.get("run"), "improvement audit run")
+    generation = _mapping(
+        checkpoint.get("configuration_generation"), "configuration generation"
+    )
+    if evidence.get("run_id") != run.get("run_id"):
+        raise ValueError("opportunity matrix run identity mismatch")
+    if generation.get("matches_runtime") is not True:
+        raise ValueError("opportunity matrix requires current runtime configuration")
+    if evidence.get("config") != generation.get("source_path"):
+        raise ValueError("opportunity matrix config identity mismatch")
+
+
+def _report_evidence(
+    args: argparse.Namespace,
+    checkpoint_raw: bytes,
+    override_raw: bytes,
+    matrix: dict[str, object] | None,
+    observer: dict[str, object] | None,
+    mark_capture: MarkCaptureHealth,
+    signal_capture: SignalCaptureHealth | None,
+    external_assets: ExternalAssetPipeline | None,
+    hype_native: HypeNativeLifecycleEvidence | None,
+) -> dict[str, object]:
+    """Build exact source evidence for one improvement report."""
+    evidence: dict[str, object] = {
+        "checkpoint": {
+            "path": str(args.checkpoint.resolve()),
+            "sha256": sha256(checkpoint_raw).hexdigest(),
+            "bytes": len(checkpoint_raw),
+        },
+        "decision_overrides": {
+            "path": str(args.decision_overrides.resolve()),
+            "sha256": sha256(override_raw).hexdigest(),
+            "bytes": len(override_raw),
+        },
+    }
+    if matrix is not None:
+        evidence["opportunity_matrix"] = matrix
+    if observer is not None:
+        evidence["sol_route_native_observer"] = observer
+    if mark_capture.evidence is not None:
+        evidence["index_mark_recorder"] = mark_capture.evidence
+    if signal_capture is not None and signal_capture.evidence is not None:
+        evidence["index_signal_capture"] = signal_capture.evidence
+    if external_assets is not None:
+        evidence["external_asset_pipeline"] = external_assets.evidence
+    if hype_native is not None:
+        evidence["hype_native_prospective_lifecycle"] = hype_native.evidence
+    return evidence
+
+
+def _attach_capture_statuses(
+    report: dict[str, object],
+    marks: MarkCaptureHealth,
+    signals: SignalCaptureHealth | None,
+    external: ExternalAssetPipeline | None,
+) -> None:
+    """Attach report-only capture states without changing research decisions."""
+    report["index_mark_capture"] = marks.status
+    if signals is not None:
+        report["index_signal_capture"] = signals.status
+    if external is not None:
+        report["external_asset_pipeline"] = external.status
+
+
+def _attach_successor_observer(
+    report: dict[str, object],
+    evidence: dict[str, object],
+    successor: v58.SuccessorObserverEvidence | None,
+) -> None:
+    """Attach the exact successor lane without changing active decisions."""
+    if successor is None:
+        return
+    report["successor_observer"] = successor.status
+    evidence["successor_observer"] = successor.evidence
+
+
+def _external_assets_for_profile(
+    args: argparse.Namespace, audit: Record, observed_at: datetime
+) -> ExternalAssetPipeline | None:
+    """Attach external candidates to exact profiles sharing the research lane."""
+    run = _mapping(audit.get("run"), "improvement audit run")
+    if run.get("profile_id") not in _EXTERNAL_ASSET_PROFILES:
+        return None
+    return _load_external_assets(args, observed_at)
+
+
+def _load_external_assets(
+    args: argparse.Namespace, observed_at: datetime
+) -> ExternalAssetPipeline:
+    """Load the source-bound report-only external candidate lane."""
+    return load_external_asset_pipeline(
+        args.external_asset_catalog,
+        observed_at=observed_at,
+        maximum_observer_age_seconds=args.maximum_external_observer_age_seconds,
+    )
+
+
+def _load_sol_observer(
+    args: argparse.Namespace,
+    audit: Record,
+    overrides: Record,
+    observed_at: datetime,
+) -> ProspectiveExperimentEvidence | None:
+    """Load the exact v51 observer only for its matching active profile."""
+    run = _mapping(audit.get("run"), "improvement audit run")
+    profile = _text(run.get("profile_id"), "improvement profile id")
+    if profile != _V51:
+        return None
+    routes = _mapping(overrides.get("routes"), "research override routes")
+    sol = _mapping(routes.get(_SOL_ROUTE), "SOL research override")
+    if sol.get("next_experiment") != _SOL_EXPERIMENT:
+        return None
+    identity = ObserverIdentity(
+        _text(run.get("run_id"), "improvement run id"),
+        profile,
+        _text(run.get("profile_fingerprint"), "improvement profile fingerprint"),
+    )
+    return load_sol_route_native_observer(
+        args.sol_one_blocker_observer,
+        identity,
+        observed_at=observed_at,
+        maximum_age_seconds=args.maximum_sol_observer_age_seconds,
+    )
 
 
 def _load_decision_overrides(path: Path) -> tuple[Record, bytes]:
@@ -164,71 +474,6 @@ def _validate_override_identity(overrides: Record, audit: Record) -> None:
         raise ValueError(f"decision override profile identity mismatch: {mismatches}")
 
 
-def _validate_checkpoint_freshness(
-    checkpoint: Record,
-    observed_at: datetime,
-    maximum_age_seconds: float,
-) -> None:
-    if not math.isfinite(maximum_age_seconds) or maximum_age_seconds <= 0.0:
-        raise ValueError("maximum checkpoint age must be positive and finite")
-    generated_at = _timestamp(
-        checkpoint.get("generated_at_utc"), "checkpoint generation time"
-    )
-    age = (observed_at - generated_at).total_seconds()
-    if age < 0.0:
-        raise ValueError("checkpoint generation time is in the future")
-    if age > maximum_age_seconds:
-        raise ValueError(
-            f"checkpoint is stale: age={age:.3f}s limit={maximum_age_seconds:.3f}s"
-        )
-
-
-def _validate_loop_args(args: argparse.Namespace) -> None:
-    if not math.isfinite(args.interval_seconds) or args.interval_seconds <= 0.0:
-        raise ValueError("improvement monitor interval must be positive and finite")
-    if args.max_cycles < 0:
-        raise ValueError("improvement monitor max cycles cannot be negative")
-    if (
-        not math.isfinite(args.maximum_checkpoint_age_seconds)
-        or args.maximum_checkpoint_age_seconds <= 0.0
-    ):
-        raise ValueError("maximum checkpoint age must be positive and finite")
-
-
-def _emit_success(report: Record) -> None:
-    assessment = _mapping(report.get("assessment"), "improvement assessment")
-    performance = _mapping(report.get("performance"), "improvement performance")
-    print(
-        json.dumps(
-            {
-                "event": "cohort_improvement_digest",
-                "state": "published",
-                "closed_trades": performance.get("closed_trades"),
-                "top_research_priority": assessment.get("top_research_priority"),
-                "execution_authority": "none",
-            },
-            sort_keys=True,
-        ),
-        flush=True,
-    )
-
-
-def _emit_failure(exc: Exception) -> None:
-    print(
-        json.dumps(
-            {
-                "event": "cohort_improvement_digest",
-                "state": "unavailable",
-                "technical_issue": f"{type(exc).__name__}: {exc}",
-                "execution_authority": "none",
-            },
-            sort_keys=True,
-        ),
-        file=sys.stderr,
-        flush=True,
-    )
-
-
 def _mapping(value: object, label: str) -> Record:
     if not isinstance(value, Mapping):
         raise ValueError(f"{label} must be an object")
@@ -241,80 +486,8 @@ def _text(value: object, label: str) -> str:
     return value.strip()
 
 
-def _timestamp(value: object, label: str) -> datetime:
-    text = _text(value, label)
-    try:
-        parsed = datetime.fromisoformat(text.replace("Z", "+00:00"))
-    except ValueError as exc:
-        raise ValueError(f"{label} must be ISO-8601") from exc
-    if parsed.tzinfo is None:
-        raise ValueError(f"{label} must include a timezone")
-    return parsed.astimezone(UTC)
-
-
 def _material_digest(value: Record) -> str:
-    material = json.loads(json.dumps(value))
-    source = material.get("source")
-    if isinstance(source, dict):
-        source.pop("last_observed_at_utc", None)
-    operational = material.get("operational_assessment")
-    if isinstance(operational, dict):
-        operational.pop("heartbeat_age_seconds", None)
-    evidence_health = material.get("evidence_health")
-    if isinstance(evidence_health, dict):
-        evidence_health.pop("right_censored_observations", None)
-        evidence_health.pop("metric_value_gaps", None)
-    _normalize_live_diagnostic_material(material)
-    return _digest(material)
-
-
-def _normalize_live_diagnostic_material(material: dict[str, object]) -> None:
-    diagnostics = material.get("live_opportunity_diagnostics")
-    if not isinstance(diagnostics, dict):
-        return
-    window = diagnostics.get("observation_window")
-    if isinstance(window, dict):
-        window.pop("end_utc", None)
-        window.pop("duration_seconds", None)
-    totals = diagnostics.get("totals")
-    if isinstance(totals, dict):
-        totals.pop("evaluations", None)
-        totals.pop("directional_evaluations", None)
-        totals.pop("right_censored_observations", None)
-    routes = diagnostics.get("routes")
-    if not isinstance(routes, list):
-        return
-    for route in routes:
-        if not isinstance(route, dict):
-            continue
-        for field in (
-            "outcome_evaluations",
-            "readiness_evaluations",
-            "latest_readiness_fraction",
-            "latest_blockers",
-            "blocker_counts",
-        ):
-            route.pop(field, None)
-        paths = route.get("one_blocker_paths")
-        if isinstance(paths, list):
-            for path in paths:
-                if isinstance(path, dict):
-                    _normalize_path_material(path)
-    leads = diagnostics.get("robust_report_only_leads")
-    if isinstance(leads, list):
-        for lead in leads:
-            if isinstance(lead, dict):
-                _normalize_path_material(lead)
-
-
-def _normalize_path_material(path: dict[str, object]) -> None:
-    path.pop("blocker_evaluations", None)
-    path.pop("censored", None)
-
-
-def _digest(value: Record) -> str:
-    encoded = json.dumps(value, sort_keys=True, separators=(",", ":"))
-    return sha256(encoded.encode()).hexdigest()
+    return material_state_sha256(value)
 
 
 def main(argv: Sequence[str] | None = None) -> int:

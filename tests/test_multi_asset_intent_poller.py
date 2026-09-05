@@ -18,6 +18,9 @@ from hypervector.live.multi_asset_intent_poller import (
 )
 from hypervector.live.multi_asset_live_config import load_multi_asset_live_config
 from hypervector.live.multi_asset_market_bars import TransientCohortMarketDataError
+from hypervector.live.multi_asset_polling_contract import (
+    READINESS_SEED_LOOKBACK_MINUTES,
+)
 from hypervector.live.multi_asset_signal_source import IntentBatch, ProviderEvaluation
 from hypervector.live.provider_readiness import SignalReadiness
 
@@ -149,6 +152,86 @@ class _StartupReadinessCollector:
         return IntentBatch((retro_intent,), decision_time_ms, (evaluation,))
 
 
+class _FreshStartupWithMissedExitCollector:
+    def __init__(
+        self,
+        strategy_id: str,
+        activation_ms: int,
+        *,
+        fresh_exit: bool = False,
+        seed_exit: bool = True,
+    ) -> None:
+        self.strategy_id = strategy_id
+        self.activation_ms = activation_ms
+        self.fresh_exit = fresh_exit
+        self.seed_exit = seed_exit
+
+    def __call__(
+        self,
+        bars: pd.DataFrame,
+        *,
+        symbol: str,
+        observed_at: pd.Timestamp,
+        after_decision_time_ms: int | None,
+    ) -> IntentBatch:
+        del bars, observed_at
+        assert after_decision_time_ms is not None
+        side = "long" if symbol in {"BTC", "SOL"} else "short"
+        if after_decision_time_ms == self.activation_ms:
+            decision_ms = self.activation_ms + 1
+            evaluation = _poller_evaluation(
+                self.strategy_id,
+                symbol,
+                side,
+                decision_ms,
+                exit_side=side if self.fresh_exit else None,
+            )
+            if self.fresh_exit:
+                return IntentBatch((), decision_ms, (evaluation,))
+            intent = StrategyIntent(
+                self.strategy_id,
+                symbol,
+                side,
+                decision_ms,
+                100.0,
+                "fresh_post_activation",
+            )
+            return IntentBatch((intent,), decision_ms, (evaluation,))
+        decision_ms = self.activation_ms - 1
+        evaluation = _poller_evaluation(
+            self.strategy_id,
+            symbol,
+            side,
+            decision_ms,
+            exit_side=side if self.seed_exit else None,
+        )
+        return IntentBatch((), decision_ms, (evaluation,))
+
+
+def _poller_evaluation(
+    strategy_id: str,
+    symbol: str,
+    side: str,
+    decision_ms: int,
+    *,
+    exit_side: str | None,
+) -> ProviderEvaluation:
+    exit_sides = frozenset({exit_side}) if exit_side is not None else frozenset()
+    return ProviderEvaluation(
+        strategy_id=strategy_id,
+        symbol=symbol,
+        decision_time_ms=decision_ms,
+        reference_price=100.0,
+        decision_action=f"close_{exit_side}" if exit_side else f"enter_{side}",
+        eligible=exit_side is None,
+        reason="missed_recipe_exit" if exit_side else "fresh_post_activation",
+        side=side,
+        readiness=SignalReadiness(side, 1, 1, (), ("FIXTURE READY",)),
+        exit_sides=exit_sides,
+        exit_reason="missed_recipe_exit" if exit_side else None,
+    )
+
+
 class _CanonicalCollector:
     def __init__(self) -> None:
         self.activations: list[int] = []
@@ -190,6 +273,18 @@ class _CanonicalCollector:
                 backend_non_action_reason="telemetry_only_no_execution_authority",
             ),
         )
+
+
+def _assert_startup_boundaries(collector: _Collector, *, symbols: int) -> None:
+    activation_ms = _OBSERVED_MS - 1_000
+    lookback_ms = READINESS_SEED_LOOKBACK_MINUTES[collector.strategy_id] * 60 * 1_000
+    initial = [
+        boundary
+        for _ in range(symbols)
+        for boundary in (activation_ms, max(0, activation_ms - lookback_ms))
+    ]
+    assert collector.boundaries[: symbols * 2] == initial
+    assert collector.boundaries[symbols * 2 :] == [activation_ms + 1] * symbols
 
 
 def _bars(symbol: str, timeframe: str) -> pd.DataFrame:
@@ -271,10 +366,10 @@ def test_poller_uses_one_minute_feed_and_incremental_refresh() -> None:
     range_onset = collectors["range_onset_bidirectional_v1"]
     source_follow = collectors["hypervelocity_source_follow_bidirectional_5m_v1"]
     hype_breakout = collectors["hype_breakout_onset_bidirectional_v1"]
-    assert hulk.bar_counts == [2] * 8
-    assert range_onset.bar_counts == [10] * 8
-    assert source_follow.bar_counts == [10] * 2
-    assert hype_breakout.bar_counts == [10] * 2
+    assert hulk.bar_counts == [2] * 12
+    assert range_onset.bar_counts == [10] * 12
+    assert source_follow.bar_counts == [10] * 3
+    assert hype_breakout.bar_counts == [10] * 3
     assert hulk.bar_times[0] == (
         pd.Timestamp("2026-08-01T11:50:00Z"),
         pd.Timestamp("2026-08-01T11:55:00Z"),
@@ -334,6 +429,73 @@ def test_startup_seeds_readiness_without_routing_retroactive_intents() -> None:
         len(collector.boundaries) == provider_sizes[strategy_id] * 3
         for strategy_id, collector in collectors.items()
     )
+
+
+def test_first_fresh_row_does_not_bypass_missed_exit_recovery_seed() -> None:
+    """Crossing a bar during startup must retain the pre-activation exit scan."""
+    activation_ms = _OBSERVED_MS - 1_000
+    config = load_multi_asset_live_config(
+        "configs/multi_asset_bidirectional_canary.toml",
+        mode="observe",
+    )
+    collectors = {
+        provider.strategy_id: _FreshStartupWithMissedExitCollector(
+            provider.strategy_id,
+            activation_ms,
+        )
+        for provider in config.providers
+    }
+    poller = ConfiguredMultiAssetIntentPoller(
+        config=config,
+        fetch_bars=lambda symbol, timeframe, days, *, end_ms=None: _one_minute_bars(
+            symbol
+        ),
+        collectors=collectors,
+    )
+    poller.activate(activation_ms)
+
+    result = poller.poll(_OBSERVED)
+
+    assert len(result.intents) == len(result.evaluations)
+    assert all(
+        row.backend_non_action_reason == "pre_activation_readiness_seed"
+        for row in result.evaluations
+    )
+    assert all(row.exit_sides for row in result.evaluations)
+    assert all(intent.decision_time_ms > activation_ms for intent in result.intents)
+
+
+def test_first_fresh_recipe_exit_is_not_hidden_by_readiness_seed() -> None:
+    """A delayed first poll must retain a fresh post-activation recipe exit."""
+    activation_ms = _OBSERVED_MS - 1_000
+    config = load_multi_asset_live_config(
+        "configs/multi_asset_bidirectional_canary.toml",
+        mode="observe",
+    )
+    collectors = {
+        provider.strategy_id: _FreshStartupWithMissedExitCollector(
+            provider.strategy_id,
+            activation_ms,
+            fresh_exit=True,
+            seed_exit=False,
+        )
+        for provider in config.providers
+    }
+    poller = ConfiguredMultiAssetIntentPoller(
+        config=config,
+        fetch_bars=lambda symbol, timeframe, days, *, end_ms=None: _one_minute_bars(
+            symbol
+        ),
+        collectors=collectors,
+    )
+    poller.activate(activation_ms)
+
+    result = poller.poll(_OBSERVED)
+
+    assert len(result.evaluations) == 10
+    assert all(row.decision_time_ms > activation_ms for row in result.evaluations)
+    assert all(row.exit_sides for row in result.evaluations)
+    assert all(row.backend_non_action_reason is None for row in result.evaluations)
 
 
 def test_poller_fetches_each_source_clock_and_advances_hold_boundaries() -> None:
@@ -398,12 +560,10 @@ def test_poller_fetches_each_source_clock_and_advances_hold_boundaries() -> None
         (99.0, 101.0, 98.0, 100.0, 10.0),
         (100.0, 102.0, 99.0, 101.0, 11.0),
     ]
-    assert hulk.boundaries[:4] == [_OBSERVED_MS - 1_000] * 4
-    assert hulk.boundaries[4:] == [_OBSERVED_MS - 999] * 4
-    assert range_onset.boundaries[:4] == [_OBSERVED_MS - 1_000] * 4
-    assert range_onset.boundaries[4:] == [_OBSERVED_MS - 999] * 4
-    assert source_follow.boundaries == [_OBSERVED_MS - 1_000, _OBSERVED_MS - 999]
-    assert hype_breakout.boundaries == [_OBSERVED_MS - 1_000, _OBSERVED_MS - 999]
+    _assert_startup_boundaries(hulk, symbols=4)
+    _assert_startup_boundaries(range_onset, symbols=4)
+    _assert_startup_boundaries(source_follow, symbols=1)
+    _assert_startup_boundaries(hype_breakout, symbols=1)
     assert {(symbol, timeframe) for symbol, timeframe, _, _ in calls} == {
         (symbol, "1m") for symbol in config.symbols
     }

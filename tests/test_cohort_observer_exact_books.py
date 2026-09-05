@@ -40,6 +40,19 @@ def test_selects_one_observe_run_and_preserves_exact_asset_bbo() -> None:
     }
 
 
+def test_selects_canonical_identity_after_report_only_restatement() -> None:
+    """A non-authoritative annotation restatement does not split one run."""
+    records = _records()
+    restated = _identity_payload()
+    restated["strategy_evidence"] = [{"status": "updated_report_only"}]
+    records.append(_row("configuration_identity", restated, _NOW_MS + 200))
+
+    selected, identity = select_report_only_observer_run(records, _RUN_ID)
+
+    assert identity["payload"] == _identity_payload()
+    assert sum(row["event_type"] == "configuration_identity" for row in selected) == 1
+
+
 def test_selection_rejects_live_authority_and_book_symbol_alias() -> None:
     """Observer research cannot consume armed rows or cross-symbol books."""
     armed = [dict(row, live_armed=True) for row in _records()]
@@ -75,6 +88,41 @@ def test_extraction_rejects_missing_required_asset_and_duplicate_timestamp() -> 
     duplicated = (*selected, selected[-1])
     with pytest.raises(ValueError, match="duplicate BTC book receive timestamp"):
         extract_observer_asset_books(duplicated, ("BTC", "SOL"))
+
+
+def test_extraction_normalizes_bounded_venue_clock_lead() -> None:
+    """Bounded venue lead stays causal while preserving both raw clocks."""
+    records = _records()
+    payload = records[-1]["payload"]
+    assert isinstance(payload, dict)
+    books = payload["books"]
+    assert isinstance(books, dict)
+    btc = books["BTC"]
+    assert isinstance(btc, dict)
+    btc["exchange_ts_ms"] = _NOW_MS + 1_750
+
+    selected, _ = select_report_only_observer_run(records)
+    book = extract_observer_asset_books(selected, ("BTC",))["BTC"][0]["payload"]
+
+    assert book["recv_ts_ms"] == _NOW_MS + 1_750
+    assert book["local_recv_ts_ms"] == _NOW_MS
+    assert book["negative_clock_skew_ms"] == 1_750
+
+
+def test_extraction_rejects_excessive_venue_clock_lead() -> None:
+    """A venue clock lead above the explicit bound remains invalid."""
+    records = _records()
+    payload = records[-1]["payload"]
+    assert isinstance(payload, dict)
+    books = payload["books"]
+    assert isinstance(books, dict)
+    btc = books["BTC"]
+    assert isinstance(btc, dict)
+    btc["exchange_ts_ms"] = _NOW_MS + 5_001
+
+    selected, _ = select_report_only_observer_run(records)
+    with pytest.raises(ValueError, match="clock skew exceeds 5000ms"):
+        extract_observer_asset_books(selected, ("BTC",))
 
 
 def test_extracted_observer_books_drive_exact_bbo_feasibility() -> None:
@@ -117,6 +165,19 @@ def test_compatible_restart_extends_the_original_observer_evidence() -> None:
     ]
     assert len(books) == 2
     assert books[-1]["payload"]["recv_ts_ms"] == _NOW_MS + 60_000
+
+
+def test_compatible_selection_deduplicates_identity_restatement() -> None:
+    """Continuation accounting sees one canonical identity per selected run."""
+    records = _records()
+    restated = _identity_payload()
+    restated["strategy_evidence"] = [{"status": "updated_report_only"}]
+    records.append(_row("configuration_identity", restated, _NOW_MS + 200))
+
+    selected, identities = select_compatible_report_only_observer_runs(records, _RUN_ID)
+
+    assert len(identities) == 1
+    assert sum(row["event_type"] == "configuration_identity" for row in selected) == 1
 
 
 def test_incompatible_restart_fails_closed_instead_of_freezing_the_path() -> None:

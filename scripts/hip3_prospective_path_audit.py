@@ -26,6 +26,7 @@ from hypervector.research.hip3_prospective_path_audit import (
 
 _STAMP = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
 _DEFAULT_OUTPUT = Path(f"data/logs/research/hip3_prospective_path_audit_{_STAMP}.json")
+_SUPPLEMENTAL_MARK_SOURCE = "hyperliquid_info_metaAndAssetCtxs"
 
 
 class ProspectiveArchiveReader(Protocol):
@@ -104,18 +105,21 @@ def _audit_reader(
         if event.received_ts_ns // 1_000_000 <= cutoff_ms
         and event.exchange_ts_ms <= cutoff_ms
     )
-    contexts = tuple(
+    all_contexts = tuple(
         event
         for event in reader.replay_asset_contexts()
         if event.received_ts_ns // 1_000_000 <= cutoff_ms
         and event.observed_ts_ms <= cutoff_ms
+    )
+    contexts = tuple(
+        event for event in all_contexts if event.source != _SUPPLEMENTAL_MARK_SOURCE
     )
     gaps = tuple(
         gap
         for gap in reader.replay_gaps()
         if gap.detected_ts_ns // 1_000_000 <= cutoff_ms
     )
-    return build_hip3_prospective_path_audit(
+    report = build_hip3_prospective_path_audit(
         l2_snapshots=books,
         public_trades=trades,
         asset_contexts=contexts,
@@ -123,6 +127,10 @@ def _audit_reader(
         observed_at_ms=cutoff_ms,
         config=config,
     )
+    report["source"]["excluded_supplemental_asset_context_rows"] = len(
+        all_contexts
+    ) - len(contexts)
+    return report
 
 
 def _symbol(value: str) -> str:

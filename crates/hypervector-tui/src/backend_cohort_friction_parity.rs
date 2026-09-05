@@ -436,6 +436,7 @@ fn target_description(
             || "REWARD/RISK N/A".into(),
             |value| format!("{prefix}{value:.2}R"),
         ),
+        "absolute_anchor" => format!("{prefix}DYNAMIC PRIOR-CLOSE"),
         value => value.replace('_', " ").to_uppercase(),
     }
 }

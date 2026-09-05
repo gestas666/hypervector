@@ -1,0 +1,129 @@
+{
+  "schema_version": "v51_index_recovered_run_live_condition_v1",
+  "generated_at_utc": "2026-08-15T09:27:00Z",
+  "mode": "report_only",
+  "execution_authority": "none",
+  "automatic_live_change": false,
+  "performance_gate": false,
+  "runtime_strategy_changed": false,
+  "scope": {
+    "run_id": "bidirectional-live-1786782860118",
+    "profile_id": "multi_asset_growth_first_5000_six_asset_profit_lock_candidate_v51",
+    "profile_fingerprint": "30cd54bb5b5b17249ae0a6a3b01d5702b276d51f8dc5ddd6b4d36ab6aa7d1908",
+    "provider_id": "hip3_breakout_pressure_sp500_spcx_fresh15s_bidirectional_v3",
+    "symbols": [
+      "xyz:SP500",
+      "xyz:SPCX"
+    ],
+    "timeframe": "15m",
+    "comparison_start_ms": 1786783500000,
+    "comparison_end_ms": 1786785300000
+  },
+  "technical_validation": {
+    "backend_decisions": 6,
+    "observer_decisions": 6,
+    "decisions_per_symbol": 3,
+    "mismatches": 0,
+    "backend_observer_decision_parity_resolved": true,
+    "fresh_pressure_decisions_per_symbol": 3,
+    "complete_pressure_history_decisions_per_symbol": 3,
+    "limitations": [
+      "The backend and observer share upstream public candle and book sources.",
+      "Decision parity establishes technical translation, not fills or profitability.",
+      "Three decisions per symbol are insufficient for parameter selection."
+    ]
+  },
+  "condition_anatomy": {
+    "xyz:SP500": {
+      "eligible_decisions": 0,
+      "long": {
+        "price_breakout_true": 0,
+        "ema_alignment_true": 0,
+        "pressure_confirmation_true": 1,
+        "nearest_breakout_distance_bps": 9.898190045248635,
+        "interpretation": "Price approached the prior 32-bar high once, but EMA21 remained below EMA55; the long was not one condition away."
+      },
+      "short": {
+        "price_breakout_true": 0,
+        "ema_alignment_true": 3,
+        "pressure_confirmation_true": 1,
+        "nearest_breakout_distance_bps": 6.429214350006429,
+        "one_blocker": {
+          "price_breakout": 1
+        },
+        "interpretation": "One completed bar had bearish EMA and pressure confirmation but remained 6.43 bps above the prior 32-bar low."
+      }
+    },
+    "xyz:SPCX": {
+      "eligible_decisions": 0,
+      "long": {
+        "price_breakout_true": 0,
+        "ema_alignment_true": 0,
+        "pressure_confirmation_true": 1,
+        "nearest_breakout_distance_bps": 116.57192199755376,
+        "interpretation": "Price remained materially below the prior 32-bar high and EMA21 remained below EMA55."
+      },
+      "short": {
+        "price_breakout_true": 0,
+        "ema_alignment_true": 3,
+        "pressure_confirmation_true": 1,
+        "nearest_breakout_distance_bps": 35.98416696653473,
+        "one_blocker": {
+          "price_breakout": 1
+        },
+        "interpretation": "One completed bar had bearish EMA and pressure confirmation but remained 35.98 bps above the prior 32-bar low."
+      }
+    }
+  },
+  "assessment": {
+    "status": "technical_parity_pass_no_new_onset",
+    "strategy_edge_identifiable": false,
+    "parameter_change_supported": false,
+    "diagnosis": "The recovered backend is consuming the exact observer decisions, and the lack of a new trade is explained by missing completed-bar price breakouts rather than stale pressure or translation failure. The current three-decision window does not support relaxing the 32-bar breakout, EMA21/55, or 0.10 pressure contract.",
+    "confidence": "high_technical_low_economic",
+    "falsifier": "Update this assessment if a later observer/backend decision mismatches, a source-native eligible onset is not routed or explicitly withheld, a protected lifecycle becomes orphaned, or a predeclared compatible sample establishes materially different side-separated economics."
+  },
+  "open_lifecycle_context": {
+    "xyz:SP500": "inherited source-native short remains open and venue-stop protected",
+    "xyz:SPCX": "inherited source-native short remains open and venue-stop protected",
+    "economic_update": "none; this condition window contains no new entry or resolved lifecycle"
+  },
+  "change_proposal": {
+    "Recommendation": "Keep the v51 index entry and exit contracts unchanged while collecting the first attributable long and resolving both existing shorts.",
+    "Why now": "The recovered run has exact technical parity and clear blocker anatomy but only three decisions per symbol and no new lifecycle.",
+    "Evidence reviewed": "Two immutable identity-bound live-condition diagnostics, one immutable six-decision backend-observer parity report, and the current protected lifecycle checkpoint.",
+    "Observed problem or opportunity": "The TUI-level blocker label hides which price, EMA, and pressure components are absent; the diagnostic shows price breakout is currently missing and long EMA alignment is absent.",
+    "Applicable market regime": "Fresh completed 15-minute HIP-3 breakout onset with EMA21/55 direction and same-boundary top-ten pressure confirmation.",
+    "Alternatives considered": "Relax the breakout lookback, remove EMA alignment, lower pressure confirmation, change exits, or preserve the frozen contract and collect attributable both-side evidence.",
+    "Proposed live change": "none",
+    "Expected upside": "Avoids manufacturing frequency by weakening a sparse route while preserving exact evidence for the next genuine onset.",
+    "Main risks and failure modes": "Sparse one-sided evidence, source gaps, stale decisions, unprotected exposure, and selecting parameters from near-miss telemetry rather than resolved after-cost lifecycles.",
+    "Validation completed": "Six backend/observer decisions matched exactly; all current-run pressure rows were fresh and history-complete; condition anatomy reconciled with authoritative ineligible decisions.",
+    "Validation still required": "Resolve both open index shorts and collect at least one fully attributable long lifecycle per route with exact fees, funding, slippage, latency, stop and exit behavior.",
+    "Success metrics": "Exact decision parity, no orphaned lifecycle, side-separated after-cost results, positive net excluding the largest winner when sample size permits, and bounded live-versus-stress residuals.",
+    "Failure / rollback triggers": "Any source/backend mismatch, unprotected lifecycle, late un-withheld entry, exit-branch mismatch, or materially adverse compatible forward economics.",
+    "Confidence level": "High confidence in current technical parity; low confidence in economic edge because no new lifecycle resolved in this window.",
+    "Explicit approval requested": false
+  },
+  "single_highest_value_next_investigation": "Collect the first attributable SPCX long decision and lifecycle while resolving the existing SP500 and SPCX short lifecycles with exact exit, cost, and excursion attribution.",
+  "evidence": [
+    {
+      "path": "../../data/logs/research/v51_sp500_live_condition_recovered_run_20260815T0925Z_v1.json",
+      "bytes": 7233,
+      "sha256": "9daedd6a08a027fe2d7f5e0fb70672c4d814536e75adbd7e83ef20473aa47788",
+      "role": "immutable_recovered_run_sp500_live_condition_diagnostic"
+    },
+    {
+      "path": "../../data/logs/research/v51_spcx_live_condition_recovered_run_20260815T0925Z_v1.json",
+      "bytes": 7234,
+      "sha256": "5b91a0d53ec1c847e671f1806b096167f2b9282d5e1b9420293be9bd88bba3b3",
+      "role": "immutable_recovered_run_spcx_live_condition_diagnostic"
+    },
+    {
+      "path": "../../data/logs/research/v51_index_backend_observer_parity_recovered_run_20260815T0915Z_v3.json",
+      "bytes": 3438,
+      "sha256": "9051c77dcf11e8b596b75eeb8b56e73d6ab875563480ad279513d47050ba765d",
+      "role": "immutable_recovered_run_backend_observer_parity"
+    }
+  ]
+}

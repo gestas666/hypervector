@@ -37,6 +37,10 @@ def test_report_binds_signal_artifact_and_stable_observer_prefix(
             str(journal_path),
             "--output",
             str(output),
+            "--start-ms",
+            "2700000",
+            "--end-ms",
+            "3600000",
         ]
     )
 
@@ -45,6 +49,9 @@ def test_report_binds_signal_artifact_and_stable_observer_prefix(
 
     persisted = json.loads(output.read_text())
     assert persisted["technical_assessment"]["pressure_decision_mismatches"] == 1
+    assert persisted["coverage"]["comparison_window_policy"] == (
+        "explicit_requested_bounds"
+    )
     assert (
         persisted["input_evidence"]["observer_journal"]["sha256"]
         == sha256(raw).hexdigest()
@@ -55,6 +62,26 @@ def test_report_binds_signal_artifact_and_stable_observer_prefix(
     assert persisted["generator_identity"]["files"]
     with pytest.raises(FileExistsError, match="immutable JSON output exists"):
         module.publish_report(output, report)
+
+
+def test_generator_identity_binds_prospective_observer_decision_path() -> None:
+    """A parity result must identify the exact live decision generator bytes."""
+    module = _module()
+
+    paths = {
+        Path(str(row["path"])).relative_to(Path.cwd())
+        for row in module._generator_identity()
+    }
+
+    assert {
+        Path("src/hypervector/live/hip3_breakout_shadow_observer.py"),
+        Path("src/hypervector/live/mu_hip3_breakout_shadow_runner.py"),
+        Path("src/hypervector/live/mu_hip3_breakout_shadow.py"),
+        Path("src/hypervector/live/mu_hip3_preclose_pressure.py"),
+        Path("src/hypervector/live/hip3_breakout_shadow_specs.py"),
+        Path("src/hypervector/live/hip3_provider_inputs.py"),
+        Path("src/hypervector/research/hip3_breakout_pressure_signals.py"),
+    }.issubset(paths)
 
 
 def _module() -> ModuleType:

@@ -1,0 +1,151 @@
+{
+  "schema_version": "v52_empirical_interarrival_review_thresholds_v1",
+  "hypothesis_id": "v52-empirical-cadence-review-thresholds-v1",
+  "generated_at_utc": "2026-08-16T14:51:00+00:00",
+  "status": "accepted",
+  "problem_restatement": "Predeclare when a quiet v52 run should trigger technical review, cadence reassessment, or material frequency-deviation investigation using actual frozen route timestamps rather than operator impatience.",
+  "method": {
+    "signal_identity": "Unique causal signal_time_utc within each frozen continuous evidence partition.",
+    "interarrival_definition": "Elapsed hours between consecutive unique signals inside one partition; gaps between disjoint evidence partitions are excluded.",
+    "bounded_no_event_definition": "Partition-start to first signal, consecutive signal gaps, and last signal to partition-end.",
+    "quantile_method": "Linear interpolation over sorted elapsed-hour observations.",
+    "planning_sensitivity": "Homogeneous Poisson zero-event probability using the previously frozen combined central and optimistic-upper route rates; diagnostic only."
+  },
+  "empirical_interarrival_hours": {
+    "hulk_expansion_short_robust_v3|BTC": {
+      "partition": "pseudo_holdout",
+      "start_utc": "2026-05-01T00:00:00+00:00",
+      "end_utc": "2026-07-27T00:00:00+00:00",
+      "unique_signals": 9,
+      "interarrival_observations": 8,
+      "minimum": 22.5,
+      "median": 246.75,
+      "p90": 357.95,
+      "maximum": 576.0,
+      "bounded_no_event_observations": 10,
+      "bounded_no_event_median": 201.0,
+      "bounded_no_event_p90": 295.65,
+      "bounded_no_event_maximum": 576.0
+    },
+    "liquidity_sweep_long_1h_stop60_target60_v2|BTC": {
+      "partition": "pseudo_holdout_exact_signal_paths",
+      "start_utc": "2026-04-28T00:00:00+00:00",
+      "end_utc": "2026-07-28T00:00:00+00:00",
+      "unique_signals": 6,
+      "interarrival_observations": 5,
+      "minimum": 63.0,
+      "median": 130.0,
+      "p90": 721.2,
+      "maximum": 834.0,
+      "bounded_no_event_observations": 7,
+      "bounded_no_event_median": 155.0,
+      "bounded_no_event_p90": 664.8,
+      "bounded_no_event_maximum": 834.0
+    },
+    "hype_breakout_compression_alignment_bidirectional_v2|HYPE": {
+      "partition": "development_aligned_only",
+      "start_utc": "2025-07-28T00:00:00+00:00",
+      "end_utc": "2026-05-28T00:00:00+00:00",
+      "unique_signals": 41,
+      "interarrival_observations": 40,
+      "minimum": 8.666666667,
+      "median": 128.791666667,
+      "p90": 424.75,
+      "maximum": 622.666666667,
+      "bounded_no_event_observations": 42,
+      "bounded_no_event_median": 128.791666667,
+      "bounded_no_event_p90": 419.875,
+      "bounded_no_event_maximum": 622.666666667
+    }
+  },
+  "prospective_review_schedule": [
+    {
+      "elapsed_since_run_start": "24h",
+      "central_zero_event_probability": 0.785948430196,
+      "optimistic_upper_zero_event_probability": 0.477993296127,
+      "action": "Technical-health and telemetry review only. Reconcile every provider evaluation, coverage, faults, freshness headroom, and venue state; do not infer a frequency defect from zero entries."
+    },
+    {
+      "elapsed_since_run_start": "7d",
+      "central_zero_event_probability": 0.185250059429,
+      "optimistic_upper_zero_event_probability": 0.005701020985,
+      "action": "Cadence reassessment. Recompute exact eligible entries per route and side, regime exposure, blocker episodes, occupancy, and source coverage. Zero entries are informative but not alone proof of broken logic."
+    },
+    {
+      "elapsed_since_run_start": "14d",
+      "central_zero_event_probability": 0.034317584519,
+      "optimistic_upper_zero_event_probability": 0.00003250164,
+      "action": "Material cadence-deviation investigation if technical coverage remained complete. Diagnose regime shift, source mismatch, parameter translation, data quality, or implementation defects before proposing any route change."
+    }
+  ],
+  "immediate_review_overrides": [
+    "Any eligible decision without a routed action or explicit withheld/rejected outcome.",
+    "Any entry submitted after its configured maximum delay.",
+    "Any unexpected order, leverage, position, missing protective stop, or unresolved venue state.",
+    "Any source identity mismatch, technical gap, corrupted ledger row, or runtime fault.",
+    "The first filled entry and every completed lifecycle, regardless of elapsed schedule."
+  ],
+  "interpretation": {
+    "current_1_680924_hour_window": "Shorter than the minimum observed within-partition interarrival for every route and therefore not evidence of cadence failure.",
+    "important_limit": "Activation can occur at any phase inside a historical interval, so the observed minimum interarrival is not a guaranteed minimum wait to the next signal.",
+    "decision": "Use the schedule as evidence-review timing, not as an automatic gate, route relaxation, or profitability claim."
+  },
+  "source_evidence": [
+    {
+      "path": "data/logs/research/20260801_hulk_short_robust_v3_btc_pseudo_holdout.json",
+      "bytes": 17900,
+      "sha256": "353ea1dbbdd3b805523dcdaf58fd3d3aeb900d0be456d4e3d5d074f01f74117b"
+    },
+    {
+      "path": "data/logs/research/bidirectional_cohort/btc_liquidity_sweep_taker_parity_20260811_v2.json",
+      "bytes": 74606,
+      "sha256": "e875fce1407701a53ae1bf8e42c0e751db77e01fee0fe72df539d7b2a5642c77"
+    },
+    {
+      "path": "data/logs/research/hype_compression_breakout_challenger_20260816_v6_alignment/report.json",
+      "bytes": 211167,
+      "sha256": "53c37e529f79223c5e7290a5cd07f5c95897be1850122bf091e5dfbcacb29354"
+    },
+    {
+      "path": "data/logs/research/hype_compression_breakout_challenger_20260816_v6_alignment/alignment_development_trades.parquet",
+      "bytes": 25432,
+      "sha256": "85e83cd5369b415fc8926ba0d645e157d2c07e7de611f7c3151364a111809c33"
+    },
+    {
+      "path": "docs/research-journal/v52-route-cadence-and-portfolio-opportunity-v1.json",
+      "bytes": 18078,
+      "sha256": "cdb5ffd1a3ba685997f7776802894b3388709a85218e20f03e084a03ca58dd82"
+    },
+    {
+      "path": "docs/research-journal/v52-opening-quiet-window-cadence-v1.json",
+      "bytes": 8016,
+      "sha256": "9f48066bb4dce0b8779bf672f672a2e6c693fb60aa1693d30948b3d2e4c8c480"
+    }
+  ],
+  "recommendation": {
+    "recommendation": "Keep the frozen routes and use the 24-hour, 7-day, and 14-day evidence-review schedule while auditing the first eligible event immediately.",
+    "why_now": "A predeclared review clock prevents both premature gate loosening and indefinite acceptance of a genuine frequency collapse.",
+    "evidence_reviewed": "Exact Hulk replay trades, exact sweep path signal times, HYPE aligned-only trade sidecar, frozen route-cadence journal, and the opening live cadence diagnosis.",
+    "observed_problem_or_opportunity": "The routes are intentionally sparse; the operational need is distinguishing normal silence from a material cadence deviation.",
+    "applicable_market_regime": "All regimes observed prospectively under the unchanged v52 route contracts; route-specific conclusions still require regime attribution at each review.",
+    "alternatives_considered": "Daily trade quotas, timeframe-based frequency assumptions, indefinite waiting, a single Poisson threshold, or empirical timestamps plus staged review thresholds.",
+    "proposed_live_change": "none",
+    "expected_upside": "Faster detection of real data/translation/regime problems without sacrificing selectivity merely to increase activity.",
+    "main_risks_and_failure_modes": "Nonstationary cadence, correlated route silence, small route samples, disjoint evidence windows, and mistaking a review trigger for proof of a defect.",
+    "validation_completed": "Unique signal timestamps and within-partition gaps were reconciled from frozen source artifacts; central and upper-rate zero-event sensitivities were independently recomputed.",
+    "validation_still_required": "Prospective eligible entries, both HYPE sides, BTC occupancy interactions, and actual interarrival behavior under the active v52 run.",
+    "success_metrics": "Every scheduled review completes with exact coverage and route/side attribution, and every eligible event is fully reconciled without unsupported parameter changes.",
+    "failure_or_rollback_triggers": "Any immediate-review override, or zero entries at 14 days with complete coverage, triggers a new diagnosis and approval-ready proposal if a validated repair exists.",
+    "confidence_level": "high on the timestamp arithmetic; medium on review-threshold usefulness; low on future profitability and stationarity",
+    "explicit_approval_requested": false
+  },
+  "highest_value_next_investigation": {
+    "experiment": "first_eligible_v52_intent_and_lifecycle_audit",
+    "live_change_authority": "none"
+  },
+  "falsifier": "Replace the schedule if prospective v52 interarrivals, exact regime exposure, or route/source identity demonstrate materially different cadence, or if a technical fault explains the quiet window.",
+  "report_only": true,
+  "execution_authority": "none",
+  "automatic_live_change": false,
+  "runtime_strategy_changed": false
+}

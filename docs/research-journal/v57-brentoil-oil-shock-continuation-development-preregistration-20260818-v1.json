@@ -1,0 +1,147 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v57-brentoil-oil-shock-continuation-development-v1",
+  "generated_at_utc": "2026-08-18T18:51:59Z",
+  "status": "preregistered_development_only_before_results",
+  "recommendation": "Evaluate one frozen BRENTOIL oil-shock continuation mechanism on development evidence only; do not alter live V57 or access validation/holdout economics.",
+  "why_now": "The frozen oil-shock reversion mechanism was nominally positive but stress-negative, technically unresolved, and its first prospective short lost. That is evidence against reversion under the modeled friction, while the opposite continuation hypothesis remains materially distinct and untested on the same detector and evidence contract.",
+  "evidence_reviewed": [
+    "Exact paired BRENTOIL archive and venue-path database from 2026-06-08T08:00:00Z through 2026-08-06T15:00:00Z.",
+    "Current-input HIP-3 fee sensitivity and scaled visible-liquidity evidence.",
+    "Official local funding bundle for the exact frozen window.",
+    "Prior development-only oil-shock reversion result: nominal +$4.2387/PF 2.2585, stress -$1.0685/PF 0.8372, with unresolved technical paths.",
+    "Exact BRENTOIL live-canary lifecycle reconciliation used only to establish a conservative measured slippage floor."
+  ],
+  "observed_problem_or_opportunity": "The prior reversion thesis loses after stress friction even though the same shock observations may contain directional momentum. Testing continuation with every other assumption frozen isolates directionality without a parameter search.",
+  "applicable_market_regime": "Fresh five-minute BRENTOIL return shocks whose absolute trailing 12-bar return exceeds the rolling 95th percentile over 2,016 bars after 1,000 bars of history.",
+  "alternatives_considered": [
+    "Retune the reversion detector; rejected because it would add selection degrees of freedom before resolving the directional hypothesis.",
+    "Reopen Range Onset, Swing/HA, Krown, or cross-asset breakout transfer; rejected because prior evidence already rejected or failed those BRENTOIL mechanisms.",
+    "Relax the reversion stress model; rejected because measured live slippage is the reason the nominal result did not survive.",
+    "Do nothing; remains the baseline and is preferred unless the preregistered continuation criteria pass."
+  ],
+  "proposed_live_change": "none",
+  "expected_upside": "A positive, technically resolved continuation result would identify a diversified non-crypto route worth opening to untouched validation, without spending live capital or changing V57.",
+  "main_risks_and_failure_modes": [
+    "The continuation result may be negative, sparse, side-dependent, or dominated by one winner.",
+    "The paired archive contains mark or L2 gaps that can make selected lifecycles technically unresolved.",
+    "Current-input fees and measured live slippage may not represent every historical timestamp.",
+    "One opposite-direction test does not eliminate multiple-testing risk across the broader research program.",
+    "Development support would not establish forward profitability or authorize deployment."
+  ],
+  "validation_completed": [
+    "The continuation implementation preserves the exact frozen shock detector and swaps only entry direction.",
+    "The same exact next-quote fills, mark/L2 risk path, funding, taker fees, latency, and visible-tail stress contracts are reused.",
+    "Unit tests prove distinct continuation identity, direction inversion, development-only evaluation, and mechanism-selecting CLI behavior.",
+    "The evaluator exposes no execution authority, automatic promotion, or live configuration mutation."
+  ],
+  "validation_still_required": [
+    "Run the immutable development-only replay after this preregistration is written.",
+    "Reconcile nominal/stress portfolio and long/short economics, fold stability, liquidations, and technical path completeness.",
+    "Open untouched validation only in a separate future experiment if every preregistered development criterion passes.",
+    "Require source-native prospective execution evidence before any live proposal."
+  ],
+  "success_metrics": [
+    "Technical path status is resolved for nominal and stress lifecycles.",
+    "Nominal and stress net PnL are positive with profit factor above 1.0.",
+    "Stress net PnL and profit factor remain positive after removing the largest winner.",
+    "Long and short stress net PnL remain positive after removing each side's largest winner.",
+    "At least two of three chronological development folds are stress-positive.",
+    "Zero liquidations and zero insolvency."
+  ],
+  "failure_or_rollback_triggers": [
+    "Any source hash, exact audit bound, funding identity, or generator dependency changes during evaluation.",
+    "Any validation or holdout economics are evaluated or used for selection.",
+    "Any technical path remains unresolved.",
+    "Stress net, stress ex-largest-winner net, either side's stress ex-largest-winner net, or majority-fold stability is nonpositive.",
+    "Any liquidation or insolvency occurs."
+  ],
+  "confidence_level": "High confidence that this isolates continuation versus reversion under the same development contract; low confidence that the economic hypothesis will pass until the immutable replay completes.",
+  "claim_falsifiers": [
+    "A code or artifact audit showing parameters, friction, source window, or risk semantics differ from the reversion baseline would falsify the isolation claim.",
+    "A technically resolved stress-negative or outlier-dependent result would reject the continuation hypothesis.",
+    "A source mutation or OOS access would invalidate this experiment rather than support either mechanism."
+  ],
+  "explicit_approval_requested": false,
+  "single_highest_value_next_investigation": "Run and independently verify this one frozen development-only continuation replay, then retain no-action unless it clears every preregistered criterion.",
+  "experiment_contract": {
+    "symbol": "xyz:BRENTOIL",
+    "mechanism": "continuation",
+    "timeframe": "5m",
+    "full_source_start_utc": "2026-06-08T08:00:00+00:00",
+    "full_source_end_utc": "2026-08-06T15:00:00+00:00",
+    "development_start_utc": "2026-06-08T08:00:00+00:00",
+    "development_end_utc": "2026-07-13T21:45:00+00:00",
+    "validation_economics": "WITHHELD_NOT_EVALUATED",
+    "holdout_economics": "WITHHELD_NOT_EVALUATED",
+    "initial_equity_usd": 500.0,
+    "normalized_notional_usd": 75.0,
+    "leverage": 5.0,
+    "return_lookback_bars": 12,
+    "threshold_lookback_bars": 2016,
+    "minimum_history_bars": 1000,
+    "shock_quantile": 0.95,
+    "target_bps": 40.0,
+    "stop_bps": 30.0,
+    "maximum_hold_bars": 12,
+    "maximum_hold_seconds": 3600,
+    "close_on_opposite_signal": true,
+    "parameter_tuning": false,
+    "candidate_selection": false
+  },
+  "evidence": {
+    "database": {
+      "path": "data/research/hip3_brentoil_exact_venue_20260815.duckdb",
+      "bytes": 1677471744,
+      "sha256": "9cc0dafecb913ae30e799213409f388eec08057882498acd1ff0cf3eb057d98e"
+    },
+    "archive_audit": {
+      "path": "data/logs/research/xyz_brentoil_exact_paired_archive_audit_20260815_v1.json",
+      "bytes": 678,
+      "sha256": "2a8a86247ecd5a033bb7dfbeaf9c4badcfadfc990e196d7ec3d2f1b6d15a1f65"
+    },
+    "qualification": {
+      "path": "data/logs/research/xyz_sndk_gold_brentoil_qualification_20260806T1611EDT.json",
+      "bytes": 6624,
+      "sha256": "ba78b5e7d18fce2984a249cf602eb7165d40ea156fd9b58f0e293c99907dd595"
+    },
+    "fee_sensitivity": {
+      "path": "data/logs/research/xyz_brentoil_liquidity_profile_fee_sensitivity_20260806.json",
+      "bytes": 5343,
+      "sha256": "8c6133f997b7fb1184df77a8b8d3d61d7e01fec24d433133c4d1c2b9c73296b7"
+    },
+    "scaled_liquidity": {
+      "path": "data/logs/research/xyz_brentoil_liquidity_profile_notional750_1250_1750_20260810.json",
+      "bytes": 4419,
+      "sha256": "624a9bbaa9e245325c01ce1e527c60b6f0a5e07e1fdeee9950040d02265f0de5"
+    },
+    "funding": {
+      "path": "data/cache/vendor/hyperliquid/xyz:BRENTOIL/20260608T080000000000Z_20260806T150000000000Z_funding/funding.parquet",
+      "bytes": 34166,
+      "sha256": "0cf47926e33c3260e072ef4424ce066cb21d902a53f12ceb370394cce088fe9c"
+    },
+    "funding_manifest": {
+      "path": "data/cache/vendor/hyperliquid/xyz:BRENTOIL/20260608T080000000000Z_20260806T150000000000Z_funding/manifest.json",
+      "bytes": 1069,
+      "sha256": "eb91c502e7e72937ede53927c64209b1db36fa77fcc354593386f1dcf41db156"
+    },
+    "live_execution": {
+      "path": "data/logs/research/bidirectional_cohort/brentoil_live_canary_lifecycle_reconciliation_20260815_v1.json",
+      "bytes": 8143,
+      "sha256": "47ba7608ce7d7fd9b2ba2c7c64555d529abae1ff509971bfbc38a46a308534bc"
+    },
+    "reversion_baseline": {
+      "path": "data/logs/research/xyz_brentoil_oil_shock_reversion_development_20260815_v4.json",
+      "bytes": 186480,
+      "sha256": "0711c0e56c746e43975fc19618d6ea952687e3ac11311a351f6fe047beefdb57"
+    }
+  },
+  "contract": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_live_change": false,
+    "automatic_promotion": false,
+    "runtime_strategy_changed": false,
+    "live_v57_changed": false
+  }
+}

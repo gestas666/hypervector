@@ -5,6 +5,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use ratatui::text::{Line, Span};
 
 use crate::app::App;
+use crate::backend_cohort_configuration::CohortPendingAssetSizing;
 use crate::cohort_config_exit::pending_provider_exit_label;
 use crate::cohort_config_state::CohortConfigEditor;
 use crate::cohort_widgets::provider_alias;
@@ -103,21 +104,42 @@ fn pending_caps_line(app: &App) -> Line<'static> {
             first.max_notional_usd
         )
     } else {
-        sizing
-            .iter()
-            .map(|(symbol, asset)| format!("{symbol} ${:.0}", asset.max_notional_usd))
-            .collect::<Vec<_>>()
-            .join(" / ")
+        mixed_sizing_label(sizing)
     };
     let prefix = if uniform {
         "NEXT SIZING "
     } else {
-        "NEXT CAPS "
+        "NEXT TIERS "
     };
     Line::from(vec![
         Span::raw(prefix),
         Span::styled(sizing_label, app.theme.cyan),
     ])
+}
+
+fn mixed_sizing_label(sizing: &BTreeMap<String, CohortPendingAssetSizing>) -> String {
+    let mut groups: Vec<(&CohortPendingAssetSizing, Vec<&str>)> = Vec::new();
+    for (symbol, asset) in sizing {
+        if let Some((_, symbols)) = groups.iter_mut().find(|(value, _)| *value == asset) {
+            symbols.push(symbol);
+        } else {
+            groups.push((asset, vec![symbol]));
+        }
+    }
+    groups.sort_by(|left, right| right.0.max_notional_usd.total_cmp(&left.0.max_notional_usd));
+    groups
+        .into_iter()
+        .map(|(asset, symbols)| {
+            format!(
+                "{:.1}x/{:.2}%/${:.0} {}",
+                asset.leverage,
+                asset.margin_fraction * 100.0,
+                asset.max_notional_usd,
+                symbols.join(",")
+            )
+        })
+        .collect::<Vec<_>>()
+        .join(" | ")
 }
 
 fn pending_exit_line(app: &App) -> Line<'static> {
@@ -155,8 +177,15 @@ fn pending_restart_lines(app: &App) -> [Line<'static>; 2] {
     };
     [
         Line::from(vec![
-            Span::raw("PENDING RESTART PROFILE  "),
-            Span::styled(generation.source_path.clone(), app.theme.gold),
+            Span::raw("PENDING RESTART PROFILE "),
+            Span::styled(
+                format!(
+                    "{}{}",
+                    staged_version_label(app, generation).unwrap_or_default(),
+                    generation.source_path
+                ),
+                app.theme.gold,
+            ),
         ]),
         Line::from(format!(
             "BLOCKED BY {blockers} // {} // AUTO RESTART {}",
@@ -168,6 +197,24 @@ fn pending_restart_lines(app: &App) -> [Line<'static>; 2] {
             },
         )),
     ]
+}
+
+fn staged_version_label(
+    app: &App,
+    generation: &crate::backend_cohort_configuration::CohortConfigurationGeneration,
+) -> Option<String> {
+    let preflight = &app.backend.growth_preflight;
+    if preflight.candidate_profile_fingerprint.as_deref()
+        != Some(generation.current_profile_fingerprint.as_str())
+    {
+        return None;
+    }
+    let profile = preflight.candidate_profile_id.as_deref()?;
+    let (_, version) = profile.rsplit_once("_v")?;
+    version
+        .chars()
+        .all(|value| value.is_ascii_digit())
+        .then(|| format!("V{version}  "))
 }
 
 fn restart_label(state: &str) -> &'static str {

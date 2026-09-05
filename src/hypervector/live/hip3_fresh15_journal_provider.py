@@ -17,16 +17,23 @@ from hypervector.live.hip3_breakout_shadow_specs import (
     SPCX_SHADOW_SPEC,
     Hip3BreakoutShadowSpec,
 )
+from hypervector.live.hip3_fresh15_condition_telemetry import (
+    Hip3Fresh15ConditionTelemetry,
+    canonical_pressure_status,
+    condition_readiness_indicators,
+    condition_readiness_metrics,
+    parse_condition_telemetry,
+)
 from hypervector.live.hip3_provider_inputs import completed_hip3_inputs
+from hypervector.live.hip3_provider_availability import Hip3ObserverUnavailableError
 from hypervector.live.multi_asset_signal_source import IntentBatch, ProviderEvaluation
 from hypervector.live.provider_readiness import SignalReadiness
 from hypervector.research.live_ledger_snapshot import snapshot_decision_ledger
 
-HIP3_INDEX_FRESH15_V3_STRATEGY = (
-    "hip3_breakout_pressure_sp500_spcx_fresh15s_bidirectional_v3"
-)
+HIP3_INDEX_FRESH15_V3_STRATEGY = SP500_SHADOW_SPEC.provider_id
 _MAXIMUM_DECISION_DELAY_MS = 15_000
 _MAXIMUM_OBSERVER_STATUS_AGE_MS = 30_000
+_MAXIMUM_OBSERVER_CLOCK_SKEW_MS = 1_000
 _SPECS = {
     SP500_SHADOW_SPEC.symbol: SP500_SHADOW_SPEC,
     SPCX_SHADOW_SPEC.symbol: SPCX_SHADOW_SPEC,
@@ -73,6 +80,7 @@ class _Decision:
     decision_delay_ms: int
     prospective: bool
     history_complete: bool
+    condition_anatomy: Hip3Fresh15ConditionTelemetry | None
 
 
 class Hip3Fresh15JournalCollector:
@@ -145,14 +153,24 @@ def default_index_fresh15_journals() -> Mapping[str, Path]:
 
 def require_fresh_index_observers(observed_at: pd.Timestamp) -> None:
     """Fail unless both default index observers are fresh and coherent."""
-    for symbol, path in _DEFAULT_JOURNALS.items():
-        decisions = _load_decisions(path, _SPECS[symbol])
-        _require_observer_health(
-            _DEFAULT_OBSERVER_STATES[symbol],
-            observed_at,
-            decisions,
-            _SPECS[symbol],
-        )
+    for symbol in _DEFAULT_JOURNALS:
+        require_fresh_index_observer(symbol, observed_at)
+
+
+def require_fresh_index_observer(
+    symbol: str,
+    observed_at: pd.Timestamp,
+) -> None:
+    """Fail unless one exact default index observer is fresh and coherent."""
+    if symbol not in _SPECS:
+        raise ValueError(f"unsupported HIP-3 v3 observer symbol: {symbol}")
+    decisions = _load_decisions(_DEFAULT_JOURNALS[symbol], _SPECS[symbol])
+    _require_observer_health(
+        _DEFAULT_OBSERVER_STATES[symbol],
+        observed_at,
+        decisions,
+        _SPECS[symbol],
+    )
 
 
 def _require_observer_health(
@@ -169,14 +187,19 @@ def _require_observer_health(
     )
     if not _observer_identity_valid(status, cursor, spec):
         raise ValueError("HIP-3 v3 observer identity is invalid")
+    _require_running_observer(status)
     timestamp = pd.Timestamp(observed_at)
     if timestamp.tzinfo is None:
         raise ValueError("HIP-3 observed_at must be timezone-aware")
     observed_at_ms = int(timestamp.timestamp() * 1_000)
     status_at_ms = _integer(status.get("observed_at_ms"), "observer observed_at_ms")
     age_ms = observed_at_ms - status_at_ms
-    if not 0 <= age_ms <= _MAXIMUM_OBSERVER_STATUS_AGE_MS:
-        raise ValueError("HIP-3 v3 observer status is stale")
+    if (
+        not -_MAXIMUM_OBSERVER_CLOCK_SKEW_MS
+        <= age_ms
+        <= _MAXIMUM_OBSERVER_STATUS_AGE_MS
+    ):
+        raise Hip3ObserverUnavailableError("observer_status_stale")
     status_boundary = _integer(
         status.get("cursor_decision_time_ms"), "status cursor boundary"
     )
@@ -184,8 +207,23 @@ def _require_observer_health(
         cursor.get("decision_time_ms"), "cursor decision boundary"
     )
     journal_boundary = decisions[-1].decision_time_ms if decisions else None
-    if status_boundary != cursor_boundary or journal_boundary != cursor_boundary:
-        raise ValueError("HIP-3 v3 observer boundaries disagree")
+    mixed_publication = status_boundary != cursor_boundary or (
+        journal_boundary is not None and journal_boundary > cursor_boundary
+    )
+    if mixed_publication:
+        raise Hip3ObserverUnavailableError("observer_checkpoint_publication_incomplete")
+
+
+def _require_running_observer(status: Mapping[str, object]) -> None:
+    """Reject stopped or faulted writers; freshness bounds degraded state."""
+    raw_runtime = status.get("observer_runtime")
+    if raw_runtime is None:
+        return
+    runtime = _mapping(raw_runtime, "observer runtime")
+    lifecycle = _text(runtime.get("lifecycle"), "observer runtime lifecycle")
+    if lifecycle in {"running", "degraded_transient"}:
+        return
+    raise Hip3ObserverUnavailableError("observer_runtime_not_running")
 
 
 def _observer_identity_valid(
@@ -253,6 +291,7 @@ def _parse_decision(
     spec: Hip3BreakoutShadowSpec,
     boundary: int,
 ) -> _Decision:
+    imbalance = _number(raw.get("decision_imbalance_10"), "decision_imbalance_10")
     decision = _Decision(
         _text(raw.get("provider_id"), "provider_id"),
         _text(raw.get("profile_id"), "profile_id"),
@@ -260,7 +299,7 @@ def _parse_decision(
         boundary,
         _side(raw.get("side")),
         _boolean(raw.get("eligible"), "eligible"),
-        _number(raw.get("decision_imbalance_10"), "decision_imbalance_10"),
+        imbalance,
         _boolean(raw.get("pressure_fresh"), "pressure_fresh"),
         _text(raw.get("pressure_status"), "pressure_status"),
         _text(raw.get("pressure_source"), "pressure_source"),
@@ -276,6 +315,7 @@ def _parse_decision(
             raw.get("pressure_state_history_complete"),
             "pressure_state_history_complete",
         ),
+        parse_condition_telemetry(raw.get("condition_anatomy"), spec.config, imbalance),
     )
     _validate_decision(decision, spec, raw)
     return decision
@@ -362,6 +402,12 @@ def _evaluation(value: _Decision, frame: pd.DataFrame) -> ProviderEvaluation:
     blockers = tuple(
         label for passed, label in zip(conditions, _condition_labels()) if not passed
     )
+    config = _SPECS[value.symbol].config
+    indicators = condition_readiness_indicators(value.condition_anatomy, config)
+    metrics = {
+        **_metrics(value),
+        **condition_readiness_metrics(value.condition_anatomy, config, value.imbalance),
+    }
     readiness = SignalReadiness(
         side=value.side,
         conditions_met=sum(conditions),
@@ -372,8 +418,9 @@ def _evaluation(value: _Decision, frame: pd.DataFrame) -> ProviderEvaluation:
             f"L2 IMB10 {value.imbalance:+.3f}",
             f"L2 STATUS {value.pressure_status.upper()}",
             f"BOOKS {value.snapshot_count}",
-        ),
-        metrics=_metrics(value),
+        )
+        + indicators,
+        metrics=metrics,
     )
     return ProviderEvaluation(
         strategy_id=value.provider_id,
@@ -397,7 +444,11 @@ def _metrics(value: _Decision) -> Mapping[str, object]:
         "pressure_age_seconds": (
             None if value.boundary_age_ms is None else value.boundary_age_ms / 1_000.0
         ),
-        "pressure_status": _canonical_pressure_status(value),
+        "pressure_status": canonical_pressure_status(
+            value.pressure_fresh,
+            value.snapshot_count,
+            value.pressure_exchange_ts_ms,
+        ),
         "decision_delay_ms": value.decision_delay_ms,
         "pressure_boundary_age_ms": value.boundary_age_ms,
         "pressure_snapshot_count": value.snapshot_count,
@@ -407,14 +458,6 @@ def _metrics(value: _Decision) -> Mapping[str, object]:
         "pressure_source": value.pressure_source,
         "source_timeframe": "15m",
     }
-
-
-def _canonical_pressure_status(value: _Decision) -> str:
-    if value.pressure_fresh:
-        return "available"
-    if value.snapshot_count == 0 or value.pressure_exchange_ts_ms is None:
-        return "no_candidate"
-    return "stale_candidate"
 
 
 def _intent(value: _Decision, reference_price: float) -> StrategyIntent:

@@ -1,0 +1,140 @@
+{
+  "schema_version": "v53_sp500_spcx_paired_path_backfill_plan_v1",
+  "generated_at_utc": "2026-08-17T17:52:58Z",
+  "hypothesis_id": "v53-sp500-spcx-paired-path-backfill-v1",
+  "status": "proposed_bounded_probe",
+  "problem_restatement": {
+    "input": "Checksum-complete historical depth-20 L2 exists for xyz:SP500 and xyz:SPCX, but full-window public-trade OHLC and exact mark-risk paths are absent.",
+    "required_output": "Determine whether a resumable trade-and-price continuation can make the two markets eligible for a distinct chronological strategy trial without redownloading L2 or changing v53.",
+    "success_criteria": [
+      "Every probe book bundle is verified and skipped rather than downloaded.",
+      "Every requested trade and price bundle is complete, identity-bound, and checksum-verifiable.",
+      "Price rows disclose exact mark coverage rather than substituting oracle or midpoint values.",
+      "Probe runtime and page counts produce a bounded full-continuation estimate.",
+      "No strategy, route, asset, sizing, leverage, exit, execution, or live profile changes."
+    ]
+  },
+  "contract": {
+    "execution_authority": "none",
+    "report_only": true,
+    "automatic_live_change": false,
+    "automatic_promotion": false,
+    "runtime_strategy_changed": false,
+    "network_scope": "four explicitly bounded one-hour 0xArchive probes",
+    "credentials": "existing OXA_API_KEY loaded without printing"
+  },
+  "known_evidence": {
+    "sp500": {
+      "symbol": "xyz:SP500",
+      "full_l2_start_utc": "2026-03-18T13:00:00Z",
+      "full_l2_end_utc": "2026-08-06T15:00:00Z",
+      "book_hours": 3386,
+      "book_snapshots": 19073915,
+      "empty_book_hours": 149,
+      "book_evidence_bytes": 2295723716,
+      "audit": {
+        "path": "data/logs/research/xyz_sp500_l2_archive_audit_20260806.json",
+        "sha256": "7fca7702d63a73508c36fb877cb6594f3779aada1dfc1c8df6a57f4b5c9b2a8c",
+        "bytes": 4479
+      }
+    },
+    "spcx": {
+      "symbol": "xyz:SPCX",
+      "full_l2_start_utc": "2026-05-17T22:00:00Z",
+      "full_l2_end_utc": "2026-08-06T15:00:00Z",
+      "book_hours": 1937,
+      "book_snapshots": 9621079,
+      "empty_book_hours": 109,
+      "book_evidence_bytes": 1574048723,
+      "audit": {
+        "path": "data/logs/research/xyz_spcx_l2_archive_audit_20260806.json",
+        "sha256": "6093d20ae5acb40315d4853aa47a97c486792a0c10dd1850fb5435a708b34e96",
+        "bytes": 3329
+      }
+    },
+    "paired_short_window": {
+      "window_start_utc": "2026-08-12T06:45:00Z",
+      "window_end_utc": "2026-08-13T23:45:00Z",
+      "sp500_trade_bundles": 42,
+      "sp500_public_trades": 87901,
+      "sp500_trade_evidence_bytes": 7872411,
+      "spcx_trade_bundles": 41,
+      "spcx_public_trades": 260674,
+      "spcx_trade_evidence_bytes": 23848060,
+      "limitation": "This approximately 41-hour window is too short for strategy qualification and has no stored 0xArchive price bundles."
+    }
+  },
+  "probe_windows": [
+    {
+      "symbol": "xyz:SP500",
+      "start_utc": "2026-03-18T13:00:00Z",
+      "end_utc": "2026-03-18T14:00:00Z",
+      "role": "launch_hour_source_availability"
+    },
+    {
+      "symbol": "xyz:SP500",
+      "start_utc": "2026-08-06T14:00:00Z",
+      "end_utc": "2026-08-06T15:00:00Z",
+      "role": "terminal_hour_source_availability"
+    },
+    {
+      "symbol": "xyz:SPCX",
+      "start_utc": "2026-05-17T22:00:00Z",
+      "end_utc": "2026-05-17T23:00:00Z",
+      "role": "launch_hour_source_availability"
+    },
+    {
+      "symbol": "xyz:SPCX",
+      "start_utc": "2026-08-06T14:00:00Z",
+      "end_utc": "2026-08-06T15:00:00Z",
+      "role": "terminal_hour_source_availability"
+    }
+  ],
+  "full_continuation_estimate": {
+    "existing_book_tasks_verified_and_skipped": 5323,
+    "new_trade_tasks": 5323,
+    "new_price_tasks": 5323,
+    "new_network_tasks": 10646,
+    "projected_public_trades": 19400000,
+    "projected_compressed_trade_evidence_bytes": 1760000000,
+    "projected_compressed_price_evidence_bytes": 200000000,
+    "estimate_limitations": [
+      "Trade projections extrapolate only the short paired window and may vary by session and listing age.",
+      "Price projection uses local MU and CL price-bundle density rather than SP500/SPCX observations.",
+      "Runtime cannot be estimated responsibly until the four-hour probe measures request pages, retries, and rate limits."
+    ]
+  },
+  "generator_identity": {
+    "script": {
+      "path": "scripts/oxa_backfill.py",
+      "sha256": "80dabf9e41deda88f52e992eaac2e08cadee87a81d69ea575bc8a9df9d4d202f",
+      "bytes": 2966
+    },
+    "orchestrator": {
+      "path": "src/hypervector/data/oxa_backfill.py",
+      "sha256": "d9cfc946e62cdce93c320308248d6a6c11d12940ea86d809e7f0eb4383f88b24",
+      "bytes": 12122
+    }
+  },
+  "decision_rules": {
+    "proceed_to_full_continuation_only_if": [
+      "All four book tasks are checksum-verified skips.",
+      "All eight new trade/price tasks publish complete source-matched manifests.",
+      "At least one exact mark observation exists in every non-empty probe hour.",
+      "There are no normalization conflicts or unresolved participant groups.",
+      "Measured task rate and projected evidence size are operationally bounded."
+    ],
+    "defer_if": [
+      "Launch history lacks public trades or exact marks for a material portion of either market.",
+      "Price evidence is oracle-only, midpoint-derived, or contains unexplained null mark paths.",
+      "Rate limiting or page counts make the continuation unbounded.",
+      "Any existing book manifest fails checksum or identity verification."
+    ],
+    "qualification_after_acquisition": "Acquisition alone grants no economic or live authority. A distinct mechanism must still pass chronological development, frozen validation, untouched holdout, realistic fee/funding/slippage/latency replay, mark-path resolution, delay stress, session analysis, and largest-winner sensitivity."
+  },
+  "confidence": {
+    "level": "high for resumable book reuse; medium for trade-volume estimate; low for full-window mark availability until probed",
+    "falsifier": "Any probe book download, source-identity mismatch, incomplete bundle, absent exact mark source, or materially different page density updates this plan before a full continuation."
+  },
+  "single_highest_value_next_investigation": "Execute and audit the four preregistered one-hour endpoint probes without changing v53."
+}

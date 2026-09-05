@@ -109,6 +109,8 @@ def _assert_path(horizon: dict[str, object]) -> None:
             "decision_time_ms": DECISION_MS,
             "directional_close_return_bps": pytest.approx(500.0),
             "favorable_excursion_bps": pytest.approx(600.0),
+            "latest_available_time_ms": DECISION_MS,
+            "path_start_time_ms": DECISION_MS,
             "reference_price": 100.0,
             "source_run_id": RUN_ID,
         }

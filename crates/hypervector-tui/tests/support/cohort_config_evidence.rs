@@ -12,6 +12,8 @@ fn renders_identity_bound_growth_sizing_and_selected_asset_friction() {
         current_provider_execution_scopes: None,
         current_provider_execution_directions: None,
         current_asset_sizing: None,
+        current_asset_entry_slippage_caps: None,
+        current_asset_market_slippage_caps: None,
         current_entry_context_overrides: Some(BTreeMap::new()),
         current_provider_sizing_overrides: Some(BTreeMap::new()),
         current_provider_directional_sizing_overrides: None,
@@ -52,6 +54,11 @@ fn renders_identity_bound_growth_sizing_and_selected_asset_friction() {
             sell_visible_cost_bps: Some(0.3),
             sizing_technically_ready: true,
         }],
+        retired_assets: vec![GrowthPreflightRetiredAssetTelemetry {
+            symbol: "ETH".into(),
+            flat_no_orders: true,
+            ledger_reconciled: true,
+        }],
         ..GrowthPreflightTelemetry::default()
     };
     let mut terminal = Terminal::new(TestBackend::new(220, 62)).expect("terminal");
@@ -70,6 +77,7 @@ fn renders_identity_bound_growth_sizing_and_selected_asset_friction() {
         .collect::<Vec<_>>()
         .join("\n");
     assert!(screen.contains("$5K PREFLIGHT BLOCKED"), "{screen}");
+    assert!(screen.contains("PENDING RESTART PROFILE V37"), "{screen}");
     assert!(screen.contains("10 SLOTS // MAX MARGIN 24.0%"), "{screen}");
     assert!(
         screen.contains("BTC 3.0% @ 5.0x // $150.00 → $750.00"),
@@ -100,7 +108,7 @@ fn renders_identity_bound_growth_sizing_and_selected_asset_friction() {
         .collect::<Vec<_>>()
         .join("\n");
     assert!(
-        screen.contains("SIZING ASSET ETH // NOT INCLUDED IN CANDIDATE ROSTER"),
+        screen.contains("RETIRED ASSET ETH // FLAT + NO ORDERS // LEDGER RECONCILED"),
         "{screen}"
     );
 }
@@ -209,6 +217,8 @@ fn renders_report_only_effective_sizing_for_the_selected_asset() {
         current_provider_execution_scopes: None,
         current_provider_execution_directions: None,
         current_asset_sizing: None,
+        current_asset_entry_slippage_caps: None,
+        current_asset_market_slippage_caps: None,
         current_entry_context_overrides: Some(BTreeMap::new()),
         current_provider_sizing_overrides: Some(BTreeMap::from([(
             "range_onset_bidirectional_v1|ETH".into(),

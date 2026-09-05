@@ -6,6 +6,10 @@ from collections.abc import Iterable, Mapping
 
 import pandas as pd
 
+from hypervector.live.btc_hulk_delayed_component_floor import (
+    BTC_HULK_DELAYED_COMPONENT_POLICY_IDS,
+    delayed_component_policy,
+)
 from hypervector.live.multi_asset_live_config import StrategyProviderConfig
 from hypervector.live.multi_asset_market_bars import (
     CohortMarketBar,
@@ -33,10 +37,17 @@ def profit_lock_history_limits(
         )
         if terminal is None:
             raise ValueError("profit-lock provider lacks a terminal hold")
-        bars = terminal // _SECONDS_PER_MINUTE + _BOUNDARY_BARS
+        warmup = _component_warmup_bars(contract.profit_lock_policy)
+        bars = terminal // _SECONDS_PER_MINUTE + _BOUNDARY_BARS + warmup
         for symbol in symbols:
             limits[symbol] = max(limits.get(symbol, 0), bars)
     return limits
+
+
+def _component_warmup_bars(policy: str) -> int:
+    if policy not in BTC_HULK_DELAYED_COMPONENT_POLICY_IDS:
+        return 0
+    return delayed_component_policy(policy).warmup_ms // (_SECONDS_PER_MINUTE * 1_000)
 
 
 def _lock_enabled_symbols(provider: StrategyProviderConfig) -> set[str]:

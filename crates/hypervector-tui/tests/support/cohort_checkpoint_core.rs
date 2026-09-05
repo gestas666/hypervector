@@ -235,6 +235,172 @@ fn minimal_checkpoint() -> serde_json::Value {
 }
 
 #[test]
+fn parses_v79_poststart_acceptance_for_operator_visibility() {
+    let mut checkpoint = minimal_checkpoint();
+    checkpoint["poststart_acceptance"] = valid_v79_poststart_acceptance();
+
+    let parsed = parse_cohort_checkpoint(&checkpoint.to_string()).expect("V79 checkpoint");
+    let acceptance = parsed.poststart_acceptance.expect("V79 acceptance");
+    assert!(acceptance.accepted);
+    assert_eq!(acceptance.expected_routes, 9);
+    assert_eq!(acceptance.evaluated_routes, 9);
+    assert_eq!(acceptance.routes_with_metrics, 9);
+    assert_eq!(acceptance.open_positions, 1);
+    assert_eq!(acceptance.fills, 2);
+    assert_eq!(acceptance.costed_fills, 2);
+    assert_eq!(acceptance.closed_trades, 1);
+}
+
+#[test]
+fn parses_v80_poststart_acceptance_with_exact_version_label() {
+    let mut checkpoint = minimal_checkpoint();
+    let mut verdict = valid_v79_poststart_acceptance();
+    verdict["schema_version"] = "v80_poststart_acceptance_v1".into();
+    checkpoint["poststart_acceptance"] = verdict;
+
+    let parsed = parse_cohort_checkpoint(&checkpoint.to_string()).expect("V80 checkpoint");
+    let acceptance = parsed.poststart_acceptance.expect("V80 acceptance");
+
+    assert_eq!(acceptance.version, "V80");
+    assert!(acceptance.accepted);
+}
+
+#[test]
+fn parses_v85_poststart_acceptance_with_exact_version_label() {
+    let mut checkpoint = minimal_checkpoint();
+    let mut verdict = valid_v79_poststart_acceptance();
+    verdict["schema_version"] = "v85_poststart_acceptance_v1".into();
+    checkpoint["poststart_acceptance"] = verdict;
+
+    let parsed = parse_cohort_checkpoint(&checkpoint.to_string()).expect("V85 checkpoint");
+    let acceptance = parsed.poststart_acceptance.expect("V85 acceptance");
+
+    assert_eq!(acceptance.version, "V85");
+    assert!(acceptance.accepted);
+}
+
+#[test]
+fn parses_v86_poststart_acceptance_with_exact_version_label() {
+    let mut checkpoint = minimal_checkpoint();
+    let mut verdict = valid_v79_poststart_acceptance();
+    verdict["schema_version"] = "v86_poststart_acceptance_v1".into();
+    checkpoint["poststart_acceptance"] = verdict;
+
+    let parsed = parse_cohort_checkpoint(&checkpoint.to_string()).expect("V86 checkpoint");
+    let acceptance = parsed.poststart_acceptance.expect("V86 acceptance");
+
+    assert_eq!(acceptance.version, "V86");
+    assert!(acceptance.accepted);
+}
+
+#[test]
+fn rejects_v79_acceptance_with_failed_position_protection() {
+    let mut checkpoint = minimal_checkpoint();
+    let mut acceptance = valid_v79_poststart_acceptance();
+    acceptance["checks"]["position_protection"]["passed"] = false.into();
+    acceptance["checks"]["position_protection"]["reasons"] =
+        serde_json::json!(["open_entry_fill_invalid:BTC"]);
+    checkpoint["poststart_acceptance"] = acceptance;
+
+    let error = parse_cohort_checkpoint(&checkpoint.to_string()).expect_err("must reject");
+    assert!(error.contains("post-start acceptance"), "{error}");
+}
+
+#[test]
+fn parses_coherent_v79_position_protection_failure() {
+    let mut checkpoint = minimal_checkpoint();
+    let mut acceptance = rejected_v79_position_protection();
+    acceptance["reasons"] = serde_json::json!(["open_entry_fill_invalid:BTC"]);
+    checkpoint["poststart_acceptance"] = acceptance;
+
+    let parsed = parse_cohort_checkpoint(&checkpoint.to_string()).expect("V79 rejection");
+    let result = parsed.poststart_acceptance.expect("V79 acceptance");
+    assert!(!result.accepted);
+    assert_eq!(result.reasons, ["open_entry_fill_invalid:BTC"]);
+    assert_eq!(result.open_positions, 1);
+}
+
+#[test]
+fn rejects_v79_global_reasons_that_disagree_with_checks() {
+    let mut checkpoint = minimal_checkpoint();
+    let mut acceptance = rejected_v79_position_protection();
+    acceptance["reasons"] = serde_json::json!(["provider_monitoring_incomplete"]);
+    checkpoint["poststart_acceptance"] = acceptance;
+
+    let error = parse_cohort_checkpoint(&checkpoint.to_string()).expect_err("must reject");
+    assert!(error.contains("post-start acceptance"), "{error}");
+}
+
+#[test]
+fn rejects_inconsistent_v79_poststart_acceptance() {
+    let mut checkpoint = minimal_checkpoint();
+    let mut acceptance = valid_v79_poststart_acceptance();
+    acceptance["checks"]["closed_lifecycle_integrity"]["passed"] = false.into();
+    acceptance["checks"]["closed_lifecycle_integrity"]["reasons"] =
+        serde_json::json!(["closed_lifecycle_invalid:BTC:10"]);
+    checkpoint["poststart_acceptance"] = acceptance;
+
+    let error = parse_cohort_checkpoint(&checkpoint.to_string()).expect_err("must reject");
+    assert!(error.contains("post-start acceptance"), "{error}");
+}
+
+fn valid_v79_poststart_acceptance() -> serde_json::Value {
+    serde_json::json!({
+        "schema_version": "v79_poststart_acceptance_v1",
+        "contract": {
+            "report_only": true,
+            "execution_authority": "none",
+            "automatic_pause": false,
+            "automatic_retuning": false,
+            "performance_gate": false
+        },
+        "accepted": true,
+        "decision": "accepted",
+        "reasons": [],
+        "checks": {
+            "checkpoint_contract": {"passed": true, "reasons": []},
+            "runtime_identity": {"passed": true, "reasons": []},
+            "runtime_freshness": {"passed": true, "reasons": []},
+            "runtime_execution_contracts": {"passed": true, "reasons": []},
+            "provider_monitoring": {
+                "passed": true,
+                "reasons": [],
+                "expected_routes": 9,
+                "evaluated_routes": 9,
+                "routes_with_metrics": 9
+            },
+            "position_protection": {
+                "passed": true,
+                "reasons": [],
+                "open_positions": 1
+            },
+            "execution_attribution": {
+                "passed": true,
+                "reasons": [],
+                "fills": 2,
+                "costed_fills": 2
+            },
+            "closed_lifecycle_integrity": {
+                "passed": true,
+                "reasons": [],
+                "closed_trades": 1
+            },
+            "accounting_epoch": {"passed": true, "reasons": []}
+        }
+    })
+}
+
+fn rejected_v79_position_protection() -> serde_json::Value {
+    let mut acceptance = valid_v79_poststart_acceptance();
+    acceptance["accepted"] = false.into();
+    acceptance["decision"] = "rejected".into();
+    acceptance["checks"]["position_protection"]["passed"] = false.into();
+    acceptance["checks"]["position_protection"]["reasons"] =
+        serde_json::json!(["open_entry_fill_invalid:BTC"]);
+    acceptance
+}
+
+#[test]
 fn accepts_unused_position_capacity_above_the_configured_asset_count() {
     let mut checkpoint = minimal_checkpoint();
     checkpoint["lifecycle"]["asset_states"] = serde_json::json!({
@@ -271,6 +437,67 @@ fn accepts_unused_position_capacity_above_the_configured_asset_count() {
     assert_eq!(risk.configured_assets, 2);
     assert_eq!(risk.configured_maximum_positions, 3);
     assert_eq!(risk.maximum_effective_margin_fraction, 0.02);
+}
+
+#[test]
+fn excludes_observe_only_assets_from_live_risk_capacity() {
+    let mut checkpoint = minimal_checkpoint();
+    checkpoint["lifecycle"]["asset_states"] = serde_json::json!({
+        "BTC": "FLAT",
+        "ETH": "FLAT",
+        "ZEC": "FLAT"
+    });
+    checkpoint["audit"]["risk_utilization"] = serde_json::json!({
+        "schema_version": 1,
+        "mode": "cohort_runtime_risk_utilization_v1",
+        "contract": {
+            "report_only": true,
+            "execution_authority": "none",
+            "performance_gate": false,
+            "balance_gate": false,
+            "automatic_sizing_change": false
+        },
+        "account_value_usd": 500.0,
+        "summary": {
+            "configured_assets": 3,
+            "executable_assets": 1,
+            "cap_bound_assets": 3,
+            "configured_maximum_positions": 1,
+            "provider_symbols": 1,
+            "provider_symbol_overrides": 0,
+            "provider_direction_overrides": 0,
+            "maximum_simultaneous_effective_margin_fraction": 0.01
+        },
+        "by_asset": {
+            "BTC": risk_asset(),
+            "ETH": risk_asset(),
+            "ZEC": risk_asset()
+        },
+        "by_provider_symbol": {
+            "btc_short|BTC": {
+                "configured_leverage": 5.0,
+                "configured_margin_fraction": 0.03,
+                "configured_max_notional_usd": 25.0,
+                "uncapped_notional_usd": 75.0,
+                "planned_notional_usd": 25.0,
+                "planned_margin_usd": 5.0,
+                "effective_margin_fraction": 0.01,
+                "notional_fraction_of_equity": 0.05,
+                "cap_utilization_ratio": 1.0 / 3.0,
+                "cap_binding": true,
+                "sizing_source": "asset_default"
+            }
+        },
+        "by_provider_symbol_side": {}
+    });
+
+    let parsed = parse_cohort_checkpoint(&checkpoint.to_string())
+        .expect("observe-only assets do not consume execution slots");
+    let risk = parsed.risk_utilization.expect("risk utilization");
+
+    assert_eq!(risk.configured_assets, 3);
+    assert_eq!(risk.configured_maximum_positions, 1);
+    assert_eq!(risk.maximum_effective_margin_fraction, 0.01);
 }
 
 fn risk_asset() -> serde_json::Value {

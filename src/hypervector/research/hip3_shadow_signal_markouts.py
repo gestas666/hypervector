@@ -7,7 +7,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass
 import math
 from statistics import mean, median
-from typing import cast
+from typing import Protocol, cast
 
 _BOOK_SOURCE = "hyperliquid_mainnet_l2_rest"
 _MINUTE_MS = 60_000
@@ -50,8 +50,19 @@ class Hip3ShadowMarkoutConfig:
         _positive_integer(self.maximum_book_lateness_ms, "maximum book lateness")
 
 
+class Hip3ShadowRouteIdentity(Protocol):
+    """Minimal exact route identity used by prospective evidence parsers."""
+
+    symbol: str
+    provider_id: str
+    profile_id: str
+    ledger_profile_id: str
+
+
 @dataclass(frozen=True)
-class _Decision:
+class Hip3ShadowDecision:
+    """One exact eligible prospective onset decision."""
+
     event_id: str
     decision_time_ms: int
     observed_at_ms: int
@@ -59,10 +70,22 @@ class _Decision:
 
 
 @dataclass(frozen=True)
-class _Book:
+class Hip3ShadowBook:
+    """One validated prospective top-of-book observation."""
+
     recv_ts_ms: int
-    best_bid: float
-    best_ask: float
+    bids: tuple[tuple[float, float], ...]
+    asks: tuple[tuple[float, float], ...]
+
+    @property
+    def best_bid(self) -> float:
+        """Return the highest validated bid."""
+        return self.bids[0][0]
+
+    @property
+    def best_ask(self) -> float:
+        """Return the lowest validated ask."""
+        return self.asks[0][0]
 
 
 @dataclass(frozen=True)
@@ -87,8 +110,8 @@ def build_hip3_shadow_signal_markouts(
     config: Hip3ShadowMarkoutConfig,
 ) -> dict[str, object]:
     """Measure causal post-publication BBO paths without claiming fills."""
-    decisions = _decisions(decision_rows, config)
-    books = _books(book_rows, config)
+    decisions = validated_shadow_decisions(decision_rows, config)
+    books = validated_shadow_books(book_rows, config)
     horizons = {
         str(horizon): _horizon(decisions, books, horizon, config)
         for horizon in sorted(config.horizons_minutes)
@@ -111,11 +134,12 @@ def build_hip3_shadow_signal_markouts(
     }
 
 
-def _decisions(
-    rows: Sequence[Mapping[str, object]], config: Hip3ShadowMarkoutConfig
-) -> tuple[_Decision, ...]:
+def validated_shadow_decisions(
+    rows: Sequence[Mapping[str, object]], config: Hip3ShadowRouteIdentity
+) -> tuple[Hip3ShadowDecision, ...]:
+    """Return unique, causal, eligible decisions for one exact route."""
     seen: set[str] = set()
-    output: list[_Decision] = []
+    output: list[Hip3ShadowDecision] = []
     for row in rows:
         event_id = _text(row.get("event_id"), "decision event id")
         if event_id in seen:
@@ -130,9 +154,9 @@ def _decisions(
 
 def _decision(
     row: Mapping[str, object],
-    config: Hip3ShadowMarkoutConfig,
+    config: Hip3ShadowRouteIdentity,
     event_id: str,
-) -> _Decision | None:
+) -> Hip3ShadowDecision | None:
     token = config.symbol.removeprefix("xyz:").lower()
     if row.get("event_type") != f"{token}_hip3_breakout_shadow_decision":
         raise ValueError("HIP-3 markout decision event type is inconsistent")
@@ -158,11 +182,11 @@ def _decision(
     observed_ms = _nonnegative_integer(value.get("observed_at_ms"), "observed time")
     if not 0 <= observed_ms - decision_ms <= 15_000:
         raise ValueError("eligible HIP-3 markout was published outside its boundary")
-    return _Decision(event_id, decision_ms, observed_ms, side)
+    return Hip3ShadowDecision(event_id, decision_ms, observed_ms, side)
 
 
 def _require_decision_identity(
-    value: Mapping[str, object], config: Hip3ShadowMarkoutConfig
+    value: Mapping[str, object], config: Hip3ShadowRouteIdentity
 ) -> None:
     expected = {
         "symbol": config.symbol,
@@ -176,9 +200,10 @@ def _require_decision_identity(
         raise ValueError("HIP-3 markout decision identity is inconsistent")
 
 
-def _books(
-    rows: Sequence[Mapping[str, object]], config: Hip3ShadowMarkoutConfig
-) -> tuple[_Book, ...]:
+def validated_shadow_books(
+    rows: Sequence[Mapping[str, object]], config: Hip3ShadowRouteIdentity
+) -> tuple[Hip3ShadowBook, ...]:
+    """Return ordered unique prospective books for one exact route."""
     output = tuple(_book(row, config) for row in rows)
     ordered = tuple(sorted(output, key=lambda value: value.recv_ts_ms))
     timestamps = [value.recv_ts_ms for value in ordered]
@@ -187,7 +212,7 @@ def _books(
     return ordered
 
 
-def _book(row: Mapping[str, object], config: Hip3ShadowMarkoutConfig) -> _Book:
+def _book(row: Mapping[str, object], config: Hip3ShadowRouteIdentity) -> Hip3ShadowBook:
     if row.get("event_type") != "book_observation":
         raise ValueError("HIP-3 markout book event type is invalid")
     if row.get("profile_id") != config.ledger_profile_id:
@@ -205,20 +230,23 @@ def _book(row: Mapping[str, object], config: Hip3ShadowMarkoutConfig) -> _Book:
         raise ValueError("HIP-3 markout book receipt precedes exchange time")
     bids = _levels(payload.get("bids"), "bids", descending=True)
     asks = _levels(payload.get("asks"), "asks", descending=False)
-    if bids[0] >= asks[0]:
+    if bids[0][0] >= asks[0][0]:
         raise ValueError("HIP-3 markout book is crossed")
-    return _Book(recv_ms, bids[0], asks[0])
+    return Hip3ShadowBook(recv_ms, bids, asks)
 
 
-def _levels(value: object, label: str, *, descending: bool) -> tuple[float, ...]:
+def _levels(
+    value: object, label: str, *, descending: bool
+) -> tuple[tuple[float, float], ...]:
     if not isinstance(value, list) or len(value) < 10:
         raise ValueError(f"HIP-3 markout {label} require ten levels")
-    prices: list[float] = []
+    levels: list[tuple[float, float]] = []
     for raw in value[:10]:
         level = _mapping(raw, f"{label} level")
         price = _positive_number(level.get("price"), f"{label} price")
-        _positive_number(level.get("size"), f"{label} size")
-        prices.append(price)
+        size = _positive_number(level.get("size"), f"{label} size")
+        levels.append((price, size))
+    prices = [level[0] for level in levels]
     comparisons = zip(prices, prices[1:])
     ordered = (
         all(left > right for left, right in comparisons)
@@ -227,12 +255,12 @@ def _levels(value: object, label: str, *, descending: bool) -> tuple[float, ...]
     )
     if not ordered:
         raise ValueError(f"HIP-3 markout {label} are not strictly ordered")
-    return tuple(prices)
+    return tuple(levels)
 
 
 def _horizon(
-    decisions: Sequence[_Decision],
-    books: Sequence[_Book],
+    decisions: Sequence[Hip3ShadowDecision],
+    books: Sequence[Hip3ShadowBook],
     horizon: int,
     config: Hip3ShadowMarkoutConfig,
 ) -> dict[str, object]:
@@ -240,14 +268,14 @@ def _horizon(
     outcomes: list[_Outcome] = []
     timestamps = [value.recv_ts_ms for value in books]
     for decision in decisions:
-        entry_status, entry = _at_or_after(
+        entry_status, entry = first_shadow_book_at_or_after(
             books, timestamps, decision.observed_at_ms, config.maximum_book_lateness_ms
         )
         if entry is None:
             coverage[f"entry_{entry_status}"] += 1
             continue
         coverage["entry_matched"] += 1
-        exit_status, exit_book = _at_or_after(
+        exit_status, exit_book = first_shadow_book_at_or_after(
             books,
             timestamps,
             entry.recv_ts_ms + horizon * _MINUTE_MS,
@@ -279,12 +307,13 @@ def _coverage(eligible: int) -> dict[str, int]:
     }
 
 
-def _at_or_after(
-    books: Sequence[_Book],
+def first_shadow_book_at_or_after(
+    books: Sequence[Hip3ShadowBook],
     timestamps: Sequence[int],
     target_ms: int,
     maximum_lateness_ms: int,
-) -> tuple[str, _Book | None]:
+) -> tuple[str, Hip3ShadowBook | None]:
+    """Return the first causal book within the declared lateness bound."""
     position = bisect_left(timestamps, target_ms)
     if position >= len(books):
         return "censored", None
@@ -295,9 +324,9 @@ def _at_or_after(
 
 
 def _outcome(
-    decision: _Decision,
-    entry: _Book,
-    exit_book: _Book,
+    decision: Hip3ShadowDecision,
+    entry: Hip3ShadowBook,
+    exit_book: Hip3ShadowBook,
     horizon: int,
     config: Hip3ShadowMarkoutConfig,
 ) -> _Outcome:

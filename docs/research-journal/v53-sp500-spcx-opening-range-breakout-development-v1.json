@@ -1,0 +1,103 @@
+{
+  "schema_version": "v53_sp500_spcx_opening_range_breakout_development_v1",
+  "created_at_utc": "2026-08-17T18:12:00Z",
+  "hypothesis_id": "V53_SP500_SPCX_OPENING_RANGE_BREAKOUT_DEVELOPMENT_V1",
+  "state": "preregistered_evidence_acquisition_in_progress",
+  "mode": "report_only",
+  "execution_authority": "none",
+  "automatic_live_change": false,
+  "automatic_promotion": false,
+  "performance_gate": false,
+  "runtime_strategy_changed": false,
+  "hypothesis": "A session-aware 15-minute opening-range breakout with completed-bar EMA21/55 alignment can capture both long and short U.S. cash-session index moves after exact HIP-3 costs without reusing the rejected pressure-transfer, Swing/HA, Krown, or Range Onset mechanisms.",
+  "why_now": "The active v53 portfolio has only BTC and HYPE and its historically implied cadence is insufficient for the requested growth objective. SP500 and SPCX are among the most liquid HIP-3 markets, but their prior pressure and Swing families failed. A full paired public-trade, exact-mark, and L2 segment is being acquired, enabling one materially different session-native test.",
+  "current_live_baseline": {
+    "profile_id": "multi_asset_growth_first_5000_hype_freshness_repair_v53",
+    "profile_fingerprint": "f6378e473088b962724176f1b4aaf0857d4e2a6c3bf0103c2d1794d6bfd46a82",
+    "configured_assets": [
+      "BTC",
+      "HYPE"
+    ],
+    "live_change_proposed": false
+  },
+  "five_scoping_invariants": {
+    "decision_time_correctness": "Signals use completed 15-minute public-trade OHLC only. The two-bar opening range is known at 10:00 America/New_York, and any later signal executes only on the next exact L2 quote.",
+    "tradability_and_universe": "Evaluate xyz:SP500 and xyz:SPCX independently. Retain both long and short. Do not pool their PnL or select one symbol using validation or holdout.",
+    "labels_and_horizons": "At most one new lifecycle per symbol per complete regular session. Entry may occur from 10:00 through 14:00 America/New_York. A protective stop, 2R target, opposite completed-bar invalidation, 15:45 session exit decision, and six-hour hard fallback are modeled.",
+    "cost_model": "Use current point-in-time HIP-3 taker fee evidence, exact next-quote bid/ask, measured visible-depth and latency stress, official hourly funding, and exact post-entry mark extrema. Missing path evidence is unresolved, not filled from oracle or midpoint.",
+    "evaluation_protocol": "Single frozen mechanism, chronological 60/20/20. Evaluate development and three development folds first. Validation remains unopened unless development is technically resolved and economically supportive. Final holdout is verdict-only."
+  },
+  "frozen_mechanism": {
+    "family": "us_cash_opening_range_breakout",
+    "signal_timeframe": "15m",
+    "session_timezone": "America/New_York",
+    "required_session_open_local": "09:30:00",
+    "opening_range_end_local": "10:00:00",
+    "last_entry_decision_local": "14:00:00",
+    "session_exit_decision_local": "15:45:00",
+    "opening_range_bars": 2,
+    "ema_fast": 21,
+    "ema_slow": 55,
+    "breakout_clearance_rule": "two_times_symbol_p99_round_trip_execution_cost_bps",
+    "long_condition": "first completed close above opening-range high plus clearance while close > EMA21 > EMA55",
+    "short_condition": "first completed close below opening-range low minus clearance while close < EMA21 < EMA55",
+    "protective_stop": "opposite signal-bar extreme, skipped when distance exceeds 80 bps and floored at 15 bps",
+    "minimum_stop_bps": 15.0,
+    "maximum_stop_bps": 80.0,
+    "target_r_multiple": 2.0,
+    "opposite_invalidation": "completed close through the opposite opening-range boundary",
+    "maximum_hold_seconds": 21600,
+    "maximum_lifecycles_per_symbol_session": 1,
+    "leverage": 10.0,
+    "initial_research_equity_usd": 5000.0,
+    "notional_selection": "derive once from the exact v53 ten-percent-margin policy and symbol capacity evidence before PnL replay"
+  },
+  "frozen_archive_scope": {
+    "start_utc": "2026-06-08T08:00:00Z",
+    "end_utc": "2026-08-06T15:00:00Z",
+    "market_family": "hip3",
+    "depth": 20,
+    "symbols": [
+      "xyz:SP500",
+      "xyz:SPCX"
+    ],
+    "required_sources": [
+      "0xarchive_hyperliquid_hip3_l2",
+      "0xarchive_hyperliquid_public_trades",
+      "0xarchive_hyperliquid_prices",
+      "official_hourly_funding"
+    ],
+    "source_plan": "docs/research-journal/v53-sp500-spcx-exact-mark-segment-backfill-plan-v1.json"
+  },
+  "development_success_contract": {
+    "technical": "Every selected development lifecycle must have resolved post-entry mark risk plus fresh exact entry and exit quotes. Session completeness and time-zone conversion must reconcile independently.",
+    "economic": "For each symbol independently: nominal and stress net positive, profit factor above one, stress net excluding the largest winner positive, at least two of three chronological stress folds positive, and long and short slices reported without post-hoc side removal.",
+    "portfolio_relevance": "A symbol that reaches untouched holdout must then enter a shared-account interaction replay against exact v53 BTC/HYPE routes; correlated same-session SP500/SPCX signals cannot be counted as independent capacity."
+  },
+  "stop_rules": [
+    "Abort a symbol before validation if any selected development lifecycle is technically unresolved.",
+    "Stop a symbol if nominal or stress net is non-positive, profit factor is at or below one, stress net excluding the largest winner is non-positive, or fewer than two chronological stress folds are positive.",
+    "Do not tune the opening window, EMA lengths, clearance multiplier, entry cutoff, stop bounds, target multiple, or exit time from development losses.",
+    "Do not convert a post-hoc profitable direction into a qualified one-sided route.",
+    "Do not combine SP500 and SPCX economics to rescue an individually losing symbol.",
+    "Do not open final holdout for mechanism selection or parameter choice."
+  ],
+  "known_failure_modes": [
+    "The exact archive may contain mark-only outages that censor many selected lifecycles.",
+    "SP500 and SPCX may be highly correlated, so two profitable individual replays need not create two portfolio opportunities.",
+    "Opening-range behavior may depend on cash-session holidays, half-days, and daylight-saving conversion; incomplete standard sessions are censored.",
+    "A completed-bar breakout can be late after a gap, and realistic next-quote entry may erase the apparent edge.",
+    "The formula-selected clearance can suppress cadence or admit noise when historical execution costs change materially.",
+    "This preregistration does not prove strategy edge, live readiness, or acceptable future capacity."
+  ],
+  "alternatives_considered": [
+    "Reuse fresh pressure v3: rejected after negative compatible live lifecycles and source-parity failure.",
+    "Reuse Swing/Heikin-Ashi: rejected by strongly negative validation evidence.",
+    "Reuse Krown trend resumption: rejected economically on BRENTOIL and XYZ100.",
+    "Restore Range Onset: rejected by prior live and forward evidence.",
+    "Tune the four-Pine stack directly on these symbols: rejected as a broad multiple-testing search; this session-native mechanism is frozen before index PnL is observed.",
+    "Leave both assets excluded: the required comparator if this fixed hypothesis fails."
+  ],
+  "next_action": "Finish checksum-complete paired acquisition and price-path audit, acquire complete official funding, compute cost-derived clearance without reading PnL, then implement the fixed development-only evaluator test-first.",
+  "approval_requested": false
+}

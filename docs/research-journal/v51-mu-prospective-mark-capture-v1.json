@@ -1,0 +1,126 @@
+{
+  "schema_version": "v51_mu_prospective_mark_capture_v1",
+  "generated_at_utc": "2026-08-15T23:43:30Z",
+  "hypothesis_id": "MU_BREAKOUT_PRESSURE_PROSPECTIVE_EDGE_V1",
+  "status": "infrastructure_defect_fixed_report_only",
+  "symbol": "xyz:MU",
+  "mode": "prospective_exact_mark_capture",
+  "execution_authority": "none",
+  "automatic_live_change": false,
+  "runtime_strategy_changed": false,
+  "problem_restatement": {
+    "input": "The MU breakout observer records source-native completed candles, decisions, and exact L2 snapshots.",
+    "failed_output": "Seven of eight prior lifecycle replays were censored, including mark-path-unresolved entries, and no prospective MU mark recorder was running.",
+    "success_criterion": "Record exact source-native MU mark observations prospectively so future eligible lifecycles can be evaluated without midpoint or oracle substitution."
+  },
+  "known_facts": {
+    "prospective_decisions_before_capture": 342,
+    "eligible_onsets_before_capture": 9,
+    "eligible_long_before_capture": 9,
+    "eligible_short_before_capture": 0,
+    "last_eligible_decision_time_ms": 1786829400000,
+    "last_eligible_decision_time_utc": "2026-08-15T21:30:00Z",
+    "prior_replay_completed_lifecycles": 1,
+    "prior_replay_censored_lifecycles": 7,
+    "prior_replay_mark_path_censors": 2,
+    "prior_replay_portfolio_state_censors": 4,
+    "prior_replay_entry_depth_censors": 1
+  },
+  "capture_contract": {
+    "process": "scripts/hip3_mark_snapshot_recorder.py",
+    "symbol": "xyz:MU",
+    "source": "hyperliquid_info_metaAndAssetCtxs",
+    "data_root": "data/live/research/mu_hip3_breakout_shadow/marks",
+    "status_output": "data/runtime/research/mu_hip3_mark_recorder_latest.json",
+    "poll_seconds": 3.0,
+    "status_seconds": 30.0,
+    "flush_seconds": 30.0,
+    "capture_started_at_ns": 1786837332460690000,
+    "capture_started_at_utc": "2026-08-15T23:42:12.460690Z",
+    "report_only": true,
+    "execution_authority": "none",
+    "signing_client_constructed": false,
+    "orders_supported": false,
+    "retroactive_marks_allowed": false
+  },
+  "initial_verification": {
+    "focused_tests_passed": 4,
+    "real_one_poll_probe_rows": 1,
+    "persistent_first_verified_heartbeat_polls": 10,
+    "persistent_first_verified_heartbeat_rows": 10,
+    "later_snapshot_polls": 28,
+    "later_snapshot_rows": 28,
+    "parquet_parts_verified": 2,
+    "process_parent_pid_at_verification": 40865,
+    "process_child_pid_at_verification": 40866,
+    "v51_profile_changed": false,
+    "orders_or_signing_surface_detected": false
+  },
+  "causal_boundary": {
+    "first_eligible_lifecycle_that_can_be_mark_complete": "the first eligible onset whose entry and entire lifecycle occur at or after the capture start",
+    "ninth_onset_repaired": false,
+    "older_censored_lifecycles_repaired": false,
+    "reason": "The recorder began more than two hours after the ninth onset and cannot fabricate pre-start mark observations."
+  },
+  "risk_and_failure_modes": [
+    "The recorder can stop while the decision observer remains healthy.",
+    "Three-second polling does not prove a continuous mark path through faster intrainterval gaps.",
+    "A future lifecycle can still be censored by missing entry depth, L2, candle, funding, or process continuity.",
+    "Mark capture improves technical evidence but does not establish strategy profitability or bidirectional edge.",
+    "All nine eligible onsets remain long, leaving short behavior unobserved."
+  ],
+  "monitoring_and_falsifiers": {
+    "health_rule": "The mutable status must remain fresh, authority-none, signer-false, orders-false, and rows_by_symbol.xyz:MU must increase.",
+    "path_rule": "A future eligible lifecycle may be called technically resolved only if every held interval satisfies the declared mark-gap contract.",
+    "falsifiers": [
+      "status freshness exceeds the declared observer tolerance",
+      "row count stops advancing while the market and decision observer advance",
+      "any status grants execution authority, constructs a signer, or supports orders",
+      "an evaluation silently fills pre-start or missing mark intervals",
+      "a future onset remains mark-path censored despite recorder continuity"
+    ]
+  },
+  "next_investigation": {
+    "1_recommendation": "Keep the exact MU decision, L2, and mark observers running report-only; evaluate the next eligible onset only after its lifecycle resolves or at the predeclared 20-path/first-short review boundary.",
+    "2_why_now": "Missing prospective mark capture was a direct cause of technically censored MU lifecycle evidence.",
+    "3_evidence_reviewed": "342 decisions, nine long onsets, prior lifecycle replay, current observer health, recorder implementation, focused tests, and a real mainnet one-poll probe.",
+    "4_observed_problem_or_opportunity": "MU has promising fixed-horizon long markouts but cannot support a live strategy claim while most lifecycle paths are censored and no short onset exists.",
+    "5_applicable_market_regime": "Frozen 15m breakout-pressure route with EMA9/21, 32-bar breakout, and absolute depth-10 imbalance at least 0.10.",
+    "6_alternatives_considered": "Use midpoint/oracle fallback, rerun historical incomplete paths, wait without mark capture, or start an unsigned exact prospective recorder. Only the final option preserves causal evidence.",
+    "7_proposed_live_change": null,
+    "8_expected_upside": "Convert future eligible MU onsets from predictable mark-path censors into evaluable stop, exit, funding, and stress lifecycles.",
+    "9_main_risks_and_failure_modes": "Recorder outage, sampling gaps, one-sided onset selection, winner concentration, pressure-transport mismatch, and incomplete execution-cost evidence.",
+    "10_validation_completed": "Recorder TDD, unsigned mainnet probe, first persistent heartbeat, immutable parquet publication, and process/status contract verification.",
+    "11_validation_still_required": "Fresh future eligible onsets after the capture boundary, resolved long and short lifecycles, exact costs and funding, source transport parity, stress robustness, and untouched confirmation.",
+    "12_success_metrics": "Zero unresolved prospective mark intervals, at least 20 independent paths with both sides represented, positive stress expectancy and largest-winner sensitivity, and incremental portfolio value.",
+    "13_failure_or_rollback_triggers": "Stop and repair the research recorder on stale/invalid status or path gaps. No live rollback exists because v51 was not changed.",
+    "14_confidence_level": "High that the missing prospective mark-capture gap is fixed for post-start data; low that MU has a deployable edge.",
+    "15_explicit_approval_requested": false
+  },
+  "source_evidence": [
+    {
+      "path": "scripts/hip3_mark_snapshot_recorder.py",
+      "sha256": "72c8930a53a475a510336ead70eff32b2dad3991485480d59ed1a3d45f381b1d"
+    },
+    {
+      "path": "src/hypervector/data/hip3_mark_snapshot_recorder.py",
+      "sha256": "3dc4ad19c5f14641dc69b9b0ff3e80e053be037ec0afc1c34f983bb16153a5f1"
+    },
+    {
+      "path": "data/live/research/mu_hip3_breakout_shadow/marks/cache/events/hyperliquid/xyz:MU/2026-08-15/asset_context.parquet/part-ea19c35e269e453c9d09f583eb762b5d.parquet",
+      "sha256": "dc91888748e88f2b8eef3c2098830e53f1b08644e5b741356be08b008b8cee19"
+    },
+    {
+      "path": "data/live/research/mu_hip3_breakout_shadow/marks/cache/events/hyperliquid/xyz:MU/2026-08-15/asset_context.parquet/part-c337da44255949c18ddae2ede8a06191.parquet",
+      "sha256": "3e72addc16f6ee741ea7909e700b2499fcb7c69a0a61968ac3a84e0950a9e526"
+    },
+    {
+      "path": "data/runtime/research/mu_hip3_mark_recorder_latest.json",
+      "mutable_status_source": true
+    },
+    {
+      "path": "data/live/research/mu_hip3_breakout_shadow.jsonl",
+      "mutable_append_only_source": true
+    }
+  ]
+}

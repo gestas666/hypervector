@@ -1,0 +1,118 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "skhx-breakout-pressure-prospective-edge-v1",
+  "revision_number": 1,
+  "supersedes_revision_id": null,
+  "created_at_utc": "2026-08-14T06:41:35Z",
+  "strategy_id": "hip3_skhx_full_l2_breakout_pressure_bidirectional_15m_v1",
+  "symbol": "xyz:SKHX",
+  "status": "observe",
+  "hypothesis": "The frozen SKHX 15m breakout, EMA, and depth-10 pressure onset may add a repeatable, executable forward edge after source-native friction without duplicating the current six-asset portfolio.",
+  "decision": "Continue exact report-only prospective collection. Do not add SKHX to v51, retune it, or infer an edge from the single positive long markout.",
+  "confidence": "low",
+  "falsifier": "Reject the candidate if a predeclared larger source-native window is non-positive after realistic costs or largest-winner removal, if both directions are not represented, or if archive/live pressure and candle identities cannot be reconciled.",
+  "frozen_route": {
+    "symbol": "xyz:SKHX",
+    "provider_id": "hip3_skhx_full_l2_breakout_pressure_bidirectional_15m_v1",
+    "profile_id": "skhx_full_l2_breakout_pressure_bidirectional_15m_research_v1",
+    "timeframe": "15m",
+    "breakout_lookback_bars": 32,
+    "fast_ema": 9,
+    "slow_ema": 21,
+    "minimum_abs_imbalance": 0.1,
+    "maximum_stop_bps": 80.0
+  },
+  "development_evidence": {
+    "technical_status": "NOT_SUITABLE_TECHNICALLY_UNRESOLVED",
+    "nominal_trades": 34,
+    "nominal_net_pnl_usd": 14.764586748965257,
+    "nominal_profit_factor": 2.4278910279454795,
+    "nominal_net_without_largest_winner_usd": 5.6114597326404985,
+    "stress_net_pnl_usd": 12.913519162629768,
+    "stress_profit_factor": 2.087370525214742,
+    "stress_net_without_largest_winner_usd": 3.838821941001725
+  },
+  "prospective_evidence_at_declaration": {
+    "decision_rows": 88,
+    "eligible_onsets": 1,
+    "eligible_long": 1,
+    "eligible_short": 0,
+    "immutable_markout_paths": 1,
+    "markout_15m_after_friction_bps": 21.61470990298042,
+    "markout_60m_after_friction_bps": 25.984142644873593,
+    "markout_240m_after_friction_bps": 14.623617515953558,
+    "observer_resumed_at_utc": "2026-08-14T06:39:40Z"
+  },
+  "technical_blockers": [
+    "archive_public_trade_ohlc_vs_live_candleSnapshot_parity_unverified",
+    "archive_ws_l2Book_vs_live_rest_pressure_decision_parity_unresolved",
+    "only_one_eligible_long_path_and_zero_short_paths",
+    "stop_exit_funding_and_depth_sized_lifecycle_economics_unverified"
+  ],
+  "minimum_additional_evidence": {
+    "to_update_diagnosis": "At least one additional independent eligible path and the first eligible short, with complete causal pressure and candle provenance.",
+    "for_change_recommendation": "A predeclared compatible forward window with both sides, realistic fee/funding/slippage/latency/depth, exact stop and exit replay, positive stress economics, and positive largest-winner sensitivity.",
+    "promotion_threshold": false
+  },
+  "metrics": {
+    "development_nominal_trades": 34,
+    "development_nominal_net_pnl_usd": 14.764586748965257,
+    "development_stress_net_pnl_usd": 12.913519162629768,
+    "prospective_decision_rows": 88,
+    "prospective_eligible_long": 1,
+    "prospective_eligible_short": 0,
+    "markout_15m_after_friction_bps": 21.61470990298042,
+    "markout_60m_after_friction_bps": 25.984142644873593,
+    "markout_240m_after_friction_bps": 14.623617515953558
+  },
+  "recommendation": {
+    "recommendation": "Keep SKHX in the isolated report-only observer and reassess only when the predeclared evidence expands.",
+    "why_now": "SKHX has one positive source-native path and positive development economics, but the technical source contract and sample breadth are unresolved.",
+    "evidence_reviewed": [
+      "HIP-3 expansion forward disposition",
+      "immutable SKHX source-native shadow markouts",
+      "current durable observer cursor and report-only status"
+    ],
+    "observed_problem_or_opportunity": "SKHX may add non-crypto opportunity cadence, but one long path cannot establish repeatability, bidirectional behavior, or portfolio diversification.",
+    "applicable_market_regime": "Observed only for a 15m upward breakout with EMA9 above EMA21 and positive depth-10 pressure.",
+    "alternatives_considered": [
+      "add SKHX to v51 immediately",
+      "retune the route against the single forward path",
+      "stop collection because archive parity is unresolved",
+      "continue exact prospective observation without authority"
+    ],
+    "proposed_live_change": "none",
+    "expected_upside": "A larger causal sample can determine whether SKHX adds meaningful, diversified opportunity before capital is exposed.",
+    "main_risks_and_failure_modes": "Small all-long sample, source-transport mismatch, selection bias, missing lifecycle costs, winner concentration, and unknown co-trigger correlation with the live roster.",
+    "validation_completed": "One eligible onset was resolved at 15m, 60m, and 240m against causal BBO rows with measured fee and residual-latency friction; observer authority remains none.",
+    "validation_still_required": "Both directions, larger independent sample, source parity, exact stop/exit lifecycles, funding, depth-sized execution, stress costs, and portfolio correlation.",
+    "success_metrics": "Positive after-cost and stress expectancy, positive without the largest winner, both sides represented, complete source provenance, and incremental portfolio value against unchanged v51.",
+    "failure_or_rollback_triggers": "Negative predeclared forward results, unresolved source identity, missing observer coverage, adverse depth/funding, or no incremental portfolio value. No rollback is needed because no live change exists.",
+    "confidence_level": "low on profitability; high that continued isolated collection is the appropriate next experiment",
+    "explicit_approval_requested": false
+  },
+  "single_highest_value_next_investigation": "Collect the first eligible SKHX short and at least one additional independent long before rerunning fixed-horizon or lifecycle economics.",
+  "evidence": [
+    {
+      "path": "../../data/logs/research/hip3_expansion_forward_disposition_20260813T0436Z_v1.json",
+      "role": "cross_asset_development_and_forward_disposition",
+      "sha256": "90ae4ada40d8a8e08bd80d0b88accce38e8e159bfe4eacdbd5b85e50196b44c6",
+      "bytes": 16899
+    },
+    {
+      "path": "../../data/logs/research/xyz_skhx_shadow_signal_markouts_20260813T0415Z_v1.json",
+      "role": "immutable_source_native_forward_markout",
+      "sha256": "15604d64ee4ed709f9c25e33cf8df7fc9a6f89c143560c40f9283dfc2d3656e4",
+      "bytes": 8307
+    }
+  ],
+  "limitations": [
+    "The declaration-time observer ledger is append-only and its mutable current bytes are not treated as immutable evidence.",
+    "Fixed-horizon BBO markouts are diagnostics, not fills or strategy PnL.",
+    "The development source was technically unresolved and cannot authorize validation or promotion.",
+    "No live strategy, asset, route, parameter, leverage, sizing, exit, execution, or deployment setting changed."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

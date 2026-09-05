@@ -1,0 +1,169 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "V58_BRENTOIL_FUNDING_PRICE_EXHAUSTION_DEVELOPMENT_V1",
+  "recorded_at_utc": "2026-08-19T03:39:42Z",
+  "status": "proposed",
+  "mode": "development_only_report_only",
+  "symbol": "xyz:BRENTOIL",
+  "execution_authority": "none",
+  "automatic_live_change": false,
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false,
+  "problem_restatement": {
+    "input": "BRENTOIL is liquid and source-instrumented, but every previously evaluated oil-shock, transferred HIP-3, and arbitrary cash-open mechanism is rejected or deferred.",
+    "output": "Determine whether a materially different perp-native funding-extreme plus price-exhaustion reversal has development evidence worth later source-complete validation.",
+    "success_scope": "One frozen directional screen only; no live route, sizing, risk, asset-universe, or deployment change."
+  },
+  "frozen_mechanism": {
+    "family": "funding_extreme_price_exhaustion_reversal",
+    "transport_disclosure": "The causal signal definition is frozen from the earlier HYPE development screen and transported unchanged to BRENTOIL. This is a cross-asset mechanism test, not a BRENTOIL-native edge claim.",
+    "timeframe": "5m",
+    "funding_lookback_events": 720,
+    "minimum_funding_history_events": 168,
+    "lower_funding_quantile": 0.05,
+    "upper_funding_quantile": 0.95,
+    "minimum_previous_extension_bps_from_ema21": 60.0,
+    "clean_history_bars": 60,
+    "long_condition": "latest known funding is negative and at or below its prior-only q05 threshold; prior close is at least 60bps below EMA21; current completed 5m bar is bullish and closes above the prior close",
+    "short_condition": "latest known funding is positive and at or above its prior-only q95 threshold; prior close is at least 60bps above EMA21; current completed 5m bar is bearish and closes below the prior close",
+    "signal_policy": "condition onset only; missing five-minute bars split the series and reset EMA, clean-history, and onset state",
+    "entry": "next observed completed five-minute bar open after the causal signal",
+    "fixed_horizons": [
+      "15m",
+      "1h",
+      "4h",
+      "8h",
+      "24h"
+    ],
+    "primary_observation_policy": "chronologically non-overlapping within each fixed horizon",
+    "funding_policy": "apply exact official hourly funding strictly after entry and through the fixed-horizon close",
+    "gap_policy": "censor if the entry or fixed-horizon path crosses a missing five-minute bar",
+    "position_sizing": "unit-notional basis-point directional screen; no leverage, liquidation, stop, target, or portfolio compounding"
+  },
+  "frozen_cost_contract": {
+    "notional_context_usd": 750.0,
+    "one_way_taker_fee_bps": 0.864,
+    "nominal_latency_bps_per_side": 1.2230537631076594,
+    "nominal_round_trip_bps_before_funding": 4.174107526215319,
+    "stress_latency_bps_per_side": 8.464583786205068,
+    "stress_round_trip_bps_before_funding": 18.657167572410137,
+    "nominal_formula": "2 * (0.864bps taker fee + 1bps latency + max((p90 round-trip visible cost - p90 spread)/2, 0))",
+    "stress_formula": "2 * (0.864bps taker fee + max(2bps plus p99 depth tail, worst observed absolute BRENTOIL canary slippage per side))",
+    "limitations": [
+      "Fixed-horizon returns do not model stop, target, liquidation, or queue behavior.",
+      "Worst observed canary slippage is sparse and may understate future gaps.",
+      "The screen cannot establish deployable execution or portfolio edge."
+    ]
+  },
+  "frozen_window": {
+    "start_utc": "2026-06-08T08:00:00Z",
+    "end_exclusive_utc": "2026-08-06T15:00:00Z",
+    "use": "development_only_hypothesis_screen",
+    "validation_accessed": false,
+    "holdout_accessed": false,
+    "oos_policy": "No validation or holdout exists inside this short archive. A supportive result may only justify a new future-only window."
+  },
+  "predeclared_outputs": {
+    "signal_counts": "long, short, raw, and non-overlapping by horizon",
+    "economics": "nominal and stress net bps, mean, profit factor, exact funding, largest-winner removal, and five chronological folds",
+    "side_separation": "long and short reported independently where sample size permits",
+    "technical": "bar counts, contiguous blocks, missing boundaries, censored paths, and source hashes",
+    "decision": "supportive_development_only, rejected_development_only, or insufficient_development_evidence"
+  },
+  "success_criteria": {
+    "minimum_non_overlapping_observations": 10,
+    "supportive_horizon": "At least one predeclared horizon must have positive stress net, positive stress net after removing its largest winner, stress profit factor above one, and at least three of five positive chronological folds.",
+    "directional_guard": "If both sides have at least five non-overlapping observations at the supportive horizon, neither side may have negative stress net after removing its largest winner.",
+    "promotion_threshold": false
+  },
+  "failure_and_invalidation": [
+    "Any source hash or frozen parameter changes after preregistration.",
+    "Funding is available to a bar before the official event timestamp.",
+    "A missing-bar path is priced rather than censored.",
+    "All horizons fail the supportive criteria.",
+    "Fewer than ten primary non-overlapping observations exist at every horizon; classify as insufficient, not failed.",
+    "A result is selected by retuning quantiles, extension, horizons, sides, or costs after outcomes are visible."
+  ],
+  "alternatives_considered": [
+    {
+      "option": "Continue only the existing HYPE/SPCX/BTC/SP500 evidence windows",
+      "tradeoff": "Lowest research complexity but leaves the fourth non-crypto mechanism question idle."
+    },
+    {
+      "option": "Restore retired BRENTOIL Swing or Breakout Pressure",
+      "disposition": "rejected",
+      "tradeoff": "Would recycle weak live-canary evidence and prior transfer failures."
+    },
+    {
+      "option": "Retune or reverse the oil-shock mechanism",
+      "disposition": "rejected",
+      "tradeoff": "Reversion stress failed and the preregistered continuation inversion also failed."
+    },
+    {
+      "option": "Run the frozen funding/price-exhaustion directional screen",
+      "disposition": "selected",
+      "tradeoff": "Materially different causal information with zero capital downside, but only a short development archive and no deployable exit model."
+    }
+  ],
+  "source_evidence": [
+    {
+      "path": "../../data/research/hip3_brentoil_exact_venue_20260815.duckdb",
+      "bytes": 1677471744,
+      "sha256": "9cc0dafecb913ae30e799213409f388eec08057882498acd1ff0cf3eb057d98e",
+      "role": "exact BRENTOIL public-trade and L2 archive database"
+    },
+    {
+      "path": "../../data/cache/vendor/hyperliquid/xyz:BRENTOIL/20260608T080000000000Z_20260806T150000000000Z_funding/funding.parquet",
+      "bytes": 34166,
+      "sha256": "0cf47926e33c3260e072ef4424ce066cb21d902a53f12ceb370394cce088fe9c",
+      "role": "complete official hourly funding"
+    },
+    {
+      "path": "../../data/cache/vendor/hyperliquid/xyz:BRENTOIL/20260608T080000000000Z_20260806T150000000000Z_funding/manifest.json",
+      "bytes": 1069,
+      "sha256": "eb91c502e7e72937ede53927c64209b1db36fa77fcc354593386f1dcf41db156",
+      "role": "funding completeness manifest"
+    },
+    {
+      "path": "../../data/logs/research/xyz_brentoil_liquidity_profile_fee_sensitivity_20260806.json",
+      "bytes": 5343,
+      "sha256": "8c6133f997b7fb1184df77a8b8d3d61d7e01fec24d433133c4d1c2b9c73296b7",
+      "role": "exact growth-mode fee evidence"
+    },
+    {
+      "path": "../../data/logs/research/xyz_brentoil_liquidity_profile_notional750_1250_1750_20260810.json",
+      "bytes": 4419,
+      "sha256": "624a9bbaa9e245325c01ce1e527c60b6f0a5e07e1fdeee9950040d02265f0de5",
+      "role": "exact $750 visible-depth evidence"
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/brentoil_live_canary_lifecycle_reconciliation_20260815_v1.json",
+      "bytes": 8143,
+      "sha256": "47ba7608ce7d7fd9b2ba2c7c64555d529abae1ff509971bfbc38a46a308534bc",
+      "role": "observed BRENTOIL slippage floor"
+    },
+    {
+      "path": "../../data/logs/research/xyz_brentoil_exact_paired_archive_audit_20260815_v1.json",
+      "bytes": 678,
+      "sha256": "2a8a86247ecd5a033bb7dfbeaf9c4badcfadfc990e196d7ec3d2f1b6d15a1f65",
+      "role": "paired archive bounds and count audit"
+    }
+  ],
+  "recommendation": {
+    "1_recommendation": "Run exactly one development-only directional screen under this frozen contract.",
+    "2_why_now": "The required fourth non-crypto lane has liquidity and exact data but no accepted mechanism; this tests a materially different causal input without risking capital.",
+    "3_evidence_reviewed": "Exact Brent archive, funding, fees, scaled liquidity, canary execution, and all prior rejected Brent mechanism dispositions.",
+    "4_observed_problem_or_opportunity": "BRENTOIL diversifies market exposure but its prior strategies do not justify live authority.",
+    "5_applicable_market_regime": "Funding-extreme, price-extended conditions followed by a completed five-minute reversal.",
+    "6_alternatives_considered": "No action, retired route restoration, oil-shock retuning, and the selected fixed transport screen.",
+    "7_proposed_live_change": null,
+    "8_expected_upside": "Identify whether funding dislocation contains enough directional information to justify a future-only exact lifecycle experiment.",
+    "9_main_risks_and_failure_modes": "Short history, cross-asset transport failure, clustered signals, gap censorship, outlier dependence, and no deployable stop/target model.",
+    "10_validation_completed": "Input completeness, point-in-time funding availability contract, cost provenance, and frozen hypothesis definition.",
+    "11_validation_still_required": "Signal implementation tests, immutable development run, chronological and largest-winner analysis, and any later future-only lifecycle validation.",
+    "12_success_metrics": "The predeclared supportive-horizon criteria above.",
+    "13_failure_or_rollback_triggers": "Any invalidation condition above. No rollback is needed because this has no live effect.",
+    "14_confidence_level": "High on input identity; low on economic edge; medium on information value.",
+    "15_explicit_approval_requested": false
+  }
+}

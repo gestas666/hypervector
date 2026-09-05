@@ -22,13 +22,14 @@ def _load() -> object:
 
 
 def test_live_parity_replay_config_is_frozen() -> None:
-    """The command replays the exact v35 8h-to-24h exit contract."""
+    """The command includes v51 router exits plus the frozen 8h-to-24h timer."""
     config = _load().build_replay_config()
 
     assert config.stop_bps == 80.0
     assert config.maximum_hold_minutes == 480
     assert config.maximum_hold_policy == "extend_while_regime_supported"
     assert config.hard_maximum_hold_minutes == 1_440
+    assert config.exit_on_opposite_signal is True
 
 
 def test_continuous_candle_segments_preserve_explicit_gaps() -> None:
@@ -70,6 +71,51 @@ def test_report_includes_the_frozen_entry_exit_study() -> None:
     module = _load()
     exit_study = {"mode": "hype_compression_exit_challenger_report_only"}
 
-    report = module._report({}, {}, {}, {}, [], [], exit_study, {}, {})
+    report = module._report({}, {}, {}, {}, [], [], exit_study, {}, {}, {}, {})
 
     assert report["compression_exit_challenger"] == exit_study
+
+
+def test_report_includes_the_fixed_regime_loss_exit_study() -> None:
+    """The immutable bundle retains the single transferred exit falsifier."""
+    module = _load()
+    exit_study = {"mode": "hype_compression_exit_challenger_report_only"}
+    regime_loss = {"mode": "hype_compression_regime_loss_exit_report_only"}
+
+    report = module._report(
+        {},
+        {},
+        {},
+        {},
+        [],
+        [],
+        exit_study,
+        regime_loss,
+        {},
+        {},
+        {},
+    )
+
+    assert report["compression_regime_loss_exit_challenger"] == regime_loss
+
+
+def test_report_includes_the_causal_alignment_replay() -> None:
+    """The immutable bundle preserves the occupancy-aware alignment test."""
+    module = _load()
+    alignment = {"mode": "hype_compression_alignment_causal_replay_v1"}
+
+    report = module._report(
+        {},
+        {},
+        {},
+        {},
+        [],
+        [],
+        {},
+        {},
+        alignment,
+        {},
+        {},
+    )
+
+    assert report["compression_alignment_replay"] == alignment

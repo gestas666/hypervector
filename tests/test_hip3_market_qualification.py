@@ -248,3 +248,45 @@ def test_preserves_missing_growth_mode_as_unresolved_fee_evidence() -> None:
     assert qualified["growth_mode"] is None
     assert qualified["positive_fee_multiplier_vs_native"] is None
     assert report["readiness"]["all_fee_multipliers_resolved"] is False
+
+
+def test_uses_current_market_level_deployer_fee_scale() -> None:
+    """Current venue metadata may move the fee scale from DEX to market rows."""
+    symbol = "xyz:SP500"
+    dex = _dex()
+    dex.pop("deployerFeeScale")
+    market = {**_metadata()["universe"][0], "deployerFeeScale": "1.0"}
+
+    report = build_hip3_market_qualification(
+        dex=dex,
+        metadata={**_metadata(), "universe": [market]},
+        spot_metadata=_spot_metadata(),
+        contexts=_contexts()[:1],
+        books={symbol: _book(symbol, "7727.0", "7727.1")},
+        candles={symbol: {"15m": _candles(1, 900_000, 2)}},
+        requested_symbols=(symbol,),
+        observed_at_utc="2026-08-15T16:20:00+00:00",
+    )
+
+    qualified = report["markets"][0]
+    assert qualified["deployer_fee_scale"] == 1.0
+    assert qualified["positive_fee_multiplier_vs_native"] == pytest.approx(0.2)
+
+
+def test_rejects_fee_scale_missing_from_both_current_and_legacy_shapes() -> None:
+    """An absent exact HIP-3 fee scale must not be guessed."""
+    symbol = "xyz:SP500"
+    dex = _dex()
+    dex.pop("deployerFeeScale")
+
+    with pytest.raises(Hip3QualificationError, match="deployerFeeScale"):
+        build_hip3_market_qualification(
+            dex=dex,
+            metadata={**_metadata(), "universe": _metadata()["universe"][:1]},
+            spot_metadata=_spot_metadata(),
+            contexts=_contexts()[:1],
+            books={symbol: _book(symbol, "7727.0", "7727.1")},
+            candles={symbol: {"15m": _candles(1, 900_000, 2)}},
+            requested_symbols=(symbol,),
+            observed_at_utc="2026-08-15T16:20:00+00:00",
+        )

@@ -346,6 +346,7 @@ def _contract() -> dict[str, object]:
 def _limitations() -> list[str]:
     return [
         "current regime context is the latest backend evaluation in the checkpoint prefix",
+        "MFE/MAE use completed 1m candle highs/lows; venue stops trigger on mark price",
         "profit protection estimates omit future funding and exit slippage",
         "regime drift is descriptive and supplies no automatic exit authority",
         "legacy ledgers without opened_at_ms use a labeled fill-time timer fallback",

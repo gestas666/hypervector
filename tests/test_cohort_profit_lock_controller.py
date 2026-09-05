@@ -172,6 +172,25 @@ def test_completed_bar_lock_persists_before_returning_current_price_exit() -> No
     assert decision["decision_time_ms"] == 180_000
 
 
+def test_unrecorded_lock_recomputes_when_a_completed_bar_is_corrected() -> None:
+    """A later transport view may reveal a trigger before one is journaled."""
+    telemetry = _Telemetry()
+    initial = (
+        _bar(60_000, body=100.2, high=100.3, low=100.1),
+        _bar(120_000, body=100.22, high=100.25, low=100.21),
+    )
+    corrected = (
+        initial[0],
+        _bar(120_000, body=100.22, high=100.25, low=100.19),
+    )
+
+    assert _actions(initial, telemetry=telemetry) == (set(), ())
+    closing, actions = _actions(corrected, telemetry=telemetry)
+
+    assert closing == {_SYMBOL}
+    assert actions[0].exit_reason == "completed_bar_profit_lock"
+
+
 def test_missing_lifecycle_bar_fails_closed_and_is_observable() -> None:
     """A candle gap cannot be interpreted as a harmless no-trigger path."""
     telemetry = _Telemetry()

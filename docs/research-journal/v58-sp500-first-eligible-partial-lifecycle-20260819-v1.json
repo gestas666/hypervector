@@ -1,0 +1,168 @@
+{
+  "schema_version": "v58_sp500_first_eligible_partial_lifecycle_v1",
+  "generated_at_utc": "2026-08-19T06:58:42Z",
+  "status": "open_lifecycle_censored_no_change_supported",
+  "mode": "report_only",
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false,
+  "live_configuration_changed": false,
+  "hypothesis": {
+    "hypothesis_id": "v57-sp500-fresh15-v3-source-native-lifecycle-v1",
+    "statement": "The unchanged SP500 fresh15 v3 route can produce attributable, source-native long and short lifecycle evidence under its frozen exit and cost contract.",
+    "state": "open_awaiting_configured_exit_and_long_side",
+    "why_updated": "The first eligible onset after the frozen-source epoch was observed and its exact partial lifecycle can now be reconciled."
+  },
+  "event": {
+    "symbol": "xyz:SP500",
+    "provider_id": "hip3_breakout_pressure_sp500_spcx_fresh15s_bidirectional_v3",
+    "profile_id": "sp500_fresh15_pressure_shadow_research_v3",
+    "decision_time_ms": 1787120100000,
+    "observed_at_ms": 1787120101436,
+    "side": "short",
+    "decision_imbalance_10": -0.8081444269652969,
+    "pressure_snapshot_count": 157,
+    "pressure_end_boundary_age_ms": 4429,
+    "signal_source": "hyperliquid_public_candleSnapshot_15m",
+    "pressure_source": "hyperliquid_mainnet_l2_rest",
+    "prospective": true,
+    "source_identity_reproduced": true
+  },
+  "frozen_execution_contract": {
+    "execution_profile_id": "multi_asset_growth_first_5000_eight_asset_incremental_v58",
+    "execution_profile_fingerprint": "8a04636c9ff60a7eae141381cb540d7c6ceed081097cda7d5e465d48faa5022b",
+    "notional_usd": 1750.0,
+    "leverage": 5.0,
+    "entry": "first_complete_recorded_depth_after_publication",
+    "one_way_taker_fee_bps": 0.864,
+    "stress_extra_bps_per_side": 2.0,
+    "fixed_stop_bps": 80.0,
+    "fixed_target": null,
+    "profit_lock": {
+      "timeframe": "completed_1m",
+      "activation_bps": 100.0,
+      "floor_bps": 40.0,
+      "trailing_giveback_bps": 80.0
+    },
+    "opposite_eligible_intent_exit": true,
+    "maximum_hold_hours": 24
+  },
+  "partial_lifecycle": {
+    "cutoff_ms": 1787122560000,
+    "elapsed_minutes": 41,
+    "entry_book_time_ms": 1787120101436,
+    "entry_price": 7675.6,
+    "entry_quantity": 0.22799520558653394,
+    "entry_depth_complete": true,
+    "stop_price": 7737.004800000001,
+    "exact_mark_rows": 2410,
+    "first_exact_mark_ms": 1787120102087,
+    "last_exact_mark_ms": 1787122559442,
+    "maximum_exact_mark_gap_ms": 1492,
+    "minimum_mark": 7676.1,
+    "maximum_mark": 7688.4,
+    "best_directional_mark_return_bps": -0.6514148731051606,
+    "maximum_adverse_mark_excursion_bps": 16.67622075147035,
+    "observed_stop_cross": false,
+    "completed_profit_lock_bars": 40,
+    "profit_lock_activated": false,
+    "profit_lock_triggered": false,
+    "opposite_eligible_intent_observed": false,
+    "configured_exit_observed": false,
+    "replay_disposition": "exit_event_censored",
+    "completed_lifecycle": false,
+    "pnl_claimed": false
+  },
+  "technical_assessment": {
+    "entry_identity_reproduced": true,
+    "mark_path_complete_to_cutoff": true,
+    "mark_gap_limit_ms": 5000,
+    "profit_lock_prefix_complete_to_cutoff": true,
+    "configured_24h_horizon_complete": false,
+    "all_lifecycle_paths_resolved": false,
+    "live_promotion_supported": false
+  },
+  "evidence_context": {
+    "prior_exact_v51_completed_short": {
+      "completed_lifecycles": 1,
+      "long_lifecycles": 0,
+      "short_lifecycles": 1,
+      "net_pnl_usd": 3.229665,
+      "net_return_bps": 6.4625,
+      "largest_winner_dependency": "complete because the sample contains one winner",
+      "interpretation": "A single prior short is technical lifecycle evidence, not deployable expectancy."
+    },
+    "current_frozen_epoch": {
+      "completed_lifecycles": 0,
+      "censored_short_lifecycles": 1,
+      "long_lifecycles": 0,
+      "interpretation": "The new short is adverse but still open under the configured contract; it is not a loss or completed trade."
+    },
+    "active_v57_effect": "none; SP500 is not an executable V57 asset",
+    "v58_effect": "observer-only; no orders, fills, signing client, or capital exposure"
+  },
+  "mark_capture_reconciliation": {
+    "supplemental_rest_recorder_status": "unavailable_stopped",
+    "supplemental_rest_recorder_status_path": "data/runtime/research/hip3_index_mark_recorder_latest.json",
+    "exact_websocket_source": "hyperliquid_ws_activeAssetCtx",
+    "exact_websocket_path_status": "complete_to_cutoff",
+    "interpretation": "The stopped REST recorder is a visible research-health issue, but exact WebSocket marks independently resolved this event through the cutoff. REST marks were not used to certify the path."
+  },
+  "hypothesis_decision": {
+    "recommendation": "Keep V57 and V58 route parameters unchanged. Continue the isolated observer and rerun the immutable lifecycle only after a configured exit, the 24-hour fallback, an opposite eligible onset, or a material evidence failure.",
+    "why_now": "The event supplies the first post-epoch eligible SP500 onset, but its configured lifecycle is unfinished.",
+    "evidence_reviewed": "Prospective decision journal, exact depth-10 book prefix, exact WebSocket mark archive, frozen 15-minute signal candles, frozen completed one-minute profit-lock candles, official funding snapshot, V58 execution config, exact fee evidence, and prior v51 lifecycle disposition.",
+    "observed_problem_or_opportunity": "The SP500 source path is functioning and attributable; economic evidence remains one prior completed short plus one unfinished short and no long lifecycle.",
+    "applicable_market_regime": "Only the exact fresh15 v3 onset observed at 2026-08-19T06:15:00Z; no session or regime generalization is supported.",
+    "alternatives_considered": "Promote after the first onset, impose an ad hoc early exit, relax entry gates, treat fixed-horizon markouts as PnL, or continue the frozen contract. Only continued frozen observation preserves the hypothesis.",
+    "proposed_live_change": null,
+    "expected_upside": "A fully resolved source-native lifecycle updates stop, profit-lock, opposite-exit, cost, and side-breadth evidence without contaminating the route contract.",
+    "main_risks_and_failure_modes": "The lifecycle may remain open, later source gaps may censor it, one outcome may dominate the sample, and archive/live source parity blockers remain unresolved.",
+    "validation_completed": "Entry identity, exact depth, exact mark continuity to cutoff, stop non-cross, completed-bar profit-lock non-activation, opposite-onset absence, and immutable source/config identities.",
+    "validation_still_required": "The configured exit, exact exit depth, funding through exit, both-side lifecycle evidence, and largest-winner-robust after-cost results.",
+    "success_metrics": "At least one technically resolved lifecycle per configured side for diagnosis; any future change recommendation still requires the predeclared compatible window and robustness criteria in the baseline journal.",
+    "failure_or_rollback_triggers": "Any consumed prefix changes, exact mark gap exceeds five seconds, exit depth is unavailable, source/config identity changes, or completed after-cost evidence is negative or winner-dependent.",
+    "confidence_level": "High on event identity and technical evidence through the cutoff; low on profitability because the lifecycle is unfinished and side breadth is absent.",
+    "explicit_approval_requested": false
+  },
+  "source_evidence": [
+    {
+      "path": "data/logs/research/v58_sp500_fresh15_first_eligible_partial_lifecycle_20260819T0656Z_v1.json",
+      "sha256": "2bccf95ea9ea499b461f88d20d754987280c90d79cd9af3c9cc67eb34d463339",
+      "bytes": 1020489
+    },
+    {
+      "path": "configs/multi_asset_growth_first_5000_eight_asset_incremental_v58.toml",
+      "sha256": "1c1c1656233b074df2ed3adcee8cb8cb2c58f0d191cc9f9ac34799478fca3378",
+      "bytes": 6142
+    },
+    {
+      "path": "docs/research-journal/v57-sp500-frozen-source-lifecycle-baseline-20260819-v1.json",
+      "sha256": "bcdd4c3e0a53351fe73b330fd414d62aace97bedc7769038563587495a9c31ee",
+      "bytes": 6548
+    },
+    {
+      "path": "docs/research-journal/v51-sp500-fresh15-v3-live-lifecycle-v2.json",
+      "sha256": "0164723389bbeb56d993b33505c0068661acb41d3cdd5a02d44f49ab311715b6",
+      "bytes": 10503
+    },
+    {
+      "path": "data/logs/research/bidirectional_cohort/v58_eight_asset_observer_audit_20260819T0650Z_v3.json",
+      "sha256": "7610ae31a4c5df7033de10a4be81fcf0288a99d5a20238e0c1185966c18562bc",
+      "bytes": 2468398
+    },
+    {
+      "path": "data/runtime/research/hip3_index_mark_recorder_latest.json",
+      "sha256": "86a67fa091444c7eea21933b8c89183016d9a553b02f6f89f3eab6d8ea8f23cf",
+      "bytes": 429
+    }
+  ],
+  "limitations": [
+    "This is an unfinished observer lifecycle and contains no realized or simulated completed PnL.",
+    "The entry and any future exit are causal depth-replay approximations, not historical venue fills.",
+    "A complete path through the current cutoff does not prove future capture continuity.",
+    "One prior completed short and one unfinished short cannot establish profitability, frequency, or both-side robustness.",
+    "No strategy, asset, route, parameter, stop, exit, leverage, sizing, live configuration, or process was changed."
+  ],
+  "falsifier": "Update this disposition when the frozen lifecycle reaches a configured exit or becomes technically unresolved. Reject any economic inference if exact path, exit-depth, funding, source identity, side breadth, after-cost, or largest-winner criteria fail."
+}

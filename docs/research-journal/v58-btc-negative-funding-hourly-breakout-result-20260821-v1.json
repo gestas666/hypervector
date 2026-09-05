@@ -1,0 +1,168 @@
+{
+  "schema_version": "v58_btc_negative_funding_hourly_breakout_result_v1",
+  "hypothesis_id": "V58_BTC_NEGATIVE_FUNDING_HOURLY_BREAKOUT_LONG_V1",
+  "generated_at_utc": "2026-08-21T12:56:13Z",
+  "status": "rejected_reproduced_no_live_change",
+  "authority": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_promotion": false,
+    "runtime_strategy_changed": false,
+    "live_backend_restarted": false,
+    "orders_supported": false
+  },
+  "problem_restatement": {
+    "observed": "V58 lacks a frequent BTC-long route, while several obvious continuation, transfer, and trigger-relaxation candidates have already failed.",
+    "tested": "One preregistered BTC hourly EMA21/55 uptrend breakout above the previous twenty hourly highs, admitted only when the latest strictly prior settled Hyperliquid funding rate was negative.",
+    "control": "The identical hourly breakout, onset, 60/60/24h exit, sizing, fee, funding-cashflow, and slippage contract without the negative-funding entry predicate."
+  },
+  "source_evidence": [
+    {
+      "path": "docs/research-journal/v58-btc-negative-funding-hourly-breakout-preregistration-20260821-v1.json",
+      "bytes": 15934,
+      "sha256": "3e9c2b74d529b8fd4fb8ab0452d03568b6ce5951dd78261f42fdb0305631ea62",
+      "evidence_role": "outcome-blind frozen contract"
+    },
+    {
+      "path": "data/logs/research/bidirectional_cohort/v58_btc_negative_funding_hourly_breakout_20260821_v1/report.json",
+      "bytes": 37260,
+      "sha256": "7908b779f2f4e4d99146e5d9cb2226a15da87a40f3e3413d264b6bc95da09b7e",
+      "evidence_role": "primary immutable report"
+    },
+    {
+      "path": "data/logs/research/bidirectional_cohort/v58_btc_negative_funding_hourly_breakout_20260821_v1/trades.parquet",
+      "bytes": 102558,
+      "sha256": "1d254bbcc62c837c17d90d0b6883304c601a37e7d63658cda67fe4dc8a7faee8",
+      "evidence_role": "primary complete trade sidecar"
+    },
+    {
+      "path": "data/logs/research/bidirectional_cohort/v58_btc_negative_funding_hourly_breakout_20260821_v1/manifest.json",
+      "bytes": 344,
+      "sha256": "e2deb075185264e571383d5b605d1bdc59358b35ba5a9b8b5059ab73a340c0dc",
+      "evidence_role": "primary immutable manifest"
+    },
+    {
+      "path": "data/logs/research/bidirectional_cohort/v58_btc_negative_funding_hourly_breakout_20260821_v2_reproduction/report.json",
+      "bytes": 37260,
+      "sha256": "a2b5fab68bd623bcde46ad5b48b08c1fc7c4467eed376e17372fac479af37d74",
+      "evidence_role": "independent command reproduction report"
+    },
+    {
+      "path": "data/logs/research/bidirectional_cohort/v58_btc_negative_funding_hourly_breakout_20260821_v2_reproduction/trades.parquet",
+      "bytes": 102558,
+      "sha256": "1d254bbcc62c837c17d90d0b6883304c601a37e7d63658cda67fe4dc8a7faee8",
+      "evidence_role": "byte-identical reproduction trade sidecar"
+    },
+    {
+      "path": "data/logs/research/bidirectional_cohort/v58_btc_negative_funding_hourly_breakout_20260821_v2_reproduction/manifest.json",
+      "bytes": 344,
+      "sha256": "02f03dd266ad9e5620f49292f741ff99175183c550feb939febe95597459f10f",
+      "evidence_role": "reproduction immutable manifest"
+    }
+  ],
+  "reproducibility": {
+    "primary_and_reproduction_trade_sidecars_byte_identical": true,
+    "trade_sidecar_sha256": "1d254bbcc62c837c17d90d0b6883304c601a37e7d63658cda67fe4dc8a7faee8",
+    "reports_identical_after_removing_generated_at_utc": true,
+    "canonical_report_sha256": "9ade886b2e8d74be6c870472a6cad1480aa81d4a39c75518e08e24003b205434",
+    "focused_tests": 21,
+    "focused_tests_status": "pass",
+    "ruff_status": "pass",
+    "file_and_function_size_status": "pass"
+  },
+  "candidate_nominal_results": {
+    "development": {
+      "raw_signals": 7,
+      "completed_trades": 7,
+      "wins": 4,
+      "losses": 3,
+      "gross_market_pnl_usd": 26.490738521740496,
+      "fees_usd": 25.409909678880588,
+      "funding_usd": -0.061655391626891244,
+      "net_pnl_usd": 1.0191734512327457,
+      "profit_factor": 1.0095863955690942,
+      "maximum_drawdown_pct": -1.2940573413057843,
+      "net_pnl_excluding_largest_winner_usd": -25.913973726316804,
+      "events_per_week": 0.266304347826087
+    },
+    "validation": {
+      "raw_signals": 18,
+      "completed_trades": 18,
+      "wins": 8,
+      "losses": 10,
+      "gross_market_pnl_usd": -71.69952704111307,
+      "fees_usd": 67.01533993311031,
+      "funding_usd": 0.8906115960859315,
+      "net_pnl_usd": -137.82425537813742,
+      "profit_factor": 0.6016180509742667,
+      "maximum_drawdown_pct": -4.9199863881135935,
+      "net_pnl_excluding_largest_winner_usd": -164.65004873099858,
+      "events_per_week": 1.4
+    },
+    "pseudo_holdout": {
+      "raw_signals": 3,
+      "completed_trades": 3,
+      "wins": 1,
+      "losses": 2,
+      "gross_market_pnl_usd": -31.931703165896714,
+      "fees_usd": 11.968457030488747,
+      "funding_usd": -0.5981459976509784,
+      "net_pnl_usd": -44.49830619403474,
+      "profit_factor": 0.37188147060981525,
+      "maximum_drawdown_pct": -1.7629573459663126,
+      "net_pnl_excluding_largest_winner_usd": -70.84380433297677,
+      "events_per_week": 0.23076923076923078
+    }
+  },
+  "stress_results": {
+    "development_net_pnl_usd": -3.537995071737896,
+    "validation_net_pnl_usd": -213.91373733818182,
+    "validation_profit_factor": 0.45784160446447636,
+    "pseudo_holdout_net_pnl_usd": -47.4642535185003,
+    "pseudo_holdout_profit_factor": 0.356939603261155,
+    "one_minute_delay_validation_net_pnl_usd": -198.08429693774633,
+    "one_minute_delay_pseudo_holdout_net_pnl_usd": -44.49815613842293
+  },
+  "mechanism_control_comparison": {
+    "development_nominal_candidate_minus_control_usd": 283.01829349329455,
+    "validation_nominal_candidate_minus_control_usd": -46.136350326413776,
+    "pseudo_holdout_nominal_candidate_minus_control_usd": 358.53060695832664,
+    "interpretation": "The funding predicate avoided many losing ordinary breakouts in development and pseudo-holdout but failed its incremental-value requirement in validation. More importantly, the filtered candidate itself remained negative before costs and after costs in both forward partitions."
+  },
+  "diagnosis": {
+    "accepted": [
+      "The exact candidate is economically falsified under the preregistered validation, pseudo-holdout, stress, delay, largest-winner, cadence, and control requirements.",
+      "Costs alone do not explain the rejection because gross market PnL was negative in validation and pseudo-holdout.",
+      "Negative settled funding did not identify a stable profitable subset of hourly BTC breakouts.",
+      "The candidate is too sparse in pseudo-holdout for the requested practical opportunity objective."
+    ],
+    "not_established": [
+      "that all funding-conditioned BTC strategies lack edge",
+      "that cross-venue basis or spot-versus-perpetual flow would behave like Hyperliquid settled funding",
+      "that no materially different BTC long mechanism can pass future preregistered tests"
+    ],
+    "failure_modes": [
+      "Negative funding can represent informed bearish pressure rather than merely uncrowded positioning.",
+      "Settled funding may be too stale or coarse for an hourly breakout entry.",
+      "Hyperliquid-only funding cannot distinguish spot-led demand from cross-venue derivatives demand.",
+      "The fixed 60/60 exit may be mismatched to trend continuation, but changing it after these results would be post-hoc rescue and requires a new independent hypothesis."
+    ]
+  },
+  "decision": {
+    "action": "reject_exact_candidate_and_do_not_retune_or_promote",
+    "live_change_proposed": null,
+    "candidate_added_to_live_roster": false,
+    "v58_changed": false,
+    "next_action": "Do not open another nearby BTC breakout or funding threshold variant. Preserve the selective sweep control and require a new data-backed mechanism with information absent from the current price-plus-settled-funding inputs before another BTC-long preregistration."
+  },
+  "confidence": {
+    "exact_candidate_rejection": "high_source_bound_reproduced_and_negative_before_costs_in_both_forward_partitions",
+    "negative_funding_has_no_incremental_information_for_any_BTC_rule": "low_rule_specific_test_only",
+    "no_live_change_is_warranted": "high_under_current_evidence"
+  },
+  "falsifiers": [
+    "A source, causality, partition, funding-availability, signal, exit, or accounting defect changes the reproduced trade identities or economics.",
+    "A prospectively frozen materially distinct mechanism using additional point-in-time information passes validation, pseudo-holdout, cost, delay, concentration, shared-capital, and execution-feasibility tests.",
+    "Venue-matched prospective evidence under the unchanged exact rule contradicts the historical rejection across enough independent events without reliance on one winner."
+  ]
+}

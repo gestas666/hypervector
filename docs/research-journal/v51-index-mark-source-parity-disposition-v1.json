@@ -1,0 +1,144 @@
+{
+  "schema_version": "v51_index_mark_source_parity_disposition_v1",
+  "generated_at_utc": "2026-08-14T10:31:11Z",
+  "status": "strict_source_substitution_not_validated",
+  "experiment_state": "accepted_result_follow_up_required",
+  "execution_authority": "none",
+  "report_only": true,
+  "runtime_strategy_changed": false,
+  "automatic_live_change": false,
+  "recommendation": "Keep the REST mark recorder running as report-only supplemental evidence, but do not let a REST receipt alone certify an exact five-second HIP-3 risk path until response staleness is causally bounded and encoded in the path gate.",
+  "why_now": "The first independently paired live overlap is large enough to test mark semantics, and SPCX falsified the predeclared one-basis-point maximum even at a 40.165ms receipt separation.",
+  "evidence_reviewed": {
+    "parity_artifact": {
+      "path": "docs/research-journal/v51-index-mark-source-parity-v1.json",
+      "sha256": "a4683a605e270141970b5224461b7900c1c25e3df4ae5e65c66994fb746ae16f",
+      "bytes": 711821,
+      "independent_manifest_and_report_recomputation": "passed"
+    },
+    "source_identities": [
+      "hyperliquid_info_metaAndAssetCtxs",
+      "hyperliquid_ws_activeAssetCtx"
+    ],
+    "pairing_contract": {
+      "method": "one_to_one_nearest_local_receipt",
+      "maximum_pair_age_ms": 250,
+      "minimum_pairs_per_symbol": 100,
+      "difference_metric": "symmetric_midpoint_relative_bps",
+      "maximum_mark_difference_bps": 1.0
+    }
+  },
+  "observed_problem_or_opportunity": {
+    "xyz:SP500": {
+      "matched_pairs": 279,
+      "exact_price_pairs": 272,
+      "maximum_difference_bps": 0.25630839025492186,
+      "parity_passed": true
+    },
+    "xyz:SPCX": {
+      "matched_pairs": 278,
+      "exact_price_pairs": 269,
+      "maximum_difference_bps": 1.4047903350412172,
+      "pairs_above_one_bps": 1,
+      "parity_passed": false
+    },
+    "spcx_worst_pair": {
+      "rest_received_at_utc": "2026-08-14T10:23:08.432624Z",
+      "rest_mark": 142.38,
+      "rest_oracle": 142.49,
+      "rest_mid": 142.365,
+      "nearest_ws_received_at_utc": "2026-08-14T10:23:08.392459Z",
+      "nearest_ws_mark": 142.36,
+      "nearest_ws_oracle": 142.47,
+      "nearest_ws_mid": 142.365,
+      "receipt_separation_ms": 40.165,
+      "latest_prior_ws_full_context_match_at_utc": "2026-08-14T10:23:07.402992Z",
+      "matched_prior_context_age_ms": 1029.632,
+      "interpretation": "The REST response matched a websocket context observed approximately one second earlier rather than the nearest websocket state. This is evidence of response staleness or update-order divergence, not proof of a pricing formula mismatch."
+    },
+    "tighter_pairing_sensitivity": {
+      "25ms": {
+        "sp500_pairs": 26,
+        "sp500_max_bps": 0.0,
+        "spcx_pairs": 19,
+        "spcx_max_bps": 0.7024691791661216
+      },
+      "50ms": {
+        "sp500_pairs": 50,
+        "sp500_max_bps": 0.0,
+        "spcx_pairs": 46,
+        "spcx_max_bps": 1.4047903350412172
+      },
+      "100ms": {
+        "sp500_pairs": 101,
+        "sp500_max_bps": 0.2562624127115479,
+        "spcx_pairs": 96,
+        "spcx_max_bps": 1.4047903350412172
+      }
+    }
+  },
+  "applicable_market_regime": "Transport and risk-path provenance issue; not conditional on trading direction or price regime.",
+  "alternatives_considered": [
+    {
+      "option": "Relax the tolerance above 1.405bps after observing the failure",
+      "disposition": "rejected",
+      "reason": "This would be post-result threshold tuning and would hide the measured one-second context lag."
+    },
+    {
+      "option": "Treat REST receipt time as exact mark observation time",
+      "disposition": "rejected_for_qualification",
+      "reason": "The response carries no exchange observation timestamp and the SPCX row matched an older websocket context."
+    },
+    {
+      "option": "Use websocket marks only",
+      "disposition": "deferred",
+      "reason": "It preserves exact update evidence but does not distinguish an unchanged mark from a transport outage during long update gaps."
+    },
+    {
+      "option": "Merge websocket primary evidence with lag-aware REST supplementation",
+      "disposition": "being_tested",
+      "reason": "This retains update precision while allowing repeated public snapshots to add evidence only when a conservative lag bound remains satisfied."
+    }
+  ],
+  "proposed_live_change": "none",
+  "expected_upside": "Prevent technically unresolved or stale HIP-3 mark paths from being mislabeled as exact while continuing to accumulate useful prospective evidence.",
+  "main_risks_and_failure_modes": [
+    "A small observed sample may understate the tail of REST response lag.",
+    "Matching repeated prices can under-identify the true age of a context.",
+    "A websocket outage removes the comparison source precisely when REST supplementation is most needed.",
+    "Using local receipt timestamps cannot recover an exchange timestamp omitted by the endpoint."
+  ],
+  "validation_completed": [
+    "One-to-one pairing prevents websocket row reuse.",
+    "Exact immutable parquet file manifests were hashed and rechecked before publication.",
+    "Both symbol reports were independently recomputed from the frozen manifests.",
+    "The 1.405bps SPCX mismatch persists with a 50ms pairing bound.",
+    "No signing client, order path, strategy route, or live configuration was touched."
+  ],
+  "validation_still_required": [
+    "Accumulate a predeclared larger overlap window and report REST-to-latest-websocket full-context lag quantiles and maxima.",
+    "Define and test a conservative effective observation timestamp or unresolved predicate for REST-supplemented bars.",
+    "Falsify the merged path gate with delayed, reordered, and absent websocket evidence.",
+    "Re-run the exact v51 lifecycle tool only after source-lag handling is frozen."
+  ],
+  "success_metrics": [
+    "No selected lifecycle is marked resolved from a REST row whose conservative effective age exceeds 5000ms.",
+    "All source substitutions retain exact source and timestamp provenance.",
+    "A delayed REST context is either aged conservatively or makes the lifecycle technically unresolved.",
+    "Prospective SP500 and SPCX lifecycle results remain unchanged under an independent artifact recomputation."
+  ],
+  "failure_or_rollback_triggers": [
+    "Any report labels REST receipt time as an exchange observation timestamp.",
+    "Any source mismatch is silently filtered or resolved by threshold relaxation.",
+    "Any research-only source adapter becomes reachable from live execution factories or routing.",
+    "Any live strategy or risk behavior changes without explicit approval."
+  ],
+  "confidence_level": {
+    "measured_transport_result": "high",
+    "one_second_staleness_interpretation": "medium_high",
+    "tail_lag_bound": "low_until_more_prospective_overlap",
+    "live_profitability_implication": "none"
+  },
+  "explicit_approval_requested": false,
+  "single_highest_value_next_investigation": "Implement and falsify a report-only lag-aware HIP-3 mark-path resolver, then replay the next attributable SP500/SPCX lifecycle without opening untouched performance evidence prematurely."
+}

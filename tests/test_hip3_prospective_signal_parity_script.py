@@ -32,6 +32,10 @@ _BAR_MS = 15 * 60_000
 _START_MS = 1_800_000_000_000
 _END_MS = _START_MS + 5 * _BAR_MS
 _SYMBOL = "xyz:MU"
+_V51_INDEX_SPEC = (
+    Path(__file__).parents[1]
+    / "docs/research-journal/v51-index-source-parity-forward-v1.json"
+)
 
 
 class _Archive:
@@ -128,6 +132,24 @@ def test_command_rejects_selected_route_symbol_alias(tmp_path: Path) -> None:
             archive=_Archive(),
             candle_source=_Candles(),
         )
+
+
+def test_v51_index_route_spec_freezes_exact_sp500_signal_identity() -> None:
+    """Prospective parity must not alias v3 index inputs to an older provider."""
+    module = _module()
+
+    config = module._route_config(_V51_INDEX_SPEC, "xyz:SP500")
+
+    assert config.symbol == "xyz:SP500"
+    assert config.provider_id == (
+        "hip3_breakout_pressure_sp500_spcx_fresh15s_bidirectional_v3"
+    )
+    assert config.profile_id == "sp500_fresh15_pressure_shadow_research_v3"
+    assert config.breakout.breakout_lookback_bars == 32
+    assert config.breakout.fast_ema == 21
+    assert config.breakout.slow_ema == 55
+    assert config.breakout.minimum_abs_imbalance == 0.1
+    assert config.breakout.maximum_stop_bps == 120.0
 
 
 def test_command_rejects_l2_prefix_that_differs_from_path_audit(

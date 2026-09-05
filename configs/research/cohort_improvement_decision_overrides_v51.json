@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "contract": {
     "report_only": true,
     "execution_authority": "none",
@@ -9,18 +9,491 @@
   "source_profile_id": "multi_asset_growth_first_5000_six_asset_profit_lock_candidate_v51",
   "source_profile_fingerprint": "30cd54bb5b5b17249ae0a6a3b01d5702b276d51f8dc5ddd6b4d36ab6aa7d1908",
   "routes": {
-    "hype_breakout_compression_pullback_bidirectional_v1|HYPE": {
+    "hip3_breakout_pressure_sp500_spcx_fresh15s_bidirectional_v3|xyz:SP500": {
       "triage": "REVISE",
+      "next_experiment": "collect_both_side_live_execution",
+      "historical_assessment": "archive_mechanism_rejected_live_v3_source_transport_materially_different_forward_edge_unproven",
+      "decision_source": "docs/research-journal/v51-index-source-parity-forward-v1.json",
+      "supporting_evidence": [
+        "docs/research-journal/v51-index-live-condition-window-v3.json",
+        "docs/research-journal/v51-index-price-breakout-blocker-outcomes-v1.json",
+        "docs/research-journal/v51-index-current-run-backend-observer-parity-v2.json",
+        "docs/research-journal/v51-index-current-run-price-breakout-protection-v1.json",
+        "docs/research-journal/v51-index-mark-source-parity-disposition-v1.json",
+        "docs/research-journal/v51-index-mark-response-lag-v1.json",
+        "data/logs/research/bidirectional_cohort/v51_sp500_shadow_lifecycle_plumbing_20260814T1100Z_v1.json",
+        "docs/research-journal/v51-sp500-first-source-native-open-lifecycle-v1.json",
+        "docs/research-journal/v51-index-current-run-backend-observer-parity-v4.json",
+        "docs/research-journal/v51-index-current-run-backend-observer-parity-v5.json",
+        "docs/research-journal/v51-index-current-run-backend-observer-parity-v6.json",
+        "docs/research-journal/v51-index-recovered-run-live-condition-v1.json",
+        "docs/research-journal/v51-index-recovered-run-live-condition-v2.json",
+        "docs/research-journal/v51-index-recovered-run-live-condition-v3.json"
+      ]
+    },
+    "hip3_breakout_pressure_sp500_spcx_fresh15s_bidirectional_v3|xyz:SPCX": {
+      "triage": "REVISE",
+      "next_experiment": "collect_both_side_live_execution",
+      "historical_assessment": "archive_mechanism_rejected_live_v3_source_transport_materially_different_forward_edge_unproven",
+      "decision_source": "docs/research-journal/v51-index-source-parity-forward-v1.json",
+      "supporting_evidence": [
+        "docs/research-journal/v51-index-live-condition-window-v3.json",
+        "docs/research-journal/v51-index-price-breakout-blocker-outcomes-v1.json",
+        "docs/research-journal/v51-index-current-run-backend-observer-parity-v2.json",
+        "docs/research-journal/v51-index-current-run-price-breakout-protection-v1.json",
+        "docs/research-journal/v51-index-mark-source-parity-disposition-v1.json",
+        "docs/research-journal/v51-index-mark-response-lag-v1.json",
+        "data/logs/research/bidirectional_cohort/v51_spcx_shadow_lifecycle_plumbing_20260814T1100Z_v1.json",
+        "docs/research-journal/v51-index-current-run-backend-observer-parity-v4.json",
+        "docs/research-journal/v51-index-current-run-backend-observer-parity-v5.json",
+        "docs/research-journal/v51-index-current-run-backend-observer-parity-v6.json",
+        "docs/research-journal/v51-index-recovered-run-live-condition-v1.json",
+        "docs/research-journal/v51-index-recovered-run-live-condition-v2.json",
+        "docs/research-journal/v51-index-recovered-run-live-condition-v3.json",
+        "docs/research-journal/v51-spcx-first-source-native-lifecycle-v2.json",
+        "docs/research-journal/v51-spcx-open-stop-trigger-v2.json"
+      ]
+    },
+    "range_onset_bidirectional_v1|ETH": {
+      "triage": "STOP",
       "next_experiment": "new_mechanic_version_required",
-      "historical_assessment": "tested_gate_relaxation_and_profit_lock_families_falsified_exact_live_translation_continues",
-      "decision_source": "docs/research-journal/v51-hype-compression-first-window-v1.json"
+      "historical_assessment": "exact_v51_close_negative_no_cost_clearing_favorable_excursion_successor_retired",
+      "decision_source": "docs/research-journal/v51-successor-route-disposition-v1.json",
+      "supporting_evidence": [
+        "docs/research-journal/v51-compatible-performance-cause-diagnosis-v2.json"
+      ]
+    },
+    "range_onset_bidirectional_v1|SOL": {
+      "triage": "STOP",
+      "next_experiment": "new_mechanic_version_required",
+      "historical_assessment": "tested_exit_repairs_not_bidirectionally_robust_entry_mechanism_unproven_successor_retired",
+      "decision_source": "docs/research-journal/v51-successor-route-disposition-v1.json",
+      "supporting_evidence": [
+        "docs/research-journal/v51-sol-range-onset-live-translation-v3.json",
+        "docs/research-journal/v51-compatible-performance-cause-diagnosis-v2.json"
+      ]
+    },
+    "hulk_expansion_short_robust_v3|BTC": {
+      "triage": "REVISE",
+      "next_experiment": "collect_side_specific_evidence",
+      "historical_assessment": "positive_validation_negative_pseudo_holdout_single_later_winner_repeatability_unproven",
+      "decision_source": "docs/research-journal/v51-successor-route-disposition-v1.json",
+      "supporting_evidence": [
+        "data/logs/research/20260801_hulk_short_robust_v3_btc_validation.json",
+        "data/logs/research/20260801_hulk_short_robust_v3_btc_pseudo_holdout.json",
+        "data/logs/research/20260811_hulk_short_robust_v3_btc_forward_cost_stress.json"
+      ]
+    },
+    "liquidity_sweep_long_1h_stop60_target60_v2|BTC": {
+      "triage": "REVISE",
+      "next_experiment": "collect_side_specific_evidence",
+      "historical_assessment": "target_selected_from_six_development_signals_and_one_forward_winner_repeatability_unproven",
+      "decision_source": "docs/research-journal/v51-successor-route-disposition-v1.json",
+      "supporting_evidence": [
+        "data/logs/research/bidirectional_cohort/btc_liquidity_sweep_taker_parity_20260811_v2.json"
+      ]
+    },
+    "hype_breakout_compression_pullback_bidirectional_v1|HYPE": {
+      "triage": "STOP",
+      "next_experiment": "new_mechanic_version_required",
+      "historical_assessment": "generic_route_negative_causal_alignment_replay_separates_opposed_entries_new_v2_identity_required",
+      "decision_source": "docs/research-journal/v51-hype-compression-alignment-causal-replay-v1.json",
+      "supporting_evidence": [
+        "data/logs/research/hype_compression_breakout_challenger_20260816_v6_alignment/report.json",
+        "docs/research-journal/v51-successor-route-disposition-v2.json"
+      ]
     }
   },
-  "evidence": [
+  "active_hypotheses": [{"hypothesis_id": "v51-index-pressure-translation-persistence-v1", "route": "hip3_breakout_pressure_sp500_spcx_fresh15s_bidirectional_v3|xyz:SP500,xyz:SPCX", "experiment": "provider_native_to_routing_publication_pressure_persistence", "status": "being_tested", "hypothesis": "provider-native breakout pressure that persists through routing publication has better after-cost outcomes than pressure that flips before submission", "evidence_source": "docs/research-journal/v51-index-pressure-translation-challenger-v1.json", "minimum_additional_evidence": "six new prospective signals with at least two retained, two flipped, and long/short coverage in each state", "execution_effect": "report_only", "automatic_live_change": false}],
+  "hypothesis_decisions": [
+    {
+      "hypothesis_id": "v51-hype-missing-onset-relaxation-v1",
+      "route": "hype_breakout_compression_pullback_bidirectional_v1|HYPE",
+      "experiment": "remove_canonical_breakout_onset",
+      "status": "rejected",
+      "decision_reason": "The measured missing-onset paths were adverse after estimated friction, so relaxing the canonical breakout-onset requirement is closed.",
+      "decision_source": "docs/research-journal/v51-hype-compression-first-window-v1.json",
+      "reopen_condition": "A separately versioned causal mechanism must remain positive across chronological development and untouched forward evidence, on both supported sides, and after removing its largest winner."
+    },
+    {
+      "hypothesis_id": "v51-hype-generic-completed-bar-profit-lock-v1",
+      "route": "hype_breakout_compression_pullback_bidirectional_v1|HYPE",
+      "experiment": "generic_completed_bar_profit_lock_family",
+      "status": "rejected",
+      "decision_reason": "All three evaluated generic completed-bar profit-lock families underperformed the frozen control, so that exit family is closed.",
+      "decision_source": "docs/research-journal/v51-hype-compression-first-window-v1.json",
+      "reopen_condition": "A genuinely new causal exit family must beat the unchanged control across chronological development and untouched forward evidence without relying on its largest winner."
+    },
+    {
+      "hypothesis_id": "v51-hype-compression-exit-opp5-loss20",
+      "route": "hype_breakout_compression_pullback_bidirectional_v1|HYPE",
+      "experiment": "opp5_loss20_regime_loss_exit",
+      "status": "rejected",
+      "decision_reason": "The single frozen opposition-loss rule mildly improved development but remained negative without its largest winner and changed the already-opened later confirmation from positive to negative, so the exact rule is closed.",
+      "decision_source": "docs/research-journal/v51-hype-compression-regime-loss-exit-v1.json",
+      "reopen_condition": "A newly versioned causal mechanism not selected from these rows must remain positive after costs and largest-winner removal and outperform the unchanged control on untouched evidence."
+    },
+    {
+      "hypothesis_id": "v51-hype-mature-profit-floor-fixed-entry",
+      "route": "hype_breakout_compression_pullback_bidirectional_v1|HYPE",
+      "experiment": "mature_a100_floor25_fixed_entry",
+      "status": "deferred",
+      "decision_reason": "Development improved modestly, but the four later-confirmation lifecycles produced zero floor triggers and both native and challenger development remained negative without the largest winner.",
+      "decision_source": "docs/research-journal/v51-hype-mature-profit-floor-fixed-entry-v1.json",
+      "reopen_condition": "At least one independent completed floor trigger must have resolved fills and costs, and a predeclared forward window must remain positive after removing its largest beneficial trigger."
+    },
+    {
+      "hypothesis_id": "v51-sp500-archive-live-source-parity-v1",
+      "route": "hip3_breakout_pressure_sp500_spcx_fresh15s_bidirectional_v3|xyz:SP500",
+      "experiment": "archive_live_source_transport_parity",
+      "status": "rejected",
+      "decision_reason": "The bounded audit found material pressure-threshold and signal-decision differences between archive and live-v3 sources, so they are not interchangeable.",
+      "decision_source": "docs/research-journal/v51-index-source-parity-forward-v1.json",
+      "reopen_condition": "A new bounded audit must prove row-for-row candle, pressure, and decision parity under one explicitly frozen source contract."
+    },
+    {
+      "hypothesis_id": "v51-spcx-archive-live-source-parity-v1",
+      "route": "hip3_breakout_pressure_sp500_spcx_fresh15s_bidirectional_v3|xyz:SPCX",
+      "experiment": "archive_live_source_transport_parity",
+      "status": "rejected",
+      "decision_reason": "The bounded audit found material pressure-threshold and signal-decision differences between archive and live-v3 sources, so they are not interchangeable.",
+      "decision_source": "docs/research-journal/v51-index-source-parity-forward-v1.json",
+      "reopen_condition": "A new bounded audit must prove row-for-row candle, pressure, and decision parity under one explicitly frozen source contract."
+    },
+    {
+      "hypothesis_id": "v51-sp500-remove-price-breakout-v1",
+      "route": "hip3_breakout_pressure_sp500_spcx_fresh15s_bidirectional_v3|xyz:SP500",
+      "experiment": "remove_or_relax_price_breakout_requirement",
+      "status": "rejected",
+      "decision_reason": "All four exact SP500 long price-only blocker observations were negative after source-bound modeled round-trip friction at 15, 30, and 60 minutes, including non-overlapping and largest-observation sensitivity.",
+      "decision_source": "docs/research-journal/v51-index-price-breakout-blocker-outcomes-v1.json",
+      "reopen_condition": "A predeclared later live-source window must materially expand independent price-only blocker observations and remain positive after source-bound costs, largest-winner removal, and side-specific analysis."
+    },
+    {
+      "hypothesis_id": "v51-spcx-remove-price-breakout-v1",
+      "route": "hip3_breakout_pressure_sp500_spcx_fresh15s_bidirectional_v3|xyz:SPCX",
+      "experiment": "remove_or_relax_price_breakout_requirement",
+      "status": "rejected",
+      "decision_reason": "The seven exact SPCX short price-only blocker observations were mixed but negative on average after source-bound modeled round-trip friction at 15, 30, and 60 minutes, including non-overlapping and largest-observation sensitivity.",
+      "decision_source": "docs/research-journal/v51-index-price-breakout-blocker-outcomes-v1.json",
+      "reopen_condition": "A predeclared later live-source window must materially expand independent price-only blocker observations and remain positive after source-bound costs, largest-winner removal, and side-specific analysis."
+    },
+    {
+      "hypothesis_id": "v51-spcx-rest-mark-exact-substitution-v1",
+      "route": "hip3_breakout_pressure_sp500_spcx_fresh15s_bidirectional_v3|xyz:SPCX",
+      "experiment": "rest_mark_exact_source_substitution",
+      "status": "rejected",
+      "decision_reason": "The larger predeclared overlap contained 970 REST responses per symbol and still produced stale-prior, future-only, and unmatched full-context rows; SPCX differed from the latest causal websocket mark by as much as 3.5133 bps, so REST receipt time cannot certify an exact risk path.",
+      "decision_source": "docs/research-journal/v51-index-mark-response-lag-v1.json",
+      "reopen_condition": "A venue-exchange timestamp or separately validated conservative lag-aware path rule must keep every selected lifecycle technically resolved without treating REST receipt time as an exchange observation or silently relaxing the source falsifier."
+    },
+    {
+      "hypothesis_id": "v51-range-onset-zero-entry-slippage-integrity-v1",
+      "route": "range_onset_bidirectional_v1|SOL",
+      "experiment": "exact_bbo_to_fill_reconciliation",
+      "status": "accepted",
+      "decision_reason": "The first v51 ETH and SOL Range Onset entries each filled at the exact contemporaneous best ask stored as the decision reference, so their zero-bps entry slippage is valid rather than missing telemetry.",
+      "decision_source": "docs/research-journal/v51-range-onset-exact-zero-entry-slippage-v1.json"
+    },
+    {
+      "hypothesis_id": "v51-sol-one-blocker-bounded-gap-censor-v1",
+      "route": "range_onset_bidirectional_v1|SOL",
+      "experiment": "channel_specific_gap_reconciliation",
+      "status": "accepted",
+      "decision_reason": "The report-only observer incorrectly censored a lifecycle for any websocket reconnect even when retained mark and L2 paths satisfied frozen cadence; channel-specific bounded reconciliation resolved the first exact attempt while preserving fail-closed over-limit behavior.",
+      "decision_source": "docs/research-journal/v51-sol-one-blocker-bounded-gap-resolution-v1.json"
+    },
+    {
+      "hypothesis_id": "v51-range-onset-successor-retention-v1",
+      "route": "range_onset_bidirectional_v1|ETH,SOL",
+      "experiment": "retain_or_repair_range_onset_in_successor",
+      "status": "rejected",
+      "decision_reason": "Exact v51 ETH loss evidence and SOL side-dependent exit research do not support retaining or further tuning Range Onset in a successor profile.",
+      "decision_source": "docs/research-journal/v51-successor-route-disposition-v1.json",
+      "reopen_condition": "A distinct predeclared evidence window for the unchanged identity must become robust by side and after costs and largest-winner removal; otherwise investigate a newly versioned mechanism instead."
+    },
+    {"hypothesis_id": "sol-breakout-continuation-after-onset", "route": "sol_breakout_continuation_aligned_fixed60_bidirectional_v1|SOL", "experiment": "remove_fresh_onset_for_aligned_continuation", "status": "rejected", "decision_reason": "The frozen prospective observer resolved four all-long paths at -77.0759 bps after costs, PF 0.3844, and -125.2013 bps without its largest winner, directly triggering its predeclared falsifier.", "decision_source": "docs/research-journal/sol-breakout-continuation-v2.json", "reopen_condition": "Only a causally distinct SOL mechanism with a new identity and preregistered window may update the broader opportunity assessment; do not retune this opened continuation family."},
+    {"hypothesis_id": "oi-forced-deleveraging-exhaustion", "route": "research_only|BTC,SOL", "experiment": "receipt_causal_oi_contraction_and_terminal_exhaustion", "status": "rejected", "decision_reason": "Thirty-three exact events averaged only +5.96 bps gross and were negative after nominal cost on both assets; the sole fully exhausted winner was 100% largest-winner dependent, so confirmation remained sealed.", "decision_source": "docs/research-journal/oi-forced-deleveraging-exhaustion-v2.json", "reopen_condition": "Only a separately preregistered prospective capture with at least 20 full exhaustion events, five per symbol, and the unchanged receipt-causal contract may update this result; do not tune this development window."},
+    {"hypothesis_id": "v51-brentoil-range-onset-transfer-v1", "route": "research_only|xyz:BRENTOIL", "experiment": "transfer_retired_range_onset_to_brentoil", "status": "rejected", "decision_reason": "No reconciled BRENTOIL canary lifecycle used Range Onset; the distinct five-minute oil-shock candidate is negative under canary-derived stress and technically unresolved.", "decision_source": "docs/research-journal/v51-brentoil-range-onset-transfer-disposition-v1.json", "reopen_condition": "Only a newly versioned preregistered BRENTOIL mechanism with resolved paths, both-side chronological evidence, and positive stress economics after largest-winner removal may reopen asset candidacy; do not transfer Range Onset."}
+  ],
+  "change_proposals": [
+    {
+      "proposal_id": "v51-transition-drain-containment-v1",
+      "approval_status": "approved_activated_waiting_flat_boundary", "approval_evidence": "docs/research-journal/v51-transition-drain-approval-activation-v1.json",
+      "execution_effect": "approved_active_transition_drain",
+      "automatic_live_change": false,
+      "recommendation": "Keep the approved exact v51 transition drain active until the run is flat and owned-order-free; do not start a successor without a separately verified preflight.",
+      "why_now": "The identity-bound drain is active because all represented v51 strategy clusters are negative and compatible closed economics are net negative; further entries are now disabled while bound exits remain managed.",
+      "evidence_reviewed": [
+        "Exact current v51 checkpoint and ledger identity",
+        "Six compatible closed lifecycle reflections",
+        "Two protected open lifecycles",
+        "v39 canary and v51 sizing contracts",
+        "v51 compatible cause diagnosis and successor route disposition"
+      ],
+      "observed_problem_or_opportunity": "The move from canary to v51 increased relative notional intensity without comparable route-level forward evidence, while the successor audit supports no full-size route.",
+      "applicable_market_regime": "All regimes because this is promotion-contract containment rather than a directional market forecast.",
+      "alternatives_considered": [
+        "Continue v51 unchanged",
+        "Close every open position immediately",
+        "Reduce size while continuing entries",
+        "Drain new entries while preserving bound exits"
+      ],
+      "proposed_live_change": "Submit one transition drain command for the exact active v51 run and profile; create no new entries and do not alter existing stops, leverage, size, or exit controllers in place.",
+      "expected_upside": "Caps further unqualified entry exposure while preserving venue protection and an auditable flat transition.",
+      "main_risks_and_failure_modes": [
+        "SOL and SPCX can still lose before their managed exits",
+        "The command must fail on stale run or profile identity",
+        "A valid new opportunity may be missed during the drain"
+      ],
+      "validation_completed": [
+        "Runtime and profile identity match",
+        "Backend and checkpoint are healthy",
+        "Backend accepted the exact transition-drain request", "Checkpoint reports the transition drain active",
+        "No new entries occurred after activation",
+        "Open lifecycles retain protection and bound exits",
+        "Compatible economics and exposure translation reconcile"
+      ],
+      "validation_still_required": [
+        "All later entries remain withheld",
+        "Final venue and ledgers become flat and order-free",
+        "Completed drain evidence is archived",
+        "Final v51 accounting and journal projections reconcile"
+      ],
+      "success_metrics": [
+        "No new entries after acknowledged activation",
+        "Existing exits remain managed",
+        "Drain completes flat and order-free with exact archived identity"
+      ],
+      "failure_or_rollback_triggers": [
+        "Identity mismatch or stale backend",
+        "Missing protection or duplicate command",
+        "Any new entry after acknowledged activation",
+        "Do not restore entry authority until a separately approved successor preflight passes"
+      ],
+      "confidence_level": "high",
+      "explicit_approval_requested": false
+    }
+  ],
+  "standing_live_change_approval": {"approval_status": "standing_preapproved_for_validated_required_changes", "approval_evidence": "docs/research-journal/v51-standing-required-change-preapproval-v1.json", "approved_scope": ["verified technical defects or missing safety, accounting, telemetry, lifecycle, or data-flow behavior", "verified broken, incorrectly applied, or internally inconsistent strategy entry or exit logic", "evidence-supported containment, repair, replacement, or retirement of active strategy behavior causing capital loss or reducing expected profitability", "required configuration, TUI, ledger, monitoring, and deployment work for an approved repair"], "excluded_scope": ["speculative unvalidated strategy or asset changes that are not required repairs", "unsupported leverage, sizing, margin, or exposure increases", "credential, wallet, secret, or withdrawal changes"], "agent_may_apply_after_validation": true, "agent_reapproval_required": false, "automatic_live_change": false, "live_arming_flags_required": true, "validation_required": true, "rollback_required": true}, "evidence": [
     {
       "path": "../../docs/research-journal/v51-hype-compression-first-window-v1.json",
       "sha256": "41c66e9a6cba120eb5974e3742e1d49ee2106a3aa5d5f47b9f0dcdb08ddfd2c4",
       "bytes": 8798
-    }
+    },
+    {
+      "path": "../../docs/research-journal/v51-index-source-parity-forward-v1.json",
+      "sha256": "01e22ea5715c1f08014ca0fbe016f64346193f27fec612a95cb18affdc6afcd1",
+      "bytes": 9626
+    },
+    {
+      "path": "../../docs/research-journal/v51-index-live-condition-window-v3.json",
+      "sha256": "5dfab805618dda81fbb09e6900f343962484504b1d06fdd25a8a61b7b27aafeb",
+      "bytes": 6834
+    },
+    {
+      "path": "../../docs/research-journal/v51-entry-submission-freshness-v1.json",
+      "sha256": "d6988c95a34ed6ce6de95274661492a004027c39b978792450f50fd8d7a5994a",
+      "bytes": 5256
+    },
+    {
+      "path": "../../docs/research-journal/v51-cross-namespace-exposure-telemetry-v1.json",
+      "sha256": "083de89837e786080256396b6a41e4e100c0b42b8a0306d89baea7a4ed269e4d",
+      "bytes": 4286
+    },
+    {
+      "path": "../../docs/research-journal/v51-approved-technical-fixes-flat-boundary-v1.json",
+      "sha256": "a6f61807a37420623039d3cddf996cf45ef696e2cfafa52eb65c953a4fd72230",
+      "bytes": 1709
+    },
+    {
+      "path": "../../data/logs/research/v51_sp500_price_blocker_outcomes_20260814_v2.json",
+      "sha256": "579b554ff1993535e53b8f12657035f18a7f889adbc3300683817c6dc097344e",
+      "bytes": 17691
+    },
+    {
+      "path": "../../data/logs/research/v51_spcx_price_blocker_outcomes_20260814_v2.json",
+      "sha256": "de3324f1707788d15fa4310c33fb93c1542189cc0a4d7801918a740a12ac4923",
+      "bytes": 21291
+    },
+    {
+      "path": "../../docs/research-journal/v51-index-price-breakout-blocker-outcomes-v1.json",
+      "sha256": "f0d07156d266d623db1f3b2a094f4e9b5a0ba2a1d8762d4ac2a21e5c17765b8b",
+      "bytes": 4925
+    },
+    {
+      "path": "../../data/logs/research/hype_compression_entry_alignment_v51_20260814_v1.json",
+      "sha256": "97b98b1e58774299c3d67e4c9b7df87dcfe828b65f79c29e626c9d3c7ca868fc",
+      "bytes": 87239
+    },
+    {
+      "path": "../../docs/research-journal/v51-hype-compression-alignment-forward-v1.json",
+      "sha256": "622bc2cd0a5a2c50392970ef3294236cd2b5bbeb7b142adee89af8d6e891028b",
+      "bytes": 17094
+    },
+    {
+      "path": "../../docs/research-journal/v51-hype-compression-regime-loss-exit-v1.json",
+      "sha256": "864e888bfb4f9df17dfe6e71b86fdd4d5ca6b53ec8df2f9c37cde6f08256859e",
+      "bytes": 6570
+    },
+    {
+      "path": "../../docs/research-journal/v51-hype-first-resolved-lifecycle-v1.json",
+      "sha256": "0ec6d44c35dc9c37843abfc4c90f06e685465794c122d767b6d53cf2792917e8",
+      "bytes": 8774
+    },
+    {
+      "path": "../../docs/research-journal/v51-sol-dual-mtf-prospective-hypothesis-v2.json",
+      "sha256": "b28ce0f0a7f9590c747306dca1474da9ba0cd168e76c44bb5121a5142a78f3e7",
+      "bytes": 13157
+    },
+    {
+      "path": "../../docs/research-journal/v49-strategy-repair-disposition.json",
+      "sha256": "c83bc76adeb98cc6e42dd9b92bd282a86716910a9338f88bbcccd0f8ac1f09da",
+      "bytes": 39774
+    },
+    {
+      "path": "../../docs/research-journal/v51-index-current-run-backend-observer-parity-v1.json",
+      "sha256": "5763daeccf8231515b6992e7a8f4411407160eea91429a46e55b32cc4e73dc6b",
+      "bytes": 2642
+    },
+    {
+      "path": "../../docs/research-journal/v51-index-current-run-price-breakout-protection-v1.json",
+      "sha256": "1ef4877caa644ba550dc401f2c43d825f7a672319f602f8db0f5177e1d23b173",
+      "bytes": 5925
+    },
+    {
+      "path": "../../docs/research-journal/v51-index-mark-source-parity-v1.json",
+      "sha256": "a4683a605e270141970b5224461b7900c1c25e3df4ae5e65c66994fb746ae16f",
+      "bytes": 711821
+    },
+    {
+      "path": "../../docs/research-journal/v51-index-mark-source-parity-disposition-v1.json",
+      "sha256": "a2064e8773d1499afea3c85be994327ef356286e37e1ef7ac669ba12002ddf02",
+      "bytes": 7219
+    },
+    {
+      "path": "../../docs/research-journal/v51-entry-submission-freshness-deployment-v1.json",
+      "sha256": "b64d3aa84d86ee30ec588bd0f38662e1e3c128189005c709b6245866aeeab7e7",
+      "bytes": 4291
+    },
+    {
+      "path": "../../docs/research-journal/v51-index-mark-response-lag-v1.json",
+      "sha256": "3165c6257d449f9f69bfff906a7bd297c5c16d0f89f43a8cde960dfb981b4d13",
+      "bytes": 1711211
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v51_sp500_shadow_lifecycle_plumbing_20260814T1100Z_v1.json",
+      "sha256": "2188afa885bd6db7581d0c6ae0d20dd064b85f7f6a8da9eeb3e7ef0f3a30425d",
+      "bytes": 1023139
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v51_spcx_shadow_lifecycle_plumbing_20260814T1100Z_v1.json",
+      "sha256": "9fb75b092b9b007d775ebad8797a4a5559013a8e883c46744aa3be5a825380b3",
+      "bytes": 1020457
+    },
+    {
+      "path": "../../docs/research-journal/v51-index-current-run-backend-observer-parity-v2.json",
+      "sha256": "261e3071dc41e1e7f2f5a49c5ae0bf2193bcfaef0dbc05c6abe5533c3c06778e",
+      "bytes": 3468
+    },
+    {
+      "path": "../../data/logs/research/v51_index_backend_observer_parity_20260814T1115Z_v4.json",
+      "sha256": "b343d118aca69109163d2358cd5ac20e6c1beed903dfc5f45a248ac37187b4c6",
+      "bytes": 3310
+    },
+    {
+      "path": "../../docs/research-journal/v51-index-current-run-backend-observer-parity-v3.json",
+      "sha256": "0c9f9647aa730cefdba815b843700908cdde92b596154416eb6024a8f1de877c",
+      "bytes": 8853
+    },
+    {
+      "path": "../../docs/research-journal/v51-index-current-run-backend-observer-parity-v4.json",
+      "sha256": "6d2bfa4dc24d8477d5375793b95f1fcbe9b417eabe963f604872da4b0fe600a5",
+      "bytes": 7468
+    },
+    {
+      "path": "../../docs/research-journal/v51-index-current-run-backend-observer-parity-v5.json",
+      "sha256": "fcc329f234ba10286e6b669694a86db2f511776dce5dc3378ad580eefdd3395f",
+      "bytes": 7744
+    },
+    {
+      "path": "../../docs/research-journal/v51-index-current-run-backend-observer-parity-v6.json",
+      "sha256": "b4a4dc867345ed4919e1e284555b5c86c9c3cd397c1d23431cdef4a83106e462",
+      "bytes": 8377
+    },
+    {
+      "path": "../../docs/research-journal/v51-index-recovered-run-live-condition-v1.json",
+      "sha256": "0093394b3f3fbaef4bc2a86265ad150aa33a9523d4a4ed07f0a7dd8c0db2f271",
+      "bytes": 7707
+    },
+    {
+      "path": "../../docs/research-journal/v51-hype-mature-profit-floor-fixed-entry-v1.json",
+      "sha256": "01af6f4409ab014af5e8e40b4a24895933bd2593c49c1285c6e7f623927e2da5",
+      "bytes": 6338
+    },
+    {
+      "path": "../../docs/research-journal/v51-sp500-first-source-native-open-lifecycle-v1.json",
+      "sha256": "26a9d97c58c27eaabd6e8d63de86b3da4311bfc1be5372f57a6ae45e001b1f86",
+      "bytes": 8442
+    },
+    {
+      "path": "../../docs/research-journal/v51-sol-hourly-cross-one-blocker-forward-v3.json",
+      "sha256": "f3f350d7c280c23b9d11b8c11aa36d087548cee4780c346e97b56882a49a366d",
+      "bytes": 9665
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v51_execution_opportunity_matrix_current_run_20260814T1855Z_v1.json",
+      "sha256": "36346588f67276eefb1a00c9099e1eb54db38beed4e6968f775c37ffef0f74e7",
+      "bytes": 25461
+    },
+    {
+      "path": "../../docs/research-journal/v51-index-recovered-run-live-condition-v2.json",
+      "sha256": "c0d4abeb99655235a79d317b6feeb200c7f72d461d19049c3bbd9e0e6c8cf5fc",
+      "bytes": 7955
+    },
+    {
+      "path": "../../docs/research-journal/v51-index-recovered-run-live-condition-v3.json",
+      "sha256": "446f7e1a4715bf79d74c181dfbeb8b9d114b378b884a185fef7e00df4efd3cb0",
+      "bytes": 9764
+    },
+    {
+      "path": "../../docs/research-journal/v51-spcx-first-source-native-lifecycle-v2.json",
+      "sha256": "1011184960030ee3e8dceee2fda2a79a2f2a60fba43eed8f1788061d3b77bbf8",
+      "bytes": 10129
+    },
+    {
+      "path": "../../docs/research-journal/v51-spcx-open-stop-trigger-v2.json",
+      "sha256": "fc7063b1cc6c655e7351d42424908724cda0ec0a78c5d27e0850a80c6ff71425",
+      "bytes": 10136
+    },
+    {
+      "path": "../../docs/research-journal/v51-range-onset-exact-zero-entry-slippage-v1.json",
+      "sha256": "66e39297a99f00571e21c9057f00ec236fe6f94c54ce19a2987f076718a2aa5e",
+      "bytes": 5445
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v51_sol_route_native_one_blocker_bounded_gap_resolution_20260816T0306Z_v1.json",
+      "sha256": "a5b61dd0625cd9d1168595e7c924a1d8fa7ddd9fda808fab569f9e7568fd702b",
+      "bytes": 7714
+    },
+    {
+      "path": "../../docs/research-journal/v51-sol-one-blocker-bounded-gap-resolution-v1.json",
+      "sha256": "d04cd3f80a9b96ad27c851768b3820d1ecd02ecb8868b9432cc2b41599764703",
+      "bytes": 7417
+    },
+    {
+      "path": "../../docs/research-journal/v51-successor-route-disposition-v1.json",
+      "sha256": "edc21557ad2773dc2a903cee622efdb46da6c598d85abade3c786c47475a290d",
+      "bytes": 18293
+    },
+    {
+      "path": "../../docs/research-journal/v51-compatible-performance-cause-diagnosis-v2.json",
+      "sha256": "c6d8289c09d96dacf3fd3e9e3c739ed2401e930b58263addbebf5fac18faa589",
+      "bytes": 13024
+    },
+    {"path": "../../docs/research-journal/sol-breakout-continuation-v2.json", "sha256": "126bcadea02a5d23610ad74f3549c42ed1704548f6ef5e53abe2db236c9c6825", "bytes": 4145},
+    {"path": "../../docs/research-journal/oi-forced-deleveraging-exhaustion-v2.json", "sha256": "28ba4a9c4320d64d966482e8b8791843592b3b918a38e4a524c3991e965a71da", "bytes": 3830},
+    {"path": "../../docs/research-journal/v51-brentoil-range-onset-transfer-disposition-v1.json", "sha256": "529ea6e7c3178848d565b36a5be57e336018d37012356b0736d651dca29a1add", "bytes": 4448},
+    {"path": "../../docs/research-journal/v51-index-pressure-translation-challenger-v1.json", "sha256": "8d57d835e4d1eb22f6148399e2409bf3c1a13d5a4b1f4d7be30360707a35fb8a", "bytes": 5591}, {"path": "../../docs/research-journal/v51-transition-drain-approval-activation-v1.json", "sha256": "11591776189e73e964dfae15265305ebeb20d80657dd7820b3e12e91d367fc12", "bytes": 3801}, {"path": "../../docs/research-journal/v51-standing-required-change-preapproval-v1.json", "sha256": "1b70911cdfc2b76be7b0b0060935b7e309b65b3a22f2ad4c55d55e06f2ac01f0", "bytes": 3313}
   ]
 }

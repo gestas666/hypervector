@@ -1,0 +1,104 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v62-eth-brentoil-exit-priority-20260825",
+  "revision_number": 1,
+  "created_at_utc": "2026-08-25T17:18:51Z",
+  "status": "preregistered_before_candidate_replay",
+  "mode": "report_only",
+  "control": {
+    "profile_id": "multi_asset_growth_first_5000_eight_asset_sndk_exit_preserved_candidate_v61",
+    "profile_fingerprint": "3ca27a84d7ccd9c8a3fb8ba6a41990048ef5ec6440c9e51df6c30bba72917267",
+    "config_sha256": "5961d8ca2720582bd3ef2ccf00edf1816d96e8de1884041ae0295d3f873f9820",
+    "config_bytes": 6275
+  },
+  "hypotheses": {
+    "ETH": "A causal ATR-and-structure stop clamped to 60-120 bps and resized to the same modeled dollar barrier risk reduces fixed-60 tactical whipsaws without worsening confirmation drawdown or relying on the largest winner.",
+    "BRENTOIL": "A previously declared completed-bar profit lock improves both long and short current-identity lifecycles relative to the no-lock 24-hour fallback after costs."
+  },
+  "eth_contract": {
+    "strategy_id": "eth_breakout_precompression_pullback_bidirectional_v1",
+    "control_stop_bps": 60.0,
+    "maximum_hold_minutes": 720,
+    "fee_bps_per_side": 4.5,
+    "slippage_bps_per_side": 2.0,
+    "same_provider_opposite_intent_exit": true,
+    "candidate_id": "atr_structure_60_120_v1",
+    "atr_period_completed_1m_bars": 14,
+    "atr_method": "wilder_ewm_alpha_1_over_14_adjust_false",
+    "atr_multiple": 1.5,
+    "structure_lookback_completed_1m_bars": 12,
+    "anchor_selection": "more_adverse_of_atr_band_and_side_specific_rolling_extreme",
+    "minimum_stop_bps": 60.0,
+    "maximum_stop_bps": 120.0,
+    "notional_scale_formula": "control_stop_bps / resolved_candidate_stop_bps",
+    "entry_timing": "signal_on_completed_bar_then_next_open_with_adverse_slippage"
+  },
+  "chronology": {
+    "construction_end_exclusive_utc": "2026-03-28T12:00:00Z",
+    "purge_end_exclusive_utc": "2026-03-29T12:00:00Z",
+    "confirmation_end_exclusive_utc": "2026-05-28T12:00:00Z",
+    "opened_final_audit_start_utc": "2026-05-29T00:00:00Z",
+    "opened_final_audit_end_exclusive_utc": "2026-07-28T00:00:00Z",
+    "opened_final_is_untouched": false,
+    "retuning_after_first_replay": false
+  },
+  "brentoil_contract": {
+    "strategy_id": "hip3_breakout_pressure_sndk_gold_brent_fresh15s_bidirectional_v2",
+    "symbol": "xyz:BRENTOIL",
+    "candidate_policy_ids": [
+      "a25_floor15_trail10",
+      "a40_floor15_trail20",
+      "a60_floor15_trail30"
+    ],
+    "prior_registration": "v58-brentoil-profit-lock-future-only-v1@4",
+    "prior_registration_sha256": "9ec5fdf9ccaf72b7238686a3b4765a631cb1b5e33e6e620c49e1db179f5d4c5f",
+    "prior_registration_bytes": 4585,
+    "excluded_lifecycle_ids": ["xyz:BRENTOIL:520642502465"],
+    "confirmation_requires_resolved_sides": ["long", "short"],
+    "open_lifecycles_may_select_policy": false
+  },
+  "eth_promotion_criteria": [
+    "exact entry-signal timestamp parity",
+    "positive equal-risk net delta in construction and confirmation",
+    "positive equal-risk net excluding largest winner in both partitions",
+    "nonnegative worst confirmation monthly-fold delta",
+    "no worse confirmation equal-risk maximum drawdown",
+    "nonnegative confirmation long and short slices",
+    "opened-final descriptive net-delta sign does not contradict confirmation"
+  ],
+  "brentoil_promotion_criteria": [
+    "at least one resolved post-registration current-identity long and short",
+    "positive after-cost delta for each side",
+    "positive leave-largest delta across eligible confirmation lifecycles",
+    "complete completed-one-minute candle coverage"
+  ],
+  "input_evidence": [
+    {
+      "path": "../../data/cache/ETH_1m_365d.parquet",
+      "sha256": "e10e00209f1584151c23a69d39116485d7c241e00d4a8c2031f7e624a431bd84",
+      "bytes": 11949012
+    },
+    {
+      "path": "../../data/cache/vendor/hyperliquid/ETH/20250728T000000000000Z_20260728T000000000000Z_funding/funding.parquet",
+      "sha256": "8debd8c1084168e705f98b8ee2c7fb82c32f9329adf053dee09e787fe5a265d8",
+      "bytes": 184070
+    }
+  ],
+  "assumptions": [
+    "completed one-minute OHLC cannot resolve private IOC queue state or adverse intrabar ordering",
+    "linear equal-risk notional scaling is an exposure comparison, not a shared-account capital forecast",
+    "the previously opened final ETH block can audit contradiction but cannot supply untouched confirmation",
+    "the excluded BRENTOIL long may describe mechanism behavior but cannot satisfy prospective side coverage"
+  ],
+  "falsifiers": [
+    "any source hash or route identity changes",
+    "the candidate uses a candle unavailable at signal time",
+    "entry timestamps differ between control and candidate source cohorts",
+    "counterfactual costs, funding, occupancy, or stop precedence are omitted",
+    "a promotion criterion fails"
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "automatic_live_change": false,
+  "runtime_strategy_changed": false
+}

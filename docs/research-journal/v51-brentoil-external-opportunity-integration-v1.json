@@ -1,0 +1,164 @@
+{
+  "schema_version": "v51_brentoil_external_opportunity_integration_v1",
+  "generated_at_utc": "2026-08-15T19:56:30Z",
+  "mode": "report_only_research_journal",
+  "decision": "Correct the candidate record: BRENTOIL has exact live-canary, liquidity, development, source-parity, and prospective observer evidence. Retain the asset as the highest-priority external non-crypto investigation, keep both retired BRENTOIL routes rejected, and collect the new oil-shock mechanism prospectively without execution authority.",
+  "contract": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_live_change": false,
+    "automatic_promotion": false,
+    "runtime_strategy_changed": false
+  },
+  "problem_restatement": {
+    "observed_gap": "The exact BRENTOIL evidence existed but was absent from the active v51 live-route improvement digest because BRENTOIL is not an active v51 route.",
+    "required_outcome": "Maintain a separately identified external-candidate pipeline so non-roster evidence is visible without corrupting the exact active-route scope.",
+    "success_criteria": [
+      "live-canary lifecycle counts and economics reconcile",
+      "current liquidity and prospective observer status are visible",
+      "development stress failure and technical blockers remain explicit",
+      "the pipeline cannot route orders or authorize promotion"
+    ]
+  },
+  "hypothesis_ledger": [
+    {
+      "hypothesis_id": "v51-external:xyz:BRENTOIL:oil-shock-reversion-5m-v1",
+      "status": "being_tested",
+      "hypothesis": "A new oil-shock reversion mechanism may exploit a liquid BRENTOIL lane after live-derived friction even though the retired Swing and breakout-pressure routes failed.",
+      "experiment": "collect_exact_eligible_oil_shock_lifecycles",
+      "confidence": "low",
+      "update_condition": "At least one fully resolved prospective lifecycle per direction plus predeclared validation with resolved candle and mark/L2 paths.",
+      "rejection_condition": "Resolved stress and validation economics remain nonpositive, source parity remains unresolved, or execution costs erase the candidate edge."
+    },
+    {
+      "hypothesis_id": "retired-brentoil-swing-and-breakout-pressure",
+      "status": "rejected",
+      "hypothesis": "The retired Swing or breakout-pressure identities establish BRENTOIL edge.",
+      "new_evidence_required_to_reopen": "A materially different source, mechanism, or market-regime hypothesis with predeclared validation; the three historical live closes alone are insufficient."
+    }
+  ],
+  "evidence_summary": {
+    "live_canary": {
+      "closed_lifecycles": 3,
+      "wins": 2,
+      "losses": 1,
+      "net_pnl_usd": 1.821755,
+      "profit_factor": 3.648046,
+      "net_excluding_largest_winner_usd": -0.232469,
+      "maximum_observed_slippage_bps": 8.464584
+    },
+    "liquidity": {
+      "global_hip3_volume_rank": 6,
+      "day_notional_volume_usd": 49403551.84429,
+      "spread_bps": 0.116337,
+      "asset_liquidity_rejected": false
+    },
+    "development": {
+      "nominal_trades": 44,
+      "nominal_net_pnl_usd": 4.238715,
+      "nominal_profit_factor": 2.258518,
+      "stress_trades": 42,
+      "stress_net_pnl_usd": -1.068481,
+      "stress_profit_factor": 0.837156,
+      "technical_path_status": "unresolved",
+      "validation_accessed": false,
+      "holdout_accessed": false
+    },
+    "source_parity": {
+      "overlap_bars": 4,
+      "mismatched_ohlc_bars": 1,
+      "resolved": false
+    },
+    "prospective_observer_at_integration": {
+      "candle_rows": 2319,
+      "decision_rows": 21,
+      "eligible_decisions": 0,
+      "status": "waiting_eligible_onset"
+    }
+  },
+  "change_proposal": {
+    "Recommendation": "Continue the BRENTOIL oil-shock observer and external-candidate monitor; do not restore the retired routes or add live authority.",
+    "Why now": "The asset satisfies the user's liquidity requirement and has real execution history, but the evidence was not represented in the active research frontier.",
+    "Evidence reviewed": [
+      "exact BRENTOIL live-canary lifecycle reconciliation",
+      "current top-ten HIP-3 liquidity snapshot",
+      "development-only oil-shock replay with nominal and stress friction",
+      "prospective candle source-parity audit",
+      "current oil-shock observer status"
+    ],
+    "Observed problem or opportunity": "BRENTOIL is liquid and executable, while its retired mechanisms failed and its new mechanism remains technically and economically unvalidated.",
+    "Applicable market regime": "Five-minute oil-shock and short-horizon mean-reversion conditions; current observer requires a causal eligible onset.",
+    "Alternatives considered": [
+      "discard BRENTOIL because retired routes failed",
+      "restore a retired route from three mixed-policy live closes",
+      "promote the nominal development result",
+      "continue a distinct report-only mechanism with exact live-derived friction"
+    ],
+    "Proposed live change": "none",
+    "Expected upside": "Preserves a top-ten liquid diversification lane and gathers mechanism-specific evidence without risking portfolio capital.",
+    "Main risks and failure modes": [
+      "nominal development performance disappears under stress",
+      "source mismatch changes signals",
+      "rare onsets delay learning",
+      "three historical closes create false confidence",
+      "largest-winner concentration overstates prior live performance"
+    ],
+    "Validation completed": [
+      "three live-canary lifecycles reconciled",
+      "point-in-time liquidity rank and spread measured",
+      "development-only nominal and stress replay completed",
+      "source-parity mismatch identified",
+      "report-only observer and monitor contracts tested"
+    ],
+    "Validation still required": [
+      "resolve candleSnapshot versus archive trade-OHLC parity",
+      "resolve historical and prospective mark/L2 paths",
+      "observe eligible long and short lifecycles",
+      "run predeclared validation and untouched holdout only after technical resolution",
+      "compare against v51 baseline and no-action at portfolio level"
+    ],
+    "Success metrics": [
+      "source and lifecycle paths technically resolved",
+      "stress net and profit factor remain positive without the largest winner",
+      "both directions contribute under the predeclared test",
+      "realized friction remains within the declared live-derived envelope"
+    ],
+    "Failure / rollback triggers": [
+      "observer identity or authority contract changes",
+      "stale or contradictory source evidence",
+      "validation stress net is nonpositive",
+      "one side or one winner determines the result",
+      "live-derived costs exceed modeled edge"
+    ],
+    "Confidence level": "High confidence that BRENTOIL has usable asset and execution data; low confidence that the new mechanism has an edge.",
+    "Explicit approval requested": false
+  },
+  "implementation": {
+    "runtime_artifact": "data/runtime/research/latest_external_opportunity_pipeline.json",
+    "monitor_command": "uv run python scripts/cohort_external_opportunity_monitor.py --interval-seconds 120",
+    "process_snapshot": {
+      "launcher_pid": 9315,
+      "worker_pid": 9316
+    },
+    "source_hashes": {
+      "src/hypervector/research/cohort_external_opportunity_pipeline.py": "99389037cbb0ce190f260b990905343da63b8ca3867155648b05a94c5e306a41",
+      "scripts/cohort_external_opportunity_monitor.py": "3e2c7c34c36eecec02f0b63235314cd8e03e04056355d4e9ce602ca21326b578",
+      "tests/test_cohort_external_opportunity_pipeline.py": "65c212592b2fb5c8e138f361e93c7b2a066769bd31c42432d3960cf058d4f8ce",
+      "tests/test_cohort_external_opportunity_monitor_script.py": "11a40f622cca059e82e7c26af345596b292e57234fa8b13804a56a82bde537d0"
+    },
+    "verification_at_integration": {
+      "focused_tests": 13,
+      "focused_test_status": "passed",
+      "broader_relevant_tests": 103,
+      "broader_relevant_test_status": "passed",
+      "production_shaped_once_status": "passed",
+      "execution_authority": "none"
+    }
+  },
+  "uncertainties_and_falsifiers": [
+    "A later exact reconciliation that changes the three lifecycle outcomes updates the descriptive live assessment.",
+    "A representative liquidity window outside the top ten or with materially worse spread/depth updates asset viability.",
+    "Resolved prospective and out-of-sample evidence may accept or reject the new mechanism.",
+    "Any order, signer, automatic promotion, or live configuration surface in this pipeline invalidates the implementation."
+  ]
+}

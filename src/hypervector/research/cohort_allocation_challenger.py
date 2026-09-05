@@ -77,21 +77,29 @@ def build_allocation_challenger(
         "profit_forecast": None,
         "limitations": _limitations(),
     }
-    if run_id is not None and allocation_capacity_available(
+    _append_visible_depth_capacity(result, hype_records, run_id, current, candidate)
+    return result
+
+
+def _append_visible_depth_capacity(
+    result: dict[str, object],
+    hype_records: Sequence[Record],
+    run_id: str | None,
+    current: Record,
+    candidate: Record,
+) -> None:
+    if run_id is None or not allocation_capacity_available(hype_records, run_id=run_id):
+        return
+    result["visible_depth_capacity"] = build_allocation_capacity(
         hype_records,
         run_id=run_id,
-    ):
-        result["visible_depth_capacity"] = build_allocation_capacity(
-            hype_records,
-            run_id=run_id,
-            current_notional_usd=_positive(
-                current.get("planned_notional_usd"), "current planned notional"
-            ),
-            candidate_notional_usd=_positive(
-                candidate.get("planned_notional_usd"), "candidate planned notional"
-            ),
-        )
-    return result
+        current_notional_usd=_positive(
+            current.get("planned_notional_usd"), "current planned notional"
+        ),
+        candidate_notional_usd=_positive(
+            candidate.get("planned_notional_usd"), "candidate planned notional"
+        ),
+    )
 
 
 def _validate_contract(evidence: Record, label: str) -> None:
@@ -179,34 +187,61 @@ def _maximum_margin(
     candidate: Record | None,
     account: float,
 ) -> float:
+    execution_symbols = _execution_symbols(risk, assets, providers)
     margins = {
         symbol: _positive(
             _mapping(row, f"asset {symbol}").get("planned_margin_usd"),
             f"{symbol} margin",
         )
         for symbol, row in assets.items()
+        if symbol in execution_symbols
     }
-    for key, raw in providers.items():
-        symbol = _provider_symbol(key)
-        row = (
-            candidate
-            if key == _TARGET and candidate is not None
-            else _mapping(raw, key)
-        )
-        margin = _positive(row.get("planned_margin_usd"), f"{key} planned margin")
-        margins[symbol] = max(margins.get(symbol, 0.0), margin)
-    count = _maximum_positions(risk, len(margins))
+    for provider_rows in _provider_rows(risk, providers):
+        for key, raw in provider_rows.items():
+            symbol = _provider_symbol(key)
+            row = (
+                candidate
+                if key == _TARGET and candidate is not None
+                else _mapping(raw, key)
+            )
+            margin = _positive(row.get("planned_margin_usd"), f"{key} planned margin")
+            margins[symbol] = max(margins.get(symbol, 0.0), margin)
+    count = _maximum_positions(risk)
     return sum(sorted(margins.values(), reverse=True)[:count]) / account
 
 
-def _maximum_positions(risk: Record, asset_count: int) -> int:
+def _execution_symbols(
+    risk: Record,
+    assets: Record,
+    providers: Record,
+) -> frozenset[str]:
+    summary = _mapping(risk.get("summary"), "risk summary")
+    explicit_count = summary.get("executable_assets")
+    if explicit_count is None:
+        return frozenset(str(symbol) for symbol in assets)
+    symbols = frozenset(
+        _provider_symbol(key)
+        for rows in _provider_rows(risk, providers)
+        for key in rows
+    )
+    if isinstance(explicit_count, bool) or not isinstance(explicit_count, int):
+        raise ValueError("executable asset count is invalid")
+    if explicit_count != len(symbols) or not symbols.issubset(assets):
+        raise ValueError("executable asset count is inconsistent")
+    return symbols
+
+
+def _provider_rows(risk: Record, providers: Record) -> tuple[Record, Record]:
+    directional = risk.get("by_provider_symbol_side")
+    if directional is None:
+        return providers, {}
+    return providers, _mapping(directional, "provider side sizing")
+
+
+def _maximum_positions(risk: Record) -> int:
     summary = _mapping(risk.get("summary"), "risk summary")
     value = summary.get("configured_maximum_positions")
-    if (
-        isinstance(value, bool)
-        or not isinstance(value, int)
-        or not 1 <= value <= asset_count
-    ):
+    if isinstance(value, bool) or not isinstance(value, int) or value < 1:
         raise ValueError("configured maximum positions is invalid")
     return value
 
@@ -282,8 +317,8 @@ def _limitations() -> list[str]:
 def _provider_symbol(value: object) -> str:
     if not isinstance(value, str):
         raise ValueError("provider-symbol key must be text")
-    parts = value.split("|", 1)
-    if len(parts) != 2 or not all(part.strip() for part in parts):
+    parts = value.split("|")
+    if len(parts) not in {2, 3} or not all(part.strip() for part in parts):
         raise ValueError("provider-symbol key is invalid")
     return parts[1]
 

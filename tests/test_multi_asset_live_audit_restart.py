@@ -40,6 +40,31 @@ def test_restart_audit_separates_current_health_from_trade_history() -> None:
     assert report["health"]["assets"]["BTC"]["final_state"] == "STOPPED"
 
 
+def test_restart_audit_recovers_entry_omitted_from_current_snapshots() -> None:
+    """Exact history must restore a prior-run entry absent from restart snapshots."""
+    cohort_rows = _with_prior_cohort_identity(_cohort_rows_with_trade())
+    snapshots = [row for row in cohort_rows if row["event_type"] == "cohort_snapshot"]
+    projected_exit = dict(snapshots[-1]["payload"]["recent_fills"][-1])
+    projected_exit["origin_run_id"] = _RUN_ID
+    snapshots[0]["payload"]["recent_fills"] = []
+    snapshots[1]["payload"]["recent_fills"] = [projected_exit]
+
+    report = audit_multi_asset_live_run(
+        cohort_rows,
+        {
+            "BTC": _restart_spanning_trade_rows(),
+            **{symbol: _asset_rows(symbol) for symbol in _SYMBOLS if symbol != "BTC"},
+        },
+        run_id=_RUN_ID,
+    )
+
+    execution = report["execution"]
+    assert execution["fills"] == 2
+    assert execution["projected_fills"] == 2
+    assert [fill["trade_id"] for fill in execution["fill_details"]] == [101, 202]
+    assert report["coverage"] == {"complete": True, "technical_gaps": []}
+
+
 def test_open_position_costs_exclude_previous_closed_lifecycle() -> None:
     """Open economics exclude realized PnL and costs from an earlier lifecycle."""
     rows = _open_cohort_rows()
@@ -155,3 +180,24 @@ def _append_run(
         {**row, "sequence": len(prior) + offset}
         for offset, row in enumerate(current, start=1)
     ]
+
+
+def _restart_spanning_trade_rows() -> list[dict[str, object]]:
+    rows = traded_asset_rows("prior-run")
+    exit_index = next(
+        index
+        for index, row in enumerate(rows)
+        if row["event_type"] == "regime_decision"
+        and row["payload"].get("decision_action") == "long_exit"
+    )
+    current_identity = {
+        **rows[0],
+        "run_id": _RUN_ID,
+        "observed_at_utc": rows[exit_index]["observed_at_utc"],
+    }
+    combined = [
+        *rows[:exit_index],
+        current_identity,
+        *[{**row, "run_id": _RUN_ID} for row in rows[exit_index:]],
+    ]
+    return [{**row, "sequence": sequence} for sequence, row in enumerate(combined, 1)]

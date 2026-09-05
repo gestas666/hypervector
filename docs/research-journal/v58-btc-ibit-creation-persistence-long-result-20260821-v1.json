@@ -1,0 +1,183 @@
+{
+  "schema_version": "v58_btc_ibit_creation_persistence_long_result_v1",
+  "hypothesis_id": "V58_BTC_IBIT_CREATION_PERSISTENCE_LONG_V1",
+  "recorded_at_utc": "2026-08-21T21:14:23Z",
+  "status": "rejected_reproduced_no_live_change",
+  "authority": {
+    "execution_authority": "none",
+    "report_only": true,
+    "live_configuration_changed": false,
+    "runtime_strategy_changed": false,
+    "orders_attempted": false,
+    "live_promotion_authorized": false,
+    "retuning_authorized": false
+  },
+  "decision": {
+    "action": "reject_exact_candidate_without_retuning",
+    "candidate_added_to_live_roster": false,
+    "shared_route_competition_run": false,
+    "shared_route_competition_reason": "The preregistration permits shared-route competition only after every standalone acceptance check passes; the candidate failed standalone validation and pseudo-holdout gates.",
+    "v58_changed": false,
+    "next_action": "Do not reopen this issuer-creation persistence rule or a nearby threshold variant. Rank a materially distinct BTC-long mechanism containing causal information absent from this issuer observation and the already rejected price-plus-funding candidates."
+  },
+  "frozen_contract": {
+    "preregistration": {
+      "path": "docs/research-journal/v58-btc-ibit-creation-persistence-long-preregistration-20260821-v1.json",
+      "bytes": 20658,
+      "sha256": "b40b5460e21f7925cad1c5ddcbcb1deac3b290ee0e937cee99af73f137747df7"
+    },
+    "source_integrity_addendum": {
+      "path": "docs/research-journal/v58-btc-ibit-creation-persistence-long-source-integrity-addendum-20260821-v1.json",
+      "bytes": 4393,
+      "sha256": "237ea157349fea6a60c8be2112039df7e7f62f234d8e80869294186a0ab093f9"
+    },
+    "input_registration": {
+      "path": "docs/research-journal/v58-btc-ibit-creation-persistence-long-input-registration-20260821-v1.json",
+      "bytes": 7551,
+      "sha256": "89852cfeb30e5556a6b7d700a17a9678b1604e7973a1b8b5a9a07fa2c6c26ef8"
+    },
+    "generator_aggregate_sha256": "d2f524156fadb60eda3db74417b63a4c9209aa93051ae747760ff77e896a084c"
+  },
+  "source_evidence": {
+    "blackrock_ibit_history": {
+      "path": "data/cache/vendor/blackrock/IBIT/20240105_20260820_history_v1/history.parquet",
+      "bytes": 18681,
+      "sha256": "bcf89c1977b4643d6bc973e803ad15a8140150926959354942c4f9c45536fbd0"
+    },
+    "blackrock_ibit_raw": {
+      "path": "data/cache/vendor/blackrock/IBIT/20240105_20260820_history_v1/fund_data.xml",
+      "bytes": 254590,
+      "sha256": "6ca21076c2cba56e5e5220c88f0afa85a657b93294b95d10cb8a185f74068829"
+    },
+    "btc_1m_bars": {
+      "path": "data/cache/BTC_1m_365d.parquet",
+      "bytes": 13014449,
+      "sha256": "b0742553ebeaa7cb4af6fabfd496f5462354cb541705fd0ca5ec222dc21e15d8"
+    },
+    "btc_hourly_funding": {
+      "path": "data/cache/vendor/hyperliquid/BTC/20250728T000000000000Z_20260728T000000000000Z_funding/funding.parquet",
+      "bytes": 184165,
+      "sha256": "1a222f783af9d5b52f500e259a89911e54c5f9c96dcab45dea466a166fc109c6"
+    }
+  },
+  "original_artifacts": {
+    "root": "data/logs/research/bidirectional_cohort/v58_btc_ibit_creation_persistence_long_20260821_v1",
+    "report": {
+      "bytes": 73917,
+      "sha256": "dbc43528efb6d3fb8ae8afab00c6bd88a8adcd07211371a2b09c4380d14eaafb"
+    },
+    "trades": {
+      "bytes": 59997,
+      "sha256": "bdb4dc50ef01cbb93783d2f628e42c1bac73481692905e2aeda1d77635b428bb"
+    },
+    "manifest": {
+      "bytes": 343,
+      "sha256": "dd4c8547387c59000d39ea1e245b7a134ba16ea8e739c56a39919aad15e7f8dd"
+    }
+  },
+  "reproduction_artifacts": {
+    "root": "data/logs/research/bidirectional_cohort/v58_btc_ibit_creation_persistence_long_20260821_v1_reproduction",
+    "report": {
+      "bytes": 73917,
+      "sha256": "b4c3f7695fd4423202380d0d7df14c7816449ac4c76b411eb55515f3feec2b13"
+    },
+    "trades": {
+      "bytes": 59997,
+      "sha256": "bdb4dc50ef01cbb93783d2f628e42c1bac73481692905e2aeda1d77635b428bb"
+    },
+    "manifest": {
+      "bytes": 343,
+      "sha256": "a4fc71f9069d1298e26c2dfadfd34835f0f6ead10a9343ff47ddb9d3b27d8681"
+    }
+  },
+  "reproduction": {
+    "status": "semantic_match",
+    "report_comparison": "identical_after_removing_generated_at_utc_only",
+    "semantic_report_sha256": "db6fd8cb3d27a66cb7d4201d141d818c8551e5e39f3f583c7edbc7d10048db02",
+    "trades_comparison": "byte_identical",
+    "expected_manifest_difference": "Each manifest binds its report's distinct generated_at_utc and therefore has a distinct report checksum."
+  },
+  "nominal_out_of_sample_results": {
+    "validation": {
+      "candidate": {
+        "completed_trades": 6,
+        "wins": 1,
+        "losses": 5,
+        "net_pnl_usd": -149.16814442342456,
+        "profit_factor": 0.14695678013810232,
+        "net_pnl_excluding_largest_winner_usd": -174.8658695717361,
+        "maximum_drawdown_pct": -4.30809055200146
+      },
+      "v58_sweep_control": {
+        "completed_trades": 6,
+        "net_pnl_usd": 36.151535132278696,
+        "profit_factor": 1.5101259253501147,
+        "net_pnl_excluding_largest_winner_usd": 9.340979141360897
+      },
+      "candidate_minus_v58_sweep_usd": -185.31967955570326
+    },
+    "pseudo_holdout": {
+      "candidate": {
+        "completed_trades": 4,
+        "wins": 2,
+        "losses": 2,
+        "net_pnl_usd": -17.245077867173677,
+        "profit_factor": 0.7573328818099184,
+        "net_pnl_excluding_largest_winner_usd": -44.17785955560656,
+        "maximum_drawdown_pct": -1.5690556022353161
+      },
+      "v58_sweep_control": {
+        "completed_trades": 6,
+        "net_pnl_usd": 99.02302580883861,
+        "profit_factor": 3.7909492312800075,
+        "net_pnl_excluding_largest_winner_usd": 71.99047032707797
+      },
+      "candidate_minus_v58_sweep_usd": -116.26810367601229
+    }
+  },
+  "acceptance": {
+    "candidate_supported": false,
+    "failed_checks": [
+      "validation_nominal_minimum_ten_completed_trades",
+      "validation_nominal_positive_net",
+      "validation_nominal_profit_factor_above_one",
+      "validation_nominal_positive_ex_largest",
+      "validation_stress_positive_net",
+      "validation_stress_profit_factor_above_one",
+      "validation_stress_positive_ex_largest",
+      "validation_publication_delay_24h_positive_net",
+      "validation_publication_delay_24h_profit_factor_above_one",
+      "validation_publication_delay_24h_positive_ex_largest",
+      "validation_nominal_candidate_exceeds_no_action",
+      "validation_nominal_candidate_exceeds_v58_sweep",
+      "pseudo_holdout_nominal_minimum_ten_completed_trades",
+      "pseudo_holdout_nominal_positive_net",
+      "pseudo_holdout_nominal_profit_factor_above_one",
+      "pseudo_holdout_nominal_positive_ex_largest",
+      "pseudo_holdout_stress_positive_net",
+      "pseudo_holdout_stress_profit_factor_above_one",
+      "pseudo_holdout_stress_positive_ex_largest",
+      "pseudo_holdout_publication_delay_24h_positive_net",
+      "pseudo_holdout_publication_delay_24h_profit_factor_above_one",
+      "pseudo_holdout_publication_delay_24h_positive_ex_largest",
+      "pseudo_holdout_nominal_candidate_exceeds_no_action",
+      "pseudo_holdout_nominal_candidate_exceeds_v58_sweep"
+    ]
+  },
+  "uncertainties_and_failure_modes": [
+    "All three BTC price partitions were previously opened, so this is a pseudo-holdout rather than a pristine untouched holdout.",
+    "Issuer as-of rows do not contain observed historical publication timestamps; the frozen availability delay is a causal approximation.",
+    "One-minute bars cannot establish exact BBO, mark ordering, visible depth, or venue queue behavior.",
+    "The result rejects this exact rule and payoff; it does not prove that all issuer-flow information lacks predictive value."
+  ],
+  "confidence": {
+    "exact_candidate_rejection": "high_registered_inputs_and_generator_with_semantically_identical_reproduction_and_negative_validation",
+    "all_issuer_flow_mechanisms_are_unusable": "low_one_exact_rule_was_tested",
+    "no_live_change_from_this_result": "high"
+  },
+  "falsifiers": [
+    "A checksum audit showing that an input or registered generator file did not match the frozen registration would invalidate this result.",
+    "A semantically different independent reproduction from the same registered bytes would invalidate the reproducibility claim.",
+    "Point-in-time issuer publication timestamps that materially change signal availability would require a new preregistered experiment, not reinterpretation of this result."
+  ]
+}

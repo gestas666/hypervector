@@ -362,6 +362,18 @@ fn unavailable_raw_context() -> RawRegimeContext {
     }
 }
 
+struct OpenOrderInputs {
+    stop: (Option<u64>, Option<f64>),
+    target: Option<crate::backend_cohort_trade_reflection_values::ProjectedTargetOrder>,
+    exit_plan: CohortOpenExitPlan,
+    profit_protection: Option<RawOpenProfitProtection>,
+    path_since_entry: RawOpenPath,
+    path_since_soft_deadline: Option<RawOpenExtensionPath>,
+    post_soft_trail: Option<RawOpenPostSoftTrail>,
+    open_profit_lock: Option<RawOpenProfitLock>,
+    ignored_provider_exit: Option<RawIgnoredProviderExit>,
+}
+
 fn project_open_trade(raw: RawOpenTradeReflection) -> Result<CohortOpenTradeReflection, String> {
     validate_open_identity(&raw)?;
     validate_optional_regime_assessment(raw.entry_regime_assessment.as_ref())?;
@@ -370,18 +382,20 @@ fn project_open_trade(raw: RawOpenTradeReflection) -> Result<CohortOpenTradeRefl
     apply_open_identity(&mut projected, &raw);
     let stop = project_protective_stop(raw.protective_stop)?;
     let target = project_target_order(raw.target_order)?;
-    let exit_plan = project_open_exit_plan(raw.exit_plan)?;
+    let exit_plan = project_open_exit_plan(&raw.strategy_id, raw.exit_plan)?;
     apply_open_orders(
         &mut projected,
-        stop,
-        target,
-        exit_plan,
-        raw.profit_protection,
-        raw.path_since_entry,
-        raw.path_since_soft_deadline,
-        raw.post_soft_trail_challenger,
-        raw.open_profit_lock_challenger,
-        raw.ignored_provider_exit_observer,
+        OpenOrderInputs {
+            stop,
+            target,
+            exit_plan,
+            profit_protection: raw.profit_protection,
+            path_since_entry: raw.path_since_entry,
+            path_since_soft_deadline: raw.path_since_soft_deadline,
+            post_soft_trail: raw.post_soft_trail_challenger,
+            open_profit_lock: raw.open_profit_lock_challenger,
+            ignored_provider_exit: raw.ignored_provider_exit_observer,
+        },
     )?;
     apply_open_contexts(
         &mut projected,
@@ -409,16 +423,19 @@ fn apply_open_identity(projected: &mut CohortOpenTradeReflection, raw: &RawOpenT
 
 fn apply_open_orders(
     projected: &mut CohortOpenTradeReflection,
-    stop: (Option<u64>, Option<f64>),
-    target: Option<crate::backend_cohort_trade_reflection_values::ProjectedTargetOrder>,
-    exit_plan: CohortOpenExitPlan,
-    profit_protection: Option<RawOpenProfitProtection>,
-    path_since_entry: RawOpenPath,
-    path_since_soft_deadline: Option<RawOpenExtensionPath>,
-    post_soft_trail: Option<RawOpenPostSoftTrail>,
-    open_profit_lock: Option<RawOpenProfitLock>,
-    ignored_provider_exit: Option<RawIgnoredProviderExit>,
+    inputs: OpenOrderInputs,
 ) -> Result<(), String> {
+    let OpenOrderInputs {
+        stop,
+        target,
+        exit_plan,
+        profit_protection,
+        path_since_entry,
+        path_since_soft_deadline,
+        post_soft_trail,
+        open_profit_lock,
+        ignored_provider_exit,
+    } = inputs;
     projected.protective_stop_oid = stop.0;
     projected.protective_stop_price = stop.1;
     projected.profit_protection = project_open_profit_protection(profit_protection)?;

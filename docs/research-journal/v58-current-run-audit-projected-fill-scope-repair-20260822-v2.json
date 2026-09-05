@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v58-current-run-audit-projected-fill-scope-repair",
+  "revision_number": 2,
+  "supersedes_revision_id": "a72ac9c73631f069257b9fc8385b51be783be1ad2a5f46ab2acba1a9427aabd1",
+  "created_at_utc": "2026-08-22T09:24:00Z",
+  "strategy_id": "portfolio_live_audit",
+  "symbol": "PORTFOLIO",
+  "status": "retain",
+  "hypothesis": "A current-run cohort audit must exclude rolling backend fills whose explicit origin_run_id is outside the compatible run identities proved by the selected asset ledgers, while retaining origin-less legacy fills so unproven projection mismatches remain visible.",
+  "decision": "Retain the same report-only scope repair after formatting only the two touched files. A fresh post-format immutable audit again reconciles 12 authoritative current-run fills to 12 projected fills with no technical gaps. The repository-wide format gate remains incomplete because 140 unrelated dirty-worktree files still predate this scoped repair's formatting; do not rewrite them as part of this defect correction.",
+  "confidence": "high",
+  "falsifier": "Reject or revise this repair if a compatible-run projected fill is excluded, an explicitly incompatible origin_run_id remains in a current-run report, a missing-origin projected fill is silently discarded, compatible-profile all-history restart tests regress, or authoritative fill and projected-fill counts diverge again for the same stable ledger snapshot.",
+  "evidence": [
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v58_spcx_repair_interim_audit_20260822T0923Z.json",
+      "role": "immutable_post_format_current_run_audit_with_exact_fill_reconciliation",
+      "sha256": "e59905aec8518c75a16f588ddf234861dcfdd135aa4604d59c5d57f4166a90ce",
+      "bytes": 4406005
+    },
+    {
+      "path": "../../src/hypervector/research/cohort_live_audit_execution.py",
+      "role": "formatted_minimal_origin_run_scope_filter_implementation",
+      "sha256": "8d0bbebd347f52adaf7c309de482413b4a995c24e5d2bf37be5490377b07bfb9",
+      "bytes": 11549
+    },
+    {
+      "path": "../../tests/test_multi_asset_live_audit.py",
+      "role": "formatted_red_green_regression_contract_and_existing_audit_coverage",
+      "sha256": "ed2eed683f6f5ea38d581d736af42ca0c2caad16dfea3eee5beadab03046d2e6",
+      "bytes": 32396
+    }
+  ],
+  "metrics": {
+    "authoritative_current_run_fills": 12,
+    "post_repair_projected_fills": 12,
+    "known_prior_run_fills_excluded": 9,
+    "post_repair_technical_gaps": 0,
+    "focused_tests_passed": 90,
+    "focused_tests_failed": 0,
+    "scoped_ruff_errors": 0,
+    "scoped_format_errors": 0,
+    "repository_unrelated_files_requiring_format": 140,
+    "diff_whitespace_errors": 0,
+    "live_runtime_changed": false
+  },
+  "limitations": [
+    "The repository-wide Ruff format check is not clean because 140 unrelated files would be reformatted; the two files touched by this repair are formatted and pass their scoped format gate.",
+    "Projected fills without origin_run_id remain visible by design; their scope must still be resolved through authoritative identity reconciliation rather than silently inferred.",
+    "This repair establishes current-run audit attribution consistency, not strategy profitability or live execution quality.",
+    "The active V58 process still runs the sealed pre-repair implementation and this report-only source change will load only during a separately authorized verified restart."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

@@ -37,6 +37,16 @@ class DirectionalPath:
     directional_close_return_bps: float
     favorable_excursion_bps: float
     adverse_excursion_bps: float
+    path_start_time_ms: int = -1
+
+    def __post_init__(self) -> None:
+        """Default direct fixtures to a path beginning at decision time."""
+        if self.path_start_time_ms == -1:
+            object.__setattr__(self, "path_start_time_ms", self.decision_time_ms)
+        if self.path_start_time_ms < self.decision_time_ms:
+            raise ValueError("path start cannot precede its decision")
+        if self.path_start_time_ms % MINUTE_MS:
+            raise ValueError("path start must align to a minute boundary")
 
 
 def validated_horizons(values: Sequence[int]) -> tuple[int, ...]:
@@ -74,13 +84,15 @@ def resolve_directional_path(
     side: str,
     candles: Mapping[int, Candle],
     horizon_minutes: int,
+    available_time_ms: int | None = None,
 ) -> tuple[str, DirectionalPath | None]:
     """Resolve only a complete contiguous future path from decision time."""
+    path_start_ms = causal_path_start_ms(decision_time_ms, available_time_ms)
     _validate_path_request(decision_time_ms, reference_price, side, horizon_minutes)
     if not candles:
         return "missing_data", None
     expected = tuple(
-        decision_time_ms + offset * MINUTE_MS for offset in range(horizon_minutes)
+        path_start_ms + offset * MINUTE_MS for offset in range(horizon_minutes)
     )
     if max(candles) < expected[-1]:
         return "censored", None
@@ -88,10 +100,23 @@ def resolve_directional_path(
         return "missing_data", None
     return "resolved", _directional_path(
         decision_time_ms,
+        path_start_ms,
         reference_price,
         side,
         tuple(candles[value] for value in expected),
     )
+
+
+def causal_path_start_ms(
+    decision_time_ms: int, available_time_ms: int | None = None
+) -> int:
+    """Return the first full minute at or after candidate availability."""
+    available = decision_time_ms if available_time_ms is None else available_time_ms
+    if isinstance(available, bool) or not isinstance(available, int):
+        raise ValueError("candidate availability must be an integer timestamp")
+    if available < decision_time_ms:
+        raise ValueError("candidate availability cannot precede its decision")
+    return ((available + MINUTE_MS - 1) // MINUTE_MS) * MINUTE_MS
 
 
 def non_overlapping_count(
@@ -118,11 +143,11 @@ def non_overlapping_paths(
         raise ValueError("non-overlap horizon must be positive")
     selected: list[DirectionalPath] = []
     next_available = -1
-    for path in sorted(paths, key=lambda item: item.decision_time_ms):
-        if path.decision_time_ms < next_available:
+    for path in sorted(paths, key=lambda item: item.path_start_time_ms):
+        if path.path_start_time_ms < next_available:
             continue
         selected.append(path)
-        next_available = path.decision_time_ms + horizon_minutes * MINUTE_MS
+        next_available = path.path_start_time_ms + horizon_minutes * MINUTE_MS
     return tuple(selected)
 
 
@@ -175,6 +200,7 @@ def _validate_path_request(
 
 def _directional_path(
     decision_time_ms: int,
+    path_start_time_ms: int,
     reference_price: float,
     side: str,
     path: Sequence[Candle],
@@ -190,4 +216,5 @@ def _directional_path(
         directional_close_return_bps=close_return * 10_000.0,
         favorable_excursion_bps=max(0.0, favorable * 10_000.0),
         adverse_excursion_bps=max(0.0, adverse * 10_000.0),
+        path_start_time_ms=path_start_time_ms,
     )

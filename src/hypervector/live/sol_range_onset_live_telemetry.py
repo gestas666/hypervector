@@ -319,7 +319,9 @@ def _fee_event_payload(
     return {
         **evidence,
         "source": (
-            "effective_hip3_fee_schedule"
+            "unresolved_hip3_fee_schedule"
+            if evidence["effective_fee_status"] == "unresolved_deployer_fee_scale"
+            else "effective_hip3_fee_schedule"
             if preflight.hip3_fee_metadata is not None
             else "venue_fee_schedule"
         ),

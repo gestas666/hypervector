@@ -1,0 +1,318 @@
+{
+  "schema_version": "v58_btc_binance_spot_lead_hl_perp_catchup_preregistration_v1",
+  "hypothesis_id": "V58_BTC_BINANCE_SPOT_LEAD_HL_PERP_CATCHUP_LONG_V1",
+  "generated_at_utc": "2026-08-21T13:11:00Z",
+  "status": "preregistered_before_external_spot_data_acquisition_or_candidate_results",
+  "authority": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_promotion": false,
+    "automatic_live_change": false,
+    "runtime_strategy_changed": false,
+    "orders_supported": false
+  },
+  "problem_restatement": {
+    "input": "V58 has two BTC short routes and one selective downside-sweep BTC long route. The current rally produced no long because no qualifying downside sweep occurred. Multiple venue-native momentum, pullback, breadth, funding, range, and side-inversion candidates have already failed or remained contradictory.",
+    "output": "Test whether a completed Binance BTCUSDT spot breakout that has not yet appeared in the structurally comparable Hyperliquid BTC perpetual bar identifies a causal, after-cost long catch-up opportunity.",
+    "stakeholder": "Operator seeking meaningful but evidence-bound growth from a live-capital portfolio.",
+    "success_criterion": "Determine whether genuinely new cross-venue spot information adds stable BTC-long value beyond same-venue and time-shifted controls without changing V58."
+  },
+  "hypothesis": "When completed Binance BTCUSDT spot bars make a fresh structural high inside an established Hyperliquid BTC hourly uptrend while the completed Hyperliquid BTC perpetual bar has not yet made its own comparable high, subsequent Hyperliquid BTC long returns may reflect delayed catch-up rather than an already-completed venue-native breakout.",
+  "claim_boundaries": [
+    "This is a cross-venue structural-lead hypothesis, not a claim of exploitable subsecond arbitrage.",
+    "Separate venue bars cannot prove that Binance caused a Hyperliquid move or that a private order could fill at a historical public price.",
+    "No Binance spot file for this experiment and no spot-conditioned future return, trade, win rate, profit factor, or path outcome was inspected before this contract was written.",
+    "The Hyperliquid partitions have been opened by other project studies, so researcher familiarity and project-level multiple testing remain material.",
+    "A positive bar result would still require prospective live source parity, exact BBO and mark evidence, and explicit human approval before any live change."
+  ],
+  "mechanism_novelty": {
+    "claim": "No prior project artifact found before preregistration tests this exact conjunction of a completed Binance spot structural breakout, a simultaneous non-breakout Hyperliquid perpetual bar, a completed Hyperliquid hourly EMA trend, and the frozen V58 60/60/24h economics.",
+    "project_search_scope": [
+      "docs/research-journal",
+      "docs/plans",
+      "docs/reviews",
+      "src/hypervector/research",
+      "scripts",
+      "tests",
+      "data/cache file-name inventory"
+    ],
+    "closest_rejected_families": [
+      "unconditioned Hyperliquid hourly breakout with negative-funding condition",
+      "BTC cross-sectional crypto breadth expansion",
+      "BTC fifteen-minute trend-pullback reacceleration",
+      "BTC liquidity-sweep primary-trigger relaxation",
+      "BTC and SOL EMA5 speed continuation",
+      "generic HT-Breakout cross-asset transfer"
+    ],
+    "material_difference": "The primary condition uses a separately timestamped spot venue's own completed structural high while requiring the Hyperliquid perpetual not to have broken its comparable high. It does not reuse funding sign, HYPE strategy identity, peer-asset breadth, a downside sweep, or an EMA recross.",
+    "confidence": "medium_for_project_novelty_low_for_economic_edge",
+    "falsifier": "An exact preexisting source-bound project result with the same cross-venue event and economics invalidates novelty and must stop result generation until reconciled."
+  },
+  "external_primary_references": [
+    {
+      "title": "Binance Public Data",
+      "url": "https://github.com/binance/binance-public-data/blob/master/README.md",
+      "supported_role": "Documents checksum-verifiable daily and monthly spot BTCUSDT klines and aggregate trades, including the microsecond timestamp convention for spot data from 2025 onward.",
+      "unsupported_inference": "Archive availability does not establish predictive value or executable cross-venue latency."
+    },
+    {
+      "title": "Hyperliquid Historical Data",
+      "url": "https://hyperliquid.gitbook.io/hyperliquid-docs/historical-data",
+      "supported_role": "Documents Hyperliquid historical L2 availability, update delays, possible missing data, and the absence of historical spot datasets in the official S3 archive.",
+      "unsupported_inference": "The documentation does not establish completeness of the project's separate candle or 0xarchive-derived inputs."
+    }
+  ],
+  "outcome_blind_data_feasibility": {
+    "local_inventory": {
+      "hyperliquid_btc_1m_bars": "available_and_hash_bound",
+      "synchronized_binance_spot_and_hyperliquid_perp_pair": "not_available",
+      "generic_binance_bybit_gap_fill": "available_but_rejected_for_this_experiment_because_endpoint_identity_and_synchronized_pair_contract_are_not_preserved",
+      "candidate_outcomes_inspected": false
+    },
+    "external_inventory": {
+      "binance_spot_btcusdt_1m_monthly_archives": "documented_available",
+      "binance_checksum_sidecars": "documented_available",
+      "hyperliquid_exact_historical_mark_path": "not_guaranteed",
+      "hyperliquid_historical_l2": "available_with_documented_delay_and_missing_data_risk"
+    },
+    "feasibility_decision": "proceed_to_checksum_verified_data_acquisition_without_calculating_returns_until_the_implementation_contract_is_testable",
+    "confidence": "medium",
+    "failure_mode": "Missing archive months, checksum failure, timestamp ambiguity, insufficient exact overlap, or unresolved gap identity is a technical failure and prevents economic result generation."
+  },
+  "frozen_market_contract": {
+    "execution_symbol": "BTC",
+    "execution_venue": "Hyperliquid mainnet perpetual",
+    "external_information_symbol": "BTCUSDT",
+    "external_information_venue": "Binance spot",
+    "direction": "long_only",
+    "source_cadence_minutes": 1,
+    "decision_timeframe_minutes": 15,
+    "trend_timeframe_minutes": 60,
+    "bar_timestamp_semantics": "left_labeled_half_open",
+    "decision_availability": "only after all fifteen spot and perpetual constituent minutes and the current completed hourly context are available",
+    "signal_timestamp": "final constituent minute of the completed fifteen-minute bucket",
+    "entry_availability": "next Hyperliquid one-minute bar open after the completed decision bucket",
+    "same_bar_entry_allowed": false,
+    "clock_alignment": "normalize Binance microsecond timestamps to exact UTC integer microseconds before conversion to milliseconds; require identical UTC minute boundaries without nearest-neighbor joins",
+    "gap_rule": "reset hourly warmup, prior-high windows, cross-venue eligibility, and onset state across any missing or duplicate minute on either venue"
+  },
+  "frozen_signal_contract": {
+    "hyperliquid_hourly_fast_ema_period": 21,
+    "hyperliquid_hourly_slow_ema_period": 55,
+    "structural_high_lookback_bars": 32,
+    "structural_high_timeframe_minutes": 15,
+    "hourly_uptrend": "latest completed Hyperliquid hour EMA21 strictly above EMA55 and close strictly above EMA21",
+    "spot_breakout": "latest completed Binance fifteen-minute close strictly above the maximum Binance high of the thirty-two immediately prior completed fifteen-minute bars in the same gap segment",
+    "perpetual_lag": "latest completed Hyperliquid fifteen-minute close less than or equal to the maximum Hyperliquid high of the thirty-two immediately prior completed fifteen-minute bars in the same gap segment",
+    "perpetual_participation": "latest completed Hyperliquid fifteen-minute close strictly above its immediately prior completed fifteen-minute close",
+    "primary_condition": "hourly_uptrend and spot_breakout and perpetual_lag and perpetual_participation",
+    "onset_semantics": "emit only when the complete primary condition is true and the immediately prior completed decision bar did not satisfy it",
+    "rearm_semantics": "at least one completed decision bar must fail the complete primary condition before another signal",
+    "absolute_cross_venue_price_basis_filter": null,
+    "volume_filter": null,
+    "funding_filter": null,
+    "l2_filter": null,
+    "open_interest_filter": null,
+    "regime_model_filter": null,
+    "parameter_grid_allowed": false,
+    "nearby_retuning_after_results_allowed": false
+  },
+  "parameter_provenance": {
+    "ema_21_55": "existing project completed-hour trend convention",
+    "thirty_two_fifteen_minute_bars": "existing HIP-3 structural breakout horizon equal to eight hours, adopted before external spot outcomes rather than fitted to BTC returns",
+    "non_breakout_perpetual_lag": "mechanism-defining structural comparison that avoids an unstable absolute BTCUSD-versus-BTCUSDT price basis threshold",
+    "positive_perpetual_participation": "sign boundary selected to reject outright perpetual downside divergence without fitting a return magnitude",
+    "economic_exit": "unchanged V58 BTC sweep-control 60bps stop, 60bps target, and 24h fallback to isolate entry quality"
+  },
+  "frozen_controls": [
+    {
+      "control_id": "BTC_HL_NATIVE_15M_BREAKOUT_LONG_CONTROL_V1",
+      "definition": "identical hourly trend, onset, entry, exit, sizing, funding cashflow, and friction contract, but the completed Hyperliquid fifteen-minute close itself must break above its own prior thirty-two highs and no Binance feature is used",
+      "purpose": "test whether the external spot lead adds value beyond an already-visible venue-native breakout",
+      "selection_authority": "none"
+    },
+    {
+      "control_id": "BTC_BINANCE_SPOT_LEAD_60M_LAG_PLACEBO_LONG_V1",
+      "definition": "identical primary contract except the Binance spot breakout state available at the decision is shifted backward by exactly four completed fifteen-minute bars while current Hyperliquid trend, lag, and participation remain unchanged",
+      "purpose": "test whether apparent value is merely clustered bullish-regime exposure rather than timely external information",
+      "selection_authority": "none"
+    },
+    {
+      "control_id": "NO_ACTION",
+      "definition": "zero trades and zero PnL",
+      "purpose": "retain the simplest capital-preservation comparator without making it a trial gate",
+      "selection_authority": "none"
+    }
+  ],
+  "frozen_execution_and_risk_contract": {
+    "initial_equity_usd": 5000.0,
+    "margin_fraction": 0.1,
+    "leverage": 10.0,
+    "venue_max_leverage": 40.0,
+    "maximum_notional_usd": 5000.0,
+    "entry_liquidity": "taker_next_hyperliquid_1m_open_proxy",
+    "stop_policy": "fixed_bps",
+    "stop_bps": 60.0,
+    "target_policy": "fixed_bps",
+    "target_bps": 60.0,
+    "maximum_hold_seconds": 86400,
+    "same_bar_target_stop_precedence": "stop_first",
+    "close_on_opposite_signal": false,
+    "same_direction_reentry_requires_reset": true,
+    "reentry_cooldown_minutes": 1,
+    "liquidation": "isolated_liquidation_proxy_from_shared_bar_engine_with_adverse_gap_execution",
+    "portfolio_scope": "one_BTC_position_at_a_time"
+  },
+  "frozen_friction_contract": {
+    "entry_taker_fee_bps": 4.5,
+    "target_maker_fee_bps": 1.5,
+    "stop_time_and_liquidation_taker_fee_bps": 4.5,
+    "nominal_taker_slippage_bps_per_side": 2.0,
+    "stress_taker_slippage_bps_per_side": 5.0,
+    "delay_stress": "move each entry one additional complete Hyperliquid minute later with nominal slippage while preserving the original signal identity",
+    "target_additional_slippage_bps": 0.0,
+    "funding_cashflow": "exact ordered Hyperliquid hourly funding rows applied with side-correct sign",
+    "missing_funding": "technical_failure_not_zero",
+    "depth_limitation": "bar replay does not claim exact historical BBO, private latency, queue rank, or fill capacity"
+  },
+  "frozen_partitions": [
+    {
+      "name": "development",
+      "start_utc": "2025-07-28T00:00:00Z",
+      "end_utc": "2026-01-28T00:00:00Z"
+    },
+    {
+      "name": "validation",
+      "start_utc": "2026-01-28T00:00:00Z",
+      "end_utc": "2026-04-28T00:00:00Z"
+    },
+    {
+      "name": "pseudo_holdout",
+      "start_utc": "2026-04-28T00:00:00Z",
+      "end_utc": "2026-07-28T00:00:00Z"
+    }
+  ],
+  "partition_disclosure": "All Hyperliquid partitions were opened by prior project research. This mechanism and its exact parameters were frozen before acquiring its Binance spot source or calculating its candidate outcomes, but the overall evidence remains retrospective and exposed to project-level multiple testing.",
+  "required_result_rows": {
+    "arms": [
+      "binance_spot_lead_hl_perp_catchup_candidate",
+      "hl_native_breakout_control",
+      "binance_spot_lead_60m_lag_placebo",
+      "no_action"
+    ],
+    "scenarios": [
+      "nominal",
+      "stress",
+      "one_minute_entry_delay"
+    ],
+    "partitions": [
+      "development",
+      "validation",
+      "pseudo_holdout"
+    ],
+    "metrics": [
+      "raw_signal_count",
+      "completed_trades",
+      "wins",
+      "losses",
+      "gross_market_pnl_usd",
+      "net_pnl_usd",
+      "profit_factor",
+      "maximum_drawdown_pct",
+      "net_pnl_excluding_largest_winner_usd",
+      "fees_usd",
+      "funding_usd",
+      "liquidations",
+      "same_bar_ambiguities",
+      "gap_expired_entries",
+      "forced_end_exits",
+      "median_interarrival_hours",
+      "events_per_week",
+      "candidate_native_control_same_minute_overlap",
+      "candidate_placebo_same_minute_overlap",
+      "cross_venue_minute_coverage",
+      "duplicate_or_missing_minute_count"
+    ]
+  },
+  "acceptance_and_disposition_contract": {
+    "trial_abort_policy": "Only a technical integrity failure aborts result publication. Sparse, losing, high-drawdown, or zero-trade outcomes remain reportable results.",
+    "candidate_support_requires": [
+      "positive_net_pnl_in_validation_and_pseudo_holdout_under_nominal_stress_and_one_minute_delay",
+      "profit_factor_above_one_in_validation_and_pseudo_holdout_under_all_three_scenarios",
+      "positive_net_pnl_after_largest_winner_removal_in_validation_and_pseudo_holdout_under_all_three_scenarios",
+      "at_least_thirteen_completed_candidate_trades_in_each_validation_and_pseudo_holdout_partition",
+      "zero_liquidations_and_zero_unreconciled_lifecycle_paths",
+      "candidate_net_pnl_strictly_above_both_active_controls_in_validation_and_pseudo_holdout_under_all_three_scenarios",
+      "candidate_maximum_drawdown_no_worse_than_both_active_controls_in_validation_and_pseudo_holdout_under_all_three_scenarios",
+      "exact_signal_and_trade_reconstruction_with_byte_identical_sidecars",
+      "checksum_verified_binance_source_and_exact_cross_venue_minute_join_reconstruction"
+    ],
+    "cadence_requirement_basis": "Thirteen trades per ninety-day partition approximates one completed opportunity per week and is a declared usefulness criterion rather than a trial-abort gate.",
+    "if_any_support_requirement_fails": "reject this exact candidate without threshold tuning or live proposal",
+    "live_proposal_requires_additionally": [
+      "shared one-BTC-position comparison against the unchanged V58 sweep and both V58 short routes",
+      "prospective post-preregistration synchronized Binance and Hyperliquid source capture",
+      "measured cross-venue receipt timestamps and clock-health telemetry",
+      "exact Hyperliquid decision-to-BBO mark and visible-depth feasibility",
+      "separately versioned live-provider parity with fail-closed external-feed behavior",
+      "fresh growth-sizing and stop-wave stress",
+      "verified flat and order-free transition boundary",
+      "explicit human approval"
+    ],
+    "automatic_live_change": false
+  },
+  "bias_and_integrity_controls": [
+    "preregister_before_binance_spot_source_acquisition",
+    "no_parameter_grid",
+    "no_threshold_side_or_exit_selection_after_results",
+    "all_partitions_all_arms_and_all_scenarios_published",
+    "completed_cross_venue_bar_causality_and_exact_UTC_boundary_unit_tests",
+    "microsecond_timestamp_conversion_unit_tests",
+    "gap_duplicate_and_onset_rearm_unit_tests",
+    "binance_archive_and_checksum_sidecars_preserved_immutably",
+    "source_hashes_and_complete_trade_sidecar_bound_in_manifest",
+    "largest_winner_removal",
+    "explicit_opened_partition_and_multiple_testing_disclosure",
+    "no_live_runtime_or_configuration_import_in_research_signal_module"
+  ],
+  "uncertainties_and_failure_modes": [
+    "Cross-venue price discovery may occur faster than one minute, leaving no executable catch-up after the completed-bar decision.",
+    "BTCUSDT spot and Hyperliquid BTC perpetual use different quote and index mechanics, so structural highs can diverge without predictive information.",
+    "The Binance breakout may merely select a broad bullish regime; the sixty-minute lag placebo is intended to challenge that interpretation.",
+    "Archive timestamps can use microseconds while project bars use milliseconds; a conversion error could create lookahead or false gaps.",
+    "Hyperliquid historical candles and official L2 archives have different completeness contracts, and exact historical mark truth may remain unavailable.",
+    "The candidate may be too sparse for meaningful portfolio contribution.",
+    "The opened historical partitions create selection and multiple-testing risk.",
+    "The fixed 60/60 exit isolates entry quality but may cap continuation; it cannot be retuned after seeing outcomes under this identity.",
+    "A positive standalone result may still displace stronger V58 BTC routes in shared capital."
+  ],
+  "falsifiers": [
+    "Implementation differs from the exact completed cross-venue structural event, clock alignment, gap, onset, entry, exit, sizing, fee, funding, delay, or slippage contract.",
+    "Archive checksums fail or independent reconstruction changes any joined minute, signal identity, lifecycle, or aggregate metric.",
+    "Any candidate support requirement fails in validation or pseudo-holdout.",
+    "Either active control matches or outperforms the primary under the frozen comparisons.",
+    "Prospective synchronized source capture shows that the external event arrives too late, is stale, or cannot execute at modeled Hyperliquid size and friction."
+  ],
+  "source_evidence": {
+    "hyperliquid_bars": {
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/BTC_1m_365d.parquet",
+      "bytes": 13014449,
+      "sha256": "b0742553ebeaa7cb4af6fabfd496f5462354cb541705fd0ca5ec222dc21e15d8"
+    },
+    "binance_spot_bars": {
+      "path": null,
+      "bytes": null,
+      "sha256": null,
+      "state": "not_acquired_before_preregistration"
+    },
+    "mechanism_inventory": {
+      "path": "/Users/gestas/Prototypes/hypervector/docs/research-journal/v58-btc-long-mechanism-error-analysis-20260821-v1.json",
+      "bytes": 14230,
+      "sha256": "cf2bcfd46e906728a0bd72865a1afcb4af372b8bd77fa1d86406f98dce51b24a"
+    }
+  },
+  "single_highest_value_next_action": {
+    "action": "Acquire the exact Binance monthly BTCUSDT spot one-minute archives and checksum sidecars for the frozen interval into a new immutable research bundle, normalize timestamps without calculating future returns, and reject the experiment on any checksum or UTC-boundary defect.",
+    "live_change_proposed": false
+  }
+}

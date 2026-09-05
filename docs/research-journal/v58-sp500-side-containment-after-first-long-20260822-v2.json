@@ -1,0 +1,145 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v58-sp500-side-containment-after-first-long",
+  "revision_number": 2,
+  "supersedes_revision_id": "6cca333ede3f5845a1e7b5a7f9a1c094777879f1a7c043a111717ea6e79569dd",
+  "created_at_utc": "2026-08-22T10:55:17Z",
+  "strategy_id": "hip3_breakout_pressure_sp500_spcx_fresh15s_bidirectional_v3",
+  "symbol": "xyz:SP500",
+  "status": "candidate",
+  "hypothesis": "Removing only future SP500 long execution authority at a verified flat and order-free boundary may contain an unsupported side while preserving observation, the exact short route, and every V58 risk and exit parameter.",
+  "decision": "Operator approval is recorded for the exact V59 cutover. Preserve the protected current SP500 short, then transition only after every position and owned order reconciles flat/order-free and the fresh preflight, backup, startup, and post-start acceptance checks pass.",
+  "confidence": "medium",
+  "falsifier": "Reject or roll back V59 if the candidate differs from V58 beyond profile identity and SP500 long execution authority, SPCX lacks an authentic public-trade signal source, or any sizing, exit, protection, fingerprint, ledger, preflight, backup, startup, post-start, or TUI check fails.",
+  "evidence": [
+    {
+      "path": "v58-sp500-lineage-side-containment-audit-20260821-v1.json",
+      "role": "historical, validation, and exact-live side lineage",
+      "sha256": "4023a9f5aa0377bc74915bf6bd29dae6beb6e9d5bb130bf9f542f67e1f55fcfe",
+      "bytes": 21047
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v58_sp500_long_resolution_short_open_20260822T0935Z.json",
+      "role": "immutable first V58 long resolution and successor short state",
+      "sha256": "0bcea82a41a95ea988fd7c78163ccfa8f18e2168258263e0bcefac280b27c0af",
+      "bytes": 15625
+    },
+    {
+      "path": "v58-sp500-lower-activation-profit-lock-future-only-preregistration-20260821-v4.json",
+      "role": "frozen exit-challenger disposition and future-only boundary",
+      "sha256": "e8745f4750a7def53395a847da7bd56ec17f60e7e19ecc14e43e1af6aab4ef6e",
+      "bytes": 4677
+    },
+    {
+      "path": "../../configs/multi_asset_growth_first_5000_eight_asset_sp500_short_containment_candidate_v59.toml",
+      "role": "exact-diff staged candidate configuration",
+      "sha256": "1f3d4e122afa70c0fd63c161cf6cd68b54d6fe7d96df738d66f8a6e1a48d3a81",
+      "bytes": 6219
+    },
+    {
+      "path": "../../tests/test_v59_sp500_short_containment_config.py",
+      "role": "configuration exact-diff regression tests",
+      "sha256": "1953396365156ff8190b2f1c21ec715251a5b4095d05fd74e689c24ab833232a",
+      "bytes": 3469
+    },
+    {
+      "path": "../../src/hypervector/research/v59_poststart_acceptance.py",
+      "role": "corrected candidate-specific post-start acceptance implementation",
+      "sha256": "69db884f713483972d386d2e4e2d4e94deef8fe9e4e6258c2afb4875b77fd770",
+      "bytes": 10068
+    },
+    {
+      "path": "../../scripts/v59_poststart_acceptance.py",
+      "role": "candidate-specific acceptance publisher",
+      "sha256": "f5ab00e9054fb59142648fcbdb59e71e0f2325bba3f4f5ef979340461e4df525",
+      "bytes": 3763
+    },
+    {
+      "path": "../../tests/test_v59_poststart_acceptance.py",
+      "role": "acceptance contract and unavailable-SPCX-source regression tests",
+      "sha256": "b36e8f7ea04844d6fb92ad517785a8ae93c9092367e34377b37437634ca902ea",
+      "bytes": 9389
+    },
+    {
+      "path": "../../tests/test_v59_poststart_acceptance_script.py",
+      "role": "acceptance publisher tests",
+      "sha256": "ebc013ffba6633757045e457a0ba62fd883eee14398abc59f96ec761aa5fb52a",
+      "bytes": 1689
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v59_sp500_short_containment_interim_preflight_20260822T0950Z.json",
+      "role": "mainnet report-only candidate preflight with current SP500 blocker",
+      "sha256": "c943e33eb594569fb7d3090876926aa925a54e7bbdb13adea250a3acfd0a857b",
+      "bytes": 22314
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v59_sp500_short_containment_growth_stress_20260822T0951Z.json",
+      "role": "candidate-bound portfolio stress sensitivity",
+      "sha256": "7f470c41e63d380e0d5ef51df0bf39362da6695fa4b0042353ad38a876e6d4fd",
+      "bytes": 27192
+    },
+    {
+      "path": "../../crates/hypervector-tui/tests/v57_v58_staged_transition_test.rs",
+      "role": "TUI visibility and no-scope-drift acceptance",
+      "sha256": "b6c3177e2afb2ae28c7318fdfaa47b3f26c77af55cf992aa3e7cdfaea578b558",
+      "bytes": 13735
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v59_sp500_short_containment_verification_20260822T1054Z.json",
+      "role": "fresh corrected focused and full verification record",
+      "sha256": "76cce702d654312f4527347978691a014f76bdc73e550226de29b7844e245299",
+      "bytes": 5058
+    }
+  ],
+  "metrics": {
+    "recommendation": "Apply only the exact V59 SP500-long containment at the first verified flat and order-free boundary; do not add the falsified crypto bull-participation sleeve.",
+    "approval_state": "Approved by the operator on 2026-08-22 for the exact validated change; no repeat approval request is required. Technical boundary conditions remain mandatory.",
+    "observed_problem": "The original V59 acceptance could count SPCX evaluations as coverage even when every evaluation had cash_open_trade_bars_incomplete and no usable public-trade source.",
+    "technical_fix": "Require positive SPCX evaluations, no source-unavailable blocker, signal_source=hyperliquid_ws_trades, and positive public_trade_count before V59 post-start acceptance can pass.",
+    "proposed_live_change": "Remove only SP500 long execution authority. Preserve all eight assets, ten-position capacity, both-side observation telemetry, the exact SP500 short route, and every sizing, stop, profit-lock, opposite-intent, and maximum-hold parameter.",
+    "current_boundary": {
+      "state": "blocked_by_protected_open_sp500_short",
+      "size_signed": -0.222,
+      "entry_price": 7654.2,
+      "protective_stop_oid": 522929314664,
+      "protective_stop_trigger_price": 7715.4336
+    },
+    "validation_completed": [
+      "Exact configuration diff",
+      "Candidate-bound report-only mainnet preflight",
+      "Candidate-bound stress sensitivity",
+      "Unavailable-SPCX-source negative acceptance test",
+      "Focused Python tests: 77 passed",
+      "Full Python non-network tests: 7436 passed, 4 deselected, 0 failed",
+      "Full Rust TUI tests: 457 passed, 4 ignored, 0 failed",
+      "Ruff check, scoped Ruff format, cargo fmt, git diff, and fail-closed CLI status"
+    ],
+    "validation_still_required": [
+      "Resolve and reconcile the current SP500 short",
+      "Run a fresh flat and order-free mainnet preflight",
+      "Create and verify a prestart backup",
+      "Start the exact V59 fingerprint",
+      "Run actual V59 post-start acceptance with authentic SPCX source telemetry",
+      "Rollback if any acceptance invariant fails"
+    ],
+    "rollback_triggers": {
+      "technical": "Any fingerprint, execution-direction, SPCX source, exit, sizing, ledger, stop, preflight, backup, startup, post-start, or TUI mismatch",
+      "economic": "Economic evidence is reported for operator review and does not silently mutate or gate execution"
+    },
+    "confidence_detail": {
+      "technical_containment": "high after focused, full Python, and full TUI verification",
+      "short_edge": "low because the exact live sample remains small and historical evidence is negative",
+      "portfolio_profitability": "low; V59 is containment, not a demonstrated growth improvement"
+    }
+  },
+  "limitations": [
+    "The current SP500 short is still open and protected, so V59 has not been cut over.",
+    "Only two comparable resolved SP500 shorts and one resolved long are available.",
+    "Historical SP500 evidence is negative and the exact live sample is largest-winner dependent.",
+    "Actual post-start acceptance cannot be established before the real cutover.",
+    "Passing technical tests does not establish profitable expectancy."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

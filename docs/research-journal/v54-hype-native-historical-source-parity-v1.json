@@ -1,0 +1,149 @@
+{
+  "schema_version": 1,
+  "generated_at_utc": "2026-08-18T02:32:37Z",
+  "mode": "hype_native_historical_source_parity_v1",
+  "status": "entry_mechanism_source_parity_verified",
+  "contract": {
+    "report_only": true,
+    "execution_authority": "none",
+    "runtime_strategy_changed": false,
+    "automatic_promotion": false
+  },
+  "historical_runtime_source": {
+    "prestart_bundle": "data/backups/bidirectional_cohort/prestart_20260806T003309.611169Z_9f0f53d5c3c7",
+    "manifest_sha256": "6118387d217d2befb8c9670778f2492393e310e36ef5a9751569cfd470a5cfc3",
+    "profile_id": "multi_asset_bidirectional_evidence_routed_hype75_eth_observer_v11",
+    "profile_fingerprint": "9f0f53d5c3c75bcec36a8b29c75d93146d686dbd46e90d25ef5ef400b8df685c",
+    "implementation_files": 1170,
+    "implementation_sha256": "e71e4089ca2ec0acc88cd16e260e815d89dc1e52937655af45555f50bfebb882",
+    "provider_archive": "files/implementation_repository_0115.gz",
+    "provider_source_sha256": "3210a0f85d62a13ef8f5d99277d62ae02b496cea5200fbf897196365a48d270d",
+    "provider_source_bytes": 8643
+  },
+  "independent_recovery_cross_check": {
+    "session_reference": "~/.codex/sessions/2026/08/07/rollout-2026-08-07T05-26-14-019fdb8b-672f-7133-afa5-086d3b71f0f8.jsonl",
+    "session_sha256": "ee50edda1db1ad5e4569ea9d6c88fd10d29470eec7fa3d4220cf91ad810159a4",
+    "session_bytes": 4476020,
+    "tool_call_id": "call_alR8zQ9rjZcsEB26ZO6POQj3",
+    "recovered_provider_lines": 249,
+    "recovered_provider_bytes": 8643,
+    "recovered_provider_sha256": "3210a0f85d62a13ef8f5d99277d62ae02b496cea5200fbf897196365a48d270d"
+  },
+  "current_provider": {
+    "path": "src/hypervector/live/hype_breakout_cohort_provider.py",
+    "sha256": "e6a6736adc511e2f8b5583a447b3abf2b68ae3a8069c8dd0c57f13aa0402cb8b",
+    "bytes": 8639,
+    "changed_lines": 2,
+    "differences": [
+      "module docstring wording changed",
+      "invalid-side ValueError wording changed from HYPE breakout to HT-Breakout"
+    ],
+    "eligibility_logic_changes": 0,
+    "valid_intent_payload_changes": 0
+  },
+  "entry_dependency_audit": [
+    {
+      "path": "src/hypervector/live/provider_readiness.py",
+      "classification": "exact_sha256_match"
+    },
+    {
+      "path": "src/hypervector/live/sol_range_onset_controller.py",
+      "classification": "exact_sha256_match"
+    },
+    {
+      "path": "src/hypervector/regime/classifier.py",
+      "classification": "exact_sha256_match"
+    },
+    {
+      "path": "src/hypervector/research/range_onset_observation.py",
+      "classification": "exact_sha256_match"
+    },
+    {
+      "path": "src/hypervector/research/range_onset_signals.py",
+      "classification": "formatting_only"
+    },
+    {
+      "path": "src/hypervector/regime/composite.py",
+      "classification": "additive_report_only_rsi_telemetry"
+    },
+    {
+      "path": "src/hypervector/regime/component_telemetry.py",
+      "classification": "formatting_only_report_only_input"
+    },
+    {
+      "path": "src/hypervector/live/sol_range_onset_decision_source.py",
+      "classification": "public_constant_renames_only"
+    },
+    {
+      "path": "src/hypervector/live/hype_breakout_entry_telemetry.py",
+      "classification": "additive_report_only_ema_contract_metadata"
+    },
+    {
+      "path": "src/hypervector/live/multi_asset_signal_source.py",
+      "classification": "additive_exit_and_backend_non_action_telemetry"
+    }
+  ],
+  "empirical_frozen_runtime_replay": {
+    "historical_repository_files_loaded": 640,
+    "input": "data/cache/HYPE_1m_365d.parquet",
+    "input_start_utc": "2026-07-14T00:00:00+00:00",
+    "evaluation_start_utc": "2026-07-21T00:00:00+00:00",
+    "observed_at_utc": "2026-07-28T00:00:00+00:00",
+    "historical_evaluations": 10080,
+    "current_evaluations": 10080,
+    "historical_intents": 38,
+    "current_intents": 38,
+    "normalized_historical_sha256": "99c488b604b7131b5539f5ceceefeb0728461b47e56b4864c50f4dfcb2ee90c8",
+    "normalized_current_sha256": "99c488b604b7131b5539f5ceceefeb0728461b47e56b4864c50f4dfcb2ee90c8",
+    "fields_compared": [
+      "decision_time_ms",
+      "side",
+      "eligible",
+      "reason",
+      "reference_price",
+      "state_5m",
+      "structural_direction"
+    ],
+    "exact_parity": true
+  },
+  "exit_contract_audit": {
+    "historical_config_sha256": "2a118e64ee0254134809acdf07b13c1bf581bd77f56a73097367e9f4d637c70e",
+    "historical_config_archive_exact": true,
+    "v11_and_candidate_common_contract": {
+      "protective_stop_bps": 80.0,
+      "fixed_take_profit": false,
+      "soft_maximum_hold_seconds": 28800,
+      "soft_policy": "extend_while_regime_supported",
+      "structure_support_threshold": 0.5,
+      "hard_maximum_hold_seconds": 86400,
+      "opposite_selected_onset": "close_without_same_cycle_reverse"
+    },
+    "candidate_safety_repairs": [
+      "provider lookup strips an operator-override prefix before matching entry identity",
+      "canonical context is selected through the explicit canonical-regime identity instead of a legacy range-provider constant",
+      "missing, future, or older-than-60-second provider/canonical evidence closes at the soft boundary instead of extending",
+      "UNKNOWN regime evidence is treated as unavailable instead of raising"
+    ],
+    "candidate_profit_lock_policy": "none",
+    "classification": "same_v11_economic_exit_shape_with_stricter_fail_closed_extension_evidence"
+  },
+  "runtime_differences_outside_entry_mechanism": [
+    "Current routing includes opposite-position exit precedence and stricter venue-symbol validation.",
+    "The v54 candidate uses a new HYPE-only identity, current stop protection, current persisted execution plans, opposite-onset closing, and the separately tested 8h-soft/24h-hard exit contract.",
+    "The favorable first-seven slice spans three historical profile fingerprints and more than one observed holding-duration behavior; this artifact does not assert that all seven used the exact v11 exit runtime.",
+    "This artifact verifies the original entry mechanism and the v11-to-candidate exit contract shape separately; it does not claim full historical runtime binary equivalence or profitable forward execution."
+  ],
+  "conclusion": "The original winning HYPE entry mechanism was not altered by the four-byte provider source change. The current HYPE-native wrapper preserves that mechanism while preventing the unsupported cross-asset scope by construction.",
+  "confidence": {
+    "provider_source_recovery": "high",
+    "entry_mechanism_parity": "high",
+    "full_runtime_binary_parity": "not_claimed",
+    "durable_profitability": "low_to_medium"
+  },
+  "falsifiers": [
+    "The compressed provider source fails its manifest SHA-256 or differs from the independently recovered transcript bytes.",
+    "Any changed dependency is shown to alter completed 5m breakout onset, hourly structural side, decision time, or reference close.",
+    "A v54 provider evaluation differs from the canonical provider on the same completed bars except for the new strategy identity and HYPE-only scope.",
+    "Prospective after-cost HYPE-native outcomes are negative or largest-winner dependent."
+  ]
+}

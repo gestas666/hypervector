@@ -1,0 +1,123 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v58-eth-sp500-open-exit-diagnostic",
+  "revision_number": 3,
+  "supersedes_revision_id": "ca17024b9cc961307ebc2255112d1ad2e97c95e00257d7e0804978d1fce4c4bf",
+  "created_at_utc": "2026-08-22T02:01:40Z",
+  "strategy_id": "multi_asset_growth_first_5000_eight_asset_incremental_v58",
+  "symbol": "PORTFOLIO",
+  "status": "observe",
+  "hypothesis": "The current ETH and SP500 exit controllers remain mechanically intact, while the reversal of the still-open ETH native-versus-R5 snapshot comparison demonstrates that a selected provisional giveback boundary cannot establish an exit-policy edge.",
+  "decision": "Keep both open lifecycles under their bound V58 execution plans and make no live exit-policy or order change from this prefix. ETH remains protected, has no ignored opposite exit or persistent structure-opposition trigger, and remains structurally supported. The same predeclared R5/2R challenger that was estimated 3.44 USD ahead at the prior open prefix is now estimated 0.69 USD behind the later exit-now reference on the excluding-funding comparison. This reversal strengthens the requirement to judge the native and rejected challenger paths only after the authoritative close rather than selecting a policy from one favorable open snapshot. SP500 remains protected and still has only 22.14 bps MFE, below both its live 100-bps activation and the lowest 25-bps report-only challenger. Reconcile both authoritative closes before judging economic exit quality.",
+  "confidence": "medium_high",
+  "falsifier": "Revise immediately if either owned stop disappears, an eligible opposite intent is not acted on, a close lacks an attributable reduce-only lifecycle, or terminal exact-cost evidence materially changes the native-versus-predeclared challenger comparison. Reopening the rejected ETH R5/2R policy broadly requires genuinely future both-side resolved evidence rather than this single selected long path.",
+  "evidence": [
+    {
+      "path": "v58-eth-sp500-open-exit-diagnostic-20260822-v2.json",
+      "role": "superseded earlier open prefix where R5 appeared provisionally ahead",
+      "sha256": "a1436972eab683c01208e4b3eca96edacd01cd116794e7c85a99a62b3841813c",
+      "bytes": 6586
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v58_prefix_20260822T0156Z.json",
+      "role": "later immutable current-run prefix where the provisional native-versus-R5 comparison reversed",
+      "sha256": "7be27b2c38d84bf012fd4433bc39d47ac4206140eb4021cb19e00febc1cd1094",
+      "bytes": 9885612
+    },
+    {
+      "path": "v58-eth-risk-normalized-profit-lock-historical-disposition-20260819-v1.json",
+      "role": "frozen historical rejection of the exact R2/1R and R5/2R global ETH exit replacements",
+      "sha256": "4ef6e991ba4e852f7500bdf768d3aab8148bb899415418c7fff9d557793d6d06",
+      "bytes": 5581
+    },
+    {
+      "path": "v58-eth-r5-component-decay-exit-disposition-v2.json",
+      "role": "frozen rejection of the distinct persistent component-decay R5 exit candidate",
+      "sha256": "9be0e83765c0df5285f30f0cd79088666a53eb253866e21b8df02de552628955",
+      "bytes": 5805
+    },
+    {
+      "path": "../../configs/multi_asset_growth_first_5000_eight_asset_incremental_v58.toml",
+      "role": "exact active V58 route risk and exit configuration",
+      "sha256": "1c1c1656233b074df2ed3adcee8cb8cb2c58f0d191cc9f9ac34799478fca3378",
+      "bytes": 6142
+    }
+  ],
+  "metrics": {
+    "run_id": "bidirectional-live-1787272893887",
+    "profile_fingerprint": "8a04636c9ff60a7eae141381cb540d7c6ceed081097cda7d5e465d48faa5022b",
+    "prefix_cutoff_utc": "2026-08-22T01:56:42.755038+00:00",
+    "coverage_complete": true,
+    "runtime_faults": 0,
+    "current_run_submission_rejections": 0,
+    "current_run_fills": 6,
+    "open_lifecycles": 2,
+    "eth": {
+      "lifecycle_id": "ETH:522413026103",
+      "side": "long",
+      "entry_price": 2448.4,
+      "mark_price": 2522.2,
+      "marked_net_pnl_usd": 21.659722,
+      "mfe_bps": 417.00702499591455,
+      "mae_bps": 0.0,
+      "peak_giveback_bps": 115.58568861297135,
+      "protective_stop_oid": 522413051214,
+      "protective_stop_price": 2433.7096,
+      "maximum_hold_seconds": 43200,
+      "deadline_utc": "2026-08-22T09:15:00Z",
+      "profit_lock_policy": "none",
+      "maximum_hold_context": "still_directionally_supported",
+      "structure_support_score": 0.9166666666666666,
+      "component_stance": "mixed_or_transition",
+      "component_alignment_score": 0.1111111111111111,
+      "persistent_opposition_triggers": 0,
+      "ignored_provider_exit_signals": 0,
+      "estimated_exit_now_net_including_current_funding_usd": 21.333935429668355,
+      "estimated_exit_now_net_excluding_funding_usd": 21.424159429668272,
+      "r5_floor2_trail2_estimated_net_excluding_funding_usd": 20.734963290199218,
+      "r5_minus_exit_now_excluding_funding_usd": -0.689196139469054,
+      "prior_prefix_r5_minus_exit_now_excluding_funding_usd": 3.4352213473794215,
+      "provisional_comparison_reversed": true,
+      "r5_historical_development_net_bps": -127.09878148733635,
+      "r5_historical_development_profit_factor": 0.9911595705649255,
+      "r5_historical_development_net_excluding_largest_winner_bps": -701.8619833471744
+    },
+    "sp500": {
+      "lifecycle_id": "xyz:SP500:521918499754",
+      "side": "long",
+      "entry_price": 7677.0,
+      "mark_price": 7684.7,
+      "marked_net_pnl_usd": 1.5752190000000001,
+      "mfe_bps": 22.144066692717512,
+      "mae_bps": 28.52676826885503,
+      "peak_giveback_bps": 12.114107073075697,
+      "protective_stop_oid": 521918558447,
+      "protective_stop_price": 7615.584,
+      "maximum_hold_seconds": 86400,
+      "deadline_utc": "2026-08-22T11:45:00Z",
+      "profit_lock_activation_bps": 100.0,
+      "profit_lock_floor_bps": 40.0,
+      "profit_lock_giveback_bps": 80.0,
+      "live_profit_lock_activated": false,
+      "lowest_report_only_challenger_activation_bps": 25.0,
+      "lowest_report_only_challenger_activated": false,
+      "ignored_provider_exit_signals": 0,
+      "estimated_exit_now_net_usd": 1.4271566428552822
+    },
+    "actual_exit_fills_claimed": false,
+    "open_marked_pnl_is_provisional": true,
+    "live_change_supported": false
+  },
+  "limitations": [
+    "Both positions remain open, so marks, excursions, giveback, funding, and final outcomes remain provisional.",
+    "The exit-now and challenger values are estimates rather than submitted fills and exclude additional exit slippage; the direct challenger comparison excludes funding.",
+    "The reversal between two selected open prefixes demonstrates snapshot instability but does not prove the native 12-hour exit is optimal.",
+    "ETH is one selected live long and cannot establish a side-balanced exit edge or erase the frozen negative development result.",
+    "The exact R5/2R global exit and the distinct R5 component-decay exit are separate rejected mechanisms; this revision does not combine or retune them.",
+    "SP500 has not reached any predeclared activation threshold, so this path still has not tested trailing behavior.",
+    "No strategy, exit, position, stop, order, sizing rule, leverage, risk limit, backend, checkpoint sidecar, or live configuration was changed."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

@@ -1,0 +1,117 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v58-sp500-breakout-cost-clearance-20260821-v1",
+  "created_at_utc": "2026-08-21T14:11:30Z",
+  "state": "preregistered_before_candidate_pnl",
+  "contract": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_live_change": false,
+    "automatic_promotion": false,
+    "runtime_strategy_changed": false,
+    "live_configuration_changed": false,
+    "sealed_holdout_accessed": false
+  },
+  "problem_restatement": "The first exact V58 SP500 long entered only 0.6512112529304507 bps above its prior 32-bar high, below both the route's modeled 4.5341785526-bps round-trip friction and the independently frozen 17.5005328604182-bps $5,000 SP500 stress-cost clearance. Test whether requiring that cost-derived clearance improves the historical SP500 pressure-breakout mechanism without choosing a threshold from PnL.",
+  "hypothesis": "For SP500 only, delaying a fresh 15-minute 32-bar pressure-breakout onset until the completed close clears the prior directional extreme by at least 17.5005328604182 bps will remove marginal cost-subscale breakouts and improve after-cost nominal and stress validation results without becoming one-sided or largest-winner dependent.",
+  "origin": {
+    "live_observation": {
+      "run_id": "bidirectional-live-1787272893887",
+      "profile_id": "multi_asset_growth_first_5000_eight_asset_incremental_v58",
+      "profile_fingerprint": "8a04636c9ff60a7eae141381cb540d7c6ceed081097cda7d5e465d48faa5022b",
+      "lifecycle_id": "xyz:SP500:521918499754",
+      "side": "long",
+      "entry_decision_time_ms": 1787312700000,
+      "entry_close": 7678.0,
+      "prior_breakout_high": 7677.5,
+      "observed_breakout_clearance_bps": 0.6512112529304507,
+      "status_at_preregistration": "open_protected_unresolved"
+    },
+    "contradictory_prior_evidence": [
+      "The unchanged selected pressure-breakout recipe was negative for SP500 in development, untouched nominal validation, and stress validation.",
+      "A distinct opening-range breakout used the same frozen 17.5005328604182-bps SP500 clearance and failed its development stress test.",
+      "Removing or relaxing the base price-breakout requirement was previously rejected in prospective SP500 blocker outcomes."
+    ]
+  },
+  "frozen_candidate": {
+    "symbol": "xyz:SP500",
+    "timeframe": "15m",
+    "breakout_lookback_bars": 32,
+    "fast_ema": 21,
+    "slow_ema": 55,
+    "minimum_abs_imbalance": 0.1,
+    "maximum_stop_bps": 120.0,
+    "minimum_breakout_clearance_bps": 17.5005328604182,
+    "clearance_origin": "pre-PnL $5,000 SP500 p99 visible-cost plus fee and stress-latency contract",
+    "long_condition": "fresh onset of close >= prior_32_bar_high * (1 + clearance_bps / 10000), EMA21 > EMA55, and imbalance_10 >= 0.10",
+    "short_condition": "fresh onset of close <= prior_32_bar_low * (1 - clearance_bps / 10000), EMA21 < EMA55, and imbalance_10 <= -0.10",
+    "parameter_selection_uses_pnl": false
+  },
+  "control": {
+    "identity": "original_selected_32bar_pressure_breakout_without_extra_clearance",
+    "minimum_breakout_clearance_bps": 0.0,
+    "all_other_signal_and_execution_fields_equal": true
+  },
+  "windows": {
+    "development_start_utc": "2026-05-17T22:30:00+00:00",
+    "development_end_utc": "2026-07-05T08:15:00+00:00",
+    "validation_end_utc": "2026-07-21T11:30:00+00:00",
+    "holdout_end_utc": "2026-08-06T15:00:00+00:00",
+    "holdout_policy": "Do not access any timestamp at or after validation_end_utc in this experiment."
+  },
+  "evaluation_contract": {
+    "portfolio_reference_equity_usd": 500.0,
+    "notional_usd": 75.0,
+    "leverage": 5.0,
+    "entry_and_exit_contract": "original historical transfer simulator with next-bar executable bid/ask, selected structural/fixed maximum 120-bps stop, EMA/opposite exits, and 96-bar maximum hold",
+    "nominal_and_stress_friction": "reuse exact SP500 friction evidence from the immutable original transfer report",
+    "development_folds": 3,
+    "validation_is_already_opened_for_base_family": true,
+    "interpretation": "Secondary fixed-threshold diagnostic, not a pristine sealed-holdout confirmation and not an exact V58 exit replay."
+  },
+  "success_metrics": {
+    "required": [
+      "Challenger validation net PnL is positive under nominal and stress friction",
+      "Challenger validation profit factor is above one under nominal and stress friction",
+      "Validation net PnL remains positive after removing the largest winner",
+      "At least one completed long and one completed short validation lifecycle remain",
+      "No liquidation and no unresolved barrier-invalidated entry",
+      "Chronological development is not wholly dependent on one positive fold"
+    ],
+    "comparison": "Report control and challenger deltas for trade count, net PnL, profit factor, drawdown, side PnL, and largest-winner sensitivity.",
+    "not_a_live_gate": true
+  },
+  "failure_rule": "Reject the candidate if any required success metric fails. Do not tune the clearance, lookback, EMA, pressure, stop, or exits after inspecting results.",
+  "next_stage_only_if_successful": "Design a separate exact-V58 80-bps-stop and 100/40/80-profit-lock replay, then require a new prospective source-native window. Historical success alone cannot authorize a live change.",
+  "risks_and_failure_modes": [
+    "The idea was prompted by one adverse live long and is vulnerable to outcome-driven hypothesis formation even though the threshold itself was frozen from costs.",
+    "The already-opened validation window is not a pristine confirmation set for the broader route family.",
+    "The historical transfer exit contract differs from V58's fixed 80-bps stop and completed-bar profit lock.",
+    "Clearance can reduce already sparse cadence and discard valid early breakouts.",
+    "The midpoint-L2 OHLC path is a validated proxy rather than public-trade OHLC.",
+    "A positive result can still be multiple-testing noise and cannot establish durable expectancy."
+  ],
+  "falsifier": "Reject or update the hypothesis if the fixed challenger fails any predeclared success metric, source identities change, candidate onset uses future data, the holdout is accessed, or the clearance threshold differs from 17.5005328604182 bps.",
+  "source_evidence": [
+    {
+      "path": "docs/research-journal/v53-sp500-spcx-opening-range-breakout-cost-contract-v1.json",
+      "sha256": "92940538608de40046ff39eba70d167b325f7c4f86d71faf902b90d797527dff",
+      "bytes": 3251
+    },
+    {
+      "path": "docs/research-journal/hip3-breakout-pressure-transfer-v1.json",
+      "sha256": "d075d0f4b654f1d8d3547b46e3673c24ed27506e7857e93f44f637de998e4862",
+      "bytes": 5143
+    },
+    {
+      "path": "data/logs/research/hip3_breakout_pressure_transfer_sp500_spcx_v1.json",
+      "sha256": "b6c58952460e569488f1c8ea92a8a28fcd2d635389405968a8b6381d20740668",
+      "bytes": 1592467
+    },
+    {
+      "path": "data/logs/research/hip3_swing_ha_transfer_sp500_spcx_v2.sources.parquet",
+      "sha256": "671c0be4b0e403937182e2d7f88839d34f365bf93e739dcbee047c2079cf8cfa",
+      "bytes": 106029
+    }
+  ]
+}

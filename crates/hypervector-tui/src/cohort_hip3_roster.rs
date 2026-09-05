@@ -53,6 +53,31 @@ pub fn roster_title(status: &Hip3RosterTelemetry) -> String {
     format!(" HIP-3 RESEARCH // REPORT ONLY // {freshness} // {wti} // {poll} ")
 }
 
+pub(crate) fn enabled_markets<'a>(
+    status: &'a Hip3RosterTelemetry,
+    enabled_symbols: &'a [String],
+) -> impl Iterator<Item = &'a Hip3MarketTelemetry> {
+    status
+        .markets
+        .iter()
+        .filter(|market| enabled_symbols.contains(&market.symbol))
+}
+
+fn cohort_roster_title(status: &Hip3RosterTelemetry, enabled_count: usize) -> String {
+    let freshness = if status.stale {
+        "STALE SNAPSHOT"
+    } else {
+        "CURRENT"
+    };
+    let poll = status
+        .polls
+        .map_or_else(|| "POLL N/A".into(), |value| format!("POLL {value}"));
+    format!(
+        " HIP-3 ACTIVE ROSTER // REPORT ONLY // {freshness} // ENABLED {enabled_count}/{} // {poll} ",
+        status.markets.len(),
+    )
+}
+
 pub(crate) fn render(frame: &mut Frame, app: &App, area: Rect) {
     let status = &app.backend.hip3_roster;
     if !status.configured {
@@ -78,7 +103,9 @@ pub(crate) fn render(frame: &mut Frame, app: &App, area: Rect) {
         );
         return;
     }
-    let rows = status.markets.iter().map(|market| {
+    let enabled = enabled_markets(status, &app.backend.cohort.enabled_symbols).collect::<Vec<_>>();
+    let title = cohort_roster_title(status, enabled.len());
+    let rows = enabled.into_iter().map(|market| {
         let values = market_row_values(market);
         let style = if market.open_order_count > 0 || market.position_size_signed != 0.0 {
             app.theme.gold
@@ -113,7 +140,7 @@ pub(crate) fn render(frame: &mut Frame, app: &App, area: Rect) {
         ])
         .style(app.theme.header),
     )
-    .block(panel(roster_title(status), app));
+    .block(panel(title, app));
     frame.render_widget(table, area);
 }
 

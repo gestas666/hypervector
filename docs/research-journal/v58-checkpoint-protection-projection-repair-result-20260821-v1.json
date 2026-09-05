@@ -1,0 +1,37 @@
+{
+  "schema_version": "v58_system_defect_result_v1",
+  "defect_id": "V58_CHECKPOINT_CUTOFF_ALIGNED_PROTECTION_PROJECTION_V1",
+  "generated_at_utc": "2026-08-21T12:09:03Z",
+  "status": "repaired_and_production_verified",
+  "severity": "material_observability_and_reconciliation_defect",
+  "authority": {
+    "report_only": true,
+    "execution_authority": "none",
+    "live_configuration_changed": false,
+    "live_strategy_changed": false,
+    "armed_backend_restarted": false,
+    "checkpoint_writer_restarted": true,
+    "continuous_consolidator_restarted": true
+  },
+  "disposition": {
+    "root_cause_confirmed": true,
+    "repair_deployed": true,
+    "venue_protection_was_absent": false,
+    "capital_exposure_changed_by_repair": false,
+    "tui_data_path_corrected": true,
+    "live_order_action_required": false
+  },
+  "confidence": {
+    "level": "high",
+    "basis": "Failing-then-passing regression coverage, full current-ledger replay, production checkpoint refresh, venue reconciliation, complete Python suite, Rust TUI suite, and active V58 nine-screen QA agree.",
+    "would_reduce_confidence": "A later cutoff-aligned open lifecycle drops an owned stop OID, or venue/checkpoint reconciliation diverges outside a bounded publication race."
+  },
+  "evidence": {
+    "repair_record": {
+      "path": "data/logs/research/bidirectional_cohort/v58_checkpoint_protection_projection_repair_20260821_v1.json",
+      "sha256": "1bf76afa5b2487511f8f72e3bcf17f7c8a52664749d26d617097960d8cad7c7e",
+      "bytes": 4302
+    }
+  },
+  "next_action": "Continue normal live monitoring. Escalate immediately if checkpoint and venue position/order identity stop matching or the protection record becomes false while a position is open."
+}

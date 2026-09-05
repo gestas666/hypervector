@@ -40,7 +40,9 @@ def _inputs(tmp_path: Path) -> tuple[Path, Path, Path]:
     return checkpoint, preflight, bundle
 
 
-def _args(module: ModuleType, tmp_path: Path, *, yes: bool) -> object:
+def _args(
+    module: ModuleType, tmp_path: Path, *, yes: bool, parent: bool = False
+) -> object:
     checkpoint, preflight, bundle = _inputs(tmp_path)
     values = [
         "--prior-config",
@@ -60,6 +62,13 @@ def _args(module: ModuleType, tmp_path: Path, *, yes: bool) -> object:
     ]
     if yes:
         values.append("--yes")
+    if parent:
+        parent_bundle = tmp_path / "parent_epoch"
+        parent_bundle.mkdir()
+        (parent_bundle / "manifest.json").write_text(
+            '{"parent":true}\n', encoding="utf-8"
+        )
+        values.extend(["--parent-accounting-epoch-bundle", str(parent_bundle)])
     return module.build_parser().parse_args(values)
 
 
@@ -128,6 +137,51 @@ def test_rollover_is_dry_run_by_default(tmp_path: Path) -> None:
     )
 
     assert not Path(args.out).exists()
+
+
+def test_confirmed_continuation_publishes_exact_parent_manifest(
+    tmp_path: Path,
+) -> None:
+    module = _load()
+    args = _args(module, tmp_path, yes=True, parent=True)
+    live_lock, checkpoint_lock, _ = _locks()
+    observed: dict[str, object] = {}
+
+    def continue_report(
+        base: dict[str, object],
+        parent: dict[str, object],
+        checkpoint: dict[str, object],
+        *,
+        parent_manifest_evidence: dict[str, object],
+    ) -> dict[str, object]:
+        observed.update(
+            {
+                "base": base,
+                "parent": parent,
+                "checkpoint": checkpoint,
+                "evidence": parent_manifest_evidence,
+            }
+        )
+        return {**base, "continuation": {"verified": True}}
+
+    report = module.run_rollover(
+        args,
+        live_lock_fn=live_lock,
+        checkpoint_lock_fn=checkpoint_lock,
+        verify_backup_fn=lambda _: {"bundle_type": "cohort_prestart_backup"},
+        verify_parent_epoch_fn=lambda _bundle, _prior: object(),
+        build_report_fn=_build_report,
+        build_continuation_fn=continue_report,
+        now_fn=lambda: datetime(2026, 8, 12, 23, tzinfo=UTC),
+    )
+
+    output = Path(args.out)
+    parent_raw = b'{"parent":true}\n'
+    assert report["continuation"] == {"verified": True}
+    assert observed["parent"] == {"parent": True}
+    assert observed["checkpoint"] == {"checkpoint": True}
+    assert observed["evidence"]["path"] == "parent_accounting_epoch_manifest.json"
+    assert (output / "parent_accounting_epoch_manifest.json").read_bytes() == parent_raw
 
 
 def test_rollover_refuses_an_active_checkpoint_writer(tmp_path: Path) -> None:

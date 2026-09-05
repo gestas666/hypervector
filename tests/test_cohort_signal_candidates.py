@@ -41,6 +41,50 @@ def test_candidates_are_deduplicated_within_each_source_run() -> None:
     ]
 
 
+def test_restart_readiness_seeds_are_not_forward_candidates() -> None:
+    """Repeated startup annotations cannot enter or break forward economics."""
+    first = _evaluation(_DECISION_MS)
+    second = _evaluation(_DECISION_MS)
+    first["backend_non_action_reason"] = "pre_activation_readiness_seed"
+    second["backend_non_action_reason"] = "pre_activation_readiness_seed"
+    second["readiness"] = {
+        "side": "long",
+        "blockers": ["restart_readiness_changed"],
+        "metrics": {},
+    }
+    records = [
+        _row("configuration_identity", {}, _DECISION_MS - 60_000, "run-a"),
+        _row("intent_routing", {"evaluations": [first]}, _DECISION_MS + 1_000, "run-a"),
+        _row(
+            "intent_routing", {"evaluations": [second]}, _DECISION_MS + 2_000, "run-a"
+        ),
+    ]
+
+    candidates, excluded, conflicts = evaluation_candidates(records)
+
+    assert candidates == ()
+    assert excluded == 0
+    assert conflicts == 0
+
+
+def test_conflicting_real_provider_evaluations_still_fail_closed() -> None:
+    """Changing a genuine duplicate decision remains an evidence conflict."""
+    first = _evaluation(_DECISION_MS)
+    second = _evaluation(_DECISION_MS)
+    second["eligible"] = True
+    second["side"] = "long"
+    records = [
+        _row("configuration_identity", {}, _DECISION_MS - 60_000, "run-a"),
+        _row("intent_routing", {"evaluations": [first]}, _DECISION_MS + 1_000, "run-a"),
+        _row(
+            "intent_routing", {"evaluations": [second]}, _DECISION_MS + 2_000, "run-a"
+        ),
+    ]
+
+    with pytest.raises(ValueError, match="conflicting duplicate provider evaluation"):
+        evaluation_candidates(records)
+
+
 def test_each_run_uses_its_own_activation_boundary() -> None:
     """A restarted run cannot admit a stale pre-start provider decision."""
     records = [
@@ -109,6 +153,80 @@ def test_candidate_rejects_conflicting_five_minute_state() -> None:
         evaluation_candidates(records)
 
 
+def test_technical_unavailability_is_not_a_signal_candidate() -> None:
+    """Receipt-time outage telemetry cannot enter forward-signal economics."""
+    evaluation = _evaluation(_DECISION_MS + 1_234)
+    evaluation.update(
+        {
+            "decision_action": "technical_unavailable",
+            "reason": "observer_status_stale",
+            "backend_non_action_reason": "observer_status_stale",
+            "readiness": {
+                "side": None,
+                "blockers": ["observer_status_stale"],
+                "metrics": {"technical_availability": "unavailable"},
+            },
+        }
+    )
+    records = [
+        _row("configuration_identity", {}, _DECISION_MS - 60_000, "run-a"),
+        _row(
+            "intent_routing",
+            {"evaluations": [evaluation]},
+            _DECISION_MS + 2_000,
+            "run-a",
+        ),
+    ]
+
+    candidates, excluded, conflicts = evaluation_candidates(records)
+
+    assert candidates == ()
+    assert excluded == 0
+    assert conflicts == 0
+
+
+def test_single_configured_direction_attributes_null_readiness_side() -> None:
+    """A one-sided provider supplies an unambiguous counterfactual direction."""
+    evaluation = _null_side_evaluation("btc_sweep_long", "BTC")
+    identity = _identity_provider("btc_sweep_long", "BTC", ["long"])
+    records = [
+        _row("configuration_identity", identity, _DECISION_MS - 60_000, "run-a"),
+        _row(
+            "intent_routing",
+            {"evaluations": [evaluation]},
+            _DECISION_MS + 1_000,
+            "run-a",
+        ),
+    ]
+
+    candidates, _, conflicts = evaluation_candidates(records)
+
+    assert candidates[0].side == "long"
+    assert candidates[0].side_source == "single_configured_direction"
+    assert conflicts == 0
+
+
+def test_bidirectional_provider_does_not_invent_null_readiness_side() -> None:
+    """Two configured directions remain ambiguous without provider-native side."""
+    evaluation = _null_side_evaluation("hype_both", "HYPE")
+    identity = _identity_provider("hype_both", "HYPE", ["long", "short"])
+    records = [
+        _row("configuration_identity", identity, _DECISION_MS - 60_000, "run-a"),
+        _row(
+            "intent_routing",
+            {"evaluations": [evaluation]},
+            _DECISION_MS + 1_000,
+            "run-a",
+        ),
+    ]
+
+    candidates, _, conflicts = evaluation_candidates(records)
+
+    assert candidates[0].side is None
+    assert candidates[0].side_source == "unavailable"
+    assert conflicts == 0
+
+
 def _evaluation(decision_ms: int) -> dict[str, object]:
     return {
         "strategy_id": "hype_breakout_onset_bidirectional_v1",
@@ -122,6 +240,33 @@ def _evaluation(decision_ms: int) -> dict[str, object]:
             "blockers": ["5m_not_breakout"],
             "metrics": {},
         },
+    }
+
+
+def _null_side_evaluation(strategy_id: str, symbol: str) -> dict[str, object]:
+    return {
+        "strategy_id": strategy_id,
+        "symbol": symbol,
+        "decision_time_ms": _DECISION_MS,
+        "reference_price": 100.0,
+        "side": None,
+        "eligible": False,
+        "readiness": {"side": None, "blockers": ["trigger_absent"], "metrics": {}},
+    }
+
+
+def _identity_provider(
+    strategy_id: str, symbol: str, sides: list[str]
+) -> dict[str, object]:
+    return {
+        "providers": [
+            {
+                "strategy_id": strategy_id,
+                "symbols": [symbol],
+                "sides": sides,
+                "execution_side_overrides": {},
+            }
+        ]
     }
 
 

@@ -1,0 +1,83 @@
+{
+  "assessment": {
+    "confidence": "medium",
+    "disposition": "INSUFFICIENT_ELAPSED_TIME_FOR_DROUGHT_DIAGNOSIS",
+    "reason": "The current zero-entry run is highly probable under the frozen development cadence. No gate relaxation or route replacement is supported by elapsed time alone.",
+    "update_trigger": "Recompute from exact compatible live evidence after a materially longer window or when an attributable eligible event or lifecycle resolves."
+  },
+  "contract": {
+    "automatic_live_change": false,
+    "automatic_retuning": false,
+    "execution_authority": "none",
+    "performance_gate": false,
+    "report_only": true,
+    "runtime_strategy_changed": false
+  },
+  "evidence": {
+    "checkpoint_snapshot": {
+      "bytes": 7510035,
+      "generated_at_utc": "2026-08-19T00:04:48.640256+00:00",
+      "path": "data/runtime/bidirectional_cohort/latest_checkpoint.json",
+      "sha256": "472369458389259e41b0769af04fedfb7fed530de11345d52cc0e945c49f2ab7"
+    },
+    "development_report": {
+      "bytes": 211167,
+      "path": "data/logs/research/hype_compression_breakout_challenger_20260816_v6_alignment/report.json",
+      "sha256": "53c37e529f79223c5e7290a5cd07f5c95897be1850122bf091e5dfbcacb29354"
+    },
+    "lifecycle_tracker_snapshot": {
+      "bytes": 2855,
+      "path": "data/runtime/bidirectional_cohort/v57_hype_alignment_both_side_lifecycle_latest.json",
+      "sha256": "6702bf57347a571b874638721d76ca6307e890dc757b1a6d8af7312e1e204174"
+    }
+  },
+  "generated_at_utc": "2026-08-19T00:04:52.363727+00:00",
+  "identity": {
+    "profile_fingerprint": "724c259bd94be60d80ffc2e6b9a760412b9729ab1f8fea403e61d266f0d9cb8d",
+    "profile_id": "multi_asset_growth_first_5000_spcx_short_containment_v57",
+    "provider_id": "hype_breakout_compression_alignment_bidirectional_v2",
+    "route": "hype_breakout_compression_alignment_bidirectional_v2|HYPE",
+    "run_id": "bidirectional-live-1787065473571",
+    "symbol": "HYPE"
+  },
+  "method": {
+    "approximation": "Homogeneous Poisson arrivals calibrated from frozen development completed trades.",
+    "development_days": 304.0,
+    "development_trades": 41,
+    "limitations": [
+      "Trading signals are regime-dependent and need not follow a homogeneous Poisson process.",
+      "Development trade cadence is not proof of future edge or future cadence.",
+      "The confidence interval captures event-count uncertainty, not market-regime drift or implementation uncertainty."
+    ],
+    "rate_confidence_interval": "Exact two-sided 95% Poisson count interval using chi-square quantiles.",
+    "runtime_hours": 8.94757434138889
+  },
+  "mode": "v57_hype_alignment_cadence_calibration_v1",
+  "prospective_state": {
+    "eligible": 0,
+    "evaluations": 221,
+    "resolved_long_lifecycles": 0,
+    "resolved_short_lifecycles": 0
+  },
+  "rate_estimates": [
+    {
+      "estimate": "lower_95",
+      "expected_trades_during_runtime": 0.036082550294440095,
+      "poisson_zero_probability": 0.9645606654295721,
+      "trades_per_week": 0.6774873522341677
+    },
+    {
+      "estimate": "point",
+      "expected_trades_during_runtime": 0.05028105098642331,
+      "poisson_zero_probability": 0.9509621180977669,
+      "trades_per_week": 0.944078947368421
+    },
+    {
+      "estimate": "upper_95",
+      "expected_trades_during_runtime": 0.068211923210175,
+      "poisson_zero_probability": 0.9340625030765264,
+      "trades_per_week": 1.2807496939478435
+    }
+  ],
+  "schema_version": 1
+}

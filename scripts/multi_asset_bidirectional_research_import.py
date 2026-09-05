@@ -36,6 +36,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--accounting-epoch-id")
     parser.add_argument("--accounting-epoch-profile-fingerprint")
     parser.add_argument("--accounting-epoch-start-ms", type=int)
+    parser.add_argument(
+        "--accounting-epoch-included-profile-fingerprint",
+        action="append",
+        default=[],
+    )
     return parser.parse_args(argv)
 
 
@@ -133,11 +138,17 @@ def _accounting_epoch(args: argparse.Namespace) -> CohortAccountingEpoch | None:
         args.accounting_epoch_profile_fingerprint,
         args.accounting_epoch_start_ms,
     )
-    if all(value is None for value in values):
+    included = tuple(args.accounting_epoch_included_profile_fingerprint)
+    if all(value is None for value in values) and not included:
         return None
     if any(value is None for value in values):
         raise ValueError("accounting epoch requires id, profile fingerprint, and start")
-    return CohortAccountingEpoch(str(values[0]), str(values[1]), int(values[2]))
+    return CohortAccountingEpoch(
+        str(values[0]),
+        str(values[1]),
+        int(values[2]),
+        included_profile_fingerprints=included,
+    )
 
 
 def main(argv: list[str] | None = None) -> int:

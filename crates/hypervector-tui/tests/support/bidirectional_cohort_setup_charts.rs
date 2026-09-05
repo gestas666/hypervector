@@ -337,6 +337,25 @@ fn strategy_readiness_cockpit_exposes_proximity_indicators_and_blockers() {
 }
 
 #[test]
+fn empty_router_outcomes_explain_current_run_data_contract() {
+    let mut app = cohort_app();
+    app.backend.cohort.actions.clear();
+    app.backend.cohort.withheld.clear();
+
+    let screen = render(&mut app, 1, 160, 50);
+
+    for expected in [
+        "CURRENT RUN ROUTING",
+        "0 action records in retained window",
+        "Setup blockers remain visible above",
+        "0 withheld intent records",
+        "Withholding begins only after an eligible intent",
+    ] {
+        assert!(screen.contains(expected), "missing {expected}\n{screen}");
+    }
+}
+
+#[test]
 fn ht_breakout_legacy_identity_never_leaks_into_operator_routing_views() {
     let mut app = cohort_app();
     app.backend.cohort.actions[0].strategy_id = "hype_breakout_onset_bidirectional_v1".into();
@@ -373,12 +392,12 @@ fn hip3_symbols_remain_exact_in_router_outcome_tables_at_160_columns() {
 }
 
 #[test]
-fn compact_readiness_cockpit_preserves_complete_leading_setup_evidence() {
+fn compact_readiness_cockpit_preserves_complete_selected_setup_evidence() {
     let mut app = cohort_app();
     let screen = render(&mut app, 1, 120, 36);
 
     for expected in [
-        "LEADING SETUP",
+        "SELECTED SETUP",
         "SQUEEZE ARMED",
         "awaiting_squeeze_release",
         "volume_not_above_1x",
@@ -387,6 +406,44 @@ fn compact_readiness_cockpit_preserves_complete_leading_setup_evidence() {
     ] {
         assert!(screen.contains(expected), "missing {expected}\n{screen}");
     }
+}
+
+#[test]
+fn readiness_cockpit_details_follow_the_selected_setup() {
+    let mut app = cohort_app();
+    app.selected_cohort_setup_index = 1;
+    app.backend.cohort.evaluations[1].readiness.indicators = (0..18)
+        .map(|index| format!("SELECTED INDICATOR {index} VALUE"))
+        .collect();
+    app.backend.cohort.evaluations[1].readiness.blockers =
+        vec!["critical_selected_blocker".into()];
+
+    let screen = render(&mut app, 1, 176, 65);
+    let detail = screen
+        .split("SELECTED SETUP")
+        .nth(1)
+        .unwrap_or_else(|| panic!("selected setup panel missing\n{screen}"));
+
+    assert!(detail.contains("RANGE ONSET"), "{screen}");
+    assert!(detail.contains("ARRIVAL ET"), "{screen}");
+    assert!(detail.contains("DECISION ET"), "{screen}");
+    assert!(detail.contains("INDICATORS"), "{screen}");
+    assert!(detail.contains("ENTER FOR ALL"), "{screen}");
+    assert!(detail.contains("BLOCKERS"), "{screen}");
+    assert!(detail.contains("critical_selected_blocker"), "{screen}");
+
+    app.show_cohort_setup_modal = true;
+    let modal = render(&mut app, 1, 176, 65);
+    assert!(modal.contains("SELECTED INDICATOR 17 VALUE"), "{modal}");
+}
+
+#[test]
+fn exact_v80_width_keeps_the_full_routing_contract_visible() {
+    let mut app = cohort_app();
+
+    let screen = render(&mut app, 1, 176, 65);
+
+    assert!(screen.contains("FORCED EXIT OFF"), "{screen}");
 }
 
 #[test]
@@ -400,6 +457,26 @@ fn readiness_cockpit_labels_observe_only_setup_authority() {
 
     assert!(screen.contains("[OBS]"), "{screen}");
     assert!(screen.contains("ROUTE OBSERVE ONLY"), "{screen}");
+}
+
+#[test]
+fn readiness_cockpit_shows_exact_route_lifecycle_counts() {
+    let mut app = cohort_app();
+    app.backend.cohort_checkpoint = trade_checkpoint();
+    app.backend.cohort_checkpoint.profile_fingerprint =
+        Some("current-profile-fingerprint".into());
+
+    let screen = render(&mut app, 1, 190, 52);
+
+    assert!(screen.contains("ENT/OPEN/EXIT"), "{screen}");
+    assert!(screen.contains("1/0/1"), "{screen}");
+    app.backend.cohort.evaluations[0].symbol = "BTC".into();
+    let rerendered = render(&mut app, 1, 190, 52);
+    let prior_profile = rerendered
+        .lines()
+        .find(|line| line.contains("BTC") && line.contains("HULK EXPANSION"))
+        .expect("prior-profile route row");
+    assert!(prior_profile.contains("0/0/0"), "{prior_profile}");
 }
 
 #[test]
@@ -431,7 +508,7 @@ fn compact_readiness_cockpit_shows_all_ten_asset_provider_evaluations() {
     assert!(screen.contains("HOLD · TREND_UP · 85%"), "{screen}");
     assert!(screen.contains("HOLD · RANGE · 61%"), "{screen}");
     let readiness_table = screen
-        .split("LEADING SETUP")
+        .split("SELECTED SETUP")
         .next()
         .expect("readiness table");
     assert_eq!(
@@ -454,5 +531,5 @@ fn compact_readiness_cockpit_shows_all_ten_asset_provider_evaluations() {
         1,
         "{screen}"
     );
-    assert!(screen.contains("LEADING SETUP"), "{screen}");
+    assert!(screen.contains("SELECTED SETUP"), "{screen}");
 }

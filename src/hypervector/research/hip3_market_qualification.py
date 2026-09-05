@@ -191,7 +191,7 @@ def _fee_evidence(
     market: Mapping[str, object],
     symbol: str,
 ) -> dict[str, float | str | None]:
-    fee_scale = _deployer_fee_scale(dex)
+    fee_scale = _deployer_fee_scale(market, dex)
     raw_growth_mode = market.get("growthMode")
     if raw_growth_mode is None:
         return {
@@ -331,8 +331,13 @@ def _pair_value(
     return matches[0]
 
 
-def _deployer_fee_scale(dex: Mapping[str, object]) -> float:
-    value = number(dex.get("deployerFeeScale"), "deployerFeeScale")
+def _deployer_fee_scale(
+    market: Mapping[str, object], dex: Mapping[str, object]
+) -> float:
+    raw_value = market.get("deployerFeeScale")
+    if raw_value is None:
+        raw_value = dex.get("deployerFeeScale")
+    value = number(raw_value, "deployerFeeScale")
     if not 0.0 <= value <= 3.0:
         raise Hip3QualificationError("deployerFeeScale must be between zero and three")
     return value

@@ -2,7 +2,7 @@ use std::{collections::BTreeMap, fs};
 
 use hypervector_tui::{
     App,
-    backend_cohort::CohortCandle,
+    backend_cohort::{CohortCandle, CohortProvider},
     backend_cohort_aligned_timer_extension::CohortAlignedTimerExtensionEvidence,
     backend_cohort_allocation::{
         CohortAllocationCapacity, CohortAllocationCapacitySide, CohortAllocationChallenger,
@@ -29,7 +29,9 @@ use hypervector_tui::{
     },
     backend_cohort_open_profit_protection::CohortOpenProfitProtection,
     backend_cohort_portfolio::CohortPortfolioEvidence,
-    backend_cohort_portfolio_archive::CohortPortfolioArchive,
+    backend_cohort_portfolio_archive::{
+        CohortAccountingEpoch, CohortPortfolioArchive, CohortPreservedHistory,
+    },
     backend_cohort_regime_conflicts::{CohortRegimeConflictEvidence, CohortRegimeConflictHorizon},
     backend_cohort_repeatability::{CohortRepeatabilityEvidence, CohortRepeatabilitySummary},
     backend_cohort_risk_utilization::{CohortAssetRiskUtilization, CohortRiskUtilization},

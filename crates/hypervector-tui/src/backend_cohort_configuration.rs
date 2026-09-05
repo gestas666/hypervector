@@ -18,6 +18,8 @@ pub struct CohortConfigurationGeneration {
     pub current_provider_execution_scopes: Option<BTreeMap<String, Vec<String>>>,
     pub current_provider_execution_directions: Option<BTreeMap<String, Vec<String>>>,
     pub current_asset_sizing: Option<BTreeMap<String, CohortPendingAssetSizing>>,
+    pub current_asset_entry_slippage_caps: Option<BTreeMap<String, f64>>,
+    pub current_asset_market_slippage_caps: Option<BTreeMap<String, f64>>,
     pub current_entry_context_overrides: Option<BTreeMap<String, String>>,
     pub current_provider_sizing_overrides: Option<BTreeMap<String, CohortProviderSizing>>,
     pub current_provider_directional_sizing_overrides:
@@ -45,6 +47,8 @@ pub struct CohortPendingExitPolicy {
     pub maximum_hold_seconds: u64,
     pub maximum_hold_policy: String,
     pub hard_maximum_hold_seconds: Option<u64>,
+    #[serde(default)]
+    pub maximum_hold_evidence_maximum_age_seconds: Option<u64>,
     #[serde(default = "ignored_provider_recipe_exit_policy")]
     pub provider_recipe_exit_policy: String,
     #[serde(default = "disabled_profit_lock_policy")]
@@ -71,6 +75,10 @@ pub(crate) struct ConfigurationGenerationEvidenceRaw {
     current_provider_execution_directions: Option<BTreeMap<String, Vec<String>>>,
     #[serde(default)]
     current_asset_sizing: Option<BTreeMap<String, CohortPendingAssetSizing>>,
+    #[serde(default)]
+    current_asset_entry_slippage_caps: Option<BTreeMap<String, f64>>,
+    #[serde(default)]
+    current_asset_market_slippage_caps: Option<BTreeMap<String, f64>>,
     #[serde(default)]
     current_entry_context_overrides: Option<BTreeMap<String, String>>,
     #[serde(default)]
@@ -104,6 +112,8 @@ pub(crate) fn project_configuration_generation(
         current_provider_execution_scopes: evidence.current_provider_execution_scopes,
         current_provider_execution_directions: evidence.current_provider_execution_directions,
         current_asset_sizing: evidence.current_asset_sizing,
+        current_asset_entry_slippage_caps: evidence.current_asset_entry_slippage_caps,
+        current_asset_market_slippage_caps: evidence.current_asset_market_slippage_caps,
         current_entry_context_overrides: evidence.current_entry_context_overrides,
         current_provider_sizing_overrides: evidence.current_provider_sizing_overrides,
         current_provider_directional_sizing_overrides: evidence
@@ -145,6 +155,14 @@ fn validate(evidence: &ConfigurationGenerationEvidenceRaw) -> Result<(), String>
             &evidence.current_provider_execution_directions,
         )
         || !asset_sizing_valid(&evidence.current_asset_sizing)
+        || !asset_ioc_caps_valid(
+            &evidence.current_asset_sizing,
+            &evidence.current_asset_entry_slippage_caps,
+        )
+        || !asset_ioc_caps_valid(
+            &evidence.current_asset_sizing,
+            &evidence.current_asset_market_slippage_caps,
+        )
         || !entry_context_overrides_valid(&evidence.current_entry_context_overrides)
         || !provider_sizing_overrides_valid(&evidence.current_provider_sizing_overrides)
         || !provider_directional_sizing_overrides_valid(
@@ -175,10 +193,13 @@ fn directional_exit_policies_valid(
     };
     policies.iter().all(|(identity, policy)| {
         let parts = identity.split('|').collect::<Vec<_>>();
-        if parts.len() != 3 || !pending_exit_policy_valid(policy) {
+        if parts.len() != 3 {
             return false;
         }
         let strategy = parts[0];
+        if !pending_exit_policy_valid(strategy, policy) {
+            return false;
+        }
         let symbol = parts[1];
         let side = parts[2];
         let route = format!("{strategy}|{symbol}");
@@ -243,26 +264,34 @@ fn provider_exit_policies_valid(
         values.iter().all(|(strategy, policy)| {
             !strategy.trim().is_empty()
                 && !strategy.contains('|')
-                && pending_exit_policy_valid(policy)
+                && pending_exit_policy_valid(strategy, policy)
         })
     })
 }
 
-fn pending_exit_policy_valid(policy: &CohortPendingExitPolicy) -> bool {
+fn pending_exit_policy_valid(strategy_id: &str, policy: &CohortPendingExitPolicy) -> bool {
+    let evidence_age_valid = policy
+        .maximum_hold_evidence_maximum_age_seconds
+        .is_none_or(|seconds| seconds > 0);
     let contract_valid = match policy.maximum_hold_policy.as_str() {
-        "fixed" => policy.hard_maximum_hold_seconds.is_none(),
+        "fixed" => {
+            policy.hard_maximum_hold_seconds.is_none()
+                && policy.maximum_hold_evidence_maximum_age_seconds.is_none()
+        }
         "extend_while_regime_supported" => policy
             .hard_maximum_hold_seconds
             .is_some_and(|hard| hard > policy.maximum_hold_seconds),
         _ => false,
     };
     policy.maximum_hold_seconds > 0
+        && evidence_age_valid
         && contract_valid
         && matches!(
             policy.provider_recipe_exit_policy.as_str(),
             "ignore" | "honor"
         )
         && profit_lock_contract_valid(
+            Some(strategy_id),
             &policy.profit_lock_policy,
             policy.profit_lock_activation_bps,
             policy.profit_lock_floor_bps,
@@ -291,6 +320,21 @@ fn asset_sizing_valid(sizing: &Option<BTreeMap<String, CohortPendingAssetSizing>
                 && row.max_notional_usd.is_finite()
                 && row.max_notional_usd > 0.0
         })
+    })
+}
+
+fn asset_ioc_caps_valid(
+    sizing: &Option<BTreeMap<String, CohortPendingAssetSizing>>,
+    caps: &Option<BTreeMap<String, f64>>,
+) -> bool {
+    caps.as_ref().is_none_or(|values| {
+        !values.is_empty()
+            && sizing
+                .as_ref()
+                .is_some_and(|assets| assets.keys().eq(values.keys()))
+            && values
+                .values()
+                .all(|cap| cap.is_finite() && (0.0..=0.05).contains(cap))
     })
 }
 

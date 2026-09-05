@@ -18,9 +18,10 @@ pub(crate) fn render(frame: &mut Frame, app: &App, area: Rect) {
         render_tall(frame, app, area);
         return;
     }
+    let performance_height = short_performance_height(app, area.height, area.width);
     let sections = Layout::vertical([
         Constraint::Length(position_tracker_height(app)),
-        Constraint::Length(7),
+        Constraint::Length(performance_height),
         Constraint::Min(8),
     ])
     .split(area);
@@ -32,10 +33,24 @@ pub(crate) fn render(frame: &mut Frame, app: &App, area: Rect) {
     crate::cohort_trades::render_fill_journal(frame, app, journals[1]);
 }
 
+fn short_performance_height(app: &App, area_height: u16, area_width: u16) -> u16 {
+    let available = area_height
+        .saturating_sub(position_tracker_height(app))
+        .saturating_sub(8);
+    let preferred = crate::cohort_trade_performance::preferred_height(app, area_width);
+    if preferred <= available {
+        return preferred;
+    }
+    crate::cohort_trade_performance::compact_height(app)
+        .min(available)
+        .max(7)
+}
+
 fn render_tall(frame: &mut Frame, app: &App, area: Rect) {
+    let performance_height = available_performance_height(app, area.height, area.width);
     let sections = Layout::vertical([
         Constraint::Length(position_tracker_height(app)),
-        Constraint::Length(7),
+        Constraint::Length(performance_height),
         Constraint::Length(PERFORMANCE_VISUAL_HEIGHT),
         Constraint::Min(8),
     ])
@@ -47,6 +62,14 @@ fn render_tall(frame: &mut Frame, app: &App, area: Rect) {
         .split(sections[3]);
     crate::cohort_trade_history::render(frame, app, journals[0]);
     crate::cohort_trades::render_fill_journal(frame, app, journals[1]);
+}
+
+fn available_performance_height(app: &App, area_height: u16, area_width: u16) -> u16 {
+    let reserved = position_tracker_height(app)
+        .saturating_add(PERFORMANCE_VISUAL_HEIGHT)
+        .saturating_add(8);
+    crate::cohort_trade_performance::preferred_height(app, area_width)
+        .min(area_height.saturating_sub(reserved).max(7))
 }
 
 fn position_tracker_height(app: &App) -> u16 {

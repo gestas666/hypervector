@@ -1,0 +1,102 @@
+{
+  "schema_version": "v51_entry_submission_freshness_v1",
+  "mode": "report_only",
+  "execution_authority": "none",
+  "automatic_live_change": false,
+  "runtime_strategy_changed": false,
+  "generated_at_utc": "2026-08-14T02:50:12.846242+00:00",
+  "scope": {
+    "run_id": "bidirectional-live-1786656816144",
+    "profile_id": "multi_asset_growth_first_5000_six_asset_profit_lock_candidate_v51",
+    "profile_fingerprint": "30cd54bb5b5b17249ae0a6a3b01d5702b276d51f8dc5ddd6b4d36ab6aa7d1908",
+    "source_checkpoint_generated_at_utc": "2026-08-14T02:47:56.930771+00:00",
+    "evaluations": 993,
+    "paired_cycles": 674,
+    "eligible_evaluations": 0,
+    "enter_actions": 0
+  },
+  "observed_problem": {
+    "severity": "P1_latent_execution_contract_gap",
+    "executed_late_entry_proven": false,
+    "submission_timestamp_observed": false,
+    "description": "The runtime checked maximum entry age after venue reconciliation but before provider collection, routing, telemetry, and order submission. An automatic entry could therefore pass the early check and exceed its route age cap before engine.enter.",
+    "thirty_second_routes": {
+      "maximum_initial_cutoff_age_ms": 26491,
+      "maximum_post_cutoff_processing_ms": 5257,
+      "maximum_routing_emission_age_ms": 31240,
+      "minimum_initial_cutoff_headroom_ms": 3509,
+      "minimum_routing_emission_headroom_ms": -1240,
+      "over_limit_ineligible_route_evaluations": 8,
+      "eligible_over_limit_evaluations": 0,
+      "enter_actions_over_limit": 0
+    },
+    "interpretation": "This proves insufficient enforcement headroom, not a late fill, rejected order, or missed profitable trade. Every over-limit observation was strategy-ineligible."
+  },
+  "proposed_change": {
+    "proposal_id": "V51_ENTRY_FRESHNESS_AT_SUBMISSION_V1",
+    "scope": "shared automatic cohort entry path only",
+    "rule": "Immediately before each automatic engine.enter, withhold when current_time_ms minus decision_time_ms is greater than the provider maximum_entry_delay_seconds times 1000.",
+    "boundary_semantics": "Exact equality remains executable, matching the existing greater-than rule.",
+    "telemetry_reason": "stale_before_submission",
+    "unaffected_paths": [
+      "manual operator entries",
+      "automatic and manual closes",
+      "venue protective stops",
+      "funding reconciliation",
+      "strategy signals and route priority",
+      "leverage, sizing, stop, target, and maximum-hold parameters"
+    ],
+    "deployment_status": "approved_waiting_verified_flat_order_free_restart",
+    "approval_evidence": "docs/research-journal/v51-approved-technical-fixes-flat-boundary-v1.json"
+  },
+  "validation": {
+    "tdd_red": "A signal fresh at 25 seconds and 31 seconds old at submission reached engine.enter before the fix.",
+    "tdd_green": "The same signal is now withheld, never reaches engine.enter, and emits stale_before_submission.",
+    "authority_regression": "Entry-delay projection uses provider execution_symbols only; observe-only symbols cannot acquire enforcement authority.",
+    "boundary_regressions": "Exact-limit entries remain executable; selected automatic closes bypass the entry-freshness guard without sampling the entry-age clock.",
+    "relevant_tests": 167,
+    "relevant_tests_status": "passed",
+    "focused_reverification_tests": 36,
+    "focused_reverification_status": "passed",
+    "verification_addendum_generated_at_utc": "2026-08-14T06:04:07Z",
+    "ruff_status": "passed",
+    "format_status": "passed",
+    "diff_check_status": "passed",
+    "live_deployment_validation": "pending_verified_flat_boundary_restart_and_poststart_acceptance"
+  },
+  "source_evidence": {
+    "implementation": [
+      {
+        "path": "src/hypervector/live/cohort_entry_submission.py",
+        "sha256": "d903fe873fb626c8a9485c3ce4a0bb5659a269035eccb5e8a0f3ef85d6f824b8",
+        "bytes": 3664
+      },
+      {
+        "path": "src/hypervector/live/cohort_routing_execution.py",
+        "sha256": "4c2f92d61c6f8fa524d1050622287c972fee18d6a0e665bdf1dd9974c887231d",
+        "bytes": 3948
+      },
+      {
+        "path": "src/hypervector/live/multi_asset_live_runner.py",
+        "sha256": "9404e4b304cee08576c92a0047f9de09cf85ffd89a1e8ec2d0abeb1ac2d1a1b4",
+        "bytes": 19177
+      },
+      {
+        "path": "scripts/multi_asset_bidirectional_live.py",
+        "sha256": "ae4d55f7232aaecd5db421f1cb350fc8096d7a920f4c44d413a9389ff1d2f2f8",
+        "bytes": 17039
+      }
+    ],
+    "primary_regression": {
+      "path": "tests/test_multi_asset_entry_submission_freshness.py",
+      "sha256": "ef8a6df4259fbfbffc99c50cc395b710a73c1d827ed03c96bdf80374f1fc2e80",
+      "bytes": 4021
+    }
+  },
+  "failure_modes_and_falsifiers": [
+    "A hidden submission-time guard in the currently loaded runtime would falsify the enforcement-gap diagnosis; none was found in the inspected path.",
+    "Fresh entries being incorrectly withheld after deployment is an immediate rollback trigger.",
+    "Clock regressions, inconsistent route limits, or missing stale non-action telemetry invalidate acceptance.",
+    "Evidence that maximum_entry_delay intentionally applies only to pre-fetch observation rather than order submission would require revising the contract and proposal."
+  ]
+}

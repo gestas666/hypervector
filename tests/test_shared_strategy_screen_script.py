@@ -70,6 +70,37 @@ def test_screen_cohorts_are_small_predeclared_and_not_a_hidden_grid() -> None:
     assert all(candidate.long_strategy is not None for candidate in candidates)
     assert all(candidate.short_strategy is None for candidate in candidates)
     assert [profile.name for profile in profiles] == ["managed_60bps_stop"]
+    candidates, profiles = MODULE._trial_design("source-short-isolation-v1")
+    assert [candidate.name for candidate in candidates] == [
+        "donchian_trend_short",
+        "squeeze_breakout_short",
+        "liquidity_sweep_short",
+        "zero_lag_reclaim_short",
+        "regime_trend_router_short",
+    ]
+    assert all(candidate.long_strategy is None for candidate in candidates)
+    assert all(candidate.short_strategy is not None for candidate in candidates)
+    assert [profile.name for profile in profiles] == ["managed_60bps_stop"]
+    candidates, profiles = MODULE._trial_design("donchian-short-managed-v1")
+    assert [candidate.name for candidate in candidates] == ["donchian_trend_short"]
+    assert candidates[0].long_strategy is None
+    assert candidates[0].short_strategy == "donchian_trend_short"
+    assert [profile.name for profile in profiles] == [
+        "managed_60bps_stop_nominal",
+        "managed_60bps_stop_stress",
+    ]
+    assert [profile.entry_slippage_bps for profile in profiles] == [2.0, 5.0]
+    assert [profile.market_exit_slippage_bps for profile in profiles] == [2.0, 5.0]
+    candidates, profiles = MODULE._trial_design("sol-ma-cross-managed-v1")
+    assert [candidate.name for candidate in candidates] == ["ma_cross"]
+    assert candidates[0].long_strategy == "ma_cross_long"
+    assert candidates[0].short_strategy == "ma_cross_short"
+    assert [profile.name for profile in profiles] == [
+        "managed_60bps_stop_nominal",
+        "managed_60bps_stop_stress20rt",
+    ]
+    assert [profile.entry_slippage_bps for profile in profiles] == [2.0, 5.5]
+    assert [profile.market_exit_slippage_bps for profile in profiles] == [2.0, 5.5]
 
 
 def test_source_cohort_and_hourly_execution_are_explicit_cli_options() -> None:
@@ -96,6 +127,30 @@ def test_source_cohort_and_hourly_execution_are_explicit_cli_options() -> None:
 
     assert parsed.execution_timeframe == "1h"
     assert parsed.cohort == "source"
+
+    sol_exact = parser.parse_args(
+        [
+            "--symbol",
+            "SOL",
+            "--bars",
+            "bars.parquet",
+            "--funding",
+            "funding.parquet",
+            "--start",
+            "2026-01-01T00:00:00Z",
+            "--end",
+            "2026-01-02T00:00:00Z",
+            "--execution-timeframe",
+            "1h",
+            "--cohort",
+            "sol-ma-cross-managed-v1",
+            "--output",
+            "report.json",
+        ]
+    )
+
+    assert sol_exact.symbol == "SOL"
+    assert sol_exact.cohort == "sol-ma-cross-managed-v1"
 
 
 def test_screen_artifact_identifies_non_btc_symbol(tmp_path: Path) -> None:
@@ -272,6 +327,53 @@ def test_source_long_isolation_cohort_is_an_explicit_cli_option() -> None:
     )
 
     assert parsed.cohort == "source-long-isolation-v1"
+
+
+def test_source_short_isolation_cohort_is_an_explicit_cli_option() -> None:
+    """The full source-derived short cohort must be explicit and bounded."""
+    parser = MODULE.build_parser()
+
+    parsed = parser.parse_args(
+        [
+            "--bars",
+            "bars.parquet",
+            "--funding",
+            "funding.parquet",
+            "--start",
+            "2026-01-01T00:00:00Z",
+            "--end",
+            "2026-01-02T00:00:00Z",
+            "--execution-timeframe",
+            "1h",
+            "--cohort",
+            "source-short-isolation-v1",
+            "--output",
+            "report.json",
+        ]
+    )
+
+    assert parsed.cohort == "source-short-isolation-v1"
+
+    parsed_exact = parser.parse_args(
+        [
+            "--bars",
+            "bars.parquet",
+            "--funding",
+            "funding.parquet",
+            "--start",
+            "2026-01-01T00:00:00Z",
+            "--end",
+            "2026-01-02T00:00:00Z",
+            "--execution-timeframe",
+            "1h",
+            "--cohort",
+            "donchian-short-managed-v1",
+            "--output",
+            "report.json",
+        ]
+    )
+
+    assert parsed_exact.cohort == "donchian-short-managed-v1"
 
 
 def test_canonical_hypervelocity_risk_surface_is_predeclared() -> None:
@@ -524,12 +626,26 @@ def test_trade_attribution_separates_direction_and_exit_reasons() -> None:
         "gross_profit_usd": pytest.approx(15.0),
         "gross_loss_usd": pytest.approx(5.0),
         "profit_factor": pytest.approx(3.0),
+        "largest_winner_usd": pytest.approx(15.0),
+        "largest_winner_share_of_gross_profit_pct": pytest.approx(100.0),
+        "net_pnl_excluding_largest_winner_usd": pytest.approx(-5.0),
         "fees_usd": pytest.approx(3.0),
         "funding_cashflow_usd": pytest.approx(0.0),
     }
     assert result["short"]["completed_trades"] == 1
     assert result["short"]["profit_factor"] == pytest.approx(0.0)
     assert result["exit_reasons"] == {"liquidation": 1, "stop": 1, "target": 1}
+
+
+def test_trade_attribution_does_not_invent_largest_winner() -> None:
+    """All-loss samples must preserve net PnL under winner removal."""
+    result = MODULE._trade_attribution((_trade("short", -4.0, "stop", fees=1.0),))[
+        "short"
+    ]
+
+    assert result["largest_winner_usd"] is None
+    assert result["largest_winner_share_of_gross_profit_pct"] is None
+    assert result["net_pnl_excluding_largest_winner_usd"] == pytest.approx(-4.0)
 
 
 def _trade(

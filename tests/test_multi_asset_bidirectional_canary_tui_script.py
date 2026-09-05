@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from importlib.util import module_from_spec, spec_from_file_location
 from pathlib import Path
 import sys
@@ -26,6 +27,21 @@ GROWTH_PREFLIGHT = "data/runtime/bidirectional_cohort/latest_growth_5000_preflig
 V39_PREFLIGHT = (
     "data/runtime/bidirectional_cohort/latest_current_500_v39_preflight.json"
 )
+V63 = (
+    "configs/"
+    "multi_asset_growth_first_5000_nine_asset_bankroll_builder_candidate_v63.toml"
+)
+V64 = (
+    "configs/multi_asset_growth_first_5000_eight_asset_gold_removed_candidate_v64.toml"
+)
+V64_PREFLIGHT = (
+    "data/logs/research/bidirectional_cohort/"
+    "v64_gold_removed_flat_preflight_20260901T0456Z.json"
+)
+V67 = (
+    "configs/"
+    "multi_asset_growth_first_5000_three_asset_evidence_scope_repaired_candidate_v67.toml"
+)
 
 
 def _load_module() -> ModuleType:
@@ -45,7 +61,6 @@ def test_observe_default_starts_disarmed_backend_and_tui() -> None:
         module.build_parser().parse_args([]),
         credentials_present=False,
     )
-
     assert launch.backend_command is not None
     assert launch.config.source_path == Path(V36)
     assert len(launch.config.symbols) == 9
@@ -97,6 +112,30 @@ def test_explicit_monitor_attaches_with_report_only_checkpoint_recovery() -> Non
     assert "--detached-lifecycle" in launch.tui_command
     assert "--cohort-checkpoint" in launch.tui_command
     assert "--hype-l2-observer-status" in launch.tui_command
+
+
+def test_v67_omits_retired_incompatible_hype_l2_observer() -> None:
+    """V67 must not render a stale observer for a retired entry mechanism."""
+    module = _load_module()
+
+    launch = module.resolve_launch(
+        module.build_parser().parse_args(
+            [
+                "--mode",
+                "live",
+                "--config",
+                V67,
+                "--enabled",
+                "--i-accept-live-risk",
+            ]
+        ),
+        credentials_present=True,
+    )
+
+    assert "--hype-l2-observer-status" not in launch.tui_command
+    assert "data/runtime/research/hype_l2_ridge_observer_latest.json" not in (
+        launch.tui_command
+    )
 
 
 def test_monitor_separates_active_v35_from_staged_v36_identity() -> None:
@@ -228,6 +267,38 @@ def test_growth_preflight_is_bound_to_a_staged_monitor_profile() -> None:
     assert launch.backend_command is None
 
 
+def test_v64_monitor_command_is_staged_report_only_and_gold_free() -> None:
+    """The exact V64 TUI command compares against V63 without starting execution."""
+    module = _load_module()
+    args = module.build_parser().parse_args(
+        [
+            "--mode",
+            "monitor",
+            "--config",
+            V63,
+            "--staged-config",
+            V64,
+            "--growth-preflight",
+            V64_PREFLIGHT,
+        ]
+    )
+
+    launch = module.resolve_launch(args, credentials_present=False)
+
+    assert launch.backend_command is None
+    assert launch.audit_command is None
+    assert launch.staged_config is not None
+    assert "xyz:GOLD" in launch.config.symbols
+    assert "xyz:GOLD" not in launch.staged_config.symbols
+    assert len(launch.staged_config.executable_provider_directions) == 23
+    checkpoint_config = launch.checkpoint_command.index("--config")
+    assert launch.checkpoint_command[checkpoint_config + 1] == V64
+    preflight = launch.tui_command.index("--growth-preflight")
+    assert launch.tui_command[preflight + 1] == V64_PREFLIGHT
+    assert "--enabled" not in launch.checkpoint_command
+    assert "--i-accept-live-risk" not in launch.checkpoint_command
+
+
 def test_growth_preflight_without_staged_monitor_is_rejected() -> None:
     """A candidate sizing artifact cannot be mislabeled as current runtime state."""
     module = _load_module()
@@ -249,10 +320,11 @@ def test_monitor_recovers_a_stale_checkpoint_while_tui_is_open(
         module.build_parser().parse_args(["--mode", "monitor", "--config", V14]),
         credentials_present=False,
     )
-    checkpoint = SimpleNamespace(label="checkpoint")
+    checkpoint = SimpleNamespace(label="checkpoint", poll=lambda: None)
     calls: list[object] = []
+    freshness = iter((False, True))
     monkeypatch.setattr(module, "_CHECKPOINT_LOG", tmp_path / "checkpoint.log")
-    monkeypatch.setattr(module, "_checkpoint_is_fresh", lambda _config: False)
+    monkeypatch.setattr(module, "_checkpoint_is_fresh", lambda _config: next(freshness))
     monkeypatch.setattr(
         module,
         "cohort_checkpoint_writer_active",
@@ -594,6 +666,10 @@ def test_normal_observer_tui_exit_stops_backend_then_publishes_audit(
         module.build_parser().parse_args([]),
         credentials_present=False,
     )
+    launch = replace(
+        launch,
+        config=replace(launch.config, stop_file=tmp_path / "STOP"),
+    )
     calls: list[tuple[str, ...]] = []
     backend = SimpleNamespace(label="backend")
     checkpoint = SimpleNamespace(label="checkpoint")
@@ -657,7 +733,6 @@ def test_explicit_live_mode_builds_one_backend_and_one_tui_command() -> None:
     )
 
     launch = module.resolve_launch(args, credentials_present=True)
-
     assert launch.backend_command is not None
     assert "scripts/multi_asset_bidirectional_live.py" in launch.backend_command
     assert "--enabled" in launch.backend_command
@@ -689,7 +764,7 @@ def test_explicit_live_mode_builds_one_backend_and_one_tui_command() -> None:
     assert "data/runtime/bidirectional_cohort/latest_checkpoint.json" in (
         launch.tui_command
     )
-    assert launch.startup_timeout_seconds >= 180.0
+    assert launch.startup_timeout_seconds >= 900.0
 
 
 def test_v25_checkpoint_retains_profile_bound_research_attachments() -> None:
@@ -868,6 +943,10 @@ def test_normal_live_tui_exit_stops_backend_then_publishes_audit(
         ["--mode", "live", "--enabled", "--i-accept-live-risk"]
     )
     launch = module.resolve_launch(args, credentials_present=True)
+    launch = replace(
+        launch,
+        config=replace(launch.config, stop_file=tmp_path / "STOP"),
+    )
     calls: list[tuple[str, ...]] = []
     backend = SimpleNamespace(label="backend")
     checkpoint = SimpleNamespace(label="checkpoint")
@@ -910,6 +989,7 @@ def test_normal_live_tui_exit_stops_backend_then_publishes_audit(
 
     assert module.run_supervisor(launch) == 0
     bound_checkpoint = (*launch.checkpoint_command, "--run-id", "fresh-live-run")
+    bound_audit = (*launch.audit_command, "--run-id", "fresh-live-run")
     assert calls == [
         ("start", "backend"),
         ("ready",),
@@ -917,8 +997,8 @@ def test_normal_live_tui_exit_stops_backend_then_publishes_audit(
         launch.tui_command,
         ("checkpoint_stop", "checkpoint"),
         ("backend_stop",),
-        (*bound_checkpoint, "--once"),
-        launch.audit_command,
+        (*bound_checkpoint, "--once", "--current-run-only"),
+        bound_audit,
     ]
 
 
@@ -933,6 +1013,10 @@ def test_live_supervisor_binds_checkpoints_to_fresh_backend_run(
             ["--mode", "live", "--enabled", "--i-accept-live-risk"]
         ),
         credentials_present=True,
+    )
+    launch = replace(
+        launch,
+        config=replace(launch.config, stop_file=tmp_path / "STOP"),
     )
     backend = SimpleNamespace(label="backend")
     checkpoint = SimpleNamespace(label="checkpoint")

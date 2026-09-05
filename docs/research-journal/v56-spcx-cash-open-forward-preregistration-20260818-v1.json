@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "V56_SPCX_CASH_OPEN_FORWARD_20260818_V1",
+  "status": "being_tested",
+  "created_at_utc": "2026-08-18T13:11:32Z",
+  "source_run": {
+    "run_id": "bidirectional-live-1787057465219",
+    "profile_id": "multi_asset_growth_first_5000_btc_tuned_v2_increment_v56",
+    "profile_fingerprint": "29a29ad11c9cc0613fd8fc93013758b8e093e96ff5f3698217b562b90f6e89c9"
+  },
+  "route": "hip3_spcx_cash_open_gap_reversal_bidirectional_15m_v1|xyz:SPCX",
+  "contract": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_promotion": false,
+    "automatic_retuning": false,
+    "automatic_strategy_changes": false,
+    "runtime_strategy_changed": false
+  },
+  "question": "Does the frozen V56 SPCX cash-open route produce a fully attributable and technically correct prospective decision and, if eligible, a protected and completely resolved live lifecycle under its exact configured contract?",
+  "observation_window": {
+    "cash_open_bar_open_utc": "2026-08-18T13:30:00Z",
+    "cash_open_bar_close_and_decision_utc": "2026-08-18T13:45:00Z",
+    "cash_session_close_utc": "2026-08-18T20:00:00Z",
+    "decision_timeframe": "15m",
+    "entry_maximum_delay_seconds": 30
+  },
+  "frozen_strategy_contract": {
+    "configured_sides": ["long", "short"],
+    "gap_threshold_bps": 20.0,
+    "entry_liquidity": "taker_ioc",
+    "stop_policy": "fixed_bps",
+    "stop_bps": 80.0,
+    "target_policy": "absolute_prior_eligible_cash_close",
+    "provider_recipe_exit_policy": "honor",
+    "maximum_hold_seconds": 22500,
+    "leverage": 10.0,
+    "margin_fraction": 0.1,
+    "maximum_notional_usd": 5000.0,
+    "maximum_simultaneous_positions_for_symbol": 1
+  },
+  "predecision_evidence": {
+    "checkpoint_generated_at_utc": "2026-08-18T13:08:05.393542Z",
+    "backend_state": "running_consistent",
+    "venue_position": "flat",
+    "owned_orders": 0,
+    "faults": 0,
+    "latest_prior_cash_close": 146.12,
+    "latest_premarket_mark_approx": 141.8,
+    "development_completed_trades": 20,
+    "development_stress_net_usd": 418.12905358932585,
+    "development_stress_profit_factor": 1.8147790747539696,
+    "development_stress_net_without_largest_winner_usd": 225.2839502400182,
+    "development_first_fold_stress_net_usd": -128.25044887366766,
+    "historical_entry_lifecycles_with_unresolved_exact_paths": 11,
+    "economic_interpretation": "aggressive_forward_research_trial_not_established_edge"
+  },
+  "outcomes_to_capture": [
+    "receipt-causal completed opening-bar source identity and trade count",
+    "decision side, reference price, prior-close target, blockers, and readiness",
+    "action or exact withholding/non-action reason",
+    "freshness at poll and immediately before submission",
+    "entry acknowledgement, fill, fees, slippage, and leverage",
+    "reduce-only stop and target order identities and prices",
+    "position, liquidation distance, funding, and venue reconciliation",
+    "exit reason, fill, fees, slippage, funding, gross and net PnL",
+    "MFE, MAE, peak giveback, and no-action 5m/15m/30m/60m path",
+    "any rejected order, source gap, venue anomaly, or unattributed state transition"
+  ],
+  "interpretation_rules": {
+    "no_signal": "Record the exact blockers and treat one quiet cash open as cadence evidence only.",
+    "eligible_but_withheld": "Classify the technical or routing cause and measure the no-action path without calling it a fill or PnL.",
+    "open_lifecycle": "Treat marks as provisional until the lifecycle is resolved and venue orders reconcile.",
+    "resolved_win_or_loss": "Report the exact result but do not infer profitability or failure from one lifecycle.",
+    "technical_mismatch": "Escalate immediately; do not reinterpret the affected lifecycle as economic evidence. Any live repair requires explicit human approval."
+  },
+  "minimum_evidence_to_update_diagnosis": "One fully attributable eligible decision and resolved lifecycle per configured side. One side or one lifecycle is diagnostic only.",
+  "minimum_evidence_for_change_recommendation": "A predeclared compatible prospective window with both-side coverage, exact costs and latency, resolved protection and exits, missed-opportunity comparison, chronological stability, and largest-winner sensitivity.",
+  "success_metrics": [
+    "Every eligible decision has exactly one action or explicit withholding reason.",
+    "Any entry uses the frozen side, target anchor, 80-bps stop, sizing, and maximum hold.",
+    "Any open position is protected by reconciled reduce-only venue orders.",
+    "The completed lifecycle reconciles fills, fees, funding, and net PnL without source or identity gaps."
+  ],
+  "failure_or_escalation_triggers": [
+    "profile, run, route, side, or decision-time identity mismatch",
+    "stale entry accepted beyond 30 seconds",
+    "missing or unfavorable prior-close target binding",
+    "missing, duplicate, non-reduce-only, or unreconciled protection",
+    "position, order, fill, fee, funding, or ledger/venue mismatch",
+    "source recovery or data gap crossing an active lifecycle without explicit attribution"
+  ],
+  "confidence": {
+    "technical_predecision_state": "high",
+    "development_economics": "low_to_medium",
+    "future_profitability": "low"
+  },
+  "falsifier": "Any frozen identity mismatch, unresolved technical path, or materially different runtime entry/exit contract invalidates the lifecycle as evidence for this hypothesis.",
+  "explicit_approval_requested": null
+}

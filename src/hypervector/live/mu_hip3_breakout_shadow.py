@@ -10,6 +10,10 @@ from hypervector.live.hip3_provider_inputs import (
     completed_hip3_inputs,
     decision_time_ms,
 )
+from hypervector.live.hip3_fresh15_condition_telemetry import (
+    Hip3Fresh15ConditionTelemetry,
+    build_condition_telemetry,
+)
 from hypervector.live.hip3_breakout_shadow_specs import (
     CL_SHADOW_SPEC,
     HIP3_SHADOW_SPECS,
@@ -71,6 +75,7 @@ class MuHip3BreakoutShadowDecision:
     prospective: bool
     pressure_state_history_complete: bool
     execution_authority: str = "none"
+    condition_anatomy: Hip3Fresh15ConditionTelemetry | None = None
 
 
 @dataclass(frozen=True)
@@ -275,12 +280,9 @@ def _decision(
     pressure_history_complete: bool,
     spec: Hip3BreakoutShadowSpec,
 ) -> tuple[MuHip3BreakoutShadowDecision, MuHip3BreakoutShadowCursor]:
+    condition_anatomy = build_condition_telemetry(bar, signal, spec.config)
     long_raw, short_raw = _raw_states(bar, signal, spec.config)
-    prior_long, prior_short = _prior_raw_states(
-        bar,
-        cursor,
-        pressure_history_complete,
-    )
+    prior_long, prior_short = _prior_raw_states(bar, cursor, pressure_history_complete)
     long_entry = long_raw and not prior_long
     short_entry = short_raw and not prior_short
     side = "long" if long_entry else ("short" if short_entry else None)
@@ -306,6 +308,7 @@ def _decision(
         cursor.decision_time_ms,
         True,
         pressure_history_complete,
+        condition_anatomy=condition_anatomy,
     )
     return decision, _cursor_from_decision(
         timestamp,

@@ -12,8 +12,8 @@ use serde_json::Value;
 
 use crate::app::App;
 use crate::backend_cohort::CohortProviderEvaluation;
-use crate::cohort_format::{eastern_time, fill_time};
 use crate::cohort_route_authority::provider_route_label;
+use crate::cohort_route_contract::{execution_label, risk_label, timing_label};
 use crate::cohort_widgets::{panel, provider_alias, provider_identity_label};
 
 const HULK_STRATEGY_ID: &str = "hulk_expansion_bidirectional_tuned_v2";
@@ -40,11 +40,23 @@ pub(crate) fn render(frame: &mut Frame, app: &App, area: Rect) {
 
 fn setup_lines<'a>(setup: &'a CohortProviderEvaluation, app: &'a App) -> Vec<Line<'a>> {
     let mut lines = identity_lines(setup, app);
+    lines.extend(configured_contract_lines(setup, app));
     lines.extend(research_lines(setup, app));
     lines.extend(regime_lines(setup));
     lines.extend(hype_entry_attribution_lines(setup, app));
     lines.extend(readiness_lines(setup, app));
     lines
+}
+
+fn configured_contract_lines<'a>(setup: &CohortProviderEvaluation, app: &'a App) -> Vec<Line<'a>> {
+    vec![
+        Line::from(execution_label(setup, &app.backend.cohort.providers)),
+        Line::from(risk_label(
+            setup,
+            &app.backend.cohort.providers,
+            &app.backend.cohort.asset_configs,
+        )),
+    ]
 }
 
 fn research_lines<'a>(setup: &CohortProviderEvaluation, app: &'a App) -> Vec<Line<'a>> {
@@ -92,9 +104,8 @@ fn identity_lines<'a>(setup: &'a CohortProviderEvaluation, app: &App) -> Vec<Lin
         ]),
         Line::from(provider_identity_label(&setup.strategy_id)),
         Line::from(format!(
-            "ARRIVAL {}  //  DECISION {}  //  REFERENCE {:.8}",
-            eastern_time(&setup.observed_at),
-            fill_time(setup.decision_time_ms),
+            "{} // REFERENCE {:.8}",
+            timing_label(setup),
             setup.reference_price,
         )),
         Line::from(format!(

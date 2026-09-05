@@ -64,6 +64,7 @@ def run_command(
         start_ms=config.start_ms,
         end_ms=config.end_ms,
         observed_at_ms=config.observed_at_ms,
+        timeframe_minutes=config.timeframe_minutes,
     )
     report = build_hip3_prospective_candle_parity(
         public_trades=trades,
@@ -131,8 +132,8 @@ def _config(
     source = _mapping(audit, "source")
     coverage = _mapping(audit, "coverage")
     timeframe = _integer(coverage, "timeframe_minutes")
-    if timeframe != 15:
-        raise ValueError("prospective candle parity currently requires 15m evidence")
+    if timeframe not in {5, 15}:
+        raise ValueError("prospective candle parity requires 5m or 15m evidence")
     return Hip3ProspectiveCandleParityConfig(
         symbol=symbol,
         start_ms=_integer(coverage, "first_full_bar_open_ms"),

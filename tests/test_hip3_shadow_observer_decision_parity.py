@@ -32,9 +32,12 @@ def test_matching_observer_and_archive_entries_resolve_pressure_parity() -> None
     assert report["technical_assessment"] == {
         "archive_entry_events": 1,
         "comparison_decisions": 2,
+        "entry_decision_mismatches": 0,
+        "missing_observer_decisions": 0,
         "non_vacuous_entry_comparison": True,
         "observer_archive_pressure_decision_parity_resolved": True,
         "observer_entry_events": 1,
+        "overlapping_decisions": 2,
         "pressure_decision_mismatches": 0,
     }
     assert report["decision_diagnostics"] == []
@@ -52,9 +55,12 @@ def test_live_rest_entry_absent_from_archive_pressure_is_explicit_mismatch() -> 
     assert report["technical_assessment"] == {
         "archive_entry_events": 0,
         "comparison_decisions": 2,
+        "entry_decision_mismatches": 1,
+        "missing_observer_decisions": 0,
         "non_vacuous_entry_comparison": True,
         "observer_archive_pressure_decision_parity_resolved": False,
         "observer_entry_events": 1,
+        "overlapping_decisions": 2,
         "pressure_decision_mismatches": 1,
     }
     assert report["decision_diagnostics"] == [
@@ -71,6 +77,81 @@ def test_live_rest_entry_absent_from_archive_pressure_is_explicit_mismatch() -> 
             "observer_pressure_exchange_ts_ms": 3_596_000,
         }
     ]
+
+
+def test_missing_observer_is_not_counted_as_pressure_decision_mismatch() -> None:
+    signal = _signal_report(entry_side=None)
+    coverage = signal["coverage"]
+    pressure = signal["reconstructed_pressure_decisions"]
+    assert isinstance(coverage, dict)
+    assert isinstance(pressure, list)
+    coverage["decision_end_ms"] = 4_500_000
+    pressure.append(
+        {
+            "decision_time_ms": 4_500_000,
+            "fresh": True,
+            "imbalance_10": -0.4,
+            "last_exchange_ts_ms": 4_499_000,
+        }
+    )
+
+    report = _builder()(
+        signal_parity_report=signal,
+        observer_rows=(
+            _observer_row(2_700_000, eligible=False, side=None),
+            _observer_row(4_500_000, eligible=True, side="long"),
+        ),
+    )
+
+    assert report["technical_assessment"] == {
+        "archive_entry_events": 0,
+        "comparison_decisions": 3,
+        "entry_decision_mismatches": 1,
+        "missing_observer_decisions": 1,
+        "non_vacuous_entry_comparison": True,
+        "observer_archive_pressure_decision_parity_resolved": False,
+        "observer_entry_events": 1,
+        "overlapping_decisions": 2,
+        "pressure_decision_mismatches": 1,
+    }
+
+
+def test_explicit_window_does_not_shrink_around_missing_observer_rows() -> None:
+    signal = _three_decision_signal_report()
+
+    report = _builder()(
+        signal_parity_report=signal,
+        observer_rows=(_observer_row(3_600_000, eligible=False, side=None),),
+        comparison_start_ms=2_700_000,
+        comparison_end_ms=4_500_000,
+    )
+
+    assert report["coverage"] == {
+        "archive_decision_start_ms": 2_700_000,
+        "archive_decision_end_ms": 4_500_000,
+        "comparison_start_ms": 2_700_000,
+        "comparison_end_ms": 4_500_000,
+        "comparison_window_policy": "explicit_requested_bounds",
+    }
+    assert report["technical_assessment"]["comparison_decisions"] == 3
+    assert report["technical_assessment"]["missing_observer_decisions"] == 2
+    assert report["technical_assessment"]["overlapping_decisions"] == 1
+
+
+def test_explicit_window_must_be_complete_and_inside_archive_bounds() -> None:
+    with pytest.raises(ValueError, match="both be provided"):
+        _builder()(
+            signal_parity_report=_signal_report(entry_side=None),
+            observer_rows=(),
+            comparison_start_ms=2_700_000,
+        )
+    with pytest.raises(ValueError, match="inside archive decision bounds"):
+        _builder()(
+            signal_parity_report=_signal_report(entry_side=None),
+            observer_rows=(),
+            comparison_start_ms=1_800_000,
+            comparison_end_ms=3_600_000,
+        )
 
 
 def test_ineligible_observer_decision_cannot_carry_an_entry_side() -> None:
@@ -120,6 +201,24 @@ def _builder() -> Callable[..., dict[str, object]]:
         "hypervector.research.hip3_shadow_observer_decision_parity"
     )
     return module.build_hip3_shadow_observer_decision_parity
+
+
+def _three_decision_signal_report() -> dict[str, object]:
+    signal = _signal_report(entry_side=None)
+    coverage = signal["coverage"]
+    pressure = signal["reconstructed_pressure_decisions"]
+    assert isinstance(coverage, dict)
+    assert isinstance(pressure, list)
+    coverage["decision_end_ms"] = 4_500_000
+    pressure.append(
+        {
+            "decision_time_ms": 4_500_000,
+            "fresh": True,
+            "imbalance_10": 0.0,
+            "last_exchange_ts_ms": 4_499_000,
+        }
+    )
+    return signal
 
 
 def _signal_report(*, entry_side: str | None) -> dict[str, object]:

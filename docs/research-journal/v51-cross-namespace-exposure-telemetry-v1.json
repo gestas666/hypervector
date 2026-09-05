@@ -1,0 +1,88 @@
+{
+  "schema_version": "v51_cross_namespace_exposure_telemetry_v1",
+  "mode": "report_only",
+  "execution_authority": "none",
+  "automatic_live_change": false,
+  "runtime_strategy_changed": false,
+  "generated_at_utc": "2026-08-14T03:58:36.434574+00:00",
+  "scope": {
+    "run_id": "bidirectional-live-1786656816144",
+    "profile_id": "multi_asset_growth_first_5000_six_asset_profit_lock_candidate_v51",
+    "profile_fingerprint": "30cd54bb5b17249ae0a6a3b01d5702b276d51f8dc5ddd6b4d36ab6aa7d1908",
+    "source_sequence": 161404,
+    "source_observed_at_utc": "2026-08-14T03:58:36.434574+00:00"
+  },
+  "observed_problem": {
+    "severity": "P1_monitoring_telemetry_understatement",
+    "description": "The cohort-level snapshot reported zero total margin and notional while the protected HYPE asset row reported nonzero core-perp exposure.",
+    "reported_total_margin_used_usd": 0.0,
+    "reported_total_notional_position_usd": 0.0,
+    "asset_margin_sum_usd": 468.140875,
+    "asset_notional_sum_usd": 4968.8112,
+    "execution_or_protection_impact": false
+  },
+  "root_cause": {
+    "description": "shared_account_facts selected only the last per-symbol reconciliation. In a profile spanning core and xyz perpetual namespaces, the last xyz snapshot cannot represent open core-perp exposure.",
+    "affected_surface": "portfolio-level telemetry and downstream exposure widgets",
+    "unaffected_surfaces": [
+      "asset-level venue position telemetry",
+      "routing position state",
+      "order submission",
+      "protective stops",
+      "sizing and leverage"
+    ]
+  },
+  "proposed_change": {
+    "proposal_id": "V51_CROSS_NAMESPACE_EXPOSURE_TELEMETRY_V1",
+    "rule": "Retain the freshest shared equity values and sum one margin/notional account total per unique perpetual namespace.",
+    "deduplication": "Core BTC/ETH/SOL/HYPE share one representative; xyz:SP500/SPCX share one representative.",
+    "deployment_status": "approved_waiting_verified_flat_order_free_restart",
+    "approval_evidence": "docs/research-journal/v51-approved-technical-fixes-flat-boundary-v1.json"
+  },
+  "validation": {
+    "tdd_red": "A controlled core-plus-xyz fixture failed because the old API accepted only the venue tuple and selected its final row.",
+    "tdd_green": "The same fixture reports 572 USD margin and 5972 USD notional after namespace deduplication, and mismatched symbol/snapshot input fails closed.",
+    "relevant_tests": 61,
+    "relevant_tests_status": "passed",
+    "ruff_status": "passed",
+    "format_status": "passed",
+    "diff_check_status": "passed",
+    "live_deployment_validation": "pending_verified_flat_boundary_restart_and_poststart_acceptance"
+  },
+  "source_evidence": {
+    "live_event": {
+      "path": "data/live/bidirectional_cohort/decisions.jsonl",
+      "sequence": 161404,
+      "canonical_event_sha256": "fbf18a7c4c90336256d30cdba740f5a91042ab9116c9a4fa3482a1cea7efb1f0"
+    },
+    "implementation": [
+      {
+        "path": "src/hypervector/live/multi_asset_live_runner_support.py",
+        "sha256": "07e8be405151b6cbf88c8a505ed724136ad42b2cf9757e8c3489d163efbd741b",
+        "bytes": 9320
+      },
+      {
+        "path": "src/hypervector/live/multi_asset_live_runner.py",
+        "sha256": "9404e4b304cee08576c92a0047f9de09cf85ffd89a1e8ec2d0abeb1ac2d1a1b4",
+        "bytes": 19177
+      }
+    ],
+    "primary_regression": {
+      "path": "tests/test_multi_asset_shared_account_facts.py",
+      "sha256": "825cb48676efcc7752caa5202502d2052060b8e174c294d1e654c314dc6ab1a1",
+      "bytes": 1749
+    }
+  },
+  "failure_modes_and_falsifiers": [
+    "A post-restart snapshot with open core exposure still reports zero aggregate margin or notional.",
+    "Two symbols in one namespace are double-counted.",
+    "Shared equity changes because of namespace aggregation.",
+    "Any route, order, sizing, leverage, stop, or exit behavior changes.",
+    "A new perpetual namespace appears without an exact representative in the snapshot."
+  ],
+  "limitations": [
+    "The corrected code is not loaded by the running backend.",
+    "The cross-namespace nonzero fixture is controlled test evidence rather than a simultaneous live core-plus-xyz position.",
+    "Live acceptance requires a flat restart and then an attributable nonzero exposure snapshot."
+  ]
+}

@@ -1,0 +1,118 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "V56_SPCX_CASH_OPEN_FORWARD_20260818_V1",
+  "status": "open_lifecycle",
+  "captured_at_utc": "2026-08-18T13:53:10Z",
+  "source_run": {
+    "run_id": "bidirectional-live-1787057465219",
+    "profile_id": "multi_asset_growth_first_5000_btc_tuned_v2_increment_v56",
+    "profile_fingerprint": "29a29ad11c9cc0613fd8fc93013758b8e093e96ff5f3698217b562b90f6e89c9"
+  },
+  "route": "hip3_spcx_cash_open_gap_reversal_bidirectional_15m_v1|xyz:SPCX",
+  "contract": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_promotion": false,
+    "automatic_retuning": false,
+    "automatic_strategy_changes": false,
+    "runtime_strategy_changed": false
+  },
+  "decision": {
+    "decision_time_utc": "2026-08-18T13:45:00Z",
+    "observed_at_utc": "2026-08-18T13:45:28.371833Z",
+    "action": "enter_long",
+    "eligible": true,
+    "reason": "cash_open_gap_reversal_confirmed",
+    "trigger": "cash_open_gap_fade",
+    "reference_price": 141.64,
+    "prior_close_target_anchor": 146.12,
+    "opening_gap_bps": -368.87489734464873,
+    "source": "ws_trades",
+    "source_trade_count": 7431,
+    "readiness_passed": 5,
+    "readiness_total": 5,
+    "blockers": []
+  },
+  "submission": {
+    "submission_observed_at_utc": "2026-08-18T13:45:20.032Z",
+    "age_ms": 20032,
+    "maximum_age_ms": 30000,
+    "freshness_passed": true,
+    "entry_liquidity": "taker_ioc",
+    "requested_notional_usd": 4917.92405849
+  },
+  "entry": {
+    "order_id": 518987874507,
+    "accepted": true,
+    "status": "filled",
+    "venue_fill_time_utc": "2026-08-18T13:45:21.021Z",
+    "side": "long",
+    "size": 34.72,
+    "price": 141.28,
+    "notional_usd": 4905.2416,
+    "leverage": 10,
+    "margin_mode": "isolated",
+    "fee_usd": 0.423812,
+    "fee_bps": 0.8639982177432402,
+    "fill_vs_decision_reference_bps": -25.416548997458345,
+    "fill_vs_reference_interpretation": "favorable_for_long"
+  },
+  "protection": {
+    "stop": {
+      "order_id": 518987920034,
+      "accepted": true,
+      "status": "resting",
+      "side": "sell",
+      "size": 34.72,
+      "trigger_price": 140.15,
+      "limit_price": 140.15,
+      "reduce_only": true,
+      "order_type": "Stop Market",
+      "distance_from_fill_bps": 79.98301245753114,
+      "gross_price_risk_usd": 39.2336
+    },
+    "target": {
+      "order_id": 518987960820,
+      "accepted": true,
+      "status": "resting",
+      "side": "sell",
+      "size": 34.72,
+      "limit_price": 146.12,
+      "reduce_only": true,
+      "order_type": "Limit",
+      "distance_from_fill_bps": 342.5821064552661,
+      "gross_price_reward_usd": 168.0448
+    },
+    "gross_reward_to_stop_risk_multiple": 4.283185840707965,
+    "maximum_hold_seconds": 22500,
+    "faults": [],
+    "duplicate_orders": false
+  },
+  "latest_open_observation": {
+    "observed_at_utc": "2026-08-18T13:52:33.934217Z",
+    "size_signed": 34.72,
+    "entry_price": 141.28,
+    "position_value_usd": 4897.6032,
+    "margin_used_usd": 482.461948,
+    "unrealized_pnl_usd": -7.6384,
+    "open_order_ids": [518987960820, 518987920034],
+    "backend_state": "running_consistent",
+    "profile_matches_runtime": true
+  },
+  "forward_interpretation": {
+    "technical_entry_and_protection": "passed",
+    "economic_outcome": "unresolved",
+    "profitability_inference": "not_permitted_from_open_or_single_lifecycle",
+    "historical_long_side_warning": "Development long stress was positive in aggregate but negative after removing its largest winner and unstable across folds; this live long is therefore diagnostic rather than established edge.",
+    "required_next_evidence": "Resolve the lifecycle and reconcile exit reason, exit fill, fees, funding, gross and net PnL, MFE, MAE, peak giveback, and the no-action path."
+  },
+  "confidence": {
+    "runtime_identity": "high",
+    "entry_attribution": "high",
+    "protection_reconciliation": "high",
+    "economic_outcome": "not_yet_observed",
+    "future_profitability": "low"
+  },
+  "falsifier": "Any later source, fill, fee, position, stop, target, exit, or profile mismatch invalidates this lifecycle as complete technical evidence; a technically complete loss or win updates economics but does not establish an edge by itself.",
+  "explicit_approval_requested": null
+}

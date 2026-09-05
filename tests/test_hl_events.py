@@ -265,3 +265,36 @@ def test_archive_replays_only_a_bounded_cross_channel_window(tmp_path: Path) -> 
     assert context in replay
     assert gap in replay
     assert later not in replay
+
+
+def test_archive_replays_only_trade_channel_for_cash_open_source(
+    tmp_path: Path,
+) -> None:
+    """A trade-only replay must not deserialize unrelated L2 or context rows."""
+    archive = EventArchive(data_root=tmp_path, symbol="BTC", batch_size=10)
+    book = l2_event()
+    trade = trade_events()[0]
+    context = parse_hl_message(
+        fixture("hl_ws_active_asset_ctx_sample.json"),
+        received_ts_ns=RECEIVED_NS,
+    )[0]
+    assert isinstance(context, AssetContextEvent)
+    gap = StreamGap(
+        "BTC",
+        "trades",
+        RECEIVED_NS,
+        "test",
+        trade.exchange_ts_ms - 1,
+        trade.exchange_ts_ms,
+    )
+    archive.append((book, trade, context))
+    archive.record_gap(gap)
+    archive.flush()
+    start = datetime.fromtimestamp((trade.exchange_ts_ms - 1) / 1_000, tz=UTC)
+    end = datetime.fromtimestamp((trade.exchange_ts_ms + 1_000) / 1_000, tz=UTC)
+
+    replay = archive.replay_trade_window(start, end)
+
+    assert len(replay) == 2
+    assert gap in replay
+    assert trade in replay

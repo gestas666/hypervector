@@ -1,0 +1,149 @@
+{
+  "schema_version": "v51_spcx_profit_lock_candle_finalization_v2",
+  "generated_at_utc": "2026-08-15T21:50:30Z",
+  "mode": "report_only_live_incident_assessment",
+  "source_run": {
+    "run_id": "bidirectional-live-1786801038311",
+    "profile_id": "multi_asset_growth_first_5000_six_asset_profit_lock_candidate_v51",
+    "profile_fingerprint": "30cd54bb5b5b17249ae0a6a3b01d5702b276d51f8dc5ddd6b4d36ab6aa7d1908"
+  },
+  "contract": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_live_change": false,
+    "runtime_strategy_changed": false
+  },
+  "supersedes": {
+    "path": "docs/research-journal/v51-spcx-profit-lock-candle-finalization-v1.json",
+    "sha256": "23821cfc8df892beae8c09ca5d8652961a8aba9bffc4b02f64cc6114571c1c57",
+    "bytes": 6410,
+    "reason": "The v1 two-cycle recovery falsifier fired; four episodes reached three consecutive degraded polls."
+  },
+  "evidence_boundary": {
+    "ledger_path": "data/live/bidirectional_cohort/decisions.jsonl",
+    "prefix_bytes": 1518758873,
+    "prefix_lines": 184859,
+    "prefix_sha256": "9ed3bd5ce41ae7bec4f197eefed3065d0ce392893f698e32bcf06c88eeb454de",
+    "append_only_source": true
+  },
+  "incident": {
+    "symbol": "xyz:SPCX",
+    "source": "profit_lock_candles",
+    "heartbeats": 888,
+    "degraded_heartbeats": 59,
+    "degraded_fraction": 0.066441441,
+    "degraded_episodes": 40,
+    "episode_lengths": {
+      "one_poll": 25,
+      "two_polls": 11,
+      "three_polls": 4
+    },
+    "maximum_consecutive_degraded_polls": 3,
+    "missing_completed_bars_per_event_min": 1,
+    "missing_completed_bars_per_event_max": 2,
+    "orders_attempted_during_degraded_events": false,
+    "runtime_faults": 0,
+    "position_venue_protected": true,
+    "venue_stop_oid": 517022767203,
+    "recovery_observed": true
+  },
+  "runtime_availability_measurement": {
+    "method": "first backend market_candles emission minus one-minute candle close for current-run post-start bars",
+    "spcx": {
+      "bars": 488,
+      "mean_seconds": 25.533,
+      "p50_seconds": 22.616,
+      "p90_seconds": 37.575,
+      "p95_seconds": 53.003,
+      "p99_seconds": 105.442,
+      "maximum_seconds": 165.442,
+      "over_60_seconds": 23,
+      "over_90_seconds": 9
+    },
+    "core_and_sp500_reference": {
+      "bars_per_symbol": 489,
+      "mean_seconds": 21.293,
+      "p50_seconds": 21.121,
+      "p90_seconds": 33.753,
+      "p95_seconds": 35.484,
+      "p99_seconds": 37.58,
+      "maximum_seconds": 165.442,
+      "over_60_seconds": 2,
+      "over_90_seconds": 2
+    },
+    "interpretation": "SPCX has a distinct finalization tail beyond the common sequential-cycle latency."
+  },
+  "causal_diagnosis": {
+    "classification": "recurrent_public_candle_finalization_lag_with_bounded_recovery",
+    "evidence": [
+      "The backend omitted one or two newest SPCX completed minutes and later emitted the exact missing timestamps.",
+      "A fresh official candleSnapshot later contained the omitted 21:32, 21:33, and 21:35 UTC rows as zero-volume flat candles.",
+      "The local cache retained prior bars and merged the later official rows; no permanent interior loss was found.",
+      "The controller refused to synthesize candles, emitted degraded telemetry, attempted no profit-lock order, and preserved the venue stop."
+    ],
+    "rejected_alternatives": {
+      "backend_crash": "rejected because reconciliation, funding, and later running heartbeats continued",
+      "local_cache_loss": "rejected because the exact omitted timestamps arrived later and merged into the cache",
+      "unprotected_position": "rejected because venue stop 517022767203 remained owned and reduce-only",
+      "harmless_two_cycle_lag": "rejected because four measured episodes lasted three polls"
+    }
+  },
+  "economic_impact_assessment": {
+    "entry_price": 138.6232482662968,
+    "side": "short",
+    "profit_lock_activation_bps": 100.0,
+    "maximum_favorable_completed_excursion_bps": 6.005361101976137,
+    "activation_reached": false,
+    "missed_or_delayed_profit_lock_exit_proven": false,
+    "current_lifecycle_impact": "none_proven",
+    "residual_risk": "An activated future lock can be recognized 60-165 seconds late when source publication follows the measured tail."
+  },
+  "hypothesis_ledger": [
+    {
+      "hypothesis_id": "v51-spcx-profit-lock-finalization-lag",
+      "status": "being_tested_falsifier_fired",
+      "hypothesis": "Official SPCX candle finalization lag is recoverable but materially longer than the common cohort cycle tail.",
+      "confidence": "high",
+      "falsifiers_or_updates": [
+        "a candle remains missing after a later official read",
+        "an activated lock trigger is delayed or missed",
+        "a targeted recovery read cannot reduce the measured tail without rate-limit or routing regressions",
+        "the venue stop becomes absent during a source gap"
+      ]
+    },
+    {
+      "hypothesis_id": "v51-spcx-targeted-profit-lock-candle-recovery",
+      "status": "proposed_for_offline_tdd",
+      "hypothesis": "A bounded exact-symbol refetch only after a detected tail gap can reduce lock-decision latency without synthesizing data or delaying unrelated exits.",
+      "confidence": "low_to_medium",
+      "falsifiers_or_updates": [
+        "recovery reads do not materially improve p95 or p99 availability",
+        "the added request budget increases 429 responses or cycle latency",
+        "the design can duplicate routing or weaken exact completed-bar identity",
+        "an independent event-driven source provides a simpler exact contract"
+      ]
+    }
+  ],
+  "recommendation": {
+    "Recommendation": "Keep the loaded v51 controller and venue stop unchanged; design and test a bounded exact-symbol recovery read for a future revision, with no candle synthesis and no deployment until separately approved.",
+    "Why now": "The two-cycle bounded-lag assumption has been falsified and SPCX p99 availability is roughly 105 seconds versus roughly 38 seconds for the common reference group.",
+    "Evidence reviewed": "Exact current-run heartbeat prefix, first-availability market-candle telemetry, current bound execution plan and stop, and a fresh official SPCX candleSnapshot.",
+    "Observed problem or opportunity": "The source-honest controller can temporarily lose profit-lock decision availability even while the backend and venue stop remain healthy.",
+    "Applicable market regime": "Any open SPCX lifecycle after the 100-bps completed-bar profit-lock activation.",
+    "Alternatives considered": "Fabricate flat candles, ignore missing rows, accept next-cycle retry, add a bounded targeted refetch, or replace the source with a separately proven exact event-driven candle contract.",
+    "Proposed live change": "none; offline mitigation candidate only",
+    "Expected upside": "Potentially reduce activated-lock decision delay while retaining exact official candle identity.",
+    "Main risks and failure modes": "API-rate pressure, longer cycles, duplicate routing, a refetch that still precedes publication, or accidental use of a synthetic candle.",
+    "Validation completed": "Root-cause separation, frequency and episode measurement, cross-symbol latency comparison, current activation and stop audit, and official-source recovery confirmation.",
+    "Validation still required": "Test-first callback/retry design, no-duplicate-action proof, bounded-request proof, simulated 429/timeout behavior, exact-source identity preservation, and prospective latency measurement.",
+    "Success metrics": "No fabricated rows; no duplicate action; venue stop always retained; material p95/p99 latency reduction; no added stale-entry or rate-limit incidents.",
+    "Failure / rollback triggers": "Any action duplication, source-identity ambiguity, new rate-limit failures, slower unrelated exits, or no meaningful availability improvement.",
+    "Confidence level": "High on diagnosis and current-trade no-impact; low-to-medium on the proposed mitigation until TDD and prospective measurement complete.",
+    "Explicit approval requested": false
+  },
+  "limitations": [
+    "Backend emission time is an upper bound on source availability because it includes the sequential cycle.",
+    "The active SPCX trade never activated its profit lock, so no avoided or incurred PnL can be attributed to this incident.",
+    "No live source, controller, route, strategy, parameter, sizing, leverage, stop, exit, process, or deployment setting changed."
+  ]
+}

@@ -1,0 +1,175 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v58-btc-short-liquidation-continuation-long-data-preflight",
+  "revision_number": 10,
+  "supersedes_revision_id": "2efeac9d06f83bfbeb92cdaef42d6a470c466251156fc17d29769ff37fa45b8d",
+  "created_at_utc": "2026-08-22T05:09:40Z",
+  "strategy_id": "btc-short-liquidation-continuation-long-data-preflight",
+  "symbol": "BTC",
+  "status": "candidate",
+  "hypothesis": "Explicit BTC forced-liquidation labels may recover a selective long opportunity absent from V58: forced short-liquidation buying may continue when post-burst price and public flow persist, while forced long-liquidation selling may produce a distinct exhaustion-reclaim long. These are competing causal mechanisms and neither edge is established.",
+  "decision": "Accept the complete official hourly funding bundle and the independently reproduced causal five-minute regime-label bundle as descriptive development inputs. Freeze long funding as the negative of constant 5000-US-dollar entry notional times the sum of official funding rates whose event timestamps lie strictly after entry and at or before exit. Keep regime labels descriptive and usable only at bar_open_at plus five minutes; they cannot gate, select, rescue, or promote an entry. Permit development-only economic replay under revisions 8 and 9. Keep validation and pseudo-holdout outcomes sealed until an immutable development disposition is published. Do not change V58 or claim a BTC-long edge from input completeness.",
+  "confidence": "medium_high",
+  "falsifier": "Reject the funding input if any file hash, raw-to-Parquet parity, hourly cadence, exact half-open window, settlement ordering, or source identity changes. Reject the regime input if any file hash, raw-to-Parquet reproduction, exact five-minute cadence, completed-bar availability timestamp, classifier source hash, or prefix-equivalence test changes. Reject the economic replay if it includes a settlement at entry, excludes one exactly at exit, uses variable rather than constant 5000-US-dollar funding notional, or uses a regime label before its candle close. Any change after development returns are opened creates a new hypothesis and cannot reuse the sealed validation or pseudo-holdout partitions.",
+  "evidence": [
+    {
+      "path": "v58-btc-short-liquidation-continuation-data-preflight-20260822-v9.json",
+      "role": "superseded outcome-blind latency and development replay contract",
+      "sha256": "baf319085b1f24f2c0c74356f51a0b52be1b469e4820aba4d2858d95dc641962",
+      "bytes": 10258
+    },
+    {
+      "path": "../../data/cache/vendor/hyperliquid/BTC/20251201T000000000000Z_20260601T000000000000Z_funding/manifest.json",
+      "role": "official funding window identity, coverage, and raw-page hashes",
+      "sha256": "80c126a24e7716f5c547d7d852924243dd98094516466240d0efa937aff1ab42",
+      "bytes": 1912
+    },
+    {
+      "path": "../../data/cache/vendor/hyperliquid/BTC/20251201T000000000000Z_20260601T000000000000Z_funding/funding.parquet",
+      "role": "4368 contiguous official BTC hourly funding settlements",
+      "sha256": "6a2bbd2b1453fb795ae5443fda2139b86d7c8f3896c560a15a9b305fb0bfce6b",
+      "bytes": 99867
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v58_btc_liquidation_causal_regime_evidence_20260822_v1/manifest.json",
+      "role": "immutable causal regime evidence identity",
+      "sha256": "3d47f6e58a7df78bf5016bb4c689dbf2c536c3482b245e7a40e2bf70e880a492",
+      "bytes": 344
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v58_btc_liquidation_causal_regime_evidence_20260822_v1/report.json",
+      "role": "outcome-unopened descriptive regime contract and source identities",
+      "sha256": "b932b53116afd4effc680ef0f5e9122fa2c6680934686a9946dcd2612d117559",
+      "bytes": 3120
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v58_btc_liquidation_causal_regime_evidence_20260822_v1/labels.parquet",
+      "role": "52704 causal five-minute regime labels with explicit availability times",
+      "sha256": "6b16e1e1d8a355a6aaf41c8e19420670879f5dc87f7740ac5bb2ac50427cc5a4",
+      "bytes": 3251765
+    },
+    {
+      "path": "../../src/hypervector/data/hl_funding_evidence.py",
+      "role": "official funding hash, cadence, coverage, and raw-parity verifier",
+      "sha256": "b39fa2b9c217d69645dfd0cc6b7b19a832dbb135aba5f81c3d0c8f511db69f1c",
+      "bytes": 9783
+    },
+    {
+      "path": "../../src/hypervector/data/oxa_candles.py",
+      "role": "candle hash, raw-reproduction, identity, and exact-cadence verifier",
+      "sha256": "b3a1ea63490a53656bc1b42b56aec350586801e8ee0abf7362c07a2583bbb2b8",
+      "bytes": 18171
+    },
+    {
+      "path": "../../src/hypervector/research/btc_liquidation_regime_evidence.py",
+      "role": "causal completed-bar regime labeling and decision-time selector",
+      "sha256": "9d43c88edf563d4799f8fddb33a81a64180f57225c61630fa818ae67884bdf55",
+      "bytes": 4723
+    },
+    {
+      "path": "../../scripts/v58_btc_liquidation_regime_evidence.py",
+      "role": "immutable report-only regime evidence publisher",
+      "sha256": "d8a7397807b99a6e88acda788c18dc6e76b37718ae0cc15a7802170528ec02d9",
+      "bytes": 7446
+    },
+    {
+      "path": "../../src/hypervector/research/btc_liquidation_covariate_models.py",
+      "role": "typed exact-decimal replay, funding, and timing models",
+      "sha256": "ffc60d47e6143e67f7f1e412e253ae9a9d7e856b601a45fc68bd1a2f90619f9f",
+      "bytes": 7793
+    },
+    {
+      "path": "../../src/hypervector/research/btc_liquidation_covariate_replay.py",
+      "role": "causal entry, depth, latency, cost, overlap, and funding semantics",
+      "sha256": "4c0d37685082bfa9c4462da34380c31f63d33fa21f51f3df7edc1f6c902f77d6",
+      "bytes": 14833
+    },
+    {
+      "path": "../../tests/test_hl_funding_evidence.py",
+      "role": "official funding integrity, cadence, identity, and parity tests",
+      "sha256": "f2d8603f2fa7528ffc7e43bf41b8251666b9e319eca68230e52ed009a907c070",
+      "bytes": 4726
+    },
+    {
+      "path": "../../tests/test_oxa_candles.py",
+      "role": "candle acquisition and independent raw-reproduction tests",
+      "sha256": "220c5d70928d5af3924fee6a59eca8f4dd29e416580fb89d8934e6938330aef6",
+      "bytes": 6559
+    },
+    {
+      "path": "../../tests/test_btc_liquidation_regime_evidence.py",
+      "role": "causal availability, prefix-equivalence, cadence, and context tests",
+      "sha256": "5d8b307153fe76fad741ea89ae9a00ea18dbb5e1221adacc19adeb496e0e4269",
+      "bytes": 3551
+    },
+    {
+      "path": "../../tests/test_v58_btc_liquidation_regime_evidence_script.py",
+      "role": "immutable descriptive regime publication and no-authority tests",
+      "sha256": "b4c9f531c15912110bfedac3709a865fc553d6f1497c5e8015f49f17bee0911b",
+      "bytes": 4036
+    },
+    {
+      "path": "../../tests/test_btc_liquidation_covariate_replay.py",
+      "role": "causality, depth, latency, costs, funding-boundary, and purge tests",
+      "sha256": "3ee12323ae81e72159291f93605d33b08618bd2259a1bc38c7ef6c53f87d15cb",
+      "bytes": 13444
+    }
+  ],
+  "metrics": {
+    "stage": "development_inputs_complete_outcomes_unopened",
+    "funding_row_count": 4368,
+    "funding_missing_hour_count": 0,
+    "funding_raw_page_count": 9,
+    "regime_source_row_count": 52704,
+    "regime_context_row_count": 288,
+    "regime_evaluation_row_count": 52416,
+    "regime_source_missing_bar_count": 0,
+    "regime_breakout_count": 866,
+    "regime_range_count": 18864,
+    "regime_transition_count": 3355,
+    "regime_trend_down_count": 14881,
+    "regime_trend_up_count": 14450,
+    "focused_test_count": 35,
+    "strategy_outcomes_inspected": false,
+    "validation_outcomes_opened": false,
+    "pseudo_holdout_outcomes_opened": false,
+    "runtime_strategy_changed": false,
+    "live_change_supported": false
+  },
+  "funding_contract": {
+    "position_side": "long",
+    "entry_notional_usd": "5000",
+    "notional_behavior": "constant_entry_notional",
+    "included_event_interval": "entry_time_ms < event_time_ms <= exit_time_ms",
+    "cashflow_formula": "-5000 * sum(included_official_funding_rates)",
+    "rate_precision": "Decimal constructed from verified serialized numeric value",
+    "applies_to_partitions": [
+      "development",
+      "validation",
+      "pseudo_holdout"
+    ]
+  },
+  "regime_contract": {
+    "bar_interval": "5m",
+    "minimum_context_bars": 288,
+    "label_availability": "bar_open_at_plus_5m",
+    "purpose": "descriptive_covariate_only",
+    "entry_gate": false,
+    "selection_authority": false,
+    "automatic_promotion": false
+  },
+  "limitations": [
+    "Funding evidence is official and complete, but historical settlement rates do not reproduce the exact account-level funding debit or credit rounding that a live position would receive.",
+    "The regime classifier is causal under prefix testing, but regime labels are model-dependent descriptions rather than proof of conditional profitability.",
+    "Regime counts were inspected before strategy outcomes only to validate coverage and label behavior; they cannot be used to choose or rescue an entry subset in this hypothesis.",
+    "The funding reader currently exposes normalized rates as floats; the economic layer converts their verified serialized values to Decimal, so source precision cannot exceed the stored evidence precision.",
+    "Complete covariates do not establish a viable entry rate, after-cost edge, stable month-to-month behavior, acceptable concentration, or portfolio improvement.",
+    "Historical exchange timestamps do not reproduce local receipt latency, hidden liquidity, queue behavior, or actual IOC fills.",
+    "Pseudo-holdout history was used by unrelated BTC research and remains weaker than the untouched prospective period beginning 2026-08-22T03:00:00Z.",
+    "No strategy outcome has been inspected under this hypothesis, and no live change is supported.",
+    "This revision cannot pause, retune, route, size, enter, close, restart, or promote a live strategy or lifecycle."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

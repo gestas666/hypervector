@@ -1,0 +1,136 @@
+{
+  "schema_version": "v51_index_live_condition_window_v3",
+  "mode": "report_only",
+  "execution_authority": "none",
+  "automatic_live_change": false,
+  "performance_gate": false,
+  "runtime_strategy_changed": false,
+  "generated_at_utc": "2026-08-14T05:44:38Z",
+  "supersedes": "docs/research-journal/v51-index-live-condition-window-v2.json",
+  "scope": {
+    "run_id": "bidirectional-live-1786656816144",
+    "profile_id": "multi_asset_growth_first_5000_six_asset_profit_lock_candidate_v51",
+    "profile_fingerprint": "30cd54bb5b5b17249ae0a6a3b01d5702b276d51f8dc5ddd6b4d36ab6aa7d1908",
+    "run_started_at_utc": "2026-08-13T21:36:35.282350+00:00",
+    "provider_id": "hip3_breakout_pressure_sp500_spcx_fresh15s_bidirectional_v3",
+    "first_decision_time_ms": 1786657500000,
+    "last_decision_time_ms": 1786685400000,
+    "timeframe": "15m",
+    "signal": {
+      "breakout_lookback_bars": 32,
+      "fast_ema": 21,
+      "slow_ema": 55,
+      "minimum_abs_imbalance": 0.1,
+      "signal_maximum_stop_bps": 120.0,
+      "execution_stop_bps": 80.0
+    }
+  },
+  "backend_observer_parity": {
+    "status": "resolved",
+    "backend_decisions": 64,
+    "observer_decisions": 64,
+    "decisions_per_symbol": 32,
+    "mismatches": 0,
+    "compared_fields": [
+      "symbol",
+      "decision_time_ms",
+      "eligible",
+      "side",
+      "decision_delay_ms",
+      "imbalance_10",
+      "pressure_boundary_age_ms",
+      "pressure_snapshot_count",
+      "pressure_history_complete",
+      "pressure_scan_complete",
+      "pressure_source"
+    ],
+    "interpretation": "The armed backend and independent source-native observers produced identical current-run decision evidence over the complete common 15-minute window. This validates collection and attribution for this prefix, not economic edge."
+  },
+  "routes": {
+    "hip3_breakout_pressure_sp500_spcx_fresh15s_bidirectional_v3|xyz:SP500": {
+      "current_run_decisions": 32,
+      "fresh_pressure_decisions": 32,
+      "complete_pressure_history_decisions": 32,
+      "eligible_decisions": 0,
+      "raw_long_conditions": 0,
+      "raw_short_conditions": 0,
+      "long_one_blocker_price_breakout": 7,
+      "short_one_blocker_price_breakout": 0,
+      "nearest_long_breakout_distance_bps": 0.768747837897172,
+      "nearest_short_breakout_distance_bps": 7.179395135960262,
+      "long_pressure_confirmations": 7,
+      "short_pressure_confirmations": 18,
+      "pressure_minimum": -0.6866355901230451,
+      "pressure_median": -0.162135175990539,
+      "pressure_maximum": 0.4913580575951813
+    },
+    "hip3_breakout_pressure_sp500_spcx_fresh15s_bidirectional_v3|xyz:SPCX": {
+      "current_run_decisions": 32,
+      "fresh_pressure_decisions": 32,
+      "complete_pressure_history_decisions": 32,
+      "eligible_decisions": 0,
+      "raw_long_conditions": 0,
+      "raw_short_conditions": 0,
+      "long_one_blocker_price_breakout": 0,
+      "short_one_blocker_price_breakout": 9,
+      "nearest_long_breakout_distance_bps": 22.53362439264993,
+      "nearest_short_breakout_distance_bps": 45.92665865894197,
+      "long_pressure_confirmations": 6,
+      "short_pressure_confirmations": 9,
+      "pressure_minimum": -0.47685187605311813,
+      "pressure_median": -0.03319416535144169,
+      "pressure_maximum": 0.5788763582142316
+    }
+  },
+  "assessment": {
+    "status": "collecting_source_native_forward_evidence",
+    "provider_transport_dead": false,
+    "backend_observer_attribution_resolved": true,
+    "configured_condition_logic_consistent_with_observations": true,
+    "parameter_change_supported": false,
+    "economic_edge_established": false,
+    "missed_trade_claimed": false,
+    "diagnosis": "All 64 backend decisions reconcile exactly to the independent observers. Both routes received fresh, history-complete pressure on all 32 boundaries and neither produced a price breakout. SP500 remained long-EMA aligned and reached seven pressure-confirmed price-only near misses; SPCX remained short-EMA aligned and reached nine pressure-confirmed price-only near misses. The provider is operating coherently, but no eligible or costed lifecycle evidence exists.",
+    "minimum_additional_evidence": "At least one attributable eligible signal and one fully resolved, exactly costed lifecycle per configured side before updating the live-translation diagnosis. A change recommendation additionally requires a predeclared compatible window, exact fees, funding, slippage, latency, stop behavior, missed-opportunity review, and largest-winner sensitivity.",
+    "single_highest_value_next_investigation": "Continue collecting exact source-native SP500 long and short eligible signals and resolved lifecycles, with SPCX second, while preserving the frozen v51 parameters."
+  },
+  "source_evidence": {
+    "sp500_diagnostic": {
+      "path": "data/logs/research/v51_sp500_live_condition_window_20260814_v3.json",
+      "sha256": "4ff94f7c0fcdb8eb3258998682e39a76d40b3440d712ee10b8a5329b89891ab2",
+      "bytes": 28700,
+      "observer_prefix_rows": 133,
+      "observer_prefix_sha256": "2781c56efe84d4b00fb2ce0f6915cb2257c8d4061312283401b4be24b3c433eb"
+    },
+    "spcx_diagnostic": {
+      "path": "data/logs/research/v51_spcx_live_condition_window_20260814_v3.json",
+      "sha256": "f8b1b2ef72762f68bb51a3472d947204c49400c861b47ac75d66a1b195a6d73a",
+      "bytes": 28726,
+      "observer_prefix_rows": 133,
+      "observer_prefix_sha256": "2190b3e6845b1df3c18203a092c1182dfbaa777f77783dbc8e82e9b187fa2b07"
+    },
+    "backend_observer_parity": {
+      "path": "data/logs/research/v51_index_backend_observer_parity_20260814_v1.json",
+      "sha256": "f92c9d3f23f18d49ac09cfd8693ab3123f7904791dc4fb7dd2971cf2350d30c7",
+      "bytes": 3310,
+      "material_state_sha256": "ea90e63b48073dc6325bfef94050bbf48703f1707f29c660a4a12c8f6fe46ca8"
+    },
+    "active_config": {
+      "path": "configs/multi_asset_growth_first_5000_six_asset_profit_lock_candidate_v51.toml",
+      "sha256": "f0f0fef087eb0a3412c2a917d2d9bd8f578b17e4a40d7c3729519a33cf4f9ab4",
+      "bytes": 3917
+    },
+    "frozen_signal_contract": {
+      "path": "docs/research-journal/v51-index-source-parity-forward-v1.json",
+      "sha256": "01e22ea5715c1f08014ca0fbe016f64346193f27fec612a95cb18affdc6afcd1",
+      "bytes": 9626
+    }
+  },
+  "limitations": [
+    "The window contains no eligible signal, fill, or completed index lifecycle.",
+    "Decision parity validates two process outputs over one prefix; it cannot establish independent upstream source correctness.",
+    "Condition proximity is not realized profit or executable fill evidence.",
+    "The archive/live source-transport parity hypothesis remains rejected; this journal uses only the exact live-v3 observer and armed-backend contracts.",
+    "No strategy, leverage, sizing, stop, target, route, or deployment parameter was changed."
+  ]
+}

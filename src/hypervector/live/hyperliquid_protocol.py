@@ -28,7 +28,7 @@ class HyperliquidFeeSchedule:
 class Hip3MarketFeeMetadata:
     """Venue inputs that modify account base rates for one HIP-3 market."""
 
-    deployer_fee_scale: float
+    deployer_fee_scale: float | None
     growth_mode: bool | None
     collateral_token_index: int
 

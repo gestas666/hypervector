@@ -1,0 +1,120 @@
+{
+  "schema_version": 1,
+  "journal_id": "v51-sol-one-blocker-portfolio-compatibility-v1",
+  "hypothesis_id": "v51-sol-remove-hourly-cross-one-blocker",
+  "generated_at_utc": "2026-08-16T04:55:43Z",
+  "status": "being_tested_negative_deployable_short_only",
+  "contract": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_live_change": false,
+    "runtime_strategy_changed": false,
+    "performance_gate": false
+  },
+  "problem_restatement": "Determine whether every SOL hourly-cross one-blocker shadow lifecycle was an incremental opportunity relative to the unchanged v51 portfolio, rather than a counterfactual entry while canonical SOL exposure was already open.",
+  "root_cause": {
+    "confidence": "high",
+    "finding": "The route-native shadow enforced one position only inside its hypothetical replay but did not attach the existing causal shared-portfolio classifier. Its pending long began after the canonical SOL long was already open, so it was not deployable incremental opportunity.",
+    "failure_boundary": "The source ledger retained the required pre-routing cohort snapshot, but the SOL observer report and improvement-digest adapter did not consume its portfolio classification."
+  },
+  "corrected_evidence": {
+    "raw_exact_evaluations": 429,
+    "independent_onsets": 8,
+    "raw_attempts": 2,
+    "deployable_attempts": 1,
+    "portfolio_excluded_attempts": 1,
+    "existing_symbol_position_attempts": 1,
+    "deployable_resolved_lifecycles": 1,
+    "deployable_active_pending_lifecycles": 0,
+    "deployable_observed_sides": [
+      "short"
+    ],
+    "deployable_wins": 0,
+    "deployable_losses": 1,
+    "deployable_net_return_bps": -12.37694793635953,
+    "deployable_simulated_net_pnl_usd": -6.188473968179765,
+    "deployable_exit_reason": "opposite_signal",
+    "nondeployable_long_status": "existing_symbol_position"
+  },
+  "decision": "Keep the live SOL Range Onset route and hourly-cross blocker unchanged. Do not count the pending long counterfactual toward long-side coverage or opportunity capture. Continue only with later independent attempts that occur while canonical SOL is flat and portfolio capacity is available.",
+  "single_highest_value_next_investigation_for_sol": "Capture the next source-resolved deployable SOL one-blocker episode while canonical SOL is flat; long-side coverage remains zero.",
+  "global_priority_note": "The portfolio-wide digest still ranks exact SPCX and SP500 live-source lifecycle collection above this SOL experiment.",
+  "validation": {
+    "red_test": "The exact snapshot test failed with KeyError because no portfolio_journal existed despite a causal pre-routing OPEN snapshot.",
+    "green_test": "The same source-bound snapshot now classifies the long attempt as existing_symbol_position with deployable=0.",
+    "focused_suite": "47 tests passed across the SOL command, shadow, shared-portfolio journal, prospective adapter, and continuous monitor integration.",
+    "static_checks": "Ruff check and format check passed; touched production files are <=500 lines and contain no functions over 50 lines.",
+    "runtime_refresh": "The report-only SOL observer and improvement monitor restarted with their prior arguments; the v51 live backend, checkpoint writer, positions, stops, configuration, sizing, and TUI were not changed."
+  },
+  "proposal_contract": {
+    "1_recommendation": "Retain the hourly-cross requirement and collect only deployable flat-SOL prospective episodes.",
+    "2_why_now": "A raw pending long was being presented as prospective maturity even though v51 had already occupied SOL on the same move.",
+    "3_evidence_reviewed": "Exact v51 cohort snapshots and routing, SOL live ledger, public L2 and mark archive, official funding, immutable one-blocker replay, improvement digest, and focused regressions.",
+    "4_observed_problem_or_opportunity": "Portfolio occupancy attribution overstated the one-blocker experiment's long-side evidence.",
+    "5_applicable_market_regime": "The excluded long and deployable short both occurred in the current v51 range-onset observation window; only the short is incremental portfolio evidence.",
+    "6_alternatives_considered": "Discard the counterfactual, infer occupancy from fills, or reuse the existing causal portfolio journal. Reusing the journal preserves the path while excluding it from deployable maturity.",
+    "7_proposed_live_change": "none",
+    "8_expected_upside": "Prevents false evidence from supporting a harmful blocker relaxation and keeps incremental opportunity accounting honest.",
+    "9_main_risks_and_failure_modes": "Sparse deployable outcomes, modeled rather than placed fills, missing future long coverage, and possible future portfolio-classification schema drift.",
+    "10_validation_completed": "TDD red-green reproduction, exact current-run refresh, causal shared-portfolio classification, digest ingestion, focused tests, formatting, line limits, and process-scope verification.",
+    "11_validation_still_required": "Additional independent deployable long and short episodes with exact fees, funding, depth, stop, opposite-signal, and maximum-hold outcomes.",
+    "12_success_metrics": "At least ten deployable resolved shorts and three deployable resolved longs; positive after-cost net and PF above one; positive ex-largest-winner net; zero unresolved portfolio or venue-path attribution.",
+    "13_failure_or_rollback_triggers": "Any occupied or capacity-blocked attempt advancing deployable maturity, any source identity mismatch, or any report-only change affecting live authority requires immediate rollback and evidence invalidation.",
+    "14_confidence_level": "High on the attribution defect and corrected current-run counts; low on strategy expectancy because only one deployable lifecycle exists and it lost.",
+    "15_explicit_approval_requested": false
+  },
+  "uncertainties_and_failure_modes": [
+    "The shared-portfolio snapshot proves deployability state, not a hypothetical venue fill.",
+    "One deployable short loss cannot establish the full strategy expectancy.",
+    "The raw long path remains useful counterfactual trajectory evidence but is non-additive and non-incremental.",
+    "Future attempts may be excluded by portfolio capacity or same-cycle action even when SOL itself is flat."
+  ],
+  "falsifiers": [
+    "The frozen report fails to reproduce one deployable short and one existing-symbol-position long.",
+    "The canonical SOL lifecycle was not open before the excluded long routing decision.",
+    "The improvement digest later reports the excluded long as deployable or active pending without a new flat-SOL attempt.",
+    "A later predeclared deployable sample becomes positive after costs and largest-winner removal with both sides represented."
+  ],
+  "evidence": [
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v51_sol_route_native_one_blocker_portfolio_compatibility_20260816T0455Z_v1.json",
+      "sha256": "ec83743d2340f939f7e654141e23dfe1f87665c9f735e37be48ecd169fcb8b85",
+      "bytes": 12246
+    },
+    {
+      "path": "../../src/hypervector/research/cohort_candidate_portfolio_journal.py",
+      "sha256": "e962bac301d84ba1472a8900645269ef1805095531629a5e597b4c207e68ca96",
+      "bytes": 14355
+    },
+    {
+      "path": "../../src/hypervector/research/cohort_prospective_experiment_evidence.py",
+      "sha256": "54ed646e5bc8a22405fdbfc019e680a5c644dbbbdc5a3aabff86e161a5d8526c",
+      "bytes": 16316
+    },
+    {
+      "path": "../../src/hypervector/research/sol_route_native_one_blocker_command.py",
+      "sha256": "66b89364c89f43b0fc9990dac49b399221af46cbdaaaf96f5863b346dfc95060",
+      "bytes": 18096
+    },
+    {
+      "path": "../../tests/test_cohort_candidate_portfolio_journal.py",
+      "sha256": "83b742e2f65358f218caa5d77710d4ff0266fae5e718cf995f6a54655828a0f7",
+      "bytes": 8456
+    },
+    {
+      "path": "../../tests/test_cohort_prospective_experiment_evidence.py",
+      "sha256": "ac111b971108c358787c5221159b0d2ce58ac5edf6882c6e32f9adef32d14163",
+      "bytes": 12068
+    },
+    {
+      "path": "../../tests/test_cohort_improvement_monitor_prospective_evidence.py",
+      "sha256": "bf0eb15614f60b82bb3da83cda946410426c2c1cfd662cba5edd3cf6ee7cd46f",
+      "bytes": 7790
+    },
+    {
+      "path": "../../tests/test_sol_route_native_one_blocker_command.py",
+      "sha256": "df7dc7fc87ebee85b8a51902ea29971982c25c4e7e4118dbfabdfc0d989872af",
+      "bytes": 14625
+    }
+  ]
+}

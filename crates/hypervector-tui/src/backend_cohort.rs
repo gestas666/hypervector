@@ -42,6 +42,10 @@ pub struct CohortAssetConfig {
     pub venue_max_leverage: f64,
     pub margin_fraction: f64,
     pub max_notional_usd: f64,
+    #[serde(default)]
+    pub entry_slippage_cap_fraction: Option<f64>,
+    #[serde(default)]
+    pub market_slippage_cap_fraction: Option<f64>,
     pub stop_bps: f64,
     pub maximum_hold_seconds: u64,
 }
@@ -61,6 +65,8 @@ pub struct CohortExecutionPlan {
     pub target_r_multiple: Option<f64>,
     pub safety_stop_overlay: bool,
     pub stop_anchor: Option<f64>,
+    #[serde(default)]
+    pub target_anchor: Option<f64>,
     #[serde(default = "fixed_maximum_hold_policy")]
     pub maximum_hold_policy: String,
     #[serde(default)]
@@ -119,11 +125,21 @@ fn disabled_profit_lock_policy() -> String {
 }
 
 pub(crate) fn profit_lock_contract_valid(
+    strategy_id: Option<&str>,
     policy: &str,
     activation: Option<f64>,
     floor: Option<f64>,
     giveback: Option<f64>,
 ) -> bool {
+    if matches!(
+        policy,
+        "btc_hulk_delayed_component_floor_v1" | "btc_hulk_delayed_component_exit_v2"
+    ) {
+        return strategy_id == Some("hulk_expansion_short_robust_v3")
+            && activation.is_none()
+            && floor.is_none()
+            && giveback.is_none();
+    }
     if policy == "none" {
         return activation.is_none() && floor.is_none() && giveback.is_none();
     }
@@ -136,6 +152,10 @@ pub(crate) fn profit_lock_contract_valid(
             .all(|value| value.is_finite() && *value > 0.0)
         && floor <= activation
 }
+
+#[cfg(test)]
+#[path = "backend_cohort_tests.rs"]
+mod tests;
 
 /// Provider-specific entry sizing bounded by the asset adapter ceiling.
 #[derive(Debug, Clone, PartialEq, Deserialize)]

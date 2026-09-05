@@ -1,0 +1,304 @@
+{
+  "schema_version": 1,
+  "source_profile_id": "multi_asset_growth_first_5000_btc_tuned_v2_increment_v56",
+  "source_profile_fingerprint": "29a29ad11c9cc0613fd8fc93013758b8e093e96ff5f3698217b562b90f6e89c9",
+  "contract": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_promotion": false,
+    "runtime_strategy_changed": false
+  },
+  "routes": {
+    "hulk_expansion_short_robust_v3|BTC": {
+      "triage": "REVISE",
+      "next_experiment": "collect_side_specific_evidence",
+      "historical_assessment": "retained_higher_priority_robust_route_forward_repeatability_sparse",
+      "decision_source": "../../docs/research-journal/v56-btc-tuned-v2-increment-proposal-v1.json",
+      "supporting_evidence": [
+        "../../docs/research-journal/v56-btc-tuned-v2-increment-proposal-v1.json",
+        "../../data/logs/research/bidirectional_cohort/v55_live_prefix_20260818T1045Z.json"
+      ]
+    },
+    "hulk_expansion_short_tuned_v2|BTC": {
+      "triage": "REVISE",
+      "next_experiment": "collect_side_specific_evidence",
+      "historical_assessment": "three_partition_positive_but_timing_sensitive_and_recent_signal_lost",
+      "decision_source": "../../docs/research-journal/v56-btc-tuned-v2-increment-proposal-v1.json",
+      "supporting_evidence": [
+        "../../data/logs/research/20260801_hulk_short_tuned_v2_development.json",
+        "../../data/logs/research/20260801_hulk_short_tuned_v2_validation.json",
+        "../../data/logs/research/20260801_hulk_short_tuned_v2_pseudo_holdout.json",
+        "../../docs/research-journal/v56-btc-tuned-v2-increment-proposal-v1.json"
+      ]
+    },
+    "liquidity_sweep_long_1h_stop60_target60_v2|BTC": {
+      "triage": "REVISE",
+      "next_experiment": "collect_side_specific_evidence",
+      "historical_assessment": "sparse_sweep_route_retained_without_relaxation",
+      "decision_source": "../../data/logs/research/bidirectional_cohort/v55_live_prefix_20260818T1045Z.json",
+      "supporting_evidence": [
+        "../../data/logs/research/bidirectional_cohort/v55_live_prefix_20260818T1045Z.json"
+      ]
+    },
+    "hype_breakout_compression_alignment_bidirectional_v2|HYPE": {
+      "triage": "REVISE",
+      "next_experiment": "collect_both_side_live_execution",
+      "historical_assessment": "development_promising_forward_sparse_and_high_frequency_onset_rejected",
+      "decision_source": "../../docs/research-journal/v56-btc-tuned-v2-increment-proposal-v1.json",
+      "supporting_evidence": [
+        "../../docs/research-journal/v56-btc-tuned-v2-increment-proposal-v1.json",
+        "../../data/logs/research/bidirectional_cohort/v55_live_prefix_20260818T1045Z.json"
+      ]
+    },
+    "hip3_spcx_cash_open_gap_reversal_bidirectional_15m_v1|xyz:SPCX": {
+      "triage": "REVISE",
+      "next_experiment": "collect_side_specific_evidence",
+      "historical_assessment": "long_containment_pending_human_approval_short_forward_evidence_unresolved",
+      "decision_source": "../../docs/research-journal/v56-spcx-long-side-containment-proposal-20260818-v1.json",
+      "supporting_evidence": [
+        "../../data/logs/research/bidirectional_cohort/v55_live_prefix_20260818T1045Z.json",
+        "../../docs/research-journal/v56-spcx-cash-open-forward-preregistration-20260818-v1.json",
+        "../../docs/research-journal/v56-spcx-cash-open-forward-decision-20260818-v1.json",
+        "../../data/logs/research/bidirectional_cohort/v56_spcx_cash_open_resolved_20260818T1420Z.json",
+        "../../docs/research-journal/v56-spcx-long-exit-giveback-challenger-preregistration-20260818-v1.json",
+        "../../data/logs/research/xyz_spcx_cash_open_long_exit_challenger_development_20260818_v1.json",
+        "../../docs/research-journal/v56-spcx-cash-open-first-long-resolution-20260818-v1.json",
+        "../../docs/research-journal/v56-spcx-long-entry-quality-preregistration-20260818-v1.json",
+        "../../data/logs/research/xyz_spcx_cash_open_long_entry_diagnosis_development_20260818_v1.json",
+        "../../docs/research-journal/v56-spcx-long-side-containment-proposal-20260818-v1.json"
+      ]
+    }
+  },
+  "active_hypotheses": [
+    {
+      "hypothesis_id": "v56-first-tuned-v2-live-lifecycle-v1",
+      "route": "hulk_expansion_short_tuned_v2|BTC",
+      "experiment": "first_exact_tuned_v2_live_lifecycle",
+      "status": "being_tested",
+      "decision_source": "../../docs/research-journal/v56-btc-tuned-v2-increment-proposal-v1.json",
+      "minimum_evidence": "One attributable tuned-v2 eligible decision with explicit routing, execution plan, fill, protection, fees, slippage, funding, stop or target, and resolved net PnL.",
+      "execution_effect": "report_only",
+      "automatic_live_change": false
+    },
+    {
+      "hypothesis_id": "v56-spcx-short-live-lifecycle-v1",
+      "route": "hip3_spcx_cash_open_gap_reversal_bidirectional_15m_v1|xyz:SPCX",
+      "experiment": "first_exact_short_lifecycle",
+      "status": "being_tested",
+      "decision_source": "../../docs/research-journal/v56-spcx-long-side-containment-proposal-20260818-v1.json",
+      "latest_evidence": "../../data/logs/research/xyz_spcx_cash_open_gap_reversal_development_20260817_v2.json",
+      "minimum_evidence": "One attributable exact-source SPCX short decision and fully resolved lifecycle with routing, fill, protection, prior-close target behavior, fees, slippage, funding, excursion, and final net PnL.",
+      "execution_effect": "report_only",
+      "automatic_live_change": false
+    }
+  ],
+  "hypothesis_decisions": [
+    {
+      "hypothesis_id": "v56-restore-original-hype-onset-v1",
+      "route": "hype_breakout_compression_alignment_bidirectional_v2|HYPE",
+      "status": "rejected",
+      "experiment": "restore_high_frequency_original_onset",
+      "decision_reason": "The exact one-year fixed-exit control lost after costs across 1023 trades; inactivity does not justify restoring a negative route.",
+      "decision_source": "../../docs/research-journal/v56-btc-tuned-v2-increment-proposal-v1.json",
+      "reopen_condition": "A preregistered independent exact-source window must become positive after costs and largest-winner removal without source or exit changes.",
+      "proposed_live_change": null
+    },
+    {
+      "hypothesis_id": "v56-replace-robust-v3-with-tuned-v2-v1",
+      "route": "hulk_expansion_short_tuned_v2|BTC",
+      "status": "rejected",
+      "experiment": "replace_robust_route",
+      "decision_reason": "Tuned-v2 adds cadence but is timing-sensitive; robust-v3 remains higher priority and cannot be displaced without compatible live evidence.",
+      "decision_source": "../../docs/research-journal/v56-btc-tuned-v2-increment-proposal-v1.json",
+      "reopen_condition": "Multiple resolved exact-v56 conflicts and lifecycles must demonstrate superior after-cost selection from tuned-v2.",
+      "proposed_live_change": null
+    },
+    {
+      "hypothesis_id": "v56-first-resolved-portfolio-lifecycle-v1",
+      "route": "prospective_v56_exact_live_route_collection|ALL",
+      "status": "accepted",
+      "experiment": "first_resolved_v56_route_outcome_audit",
+      "decision_reason": "The first V56 route lifecycle resolved with complete action, entry, protection, five stop fills, costs, excursion telemetry, final flat state, and zero faults. The economic result was a $42.08606 loss and is retained without being success-shaped.",
+      "decision_source": "../../data/logs/research/bidirectional_cohort/v56_spcx_cash_open_resolved_20260818T1420Z.json",
+      "reopen_condition": null,
+      "proposed_live_change": null
+    },
+    {
+      "hypothesis_id": "v56-spcx-cash-open-forward-20260818-v1",
+      "route": "hip3_spcx_cash_open_gap_reversal_bidirectional_15m_v1|xyz:SPCX",
+      "status": "accepted",
+      "experiment": "prospective_cash_open_gap_reversal_decision_and_lifecycle",
+      "decision_reason": "The preregistered long decision produced an exact protected lifecycle and resolved at its planned stop for -$42.08606 net. Acceptance applies only to evidence completeness, not profitability or route promotion.",
+      "decision_source": "../../docs/research-journal/v56-spcx-cash-open-first-long-resolution-20260818-v1.json",
+      "reopen_condition": null,
+      "proposed_live_change": null
+    },
+    {
+      "hypothesis_id": "v56-spcx-long-fixed-target-family-v1",
+      "route": "hip3_spcx_cash_open_gap_reversal_bidirectional_15m_v1|xyz:SPCX|long",
+      "status": "rejected",
+      "experiment": "entry_anchored_fixed_target_40_60_80_bps",
+      "decision_reason": "All three preregistered targets lost under stress and underperformed the prior-close control; 40 and 60 bps had zero positive folds, 80 bps had one, and all scenarios retained four unresolved entry slices.",
+      "decision_source": "../../data/logs/research/xyz_spcx_cash_open_long_exit_challenger_development_20260818_v1.json",
+      "reopen_condition": "A distinct preregistered source-compatible mechanism must improve fold stability and leave-largest after-cost results over the prior-close control, resolve technical paths, and then survive independent forward validation.",
+      "proposed_live_change": null
+    },
+    {
+      "hypothesis_id": "v56-spcx-long-entry-quality-v1",
+      "route": "hip3_spcx_cash_open_gap_reversal_bidirectional_15m_v1|xyz:SPCX|long",
+      "status": "accepted",
+      "experiment": "causal_long_entry_quality_diagnosis",
+      "decision_reason": "All nine development long entries reconciled one-to-one to causal opening features, nominal and stress outcomes, and technical path status without OOS access. No entry filter was selected; the side remains largest-winner dependent and the negative-imbalance subset is temporally concentrated.",
+      "decision_source": "../../data/logs/research/xyz_spcx_cash_open_long_entry_diagnosis_development_20260818_v1.json",
+      "reopen_condition": "A new preregistered, non-post-hoc causal mechanism must add independent evidence beyond these nine development longs and the first stopped forward long.",
+      "proposed_live_change": null
+    }
+  ],
+  "change_proposals": [
+    {
+      "proposal_id": "v56-disable-spcx-long-retain-short-v1",
+      "approval_status": "pending_human_approval",
+      "execution_effect": "proposal_only",
+      "automatic_live_change": false,
+      "recommendation": "At the next verified flat and owned-order-free boundary, cut over to a successor profile that removes long authority from the SPCX cash-open provider while retaining its short authority and leaving every BTC and HYPE route unchanged.",
+      "why_now": "The first exact V56 SPCX long lost $42.08606; the frozen development long side had only 3 wins in 9 trades, two of three folds lost, and stress net became -$75.04559 after removing its largest winner. The pooled route was promoted primarily by the materially stronger short side.",
+      "evidence_reviewed": [
+        "Exact V56 SPCX decision, fill, protection, stop execution, costs, excursion, and final flat lifecycle audit",
+        "Frozen 2026-06-08 through 2026-07-13 SPCX development replay with nominal, stress, side, fold, and largest-winner diagnostics",
+        "Preregistered 40, 60, and 80 bps long fixed-target development challenger",
+        "Preregistered nine-trade causal long entry-quality diagnosis with technical-path attribution"
+      ],
+      "observed_problem_or_opportunity": "Bidirectional pooled economics masked a brittle long side: long stress PF was 1.4133 only because of one $192.8451 winner, PF without that winner was 0.7367, fold nets were -$44.6464, +$319.8025, and -$139.3610, and the first exact forward long lost. The live reason says reversal confirmed although the mechanism does not require an opening-bar reversal.",
+      "applicable_market_regime": "All observed regimes; this is a side-specific evidence and authority correction, not a directional macro forecast.",
+      "alternatives_considered": [
+        "Continue both SPCX sides unchanged and collect more losses or wins",
+        "Reduce only SPCX long size without evidence for a calibrated fraction",
+        "Require a positive opening-bar reversal, which left one losing development trade and today also lost",
+        "Require negative top-10 imbalance, a post-hoc five-trade subset whose wins cluster in one middle fold and whose later two trades both lost",
+        "Remove the entire SPCX route, which would discard the materially stronger short-side development evidence"
+      ],
+      "proposed_live_change": "Create and verify a new successor config with the SPCX provider sides set to [short] and executable direction limited to short; do not edit or hot-reload the active V56 file. Cut over only while venue and all strategy ledgers are flat and owned-order-free. Preserve BTC and HYPE routes, leverage, margin, stops, targets, and hold policies exactly.",
+      "expected_upside": "Prevents a weak, largest-winner-dependent long side from taking another approximately $5,000-notional 80-bps-stop exposure while preserving the route's stronger short-side opportunity and all other V56 opportunities.",
+      "main_risks_and_failure_modes": [
+        "Nine development longs plus one forward long remain a small sample and disabling may miss a future winner",
+        "Four of nine development long lifecycles have unresolved entry risk slices",
+        "The short side has no exact V56 resolved lifecycle yet and its own profitability remains provisional",
+        "A malformed successor could accidentally remove the whole provider or retain hidden long authority",
+        "Restarting away from a non-flat or order-held state could orphan risk and is prohibited"
+      ],
+      "validation_completed": [
+        "V56 first lifecycle reconciles exactly to one long stop loss and final flat/order-free state",
+        "Development long side is separated from pooled route economics",
+        "All three chronological long fold outcomes and largest-winner sensitivity are explicit",
+        "Fixed 40, 60, and 80 bps target family was preregistered and rejected after exact stress replay",
+        "Causal opening gap, reversal, spread, imbalance, trade count, volume, and L2 snapshot features reconcile one-to-one for all nine long entries",
+        "No entry filter or live mutation was selected from the descriptive diagnosis"
+      ],
+      "validation_still_required": [
+        "Explicit human approval of this exact side-authority proposal",
+        "TDD successor config proving exact BTC and HYPE identity preservation and SPCX short-only authority",
+        "Fresh flat, owned-order-free, venue/ledger/accounting preflight before cutover",
+        "Poststart acceptance proving no SPCX long executable scope or long action and intact SPCX short exit contract",
+        "Prospective exact-cost SPCX short lifecycle collection before any claim that the short side is profitable"
+      ],
+      "success_metrics": [
+        "Zero executable or manually routable SPCX long scope in the successor",
+        "Exact SPCX short route remains present with 80-bps stop and prior-cash-close target",
+        "All BTC and HYPE route identities and execution contracts remain byte-equivalent in parsed configuration",
+        "Cutover occurs only flat and order-free with healthy checkpoint and zero faults",
+        "Every later SPCX short decision receives complete action or withholding and lifecycle accounting"
+      ],
+      "failure_or_rollback_triggers": [
+        "Any open position or owned order at the proposed cutover boundary",
+        "Any successor diff beyond SPCX long authority and version/accounting identity",
+        "Any SPCX long intent becomes routable after cutover",
+        "SPCX short route, stop, target anchor, or session-close fallback is missing or changed",
+        "Backend/checkpoint identity mismatch, stale telemetry, protection defect, or accounting reconciliation failure"
+      ],
+      "confidence_level": "medium",
+      "explicit_approval_requested": true
+    }
+  ],
+  "evidence": [
+    {
+      "path": "../multi_asset_growth_first_5000_btc_tuned_v2_increment_v56.toml",
+      "sha256": "4ec043c4d8aa9c86f25b448ae7e1ea133531af06db9223ac7bf7d46918993053",
+      "bytes": 3107
+    },
+    {
+      "path": "../../docs/research-journal/v56-btc-tuned-v2-increment-proposal-v1.json",
+      "sha256": "93c803bf9b701a0ca677672af302c36748d1f92722c5ff396aa97c6afd3d7d59",
+      "bytes": 5368
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v56_btc_tuned_v2_increment_preflight_20260818_v1.json",
+      "sha256": "d4da04a9bfc125b5241e87078ce17ce7cb1adce529a19768d430af1817152cc7",
+      "bytes": 9188
+    },
+    {
+      "path": "../../data/logs/research/20260801_hulk_short_tuned_v2_development.json",
+      "sha256": "be48f01177dd5828c3016ecac339f7facb59892c0ab65878ec793c6d5409687d",
+      "bytes": 84659
+    },
+    {
+      "path": "../../data/logs/research/20260801_hulk_short_tuned_v2_validation.json",
+      "sha256": "90465a69fe9cb6b3fe39ff7b23d81b6e6fd3b2d6b0d190d36422eeefbae63a3c",
+      "bytes": 54997
+    },
+    {
+      "path": "../../data/logs/research/20260801_hulk_short_tuned_v2_pseudo_holdout.json",
+      "sha256": "c461ecbef4896dd7596ce9018755be28e7f1910b9564b879f992a08c0abdeb49",
+      "bytes": 30025
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v55_live_prefix_20260818T1045Z.json",
+      "sha256": "81c73f1086d5eccb9107885db4e9a50f2288629e96bef5de87b14e37bab1f1ad",
+      "bytes": 6036689
+    },
+    {
+      "path": "../../docs/research-journal/v56-spcx-cash-open-forward-preregistration-20260818-v1.json",
+      "sha256": "11a3013341191b6cacaeed21f28b84f45f2b38a8e70aa45abb8071097d8a85d1",
+      "bytes": 5486
+    },
+    {
+      "path": "../../docs/research-journal/v56-spcx-cash-open-forward-decision-20260818-v1.json",
+      "sha256": "cfd3c067e9795b5c993cc098958e25dcbc2aca7cbe84fa2b25e648eabbae6f11",
+      "bytes": 4270
+    },
+    {
+      "path": "../../docs/research-journal/v56-spcx-cash-open-first-long-resolution-20260818-v1.json",
+      "sha256": "026fc938233943f6364131122a97a6b192c1dfc2ffecce23cafde7c7c6ac5108",
+      "bytes": 9598
+    },
+    {
+      "path": "../../docs/research-journal/v56-spcx-long-exit-giveback-challenger-preregistration-20260818-v1.json",
+      "sha256": "0d07332ff1cc9ca51e0dcdf54416f8d0b1fa20c274b27f76a7dfbe21ce546f16",
+      "bytes": 4930
+    },
+    {
+      "path": "../../data/logs/research/xyz_spcx_cash_open_long_exit_challenger_development_20260818_v1.json",
+      "sha256": "d307c5ea128dbfafc23533e35db228fe77014fd955e88c3ae38a6c70bfe1d844",
+      "bytes": 474588
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v56_spcx_cash_open_resolved_20260818T1420Z.json",
+      "sha256": "b5b151c78f246c322d9f561495bb423ab1fd90eaee827df37093aec467df01d5",
+      "bytes": 6819140
+    },
+    {
+      "path": "../../docs/research-journal/v56-spcx-long-entry-quality-preregistration-20260818-v1.json",
+      "sha256": "5332ce8a2af55d9af34951d5c256cd3f81472fc96a51e0cdc9f07a997df14630",
+      "bytes": 4712
+    },
+    {
+      "path": "../../data/logs/research/xyz_spcx_cash_open_long_entry_diagnosis_development_20260818_v1.json",
+      "sha256": "0b5eb1b410b6a654ca9146d61f1ec7b57031da02fd878d2fa4c77595a258033d",
+      "bytes": 170262
+    },
+    {
+      "path": "../../docs/research-journal/v56-spcx-long-side-containment-proposal-20260818-v1.json",
+      "sha256": "7fb97db8fe78498c297037e58d4494fe59d579ce794d940a25c0205053dadb80",
+      "bytes": 7231
+    }
+  ]
+}

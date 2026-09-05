@@ -1,0 +1,236 @@
+{
+  "schema_version": "v58_btc_trend_pullback_reacceleration_preregistration_v1",
+  "hypothesis_id": "V58_BTC_15M_TREND_PULLBACK_REACCELERATION_LONG_V1",
+  "generated_at_utc": "2026-08-21T10:56:30Z",
+  "status": "preregistered_before_candidate_results",
+  "authority": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_promotion": false,
+    "automatic_live_change": false,
+    "runtime_strategy_changed": false,
+    "orders_supported": false
+  },
+  "problem_restatement": {
+    "input": "The unchanged V58 BTC sweep-reclaim long is historically selective but did not cover the current no-sweep uptrend. Removing the sweep predicate was economically falsified.",
+    "output": "Test one causally distinct BTC-only long mechanism that waits for an established hourly uptrend, a completed fifteen-minute pullback, and a fresh local reacceleration.",
+    "stakeholder": "Operator seeking meaningful but evidence-bound $5,000 portfolio growth.",
+    "success_criterion": "Determine whether the exact frozen candidate adds after-cost BTC-long opportunity without reopening a rejected family, relying on one winner, or degrading the current V58 BTC route portfolio."
+  },
+  "hypothesis": "Within an established BTC hourly uptrend, the first completed fifteen-minute close that breaks the prior one-hour local high after a pullback to the hourly EMA21 may have better continuation quality than immediate breakout transfer or fast EMA recross events while occurring more often than the current downside-sweep reclaim.",
+  "mechanism_novelty": {
+    "selected_from": "v58-btc-long-mechanism-error-analysis-20260821-v1.json",
+    "selection_sha256": "cf2bcfd46e906728a0bd72865a1afcb4af372b8bd77fa1d86406f98dce51b24a",
+    "selection_bytes": 14230,
+    "claim": "No project artifact found before preregistration tests this complete BTC-specific hourly-trend, fifteen-minute pullback-state, and local-high reacceleration event.",
+    "confidence": "medium",
+    "falsifier": "An exact prior project study or implementation with the same state machine and economic contract invalidates the novelty claim and must be reconciled before result generation."
+  },
+  "frozen_market_contract": {
+    "symbol": "BTC",
+    "direction": "long_only",
+    "input_cadence": "uninterrupted_1m_with_explicit_hl_gap_fill_allowed",
+    "decision_timeframe_minutes": 15,
+    "trend_timeframe_minutes": 60,
+    "bar_timestamp_semantics": "left_labeled_half_open",
+    "decision_availability": "only_after_all_constituent_minutes_complete",
+    "entry_availability": "next_one_minute_bar_open_after_the_completed_15m_decision",
+    "same_bar_entry_allowed": false,
+    "gap_rule": "reset_warmup_and_candidate_state_across_any_unfilled_input_gap"
+  },
+  "frozen_signal_contract": {
+    "hourly_fast_ema_period": 21,
+    "hourly_slow_ema_period": 55,
+    "hourly_uptrend": "latest_completed_1h_ema21_gt_ema55_and_close_gt_ema21",
+    "pullback_window_15m_bars": 8,
+    "pullback_arm": "while_hourly_uptrend_is_true_a_completed_15m_low_at_or_below_the_latest_completed_1h_ema21_arms_one_episode_if_that_15m_close_is_at_or_above_the_latest_completed_1h_ema55",
+    "pullback_refresh": "additional_pullback_touches_do_not_extend_an_already_armed_episode",
+    "pullback_expiry": "expire_after_eight_completed_15m_bars_without_entry_or_immediately_if_hourly_uptrend_becomes_false_or_a_15m_close_falls_below_the_latest_completed_1h_ema55",
+    "reacceleration_lookback_15m_bars": 4,
+    "reacceleration_entry": "while_armed_the_current_completed_15m_close_must_be_strictly_above_the_maximum_high_of_the_four_immediately_prior_completed_15m_bars_and_above_the_latest_completed_1h_ema21",
+    "onset_semantics": "emit_only_the_first_qualifying_reacceleration_for_each_armed_pullback_episode",
+    "rearm_semantics": "after_emission_require_a_new_completed_pullback_arm_event",
+    "volume_filter": null,
+    "l2_signal_filter": null,
+    "regime_model_filter": null,
+    "session_filter": null,
+    "parameter_grid_allowed": false,
+    "nearby_retuning_after_results_allowed": false
+  },
+  "parameter_provenance": {
+    "ema_21_55": "existing_active_HIP3_completed_bar_convention",
+    "eight_bar_pullback_expiry": "single_two_hour_hypothesis_not_selected_from_candidate_results",
+    "four_bar_reacceleration_high": "single_one_hour_local_structure_hypothesis_not_selected_from_candidate_results",
+    "economic_exit": "unchanged_V58_BTC_sweep_control_60bps_stop_60bps_target_24h_fallback_to_isolate_entry_quality"
+  },
+  "frozen_execution_and_risk_contract": {
+    "initial_equity_usd": 5000.0,
+    "margin_fraction": 0.1,
+    "leverage": 10.0,
+    "venue_max_leverage": 40.0,
+    "maximum_notional_usd": 5000.0,
+    "entry_liquidity": "taker_next_1m_open_proxy",
+    "stop_policy": "fixed_bps",
+    "stop_bps": 60.0,
+    "target_policy": "fixed_bps",
+    "target_bps": 60.0,
+    "maximum_hold_seconds": 86400,
+    "same_bar_target_stop_precedence": "stop_first",
+    "close_on_opposite_signal": false,
+    "same_direction_reentry_requires_reset": true,
+    "reentry_cooldown_minutes": 1,
+    "liquidation": "isolated_liquidation_proxy_from_shared_bar_engine_with_adverse_gap_execution",
+    "portfolio_scope": "one_BTC_position_at_a_time"
+  },
+  "frozen_friction_contract": {
+    "entry_taker_fee_bps": 4.5,
+    "target_maker_fee_bps": 1.5,
+    "stop_time_and_liquidation_taker_fee_bps": 4.5,
+    "nominal_taker_slippage_bps_per_side": 2.0,
+    "stress_taker_slippage_bps_per_side": 5.0,
+    "target_additional_slippage_bps": 0.0,
+    "funding": "exact_ordered_Hyperliquid_hourly_funding_rows_applied_with_side_correct_sign",
+    "missing_funding": "technical_failure_not_zero",
+    "depth_limitation": "bar_replay_does_not_claim_exact_historical_BBO_or_fill_capacity"
+  },
+  "frozen_partitions": [
+    {
+      "name": "development",
+      "start_utc": "2025-07-28T00:00:00Z",
+      "end_utc": "2026-01-28T00:00:00Z"
+    },
+    {
+      "name": "validation",
+      "start_utc": "2026-01-28T00:00:00Z",
+      "end_utc": "2026-04-28T00:00:00Z"
+    },
+    {
+      "name": "pseudo_holdout",
+      "start_utc": "2026-04-28T00:00:00Z",
+      "end_utc": "2026-07-28T00:00:00Z"
+    }
+  ],
+  "partition_disclosure": "All three partitions were opened by prior project research and are not pristine. The exact new mechanism and all parameters are frozen before its results, but researcher familiarity and multiple-testing risk remain material.",
+  "required_comparisons": [
+    {
+      "comparison": "candidate_standalone_vs_no_action",
+      "purpose": "measure absolute after-cost candidate economics"
+    },
+    {
+      "comparison": "candidate_vs_unchanged_v58_sweep_control_under_identical_60_60_exit_and_costs",
+      "purpose": "measure cadence and economic quality without exit confounding"
+    },
+    {
+      "comparison": "candidate_plus_v58_sweep_control_with_one_BTC_position",
+      "purpose": "measure overlap, displacement, and incremental long-route value"
+    },
+    {
+      "comparison": "candidate_plus_both_v58_BTC_short_routes_plus_sweep_control",
+      "purpose": "measure priority conflicts, capital occupancy, drawdown, and portfolio-level incremental value"
+    },
+    {
+      "comparison": "v58_current_BTC_routes_without_candidate",
+      "purpose": "current-system baseline"
+    },
+    {
+      "comparison": "v51_BTC_route_baseline_if_exact_identity_is_reconstructable",
+      "purpose": "mandate-required historical baseline; otherwise publish explicit identity-unavailable status rather than substitute another profile"
+    }
+  ],
+  "required_result_rows": {
+    "scenarios": [
+      "nominal",
+      "stress"
+    ],
+    "partitions": [
+      "development",
+      "validation",
+      "pseudo_holdout"
+    ],
+    "metrics": [
+      "raw_signal_count",
+      "completed_trades",
+      "wins",
+      "losses",
+      "net_pnl_usd",
+      "profit_factor",
+      "maximum_drawdown_pct",
+      "net_pnl_excluding_largest_winner_usd",
+      "fees_usd",
+      "funding_usd",
+      "liquidations",
+      "same_bar_ambiguities",
+      "gap_expired_entries",
+      "forced_end_exits",
+      "median_interarrival_hours",
+      "events_per_week",
+      "long_route_overlap_and_displacement"
+    ]
+  },
+  "acceptance_and_disposition_contract": {
+    "trial_abort_policy": "Only a technical integrity failure aborts result publication. Sparse, losing, high-drawdown, or zero-trade results remain valid reported outcomes.",
+    "candidate_support_requires": [
+      "positive_nominal_and_stress_net_pnl_in_validation_and_pseudo_holdout",
+      "profit_factor_above_one_in_validation_and_pseudo_holdout",
+      "positive_net_pnl_after_largest_winner_removal_in_validation_and_pseudo_holdout",
+      "no_liquidations_or_unreconciled_lifecycle_paths",
+      "positive_incremental_net_pnl_without_worse_maximum_drawdown_in_the_shared_current_V58_BTC_route_comparison",
+      "at_least_thirteen_completed_trades_in_each_validation_and_pseudo_holdout_partition",
+      "no_material_entry_delay_or_stress_cost_sign_reversal",
+      "exact_signal_reconstruction_and_immutable_sidecar_parity"
+    ],
+    "cadence_requirement_basis": "Thirteen trades per ninety-day partition is approximately one completed opportunity per week and is a declared usefulness criterion, not a trial-abort gate.",
+    "live_proposal_requires_additionally": [
+      "prospective_post_preregistration_signal_and_BBO_capture",
+      "exact_mark_and_visible_depth_feasibility",
+      "implementation_parity_with_a_separately_versioned_live_provider",
+      "fresh_growth_sizing_and_stop_wave_stress",
+      "verified_flat_and_order_free_transition_boundary",
+      "explicit_human_approval"
+    ],
+    "automatic_live_change": false
+  },
+  "bias_and_integrity_controls": [
+    "no_parameter_grid",
+    "no_threshold_or_side_selection_after_results",
+    "all_partitions_and_both_cost_scenarios_published",
+    "completed_bar_causality_rebuilt_independently",
+    "one_shot_pullback_state_and_gap_resets_unit_tested",
+    "source_hashes_and_trade_sidecar_bound_in_manifest",
+    "largest_winner_removal",
+    "explicit_multiple_testing_and_opened_partition_disclosure",
+    "no_live_runtime_or_config import in_research_module"
+  ],
+  "uncertainties_and_failure_modes": [
+    "The periods and event definition may still be an unprofitable hypothesis despite being frozen.",
+    "The opened historical partitions create selection and researcher-degrees-of-freedom risk.",
+    "One-minute OHLC cannot establish intraminute mark ordering, queue, or exact depth.",
+    "A fixed 60/60 exit isolates entry quality but may not be the optimal exit for a trend-pullback mechanism.",
+    "The candidate may overlap or conflict with the two V58 short routes and reduce portfolio results despite positive standalone PnL.",
+    "Zero or sparse signals would demonstrate inadequate practical cadence but would not be converted into fabricated trades."
+  ],
+  "falsifiers": [
+    "Implementation differs from the exact completed-bar state machine, rearm, gap, entry, exit, sizing, fee, funding, or slippage contract.",
+    "Independent sidecar reconstruction changes any signal identity, lifecycle, or aggregate metric.",
+    "Candidate support requirements fail in validation or pseudo-holdout.",
+    "Shared-current-V58 comparison shows negative incremental PnL or worse maximum drawdown.",
+    "Prospective decisions disagree with their completed source bars or cannot be executed at modeled size and friction."
+  ],
+  "source_evidence": {
+    "bars": {
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/BTC_1m_365d.parquet",
+      "bytes": 13014449,
+      "sha256": "b0742553ebeaa7cb4af6fabfd496f5462354cb541705fd0ca5ec222dc21e15d8"
+    },
+    "funding": {
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/hyperliquid/BTC/20250728T000000000000Z_20260728T000000000000Z_funding/funding.parquet",
+      "bytes": 184165,
+      "sha256": "1a222f783af9d5b52f500e259a89911e54c5f9c96dcab45dea466a166fc109c6"
+    },
+    "mechanism_selection": {
+      "path": "/Users/gestas/Prototypes/hypervector/docs/research-journal/v58-btc-long-mechanism-error-analysis-20260821-v1.json",
+      "bytes": 14230,
+      "sha256": "cf2bcfd46e906728a0bd72865a1afcb4af372b8bd77fa1d86406f98dce51b24a"
+    }
+  }
+}

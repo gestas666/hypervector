@@ -37,6 +37,9 @@ from hypervector.live.sol_range_onset_reconcile import (
     reconcile_sol_startup,
 )
 from hypervector.live.sol_range_onset_state import SolLiveStateMachine
+from hypervector.live.sol_range_onset_stop_close import (
+    cancel_residual_stop_after_close,
+)
 
 
 @dataclass(frozen=True)
@@ -89,7 +92,7 @@ def recover_pending_exit(
             adapter, config, events, machine, records, venue
         )
     return _recover_pending_close(
-        adapter, config, events, machine, orders, pending, records, venue
+        adapter, config, events, machine, orders, pending, poller, records, venue
     )
 
 
@@ -183,6 +186,7 @@ def _recover_pending_close(
     machine: SolLiveStateMachine,
     orders: SolOrderSubmission,
     pending: PendingSolOrderIntent,
+    poller: SolReconciliationPoller,
     records: list[dict[str, object]],
     venue: SolReconciliationSnapshot,
 ) -> RecoveredPendingEntry | None:
@@ -206,8 +210,28 @@ def _recover_pending_close(
             venue=venue,
             allow_reduced_size=True,
         )
-    if not venue.is_flat:
-        _fault(events, SolOrderRestartError("recovered close is not flat"))
+    _complete_pending_close(
+        context=context,
+        close_oid=ack.oid,
+        venue=venue,
+        machine=machine,
+        events=events,
+        orders=orders,
+        poller=poller,
+    )
+    return None
+
+
+def _complete_pending_close(
+    *,
+    context: PendingPositionContext,
+    close_oid: int,
+    venue: SolReconciliationSnapshot,
+    machine: SolLiveStateMachine,
+    events: SolLiveEngineEvents,
+    orders: SolOrderSubmission,
+    poller: SolReconciliationPoller,
+) -> None:
     machine.restore_exit_pending(
         entry_oid=context.entry_oid,
         stop_oid=context.stop_oid,
@@ -216,12 +240,20 @@ def _recover_pending_close(
         execution_plan=context.execution_plan,
     )
     events.emit_state()
-    machine.acknowledge_close(ack.oid)
+    machine.acknowledge_close(close_oid)
+    after = cancel_residual_stop_after_close(
+        venue=venue,
+        stop_oid=context.stop_oid,
+        events=events,
+        orders=orders,
+        poller=poller,
+    )
+    if not after.is_flat:
+        _fault(events, SolOrderRestartError("recovered close is not flat"))
     machine.confirm_flat()
-    events.emit_close_complete(reason="restart_recovery", oid=ack.oid)
-    events.emit_reconciliation(venue)
+    events.emit_close_complete(reason="restart_recovery", oid=close_oid)
+    events.emit_reconciliation(after)
     events.emit_state()
-    return None
 
 
 def _recover_ack(

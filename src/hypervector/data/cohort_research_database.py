@@ -34,13 +34,14 @@ _EVENT_COLUMNS = (
     "payload",
 )
 _INSERT_SQL = """
-INSERT OR IGNORE INTO cohort_live_events
+INSERT INTO cohort_live_events
 SELECT
     event_id, source_path, ledger_symbol, schema_version, sequence, event_type,
     observed_at_utc, execution_mode, effective_mode, live_armed,
     execution_authority, profile_id, profile_fingerprint, run_fingerprint,
     run_id, CAST(payload AS JSON)
 FROM cohort_import_batch
+ON CONFLICT (event_id) DO NOTHING
 """
 _SOURCE_SQL = """
 INSERT INTO cohort_live_sources (
@@ -257,7 +258,6 @@ def _source_increment(
     new_data = _read_range(path, prior_bytes, complete_size)
     ledger_symbol = _ledger_symbol(path)
     rows, ignored_observe_events = _parse_lines(source, ledger_symbol, new_data)
-    _validate_new_identities(connection, source, rows)
     return _SourceIncrement(
         source,
         ledger_symbol,
@@ -384,23 +384,6 @@ def _event_row(
     )
 
 
-def _validate_new_identities(
-    connection: duckdb.DuckDBPyConnection,
-    source: str,
-    rows: tuple[tuple[object, ...], ...],
-) -> None:
-    for row in rows:
-        existing = connection.execute(
-            """
-            SELECT event_id FROM cohort_live_events
-            WHERE source_path = ? AND run_id = ? AND sequence = ?
-            """,
-            [source, row[14], row[4]],
-        ).fetchone()
-        if existing is not None and existing[0] != row[0]:
-            raise ValueError(f"conflicting cohort run sequence in {source}")
-
-
 def _commit_increments(
     connection: duckdb.DuckDBPyConnection,
     increments: tuple[_SourceIncrement, ...],
@@ -410,7 +393,11 @@ def _commit_increments(
         for increment in increments:
             _reconcile_ledger_symbol(connection, increment)
             if increment.rows:
-                _insert_event_batch(connection, increment.rows)
+                _insert_event_batch(
+                    connection,
+                    increment.rows,
+                    increment.source_path,
+                )
             connection.execute(
                 _SOURCE_SQL,
                 [
@@ -444,13 +431,17 @@ def _reconcile_ledger_symbol(
 def _insert_event_batch(
     connection: duckdb.DuckDBPyConnection,
     rows: tuple[tuple[object, ...], ...],
+    source: str,
 ) -> None:
     columns = {
         name: [row[index] for row in rows] for index, name in enumerate(_EVENT_COLUMNS)
     }
     connection.register("cohort_import_batch", pa.table(columns))
     try:
-        connection.execute(_INSERT_SQL)
+        try:
+            connection.execute(_INSERT_SQL)
+        except duckdb.ConstraintException as exc:
+            raise ValueError(f"conflicting cohort run sequence in {source}") from exc
     finally:
         connection.unregister("cohort_import_batch")
 

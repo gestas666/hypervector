@@ -27,8 +27,8 @@ def parse_hip3_market_fee_metadata(
     market = _exact_market(market_metadata, symbol)
     dex = _exact_dex(dexes, perp_dex)
     growth_mode = _growth_mode(market, symbol)
-    fee_scale = number(dex.get("deployerFeeScale"), "deployerFeeScale")
-    if not 0.0 <= fee_scale <= 3.0:
+    fee_scale = _deployer_fee_scale(market, dex)
+    if fee_scale is not None and not 0.0 <= fee_scale <= 3.0:
         raise HyperliquidAdapterError("deployerFeeScale must be between zero and three")
     return Hip3MarketFeeMetadata(
         deployer_fee_scale=fee_scale,
@@ -38,6 +38,17 @@ def parse_hip3_market_fee_metadata(
             "collateralToken",
         ),
     )
+
+
+def _deployer_fee_scale(
+    market: Mapping[str, object],
+    dex: Mapping[str, object],
+) -> float | None:
+    """Prefer the market-specific fee scale, then the dex-wide legacy field."""
+    value = market.get("deployerFeeScale")
+    if value is None:
+        value = dex.get("deployerFeeScale")
+    return None if value is None else number(value, "deployerFeeScale")
 
 
 def _growth_mode(market: Mapping[str, object], symbol: str) -> bool | None:

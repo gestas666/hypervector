@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "mode": "v57_exact_route_lifecycle_tracker_preregistration",
+  "generated_at_utc": "2026-09-01T13:42:33Z",
+  "live_identity": {
+    "run_id": "bidirectional-live-1788269536520",
+    "profile_id": "multi_asset_growth_first_5000_three_asset_btc_ioc_hardened_candidate_v68",
+    "profile_fingerprint": "9c8df6faa8005290032802d58f7e53ec5cdc5b9605218bc426ee6d3a3b3b60fd",
+    "provider_id": "hype_breakout_compression_alignment_bidirectional_v2",
+    "signal_strategy_id": "hype_breakout_compression_alignment_bidirectional_v2",
+    "symbol": "HYPE",
+    "route": "hype_breakout_compression_alignment_bidirectional_v2|HYPE",
+    "required_sides": ["long", "short"]
+  },
+  "prospective_boundary": {
+    "capture_start_utc": "2026-09-01T13:42:33Z",
+    "capture_start_ms": 1788270153000,
+    "baseline_route_evaluations": 4,
+    "baseline_eligible_evaluations": 0,
+    "selection_rule": "Future-only exact V68 route lifecycle after monitor activation."
+  },
+  "contract": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_live_change": false,
+    "automatic_retuning": false,
+    "automatic_promotion": false,
+    "runtime_strategy_changed": false
+  },
+  "implementation_evidence": [
+    {"path": "src/hypervector/research/cohort_route_lifecycle_scope.py", "sha256": "8c290e1877967187e1c659da53786f723947c294e7e4cabc3d76e30a2ddfabfc", "bytes": 3246},
+    {"path": "src/hypervector/research/cohort_route_lifecycle_evidence.py", "sha256": "4b6323fe7f73705658535d0b6e77c75c643b0aef170635620e3988092735ca7b", "bytes": 18779},
+    {"path": "src/hypervector/research/cohort_route_lifecycle_values.py", "sha256": "9edf4dc4098da1a8d3b10a15111e39923099322affcfeddfb4fc7cc8d3520c71", "bytes": 5631},
+    {"path": "scripts/cohort_route_lifecycle_watch.py", "sha256": "191d6975762b06f14a2ca7a3aa03feea172d000c399d7869f0e85012b8437107", "bytes": 13829}
+  ],
+  "outputs": {
+    "mutable_status": "data/runtime/bidirectional_cohort/v68_hype_alignment_both_side_lifecycle_latest.json",
+    "immutable_final": "data/logs/research/bidirectional_cohort/v68_hype_alignment_both_side_first_complete_20260901_v1.json"
+  }
+}

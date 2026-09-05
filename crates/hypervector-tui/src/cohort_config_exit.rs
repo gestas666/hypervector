@@ -70,7 +70,10 @@ fn hold_contract(policy: &CohortPendingExitPolicy) -> String {
     let hard = policy
         .hard_maximum_hold_seconds
         .map_or_else(|| "N/A".into(), duration_label);
-    format!("REGIME EXTEND {soft} → HARD {hard}")
+    let evidence = policy
+        .maximum_hold_evidence_maximum_age_seconds
+        .map_or_else(|| "N/A".into(), duration_label);
+    format!("REGIME EXTEND {soft} → HARD {hard} / EVIDENCE ≤{evidence}")
 }
 
 fn pending_profit_lock(policy: &CohortPendingExitPolicy) -> String {
@@ -91,6 +94,12 @@ fn profit_lock_label(
     if policy == "none" {
         return "PROFIT LOCK OFF".into();
     }
+    if policy == "btc_hulk_delayed_component_floor_v1" {
+        return "PROFIT LOCK DELAYED COMPONENT FLOOR".into();
+    }
+    if policy == "btc_hulk_delayed_component_exit_v2" {
+        return "PROFIT LOCK FLOOR / REVERSAL CONTAINMENT".into();
+    }
     match (activation, floor, giveback) {
         (Some(activation), Some(floor), Some(giveback)) => {
             format!("PROFIT LOCK {activation:.0}/{floor:.0}/{giveback:.0}bps")
@@ -109,7 +118,7 @@ fn duration_label(seconds: u64) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::{directional_profit_locks, profit_lock_label};
+    use super::{directional_profit_locks, hold_contract, profit_lock_label};
     use crate::backend_cohort_configuration::CohortPendingExitPolicy;
     use std::collections::BTreeMap;
 
@@ -127,6 +136,14 @@ mod tests {
             profit_lock_label("completed_bar_trailing", Some(25.0), None, Some(6.0)),
             "PROFIT LOCK INVALID",
         );
+        assert_eq!(
+            profit_lock_label("btc_hulk_delayed_component_floor_v1", None, None, None,),
+            "PROFIT LOCK DELAYED COMPONENT FLOOR",
+        );
+        assert_eq!(
+            profit_lock_label("btc_hulk_delayed_component_exit_v2", None, None, None,),
+            "PROFIT LOCK FLOOR / REVERSAL CONTAINMENT",
+        );
     }
 
     #[test]
@@ -135,6 +152,7 @@ mod tests {
             maximum_hold_seconds: 28_800,
             maximum_hold_policy: "fixed".into(),
             hard_maximum_hold_seconds: None,
+            maximum_hold_evidence_maximum_age_seconds: None,
             provider_recipe_exit_policy: "ignore".into(),
             profit_lock_policy: "completed_bar_trailing".into(),
             profit_lock_activation_bps: Some(30.0),
@@ -148,5 +166,25 @@ mod tests {
             " / HYPE PROFIT LOCK 30/12/7bps long",
         );
         assert!(directional_profit_locks(Some(&policies), "provider", Some("BTC")).is_empty());
+    }
+
+    #[test]
+    fn extended_hold_label_exposes_evidence_freshness() {
+        let policy = CohortPendingExitPolicy {
+            maximum_hold_seconds: 28_800,
+            maximum_hold_policy: "extend_while_regime_supported".into(),
+            hard_maximum_hold_seconds: Some(86_400),
+            maximum_hold_evidence_maximum_age_seconds: Some(60),
+            provider_recipe_exit_policy: "ignore".into(),
+            profit_lock_policy: "none".into(),
+            profit_lock_activation_bps: None,
+            profit_lock_floor_bps: None,
+            profit_lock_giveback_bps: None,
+        };
+
+        assert_eq!(
+            hold_contract(&policy),
+            "REGIME EXTEND 8H → HARD 24H / EVIDENCE ≤60S"
+        );
     }
 }

@@ -7,6 +7,7 @@ import argparse
 from dataclasses import asdict
 import json
 from pathlib import Path
+from typing import NamedTuple
 
 import pandas as pd
 
@@ -23,11 +24,24 @@ from hypervector.research.hype_breakout_exit_market import (
 )
 from hypervector.research.hype_breakout_exit_models import HypeExitReplayConfig
 from hypervector.research.hype_compression_breakout_challenger import (
+    HypeCompressionConfirmationBundle,
+    HypeCompressionResearchBundle,
     build_hype_compression_breakout_bundle,
     build_hype_compression_confirmation,
 )
+from hypervector.research.hype_compression_alignment_replay import (
+    HypeCompressionAlignmentReplay,
+    build_hype_compression_alignment_replay,
+)
 from hypervector.research.hype_compression_exit_challenger import (
+    HypeCompressionExitStudy,
     build_hype_compression_exit_study,
+)
+from hypervector.research.hype_compression_regime_loss_exit import (
+    build_hype_compression_regime_loss_study,
+)
+from hypervector.research.hype_compression_regime_loss_study import (
+    HypeCompressionRegimeLossStudy,
 )
 
 _ROOT = Path(__file__).resolve().parents[1]
@@ -44,6 +58,16 @@ _CONFIRMATION_FUNDING_DIRECTORY = _ROOT / (
     "data/cache/vendor/hyperliquid/HYPE/"
     "20260728T000000000000Z_20260811T000000000000Z_funding"
 )
+
+
+class _StudyBundles(NamedTuple):
+    """All fixed-entry HYPE challenger results for one immutable report."""
+
+    development: HypeCompressionResearchBundle
+    confirmation: HypeCompressionConfirmationBundle
+    exits: HypeCompressionExitStudy
+    regime_loss: HypeCompressionRegimeLossStudy
+    alignment: HypeCompressionAlignmentReplay
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -72,12 +96,13 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def build_replay_config() -> HypeExitReplayConfig:
-    """Return the exact v35 HYPE 8h-to-24h execution contract."""
+    """Return the exact v51 HYPE router and 8h-to-24h execution contract."""
     return HypeExitReplayConfig(
         stop_bps=80.0,
         maximum_hold_minutes=480,
         maximum_hold_policy="extend_while_regime_supported",
         hard_maximum_hold_minutes=1_440,
+        exit_on_opposite_signal=True,
     )
 
 
@@ -105,46 +130,88 @@ def run(args: argparse.Namespace) -> dict[str, object]:
         args,
         config,
     )
-    development_bundle = build_hype_compression_breakout_bundle(
-        development,
-        config=config,
-        fold_count=args.fold_count,
-    )
     confirmation_markets, gaps, confirmation_evidence = _confirmation_markets(args)
-    frozen = str(development_bundle.report["selection"]["selected_challenger"])
-    confirmation_bundle = build_hype_compression_confirmation(
-        confirmation_markets,
-        frozen_policy_id=frozen,
-        config=config,
-    )
-    exit_bundle = build_hype_compression_exit_study(
+    studies = _build_studies(
         development,
         confirmation_markets,
-        frozen_compression_policy_id=frozen,
         config=config,
         fold_count=args.fold_count,
     )
     report = _report(
-        development_bundle.report,
-        confirmation_bundle.report,
+        studies.development.report,
+        studies.confirmation.report,
         split,
         asdict(development_evidence),
         confirmation_evidence,
         gaps,
-        exit_bundle.report,
+        studies.exits.report,
+        studies.regime_loss.report,
+        studies.alignment.report,
         sources,
         generator,
     )
     _publish(
         args.out_dir,
         report,
-        development_bundle.trade_rows,
-        confirmation_bundle.trade_rows,
-        exit_bundle.development_trades,
-        exit_bundle.confirmation_trades,
+        _trade_sidecars(studies),
         generator,
     )
     return report
+
+
+def _build_studies(
+    development: pd.DataFrame,
+    confirmation: tuple[pd.DataFrame, ...],
+    *,
+    config: HypeExitReplayConfig,
+    fold_count: int,
+) -> _StudyBundles:
+    developed = build_hype_compression_breakout_bundle(
+        development,
+        config=config,
+        fold_count=fold_count,
+    )
+    frozen = str(developed.report["selection"]["selected_challenger"])
+    confirmed = build_hype_compression_confirmation(
+        confirmation,
+        frozen_policy_id=frozen,
+        config=config,
+    )
+    exits = build_hype_compression_exit_study(
+        development,
+        confirmation,
+        frozen_compression_policy_id=frozen,
+        config=config,
+        fold_count=fold_count,
+    )
+    regime_loss = build_hype_compression_regime_loss_study(
+        development,
+        confirmation,
+        frozen_compression_policy_id=frozen,
+        config=config,
+        fold_count=fold_count,
+    )
+    alignment = build_hype_compression_alignment_replay(
+        development,
+        confirmation,
+        frozen_policy_id=frozen,
+        config=config,
+        fold_count=fold_count,
+    )
+    return _StudyBundles(developed, confirmed, exits, regime_loss, alignment)
+
+
+def _trade_sidecars(studies: _StudyBundles) -> dict[str, pd.DataFrame]:
+    return {
+        "development_trades": studies.development.trade_rows,
+        "confirmation_trades": studies.confirmation.trade_rows,
+        "exit_development_trades": studies.exits.development_trades,
+        "exit_confirmation_trades": studies.exits.confirmation_trades,
+        "regime_loss_development_trades": studies.regime_loss.development_trades,
+        "regime_loss_confirmation_trades": studies.regime_loss.confirmation_trades,
+        "alignment_development_trades": studies.alignment.development_trades,
+        "alignment_confirmation_trades": studies.alignment.confirmation_trades,
+    }
 
 
 def _development_market(
@@ -212,6 +279,8 @@ def _report(
     confirmation_evidence: list[dict[str, object]],
     gaps: list[dict[str, object]],
     exit_study: dict[str, object],
+    regime_loss_study: dict[str, object],
+    alignment_replay: dict[str, object],
     sources: dict[str, object],
     generator: dict[str, dict[str, object]],
 ) -> dict[str, object]:
@@ -226,6 +295,8 @@ def _report(
         "later_confirmation_gaps": gaps,
         "later_confirmation": confirmation,
         "compression_exit_challenger": exit_study,
+        "compression_regime_loss_exit_challenger": regime_loss_study,
+        "compression_alignment_replay": alignment_replay,
         "source_evidence": sources,
         "generator_identity": generator,
     }
@@ -234,50 +305,45 @@ def _report(
 def _publish(
     output: Path,
     report: dict[str, object],
-    development_trades: pd.DataFrame,
-    confirmation_trades: pd.DataFrame,
-    exit_development_trades: pd.DataFrame,
-    exit_confirmation_trades: pd.DataFrame,
+    sidecars: dict[str, pd.DataFrame],
     generator: dict[str, dict[str, object]],
 ) -> None:
     def write_bundle(staging: Path) -> None:
-        development_path = staging / "development_trades.parquet"
-        confirmation_path = staging / "confirmation_trades.parquet"
-        exit_development_path = staging / "exit_development_trades.parquet"
-        exit_confirmation_path = staging / "exit_confirmation_trades.parquet"
+        paths = _write_sidecars(staging, sidecars)
         report_path = staging / "report.json"
-        development_trades.to_parquet(development_path, index=False)
-        confirmation_trades.to_parquet(confirmation_path, index=False)
-        exit_development_trades.to_parquet(exit_development_path, index=False)
-        exit_confirmation_trades.to_parquet(exit_confirmation_path, index=False)
         report["sidecars"] = {
-            "development_trades": _file_reference(development_path),
-            "confirmation_trades": _file_reference(confirmation_path),
-            "exit_development_trades": _file_reference(exit_development_path),
-            "exit_confirmation_trades": _file_reference(exit_confirmation_path),
+            name: _file_reference(path) for name, path in paths.items()
         }
         write_json(report_path, report)
         if _generator_identity() != generator:
             raise RuntimeError("HYPE challenger generator changed during publication")
-        write_json(
-            staging / "manifest.json",
-            {
-                "schema_version": 1,
-                "complete": True,
-                "files": {
-                    path.name: file_evidence(path)
-                    for path in (
-                        report_path,
-                        development_path,
-                        confirmation_path,
-                        exit_development_path,
-                        exit_confirmation_path,
-                    )
-                },
-            },
-        )
+        _write_manifest(staging, report_path, tuple(paths.values()))
 
     publish_immutable_directory(output, write_bundle)
+
+
+def _write_sidecars(
+    staging: Path,
+    sidecars: dict[str, pd.DataFrame],
+) -> dict[str, Path]:
+    paths: dict[str, Path] = {}
+    for name, frame in sidecars.items():
+        path = staging / f"{name}.parquet"
+        frame.to_parquet(path, index=False)
+        paths[name] = path
+    return paths
+
+
+def _write_manifest(staging: Path, report: Path, sidecars: tuple[Path, ...]) -> None:
+    files = (report, *sidecars)
+    write_json(
+        staging / "manifest.json",
+        {
+            "schema_version": 1,
+            "complete": True,
+            "files": {path.name: file_evidence(path) for path in files},
+        },
+    )
 
 
 def _candle_gaps(timestamps: pd.Series) -> list[dict[str, object]]:

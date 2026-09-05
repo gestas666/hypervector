@@ -8,12 +8,22 @@ import json
 import math
 import os
 from pathlib import Path
+import time
 from typing import Protocol, cast
 
 import pandas as pd
 
 from hypervector.data.hl import fetch_hl_l2_book, fetch_hl_ohlcv_snapshot
 from hypervector.live.hip3_provider_inputs import completed_hip3_inputs
+from hypervector.live.hip3_shadow_candle_storage import (
+    ShadowCandleContract,
+    append_candles_once,
+    candle_summary,
+    source_revision_status,
+)
+from hypervector.live.hip3_shadow_candle_contracts import (
+    hip3_shadow_candle_contract,
+)
 from hypervector.live.mu_hip3_breakout_shadow import (
     Hip3BreakoutShadowSpec,
     MU_SHADOW_SPEC,
@@ -27,6 +37,17 @@ from hypervector.live.mu_hip3_preclose_pressure import (
     MuHip3LedgerPreclosePressureSource,
     MuPreclosePressureEvidence,
 )
+from hypervector.live.mu_hip3_shadow_journal import (
+    mu_shadow_journal_event_ids,
+    mu_shadow_journal_summary,
+)
+from hypervector.live.mu_hip3_shadow_book import mu_shadow_book_row
+from hypervector.live.multi_asset_market_bars import TransientCohortMarketDataError
+from hypervector.live.hip3_profit_lock_candle_capture import (
+    Hip3ProfitLockCandleCapture,
+    profit_lock_candle_path,
+)
+from hypervector.live.transient_transport import transient_read_failure_reason
 from hypervector.paper.book import BookSnapshot
 from hypervector.research.checkpoint_storage import write_atomic_json
 from hypervector.research.hip3_breakout_pressure_signals import (
@@ -48,7 +69,9 @@ class MuHip3PublicSourceProtocol(Protocol):
     def book_snapshot(self) -> BookSnapshot:
         """Return one exact public ``xyz:MU`` L2 snapshot."""
 
-    def completed_candle_history(self, *, observed_at_ms: int) -> pd.DataFrame:
+    def completed_candle_history(
+        self, *, observed_at_ms: int, timeframe: str = "15m"
+    ) -> pd.DataFrame:
         """Return recent public 15-minute candles through the observation time."""
 
 
@@ -61,16 +84,28 @@ class MuHip3PublicRestSource:
 
     def book_snapshot(self) -> BookSnapshot:
         """Fetch one exact public MU L2 book without constructing a signer."""
-        return fetch_hl_l2_book(self._spec.symbol)
+        try:
+            return fetch_hl_l2_book(self._spec.symbol)
+        except (RuntimeError, OSError) as exc:
+            _raise_if_transient(exc, "hyperliquid_public_l2")
+            raise
 
-    def completed_candle_history(self, *, observed_at_ms: int) -> pd.DataFrame:
+    def completed_candle_history(
+        self, *, observed_at_ms: int, timeframe: str = "15m"
+    ) -> pd.DataFrame:
         """Fetch a bounded public MU 15-minute candle window."""
-        return fetch_hl_ohlcv_snapshot(
-            self._spec.symbol,
-            "15m",
-            _CANDLE_LOOKBACK_DAYS,
-            end_ms=observed_at_ms,
-        )
+        try:
+            frame = fetch_hl_ohlcv_snapshot(
+                self._spec.symbol,
+                timeframe,
+                _CANDLE_LOOKBACK_DAYS,
+                end_ms=observed_at_ms,
+            )
+            frame.attrs["received_at_ms"] = time.time_ns() // 1_000_000
+            return frame
+        except (RuntimeError, OSError) as exc:
+            _raise_if_transient(exc, "hyperliquid_public_candles")
+            raise
 
 
 @dataclass(frozen=True)
@@ -83,6 +118,11 @@ class MuHip3ShadowPaths:
     journal: Path
     status: Path
 
+    @property
+    def candle_ledger(self) -> Path:
+        """Return the deterministic sibling ledger for exact source candles."""
+        return self.journal.with_name(f"{self.journal.stem}_candles.jsonl")
+
     def __post_init__(self) -> None:
         """Reject aliased or overlapping output identities."""
         values = (
@@ -90,6 +130,7 @@ class MuHip3ShadowPaths:
             self.cohort_ledger,
             self.cursor,
             self.journal,
+            self.candle_ledger,
             self.status,
         )
         if len(set(values)) != len(values):
@@ -105,6 +146,9 @@ class MuHip3ShadowPollResult:
     observed_at_ms: int
     cursor_decision_time_ms: int
     retroactive_decisions_censored: int
+    source_revision_rows_current_snapshot: int = 0
+    source_revision_fields_current_snapshot: tuple[str, ...] = ()
+    source_revision_bar_open_ms_current_snapshot: tuple[int, ...] = ()
     intents: tuple[()] = ()
     execution_authority: str = "none"
 
@@ -137,6 +181,13 @@ class MuHip3BreakoutShadowRunner:
             pressure_source=pressure,
             spec=spec,
         )
+        self._profit_lock_capture = (
+            Hip3ProfitLockCandleCapture(
+                source, spec.symbol, profit_lock_candle_path(paths.journal)
+            )
+            if spec.symbol in {"xyz:SP500", "xyz:SPCX"}
+            else None
+        )
 
     @property
     def config(self) -> Hip3BreakoutPressureConfig:
@@ -147,9 +198,11 @@ class MuHip3BreakoutShadowRunner:
         """Capture one book and durably advance at most one prospective bar."""
         requested = _nonnegative_integer(observed_at_ms, "observed_at_ms")
         snapshot = self._source.book_snapshot()
-        book_row, receipt_ms = _book_row(snapshot, self._spec)
+        book_row, receipt_ms = mu_shadow_book_row(snapshot, self._spec)
         observed = max(requested, receipt_ms)
         _append_jsonl(self._paths.asset_ledger, book_row)
+        if self._profit_lock_capture is not None:
+            self._profit_lock_capture.poll(observed)
         cursor = _load_cursor(self._paths.cursor)
         if cursor is None:
             result = self._bootstrap(observed)
@@ -159,7 +212,7 @@ class MuHip3BreakoutShadowRunner:
             )
         else:
             result = self._advance(cursor, observed)
-        _write_status(self._paths.status, result, self._spec)
+        _write_status(self._paths, result, self._spec)
         return result
 
     def _bootstrap(self, observed_at_ms: int) -> MuHip3ShadowPollResult:
@@ -171,6 +224,13 @@ class MuHip3BreakoutShadowRunner:
             None,
         )
         latest = frame.index[-1]
+        append_candles_once(
+            self._paths.candle_ledger,
+            frame,
+            contract=_candle_contract(self._spec),
+            observed_at_ms=observed_at_ms,
+            prior_boundary_ms=boundary,
+        )
         cursor = MuHip3BreakoutShadowCursor(
             self._spec.provider_id,
             self._spec.profile_id,
@@ -192,8 +252,20 @@ class MuHip3BreakoutShadowRunner:
     ) -> MuHip3ShadowPollResult:
         """Evaluate unseen completed bars and atomically persist the next cursor."""
         bars = self._source.completed_candle_history(observed_at_ms=observed_at_ms)
-        batch = self._collector(
+        frame, _positions, _boundary = completed_hip3_inputs(
             bars,
+            _timestamp(observed_at_ms),
+            cursor.decision_time_ms,
+        )
+        reconciliation = append_candles_once(
+            self._paths.candle_ledger,
+            frame,
+            contract=_candle_contract(self._spec),
+            observed_at_ms=observed_at_ms,
+            prior_boundary_ms=cursor.decision_time_ms,
+        )
+        batch = self._collector(
+            _raw_candle_frame(reconciliation.frame),
             symbol=self._spec.symbol,
             observed_at=_timestamp(observed_at_ms),
             cursor=cursor,
@@ -207,50 +279,17 @@ class MuHip3BreakoutShadowRunner:
             observed_at_ms,
             batch.next_cursor.decision_time_ms,
             batch.retroactive_decisions_censored,
+            source_revision_rows_current_snapshot=reconciliation.revision_rows,
+            source_revision_fields_current_snapshot=reconciliation.revision_fields,
+            source_revision_bar_open_ms_current_snapshot=(
+                reconciliation.revision_bar_open_ms
+            ),
         )
 
 
-def _book_row(
-    snapshot: BookSnapshot,
-    spec: Hip3BreakoutShadowSpec = MU_SHADOW_SPEC,
-) -> tuple[dict[str, object], int]:
-    if snapshot.symbol != spec.symbol:
-        raise ValueError(
-            f"HIP-3 shadow public book must have exact {spec.symbol} identity"
-        )
-    if snapshot.source != "hl_rest_l2":
-        raise ValueError("MU shadow public book must use Hyperliquid Info REST")
-    exchange = _exact_integer(snapshot.ts_exchange_ms, "exchange timestamp")
-    receipt = _ceiling_integer(snapshot.ts_recv_ms, "receipt timestamp")
-    if receipt < exchange:
-        raise ValueError("MU shadow book receipt precedes its exchange timestamp")
-    payload = {
-        "symbol": spec.symbol,
-        "source": MU_PRESSURE_SOURCE,
-        "exchange_ts_ms": exchange,
-        "recv_ts_ms": receipt,
-        "bids": _levels(snapshot, "bids"),
-        "asks": _levels(snapshot, "asks"),
-    }
-    return (
-        {
-            "event_type": "book_observation",
-            "profile_id": spec.ledger_profile_id,
-            "execution_authority": "none",
-            "payload": payload,
-        },
-        receipt,
-    )
-
-
-def _levels(snapshot: BookSnapshot, side: str) -> list[dict[str, float]]:
-    values = snapshot.bids if side == "bids" else snapshot.asks
-    if len(values) < 10:
-        raise ValueError(f"MU shadow {side} require at least ten levels")
-    return [
-        {"price": float(level.price), "size": float(level.size)}
-        for level in values[:10]
-    ]
+def _raw_candle_frame(frame: pd.DataFrame) -> pd.DataFrame:
+    raw = frame.loc[:, ["open", "high", "low", "close", "volume"]].reset_index()
+    return raw.rename(columns={raw.columns[0]: "timestamp"})
 
 
 def _write_cursor(path: Path, cursor: MuHip3BreakoutShadowCursor) -> None:
@@ -304,11 +343,15 @@ def _append_decision_once(
     decision: MuHip3BreakoutShadowDecision,
 ) -> None:
     event_id = f"{decision.provider_id}|{decision.symbol}|{decision.decision_time_ms}"
-    if event_id in _journal_event_ids(path):
+    event_type = f"{_route_token(decision.symbol)}_hip3_breakout_shadow_decision"
+    if event_id in mu_shadow_journal_event_ids(
+        path,
+        expected_event_type=event_type,
+    ):
         return
     row = {
         "schema_version": 1,
-        "event_type": f"{_route_token(decision.symbol)}_hip3_breakout_shadow_decision",
+        "event_type": event_type,
         "event_id": event_id,
         "report_only": True,
         "execution_authority": "none",
@@ -317,20 +360,6 @@ def _append_decision_once(
         "decision": asdict(decision),
     }
     _append_jsonl(path, row)
-
-
-def _journal_event_ids(path: Path) -> set[str]:
-    if not path.exists():
-        return set()
-    values: set[str] = set()
-    with path.open("r", encoding="utf-8") as stream:
-        for line_number, line in enumerate(stream, start=1):
-            row = _object(json.loads(line), f"journal line {line_number}")
-            event_id = _text(row.get("event_id"), "event_id")
-            if event_id in values:
-                raise ValueError("MU shadow journal contains a duplicate event")
-            values.add(event_id)
-    return values
 
 
 def _append_jsonl(path: Path, payload: Mapping[str, object]) -> None:
@@ -343,12 +372,24 @@ def _append_jsonl(path: Path, payload: Mapping[str, object]) -> None:
 
 
 def _write_status(
-    path: Path,
+    paths: MuHip3ShadowPaths,
     result: MuHip3ShadowPollResult,
     spec: Hip3BreakoutShadowSpec = MU_SHADOW_SPEC,
 ) -> None:
+    journal = mu_shadow_journal_summary(
+        paths.journal,
+        expected_event_type=(
+            f"{_route_token(spec.symbol)}_hip3_breakout_shadow_decision"
+        ),
+    )
+    revisions = source_revision_status(
+        paths.status,
+        current_bars=result.source_revision_bar_open_ms_current_snapshot,
+        current_fields=result.source_revision_fields_current_snapshot,
+        allowed_fields=_candle_contract(spec).revision_tolerant_fields,
+    )
     write_atomic_json(
-        path,
+        paths.status,
         {
             "schema_version": 1,
             "mode": f"{_route_token(spec.symbol)}_hip3_breakout_shadow_observer",
@@ -362,15 +403,27 @@ def _write_status(
             "runtime_strategy_changed": False,
             "automatic_promotion": False,
             "signal_ohlc_source": "hyperliquid_public_candleSnapshot_15m",
+            "signal_ohlc_revision_policy": "freeze_first_observed_disclose_revisions",
             "pressure_source": MU_PRESSURE_SOURCE,
             "promotion_blockers": list(_PROMOTION_BLOCKERS),
             "observed_at_ms": result.observed_at_ms,
             "cursor_decision_time_ms": result.cursor_decision_time_ms,
             "bootstrap": result.bootstrap,
             "decisions_published": len(result.decisions),
+            "decisions_this_poll": len(result.decisions),
             "retroactive_decisions_censored": result.retroactive_decisions_censored,
+            **journal,
+            **candle_summary(paths.candle_ledger),
+            "profit_lock_candles": candle_summary(
+                profit_lock_candle_path(paths.journal)
+            ),
+            **revisions,
         },
     )
+
+
+def _candle_contract(spec: Hip3BreakoutShadowSpec) -> ShadowCandleContract:
+    return hip3_shadow_candle_contract(spec.symbol, "15m")
 
 
 def _object(value: object, label: str) -> dict[str, object]:
@@ -413,6 +466,21 @@ def _ceiling_integer(value: object, label: str) -> int:
     if not math.isfinite(numeric) or numeric < 0.0:
         raise ValueError(f"MU shadow {label} must be finite and nonnegative")
     return math.ceil(numeric)
+
+
+def _raise_if_transient(error: Exception, source: str) -> None:
+    """Classify an exhausted transport failure anywhere in its cause chain."""
+    current: BaseException | None = error
+    visited: set[int] = set()
+    while isinstance(current, Exception) and id(current) not in visited:
+        visited.add(id(current))
+        reason = transient_read_failure_reason(current)
+        if reason is not None:
+            raise TransientCohortMarketDataError(
+                source=source,
+                reason=reason,
+            ) from error
+        current = current.__cause__ or current.__context__
 
 
 def _timestamp(value: int) -> pd.Timestamp:

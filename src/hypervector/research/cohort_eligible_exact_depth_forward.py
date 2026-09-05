@@ -3,38 +3,43 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
+from hypervector.research.cohort_active_book_path import (
+    active_book_gap,
+    active_book_gap_attempt as _gap_attempt,
+)
 from hypervector.research.cohort_exact_depth_books import (
     book_time,
     compatible_run_ids,
     directional_return_bps,
     first_book,
-    first_stop_book,
     latest_book_time,
-    post_entry_books,
-    protective_stop_price,
     validated_books,
     visible_depth_fill,
+)
+from hypervector.research.cohort_exact_depth_attempts import (
+    attempt_base as _attempt_base,
+    capacity_status as _capacity_status,
+    eligible_candidates,
+    entry_fields as _entry_fields,
+)
+from hypervector.research.cohort_eligible_opposite_exit import (
+    EarlyExitEvidence,
+    entered_early_exit_evidence,
 )
 from hypervector.research.cohort_eligible_policy_funding import (
     EligiblePolicyFundingEvidence,
     covered_funding_bps,
 )
-from hypervector.research.cohort_live_audit_values import (
-    event_rows,
-    mapping,
-    nonnegative_int,
-    number,
-    payload,
-    positive_int,
-    text,
+from hypervector.research.cohort_eligible_exact_depth_reporting import (
+    forward_report,
+    net_scope,
+    policy_contract,
+    positive_rate,
 )
-from hypervector.research.cohort_signal_candidates import (
-    SignalCandidate,
-    evaluation_candidates,
-)
+from hypervector.research.cohort_live_audit_values import nonnegative_int
+from hypervector.research.cohort_signal_candidates import SignalCandidate
 
 Record = Mapping[str, object]
-_POLICY_MODE = "cohort_config_bound_eligible_policy_forward_report"
 _MINUTE_MS = 60_000
 _CURRENT_OUTCOME_KEYS = (
     "exit_time_ms",
@@ -58,8 +63,8 @@ def build_eligible_exact_depth_forward_report(
     maximum_exit_delay_ms: int,
 ) -> dict[str, object]:
     """Replay eligible signals through causal recorded visible depth."""
-    contract = _policy_contract(policy_report)
-    _rate(taker_fee_rate, "taker fee rate")
+    contract = policy_contract(policy_report)
+    positive_rate(taker_fee_rate, "taker fee rate")
     nonnegative_int(maximum_entry_delay_ms, "maximum entry delay")
     nonnegative_int(maximum_exit_delay_ms, "maximum exit delay")
     books = validated_books(
@@ -67,7 +72,7 @@ def build_eligible_exact_depth_forward_report(
         symbol=str(contract["symbol"]),
         run_ids=compatible_run_ids(contract),
     )
-    candidates = _candidates(cohort_records, contract)
+    candidates = eligible_candidates(cohort_records, contract)
     attempts: list[dict[str, object]] = []
     executions: list[dict[str, object]] = []
     next_available_ms = -1
@@ -78,6 +83,7 @@ def build_eligible_exact_depth_forward_report(
             continue
         attempt, execution, next_available_ms = _evaluate_candidate(
             candidate,
+            candidates,
             books,
             contract,
             funding_evidence,
@@ -88,11 +94,12 @@ def build_eligible_exact_depth_forward_report(
         attempts.append(attempt)
         if execution is not None:
             executions.append(execution)
-    return _report(contract, attempts, executions, overlapping, taker_fee_rate)
+    return forward_report(contract, attempts, executions, overlapping, taker_fee_rate)
 
 
 def _evaluate_candidate(
     candidate: SignalCandidate,
+    candidates: Sequence[SignalCandidate],
     books: Sequence[Record],
     contract: Record,
     funding: EligiblePolicyFundingEvidence | None,
@@ -121,10 +128,12 @@ def _evaluate_candidate(
         entry_fill,
         books,
         candidate,
+        candidates,
         contract,
         funding,
         fee_rate,
         exit_delay_ms,
+        max(entry_delay_ms, exit_delay_ms),
     )
 
 
@@ -134,31 +143,31 @@ def _evaluate_entered(
     entry_fill: Record,
     books: Sequence[Record],
     candidate: SignalCandidate,
+    candidates: Sequence[SignalCandidate],
     contract: Record,
     funding: EligiblePolicyFundingEvidence | None,
     fee_rate: float,
     exit_delay_ms: int,
+    active_gap_limit_ms: int,
 ) -> tuple[dict[str, object], dict[str, object] | None, int]:
     quantity = float(entry_fill["quantity"])
     deadline = book_time(entry) + int(contract["maximum_hold_minutes"]) * _MINUTE_MS
-    stop_price = protective_stop_price(
-        candidate.side or "", float(entry_fill["price"]), float(contract["stop_bps"])
+    early = _early_exit(
+        base,
+        entry,
+        entry_fill,
+        books,
+        candidate,
+        candidates,
+        contract,
+        funding,
+        fee_rate,
+        exit_delay_ms,
+        deadline,
+        active_gap_limit_ms,
     )
-    path = post_entry_books(books, book_time(entry), deadline)
-    stop_book = first_stop_book(path, side=candidate.side or "", stop_price=stop_price)
-    if stop_book is not None:
-        return _resolve(
-            base,
-            entry,
-            stop_book,
-            entry_fill,
-            quantity,
-            candidate,
-            contract,
-            funding,
-            fee_rate,
-            "protective_stop",
-        )
+    if early is not None:
+        return early
     return _maximum_hold_or_pending(
         base,
         entry,
@@ -171,7 +180,93 @@ def _evaluate_entered(
         fee_rate,
         deadline,
         exit_delay_ms,
+        active_gap_limit_ms,
     )
+
+
+def _early_exit(
+    base: dict[str, object],
+    entry: Record,
+    entry_fill: Record,
+    books: Sequence[Record],
+    candidate: SignalCandidate,
+    candidates: Sequence[SignalCandidate],
+    contract: Record,
+    funding: EligiblePolicyFundingEvidence | None,
+    fee_rate: float,
+    exit_delay_ms: int,
+    deadline: int,
+    active_gap_limit_ms: int,
+) -> tuple[dict[str, object], dict[str, object] | None, int] | None:
+    evidence = entered_early_exit_evidence(
+        entry=entry,
+        entry_fill=entry_fill,
+        books=books,
+        opening=candidate,
+        candidates=candidates,
+        contract=contract,
+        exit_delay_ms=exit_delay_ms,
+        deadline_ms=deadline,
+    )
+    if evidence.unavailable_status is not None:
+        fields, resume_time = evidence.unavailable_status
+        return base | _entry_fields(entry, entry_fill) | fields, None, resume_time
+    if evidence.reason is None or evidence.exit_book is None:
+        return None
+    return _resolve_early_exit(
+        base,
+        entry,
+        entry_fill,
+        books,
+        candidate,
+        contract,
+        funding,
+        fee_rate,
+        deadline,
+        active_gap_limit_ms,
+        evidence,
+    )
+
+
+def _resolve_early_exit(
+    base: dict[str, object],
+    entry: Record,
+    entry_fill: Record,
+    books: Sequence[Record],
+    candidate: SignalCandidate,
+    contract: Record,
+    funding: EligiblePolicyFundingEvidence | None,
+    fee_rate: float,
+    deadline: int,
+    active_gap_limit_ms: int,
+    evidence: EarlyExitEvidence,
+) -> tuple[dict[str, object], dict[str, object] | None, int]:
+    exit_book = evidence.exit_book
+    reason = evidence.reason
+    if exit_book is None or reason is None:
+        raise ValueError("selected early exit is incomplete")
+    gap = active_book_gap(entry, exit_book, books, active_gap_limit_ms)
+    if gap is not None:
+        attempt = _gap_attempt(base, _entry_fields(entry, entry_fill), gap, deadline)
+        return attempt, None, deadline
+    result = _resolve(
+        base,
+        entry,
+        exit_book,
+        entry_fill,
+        float(entry_fill["quantity"]),
+        candidate,
+        contract,
+        funding,
+        fee_rate,
+        reason,
+    )
+    attempt, execution, exit_time = result
+    if execution is not None and evidence.policy_selected and evidence.policy:
+        execution["policy_exit_evidence"] = dict(evidence.policy.evidence)
+    if evidence.opposite is not None:
+        exit_time = max(exit_time, evidence.opposite.available_time_ms + 1)
+    return attempt, execution, exit_time
 
 
 def _maximum_hold_or_pending(
@@ -186,20 +281,52 @@ def _maximum_hold_or_pending(
     fee_rate: float,
     deadline: int,
     exit_delay_ms: int,
+    active_gap_limit_ms: int,
 ) -> tuple[dict[str, object], dict[str, object] | None, int]:
     if latest_book_time(books) < deadline:
-        attempt = _pending(
+        return _pending_before_deadline(
             base,
             entry,
-            books[-1],
             entry_fill,
             quantity,
+            books,
             candidate,
             contract,
             funding,
             fee_rate,
+            deadline,
+            active_gap_limit_ms,
         )
-        return attempt, None, deadline
+    return _maximum_hold_exit(
+        base,
+        entry,
+        entry_fill,
+        quantity,
+        books,
+        candidate,
+        contract,
+        funding,
+        fee_rate,
+        deadline,
+        exit_delay_ms,
+        active_gap_limit_ms,
+    )
+
+
+def _maximum_hold_exit(
+    base: dict[str, object],
+    entry: Record,
+    entry_fill: Record,
+    quantity: float,
+    books: Sequence[Record],
+    candidate: SignalCandidate,
+    contract: Record,
+    funding: EligiblePolicyFundingEvidence | None,
+    fee_rate: float,
+    deadline: int,
+    exit_delay_ms: int,
+    active_gap_limit_ms: int,
+) -> tuple[dict[str, object], dict[str, object] | None, int]:
     exit_book = first_book(books, deadline, exit_delay_ms)
     if exit_book is None:
         attempt = (
@@ -210,6 +337,10 @@ def _maximum_hold_or_pending(
                 "deadline_time_ms": deadline,
             }
         )
+        return attempt, None, deadline
+    gap = active_book_gap(entry, exit_book, books, active_gap_limit_ms)
+    if gap is not None:
+        attempt = _gap_attempt(base, _entry_fields(entry, entry_fill), gap, deadline)
         return attempt, None, deadline
     return _resolve(
         base,
@@ -223,6 +354,37 @@ def _maximum_hold_or_pending(
         fee_rate,
         "maximum_hold",
     )
+
+
+def _pending_before_deadline(
+    base: dict[str, object],
+    entry: Record,
+    entry_fill: Record,
+    quantity: float,
+    books: Sequence[Record],
+    candidate: SignalCandidate,
+    contract: Record,
+    funding: EligiblePolicyFundingEvidence | None,
+    fee_rate: float,
+    deadline: int,
+    active_gap_limit_ms: int,
+) -> tuple[dict[str, object], dict[str, object] | None, int]:
+    gap = active_book_gap(entry, books[-1], books, active_gap_limit_ms)
+    if gap is not None:
+        attempt = _gap_attempt(base, _entry_fields(entry, entry_fill), gap, deadline)
+        return attempt, None, deadline
+    attempt = _pending(
+        base,
+        entry,
+        books[-1],
+        entry_fill,
+        quantity,
+        candidate,
+        contract,
+        funding,
+        fee_rate,
+    )
+    return attempt, None, deadline
 
 
 def _resolve(
@@ -348,149 +510,7 @@ def _outcome(
             "fee_bps": fee_bps,
             "funding_bps": funding_bps,
             "net_return_bps": net,
-            "net_return_scope": _net_scope(funding_bps),
+            "net_return_scope": net_scope(funding_bps),
             "simulated_net_pnl_usd": entry_notional * net / 10_000.0,
         }
     )
-
-
-def _candidates(
-    records: Sequence[Record], contract: Record
-) -> tuple[SignalCandidate, ...]:
-    identity = event_rows(records, "configuration_identity")
-    run_ids = compatible_run_ids(contract)
-    if len(identity) != len(run_ids) or {row.get("run_id") for row in identity} != set(
-        run_ids
-    ):
-        raise ValueError("exact-depth report continuation identities are incomplete")
-    for row in identity:
-        if payload(row).get("profile_fingerprint") != contract.get(
-            "profile_fingerprint"
-        ):
-            raise ValueError("cohort profile fingerprint differs from policy contract")
-    candidates, _, _ = evaluation_candidates(records)
-    selected = tuple(
-        candidate
-        for candidate in candidates
-        if candidate.source_run_id == contract["source_run_id"]
-        and candidate.strategy_id == contract["source_strategy_id"]
-        and candidate.symbol == contract["symbol"]
-        and candidate.eligible
-    )
-    return tuple(sorted(selected, key=lambda row: row.available_time_ms))
-
-
-def _policy_contract(report: Record) -> Record:
-    if report.get("mode") != _POLICY_MODE:
-        raise ValueError("exact-depth input is not a config-bound policy report")
-    contract = mapping(report.get("contract"), "policy contract")
-    if (
-        contract.get("report_only") is not True
-        or contract.get("execution_authority") != "none"
-        or contract.get("portfolio_pnl_claimed") is not False
-    ):
-        raise ValueError("policy report does not preserve report-only authority")
-    for field in (
-        "source_strategy_id",
-        "candidate_strategy_id",
-        "symbol",
-        "source_run_id",
-        "profile_fingerprint",
-    ):
-        text(contract.get(field), field)
-    if number(contract.get("stop_bps"), "stop bps") <= 0.0:
-        raise ValueError("stop bps must be positive")
-    if number(contract.get("notional_usd"), "notional") <= 0.0:
-        raise ValueError("notional must be positive")
-    positive_int(contract.get("maximum_hold_minutes"), "maximum hold minutes")
-    return contract
-
-
-def _report(
-    contract: Record,
-    attempts: Sequence[Record],
-    executions: Sequence[Record],
-    overlapping: int,
-    fee_rate: float,
-) -> dict[str, object]:
-    return {
-        "schema_version": 1,
-        "mode": "cohort_eligible_exact_visible_depth_forward_report",
-        "state": "descriptive_exact_depth_evidence"
-        if executions
-        else "awaiting_resolution",
-        "contract": {
-            **dict(contract),
-            "execution_authority": "none",
-            "portfolio_pnl_claimed": False,
-            "actual_orders_or_fills_claimed": False,
-            "entry_exit_source": "recorded_visible_l2_depth_vwap",
-            "taker_fee_rate": fee_rate,
-        },
-        "summary": {
-            "selected_non_overlapping": len(attempts),
-            "overlapping_excluded": overlapping,
-            "resolved": len(executions),
-            "pending": sum(row.get("status") == "exit_pending" for row in attempts),
-            "technical_incomplete": sum(
-                row.get("status") not in {"resolved", "exit_pending"}
-                for row in attempts
-            ),
-        },
-        "latest_attempts": list(attempts),
-        "latest_executions": list(executions),
-        "limitations": [
-            "recorded visible depth is not proof that a live IOC would receive the same fill",
-            "book snapshots cannot observe cancellations or price changes between samples",
-            "simulated PnL is descriptive and has no execution or promotion authority",
-        ],
-    }
-
-
-def _attempt_base(candidate: SignalCandidate, contract: Record) -> dict[str, object]:
-    return {
-        "source_run_id": candidate.source_run_id,
-        "strategy_id": candidate.strategy_id,
-        "candidate_strategy_id": contract["candidate_strategy_id"],
-        "symbol": candidate.symbol,
-        "side": candidate.side,
-        "decision_time_ms": candidate.decision_time_ms,
-        "available_time_ms": candidate.available_time_ms,
-        "reference_price": candidate.reference_price,
-    }
-
-
-def _entry_fields(entry: Record, fill: Record) -> dict[str, object]:
-    return {
-        "entry_time_ms": book_time(entry),
-        "entry_price": fill["price"],
-        "position_quantity": fill["quantity"],
-        "entry_notional_usd": fill["quote_usd"],
-        "entry_levels_consumed": fill["levels_consumed"],
-    }
-
-
-def _capacity_status(prefix: str, book: Record, fill: Record) -> dict[str, object]:
-    return {
-        "status": f"{prefix}_capacity_insufficient",
-        f"{prefix}_time_ms": book_time(book),
-        f"{prefix}_filled_quantity": fill["quantity"],
-        f"{prefix}_unfilled_quantity": fill["unfilled_quantity"],
-    }
-
-
-def _net_scope(funding_bps: float | None) -> str:
-    return (
-        "exact_depth_fee_and_funding"
-        if funding_bps is not None
-        else "exact_depth_fee_before_funding"
-    )
-
-
-def _rate(value: float, label: str) -> float:
-    result = number(value, label)
-    if result <= 0.0:
-        raise ValueError(f"{label} must be positive")
-    if result >= 1.0:
-        raise ValueError(f"{label} must be less than one")
-    return result

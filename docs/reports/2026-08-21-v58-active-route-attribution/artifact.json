@@ -1,0 +1,231 @@
+{
+  "surface": "report",
+  "manifest": {
+    "version": 1,
+    "surface": "report",
+    "title": "V58 Active Route Attribution and SPCX Source Diagnosis",
+    "description": "Source-bound technical attribution of the quiet V58 prefix, the SPCX cash-session source failure, and an approval-ready fail-closed repair plan.",
+    "generatedAt": "2026-08-21T03:33:34Z",
+    "cards": [
+      {
+        "id": "routes-card",
+        "description": "Executable provider-symbol routes in the active V58 profile.",
+        "dataset": "headline",
+        "sourceId": "attribution-evidence",
+        "metrics": [{"label": "Configured routes", "field": "configured_routes", "format": "number"}]
+      },
+      {
+        "id": "available-card",
+        "description": "Routes completing their expected same-timeframe decision clocks.",
+        "dataset": "headline",
+        "sourceId": "attribution-evidence",
+        "metrics": [{"label": "Clock-complete routes", "field": "clock_complete_routes", "format": "number"}]
+      },
+      {
+        "id": "unavailable-card",
+        "description": "Routes with persistent route-specific technical unavailability.",
+        "dataset": "headline",
+        "sourceId": "attribution-evidence",
+        "metrics": [{"label": "Unavailable routes", "field": "unavailable_routes", "format": "number"}]
+      },
+      {
+        "id": "cash-bars-card",
+        "description": "Required U.S. cash-session bars present in the frozen seven-day window.",
+        "dataset": "headline",
+        "sourceId": "attribution-evidence",
+        "metrics": [{"label": "Cash bars present", "field": "cash_bars_present", "format": "number"}]
+      },
+      {
+        "id": "missing-trades-card",
+        "description": "Independent vendor trade identities absent from the local tape inside declared gaps.",
+        "dataset": "headline",
+        "sourceId": "attribution-evidence",
+        "metrics": [{"label": "Vendor trades missing locally", "field": "vendor_trades_missing_local", "format": "number"}]
+      }
+    ],
+    "charts": [
+      {
+        "id": "route-availability",
+        "title": "Completed decision-clock coverage by active route",
+        "subtitle": "Availability compares outcome evaluations with the maximum completed clocks among routes sharing each configured timeframe; it is not a trade-frequency or profitability metric.",
+        "intent": "comparison",
+        "question": "Which V58 routes are selectively waiting, and which route is technically unavailable?",
+        "rationale": "A normalized horizontal bar separates route availability from the large evaluation-count differences caused by 1-minute, 15-minute, 30-minute, and hourly clocks.",
+        "type": "horizontalBar",
+        "dataset": "route_availability",
+        "sourceId": "attribution-evidence",
+        "encodings": {
+          "x": {"field": "route_label", "type": "nominal", "label": "Route"},
+          "y": {"field": "availability_pct", "type": "quantitative", "label": "Completed clock coverage", "unit": "%"},
+          "tooltip": [
+            {"field": "timeframe", "type": "text", "label": "Clock"},
+            {"field": "outcome_evaluations", "type": "quantitative", "label": "Outcome evaluations"},
+            {"field": "readiness_evaluations", "type": "quantitative", "label": "Readiness attempts"},
+            {"field": "availability_class", "type": "text", "label": "Attribution"},
+            {"field": "primary_blocker", "type": "text", "label": "Primary blocker"}
+          ]
+        },
+        "layout": "full",
+        "maxRows": 10
+      }
+    ],
+    "tables": [
+      {
+        "id": "route-audit",
+        "title": "Exact V58 route attribution",
+        "subtitle": "Frozen checkpoint through August 20, 2026 at 11:23 p.m. ET; zero eligible observations do not establish long-run frequency.",
+        "dataset": "route_availability",
+        "sourceId": "attribution-evidence",
+        "layout": "full",
+        "defaultSort": {"field": "availability_pct", "direction": "asc"},
+        "columns": [
+          {"field": "asset", "label": "Asset"},
+          {"field": "route_label", "label": "Route"},
+          {"field": "timeframe", "label": "Clock"},
+          {"field": "outcome_evaluations", "label": "Outcomes", "format": "number"},
+          {"field": "readiness_evaluations", "label": "Readiness", "format": "number"},
+          {"field": "eligible_evaluations", "label": "Eligible", "format": "number"},
+          {"field": "availability_pct", "label": "Clock coverage", "format": "number", "unit": "%"},
+          {"field": "availability_class", "label": "Attribution"},
+          {"field": "primary_blocker", "label": "Primary blocker"}
+        ]
+      },
+      {
+        "id": "source-coverage",
+        "title": "SPCX public-trade bar coverage",
+        "subtitle": "Seven-day exact local archive from August 13 at 11:15 p.m. ET through August 20 at 11:15 p.m. ET.",
+        "dataset": "source_coverage",
+        "sourceId": "attribution-evidence",
+        "layout": "full",
+        "columns": [
+          {"field": "scope", "label": "Required scope"},
+          {"field": "expected_bars", "label": "Expected bars", "format": "number"},
+          {"field": "observed_bars", "label": "Observed bars", "format": "number"},
+          {"field": "missing_bars", "label": "Missing bars", "format": "number"},
+          {"field": "completeness_pct", "label": "Completeness", "format": "number", "unit": "%"},
+          {"field": "interpretation", "label": "Interpretation"}
+        ]
+      },
+      {
+        "id": "bar-reconciliation",
+        "title": "Affected SPCX opening-bar reconciliation",
+        "subtitle": "August 20, 2026 09:30–09:45 ET; independent trades change volume and count but not OHLC or the gap-reversal decision state.",
+        "dataset": "bar_reconciliation",
+        "sourceId": "attribution-evidence",
+        "layout": "full",
+        "columns": [
+          {"field": "source_state", "label": "Evidence state"},
+          {"field": "trade_count", "label": "Trades", "format": "number"},
+          {"field": "volume", "label": "Volume", "format": "number"},
+          {"field": "open", "label": "Open", "format": "number"},
+          {"field": "high", "label": "High", "format": "number"},
+          {"field": "low", "label": "Low", "format": "number"},
+          {"field": "close", "label": "Close", "format": "number"},
+          {"field": "opening_gap_bps", "label": "Opening gap", "format": "number", "unit": "bps"}
+        ]
+      },
+      {
+        "id": "tradeoffs",
+        "title": "Repair alternatives and trade-offs",
+        "subtitle": "The preferred option preserves exact evidence while limiting the change to the source contract.",
+        "dataset": "repair_alternatives",
+        "sourceId": "repair-proposal",
+        "layout": "full",
+        "columns": [
+          {"field": "option", "label": "Option"},
+          {"field": "benefit", "label": "Benefit"},
+          {"field": "risk", "label": "Risk or cost"},
+          {"field": "disposition", "label": "Disposition"}
+        ]
+      }
+    ],
+    "sources": [
+      {
+        "id": "attribution-evidence",
+        "label": "Immutable V58 route and SPCX source evidence",
+        "path": "docs/reports/2026-08-21-v58-active-route-attribution/evidence.json",
+        "query": {
+          "engine": "json",
+          "language": "sql",
+          "sql": "SELECT * FROM read_json_auto('docs/reports/2026-08-21-v58-active-route-attribution/evidence.json')",
+          "description": "Frozen live-checkpoint route attribution, exact local trade-bar coverage, combined-channel gap audit, bounded 0xArchive reconciliation, hypotheses, limitations, and proposed validation gates.",
+          "tables_used": ["docs/reports/2026-08-21-v58-active-route-attribution/evidence.json"],
+          "filters": ["run_id = bidirectional-live-1787272893887", "profile fingerprint = 8a04636c...5022b", "SPCX archive window ends 2026-08-21T03:15:00Z"],
+          "metric_definitions": ["Clock coverage is outcome evaluations divided by the maximum completed evaluations among available routes on the same configured timeframe; cash-session completeness counts scheduled 15-minute bars; vendor missing trades compare exact non-surrogate trade IDs inside declared gap interiors."]
+        }
+      },
+      {
+        "id": "repair-proposal",
+        "label": "Approval-ready SPCX session-source repair proposal",
+        "path": "docs/research-journal/v58-spcx-cash-session-source-availability-repair-proposal-20260821-v1.json",
+        "query": {
+          "engine": "json",
+          "language": "sql",
+          "sql": "SELECT * FROM read_json_auto('docs/research-journal/v58-spcx-cash-session-source-availability-repair-proposal-20260821-v1.json')",
+          "description": "Bounded implementation scope, alternatives, risks, validation still required, success metrics, rollback triggers, confidence, and approval boundary.",
+          "tables_used": ["docs/research-journal/v58-spcx-cash-session-source-availability-repair-proposal-20260821-v1.json"]
+        }
+      }
+    ],
+    "blocks": [
+      {"id": "title", "type": "markdown", "body": "# V58 Active Route Attribution and SPCX Source Diagnosis"},
+      {"id": "technical-summary", "type": "markdown", "sourceId": "attribution-evidence", "body": "## Technical Summary\n\n- **The quiet prefix is attributable, not a shared scheduler or router failure.** Nine of ten routes completed every observed same-timeframe decision clock and produced zero eligible evaluations for explicit strategy blockers. Routing recorded 504 cycles and zero actions because no eligible intent reached it.\n- **SPCX is the exception.** Its cash-open route recorded 452 readiness attempts but zero completed signal evaluations, with `cash_open_trade_bars_incomplete` on every attempt. This is persistent technical unavailability, not selective waiting.\n- **The immediate blocker is an over-broad source contract.** All 130 required cash-session bars exist, while the builder rejects the entire seven-day window because 13 after-close 15-minute intervals contain no trade.\n- **A second fail-open defect must be fixed at the same boundary.** The current source recognizes only a channel exactly equal to `trades`; it ignores 61 recorder-wide gaps whose combined channel includes trades. Independent 0xArchive evidence found 619 trades missing locally in two opening-bar gaps.\n- **The affected decision inputs are stable in this frozen case.** Adding those 619 trades increases count and volume but leaves open, high, low, close, the -158.37 bps opening gap, and close-versus-prior-close state unchanged. This supports a repair but does not prove future invariance.\n- **No live change has been applied.** Confidence is high in the route attribution and immediate blocker, medium in behavior preservation until implementation, parity tests, and a forward cash-open observation pass. Profitability remains unknown."},
+      {"id": "headline", "type": "metric-strip", "cardIds": ["routes-card", "available-card", "unavailable-card", "cash-bars-card", "missing-trades-card"]},
+      {"id": "key-finding", "type": "markdown", "sourceId": "attribution-evidence", "body": "## One route is unavailable; nine are selectively waiting\n\nThe normalized chart asks whether each route completed the decision clocks observed for its own timeframe. This avoids treating 157 one-minute observations as more available than five 30-minute observations. Nine routes reach 100%; SPCX reaches 0% despite continuous readiness polling."},
+      {"id": "route-chart", "type": "chart", "chartId": "route-availability"},
+      {"id": "route-table", "type": "table", "tableId": "route-audit"},
+      {"id": "scope", "type": "markdown", "sourceId": "attribution-evidence", "body": "## Scope, data, and definitions\n\nThe live prefix runs from 00:46:33 to 03:23:43 UTC on August 21 and is pinned to checkpoint SHA-256 `07f6e95e…aa5756d`. **Outcome evaluation** means a route completed one provider decision. **Readiness attempt** includes repeated availability checks. **Eligible** means every configured entry condition passed. **Clock coverage** is an operational availability measure, not a win probability, expected return, or trade-frequency estimate. The SPCX source audit uses exact local public trades over a seven-day half-open window and 13 independently acquired HIP-3 0xArchive gap windows."},
+      {"id": "methodology", "type": "markdown", "sourceId": "attribution-evidence", "body": "## Methodology\n\n1. Freeze and hash one backend-authored V58 checkpoint.\n2. Reconstruct route outcomes with the existing report-only opportunity diagnostic and compare routes only within their configured timeframes.\n3. Partition SPCX 15-minute coverage into all-hours and scheduled New York cash-session bars.\n4. Parse exact and comma-delimited combined-channel recorder gaps, then identify cash-session overlaps.\n5. Fetch each overlapping interval from 0xArchive with complete page-chain and participant-pair normalization checks.\n6. Compare exact non-surrogate trade IDs and recompute the affected opening bar after adding vendor-only identities.\n7. Keep all findings report-only and define falsifiers, success metrics, and rollback triggers before any implementation."},
+      {"id": "coverage-heading", "type": "markdown", "sourceId": "attribution-evidence", "body": "## Required session coverage is complete, but transport provenance is not\n\nThe source has every scheduled cash bar. The 13 absent bars are after the cash close and should not disable a cash-open strategy. However, 13 combined-channel gaps overlap cash sessions. Eleven contain no local-versus-vendor identity difference; two opening-bar gaps contain 619 vendor trades absent locally. A repair therefore must narrow the bar schedule and strengthen gap handling together."},
+      {"id": "coverage-table", "type": "table", "tableId": "source-coverage"},
+      {"id": "reconciliation-table", "type": "table", "tableId": "bar-reconciliation"},
+      {"id": "limitations", "type": "markdown", "sourceId": "attribution-evidence", "body": "## Uncertainties, risks, and failure modes\n\nThe 2.62-hour route prefix is too short for an economic or frequency conclusion. The same-timeframe denominator is an observed-run comparator, not an independent market-calendar SLA. One bar's OHLC invariance does not establish future gap invariance. A calendar or DST error could select the wrong session; an unresolved prior-close bar could corrupt the target anchor; an implicit vendor fallback could introduce hindsight; and sparse-frame indexing could alter exits or replay startup decisions. Any of these outcomes falsifies the proposed behavior-preserving repair."},
+      {"id": "recommendation", "type": "markdown", "sourceId": "repair-proposal", "body": "## Recommendation and validation plan\n\nApprove implementation and **report-only validation** of a scheduled cash-session source. It must recognize combined-channel gaps, preserve per-bar provenance, prevent entry on an unresolved current opening or immediately prior close, emit source-recovery exits for new held-position gaps, and treat overnight no-advance as a clean empty batch. Do not forward-fill. Do not cut over live until complete-window signal/target/stop/exit parity, holiday and early-close tests, the frozen 13-window replay, no-advance and restart tests, one forward cash-open observation, the full non-network suite, the TUI suite, and reconciled restart acceptance all pass."},
+      {"id": "tradeoffs-table", "type": "table", "tableId": "tradeoffs"},
+      {"id": "next-steps", "type": "markdown", "sourceId": "repair-proposal", "body": "## Next steps\n\n1. Obtain approval for implementation and report-only validation only.\n2. Write failing production-behavior tests for scheduled bars, holidays, early closes, combined gaps, required prior-close completeness, overnight no-advance, and restart seeding.\n3. Implement the smallest source-boundary change and prove parity on complete windows.\n4. Replay the frozen 13 gaps with explicit websocket/vendor provenance.\n5. Run a report-only forward cash-open observation.\n6. Present the resulting evidence and request separate live-cutover approval only if every gate passes.\n\nRollback triggers include any fingerprint mismatch, unresolved required bar, decision parity drift, duplicate or stale entry, implicit vendor fallback, runtime fault, position mismatch, or protection mismatch."},
+      {"id": "further-questions", "type": "markdown", "body": "## Further questions\n\n- Should independently acquired trades ever be admitted to the live source, or should they remain validation-only while any affected current decision stays fail-closed?\n- What is the minimum provenance contract for declaring a historical gap reconciled before it can supply a prior-close anchor?\n- After technical availability is restored, does SPCX short produce enough exact forward lifecycles to retain its development advantage after costs and largest-winner sensitivity?\n- Do recurring websocket disconnects justify a separate transport redesign after this route-specific repair is complete?"}
+    ]
+  },
+  "snapshot": {
+    "version": 1,
+    "generatedAt": "2026-08-21T03:33:34Z",
+    "status": "ready",
+    "datasets": {
+      "headline": [
+        {"configured_routes": 10, "clock_complete_routes": 9, "unavailable_routes": 1, "cash_bars_present": 130, "vendor_trades_missing_local": 619}
+      ],
+      "route_availability": [
+        {"asset": "xyz:SPCX", "route_label": "SPCX cash open", "timeframe": "15m", "outcome_evaluations": 0, "readiness_evaluations": 452, "eligible_evaluations": 0, "availability_pct": 0.0, "availability_class": "Technical unavailability", "primary_blocker": "cash_open_trade_bars_incomplete"},
+        {"asset": "ETH", "route_label": "ETH pullback", "timeframe": "1m", "outcome_evaluations": 157, "readiness_evaluations": 158, "eligible_evaluations": 0, "availability_pct": 100.0, "availability_class": "Selective waiting", "primary_blocker": "canonical_breakout_onset_absent"},
+        {"asset": "HYPE", "route_label": "HYPE compression", "timeframe": "1m", "outcome_evaluations": 157, "readiness_evaluations": 158, "eligible_evaluations": 0, "availability_pct": 100.0, "availability_class": "Selective waiting", "primary_blocker": "canonical_breakout_onset_absent"},
+        {"asset": "xyz:BRENTOIL", "route_label": "BRENTOIL pressure", "timeframe": "15m", "outcome_evaluations": 10, "readiness_evaluations": 11, "eligible_evaluations": 0, "availability_pct": 100.0, "availability_class": "Selective waiting", "primary_blocker": "breakout_level_not_crossed"},
+        {"asset": "xyz:SNDK", "route_label": "SNDK pressure", "timeframe": "15m", "outcome_evaluations": 10, "readiness_evaluations": 11, "eligible_evaluations": 0, "availability_pct": 100.0, "availability_class": "Selective waiting", "primary_blocker": "breakout_level_not_crossed"},
+        {"asset": "xyz:SP500", "route_label": "SP500 fresh-15", "timeframe": "15m", "outcome_evaluations": 10, "readiness_evaluations": 11, "eligible_evaluations": 0, "availability_pct": 100.0, "availability_class": "Selective waiting", "primary_blocker": "fresh_breakout_onset_absent"},
+        {"asset": "SOL", "route_label": "SOL Hulk", "timeframe": "30m", "outcome_evaluations": 5, "readiness_evaluations": 6, "eligible_evaluations": 0, "availability_pct": 100.0, "availability_class": "Selective waiting", "primary_blocker": "moderate_adx_not_present"},
+        {"asset": "BTC", "route_label": "BTC Hulk robust", "timeframe": "30m", "outcome_evaluations": 5, "readiness_evaluations": 6, "eligible_evaluations": 0, "availability_pct": 100.0, "availability_class": "Selective waiting", "primary_blocker": "moderate_adx_not_present"},
+        {"asset": "BTC", "route_label": "BTC Hulk tuned", "timeframe": "30m", "outcome_evaluations": 5, "readiness_evaluations": 6, "eligible_evaluations": 0, "availability_pct": 100.0, "availability_class": "Selective waiting", "primary_blocker": "moderate_adx_not_present"},
+        {"asset": "BTC", "route_label": "BTC liquidity sweep", "timeframe": "1h", "outcome_evaluations": 3, "readiness_evaluations": 4, "eligible_evaluations": 0, "availability_pct": 100.0, "availability_class": "Selective waiting", "primary_blocker": "sweep_below_prior_low_absent"}
+      ],
+      "source_coverage": [
+        {"scope": "All 24 hours", "expected_bars": 672, "observed_bars": 659, "missing_bars": 13, "completeness_pct": 98.06547619047619, "interpretation": "Rejected by current source; missing bars are after cash close"},
+        {"scope": "Scheduled U.S. cash sessions", "expected_bars": 130, "observed_bars": 130, "missing_bars": 0, "completeness_pct": 100.0, "interpretation": "Every strategy-required cash bar is present"}
+      ],
+      "bar_reconciliation": [
+        {"source_state": "Local websocket tape", "trade_count": 5129, "volume": 105261.9, "open": 137.34, "high": 137.83, "low": 135.27, "close": 135.7, "opening_gap_bps": -158.366176997492},
+        {"source_state": "Local plus 0xArchive gap trades", "trade_count": 5748, "volume": 116753.99, "open": 137.34, "high": 137.83, "low": 135.27, "close": 135.7, "opening_gap_bps": -158.366176997492}
+      ],
+      "repair_alternatives": [
+        {"option": "Scheduled-session exact trades", "benefit": "Restores relevant evaluation and preserves source semantics", "risk": "Requires calendar, gap-provenance, parity, and forward validation", "disposition": "Preferred for implementation tests"},
+        {"option": "Do nothing", "benefit": "No runtime change", "risk": "SPCX remains technically disabled", "disposition": "Safe fallback"},
+        {"option": "Forward-fill overnight bars", "benefit": "Would satisfy continuous index", "risk": "Fabricates OHLC and can corrupt anchors", "disposition": "Rejected"},
+        {"option": "Ignore recorder gaps", "benefit": "Simpler source", "risk": "Proven to hide 619 missed trades", "disposition": "Rejected"},
+        {"option": "Replace source with candles or L2", "benefit": "Avoids sparse trade bars", "risk": "Changes strategy identity and expands validation burden", "disposition": "Not preferred"}
+      ]
+    },
+    "accessIssues": []
+  },
+  "sources": [
+    {"id": "attribution-evidence", "label": "Immutable V58 route and SPCX source evidence", "path": "docs/reports/2026-08-21-v58-active-route-attribution/evidence.json"},
+    {"id": "repair-proposal", "label": "Approval-ready SPCX session-source repair proposal", "path": "docs/research-journal/v58-spcx-cash-session-source-availability-repair-proposal-20260821-v1.json"}
+  ]
+}

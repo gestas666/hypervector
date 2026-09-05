@@ -3,10 +3,19 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import asdict, dataclass, replace
+from dataclasses import replace
 import math
 
 from hypervector.live.cohort_execution_plan import ProviderExecutionContract
+from hypervector.research.cohort_friction_contract_models import (
+    ModeledExecutionContract,
+)
+from hypervector.research.cohort_friction_contract_recent import (
+    spcx_cash_open_modeled_contract,
+    v58_commodity_fresh15_modeled_contracts,
+    v76_sndk_fresh15_modeled_contract,
+    v79_route_modeled_contracts,
+)
 from hypervector.research.eth_pullback_replay import ETH_PULLBACK_STRATEGY
 from hypervector.research.hype_breakout_exit_models import HypeExitReplayConfig
 from hypervector.research.market_cipher_strategy_research import (
@@ -18,11 +27,17 @@ from hypervector.research.source_follow_live_shape_models import SourceLiveShape
 Record = Mapping[str, object]
 HULK_STRATEGY = "hulk_expansion_bidirectional_tuned_v2"
 HULK_ROBUST_SHORT_STRATEGY = "hulk_expansion_short_robust_v3"
+HULK_TUNED_SHORT_STRATEGY = "hulk_expansion_short_tuned_v2"
 RANGE_STRATEGY = "range_onset_bidirectional_v1"
 LIQUIDITY_SWEEP_TARGET60_STRATEGY = "liquidity_sweep_long_1h_stop60_target60_v2"
 SOURCE_STRATEGY = "hypervelocity_source_follow_bidirectional_5m_v1"
 HYPE_STRATEGY = "hype_breakout_onset_bidirectional_v1"
 HYPE_COMPRESSION_STRATEGY = "hype_breakout_compression_pullback_bidirectional_v1"
+HYPE_ALIGNMENT_STRATEGY = "hype_breakout_compression_alignment_bidirectional_v2"
+HYPE_ALIGNMENT_EVIDENCE = (
+    "data/logs/research/hype_compression_breakout_challenger_"
+    "20260816_v6_alignment/report.json"
+)
 HIP3_SWING_INDEX = "hip3_swing_ha_sp500_spcx_bidirectional_v2"
 HIP3_BREAKOUT_INDEX = "hip3_breakout_pressure_sp500_spcx_bidirectional_v1"
 HIP3_BREAKOUT_FRESH15_INDEX = (
@@ -30,6 +45,7 @@ HIP3_BREAKOUT_FRESH15_INDEX = (
 )
 HIP3_SWING_COMMODITY = "hip3_swing_ha_sndk_gold_brent_bidirectional_v1"
 HIP3_BREAKOUT_COMMODITY = "hip3_breakout_pressure_sndk_gold_brent_bidirectional_v1"
+SPCX_CASH_OPEN = "hip3_spcx_cash_open_gap_reversal_bidirectional_15m_v1"
 HIP3_V25_LIFECYCLE_EVIDENCE = (
     "data/logs/research/hip3_v25_lifecycle_bar_diagnostic_20260807.json"
 )
@@ -38,37 +54,14 @@ V51_GROWTH_STRESS_EVIDENCE = (
 )
 
 
-@dataclass(frozen=True)
-class ModeledExecutionContract:
-    """Research mechanics cited for one live provider identity."""
-
-    entry_liquidity: str
-    entry_fee_bps: float
-    entry_slippage_bps: float | None
-    stop_policy: str
-    stop_bps: float | None
-    minimum_stop_bps: float | None
-    maximum_stop_bps: float | None
-    maximum_hold_seconds: int | None
-    maximum_hold_policy: str
-    hard_maximum_hold_seconds: int | None
-    target_policy: str
-    target_liquidity: str | None
-    target_bps: float | None
-    target_r_multiple: float | None
-    evidence_source: str
-
-    def as_payload(self) -> dict[str, object]:
-        """Return a JSON-safe modeled contract projection."""
-        return asdict(self)
-
-
 def modeled_contract(
     strategy: str,
     symbol: str | None = None,
 ) -> ModeledExecutionContract | None:
     """Resolve cited mechanics for an exact pair before provider fallback."""
-    exact = _hip3_modeled_contracts().get((strategy, symbol))
+    route = (strategy, symbol)
+    exact = v79_route_modeled_contracts().get(route)
+    exact = exact or _hip3_modeled_contracts().get(route)
     return exact or _modeled_contracts().get(strategy)
 
 
@@ -137,11 +130,15 @@ def _modeled_contracts() -> dict[str, ModeledExecutionContract]:
     return {
         HULK_STRATEGY: _hulk_modeled_contract(),
         HULK_ROBUST_SHORT_STRATEGY: _hulk_modeled_contract(),
+        HULK_TUNED_SHORT_STRATEGY: _hulk_modeled_contract(),
         RANGE_STRATEGY: _range_modeled_contract(),
         LIQUIDITY_SWEEP_TARGET60_STRATEGY: _liquidity_sweep_target60_contract(),
         SOURCE_STRATEGY: _source_modeled_contract(),
         HYPE_STRATEGY: _hype_modeled_contract(),
         HYPE_COMPRESSION_STRATEGY: _hype_modeled_contract(),
+        HYPE_ALIGNMENT_STRATEGY: replace(
+            _hype_modeled_contract(), evidence_source=HYPE_ALIGNMENT_EVIDENCE
+        ),
         ETH_PULLBACK_STRATEGY: _eth_pullback_modeled_contract(),
     }
 
@@ -161,7 +158,7 @@ def _hip3_modeled_contracts() -> dict[tuple[str, str | None], ModeledExecutionCo
         HIP3_SWING_COMMODITY: ("xyz:SNDK", "xyz:GOLD", "xyz:BRENTOIL"),
         HIP3_BREAKOUT_COMMODITY: ("xyz:SNDK", "xyz:GOLD", "xyz:BRENTOIL"),
     }
-    return {
+    contracts = {
         (strategy, symbol): _hip3_modeled_contract(
             costs[symbol],
             V51_GROWTH_STRESS_EVIDENCE
@@ -171,6 +168,11 @@ def _hip3_modeled_contracts() -> dict[tuple[str, str | None], ModeledExecutionCo
         for strategy, symbols in groups.items()
         for symbol in symbols
     }
+    contracts[(SPCX_CASH_OPEN, "xyz:SPCX")] = spcx_cash_open_modeled_contract()
+    contracts.update(v58_commodity_fresh15_modeled_contracts())
+    route, contract = v76_sndk_fresh15_modeled_contract()
+    contracts[route] = contract
+    return contracts
 
 
 def _hip3_modeled_contract(

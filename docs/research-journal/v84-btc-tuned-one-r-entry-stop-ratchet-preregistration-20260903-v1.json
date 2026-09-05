@@ -1,0 +1,140 @@
+{
+  "schema_version": 1,
+  "preregistration_id": "V84_BTC_TUNED_ONE_R_ENTRY_STOP_RATCHET_20260903_V1",
+  "created_at_utc": "2026-09-03T03:26:17Z",
+  "status": "preregistered_before_candidate_outcomes",
+  "problem_restatement": {
+    "input": "The exact BTC short rows from four frozen tuned-v2 lifecycle artifacts, frozen BTC one-minute venue candles, and each artifact's recorded friction assumptions.",
+    "output": "A report-only causal counterfactual for one fixed completed-bar 1R entry-stop ratchet; no regenerated entries and no automatic runtime authority.",
+    "motivation": "Two of the three exact live tuned-v2 BTC closes surrendered more than 1R-equivalent favorable excursion before closing at the structural stop. Generic profit locks and the robust-v3 component exit degraded frozen tuned-v2 partitions and are excluded.",
+    "success_criteria": "The one unchanged candidate passes source-integrity, causal-timing, friction, non-degradation, positive-net, leave-largest-winner, and exercise gates in every declared partition."
+  },
+  "scope": {
+    "route": "hulk_expansion_short_tuned_v2|BTC|short",
+    "candidate_id": "btc_tuned_one_r_entry_stop_ratchet_v1",
+    "entry_logic_changed": false,
+    "position_sizing_changed": false,
+    "structural_stop_changed_before_activation": false,
+    "structural_target_changed": false,
+    "maximum_hold_changed": false,
+    "only_candidate_change": "After a completed one-minute close reaches at least 1.0R favorable, ratchet the protective stop to the raw entry price for subsequent bars only.",
+    "economic_breakeven_claim": false,
+    "economic_breakeven_note": "An entry-price fill remains a small net loss after entry fee, exit fee, adverse slippage, and any funding. The candidate is therefore named an entry-stop ratchet, not a net break-even stop."
+  },
+  "frozen_protocol": {
+    "row_filter": {
+      "candidate": "hulk_expansion_short_tuned_v2",
+      "symbol": "BTC",
+      "direction": "short"
+    },
+    "activation_r_multiple": 1.0,
+    "activation_measure": "A completed one-minute candle close must be at or below entry_price minus 1.0 times (stop_price minus entry_price). Intrabar low alone cannot activate.",
+    "activation_timing": "The minute candle whose open timestamp equals entry_time_utc is the first eligible completed bar. Activation occurs only after that candle completes. The ratcheted stop cannot trigger on the activation candle.",
+    "candidate_stop_price": "entry_price",
+    "subsequent_trigger": "On a later minute bar, short-side stop crossing requires high greater than or equal to entry_price.",
+    "structural_priority": "Before candidate activation or triggering on each minute, check the unchanged source structural stop and 3R target. If either is crossed, or both outcomes are possible on the same minute, preserve the exact recorded control outcome.",
+    "candidate_fill_reference": "For a short stop, max(entry_price, trigger_bar_open). Apply the source report's adverse market-exit slippage to that reference.",
+    "candidate_costs": "Charge the source entry fee on entry notional and source market-exit fee on candidate fill notional. Prorate recorded source funding by candidate elapsed duration divided by source control duration.",
+    "control_preservation": "If no unambiguous candidate trigger starts strictly before exit_time_utc, retain the exact source net_pnl_usd.",
+    "missing_data": "Fail closed if any required one-minute timestamp from entry_time_utc through the minute strictly before exit_time_utc is absent, duplicated, non-UTC, non-monotonic, or has invalid OHLCV.",
+    "mixed_symbol_behavior": "Fail closed if an unfiltered partition contains a row outside the exact BTC tuned-v2 short route. Silent use of BTC candles for another asset is prohibited."
+  },
+  "partitions": {
+    "development": {
+      "expected_btc_trades": 34,
+      "control_net_pnl_usd": 736.8593488514075,
+      "control_net_without_largest_winner_usd": 624.5078467710194,
+      "control_worst_trade_net_pnl_usd": -58.24546248444136,
+      "trades_path": "../../data/logs/research/20260801_hulk_short_tuned_v2_development.trades.parquet",
+      "report_path": "../../data/logs/research/20260801_hulk_short_tuned_v2_development.json"
+    },
+    "validation": {
+      "expected_btc_trades": 16,
+      "control_net_pnl_usd": 495.5257454364762,
+      "control_net_without_largest_winner_usd": 385.1629822713347,
+      "control_worst_trade_net_pnl_usd": -58.497449378911824,
+      "trades_path": "../../data/logs/research/20260801_hulk_short_tuned_v2_validation.trades.parquet",
+      "report_path": "../../data/logs/research/20260801_hulk_short_tuned_v2_validation.json"
+    },
+    "pseudo_holdout": {
+      "expected_btc_trades": 9,
+      "control_net_pnl_usd": -111.48825479786535,
+      "control_net_without_largest_winner_usd": -221.72720595183358,
+      "control_worst_trade_net_pnl_usd": -59.246997879793255,
+      "trades_path": "../../data/logs/research/20260801_hulk_short_tuned_v2_pseudo_holdout.trades.parquet",
+      "report_path": "../../data/logs/research/20260801_hulk_short_tuned_v2_pseudo_holdout.json"
+    },
+    "robustness_cost_stress": {
+      "expected_btc_trades": 25,
+      "control_net_pnl_usd": 169.97471697138616,
+      "control_net_without_largest_winner_usd": 61.456511849291445,
+      "control_worst_trade_net_pnl_usd": -64.50476649509923,
+      "trades_path": "../../data/logs/research/20260801_hulk_short_tuned_v2_robustness_cost_stress.trades.parquet",
+      "report_path": "../../data/logs/research/20260801_hulk_short_tuned_v2_robustness_cost_stress.json"
+    }
+  },
+  "acceptance_gates": {
+    "integrity": "All input hashes and expected BTC row counts match this preregistration.",
+    "causality": "No candidate stop triggers on its activation candle or at/after the recorded control exit boundary; original stop/target wins ambiguity.",
+    "exercise": "Candidate triggers at least once in development, validation, pseudo-holdout, and robustness cost stress.",
+    "partition_non_degradation": "Candidate net PnL and net PnL without the largest winner are each greater than or equal to their control value in every partition.",
+    "partition_survival": "Candidate net PnL and net PnL without the largest winner are each greater than or equal to zero in every partition.",
+    "worst_trade": "Candidate worst-trade net PnL is no lower than control worst-trade net PnL in every partition.",
+    "decision_rule": "Promote only if every gate passes. Any failed or unexercised gate rejects runtime installation; do not tune activation, stop, timing, or gates after outcomes are read."
+  },
+  "known_limitations": [
+    "One-minute OHLC does not reveal intrabar path or queue position.",
+    "The source strategy resolves on 30-minute bars; structural stop/target priority is imposed from minute OHLC to avoid giving the faster overlay an optimistic precedence advantage.",
+    "Recorded funding is prorated rather than rebuilt event by event.",
+    "The cost-stress partition overlaps later chronology and is a friction stress, not an independent statistical holdout.",
+    "Three exact live closes cannot establish stable expectancy; the live givebacks motivate this fixed falsification test but are excluded from fitting and acceptance metrics."
+  ],
+  "falsifiers": [
+    "Any source hash or exact-route row count differs.",
+    "Candidate output changes when future candles after the trigger are appended.",
+    "A same-bar activation and trigger is observed.",
+    "A mixed-symbol row is evaluated against BTC candles.",
+    "Any acceptance gate fails."
+  ],
+  "source_evidence": [
+    {
+      "path": "data/logs/research/20260801_hulk_short_tuned_v2_development.trades.parquet",
+      "sha256": "8f2b7479c8050d2fd06ebd2c763171eb2fc455a27603fdcfcdf0a056411c77d9"
+    },
+    {
+      "path": "data/logs/research/20260801_hulk_short_tuned_v2_development.json",
+      "sha256": "be48f01177dd5828c3016ecac339f7facb59892c0ab65878ec793c6d5409687d"
+    },
+    {
+      "path": "data/logs/research/20260801_hulk_short_tuned_v2_validation.trades.parquet",
+      "sha256": "7779130703a0c14637ab2bc1f453e5036f1c2ca37f78786a613ec0674e2326d2"
+    },
+    {
+      "path": "data/logs/research/20260801_hulk_short_tuned_v2_validation.json",
+      "sha256": "90465a69fe9cb6b3fe39ff7b23d81b6e6fd3b2d6b0d190d36422eeefbae63a3c"
+    },
+    {
+      "path": "data/logs/research/20260801_hulk_short_tuned_v2_pseudo_holdout.trades.parquet",
+      "sha256": "ed2f9b7e53f3614a08bd52abdc26408954483c8da6c952eaeda87ab24fe8d592"
+    },
+    {
+      "path": "data/logs/research/20260801_hulk_short_tuned_v2_pseudo_holdout.json",
+      "sha256": "c461ecbef4896dd7596ce9018755be28e7f1910b9564b879f992a08c0abdeb49"
+    },
+    {
+      "path": "data/logs/research/20260801_hulk_short_tuned_v2_robustness_cost_stress.trades.parquet",
+      "sha256": "425bfe6518a3102f6b0885d4f82a2280d15756a4955e9d32ce4dc62cbfa0811b"
+    },
+    {
+      "path": "data/logs/research/20260801_hulk_short_tuned_v2_robustness_cost_stress.json",
+      "sha256": "f12c1bf9b2ce9a1005aaca2ababceca7ce776b742e713ced2d71c10a14faa68c"
+    },
+    {
+      "path": "data/cache/BTC_1m_365d.parquet",
+      "sha256": "b0742553ebeaa7cb4af6fabfd496f5462354cb541705fd0ca5ec222dc21e15d8"
+    }
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

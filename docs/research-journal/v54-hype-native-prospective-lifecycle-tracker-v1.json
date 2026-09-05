@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "generated_at_utc": "2026-08-18T05:40:10Z",
+  "hypothesis_id": "v54-hype-native-prospective-lifecycle-tracker-v1",
+  "status": "being_implemented_report_only_not_live_authorized",
+  "recommendation": "Add an execution-incapable lifecycle report for the already-running v54 HYPE-native long challenger so every future eligible long signal is measured through its actual candidate stop, native short-onset exit, or fixed eight-hour boundary without manual reconstruction.",
+  "why_now": "Historical provider/source parity is verified, but economic confidence remains low because the original live seed is N=7, later HYPE evidence is adverse or winner-dependent, and the current v54 observer has not yet produced an eligible signal. Existing forward tools either ignore the native opposite exit or reject already-eligible v54 signals.",
+  "evidence_reviewed": [
+    "docs/research-journal/v54-hype-native-historical-source-parity-v1.json",
+    "docs/research-journal/v54-hype-native-directional-authority-challenger-v1.json",
+    "docs/research-journal/v54-hype-native-adverse-15m-context-hypothesis-v2.json",
+    "data/observe/v54_hype_native_long_challenger_continuous_20260818/decisions.jsonl"
+  ],
+  "observed_problem_or_opportunity": "The observer already persists exact provider evaluations, completed candles, and 20-level HYPE books. It lacks a single automatic report that applies the v54 long-only entry authority and native short-onset exit contract across portfolio occupancy.",
+  "applicable_market_regime": "All prospectively observed HYPE regimes; completed 1m/5m/15m states are annotations and do not gate the report.",
+  "alternatives_considered": [
+    "Continue manually reconstructing each signal; rejected because it is slow and error-prone.",
+    "Reuse the generic eligible-depth forward tool; rejected because it omits provider-native opposite exits.",
+    "Reuse the v53 counterfactual HYPE tool; rejected because it requires a blocked source signal and a different candidate identity.",
+    "Change the live HYPE route now; rejected because prospective economics remain insufficient."
+  ],
+  "proposed_live_change": "None. The tracker consumes only report-only observer telemetry and cannot construct an exchange or signing client.",
+  "expected_upside": "Eliminates manual lifecycle reconstruction, preserves exact signal and portfolio occupancy, and creates comparable forward evidence for deciding whether HYPE-native long authority merits a future approval request.",
+  "main_risks_and_failure_modes": [
+    "Sampled BBO crossings do not prove venue mark-price stop triggers.",
+    "Observer book gaps can hide adverse excursions and must make the affected lifecycle technically unresolved.",
+    "Modeled residual slippage is not a private fill.",
+    "Funding is incomplete until exact public hourly settlements are attached.",
+    "A report-only evaluation must never be interpreted as realized PnL or live authority."
+  ],
+  "frozen_contract": {
+    "run_id": "bidirectional-observe-1787029740833",
+    "profile_id": "multi_asset_growth_first_5000_hype_native_long_challenger_v54",
+    "profile_fingerprint": "1c0beafb19ef1b8c5594d3bf1aa6a23eeff12f28f540d958953cc25e8bff1643",
+    "run_fingerprint": "09a64ad206d33ac6644400bd21e3d5128c4b98c457f99662c40721cb02b7869d",
+    "config_sha256": "2e5ac993500542d411e5f5de9c67160bf881faf056ca11efefab831de23d8112",
+    "strategy_id": "hype_native_breakout_onset_long_v3",
+    "symbol": "HYPE",
+    "entry_sides": ["long"],
+    "opposite_short_onset_exit": true,
+    "notional_usd": 1250.0,
+    "stop_bps": 80.0,
+    "maximum_hold_seconds": 28800,
+    "maximum_entry_delay_ms": 60000,
+    "maximum_exit_delay_ms": 60000,
+    "fee_bps_per_side": 4.32,
+    "residual_slippage_bps_per_side": 2.0,
+    "maximum_book_gap_ms": 45000
+  },
+  "validation_completed": "Provider source parity, HYPE-only scope, long-only entry authority, short-onset exit-only semantics, and zero-order observe runtime were already verified separately.",
+  "validation_still_required": [
+    "TDD for waiting, entry, opposite exit, stop, fixed hold, occupancy, gap, identity, and authority cases.",
+    "A bounded real-ledger baseline proving zero actions and an honest waiting status when no eligible signal exists.",
+    "Exact funding attachment and venue mark evidence before treating any lifecycle as fully resolved economics."
+  ],
+  "success_metrics": [
+    "Every post-activation eligible v54 long is attempted exactly once unless occupied by an earlier open lifecycle.",
+    "Every v54 exit-only short onset closes the applicable open long before the fixed deadline.",
+    "No short entry, non-HYPE signal, order action, or live authority appears.",
+    "Every resolved proxy reports finite-depth entry/exit, fees, residual slippage, MFE, MAE, context, and largest-winner sensitivity.",
+    "Any path with an excessive book gap or missing funding/mark evidence remains explicitly unresolved."
+  ],
+  "failure_or_rollback_triggers": "Any identity mismatch, short entry, duplicate lifecycle, noncausal book use, hidden data gap, execution authority, or disagreement with the frozen config aborts publication. No live rollback applies because no live mutation is authorized.",
+  "confidence_level": "High on the need for automated exact-contract evidence; low on HYPE profitability until prospective lifecycles resolve.",
+  "explicit_approval_requested": false
+}

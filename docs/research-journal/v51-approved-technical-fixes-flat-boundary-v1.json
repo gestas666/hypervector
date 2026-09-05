@@ -1,0 +1,36 @@
+{
+  "schema_version": "v51_approved_technical_fixes_flat_boundary_v1",
+  "mode": "human_approval_record",
+  "recorded_at_utc": "2026-08-14T04:42:50Z",
+  "source": "active_thread_explicit_human_approval",
+  "profile_id": "multi_asset_growth_first_5000_six_asset_profit_lock_candidate_v51",
+  "profile_fingerprint": "30cd54bb5b5b17249ae0a6a3b01d5702b276d51f8dc5ddd6b4d36ab6aa7d1908",
+  "approved_proposals": [
+    "V51_ENTRY_FRESHNESS_AT_SUBMISSION_V1",
+    "V51_CROSS_NAMESPACE_EXPOSURE_TELEMETRY_V1"
+  ],
+  "approval_scope": "Deploy the already-tested technical fixes at the next verified flat and owned-order-free restart boundary.",
+  "required_boundary_conditions": [
+    "all configured venue positions are flat",
+    "all cohort-owned entry, stop, target, and close orders are absent",
+    "the active v51 backend is stopped normally",
+    "a fresh prestart backup and profile fingerprint verify",
+    "poststart heartbeat, routing, protection, checkpoint, and TUI acceptance pass"
+  ],
+  "not_authorized": [
+    "strategy or asset changes",
+    "entry or exit parameter changes",
+    "leverage, sizing, stop, target, or maximum-hold changes",
+    "automatic deployment before the boundary conditions pass",
+    "restart while the HYPE lifecycle or its protective stop remains open"
+  ],
+  "execution_authority": "none",
+  "automatic_deployment": false,
+  "runtime_strategy_changed": false,
+  "current_status": "approved_waiting_flat_boundary",
+  "limitations": [
+    "This file records human scope; it is not an executable deployment token.",
+    "The running backend does not hot-reload these fixes.",
+    "Post-restart live acceptance remains required before either fix is considered deployed."
+  ]
+}

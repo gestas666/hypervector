@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v51-current-run-entry-gate-review",
+  "revision_number": 2,
+  "supersedes": "v51-current-run-entry-gate-review-v1.json",
+  "created_at_utc": "2026-08-15T21:06:37.122015+00:00",
+  "status": "accepted_no_live_change_episode_ranking_corrected",
+  "hypothesis": "The frozen v51 entry gates are filtering after-cost noise rather than silently suppressing robust opportunities in the current live window.",
+  "correction": "The prior continuous diagnostic ranked repeated route-level blocker rows. Exact portfolio episode-onset evidence is the independent unit. The corrected selector uses a unique episode attribution, refuses to pool long and short attributions, and no longer reports a robust HYPE missing-onset lead.",
+  "decision": "Keep all v51 entry gates unchanged. Continue exact lifecycle and missed-opportunity measurement; do not reopen HYPE missing-onset or SOL hourly-cross relaxation from this evidence.",
+  "confidence": "high_for_diagnostic_correction_medium_for_current_window_filtering_low_for_long_run_edge",
+  "falsifier": "Reopen a gate hypothesis only if a later predeclared compatible window has technically complete, side-separated independent episode onsets that remain positive after actual route costs and largest-winner removal, or if an eligible intent is suppressed outside the documented router contract.",
+  "live_identity": {
+    "run_id": "bidirectional-live-1786801038311",
+    "profile_id": "multi_asset_growth_first_5000_six_asset_profit_lock_candidate_v51",
+    "profile_fingerprint": "30cd54bb5b5b17249ae0a6a3b01d5702b276d51f8dc5ddd6b4d36ab6aa7d1908"
+  },
+  "immutable_evidence": {
+    "path": "../../data/logs/research/bidirectional_cohort/v51_live_opportunity_diagnostics_episode_corrected_20260815T210627Z_v1.json",
+    "sha256": "618f14d838801771ac59f71ce5cde601ce009404c7f55132f598dde2bc844704",
+    "checkpoint_sha256": "f5ae39acf20ed2a93afaa7c283fdab56d84de5cac9ddc9a7ce8544e3c1f3552d",
+    "checkpoint_bytes": 8511043,
+    "source_checkpoint_generated_at_utc": "2026-08-15T21:06:22.127447+00:00"
+  },
+  "generator_evidence": {
+    "cohort_live_opportunity_diagnostics_sha256": "3101bb6e5199cd6b742772004a570309d588af3ed30db17b542e38fd2b8cea2a",
+    "cohort_opportunity_episode_evidence_sha256": "0fe13c35b6e0ad0f94e515b0abec31d802a8c0c8e4046ec1d4c13941390e12e6"
+  },
+  "corrected_findings": {
+    "robust_report_only_lead_count": 0,
+    "HYPE_missing_breakout_onset_60m": {
+      "sample_basis": "portfolio_episode_onsets",
+      "episode_attribution_count": 1,
+      "independent_paths": 3,
+      "mean_after_estimated_friction_bps": 8.2034022767027,
+      "mean_excluding_largest_bps": -4.414848018024818,
+      "assessment": "negative_or_concentrated_after_estimated_friction"
+    },
+    "SOL_missing_hourly_cross_60m": {
+      "sample_basis": "side_separated_episode_evidence",
+      "episode_attribution_count": 2,
+      "assessment": "side_separation_required",
+      "interpretation": "The route-level row cannot pool independent long and short episode summaries into one promotion claim."
+    }
+  },
+  "current_compatible_performance": {
+    "closed_trades": 4,
+    "wins": 3,
+    "losses": 1,
+    "net_pnl_usd": 10.734867000000001,
+    "profit_factor": 1.2164226352777177,
+    "fees_usd": 10.284588999999999,
+    "funding_usd": 1.014291,
+    "maximum_drawdown_pct": 0.4277725434337883,
+    "interpretation": "Descriptive current-run evidence only; four closes do not establish a repeatable portfolio edge."
+  },
+  "recommendation": {
+    "recommendation": "Retain the exact v51 entry gates and continue forward measurement using episode-onset, side-separated opportunity units.",
+    "why_now": "The report-only monitor temporarily surfaced a HYPE research lead that disappeared when the independent sample definition was reconciled to the checkpoint's portfolio episode ledger.",
+    "evidence_reviewed": [
+      "exact live v51 checkpoint prefix",
+      "portfolio opportunity deduplication by attribution",
+      "route-level one-blocker paths",
+      "actual compatible lifecycle performance and costs",
+      "largest-winner sensitivity"
+    ],
+    "observed_problem_or_opportunity": "Persistent blocker rows were counted as route-level independent paths, overstating HYPE repeatability; SOL also has distinct long and short episode attributions that cannot be pooled.",
+    "applicable_market_regime": "Only the frozen v51 observation window and its observed regime mix; no claim is made for unobserved regimes.",
+    "alternatives_considered": [
+      "retain repeated blocker-row ranking",
+      "pool long and short episode summaries",
+      "abort the entire digest on multiple side attributions",
+      "rank unique episode onsets and mark multi-side evidence as separation required"
+    ],
+    "proposed_live_change": "none",
+    "expected_upside": "Prevents false-positive research leads and avoids weakening live entry gates on concentrated evidence.",
+    "main_risks_and_failure_modes": "Episode samples remain sparse; counterfactual close marks are not executable fills; route costs may understate queue or impact; unique attribution depends on exact provider, symbol, blocker, side, and horizon identity.",
+    "validation_completed": "TDD covered unique episode ranking, ambiguous long/short attribution, legacy fallback, configured-route scope, and current live execution visibility; a real checkpoint one-shot produced zero robust leads.",
+    "validation_still_required": "Resolved live lifecycles on every route and side, actual fees/funding/slippage, non-adjacent regimes, and predeclared forward windows large enough to estimate repeatability.",
+    "success_metrics": "No repeated-row promotion; exact attribution count serialized; positive after-cost episode net and profit factor above one; positive after removing the largest winner; technical completeness; stable side-separated results.",
+    "failure_or_rollback_triggers": "Any diagnostic that promotes repeated blocker rows, pools ambiguous sides, or changes live authority is a defect; a later robust side-separated episode window updates the gate decision through a new reviewed revision.",
+    "confidence_level": "high for the diagnostic correction; medium for retaining gates in this window; low for long-run profitability",
+    "explicit_approval_requested": false
+  },
+  "single_highest_value_next_investigation": "Resolve the open exact-v51 SPCX short and reconcile its realized exit, MFE/MAE, profit-lock behavior, costs, and regime path.",
+  "limitations": [
+    "The source checkpoint is rolling; the immutable digest freezes only the recorded prefix.",
+    "Three HYPE episode paths and four compatible closes are too sparse for a long-run edge claim.",
+    "No live strategy, route, asset, parameter, leverage, sizing, risk, exit, execution, or deployment configuration changed."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

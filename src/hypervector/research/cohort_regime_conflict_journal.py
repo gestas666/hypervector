@@ -38,6 +38,7 @@ class _Intent:
     symbol: str
     side: str
     decision_time_ms: int
+    available_time_ms: int
     reference_price: float
     regime_score: float
     regime_stance: str
@@ -144,7 +145,8 @@ def _conflicts(
     excluded = 0
     for row in event_rows(records, "intent_routing"):
         cycle = payload(row)
-        for conflict in _cycle_conflicts(cycle, priorities):
+        available_time_ms = int(timestamp(row).timestamp() * 1_000)
+        for conflict in _cycle_conflicts(cycle, priorities, available_time_ms):
             if conflict.selected.decision_time_ms <= activation_ms:
                 excluded += 1
             else:
@@ -153,7 +155,9 @@ def _conflicts(
 
 
 def _cycle_conflicts(
-    cycle: Record, priorities: Mapping[tuple[str, str], int]
+    cycle: Record,
+    priorities: Mapping[tuple[str, str], int],
+    available_time_ms: int,
 ) -> tuple[_Conflict, ...]:
     withheld = object_list(cycle, "withheld")
     symbols = sorted(
@@ -166,9 +170,11 @@ def _cycle_conflicts(
     actions = _provider_candidates(
         [row for row in object_list(cycle, "actions") if row.get("symbol") in symbols],
         priorities,
+        available_time_ms,
     )
     return tuple(
-        _symbol_conflict(symbol, actions, withheld, priorities) for symbol in symbols
+        _symbol_conflict(symbol, actions, withheld, priorities, available_time_ms)
+        for symbol in symbols
     )
 
 
@@ -177,14 +183,17 @@ def _symbol_conflict(
     actions: Sequence[_Intent],
     withheld: Sequence[Record],
     priorities: Mapping[tuple[str, str], int],
+    available_time_ms: int,
 ) -> _Conflict:
     selected = [value for value in actions if value.symbol == symbol]
     if not selected:
-        selected = _operationally_withheld_selection(symbol, withheld, priorities)
+        selected = _operationally_withheld_selection(
+            symbol, withheld, priorities, available_time_ms
+        )
     if len(selected) != 1:
         raise ValueError(f"regime conflict requires one selected intent for {symbol}")
     alternatives = tuple(
-        _intent(row, priorities)
+        _intent(row, priorities, available_time_ms)
         for row in withheld
         if row.get("symbol") == symbol and row.get("reason") in _CONFLICT_REASONS
     )
@@ -194,10 +203,12 @@ def _symbol_conflict(
 
 
 def _provider_candidates(
-    rows: Sequence[Record], priorities: Mapping[tuple[str, str], int]
+    rows: Sequence[Record],
+    priorities: Mapping[tuple[str, str], int],
+    available_time_ms: int,
 ) -> tuple[_Intent, ...]:
     return tuple(
-        _intent(row, priorities)
+        _intent(row, priorities, available_time_ms)
         for row in rows
         if (row.get("strategy_id"), row.get("symbol")) in priorities
     )
@@ -207,9 +218,10 @@ def _operationally_withheld_selection(
     symbol: str,
     withheld: Sequence[Record],
     priorities: Mapping[tuple[str, str], int],
+    available_time_ms: int,
 ) -> list[_Intent]:
     return [
-        _intent(row, priorities)
+        _intent(row, priorities, available_time_ms)
         for row in withheld
         if row.get("symbol") == symbol
         and row.get("reason") not in _CONFLICT_REASONS
@@ -217,7 +229,11 @@ def _operationally_withheld_selection(
     ]
 
 
-def _intent(row: Record, priorities: Mapping[tuple[str, str], int]) -> _Intent:
+def _intent(
+    row: Record,
+    priorities: Mapping[tuple[str, str], int],
+    available_time_ms: int,
+) -> _Intent:
     strategy = text(row.get("strategy_id"), "intent strategy")
     symbol = text(row.get("symbol"), "intent symbol")
     if (strategy, symbol) not in priorities:
@@ -242,6 +258,7 @@ def _intent(row: Record, priorities: Mapping[tuple[str, str], int]) -> _Intent:
         symbol,
         side,
         decision_time,
+        max(decision_time, available_time_ms),
         reference,
         score,
         text(row.get("regime_alignment_stance"), "regime alignment stance"),
@@ -301,12 +318,13 @@ def _comparison_path(
     selected_return = selected.directional_close_return_bps
     static_return = static.directional_close_return_bps
     advantage = selected_return - static_return
-    summary.decision_times_ms.append(conflict.selected.decision_time_ms)
+    summary.decision_times_ms.append(selected.path_start_time_ms)
     summary.selected_returns.append(selected_return)
     summary.static_returns.append(static_return)
     summary.advantages.append(advantage)
     return {
         "status": "resolved",
+        "path_start_time_ms": selected.path_start_time_ms,
         "regime_selected_return_bps": selected_return,
         "static_priority_return_bps": static_return,
         "regime_advantage_bps": advantage,
@@ -318,6 +336,7 @@ def _resolve(
 ) -> tuple[str, DirectionalPath | None]:
     return resolve_directional_path(
         decision_time_ms=intent.decision_time_ms,
+        available_time_ms=intent.available_time_ms,
         reference_price=intent.reference_price,
         side=intent.side,
         candles=candles,
@@ -329,6 +348,7 @@ def _intent_payload(intent: _Intent) -> dict[str, object]:
     return {
         "strategy_id": intent.strategy_id,
         "side": intent.side,
+        "available_time_ms": intent.available_time_ms,
         "reference_price": intent.reference_price,
         "regime_alignment_score": intent.regime_score,
         "regime_alignment_stance": intent.regime_stance,
@@ -421,6 +441,7 @@ def _contract() -> dict[str, object]:
         "execution_authority": "none",
         "runtime_strategy_changed": False,
         "automatic_strategy_changes": False,
+        "path_start_policy": ("first_full_minute_at_or_after_intent_availability"),
     }
 
 
@@ -439,6 +460,7 @@ def _limitations() -> list[str]:
         "completed candles are counterfactual paths rather than executable fills",
         "same-direction provider choices require execution evidence, not bar returns",
         "overlapping paths are descriptive and report an independent count",
+        "a partial availability minute is excluded from forward candle paths",
         "small conflict samples do not establish routing edge",
         "this journal cannot route, pause, retune, or submit orders",
     ]

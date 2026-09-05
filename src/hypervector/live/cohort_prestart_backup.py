@@ -31,6 +31,7 @@ from hypervector.live.cohort_prestart_ledger_sources import (
 _CHUNK_BYTES = 1024 * 1024
 _MANIFEST_NAME = "manifest.json"
 _SCHEMA_VERSION = 1
+Record = Mapping[str, object]
 
 
 class CohortPrestartBackupError(RuntimeError):
@@ -133,6 +134,8 @@ def _backup_sources(
     sources.extend(_ledger_sources(config, previous))
     sources.extend(_provider_sources(config))
     sources.extend(_previous_sources(previous, strategy_changed, config.source_path))
+    if approval := config.transition_approval:
+        sources.append(_required_source("transition_approval", approval))
     sources.extend(_optional_state_sources(config))
     sources.extend(
         _required_source(f"implementation_{role}", path)
@@ -355,9 +358,7 @@ def _gzip_digest(path: Path) -> tuple[str, int]:
                 digest.update(chunk)
                 byte_count += len(chunk)
     except (gzip.BadGzipFile, EOFError, OSError) as exc:
-        raise CohortPrestartBackupError(
-            f"backup archive cannot be restored: {path}"
-        ) from exc
+        raise CohortPrestartBackupError(f"cannot restore backup: {path}") from exc
     return digest.hexdigest(), byte_count
 
 
@@ -423,9 +424,7 @@ def _new_assets_without_prior_ledgers(
     return list(_ledger_backup_plan(config, previous).new_assets_without_prior_ledgers)
 
 
-def _identity_summary(
-    identity: Mapping[str, object] | None,
-) -> dict[str, object] | None:
+def _identity_summary(identity: Record | None) -> dict[str, object] | None:
     if identity is None:
         return None
     payload = identity.get("payload")
@@ -438,10 +437,7 @@ def _identity_summary(
     } | {"config_source_path": config_source}
 
 
-def _strategy_changed(
-    previous: Mapping[str, object] | None,
-    target_fingerprint: str,
-) -> bool:
+def _strategy_changed(previous: Record | None, target_fingerprint: str) -> bool:
     if previous is None:
         return False
     return previous.get("profile_fingerprint") != target_fingerprint
@@ -451,9 +447,7 @@ def _load_manifest(path: Path) -> dict[str, object]:
     try:
         decoded = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
-        raise CohortPrestartBackupError(
-            f"backup manifest cannot be read: {path}"
-        ) from exc
+        raise CohortPrestartBackupError(f"cannot read manifest: {path}") from exc
     if not isinstance(decoded, dict):
         raise CohortPrestartBackupError("backup manifest must be an object")
     return decoded
@@ -461,9 +455,8 @@ def _load_manifest(path: Path) -> dict[str, object]:
 
 def _write_manifest(path: Path, manifest: Mapping[str, object]) -> None:
     try:
-        encoded = (
-            json.dumps(manifest, indent=2, sort_keys=True, allow_nan=False) + "\n"
-        ).encode()
+        text = json.dumps(manifest, indent=2, sort_keys=True, allow_nan=False) + "\n"
+        encoded = text.encode()
     except (TypeError, ValueError) as exc:
         raise CohortPrestartBackupError("backup manifest is not JSON-safe") from exc
     with path.open("xb") as handle:

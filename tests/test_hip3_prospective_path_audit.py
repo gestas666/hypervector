@@ -145,6 +145,42 @@ def test_wrong_channel_source_is_rejected_instead_of_success_shaped() -> None:
         )
 
 
+def test_repeated_trade_payload_uses_earliest_receipt_without_double_counting() -> None:
+    """Recorder overlap may duplicate one venue trade with a later receipt only."""
+    config = Hip3ProspectivePathAuditConfig(symbol=_SYMBOL)
+    original = _trade(30_000, 1)
+    repeated = replace(original, received_ts_ns=original.received_ts_ns + 1_000_000)
+
+    report = build_hip3_prospective_path_audit(
+        l2_snapshots=tuple(_book(offset) for offset in range(0, _BAR_MS, 10_000)),
+        public_trades=(repeated, original),
+        asset_contexts=tuple(_mark(offset) for offset in range(0, _BAR_MS, 5_000)),
+        stream_gaps=(),
+        observed_at_ms=_START_MS + _BAR_MS,
+        config=config,
+    )
+
+    assert report["channels"]["trades"]["observations"] == 2
+    assert report["channels"]["trades"]["unique_observations"] == 1
+    assert report["channels"]["trades"]["duplicate_observations"] == 1
+
+
+def test_repeated_trade_identity_with_changed_economics_is_rejected() -> None:
+    """Price, size, side, hash, or participants cannot conflict under one ID."""
+    config = Hip3ProspectivePathAuditConfig(symbol=_SYMBOL)
+    original = _trade(30_000, 1)
+
+    with raises(ValueError, match="conflicting public trade identity"):
+        build_hip3_prospective_path_audit(
+            l2_snapshots=tuple(_book(offset) for offset in range(0, _BAR_MS, 10_000)),
+            public_trades=(original, replace(original, price=101.0)),
+            asset_contexts=tuple(_mark(offset) for offset in range(0, _BAR_MS, 5_000)),
+            stream_gaps=(),
+            observed_at_ms=_START_MS + _BAR_MS,
+            config=config,
+        )
+
+
 def test_future_received_book_cannot_prove_past_path_coverage() -> None:
     config = Hip3ProspectivePathAuditConfig(symbol=_SYMBOL)
     future = (_START_MS + _BAR_MS + 1) * 1_000_000

@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v51-index-live-translation-current-run-v1",
+  "revision_number": 4,
+  "supersedes_revision_id": "0dbe98de5f1b1b4d12eb3556b2932a57c463f074326161f7ab7062f1b8529b85",
+  "created_at_utc": "2026-08-16T06:34:00Z",
+  "strategy_id": "hip3_breakout_pressure_sp500_spcx_fresh15s_bidirectional_v3",
+  "symbol": "xyz:SP500+xyz:SPCX",
+  "status": "observe",
+  "hypothesis": "The exact v51 SP500/SPCX live-v3 route may retain an attributable after-cost edge only when source-native observer decisions reach the backend and complete protected lifecycles occur on both configured sides.",
+  "decision": "Continue the frozen route and monitor the first exact current-run SPCX long through its automatic exit. The source-native long signal, backend route, entry fill, sizing, and venue protection reconcile, but the open lifecycle provides no profitability conclusion until its exit, costs, funding, MFE, MAE, and giveback are final.",
+  "confidence": "low",
+  "falsifier": "Reject the technical attribution if the venue stop disappears, the lifecycle identity or execution plan changes without a recorded transition, the observer and backend decision differ, or the close cannot reconcile to exact fills and costs. Update economic confidence only after this lifecycle and additional predeclared long and short outcomes resolve.",
+  "metrics": {
+    "run_id": "bidirectional-live-1786801038311",
+    "spcx_current_run_long_eligible_decisions": 1,
+    "spcx_current_run_long_open_lifecycles": 1,
+    "sp500_current_run_eligible_decisions": 0,
+    "decision_time_ms": 1786861800000,
+    "decision_delay_ms": 949,
+    "submission_age_ms": 14707,
+    "submission_limit_ms": 30000,
+    "reference_price": 140.14,
+    "average_entry_price": 140.18,
+    "entry_size": 35.36,
+    "entry_notional_usd": 4956.7648,
+    "entry_slippage_bps": 2.8542885685757433,
+    "entry_fees_usd": 0.428263,
+    "protective_stop_oid": 517508481177,
+    "protective_stop_trigger_price": 139.06,
+    "protective_stop_distance_from_fill_bps": 79.8972749322303,
+    "maximum_hold_seconds": 86400,
+    "profit_lock_activation_bps": 100.0,
+    "profit_lock_floor_bps": 40.0,
+    "profit_lock_giveback_bps": 80.0,
+    "marked_net_pnl_usd_at_audit": -3.6106629999999997,
+    "lifecycle_closed": false,
+    "live_change_proposed": false
+  },
+  "evidence": [
+    {
+      "path": "../../data/logs/research/v51_current_run_live_audit_20260816T0633Z_v1.json",
+      "role": "immutable_current_run_entry_execution_protection_and_open_lifecycle_audit",
+      "sha256": "44e193d877e5a2b973e0e9a77b8feb6725e1a5e507723d0f1f946f1494888cba",
+      "bytes": 8642903
+    },
+    {
+      "path": "../../data/logs/research/v51_index_backend_observer_parity_20260816T0635Z_v9.json",
+      "role": "current_run_backend_observer_parity_through_eligible_entry_boundary",
+      "sha256": "ae51ffb21125ff9ffab7d80066edd568c224da912bb96c0181fcc42924efc03b",
+      "bytes": 6616
+    }
+  ],
+  "limitations": [
+    "The SPCX lifecycle is open; marked PnL is transient and is not a completed outcome.",
+    "One long lifecycle cannot establish profitability, direction robustness, or portfolio diversification.",
+    "The current-run audit reports provider-metric telemetry as incomplete even though route, fill, position, and stop evidence reconcile.",
+    "The historical 17:00-19:00Z observer gap remains unresolved.",
+    "No live strategy, route, threshold, exit, sizing, leverage, process, or deployment setting changed."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

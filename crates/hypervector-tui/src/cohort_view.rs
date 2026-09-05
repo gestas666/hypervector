@@ -77,13 +77,20 @@ fn status_line(app: &App) -> Line<'static> {
         .map(eastern_time)
         .unwrap_or_else(|| "N/A".into());
     let pulse = ["·", "∙", "●", "∙"][(app.tick_count % 4) as usize];
-    let (authority, authority_style) =
-        match (app.backend.connection, app.backend.live_armed == Some(true)) {
-            (BackendConnectionState::Connected, true) => ("LIVE EXECUTION ARMED", app.theme.bear),
-            (BackendConnectionState::Connected, false) => ("EXECUTION DISARMED", app.theme.gold),
-            (_, true) => ("LAST CHECKPOINT ARMED", app.theme.gold),
-            (_, false) => ("BACKEND NOT LIVE", app.theme.gold),
-        };
+    let stopped = clean_stopped_snapshot(app);
+    let (authority, authority_style) = match (
+        stopped,
+        app.backend.connection,
+        app.backend.live_armed == Some(true),
+    ) {
+        (true, _, _) => ("STOPPED SNAPSHOT", app.theme.cyan),
+        (false, BackendConnectionState::Connected, true) => {
+            ("LIVE EXECUTION ARMED", app.theme.bear)
+        }
+        (false, BackendConnectionState::Connected, false) => ("EXECUTION DISARMED", app.theme.gold),
+        (false, _, true) => ("LAST CHECKPOINT ARMED", app.theme.gold),
+        (false, _, false) => ("BACKEND NOT LIVE", app.theme.gold),
+    };
     let mut spans = vec![
         Span::styled(format!(" {pulse} "), connection_style(app)),
         Span::styled(connection_label(app), connection_style(app)),
@@ -92,11 +99,41 @@ fn status_line(app: &App) -> Line<'static> {
         Span::raw("  //  "),
         Span::styled(authority, authority_style),
     ];
+    if let Some(acceptance) = &app.backend.cohort_checkpoint.poststart_acceptance {
+        spans.push(Span::raw("  //  "));
+        let verdict = if stopped {
+            "RUN STOPPED"
+        } else if acceptance.accepted {
+            "CHECK PASS"
+        } else {
+            "CHECK FAIL"
+        };
+        spans.push(Span::styled(
+            format!("{} {verdict}", acceptance.version),
+            if stopped || acceptance.accepted {
+                app.theme.bull
+            } else {
+                app.theme.gate_blocked
+            },
+        ));
+    }
     if app.detached_lifecycle {
         spans.push(Span::raw("  //  "));
         spans.push(Span::styled("BACKEND PERSISTS ON QUIT", app.theme.cyan));
     }
     Line::from(spans)
+}
+
+fn clean_stopped_snapshot(app: &App) -> bool {
+    app.backend.cohort_checkpoint.lifecycle_state.as_deref()
+        == Some("stale_running_heartbeat_after_asset_stop")
+        && !app.backend.cohort_checkpoint.asset_states.is_empty()
+        && app
+            .backend
+            .cohort_checkpoint
+            .asset_states
+            .values()
+            .all(|state| state == "STOPPED")
 }
 
 fn render_navigation(frame: &mut Frame, app: &App, area: Rect) {
@@ -134,11 +171,14 @@ fn render_footer(frame: &mut Frame, app: &App, area: Rect) {
     );
 }
 
-fn context_help(app: &App) -> &'static str {
+fn context_help(app: &App) -> String {
     if app.detached_lifecycle && app.active_tab == 0 {
-        return " Quit leaves backend running  //  All nine assets visible";
+        return format!(
+            " Quit leaves backend running  //  All {} configured assets visible",
+            app.backend.cohort.enabled_symbols.len(),
+        );
     }
-    match app.active_tab {
+    let help = match app.active_tab {
         0 => " Quit  //  All assets visible  //  Backend-authored telemetry",
         1 => " Quit  //  [↑/↓] Select setup  [Enter] Full backend evidence",
         2 => " Quit  //  [←/→] Select coin  [Enter] Strategy + timeframe detail",
@@ -149,7 +189,8 @@ fn context_help(app: &App) -> &'static str {
         7 => " Quit  //  [←/→] Coin  //  Backend labels + causal evidence  //  Read-only",
         8 => " Quit  //  [←/→] Coin [p/P] Provider [↑/↓] Row [+/-] Adjust [Enter] Action",
         _ => " Quit  //  Backend-authored telemetry  //  Lifecycle follows launcher",
-    }
+    };
+    help.to_string()
 }
 
 fn render_resize_notice(frame: &mut Frame, app: &App) {
@@ -168,4 +209,47 @@ fn render_resize_notice(frame: &mut Frame, app: &App) {
             .block(panel(" HYPERVECTOR // DISPLAY REQUIREMENT ", app)),
         frame.area(),
     );
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::backend_cohort_checkpoint::CohortPoststartAcceptance;
+
+    #[test]
+    fn stopped_checkpoint_is_not_presented_as_armed_or_failed() {
+        let mut app = App::new("MULTI".into(), "1m".into(), vec![], true, false);
+        app.backend.connection = BackendConnectionState::Stale;
+        app.backend.live_armed = Some(true);
+        app.backend.cohort_checkpoint.lifecycle_state =
+            Some("stale_running_heartbeat_after_asset_stop".into());
+        app.backend.cohort_checkpoint.asset_states = [
+            ("BTC".into(), "STOPPED".into()),
+            ("ETH".into(), "STOPPED".into()),
+        ]
+        .into();
+        app.backend.cohort_checkpoint.poststart_acceptance = Some(CohortPoststartAcceptance {
+            version: "V80".into(),
+            accepted: false,
+            reasons: vec!["runtime_not_fresh_and_healthy".into()],
+            expected_routes: 9,
+            evaluated_routes: 9,
+            routes_with_metrics: 9,
+            open_positions: 0,
+            fills: 0,
+            costed_fills: 0,
+            closed_trades: 0,
+        });
+
+        let rendered = status_line(&app)
+            .spans
+            .iter()
+            .map(|span| span.content.as_ref())
+            .collect::<String>();
+
+        assert!(rendered.contains("STOPPED SNAPSHOT"));
+        assert!(rendered.contains("V80 RUN STOPPED"));
+        assert!(!rendered.contains("LAST CHECKPOINT ARMED"));
+        assert!(!rendered.contains("CHECK FAIL"));
+    }
 }

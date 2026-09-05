@@ -370,6 +370,7 @@ def fetch_hl_l2_book(
     symbol: str,
     *,
     session: requests.Session | None = None,
+    sleep_fn: Callable[[float], None] = time.sleep,
 ) -> BookSnapshot:
     """Fetch HL public L2 book (info type ``l2Book``) as a BookSnapshot.
 
@@ -383,8 +384,7 @@ def fetch_hl_l2_book(
     sess = session or requests.Session()
     payload = {"type": "l2Book", "coin": coin}
     try:
-        resp = sess.post(HL_INFO_URL, json=payload, timeout=30)
-        resp.raise_for_status()
+        resp = _request_hl_l2_book(sess, payload, sleep_fn)
         raw = resp.json()
     except Exception as exc:  # noqa: BLE001 — wrap all transport failures
         raise RuntimeError(f"HL l2Book fetch failed for {coin}: {exc}") from exc
@@ -399,3 +399,35 @@ def fetch_hl_l2_book(
         )
     except Exception as exc:  # noqa: BLE001
         raise RuntimeError(f"HL l2Book parse failed for {coin}: {exc}") from exc
+
+
+def _request_hl_l2_book(
+    session: requests.Session,
+    payload: dict[str, object],
+    sleep_fn: Callable[[float], None],
+) -> requests.Response:
+    """Fetch one L2 response with the bounded public-read retry contract."""
+    attempts = len(_SNAPSHOT_RETRY_DELAYS) + 1
+    for attempt in range(attempts):
+        try:
+            response = session.post(HL_INFO_URL, json=payload, timeout=30)
+        except requests.RequestException as exc:
+            if attempt == attempts - 1:
+                raise
+            delay = _SNAPSHOT_RETRY_DELAYS[attempt]
+            logger.warning(
+                "HL L2 transport %s; retrying in %.1fs",
+                type(exc).__name__,
+                delay,
+            )
+            sleep_fn(delay)
+            continue
+        if response.status_code != 429:
+            response.raise_for_status()
+            return response
+        if attempt == attempts - 1:
+            response.raise_for_status()
+        delay = _snapshot_retry_delay(response, attempt)
+        logger.warning("HL L2 throttled; retrying in %.1fs", delay)
+        sleep_fn(delay)
+    raise RuntimeError("HL L2 retry loop exhausted")

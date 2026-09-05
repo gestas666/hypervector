@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "eth-breakout-precompression-pullback",
+  "revision_number": 9,
+  "supersedes_revision_id": "4b6f313c7a8428a4792b7157699f6a3b89b761ce1d82724c4408ee147d26b63c",
+  "created_at_utc": "2026-08-17T16:06:00Z",
+  "strategy_id": "eth_breakout_precompression_pullback_bidirectional_v1",
+  "symbol": "ETH",
+  "status": "observe",
+  "hypothesis": "A future-only ETH compression-pullback setup blocked solely by the fresh canonical breakout-onset requirement may retain repeatable after-cost value under exact visible-depth execution and the frozen 60-bps stop contract.",
+  "decision": "Keep v53 and the canonical breakout-onset requirement unchanged. Continue the isolated observer without retuning only to determine whether materially new future evidence can overturn the negative N=3 long-only sample. Do not add ETH or grant this experiment execution authority.",
+  "confidence": "low",
+  "falsifier": "Retain the canonical breakout-onset requirement if the predeclared twenty-candidate sample is negative, one-sided, technically unresolved, stress-negative after removing the largest winner, or has worse stop behavior than the frozen route. Any source, identity, funding, depth, or timing mismatch invalidates the window.",
+  "evidence": [
+    {
+      "path": "eth-breakout-precompression-pullback-v13.json",
+      "role": "human_readable_future_only_n3_decision_revision",
+      "sha256": "cd8b81df043435fdd70a224d741f5581ea6c515ba3a5a1dae348ca4d1131eb59",
+      "bytes": 8920
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/eth_onset_one_blocker_15m_20260817T1604Z_v3.json",
+      "role": "immutable_exact_depth_n3_primary_horizon_replay",
+      "sha256": "e4d8aa5ce0e3eb934c26a62f99b2701a5d97cf6b89b348856f0f9e0bfef522cd",
+      "bytes": 18360
+    }
+  ],
+  "metrics": {
+    "future_only_start_ms": 1786978680000,
+    "future_only_exact_candidates": 23,
+    "selected_non_overlapping": 3,
+    "resolved_executions": 3,
+    "right_boundary_entry_missing": 0,
+    "long_resolved": 3,
+    "short_resolved": 0,
+    "wins": 1,
+    "losses": 2,
+    "total_net_return_bps": -1.9039288177714386,
+    "mean_net_return_bps": -0.6346429392571462,
+    "median_net_return_bps": -2.8447759044979737,
+    "profit_factor": 0.7671793708934254,
+    "net_return_excluding_largest_winner_bps": -8.177663745165411,
+    "simulated_total_net_pnl_usd": -0.9519644088857193,
+    "stress_excluding_largest_winner_pass": false,
+    "stop_proxy_crosses": 0,
+    "notional_usd": 5000.0,
+    "stop_bps": 60.0,
+    "primary_horizon_minutes": 15,
+    "minimum_required_candidates": 20,
+    "runtime_strategy_changed": false
+  },
+  "limitations": [
+    "Three results remain far below the predeclared twenty-candidate minimum.",
+    "The aggregate, median, and largest-winner-removed result are negative.",
+    "All resolved candidates are long-side, so bidirectional behavior remains untested.",
+    "Recorded visible depth can cancel before a live IOC arrives.",
+    "The stop proxy uses adverse BBO rather than an exact venue mark-trigger fill.",
+    "The fixed 15-minute diagnostic does not reproduce the route's full native maximum-hold lifecycle."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

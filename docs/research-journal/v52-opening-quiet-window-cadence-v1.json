@@ -1,0 +1,137 @@
+{
+  "schema_version": "v52_opening_quiet_window_cadence_v1",
+  "hypothesis_id": "v52-opening-quiet-window-cadence-v1",
+  "generated_at_utc": "2026-08-16T14:44:44.482706+00:00",
+  "status": "accepted",
+  "decision": "The first 1.680924 hours with zero eligible entries is consistent with the frozen route-cadence evidence and does not support loosening entry conditions.",
+  "problem_restatement": "Determine whether the live v52 opening window's zero trades indicate a technical or frequency defect, or remain statistically ordinary for three sparse event-driven routes.",
+  "live_observation": {
+    "run_id": "bidirectional-live-1786885252328",
+    "profile_id": "multi_asset_growth_first_5000_evidence_bound_successor_v52",
+    "profile_fingerprint": "662d28b352cfc4f09e08c71ee67c8f044421483f2932539b09ea082b5e4f27f7",
+    "first_observed_at_utc": "2026-08-16T13:03:40.441507+00:00",
+    "last_observed_at_utc": "2026-08-16T14:44:31.767391+00:00",
+    "duration_seconds": 6051.325884,
+    "duration_hours": 1.680923857,
+    "poll_cycles": 404,
+    "provider_evaluations": 105,
+    "eligible_evaluations": 0,
+    "strategy_intents": 0,
+    "routed_actions": 0,
+    "withheld_intents": 0,
+    "submitted_entries": 0,
+    "stale_entries_withheld": 0,
+    "open_lifecycles": 0,
+    "closed_lifecycles": 0,
+    "faults": 0,
+    "technical_coverage_complete": true,
+    "technical_gaps": [],
+    "asset_states": {
+      "BTC": "FLAT",
+      "HYPE": "FLAT"
+    },
+    "owned_open_orders": 0,
+    "equity_change_usd": 0.0
+  },
+  "route_evaluations": {
+    "hulk_expansion_short_robust_v3|BTC": {
+      "evaluations": 3,
+      "eligible": 0,
+      "historical_planning_rate_per_week": 0.724137931
+    },
+    "liquidity_sweep_long_1h_stop60_target60_v2|BTC": {
+      "evaluations": 1,
+      "eligible": 0,
+      "historical_planning_rate_per_week": 0.461538462
+    },
+    "hype_breakout_compression_alignment_bidirectional_v2|HYPE": {
+      "evaluations": 101,
+      "eligible": 0,
+      "historical_planning_rate_per_week": 0.500372301
+    }
+  },
+  "cadence_sensitivity": {
+    "model": "homogeneous_poisson_planning_sensitivity",
+    "planning_rate_per_week": 1.686048694,
+    "expected_events_during_observation": 0.016869759,
+    "probability_of_zero_events": 0.983271739,
+    "optimistic_sum_of_route_upper_rates_per_week": 5.16711,
+    "optimistic_expected_events_during_observation": 0.051699515,
+    "optimistic_probability_of_zero_events": 0.949614169,
+    "interpretation": "The observed zero-event window is ordinary under both the central planning rate and an intentionally optimistic upper-rate sensitivity.",
+    "limitations": [
+      "Provider signals are regime-dependent and clustered, so homogeneous Poisson arrivals are a planning sensitivity rather than a fitted generative model.",
+      "The two BTC routes share one asset slot and are not independent.",
+      "Recent route rates have wide uncertainty and include sparse or post-selected evidence.",
+      "This calculation assesses cadence consistency only; it says nothing about profitability or future route quality."
+    ]
+  },
+  "bounded_prefix_evidence": {
+    "cohort": {
+      "path": "data/live/bidirectional_cohort/decisions.jsonl",
+      "sequence_start": 192918,
+      "sequence_end": 194737,
+      "bytes": 4201110,
+      "sha256": "f48ead3a1c9b9ee0256cb9f9c34468729e9a7c330d75cf9eb3510c84df5ed66d"
+    },
+    "BTC": {
+      "path": "data/live/bidirectional_cohort/btc.jsonl",
+      "sequence_start": 193868,
+      "sequence_end": 195494,
+      "bytes": 2342192,
+      "sha256": "aafa3d46cdba8445eab294ad6415de00dc6314368ddbc8e28d1d215e4b3a05e6"
+    },
+    "HYPE": {
+      "path": "data/live/bidirectional_cohort/hype.jsonl",
+      "sequence_start": 193866,
+      "sequence_end": 195488,
+      "bytes": 2104033,
+      "sha256": "e1c6f8964303de888c2240886b456ad0ebc90e5ac6d9e569863b819553ddcdf3"
+    }
+  },
+  "source_evidence": [
+    {
+      "path": "docs/research-journal/v52-route-cadence-and-portfolio-opportunity-v1.json",
+      "bytes": 18078,
+      "sha256": "cdb5ffd1a3ba685997f7776802894b3388709a85218e20f03e084a03ca58dd82"
+    },
+    {
+      "path": "docs/research-journal/v52-first-hour-route-readiness-and-missed-opportunity-v2.json",
+      "bytes": 12887,
+      "sha256": "f3a5ba3e6b73cfd4836bd3c62207fe72c89fb7b194c82de20d798d2a6bc557b9"
+    },
+    {
+      "path": "configs/multi_asset_growth_first_5000_evidence_bound_successor_v52.toml",
+      "bytes": 1993,
+      "sha256": "bcc46284503a2b38b43ee1f6dca473d32edfb7c9f2cb5cd50dd828f9dabe00fb"
+    }
+  ],
+  "recommendation": {
+    "recommendation": "Keep the frozen v52 route contracts unchanged and continue prospective collection.",
+    "why_now": "The quiet opening window prompted a frequency-defect hypothesis, but the observed duration is much shorter than the routes' historically measured interarrival scale.",
+    "evidence_reviewed": "The immutable route-cadence journal, corrected first-hour causal path journal, exact v52 configuration, and bounded current-run cohort/BTC/HYPE ledger prefixes.",
+    "observed_problem_or_opportunity": "No route has emitted an eligible entry, but all evaluations reconcile to explicit ineligible states with complete technical coverage and no faults.",
+    "applicable_market_regime": "The current observed market window only; provider signals remain conditional on their frozen structural, sweep, compression, and breakout states.",
+    "alternatives_considered": "Loosen entry gates immediately, add routes to manufacture activity, classify the window as a system defect, or continue exact prospective collection.",
+    "proposed_live_change": "none",
+    "expected_upside": "Avoid an unsupported frequency-driven relaxation while preserving exact evidence for the first genuine opportunity.",
+    "main_risks_and_failure_modes": "Historical rate nonstationarity, signal clustering, BTC route dependence, sparse samples, or a later eligible intent exposing a routing/execution defect.",
+    "validation_completed": "Exact profile/run identity, complete coverage, zero faults, flat venue state, provider evaluation counts, and two cadence sensitivities were reconciled.",
+    "validation_still_required": "The first eligible intent, submitted entry, completed lifecycle, HYPE short, BTC provider collision, and route-level realized cadence over a materially longer prospective window.",
+    "success_metrics": "Every future eligible intent receives an attributable route outcome; every lifecycle reconciles costs, protection, exit reason, and venue economics; cadence is reported with uncertainty.",
+    "failure_or_rollback_triggers": "Any unexplained eligible non-action, stale submission, missing protection, unresolved order, source mismatch, data gap, or sustained cadence materially outside the frozen evidence range.",
+    "confidence_level": "high that the current quiet window is not evidence of a technical frequency defect; medium that one-to-two entries per week remains a useful planning range; low on future profitability until exact live lifecycles exist",
+    "explicit_approval_requested": false
+  },
+  "highest_value_next_investigation": {
+    "experiment": "first_eligible_v52_intent_and_lifecycle_audit",
+    "objective": "Audit the first eligible route decision through freshness revalidation, routing, submission, acknowledgement, protection, exit, costs, and ledger reflection.",
+    "minimum_evidence": "One attributable eligible decision; if filled, one fully resolved lifecycle. A withheld or rejected decision remains valid diagnostic evidence when its exact reason reconciles.",
+    "live_change_authority": "none"
+  },
+  "falsifier": "Update this diagnosis if an eligible route decision fails to route or be explicitly withheld, if technical coverage breaks, or if a materially longer prospective window produces cadence inconsistent with the frozen uncertainty range.",
+  "report_only": true,
+  "execution_authority": "none",
+  "automatic_live_change": false,
+  "runtime_strategy_changed": false
+}

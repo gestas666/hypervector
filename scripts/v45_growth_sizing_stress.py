@@ -12,7 +12,6 @@ import sys
 from typing import Literal
 
 from hypervector.data.oxa_storage import file_evidence, write_immutable_json
-from hypervector.live.cohort_entry_sizing import CohortEntrySizing
 from hypervector.live.cohort_monitor_identity import active_ledger_identity
 from hypervector.live.multi_asset_live_config import (
     MultiAssetLiveConfig,
@@ -21,6 +20,7 @@ from hypervector.live.multi_asset_live_config import (
 from hypervector.research.cohort_growth_sizing_evidence import (
     hip3_visible_quantiles,
 )
+from hypervector.research.cohort_candidate_notionals import candidate_asset_notionals
 from hypervector.research.cohort_recent_liquidity import (
     build_recent_liquidity_profile,
 )
@@ -81,31 +81,6 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--schema-version", default="v45_portfolio_friction_stress_v1")
     parser.add_argument("--output", type=Path, default=_OUTPUT)
     return parser
-
-
-def candidate_asset_notionals(
-    config: MultiAssetLiveConfig, account_value_usd: float
-) -> dict[str, float]:
-    """Return each asset's largest executable route notional at one equity."""
-    output: dict[str, float] = {}
-    for asset in config.assets:
-        values = []
-        for provider in config.providers:
-            if asset.symbol not in provider.symbols:
-                continue
-            sizing = provider.entry_sizing(asset.symbol) or CohortEntrySizing(
-                asset.margin_fraction, asset.max_notional_usd
-            )
-            values.append(
-                sizing.planned_notional(
-                    account_value_usd=account_value_usd,
-                    leverage=asset.leverage,
-                )
-            )
-        if not values:
-            raise ValueError(f"candidate asset has no route: {asset.symbol}")
-        output[asset.symbol] = max(values)
-    return output
 
 
 def collect_candidate_depth(

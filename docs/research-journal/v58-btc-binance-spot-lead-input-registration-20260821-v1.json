@@ -1,0 +1,72 @@
+{
+  "schema_version": "v58_btc_binance_spot_lead_input_registration_v1",
+  "hypothesis_id": "V58_BTC_BINANCE_SPOT_LEAD_HL_PERP_CATCHUP_LONG_V1",
+  "generated_at_utc": "2026-08-21T13:34:22Z",
+  "status": "inputs_hash_bound_before_candidate_signal_or_return_results",
+  "authority": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_promotion": false,
+    "automatic_live_change": false,
+    "runtime_strategy_changed": false
+  },
+  "change_scope": {
+    "type": "outcome_blind_technical_input_registration",
+    "signal_changed": false,
+    "parameters_changed": false,
+    "partitions_changed": false,
+    "execution_or_risk_changed": false,
+    "friction_changed": false,
+    "acceptance_changed": false,
+    "candidate_signal_count_inspected": false,
+    "candidate_returns_inspected": false,
+    "candidate_pnl_inspected": false,
+    "reason": "The preregistration necessarily preceded Binance source acquisition. This append-only record binds every acquired or preexisting source before the first candidate signal or return calculation."
+  },
+  "preregistration": {
+    "path": "/Users/gestas/Prototypes/hypervector/docs/research-journal/v58-btc-binance-spot-lead-hl-perp-catchup-preregistration-20260821-v1.json",
+    "bytes": 19722,
+    "sha256": "c63cae09aefbdee0e6707b2f0fa7708c3bdb48eb45e7e879aca7ec919a3ceab5"
+  },
+  "source_evidence": {
+    "hyperliquid_btc_1m_bars": {
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/BTC_1m_365d.parquet",
+      "bytes": 13014449,
+      "sha256": "b0742553ebeaa7cb4af6fabfd496f5462354cb541705fd0ca5ec222dc21e15d8"
+    },
+    "hyperliquid_btc_hourly_funding": {
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/hyperliquid/BTC/20250728T000000000000Z_20260728T000000000000Z_funding/funding.parquet",
+      "bytes": 184165,
+      "sha256": "1a222f783af9d5b52f500e259a89911e54c5f9c96dcab45dea466a166fc109c6"
+    },
+    "binance_spot_vendor_manifest": {
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/binance/BTCUSDT/20250728T000000Z_20260728T000000Z_spot_1m_v58_lead_v1/manifest.json",
+      "bytes": 11202,
+      "sha256": "4260135a25794bd42184a2413c2f653efb09398f77b3828b012c307c2613a720",
+      "archive_count": 13,
+      "all_vendor_checksums_verified": true,
+      "all_zip_containers_verified": true
+    },
+    "binance_spot_normalized_manifest": {
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/binance/BTCUSDT/20250728T000000Z_20260728T000000Z_spot_1m_v58_lead_v1_normalized/manifest.json",
+      "bytes": 871,
+      "sha256": "56190a8a0a64978882d312c2799a6334a57df803b673a5b3c9a153a4b914cae6"
+    },
+    "binance_spot_normalized_bars": {
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/binance/BTCUSDT/20250728T000000Z_20260728T000000Z_spot_1m_v58_lead_v1_normalized/spot_1m.parquet",
+      "bytes": 32662774,
+      "sha256": "8bb83f20f620bb47befde1c656f00df02b91493ce342a9b15cfc381cd9613236",
+      "rows": 525600,
+      "gap_boundaries": 0,
+      "missing_minutes": 0,
+      "duplicate_minutes": 0
+    }
+  },
+  "technical_validation": {
+    "focused_tests_passed": 25,
+    "candidate_outcomes_computed": false,
+    "live_runtime_touched": false,
+    "falsifier": "Any byte or checksum drift, duplicate or missing Binance minute, timestamp-unit ambiguity, source interval mismatch, or independent reconstruction disagreement invalidates this registration and stops result generation."
+  },
+  "next_action": "Implement and independently verify the immutable full matrix publisher, then calculate all preregistered arms, scenarios, and partitions exactly once without performance aborts."
+}

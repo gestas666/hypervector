@@ -1,0 +1,143 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v58-btc-short-liquidation-continuation-long-data-preflight",
+  "revision_number": 13,
+  "supersedes_revision_id": "848e9b8f07b43a1d575eb2d6180ce62273e298673dbaae44da640e3e9d758854",
+  "created_at_utc": "2026-08-22T05:44:07Z",
+  "strategy_id": "btc-short-liquidation-continuation-long-data-preflight",
+  "symbol": "BTC",
+  "status": "candidate",
+  "hypothesis": "Explicit BTC forced-liquidation labels may recover a selective long opportunity absent from V58: forced short-liquidation buying may continue when post-burst price and public flow persist, while forced long-liquidation selling may produce a distinct exhaustion-reclaim long. These are competing causal mechanisms and neither edge is established.",
+  "decision": "Accept the immutable development raw materialization as complete causal replay evidence but not as an economic disposition. Correct its mislabeled preregistration source-record field through the bound metadata sidecar and bind revision 12 directly. Freeze the statistical implementation below before inspecting any PnL or return value. Evaluate continuation_long and exhaustion_reclaim_long separately on the sole primary 5s_p95 arm and five-minute horizon after the exact 15-minute overlap purge. Publish all other arms, horizons, and regime strata as diagnostics with no rescue authority. Open validation only for a branch satisfying every frozen development advancement criterion; keep validation and pseudo-holdout sealed until the immutable disposition is reviewed and a new journal revision explicitly opens the next partition. Do not change V58.",
+  "confidence": "medium_high",
+  "falsifier": "Reject the disposition if raw or correction hashes drift, a non-development record appears, episode-arm identities do not remain unique, return bps uses any denominator other than actual depth-walk entry quote, overlap purge occurs after outcome filtering, unresolved outcomes become zeros, bootstrap days or within-day observations are dropped, bootstrap seed/resample/block parameters change, the one-sided null is not centered, Holm is not applied across exactly two primary branches, any diagnostic rescues a failed primary branch, or the published advancement decision differs from the conjunction of all seven frozen criteria.",
+  "evidence": [
+    {
+      "path": "v58-btc-short-liquidation-continuation-data-preflight-20260822-v12.json",
+      "role": "superseded boundary-corrected materializer preregistration",
+      "sha256": "9bc3e4f4f1582d0836cb6f06c43a0b745b25dce0ec048805a3c63bb0c91386b4",
+      "bytes": 7448
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v58_btc_liquidation_development_economics_20260822_v1/manifest.json",
+      "role": "immutable raw development economic artifact identity",
+      "sha256": "fd5004174c1f9658be629b21cf932053af3fb87ee2ac401bb62dfcc1d327ec65",
+      "bytes": 345
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v58_btc_liquidation_development_economics_20260822_v1/report.json",
+      "role": "development-only raw coverage and no-authority contract",
+      "sha256": "97b4f780efdcf3e748450c4e9c3e393a75482a66c6dbdfb527fa037d620ed5f2",
+      "bytes": 4913
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v58_btc_liquidation_development_economics_20260822_v1/results.jsonl.gz",
+      "role": "2836 unique exact-string development episode-arm results",
+      "sha256": "318e6d540ff1f7ddb82185b35cebb97982c8dd49863c6a74f225844d43a2ce2b",
+      "bytes": 350128
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v58_btc_liquidation_development_economics_metadata_correction_20260822_v1.json",
+      "role": "raw preregistration source-record label correction without economic changes",
+      "sha256": "02a568e4844ca55c57ab541f1ba91dffb86a7a1fcf82003099ac8ded9b54f1cd",
+      "bytes": 2347
+    },
+    {
+      "path": "../../src/hypervector/research/btc_liquidation_development_statistics.py",
+      "role": "typed exact parsing, purge, point metrics, bootstrap, Holm, monthly, and regime statistics",
+      "sha256": "f765713a4dc301007c589a93d352c858518e7253d3c8ff6f5f705adb8ad9ea27",
+      "bytes": 15575
+    },
+    {
+      "path": "../../scripts/v58_btc_liquidation_development_disposition.py",
+      "role": "guarded immutable development disposition command",
+      "sha256": "5bccb487819f598b1f80f1377faf59465e9da62aa7b49ee593f1e1e2c7ee6844",
+      "bytes": 17964
+    },
+    {
+      "path": "../../tests/test_btc_liquidation_development_statistics.py",
+      "role": "denominator, purge order, stationary bootstrap, Holm, concentration, and profit-factor tests",
+      "sha256": "9eca9c114fb9d350d364ad097997c659957935ddc3623f9f615ff67d7464f08c",
+      "bytes": 4495
+    },
+    {
+      "path": "../../tests/test_v58_btc_liquidation_development_disposition_script.py",
+      "role": "fixed input/output and all-criteria advancement tests",
+      "sha256": "ef46747fcd848695ea509358846675e065419c9dfe68c9a50808506a7bbd116d",
+      "bytes": 2487
+    }
+  ],
+  "metrics": {
+    "stage": "development_statistics_frozen_values_uninspected",
+    "development_episode_count": 1531,
+    "development_arm_record_count": 2836,
+    "eligible_arm_record_count": 575,
+    "signal_blocked_arm_record_count": 2226,
+    "technical_excluded_arm_record_count": 35,
+    "primary_five_minute_eligible_outcome_resolution_rate": "1.0",
+    "focused_test_count": 54,
+    "statistics_file_lines": 438,
+    "disposition_command_lines": 484,
+    "development_result_values_inspected": false,
+    "validation_outcomes_opened": false,
+    "pseudo_holdout_outcomes_opened": false,
+    "runtime_strategy_changed": false,
+    "live_change_supported": false
+  },
+  "statistical_contract": {
+    "primary_arm": "5s_p95",
+    "primary_horizon_ms": 300000,
+    "branches": [
+      "continuation_long",
+      "exhaustion_reclaim_long"
+    ],
+    "overlap_purge": "within exact branch-arm-partition, retain earliest eligible entry and suppress a later entry when its decision_time_ms is less than or equal to retained entry_time_ms plus 900000",
+    "purge_order": "before horizon resolution filtering and economic summary",
+    "unresolved_outcome_treatment": "explicitly reported and excluded from economic means; never zero-filled",
+    "return_denominator": "actual exact depth-walk entry quote notional",
+    "nominal_return_bps": "nominal_net_pnl_usd divided by entry quote notional times 10000",
+    "stressed_return_bps": "stressed_net_pnl_usd divided by the same actual entry quote notional times 10000",
+    "bootstrap": {
+      "method": "stationary circular bootstrap over ordered UTC-day aggregates with every within-day observation retained",
+      "sample_length": "same number of UTC days as observed",
+      "expected_block_length_days": 7,
+      "resamples": 10000,
+      "seed": 20260822,
+      "confidence_interval": "2.5th and 97.5th percentiles of raw bootstrap means",
+      "one_sided_null": "subtract the observed all-observation mean from each observation before day aggregation; p=(1+count(null_bootstrap_mean >= observed_mean))/(10000+1)"
+    },
+    "multiple_testing": "Holm family-wise adjustment across exactly the two primary branch one-sided p-values at alpha 0.05",
+    "monthly_material_negative_definition": "a UTC month with at least 20 retained resolved primary observations and mean nominal five-minute return below zero",
+    "concentration": "largest positive episode nominal PnL divided by total positive nominal PnL",
+    "diagnostic_non_rescue": true,
+    "automatic_promotion": false
+  },
+  "development_advancement_contract": {
+    "logic": "all criteria must be true independently for each primary branch",
+    "criteria": [
+      "at least 100 retained resolved primary observations",
+      "positive mean nominal five-minute return",
+      "positive nominal 95-percent bootstrap lower bound",
+      "Holm-adjusted one-sided p-value below 0.05",
+      "positive mean doubled-impact-stress return",
+      "no materially negative development month",
+      "largest positive episode contribution at or below 30 percent"
+    ],
+    "next_partition_behavior": "a survivor remains report-only; validation can open only after a new immutable journal revision",
+    "validation_currently_open": false,
+    "pseudo_holdout_currently_open": false
+  },
+  "limitations": [
+    "Development is model-building evidence, not untouched confirmation; a branch that advances can still fail validation, pseudo-holdout, shared-portfolio replay, or prospective testing.",
+    "The 100-observation development advancement threshold is a screening requirement and does not satisfy the separate untouched-partition promotion minimum.",
+    "Percentile bootstrap intervals and the null-centered one-sided test depend on UTC-day block stationarity and may understate dependence beyond the observed window.",
+    "Reusing the same deterministic seed across branches and nominal/stress surfaces ensures reproducibility but does not create independent simulations.",
+    "Regime strata, non-primary arms, and non-primary horizons are descriptive and cannot support selection under this hypothesis.",
+    "The raw artifact's mislabeled source-record field is corrected only by the immutable sidecar; the raw artifact itself remains unchanged.",
+    "No economic result value had been inspected when this revision was appended, and no live change is supported.",
+    "This revision cannot pause, retune, route, size, enter, close, restart, or promote a live strategy or lifecycle."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

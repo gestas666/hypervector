@@ -1,0 +1,127 @@
+{
+  "authority": {
+    "automatic_promotion": false,
+    "execution_authority": "none",
+    "orders_supported": false,
+    "report_only": true,
+    "runtime_strategy_changed": false
+  },
+  "change_scope": {
+    "candidate_pnl_inspected": false,
+    "candidate_returns_inspected": false,
+    "candidate_signal_count_inspected": false
+  },
+  "deribit_source_audit": {
+    "candidate_outcomes_computed": false,
+    "finite_positive_ohlc": true,
+    "first_timestamp": "2025-07-28T00:00:00+00:00",
+    "hourly_continuity": true,
+    "last_timestamp": "2026-07-28T00:00:00+00:00",
+    "manifest_evidence_verified": true,
+    "page_rows": [
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      1000,
+      761
+    ],
+    "request_count": 9,
+    "rows": 8761,
+    "unique": true,
+    "valid_ohlc_bounds": true
+  },
+  "generator_identity": {
+    "aggregate_sha256": "d2e043759e177915d6b97718124d3b512a4ffd9b13e2a28b5f7e2a877f8d86bd",
+    "files": {
+      "scripts/v58_btc_dvol_vrp_experiment.py": {
+        "bytes": 11935,
+        "sha256": "4d69f532ba3ce55a31cfa354da93f1351a2d486bd2666bfde258028b3e7dd100"
+      },
+      "src/hypervector/data/oxa_storage.py": {
+        "bytes": 5267,
+        "sha256": "abf1cc8c044d4e394c3c5bcca334e1e4d0052bda4acc3159a47de8857a95e17e"
+      },
+      "src/hypervector/research/btc_dvol_vrp_continuation.py": {
+        "bytes": 4584,
+        "sha256": "66142aadd4f6787c36da19886109065c9b411c19247e88cab1648d3877bb8b7f"
+      },
+      "src/hypervector/research/btc_dvol_vrp_experiment.py": {
+        "bytes": 14654,
+        "sha256": "d5e995d5694d36e3ca086ab85c8470518914727581da46cfe2b54d1e2a3c3b80"
+      },
+      "src/hypervector/research/btc_dvol_vrp_features.py": {
+        "bytes": 5480,
+        "sha256": "bf1f778ed32ecc2c61d391f03606f071304fad68535fd371abde3aec57ef79b8"
+      },
+      "src/hypervector/research/btc_dvol_vrp_historical.py": {
+        "bytes": 7587,
+        "sha256": "ac906c3b0df761f73c22ce6796ca26e3dd9b4ba6367bddc07d271fcd16407cd6"
+      },
+      "src/hypervector/research/btc_dvol_vrp_replay.py": {
+        "bytes": 6260,
+        "sha256": "a3c074361077c9909064b607b5e60c0993251707e95ff7ff73fd99556a14230c"
+      },
+      "src/hypervector/research/btc_fixed_60_60_replay.py": {
+        "bytes": 4196,
+        "sha256": "9c11131ab445f2bd1d693decaa4c053c4ef79248b29a2410d3cc7dac72252738"
+      },
+      "src/hypervector/research/btc_sweep_primary_relaxation.py": {
+        "bytes": 6861,
+        "sha256": "b0bfca0273690f71b002be0a76843c2dea207c9428b1cc50a95ccce903ea5248"
+      },
+      "src/hypervector/research/deribit_dvol_acquisition.py": {
+        "bytes": 10350,
+        "sha256": "71e76e7cccbc15894416555456f5c32a372f2c03411f0439a544537df163b889"
+      },
+      "src/hypervector/research/shared_bar_portfolio.py": {
+        "bytes": 18794,
+        "sha256": "f4e5c3a07d6748709a9535889465e027637e1afcaf625748796ee7599b247ad3"
+      },
+      "src/hypervector/research/shared_portfolio_inputs.py": {
+        "bytes": 7441,
+        "sha256": "873c83ba996b8b67f1aaad6d22a67afdebc42ae8e2e999cf63278892d515d272"
+      },
+      "src/hypervector/research/shared_portfolio_models.py": {
+        "bytes": 8558,
+        "sha256": "a71fc1785a579088a655a40d087a26cab3c58c96d08e40449790efc66cb69489"
+      }
+    }
+  },
+  "hypothesis_id": "V58_BTC_DVOL_VRP_CONTINUATION_LONG_V1",
+  "live_promotion_authorized": false,
+  "outcomes_inspected_before_registration": false,
+  "preregistration": {
+    "bytes": 10561,
+    "path": "/Users/gestas/Prototypes/hypervector/docs/research-journal/v58-btc-dvol-vrp-continuation-long-preregistration-20260821-v1.json",
+    "sha256": "b6ad9cbf6720537ce6ecac96dccad49e1573325e95c5c651dcc433c86b0fcd8e"
+  },
+  "recorded_at_utc": "2026-08-21T23:03:31Z",
+  "schema_version": "v58_btc_dvol_vrp_continuation_long_input_registration_v1",
+  "source_evidence": {
+    "deribit_dvol_manifest": {
+      "bytes": 4705,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/deribit/BTC_DVOL/20250728T000000Z_20260728T000000Z_hourly_v1/manifest.json",
+      "sha256": "752018126dd42aa420541d011958c54d5708b36ecbeb918ae1117eb03468bf91"
+    },
+    "deribit_dvol_parquet": {
+      "bytes": 165348,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/deribit/BTC_DVOL/20250728T000000Z_20260728T000000Z_hourly_v1/dvol.parquet",
+      "sha256": "d64918d8eb65aa132c4bbff9231996e8e7c9cb0984953d851c5e0e7b4a09a617"
+    },
+    "hyperliquid_btc_1m_bars": {
+      "bytes": 13014449,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/BTC_1m_365d.parquet",
+      "sha256": "b0742553ebeaa7cb4af6fabfd496f5462354cb541705fd0ca5ec222dc21e15d8"
+    },
+    "hyperliquid_btc_hourly_funding": {
+      "bytes": 184165,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/hyperliquid/BTC/20250728T000000000000Z_20260728T000000000000Z_funding/funding.parquet",
+      "sha256": "1a222f783af9d5b52f500e259a89911e54c5f9c96dcab45dea466a166fc109c6"
+    }
+  },
+  "status": "inputs_hash_bound_before_candidate_signal_or_return_results"
+}

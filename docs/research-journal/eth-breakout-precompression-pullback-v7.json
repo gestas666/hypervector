@@ -1,0 +1,178 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "eth-breakout-precompression-pullback",
+  "revision_number": 7,
+  "supersedes_revision_id": "eth-breakout-precompression-pullback-v6",
+  "created_at_utc": "2026-08-17T13:25:10Z",
+  "status": "being_tested",
+  "symbol": "ETH",
+  "strategy_id": "eth_breakout_precompression_pullback_bidirectional_v1",
+  "hypothesis": "The unchanged ETH compression-pullback route may provide materially higher portfolio cadence while retaining a small after-cost edge, but it requires a new source-compatible prospective window because chronological subgroup leadership rotated and the opened final block was largest-winner dependent.",
+  "why_reopened": "Revision 6 rejected another static side or breakout-relation successor. A later exact long lifecycle, ETH:515428839206, added new evidence after that decision and changed the three-lifecycle live aggregate from negative without its largest winner to marginally positive without its largest winner. This justifies report-only requalification of the unchanged pooled mechanism; it does not reopen the rejected static subgroup split or authorize live execution.",
+  "decision": "Run the exact unchanged provider in an isolated report-only observer. Do not add ETH to v53, change its 60-bps stop or 12-hour hold, select a side/relation subgroup, or scale historical results. Require source-compatible prospective eligible signals and resolved long and short markout lifecycles before an approval-ready live proposal.",
+  "historical_evidence": {
+    "window_start_utc": "2025-07-28T00:00:00Z",
+    "window_end_exclusive_utc": "2026-07-28T00:00:00Z",
+    "trades": 338,
+    "wins": 85,
+    "losses": 253,
+    "net_return_bps": 1980.3116433233595,
+    "profit_factor": 1.1125575731205795,
+    "net_excluding_largest_winner_bps": 810.0056498376389,
+    "estimated_trades_per_week": 6.48219,
+    "development": {
+      "trades": 282,
+      "net_return_bps": 1657.9804255885545,
+      "profit_factor": 1.1110897477996182,
+      "net_excluding_largest_winner_bps": 487.67443210283386
+    },
+    "opened_final_60d": {
+      "trades": 56,
+      "net_return_bps": 322.33121773480485,
+      "profit_factor": 1.1207652329357494,
+      "net_excluding_largest_winner_bps": -346.32245397103173,
+      "sealed_out_of_sample": false
+    },
+    "modeled_friction": {
+      "fee_bps_per_side": 4.5,
+      "slippage_bps_per_side": 2.0,
+      "official_funding_included": true,
+      "intrabar_stop_ordering_exact": false
+    }
+  },
+  "exact_live_evidence": {
+    "unique_lifecycles": 3,
+    "wins": 2,
+    "losses": 1,
+    "net_pnl_usd": 0.198733,
+    "gross_profit_usd": 0.204832,
+    "gross_loss_usd": 0.006099,
+    "profit_factor": 33.5845,
+    "net_excluding_largest_winner_usd": 0.004716,
+    "entry_margin_used_usd": 14.912189,
+    "net_on_aggregate_entry_margin_pct": 1.33269,
+    "mean_entry_slippage_bps": 2.08839,
+    "interpretation": "The live aggregate is positive and observed entry slippage closely matches the 2-bps model, but N=3 and one $0.194017 winner dominates $0.198733 total net. Profit factor is not stable evidence at this sample size.",
+    "lifecycles": [
+      {
+        "lifecycle_id": "ETH:512630677308",
+        "side": "long",
+        "breakout_relation": "aligned",
+        "net_pnl_usd": 0.010815,
+        "net_return_on_margin_pct": 0.21736465206581837,
+        "exit_reason": "maximum_hold_seconds"
+      },
+      {
+        "lifecycle_id": "ETH:513092524956",
+        "side": "short",
+        "breakout_relation": "opposed",
+        "net_pnl_usd": -0.006099,
+        "net_return_on_margin_pct": -0.12322862637965454,
+        "exit_reason": "maximum_hold_seconds"
+      },
+      {
+        "lifecycle_id": "ETH:515428839206",
+        "side": "long",
+        "breakout_relation": "opposed",
+        "net_pnl_usd": 0.194017,
+        "net_return_on_margin_pct": 3.8901884009558603,
+        "exit_reason": "maximum_hold_seconds"
+      }
+    ]
+  },
+  "observer": {
+    "state": "running",
+    "run_id": "bidirectional-observe-1786973060386",
+    "profile_id": "multi_asset_eth_pullback_forward_observer_v1",
+    "profile_fingerprint": "5761fe86d7b853629a2b982c6c41c103e8a11f1d8d901703aaac2dacfe27754d",
+    "ledger": "data/observe/eth_pullback_forward_observer/decisions.jsonl",
+    "execution_mode": "observe",
+    "live_armed": false,
+    "execution_authority": "none",
+    "route": {
+      "sides": [
+        "long",
+        "short"
+      ],
+      "timeframe": "1m",
+      "maximum_entry_delay_seconds": 60,
+      "stop_bps": 60.0,
+      "target_policy": "none",
+      "maximum_hold_seconds": 43200
+    },
+    "first_snapshot": {
+      "eligible": false,
+      "decision_action": "hold",
+      "reason": "canonical_breakout_onset_absent",
+      "conditions_met": 2,
+      "conditions_required": 3
+    }
+  },
+  "contract": {
+    "execution_authority": "none",
+    "report_only": true,
+    "automatic_promotion": false,
+    "runtime_strategy_changed": false,
+    "v53_changed": false,
+    "orders_supported": false
+  },
+  "minimum_evidence_to_update": {
+    "diagnostic": "At least one source-attributable eligible event on each configured side with complete decision, bar, book, and markout coverage.",
+    "approval_ready": "A preregistered compatible forward window with resolved long and short lifecycles, exact fees/funding/slippage/latency, stop-path review, missed-opportunity accounting, and positive economics without the largest winner. Historical and live-source behavior must not show another side/relation rotation that invalidates the pooled identity.",
+    "no_fixed_trade_count_promotion_gate": true
+  },
+  "risks": [
+    "The entry rule and 60-bps/12-hour exit were selected after multiple historical trials.",
+    "The opened final 60-day partition was previously inspected and becomes negative after removing its largest winner.",
+    "Historical win rate is low and returns depend on infrequent large winners.",
+    "Development and opened-final side/relation leadership rotated completely.",
+    "Three live lifecycles are insufficient to distinguish edge from variance.",
+    "The observer records production-equivalent decisions but cannot establish executable fill economics until eligible events receive causal book and markout follow-up."
+  ],
+  "confidence": {
+    "historical_cadence": "high",
+    "contract_and_friction_parity": "medium_high",
+    "repeatable_profit_edge": "low",
+    "observer_isolation": "high",
+    "priority_as_next_investigation": "high"
+  },
+  "falsifier": "Reject or redesign the candidate if exact prospective signals materially under-deliver historical cadence, either side is persistently negative after costs, results again depend on one winner, source/feature parity fails, stop or latency behavior exceeds the frozen contract, or a different independent route produces stronger compatible evidence first.",
+  "evidence": [
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/eth_pullback_mechanism_attribution_exact_v4_20260809T123838Z.json",
+      "sha256": "a677ed5fb62338bbc9984fdc8c8b5d9e3957fe0a2ec2f37dc5f0ee434d41f899",
+      "bytes": 26646,
+      "role": "historical_exact_mechanism_and_chronological_attribution"
+    },
+    {
+      "path": "eth-breakout-precompression-pullback-v6.json",
+      "sha256": "b0c6dbee5b9b87dfae1838b8ae6090dcc26e88d044587e6d176fe04e0addc488",
+      "bytes": 4477,
+      "role": "prior_static_side_relation_rejection"
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/multi_asset_live_audit_bidirectional-live-1786182011216.json",
+      "sha256": "843107f83de8fe95f30cb5a674e6e3baa62dba0170f631ea510444c44ee210e9",
+      "bytes": 14882493,
+      "role": "first_exact_live_long"
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v25_live_prefix_successor_refresh_20260809T201446Z.json",
+      "sha256": "2a5a3dcb67bb5549dd3052988effbabb6117d431cdce88301a35b6a45634d06e",
+      "bytes": 16099342,
+      "role": "second_exact_live_short"
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v39_final_stopped_run_audit_20260813T112441Z.json",
+      "sha256": "f8b62882e1114c77aee52d32a8f13ef723d9ef9f862a3d883db416445d69fce4",
+      "bytes": 16898153,
+      "role": "new_third_exact_live_long"
+    },
+    {
+      "path": "../../configs/research/multi_asset_eth_pullback_forward_observer_v1.toml",
+      "sha256": "68627268fa753d09d7e8284a3b49293564ea155d23de1c17da2ad2061184b9c5",
+      "bytes": 901,
+      "role": "isolated_forward_observer_contract"
+    }
+  ]
+}

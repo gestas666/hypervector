@@ -255,8 +255,8 @@ fn dedicated_regime_screen_projects_backend_multitimeframe_and_range_evidence() 
         screen.contains("BK:S STR:S ALIGNED | RX5 LOST +49.1"),
         "{screen}"
     );
-    assert!(screen.contains("NOW+43.6 MFE+51.7"), "{screen}");
-    assert!(screen.contains("MAE77.9 G8.1"), "{screen}");
+    assert!(screen.contains("N+43.6 CMFE+51.7"), "{screen}");
+    assert!(screen.contains("CMAE77.9 G8.1"), "{screen}");
     assert!(
         screen.contains("SOFT+12.5 MFE47.5 MAE7.9 G35.0"),
         "{screen}"

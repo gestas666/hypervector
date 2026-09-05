@@ -61,6 +61,13 @@ def number(values: Mapping[str, object], key: str) -> float:
     return result
 
 
+def optional_number(values: Mapping[str, object], key: str) -> float | None:
+    """Parse one optional positive finite numeric field."""
+    if key not in values:
+        return None
+    return number(values, key)
+
+
 def integer(values: Mapping[str, object], key: str) -> int:
     """Require one positive integer field."""
     value = values.get(key)
@@ -176,3 +183,21 @@ def sides(value: object, label: str) -> frozenset[str]:
     if not result.issubset(_BOTH_SIDES):
         raise MultiAssetLiveConfigError(f"{label} must contain long and/or short")
     return result
+
+
+def require_live_start(
+    *,
+    mode: str,
+    enabled: bool,
+    accepts_live_risk: bool,
+    credentials_present: bool,
+) -> None:
+    """Reject a live start unless authority and credentials are explicit."""
+    if mode != "live":
+        raise MultiAssetLiveConfigError("live start refused because mode is observe")
+    if not enabled:
+        raise MultiAssetLiveConfigError("live start requires --enabled")
+    if not accepts_live_risk:
+        raise MultiAssetLiveConfigError("live start requires --i-accept-live-risk")
+    if not credentials_present:
+        raise MultiAssetLiveConfigError("live start requires configured credentials")

@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v58-btc-short-liquidation-continuation-long-data-preflight",
+  "revision_number": 7,
+  "supersedes_revision_id": "e7f19ed3f44284c9b90e8c5241266cbdc14213431fccdd4f376e7ab7ff1e00ea",
+  "created_at_utc": "2026-08-22T03:26:59Z",
+  "strategy_id": "btc-short-liquidation-continuation-long-data-preflight",
+  "symbol": "BTC",
+  "status": "candidate",
+  "hypothesis": "Explicit BTC forced-liquidation labels may recover a selective long opportunity absent from V58: forced short-liquidation buying may continue when post-burst price and public flow persist, while forced long-liquidation selling may produce a distinct exhaustion-reclaim long. These are competing causal mechanisms and neither edge is established.",
+  "decision": "Accept the outcome-blind treatment-episode cohort as technically reproducible from the ten normalization-v2 source bundles. The frozen causal contract yields 42569 same-direction episodes and 2440 unique percentile-eligible episodes, including more than 100 episodes for each competing branch. This clears treatment-count feasibility only. Acquire and align public-flow, L2, executable-entry, fee, funding, and forward-path evidence solely for merged eligible windows under the unchanged revision-4 contract. Do not change V58 or claim a BTC-long edge before after-cost, dependence, stability, concentration, shared-portfolio, and untouched prospective tests pass.",
+  "confidence": "medium",
+  "falsifier": "Reject this treatment cohort if the reproducing verifier no longer regenerates every row from the manifest-bound normalized labels, any source or output hash drifts, duplicate episode identities appear, future observations alter a prior threshold, or outcome fields are found in this artifact. Reject either strategy branch under the exact revision-4 after-cost, dependence, monthly-stability, largest-winner, shared-portfolio, and prospective criteria.",
+  "evidence": [
+    {
+      "path": "v58-btc-short-liquidation-continuation-data-preflight-20260822-v6.json",
+      "role": "superseded qualified treatment-archive state and frozen experiment contract",
+      "sha256": "a6530ebf600559a0c04eaf10ce6ce300c4af0503d8801fabcf245a8778509e3a",
+      "bytes": 6935
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v58_btc_liquidation_treatment_episodes_20260822_v1/manifest.json",
+      "role": "outcome-blind episode contract, source identities, counts, and output hashes",
+      "sha256": "fa1377cf18c3f57edc042896478f2c6a935c997aaa51b0b7edd1294d01af3314",
+      "bytes": 5329
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v58_btc_liquidation_treatment_episodes_20260822_v1/episodes.jsonl.gz",
+      "role": "complete exact-decimal treatment episode cohort",
+      "sha256": "6bacfa6e5fc746a8606ea6e2a35ebb4f19264f798b739edfd07f6101d5385e61",
+      "bytes": 4024028
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v58_btc_liquidation_treatment_episodes_20260822_v1/eligible_episodes.jsonl.gz",
+      "role": "exact subset of percentile-eligible treatment episodes",
+      "sha256": "75703dc1278bb1335a7b4524e18fcc748358989165ec158f6be0712ee71912b4",
+      "bytes": 297650
+    },
+    {
+      "path": "../../src/hypervector/research/btc_liquidation_episodes.py",
+      "role": "causal clustering, exact trailing-intensity, and strictly-prior percentile implementation",
+      "sha256": "138a7fc6310203224f60cf4f5d367068b4636d68855a5d36ba29583cb5caa9c3",
+      "bytes": 14027
+    },
+    {
+      "path": "../../src/hypervector/research/btc_liquidation_episode_storage.py",
+      "role": "immutable publisher and source-reproducing artifact verifier",
+      "sha256": "2891b96e509126521f34351e308178aeff535e2d930b57575305ac6a660feac0",
+      "bytes": 14387
+    },
+    {
+      "path": "../../tests/test_btc_liquidation_episodes.py",
+      "role": "causal-window, leakage, boundary, exact-decimal, and source-integrity tests",
+      "sha256": "722840b49d4d37798ee6a6cf4067821b983dbf9cae6371b54c8cd2260e37ea62",
+      "bytes": 12876
+    },
+    {
+      "path": "../../tests/test_btc_liquidation_episode_storage.py",
+      "role": "atomic publication, transitive integrity, coherent-tamper, and reproduction tests",
+      "sha256": "45c21ab3c0b26c508a1b315d3d2d47a8e508ba6e82d568bebd3e3533f4cd4dea",
+      "bytes": 12074
+    },
+    {
+      "path": "../../configs/multi_asset_growth_first_5000_eight_asset_incremental_v58.toml",
+      "role": "unchanged active V58 route and direction contract",
+      "sha256": "1c1c1656233b074df2ed3adcee8cb8cb2c58f0d191cc9f9ac34799478fca3378",
+      "bytes": 6142
+    }
+  ],
+  "metrics": {
+    "stage": "treatment_episodes_complete_covariates_pending",
+    "source_label_count": 804861,
+    "episode_count": 42569,
+    "liquidated_short_continuation_episode_count": 19175,
+    "liquidated_long_exhaustion_episode_count": 23394,
+    "threshold_available_episode_count": 39282,
+    "warmup_withheld_episode_count": 3287,
+    "minimum_three_fill_episode_count": 30208,
+    "eligible_unique_episode_count": 2440,
+    "continuation_long_eligible_episode_count": 1264,
+    "exhaustion_reclaim_long_eligible_episode_count": 1176,
+    "five_second_p95_arm_count": 1918,
+    "five_second_p99_arm_count": 403,
+    "fifteen_second_p95_arm_count": 1842,
+    "fifteen_second_p99_arm_count": 389,
+    "duplicate_episode_id_count": 0,
+    "forbidden_outcome_field_count": 0,
+    "source_reproduction_verified": true,
+    "strategy_outcomes_inspected": false,
+    "market_covariates_acquired": false,
+    "revision_4_experiment_contract_changed": false,
+    "live_change_supported": false
+  },
+  "limitations": [
+    "The cohort establishes treatment availability and causal threshold construction, not profitable entries or exits.",
+    "The first 3287 episodes are correctly withheld from threshold eligibility because the actual source begins on 2025-12-22 and lacks a full prior 30-day window.",
+    "Eligible percentile arms overlap; 4552 arm assignments represent 2440 unique episodes and must not be treated as independent trades.",
+    "Liquidation episodes can cluster temporally and across arms, so inference must use block bootstrap, overlap purging, and unique-episode accounting.",
+    "Public-flow, L2, executable price, fee, funding, slippage, and forward outcomes remain unacquired for this cohort.",
+    "No strategy outcome has been inspected, and no live change is supported.",
+    "This revision cannot pause, retune, route, size, enter, close, restart, or promote a live strategy or lifecycle."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

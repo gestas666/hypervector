@@ -48,6 +48,7 @@ class BtcHyperliquidAdapter(HyperliquidPerpReader):
         account_address: str,
         max_notional_usd: float,
         slippage_fraction: float,
+        entry_slippage_fraction: float | None = None,
         symbol: str = BTC_SYMBOL,
         perp_dex: str = "",
     ) -> None:
@@ -71,6 +72,19 @@ class BtcHyperliquidAdapter(HyperliquidPerpReader):
         if slippage > 0.05:
             raise HyperliquidAdapterError("slippage_fraction must not exceed 0.05")
         self._slippage_fraction = slippage
+        entry_slippage = (
+            slippage
+            if entry_slippage_fraction is None
+            else nonnegative_finite(
+                entry_slippage_fraction,
+                "entry_slippage_fraction",
+            )
+        )
+        if entry_slippage > 0.05:
+            raise HyperliquidAdapterError(
+                "entry_slippage_fraction must not exceed 0.05"
+            )
+        self._entry_slippage_fraction = entry_slippage
 
     @property
     def symbol(self) -> str:
@@ -84,8 +98,13 @@ class BtcHyperliquidAdapter(HyperliquidPerpReader):
 
     @property
     def slippage_fraction(self) -> float:
-        """Return the configured IOC price-protection fraction."""
+        """Return the configured reduce-only IOC price-protection fraction."""
         return self._slippage_fraction
+
+    @property
+    def entry_slippage_fraction(self) -> float:
+        """Return the configured opening IOC price-protection fraction."""
+        return self._entry_slippage_fraction
 
     def configure_isolated_leverage(self, leverage: int) -> None:
         """Set explicit isolated BTC leverage and validate acknowledgement."""
@@ -227,7 +246,7 @@ class BtcHyperliquidAdapter(HyperliquidPerpReader):
                 _entry_is_buy(side),
                 size,
                 px=price,
-                slippage=self._slippage_fraction,
+                slippage=self._entry_slippage_fraction,
                 cloid=Cloid.from_str(identity),
             ),
         )

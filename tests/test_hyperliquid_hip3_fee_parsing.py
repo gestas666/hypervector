@@ -53,6 +53,34 @@ def test_parses_exact_dex_and_market_fee_metadata() -> None:
     assert result.collateral_token_index == 0
 
 
+def test_prefers_market_specific_deployer_fee_scale() -> None:
+    """A market-level fee scale must resolve when the dex-wide field is absent."""
+    metadata = _metadata()
+    metadata["universe"][0]["deployerFeeScale"] = "1.0"
+
+    result = parse_hip3_market_fee_metadata(
+        metadata=metadata,
+        dexes=[None, {"name": "xyz"}],
+        symbol="xyz:SP500",
+        perp_dex="xyz",
+    )
+
+    assert result.deployer_fee_scale == 1.0
+
+
+def test_preserves_missing_deployer_fee_scale_as_unresolved() -> None:
+    """Current API omission must not invent a fee scale or block reconciliation."""
+    result = parse_hip3_market_fee_metadata(
+        metadata=_metadata(),
+        dexes=[None, {"name": "xyz"}],
+        symbol="xyz:SP500",
+        perp_dex="xyz",
+    )
+
+    assert result.deployer_fee_scale is None
+    assert result.growth_mode is True
+
+
 @pytest.mark.parametrize("growth_mode", ("", "unknown"))
 def test_rejects_unsupported_growth_mode(growth_mode: str) -> None:
     """Unknown fee modes must fail rather than inherit a plausible default."""

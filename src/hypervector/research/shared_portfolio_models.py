@@ -6,6 +6,11 @@ import math
 from dataclasses import asdict, dataclass
 from typing import Literal
 
+from hypervector.cohort_profit_lock_policy import ProfitLockPolicy, policy_declaration
+from hypervector.research.shared_portfolio_completed_peak_lock import (
+    CompletedBarPeakLockPolicy,
+)
+
 Direction = Literal["long", "short"]
 ExitReason = Literal[
     "target",
@@ -13,6 +18,7 @@ ExitReason = Literal[
     "liquidation",
     "signal",
     "opposite_signal",
+    "profit_lock",
     "max_hold",
     "data_gap",
     "end_of_data",
@@ -28,8 +34,12 @@ class SharedPortfolioConfig:
     margin_fraction: float = 0.10
     leverage: float = 10.0
     venue_max_leverage: float = 40.0
+    maximum_notional_usd: float | None = None
+    risk_fraction_per_position: float | None = None
     target_margin_pct: float | None = None
+    target_r_multiple: float | None = None
     stop_margin_pct: float | None = None
+    minimum_stop_distance_bps: float | None = None
     maximum_stop_distance_bps: float | None = None
     entry_fee_rate: float = 0.00045
     target_fee_rate: float = 0.00015
@@ -56,6 +66,8 @@ class SharedPortfolioConfig:
     signal_exit_max_age_bars: int | None = None
     signal_exit_max_mfe_bps: float | None = None
     signal_exit_min_adverse_bps: float | None = None
+    completed_bar_profit_lock: ProfitLockPolicy | None = None
+    completed_bar_peak_lock: CompletedBarPeakLockPolicy | None = None
 
     def __post_init__(self) -> None:
         """Reject unsafe, non-finite, or venue-incompatible assumptions."""
@@ -67,12 +79,33 @@ class SharedPortfolioConfig:
         _positive(self.venue_max_leverage, "venue_max_leverage")
         if self.leverage > self.venue_max_leverage:
             raise ValueError("leverage must not exceed venue_max_leverage")
+        _optional_positive(self.maximum_notional_usd, "maximum_notional_usd")
+        if self.risk_fraction_per_position is not None:
+            _fraction(
+                self.risk_fraction_per_position,
+                "risk_fraction_per_position",
+            )
         _optional_positive(self.target_margin_pct, "target_margin_pct")
+        _optional_positive(self.target_r_multiple, "target_r_multiple")
         _optional_positive(self.stop_margin_pct, "stop_margin_pct")
+        _optional_positive(
+            self.minimum_stop_distance_bps,
+            "minimum_stop_distance_bps",
+        )
         _optional_positive(
             self.maximum_stop_distance_bps,
             "maximum_stop_distance_bps",
         )
+        if self.target_margin_pct is not None and self.target_r_multiple is not None:
+            raise ValueError("target_margin_pct and target_r_multiple are exclusive")
+        if (
+            self.minimum_stop_distance_bps is not None
+            and self.maximum_stop_distance_bps is not None
+            and self.minimum_stop_distance_bps > self.maximum_stop_distance_bps
+        ):
+            raise ValueError(
+                "minimum_stop_distance_bps must not exceed maximum_stop_distance_bps"
+            )
         for name in _FEE_FIELDS:
             _rate(float(getattr(self, name)), name)
         for name in _SLIPPAGE_FIELDS:
@@ -114,6 +147,8 @@ class SharedPortfolioConfig:
             "signal_exit_min_adverse_bps",
         )
         _conditional_exit_fields(self)
+        if self.completed_bar_profit_lock is not None:
+            policy_declaration(self.completed_bar_profit_lock)
 
 
 @dataclass(frozen=True)

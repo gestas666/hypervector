@@ -101,3 +101,16 @@ def test_directional_override_requests_history_when_base_lock_is_disabled() -> N
     )
 
     assert profit_lock_history_limits((enabled,)) == {"BTC": 482}
+
+
+def test_btc_hulk_component_floor_retains_restart_stable_warmup() -> None:
+    """The specialized policy retains 24h seed plus its full 24h lifecycle."""
+    config = load_multi_asset_live_config(
+        "configs/"
+        "multi_asset_growth_first_5000_eight_asset_btc_hulk_smart_exit_candidate_v60.toml",
+        mode="observe",
+    )
+
+    limits = profit_lock_history_limits(config.providers)
+
+    assert limits["BTC"] == 2_882

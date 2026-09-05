@@ -1,0 +1,157 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "eth-breakout-precompression-pullback",
+  "revision_number": 12,
+  "supersedes_revision_id": "eth-breakout-precompression-pullback-v11",
+  "created_at_utc": "2026-08-17T15:48:00Z",
+  "status": "prospective_window_collecting_n2_largest_winner_dependent_long",
+  "symbol": "ETH",
+  "strategy_id": "eth_breakout_precompression_pullback_bidirectional_v1",
+  "hypothesis": "Removing only the fresh canonical breakout-onset requirement may recover repeatable ETH compression-pullback opportunities after realistic execution costs without degrading the frozen 60-bps stop behavior.",
+  "decision": "Continue the isolated report-only observer and frozen future-only diagnostic unchanged. The second resolved long path lost after recorded visible-depth execution and fees; the two-path aggregate remains slightly positive only because of the first winner and becomes negative when that winner is removed. Do not add ETH or relax the onset requirement.",
+  "why_this_revision": "The second preregistered non-overlapping 15-minute path resolved, converting the positive N=1 result into a one-win/one-loss, largest-winner-dependent N=2 sample.",
+  "frozen_identity": {
+    "run_id": "bidirectional-observe-1786973060386",
+    "profile_id": "multi_asset_eth_pullback_forward_observer_v1",
+    "profile_fingerprint": "5761fe86d7b853629a2b982c6c41c103e8a11f1d8d901703aaac2dacfe27754d",
+    "strategy_id": "eth_breakout_precompression_pullback_bidirectional_v1",
+    "symbol": "ETH",
+    "sides": [
+      "long",
+      "short"
+    ],
+    "timeframe": "1m",
+    "primary_horizon_minutes": 15,
+    "minimum_entry_spacing_minutes": 15,
+    "notional_usd": 5000.0,
+    "stop_bps": 60.0,
+    "target_policy": "none",
+    "maximum_hold_seconds": 43200,
+    "entry_liquidity": "recorded_visible_depth_taker_ioc_proxy",
+    "taker_fee_rate": 0.00045
+  },
+  "future_one_blocker_experiment": {
+    "hypothesis_id": "eth-remove-canonical-breakout-onset-forward-v1",
+    "status": "being_tested",
+    "start_utc": "2026-08-17T14:58:00Z",
+    "start_ms": 1786978680000,
+    "blocker": "canonical_breakout_onset_absent",
+    "candidate_definition": "exactly two of three frozen entry conditions met with canonical_breakout_onset_absent as the sole blocker",
+    "entry": "first complete visible-depth executable quote causally available after routing publication",
+    "primary_horizon_minutes": 15,
+    "overlap_policy": "suppress additional same-side candidates until the primary horizon resolves",
+    "minimum_evidence": "At least 20 independent candidates with both sides represented, complete exact-depth entry and exit paths, positive primary-horizon mean and median after nominal cost, positive stress mean after removing the largest winner, and no worse stop-path behavior than the frozen route.",
+    "live_authority": "none"
+  },
+  "resolved_one_blocker_paths": {
+    "observer_evaluations": 143,
+    "pre_cutoff_exact_candidates_excluded": 9,
+    "future_only_exact_candidates": 18,
+    "selected_non_overlapping": 3,
+    "resolved_executions": 2,
+    "entry_missing_at_right_boundary": 1,
+    "long_resolved": 2,
+    "short_resolved": 0,
+    "wins": 1,
+    "losses": 1,
+    "long_total_net_return_bps": 0.940847086726535,
+    "long_mean_net_return_bps": 0.4704235433632675,
+    "long_profit_factor": 1.1764235653995647,
+    "net_return_excluding_largest_winner_bps": -5.332887840667437,
+    "stress_excluding_largest_winner_pass": false,
+    "stop_proxy_crosses": 0,
+    "first_path": {
+      "decision_time_ms": 1786979580000,
+      "entry_time_ms": 1786979602176,
+      "exit_time_ms": 1786980502375,
+      "gross_return_bps": 15.280611202435068,
+      "fee_bps": 9.006876275041096,
+      "funding_bps": 0.0,
+      "net_return_bps": 6.273734927393972,
+      "simulated_net_pnl_usd": 3.136867463696986,
+      "mfe_bps": 16.855175809584733,
+      "mae_bps": -7.813003035742616
+    },
+    "second_path": {
+      "decision_time_ms": 1786980600000,
+      "entry_time_ms": 1786980622389,
+      "exit_time_ms": 1786981522669,
+      "gross_return_bps": 3.6687631027287892,
+      "fee_bps": 9.001650943396227,
+      "funding_bps": 0.0,
+      "net_return_bps": -5.332887840667437,
+      "simulated_net_pnl_usd": -2.6664439203337187,
+      "mfe_bps": 8.909853249476907,
+      "mae_bps": -9.433962264149276
+    },
+    "profitability_claimed": false
+  },
+  "right_boundary_candidate": {
+    "decision_time_ms": 1786981620000,
+    "side": "long",
+    "status": "entry_missing",
+    "pooled_with_resolved": false,
+    "interpretation": "The candidate became available at the evidence boundary and had no subsequent book within the frozen prefix. A later prefix may resolve it; it is not treated as a loss, fill, or technical strategy fault."
+  },
+  "interpretation": {
+    "aggregate_positive_after_recorded_costs": true,
+    "aggregate_margin_bps": 0.940847086726535,
+    "largest_winner_removed_positive": false,
+    "minimum_sample_reached": false,
+    "both_sides_represented": false,
+    "stress_acceptance_passed": false,
+    "live_change_supported": false,
+    "comparison_with_no_action": "Keeping v53 unchanged remains preferred because the tiny positive aggregate is largest-winner dependent, entirely long-side, and only two resolved paths."
+  },
+  "risks_and_failure_modes": [
+    "Two results remain far below the predeclared twenty-candidate minimum.",
+    "Removing the largest winner makes the observed net result negative.",
+    "All resolved candidates are long-side, leaving the configured short side untested.",
+    "The right-boundary candidate lacked a later book in this immutable prefix and is excluded rather than guessed.",
+    "Recorded visible depth can cancel before a live IOC reaches the venue.",
+    "The stop proxy uses adverse BBO rather than an exact venue mark-trigger fill.",
+    "A fixed 15-minute diagnostic does not reproduce the route's full native maximum-hold lifecycle."
+  ],
+  "recommendation": {
+    "Recommendation": "Keep v53 and the ETH onset requirement unchanged; continue the frozen future-only experiment until its evidence contract resolves or is invalidated.",
+    "Why now": "The second path shows that the first winner was not yet repeatable and that the current aggregate fails largest-winner sensitivity.",
+    "Evidence reviewed": "Two resolved non-overlapping exact-depth paths, one right-boundary candidate, official funding, exact fees, visible-depth capacity, MFE/MAE, and the immutable N=1 revision.",
+    "Observed problem or opportunity": "Removing onset admitted one small winner and one smaller loss, for only 0.94 bps total and a negative result without the winner.",
+    "Applicable market regime": "Observed ETH transition and trend-up structure with prior compression and long pullbacks but no fresh canonical five-minute breakout onset.",
+    "Alternatives considered": "Promote after N=1, reject permanently after N=2, retune the horizon, change the stop, or continue the preregistered experiment.",
+    "Proposed live change": null,
+    "Expected upside": "Continuing tests whether the marginal setup has repeatable both-side value without contaminating v53 capital or selecting on the first winner.",
+    "Main risks and failure modes": "Sparse variance, one-sided sampling, outlier dependence, recorded-book cancellation, mark-stop mismatch, and native-exit mismatch.",
+    "Validation completed": "Exact identity and cutoff, two causal entry/exit paths, non-overlap enforcement, visible-depth capacity, official fees and funding, MFE/MAE, stop proxy, and largest-winner sensitivity.",
+    "Validation still required": "At least eighteen additional independent resolved candidates, short-side evidence, full stress arithmetic, exact stop behavior, and native lifecycle comparison.",
+    "Success metrics": "The unchanged twenty-candidate both-side contract with positive nominal mean and median, positive stress result after largest-winner removal, and no worse stop behavior.",
+    "Failure / rollback triggers": "Negative, one-sided, unresolved, or outlier-dependent final evidence retains the current onset requirement; source or identity mismatch invalidates the window.",
+    "Confidence level": "high on N=2 arithmetic, low on long-run expectancy",
+    "Explicit approval requested": false
+  },
+  "next_highest_value_investigation": "Resolve the next causally available ETH candidate without retuning while continuing exact v53 HYPE lifecycle collection.",
+  "contract": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_promotion": false,
+    "runtime_strategy_changed": false,
+    "v53_changed": false,
+    "orders_supported": false,
+    "no_parameter_retuning_during_window": true
+  },
+  "explicit_approval_requested": false,
+  "source_evidence": [
+    {
+      "path": "docs/research-journal/eth-breakout-precompression-pullback-v11.json",
+      "sha256": "6038578aa14d7ad124b30b186ac55da473de2dd5b934fa4ff540befbf7d85e78",
+      "bytes": 8926,
+      "role": "superseded_n1_revision"
+    },
+    {
+      "path": "data/logs/research/bidirectional_cohort/eth_onset_one_blocker_15m_20260817T1547Z_v2.json",
+      "sha256": "9c2adf7c0e18876f1327cd6f573003f84700888f5ec8c2b3a6dea67e31adf2ba",
+      "bytes": 15906,
+      "role": "immutable_exact_depth_n2_primary_horizon_replay"
+    }
+  ]
+}

@@ -130,6 +130,26 @@ def test_terminal_exit_does_not_overwrite_the_soft_extension_decision() -> None:
     assert outcome["decision_outcome"] == "extend"
 
 
+def test_venue_close_pnl_survives_aggregate_price_rounding() -> None:
+    """Exact venue close PnL remains authoritative over rounded leg prices."""
+    assets = _asset_rows()
+    exit_fill = assets[4]["payload"]
+    assert isinstance(exit_fill, dict)
+    exit_fill["closed_pnl_usd"] = 5.889484
+    trade = _trade()
+    trade["net_pnl_usd"] = 5.7668317
+
+    report = build_maximum_hold_extension_outcomes(
+        _cohort_rows(include_decision=True),
+        {"HYPE": assets},
+        [trade],
+    )
+
+    outcome = report["latest_outcomes"][0]
+    assert outcome["actual_gross_pnl_usd"] == pytest.approx(5.889484)
+    assert outcome["actual_net_pnl_usd"] == pytest.approx(5.7668317)
+
+
 def test_conflicting_persisted_plans_fail_instead_of_guessing() -> None:
     """A lifecycle cannot silently change its timer contract after restart."""
     assets = _asset_rows()
@@ -196,7 +216,15 @@ def _asset_rows() -> list[dict[str, object]]:
         _fill(11, 101, 70_000, 100.0, 1.0, 0.045),
         _funding(120_000, -0.01),
         _funding(240_000, -0.02),
-        _fill(22, 202, 310_000, 105.894, 1.0, 0.0476523),
+        _fill(
+            22,
+            202,
+            310_000,
+            105.894,
+            1.0,
+            0.0476523,
+            closed_pnl_usd=5.894,
+        ),
         {
             "event_type": "state_transition",
             "payload": {
@@ -246,6 +274,8 @@ def _fill(
     price: float,
     size: float,
     fee_usd: float,
+    *,
+    closed_pnl_usd: float = 0.0,
 ) -> dict[str, object]:
     return {
         "event_type": "fill",
@@ -256,6 +286,7 @@ def _fill(
             "price": price,
             "size": size,
             "fee_usd": fee_usd,
+            "closed_pnl_usd": closed_pnl_usd,
         },
     }
 

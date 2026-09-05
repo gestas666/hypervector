@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v58-post-outage-live-performance-attribution",
+  "revision_number": 1,
+  "supersedes_revision_id": null,
+  "created_at_utc": "2026-08-21T02:53:00Z",
+  "strategy_id": "multi_asset_growth_first_5000_eight_asset_incremental_v58",
+  "symbol": "PORTFOLIO",
+  "status": "retain",
+  "hypothesis": "The currently observed V58 losses and open-profit giveback do not yet establish stable strategy failure or stable execution degradation because the source-compatible realized sample contains only three same-side closes, its positive aggregate result depends on one largest winner, and the active successor run has no new entry or close.",
+  "decision": "Retain the exact V58 live strategy, risk, sizing, and exit configuration unchanged while collecting authoritative closures for the inherited SP500 and BRENTOIL lifecycles and subsequent source-compatible both-side routes. Continue report-only stop-slippage, after-cost, and largest-winner-removed attribution. Do not infer profitability from marked open PnL, do not treat the sparse predecessor sample as route expectancy, and do not apply an automatic live change from this revision.",
+  "confidence": "low",
+  "falsifier": "Update this decision if either pinned source fails byte or SHA-256 verification, if fill, fee, funding, slippage, lifecycle ownership, or PnL reconciliation differs, or if a larger source-compatible both-side sample attributes losses to stable execution degradation or stable strategy failure. The SP500 or BRENTOIL authoritative close may also materially reverse the provisional marked attribution.",
+  "evidence": [
+    {
+      "path": "v58-post-outage-performance-attribution-20260821-v1.json",
+      "role": "source-bound_post-outage_attribution_and_failure_modes",
+      "sha256": "2db9acff41ede06fd0545d8d919ee24a2be84f46153b69d30f7eb57b49ddf561",
+      "bytes": 4862
+    },
+    {
+      "path": "../../data/logs/research/v58_current_run_execution_quality_20260820_v4.json",
+      "role": "immutable_predecessor_execution_quality_with_embedded_checkpoint_snapshot",
+      "sha256": "733c6fbd05f4efae0b0ceb3f6faa7bf1434d8468288708f61eaa5f5cca981aea",
+      "bytes": 11673279
+    },
+    {
+      "path": "../../data/logs/research/v58_continuous_improvement_snapshot_20260821T0248Z_v1.json",
+      "role": "immutable_active_run_runtime_open_lifecycle_and_observer_snapshot",
+      "sha256": "aa23474a8b7c3485e6e40974f184ae70c43f10a7d33fa524f551b42690ae12c0",
+      "bytes": 165603
+    }
+  ],
+  "metrics": {
+    "active_run_id": "bidirectional-live-1787272893887",
+    "source_compatible_predecessor_run_id": "bidirectional-live-1787166474078",
+    "active_new_entries": 0,
+    "active_new_closes": 0,
+    "active_inherited_open_lifecycles": 2,
+    "active_open_marked_net_pnl_usd": 11.986122,
+    "active_open_marked_to_stop_giveback_usd": 31.63298260586934,
+    "predecessor_closed_lifecycles": 3,
+    "predecessor_observed_sides": [
+      "long"
+    ],
+    "predecessor_net_pnl_usd": 16.169133000000002,
+    "predecessor_largest_winner_usd": 27.197133,
+    "predecessor_net_excluding_largest_winner_usd": -11.027999999999999,
+    "predecessor_stop_slippage_observations": 2,
+    "predecessor_mean_stop_slippage_bps": 6.20978255217397,
+    "live_change_supported": false
+  },
+  "limitations": [
+    "Open lifecycle PnL is provisional and may reverse before an authoritative exit fill.",
+    "Three same-side closed lifecycles cannot establish both-side route expectancy.",
+    "Two stop-slippage observations cannot establish a stable execution-cost distribution.",
+    "The successor observer contains one explicit public-L2 HTTP 429 degraded cycle and is not gap-free.",
+    "This revision has no execution, promotion, sizing, routing, closing, or risk authority."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

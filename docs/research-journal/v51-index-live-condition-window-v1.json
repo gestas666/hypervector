@@ -1,0 +1,101 @@
+{
+  "schema_version": "v51_index_live_condition_window_v1",
+  "mode": "report_only",
+  "execution_authority": "none",
+  "automatic_live_change": false,
+  "performance_gate": false,
+  "runtime_strategy_changed": false,
+  "generated_at_utc": "2026-08-14T02:28:56.411841+00:00",
+  "scope": {
+    "run_id": "bidirectional-live-1786656816144",
+    "profile_id": "multi_asset_growth_first_5000_six_asset_profit_lock_candidate_v51",
+    "profile_fingerprint": "30cd54bb5b5b17249ae0a6a3b01d5702b276d51f8dc5ddd6b4d36ab6aa7d1908",
+    "run_started_at_utc": "2026-08-13T21:36:35.282350+00:00",
+    "provider_id": "hip3_breakout_pressure_sp500_spcx_fresh15s_bidirectional_v3",
+    "first_decision_time_ms": 1786657500000,
+    "last_decision_time_ms": 1786674600000,
+    "timeframe": "15m",
+    "signal": {
+      "breakout_lookback_bars": 32,
+      "fast_ema": 21,
+      "slow_ema": 55,
+      "minimum_abs_imbalance": 0.1,
+      "signal_maximum_stop_bps": 120.0,
+      "execution_stop_bps": 80.0
+    }
+  },
+  "routes": {
+    "hip3_breakout_pressure_sp500_spcx_fresh15s_bidirectional_v3|xyz:SP500": {
+      "current_run_decisions": 20,
+      "fresh_pressure_decisions": 20,
+      "complete_pressure_history_decisions": 20,
+      "eligible_decisions": 0,
+      "raw_long_conditions": 0,
+      "raw_short_conditions": 0,
+      "long_one_blocker_price_breakout": 4,
+      "short_one_blocker_price_breakout": 0,
+      "nearest_long_breakout_distance_bps": 1.0251810085220503,
+      "nearest_short_breakout_distance_bps": 13.21139514898116,
+      "pressure_minimum": -0.6866355901230451,
+      "pressure_median": -0.23677567538522035,
+      "pressure_maximum": 0.35453060198567304
+    },
+    "hip3_breakout_pressure_sp500_spcx_fresh15s_bidirectional_v3|xyz:SPCX": {
+      "current_run_decisions": 20,
+      "fresh_pressure_decisions": 20,
+      "complete_pressure_history_decisions": 20,
+      "eligible_decisions": 0,
+      "raw_long_conditions": 0,
+      "raw_short_conditions": 0,
+      "long_one_blocker_price_breakout": 0,
+      "short_one_blocker_price_breakout": 7,
+      "nearest_long_breakout_distance_bps": 182.91824961305915,
+      "nearest_short_breakout_distance_bps": 48.7391396482304,
+      "pressure_minimum": -0.47685187605311813,
+      "pressure_median": -0.0382315711944303,
+      "pressure_maximum": 0.5788763582142316
+    }
+  },
+  "assessment": {
+    "status": "collecting_source_native_forward_evidence",
+    "provider_transport_dead": false,
+    "configured_condition_logic_consistent_with_observations": true,
+    "parameter_change_supported": false,
+    "economic_edge_established": false,
+    "missed_trade_claimed": false,
+    "diagnosis": "Both routes received fresh, history-complete pressure but did not cross their frozen 32-bar price boundary. SP500 approached the long boundary; SPCX remained farther from its short boundary. This is coherent waiting, not evidence of a dead provider or a profitable edge.",
+    "minimum_additional_evidence": "At least one attributable eligible signal and one fully resolved, exactly costed lifecycle per configured side before updating the live-translation diagnosis. A change recommendation additionally requires a predeclared compatible window, execution costs, stop behavior, missed-opportunity review, and largest-winner sensitivity."
+  },
+  "source_evidence": {
+    "sp500_diagnostic": {
+      "path": "data/logs/research/v51_sp500_live_condition_window_20260814_v1.json",
+      "sha256": "4018fc6c3cbb27ef3cf06b8f47447ffcbc1e71b97a609c44d4fd0fff87963b22",
+      "bytes": 19819,
+      "observer_prefix_rows": 121,
+      "observer_prefix_sha256": "c2a340f55f98538602b0e34635b794e175419089243ed1ab63c8d6ec3384fae8"
+    },
+    "spcx_diagnostic": {
+      "path": "data/logs/research/v51_spcx_live_condition_window_20260814_v1.json",
+      "sha256": "580212c57b66b0acee99db70da05d17425310c3989422ba710057ccb21462916",
+      "bytes": 19833,
+      "observer_prefix_rows": 121,
+      "observer_prefix_sha256": "2a1492877bb13763b8070338d22eaa90b52c3843df82f9119ec5a21c7735f9d9"
+    },
+    "active_config": {
+      "path": "configs/multi_asset_growth_first_5000_six_asset_profit_lock_candidate_v51.toml",
+      "sha256": "f0f0fef087eb0a3412c2a917d2d9bd8f578b17e4a40d7c3729519a33cf4f9ab4",
+      "bytes": 3917
+    },
+    "frozen_signal_contract": {
+      "path": "docs/research-journal/v51-index-source-parity-forward-v1.json",
+      "sha256": "01e22ea5715c1f08014ca0fbe016f64346193f27fec612a95cb18affdc6afcd1",
+      "bytes": 9626
+    }
+  },
+  "limitations": [
+    "The window contains no eligible signal, fill, or completed lifecycle.",
+    "Condition proximity is not realized profit or executable fill evidence.",
+    "The archive/live source-transport parity hypothesis remains rejected; this journal uses only the exact live-v3 observer contract for current-run diagnosis.",
+    "No strategy, leverage, sizing, stop, target, route, or deployment parameter was changed."
+  ]
+}

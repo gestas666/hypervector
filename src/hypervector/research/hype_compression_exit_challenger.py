@@ -25,6 +25,19 @@ from hypervector.research.hype_compression_breakout_challenger import (
     apply_hype_compression_policy,
     declared_hype_compression_policies,
 )
+from hypervector.research.hype_compression_regime_loss_exit import (
+    FixedLifecycleRegimeLossExit,
+    FixedRegimeLossComparison,
+    compare_fixed_regime_loss_exits,
+    replay_fixed_lifecycle_regime_loss_exit,
+)
+
+__all__ = (
+    "FixedLifecycleRegimeLossExit",
+    "FixedRegimeLossComparison",
+    "compare_fixed_regime_loss_exits",
+    "replay_fixed_lifecycle_regime_loss_exit",
+)
 
 
 @dataclass(frozen=True)

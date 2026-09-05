@@ -116,6 +116,32 @@ def test_accounting_epoch_is_forwarded_and_prevents_cross_epoch_cache_reuse(
     assert observed == [epoch]
 
 
+def test_accounting_epoch_cli_reconstructs_exact_profile_lineage() -> None:
+    """Repeated lineage arguments must survive the worker process boundary."""
+    module = _load_module()
+    args = module.parse_args(
+        [
+            "--accounting-epoch-id",
+            "growth_5000_v58_v59",
+            "--accounting-epoch-profile-fingerprint",
+            "b" * 64,
+            "--accounting-epoch-start-ms",
+            "1786164729837",
+            "--accounting-epoch-included-profile-fingerprint",
+            "a" * 64,
+            "--accounting-epoch-included-profile-fingerprint",
+            "b" * 64,
+        ]
+    )
+
+    assert module._accounting_epoch(args) == CohortAccountingEpoch(
+        "growth_5000_v58_v59",
+        "b" * 64,
+        1_786_164_729_837,
+        included_profile_fingerprints=("a" * 64, "b" * 64),
+    )
+
+
 def test_rolling_import_rebuilds_archive_after_new_fill(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -303,7 +329,7 @@ def _archive(identity: dict[str, object]) -> dict[str, object]:
     return {
         "schema_version": 1,
         "mode": "cohort_live_portfolio_archive_v1",
-        "projection_revision": 2,
+        "projection_revision": archive_module.PORTFOLIO_ARCHIVE_PROJECTION_REVISION,
         "source_execution": identity,
         "performance": {"total": {"closed_trades": 0}},
     }

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 import pytest
 
@@ -222,3 +222,51 @@ def test_persisted_recipe_exit_replays_after_controller_restart() -> None:
     assert recovered[0].decision_time_ms == _DECISION_MS
     assert recovered[0].reference_price == 4_351.0
     assert recovered[0].exit_reason == "hip3_swing_ha_flip"
+
+
+def test_restart_closes_when_recipe_exit_scan_does_not_cover_open_lifecycle() -> None:
+    """An old position must not survive an unverifiable missed-exit interval."""
+    readiness = replace(
+        _evaluation().readiness,
+        metrics={
+            "pre_activation_scan_start_ms": _OPENED_MS + 1,
+            "pre_activation_scan_end_ms": _DECISION_MS,
+        },
+    )
+    seed = replace(
+        _evaluation(),
+        decision_action="hold",
+        reason="entry_condition_absent",
+        readiness=readiness,
+        exit_sides=frozenset(),
+        exit_reason=None,
+        backend_non_action_reason="pre_activation_readiness_seed",
+    )
+
+    closing, actions = _actions(_snapshot(), seed)
+
+    assert closing == {_SYMBOL}
+    assert actions[0].decision_time_ms == _DECISION_MS
+    assert actions[0].exit_reason == "provider_recipe_exit_recovery_unverified"
+
+
+def test_restart_keeps_position_when_scan_covers_it_without_an_exit() -> None:
+    """A complete post-entry scan must not manufacture a recipe exit."""
+    readiness = replace(
+        _evaluation().readiness,
+        metrics={
+            "pre_activation_scan_start_ms": _OPENED_MS,
+            "pre_activation_scan_end_ms": _DECISION_MS,
+        },
+    )
+    seed = replace(
+        _evaluation(),
+        decision_action="hold",
+        reason="entry_condition_absent",
+        readiness=readiness,
+        exit_sides=frozenset(),
+        exit_reason=None,
+        backend_non_action_reason="pre_activation_readiness_seed",
+    )
+
+    assert _actions(_snapshot(), seed) == (set(), ())

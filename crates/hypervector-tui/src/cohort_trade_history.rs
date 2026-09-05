@@ -25,12 +25,14 @@ const HIP3_SYMBOL_COLUMN_WIDTH: u16 = 12;
 pub(crate) fn render(frame: &mut Frame, app: &App, area: Rect) {
     let trades = app.backend.cohort_checkpoint.user_trade_reflections();
     if trades.is_empty() {
+        let message = crate::cohort_trade_performance::empty_epoch_history_message(app)
+            .unwrap_or_else(|| "No completed backend lifecycle is available".into());
         render_empty(
             frame,
             app,
             area,
-            " CLOSED LIFECYCLE JOURNAL ",
-            "No completed backend lifecycle is available",
+            " COMPLETED TRADES // CLOSED LIFECYCLE JOURNAL ",
+            &message,
         );
         return;
     }

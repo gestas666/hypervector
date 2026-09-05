@@ -50,7 +50,13 @@ CREATE TABLE IF NOT EXISTS public_trades (
     bundle_id VARCHAR NOT NULL
 );
 CREATE OR REPLACE VIEW replay_book_snapshots AS
-SELECT * FROM book_snapshots;
+SELECT books.*
+FROM book_snapshots AS books
+INNER JOIN archive_bundles AS bundles USING (bundle_id)
+QUALIFY row_number() OVER (
+    PARTITION BY books.symbol, books.ts_exchange_ms
+    ORDER BY bundles.start_utc DESC, books.bundle_id DESC
+) = 1;
 CREATE OR REPLACE VIEW replay_public_trades AS
 SELECT trades.*
 FROM public_trades AS trades

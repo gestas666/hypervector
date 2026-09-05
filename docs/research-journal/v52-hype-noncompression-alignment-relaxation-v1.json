@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v52-hype-noncompression-alignment-relaxation",
+  "revision_number": 1,
+  "supersedes_revision_id": null,
+  "created_at_utc": "2026-08-16T21:26:00Z",
+  "strategy_id": "hype_breakout_compression_alignment_bidirectional_v2",
+  "symbol": "HYPE",
+  "status": "reject",
+  "hypothesis": "A fresh HYPE breakout onset aligned with the completed-hour structural direction may remain profitable without the compression and non-chasing prerequisites used by the active v52 route.",
+  "decision": "Do not reopen the rejected broad direction-alignment arm and do not relax the active v52 compression or pullback prerequisites. The first v52 aligned non-compression onset cleared the fixed diagnostic hurdle at five and sixty minutes but failed at fifteen and thirty minutes. It is one readiness-only event with all three active-route prerequisites absent, while the prior broad aligned arm remained materially negative across 509 development and 115 already-opened final lifecycles. Continue the active compression-qualified route unchanged and collect the first compatible eligible lifecycle on each side.",
+  "confidence": "medium_high",
+  "falsifier": "Update this rejection only if a predeclared independent same-blocker sample becomes positive after realistic costs and largest-winner removal, and a causal occupancy-aware both-side replay shows that removing the active compression prerequisites improves the exact v52 contract without materially worsening drawdown or execution quality.",
+  "evidence": [
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v52_hype_aligned_noncompression_onset_20260816_v1.json",
+      "role": "exact_v52_aligned_noncompression_readiness_path",
+      "sha256": "5d66c5fddd610dbb986d45cb58b6c2021ec2933a56deec26f11b4a5403f3a6a9",
+      "bytes": 6122
+    },
+    {
+      "path": "../../data/logs/research/hype_breakout_entry_alignment_hl365d_v2_20260806.json",
+      "role": "prior_broad_alignment_development_and_opened_final_replay",
+      "sha256": "c03cd58711d6439f4ffa9b43362a58f6da8fe5ab47eb4bdb1d71167e9da7b472",
+      "bytes": 7039
+    }
+  ],
+  "metrics": {
+    "v52_new_independent_events": 1,
+    "v52_new_event_side": "long",
+    "v52_new_event_eligible": false,
+    "v52_new_event_missing_prerequisites": 3,
+    "v52_new_event_5m_after_hurdle_bps": 18.389279087110644,
+    "v52_new_event_15m_after_hurdle_bps": -7.103671331702188,
+    "v52_new_event_30m_after_hurdle_bps": -14.560792882783213,
+    "v52_new_event_60m_after_hurdle_bps": 9.024521790402485,
+    "prior_development_aligned_trades": 509,
+    "prior_development_aligned_mean_net_bps_per_trade": -13.923187174946694,
+    "prior_development_aligned_profit_factor": 0.803493241881218,
+    "prior_opened_final_aligned_trades": 115,
+    "prior_opened_final_aligned_mean_net_bps_per_trade": -20.197101688379938,
+    "prior_opened_final_aligned_profit_factor": 0.7220991598053571,
+    "minimum_same_blocker_same_side_paths_before_update": 20,
+    "execution_authority": "none",
+    "runtime_changed_by_this_revision": false
+  },
+  "limitations": [
+    "The new observation is one readiness-only path, not an order, fill, position, or PnL observation.",
+    "The four horizons overlap and are not independent samples.",
+    "The fixed thirteen-basis-point hurdle is not realized execution cost.",
+    "The prior broad-alignment evidence uses an older route identity, but it directly tests the omitted-compression mechanism and remains the relevant rejection baseline.",
+    "The active v52 route has no eligible or resolved lifecycle yet, so its future profitability remains unverified.",
+    "The malformed attempted v6 continuation is retained as forensic evidence and is not part of this distinct chain.",
+    "This revision grants no gating, sizing, routing, entry, exit, pause, retuning, or promotion authority."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

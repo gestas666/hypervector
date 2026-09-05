@@ -1,0 +1,126 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v75-five-crypto-donchian-atr-breakout-20260901",
+  "created_at_utc": "2026-09-01T15:54:00Z",
+  "status": "preregistered_before_candidate_replay",
+  "mode": "report_only",
+  "motivation": {
+    "mechanism": "Sustained range expansion may persist long enough for a slow channel exit to overcome all-taker costs.",
+    "positive_prior": "Slow hourly SOL trend evidence and HYPE alignment evidence suggest persistence can exist in asset-specific slices.",
+    "negative_prior": "UT flips, small ROE ratchets, and completed-4h SMA crosses failed out of sample or after largest-winner removal.",
+    "testable_change": "Require a fresh completed-4h breakout of the prior 20-bar channel, retain the position until a prior 10-bar counter-channel exit or structural stop, and do not use a fixed target."
+  },
+  "roster_contract": {
+    "crypto_assets": ["BTC", "ETH", "SOL", "HYPE", "ZEC"],
+    "successor_visible_assets": [
+      "BTC",
+      "ETH",
+      "SOL",
+      "HYPE",
+      "ZEC",
+      "xyz:SPCX",
+      "xyz:SNDK"
+    ],
+    "excluded_assets": ["xyz:GOLD", "xyz:SP500", "xyz:BRENTOIL"],
+    "unsupported_route_disposition": "visible_and_fail_closed_from_new_entries"
+  },
+  "candidate_contract": {
+    "strategy_family": "completed_4h_donchian_20_10_atr20_stop_v1",
+    "signal_timeframe": "4h",
+    "execution_timeframe": "15m",
+    "entry_channel_bars": 20,
+    "exit_channel_bars": 10,
+    "entry": "fresh_close_breakout_of_prior_completed_20_bar_high_or_low_then_next_15m_open",
+    "sides": ["long", "short"],
+    "atr_period_bars": 20,
+    "atr_method": "sma_seeded_wilder_rma_on_raw_4h_true_range",
+    "initial_stop": "signal_close_plus_or_minus_2_atr",
+    "minimum_stop_bps": 20.0,
+    "maximum_stop_bps": null,
+    "target": null,
+    "long_exit": "completed_4h_close_below_prior_10_bar_low_then_next_15m_open",
+    "short_exit": "completed_4h_close_above_prior_10_bar_high_then_next_15m_open",
+    "reverse_on_opposite_20_bar_breakout": true,
+    "maximum_hold_seconds": 2592000,
+    "same_bar_risk_order": "liquidation_then_stop",
+    "gap_policy": "expire_pending_entry_or_censor_open_lifecycle_at_first_observed_quote"
+  },
+  "risk_contract": {
+    "initial_equity_usd": 5000.0,
+    "risk_fraction_per_position": 0.0075,
+    "isolated_leverage": 5.0,
+    "maximum_margin_fraction_per_position": 0.15,
+    "maximum_notional_usd_per_position": 5000.0,
+    "maximum_theoretical_five_position_stop_loss_pct_equity_before_gap_and_costs": 3.75,
+    "entry_requires_stop_inside_liquidation_boundary": true
+  },
+  "friction_profiles": {
+    "nominal": {
+      "fee_bps_per_side": 4.5,
+      "slippage_bps_per_side": 2.5,
+      "round_trip_bps": 14.0
+    },
+    "stress": {
+      "fee_bps_per_side": 4.5,
+      "slippage_bps_per_side": 5.5,
+      "round_trip_bps": 20.0
+    }
+  },
+  "chronology": {
+    "btc_eth_sol_hype_development": [
+      "2025-07-28T00:00:00Z",
+      "2026-01-28T00:00:00Z"
+    ],
+    "btc_eth_sol_hype_validation": [
+      "2026-01-28T00:00:00Z",
+      "2026-04-28T00:00:00Z"
+    ],
+    "btc_eth_sol_hype_pseudo_holdout": [
+      "2026-04-28T00:00:00Z",
+      "2026-07-28T00:00:00Z"
+    ],
+    "zec_source_window": [
+      "2026-01-28T00:00:00Z",
+      "2026-09-01T12:00:00Z"
+    ],
+    "zec_development": [
+      "2026-02-02T00:00:00Z",
+      "2026-05-01T00:00:00Z"
+    ],
+    "zec_validation": [
+      "2026-05-01T00:00:00Z",
+      "2026-07-01T00:00:00Z"
+    ],
+    "zec_pseudo_holdout": [
+      "2026-07-01T00:00:00Z",
+      "2026-09-01T00:00:00Z"
+    ],
+    "opening_rule": "Open development only. Open each validation once only when its development group clears aggregate stress and largest-winner criteria without parameter changes."
+  },
+  "trial_accounting": {
+    "new_strategy_family_trial_number": 4,
+    "parameter_variants": 1,
+    "friction_profiles_are_stress_tests_not_selection_variants": true,
+    "asset_slices_are_diagnostics_not_parameter_selection": true
+  },
+  "support_criteria": [
+    "group nominal and stress net PnL and profit factor exceed zero and one",
+    "group nominal and stress net remain positive after the single largest winner is removed",
+    "no liquidation or insolvency",
+    "both long and short trades occur in the group",
+    "no-lookahead, append-invariance, gap reset, timing, exit, and fixed-risk sizing tests pass",
+    "shared-account concurrency simulation passes before live authority"
+  ],
+  "falsifiers": [
+    "development or validation group nominal or stress expectancy is non-positive",
+    "development or validation group depends on the largest winner",
+    "a future bar changes a prior entry, exit, stop, or size",
+    "a channel includes the current decision bar",
+    "any completed-4h decision is executed before its close",
+    "parameters are changed after viewing V75 returns"
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "automatic_live_change": false,
+  "runtime_strategy_changed": false
+}

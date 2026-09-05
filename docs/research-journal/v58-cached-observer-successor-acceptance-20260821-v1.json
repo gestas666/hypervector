@@ -1,0 +1,123 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v58-cached-observer-successor-acceptance",
+  "revision_number": 1,
+  "recorded_at_utc": "2026-08-21T19:28:37Z",
+  "status": "accepted_for_non_pooled_report_only_collection",
+  "authority": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_live_change": false,
+    "runtime_strategy_changed": false,
+    "orders_supported": false,
+    "promotion_authority": "none"
+  },
+  "predecessor_incident": {
+    "disposition": "sealed_unexplained_external_process_loss_or_unmonitored_termination",
+    "pooled_with_successor": false,
+    "journal_path": "docs/research-journal/v58-cached-observer-unexplained-termination-20260821-v1.json",
+    "journal_sha256": "718c4a50d5d55d8d70e3eb4b9308839c3b5483485332537baf7005bf97dc2442"
+  },
+  "successor_identity": {
+    "profile_id": "multi_asset_growth_first_5000_eight_asset_incremental_v58",
+    "base_profile_fingerprint": "8a04636c9ff60a7eae141381cb540d7c6ceed081097cda7d5e465d48faa5022b",
+    "observer_profile_fingerprint": "a779d40ff77909b42d0359668087aad77a74cd8209c936d88d253062a2ddba17",
+    "observer_run_fingerprint": "950a71d22a1b94292d3fbdd674ace4b92d0ac1d506f7f3a1700d806b68462ea8",
+    "observer_run_id": "bidirectional-observe-1787339261510",
+    "ledger_path": "data/observe/v58_eight_asset_cached_parity_20260821_v2/decisions.jsonl"
+  },
+  "validation_completed": {
+    "full_project_verification": {
+      "python_command": "uv run pytest tests/ -q -m not network",
+      "python_result": "7076 passed, 4 deselected, 27 warnings",
+      "rust_command": "cargo test -p hypervector-tui",
+      "rust_result": "pass_with_zero_failures",
+      "focused_ruff": "pass",
+      "cli_status": "pass",
+      "journal_json_validation": "pass"
+    },
+    "derived_identity_contract": {
+      "result": "pass",
+      "tests": 16,
+      "command": "uv run pytest tests/test_cohort_successor_observer_status.py tests/test_v58_continuous_improvement_script.py -q",
+      "lint": "pass"
+    },
+    "prospective_lifecycle_boundary": {
+      "result": "pass",
+      "tests": 29,
+      "command": "uv run pytest tests/test_eth_pullback_forward_resolution.py tests/test_eth_pullback_forward_watch_script.py tests/test_eth_pullback_forward_resolution_script.py tests/test_hype_alignment_shadow_lifecycle.py tests/test_hype_alignment_shadow_lifecycle_watch_script.py -q",
+      "lint": "pass",
+      "prospective_start_ms": 1787340300000
+    },
+    "observer_checkpoint": {
+      "technical_complete": true,
+      "technical_gaps": [],
+      "degraded_poll_cycles": 0,
+      "routed_actions": 0,
+      "sha256_at_review": "38456c62108d928be1a53e4f029f7b81fb79f660cc93a12b01b0a445c2856dc0"
+    },
+    "completed_candle_parity": {
+      "contiguous_exact_minutes": 16,
+      "minimum_contiguous_minutes": 1440,
+      "exact_ohlcv_rows": 128,
+      "common_ohlcv_rows": 128,
+      "mismatches": 0,
+      "gate_status": "collecting",
+      "sha256_at_review": "8cfe6229f6cbabd235fc73a1a8fff60cd588ae1e1c6b5f991b02d3d18b90f2c3"
+    },
+    "lifecycle_watchers": {
+      "BTC": {
+        "status": "awaiting_resolution",
+        "selected": 0,
+        "resolved": 0,
+        "sha256_at_review": "91e8371c563089a157cdf40b7a65b96541300d10df68df2ff15b4702c93f9e77"
+      },
+      "ETH": {
+        "status": "awaiting_resolution",
+        "selected": 0,
+        "resolved": 0,
+        "sha256_at_review": "e44f3e21c1fc75061b7c9f296e9c7b20df28d79181f27f2eb521a956c9f6fd0c"
+      },
+      "HYPE": {
+        "status": "awaiting_resolution",
+        "selected": 0,
+        "resolved": 0,
+        "sha256_at_review": "0d22880e6f14c215c99d33e5274dbe0a4cd1cc1b7484dde43160c11739978329"
+      }
+    },
+    "continuous_consolidator": {
+      "status": "running",
+      "route_count": 10,
+      "watcher_count": 10,
+      "eligible_without_exact_capture": 0,
+      "backend_process_health": "healthy",
+      "venue_ledger_reconciled": true,
+      "sha256_at_review": "1a0f064c20c23a91fe4ef8cc71e7dddc13a96ee9f5444f994570af6483ea091a"
+    }
+  },
+  "limitations": [
+    "Sixteen exact parity minutes do not satisfy the 1,440-minute acceptance horizon.",
+    "Exact completed-candle equality does not establish provider-decision equality or profitable edge.",
+    "The successor lifecycle windows have zero eligible or resolved lifecycles and cannot support a live change.",
+    "The predecessor and successor epochs remain non-pooled because the predecessor process exit was not durably classified."
+  ],
+  "success_criteria": [
+    "Observer and consolidator processes remain retained and fresh.",
+    "All ten routes retain exact lifecycle capture with zero uncaptured eligible signals.",
+    "The 1,440-minute parity horizon completes without OHLCV mismatches.",
+    "Prospective BTC, ETH, and HYPE outcomes remain bound to the successor identity and preregistered boundary."
+  ],
+  "failure_or_update_triggers": [
+    "Observer, watcher, or consolidator process exit or stale checkpoint.",
+    "Any nonzero routed observer action or execution authority.",
+    "Any candle mismatch, duplicate conflict, identity mismatch, uncaptured eligible signal, or changed frozen generator.",
+    "Any attempt to pool predecessor outcomes into this successor epoch."
+  ],
+  "confidence_level": {
+    "technical_successor_acceptance": "high",
+    "completed_candle_equivalence_at_current_horizon": "high",
+    "full_1440_minute_parity": "low_not_yet_observed",
+    "strategy_edge_or_live_change": "low_and_not_claimed"
+  },
+  "single_highest_value_next_investigation": "Reconcile the sole open SP500 live lifecycle under its frozen stop, opposite-intent, profit-lock, and maximum-hold contract."
+}

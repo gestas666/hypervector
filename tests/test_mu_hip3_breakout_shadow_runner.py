@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pandas as pd
 import pytest
+from requests import HTTPError, ReadTimeout, Response
 
 from hypervector.live.mu_hip3_breakout_shadow import (
     MU_SHADOW_PROFILE_ID,
@@ -19,6 +20,7 @@ from hypervector.live.mu_hip3_breakout_shadow_runner import (
     MuHip3PublicRestSource,
     MuHip3ShadowPaths,
 )
+from hypervector.live.multi_asset_market_bars import TransientCohortMarketDataError
 from hypervector.paper.book import BookLevel, BookSnapshot
 
 
@@ -79,6 +81,10 @@ def _jsonl(path: Path) -> list[dict[str, object]]:
     return [json.loads(line) for line in path.read_text().splitlines()]
 
 
+def _candle_path(paths: MuHip3ShadowPaths) -> Path:
+    return paths.journal.with_name(f"{paths.journal.stem}_candles.jsonl")
+
+
 def test_first_poll_bootstraps_durable_cursor_without_retroactive_decision(
     tmp_path: Path,
 ) -> None:
@@ -100,6 +106,12 @@ def test_first_poll_bootstraps_durable_cursor_without_retroactive_decision(
     assert cursor["short_raw"] is None
     assert cursor["execution_authority"] == "none"
     assert _jsonl(_paths(tmp_path).journal) == []
+    candles = _jsonl(_candle_path(_paths(tmp_path)))
+    assert len(candles) == 40
+    assert all(row["historical_warmup"] is True for row in candles)
+    assert all(row["prospective"] is False for row in candles)
+    assert candles[-1]["symbol"] == "xyz:MU"
+    assert candles[-1]["source"] == "hyperliquid_public_candleSnapshot_15m"
 
 
 def test_book_capture_persists_exact_mu_top_ten_receipt_evidence(
@@ -126,13 +138,46 @@ def test_book_capture_persists_exact_mu_top_ten_receipt_evidence(
     assert len(payload["asks"]) == 10
 
 
+def test_book_capture_normalizes_bounded_exchange_clock_lead(
+    tmp_path: Path,
+) -> None:
+    """A small venue-clock lead stays causal and retains raw provenance."""
+    local_receipt_ms = int(pd.Timestamp("2026-08-09T22:00:01Z").timestamp() * 1_000)
+    exchange_ms = local_receipt_ms + 1_600
+    source = _Source([_book(exchange_ms, local_receipt_ms)], [_bars(40)])
+    runner = MuHip3BreakoutShadowRunner(source=source, paths=_paths(tmp_path))
+
+    result = runner.poll(observed_at_ms=local_receipt_ms)
+
+    payload = _jsonl(_paths(tmp_path).asset_ledger)[0]["payload"]
+    assert result.observed_at_ms == exchange_ms
+    assert payload["exchange_ts_ms"] == exchange_ms
+    assert payload["recv_ts_ms"] == exchange_ms
+    assert payload["local_recv_ts_ms"] == local_receipt_ms
+    assert payload["negative_clock_skew_ms"] == 1_600
+
+
+def test_book_capture_rejects_excessive_exchange_clock_lead(tmp_path: Path) -> None:
+    """A large clock disagreement must remain a fail-closed data error."""
+    local_receipt_ms = int(pd.Timestamp("2026-08-09T22:00:01Z").timestamp() * 1_000)
+    source = _Source([_book(local_receipt_ms + 5_001, local_receipt_ms)], [_bars(40)])
+
+    with pytest.raises(ValueError, match="clock skew exceeds 5000ms"):
+        MuHip3BreakoutShadowRunner(source=source, paths=_paths(tmp_path)).poll(
+            observed_at_ms=local_receipt_ms
+        )
+
+
 def test_restart_reuses_cursor_and_never_duplicates_one_decision(
     tmp_path: Path,
 ) -> None:
     paths = _paths(tmp_path)
     first_ms = int(pd.Timestamp("2026-08-09T21:45:01Z").timestamp() * 1_000)
     next_ms = int(pd.Timestamp("2026-08-09T22:00:01Z").timestamp() * 1_000)
-    first = _Source([_book(first_ms - 100, first_ms - 50)], [_bars(39)])
+    first = _Source(
+        [_book(first_ms - 100, first_ms - 50)],
+        [_bars(40).iloc[:-1].copy()],
+    )
     MuHip3BreakoutShadowRunner(source=first, paths=paths).poll(observed_at_ms=first_ms)
     proof = {
         "event_type": "book_observation",
@@ -165,6 +210,21 @@ def test_restart_reuses_cursor_and_never_duplicates_one_decision(
     assert _jsonl(paths.journal)[0]["execution_authority"] == "none"
     assert _jsonl(paths.journal)[0]["intents"] == []
     assert repeat_source.candle_calls == 0
+    candles = _jsonl(_candle_path(paths))
+    assert len(candles) == 40
+    assert candles[-1]["bar_close_ms"] == next_ms - 1_000
+    assert candles[-1]["historical_warmup"] is False
+    assert candles[-1]["prospective"] is True
+    status = json.loads(paths.status.read_text())
+    assert status["decisions_this_poll"] == 0
+    assert status["decision_rows_total"] == 1
+    assert status["eligible_decisions_total"] == int(result.decisions[0].eligible)
+    assert status["long_decisions_total"] == int(result.decisions[0].side == "long")
+    assert status["short_decisions_total"] == int(result.decisions[0].side == "short")
+    assert status["non_action_decisions_total"] == int(result.decisions[0].side is None)
+    assert status["last_decision_time_ms"] == result.decisions[0].decision_time_ms
+    assert status["candle_rows_total"] == 40
+    assert status["prospective_candle_rows_total"] == 1
 
 
 def test_status_discloses_source_parity_blockers_and_no_execution_surface(
@@ -228,6 +288,71 @@ def test_public_source_binds_exact_mu_book_and_completed_candles(
         ("book", "xyz:MU"),
         ("bars", "xyz:MU", "15m", 2.0, 123),
     ]
+
+
+def test_public_source_classifies_exhausted_l2_transport_failure(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A wrapped transport timeout is retryable without hiding parse faults."""
+
+    def fail_book(_symbol: str) -> BookSnapshot:
+        try:
+            raise ReadTimeout("public L2 deadline")
+        except ReadTimeout as exc:
+            raise RuntimeError("HL l2Book fetch failed") from exc
+
+    monkeypatch.setattr(
+        "hypervector.live.mu_hip3_breakout_shadow_runner.fetch_hl_l2_book",
+        fail_book,
+    )
+
+    with pytest.raises(TransientCohortMarketDataError) as captured:
+        MuHip3PublicRestSource().book_snapshot()
+
+    assert captured.value.source == "hyperliquid_public_l2"
+    assert captured.value.reason == "transport_timeout_retry_exhausted"
+
+
+def test_public_source_does_not_retry_l2_parse_failure(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Malformed venue payloads remain fatal technical evidence."""
+
+    def fail_book(_symbol: str) -> BookSnapshot:
+        try:
+            raise ValueError("crossed book")
+        except ValueError as exc:
+            raise RuntimeError("HL l2Book parse failed") from exc
+
+    monkeypatch.setattr(
+        "hypervector.live.mu_hip3_breakout_shadow_runner.fetch_hl_l2_book",
+        fail_book,
+    )
+
+    with pytest.raises(RuntimeError, match="parse failed"):
+        MuHip3PublicRestSource().book_snapshot()
+
+
+def test_public_source_classifies_exhausted_candle_throttle(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """An exhausted public candle 429 degrades one poll without exiting."""
+    response = Response()
+    response.status_code = 429
+
+    def fail_candles(*_args: object, **_kwargs: object) -> pd.DataFrame:
+        raise HTTPError("throttled", response=response)
+
+    monkeypatch.setattr(
+        "hypervector.live.mu_hip3_breakout_shadow_runner.fetch_hl_ohlcv_snapshot",
+        fail_candles,
+    )
+
+    with pytest.raises(TransientCohortMarketDataError) as captured:
+        MuHip3PublicRestSource().completed_candle_history(observed_at_ms=123)
+
+    assert captured.value.source == "hyperliquid_public_candles"
+    assert captured.value.reason == "http_429_retry_exhausted"
 
 
 @pytest.mark.parametrize("aliased", ["BTC", "xyz:SP500"])

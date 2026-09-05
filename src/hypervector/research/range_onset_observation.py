@@ -35,7 +35,14 @@ def prepare_completed_range_onset_frames(
     complete = bars.loc[bars.index + _MINUTE <= observed]
     if complete.empty:
         raise ValueError("Hyperliquid returned no completed SOL candles")
+    complete = _latest_contiguous_segment(complete)
     return complete, signal_builder(complete), regime_builder(complete)
+
+
+def _latest_contiguous_segment(complete: pd.DataFrame) -> pd.DataFrame:
+    deltas = complete.index[1:] - complete.index[:-1]
+    resets = [position + 1 for position, delta in enumerate(deltas) if delta != _MINUTE]
+    return complete.iloc[resets[-1] :] if resets else complete
 
 
 def _utc_timestamp(value: pd.Timestamp) -> pd.Timestamp:

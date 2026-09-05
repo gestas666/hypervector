@@ -1,0 +1,140 @@
+{
+  "schema_version": "v51_four_plus_four_noncrypto_candidate_review_v5",
+  "generated_at_utc": "2026-08-15T16:27:01Z",
+  "mode": "report_only",
+  "execution_authority": "none",
+  "automatic_live_change": false,
+  "automatic_promotion": false,
+  "performance_gate": false,
+  "runtime_strategy_changed": false,
+  "supersedes": {
+    "path": "docs/research-journal/v51-four-plus-four-noncrypto-candidate-review-v4.json",
+    "sha256": "9483b6d86d2f2957a1b5f4077ba7e66b1289d2663a4c300d8ed5c3fac5dac922",
+    "bytes": 4693
+  },
+  "decision_update": {
+    "source": "explicit_user_direction",
+    "instruction": "Keep xyz:SKHX excluded and use a different industry or economic exposure for the remaining non-crypto slot.",
+    "interpretation": "Retain xyz:MU as the sole semiconductor research candidate. Rank distinct HIP-3 candidates without granting live authority.",
+    "runtime_impact": "none",
+    "config_impact": "none"
+  },
+  "hypothesis": {
+    "id": "DISTINCT_FOURTH_NONCRYPTO_ROUTE_V1",
+    "state": "being_tested_no_live_change",
+    "claim": "A macro-FX or commodity route may diversify the planned non-crypto sleeve better than a second semiconductor asset, provided it first establishes executable, after-cost, bidirectional edge.",
+    "confidence": "high_on_diversification_intent_low_on_strategy_profitability",
+    "falsifier_or_update": "Reject a candidate if exact historical or prospective evidence is incomplete, after-cost results fail largest-winner sensitivity, either side is unsupported, or portfolio co-trigger behavior adds concentration rather than diversification."
+  },
+  "target_roster": {
+    "crypto_controls": [
+      "BTC",
+      "ETH",
+      "SOL",
+      "HYPE"
+    ],
+    "live_noncrypto_controls": [
+      "xyz:SP500",
+      "xyz:SPCX"
+    ],
+    "sole_semiconductor_research_candidate": "xyz:MU",
+    "excluded_semiconductor_candidate": "xyz:SKHX",
+    "distinct_fourth_slot": "open_pending_strategy_evidence",
+    "live_roster_changed": false
+  },
+  "mu_status": {
+    "mode": "report_only",
+    "execution_authority": "none",
+    "decision_rows": 328,
+    "eligible_onsets": 8,
+    "eligible_long": 8,
+    "eligible_short": 0,
+    "next_evidence_trigger": "Reassess at 20 independent paths or the first short-side onset, whichever occurs first.",
+    "profitability_conclusion": "not_established"
+  },
+  "candidate_qualification": {
+    "status": "qualified_for_observation_only",
+    "fee_scale_schema_fix": "Current market-level deployerFeeScale is authoritative when present; the legacy DEX-level field remains a fail-closed fallback.",
+    "live_execution_supported": false,
+    "strategy_transfer_validated": false,
+    "ranked_research_priority": [
+      {
+        "rank": 1,
+        "symbol": "xyz:JPY",
+        "exposure": "macro_fx",
+        "day_notional_volume_usd": 817247.6622,
+        "spread_bps": 0.627569111,
+        "visible_book_notional_usd": 526212.96075,
+        "reason": "Tightest current spread and deepest visible dollar book of the three, with the most distinct economic exposure from MU and the equity indexes.",
+        "risk": "Current daily turnover is the lowest of the three; strategy edge, session behavior, and stress fills are unverified."
+      },
+      {
+        "rank": 2,
+        "symbol": "xyz:NATGAS",
+        "exposure": "energy_commodity",
+        "day_notional_volume_usd": 4389448.95717,
+        "spread_bps": 1.438434983,
+        "visible_book_notional_usd": 132549.05664,
+        "reason": "Higher turnover than JPY and a distinct energy exposure with better displayed depth than copper.",
+        "risk": "Weather, seasonality, gaps, and a 10x venue ceiling require separate risk-path evidence rather than strategy transfer."
+      },
+      {
+        "rank": 3,
+        "symbol": "xyz:COPPER",
+        "exposure": "industrial_metal",
+        "day_notional_volume_usd": 10998779.217673,
+        "spread_bps": 1.628122109,
+        "visible_book_notional_usd": 80953.995563,
+        "reason": "Highest current turnover of the shortlist.",
+        "risk": "Widest current spread, lowest displayed dollar depth, and greater cyclical overlap with technology and equity risk than JPY or natural gas."
+      }
+    ]
+  },
+  "recommendation": {
+    "recommendation": "Use xyz:JPY as the first distinct fourth-slot research track, with xyz:NATGAS as the fallback and xyz:COPPER third. Do not add any of them live yet.",
+    "why_now": "The user explicitly excluded duplicate semiconductor exposure, and the current public venue snapshot supports a bounded cross-industry shortlist.",
+    "evidence_reviewed": "Official public HIP-3 metadata, exact current L2 books, fee mode, venue leverage limits, and capped 1m/5m/15m candle continuity for JPY, copper, and natural gas.",
+    "observed_problem_or_opportunity": "The portfolio needs one distinct non-crypto route, but none of these assets has strategy-level after-cost evidence yet.",
+    "applicable_market_regime": "unknown_until_candidate-specific chronological analysis",
+    "alternatives_considered": [
+      "leave the fourth slot empty",
+      "xyz:NATGAS",
+      "xyz:COPPER",
+      "reopen previously rejected SILVER, CL, GOLD, or BRENTOIL mechanisms"
+    ],
+    "proposed_live_change": "none",
+    "expected_upside": "A genuinely distinct macro-FX route could improve opportunity breadth without intentionally duplicating semiconductor concentration.",
+    "main_risks_and_failure_modes": [
+      "selection from one current liquidity snapshot",
+      "public candles are capped and do not establish exact fill or mark paths",
+      "unmeasured long-short asymmetry",
+      "session-dependent liquidity and gap risk",
+      "multiple-testing and strategy-transfer bias"
+    ],
+    "validation_completed": "Identity, exact current fee scale, growth mode, leverage, live L2 availability, spread, depth, volume, and recent candle continuity.",
+    "validation_still_required": "Checksum-bound historical L2, trades, and mark paths; development-only causal strategy search; untouched validation and holdout; realistic fees, funding, slippage, latency, stop behavior, largest-winner removal, both sides, and prospective report-only observation.",
+    "success_metrics": "Positive nominal and stress after costs, positive after largest-winner removal, no unresolved lifecycle paths, both directions independently supported, and portfolio-level co-trigger evidence better than leaving the slot empty.",
+    "failure_rollback_triggers": "Any evidence-identity mismatch, unresolved risk path, one-sided dependence, nonpositive stress after largest-winner removal, or adverse concentration causes rejection with no live rollback required.",
+    "confidence_level": "medium_on_JPY_research_priority_low_on_profitability",
+    "explicit_approval_requested": false
+  },
+  "single_highest_value_next_investigation": "Audit exact historical JPY L2, public trades, and mark-path coverage, then run a development-only bidirectional candidate study without opening validation or holdout until the development identity and technical path resolve.",
+  "source_evidence": [
+    {
+      "path": "data/logs/research/xyz_jpy_copper_natgas_qualification_20260815T1625Z_v1.json",
+      "sha256": "26d9567cb036210e5a199163597efafd3d9037d5f287a2a4163d2b719afe7b3b",
+      "bytes": 6687
+    },
+    {
+      "path": "docs/research-journal/v51-four-plus-four-noncrypto-candidate-review-v4.json",
+      "sha256": "9483b6d86d2f2957a1b5f4077ba7e66b1289d2663a4c300d8ed5c3fac5dac922",
+      "bytes": 4693
+    }
+  ],
+  "limitations": [
+    "This ranking chooses research priority, not a live asset or profitable strategy.",
+    "No live strategy, asset, route, sizing, leverage, stop, exit, execution, process, or deployment setting changed.",
+    "Current liquidity measurements can change and must be repeated across sessions.",
+    "JPY daily notional is materially lower than copper and natural gas despite its stronger displayed spread and depth snapshot."
+  ]
+}

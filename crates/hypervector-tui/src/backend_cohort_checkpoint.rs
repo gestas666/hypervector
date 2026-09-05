@@ -35,6 +35,10 @@ use crate::backend_cohort_opportunity_capture::{
 };
 use crate::backend_cohort_portfolio::{CohortPortfolioEvidence, project_portfolio};
 use crate::backend_cohort_portfolio_archive::{CohortPortfolioArchive, project_portfolio_archive};
+pub use crate::backend_cohort_poststart_acceptance::CohortPoststartAcceptance;
+use crate::backend_cohort_poststart_acceptance::{
+    PoststartAcceptanceRaw, project_poststart_acceptance,
+};
 use crate::backend_cohort_profit_lock::{CohortProfitLockEvidence, parse_profit_lock_evidence};
 use crate::backend_cohort_regime_conflicts::{
     CohortRegimeConflictEvidence, project_regime_conflicts,
@@ -52,8 +56,11 @@ pub use crate::backend_cohort_venue_portfolio::{CohortValuedSpotAsset, CohortVen
 pub use crate::cohort_observer_evidence::{
     CohortObserverPathEvidence, CohortObserverProviderEvidence,
 };
+#[path = "backend_cohort_checkpoint_projection.rs"]
+mod live_projection;
 #[path = "backend_cohort_checkpoint_validation.rs"]
 mod validation;
+use live_projection::parse_live;
 use validation::{validate_envelope, validate_live, validate_observer};
 const LIVE_MODE: &str = "multi_asset_bidirectional_live_checkpoint";
 const OBSERVER_MODE: &str = "multi_asset_bidirectional_observer_checkpoint";
@@ -69,6 +76,7 @@ pub struct CohortCheckpointTelemetry {
     pub profile_fingerprint: Option<String>,
     pub analysis_mode: Option<String>,
     pub configuration_generation: Option<CohortConfigurationGeneration>,
+    pub poststart_acceptance: Option<CohortPoststartAcceptance>,
     pub lifecycle_state: Option<String>,
     pub cohort_heartbeat_status: Option<String>,
     pub asset_states: BTreeMap<String, String>,
@@ -161,6 +169,7 @@ struct CheckpointDocument {
     venue_portfolio: Option<Value>,
     status: Option<UnavailableStatus>,
     configuration_generation: Option<ConfigurationGenerationEvidenceRaw>,
+    poststart_acceptance: Option<PoststartAcceptanceRaw>,
     lifecycle: Option<LifecycleEvidence>,
     observer: Option<ObserverEvidence>,
     audit: Option<Value>,
@@ -296,149 +305,6 @@ pub fn parse_cohort_checkpoint(content: &str) -> Result<CohortCheckpointTelemetr
         return parse_observer(document);
     }
     parse_live(document)
-}
-
-fn parse_live(document: CheckpointDocument) -> Result<CohortCheckpointTelemetry, String> {
-    let (venue_portfolio, venue_portfolio_issue) =
-        project_venue_portfolio(document.venue_portfolio.clone())?;
-    let configuration_generation =
-        project_configuration_generation(document.configuration_generation)?;
-    let lifecycle = document
-        .lifecycle
-        .ok_or_else(|| "ready checkpoint is missing lifecycle evidence".to_string())?;
-    let audit: LiveAuditEvidence = serde_json::from_value(
-        document
-            .audit
-            .ok_or_else(|| "ready checkpoint is missing audit evidence".to_string())?,
-    )
-    .map_err(|error| format!("invalid live checkpoint audit: {error}"))?;
-    validate_live(&lifecycle, &audit)?;
-    let backend_issue = match lifecycle.state.as_str() {
-        "backend_heartbeat_stale" => {
-            Some("execution backend heartbeat has not advanced for more than 60s".to_string())
-        }
-        "backend_runtime_fault" => {
-            Some("execution backend reported a terminal runtime fault".to_string())
-        }
-        _ => None,
-    };
-    let backend_stale = backend_issue.is_some();
-    let (run_id, profile_id, profile_fingerprint) =
-        crate::backend_cohort_live_audit::project_live_run_identity(audit.run.as_ref())?;
-    let live_audit_status = project_live_audit_status(audit.runtime, audit.health, audit.run)?;
-    let scorecard_outcomes = provider_contract_outcome_count(audit.trade_reflections.as_ref())?
-        .or(Some(audit.execution.closed_trades));
-    let (resolved, independent, provider_journal) = match &audit.signal_outcomes {
-        Some(outcomes) => {
-            let (resolved, independent) = five_minute_path_counts(outcomes)?;
-            let journal = provider_journal(
-                &audit.readiness,
-                outcomes,
-                audit.orderbook_opportunity.as_ref(),
-                audit.strategy_scorecard.as_ref(),
-                scorecard_outcomes,
-            )?;
-            (Some(resolved), Some(independent), journal)
-        }
-        None => (None, None, Vec::new()),
-    };
-    let (
-        reflection_complete,
-        trade_reflections,
-        all_time_trade_reflections,
-        timer_context_evidence,
-        trade_performance,
-    ) = project_trade_reflections(audit.trade_reflections, audit.execution.closed_trades)?;
-    let open_trade_reflections = project_open_trade_reflections(
-        audit.open_trade_reflections,
-        audit.execution.open_lifecycles,
-    )?;
-    let friction_parity = project_friction_parity(audit.execution.friction_parity.as_ref())?;
-    let portfolio = project_portfolio(audit.portfolio)?;
-    let portfolio_archive = project_portfolio_archive(audit.portfolio_archive)?;
-    let risk_utilization = project_risk_utilization(audit.risk_utilization)?;
-    let allocation_challenger =
-        project_allocation_challenger(audit.allocation_challenger, risk_utilization.as_ref())?;
-    let asymmetric_forward_observer =
-        project_asymmetric_forward_observer(audit.asymmetric_forward_observer)?;
-    let side_composition = project_side_composition(
-        audit.side_composition,
-        run_id.as_deref(),
-        profile_id.as_deref(),
-        profile_fingerprint.as_deref(),
-    )?;
-    let regime_conflicts = project_regime_conflicts(audit.regime_conflict_journal)?;
-    let maximum_hold_decisions = project_maximum_hold_decisions(audit.maximum_hold_decisions)?;
-    let profit_lock_challenger = parse_profit_lock_evidence(audit.profit_lock_challenger)?;
-    let execution_opportunity_matrix =
-        project_execution_opportunity_matrix(audit.execution_opportunity_matrix)?;
-    let eligible_policy_forward = project_eligible_policy_forward(audit.eligible_policy_forward)?;
-    let hulk_entry_quality = project_hulk_entry_quality(audit.hulk_entry_quality_challenger)?;
-    Ok(CohortCheckpointTelemetry {
-        configured: true,
-        available: true,
-        stale: backend_stale,
-        generated_at_utc: Some(document.generated_at_utc),
-        run_id,
-        profile_id,
-        profile_fingerprint,
-        analysis_mode: Some("live_execution".into()),
-        configuration_generation,
-        lifecycle_state: Some(lifecycle.state),
-        cohort_heartbeat_status: lifecycle.cohort_heartbeat_status,
-        asset_states: lifecycle.asset_states,
-        coverage_complete: Some(audit.coverage.complete),
-        technical_gaps: audit.coverage.technical_gaps,
-        readiness_evaluations: Some(audit.readiness.evaluations),
-        strategy_intents: audit
-            .routing
-            .as_ref()
-            .map(|routing| routing.strategy_intents),
-        routing_actions: audit.routing.map(|routing| routing.actions),
-        live_audit_status,
-        forward_evaluations: audit
-            .signal_outcomes
-            .as_ref()
-            .map(|outcomes| outcomes.evaluations),
-        eligible_signals: audit
-            .signal_outcomes
-            .as_ref()
-            .map(|outcomes| outcomes.eligible_evaluations),
-        five_minute_paths_resolved: resolved,
-        five_minute_paths_independent: independent,
-        forward_path_coverage_complete: audit
-            .signal_outcomes
-            .as_ref()
-            .map(|outcomes| outcomes.coverage.complete),
-        closed_trades: Some(audit.execution.closed_trades),
-        net_pnl_usd: Some(audit.execution.net_pnl_usd),
-        venue_portfolio,
-        venue_portfolio_issue,
-        portfolio,
-        portfolio_archive,
-        risk_utilization,
-        allocation_challenger,
-        asymmetric_forward_observer,
-        side_composition,
-        friction_parity,
-        regime_conflicts,
-        maximum_hold_decisions,
-        profit_lock_challenger,
-        execution_opportunity_matrix,
-        eligible_policy_forward,
-        hulk_entry_quality,
-        evidence_state: Some(audit.learning.evidence_state),
-        trade_reflection_context_complete: reflection_complete,
-        timer_context_evidence,
-        trade_reflections,
-        all_time_trade_reflections,
-        trade_performance,
-        fill_details: audit.execution.fill_details,
-        open_trade_reflections,
-        observer_provider_journal: provider_journal,
-        issue: backend_issue,
-        ..CohortCheckpointTelemetry::default()
-    })
 }
 
 fn parse_observer(document: CheckpointDocument) -> Result<CohortCheckpointTelemetry, String> {

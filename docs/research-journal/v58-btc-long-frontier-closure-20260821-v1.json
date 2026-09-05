@@ -1,0 +1,163 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v58-btc-long-frontier",
+  "revision_number": 1,
+  "recorded_at_utc": "2026-08-21T18:22:52Z",
+  "status": "deferred_pending_materially_new_causal_information",
+  "authority": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_promotion": false,
+    "runtime_strategy_changed": false,
+    "live_change_proposed": false
+  },
+  "recommendation": "Retain the selective BTC hourly sweep-reclaim long unchanged and do not enable, invert, relax, or retune any already-tested BTC long family. Defer another BTC long experiment until a materially new causal input and mechanism are identified; prioritize resolving the currently open ETH and SP500 lifecycles.",
+  "why_now": "V58 missed a smooth BTC advance because its only long route is a rare downside-sweep reversal. Six subsequent or previously overlooked candidate families now have explicit negative or non-robust forward dispositions, including point-in-time subminute order-flow evidence.",
+  "evidence_reviewed": [
+    "Current V58 BTC route identity and all 19 current-run hourly long evaluations.",
+    "Frozen sweep-predicate relaxation replay.",
+    "Frozen fifteen-minute trend-pullback reacceleration replay and failure attribution.",
+    "Robust-v3 raw-long prior-art disposition.",
+    "Binance-spot lead versus Hyperliquid-perp catch-up replay.",
+    "Negative-funding hourly breakout replay.",
+    "Ten-second sell-flow absorption and bid-replenishment replay.",
+    "Previously overlooked hourly long-only Donchian, squeeze, zero-lag, regime-router, and sweep screens across development, validation, and pseudo-holdout."
+  ],
+  "observed_problem_or_opportunity": {
+    "problem": "BTC is nominally bidirectional but has two short-only Hulk routes and one sparse long-only sweep-reclaim route, leaving ordinary trend continuation uncovered.",
+    "current_run_hourly_long_evaluations": 19,
+    "current_run_hourly_long_eligible": 0,
+    "sweep_absent_evaluations": 19,
+    "volume_below_1_20x_evaluations": 12,
+    "latest_prior_20h_low": 72448.0,
+    "latest_sweep_low": 77200.0,
+    "latest_sweep_clearance_bps": -655.9187279151943,
+    "latest_volume_multiple": 0.2931380122223406,
+    "route_or_capacity_failure_found": false,
+    "diagnosis": "strategy_coverage_gap"
+  },
+  "applicable_market_regime": "BTC sustained bullish trend continuation without a downside sweep of the previous twenty-hour low.",
+  "candidate_dispositions": {
+    "sweep_predicate_relaxation": {
+      "status": "rejected_without_nearby_retuning",
+      "validation_net_pnl_usd": -689.2545169336727,
+      "validation_profit_factor": 0.6805970096491176,
+      "pseudo_holdout_net_pnl_usd": -549.2057995307432,
+      "pseudo_holdout_profit_factor": 0.7377086402695742
+    },
+    "fifteen_minute_trend_pullback_reacceleration": {
+      "status": "rejected_without_nearby_retuning",
+      "validation_net_pnl_usd": -162.78143188799731,
+      "validation_profit_factor": 0.7893828806908856,
+      "pseudo_holdout_net_pnl_usd": -318.834118218565,
+      "pseudo_holdout_profit_factor": 0.5181220833791018,
+      "pseudo_holdout_incremental_v58_net_pnl_usd": -311.17506633444464
+    },
+    "raw_robust_v3_long": {
+      "status": "rejected_as_non_distinct_from_failed_hulk_long_prior_art",
+      "selection_validation_net_pnl_usd": 405.59,
+      "selection_pseudo_holdout_net_pnl_usd": -18.35,
+      "closest_bidirectional_prior_long_validation_net_pnl_usd": -808.4606050306222,
+      "closest_bidirectional_prior_long_pseudo_holdout_net_pnl_usd": -245.36606841331246
+    },
+    "binance_spot_lead_hyperliquid_perp_catchup": {
+      "status": "rejected_without_nearby_retuning",
+      "validation_net_pnl_usd": 9.45868340373545,
+      "validation_net_excluding_largest_winner_usd": -17.536816596264696,
+      "pseudo_holdout_net_pnl_usd": -87.52612882006815,
+      "pseudo_holdout_profit_factor": 0.47771896074787445
+    },
+    "negative_funding_hourly_breakout": {
+      "status": "rejected_without_nearby_retuning",
+      "validation_net_pnl_usd": -137.82425537813742,
+      "validation_profit_factor": 0.6016180509742667,
+      "pseudo_holdout_net_pnl_usd": -44.49830619403474,
+      "pseudo_holdout_profit_factor": 0.37188147060981525
+    },
+    "ten_second_sell_flow_absorption": {
+      "status": "rejected_without_nearby_retuning",
+      "validation_trades": 42,
+      "validation_net_expectancy_bps": -8.278854858880763,
+      "validation_profit_factor": 0.7651633379283858,
+      "pseudo_holdout_trades": 42,
+      "pseudo_holdout_net_expectancy_bps": -19.893063387363288,
+      "pseudo_holdout_profit_factor": 0.522665164270953
+    },
+    "ordinary_hourly_long_only_families": {
+      "status": "prior_art_rejects_obvious_trend_route_substitutes",
+      "development_validation_pseudo_holdout": {
+        "donchian_trend_net_pnl_usd": [-1290.963693953836, -416.88892712635607, -997.2970987610861],
+        "squeeze_breakout_net_pnl_usd": [-142.6095719015666, -31.623276223859648, -692.9159068399476],
+        "zero_lag_reclaim_net_pnl_usd": [-223.30966366563007, -252.4220105859622, -243.78660120671157],
+        "regime_trend_router_net_pnl_usd": [246.7341241179438, -120.30853441245381, -460.8263941051573],
+        "liquidity_sweep_control_net_pnl_usd": [60.468472246968304, 4.32676135373913, 139.88730358509383]
+      },
+      "interpretation": "Only the selective hourly liquidity-sweep control remained positive in all three chronological partitions."
+    }
+  },
+  "alternatives_considered": [
+    {
+      "alternative": "enable_raw_hulk_long",
+      "expected_upside": "Higher apparent bidirectional cadence.",
+      "main_risk": "Reopens a failed side-inversion family with negative long-specific forward evidence.",
+      "decision": "reject"
+    },
+    {
+      "alternative": "relax_sweep_or_add_completed_bar_breakout",
+      "expected_upside": "Captures more ordinary rally bars.",
+      "main_risk": "Multiple exact chronological tests lost before or after costs and degraded the V58 portfolio.",
+      "decision": "reject"
+    },
+    {
+      "alternative": "add_subminute_absorption",
+      "expected_upside": "Uses genuinely point-in-time depth and public-trade sequencing.",
+      "main_risk": "The exact forward candidate was negative in both partitions and worse under latency stress.",
+      "decision": "reject_exact_candidate"
+    },
+    {
+      "alternative": "retain_selective_sweep_and_defer",
+      "expected_upside": "Preserves the only long family positive in all three chronological partitions and prevents repeated multiple-testing on the same data.",
+      "main_risk": "V58 remains unable to capture many smooth BTC advances.",
+      "decision": "selected_control"
+    }
+  ],
+  "proposed_live_change": "none",
+  "expected_upside": "Avoid converting understandable frustration with missed upside into a high-frequency negative-expectancy BTC long route while preserving the independently positive sweep control.",
+  "main_risks_and_failure_modes": [
+    "Deferral leaves a genuine BTC trend-continuation coverage gap.",
+    "All historical partitions have been opened by prior research, increasing multiple-testing risk for another candidate on the same window.",
+    "Positive selective-sweep history may not persist in future regimes.",
+    "A genuinely profitable mechanism may exist outside the currently recorded inputs or candidate families."
+  ],
+  "validation_completed": "Chronological development, validation, pseudo-holdout, nominal and stress friction, largest-winner sensitivity, shared-V58 incremental comparison where applicable, and source-bound subminute replay for the enumerated candidates.",
+  "validation_still_required": "No further validation is required for these exact rejections. Any new BTC long hypothesis must use a materially new causal assumption or input, freeze its contract before outcome inspection, and pass positive after-cost validation and pseudo-holdout results, largest-winner removal, latency/slippage stress, and shared-V58 interaction replay.",
+  "minimum_reopen_evidence": [
+    "A newly available causal data source or a mechanism not reducible to the rejected price breakout, sweep relaxation, raw Hulk inversion, spot-lead, funding, pullback, impulse, flow-exhaustion, or bid-replenishment families.",
+    "A preregistered untouched future window or independently acquired source-complete chronological partition.",
+    "Positive net PnL and profit factor above one in validation and pseudo-holdout after realistic fees, funding, slippage, and latency.",
+    "Positive net result after removing the largest winner and no hidden liquidation or portfolio-capacity failure.",
+    "Positive incremental shared-portfolio result versus unchanged V58 and no action."
+  ],
+  "success_metrics": "The frontier remains traceable; rejected families are not reopened without new evidence; the live sweep control remains identity-stable; any future candidate is judged by preregistered after-cost and shared-portfolio evidence rather than missed-rally hindsight.",
+  "failure_or_rollback_triggers": "No live rollback applies. Reopen this frontier only if an evidence hash or causal implementation is invalidated, a genuinely new independent data source becomes available, or prospective evidence satisfies the minimum reopen contract.",
+  "confidence_level": {
+    "current_coverage_gap_diagnosis": "high",
+    "rejection_of_enumerated_exact_candidates": "high",
+    "retaining_the_selective_sweep_as_the_least_bad_validated_control": "medium",
+    "claim_that_no_profitable_btc_long_mechanism_exists": "low_and_not_made"
+  },
+  "single_highest_value_next_investigation": "Resolve and reconcile the currently open ETH and SP500 lifecycles, including exact exit reason, fills, fees, funding, MFE, MAE, peak giveback, protection cleanup, and predeclared exit-challenger outcomes. Do not start another BTC long sweep on already-opened data.",
+  "explicit_approval_requested": false,
+  "evidence": [
+    {"path": "v58-btc-sweep-primary-relaxation-causal-replay-result-20260821-v1.json", "sha256": "606eb5af242b6711b8f0ac709d2861fc45578df0dcae65f20a0bcbe3eeced0e2"},
+    {"path": "v58-btc-trend-pullback-reacceleration-result-20260821-v1.json", "sha256": "127215c17f6a30ee44bb1f026df55bf6705973afee4b9b402e78eb05ef090de4"},
+    {"path": "v58-btc-binance-spot-lead-hl-perp-catchup-result-20260821-v1.json", "sha256": "672bf4a7d499d2b2db09610a0b007cfe15c66a7ae7e213cb941c2d6850e7246b"},
+    {"path": "v58-btc-negative-funding-hourly-breakout-result-20260821-v1.json", "sha256": "6fbc76090810b6cd9dfd8c536909a47a64488f6c2a28e5dfc263827ad14962aa"},
+    {"path": "v58-btc-subminute-sell-flow-absorption-result-20260821-v1.json", "sha256": "32caa4dbb77b2b69a671c8408b915206fc97358a23a114b89de11aaa7f1538c7"},
+    {"path": "v58-btc-robust-v3-raw-long-prior-art-disposition-20260821-v1.json", "sha256": "79e51cddd8ae2f5693a90ce5002054ffd779e36c3ba2bb224a313819d0313e91"},
+    {"path": "../../data/logs/research/shared_strategy_source_long_isolation_development_20250728_20260128_1h_managed_v1.json", "sha256": "d8e985d9b500cb08d48e31ac59fc1bea1597428ba38f89e3b0cecfb75d3500c9"},
+    {"path": "../../data/logs/research/shared_strategy_source_long_isolation_validation_20260128_20260428_1h_managed_v1.json", "sha256": "c388d963aa33cd389dedca131b54270f8013a628653add9a067ae4021aab9687"},
+    {"path": "../../data/logs/research/shared_strategy_source_long_isolation_pseudo_holdout_20260428_20260728_1h_managed_v1.json", "sha256": "8f85c1a471ce52f8658c5d2a5ea54cf6948d29d29607cbbce724c54dbd3a3e08"},
+    {"path": "../../configs/multi_asset_growth_first_5000_eight_asset_incremental_v58.toml", "sha256": "1c1c1656233b074df2ed3adcee8cb8cb2c58f0d191cc9f9ac34799478fca3378"}
+  ]
+}

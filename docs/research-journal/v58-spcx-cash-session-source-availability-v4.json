@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v58-spcx-cash-session-source-availability",
+  "revision_number": 4,
+  "supersedes_revision_id": "13f53e3b9aa04c0970776fa71be0b625cb72b276c93817663f3b42259e3aa162",
+  "created_at_utc": "2026-08-21T04:59:02Z",
+  "strategy_id": "hip3_spcx_cash_open_gap_reversal_bidirectional_15m_v1",
+  "symbol": "xyz:SPCX",
+  "status": "observe",
+  "hypothesis": "The session-aware source repair plus a cash-schedule-sized startup seed restores SPCX production observer availability without retroactive execution or changes to the frozen strategy, exit, sizing, leverage, or risk contract; the next genuine cash-open decision remains the highest-value falsification gate.",
+  "decision": "Revise the prior local closure after its production startup assumption was falsified. Accept the seven-day readiness-seed repair as a fully regressed report-only candidate, keep the active live process unchanged, and run the repaired production collectors continuously with zero execution authority until the next genuine cash open.",
+  "confidence": "medium_high",
+  "falsifier": "Reject or revise the candidate if the next complete-evidence cash open is missing, uses unresolved opening or prior-close evidence, differs from the frozen decision contract, duplicates or stales its cursor, violates observer authority, or causes a later runtime, venue, protection, or TUI mismatch.",
+  "evidence": [
+    {
+      "path": "v58-spcx-cash-session-source-availability-production-startup-closure-20260821-v4.json",
+      "role": "production_startup_failure_root_cause_repair_and_recovery_closure",
+      "sha256": "5076dfbdee707ff1a757fc399f792ccb5ef27acdf53125b0f45d56b728110621",
+      "bytes": 7311
+    },
+    {
+      "path": "../../data/observe/v58_spcx_cash_session_repair_forward_20260821_v1/decisions.jsonl",
+      "role": "frozen_fail_closed_production_startup_evidence",
+      "sha256": "b49f90bf8efefea66fc65dd0f984cff3e0c886734bf26946e6b26282cef8fdbc",
+      "bytes": 34865
+    },
+    {
+      "path": "../../data/observe/v58_spcx_cash_session_repair_forward_20260821_v2/decisions.jsonl",
+      "role": "frozen_successful_bounded_production_observer_recovery",
+      "sha256": "600acd4049159e8f42b1be674882c630c705004f87f7306f9219696c4cba30c2",
+      "bytes": 350925
+    },
+    {
+      "path": "../../src/hypervector/live/multi_asset_polling_contract.py",
+      "role": "cash_schedule_sized_spcx_startup_seed_contract",
+      "sha256": "1b5f423cc5a7b5923a1155cf0b8ac7eedd2e00b44755411a41b05d4c6382faf1",
+      "bytes": 3599
+    },
+    {
+      "path": "../../tests/test_multi_asset_readiness_seed.py",
+      "role": "exact_weekend_production_path_regression",
+      "sha256": "83a782547f71f09c4c5e53f6906b0b5013644ab5ad218b8f296bf07caf2a6600",
+      "bytes": 2164
+    },
+    {
+      "path": "../../data/backups/bidirectional_cohort/prestart_20260821T045427.496795Z_8a04636c9ff6/manifest.json",
+      "role": "independently_verified_final_candidate_implementation_bundle",
+      "sha256": "3d1f786c373f1c961e337edb74080d783cb2d780c0fd2de7fd00ec534c066a7a",
+      "bytes": 844669
+    }
+  ],
+  "metrics": {
+    "production_startup_failure_exit_code": 2,
+    "production_startup_failure_actions": 0,
+    "weekend_startup_red_test_observed": true,
+    "focused_startup_and_observer_tests_passed": 39,
+    "focused_startup_and_observer_tests_failed": 0,
+    "full_nonnetwork_python_passed": 6907,
+    "full_nonnetwork_python_failed": 0,
+    "full_nonnetwork_python_deselected": 4,
+    "rust_tui_suite_passed": true,
+    "rust_clippy_warnings_denied_passed": true,
+    "active_v58_all_nine_screens_passed": true,
+    "bounded_observer_exit_code": 0,
+    "bounded_observer_expected_provider_symbols": 10,
+    "bounded_observer_observed_provider_symbols": 10,
+    "bounded_observer_actions": 0,
+    "persistent_observer_running": true,
+    "persistent_observer_actions_at_revision": 0,
+    "final_implementation_file_count": 1717,
+    "final_implementation_sha256": "c80e239fa284111a217f6375d8eb675da4c4de09adddb43333fbb3bf4bf92001",
+    "final_bundle_verified": true,
+    "current_live_runtime_changed": false,
+    "current_live_faults": 0,
+    "current_live_profile_matches_runtime": true,
+    "forward_cash_open_observations": 0
+  },
+  "limitations": [
+    "The repaired observer has recovered startup and continuous routing, but no future cash-open boundary has occurred yet.",
+    "The active live process still uses its already-loaded pre-repair code and must not be restarted while BRENTOIL and SP500 remain open.",
+    "Technical availability and behavior preservation do not establish positive live expectancy, frequency, or profitability.",
+    "The persistent observer ledger is append-only and is tracked by run identity rather than a frozen file hash."
+  ],
+  "highest_value_next_investigation": "next_genuine_spcx_cash_open_availability_and_exact_decision_parity",
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

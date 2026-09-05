@@ -1,0 +1,86 @@
+{
+  "schema_version": "v52_cross_asset_family_disposition_v1",
+  "generated_at_utc": "2026-08-16T22:37:07Z",
+  "hypothesis_id": "cross_asset_residual_and_impulse_family_v1",
+  "status": "rejected",
+  "automatic_live_change": false,
+  "execution_effect": "report_only",
+  "problem": "Determine whether the existing cross-asset residual, exit-surface, or leader-follower impulse searches justify another trial while v52 awaits its first eligible lifecycle.",
+  "evidence_reviewed": [
+    {
+      "path": "data/logs/research/cross_asset_residual_development_v2.json",
+      "sha256": "147d05ba913007404b5baa5b125a9e2b5f8fef1639ba76d2a08075d26811c2fd"
+    },
+    {
+      "path": "data/logs/research/cross_asset_residual_exit_surface_v2.json",
+      "sha256": "179101b1d28cafc8a36795a9ea04dad1064641cc5b6a2f9daa12eafa6743ac75"
+    },
+    {
+      "path": "data/logs/research/cross_asset_impulse_development_v1.json",
+      "sha256": "5721bf0a11b7616068b2fd5d563cd7415ccd464062ef1cf73a68088faafbd5e4"
+    }
+  ],
+  "observed_results": {
+    "residual_base_family": {
+      "pair_cells": 6,
+      "completed_trades": 804,
+      "positive_net_cells": 0,
+      "best_profit_factor": 0.8812238325796905,
+      "net_pnl_usd_by_pair": {
+        "BTC/ETH": -577.3082012415671,
+        "BTC/SOL": -671.730166195046,
+        "BTC/HYPE": -2025.8487931029522,
+        "ETH/SOL": -375.00781661129804,
+        "ETH/HYPE": -1203.898357557544,
+        "SOL/HYPE": -802.5606967280673
+      }
+    },
+    "residual_exit_surface": {
+      "selectable_cells": 90,
+      "positive_net_cells": 0,
+      "best_cell": {
+        "pair": "ETH/SOL",
+        "trial_id": "stop5_hold288",
+        "completed_trades": 137,
+        "net_pnl_usd": -103.64926306948473,
+        "profit_factor": 0.9635732706955119,
+        "liquidations": 1
+      }
+    },
+    "leader_follower_impulse": {
+      "selectable_cells": 15,
+      "eligible_for_replay": 0,
+      "selected_candidate": null,
+      "known_cumulative_selectable_cells": 105,
+      "strongest_cell": {
+        "leader": "BTC",
+        "follower": "SOL",
+        "horizon_minutes": 15,
+        "worst_base_fold_mean_bps": 0.8298709484372477,
+        "worst_delayed_fold_mean_bps": -0.4323659422461645,
+        "eligible_for_replay": false
+      }
+    }
+  },
+  "decision": {
+    "disposition": "STOP_EXACT_FAMILIES",
+    "reason": "The base residual family lost in every pair, all 90 exit variants remained negative, and no impulse cell survived the delayed and fold-stability contract. Re-running nearby pairs, exits, horizons, or thresholds on the same development evidence would add selection bias without a new causal premise.",
+    "live_recommendation": "No route, parameter, sizing, leverage, asset-universe, or execution change.",
+    "highest_value_next_investigation": "Continue the exact v52 first-eligible lifecycle audit, prioritizing both-side HYPE evidence, while completing the frozen MU source-transport parity window."
+  },
+  "reopen_condition": "Only reopen under a separately versioned causal mechanism or materially changed predeclared regime, asset universe, or execution source. Count it as a new family and require realistic costs, chronological development folds, untouched validation and holdout, gap handling, and positive largest-winner-removed stress performance.",
+  "uncertainties": [
+    "The artifacts are development evidence and do not prove that every possible cross-asset mechanism lacks edge.",
+    "The impulse artifact states that the project-wide historical trial ledger is incomplete, so its 105 known selectable cells are a lower bound on selection burden.",
+    "Fixed friction and atomic pair fills do not reconstruct asynchronous leg execution."
+  ],
+  "confidence": {
+    "exact_family_rejection": "high",
+    "all_cross_asset_mechanisms_rejected": "low"
+  },
+  "falsifiers": [
+    "An immutable artifact with independent causal evidence shows positive net and profit factor above one for the exact frozen family after stress costs and largest-winner removal.",
+    "A data or accounting defect is found that materially changes the reviewed cell economics.",
+    "A genuinely distinct predeclared mechanism satisfies the reopen contract without reusing the rejected development evidence for selection."
+  ]
+}

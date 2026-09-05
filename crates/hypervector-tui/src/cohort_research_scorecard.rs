@@ -32,9 +32,9 @@ pub(crate) fn scorecard_lines<'a>(
         .as_deref()
         .map_or_else(|| "NOT REPORTED BY THIS RUN".into(), human_token);
     let mut lines = vec![
-        Line::from(format!("RESEARCH {state} // CONFIDENCE {confidence}")),
+        Line::from(format!("FROZEN SOURCE {state} // CONFIDENCE {confidence}")),
         Line::from(format!(
-            "CADENCE {}",
+            "SOURCE CADENCE {}",
             item.historical_cadence.as_deref().unwrap_or("NOT REPORTED")
         )),
         Line::from(format!("FORWARD {assessment}")),
@@ -53,6 +53,10 @@ pub(crate) fn scorecard_lines<'a>(
     ];
     lines.extend(directional_lines(item, app));
     if let Some(performance) = &item.execution_performance {
+        lines.push(Line::from(Span::styled(
+            "FROZEN OUTCOME LABEL // RESOLVED LIVE RESULTS BELOW",
+            app.theme.cyan,
+        )));
         lines.push(Line::from(""));
         lines.extend(execution_performance_lines(
             performance,

@@ -1,5 +1,3 @@
-"""CLI contracts for the rolling portfolio-improvement digest."""
-
 from __future__ import annotations
 
 import argparse
@@ -14,13 +12,9 @@ import pytest
 SCRIPT = Path(__file__).parents[1] / "scripts" / "cohort_improvement_monitor.py"
 
 
-def test_default_override_is_bound_to_v51_and_immutable_route_evidence() -> None:
-    """The v51 override may use only its exact source-bound research decision."""
-    module = _load()
-
-    args = module.build_parser().parse_args([])
-    payload = json.loads(args.decision_overrides.read_text())
-
+def test_default_override_is_bound_to_v51_profile_and_hype_evidence() -> None:
+    """The v51 override must bind its profile and HYPE research evidence."""
+    args, payload = _default_override()
     assert args.decision_overrides.name == (
         "cohort_improvement_decision_overrides_v51.json"
     )
@@ -33,13 +27,98 @@ def test_default_override_is_bound_to_v51_and_immutable_route_evidence() -> None
     route = payload["routes"][
         "hype_breakout_compression_pullback_bidirectional_v1|HYPE"
     ]
-    assert route["triage"] == "REVISE"
+    assert route["triage"] == "STOP"
     assert route["next_experiment"] == "new_mechanic_version_required"
     assert route["decision_source"].endswith(
-        "v51-hype-compression-first-window-v1.json"
+        "v51-hype-compression-alignment-causal-replay-v1.json"
     )
-    assert len(payload["evidence"]) == 1
+    assert route["supporting_evidence"] == [
+        "data/logs/research/hype_compression_breakout_challenger_20260816_v6_alignment/report.json",
+        "docs/research-journal/v51-successor-route-disposition-v2.json",
+    ]
+
+
+def test_default_override_binds_sol_route_evidence() -> None:
+    """The v51 override must bind exact SOL research evidence."""
+    _, payload = _default_override()
+    sol = payload["routes"]["range_onset_bidirectional_v1|SOL"]
+    assert sol["triage"] == "STOP"
+    assert sol["next_experiment"] == "new_mechanic_version_required"
+    assert sol["decision_source"].endswith("v51-successor-route-disposition-v1.json")
+    assert sol["supporting_evidence"] == [
+        "docs/research-journal/v51-sol-range-onset-live-translation-v3.json",
+        "docs/research-journal/v51-compatible-performance-cause-diagnosis-v2.json",
+    ]
+    assert len(payload["evidence"]) == 49
+
+
+def test_default_override_binds_decisions_and_active_drain_proposal() -> None:
+    """Keep research decisions and the approved active containment visible."""
+    args, payload = _default_override()
+    decisions = {row["hypothesis_id"]: row for row in payload["hypothesis_decisions"]}
+    regime_loss = decisions["v51-hype-compression-exit-opp5-loss20"]
+    assert regime_loss["status"] == "rejected"
+    assert regime_loss["experiment"] == "opp5_loss20_regime_loss_exit"
+    mature_floor = decisions["v51-hype-mature-profit-floor-fixed-entry"]
+    assert mature_floor["status"] == "deferred"
+    assert mature_floor["experiment"] == "mature_a100_floor25_fixed_entry"
+    assert mature_floor["decision_source"].endswith(
+        "v51-hype-mature-profit-floor-fixed-entry-v1.json"
+    )
+    assert decisions["v51-sp500-remove-price-breakout-v1"]["status"] == "rejected"
+    assert decisions["v51-spcx-remove-price-breakout-v1"]["status"] == "rejected"
+    mark_source = decisions["v51-spcx-rest-mark-exact-substitution-v1"]
+    assert mark_source["status"] == "rejected"
+    assert mark_source["experiment"] == "rest_mark_exact_source_substitution"
+    assert mark_source["decision_source"].endswith(
+        "v51-index-mark-response-lag-v1.json"
+    )
+    entry_integrity = decisions["v51-range-onset-zero-entry-slippage-integrity-v1"]
+    assert entry_integrity["status"] == "accepted"
+    assert entry_integrity["experiment"] == "exact_bbo_to_fill_reconciliation"
+    assert entry_integrity["decision_source"].endswith(
+        "v51-range-onset-exact-zero-entry-slippage-v1.json"
+    )
+    gap_censor = decisions["v51-sol-one-blocker-bounded-gap-censor-v1"]
+    assert gap_censor["status"] == "accepted"
+    assert gap_censor["experiment"] == "channel_specific_gap_reconciliation"
+    assert gap_censor["decision_source"].endswith(
+        "v51-sol-one-blocker-bounded-gap-resolution-v1.json"
+    )
+    proposals = payload["change_proposals"]
+    assert [row["proposal_id"] for row in proposals] == [
+        "v51-transition-drain-containment-v1"
+    ]
+    assert proposals[0]["approval_status"] == (
+        "approved_activated_waiting_flat_boundary"
+    )
+    assert proposals[0]["execution_effect"] == "approved_active_transition_drain"
+    assert proposals[0]["automatic_live_change"] is False
+    assert proposals[0]["explicit_approval_requested"] is False
+    assert proposals[0]["approval_evidence"].endswith(
+        "v51-transition-drain-approval-activation-v1.json"
+    )
+    standing = payload["standing_live_change_approval"]
+    assert standing["approval_status"] == (
+        "standing_preapproved_for_validated_required_changes"
+    )
+    assert standing["agent_may_apply_after_validation"] is True
+    assert standing["agent_reapproval_required"] is False
+    assert standing["automatic_live_change"] is False
+    assert standing["approval_evidence"].endswith(
+        "v51-standing-required-change-preapproval-v1.json"
+    )
     assert args.maximum_checkpoint_age_seconds == 180.0
+
+
+def test_default_override_evidence_hashes_reconcile() -> None:
+    """The active monitor manifest must match every source-bound evidence file."""
+    module = _load()
+    args = module.build_parser().parse_args([])
+    payload, raw = module._load_decision_overrides(args.decision_overrides)
+
+    assert len(payload["evidence"]) == 49
+    assert raw == args.decision_overrides.read_bytes()
 
 
 def test_once_publishes_source_bound_report_only_digest(
@@ -61,6 +140,68 @@ def test_once_publishes_source_bound_report_only_digest(
     assert persisted["evidence"]["decision_overrides"]["sha256"]
     assert persisted["material_state_sha256"]
     assert len(history.read_text().splitlines()) == 1
+
+
+def test_refresh_attaches_current_run_opportunity_matrix(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A source-bound v51 matrix must enter only the report-only digest."""
+    module = _load()
+    checkpoint, output, history, overrides, _ = _monitor_files(tmp_path)
+    matrix = tmp_path / "matrix.json"
+    matrix.write_text(json.dumps(_opportunity_matrix()))
+    _install_fakes(module, monkeypatch)
+    args = _once_args(module, checkpoint, output, history, overrides)
+    args.opportunity_matrix = matrix
+
+    assert module.run_monitor(args, sleep_fn=lambda seconds: None) == 0
+    persisted = json.loads(output.read_text())
+    assert persisted["matrix_marker"] == "current-v51"
+    assert persisted["evidence"]["opportunity_matrix"]["sha256"]
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "message"),
+    (
+        ("run_id", "other-run", "run identity mismatch"),
+        ("config", "other-config.toml", "config identity mismatch"),
+    ),
+)
+def test_monitor_rejects_foreign_opportunity_matrix(
+    tmp_path: Path,
+    field: str,
+    value: str,
+    message: str,
+) -> None:
+    """Another run or profile configuration cannot enter the live digest."""
+    module = _load()
+    checkpoint = _checkpoint(datetime.now(UTC).isoformat())
+    matrix = _opportunity_matrix()
+    matrix["evidence"][field] = value
+    path = tmp_path / "matrix.json"
+    path.write_text(json.dumps(matrix))
+
+    with pytest.raises(ValueError, match=message):
+        module._attach_opportunity_matrix(
+            checkpoint,
+            checkpoint["audit"],
+            path,
+        )
+
+
+def test_monitor_rejects_matrix_when_config_is_not_runtime(
+    tmp_path: Path,
+) -> None:
+    """A staged or stale configuration cannot supply current-run research."""
+    module = _load()
+    checkpoint = _checkpoint(datetime.now(UTC).isoformat())
+    checkpoint["configuration_generation"]["matches_runtime"] = False
+    path = tmp_path / "matrix.json"
+    path.write_text(json.dumps(_opportunity_matrix()))
+
+    with pytest.raises(ValueError, match="current runtime configuration"):
+        module._attach_opportunity_matrix(checkpoint, checkpoint["audit"], path)
 
 
 def test_material_hash_ignores_poll_clock_but_not_research_state() -> None:
@@ -200,6 +341,12 @@ def _monitor_files(tmp_path: Path) -> tuple[Path, Path, Path, Path, str]:
     return checkpoint, output, history, overrides, generated_at
 
 
+def _default_override() -> tuple[argparse.Namespace, dict[str, object]]:
+    module = _load()
+    args = module.build_parser().parse_args([])
+    return args, json.loads(args.decision_overrides.read_text())
+
+
 def _checkpoint(generated_at: str) -> dict[str, object]:
     return {
         "generated_at_utc": generated_at,
@@ -211,9 +358,14 @@ def _checkpoint(generated_at: str) -> dict[str, object]:
         "audit": {
             "marker": 7,
             "run": {
+                "run_id": "run-51",
                 "profile_id": "profile-51",
                 "profile_fingerprint": "a" * 64,
             },
+        },
+        "configuration_generation": {
+            "source_path": "config-v51.toml",
+            "matches_runtime": True,
         },
     }
 
@@ -230,6 +382,19 @@ def _overrides() -> dict[str, object]:
         "source_profile_fingerprint": "a" * 64,
         "routes": {},
         "evidence": [],
+    }
+
+
+def _opportunity_matrix() -> dict[str, object]:
+    return {
+        "contract": {
+            "report_only": True,
+            "execution_authority": "none",
+            "live_strategy_changed": False,
+        },
+        "evidence": {"run_id": "run-51", "config": "config-v51.toml"},
+        "results": [],
+        "marker": "current-v51",
     }
 
 
@@ -253,6 +418,11 @@ def _fake_digest(
         "marker": audit["marker"],
         "assessment": {"top_research_priority": "route|SYMBOL"},
         "performance": {"closed_trades": 3},
+        "matrix_marker": (
+            audit["execution_opportunity_matrix"]["marker"]
+            if "execution_opportunity_matrix" in audit
+            else None
+        ),
     }
 
 

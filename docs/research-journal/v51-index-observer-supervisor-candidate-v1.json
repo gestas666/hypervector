@@ -1,0 +1,99 @@
+{
+  "schema_version": "v51_index_observer_supervisor_candidate_v1",
+  "recorded_at_utc": "2026-08-16T05:57:55Z",
+  "profile_id": "multi_asset_growth_first_5000_six_asset_profit_lock_candidate_v51",
+  "run_id": "bidirectional-live-1786801038311",
+  "hypothesis_key": "v51|hip3_fresh15_v3|post_start_observer_supervision",
+  "status": "validated_report_only_not_deployed",
+  "problem_statement": "The SP500 and SPCX report-only observer processes can stop after backend startup. The startup guard does not recover that post-start failure, leaving both executable index routes technically unavailable while the order backend remains healthy.",
+  "candidate": {
+    "module": "src/hypervector/live/hip3_index_observer_supervisor.py",
+    "script": "scripts/hip3_index_observer_supervisor.py",
+    "owned_symbols": [
+      "xyz:SP500",
+      "xyz:SPCX"
+    ],
+    "execution_authority": "none",
+    "report_only": true,
+    "orders_supported": false,
+    "registered_with_live_launcher": false,
+    "started_as_background_process": false,
+    "current_manual_observers_changed": false,
+    "live_backend_changed": false
+  },
+  "validated_contract": {
+    "singleton_child_ownership": true,
+    "exact_two_symbol_identity": true,
+    "restart_only_failed_child": true,
+    "bounded_restart_budget": true,
+    "preserve_cursor_boundary": true,
+    "preserve_append_only_journal": true,
+    "reject_retroactive_evidence": true,
+    "bounded_status_warmup": true,
+    "prospective_health_contract_reused": true,
+    "fault_status_is_not_success_shaped": true,
+    "supervisor_and_child_files_are_distinct": true,
+    "graceful_signal_shutdown": true,
+    "signer_or_order_surface_present": false
+  },
+  "verification": {
+    "focused_tests": "20 passed",
+    "expanded_relevant_tests": "52 passed",
+    "ruff_check": "passed",
+    "ruff_format_check": "passed",
+    "py_compile": "passed",
+    "git_diff_check": "passed",
+    "file_and_function_limits": "passed",
+    "source_sha256": {
+      "src/hypervector/live/hip3_index_observer_supervisor.py": "b069433ff1b4781a296e75161cc736f2e05b75c3820ff80f171d534c463e3262",
+      "scripts/hip3_index_observer_supervisor.py": "b27c41c2684c91ad7ce411f3888f505ce25fa2af28455d377e23eba0c5c17753",
+      "tests/test_hip3_index_observer_supervisor.py": "9e1551dfd88e18ad48e157086cfffc3aca62efcba49160b0a245a35de7b4b374",
+      "tests/test_hip3_index_observer_supervisor_script.py": "cde843723c60a5f549265850ba5faa07d184823184d501552d66ba08129f82f4"
+    }
+  },
+  "current_runtime_reconciliation": {
+    "checked_at_utc": "2026-08-16T05:57:55Z",
+    "v51_backend_process_unchanged": true,
+    "checkpoint_writer_process_unchanged": true,
+    "sp500_manual_observer_process_unchanged": true,
+    "spcx_manual_observer_process_unchanged": true,
+    "checkpoint_fresh": true,
+    "sp500_status_fresh": true,
+    "spcx_status_fresh": true
+  },
+  "hypothesis_ledger": [
+    {
+      "hypothesis": "A standalone zero-authority supervisor can recover one failed index observer without restarting its healthy sibling or altering prospective evidence.",
+      "status": "supported_in_deterministic_tests",
+      "falsifier": "Any crash/restart that regresses a cursor, replaces a journal, emits retroactive evidence, starts a duplicate owner, or restarts the healthy sibling."
+    },
+    {
+      "hypothesis": "The supervisor candidate is safe to deploy automatically during the current live run.",
+      "status": "not_yet_established",
+      "falsifier": "Deployment requires stopping the manually owned observers and changing live process topology; this has not been approved or soak-tested prospectively."
+    }
+  ],
+  "change_proposal": {
+    "1_recommendation": "At an approved controlled boundary, stop only the two current manual unsigned observers and replace them with the singleton report-only supervisor. Do not restart or alter the v51 order backend.",
+    "2_why_now": "A prior approximately 2.5-hour observer outage made both live index routes technically unavailable despite a healthy backend.",
+    "3_evidence_reviewed": "Incident journal, observer status/cursor/journals, process start times, public source candles, backend heartbeat and route telemetry, deterministic crash/restart tests, and current runtime process reconciliation.",
+    "4_observed_problem_or_opportunity": "Post-start observer failure is not recovered automatically and currently depends on manual detection and restart.",
+    "5_applicable_market_regime": "All regimes; this is market-data process availability, not a trading signal rule.",
+    "6_alternatives_considered": [
+      "retain manual observers and alerts only",
+      "disable SP500 and SPCX routes",
+      "embed collection inside the order backend",
+      "run the isolated external supervisor"
+    ],
+    "7_proposed_live_change": "Process-topology change only: replace two manually started unsigned observer processes with one singleton parent managing the same exact commands and durable state files. No asset, strategy, signal, exit, sizing, leverage, margin, stop, or order-client change.",
+    "8_expected_upside": "Shorten or eliminate silent index-route downtime while retaining fail-closed provider behavior and durable prospective evidence.",
+    "9_main_risks_and_failure_modes": "Duplicate writers, cursor regression, journal replacement, restart storms, stale-but-running children, hidden persistent data-source failure, or supervisor termination. Tests cover these except real prospective soak behavior.",
+    "10_validation_completed": "52 relevant tests pass; exact fault modes are fail-closed; status distinguishes warming, ready, and fault; source is order-incapable; current live processes were unchanged.",
+    "11_validation_still_required": "Controlled prospective soak after approval, checkpoint/TUI visibility for supervisor state, and proof that a killed child restarts once without duplicated decisions under real process timing.",
+    "12_success_metrics": "Zero cursor regression or duplicate decision; no signer/order surface; failed child restarts within warmup plus poll interval; healthy sibling PID remains unchanged; checkpoint and TUI show current observer readiness/fault.",
+    "13_failure_or_rollback_triggers": "Any duplicate owner, cursor or journal mutation, retroactive decision, wrong symbol identity, restart-budget exhaustion, unexpected execution authority, or backend interference. Roll back by stopping the supervisor and manually starting the exact observers from preserved cursors.",
+    "14_confidence_level": "High for deterministic isolation and fail-closed behavior; medium for real-process reliability until prospective soak and checkpoint/TUI integration are validated.",
+    "15_explicit_approval_requested": true
+  },
+  "single_highest_value_next_investigation": "Continue exact source-native SP500 and SPCX v3 prospective lifecycle collection; require attributable long and short evidence before changing route economics."
+}

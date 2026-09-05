@@ -78,7 +78,7 @@ def test_extended_lifecycle_records_terminal_exit_once_across_restart() -> None:
 
     assert expired == {"HYPE"}
     assert len(actions) == 1
-    assert actions[0].exit_reason == "maximum_hold_seconds"
+    assert actions[0].exit_reason == "maximum_hold_evidence_missing"
     terminal_id = "HYPE:99:terminal_maximum_hold"
     assert telemetry.decisions[terminal_id]["decision_stage"] == "terminal"
     assert telemetry.decisions[terminal_id]["outcome"] == "exit"
@@ -92,7 +92,7 @@ def test_extended_lifecycle_records_terminal_exit_once_across_restart() -> None:
         _supported_evaluations(soft_ms + 120_000),
     )
     assert len(recovered) == 1
-    assert recovered[0].exit_reason == "maximum_hold_seconds"
+    assert recovered[0].exit_reason == "maximum_hold_evidence_missing"
     assert len(telemetry.decisions) == 2
 
 
@@ -112,10 +112,11 @@ def test_unsupported_soft_boundary_emits_exit_action_and_decision() -> None:
     assert expired == {"HYPE"}
     assert len(actions) == 1
     assert actions[0].action == "close"
-    assert actions[0].exit_reason == "maximum_hold_seconds"
+    assert actions[0].exit_reason == "maximum_hold_evidence_missing"
     decision = telemetry.decisions["HYPE:99:soft_maximum_hold"]
     assert decision["outcome"] == "exit"
-    assert decision["exit_reason"] == "maximum_hold_seconds"
+    assert decision["exit_reason"] == "maximum_hold_evidence_missing"
+    assert decision["maximum_hold_evidence_status"] == ("maximum_hold_evidence_missing")
 
     _, recovered_actions = _controller(engine, telemetry).actions(
         observed_ms + 60_000,
@@ -123,7 +124,7 @@ def test_unsupported_soft_boundary_emits_exit_action_and_decision() -> None:
         _supported_evaluations(observed_ms + 60_000),
     )
     assert len(recovered_actions) == 1
-    assert recovered_actions[0].exit_reason == "maximum_hold_seconds"
+    assert recovered_actions[0].exit_reason == "maximum_hold_evidence_missing"
     assert len(telemetry.decisions) == 1
 
 
@@ -145,6 +146,7 @@ def _open_snapshot(opened_at_ms: int) -> SolLiveSnapshot:
         maximum_hold_seconds=28_800,
         maximum_hold_policy="extend_while_regime_supported",
         hard_maximum_hold_seconds=86_400,
+        maximum_hold_evidence_maximum_age_seconds=60,
     ).bind(strategy_id="hype", stop_anchor=None)
     return SolLiveSnapshot(
         state=SolLiveState.OPEN,

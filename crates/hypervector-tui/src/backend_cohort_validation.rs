@@ -1,6 +1,7 @@
 //! Structural validation for authoritative cohort ledger projections.
 
 use serde_json::Value;
+use std::collections::BTreeSet;
 use std::path::Path;
 
 use super::{
@@ -150,6 +151,17 @@ pub(super) fn validate_identity(
     if assets.iter().any(|asset| asset.sides != ["long", "short"]) {
         return Err("cohort assets must declare long and short".into());
     }
+    if assets.iter().any(|asset| {
+        [
+            asset.entry_slippage_cap_fraction,
+            asset.market_slippage_cap_fraction,
+        ]
+        .into_iter()
+        .flatten()
+        .any(|cap| !cap.is_finite() || !(0.0..=0.05).contains(&cap))
+    }) {
+        return Err("cohort asset IOC price protection is invalid".into());
+    }
     if providers
         .iter()
         .any(|provider| !provider_sides_valid(&provider.sides))
@@ -182,6 +194,7 @@ pub(super) fn validate_identity(
         provider.execution.as_ref().is_some_and(|execution| {
             !recipe_exit_policy_valid(&execution.provider_recipe_exit_policy)
                 || !super::profit_lock_contract_valid(
+                    Some(&provider.strategy_id),
                     &execution.profit_lock_policy,
                     execution.profit_lock_activation_bps,
                     execution.profit_lock_floor_bps,
@@ -193,11 +206,24 @@ pub(super) fn validate_identity(
     }
     validate_specialized_providers(providers)?;
     if position_policy.max_positions_per_symbol != 1
-        || position_policy.maximum_concurrent_positions < symbols.len()
+        || position_policy.maximum_concurrent_positions < executable_asset_count(providers)
     {
         return Err("cohort identity has an invalid position policy".into());
     }
     Ok(())
+}
+
+fn executable_asset_count(providers: &[CohortProvider]) -> usize {
+    providers
+        .iter()
+        .flat_map(|provider| {
+            provider
+                .execution_symbols
+                .as_ref()
+                .unwrap_or(&provider.symbols)
+        })
+        .collect::<BTreeSet<_>>()
+        .len()
 }
 
 fn provider_sides_valid(sides: &[String]) -> bool {
@@ -276,12 +302,18 @@ pub(super) fn validate_snapshot(
         return Err("cohort snapshot bracket identity is inconsistent".into());
     }
     if assets.iter().any(|asset| {
-        asset
-            .execution_plan
-            .as_ref()
-            .is_some_and(|plan| !recipe_exit_policy_valid(&plan.provider_recipe_exit_policy))
+        asset.execution_plan.as_ref().is_some_and(|plan| {
+            !recipe_exit_policy_valid(&plan.provider_recipe_exit_policy)
+                || !super::profit_lock_contract_valid(
+                    Some(&plan.strategy_id),
+                    &plan.profit_lock_policy,
+                    plan.profit_lock_activation_bps,
+                    plan.profit_lock_floor_bps,
+                    plan.profit_lock_giveback_bps,
+                )
+        })
     }) {
-        return Err("cohort snapshot recipe-exit policy is invalid".into());
+        return Err("cohort snapshot exit policy is invalid".into());
     }
     Ok(())
 }
@@ -331,170 +363,5 @@ pub(super) fn validate_regime_preference(
 }
 
 #[cfg(test)]
-mod direction_scope_tests {
-    use std::collections::BTreeMap;
-
-    use serde_json::json;
-
-    use super::{parse_prestart_backup, recipe_exit_policy_valid, validate_identity};
-    use crate::backend_cohort::{CohortAssetConfig, CohortPositionPolicy, CohortProvider};
-    use crate::backend_telemetry::LedgerRow;
-
-    fn backup_row(manifest_hash: &str) -> LedgerRow {
-        serde_json::from_value(json!({
-            "prestart_backup": {
-                "status": "verified",
-                "bundle_path": "data/backups/prestart_test",
-                "manifest_path": "data/backups/prestart_test/manifest.json",
-                "manifest_sha256": manifest_hash,
-                "strategy_changed": true,
-                "implementation_file_count": 1156,
-                "implementation_sha256": "b".repeat(64)
-            }
-        }))
-        .expect("ledger row")
-    }
-
-    #[test]
-    fn validates_exact_prestart_backup_identity() {
-        let parsed = parse_prestart_backup(&backup_row(&"a".repeat(64)))
-            .expect("valid backup")
-            .expect("backup present");
-
-        assert_eq!(parsed.implementation_file_count, 1_156);
-        assert!(parsed.strategy_changed);
-    }
-
-    #[test]
-    fn rejects_malformed_prestart_backup_hash() {
-        let error =
-            parse_prestart_backup(&backup_row("not-a-sha")).expect_err("malformed hash must fail");
-
-        assert!(error.contains("backup evidence is invalid"));
-    }
-
-    #[test]
-    fn accepts_only_explicit_recipe_exit_policies() {
-        assert!(recipe_exit_policy_valid("ignore"));
-        assert!(recipe_exit_policy_valid("honor"));
-        assert!(!recipe_exit_policy_valid("sometimes"));
-    }
-
-    #[test]
-    fn accepts_one_sided_provider_without_losing_bidirectional_asset() {
-        let symbols = vec!["ETH".into()];
-        let assets = vec![CohortAssetConfig {
-            symbol: "ETH".into(),
-            sides: vec!["long".into(), "short".into()],
-            leverage: 5.0,
-            venue_max_leverage: 25.0,
-            margin_fraction: 0.03,
-            max_notional_usd: 25.0,
-            stop_bps: 60.0,
-            maximum_hold_seconds: 172_800,
-        }];
-        let providers = vec![CohortProvider {
-            strategy_id: "range_onset_bidirectional_v1".into(),
-            symbols: symbols.clone(),
-            sides: vec!["long".into()],
-            priority: 20,
-            timeframe: "1m".into(),
-            maximum_entry_delay_seconds: 60,
-            execution_symbols: Some(symbols.clone()),
-            execution_side_overrides: BTreeMap::from([("ETH".into(), vec!["long".into()])]),
-            entry_context_overrides: BTreeMap::from([(
-                "ETH".into(),
-                "dual_mtf_not_opposed".into(),
-            )]),
-            sizing_overrides: BTreeMap::new(),
-            source_profile: None,
-            execution: None,
-        }];
-        let policy = CohortPositionPolicy {
-            max_positions_per_symbol: 1,
-            maximum_concurrent_positions: 1,
-        };
-
-        validate_identity(&symbols, &assets, &providers, &policy).expect("valid direction scope");
-    }
-
-    #[test]
-    fn rejects_position_capacity_below_enabled_asset_count() {
-        let symbols: Vec<String> = vec!["BTC".into(), "ETH".into()];
-        let assets: Vec<CohortAssetConfig> = symbols
-            .iter()
-            .map(|symbol| CohortAssetConfig {
-                symbol: symbol.clone(),
-                sides: vec!["long".into(), "short".into()],
-                leverage: 5.0,
-                venue_max_leverage: 25.0,
-                margin_fraction: 0.03,
-                max_notional_usd: 25.0,
-                stop_bps: 60.0,
-                maximum_hold_seconds: 172_800,
-            })
-            .collect();
-        let providers = vec![CohortProvider {
-            strategy_id: "range_onset_bidirectional_v1".into(),
-            symbols: symbols.clone(),
-            sides: vec!["long".into(), "short".into()],
-            priority: 20,
-            timeframe: "1m".into(),
-            maximum_entry_delay_seconds: 60,
-            execution_symbols: Some(symbols.clone()),
-            execution_side_overrides: BTreeMap::new(),
-            entry_context_overrides: BTreeMap::new(),
-            sizing_overrides: BTreeMap::new(),
-            source_profile: None,
-            execution: None,
-        }];
-        let policy = CohortPositionPolicy {
-            max_positions_per_symbol: 1,
-            maximum_concurrent_positions: 1,
-        };
-
-        let error = validate_identity(&symbols, &assets, &providers, &policy)
-            .expect_err("each enabled asset must own one position slot");
-
-        assert!(error.contains("invalid position policy"));
-    }
-
-    #[test]
-    fn accepts_position_capacity_above_enabled_asset_count() {
-        let symbols: Vec<String> = vec!["BTC".into(), "ETH".into()];
-        let assets: Vec<CohortAssetConfig> = symbols
-            .iter()
-            .map(|symbol| CohortAssetConfig {
-                symbol: symbol.clone(),
-                sides: vec!["long".into(), "short".into()],
-                leverage: 5.0,
-                venue_max_leverage: 25.0,
-                margin_fraction: 0.03,
-                max_notional_usd: 25.0,
-                stop_bps: 60.0,
-                maximum_hold_seconds: 172_800,
-            })
-            .collect();
-        let providers = vec![CohortProvider {
-            strategy_id: "range_onset_bidirectional_v1".into(),
-            symbols: symbols.clone(),
-            sides: vec!["long".into(), "short".into()],
-            priority: 20,
-            timeframe: "1m".into(),
-            maximum_entry_delay_seconds: 60,
-            execution_symbols: Some(symbols.clone()),
-            execution_side_overrides: BTreeMap::new(),
-            entry_context_overrides: BTreeMap::new(),
-            sizing_overrides: BTreeMap::new(),
-            source_profile: None,
-            execution: None,
-        }];
-        let policy = CohortPositionPolicy {
-            max_positions_per_symbol: 1,
-            maximum_concurrent_positions: 3,
-        };
-
-        validate_identity(&symbols, &assets, &providers, &policy)
-            .expect("unused capacity may reserve a future asset slot");
-    }
-}
+#[path = "backend_cohort_validation_tests.rs"]
+mod direction_scope_tests;

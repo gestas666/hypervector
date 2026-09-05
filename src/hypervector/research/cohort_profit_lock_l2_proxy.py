@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 import math
+from typing import Literal
 
 from hypervector.research.cohort_profit_lock_policy import (
     POLICIES,
@@ -51,29 +52,57 @@ def build_profit_lock_proxy_report(
     lifecycles: Sequence[ProxyLifecycle],
     bars: Mapping[int, ProxyMinuteBar],
     completeness_thresholds_ms: Sequence[int],
+    *,
+    path_source: Literal["l2_midpoint_proxy", "exact_exchange_mark"] = (
+        "l2_midpoint_proxy"
+    ),
 ) -> dict[str, object]:
     """Build report-only causal profit-lock proxy evidence."""
     thresholds = _validate_inputs(lifecycles, bars, completeness_thresholds_ms)
+    mode, limitations = _source_contract(path_source)
     return {
         "schema_version": 1,
-        "mode": "cohort_profit_lock_l2_midpoint_proxy_v1",
+        "mode": mode,
+        "path_source": path_source,
         "contract": {
             "report_only": True,
             "execution_authority": "none",
             "runtime_strategy_changed": False,
             "automatic_promotion": False,
         },
-        "limitations": [
-            "L2 midpoint OHLC is a proxy rather than venue trade or mark OHLC",
-            "counterfactual economics exclude funding and additional exit slippage",
-            "a trigger after the first incomplete minute is withheld",
-            "policy parameters were predeclared and are not fitted by this report",
-        ],
+        "limitations": limitations,
         "thresholds_ms": {
             str(threshold): _threshold_report(lifecycles, bars, threshold)
             for threshold in thresholds
         },
     }
+
+
+def _source_contract(
+    path_source: Literal["l2_midpoint_proxy", "exact_exchange_mark"],
+) -> tuple[str, list[str]]:
+    common = [
+        "counterfactual economics exclude funding and additional exit slippage",
+        "a trigger after the first incomplete minute is withheld",
+        "policy parameters were predeclared and are not fitted by this report",
+    ]
+    if path_source == "exact_exchange_mark":
+        return (
+            "cohort_profit_lock_exact_exchange_mark_v1",
+            [
+                "sampled exchange mark OHLC cannot reconstruct intrainterval mark movement",
+                *common,
+            ],
+        )
+    if path_source == "l2_midpoint_proxy":
+        return (
+            "cohort_profit_lock_l2_midpoint_proxy_v1",
+            [
+                "L2 midpoint OHLC is a proxy rather than venue trade or mark OHLC",
+                *common,
+            ],
+        )
+    raise ValueError("profit-lock path source is unsupported")
 
 
 def _threshold_report(
@@ -83,11 +112,17 @@ def _threshold_report(
 ) -> dict[str, object]:
     rows = [_lifecycle_result(value, bars, threshold_ms) for value in lifecycles]
     phases = sorted({value.phase for value in lifecycles})
+    sides = sorted({value.side for value in lifecycles})
     return {
         "lifecycles": rows,
+        "overall": _phase_summary(rows),
         "by_phase": {
             phase: _phase_summary([row for row in rows if row["phase"] == phase])
             for phase in phases
+        },
+        "by_side": {
+            side: _phase_summary([row for row in rows if row["side"] == side])
+            for side in sides
         },
     }
 

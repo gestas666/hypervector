@@ -1,0 +1,129 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v81-zec-native15-managed-transfer-20260903",
+  "created_at_utc": "2026-09-03T02:55:00Z",
+  "status": "falsified_in_development_no_survivor",
+  "mode": "report_only",
+  "problem_restatement": {
+    "input": "The V79 ZEC Donchian route failed largest-winner robustness and the V80 one-minute transfer screen failed its preregistered source-cadence bound before return replay.",
+    "required_output": "Test fixed, pre-existing causal strategy mechanisms on native fifteen-minute ZEC bars without tuning parameters or dropping ZEC from the roster.",
+    "success_criteria": "One exact family-side clears development, validation, and holdout at nominal and stress costs, remains positive without its largest winner, and can be implemented with runtime parity."
+  },
+  "data_contract": {
+    "venue": "Hyperliquid mainnet core perpetual",
+    "symbol": "ZEC",
+    "source_window": [
+      "2025-10-02T14:00:00Z",
+      "2026-01-28T00:00:00Z"
+    ],
+    "candles": "immutable 0xArchive Hyperliquid native fifteen-minute candles",
+    "funding": "official Hyperliquid fundingHistory",
+    "maximum_missing_interval_fraction": 0.001,
+    "gap_policy": "reset rolling state and do not bridge missing native bars",
+    "entry_timing": "signal on one completed native fifteen-minute bar and enter at the next bar open",
+    "returns_inspected_before_preregistration": false
+  },
+  "chronology": {
+    "warmup_and_development_source": [
+      "2025-10-02T14:00:00Z",
+      "2025-11-20T00:00:00Z"
+    ],
+    "development_score": [
+      "2025-10-15T00:00:00Z",
+      "2025-11-20T00:00:00Z"
+    ],
+    "embargo_after_development_hours": 48,
+    "validation": [
+      "2025-11-22T00:00:00Z",
+      "2025-12-20T00:00:00Z"
+    ],
+    "embargo_after_validation_hours": 48,
+    "untouched_holdout": [
+      "2025-12-22T00:00:00Z",
+      "2026-01-28T00:00:00Z"
+    ],
+    "opening_rule": "Run every fixed family-side in development, open validation only for complete development survivors, and open holdout only for complete validation survivors without changing parameters or direction."
+  },
+  "candidate_contract": {
+    "parameter_source": "unchanged defaults in hypervector.strategies.source_derived",
+    "families": [
+      "squeeze_breakout",
+      "liquidity_sweep",
+      "zero_lag_reclaim",
+      "regime_trend_router"
+    ],
+    "sides": [
+      "long",
+      "short"
+    ],
+    "family_count": 4,
+    "family_side_count": 8,
+    "parameter_variants": 1,
+    "stop_bps": 60.0,
+    "target": null,
+    "maximum_hold_hours": 48,
+    "close_on_strategy_exit": true,
+    "close_on_opposite_signal": true,
+    "same_bar_risk_order": "liquidation_then_stop_then_strategy_exit",
+    "parameter_tuning_permitted": false
+  },
+  "risk_and_friction_contract": {
+    "initial_equity_usd": 5000.0,
+    "isolated_leverage": 5.0,
+    "margin_fraction": 0.02,
+    "maximum_notional_usd": 500.0,
+    "maximum_loss_before_gap_and_costs_usd": 3.0,
+    "entry_fee_bps": 4.5,
+    "market_exit_fee_bps": 4.5,
+    "nominal_slippage_bps_per_side": 2.5,
+    "stress_slippage_bps_per_side": 5.5,
+    "nominal_round_trip_bps": 14.0,
+    "stress_round_trip_bps": 20.0
+  },
+  "support_criteria": {
+    "minimum_completed_trades_per_partition": 12,
+    "minimum_profit_factor": 1.0,
+    "minimum_net_pnl_usd": 0.0,
+    "minimum_net_excluding_largest_winner_usd": 0.0,
+    "maximum_drawdown_pct": 5.0,
+    "required_profiles": [
+      "nominal_14bps_rt",
+      "stress_20bps_rt"
+    ],
+    "multiple_comparison_rule": "No ranking, best-of-grid selection, parameter edits, or direction changes; an exact family-side must independently pass every criterion in every opened partition.",
+    "runtime_requirements": [
+      "append invariance",
+      "gap reset",
+      "next-bar entry timing",
+      "entry freshness",
+      "stop ownership",
+      "strategy-exit timing",
+      "restart recovery",
+      "research-to-live signal parity"
+    ]
+  },
+  "falsifiers": [
+    "native fifteen-minute coverage exceeds the missing-interval bound",
+    "no exact family-side clears development under both cost profiles",
+    "a development survivor fails validation",
+    "a validation survivor fails holdout",
+    "any passing result becomes non-positive without its largest winner",
+    "fewer than twelve trades resolve in any required partition",
+    "runtime parity cannot be demonstrated"
+  ],
+  "development_result": {
+    "opened_at_utc": "2026-09-03T02:58:23Z",
+    "artifact": "data/logs/research/v81_zec_native15_managed_transfer_development_20260903_v1.json",
+    "artifact_sha256": "e5513aaf878ecd2234d5756ee41404e03f263b64a82f6aa155cfc27112513725",
+    "native_bar_rows": 4656,
+    "supported_candidate_ids": [],
+    "validation_opened": false,
+    "holdout_opened": false,
+    "finding": "No exact family-side passed both friction profiles. Every candidate with positive headline net PnL became negative after removing its largest winner; negative and sparse candidates also failed.",
+    "contract_result": "fail"
+  },
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "automatic_live_change": false,
+  "runtime_strategy_changed": false
+}

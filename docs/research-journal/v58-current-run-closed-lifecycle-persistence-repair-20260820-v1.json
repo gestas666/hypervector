@@ -1,0 +1,118 @@
+{
+  "schema_version": "hypervector.v58_current_run_closed_lifecycle_persistence_repair.v1",
+  "generated_at_utc": "2026-08-20T19:12:48Z",
+  "hypothesis_id": "v58-current-run-closed-lifecycle-persistence-v1",
+  "status": "ACCEPTED_REPORT_ONLY_TECHNICAL_REPAIR",
+  "contract": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_promotion": false,
+    "performance_gate": false,
+    "runtime_strategy_changed": false,
+    "live_configuration_changed": false,
+    "orders_or_positions_changed": false
+  },
+  "problem_restatement": {
+    "observed_gap": "closed lifecycle evidence omitted resolved excursion and profit-lock counterfactual fields",
+    "failure_mode": "The active checkpoint computed completed-path MFE, MAE, peak giveback, and exact closed profit-lock economics, but the V58 continuous extractor retained only entry, exit, PnL, fees, and funding after a lifecycle closed.",
+    "success_criterion": "Every exact current-run close must retain its resolved completed-hold capture and lifecycle-joined profit-lock result in the matching hypothesis-ledger row."
+  },
+  "implementation": {
+    "closed_extractor": {
+      "path": "src/hypervector/research/v58_live_closed_lifecycles.py",
+      "bytes": 13343,
+      "sha256": "1cae4c584bfe8c84e94a9d8dfcc4aafc101d4c3e2fbd1ce790c3001d34cea610"
+    },
+    "ledger_attachment": {
+      "path": "src/hypervector/research/v58_current_investigation.py",
+      "bytes": 15418,
+      "sha256": "130035232f1e2b031816fe30f05a6698bd319d40b3a17496e716e2f9dd173e39"
+    },
+    "extractor_tests": {
+      "path": "tests/test_v58_live_closed_lifecycles.py",
+      "bytes": 8238,
+      "sha256": "ea2f7f35bf290d7f31fe17d4a1a36d37d1782a6bddb09ad8eb30a6687956b68d"
+    },
+    "attachment_tests": {
+      "path": "tests/test_v58_live_open_hypothesis_context.py",
+      "bytes": 7983,
+      "sha256": "929d507641ed66916c2ef0b80f2e21267bb7cce1b46c30702a28cbb5655d3c24"
+    },
+    "behavior": [
+      "Require resolved closed-path capture before labeling current-run close evidence technically complete.",
+      "Join profit-lock results by exact lifecycle, run, profile, strategy, symbol, and side identity.",
+      "Reconcile each policy's actual PnL and estimated-minus-actual delta to the authoritative close.",
+      "Persist the validated path and counterfactual fields in current_run_resolved_lifecycles."
+    ]
+  },
+  "runtime_acceptance": {
+    "rolling_report_path": "data/runtime/research/v58_continuous_improvement_latest.json",
+    "rolling_report_snapshot_generated_at_utc": "2026-08-20T19:12:20.068711+00:00",
+    "rolling_report_snapshot_bytes": 202210,
+    "rolling_report_snapshot_sha256": "ddfb6c78d1691e6ea495637d3db880ce2eca6b5c983be9ef51c9303dd5ee7a14",
+    "current_run_id": "bidirectional-live-1787166474078",
+    "current_profile_fingerprint": "8a04636c9ff60a7eae141381cb540d7c6ceed081097cda7d5e465d48faa5022b",
+    "resolved_lifecycle_ids": [
+      "ETH:520161109446",
+      "ETH:520759995805",
+      "ETH:521066184054"
+    ],
+    "resolved_lifecycles": 3,
+    "closed_fields_present": [
+      "actual_entry_fill_claim",
+      "actual_exit_fill_claim",
+      "completed_hold_capture",
+      "entry_price",
+      "entry_time_ms",
+      "exit_price",
+      "exit_reason",
+      "exit_time_ms",
+      "fees_usd",
+      "funding_usd",
+      "lifecycle_id",
+      "net_pnl_usd",
+      "profit_lock_challenger",
+      "side",
+      "source",
+      "technical_complete"
+    ],
+    "sp500_open_lifecycle_id": "xyz:SP500:520755869955",
+    "sp500_disposition": "await_exact_close_then_review_actual_vs_predeclared_counterfactuals"
+  },
+  "validation": {
+    "red_phase": "Two focused tests failed with missing completed_hold_capture fields before implementation.",
+    "focused_tests": "8 passed",
+    "broader_relevant_tests": "115 passed",
+    "real_checkpoint_load": "3 current-run closes retained both completed_hold_capture and profit_lock_challenger; 2 open lifecycles remained intact.",
+    "rolling_supervisor": "The next atomic report refresh persisted the new fields in every current-run ETH close.",
+    "ruff_check": "passed",
+    "ruff_format_check": "passed",
+    "diff_check": "passed",
+    "code_standard_check": "4 touched files are under 500 lines and contain no function over 50 lines."
+  },
+  "interpretation": {
+    "technical_conclusion": "Closed V58 lifecycle evidence no longer loses the exact excursion and profit-lock comparison required for exit review.",
+    "economic_conclusion": "No exit-policy or profitability conclusion follows from this repair. The current SP500 trade remains open and its lower-lock alternatives remain counterfactual diagnostics.",
+    "live_change_supported": false,
+    "highest_value_next_investigation": "Reconcile xyz:SP500:520755869955 immediately after its authoritative close and compare actual after-cost PnL with the frozen profit-lock policies."
+  },
+  "confidence": {
+    "technical_repair": "high",
+    "current_eth_closed_evidence": "high",
+    "future_sp500_close_persistence": "medium_high_until_observed",
+    "exit_policy_edge": "low_unverified"
+  },
+  "known_failure": {
+    "immutable_one_shot_attempt": "failed_closed_no_artifact",
+    "reason": "route side reconciliation source bytes mismatch",
+    "impact": "report-only publication availability; no live execution impact",
+    "disposition": "Do not treat the failed one-shot as evidence and do not change the current SP500 priority."
+  },
+  "falsifiers": [
+    "The SP500 lifecycle closes but its matching hypothesis row lacks completed_hold_capture or profit_lock_challenger.",
+    "Any joined counterfactual differs in lifecycle, run, profile, strategy, symbol, side, or authoritative actual PnL.",
+    "Any completed-hold capture is unresolved while the close is labeled technically complete.",
+    "Any profit-lock estimate and estimated-minus-actual delta fail arithmetic reconciliation.",
+    "The repair changes live configuration, execution authority, an order, or a position."
+  ]
+}

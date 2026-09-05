@@ -1,0 +1,111 @@
+{
+  "schema_version": "v57_sndk_brentoil_cash_open_transfer_preregistration_v1",
+  "hypothesis_id": "V57_SNDK_BRENTOIL_CASH_OPEN_TRANSFER_V1",
+  "created_at_utc": "2026-08-18T23:07:53Z",
+  "state": "preregistered_before_target_pnl",
+  "mode": "report_only",
+  "problem_restatement": "Test whether the unchanged SPCX cash-open gap-reversal family is technically meaningful and locally evaluable on SNDK and BRENTOIL before inspecting target-strategy PnL.",
+  "frozen_parent_contract": {
+    "source": "docs/research-journal/v53-sp500-spcx-cash-open-gap-reversal-preregistration-v1.json",
+    "source_sha256": "02546f89b422af2d0e35d8de1e1329054d4a873fdf67c259688785737528c472",
+    "symbols": [
+      "xyz:SNDK",
+      "xyz:BRENTOIL"
+    ],
+    "directions": [
+      "long",
+      "short"
+    ],
+    "timeframe": "15m",
+    "timezone": "America/New_York",
+    "event_definition": "absolute cash-open gap from prior eligible 16:00 close is at least the fixed threshold",
+    "gap_threshold_bps": 20.0,
+    "decision_bar_local_open": "09:30",
+    "entry_time": "first exact next-bar quote after the completed 09:30-09:45 bar",
+    "positive_gap_action": "short_only_if_first_bar_close_remains_above_prior_close",
+    "negative_gap_action": "long_only_if_first_bar_close_remains_below_prior_close",
+    "target": "prior_eligible_cash_session_close",
+    "stop_bps": 80.0,
+    "cash_close_exit_bar_local_open": "15:45",
+    "maximum_hold_bars": 25,
+    "maximum_hold_seconds": 22500,
+    "maximum_entries_per_session": 1,
+    "reference_equity_usd": 5000.0,
+    "notional_usd_per_position": 5000.0,
+    "leverage": 10.0,
+    "margin_fraction": 0.1,
+    "same_direction_reentry_requires_reset": true,
+    "parameter_grid": false,
+    "side_selection": false,
+    "symbol_pooling": false,
+    "tuning_authority": "none"
+  },
+  "technical_admission_before_pnl": {
+    "asset_semantics": "The target must possess the parent mechanism's U.S. cash-session open and prior eligible 16:00 close semantics.",
+    "signal_source": "checksum-complete 0xArchive public-trade OHLC; L2 midpoint OHLC is not an allowed substitute",
+    "risk_path": "complete exact mark extrema with post-entry entry-bar slicing",
+    "quotes": "causal exact L2 next-bar entry and exit quotes",
+    "funding": "complete immutable local official funding bundle",
+    "fees": "resolved current account and HIP-3 venue inputs, labeled historical sensitivity",
+    "depth": "100-percent two-sided visible completion at the frozen $5000 notional",
+    "unresolved_policy": "fail closed before target PnL; do not change size, source, session, side, or thresholds"
+  },
+  "development_reporting_if_admitted": {
+    "required": [
+      "nominal and stress economics",
+      "long and short attribution",
+      "three chronological development folds",
+      "largest-winner removal",
+      "path-integrity counts",
+      "trades per week"
+    ],
+    "validation_rule": "Open only the exact frozen identity if all predeclared development economic and technical checks pass.",
+    "holdout_rule": "Open only after the frozen identity advances through validation without retuning."
+  },
+  "advance_requirements": {
+    "technical_paths_resolved": true,
+    "nominal_net_positive": true,
+    "stress_net_positive": true,
+    "nominal_profit_factor_above_one": true,
+    "stress_profit_factor_above_one": true,
+    "stress_positive_without_largest_winner": true,
+    "both_directions_observed": true,
+    "at_least_two_positive_stress_folds": true,
+    "no_liquidations": true
+  },
+  "pre_pnl_evidence": [
+    {
+      "path": "data/runtime/research/hip3_roster_fee_validation_v2.json",
+      "sha256": "8857bbd80eb86d21e94b34125bf7a52606f61264c9c22524aff25355b772a74b",
+      "bytes": 32135
+    },
+    {
+      "path": "data/logs/research/xyz_sndk_liquidity_profile_notional5000_cash_open_transfer_20260818_v1.json",
+      "sha256": "b21765507f6b437c18f33f36d85940b2e1d04968042e5521de0cf75627cf22a1",
+      "bytes": 3306
+    },
+    {
+      "path": "data/logs/research/xyz_brentoil_liquidity_profile_notional5000_cash_open_transfer_20260818_v1.json",
+      "sha256": "83dfb0d573795cf400eaaf954fd8bccd5c143779c64d586b458843c4664acf42",
+      "bytes": 3287
+    },
+    {
+      "path": "data/logs/research/xyz_sndk_l2_archive_audit_20260806.json",
+      "sha256": "a5f102b7612122fd258c9ddcbc269858f2dcb683b5302a144453ab14382af498",
+      "bytes": 4397
+    },
+    {
+      "path": "data/logs/research/xyz_brentoil_exact_paired_archive_audit_20260815_v1.json",
+      "sha256": "2a8a86247ecd5a033bb7dfbeaf9c4badcfadfc990e196d7ec3d2f1b6d15a1f65",
+      "bytes": 678
+    }
+  ],
+  "target_pnl_accessed": false,
+  "validation_accessed": false,
+  "holdout_accessed": false,
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "live_change_proposed": false,
+  "runtime_strategy_changed": false,
+  "falsifier": "The unchanged transfer is admissible only if each target has exact parent-session semantics, complete local trade/mark/L2/funding paths, and 100-percent two-sided $5000 depth coverage before any target PnL is calculated."
+}

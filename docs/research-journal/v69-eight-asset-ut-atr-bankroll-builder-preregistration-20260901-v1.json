@@ -1,0 +1,140 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v69-eight-asset-ut-atr-bankroll-builder-20260901",
+  "revision_number": 1,
+  "created_at_utc": "2026-09-01T14:58:54Z",
+  "status": "preregistered_before_candidate_replay",
+  "mode": "report_only",
+  "objective": "Test one independently implemented, causal trend-following lifecycle across the V63-minus-GOLD roster without deleting assets or reusing rejected V63 route mechanics.",
+  "roster_contract": {
+    "required_assets": [
+      "BTC",
+      "ETH",
+      "SOL",
+      "HYPE",
+      "xyz:SP500",
+      "xyz:SPCX",
+      "xyz:SNDK",
+      "xyz:BRENTOIL"
+    ],
+    "excluded_assets": ["xyz:GOLD"],
+    "unsupported_route_disposition": "retain_asset_in_tui_and_portfolio_surface_but_fail_closed_from_new_entries",
+    "asset_retirement_is_a_valid_strategy_repair": false
+  },
+  "source_prior_art": {
+    "repository": "https://github.com/hpombo1337/hypertrader",
+    "reviewed_commit": "d99b89628be8dcc7aafba5cc8d100497490f1666",
+    "license_observation": "README states Private repository. All rights reserved.",
+    "reuse_policy": "No source code copied. Reimplement the mathematical signal and lifecycle contract independently and validate it against local causal tests.",
+    "adopted_concepts": [
+      "completed_4h_signal_bars",
+      "heikin_ashi_close_signal_source_with_raw_ohlc_atr",
+      "wilder_atr_13_and_key_value_1",
+      "native_trailing_stop",
+      "opposite_flip_exit",
+      "execution_research_live_parity"
+    ],
+    "not_adopted_as_evidence": "External backtest or live returns do not establish profitability in this repository, asset roster, cost model, or deployment context."
+  },
+  "candidate_contract": {
+    "strategy_family": "ut_atr_flip_variant_r_v1",
+    "signal_timeframe": "4h",
+    "execution_timeframe": "15m",
+    "decision_timing": "completed_4h_bar_only",
+    "entry_timing": "next_observed_15m_open_after_completed_4h_decision",
+    "signal_source": "raw_ohlc_mean_heikin_ashi_close",
+    "atr_source": "raw_ohlc_true_range",
+    "atr_method": "sma_seeded_wilder_rma",
+    "atr_period": 13,
+    "atr_key_value": 1.0,
+    "directions": ["long", "short"],
+    "stop_policy": "signal_native_atr_trailing_stop_clamped_at_fill",
+    "minimum_stop_bps": 20.0,
+    "maximum_stop_bps": 75.0,
+    "target_policy": "reward_risk",
+    "target_r_multiple": 3.0,
+    "opposite_flip_policy": "close_then_reverse_at_next_executable_open",
+    "maximum_hold_seconds": 604800,
+    "same_bar_barrier_order": "stop_before_target",
+    "gap_policy": "expire_pending_entry_or_close_open_lifecycle_at_first_observed_executable_quote",
+    "entry_order_model": "taker_ioc",
+    "profit_lock_experiment": "none_in_v1_baseline_to_avoid_post_hoc_exit_mixing"
+  },
+  "risk_contract": {
+    "initial_equity_usd": 5000.0,
+    "isolated_leverage": 10.0,
+    "margin_fraction_per_position": 0.10,
+    "maximum_notional_usd_per_position": 5000.0,
+    "maximum_modeled_pre_cost_stop_loss_pct_equity_per_position": 0.75,
+    "maximum_theoretical_eight_position_stop_loss_pct_equity_before_gap_and_costs": 6.0,
+    "portfolio_concurrency_must_be_simulated_before_live_authority": true
+  },
+  "friction_profiles": {
+    "nominal": {
+      "entry_fee_bps": 4.5,
+      "market_exit_fee_bps": 4.5,
+      "slippage_bps_per_side": 2.5,
+      "modeled_round_trip_bps": 14.0
+    },
+    "stress": {
+      "entry_fee_bps": 4.5,
+      "market_exit_fee_bps": 4.5,
+      "slippage_bps_per_side": 5.5,
+      "modeled_round_trip_bps": 20.0
+    },
+    "funding": "include_when_exact_local_funding_is_available; otherwise report omission as a limitation"
+  },
+  "chronology": {
+    "crypto": {
+      "development": ["2025-07-28T00:00:00Z", "2026-01-28T00:00:00Z"],
+      "validation": ["2026-01-28T00:00:00Z", "2026-04-28T00:00:00Z"],
+      "pseudo_holdout": ["2026-04-28T00:00:00Z", "2026-07-28T00:00:00Z"]
+    },
+    "hip3_common_window": {
+      "development": ["2026-07-11T12:00:00Z", "2026-08-06T12:00:00Z"],
+      "validation": ["2026-08-06T12:00:00Z", "2026-08-19T12:00:00Z"],
+      "pseudo_holdout": ["2026-08-19T12:00:00Z", "2026-09-01T12:00:00Z"]
+    },
+    "opening_rule": "Run development first. Open each later partition once, in order, only after freezing the prior-partition disposition; no retuning from validation or pseudo-holdout outcomes."
+  },
+  "trial_accounting": {
+    "architecture_trials_in_this_family": 1,
+    "friction_stress_is_not_a_selection_trial": true,
+    "asset_results_may_not_select_new_parameters": true,
+    "largest_winner_exclusion_is_diagnostic_not_a_retuning_input": true
+  },
+  "development_support_criteria": [
+    "positive nominal net PnL and profit factor above 1 after modeled costs",
+    "positive stress net PnL and profit factor above 1",
+    "positive net PnL after removing the largest winner",
+    "no liquidation or insolvency",
+    "both long and short entry paths are exercised when the market emits both flips",
+    "no lookahead, append-invariance, or execution-timing test fails"
+  ],
+  "portfolio_support_criteria": [
+    "positive net PnL under nominal and stress friction",
+    "positive net PnL after removing the largest winner",
+    "maximum drawdown is reported and does not exceed the predeclared 25 percent research ceiling",
+    "asset concentration, concurrent stop risk, and monthly fold results are reported",
+    "research and live entry, stop, target, flip, hold, cost, and sizing semantics match"
+  ],
+  "falsifiers": [
+    "any decision uses an incomplete 4h bar or future 15m price",
+    "an appended future suffix changes any prior signal or stop",
+    "nominal or stress development expectancy is non-positive",
+    "profitability disappears after removing the largest winner",
+    "a route requires asset-specific post-outcome tuning",
+    "the shared portfolio breaches the research drawdown ceiling",
+    "live parity cannot be demonstrated"
+  ],
+  "known_limitations": [
+    "The HIP3 history is materially shorter than the crypto history.",
+    "OHLC backtests cannot reproduce queue position, private IOC rejection, or all mark-price gaps.",
+    "A positive historical result would remain a provisional hypothesis, not a profit guarantee.",
+    "A negative asset result keeps the asset visible but cannot authorize entries until a separately preregistered replacement passes."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "automatic_live_change": false,
+  "runtime_strategy_changed": false
+}

@@ -7,6 +7,12 @@ from pathlib import Path
 
 import pytest
 
+from hypervector.live.bidirectional_intents import (
+    BidirectionalIntentRouter,
+    PositionState,
+    StrategyCapability,
+    StrategyIntent,
+)
 from hypervector.live.hip3_fresh15_journal_provider import (
     HIP3_INDEX_FRESH15_V3_STRATEGY,
     Hip3Fresh15JournalCollector,
@@ -77,6 +83,39 @@ def test_v51_index_route_keeps_the_repaired_pressure_collector() -> None:
     collector = build_default_collector(provider, config, Path("backtest-lab"))
 
     assert isinstance(collector, Hip3Fresh15JournalCollector)
+
+
+def test_v51_hype_opposite_signal_closes_without_same_cycle_reversal() -> None:
+    """The exact HYPE provider must close an open short on an eligible long."""
+    config = load_multi_asset_live_config(_V51, mode="observe")
+    provider = next(
+        row
+        for row in config.providers
+        if row.strategy_id == "hype_breakout_compression_pullback_bidirectional_v1"
+    )
+    capability = StrategyCapability(
+        provider.strategy_id,
+        "HYPE",
+        frozenset(provider.sides),
+        provider.priority,
+        provider.position_policy,
+    )
+    router = BidirectionalIntentRouter((capability,), maximum_positions=10)
+    intent = StrategyIntent(
+        provider.strategy_id,
+        "HYPE",
+        "long",
+        1_786_700_000_000,
+        56.0,
+        "confirmed_opposite_signal",
+    )
+
+    report = router.route((intent,), positions={"HYPE": PositionState("HYPE", "short")})
+
+    assert [(action.action, action.side) for action in report.actions] == [
+        ("close", "long")
+    ]
+    assert report.withheld == ()
 
 
 def test_v51_stress_is_bound_to_the_exact_profit_protected_profile() -> None:

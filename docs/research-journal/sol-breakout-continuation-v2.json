@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "sol-breakout-continuation-after-onset",
+  "revision_number": 2,
+  "supersedes_revision_id": "sol-breakout-continuation-v1",
+  "created_at_utc": "2026-08-16T08:46:19Z",
+  "strategy_id": "sol_breakout_continuation_aligned_fixed60_bidirectional_v1",
+  "symbol": "SOL",
+  "status": "reject",
+  "hypothesis": "After a SOL five-minute breakout onset has already occurred, a later source evaluation blocked only by awaiting_new_5m_breakout_onset may identify a tradable continuation when side-adjusted visible-book pressure remains aligned. The frozen observer retained both directions, a 75-minute accepted-entry spacing, adverse recorded BBO entry and exit, observed funding and taker fees, an 80-bps stop proxy, no target, and a fixed 60-minute horizon.",
+  "decision": "Reject this exact continuation mechanism. The prospective observer resolved four non-overlapping post-cutoff paths: one winner and three losses, all long, for -77.0759 bps after costs, profit factor 0.3844, and -125.2013 bps after removing the largest winner. The result directly triggered the predeclared nonpositive-ex-largest-winner falsifier and remained one-sided. Do not restore the removed onset, tune nearby continuation thresholds on this opened window, add leverage, or grant this candidate entry, exit, sizing, or routing authority. A future SOL replacement must use a causally distinct identity and a new preregistered evidence window.",
+  "confidence": "medium_high",
+  "falsifier": "This rejection is invalidated by a source/profile/cutoff mismatch, an execution row included before the frozen cutoff, incorrect BBO or funding attribution, an overlap counted as independent, incorrect 8.64-bps round-trip taker fees, or changed evidence bytes. A separately preregistered SOL mechanism with a distinct causal signal could update the broader SOL opportunity assessment, but it would not promote or retune this exact rejected family.",
+  "evidence": [
+    {
+      "path": "sol-breakout-continuation-v1.json",
+      "role": "predeclared_hypothesis_cutoff_contract_and_falsifiers",
+      "sha256": "0e2ea5631a72f8a0852bc8d523fe609fffab26a24ebcf8cb7f2ed392bb34fb69",
+      "bytes": 5373
+    },
+    {
+      "path": "../../data/runtime/bidirectional_cohort/latest_sol_breakout_continuation_challenger.json",
+      "role": "frozen_report_only_post_cutoff_forward_observer_result",
+      "sha256": "679322b2c02788eb822e3d178075230105581cc3c0e3a4cf3483bc7d2ed43059",
+      "bytes": 192673
+    }
+  ],
+  "metrics": {
+    "prospective_cutoff_utc": "2026-08-08T22:50:00Z",
+    "observer_generated_at_utc": "2026-08-09T23:29:19.758531+00:00",
+    "evaluations": 29465,
+    "exact_candidates": 28,
+    "pre_cutoff_excluded": 20,
+    "selected_non_overlapping": 4,
+    "resolved_executions": 4,
+    "wins": 1,
+    "losses": 3,
+    "long_resolved": 4,
+    "short_resolved": 0,
+    "total_net_return_bps": -77.0759438330129,
+    "mean_net_return_bps": -19.268985958253225,
+    "profit_factor": 0.384383626786168,
+    "largest_winner_bps": 48.125313291837585,
+    "net_excluding_largest_winner_bps": -125.20125712485049,
+    "largest_abs_contribution_fraction": 0.5489465239543614,
+    "stop_proxy_crosses": 1,
+    "entry_capacity_failures": 0,
+    "exit_capacity_failures": 0,
+    "entry_missing": 0,
+    "exit_missing": 0,
+    "execution_authority": "none",
+    "runtime_changed_by_this_revision": false
+  },
+  "limitations": [
+    "The four prospective paths cover only the long side, so they cannot estimate a bidirectional portfolio effect.",
+    "Recorded BBO is an executable estimate rather than proof of private IOC fill or queue position.",
+    "The fixed 60-minute horizon and 80-bps stop proxy are frozen diagnostic rules rather than an adaptive production exit policy.",
+    "The result rejects only this exact continuation mechanism; it does not establish that every possible SOL strategy lacks edge.",
+    "This revision is report-only and cannot enter, close, resize, gate, rank, pause, or promote a live strategy."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

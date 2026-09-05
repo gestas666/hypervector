@@ -1,0 +1,158 @@
+{
+  "schema_version": 1,
+  "generated_at_utc": "2026-08-18T22:56:20Z",
+  "hypothesis_id": "v57-hype-native-lineage-segmentation-v1",
+  "status": "complete_rejected_as_comparable_aggregate",
+  "problem_restatement": "Reconstruct whether the 38 closes attributed to hype_breakout_onset_bidirectional_v1 are one comparable HYPE experiment or a mixture of native HYPE and later cross-asset authorities.",
+  "contract": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_live_change": false,
+    "runtime_strategy_changed": false
+  },
+  "authoritative_population": {
+    "strategy_id": "hype_breakout_onset_bidirectional_v1",
+    "trades": 38,
+    "wins": 18,
+    "losses": 20,
+    "net_pnl_usd": -1.465997,
+    "profit_factor": 0.80193,
+    "complete": true,
+    "unique_lifecycle_ids": true
+  },
+  "segmentation": {
+    "first_seven_native_hype": {
+      "trades": 7,
+      "wins": 6,
+      "losses": 1,
+      "net_pnl_usd": 2.16092,
+      "profit_factor": 10.65054,
+      "net_excluding_largest_winner_usd": 1.261432,
+      "maximum_notional_usd": 25.0,
+      "autonomous_exits": 7,
+      "operator_manual_exits": 0,
+      "sides": {
+        "long": {
+          "trades": 6,
+          "wins": 5,
+          "losses": 1,
+          "net_pnl_usd": 1.928432
+        },
+        "short": {
+          "trades": 1,
+          "wins": 1,
+          "losses": 0,
+          "net_pnl_usd": 0.232488
+        }
+      },
+      "exit_outcomes": {
+        "maximum_hold_winners_near_eight_hours": 4,
+        "maximum_hold_winners_extended_beyond_eight_hours": 2,
+        "protective_stop_losses": 1
+      }
+    },
+    "later_seven_native_hype": {
+      "trades": 7,
+      "wins": 1,
+      "losses": 6,
+      "net_pnl_usd": -3.134532,
+      "profit_factor": 0.0335,
+      "maximum_notional_usd": 75.0,
+      "sides": {
+        "long": {
+          "trades": 3,
+          "wins": 0,
+          "losses": 3,
+          "net_pnl_usd": -1.75619
+        },
+        "short": {
+          "trades": 4,
+          "wins": 1,
+          "losses": 3,
+          "net_pnl_usd": -1.378342
+        }
+      }
+    },
+    "cross_asset_transfer": {
+      "trades": 24,
+      "wins": 11,
+      "losses": 13,
+      "net_pnl_usd": -0.492385,
+      "symbols": [
+        "BTC",
+        "ETH",
+        "SOL"
+      ],
+      "operator_manual_exits": 3,
+      "cross_provider_exits": 2,
+      "classification": "unsupported_transfer_not_native_hype_evidence"
+    },
+    "remaining_thirty_one_mixed": {
+      "trades": 31,
+      "wins": 12,
+      "losses": 19,
+      "net_pnl_usd": -3.626917,
+      "profit_factor": 0.49467,
+      "net_excluding_largest_winner_usd": -5.209794
+    }
+  },
+  "lineage_findings": [
+    "The first seven entries executed only on HYPE under one exact HYPE asset-wrapper fingerprint, but spanned three cohort fingerprints and five process runs.",
+    "Rows eight and nine retained HYPE-only execution but changed maximum notional from $25 to $75.",
+    "V14 and V25 granted the legacy provider execution authority on BTC, ETH, SOL, and HYPE without asset-native qualification.",
+    "V39 retired HYPE from the legacy provider while continuing BTC, ETH, and SOL under the same strategy ID.",
+    "The first three native lifecycles do not persist an execution plan; exact 8h-soft/24h-hard extension authority is therefore not proven for those rows.",
+    "All seven first entries were autonomous; the later mixed sample includes manual and cross-provider exits.",
+    "The 38-trade aggregate is valid accounting history but invalid as a controlled strategy continuation."
+  ],
+  "decision": {
+    "aggregate_comparability": "rejected",
+    "cross_asset_transfer": "remain_rejected",
+    "restore_original_native_hype_now": false,
+    "current_v57_change": "none",
+    "reason": "The first seven support the user's scope-drift diagnosis, but seven trades do not establish durable edge; the closest later HYPE-only continuation was 0W/2L after sizing changed, and the preregistered native reconstruction was later rejected prospectively.",
+    "next_investigation": "Keep current V57 HYPE evidence collection intact and test only a materially distinct preregistered HYPE mechanism; do not reuse the 38-trade aggregate as promotion evidence."
+  },
+  "reopen_conditions": [
+    "An immutable pre-entry source bundle proves exact provider and execution-plan parity across the first seven and a later HYPE-only sample.",
+    "A preregistered independent HYPE-only sample is positive after exact costs and after removing its largest winner.",
+    "A materially distinct causal HYPE mechanism survives development, untouched validation, holdout, and source-compatible prospective translation."
+  ],
+  "risks_and_failure_modes": [
+    "The first seven may be a favorable small-sample streak.",
+    "Profile, sizing, market regime, and exit authority changed together, so their individual causal effects are not identifiable from live history alone.",
+    "Current provider-source parity supports later entry semantics but cannot prove the exact first-seven provider bytes.",
+    "Dollar PnL is not directly comparable across the $25 and $75 sizing regimes."
+  ],
+  "evidence": [
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v53_live_prefix_20260817T1227Z_v1.json",
+      "sha256": "58af1c65c7f813498547d288a0b242d62736dba6f399a00432b5a6714bb3acf2",
+      "role": "complete_authoritative_lifecycle_population"
+    },
+    {
+      "path": "v54-hype-native-historical-source-parity-v1.json",
+      "role": "entry_source_parity_limit"
+    },
+    {
+      "path": "v54-hype-native-exit-lineage-reconciliation-v1.json",
+      "role": "exit_policy_lineage"
+    },
+    {
+      "path": "v54-hype-breakout-transfer-incident-reconciliation-v1.json",
+      "role": "cross_asset_transfer_disposition"
+    },
+    {
+      "path": "v54-hype-native-third-forward-final-disposition-v1.json",
+      "role": "prospective_native_reconstruction_rejection"
+    }
+  ],
+  "confidence": {
+    "lifecycle_membership_and_accounting": "high",
+    "scope_drift_diagnosis": "high",
+    "first_seven_exact_provider_binary_parity": "medium_low",
+    "durable_original_hype_edge": "low",
+    "cross_asset_transfer_rejection": "high"
+  },
+  "falsifier": "Update this report if immutable raw fills change the 38-lifecycle population, a pre-entry bundle proves a different exact first-seven provider contract, or a matched HYPE-only autonomous later cohort was omitted."
+}

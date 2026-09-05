@@ -24,10 +24,12 @@ from hypervector.live.multi_asset_live_config_parsing import (
     mapping as _mapping,
     mapping_rows as _mapping_rows,
     number as _number,
+    optional_number as _optional_number,
     optional_path as _optional_path,
     optional_strings as _optional_strings,
     positive_number_overrides as _positive_number_overrides,
     provider_position_policy as _provider_position_policy,
+    require_live_start as _require_live,
     side_overrides as _side_overrides,
     sides as _sides,
     strings as _strings,
@@ -67,6 +69,7 @@ class AssetLiveConfig:
     mode: LiveMode
     enabled: bool
     accepts_live_risk: bool
+    entry_slippage_cap_fraction: float | None = None
     strategy_id: str = "multi_strategy_bidirectional_router"
     max_positions_per_symbol: int = 1
     capital_source: str = "shared_live_account"
@@ -82,6 +85,13 @@ class AssetLiveConfig:
     def authoritative_ledger(self) -> Path:
         """Return the only symbol ledger owned by the live engine."""
         return self.live_ledger
+
+    @property
+    def effective_entry_slippage_cap_fraction(self) -> float:
+        """Return the opening IOC cap, falling back to the legacy shared cap."""
+        if self.entry_slippage_cap_fraction is None:
+            return self.market_slippage_cap_fraction
+        return self.entry_slippage_cap_fraction
 
     @property
     def profile_fingerprint(self) -> str:
@@ -196,6 +206,7 @@ class MultiAssetLiveConfig:
     mode: LiveMode
     enabled: bool
     accepts_live_risk: bool
+    transition_approval: Path | None = None
 
     @property
     def symbols(self) -> tuple[str, ...]:
@@ -272,22 +283,23 @@ class MultiAssetLiveConfig:
     @property
     def profile_fingerprint(self) -> str:
         """Hash the full non-secret cohort identity."""
-        return stable_fingerprint(
-            {
-                "profile_id": self.profile_id,
-                "network": self.network,
-                "margin_mode": self.margin_mode,
-                "maximum_positions": self.maximum_positions,
-                "cohort_ledger": self.cohort_ledger,
-                "stop_file": self.stop_file,
-                "poll_seconds": self.poll_seconds,
-                "lookback_days": self.lookback_days,
-                "assets": tuple(_asset_profile_values(asset) for asset in self.assets),
-                "providers": tuple(
-                    _provider_profile_values(provider) for provider in self.providers
-                ),
-            }
-        )
+        values: dict[str, object] = {
+            "profile_id": self.profile_id,
+            "network": self.network,
+            "margin_mode": self.margin_mode,
+            "maximum_positions": self.maximum_positions,
+            "cohort_ledger": self.cohort_ledger,
+            "stop_file": self.stop_file,
+            "poll_seconds": self.poll_seconds,
+            "lookback_days": self.lookback_days,
+            "assets": tuple(_asset_profile_values(asset) for asset in self.assets),
+            "providers": tuple(
+                _provider_profile_values(provider) for provider in self.providers
+            ),
+        }
+        if self.transition_approval is not None:
+            values["transition_approval"] = self.transition_approval
+        return stable_fingerprint(values)
 
     @property
     def run_fingerprint(self) -> str:
@@ -347,6 +359,7 @@ def load_multi_asset_live_config(
         mode=mode,
         enabled=bool(enabled),
         accepts_live_risk=bool(accepts_live_risk),
+        transition_approval=_optional_path(runtime.get("transition_approval")),
     )
     _validate_config(config)
     return config
@@ -387,6 +400,10 @@ def _assets(
             mode=mode,
             enabled=bool(enabled),
             accepts_live_risk=bool(accepts_live_risk),
+            entry_slippage_cap_fraction=_optional_number(
+                row,
+                "entry_slippage_cap_fraction",
+            ),
         )
         for row in rows
     )
@@ -438,14 +455,12 @@ def _providers(value: object) -> tuple[StrategyProviderConfig, ...]:
 def _validate_config(config: MultiAssetLiveConfig) -> None:
     if config.network != "mainnet" or config.margin_mode != "isolated":
         raise MultiAssetLiveConfigError("cohort requires mainnet isolated margin")
-    if config.maximum_positions < len(config.assets):
-        raise MultiAssetLiveConfigError(
-            "cohort maximum_positions must be at least enabled asset count"
-        )
     if not 0.0 < config.poll_seconds <= 60.0 or config.lookback_days < 3:
         raise MultiAssetLiveConfigError("invalid cohort polling or lookback settings")
-    if len(config.assets) < 2 or len(set(config.symbols)) != len(config.symbols):
+    if not config.assets or len(set(config.symbols)) != len(config.symbols):
         raise MultiAssetLiveConfigError("cohort assets must be unique and multi-asset")
+    if config.mode == "live" and len(config.assets) < 2:
+        raise MultiAssetLiveConfigError("live cohort requires at least two assets")
     enabled = set(config.symbols)
     provider_ids = [provider.strategy_id for provider in config.providers]
     priorities = [provider.priority for provider in config.providers]
@@ -470,21 +485,15 @@ def _validate_config(config: MultiAssetLiveConfig) -> None:
             )
         if not 0.0 < asset.margin_fraction <= 1.0:
             raise MultiAssetLiveConfigError("asset margin_fraction must be in (0, 1]")
+        if not 0.0 < asset.effective_entry_slippage_cap_fraction <= 0.05:
+            raise MultiAssetLiveConfigError(
+                "asset entry_slippage_cap_fraction must be in (0, 0.05]"
+            )
     _validate_provider_scope(config, enabled)
-
-
-def _require_live(
-    *,
-    mode: LiveMode,
-    enabled: bool,
-    accepts_live_risk: bool,
-    credentials_present: bool,
-) -> None:
-    if mode != "live":
-        raise MultiAssetLiveConfigError("live start refused because mode is observe")
-    if not enabled:
-        raise MultiAssetLiveConfigError("live start requires --enabled")
-    if not accepts_live_risk:
-        raise MultiAssetLiveConfigError("live start requires --i-accept-live-risk")
-    if not credentials_present:
-        raise MultiAssetLiveConfigError("live start requires configured credentials")
+    executable_symbols = {
+        symbol for provider in config.providers for symbol in provider.execution_symbols
+    }
+    if config.maximum_positions < len(executable_symbols):
+        raise MultiAssetLiveConfigError(
+            "cohort maximum_positions must be at least executable asset count"
+        )

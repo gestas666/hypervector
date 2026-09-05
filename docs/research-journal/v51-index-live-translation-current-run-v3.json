@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v51-index-live-translation-current-run-v1",
+  "revision_number": 3,
+  "supersedes_revision_id": "534378c7aa6804f2b5470451560c361e3d3029efd8105262558f21f7cb779967",
+  "created_at_utc": "2026-08-16T06:23:32Z",
+  "strategy_id": "hip3_breakout_pressure_sp500_spcx_fresh15s_bidirectional_v3",
+  "symbol": "xyz:SP500+xyz:SPCX",
+  "status": "observe",
+  "hypothesis": "The exact v51 SP500/SPCX live-v3 route may retain an attributable after-cost edge only when source-native observer decisions reach the backend without internal coverage gaps and complete lifecycles occur on both configured sides.",
+  "decision": "Keep the exact v51 index parameters unchanged. All 116 present decisions are field-identical across observer and backend, and the current process produced no eligible completed index signal. Continue uninterrupted prospective collection; do not pool the prior process window as current-run evidence or tune from two SPCX shorts and one SP500 short.",
+  "confidence": "low",
+  "falsifier": "Update this diagnosis if a current-run observer decision is eligible but lacks matching backend action or explicit non-action, if future present decisions diverge, if another internal boundary gap appears, or when source-native long lifecycles resolve with complete fills, costs, protection, and exit evidence.",
+  "metrics": {
+    "run_id": "bidirectional-live-1786801038311",
+    "expected_symbol_decisions": 134,
+    "compared_symbol_decisions": 116,
+    "field_mismatches_on_present_decisions": 0,
+    "joint_missing_symbol_decisions": 18,
+    "missing_completed_boundaries_per_symbol": 9,
+    "sp500_current_run_completed_decisions": 58,
+    "spcx_current_run_completed_decisions": 58,
+    "sp500_current_run_eligible_decisions": 0,
+    "spcx_current_run_eligible_decisions": 0,
+    "silent_eligible_signal_without_backend_action": 0,
+    "compatible_prior_process_index_lifecycles": 3,
+    "compatible_prior_process_long_lifecycles": 0,
+    "live_change_proposed": false
+  },
+  "evidence": [
+    {
+      "path": "../../data/logs/research/v51_index_backend_observer_parity_20260816T062246Z_v8.json",
+      "role": "immutable_extended_current_run_backend_observer_parity",
+      "sha256": "d3d23f21a81bc78dafa09bfa455eac51b600eb55ae0973d57de5017f588d3739",
+      "bytes": 6616
+    },
+    {
+      "path": "v51-index-current-run-backend-observer-parity-v7.json",
+      "role": "source_diagnosis_and_approval_ready_recommendation",
+      "sha256": "ec93a8e6acc0a30c44a9733a19b3bc5c3a743793a02edaa19749494c929e2108",
+      "bytes": 9241
+    },
+    {
+      "path": "v51-index-observer-supervisor-candidate-v2.json",
+      "role": "validated_but_undeployed_observer_recovery_candidate",
+      "sha256": "43c654508d238c7a24769b833790b1d4acf5be081ddd93465a248919598e364d",
+      "bytes": 9043
+    }
+  ],
+  "limitations": [
+    "The historical 17:00-19:00Z joint observer gap leaves 18 symbol-boundaries unresolved.",
+    "The backend and independent observer may still share an upstream public-data defect.",
+    "All three compatible index lifecycles came from a prior v51 process and were shorts.",
+    "Zero current-run eligible signals measures scarcity over this window and does not establish future frequency or profitability.",
+    "No live strategy, route, parameter, sizing, leverage, stop, target, exit, process, or deployment setting changed."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "mu-breakout-pressure-prospective-lifecycle-edge-v1",
+  "revision_number": 6,
+  "supersedes_revision_id": "e14e5b6b517c7ac21d7914799b940650458911c51364cfbd8121b23eb71a6d54",
+  "created_at_utc": "2026-08-17T07:19:38Z",
+  "strategy_id": "hip3_mu_full_l2_breakout_pressure_bidirectional_15m_v1",
+  "symbol": "xyz:MU",
+  "status": "observe",
+  "hypothesis": "The exact MU 15m breakout-pressure route may add a repeatable source-native edge after finite-depth fills, fees, funding, latency, stop behavior, and one-position-per-route lifecycle accounting.",
+  "decision": "Keep MU report-only and leave its frozen route and exits unchanged. A bias-controlled attribution against the first predeclared horizon at or after each actual exit finds one long stop that recovered by 240 minutes, but the other comparable long and both comparable shorts remained directionally negative. Three longer-held long lifecycles have no post-exit frozen comparator. One recovered stop among seven completed lifecycles is insufficient to diagnose a general stop defect or select a new exit.",
+  "confidence": "low",
+  "falsifier": "Update the exit-truncation diagnosis only after at least three independent technically resolved long stop exits have a first predeclared post-exit horizon and a majority recover directionally after all frozen costs, while the full route still meets the preregistered minimum of 20 independent onsets and 12 resolved both-side lifecycles. Reject the diagnosis if comparable long stop exits remain mostly adverse or if recovery disappears under exact depth, funding, and stress accounting.",
+  "frozen_measurement_contract": {
+    "horizons_minutes": [
+      15,
+      60,
+      240
+    ],
+    "selection_rule": "first_frozen_horizon_at_or_after_actual_exit",
+    "classification_basis": "gross_direction_only",
+    "later_horizon_selection_prohibited": true,
+    "execution_equivalent_pnl_delta_claimed": false,
+    "exit_optimization_performed": false
+  },
+  "metrics": {
+    "completed_lifecycles": 7,
+    "post_exit_comparable_lifecycles": 4,
+    "no_post_exit_frozen_horizon": 3,
+    "directional_recovery_after_exit": 1,
+    "loss_persisted_after_exit": 3,
+    "by_side": {
+      "long": {
+        "completed": 5,
+        "post_exit_comparable": 2,
+        "directional_recovery_after_exit": 1,
+        "loss_persisted_after_exit": 1,
+        "no_post_exit_frozen_horizon": 3
+      },
+      "short": {
+        "completed": 2,
+        "post_exit_comparable": 2,
+        "directional_recovery_after_exit": 0,
+        "loss_persisted_after_exit": 2,
+        "no_post_exit_frozen_horizon": 0
+      }
+    },
+    "recovered_long_stop": {
+      "decision_time_ms": 1786702500000,
+      "actual_holding_minutes": 196.5202,
+      "actual_gross_return_bps": -107.89850016703407,
+      "actual_stress_net_return_bps": -115.77230818656953,
+      "first_post_exit_horizon_minutes": 240,
+      "horizon_gross_bbo_bps": 25.500276509022868,
+      "horizon_after_modeled_friction_bps": 21.76752325748159
+    },
+    "persistent_paths": [
+      {
+        "side": "long",
+        "exit_reason": "signal",
+        "actual_holding_minutes": 164.97846666666666,
+        "actual_gross_return_bps": -17.177545729798517,
+        "first_post_exit_horizon_minutes": 240,
+        "horizon_gross_bbo_bps": -1.4325914556145847
+      },
+      {
+        "side": "short",
+        "exit_reason": "signal",
+        "actual_holding_minutes": 210.03451666666666,
+        "actual_gross_return_bps": -50.903273753341225,
+        "first_post_exit_horizon_minutes": 240,
+        "horizon_gross_bbo_bps": -47.57559290057279
+      },
+      {
+        "side": "short",
+        "exit_reason": "stop",
+        "actual_holding_minutes": 60.30335,
+        "actual_gross_return_bps": -61.74100483473577,
+        "first_post_exit_horizon_minutes": 240,
+        "horizon_gross_bbo_bps": -178.58059218966548
+      }
+    ]
+  },
+  "proposal_contract": {
+    "recommendation": "Keep MU report-only, preserve the frozen route and exit contract, and continue exact prospective lifecycle and transport-parity collection.",
+    "why_now": "The repaired lifecycle replay and frozen markouts could be joined for the first direct exit-timing attribution without searching a new parameter surface.",
+    "evidence_reviewed": "Seven exact archive-repaired prospective lifecycle episodes, the same fourteen frozen 15/60/240-minute executable-BBO paths, exact input and generator hashes, nominal and stress lifecycle economics, side attribution, and an independent rule-level reconciliation.",
+    "observed_problem_or_opportunity": "One losing long stop recovered directionally by the first frozen horizon after exit, while the other comparable long and both comparable shorts remained adverse. The sample does not support treating all losses as bad exit timing.",
+    "applicable_market_regime": "The evidence is limited to source-native 15m MU breakout-pressure onsets under the observed EMA9/EMA21 and depth-10 pressure conditions; it does not establish a general regime rule.",
+    "alternatives_considered": "Immediate wider stops, longer fixed holds, profit targets, trailing exits, long-only selection, short removal, a parameter sweep, selecting the most favorable horizon, and doing nothing. The diagnostic used the first frozen post-exit horizon and proposes no live change to avoid post-hoc selection.",
+    "proposed_live_change": "none",
+    "expected_upside": "More exact comparable exits can distinguish a recurring long-stop truncation mechanism from one-path variance without risking v53 capital or contaminating the frozen MU experiment.",
+    "main_risks_and_failure_modes": "Only four exits are comparable, only one is a recovered long stop, three long lifecycles outlast the largest fixed horizon, fixed BBO paths omit funding and depth-sized stop execution, and the 240-minute comparator may occur materially after the real exit.",
+    "validation_completed": "Exact symbol/provider/profile and authority identities reconcile; nominal and stress lifecycle keys match; only the first eligible frozen horizon was used; missing or later horizons cannot be substituted; input and generator hashes were frozen; the output was independently recomputed without importing the diagnostic module.",
+    "validation_still_required": "The fixed 96-decision transport-parity window, at least 20 independent onsets and 12 resolved both-side lifecycles, at least three comparable long stop exits, complete depth and mark paths, exact funding and stress accounting, and a future preregistered confirmation of any proposed exit change.",
+    "success_metrics": "A majority of at least three independent long stop exits recover at the first frozen post-exit horizon after costs, while route-level stress net and stress net excluding the largest winner remain positive in at least 12 resolved both-side lifecycles.",
+    "failure_or_rollback_triggers": "Comparable long stop exits remain mostly adverse, the apparent recovery depends on one path or a selected horizon, exact depth/funding reverses recovery, transport identity fails, or route-level ex-largest stress economics remain negative.",
+    "confidence_level": "high_on_measurement_integrity_low_on_exit_diagnosis",
+    "explicit_approval_requested": false
+  },
+  "evidence": [
+    {
+      "path": "../../data/logs/research/xyz_mu_shadow_exit_attribution_20260817T065547Z_v1.json",
+      "role": "immutable_bias_controlled_exit_attribution",
+      "sha256": "85087590e2912671d4f1733b0cc60dbc1af38e05131ea2e4901e7d1dbec70704",
+      "bytes": 7351
+    },
+    {
+      "path": "../../data/logs/research/xyz_mu_breakout_shadow_lifecycle_archive_repaired_20260817T065547Z_v5.json",
+      "role": "immutable_archive_repaired_lifecycle_replay",
+      "sha256": "855a79cac90506790c7c8f4dc9c05fb3debb49593f9a22a7c1808b017bf581e2",
+      "bytes": 15397601
+    },
+    {
+      "path": "../../data/logs/research/xyz_mu_shadow_signal_markouts_20260817T065547Z_v5.json",
+      "role": "immutable_predeclared_fixed_horizon_markouts",
+      "sha256": "ca094f4d2429207b6d0c9d5e06953267dd81f12d552c521bcd162378becde099",
+      "bytes": 44538
+    }
+  ],
+  "limitations": [
+    "Only four of seven completed lifecycles have a frozen horizon at or after their actual exit.",
+    "Only one comparable lifecycle shows directional recovery, so the result cannot establish a recurring exit defect.",
+    "Both comparable shorts remain adverse, but two observations do not establish stable short-side expectancy.",
+    "The fixed-horizon paths are BBO diagnostics and do not reproduce lifecycle funding, depth-sized fills, stop execution, or stress friction.",
+    "The first eligible 240-minute horizon occurs 30 to 180 minutes after the comparable exits and cannot identify an optimal exit time.",
+    "No v53 strategy, asset, route, parameter, leverage, sizing, risk, execution, exit, or deployment setting changed."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

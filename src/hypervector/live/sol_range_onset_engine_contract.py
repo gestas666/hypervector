@@ -5,9 +5,20 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import datetime
 
+_IOC_NO_FILL_FRAGMENT = "could not immediately match against any resting orders"
+
 
 class SolLiveEngineError(RuntimeError):
     """The live lifecycle encountered a technical execution fault."""
+
+
+class SolEntryNotFilledError(SolLiveEngineError):
+    """A definitive IOC acknowledgement left the venue safely flat."""
+
+
+def is_ioc_no_fill_error(value: str | None) -> bool:
+    """Recognize Hyperliquid's definitive immediate-or-cancel no-match text."""
+    return bool(value and _IOC_NO_FILL_FRAGMENT in value.casefold())
 
 
 def require_started(started: bool) -> None:

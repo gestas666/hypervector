@@ -1,0 +1,102 @@
+{
+  "schema_version": "v52_first_eligible_lifecycle_audit_baseline_v1",
+  "hypothesis_id": "v52-first-eligible-lifecycle-audit-v1",
+  "generated_at_utc": "2026-08-16T15:17:11Z",
+  "status": "being_tested",
+  "experiment": "first_eligible_v52_intent_and_lifecycle_audit",
+  "problem_restatement": "Freeze a causal, immutable, technically complete v52 prefix before the first eligible signal so the first intent, action or withholding, submission, protection, exit, costs, and missed-opportunity evidence can be compared against an exact same-run baseline.",
+  "baseline": {
+    "run_id": "bidirectional-live-1786885252328",
+    "profile_id": "multi_asset_growth_first_5000_evidence_bound_successor_v52",
+    "profile_fingerprint": "662d28b352cfc4f09e08c71ee67c8f044421483f2932539b09ea082b5e4f27f7",
+    "run_fingerprint": "c792e5852b38aa69d8344bbee4884991b14558ab778376ccc5dc12c3b685942b",
+    "first_observed_at_utc": "2026-08-16T13:03:40.441507+00:00",
+    "last_observed_at_utc": "2026-08-16T15:14:46.954890+00:00",
+    "cohort_rows": 2364,
+    "configured_symbols": [
+      "BTC",
+      "HYPE"
+    ],
+    "configured_routes": [
+      "hulk_expansion_short_robust_v3|BTC",
+      "hype_breakout_compression_alignment_bidirectional_v2|HYPE",
+      "liquidity_sweep_long_1h_stop60_target60_v2|BTC"
+    ],
+    "readiness_evaluations": 140,
+    "provider_evaluations": 137,
+    "directional_evaluations": 131,
+    "preactivation_annotations_excluded": 3,
+    "eligible_evaluations": 0,
+    "strategy_intents": 0,
+    "actions": 0,
+    "withheld": 0,
+    "fills": 0,
+    "open_lifecycles": 0,
+    "closed_trades": 0,
+    "net_pnl_usd": 0,
+    "fees_usd": 0,
+    "funding_usd": 0,
+    "technical_coverage_complete": true,
+    "technical_gaps": [],
+    "runtime_contracts_aligned": 3,
+    "runtime_contract_mismatches": 0
+  },
+  "immutable_evidence": [
+    {
+      "path": "data/logs/research/bidirectional_cohort/v52_pre_first_eligible_baseline_20260816T1512Z.json",
+      "role": "same-run causal pre-first-eligible audit prefix",
+      "bytes": 6311652,
+      "sha256": "2b4548a07c8b742d7e47d5b48773bf57d49a5f9363eaf8905be08ec9cf25ef75"
+    },
+    {
+      "path": "configs/multi_asset_growth_first_5000_evidence_bound_successor_v52.toml",
+      "role": "active live strategy and execution contract",
+      "bytes": 1993,
+      "sha256": "bcc46284503a2b38b43ee1f6dca473d32edfb7c9f2cb5cd50dd828f9dabe00fb"
+    }
+  ],
+  "trigger_contract": {
+    "first_diagnostic_trigger": "eligible_evaluations, actions, or withheld increases above the baseline",
+    "open_lifecycle_trigger": "an attributable entry fill creates an open lifecycle",
+    "resolved_lifecycle_trigger": "the lifecycle closes and reconciles to exact fills, fees, funding, protection, and exit reason",
+    "after_prefix_action": "publish a fresh immutable same-run audit and a strict cohort-live-audit-delta against this baseline",
+    "technical_escalation": "immediate if an eligible decision lacks an action or explicit withholding, submission exceeds its route delay, an action leaves execution scope, protection is absent, or ledger and venue state disagree",
+    "economic_update": "only after a technically resolved lifecycle; one result remains diagnostic and is not a profitability estimate"
+  },
+  "audit_fields": [
+    "provider and symbol identity",
+    "decision time, availability time, and entry-age ceiling",
+    "side and regime alignment",
+    "router action or explicit withholding reason",
+    "submission and acknowledgement timestamps",
+    "requested and filled price, size, leverage, margin, fee, and slippage",
+    "venue position and reduce-only protection",
+    "maximum favorable and adverse excursion",
+    "provider exit, opposite signal, target, stop, and maximum-hold decisions",
+    "final fee, funding, gross market PnL, and net PnL",
+    "near-miss paths and portfolio occupancy displacement"
+  ],
+  "recommendation": {
+    "recommendation": "Continue the exact v52 live routes unchanged and use this immutable prefix as the baseline for the first eligible signal and lifecycle audit.",
+    "why_now": "The live run is technically healthy but has not yet exercised entry, submission, protection, or exit behavior under the exact v52 identity.",
+    "evidence_reviewed": "The full causal cohort prefix, both active asset ledgers, retired history for accounting reconciliation, the exact v52 config, route readiness, signal outcomes, routing, friction parity, and open and closed lifecycle projections.",
+    "observed_problem_or_opportunity": "There is no current execution defect or resolved performance evidence; the first eligible event has unusually high information value because it tests the entire live translation path.",
+    "applicable_market_regime": "Any future regime satisfying one of the frozen BTC or HYPE entry contracts; the baseline itself was dominated by non-qualifying BTC range and HYPE range or opposed-onset conditions.",
+    "alternatives_considered": "Wait without a frozen prefix, relax entry conditions to force a trade, run another development replay, or predeclare and freeze the same-run baseline now.",
+    "proposed_live_change": "none",
+    "expected_upside": "An exact delta can isolate routing, timing, fill, protection, exit, cost, and missed-opportunity behavior without reconstructing a moving live ledger after the fact.",
+    "main_risks_and_failure_modes": "Low signal cadence, a withheld rather than filled first event, an unresolved open lifecycle, run identity change, technical evidence gaps, or overinterpreting one outcome.",
+    "validation_completed": "The baseline audit is immutable, report-only, same-run, complete, gap-free, zero-eligible, zero-fill, zero-lifecycle, and reconciles all three runtime execution contracts.",
+    "validation_still_required": "The first attributable eligible decision, any corresponding submission or withholding, venue acknowledgement, protective order, completed exit, exact costs, and both HYPE directions over additional non-adjacent evidence.",
+    "success_metrics": "Every eligible decision receives an attributable outcome; every fill receives timely protection; every close reconciles exit reason and exact economics; no audit identity or coverage gap appears.",
+    "failure_or_rollback_triggers": "Any eligible intent without action or explicit withholding, late submission, route-scope breach, missing stop, duplicate position, unexplained close, cost mismatch, source hash conflict, or venue-ledger disagreement.",
+    "confidence_level": "high on the baseline identity and technical completeness; low on strategy profitability until exact v52 lifecycles resolve",
+    "explicit_approval_requested": false
+  },
+  "single_highest_value_next_investigation": "Audit the first eligible HYPE event through its full live lifecycle; if a BTC event arrives first, audit it immediately and retain HYPE both-side collection as the top unresolved economic question.",
+  "falsifier": "This baseline is invalidated by an evidence hash mismatch, non-monotonic later prefix, run or profile identity change, a hidden pre-baseline eligible event, or a later audit that cannot reconcile the declared zero-event state.",
+  "report_only": true,
+  "execution_authority": "none",
+  "automatic_live_change": false,
+  "runtime_strategy_changed": false
+}

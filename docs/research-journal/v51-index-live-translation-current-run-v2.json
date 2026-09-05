@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v51-index-live-translation-current-run-v1",
+  "revision_number": 2,
+  "supersedes_revision_id": "ed9568057f1d5cd539ce3bd91e47d3002554e51c9ae7b50e25801c5946693f1a",
+  "created_at_utc": "2026-08-14T08:59:00Z",
+  "strategy_id": "hip3_breakout_pressure_sp500_spcx_fresh15s_bidirectional_v3",
+  "symbol": "xyz:SP500+xyz:SPCX",
+  "status": "observe",
+  "hypothesis": "The exact v51 SP500/SPCX live-v3 route may retain an attributable after-cost edge when its backend and source-native observer decisions remain identical and complete lifecycles occur on both configured sides.",
+  "decision": "Continue exact live collection without changing the route. Fourteen current-run backend decisions match the source-native observers exactly, but no eligible onset or complete lifecycle exists. Preserve the 32-bar price-breakout requirement: the measured EMA-and-pressure near misses were nonpositive after source-bound modeled friction and do not justify relaxing the entry contract.",
+  "confidence": "low",
+  "falsifier": "Reject the live-translation hypothesis if backend-observer decisions diverge, source coverage becomes incomplete, or a predeclared set of resolved long and short lifecycles is non-positive after exact fees, funding, slippage, latency, stop behavior, and largest-winner removal. Reconsider the price-breakout requirement only if a later predeclared live-source near-miss window is positive after costs, side separation, overlap control, and largest-winner removal.",
+  "metrics": {
+    "run_id": "bidirectional-live-1786691478619",
+    "backend_decisions": 14,
+    "observer_decisions": 14,
+    "decision_mismatches": 0,
+    "sp500_eligible_decisions": 0,
+    "spcx_eligible_decisions": 0,
+    "resolved_lifecycles": 0,
+    "sp500_long_price_only_observations": 2,
+    "sp500_long_resolved_paths": 5,
+    "sp500_long_independent_15m_after_friction_bps": -4.021304617551451,
+    "sp500_long_independent_30m_after_friction_bps": -3.508537526958741,
+    "sp500_long_independent_60m_after_friction_bps": 0.7222317038107224,
+    "spcx_short_price_only_observations": 4,
+    "spcx_short_resolved_paths": 7,
+    "spcx_short_independent_15m_after_friction_bps": -8.873060664391778,
+    "spcx_short_independent_30m_after_friction_bps": -16.749796122456914,
+    "spcx_short_independent_60m_after_friction_bps": -26.25861945196193,
+    "live_change_proposed": false
+  },
+  "evidence": [
+    {
+      "path": "../../data/logs/research/v51_sp500_live_condition_window_20260814T0852Z_v4.json",
+      "role": "exact_current_run_sp500_live_condition_window",
+      "sha256": "e8688c905fb46697027e81b403ece8b88851f685fa1f7144cdb96172e460c55d",
+      "bytes": 10192
+    },
+    {
+      "path": "../../data/logs/research/v51_spcx_live_condition_window_20260814T0852Z_v4.json",
+      "role": "exact_current_run_spcx_live_condition_window",
+      "sha256": "8886651946b4619aa3375c5251971759416018f8e0e8a82529a0ef189f8e9118",
+      "bytes": 10193
+    },
+    {
+      "path": "../../data/logs/research/v51_sp500_price_blocker_outcomes_20260814T0853Z_v3.json",
+      "role": "current_run_sp500_long_price_only_blocker_outcomes",
+      "sha256": "aa251108242ef781ac5606c31d6690f27fbb216cecf1dfdbd0a7cb3684166731",
+      "bytes": 14601
+    },
+    {
+      "path": "../../data/logs/research/v51_spcx_price_blocker_outcomes_20260814T0853Z_v3.json",
+      "role": "current_run_spcx_short_price_only_blocker_outcomes",
+      "sha256": "3bcc51b58c1f1fef402a5db269f1ee841aef2a158e384d3bf91b98bd3744bff2",
+      "bytes": 16242
+    },
+    {
+      "path": "../../data/logs/research/v51_index_backend_observer_parity_20260814T0855Z_v3.json",
+      "role": "immutable_current_run_backend_observer_parity",
+      "sha256": "690cc3c492565a4b3de0a51117edbe5b82a8e773a08dc0978b2d74a3d3df04dd",
+      "bytes": 3309
+    },
+    {
+      "path": "../../configs/multi_asset_growth_first_5000_six_asset_profit_lock_candidate_v51.toml",
+      "role": "active_v51_strategy_and_execution_contract",
+      "sha256": "f0f0fef087eb0a3412c2a917d2d9bd8f578b17e4a40d7c3729519a33cf4f9ab4",
+      "bytes": 3917
+    }
+  ],
+  "limitations": [
+    "The current v51 run has no eligible SP500/SPCX entry and no resolved index lifecycle, so economic-edge confidence remains low.",
+    "Reference closes are not executable entry or exit quotes, and the modeled round-trip friction is a sensitivity rather than a realized fill cost.",
+    "The near-miss sample is small, contains right-censored longer horizons, and cannot prove optimal parameters or profitability.",
+    "Backend and observer processes may still share an upstream public-data defect despite exact decision parity.",
+    "No live strategy, route, parameter, sizing, leverage, stop, target, exit, or execution behavior changed."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

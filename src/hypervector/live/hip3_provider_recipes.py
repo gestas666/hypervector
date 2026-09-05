@@ -10,6 +10,7 @@ from hypervector.live.hip3_cohort_providers import (
     HIP3_BREAKOUT_COMMODITY_FRESH15_STRATEGY,
     HIP3_BREAKOUT_INDEX_STRATEGY,
     HIP3_BREAKOUT_INDEX_FRESH15_STRATEGY,
+    HIP3_BREAKOUT_SNDK_FRESH15_STRATEGY,
     HIP3_SWING_COMMODITY_STRATEGY,
     HIP3_SWING_INDEX_STRATEGY,
     Hip3BreakoutPressureCollector,
@@ -38,6 +39,7 @@ def configured_hip3_recipe(
     if strategy_id in {
         HIP3_BREAKOUT_COMMODITY_STRATEGY,
         HIP3_BREAKOUT_COMMODITY_FRESH15_STRATEGY,
+        HIP3_BREAKOUT_SNDK_FRESH15_STRATEGY,
     }:
         return Hip3BreakoutPressureConfig(32, 21, 55, 0.35, 120.0)
     raise ValueError(f"unsupported HIP-3 provider: {strategy_id}")

@@ -247,30 +247,24 @@ def _counterfactual_economics(
     exit_ms = nonnegative_int(exit_leg.get("venue_timestamp_ms"), "exit timestamp")
     entry_price = positive_number(entry.get("price"), "entry price")
     exit_price = positive_number(exit_leg.get("price"), "exit price")
-    reference = positive_number(
-        exit_leg.get("expected_reference_price"), "exit reference price"
-    )
+    reference = _exit_reference(exit_leg)
     size = positive_number(entry.get("size"), "entry size")
     _validate_recorded_costs(
         trade, side, size, entry_price, exit_price, entry_fill, exit_fill
     )
-    actual_funding = number(trade.get("funding_usd"), "actual funding")
-    observed_full = funding_sum(funding, entry_ms, exit_ms)
-    if not math.isclose(observed_full, actual_funding, abs_tol=_MONEY_TOLERANCE):
-        raise ValueError("extension funding rows do not reconcile to actual lifecycle")
-    soft_funding = funding_sum(funding, entry_ms, soft_ms)
+    actual_funding, soft_funding = _validated_funding(
+        trade, funding, entry_ms, exit_ms, soft_ms
+    )
     estimated_soft_exit = soft_reference * exit_price / reference
     exit_fee_rate = exit_fill.fee_usd / exit_fill.notional_usd
     estimated_soft_fee = estimated_soft_exit * size * exit_fee_rate
     direction = 1.0 if side == "long" else -1.0
-    actual_gross = direction * (exit_price - entry_price) * size
+    price_implied_actual_gross = direction * (exit_price - entry_price) * size
     soft_gross = direction * (estimated_soft_exit - entry_price) * size
     actual_net = number(trade.get("net_pnl_usd"), "actual net PnL")
-    computed_actual = (
-        actual_gross - entry_fill.fee_usd - exit_fill.fee_usd + actual_funding
+    actual_gross = _validated_actual_gross(
+        actual_net, actual_funding, entry_fill, exit_fill
     )
-    if not math.isclose(computed_actual, actual_net, abs_tol=_MONEY_TOLERANCE):
-        raise ValueError("extension economics do not reconcile to actual net PnL")
     soft_net = soft_gross - entry_fill.fee_usd - estimated_soft_fee + soft_funding
     return {
         "estimated_soft_exit_price": estimated_soft_exit,
@@ -280,12 +274,49 @@ def _counterfactual_economics(
         "funding_through_soft_usd": soft_funding,
         "funding_during_extension_usd": actual_funding - soft_funding,
         "actual_gross_pnl_usd": actual_gross,
+        "price_implied_actual_gross_pnl_usd": price_implied_actual_gross,
+        "price_rounding_gap_usd": price_implied_actual_gross - actual_gross,
         "estimated_soft_gross_pnl_usd": soft_gross,
         "actual_net_pnl_usd": actual_net,
         "estimated_soft_net_pnl_usd": soft_net,
         "actual_minus_soft_gross_usd": actual_gross - soft_gross,
         "actual_minus_soft_net_usd": actual_net - soft_net,
     }
+
+
+def _exit_reference(exit_leg: Record) -> float:
+    return positive_number(
+        exit_leg.get("expected_reference_price"), "exit reference price"
+    )
+
+
+def _validated_funding(
+    trade: Record,
+    funding: Mapping[int, float],
+    entry_ms: int,
+    exit_ms: int,
+    soft_ms: int,
+) -> tuple[float, float]:
+    actual = number(trade.get("funding_usd"), "actual funding")
+    observed = funding_sum(funding, entry_ms, exit_ms)
+    if not math.isclose(observed, actual, abs_tol=_MONEY_TOLERANCE):
+        raise ValueError("extension funding rows do not reconcile to actual lifecycle")
+    return actual, funding_sum(funding, entry_ms, soft_ms)
+
+
+def _validated_actual_gross(
+    actual_net: float,
+    actual_funding: float,
+    entry_fill: FillAggregate,
+    exit_fill: FillAggregate,
+) -> float:
+    actual_gross = exit_fill.closed_pnl_usd
+    computed_net = (
+        actual_gross - entry_fill.fee_usd - exit_fill.fee_usd + actual_funding
+    )
+    if not math.isclose(computed_net, actual_net, abs_tol=_MONEY_TOLERANCE):
+        raise ValueError("extension economics do not reconcile to actual net PnL")
+    return actual_gross
 
 
 def _validate_recorded_costs(

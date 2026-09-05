@@ -1,0 +1,150 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v51-hype-compression-live-translation",
+  "revision_number": 1,
+  "supersedes_revision_id": null,
+  "created_at_utc": "2026-08-14T08:40:54Z",
+  "strategy_id": "hype_breakout_compression_pullback_bidirectional_v1",
+  "symbol": "HYPE",
+  "status": "observe",
+  "hypothesis": "The exact v51 HYPE compression-pullback route may retain repeatable after-cost edge, but opposed structural and breakout direction may identify a weaker cohort and large-notional protective stops may experience fast-market gap loss beyond their trigger.",
+  "decision": "Keep the exact live route unchanged. Classify the first resolved lifecycle as a valid protective-stop loss during a rapid sell wave, not as a routing or depth-consumption defect. Continue the predeclared alignment study and exact long/short live translation collection without using this post-hoc loss to add a gate or exit.",
+  "confidence": "medium",
+  "falsifier": "Update the execution diagnosis if exact venue evidence shows the order filled materially below contemporaneous executable depth or was submitted late. Update the strategy diagnosis only after a predeclared compatible live window shows aligned or opposed cohorts remain materially different after actual costs, side separation, and largest-winner sensitivity.",
+  "lifecycle": {
+    "lifecycle_id": "HYPE:516333204294",
+    "source_run_id": "bidirectional-live-1786656816144",
+    "source_profile_fingerprint": "30cd54bb5b5b17249ae0a6a3b01d5702b276d51f8dc5ddd6b4d36ab6aa7d1908",
+    "side": "long",
+    "entry_venue_timestamp_ms": 1786677026462,
+    "exit_venue_timestamp_ms": 1786690793813,
+    "holding_time_ms": 13767351,
+    "entry_price": 56.864,
+    "entry_size": 87.9,
+    "entry_notional_usd": 4998.3456,
+    "entry_margin_used_usd": 498.026875,
+    "leverage": 10.0,
+    "exit_price": 56.35,
+    "exit_reason": "protective_stop",
+    "stop_trigger_price": 56.409088,
+    "gross_market_pnl_usd": -45.1806,
+    "fees_usd": 4.299052,
+    "funding_usd": -0.121754,
+    "net_pnl_usd": -49.601406,
+    "gross_return_bps": -90.39110861001399,
+    "net_return_bps": -99.23564709090945,
+    "net_return_on_margin_pct": -9.959584209185499,
+    "maximum_favorable_excursion_bps": 32.70962296004542,
+    "maximum_adverse_excursion_bps": 90.39110861001399,
+    "peak_giveback_bps": 123.10073157005941,
+    "observed_cost_hurdle_bps": 8.844538480892558,
+    "entry_slippage_bps": -3.164445694597199,
+    "exit_slippage_from_trigger_bps": 10.474907872998848
+  },
+  "entry_context": {
+    "structural_side": "long",
+    "five_minute_breakout_side": "short",
+    "breakout_side_relation": "opposed",
+    "canonical_state_1m": "TREND_DOWN",
+    "canonical_state_5m": "BREAKOUT",
+    "canonical_context_15m": "RANGE",
+    "canonical_confidence": 0.6236111111111111,
+    "ema_21_55_direction": -1,
+    "sma_100_200_direction": -1,
+    "cipher_a_direction": -1,
+    "harsi_direction": -1,
+    "mtf_5m_bias": -3,
+    "mtf_15m_bias": -3,
+    "interpretation": "The route entered from its authoritative hourly structural long side after a fresh short breakout onset. The surrounding report-only trend components opposed the long, but they were not live entry gates. This is a strategy-assumption observation, not evidence that execution differed from configuration."
+  },
+  "exit_context": {
+    "canonical_state_1m": "TREND_DOWN",
+    "canonical_state_5m": "TREND_DOWN",
+    "canonical_context_15m": "TREND_DOWN",
+    "canonical_confidence": 0.6472222222222223,
+    "first_opposed_decision_ms": 1786677300000,
+    "maximum_consecutive_opposed_decisions": 185,
+    "opposed_decisions": 215,
+    "completed_decisions": 229,
+    "coverage_gap_decisions": 0,
+    "interpretation": "Regime context became persistently opposed shortly after entry and remained opposed at the stop. The separately frozen opp5_loss20 exit challenger was already rejected because it failed robustness and untouched-later evidence; this lifecycle cannot be reused to select another threshold."
+  },
+  "exact_stop_event": {
+    "book_window_start_utc": "2026-08-14T06:59:30Z",
+    "book_window_end_utc": "2026-08-14T07:00:10Z",
+    "l2_snapshots": 88,
+    "l2_window_complete": true,
+    "best_bid_before_cross": 56.428,
+    "best_bid_first_below_stop": 56.371,
+    "cross_interval_ms": 500,
+    "visible_sell_vwap_612ms_before_fill": 56.350847,
+    "visible_sell_vwap_313ms_before_fill": 56.355,
+    "actual_fill_price": 56.35,
+    "actual_fill_minus_visible_vwap_612ms_bps": -0.1503,
+    "trigger_to_fill_gap_loss_usd": 5.1938352,
+    "public_trade_window_complete": true,
+    "public_trades": 974,
+    "five_seconds_before_fill_buy_aggressor_size": 828.18,
+    "five_seconds_before_fill_sell_aggressor_size": 6182.11,
+    "five_seconds_before_fill_sell_to_buy_ratio": 7.464693665628245,
+    "own_fill_share_of_five_second_sell_volume_pct": 1.4218446452748335,
+    "diagnosis": "rapid_market_gap_through_stop_not_execution_depth_defect"
+  },
+  "counterfactuals": {
+    "low_activation_profit_lock_single_trade_result": "The 25-bps activation challenger would have estimated a small positive result on this lifecycle.",
+    "selection_warning": "That result is post-hoc and the same generic profit-lock family already failed development and later acceptance. It is not a live-change proposal.",
+    "regime_loss_exit_result": "The previously frozen opposition-loss exit mildly improved development but failed largest-winner robustness and made the opened later block negative. It remains rejected.",
+    "do_nothing_baseline": "Preserve the exact v51 route and continue causal live measurement."
+  },
+  "minimum_additional_evidence": {
+    "to_update_execution_diagnosis": "Another exact v51 HYPE stop with complete source-native L2 and public trades, including any case where actual fill is materially worse than contemporaneous executable depth.",
+    "to_update_strategy_diagnosis": "At least one later resolved exact-v51 lifecycle per side and relation cohort after the 2026-08-14T03:29:21.702938Z prospective cutoff.",
+    "for_change_recommendation": "A predeclared compatible forward window with exact fees, funding, slippage, latency, stop behavior, both sides, aligned and opposed cohorts, largest-winner sensitivity, and a separately versioned portfolio replay.",
+    "promotion_threshold": false
+  },
+  "single_highest_value_next_investigation": "Continue the current system-wide priority of collecting exact SP500 v3 long and short lifecycles while passively filling the predeclared HYPE side-and-relation cells; do not spend further trials on already-rejected HYPE exits.",
+  "evidence": [
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/multi_asset_live_audit_bidirectional-live-1786656816144_final_20260814T0705Z.json",
+      "role": "immutable_exact_v51_lifecycle_audit",
+      "sha256": "6b843bb0fd00e3de83faff34c4d06081c9d2859fa1c12f2717cd5e82b6a01145",
+      "bytes": 7813929
+    },
+    {
+      "path": "../../data/cache/vendor/0xarchive/hyperliquid/HYPE/20260814T065930000000Z_20260814T070010000000Z_d20/manifest.json",
+      "role": "exact_stop_window_source_native_l2",
+      "sha256": "a3e161a76fb88f92b898c89578642f6c3e32956064ff4ff0deda39b6d3dc0e2d",
+      "bytes": 963
+    },
+    {
+      "path": "../../data/cache/vendor/0xarchive/hyperliquid/HYPE/20260814T065930000000Z_20260814T070010000000Z_trades/manifest.json",
+      "role": "exact_stop_window_public_trade_flow",
+      "sha256": "b2d6d0720890c83466d0241177e80d33769386b873c2ca2171bc28e8d8092699",
+      "bytes": 1234
+    },
+    {
+      "path": "../../configs/multi_asset_growth_first_5000_six_asset_profit_lock_candidate_v51.toml",
+      "role": "exact_live_contract",
+      "sha256": "f0f0fef087eb0a3412c2a917d2d9bd8f578b17e4a40d7c3729519a33cf4f9ab4",
+      "bytes": 3917
+    }
+  ],
+  "metrics": {
+    "compatible_resolved_lifecycles": 1,
+    "wins": 0,
+    "losses": 1,
+    "net_pnl_usd": -49.601406,
+    "live_change_proposed": false,
+    "technical_execution_defect_found": false
+  },
+  "limitations": [
+    "One lifecycle cannot establish or invalidate durable strategy edge.",
+    "The aligned-versus-opposed split was examined after the frozen compression policy and is under prospective measurement, not promotion.",
+    "0xArchive books are 500-ms snapshots and cannot reproduce every microsecond of trigger ordering, but they bracket the fill and reconcile visible size and price.",
+    "Counterfactual exit prices are completed-bar estimates, not venue fills, and capital reallocation was not modeled.",
+    "No live strategy, route, parameter, leverage, sizing, risk control, exit, or execution authority changed from this diagnosis."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

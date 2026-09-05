@@ -17,8 +17,8 @@ pub(super) fn render_actions(frame: &mut Frame, app: &App, area: Rect) {
             frame,
             app,
             area,
-            " SELECTED BACKEND ACTIONS ",
-            "No actions selected in the recent routing window",
+            " SELECTED BACKEND ACTIONS // CURRENT RUN ",
+            "0 action records in retained window\nSetup blockers remain visible above until a provider emits an eligible intent",
         );
         return;
     }
@@ -112,8 +112,8 @@ pub(super) fn render_withheld(frame: &mut Frame, app: &App, area: Rect) {
             frame,
             app,
             area,
-            " WITHHELD INTENTS // NOTHING HIDDEN ",
-            "No intents withheld in the recent routing window",
+            " WITHHELD INTENTS // CURRENT RUN // NOTHING HIDDEN ",
+            "0 withheld intent records in retained window\nWithholding begins only after an eligible intent reaches the router",
         );
         return;
     }
@@ -140,7 +140,7 @@ pub(super) fn render_withheld(frame: &mut Frame, app: &App, area: Rect) {
             .style(app.theme.header),
         )
         .block(panel(
-            " WITHHELD INTENTS // NOTHING HIDDEN // RECENT 50 ",
+            " WITHHELD INTENTS // CURRENT RUN // NOTHING HIDDEN // RECENT 50 ",
             app,
         ));
     frame.render_widget(table, area);

@@ -153,6 +153,15 @@ fn retired_open_gold_remains_visible_as_a_transition_blocker() {
     report["portfolio"]["maximum_configured_margin_fraction"] = json!(0.03);
     report["portfolio"]["sizing_technically_ready"] = json!(true);
     report["portfolio"]["readiness_reasons"] = json!(["venue is not flat with no open orders"]);
+    report["profile_change_approval"] = json!({
+        "state": "approved_profile_change",
+        "approval_required": true,
+        "approval_status": "approved_for_live_transition",
+        "approval_document": "docs/live-approvals/v63-to-v64.json",
+        "retired_execution_scopes": ["provider|xyz:GOLD|long"],
+        "replacement_execution_scopes": [],
+        "execution_authority": "none"
+    });
 
     let parsed = parse_growth_preflight(&report.to_string()).expect("retired GOLD is valid");
 
@@ -161,4 +170,32 @@ fn retired_open_gold_remains_visible_as_a_transition_blocker() {
     assert_eq!(parsed.open_orders, Some(1));
     assert_eq!(parsed.assets.len(), 1);
     assert_eq!(parsed.assets[0].symbol, "BTC");
+    assert_eq!(parsed.retired_assets.len(), 1);
+    assert_eq!(parsed.retired_assets[0].symbol, "xyz:GOLD");
+    assert!(!parsed.retired_assets[0].flat_no_orders);
+    assert!(parsed.retired_assets[0].ledger_reconciled);
+    let approval = parsed.profile_change_approval.expect("profile approval");
+    assert_eq!(approval.state, "approved_profile_change");
+    assert_eq!(approval.retired_execution_scopes.len(), 1);
+    assert!(approval.replacement_execution_scopes.is_empty());
+}
+
+#[test]
+fn rejects_profile_change_approval_that_claims_execution_authority() {
+    let mut report = document();
+    report["profile_change_approval"] = json!({
+        "state": "approved_profile_change",
+        "approval_required": true,
+        "approval_status": "approved_for_live_transition",
+        "approval_document": "docs/live-approvals/change.json",
+        "retired_execution_scopes": [],
+        "replacement_execution_scopes": [],
+        "execution_authority": "hyperliquid_mainnet"
+    });
+
+    assert!(
+        parse_growth_preflight(&report.to_string())
+            .unwrap_err()
+            .contains("profile change approval")
+    );
 }

@@ -24,7 +24,10 @@ pub(crate) fn render(frame: &mut Frame, app: &App, area: Rect) {
         );
         return;
     };
-    let current = performance.current_run.as_ref();
+    let current = performance
+        .current_run
+        .as_ref()
+        .filter(|run| app.backend.run_id.as_deref() == Some(run.run_id.as_str()));
     let (all_total, all_strategies) = app
         .backend
         .cohort_checkpoint
@@ -46,7 +49,21 @@ pub(crate) fn render(frame: &mut Frame, app: &App, area: Rect) {
             app,
         )
     });
-    let mut block = panel(" STRATEGY LEDGER // RUN | ALL-TIME MIXED PROFILES ", app);
+    let title = current.map_or_else(
+        || " STRATEGY LEDGER // RUN UNAVAILABLE | ALL-TIME MIXED ".into(),
+        |run| {
+            let label = if run.total.closed_trades == 0 {
+                "FRESH RUN"
+            } else {
+                "RUN"
+            };
+            format!(
+                " STRATEGY LEDGER // {label} {}/{} | ALL-TIME MIXED ",
+                run.total.wins, run.total.losses,
+            )
+        },
+    );
+    let mut block = panel(title, app);
     if let Some(annotation) = hulk_entry_quality_annotation(app) {
         block = block.title_bottom(annotation);
     }

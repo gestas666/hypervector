@@ -1,0 +1,528 @@
+{
+  "schema_version": 1,
+  "source_profile_id": "multi_asset_growth_first_5000_hype_freshness_repair_v53",
+  "source_profile_fingerprint": "f6378e473088b962724176f1b4aaf0857d4e2a6c3bf0103c2d1794d6bfd46a82",
+  "contract": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_promotion": false,
+    "runtime_strategy_changed": false
+  },
+  "routes": {
+    "hulk_expansion_short_robust_v3|BTC": {
+      "triage": "REVISE",
+      "next_experiment": "collect_side_specific_evidence",
+      "historical_assessment": "fixed-cap evidence is positive in the 27-trade stress block but negative in the nine-trade pseudo-holdout and largest-winner dependent; repeatability remains unproven",
+      "decision_source": "docs/research-journal/v53-btc-hulk-fixed-cap-evidence-parity-v1.json",
+      "supporting_evidence": [
+        "data/logs/research/20260801_hulk_short_robust_v3_btc_robustness_cost_stress.json",
+        "data/logs/research/20260801_hulk_short_robust_v3_btc_pseudo_holdout.json",
+        "data/logs/research/20260811_hulk_short_robust_v3_btc_forward_nominal.json"
+      ]
+    },
+    "liquidity_sweep_long_1h_stop60_target60_v2|BTC": {
+      "triage": "REVISE",
+      "next_experiment": "collect_side_specific_evidence",
+      "historical_assessment": "six_development_paths_and_one_later_winner_are_promising_but_sparse",
+      "decision_source": "docs/research-journal/v53-live-improvement-baseline-v1.json",
+      "supporting_evidence": [
+        "configs/research/cohort_improvement_decision_overrides_v52.json",
+        "data/logs/research/bidirectional_cohort/btc_liquidity_sweep_taker_parity_20260811_v2.json"
+      ]
+    },
+    "hype_breakout_compression_alignment_bidirectional_v2|HYPE": {
+      "triage": "REVISE",
+      "next_experiment": "collect_both_side_live_execution",
+      "historical_assessment": "development_supportive_but_postselected; runtime opposite-intent exit parity is verified while exact v53 closes and independent later short lifecycles remain absent",
+      "decision_source": "docs/research-journal/v53-hype-exit-runtime-contract-verification-v1.json",
+      "supporting_evidence": [
+        "configs/research/cohort_improvement_decision_overrides_v52.json",
+        "docs/research-journal/v51-hype-compression-alignment-causal-replay-v1.json",
+        "data/logs/research/hype_compression_breakout_challenger_20260816_v6_alignment/report.json",
+        "docs/research-journal/v52-hype-side-and-opposite-exit-contract-v1.json",
+        "docs/research-journal/v52-hype-maximum-hold-evidence-freshness-v1.json",
+        "docs/research-journal/v53-hype-exit-runtime-contract-verification-v1.json"
+      ]
+    }
+  },
+  "active_hypotheses": [
+    {
+      "hypothesis_id": "v53-first-eligible-lifecycle-audit-v1",
+      "route": "prospective_v53_exact_live_route_collection|ALL",
+      "experiment": "first_eligible_v53_intent_and_lifecycle_audit",
+      "status": "being_tested",
+      "decision_source": "docs/research-journal/v53-live-improvement-baseline-v1.json",
+      "evidence_baseline": "data/logs/research/bidirectional_cohort/v53_pre_first_eligible_baseline_20260817T0535Z_v1.json",
+      "baseline_identity": {
+        "run_id": "bidirectional-live-1786942233732",
+        "profile_id": "multi_asset_growth_first_5000_hype_freshness_repair_v53",
+        "profile_fingerprint": "f6378e473088b962724176f1b4aaf0857d4e2a6c3bf0103c2d1794d6bfd46a82"
+      },
+      "baseline_counters": {
+        "eligible_evaluations": 0,
+        "strategy_intents": 0,
+        "actions": 0,
+        "withheld": 0,
+        "fills": 0,
+        "open_lifecycles": 0,
+        "closed_trades": 0
+      },
+      "minimum_evidence": "one attributable eligible decision with an explicit action or withholding outcome; a fill additionally requires reconciled protection and a resolved lifecycle before any economic update",
+      "execution_effect": "report_only",
+      "automatic_live_change": false
+    },
+    {
+      "hypothesis_id": "eth-remove-canonical-breakout-onset-forward-v1",
+      "route": "research_only|ETH",
+      "experiment": "future_only_canonical_breakout_onset_one_blocker",
+      "status": "being_tested",
+      "decision_reason": "The latest isolated prefix contains 368 long and zero short evaluations, no eligible intent, and negative independent 5/15/30/60-minute readiness paths after the fixed 13-bps diagnostic hurdle and largest-winner removal. Keep collecting exact both-side eligible lifecycles; no blocker relaxation or live inclusion is supported.",
+      "decision_source": "docs/research-journal/v53-eth-pullback-forward-prefix-result-v1.json",
+      "prior_decision_source": "docs/research-journal/eth-breakout-precompression-pullback-v13.json",
+      "minimum_evidence": "At least 20 future-only independent candidates with both sides, exact depth and funding, positive nominal mean and median, positive stress net after largest-winner removal, and no worse stop behavior than the frozen route.",
+      "execution_effect": "report_only",
+      "automatic_live_change": false
+    },
+    {
+      "hypothesis_id": "V53_SPCX_CASH_OPEN_PROSPECTIVE_V1",
+      "route": "research_only|xyz:SPCX",
+      "experiment": "unchanged_15m_cash_open_gap_reversal_prospective_prefix",
+      "status": "being_tested",
+      "decision_reason": "The exact prospective prefix contains 379 completed 15-minute public-trade bars and one fully scorable cash-open decision. The frozen 20-bps rule observed a 7.15-bps opening gap and correctly produced no entry. Continue exact collection without tuning; one scorable session neither validates nor rejects the historical approximately 3.94 trades-per-week development estimate.",
+      "decision_source": "docs/research-journal/v53-spcx-cash-open-prospective-prefix-v1.json",
+      "observed_entry_count": 0,
+      "scorable_cash_open_decisions": 1,
+      "minimum_evidence": "At least one attributable frozen entry or five fully scorable cash-open sessions for the next diagnostic update; any live-change review additionally requires resolved exact-cost lifecycles, both-side accounting, positive stress net, and positive largest-winner-removed net over a predeclared compatible window.",
+      "execution_effect": "report_only",
+      "automatic_live_change": false
+    },
+    {
+      "hypothesis_id": "MU_BREAKOUT_PRESSURE_TRANSPORT_PARITY_FORWARD_V2",
+      "route": "research_only|xyz:MU",
+      "experiment": "fixed_96_decision_transport_parity_forward_window",
+      "status": "being_tested",
+      "decision_reason": "The fixed v2 window resolved 4/4 decisions before a bounded venue-clock lead triggered an observer fault. The missed 21:00Z decision and required generator repair guarantee technical failure; the finalizer must preserve and publish FAIL after the frozen end boundary.",
+      "decision_source": "docs/research-journal/v53-mu-transport-parity-forward-window-v2.json",
+      "repair_source": "docs/research-journal/v53-mu-transport-window-v2-clock-skew-failure-and-repair-v1.json",
+      "minimum_evidence": "Technical success requires all 96 decisions, zero missing or unresolved rows, zero source or entry-decision mismatches, and at least one non-vacuous entry event. Economic review additionally requires at least 20 independent resolved lifecycles with both sides, exact costs and exits, and positive stress net after largest-winner removal.",
+      "execution_effect": "report_only",
+      "automatic_live_change": false
+    }
+  ],
+  "hypothesis_decisions": [
+    {
+      "hypothesis_id": "V53_MU_CASH_OPEN_GAP_TRANSFER_V1",
+      "route": "research_only|xyz:MU",
+      "experiment": "unchanged_spcx_cash_open_gap_reversal_transfer",
+      "status": "rejected",
+      "decision_reason": "The frozen MU transfer lost 89.31 dollars nominally and 192.74 dollars under stress across 20 development trades. Both stress-tested sides lost, only one of three stress folds was positive, largest-winner-removed net was negative, and 12 lifecycles were technically unresolved. Validation and holdout remained sealed.",
+      "decision_source": "docs/research-journal/v53-mu-cash-open-gap-transfer-development-result-v1.json",
+      "preregistration_source": "docs/research-journal/v53-mu-cash-open-gap-transfer-preregistration-v1.json",
+      "proposed_live_change": null,
+      "reopen_condition": "Only a materially distinct preregistered MU mechanism or exact recovered path evidence that materially falsifies the recorded development economics may reopen MU; do not rescue this transfer by threshold tuning or side selection."
+    },
+    {
+      "hypothesis_id": "v53-btc-hulk-fixed-cap-evidence-parity-v1",
+      "route": "hulk_expansion_short_robust_v3|BTC",
+      "experiment": "exact_fixed_notional_translation_and_largest_winner_sensitivity",
+      "status": "accepted",
+      "decision_reason": "At the exact v53 planned notional, the 27-trade stress block remained positive but lost its edge after removing the largest winner, while the nine-trade pseudo-holdout lost $39.663970 with PF 0.8187. The recent pseudo-holdout plus later winner was only $2.835342/PF 1.013 and lost $105.426342 without its largest winner. The route remains an unproven prospective experiment rather than a robust return engine.",
+      "decision_source": "docs/research-journal/v53-btc-hulk-fixed-cap-evidence-parity-v1.json",
+      "proposed_live_change": null,
+      "reopen_condition": "A preregistered exact fixed-cap untouched replay or compatible v53 live sample must remain positive after costs and largest-winner removal without abnormal stop gaps or execution degradation."
+    },
+    {
+      "hypothesis_id": "v53-hype-maximum-hold-evidence-freshness-repair-v1",
+      "route": "hype_breakout_compression_alignment_bidirectional_v2|HYPE",
+      "experiment": "two_source_nonfuture_60_second_soft_hold_evidence",
+      "status": "accepted",
+      "decision_reason": "The approved repair is deployed under the distinct v53 identity and passed flat preflight plus exact poststart acceptance; it is no longer a pending proposal.",
+      "decision_source": "data/logs/research/bidirectional_cohort/v53_poststart_acceptance_20260817T051320Z.json"
+    },
+    {
+      "hypothesis_id": "V53_HYPE_EXIT_RUNTIME_PARITY_V1",
+      "route": "hype_breakout_compression_alignment_bidirectional_v2|HYPE",
+      "experiment": "exact_router_opposite_intent_and_exit_challenger_reconciliation",
+      "status": "accepted",
+      "decision_reason": "The exact v53 route uses enter_and_close, so a fresh eligible opposite aligned intent closes before reversal. Provider-recipe ignore does not disable that router path. Previously tested fixed profit locks and regime-loss exits underperformed the control, so no exit-policy change is supported before exact v53 lifecycles exist.",
+      "decision_source": "docs/research-journal/v53-hype-exit-runtime-contract-verification-v1.json",
+      "proposed_live_change": null,
+      "reopen_condition": "Reassess only from attributable v53 HYPE lifecycles showing repeatable after-cost profit giveback that a preregistered causal exit captures without largest-winner dependence or opposite-side degradation."
+    },
+    {
+      "hypothesis_id": "V53_HYPE_DIRECTIONAL_SIDE_COVERAGE_AUDIT_V1",
+      "route": "hype_breakout_compression_alignment_bidirectional_v2|HYPE",
+      "experiment": "exact_bidirectional_side_generation_and_missed_entry_audit",
+      "status": "accepted",
+      "decision_reason": "The exact complete v53 prefix had 935 long and zero short source evaluations because the frozen slower structural direction remained long, while five short breakout-side rows proved short evidence reached alignment. Both fresh onsets failed independent compression or pullback conditions, so no side bug or missed eligible entry was found.",
+      "decision_source": "docs/research-journal/v53-hype-directional-side-coverage-audit-v1.json",
+      "proposed_live_change": null,
+      "reopen_condition": "Reopen immediately if a structural short source row is projected long, an eligible short intent is suppressed without explicit provenance, or exact resolved lifecycles show repeated after-cost directional failure."
+    },
+    {
+      "hypothesis_id": "V53_CONFIGURED_PAYOFF_GROWTH_CAPACITY_V2",
+      "route": "exact_v53_portfolio|ALL",
+      "experiment": "configured_payoff_risk_and_growth_capacity",
+      "status": "accepted",
+      "decision_reason": "Sizing is economically meaningful at roughly 45 to 47 dollars modeled p99 loss per stopped position, but positive expectancy remains unverified because every retained route is sparse, post-selected, unresolved, or largest-winner dependent.",
+      "decision_source": "docs/research-journal/v53-portfolio-cadence-and-growth-capacity-v2.json",
+      "proposed_live_change": null,
+      "reopen_condition": "Update from exact resolved v53 route lifecycles with observed fees, slippage, funding, stop behavior, and largest-winner sensitivity."
+    },
+    {
+      "hypothesis_id": "v53-v51-final-loss-disposition-v1",
+      "route": "retired_v51_mechanisms|HYPE_ETH_SOL_SP500_SPCX",
+      "experiment": "exact_final_eight_lifecycle_loss_postmortem",
+      "status": "accepted",
+      "decision_reason": "The final exact-v51 profile finished 3W/5L, -$94.078803 net, PF 0.3907; Range Onset, index pressure v3, and HYPE v1 were each negative before costs. Unchanged reuse stays closed, while v53 requires new prospective evidence under its distinct identities.",
+      "decision_source": "docs/research-journal/v53-v51-final-loss-disposition-v1.json",
+      "reopen_condition": "Only a materially distinct preregistered causal mechanism or a compatible untouched window satisfying the recorded family-specific reopen condition may reopen a retired v51 mechanism."
+    },
+    {
+      "hypothesis_id": "v53-canary-lineage-scale-up-audit-v1",
+      "route": "pre_5000_canary_lineage|ALL",
+      "experiment": "exact_profile_exit_authority_and_v53_contract_transition",
+      "status": "accepted",
+      "decision_reason": "The 73 pre-$5K trades earned +$4.237874/PF 1.283, but excluding the largest winner was -$0.600152 and the 64 non-operator exits lost $4.177554/PF 0.721. V53 has zero exact provider identity overlap, so it is a new prospective portfolio rather than a faithful canary scale-up; wholesale restoration and unchanged Hulk v2 reopening remain rejected.",
+      "decision_source": "docs/research-journal/v53-canary-lineage-scale-up-audit-v1.json",
+      "reopen_condition": "Only a genuinely new preregistered mechanism may reopen a retired canary family, and it must survive current-source chronological validation, untouched holdout, execution stress, delay sensitivity, and symbol-level largest-winner removal."
+    },
+    {
+      "hypothesis_id": "v53-hype-canonical-onset-one-blocker-first-window-v1",
+      "route": "hype_breakout_compression_alignment_bidirectional_v2|HYPE",
+      "experiment": "retest_remove_canonical_breakout_onset_in_first_v53_window",
+      "status": "rejected",
+      "decision_reason": "Twenty-two independent five-minute paths now exceed the predeclared reassessment count and remain negative after the diagnostic hurdle on mean, median, and largest-winner-removed mean. Fifteen minutes is also negative; thirty minutes fails largest-winner sensitivity and sixty minutes remains sparse and post-observation. The onset-relaxation rejection remains closed.",
+      "decision_source": "docs/research-journal/v53-hype-canonical-onset-one-blocker-extended-window-v2.json",
+      "closed_live_diagnostic_blockers": [
+        "canonical_breakout_onset_absent"
+      ],
+      "reopen_condition": "A materially different preregistered window must satisfy the existing requirement for at least 20 independent paths with positive after-cost mean, median, and largest-winner-removed mean."
+    },
+    {
+      "hypothesis_id": "v53-hype-first-canonical-onset-nearmiss-v2",
+      "route": "hype_breakout_compression_alignment_bidirectional_v2|HYPE",
+      "experiment": "remove_compression_or_pullback_after_first_fresh_onset_nearmiss",
+      "status": "rejected",
+      "decision_reason": "The preregistered first exact-v53 fresh-onset long advanced 70.13 bps, then crossed the configured 80-bps protective-stop proxy in completed trade candles and later at an observed executable bid. The modeled 5,000-dollar-notional exit proxy was -48.46 dollars after the frozen hurdle. This strengthens the existing no-relaxation decision without claiming an exact mark-trigger or fill.",
+      "decision_source": "docs/research-journal/v53-hype-first-canonical-onset-nearmiss-v2.json",
+      "reopen_condition": "The existing twenty-independent-path requirement remains: both sides, exact risk and exit paths, and positive after-cost mean, median, and largest-winner-removed results under a predeclared window."
+    },
+    {
+      "hypothesis_id": "v52-first-eligible-lifecycle-audit-v1",
+      "route": "prospective_v52_exact_live_route_collection|ALL",
+      "experiment": "first_eligible_v52_intent_and_lifecycle_audit",
+      "status": "superseded",
+      "decision_reason": "The v52 run ended flat and its observation boundary was replaced by the exact v53 accounting epoch.",
+      "decision_source": "docs/research-journal/v53-live-improvement-baseline-v1.json",
+      "superseded_by": "v53-first-eligible-lifecycle-audit-v1"
+    },
+    {
+      "hypothesis_id": "v52-hype-aligned-fixed-target-sensitivity",
+      "route": "hype_breakout_compression_alignment_bidirectional_v2|HYPE",
+      "experiment": "symmetric_fixed_target_40_500_bps",
+      "status": "rejected",
+      "decision_reason": "Every 40-300-bps target lost after modeled costs, while the selected 500-bps target materially reduced native aggregate net and lacked independent short confirmation.",
+      "decision_source": "docs/research-journal/v52-hype-aligned-fixed-target-sensitivity-v2.json",
+      "reopen_condition": "A predeclared independent both-side or explicitly side-specific target must beat native total and largest-winner-removed net after executable costs without materially degrading the opposite direction."
+    },
+    {
+      "hypothesis_id": "v52-hype-remove-canonical-breakout-onset-v1",
+      "route": "hype_breakout_compression_alignment_bidirectional_v2|HYPE",
+      "experiment": "remove_canonical_breakout_onset",
+      "status": "rejected",
+      "decision_reason": "Twenty-two independent long-side paths were negative after the fixed diagnostic hurdle and after largest-winner removal.",
+      "decision_source": "docs/research-journal/v52-hype-canonical-onset-relaxation-forward-v1.json",
+      "reopen_condition": "A distinct causal mechanism or materially different predeclared regime window must produce at least 20 independent paths with positive after-cost mean, median, and largest-winner-removed mean."
+    },
+    {
+      "hypothesis_id": "v52-hype-noncompression-alignment-relaxation",
+      "route": "hype_breakout_compression_alignment_bidirectional_v2|HYPE",
+      "experiment": "remove_compression_and_pullback_prerequisites",
+      "status": "rejected",
+      "decision_reason": "The broad aligned-only arm lost across development and opened-final lifecycles; one mixed forward path did not overturn it.",
+      "decision_source": "docs/research-journal/v52-hype-noncompression-alignment-relaxation-v1.json",
+      "reopen_condition": "A predeclared independent same-blocker sample must be positive after realistic costs and largest-winner removal and improve the exact v53 contract."
+    },
+    {
+      "hypothesis_id": "v52-hype-breakout-side-alignment-relaxation",
+      "route": "hype_breakout_compression_alignment_bidirectional_v2|HYPE",
+      "experiment": "remove_breakout_side_alignment_requirement",
+      "status": "rejected",
+      "decision_reason": "The only exact opposed one-blocker path was mixed and negative at three of four horizons, so removing alignment was unsupported.",
+      "decision_source": "docs/research-journal/v52-hype-breakout-side-alignment-relaxation-v1.json",
+      "reopen_condition": "At least 20 independent exact one-blocker episodes with both sides must survive executable costs and largest-winner removal before an exact stop-and-exit replay."
+    },
+    {
+      "hypothesis_id": "v52-btc-sweep-primary-trigger-relaxation-v1",
+      "route": "liquidity_sweep_long_1h_stop60_target60_v2|BTC",
+      "experiment": "remove_sweep_below_prior_low",
+      "status": "deferred",
+      "decision_reason": "Four cross-run exact-route episodes remain below the predeclared twelve-episode threshold; the two new v53 episodes were adverse after the frozen hurdle, and the first crossed the configured stop proxy before its target.",
+      "decision_source": "docs/research-journal/v53-btc-sweep-primary-trigger-relaxation-v2.json",
+      "reopen_condition": "At least 12 independent one-blocker episodes or a separately predeclared exact replay must remain positive after costs and largest-winner removal under the intended stop and target."
+    },
+    {
+      "hypothesis_id": "v52-higher-cadence-crypto-challenger-family-v1",
+      "route": "higher_cadence_crypto_challengers|BTC_SOL_HYPE",
+      "experiment": "impulse_sweep_expected_return_and_low_timeframe_matrix",
+      "status": "rejected",
+      "decision_reason": "The saved impulse models, venue-native impulse arms, five-minute sweeps, expected-return models, and low-timeframe matrix failed their frozen chronological and cost tests.",
+      "decision_source": "docs/research-journal/higher-cadence-crypto-challenger-disposition-v1.json",
+      "reopen_condition": "Only a materially different preregistered causal mechanism with positive gross edge before modeling and untouched after-cost evidence may reopen this family."
+    },
+    {
+      "hypothesis_id": "v52-cross-asset-family-v1",
+      "route": "cross_asset_residual_and_impulse|BTC_ETH_SOL_HYPE",
+      "experiment": "residual_pair_exit_surface_and_leader_follower_impulse",
+      "status": "rejected",
+      "decision_reason": "All six residual pairs lost, no exit-surface cell was positive, and no impulse cell survived delay and fold-stability checks.",
+      "decision_source": "docs/research-journal/v52-cross-asset-family-disposition-v1.json",
+      "reopen_condition": "Only a separate causal mechanism or materially changed predeclared regime, universe, or source may reopen this family with untouched validation, holdout, stress, and largest-winner sensitivity."
+    },
+    {
+      "hypothesis_id": "v53-portfolio-cadence-and-growth-capacity-v1",
+      "route": "exact_v53_portfolio|BTC_HYPE",
+      "experiment": "source_bound_route_cadence_and_shared_growth_capacity",
+      "status": "accepted",
+      "decision_reason": "The three exact v53 routes imply only about 2.01 naive historical events per week before BTC occupancy conflicts, while every expectancy estimate remains sparse, post-hoc, or forward-unproven. Cadence insufficiency is a material portfolio-design risk, but it does not justify loosening current triggers or restoring rejected routes.",
+      "decision_source": "docs/research-journal/v53-portfolio-cadence-and-growth-capacity-v1.json",
+      "reopen_condition": "Update the diagnosis when multiple prospective exact-v53 weeks establish materially different independent cadence or when a genuinely distinct route passes chronological development, untouched validation and holdout, execution stress, delay, stop-path, and largest-winner tests."
+    },
+    {
+      "hypothesis_id": "V53_FIRST_14H_SELECTIVITY_VS_MISSED_OPPORTUNITY_V1",
+      "route": "exact_v53_portfolio|BTC_HYPE",
+      "experiment": "first_14h_readiness_and_missed_opportunity_audit",
+      "status": "accepted",
+      "decision_reason": "The first bounded v53 window showed no eligible intent or hidden routing failure. Exact blockers matched absent market prerequisites, so evidence favored intended selectivity over a broken entry path and did not support trigger relaxation.",
+      "decision_source": "docs/research-journal/v53-first-14h-readiness-and-missed-opportunity-audit-v1.json",
+      "proposed_live_change": null,
+      "reopen_condition": "Update only when the first attributable eligible v53 lifecycle resolves, a technical routing defect appears, or a later preregistered window demonstrates materially different missed-opportunity evidence."
+    },
+    {
+      "hypothesis_id": "MU_BREAKOUT_PRESSURE_TRANSPORT_PARITY_FORWARD_V1",
+      "route": "research_only|xyz:MU",
+      "experiment": "first_fixed_96_decision_transport_parity_forward_window",
+      "status": "superseded",
+      "decision_reason": "The first frozen MU window failed irreversibly after the report-only observer exited on a transient public-data failure and missed a prospective decision. The failure is preserved; the repaired observer collects only under a distinct future v2 preregistration.",
+      "decision_source": "docs/research-journal/v53-mu-transport-window-final-result-and-observer-repair-v1.json",
+      "superseded_by": "MU_BREAKOUT_PRESSURE_TRANSPORT_PARITY_FORWARD_V2",
+      "proposed_live_change": null
+    },
+    {"hypothesis_id": "v53-brentoil-candle-revision-technical-pause-v1", "route": "research_only|xyz:BRENTOIL", "experiment": "immutable_candle_revision_and_delayed_finalization_audit", "status": "deferred", "decision_reason": "The v1 observer's immutable candle source contract encountered signal-field revisions, while the candidate also has negative stress development economics. Its ledger remains preserved and the observer stays technically paused.", "decision_source": "docs/research-journal/v53-brentoil-candle-revision-technical-pause-v1.json", "proposed_live_change": null, "reopen_condition": "Only a separately preregistered v2 source identity with a new immutable epoch, bounded finalization delay, zero source revisions, complete decisions, and supportive exact-cost economics may reopen BRENTOIL."},
+    {
+      "hypothesis_id": "V53_SP500_SPCX_OPENING_RANGE_BREAKOUT_DEVELOPMENT_V1",
+      "route": "us_cash_opening_range_breakout|xyz:SP500,xyz:SPCX",
+      "experiment": "frozen_bidirectional_15m_session_opening_range_breakout",
+      "status": "rejected",
+      "decision_reason": "SP500 earned only $3.769148 nominal but lost $23.105984 under the frozen stress contract and $53.215553 after removing its largest winner. SPCX lost $54.268802 nominal and $90.712587 under stress. Both symbols also contained unresolved selected lifecycle paths, so validation and holdout remained unopened.",
+      "decision_source": "docs/research-journal/v53-sp500-spcx-opening-range-breakout-development-result-v1.json",
+      "proposed_live_change": null,
+      "reopen_condition": "Only a separately preregistered causal mechanism that is materially different from opening-range breakout, pressure transfer, Swing/HA, Krown, and Range Onset may reopen these symbols; this experiment's sealed validation and holdout cannot be used for parameter selection."
+    },
+    {
+      "hypothesis_id": "V53_XYZ100_KROWN_TREND_RESUMPTION_DEVELOPMENT_V1",
+      "route": "krown_trend_resumption|xyz:XYZ100",
+      "experiment": "frozen_bidirectional_15m_rsi_ema_trend_resumption",
+      "status": "rejected",
+      "decision_reason": "All three chronological development folds lost after modeled costs; aggregate nominal and stress results, both directions, and largest-winner-removed results were negative, while 140 of 259 lifecycles also had unresolved technical paths. Validation and holdout remained unopened.",
+      "decision_source": "docs/research-journal/v53-xyz100-krown-trend-resumption-development-v1.json",
+      "reopen_condition": "Only a materially different preregistered signal thesis with resolved exact mark and quote paths may reopen XYZ100; parameter tuning on these development losses is prohibited."
+    },
+    {
+      "hypothesis_id": "V53_HIP3_TOP10_LIQUIDITY_SCREEN_V1",
+      "route": "external_top10_liquidity_screen|xyz",
+      "experiment": "point_in_time_active_market_volume_ranking_and_prior_decision_reconciliation",
+      "status": "superseded",
+      "decision_reason": "MU is the only current top-ten xyz market with an active materially distinct preregistered experiment. Every other immediately identifiable lane is operator-excluded, duplicates the MU semiconductor lane, has negative or technically unresolved evidence, or requires a genuinely new mechanism; liquidity alone does not justify filling a portfolio slot.",
+      "decision_source": "docs/research-journal/v53-hip3-top10-liquidity-screen-v1.json",
+      "superseded_by": "V53_HIP3_TOP10_LIQUIDITY_SCREEN_V2",
+      "reopen_condition": "Use a new point-in-time liquidity snapshot and a genuinely distinct preregistered mechanism that passes causal development, untouched validation and holdout, exact execution stress, both-side robustness, and largest-winner removal."
+    },
+    {"hypothesis_id": "V53_HIP3_TOP10_LIQUIDITY_SCREEN_V2", "route": "external_top10_liquidity_screen|xyz", "experiment": "corrected_mu_v2_window_and_completed_candidate_dispositions", "status": "accepted", "decision_reason": "The v1 capacity ranking remains usable, but its MU-v1 cutoff is superseded. The independent MU-v2 window runs from 2026-08-17T20:00:00Z through 2026-08-18T20:00:00Z; index opening range is rejected and BRENTOIL remains deferred, leaving no second qualified external candidate.", "decision_source": "docs/research-journal/v53-hip3-top10-liquidity-screen-v2.json", "proposed_live_change": null, "reopen_condition": "Update after the fixed MU-v2 result or after a genuinely distinct preregistered mechanism passes causal development, untouched validation and holdout, exact execution stress, both-side robustness, and largest-winner removal."},
+    {"hypothesis_id": "V53_MU_PROSPECTIVE_LIFECYCLE_UPDATE_V1", "route": "research_only|xyz:MU", "experiment": "prospective_exact_cost_lifecycle_and_largest_winner_update", "status": "deferred", "decision_reason": "The eighth resolved lifecycle was another long stop. The sample is now 2W/6L; nominal and stress headlines remain positive only because of the first large winner, both largest-winner-removed totals are negative, shorts are 0W/2L, and two paths remain censored. No funded inclusion is supported.", "decision_source": "docs/research-journal/v53-mu-prospective-lifecycle-update-v1.json", "proposed_live_change": null, "reopen_condition": "At least 20 future-only technically resolved both-side lifecycles must have positive nominal and stress net, median, and largest-winner-removed economics under exact source and execution identity."},
+    {
+      "hypothesis_id": "V53_HYPE_L2_RIDGE_PROSPECTIVE_CLOSURE_V1",
+      "route": "retired_hype_breakout_onset_l2_annotation|HYPE",
+      "experiment": "frozen_ridge_prospective_discrimination_and_portfolio_novelty",
+      "status": "rejected",
+      "decision_reason": "The Ridge model annotates only the retired HYPE breakout-onset route and therefore adds no independent entry or cadence. Its four exact prospective outcomes were all losses, both score bands lost, and directional sign agreement was zero; it is incompatible with the distinct v53 HYPE compression identity.",
+      "decision_source": "docs/research-journal/v53-hype-l2-ridge-prospective-closure-v1.json",
+      "proposed_live_change": null,
+      "reopen_condition": "Only a materially distinct preregistered L2 entry mechanism with at least 20 future-only both-side resolved lifecycles, positive after-cost and largest-winner-removed results, stable score discrimination, and exact route identity may reopen this hypothesis."
+    },
+    {"hypothesis_id": "V53_SP500_SPCX_CASH_OPEN_GAP_REVERSAL_V1", "route": "cash_open_gap_reversal|xyz:SP500,xyz:SPCX", "experiment": "frozen_bidirectional_15m_cash_open_gap_reversal", "status": "deferred", "decision_reason": "SP500 failed nominal, stress, fold, and largest-winner checks. SPCX produced 20 development trades, +$418.129054 stress net, PF 1.8148, and +$225.283950 without its largest winner, but 11 selected lifecycles have unresolved entry-bar mark paths. Validation and holdout remain unopened; no live change is proposed.", "decision_source": "docs/research-journal/v53-sp500-spcx-cash-open-gap-reversal-development-result-v1.json", "proposed_live_change": null, "reopen_condition": "Resolve all 11 exact SPCX entry-bar mark paths under the frozen identity without parameter changes or OOS access; then require the same stress, fold, both-side, liquidation, and largest-winner checks before opening validation."}
+  ],
+  "change_proposals": [],
+  "evidence": [
+    {
+      "path": "../../docs/research-journal/v53-live-improvement-baseline-v1.json",
+      "sha256": "0e268a483417d7bfe3a2cc8755ef14f1af72b602322e4eb39f5c5cd1f352c92a",
+      "bytes": 8114
+    },
+    {
+      "path": "cohort_improvement_decision_overrides_v52.json",
+      "sha256": "aa77fff7dcbb75958ad56f9b7cd1629ba4104932697d68876d24b1093783bf40",
+      "bytes": 33474
+    },
+    {
+      "path": "../multi_asset_growth_first_5000_hype_freshness_repair_v53.toml",
+      "sha256": "d1f6a4e6eb77ba9d8ad1069e703e54611feeaacec6242ac0000eb6f0f0ee4f2b",
+      "bytes": 2038
+    },
+    {
+      "path": "../../docs/runbooks/2026-08-17-v52-v53-transition-contract.md",
+      "sha256": "57b94fcc944a818b33703c5fc45ad90c57ceaa327a63419a45adbefcfaafde4b",
+      "bytes": 7875
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v53_poststart_acceptance_20260817T051320Z.json",
+      "sha256": "acaa8ec5062adbe3432d1ddc1cc768c5b305123e93ed8333ea49e36f7754087b",
+      "bytes": 8380
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v53_pre_first_eligible_baseline_20260817T0535Z_v1.json",
+      "sha256": "9cb8824dde737d603419ac330e4ec1f38dce49dcceae31c4751255d14a850895",
+      "bytes": 6276265
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v53_growth_sizing_stress_20260817_v1.json",
+      "sha256": "50ebfb5e78237912ffbf7c1dc5d808e1c9c87126558f8f6a5d67f33171ce3dc2",
+      "bytes": 199956
+    },
+    {
+      "path": "../../docs/research-journal/v53-xyz100-krown-trend-resumption-development-v1.json",
+      "sha256": "cc005179e36aebfd1fa13e91bae746970b7c09fe8080124200d7bf6dbb56a119",
+      "bytes": 11969
+    },
+    {
+      "path": "../../data/logs/research/xyz_xyz100_krown_trend_resumption_development_20260817_v1.json",
+      "sha256": "fd75068ad7665599be80bc4dd364f366b5fb9191771ade16a52e4d65cb4bee08",
+      "bytes": 187451
+    },
+    {
+      "path": "../../docs/research-journal/v53-v51-final-loss-disposition-v1.json",
+      "sha256": "bd7e76a978c3d92696ac0da30d17126244327f80f1baa57f5fdc4a8de4dd36bc",
+      "bytes": 16933
+    },
+    {
+      "path": "../../docs/research-journal/v53-canary-lineage-scale-up-audit-v1.json",
+      "sha256": "bebf9d08869b1d45431451d3ded6b1380e0890f8e010fe53b46357e6969fa7a6",
+      "bytes": 16597
+    },
+    {
+      "path": "../../docs/research-journal/v53-hype-canonical-onset-one-blocker-extended-window-v2.json",
+      "sha256": "d1fe284ade57b3376c643a0aa249f3a4f40b03e0df51f1709c67c44a6368fdf0",
+      "bytes": 8244
+    },
+    {
+      "path": "../../docs/research-journal/v53-hype-first-canonical-onset-nearmiss-v2.json",
+      "sha256": "b76a66f3bf29dbcfe84c143c2c04ef4bd3b72a76d037e762eca5ea972576f373",
+      "bytes": 8285
+    },
+    {
+      "path": "../../docs/research-journal/v53-btc-sweep-primary-trigger-relaxation-v2.json",
+      "sha256": "f5b1c781309740491ec96e2e9b9f8d85e97cf656310f09e1f352377fb00d32d0",
+      "bytes": 8574
+    },
+    {
+      "path": "../../docs/research-journal/eth-breakout-precompression-pullback-v13.json",
+      "sha256": "cd8b81df043435fdd70a224d741f5581ea6c515ba3a5a1dae348ca4d1131eb59",
+      "bytes": 8920
+    },
+    {
+      "path": "../../docs/research-journal/v53-btc-hulk-fixed-cap-evidence-parity-v1.json",
+      "sha256": "500a4451876f16e326d8294add59f0a26b10ab25b3f9435362b0f0d3bb203a95",
+      "bytes": 10906
+    },
+    {
+      "path": "../../docs/research-journal/v53-portfolio-cadence-and-growth-capacity-v1.json",
+      "sha256": "151e65a6983a00d708d1495a1f240b6caeb7f6dada12fa33a76da62c166670ec",
+      "bytes": 12149
+    },
+    {
+      "path": "../../docs/research-journal/v53-hip3-top10-liquidity-screen-v1.json",
+      "sha256": "244eeb3c18e938067e582e335e2819ebd671e46654f6bea71305b4f03c44f2a2",
+      "bytes": 6804
+    },
+    {
+      "path": "../../docs/research-journal/v53-eth-pullback-forward-prefix-result-v1.json",
+      "sha256": "2cfa211fdf1a8ee8b7bdd59b832442dc343b43c747bac1fcd56ec7495d592c8e",
+      "bytes": 5386
+    },
+    {
+      "path": "../../docs/research-journal/v53-hype-exit-runtime-contract-verification-v1.json",
+      "sha256": "1db4b716be3d338d39f5acb6a595a78460997b99f4d89893a3dc708ab4377bef",
+      "bytes": 6094
+    },
+    {
+      "path": "../../docs/research-journal/v53-mu-transport-parity-forward-window-v2.json",
+      "sha256": "7245e990603d42debc1781b353f7cd75d45ad510f98ef9c16f5860b2a5fe1a36",
+      "bytes": 8769
+    },
+    {
+      "path": "../../docs/research-journal/v53-sp500-spcx-opening-range-breakout-development-result-v1.json",
+      "sha256": "24a593a7f0c90688ae64d1338940d09b5842123fa5cb6c96936d2786c3e36242",
+      "bytes": 3896
+    },
+    {
+      "path": "../../data/logs/research/xyz_sp500_opening_range_breakout_development_20260817_v1.json",
+      "sha256": "4b0c6ed639566b38b21e7c1e5c05c2d04368a4fcace367e38216c54ed6a59059",
+      "bytes": 188959
+    },
+    {
+      "path": "../../data/logs/research/xyz_spcx_opening_range_breakout_development_20260817_v1.json",
+      "sha256": "6fdffe36404b6215c0652197aa689e5d596809adecbf5f6577e9e3e27df5c5e2",
+      "bytes": 187530
+    },
+    {
+      "path": "../../docs/research-journal/v53-first-14h-readiness-and-missed-opportunity-audit-v1.json",
+      "sha256": "5e789b6a064e3919631731ddbc5acf6df8c1807b0ed9b5dcfdaa21c6edca82cc",
+      "bytes": 9319
+    },
+    {
+      "path": "../../docs/research-journal/v53-mu-transport-window-final-result-and-observer-repair-v1.json",
+      "sha256": "6b5cd06f918e74085331dc6e696b150da945365e14e5685fd832d6ad2eaa4f89",
+      "bytes": 6250
+    },
+    {
+      "path": "../../docs/research-journal/v53-mu-observer-repair-first-prospective-boundary-v1.json",
+      "sha256": "c2fc8dcdf8952c9e369bf422f84e6fa12b85df2ea840f56050005b3aee9fbd3a",
+      "bytes": 4064
+    },
+    {
+      "path": "../../docs/research-journal/v53-brentoil-candle-revision-technical-pause-v1.json",
+      "sha256": "cc5b9fe5cf485bc1cee0c90254c1436b3087a82a76aa05dcfb7f3c6fbb5406b9",
+      "bytes": 9274
+    },
+    {
+      "path": "../../docs/research-journal/v53-hip3-top10-liquidity-screen-v2.json",
+      "sha256": "3db79d0b59f11f0700d37e894cc8f53c534885429c5b3931c2508a36c967cd01",
+      "bytes": 4942
+    },
+    {
+      "path": "../../docs/research-journal/v53-hype-directional-side-coverage-audit-v1.json",
+      "sha256": "68420396f1fe91394ee1d8a61dcf81dd86a2ce3e982dc0f550e940ce5e151427",
+      "bytes": 9683
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v53_hype_side_coverage_20260817T2027Z_v1.json",
+      "sha256": "cb708490d31de2de21f6022045d9e4c03d4fafc1f2f617e06f47c5e5276036d6",
+      "bytes": 6601605
+    },
+    {"path": "../../docs/research-journal/v53-portfolio-cadence-and-growth-capacity-v2.json", "sha256": "c61af5a0cfc223a705396e49be5d3e0ec643d4ef886b485791d7ddaa7e9bee4f", "bytes": 13062},
+    {"path": "../../docs/research-journal/v53-mu-transport-window-v2-clock-skew-failure-and-repair-v1.json", "sha256": "04154c55e220b4a61d659678bfb1fa8e85401c529e5d0801979e443a18d87027", "bytes": 7769},
+    {"path": "../../docs/research-journal/v53-hype-l2-ridge-prospective-closure-v1.json", "sha256": "78541bb9b4176e96876d53971ff1d90f72da8e6d7cc227af05b65ae773b55a07", "bytes": 7143},
+    {"path": "../../docs/research-journal/v53-mu-prospective-lifecycle-update-v1.json", "sha256": "ec089e282a4863b66453c4b36dd179299cb98c9a0c1a8dd90283f999920b386d", "bytes": 8779},
+    {"path": "../../docs/research-journal/v53-sp500-spcx-cash-open-gap-reversal-development-result-v1.json", "sha256": "605eee3d4c63ffe76a66333f576f0149016e651375d3a744a09878db879cf125", "bytes": 9973},
+    {"path": "../../data/logs/research/xyz_sp500_cash_open_gap_reversal_development_20260817_v1.json", "sha256": "7558c46f3e66eb0110c7aca37bb3e7867847c7febf04fd76df2d42ec2910ae46", "bytes": 189607},
+    {"path": "../../data/logs/research/xyz_spcx_cash_open_gap_reversal_development_20260817_v1.json", "sha256": "52594aac811a59577973b2fc6120ba714dd6dc941aa7419285a86ee0721ee3b1", "bytes": 189463},
+    {"path": "../../docs/research-journal/v53-mu-cash-open-gap-transfer-preregistration-v1.json", "sha256": "e4c971b9ae02fdebe856c6f7228eedb11fd2e45bc2c8e18ad8da99982c0d4597", "bytes": 6555},
+    {"path": "../../data/logs/research/xyz_mu_liquidity_profile_notional_ladder_cash_open_transfer_20260817_v1.json", "sha256": "13214487ce7da2c6dc420e2aa682ddf10a108984a44bb7ffb561075158e78f55", "bytes": 8286},
+    {"path": "../../data/logs/research/xyz_mu_cash_open_gap_reversal_development_20260817_v1.json", "sha256": "c942d9212d473bd5992d81aa131fe25dc29d3bb4672323fa5f3696316f64001e", "bytes": 261468},
+    {"path": "../../docs/research-journal/v53-mu-cash-open-gap-transfer-development-result-v1.json", "sha256": "db4ac2e9695b81c4b39d4aec33c25bd4c3e29323e9acd4a2d4ad76fb3e0670c5", "bytes": 3846},
+    {"path": "../../data/logs/research/xyz_spcx_prospective_path_audit_20260817_v3.json", "sha256": "c56081e49c36654ab2295a3b4953c5f793797f39609fe31cfce5b4e4b1c96c04", "bytes": 233872},
+    {"path": "../../data/logs/research/xyz_spcx_cash_open_prospective_20260817_v1.json", "sha256": "d0cad7d7007c37928ee147a054a39714ef8995cfff106191cd537d76d10508c2", "bytes": 2731},
+    {"path": "../../docs/research-journal/v53-spcx-cash-open-prospective-prefix-v1.json", "sha256": "be502aab6e526e512fed753e4bef5e8a42dc50316fa644a82f1108f729376f34", "bytes": 3856}
+  ]
+}

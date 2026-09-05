@@ -1,0 +1,111 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v51-checkpoint-extension-rounding-reconciliation-incident-v1",
+  "status": "technical_projection_incident_resolved_live_authority_unchanged",
+  "recorded_at_utc": "2026-08-14T21:54:30Z",
+  "profile": {
+    "profile_id": "multi_asset_growth_first_5000_six_asset_profit_lock_candidate_v51",
+    "profile_fingerprint": "30cd54bb5b5b17249ae0a6a3b01d5702b276d51f8dc5ddd6b4d36ab6aa7d1908",
+    "run_id": "bidirectional-live-1786691478619",
+    "accounting_epoch_id": "v51_first_live"
+  },
+  "incident": {
+    "affected_layer": "read_only_checkpoint_projection",
+    "unaffected_layers": [
+      "venue_execution",
+      "asset_ledgers",
+      "cohort_ledger",
+      "protective_orders",
+      "strategy_routing"
+    ],
+    "last_complete_checkpoint_generated_at_utc": "2026-08-14T21:28:49.272326+00:00",
+    "first_reconciled_checkpoint_generated_at_utc": "2026-08-14T21:53:41.777979+00:00",
+    "observed_error": "extension economics do not reconcile to actual net PnL",
+    "behavior": "The writer retained the last complete checkpoint while the source ledgers continued advancing.",
+    "capital_impact": "none observed; the HYPE close and SP500 protection continued under the live backend"
+  },
+  "root_cause": {
+    "lifecycle_id": "HYPE:516556857812",
+    "exit_oid": 516880697070,
+    "exit_reason": "maximum_hold_seconds",
+    "exit_price": 55.714,
+    "exit_size": 88.28,
+    "authoritative_venue_closed_pnl_usd": 39.443504,
+    "aggregate_price_implied_gross_pnl_usd": 39.44801999999955,
+    "rounding_gap_usd": 0.00451599999954766,
+    "fees_usd": 4.266563,
+    "funding_usd": 0.574115,
+    "authoritative_net_pnl_usd": 35.751056,
+    "explanation": "The extension projector recomputed realized gross from rounded aggregate entry and exit prices. Hyperliquid's exact partial-fill closed PnL differed by $0.004516, so the fail-closed five-microdollar reconciliation rejected an otherwise authoritative close."
+  },
+  "repair": {
+    "method": "Aggregate exact per-fill closed_pnl_usd and use it as authoritative realized gross while retaining the rounded-price estimate and gap as explicit telemetry.",
+    "strict_checks_preserved": [
+      "deduplicated fill identity",
+      "entry and exit size parity",
+      "entry and exit fee reconciliation",
+      "funding timeline reconciliation",
+      "authoritative gross minus fees plus funding equals reflected net PnL"
+    ],
+    "live_strategy_changed": false,
+    "live_config_changed": false,
+    "execution_authority_changed": false,
+    "checkpoint_writer_reloaded_only": true,
+    "backend_restarted": false,
+    "source_hashes": {
+      "cohort_lifecycle_evidence.py": "4e0bcddf58380f2402ffd738dc96c34027ecafd329e60b05b34ea217280dee8f",
+      "cohort_maximum_hold_extension_outcomes.py": "51c8e9f1687e6397236c611089c1cc82c5531a458867660482960a31a48ed0c9",
+      "test_cohort_maximum_hold_extension_outcomes.py": "5adbb6809256374c34e3edaf793576fcabd28d421c4761d6d61d8a089537352e"
+    }
+  },
+  "post_repair_acceptance": {
+    "checkpoint_state": "running_consistent",
+    "faulted_assets": [],
+    "hype_state": "FLAT",
+    "sp500_state": "OPEN_PROTECTED",
+    "sp500_stop_oid": 516695974655,
+    "accounting_epoch_closed_trades": 3,
+    "accounting_epoch_wins": 2,
+    "accounting_epoch_losses": 1,
+    "accounting_epoch_net_pnl_usd": 7.505202,
+    "accounting_epoch_profit_factor": 1.1513102672936328,
+    "portfolio_archive_complete": true,
+    "portfolio_archive_fill_events": 174,
+    "portfolio_archive_fill_sha256": "003d1aa165eb7526dc581c96706a3c8f3283b27bbaa64f49515849e556e9924f"
+  },
+  "validation": {
+    "red_test": "test_venue_close_pnl_survives_aggregate_price_rounding failed with the production reconciliation error before implementation",
+    "green_test": "The same test passed after exact closed-PnL aggregation",
+    "focused_tests": 91,
+    "focused_tests_status": "passed",
+    "ruff_status": "passed",
+    "format_status": "passed",
+    "full_real_ledger_probe": "passed",
+    "line_and_function_limits": "passed"
+  },
+  "uncertainties_risks_and_failure_modes": [
+    "The replacement checkpoint writer is report-only and was reloaded independently of the original TUI supervisor after the original writer was stopped.",
+    "A future venue schema that omits closed_pnl_usd would produce zero authoritative gross and fail reconciliation rather than silently infer it.",
+    "The repair validates the current Hyperliquid partial-fill shape but does not establish strategy profitability.",
+    "The still-open SP500 lifecycle can change the accounting epoch after this checkpoint."
+  ],
+  "falsifier": "The repair is falsified if a complete source ledger prefix with exact fill closed PnL, fees, and funding cannot reproduce reflected net PnL; if checkpoint generation stalls again on the same lifecycle; if the epoch diverges from 3 closes and +$7.505202 at this prefix; or if the live backend, routing, or venue orders changed during the report-only reload.",
+  "change_proposal": {
+    "Recommendation": "Retain the exact closed-PnL projector repair and continue the v51 run without changing strategy parameters.",
+    "Why now": "A resolved profitable HYPE lifecycle was durable in the ledgers but invisible in the TUI because the checkpoint intentionally retained its last complete projection.",
+    "Evidence reviewed": "Exact HYPE asset ledger, cohort ledger, two close fills, fee and funding rows, reflected lifecycle, old and repaired checkpoints, accounting archive, and live process identity.",
+    "Observed problem or opportunity": "Rounded aggregate prices differed from authoritative per-fill closed PnL by $0.004516, blocking all newer telemetry despite correct execution.",
+    "Applicable market regime": "Technical accounting behavior; independent of market regime and applicable to any partially filled close.",
+    "Alternatives considered": "Loosen the money tolerance, omit extension outcomes, mutate the ledger, restart the trading backend, or use exact venue closed PnL.",
+    "Proposed live change": "No strategy or execution change; retain the projector-only correction already reloaded under the user's preapproved defect authority.",
+    "Expected upside": "Continuous honest TUI/accounting updates without weakening exact fee, funding, size, or realized-PnL checks.",
+    "Main risks and failure modes": "Missing future venue fields, lifecycle cleanup of the independently reloaded writer, and unrelated accounting failures being mistaken for the fixed rounding case.",
+    "Validation completed": "Red-green regression, 91 focused tests, static checks, exact real-ledger checkpoint build, live writer reload, archive rebuild, and TUI source checkpoint reconciliation.",
+    "Validation still required": "Observe at least one additional partial-fill close and verify continued checkpoint publication through the eventual SP500 close.",
+    "Success metrics": "Checkpoint age remains below its stale threshold; each close increments the complete epoch exactly once; net PnL reconciles to venue closed PnL minus fees plus funding; no strategy process restart occurs.",
+    "Failure / rollback triggers": "Repeated same error, missing closed-PnL evidence, duplicate close attribution, stale checkpoint, profile/epoch mismatch, or any effect on execution authority.",
+    "Confidence level": "High on the root cause and current repair from exact production arithmetic and successful replay; medium on future venue-schema compatibility until another independent close is observed.",
+    "Explicit approval requested": "No additional approval requested because the user preapproved corrective changes for bugs that reduce correctness or profitability, and this repair changes only report-only projection logic."
+  },
+  "single_highest_value_next_investigation": "Verify the next resolved SP500 lifecycle increments the same accounting epoch exactly once and remains visible through the continuously refreshed checkpoint without another projection failure."
+}

@@ -6,10 +6,15 @@ from collections.abc import Mapping, Sequence
 from datetime import datetime, timezone
 
 from hypervector.research.cohort_live_audit_values import event_rows, payload, text
+from hypervector.research.cohort_observer_identity import (
+    canonical_observer_identities,
+    canonical_observer_run,
+)
 
 Record = Mapping[str, object]
 _STRATEGY_NAME = "multi_asset_bidirectional_cohort"
 _BOOK_SOURCE = "hyperliquid_mainnet_l2_rest"
+_MAXIMUM_NEGATIVE_CLOCK_SKEW_MS = 5_000
 
 
 def select_report_only_observer_run(
@@ -27,10 +32,7 @@ def select_report_only_observer_run(
     selected = tuple(row for row in records if row.get("run_id") == chosen)
     if not selected or not all(_is_report_only_observe(row) for row in selected):
         raise ValueError(f"run {chosen} is not a report-only observe run")
-    run_identities = event_rows(selected, "configuration_identity")
-    if len(run_identities) != 1:
-        raise ValueError(f"run {chosen} requires exactly one configuration identity")
-    identity = run_identities[0]
+    selected, identity = canonical_observer_run(selected, chosen)
     _validate_identity(identity, chosen)
     _validate_run_envelope(selected, identity)
     return selected, identity
@@ -41,7 +43,7 @@ def select_compatible_report_only_observer_runs(
 ) -> tuple[tuple[Record, ...], tuple[Record, ...]]:
     """Extend one observer run through later exact-contract restarts."""
     _, origin = select_report_only_observer_run(records, requested)
-    identities = list(event_rows(records, "configuration_identity"))
+    identities = list(canonical_observer_identities(records))
     origin_index = next(
         index for index, row in enumerate(identities) if _run_id(row) == requested
     )
@@ -55,7 +57,16 @@ def select_compatible_report_only_observer_runs(
             raise ValueError(f"observer run {run} continuation identity differs")
         compatible.append(validated)
         allowed.add(run)
-    selected = tuple(row for row in records if row.get("run_id") in allowed)
+    canonical = {_run_id(row): row for row in compatible}
+    selected = tuple(
+        row
+        for row in records
+        if row.get("run_id") in allowed
+        and (
+            row.get("event_type") != "configuration_identity"
+            or row is canonical[row.get("run_id")]
+        )
+    )
     return selected, tuple(compatible)
 
 
@@ -95,20 +106,29 @@ def _append_market_books(
         output[symbol].append(_asset_row(row, book))
 
 
-def _validate_book(book: Record, symbol: str, observed_at_ms: int) -> int:
+def _validate_book(book: dict[str, object], symbol: str, observed_at_ms: int) -> int:
     if book.get("symbol") != symbol:
         raise ValueError(f"observer {symbol} book symbol identity is invalid")
     if book.get("source") != _BOOK_SOURCE:
         raise ValueError(f"observer {symbol} book source is invalid")
-    recv_ms = _nonnegative_int(book.get("recv_ts_ms"), f"{symbol} receive time")
+    local_recv_ms = _nonnegative_int(book.get("recv_ts_ms"), f"{symbol} receive time")
     exchange_ms = _nonnegative_int(
         book.get("exchange_ts_ms"), f"{symbol} exchange time"
     )
-    if exchange_ms > recv_ms or recv_ms > observed_at_ms:
+    if local_recv_ms > observed_at_ms:
         raise ValueError(f"observer {symbol} book chronology is invalid")
+    negative_skew_ms = max(0, exchange_ms - local_recv_ms)
+    if negative_skew_ms > _MAXIMUM_NEGATIVE_CLOCK_SKEW_MS:
+        raise ValueError(
+            f"observer {symbol} book clock skew exceeds "
+            f"{_MAXIMUM_NEGATIVE_CLOCK_SKEW_MS}ms"
+        )
+    book["local_recv_ts_ms"] = local_recv_ms
+    book["negative_clock_skew_ms"] = negative_skew_ms
+    book["recv_ts_ms"] = max(exchange_ms, local_recv_ms)
     _sequence(book.get("bids"), f"{symbol} bids")
     _sequence(book.get("asks"), f"{symbol} asks")
-    return recv_ms
+    return max(exchange_ms, local_recv_ms)
 
 
 def _asset_row(row: Record, book: dict[str, object]) -> dict[str, object]:
@@ -141,6 +161,8 @@ def _validate_run_envelope(records: Sequence[Record], identity: Record) -> None:
 
 
 def _continuation_contract(identity: Record) -> tuple[object, ...]:
+    configuration = dict(payload(identity))
+    configuration.pop("strategy_evidence", None)
     return (
         identity.get("profile_id"),
         identity.get("profile_fingerprint"),
@@ -149,7 +171,7 @@ def _continuation_contract(identity: Record) -> tuple[object, ...]:
         identity.get("effective_mode"),
         identity.get("live_armed"),
         identity.get("execution_authority"),
-        payload(identity),
+        configuration,
     )
 
 

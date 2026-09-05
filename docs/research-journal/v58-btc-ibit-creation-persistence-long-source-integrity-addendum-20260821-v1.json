@@ -1,0 +1,92 @@
+{
+  "schema_version": "v58_btc_ibit_creation_persistence_long_source_integrity_addendum_v1",
+  "hypothesis_id": "V58_BTC_IBIT_CREATION_PERSISTENCE_LONG_V1",
+  "generated_at_utc": "2026-08-21T21:05:00Z",
+  "status": "frozen_after_failed_technical_acquisition_before_candidate_signal_or_return_results",
+  "authority": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_live_change": false,
+    "runtime_strategy_changed": false
+  },
+  "trigger": {
+    "failed_acquisition_attempts": 2,
+    "first_failure": "The official SpreadsheetML structural tags use the ss namespace prefix; the parser originally recognized only unprefixed local tag names.",
+    "second_failure": "Two Historical rows contain the exact Shares Outstanding placeholder token -- and therefore cannot be normalized as numeric issuer observations.",
+    "immutable_source_bundle_published": false,
+    "candidate_signal_count_inspected": false,
+    "candidate_returns_inspected": false,
+    "candidate_pnl_inspected": false
+  },
+  "observed_source_structure": {
+    "historical_data_rows_including_placeholders": 660,
+    "historical_columns": [
+      "As Of",
+      "NAV per Share",
+      "Ex-Dividends",
+      "Shares Outstanding"
+    ],
+    "share_placeholder_rows": [
+      {
+        "as_of_date": "2024-03-31",
+        "nav_per_share": 40.304432,
+        "shares_outstanding_token": "--"
+      },
+      {
+        "as_of_date": "2024-03-29",
+        "nav_per_share": 40.304432,
+        "shares_outstanding_token": "--"
+      }
+    ],
+    "immediately_prior_valid_observation": {
+      "as_of_date": "2024-03-28",
+      "nav_per_share": 40.304432,
+      "shares_outstanding": 440040000
+    },
+    "immediately_next_valid_observation": {
+      "as_of_date": "2024-04-01",
+      "nav_per_share": 39.488238,
+      "shares_outstanding": 442400000
+    },
+    "other_missing_or_wrong_width_historical_rows": 0,
+    "placeholder_rows_on_or_after_frozen_market_start": 0
+  },
+  "frozen_normalization_rule": {
+    "frozen_market_start": "2025-07-28T00:00:00Z",
+    "allowed_placeholder_token": "--",
+    "allowed_only_when": "Shares Outstanding equals the exact placeholder token and the issuer as-of date is strictly before 2025-07-28.",
+    "normalization": "Exclude an allowed placeholder row from the shares-outstanding observation sequence without imputing, forward-filling, backfilling, or converting it to zero.",
+    "sequence_semantics": "The immediately prior and next rows containing finite positive whole-unit shares become consecutive valid issuer observations, consistent with the preregistered rule not to fabricate weekend or holiday observations.",
+    "technical_failure_conditions": [
+      "any Shares Outstanding placeholder on or after 2025-07-28",
+      "any placeholder token other than the exact string --",
+      "any nonfinite, nonpositive, or fractional numeric shares value",
+      "any missing or invalid NAV value",
+      "any duplicate or unordered as-of date",
+      "any unregistered split-like discontinuity"
+    ],
+    "manifest_requirements": [
+      "retain the exact raw workbook bytes",
+      "record raw historical row count",
+      "record normalized valid-observation row count",
+      "record excluded placeholder count and exact dates",
+      "bind this addendum by path, byte count, and SHA-256"
+    ]
+  },
+  "unchanged_research_contract": [
+    "primary and control signal definitions",
+    "next-day noon availability",
+    "twenty-four-hour delay sensitivity",
+    "partitions",
+    "fees, funding, and slippage",
+    "60-bps stop and 60-bps target",
+    "24-hour maximum hold",
+    "acceptance and rejection rules",
+    "execution_authority none"
+  ],
+  "risk_and_falsifier": {
+    "risk": "Excluding missing-share rows connects valid observations across an unobserved interval; this could matter to a persistence signal if such a gap occurred near the tested window.",
+    "mitigation": "Both observed placeholders precede the first frozen market partition by more than one year, and any placeholder within or after the frozen window remains a technical failure.",
+    "falsifier": "A source-bound inspection finds another missing-share row, a placeholder on or after 2025-07-28, a different placeholder token, or any candidate outcome was inspected before this rule was frozen. Any such finding invalidates this addendum and stops the experiment."
+  }
+}

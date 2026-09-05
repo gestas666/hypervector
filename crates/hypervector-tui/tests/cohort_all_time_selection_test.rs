@@ -25,6 +25,7 @@ fn fresher_reflections_temporarily_outrank_a_lagging_archive() {
             observed_through_utc: Some("2026-08-12T13:44:00+00:00".into()),
             performance: performance(63, -1.92),
             accounting_epoch: None,
+            preserved_history: None,
         }),
         trade_performance: Some(CohortTradePerformance {
             all_time_live: Some(performance(64, -1.75)),
@@ -50,7 +51,15 @@ fn accounting_epoch_archive_outranks_preserved_prior_reflections() {
                 epoch_id: "v51_first_live".into(),
                 profile_fingerprint: "a".repeat(64),
                 start_venue_timestamp_ms: 1_786_648_891_318,
+                included_profile_fingerprints: Vec::new(),
             }),
+            preserved_history: Some(
+                hypervector_tui::backend_cohort_portfolio_archive::CohortPreservedHistory {
+                    symbols: vec!["BTC".into()],
+                    observed_through_utc: None,
+                    performance: performance(73, 4.24),
+                },
+            ),
         }),
         trade_performance: Some(CohortTradePerformance {
             all_time_live: Some(performance(73, 4.24)),

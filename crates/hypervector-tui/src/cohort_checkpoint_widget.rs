@@ -112,9 +112,34 @@ fn live_line(checkpoint: &CohortCheckpointTelemetry) -> String {
     let run = run_performance(checkpoint);
     let all_time = all_time_performance(checkpoint);
     let evidence = human_token(checkpoint.evidence_state.as_deref().unwrap_or("unresolved"));
-    format!(
-        "{freshness} | {lifecycle} | {coverage} | {evaluations} | {run} | {all_time} | {evidence}"
-    )
+    let mut fields = vec![freshness.into(), lifecycle, coverage];
+    if let Some(monitoring) = poststart_acceptance_line(checkpoint) {
+        fields.push(monitoring);
+    }
+    fields.extend([evaluations, run, all_time, evidence]);
+    fields.join(" | ")
+}
+
+fn poststart_acceptance_line(checkpoint: &CohortCheckpointTelemetry) -> Option<String> {
+    let value = checkpoint.poststart_acceptance.as_ref()?;
+    let state = if value.accepted { "PASS" } else { "FAIL" };
+    let summary = format!(
+        "{} {state} {}/{} ROUTES M{} O{} F{} Q{} C{}",
+        value.version,
+        value.evaluated_routes,
+        value.expected_routes,
+        value.routes_with_metrics,
+        value.open_positions,
+        value.fills,
+        value.costed_fills,
+        value.closed_trades,
+    );
+    value
+        .reasons
+        .first()
+        .map_or(Some(summary.clone()), |reason| {
+            Some(format!("{summary} // {}", human_token(reason)))
+        })
 }
 
 fn run_performance(checkpoint: &CohortCheckpointTelemetry) -> String {
@@ -279,6 +304,7 @@ fn signed_delta(value: f64) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::backend_cohort_checkpoint::CohortPoststartAcceptance;
     use crate::backend_cohort_maximum_hold::{
         CohortMaximumHoldDecision, CohortMaximumHoldEvidence,
     };
@@ -342,6 +368,32 @@ mod tests {
 
         assert!(line.contains("RUN 0C NET +$0.00"), "{line}");
         assert!(line.contains("ALL 0C NET +$0.00"), "{line}");
+    }
+
+    #[test]
+    fn live_line_discloses_v79_failure_reason_and_route_counts() {
+        let checkpoint = CohortCheckpointTelemetry {
+            poststart_acceptance: Some(CohortPoststartAcceptance {
+                version: "V79".into(),
+                accepted: false,
+                reasons: vec!["provider_monitoring_incomplete".into()],
+                expected_routes: 9,
+                evaluated_routes: 8,
+                routes_with_metrics: 8,
+                open_positions: 0,
+                fills: 0,
+                costed_fills: 0,
+                closed_trades: 0,
+            }),
+            ..CohortCheckpointTelemetry::default()
+        };
+
+        let line = live_line(&checkpoint);
+
+        assert!(
+            line.contains("V79 FAIL 8/9 ROUTES M8 O0 F0 Q0 C0 // PROVIDER MONITORING INCOMPLETE"),
+            "{line}"
+        );
     }
 
     #[test]

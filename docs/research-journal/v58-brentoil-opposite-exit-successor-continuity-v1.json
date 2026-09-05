@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v58-brentoil-opposite-exit-successor-continuity",
+  "revision_number": 1,
+  "supersedes_revision_id": null,
+  "created_at_utc": "2026-08-21T08:13:03Z",
+  "strategy_id": "hip3_breakout_pressure_sndk_gold_brent_fresh15s_bidirectional_v2",
+  "symbol": "xyz:BRENTOIL",
+  "status": "retain",
+  "hypothesis": "The inherited V58 BRENTOIL lifecycle has preserved opposite-intent exit routing across its source process and the post-outage successor process; its observed profit giveback is consistent with the configured no-lock contract rather than a missed eligible opposite close in the audited prefix.",
+  "decision": "Retain the current protected lifecycle and frozen exit contract until its authoritative close. Do not install a post-hoc target or profit lock from this single open long. Reconcile the final close and continue the separately preregistered future-only both-side exit-policy experiment.",
+  "confidence": "high",
+  "falsifier": "Revise immediately if any authenticated post-entry evaluation from either bound run contains an eligible BRENTOIL short without a matching close action, if a later run is adopted without preserved source provenance, if the stop disappears, or if final venue reconciliation cannot attribute the close and owned-order cleanup.",
+  "evidence": [
+    {
+      "path": "../../data/logs/research/v58_brentoil_opposite_exit_audit_20260821_v2.json",
+      "role": "immutable_source_and_successor_run_opposite_exit_reconciliation",
+      "sha256": "a16f70572da5a884439c44341fdc2c5d30f193be45a6f0e81ea2637a7e2ba726",
+      "bytes": 4645
+    }
+  ],
+  "metrics": {
+    "source_run_id": "bidirectional-live-1787166474078",
+    "runtime_run_id": "bidirectional-live-1787272893887",
+    "post_entry_evaluations": 91,
+    "eligible_same_side_evaluations": 2,
+    "eligible_opposite_evaluations": 0,
+    "routed_opposite_exit_actions": 0,
+    "missed_eligible_opposite_exit": false,
+    "lifecycle_resolved": false,
+    "live_change_supported": false,
+    "runtime_strategy_changed": false
+  },
+  "limitations": [
+    "The lifecycle remains open, so its final exit reason, fill, fees, funding, slippage, and net result are unresolved.",
+    "Absence of an eligible opposite intent does not establish that the native exit policy is economically optimal.",
+    "One inherited long lifecycle cannot estimate route expectancy or justify fitting a profit lock.",
+    "The conclusion covers only the immutable decision-ledger prefix recorded in the evidence artifact."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

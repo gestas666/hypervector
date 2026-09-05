@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from importlib.util import module_from_spec, spec_from_file_location
 import json
 from pathlib import Path
@@ -66,6 +67,32 @@ def test_command_writes_authority_none_exact_symbol_report(tmp_path: Path) -> No
     assert all(
         len(value["sha256"]) == 64 for value in report["generator_identity"].values()
     )
+
+
+def test_command_excludes_disclosed_rest_marks_from_exact_path_authority(
+    tmp_path: Path,
+) -> None:
+    """Supplemental REST marks cannot poison or certify WebSocket coverage."""
+    module = _load_module()
+    output = tmp_path / "mixed-source-audit.json"
+    args = module.build_parser().parse_args(
+        ["--symbol", _SYMBOL, "--data-root", str(tmp_path), "--output", str(output)]
+    )
+    archive = _Archive()
+    exact = archive.replay_asset_contexts()
+    archive.replay_asset_contexts = lambda: exact + (
+        replace(exact[0], source="hyperliquid_info_metaAndAssetCtxs"),
+    )
+
+    report = module.run_command(
+        args,
+        archive=archive,
+        observed_at_ms=_START_MS + _BAR_MS,
+    )
+
+    assert report["source"]["excluded_supplemental_asset_context_rows"] == 1
+    assert report["channels"]["mark"]["observations"] == len(exact)
+    assert report["technical_assessment"]["prospective_bar_path_coverage_resolved"]
 
 
 def _load_module() -> ModuleType:

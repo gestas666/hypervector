@@ -267,7 +267,7 @@ def _intent(symbol: str, side: str) -> StrategyIntent:
         "hulk",
         symbol,
         side,
-        1_785_600_000_000,
+        1_785_585_600_000,
         100.0,
         "signal",
     )
@@ -299,6 +299,9 @@ def _runner(
 ) -> tuple[MultiAssetLiveRunner, dict[str, _Engine], _Telemetry]:
     engines = {symbol: _Engine(symbol) for symbol in _SYMBOLS}
     telemetry = _Telemetry(transition_drain)
+    executable_pairs = executable_provider_symbols or frozenset(
+        ("hulk", symbol) for symbol in _SYMBOLS
+    )
     runner = MultiAssetLiveRunner(
         symbols=_SYMBOLS,
         engines=engines,
@@ -320,11 +323,10 @@ def _runner(
             if execution_contracts is not None
             else {"hulk": _contract()}
         ),
-        executable_provider_symbols=(
-            executable_provider_symbols
-            if executable_provider_symbols is not None
-            else frozenset(("hulk", symbol) for symbol in _SYMBOLS)
-        ),
+        maximum_entry_delay_ms_by_provider_symbol={
+            pair: 60_000 for pair in executable_pairs
+        },
+        executable_provider_symbols=executable_pairs,
         executable_provider_directions=executable_provider_directions,
         provider_entry_sizing=provider_entry_sizing or {},
         provider_directional_entry_sizing=provider_directional_entry_sizing or {},
@@ -338,7 +340,11 @@ def test_runner_persists_canonical_regime_outside_provider_routing_rows(
     tmp_path: Path,
 ) -> None:
     """The backend journals detector state without treating it as a setup route."""
-    canonical = _regime_evaluation("canonical_regime_telemetry_v1", "BTC")
+    canonical = _regime_evaluation(
+        "canonical_regime_telemetry_v1",
+        "BTC",
+        1_785_600_000_000,
+    )
     runner, _, telemetry = _runner(
         tmp_path,
         (),
@@ -444,6 +450,9 @@ def test_intent_clock_is_sampled_after_reconciliation(tmp_path: Path) -> None:
         signal_stop_requested=lambda: False,
         maximum_hold_seconds_by_symbol={symbol: 28_800 for symbol in _SYMBOLS},
         execution_contracts={"hulk": _contract()},
+        maximum_entry_delay_ms_by_provider_symbol={
+            ("hulk", symbol): 60_000 for symbol in _SYMBOLS
+        },
         executable_provider_symbols=frozenset(("hulk", symbol) for symbol in _SYMBOLS),
     )
 
@@ -478,6 +487,9 @@ def test_post_reconcile_intent_clock_does_not_advance_funding_cursor(
         signal_stop_requested=lambda: False,
         maximum_hold_seconds_by_symbol={symbol: 28_800 for symbol in _SYMBOLS},
         execution_contracts={"hulk": _contract()},
+        maximum_entry_delay_ms_by_provider_symbol={
+            ("hulk", symbol): 60_000 for symbol in _SYMBOLS
+        },
         executable_provider_symbols=frozenset(("hulk", symbol) for symbol in _SYMBOLS),
     )
 
@@ -609,7 +621,7 @@ def test_manual_close_suppresses_one_cycle_then_automatic_strategy_resumes(
     assert runner.poll_once() == 1
 
     assert engines["BTC"].exits == [(100.0, "operator_manual_close")]
-    assert engines["BTC"].entries == [("long", 100.0, 1_785_600_000_000)]
+    assert engines["BTC"].entries == [("long", 100.0, 1_785_585_600_000)]
     assert telemetry.routings[1][1].actions[0].strategy_id == "hulk"
 
 
@@ -867,8 +879,8 @@ def test_supported_soft_deadline_is_journaled_once(tmp_path: Path) -> None:
     observed_ms = int(datetime(2026, 8, 1, 12, tzinfo=UTC).timestamp() * 1_000)
     opened_at_ms = observed_ms - 28_800_000
     evaluations = (
-        _regime_evaluation("hulk", "HYPE"),
-        _regime_evaluation("range_onset_bidirectional_v1", "HYPE"),
+        _regime_evaluation("hulk", "HYPE", observed_ms),
+        _regime_evaluation("range_onset_bidirectional_v1", "HYPE", observed_ms),
     )
     runner, engines, telemetry = _runner(tmp_path, (), evaluations=evaluations)
     plan = ProviderExecutionContract(
@@ -879,6 +891,7 @@ def test_supported_soft_deadline_is_journaled_once(tmp_path: Path) -> None:
         maximum_hold_seconds=28_800,
         maximum_hold_policy="extend_while_regime_supported",
         hard_maximum_hold_seconds=86_400,
+        maximum_hold_evidence_maximum_age_seconds=60,
     ).bind(strategy_id="hulk", stop_anchor=None)
     engines["HYPE"].current = SolLiveSnapshot(
         state=SolLiveState.OPEN,
@@ -910,17 +923,25 @@ def test_supported_soft_deadline_is_journaled_once(tmp_path: Path) -> None:
             "exit_reason": None,
             "structure_alignment_score": 1.0,
             "structure_alignment_threshold": 0.5,
+            "maximum_hold_evidence_maximum_age_ms": 60_000,
+            "provider_evidence_age_ms": 0,
+            "canonical_evidence_age_ms": 0,
+            "maximum_hold_evidence_status": "fresh",
             "provider_evaluation": evaluations[0].as_payload(),
             "canonical_evaluation": evaluations[1].as_payload(),
         }
     ]
 
 
-def _regime_evaluation(strategy_id: str, symbol: str) -> ProviderEvaluation:
+def _regime_evaluation(
+    strategy_id: str,
+    symbol: str,
+    decision_time_ms: int,
+) -> ProviderEvaluation:
     return ProviderEvaluation(
         strategy_id=strategy_id,
         symbol=symbol,
-        decision_time_ms=1_785_600_000_000,
+        decision_time_ms=decision_time_ms,
         reference_price=100.0,
         decision_action="hold",
         eligible=False,
@@ -953,6 +974,9 @@ def test_runner_uses_configured_start_to_start_poll_period(tmp_path: Path) -> No
         signal_stop_requested=lambda: False,
         maximum_hold_seconds_by_symbol={symbol: 28_800 for symbol in _SYMBOLS},
         execution_contracts={"hulk": _contract()},
+        maximum_entry_delay_ms_by_provider_symbol={
+            ("hulk", symbol): 60_000 for symbol in _SYMBOLS
+        },
         executable_provider_symbols=frozenset(("hulk", symbol) for symbol in _SYMBOLS),
     )
 

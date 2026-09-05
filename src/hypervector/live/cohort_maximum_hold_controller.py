@@ -84,6 +84,7 @@ class CohortMaximumHoldController:
             symbol=symbol,
             side=side,
             elapsed_ms=observed_ms - opened,
+            observed_ms=observed_ms,
             fallback_hold_ms=self._fallback_hold_ms[symbol],
             evaluations=evaluations,
         )

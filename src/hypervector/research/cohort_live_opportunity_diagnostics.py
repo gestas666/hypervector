@@ -6,8 +6,20 @@ from collections.abc import Mapping
 from datetime import datetime
 from math import isfinite
 
-Record = Mapping[str, object]
+from hypervector.research.cohort_decision_side_coverage import (
+    build_decision_side_coverage,
+)
+from hypervector.research.cohort_live_diagnostic_disposition import (
+    apply_closed_path_dispositions,
+)
+from hypervector.research.cohort_opportunity_episode_evidence import (
+    episode_attribution_assessment,
+    match_episode_capture,
+    parse_episode_attributions,
+    validated_blocker_episode_evidence,
+)
 
+Record = Mapping[str, object]
 _MINIMUM_INDEPENDENT_PATHS = 3
 _CONTRACT: dict[str, object] = {
     "report_only": True,
@@ -17,18 +29,34 @@ _CONTRACT: dict[str, object] = {
 }
 
 
-def build_live_opportunity_diagnostics(audit: Record) -> dict[str, object]:
+def build_live_opportunity_diagnostics(
+    audit: Record, *, hypothesis_decisions: object = None
+) -> dict[str, object]:
     """Expose exact route readiness paths without claiming hypothetical fills."""
     signal = _mapping(audit.get("signal_outcomes"), "signal outcomes")
     outcomes = _mapping(signal.get("by_provider_symbol"), "route outcomes")
+    episode_attributions = parse_episode_attributions(signal)
     readiness = _route_mapping(audit, "readiness")
     scorecard = _route_mapping(audit, "strategy_scorecard")
-    if set(outcomes) != set(readiness) or set(outcomes) != set(scorecard):
-        raise ValueError("live diagnostic route scope is inconsistent")
+    configured_routes = set(readiness)
+    if configured_routes != set(scorecard):
+        raise ValueError("live diagnostic configured route scope is inconsistent")
+    if not set(outcomes).issubset(configured_routes):
+        raise ValueError("live diagnostic outcome route scope is inconsistent")
     routes = [
-        _route_record(route, outcomes[route], readiness[route], scorecard[route])
-        for route in sorted(outcomes)
+        _route_record(
+            route,
+            outcomes.get(route),
+            readiness[route],
+            scorecard[route],
+            outcomes_available=route in outcomes,
+            episode_attributions=episode_attributions,
+        )
+        for route in sorted(configured_routes)
     ]
+    routes = apply_closed_path_dispositions(
+        routes, [] if hypothesis_decisions is None else hypothesis_decisions
+    )
     leads = [
         path
         for route in routes
@@ -53,26 +81,33 @@ def _route_mapping(audit: Record, field: str) -> Record:
 
 def _route_record(
     route: str,
-    raw_outcomes: object,
+    raw_outcomes: object | None,
     raw_readiness: object,
     raw_score: object,
+    *,
+    outcomes_available: bool,
+    episode_attributions: list[Record],
 ) -> dict[str, object]:
-    outcomes = _mapping(raw_outcomes, f"route outcomes {route}")
+    outcomes, evaluations, eligible_count = _route_outcome_evidence(
+        route, raw_outcomes, outcomes_available
+    )
     readiness = _mapping(raw_readiness, f"route readiness {route}")
     score = _mapping(raw_score, f"route scorecard {route}")
-    evidence = _mapping(outcomes.get("by_evidence_class"), "evidence classes")
-    eligible = _mapping(evidence.get("eligible_signal"), "eligible evidence")
-    evaluations = _nonnegative_int(outcomes.get("evaluations"), "evaluations")
-    eligible_count = _nonnegative_int(eligible.get("evaluations"), "eligible count")
     readiness_count = _nonnegative_int(readiness.get("count"), "readiness")
     combinations = _blocker_combinations(
         readiness.get("blocker_combinations"), readiness_count
     )
+    episode_evidence = validated_blocker_episode_evidence(readiness, readiness_count)
+    current_execution = _current_live_execution(score)
     return {
         "route": route,
+        "signal_outcomes_status": _outcome_status(outcomes_available),
         "outcome_evaluations": evaluations,
         "readiness_evaluations": readiness_count,
         "eligible_evaluations": eligible_count,
+        "decision_side_coverage": build_decision_side_coverage(
+            outcomes, evaluations, eligible_count
+        ),
         "latest_readiness_fraction": _probability(
             readiness.get("latest_fraction"), "readiness fraction"
         ),
@@ -82,9 +117,92 @@ def _route_record(
         "blocker_combination_status": (
             "available" if combinations else "unavailable_legacy_audit"
         ),
+        **episode_evidence,
         "historical_cadence": _optional_text(score.get("historical_cadence")),
+        "historical_cadence_currentness": (
+            "superseded_by_current_live_execution"
+            if current_execution["closed_lifecycles"]
+            else "frozen_prior_evidence"
+        ),
+        "current_live_execution": current_execution,
         "scarcity_interpretation": _scarcity(evaluations, eligible_count),
-        "one_blocker_paths": _one_blocker_paths(route, outcomes),
+        "one_blocker_paths": _one_blocker_paths(route, outcomes, episode_attributions),
+    }
+
+
+def _outcome_status(available: bool) -> str:
+    if available:
+        return "available"
+    return "unavailable_no_completed_route_evaluation"
+
+
+def _route_outcome_evidence(
+    route: str,
+    raw_outcomes: object | None,
+    available: bool,
+) -> tuple[Record, int, int]:
+    if not available:
+        return {}, 0, 0
+    outcomes = _mapping(raw_outcomes, f"route outcomes {route}")
+    evidence = _mapping(outcomes.get("by_evidence_class"), "evidence classes")
+    eligible = _mapping(evidence.get("eligible_signal"), "eligible evidence")
+    evaluations = _nonnegative_int(outcomes.get("evaluations"), "evaluations")
+    eligible_count = _nonnegative_int(eligible.get("evaluations"), "eligible count")
+    return outcomes, evaluations, eligible_count
+
+
+def _current_live_execution(score: Record) -> dict[str, object]:
+    identifiable = score.get("execution_outcomes_identifiable", False)
+    if not isinstance(identifiable, bool):
+        raise ValueError("execution outcome identity must be boolean")
+    if not identifiable:
+        return _empty_live_execution()
+    performance = _mapping(score.get("execution_performance"), "current live execution")
+    repeatability = _mapping(
+        score.get("repeatability_evidence", {}), "repeatability evidence"
+    )
+    sides = _mapping(score.get("execution_performance_by_side", {}), "execution sides")
+    observed_sides = sorted(sides)
+    if not set(observed_sides).issubset({"long", "short"}):
+        raise ValueError("execution sides must be long or short")
+    return {
+        "status": "resolved_lifecycles_available",
+        "closed_lifecycles": _nonnegative_int(
+            performance.get("closed_trades"), "closed lifecycles"
+        ),
+        "observed_sides": observed_sides,
+        "wins": _nonnegative_int(performance.get("wins"), "wins"),
+        "losses": _nonnegative_int(performance.get("losses"), "losses"),
+        "breakeven": _nonnegative_int(performance.get("breakeven"), "breakeven"),
+        "net_pnl_usd": _number(performance.get("net_pnl_usd"), "net PnL"),
+        "fees_usd": _number(performance.get("fees_usd"), "fees"),
+        "funding_usd": _number(performance.get("funding_usd"), "funding"),
+        "net_return_on_margin_pct": _number(
+            performance.get("net_return_on_margin_pct"), "return on margin"
+        ),
+        "largest_winner_share_of_gross_profit_pct": _optional_number(
+            repeatability.get("largest_winner_share_of_gross_profit_pct")
+        ),
+        "net_pnl_excluding_largest_winner_usd": _optional_number(
+            repeatability.get("net_pnl_excluding_largest_winner_usd")
+        ),
+    }
+
+
+def _empty_live_execution() -> dict[str, object]:
+    return {
+        "status": "no_resolved_lifecycles",
+        "closed_lifecycles": 0,
+        "observed_sides": [],
+        "wins": 0,
+        "losses": 0,
+        "breakeven": 0,
+        "net_pnl_usd": 0.0,
+        "fees_usd": 0.0,
+        "funding_usd": 0.0,
+        "net_return_on_margin_pct": None,
+        "largest_winner_share_of_gross_profit_pct": None,
+        "net_pnl_excluding_largest_winner_usd": None,
     }
 
 
@@ -113,7 +231,9 @@ def _blocker_combination(value: object) -> dict[str, object]:
     }
 
 
-def _one_blocker_paths(route: str, outcomes: Record) -> list[dict[str, object]]:
+def _one_blocker_paths(
+    route: str, outcomes: Record, episode_attributions: list[Record]
+) -> list[dict[str, object]]:
     section = _mapping(outcomes.get("one_blocker_near_misses", {}), "near misses")
     blockers = _mapping(section.get("by_blocker", {}), "near-miss blockers")
     rows: list[dict[str, object]] = []
@@ -121,7 +241,21 @@ def _one_blocker_paths(route: str, outcomes: Record) -> list[dict[str, object]]:
         record = _mapping(raw, f"near-miss blocker {blocker}")
         horizons = _mapping(record.get("horizons"), "near-miss horizons")
         for horizon, raw_horizon in sorted(horizons.items(), key=_horizon_key):
-            rows.append(_path_record(route, blocker, horizon, raw_horizon, record))
+            episode, attribution_count, ambiguous_count = match_episode_capture(
+                episode_attributions, route, blocker, horizon
+            )
+            rows.append(
+                _path_record(
+                    route,
+                    blocker,
+                    horizon,
+                    raw_horizon,
+                    record,
+                    episode,
+                    attribution_count,
+                    ambiguous_count,
+                )
+            )
     return rows
 
 
@@ -131,17 +265,23 @@ def _path_record(
     horizon: str,
     raw_horizon: object,
     blocker_record: Record,
+    episode: Record | None,
+    episode_attribution_count: int,
+    ambiguous_episode_attribution_count: int,
 ) -> dict[str, object]:
     values = _mapping(raw_horizon, f"near-miss horizon {horizon}")
-    capture = _mapping(
-        values.get("independent_opportunity_capture"), "independent capture"
+    capture, sample_basis, sample = _ranking_capture(
+        values,
+        episode,
+        episode_attribution_count,
+        ambiguous_episode_attribution_count,
     )
     resolved = _nonnegative_int(capture.get("resolved"), "independent resolved")
     mean = _optional_number(capture.get("mean_close_after_estimated_friction_bps"))
     ex_largest = _optional_number(
         capture.get("mean_excluding_largest_close_after_estimated_friction_bps")
     )
-    missing = _nonnegative_int(values.get("missing_data"), "missing data")
+    missing = _nonnegative_int(sample.get("missing_data"), "missing data")
     return {
         "route": route,
         "blocker": blocker,
@@ -150,17 +290,63 @@ def _path_record(
             blocker_record.get("evaluations"), "blocker evaluations"
         ),
         "independent_resolved": resolved,
-        "censored": _nonnegative_int(values.get("censored"), "censored"),
+        "censored": _nonnegative_int(sample.get("censored"), "censored"),
         "missing_data": missing,
         "mean_after_estimated_friction_bps": mean,
         "mean_excluding_largest_bps": ex_largest,
+        "sample_basis": sample_basis,
+        "episode_attribution_count": episode_attribution_count,
+        "ambiguous_episode_attribution_count": (ambiguous_episode_attribution_count),
         "cost_clearing_close_rate": _optional_probability(
             capture.get("cost_clearing_close_rate"), "cost-clearing rate"
         ),
-        "assessment": _path_assessment(resolved, missing, mean, ex_largest),
+        "assessment": episode_attribution_assessment(
+            ambiguous_episode_attribution_count,
+            episode_attribution_count,
+            _path_assessment(resolved, missing, mean, ex_largest),
+        ),
         "execution_claim": False,
         "automatic_live_change": False,
     }
+
+
+def _ranking_capture(
+    values: Record,
+    episode: Record | None,
+    attribution_count: int,
+    ambiguous_count: int,
+) -> tuple[Record, str, Record]:
+    if ambiguous_count:
+        capture, _ = _path_capture(values)
+        return capture, "portfolio_attribution_ambiguous", values
+    if attribution_count == 1 and episode is not None:
+        capture = _mapping(
+            episode.get("independent_opportunity_capture"),
+            "portfolio episode-onset independent capture",
+        )
+        return capture, "portfolio_episode_onsets", episode
+    if attribution_count > 1:
+        capture, _ = _path_capture(values)
+        return capture, "side_separated_episode_evidence", values
+    capture, basis = _path_capture(values)
+    return capture, basis, values
+
+
+def _path_capture(values: Record) -> tuple[Record, str]:
+    episode = values.get("episode_onsets")
+    if episode is not None:
+        onset = _mapping(episode, "episode-onset evidence")
+        return (
+            _mapping(
+                onset.get("independent_opportunity_capture"),
+                "episode-onset independent capture",
+            ),
+            "episode_onsets",
+        )
+    return (
+        _mapping(values.get("independent_opportunity_capture"), "independent capture"),
+        "legacy_non_overlapping_paths",
+    )
 
 
 def _path_assessment(

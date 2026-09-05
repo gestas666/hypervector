@@ -1,0 +1,90 @@
+{
+  "schema_version": "v58_btc_option_flow_execution_horizon_audit_v1",
+  "hypothesis_id": "V58_BTC_DERIBIT_OTM_DIRECTIONAL_FLOW_LONG_V1",
+  "recorded_at_utc": "2026-08-22T08:06:51Z",
+  "status": "required_post_entry_execution_horizon_qualified_before_candidate_outcomes",
+  "problem": "The pseudo-holdout accepts entries before 2026-08-01T00:00:00Z and the frozen maximum hold is 24 hours, so unbiased lifecycle resolution requires execution candles and funding through 2026-08-02T00:00:00Z.",
+  "entry_source_end_utc": "2026-08-01T00:00:00Z",
+  "required_execution_end_utc": "2026-08-02T00:00:00Z",
+  "maximum_hold_hours": 24,
+  "candle_horizon_source": {
+    "bundle": "data/cache/vendor/0xarchive/hyperliquid/BTC/20260727T230000000000Z_20260811T230000000000Z_candles_1m",
+    "manifest": {
+      "bytes": 1185,
+      "sha256": "16f97cda30dfd64e0f112bc786930028d731fc718af127b93e58ae19416feab3"
+    },
+    "candles": {
+      "bytes": 770950,
+      "sha256": "461f613fc3bdc9cc629595e8be9776dc18c695fa7760711c9a88c681d26209bb"
+    },
+    "raw_page_count": 3,
+    "raw_reproduction_matches": true,
+    "requested_start_utc": "2026-07-27T23:00:00Z",
+    "requested_end_utc": "2026-08-11T23:00:00Z",
+    "horizon_audit": {
+      "start_utc": "2026-08-01T00:00:00Z",
+      "end_utc_exclusive": "2026-08-02T00:00:00Z",
+      "expected_rows": 1440,
+      "observed_rows": 1437,
+      "missing_rows": 3,
+      "gap_run_count": 1,
+      "maximum_gap_minutes": 3,
+      "repairable_missing_rows": 3,
+      "rejected_missing_rows": 0,
+      "leading_gap": false,
+      "trailing_gap": false,
+      "contract_pass": true,
+      "gaps": [
+        {
+          "start_utc": "2026-08-01T09:05:00Z",
+          "end_utc_exclusive": "2026-08-01T09:08:00Z",
+          "minutes": 3,
+          "repairable": true
+        }
+      ]
+    },
+    "overlap_with_primary_source": {
+      "start_utc": "2026-07-27T23:00:00Z",
+      "end_utc_exclusive": "2026-08-01T00:00:00Z",
+      "matched_rows": 5820,
+      "conflicting_open_rows": 0,
+      "conflicting_high_rows": 0,
+      "conflicting_low_rows": 0,
+      "conflicting_close_rows": 0,
+      "conflicting_volume_rows": 0,
+      "exact_match": true
+    }
+  },
+  "funding_horizon_source": {
+    "bundle": "data/cache/vendor/hyperliquid/BTC/20260730T120000000000Z_20260811T230000000000Z_funding",
+    "manifest": {
+      "bytes": 773,
+      "sha256": "7de73073f4b426a27114cc66e6c4c19814a30684fe1fcbd1cd19a38d8b927277"
+    },
+    "funding": {
+      "bytes": 9422,
+      "sha256": "2962b78bf3e8fa5e0a85ed06c90729c99f1c2335b06c0a47356ec27049ffb20e"
+    },
+    "requested_start_utc": "2026-07-30T12:00:00Z",
+    "requested_end_utc": "2026-08-11T23:00:00Z",
+    "horizon_start_utc": "2026-08-01T00:00:00Z",
+    "horizon_end_utc": "2026-08-02T00:00:00Z",
+    "horizon_observed_hour_count": 24,
+    "horizon_missing_hour_count": 0,
+    "overlap_with_primary_source": {
+      "matched_rows": 36,
+      "conflicting_rate_rows": 0,
+      "exact_match": true
+    }
+  },
+  "outcome_blindness": {
+    "candidate_signal_counts_inspected": false,
+    "candidate_forward_returns_inspected": false,
+    "candidate_trade_outcomes_inspected": false,
+    "source_integrity_and_lifecycle_bounds_only": true
+  },
+  "execution_authority": "none",
+  "runtime_strategy_changed": false,
+  "live_change_authorized": false,
+  "decision": "Extend only the market execution and funding evidence horizon through 2026-08-02T00:00:00Z. Keep the entry, feature, partition, strategy, sizing, cost, control, and acceptance contracts unchanged."
+}

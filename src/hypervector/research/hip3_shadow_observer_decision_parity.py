@@ -8,6 +8,11 @@ import math
 _ARCHIVE_PRESSURE_SOURCE = "hyperliquid_ws_l2Book"
 _LIVE_PRESSURE_SOURCE = "hyperliquid_mainnet_l2_rest"
 _TIMEFRAME_MS = 15 * 60_000
+_LIMITATIONS = (
+    "this compares entry decisions rather than fills or profitability",
+    "different pressure transports remain distinct evidence sources",
+    "this report grants no execution or promotion authority",
+)
 _ObserverDecision = tuple[bool, str | None, float, int]
 _PressureDecision = tuple[float, int]
 
@@ -16,6 +21,8 @@ def build_hip3_shadow_observer_decision_parity(
     *,
     signal_parity_report: Mapping[str, object],
     observer_rows: Sequence[Mapping[str, object]],
+    comparison_start_ms: int | None = None,
+    comparison_end_ms: int | None = None,
 ) -> dict[str, object]:
     """Compare frozen archive-pressure entries with prospective live decisions."""
     scope = _validated_signal_scope(signal_parity_report)
@@ -23,40 +30,83 @@ def build_hip3_shadow_observer_decision_parity(
     archive_entries = _archive_entries(signal_parity_report)
     archive_pressure = _archive_pressure(signal_parity_report)
     observed = _observer_decisions(observer_rows, scope)
-    comparison = _comparison_bounds(start_ms, end_ms, observed)
+    comparison = _comparison_bounds(
+        start_ms,
+        end_ms,
+        observed,
+        requested_start_ms=comparison_start_ms,
+        requested_end_ms=comparison_end_ms,
+    )
     diagnostics = _diagnostics(archive_entries, archive_pressure, observed, comparison)
     archive_count = _entry_count(archive_entries, comparison)
     observer_count = _observer_entry_count(observed, comparison)
     decision_count = _decision_count(comparison)
-    resolved = decision_count > 0 and not diagnostics
+    assessment = _technical_assessment(
+        diagnostics=diagnostics,
+        archive_count=archive_count,
+        observer_count=observer_count,
+        decision_count=decision_count,
+    )
+    coverage = _coverage(
+        archive_bounds=(start_ms, end_ms),
+        comparison_bounds=comparison,
+        explicit=comparison_start_ms is not None,
+    )
     return {
-        "schema_version": "hip3_shadow_observer_decision_parity_v1",
+        "schema_version": "hip3_shadow_observer_decision_parity_v2",
         "contract": _contract(),
         "scope": scope,
         "source": {
             "archive_pressure_source": _ARCHIVE_PRESSURE_SOURCE,
             "observer_pressure_source": _LIVE_PRESSURE_SOURCE,
         },
-        "coverage": {
-            "archive_decision_start_ms": start_ms,
-            "archive_decision_end_ms": end_ms,
-            "comparison_start_ms": comparison[0],
-            "comparison_end_ms": comparison[1],
-        },
+        "coverage": coverage,
         "decision_diagnostics": diagnostics,
-        "technical_assessment": {
-            "archive_entry_events": archive_count,
-            "comparison_decisions": decision_count,
-            "non_vacuous_entry_comparison": archive_count + observer_count > 0,
-            "observer_archive_pressure_decision_parity_resolved": resolved,
-            "observer_entry_events": observer_count,
-            "pressure_decision_mismatches": len(diagnostics),
-        },
-        "limitations": [
-            "this compares entry decisions rather than fills or profitability",
-            "different pressure transports remain distinct evidence sources",
-            "this report grants no execution or promotion authority",
-        ],
+        "technical_assessment": assessment,
+        "limitations": list(_LIMITATIONS),
+    }
+
+
+def _coverage(
+    *,
+    archive_bounds: tuple[int, int],
+    comparison_bounds: tuple[int | None, int | None],
+    explicit: bool,
+) -> dict[str, object]:
+    return {
+        "archive_decision_start_ms": archive_bounds[0],
+        "archive_decision_end_ms": archive_bounds[1],
+        "comparison_start_ms": comparison_bounds[0],
+        "comparison_end_ms": comparison_bounds[1],
+        "comparison_window_policy": (
+            "explicit_requested_bounds" if explicit else "observer_overlap"
+        ),
+    }
+
+
+def _technical_assessment(
+    *,
+    diagnostics: Sequence[Mapping[str, object]],
+    archive_count: int,
+    observer_count: int,
+    decision_count: int,
+) -> dict[str, object]:
+    missing = sum(row.get("reason") == "missing_observer" for row in diagnostics)
+    mismatches = sum(
+        row.get("reason") == "entry_decision_mismatch" for row in diagnostics
+    )
+    return {
+        "archive_entry_events": archive_count,
+        "comparison_decisions": decision_count,
+        "entry_decision_mismatches": mismatches,
+        "missing_observer_decisions": missing,
+        "non_vacuous_entry_comparison": archive_count + observer_count > 0,
+        "observer_archive_pressure_decision_parity_resolved": (
+            decision_count > 0 and not diagnostics
+        ),
+        "observer_entry_events": observer_count,
+        "overlapping_decisions": decision_count - missing,
+        "pressure_decision_mismatches": mismatches,
     }
 
 
@@ -190,7 +240,18 @@ def _comparison_bounds(
     start_ms: int,
     end_ms: int,
     observed: Mapping[int, _ObserverDecision],
+    *,
+    requested_start_ms: int | None,
+    requested_end_ms: int | None,
 ) -> tuple[int | None, int | None]:
+    if (requested_start_ms is None) != (requested_end_ms is None):
+        raise ValueError("comparison start and end must both be provided")
+    if requested_start_ms is not None and requested_end_ms is not None:
+        if not start_ms <= requested_start_ms <= requested_end_ms <= end_ms:
+            raise ValueError("comparison window must be inside archive decision bounds")
+        if requested_start_ms % _TIMEFRAME_MS or requested_end_ms % _TIMEFRAME_MS:
+            raise ValueError("comparison window must align to the 15m decision cadence")
+        return requested_start_ms, requested_end_ms
     if not observed:
         return None, None
     start = max(start_ms, min(observed))

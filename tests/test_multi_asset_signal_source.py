@@ -170,6 +170,28 @@ def test_explicit_dual_mtf_policy_withholds_only_opposed_range_entries() -> None
     )
 
 
+def test_range_provider_preserves_raw_exit_when_entry_context_is_blocked() -> None:
+    """Entry admission must not suppress the researched raw-cross exit."""
+    decision = replace(
+        _range_with_context("short", 0, admitted=False),
+        short_entry=False,
+        long_exit=True,
+    )
+
+    batch = collect_range_onset_bidirectional_intents(
+        pd.DataFrame(),
+        symbol="ETH",
+        observed_at=pd.Timestamp("2026-08-01T14:00:00Z"),
+        after_decision_time_ms=None,
+        entry_context_policies={"ETH": "dual_mtf_not_opposed"},
+        decision_builder=lambda *args, **kwargs: (decision,),
+    )
+
+    assert batch.intents == ()
+    assert batch.evaluations[0].exit_sides == frozenset({"long"})
+    assert batch.evaluations[0].exit_reason == "range_onset_signal"
+
+
 def test_hulk_provider_exposes_non_entry_score_and_indicator_readiness() -> None:
     """A completed Hulk hold remains visible with exact setup evidence."""
     hold = HulkSmashLiveDecision(

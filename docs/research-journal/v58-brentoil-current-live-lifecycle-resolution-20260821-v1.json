@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v58-brentoil-current-live-lifecycle-resolution-20260821",
+  "revision_number": 1,
+  "supersedes_revision_id": null,
+  "created_at_utc": "2026-08-21T08:57:20Z",
+  "strategy_id": "hip3_breakout_pressure_sndk_gold_brent_fresh15s_bidirectional_v2",
+  "symbol": "xyz:BRENTOIL",
+  "status": "retain",
+  "hypothesis": "The current V58 BRENTOIL no-profit-lock exit contract can surrender a material favorable excursion before its 24-hour fallback, but one exact resolved long is diagnostic evidence rather than sufficient both-side evidence for a live exit-policy change.",
+  "decision": "Retain the loaded BRENTOIL exit contract for now, record the completed lifecycle as a high-priority profit-capture diagnosis, and continue the preregistered future-only both-side exact-costed experiment. Do not fit or promote a target or trailing lock from this single selected live long.",
+  "confidence": "low",
+  "falsifier": "Reconsider the retained contract when the preregistered current-identity experiment has technically complete attributable long and short lifecycles and a candidate remains positive after exact fees, funding, slippage, gap sensitivity, and largest-winner removal. Reject this reconciliation immediately if any cited source hash changes or if independent venue, order-cleanup, fill, fee, funding, or cash identities cease to agree.",
+  "evidence": [
+    {
+      "path": "../../data/logs/research/v58_brentoil_live_lifecycle_reconciliation_20260821_v2.json",
+      "role": "immutable_exact_three_epoch_live_lifecycle_reconciliation",
+      "sha256": "a57c9e4bf8c53257b3b86a7790d0f9dc3e7514bee847884a8b576e0eed5e80d8",
+      "bytes": 7393
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v58_after_brentoil_close_20260821T085500Z.json",
+      "role": "immutable_same_run_post_close_cohort_audit",
+      "sha256": "a93622c6f54f92676b41977eadc2554b86e14c96aaacbb6c827ecb02811b95bf",
+      "bytes": 8763121
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v58_brentoil_close_delta_20260821T085500Z.json",
+      "role": "immutable_before_after_close_delta",
+      "sha256": "00581505db1555168dff9a367eb8edb9cd1a3c99b10101318c48ee4ef88aaca1",
+      "bytes": 197862
+    },
+    {
+      "path": "../../src/hypervector/research/v58_brentoil_live_lifecycle.py",
+      "role": "canonical-reflection-and-adopted-epoch-reconciliation-repair",
+      "sha256": "d3e952bc49c9bdaf39ba528ef202bd1ddfd867542fe7299900ac8b16921e6b3e",
+      "bytes": 25085
+    },
+    {
+      "path": "../../tests/test_v58_brentoil_live_lifecycle.py",
+      "role": "report-only-reconciliation-regression-tests",
+      "sha256": "ba18a99de86080412511ca366d4354b6823d53f0cf7beb48ef64b79fc5f3fa17",
+      "bytes": 16042
+    },
+    {
+      "path": "v58-brentoil-profit-lock-future-only-preregistration-20260821-v3.json",
+      "role": "future-only-both-side-policy-test",
+      "sha256": "960f3722e6c69ba346d43640d224240928e6e0c1d40fea992c6a3ed77a7abea3",
+      "bytes": 2841
+    }
+  ],
+  "metrics": {
+    "lifecycle_id": "xyz:BRENTOIL:520642502465",
+    "authenticated_runtime_epochs": 3,
+    "entry_price": 91.565,
+    "exit_price": 91.482,
+    "exit_reason": "maximum_hold_seconds",
+    "holding_time_ms": 86411285,
+    "gross_market_pnl_usd": -0.66566,
+    "fees_usd": 0.126837,
+    "funding_usd": 0.119131,
+    "net_pnl_usd": -0.673366,
+    "gross_return_bps": -9.064598918800852,
+    "net_return_bps": -9.169535071293536,
+    "maximum_favorable_excursion_bps": 105.82646207612179,
+    "maximum_adverse_excursion_bps": 73.93654780756708,
+    "peak_giveback_bps": 114.89106099492274,
+    "gross_mfe_capture_ratio": -0.08565531475748214,
+    "economic_outcome": "cleared_cost_hurdle_then_surrendered",
+    "eligible_opposite_exit_at_close": false,
+    "venue_flat_order_free": true,
+    "focused_tests_passed": 17,
+    "focused_tests_failed": 0,
+    "technical_reconciliation_confidence": "high",
+    "live_change_supported": false,
+    "runtime_strategy_changed": false
+  },
+  "limitations": [
+    "This is one selected long lifecycle and cannot estimate current-route expectancy or both-side exit-policy robustness.",
+    "Completed-candle MFE and MAE do not establish executable historical trailing-stop fills, queue priority, or gap behavior.",
+    "The future-only collector begins after this entry, so this lifecycle is not counted as prospective policy evidence.",
+    "Older BRENTOIL route identities are not relabeled as the current v2 contract.",
+    "A diagnostic giveback does not prove that any tested profit lock improves out-of-sample portfolio growth."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

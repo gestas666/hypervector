@@ -64,7 +64,10 @@ pub(crate) struct RawOpenExitPlan {
     opposite_intent_arbitration: String,
 }
 
-pub(crate) fn project_open_exit_plan(raw: RawOpenExitPlan) -> Result<CohortOpenExitPlan, String> {
+pub(crate) fn project_open_exit_plan(
+    strategy_id: &str,
+    raw: RawOpenExitPlan,
+) -> Result<CohortOpenExitPlan, String> {
     let soft_deadline = raw
         .soft_deadline_timestamp_ms
         .unwrap_or(raw.deadline_timestamp_ms);
@@ -86,6 +89,7 @@ pub(crate) fn project_open_exit_plan(raw: RawOpenExitPlan) -> Result<CohortOpenE
         || raw.controller != "cohort_maximum_hold"
         || !matches!(raw.provider_recipe_exit_policy.as_str(), "ignore" | "honor")
         || !profit_lock_contract_valid(
+            Some(strategy_id),
             &raw.profit_lock_policy,
             raw.profit_lock_activation_bps,
             raw.profit_lock_floor_bps,
@@ -191,7 +195,7 @@ mod tests {
         }))
         .expect("raw exit plan");
 
-        let plan = project_open_exit_plan(raw).expect("valid exit plan");
+        let plan = project_open_exit_plan("example_strategy", raw).expect("valid exit plan");
 
         assert_eq!(plan.profit_lock_policy, "completed_bar_trailing");
         assert_eq!(plan.profit_lock_activation_bps, Some(25.0));

@@ -1,0 +1,269 @@
+{
+  "schema_version": "v51_four_plus_four_noncrypto_candidate_review_v9",
+  "generated_at_utc": "2026-08-16T03:50:00Z",
+  "mode": "report_only",
+  "execution_authority": "none",
+  "automatic_live_change": false,
+  "automatic_promotion": false,
+  "performance_gate": false,
+  "runtime_strategy_changed": false,
+  "supersedes": {
+    "path": "docs/research-journal/v51-four-plus-four-noncrypto-candidate-review-v8.json",
+    "sha256": "d00fecdbbc83e97abece1aaf85615e39ac6a41398171285ab2cb6574a761653f",
+    "bytes": 15831,
+    "reason": "Adds exact eight-asset common-window market-dependence evidence and current prospective BRENTOIL/MU status without changing the frozen live portfolio."
+  },
+  "runtime_scope": {
+    "run_id": "bidirectional-live-1786801038311",
+    "profile_id": "multi_asset_growth_first_5000_six_asset_profit_lock_candidate_v51",
+    "profile_fingerprint": "30cd54bb5b5b17249ae0a6a3b01d5702b276d51f8dc5ddd6b4d36ab6aa7d1908",
+    "live_roster_changed": false
+  },
+  "hypothesis_ledger": [
+    {
+      "id": "FOUR_CRYPTO_FOUR_NONCRYPTO_DIVERSIFIED_ROSTER_V2",
+      "state": "being_tested_no_live_change",
+      "hypothesis": "BRENTOIL and MU can eventually add distinct oil and semiconductor mechanisms to the existing four-crypto plus two-index portfolio.",
+      "current_evidence": "BRENTOIL has stable low and negative one-hour market-return dependence across three chronological folds plus exact canary execution priors, but its new source-native strategy has zero prospective entries. MU is more market-correlated, has two resolved all-long lifecycles, eight censored paths, and no short evidence.",
+      "update_or_falsifier": "Reject or replace a candidate if liquidity leaves the global top 10, source-native stress economics fail after largest-winner removal, technical gaps remain structural, or exact strategy-return/co-trigger evidence contradicts the preliminary market-return diversification result."
+    },
+    {
+      "id": "V51_INDEX_BIDIRECTIONAL_ROUTE_READINESS",
+      "state": "being_tested",
+      "hypothesis": "The restored SP500/SPCX v3 provider can produce attributable long and short entries without directional starvation.",
+      "current_evidence": "Both sides remain executable. The current improvement digest still selects first attributable SPCX both-side execution evidence as the highest-value unresolved active-route question; no parameter change is proposed.",
+      "update_or_falsifier": "A fully aligned completed bar that fails to emit its authoritative side establishes a defect. A predeclared compatible window with no long raw conditions increases directional-starvation concern."
+    },
+    {
+      "id": "V51_BRENTOIL_OIL_SHOCK_FORWARD_EDGE",
+      "state": "being_tested",
+      "hypothesis": "A source-native five-minute oil-shock reversion route can monetize BRENTOIL's distinct market behavior after exact canary-derived costs.",
+      "current_evidence": "At mutable status observation 1786852031854 ms the observer had 115 decisions, 110 prospective candles, zero eligible onsets, six canary execution observations, and no routing authority. Historical full-development stress remains negative.",
+      "update_or_falsifier": "Require resolved prospective long and short lifecycles with exact marks, fills, fees, funding, slippage, and positive stress economics excluding the largest winner. A negative resolved sample rejects the mechanism despite favorable market correlation."
+    },
+    {
+      "id": "V51_MU_BREAKOUT_FORWARD_EDGE",
+      "state": "being_tested_no_live_change",
+      "hypothesis": "The MU pressure-breakout route can provide semiconductor exposure with repeatable both-side after-cost edge.",
+      "current_evidence": "At mutable status observation 1786852034653 ms the observer had 359 decisions, 11 eligible longs, zero eligible shorts, and no execution authority. The immutable lifecycle replay has two resolved longs, eight censored paths, positive pooled stress net but negative stress net after removing the largest winner.",
+      "update_or_falsifier": "Require a resolved short plus additional independent longs, complete source parity, and positive stress economics after largest-winner removal before opening any live proposal."
+    }
+  ],
+  "target_roster": {
+    "crypto_controls": [
+      "BTC",
+      "ETH",
+      "SOL",
+      "HYPE"
+    ],
+    "live_noncrypto_controls": [
+      "xyz:SP500",
+      "xyz:SPCX"
+    ],
+    "noncrypto_research_candidates": [
+      "xyz:BRENTOIL",
+      "xyz:MU"
+    ],
+    "excluded_candidate": "xyz:SKHX",
+    "live_roster_changed": false
+  },
+  "market_return_diversification": {
+    "scope": {
+      "source": "hyperliquid_public_candleSnapshot",
+      "interval": "1h",
+      "window_start_utc": "2026-06-08T08:00:00Z",
+      "window_end_utc": "2026-08-16T03:00:00Z",
+      "shared_contiguous_return_rows": 1650,
+      "excluded_noncontiguous_returns": 0,
+      "chronological_folds": 3
+    },
+    "xyz:BRENTOIL": {
+      "mean_correlation_to_six_asset_baseline": -0.18536487494136614,
+      "mean_absolute_correlation_to_six_asset_baseline": 0.18536487494136614,
+      "maximum_absolute_baseline_correlation": 0.3230671661769692,
+      "maximum_absolute_baseline_symbol": "xyz:SP500",
+      "baseline_negative_given_candidate_negative": 0.44636251541307026,
+      "fold_mean_absolute_correlations": [
+        0.189386036915041,
+        0.19042434256537855,
+        0.23052772466850405
+      ],
+      "assessment": "preliminary_market_diversification_supported_strategy_edge_unproven"
+    },
+    "xyz:MU": {
+      "mean_correlation_to_six_asset_baseline": 0.4051984182610377,
+      "mean_absolute_correlation_to_six_asset_baseline": 0.4051984182610377,
+      "maximum_absolute_baseline_correlation": 0.5835202302544704,
+      "maximum_absolute_baseline_symbol": "xyz:SP500",
+      "baseline_negative_given_candidate_negative": 0.64,
+      "fold_mean_absolute_correlations": [
+        0.44396485979790606,
+        0.3549423870388843,
+        0.40653719408467787
+      ],
+      "assessment": "market_diversification_weaker_than_brentoil_strategy_edge_unproven"
+    },
+    "candidate_pair_correlation": -0.1312625881358888,
+    "illustrative_equal_weight_hourly_volatility": {
+      "six_asset_baseline": 0.004367286245781774,
+      "baseline_plus_brentoil": 0.0036721715314898184,
+      "baseline_plus_mu": 0.004752596412801049,
+      "all_eight_assets": 0.004077198064240168
+    },
+    "interpretation": "BRENTOIL has materially stronger preliminary market-return diversification than MU. This does not measure strategy signals, co-triggers, fills, costs, funding, portfolio PnL, or executable allocation weights."
+  },
+  "ranked_opportunities": [
+    {
+      "rank": 1,
+      "investigation": "Resolve the first source-native BRENTOIL oil-shock lifecycle and then obtain both-side evidence",
+      "expected_value": "high_information_value_unquantified_economic_value",
+      "confidence": "high_market_diversification_and_execution_feasibility_low_strategy_edge",
+      "implementation_complexity": "observer_already_running",
+      "downside": "zero prospective onsets so far and negative full-development stress",
+      "validation_priority": 1
+    },
+    {
+      "rank": 2,
+      "investigation": "Capture first attributable SPCX long and additional exact v51 lifecycle evidence",
+      "expected_value": "direct_active_route_economics",
+      "confidence": "high_technical_low_economic",
+      "implementation_complexity": "collection_already_running",
+      "downside": "sparse source-native sample",
+      "validation_priority": 2
+    },
+    {
+      "rank": 3,
+      "investigation": "MU first resolved short plus additional independent resolved longs",
+      "expected_value": "unquantified",
+      "confidence": "low_to_medium_long_low_bidirectional",
+      "implementation_complexity": "observer_already_running",
+      "downside": "eight censored paths, no short evidence, largest-winner dependence, and higher baseline correlation",
+      "validation_priority": 3
+    },
+    {
+      "rank": 4,
+      "investigation": "do nothing to live routes",
+      "expected_value": "preserves_frozen_v51_baseline",
+      "confidence": "high",
+      "implementation_complexity": "none",
+      "downside": "candidate information accumulates without deployed diversification",
+      "validation_priority": 4
+    }
+  ],
+  "recommendation": "Continue the frozen v51 live portfolio and the report-only BRENTOIL/MU observers. Prioritize the first resolved BRENTOIL lifecycle because it combines top-10 liquidity, exact canary execution priors, and stable low market dependence, while retaining SPCX both-side collection as the highest active-route evidence question.",
+  "why_now": "The first exact common-window eight-asset study closes the prior market-correlation evidence gap and differentiates BRENTOIL's portfolio relevance from MU's, but neither candidate has sufficient strategy-return evidence for a live addition.",
+  "evidence_reviewed": [
+    "1650 exact synchronized contiguous hourly returns across all eight assets",
+    "three chronological market-correlation folds",
+    "BRENTOIL exact live-canary lifecycle, slippage, fee, funding, and liquidity evidence",
+    "BRENTOIL full-development and prospective oil-shock evidence",
+    "MU immutable source-native lifecycle replay and current observer state",
+    "current v51 improvement digest for unresolved active-route evidence"
+  ],
+  "observed_problem_or_opportunity": "BRENTOIL appears to offer real market-level diversification but still lacks a validated profitable entry and exit mechanism. MU currently overlaps the index and crypto baseline more strongly and remains one-sided and outlier-dependent.",
+  "applicable_market_regime": "Market-dependence evidence spans all observed hourly conditions; strategy evidence remains BRENTOIL five-minute oil-shock reversion and MU fifteen-minute pressure breakout.",
+  "alternatives_considered": [
+    "activate BRENTOIL from correlation alone: rejected because market dependence is not strategy expectancy",
+    "activate MU from two pooled winning/losing longs: rejected because stress excluding the largest winner is negative and no short resolved",
+    "restore retired BRENTOIL Swing or Breakout: rejected by exact attribution and prior validation",
+    "add SKHX: excluded by user direction and duplicate semiconductor exposure",
+    "change the frozen v51 index thresholds: rejected because this study contains no index strategy parameter evidence"
+  ],
+  "proposed_live_change": null,
+  "expected_upside": "Converts the next candidate lifecycle into portfolio-relevant evidence rather than testing another highly correlated asset without a mechanism.",
+  "main_risks_and_failure_modes": [
+    "Pearson hourly correlation can miss nonlinear and tail dependence",
+    "market-return diversification may not survive strategy signal co-triggering",
+    "BRENTOIL full-development stress expectancy is negative",
+    "BRENTOIL has zero prospective oil-shock entries so far",
+    "MU evidence is all long, technically censored, and dependent on the largest winner",
+    "public candle snapshots can differ from exact trade-path OHLC"
+  ],
+  "validation_completed": [
+    "exact common-source and common-window candles for all eight assets",
+    "gap exclusion and exact shared-row reconciliation",
+    "three chronological fold comparisons",
+    "independent close-row hash, generator hash, correlation, and volatility recomputation",
+    "BRENTOIL canary lifecycle and top-10 liquidity reconciliation",
+    "MU source-native nominal and stress lifecycle replay"
+  ],
+  "validation_still_required": [
+    "resolved BRENTOIL prospective lifecycles on both sides",
+    "positive BRENTOIL stress economics after largest-winner removal",
+    "strategy-return correlation and actual co-trigger timing across the eight assets",
+    "simultaneous-loss replay using exact candidate routes and v51 sizing",
+    "resolved MU short and additional independent longs",
+    "exact SP500/SPCX both-side current-profile live outcomes"
+  ],
+  "success_metrics": [
+    "candidate path and execution evidence fully resolved",
+    "positive after-cost stress net and profit factor above one after largest-winner removal",
+    "both directions independently measured",
+    "candidate strategy loss overlap does not materially increase the v51 simultaneous-loss wave",
+    "live execution residual remains inside an explicitly approved risk budget"
+  ],
+  "failure_or_rollback_triggers": [
+    "candidate liquidity leaves the global top 10",
+    "resolved prospective stress economics remain negative",
+    "strategy-level co-triggers erase the apparent market diversification",
+    "route emits the wrong side or ignores a fully aligned setup",
+    "unprotected exposure or source/mark-path corruption"
+  ],
+  "confidence_level": {
+    "artifact_integrity_and_market_calculation": "high",
+    "brentoil_market_diversification": "medium_high_with_three_fold_consistency",
+    "brentoil_execution_feasibility": "high",
+    "brentoil_repeatable_profitability": "low",
+    "mu_market_diversification": "low_to_medium_relative_to_brentoil",
+    "mu_repeatable_profitability": "low",
+    "eight_asset_portfolio_improvement": "low_until_strategy_level_co_trigger_evidence"
+  },
+  "explicit_approval_requested": false,
+  "single_highest_value_next_investigation": "Capture and resolve the first source-native BRENTOIL oil-shock lifecycle; if an attributable SPCX lifecycle closes first, reconcile that active-route evidence immediately without changing either strategy.",
+  "source_evidence": [
+    {
+      "path": "docs/research-journal/v51-four-plus-four-noncrypto-candidate-review-v8.json",
+      "sha256": "d00fecdbbc83e97abece1aaf85615e39ac6a41398171285ab2cb6574a761653f",
+      "bytes": 15831
+    },
+    {
+      "path": "data/logs/research/v51_eight_asset_market_diversification_20260816T0345Z_v1.json",
+      "sha256": "f14a2b23f5b5bd61f3d08d3cae5d3a13a27bd0605cb211e9433b742a0f6f8515",
+      "bytes": 1177309
+    },
+    {
+      "path": "data/logs/research/bidirectional_cohort/brentoil_live_canary_lifecycle_reconciliation_20260815_v1.json",
+      "sha256": "47ba7608ce7d7fd9b2ba2c7c64555d529abae1ff509971bfbc38a46a308534bc",
+      "bytes": 8143
+    },
+    {
+      "path": "data/logs/research/xyz_brentoil_oil_shock_reversion_development_20260815_v4.json",
+      "sha256": "0711c0e56c746e43975fc19618d6ea952687e3ac11311a351f6fe047beefdb57",
+      "bytes": 186480
+    },
+    {
+      "path": "data/logs/research/xyz_mu_breakout_shadow_lifecycle_20260816T0230Z_v2.json",
+      "sha256": "23b85e0ee55d5d71c8e570f4a958ec89a5649b4b5130e06f0a480cd1f592600a",
+      "bytes": 11710183
+    },
+    {
+      "path": "data/runtime/research/brentoil_oil_shock_shadow_latest.json",
+      "mutable_status_observed_at_ms": 1786852031854
+    },
+    {
+      "path": "data/runtime/research/mu_hip3_breakout_shadow_latest.json",
+      "mutable_status_observed_at_ms": 1786852034653
+    },
+    {
+      "path": "data/runtime/bidirectional_cohort/latest_improvement_digest.json",
+      "mutable_status_reviewed_at_utc": "2026-08-16T03:46:01.665131+00:00"
+    }
+  ],
+  "limitations": [
+    "This revision is report-only and authorizes no asset, route, parameter, sizing, leverage, exit, or deployment change.",
+    "Market-return dependence is not strategy-return correlation, executable PnL, or a covariance allocation model.",
+    "BRENTOIL prospective evidence contains no eligible oil-shock onset yet.",
+    "MU has no resolved short and stress expectancy is negative without the largest winner.",
+    "Mutable observer statuses continue to change after their recorded observation timestamps."
+  ]
+}

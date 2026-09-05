@@ -11,6 +11,9 @@ from hypervector.research.cohort_live_audit_values import (
     text,
 )
 from hypervector.research.cohort_regime_assessment import build_regime_assessment
+from hypervector.research.cohort_signal_candidates import (
+    is_technical_unavailability,
+)
 from hypervector.research.cohort_trade_performance import build_trade_performance
 
 Record = Mapping[str, object]
@@ -164,6 +167,8 @@ def _evaluation_index(
 ) -> dict[int, Record]:
     output: dict[int, Record] = {}
     for evaluation in evaluations:
+        if is_technical_unavailability(evaluation):
+            continue
         timestamp_ms = nonnegative_int(
             evaluation.get("decision_time_ms"), "opposition decision timestamp"
         )

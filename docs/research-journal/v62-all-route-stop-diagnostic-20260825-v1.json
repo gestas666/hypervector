@@ -1,0 +1,2051 @@
+{
+  "automatic_live_change": false,
+  "diagnostic": {
+    "checkpoint_generated_at_utc": "2026-08-25T17:37:05.385625+00:00",
+    "contract": {
+      "automatic_strategy_changes": false,
+      "execution_authority": "none",
+      "report_only": true,
+      "runtime_strategy_changed": false
+    },
+    "limitations": [
+      "exact current route identities can have sparse all-time samples",
+      "completed one-minute paths do not reproduce mark-price stop ordering",
+      "possible whipsaw means post-stop entry recovery, not proven wider-stop PnL",
+      "routes without protective stops remain insufficient rather than favorable"
+    ],
+    "mode": "v62_all_executable_route_stop_diagnostic",
+    "profile": "multi_asset_growth_first_5000_eight_asset_sndk_exit_preserved_candidate_v61",
+    "profile_fingerprint": "3ca27a84d7ccd9c8a3fb8ba6a41990048ef5ec6440c9e51df6c30bba72917267",
+    "routes": {
+      "eth_breakout_precompression_pullback_bidirectional_v1|ETH": {
+        "closed_trades": 13,
+        "configured_exit_contract": {
+          "entry_liquidity": "taker_ioc",
+          "maximum_hold_seconds": 43200,
+          "stop_bps": 60.0,
+          "stop_policy": "fixed_bps",
+          "target_policy": "none"
+        },
+        "evidence_status": "protective_stop_recovery_evidence_available",
+        "exit_reason_counts": {
+          "maximum_hold_seconds": 5,
+          "operator_manual_close": 1,
+          "protective_stop": 7
+        },
+        "open_trades": 0,
+        "possible_control_whipsaws_15m": 4,
+        "protective_stop_trades": 7,
+        "resolved_post_stop_paths_15m": 7,
+        "stop_recovery_assessment": {
+          "contract": {
+            "automatic_strategy_changes": false,
+            "execution_authority": "none",
+            "performance_gate": false,
+            "report_only": true,
+            "runtime_strategy_changed": false
+          },
+          "limitations": [
+            "completed candles cannot identify an executable intrabar stop fill",
+            "survival means only that observed adverse excursion stayed inside the barrier",
+            "leverage changes margin return and liquidation headroom, not the configured price-bps stop distance",
+            "ATR units remain unavailable when the recorded entry lacks causal ATR telemetry",
+            "a post-stop entry recovery is a possible whipsaw, not proof that a wider stop improves net execution",
+            "equal-risk gross candidates resize notional but omit counterfactual fees, funding, and slippage",
+            "the report cannot change, route, size, or submit an order"
+          ],
+          "mode": "cohort_protective_stop_recovery_sensitivity_v2",
+          "schema_version": 2,
+          "stop_widths_bps": [
+            20.0,
+            40.0,
+            60.0,
+            80.0,
+            100.0,
+            120.0
+          ],
+          "summary": {
+            "assessment": {
+              "candidates": {
+                "100bps": {
+                  "barrier_crossed": 0,
+                  "equal_risk_gross_pnl_usd": null,
+                  "equal_risk_notional_usd": null,
+                  "resolved_trades": 0,
+                  "status": "insufficient_path_evidence",
+                  "survived": 0
+                },
+                "120bps": {
+                  "barrier_crossed": 0,
+                  "equal_risk_gross_pnl_usd": null,
+                  "equal_risk_notional_usd": null,
+                  "resolved_trades": 0,
+                  "status": "insufficient_path_evidence",
+                  "survived": 0
+                },
+                "20bps": {
+                  "barrier_crossed": 0,
+                  "equal_risk_gross_pnl_usd": null,
+                  "equal_risk_notional_usd": null,
+                  "resolved_trades": 0,
+                  "status": "insufficient_path_evidence",
+                  "survived": 0
+                },
+                "40bps": {
+                  "barrier_crossed": 0,
+                  "equal_risk_gross_pnl_usd": null,
+                  "equal_risk_notional_usd": null,
+                  "resolved_trades": 0,
+                  "status": "insufficient_path_evidence",
+                  "survived": 0
+                },
+                "60bps": {
+                  "barrier_crossed": 0,
+                  "equal_risk_gross_pnl_usd": null,
+                  "equal_risk_notional_usd": null,
+                  "resolved_trades": 0,
+                  "status": "insufficient_path_evidence",
+                  "survived": 0
+                },
+                "80bps": {
+                  "barrier_crossed": 0,
+                  "equal_risk_gross_pnl_usd": null,
+                  "equal_risk_notional_usd": null,
+                  "resolved_trades": 0,
+                  "status": "insufficient_path_evidence",
+                  "survived": 0
+                }
+              },
+              "censored_trades": 7,
+              "counterfactual_net_pnl_available": false,
+              "entry_recovered_after_stop": 4,
+              "horizon_minutes": 15,
+              "possible_control_whipsaws": 4,
+              "post_stop_resolved_trades": 7,
+              "resolved_trades": 0
+            },
+            "protective_stop_trades": 7
+          },
+          "trades": [
+            {
+              "actual_stop_width_bps": 59.999999999999105,
+              "control_barrier_loss_on_margin_pct": 2.999999999999955,
+              "control_barrier_risk_usd": 4.422327299999934,
+              "entry_notional_usd": 737.0545500000001,
+              "horizons": {
+                "1440": {
+                  "adverse_excursion_bps": 222.80983137543896,
+                  "candidates": {
+                    "100bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "120bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "20bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "40bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "60bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "80bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    }
+                  },
+                  "directional_close_return_bps": 272.2267978672677,
+                  "favorable_excursion_bps": 620.3129741211155,
+                  "status": "resolved"
+                },
+                "240": {
+                  "adverse_excursion_bps": 222.80983137543896,
+                  "candidates": {
+                    "100bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "120bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "20bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "40bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "60bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "80bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    }
+                  },
+                  "directional_close_return_bps": -7.802678919762718,
+                  "favorable_excursion_bps": 65.45580649356175,
+                  "status": "resolved"
+                },
+                "2880": {
+                  "adverse_excursion_bps": 222.80983137543896,
+                  "candidates": {
+                    "100bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "120bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "20bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "40bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "60bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "80bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    }
+                  },
+                  "directional_close_return_bps": 483.3326108630631,
+                  "favorable_excursion_bps": 1055.9625471411848,
+                  "status": "resolved"
+                },
+                "720": {
+                  "adverse_excursion_bps": 222.80983137543896,
+                  "candidates": {
+                    "100bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "120bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "20bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "40bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "60bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "80bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    }
+                  },
+                  "directional_close_return_bps": 105.33616541679169,
+                  "favorable_excursion_bps": 233.64688543066504,
+                  "status": "resolved"
+                }
+              },
+              "leverage": 5.0,
+              "lifecycle_id": "ETH:520759995805",
+              "post_stop_horizons": {
+                "15": {
+                  "entry_recovered": false,
+                  "entry_recovery_required_bps": 63.69148889761256,
+                  "favorable_excursion_bps": 0.0,
+                  "status": "resolved"
+                },
+                "30": {
+                  "entry_recovered": false,
+                  "entry_recovery_required_bps": 63.69148889761256,
+                  "favorable_excursion_bps": 0.0,
+                  "status": "resolved"
+                },
+                "5": {
+                  "entry_recovered": false,
+                  "entry_recovery_required_bps": 63.69148889761256,
+                  "favorable_excursion_bps": 0.0,
+                  "status": "resolved"
+                },
+                "60": {
+                  "entry_recovered": false,
+                  "entry_recovery_required_bps": 63.69148889761256,
+                  "favorable_excursion_bps": 3.0537015224885167,
+                  "status": "resolved"
+                }
+              },
+              "price_stop_distance_is_leverage_independent": true,
+              "side": "long",
+              "source_profile_fingerprint": "8a04636c9ff60a7eae141381cb540d7c6ceed081097cda7d5e465d48faa5022b",
+              "source_run_id": "bidirectional-live-1787166474078",
+              "stop_distance_atr_units": null,
+              "stop_distance_recent_bar_range_units": 1.8935342465752674,
+              "strategy_id": "eth_breakout_precompression_pullback_bidirectional_v1",
+              "symbol": "ETH",
+              "volatility_evidence": {
+                "atr_bps": null,
+                "recent_bar_range_bps": 31.686778366178405
+              }
+            },
+            {
+              "actual_stop_width_bps": 60.00000000000073,
+              "control_barrier_loss_on_margin_pct": 3.0000000000000364,
+              "control_barrier_risk_usd": 4.404192660000055,
+              "entry_notional_usd": 734.0321100000001,
+              "horizons": {
+                "1440": {
+                  "adverse_excursion_bps": 159.4270855535196,
+                  "candidates": {
+                    "100bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "120bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "20bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "40bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "60bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "80bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    }
+                  },
+                  "directional_close_return_bps": 241.69828210921062,
+                  "favorable_excursion_bps": 443.7529306449539,
+                  "status": "resolved"
+                },
+                "240": {
+                  "adverse_excursion_bps": 152.6066754763633,
+                  "candidates": {
+                    "100bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "120bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "20bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "40bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "60bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "80bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    }
+                  },
+                  "directional_close_return_bps": -113.81559316253953,
+                  "favorable_excursion_bps": 19.608678971823057,
+                  "status": "resolved"
+                },
+                "2880": {
+                  "adverse_excursion_bps": 159.4270855535196,
+                  "candidates": {
+                    "100bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "120bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "20bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "40bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "60bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "80bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    }
+                  },
+                  "directional_close_return_bps": 349.54601645423855,
+                  "favorable_excursion_bps": 872.1599386163082,
+                  "status": "resolved"
+                },
+                "720": {
+                  "adverse_excursion_bps": 159.4270855535196,
+                  "candidates": {
+                    "100bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "120bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "20bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "40bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "60bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "80bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    }
+                  },
+                  "directional_close_return_bps": 19.18240334200183,
+                  "favorable_excursion_bps": 149.19647043778463,
+                  "status": "resolved"
+                }
+              },
+              "leverage": 5.0,
+              "lifecycle_id": "ETH:521066184054",
+              "post_stop_horizons": {
+                "15": {
+                  "entry_recovered": false,
+                  "entry_recovery_required_bps": 69.53685023822986,
+                  "favorable_excursion_bps": 23.178950079409955,
+                  "status": "resolved"
+                },
+                "30": {
+                  "entry_recovered": false,
+                  "entry_recovery_required_bps": 69.53685023822986,
+                  "favorable_excursion_bps": 23.178950079409955,
+                  "status": "resolved"
+                },
+                "5": {
+                  "entry_recovered": false,
+                  "entry_recovery_required_bps": 69.53685023822986,
+                  "favorable_excursion_bps": 23.178950079409955,
+                  "status": "resolved"
+                },
+                "60": {
+                  "entry_recovered": false,
+                  "entry_recovery_required_bps": 69.53685023822986,
+                  "favorable_excursion_bps": 23.178950079409955,
+                  "status": "resolved"
+                }
+              },
+              "price_stop_distance_is_leverage_independent": true,
+              "side": "long",
+              "source_profile_fingerprint": "8a04636c9ff60a7eae141381cb540d7c6ceed081097cda7d5e465d48faa5022b",
+              "source_run_id": "bidirectional-live-1787166474078",
+              "stop_distance_atr_units": null,
+              "stop_distance_recent_bar_range_units": 1.3050555555556043,
+              "strategy_id": "eth_breakout_precompression_pullback_bidirectional_v1",
+              "symbol": "ETH",
+              "volatility_evidence": {
+                "atr_bps": null,
+                "recent_bar_range_bps": 45.975054276104586
+              }
+            },
+            {
+              "actual_stop_width_bps": 59.9999999999992,
+              "control_barrier_loss_on_margin_pct": 2.9999999999999596,
+              "control_barrier_risk_usd": 4.406436719999942,
+              "entry_notional_usd": 734.4061200000001,
+              "horizons": {
+                "1440": {
+                  "adverse_excursion_bps": 141.06064366674943,
+                  "candidates": {
+                    "100bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "120bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "20bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "40bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "60bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "80bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    }
+                  },
+                  "directional_close_return_bps": 28.54306279473917,
+                  "favorable_excursion_bps": 550.5915446347309,
+                  "status": "resolved"
+                },
+                "240": {
+                  "adverse_excursion_bps": 91.00686688177429,
+                  "candidates": {
+                    "100bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "directional_close_return_bps": 101.34855630015815,
+                      "status": "survived_observed_path"
+                    },
+                    "120bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "directional_close_return_bps": 101.34855630015815,
+                      "status": "survived_observed_path"
+                    },
+                    "20bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "40bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "60bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "80bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    }
+                  },
+                  "directional_close_return_bps": 101.34855630015815,
+                  "favorable_excursion_bps": 130.71895424836555,
+                  "status": "resolved"
+                },
+                "2880": {
+                  "adverse_excursion_bps": 249.02788119467334,
+                  "candidates": {
+                    "100bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "120bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "20bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "40bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "60bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "80bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    }
+                  },
+                  "directional_close_return_bps": 138.9923057830722,
+                  "favorable_excursion_bps": 550.5915446347309,
+                  "status": "resolved"
+                },
+                "720": {
+                  "adverse_excursion_bps": 141.06064366674943,
+                  "candidates": {
+                    "100bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "120bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "20bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "40bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "60bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "80bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    }
+                  },
+                  "directional_close_return_bps": -109.20824025812847,
+                  "favorable_excursion_bps": 550.5915446347309,
+                  "status": "resolved"
+                }
+              },
+              "leverage": 5.0,
+              "lifecycle_id": "ETH:522234293900",
+              "post_stop_horizons": {
+                "15": {
+                  "entry_recovered": true,
+                  "entry_recovery_required_bps": 61.599933405478424,
+                  "favorable_excursion_bps": 81.99450595188563,
+                  "status": "resolved"
+                },
+                "30": {
+                  "entry_recovered": true,
+                  "entry_recovery_required_bps": 61.599933405478424,
+                  "favorable_excursion_bps": 81.99450595188563,
+                  "status": "resolved"
+                },
+                "5": {
+                  "entry_recovered": false,
+                  "entry_recovery_required_bps": 61.599933405478424,
+                  "favorable_excursion_bps": 9.156746857572617,
+                  "status": "resolved"
+                },
+                "60": {
+                  "entry_recovered": true,
+                  "entry_recovery_required_bps": 61.599933405478424,
+                  "favorable_excursion_bps": 81.99450595188563,
+                  "status": "resolved"
+                }
+              },
+              "price_stop_distance_is_leverage_independent": true,
+              "side": "long",
+              "source_profile_fingerprint": "8a04636c9ff60a7eae141381cb540d7c6ceed081097cda7d5e465d48faa5022b",
+              "source_run_id": "bidirectional-live-1787272893887",
+              "stop_distance_atr_units": null,
+              "stop_distance_recent_bar_range_units": 1.9595675675676376,
+              "strategy_id": "eth_breakout_precompression_pullback_bidirectional_v1",
+              "symbol": "ETH",
+              "volatility_evidence": {
+                "atr_bps": null,
+                "recent_bar_range_bps": 30.619000331014714
+              }
+            },
+            {
+              "actual_stop_width_bps": 59.99999999999981,
+              "control_barrier_loss_on_margin_pct": 2.9999999999999902,
+              "control_barrier_risk_usd": 4.392429599999986,
+              "entry_notional_usd": 732.0716,
+              "horizons": {
+                "1440": {
+                  "adverse_excursion_bps": 265.887926809345,
+                  "candidates": {
+                    "100bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "120bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "20bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "40bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "60bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "80bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    }
+                  },
+                  "directional_close_return_bps": -126.61329848064007,
+                  "favorable_excursion_bps": 417.00702499591455,
+                  "status": "resolved"
+                },
+                "240": {
+                  "adverse_excursion_bps": 0.0,
+                  "candidates": {
+                    "100bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "directional_close_return_bps": 320.2091161574905,
+                      "status": "survived_observed_path"
+                    },
+                    "120bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "directional_close_return_bps": 320.2091161574905,
+                      "status": "survived_observed_path"
+                    },
+                    "20bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "directional_close_return_bps": 320.2091161574905,
+                      "status": "survived_observed_path"
+                    },
+                    "40bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "directional_close_return_bps": 320.2091161574905,
+                      "status": "survived_observed_path"
+                    },
+                    "60bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "directional_close_return_bps": 320.2091161574905,
+                      "status": "survived_observed_path"
+                    },
+                    "80bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "directional_close_return_bps": 320.2091161574905,
+                      "status": "survived_observed_path"
+                    }
+                  },
+                  "directional_close_return_bps": 320.2091161574905,
+                  "favorable_excursion_bps": 417.00702499591455,
+                  "status": "resolved"
+                },
+                "2880": {
+                  "adverse_excursion_bps": 372.48815553014293,
+                  "candidates": {
+                    "100bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "120bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "20bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "40bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "60bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "80bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    }
+                  },
+                  "directional_close_return_bps": 81.68599901976714,
+                  "favorable_excursion_bps": 417.00702499591455,
+                  "status": "resolved"
+                },
+                "720": {
+                  "adverse_excursion_bps": 265.887926809345,
+                  "candidates": {
+                    "100bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "120bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "20bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "40bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "60bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "80bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    }
+                  },
+                  "directional_close_return_bps": -91.48831890214093,
+                  "favorable_excursion_bps": 417.00702499591455,
+                  "status": "resolved"
+                }
+              },
+              "leverage": 5.0,
+              "lifecycle_id": "ETH:522413026103",
+              "post_stop_horizons": {
+                "15": {
+                  "entry_recovered": true,
+                  "entry_recovery_required_bps": 99.82674696807248,
+                  "favorable_excursion_bps": 126.22720897615957,
+                  "status": "resolved"
+                },
+                "30": {
+                  "entry_recovered": true,
+                  "entry_recovery_required_bps": 99.82674696807248,
+                  "favorable_excursion_bps": 126.22720897615957,
+                  "status": "resolved"
+                },
+                "5": {
+                  "entry_recovered": true,
+                  "entry_recovery_required_bps": 99.82674696807248,
+                  "favorable_excursion_bps": 126.22720897615957,
+                  "status": "resolved"
+                },
+                "60": {
+                  "entry_recovered": true,
+                  "entry_recovery_required_bps": 99.82674696807248,
+                  "favorable_excursion_bps": 126.22720897615957,
+                  "status": "resolved"
+                }
+              },
+              "price_stop_distance_is_leverage_independent": true,
+              "side": "long",
+              "source_profile_fingerprint": "8a04636c9ff60a7eae141381cb540d7c6ceed081097cda7d5e465d48faa5022b",
+              "source_run_id": "bidirectional-live-1787272893887",
+              "stop_distance_atr_units": null,
+              "stop_distance_recent_bar_range_units": 3.129319148935979,
+              "strategy_id": "eth_breakout_precompression_pullback_bidirectional_v1",
+              "symbol": "ETH",
+              "volatility_evidence": {
+                "atr_bps": null,
+                "recent_bar_range_bps": 19.17349977563037
+              }
+            },
+            {
+              "actual_stop_width_bps": 60.0000000000004,
+              "control_barrier_loss_on_margin_pct": 3.00000000000002,
+              "control_barrier_risk_usd": 4.353715680000028,
+              "entry_notional_usd": 725.6192799999999,
+              "horizons": {
+                "1440": {
+                  "adverse_excursion_bps": 251.67578237447196,
+                  "candidates": {
+                    "100bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "120bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "20bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "40bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "60bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "80bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    }
+                  },
+                  "directional_close_return_bps": -166.1389151622328,
+                  "favorable_excursion_bps": 180.5321380104441,
+                  "status": "resolved"
+                },
+                "240": {
+                  "adverse_excursion_bps": 227.00168606324843,
+                  "candidates": {
+                    "100bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "120bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "20bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "40bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "60bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "80bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    }
+                  },
+                  "directional_close_return_bps": -28.786445696427077,
+                  "favorable_excursion_bps": 180.5321380104441,
+                  "status": "resolved"
+                },
+                "2880": {
+                  "adverse_excursion_bps": 420.69334210634634,
+                  "candidates": {
+                    "100bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "120bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "20bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "40bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "60bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "80bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    }
+                  },
+                  "directional_close_return_bps": -187.11189702677044,
+                  "favorable_excursion_bps": 180.5321380104441,
+                  "status": "resolved"
+                },
+                "720": {
+                  "adverse_excursion_bps": 227.41292100176835,
+                  "candidates": {
+                    "100bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "120bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "20bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "40bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "60bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "80bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    }
+                  },
+                  "directional_close_return_bps": -83.0694575811175,
+                  "favorable_excursion_bps": 180.5321380104441,
+                  "status": "resolved"
+                }
+              },
+              "leverage": 5.0,
+              "lifecycle_id": "ETH:524002981958",
+              "post_stop_horizons": {
+                "15": {
+                  "entry_recovered": false,
+                  "entry_recovery_required_bps": 103.77665635682875,
+                  "favorable_excursion_bps": 24.825004069672918,
+                  "status": "resolved"
+                },
+                "30": {
+                  "entry_recovered": false,
+                  "entry_recovery_required_bps": 103.77665635682875,
+                  "favorable_excursion_bps": 25.638938629333197,
+                  "status": "resolved"
+                },
+                "5": {
+                  "entry_recovered": false,
+                  "entry_recovery_required_bps": 103.77665635682875,
+                  "favorable_excursion_bps": 11.395083835258335,
+                  "status": "resolved"
+                },
+                "60": {
+                  "entry_recovered": false,
+                  "entry_recovery_required_bps": 103.77665635682875,
+                  "favorable_excursion_bps": 25.638938629333197,
+                  "status": "resolved"
+                }
+              },
+              "price_stop_distance_is_leverage_independent": true,
+              "side": "short",
+              "source_profile_fingerprint": "c057882fdd0818831076685aa0fb0134b22889618f6c145ca8e1f9f33111ab78",
+              "source_run_id": "bidirectional-live-1787425692968",
+              "stop_distance_atr_units": null,
+              "stop_distance_recent_bar_range_units": 2.9199600000000197,
+              "strategy_id": "eth_breakout_precompression_pullback_bidirectional_v1",
+              "symbol": "ETH",
+              "volatility_evidence": {
+                "atr_bps": null,
+                "recent_bar_range_bps": 20.54822668803682
+              }
+            },
+            {
+              "actual_stop_width_bps": 60.00000000000095,
+              "control_barrier_loss_on_margin_pct": 3.000000000000048,
+              "control_barrier_risk_usd": 4.3710782400000685,
+              "entry_notional_usd": 728.5130399999999,
+              "horizons": {
+                "1440": {
+                  "adverse_excursion_bps": 159.63420503770197,
+                  "candidates": {
+                    "100bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "120bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "20bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "40bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "60bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "80bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    }
+                  },
+                  "directional_close_return_bps": -45.72437028718013,
+                  "favorable_excursion_bps": 163.6451147120166,
+                  "status": "resolved"
+                },
+                "240": {
+                  "adverse_excursion_bps": 69.78982833306446,
+                  "candidates": {
+                    "100bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "directional_close_return_bps": 58.559281244987545,
+                      "status": "survived_observed_path"
+                    },
+                    "120bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "directional_close_return_bps": 58.559281244987545,
+                      "status": "survived_observed_path"
+                    },
+                    "20bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "40bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "60bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "80bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "directional_close_return_bps": 58.559281244987545,
+                      "status": "survived_observed_path"
+                    }
+                  },
+                  "directional_close_return_bps": 58.559281244987545,
+                  "favorable_excursion_bps": 163.6451147120166,
+                  "status": "resolved"
+                },
+                "2880": {
+                  "candidates": {},
+                  "status": "censored"
+                },
+                "720": {
+                  "adverse_excursion_bps": 159.63420503770197,
+                  "candidates": {
+                    "100bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "120bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "20bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "40bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "60bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "80bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    }
+                  },
+                  "directional_close_return_bps": -25.66982191560929,
+                  "favorable_excursion_bps": 163.6451147120166,
+                  "status": "resolved"
+                }
+              },
+              "leverage": 5.0,
+              "lifecycle_id": "ETH:525006831133",
+              "post_stop_horizons": {
+                "15": {
+                  "entry_recovered": true,
+                  "entry_recovery_required_bps": 67.02737624162181,
+                  "favorable_excursion_bps": 100.13728498748264,
+                  "status": "resolved"
+                },
+                "30": {
+                  "entry_recovered": true,
+                  "entry_recovery_required_bps": 67.02737624162181,
+                  "favorable_excursion_bps": 125.97916498425343,
+                  "status": "resolved"
+                },
+                "5": {
+                  "entry_recovered": false,
+                  "entry_recovery_required_bps": 67.02737624162181,
+                  "favorable_excursion_bps": 58.95178874263163,
+                  "status": "resolved"
+                },
+                "60": {
+                  "entry_recovered": true,
+                  "entry_recovery_required_bps": 67.02737624162181,
+                  "favorable_excursion_bps": 184.93095372688506,
+                  "status": "resolved"
+                }
+              },
+              "price_stop_distance_is_leverage_independent": true,
+              "side": "long",
+              "source_profile_fingerprint": "3ca27a84d7ccd9c8a3fb8ba6a41990048ef5ec6440c9e51df6c30bba72917267",
+              "source_run_id": "bidirectional-live-1787564992209",
+              "stop_distance_atr_units": null,
+              "stop_distance_recent_bar_range_units": 3.481395348837117,
+              "strategy_id": "eth_breakout_precompression_pullback_bidirectional_v1",
+              "symbol": "ETH",
+              "volatility_evidence": {
+                "atr_bps": null,
+                "recent_bar_range_bps": 17.234468937876482
+              }
+            },
+            {
+              "actual_stop_width_bps": 59.99999999999926,
+              "control_barrier_loss_on_margin_pct": 2.999999999999963,
+              "control_barrier_risk_usd": 4.363262459999946,
+              "entry_notional_usd": 727.21041,
+              "horizons": {
+                "1440": {
+                  "candidates": {},
+                  "status": "censored"
+                },
+                "240": {
+                  "adverse_excursion_bps": 76.98198379750832,
+                  "candidates": {
+                    "100bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "directional_close_return_bps": 4.836564427068701,
+                      "status": "survived_observed_path"
+                    },
+                    "120bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "directional_close_return_bps": 4.836564427068701,
+                      "status": "survived_observed_path"
+                    },
+                    "20bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "40bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "60bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "80bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "directional_close_return_bps": 4.836564427068701,
+                      "status": "survived_observed_path"
+                    }
+                  },
+                  "directional_close_return_bps": 4.836564427068701,
+                  "favorable_excursion_bps": 66.50276087219353,
+                  "status": "resolved"
+                },
+                "2880": {
+                  "candidates": {},
+                  "status": "censored"
+                },
+                "720": {
+                  "candidates": {},
+                  "status": "censored"
+                }
+              },
+              "leverage": 5.0,
+              "lifecycle_id": "ETH:526010179383",
+              "post_stop_horizons": {
+                "15": {
+                  "entry_recovered": true,
+                  "entry_recovery_required_bps": 64.9060890024744,
+                  "favorable_excursion_bps": 79.91562208429892,
+                  "status": "resolved"
+                },
+                "30": {
+                  "entry_recovered": true,
+                  "entry_recovery_required_bps": 64.9060890024744,
+                  "favorable_excursion_bps": 101.01010101010166,
+                  "status": "resolved"
+                },
+                "5": {
+                  "entry_recovered": true,
+                  "entry_recovery_required_bps": 64.9060890024744,
+                  "favorable_excursion_bps": 78.69863291550149,
+                  "status": "resolved"
+                },
+                "60": {
+                  "entry_recovered": true,
+                  "entry_recovery_required_bps": 64.9060890024744,
+                  "favorable_excursion_bps": 131.8404932862771,
+                  "status": "resolved"
+                }
+              },
+              "price_stop_distance_is_leverage_independent": true,
+              "side": "long",
+              "source_profile_fingerprint": "3ca27a84d7ccd9c8a3fb8ba6a41990048ef5ec6440c9e51df6c30bba72917267",
+              "source_run_id": "bidirectional-live-1787564992209",
+              "stop_distance_atr_units": null,
+              "stop_distance_recent_bar_range_units": 0.9918799999999878,
+              "strategy_id": "eth_breakout_precompression_pullback_bidirectional_v1",
+              "symbol": "ETH",
+              "volatility_evidence": {
+                "atr_bps": null,
+                "recent_bar_range_bps": 60.49118845021575
+              }
+            }
+          ]
+        },
+        "strategy_id": "eth_breakout_precompression_pullback_bidirectional_v1",
+        "symbol": "ETH"
+      },
+      "hip3_breakout_pressure_sndk_gold_brent_fresh15s_bidirectional_v2|xyz:BRENTOIL": {
+        "closed_trades": 2,
+        "configured_exit_contract": {
+          "entry_liquidity": "taker_ioc",
+          "maximum_hold_seconds": 86400,
+          "stop_bps": 80.0,
+          "stop_policy": "fixed_bps",
+          "target_policy": "none"
+        },
+        "evidence_status": "insufficient_no_protective_stops",
+        "exit_reason_counts": {
+          "maximum_hold_seconds": 1,
+          "operator_manual_close": 1
+        },
+        "open_trades": 1,
+        "possible_control_whipsaws_15m": 0,
+        "protective_stop_trades": 0,
+        "resolved_post_stop_paths_15m": 0,
+        "stop_recovery_assessment": null,
+        "strategy_id": "hip3_breakout_pressure_sndk_gold_brent_fresh15s_bidirectional_v2",
+        "symbol": "xyz:BRENTOIL"
+      },
+      "hip3_breakout_pressure_sndk_gold_brent_fresh15s_bidirectional_v2|xyz:SNDK": {
+        "closed_trades": 1,
+        "configured_exit_contract": {
+          "entry_liquidity": "taker_ioc",
+          "maximum_hold_seconds": 86400,
+          "stop_bps": 80.0,
+          "stop_policy": "fixed_bps",
+          "target_policy": "none"
+        },
+        "evidence_status": "insufficient_no_protective_stops",
+        "exit_reason_counts": {
+          "operator_manual_close": 1
+        },
+        "open_trades": 1,
+        "possible_control_whipsaws_15m": 0,
+        "protective_stop_trades": 0,
+        "resolved_post_stop_paths_15m": 0,
+        "stop_recovery_assessment": null,
+        "strategy_id": "hip3_breakout_pressure_sndk_gold_brent_fresh15s_bidirectional_v2",
+        "symbol": "xyz:SNDK"
+      },
+      "hip3_breakout_pressure_sp500_spcx_fresh15s_bidirectional_v3|xyz:SP500": {
+        "closed_trades": 7,
+        "configured_exit_contract": {
+          "entry_liquidity": "taker_ioc",
+          "maximum_hold_seconds": 86400,
+          "profit_lock_activation_bps": 100.0,
+          "profit_lock_floor_bps": 40.0,
+          "profit_lock_giveback_bps": 80.0,
+          "profit_lock_policy": "completed_bar_trailing",
+          "stop_bps": 80.0,
+          "stop_policy": "fixed_bps",
+          "target_policy": "none"
+        },
+        "evidence_status": "insufficient_no_protective_stops",
+        "exit_reason_counts": {
+          "maximum_hold_seconds": 3,
+          "operator_manual_close": 3,
+          "opposite_strategy_intent": 1
+        },
+        "open_trades": 0,
+        "possible_control_whipsaws_15m": 0,
+        "protective_stop_trades": 0,
+        "resolved_post_stop_paths_15m": 0,
+        "stop_recovery_assessment": null,
+        "strategy_id": "hip3_breakout_pressure_sp500_spcx_fresh15s_bidirectional_v3",
+        "symbol": "xyz:SP500"
+      },
+      "hip3_spcx_cash_open_gap_reversal_bidirectional_15m_v1|xyz:SPCX": {
+        "closed_trades": 2,
+        "configured_exit_contract": {
+          "entry_liquidity": "taker_ioc",
+          "maximum_hold_seconds": 22500,
+          "provider_recipe_exit_policy": "honor",
+          "stop_bps": 80.0,
+          "stop_policy": "fixed_bps",
+          "target_policy": "absolute_anchor"
+        },
+        "evidence_status": "protective_stop_recovery_evidence_available",
+        "exit_reason_counts": {
+          "protective_stop": 2
+        },
+        "open_trades": 0,
+        "possible_control_whipsaws_15m": 1,
+        "protective_stop_trades": 2,
+        "resolved_post_stop_paths_15m": 2,
+        "stop_recovery_assessment": {
+          "contract": {
+            "automatic_strategy_changes": false,
+            "execution_authority": "none",
+            "performance_gate": false,
+            "report_only": true,
+            "runtime_strategy_changed": false
+          },
+          "limitations": [
+            "completed candles cannot identify an executable intrabar stop fill",
+            "survival means only that observed adverse excursion stayed inside the barrier",
+            "leverage changes margin return and liquidation headroom, not the configured price-bps stop distance",
+            "ATR units remain unavailable when the recorded entry lacks causal ATR telemetry",
+            "a post-stop entry recovery is a possible whipsaw, not proof that a wider stop improves net execution",
+            "equal-risk gross candidates resize notional but omit counterfactual fees, funding, and slippage",
+            "the report cannot change, route, size, or submit an order"
+          ],
+          "mode": "cohort_protective_stop_recovery_sensitivity_v2",
+          "schema_version": 2,
+          "stop_widths_bps": [
+            20.0,
+            40.0,
+            60.0,
+            80.0,
+            100.0,
+            120.0
+          ],
+          "summary": {
+            "assessment": {
+              "candidates": {
+                "100bps": {
+                  "barrier_crossed": 0,
+                  "equal_risk_gross_pnl_usd": null,
+                  "equal_risk_notional_usd": null,
+                  "resolved_trades": 0,
+                  "status": "insufficient_path_evidence",
+                  "survived": 0
+                },
+                "120bps": {
+                  "barrier_crossed": 0,
+                  "equal_risk_gross_pnl_usd": null,
+                  "equal_risk_notional_usd": null,
+                  "resolved_trades": 0,
+                  "status": "insufficient_path_evidence",
+                  "survived": 0
+                },
+                "20bps": {
+                  "barrier_crossed": 0,
+                  "equal_risk_gross_pnl_usd": null,
+                  "equal_risk_notional_usd": null,
+                  "resolved_trades": 0,
+                  "status": "insufficient_path_evidence",
+                  "survived": 0
+                },
+                "40bps": {
+                  "barrier_crossed": 0,
+                  "equal_risk_gross_pnl_usd": null,
+                  "equal_risk_notional_usd": null,
+                  "resolved_trades": 0,
+                  "status": "insufficient_path_evidence",
+                  "survived": 0
+                },
+                "60bps": {
+                  "barrier_crossed": 0,
+                  "equal_risk_gross_pnl_usd": null,
+                  "equal_risk_notional_usd": null,
+                  "resolved_trades": 0,
+                  "status": "insufficient_path_evidence",
+                  "survived": 0
+                },
+                "80bps": {
+                  "barrier_crossed": 0,
+                  "equal_risk_gross_pnl_usd": null,
+                  "equal_risk_notional_usd": null,
+                  "resolved_trades": 0,
+                  "status": "insufficient_path_evidence",
+                  "survived": 0
+                }
+              },
+              "censored_trades": 2,
+              "counterfactual_net_pnl_available": false,
+              "entry_recovered_after_stop": 1,
+              "horizon_minutes": 15,
+              "possible_control_whipsaws": 1,
+              "post_stop_resolved_trades": 2,
+              "resolved_trades": 0
+            },
+            "protective_stop_trades": 2
+          },
+          "trades": [
+            {
+              "actual_stop_width_bps": 80.00000000000104,
+              "control_barrier_loss_on_margin_pct": 8.000000000000103,
+              "control_barrier_risk_usd": 39.24193280000051,
+              "entry_notional_usd": 4905.2416,
+              "horizons": {
+                "1440": {
+                  "candidates": {},
+                  "status": "missing_data"
+                },
+                "240": {
+                  "adverse_excursion_bps": 85.64552661381674,
+                  "candidates": {
+                    "100bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "directional_close_return_bps": 271.09286523216315,
+                      "status": "survived_observed_path"
+                    },
+                    "120bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "directional_close_return_bps": 271.09286523216315,
+                      "status": "survived_observed_path"
+                    },
+                    "20bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "40bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "60bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "80bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    }
+                  },
+                  "directional_close_return_bps": 271.09286523216315,
+                  "favorable_excursion_bps": 358.15402038505084,
+                  "status": "resolved"
+                },
+                "2880": {
+                  "candidates": {},
+                  "status": "missing_data"
+                },
+                "720": {
+                  "adverse_excursion_bps": 85.64552661381674,
+                  "candidates": {
+                    "100bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "directional_close_return_bps": 111.83465458663777,
+                      "status": "survived_observed_path"
+                    },
+                    "120bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "directional_close_return_bps": 111.83465458663777,
+                      "status": "survived_observed_path"
+                    },
+                    "20bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "40bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "60bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "80bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    }
+                  },
+                  "directional_close_return_bps": 111.83465458663777,
+                  "favorable_excursion_bps": 358.15402038505084,
+                  "status": "resolved"
+                }
+              },
+              "leverage": 10.0,
+              "lifecycle_id": "xyz:SPCX:518987874507",
+              "post_stop_horizons": {
+                "15": {
+                  "entry_recovered": true,
+                  "entry_recovery_required_bps": 84.79362039211402,
+                  "favorable_excursion_bps": 141.89890703080187,
+                  "status": "resolved"
+                },
+                "30": {
+                  "entry_recovered": true,
+                  "entry_recovery_required_bps": 84.79362039211402,
+                  "favorable_excursion_bps": 208.997618831257,
+                  "status": "resolved"
+                },
+                "5": {
+                  "entry_recovered": false,
+                  "entry_recovery_required_bps": 84.79362039211402,
+                  "favorable_excursion_bps": 70.51729873244206,
+                  "status": "resolved"
+                },
+                "60": {
+                  "entry_recovered": true,
+                  "entry_recovery_required_bps": 84.79362039211402,
+                  "favorable_excursion_bps": 208.997618831257,
+                  "status": "resolved"
+                }
+              },
+              "price_stop_distance_is_leverage_independent": true,
+              "side": "long",
+              "source_profile_fingerprint": "29a29ad11c9cc0613fd8fc93013758b8e093e96ff5f3698217b562b90f6e89c9",
+              "source_run_id": "bidirectional-live-1787057465219",
+              "stop_distance_atr_units": null,
+              "stop_distance_recent_bar_range_units": null,
+              "strategy_id": "hip3_spcx_cash_open_gap_reversal_bidirectional_15m_v1",
+              "symbol": "xyz:SPCX",
+              "volatility_evidence": {
+                "atr_bps": null,
+                "recent_bar_range_bps": null
+              }
+            },
+            {
+              "actual_stop_width_bps": 79.99999999999903,
+              "control_barrier_loss_on_margin_pct": 3.9999999999999516,
+              "control_barrier_risk_usd": 13.591459199999838,
+              "entry_notional_usd": 1698.9324000000001,
+              "horizons": {
+                "1440": {
+                  "candidates": {},
+                  "status": "censored"
+                },
+                "240": {
+                  "candidates": {},
+                  "status": "censored"
+                },
+                "2880": {
+                  "candidates": {},
+                  "status": "censored"
+                },
+                "720": {
+                  "candidates": {},
+                  "status": "censored"
+                }
+              },
+              "leverage": 5.0,
+              "lifecycle_id": "xyz:SPCX:526285930432",
+              "post_stop_horizons": {
+                "15": {
+                  "entry_recovered": false,
+                  "entry_recovery_required_bps": 77.13799021633605,
+                  "favorable_excursion_bps": 64.07012979958826,
+                  "status": "resolved"
+                },
+                "30": {
+                  "entry_recovered": false,
+                  "entry_recovery_required_bps": 77.13799021633605,
+                  "favorable_excursion_bps": 64.07012979958826,
+                  "status": "resolved"
+                },
+                "5": {
+                  "entry_recovered": false,
+                  "entry_recovery_required_bps": 77.13799021633605,
+                  "favorable_excursion_bps": 11.07269588722426,
+                  "status": "resolved"
+                },
+                "60": {
+                  "entry_recovered": false,
+                  "entry_recovery_required_bps": 77.13799021633605,
+                  "favorable_excursion_bps": 64.07012979958826,
+                  "status": "resolved"
+                }
+              },
+              "price_stop_distance_is_leverage_independent": true,
+              "side": "short",
+              "source_profile_fingerprint": "3ca27a84d7ccd9c8a3fb8ba6a41990048ef5ec6440c9e51df6c30bba72917267",
+              "source_run_id": "bidirectional-live-1787564992209",
+              "stop_distance_atr_units": null,
+              "stop_distance_recent_bar_range_units": null,
+              "strategy_id": "hip3_spcx_cash_open_gap_reversal_bidirectional_15m_v1",
+              "symbol": "xyz:SPCX",
+              "volatility_evidence": {
+                "atr_bps": null,
+                "recent_bar_range_bps": null
+              }
+            }
+          ]
+        },
+        "strategy_id": "hip3_spcx_cash_open_gap_reversal_bidirectional_15m_v1",
+        "symbol": "xyz:SPCX"
+      },
+      "hulk_expansion_bidirectional_tuned_v2|SOL": {
+        "closed_trades": 2,
+        "configured_exit_contract": {
+          "entry_liquidity": "taker_ioc",
+          "maximum_hold_seconds": 86400,
+          "maximum_stop_bps": 75.0,
+          "minimum_stop_bps": 20.0,
+          "stop_policy": "structural_clamped_bps",
+          "target_policy": "reward_risk",
+          "target_r_multiple": 3.0
+        },
+        "evidence_status": "insufficient_no_protective_stops",
+        "exit_reason_counts": {
+          "operator_manual_close": 1,
+          "target": 1
+        },
+        "open_trades": 0,
+        "possible_control_whipsaws_15m": 0,
+        "protective_stop_trades": 0,
+        "resolved_post_stop_paths_15m": 0,
+        "stop_recovery_assessment": null,
+        "strategy_id": "hulk_expansion_bidirectional_tuned_v2",
+        "symbol": "SOL"
+      },
+      "hulk_expansion_short_robust_v3|BTC": {
+        "closed_trades": 1,
+        "configured_exit_contract": {
+          "entry_liquidity": "taker_ioc",
+          "maximum_hold_seconds": 86400,
+          "maximum_stop_bps": 75.0,
+          "minimum_stop_bps": 20.0,
+          "profit_lock_policy": "btc_hulk_delayed_component_floor_v1",
+          "stop_policy": "structural_clamped_bps",
+          "target_policy": "reward_risk",
+          "target_r_multiple": 3.0
+        },
+        "evidence_status": "protective_stop_recovery_evidence_available",
+        "exit_reason_counts": {
+          "protective_stop": 1
+        },
+        "open_trades": 0,
+        "possible_control_whipsaws_15m": 0,
+        "protective_stop_trades": 1,
+        "resolved_post_stop_paths_15m": 1,
+        "stop_recovery_assessment": {
+          "contract": {
+            "automatic_strategy_changes": false,
+            "execution_authority": "none",
+            "performance_gate": false,
+            "report_only": true,
+            "runtime_strategy_changed": false
+          },
+          "limitations": [
+            "completed candles cannot identify an executable intrabar stop fill",
+            "survival means only that observed adverse excursion stayed inside the barrier",
+            "leverage changes margin return and liquidation headroom, not the configured price-bps stop distance",
+            "ATR units remain unavailable when the recorded entry lacks causal ATR telemetry",
+            "a post-stop entry recovery is a possible whipsaw, not proof that a wider stop improves net execution",
+            "equal-risk gross candidates resize notional but omit counterfactual fees, funding, and slippage",
+            "the report cannot change, route, size, or submit an order"
+          ],
+          "mode": "cohort_protective_stop_recovery_sensitivity_v2",
+          "schema_version": 2,
+          "stop_widths_bps": [
+            20.0,
+            40.0,
+            60.0,
+            80.0,
+            100.0,
+            120.0
+          ],
+          "summary": {
+            "assessment": {
+              "candidates": {
+                "100bps": {
+                  "barrier_crossed": 0,
+                  "equal_risk_gross_pnl_usd": null,
+                  "equal_risk_notional_usd": null,
+                  "resolved_trades": 0,
+                  "status": "insufficient_path_evidence",
+                  "survived": 0
+                },
+                "120bps": {
+                  "barrier_crossed": 0,
+                  "equal_risk_gross_pnl_usd": null,
+                  "equal_risk_notional_usd": null,
+                  "resolved_trades": 0,
+                  "status": "insufficient_path_evidence",
+                  "survived": 0
+                },
+                "20bps": {
+                  "barrier_crossed": 0,
+                  "equal_risk_gross_pnl_usd": null,
+                  "equal_risk_notional_usd": null,
+                  "resolved_trades": 0,
+                  "status": "insufficient_path_evidence",
+                  "survived": 0
+                },
+                "40bps": {
+                  "barrier_crossed": 0,
+                  "equal_risk_gross_pnl_usd": null,
+                  "equal_risk_notional_usd": null,
+                  "resolved_trades": 0,
+                  "status": "insufficient_path_evidence",
+                  "survived": 0
+                },
+                "60bps": {
+                  "barrier_crossed": 0,
+                  "equal_risk_gross_pnl_usd": null,
+                  "equal_risk_notional_usd": null,
+                  "resolved_trades": 0,
+                  "status": "insufficient_path_evidence",
+                  "survived": 0
+                },
+                "80bps": {
+                  "barrier_crossed": 0,
+                  "equal_risk_gross_pnl_usd": null,
+                  "equal_risk_notional_usd": null,
+                  "resolved_trades": 0,
+                  "status": "insufficient_path_evidence",
+                  "survived": 0
+                }
+              },
+              "censored_trades": 1,
+              "counterfactual_net_pnl_available": false,
+              "entry_recovered_after_stop": 0,
+              "horizon_minutes": 15,
+              "possible_control_whipsaws": 0,
+              "post_stop_resolved_trades": 1,
+              "resolved_trades": 0
+            },
+            "protective_stop_trades": 1
+          },
+          "trades": [
+            {
+              "actual_stop_width_bps": 75.00000000000077,
+              "control_barrier_loss_on_margin_pct": 7.500000000000077,
+              "control_barrier_risk_usd": 36.68516662500038,
+              "entry_notional_usd": 4891.35555,
+              "horizons": {
+                "1440": {
+                  "adverse_excursion_bps": 190.85513012849776,
+                  "candidates": {
+                    "100bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "120bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "20bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "40bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "60bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "80bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    }
+                  },
+                  "directional_close_return_bps": -34.30956884743264,
+                  "favorable_excursion_bps": 136.58600221772897,
+                  "status": "resolved"
+                },
+                "240": {
+                  "adverse_excursion_bps": 13.306372708890013,
+                  "candidates": {
+                    "100bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "directional_close_return_bps": 16.567738568912247,
+                      "status": "survived_observed_path"
+                    },
+                    "120bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "directional_close_return_bps": 16.567738568912247,
+                      "status": "survived_observed_path"
+                    },
+                    "20bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "directional_close_return_bps": 16.567738568912247,
+                      "status": "survived_observed_path"
+                    },
+                    "40bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "directional_close_return_bps": 16.567738568912247,
+                      "status": "survived_observed_path"
+                    },
+                    "60bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "directional_close_return_bps": 16.567738568912247,
+                      "status": "survived_observed_path"
+                    },
+                    "80bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "directional_close_return_bps": 16.567738568912247,
+                      "status": "survived_observed_path"
+                    }
+                  },
+                  "directional_close_return_bps": 16.567738568912247,
+                  "favorable_excursion_bps": 136.58600221772897,
+                  "status": "resolved"
+                },
+                "2880": {
+                  "adverse_excursion_bps": 605.8313221577193,
+                  "candidates": {
+                    "100bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "120bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "20bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "40bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "60bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "80bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    }
+                  },
+                  "directional_close_return_bps": -480.98623703607177,
+                  "favorable_excursion_bps": 136.58600221772897,
+                  "status": "resolved"
+                },
+                "720": {
+                  "adverse_excursion_bps": 155.63237884025804,
+                  "candidates": {
+                    "100bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "120bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "20bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "40bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "60bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    },
+                    "80bps": {
+                      "counterfactual_execution_pnl_available": false,
+                      "status": "barrier_crossed"
+                    }
+                  },
+                  "directional_close_return_bps": -107.75552801513211,
+                  "favorable_excursion_bps": 136.58600221772897,
+                  "status": "resolved"
+                }
+              },
+              "leverage": 10.0,
+              "lifecycle_id": "BTC:523755481481",
+              "post_stop_horizons": {
+                "15": {
+                  "entry_recovered": false,
+                  "entry_recovery_required_bps": 80.09905064667034,
+                  "favorable_excursion_bps": 13.064823371671253,
+                  "status": "resolved"
+                },
+                "30": {
+                  "entry_recovered": false,
+                  "entry_recovery_required_bps": 80.09905064667034,
+                  "favorable_excursion_bps": 13.064823371671253,
+                  "status": "resolved"
+                },
+                "5": {
+                  "entry_recovered": false,
+                  "entry_recovery_required_bps": 80.09905064667034,
+                  "favorable_excursion_bps": 9.441351627076378,
+                  "status": "resolved"
+                },
+                "60": {
+                  "entry_recovered": false,
+                  "entry_recovery_required_bps": 80.09905064667034,
+                  "favorable_excursion_bps": 29.1116268120184,
+                  "status": "resolved"
+                }
+              },
+              "price_stop_distance_is_leverage_independent": true,
+              "side": "short",
+              "source_profile_fingerprint": "c057882fdd0818831076685aa0fb0134b22889618f6c145ca8e1f9f33111ab78",
+              "source_run_id": "bidirectional-live-1787425692968",
+              "stop_distance_atr_units": null,
+              "stop_distance_recent_bar_range_units": null,
+              "strategy_id": "hulk_expansion_short_robust_v3",
+              "symbol": "BTC",
+              "volatility_evidence": {
+                "atr_bps": null,
+                "recent_bar_range_bps": null
+              }
+            }
+          ]
+        },
+        "strategy_id": "hulk_expansion_short_robust_v3",
+        "symbol": "BTC"
+      },
+      "hulk_expansion_short_tuned_v2|BTC": {
+        "closed_trades": 0,
+        "configured_exit_contract": {
+          "entry_liquidity": "taker_ioc",
+          "maximum_hold_seconds": 86400,
+          "maximum_stop_bps": 75.0,
+          "minimum_stop_bps": 20.0,
+          "stop_policy": "structural_clamped_bps",
+          "target_policy": "reward_risk",
+          "target_r_multiple": 3.0
+        },
+        "evidence_status": "insufficient_no_closed_trades",
+        "exit_reason_counts": {},
+        "open_trades": 0,
+        "possible_control_whipsaws_15m": 0,
+        "protective_stop_trades": 0,
+        "resolved_post_stop_paths_15m": 0,
+        "stop_recovery_assessment": null,
+        "strategy_id": "hulk_expansion_short_tuned_v2",
+        "symbol": "BTC"
+      },
+      "hype_breakout_compression_alignment_bidirectional_v2|HYPE": {
+        "closed_trades": 0,
+        "configured_exit_contract": {
+          "entry_liquidity": "taker_ioc",
+          "hard_maximum_hold_seconds": 86400,
+          "maximum_hold_evidence_maximum_age_seconds": 60,
+          "maximum_hold_policy": "extend_while_regime_supported",
+          "maximum_hold_seconds": 28800,
+          "stop_bps": 80.0,
+          "stop_policy": "fixed_bps",
+          "target_policy": "none"
+        },
+        "evidence_status": "insufficient_no_closed_trades",
+        "exit_reason_counts": {},
+        "open_trades": 0,
+        "possible_control_whipsaws_15m": 0,
+        "protective_stop_trades": 0,
+        "resolved_post_stop_paths_15m": 0,
+        "stop_recovery_assessment": null,
+        "strategy_id": "hype_breakout_compression_alignment_bidirectional_v2",
+        "symbol": "HYPE"
+      },
+      "liquidity_sweep_long_1h_stop60_target60_v2|BTC": {
+        "closed_trades": 1,
+        "configured_exit_contract": {
+          "entry_liquidity": "taker_ioc",
+          "maximum_hold_seconds": 86400,
+          "stop_bps": 60.0,
+          "stop_policy": "fixed_bps",
+          "target_bps": 60.0,
+          "target_policy": "fixed_bps"
+        },
+        "evidence_status": "insufficient_no_protective_stops",
+        "exit_reason_counts": {
+          "target": 1
+        },
+        "open_trades": 0,
+        "possible_control_whipsaws_15m": 0,
+        "protective_stop_trades": 0,
+        "resolved_post_stop_paths_15m": 0,
+        "stop_recovery_assessment": null,
+        "strategy_id": "liquidity_sweep_long_1h_stop60_target60_v2",
+        "symbol": "BTC"
+      }
+    },
+    "schema_version": 1,
+    "summary": {
+      "executable_routes": 10,
+      "routes_with_closed_trades": 8,
+      "routes_with_protective_stops": 3,
+      "routes_with_resolved_stop_recovery": 3
+    }
+  },
+  "execution_authority": "none",
+  "mode": "v62_all_route_stop_diagnostic_publication",
+  "runtime_strategy_changed": false,
+  "schema_version": 1,
+  "sources": {
+    "checkpoint": {
+      "bytes": 13065574,
+      "path": "/Users/gestas/Prototypes/hypervector/data/runtime/bidirectional_cohort/latest_checkpoint.json",
+      "sha256": "b587d6385fb35728f50d78735953121e5611bb0b27335d38e9aafa4c27c7af19"
+    },
+    "config": {
+      "bytes": 6275,
+      "path": "/Users/gestas/Prototypes/hypervector/configs/multi_asset_growth_first_5000_eight_asset_sndk_exit_preserved_candidate_v61.toml",
+      "sha256": "5961d8ca2720582bd3ef2ccf00edf1816d96e8de1884041ae0295d3f873f9820"
+    }
+  }
+}

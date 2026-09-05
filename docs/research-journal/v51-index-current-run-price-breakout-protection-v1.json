@@ -1,0 +1,111 @@
+{
+  "schema_version": "v51_index_current_run_price_breakout_protection_v1",
+  "mode": "report_only",
+  "execution_authority": "none",
+  "runtime_strategy_changed": false,
+  "automatic_live_change": false,
+  "profile_id": "multi_asset_growth_first_5000_six_asset_profit_lock_candidate_v51",
+  "profile_fingerprint": "30cd54bb5b5b17249ae0a6a3b01d5702b276d51f8dc5ddd6b4d36ab6aa7d1908",
+  "run_id": "bidirectional-live-1786691478619",
+  "provider_id": "hip3_breakout_pressure_sp500_spcx_fresh15s_bidirectional_v3",
+  "question": "Does the exact current-run live-source evidence justify removing or relaxing the 32-bar price-breakout requirement for SP500 or SPCX?",
+  "decision": "No. Preserve the exact v51 price-breakout requirement and continue collecting attributable long and short live lifecycles. The current-run near-breakout paths were nonpositive after source-bound modeled friction and reinforce the previously rejected gate-relaxation hypothesis.",
+  "confidence": "medium",
+  "confidence_basis": "Backend and observer decisions match exactly across 14 current-run decisions, pressure history is complete, and every resolved SPCX short horizon plus the independent SP500 15m and 30m summaries was negative after modeled costs. Confidence is not high because these are reference-close counterfactuals rather than executable fills or full strategy lifecycles.",
+  "current_run_evidence": {
+    "backend_observer_parity": {
+      "compared_decisions": 14,
+      "mismatches": 0,
+      "resolved": true
+    },
+    "sp500_long_price_only_blockers": {
+      "candidate_observations": 2,
+      "resolved_paths": 5,
+      "round_trip_friction_bps": 4.5341785526,
+      "independent_mean_after_friction_bps": {
+        "15m": -4.021304617551451,
+        "30m": -3.508537526958741,
+        "60m": 0.7222317038107224
+      },
+      "largest_observation_sensitivity_bps": {
+        "15m": -5.175204193625642,
+        "30m": -3.508537526958741,
+        "60m": null
+      }
+    },
+    "spcx_short_price_only_blockers": {
+      "candidate_observations": 4,
+      "resolved_paths": 7,
+      "round_trip_friction_bps": 7.2311353082,
+      "independent_mean_after_friction_bps": {
+        "15m": -8.873060664391778,
+        "30m": -16.749796122456914,
+        "60m": -26.25861945196193
+      },
+      "largest_observation_sensitivity_bps": {
+        "15m": -9.694023342487666,
+        "30m": -30.496786746439145,
+        "60m": -48.12228026025754
+      }
+    }
+  },
+  "diagnosis": {
+    "entry_absence": "expected selectivity under current market conditions, not missing orderbook evidence or a backend-observer implementation mismatch",
+    "price_breakout_gate": "currently protective in the measured current-run near-miss sample",
+    "parameter_change_supported": false,
+    "economic_edge_established": false
+  },
+  "alternatives_considered": [
+    "remove the 32-bar price-breakout requirement",
+    "shorten the breakout lookback",
+    "trade EMA-plus-pressure alignment before price breakout",
+    "preserve the frozen v51 route and continue source-native lifecycle collection"
+  ],
+  "recommendation": "Preserve the frozen v51 route. Keep SP500 as the highest-value live-source lifecycle investigation and SPCX second. Do not spend another tuning trial on price-breakout relaxation unless the declared reopen condition is met.",
+  "minimum_additional_evidence": "At least one attributable eligible signal and one fully resolved exact-v51 lifecycle per configured side for SP500 and SPCX, including exact entry/exit fills, fees, funding, latency, slippage, stop behavior, and complete source attribution.",
+  "reopen_condition": "A predeclared later live-source window must materially expand independent price-only blocker observations and remain positive after source-bound costs, largest-winner removal, side separation, and realistic execution sensitivity.",
+  "failure_modes_and_limitations": [
+    "Reference closes are not executable entry or exit quotes.",
+    "Round-trip friction is a source-bound symmetric sensitivity because the current routes have no fills.",
+    "Several longer-horizon paths are right-censored.",
+    "The sample is small and cannot establish strategy profitability or optimal parameters."
+  ],
+  "evidence": [
+    {
+      "path": "../../data/logs/research/v51_sp500_live_condition_window_20260814T0852Z_v4.json",
+      "sha256": "e8688c905fb46697027e81b403ece8b88851f685fa1f7144cdb96172e460c55d",
+      "bytes": 10192,
+      "role": "exact_current_run_sp500_live_condition_window"
+    },
+    {
+      "path": "../../data/logs/research/v51_spcx_live_condition_window_20260814T0852Z_v4.json",
+      "sha256": "8886651946b4619aa3375c5251971759416018f8e0e8a82529a0ef189f8e9118",
+      "bytes": 10193,
+      "role": "exact_current_run_spcx_live_condition_window"
+    },
+    {
+      "path": "../../data/logs/research/v51_sp500_price_blocker_outcomes_20260814T0853Z_v3.json",
+      "sha256": "aa251108242ef781ac5606c31d6690f27fbb216cecf1dfdbd0a7cb3684166731",
+      "bytes": 14601,
+      "role": "current_run_sp500_long_price_only_blocker_outcomes"
+    },
+    {
+      "path": "../../data/logs/research/v51_spcx_price_blocker_outcomes_20260814T0853Z_v3.json",
+      "sha256": "3bcc51b58c1f1fef402a5db269f1ee841aef2a158e384d3bf91b98bd3744bff2",
+      "bytes": 16242,
+      "role": "current_run_spcx_short_price_only_blocker_outcomes"
+    },
+    {
+      "path": "../../data/logs/research/v51_index_backend_observer_parity_20260814T0855Z_v3.json",
+      "sha256": "690cc3c492565a4b3de0a51117edbe5b82a8e773a08dc0978b2d74a3d3df04dd",
+      "bytes": 3309,
+      "role": "immutable_current_run_backend_observer_parity"
+    },
+    {
+      "path": "../../configs/multi_asset_growth_first_5000_six_asset_profit_lock_candidate_v51.toml",
+      "sha256": "f0f0fef087eb0a3412c2a917d2d9bd8f578b17e4a40d7c3729519a33cf4f9ab4",
+      "bytes": 3917,
+      "role": "active_v51_strategy_and_execution_contract"
+    }
+  ]
+}

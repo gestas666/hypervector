@@ -103,3 +103,52 @@ def test_completeness_threshold_sensitivity_is_explicit() -> None:
     assert report["thresholds_ms"]["30000"]["lifecycles"][0]["status"] == (
         "resolved_complete_path"
     )
+
+
+def test_report_summarizes_pooled_and_directional_results() -> None:
+    bars = {
+        60_000: _bar(60_000, low=100.4, high=101.0),
+        120_000: _bar(120_000, low=100.1, high=100.7),
+        180_000: _bar(180_000, low=100.4, high=100.7),
+    }
+    long = _trade("SOL:long")
+    short = ProxyLifecycle(
+        lifecycle_id="SOL:short",
+        phase="development",
+        side="short",
+        entry_timestamp_ms=1_000,
+        exit_timestamp_ms=240_000,
+        entry_price=101.0,
+        exit_price=100.8,
+        quantity=1.0,
+        gross_pnl_usd=0.2,
+        fees_usd=0.09,
+    )
+
+    report = build_profit_lock_proxy_report((long, short), bars, (15_000,))
+
+    threshold = report["thresholds_ms"]["15000"]
+    assert threshold["overall"]["a25_floor15_trail10"]["trades"] == 2
+    assert threshold["by_side"]["long"]["a25_floor15_trail10"]["trades"] == 1
+    assert threshold["by_side"]["short"]["a25_floor15_trail10"]["trades"] == 1
+
+
+def test_exact_mark_path_is_labeled_separately_from_l2_proxy() -> None:
+    bars = {
+        60_000: _bar(60_000, low=100.4, high=101.0),
+        120_000: _bar(120_000, low=100.1, high=100.7),
+        180_000: _bar(180_000, low=100.4, high=100.7),
+    }
+
+    report = build_profit_lock_proxy_report(
+        (_trade("SP500:exact-mark"),),
+        bars,
+        (15_000,),
+        path_source="exact_exchange_mark",
+    )
+
+    assert report["mode"] == "cohort_profit_lock_exact_exchange_mark_v1"
+    assert report["path_source"] == "exact_exchange_mark"
+    assert report["limitations"][0] == (
+        "sampled exchange mark OHLC cannot reconstruct intrainterval mark movement"
+    )

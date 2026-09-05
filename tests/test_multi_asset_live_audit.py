@@ -12,12 +12,41 @@ import pytest
 from cohort_live_audit_trade_fixture import traded_asset_rows
 
 from hypervector.research.cohort_live_audit import audit_multi_asset_live_run
+from hypervector.research.cohort_live_audit_execution import _merge_fill
 
 _SYMBOLS = ("BTC", "ETH", "SOL", "HYPE")
 _HULK = "hulk_expansion_bidirectional_tuned_v2"
 _RANGE = "range_onset_bidirectional_v1"
 _RUN_ID = "cohort-live-a"
 _SCRIPT = Path("scripts/multi_asset_bidirectional_live_audit.py")
+
+
+def test_exact_fill_placeholders_do_not_erase_projected_attribution() -> None:
+    """Sentinel asset values must not overwrite known lifecycle attribution."""
+    projected = {
+        "symbol": "BTC",
+        "trade_id": 202,
+        "strategy_id": "hulk_expansion_short_tuned_v2",
+        "operation": "protective_stop",
+        "exit_controller_id": "cohort_protective_stop",
+        "price": 103.98,
+    }
+    exact_fill = {
+        "symbol": "BTC",
+        "trade_id": 202,
+        "strategy_id": "unattributed",
+        "operation": "unknown",
+        "exit_controller_id": "unattributed",
+        "price": 103.98,
+        "fee_usd": 0.01,
+    }
+
+    merged = _merge_fill(projected, {("BTC", 202): exact_fill})
+
+    assert merged["strategy_id"] == "hulk_expansion_short_tuned_v2"
+    assert merged["operation"] == "protective_stop"
+    assert merged["exit_controller_id"] == "cohort_protective_stop"
+    assert merged["fee_usd"] == pytest.approx(0.01)
 
 
 def test_flat_run_preserves_readiness_health_and_zero_trade_evidence() -> None:
@@ -123,6 +152,7 @@ def test_flat_run_preserves_readiness_health_and_zero_trade_evidence() -> None:
         "estimated_minus_actual_net_usd": 0,
         "profit_factor": None,
     }
+    assert "support_decay_all_time_live_mechanism" not in profit_lock
     prospective_hip3 = profit_lock.get("hip3_swing_60_30_prospective_mechanism")
     assert isinstance(prospective_hip3, dict)
     assert prospective_hip3["entry_cutoff_timestamp_ms"] == 1_786_248_246_000
@@ -374,17 +404,7 @@ def test_closed_trade_is_attributed_by_provider_side_and_realized_friction() -> 
         conditioned["summary_by_policy"]["a25_floor15_trail10"]["eligible_lifecycles"]
         == 1
     )
-    support_decay = profit_lock.get("support_decay_all_time_live_mechanism")
-    assert isinstance(support_decay, dict)
-    assert support_decay["contract"]["execution_authority"] == "none"
-    assert support_decay["activation_contract"] == {
-        "source": "causal_regime_support_decay_persistence_v1",
-        "persistence_decisions": 5,
-        "decision_interval_ms": 60_000,
-        "support_decay_threshold": 0.25,
-        "pre_gate_favorable_excursion_retained": True,
-        "same_bar_activation_and_trigger_allowed": False,
-    }
+    assert "support_decay_all_time_live_mechanism" not in profit_lock
     retrace = profit_lock.get("support_decay_retrace_all_time_live_mechanism")
     assert isinstance(retrace, dict)
     assert retrace["contract"]["execution_authority"] == "none"
@@ -441,6 +461,46 @@ def test_audit_rejects_conflicting_backend_and_asset_fill_identity() -> None:
             },
             run_id=_RUN_ID,
         )
+
+
+def test_current_run_audit_excludes_known_prior_run_projected_fill() -> None:
+    """Rolling backend fills must respect the selected asset-ledger run scope."""
+    rows = _cohort_rows_with_trade()
+    snapshots = [row for row in rows if row["event_type"] == "cohort_snapshot"]
+    for snapshot in snapshots:
+        recent_fills = snapshot["payload"]["recent_fills"]
+        for fill in recent_fills:
+            fill["origin_run_id"] = _RUN_ID
+        recent_fills.insert(
+            0,
+            {
+                "symbol": "BTC",
+                "trade_id": 99,
+                "price": 99.0,
+                "size": 0.25,
+                "fee_usd": 0.01,
+                "slippage_bps": 1.0,
+                "acknowledgement_latency_ms": 40,
+                "markout_bps": 1.0,
+                "origin_run_id": "prior-run",
+            },
+        )
+
+    report = audit_multi_asset_live_run(
+        rows,
+        {
+            "BTC": traded_asset_rows(_RUN_ID),
+            **{symbol: _asset_rows(symbol) for symbol in _SYMBOLS if symbol != "BTC"},
+        },
+        run_id=_RUN_ID,
+    )
+
+    assert report["execution"]["fills"] == 2
+    assert report["execution"]["projected_fills"] == 2
+    assert {fill["origin_run_id"] for fill in report["execution"]["fill_details"]} == {
+        _RUN_ID
+    }
+    assert report["coverage"] == {"complete": True, "technical_gaps": []}
 
 
 def test_audit_script_publishes_immutable_multi_ledger_evidence(tmp_path: Path) -> None:
@@ -670,10 +730,14 @@ def _cohort_rows_with_trade() -> list[dict[str, object]]:
         )
     ]
     snapshots = [row for row in rows if row["event_type"] == "cohort_snapshot"]
-    snapshots[0]["payload"]["recent_fills"] = projected
+    snapshots[0]["payload"]["recent_fills"] = projected[:1]
     snapshots[1]["payload"]["recent_fills"] = projected
     snapshots[1]["payload"]["account_value_usd"] = 504.13
     snapshots[1]["payload"]["withdrawable_usd"] = 504.13
+    snapshots[1]["observed_at_utc"] = datetime.fromtimestamp(
+        1_785_600_016,
+        timezone.utc,
+    ).isoformat()
     rows[-1]["observed_at_utc"] = datetime.fromtimestamp(
         1_785_600_032,
         timezone.utc,

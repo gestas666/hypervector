@@ -86,12 +86,10 @@ def test_v12_builds_runtime_collectors_and_retains_low_confidence_evidence() -> 
         fetch_bars=lambda symbol, timeframe, days, *, end_ms=None: None,
         backtest_lab_root=Path("../backtest-lab/backtest_lab").resolve(),
     )
-    assert evidence["research_state"] == (
-        "side_relation_set_falsified_new_mechanism_required"
-    )
-    assert evidence["confidence"] == "medium"
+    assert evidence["research_state"] == "prospective_requalification_open_long_only"
+    assert evidence["confidence"] == "low"
     assert evidence["evidence_source"] == (
-        "docs/research-journal/eth-breakout-precompression-pullback-v6.json"
+        "docs/research-journal/eth-breakout-precompression-pullback-v17.json"
     )
     assert evidence["execution_effect"] == "report_only"
 

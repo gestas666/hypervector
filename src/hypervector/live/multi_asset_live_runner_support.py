@@ -18,6 +18,7 @@ from hypervector.live.multi_asset_cohort_telemetry import (
     AssetCohortSnapshot,
     SharedAccountFacts,
 )
+from hypervector.live.perp_venue_identity import parse_perp_venue_identity
 from hypervector.live.sol_range_onset_state import SolLiveSnapshot, SolLiveState
 
 
@@ -78,17 +79,26 @@ def entry_provider_strategy_id(strategy_id: str) -> str:
 
 
 def shared_account_facts(
+    symbols: tuple[str, ...],
     venues: tuple[SolReconciliationSnapshot, ...],
 ) -> SharedAccountFacts:
-    """Project one exact shared-account row from coalesced venue reads."""
+    """Project shared equity and one exposure total per perp namespace."""
     if not venues:
         raise MultiAssetLiveRunnerError("shared account reconciliation is empty")
+    if len(symbols) != len(venues):
+        raise MultiAssetLiveRunnerError(
+            "shared account symbols and venue snapshots must agree"
+        )
+    namespaces: dict[str, SolReconciliationSnapshot] = {}
+    for symbol, venue in zip(symbols, venues, strict=True):
+        namespace = parse_perp_venue_identity(symbol).perp_dex
+        namespaces[namespace] = venue
     account = venues[-1].account
     return SharedAccountFacts(
         account.account_value_usd,
         account.withdrawable_usd,
-        account.total_margin_used_usd,
-        account.total_notional_position_usd,
+        sum(value.account.total_margin_used_usd for value in namespaces.values()),
+        sum(value.account.total_notional_position_usd for value in namespaces.values()),
         account.balance_source,
     )
 

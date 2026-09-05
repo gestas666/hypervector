@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "V53_SP500_SPCX_OPENING_RANGE_BREAKOUT_COST_CONTRACT_V1",
+  "created_at_utc": "2026-08-17T18:33:00Z",
+  "state": "frozen_before_strategy_pnl",
+  "execution_authority": "none",
+  "runtime_strategy_changed": false,
+  "live_configuration_changed": false,
+  "parent_preregistration": {
+    "path": "docs/research-journal/v53-sp500-spcx-opening-range-breakout-development-v1.json",
+    "sha256": "1f853bba076afa08742476a53116bf1fded2bebae295dccdd80feca8057828e3"
+  },
+  "portfolio_contract": {
+    "reference_equity_usd": 5000.0,
+    "margin_fraction_per_position": 0.1,
+    "leverage": 10.0,
+    "notional_usd_per_position": 5000.0,
+    "simultaneous_position_assumption": "evaluated independently before any shared-portfolio replay"
+  },
+  "fee_evidence": {
+    "path": "data/runtime/research/hip3_roster_fee_validation_v2.json",
+    "sha256": "8857bbd80eb86d21e94b34125bf7a52606f61264c9c22524aff25355b772a74b",
+    "account_base_taker_rate": 0.00045,
+    "active_referral_discount": 0.04,
+    "deployer_fee_scale": 1.0,
+    "growth_mode": true,
+    "aligned_quote": false,
+    "effective_taker_rate": 0.0000864,
+    "one_way_taker_fee_bps": 0.864,
+    "round_trip_taker_fee_bps": 1.728
+  },
+  "stress_contract": {
+    "nominal_latency_bps_per_side": 1.0,
+    "stress_latency_bps_per_side": 2.0,
+    "clearance_formula": "2 * (p99_round_trip_taker_total_cost_bps + 2 * stress_latency_bps_per_side)",
+    "historical_fee_limitation": "current resolved fee inputs are modeled across the archive; historical account fee-state changes are unavailable"
+  },
+  "symbols": {
+    "xyz:SP500": {
+      "liquidity_profile": {
+        "path": "data/logs/research/xyz_sp500_liquidity_profile_notional5000_exact_fee_20260817_v1.json",
+        "sha256": "3d4ad15305419e819166a8338c7a12445340397f7ea97c3495af48f3ea73a71a"
+      },
+      "sample_count": 38007,
+      "buy_complete_rate": 1.0,
+      "sell_complete_rate": 1.0,
+      "p99_round_trip_visible_cost_bps": 3.0222664302090996,
+      "p99_round_trip_taker_total_cost_bps": 4.750266430209099,
+      "stress_round_trip_cost_bps": 8.7502664302091,
+      "frozen_breakout_clearance_bps": 17.5005328604182
+    },
+    "xyz:SPCX": {
+      "liquidity_profile": {
+        "path": "data/logs/research/xyz_spcx_liquidity_profile_notional5000_exact_fee_20260817_v1.json",
+        "sha256": "c6e8baf7922ec0dbfd3941caf728f6e0b4e498279fd85d7f62c52ec8b946c7c9"
+      },
+      "sample_count": 21237,
+      "buy_complete_rate": 1.0,
+      "sell_complete_rate": 1.0,
+      "p99_round_trip_visible_cost_bps": 21.69289850731548,
+      "p99_round_trip_taker_total_cost_bps": 23.42089850731548,
+      "stress_round_trip_cost_bps": 27.42089850731548,
+      "frozen_breakout_clearance_bps": 54.84179701463096
+    }
+  },
+  "validation": {
+    "success": "candidate generation uses these exact per-symbol clearance values and not a PnL-selected alternative",
+    "failure": "any source hash changes, visible depth becomes incomplete at the frozen notional, or implementation uses a different fee, latency, or clearance value"
+  },
+  "confidence": {
+    "fee_and_visible_depth_calculation": "high",
+    "future_execution_cost_prediction": "medium",
+    "strategy_profitability": "unknown"
+  }
+}

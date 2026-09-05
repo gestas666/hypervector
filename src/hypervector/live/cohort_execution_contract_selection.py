@@ -47,4 +47,5 @@ def bind_execution_plan(
     return contract.bind(
         strategy_id=action.strategy_id,
         stop_anchor=action.stop_anchor,
+        target_anchor=action.target_anchor,
     )

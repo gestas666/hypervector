@@ -80,6 +80,13 @@ def _diagnostic() -> dict[str, object]:
                 "profile_id": "mu_full_l2_breakout_pressure_bidirectional_15m_research_v1",
                 "timeframe": "15m",
                 "family": "breakout_pressure",
+                "config": {
+                    "breakout_lookback_bars": 32,
+                    "fast_ema": 9,
+                    "slow_ema": 21,
+                    "minimum_abs_imbalance": 0.1,
+                    "maximum_stop_bps": 80.0,
+                },
             }
         },
         "inputs": {"nominal_latency_bps_per_side": 1.0},

@@ -123,6 +123,7 @@ impl CohortWindow {
                 self.retain(index, line);
                 self.heartbeat_retained = true;
             }
+            Some("funding_reconciliation_window") => {}
             Some("market_books" | "heartbeat") => {}
             _ => self.unsupported_event = true,
         }

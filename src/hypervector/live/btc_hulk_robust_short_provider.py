@@ -24,6 +24,10 @@ from hypervector.research.market_cipher_strategy_research import (
 )
 
 HULK_ROBUST_SHORT_STRATEGY = "hulk_expansion_short_robust_v3"
+HULK_TUNED_SHORT_STRATEGY = "hulk_expansion_short_tuned_v2"
+HULK_SHORT_STRATEGIES = frozenset(
+    {HULK_ROBUST_SHORT_STRATEGY, HULK_TUNED_SHORT_STRATEGY}
+)
 
 
 class HulkDecisionBuilderProtocol(Protocol):
@@ -56,15 +60,17 @@ class _RobustShortConfig:
 
 
 class HulkRobustShortCollector:
-    """Collect completed robust-v3 BTC short decisions for the shared router."""
+    """Collect one frozen BTC Hulk short profile for the shared router."""
 
     def __init__(
         self,
         *,
         backtest_lab_root: Path,
+        strategy_id: str = HULK_ROBUST_SHORT_STRATEGY,
         decision_builder: HulkDecisionBuilderProtocol = build_completed_hulk_decisions,
     ) -> None:
-        self._config = _config(backtest_lab_root)
+        self._strategy_id = strategy_id
+        self._config = _config(backtest_lab_root, strategy_id)
         self._decision_builder = decision_builder
 
     def __call__(
@@ -87,17 +93,23 @@ class HulkRobustShortCollector:
         )
         return IntentBatch(
             intents=tuple(
-                _intent(value, symbol) for value in decisions if value.entry_eligible
+                _intent(value, symbol, self._strategy_id)
+                for value in decisions
+                if value.entry_eligible
             ),
             latest_decision_time_ms=_latest(decisions, after_decision_time_ms),
-            evaluations=tuple(_evaluation(value, symbol) for value in decisions),
+            evaluations=tuple(
+                _evaluation(value, symbol, self._strategy_id) for value in decisions
+            ),
         )
 
 
-def _config(root: Path) -> _RobustShortConfig:
-    profile = resolve_hulk_research_profile(HULK_ROBUST_SHORT_STRATEGY)
+def _config(root: Path, strategy_id: str) -> _RobustShortConfig:
+    if strategy_id not in HULK_SHORT_STRATEGIES:
+        raise ValueError(f"unsupported Hulk short strategy: {strategy_id}")
+    profile = resolve_hulk_research_profile(strategy_id)
     if profile.side != "short":
-        raise ValueError("robust Hulk profile must remain short-only")
+        raise ValueError("Hulk short profile must remain short-only")
     return _RobustShortConfig(
         root,
         profile.supertrend_period,
@@ -111,11 +123,15 @@ def _config(root: Path) -> _RobustShortConfig:
     )
 
 
-def _intent(decision: HulkSmashLiveDecision, symbol: str) -> StrategyIntent:
+def _intent(
+    decision: HulkSmashLiveDecision,
+    symbol: str,
+    strategy_id: str,
+) -> StrategyIntent:
     if decision.signal_side != "short":
         raise ValueError("robust Hulk entry must remain short")
     return StrategyIntent(
-        strategy_id=HULK_ROBUST_SHORT_STRATEGY,
+        strategy_id=strategy_id,
         symbol=symbol,
         side="short",
         decision_time_ms=decision.decision_time_ms,
@@ -128,11 +144,12 @@ def _intent(decision: HulkSmashLiveDecision, symbol: str) -> StrategyIntent:
 def _evaluation(
     decision: HulkSmashLiveDecision,
     symbol: str,
+    strategy_id: str,
 ) -> ProviderEvaluation:
     readiness = decision.readiness or _unavailable_readiness()
     side = "short" if decision.entry_eligible else readiness.side
     return ProviderEvaluation(
-        strategy_id=HULK_ROBUST_SHORT_STRATEGY,
+        strategy_id=strategy_id,
         symbol=symbol,
         decision_time_ms=decision.decision_time_ms,
         reference_price=decision.reference_price,

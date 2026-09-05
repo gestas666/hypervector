@@ -7,23 +7,36 @@ from dataclasses import asdict, dataclass
 import math
 from typing import Literal
 
+from hypervector.live.cohort_execution_plan_validation import (
+    CohortExecutionPlanError,
+    validate_profit_lock_contract,
+)
+
 EntryLiquidity = Literal["taker_ioc", "maker_post_only"]
 StopPolicy = Literal["fixed_bps", "structural_clamped_bps"]
-TargetPolicy = Literal["none", "fixed_bps", "reward_risk"]
+TargetPolicy = Literal["none", "fixed_bps", "reward_risk", "absolute_anchor"]
 MaximumHoldPolicy = Literal["fixed", "extend_while_regime_supported"]
 ProviderRecipeExitPolicy = Literal["ignore", "honor"]
-ProfitLockPolicy = Literal["none", "completed_bar_trailing"]
+ProfitLockPolicy = Literal[
+    "none",
+    "completed_bar_trailing",
+    "btc_hulk_delayed_component_floor_v1",
+    "btc_hulk_delayed_component_exit_v2",
+]
 
 _ENTRY_LIQUIDITIES = frozenset({"taker_ioc", "maker_post_only"})
 _STOP_POLICIES = frozenset({"fixed_bps", "structural_clamped_bps"})
-_TARGET_POLICIES = frozenset({"none", "fixed_bps", "reward_risk"})
+_TARGET_POLICIES = frozenset({"none", "fixed_bps", "reward_risk", "absolute_anchor"})
 _MAXIMUM_HOLD_POLICIES = frozenset({"fixed", "extend_while_regime_supported"})
 _PROVIDER_RECIPE_EXIT_POLICIES = frozenset({"ignore", "honor"})
-_PROFIT_LOCK_POLICIES = frozenset({"none", "completed_bar_trailing"})
-
-
-class CohortExecutionPlanError(ValueError):
-    """A provider execution contract is incomplete or internally inconsistent."""
+_PROFIT_LOCK_POLICIES = frozenset(
+    {
+        "none",
+        "completed_bar_trailing",
+        "btc_hulk_delayed_component_floor_v1",
+        "btc_hulk_delayed_component_exit_v2",
+    }
+)
 
 
 @dataclass(frozen=True)
@@ -42,6 +55,7 @@ class ProviderExecutionContract:
     safety_stop_overlay: bool = False
     maximum_hold_policy: MaximumHoldPolicy = "fixed"
     hard_maximum_hold_seconds: int | None = None
+    maximum_hold_evidence_maximum_age_seconds: int | None = None
     provider_recipe_exit_policy: ProviderRecipeExitPolicy = "ignore"
     profit_lock_policy: ProfitLockPolicy = "none"
     profit_lock_activation_bps: float | None = None
@@ -62,7 +76,12 @@ class ProviderExecutionContract:
         _validate_maximum_hold_contract(self)
         if self.provider_recipe_exit_policy not in _PROVIDER_RECIPE_EXIT_POLICIES:
             raise CohortExecutionPlanError("unsupported provider recipe exit policy")
-        _validate_profit_lock_contract(self)
+        validate_profit_lock_contract(
+            self.profit_lock_policy,
+            self.profit_lock_activation_bps,
+            self.profit_lock_floor_bps,
+            self.profit_lock_giveback_bps,
+        )
         if not isinstance(self.safety_stop_overlay, bool):
             raise CohortExecutionPlanError("safety_stop_overlay must be boolean")
 
@@ -71,6 +90,7 @@ class ProviderExecutionContract:
         *,
         strategy_id: str,
         stop_anchor: float | None,
+        target_anchor: float | None = None,
     ) -> BoundExecutionPlan:
         """Bind dynamic decision evidence to one restart-safe execution plan."""
         strategy = strategy_id.strip()
@@ -80,8 +100,18 @@ class ProviderExecutionContract:
             anchor = _positive(stop_anchor, "stop_anchor")
         else:
             anchor = None
+        target = (
+            _positive(target_anchor, "target_anchor")
+            if self.target_policy == "absolute_anchor"
+            else None
+        )
+        if self.target_policy != "absolute_anchor" and target_anchor is not None:
+            raise CohortExecutionPlanError("static target cannot carry target_anchor")
         return BoundExecutionPlan(
-            strategy_id=strategy, stop_anchor=anchor, **asdict(self)
+            strategy_id=strategy,
+            stop_anchor=anchor,
+            target_anchor=target,
+            **asdict(self),
         )
 
     def as_payload(self) -> dict[str, object]:
@@ -96,9 +126,7 @@ class ProviderExecutionContract:
             entry_liquidity=_entry_liquidity(row.get("entry_liquidity")),
             stop_policy=_stop_policy(row.get("stop_policy")),
             target_policy=_target_policy(row.get("target_policy")),
-            maximum_hold_seconds=_integer(
-                row.get("maximum_hold_seconds"), "maximum_hold_seconds"
-            ),
+            maximum_hold_seconds=_integer_field(row, "maximum_hold_seconds"),
             stop_bps=_optional_number(row.get("stop_bps"), "stop_bps"),
             minimum_stop_bps=_optional_number(
                 row.get("minimum_stop_bps"), "minimum_stop_bps"
@@ -116,9 +144,11 @@ class ProviderExecutionContract:
             maximum_hold_policy=_maximum_hold_policy(
                 row.get("maximum_hold_policy", "fixed")
             ),
-            hard_maximum_hold_seconds=_optional_integer(
-                row.get("hard_maximum_hold_seconds"),
-                "hard_maximum_hold_seconds",
+            hard_maximum_hold_seconds=_optional_integer_field(
+                row, "hard_maximum_hold_seconds"
+            ),
+            maximum_hold_evidence_maximum_age_seconds=_optional_integer_field(
+                row, "maximum_hold_evidence_maximum_age_seconds"
             ),
             provider_recipe_exit_policy=_provider_recipe_exit_policy(
                 row.get("provider_recipe_exit_policy", "ignore")
@@ -155,8 +185,10 @@ class BoundExecutionPlan:
     target_r_multiple: float | None = None
     safety_stop_overlay: bool = False
     stop_anchor: float | None = None
+    target_anchor: float | None = None
     maximum_hold_policy: MaximumHoldPolicy = "fixed"
     hard_maximum_hold_seconds: int | None = None
+    maximum_hold_evidence_maximum_age_seconds: int | None = None
     provider_recipe_exit_policy: ProviderRecipeExitPolicy = "ignore"
     profit_lock_policy: ProfitLockPolicy = "none"
     profit_lock_activation_bps: float | None = None
@@ -178,6 +210,9 @@ class BoundExecutionPlan:
             safety_stop_overlay=self.safety_stop_overlay,
             maximum_hold_policy=self.maximum_hold_policy,
             hard_maximum_hold_seconds=self.hard_maximum_hold_seconds,
+            maximum_hold_evidence_maximum_age_seconds=(
+                self.maximum_hold_evidence_maximum_age_seconds
+            ),
             provider_recipe_exit_policy=self.provider_recipe_exit_policy,
             profit_lock_policy=self.profit_lock_policy,
             profit_lock_activation_bps=self.profit_lock_activation_bps,
@@ -190,6 +225,10 @@ class BoundExecutionPlan:
             _positive(self.stop_anchor, "stop_anchor")
         elif self.stop_anchor is not None:
             raise CohortExecutionPlanError("fixed stop cannot carry stop_anchor")
+        if self.target_policy == "absolute_anchor":
+            _positive(self.target_anchor, "target_anchor")
+        elif self.target_anchor is not None:
+            raise CohortExecutionPlanError("static target cannot carry target_anchor")
 
     def as_payload(self) -> dict[str, object]:
         """Return the complete plan for durable state transitions."""
@@ -204,9 +243,7 @@ class BoundExecutionPlan:
             entry_liquidity=_entry_liquidity(row.get("entry_liquidity")),
             stop_policy=_stop_policy(row.get("stop_policy")),
             target_policy=_target_policy(row.get("target_policy")),
-            maximum_hold_seconds=_integer(
-                row.get("maximum_hold_seconds"), "maximum_hold_seconds"
-            ),
+            maximum_hold_seconds=_integer_field(row, "maximum_hold_seconds"),
             stop_bps=_optional_number(row.get("stop_bps"), "stop_bps"),
             minimum_stop_bps=_optional_number(
                 row.get("minimum_stop_bps"), "minimum_stop_bps"
@@ -222,12 +259,15 @@ class BoundExecutionPlan:
                 row.get("safety_stop_overlay", False), "safety_stop_overlay"
             ),
             stop_anchor=_optional_number(row.get("stop_anchor"), "stop_anchor"),
+            target_anchor=_optional_number(row.get("target_anchor"), "target_anchor"),
             maximum_hold_policy=_maximum_hold_policy(
                 row.get("maximum_hold_policy", "fixed")
             ),
-            hard_maximum_hold_seconds=_optional_integer(
-                row.get("hard_maximum_hold_seconds"),
-                "hard_maximum_hold_seconds",
+            hard_maximum_hold_seconds=_optional_integer_field(
+                row, "hard_maximum_hold_seconds"
+            ),
+            maximum_hold_evidence_maximum_age_seconds=_optional_integer_field(
+                row, "maximum_hold_evidence_maximum_age_seconds"
             ),
             provider_recipe_exit_policy=_provider_recipe_exit_policy(
                 row.get("provider_recipe_exit_policy", "ignore")
@@ -262,6 +302,12 @@ class BoundExecutionPlan:
         _side(side)
         if self.target_policy == "none":
             return None
+        if self.target_policy == "absolute_anchor":
+            target = _positive(self.target_anchor, "target_anchor")
+            favorable = target > entry if side == "long" else target < entry
+            if not favorable:
+                raise CohortExecutionPlanError("absolute target must remain favorable")
+            return target
         distance = (
             _positive(self.target_bps, "target_bps")
             if self.target_policy == "fixed_bps"
@@ -303,10 +349,10 @@ def _validate_stop_contract(contract: ProviderExecutionContract) -> None:
 
 
 def _validate_target_contract(contract: ProviderExecutionContract) -> None:
-    if contract.target_policy == "none":
+    if contract.target_policy in {"none", "absolute_anchor"}:
         if contract.target_bps is not None or contract.target_r_multiple is not None:
             raise CohortExecutionPlanError(
-                "no-target policy cannot define target values"
+                "dynamic or no-target policy cannot define static target values"
             )
         return
     if contract.target_policy == "fixed_bps":
@@ -323,42 +369,25 @@ def _validate_maximum_hold_contract(contract: ProviderExecutionContract) -> None
     if contract.maximum_hold_policy not in _MAXIMUM_HOLD_POLICIES:
         raise CohortExecutionPlanError("unsupported maximum hold policy")
     hard = contract.hard_maximum_hold_seconds
+    evidence_age = contract.maximum_hold_evidence_maximum_age_seconds
     if contract.maximum_hold_policy == "fixed":
         if hard is not None:
             raise CohortExecutionPlanError(
                 "fixed maximum hold cannot define a hard maximum hold"
+            )
+        if evidence_age is not None:
+            raise CohortExecutionPlanError(
+                "fixed maximum hold cannot define an evidence age"
             )
         return
     if hard is None or hard <= contract.maximum_hold_seconds:
         raise CohortExecutionPlanError(
             "hard maximum hold must be later than maximum_hold_seconds"
         )
-
-
-def _validate_profit_lock_contract(contract: ProviderExecutionContract) -> None:
-    values = (
-        contract.profit_lock_activation_bps,
-        contract.profit_lock_floor_bps,
-        contract.profit_lock_giveback_bps,
-    )
-    if contract.profit_lock_policy not in _PROFIT_LOCK_POLICIES:
-        raise CohortExecutionPlanError("unsupported profit lock policy")
-    if contract.profit_lock_policy == "none":
-        if any(value is not None for value in values):
-            raise CohortExecutionPlanError(
-                "disabled profit lock cannot define lock parameters"
-            )
-        return
-    if any(value is None for value in values):
-        raise CohortExecutionPlanError(
-            "completed-bar profit lock requires activation, floor, and giveback"
-        )
-    activation = _positive(values[0], "profit_lock_activation_bps")
-    floor = _positive(values[1], "profit_lock_floor_bps")
-    _positive(values[2], "profit_lock_giveback_bps")
-    if floor > activation:
-        raise CohortExecutionPlanError(
-            "profit lock floor cannot exceed activation threshold"
+    if evidence_age is not None:
+        _positive_integer(
+            evidence_age,
+            "maximum_hold_evidence_maximum_age_seconds",
         )
 
 
@@ -400,8 +429,16 @@ def _integer(value: object, label: str) -> int:
     return value
 
 
+def _integer_field(row: Mapping[str, object], key: str) -> int:
+    return _integer(row.get(key), key)
+
+
 def _optional_integer(value: object, label: str) -> int | None:
     return None if value is None else _integer(value, label)
+
+
+def _optional_integer_field(row: Mapping[str, object], key: str) -> int | None:
+    return _optional_integer(row.get(key), key)
 
 
 def _positive_integer(value: object, label: str) -> int:

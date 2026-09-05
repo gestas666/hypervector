@@ -26,7 +26,26 @@ pub(crate) fn growth_preflight_lines(app: &App, symbol: &str) -> Vec<Line<'stati
             "SIZING PREFLIGHT IDENTITY MISMATCH // NOT APPLIED TO STAGED PROFILE",
         )];
     }
-    vec![portfolio_line(preflight), asset_line(preflight, symbol)]
+    let mut lines = vec![portfolio_line(preflight)];
+    if let Some(line) = approval_line(preflight) {
+        lines.push(line);
+    }
+    lines.push(asset_line(preflight, symbol));
+    lines
+}
+
+fn approval_line(preflight: &GrowthPreflightTelemetry) -> Option<Line<'static>> {
+    let approval = preflight.profile_change_approval.as_ref()?;
+    let label = match approval.state.as_str() {
+        "approved_profile_change" => "PROFILE CHANGE APPROVED",
+        "unchanged_profile" => "PROFILE CHANGE APPROVAL NOT REQUIRED",
+        _ => "PROFILE CHANGE APPROVAL INVALID",
+    };
+    Some(Line::from(format!(
+        "{label} // RETIRED {} // REPLACEMENTS {} // EXECUTION AUTHORITY NONE",
+        approval.retired_execution_scopes.len(),
+        approval.replacement_execution_scopes.len(),
+    )))
 }
 
 fn matches_staged_identity(app: &App, preflight: &GrowthPreflightTelemetry) -> bool {
@@ -80,6 +99,25 @@ fn reference_label(value: f64) -> String {
 
 fn asset_line(preflight: &GrowthPreflightTelemetry, symbol: &str) -> Line<'static> {
     let Some(asset) = preflight.assets.iter().find(|asset| asset.symbol == symbol) else {
+        if let Some(retired) = preflight
+            .retired_assets
+            .iter()
+            .find(|asset| asset.symbol == symbol)
+        {
+            return Line::from(format!(
+                "RETIRED ASSET {symbol} // {} // {}",
+                if retired.flat_no_orders {
+                    "FLAT + NO ORDERS"
+                } else {
+                    "VENUE EXPOSURE PRESENT"
+                },
+                if retired.ledger_reconciled {
+                    "LEDGER RECONCILED"
+                } else {
+                    "LEDGER MISMATCH"
+                },
+            ));
+        }
         return Line::from(format!(
             "SIZING ASSET {symbol} // NOT INCLUDED IN CANDIDATE ROSTER"
         ));

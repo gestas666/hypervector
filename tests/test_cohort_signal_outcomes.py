@@ -39,6 +39,8 @@ def test_eligible_long_evaluation_resolves_without_claiming_a_fill() -> None:
         "execution_authority": "none",
         "model_trained": False,
         "thresholds_selected": False,
+        "configured_direction_attribution": "counterfactual_only",
+        "path_start_policy": ("first_full_minute_at_or_after_candidate_availability"),
     }
     assert outcomes["evaluations"] == 1
     assert outcomes["eligible_evaluations"] == 1

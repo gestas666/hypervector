@@ -10,6 +10,7 @@ use ratatui::{
 
 use crate::app::App;
 use crate::backend_cohort::CohortAssetSnapshot;
+use crate::cohort_profit_lock_labels::plan_profit_lock_label;
 
 pub(crate) const MIN_WIDTH: u16 = 100;
 pub(crate) const MIN_HEIGHT: u16 = 28;
@@ -82,6 +83,18 @@ pub(crate) fn provider_alias(strategy_id: &str) -> &str {
         "HIP3 BK15 CMD"
     } else if strategy_id == "hip3_breakout_pressure_sndk_gold_brent_bidirectional_v1" {
         "HIP3 BK CMD"
+    } else if strategy_id == "hip3_spcx_cash_open_gap_reversal_bidirectional_15m_v1" {
+        "SPCX CASH OPEN"
+    } else if strategy_id == "hip3_spcx_cash_session_fresh15_long_v4" {
+        "SPCX CASH LONG"
+    } else if strategy_id == "hip3_breakout_pressure_sndk_fresh15s_bidirectional_v3" {
+        "SNDK BK15 SHORT"
+    } else if strategy_id == "eth_range_onset_long_dual_mtf_v2" {
+        "ETH RANGE LONG"
+    } else if strategy_id == "sol_range_onset_short_dual_mtf_v2" {
+        "SOL RANGE SHORT"
+    } else if strategy_id == "zec_donchian_20_10_atr20_long_v1" {
+        "ZEC DONCHIAN L"
     } else if strategy_id == "btc_hulk_money_flow_relaxed_fixed60_bidirectional_v1" {
         "BTC HULK FLOW60"
     } else if strategy_id == "hulk_expansion_short_robust_v3" {
@@ -104,6 +117,10 @@ pub(crate) fn provider_alias(strategy_id: &str) -> &str {
         "ETH BK PULLBACK"
     } else if strategy_id == "hype_breakout_compression_pullback_bidirectional_v1" {
         "HYPE COMPRESSION"
+    } else if strategy_id == "hype_breakout_compression_alignment_bidirectional_v2" {
+        "HYPE ALIGN"
+    } else if strategy_id == "hype_native_breakout_onset_bidirectional_v2" {
+        "HYPE NATIVE"
     } else if strategy_id == "hype_breakout_relaxed_target20_60m_bidirectional_v3" {
         "HYPE T20+60"
     } else if strategy_id == "hype_breakout_relaxed_fixed60_matched_bidirectional_v4" {
@@ -166,6 +183,14 @@ pub(crate) fn execution_plan_label(asset: &CohortAssetSnapshot) -> String {
     };
     let provider = if plan.strategy_id.starts_with("hulk_") {
         "HK"
+    } else if plan.strategy_id.starts_with("eth_range_onset_") {
+        "ER"
+    } else if plan.strategy_id.starts_with("sol_range_onset_") {
+        "SR"
+    } else if plan.strategy_id.starts_with("zec_donchian_") {
+        "ZD"
+    } else if plan.strategy_id.starts_with("hip3_spcx_cash_session_") {
+        "SC"
     } else if plan.strategy_id.starts_with("range_onset_") {
         "RG"
     } else if plan.strategy_id.starts_with("hypervelocity_source_follow_") {
@@ -181,32 +206,35 @@ pub(crate) fn execution_plan_label(asset: &CohortAssetSnapshot) -> String {
         "H3S"
     } else if plan.strategy_id.starts_with("hip3_breakout_pressure_") {
         "H3B"
+    } else if plan.strategy_id.starts_with("hip3_spcx_cash_open_") {
+        "CO"
     } else {
         "CU"
     };
     let recipe_exit = if plan.provider_recipe_exit_policy == "honor" {
-        "RX:H"
+        "H"
     } else {
-        "RX:I"
+        "I"
     };
-    let profit_lock = if plan.profit_lock_policy == "completed_bar_trailing" {
-        "PL:ON"
-    } else {
-        "PL:OFF"
-    };
+    let profit_lock = plan_profit_lock_label(
+        &plan.profit_lock_policy,
+        plan.profit_lock_activation_bps,
+        plan.profit_lock_floor_bps,
+        plan.profit_lock_giveback_bps,
+    );
     let soft_hours = plan.maximum_hold_seconds / 3_600;
     if plan.maximum_hold_policy == "extend_while_regime_supported" {
         return plan.hard_maximum_hold_seconds.map_or_else(
-            || format!("{provider}{soft_hours}H? {recipe_exit} {profit_lock}"),
+            || format!("{provider}{soft_hours}H?/{recipe_exit}/{profit_lock}"),
             |hard| {
                 format!(
-                    "{provider}{soft_hours}>{}H {recipe_exit} {profit_lock}",
+                    "{provider}{soft_hours}>{}H/{recipe_exit}/{profit_lock}",
                     hard / 3_600
                 )
             },
         );
     }
-    format!("{provider}{soft_hours}H {recipe_exit} {profit_lock}")
+    format!("{provider}{soft_hours}H/{recipe_exit}/{profit_lock}")
 }
 
 fn compact_price(price: f64) -> String {
@@ -246,7 +274,66 @@ pub(crate) fn safe_ratio(numerator: f64, denominator: f64) -> Option<f64> {
 
 #[cfg(test)]
 mod tests {
-    use super::provider_alias;
+    use super::{execution_plan_label, provider_alias};
+    use crate::backend_cohort::CohortAssetSnapshot;
+
+    fn open_btc_hulk_snapshot() -> CohortAssetSnapshot {
+        serde_json::from_value(serde_json::json!({
+            "symbol": "BTC",
+            "state": "OPEN",
+            "direction_capability": ["long", "short"],
+            "position_size_signed": -0.1,
+            "position_side": "short",
+            "entry_oid": 1,
+            "stop_oid": 2,
+            "target_oid": 3,
+            "target_price": 75_000.0,
+            "execution_plan": {
+                "strategy_id": "hulk_expansion_short_robust_v3",
+                "entry_liquidity": "taker_ioc",
+                "stop_policy": "structural_clamped_bps",
+                "target_policy": "reward_risk",
+                "maximum_hold_seconds": 86_400,
+                "stop_bps": null,
+                "minimum_stop_bps": 20.0,
+                "maximum_stop_bps": 75.0,
+                "target_bps": null,
+                "target_r_multiple": 3.0,
+                "safety_stop_overlay": false,
+                "stop_anchor": 78_000.0,
+                "target_anchor": null,
+                "maximum_hold_policy": "fixed",
+                "hard_maximum_hold_seconds": null,
+                "provider_recipe_exit_policy": "ignore",
+                "profit_lock_policy": "btc_hulk_delayed_component_floor_v1",
+                "profit_lock_activation_bps": null,
+                "profit_lock_floor_bps": null,
+                "profit_lock_giveback_bps": null
+            },
+            "last_fault": null,
+            "mark_price": 77_000.0,
+            "entry_price": 77_000.0,
+            "liquidation_price": 80_000.0,
+            "liquidation_distance_pct": 3.9,
+            "margin_used_usd": 500.0,
+            "position_value_usd": 10_000.0,
+            "unrealized_pnl_usd": 0.0,
+            "leverage": 20,
+            "fees_net_usd": 4.32,
+            "funding_net_usd": 0.0,
+            "realized_pnl_usd": 0.0,
+            "fill_count": 1
+        }))
+        .expect("fixture should deserialize")
+    }
+
+    #[test]
+    fn execution_plan_shows_named_btc_profit_lock_as_enabled() {
+        let label = execution_plan_label(&open_btc_hulk_snapshot());
+
+        assert_eq!(label, "HK24H/I/DCF");
+        assert!(label.chars().count() <= 12);
+    }
 
     #[test]
     fn relaxed_hype_provider_has_a_compact_distinct_alias() {
@@ -269,6 +356,26 @@ mod tests {
         assert_eq!(
             provider_alias("hype_breakout_relaxed_60m_bidirectional_v2"),
             "HYPE 60+15"
+        );
+        assert_eq!(
+            provider_alias("eth_range_onset_long_dual_mtf_v2"),
+            "ETH RANGE LONG"
+        );
+        assert_eq!(
+            provider_alias("sol_range_onset_short_dual_mtf_v2"),
+            "SOL RANGE SHORT"
+        );
+        assert_eq!(
+            provider_alias("zec_donchian_20_10_atr20_long_v1"),
+            "ZEC DONCHIAN L"
+        );
+        assert_eq!(
+            provider_alias("hip3_spcx_cash_session_fresh15_long_v4"),
+            "SPCX CASH LONG"
+        );
+        assert_eq!(
+            provider_alias("hip3_breakout_pressure_sndk_fresh15s_bidirectional_v3"),
+            "SNDK BK15 SHORT"
         );
         assert_eq!(
             provider_alias("hype_breakout_relaxed_target20_60m_bidirectional_v3"),
@@ -309,6 +416,10 @@ mod tests {
         assert_eq!(
             provider_alias("hype_breakout_compression_pullback_bidirectional_v1"),
             "HYPE COMPRESSION"
+        );
+        assert_eq!(
+            provider_alias("hype_native_breakout_onset_bidirectional_v2"),
+            "HYPE NATIVE"
         );
         assert_eq!(
             provider_alias("liquidity_sweep_long_1h_stop60_target60_v2"),

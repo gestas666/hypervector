@@ -84,6 +84,51 @@ def test_verified_hip3_books_ingest_without_fabricated_trades(tmp_path: Path) ->
     assert provenance == ("hip3", True)
 
 
+def test_replay_books_deduplicate_paired_copy_of_book_only_bundle(
+    tmp_path: Path,
+) -> None:
+    config = _hip3_archive(tmp_path)
+    path = tmp_path / "research.duckdb"
+    database = ResearchDatabase(path)
+    database.ingest_archive(config)
+    with duckdb.connect(str(path)) as connection:
+        bundle_id = connection.execute(
+            "SELECT bundle_id FROM archive_bundles"
+        ).fetchone()[0]
+        connection.execute(
+            """
+            INSERT INTO archive_bundles
+            SELECT 'paired', symbol, start_utc, end_utc, depth, book_rows, 0,
+                   book_manifest_sha256, 'paired-trade', 'paired-fingerprint',
+                   ingested_at
+            FROM archive_bundles WHERE bundle_id = ?
+            """,
+            [bundle_id],
+        )
+        connection.execute(
+            """
+            INSERT INTO archive_bundle_provenance
+            SELECT 'paired', market_family, false, book_source
+            FROM archive_bundle_provenance WHERE bundle_id = ?
+            """,
+            [bundle_id],
+        )
+        connection.execute(
+            """
+            INSERT INTO book_snapshots
+            SELECT * REPLACE ('paired' AS bundle_id)
+            FROM book_snapshots WHERE bundle_id = ?
+            """,
+            [bundle_id],
+        )
+
+    summary = database.summary()
+
+    assert summary["source_book_snapshots"] == 2
+    assert summary["replay_book_snapshots"] == 1
+    assert summary["deduplicated_book_rows"] == 1
+
+
 def test_research_database_cli_accepts_explicit_hip3_book_only_mode(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],

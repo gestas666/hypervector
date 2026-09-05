@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pandas as pd
 
+from hypervector.research import hype_compression_regime_loss_exit as regime_loss
 from hypervector.research.hype_breakout_exit_models import HypeExitReplayConfig
 from hypervector.research.hype_compression_exit_challenger import (
     build_hype_compression_exit_study,
@@ -84,3 +85,23 @@ def test_study_selects_on_development_and_only_scores_frozen_exit_later() -> Non
     assert set(bundle.development_trades["exit_policy_id"]) == {
         policy.policy_id for policy in declared_hype_compression_exit_policies()
     }
+
+
+def test_regime_loss_study_freezes_one_policy_and_never_reselects_later() -> None:
+    """The transferred opposition exit is one declared test, not another grid."""
+    study = regime_loss.build_hype_compression_regime_loss_study(
+        _market(),
+        (_market(),),
+        frozen_compression_policy_id="compression_5m50_1m40_pullback",
+        config=HypeExitReplayConfig(maximum_hold_minutes=20),
+        fold_count=2,
+    )
+
+    assert study.report["execution_authority"] == "none"
+    assert study.report["policy_id"] == "opp5_loss20"
+    assert study.report["trial_count"] == 1
+    assert study.report["later_confirmation"]["selection_performed"] is False
+    assert study.report["capital_reallocation_modeled"] is False
+    assert (
+        len(study.development_trades) == study.report["development"]["entry_lifecycles"]
+    )

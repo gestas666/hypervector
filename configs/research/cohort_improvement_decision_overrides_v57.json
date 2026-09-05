@@ -1,0 +1,515 @@
+{
+  "schema_version": 1,
+  "source_profile_id": "multi_asset_growth_first_5000_spcx_short_containment_v57",
+  "source_profile_fingerprint": "724c259bd94be60d80ffc2e6b9a760412b9729ab1f8fea403e61d266f0d9cb8d",
+  "contract": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_promotion": false,
+    "runtime_strategy_changed": false
+  },
+  "review_triggers": {
+    "zero_entry": {
+      "threshold_seconds": 1209600,
+      "action": "cadence_deviation_investigation",
+      "decision_source": "../../docs/research-journal/v57-continuous-improvement-baseline-20260818-v1.json",
+      "contract": {
+        "report_only": true,
+        "execution_authority": "none",
+        "automatic_live_change": false
+      }
+    },
+    "route_zero_signal": {
+      "hype_breakout_compression_alignment_bidirectional_v2|HYPE": {
+        "threshold_seconds": 1209600,
+        "priority": 1,
+        "action": "route_cadence_deviation_investigation",
+        "decision_source": "../../docs/research-journal/v57-route-cadence-review-thresholds-20260818-v2.json",
+        "contract": {
+          "report_only": true,
+          "execution_authority": "none",
+          "automatic_live_change": false
+        }
+      },
+      "hip3_spcx_cash_open_gap_reversal_bidirectional_15m_v1|xyz:SPCX": {
+        "threshold_seconds": 604800,
+        "priority": 2,
+        "action": "route_cadence_deviation_investigation",
+        "decision_source": "../../docs/research-journal/v57-route-cadence-review-thresholds-20260818-v2.json",
+        "contract": {
+          "report_only": true,
+          "execution_authority": "none",
+          "automatic_live_change": false
+        }
+      },
+      "hulk_expansion_short_tuned_v2|BTC": {
+        "threshold_seconds": 604800,
+        "priority": 3,
+        "action": "route_cadence_deviation_investigation",
+        "decision_source": "../../docs/research-journal/v57-route-cadence-review-thresholds-20260818-v2.json",
+        "contract": {
+          "report_only": true,
+          "execution_authority": "none",
+          "automatic_live_change": false
+        }
+      },
+      "hulk_expansion_short_robust_v3|BTC": {
+        "threshold_seconds": 2160000,
+        "priority": 4,
+        "action": "route_cadence_deviation_investigation",
+        "decision_source": "../../docs/research-journal/v57-route-cadence-review-thresholds-20260818-v2.json",
+        "contract": {
+          "report_only": true,
+          "execution_authority": "none",
+          "automatic_live_change": false
+        }
+      },
+      "liquidity_sweep_long_1h_stop60_target60_v2|BTC": {
+        "threshold_seconds": 2160000,
+        "priority": 5,
+        "action": "route_cadence_deviation_investigation",
+        "decision_source": "../../docs/research-journal/v57-route-cadence-review-thresholds-20260818-v2.json",
+        "contract": {
+          "report_only": true,
+          "execution_authority": "none",
+          "automatic_live_change": false
+        }
+      }
+    }
+  },
+  "routes": {
+    "hulk_expansion_short_robust_v3|BTC": {
+      "triage": "REVISE",
+      "next_experiment": "collect_side_specific_evidence",
+      "historical_assessment": "v56 contract retained unchanged; exact successor lifecycle repeatability remains sparse",
+      "decision_source": "../../docs/research-journal/v57-btc-robust-v3-short-live-lifecycle-preregistration-20260819-v2.json",
+      "supporting_evidence": [
+        "docs/research-journal/v56-spcx-long-side-containment-approval-activation-20260818-v1.json"
+      ]
+    },
+    "hulk_expansion_short_tuned_v2|BTC": {
+      "triage": "REVISE",
+      "next_experiment": "collect_side_specific_evidence",
+      "historical_assessment": "v56 contract retained unchanged; three-partition evidence is positive but timing sensitive",
+      "decision_source": "../../docs/research-journal/v57-btc-tuned-v2-short-live-lifecycle-preregistration-20260819-v2.json",
+      "supporting_evidence": [
+        "docs/research-journal/v56-spcx-long-side-containment-approval-activation-20260818-v1.json"
+      ]
+    },
+    "liquidity_sweep_long_1h_stop60_target60_v2|BTC": {
+      "triage": "REVISE",
+      "next_experiment": "collect_side_specific_evidence",
+      "historical_assessment": "v56 sparse sweep contract retained unchanged without relaxation",
+      "decision_source": "../../docs/research-journal/v57-btc-liquidity-sweep-long-live-lifecycle-preregistration-20260819-v2.json",
+      "supporting_evidence": [
+        "docs/research-journal/v56-spcx-long-side-containment-approval-activation-20260818-v1.json",
+        "docs/research-journal/v53-btc-sweep-primary-trigger-relaxation-v2.json"
+      ]
+    },
+    "hype_breakout_compression_alignment_bidirectional_v2|HYPE": {
+      "triage": "REVISE",
+      "next_experiment": "collect_both_side_live_execution",
+      "historical_assessment": "The exact V57 route remains outcome-unidentified. It withheld both resolved native-long proxy losses, and its first true armed-run onset also remained ineligible before the causal sampled-BBO path crossed the configured 80-bps protective-stop proxy. The live backend and two separately running observers produced semantically identical evaluations for that onset, so a live-only implementation divergence is not supported for this event. Loosening compression, pullback, or alignment remains rejected while compatible long and short lifecycles are collected.",
+      "decision_source": "../../docs/research-journal/v57-hype-alignment-both-side-live-lifecycle-preregistration-20260819-v5.json",
+      "supporting_evidence": [
+        "docs/research-journal/v57-hype-native-forward-update-20260818-v1.json",
+        "data/logs/research/hype_compression_breakout_challenger_20260816_v6_alignment/report.json",
+        "data/logs/research/hype_native_v54_prospective_lifecycles/bidirectional-observe-1787029740833_0002_adc7efbabbc4.json",
+        "docs/research-journal/v52-hype-noncompression-alignment-relaxation-v1.json",
+        "docs/research-journal/v57-continuous-improvement-baseline-20260818-v5.json",
+        "data/logs/research/bidirectional_cohort/v57_hype_first_true_onset_process_parity_20260818_v1.json"
+      ]
+    },
+    "hip3_spcx_cash_open_gap_reversal_bidirectional_15m_v1|xyz:SPCX": {
+      "triage": "REVISE",
+      "next_experiment": "collect_side_specific_evidence",
+      "historical_assessment": "long execution is contained; retained short authority requires exact prospective lifecycle evidence",
+      "decision_source": "../../docs/research-journal/v57-spcx-short-live-lifecycle-preregistration-20260819-v2.json",
+      "supporting_evidence": [
+        "docs/research-journal/v56-spcx-long-side-containment-approval-activation-20260818-v1.json",
+        "data/logs/research/xyz_spcx_cash_open_gap_reversal_development_20260817_v2.json"
+      ]
+    }
+  },
+  "active_hypotheses": [
+    {
+      "hypothesis_id": "v57-first-robust-v3-live-lifecycle-v1",
+      "route": "hulk_expansion_short_robust_v3|BTC",
+      "experiment": "first_exact_robust_v3_live_lifecycle",
+      "status": "being_tested",
+      "decision_source": "../../docs/research-journal/v57-btc-robust-v3-short-live-lifecycle-preregistration-20260819-v2.json",
+      "minimum_evidence": "One attributable robust-v3 eligible short decision with routing, fill, protection, fees, slippage, funding, and resolved net PnL.",
+      "execution_effect": "report_only",
+      "automatic_live_change": false,
+      "lifecycle_status_path": "data/runtime/bidirectional_cohort/v57_btc_robust_v3_short_lifecycle_latest.json",
+      "required_sides": ["short"]
+    },
+    {
+      "hypothesis_id": "v57-first-tuned-v2-live-lifecycle-v1",
+      "route": "hulk_expansion_short_tuned_v2|BTC",
+      "experiment": "first_exact_tuned_v2_live_lifecycle",
+      "status": "being_tested",
+      "decision_source": "../../docs/research-journal/v57-btc-tuned-v2-short-live-lifecycle-preregistration-20260819-v2.json",
+      "minimum_evidence": "One attributable tuned-v2 eligible decision with routing, fill, protection, fees, slippage, funding, and resolved net PnL.",
+      "execution_effect": "report_only",
+      "automatic_live_change": false,
+      "lifecycle_status_path": "data/runtime/bidirectional_cohort/v57_btc_tuned_v2_short_lifecycle_latest.json",
+      "required_sides": ["short"]
+    },
+    {
+      "hypothesis_id": "v57-spcx-short-live-lifecycle-v1",
+      "route": "hip3_spcx_cash_open_gap_reversal_bidirectional_15m_v1|xyz:SPCX",
+      "experiment": "first_exact_short_lifecycle",
+      "status": "being_tested",
+      "decision_source": "../../docs/research-journal/v57-spcx-short-live-lifecycle-preregistration-20260819-v2.json",
+      "minimum_evidence": "One attributable SPCX short decision and resolved lifecycle with routing, fill, protection, prior-close target behavior, costs, excursion, and final net PnL.",
+      "execution_effect": "report_only",
+      "automatic_live_change": false,
+      "lifecycle_status_path": "data/runtime/bidirectional_cohort/v57_spcx_short_lifecycle_latest.json",
+      "required_sides": ["short"]
+    },
+    {
+      "hypothesis_id": "v57-hype-alignment-both-side-live-lifecycle-v1",
+      "route": "hype_breakout_compression_alignment_bidirectional_v2|HYPE",
+      "experiment": "first_exact_alignment_lifecycle_per_side",
+      "status": "being_tested",
+      "decision_source": "../../docs/research-journal/v57-hype-alignment-both-side-live-lifecycle-preregistration-20260819-v5.json",
+      "minimum_evidence": "At least one attributable eligible decision and one fully resolved lifecycle on each configured side, long and short, with routing, fill, protection, exact costs, exit attribution, excursion, and net PnL; this diagnostic minimum does not establish promotion or exit-policy authority.",
+      "execution_effect": "report_only",
+      "automatic_live_change": false,
+      "lifecycle_status_path": "data/runtime/bidirectional_cohort/v57_hype_alignment_both_side_lifecycle_latest.json",
+      "required_sides": ["long", "short"]
+    },
+    {
+      "hypothesis_id": "v57-first-liquidity-sweep-long-live-lifecycle-v1",
+      "route": "liquidity_sweep_long_1h_stop60_target60_v2|BTC",
+      "experiment": "first_exact_liquidity_sweep_live_lifecycle",
+      "status": "being_tested",
+      "decision_source": "../../docs/research-journal/v57-btc-liquidity-sweep-long-live-lifecycle-preregistration-20260819-v2.json",
+      "minimum_evidence": "One attributable liquidity-sweep eligible long decision with routing, fill, protection, fees, slippage, funding, and resolved net PnL.",
+      "execution_effect": "report_only",
+      "automatic_live_change": false,
+      "lifecycle_status_path": "data/runtime/bidirectional_cohort/v57_btc_liquidity_sweep_long_lifecycle_latest.json",
+      "required_sides": ["long"]
+    }
+  ],
+  "hypothesis_decisions": [
+    {
+      "hypothesis_id": "v57-hype-native-lineage-segmentation-v1",
+      "route": "hype_breakout_onset_bidirectional_v1|mixed",
+      "experiment": "treat_legacy_38_close_set_as_one_comparable_hype_strategy",
+      "status": "rejected",
+      "classification": "not_a_comparable_strategy_aggregate",
+      "decision_reason": "The 38-close legacy ID contains only 14 native HYPE lifecycles and 24 cross-asset BTC/ETH/SOL transfers across changing profiles, sizing, and exit authorities. The first seven native HYPE closes were 6W/1L and +$2.160920, while the later seven native HYPE closes were 1W/6L and -$3.134532; neither may be pooled with the 24 cross-asset closes as a controlled continuation.",
+      "decision_source": "../../docs/research-journal/v57-hype-native-lineage-segmentation-20260818-v1.json",
+      "reopen_condition": "Reopen only if immutable pre-entry evidence proves a matched HYPE-only provider and exit contract, or a preregistered independent HYPE-only sample is positive after exact costs and largest-winner removal."
+    },
+    {
+      "hypothesis_id": "v57-hype-native-long-replacement-forward-update-v1",
+      "route": "hype_native_breakout_onset_long_v3|HYPE",
+      "experiment": "restore_native_long_after_new_forward_evidence",
+      "status": "rejected",
+      "decision_reason": "The new sampled-BBO lifecycle lost, the two-lifecycle observer summary is 0W/2L, and the prior exact three-lifecycle candidate was already negative and largest-winner dependent.",
+      "decision_source": "../../docs/research-journal/v57-hype-native-forward-update-20260818-v1.json",
+      "reopen_condition": "A preregistered independent exact-source window is positive after all costs and after removing its largest winner, or a materially different mechanism is proposed before observing results.",
+      "closed_live_diagnostic_blockers": [
+        "largest_winner_dependence",
+        "mark_stop_truth_unavailable",
+        "negative_after_cost_forward_sample",
+        "opposed_breakout_admission"
+      ]
+    },
+    {
+      "hypothesis_id": "v52-hype-noncompression-alignment-relaxation",
+      "route": "hype_breakout_compression_alignment_bidirectional_v2|HYPE",
+      "experiment": "remove_compression_and_pullback_prerequisites",
+      "status": "rejected",
+      "decision_reason": "One v52 aligned non-compression onset was mixed across fixed horizons, while the prior broad aligned-only arm lost across 509 development and 115 opened-final lifecycles. Compression and pullback prerequisites remain unchanged.",
+      "decision_source": "../../docs/research-journal/v52-hype-noncompression-alignment-relaxation-v1.json",
+      "reopen_condition": "A predeclared independent same-blocker sample must become positive after realistic costs and largest-winner removal, and an occupancy-aware both-side replay must improve the exact active contract without materially worsening drawdown or execution quality."
+    },
+    {
+      "hypothesis_id": "v57-hype-first-true-onset-filter-result-v1",
+      "route": "hype_breakout_compression_alignment_bidirectional_v2|HYPE",
+      "experiment": "relax_gates_after_first_true_v57_onset",
+      "status": "rejected",
+      "decision_reason": "The first true HYPE onset in the armed V57 run was opposed to the structural candidate side and failed the frozen compression and pullback prerequisites. The live backend and two observers produced semantically identical evaluations. Its causal completed-candle path had zero favorable excursion before crossing the 80-bps protective stop proxy, and the later sampled executable bid also crossed that level. This event supports the specific withholding decision but does not establish active-route expectancy.",
+      "decision_source": "../../docs/research-journal/v57-continuous-improvement-baseline-20260818-v5.json",
+      "reopen_condition": "A preregistered independent same-mechanism sample must become positive after exact costs and largest-winner removal, or contrary aligned-route evidence must show that the frozen gates systematically reject positive compatible lifecycles."
+    },
+    {
+      "hypothesis_id": "v57-brentoil-oil-shock-external-candidate-v1",
+      "route": "hip3_brentoil_oil_shock_reversion_bidirectional_5m_shadow_v1|xyz:BRENTOIL",
+      "experiment": "promote_current_oil_shock_candidate",
+      "status": "deferred",
+      "decision_reason": "Development stress remains negative, source parity remains unresolved, and the first technically resolved prospective short stopped out under both nominal and stress friction.",
+      "decision_source": "../../docs/research-journal/v57-brentoil-prospective-loss-update-20260818-v1.json",
+      "reopen_condition": "A preregistered independent window resolves source and mark paths and remains positive after realistic costs and largest-winner removal, or a materially different mechanism is specified before results."
+    },
+    {
+      "hypothesis_id": "v57-brentoil-oil-shock-continuation-development-v1",
+      "route": "hip3_brentoil_oil_shock_continuation_bidirectional_5m_research_v1|xyz:BRENTOIL",
+      "experiment": "invert_frozen_oil_shock_reversion_into_continuation",
+      "status": "rejected",
+      "decision_reason": "The preregistered development-only continuation replay lost nominally and under stress, both sides lost after largest-winner removal, all three chronological stress folds lost, and technical paths remained unresolved. Validation and holdout stayed unopened.",
+      "decision_source": "../../docs/research-journal/v57-brentoil-oil-shock-continuation-development-result-20260818-v1.json",
+      "reopen_condition": "Only a preregistered materially different causal oil mechanism with resolved paths and positive stress, side, fold, and largest-winner robustness may reopen BRENTOIL strategy research; do not retune or retry direction inversion."
+    },
+    {
+      "hypothesis_id": "v57-sol-failed-range-reclaim-screen-v1",
+      "route": "research_only_range_reclaim_v1|SOL",
+      "experiment": "rerun_failed_range_reclaim_with_120_bar_lookback",
+      "status": "rejected",
+      "decision_reason": "The proposed retune duplicates an existing five-minute failed-range reclaim family that lost for SOL longs under both exits in development, validation, and pseudo-holdout; the only later positive side/exit cell was not stable in either prior partition.",
+      "decision_source": "../../docs/research-journal/v57-sol-failed-range-reclaim-screen-20260818-v1.json",
+      "reopen_condition": "A preregistered materially different causal mechanism or explicit changed-regime evidence must exist before parameter selection, followed by exact SOL venue-path replay with realistic costs, stress, largest-winner sensitivity, and untouched OOS."
+    },
+    {
+      "hypothesis_id": "v57-eth-pullback-live-addition-v1",
+      "route": "eth_breakout_precompression_pullback_bidirectional_v1|ETH",
+      "experiment": "add_frozen_eth_pullback_route_to_v57",
+      "status": "rejected",
+      "decision_reason": "The first source-compatible prospective lifecycle lost 69.13 bps after exact visible-depth entry and stop exit, taker fees, and official funding; prior live evidence was sparse and nearly zero after removing its largest winner.",
+      "decision_source": "../../docs/research-journal/eth-breakout-precompression-pullback-v14.json",
+      "reopen_condition": "A preregistered compatible window contains resolved long and short lifecycles and remains positive after realistic costs and largest-winner removal, or a materially different ETH mechanism is specified before results."
+    },
+    {
+      "hypothesis_id": "v57-btc-sweep-primary-trigger-relaxation-v1",
+      "route": "liquidity_sweep_long_1h_stop60_target60_v2|BTC",
+      "experiment": "remove_primary_sweep_requirement",
+      "status": "rejected",
+      "decision_reason": "Four exact-route one-blocker episodes were adverse or largest-winner dependent after costs, one crossed the configured stop proxy before its target, and current V57 one-blocker paths remain negative. The signed negative clearance correctly means price stayed above the prior low; it is not a suppressed valid sweep.",
+      "decision_source": "../../docs/research-journal/v53-btc-sweep-primary-trigger-relaxation-v2.json",
+      "reopen_condition": "At least twelve independent exact one-blocker episodes, or a separately preregistered causal replay, must remain positive after realistic costs and largest-winner removal under the exact 60-bps stop and target contract."
+    },
+    {
+      "hypothesis_id": "v57-btc-hulk-v2-long-restoration-v1",
+      "route": "hulk_expansion_bidirectional_tuned_v2|BTC",
+      "experiment": "restore_retired_hulk_v2_long_authority",
+      "status": "rejected",
+      "decision_reason": "Eight mixed-profile small-notional live closes were favorable, but the frozen bidirectional validation replay lost $682.57 at PF 0.7106 and the v53 lineage audit already rejected restoration. The current short-only tuned-v2 route preserves the historically positive directional slice without relabeling old long outcomes as V57 evidence.",
+      "decision_source": "../../docs/research-journal/v53-canary-lineage-scale-up-audit-v1.json",
+      "reopen_condition": "A preregistered exact-contract BTC long observer must produce an independent cost-adjusted sample that is positive after largest-winner removal and does not conflict with the active liquidity-sweep long route, or a materially different long mechanism must be specified before results are observed."
+    },
+    {
+      "hypothesis_id": "v57-btc-sol-ema5-speed-continuation-development-v1",
+      "route": "research_only_ema5_speed_continuation|BTC,SOL",
+      "experiment": "screen_frozen_15m_ema5_recross_inside_ema21_55_trend",
+      "status": "rejected",
+      "decision_reason": "The preregistered one-year development replay nearly exhausted the shared account under nominal and stress friction, both assets and both directions lost, all three stress folds lost, largest-winner removal remained negative, and exact historical mark paths were unavailable. Validation and holdout stayed unopened.",
+      "decision_source": "../../docs/research-journal/v57-btc-sol-ema5-speed-continuation-development-result-20260818-v1.json",
+      "reopen_condition": "Do not retune EMA periods, stops, hold, or sides to rescue this family. Only materially new causal information, a separately preregistered mechanism, or validated changed-regime evidence may justify a new hypothesis."
+    },
+    {
+      "hypothesis_id": "v57-mu-transport-parity-forward-v2",
+      "route": "research_only_mu_breakout_pressure_transport_parity|xyz:MU",
+      "experiment": "qualify_fixed_transport_parity_forward_v2",
+      "status": "rejected",
+      "decision_reason": "The immutable 24-hour window failed because the frozen generator changed after collection began; it also contained one missing and one state-history-incomplete decision, and all six eligible decisions were short. No parity chain or profitability inference is valid.",
+      "decision_source": "../../docs/research-journal/v57-mu-transport-parity-forward-v2-result-20260818-v1.json",
+      "reopen_condition": "Do not rerun or resize this fixed-window hypothesis. Any future MU work must be a materially new preregistered hypothesis with a deployment-frozen source contract, complete prospective coverage, both sides represented, and exact executable lifecycle evidence."
+    },
+    {
+      "hypothesis_id": "v57-mu-source-native-lifecycle-replay-v1",
+      "route": "research_only_mu_breakout_pressure_source_native|xyz:MU",
+      "experiment": "replay_prospective_source_native_mu_onsets_with_recorded_execution_paths",
+      "status": "rejected",
+      "decision_reason": "The materially new source-native replay produced 1 win and 4 losses across the five technically complete lifecycles, lost nominally and under stress, remained negative after removing its largest winner, lost on both observed sides, and censored 15 of 20 prospective onsets because execution-path or portfolio-state evidence was incomplete.",
+      "decision_source": "../../docs/research-journal/v57-mu-source-native-lifecycle-result-20260818-v1.json",
+      "reopen_condition": "Do not promote, resize, or retune this frozen MU family from these results. Reopen only for a preregistered materially different causal mechanism, or after complete prospective source-native execution paths produce an independent both-side sample that is positive after exact costs, stress, and largest-winner removal."
+    }
+  ],
+  "change_proposals": [],
+  "evidence": [
+    {
+      "path": "../../docs/research-journal/v57-hype-native-lineage-segmentation-20260818-v1.json",
+      "sha256": "3665797fd6c1abc16a940347dc7619c149eee050bccf4b083a0a311a8852c006",
+      "bytes": 6441
+    },
+    {
+      "path": "../multi_asset_growth_first_5000_spcx_short_containment_v57.toml",
+      "sha256": "c4b7f50422952cf7d1628e3969b272bd4413ca3aba356f105e5146f006306335",
+      "bytes": 3161
+    },
+    {
+      "path": "../../docs/research-journal/v56-spcx-long-side-containment-proposal-20260818-v1.json",
+      "sha256": "7fb97db8fe78498c297037e58d4494fe59d579ce794d940a25c0205053dadb80",
+      "bytes": 7231
+    },
+    {
+      "path": "../../docs/research-journal/v56-spcx-long-side-containment-approval-activation-20260818-v1.json",
+      "sha256": "dfdc65bd8580e0366b0f3c7bf1c751f36d3fa7e4fa33eafbc9daf859d84a73c4",
+      "bytes": 4470
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v57_spcx_short_containment_preflight_20260818_v1.json",
+      "sha256": "bf928a5585291840530dfc98205257c49e92e3393e491ea96cbe079578771a82",
+      "bytes": 9271
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v57_spcx_short_containment_poststart_20260818_v1.json",
+      "sha256": "41687fb3c76dacbc221da9a0454cd4455286822b39267010a7097698654028d8",
+      "bytes": 6280
+    },
+    {
+      "path": "../../docs/research-journal/v57-continuous-improvement-baseline-20260818-v1.json",
+      "sha256": "31934835302c88098911aba1fb9c793d685eff406bb34faa6d1d618cd53629a9",
+      "bytes": 19516
+    },
+    {
+      "path": "../../docs/research-journal/v57-hype-native-forward-update-20260818-v1.json",
+      "sha256": "fabd9148b270995d5a6131ac6d8d4b27cc474600b18dbfc4d2f5f4b06805d26f",
+      "bytes": 8938
+    },
+    {
+      "path": "../../docs/research-journal/v57-route-cadence-review-thresholds-20260818-v2.json",
+      "sha256": "eb6eeed8aab22935677585cbc732dfb90d3627054a36ae950920c88e50309131",
+      "bytes": 7440
+    },
+    {
+      "path": "../../docs/research-journal/v52-hype-noncompression-alignment-relaxation-v1.json",
+      "sha256": "80bfe8e09a2c58c7190a86ba67faefbe8b8de3734dccd108ad2c46095bfce37e",
+      "bytes": 3975
+    },
+    {
+      "path": "../../docs/research-journal/v57-brentoil-external-pipeline-recovery-20260818-v1.json",
+      "sha256": "c50d5439daa072c5f04369d7f83472356a748cd55e36f5c463c120dc0df9a9bd",
+      "bytes": 7861
+    },
+    {
+      "path": "../../docs/research-journal/v57-brentoil-prospective-loss-update-20260818-v1.json",
+      "sha256": "12b4c74af59fb54a68ec4da7b27cc0f85cc14b9af5be01f4d8da8ab2388dbdf3",
+      "bytes": 7670
+    },
+    {
+      "path": "../../docs/research-journal/v57-brentoil-oil-shock-continuation-development-preregistration-20260818-v1.json",
+      "sha256": "c31455dccfa5952148022ec70a8e82649a35cbab175bd51588ce70bea8abcd4c",
+      "bytes": 9255
+    },
+    {
+      "path": "../../docs/research-journal/v57-brentoil-oil-shock-continuation-development-result-20260818-v1.json",
+      "sha256": "4ed547b3456064e27f2301f9d7aff69f4760f0e250dba59d465463dcef86bc54",
+      "bytes": 6833
+    },
+    {
+      "path": "../../docs/research-journal/v57-sol-failed-range-reclaim-screen-20260818-v1.json",
+      "sha256": "5c4004631a17e083a7088d62331d34c205862676e285340d32afc9f44247564b",
+      "bytes": 7935
+    },
+    {
+      "path": "../../docs/research-journal/eth-breakout-precompression-pullback-v14.json",
+      "sha256": "d78cc8595f2348d6ef6000f37b52a479db0a16fdd4a4f5689580adc54e1bef4f",
+      "bytes": 8035
+    },
+    {
+      "path": "../../docs/research-journal/v53-btc-sweep-primary-trigger-relaxation-v2.json",
+      "sha256": "f5b1c781309740491ec96e2e9b9f8d85e97cf656310f09e1f352377fb00d32d0",
+      "bytes": 8574
+    },
+    {
+      "path": "../../docs/research-journal/v53-canary-lineage-scale-up-audit-v1.json",
+      "sha256": "bebf9d08869b1d45431451d3ded6b1380e0890f8e010fe53b46357e6969fa7a6",
+      "bytes": 16597
+    },
+    {
+      "path": "../../docs/research-journal/v57-btc-sol-ema5-speed-continuation-preregistration-v1.json",
+      "sha256": "4b77d56e5180bad098c8388cbe2a47d269cda8ca4619530261ca1fae14e1ee3b",
+      "bytes": 5946
+    },
+    {
+      "path": "../../docs/research-journal/v57-btc-sol-ema5-speed-continuation-development-result-20260818-v1.json",
+      "sha256": "21cbe4eb1351627480ef8d506e725dc5294c4fe0df433a954ef8eb27e5aab1d4",
+      "bytes": 9147
+    },
+    {
+      "path": "../../docs/research-journal/v57-mu-transport-parity-forward-v2-result-20260818-v1.json",
+      "sha256": "707075401ec4eac841e18e84ea6282cf6b7a7c852558fd0cfd03aae991e370f8",
+      "bytes": 6791
+    },
+    {
+      "path": "../../docs/research-journal/v57-mu-source-native-lifecycle-result-20260818-v1.json",
+      "sha256": "b3ead729fed75bb64b3655fc17cef0f04a7a5f5e496293d2b192707c61bb6bee",
+      "bytes": 3467
+    },
+    {
+      "path": "../../docs/research-journal/v57-hype-alignment-both-side-live-lifecycle-tracker-20260818-v1.json",
+      "sha256": "1b2b70ee8c5738855191db5d76a1597d0a38861574f062037193f55d7b4c11a8",
+      "bytes": 8097
+    },
+    {
+      "path": "../../docs/research-journal/v57-hype-alignment-both-side-live-lifecycle-preregistration-20260818-v2.json",
+      "sha256": "9f7b39eb8162f61a20be264f2f9e8b672d01e7639be9c1a52a091d5a744d6bd2",
+      "bytes": 5891
+    },
+    {
+      "path": "../../docs/research-journal/v57-hype-alignment-both-side-live-lifecycle-preregistration-20260818-v3.json",
+      "sha256": "895c6a06d661d4dd76ee378fb0c9abc89bf81c895065b8fc8b243dbbf91977e7",
+      "bytes": 6088
+    },
+    {
+      "path": "../../docs/research-journal/v57-hype-alignment-both-side-live-lifecycle-preregistration-20260818-v4.json",
+      "sha256": "dc9be25ec23574fbdb95e373785beb9a2a438662b6585006fde180cbc00f5b67",
+      "bytes": 5299
+    },
+    {
+      "path": "../../docs/research-journal/v57-hype-alignment-both-side-live-lifecycle-preregistration-20260819-v5.json",
+      "sha256": "b5cdd9ccb0f464acd9731b0eed0c74f836a2b8629b4f3d80251c7cc0e815c65c",
+      "bytes": 5861
+    },
+    {
+      "path": "../../docs/research-journal/v57-btc-tuned-v2-short-live-lifecycle-preregistration-20260818-v1.json",
+      "sha256": "4a091ce652fb56f5eca2b983e8f6f46f4b0d3a292865283f1fd59881c0dc315e",
+      "bytes": 4574
+    },
+    {
+      "path": "../../docs/research-journal/v57-spcx-short-live-lifecycle-preregistration-20260818-v1.json",
+      "sha256": "2feab71fa9669671e9ac63084825646f79a2e53c4ab2828e6a0dace68f1260cd",
+      "bytes": 4703
+    },
+    {
+      "path": "../../docs/research-journal/v57-btc-robust-v3-short-live-lifecycle-preregistration-20260818-v1.json",
+      "sha256": "dfbfa9fa81d52961954a95bb0440e1357f5a886837543890457610bd82db2c70",
+      "bytes": 4576
+    },
+    {
+      "path": "../../docs/research-journal/v57-btc-liquidity-sweep-long-live-lifecycle-preregistration-20260818-v1.json",
+      "sha256": "258d88f5f56c4542edde0b49d35a87d80759f5f558613f33a0ca623390491313",
+      "bytes": 4640
+    },
+    {
+      "path": "../../docs/research-journal/v57-spcx-short-live-lifecycle-preregistration-20260819-v2.json",
+      "sha256": "7f83073b0469eb216dd886b653cec9ce0d3852bd7d49c46003359819e2aa2347",
+      "bytes": 3329
+    },
+    {
+      "path": "../../docs/research-journal/v57-btc-tuned-v2-short-live-lifecycle-preregistration-20260819-v2.json",
+      "sha256": "97a164b9d31f7180eede155ef991cf3cb8a862d6fcf474188bf08c540dbf54cb",
+      "bytes": 3287
+    },
+    {
+      "path": "../../docs/research-journal/v57-btc-liquidity-sweep-long-live-lifecycle-preregistration-20260819-v2.json",
+      "sha256": "6076590af169172ebe3319078c6f53d3ba2311dff6e2f97c4db87a36db039b2d",
+      "bytes": 3369
+    },
+    {
+      "path": "../../docs/research-journal/v57-btc-robust-v3-short-live-lifecycle-preregistration-20260819-v2.json",
+      "sha256": "2894eb155fd5e4b31b31d01dd79b3d87f68514d1d43f0a4e9e685d1171891267",
+      "bytes": 3297
+    },
+    {
+      "path": "../../docs/research-journal/v57-continuous-improvement-baseline-20260818-v5.json",
+      "sha256": "504f4cee5b4a2cbfbdb25e15ba1ed6f895d32c0ea1da0bcb949188c0fdb9a2a9",
+      "bytes": 6232
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v57_hype_first_true_onset_stop_path_20260818_v2.json",
+      "sha256": "4e6e624b8703cd988af34c162e3f9e74e9fe6f27dbc539f98fed21d3e5a307a6",
+      "bytes": 4826
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v57_hype_first_true_onset_process_parity_20260818_v1.json",
+      "sha256": "f56487690098dbb54108fb565bf29733f46c5fb3d856446db2a824c1643f8705",
+      "bytes": 9358
+    }
+  ]
+}

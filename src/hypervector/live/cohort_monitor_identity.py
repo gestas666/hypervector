@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import json
 from pathlib import Path
+import time
 
 from hypervector.live.multi_asset_live_config import (
     MultiAssetLiveConfig,
@@ -115,6 +116,57 @@ def require_matching_checkpoint_attachment(
         )
     if staged_config is not None:
         require_staged_checkpoint_identity(value, active_config, staged_config)
+    if not isinstance(value, dict):
+        raise MultiAssetLiveConfigError("recent checkpoint must be a JSON object")
+    return value
+
+
+def fresh_checkpoint_document(
+    path: Path,
+    config: MultiAssetLiveConfig,
+    staged_config: MultiAssetLiveConfig | None = None,
+    *,
+    maximum_age_seconds: float,
+) -> dict[str, object] | None:
+    """Return recent checkpoint bytes bound to the active and staged identities."""
+    active = active_ledger_identity(config)
+    try:
+        age_seconds = time.time() - path.stat().st_mtime
+    except FileNotFoundError:
+        return None
+    except OSError as exc:
+        raise MultiAssetLiveConfigError(
+            f"checkpoint metadata is unavailable: {exc}"
+        ) from exc
+    if not 0.0 <= age_seconds <= maximum_age_seconds:
+        return None
+    value = _read_checkpoint(path)
+    checkpoint = checkpoint_identity(value)
+    if (
+        checkpoint.profile_id != config.profile_id
+        or checkpoint.profile_fingerprint != config.profile_fingerprint
+    ):
+        raise MultiAssetLiveConfigError(
+            "recent checkpoint profile identity does not match --config; "
+            "refusing concurrent recovery"
+        )
+    if checkpoint.run_id != active.run_id:
+        raise MultiAssetLiveConfigError(
+            "recent checkpoint run identity does not match the active ledger; "
+            "refusing concurrent recovery"
+        )
+    if staged_config is not None:
+        require_staged_checkpoint_identity(value, config, staged_config)
+    return value
+
+
+def _read_checkpoint(path: Path) -> dict[str, object]:
+    try:
+        value: object = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise MultiAssetLiveConfigError(
+            f"recent checkpoint is unreadable; refusing concurrent recovery: {exc}"
+        ) from exc
     if not isinstance(value, dict):
         raise MultiAssetLiveConfigError("recent checkpoint must be a JSON object")
     return value

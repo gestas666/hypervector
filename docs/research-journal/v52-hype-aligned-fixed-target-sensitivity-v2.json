@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v52-hype-aligned-fixed-target-sensitivity",
+  "revision_number": 2,
+  "supersedes_revision_id": "fe76e6f812c78f12d839aa28e43963bb75c3f02648cad9b19274966fa0ee6cb0",
+  "created_at_utc": "2026-08-16T17:31:00Z",
+  "strategy_id": "hype_breakout_compression_alignment_bidirectional_v2",
+  "symbol": "HYPE",
+  "status": "reject",
+  "hypothesis": "A symmetric fixed take-profit may reduce peak-profit giveback without destroying the exact aligned-entry v52 HYPE route's after-cost edge.",
+  "decision": "Retain the native v52 HYPE exit and reject the tested symmetric 40-500-bps fixed-target grid. Revision 2 preserves the same economics while binding the evidence to the canonically formatted generator source.",
+  "confidence": "medium_high",
+  "falsifier": "A predeclared independent both-side or explicitly side-specific fixed-target experiment, with source-compatible entries and executable costs, beats the native exit in total and leave-largest net return without materially degrading the opposite direction.",
+  "evidence": [
+    {
+      "path": "../../data/logs/research/hype_aligned_fixed_target_fixed_entry_sensitivity_20260816_v4.json",
+      "role": "authoritative_formatted_generator_fixed_entry_target_sensitivity_report",
+      "sha256": "edfae6d7b6bb4463f32978714e97eb5afe355eb0427ffc656b896c905c164a89",
+      "bytes": 470999
+    }
+  ],
+  "metrics": {
+    "development_lifecycles": 41,
+    "development_long_lifecycles": 19,
+    "development_short_lifecycles": 22,
+    "development_selected_target_bps": 500.0,
+    "native_net_bps": 2298.2324439484123,
+    "native_profit_factor": 1.8569147214819552,
+    "native_without_largest_winner_net_bps": 289.2553159192332,
+    "selected_tail_net_bps": 1028.7326954389582,
+    "selected_tail_profit_factor": 1.3969862040381031,
+    "selected_tail_without_largest_winner_net_bps": 541.5407688337261,
+    "selected_tail_minus_native_net_bps": -1269.499748509454,
+    "selected_tail_long_net_bps": -89.92472943232795,
+    "selected_tail_short_net_bps": 1118.6574248712861,
+    "selected_target_triggered_lifecycles": 7,
+    "later_confirmation_lifecycles": 1,
+    "later_confirmation_target_triggers": 0,
+    "payload_equal_to_revision_1_excluding_generator_identity": true
+  },
+  "limitations": [
+    "The fixed-entry study cannot model additional signals that an earlier target exit could free capital to take.",
+    "One-minute OHLC cannot prove intrabar target-versus-stop ordering or private IOC execution.",
+    "The later-confirmation cohort contains one long and no short, so it cannot validate a side-specific short target.",
+    "The selected 500-bps target was selected on development only and reduced total after-cost net return versus the native exit."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

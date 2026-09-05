@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v79-zec-donchian-long-pseudo-holdout-20260902",
+  "created_at_utc": "2026-09-02T23:33:00Z",
+  "status": "preregistered_before_pseudo_holdout_open",
+  "selection_disclosure": {
+    "classification": "posthoc_side_selection_from_previously_unopened_validation",
+    "reason": "The original V75 development gate rejected the combined long-short ZEC family. The user subsequently required every retained roster asset to trade, so V79 opened the unchanged validation window and selected only the positive long slice before inspecting the pseudo-holdout.",
+    "confidence_ceiling": "low_to_medium_even_if_pseudo_holdout_passes"
+  },
+  "frozen_candidate": {
+    "strategy_id": "zec_donchian_20_10_atr20_long_v1",
+    "symbol": "ZEC",
+    "side": "long",
+    "signal_timeframe": "4h",
+    "execution_timeframe": "15m",
+    "entry": "fresh completed-4h close above the prior completed 20-bar high, entered no earlier than the next 15m open",
+    "exit": "completed-4h close below the prior completed 10-bar low, executed no earlier than the next 15m open",
+    "initial_stop": "signal close minus 2.0 times 20-bar Wilder ATR",
+    "minimum_stop_bps": 20.0,
+    "maximum_stop_bps": 250.0,
+    "maximum_hold_seconds": 2592000,
+    "entry_liquidity": "taker_ioc",
+    "target": null,
+    "reverse_on_opposite_breakout": false
+  },
+  "risk_contract": {
+    "isolated_leverage": 5.0,
+    "margin_fraction": 0.02,
+    "maximum_notional_usd": 500.0,
+    "venue_max_leverage": 10.0,
+    "rationale": "Probation sizing bounds exposure because side selection is post-hoc and the sample is small."
+  },
+  "friction_profiles": {
+    "nominal_round_trip_bps": 14.0,
+    "stress_round_trip_bps": 20.0
+  },
+  "chronology": {
+    "warmup_start_utc": "2026-06-26T00:00:00Z",
+    "score_start_utc": "2026-07-01T00:00:00Z",
+    "end_exclusive_utc": "2026-09-01T00:00:00Z"
+  },
+  "support_criteria": [
+    "long-only net PnL is positive under nominal and stress friction",
+    "long-only profit factor exceeds 1.0 under nominal and stress friction",
+    "long-only net PnL remains positive after removing its largest winner under nominal and stress friction",
+    "at least three long lifecycles complete",
+    "no liquidation or insolvency occurs",
+    "existing no-lookahead and append-invariance signal tests pass"
+  ],
+  "failure_disposition": "Do not authorize this ZEC route; develop a new preregistered mechanism or leave V79 technically incomplete rather than relabeling a failed strategy.",
+  "source_evidence": [
+    {
+      "path": "data/logs/research/v79_zec_donchian_atr_posthoc_validation_20260902_v1.json",
+      "sha256": "35dae23f79340e478e7e8b76b6117ce1662742b0e48903e584ee1b41d4249850"
+    },
+    {
+      "path": "docs/research-journal/v75-five-crypto-donchian-atr-breakout-preregistration-20260901-v1.json",
+      "sha256": "85ee1408f1734f5420f4f606fd4d8e08de1ec3a6750bd53239b70d5517ac23f5"
+    },
+    {
+      "path": "data/cache/vendor/0xarchive/hyperliquid/ZEC/20260128T000000000000Z_20260901T120000000000Z_candles_15m/candles.parquet",
+      "sha256": "b1dde02ee783d0426a75d01491fbb524873eb12eb7ef5257d0a60863db13b645"
+    },
+    {
+      "path": "data/cache/vendor/hyperliquid/ZEC/20260128T000000000000Z_20260901T120000000000Z_funding/funding.parquet",
+      "sha256": "7f60c8e7dcb24d2120336f3f3b129b0974ee29aca696f70c9563be3e5a01322c"
+    }
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

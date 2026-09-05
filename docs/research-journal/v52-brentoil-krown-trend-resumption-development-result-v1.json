@@ -1,0 +1,77 @@
+{
+  "schema_version": "v52_brentoil_krown_trend_resumption_development_result_v1",
+  "created_at_utc": "2026-08-16T22:10:08Z",
+  "hypothesis_id": "BRENTOIL_KROWN_TREND_RESUMPTION_15M_V1",
+  "preregistration": "docs/research-journal/v52-brentoil-krown-trend-resumption-development-v1.json",
+  "status": "rejected_development",
+  "decision": "do_not_open_validation_or_holdout_and_do_not_add_live_route",
+  "execution_authority": "none",
+  "live_change_proposed": false,
+  "evidence": {
+    "path": "data/logs/research/xyz_brentoil_krown_trend_resumption_development_20260816_v1.json",
+    "sha256": "f9e4dce273fb42f129091bd04daafc5b001aae2dca75e9daab17067996c3b327",
+    "development_window": {
+      "start_utc": "2026-06-08T08:00:00+00:00",
+      "end_utc": "2026-07-13T21:45:00+00:00"
+    },
+    "validation_accessed": false,
+    "holdout_accessed": false,
+    "source_references_rehashed": 8,
+    "generator_files_frozen": 741
+  },
+  "normalized_500_usd_results": {
+    "trades": 217,
+    "trades_per_week": 42.70102489019034,
+    "nominal": {
+      "wins": 63,
+      "losses": 154,
+      "net_usd": -4.385866759873579,
+      "return_pct": -0.8771733519747158,
+      "profit_factor": 0.8338026386683377,
+      "maximum_drawdown_pct": -1.4926109385261068,
+      "net_without_largest_winner_usd": -6.268957470256922,
+      "long_net_usd": 0.19697434508403144,
+      "short_net_usd": -4.582841104957049
+    },
+    "stress": {
+      "wins": 43,
+      "losses": 174,
+      "net_usd": -26.80988724662876,
+      "return_pct": -5.361977449325752,
+      "profit_factor": 0.3760666068805418,
+      "maximum_drawdown_pct": -5.539338965232432,
+      "net_without_largest_winner_usd": -28.50604286821403,
+      "long_net_usd": -9.093532439690259,
+      "long_net_without_largest_winner_usd": -10.789688061275795,
+      "short_net_usd": -17.716354806938234,
+      "short_net_without_largest_winner_usd": -18.848669543702677
+    },
+    "stress_fold_net_usd": [
+      -9.30979504756175,
+      -11.330973574978088,
+      -6.841993300709248
+    ],
+    "liquidations": 0
+  },
+  "technical_path": {
+    "status": "unresolved",
+    "unresolved_lifecycle_trades": 144,
+    "unresolved_entry_bar_risk_trades": 108,
+    "stale_l2_entry_trades": 3,
+    "stale_l2_exit_trades": 3
+  },
+  "rejection_reasons": [
+    "nominal net and profit factor were negative",
+    "stress net and profit factor were strongly negative",
+    "all three chronological stress folds lost",
+    "both long and short stress slices lost before and after largest-winner removal",
+    "144 of 217 selected lifecycles had unresolved exact path evidence"
+  ],
+  "interpretation": "The predeclared fresh Krown RSI-EMA turn plus EMA21/55 alignment overtraded BRENTOIL and did not survive realistic friction. The result fails economically even before its unresolved-path defect is considered.",
+  "confidence": {
+    "level": "high_for_rejecting_this_exact_frozen_hypothesis",
+    "basis": "negative nominal and stress economics, all three stress folds negative, both sides negative under stress, negative largest-winner sensitivity, exact source rehashes, and sealed out-of-sample partitions",
+    "limitation": "this does not falsify every possible Krown-derived mechanism or every BRENTOIL strategy"
+  },
+  "update_or_falsifier": "Only a separately preregistered mechanism with materially new causal information or exact-path recovery could justify new research; parameter tuning of this rejected development result would be post-selection overfitting and is not authorized."
+}

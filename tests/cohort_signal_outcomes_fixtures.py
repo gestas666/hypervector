@@ -24,8 +24,12 @@ def cohort_rows() -> list[dict[str, object]]:
     rows = [
         row(index, event, value) for index, (event, value) in enumerate(payloads, 1)
     ]
-    rows[-1]["observed_at_utc"] = datetime.fromtimestamp(
+    rows[-2]["observed_at_utc"] = datetime.fromtimestamp(
         (DECISION_MS + 5_000) / 1_000,
+        timezone.utc,
+    ).isoformat()
+    rows[-1]["observed_at_utc"] = datetime.fromtimestamp(
+        (DECISION_MS + 6_000) / 1_000,
         timezone.utc,
     ).isoformat()
     return rows

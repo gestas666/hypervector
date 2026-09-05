@@ -19,13 +19,18 @@ def update_latest_evaluations(
     prior: EvaluationMap,
     observed: tuple[ProviderEvaluation, ...],
 ) -> dict[EvaluationKey, ProviderEvaluation]:
-    """Retain the newest completed-bar evaluation for every provider-symbol."""
+    """Retain each provider's newest state without discarding a batched exit."""
     latest = dict(prior)
+    grouped: dict[EvaluationKey, list[ProviderEvaluation]] = {}
     for evaluation in observed:
         key = (evaluation.strategy_id, evaluation.symbol)
+        grouped.setdefault(key, []).append(evaluation)
+    for key, rows in grouped.items():
+        exits = [row for row in rows if row.exit_sides]
+        candidate = max(exits or rows, key=lambda row: row.decision_time_ms)
         current = latest.get(key)
-        if current is None or evaluation.decision_time_ms > current.decision_time_ms:
-            latest[key] = evaluation
+        if current is None or candidate.decision_time_ms > current.decision_time_ms:
+            latest[key] = candidate
     return latest
 
 
@@ -58,9 +63,11 @@ def maximum_hold_decision_payload(
         return None
     provider, canonical = maximum_hold_evaluations(plan, symbol, evaluations)
     score = _structure_alignment(side, provider, canonical)
-    reason = maximum_hold_exit_reason(plan, elapsed_ms, side, provider, canonical)
+    reason = maximum_hold_exit_reason(
+        plan, elapsed_ms, side, provider, canonical, observed_ms=observed_ms
+    )
     hard = plan.hard_maximum_hold_seconds
-    return {
+    payload = {
         "decision_id": f"{symbol}:{entry_oid}:soft_maximum_hold",
         "decision_stage": "soft",
         "lifecycle_id": f"{symbol}:{entry_oid}",
@@ -81,6 +88,9 @@ def maximum_hold_decision_payload(
         "provider_evaluation": provider.as_payload() if provider else None,
         "canonical_evaluation": canonical.as_payload() if canonical else None,
     }
+    return payload | _maximum_hold_evidence_payload(
+        plan, observed_ms, provider, canonical
+    )
 
 
 def maximum_hold_terminal_decision_payload(
@@ -121,6 +131,7 @@ def resolve_maximum_hold_exit_reason(
     symbol: str,
     side: str,
     elapsed_ms: int,
+    observed_ms: int,
     fallback_hold_ms: int,
     evaluations: EvaluationMap,
 ) -> str | None:
@@ -128,7 +139,14 @@ def resolve_maximum_hold_exit_reason(
     if plan is None:
         return "maximum_hold_seconds" if elapsed_ms >= fallback_hold_ms else None
     provider, canonical = maximum_hold_evaluations(plan, symbol, evaluations)
-    return maximum_hold_exit_reason(plan, elapsed_ms, side, provider, canonical)
+    return maximum_hold_exit_reason(
+        plan,
+        elapsed_ms,
+        side,
+        provider,
+        canonical,
+        observed_ms=observed_ms,
+    )
 
 
 def maximum_hold_exit_reason(
@@ -137,6 +155,8 @@ def maximum_hold_exit_reason(
     side: str,
     provider: ProviderEvaluation | None,
     canonical: ProviderEvaluation | None,
+    *,
+    observed_ms: int | None = None,
 ) -> str | None:
     """Resolve a soft exit, bounded extension, or unconditional hard exit."""
     if (
@@ -156,12 +176,84 @@ def maximum_hold_exit_reason(
         raise ValueError("regime-supported extension lacks a hard maximum hold")
     if elapsed_ms >= hard * 1_000:
         return "hard_maximum_hold_seconds"
+    evidence_reason = _extension_evidence_failure(
+        plan,
+        provider,
+        canonical,
+        observed_ms,
+    )
+    if evidence_reason is not None:
+        return evidence_reason
     score = _structure_alignment(side, provider, canonical)
     return (
         None
         if score is not None and score >= _STANCE_THRESHOLD
         else "maximum_hold_seconds"
     )
+
+
+def _extension_evidence_failure(
+    plan: BoundExecutionPlan,
+    provider: ProviderEvaluation | None,
+    canonical: ProviderEvaluation | None,
+    observed_ms: int | None,
+) -> str | None:
+    maximum_age = plan.maximum_hold_evidence_maximum_age_seconds
+    if maximum_age is None:
+        return "maximum_hold_evidence_contract_missing"
+    if provider is None or canonical is None:
+        return "maximum_hold_evidence_missing"
+    if isinstance(observed_ms, bool) or not isinstance(observed_ms, int):
+        return "maximum_hold_evidence_observation_time_missing"
+    if observed_ms < 0:
+        return "maximum_hold_evidence_observation_time_missing"
+    ages = (
+        observed_ms - provider.decision_time_ms,
+        observed_ms - canonical.decision_time_ms,
+    )
+    if any(age < 0 for age in ages):
+        return "maximum_hold_evidence_future"
+    if any(age > maximum_age * 1_000 for age in ages):
+        return "maximum_hold_evidence_stale"
+    return None
+
+
+def _maximum_hold_evidence_payload(
+    plan: BoundExecutionPlan,
+    observed_ms: int,
+    provider: ProviderEvaluation | None,
+    canonical: ProviderEvaluation | None,
+) -> dict[str, object]:
+    maximum_age = plan.maximum_hold_evidence_maximum_age_seconds
+    provider_age = _evaluation_age_ms(provider, observed_ms)
+    canonical_age = _evaluation_age_ms(canonical, observed_ms)
+    if plan.maximum_hold_policy == "fixed":
+        status = "not_applicable"
+    else:
+        status = (
+            _extension_evidence_failure(
+                plan,
+                provider,
+                canonical,
+                observed_ms,
+            )
+            or "fresh"
+        )
+    return {
+        "maximum_hold_evidence_maximum_age_ms": (
+            maximum_age * 1_000 if maximum_age is not None else None
+        ),
+        "provider_evidence_age_ms": provider_age,
+        "canonical_evidence_age_ms": canonical_age,
+        "maximum_hold_evidence_status": status,
+    }
+
+
+def _evaluation_age_ms(
+    evaluation: ProviderEvaluation | None,
+    observed_ms: int,
+) -> int | None:
+    return None if evaluation is None else observed_ms - evaluation.decision_time_ms
 
 
 def _structure_alignment(

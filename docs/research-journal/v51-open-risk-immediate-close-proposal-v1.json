@@ -1,0 +1,90 @@
+{
+  "schema_version": "v51_open_risk_immediate_close_proposal_v1",
+  "hypothesis_id": "v51-open-risk-immediate-close",
+  "status": "proposed_awaiting_explicit_approval",
+  "generated_at_utc": "2026-08-16T12:17:16.027329+00:00",
+  "execution_authority": "none",
+  "automatic_live_change": false,
+  "runtime_strategy_changed": false,
+  "performance_gate": false,
+  "trade_count_gate": false,
+  "recommendation": "Approve reduce-only closure of the remaining SOL and xyz:SPCX v51 positions, then preserve their exact fills and proceed through the verified flat-boundary v52 cutover.",
+  "why_now": "Both positions belong to routes already retired from v52, the transition drain is active, their open-path evidence has deteriorated, and the loaded v51 backend has recurring full-ledger CPU saturation that is fixed only in the staged implementation.",
+  "evidence_reviewed": [
+    "Fresh v51 checkpoint generated at 2026-08-16T12:16:31.376663+00:00",
+    "Exact current-run SOL and xyz:SPCX open lifecycle reflections",
+    "Venue stop identities 517255993410 and 517508481177",
+    "Causal completed-minute excursion and regime-opposition telemetry",
+    "Approved active transition-drain identity ed1b4d02f5fc4da49acac47170db4313",
+    "Native backend CPU samples and the tested incremental-ledger remediation",
+    "v52 profile, stress artifact, transition contract, and common-window replay"
+  ],
+  "observed_problem_or_opportunity": "Waiting for the original fallback exits leaves approximately another $42 of modeled stop-distance loss exposed across routes that will not be retained, while delaying prospective v52 evidence collection.",
+  "applicable_market_regime": "SOL is currently 5m/15m TREND_DOWN against its long and has 117 consecutive opposed completed decisions; xyz:SPCX has unavailable canonical regime telemetry and no fresh opposite breakout signal.",
+  "alternatives_considered": [
+    "Keep both positions to their original signal, venue-stop, or maximum-hold exits",
+    "Close only the strongly opposed SOL long",
+    "Close only the near-stop xyz:SPCX long",
+    "Restart v51 while positions remain open",
+    "Reduce protection or widen stops"
+  ],
+  "proposed_live_change": "Submit one reduce-only operator close for SOL and one for xyz:SPCX through the existing armed backend. Do not reverse, reopen, resize, alter leverage, cancel protection first, or grant any v52 order authority until the final flat preflight and clean epoch pass.",
+  "expected_upside": "Caps further exposure in retired routes, removes the operational need to keep the loaded v51 process managing timers, and permits the evidence-bound v52 launch after exact ledger reconciliation.",
+  "main_risks_and_failure_modes": [
+    "The positions may recover after closure, making the close economically worse than waiting",
+    "IOC exit slippage or fees may exceed the checkpoint estimate",
+    "A partial close or venue rejection could leave residual exposure requiring reconciliation",
+    "Stopping protection before a confirmed reduce-only fill would create naked exposure",
+    "Immediate closure is risk containment and cutover acceleration, not proof of exit-policy alpha"
+  ],
+  "validation_completed": [
+    "Backend and checkpoint identities match the active v51 run",
+    "Both positions and their reduce-only venue stops reconcile in the checkpoint",
+    "No runtime faults are reported",
+    "Transition drain is active and no post-drain entries have occurred",
+    "SOL path shows +33.2662 bps MFE, -41.6159 bps MAE, -33.9289 bps current directional return, and 117 consecutive opposed decisions",
+    "xyz:SPCX path shows +10.7005 bps MFE, -76.3304 bps MAE, and -41.3754 bps current directional return",
+    "Checkpoint estimates combined exit-now net near -$43.15 and combined stop net near -$85.28; these are estimates, not guaranteed fills",
+    "v52 technical package passed 102 relevant Python tests and 122 isolated Rust/TUI tests"
+  ],
+  "validation_still_required": [
+    "Fresh operator approval tied to these exact open lifecycles",
+    "Fresh pre-submit venue and ledger reconciliation",
+    "Accepted reduce-only acknowledgements and complete fills",
+    "Zero residual signed positions and zero owned orders",
+    "Final v51 accounting, fees, funding, slippage, and exit-reason reconciliation",
+    "Fresh v52 flat preflight, recoverable 0/0 epoch, startup, and poststart acceptance"
+  ],
+  "success_metrics": [
+    "Both exact positions close without reversal or duplicate order",
+    "No period of unprotected residual exposure",
+    "Final v51 ledgers and venue are flat and order-free",
+    "The first v52 checkpoint reports ALL-TIME 0/0 and CURRENT RUN 0/0",
+    "V52 poststart technical acceptance is accepted"
+  ],
+  "failure_or_rollback_triggers": [
+    "Stale run/profile identity",
+    "Missing or changed position identity",
+    "Missing stop before close submission",
+    "Partial fill, order rejection, residual exposure, or ledger/venue disagreement",
+    "Any v52 order before the clean boundary",
+    "Failed v52 preflight or poststart acceptance"
+  ],
+  "confidence_level": {
+    "technical_risk_containment": "high",
+    "immediate_close_beats_waiting_economically": "low_to_medium",
+    "cutover_acceleration": "high_if_reduce_only_closes_fill"
+  },
+  "explicit_approval_requested": "Approve or reject reduce-only closure of the exact current SOL and xyz:SPCX positions. No live close will be sent from this proposal alone.",
+  "limitations": [
+    "Checkpoint exit-now and stop-net values estimate fees but omit future funding and realized exit slippage",
+    "Open-path regime and excursion evidence is descriptive and can reverse after the cutoff",
+    "The mutable latest checkpoint is continuously refreshed; execution must revalidate exact current state",
+    "This proposal cannot place, cancel, resize, reverse, restart, or arm any strategy"
+  ],
+  "highest_value_next_investigation": {
+    "experiment": "prospective_v52_exact_live_route_collection",
+    "precondition": "v51 flat/order-free closure, final reconciliation, clean v52 epoch, and accepted v52 technical startup",
+    "priority": 1
+  }
+}

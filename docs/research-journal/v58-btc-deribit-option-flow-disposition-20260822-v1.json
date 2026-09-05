@@ -1,0 +1,54 @@
+{
+  "schema_version": "v58_btc_deribit_option_flow_disposition_v1",
+  "hypothesis_id": "V58_BTC_DERIBIT_OTM_DIRECTIONAL_FLOW_LONG_V1",
+  "recorded_at_utc": "2026-08-22T08:56:00Z",
+  "status": "rejected_closed_family",
+  "decision": "Reject the exact Deribit out-of-the-money directional-flow BTC long. Do not retune its thresholds, exits, delta band, expiry band, or sizing on the opened historical partitions. Do not add it to V58, future-only capture, paper routing, or live routing. Retain the current selective liquidity-sweep reversal long unchanged; it outperformed this candidate in development, validation, and pseudo-holdout nominal comparisons.",
+  "why_now": "The frozen experiment, realistic-cost stress cases, independent main-cell arithmetic audit, and exact five-fold trade reproduction are complete.",
+  "evidence_reviewed": [
+    "Registered source containing 8760 hourly rows, 6466828 unique raw option trades upstream, and zero unmatched instrument trade rows after exact official metadata supplementation.",
+    "Frozen five-fold development protocol and development, validation, and pseudo-holdout partitions.",
+    "Nominal 2-bps/no-delay, stress 5-bps/5-minute, and delayed 10-bps/60-minute scenarios with exact funding and declared fees.",
+    "Direction-inverted placebo, no-action, and current liquidity-sweep controls.",
+    "All 462 main trade rows, all 36 main summary cells, and all 14 development-fold trade rows reproduced exactly."
+  ],
+  "observed_problem_or_opportunity": "V58 lacks an ordinary bullish-continuation BTC route, but this option-flow rule did not solve that coverage gap with positive, stable after-cost evidence.",
+  "applicable_market_regime": "The tested rule attempted to detect bullish directional option-flow onsets across the frozen 2025-10-01 through 2026-08-01 entry partitions. The rejection applies to this exact mechanism and frozen economics, not to every conceivable BTC long.",
+  "alternatives_considered": {
+    "no_action": "Outperformed the candidate in both validation and pseudo-holdout nominal results.",
+    "current_liquidity_sweep_control": "Produced positive nominal net PnL in development, validation, and pseudo-holdout and exceeded the candidate in each partition, but remains deliberately sparse and has only seven validation trades.",
+    "direction_inverted_placebo": "Also lost in validation and pseudo-holdout; the candidate did not reliably separate itself from direction inversion.",
+    "nearby_option_flow_retuning": "Rejected because the data are now opened and the frozen candidate failed 25 acceptance checks; retuning would materially increase multiple-testing and overfitting risk."
+  },
+  "proposed_live_change": "none",
+  "expected_upside_of_decision": "Avoids deploying a higher-frequency BTC long that lost after costs and prevents repeated tuning on already-opened data while preserving the only tested control that outperformed it.",
+  "main_risks_and_failure_modes": [
+    "V58 remains short-biased and may miss ordinary BTC bullish continuation.",
+    "The sweep control's positive historical totals are based on sparse samples and do not establish future profitability.",
+    "One-minute bar replay cannot establish exact queue position, market impact, or every intrabar path.",
+    "Historical partitions cannot prove adaptation to a future regime."
+  ],
+  "validation_completed": {
+    "source_integrity": "pass",
+    "point_in_time_signal_construction": "pass",
+    "frozen_partition_execution": "pass",
+    "realistic_cost_and_latency_stress": "pass_as_test_rejected_candidate",
+    "development_fold_stability": "fail_candidate",
+    "validation": "fail_candidate",
+    "pseudo_holdout": "fail_candidate",
+    "largest_winner_exclusion": "fail_candidate",
+    "control_comparison": "fail_candidate",
+    "trade_level_reproduction": "pass"
+  },
+  "validation_still_required": "No further validation is authorized for this closed candidate. A future BTC-long proposal requires a materially new causal mechanism, a new outcome-blind preregistration, and sufficient untouched data.",
+  "success_metrics": "not_applicable_candidate_rejected",
+  "failure_or_rollback_triggers": "not_applicable_no_live_change",
+  "confidence_level": "High confidence that this exact candidate should not be promoted; medium confidence that retaining the sparse sweep control is preferable to removing it because its sample remains limited.",
+  "explicit_approval_requested": "none",
+  "hypothesis_ledger": {
+    "previous_state": "being_tested",
+    "new_state": "rejected",
+    "reopen_rule": "Only materially new causal information, a changed source assumption, or a new untouched regime window may justify a new hypothesis. Nearby option-flow tuning is not a valid reopen condition."
+  },
+  "single_highest_value_next_investigation": "Reconcile the latest live V58 BTC route ledger against provider eligibility and execution telemetry. Continue untouched prospective public-event collection; do not open another historical BTC-long family merely to increase trade frequency."
+}

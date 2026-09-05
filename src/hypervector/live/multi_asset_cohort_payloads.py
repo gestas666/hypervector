@@ -19,6 +19,8 @@ def asset_config_payload(asset: AssetLiveConfig) -> dict[str, object]:
         "venue_max_leverage": asset.venue_max_leverage,
         "margin_fraction": asset.margin_fraction,
         "max_notional_usd": asset.max_notional_usd,
+        "entry_slippage_cap_fraction": (asset.effective_entry_slippage_cap_fraction),
+        "market_slippage_cap_fraction": asset.market_slippage_cap_fraction,
         "stop_bps": asset.stop_bps,
         "maximum_hold_seconds": asset.maximum_hold_seconds,
     }
@@ -69,6 +71,7 @@ def intent_payload(intent: StrategyIntent) -> dict[str, object]:
         "reference_price": intent.reference_price,
         "source_reason": intent.reason,
         "stop_anchor": intent.stop_anchor,
+        "target_anchor": intent.target_anchor,
         "regime_alignment_score": intent.regime_alignment_score,
         "regime_alignment_stance": intent.regime_alignment_stance,
         "regime_decision_time_ms": intent.regime_decision_time_ms,

@@ -7,13 +7,13 @@ use ratatui::{
     Frame,
     layout::{Constraint, Direction, Layout, Rect},
     text::{Line, Span},
-    widgets::{Cell, Paragraph, Row, Table, TableState, Wrap},
+    widgets::{Cell, Paragraph, Row, Table, TableState},
 };
 
 use crate::app::App;
-use crate::backend_cohort::CohortProviderEvaluation;
-use crate::cohort_format::{eastern_time, fill_time};
-use crate::cohort_route_authority::{provider_route_label, provider_route_token};
+use crate::backend_cohort::{CohortProvider, CohortProviderEvaluation};
+use crate::cohort_route_authority::provider_route_token;
+use crate::cohort_route_contract::age_label;
 use crate::cohort_router_format::human_token;
 use crate::cohort_widgets::{WIDE_WIDTH, panel, provider_alias, render_empty};
 
@@ -21,12 +21,13 @@ const HULK_STRATEGY_ID: &str = "hulk_expansion_bidirectional_tuned_v2";
 
 /// Render recent selected actions and every visible withholding reason.
 pub(crate) fn render(frame: &mut Frame, app: &App, area: Rect) {
+    let evidence_rows = if area.width >= WIDE_WIDTH { 12 } else { 10 };
     let desired_readiness = if app.backend.cohort.evaluations.is_empty() {
         5
     } else {
-        app.backend.cohort.evaluations.len() as u16 + 8
+        app.backend.cohort.evaluations.len() as u16 + evidence_rows
     };
-    let readiness_height = desired_readiness.min(area.height.saturating_sub(11).max(5));
+    let readiness_height = desired_readiness.min(area.height.saturating_sub(8).max(7));
     let remaining_height = area.height.saturating_sub(3 + readiness_height);
     let actions_height = remaining_height / 2;
     let withheld_height = remaining_height.saturating_sub(actions_height);
@@ -57,23 +58,24 @@ fn render_summary(frame: &mut Frame, app: &App, area: Rect) {
             format!("ROUTED {}", app.backend.cohort.actions.len()),
             app.theme.bull,
         ),
-        Span::raw("        "),
+        Span::raw("    "),
         Span::styled(
             format!("WITHHELD {}", app.backend.cohort.withheld.len()),
             app.theme.gold,
         ),
-        Span::raw("        "),
+        Span::raw("    "),
         Span::styled(coverage, coverage_style),
-        Span::raw("        "),
+        Span::raw("    "),
         Span::styled(format!("SLOTS {open} / {maximum}"), app.theme.cyan),
         Span::raw(format!(
-            "        ASSETS {asset_count}        ONE POSITION PER COIN        {routing}"
+            "    ASSETS {asset_count}    ONE POSITION PER COIN    {routing}"
         )),
     ]);
     frame.render_widget(
-        Paragraph::new(line)
-            .centered()
-            .block(panel(" RECENT ROUTING WINDOW ", app)),
+        Paragraph::new(line).centered().block(panel(
+            " CURRENT RUN ROUTING // LATEST SETUP PER ROUTE ",
+            app,
+        )),
         area,
     );
 }
@@ -131,11 +133,15 @@ fn render_evaluations(frame: &mut Frame, app: &App, area: Rect) {
         return;
     }
     let wide = area.width >= WIDE_WIDTH;
-    let table_height =
-        (app.backend.cohort.evaluations.len() as u16 + 3).min(area.height.saturating_sub(5));
+    let detail_height = if wide { 9 } else { 7 };
+    let table_height = (app.backend.cohort.evaluations.len() as u16 + 3)
+        .min(area.height.saturating_sub(detail_height));
     let sections = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([Constraint::Length(table_height), Constraint::Min(5)])
+        .constraints([
+            Constraint::Length(table_height),
+            Constraint::Min(detail_height),
+        ])
         .split(area);
     let rows = app
         .backend
@@ -157,25 +163,17 @@ fn render_evaluations(frame: &mut Frame, app: &App, area: Rect) {
         .min(app.backend.cohort.evaluations.len().saturating_sub(1));
     let mut state = TableState::default().with_selected(Some(selected));
     frame.render_stateful_widget(table, sections[0], &mut state);
-    render_leading_setup(frame, app, sections[1]);
+    crate::cohort_setup_summary::render(frame, app, selected, sections[1], wide);
 }
 
 fn evaluation_row<'a>(evaluation: &'a CohortProviderEvaluation, app: &App, wide: bool) -> Row<'a> {
-    let provider = format!(
-        "{} [{}]",
-        provider_alias(&evaluation.strategy_id),
-        provider_route_token(
-            &app.backend.cohort.providers,
-            &evaluation.strategy_id,
-            &evaluation.symbol,
-            app.backend.live_armed,
-        )
-    );
+    let provider = provider_label(evaluation, app);
     let progress = readiness_bar(evaluation.readiness.readiness_fraction);
     let conditions = format!(
         "{}/{}",
         evaluation.readiness.conditions_met, evaluation.readiness.conditions_required
     );
+    let lifecycles = route_lifecycle_counts(evaluation, app);
     let status = evaluation_status(evaluation);
     let indicators = evaluation.readiness.indicators.join(" · ");
     let blockers = human_blockers(evaluation);
@@ -188,13 +186,16 @@ fn evaluation_row<'a>(evaluation: &'a CohortProviderEvaluation, app: &App, wide:
     };
     if wide {
         Row::new(vec![
-            Cell::from(eastern_time(&evaluation.observed_at)),
-            Cell::from(fill_time(evaluation.decision_time_ms)),
+            Cell::from(crate::cohort_format::fill_date_time(
+                evaluation.decision_time_ms,
+            )),
+            Cell::from(age_label(evaluation)),
             Cell::from(evaluation.symbol.as_str()).style(app.theme.title),
             Cell::from(provider),
-            Cell::from(evaluation.side.as_deref().unwrap_or("--").to_uppercase()),
+            Cell::from(evaluation_bias(evaluation, &app.backend.cohort.providers)),
             Cell::from(progress).style(style),
             Cell::from(conditions),
+            Cell::from(lifecycles),
             Cell::from(status),
             Cell::from(indicators),
             Cell::from(blockers).style(app.theme.gold),
@@ -203,13 +204,53 @@ fn evaluation_row<'a>(evaluation: &'a CohortProviderEvaluation, app: &App, wide:
         Row::new(vec![
             Cell::from(evaluation.symbol.as_str()).style(app.theme.title),
             Cell::from(provider),
-            Cell::from(evaluation.side.as_deref().unwrap_or("--").to_uppercase()),
+            Cell::from(evaluation_bias(evaluation, &app.backend.cohort.providers)),
             Cell::from(progress).style(style),
             Cell::from(conditions),
+            Cell::from(lifecycles),
             Cell::from(compact_evaluation_status(evaluation)),
             Cell::from(blockers).style(app.theme.gold),
         ])
     }
+}
+
+fn provider_label(evaluation: &CohortProviderEvaluation, app: &App) -> String {
+    format!(
+        "{} [{}]",
+        provider_alias(&evaluation.strategy_id),
+        provider_route_token(
+            &app.backend.cohort.providers,
+            &evaluation.strategy_id,
+            &evaluation.symbol,
+            app.backend.live_armed,
+        )
+    )
+}
+
+fn route_lifecycle_counts(evaluation: &CohortProviderEvaluation, app: &App) -> String {
+    let matches = |strategy_id: &str, symbol: &str| {
+        strategy_id == evaluation.strategy_id && symbol == evaluation.symbol
+    };
+    let current_profile = app.backend.cohort_checkpoint.profile_fingerprint.as_deref();
+    let open = app
+        .backend
+        .cohort_checkpoint
+        .open_trade_reflections
+        .iter()
+        .filter(|trade| matches(&trade.strategy_id, &trade.symbol))
+        .count();
+    let exited = app
+        .backend
+        .cohort_checkpoint
+        .trade_reflections
+        .iter()
+        .filter(|trade| {
+            let profile_matches = current_profile.is_none()
+                || trade.source_profile_fingerprint.as_deref() == current_profile;
+            matches(&trade.strategy_id, &trade.symbol) && profile_matches
+        })
+        .count();
+    format!("{}/{}/{}", open + exited, open, exited)
 }
 
 fn readiness_bar(fraction: f64) -> String {
@@ -223,7 +264,37 @@ fn readiness_bar(fraction: f64) -> String {
     )
 }
 
-fn evaluation_status(evaluation: &CohortProviderEvaluation) -> String {
+/// Return the observed side or the exact configured one-sided route bias.
+pub(crate) fn evaluation_bias(
+    evaluation: &CohortProviderEvaluation,
+    providers: &[CohortProvider],
+) -> String {
+    if let Some(side) = evaluation
+        .side
+        .as_deref()
+        .or(evaluation.readiness.side.as_deref())
+    {
+        return side.to_uppercase();
+    }
+    let Some(provider) = providers.iter().find(|provider| {
+        provider.strategy_id == evaluation.strategy_id
+            && provider.symbols.contains(&evaluation.symbol)
+    }) else {
+        return "--".into();
+    };
+    let sides = provider
+        .execution_side_overrides
+        .get(&evaluation.symbol)
+        .unwrap_or(&provider.sides);
+    match sides.as_slice() {
+        [side] if side == "long" => "CFG-L".into(),
+        [side] if side == "short" => "CFG-S".into(),
+        _ => "--".into(),
+    }
+}
+
+/// Format the backend decision without turning readiness into an action.
+pub(crate) fn evaluation_status(evaluation: &CohortProviderEvaluation) -> String {
     if let Some(reason) = evaluation.backend_non_action_reason.as_deref() {
         return format!("READINESS ONLY · {}", human_token(reason));
     }
@@ -280,32 +351,22 @@ fn human_blockers(evaluation: &CohortProviderEvaluation) -> String {
     }
 }
 
-fn is_eligible_hulk(evaluation: &CohortProviderEvaluation) -> bool {
+/// Distinguish optional Hulk support gaps from required entry conditions.
+pub(crate) fn is_eligible_hulk(evaluation: &CohortProviderEvaluation) -> bool {
     evaluation.strategy_id == HULK_STRATEGY_ID && evaluation.eligible
-}
-
-fn leading_gaps(evaluation: &CohortProviderEvaluation) -> String {
-    if evaluation.readiness.blockers.is_empty() {
-        return "NONE".into();
-    }
-    let gaps = evaluation.readiness.blockers.join(" · ");
-    if is_eligible_hulk(evaluation) {
-        format!("SUPPORT ONLY · {gaps}")
-    } else {
-        gaps
-    }
 }
 
 fn evaluation_header(wide: bool) -> Row<'static> {
     if wide {
         Row::new([
-            "ARRIVAL ET",
-            "DECISION ET",
+            "SIGNAL DATE ET",
+            "AGE",
             "COIN",
             "PROVIDER [AUTH]",
             "BIAS",
             "READINESS",
             "MET",
+            "ENT/OPEN/EXIT",
             "SIGNAL / WHY",
             "LIVE INDICATORS",
             "NEXT GAPS",
@@ -317,6 +378,7 @@ fn evaluation_header(wide: bool) -> Row<'static> {
             "BIAS",
             "READINESS",
             "MET",
+            "ENT/OPEN/EXIT",
             "SIGNAL / WHY",
             "NEXT GAPS",
         ])
@@ -326,92 +388,28 @@ fn evaluation_header(wide: bool) -> Row<'static> {
 fn evaluation_widths(wide: bool) -> Vec<Constraint> {
     if wide {
         vec![
-            Constraint::Length(12),
-            Constraint::Length(12),
-            Constraint::Length(12),
-            Constraint::Length(23),
+            Constraint::Length(16),
+            Constraint::Length(8),
+            Constraint::Length(9),
+            Constraint::Length(24),
             Constraint::Length(5),
             Constraint::Length(13),
             Constraint::Length(5),
-            Constraint::Length(24),
-            Constraint::Length(28),
-            Constraint::Min(25),
+            Constraint::Length(13),
+            Constraint::Length(22),
+            Constraint::Length(25),
+            Constraint::Min(18),
         ]
     } else {
         vec![
-            Constraint::Length(12),
-            Constraint::Length(23),
+            Constraint::Length(13),
+            Constraint::Length(24),
             Constraint::Length(5),
             Constraint::Length(13),
             Constraint::Length(5),
-            Constraint::Length(24),
-            Constraint::Min(27),
+            Constraint::Length(10),
+            Constraint::Length(22),
+            Constraint::Min(17),
         ]
     }
-}
-
-fn render_leading_setup(frame: &mut Frame, app: &App, area: Rect) {
-    let Some(leading) = leading_evaluation(&app.backend.cohort.evaluations) else {
-        return;
-    };
-    let header = format!(
-        "{} · {} · ROUTE {} · {} · {:.0}% ({}/{}) · {}",
-        leading.symbol,
-        provider_alias(&leading.strategy_id),
-        provider_route_label(
-            &app.backend.cohort.providers,
-            &leading.strategy_id,
-            &leading.symbol,
-            app.backend.live_armed,
-        ),
-        leading.side.as_deref().unwrap_or("--").to_uppercase(),
-        leading.readiness.readiness_fraction * 100.0,
-        leading.readiness.conditions_met,
-        leading.readiness.conditions_required,
-        evaluation_status(leading),
-    );
-    let lines = vec![
-        Line::from(Span::styled(header, app.theme.title)),
-        Line::from(format!(
-            "INDICATORS  {}",
-            leading.readiness.indicators.join(" · ")
-        )),
-        Line::from(format!(
-            "{:<11}{}  //  SOURCE REASON {}",
-            if is_eligible_hulk(leading) {
-                "SUPPORT"
-            } else {
-                "BLOCKERS"
-            },
-            leading_gaps(leading),
-            leading.reason,
-        )),
-    ];
-    frame.render_widget(
-        Paragraph::new(lines).wrap(Wrap { trim: true }).block(panel(
-            " LEADING SETUP // HIGHEST PREREQUISITE COMPLETION ",
-            app,
-        )),
-        area,
-    );
-}
-
-fn leading_evaluation(
-    evaluations: &[CohortProviderEvaluation],
-) -> Option<&CohortProviderEvaluation> {
-    evaluations.iter().max_by(|left, right| {
-        left.eligible
-            .cmp(&right.eligible)
-            .then_with(|| {
-                left.readiness
-                    .readiness_fraction
-                    .total_cmp(&right.readiness.readiness_fraction)
-            })
-            .then_with(|| {
-                left.readiness
-                    .conditions_met
-                    .cmp(&right.readiness.conditions_met)
-            })
-            .then_with(|| left.decision_time_ms.cmp(&right.decision_time_ms))
-    })
 }

@@ -1,0 +1,123 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "eth-breakout-precompression-pullback",
+  "revision_number": 14,
+  "supersedes_revision_id": "eth-breakout-precompression-pullback-v13",
+  "created_at_utc": "2026-08-18T11:09:00Z",
+  "status": "first_exact_eligible_lifecycle_adverse",
+  "symbol": "ETH",
+  "strategy_id": "eth_breakout_precompression_pullback_bidirectional_v1",
+  "hypothesis": "The unchanged ETH compression-pullback route may add useful portfolio cadence if exact source-native eligible lifecycles remain positive after visible-depth fills, fees, funding, stops, and largest-winner sensitivity.",
+  "decision": "Do not add ETH to v55 and do not loosen its onset requirement. The first new source-compatible eligible long resolved through the frozen 60-bps stop for -69.13 bps after exact visible-depth entry and exit, taker fees, and official funding. Continue the unchanged observer only as report-only evidence; require materially more both-side resolved evidence before reconsideration.",
+  "contract": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_live_change": false,
+    "runtime_strategy_changed": false,
+    "actual_order_or_fill_claimed": false,
+    "v55_changed": false
+  },
+  "frozen_identity": {
+    "run_id": "bidirectional-observe-1786973060386",
+    "profile_id": "multi_asset_eth_pullback_forward_observer_v1",
+    "profile_fingerprint": "5761fe86d7b853629a2b982c6c41c103e8a11f1d8d901703aaac2dacfe27754d",
+    "side": "long",
+    "decision_time_ms": 1787018100000,
+    "notional_usd": 750.0,
+    "stop_bps": 60.0,
+    "target_policy": "none",
+    "maximum_hold_seconds": 43200,
+    "taker_fee_rate": 0.00045
+  },
+  "exact_forward_lifecycle": {
+    "entry_time_ms": 1787018116659,
+    "entry_price": 1899.9,
+    "entry_levels_consumed": 1,
+    "exit_time_ms": 1787023292854,
+    "exit_price": 1888.5,
+    "exit_reason": "protective_stop",
+    "gross_return_bps": -60.00315806095058,
+    "fee_bps": 8.972998578872573,
+    "funding_bps": -0.15665900000000002,
+    "net_return_bps": -69.13281563982316,
+    "simulated_net_pnl_usd": -5.184961172986737,
+    "technical_incomplete": 0,
+    "actual_order_or_fill_claimed": false
+  },
+  "evidence_context": {
+    "forward_window_evaluations": 1272,
+    "eligible_evaluations": 1,
+    "eligible_long": 1,
+    "eligible_short": 0,
+    "withheld_reason": "observe_mode_no_execution",
+    "historical_estimated_trades_per_week": 6.48219,
+    "prior_exact_live_lifecycles": 3,
+    "prior_exact_live_net_usd": 0.198733,
+    "prior_exact_live_net_excluding_largest_winner_usd": 0.004716,
+    "interpretation": "The new eligible event confirms the source can fire at a potentially useful cadence, but its exact resolved loss weakens rather than strengthens the already fragile economic case."
+  },
+  "technical_incident_and_repair": {
+    "incident": "The exact-depth adapter rejected 320 observer book rows because venue time led local receipt time by 1.21 to 1.75 seconds during one bounded interval.",
+    "root_cause": "The adapter assumed venue exchange time could not lead the machine wall clock.",
+    "repair": "Preserve local receipt and venue time, use max(exchange, local receipt) as causal availability, and fail closed above 5000 milliseconds.",
+    "live_backend_affected": false,
+    "strategy_logic_changed": false,
+    "validation": "Two red-to-green clock-skew regressions plus exact-depth, config-binding, and observer-book suites passed."
+  },
+  "analysis": {
+    "confidence": "high_on_path_arithmetic_low_on_long_run_expectancy",
+    "normal_variance_or_defect": "One loss does not prove the strategy is bad. The clock-skew failure was a report-only adapter defect and did not cause the trade outcome. The economic result is one source-compatible observation and remains dominated by sampling uncertainty.",
+    "comparison_with_no_action": "Keeping ETH outside v55 avoids adding a route whose newest exact eligible lifecycle lost and whose prior live aggregate was nearly zero after removing one winner.",
+    "failure_modes": [
+      "Recorded visible depth may differ from a real IOC because of cancellations between snapshots.",
+      "One new lifecycle cannot estimate stable expectancy or side symmetry.",
+      "The prior three-live-trade aggregate was dominated by one winner.",
+      "The opened historical final block was negative after removing its largest winner."
+    ]
+  },
+  "recommendation": {
+    "recommendation": "Reject ETH as the immediate v55 cadence addition; continue the exact frozen observer without retuning.",
+    "why_now": "The observer finally emitted an eligible event and its full configured stop lifecycle is now resolved rather than inferred from readiness rows.",
+    "evidence_reviewed": "The 1272-evaluation forward prefix, exact visible-depth entry and stop exit, official funding history, source-bound fees, prior three exact live lifecycles, and prior chronological replay.",
+    "observed_problem_or_opportunity": "ETH can produce a qualifying event, but the first new forward lifecycle lost -69.13 bps and the cumulative evidence remains sparse and outlier-sensitive.",
+    "applicable_market_regime": "A long ETH pullback after a fresh short-side five-minute breakout in mixed 1m/5m/15m structure.",
+    "alternatives_considered": "Add ETH immediately, remove onset, add a fixed target, select long only, retune after this loss, stop the observer, or continue the frozen route.",
+    "proposed_live_change": "none",
+    "expected_upside": "Avoids exposing live capital to a candidate that has not shown robust source-compatible edge while retaining its future evidence stream.",
+    "main_risks_and_failure_modes": "The rejection may delay a real but low-win-rate edge; continued collection costs research time; future results may rotate by side or regime.",
+    "validation_completed": "Exact identity, causal depth, bounded clock normalization, stop path, fees, official funding, source hashes, and no-execution authority.",
+    "validation_still_required": "Resolved long and short lifecycles in a preregistered compatible window, positive after-cost net and positive largest-winner-removed net, exact stop and latency behavior, and stable source parity.",
+    "success_metrics": "Positive compatible net and largest-winner-removed net with both sides represented and no technical gaps or dominant single winner.",
+    "failure_or_rollback_triggers": "No rollback applies because no live change is proposed. Any identity, source, funding, depth, or generator mismatch invalidates this result.",
+    "confidence_level": "high_path_low_profitability",
+    "explicit_approval_requested": false
+  },
+  "highest_value_next_investigation": {
+    "rank": 1,
+    "experiment": "first_source_native_spcx_cash_open_decision_and_lifecycle",
+    "reason": "SPCX remains the only current higher-cadence development-positive route, while ETH just produced adverse exact forward evidence.",
+    "change_authority": "none"
+  },
+  "falsifiers": [
+    "The immutable exact-depth artifact does not reproduce the stated entry, stop, fee, funding, or net result.",
+    "A preregistered compatible ETH window becomes positive after costs and after largest-winner removal with both sides represented.",
+    "The clock-skew adapter accepts venue lead above 5000 milliseconds or loses either raw clock."
+  ],
+  "source_evidence": [
+    {
+      "path": "data/logs/research/bidirectional_cohort/eth_pullback_eligible_exact_depth_20260818T1108Z_v2.json",
+      "sha256": "7ab2676191134f56c5ab587bbb6e873fb50731ec5e3a6563ea620059e3942af6",
+      "bytes": 4676
+    },
+    {
+      "path": "data/logs/research/bidirectional_cohort/eth_pullback_prospective_window_20260818T1058Z_v5.json",
+      "sha256": "1e72e043d37541fc4286caa71c75978f748f43b0c6a3be1be6f9ed4d591db588",
+      "bytes": 6009
+    },
+    {
+      "path": "docs/research-journal/eth-breakout-precompression-pullback-v13.json",
+      "sha256": "cd8b81df043435fdd70a224d741f5581ea6c515ba3a5a1dae348ca4d1131eb59",
+      "bytes": 8920
+    }
+  ]
+}

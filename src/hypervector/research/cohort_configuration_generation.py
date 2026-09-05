@@ -30,8 +30,11 @@ class ConfigurationGenerationExpectation:
     source_modified_at_utc: str
     profile_fingerprint: str
     provider_execution_scopes: tuple[tuple[str, tuple[str, ...]], ...] = ()
+    provider_observation_directions: tuple[tuple[str, str, tuple[str, ...]], ...] = ()
     provider_execution_directions: tuple[tuple[str, str, tuple[str, ...]], ...] = ()
     asset_sizing: tuple[tuple[str, float, float, float], ...] = ()
+    asset_entry_slippage_caps: tuple[tuple[str, float], ...] = ()
+    asset_market_slippage_caps: tuple[tuple[str, float], ...] = ()
     entry_context_overrides: tuple[tuple[str, str, str], ...] = ()
     provider_sizing_overrides: tuple[tuple[str, str, float, float], ...] = ()
     provider_directional_sizing_overrides: tuple[
@@ -57,8 +60,13 @@ def load_configuration_expectation(
         source_modified_at_utc=modified_at.isoformat(),
         profile_fingerprint=config.profile_fingerprint,
         provider_execution_scopes=_provider_execution_scope_expectation(config),
+        provider_observation_directions=_provider_observation_direction_expectation(
+            config
+        ),
         provider_execution_directions=_provider_execution_direction_expectation(config),
         asset_sizing=_asset_sizing_expectation(config),
+        asset_entry_slippage_caps=_asset_entry_slippage_cap_expectation(config),
+        asset_market_slippage_caps=_asset_market_slippage_cap_expectation(config),
         entry_context_overrides=_entry_context_expectation(config),
         provider_sizing_overrides=_provider_sizing_expectation(config),
         provider_directional_sizing_overrides=_directional_sizing_expectation(config),
@@ -80,6 +88,28 @@ def _asset_sizing_expectation(
                 asset.margin_fraction,
                 asset.max_notional_usd,
             )
+            for asset in config.assets
+        )
+    )
+
+
+def _asset_market_slippage_cap_expectation(
+    config: MultiAssetLiveConfig,
+) -> tuple[tuple[str, float], ...]:
+    return tuple(
+        sorted(
+            (asset.symbol, asset.market_slippage_cap_fraction)
+            for asset in config.assets
+        )
+    )
+
+
+def _asset_entry_slippage_cap_expectation(
+    config: MultiAssetLiveConfig,
+) -> tuple[tuple[str, float], ...]:
+    return tuple(
+        sorted(
+            (asset.symbol, asset.effective_entry_slippage_cap_fraction)
             for asset in config.assets
         )
     )
@@ -111,6 +141,22 @@ def _provider_execution_direction_expectation(
             )
             for provider in config.providers
             for symbol in provider.execution_symbols
+        )
+    )
+
+
+def _provider_observation_direction_expectation(
+    config: MultiAssetLiveConfig,
+) -> tuple[tuple[str, str, tuple[str, ...]], ...]:
+    return tuple(
+        sorted(
+            (
+                provider.strategy_id,
+                symbol,
+                tuple(sorted(provider.sides)),
+            )
+            for provider in config.providers
+            for symbol in provider.symbols
         )
     )
 
@@ -185,6 +231,12 @@ def configuration_generation_evidence(
             "config modification time",
         ),
         "current_asset_sizing": _asset_sizing_evidence(expectation.asset_sizing),
+        "current_asset_entry_slippage_caps": _asset_market_slippage_cap_evidence(
+            expectation.asset_entry_slippage_caps
+        ),
+        "current_asset_market_slippage_caps": _asset_market_slippage_cap_evidence(
+            expectation.asset_market_slippage_caps
+        ),
         "current_entry_context_overrides": _entry_context_override_evidence(
             expectation.entry_context_overrides
         ),
@@ -220,6 +272,12 @@ def _attach_provider_scope_evidence(
     if expectation.provider_execution_scopes:
         evidence["current_provider_execution_scopes"] = (
             _provider_execution_scope_evidence(expectation.provider_execution_scopes)
+        )
+    if expectation.provider_observation_directions:
+        evidence["current_provider_observation_directions"] = (
+            _provider_execution_direction_evidence(
+                expectation.provider_observation_directions
+            )
         )
     if expectation.provider_execution_directions:
         evidence["current_provider_execution_directions"] = (
@@ -293,6 +351,24 @@ def _asset_sizing_evidence(
             "margin_fraction": margin,
             "max_notional_usd": cap,
         }
+    return evidence
+
+
+def _asset_market_slippage_cap_evidence(
+    caps: tuple[tuple[str, float], ...],
+) -> dict[str, float]:
+    evidence: dict[str, float] = {}
+    for symbol, market_slippage_cap_fraction in caps:
+        asset = _required_text(symbol, "asset IOC cap symbol")
+        cap = _finite_number(
+            market_slippage_cap_fraction,
+            "asset market slippage cap fraction",
+        )
+        if "|" in asset or not 0.0 <= cap <= 0.05:
+            raise ValueError("asset market slippage cap is invalid")
+        if asset in evidence:
+            raise ValueError("asset IOC cap symbol must be unique")
+        evidence[asset] = cap
     return evidence
 
 

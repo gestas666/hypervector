@@ -68,6 +68,7 @@ CLI_COMMANDS: tuple[str, ...] = (
     "hl-funding-fetch",
     "oxa-book-fetch",
     "oxa-candle-fetch",
+    "oxa-liquidation-fetch",
     "oxa-price-fetch",
     "oxa-trade-fetch",
     "research-db-build",

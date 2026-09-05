@@ -12,6 +12,7 @@ from types import ModuleType
 
 import pytest
 
+from cohort_observer_audit_assertions import assert_observer_audit_baseline
 from hypervector.research.cohort_observer_audit import audit_cohort_observer_run
 
 _SYMBOLS = ("BTC", "ETH", "SOL", "HYPE")
@@ -25,69 +26,73 @@ def test_report_separates_setup_progression_from_unobserved_edge() -> None:
     """Readiness movement remains diagnostic when no outcomes or fills exist."""
     report = audit_cohort_observer_run(_observer_rows(), run_id=_RUN_ID)
 
-    assert report["observer_contract"] == {
-        "report_only": True,
-        "execution_authority": "none",
-        "orders_observed": False,
-        "fills_observed": False,
-        "profitability_measured": False,
-        "performance_gate": False,
-        "runtime_strategy_changed": False,
+    assert_observer_audit_baseline(report)
+
+
+def test_readiness_preserves_historical_eligible_counts_by_side() -> None:
+    """Later readiness rows must not erase the side of an eligible event."""
+    report = audit_cohort_observer_run(_observer_rows(), run_id=_RUN_ID)
+    route = f"{_HULK}|BTC"
+
+    assert report["readiness"]["by_provider_symbol"][route].get("eligible_by_side") == {
+        "long": 1,
+        "short": 0,
     }
+
+
+def test_identical_resume_configuration_identity_is_accepted() -> None:
+    """A resumed frozen run may restate, but not change, its exact identity."""
+    rows = _observer_rows()
+    rows.append(
+        _row(
+            len(rows) + 1,
+            "configuration_identity",
+            _identity(),
+            "2026-08-01T12:31:00+00:00",
+        )
+    )
+
+    report = audit_cohort_observer_run(rows, run_id=_RUN_ID)
+
     assert report["run"]["run_id"] == _RUN_ID
-    assert report["run"]["symbols"] == list(_SYMBOLS)
-    assert report["runtime"]["poll_cycles"] == 2
-    assert report["runtime"]["routing_cycles"] == 2
-    assert report["runtime"]["evaluation_cycles"] == 2
-    assert report["technical"]["expected_provider_symbols"] == 8
-    assert report["technical"]["initial_provider_symbols"] == 8
-    assert report["technical"]["observed_provider_symbols"] == 8
-    assert report["technical"]["technical_gaps"] == []
     assert report["technical"]["complete"] is True
-    timing = report["technical"]["decision_timing_seconds"]
-    assert timing["startup_seed_age_by_provider"][_HULK]["count"] == 4
-    assert timing["startup_seed_age_by_provider"][_HULK]["maximum"] == 2.0
-    assert timing["steady_state_arrival_lag_by_provider"][_HULK]["count"] == 4
-    assert timing["steady_state_arrival_lag_by_provider"][_HULK]["maximum"] == 2.0
-    assert "arrival_lag_seconds_by_provider" not in report["technical"]
-    assert report["signals"]["strategy_intents"] == 1
-    assert report["signals"]["eligible_evaluations"] == 1
-    assert report["signals"]["routed_actions"] == 0
-    assert report["signals"]["withheld_reasons"] == {"observe_mode_no_execution": 1}
-    outcomes = report["signal_outcomes"]
-    assert outcomes["contract"] == {
-        "counterfactual_only": True,
-        "fills_assumed": False,
-        "pnl_claimed": False,
-        "execution_authority": "none",
-        "model_trained": False,
-        "thresholds_selected": False,
-    }
-    assert outcomes["preactivation_annotations_excluded"] == 8
-    assert outcomes["evaluations"] == 8
-    assert outcomes["eligible_evaluations"] == 1
-    assert outcomes["coverage"]["market_data_complete"] is True
-    hulk_btc = report["readiness"]["by_provider_symbol"][f"{_HULK}|BTC"]
-    assert hulk_btc["count"] == 2
-    assert hulk_btc["first_fraction"] == 0.5
-    assert hulk_btc["latest_fraction"] == 1.0
-    assert hulk_btc["progressions"] == 1
-    assert hulk_btc["regressions"] == 0
-    assert hulk_btc["state_transitions"] == 1
-    assert hulk_btc["latest_side"] == "long"
-    assert report["learning"] == {
-        "evidence_state": "setup_and_signal_paths_only_no_execution_outcomes",
-        "signal_path_descriptives_identifiable": True,
-        "strategy_edge_identifiable": False,
-        "profitability_identifiable": False,
-        "execution_quality_identifiable": False,
-        "valid_uses": [
-            "technical_parity",
-            "signal_cadence",
-            "setup_progression",
-            "blocker_attribution",
-        ],
-    }
+
+
+def test_conflicting_resume_configuration_identity_is_rejected() -> None:
+    """A resumed run cannot mutate its frozen provider or risk contract."""
+    rows = _observer_rows()
+    changed = _identity()
+    changed["position_policy"] = {"maximum_concurrent_positions": 3}
+    rows.append(
+        _row(
+            len(rows) + 1,
+            "configuration_identity",
+            changed,
+            "2026-08-01T12:31:00+00:00",
+        )
+    )
+
+    with pytest.raises(ValueError, match="configuration identity"):
+        audit_cohort_observer_run(rows, run_id=_RUN_ID)
+
+
+def test_report_only_strategy_evidence_restatement_is_accepted() -> None:
+    """Research annotations may advance without changing executable identity."""
+    rows = _observer_rows()
+    annotated = _identity()
+    annotated["strategy_evidence"] = [{"status": "new_report_only_evidence"}]
+    rows.append(
+        _row(
+            len(rows) + 1,
+            "configuration_identity",
+            annotated,
+            "2026-08-01T12:31:00+00:00",
+        )
+    )
+
+    report = audit_cohort_observer_run(rows, run_id=_RUN_ID)
+
+    assert report["technical"]["complete"] is True
 
 
 def test_data_defects_are_reported_without_success_shaping() -> None:
@@ -126,6 +131,26 @@ def test_data_defects_are_reported_without_success_shaping() -> None:
     ]
 
 
+def test_restart_seed_duplicates_are_reported_but_not_actionable() -> None:
+    """Repeated pre-activation readiness cannot masquerade as a new decision."""
+    rows = _observer_rows()
+    routings = [row for row in rows if row["event_type"] == "intent_routing"]
+    initial = routings[0]["payload"]["evaluations"][0]
+    initial["backend_non_action_reason"] = "pre_activation_readiness_seed"
+    duplicate = dict(initial)
+    duplicate["readiness"] = dict(initial["readiness"])
+    routings[1]["payload"]["evaluations"].append(duplicate)
+
+    technical = audit_cohort_observer_run(rows, run_id=_RUN_ID)["technical"]
+    timing = technical["decision_timing_seconds"]
+
+    assert technical["duplicate_evaluations"] == 0
+    assert technical["preactivation_duplicate_evaluations"] == 1
+    assert technical["complete"] is True
+    assert timing["startup_seed_age_by_provider"][_HULK]["maximum"] == 1_802.0
+    assert timing["steady_state_arrival_lag_by_provider"][_HULK]["maximum"] == 2.0
+
+
 def test_runtime_separates_degraded_public_data_cycles() -> None:
     """Recoverable skipped cycles remain distinct from successful polls."""
     rows = _observer_rows()
@@ -142,14 +167,85 @@ def test_runtime_separates_degraded_public_data_cycles() -> None:
             "2026-08-01T12:30:18+00:00",
         )
     )
+    rows.append(
+        _row(9, "heartbeat", {"status": "running"}, "2026-08-01T12:30:33+00:00")
+    )
 
     runtime = audit_cohort_observer_run(rows, run_id=_RUN_ID)["runtime"]
 
-    assert runtime["poll_cycles"] == 3
-    assert runtime["successful_poll_cycles"] == 2
+    assert runtime["poll_cycles"] == 4
+    assert runtime["successful_poll_cycles"] == 3
     assert runtime["degraded_poll_cycles"] == 1
     assert runtime["degraded_sources"] == {"hyperliquid_public_l2": 1}
     assert runtime["degraded_reasons"] == {"transport_timeout_retry_exhausted": 1}
+    assert runtime["first_degraded_observed_at_utc"] == "2026-08-01T12:30:18+00:00"
+    assert runtime["last_degraded_observed_at_utc"] == "2026-08-01T12:30:18+00:00"
+    assert runtime["successful_polls_since_last_degraded"] == 1
+    assert runtime["latest_poll_status"] == "running"
+
+
+def test_poll_gap_beyond_entry_delay_is_a_technical_gap() -> None:
+    """A silent observer interval cannot support complete opportunity coverage."""
+    rows = _observer_rows()
+    identity = rows[0]["payload"]
+    assert isinstance(identity, dict)
+    identity["runtime"] = {"poll_seconds": 15.0}
+    providers = identity["providers"]
+    assert isinstance(providers, list)
+    for provider in providers:
+        assert isinstance(provider, dict)
+        provider["maximum_entry_delay_seconds"] = 30
+
+    technical = audit_cohort_observer_run(rows, run_id=_RUN_ID)["technical"]
+
+    assert technical["complete"] is False
+    assert technical["technical_gaps"] == ["observer_heartbeat_gap_exceeds_entry_delay"]
+
+
+def test_complete_scheduled_decisions_override_a_long_heartbeat_interval() -> None:
+    """Exact timely decision coverage must outrank a coarse heartbeat proxy."""
+    rows = _observer_rows()
+    identity = rows[0]["payload"]
+    assert isinstance(identity, dict)
+    providers = identity["providers"]
+    assert isinstance(providers, list)
+    for provider in providers:
+        assert isinstance(provider, dict)
+        provider["timeframe"] = "30m"
+        provider["maximum_entry_delay_seconds"] = 30
+    rows.append(
+        _row(8, "heartbeat", {"status": "running"}, "2026-08-01T12:30:33+00:00")
+    )
+
+    technical = audit_cohort_observer_run(rows, run_id=_RUN_ID)["technical"]
+
+    assert technical["complete"] is True
+    assert technical["technical_gaps"] == []
+
+
+def test_missing_scheduled_decision_keeps_runtime_coverage_incomplete() -> None:
+    """Schedule-aware coverage must still fail closed on one omitted route row."""
+    rows = _observer_rows()
+    identity = rows[0]["payload"]
+    assert isinstance(identity, dict)
+    providers = identity["providers"]
+    assert isinstance(providers, list)
+    for provider in providers:
+        assert isinstance(provider, dict)
+        provider["timeframe"] = "30m"
+        provider["maximum_entry_delay_seconds"] = 30
+    routings = [row for row in rows if row["event_type"] == "intent_routing"]
+    evaluations = routings[-1]["payload"]["evaluations"]
+    assert isinstance(evaluations, list)
+    evaluations.pop()
+    rows.append(
+        _row(8, "heartbeat", {"status": "running"}, "2026-08-01T12:30:33+00:00")
+    )
+
+    technical = audit_cohort_observer_run(rows, run_id=_RUN_ID)["technical"]
+
+    assert technical["complete"] is False
+    assert technical["technical_gaps"] == ["observer_heartbeat_gap_exceeds_entry_delay"]
 
 
 def test_hold_direction_conflict_is_an_explicit_observer_gap() -> None:

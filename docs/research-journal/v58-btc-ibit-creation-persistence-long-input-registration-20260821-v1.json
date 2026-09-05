@@ -1,0 +1,192 @@
+{
+  "schema_version": "v58_btc_ibit_creation_persistence_long_input_registration_v1",
+  "hypothesis_id": "V58_BTC_IBIT_CREATION_PERSISTENCE_LONG_V1",
+  "generated_at_utc": "2026-08-21T21:15:00Z",
+  "status": "inputs_hash_bound_before_candidate_signal_or_return_results",
+  "authority": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_promotion": false,
+    "automatic_live_change": false,
+    "runtime_strategy_changed": false
+  },
+  "change_scope": {
+    "candidate_signal_count_inspected": false,
+    "candidate_returns_inspected": false,
+    "candidate_pnl_inspected": false,
+    "candidate_acceptance_inspected": false,
+    "live_configuration_changed": false,
+    "orders_supported": false
+  },
+  "preregistration": {
+    "path": "/Users/gestas/Prototypes/hypervector/docs/research-journal/v58-btc-ibit-creation-persistence-long-preregistration-20260821-v1.json",
+    "bytes": 20658,
+    "sha256": "b40b5460e21f7925cad1c5ddcbcb1deac3b290ee0e937cee99af73f137747df7"
+  },
+  "source_evidence": {
+    "source_integrity_addendum": {
+      "path": "/Users/gestas/Prototypes/hypervector/docs/research-journal/v58-btc-ibit-creation-persistence-long-source-integrity-addendum-20260821-v1.json",
+      "bytes": 4393,
+      "sha256": "237ea157349fea6a60c8be2112039df7e7f62f234d8e80869294186a0ab093f9"
+    },
+    "blackrock_ibit_manifest": {
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/blackrock/IBIT/20240105_20260820_history_v1/manifest.json",
+      "bytes": 1982,
+      "sha256": "8a2bb2fff0a6b2d8db610791a5f64e8f010577ee9b4bccfe5f0e51d8ca0d7db1"
+    },
+    "blackrock_ibit_raw": {
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/blackrock/IBIT/20240105_20260820_history_v1/fund_data.xml",
+      "bytes": 254590,
+      "sha256": "6ca21076c2cba56e5e5220c88f0afa85a657b93294b95d10cb8a185f74068829"
+    },
+    "blackrock_ibit_history": {
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/blackrock/IBIT/20240105_20260820_history_v1/history.parquet",
+      "bytes": 18681,
+      "sha256": "bcf89c1977b4643d6bc973e803ad15a8140150926959354942c4f9c45536fbd0"
+    },
+    "hyperliquid_btc_1m_bars": {
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/BTC_1m_365d.parquet",
+      "bytes": 13014449,
+      "sha256": "b0742553ebeaa7cb4af6fabfd496f5462354cb541705fd0ca5ec222dc21e15d8"
+    },
+    "hyperliquid_btc_hourly_funding": {
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/hyperliquid/BTC/20250728T000000000000Z_20260728T000000000000Z_funding/funding.parquet",
+      "bytes": 184165,
+      "sha256": "1a222f783af9d5b52f500e259a89911e54c5f9c96dcab45dea466a166fc109c6"
+    }
+  },
+  "source_quality": {
+    "blackrock_raw_historical_rows": 660,
+    "blackrock_normalized_valid_observation_rows": 658,
+    "blackrock_first_as_of_date": "2024-01-05",
+    "blackrock_last_as_of_date": "2026-08-20",
+    "duplicate_as_of_dates": 0,
+    "split_like_discontinuities": 0,
+    "excluded_share_placeholder_dates": [
+      "2024-03-29",
+      "2024-03-31"
+    ],
+    "placeholder_rows_on_or_after_frozen_market_start": 0,
+    "normalized_equals_reparse_of_registered_raw": true,
+    "manifest_file_evidence_verified": true,
+    "candidate_outcomes_computed": false
+  },
+  "registered_experiment": {
+    "partitions": [
+      {
+        "name": "development",
+        "start_utc": "2025-07-28T00:00:00Z",
+        "end_utc": "2026-01-28T00:00:00Z"
+      },
+      {
+        "name": "validation",
+        "start_utc": "2026-01-28T00:00:00Z",
+        "end_utc": "2026-04-28T00:00:00Z"
+      },
+      {
+        "name": "pseudo_holdout",
+        "start_utc": "2026-04-28T00:00:00Z",
+        "end_utc": "2026-07-28T00:00:00Z"
+      }
+    ],
+    "scenarios": {
+      "nominal": {
+        "taker_slippage_bps_per_side": 2.0,
+        "publication_delay_minutes": 0
+      },
+      "stress": {
+        "taker_slippage_bps_per_side": 5.0,
+        "publication_delay_minutes": 0
+      },
+      "publication_delay_24h": {
+        "taker_slippage_bps_per_side": 2.0,
+        "publication_delay_minutes": 1440
+      }
+    },
+    "arms": [
+      "ibit_two_creation_persistence_candidate",
+      "ibit_single_creation_onset_control",
+      "ibit_two_redemption_persistence_long_placebo",
+      "v58_liquidity_sweep_long_control",
+      "no_action"
+    ],
+    "execution_geometry": {
+      "initial_equity_usd": 5000.0,
+      "margin_fraction": 0.1,
+      "leverage": 10.0,
+      "maximum_notional_usd": 5000.0,
+      "stop_bps": 60.0,
+      "target_bps": 60.0,
+      "maximum_hold_minutes": 1440,
+      "entry_taker_fee_bps": 4.5,
+      "target_maker_fee_bps": 1.5,
+      "market_exit_fee_bps": 4.5,
+      "funding": "exact_registered_Hyperliquid_hourly_rows"
+    }
+  },
+  "generator_identity": {
+    "aggregate_sha256": "d2f524156fadb60eda3db74417b63a4c9209aa93051ae747760ff77e896a084c",
+    "files": {
+      "scripts/v58_btc_ibit_creation_experiment.py": {
+        "bytes": 13152,
+        "sha256": "b729307ebf543b89474a1b5d00bc78ea2f07d8dd91331a30f63f8c79e9be610b"
+      },
+      "src/hypervector/data/oxa_storage.py": {
+        "bytes": 5267,
+        "sha256": "abf1cc8c044d4e394c3c5bcca334e1e4d0052bda4acc3159a47de8857a95e17e"
+      },
+      "src/hypervector/research/blackrock_ibit_acquisition.py": {
+        "bytes": 4473,
+        "sha256": "e676d7b0589a1cf9cc65955e1f641563735fcdf81b61e7110efac2a920be5d87"
+      },
+      "src/hypervector/research/blackrock_ibit_history.py": {
+        "bytes": 11545,
+        "sha256": "3d33622761bc094556918cecb949cc38df18e49795be257c6a1baa5fdce0ee76"
+      },
+      "src/hypervector/research/btc_fixed_60_60_replay.py": {
+        "bytes": 4196,
+        "sha256": "9c11131ab445f2bd1d693decaa4c053c4ef79248b29a2410d3cc7dac72252738"
+      },
+      "src/hypervector/research/btc_ibit_creation_experiment.py": {
+        "bytes": 13669,
+        "sha256": "bd93136f687ea3fbc05fdaa54c69e39680d5108189e41673bbe0ea9c98d5b904"
+      },
+      "src/hypervector/research/btc_ibit_creation_historical.py": {
+        "bytes": 5309,
+        "sha256": "4caae80fc474553af682928616df73201cff2e999fa1b6d93b5b9a2b97b35949"
+      },
+      "src/hypervector/research/btc_ibit_creation_long.py": {
+        "bytes": 6361,
+        "sha256": "b4e8e85530d948554f50fca889cfe3daf2e9ee19197eac4215dc704285e4a81f"
+      },
+      "src/hypervector/research/btc_ibit_creation_replay.py": {
+        "bytes": 5882,
+        "sha256": "202bd0cbde50c082e49825414356bf09603288eb4f0ea5a5434d6a4d8ff6d49c"
+      },
+      "src/hypervector/research/btc_sweep_primary_relaxation.py": {
+        "bytes": 6861,
+        "sha256": "b0bfca0273690f71b002be0a76843c2dea207c9428b1cc50a95ccce903ea5248"
+      },
+      "src/hypervector/research/shared_bar_portfolio.py": {
+        "bytes": 18794,
+        "sha256": "f4e5c3a07d6748709a9535889465e027637e1afcaf625748796ee7599b247ad3"
+      },
+      "src/hypervector/research/shared_portfolio_inputs.py": {
+        "bytes": 7441,
+        "sha256": "873c83ba996b8b67f1aaad6d22a67afdebc42ae8e2e999cf63278892d515d272"
+      },
+      "src/hypervector/research/shared_portfolio_models.py": {
+        "bytes": 8558,
+        "sha256": "a71fc1785a579088a655a40d087a26cab3c58c96d08e40449790efc66cb69489"
+      }
+    }
+  },
+  "publication_contract": {
+    "run_once": true,
+    "all_partitions_arms_and_scenarios_required": true,
+    "performance_abort_allowed": false,
+    "source_and_generator_reverification_after_calculation": true,
+    "live_promotion_authorized_regardless_of_outcome": false,
+    "retuning_after_result": false
+  }
+}

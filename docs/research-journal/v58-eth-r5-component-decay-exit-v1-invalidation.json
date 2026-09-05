@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "recorded_at_utc": "2026-08-19T22:44:00Z",
+  "status": "invalidated_technical_adapter_error",
+  "execution_authority": "none",
+  "runtime_strategy_changed": false,
+  "invalid_artifact": {
+    "path": "../../data/logs/research/bidirectional_cohort/v58_eth_r5_component_decay_exit_20260819_v1.json",
+    "sha256": "6404c403d2494137148837bff00311d97c8f542ae332fb7f703ad049c04e4ff7",
+    "bytes": 113788
+  },
+  "observed_contradiction": "The artifact reported 71 development component-decay exits from only 35 declared component triggers and 18 opened-final exits from only 8 triggers.",
+  "root_cause": "The report-only adapter expressed a component trigger through the shared structural-reversal replay path but retained the market's native structural_direction values. Ordinary structural reversals therefore gained unintended candidate exit authority.",
+  "correction": "Neutralize structural_direction in the fixed-entry adapter market, set it opposite only on exact component-trigger rows, and require component-decay exits to be no greater than causal trigger count.",
+  "tdd_falsifiers": [
+    "A native structural reversal with no component trigger must retain the native control exit.",
+    "Any artifact segment with more structural-adapter exits than component triggers must raise before publication."
+  ],
+  "economic_claims_valid": false,
+  "live_change_supported": false,
+  "falsifier": "This invalidation would be updated only if the original artifact were shown to have neutralized native structural directions or reconciled every exit to a component trigger; it did neither."
+}

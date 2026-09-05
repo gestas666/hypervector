@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "mode": "v58_post_outage_performance_attribution_v1",
+  "generated_at_utc": "2026-08-21T02:52:00+00:00",
+  "contract": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_live_change": false,
+    "runtime_strategy_changed": false,
+    "orders_supported": false,
+    "performance_gate": false
+  },
+  "identity": {
+    "profile_id": "multi_asset_growth_first_5000_eight_asset_incremental_v58",
+    "profile_fingerprint": "8a04636c9ff60a7eae141381cb540d7c6ceed081097cda7d5e465d48faa5022b",
+    "active_run_id": "bidirectional-live-1787272893887",
+    "source_compatible_predecessor_run_id": "bidirectional-live-1787166474078"
+  },
+  "evidence": {
+    "predecessor_execution_quality": {
+      "path": "data/logs/research/v58_current_run_execution_quality_20260820_v4.json",
+      "bytes": 11673279,
+      "sha256": "733c6fbd05f4efae0b0ceb3f6faa7bf1434d8468288708f61eaa5f5cca981aea",
+      "generated_at_utc": "2026-08-20T21:43:29.474898+00:00"
+    },
+    "active_continuous_snapshot": {
+      "path": "data/logs/research/v58_continuous_improvement_snapshot_20260821T0248Z_v1.json",
+      "bytes": 165603,
+      "sha256": "aa23474a8b7c3485e6e40974f184ae70c43f10a7d33fa524f551b42690ae12c0",
+      "generated_at_utc": "2026-08-21T02:48:58.487484+00:00"
+    }
+  },
+  "attribution": {
+    "active_run": {
+      "new_closed_lifecycles": 0,
+      "new_entry_fills": 0,
+      "open_lifecycles": 2,
+      "open_symbols": [
+        "xyz:BRENTOIL",
+        "xyz:SP500"
+      ],
+      "open_positions_are_adopted_from_predecessor": true,
+      "marked_net_pnl_usd": 11.986122,
+      "estimated_exit_now_net_usd": 11.774996493869356,
+      "estimated_stop_net_usd": -19.857986111999985,
+      "marked_to_stop_giveback_usd": 31.63298260586934,
+      "marked_values_are_provisional": true
+    },
+    "source_compatible_predecessor": {
+      "closed_lifecycles": 3,
+      "sides_observed": [
+        "long"
+      ],
+      "wins": 1,
+      "losses": 2,
+      "net_pnl_usd": 16.169133000000002,
+      "largest_winner_usd": 27.197133,
+      "net_pnl_excluding_largest_winner_usd": -11.027999999999999,
+      "stop_exit_slippage_bps": {
+        "count": 2,
+        "minimum": 3.308245153438305,
+        "mean": 6.20978255217397,
+        "maximum": 9.111319950909635
+      }
+    }
+  },
+  "assessment": {
+    "confidence": "medium_execution_low_strategy",
+    "confidence_basis": "entry freshness and cash accounting are exact, but three same-side closes and two unresolved inherited positions cannot establish route expectancy",
+    "entry_execution_degradation_supported": false,
+    "strategy_breakage_supported": false,
+    "evidence_sufficient_for_live_change": false,
+    "primary_attribution": "insufficient_sample_path_variance_with_stop_exit_cost_tail_and_largest_winner_dependence",
+    "highest_value_next_investigation": "reconcile the authoritative exits of the inherited SP500 and BRENTOIL lifecycles, then update route-level after-cost and largest-winner-removed attribution",
+    "current_priority_route": "hip3_breakout_pressure_sp500_spcx_fresh15s_bidirectional_v3|xyz:SP500"
+  },
+  "uncertainties_and_failure_modes": [
+    "open lifecycle PnL is marked and can reverse before an authoritative exit fill",
+    "the predecessor sample contains only three closed ETH long lifecycles and cannot establish both-side expectancy",
+    "positive aggregate predecessor PnL depends on one largest winner",
+    "two stop-slippage observations do not establish a stable execution-cost distribution",
+    "the active run has no new entries or closes, so it contains no new realized strategy-performance evidence",
+    "the observer successor has one public-L2 HTTP 429 degraded cycle and must not be treated as gap-free"
+  ],
+  "falsifiers": [
+    "recomputed fill, fee, funding, slippage, or lifecycle PnL differs from either source artifact",
+    "either source artifact byte count or SHA-256 does not reproduce",
+    "an adopted position is shown to have originated in the active run",
+    "a submitted entry is shown to exceed its exact configured age limit",
+    "a larger source-compatible both-side sample attributes losses to stable execution degradation or stable strategy failure",
+    "the SP500 or BRENTOIL authoritative close materially changes the provisional marked attribution"
+  ],
+  "recommendation": {
+    "decision": "retain_v58_unchanged_continue_exact_lifecycle_collection",
+    "proposed_live_change": null,
+    "explicit_approval_requested": false,
+    "do_nothing_tradeoff": "preserves causal comparability but leaves the two existing frozen exit contracts exposed to their already-configured stop and time/profit-lock paths",
+    "alternative_tradeoff": "changing an exit now could reduce future giveback but would be a post-entry intervention unsupported by sufficient source-compatible evidence"
+  }
+}

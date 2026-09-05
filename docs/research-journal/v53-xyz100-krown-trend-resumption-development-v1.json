@@ -1,0 +1,205 @@
+{
+  "schema_version": "v53_xyz100_krown_trend_resumption_development_v1",
+  "created_at_utc": "2026-08-17T07:41:39Z",
+  "hypothesis_id": "V53_XYZ100_KROWN_TREND_RESUMPTION_DEVELOPMENT_V1",
+  "state": "rejected_development_stop",
+  "resolved_at_utc": "2026-08-17T08:46:03Z",
+  "mode": "report_only",
+  "execution_authority": "none",
+  "automatic_live_change": false,
+  "automatic_promotion": false,
+  "performance_gate": false,
+  "runtime_strategy_changed": false,
+  "hypothesis": "A predeclared bidirectional 15-minute RSI-EMA turn aligned with EMA21/55 trend structure can capture after-cost XYZ100 trend resumptions without relying on the retired SP500/SPCX pressure-transfer mechanisms.",
+  "why_reopened": "XYZ100 was previously deferred because the then-planned portfolio already contained SP500 and SPCX. The exact current v53 runtime contains only BTC and HYPE, so the equity-index-overlap premise no longer applies. This is a changed portfolio assumption, not a validation-driven retry of a rejected result.",
+  "current_live_baseline": {
+    "profile_id": "multi_asset_growth_first_5000_hype_freshness_repair_v53",
+    "profile_fingerprint": "f6378e473088b962724176f1b4aaf0857d4e2a6c3bf0103c2d1794d6bfd46a82",
+    "config_path": "configs/multi_asset_growth_first_5000_hype_freshness_repair_v53.toml",
+    "config_sha256": "d1f6a4e6eb77ba9d8ad1069e703e54611feeaacec6242ac0000eb6f0f0ee4f2b",
+    "configured_assets": [
+      "BTC",
+      "HYPE"
+    ],
+    "live_change_proposed": false
+  },
+  "five_scoping_invariants": {
+    "decision_time_correctness": "Signals use completed public-trade 15-minute OHLC only; entries execute on the next exact L2 quote. No current-bar close may fill its own signal.",
+    "tradability_and_universe": "Exact symbol xyz:XYZ100 on Hyperliquid HIP-3; both long and short are retained; no pooling with SP500, SPCX, or crypto evidence.",
+    "labels_and_horizons": "One-position lifecycle with opposite-signal close, 80-bps protective ceiling, and 96-bar or 24-hour maximum hold, whichever occurs first.",
+    "cost_model": "Exact taker fee evidence, actual hourly funding, next-quote bid/ask, measured visible-book and latency stress, exact mark extrema for risk, and largest-winner removal.",
+    "evaluation_protocol": "Chronological 60/20/20. Select nothing outside the single frozen mechanism. Evaluate development and three chronological development folds first. Validation remains unopened unless development is technically resolved and economically supportive; final holdout is verdict-only."
+  },
+  "frozen_mechanism": {
+    "family": "krown_trend_resumption",
+    "timeframe": "15m",
+    "rsi_length": 14,
+    "rsi_ema_length": 12,
+    "rsi_midline": 50.0,
+    "price_ema_fast": 21,
+    "price_ema_slow": 55,
+    "protective_stop_bps": 80.0,
+    "maximum_hold_bars": 96,
+    "maximum_hold_seconds": 86400,
+    "leverage": 5.0,
+    "initial_research_equity_usd": 500.0,
+    "notional_selection": "derive from exact liquidity and fee evidence before replay; do not tune from PnL",
+    "entry_sides": [
+      "long",
+      "short"
+    ]
+  },
+  "frozen_archive_scope": {
+    "start_utc": "2026-06-08T08:00:00Z",
+    "end_utc": "2026-08-17T07:00:00Z",
+    "market_family": "hip3",
+    "depth": 20,
+    "required_sources": [
+      "0xarchive_hyperliquid_hip3_l2",
+      "0xarchive_hyperliquid_public_trades",
+      "0xarchive_hyperliquid_prices",
+      "official_hourly_funding"
+    ],
+    "mark_policy": "No oracle or midpoint substitution for missing mark risk. Development lifecycle overlap with unresolved mark or executable quote evidence aborts without replacement selection."
+  },
+  "evidence_reviewed": [
+    {
+      "path": "data/logs/research/xyz_xyz100_qualification_20260817T0740Z_v1.json",
+      "sha256": "ad1250efa838db485e2ec1fbc42f0243dd620d318d0c72095f78ca6a9a350bdf",
+      "interpretation": "Current public qualification: approximately $75.43M daily notional, 0.331-bps displayed spread, 30x venue maximum, complete capped candles, observation only."
+    },
+    {
+      "path": "data/logs/research/xyz_xyz100_paired_archive_audit_20260816T0000_0100_v1.json",
+      "sha256": "06a282e74584cfa575a5ee08d04def84a3be90e86196835913892ebdd6a3e284",
+      "interpretation": "One-hour paired probe is checksum-complete with 7,838 books, 1,253 canonical public trades, and no empty book or trade window."
+    },
+    {
+      "path": "data/logs/research/xyz_xyz100_liquidity_recent_hour_20260816_v1.json",
+      "sha256": "c4f624f6c6e77dfd01952569053abf220eb8f8af9de0a656fc373f1a06691685",
+      "interpretation": "A 12-boundary recent-hour capacity screen has complete visible depth through $5,000 notional; its $5,000 p99 round-trip visible cost is 0.642 bps and modeled taker total is 2.370 bps. This is feasibility evidence only, not a historical stress estimate."
+    },
+    {
+      "path": "data/logs/research/xyz_xyz100_current_fee_inputs_20260817T0748Z_v1.json",
+      "sha256": "4abc480d1dc0a4d0bdf501ead972f48627913474dca1ff13e973356367872817",
+      "interpretation": "Current account fee tier plus exact XYZ100 deployer/growth metadata imply 0.864-bps one-way taker fees and 1.728-bps round-trip taker fees; aligned-quote status remains conservatively false."
+    },
+    {
+      "path": "data/cache/vendor/hyperliquid/xyz:XYZ100/20260608T080000000000Z_20260817T070000000000Z_funding/funding.parquet",
+      "sha256": "88b7f937da2730547377f057b73aa103c7300f2664dcb811dbe2db66e158f3a8",
+      "manifest_path": "data/cache/vendor/hyperliquid/xyz:XYZ100/20260608T080000000000Z_20260817T070000000000Z_funding/manifest.json",
+      "manifest_sha256": "525902bfc49da5b93a020fd2641b96a85897a0a1f3b4d8233e86745996d9f5ef",
+      "interpretation": "Official hourly funding is checksum-complete for all 1,679 half-open hourly settlements in the frozen replay scope."
+    },
+    {
+      "path": "data/logs/research/xyz_xyz100_full_paired_archive_audit_20260817_v1.json",
+      "sha256": "7c1151058bb30477b3092ce904a676d7bf2e66c24a69b602b42606746be97986",
+      "interpretation": "The frozen window contains 3,358 paired bundles, 9,331,266 book snapshots, 4,607,097 public trades, seven empty book hours, and one conservatively censored zero-size snapshot."
+    },
+    {
+      "path": "data/logs/research/xyz_xyz100_liquidity_profile_full_20260817_v1.json",
+      "sha256": "9e21fc093fc1d0b96946d6e4e2dcf94c554c414664cb3d498e82c1c268bc9feb",
+      "interpretation": "All 19,924 timely samples have complete visible depth through $5,000; modeled $5,000 taker round-trip cost is 2.078 bps median, 2.931 bps p90, and 3.959 bps p99."
+    },
+    {
+      "path": "data/logs/research/xyz_xyz100_krown_trend_resumption_development_20260817_v1.json",
+      "sha256": "fd75068ad7665599be80bc4dd364f366b5fb9191771ade16a52e4d65cb4bee08",
+      "interpretation": "Frozen development replay rejects the mechanism economically and technically; validation and holdout remained unopened."
+    }
+  ],
+  "technical_probe": {
+    "recent_hour": {
+      "price_rows": 1200,
+      "exact_mark_rows": 1200,
+      "missing_mark_rows": 0,
+      "maximum_mark_gap_ms": 3181
+    },
+    "recent_capacity_screen": {
+      "boundaries": 12,
+      "tested_notionals_usd": [
+        75.0,
+        750.0,
+        2500.0,
+        5000.0
+      ],
+      "both_side_completion_rate": 1.0,
+      "five_thousand_visible_round_trip_p99_bps": 0.6423179731413375,
+      "five_thousand_taker_total_round_trip_p99_bps": 2.3703179731413373,
+      "disposition": "mechanically_feasible_recent_hour_only_full_window_required_for_stress"
+    },
+    "pre_exact_mark_hour": {
+      "start_utc": "2026-02-26T17:00:00Z",
+      "price_rows": 1239,
+      "exact_mark_rows": 0,
+      "oracle_rows": 1239,
+      "disposition": "excluded_from_exact_risk_scope"
+    },
+    "exact_mark_scope_start_probe": {
+      "start_utc": "2026-06-08T08:00:00Z",
+      "price_rows": 1182,
+      "exact_mark_rows": 1182,
+      "missing_mark_rows": 0,
+      "first_exact_mark_ms": 1780905600347,
+      "maximum_mark_gap_ms": 5601
+    }
+  },
+  "development_success_evidence": {
+    "technical": "Every selected development lifecycle has resolved post-entry mark risk and fresh executable entry/exit quotes; no conflicting or missing source identity.",
+    "economic": "Nominal and stress net positive, profit factor above one, positive after largest-winner removal, majority-positive chronological stress folds, and long/short results reported separately.",
+    "feasibility": "Measured round-trip movement clears realistic costs without assuming unavailable queue priority or synthetic fills."
+  },
+  "stop_rules": [
+    "Abort before validation if the selected development path is technically unresolved.",
+    "Stop this exact mechanism if nominal or stress net is non-positive, profit factor is at or below one, or stress net excluding the largest winner is non-positive.",
+    "Do not convert a post-hoc profitable side into a qualified one-sided route; that requires a new preregistered hypothesis.",
+    "Do not retune the mechanism on development or validation to rescue a failure.",
+    "Do not open the final holdout for mechanism selection or parameter choice."
+  ],
+  "known_failure_modes": [
+    "The Krown mechanism failed on BRENTOIL; market transfer may also fail on XYZ100.",
+    "HIP-3 mark cadence can leave many lifecycle paths technically unresolved despite non-null mark rows.",
+    "XYZ100 may be highly correlated with BTC/HYPE during technology-led risk-on or risk-off waves.",
+    "Point-in-time liquidity does not prove historical capacity, fills, or edge.",
+    "The margin-table detail remains incomplete and blocks any live proposal even if development is favorable."
+  ],
+  "alternatives_considered": [
+    "Restore SP500/SPCX pressure transfer: rejected by untouched validation and source-parity evidence.",
+    "Add INTC, DRAM, SNDK, or SKHX: excluded because MU already owns the sole semiconductor research lane and SKHX is explicitly excluded.",
+    "Add CL or BRENTOIL: one oil lane with negative or technically unresolved strategy evidence.",
+    "Reuse Swing/Heikin-Ashi or breakout-pressure unchanged: rejected across prior HIP-3 markets.",
+    "Leave the slot empty: baseline comparator and required outcome if XYZ100 fails."
+  ],
+  "final_result": {
+    "disposition": "NOT_SUITABLE_TECHNICALLY_UNRESOLVED",
+    "live_change_proposed": false,
+    "validation_accessed": false,
+    "holdout_accessed": false,
+    "development_window": {
+      "start_utc": "2026-06-08T08:00:00+00:00",
+      "end_utc": "2026-07-20T07:15:00+00:00"
+    },
+    "nominal": {
+      "trades": 259,
+      "wins": 59,
+      "losses": 200,
+      "net_usd": -11.409717903954345,
+      "return_pct": -2.281943580790869,
+      "profit_factor": 0.4521911981628322,
+      "net_without_largest_winner_usd": -12.26558464525741
+    },
+    "stress": {
+      "trades": 259,
+      "wins": 52,
+      "losses": 207,
+      "net_usd": -15.177075916666354,
+      "return_pct": -3.0354151833332708,
+      "profit_factor": 0.3609223206488826,
+      "net_without_largest_winner_usd": -16.01760849455881
+    },
+    "directional_result": "Both long and short slices lost under nominal and stress friction; no post-hoc side is retained.",
+    "fold_result": "All three chronological development folds lost under nominal and stress friction.",
+    "technical_result": "140 of 259 lifecycles overlap unresolved evidence, including 91 unresolved entry-bar risk slices and one stale executable exit quote.",
+    "reopen_condition": "Do not retry this exact mechanism absent a materially different preregistered signal thesis plus resolved exact mark and quote paths; parameter tuning on these development losses is prohibited."
+  },
+  "next_action": "Leave XYZ100 out of the live roster. Continue the higher-value exact v53 lifecycle capture and finish the already-frozen MU source-parity evidence; do not spend validation or holdout data rescuing this rejected mechanism.",
+  "approval_requested": false
+}

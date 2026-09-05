@@ -40,12 +40,34 @@ class _Candles:
         start_ms: int,
         end_ms: int,
         observed_at_ms: int,
+        timeframe_minutes: int = 15,
     ) -> pd.DataFrame:
-        assert (symbol, start_ms, end_ms, observed_at_ms) == (
+        assert (symbol, start_ms, end_ms, observed_at_ms, timeframe_minutes) == (
             _SYMBOL,
             _START_MS,
             _END_MS,
             _END_MS,
+            15,
+        )
+        return _candles()
+
+
+class _FiveMinuteCandles:
+    def completed_candles(
+        self,
+        *,
+        symbol: str,
+        start_ms: int,
+        end_ms: int,
+        observed_at_ms: int,
+        timeframe_minutes: int = 15,
+    ) -> pd.DataFrame:
+        assert (symbol, start_ms, end_ms, observed_at_ms, timeframe_minutes) == (
+            _SYMBOL,
+            _START_MS,
+            _START_MS + 5 * 60_000,
+            _START_MS + 5 * 60_000,
+            5,
         )
         return _candles()
 
@@ -109,6 +131,25 @@ def test_command_reports_candle_parity_despite_independent_mark_gap(
     }
 
 
+def test_command_accepts_five_minute_path_contract(tmp_path: Path) -> None:
+    """Oil shadows can audit the same exact trade/candle source at 5m."""
+    module = _module()
+    trades = _trades()
+    path_audit = tmp_path / "path-5m.json"
+    output = tmp_path / "parity-5m.json"
+    _write_path_audit(path_audit, trades, timeframe_minutes=5)
+
+    report = module.run_command(
+        _args(path_audit, output),
+        archive=_Archive(trades),
+        candle_source=_FiveMinuteCandles(),
+    )
+
+    assert report["scope"]["timeframe_minutes"] == 5
+    assert report["coverage"]["exact_ohlc_bars"] == 1
+    assert report["technical_assessment"]["candle_ohlc_parity_resolved"] is True
+
+
 def test_command_rejects_path_audit_symbol_mismatch(tmp_path: Path) -> None:
     module = _module()
     trades = _trades()
@@ -161,26 +202,29 @@ def _write_path_audit(
     trades: tuple[PublicTradeEvent, ...],
     *,
     symbol: str = _SYMBOL,
+    timeframe_minutes: int = 15,
 ) -> None:
+    end_ms = _START_MS + timeframe_minutes * 60_000
     parity = build_hip3_prospective_candle_parity(
         public_trades=trades,
         candles=_candles(),
         config=Hip3ProspectiveCandleParityConfig(
             _SYMBOL,
             _START_MS,
-            _END_MS,
-            _END_MS,
+            end_ms,
+            end_ms,
+            timeframe_minutes=timeframe_minutes,
         ),
     )
     payload = {
         "schema_version": "hip3_prospective_path_audit_v1",
         "contract": {"report_only": True, "execution_authority": "none"},
-        "source": {"symbol": symbol, "observed_at_ms": _END_MS},
+        "source": {"symbol": symbol, "observed_at_ms": end_ms},
         "coverage": {
             "first_full_bar_open_ms": _START_MS,
-            "completed_bar_end_ms": _END_MS,
+            "completed_bar_end_ms": end_ms,
             "completed_bars": 1,
-            "timeframe_minutes": 15,
+            "timeframe_minutes": timeframe_minutes,
         },
         "evidence_identity": {
             "trades": {

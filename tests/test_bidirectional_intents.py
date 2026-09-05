@@ -243,6 +243,30 @@ def test_regime_preference_can_select_an_opposite_intent_exit_during_conflict() 
     assert report.withheld[0].reason == "lower_regime_alignment"
 
 
+def test_open_position_gives_eligible_opposite_exit_precedence() -> None:
+    """An eligible opposite closes before a stronger same-side hold intent."""
+    capabilities = (
+        StrategyCapability(
+            "hulk_bidirectional", "BTC", frozenset({"long", "short"}), 30
+        ),
+        StrategyCapability("range_onset", "BTC", frozenset({"long", "short"}), 10),
+    )
+    router = BidirectionalIntentRouter(capabilities, maximum_positions=1)
+
+    report = router.route(
+        (
+            _intent("BTC", "long", regime_score=1.0),
+            _intent("BTC", "short", strategy="range_onset", regime_score=-1.0),
+        ),
+        positions={"BTC": PositionState("BTC", "long")},
+    )
+
+    assert [(action.action, action.side) for action in report.actions] == [
+        ("close", "short")
+    ]
+    assert report.withheld[0].reason == "opposite_position_exit_precedence"
+
+
 def test_namespaced_hip3_symbol_is_preserved_in_intent_and_position() -> None:
     """Portfolio routing preserves exact builder-perp venue identity."""
     intent = StrategyIntent(

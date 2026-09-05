@@ -63,6 +63,12 @@ class SolLiveEngineEvents:
         """Persist a strategy close after venue-flat reconciliation."""
         self.emit("close", {"reason": reason, "oid": oid, "verified_flat": True})
 
+    def confirm_entry_not_filled(self, *, reason: str) -> None:
+        """Persist a definitive IOC no-fill and the resulting flat state."""
+        self._machine.confirm_entry_not_filled()
+        self.emit("entry_not_filled", {"reason": reason, "verified_flat": True})
+        self.emit_state()
+
     def fault(self, reason: str) -> None:
         """Enter fault state and persist the reason plus resulting state."""
         self._machine.fault(reason)

@@ -1,0 +1,356 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v57-continuous-improvement-baseline-20260818-v1",
+  "revision_number": 1,
+  "supersedes_revision_id": null,
+  "created_at_utc": "2026-08-18T15:34:00Z",
+  "strategy_id": "v57_continuous_improvement_portfolio",
+  "symbol": "PORTFOLIO",
+  "status": "observe",
+  "hypothesis": "The exact V57 routes are technically operational, and source-compatible live translation rather than immediate gate relaxation is the highest-value way to determine whether they retain after-cost edge.",
+  "decision": "Retain V57 unchanged while collecting the first fully attributable eligible events and resolved lifecycles, prioritizing both HYPE directions.",
+  "confidence": "medium",
+  "falsifier": "A missing or late eligible action, unprotected fill, identity or ledger defect, materially adverse exact lifecycle pattern, or complete 14-day zero-entry window would invalidate the current technical-health or normal-scarcity diagnosis.",
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false,
+  "generated_at_utc": "2026-08-18T15:34:00Z",
+  "state": "accepted_baseline_continuing_experiment",
+  "mode": "report_only_live_translation_review",
+  "evidence": [
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v57_live_prefix_20260818T153017Z.json",
+      "role": "immutable_exact_v57_live_prefix",
+      "sha256": "9cdbef956e8021b0d647d15bb07057f89733c5f139fd87edde994bb23693cbb0",
+      "bytes": 6475138
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v57_live_prefix_delta_20260818T152323Z_153017Z.json",
+      "role": "same_run_monotonic_prefix_delta",
+      "sha256": "7a3f211318a02ce73d882621a2abf70ab2c02e0fe7104028a0a6823700ada35a",
+      "bytes": 19479
+    },
+    {
+      "path": "../../data/logs/research/hype_compression_breakout_challenger_20260816_v6_alignment/report.json",
+      "role": "exact_hype_alignment_development_and_confirmation",
+      "sha256": "53c37e529f79223c5e7290a5cd07f5c95897be1850122bf091e5dfbcacb29354",
+      "bytes": 211167
+    },
+    {
+      "path": "../../data/logs/research/xyz_spcx_cash_open_gap_reversal_development_20260817_v2.json",
+      "role": "spcx_side_and_path_sensitivity",
+      "sha256": "613475b27b2884f9b90346cb0c0f175a314e09dbcba4f628b972aba3ebb1c3b8",
+      "bytes": 211473
+    },
+    {
+      "path": "../../data/logs/research/20260801_hulk_short_tuned_v2_pseudo_holdout.json",
+      "role": "btc_tuned_v2_pseudo_holdout",
+      "sha256": "c461ecbef4896dd7596ce9018755be28e7f1910b9564b879f992a08c0abdeb49",
+      "bytes": 30025
+    },
+    {
+      "path": "../../data/logs/research/20260801_hulk_short_robust_v3_btc_pseudo_holdout.json",
+      "role": "btc_robust_v3_pseudo_holdout",
+      "sha256": "353ea1dbbdd3b805523dcdaf58fd3d3aeb900d0be456d4e3d5d074f01f74117b",
+      "bytes": 17900
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/btc_liquidity_sweep_taker_parity_20260811_v2.json",
+      "role": "btc_sweep_causal_path_sensitivity",
+      "sha256": "e875fce1407701a53ae1bf8e42c0e751db77e01fee0fe72df539d7b2a5642c77",
+      "bytes": 74606
+    },
+    {
+      "path": "v52-empirical-interarrival-review-thresholds-v1.json",
+      "role": "predeclared_route_cadence_review_schedule",
+      "sha256": "95f7d84492f1b1cb2a184da3ed4af5db43089df8dbdcefcdd305e13d378de586",
+      "bytes": 9201
+    }
+  ],
+  "metrics": {
+    "observation_minutes": 22.429243666666665,
+    "executable_routes": 5,
+    "readiness_evaluations": 32,
+    "eligible_evaluations": 0,
+    "fills": 0,
+    "closed_lifecycles": 0,
+    "faults": 0,
+    "technical_gaps": 0,
+    "hype_development_trades": 41,
+    "hype_development_profit_factor": 1.8569147214819552,
+    "hype_short_net_excluding_largest_winner_bps": -351.354111800601
+  },
+  "limitations": [
+    "The exact V57 prefix contains no eligible event or resolved lifecycle and cannot estimate profitability.",
+    "Historical route artifacts differ in source contract, portfolio scale, partition, and path completeness and are not pooled into a portfolio return forecast.",
+    "HYPE later confirmation contains one long and no short, so both-side live translation remains unresolved.",
+    "SPCX and sweep historical path gaps prevent treating their development economics as qualification proof.",
+    "Historical interarrival times are nonstationary diagnostics rather than a guarantee of future signal cadence."
+  ],
+  "contract": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_live_change": false,
+    "automatic_promotion": false,
+    "automatic_retuning": false,
+    "runtime_strategy_changed": false,
+    "performance_gate": false,
+    "trade_count_gate": false
+  },
+  "problem_restatement": {
+    "question": "Is the first V57 zero-trade prefix caused by a technical defect, an abnormal cadence collapse, or intended route conditions, and which unresolved route question has the highest information value?",
+    "success_criteria": [
+      "The exact run and profile identity reconcile.",
+      "Every executable provider-symbol route has attributable readiness evidence.",
+      "Eligible entries reconcile to an action or explicit non-action outcome.",
+      "Ledger, venue, timing, protection, cost, and PnL evidence are complete for any lifecycle.",
+      "The next investigation is selected from evidence rather than operator impatience or recent PnL."
+    ]
+  },
+  "live_identity": {
+    "run_id": "bidirectional-live-1787065473571",
+    "profile_id": "multi_asset_growth_first_5000_spcx_short_containment_v57",
+    "profile_fingerprint": "724c259bd94be60d80ffc2e6b9a760412b9729ab1f8fea403e61d266f0d9cb8d",
+    "observation_start_utc": "2026-08-18T15:07:53.605394+00:00",
+    "observation_end_utc": "2026-08-18T15:30:19.360014+00:00",
+    "observation_minutes": 22.429243666666665,
+    "assets": ["BTC", "HYPE", "xyz:SPCX"],
+    "executable_routes": 5
+  },
+  "technical_reconciliation": {
+    "evidence_complete": true,
+    "technical_gaps": [],
+    "faults": 0,
+    "route_coverage": "5_of_5",
+    "poll_cycles": 90,
+    "readiness_evaluations": 32,
+    "eligible_evaluations": 0,
+    "strategy_intents": 0,
+    "actions": 0,
+    "withheld": 0,
+    "fills": 0,
+    "open_lifecycles": 0,
+    "closed_lifecycles": 0,
+    "execution_contracts_aligned": 5,
+    "execution_contract_mismatches": 0,
+    "entry_age_breaches": 0,
+    "all_assets_flat": true,
+    "all_owned_orders_empty": true,
+    "collector_or_router_defect_observed": false
+  },
+  "data_quality": {
+    "intended_use": "technical diagnosis and experiment prioritization, not profitability estimation",
+    "grain": "exact V57 run, provider-symbol readiness evaluation, routing cycle, and owned venue lifecycle",
+    "completeness": "complete_for_the_frozen_prefix",
+    "identity_integrity": "exact_run_profile_and_route_scope_reconciled",
+    "ledger_tail_status": "complete_lines_only_no_dropped_tail",
+    "economic_sample_status": "empty_no_eligible_or_resolved_lifecycle",
+    "historical_comparability_limit": "route artifacts differ in source contract, portfolio scale, partition, and path completeness and are not pooled into a V57 return forecast"
+  },
+  "diagnosis": {
+    "verified": [
+      "The live backend and checkpoint identity match V57.",
+      "All five executable routes produced attributable readiness evidence.",
+      "No configured setup became eligible during the frozen prefix.",
+      "No action, fill, fee, funding, PnL, open position, order, fault, or technical gap was omitted from the prefix.",
+      "The first 22.4 minutes are shorter than the minimum empirical within-partition signal interarrival for HYPE, BTC robust-v3, and BTC sweep."
+    ],
+    "likely": [
+      "The observed silence is intended setup scarcity rather than a current wiring defect.",
+      "HYPE provides the highest information-value live-translation question because it is the only bidirectional route and its short development robustness is weak."
+    ],
+    "unresolved": [
+      "Future V57 profitability, loss distribution, and trade cadence.",
+      "Actual V57 fees, slippage, acknowledgement latency, funding, stop behavior, exit behavior, and markout under a fill.",
+      "Whether HYPE short retains after-cost edge prospectively.",
+      "Whether SPCX short survives source-native live execution and unresolved historical risk paths.",
+      "Whether the two BTC Hulk routes add independent opportunities or duplicate the same episodes."
+    ]
+  },
+  "route_findings": {
+    "hype_breakout_compression_alignment_bidirectional_v2|HYPE": {
+      "configured_directions": ["long", "short"],
+      "current_evaluations": 24,
+      "current_eligible": 0,
+      "current_non_entry_reason": "canonical breakout onset and authoritative compression prerequisites absent",
+      "development_trades": 41,
+      "development_net_bps": 2298.2324439484123,
+      "development_profit_factor": 1.8569147214819552,
+      "development_net_excluding_largest_winner_bps": 289.2553159192332,
+      "positive_folds": 3,
+      "fold_count": 5,
+      "long_net_excluding_largest_winner_bps": 89.2968991121104,
+      "short_net_excluding_largest_winner_bps": -351.354111800601,
+      "later_confirmation": "one_long_win_no_short",
+      "status": "being_tested",
+      "confidence": "low_on_future_edge"
+    },
+    "hip3_spcx_cash_open_gap_reversal_bidirectional_15m_v1|xyz:SPCX": {
+      "configured_directions": ["short"],
+      "current_evaluations": 3,
+      "current_eligible": 0,
+      "current_non_entry_reason": "outside the cash-open decision",
+      "development_short_trades": 11,
+      "development_short_stress_net_usd": 300.32954042314697,
+      "development_short_stress_profit_factor": 2.316310459593731,
+      "development_short_stress_net_excluding_largest_winner_usd": 135.05807290081867,
+      "pooled_unresolved_lifecycle_trades": 11,
+      "status": "being_tested",
+      "confidence": "low"
+    },
+    "hulk_expansion_short_robust_v3|BTC": {
+      "configured_directions": ["short"],
+      "current_evaluations": 2,
+      "current_eligible": 0,
+      "development_validation_pseudo_holdout_trades": [39, 18, 9],
+      "pseudo_holdout_net_usd": -18.349258048338026,
+      "pseudo_holdout_profit_factor": 0.9335553949659677,
+      "later_forward_trades": 1,
+      "later_forward_cost_stress_net_usd": 103.18422272303724,
+      "later_forward_two_bar_delay_net_usd": -48.19013342061437,
+      "status": "being_tested",
+      "confidence": "low"
+    },
+    "hulk_expansion_short_tuned_v2|BTC": {
+      "configured_directions": ["short"],
+      "current_evaluations": 2,
+      "current_eligible": 0,
+      "development_validation_pseudo_holdout_trades": [55, 34, 17],
+      "partition_profit_factors": [1.74432283366618, 1.1242198611064231, 1.2715297908722585],
+      "status": "being_tested",
+      "confidence": "low_to_medium"
+    },
+    "liquidity_sweep_long_1h_stop60_target60_v2|BTC": {
+      "configured_directions": ["long"],
+      "current_executable_evaluations": 0,
+      "current_seed_evaluations": 1,
+      "development_result": "five_wins_one_loss_with_one_unresolved_path",
+      "forward_result": "one_resolved_win",
+      "status": "being_tested",
+      "confidence": "low"
+    }
+  },
+  "alternatives_tested_or_considered": [
+    {
+      "idea": "Relax HYPE breakout-side alignment",
+      "status": "rejected",
+      "reason": "The exact one-blocker event was negative after the diagnostic hurdle at three of four horizons and the sample was one."
+    },
+    {
+      "idea": "Remove HYPE compression or pullback prerequisites",
+      "status": "rejected",
+      "reason": "The broader aligned mechanism lost across 509 development and 115 already-opened final lifecycles."
+    },
+    {
+      "idea": "Add a symmetric HYPE fixed target",
+      "status": "rejected",
+      "reason": "The selected development target reduced total net return by 1,269.5 bps versus the native exit and did not pass later acceptance."
+    },
+    {
+      "idea": "Add HYPE trailing-profit or regime-loss exits",
+      "status": "rejected",
+      "reason": "Declared challengers failed development and/or later confirmation acceptance."
+    },
+    {
+      "idea": "Re-enable SPCX longs",
+      "status": "rejected",
+      "reason": "The long development slice became negative after removing its largest winner and the first exact forward long lost."
+    },
+    {
+      "idea": "Loosen routes solely to raise trade count",
+      "status": "deferred_without_support",
+      "reason": "The current live window is below preregistered cadence-review thresholds and no validated relaxation is positive after costs and robustness sensitivity."
+    }
+  ],
+  "highest_value_next_investigation": {
+    "rank": 1,
+    "route": "hype_breakout_compression_alignment_bidirectional_v2|HYPE",
+    "hypothesis": "The exact V57 HYPE route retains after-cost edge in both configured directions under its intended compression and alignment conditions.",
+    "experiment": "collect_both_side_live_execution",
+    "status": "being_tested",
+    "minimum_evidence_to_update_diagnosis": "At least one attributable eligible signal and one fully resolved lifecycle for each configured direction, long and short.",
+    "minimum_evidence_for_change_recommendation": "A predeclared compatible window with exact fees, funding, slippage, latency, venue stop behavior, native exit behavior, missed-opportunity review, and largest-winner sensitivity.",
+    "promotion_threshold": false,
+    "execution_effect": "report_only"
+  },
+  "recommendation": {
+    "recommendation": "Continue exact V57 unchanged and audit the first eligible event immediately while collecting the first fully resolved HYPE long and short lifecycles.",
+    "why_now": "The runtime is healthy, the live economic sample is empty, and HYPE's direction asymmetry is the highest-value unresolved question.",
+    "evidence_reviewed": "Two immutable V57 prefixes and their delta, the exact V57 config and post-start acceptance, the continuous-improvement digest, HYPE aligned replay and exit challengers, SPCX development evidence, BTC chronological evidence, sweep path sensitivity, and the preregistered cadence schedule.",
+    "observed_problem_or_opportunity": "No V57 route has translated into an eligible signal or resolved lifecycle, so edge and realized execution remain unidentified; HYPE development is promising in aggregate but weak on short-side robustness.",
+    "applicable_market_regime": "All regimes observed prospectively under the frozen V57 route contracts; route conclusions require exact regime attribution when an eligible signal occurs.",
+    "alternatives_considered": "Relax HYPE alignment, remove compression gates, add fixed targets or trailing exits, re-enable SPCX longs, loosen BTC triggers, or keep V57 unchanged while collecting source-compatible evidence.",
+    "proposed_live_change": "none",
+    "expected_upside": "Preserves the selected mechanisms while obtaining the evidence needed to distinguish real edge, side weakness, execution degradation, and ordinary variance.",
+    "main_risks_and_failure_modes": "Opportunity scarcity can remain economically impractical; the first lifecycle can lose; small samples can create false confidence; source or execution behavior can diverge only when a real signal fires.",
+    "validation_completed": "Exact identity, route coverage, ledger completeness, current venue flatness, entry-age diagnostics, non-entry attribution, historical fold and side sensitivity, and prior challenger dispositions.",
+    "validation_still_required": "Attributable eligible signals and resolved V57 lifecycles with realized costs, protection, exits, regime, excursion, and portfolio interactions.",
+    "success_metrics": "Every eligible event reconciles to an action or explicit withholding; each configured HYPE direction produces a complete lifecycle; realized costs stay within declared sensitivities; after-cost evidence survives largest-winner removal in a predeclared compatible window.",
+    "failure_or_rollback_triggers": "Any missing route, stale or late eligible submission, unaccounted eligible event, unprotected fill, identity mismatch, corrupted ledger, unexpected leverage or exposure, or materially adverse exact lifecycle pattern requires immediate audit and an approval-ready containment or rollback proposal.",
+    "confidence_level": "high_technical_medium_scarcity_diagnosis_low_profitability",
+    "explicit_approval_requested": false
+  },
+  "falsifiers": [
+    "An eligible V57 event occurs without a routed action or explicit withholding outcome.",
+    "A V57 entry is submitted beyond its maximum configured age.",
+    "A venue fill is not protected by the intended reduce-only stop and any configured target.",
+    "A later complete audit shows missing route decisions, ledger corruption, source mismatch, or unexplained position state.",
+    "The HYPE route produces prospective side evidence materially inconsistent with the current long-dominant development diagnosis.",
+    "Zero entries persist to the 14-day review with complete technical coverage, requiring a cadence-deviation investigation rather than the current normal-scarcity diagnosis."
+  ],
+  "confidence_assessment": {
+    "runtime_identity_and_technical_health": "high",
+    "no_current_wiring_defect": "high_for_the_observed_no_trade_path",
+    "normal_scarcity_diagnosis": "medium",
+    "route_profitability": "low_unverified",
+    "portfolio_growth_capacity": "low_unverified"
+  },
+  "source_evidence": [
+    {
+      "path": "data/logs/research/bidirectional_cohort/v57_live_prefix_20260818T153017Z.json",
+      "sha256": "9cdbef956e8021b0d647d15bb07057f89733c5f139fd87edde994bb23693cbb0",
+      "bytes": 6475138
+    },
+    {
+      "path": "data/logs/research/bidirectional_cohort/v57_live_prefix_delta_20260818T152323Z_153017Z.json",
+      "sha256": "7a3f211318a02ce73d882621a2abf70ab2c02e0fe7104028a0a6823700ada35a",
+      "bytes": 19479
+    },
+    {
+      "path": "data/runtime/bidirectional_cohort/latest_improvement_digest.json",
+      "sha256": "10ab54eb0b6af102d1310009bd6fc240c028eaa4da44eac76985ac7df4210dab",
+      "bytes": 53985,
+      "note": "rolling source frozen by hash at this journal revision"
+    },
+    {
+      "path": "configs/multi_asset_growth_first_5000_spcx_short_containment_v57.toml",
+      "sha256": "c4b7f50422952cf7d1628e3969b272bd4413ca3aba356f105e5146f006306335",
+      "bytes": 3161
+    },
+    {
+      "path": "data/logs/research/hype_compression_breakout_challenger_20260816_v6_alignment/report.json",
+      "sha256": "53c37e529f79223c5e7290a5cd07f5c95897be1850122bf091e5dfbcacb29354",
+      "bytes": 211167
+    },
+    {
+      "path": "docs/research-journal/v53-hype-directional-side-coverage-audit-v1.json",
+      "sha256": "68420396f1fe91394ee1d8a61dcf81dd86a2ce3e982dc0f550e940ce5e151427",
+      "bytes": 9683
+    },
+    {
+      "path": "docs/research-journal/v52-hype-breakout-side-alignment-relaxation-v1.json",
+      "sha256": "4a3cf7ec2ff55ab23839f6d383399fcb200fbac62b4ad9bd7f3e2888bc0b5d33",
+      "bytes": 3758
+    },
+    {
+      "path": "docs/research-journal/v52-hype-noncompression-alignment-relaxation-v1.json",
+      "sha256": "80bfe8e09a2c58c7190a86ba67faefbe8b8de3734dccd108ad2c46095bfce37e",
+      "bytes": 3975
+    },
+    {
+      "path": "docs/research-journal/v52-hype-aligned-fixed-target-sensitivity-v2.json",
+      "sha256": "38859e4e212aaed747cd7d9f71d0b99221ec19a030147b2bd633fc20d9ae532e",
+      "bytes": 2867
+    }
+  ]
+}

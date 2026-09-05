@@ -18,6 +18,11 @@ from hypervector.live.mu_hip3_preclose_pressure import (
     MuAssetLedgerBinding,
     MuHip3LedgerPreclosePressureSource,
 )
+from hypervector.live.mu_hip3_breakout_shadow_runner import (
+    MuHip3ShadowPaths,
+    MuHip3ShadowPollResult,
+    _write_status,
+)
 from hypervector.research.hip3_breakout_pressure_signals import (
     Hip3BreakoutPressureConfig,
 )
@@ -181,3 +186,34 @@ def test_index_observer_exposes_no_live_authority_flags() -> None:
     assert "--enabled" not in source
     assert "i-accept-live-risk" not in source
     assert "order" not in source.lower()
+
+
+def test_index_status_accepts_its_exact_route_journal_type(tmp_path: Path) -> None:
+    """A shared status writer must validate the selected index route identity."""
+    paths = MuHip3ShadowPaths(
+        tmp_path / "asset.jsonl",
+        tmp_path / "cohort.jsonl",
+        tmp_path / "cursor.json",
+        tmp_path / "journal.jsonl",
+        tmp_path / "status.json",
+    )
+    decision_time_ms = 1_786_918_500_000
+    row = {
+        "event_type": "sp500_hip3_breakout_shadow_decision",
+        "event_id": f"{SP500_SHADOW_SPEC.provider_id}|xyz:SP500|{decision_time_ms}",
+        "execution_authority": "none",
+        "intents": [],
+        "decision": {
+            "decision_time_ms": decision_time_ms,
+            "eligible": False,
+            "side": None,
+        },
+    }
+    paths.journal.write_text(json.dumps(row) + "\n", encoding="utf-8")
+    result = MuHip3ShadowPollResult((), False, decision_time_ms, decision_time_ms, 0)
+
+    _write_status(paths, result, SP500_SHADOW_SPEC)
+
+    status = json.loads(paths.status.read_text(encoding="utf-8"))
+    assert status["mode"] == "sp500_hip3_breakout_shadow_observer"
+    assert status["decision_rows_total"] == 1

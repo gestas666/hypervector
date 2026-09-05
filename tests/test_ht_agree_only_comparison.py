@@ -68,6 +68,7 @@ def test_comparison_is_report_only_and_preserves_v39_execution_contract() -> Non
         "hard_maximum_hold_minutes": 1440,
         "fee_bps_per_side": 4.5,
         "slippage_bps_per_side": 2.0,
+        "exit_on_opposite_signal": False,
     }
     assert report["source"]["symbol"] == "BTC"
     assert report["development"]["entry_accounting"]["opposed_onsets"] == 1

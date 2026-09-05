@@ -1,0 +1,120 @@
+{
+  "schema_version": 1,
+  "mode": "v57_route_zero_signal_review_thresholds",
+  "hypothesis_id": "V57_ROUTE_ZERO_SIGNAL_CADENCE_REVIEW_V1",
+  "revision_number": 1,
+  "created_at_utc": "2026-08-18T18:30:00Z",
+  "live_identity": {
+    "profile_id": "multi_asset_growth_first_5000_spcx_short_containment_v57",
+    "profile_fingerprint": "724c259bd94be60d80ffc2e6b9a760412b9729ab1f8fea403e61d266f0d9cb8d"
+  },
+  "problem_restatement": "One portfolio-wide 14-day zero-entry clock cannot distinguish a relatively frequent cash-open route from structurally sparse breakout and sweep routes.",
+  "decision": "Add exact-route report-only zero-signal review clocks. Crossing a clock opens a cadence-deviation investigation; it does not reject, pause, retune, resize, or change a live route.",
+  "selection_rule": {
+    "description": "Choose a bounded review horizon corresponding to roughly two or more events under the frozen historical cadence where feasible, while preserving the existing 14-day HYPE review and avoiding an indefinite wait for the sparse BTC routes.",
+    "poisson_values_are_sensitivity_only": true,
+    "performance_gate": false,
+    "trade_count_gate": false
+  },
+  "route_thresholds": {
+    "hype_breakout_compression_alignment_bidirectional_v2|HYPE": {
+      "priority": 1,
+      "threshold_days": 14,
+      "historical_cadence": "41 causal development trades over approximately 304 days; later evidence remains sparse",
+      "expected_events_at_threshold_sensitivity": 1.888,
+      "stationary_poisson_zero_event_probability_sensitivity": 0.1513,
+      "action": "route_cadence_deviation_investigation"
+    },
+    "hip3_spcx_cash_open_gap_reversal_bidirectional_15m_v1|xyz:SPCX": {
+      "priority": 2,
+      "threshold_days": 7,
+      "historical_cadence": "approximately 3.94 development trades per week; OOS remains sealed",
+      "expected_events_at_threshold_sensitivity": 3.94,
+      "stationary_poisson_zero_event_probability_sensitivity": 0.0194,
+      "action": "route_cadence_deviation_investigation"
+    },
+    "hulk_expansion_short_tuned_v2|BTC": {
+      "priority": 3,
+      "threshold_days": 7,
+      "historical_cadence": "106 completed trades over 338 covered days, approximately 2.2 per week",
+      "expected_events_at_threshold_sensitivity": 2.2,
+      "stationary_poisson_zero_event_probability_sensitivity": 0.1108,
+      "action": "route_cadence_deviation_investigation"
+    },
+    "hulk_expansion_short_robust_v3|BTC": {
+      "priority": 4,
+      "threshold_days": 25,
+      "historical_cadence": "one exact forward signal over 12.5 covered days",
+      "expected_events_at_threshold_sensitivity": 2.0,
+      "stationary_poisson_zero_event_probability_sensitivity": 0.1353,
+      "action": "route_cadence_deviation_investigation"
+    },
+    "liquidity_sweep_long_1h_stop60_target60_v2|BTC": {
+      "priority": 5,
+      "threshold_days": 25,
+      "historical_cadence": "six development signals over 92 days and one forward signal over 12.5 days",
+      "expected_events_at_threshold_sensitivity": 2.0,
+      "stationary_poisson_zero_event_probability_sensitivity": 0.1353,
+      "action": "route_cadence_deviation_investigation"
+    }
+  },
+  "validation_plan": {
+    "signal_identity": "Use exact current-profile strategy_id|symbol eligible-signal counts from the backend-authored strategy scorecard.",
+    "coverage": "A clock cannot become due when checkpoint coverage is incomplete or has technical gaps.",
+    "history": "Elapsed countdown changes are excluded from the material-change hash; status transitions remain material.",
+    "authority": "Every clock is report-only with execution_authority none and automatic_live_change false."
+  },
+  "limitations": [
+    "Historical cadence may not remain stationary under the current regime.",
+    "The Poisson calculation is a transparent sensitivity, not a validated arrival model or rejection threshold.",
+    "Cash-session holidays and route overlap are not modeled by elapsed wall-clock time.",
+    "A due review requests diagnosis only; it is not evidence that a strategy is broken.",
+    "An observed eligible signal closes the zero-signal clock but does not establish execution quality or profitability."
+  ],
+  "falsifiers": [
+    "An exact route emits an eligible signal before its threshold, in which case its clock must report signal_observed.",
+    "Technical coverage becomes incomplete, in which case no route clock may report review_due.",
+    "Live evidence shows that route evaluations are not attributable by exact strategy_id and symbol.",
+    "A later validated arrival model materially changes the appropriate diagnostic horizons."
+  ],
+  "source_evidence": [
+    {
+      "path": "docs/research-journal/v57-continuous-improvement-baseline-20260818-v1.json",
+      "sha256": "31934835302c88098911aba1fb9c793d685eff406bb34faa6d1d618cd53629a9",
+      "bytes": 19516
+    },
+    {
+      "path": "data/logs/research/xyz_spcx_cash_open_gap_reversal_development_20260817_v2.json",
+      "sha256": "613475b27b2884f9b90346cb0c0f175a314e09dbcba4f628b972aba3ebb1c3b8",
+      "bytes": 211473
+    },
+    {
+      "path": "data/logs/research/20260811_hulk_short_robust_v3_btc_forward_nominal.json",
+      "sha256": "385b7452043840f2e246409a4cdb32a0998b2be3fb742778a0cce159327364a6",
+      "bytes": 7183
+    },
+    {
+      "path": "docs/reviews/2026-08-01-market-cipher-strategy-rehabilitation.md",
+      "sha256": "300e014fed139f553df62d40cfd7f3095ea3c2d88cffabd1dac67886f5d65d05",
+      "bytes": 12084
+    },
+    {
+      "path": "data/logs/research/hype_compression_breakout_challenger_20260816_v6_alignment/report.json",
+      "sha256": "53c37e529f79223c5e7290a5cd07f5c95897be1850122bf091e5dfbcacb29354",
+      "bytes": 211167
+    },
+    {
+      "path": "data/logs/research/bidirectional_cohort/btc_liquidity_sweep_taker_parity_20260811_v2.json",
+      "sha256": "e875fce1407701a53ae1bf8e42c0e751db77e01fee0fe72df539d7b2a5642c77",
+      "bytes": 74606
+    }
+  ],
+  "contract": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_live_change": false,
+    "automatic_retuning": false,
+    "automatic_promotion": false,
+    "runtime_strategy_changed": false
+  }
+}

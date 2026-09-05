@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import Protocol
@@ -37,15 +37,24 @@ from hypervector.live.multi_asset_market_bars import (
     resample_one_minute_to_five,
 )
 from hypervector.live.multi_asset_polling_contract import (
-    READINESS_SEED_LOOKBACK_MINUTES,
     SOURCE_TIMEFRAMES,
 )
+from hypervector.live.multi_asset_poll_validation import (
+    record_fresh_intents,
+    validate_intent_batch,
+)
 from hypervector.live.multi_asset_signal_source import IntentBatch, ProviderEvaluation
+from hypervector.live.multi_asset_readiness_seed import (
+    ProviderIntentCollectorProtocol,
+    collect_provider_batch,
+    collect_readiness_seed_views,
+    latest_startup_telemetry_evaluation,
+    preferred_startup_runtime_evaluation,
+)
 from hypervector.live.transient_transport import transient_read_failure_reason
 
 _INCREMENTAL_LOOKBACK_MINUTES = 5
 _MINUTES_PER_DAY = 24 * 60
-_PREACTIVATION_READINESS_REASON = "pre_activation_readiness_seed"
 
 
 class CohortBarFetcherProtocol(Protocol):
@@ -61,19 +70,6 @@ class CohortBarFetcherProtocol(Protocol):
     ) -> pd.DataFrame: ...
 
 
-class ProviderIntentCollectorProtocol(Protocol):
-    """Uniform adapter around one provider's completed-bar builder."""
-
-    def __call__(
-        self,
-        bars: pd.DataFrame,
-        *,
-        symbol: str,
-        observed_at: pd.Timestamp,
-        after_decision_time_ms: int | None,
-    ) -> IntentBatch: ...
-
-
 _default_collector = build_default_collector
 
 
@@ -87,6 +83,7 @@ class CohortIntentPoll:
     market_bars: Mapping[str, tuple[CohortMarketBar, ...]] = field(default_factory=dict)
     exit_bars: Mapping[str, tuple[CohortMarketBar, ...]] = field(default_factory=dict)
     evaluations: tuple[ProviderEvaluation, ...] = field(default_factory=tuple)
+    display_evaluations: tuple[ProviderEvaluation, ...] | None = None
     regime_evaluations: tuple[ProviderEvaluation, ...] = field(default_factory=tuple)
 
     @property
@@ -98,6 +95,15 @@ class CohortIntentPoll:
     def all_evaluations(self) -> tuple[ProviderEvaluation, ...]:
         """Return provider setups plus non-executable canonical regime evidence."""
         return self.evaluations + self.regime_evaluations
+
+    @property
+    def telemetry_evaluations(self) -> tuple[ProviderEvaluation, ...]:
+        """Return the freshest display rows without dropping runtime recovery."""
+        return (
+            self.evaluations
+            if self.display_evaluations is None
+            else self.display_evaluations
+        )
 
 
 class ConfiguredMultiAssetIntentPoller:
@@ -199,10 +205,12 @@ class ConfiguredMultiAssetIntentPoller:
                 source="hyperliquid_public_candles",
                 reason=reason,
             ) from exc
-        intents, source_withheld, evaluations = self._collect_cycle(
-            bars,
-            observed,
-            observed_ms,
+        intents, source_withheld, evaluations, telemetry_evaluations = (
+            self._collect_cycle(
+                bars,
+                observed,
+                observed_ms,
+            )
         )
         regime_evaluations = self._canonical_regime_collector.collect(bars, observed)
         result = self._build_poll(
@@ -211,6 +219,7 @@ class ConfiguredMultiAssetIntentPoller:
             intents,
             source_withheld,
             evaluations,
+            telemetry_evaluations,
             regime_evaluations,
         )
         self._readiness_seed_pending = False
@@ -225,10 +234,12 @@ class ConfiguredMultiAssetIntentPoller:
         list[StrategyIntent],
         list[WithheldIntent],
         list[ProviderEvaluation],
+        list[ProviderEvaluation],
     ]:
         intents: list[StrategyIntent] = []
         source_withheld: list[WithheldIntent] = []
         evaluations: list[ProviderEvaluation] = []
+        telemetry_evaluations: list[ProviderEvaluation] = []
         for provider in self._config.providers:
             self._collect_provider(
                 provider,
@@ -238,8 +249,9 @@ class ConfiguredMultiAssetIntentPoller:
                 intents,
                 source_withheld,
                 evaluations,
+                telemetry_evaluations,
             )
-        return intents, source_withheld, evaluations
+        return intents, source_withheld, evaluations, telemetry_evaluations
 
     def _collect_provider(
         self,
@@ -250,19 +262,31 @@ class ConfiguredMultiAssetIntentPoller:
         intents: list[StrategyIntent],
         source_withheld: list[WithheldIntent],
         evaluations: list[ProviderEvaluation],
+        telemetry_evaluations: list[ProviderEvaluation],
     ) -> None:
         timeframe = SOURCE_TIMEFRAMES[provider.strategy_id]
         collector = self._collectors[provider.strategy_id]
         for symbol in provider.symbols:
             key = (provider.strategy_id, symbol)
             prior = self._require_boundary(key)
-            batch = collector(
+            collected = collect_provider_batch(
+                collector,
                 bars[(symbol, timeframe)],
-                symbol=symbol,
-                observed_at=observed,
-                after_decision_time_ms=prior,
+                provider.strategy_id,
+                symbol,
+                observed,
+                prior,
+                observed_ms,
+                latest_completed_price(bars[(symbol, "1m")], observed, "1m"),
             )
-            _validate_batch(batch, provider.strategy_id, symbol, prior, observed_ms)
+            if isinstance(collected, ProviderEvaluation):
+                evaluations.append(collected)
+                telemetry_evaluations.append(collected)
+                continue
+            batch = collected
+            validate_intent_batch(
+                batch, provider.strategy_id, symbol, prior, observed_ms
+            )
             self._boundaries[key] = batch.latest_decision_time_ms
             self._record_evaluations(
                 batch,
@@ -272,15 +296,29 @@ class ConfiguredMultiAssetIntentPoller:
                 symbol,
                 observed,
                 prior,
+                latest_completed_price(bars[(symbol, "1m")], observed, "1m"),
                 evaluations,
+                telemetry_evaluations,
             )
-            _record_intents(
-                batch,
-                observed_ms,
-                provider.maximum_entry_delay_seconds,
-                intents,
-                source_withheld,
+            self._record_batch_intents(
+                provider, batch, observed_ms, intents, source_withheld
             )
+
+    @staticmethod
+    def _record_batch_intents(
+        provider: StrategyProviderConfig,
+        batch: IntentBatch,
+        observed_ms: int,
+        intents: list[StrategyIntent],
+        source_withheld: list[WithheldIntent],
+    ) -> None:
+        record_fresh_intents(
+            batch,
+            observed_ms,
+            provider.maximum_entry_delay_seconds,
+            intents,
+            source_withheld,
+        )
 
     def _record_evaluations(
         self,
@@ -291,23 +329,33 @@ class ConfiguredMultiAssetIntentPoller:
         symbol: str,
         observed: pd.Timestamp,
         prior: int,
+        unavailable_reference_price: float,
         evaluations: list[ProviderEvaluation],
+        telemetry_evaluations: list[ProviderEvaluation],
     ) -> None:
-        if batch.evaluations:
-            evaluations.extend(batch.evaluations)
+        if self._readiness_seed_pending:
+            views = collect_readiness_seed_views(
+                collector,
+                bars,
+                provider.strategy_id,
+                symbol,
+                observed,
+                prior,
+                unavailable_reference_price,
+            )
+            selected = preferred_startup_runtime_evaluation(
+                views.recovery, batch.evaluations
+            )
+            if selected is not None:
+                evaluations.append(selected)
+            telemetry = latest_startup_telemetry_evaluation(
+                views.telemetry, batch.evaluations
+            )
+            if telemetry is not None:
+                telemetry_evaluations.append(telemetry)
             return
-        if not self._readiness_seed_pending:
-            return
-        seed = self._seed_readiness_evaluation(
-            collector,
-            bars,
-            provider.strategy_id,
-            symbol,
-            observed,
-            prior,
-        )
-        if seed is not None:
-            evaluations.append(seed)
+        evaluations.extend(batch.evaluations)
+        telemetry_evaluations.extend(batch.evaluations)
 
     def _require_boundary(self, key: tuple[str, str]) -> int:
         boundaries = self._boundaries
@@ -322,6 +370,7 @@ class ConfiguredMultiAssetIntentPoller:
         intents: list[StrategyIntent],
         source_withheld: list[WithheldIntent],
         evaluations: list[ProviderEvaluation],
+        telemetry_evaluations: list[ProviderEvaluation],
         regime_evaluations: tuple[ProviderEvaluation, ...],
     ) -> CohortIntentPoll:
         evaluation_rows = tuple(evaluations)
@@ -361,56 +410,16 @@ class ConfiguredMultiAssetIntentPoller:
             market_bars=market_bars,
             exit_bars=exit_bars,
             evaluations=evaluation_rows,
+            display_evaluations=tuple(telemetry_evaluations),
             regime_evaluations=regime_evaluations,
         )
 
-    def _seed_readiness_evaluation(
-        self,
-        collector: ProviderIntentCollectorProtocol,
-        bars: pd.DataFrame,
-        strategy_id: str,
-        symbol: str,
-        observed: pd.Timestamp,
-        activation_boundary: int,
-    ) -> ProviderEvaluation | None:
-        lookback_ms = READINESS_SEED_LOOKBACK_MINUTES[strategy_id] * 60 * 1_000
-        seed_boundary = max(0, activation_boundary - lookback_ms)
-        batch = collector(
-            bars,
-            symbol=symbol,
-            observed_at=observed,
-            after_decision_time_ms=seed_boundary,
-        )
-        _validate_batch(
-            batch,
-            strategy_id,
-            symbol,
-            seed_boundary,
-            activation_boundary,
-        )
-        seed = max(
-            batch.evaluations, key=lambda value: value.decision_time_ms, default=None
-        )
-        return (
-            None
-            if seed is None
-            else replace(
-                seed,
-                backend_non_action_reason=_PREACTIVATION_READINESS_REASON,
-            )
-        )
-
     def _fetch_cycle(self, observed_ms: int) -> dict[tuple[str, str], pd.DataFrame]:
-        lookback_days = (
-            self._config.lookback_days
-            if not self._one_minute_cache
-            else _INCREMENTAL_LOOKBACK_MINUTES / _MINUTES_PER_DAY
-        )
         fresh = {
             symbol: self._fetch_bars(
                 symbol,
                 "1m",
-                lookback_days,
+                self._fetch_lookback_days(symbol, observed_ms),
                 end_ms=observed_ms,
             )
             for symbol in self._config.symbols
@@ -440,6 +449,20 @@ class ConfiguredMultiAssetIntentPoller:
         )
         return result
 
+    def _fetch_lookback_days(self, symbol: str, observed_ms: int) -> float:
+        """Cover a stale cache gap while retaining the normal overlap."""
+        cached = self._one_minute_cache.get(symbol)
+        if cached is None or cached.empty:
+            return float(self._config.lookback_days)
+        timestamps = pd.to_datetime(cached["timestamp"], utc=True, errors="raise")
+        latest_ms = int(pd.Timestamp(timestamps.max()).timestamp() * 1_000)
+        stale_minutes = max(0.0, (observed_ms - latest_ms) / 60_000.0) + 1.0
+        required_minutes = max(_INCREMENTAL_LOOKBACK_MINUTES, stale_minutes)
+        return min(
+            float(self._config.lookback_days),
+            required_minutes / _MINUTES_PER_DAY,
+        )
+
     def _intent_order(self, intent: StrategyIntent) -> tuple[int, int, int]:
         symbol_index = self._config.symbols.index(intent.symbol)
         priority = next(
@@ -448,50 +471,3 @@ class ConfiguredMultiAssetIntentPoller:
             if provider.strategy_id == intent.strategy_id
         )
         return intent.decision_time_ms, symbol_index, -priority
-
-
-def _validate_batch(
-    batch: IntentBatch,
-    strategy_id: str,
-    symbol: str,
-    prior: int,
-    observed_ms: int,
-) -> None:
-    boundary = batch.latest_decision_time_ms
-    if boundary < prior or boundary > observed_ms:
-        raise MultiAssetIntentPollerError(
-            f"invalid decision boundary for {strategy_id}/{symbol}: {boundary}"
-        )
-    for intent in batch.intents:
-        if intent.strategy_id != strategy_id or intent.symbol != symbol:
-            raise MultiAssetIntentPollerError(
-                "provider emitted an intent with incorrect attribution"
-            )
-        if not prior < intent.decision_time_ms <= boundary:
-            raise MultiAssetIntentPollerError(
-                "provider intent lies outside its causal decision boundary"
-            )
-    for evaluation in batch.evaluations:
-        if evaluation.strategy_id != strategy_id or evaluation.symbol != symbol:
-            raise MultiAssetIntentPollerError(
-                "provider emitted an evaluation with incorrect attribution"
-            )
-        if not prior < evaluation.decision_time_ms <= boundary:
-            raise MultiAssetIntentPollerError(
-                "provider evaluation lies outside its causal decision boundary"
-            )
-
-
-def _record_intents(
-    batch: IntentBatch,
-    observed_ms: int,
-    maximum_entry_delay_seconds: int,
-    intents: list[StrategyIntent],
-    source_withheld: list[WithheldIntent],
-) -> None:
-    for intent in batch.intents:
-        age = observed_ms - intent.decision_time_ms
-        if age > maximum_entry_delay_seconds * 1_000:
-            source_withheld.append(WithheldIntent(intent, "stale_completed_decision"))
-        else:
-            intents.append(intent)

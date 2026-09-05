@@ -41,6 +41,20 @@ fn render_performance(frame: &mut Frame, app: &App, area: Rect) {
         );
         return;
     };
+    if performance
+        .current_run
+        .as_ref()
+        .is_some_and(|run| app.backend.run_id.as_deref() != Some(run.run_id.as_str()))
+    {
+        crate::cohort_widgets::render_empty(
+            frame,
+            app,
+            area,
+            " PORTFOLIO PERFORMANCE // LIVE LEDGER ",
+            "Current-run performance identity mismatch",
+        );
+        return;
+    }
     let (scope_label, current) = performance.current_run.as_ref().map_or_else(
         || {
             performance

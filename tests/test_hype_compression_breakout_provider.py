@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from types import SimpleNamespace
 
 import pandas as pd
 import pytest
@@ -12,7 +13,12 @@ from hypervector.live.hype_breakout_compression_provider import (
     HYPE_COMPRESSION_BREAKOUT_STRATEGY,
     HypeCompressionBreakoutCollector,
 )
+from hypervector.live.hype_compression_alignment_provider import (
+    HYPE_COMPRESSION_ALIGNMENT_STRATEGY,
+    HypeCompressionAlignmentCollector,
+)
 from hypervector.live.multi_asset_signal_source import IntentBatch, ProviderEvaluation
+from hypervector.live.multi_asset_default_collectors import _native_collector
 from hypervector.live.provider_readiness import SignalReadiness
 
 _DECISION_MS = int(pd.Timestamp("2026-08-10T20:00:00Z").timestamp() * 1_000)
@@ -25,12 +31,14 @@ def _source(
     bbwp_5m: float | None = 45.0,
     prior_bbwp: float | None = 35.0,
     body_bps: float | None = -2.0,
+    relation: str = "aligned",
 ) -> ProviderEvaluation:
     metrics: dict[str, object] = {
         "entry_feature_status": "measured",
         "authoritative_5m_bbwp_percentile": bbwp_5m,
         "prior_bbwp_min_15m": prior_bbwp,
         "directional_bar_body_bps": body_bps,
+        "breakout_side_relation": relation,
     }
     return ProviderEvaluation(
         strategy_id=_CANONICAL,
@@ -175,3 +183,68 @@ def test_hype_filter_rejects_other_symbols() -> None:
             observed_at=pd.Timestamp("2026-08-10T20:00:30Z"),
             after_decision_time_ms=_DECISION_MS - 60_000,
         )
+
+
+@pytest.mark.parametrize("side", ["long", "short"])
+def test_alignment_revision_routes_both_aligned_sides(side: str) -> None:
+    """The versioned repair retains only agreement under a new identity."""
+    collector = HypeCompressionAlignmentCollector(
+        canonical_collector=_canonical(_source(side=side, relation="aligned")),
+        execution_enabled=True,
+    )
+
+    batch = collector(
+        pd.DataFrame(),
+        symbol="HYPE",
+        observed_at=pd.Timestamp("2026-08-10T20:00:30Z"),
+        after_decision_time_ms=_DECISION_MS - 60_000,
+    )
+
+    assert [(intent.strategy_id, intent.side) for intent in batch.intents] == [
+        (HYPE_COMPRESSION_ALIGNMENT_STRATEGY, side)
+    ]
+    assert batch.evaluations[0].readiness.metrics["alignment_only"] is True
+    assert batch.evaluations[0].readiness.conditions_required == 5
+
+
+@pytest.mark.parametrize(
+    ("relation", "reason"),
+    [
+        ("opposed", "breakout_side_opposed"),
+        ("unavailable", "breakout_side_unavailable"),
+    ],
+)
+def test_alignment_revision_fails_closed_without_agreement(
+    relation: str,
+    reason: str,
+) -> None:
+    """Opposed or absent side evidence cannot leak a base compression intent."""
+    collector = HypeCompressionAlignmentCollector(
+        canonical_collector=_canonical(_source(relation=relation)),
+        execution_enabled=True,
+    )
+
+    batch = collector(
+        pd.DataFrame(),
+        symbol="HYPE",
+        observed_at=pd.Timestamp("2026-08-10T20:00:30Z"),
+        after_decision_time_ms=_DECISION_MS - 60_000,
+    )
+
+    assert batch.intents == ()
+    assert batch.evaluations[0].reason == reason
+    assert reason in batch.evaluations[0].readiness.blockers
+
+
+def test_alignment_revision_has_a_default_runtime_collector() -> None:
+    """A successor config cannot validate yet fail during collector assembly."""
+    provider = SimpleNamespace(
+        strategy_id=HYPE_COMPRESSION_ALIGNMENT_STRATEGY,
+        execution_symbols=("HYPE",),
+        executable_sides=lambda _symbol: frozenset({"long", "short"}),
+    )
+    config = SimpleNamespace(mode="live")
+
+    collector = _native_collector(provider, config)
+
+    assert isinstance(collector, HypeCompressionAlignmentCollector)

@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Iterator, Mapping
+from dataclasses import dataclass
 from datetime import datetime, timezone
 import json
 import os
@@ -19,6 +20,7 @@ SOL_LIVE_EVENT_TYPES = frozenset(
         "order_intent",
         "cancel_intent",
         "order_acknowledgement",
+        "entry_not_filled",
         "fill",
         "stop_order",
         "target_order",
@@ -54,6 +56,18 @@ class SolLiveLedgerError(RuntimeError):
     """A live ledger path, record, or existing history is invalid."""
 
 
+@dataclass(frozen=True)
+class SolLiveLedgerCursor:
+    """Exact byte and sequence boundary for incremental ledger reads."""
+
+    byte_offset: int
+    next_sequence: int
+
+    def __post_init__(self) -> None:
+        if self.byte_offset < 0 or self.next_sequence <= 0:
+            raise SolLiveLedgerError("live ledger cursor is invalid")
+
+
 class SolLiveLedger:
     """Append durable, identity-stamped records without resetting history."""
 
@@ -81,7 +95,7 @@ class SolLiveLedger:
         )
         self._run_fingerprint = _required_text(run_fingerprint, "run_fingerprint")
         self._run_id = _required_text(run_id, "run_id")
-        self._next_sequence = len(self.read_all()) + 1
+        self._next_sequence = self._validated_record_count() + 1
 
     def append(
         self,
@@ -157,21 +171,57 @@ class SolLiveLedger:
 
     def read_all(self) -> list[dict[str, object]]:
         """Read and validate the complete existing ledger in sequence order."""
+        return list(self._iter_records())
+
+    def read_matching(
+        self,
+        predicate: Callable[[Mapping[str, object]], bool],
+    ) -> list[dict[str, object]]:
+        """Validate all rows while retaining only rows selected by ``predicate``."""
+        return [record for record in self._iter_records() if predicate(record)]
+
+    def _validated_record_count(self) -> int:
+        return sum(1 for _record in self._iter_records())
+
+    def _iter_records(self) -> Iterator[dict[str, object]]:
         if not self.path.exists():
-            return []
-        records: list[dict[str, object]] = []
+            return
         with self.path.open("r", encoding="utf-8") as handle:
             for line_number, line in enumerate(handle, start=1):
                 if not line.strip():
                     raise SolLiveLedgerError(f"live ledger line {line_number} is empty")
                 record = _decode_record(line, line_number)
-                expected = len(records) + 1
-                if record.get("sequence") != expected:
+                if record.get("sequence") != line_number:
                     raise SolLiveLedgerError(
-                        f"live ledger line {line_number} sequence must equal {expected}"
+                        f"live ledger line {line_number} sequence must equal {line_number}"
                     )
-                records.append(record)
-        return records
+                yield record
+
+    def end_cursor(self) -> SolLiveLedgerCursor:
+        """Return the current complete append boundary for this writer."""
+        size = self.path.stat().st_size if self.path.exists() else 0
+        return SolLiveLedgerCursor(size, self._next_sequence)
+
+    def read_from_cursor(
+        self,
+        cursor: SolLiveLedgerCursor,
+    ) -> tuple[list[dict[str, object]], SolLiveLedgerCursor]:
+        """Read and validate only complete rows appended after ``cursor``."""
+        size = self.path.stat().st_size if self.path.exists() else 0
+        if size < cursor.byte_offset:
+            raise SolLiveLedgerError("live ledger was truncated after cursor creation")
+        if size == cursor.byte_offset:
+            if cursor.next_sequence != self._next_sequence:
+                raise SolLiveLedgerError("live ledger cursor sequence is stale")
+            return [], cursor
+        encoded = _read_suffix(self.path, cursor.byte_offset)
+        rows = _decode_suffix(encoded, cursor.next_sequence)
+        next_sequence = cursor.next_sequence + len(rows)
+        if next_sequence != self._next_sequence:
+            raise SolLiveLedgerError("live ledger changed outside its active writer")
+        return rows, SolLiveLedgerCursor(
+            cursor.byte_offset + len(encoded), next_sequence
+        )
 
     def _append_record(self, record: Mapping[str, object]) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)
@@ -244,6 +294,37 @@ def _decode_record(line: str, line_number: int) -> dict[str, object]:
         raise SolLiveLedgerError(f"live ledger line {line_number} must be an object")
     _validate_json_value(value, path=f"line {line_number}")
     return value
+
+
+def _read_suffix(path: Path, offset: int) -> bytes:
+    try:
+        with path.open("rb") as handle:
+            handle.seek(offset)
+            encoded = handle.read()
+    except OSError as exc:
+        raise SolLiveLedgerError(f"unable to read live ledger suffix: {exc}") from exc
+    if not encoded.endswith(b"\n"):
+        raise SolLiveLedgerError("live ledger suffix ends with an incomplete row")
+    return encoded
+
+
+def _decode_suffix(encoded: bytes, first_sequence: int) -> list[dict[str, object]]:
+    try:
+        lines = encoded.decode("utf-8").splitlines()
+    except UnicodeDecodeError as exc:
+        raise SolLiveLedgerError("live ledger suffix is not valid UTF-8") from exc
+    records: list[dict[str, object]] = []
+    for line_number, line in enumerate(lines, start=first_sequence):
+        if not line:
+            raise SolLiveLedgerError(f"live ledger line {line_number} is empty")
+        record = _decode_record(line, line_number)
+        expected = first_sequence + len(records)
+        if record.get("sequence") != expected:
+            raise SolLiveLedgerError(
+                f"live ledger line {line_number} sequence must equal {expected}"
+            )
+        records.append(record)
+    return records
 
 
 def _validated_payload(payload: Mapping[str, object]) -> dict[str, object]:

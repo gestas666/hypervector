@@ -16,7 +16,9 @@ use crate::cohort_format::money;
 use crate::cohort_growth_preflight::growth_preflight_lines;
 use crate::cohort_operator::CohortAssetStageRequest;
 use crate::cohort_router_format::human_token;
-use crate::cohort_sizing_evidence::{asset_sizing_line, staged_provider_sizing_line};
+use crate::cohort_sizing_evidence::{
+    asset_ioc_cap_line, asset_sizing_line, staged_provider_sizing_line,
+};
 use crate::cohort_widgets::{panel, provider_alias, render_empty};
 
 /// Render effective values beside a complete restart-only draft profile.
@@ -320,6 +322,9 @@ fn context_lines<'a>(app: &'a App, editor: Option<&CohortConfigEditor>) -> Vec<L
         )),
         asset_sizing_line(app, coin),
         staged_provider_sizing_line(app, coin),
+    ];
+    lines.extend(asset_ioc_cap_line(app, coin));
+    lines.extend([
         Line::from(format!(
             "CREDENTIALS  WALLET {wallet}  //  SIGNER {signer}  //  VALUES NEVER RENDERED"
         )),
@@ -331,7 +336,7 @@ fn context_lines<'a>(app: &'a App, editor: Option<&CohortConfigEditor>) -> Vec<L
             Span::styled("[↑/↓] ROW  [+/-] VALUE  [ENTER] ACTION", app.theme.gold),
         ]),
         Line::from(Span::styled(notice.to_string(), app.theme.muted)),
-    ];
+    ]);
     lines.extend(growth_preflight_lines(app, coin));
     lines.extend(scope_matrix_lines(app, editor));
     lines
@@ -355,6 +360,12 @@ fn provider_contract(value: Option<&CohortProviderExecutionContract>) -> String 
 fn profit_lock_contract(contract: &CohortProviderExecutionContract) -> String {
     if contract.profit_lock_policy == "none" {
         return "OFF".into();
+    }
+    if contract.profit_lock_policy == "btc_hulk_delayed_component_floor_v1" {
+        return "DELAYED COMPONENT FLOOR".into();
+    }
+    if contract.profit_lock_policy == "btc_hulk_delayed_component_exit_v2" {
+        return "FLOOR / REVERSAL CONTAINMENT".into();
     }
     match (
         contract.profit_lock_activation_bps,
@@ -400,6 +411,7 @@ fn target_contract(contract: &CohortProviderExecutionContract) -> String {
         "reward_risk" => contract
             .target_r_multiple
             .map_or_else(|| "RR N/A".into(), |value| format!("{value:.1}R")),
+        "absolute_anchor" => "DYNAMIC PRIOR-CLOSE".into(),
         _ => "UNKNOWN".into(),
     }
 }
@@ -443,5 +455,44 @@ fn configured_label(value: Option<bool>) -> &'static str {
         Some(true) => "CONFIGURED",
         Some(false) => "MISSING",
         None => "UNREPORTED",
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::profit_lock_contract;
+    use crate::backend_cohort::CohortProviderExecutionContract;
+
+    #[test]
+    fn specialized_btc_hulk_lock_is_not_labeled_invalid() {
+        let contract = CohortProviderExecutionContract {
+            entry_liquidity: "taker_ioc".into(),
+            stop_policy: "structural_clamped_bps".into(),
+            target_policy: "reward_risk".into(),
+            maximum_hold_seconds: 86_400,
+            stop_bps: None,
+            minimum_stop_bps: Some(20.0),
+            maximum_stop_bps: Some(75.0),
+            target_bps: None,
+            target_r_multiple: Some(3.0),
+            safety_stop_overlay: false,
+            maximum_hold_policy: "fixed".into(),
+            hard_maximum_hold_seconds: None,
+            provider_recipe_exit_policy: "ignore".into(),
+            profit_lock_policy: "btc_hulk_delayed_component_floor_v1".into(),
+            profit_lock_activation_bps: None,
+            profit_lock_floor_bps: None,
+            profit_lock_giveback_bps: None,
+        };
+
+        assert_eq!(profit_lock_contract(&contract), "DELAYED COMPONENT FLOOR");
+        let versioned = CohortProviderExecutionContract {
+            profit_lock_policy: "btc_hulk_delayed_component_exit_v2".into(),
+            ..contract
+        };
+        assert_eq!(
+            profit_lock_contract(&versioned),
+            "FLOOR / REVERSAL CONTAINMENT"
+        );
     }
 }

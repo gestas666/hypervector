@@ -1,0 +1,158 @@
+{
+  "assessment": {
+    "confidence": "medium",
+    "disposition": "RETAIN_CURRENT_HYPE_ALIGNMENT_GATES",
+    "reason": "Current-run counterfactuals do not show robust after-cost opportunity behind any single missing gate. The only positive mean values are prior-compression-absent at 30 and 60 minutes; both have negative medians and negative excluding-largest-winner means.",
+    "reopen_only_if": "New non-overlapping prospective evidence is positive after costs, positive excluding its largest winner, and directionally consistent for a predeclared gate relaxation."
+  },
+  "checkpoint_snapshot": {
+    "bytes": 7510197,
+    "generated_at_utc": "2026-08-19T00:02:05.475540+00:00",
+    "path": "data/runtime/bidirectional_cohort/latest_checkpoint.json",
+    "sha256": "1a9802fe2549391fe300d0ee54d9f30710c6a0e359d840438927b1eee4a949e8"
+  },
+  "contract": {
+    "automatic_live_change": false,
+    "automatic_retuning": false,
+    "execution_authority": "none",
+    "performance_gate": false,
+    "report_only": true,
+    "runtime_strategy_changed": false
+  },
+  "evidence": {
+    "authoritative_5m_compression_absent": {
+      "evaluations": 227,
+      "independent_horizons_minutes": {
+        "5": {
+          "excluding_largest_mean_bps": -17.502621333760423,
+          "mean_bps": -16.537970508916615,
+          "median_bps": -14.869798874617468,
+          "resolved": 46
+        },
+        "15": {
+          "excluding_largest_mean_bps": -23.060976072287996,
+          "mean_bps": -20.225496749440456,
+          "median_bps": -16.37245379738338,
+          "resolved": 17
+        },
+        "30": {
+          "excluding_largest_mean_bps": -30.83939207528479,
+          "mean_bps": -24.24705499324271,
+          "median_bps": -21.527911855502612,
+          "resolved": 9
+        },
+        "60": {
+          "excluding_largest_mean_bps": -47.723367560277055,
+          "mean_bps": -28.442901507627617,
+          "median_bps": -7.599338418956869,
+          "resolved": 5
+        }
+      }
+    },
+    "canonical_breakout_onset_absent": {
+      "evaluations": 533,
+      "independent_horizons_minutes": {
+        "5": {
+          "excluding_largest_mean_bps": -14.912087479712804,
+          "mean_bps": -14.298356037113372,
+          "median_bps": -14.017619484641186,
+          "resolved": 106
+        },
+        "15": {
+          "excluding_largest_mean_bps": -18.455541435669005,
+          "mean_bps": -16.56624768904095,
+          "median_bps": -15.55406095692079,
+          "resolved": 35
+        },
+        "30": {
+          "excluding_largest_mean_bps": -22.055626875074452,
+          "mean_bps": -17.724853748953564,
+          "median_bps": -14.705058909784452,
+          "resolved": 17
+        },
+        "60": {
+          "excluding_largest_mean_bps": -27.854171041236434,
+          "mean_bps": -19.309262797093847,
+          "median_bps": -4.672974807186414,
+          "resolved": 8
+        }
+      }
+    },
+    "directional_pullback_absent": {
+      "evaluations": 258,
+      "independent_horizons_minutes": {
+        "5": {
+          "excluding_largest_mean_bps": -14.696788477413705,
+          "mean_bps": -14.14701159444011,
+          "median_bps": -14.009557140934092,
+          "resolved": 85
+        },
+        "15": {
+          "excluding_largest_mean_bps": -18.451300332657393,
+          "mean_bps": -15.86548826006379,
+          "median_bps": -11.807251908396477,
+          "resolved": 32
+        },
+        "30": {
+          "excluding_largest_mean_bps": -19.094132145317285,
+          "mean_bps": -15.362447421441857,
+          "median_bps": -15.73958529527496,
+          "resolved": 17
+        },
+        "60": {
+          "excluding_largest_mean_bps": -24.528598353987007,
+          "mean_bps": -15.238962603996058,
+          "median_bps": -2.888994148865553,
+          "resolved": 8
+        }
+      }
+    },
+    "prior_compression_absent": {
+      "evaluations": 122,
+      "independent_horizons_minutes": {
+        "5": {
+          "excluding_largest_mean_bps": -6.688911934630219,
+          "mean_bps": -4.584009809798467,
+          "median_bps": -8.232338367756597,
+          "resolved": 27
+        },
+        "15": {
+          "excluding_largest_mean_bps": -7.986568867079652,
+          "mean_bps": -1.5838331750563999,
+          "median_bps": -7.568281636352913,
+          "resolved": 12
+        },
+        "30": {
+          "excluding_largest_mean_bps": -7.284300238264831,
+          "mean_bps": 2.5815460672495414,
+          "median_bps": -6.747080839215369,
+          "resolved": 8
+        },
+        "60": {
+          "excluding_largest_mean_bps": -7.0205046074842565,
+          "mean_bps": 5.792619074434747,
+          "median_bps": -7.599338418956869,
+          "resolved": 5
+        }
+      }
+    }
+  },
+  "generated_at_utc": "2026-08-19T00:02:10.835509+00:00",
+  "identity": {
+    "eligible_evaluations": 0,
+    "profile_fingerprint": "724c259bd94be60d80ffc2e6b9a760412b9729ab1f8fea403e61d266f0d9cb8d",
+    "profile_id": "multi_asset_growth_first_5000_spcx_short_containment_v57",
+    "provider_id": "hype_breakout_compression_alignment_bidirectional_v2",
+    "route": "hype_breakout_compression_alignment_bidirectional_v2|HYPE",
+    "route_evaluations": 534,
+    "run_id": "bidirectional-live-1787065473571",
+    "symbol": "HYPE"
+  },
+  "limitations": [
+    "These are sampled counterfactual markouts for ineligible evaluations, not executable trade lifecycles.",
+    "Small independent samples at longer horizons cannot establish absence of future opportunity.",
+    "The evidence supports retaining gates now; it does not establish the active route's profitability."
+  ],
+  "mode": "v57_hype_alignment_gate_relaxation_current_run_diagnostic_v1",
+  "schema_version": 1
+}

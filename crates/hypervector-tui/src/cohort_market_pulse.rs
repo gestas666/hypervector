@@ -87,13 +87,13 @@ fn render_compact(frame: &mut Frame, app: &App, area: Rect, symbols: &[String], 
     let table = Table::new(
         rows,
         [
-            Constraint::Length(13),
             Constraint::Length(9),
-            Constraint::Length(8),
             Constraint::Length(7),
-            Constraint::Length(9),
-            Constraint::Length(14),
-            Constraint::Min(15),
+            Constraint::Length(4),
+            Constraint::Length(6),
+            Constraint::Length(7),
+            Constraint::Length(8),
+            Constraint::Min(8),
         ],
     )
     .column_spacing(1)

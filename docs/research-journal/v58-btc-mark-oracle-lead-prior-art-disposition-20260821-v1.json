@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v58-btc-mark-oracle-lead-perp-catchup-long",
+  "revision_number": 1,
+  "supersedes_revision_id": null,
+  "created_at_utc": "2026-08-21T22:07:20Z",
+  "strategy_id": "btc_mark_oracle_lead_perp_catchup_long_research_v1",
+  "symbol": "BTC",
+  "status": "reject",
+  "hypothesis": "A positive move in Hyperliquid's BTC spot oracle that is not yet reflected in the simultaneously received BTC mark price may identify a distinct causal long catch-up mechanism.",
+  "decision": "Reject this exact oracle-leads-mark framing before candidate counting or outcome inspection. Hyperliquid documents that BTC oracle and mark prices update together approximately every three seconds, and mark price directly incorporates the oracle plus Hyperliquid and external-perpetual price inputs. Hypervector's activeAssetCtx recorder receives both values in one message with only a local receipt timestamp and cannot establish within-message ordering. Calling the observed mark-oracle difference a causal oracle lead would therefore overstate the evidence and substantially reopen the already rejected Binance-spot-lead and negative-funding/basis families. Do not count, backtest, retune, paper-route, or add this candidate to V58. Continue passive public-event collection so a materially different future hypothesis can use an untouched prospective boundary.",
+  "confidence": "medium_high",
+  "falsifier": "Reopen only if a point-in-time source exposes independently timestamped oracle and executable-perpetual updates with validated ordering, or if Hyperliquid's documented mark/oracle construction changes such that oracle observations become causally available before mark inputs. A renamed threshold on the current simultaneous activeAssetCtx fields is not a falsifier.",
+  "evidence": [
+    {
+      "path": "v58-btc-long-frontier-closure-20260821-v1.json",
+      "role": "prior_btc_long_family_closure_and_minimum_reopen_contract",
+      "sha256": "7d7a3d6985942148246ab36858a8dddaab2e8b67e957f5b6286a6a469bb6da30",
+      "bytes": 11736
+    },
+    {
+      "path": "v58-btc-ibit-creation-persistence-long-result-20260821-v1.json",
+      "role": "materially_new_issuer_input_rejection_after_registered_replay",
+      "sha256": "d7c8694c3fe810b9163ab4db934e93453f0e059fe2cfebb8cb98519ee5ce4ed6",
+      "bytes": 8485
+    },
+    {
+      "path": "v58-btc-oi-expansion-flow-continuation-preflight-result-20260821-v1.json",
+      "role": "materially_new_open_interest_input_rejected_for_insufficient_cadence_before_outcomes",
+      "sha256": "075db38ab24acfb2b79b7c539790727bec6472305af42c376ff4da1280b07375",
+      "bytes": 4662
+    },
+    {
+      "path": "../../src/hypervector/data/hl_events.py",
+      "role": "active_asset_context_parser_and_local_receipt_timestamp_contract",
+      "sha256": "d2573386722efff94a0f1e36716b19c4f010029b8154f914f95082303b700286",
+      "bytes": 13033
+    }
+  ],
+  "metrics": {
+    "source_projection_checked_at_utc": "2026-08-21T22:07:20Z",
+    "source_projection_table": "data/research/market.duckdb:live_asset_contexts",
+    "source_projection_last_receipt_utc": "2026-08-20T23:50:47.248500Z",
+    "btc_context_rows": 1396375,
+    "distinct_receipt_timestamps": 1396375,
+    "median_receipt_gap_seconds": 1.0143386639186143,
+    "p99_receipt_gap_seconds": 1.3091332424068824,
+    "maximum_receipt_gap_seconds": 552554.400034,
+    "basis_bps_p01": -6.291101464804728,
+    "basis_bps_median": -4.544876460219865,
+    "basis_bps_p99": -1.1877370752161693,
+    "basis_bps_minimum": -13.748066678123116,
+    "basis_bps_maximum": 35.127148143547785,
+    "basis_bps_standard_deviation": 0.9653640514597942,
+    "candidate_counts_inspected": false,
+    "forward_returns_inspected": false,
+    "outcomes_computed": false,
+    "orders_attempted": false,
+    "official_hyperliquid_oracle_documentation": "https://hyperliquid.gitbook.io/hyperliquid-docs/hypercore/oracle",
+    "official_hyperliquid_mark_documentation": "https://hyperliquid.gitbook.io/hyperliquid-docs/trading/robust-price-indices",
+    "recorder_restart": {
+      "status": "verified_writing_new_immutable_parts",
+      "execution_authority": "none",
+      "channels": [
+        "l2Book",
+        "trades",
+        "activeAssetCtx"
+      ],
+      "archive_path": "data/cache/events/hyperliquid/BTC"
+    }
+  },
+  "limitations": [
+    "The descriptive DuckDB projection is mutable and ended before the recorder restart; its distribution metrics support source characterization only and were not used to select a signal threshold.",
+    "activeAssetCtx has no exchange event timestamp, so local receipt ordering cannot prove when validators computed each component.",
+    "Mark-oracle basis may contain useful state information, but this disposition rejects only the causal oracle-lead catch-up framing and does not claim that every independently specified basis mechanism is unprofitable.",
+    "The official documentation describes approximate update cadence and construction, not network delivery latency to this recorder.",
+    "No candidate cadence, forward return, fill, fee, funding, slippage, PnL, or portfolio interaction was inspected for this rejected framing.",
+    "No live strategy, asset, route, side, threshold, exit, leverage, size, risk limit, process, order, or position was changed."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

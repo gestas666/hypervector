@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "BRENTOIL_SHADOW_CLOCK_SKEW_RECOVERY_V1",
+  "created_at_utc": "2026-08-18T06:43:30Z",
+  "symbol": "xyz:BRENTOIL",
+  "mode": "report_only_infrastructure_recovery",
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false,
+  "incident": {
+    "component": "brentoil_oil_shock_shadow_observer",
+    "failure": "ValueError: BRENTOIL shadow book receipt precedes exchange time",
+    "effect": "The report-only signal observer stopped and prospective evidence became stale.",
+    "capital_effect": "none_observed",
+    "live_backend_affected": false,
+    "exact_failed_skew_ms_available": false,
+    "unknown_reason": "The rejected book row was not appended before the exception and the terminated process output did not retain the numeric timestamps."
+  },
+  "root_cause": {
+    "classification": "bounded_venue_clock_lead_over_local_receipt_clock",
+    "prior_art": "src/hypervector/live/mu_hip3_shadow_book.py",
+    "incorrect_assumption": "Local receipt time could not precede the venue exchange timestamp.",
+    "failure_mode": "A small negative measured transport delay was treated as corrupt data instead of clock skew."
+  },
+  "remediation_contract": {
+    "implementation": "src/hypervector/live/hip3_shadow_book.py",
+    "raw_exchange_time_preserved": true,
+    "raw_local_receipt_time_preserved": true,
+    "causal_receipt_time": "max(exchange_ts_ms, local_recv_ts_ms)",
+    "negative_clock_skew_ms": "max(exchange_ts_ms - local_recv_ts_ms, 0)",
+    "maximum_accepted_clock_lead_ms": 5000,
+    "excessive_clock_lead_behavior": "fail_closed",
+    "order_or_signing_surface_added": false
+  },
+  "validation": {
+    "bounded_lead_regression": {
+      "input_clock_lead_ms": 1600,
+      "expected_result": "accepted_with_normalized_causal_receipt_and_preserved_raw_clocks",
+      "status": "pass"
+    },
+    "excessive_lead_regression": {
+      "input_clock_lead_ms": 5001,
+      "expected_result": "ValueError",
+      "status": "pass"
+    },
+    "shared_mu_regression": "pass",
+    "real_bounded_probe": {
+      "status": "pass",
+      "exchange_ts_ms": 1787035149799,
+      "local_recv_ts_ms": 1787035150330,
+      "causal_recv_ts_ms": 1787035150330,
+      "negative_clock_skew_ms": 0,
+      "book_depth_per_side": 10
+    },
+    "focused_suite": {
+      "tests_passed": 67,
+      "tests_failed": 0,
+      "duration_seconds": 1.81
+    },
+    "ruff_check": "pass",
+    "ruff_format_check": "pass",
+    "diff_check": "pass"
+  },
+  "post_recovery_observation": {
+    "observed_at_ms": 1787035406281,
+    "cursor_decision_time_ms": 1787035200000,
+    "decision_rows_total": 5,
+    "eligible_decisions_total": 0,
+    "source_revision_rows_total": 0,
+    "last_non_action_reason": "no_shock_onset",
+    "lifecycle_watch_state": "WAITING_ELIGIBLE_ONSET",
+    "resolved_lifecycles": 0
+  },
+  "limitations": [
+    "The exact skew of the rejected pre-fix row cannot be reconstructed because fail-fast occurred before append.",
+    "A passing transport probe establishes observer recovery, not strategy edge.",
+    "Five clean decisions with zero eligible onsets are insufficient for economic assessment.",
+    "Archive public-trade OHLC versus live candleSnapshot parity remains unverified."
+  ],
+  "confidence": {
+    "technical_recovery": "high",
+    "economic_edge": "low"
+  },
+  "falsifiers": [
+    "Any venue clock lead at or below 5000 ms still terminates the observer.",
+    "Any venue clock lead above 5000 ms is accepted.",
+    "Raw exchange or local receipt timestamps are not retained.",
+    "The observer or lifecycle status becomes stale while the processes remain healthy.",
+    "The remediation changes live routing, orders, signing, or strategy behavior."
+  ]
+}

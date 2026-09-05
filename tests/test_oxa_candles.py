@@ -14,9 +14,11 @@ from hypervector.data.oxa_candles import (
     OxaCandleClient,
     OxaCandleRequest,
     fetch_candle_history,
+    read_complete_candle_evidence,
     repair_candle_cadence,
     store_candle_history,
 )
+from hypervector.data.oxa_storage import file_evidence
 
 VALID_PAGE = {
     "success": True,
@@ -112,6 +114,54 @@ def test_candle_bundle_is_atomic_auditable_and_cache_ready(tmp_path: Path) -> No
     assert manifest["files"]["raw/page-0001.json.gz"]["sha256"]
     assert list(bars["source"]) == ["hl"]
     assert bars.iloc[0]["close"] == 101.0
+
+
+def test_complete_candle_reader_reproduces_parquet_from_raw_pages(
+    tmp_path: Path,
+) -> None:
+    """A read-side verifier binds raw payloads to the normalized Parquet."""
+    request = _request()
+    result = fetch_candle_history(
+        OxaCandleClient(
+            api_key="test", session=FakeSession([copy.deepcopy(VALID_PAGE)])
+        ),
+        request,
+    )
+    stored = store_candle_history(tmp_path, request, result)
+
+    frame, evidence = read_complete_candle_evidence(stored.directory, request)
+
+    assert len(frame) == 1
+    assert frame.iloc[0]["close"] == 101.0
+    assert evidence["raw_reproduction_matches"] is True
+    assert evidence["row_count"] == 1
+
+
+def test_complete_candle_reader_rejects_manifest_valid_but_raw_divergent_parquet(
+    tmp_path: Path,
+) -> None:
+    """Recomputed file hashes cannot conceal raw-to-Parquet semantic drift."""
+    request = _request()
+    result = fetch_candle_history(
+        OxaCandleClient(
+            api_key="test", session=FakeSession([copy.deepcopy(VALID_PAGE)])
+        ),
+        request,
+    )
+    stored = store_candle_history(tmp_path, request, result)
+    frame = pd.read_parquet(stored.candles_path)
+    frame.loc[0, "close"] = 100.5
+    frame.to_parquet(stored.candles_path, index=False)
+    manifest = json.loads(stored.manifest_path.read_text(encoding="utf-8"))
+    manifest["files"]["candles.parquet"] = file_evidence(stored.candles_path)
+    stored.manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+    try:
+        read_complete_candle_evidence(stored.directory, request)
+    except ValueError as exc:
+        assert "raw pages" in str(exc)
+    else:
+        raise AssertionError("raw-divergent candle Parquet was accepted")
 
 
 def test_candle_request_rejects_non_utc_or_unsupported_interval() -> None:

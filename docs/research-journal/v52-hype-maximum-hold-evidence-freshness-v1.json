@@ -1,0 +1,112 @@
+{
+  "schema_version": "v52_hype_maximum_hold_evidence_freshness_v1",
+  "hypothesis_id": "v52-hype-maximum-hold-evidence-freshness-v1",
+  "generated_at_utc": "2026-08-17T03:44:46Z",
+  "status": "standing_approval_applies_not_implemented_or_deployed",
+  "problem_restatement": "Verify that the HYPE 8-hour soft maximum-hold extension requires complete, fresh causal provider and canonical-regime evidence rather than indefinitely retained support.",
+  "source_identity": {
+    "run_id": "bidirectional-live-1786927506379",
+    "profile_id": "multi_asset_growth_first_5000_evidence_bound_successor_v52",
+    "profile_fingerprint": "662d28b352cfc4f09e08c71ee67c8f044421483f2932539b09ea082b5e4f27f7",
+    "strategy_id": "hype_breakout_compression_alignment_bidirectional_v2"
+  },
+  "finding": {
+    "severity": "P1 latent capital-risk contract defect",
+    "confidence": "high for code behavior; medium for realized-loss impact because v52 has no open or completed HYPE lifecycle",
+    "observed_behavior": "At the 8-hour soft boundary, the policy scores the newest retained provider and canonical evaluations without checking their age. Either source can also be absent while the remaining positive source alone authorizes extension.",
+    "deterministic_falsifier_result": {
+      "elapsed_ms": 28800000,
+      "retained_evidence_age_ms": 28809000,
+      "both_stale_supported_outcome": "extend",
+      "provider_missing_canonical_supported_outcome": "extend",
+      "canonical_missing_provider_supported_outcome": "extend",
+      "both_missing_outcome": "exit"
+    },
+    "contradicted_contract_comment": "The current policy test states that missing evidence cannot silently extend risk, but it covers only the both-missing case.",
+    "current_capital_state": "BTC and HYPE were FLAT with zero owned orders and zero v52 fills at discovery; no immediate position is exposed to this edge case.",
+    "existing_protection": "Any future HYPE position still has an 80-bps venue-native stop and an unconditional 24-hour hard maximum. The defect affects only permission to remain open after the 8-hour soft boundary."
+  },
+  "bounded_live_freshness_evidence": {
+    "selection_contract": "Current run only; HYPE alignment-v2 provider evaluations excluding the pre-activation readiness seed, plus HYPE canonical-regime evaluations; canonical sorted-key compact JSON rows.",
+    "first_sequence": 205505,
+    "last_sequence": 208656,
+    "first_observed_at_utc": "2026-08-17T00:48:12.804904+00:00",
+    "last_observed_at_utc": "2026-08-17T03:43:15.072408+00:00",
+    "selected_rows": 352,
+    "selected_sha256": "17ba95fa2fd70798833d6651e36aed3f12823cbdc662c7d34703efe3249f2f23",
+    "provider": {
+      "rows": 176,
+      "minimum_age_ms": 12389.873,
+      "mean_age_ms": 14003.549,
+      "maximum_age_ms": 15740.410
+    },
+    "canonical": {
+      "rows": 176,
+      "minimum_age_ms": 12389.073,
+      "mean_age_ms": 13999.618,
+      "maximum_age_ms": 15739.953
+    },
+    "interpretation": "Normal v52 evidence is materially fresher than the configured 60-second entry-action boundary. This supports a 60-second fail-closed extension-evidence limit but does not prove future outage behavior."
+  },
+  "proposed_remediation_contract": {
+    "policy": "Persist an explicit maximum_hold_evidence_maximum_age_seconds=60 in the HYPE execution plan. At and after the soft boundary, extension requires both the bound provider evaluation and canonical regime evaluation to be present, non-future, and no older than 60 seconds.",
+    "fail_closed_behavior": "Missing, future-dated, or older evidence exits at the 8-hour soft boundary with an attributed technical-evidence reason; it cannot authorize extension.",
+    "unchanged_behavior": [
+      "80-bps venue-native protective stop",
+      "fresh eligible opposite-alignment close without same-cycle reversal",
+      "no fixed take-profit or trailing stop",
+      "24-hour unconditional hard maximum",
+      "BTC strategy contracts, position sizing, leverage, and portfolio capacity"
+    ],
+    "deployment_requirement": "Versioned profile/config identity, exact persisted-plan recovery, flat/order-free preflight, immutable prestart backup, controlled restart, poststart acceptance, and TUI identity reconciliation."
+  },
+  "validation_completed": {
+    "deterministic_probes": 2,
+    "focused_tests_passed": 117,
+    "focused_tests_failed": 0,
+    "source_hashes": [
+      {
+        "path": "src/hypervector/live/cohort_maximum_hold_policy.py",
+        "bytes": 7338,
+        "sha256": "3f2d51cb6d8855e19913b41d497659d11cc74f86ee299871675dab8db2babd16"
+      },
+      {
+        "path": "src/hypervector/live/cohort_maximum_hold_controller.py",
+        "bytes": 8411,
+        "sha256": "7919e2b24b01fa3eb1532911278ac1b99c5ae4b7a93dc6add0736fec43452328"
+      },
+      {
+        "path": "configs/multi_asset_growth_first_5000_evidence_bound_successor_v52.toml",
+        "bytes": 1993,
+        "sha256": "bcc46284503a2b38b43ee1f6dca473d32edfb7c9f2cb5cd50dd828f9dabe00fb"
+      }
+    ]
+  },
+  "recommendation": {
+    "Recommendation": "Implement and test the explicit 60-second, two-source freshness requirement, then request a controlled flat-boundary deployment rather than leaving stale or partial evidence able to extend HYPE risk.",
+    "Why now": "The first v52 position has not opened, so the defect can be corrected before an 8-hour lifecycle reaches this path; the live system is currently flat and healthy.",
+    "Evidence reviewed": "Exact v52 config and source hashes, current run freshness distribution, maximum-hold policy/controller, opposite-intent router, stop-preserving close engine, persisted decision recovery, and 117 focused tests.",
+    "Observed problem or opportunity": "Retained stale support and one-source partial support are success-shaped into an extension instead of failing closed at the soft deadline.",
+    "Applicable market regime": "All HYPE regimes whenever a v52 lifecycle reaches eight hours; most consequential during a data outage or partial-provider failure.",
+    "Alternatives considered": "Do nothing; remove extension and force every trade out at eight hours; use a global hard-coded freshness constant; reuse only the outer entry-delay value without persisting it; or persist an explicit execution-plan freshness contract.",
+    "Proposed live change": "After implementation and separate approval, deploy a versioned successor whose HYPE plan requires both provider and canonical evidence no older than 60 seconds before extending beyond eight hours.",
+    "Expected upside": "Prevent stale or incomplete market evidence from prolonging HYPE exposure while preserving fresh, regime-supported winners and the existing hard/stop safeguards.",
+    "Main risks and failure modes": "An overly tight boundary could close a valid trade during a brief telemetry delay; a plan field could be omitted during restart; partial evidence attribution could be ambiguous; or old ledgers could be parsed with unsafe defaults.",
+    "Validation completed": "Current behavior was deterministically reproduced; normal live evidence ages were measured; existing opposite-signal, timer, runner, stop-preserving close, and v52 contract tests passed 117/117.",
+    "Validation still required": "TDD for stale provider, stale canonical, missing either source, future timestamps, exact 60-second boundary, fresh extension, hard deadline, persisted restart, config serialization/fingerprint, and full live-run regression; then flat preflight and poststart acceptance.",
+    "Success metrics": "No extension from missing/future/>60-second evidence; fresh two-source support still extends; fixed timers and hard deadline are unchanged; every soft decision journals source ages and resolution; no unprotected interval or identity drift.",
+    "Failure / rollback triggers": "Any current open position, owned order, source/hash drift, plan recovery mismatch, false extension, false fixed-policy exit, missing stop, backend fault, checkpoint identity mismatch, or failed TUI acceptance blocks deployment or triggers flat-boundary rollback.",
+    "Confidence level": "High on the code defect and fail-closed direction; medium on 60 seconds as the operational threshold because the current sample is only about three hours, although all 352 exact rows were under 15.75 seconds.",
+    "Explicit approval requested": "No additional approval is required for this validated technical repair under docs/research-journal/v51-standing-required-change-preapproval-v1.json; live arming still requires the prescribed flat-boundary validation, rollback evidence, and explicit safety flags."
+  },
+  "highest_value_next_investigation": {
+    "experiment": "hype_maximum_hold_evidence_freshness_remediation",
+    "reason": "This is a capital-relevant defect in an unexercised live exit path and has higher immediate information value than another parameter search.",
+    "live_change_authority": "standing human approval applies after validation; no automatic live change"
+  },
+  "falsifier": "Downgrade or withdraw this finding if the maximum-hold controller is proven to receive only fresh, complete provider-plus-canonical evidence by a stronger invariant not visible in the reviewed code, or if a deterministic integration test shows stale/partial evidence cannot reach the extension decision.",
+  "report_only": true,
+  "execution_authority": "none",
+  "automatic_live_change": false,
+  "runtime_strategy_changed": false
+}

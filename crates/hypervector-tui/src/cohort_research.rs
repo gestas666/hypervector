@@ -344,6 +344,62 @@ fn detail_lines<'a>(
     lines
 }
 
+fn horizon_lines(
+    paths: &std::collections::BTreeMap<u16, CohortObserverPathEvidence>,
+) -> Vec<Line<'static>> {
+    [5_u16, 15, 30, 60]
+        .into_iter()
+        .map(|minutes| Line::from(horizon_line(minutes, paths.get(&minutes))))
+        .collect()
+}
+
+fn horizon_line(minutes: u16, value: Option<&CohortObserverPathEvidence>) -> String {
+    let Some(path) = value else {
+        return format!("{minutes:>2}M  N/A");
+    };
+    let mean = path
+        .mean_directional_return_bps
+        .map_or_else(|| "N/A".into(), |value| format!("{value:+.2}bps"));
+    let positive = path
+        .positive_directional_rate
+        .map_or_else(|| "N/A".into(), |value| format!("{:.1}%", value * 100.0));
+    format!(
+        "{minutes:>2}M  R{}/I{}  MEAN {mean}  POS {positive}  CENS {}  MISS {}{}",
+        path.resolved,
+        path.independent,
+        path.censored,
+        path.missing_data,
+        path_capture_suffix(path),
+    )
+}
+
+fn centered_rect(percent_x: u16, percent_y: u16, area: Rect) -> Rect {
+    let rows = Layout::vertical([
+        Constraint::Percentage((100 - percent_y) / 2),
+        Constraint::Percentage(percent_y),
+        Constraint::Percentage((100 - percent_y) / 2),
+    ])
+    .split(area);
+    Layout::horizontal([
+        Constraint::Percentage((100 - percent_x) / 2),
+        Constraint::Percentage(percent_x),
+        Constraint::Percentage((100 - percent_x) / 2),
+    ])
+    .split(rows[1])[1]
+}
+
+fn count(value: Option<usize>) -> String {
+    value.map_or_else(|| "N/A".into(), |item| item.to_string())
+}
+
+fn yes_no(value: Option<bool>) -> &'static str {
+    match value {
+        Some(true) => "COMPLETE",
+        Some(false) => "INCOMPLETE",
+        None => "N/A",
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::collections::BTreeMap;
@@ -426,61 +482,5 @@ mod tests {
                 }),
             }),
         }
-    }
-}
-
-fn horizon_lines(
-    paths: &std::collections::BTreeMap<u16, CohortObserverPathEvidence>,
-) -> Vec<Line<'static>> {
-    [5_u16, 15, 30, 60]
-        .into_iter()
-        .map(|minutes| Line::from(horizon_line(minutes, paths.get(&minutes))))
-        .collect()
-}
-
-fn horizon_line(minutes: u16, value: Option<&CohortObserverPathEvidence>) -> String {
-    let Some(path) = value else {
-        return format!("{minutes:>2}M  N/A");
-    };
-    let mean = path
-        .mean_directional_return_bps
-        .map_or_else(|| "N/A".into(), |value| format!("{value:+.2}bps"));
-    let positive = path
-        .positive_directional_rate
-        .map_or_else(|| "N/A".into(), |value| format!("{:.1}%", value * 100.0));
-    format!(
-        "{minutes:>2}M  R{}/I{}  MEAN {mean}  POS {positive}  CENS {}  MISS {}{}",
-        path.resolved,
-        path.independent,
-        path.censored,
-        path.missing_data,
-        path_capture_suffix(path),
-    )
-}
-
-fn centered_rect(percent_x: u16, percent_y: u16, area: Rect) -> Rect {
-    let rows = Layout::vertical([
-        Constraint::Percentage((100 - percent_y) / 2),
-        Constraint::Percentage(percent_y),
-        Constraint::Percentage((100 - percent_y) / 2),
-    ])
-    .split(area);
-    Layout::horizontal([
-        Constraint::Percentage((100 - percent_x) / 2),
-        Constraint::Percentage(percent_x),
-        Constraint::Percentage((100 - percent_x) / 2),
-    ])
-    .split(rows[1])[1]
-}
-
-fn count(value: Option<usize>) -> String {
-    value.map_or_else(|| "N/A".into(), |item| item.to_string())
-}
-
-fn yes_no(value: Option<bool>) -> &'static str {
-    match value {
-        Some(true) => "COMPLETE",
-        Some(false) => "INCOMPLETE",
-        None => "N/A",
     }
 }

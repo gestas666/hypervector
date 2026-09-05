@@ -1,0 +1,204 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v57-xyz100-independent-candidate-v1",
+  "created_at_utc": "2026-08-19T01:01:19Z",
+  "status": "rejected_for_independent_slot",
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false,
+  "problem_restatement": {
+    "objective": "Identify one liquid, source-defined non-crypto market that can add a materially distinct opportunity stream without blindly transferring an existing strategy.",
+    "success_criteria": [
+      "exact instrument and oracle identity",
+      "current public liquidity sufficient for bounded research",
+      "continuous point-in-time source coverage for an initial dependence screen",
+      "materially distinct return behavior from the existing SP500 and SPCX research universe",
+      "no live authority inferred from market liquidity or correlation"
+    ]
+  },
+  "instrument_identity": {
+    "symbol": "xyz:XYZ100",
+    "deployer_namespace": "xyz",
+    "description": "Modified-capitalization-weighted index of 100 large non-financial U.S.-listed companies with growth-sector concentration.",
+    "oracle_summary": "Cash-session spot index pricing with futures-derived implied-spot pricing outside the cash session during external coverage.",
+    "external_coverage": "Sunday 18:00 ET through Friday 17:00 ET with daily 17:00-18:00 ET gaps and exchange holiday closures.",
+    "maximum_leverage": 30,
+    "identity_confidence": "high",
+    "primary_sources": [
+      "https://docs.trade.xyz/consolidated-resources/specification-index",
+      "https://docs.trade.xyz/xyz-perps-specification/equity-perpetuals/xyz100-and-index-perpetuals",
+      "https://docs.trade.xyz/api/overview"
+    ]
+  },
+  "current_market_screen": {
+    "observed_at_utc": "2026-08-19T00:53:24.675865+00:00",
+    "active_xyz_markets": 100,
+    "volume_rank": 5,
+    "day_notional_volume_usd": 281900583.2136001,
+    "open_interest_usd_approx": 234929733.986,
+    "spread_bps": 0.33933388757868305,
+    "growth_mode": "enabled",
+    "funding_multiplier": 0.5,
+    "technical_qualification": "qualified_for_observation_only",
+    "live_execution_supported": false,
+    "qualification_blockers": [
+      "full venue-matched chronological source exceeds the public candle cap",
+      "exact strategy and both-side economics are untested",
+      "margin-table details were unavailable in the public qualification response",
+      "execution and TUI integration were not evaluated"
+    ]
+  },
+  "dependence_test": {
+    "source": "Hyperliquid public candleSnapshot 1h",
+    "window_start_utc": "2026-06-27T00:00:00+00:00",
+    "window_end_utc": "2026-08-19T00:00:00+00:00",
+    "shared_contiguous_returns": 1271,
+    "excluded_noncontiguous_returns": {
+      "xyz:SP500": 0,
+      "xyz:SPCX": 0,
+      "xyz:XYZ100": 0
+    },
+    "pearson_correlation": {
+      "xyz:SP500": 0.8794088931403387,
+      "xyz:SPCX": 0.35719562341081734
+    },
+    "sp500_correlation_by_chronological_fold": [
+      0.8514046788512053,
+      0.8426168640894748,
+      0.9250471827156038,
+      0.8050707263997943
+    ],
+    "candidate_negative_hours_with_negative_baseline_fraction": 0.6565143824027073,
+    "interpretation": "XYZ100 is persistently coupled to SP500 in this point-in-time market-return sample. It does not satisfy the requested independent-opportunity role even though it may be tradable under a distinct future mechanism.",
+    "strategy_edge_established": false
+  },
+  "decision": {
+    "market_data_collection_disposition": "bounded qualification complete",
+    "independent_portfolio_slot_disposition": "reject",
+    "live_addition_authorized": false,
+    "strategy_transfer_authorized": false,
+    "reason": "The high and fold-stable SP500 correlation contradicts the independence objective, while no XYZ100-native strategy evidence exists.",
+    "not_rejected_for": [
+      "headline liquidity",
+      "current spread",
+      "instrument identity",
+      "public data availability"
+    ]
+  },
+  "existing_sp500_collection_state": {
+    "observed_at_ms": 1787101417398,
+    "supervisor_status": "ready",
+    "observer_runtime": "running",
+    "execution_authority": "none",
+    "orders_supported": false,
+    "decision_rows_total": 398,
+    "eligible_decisions_total": 8,
+    "long_decisions_total": 6,
+    "short_decisions_total": 2,
+    "source_revision_rows_total": 1,
+    "prior_exact_resolved_lifecycles": 1,
+    "prior_exact_resolved_side": "short",
+    "prior_exact_net_pnl_usd": 3.229665,
+    "profitability_identifiable": false,
+    "remaining_blockers": [
+      "archive public-trade OHLC versus live candleSnapshot parity remains unverified",
+      "archive websocket L2 versus live REST pressure-decision parity remains unresolved",
+      "the cumulative eligible decision sample has not been converted into fully resolved exact-contract lifecycles",
+      "one prior profitable short is entirely largest-winner dependent and has no exact long counterpart"
+    ]
+  },
+  "single_highest_value_next_investigation": {
+    "action": "Freeze the current SP500 v3 decision, book, candle, mark, fee, and funding prefixes at one declared cutoff and resolve the eligible long and short paths under the unchanged v51 80-bps stop, 100/40/80 profit-lock, opposite-intent, and 24-hour fallback contract.",
+    "why_now": "The route already has source-native both-side eligible events and ongoing raw capture; lifecycle resolution closes a narrower and more decision-relevant evidence gap than adding another correlated index or retuning entry thresholds.",
+    "scope": "report_only",
+    "proposed_live_change": "none",
+    "minimum_output": [
+      "exact eligible-to-entry attribution",
+      "resolved versus censored lifecycle count by side",
+      "entry and exit source identity",
+      "fees, funding, slippage, stop, profit-lock, opposite-intent, and max-hold attribution",
+      "net, profit factor, drawdown, and largest-winner sensitivity",
+      "explicit unresolved-path causes without midpoint or oracle substitution"
+    ],
+    "success_condition": "At least one technically resolved long and additional independent short outcomes become available without route or parameter changes.",
+    "failure_condition": "Exact-source gaps, source revisions, unresolved mark paths, or identity mismatch prevent causal lifecycle resolution.",
+    "approval_requested": false
+  },
+  "alternatives_considered": [
+    {
+      "option": "Add XYZ100 immediately",
+      "disposition": "reject",
+      "tradeoff": "Adds liquidity but duplicates SP500 factor exposure and has no route economics."
+    },
+    {
+      "option": "Transfer SP500 pressure or SPCX cash-open logic to XYZ100",
+      "disposition": "reject",
+      "tradeoff": "Fast to implement but violates source-native validation and ignores XYZ100 oracle/session construction."
+    },
+    {
+      "option": "Continue SP500 raw collection without lifecycle resolution",
+      "disposition": "insufficient",
+      "tradeoff": "Preserves data but delays the evidence needed for an economic decision."
+    },
+    {
+      "option": "Resolve the already-captured SP500 v3 lifecycles",
+      "disposition": "selected",
+      "tradeoff": "No live downside and highest information value, but exact path gaps may censor the result."
+    }
+  ],
+  "uncertainties_and_failure_modes": [
+    "Market-return correlation is not strategy-return correlation and can change by regime.",
+    "The 53-day sample may underrepresent tail dependence and structural breaks.",
+    "Public candleSnapshot OHLC can differ from public-trade OHLC used by archive research.",
+    "A distinct XYZ100-native strategy could later reduce signal overlap despite high market correlation.",
+    "SP500 lifecycle resolution can remain technically censored if exact marks or quotes are incomplete."
+  ],
+  "confidence": {
+    "instrument_identity": "high",
+    "current_liquidity_screen": "high",
+    "market_return_redundancy_over_tested_window": "high",
+    "future_strategy_return_redundancy": "low",
+    "sp500_route_profitability": "low",
+    "next_investigation_priority": "high"
+  },
+  "falsifier": "Reopen XYZ100 as an independent candidate only if a preregistered XYZ100-native mechanism produces source-complete strategy returns with materially lower SP500/SPCX signal and PnL dependence, realistic exact costs, chronological stability, and positive largest-winner-removed evidence. Update the SP500 priority if its frozen lifecycle paths cannot be resolved or resolve adversely after exact costs.",
+  "evidence": [
+    {
+      "path": "../../data/logs/research/xyz_liquidity_snapshot_20260819T0055Z_v1.json",
+      "bytes": 27079,
+      "sha256": "bcf0a322afc958d986fa27d4c33a159dfdf7d6e35868cbfea4df9102284fe58c",
+      "role": "current official public xyz liquidity ranking"
+    },
+    {
+      "path": "../../data/logs/research/xyz_xyz100_qualification_20260819T0056Z_v1.json",
+      "bytes": 3168,
+      "sha256": "be5d78eef146248ca74b90907ce0239daa63e68d1fc01a35604eec0fa19894f6",
+      "role": "exact xyz:XYZ100 public market qualification"
+    },
+    {
+      "path": "../../data/logs/research/xyz100_sp500_spcx_market_diversification_20260819_v1.json",
+      "bytes": 345729,
+      "sha256": "9f49e0e2f564063592060f507e2f2feff4b0927885455ac35396d8e6b0e30989",
+      "role": "immutable common-window dependence diagnostic"
+    },
+    {
+      "path": "../../data/live/research/xyz_sp500_fresh15_v3_decisions.jsonl",
+      "bytes": 417272,
+      "rows": 398,
+      "sha256": "cce5fc615277e0c74f591af7e683e83c53679dbe900fd0e842c0f80ba00a5d1a",
+      "role": "append-only report-only SP500 decision-ledger prefix at the declared observation"
+    },
+    {
+      "path": "v51-sp500-fresh15-v3-live-lifecycle-v2.json",
+      "bytes": 10503,
+      "sha256": "0164723389bbeb56d993b33505c0068661acb41d3cdd5a02d44f49ab311715b6",
+      "role": "prior exact single-short SP500 lifecycle disposition"
+    },
+    {
+      "path": "v58-eight-asset-opportunity-coverage-audit-20260819-v1.json",
+      "bytes": 16029,
+      "sha256": "c64ea1eca2f1bb2579872388117337e52ce98973b728ac51d36f790d5938c261",
+      "role": "prior portfolio opportunity and candidate disposition"
+    }
+  ]
+}

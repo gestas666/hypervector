@@ -1,0 +1,279 @@
+{
+  "schema_version": 1,
+  "mode": "v58_public_info_budget_live_candle_cache_challenger",
+  "execution_authority": "none",
+  "report_only": true,
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false,
+  "revision_number": 1,
+  "supersedes_revision_id": null,
+  "created_at_utc": "2026-08-21T05:52:00Z",
+  "hypothesis_id": "v58-public-info-budget-live-candle-cache-challenger-v1",
+  "strategy_id": "v58_public_info_transport_budget",
+  "symbol": "PORTFOLIO",
+  "status": "observe",
+  "hypothesis": "Reusing one verified Hyperliquid REST completed-minute candle snapshot per symbol can materially reduce V58 shared-IP request weight without changing completed-bar OHLCV, route decisions, or completed-bar exit decisions.",
+  "decision": "Continue the cached-observer versus uncached-live parity window and archive-only WebSocket collection. Do not modify or restart the live backend. Direct WebSocket substitution remains rejected because the sealed source-parity result contains decision mismatches. Present a separate live-cache implementation request only after the 24-hour OHLCV and exact controller-decision gates pass.",
+  "confidence": "medium_high",
+  "falsifier": "Reject or revise the live-cache challenger if any cached-versus-uncached completed-bar difference changes a V58 route or profit-lock decision, a missing completed bar is cached, the request reduction is below 70 percent, or 429 and cycle-latency behavior does not materially improve.",
+  "evidence": [
+    {
+      "path": "../../src/hypervector/live/completed_candle_snapshot_cache.py",
+      "role": "existing_completed_minute_request_reuse_contract",
+      "sha256": "7ea96c089acd6481e2ef7b91f45145a720beb415adf7271c2fccacb89b70a2e6",
+      "bytes": 2348
+    },
+    {
+      "path": "../../scripts/multi_asset_bidirectional_observe.py",
+      "role": "active_report_only_cached_observer_integration",
+      "sha256": "416fceab7d7c7132b90cf458806d802ca8cb1f9391192e711bafcbd38eca6479",
+      "bytes": 9365
+    },
+    {
+      "path": "v51-index-source-parity-forward-v1.json",
+      "role": "sealed_evidence_rejecting_direct_rest_websocket_source_alias",
+      "sha256": "01e22ea5715c1f08014ca0fbe016f64346193f27fec612a95cb18affdc6afcd1",
+      "bytes": 9626
+    },
+    {
+      "path": "v58-observer-http429-gap-cache-recovery-20260821-v1.json",
+      "role": "prior_http429_incident_and_report_only_cache_recovery",
+      "sha256": "d822ff0ccbd40e305e52d405730c40d07a59ff83407c4b947adcf3ee345d8619",
+      "bytes": 5013
+    }
+  ],
+  "metrics": {
+    "live_degraded_cycles": 5,
+    "live_public_candle_429_cycles": 2,
+    "live_account_reconciliation_429_cycles": 3,
+    "observer_public_l2_429_cycles": 10,
+    "cached_uncached_overlap_rows": 1600,
+    "exact_ohlcv_matches": 1600,
+    "ohlcv_mismatches": 0,
+    "established_stale_index_boundaries": 3,
+    "stale_index_boundaries_with_raw_breakout": 0,
+    "live_runtime_changed": false,
+    "execution_authority": "none"
+  },
+  "limitations": [
+    "The current parity prefix covers 200 completed minutes per asset, not the predeclared 24-hour window.",
+    "Live telemetry preserves accepted completed bars but does not serialize every redundant REST response.",
+    "Zero OHLCV mismatch does not prove that a very late venue revision can never occur.",
+    "Exact candle parity must still be propagated through route, entry-freshness, maximum-hold, opposite-exit, and profit-lock decision parity.",
+    "Shared-IP aggregate request weight is inferred from code paths and failures; a centralized measured per-endpoint request trace is not yet available.",
+    "No profitability conclusion follows from transport reliability evidence."
+  ],
+  "problem_restatement": {
+    "input": "The V58 live backend, observer, checkpoint, venue preflight, index-pressure observers, and lifecycle watchers share the venue public-info rate budget.",
+    "observed_failure": "Intermittent HTTP 429 responses skip otherwise recoverable public-data or reconciliation cycles.",
+    "required_output": "Reduce avoidable public-info weight without changing candle values, route decisions, profit-lock decisions, live authority, risk, or exit policy.",
+    "success_criterion": "A same-source request-reuse challenger demonstrates exact completed-bar and decision parity while materially reducing candleSnapshot calls.",
+    "stakeholders": [
+      "live capital owner",
+      "V58 live backend",
+      "TUI and research observers"
+    ]
+  },
+  "known_facts": {
+    "active_live_identity": {
+      "run_id": "bidirectional-live-1787272893887",
+      "profile_id": "multi_asset_growth_first_5000_eight_asset_incremental_v58",
+      "profile_fingerprint": "8a04636c9ff60a7eae141381cb540d7c6ceed081097cda7d5e465d48faa5022b"
+    },
+    "venue_documented_limits": {
+      "rest_aggregate_weight_per_ip_per_minute": 1200,
+      "l2Book_weight": 2,
+      "other_documented_info_base_weight": 20,
+      "candleSnapshot_additional_weight_note": "Additional weight applies per 60 returned items.",
+      "websocket_guidance": "The venue recommends WebSockets for lowest-latency real-time data.",
+      "sources": [
+        "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/rate-limits-and-user-limits",
+        "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/websocket/subscriptions",
+        "https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/websocket"
+      ],
+      "research_capture": "/tmp/hyperliquid-rate-limit-l2book.json"
+    },
+    "index_observer_call_contract": {
+      "symbols": [
+        "xyz:SP500",
+        "xyz:SPCX"
+      ],
+      "poll_seconds_per_observer": 5.0,
+      "aggregate_l2_requests_per_minute": 24,
+      "aggregate_l2_weight_per_minute": 48,
+      "interpretation": "The two index observers alone are well below the documented aggregate limit; shared-IP aggregate traffic remains the relevant boundary."
+    },
+    "active_live_degraded_cycles": {
+      "count": 5,
+      "public_candle_429_cycles": 2,
+      "account_reconciliation_429_cycles": 3,
+      "event_sequences": [
+        295669,
+        295856,
+        295937,
+        296142,
+        298158
+      ],
+      "first_observed_at_utc": "2026-08-21T02:07:59.446805+00:00",
+      "last_observed_at_utc": "2026-08-21T04:57:56.898328+00:00",
+      "next_successful_cycle_route_coverage": "10/10 after every degraded cycle",
+      "next_successful_cycle_eligible_signals": 0,
+      "next_successful_cycle_actions": 0,
+      "realized_missed_trade_proven": false
+    },
+    "active_report_only_observer_degraded_cycles": {
+      "run_id": "bidirectional-observe-1787279243093",
+      "count": 10,
+      "source": "hyperliquid_public_l2",
+      "reason": "http_429_retry_exhausted",
+      "first_observed_at_utc": "2026-08-21T02:46:49.942088+00:00",
+      "last_observed_at_utc": "2026-08-21T04:58:52.230011+00:00"
+    },
+    "index_decision_boundary_impact": {
+      "sp500_rows": 603,
+      "sp500_fresh_rows": 600,
+      "sp500_established_stale_rows": 2,
+      "sp500_bootstrap_truncated_rows": 1,
+      "spcx_rows": 610,
+      "spcx_fresh_rows": 608,
+      "spcx_established_stale_rows": 1,
+      "spcx_bootstrap_truncated_rows": 1,
+      "established_stale_rows_with_raw_breakout": 0,
+      "post_repair_boundaries_per_symbol": 2,
+      "post_repair_fresh_boundaries_per_symbol": 2,
+      "recorded_entry_lost_to_stale_pressure_proven": false
+    }
+  },
+  "same_source_cache_parity_prefix": {
+    "prospective_start_ms": 1787279460000,
+    "prospective_start_utc": "2026-08-21T02:31:00+00:00",
+    "comparison_end_bar_utc": "2026-08-21T05:50:00+00:00",
+    "symbols": 8,
+    "completed_minutes_per_symbol": 200,
+    "overlap_rows": 1600,
+    "exact_ohlcv_matches": 1600,
+    "ohlcv_mismatches": 0,
+    "observer_duplicate_rows_after_recovery": 1200,
+    "observer_duplicate_rows_with_changed_ohlcv": 0,
+    "sources": {
+      "uncached_live": "data/live/bidirectional_cohort/decisions.jsonl",
+      "cached_report_only_observer": "data/observe/v58_eight_asset_prospective_20260819_v1/decisions.jsonl"
+    },
+    "limitations": [
+      "The live telemetry records first accepted completed-bar values, not every redundant REST response.",
+      "Zero OHLCV mismatch does not independently prove that a very late venue revision can never occur.",
+      "The current prefix is shorter than the predeclared 24-hour acceptance target.",
+      "Exact candle parity alone does not prove profit-lock decision parity for every possible path."
+    ]
+  },
+  "websocket_challenger": {
+    "authority": "report_only_archive_only",
+    "started_at_utc": "2026-08-21T05:49:01Z",
+    "sessions": [
+      "hypervector-v58-sp500-ws-evidence",
+      "hypervector-v58-spcx-ws-evidence"
+    ],
+    "symbols": [
+      "xyz:SP500",
+      "xyz:SPCX"
+    ],
+    "channels": [
+      "l2Book",
+      "trades",
+      "activeAssetCtx"
+    ],
+    "execution_authority": "none",
+    "initial_stream_gaps": 0,
+    "live_backend_input": false,
+    "direct_cutover_supported": false,
+    "direct_cutover_blocker": "The sealed V51 source-parity result found four SP500 and two SPCX signal-decision mismatches between REST/candleSnapshot and WebSocket/public-trade mechanisms."
+  },
+  "analysis": {
+    "likely_cause": "Aggregate shared-IP request weight, especially repeated candleSnapshot traffic and concurrent account/preflight reads, is a more plausible cause than the two five-second index L2 observers alone.",
+    "cause_confidence": "medium",
+    "cause_falsifier": "A measured aggregate request-weight trace below the venue limit during a new 429 burst would falsify simple aggregate-weight saturation and require investigation of burst, endpoint-specific, or upstream limits.",
+    "capital_impact": "No recorded eligible entry or order was lost after the identified V58 degraded cycles, but a future boundary could be affected and account reconciliation latency is operationally undesirable.",
+    "capital_impact_confidence": "high_for_recorded_prefix_low_for_future_absence",
+    "capital_impact_falsifier": "Any eligible completed-bar signal whose valid submission window expires solely because of a 429, or any protection/reconciliation action delayed by a 429, establishes material impact."
+  },
+  "recommendation": {
+    "recommendation": "Continue archive-only WebSocket evidence and prepare, but do not deploy, a same-source live completed-minute candle cache challenger after the 24-hour parity gate.",
+    "why_now": "V58 has recorded recoverable 429 cycles, while the report-only cache already reduced candle requests and produced exact same-source OHLCV parity across the current prefix.",
+    "observed_problem_or_opportunity": "Repeated same-minute candleSnapshot requests consume high-weight public-info budget without producing new completed-bar decisions.",
+    "applicable_market_regime": "All regimes; this is transport efficiency rather than a market-direction rule.",
+    "proposed_live_change": "Pending validation and separate approval, wrap the live cohort candle fetcher in completed-minute request reuse using the existing Hyperliquid REST candle source. Do not change strategy, route, sizing, leverage, stop, target, or exit policies.",
+    "expected_upside": "Approximately 75 percent fewer steady-state live candleSnapshot calls at a 15-second poll interval, leaving more shared-IP headroom and reducing the probability of skipped cycles.",
+    "main_risks": [
+      "A venue revision after the first accepted completed-bar response could be hidden until the next minute.",
+      "A profit-lock path could differ if cached and later uncached OHLCV differ.",
+      "Reduced calls may not eliminate 429s caused by other processes or burst limits.",
+      "A future restart would load changed implementation code and therefore requires explicit review and authorization."
+    ],
+    "validation_completed": [
+      "Existing cache unit tests cover same-minute reuse, next-minute refresh, deep-copy isolation, and retry when the completed bar is missing.",
+      "The current cached-observer versus uncached-live prefix has 1600/1600 exact OHLCV matches.",
+      "Every current live degraded cycle recovered with complete route coverage and no eligible signal.",
+      "Two archive-only WebSocket evidence sessions started without stream gaps or execution authority."
+    ],
+    "validation_still_required": [
+      "Reach at least 24 contiguous hours and 11520 exact OHLCV overlap rows across eight assets with zero unexplained mismatch.",
+      "Replay cached and uncached inputs through exact V58 route and completed-bar profit-lock controllers and require identical decisions.",
+      "Measure request-count and cycle-latency reduction in an authority-none process.",
+      "Run focused tests plus the complete non-network Python suite.",
+      "Require a verified flat and order-free restart boundary or an explicitly reviewed open-position restart-adoption plan before any deployment."
+    ],
+    "success_metrics": [
+      "At least 70 percent fewer steady-state live candleSnapshot calls.",
+      "Zero completed-bar OHLCV mismatch across the acceptance window.",
+      "Zero route, entry-freshness, maximum-hold, opposite-exit, or profit-lock decision mismatch.",
+      "No increase in poll latency, stale intent, runtime fault, or unprotected-position events.",
+      "No execution authority in any challenger process."
+    ],
+    "failure_or_rollback_triggers": [
+      "Any cached-versus-uncached OHLCV mismatch changes a V58 decision.",
+      "Any profit-lock action differs by side, timestamp, price, or lifecycle identity.",
+      "Any missing completed bar is cached rather than retried.",
+      "429 frequency or cycle latency does not materially improve.",
+      "Any direct WebSocket substitution changes the frozen REST signal mechanism."
+    ],
+    "confidence_level": "medium_high_for_request_reduction_medium_for_live_equivalence_low_for_429_elimination",
+    "explicit_approval_requested": "No live cutover approval requested yet. Continue report-only collection. After the 24-hour parity and controller-decision gates pass, present a separate approval-ready implementation and deployment request."
+  },
+  "alternatives": [
+    {
+      "option": "Do nothing",
+      "upside": "No implementation or restart risk.",
+      "downside": "Retains avoidable shared-IP weight and future skipped-cycle exposure.",
+      "disposition": "Acceptable current runtime baseline while evidence accumulates."
+    },
+    {
+      "option": "Same-source completed-minute live cache",
+      "upside": "Large deterministic request reduction while preserving the REST candle source.",
+      "downside": "Requires finalization and profit-lock parity proof.",
+      "disposition": "Highest-value next technical challenger."
+    },
+    {
+      "option": "Shared REST request broker and weighted limiter",
+      "upside": "Preserves endpoint semantics and can coordinate every process.",
+      "downside": "Higher implementation, failure-domain, and operational complexity.",
+      "disposition": "Defer unless caching does not provide adequate headroom."
+    },
+    {
+      "option": "Direct WebSocket L2 substitution",
+      "upside": "Removes recurring REST L2 weight and improves event density.",
+      "downside": "Prior evidence proves source-decision mismatches; this can change the strategy mechanism.",
+      "disposition": "Rejected for direct cutover; retain only as report-only challenger evidence."
+    }
+  ],
+  "single_highest_value_next_investigation": "Complete the 24-hour same-source cached-observer versus uncached-live OHLCV window, then run exact route and profit-lock decision parity before considering implementation.",
+  "authority": {
+    "report_only": true,
+    "execution_authority": "none",
+    "orders_supported": false,
+    "signing_client_constructed": false,
+    "live_backend_restarted": false,
+    "live_configuration_changed": false,
+    "runtime_strategy_changed": false,
+    "risk_or_exit_changed": false
+  }
+}

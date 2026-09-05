@@ -1,0 +1,78 @@
+{
+  "schema_version": "cohort_strategy_result_v1",
+  "hypothesis_id": "V58_BTC_SWEEP_PRIMARY_RELAXATION_CAUSAL_REPLAY_V1",
+  "generated_at_utc": "2026-08-21T10:27:13.205888+00:00",
+  "status": "rejected",
+  "authority": {
+    "report_only": true,
+    "execution_authority": "none",
+    "live_configuration_changed": false,
+    "live_process_changed": false,
+    "automatic_promotion": false,
+    "retuning_authorized": false
+  },
+  "problem_restatement": {
+    "observed": "V58 did not open a BTC long during the current trend-up move because its only long route requires an hourly downside sweep below the previous twenty-hour low before reclaim, volume, and EMA55 checks can qualify.",
+    "tested_correction": "Remove only the downside-sweep predicate while preserving reclaim, 1.20x volume, EMA55, onset, next-minute taker entry, fixed 60-bps stop, fixed 60-bps maker target, and twenty-four-hour fallback.",
+    "result": "The correction increased opportunity but lost materially in every chronological partition and friction scenario."
+  },
+  "decision": {
+    "accepted_for_next_validation_stage": false,
+    "disposition": "reject_frozen_candidate",
+    "retain_live_control_unchanged": true,
+    "reason": "The candidate failed net PnL, profit factor, largest-winner removal, drawdown, stress, and candidate-versus-control requirements in both validation and pseudo-holdout.",
+    "nearby_retuning_allowed": false,
+    "live_change_recommended": false
+  },
+  "chronological_results": {
+    "development": {
+      "days": 184,
+      "nominal_control": {"signals": 10, "trades": 10, "wins": 7, "losses": 3, "net_pnl_usd": 80.02250707401618, "profit_factor": 1.750559880973684, "net_ex_largest_winner_usd": 53.027007074016005, "maximum_drawdown_pct": -1.2150870608203743},
+      "nominal_candidate": {"signals": 273, "trades": 214, "wins": 110, "losses": 104, "net_pnl_usd": -681.0692859301907, "profit_factor": 0.7907928596755035, "net_ex_largest_winner_usd": -707.8010502337746, "maximum_drawdown_pct": -18.495188140596163},
+      "stress_control_net_pnl_usd": 75.54415346281621,
+      "stress_candidate_net_pnl_usd": -1084.0741677812634
+    },
+    "validation": {
+      "days": 90,
+      "nominal_control": {"signals": 6, "trades": 6, "wins": 4, "losses": 2, "net_pnl_usd": 36.151535132278696, "profit_factor": 1.5101259253501147, "net_ex_largest_winner_usd": 9.340979141360897, "maximum_drawdown_pct": -1.4381201353493527},
+      "nominal_candidate": {"signals": 143, "trades": 128, "wins": 61, "losses": 67, "net_pnl_usd": -689.2545169336727, "profit_factor": 0.6805970096491176, "net_ex_largest_winner_usd": -716.1876549935312, "maximum_drawdown_pct": -15.395797936266561},
+      "stress_control_net_pnl_usd": 33.14455007959987,
+      "stress_candidate_net_pnl_usd": -964.1692688261751
+    },
+    "pseudo_holdout": {
+      "days": 91,
+      "nominal_control": {"signals": 6, "trades": 6, "wins": 5, "losses": 1, "net_pnl_usd": 99.02302580883861, "profit_factor": 3.7909492312800075, "net_ex_largest_winner_usd": 71.99047032707797, "maximum_drawdown_pct": -0.7781702668409592},
+      "nominal_candidate": {"signals": 140, "trades": 124, "wins": 61, "losses": 63, "net_pnl_usd": -549.2057995307432, "profit_factor": 0.7377086402695742, "net_ex_largest_winner_usd": -576.4596239105423, "maximum_drawdown_pct": -15.30036908935888},
+      "stress_control_net_pnl_usd": 33.31191494177892,
+      "stress_candidate_net_pnl_usd": -874.2631019662431
+    }
+  },
+  "interpretation": {
+    "high_confidence": "Under the frozen one-minute bar contract, the sweep predicate is not an arbitrary blocker: it selects a much smaller and materially stronger historical subset. Removing it is falsified as a BTC long-coverage correction.",
+    "medium_confidence": "The unchanged sweep-qualified control has positive, largest-winner-robust results across the opened chronological partitions, but only about 0.38 to 0.47 completed trades per week and therefore cannot provide frequent BTC long participation.",
+    "not_established": "The historical control does not establish future profitability, and one-minute bars do not prove exact mark-trigger ordering, executable depth, queue, or sub-minute latency."
+  },
+  "failure_modes_and_falsifiers": [
+    "Independent reconstruction changes source hashes, signal counts, trade rows, or economics.",
+    "Exact mark and executable-depth replay reverses the candidate-versus-control ranking by more than the large observed loss gap.",
+    "The implementation is shown to differ from the preregistered reclaim, volume, EMA55, onset, sizing, 60/60 exit, fee, funding, or slippage contract.",
+    "The current live diagnosis is updated if an eligible sweep-qualified BTC long was emitted but rejected downstream; current immutable evidence shows zero eligible and zero rejected BTC long decisions."
+  ],
+  "single_highest_value_next_investigation": {
+    "system_priority": "Resolve and reconcile the currently open protected SP500 lifecycle because it is the only active capital exposure.",
+    "btc_priority_after_that": "Preserve the sweep-qualified control and perform a mechanism-level error analysis of previously evaluated BTC long families to preregister one distinct asset-specific continuation mechanism; do not relax the rejected sweep route and do not transfer HT-Breakout blindly from HYPE.",
+    "success_criteria_before_any_live_proposal": "Positive after-cost validation and pseudo-holdout, stress, largest-winner removal, shared BTC portfolio competition against both short routes and the sweep control, exact mark/BBO feasibility, prospective post-cutoff paths, implementation parity, and explicit human approval."
+  },
+  "evidence": {
+    "preregistration": {"path": "docs/research-journal/v58-btc-sweep-primary-relaxation-causal-replay-preregistration-20260821-v1.json", "sha256": "f796d369dd2758d1bc7716985a4522c32540580e3ec9226ed46a664561d4a0d5", "bytes": 10326},
+    "report": {"path": "data/logs/research/bidirectional_cohort/v58_btc_sweep_primary_relaxation_replay_20260821_v1/report.json", "sha256": "17dbbe6e85c013c23ec0a6db93a4979ac6fbde01052206dcdd6efdaef4e3ebea", "bytes": 20570},
+    "trade_sidecar": {"path": "data/logs/research/bidirectional_cohort/v58_btc_sweep_primary_relaxation_replay_20260821_v1/trades.parquet", "sha256": "118db6096e572464d436de3de93ad592a00a2e61791a435b349daddf59548a4e", "bytes": 163158, "rows": 978},
+    "generator_aggregate_sha256": "4a794a3565fcbf0ae3fb342a1be6dd8b0f192fad3438b3d027baf39839fb3669",
+    "post_format_reproduction": {
+      "report": {"path": "data/logs/research/bidirectional_cohort/v58_btc_sweep_primary_relaxation_replay_20260821_v2/report.json", "sha256": "350f708c4226d8a3e576abd74ce460f5fff22fbddd21c8379d51705c3d6f8113", "bytes": 20570},
+      "trade_sidecar": {"path": "data/logs/research/bidirectional_cohort/v58_btc_sweep_primary_relaxation_replay_20260821_v2/trades.parquet", "sha256": "118db6096e572464d436de3de93ad592a00a2e61791a435b349daddf59548a4e", "bytes": 163158, "rows": 978},
+      "generator_aggregate_sha256": "2762ed8780567a56626417ceaadde262b252a6c36ae05098fb5501440d98d2e8",
+      "verification": "summary rows, comparisons, acceptance decision, and all trade rows matched the preregistered v1 artifact exactly"
+    }
+  }
+}

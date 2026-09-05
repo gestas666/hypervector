@@ -4,9 +4,15 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
+from hypervector.live import cohort_execution_contract_selection as contract_selection
 from hypervector.live.bidirectional_intents import RoutingAction
 from hypervector.live.cohort_entry_sizing import CohortEntrySizing
-from hypervector.live.cohort_execution_plan import BoundExecutionPlan
+from hypervector.live.cohort_execution_plan import (
+    BoundExecutionPlan,
+    ProviderExecutionContract,
+)
+from hypervector.live.multi_asset_live_protocols import MultiAssetEngineProtocol
+from hypervector.live.multi_asset_live_runner_support import entry_provider_strategy_id
 
 
 def routing_decision_payload(
@@ -62,3 +68,33 @@ def select_entry_sizing(
     if selected is not None:
         return selected, "provider_symbol_override"
     return None, "asset_default"
+
+
+def execute_routing_action(
+    action: RoutingAction,
+    *,
+    engine: MultiAssetEngineProtocol,
+    contracts: Mapping[
+        contract_selection.ExecutionContractKey, ProviderExecutionContract
+    ],
+    directional_sizing: Mapping[tuple[str, str, str], CohortEntrySizing],
+    fallback_sizing: Mapping[tuple[str, str], CohortEntrySizing],
+) -> None:
+    """Bind, journal, and execute one already-admitted routing action."""
+    plan = contract_selection.bind_execution_plan(contracts, action)
+    provider = entry_provider_strategy_id(action.strategy_id)
+    sizing, source = select_entry_sizing(
+        provider, action.symbol, action.side, directional_sizing, fallback_sizing
+    )
+    engine.record_strategy_decision(
+        routing_decision_payload(action, plan, sizing, source)
+    )
+    if action.action == "enter":
+        engine.enter(
+            side=action.side,
+            mark_price=action.reference_price,
+            decision_time_ms=action.decision_time_ms,
+            entry_sizing=sizing,
+        )
+        return
+    engine.exit(mark_price=action.reference_price, reason=routing_exit_reason(action))

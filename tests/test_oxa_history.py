@@ -224,6 +224,49 @@ def test_snapshot_validation_rejects_invalid_native_books(
         )
 
 
+def test_zero_size_snapshot_is_censored_with_raw_evidence(tmp_path: Path) -> None:
+    """A zero-size vendor snapshot is retained raw but excluded from replay."""
+    payload = copy.deepcopy(VALID_PAGE)
+    censored = payload["data"][0]  # type: ignore[index]
+    censored["asks"][0]["sz"] = "0"  # type: ignore[index]
+    valid = copy.deepcopy(censored)
+    valid["timestamp"] = "2026-07-26T23:50:01.830Z"
+    valid["asks"][0]["sz"] = "2.00215"  # type: ignore[index]
+    payload["data"] = [censored, valid]
+    payload["meta"]["next_cursor"] = None  # type: ignore[index]
+    request = _valid_request()
+
+    result = fetch_orderbook_history(
+        OxaHistoryClient(api_key="test-key", session=FakeSession(payload)), request
+    )
+    stored = store_orderbook_history(tmp_path, request, result)
+
+    assert len(result.snapshots) == 1
+    assert result.censored_zero_size_snapshots == 1
+    manifest = json.loads(stored.manifest_path.read_text(encoding="utf-8"))
+    assert manifest["censored_zero_size_snapshots"] == 1
+    with gzip.open(
+        stored.directory / "raw" / "page-0001.json.gz", "rt", encoding="utf-8"
+    ) as handle:
+        raw = json.load(handle)
+    assert raw["data"][0]["asks"][0]["sz"] == "0"
+
+
+def test_zero_size_update_censors_same_timestamp_state() -> None:
+    """A malformed same-time update cannot leave an older state replayable."""
+    payload = copy.deepcopy(VALID_PAGE)
+    censored = copy.deepcopy(payload["data"][0])  # type: ignore[index]
+    censored["asks"][0]["sz"] = "0"  # type: ignore[index]
+    payload["data"].append(censored)  # type: ignore[union-attr]
+
+    page = OxaHistoryClient(
+        api_key="test-key", session=FakeSession(payload)
+    ).fetch_page(_valid_request())
+
+    assert page.snapshots == ()
+    assert page.censored_zero_size_snapshots == 1
+
+
 def test_same_millisecond_updates_coalesce_to_last_vendor_state() -> None:
     """Sub-millisecond updates use the last ordered state without false timing."""
     payload = copy.deepcopy(VALID_PAGE)

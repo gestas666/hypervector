@@ -124,6 +124,62 @@ def test_rejects_checkpoint_database_fill_count_mismatch(tmp_path: Path) -> None
         module.collect_execution_friction(database, checkpoint)
 
 
+def test_sp500_friction_includes_current_v3_exact_adverse_exit(
+    tmp_path: Path,
+) -> None:
+    """Current fresh15 SP500 exits must not be hidden by the legacy proxy."""
+    module = _module()
+    database = tmp_path / "fills.duckdb"
+    checkpoint = tmp_path / "checkpoint.json"
+    _database(database)
+    connection = duckdb.connect(str(database))
+    connection.execute(
+        "insert into cohort_live_attributed_fills values (?,?,?,?,?,?,?)",
+        (
+            "2026-08-01T00:11:00Z",
+            12,
+            "xyz:SP500",
+            "hip3_breakout_pressure_sp500_spcx_fresh15s_bidirectional_v3",
+            "protective_stop",
+            12.0,
+            21,
+        ),
+    )
+    connection.close()
+    _checkpoint(checkpoint, 12)
+
+    friction, _evidence = module.collect_execution_friction(
+        database, checkpoint, symbols=("xyz:SP500",)
+    )
+
+    assert friction["xyz:SP500"]["adverse_exit"]["sample_count"] == 2
+    assert friction["xyz:SP500"]["adverse_exit"]["p99_bps"] == pytest.approx(11.94)
+
+
+def test_fill_identity_hash_ignores_repeated_snapshot_revision_time(
+    tmp_path: Path,
+) -> None:
+    """A later snapshot wrapper must not change identical fill provenance."""
+    module = _module()
+    database = tmp_path / "fills.duckdb"
+    checkpoint = tmp_path / "checkpoint.json"
+    _database(database)
+    _checkpoint(checkpoint, 11)
+
+    before_friction, before = module.collect_execution_friction(database, checkpoint)
+    connection = duckdb.connect(str(database))
+    connection.execute(
+        "update cohort_live_attributed_fills "
+        "set snapshot_observed_at_utc = '2026-08-02T00:00:00Z' "
+        "where trade_id = 1"
+    )
+    connection.close()
+    after_friction, after = module.collect_execution_friction(database, checkpoint)
+
+    assert after_friction == before_friction
+    assert after["canonical_rows_sha256"] == before["canonical_rows_sha256"]
+
+
 def test_parser_has_no_live_authority_surface() -> None:
     """The command cannot arm or mutate the live backend."""
     help_text = _module().build_parser().format_help()

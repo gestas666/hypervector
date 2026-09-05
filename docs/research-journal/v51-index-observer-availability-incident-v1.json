@@ -1,0 +1,174 @@
+{
+  "schema_version": "v51_index_observer_availability_incident_v1",
+  "recorded_at_utc": "2026-08-15T19:33:00Z",
+  "profile_id": "multi_asset_growth_first_5000_six_asset_profit_lock_candidate_v51",
+  "profile_fingerprint": "30cd54bb5b5b17249ae0a6a3b01d5702b276d51f8dc5ddd6b4d36ab6aa7d1908",
+  "run_id": "bidirectional-live-1786801038311",
+  "hypothesis_key": "v51|hip3_fresh15_v3|observer_availability",
+  "incident": {
+    "classification": "missing_report_only_provider_dependency",
+    "affected_routes": [
+      "hip3_breakout_pressure_sp500_spcx_fresh15s_bidirectional_v3|xyz:SP500",
+      "hip3_breakout_pressure_sp500_spcx_fresh15s_bidirectional_v3|xyz:SPCX"
+    ],
+    "last_preserved_decision_time_ms_before_outage": 1786812300000,
+    "last_preserved_decision_time_utc": "2026-08-15T16:45:00Z",
+    "first_recovered_decision_time_ms": 1786821300000,
+    "first_recovered_decision_time_utc": "2026-08-15T19:15:00Z",
+    "first_complete_history_recovery_time_ms": 1786822200000,
+    "first_complete_history_recovery_time_utc": "2026-08-15T19:30:00Z",
+    "missing_completed_15m_decisions_per_symbol": 10,
+    "current_run_stale_evaluations_at_recording": {
+      "xyz:SP500": 246,
+      "xyz:SPCX": 245
+    },
+    "backend_behavior": "fail_closed_technical_unavailable",
+    "unsafe_order_observed": false,
+    "unprotected_position_observed": false
+  },
+  "root_cause": {
+    "primary": "The two unsigned fresh15 observer processes were supervised side processes, but the v51 restart runbook and live-launch path did not require their startup or freshness before arming the backend.",
+    "not_observed": [
+      "cursor corruption",
+      "duplicate prospective decisions",
+      "provider identity mismatch",
+      "backend process fault",
+      "venue stop loss of protection"
+    ]
+  },
+  "open_position_safety_during_incident": {
+    "symbol": "xyz:SPCX",
+    "side": "short",
+    "lifecycle_id": "xyz:SPCX:517022750282",
+    "venue_stop_oid": 517022767203,
+    "protected_at_recording": true,
+    "maximum_hold_and_profit_lock_management": "backend_continued_running",
+    "limitation": "The unavailable observer could not supply a prospective opposite entry signal during the outage."
+  },
+  "missed_opportunity_reconstruction": {
+    "method": "Reconstruct each missing completed 15m close from retained source-native one-minute evidence and compare it with the frozen prior breakout bounds. The price-breakout condition is necessary regardless of unavailable L2 pressure.",
+    "xyz:SP500": {
+      "prior_breakout_low": 7771.0,
+      "prior_breakout_high": 7786.1,
+      "missing_closes": [
+        7779.5,
+        7778.1,
+        7776.2,
+        7781.4,
+        7782.7,
+        7781.1,
+        7780.8,
+        7778.5,
+        7777.0,
+        7785.0
+      ],
+      "price_breakout_count": 0
+    },
+    "xyz:SPCX": {
+      "prior_breakout_low": 138.95,
+      "prior_breakout_high": 139.77,
+      "missing_closes": [
+        139.45,
+        139.49,
+        139.47,
+        139.48,
+        139.47,
+        139.43,
+        139.42,
+        139.45,
+        139.45,
+        139.37
+      ],
+      "price_breakout_count": 0
+    },
+    "conclusion": "No eligible v3 onset or opposite entry intent was missed because every missing close remained inside its frozen breakout interval.",
+    "confidence": "high",
+    "falsifier": "Any exact source-native completed close outside the serialized prior breakout interval invalidates the no-missed-onset conclusion and requires a full L2 reconstruction."
+  },
+  "restoration": {
+    "commands": [
+      "uv run python scripts/index_hip3_breakout_shadow_observe.py --symbol xyz:SP500",
+      "uv run python scripts/index_hip3_breakout_shadow_observe.py --symbol xyz:SPCX"
+    ],
+    "cursor_reset": false,
+    "retroactive_entry_emitted": false,
+    "signing_client_constructed": false,
+    "orders_supported": false,
+    "execution_authority": "none",
+    "first_recovered_bar_censored_reason": "prior_pressure_state_unavailable",
+    "first_complete_bar": {
+      "decision_time_utc": "2026-08-15T19:30:00Z",
+      "xyz:SP500": {
+        "pressure_state_history_complete": true,
+        "pressure_snapshot_count": 162,
+        "pressure_boundary_age_ms": 3508,
+        "decision_delay_ms": 2463,
+        "eligible": false,
+        "reason": "fresh_breakout_onset_absent"
+      },
+      "xyz:SPCX": {
+        "pressure_state_history_complete": true,
+        "pressure_snapshot_count": 162,
+        "pressure_boundary_age_ms": 2974,
+        "decision_delay_ms": 3143,
+        "eligible": false,
+        "reason": "fresh_breakout_onset_absent"
+      }
+    }
+  },
+  "technical_change": {
+    "description": "Require fresh exact SP500 and SPCX observer identities before the v51 live launcher may construct a backend command, and document both observer startup commands before preflight.",
+    "files": [
+      "src/hypervector/live/cohort_tui_commands.py",
+      "scripts/multi_asset_bidirectional_canary_tui.py",
+      "tests/test_v51_index_observer_startup_guard.py",
+      "tests/test_v51_technical_fix_restart_runbook.py",
+      "docs/runbooks/2026-08-14-v51-approved-technical-fix-restart.md"
+    ],
+    "live_strategy_changed": false,
+    "risk_configuration_changed": false,
+    "backend_restarted": false,
+    "remaining_limitation": "The guard prevents a launch with stale observers but does not automatically restart an observer that exits after backend startup."
+  },
+  "hypothesis_ledger": [
+    {
+      "hypothesis": "Missing fresh15 observer processes caused the index provider telemetry outage.",
+      "status": "accepted",
+      "evidence": "Both processes were absent while route evaluations reported observer_status_stale; restoring the exact processes advanced preserved cursors and restored complete route anatomy."
+    },
+    {
+      "hypothesis": "The outage caused an eligible SP500 or SPCX entry or opposite intent to be missed.",
+      "status": "rejected",
+      "evidence": "All ten missing completed closes per symbol remained inside the necessary frozen breakout bounds."
+    },
+    {
+      "hypothesis": "Persistent automatic observer supervision should be added.",
+      "status": "proposed",
+      "evidence": "Startup validation closes the launch omission but cannot recover a post-start observer exit.",
+      "minimum_validation": "A reviewed singleton supervisor must preserve exact cursors, reject duplicate owners, expose freshness to the checkpoint, restart only the unsigned report-only observer, and prove no retroactive decisions across crash recovery."
+    }
+  ],
+  "change_proposal": {
+    "recommendation": "Retain the startup freshness guard and evaluate a separate singleton report-only observer supervisor before any future v51 restart.",
+    "why_now": "The current run spent roughly 2.5 hours without prospective SP500/SPCX pressure decisions even though the backend itself remained healthy.",
+    "evidence_reviewed": "Current v51 checkpoint, cohort intent-routing rows, exact observer status/cursor files, prospective decision journals, open-position protection, and reconstructed missing 15m closes.",
+    "observed_problem_or_opportunity": "A required report-only data dependency could stop independently and make both live index routes technically unavailable.",
+    "applicable_market_regime": "all",
+    "alternatives_considered": [
+      "manual observer startup only",
+      "disable both index routes",
+      "embed unsigned market-data collection inside the order backend",
+      "external singleton report-only supervisor"
+    ],
+    "proposed_live_change": "No strategy, asset, route, signal, exit, sizing, leverage, risk, or order behavior change. The applied technical guard only refuses a future backend launch when required observers are stale. Automatic post-start supervision remains unapproved.",
+    "expected_upside": "Prevent another live launch with unavailable index inputs and reduce unobserved route downtime if a later supervisor is approved.",
+    "main_risks_and_failure_modes": "A supervisor could create duplicate writers, reset a cursor, emit retroactive decisions, or hide a persistent data-source failure unless it is singleton, identity-bound, and fail-closed.",
+    "validation_completed": "Observer restart preserved both cursors, emitted no retroactive decisions, restored complete 19:30 UTC pressure history, and generated no orders. Startup-guard and runbook regressions pass.",
+    "validation_still_required": "Prospective crash/restart soak test for any supervisor, duplicate-owner rejection, stale-status alerting, and exact checkpoint visibility.",
+    "success_metrics": "Zero observer_status_stale evaluations after warmup during an uninterrupted run; one exact decision per completed 15m boundary; no cursor regression, duplicate decision, signer construction, or order surface.",
+    "failure_or_rollback_triggers": "Any duplicate owner, cursor regression, retroactive decision, identity mismatch, unexpected execution authority, or backend interference requires immediate supervisor shutdown while the provider remains fail-closed.",
+    "confidence_level": "high for the diagnosed startup omission; medium for the value of future automatic supervision until crash-recovery tests pass",
+    "explicit_approval_requested": false
+  },
+  "single_highest_value_next_investigation": "Continue exact source-native SP500 and SPCX v3 prospective lifecycle collection, requiring at least one attributable eligible signal and one fully resolved lifecycle per configured side before updating the economic diagnosis."
+}

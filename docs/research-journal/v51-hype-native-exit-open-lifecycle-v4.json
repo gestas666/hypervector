@@ -1,0 +1,121 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v51-hype-native-exit-open-lifecycle-v4",
+  "status": "open_provisional_a60_lead_compressed_no_live_change",
+  "recorded_at_utc": "2026-08-14T17:50:19.387203+00:00",
+  "supersedes": "v51-hype-native-exit-open-lifecycle-v3.json",
+  "profile": {
+    "profile_id": "multi_asset_growth_first_5000_six_asset_profit_lock_candidate_v51",
+    "profile_fingerprint": "30cd54bb5b17249ae0a6a3b01d5702b276d51f8dc5ddd6b4d36ab6aa7d1908",
+    "run_id": "bidirectional-live-1786691478619"
+  },
+  "lifecycle": {
+    "lifecycle_id": "HYPE:516556857812",
+    "strategy_id": "hype_breakout_compression_pullback_bidirectional_v1",
+    "side": "short",
+    "entry_price": 56.16085115541458,
+    "size": 88.28,
+    "leverage": 10,
+    "venue_stop_oid": 516556877091,
+    "venue_stop_trigger_price": 56.6100864,
+    "profit_lock_policy": "none",
+    "soft_maximum_hold_seconds": 28800,
+    "hard_maximum_hold_seconds": 86400,
+    "opposite_executable_intent_exit": "automatic_close_without_same_cycle_reversal"
+  },
+  "frozen_live_observation": {
+    "as_of_timestamp_ms": 1786729819387,
+    "marked_net_pnl_usd": 25.716921,
+    "estimated_exit_now_net_usd": 23.587013037637014,
+    "estimated_exit_now_net_excluding_funding_usd": 23.258511037636115,
+    "protected_profit_fraction": 0.0,
+    "maximum_favorable_excursion_bps": 123.72518242141916,
+    "maximum_adverse_excursion_bps": 14.271301616071153,
+    "peak_giveback_bps": 68.1969721114306,
+    "completed_path_bars": 353,
+    "eligible_opposite_signal": false,
+    "provider_action": "hold",
+    "provider_reason": "canonical_breakout_onset_absent",
+    "structural_side": "short",
+    "state_5m": "RANGE",
+    "context_15m": "TREND_DOWN",
+    "opposed_decisions": 0,
+    "opposition_coverage_gaps": 0
+  },
+  "same_run_delta_from_v3_prefix": {
+    "window_start_utc": "2026-08-14T17:23:49.010736+00:00",
+    "window_end_utc": "2026-08-14T17:50:19.387203+00:00",
+    "closed_trades_delta": 0,
+    "hype_marked_net_pnl_usd_delta": 9.472444,
+    "hype_current_directional_return_bps_delta": 19.10583578996428,
+    "hype_peak_giveback_bps_delta": -19.10583578996429,
+    "maximum_favorable_excursion_bps_delta": 0.0,
+    "maximum_adverse_excursion_bps_delta": 0.0,
+    "interpretation": "The native position recovered approximately 19.11 basis points without setting a new favorable or adverse excursion, reducing the apparent a60 advantage without resolving the lifecycle."
+  },
+  "predeclared_exit_comparison": {
+    "current_native_net_excluding_funding_usd": 23.258511037636115,
+    "a60_floor15_trail30": {
+      "trigger_timestamp_ms": 1786717620000,
+      "estimated_net_excluding_funding_usd": 27.949352243029516,
+      "challenger_minus_current_native_usd": 4.690841205393401,
+      "funding_included": false,
+      "additional_exit_slippage_included": false
+    },
+    "a100_floor25_only": {
+      "trigger_timestamp_ms": 1786725960000,
+      "estimated_net_excluding_funding_usd": 8.116452352499891,
+      "challenger_minus_current_native_usd": -15.142058685136224,
+      "funding_included": false,
+      "additional_exit_slippage_included": false
+    },
+    "interpretation": "The predeclared a60 challenger remains ahead, but its lead contracted from $14.17 to $4.69 as the native path recovered. The later 100/25 floor remains materially behind. The ordering remains right-censored until the native lifecycle closes."
+  },
+  "evidence": [
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v51_open_exit_prefix_20260814T1750Z.json",
+      "bytes": 8046467,
+      "sha256": "6b81bcac17febff889a38615468aa4cac20a24718d8e38f9b8f31299bb325511",
+      "role": "immutable exact-run audit prefix"
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v51_open_exit_delta_20260814T1724Z_to_1750Z.json",
+      "bytes": 32444,
+      "sha256": "27aeafc917333aa445c77520934a18960a61165ffc4e9d92693e6a675623d310",
+      "role": "immutable same-run material-change delta"
+    },
+    {
+      "path": "v51-hype-native-exit-open-lifecycle-v3.json",
+      "bytes": 8437,
+      "sha256": "f7384db87b3767858273207f0d67064ad7bd086612af00e91638f80216df6b35",
+      "role": "superseded prior-boundary assessment"
+    }
+  ],
+  "uncertainties_risks_and_failure_modes": [
+    "The lifecycle remains open and can reverse the native-versus-a60 ordering before its actual close.",
+    "The challenger excludes funding and additional exit slippage, so its $4.69 lead is not an executable realized delta.",
+    "The large change in apparent advantage across two nearby endpoints demonstrates endpoint sensitivity and selection risk.",
+    "This is one prospective live path following prior development evidence that rejected the generic completed-bar lock family.",
+    "Installing a60 from this one path could truncate future larger HYPE trends.",
+    "The venue stop protects against a bounded adverse trigger but protects none of the current open profit."
+  ],
+  "falsifier": "Resolve the exact lifecycle. If native realized net exceeds a60 after exact cost normalization, the current apparent a60 advantage is falsified; if repeated independent predeclared a60 triggers remain superior after all costs and largest-winner removal, the prior generic-lock rejection must be revisited.",
+  "change_proposal": {
+    "Recommendation": "Keep the active HYPE lifecycle unchanged, retain mandatory eligible-opposite closure, and compare the frozen a60 exit immediately after the lifecycle resolves.",
+    "Why now": "The same open path recovered $9.47 and reduced the predeclared a60 lead from $14.17 to $4.69, exposing material endpoint sensitivity in any conclusion drawn before the native exit.",
+    "Evidence reviewed": "Three immutable exact-run prefixes, two same-run deltas, current venue stop and execution plan, complete 353-bar holding path, signal/opposition telemetry, and predeclared a60 and 100/25 policies.",
+    "Observed problem or opportunity": "The native no-profit-lock contract captured a 123.73-bps favorable excursion, surrendered as much as 87.30 bps, and then recovered 19.11 bps while no eligible opposite onset appeared.",
+    "Applicable market regime": "HYPE remains structurally short with 15m TREND_DOWN context, authoritative 5m RANGE, no persistent opposition, and no fresh breakout onset.",
+    "Alternatives considered": "Manual close now, deploy a60 now, deploy the later 100/25 floor, close on non-executable opposition, or preserve the current lifecycle and complete the predeclared comparison.",
+    "Proposed live change": "None while this lifecycle is open; eligible opposite strategy intent remains an automatic close without same-cycle reversal.",
+    "Expected upside": "Avoid endpoint-driven retuning while preserving exact evidence needed to decide whether a causal profit lock improves HYPE profit capture.",
+    "Main risks and failure modes": "Further profit giveback before an opposite/timer exit, one-path selection bias, omitted challenger costs, and truncation of rare large winners if a60 is later adopted.",
+    "Validation completed": "Run/profile identity, venue stop ownership, signal and opposition state, complete holding-bar coverage, challenger trigger causality, and exact same-run delta reconciliation are verified.",
+    "Validation still required": "Actual exit reason and fill, exact fees/funding/slippage, final MFE/MAE/giveback, native-versus-a60 normalized delta, additional independent triggers, and largest-winner sensitivity.",
+    "Success metrics": "Eligible opposite closes exactly once; no same-cycle reversal occurs; venue stop stays owned; actual lifecycle costs reconcile; and any future a60 proposal remains positive over native across independent outcomes after costs and leave-largest analysis.",
+    "Failure / rollback triggers": "Missing eligible-opposite close, immediate same-cycle reversal, lost stop protection, identity/accounting mismatch, or future independent evidence showing a60 truncates more net edge than it preserves.",
+    "Confidence level": "High on frozen arithmetic and technical integrity; medium that this path exposes a profit-capture weakness; low that a60 is a durable optimal exit because the decisive live sample is one open lifecycle.",
+    "Explicit approval requested": "No approval requested because no profit-lock deployment is proposed."
+  },
+  "single_highest_value_next_investigation": "Resolve HYPE:516556857812 and compare exact realized native net with a60 and 100/25 using final fees, funding, slippage, excursion, and exit reason without changing or retuning the frozen challengers."
+}

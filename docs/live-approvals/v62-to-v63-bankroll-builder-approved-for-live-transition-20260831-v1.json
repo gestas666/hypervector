@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "document_type": "cohort_profile_change_approval",
+  "approval_status": "approved_for_live_transition",
+  "approved_at_utc": "2026-08-31T22:55:00Z",
+  "approved_by": "operator_in_conversation",
+  "operator_approval": "Approved V63 replacement profile to remove capital preservation bottlenecks, unblock high-alpha directions, and build bankroll across 9 assets.",
+  "execution_authority": "none",
+  "previous_profile": {
+    "profile_id": "multi_asset_growth_first_5000_eight_asset_hype_a60_candidate_v62",
+    "profile_fingerprint": "a7cabf8bc59f38ba41898c2d1339e10c8dcc7c8a7a2940429f0ededefd928f8a"
+  },
+  "candidate_profile": {
+    "profile_id": "multi_asset_growth_first_5000_nine_asset_bankroll_builder_candidate_v63",
+    "profile_fingerprint": "b81d0d22ed041ad007dfe4b6c55c652889ecc133bc9939e08eac5613e6fc1681"
+  },
+  "change_scopes": [
+    "remove_hype_a60_profit_lock",
+    "unblock_sol_sp500_spcx_sndk_long_directions",
+    "add_btc_eth_30m_hulk_bidirectional_expansion",
+    "restore_gold_fresh15_breakout_pressure",
+    "increase_margin_fraction_and_leverage_for_bankroll_growth"
+  ],
+  "recommendation_evidence": [
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v63_bankroll_builder_expansion_20260831_v1.json",
+      "sha256": "8008cb0b18b2e6a4e34aadd3f50fb76034f4120967c245b6f5015924611a9703"
+    }
+  ],
+  "rollback": {
+    "config_path": "../../configs/multi_asset_growth_first_5000_eight_asset_hype_a60_candidate_v62.toml",
+    "profile_fingerprint": "a7cabf8bc59f38ba41898c2d1339e10c8dcc7c8a7a2940429f0ededefd928f8a",
+    "sha256": "e352886736cc0f69e4ee90b21474d2c4312df0d19ddacb87924a9d656b4c055b"
+  },
+  "retirements": []
+}

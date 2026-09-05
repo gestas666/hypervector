@@ -1,0 +1,268 @@
+{
+  "schema_version": "v51_four_plus_four_noncrypto_candidate_review_v6",
+  "generated_at_utc": "2026-08-15T16:47:46Z",
+  "mode": "report_only",
+  "execution_authority": "none",
+  "automatic_live_change": false,
+  "automatic_promotion": false,
+  "performance_gate": false,
+  "runtime_strategy_changed": false,
+  "supersedes": {
+    "path": "docs/research-journal/v51-four-plus-four-noncrypto-candidate-review-v5.json",
+    "sha256": "f9d2a0b4047365c69aa2f3c33a1306e05b2fd98149c9f7be139019a3feac0dca",
+    "bytes": 7972,
+    "reason": "The prior shortlist ranked only JPY, NATGAS, and COPPER rather than the full current HIP-3 universe and therefore did not satisfy the user's top-liquidity requirement."
+  },
+  "decision_update": {
+    "source": "explicit_user_correction_plus_exact_live_reconciliation",
+    "instruction": "Reject non-top-ten liquidity candidates and incorporate the BRENTOIL data already collected during live canary operation.",
+    "interpretation": "JPY, NATGAS, and COPPER are rejected for this roster search. Preserve MU as the sole semiconductor research candidate and compare the distinct current top-ten lanes using exact existing evidence.",
+    "runtime_impact": "none",
+    "config_impact": "none"
+  },
+  "target_roster": {
+    "crypto_controls": [
+      "BTC",
+      "ETH",
+      "SOL",
+      "HYPE"
+    ],
+    "live_noncrypto_controls": [
+      "xyz:SP500",
+      "xyz:SPCX"
+    ],
+    "sole_semiconductor_research_candidate": "xyz:MU",
+    "excluded_semiconductor_candidates": [
+      "xyz:SNDK",
+      "xyz:INTC",
+      "xyz:DRAM",
+      "xyz:SKHX"
+    ],
+    "distinct_fourth_slot": "open_pending_oil_strategy_evidence",
+    "live_roster_changed": false
+  },
+  "current_global_top_ten_by_day_notional": [
+    {
+      "rank": 1,
+      "symbol": "xyz:SNDK",
+      "day_notional_volume_usd": 182085680.1863
+    },
+    {
+      "rank": 2,
+      "symbol": "xyz:XYZ100",
+      "day_notional_volume_usd": 127455773.3265
+    },
+    {
+      "rank": 3,
+      "symbol": "xyz:SPCX",
+      "day_notional_volume_usd": 87605736.282
+    },
+    {
+      "rank": 4,
+      "symbol": "xyz:SP500",
+      "day_notional_volume_usd": 73284513.0338
+    },
+    {
+      "rank": 5,
+      "symbol": "xyz:CL",
+      "day_notional_volume_usd": 57318822.23763
+    },
+    {
+      "rank": 6,
+      "symbol": "xyz:BRENTOIL",
+      "day_notional_volume_usd": 49403551.84429
+    },
+    {
+      "rank": 7,
+      "symbol": "xyz:INTC",
+      "day_notional_volume_usd": 44608397.2046
+    },
+    {
+      "rank": 8,
+      "symbol": "xyz:DRAM",
+      "day_notional_volume_usd": 40155853.0
+    },
+    {
+      "rank": 9,
+      "symbol": "xyz:SKHX",
+      "day_notional_volume_usd": 32612781.5892
+    },
+    {
+      "rank": 10,
+      "symbol": "xyz:MU",
+      "day_notional_volume_usd": 31029978.24115
+    }
+  ],
+  "candidate_disposition": {
+    "rejected_from_this_search": [
+      {
+        "symbols": [
+          "xyz:JPY",
+          "xyz:NATGAS",
+          "xyz:COPPER"
+        ],
+        "reason": "They were not in the current global HIP-3 top ten by day notional and the user explicitly rejected the shortlist."
+      },
+      {
+        "symbols": [
+          "xyz:SNDK",
+          "xyz:INTC",
+          "xyz:DRAM",
+          "xyz:SKHX"
+        ],
+        "reason": "They duplicate the semiconductor exposure intentionally limited to MU."
+      },
+      {
+        "symbols": [
+          "xyz:SP500",
+          "xyz:SPCX"
+        ],
+        "reason": "They are already in the live non-crypto sleeve and are not new-slot candidates."
+      }
+    ],
+    "remaining_distinct_candidates": [
+      {
+        "symbol": "xyz:XYZ100",
+        "exposure": "technology_and_growth_tilted_index",
+        "disposition": "deprioritized_for_portfolio_overlap",
+        "reason": "Excellent liquidity, but it overlaps the existing equity-index sleeve and MU technology exposure more than an oil market does."
+      },
+      {
+        "symbol": "xyz:CL",
+        "exposure": "WTI_crude_oil",
+        "disposition": "research_candidate_strategy_not_promotable",
+        "reason": "Rank 5 liquidity with a strong current execution surface. The existing development-only breakout study was positive nominally but stress-negative after its largest winner and technically unresolved for 59 of 81 lifecycles."
+      },
+      {
+        "symbol": "xyz:BRENTOIL",
+        "exposure": "Brent_crude_oil",
+        "disposition": "research_candidate_with_exact_live_execution_priors",
+        "reason": "Rank 6 liquidity plus 13,662 retained books and three exact live lifecycles provide real fill, stop, funding, and slippage evidence. The old strategies remain rejected."
+      }
+    ]
+  },
+  "brentoil_live_evidence": {
+    "ledger_rows": 54848,
+    "book_observations": 13662,
+    "closed_lifecycles": 3,
+    "wins": 2,
+    "losses": 1,
+    "net_pnl_usd": 1.821755,
+    "profit_factor": 3.648046,
+    "net_pnl_excluding_largest_winner_usd": -0.232469,
+    "swing_long": {
+      "net_pnl_usd": 2.054224,
+      "exit_reason": "operator_manual_close",
+      "holding_hours": 16.866306
+    },
+    "breakout_long": {
+      "net_pnl_usd": 0.455493,
+      "exit_reason": "operator_manual_close",
+      "holding_minutes": 12.441867
+    },
+    "breakout_short": {
+      "net_pnl_usd": -0.687962,
+      "exit_reason": "protective_stop",
+      "holding_minutes": 78.570533,
+      "exit_slippage_bps": 8.464583786205068
+    },
+    "breakout_route_only": {
+      "wins": 1,
+      "losses": 1,
+      "net_pnl_usd": -0.232469,
+      "profit_factor": 0.6620903480134077
+    },
+    "interpretation": "The asset has useful live evidence and demonstrated executable liquidity. The positive combined headline is largest-winner dependent, two closes were manual, Swing is retired, and the breakout route remains net negative."
+  },
+  "oil_lane_comparison": {
+    "CL": {
+      "current_volume_rank": 5,
+      "current_day_notional_volume_usd": 57318822.23763,
+      "current_spread_bps": 0.12346517356175725,
+      "current_visible_returned_book_notional_usd": 195171.960683,
+      "development_only_trades": 81,
+      "development_nominal_net_pnl_usd": 5.2512,
+      "development_nominal_profit_factor": 1.2427,
+      "development_stress_net_pnl_usd": 3.3136,
+      "development_stress_profit_factor": 1.1427,
+      "development_stress_excluding_largest_winner_usd": -1.0609,
+      "technically_unresolved_lifecycles": 59,
+      "disposition": "not_promotable"
+    },
+    "BRENTOIL": {
+      "current_volume_rank": 6,
+      "current_day_notional_volume_usd": 49403551.84429,
+      "current_spread_bps": 0.11633656167347525,
+      "current_visible_returned_book_notional_usd": 92862.465975,
+      "exact_live_lifecycles": 3,
+      "exact_live_net_pnl_usd": 1.821755,
+      "exact_live_net_excluding_largest_winner_usd": -0.232469,
+      "old_breakout_route_net_pnl_usd": -0.232469,
+      "old_breakout_route_profit_factor": 0.6620903480134077,
+      "independent_strategy_validation": "negative_for_old_swing_and_breakout_mechanisms",
+      "disposition": "not_promotable"
+    },
+    "current_preference": "Do not choose the live asset before strategy evidence. CL has the stronger historical development sample and displayed depth; BRENTOIL has the stronger exact live execution prior. Treat them as a paired oil-mechanism investigation."
+  },
+  "recommendation": {
+    "recommendation": "Keep the fourth non-crypto slot empty while testing one new, versioned oil mechanism across CL and BRENTOIL. Use Brent's live fills as empirical friction priors rather than reusing its rejected strategies.",
+    "why_now": "The corrected full-universe screen leaves oil as the only top-ten exposure clearly distinct from the existing equity and semiconductor sleeve, and Brent already has real canary data that materially improves execution assumptions.",
+    "evidence_reviewed": "Current official top-ten HIP-3 metadata and L2, 54,848 Brent ledger rows, 13,662 Brent book observations, three reconciled Brent live lifecycles, retired-strategy validation reports, the v39 route review, and the CL development-only diagnostic.",
+    "observed_problem_or_opportunity": "Oil provides portfolio differentiation and sufficient venue liquidity, but neither the old Brent route nor the current CL development candidate establishes robust bidirectional after-cost edge.",
+    "applicable_market_regime": "oil_trend_and_breakout_regimes_to_be_predeclared",
+    "alternatives_considered": [
+      "leave the fourth slot empty",
+      "add CL using the post-hoc long slice",
+      "restore BRENTOIL Swing or breakout unchanged",
+      "add XYZ100 despite overlap",
+      "reopen JPY, NATGAS, or COPPER"
+    ],
+    "proposed_live_change": "none",
+    "expected_upside": "A validated oil route could add meaningful non-equity opportunity breadth and reuse measured Brent execution behavior without semiconductor duplication.",
+    "main_risks_and_failure_modes": [
+      "oil contracts can gap around macro and inventory events",
+      "CL and Brent are highly related and must not occupy two independent diversification slots",
+      "post-hoc preference for the CL long side",
+      "Brent's live result is largest-winner dependent",
+      "manual closes obscure automatic exit quality",
+      "strategy search can overfit a small number of regimes"
+    ],
+    "validation_completed": "Global liquidity ranking, exact current spreads and depth, retained Brent ledger coverage, exact lifecycle accounting, fees, funding, entry and exit slippage, stop behavior, largest-winner sensitivity, and prior validation disposition.",
+    "validation_still_required": "A new causal oil mechanism with a new identity; development-only cross-market study using exact L2/trades/marks; bidirectional side reporting; stress costs seeded from Brent live fills; no unresolved paths; untouched validation and holdout; then prospective report-only observation.",
+    "success_metrics": "Positive nominal and stress results after all costs and largest-winner removal, represented long and short sides or a predeclared one-sided hypothesis, complete risk paths, acceptable stop slippage, and portfolio co-trigger behavior superior to leaving the slot empty.",
+    "failure_rollback_triggers": "Reject without live deployment if the strategy is technically unresolved, stress-negative after largest-winner removal, dependent on one side without preregistration, or materially correlated with existing loss waves without incremental return.",
+    "confidence_level": "high_on_Brent_data_availability_high_on_oil_liquidity_low_on_strategy_profitability",
+    "explicit_approval_requested": false
+  },
+  "single_highest_value_next_investigation": "Build one new, versioned oil-lane candidate and run the identical causal development-only contract on CL and BRENTOIL using Brent's exact canary friction distribution; do not open validation until the selected development path resolves and survives largest-winner removal.",
+  "source_evidence": [
+    {
+      "path": "data/logs/research/bidirectional_cohort/brentoil_live_canary_lifecycle_reconciliation_20260815_v1.json",
+      "role": "exact_Brent_live_execution_reconciliation",
+      "sha256": "47ba7608ce7d7fd9b2ba2c7c64555d529abae1ff509971bfbc38a46a308534bc",
+      "bytes": 8143
+    },
+    {
+      "path": "data/logs/research/xyz_global_top10_liquidity_qualification_20260815T1645Z_v1.json",
+      "sha256": "a7f14a5e0d2926bc170ce773d8db8a18c25f6c97f3c5cfbab69977e88fb9a992",
+      "bytes": 18773
+    },
+    {
+      "path": "data/logs/research/xyz_cl_development_only_diagnostic_20260811_v1.json",
+      "sha256": "fca63ef8dd933037159a7171ec3f58d0a349d10983f6afc5d6762f036e223327",
+      "bytes": 1442655
+    },
+    {
+      "path": "docs/research-journal/v51-four-plus-four-noncrypto-candidate-review-v5.json",
+      "sha256": "f9d2a0b4047365c69aa2f3c33a1306e05b2fd98149c9f7be139019a3feac0dca",
+      "bytes": 7972
+    }
+  ],
+  "limitations": [
+    "The current top-ten ranking, spread, and depth are point-in-time measurements.",
+    "The three Brent lifecycles are too few and too heterogeneous to establish edge.",
+    "No current oil strategy has passed the required technical and economic evidence sequence.",
+    "CL and BRENTOIL are one correlated oil lane, not two diversification slots.",
+    "No live strategy, asset, route, sizing, leverage, stop, exit, execution, process, or deployment setting changed."
+  ]
+}

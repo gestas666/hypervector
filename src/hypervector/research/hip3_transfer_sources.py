@@ -91,6 +91,12 @@ def attach_official_funding(
     return output, evidence
 
 
+def validated_official_funding(funding: pd.DataFrame) -> pd.DataFrame:
+    """Return exact ordered hourly funding events after source validation."""
+    rates = _validated_funding(funding)
+    return rates.rename("funding_rate").to_frame()
+
+
 def compare_midpoint_proxy_to_official(
     proxy_bars: pd.DataFrame,
     official_candles: pd.DataFrame,

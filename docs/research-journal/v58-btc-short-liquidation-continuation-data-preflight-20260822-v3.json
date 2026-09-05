@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v58-btc-short-liquidation-continuation-long-data-preflight",
+  "revision_number": 3,
+  "supersedes_revision_id": "0e005453d4ef66106e054046be92f491d9fafe3ba91cab309f2d05263858ed1d",
+  "created_at_utc": "2026-08-22T01:55:12Z",
+  "strategy_id": "btc-short-liquidation-continuation-long-data-preflight",
+  "symbol": "BTC",
+  "status": "candidate",
+  "hypothesis": "A causally observed burst of forced BTC short-liquidation buying may contain incremental information about near-term bullish continuation after conditioning on post-burst price and book persistence, but an exhaustion reversal is an equally plausible competing mechanism and no directional edge is currently established.",
+  "decision": "Retain only as a source-qualification candidate. The frozen post-frontier public-recorder prefix has exact raw-Parquet-to-DuckDB parity and can supply gap-excluding public book, trade, and asset-context covariates, but one declared 2.307-second multi-channel disconnect occurred and the public trade schema has no liquidation flag. The public recorder therefore cannot supply the causal forced-liquidation treatment label or replace the still-unacquired official node-fill sample. Do not inspect strategy outcomes, specify entry thresholds, request requester-pays data, or change V58 under this revision.",
+  "confidence": "low",
+  "falsifier": "Invalidate the public-context qualification if a later immutable import changes any frozen-prefix row count or normalized row-stream SHA-256, reveals undeclared gaps, or proves source-timestamp semantics unsuitable for causal alignment. Invalidate the official-source requirement only if a separately verified non-billable source provides explicit liquidation metadata, causal event time, side semantics, and declared-window completeness. Update the strategy assessment only after an independently preregistered continuation-versus-exhaustion test passes realistic after-cost validation.",
+  "evidence": [
+    {
+      "path": "v58-btc-short-liquidation-continuation-data-preflight-20260822-v2.json",
+      "role": "superseded official-node-fill source qualification state",
+      "sha256": "2287ac7630617030725cd1d451f2c9b36c0034d5b40f492f615db1fdb2f821db",
+      "bytes": 4338
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v58_btc_public_recorder_continuity_20260822_v1.json",
+      "role": "frozen post-frontier raw-to-database parity and continuity assessment",
+      "sha256": "7af1cde83358641c45e11286e65628f9a6ecc13b8313e719a39696af49cfb8bd",
+      "bytes": 6134
+    },
+    {
+      "path": "../../data/cache/events/hyperliquid/BTC/2026-08-22/gaps.jsonl",
+      "role": "declared multi-channel recorder disconnect evidence",
+      "sha256": "af5f7899555c7787fba3e271a07e9531f5dc8a8e14d7dc8583adee8cbf603c6f",
+      "bytes": 235
+    },
+    {
+      "path": "v58-btc-long-frontier-closure-20260821-v1.json",
+      "role": "frozen prior-family inventory and materially-new-input requirement",
+      "sha256": "7d7a3d6985942148246ab36858a8dddaab2e8b67e957f5b6286a6a469bb6da30",
+      "bytes": 11736
+    },
+    {
+      "path": "../../configs/multi_asset_growth_first_5000_eight_asset_incremental_v58.toml",
+      "role": "unchanged active V58 route and direction contract",
+      "sha256": "1c1c1656233b074df2ed3adcee8cb8cb2c58f0d191cc9f9ac34799478fca3378",
+      "bytes": 6142
+    }
+  ],
+  "metrics": {
+    "stage": "source_qualification_only",
+    "prospective_window_start_utc": "2026-08-21T23:33:51Z",
+    "prospective_window_end_exclusive_utc": "2026-08-22T01:39:00Z",
+    "prospective_window_seconds": 7509,
+    "l2_rows": 1397,
+    "trade_rows": 42784,
+    "distinct_trade_ids": 42784,
+    "asset_context_rows": 7347,
+    "raw_database_exact_parity": true,
+    "declared_gap_rows": 1,
+    "declared_gap_duration_ms": 2307,
+    "asset_context_exchange_timestamp_available": false,
+    "public_trade_liquidation_flag_available": false,
+    "liquidation_field_coverage_verified": false,
+    "authenticated_aws_request_sent": false,
+    "requester_charge_acceptance_sent": false,
+    "strategy_outcomes_inspected": false,
+    "entry_or_exit_thresholds_specified": false,
+    "live_change_supported": false
+  },
+  "limitations": [
+    "The public prefix contains one explicit 2.307-second multi-channel disconnect and must be excluded from any affected causal horizon.",
+    "Asset-context rows use local receipt time because the activeAssetCtx stream does not provide exchange timestamps.",
+    "Public trades preserve aggressor side and participant identities but do not identify forced-liquidation fills.",
+    "No authenticated official prefix listing, object metadata, sample fill bundle, or requester-pays download has occurred.",
+    "Historical BTC price partitions have already been opened, so any economic test requires a separately frozen contract and genuinely independent evidence.",
+    "Continuation and exhaustion remain competing hypotheses with no measured edge.",
+    "This revision cannot pause, retune, route, size, enter, close, restart, or promote a live strategy or lifecycle."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

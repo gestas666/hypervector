@@ -1,0 +1,108 @@
+{
+  "schema_version": "v51_index_mark_path_capture_v2",
+  "generated_at_utc": "2026-08-15T22:19:22Z",
+  "status": "prospective_capture_recovered_historical_path_remains_unresolved",
+  "mode": "report_only",
+  "execution_authority": "none",
+  "automatic_live_change": false,
+  "runtime_strategy_changed": false,
+  "supersedes": {
+    "path": "docs/research-journal/v51-index-mark-path-capture-v1.json",
+    "sha256": "a3e45c2821e3113e392d6814e601b443156eab065c648465ba25e003bf2af703",
+    "bytes": 3792
+  },
+  "problem_restatement": {
+    "problem": "The open SPCX short uses a venue mark-price stop, but the prior three-second public mark recorder was not running when the current v51 lifecycle entered.",
+    "success_criterion": "Capture future SP500 and SPCX mark observations at a three-second target cadence without constructing any execution client or changing v51 behavior.",
+    "non_goal": "The recovered recorder cannot retroactively fill any historical mark gap or prove that an unobserved mark did not cross the stop."
+  },
+  "current_spcx_lifecycle": {
+    "lifecycle_id": "xyz:SPCX:517022750282",
+    "side": "short",
+    "entry_venue_timestamp_ms": 1786767327326,
+    "entry_price": 138.6232482662968,
+    "stop_trigger_price": 139.7321856,
+    "maximum_observed_mark_after_entry": 139.68,
+    "maximum_observed_mark_timestamp_ms": 1786800470888,
+    "observed_stop_cross": false,
+    "websocket_mark_samples_after_entry": 63810,
+    "maximum_websocket_gap_ms": 110796,
+    "strict_path_limit_ms": 5000,
+    "technical_path_status": "unresolved_before_rest_capture_recovery",
+    "interpretation": "No retained mark observation crossed the stop, but the historical 110.796-second gap prevents a proof that no brief crossing occurred."
+  },
+  "recovered_capture_contract": {
+    "symbols": [
+      "xyz:SP500",
+      "xyz:SPCX"
+    ],
+    "source": "hyperliquid_info_metaAndAssetCtxs",
+    "poll_seconds": 3.0,
+    "data_root": "data/live/research/hip3_index_marks",
+    "status_path": "data/runtime/research/hip3_index_mark_recorder_latest.json",
+    "launcher_pid_at_validation": 28540,
+    "worker_pid_at_validation": 28541,
+    "signing_client_constructed": false,
+    "orders_supported": false
+  },
+  "bounded_validation": {
+    "status_event": "hip3_mark_recorder_heartbeat",
+    "polls": 37,
+    "rows_by_symbol": {
+      "xyz:SP500": 37,
+      "xyz:SPCX": 37
+    },
+    "focused_tests": 4,
+    "focused_tests_status": "passed",
+    "authority_none_verified": true,
+    "orders_unsupported_verified": true
+  },
+  "hypothesis_ledger": [
+    {
+      "hypothesis_id": "v51-index-exact-mark-path-capture",
+      "status": "being_tested",
+      "hypothesis": "REST supplementation will keep prospective SP500 and SPCX lifecycle mark gaps within five seconds when the update-driven WebSocket stream becomes sparse.",
+      "minimum_update_evidence": "One complete eligible lifecycle whose merged mark path has no gap above five seconds.",
+      "falsifiers": [
+        "any merged lifecycle mark gap above 5000ms",
+        "stale recorder status during an open lifecycle",
+        "schema or market-identity ambiguity",
+        "a venue mark crossing the stop without the expected protected close"
+      ]
+    }
+  ],
+  "recommendation": {
+    "Recommendation": "Keep v51 unchanged and use the recovered recorder only as prospective evidence for the open and future index lifecycles.",
+    "Why now": "SPCX is open near its fixed stop and its trade-candle high cannot establish whether the venue mark trigger fired.",
+    "Evidence reviewed": "Current v51 SPCX ledger, 63,810 retained WebSocket mark samples, current venue protection, prior capture journal, recorder implementation, and focused tests.",
+    "Observed problem or opportunity": "The current lifecycle is protected, but exact stop-path attribution is weaker than the configured five-second research contract.",
+    "Applicable market regime": "All source-native SP500 and SPCX v3 lifecycles because the same venue mark-price stop semantics apply.",
+    "Alternatives considered": "Infer from trade candles, relax the gap rule, manually intervene, or restore unsigned mark capture; only the final option preserves execution and evidence integrity.",
+    "Proposed live change": null,
+    "Expected upside": "Future stop and drawdown diagnoses can use exact mark-source evidence instead of a mismatched trade-price proxy.",
+    "Main risks and failure modes": "The recorder may stop or be rate-limited, and it cannot repair pre-recovery evidence gaps.",
+    "Validation completed": "No-order contract, authority-none status, bounded real heartbeat, exact symbol binding, and focused unit tests.",
+    "Validation still required": "Continuous merged-path gap audit through a fully resolved source-native lifecycle.",
+    "Success metrics": "No gap above five seconds across a resolved lifecycle and exact reconciliation between mark trigger, venue stop, and close fill.",
+    "Failure / rollback triggers": "Recorder heartbeat becomes stale, any identity/schema mismatch occurs, or merged path evidence exceeds the five-second limit.",
+    "Confidence level": "High on recorder isolation and current venue protection; medium on prospective path completeness until a full lifecycle resolves; low on SPCX strategy expectancy at the current sample size.",
+    "Explicit approval requested": false
+  },
+  "source_evidence": [
+    {
+      "path": "scripts/hip3_mark_snapshot_recorder.py",
+      "sha256": "72c8930a53a475a510336ead70eff32b2dad3991485480d59ed1a3d45f381b1d",
+      "bytes": 4066
+    },
+    {
+      "path": "src/hypervector/data/hip3_mark_snapshot_recorder.py",
+      "sha256": "3dc4ad19c5f14641dc69b9b0ff3e80e053be037ec0afc1c34f983bb16153a5f1",
+      "bytes": 10140
+    }
+  ],
+  "limitations": [
+    "The current lifecycle began before recorder recovery and remains technically unresolved under the strict five-second path contract.",
+    "Periodic REST samples are local-receipt observations rather than exchange-timestamped mark events.",
+    "No strategy, route, asset, parameter, sizing, leverage, stop, exit, execution behavior, or deployment configuration changed."
+  ]
+}

@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import argparse
-import json
 from pathlib import Path
+import signal
 import subprocess
 import sys
 import time
@@ -14,6 +14,7 @@ from hypervector.live.canary_supervisor import (
     CanarySupervisorError,
     LedgerStartupSnapshot,
     capture_ledger_start,
+    signal_process_group as _signal_process_group,
     wait_for_fresh_configuration_identity,
 )
 from hypervector.live.cohort_accounting_rollover import (
@@ -21,9 +22,8 @@ from hypervector.live.cohort_accounting_rollover import (
 )
 from hypervector.live.cohort_monitor_identity import (
     active_ledger_identity,
-    checkpoint_identity,
+    fresh_checkpoint_document,
     require_matching_checkpoint_attachment,
-    require_staged_checkpoint_identity,
 )
 from hypervector.live.cohort_tui_commands import (
     CHECKPOINT_OUTPUT as _CHECKPOINT_OUTPUT,
@@ -34,8 +34,14 @@ from hypervector.live.cohort_tui_commands import (
     observer_audit_command as _observer_audit_command,
     observer_checkpoint_command as _observer_checkpoint_command,
     observer_command as _observer_command,
+    index_observer_dependency_command as _index_observer_dependency_command,
+    require_live_provider_dependencies as _require_live_provider_dependencies,
     require_checkpoint_accounting_epoch as _require_checkpoint_accounting_epoch,
     tui_command as _tui_command,
+)
+from hypervector.live.cohort_tui_dependency_supervision import (
+    start_owned_dependency,
+    stop_owned_dependency,
 )
 from hypervector.live.multi_asset_live_config import (
     MultiAssetLiveConfig,
@@ -52,7 +58,8 @@ _DEFAULT_CONFIG = Path(
 _DEFAULT_BACKTEST_LAB = Path("../backtest-lab/backtest_lab")
 _BACKEND_LOG = Path("data/runtime/bidirectional_cohort/backend.log")
 _CHECKPOINT_LOG = Path("data/runtime/bidirectional_cohort/checkpoint.log")
-_DEFAULT_STARTUP_TIMEOUT_SECONDS = 180.0
+_DEPENDENCY_LOG = Path("data/runtime/bidirectional_cohort/spcx_observer.log")
+_DEFAULT_STARTUP_TIMEOUT_SECONDS = 900.0
 _CHECKPOINT_FRESHNESS_SECONDS = 90.0
 
 
@@ -190,7 +197,7 @@ def _resolved_launch(
     accounting_epoch: CohortAccountingEpoch | None,
 ) -> MultiAssetTuiLaunch:
     backend = (
-        _backend_command(args)
+        _backend_command(args, config)
         if mode == "live"
         else _observer_command(args)
         if args.mode == "observe"
@@ -213,6 +220,7 @@ def _resolved_launch(
         ),
         tui_command=_tui_command(
             args,
+            config,
             config.cohort_ledger,
             include_checkpoint=True,
         ),
@@ -225,6 +233,9 @@ def _resolved_launch(
         ),
         startup_timeout_seconds=args.startup_timeout_seconds,
         accounting_epoch=accounting_epoch,
+        dependency_command=(
+            _index_observer_dependency_command(config) if mode == "live" else None
+        ),
     )
 
 
@@ -236,11 +247,30 @@ def run_supervisor(launch: MultiAssetTuiLaunch) -> int:
         raise MultiAssetLiveConfigError(
             f"operator stop file exists; inspect before removing: {launch.config.stop_file}"
         )
+    dependency = (
+        _start_owned_dependency(
+            launch.dependency_command,
+            launch.config,
+            timeout_seconds=launch.startup_timeout_seconds,
+        )
+        if launch.dependency_command is not None
+        else None
+    )
+    try:
+        return _run_live_supervisor(launch)
+    finally:
+        if dependency is not None:
+            _stop_owned_dependency(dependency)
+
+
+def _run_live_supervisor(launch: MultiAssetTuiLaunch) -> int:
+    """Supervise the backend, checkpoint writer, TUI, and final audit."""
     snapshot = capture_ledger_start(launch.config.cohort_ledger)
     _BACKEND_LOG.parent.mkdir(parents=True, exist_ok=True)
     checkpoint: subprocess.Popen[bytes] | None = None
     checkpoint_failure: str | None = None
     checkpoint_command = launch.checkpoint_command
+    audit_command = launch.audit_command
     with _BACKEND_LOG.open("ab", buffering=0) as backend_log:
         backend = subprocess.Popen(
             launch.backend_command,
@@ -250,9 +280,16 @@ def run_supervisor(launch: MultiAssetTuiLaunch) -> int:
         try:
             _wait_for_backend(backend, launch, snapshot)
             if checkpoint_command is not None and launch.config.mode == "live":
-                checkpoint_command = _bind_checkpoint_to_active_run(
+                checkpoint_command = _bind_run_to_active_backend(
                     checkpoint_command,
                     launch.config,
+                    command_name="checkpoint",
+                )
+            if audit_command is not None and launch.config.mode == "live":
+                audit_command = _bind_run_to_active_backend(
+                    audit_command,
+                    launch.config,
+                    command_name="audit",
                 )
             if checkpoint_command is not None:
                 checkpoint = _start_checkpoint_monitor(checkpoint_command)
@@ -266,29 +303,54 @@ def run_supervisor(launch: MultiAssetTuiLaunch) -> int:
         if checkpoint_command is not None
         else None
     )
-    if launch.audit_command is not None:
-        _publish_audit(launch.audit_command)
+    if audit_command is not None:
+        _publish_audit(audit_command)
     failure = checkpoint_failure or final_checkpoint_failure
     if failure is not None:
         raise RuntimeError(failure)
     return tui_returncode
 
 
+def _start_owned_dependency(
+    command: tuple[str, ...],
+    config: MultiAssetLiveConfig,
+    *,
+    timeout_seconds: float,
+) -> subprocess.Popen[bytes] | None:
+    """Start the unsigned observer only when no fresh external instance exists."""
+    return start_owned_dependency(
+        command,
+        config,
+        timeout_seconds=timeout_seconds,
+        log_path=_DEPENDENCY_LOG,
+        health_check=_require_live_provider_dependencies,
+    )
+
+
+def _stop_owned_dependency(process: subprocess.Popen[bytes]) -> None:
+    """Stop only the unsigned observer supervisor started by this TUI."""
+    stop_owned_dependency(process)
+
+
 def _run_monitor(launch: MultiAssetTuiLaunch) -> int:
     """Attach a TUI and recover its report-only checkpoint when stale."""
     checkpoint: subprocess.Popen[bytes] | None = None
     checkpoint_failure: str | None = None
-    checkpoint_fresh = (
-        _checkpoint_is_fresh(
-            launch.config,
-            launch.staged_config,
-            accounting_epoch=launch.accounting_epoch,
+
+    def freshness_check() -> bool:
+        return (
+            _checkpoint_is_fresh(
+                launch.config,
+                launch.staged_config,
+                accounting_epoch=launch.accounting_epoch,
+            )
+            if launch.accounting_epoch is not None
+            else _checkpoint_is_fresh(launch.config, launch.staged_config)
+            if launch.staged_config is not None
+            else _checkpoint_is_fresh(launch.config)
         )
-        if launch.accounting_epoch is not None
-        else _checkpoint_is_fresh(launch.config, launch.staged_config)
-        if launch.staged_config is not None
-        else _checkpoint_is_fresh(launch.config)
-    )
+
+    checkpoint_fresh = freshness_check()
     if launch.checkpoint_command is not None:
         writer_active = cohort_checkpoint_writer_active(_CHECKPOINT_OUTPUT)
         if (
@@ -305,9 +367,10 @@ def _run_monitor(launch: MultiAssetTuiLaunch) -> int:
                 _require_checkpoint_accounting_epoch(document, launch.accounting_epoch)
         if not writer_active:
             checkpoint = _start_checkpoint_monitor(
-                _bind_checkpoint_to_active_run(
+                _bind_run_to_active_backend(
                     launch.checkpoint_command,
                     launch.config,
+                    command_name="checkpoint",
                 )
             )
     try:
@@ -327,39 +390,14 @@ def _checkpoint_is_fresh(
     accounting_epoch: CohortAccountingEpoch | None = None,
 ) -> bool:
     """Accept only a recent checkpoint bound to the selected backend profile."""
-    active = active_ledger_identity(config)
-    try:
-        age_seconds = time.time() - _CHECKPOINT_OUTPUT.stat().st_mtime
-    except FileNotFoundError:
+    document = fresh_checkpoint_document(
+        _CHECKPOINT_OUTPUT,
+        config,
+        staged_config,
+        maximum_age_seconds=_CHECKPOINT_FRESHNESS_SECONDS,
+    )
+    if document is None:
         return False
-    except OSError as exc:
-        raise MultiAssetLiveConfigError(
-            f"checkpoint metadata is unavailable: {exc}"
-        ) from exc
-    if not 0.0 <= age_seconds <= _CHECKPOINT_FRESHNESS_SECONDS:
-        return False
-    try:
-        document: object = json.loads(_CHECKPOINT_OUTPUT.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
-        raise MultiAssetLiveConfigError(
-            f"recent checkpoint is unreadable; refusing concurrent recovery: {exc}"
-        ) from exc
-    checkpoint = checkpoint_identity(document)
-    if (
-        checkpoint.profile_id != config.profile_id
-        or checkpoint.profile_fingerprint != config.profile_fingerprint
-    ):
-        raise MultiAssetLiveConfigError(
-            "recent checkpoint profile identity does not match --config; "
-            "refusing concurrent recovery"
-        )
-    if checkpoint.run_id != active.run_id:
-        raise MultiAssetLiveConfigError(
-            "recent checkpoint run identity does not match the active ledger; "
-            "refusing concurrent recovery"
-        )
-    if staged_config is not None:
-        require_staged_checkpoint_identity(document, config, staged_config)
     if accounting_epoch is not None:
         _require_checkpoint_accounting_epoch(document, accounting_epoch)
     return True
@@ -376,20 +414,23 @@ def _start_checkpoint_monitor(
             command,
             stdout=checkpoint_log,
             stderr=subprocess.STDOUT,
+            start_new_session=True,
         )
 
 
-def _bind_checkpoint_to_active_run(
+def _bind_run_to_active_backend(
     command: tuple[str, ...],
     config: MultiAssetLiveConfig,
+    *,
+    command_name: str,
 ) -> tuple[str, ...]:
-    """Bind report-only telemetry to the backend run proven after startup."""
+    """Bind one report-only command to the backend run proven after startup."""
     run_id = active_ledger_identity(config).run_id
     if "--run-id" not in command:
         return (*command, "--run-id", run_id)
     index = command.index("--run-id")
     if index + 1 >= len(command):
-        raise MultiAssetLiveConfigError("checkpoint --run-id value is missing")
+        raise MultiAssetLiveConfigError(f"{command_name} --run-id value is missing")
     rebound = list(command)
     rebound[index + 1] = run_id
     return tuple(rebound)
@@ -403,11 +444,11 @@ def _stop_checkpoint_monitor(process: subprocess.Popen[bytes]) -> str | None:
             else f"checkpoint observer exited with {process.returncode}; "
             f"inspect {_CHECKPOINT_LOG}"
         )
-    process.terminate()
+    _signal_process_group(process.pid, signal.SIGTERM)
     try:
         process.wait(timeout=5.0)
     except subprocess.TimeoutExpired:
-        process.kill()
+        _signal_process_group(process.pid, signal.SIGKILL)
         process.wait(timeout=5.0)
         return f"checkpoint observer required forced termination; inspect {_CHECKPOINT_LOG}"
     return None
@@ -426,7 +467,15 @@ def _publish_audit(command: tuple[str, ...] | None) -> None:
 def _publish_final_checkpoint(command: tuple[str, ...] | None) -> str | None:
     if command is None:
         return "cohort stopped but final checkpoint command is missing"
-    result = subprocess.run((*command, "--once"), check=False)
+    bounded = (
+        ("--current-run-only",)
+        if "scripts/multi_asset_bidirectional_live_checkpoint.py" in command
+        else ()
+    )
+    result = subprocess.run(
+        (*command, "--once", *bounded),
+        check=False,
+    )
     if result.returncode == 0:
         return None
     return (
@@ -486,9 +535,8 @@ def main() -> int:
     try:
         launch = resolve_launch(
             build_parser().parse_args(),
-            credentials_present=(
-                presence.wallet_configured and presence.signing_key_configured
-            ),
+            credentials_present=presence.wallet_configured
+            and presence.signing_key_configured,
         )
         return run_supervisor(launch)
     except (CanarySupervisorError, MultiAssetLiveConfigError, RuntimeError) as exc:

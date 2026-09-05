@@ -4,14 +4,29 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 
+from hypervector.research.cohort_hypothesis_ledger import (
+    normalize_active_hypotheses,
+    normalize_hypothesis_decisions,
+)
+from hypervector.research.cohort_change_proposals import normalize_change_proposals
+from hypervector.research.cohort_first_event_trigger import (
+    build_first_event_observations,
+)
+from hypervector.research.cohort_human_approval import (
+    normalize_standing_live_change_approval,
+)
 from hypervector.research.cohort_side_composition import build_side_composition
 from hypervector.research.cohort_successor_triage import build_successor_triage
 
 Record = Mapping[str, object]
 
 _EXPERIMENT_PRIORITY = {
+    "collect_and_resolve_source_transport_parity": 0,
+    "diagnose_long_entry_quality": 0,
     "shared_portfolio_interaction_replay": 0,
     "collect_both_side_live_execution": 1,
+    "collect_route_native_one_blocker_shadow": 1,
+    "collect_route_specific_regime_context_evidence": 2,
     "separate_long_short_mechanisms": 2,
     "diagnose_signal_cost_or_concentration": 3,
     "collect_side_specific_evidence": 3,
@@ -57,6 +72,9 @@ def build_cohort_improvement_digest(
         "triage_summary": dict(_mapping(triage.get("summary"), "triage summary")),
         "experiment_queue": queue,
         "research_decision_overrides": override_summary,
+        "active_hypothesis_observations": build_first_event_observations(
+            audit, override_summary["active_hypotheses"]
+        ),
         "robust_near_misses": near_misses,
         "side_frontier": _side_frontier(sides),
         "assessment": _assessment(queue, near_misses),
@@ -83,6 +101,13 @@ def _apply_experiment_overrides(
         _mapping(payload.get("contract"), "research override contract")
     )
     raw_routes = _mapping(payload.get("routes"), "research override routes")
+    active = normalize_active_hypotheses(payload.get("active_hypotheses", []))
+    decisions = normalize_hypothesis_decisions(payload.get("hypothesis_decisions", []))
+    proposals = normalize_change_proposals(payload.get("change_proposals", []))
+    review_triggers, trigger_evidence = _review_trigger_inputs(payload)
+    approval = normalize_standing_live_change_approval(
+        payload.get("standing_live_change_approval")
+    )
     indexed = {_text(row.get("route"), "queue route"): dict(row) for row in queue}
     applied: list[str] = []
     sources: dict[str, str] = {}
@@ -99,9 +124,29 @@ def _apply_experiment_overrides(
     return ranked, {
         "applied_routes": applied,
         "decision_sources": sources,
+        "active_hypotheses": active,
+        "hypothesis_decisions": decisions,
+        "change_proposals": proposals,
+        "review_triggers": review_triggers,
+        "review_trigger_evidence": trigger_evidence,
+        "standing_live_change_approval": approval,
         "execution_effect": "report_only",
         "automatic_promotion": False,
     }
+
+
+def _review_trigger_inputs(
+    payload: Record,
+) -> tuple[dict[str, object], list[dict[str, str]]]:
+    triggers = dict(
+        _mapping(payload.get("review_triggers", {}), "research review triggers")
+    )
+    if not triggers:
+        return triggers, []
+    evidence = _mapping_sequence(payload.get("evidence", []), "evidence")
+    return triggers, [
+        {"path": _text(row.get("path"), "research evidence path")} for row in evidence
+    ]
 
 
 def _apply_route_override(row: dict[str, object], override: Record, route: str) -> None:
@@ -122,6 +167,10 @@ def _apply_route_override(row: dict[str, object], override: Record, route: str) 
             "priority_class": _EXPERIMENT_PRIORITY[experiment],
             "decision_source": _text(
                 override.get("decision_source"), f"{route} decision source"
+            ),
+            "supporting_evidence": _text_sequence(
+                override.get("supporting_evidence", []),
+                f"{route} supporting evidence",
             ),
             "execution_effect": "report_only",
         }
@@ -144,6 +193,12 @@ def _empty_override_summary() -> dict[str, object]:
     return {
         "applied_routes": [],
         "decision_sources": {},
+        "active_hypotheses": [],
+        "hypothesis_decisions": [],
+        "change_proposals": [],
+        "review_triggers": {},
+        "review_trigger_evidence": [],
+        "standing_live_change_approval": None,
         "execution_effect": "report_only",
         "automatic_promotion": False,
     }

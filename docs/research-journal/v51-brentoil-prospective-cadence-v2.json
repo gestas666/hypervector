@@ -1,0 +1,182 @@
+{
+  "schema_version": "v51_brentoil_prospective_cadence_v2",
+  "hypothesis_id": "v51_brentoil_prospective_cadence",
+  "revision": 2,
+  "supersedes_revision": 1,
+  "status": "being_tested",
+  "generated_at_utc": "2026-08-16T05:04:47Z",
+  "mode": "report_only",
+  "execution_authority": "none",
+  "automatic_live_change": false,
+  "runtime_strategy_changed": false,
+  "symbol": "xyz:BRENTOIL",
+  "provider_id": "hip3_brentoil_oil_shock_reversion_bidirectional_5m_shadow_v1",
+  "problem_restatement": "Update the zero-entry diagnosis using the exact BRENTOIL canary record and like-for-like source-native cadence windows rather than treating the live canary data as absent or relying only on a homogeneous Poisson approximation.",
+  "known_facts": {
+    "live_canary_data_exists": true,
+    "live_canary_closed_lifecycles": 3,
+    "live_canary_wins": 2,
+    "live_canary_losses": 1,
+    "live_canary_net_pnl_usd": 1.821755,
+    "live_canary_profit_factor": 3.648046,
+    "live_canary_net_excluding_largest_winner_usd": -0.232469,
+    "breakout_pressure_net_pnl_usd": -0.232469,
+    "current_strategy_identity_differs_from_canary_identities": true,
+    "current_strategy_edge_established": false
+  },
+  "prospective_window": {
+    "decision_rows": 130,
+    "timely_decisions": 129,
+    "stale_decisions": 1,
+    "eligible_decisions": 0,
+    "long_decisions": 0,
+    "short_decisions": 0,
+    "first_signal_bar_open_utc": "2026-08-15T18:10:00+00:00",
+    "last_signal_bar_close_utc": "2026-08-16T05:00:00+00:00",
+    "coverage_hours": 10.833333333333334,
+    "maximum_threshold_fraction": 0.5083448988648575,
+    "latest_trailing_return_bps": -10.316089622477431,
+    "latest_shock_threshold_bps": 87.86066210656752
+  },
+  "source_native_cadence_diagnostic": {
+    "method": "Recompute the frozen 12-bar return and lagged 95th-percentile threshold from the exact public candleSnapshot ledger, then compare the 130-decision prospective span with every prior contiguous 130-bar window having complete threshold history. This is a descriptive cadence diagnostic and does not select or tune a parameter.",
+    "historical_threshold_available_rows_before_prospective_start": 1286,
+    "historical_comparable_contiguous_windows": 1157,
+    "historical_zero_onset_windows": 225,
+    "historical_zero_onset_window_fraction": 0.1944684528954192,
+    "historical_window_onset_count_mean": 2.5185825410544513,
+    "historical_window_onset_count_median": 2.0,
+    "historical_window_onset_count_p90": 6.0,
+    "historical_window_onset_count_distribution": {
+      "0": 225,
+      "1": 317,
+      "2": 68,
+      "3": 190,
+      "4": 75,
+      "5": 147,
+      "6": 90,
+      "7": 44,
+      "8": 1
+    },
+    "same_utc_session_windows": {
+      "definition": "Exact 18:10Z through next-day 05:00Z source-native windows with 130 contiguous bars and complete frozen-threshold history.",
+      "qualified_windows": 4,
+      "zero_onset_windows": 2,
+      "windows": [
+        {
+          "start_utc": "2026-08-11T18:10:00+00:00",
+          "long_onsets": 0,
+          "short_onsets": 0
+        },
+        {
+          "start_utc": "2026-08-12T18:10:00+00:00",
+          "long_onsets": 0,
+          "short_onsets": 1
+        },
+        {
+          "start_utc": "2026-08-13T18:10:00+00:00",
+          "long_onsets": 1,
+          "short_onsets": 0
+        },
+        {
+          "start_utc": "2026-08-14T18:10:00+00:00",
+          "long_onsets": 0,
+          "short_onsets": 0
+        }
+      ]
+    }
+  },
+  "assessment": {
+    "strategy_dead_or_broken": "not_supported_by_current_evidence",
+    "threshold_relaxation_supported": false,
+    "live_addition_supported": false,
+    "reason": "Zero onsets occurred in 19.45% of prior contiguous source-native windows of the same length and in two of four exact same-UTC-session windows. The current maximum move reached only 50.83% of the frozen threshold. The quiet window is therefore not anomalous enough to justify loosening the mechanism, while zero prospective lifecycles still provides no profitability evidence.",
+    "confidence": "medium",
+    "confidence_basis": "The source and signal identity are exact, but only four same-session historical windows qualify and shock arrivals are clustered rather than independent."
+  },
+  "recommendation": "Keep BRENTOIL in the expansion shortlist and continue its frozen report-only oil-shock observer. Use the three exact canary lifecycles as execution-friction priors, not as proof of the new mechanism. Do not restore the retired Swing or breakout-pressure routes, loosen the shock threshold, or add BRENTOIL live from the current evidence.",
+  "why_now": "The user correctly identified that BRENTOIL has live-canary data, and the prospective window is now long enough to replace the earlier all-session Poisson-only diagnosis with an exact rolling-window comparison.",
+  "evidence_reviewed": [
+    "three exact BRENTOIL live-canary lifecycles with fills, fees, funding, stops, exit reasons, and slippage",
+    "130 exact source-native shadow decisions",
+    "2,428 exact public five-minute candleSnapshot rows",
+    "1,157 prior contiguous windows matching the current decision count",
+    "four prior exact UTC-session windows matching the current clock span"
+  ],
+  "observed_problem_or_opportunity": "BRENTOIL has top-ten venue liquidity and useful execution evidence, but its new source-native oil-shock mechanism has not fired prospectively and its development stress result is negative.",
+  "applicable_market_regime": "Five-minute large-return shock and immediate mean-reversion conditions in the active BRENTOIL market; the current quiet overnight span did not approach the frozen shock threshold.",
+  "alternatives_considered": [
+    "restore the retired BRENTOIL Swing route: rejected because one manually closed winner does not overturn its rejected identity",
+    "restore the retired BRENTOIL breakout-pressure route: rejected because its exact two-trade canary component is net negative and prior validation failed",
+    "lower the shock threshold now: rejected because a zero-onset window remains historically ordinary and would be post-observation tuning",
+    "drop BRENTOIL for inactivity: rejected because current source-native cadence does not establish a broken route and liquidity remains viable"
+  ],
+  "proposed_live_change": "none",
+  "expected_upside": "Continued observation can produce an attributable, oil-specific lifecycle while retaining BRENTOIL's measured diversification and execution feasibility without exposing capital prematurely.",
+  "main_risks_and_failure_modes": [
+    "The four same-session historical windows are a small sample.",
+    "Shock arrivals cluster around events and violate independent-arrival assumptions.",
+    "Development stress expectancy is negative and historical mark paths remain technically unresolved.",
+    "The canary winner concentration can falsely suggest strategy edge.",
+    "One decision exceeded the frozen prospective delay and is retained as stale rather than eligible."
+  ],
+  "validation_completed": [
+    "exact live-canary lifecycle reconciliation",
+    "exact source identity and causal prospective cursor verification",
+    "source-native rolling-window cadence comparison",
+    "same-UTC-session cadence comparison",
+    "threshold-proximity measurement"
+  ],
+  "validation_still_required": [
+    "at least one fully resolved prospective lifecycle per configured direction",
+    "mechanism-specific live fill and slippage observations",
+    "resolved mark and executable-L2 path evidence",
+    "predeclared validation and untouched holdout after technical resolution",
+    "positive stress expectancy excluding the largest winner"
+  ],
+  "success_metrics": [
+    "fully resolved prospective long and short lifecycle coverage",
+    "zero unresolved mark or executable-L2 bars across selected lifecycles",
+    "stress profit factor above one and positive net after measured costs",
+    "positive stress net after removing the largest winner"
+  ],
+  "failure_or_rollback_triggers": [
+    "an eligible threshold crossing is missing from the journal",
+    "decision delays repeatedly exceed the frozen 15-second limit",
+    "resolved prospective lifecycles remain stress-negative or outlier-dependent",
+    "venue liquidity or execution friction becomes incompatible with planned size"
+  ],
+  "confidence_level": "medium for the cadence diagnosis; high for live-canary existence and arithmetic; low for repeatable profitability",
+  "explicit_approval_requested": false,
+  "single_highest_value_next_investigation": "Collect the first exact SPCX live-source lifecycle for its missing side if it occurs first; otherwise resolve the first source-native BRENTOIL oil-shock lifecycle. No parameter or live-authority change is justified while both remain pending.",
+  "falsifiers": [
+    "A replay of the exact 130 decision rows produces an eligible onset.",
+    "A source-native comparable-window audit materially changes the reported 225 of 1,157 zero-window count.",
+    "A longer predeclared prospective window falls outside the historical cadence range.",
+    "Resolved prospective lifecycles establish positive, non-concentrated stress expectancy."
+  ],
+  "evidence": {
+    "superseded_journal": {
+      "path": "docs/research-journal/v51-brentoil-prospective-cadence-v1.json",
+      "bytes": 6034,
+      "sha256": "114ed3af3b8613012e6660a9376b4e2280f52bcc6078c6568f35aa170c3f7a6c"
+    },
+    "candle_prefix": {
+      "path": "data/live/research/brentoil_oil_shock_shadow/candles.jsonl",
+      "rows": 2428,
+      "prefix_bytes": 922741,
+      "prefix_sha256": "545202d8f84b5025ef97442b451d74584c203393488f7f03feadbb0a2ac6b7c0"
+    },
+    "decision_prefix": {
+      "path": "data/live/research/brentoil_oil_shock_shadow/decisions.jsonl",
+      "rows": 130,
+      "prefix_bytes": 131832,
+      "prefix_sha256": "339da0734dcda29dd1d50c7dc2262e859cff5b28c50aef352c4969c5e4f46952"
+    },
+    "canary_reconciliation": {
+      "path": "data/logs/research/bidirectional_cohort/brentoil_live_canary_lifecycle_reconciliation_20260815_v1.json",
+      "bytes": 8143,
+      "sha256": "47ba7608ce7d7fd9b2ba2c7c64555d529abae1ff509971bfbc38a46a308534bc"
+    }
+  }
+}

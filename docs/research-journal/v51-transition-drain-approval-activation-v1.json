@@ -1,0 +1,87 @@
+{
+  "schema_version": "v51_transition_drain_approval_activation_v1",
+  "mode": "human_approval_and_backend_activation_record",
+  "recorded_at_utc": "2026-08-16T10:03:27Z",
+  "source": "active_thread_explicit_human_approval",
+  "approval_statement": "ive already pre approved all required changes",
+  "interpreted_scope": "The exact previously described v51 transition-drain proposal: disable new entries, preserve current venue stops and bound exits, continue journaling, and wait for a flat and owned-order-free boundary.",
+  "proposal_id": "v51-transition-drain-containment-v1",
+  "run_id": "bidirectional-live-1786801038311",
+  "profile_id": "multi_asset_growth_first_5000_six_asset_profit_lock_candidate_v51",
+  "profile_fingerprint": "30cd54bb5b5b17249ae0a6a3b01d5702b276d51f8dc5ddd6b4d36ab6aa7d1908",
+  "request_id": "ed1b4d02f5fc4da49acac47170db4313",
+  "requested_at_utc": "2026-08-16T10:00:10.455000+00:00",
+  "activated_at_utc": "2026-08-16T10:00:25.748592+00:00",
+  "backend_outcome": {
+    "status": "completed",
+    "reason": "transition drain activated",
+    "path": "data/live/bidirectional_cohort/operator_commands/outcomes/ed1b4d02f5fc4da49acac47170db4313.json",
+    "sha256": "e422de822a25caaf3c3163442edbfa00c6244a2c148f168f22b39636d78f27cf",
+    "bytes": 237
+  },
+  "durable_state": {
+    "status": "active",
+    "path": "data/live/bidirectional_cohort/transition_drain.json",
+    "sha256_at_recording": "c42ce51877e632db79a1bd0780483830390a9b1f70d3aa46fba9013aa02e8e28",
+    "bytes_at_recording": 468
+  },
+  "post_activation_validation": {
+    "checkpoint_generated_at_utc": "2026-08-16T10:03:27.032963+00:00",
+    "backend_state": "running_consistent",
+    "backend_process_health": "healthy",
+    "faulted_assets": [],
+    "new_entry_events_after_activation": 0,
+    "open_positions": [
+      {
+        "symbol": "SOL",
+        "size_signed": 66.16,
+        "stop_oid": 517255993410,
+        "stop_trigger": 74.848,
+        "reduce_only": true,
+        "venue_trigger": true
+      },
+      {
+        "symbol": "xyz:SPCX",
+        "size_signed": 35.36,
+        "stop_oid": 517508481177,
+        "stop_trigger": 139.06,
+        "reduce_only": true,
+        "venue_trigger": true
+      }
+    ]
+  },
+  "authorized_effect": {
+    "new_entries": "disabled",
+    "existing_strategy_exits": "preserved",
+    "existing_maximum_hold_exits": "preserved",
+    "manual_close": "preserved",
+    "venue_native_protection": "preserved",
+    "automatic_successor_start": false
+  },
+  "not_authorized_by_this_record": [
+    "immediate liquidation of the two protected positions",
+    "in-place stop, target, leverage, sizing, or strategy changes",
+    "starting a successor profile before a separately verified flat and owned-order-free boundary",
+    "automatic promotion of any report-only candidate"
+  ],
+  "remaining_acceptance": [
+    "SOL and SPCX close under their bound exit contracts",
+    "all configured venue positions become flat",
+    "all cohort-owned orders clear",
+    "the drain reaches completed state and is archived with exact identity",
+    "final v51 accounting and journal projections reconcile"
+  ],
+  "failure_or_update_triggers": [
+    "any new entry after activation",
+    "either protected stop disappears while its position remains open",
+    "run or profile identity changes",
+    "backend health becomes stale or faulted",
+    "venue and ledger position state diverge"
+  ],
+  "confidence_level": "high_on_activation_and_current_protection",
+  "limitations": [
+    "The drain does not guarantee profitable exits for SOL or SPCX.",
+    "The durable state file is expected to change when the drain completes, so its recorded hash is a point-in-time identity rather than an immutable final archive.",
+    "A completed drain and final accounting remain pending."
+  ]
+}

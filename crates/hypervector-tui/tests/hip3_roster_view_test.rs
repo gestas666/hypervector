@@ -95,7 +95,7 @@ fn stale_roster_title_and_table_do_not_present_old_account_data_as_live() {
 fn depth_screen_renders_backend_hip3_roster_without_local_fallback() {
     let mut app = App::new("BTC".into(), "5m".into(), Vec::new(), true, false);
     app.active_tab = 3;
-    app.backend.cohort.enabled_symbols = vec!["BTC".into()];
+    app.backend.cohort.enabled_symbols = vec!["BTC".into(), "xyz:SP500".into(), "xyz:GOLD".into()];
     app.backend.cohort.books.insert("BTC".into(), crypto_book());
     app.backend.hip3_roster = Hip3RosterTelemetry {
         configured: true,
@@ -129,11 +129,49 @@ fn depth_screen_renders_backend_hip3_roster_without_local_fallback() {
         .iter()
         .map(|cell| cell.symbol())
         .collect::<String>();
-    assert!(text.contains("HIP-3 RESEARCH"));
-    assert!(text.contains("WTI HIST != BRENT"));
+    assert!(text.contains("HIP-3 ACTIVE ROSTER"));
+    assert!(text.contains("ENABLED 2/2"));
     assert!(text.contains("xyz:SP500"));
     assert!(text.contains("xyz:GOLD"));
     assert!(text.contains("UNRES"));
+}
+
+#[test]
+fn depth_screen_hides_hip3_markets_outside_the_active_cohort() {
+    let mut app = App::new("BTC".into(), "5m".into(), Vec::new(), true, false);
+    app.active_tab = 3;
+    app.backend.cohort.enabled_symbols = vec!["BTC".into(), "xyz:SPCX".into(), "xyz:SNDK".into()];
+    app.backend.cohort.books.insert("BTC".into(), crypto_book());
+    app.backend.hip3_roster = Hip3RosterTelemetry {
+        configured: true,
+        available: true,
+        markets: vec![
+            market("xyz:SP500", Some(0.0000864)),
+            market("xyz:SPCX", Some(0.0000864)),
+            market("xyz:SNDK", Some(0.0000864)),
+            market("xyz:GOLD", None),
+            market("xyz:BRENTOIL", Some(0.0000864)),
+        ],
+        ..Hip3RosterTelemetry::default()
+    };
+    let mut terminal = Terminal::new(TestBackend::new(180, 40)).expect("test terminal");
+
+    terminal
+        .draw(|frame| cohort_view::render(frame, &app))
+        .expect("render filtered depth screen");
+
+    let text = terminal
+        .backend()
+        .buffer()
+        .content()
+        .iter()
+        .map(|cell| cell.symbol())
+        .collect::<String>();
+    assert!(text.contains("xyz:SPCX"), "{text}");
+    assert!(text.contains("xyz:SNDK"), "{text}");
+    for excluded in ["xyz:SP500", "xyz:GOLD", "xyz:BRENTOIL"] {
+        assert!(!text.contains(excluded), "leaked {excluded}\n{text}");
+    }
 }
 
 fn market(symbol: &str, taker_fee_rate: Option<f64>) -> Hip3MarketTelemetry {

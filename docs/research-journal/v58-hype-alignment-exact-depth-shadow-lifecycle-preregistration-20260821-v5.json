@@ -1,0 +1,53 @@
+{
+  "schema_version": "v58_hype_alignment_shadow_preregistration_v5",
+  "status": "prospective_collecting_successor_observer_epoch",
+  "hypothesis_id": "v58_hype_alignment_exact_depth_shadow_lifecycle_v5",
+  "supersedes_hypothesis_id": "v58_hype_alignment_exact_depth_shadow_lifecycle_v4",
+  "strategy_id": "hype_breakout_compression_alignment_bidirectional_v2",
+  "symbol": "HYPE",
+  "source": {
+    "config_path": "configs/multi_asset_growth_first_5000_eight_asset_incremental_v58.toml",
+    "config_sha256": "1c1c1656233b074df2ed3adcee8cb8cb2c58f0d191cc9f9ac34799478fca3378",
+    "observer_profile_fingerprint": "a779d40ff77909b42d0359668087aad77a74cd8209c936d88d253062a2ddba17",
+    "observer_run_fingerprint": "950a71d22a1b94292d3fbdd674ace4b92d0ac1d506f7f3a1700d806b68462ea8",
+    "observer_run_id": "bidirectional-observe-1787339261510",
+    "ledger_path": "data/observe/v58_eight_asset_cached_parity_20260821_v2/decisions.jsonl"
+  },
+  "prospective_start_ms": 1787340300000,
+  "ledger_prefix": {
+    "bytes": 1815000,
+    "path": "/Users/gestas/Prototypes/hypervector/data/observe/v58_eight_asset_cached_parity_20260821_v2/decisions.jsonl",
+    "rows": 231,
+    "sha256": "12bb8d22e80b70edb4ba3bcd8b4d384ec78e9fb97fa1818e342a5f55b87e5bb9"
+  },
+  "frozen_contract": {
+    "sides": [
+      "long",
+      "short"
+    ],
+    "entry_liquidity": "taker_ioc",
+    "stop_policy": "fixed_bps",
+    "stop_bps": 80.0,
+    "target_policy": "none",
+    "close_on_eligible_opposite_signal": true,
+    "soft_maximum_hold_seconds": 28800,
+    "maximum_hold_policy": "extend_while_regime_supported",
+    "hard_maximum_hold_seconds": 86400,
+    "maximum_hold_evidence_maximum_age_seconds": 60,
+    "profit_lock_policy": "none",
+    "taker_fee_rate_per_side": 0.00045
+  },
+  "analysis_contract": {
+    "performance_gate": false,
+    "automatic_promotion": false,
+    "automatic_retuning": false,
+    "pool_with_predecessor_epoch": false
+  },
+  "report_only": true,
+  "execution_authority": "none",
+  "orders_supported": false,
+  "signing_client_constructed": false,
+  "automatic_live_change": false,
+  "runtime_strategy_changed": false,
+  "approval_requested": false
+}

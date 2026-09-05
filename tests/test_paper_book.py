@@ -7,6 +7,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
+from requests import ConnectionError
 
 from hypervector.paper.book import (
     BookFeed,
@@ -182,6 +183,49 @@ def test_fetch_hl_l2_book_posts_and_parses():
     assert snap.source == "hl_rest_l2"
     assert snap.ts_recv_ms == 1700000001000.0
     assert snap.symbol == "BTC-PERP"
+
+
+def test_fetch_hl_l2_book_retries_transient_connection_failure():
+    """One transient connection failure cannot degrade a five-second observer poll."""
+    from hypervector.data.hl import fetch_hl_l2_book
+
+    raw = json.loads(FIX.read_text())
+    mock_resp = MagicMock()
+    mock_resp.raise_for_status = MagicMock()
+    mock_resp.json.return_value = raw
+    mock_sess = MagicMock()
+    mock_sess.post.side_effect = [ConnectionError("temporary disconnect"), mock_resp]
+    delays: list[float] = []
+
+    snap = fetch_hl_l2_book(
+        "BTC-PERP",
+        session=mock_sess,
+        sleep_fn=delays.append,
+    )
+
+    assert mock_sess.post.call_count == 2
+    assert delays == [1.0]
+    assert snap.best_bid() == 100.0
+
+
+def test_fetch_hl_l2_book_fails_after_bounded_connection_retries():
+    """Persistent transport failure remains explicit after the retry budget."""
+    from hypervector.data.hl import fetch_hl_l2_book
+
+    mock_sess = MagicMock()
+    mock_sess.post.side_effect = ConnectionError("persistent disconnect")
+    delays: list[float] = []
+
+    with pytest.raises(RuntimeError, match="HL l2Book fetch failed") as captured:
+        fetch_hl_l2_book(
+            "BTC-PERP",
+            session=mock_sess,
+            sleep_fn=delays.append,
+        )
+
+    assert mock_sess.post.call_count == 4
+    assert delays == [1.0, 2.0, 4.0]
+    assert isinstance(captured.value.__cause__, ConnectionError)
 
 
 def test_fetch_hl_l2_book_raises_on_http_error():

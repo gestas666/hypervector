@@ -1,0 +1,162 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v58-sp500-side-containment-after-first-long",
+  "revision_number": 1,
+  "supersedes_revision_id": null,
+  "created_at_utc": "2026-08-22T10:06:55Z",
+  "strategy_id": "hip3_breakout_pressure_sp500_spcx_fresh15s_bidirectional_v3",
+  "symbol": "xyz:SP500",
+  "status": "candidate",
+  "hypothesis": "Removing only future SP500 long execution authority at a verified flat and order-free boundary may contain an unsupported side while preserving observation, the exact short route, and every V58 risk and exit parameter.",
+  "decision": "Stage only; do not alter the current open short; defer the live decision until the current short resolves and a fresh flat/order-free preflight is complete.",
+  "confidence": "medium",
+  "falsifier": "Reject or revise containment if the open short materially changes the side decision, the candidate differs from V58 beyond profile identity and SP500 long authority, any sizing/exit/protection/fingerprint/ledger check fails, or comparable preregistered SP500 long evidence becomes positive after costs and largest-winner removal.",
+  "evidence": [
+    {
+      "path": "v58-sp500-lineage-side-containment-audit-20260821-v1.json",
+      "role": "historical, validation, and exact-live side lineage",
+      "sha256": "4023a9f5aa0377bc74915bf6bd29dae6beb6e9d5bb130bf9f542f67e1f55fcfe",
+      "bytes": 21047
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v58_sp500_long_resolution_short_open_20260822T0935Z.json",
+      "role": "immutable first V58 long resolution and successor short state",
+      "sha256": "0bcea82a41a95ea988fd7c78163ccfa8f18e2168258263e0bcefac280b27c0af",
+      "bytes": 15625
+    },
+    {
+      "path": "v58-sp500-lower-activation-profit-lock-future-only-preregistration-20260821-v4.json",
+      "role": "frozen exit-challenger disposition and future-only boundary",
+      "sha256": "e8745f4750a7def53395a847da7bd56ec17f60e7e19ecc14e43e1af6aab4ef6e",
+      "bytes": 4677
+    },
+    {
+      "path": "../../configs/multi_asset_growth_first_5000_eight_asset_sp500_short_containment_candidate_v59.toml",
+      "role": "exact-diff staged candidate configuration",
+      "sha256": "1f3d4e122afa70c0fd63c161cf6cd68b54d6fe7d96df738d66f8a6e1a48d3a81",
+      "bytes": 6219
+    },
+    {
+      "path": "../../tests/test_v59_sp500_short_containment_config.py",
+      "role": "configuration exact-diff regression tests",
+      "sha256": "1953396365156ff8190b2f1c21ec715251a5b4095d05fd74e689c24ab833232a",
+      "bytes": 3469
+    },
+    {
+      "path": "../../src/hypervector/research/v59_poststart_acceptance.py",
+      "role": "candidate-specific post-start acceptance implementation",
+      "sha256": "b2b362020a030a5287728692d9d3d3cfb32b2a7a275f7ac727830c6eeee9b08b",
+      "bytes": 8171
+    },
+    {
+      "path": "../../scripts/v59_poststart_acceptance.py",
+      "role": "candidate-specific acceptance publisher",
+      "sha256": "f5ab00e9054fb59142648fcbdb59e71e0f2325bba3f4f5ef979340461e4df525",
+      "bytes": 3763
+    },
+    {
+      "path": "../../tests/test_v59_poststart_acceptance.py",
+      "role": "acceptance contract unit tests",
+      "sha256": "9c1d4dea0ae195663fc94fde0716acf20fef1049e2d221e736125763f0aea494",
+      "bytes": 7458
+    },
+    {
+      "path": "../../tests/test_v59_poststart_acceptance_script.py",
+      "role": "acceptance publisher tests",
+      "sha256": "ebc013ffba6633757045e457a0ba62fd883eee14398abc59f96ec761aa5fb52a",
+      "bytes": 1689
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v59_sp500_short_containment_interim_preflight_20260822T0950Z.json",
+      "role": "mainnet report-only candidate preflight with current SP500 blocker",
+      "sha256": "c943e33eb594569fb7d3090876926aa925a54e7bbdb13adea250a3acfd0a857b",
+      "bytes": 22314
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v59_sp500_short_containment_growth_stress_20260822T0951Z.json",
+      "role": "candidate-bound portfolio stress sensitivity",
+      "sha256": "7f470c41e63d380e0d5ef51df0bf39362da6695fa4b0042353ad38a876e6d4fd",
+      "bytes": 27192
+    },
+    {
+      "path": "../../crates/hypervector-tui/tests/v57_v58_staged_transition_test.rs",
+      "role": "TUI visibility and no-scope-drift acceptance",
+      "sha256": "b6c3177e2afb2ae28c7318fdfaa47b3f26c77af55cf992aa3e7cdfaea578b558",
+      "bytes": 13735
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v59_sp500_short_containment_verification_20260822T1000Z.json",
+      "role": "fresh focused and full verification record",
+      "sha256": "e6b684bfd1304ced46f04e4d52fc1c4e0173a06d427bd454d9c6e05454575a13",
+      "bytes": 3352
+    }
+  ],
+  "metrics": {
+    "recommendation": "Stage only SP500 short-only containment; make no current live mutation and claim no profitability improvement.",
+    "why_now": "The first exact V58 SP500 long closed at -4.873255 USD after 49.1013 bps of peak giveback. Historical development, untouched validation, and stress were negative on both sides. Two exact prior live shorts closed +6.73181 USD combined, but both used the 24-hour fallback and the sample is too small to establish edge. A third short is open and protected.",
+    "observed_problem": "Bidirectional authority exposes capital to a long side with one negative exact lifecycle and negative comparable historical evidence, while aggregate SP500 live evidence remains largest-winner dependent.",
+    "applicable_regime": "Exact v3 breakout-pressure SP500 route only. The proposal is authority containment, not a claim about general SP500 regimes or a new entry mechanism.",
+    "alternatives": [
+      "Keep V58 bidirectional authority unchanged after the open short resolves",
+      "Remove SP500 entirely",
+      "Retune pressure activation",
+      "Add a fixed target or lower profit-lock activation"
+    ],
+    "proposed_live_change": "Only at a future verified flat and order-free boundary, remove SP500 long execution authority. Preserve all eight assets, ten-position capacity, both-side observation telemetry, the exact short route, and every sizing, stop, profit-lock, opposite-intent, and maximum-hold parameter.",
+    "expected_upside": "Avoid future exposure to the currently unsupported long side while retaining causal short-side learning. No return forecast or short-side profitability claim is supported.",
+    "risks": [
+      "The two resolved shorts and one resolved long are insufficient for expectancy estimation",
+      "Containment can miss future profitable longs",
+      "Historical short evidence is negative",
+      "The current short can resolve at a loss",
+      "Changing authority can create configuration or TUI drift unless candidate-bound acceptance passes"
+    ],
+    "validation_completed": [
+      "Exact configuration diff",
+      "Candidate-bound report-only mainnet preflight",
+      "Candidate-bound stress sensitivity",
+      "Candidate-specific post-start acceptance and negative tests",
+      "TUI staged-transition render test",
+      "Focused Python tests: 76 passed",
+      "Full Python tests: 7421 passed, 4 deselected, 0 failed",
+      "Full Rust tests: 457 passed, 4 ignored, 0 failed",
+      "Ruff check, scoped Ruff format, cargo fmt, and git diff checks"
+    ],
+    "validation_still_required": [
+      "Resolve and reconcile the current SP500 short",
+      "Refresh the immutable decision evidence with the final short outcome",
+      "Run a fresh flat and order-free preflight",
+      "Create and verify a prestart backup",
+      "Obtain operation-specific live cutover approval",
+      "Run actual post-start candidate acceptance after an approved cutover"
+    ],
+    "success_metrics": {
+      "economic_review_boundary": "Review after three additional independent shorts or 30 calendar days, whichever comes first",
+      "economic": "Exact after-cost net PnL above zero, profit factor above one, and net PnL excluding the largest winner above zero",
+      "technical": "Zero runtime faults, zero venue-ledger divergence, exactly one owned protective stop per open position, and no fingerprint/direction/exit/sizing/TUI drift",
+      "gate_semantics": "Review metrics are reported evidence, not hidden automatic execution gates"
+    },
+    "rollback_triggers": {
+      "technical": "Any fingerprint, execution-direction, exit, sizing, ledger, stop, preflight, or TUI mismatch blocks or rolls back the candidate",
+      "economic": "Non-positive or largest-winner-dependent evidence prompts an explicit human decision; it does not create an undeclared automatic gate"
+    },
+    "confidence_detail": {
+      "containment": "medium",
+      "short_edge": "low"
+    },
+    "approval_state": "Deferred. No live cutover approval is requested while SP500 remains open; request operation-specific approval only after a verified flat and order-free boundary."
+  },
+  "limitations": [
+    "Only two comparable resolved shorts and one resolved long are available",
+    "The historical mechanism uses an older proxy-backed research path and is not identical to every v3 runtime detail",
+    "The three-outcome aggregate is dependent on its largest winner",
+    "Three eligible evaluations in the lifecycle watcher did not create new attributable lifecycles and remain explicitly classified as occupied or withheld evidence",
+    "The stress artifact is a marginal sensitivity analysis, not a joint loss ceiling or proof of profitability",
+    "Actual post-start acceptance cannot run until an approved cutover occurs",
+    "Repository-wide format check still reports 140 unrelated pre-existing files that would reformat",
+    "Staging a safer authority scope is not an economic improvement and must not be described as one"
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

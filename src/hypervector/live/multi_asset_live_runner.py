@@ -13,23 +13,21 @@ from hypervector.live.bidirectional_intents import (
     IntentRoutingReport,
     RoutingAction,
 )
-from hypervector.live.cohort_execution_plan import (
-    BoundExecutionPlan,
-    ProviderExecutionContract,
-)
+from hypervector.live.cohort_execution_plan import ProviderExecutionContract
 from hypervector.live import cohort_execution_contract_selection as contract_selection
 from hypervector.live.cohort_entry_sizing import CohortEntrySizing
+from hypervector.live.cohort_entry_submission import (
+    EntryDelayMap,
+    execute_fresh_routed_actions,
+    validate_entry_delays,
+)
 from hypervector.live.cohort_funding_window import committed_funding_window
 from hypervector.live.cohort_transition_drain import CohortTransitionDrain
 from hypervector.live.cohort_route_cycle import (
     route_cycle,
     validate_and_build_exit_controllers,
 )
-from hypervector.live.cohort_routing_execution import (
-    routing_decision_payload,
-    routing_exit_reason,
-    select_entry_sizing,
-)
+from hypervector.live.cohort_routing_execution import execute_routing_action
 from hypervector.live.cohort_maximum_hold_policy import (
     EvaluationKey,
     update_latest_evaluations,
@@ -45,7 +43,6 @@ from hypervector.live.multi_asset_live_runner_support import (
     all_flat_and_unowned,
     asset_snapshot,
     aware,
-    entry_provider_strategy_id,
     reconcile_engines,
     remaining_delay,
     shared_account_facts,
@@ -99,6 +96,7 @@ class MultiAssetLiveRunner:
         signal_stop_requested: Callable[[], bool],
         maximum_hold_seconds_by_symbol: Mapping[str, int],
         execution_contracts: _ContractMap,
+        maximum_entry_delay_ms_by_provider_symbol: EntryDelayMap,
         executable_provider_symbols: frozenset[tuple[str, str]],
         executable_provider_directions: frozenset[tuple[str, str, str]] | None = None,
         provider_entry_sizing: _SizingMap | None = None,
@@ -115,6 +113,7 @@ class MultiAssetLiveRunner:
             telemetry,
             maximum_hold_seconds_by_symbol,
             execution_contracts,
+            maximum_entry_delay_ms_by_provider_symbol,
             executable_provider_symbols,
             executable_provider_directions,
             provider_entry_sizing or {},
@@ -132,7 +131,6 @@ class MultiAssetLiveRunner:
             signal_stop_requested,
             monotonic_fn,
         )
-        self._funding_start_ms, self._started = None, False
 
     def _assign_strategy_dependencies(
         self,
@@ -143,6 +141,7 @@ class MultiAssetLiveRunner:
         telemetry: CohortTelemetryProtocol,
         maximum_holds: Mapping[str, int],
         contracts: _ContractMap,
+        entry_delays: EntryDelayMap,
         executable_pairs: frozenset[tuple[str, str]],
         executable_directions: frozenset[tuple[str, str, str]] | None,
         sizing: _SizingMap,
@@ -168,19 +167,40 @@ class MultiAssetLiveRunner:
         )
         self._assign_execution_authority(
             contracts=contracts,
+            entry_delays=entry_delays,
             executable_pairs=executable_pairs,
             effective_directions=effective_directions,
             sizing=sizing,
             directional_sizing=directional_sizing,
         )
-        self._latest_evaluations = {}
-        self._operator_processor = create_operator_processor(
+        self._assign_operator_dependencies(
             operator_commands,
             telemetry,
             engines,
             executable_pairs,
             effective_directions,
             router.maximum_positions,
+            transition_drain,
+        )
+
+    def _assign_operator_dependencies(
+        self,
+        commands: OperatorCommandSourceProtocol | None,
+        telemetry: CohortTelemetryProtocol,
+        engines: Mapping[str, MultiAssetEngineProtocol],
+        executable_pairs: frozenset[tuple[str, str]],
+        effective_directions: frozenset[tuple[str, str, str]],
+        maximum_positions: int,
+        transition_drain: CohortTransitionDrain | None,
+    ) -> None:
+        self._latest_evaluations = {}
+        self._operator_processor = create_operator_processor(
+            commands,
+            telemetry,
+            engines,
+            executable_pairs,
+            effective_directions,
+            maximum_positions,
             transition_drain,
         )
         self._transition_drain = transition_drain
@@ -226,6 +246,7 @@ class MultiAssetLiveRunner:
         self,
         *,
         contracts: _ContractMap,
+        entry_delays: EntryDelayMap,
         executable_pairs: frozenset[tuple[str, str]],
         effective_directions: frozenset[tuple[str, str, str]],
         sizing: _SizingMap,
@@ -234,6 +255,9 @@ class MultiAssetLiveRunner:
         self._executable_provider_symbols = executable_pairs
         self._executable_provider_directions = effective_directions
         self._execution_contracts = dict(contracts)
+        self._maximum_entry_delay_ms = validate_entry_delays(
+            entry_delays, executable_pairs
+        )
         self._provider_entry_sizing = dict(sizing)
         self._provider_directional_entry_sizing = dict(directional_sizing)
 
@@ -254,6 +278,7 @@ class MultiAssetLiveRunner:
         self._poll_seconds = poll_seconds
         self._signal_stop_requested = signal_stop_requested
         self._monotonic_fn = monotonic_fn
+        self._funding_start_ms, self._started = None, False
 
     def start(
         self,
@@ -311,10 +336,10 @@ class MultiAssetLiveRunner:
             executable_directions=self._executable_provider_directions,
             transition_drain=self._transition_drain,
         )
-        report = IntentRoutingReport(operator_actions + routed.actions, routed.withheld)
-        self._finish_cycle(
+        report = self._finish_cycle(
             poll=poll,
-            report=report,
+            operator_actions=operator_actions,
+            routed=routed,
             routed_actions=routed.actions,
             venues=venues,
             funding_start_ms=funding_start_ms,
@@ -327,16 +352,27 @@ class MultiAssetLiveRunner:
         self,
         *,
         poll: CohortIntentPoll,
-        report: IntentRoutingReport,
+        operator_actions: tuple[RoutingAction, ...],
+        routed: IntentRoutingReport,
         routed_actions: tuple[RoutingAction, ...],
         venues: Mapping[str, SolReconciliationSnapshot],
         funding_start_ms: int,
         funding_end_ms: int,
         observed_ms: int,
-    ) -> None:
-        self._telemetry.emit_routing(poll.all_intents, report, poll.evaluations)
-        for action in routed_actions:
-            self._execute(action)
+    ) -> IntentRoutingReport:
+        executed, submission_withheld = execute_fresh_routed_actions(
+            routed_actions,
+            now_ms=lambda: int(aware(self._now_fn()).timestamp() * 1_000),
+            delays=self._maximum_entry_delay_ms,
+            execute=self._execute,
+        )
+        report = IntentRoutingReport(
+            operator_actions + executed,
+            routed.withheld + submission_withheld,
+        )
+        self._telemetry.emit_routing(
+            poll.all_intents, report, poll.telemetry_evaluations
+        )
         post_action = bool(report.actions)
         if post_action:
             venues = reconcile_engines(
@@ -349,11 +385,12 @@ class MultiAssetLiveRunner:
         self._telemetry.emit_funding_reconciliation_window(funding_window)
         self._complete_transition_drain_if_ready()
         self._telemetry.emit_snapshot(
-            account=shared_account_facts(venues),
+            account=shared_account_facts(self._symbols, venues),
             assets=self._asset_snapshots(venues, poll.reference_prices),
         )
         if not self._profit_lock_controller.cycle_degraded:
             self._telemetry.emit_heartbeat()
+        return report
 
     def _run_operator_commands(
         self,
@@ -408,45 +445,12 @@ class MultiAssetLiveRunner:
         return polls
 
     def _execute(self, action: RoutingAction) -> None:
-        engine = self._engines[action.symbol]
-        execution_plan = self._bind_execution_plan(action)
-        provider = entry_provider_strategy_id(action.strategy_id)
-        entry_sizing, sizing_source = select_entry_sizing(
-            provider,
-            action.symbol,
-            action.side,
-            self._provider_directional_entry_sizing,
-            self._provider_entry_sizing,
-        )
-        engine.record_strategy_decision(
-            routing_decision_payload(
-                action,
-                execution_plan,
-                entry_sizing,
-                sizing_source,
-            )
-        )
-        if action.action == "enter":
-            engine.enter(
-                side=action.side,
-                mark_price=action.reference_price,
-                decision_time_ms=action.decision_time_ms,
-                entry_sizing=entry_sizing,
-            )
-            return
-        engine.exit(
-            mark_price=action.reference_price,
-            reason=routing_exit_reason(action),
-        )
-
-    def _bind_execution_plan(
-        self,
-        action: RoutingAction,
-    ) -> BoundExecutionPlan | None:
-        """Bind the effective provider-symbol execution contract."""
-        return contract_selection.bind_execution_plan(
-            self._execution_contracts,
+        execute_routing_action(
             action,
+            engine=self._engines[action.symbol],
+            contracts=self._execution_contracts,
+            directional_sizing=self._provider_directional_entry_sizing,
+            fallback_sizing=self._provider_entry_sizing,
         )
 
     def _asset_snapshots(

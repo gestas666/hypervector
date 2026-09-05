@@ -337,9 +337,20 @@ def test_routing_records_selected_and_withheld_strategy_identity(
                 regime_alignment_stance=selected.regime_alignment_stance,
                 regime_decision_time_ms=selected.regime_decision_time_ms,
                 regime_alignment_basis=selected.regime_alignment_basis,
+                submission_observed_at_ms=1_785_600_029_000,
+                submission_age_ms=29_000,
+                submission_limit_ms=30_000,
             ),
         ),
-        withheld=(WithheldIntent(withheld, "portfolio_position_capacity"),),
+        withheld=(
+            WithheldIntent(
+                withheld,
+                "stale_before_submission",
+                submission_observed_at_ms=1_785_600_031_000,
+                submission_age_ms=31_000,
+                submission_limit_ms=30_000,
+            ),
+        ),
     )
 
     telemetry.emit_routing((selected, withheld), report)
@@ -356,8 +367,14 @@ def test_routing_records_selected_and_withheld_strategy_identity(
     assert payload["actions"][0]["regime_alignment_stance"] == (
         "directionally_supported"
     )
+    assert payload["actions"][0]["submission_observed_at_ms"] == 1_785_600_029_000
+    assert payload["actions"][0]["submission_age_ms"] == 29_000
+    assert payload["actions"][0]["submission_limit_ms"] == 30_000
     assert payload["withheld"][0]["regime_alignment_score"] == -1.0
-    assert payload["withheld"][0]["reason"] == "portfolio_position_capacity"
+    assert payload["withheld"][0]["reason"] == "stale_before_submission"
+    assert payload["withheld"][0]["submission_observed_at_ms"] == 1_785_600_031_000
+    assert payload["withheld"][0]["submission_age_ms"] == 31_000
+    assert payload["withheld"][0]["submission_limit_ms"] == 30_000
 
 
 def _aligned_intent(

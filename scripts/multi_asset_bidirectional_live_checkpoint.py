@@ -107,6 +107,11 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="do not attach a profile-specific asymmetric portfolio observer",
     )
+    parser.add_argument(
+        "--current-run-only",
+        action="store_true",
+        help="bound publication to the explicitly selected live run",
+    )
     parser.add_argument("--once", action="store_true")
     return parser
 
@@ -141,7 +146,6 @@ def _run_owned_checkpoint_loop(
     funding_fn: FundingFn | None,
     sleep_fn: Callable[[float], None],
 ) -> int:
-    """Publish while the caller exclusively owns the output artifact."""
     active_sync, active_portfolio, active_funding = _checkpoint_services(
         args, sync_fn, portfolio_fn, funding_fn
     )
@@ -166,6 +170,10 @@ def _run_owned_checkpoint_loop(
                 active_portfolio,
                 active_funding,
                 None if controller is None else controller.portfolio_archive,
+                current_run_only=(
+                    args.current_run_only
+                    or (controller is not None and controller.portfolio_archive is None)
+                ),
                 sleep_fn=sleep_fn,
             )
             sleep_fn(args.interval_seconds)
@@ -217,6 +225,7 @@ def _run_once(
         portfolio_fn,
         funding_fn,
         archive,
+        current_run_only=args.current_run_only,
         sleep_fn=sleep_fn,
     )
     return 0 if published and sync_ok else 2
@@ -273,7 +282,6 @@ def _log_background_sync(controller: BackgroundResearchSync) -> None:
 
 
 def _emit_event(event: str, fields: Mapping[str, object]) -> None:
-    """Write one flushed report-only event to the shared sidecar log stream."""
     payload = {
         "event": event,
         "execution_authority": "none",
@@ -289,6 +297,7 @@ def _publish_once(
     funding_fn: FundingFn | None,
     portfolio_archive: Mapping[str, object] | None,
     *,
+    current_run_only: bool = False,
     sleep_fn: Callable[[float], None],
 ) -> bool:
     venue_portfolio = (
@@ -304,6 +313,7 @@ def _publish_once(
                 venue_portfolio,
                 funding_fn,
                 portfolio_archive,
+                current_run_only,
             )
         except (duckdb.Error, FileNotFoundError, ValueError) as exc:
             if attempt + 1 < _SNAPSHOT_ATTEMPTS:
@@ -324,7 +334,6 @@ def _publish_once(
 
 
 def _has_complete_live_checkpoint(path: Path) -> bool:
-    """Return whether the destination contains a prior complete live projection."""
     if not path.is_file():
         return False
     try:
@@ -340,8 +349,8 @@ def _publish_snapshot(
     venue_portfolio: Mapping[str, object] | None,
     funding_fn: FundingFn | None = None,
     portfolio_archive: Mapping[str, object] | None = None,
+    current_run_only: bool = False,
 ) -> None:
-    """Publish one cross-ledger prefix with no retry or execution authority."""
     if publish_fn is publish_live_checkpoint:
         _publish_real_snapshot(
             args,
@@ -349,6 +358,7 @@ def _publish_snapshot(
             venue_portfolio,
             funding_fn,
             portfolio_archive,
+            current_run_only,
         )
         return
     publish_fn(
@@ -366,6 +376,7 @@ def _publish_real_snapshot(
     venue_portfolio: Mapping[str, object] | None,
     funding_fn: FundingFn | None,
     portfolio_archive: Mapping[str, object] | None,
+    current_run_only: bool = False,
 ) -> None:
     refreshed = publish_rolling_checkpoint(
         publish_fn,
@@ -382,6 +393,7 @@ def _publish_real_snapshot(
         eligible_policy_forward=args.eligible_policy_forward,
         funding_evidence_fn=funding_fn,
         portfolio_archive=portfolio_archive,
+        current_run_only=current_run_only,
         asymmetric_forward_journal_path=(
             None
             if args.disable_asymmetric_forward_observer
@@ -433,7 +445,6 @@ def _sync_research_database(
     cached_checkpoint_path: Path | None = None,
     accounting_epoch: CohortAccountingEpoch | None = None,
 ) -> dict[str, object]:
-    """Persist journals in a short-lived worker and return its archive projection."""
     worker = Path(__file__).with_name("multi_asset_bidirectional_research_import.py")
     command = _research_worker_command(
         worker,

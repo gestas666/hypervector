@@ -47,6 +47,9 @@ HIP3_BREAKOUT_COMMODITY_STRATEGY = (
 HIP3_BREAKOUT_COMMODITY_FRESH15_STRATEGY = (
     "hip3_breakout_pressure_sndk_gold_brent_fresh15s_bidirectional_v2"
 )
+HIP3_BREAKOUT_SNDK_FRESH15_STRATEGY = (
+    "hip3_breakout_pressure_sndk_fresh15s_bidirectional_v3"
+)
 HIP3_STRATEGIES = frozenset(
     {
         HIP3_SWING_INDEX_STRATEGY,
@@ -55,6 +58,7 @@ HIP3_STRATEGIES = frozenset(
         HIP3_SWING_COMMODITY_STRATEGY,
         HIP3_BREAKOUT_COMMODITY_STRATEGY,
         HIP3_BREAKOUT_COMMODITY_FRESH15_STRATEGY,
+        HIP3_BREAKOUT_SNDK_FRESH15_STRATEGY,
     }
 )
 
@@ -152,6 +156,7 @@ class Hip3BreakoutPressureCollector:
             HIP3_BREAKOUT_INDEX_FRESH15_STRATEGY,
             HIP3_BREAKOUT_COMMODITY_STRATEGY,
             HIP3_BREAKOUT_COMMODITY_FRESH15_STRATEGY,
+            HIP3_BREAKOUT_SNDK_FRESH15_STRATEGY,
         }:
             raise ValueError("unsupported HIP-3 breakout strategy identity")
         self._strategy_id = strategy_id
@@ -299,6 +304,7 @@ def _maximum_pressure_age_ms(strategy_id: str) -> int:
     if strategy_id in {
         HIP3_BREAKOUT_INDEX_FRESH15_STRATEGY,
         HIP3_BREAKOUT_COMMODITY_FRESH15_STRATEGY,
+        HIP3_BREAKOUT_SNDK_FRESH15_STRATEGY,
     }:
         return ARCHIVE_PARITY_MAXIMUM_PRESSURE_AGE_MS
     return LEGACY_MAXIMUM_PRESSURE_AGE_MS

@@ -1,0 +1,173 @@
+{
+  "schema_version": 1,
+  "generated_at_utc": "2026-08-18T00:22:22Z",
+  "hypothesis_id": "v54-hype-native-breakout-v53-window-parity-v1",
+  "status": "parity_pass_two_counterfactual_entries_one_resolved_loss_one_open_path",
+  "contract": {
+    "report_only": true,
+    "execution_authority": "none",
+    "runtime_strategy_changed": false,
+    "automatic_promotion": false,
+    "markouts_are_not_venue_fills": true
+  },
+  "source_window": {
+    "symbol": "HYPE",
+    "source": "Hyperliquid public candleSnapshot completed 1m OHLCV",
+    "v53_first_observed_boundary_ms": 1786942394509,
+    "evaluation_end_ms": 1787012400000,
+    "evaluation_end_utc": "2026-08-18T00:20:00+00:00",
+    "bar_rows": 5222,
+    "bar_start_utc": "2026-08-14T09:19:00+00:00",
+    "bar_end_utc": "2026-08-18T00:20:00+00:00",
+    "normalized_csv_sha256": "818bc95661f426a58fdd52e6e26ad3364f454ba5a710ce6949a9b5273c095f05"
+  },
+  "implementation_evidence": [
+    {
+      "path": "configs/multi_asset_growth_first_5000_hype_native_reconstruction_candidate_v54.toml",
+      "sha256": "704788dd4871219415f4a4b75890d688e359beba05da9d31a4214fd6c255bc47"
+    },
+    {
+      "path": "src/hypervector/live/hype_native_breakout_provider.py",
+      "sha256": "ffac29726f229ab3ed477129b1daebceffdfec3cac0ea561a87528bac22f8ea8"
+    },
+    {
+      "path": "data/observe/v54_hype_native_candidate/decisions.jsonl",
+      "sha256": "ccf95397eafa07c05783cf92b8a669a019f3d1f6de1e7080339ec89d5b969f0e",
+      "rows": 5,
+      "mode": "bounded_one_poll_observe_only"
+    }
+  ],
+  "decision_parity": {
+    "canonical_strategy_id": "hype_breakout_onset_bidirectional_v1",
+    "candidate_strategy_id": "hype_native_breakout_onset_bidirectional_v2",
+    "canonical_evaluations": 1167,
+    "candidate_evaluations": 1167,
+    "canonical_eligible_intents": 2,
+    "candidate_eligible_intents": 2,
+    "normalized_payload_equal_after_removing_strategy_id": true,
+    "normalized_payload_sha256": "1f836daed2ce10c439370e0b850a601112df87eebb601dfdd7187da4c0a255b0",
+    "interpretation": "The wrapper changed provider identity and symbol authority only; every completed decision, side, price, trigger, readiness value, and intent matched canonical v1 in the operational window."
+  },
+  "bounded_observer_result": {
+    "exit_code": 0,
+    "signing_client_constructed": false,
+    "orders_supported": false,
+    "new_background_process": false,
+    "candidate_evaluation": {
+      "decision_time_ms": 1787012340000,
+      "decision_action": "hold",
+      "eligible": false,
+      "reason": "5m_not_breakout",
+      "side": "long",
+      "backend_non_action_reason": "pre_activation_readiness_seed"
+    },
+    "candidate_strategy_evidence_present": true,
+    "compression_strategy_evidence_present": true
+  },
+  "counterfactual_signal_paths": [
+    {
+      "decision_time_ms": 1786951500000,
+      "decision_time_utc": "2026-08-17T07:25:00+00:00",
+      "side": "long",
+      "reference_price": 59.457,
+      "breakout_side": "long",
+      "breakout_side_relation": "aligned",
+      "compression_rejection": {
+        "reason": "authoritative_5m_compression_absent",
+        "blockers": [
+          "authoritative_5m_compression_absent",
+          "directional_pullback_absent"
+        ],
+        "prior_bbwp_min_15m": 38.75,
+        "authoritative_5m_bbwp_percentile": 88.75,
+        "directional_bar_body_bps": 10.270051855343354
+      },
+      "path": {
+        "five_minute_gross_bps": -6.559362228165666,
+        "fifteen_minute_gross_bps": -10.427704055030462,
+        "one_hour_gross_bps": -41.87900499520669,
+        "four_hour_gross_bps": 31.283112165094717,
+        "eight_hour_close_gross_bps": -31.114923390013203,
+        "eight_hour_mfe_bps": 70.13471920884085,
+        "eight_hour_mae_bps": 114.36836705518316,
+        "eighty_bps_stop_crossed": true,
+        "first_source_candle_stop_cross_open_utc": "2026-08-17T13:05:00+00:00",
+        "source_candle_low": 58.967,
+        "stop_trigger_price": 58.981344
+      },
+      "candidate_1250_estimate": {
+        "gross_stop_loss_usd": -10.0,
+        "round_trip_fee_and_slippage_assumption_usd": -1.58,
+        "estimated_net_usd_before_funding_and_stop_slippage": -11.58,
+        "status": "resolved_adverse_source_path_not_a_venue_fill"
+      }
+    },
+    {
+      "decision_time_ms": 1786998000000,
+      "decision_time_utc": "2026-08-17T20:20:00+00:00",
+      "side": "long",
+      "reference_price": 58.399,
+      "breakout_side": "short",
+      "breakout_side_relation": "opposed",
+      "compression_rejection": {
+        "reason": "authoritative_5m_compression_absent",
+        "blockers": [
+          "authoritative_5m_compression_absent",
+          "prior_compression_absent"
+        ],
+        "prior_bbwp_min_15m": 96.66666666666667,
+        "authoritative_5m_bbwp_percentile": 65.41666666666667,
+        "directional_bar_body_bps": -16.07029901013801
+      },
+      "path": {
+        "five_minute_gross_bps": 30.822445589822056,
+        "fifteen_minute_gross_bps": 62.6723060326384,
+        "one_hour_gross_bps": 54.96669463518123,
+        "four_hour_gross_bps": 190.41421942156634,
+        "four_hour_net_bps_fee_slippage_only": 177.77421942156633,
+        "observed_mfe_bps": 194.86635045120605,
+        "observed_mae_bps": 3.7671877943112886,
+        "eighty_bps_stop_crossed": false,
+        "eight_hour_path_complete": false
+      },
+      "candidate_1250_estimate": {
+        "four_hour_mark_to_market_net_usd_before_funding": 22.22177742769579,
+        "status": "unresolved_open_counterfactual_not_realized_profit"
+      }
+    }
+  ],
+  "friction_assumption": {
+    "round_trip_taker_fee_bps": 8.64,
+    "round_trip_slippage_bps": 4.0,
+    "total_before_funding_bps": 12.64,
+    "fee_source": "v53 public-wallet preflight effective 4.32 bps one-way taker fee",
+    "slippage_source": "frozen modeled 2 bps per side",
+    "limitations": [
+      "Signal reference closes are not executable entry fills.",
+      "Source candle extrema are not mark-price stop events and do not preserve intraminute ordering.",
+      "Funding is omitted.",
+      "The second path is unresolved and can give back its observed gain.",
+      "Stop execution can be worse than the 80 bps trigger under gaps or latency."
+    ]
+  },
+  "diagnosis_update": {
+    "prior_incorrect_statement": "The canonical breakout onset itself was absent throughout v53.",
+    "correction": "Two canonical onsets occurred. Compression rejected both because its additional compression/pullback conditions failed.",
+    "economic_interpretation": "At the proposed $1250 tier, one path would likely have stopped for an estimated -$11.58 before funding/stop slippage; the second was approximately +$22.22 mark-to-market after modeled fees/slippage at four hours but remained unresolved. This is not a profitable two-trade result claim.",
+    "cadence_interpretation": "Two native opportunities in approximately 19.4 hours is materially more active than v53 compression's zero, but the window is too short to estimate stable weekly frequency."
+  },
+  "research_disposition": {
+    "candidate_identity_and_scope": "accepted_technical_parity",
+    "candidate_profitability": "unresolved_sparse_counterfactual",
+    "compression_filter_in_this_window": "prevented_one_likely_loss_and_one_unresolved_large_gain",
+    "live_authority": "pending_explicit_human_approval_after_staged_preflight",
+    "next_highest_value_investigation": "complete the second path and reconstruct exact entry/stop/exit quotes from retained L2 and mark evidence before choosing between native-only and a causal variable-size combination"
+  },
+  "falsifiers": [
+    "A same-window replay produces any normalized decision difference beyond strategy identity.",
+    "The retained live ledger shows either onset was not available prospectively at its completed decision boundary.",
+    "Exact L2/mark replay changes the first path from stop loss or removes the second path's favorable excursion.",
+    "The candidate emits any non-HYPE intent or fails the current exit and protection contract.",
+    "A longer prospectively frozen native window is negative after costs or dependent on one winner."
+  ]
+}

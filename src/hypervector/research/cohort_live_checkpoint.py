@@ -5,8 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping, Sequence
 from contextlib import ExitStack
 from datetime import datetime, timezone
-import json
-import math
+from functools import partial
 from pathlib import Path
 
 from hypervector.research.cohort_configuration_generation import (
@@ -19,6 +18,22 @@ from hypervector.research.cohort_checkpoint_history import (
     merge_complete_historical_projection,
 )
 from hypervector.research.checkpoint_storage import write_atomic_json
+from hypervector.research.cohort_checkpoint_consistency import (
+    require_checkpoint_asset_state_consistency,
+)
+from hypervector.research.cohort_checkpoint_archive_validation import (
+    reconcile_equal_coverage_archive as _reconcile_equal_coverage_archive,
+    refresh_accounting_epoch_archive as _refresh_accounting_epoch_archive,
+)
+from hypervector.research.checkpoint_ledger_projection import (
+    compact_asset_ledger_rows,
+    compact_cohort_ledger_rows,
+)
+from hypervector.research.cohort_checkpoint_opportunity import (
+    load_opportunity_matrix as _load_opportunity_matrix,
+    load_supplemental_opportunity_matrix as _load_supplemental_opportunity_matrix,
+    merge_opportunity_matrices,
+)
 from hypervector.research.cohort_allocation_challenger import (
     allocation_challenger_applicable,
     build_allocation_challenger,
@@ -41,6 +56,7 @@ from hypervector.research.cohort_live_audit import audit_multi_asset_live_run
 from hypervector.research.cohort_live_audit_values import (
     configured_symbols,
     run_id as audit_run_id,
+    timestamp as ledger_timestamp,
 )
 from hypervector.research.cohort_live_run_selection import select_armed_live_run
 from hypervector.research.cohort_live_lifecycle import build_live_lifecycle
@@ -54,8 +70,12 @@ from hypervector.research.cohort_risk_utilization import cohort_risk_utilization
 from hypervector.research.cohort_side_composition import build_side_composition
 from hypervector.research.cohort_transition_checkpoint import transition_drain_summary
 from hypervector.research.live_ledger_snapshot import (
-    snapshot_compatible_execution_ledger,
+    snapshot_current_run_ledger,
     snapshot_decision_ledger,
+    snapshot_projected_compatible_execution_ledger,
+)
+from hypervector.research.seven_asset_checkpoint_acceptance import (
+    attach_seven_asset_poststart_acceptance,
 )
 
 Record = Mapping[str, object]
@@ -76,6 +96,7 @@ def build_live_checkpoint(
     eligible_policy_forward_spec: EligiblePolicyForwardSpec | None = None,
     eligible_policy_funding_evidence: EligiblePolicyFundingEvidence | None = None,
     portfolio_archive: Mapping[str, object] | None = None,
+    portfolio_reflections_complete: bool = True,
     asymmetric_forward_declaration: AsymmetricForwardDeclaration | None = None,
     heartbeat_stale_after_seconds: float | None = None,
     all_time_asset_records: Mapping[str, Sequence[Record]] | None = None,
@@ -87,6 +108,7 @@ def build_live_checkpoint(
         all_time_asset_records=all_time_asset_records,
         run_id=run_id,
     )
+    observed_at = generated_at or datetime.now(timezone.utc)
     run = _mapping(audit.get("run"), "audit run")
     selected_run_id = _text(run.get("run_id"), "audit run_id")
     audit["risk_utilization"] = cohort_risk_utilization(
@@ -123,22 +145,25 @@ def build_live_checkpoint(
         )
     if portfolio_archive is not None:
         audit["portfolio_archive"] = _validated_portfolio_archive(portfolio_archive)
-        _reconcile_equal_coverage_archive(audit)
+        if portfolio_reflections_complete:
+            _refresh_accounting_epoch_archive(audit, observed_at)
+            _reconcile_equal_coverage_archive(audit)
     if asymmetric_forward_declaration is not None:
         attach_asymmetric_forward_observer(audit, asymmetric_forward_declaration)
-    observed_at = generated_at or datetime.now(timezone.utc)
+    lifecycle = build_live_lifecycle(
+        cohort_records,
+        asset_records,
+        run_id=selected_run_id,
+        observed_at=observed_at,
+        heartbeat_stale_after_seconds=heartbeat_stale_after_seconds,
+    )
+    require_checkpoint_asset_state_consistency(lifecycle, audit)
     checkpoint: dict[str, object] = {
         "schema_version": 1,
         "mode": "multi_asset_bidirectional_live_checkpoint",
         "generated_at_utc": _aware_isoformat(observed_at),
         "checkpoint_contract": _checkpoint_contract(),
-        "lifecycle": build_live_lifecycle(
-            cohort_records,
-            asset_records,
-            run_id=selected_run_id,
-            observed_at=observed_at,
-            heartbeat_stale_after_seconds=heartbeat_stale_after_seconds,
-        ),
+        "lifecycle": lifecycle,
         "transition_drain": transition_drain_summary(
             _latest_event(
                 _run_rows(cohort_records, selected_run_id), "cohort_snapshot"
@@ -179,27 +204,44 @@ def publish_live_checkpoint(
     asymmetric_forward_journal_path: Path | None = None,
     compatible_execution_history: bool = False,
     complete_historical_checkpoint: Mapping[str, object] | None = None,
+    current_run_only: bool = False,
 ) -> dict[str, object]:
     """Snapshot complete ledger prefixes and atomically replace one report."""
     if compatible_execution_history and run_id is None:
         raise ValueError("compatible execution history requires an explicit run_id")
+    if current_run_only and run_id is None:
+        raise ValueError("current-run-only checkpoint requires an explicit run_id")
+    if current_run_only and compatible_execution_history:
+        raise ValueError("current-run-only checkpoint cannot merge cached history")
     cohort_path = ledger_root / "decisions.jsonl"
     observed_at = generated_at or datetime.now(timezone.utc)
     with ExitStack() as stack:
-        cohort_snapshot = (
-            snapshot_compatible_execution_ledger(
+        if current_run_only:
+            cohort_snapshot = snapshot_current_run_ledger(
                 cohort_path,
                 allow_incomplete_tail=True,
                 run_id=run_id,
             )
-            if compatible_execution_history
-            else snapshot_decision_ledger(
+        elif compatible_execution_history:
+            cohort_snapshot = snapshot_projected_compatible_execution_ledger(
+                cohort_path,
+                allow_incomplete_tail=True,
+                run_id=run_id,
+                projector=compact_cohort_ledger_rows,
+            )
+        else:
+            cohort_snapshot = snapshot_decision_ledger(
                 cohort_path,
                 allow_incomplete_tail=True,
             )
-        )
         cohort_rows, cohort_evidence = stack.enter_context(cohort_snapshot)
         _, identity = select_armed_live_run(cohort_rows, run_id)
+        cohort_snapshot_cutoff = ledger_timestamp(
+            _required_latest_event(
+                _run_rows(cohort_rows, audit_run_id(identity)),
+                "cohort_snapshot",
+            )
+        )
         asset_paths = _asset_paths(
             ledger_root,
             cohort_path,
@@ -208,29 +250,42 @@ def publish_live_checkpoint(
         asset_rows: dict[str, list[dict[str, object]]] = {}
         asset_evidence: dict[str, dict[str, object]] = {}
         for symbol, path in asset_paths.items():
-            asset_snapshot = (
-                snapshot_compatible_execution_ledger(
+            if current_run_only:
+                asset_snapshot = snapshot_current_run_ledger(
                     path,
                     allow_incomplete_tail=True,
                     run_id=audit_run_id(identity),
                 )
-                if compatible_execution_history
-                else snapshot_decision_ledger(
+            elif compatible_execution_history:
+                asset_snapshot = snapshot_projected_compatible_execution_ledger(
+                    path,
+                    allow_incomplete_tail=True,
+                    run_id=audit_run_id(identity),
+                    projector=partial(
+                        compact_asset_ledger_rows,
+                        current_run_id=audit_run_id(identity),
+                        as_of=cohort_snapshot_cutoff,
+                    ),
+                )
+            else:
+                asset_snapshot = snapshot_decision_ledger(
                     path,
                     allow_incomplete_tail=True,
                 )
-            )
             rows, evidence = stack.enter_context(asset_snapshot)
             asset_rows[symbol] = rows
             asset_evidence[symbol] = {"path": str(path), **evidence}
-        retired_rows, retired_evidence = snapshot_retired_asset_ledgers(
-            stack,
-            ledger_root,
-            cohort_path,
-            active_symbols=tuple(asset_paths),
-            compatible_execution_history=compatible_execution_history,
-            run_id=audit_run_id(identity),
-        )
+        if current_run_only:
+            retired_rows, retired_evidence = {}, {}
+        else:
+            retired_rows, retired_evidence = snapshot_retired_asset_ledgers(
+                stack,
+                ledger_root,
+                cohort_path,
+                active_symbols=tuple(asset_paths),
+                compatible_execution_history=compatible_execution_history,
+                run_id=audit_run_id(identity),
+            )
         forward_spec = (
             _eligible_policy_forward_spec(cohort_rows, config_path, run_id)
             if eligible_policy_forward
@@ -268,6 +323,7 @@ def publish_live_checkpoint(
             eligible_policy_forward_spec=forward_spec,
             eligible_policy_funding_evidence=funding_evidence,
             portfolio_archive=portfolio_archive,
+            portfolio_reflections_complete=not current_run_only,
             all_time_asset_records=asset_rows | retired_rows,
             asymmetric_forward_declaration=(
                 load_asymmetric_forward_declaration(asymmetric_forward_journal_path)
@@ -290,6 +346,16 @@ def publish_live_checkpoint(
             checkpoint,
             complete_historical_checkpoint,
         )
+        checkpoint_audit = checkpoint.get("audit")
+        if not isinstance(checkpoint_audit, dict):
+            raise ValueError("merged checkpoint audit must be mutable")
+        _refresh_accounting_epoch_archive(checkpoint_audit, observed_at)
+    if config_path is not None:
+        attach_seven_asset_poststart_acceptance(
+            checkpoint,
+            config_path,
+            observed_at=observed_at,
+        )
     write_atomic_json(destination, checkpoint)
     return checkpoint
 
@@ -305,31 +371,6 @@ def _validated_portfolio_archive(value: Mapping[str, object]) -> dict[str, objec
     ):
         raise ValueError("portfolio archive contract is invalid")
     return dict(value)
-
-
-def _reconcile_equal_coverage_archive(audit: Mapping[str, object]) -> None:
-    archive = _mapping(audit.get("portfolio_archive"), "portfolio archive")
-    archive_performance = archive.get("performance")
-    if not isinstance(archive_performance, Mapping):
-        return
-    archive_total = archive_performance.get("total")
-    if not isinstance(archive_total, Mapping):
-        return
-    reflections = _mapping(audit.get("trade_reflections"), "trade reflections")
-    all_time = _mapping(reflections.get("all_time_live"), "all-time reflections")
-    reflected_total = _mapping(
-        _mapping(all_time.get("performance"), "all-time performance").get("total"),
-        "all-time total",
-    )
-    if archive_total.get("closed_trades") != reflected_total.get("closed_trades"):
-        return
-    for field in ("net_pnl_usd", "maximum_closed_sequence_drawdown_usd"):
-        archive_value = _finite_number(archive_total.get(field), f"archive {field}")
-        reflected_value = _finite_number(
-            reflected_total.get(field), f"all-time {field}"
-        )
-        if not math.isclose(archive_value, reflected_value, abs_tol=1e-9):
-            raise ValueError(f"archive {field} differs from all-time reflections")
 
 
 def _eligible_policy_forward_spec(
@@ -376,104 +417,6 @@ def _attach_venue_portfolio(
         checkpoint["venue_portfolio"] = dict(venue_portfolio)
 
 
-def _load_opportunity_matrix(path: Path) -> Mapping[str, object]:
-    if not path.is_file():
-        raise FileNotFoundError(f"opportunity matrix does not exist: {path}")
-    value = json.loads(path.read_text(encoding="utf-8"))
-    if not isinstance(value, Mapping):
-        raise ValueError("opportunity matrix must be a JSON object")
-    return value
-
-
-def _load_supplemental_opportunity_matrix(path: Path) -> Mapping[str, object]:
-    try:
-        return _load_opportunity_matrix(path)
-    except FileNotFoundError as exc:
-        raise FileNotFoundError(
-            f"supplemental opportunity matrix does not exist: {path}"
-        ) from exc
-
-
-def merge_opportunity_matrices(
-    primary: Mapping[str, object] | None,
-    supplemental: Sequence[Mapping[str, object]],
-) -> dict[str, object]:
-    """Validate and combine one primary matrix with report-only challengers."""
-    if primary is None:
-        raise ValueError("supplemental opportunity matrices require a primary matrix")
-    matrix = _validated_opportunity_matrix(primary)
-    identities: set[str] = set()
-    primary_challenger = matrix.get("forward_challenger")
-    if primary_challenger is not None:
-        _, identity = _validated_forward_challenger(primary_challenger)
-        identities.add(identity)
-    challengers: list[dict[str, object]] = []
-    for value in supplemental:
-        candidate_matrix = _validated_opportunity_matrix(value)
-        challenger, identity = _validated_forward_challenger(
-            candidate_matrix.get("forward_challenger")
-        )
-        if identity in identities:
-            raise ValueError(f"duplicate candidate strategy identity: {identity}")
-        identities.add(identity)
-        challengers.append(challenger)
-    if challengers:
-        matrix["supplemental_forward_challengers"] = challengers
-    return matrix
-
-
-def _validated_forward_challenger(value: object) -> tuple[dict[str, object], str]:
-    challenger = dict(_mapping(value, "forward opportunity challenger"))
-    contract = _mapping(challenger.get("contract"), "forward challenger contract")
-    if contract.get("report_only") is not True:
-        raise ValueError("forward challenger must be report-only")
-    if contract.get("execution_authority") != "none":
-        raise ValueError("forward challenger execution authority must be none")
-    if contract.get("live_strategy_changed") is not False:
-        raise ValueError("forward challenger must not change the live strategy")
-    if contract.get("automatic_promotion") is not False:
-        raise ValueError("forward challenger must not promote automatically")
-    if contract.get("portfolio_pnl_claimed") is not False:
-        raise ValueError("forward challenger must not claim portfolio PnL")
-    journal = _mapping(challenger.get("portfolio_journal"), "portfolio journal")
-    journal_contract = _mapping(journal.get("contract"), "portfolio journal contract")
-    if journal_contract.get("report_only") is not True:
-        raise ValueError("portfolio journal must be report-only")
-    if journal_contract.get("execution_authority") != "none":
-        raise ValueError("portfolio journal execution authority must be none")
-    if journal_contract.get("portfolio_pnl_claimed") is not False:
-        raise ValueError("portfolio journal must not claim portfolio PnL")
-    identity = _text(
-        journal_contract.get("candidate_strategy_id"),
-        "candidate strategy identity",
-    )
-    return challenger, identity
-
-
-def _validated_opportunity_matrix(value: Mapping[str, object]) -> dict[str, object]:
-    matrix = dict(value)
-    if matrix.get("schema_version") != 1:
-        raise ValueError("opportunity matrix has an unsupported schema")
-    if matrix.get("mode") != "cohort_execution_opportunity_matrix":
-        raise ValueError("opportunity matrix has an unexpected mode")
-    contract = _mapping(matrix.get("contract"), "opportunity matrix contract")
-    if contract.get("report_only") is not True:
-        raise ValueError("opportunity matrix must be report-only")
-    if contract.get("execution_authority") != "none":
-        raise ValueError("opportunity matrix execution authority must be none")
-    if contract.get("portfolio_pnl_claimed") is not False:
-        raise ValueError("opportunity matrix must not claim portfolio PnL")
-    comparisons = matrix.get("comparisons")
-    results = matrix.get("results")
-    if isinstance(comparisons, bool) or not isinstance(comparisons, int):
-        raise ValueError("opportunity matrix comparisons must be an integer")
-    if not isinstance(results, Sequence) or isinstance(results, (str, bytes)):
-        raise ValueError("opportunity matrix results must be a sequence")
-    if len(results) != comparisons:
-        raise ValueError("opportunity matrix result count is inconsistent")
-    return matrix
-
-
 def _asset_paths(
     ledger_root: Path,
     cohort_path: Path,
@@ -513,6 +456,13 @@ def _latest_event(records: Sequence[Record], event_type: str) -> Record | None:
     )
 
 
+def _required_latest_event(records: Sequence[Record], event_type: str) -> Record:
+    result = _latest_event(records, event_type)
+    if result is None:
+        raise ValueError(f"checkpoint requires a {event_type} event")
+    return result
+
+
 def _asset_state(records: Sequence[Record]) -> str | None:
     transition = _latest_event(records, "state_transition")
     return _payload_text(transition, "state") if transition else None
@@ -540,12 +490,3 @@ def _text(value: object, label: str) -> str:
     if not isinstance(value, str) or not value.strip():
         raise ValueError(f"{label} must be non-empty text")
     return value.strip()
-
-
-def _finite_number(value: object, label: str) -> float:
-    if isinstance(value, bool) or not isinstance(value, (int, float)):
-        raise ValueError(f"{label} must be numeric")
-    result = float(value)
-    if not math.isfinite(result):
-        raise ValueError(f"{label} must be finite")
-    return result

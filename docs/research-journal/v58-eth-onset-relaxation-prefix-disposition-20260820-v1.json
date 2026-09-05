@@ -1,0 +1,156 @@
+{
+  "schema_version": 1,
+  "created_at_utc": "2026-08-20T00:08:19.619744+00:00",
+  "hypothesis_id": "v58_eth_remove_canonical_breakout_onset",
+  "symbol": "ETH",
+  "strategy_id": "eth_breakout_precompression_pullback_bidirectional_v1",
+  "status": "deferred",
+  "decision": "Do not remove or relax the canonical breakout-onset requirement in the live v58 route. Treat the favorable current-prefix paths only as hypothesis-formation evidence. Keep the unchanged route and its native 60-bps stop and 12-hour maximum hold while the exact open lifecycle resolves.",
+  "why_now": "The current v58 prefix contains favorable counterfactual ETH-long paths when canonical onset is the only blocker, but an earlier frozen one-blocker sample was slightly negative after modeled costs and the current prefix is one directional trend episode rather than an independent strategy evaluation.",
+  "current_highest_value_investigation": {
+    "priority": 1,
+    "experiment": "resolve_open_exact_lifecycle",
+    "lifecycle_id": "ETH:520161109446",
+    "reason": "It is the first exact v58 lifecycle under the frozen ETH contract and supplies real entry, fee, funding, stop, hold, and exit evidence."
+  },
+  "relaxation_investigation": {
+    "priority": 2,
+    "state": "future_only_preregistration_required",
+    "execution_authority": "none",
+    "automatic_live_change": false
+  },
+  "evidence": {
+    "earlier_frozen_one_blocker": {
+      "resolved_paths": 3,
+      "side": "long",
+      "wins": 1,
+      "losses": 2,
+      "total_net_return_bps": -1.9039288177714386,
+      "mean_net_return_bps": -0.6346429392571462,
+      "profit_factor": 0.7671793708934254,
+      "short_paths": 0,
+      "interpretation": "Small and one-sided; it does not support live relaxation."
+    },
+    "current_live_prefix_one_blocker": {
+      "checkpoint_generated_at_utc": "2026-08-20T00:08:19.619744+00:00",
+      "decision_minutes": 67,
+      "episode_count": 39,
+      "single_minute_episodes": 23,
+      "horizons_after_estimated_friction": {
+        "5m": {
+          "resolved": 25,
+          "censored": 2,
+          "mean_bps": 25.82634669082536,
+          "mean_excluding_largest_bps": 12.593256416214144,
+          "median_bps": -1.0833214166542255,
+          "before_open_paths": 13,
+          "at_or_after_open_paths": 12
+        },
+        "15m": {
+          "resolved": 10,
+          "censored": 5,
+          "mean_bps": 70.53531570962025,
+          "mean_excluding_largest_bps": 30.843576129083527,
+          "median_bps": 15.170544592691638,
+          "before_open_paths": 5,
+          "at_or_after_open_paths": 5
+        },
+        "30m": {
+          "resolved": 6,
+          "censored": 11,
+          "mean_bps": 128.83831592518126,
+          "mean_excluding_largest_bps": 28.890938364068642,
+          "median_bps": 35.32543233154074,
+          "before_open_paths": 4,
+          "at_or_after_open_paths": 2
+        },
+        "60m": {
+          "resolved": 3,
+          "censored": 28,
+          "mean_bps": 277.3676937777067,
+          "mean_excluding_largest_bps": 67.79222793877074,
+          "median_bps": 87.98109595596982,
+          "before_open_paths": 2,
+          "at_or_after_open_paths": 1
+        }
+      },
+      "interpretation": "Favorable but selection-exposed. These paths come from one ETH trend window; many occur while the one-position-per-symbol portfolio already holds ETH and therefore cannot represent additional deployable entries."
+    },
+    "open_exact_lifecycle_snapshot": {
+      "lifecycle_id": "ETH:520161109446",
+      "side": "long",
+      "entry_price": 2198.9,
+      "entry_size": 0.3317,
+      "entry_slippage_bps": -25.402585620321656,
+      "marked_net_pnl_usd": 18.908579,
+      "estimated_exit_now_net_usd": 18.585163596843877,
+      "estimated_stop_net_usd": -5.052641240000036,
+      "maximum_favorable_excursion_bps": 672.6090317886224,
+      "peak_giveback_bps": 408.38601118741377,
+      "completed_bars": 192,
+      "regime_context": "still_directionally_supported",
+      "opposed_completed_decisions": 0,
+      "native_exit_unchanged": true,
+      "interpretation": "The unchanged onset rule did capture the same broader move. The lifecycle remains open, so none of these values are final realized economics."
+    }
+  },
+  "bias_and_failure_modes": [
+    "The current prefix is one directional trend regime and path observations are correlated even when horizon overlap is removed.",
+    "Counterfactual paths are not orders, fills, stop executions, funding-complete lifecycles, or native 12-hour exit results.",
+    "At-or-after-open paths collide with the portfolio's one-position-per-symbol constraint and cannot create incremental ETH exposure.",
+    "The current prefix was inspected before this disposition and cannot be reused as future-only evaluation evidence.",
+    "Only the long side has current one-blocker evidence; a bidirectional live change would otherwise be selected from one side.",
+    "Multiple horizons were inspected, increasing selection-bias risk."
+  ],
+  "future_only_validation_contract": {
+    "start_decision_time_ms_inclusive": 1787184540000,
+    "current_prefix_withheld_from_evaluation": true,
+    "mode": "report_only",
+    "execution_authority": "none",
+    "runtime_strategy_changed": false,
+    "baseline": "unchanged eth_breakout_precompression_pullback_bidirectional_v1",
+    "candidate": "canonical onset is the sole removed condition; all other entry, 60-bps stop, and 12-hour hold semantics remain frozen",
+    "required_evidence": [
+      "source-attributable causal decision and first executable BBO",
+      "exact fees, funding, slippage, latency, stop-path, and native-exit accounting",
+      "non-overlapping prospective paths with occupancy collisions reported separately",
+      "long and short evidence reported separately without post-hoc side selection",
+      "comparison with the unchanged route and with no action",
+      "largest-winner and regime-specific sensitivity",
+      "no validation or live promotion from the current inspected prefix"
+    ],
+    "minimum_diagnostic_update": "At least one technically resolved future-only path on each configured side. This is diagnostic evidence, not a promotion threshold.",
+    "approval_ready_condition": "Only a separately reviewed future-only result with positive after-cost economics excluding the largest winner, no unresolved technical paths, no adverse side rotation, and an explicit human-approved live proposal may change the route."
+  },
+  "source_evidence": [
+    {
+      "path": "docs/research-journal/eth-breakout-precompression-pullback-v7.json",
+      "sha256": "5071d73fbba6d6893bf4de8b65d1103555492c3067cb7ceb461ca3df78ed989f"
+    },
+    {
+      "path": "data/logs/research/bidirectional_cohort/eth_onset_one_blocker_15m_20260817T1604Z_v3.json",
+      "sha256": "e4d8aa5ce0e3eb934c26a62f99b2701a5d97cf6b89b348856f0f9e0bfef522cd"
+    },
+    {
+      "path": "data/logs/research/bidirectional_cohort/eth_pullback_prospective_window_20260818T1058Z_v5.json",
+      "sha256": "1e72e043d37541fc4286caa71c75978f748f43b0c6a3be1be6f9ed4d591db588"
+    },
+    {
+      "path": "data/logs/research/bidirectional_cohort/v58_opportunity_cotrigger_prefix_20260820T0000Z_v1.json",
+      "sha256": "a619a9b5d1e5e9952b994dbd048297956e2d0f1575e4524f6bfeb82f4ddc80be"
+    },
+    {
+      "path": "data/runtime/bidirectional_cohort/latest_checkpoint.json",
+      "snapshot_generated_at_utc": "2026-08-20T00:08:19.619744+00:00",
+      "snapshot_sha256": "95edf880edd9a8a27c918629619aeeab0e134d0712f66013816f9c337ce841bb",
+      "mutable_source_warning": true
+    }
+  ],
+  "confidence": {
+    "do_not_change_live_now": "high",
+    "current_prefix_directional_opportunity": "medium",
+    "repeatable_relaxed_entry_edge": "low",
+    "open_lifecycle_final_outcome": "unknown_until_closed"
+  },
+  "falsifier": "Update this disposition if a preregistered future-only, technically complete, both-side source-compatible window shows that the sole onset relaxation improves after-cost native-lifecycle economics over the unchanged route without largest-winner dependence, occupancy distortion, or regime-specific collapse."
+}

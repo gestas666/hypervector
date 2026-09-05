@@ -84,9 +84,9 @@ def test_v43_btc_evidence_is_exact_and_discloses_single_event_samples() -> None:
 
     short = rows[("hulk_expansion_short_robust_v3", "BTC")]
     long = rows[("liquidity_sweep_long_1h_stop60_v1", "BTC")]
-    assert short["research_state"] == "forward_exact_n1_repeatability_unproven"
+    assert short["research_state"] == "historical_mixed_exact_live_n2_negative"
     assert long["research_state"] == "maker_forward_n1_runtime_taker_mismatch"
-    assert "1 exact" in str(short["cadence"])
+    assert "2 exact live closes" in str(short["cadence"])
     assert "1 exact" in str(long["cadence"])
     assert "repeatability" in str(short["summary"]).lower()
     assert "repeatability" in str(long["summary"]).lower()

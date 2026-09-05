@@ -1,0 +1,90 @@
+{
+  "schema_version": "v51_spcx_readiness_sampling_correction_v1",
+  "generated_at_utc": "2026-08-16T05:18:28Z",
+  "mode": "report_only_diagnostic_correction",
+  "contract": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_live_change": false,
+    "runtime_strategy_changed": false,
+    "performance_gate": false
+  },
+  "run_identity": {
+    "run_id": "bidirectional-live-1786801038311",
+    "profile_id": "multi_asset_growth_first_5000_six_asset_profit_lock_candidate_v51",
+    "profile_fingerprint": "30cd54bb5b5b17249ae0a6a3b01d5702b276d51f8dc5ddd6b4d36ab6aa7d1908",
+    "first_observed_at_utc": "2026-08-15T13:40:33.871103+00:00",
+    "last_observed_at_utc": "2026-08-16T05:15:12.865802+00:00"
+  },
+  "route": "hip3_breakout_pressure_sp500_spcx_fresh15s_bidirectional_v3|xyz:SPCX",
+  "hypothesis": {
+    "statement": "Raw readiness counts overstate independent observer failures because an unavailable provider is evaluated once per backend poll rather than once per completed 15-minute decision.",
+    "status": "supported_for_this_frozen_prefix",
+    "confidence": "high",
+    "falsifier": "The frozen route sequence contains multiple separate observer_status_stale episodes or an eligible signal attributable to the stale interval."
+  },
+  "raw_readiness": {
+    "sampling_basis": "backend_poll_evaluations",
+    "evaluations": 300,
+    "eligible": 0,
+    "blocker_counts": {
+      "fresh_breakout_onset_absent": 55,
+      "observer_status_stale": 245,
+      "prior_pressure_state_unavailable": 2
+    }
+  },
+  "poll_normalized_episode_evidence": {
+    "basis": "maximal_consecutive_identical_blocker_sets",
+    "combinations": [
+      {
+        "blockers": [
+          "fresh_breakout_onset_absent"
+        ],
+        "episodes": 2,
+        "evaluations": 53
+      },
+      {
+        "blockers": [
+          "fresh_breakout_onset_absent",
+          "prior_pressure_state_unavailable"
+        ],
+        "episodes": 2,
+        "evaluations": 2
+      },
+      {
+        "blockers": [
+          "observer_status_stale"
+        ],
+        "episodes": 1,
+        "evaluations": 245
+      }
+    ],
+    "stale_episode_first_observed_at_utc": "2026-08-15T16:59:57.360345+00:00",
+    "stale_episode_last_observed_at_utc": "2026-08-15T19:14:25.945477+00:00",
+    "interpretation": "The 245 stale rows are one continuous technical episode sampled repeatedly by the backend. They are not 245 independent missed market opportunities."
+  },
+  "research_decision": {
+    "strategy_or_parameter_change": "none",
+    "live_change_proposal": null,
+    "highest_value_route_experiment": "collect_both_side_live_execution",
+    "next_diagnostic": "Attribute the single stale interval to expected source/session availability versus an observer fault using source health and decision-journal continuity.",
+    "reason": "The corrected sampling semantics do not prove an eligible signal, loss, or strategy defect; they prevent technical polling frequency from distorting research priority."
+  },
+  "limitations": [
+    "Consecutive blocker episodes describe technical state continuity, not trade frequency or win probability.",
+    "This evidence does not establish whether the stale interval originated at the venue source, transport, or observer process.",
+    "Zero eligible signals in this prefix does not establish that the route will remain inactive."
+  ],
+  "source_evidence": {
+    "cohort_ledger_prefix": {
+      "path": "data/live/bidirectional_cohort/decisions.jsonl",
+      "bytes": 1563524005,
+      "sha256": "fb29b4380e90a308be50c79df2bbef47bd8ef9f529ddbf837d1355a1ad9b94d4"
+    },
+    "generator_files": {
+      "src/hypervector/research/cohort_live_audit_summaries.py": "ad6e588d6755d6465fab2c1af8b71d0c314c50ecf1ef3c6c5a59665f24be15a9",
+      "src/hypervector/research/cohort_opportunity_episode_evidence.py": "da9f68ee720d1faf2bc25cf811e334a367a4d6a68db8e58eed546e54780904a1",
+      "src/hypervector/research/cohort_live_opportunity_diagnostics.py": "7ccd7f2d003bafcf439379eafcec5937264362a38c3de9cc13fc0248d536e1c9"
+    }
+  }
+}

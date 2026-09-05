@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "generated_at_utc": "2026-08-18T03:17:49Z",
+  "hypothesis_id": "v54-hype-native-opposite-exit-replay-v1",
+  "status": "complete_contract_historical_partitions_disagree",
+  "contract": {
+    "report_only": true,
+    "execution_authority": "none",
+    "runtime_strategy_changed": false,
+    "automatic_promotion": false,
+    "performance_gate": false
+  },
+  "problem": "The earlier fixed-eight-hour versus supported-extension replay omitted v54's configured opposite-native-onset close, so it could not represent the complete candidate exit contract.",
+  "implementation": {
+    "source": "src/hypervector/research/hype_native_exit_comparison.py",
+    "runner": "scripts/hype_breakout_exit_experiment.py --compare-v54-exit-contract",
+    "tdd": "The initial tests failed because the module and CLI mode did not exist. The implemented comparison then passed 35 focused exit, market, runner, and replay tests plus scoped Ruff check and format verification.",
+    "invariants": [
+      "both arms use the same reconstructed HYPE-native signal stream",
+      "both arms close on a fresh opposite strategy onset",
+      "both arms retain the 80 bps protective stop",
+      "fixed exits at eight hours while extension may continue to 24 hours under structural support",
+      "fees are 4.32 bps per side and residual slippage is 2 bps per side",
+      "the final 60-day block is descriptive and cannot select the policy"
+    ]
+  },
+  "evidence": {
+    "path": "data/logs/research/hype_hype_native_v54_fixed8_vs_extension_opposite_hl365d_20260818.json",
+    "sha256": "a4bc6da9c6db08b06909ca8439291b6c639a06a6e155bf987af808c2a1c5fec1",
+    "bars_sha256": "3dba115ac49c71f4b52d69849eaf69ab1da23e82ebb0326e9738cf35b0d159d2",
+    "funding_sha256": "080415ac9cb16938abd154eccc04691da6c9c05bdf544d25312659cf905c5242",
+    "window": "2025-07-28T00:00:00Z through 2026-07-28T00:00:00Z",
+    "development_end_exclusive": "2026-05-28T00:00:00Z",
+    "holdout_already_opened_start": "2026-05-29T00:00:00Z"
+  },
+  "aggregate_results": {
+    "development": {
+      "fixed": {
+        "trades": 1023,
+        "net_bps": -7518.384503,
+        "profit_factor": 0.892918,
+        "maximum_drawdown_bps": 9188.566567,
+        "opposite_onset_exits": 35
+      },
+      "extension": {
+        "trades": 971,
+        "net_bps": -8947.62637,
+        "profit_factor": 0.865378,
+        "maximum_drawdown_bps": 11620.191731,
+        "opposite_onset_exits": 37
+      },
+      "extension_minus_fixed_net_bps": -1429.241867
+    },
+    "holdout_already_opened": {
+      "fixed": {
+        "trades": 216,
+        "net_bps": -1166.596646,
+        "profit_factor": 0.919028,
+        "maximum_drawdown_bps": 3347.747693,
+        "opposite_onset_exits": 9
+      },
+      "extension": {
+        "trades": 201,
+        "net_bps": 418.109175,
+        "profit_factor": 1.031395,
+        "maximum_drawdown_bps": 2865.613504,
+        "opposite_onset_exits": 10
+      },
+      "extension_minus_fixed_net_bps": 1584.705822
+    }
+  },
+  "matched_entry_results": {
+    "method": "Compare only lifecycles sharing exact signal_time_utc and side; report unmatched occupancy separately.",
+    "development": {
+      "matched_trades": 967,
+      "fixed_only_trades": 56,
+      "extension_only_trades": 4,
+      "extension_better_trades": 42,
+      "fixed_better_trades": 87,
+      "ties": 838,
+      "fixed_net_bps": -7133.519099,
+      "extension_net_bps": -9532.043975,
+      "extension_minus_fixed_bps": -2398.524876,
+      "extension_minus_fixed_excluding_largest_advantage_bps": -3846.139403,
+      "long_extension_minus_fixed_bps": 743.203526,
+      "short_extension_minus_fixed_bps": -3141.728402
+    },
+    "holdout_already_opened": {
+      "matched_trades": 200,
+      "fixed_only_trades": 16,
+      "extension_only_trades": 1,
+      "extension_better_trades": 13,
+      "fixed_better_trades": 13,
+      "ties": 174,
+      "fixed_net_bps": -938.481788,
+      "extension_net_bps": 508.800606,
+      "extension_minus_fixed_bps": 1447.282395,
+      "extension_minus_fixed_excluding_largest_advantage_bps": 792.231191,
+      "long_extension_minus_fixed_bps": 1139.347966,
+      "short_extension_minus_fixed_bps": 307.934429
+    }
+  },
+  "interpretation": {
+    "updated": "Including opposite-native-onset exits materially improves contract parity and strengthens extension in the already-opened block, where extension becomes modestly positive. Development still favors fixed eight hours and remains negative under both policies.",
+    "not_established": [
+      "that either exit policy creates a durable profitable entry edge",
+      "that the already-opened holdout can select extension",
+      "that the legacy bar reconstruction reproduces private current IOC fills",
+      "that a post-hoc long-extension and short-fixed split is stable"
+    ],
+    "decision_effect": "The fixed-versus-extension selection remains unresolved before the second prospective eight-hour boundary. The complete-contract replay removes one evidence defect but does not authorize a live change."
+  },
+  "limitations": [
+    "The final block was previously opened and is descriptive only.",
+    "Legacy bars approximate current native onset and private IOC execution.",
+    "One-minute bars cannot establish intrabar event order.",
+    "Different hold occupancy changes later available entries.",
+    "The side split is descriptive and was not preregistered as a live policy."
+  ],
+  "confidence": {
+    "mechanical_opposite_exit_parity": "high",
+    "historical_economic_measurement": "medium",
+    "fixed_over_extension": "low_due_to_partition_disagreement",
+    "durable_entry_profitability": "low"
+  },
+  "falsifiers": [
+    "A source or input hash changes or lifecycle recomputation changes the cited results.",
+    "A prospective frozen same-contract sample consistently favors one policy after exact fees, funding, and fills.",
+    "Current native onsets diverge from the reconstructed legacy signal stream on matched completed bars.",
+    "An exact event-order replay materially changes opposite-onset, stop, or timer precedence."
+  ]
+}

@@ -213,8 +213,8 @@ fn selected_research_row_opens_all_horizon_evidence() {
         "15M  R4/I1",
         "SQUEEZE NOT ARMED",
         "COUNTERFACTUAL CANDLE PATHS",
-        "RESEARCH FORWARD OBSERVER // CONFIDENCE LOW",
-        "CADENCE not established; measuring each onset",
+        "FROZEN SOURCE FORWARD OBSERVER // CONFIDENCE LOW",
+        "SOURCE CADENCE not established; measuring each onset",
         "ROUTE LIVE EXECUTABLE // RESEARCH REPORT ONLY",
         "NO AUTO FILTER OR SIZE",
     ] {
@@ -289,6 +289,8 @@ fn selected_live_research_row_shows_exact_execution_performance() {
     let screen = render(&mut app, 5, 160, 48);
 
     for expected in [
+        "FROZEN SOURCE FORWARD OBSERVER // CONFIDENCE LOW",
+        "FROZEN OUTCOME LABEL // RESOLVED LIVE RESULTS BELOW",
         "LIVE CONFIG-CONTRACT SAMPLE // RESOLVED VENUE LIFECYCLES",
         "CLOSED 4 // W/L/BE 3/1/0 // WR 75.0%",
         "NET +$1.00 // RETURN +5.02% // PF 5.49",

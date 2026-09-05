@@ -85,6 +85,40 @@ def test_provider_recipe_exit_policy_defaults_ignore_and_round_trips_honor() -> 
     assert BoundExecutionPlan.from_payload(plan.as_payload()) == plan
 
 
+def test_maximum_hold_evidence_freshness_survives_entry_and_restart() -> None:
+    """The soft-hold evidence limit must remain bound to the open lifecycle."""
+    contract = ProviderExecutionContract(
+        entry_liquidity="taker_ioc",
+        stop_policy="fixed_bps",
+        stop_bps=80.0,
+        target_policy="none",
+        maximum_hold_seconds=28_800,
+        maximum_hold_policy="extend_while_regime_supported",
+        hard_maximum_hold_seconds=86_400,
+        maximum_hold_evidence_maximum_age_seconds=60,
+    )
+
+    plan = contract.bind(strategy_id="hype_alignment_v2", stop_anchor=None)
+    recovered = BoundExecutionPlan.from_payload(plan.as_payload())
+
+    assert ProviderExecutionContract.from_payload(contract.as_payload()) == contract
+    assert recovered == plan
+    assert recovered.maximum_hold_evidence_maximum_age_seconds == 60
+
+
+def test_fixed_hold_rejects_an_evidence_freshness_contract() -> None:
+    """Evidence freshness is meaningful only for a conditional extension."""
+    with pytest.raises(CohortExecutionPlanError, match="cannot define an evidence age"):
+        ProviderExecutionContract(
+            entry_liquidity="taker_ioc",
+            stop_policy="fixed_bps",
+            stop_bps=80.0,
+            target_policy="none",
+            maximum_hold_seconds=28_800,
+            maximum_hold_evidence_maximum_age_seconds=60,
+        )
+
+
 def test_unknown_provider_recipe_exit_policy_fails_fast() -> None:
     """A misspelled exit authority cannot silently become executable."""
     payload = {

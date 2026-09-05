@@ -1,0 +1,157 @@
+{
+  "schema_version": 1,
+  "mode": "v58_index_observer_mixed_publication_recovery_closure_v1",
+  "created_at_utc": "2026-08-21T05:17:57Z",
+  "contract": {
+    "report_only": true,
+    "execution_authority": "none",
+    "orders_supported": false,
+    "live_backend_restarted": false,
+    "live_configuration_changed": false,
+    "strategy_or_risk_changed": false
+  },
+  "recommendation": "Retain the bounded mixed-publication recovery in the HIP-3 index observer supervisor and continue monitoring it across future 15-minute boundaries. Do not restart the live backend for this observer-only repair.",
+  "why_now": "The SP500 and SPCX decision observers stopped at the 05:00 UTC publication boundary, causing the live SP500 provider to remain technically unavailable while an SP500 position was open.",
+  "evidence_reviewed": [
+    "The supervisor fault payload at 2026-08-21T05:00:02.353Z.",
+    "The SP500 status, cursor, and journal files published around 05:00:03Z.",
+    "Twenty-nine consecutive live SP500 observer_status_stale evaluations.",
+    "The prior August 19 publication-skew recovery record.",
+    "Exact RED/GREEN supervisor tests and the complete non-network regression suite.",
+    "The real 05:15 UTC post-repair status/cursor/journal and live routing boundary."
+  ],
+  "observed_problem_or_opportunity": {
+    "supervisor_fault_observed_at_ms": 1787288402353,
+    "supervisor_fault": "HIP-3 observer unavailable: observer_checkpoint_publication_incomplete",
+    "faulted_routes": [
+      "xyz:SP500",
+      "xyz:SPCX"
+    ],
+    "route_restart_counts_at_fault": {
+      "xyz:SP500": 0,
+      "xyz:SPCX": 0
+    },
+    "sp500_stale_evaluations": 29,
+    "first_sp500_stale_observed_at_utc": "2026-08-21T05:00:44.022168+00:00",
+    "last_sp500_stale_observed_at_utc": "2026-08-21T05:09:31.235731+00:00",
+    "sp500_entries_authorized_while_stale": 0,
+    "active_sp500_position_stop_oid": 520755909739,
+    "active_sp500_position_stop_trigger_price": 7753.9392
+  },
+  "root_cause": {
+    "confidence": "high",
+    "mechanism": "The children publish journal, cursor, and status through separate atomic replacements. The supervisor health check sampled the valid transient where the journal was newer than the cursor/status, propagated observer_checkpoint_publication_incomplete as fatal, killed both children, and had no outer process to restart itself.",
+    "prior_assessment_update": "The August 19 record rated publication skew only medium-confidence because no traceback was retained. The exact supervisor fault payload and boundary-aligned file writes now directly establish the mechanism.",
+    "falsifier": "A retained stack or deterministic replay showing the 05:00 fault originated outside the mixed-publication health check would invalidate this attribution."
+  },
+  "applicable_market_regime": "All regimes; this is source publication and process supervision, not a market-regime or strategy-parameter change.",
+  "alternatives_considered": [
+    {
+      "alternative": "do_nothing",
+      "tradeoff": "Leaves SP500/SPCX technically unavailable after any transient publication race."
+    },
+    {
+      "alternative": "restart_the_unmodified_supervisor",
+      "tradeoff": "Restores service temporarily but preserves the boundary failure mode."
+    },
+    {
+      "alternative": "ignore_publication_incoherence_without_a_bound",
+      "tradeoff": "Rejected because a permanently corrupt checkpoint could appear healthy."
+    },
+    {
+      "alternative": "multi_file_transaction_protocol",
+      "tradeoff": "Potentially stronger but broader and unnecessary for a safely fail-closed reader; deferred unless bounded recovery proves insufficient."
+    },
+    {
+      "alternative": "bounded_degraded_state_then_recheck",
+      "tradeoff": "Selected because it preserves fail-closed provider behavior, exposes degraded telemetry, recovers transient skew, and still hard-faults persistent incoherence."
+    }
+  ],
+  "proposed_live_change": {
+    "observer_supervisor_behavior": [
+      "Catch only observer_checkpoint_publication_incomplete as transient.",
+      "Publish supervisor status degraded with the exact health_issue.",
+      "Clear degradation immediately when status/cursor/journal become coherent.",
+      "Raise an explicit supervisor fault if incoherence lasts through the existing maximum-status-silence bound."
+    ],
+    "live_strategy_change": false,
+    "live_risk_sizing_or_leverage_change": false,
+    "live_backend_restart": false
+  },
+  "expected_upside": "Prevent a valid sub-second publication window from disabling both HIP-3 index routes, preserving opportunity availability and TUI readiness data without weakening entry authorization.",
+  "main_risks_and_failure_modes": [
+    "A too-broad exception catch could mask identity or corruption errors; the implementation catches one exact typed reason only.",
+    "A persistent mixed checkpoint could remain misleading; the existing bounded silence policy converts it to a hard fault.",
+    "The supervisor process itself could still be absent; tmux process and freshness monitoring remain required.",
+    "Restoring technical availability does not establish profitable SP500 or SPCX expectancy."
+  ],
+  "validation_completed": {
+    "red": {
+      "transient_case_failed_before_repair": true,
+      "persistent_case_failed_before_repair": true,
+      "observed_exception": "Hip3ObserverUnavailableError"
+    },
+    "focused_green": {
+      "passed": 37,
+      "failed": 0
+    },
+    "full_nonnetwork_python": {
+      "passed": 6909,
+      "failed": 0,
+      "deselected": 4,
+      "warnings": 27
+    },
+    "real_boundary": {
+      "decision_time_ms": 1787289300000,
+      "supervisor_status": "ready",
+      "sp500_status_boundary_ms": 1787289300000,
+      "sp500_cursor_boundary_ms": 1787289300000,
+      "route_restart_count": 0,
+      "live_evaluation_reason": "fresh_breakout_onset_absent",
+      "live_backend_non_action_reason": null,
+      "live_actions": 0,
+      "pressure_status": "available",
+      "pressure_age_seconds": 0.178
+    },
+    "tui": {
+      "active_v58_all_nine_screens_passed": true,
+      "sp500_latest_status": "L2 STATUS FRESH"
+    },
+    "backup": {
+      "path": "data/backups/bidirectional_cohort/prestart_20260821T051617.083464Z_8a04636c9ff6",
+      "manifest_sha256": "1166e7c2dcd0b3d3a615eb9be337f95a7d02f7916c4c6e5c8ef3419085186232",
+      "manifest_bytes": 844669,
+      "implementation_file_count": 1717,
+      "implementation_sha256": "588aa83b39aa36108ab558269bf086e048c778291415fa2b46173af8c44dd5dd",
+      "verification_status": "verified",
+      "strategy_changed": false,
+      "execution_authority": "none"
+    }
+  },
+  "validation_still_required": [
+    "Continue observing future 15-minute boundaries for repeat supervisor readiness and exact cursor/status equality.",
+    "Escalate any degraded interval lasting near the configured silence bound.",
+    "Keep live entry authorization fail-closed whenever the observer files are not coherent."
+  ],
+  "success_metrics": [
+    "Supervisor remains running and returns to ready after transient mixed publication.",
+    "Status and cursor converge to each completed 15-minute decision boundary.",
+    "Zero live entries are authorized while observer health is stale or publication is incomplete.",
+    "Persistent incoherence produces a bounded explicit fault rather than a success-shaped state.",
+    "SP500 readiness and all nine TUI screens remain populated from current backend evidence."
+  ],
+  "failure_or_rollback_triggers": [
+    "Any mixed publication still terminates the supervisor immediately.",
+    "Any degraded state persists beyond the maximum-status-silence bound without a fault.",
+    "Any intent is authorized from incoherent status/cursor/journal evidence.",
+    "Any cursor regression, journal replacement, identity mismatch, route restart-budget bypass, live fault, missing protection, or TUI data loss."
+  ],
+  "confidence_level": {
+    "incident_root_cause": "high",
+    "implementation_behavior": "high after deterministic and real-boundary validation",
+    "repository_regression_state": "high",
+    "long_horizon_process_reliability": "medium_high pending more boundaries",
+    "strategy_profitability": "not evaluated by this repair"
+  },
+  "explicit_approval_requested": "No live restart or strategy approval is requested. Retain the already running report-only supervisor repair under the standing authority to correct technical defects; continue monitoring and escalate any rollback trigger."
+}

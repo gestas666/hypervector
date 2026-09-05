@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v51-sol-range-onset-live-translation",
+  "revision_number": 1,
+  "supersedes_revision_id": null,
+  "created_at_utc": "2026-08-15T21:26:39Z",
+  "strategy_id": "range_onset_bidirectional_v1",
+  "symbol": "SOL",
+  "status": "observe",
+  "hypothesis": "The exact v51 SOL Range-Onset route may retain after-cost edge under its native opposite-intent, 80-bps stop, and 48-hour fallback exits; its first attributable lifecycle must resolve before exit changes are justified.",
+  "decision": "Continue the protected first v51 SOL long unchanged. Its current profit is below every predeclared completed-bar profit-lock activation and below the separately researched 60-bps fixed target, so the open mark does not justify an intervention or new live exit.",
+  "confidence": "medium",
+  "execution_authority": "none",
+  "report_only": true,
+  "automatic_promotion": false,
+  "automatic_live_change": false,
+  "runtime_strategy_changed": false,
+  "falsifier": "Reject the implementation claim on any unexplained signal/route mismatch, missing protection, or exit-plan deviation. Weaken the edge claim if predeclared route-matched forward lifecycles become negative after exact costs or remain winner-concentrated. Reconsider native exits only if a frozen challenger improves chronological and side-separated results after costs and largest-winner removal.",
+  "scope": {
+    "run_id": "bidirectional-live-1786801038311",
+    "profile_id": "multi_asset_growth_first_5000_six_asset_profit_lock_candidate_v51",
+    "profile_fingerprint": "30cd54bb5b5b17249ae0a6a3b01d5702b276d51f8dc5ddd6b4d36ab6aa7d1908",
+    "lifecycle_id": "SOL:517255982534",
+    "position_side": "long",
+    "entry_price": 75.452,
+    "position_size": 66.16,
+    "stop_order_id": 517255993410,
+    "stop_trigger_price": 74.848384,
+    "maximum_hold_seconds": 172800
+  },
+  "metrics": {
+    "entry_slippage_bps": 0.0,
+    "marked_net_pnl_usd": 4.465418,
+    "estimated_exit_now_net_usd": 2.305973,
+    "estimated_stop_net_usd": -44.423546,
+    "maximum_favorable_excursion_bps": 24.651434,
+    "maximum_adverse_excursion_bps": 5.698987,
+    "peak_giveback_bps": 11.000371,
+    "profit_lock_activation_25bps_reached": false,
+    "fixed_target_60bps_reached": false,
+    "ignored_provider_exit_signals": 0,
+    "position_protected": true,
+    "automatic_promotion": false,
+    "execution_authority": "none",
+    "runtime_changed": false
+  },
+  "findings": {
+    "entry_contract": "Fresh completed hourly SMA10/30 long cross with completed 5-minute RANGE admission; exact taker entry had zero measured slippage.",
+    "native_exit_contract": "Opposite selected executable intent, 80-bps fixed protective stop, or 48-hour maximum hold; no target and no live profit lock.",
+    "current_exit_state": "No opposite exit signal, target, or profit-lock activation has occurred. The venue stop is present and the maximum-hold deadline is not expired.",
+    "challenger_context": "The 60-bps fixed-target historical diagnostic was pooled-positive and positive excluding its largest winner, but only two of four blocks were positive and the benefit was entirely long-side; native remains the frozen control.",
+    "interpretation": "The current approximately 25-bps peak excursion is an informative first live path, not evidence that native exits are defective. Closing or locking it now would contaminate the predeclared live control."
+  },
+  "limitations": [
+    "The lifecycle remains open; its final PnL, exit reason, fees, funding, slippage, and giveback are unknown.",
+    "Completed one-minute candles approximate excursions and are not executable fills.",
+    "Estimated exit-now economics omit additional slippage and future funding.",
+    "The fixed-target surface was selected after prior live giveback and is not an untouched holdout.",
+    "One long lifecycle cannot establish bidirectional edge or optimal exits.",
+    "This record has no authority to close, resize, route, or modify the position."
+  ],
+  "evidence": [
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v51_open_spcx_prefix_20260815T2114Z_v1.json",
+      "role": "immutable_v51_open_lifecycle_and_exit_challenger_audit",
+      "sha256": "c119a0a1cf4200b02bb7ba9ad125d37795907e741f73a808691e7ac5dcb501e1",
+      "bytes": 8146477
+    },
+    {
+      "path": "../../data/logs/research/sol_range_onset_v49_target_exit_audit_20260812_v1.json",
+      "role": "historical_native_vs_fixed_target_diagnostic",
+      "sha256": "10ceed2db069b9b3f4a1bf7d52438ee4b009b7b9a0af418a32c4057846e3ec1e",
+      "bytes": 11144
+    },
+    {
+      "path": "../../configs/multi_asset_growth_first_5000_six_asset_profit_lock_candidate_v51.toml",
+      "role": "active_v51_route_and_exit_contract",
+      "sha256": "f0f0fef087eb0a3412c2a917d2d9bd8f578b17e4a40d7c3729519a33cf4f9ab4",
+      "bytes": 3917
+    },
+    {
+      "path": "v51-sol-range-onset-first-window-v1.json",
+      "role": "prior_zero-entry_v51_window",
+      "sha256": "d14377990b25ab35b854631d53b187e4288f2c5ad96ff0ec1d1c92e0d7761136",
+      "bytes": 9119
+    }
+  ],
+  "recommendation": {
+    "Recommendation": "Preserve the exact SOL Range-Onset lifecycle and native exit control while recording its final outcome and the already-predeclared exit challengers report-only.",
+    "Why now": "The first attributable v51 SOL entry has occurred and is modestly profitable, creating a temptation to intervene before any challenger activation or resolved result.",
+    "Evidence reviewed": "Exact v51 entry and protection, frozen open-lifecycle audit, completed-candle MFE/MAE, current mark and costs, predeclared profit-lock states, fixed-target historical audit, and route configuration.",
+    "Observed problem or opportunity": "Open profit can return to the loss stop because native Range-Onset has no fixed target or profit lock, but the present peak has not crossed even the lowest predeclared 25-bps lock activation.",
+    "Applicable market regime": "Completed-hour long crossover admitted by a completed five-minute RANGE state, with the current context still structurally long and not emitting an opposite onset.",
+    "Alternatives considered": "Close immediately, add a live 25-bps profit lock, add the post-hoc 60-bps long target, shorten the 48-hour hold, or keep native exits as the forward control.",
+    "Proposed live change": "none",
+    "Expected upside": "Preserves unbiased evidence for a sparse mechanism whose historical returns depend on allowing some winners to develop.",
+    "Main risks and failure modes": "The open profit may reverse; a rare-winner mechanism may remain concentrated; the 48-hour fallback may incur opportunity cost; one side may lack edge.",
+    "Validation completed": "Exact entry/plan/stop identity, no ignored exit signal, completed-candle path completeness, current cost accounting, and historical target sensitivity with block and side decomposition.",
+    "Validation still required": "Resolved final exit and after-cost result, opposite-intent behavior, long and short forward samples, largest-winner sensitivity, and prospective comparison against frozen challenger policies.",
+    "Success metrics": "Correct protected lifecycle resolution, positive exact after-cost route economics, profit factor above one by side and pooled, positive net excluding the largest winner, and a challenger improvement that is stable across time blocks if any exit change is proposed.",
+    "Failure / rollback triggers": "Unprotected exposure or exit-plan mismatch is an incident; repeated route-matched negative closes or robust challenger superiority triggers a new approval-ready exit proposal.",
+    "Confidence level": "High for current implementation/protection; medium for preserving the control; low for durable profitability and optimal exit design.",
+    "Explicit approval requested": false
+  },
+  "single_highest_value_next_investigation": "Resolve this first v51 SOL lifecycle and compare its native exit with the frozen 25/40/60-bps completed-bar locks and 60-bps fixed-target challenger using exact realized costs."
+}

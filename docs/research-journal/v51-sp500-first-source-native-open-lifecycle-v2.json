@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v51-sp500-first-source-native-open-lifecycle-v2",
+  "status": "open_right_censored_profit_lock_correctly_not_activated",
+  "recorded_at_utc": "2026-08-14T18:01:28.679781+00:00",
+  "supersedes": "v51-sp500-first-source-native-open-lifecycle-v1.json",
+  "profile": {
+    "profile_id": "multi_asset_growth_first_5000_six_asset_profit_lock_candidate_v51",
+    "profile_fingerprint": "30cd54bb5b17249ae0a6a3b01d5702b276d51f8dc5ddd6b4d36ab6aa7d1908",
+    "run_id": "bidirectional-live-1786691478619"
+  },
+  "lifecycle": {
+    "lifecycle_id": "xyz:SP500:516695933154",
+    "strategy_id": "hip3_breakout_pressure_sp500_spcx_fresh15s_bidirectional_v3",
+    "side": "short",
+    "decision_time_ms": 1786720500000,
+    "fill_time_ms": 1786720524532,
+    "decision_to_fill_ms": 24532,
+    "maximum_entry_delay_ms": 30000,
+    "entry_reference_price": 7783.6,
+    "entry_fill_price": 7784.3,
+    "entry_size": 0.642,
+    "entry_slippage_bps": -0.8993267896589092,
+    "entry_fee_usd": 0.431785,
+    "leverage": 10,
+    "venue_stop_oid": 516695974655,
+    "venue_stop_trigger_price": 7846.5744,
+    "target_policy": "none",
+    "profit_lock_policy": "completed_bar_trailing",
+    "profit_lock_activation_bps": 100.0,
+    "profit_lock_floor_bps": 40.0,
+    "profit_lock_giveback_bps": 80.0,
+    "opposite_executable_intent_exit": "automatic_close_without_same_cycle_reversal",
+    "maximum_hold_seconds": 86400
+  },
+  "frozen_open_observation": {
+    "as_of_timestamp_ms": 1786730488679,
+    "marked_net_pnl_usd": 4.129768,
+    "estimated_exit_now_net_usd": 3.698376827768714,
+    "current_directional_return_bps": 9.120922883237848,
+    "maximum_favorable_excursion_bps": 12.846370258082773,
+    "maximum_adverse_excursion_bps": 3.0831288619403985,
+    "peak_giveback_bps": 3.7254473748449257,
+    "completed_path_bars": 165,
+    "profit_lock_activated": false,
+    "profit_lock_activation_shortfall_bps": 87.15362974191723,
+    "protected_profit_fraction": 0.0,
+    "eligible_opposite_signal": false,
+    "provider_action": "hold",
+    "provider_reason": "fresh_breakout_onset_absent",
+    "provider_side": null,
+    "current_canonical_regime_status": "unavailable",
+    "current_pressure_status": "available",
+    "current_pressure_imbalance_10": 0.710773381416883,
+    "current_pressure_snapshot_count": 156,
+    "opposed_decisions": 0,
+    "opposition_unavailable_decisions": 11,
+    "opposition_coverage_gap_decisions": 140
+  },
+  "exit_contract_assessment": {
+    "stop": "The exact reduce-only 80-bps venue stop remains the adverse protection branch.",
+    "opposite_signal": "A later eligible short-to-long provider intent closes without same-cycle reversal; no eligible opposite exists at this boundary.",
+    "profit_lock": "The 100/40/80 completed-bar lock correctly remains inactive because 12.85-bps MFE is 87.15 bps below activation.",
+    "maximum_hold": "The fixed 24-hour deadline remains a fallback and is not yet expired.",
+    "fixed_target": "No fixed TP is configured for this trend-following route.",
+    "regime": "Canonical regime context is unavailable for this HIP-3 lifecycle and is not being fabricated or used as an exit claim."
+  },
+  "evidence": [
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v51_open_exit_prefix_20260814T1802Z.json",
+      "bytes": 8056173,
+      "sha256": "6cecc39033fbe454e344979811a28a47a3406c1776bce7fc336c37fca2d0246c",
+      "role": "immutable exact-run open-lifecycle audit prefix"
+    },
+    {
+      "path": "v51-sp500-first-source-native-open-lifecycle-v1.json",
+      "bytes": 8442,
+      "sha256": "26a9d97c58c27eaabd6e8d63de86b3da4311bfc1be5372f57a6ae45e001b1f86",
+      "role": "superseded entry-boundary assessment"
+    },
+    {
+      "path": "../../configs/multi_asset_growth_first_5000_six_asset_profit_lock_candidate_v51.toml",
+      "bytes": 3917,
+      "sha256": "f0f0fef087eb0a3412c2a917d2d9bd8f578b17e4a40d7c3729519a33cf4f9ab4",
+      "role": "exact active execution-contract configuration"
+    }
+  ],
+  "uncertainties_risks_and_failure_modes": [
+    "The lifecycle remains open and every provisional return or excursion can change before the venue close.",
+    "One SP500 short cannot establish route edge or validate both configured directions.",
+    "The completed-bar lock has not activated, so this path has not yet tested its update or trigger branches.",
+    "Canonical regime and opposition telemetry are incomplete for this HIP-3 path and cannot support a regime-exit conclusion.",
+    "A future gap can execute the stop or profit lock beyond its trigger price.",
+    "An opposite executable intent can close at a later market price but cannot guarantee the current unrealized profit."
+  ],
+  "falsifier": "Update this assessment if the lifecycle loses venue protection, a completed path reaches 100 bps without activating the lock, an eligible opposite intent fails to close, the fixed deadline behaves differently from its persisted contract, or final accounting does not reconcile exactly.",
+  "change_proposal": {
+    "Recommendation": "Keep the exact v51 SP500 route and exit contract unchanged through this first source-native lifecycle and resolve it against the predeclared audit fields.",
+    "Why now": "The trade is modestly profitable but remains far below its profit-lock activation, allowing us to distinguish expected inactive protection from a missing or broken exit.",
+    "Evidence reviewed": "Exact entry and fill, measured entry cost and slippage, current venue mark, reduce-only stop, 165 completed path bars, configured profit lock, current provider state, opposition coverage, and fixed deadline.",
+    "Observed problem or opportunity": "The current profit is unprotected because MFE reached only 12.85 bps against a predeclared 100-bps activation; no exit branch has been skipped at this boundary.",
+    "Applicable market regime": "Entry was a source-native 15-minute SP500 short breakout with fresh negative depth pressure and EMA confirmation; current canonical regime context is unavailable.",
+    "Alternatives considered": "Close early, lower activation mid-trade, add a fixed TP, use incomplete regime context as an exit, or preserve the frozen forward contract until resolution.",
+    "Proposed live change": "None. Preserve the 80-bps venue stop, 100/40/80 completed-bar profit lock, eligible opposite-intent close, and 24-hour maximum hold.",
+    "Expected upside": "Collect uncontaminated source-native exit evidence and avoid lowering a trailing threshold merely because a small open profit exists.",
+    "Main risks and failure modes": "The trade can give back its small profit, gap through the stop, never test the lock, or become an unrepresentative first sample.",
+    "Validation completed": "Entry identity, timing, fee, slippage, leverage, stop ownership, exit-plan parameters, current MFE/MAE/giveback, lock non-activation, and absence of an eligible opposite signal are reconciled.",
+    "Validation still required": "Final close trigger and fill, exact costs and funding, lock update/trigger behavior if activated, flat reconciliation, and independent long and short lifecycles for both SP500 and SPCX.",
+    "Success metrics": "Exact close attribution, continuous venue protection, no stale or duplicate execution, reconciled after-cost PnL, and at least one fully resolved source-native lifecycle per configured side before any economic recommendation.",
+    "Failure / rollback triggers": "Lost stop, stale or duplicate execution, lock activation without an owned update, missed opposite close, accounting mismatch, route identity drift, or repeated compatible after-cost losses.",
+    "Confidence level": "High that the current inactive profit lock is contract-correct; high on entry and protection attribution; low on route profitability because this is one right-censored short.",
+    "Explicit approval requested": "No approval requested because no live change is proposed."
+  },
+  "single_highest_value_next_investigation": "Resolve xyz:SP500:516695933154 and compare its exact after-cost exit against the frozen stop, profit lock, opposite intent, provider-exit observer, and maximum-hold contracts without retuning."
+}

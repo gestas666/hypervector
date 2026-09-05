@@ -1,0 +1,93 @@
+{
+  "schema_version": "v51_open_risk_immediate_close_proposal_v2",
+  "hypothesis_id": "v51-open-risk-immediate-close",
+  "revision": 2,
+  "supersedes": "docs/research-journal/v51-open-risk-immediate-close-proposal-v1.json",
+  "status": "proposed_awaiting_explicit_approval",
+  "generated_at_utc": "2026-08-16T12:25:00Z",
+  "execution_authority": "none",
+  "automatic_live_change": false,
+  "runtime_strategy_changed": false,
+  "performance_gate": false,
+  "trade_count_gate": false,
+  "recommendation": "Approve reduce-only closure of the exact remaining SOL and xyz:SPCX v51 positions, reconcile the final fills and orders, then proceed through the verified flat-boundary v52 cutover.",
+  "why_now": "Both positions belong to routes retired from v52, the transition drain is active, both paths remain negative, SOL remains strongly directionally opposed, and the loaded v51 backend continues recurring full-ledger CPU saturation that is remediated in the staged implementation.",
+  "evidence_reviewed": [
+    "V51 checkpoint generated at 2026-08-16T12:22:03.882796+00:00",
+    "Exact SOL lifecycle SOL:517255982534 and xyz:SPCX lifecycle xyz:SPCX:517508462602",
+    "Venue-native reduce-only stops 517255993410 and 517508481177",
+    "Causal completed-minute excursion and regime-opposition telemetry",
+    "Active transition drain ed1b4d02f5fc4da49acac47170db4313",
+    "Backend process health plus direct CPU/RSS process observation",
+    "V52 config, stress evidence, common-window replay, transition contract, and targeted 34-test verification",
+    "Focused operator-close, transition-drain, engine, order-submission, and adapter verification"
+  ],
+  "observed_problem_or_opportunity": "Current checkpoint estimates combined reduce-only exit-now net near -$44.59 versus combined stop net near -$85.28. Waiting therefore retains roughly $40.69 of modeled additional stop-distance downside across routes that v52 will retire, while also delaying v52 forward evidence.",
+  "applicable_market_regime": "SOL is a long with 5m/15m TREND_DOWN, a latest structure-support score of -0.9167, and 122 consecutive opposed decisions. SPCX regime attribution is unavailable; its long is 47.08 bps below entry with no ignored provider exit observed.",
+  "alternatives_considered": [
+    "Keep both positions until signal, stop, or maximum-hold exit",
+    "Close only the strongly opposed SOL long",
+    "Close only the near-stop xyz:SPCX long",
+    "Restart v51 while positions remain open",
+    "Widen or remove existing protection"
+  ],
+  "proposed_live_change": "After a fresh pre-submit identity and protection check, submit one reduce-only close for SOL and one for xyz:SPCX through the existing armed backend. Do not reverse, reopen, resize, change leverage, cancel protection before confirmed fills, or grant v52 order authority before final flat reconciliation.",
+  "expected_upside": "Bounds further exposure in retired routes, accelerates removal of the old CPU-heavy backend, and opens the verified v52 prospective evidence window sooner.",
+  "main_risks_and_failure_modes": [
+    "Either position may recover after closure",
+    "IOC slippage and fees may exceed checkpoint estimates",
+    "Partial fills or venue rejection may leave residual exposure",
+    "Protection cancellation before a confirmed close would create naked risk",
+    "The close is risk containment and cutover acceleration, not validated exit-policy alpha"
+  ],
+  "validation_completed": [
+    "Backend and checkpoint identify a healthy running v51 process with zero faulted assets",
+    "Both exact positions have venue-native stop identities in the checkpoint",
+    "Transition drain is active and no new entry is proposed",
+    "SOL: mark 75.217, marked net -$18.49, estimated exit-now -$20.64, estimated stop net -$45.01",
+    "SPCX: mark 139.52, marked net -$23.53, estimated exit-now -$23.95, estimated stop net -$40.27",
+    "SOL path: +33.27 bps MFE, -41.62 bps MAE, -31.15 bps current, 122 consecutive opposed decisions",
+    "SPCX path: +10.70 bps MFE, -76.33 bps MAE, -47.08 bps current",
+    "Fresh targeted v52 verification passed 34 tests in 1.62 seconds",
+    "Focused reduce-only operator-close verification passed 99 tests in 1.71 seconds"
+  ],
+  "validation_still_required": [
+    "Explicit operator approval tied to these exact two live lifecycles",
+    "Fresh pre-submit venue, ledger, signed-size, and stop reconciliation",
+    "Accepted reduce-only acknowledgements and complete fills",
+    "Zero residual signed positions and zero owned orders",
+    "Final v51 fees, funding, slippage, exit reasons, and accounting reconciliation",
+    "Fresh v52 flat preflight, recoverable 0/0 epoch, startup, and poststart acceptance"
+  ],
+  "success_metrics": [
+    "Both exact positions close without reversal or duplicate orders",
+    "No interval of unprotected residual exposure",
+    "Final v51 venue and ledgers are flat and owned-order-free",
+    "First v52 checkpoint reports ALL-TIME 0/0 and CURRENT RUN 0/0",
+    "V52 poststart technical acceptance is accepted"
+  ],
+  "failure_or_rollback_triggers": [
+    "Stale or changed run/profile/lifecycle identity",
+    "Missing or changed venue position or protection",
+    "Partial fill, rejection, residual position, or ledger/venue disagreement",
+    "Any v52 order before the clean boundary",
+    "Failed v52 preflight or poststart acceptance"
+  ],
+  "confidence_level": {
+    "technical_risk_containment": "high",
+    "immediate_close_beats_waiting_economically": "low_to_medium",
+    "cutover_acceleration": "high_if_reduce_only_closes_fill"
+  },
+  "explicit_approval_requested": "Approve or reject reduce-only closure of the exact current SOL and xyz:SPCX positions. This proposal alone sends no order.",
+  "limitations": [
+    "Checkpoint exit estimates omit realized slippage and future funding",
+    "Open-path evidence is descriptive and can reverse",
+    "The latest checkpoint is mutable and execution must revalidate current venue truth",
+    "No v52 profitability claim follows from technical readiness"
+  ],
+  "highest_value_next_investigation": {
+    "experiment": "prospective_v52_exact_live_route_collection",
+    "precondition": "v51 flat and owned-order-free, final reconciliation, clean v52 epoch, explicit live approval, and accepted v52 startup",
+    "priority": 1
+  }
+}

@@ -1,0 +1,162 @@
+{
+  "schema_version": 1,
+  "record_id": "v52-one-sided-readiness-and-btc-sweep-near-miss-v1",
+  "created_at_utc": "2026-08-16T18:00:36Z",
+  "source_profile": {
+    "profile_id": "multi_asset_growth_first_5000_evidence_bound_successor_v52",
+    "profile_fingerprint": "662d28b352cfc4f09e08c71ee67c8f044421483f2932539b09ea082b5e4f27f7",
+    "run_id": "bidirectional-live-1786885252328",
+    "run_fingerprint": "c792e5852b38aa69d8344bbee4884991b14558ab778376ccc5dc12c3b685942b",
+    "audit_cutoff_utc": "2026-08-16T17:58:37.156609+00:00"
+  },
+  "problem_restatement": "The report-only forward audit could not attribute readiness direction for v52 providers configured for one execution side, and the newly visible BTC sweep near misses needed an explicit decision before they could be mistaken for permission to relax the primary sweep trigger.",
+  "one_sided_direction_attribution": {
+    "hypothesis_id": "v52-report-only-one-sided-direction-attribution-v1",
+    "status": "accepted",
+    "scope": "report_only_forward_diagnostics",
+    "no_direction_after": 0,
+    "configured_routes": {
+      "hulk_expansion_short_robust_v3|BTC": "short",
+      "liquidity_sweep_long_1h_stop60_target60_v2|BTC": "long"
+    },
+    "pre_fix_observation": {
+      "hulk_no_direction": 9,
+      "btc_sweep_no_direction": 4,
+      "provenance": "Observed in the mutable checkpoint before the report-only sidecar restart; that predecessor was not retained as immutable evidence."
+    },
+    "post_fix_immutable_audit": {
+      "hulk_evaluations": 9,
+      "hulk_configured_direction_annotations": 9,
+      "btc_sweep_evaluations": 4,
+      "btc_sweep_configured_direction_annotations": 4,
+      "no_direction_after": 0,
+      "eligible_evaluations": 0,
+      "actions_created": 0
+    },
+    "causal_contract": [
+      "Provider-native direction remains authoritative whenever present.",
+      "Configuration direction is used only when the exact provider-symbol execution scope declares one side.",
+      "A bidirectional route with no provider-native direction remains unattributed.",
+      "Configured attribution cannot create eligibility, an intent, an action, a fill, or PnL."
+    ],
+    "decision": "accept_report_only_attribution_repair",
+    "confidence": "medium_high",
+    "failure_modes": [
+      "A malformed or stale configuration identity could mislabel counterfactual direction if identity validation were bypassed.",
+      "The unretained mutable predecessor weakens exact before-versus-after archival provenance; the regression test and immutable post-fix audit provide the durable evidence."
+    ],
+    "falsifier": "A bidirectional route with null provider direction receives a configured side, a configured annotation creates an eligible/action row, or the audit direction disagrees with the exact configuration identity."
+  },
+  "btc_sweep_primary_trigger_near_miss": {
+    "hypothesis_id": "v52-btc-sweep-primary-trigger-relaxation-v1",
+    "status": "deferred",
+    "route": "liquidity_sweep_long_1h_stop60_target60_v2|BTC",
+    "candidate_change": "remove_sweep_below_prior_low",
+    "blocker": "sweep_below_prior_low_absent",
+    "side": "long",
+    "independent_episodes": 2,
+    "estimated_round_trip_friction_bps": 13.0,
+    "horizons": {
+      "5m": {
+        "resolved": 2,
+        "censored": 0,
+        "mean_close_after_friction_bps": -12.210115681364531,
+        "mean_excluding_largest_bps": -13.9506757720279,
+        "cost_clearing_close_count": 0
+      },
+      "15m": {
+        "resolved": 2,
+        "censored": 0,
+        "mean_close_after_friction_bps": -9.904440012440162,
+        "mean_excluding_largest_bps": -19.326111023248203,
+        "cost_clearing_close_count": 0
+      },
+      "30m": {
+        "resolved": 2,
+        "censored": 0,
+        "mean_close_after_friction_bps": 0.2397663861510999,
+        "mean_excluding_largest_bps": -23.279930412778747,
+        "cost_clearing_close_count": 1
+      },
+      "60m": {
+        "resolved": 1,
+        "censored": 1,
+        "mean_close_after_friction_bps": 6.01351544055796,
+        "mean_excluding_largest_bps": null,
+        "cost_clearing_close_count": 1
+      }
+    },
+    "analysis": "The two independent episodes are negative after estimated friction at 5m and 15m. The 30m mean is approximately flat but becomes materially negative after removing its largest close. The only positive 60m result is one resolved episode with the other path censored, so it cannot establish repeatability.",
+    "decision": "defer_trigger_relaxation",
+    "live_change": "none",
+    "minimum_evidence_to_update_diagnosis": "At least 12 independent one-blocker episodes, or a separately predeclared causal replay of the exact candidate, with positive after-cost and leave-largest evidence under the intended stop and target. This is a diagnostic review threshold, not automatic promotion authority.",
+    "confidence": "low",
+    "failure_modes": [
+      "Two episodes have high sampling uncertainty.",
+      "The 30m mean depends on one favorable path.",
+      "The 60m result has only one resolved path and one censored path.",
+      "Completed-candle counterfactuals are not actual orders, fills, funding, slippage, or shared-capital PnL."
+    ],
+    "falsifier": "A larger independent sample or predeclared causal replay remains positive after executable costs and largest-winner removal without degrading the existing stop/target contract."
+  },
+  "recommendation_matrix": [
+    {
+      "item": "one_sided_report_only_direction_attribution",
+      "decision": "accept",
+      "expected_upside": "Accurate missed-opportunity and readiness analysis for the exact one-sided v52 routes.",
+      "downside": "No direct economic upside; this is telemetry correctness only.",
+      "live_authority": "none"
+    },
+    {
+      "item": "btc_sweep_primary_trigger_relaxation",
+      "decision": "defer",
+      "expected_upside": "Potentially higher trade frequency if later evidence proves the sweep predicate unnecessarily restrictive.",
+      "downside": "Current evidence indicates added low-quality entries and severe outlier dependence.",
+      "live_authority": "none"
+    },
+    {
+      "item": "unchanged_v52_live_collection",
+      "decision": "continue",
+      "expected_upside": "Obtain the first attributable eligible intent and resolved lifecycle without contaminating the frozen live trial.",
+      "downside": "The route may remain quiet; elapsed silence alone does not establish a defect.",
+      "live_authority": "unchanged_existing_backend"
+    }
+  ],
+  "next_highest_value_investigation": "Continue the frozen first-eligible lifecycle audit and review the first eligible intent immediately for route identity, submission freshness, action/withholding outcome, venue protection, exit behavior, and resolved after-cost economics.",
+  "source_identity": [
+    {
+      "path": "../../src/hypervector/research/cohort_signal_candidates.py",
+      "sha256": "9bbd1344f0da0d8284474018d91c54a8a8ce57961d82ef02a02f5e669b3af6f0",
+      "bytes": 11640
+    },
+    {
+      "path": "../../src/hypervector/research/cohort_signal_outcomes.py",
+      "sha256": "e86dc223ba46900885f1605822cd28a05ac815d39704b3c5f7856ed6d5a60f39",
+      "bytes": 17122
+    },
+    {
+      "path": "../../crates/hypervector-tui/src/cohort_router.rs",
+      "sha256": "3843ce1bc0c770ec69acf8cc93e1be380d45126e7d2ae22ec25c82fe65439a4a",
+      "bytes": 14795
+    }
+  ],
+  "evidence": [
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v52_one_sided_readiness_sweep_near_miss_20260816T1757Z.json",
+      "role": "immutable_exact_run_audit",
+      "sha256": "96059da86a73a17c25dce2e06beca2221e53a01a266885b227c9f523a182e290",
+      "bytes": 6547388
+    },
+    {
+      "path": "../../configs/multi_asset_growth_first_5000_evidence_bound_successor_v52.toml",
+      "role": "exact_live_profile",
+      "sha256": "bcc46284503a2b38b43ee1f6dca473d32edfb7c9f2cb5cd50dd828f9dabe00fb",
+      "bytes": 1993
+    }
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "performance_gate": false,
+  "balance_gate": false,
+  "runtime_strategy_changed": false
+}

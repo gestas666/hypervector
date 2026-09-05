@@ -8,6 +8,8 @@ fn config_app() -> App {
             venue_max_leverage: 20.0,
             margin_fraction: 0.03,
             max_notional_usd: 25.0,
+            entry_slippage_cap_fraction: None,
+            market_slippage_cap_fraction: None,
             stop_bps: 80.0,
             maximum_hold_seconds: 28_800,
         })
@@ -138,12 +140,11 @@ fn stages_a_complete_restart_only_profile_from_the_config_editor() {
         request["settings"]["providers"].as_array().unwrap().len(),
         1
     );
-    assert!(
-        app.cohort_notice
-            .as_deref()
-            .unwrap()
-            .contains("STAGED PROFILE")
-    );
+    assert!(app
+        .cohort_notice
+        .as_deref()
+        .unwrap()
+        .contains("STAGED PROFILE"));
 }
 
 #[test]
@@ -160,12 +161,10 @@ fn refuses_to_stage_profile_while_live_execution_is_armed() {
 
     app.activate_cohort_config_row();
 
-    assert!(
-        fs::read_dir(temporary.path().join("pending"))
-            .expect("pending")
-            .next()
-            .is_none()
-    );
+    assert!(fs::read_dir(temporary.path().join("pending"))
+        .expect("pending")
+        .next()
+        .is_none());
     assert!(app.cohort_notice.as_deref().unwrap().contains("DISARM"));
 }
 
@@ -227,6 +226,8 @@ fn renders_running_and_staged_entry_context_as_distinct_values() {
             current_provider_execution_scopes: None,
             current_provider_execution_directions: None,
             current_asset_sizing: None,
+            current_asset_entry_slippage_caps: None,
+            current_asset_market_slippage_caps: None,
             current_entry_context_overrides: Some(
                 [(
                     "range_onset_bidirectional_v1|ETH".into(),
@@ -288,6 +289,8 @@ fn renders_the_external_next_flat_profile_and_restart_blockers() {
             ("HYPE".into(), pending_asset(75.0)),
             ("SOL".into(), pending_asset(75.0)),
         ])),
+        current_asset_entry_slippage_caps: None,
+        current_asset_market_slippage_caps: None,
         current_entry_context_overrides: Some(BTreeMap::new()),
         current_provider_sizing_overrides: Some(BTreeMap::new()),
         current_provider_directional_sizing_overrides: None,
@@ -297,6 +300,7 @@ fn renders_the_external_next_flat_profile_and_restart_blockers() {
                 maximum_hold_seconds: 28_800,
                 maximum_hold_policy: "extend_while_regime_supported".into(),
                 hard_maximum_hold_seconds: Some(86_400),
+                maximum_hold_evidence_maximum_age_seconds: None,
                 provider_recipe_exit_policy: "ignore".into(),
                 profit_lock_policy: "none".into(),
                 profit_lock_activation_bps: None,
@@ -340,7 +344,7 @@ fn renders_the_external_next_flat_profile_and_restart_blockers() {
     assert!(screen.contains("WAIT FOR FLAT + NO ORDERS"), "{screen}");
     assert!(screen.contains("AUTO RESTART NO"), "{screen}");
     assert!(
-        screen.contains("NEXT CAPS BTC $25 / ETH $25 / HYPE $75 / SOL $75"),
+        screen.contains("NEXT TIERS 5.0x/3.00%/$75 HYPE,SOL | 5.0x/3.00%/$25 BTC,ETH"),
         "{screen}"
     );
     assert!(
@@ -391,6 +395,8 @@ fn renders_effective_v35_against_exact_staged_v36_route_removals() {
         ])),
         current_provider_execution_directions: None,
         current_asset_sizing: None,
+        current_asset_entry_slippage_caps: None,
+        current_asset_market_slippage_caps: None,
         current_entry_context_overrides: Some(BTreeMap::new()),
         current_provider_sizing_overrides: Some(BTreeMap::new()),
         current_provider_directional_sizing_overrides: None,

@@ -6,6 +6,10 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 import math
 
+from hypervector.live.cohort_execution_plan_validation import (
+    CohortExecutionPlanError,
+    validate_profit_lock_contract,
+)
 from hypervector.research.cohort_live_audit_values import (
     mapping,
     mapping_list,
@@ -150,22 +154,20 @@ def _parse_profit_lock(
     symbol: str,
 ) -> tuple[str, float | None, float | None, float | None]:
     policy = text(values.get("profit_lock_policy", "none"), "profit lock policy")
-    raw = (
+    raw_values = (
         values.get("profit_lock_activation_bps"),
         values.get("profit_lock_floor_bps"),
         values.get("profit_lock_giveback_bps"),
     )
-    if policy == "none":
-        if any(value is not None for value in raw):
-            raise ValueError(f"{symbol} disabled profit lock defines parameters")
-        return policy, None, None, None
-    if policy != "completed_bar_trailing" or any(value is None for value in raw):
-        raise ValueError(f"{symbol} profit lock contract is incomplete")
-    activation, floor, giveback = (
-        _positive_number(value, f"{symbol} profit lock") for value in raw
+    parsed = tuple(
+        None if value is None else _positive_number(value, f"{symbol} profit lock")
+        for value in raw_values
     )
-    if floor > activation:
-        raise ValueError(f"{symbol} profit lock floor exceeds activation")
+    activation, floor, giveback = parsed
+    try:
+        validate_profit_lock_contract(policy, activation, floor, giveback)
+    except CohortExecutionPlanError as exc:
+        raise ValueError(f"{symbol} profit lock contract is invalid: {exc}") from exc
     return policy, activation, floor, giveback
 
 

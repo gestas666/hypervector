@@ -1,0 +1,131 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "eth-breakout-precompression-pullback",
+  "revision_number": 9,
+  "supersedes_revision_id": "eth-breakout-precompression-pullback-v8",
+  "created_at_utc": "2026-08-17T14:24:00Z",
+  "status": "prospective_window_collecting_no_eligible_signal",
+  "symbol": "ETH",
+  "strategy_id": "eth_breakout_precompression_pullback_bidirectional_v1",
+  "hypothesis": "The unchanged pooled ETH compression-pullback route may add portfolio cadence if a source-compatible prospective window produces attributable, technically resolved long and short lifecycles with positive after-cost economics that do not depend on one winner.",
+  "decision": "Continue the isolated report-only observer unchanged. Do not add ETH, relax an entry condition, retune a parameter, or infer signal cadence from repeated minute evaluations.",
+  "why_this_revision": "The first cutoff-bound evidence now quantifies readiness depth. It is technically complete, but no evaluation exceeded one of three entry conditions and no short-side evaluation occurred.",
+  "frozen_identity": {
+    "run_id": "bidirectional-observe-1786973060386",
+    "profile_id": "multi_asset_eth_pullback_forward_observer_v1",
+    "profile_fingerprint": "5761fe86d7b853629a2b982c6c41c103e8a11f1d8d901703aaac2dacfe27754d",
+    "strategy_id": "eth_breakout_precompression_pullback_bidirectional_v1",
+    "symbol": "ETH",
+    "sides": [
+      "long",
+      "short"
+    ],
+    "timeframe": "1m",
+    "stop_bps": 60.0,
+    "target_policy": "none",
+    "maximum_hold_seconds": 43200
+  },
+  "prospective_window": {
+    "start_utc": "2026-08-17T13:45:00Z",
+    "start_ms": 1786974300000,
+    "last_observed_at_utc": "2026-08-17T14:23:22.449469+00:00",
+    "decision_policy": "decision_time_ms_greater_than_or_equal_to_start_ms",
+    "pre_cutoff_evaluations_excluded": 21,
+    "end_policy": "open_until_superseded_or_minimum_evidence_resolves"
+  },
+  "observations": {
+    "evaluations": 39,
+    "eligible_evaluations": 0,
+    "routed_actions": 0,
+    "withheld_intents": 0,
+    "by_side": {
+      "long": 39,
+      "short": 0
+    },
+    "blocker_counts": {
+      "canonical_breakout_onset_absent": 39,
+      "prior_compression_absent": 39,
+      "directional_pullback_absent": 14
+    },
+    "readiness": {
+      "maximum_fraction": 0.3333333333333333,
+      "maximum_conditions_met": 1,
+      "conditions_required": 3,
+      "evaluations_at_maximum": 25,
+      "zero_condition_evaluations": 14,
+      "sampling_basis": "completed_minute_evaluations",
+      "independent_setup_count_claimed": false
+    }
+  },
+  "interpretation": {
+    "entry_near_miss_observed": false,
+    "cadence_estimate_updated": false,
+    "profitability_updated": false,
+    "current_evidence": "The observer is functioning, but the first 39 post-cutoff evaluations did not contain a fresh breakout onset or prior compression. Repeated minute rows describe one short market window and are not independent setups.",
+    "comparison_with_no_action": "Keeping v53 unchanged remains preferred because the ETH observer has not produced a qualifying counterfactual entry or resolved lifecycle.",
+    "minimum_update_evidence": "At least one source-attributable eligible event on each configured side with complete decision, book, stop path, exact costs, and resolved lifecycle evidence. Any approval-ready recommendation must remain positive after removing its largest winner."
+  },
+  "technical_validation": {
+    "complete": true,
+    "duplicate_evaluations": 0,
+    "future_decisions": 0,
+    "technical_gaps": [],
+    "source_prefix_immutable": true
+  },
+  "risks_and_failure_modes": [
+    "Thirty-nine minute evaluations cover less than one hour and cannot validate or falsify a weekly cadence estimate.",
+    "All observed evaluations were long-side, so bidirectional behavior is untested.",
+    "Historical edge is small, selection-sensitive, and largest-winner dependent in the opened final block.",
+    "An eligible observer signal is not an executable result until its causal risk and cost path resolves.",
+    "Changing a filter during this window would invalidate the preregistered comparison."
+  ],
+  "confidence": {
+    "prospective_boundary_integrity": "high",
+    "technical_observer_health": "high",
+    "claim_that_no_entry_nearmiss_occurred_in_this_prefix": "high",
+    "repeatable_profit_edge": "low",
+    "future_live_suitability": "unknown"
+  },
+  "contract": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_promotion": false,
+    "runtime_strategy_changed": false,
+    "v53_changed": false,
+    "orders_supported": false,
+    "no_parameter_retuning_during_window": true
+  },
+  "explicit_approval_requested": false,
+  "source_evidence": [
+    {
+      "path": "docs/research-journal/eth-breakout-precompression-pullback-v8.json",
+      "sha256": "1d2c6f88ccf8ee9e326cc33dd3f7ccdd0da652ddbcccce769912af0dedc6f507",
+      "bytes": 8031,
+      "role": "preregistered_cutoff_and_acceptance_contract"
+    },
+    {
+      "path": "data/logs/research/bidirectional_cohort/eth_pullback_prospective_window_20260817T1423Z_v3.json",
+      "sha256": "e10cb9d02d57aac0c84a12893f5119796958649bb59767076deed1e585708041",
+      "bytes": 5863,
+      "role": "immutable_cutoff_bound_observer_prefix"
+    },
+    {
+      "path": "src/hypervector/research/cohort_observer_prospective_window.py",
+      "sha256": "bc0e4f8e56c2b72135913558b267599bed235ba0dd6d9cf04d4184d0f8b6500f",
+      "bytes": 12357,
+      "role": "prospective_window_and_readiness_audit"
+    },
+    {
+      "path": "tests/test_cohort_observer_prospective_window.py",
+      "sha256": "097b426217c475959f2733ec366bb257f82bdd6b4b88330b1018ffad09eaffd4",
+      "bytes": 6326,
+      "role": "cutoff_identity_and_readiness_regressions"
+    },
+    {
+      "path": "configs/research/multi_asset_eth_pullback_forward_observer_v1.toml",
+      "sha256": "68627268fa753d09d7e8284a3b49293564ea155d23de1c17da2ad2061184b9c5",
+      "bytes": 901,
+      "role": "exact_report_only_observer_configuration"
+    }
+  ]
+}

@@ -1,0 +1,355 @@
+{
+  "surface": "report",
+  "manifest": {
+    "version": 1,
+    "surface": "report",
+    "title": "V56 Live Cutover and First Forward Review",
+    "description": "Source-bound technical and economic review of the V56 cutover, active route readiness, and the preregistered SPCX cash-open experiment.",
+    "generatedAt": "2026-08-18T13:53:10Z",
+    "cards": [
+      {
+        "id": "collateral-card",
+        "description": "Execution collateral reported by the live venue checkpoint.",
+        "dataset": "headline",
+        "sourceId": "v56-checkpoint",
+        "metrics": [
+          {"label": "Execution collateral", "field": "execution_collateral_usd", "format": "currency"}
+        ]
+      },
+      {
+        "id": "routes-card",
+        "description": "Exact provider-symbol routes with live execution authority.",
+        "dataset": "headline",
+        "sourceId": "v56-poststart",
+        "metrics": [
+          {"label": "Executable routes", "field": "executable_routes", "format": "number"}
+        ]
+      },
+      {
+        "id": "trades-card",
+        "description": "Resolved lifecycles in the exact V56 accounting epoch.",
+        "dataset": "headline",
+        "sourceId": "v56-checkpoint",
+        "metrics": [
+          {"label": "V56 closed trades", "field": "closed_trades", "format": "number"}
+        ]
+      },
+      {
+        "id": "open-card",
+        "description": "Technically protected but economically unresolved V56 lifecycles.",
+        "dataset": "headline",
+        "sourceId": "spcx-forward-decision",
+        "metrics": [
+          {"label": "Open lifecycles", "field": "open_lifecycles", "format": "number"}
+        ]
+      },
+      {
+        "id": "faults-card",
+        "description": "Backend faulted assets at the review cutoff.",
+        "dataset": "headline",
+        "sourceId": "v56-checkpoint",
+        "metrics": [
+          {"label": "Faulted assets", "field": "faulted_assets", "format": "number"}
+        ]
+      }
+    ],
+    "charts": [
+      {
+        "id": "spcx-execution-geometry",
+        "title": "SPCX stop-to-target geometry from the actual fill",
+        "subtitle": "Signed basis-point distance from the $141.28 fill; both exit orders are resting and reduce-only.",
+        "intent": "comparison",
+        "question": "What risk and reward geometry did the live SPCX entry actually receive?",
+        "rationale": "The signed bars expose the exact 80-bps downside and 342.6-bps prior-close target without implying a realized outcome.",
+        "type": "horizontalBar",
+        "dataset": "spcx_execution_levels",
+        "sourceId": "spcx-forward-decision",
+        "encodings": {
+          "x": {"field": "level", "type": "nominal", "label": "Execution level"},
+          "y": {"field": "distance_from_fill_bps", "type": "quantitative", "label": "Distance from fill", "unit": "bps"},
+          "tooltip": [
+            {"field": "price", "type": "quantitative", "label": "Price", "format": "number"},
+            {"field": "order_type", "type": "text", "label": "Order type"},
+            {"field": "status", "type": "text", "label": "Status"},
+            {"field": "gross_price_usd", "type": "quantitative", "label": "Gross price PnL at level", "format": "currency"}
+          ]
+        },
+        "referenceLines": [
+          {"axis": "y", "value": 0, "label": "Entry fill", "color": "neutral", "lineStyle": "dashed"}
+        ],
+        "layout": "full",
+        "maxRows": 3
+      }
+    ],
+    "tables": [
+      {
+        "id": "route-status",
+        "title": "Active V56 route readiness",
+        "subtitle": "Latest completed decision for each frozen route; readiness is diagnostic and does not override its signal contract.",
+        "dataset": "route_status",
+        "sourceId": "v56-checkpoint",
+        "layout": "full",
+        "defaultSort": {"field": "priority", "direction": "asc"},
+        "columns": [
+          {"field": "priority", "label": "Priority", "format": "number"},
+          {"field": "asset", "label": "Asset"},
+          {"field": "route", "label": "Route"},
+          {"field": "side", "label": "Latest side"},
+          {"field": "readiness_pct", "label": "Readiness", "format": "number", "unit": "%"},
+          {"field": "latest_reason", "label": "Current reason"},
+          {"field": "historical_cadence", "label": "Prior cadence evidence"}
+        ]
+      },
+      {
+        "id": "forward-experiments",
+        "title": "Prospective experiment queue",
+        "subtitle": "Predeclared minimum evidence prevents interpreting sparse outcomes after the fact.",
+        "dataset": "experiments",
+        "sourceId": "v56-digest",
+        "layout": "full",
+        "defaultSort": {"field": "priority", "direction": "asc"},
+        "columns": [
+          {"field": "priority", "label": "Priority", "format": "number"},
+          {"field": "hypothesis", "label": "Hypothesis"},
+          {"field": "status", "label": "Status"},
+          {"field": "minimum_evidence", "label": "Minimum evidence"}
+        ]
+      },
+      {
+        "id": "spcx-evidence",
+        "title": "SPCX evidence boundary",
+        "subtitle": "Historical development economics are encouraging but technically incomplete; the live result remains prospective.",
+        "dataset": "spcx_evidence",
+        "sourceId": "spcx-development",
+        "layout": "full",
+        "columns": [
+          {"field": "measure", "label": "Measure"},
+          {"field": "value", "label": "Observed value"},
+          {"field": "interpretation", "label": "Interpretation"}
+        ]
+      }
+    ],
+    "blocks": [
+      {
+        "id": "title",
+        "type": "markdown",
+        "body": "# V56 Live Cutover and First Forward Review"
+      },
+      {
+        "id": "executive-summary",
+        "type": "markdown",
+        "sourceId": "v56-checkpoint",
+        "body": "## Executive Summary\n\n- **V56 is live and technically consistent.** The backend is healthy, the exact profile fingerprint matches disk, and all five provider-symbol routes are covered.\n- **The preregistered SPCX event fired.** A fresh long decision filled 34.72 SPCX at $141.28. The venue reports exactly one reduce-only 80-bps stop at $140.15 and one reduce-only prior-close target at $146.12.\n- **The economic result is unresolved.** The exact V56 epoch remains 0W/0L because the first lifecycle is open. Its current marks are provisional and cannot establish an edge.\n- **No further live change is recommended from this prefix.** Technical entry/protection evidence is high confidence; future profitability remains low confidence until this and additional both-side lifecycles resolve."
+      },
+      {
+        "id": "headline",
+        "type": "metric-strip",
+        "cardIds": ["collateral-card", "routes-card", "trades-card", "open-card", "faults-card"]
+      },
+      {
+        "id": "runtime",
+        "type": "markdown",
+        "sourceId": "v56-poststart",
+        "body": "## The cutover passed its technical contract\n\nThe post-start acceptance bound the live run to the exact V56 profile, five routes, seven directional scopes, current configuration, fresh heartbeat, complete regime telemetry for core assets, and zero unprotected positions. A later profile mismatch, stale heartbeat, route omission, duplicate position, or unreconciled order would falsify this assessment."
+      },
+      {
+        "id": "route-status-block",
+        "type": "table",
+        "tableId": "route-status"
+      },
+      {
+        "id": "spcx-execution-heading",
+        "type": "markdown",
+        "sourceId": "spcx-forward-decision",
+        "body": "## The live entry has asymmetric price geometry\n\nThe actual fill improved on the decision reference by 25.4 bps. The fixed stop represents about $39.23 of gross price risk, while the prior-close target represents about $168.04 of gross price reward, or 4.28R before exit costs and funding. This is order geometry, not expected value or realized profit."
+      },
+      {
+        "id": "spcx-execution-chart-block",
+        "type": "chart",
+        "chartId": "spcx-execution-geometry"
+      },
+      {
+        "id": "experiment-heading",
+        "type": "markdown",
+        "sourceId": "spcx-preregistration",
+        "body": "## SPCX is now the highest-value active lifecycle\n\nThe setup was frozen before the opening bar. The 09:45 ET decision was a fresh eligible long with 7,431 receipt-causal source trades, a 20.032-second submission age inside the 30-second limit, and no blockers. Entry and protection match the frozen target, stop, leverage, margin, and identity contract. The remaining question is the resolved economic outcome."
+      },
+      {
+        "id": "experiments-block",
+        "type": "table",
+        "tableId": "forward-experiments"
+      },
+      {
+        "id": "spcx-evidence-block",
+        "type": "table",
+        "tableId": "spcx-evidence"
+      },
+      {
+        "id": "recommendation",
+        "type": "markdown",
+        "sourceId": "v56-digest",
+        "body": "## Recommendation\n\nContinue the exact V56 live run and capture the open SPCX lifecycle end to end. Do not loosen BTC or HYPE entry logic merely because their first live prefix is quiet. The SPCX entry and venue protection passed; the next required evidence is the exact exit reason and fill, fees, funding, net PnL, MFE, MAE, and peak giveback. No additional live strategy, risk, or configuration change is currently evidence-ready."
+      },
+      {
+        "id": "questions",
+        "type": "markdown",
+        "body": "## Further Questions\n\nThe first unresolved question is whether SPCX can produce a technically complete long and short lifecycle under its exact live source. The second is whether tuned BTC v2 adds independent opportunities without displacing robust v3. The third is whether HYPE’s stricter compression alignment captures a profitable mechanism at useful cadence. Each requires compatible live evidence rather than another parameter search."
+      },
+      {
+        "id": "caveats",
+        "type": "markdown",
+        "body": "## Caveats and Assumptions\n\nConfidence is **high** in the observed V56 runtime identity, entry attribution, and venue protection, **medium** in route-contract parity covered by focused tests, and **low** in future profitability. SPCX development was positive in aggregate, but 11 of 20 historical entry paths were technically unresolved. More importantly for this live long, the development long slice became negative after removing its largest winner and was unstable across folds. No performance chart is shown because zero resolved V56 lifecycles cannot support a meaningful trajectory or comparison."
+      }
+    ],
+    "sources": [
+      {
+        "id": "v56-checkpoint",
+        "label": "Live V56 checkpoint",
+        "path": "data/runtime/bidirectional_cohort/latest_checkpoint.json",
+        "query": {
+          "engine": "json",
+          "language": "sql",
+          "sql": "SELECT * FROM read_json_auto('data/runtime/bidirectional_cohort/latest_checkpoint.json')",
+          "description": "Backend-authored run identity, lifecycle, venue portfolio, readiness, routing, and performance telemetry at the report cutoff.",
+          "tables_used": ["data/runtime/bidirectional_cohort/latest_checkpoint.json"],
+          "filters": ["Exact active V56 run and accounting epoch at the report cutoff"],
+          "metric_definitions": ["Execution collateral is the venue-reported collateral available to the live execution account; closed and open lifecycle counts are bound to the exact V56 accounting epoch."]
+        }
+      },
+      {
+        "id": "v56-digest",
+        "label": "V56 continuous-improvement digest",
+        "path": "data/runtime/bidirectional_cohort/latest_improvement_digest.json",
+        "query": {
+          "engine": "json",
+          "language": "sql",
+          "sql": "SELECT * FROM read_json_auto('data/runtime/bidirectional_cohort/latest_improvement_digest.json')",
+          "description": "Report-only opportunity ranking, hypothesis ledger, diagnostics, and human approval boundary.",
+          "tables_used": ["data/runtime/bidirectional_cohort/latest_improvement_digest.json"],
+          "filters": ["Exact V56 profile fingerprint; report-only hypotheses and evidence"],
+          "metric_definitions": ["Experiment priority is the monitor's report-only research ordering and does not grant execution authority."]
+        }
+      },
+      {
+        "id": "v56-poststart",
+        "label": "V56 post-start acceptance",
+        "path": "data/logs/research/bidirectional_cohort/v56_poststart_acceptance_20260818T125747Z.json",
+        "query": {
+          "engine": "json",
+          "language": "sql",
+          "sql": "SELECT * FROM read_json_auto('data/logs/research/bidirectional_cohort/v56_poststart_acceptance_20260818T125747Z.json')",
+          "description": "Immutable technical acceptance for the exact live V56 run.",
+          "tables_used": ["data/logs/research/bidirectional_cohort/v56_poststart_acceptance_20260818T125747Z.json"],
+          "filters": ["Exact V56 run, profile fingerprint, five routes, and seven directional scopes"],
+          "metric_definitions": ["Executable routes count exact provider-symbol routes that passed the immutable V56 post-start acceptance."]
+        }
+      },
+      {
+        "id": "v56-config",
+        "label": "Exact V56 live configuration",
+        "path": "configs/multi_asset_growth_first_5000_btc_tuned_v2_increment_v56.toml",
+        "query": {
+          "engine": "toml",
+          "description": "Frozen assets, providers, sizing, execution, and exit contracts."
+        }
+      },
+      {
+        "id": "spcx-preregistration",
+        "label": "SPCX cash-open forward preregistration",
+        "path": "docs/research-journal/v56-spcx-cash-open-forward-preregistration-20260818-v1.json",
+        "query": {
+          "engine": "json",
+          "description": "Prospective hypothesis, fixed decision window, exact strategy contract, outcomes, and falsifiers."
+        }
+      },
+      {
+        "id": "spcx-development",
+        "label": "SPCX cash-open development evidence",
+        "path": "data/logs/research/xyz_spcx_cash_open_gap_reversal_development_20260817_v2.json",
+        "query": {
+          "engine": "json",
+          "language": "sql",
+          "sql": "SELECT * FROM read_json_auto('data/logs/research/xyz_spcx_cash_open_gap_reversal_development_20260817_v2.json')",
+          "description": "Development-only nominal/stress economics, fold behavior, and unresolved exact-path evidence.",
+          "tables_used": ["data/logs/research/xyz_spcx_cash_open_gap_reversal_development_20260817_v2.json"],
+          "filters": ["Development partition only; nominal and stress results remain separated"],
+          "metric_definitions": ["Stress net and profit factor include modeled friction; without-largest-winner metrics remove the largest profitable lifecycle from the relevant slice."]
+        }
+      },
+      {
+        "id": "spcx-forward-decision",
+        "label": "SPCX preregistered forward decision",
+        "path": "docs/research-journal/v56-spcx-cash-open-forward-decision-20260818-v1.json",
+        "query": {
+          "engine": "json",
+          "language": "sql",
+          "sql": "SELECT * FROM read_json_auto('docs/research-journal/v56-spcx-cash-open-forward-decision-20260818-v1.json')",
+          "description": "Exact decision, entry fill, fee, freshness, stop, target, venue reconciliation, and open-lifecycle boundary.",
+          "tables_used": ["docs/research-journal/v56-spcx-cash-open-forward-decision-20260818-v1.json"],
+          "filters": ["Exact V56 run, SPCX route, and 2026-08-18 13:45 UTC decision"],
+          "metric_definitions": ["Distance from fill is signed basis points from the actual $141.28 fill; gross price PnL excludes future exit costs and funding."]
+        }
+      },
+      {
+        "id": "v56-proposal",
+        "label": "V56 tuned-BTC incremental proposal",
+        "path": "docs/research-journal/v56-btc-tuned-v2-increment-proposal-v1.json",
+        "query": {
+          "engine": "json",
+          "description": "Approved incremental change, historical cadence evidence, risks, and success criteria."
+        }
+      }
+    ]
+  },
+  "snapshot": {
+    "version": 1,
+    "generatedAt": "2026-08-18T13:53:10Z",
+    "status": "partial",
+    "datasets": {
+      "headline": [
+        {"execution_collateral_usd": 4917.92405849, "executable_routes": 5, "closed_trades": 0, "open_lifecycles": 1, "faulted_assets": 0}
+      ],
+      "route_status": [
+        {"priority": 1, "asset": "xyz:SPCX", "route": "Cash-open gap reversal", "side": "Long", "readiness_pct": 100.0, "latest_reason": "Eligible; filled and protected; lifecycle open", "historical_cadence": "20 development trades; ~3.94/week"},
+        {"priority": 2, "asset": "HYPE", "route": "Compression alignment v2", "side": "Long context", "readiness_pct": 0.0, "latest_reason": "No fresh breakout or compression", "historical_cadence": "41 causal development trades"},
+        {"priority": 3, "asset": "BTC", "route": "Hulk robust v3 short", "side": "Short", "readiness_pct": 50.0, "latest_reason": "Expansion absent; score 6/7", "historical_cadence": "66 signals / 338 days"},
+        {"priority": 4, "asset": "BTC", "route": "Hulk tuned v2 short", "side": "Short", "readiness_pct": 50.0, "latest_reason": "Expansion absent; score 6/8", "historical_cadence": "106 trades / 338 days; ~2.2/week"},
+        {"priority": 5, "asset": "BTC", "route": "Liquidity sweep long", "side": "Long", "readiness_pct": 50.0, "latest_reason": "No prior-low sweep; volume below 1.20x", "historical_cadence": "6 development signals / 92 days"}
+      ],
+      "spcx_execution_levels": [
+        {"level": "Protective stop", "distance_from_fill_bps": -79.98301245753114, "price": 140.15, "order_type": "Stop Market", "status": "resting_reduce_only", "gross_price_usd": -39.2336, "order_id": 518987920034, "size": 34.72},
+        {"level": "Entry fill", "distance_from_fill_bps": 0.0, "price": 141.28, "order_type": "Taker IOC", "status": "filled", "gross_price_usd": 0.0, "order_id": 518987874507, "size": 34.72},
+        {"level": "Prior-close target", "distance_from_fill_bps": 342.5821064552661, "price": 146.12, "order_type": "Limit", "status": "resting_reduce_only", "gross_price_usd": 168.0448, "order_id": 518987960820, "size": 34.72}
+      ],
+      "experiments": [
+        {"priority": 1, "hypothesis": "SPCX prospective cash-open decision and lifecycle", "status": "Open lifecycle", "minimum_evidence": "Resolve this long, then obtain a fully attributable resolved lifecycle per configured side"},
+        {"priority": 2, "hypothesis": "First exact tuned-BTC-v2 lifecycle", "status": "Being tested", "minimum_evidence": "Attributed signal, action, fill, protection, costs, and resolved exit"},
+        {"priority": 3, "hypothesis": "First resolved V56 portfolio lifecycle", "status": "Being tested", "minimum_evidence": "Every eligible decision and fill reconciled through completion"}
+      ],
+      "spcx_evidence": [
+        {"measure": "Development stress result", "value": "+$418.13; PF 1.815", "interpretation": "Promising development result, not OOS proof"},
+        {"measure": "Without largest winner", "value": "+$225.28", "interpretation": "Aggregate result is not solely one winner"},
+        {"measure": "First chronological stress fold", "value": "-$128.25", "interpretation": "Temporal stability is mixed"},
+        {"measure": "Long stress without largest winner", "value": "-$75.05; PF 0.737", "interpretation": "The configured long side is not established as robust"},
+        {"measure": "Unresolved exact entry paths", "value": "11 of 20", "interpretation": "Historical qualification remains technically blocked"},
+        {"measure": "Prospective live decision", "value": "Long 34.72 @ $141.28", "interpretation": "Fresh, filled, and protected; economic outcome open"},
+        {"measure": "Prospective live outcomes", "value": "0 resolved; 1 open", "interpretation": "Profitability confidence remains low"}
+      ]
+    }
+  },
+  "sources": [
+    {"id": "v56-checkpoint", "label": "Live V56 checkpoint", "path": "data/runtime/bidirectional_cohort/latest_checkpoint.json"},
+    {"id": "v56-digest", "label": "V56 continuous-improvement digest", "path": "data/runtime/bidirectional_cohort/latest_improvement_digest.json"},
+    {"id": "v56-poststart", "label": "V56 post-start acceptance", "path": "data/logs/research/bidirectional_cohort/v56_poststart_acceptance_20260818T125747Z.json"},
+    {"id": "v56-config", "label": "Exact V56 live configuration", "path": "configs/multi_asset_growth_first_5000_btc_tuned_v2_increment_v56.toml"},
+    {"id": "spcx-preregistration", "label": "SPCX cash-open forward preregistration", "path": "docs/research-journal/v56-spcx-cash-open-forward-preregistration-20260818-v1.json"},
+    {"id": "spcx-development", "label": "SPCX cash-open development evidence", "path": "data/logs/research/xyz_spcx_cash_open_gap_reversal_development_20260817_v2.json"},
+    {"id": "spcx-forward-decision", "label": "SPCX preregistered forward decision", "path": "docs/research-journal/v56-spcx-cash-open-forward-decision-20260818-v1.json"},
+    {"id": "v56-proposal", "label": "V56 tuned-BTC incremental proposal", "path": "docs/research-journal/v56-btc-tuned-v2-increment-proposal-v1.json"}
+  ],
+  "package_info": {
+    "root": "docs/reports/2026-08-18-v56-live-forward-review",
+    "manifestPath": "artifact.json",
+    "snapshotPath": "artifact.json"
+  }
+}

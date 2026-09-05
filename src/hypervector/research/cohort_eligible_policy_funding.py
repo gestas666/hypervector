@@ -78,6 +78,21 @@ def covered_funding_bps(
     return -direction * rate * 10_000.0
 
 
+def exact_depth_funding_bounds(report: Mapping[str, object]) -> tuple[int, int] | None:
+    """Return complete funding bounds for entered exact-depth lifecycles."""
+    rows = [
+        row
+        for field in ("latest_attempts", "latest_executions")
+        for row in _report_rows(report.get(field), field)
+        if row.get("entry_time_ms") is not None
+    ]
+    if not rows:
+        return None
+    starts = [_report_time(row.get("entry_time_ms"), "entry time") for row in rows]
+    ends = [_report_end_time(row) for row in rows]
+    return min(starts), max(ends)
+
+
 def parse_official_funding_history(
     rows: Sequence[Mapping[str, object]],
     *,
@@ -101,6 +116,27 @@ def parse_official_funding_history(
         requested_end_ms=requested_end_ms,
         events=tuple(sorted(events, key=lambda event: event.timestamp_ms)),
     )
+
+
+def _report_rows(value: object, label: str) -> tuple[Mapping[str, object], ...]:
+    if not isinstance(value, Sequence) or isinstance(value, (str, bytes)):
+        raise ValueError(f"{label} must be a sequence")
+    if not all(isinstance(row, Mapping) for row in value):
+        raise ValueError(f"{label} rows must be mappings")
+    return tuple(row for row in value if isinstance(row, Mapping))
+
+
+def _report_end_time(row: Mapping[str, object]) -> int:
+    for field in ("exit_time_ms", "current_exit_time_ms", "deadline_time_ms"):
+        if row.get(field) is not None:
+            return _report_time(row.get(field), field)
+    raise ValueError("entered exact-depth lifecycle has no terminal observation time")
+
+
+def _report_time(value: object, label: str) -> int:
+    if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+        raise ValueError(f"{label} must be a nonnegative integer")
+    return value
 
 
 def _finite_float(value: object, label: str) -> float:

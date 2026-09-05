@@ -49,6 +49,16 @@ def preflight_fee_payload(
         "aligned_quote": False,
         "aligned_quote_status": "unresolved_conservative_false",
     }
+    if hip3_metadata.deployer_fee_scale is None:
+        return {
+            **hip3_common,
+            "effective_fee_status": "unresolved_deployer_fee_scale",
+            "effective_maker_fee_rate": None,
+            "effective_taker_fee_rate": None,
+            "one_way_maker_fee_bps": None,
+            "one_way_taker_fee_bps": None,
+            "fee_formula_source": None,
+        }
     if hip3_metadata.growth_mode is None:
         return {
             **hip3_common,

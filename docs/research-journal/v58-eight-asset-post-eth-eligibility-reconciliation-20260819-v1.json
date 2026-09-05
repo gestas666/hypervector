@@ -1,0 +1,145 @@
+{
+  "schema_version": "v58_eight_asset_post_eth_eligibility_reconciliation_v1",
+  "generated_at_utc": "2026-08-19T09:04:00Z",
+  "status": "EIGHT_ASSETS_OBSERVED_ONE_ELIGIBLE_LIFECYCLE_OPEN_NO_LIVE_CHANGE_PROPOSED",
+  "mode": "report_only",
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false,
+  "live_configuration_changed": false,
+  "problem_restatement": {
+    "requested_topology": "four crypto assets and four non-crypto assets with ten account position slots",
+    "question": "Does the post-ETH-event V58 evidence support representing every configured executable route as corrected and live-ready?",
+    "success_criterion": "Reconcile exact candidate topology, prospective observer evidence, source-compatible route economics, configured exits, and exact $5,000 stress without pooling incompatible identities."
+  },
+  "exact_candidate": {
+    "profile_id": "multi_asset_growth_first_5000_eight_asset_incremental_v58",
+    "profile_fingerprint": "8a04636c9ff60a7eae141381cb540d7c6ceed081097cda7d5e465d48faa5022b",
+    "assets": [
+      "BTC",
+      "ETH",
+      "SOL",
+      "HYPE",
+      "xyz:SP500",
+      "xyz:SPCX",
+      "xyz:SNDK",
+      "xyz:BRENTOIL"
+    ],
+    "maximum_positions": 10,
+    "effective_unique_asset_concurrency": 8,
+    "provider_count": 9,
+    "provider_symbol_route_count": 10,
+    "all_eight_assets_have_execution_authority_in_the_candidate_file": true,
+    "current_process_authority": "observer_only_no_execution"
+  },
+  "prospective_prefix": {
+    "run_id": "bidirectional-observe-1787127644202",
+    "first_observed_at_utc": "2026-08-19T08:20:45.562891+00:00",
+    "last_observed_at_utc": "2026-08-19T09:03:05.187899+00:00",
+    "poll_cycles": 169,
+    "successful_poll_cycles": 168,
+    "degraded_poll_cycles": 1,
+    "degraded_reason": "hyperliquid_public_l2 transport_timeout_retry_exhausted",
+    "technical_complete": true,
+    "technical_gaps": [],
+    "eligible_evaluations": 1,
+    "strategy_intents": 1,
+    "routed_actions": 0,
+    "withheld_intents": 1,
+    "withheld_reason": "observe_mode_no_execution",
+    "orders_or_fills_observed": false
+  },
+  "first_new_eligible_lifecycle": {
+    "symbol": "ETH",
+    "provider_id": "eth_breakout_precompression_pullback_bidirectional_v1",
+    "side": "long",
+    "decision_time_ms": 1787128800000,
+    "modeled_entry_price": 1924.6,
+    "fixed_stop_bps": 60.0,
+    "modeled_stop_price": 1913.0524,
+    "maximum_hold_hours": 12,
+    "status": "open_exit_pending",
+    "pnl_claimed": false,
+    "interpretation": "The lifecycle is adverse but unresolved. It cannot yet be counted as a win, loss, or completed trade."
+  },
+  "exact_configured_stress": {
+    "account_value_usd": 5000.0,
+    "route_aware_maximum_margin_fraction": 0.46,
+    "maximum_margin_usd": 2300.0,
+    "maximum_hypothetical_gross_notional_usd": 16500.0,
+    "maximum_simultaneous_positions": 8,
+    "stacked_p99_stop_wave_loss_usd": 180.30417600407134,
+    "stacked_p99_stop_wave_loss_pct_equity": 3.6060835200814267,
+    "interpretation": "Deterministic simultaneous-stop sensitivity using frozen marginal p99 friction inputs; not a joint probability, realized-loss ceiling, or profitability forecast."
+  },
+  "route_disposition": {
+    "BTC": "retained incumbent routes with low repeatability confidence; technically source-compatible",
+    "HYPE": "development-promising alignment route with sparse exact forward evidence and fragile short-side robustness",
+    "ETH": "high historical cadence but adverse exact forward evidence; second exact lifecycle remains open",
+    "SOL": "short-only candidate with positive development and pseudo-holdout but materially negative validation and negative pooled stress after largest-winner removal",
+    "xyz:SP500": "source-native fresh15 v3 route with one prior profitable short, no exact long, and a newer short currently censored by stale or missing profit-lock candle evidence",
+    "xyz:SPCX": "cash-open short candidate with positive development but unresolved archive risk paths and no resolved prospective short",
+    "xyz:SNDK": "transferred pressure short lacks current-side expectancy; older incompatible long evidence contains two stop losses",
+    "xyz:BRENTOIL": "transferred pressure route lacks stable current-identity expectancy; older route was negative and source-native oil-shock stress failed"
+  },
+  "decision": {
+    "eight_asset_visibility_and_collection": "continue",
+    "claim_all_eight_routes_are_repaired_or_validated": false,
+    "live_cutover_supported_by_current_evidence": false,
+    "performance_gate_applied": false,
+    "reason": "The charter permits an explicitly approved ungated trial, but technical readiness, exact accounting/rollback artifacts, and honest route-level uncertainty must still be resolved before arming. No implicit performance abort is asserted here."
+  },
+  "single_highest_value_next_investigation": {
+    "action": "Resolve the frozen ETH lifecycle at its unchanged 60-bps stop or 12-hour maximum hold, then update the route ranking without retuning or opening validation data.",
+    "why": "It is the first new eligible V58 route event, has exact source/depth/funding instrumentation, and directly tests the highest-cadence added crypto route under the actual proposed contract."
+  },
+  "operational_work_remaining_before_any_cutover": [
+    "freeze the exact human-approved route, side, sizing, leverage, and exit set",
+    "generate an accounting epoch bound to that exact profile",
+    "write and test the exact transition and rollback contract",
+    "regenerate a fresh flat and order-free eight-asset preflight",
+    "verify all-eight-asset TUI and post-start acceptance against the exact identity",
+    "require explicit live-risk approval for the final frozen profile"
+  ],
+  "evidence": [
+    {
+      "path": "configs/multi_asset_growth_first_5000_eight_asset_incremental_v58.toml",
+      "bytes": 6142,
+      "sha256": "1c1c1656233b074df2ed3adcee8cb8cb2c58f0d191cc9f9ac34799478fca3378"
+    },
+    {
+      "path": "data/logs/research/bidirectional_cohort/v58_eight_asset_observer_audit_20260819T0902Z_v4.json",
+      "bytes": 1759706,
+      "sha256": "d1b1cbb3e090c424ee57e0eb0c158a33964d6a3a5c13a3633ad9268679cd2364"
+    },
+    {
+      "path": "data/logs/research/bidirectional_cohort/v58_eight_asset_growth_sizing_stress_20260819_v1.json",
+      "bytes": 27102,
+      "sha256": "25e95bdd6857b486bcffb9d0fa102712e1687cbe4e0b75dcd2553085bdd13c85"
+    },
+    {
+      "path": "data/logs/research/bidirectional_cohort/v58_eth_pullback_first_eligible_partial_lifecycle_20260819T0840Z_v2.json",
+      "bytes": 4091,
+      "sha256": "50edb35a2c5d2f333c7953c1148262c008f580118de7cdc7d8c44f667f999b2e"
+    },
+    {
+      "path": "data/logs/research/bidirectional_cohort/v57_final_stopped_run_audit_20260819T0835Z_v2.json",
+      "bytes": 7631100,
+      "sha256": "347bfb020d30e3245acc1908ce6fd0ede9a3ee9cec8cfc6a0f56bdff981de17d"
+    }
+  ],
+  "confidence": {
+    "topology_and_configured_risk": "high",
+    "observer_integrity": "high",
+    "route_economic_descriptions": "medium_to_high_for_historical_windows",
+    "future_profitability": "low_unverified",
+    "basis": "Exact config parsing, immutable observer and stress artifacts, source-bound route journals, and an unresolved prospective ETH lifecycle."
+  },
+  "falsifiers": [
+    "Any recorded evidence hash or byte count changes.",
+    "The ETH lifecycle resolves under a different entry, stop, fee, funding, or maximum-hold contract.",
+    "A source-compatible route reaches its preregistered evidence threshold and materially updates the route disposition.",
+    "A fresh preflight or venue rule invalidates leverage, fee, depth, or sizing assumptions.",
+    "The final human-approved profile intentionally differs from the V58 candidate summarized here."
+  ]
+}

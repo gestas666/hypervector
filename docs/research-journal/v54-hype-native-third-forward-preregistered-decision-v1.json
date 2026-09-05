@@ -1,0 +1,122 @@
+{
+  "schema_version": 1,
+  "generated_at_utc": "2026-08-18T07:30:00Z",
+  "hypothesis_id": "v54-hype-native-third-forward-preregistered-decision-v1",
+  "status": "being_tested_open_third_compatible_long_path",
+  "recommendation": "Resolve the currently open HYPE-native v3 lifecycle with exact venue-mark and official-funding evidence. Issue an approval-ready HYPE-only live-research replacement proposal only if the preregistered winner-robust threshold and every technical invariant pass.",
+  "why_now": "The active v53 compression route rejected two exact same-bar native breakout opportunities, while the isolated native route admitted them. Two earlier compatible report-only long paths total positive after funding but remain dependent on their largest winner. The open third path can resolve that specific uncertainty without changing the strategy or searching another parameter grid.",
+  "evidence_reviewed": [
+    {
+      "path": "docs/research-journal/v54-hype-native-exit-lineage-reconciliation-v1.json",
+      "finding": "The first two funded report-only paths were one loss of $12.093905 and one win of $13.754459, totaling +$1.660554 with PF 1.137305; excluding the largest winner leaves -$12.093905."
+    },
+    {
+      "path": "docs/research-journal/v54-hype-native-directional-authority-challenger-v1.json",
+      "finding": "Long entry authority is materially better than short and bidirectional authority but absolute profitability remains low confidence; short native onsets remain long-exit authority only."
+    },
+    {
+      "path": "docs/research-journal/v54-hype-native-historical-source-parity-v1.json",
+      "finding": "The original and reconstructed provider produced 38 identical normalized intents over 10,080 historical evaluations, establishing entry-mechanism parity without claiming profitable forward execution."
+    },
+    {
+      "path": "data/observe/v54_hype_native_long_challenger_continuous_20260818/decisions.jsonl",
+      "prefix_bytes": 4969166,
+      "prefix_sha256": "6558c6b91c8c288a67caba96c3a8f5f610a2d7c02e017abb3d5e42dac75461dd",
+      "finding": "At decision 1787034600000, the native long was eligible 3/3 at reference 59.676. The active compression comparator was ineligible 2/5 with authoritative compression, prior compression, and pullback blockers."
+    }
+  ],
+  "observed_problem_or_opportunity": "v53 is not technically broken; its compression-pullback mechanism intentionally misses uncompressed native breakout momentum. The restored native HYPE-only mechanism captured the current move, and exact signal-time depth supports scaling beyond the $1,250 observer notional.",
+  "applicable_market_regime": "A completed five-minute HYPE breakout onset aligned with the native structural long side. Short native onset closes an open long but cannot create a short entry.",
+  "alternatives_considered": [
+    {
+      "alternative": "Keep only v53 compression",
+      "decision": "baseline comparator",
+      "tradeoff": "preserves the selected compression hypothesis but missed both current native opportunities"
+    },
+    {
+      "alternative": "Restore bidirectional native execution",
+      "decision": "rejected",
+      "tradeoff": "short-entry development and forward evidence are materially weaker"
+    },
+    {
+      "alternative": "Transfer native breakout to other assets",
+      "decision": "rejected",
+      "tradeoff": "repeats the unsupported cross-asset transfer incident"
+    },
+    {
+      "alternative": "Add a fixed target or generic profit lock",
+      "decision": "rejected_without_new_evidence",
+      "tradeoff": "prior tests cut the large continuations on which native HYPE economics depend"
+    }
+  ],
+  "proposed_live_change": {
+    "current_status": "none_not_yet_requested",
+    "conditional_future_request": "Replace the live HYPE compression provider with the HYPE-only native long v3 provider; retain the compression route report-only as comparator.",
+    "entry_side": "long_only",
+    "short_native_onset": "close_open_long_only",
+    "protective_stop_bps": 80.0,
+    "take_profit": null,
+    "maximum_hold_seconds": 28800,
+    "cross_asset_scope": false,
+    "automatic_deployment": false
+  },
+  "expected_upside": "Restore the exact HYPE-only momentum mechanism that v53 compression omits, preserve native opposite-onset profit capture, and use the existing funded HYPE risk budget without applying the mechanism to unsupported assets.",
+  "main_risks_and_failure_modes": [
+    "The current favorable path can reverse before its configured exit.",
+    "The development long-only sample remains negative and the prior forward N=2 is winner-dependent.",
+    "A sampled BBO stop is not venue-mark truth until the exact price archive is reconciled.",
+    "The $5,000 book replay proves visible depth only at sampled entry/current books, not during every future fast-market stop.",
+    "Removing the bidirectional compression route eliminates current HYPE short-entry authority, although that authority has no compatible v53 closes."
+  ],
+  "validation_completed": {
+    "same_bar_baseline_comparison": "Two exact native entries each have feature-identical v53 comparisons; both baseline decisions were ineligible for the same three blockers.",
+    "entry_capacity": [
+      {
+        "notional_usd": 1250.0,
+        "average_entry_price": 59.663,
+        "levels_consumed": 1,
+        "complete": true
+      },
+      {
+        "notional_usd": 2500.0,
+        "average_entry_price": 59.664600115488,
+        "levels_consumed": 2,
+        "complete": true
+      },
+      {
+        "notional_usd": 5000.0,
+        "average_entry_price": 59.666165530196,
+        "levels_consumed": 4,
+        "complete": true,
+        "incremental_entry_impact_vs_1250_bps": 0.5305683918011006
+      }
+    ],
+    "technical_tests": "The same-bar comparison and exact post-close resolver suites pass; missing/mismatched comparisons, sparse marks, unconfirmed stops, stale oracles, and input drift fail closed.",
+    "live_runtime_mutated": false
+  },
+  "validation_still_required": [
+    "The open lifecycle must close by native opposite onset, protective stop, or the fixed eight-hour boundary.",
+    "Official HYPE funding must cover the exact entry-to-exit interval and use causal non-stale oracle prices.",
+    "0xArchive venue marks must continuously cover the lifecycle and agree with the reported stop/exit order.",
+    "A successor live profile, accounting epoch, flat/order-free preflight, route/exit/TUI acceptance, and rollback bundle are required if approval is later granted."
+  ],
+  "preregistered_decision_rule": {
+    "prior_two_path_net_usd_after_funding": 1.660554,
+    "prior_largest_winner_usd": 13.754459,
+    "prior_loss_usd": -12.093905,
+    "third_path_after_funding_threshold_usd": 12.093905,
+    "supportive_if": "The third lifecycle is technically resolved, mark-consistent, and net PnL after official funding is greater than $12.093905. This makes the three-path forward sample positive after removing its largest winner.",
+    "not_supportive_if": "The third lifecycle is at or below $12.093905 after funding, technically unresolved, or inconsistent with exact mark-stop timing.",
+    "selection_effect": "Supportive evidence permits an explicit approval request for a bounded live-research replacement; it does not establish durable profitability or authorize deployment automatically."
+  },
+  "success_metrics": [
+    "Positive three-path forward net after exact costs and official funding.",
+    "Positive three-path net after removing the largest winner.",
+    "Zero wrong-side, non-HYPE, duplicate, stale, unprotected, or identity-mismatched actions.",
+    "At $5,000 notional, complete sampled visible depth with incremental entry impact no worse than 5 bps versus the $1,250 tier."
+  ],
+  "failure_or_rollback_triggers": "Technical evidence failure blocks the economic decision. A later approved live route returns to report-only at a separately approved flat/order-free boundary after any unprotected exposure, wrong-side/non-HYPE action, exit-plan mismatch, or a predeclared compatible live window that is net negative after costs.",
+  "confidence_level": "High for entry identity, same-bar baseline divergence, HYPE-only scope, and sampled $5,000 entry capacity; low-to-medium for absolute profitability until the third path resolves; no claim of durable edge from N=3.",
+  "explicit_approval_requested": false,
+  "automatic_live_change": false
+}

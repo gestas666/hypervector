@@ -13,17 +13,23 @@ from pathlib import Path
 import sys
 
 from hypervector.data.oxa_storage import publish_immutable_directory, write_json
+from hypervector.live.cohort_accounting_continuation import (
+    build_accounting_continuation_manifest,
+)
 from hypervector.live.cohort_accounting_rollover import (
     build_accounting_rollover_manifest,
+    load_accounting_rollover_manifest,
 )
 from hypervector.live.cohort_prestart_backup import (
     CohortPrestartBackupError,
     verify_cohort_prestart_backup,
 )
 from hypervector.live.multi_asset_live_config import (
+    MultiAssetLiveConfig,
     MultiAssetLiveConfigError,
     load_multi_asset_live_config,
 )
+from hypervector.research.cohort_live_portfolio_archive import CohortAccountingEpoch
 from hypervector.runtime_lock import (
     RuntimeLockError,
     bidirectional_live_runtime_lock,
@@ -33,6 +39,8 @@ from hypervector.runtime_lock import (
 LockFn = Callable[[Path], AbstractContextManager[Path]]
 VerifyBackupFn = Callable[[Path], dict[str, object]]
 BuildReportFn = Callable[..., dict[str, object]]
+BuildContinuationFn = Callable[..., dict[str, object]]
+VerifyParentEpochFn = Callable[[Path, MultiAssetLiveConfig], CohortAccountingEpoch]
 NowFn = Callable[[], datetime]
 
 
@@ -44,6 +52,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--checkpoint", type=Path, required=True)
     parser.add_argument("--preflight", type=Path, required=True)
     parser.add_argument("--prestart-bundle", type=Path, required=True)
+    parser.add_argument("--parent-accounting-epoch-bundle", type=Path)
     parser.add_argument("--epoch-id", required=True)
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument(
@@ -60,24 +69,35 @@ def run_rollover(
     live_lock_fn: LockFn = bidirectional_live_runtime_lock,
     checkpoint_lock_fn: LockFn = cohort_checkpoint_runtime_lock,
     verify_backup_fn: VerifyBackupFn = verify_cohort_prestart_backup,
+    verify_parent_epoch_fn: VerifyParentEpochFn = load_accounting_rollover_manifest,
     build_report_fn: BuildReportFn = build_accounting_rollover_manifest,
+    build_continuation_fn: BuildContinuationFn = build_accounting_continuation_manifest,
     now_fn: NowFn = lambda: datetime.now(UTC),
 ) -> dict[str, object]:
     """Validate stopped state and optionally publish its accounting boundary."""
     prior = load_multi_asset_live_config(args.prior_config, mode="observe")
     successor = load_multi_asset_live_config(args.successor_config, mode="observe")
     checkpoint_path = Path(args.checkpoint)
+    parent_bundle = (
+        Path(args.parent_accounting_epoch_bundle)
+        if args.parent_accounting_epoch_bundle is not None
+        else None
+    )
     with live_lock_fn(prior.cohort_ledger):
         with checkpoint_lock_fn(checkpoint_path):
+            if parent_bundle is not None:
+                verify_parent_epoch_fn(parent_bundle, prior)
             inputs = _load_inputs(
                 checkpoint_path,
                 Path(args.preflight),
                 Path(args.prestart_bundle),
+                parent_bundle,
                 verify_backup_fn,
             )
             report = _build_report(
                 build_report_fn, prior, successor, inputs, str(args.epoch_id), now_fn()
             )
+            report = _continue_report(build_continuation_fn, report, inputs)
             if args.yes:
                 _publish(Path(args.out), report, inputs)
     _print_result(Path(args.out), report, confirmed=bool(args.yes))
@@ -88,6 +108,7 @@ def _load_inputs(
     checkpoint: Path,
     preflight: Path,
     bundle: Path,
+    parent_bundle: Path | None,
     verify_backup_fn: VerifyBackupFn,
 ) -> dict[str, object]:
     checkpoint_json, checkpoint_bytes = _read_json(checkpoint, "checkpoint")
@@ -97,7 +118,7 @@ def _load_inputs(
     verified = verify_backup_fn(bundle)
     if verified != manifest_json:
         raise ValueError("verified backup manifest differs from preserved bytes")
-    return {
+    result: dict[str, object] = {
         "checkpoint": checkpoint_json,
         "checkpoint_bytes": checkpoint_bytes,
         "preflight": preflight_json,
@@ -106,6 +127,13 @@ def _load_inputs(
         "backup_manifest_path": manifest_path,
         "backup_manifest_bytes": manifest_bytes,
     }
+    if parent_bundle is not None:
+        parent_json, parent_bytes = _read_json(
+            parent_bundle / "manifest.json", "parent accounting epoch manifest"
+        )
+        result["parent_accounting_epoch"] = parent_json
+        result["parent_accounting_epoch_bytes"] = parent_bytes
+    return result
 
 
 def _build_report(
@@ -137,6 +165,30 @@ def _build_report(
     )
 
 
+def _continue_report(
+    build_continuation_fn: BuildContinuationFn,
+    report: dict[str, object],
+    inputs: Mapping[str, object],
+) -> dict[str, object]:
+    parent = inputs.get("parent_accounting_epoch")
+    if parent is None:
+        return report
+    if not isinstance(parent, Mapping):
+        raise ValueError("parent accounting epoch manifest must be an object")
+    parent_bytes = _bytes(inputs.get("parent_accounting_epoch_bytes"))
+    checkpoint = inputs.get("checkpoint")
+    if not isinstance(checkpoint, Mapping):
+        raise ValueError("accounting rollover checkpoint must be an object")
+    return build_continuation_fn(
+        report,
+        parent,
+        checkpoint,
+        parent_manifest_evidence=_evidence(
+            "parent_accounting_epoch_manifest.json", parent_bytes
+        ),
+    )
+
+
 def _publish(
     output: Path,
     report: Mapping[str, object],
@@ -149,6 +201,11 @@ def _publish(
         (staging / "final_preflight.json").write_bytes(
             _bytes(inputs["preflight_bytes"])
         )
+        parent_bytes = inputs.get("parent_accounting_epoch_bytes")
+        if parent_bytes is not None:
+            (staging / "parent_accounting_epoch_manifest.json").write_bytes(
+                _bytes(parent_bytes)
+            )
         write_json(staging / "manifest.json", report)
 
     publish_immutable_directory(output, writer)

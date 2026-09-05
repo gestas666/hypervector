@@ -9,6 +9,9 @@ import json
 import math
 from pathlib import Path
 
+from hypervector.live.cohort_accounting_continuation import (
+    validate_accounting_continuation,
+)
 from hypervector.live.multi_asset_live_config import MultiAssetLiveConfig
 from hypervector.research.cohort_live_portfolio_archive import CohortAccountingEpoch
 
@@ -17,6 +20,14 @@ _CLEAN_ACCOUNTING_REQUIRED_PROFILE_FINGERPRINTS = frozenset(
         "0be937a1a50ca56becefb330f96d770e39863727d1e2832d025474afc489ae5e",
         "375281af0b683e0ddd6c22c02b6a20ea2807705a124a1fce23da76bb39ccc7dd",
         "30cd54bb5b5b17249ae0a6a3b01d5702b276d51f8dc5ddd6b4d36ab6aa7d1908",
+        "662d28b352cfc4f09e08c71ee67c8f044421483f2932539b09ea082b5e4f27f7",
+        "c057882fdd0818831076685aa0fb0134b22889618f6c145ca8e1f9f33111ab78",
+        "2e5ff9b63421c12a35353a9c3b3dbc0488408c399c223ab73256cc42fa65d6fe",
+        "3efb5cbb18c94c0b528a7d9e95744e26139f3570a6c7953ae6408f69d738526c",
+        "6c12d96e3fe09dd5dcefd24761bc7462ec6d6aa0b0d0f023a21e4b8597b646f7",
+        "89c84ecf8f927d1b22b3db7b28a9b6e62c89685d7049ef02f0cca90fc568d5ca",
+        "18306afaaad1912b368f483c770c507a94a2403f9bd2741691776220b38633e8",
+        "f454101eadaef46fd026c1a901bb7873bad61d7e7183a4c2e342e477e4e38733",
     }
 )
 
@@ -53,7 +64,10 @@ def load_accounting_rollover_manifest(
     epoch = _loaded_epoch(document.get("accounting_epoch"))
     if epoch.profile_fingerprint != successor.profile_fingerprint:
         raise ValueError("accounting rollover epoch profile differs from successor")
-    _validate_loaded_acceptance(document.get("acceptance"))
+    if "continuation" in document:
+        validate_accounting_continuation(root, document, epoch)
+    else:
+        _validate_loaded_acceptance(document.get("acceptance"))
     _validate_preserved_evidence(root, document.get("preserved_prior_history"))
     return epoch
 
@@ -95,10 +109,16 @@ def _validate_loaded_contract(document: Mapping[str, object]) -> None:
 
 def _loaded_epoch(value: object) -> CohortAccountingEpoch:
     epoch = _mapping(value, "accounting epoch")
+    included = epoch.get("included_profile_fingerprints", [])
+    profiles = tuple(
+        _text(item, "accounting epoch included profile")
+        for item in _sequence(included, "accounting epoch included profiles")
+    )
     return CohortAccountingEpoch(
         _text(epoch.get("epoch_id"), "accounting epoch id"),
         _text(epoch.get("profile_fingerprint"), "accounting epoch profile"),
         _integer(epoch.get("start_venue_timestamp_ms"), "accounting epoch start"),
+        included_profile_fingerprints=profiles,
     )
 
 
@@ -112,6 +132,11 @@ def _validate_loaded_acceptance(value: object) -> None:
         if acceptance.get(key) != 0:
             raise ValueError(f"accounting rollover acceptance {key} is not zero")
     _positive_number(acceptance.get("venue_equity_usd"), "venue equity")
+    if "sizing_reference_equity_usd" in acceptance:
+        _positive_number(
+            acceptance.get("sizing_reference_equity_usd"),
+            "sizing reference equity",
+        )
 
 
 def _validate_preserved_evidence(root: Path, value: object) -> None:
@@ -181,13 +206,41 @@ def build_accounting_rollover_manifest(
     """Build a no-authority epoch only from flat, preserved exact identities."""
     boundary = _aware_utc(now)
     prior_run_id = _validate_checkpoint(checkpoint, prior, boundary)
-    venue_equity = _validate_preflight(preflight, prior, successor, boundary)
+    venue_equity, sizing_reference_equity = _validate_preflight(
+        preflight, prior, successor, boundary
+    )
     _validate_backup(backup_manifest, prior, successor, prior_run_id)
     epoch = CohortAccountingEpoch(
         epoch_id,
         successor.profile_fingerprint,
         int(boundary.timestamp() * 1_000),
     )
+    return _rollover_document(
+        prior,
+        successor,
+        prior_run_id,
+        boundary,
+        epoch,
+        venue_equity,
+        sizing_reference_equity,
+        backup_bundle_evidence,
+        checkpoint_evidence,
+        preflight_evidence,
+    )
+
+
+def _rollover_document(
+    prior: MultiAssetLiveConfig,
+    successor: MultiAssetLiveConfig,
+    prior_run_id: str,
+    boundary: datetime,
+    epoch: CohortAccountingEpoch,
+    venue_equity: float,
+    sizing_reference_equity: float,
+    backup_bundle_evidence: Mapping[str, object],
+    checkpoint_evidence: Mapping[str, object],
+    preflight_evidence: Mapping[str, object],
+) -> dict[str, object]:
     return {
         "schema_version": 1,
         "mode": "cohort_accounting_epoch_rollover_v1",
@@ -203,6 +256,7 @@ def build_accounting_rollover_manifest(
             "current_run_closed_trades": 0,
             "open_lifecycles": 0,
             "venue_equity_usd": venue_equity,
+            "sizing_reference_equity_usd": sizing_reference_equity,
         },
         "preserved_prior_history": {
             "prestart_backup": _evidence(backup_bundle_evidence, "prestart backup"),
@@ -255,7 +309,7 @@ def _validate_preflight(
     prior: MultiAssetLiveConfig,
     successor: MultiAssetLiveConfig,
     boundary: datetime,
-) -> float:
+) -> tuple[float, float]:
     observed = _timestamp(preflight.get("observed_at_utc"), "preflight observed")
     if observed > boundary:
         raise ValueError("accounting rollover preflight is from the future")
@@ -264,9 +318,35 @@ def _validate_preflight(
     _require_prefixed_identity(identity, successor, "candidate")
     portfolio = _mapping(preflight.get("portfolio"), "preflight portfolio")
     _require_flat_preflight(portfolio)
-    return _positive_number(
-        portfolio.get("sizing_reference_equity_usd"), "venue equity"
+    venue_equity = _observed_venue_equity(preflight.get("assets"), successor)
+    sizing_reference = _positive_number(
+        portfolio.get("sizing_reference_equity_usd"), "sizing reference equity"
     )
+    return venue_equity, sizing_reference
+
+
+def _observed_venue_equity(value: object, successor: MultiAssetLiveConfig) -> float:
+    assets = _sequence(value, "preflight assets")
+    equity_by_symbol: dict[str, float] = {}
+    for value in assets:
+        asset = _mapping(value, "preflight asset")
+        symbol = _text(asset.get("symbol"), "preflight asset symbol")
+        if symbol in equity_by_symbol:
+            raise ValueError("accounting rollover preflight asset is duplicated")
+        sizing = _mapping(asset.get("sizing"), f"preflight {symbol} sizing")
+        equity_by_symbol[symbol] = _positive_number(
+            sizing.get("actual_account_value_usd"),
+            f"preflight {symbol} observed venue equity",
+        )
+    if set(equity_by_symbol) != set(successor.symbols):
+        raise ValueError("accounting rollover preflight asset set differs")
+    observed = next(iter(equity_by_symbol.values()))
+    if any(
+        not math.isclose(equity, observed, rel_tol=0.0, abs_tol=1e-9)
+        for equity in equity_by_symbol.values()
+    ):
+        raise ValueError("accounting rollover observed venue equity differs by asset")
+    return observed
 
 
 def _require_flat_preflight(portfolio: Mapping[str, object]) -> None:

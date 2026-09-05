@@ -23,6 +23,7 @@ class FillAggregate:
     size: float
     notional_usd: float
     fee_usd: float
+    closed_pnl_usd: float
 
 
 @dataclass(frozen=True)
@@ -32,6 +33,7 @@ class _Fill:
     price: float
     size: float
     fee_usd: float
+    closed_pnl_usd: float
 
 
 def build_fill_index(
@@ -130,6 +132,7 @@ def _parse_fill(values: Record) -> _Fill:
         price,
         size,
         fee,
+        number(values.get("closed_pnl_usd", 0.0), "fill closed PnL"),
     )
 
 
@@ -138,4 +141,5 @@ def _aggregate_fills(fills: Sequence[_Fill]) -> FillAggregate:
         sum(fill.size for fill in fills),
         sum(fill.price * fill.size for fill in fills),
         sum(fill.fee_usd for fill in fills),
+        sum(fill.closed_pnl_usd for fill in fills),
     )

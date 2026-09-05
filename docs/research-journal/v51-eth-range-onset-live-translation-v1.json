@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v51-eth-range-onset-live-translation",
+  "revision_number": 1,
+  "supersedes_revision_id": null,
+  "created_at_utc": "2026-08-15T21:30:27Z",
+  "strategy_id": "range_onset_bidirectional_v1",
+  "symbol": "ETH",
+  "status": "observe",
+  "hypothesis": "The exact v51 ETH dual-MTF Range-Onset route may retain after-cost edge when its selective entry and native opposite-intent, 60-bps stop, and 48-hour fallback exits are preserved through complete live lifecycles.",
+  "decision": "Continue the protected first v51 ETH long unchanged. It has not emitted an opposite exit, reached a predeclared profit-lock activation, or reached its 48-hour fallback; its small provisional loss is insufficient to diagnose the entry or exit as defective.",
+  "confidence": "medium",
+  "execution_authority": "none",
+  "report_only": true,
+  "automatic_promotion": false,
+  "automatic_live_change": false,
+  "runtime_strategy_changed": false,
+  "falsifier": "Reject the implementation claim on an entry-context mismatch, unexplained route suppression, missing protection, or exit-plan deviation. Weaken the edge claim if route-matched completed v51 lifecycles are negative after exact costs or remain concentrated in a single winner. Reconsider the native exit only if a frozen challenger improves chronological and side-separated results without eliminating the rare-winner mechanism.",
+  "scope": {
+    "run_id_at_frozen_prefix": "bidirectional-live-1786801038311",
+    "source_entry_run_id": "bidirectional-live-1786691478619",
+    "profile_id": "multi_asset_growth_first_5000_six_asset_profit_lock_candidate_v51",
+    "profile_fingerprint": "30cd54bb5b5b17249ae0a6a3b01d5702b276d51f8dc5ddd6b4d36ab6aa7d1908",
+    "lifecycle_id": "ETH:516976976124",
+    "position_side": "long",
+    "entry_price": 1883.6,
+    "position_size": 2.6544,
+    "stop_order_id": 516976990226,
+    "stop_trigger_price": 1872.2984,
+    "maximum_hold_seconds": 172800
+  },
+  "metrics": {
+    "entry_slippage_bps": 0.0,
+    "marked_net_pnl_usd": -4.079765,
+    "estimated_exit_now_net_usd": -6.239116,
+    "estimated_stop_net_usd": -34.898496,
+    "maximum_favorable_excursion_bps": 10.617966,
+    "maximum_adverse_excursion_bps": 44.064557,
+    "peak_giveback_bps": 13.272457,
+    "profit_lock_activation_25bps_reached": false,
+    "ignored_provider_exit_signals": 0,
+    "position_protected": true,
+    "automatic_promotion": false,
+    "execution_authority": "none",
+    "runtime_changed": false
+  },
+  "findings": {
+    "entry_contract": "Fresh completed hourly SMA10/30 long cross, completed five-minute RANGE admission, structural long alignment, and active dual-MTF not-opposed context; measured entry slippage was effectively zero.",
+    "native_exit_contract": "Opposite selected executable intent, 60-bps fixed protective stop, or 48-hour maximum hold; no fixed target and no live profit lock.",
+    "current_exit_state": "No opposite exit signal, target, or profit-lock activation has occurred. The venue stop is present and the 48-hour deadline remains pending.",
+    "historical_exit_context": "In the frozen v49 research partitions, all seven ETH 48-hour exits were winners and contributed $3,798.90, so shortening the fallback or applying a generic trail could suppress the measured rare-winner mechanism.",
+    "interpretation": "The current path reached only +10.62 bps MFE and -44.06 bps MAE. That is a provisional weak trade, not evidence that profit capture failed or that the 48-hour fallback is too long."
+  },
+  "limitations": [
+    "The lifecycle remains open; final PnL, exit reason, fees, funding, slippage, and opportunity cost are unknown.",
+    "Completed one-minute candle extrema are not executable fills.",
+    "Estimated exit-now economics omit additional slippage and future funding.",
+    "Historical ETH exit evidence was selected through prior research and is not a pristine untouched holdout.",
+    "One long lifecycle cannot establish side-separated or pooled edge.",
+    "This record cannot close, resize, route, or modify the live position."
+  ],
+  "evidence": [
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v51_open_spcx_prefix_20260815T2114Z_v1.json",
+      "role": "immutable_v51_open_lifecycle_and_exit_challenger_audit",
+      "sha256": "c119a0a1cf4200b02bb7ba9ad125d37795907e741f73a808691e7ac5dcb501e1",
+      "bytes": 8146477
+    },
+    {
+      "path": "v49-strategy-repair-disposition.json",
+      "role": "frozen_eth_exit_and_strategy_repair_evidence",
+      "sha256": "c83bc76adeb98cc6e42dd9b92bd282a86716910a9338f88bbcccd0f8ac1f09da",
+      "bytes": 39774
+    },
+    {
+      "path": "../../configs/multi_asset_growth_first_5000_six_asset_profit_lock_candidate_v51.toml",
+      "role": "active_v51_route_and_exit_contract",
+      "sha256": "f0f0fef087eb0a3412c2a917d2d9bd8f578b17e4a40d7c3729519a33cf4f9ab4",
+      "bytes": 3917
+    }
+  ],
+  "recommendation": {
+    "Recommendation": "Preserve the exact ETH Range-Onset lifecycle and native exit control while collecting its resolved outcome and predeclared report-only challenger states.",
+    "Why now": "The first attributable v51 ETH entry is open near breakeven after costs, providing the first direct live translation evidence for the repaired route.",
+    "Evidence reviewed": "Exact entry context, active plan and stop, frozen open-lifecycle audit, completed-candle path, current fees/funding/mark, predeclared challenger states, v49 exit evidence, and active configuration.",
+    "Observed problem or opportunity": "The route can hold up to 48 hours without a target, but this trade never developed enough favorable excursion to establish a profit-capture opportunity.",
+    "Applicable market regime": "Completed-hour long crossover admitted in a completed five-minute RANGE state with dual-MTF context not opposed; current structure remains long without a new opposite crossover.",
+    "Alternatives considered": "Close near breakeven, add a generic profit lock, shorten the fallback, add a fixed target, or preserve the native rare-winner control.",
+    "Proposed live change": "none",
+    "Expected upside": "Maintains unbiased evidence for whether the historically important long-hold mechanism translates under actual v51 costs and execution.",
+    "Main risks and failure modes": "The trade may stop out; capital remains occupied; the historical rare-winner pattern may not persist; side asymmetry or regime dependence may invalidate pooled results.",
+    "Validation completed": "Exact route/entry/stop/plan identity, entry-context admission, no ignored exit, complete open-path accounting, and historical maximum-hold contribution review.",
+    "Validation still required": "Resolved exit and exact after-cost outcome, opposite-intent behavior, long and short route samples, largest-winner sensitivity, opportunity cost, and prospective challenger comparisons.",
+    "Success metrics": "Correct protected resolution, positive route-matched after-cost net and PF above one by side and pooled, positive net excluding the largest winner, and no challenger improvement that is merely post-hoc or concentration-driven.",
+    "Failure / rollback triggers": "Unprotected exposure or plan mismatch is an incident; repeated route-matched negative closes or a robust predeclared exit challenger triggers an approval-ready revision proposal.",
+    "Confidence level": "High for current implementation and protection; medium for preserving the control; low for durable live profitability and exit optimality.",
+    "Explicit approval requested": false
+  },
+  "single_highest_value_next_investigation": "Resolve this first v51 ETH lifecycle and decompose its final result into entry timing, market path, fees, funding, exit branch, opportunity cost, and counterfactual exit performance."
+}

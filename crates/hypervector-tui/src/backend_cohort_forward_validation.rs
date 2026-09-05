@@ -143,80 +143,99 @@ fn expected_forward_opi_identity(
     blocker: &str,
     candidate: Option<&str>,
 ) -> Option<&'static str> {
-    match (strategy_id, symbol, blocker, candidate) {
+    let identity = (strategy_id, symbol, blocker, candidate);
+    if aligned_forward_identity(identity) {
+        return Some("aligned");
+    }
+    if all_forward_identity(identity) {
+        return Some("all");
+    }
+    if opposed_forward_identity(identity) {
+        return Some("opposed");
+    }
+    None
+}
+
+type ForwardIdentity<'a> = (&'a str, &'a str, &'a str, Option<&'a str>);
+
+fn aligned_forward_identity(identity: ForwardIdentity<'_>) -> bool {
+    matches!(
+        identity,
         (
             "hype_breakout_onset_bidirectional_v1",
             "HYPE",
             "5m_not_breakout",
             Some("hype_aligned_book_breakout_relaxation_fixed60_bidirectional_v1"),
-        )
-        | (
+        ) | (
             "hype_breakout_onset_bidirectional_v1",
             "SOL",
             "5m_not_breakout",
             Some("sol_aligned_book_breakout_relaxation_fixed60_bidirectional_v1"),
-        )
-        | (
+        ) | (
             "hip3_swing_ha_sp500_spcx_bidirectional_v2",
             "xyz:SPCX",
             "pivot_break_state_missing",
             Some("spcx_swing_pivot_relaxed_fixed60_bidirectional_v1"),
-        )
-        | (
+        ) | (
             "hype_breakout_onset_bidirectional_v1",
             "SOL",
             "awaiting_new_5m_breakout_onset",
             Some("sol_breakout_continuation_aligned_fixed60_bidirectional_v1"),
-        ) => Some("aligned"),
+        ) | (
+            "range_onset_bidirectional_v1",
+            "SOL",
+            "awaiting_hourly_sma_cross",
+            Some("sol_aligned_range_relaxed_fixed60_bidirectional_v1"),
+        )
+    )
+}
+
+fn all_forward_identity(identity: ForwardIdentity<'_>) -> bool {
+    matches!(
+        identity,
         (
             "hype_breakout_onset_bidirectional_v1",
             "HYPE",
             "5m_not_breakout",
-            None
-            | Some(
+            None | Some(
                 "hype_breakout_relaxed_60m_bidirectional_v2"
-                | "hype_breakout_relaxed_target20_60m_bidirectional_v3"
-                | "hype_breakout_relaxed_fixed60_matched_bidirectional_v4",
+                    | "hype_breakout_relaxed_target20_60m_bidirectional_v3"
+                    | "hype_breakout_relaxed_fixed60_matched_bidirectional_v4",
             ),
-        )
-        | (
+        ) | (
             "range_onset_bidirectional_v1",
             "BTC",
             "awaiting_hourly_sma_cross",
             Some("btc_structural_continuation_fixed60_bidirectional_v1"),
-        )
-        | (
+        ) | (
             "hulk_expansion_bidirectional_tuned_v2",
             "BTC",
             "money_flow_not_aligned",
             Some("btc_hulk_money_flow_relaxed_fixed60_bidirectional_v1"),
-        )
-        | (
+        ) | (
             "hulk_expansion_bidirectional_tuned_v2",
             "HYPE",
             "squeeze_not_armed",
             Some("hype_hulk_squeeze_relaxed_fixed60_bidirectional_v1"),
-        )
-        | (
+        ) | (
             "hulk_expansion_bidirectional_tuned_v2",
             "SOL",
             "expansion_trigger_not_present",
             Some("sol_hulk_expansion_trigger_relaxed_fixed60_bidirectional_v1"),
-        ) => Some("all"),
+        )
+    )
+}
+
+fn opposed_forward_identity(identity: ForwardIdentity<'_>) -> bool {
+    matches!(
+        identity,
         (
             "range_onset_bidirectional_v1",
             "HYPE",
             "awaiting_hourly_sma_cross",
             Some("hype_range_absorption_fixed60_bidirectional_v1"),
-        ) => Some("opposed"),
-        (
-            "range_onset_bidirectional_v1",
-            "SOL",
-            "awaiting_hourly_sma_cross",
-            Some("sol_aligned_range_relaxed_fixed60_bidirectional_v1"),
-        ) => Some("aligned"),
-        _ => None,
-    }
+        )
+    )
 }
 
 fn forward_summary_valid(raw: &ForwardOneBlockerChallengerRaw) -> bool {
@@ -364,6 +383,29 @@ pub(crate) fn summary_valid(
         })
 }
 
+fn profit_factor_valid(value: Option<f64>, losses: usize) -> bool {
+    match (value, losses) {
+        (None, 0) => true,
+        (Some(number), count) if count > 0 => number.is_finite() && number >= 0.0,
+        _ => false,
+    }
+}
+
+pub(crate) fn optional_fraction_valid(
+    value: Option<f64>,
+    resolved: usize,
+    wins: usize,
+    losses: usize,
+) -> bool {
+    match (value, resolved, wins + losses) {
+        (None, 0, 0) | (None, _, 0) => true,
+        (Some(number), count, nonzero) if count > 0 && nonzero > 0 => {
+            number.is_finite() && (0.0..=1.0).contains(&number)
+        }
+        _ => false,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::expected_forward_opi_identity;
@@ -388,28 +430,5 @@ mod tests {
             ),
             Some("aligned")
         );
-    }
-}
-
-fn profit_factor_valid(value: Option<f64>, losses: usize) -> bool {
-    match (value, losses) {
-        (None, 0) => true,
-        (Some(number), count) if count > 0 => number.is_finite() && number >= 0.0,
-        _ => false,
-    }
-}
-
-pub(crate) fn optional_fraction_valid(
-    value: Option<f64>,
-    resolved: usize,
-    wins: usize,
-    losses: usize,
-) -> bool {
-    match (value, resolved, wins + losses) {
-        (None, 0, 0) | (None, _, 0) => true,
-        (Some(number), count, nonzero) if count > 0 && nonzero > 0 => {
-            number.is_finite() && (0.0..=1.0).contains(&number)
-        }
-        _ => false,
     }
 }

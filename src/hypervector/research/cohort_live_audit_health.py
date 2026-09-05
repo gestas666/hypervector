@@ -9,17 +9,47 @@ from hypervector.research.cohort_live_audit_values import (
     integer,
     latest,
     payload,
+    text,
+    timestamp,
 )
 
 Record = Mapping[str, object]
 
 
-def health_summary(assets: Mapping[str, Sequence[Record]]) -> dict[str, object]:
+def health_summary(
+    records: Sequence[Record],
+    assets: Mapping[str, Sequence[Record]],
+) -> dict[str, object]:
     """Summarize terminal state, venue-stop coverage, and recorded faults."""
+    runtime = _runtime_health(records)
     summaries = {symbol: _asset_health(rows) for symbol, rows in assets.items()}
     return {
-        "faults": sum(integer(values, "faults") for values in summaries.values()),
+        "faults": integer(runtime, "faults")
+        + sum(integer(values, "faults") for values in summaries.values()),
+        "runtime": runtime,
         "assets": summaries,
+    }
+
+
+def _runtime_health(records: Sequence[Record]) -> dict[str, object]:
+    faults = event_rows(records, "runtime_fault")
+    latest_fault = _runtime_fault(faults[-1]) if faults else None
+    return {"faults": len(faults), "latest_fault": latest_fault}
+
+
+def _runtime_fault(record: Record) -> dict[str, object]:
+    values = payload(record)
+    if values.get("status") != "faulted":
+        raise ValueError("runtime fault status must be faulted")
+    orders_attempted = values.get("orders_attempted")
+    if not isinstance(orders_attempted, bool):
+        raise ValueError("runtime fault orders_attempted must be boolean")
+    timestamp(record)
+    observed_at = text(record.get("observed_at_utc"), "observed_at_utc")
+    return {
+        "exception_type": text(values.get("exception_type"), "exception_type"),
+        "observed_at_utc": observed_at,
+        "orders_attempted": orders_attempted,
     }
 
 

@@ -11,6 +11,7 @@ from hypervector.live.sol_aligned_range_contract import (
 
 _HYPE = "hype_breakout_onset_bidirectional_v1"
 _HYPE_COMPRESSION = "hype_breakout_compression_pullback_bidirectional_v1"
+_HYPE_ALIGNMENT = "hype_breakout_compression_alignment_bidirectional_v2"
 _RANGE = "range_onset_bidirectional_v1"
 _SOURCE = "hypervelocity_source_follow_bidirectional_5m_v1"
 _ETH_PRECOMPRESSION = "eth_breakout_precompression_pullback_bidirectional_v1"
@@ -91,7 +92,7 @@ def test_scorecard_binds_sol_range_direction_stability() -> None:
 
 
 def test_scorecard_binds_eth_precompression_direction_rotation() -> None:
-    """ETH display must preserve long support and short contradiction."""
+    """ETH display must bind the current report-only requalification state."""
     record = _scorecard_record(_ETH_PRECOMPRESSION, "ETH")
     long = record["directional_research"]["long"]
     short = record["directional_research"]["short"]
@@ -101,12 +102,12 @@ def test_scorecard_binds_eth_precompression_direction_rotation() -> None:
     assert short["research_state"] == "contradictory"
     assert "140 development" in short["cadence"]
     assert "PF 0.9853" in short["summary"]
-    assert record["research_state"] == (
-        "side_relation_set_falsified_new_mechanism_required"
-    )
+    assert record["research_state"] == "prospective_requalification_open_long_only"
     assert record["evidence_source"] == (
-        "docs/research-journal/eth-breakout-precompression-pullback-v6.json"
+        "docs/research-journal/eth-breakout-precompression-pullback-v17.json"
     )
+    assert "first exact long stopped" in record["historical_summary"]
+    assert "zero short" in record["historical_summary"]
 
 
 def test_scorecard_binds_hip3_side_instability() -> None:
@@ -223,6 +224,23 @@ def test_scorecard_binds_exact_hype_compression_evidence() -> None:
     assert record["evidence_source"] == (
         "data/logs/research/"
         "hype_compression_breakout_challenger_20260811_v4/report.json"
+    )
+    assert record["performance_gate"] is False
+
+
+def test_scorecard_binds_causal_hype_alignment_replay() -> None:
+    """The successor identity cites occupancy-aware evidence and its caveats."""
+    record = _scorecard_record(_HYPE_ALIGNMENT, "HYPE")
+
+    assert record["research_state"] == ("development_promising_exact_live_n2_mixed")
+    assert record["confidence"] == "low"
+    assert "41 causal development" in record["historical_cadence"]
+    assert "3/5 positive folds" in record["historical_summary"]
+    assert "+289.26 bps" in record["historical_summary"]
+    assert "+$6.34" in record["historical_summary"]
+    assert record["evidence_source"] == (
+        "data/logs/research/bidirectional_cohort/"
+        "v84_active_route_tui_evidence_refresh_20260903_v1.json"
     )
     assert record["performance_gate"] is False
 

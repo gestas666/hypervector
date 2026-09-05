@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Mapping, Sequence
+from collections.abc import Collection, Mapping, Sequence
 import math
 from statistics import median
 
@@ -22,8 +22,16 @@ from hypervector.research.cohort_live_audit_values import (
     run_id,
     text,
 )
+from hypervector.research.cohort_order_submission_outcomes import (
+    build_order_submission_outcomes,
+)
 
 Record = Mapping[str, object]
+
+_ATTRIBUTION_PLACEHOLDERS = frozenset({"unattributed", "unknown"})
+_ATTRIBUTION_FIELDS = frozenset(
+    {"strategy_id", "operation", "exit_controller_id", "exit_reason"}
+)
 
 
 def execution_summary(
@@ -37,7 +45,10 @@ def execution_summary(
     summaries = _journal_summaries(journals)
     fills = _fill_count(history_assets)
     current_fills = _fill_count(current_assets)
-    fill_details = _fill_details(_projected_fills(cohort), history_assets)
+    compatible_run_ids = history_run_ids(history_assets)
+    fill_details = _fill_details(
+        _projected_fills(cohort, compatible_run_ids), history_assets
+    )
     trades = [
         trade
         for journal in journals.values()
@@ -46,6 +57,7 @@ def execution_summary(
     pnls = [number(trade.get("net_pnl_usd"), "trade net PnL") for trade in trades]
     return _execution_payload(
         cohort,
+        current_assets,
         history_assets,
         journals,
         identity,
@@ -91,6 +103,7 @@ def _fill_count(assets: Mapping[str, Sequence[Record]]) -> int:
 
 def _execution_payload(
     cohort: Sequence[Record],
+    current_assets: Mapping[str, Sequence[Record]],
     history_assets: Mapping[str, Sequence[Record]],
     journals: Mapping[str, Mapping[str, object]],
     identity: Record,
@@ -108,6 +121,12 @@ def _execution_payload(
         "history_run_ids": history_run_ids(history_assets),
         "fills": fills,
         "current_run_fills": current_fills,
+        "submission_outcomes": build_order_submission_outcomes(
+            history_assets, scope="compatible_profile_history"
+        ),
+        "current_run_submission_outcomes": build_order_submission_outcomes(
+            current_assets, scope="current_run"
+        ),
         "projected_fills": len(fill_details),
         "fill_details": list(fill_details),
         "fee_rate_bps": fill_fee_rate_summary(fill_details),
@@ -141,10 +160,18 @@ def _journal_number_total(
     return sum(number(row.get(key), label) for row in summaries.values())
 
 
-def _projected_fills(records: Sequence[Record]) -> list[Record]:
+def _projected_fills(
+    records: Sequence[Record], compatible_run_ids: Collection[str]
+) -> list[Record]:
     unique: dict[tuple[str, int], Record] = {}
     for row in event_rows(records, "cohort_snapshot"):
         for fill in object_list(payload(row), "recent_fills"):
+            origin_run_id = fill.get("origin_run_id")
+            if (
+                origin_run_id is not None
+                and text(origin_run_id, "fill origin run id") not in compatible_run_ids
+            ):
+                continue
             symbol = text(fill.get("symbol"), "fill symbol")
             trade_id = positive_int(fill.get("trade_id"), "trade id")
             unique[(symbol, trade_id)] = fill
@@ -163,9 +190,20 @@ def _fill_details(
         for symbol, rows in history_assets.items()
         for fill in fill_payloads(symbol, [dict(row) for row in rows])
     }
-    output: list[Record] = []
-    for fill in projected:
-        output.append(_merge_fill(fill, exact))
+    projections = {
+        (
+            text(fill.get("symbol"), "fill symbol"),
+            positive_int(fill.get("trade_id"), "trade id"),
+        ): fill
+        for fill in projected
+    }
+    output = [
+        _merge_fill(projections[identity], exact) if identity in projections else detail
+        for identity, detail in exact.items()
+    ]
+    output.extend(
+        dict(fill) for identity, fill in projections.items() if identity not in exact
+    )
     return output
 
 
@@ -183,8 +221,34 @@ def _merge_fill(
     _validate_fill_identity(projected, detail, identity)
     return {
         **projected,
-        **{key: value for key, value in detail.items() if value is not None},
+        **_authoritative_exact_values(projected, detail),
     }
+
+
+def _authoritative_exact_values(projected: Record, detail: Record) -> dict[str, object]:
+    values: dict[str, object] = {}
+    for key, value in detail.items():
+        if value is None:
+            continue
+        if key in _ATTRIBUTION_FIELDS and _placeholder_erases_attribution(
+            projected.get(key), value
+        ):
+            continue
+        values[key] = value
+    return values
+
+
+def _placeholder_erases_attribution(projected: object, exact: object) -> bool:
+    if (
+        not isinstance(exact, str)
+        or exact.strip().lower() not in _ATTRIBUTION_PLACEHOLDERS
+    ):
+        return False
+    return (
+        isinstance(projected, str)
+        and bool(projected.strip())
+        and projected.strip().lower() not in _ATTRIBUTION_PLACEHOLDERS
+    )
 
 
 def _validate_fill_identity(

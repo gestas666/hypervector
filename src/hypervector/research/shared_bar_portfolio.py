@@ -20,6 +20,7 @@ from hypervector.research.shared_portfolio_inputs import (
     side_exit_signal,
     validate_shared_inputs,
 )
+from hypervector.research.shared_portfolio_entry_barriers import entry_barriers
 from hypervector.research.shared_portfolio_models import (
     Direction,
     ExitReason,
@@ -29,8 +30,13 @@ from hypervector.research.shared_portfolio_models import (
 )
 from hypervector.research.shared_portfolio_pricing import (
     adverse_price,
-    margin_barrier,
     maximum_hold_reached,
+)
+from hypervector.research.shared_portfolio_profit_lock import (
+    completed_bar_profit_lock_triggered,
+)
+from hypervector.research.shared_portfolio_completed_peak_lock import (
+    completed_close_peak_lock_triggered,
 )
 from hypervector.research.shared_portfolio_quotes import (
     executable_close_price,
@@ -39,6 +45,7 @@ from hypervector.research.shared_portfolio_quotes import (
 from hypervector.research.shared_portfolio_reporting import (
     build_shared_portfolio_report,
 )
+from hypervector.research.shared_portfolio_sizing import position_size
 from hypervector.research.shared_portfolio_signal_exits import signal_exit_allowed
 
 
@@ -220,15 +227,20 @@ def _fill_entry(
         config.entry_slippage_bps,
         entering=True,
     )
-    margin = state.equity * config.margin_fraction
-    notional = margin * config.leverage
-    fee = notional * config.entry_fee_rate
-    quantity = notional / entry
-    target, stop = _entry_barriers(pending, entry, config)
+    target, stop = entry_barriers(pending, entry, config)
     if not barriers_allow_entry(entry, pending.direction, target, stop):
         state.pending_entry = None
         state.barrier_invalidated_entries += 1
         return
+    margin, notional = position_size(
+        state.equity,
+        entry,
+        stop,
+        pending.direction,
+        config,
+    )
+    fee = notional * config.entry_fee_rate
+    quantity = notional / entry
     state.position = _OpenPosition(
         pending.direction,
         pending.signal_position,
@@ -247,46 +259,6 @@ def _fill_entry(
     state.equity -= fee
     state.maximum_concurrent_positions = max(state.maximum_concurrent_positions, 1)
     state.update_drawdown(state.equity)
-
-
-def _entry_barriers(
-    pending: BarEntrySignal,
-    entry: float,
-    config: SharedPortfolioConfig,
-) -> tuple[float | None, float | None]:
-    target = pending.target_price or margin_barrier(
-        entry,
-        pending.direction,
-        config.target_margin_pct,
-        config.leverage,
-        favorable=True,
-    )
-    stop = pending.stop_price or margin_barrier(
-        entry,
-        pending.direction,
-        config.stop_margin_pct,
-        config.leverage,
-        favorable=False,
-    )
-    return target, _clamp_stop_distance(
-        stop,
-        entry,
-        pending.direction,
-        config.maximum_stop_distance_bps,
-    )
-
-
-def _clamp_stop_distance(
-    stop: float | None,
-    entry: float,
-    direction: Direction,
-    maximum_bps: float | None,
-) -> float | None:
-    if stop is None or maximum_bps is None:
-        return stop
-    fraction = maximum_bps / 10_000.0
-    ceiling = entry * (1.0 - fraction if direction == "long" else 1.0 + fraction)
-    return max(stop, ceiling) if direction == "long" else min(stop, ceiling)
 
 
 def _settle_funding(
@@ -503,6 +475,25 @@ def _schedule_close_actions(
         state.blocked_reentry_direction = None
     opened = state.position
     if opened is not None:
+        if completed_bar_profit_lock_triggered(
+            bars,
+            entry_position=opened.entry_position,
+            current_position=position,
+            direction=opened.direction,
+            entry_price=opened.entry_price,
+            policy=config.completed_bar_profit_lock,
+        ):
+            state.pending_exit = "profit_lock"
+        if completed_close_peak_lock_triggered(
+            bars,
+            entry_position=opened.entry_position,
+            current_position=position,
+            direction=opened.direction,
+            entry_price=opened.entry_price,
+            leverage=config.leverage,
+            policy=config.completed_bar_peak_lock,
+        ):
+            state.pending_exit = "profit_lock"
         _schedule_for_open_position(state, bars, signals, position, desired, config)
         return
     if desired is None or state.equity <= 0.0:

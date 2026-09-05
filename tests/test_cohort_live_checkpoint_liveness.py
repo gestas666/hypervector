@@ -5,7 +5,12 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from copy import deepcopy
 
+import pytest
+
 from hypervector.research.cohort_live_checkpoint import build_live_checkpoint
+from hypervector.research.cohort_checkpoint_consistency import (
+    require_checkpoint_asset_state_consistency,
+)
 from test_cohort_live_checkpoint import _active_asset_rows
 from test_multi_asset_live_audit import _asset_rows, _cohort_rows
 
@@ -99,3 +104,98 @@ def test_runtime_fault_immediately_overrides_recent_running_heartbeat() -> None:
     assert lifecycle["state"] == "backend_runtime_fault"
     assert lifecycle["backend_process_health"] == "faulted"
     assert lifecycle["runtime_fault_exception_type"] == "RuntimeError"
+
+
+def test_later_asset_transition_cannot_mix_with_older_audit_cutoff() -> None:
+    """A checkpoint must not mix newer lifecycle state with older open evidence."""
+    cohort = _cohort_rows()
+    assets = {symbol: _active_asset_rows(symbol) for symbol in _SYMBOLS}
+    later = deepcopy(assets["ETH"][-1])
+    later["sequence"] = int(later["sequence"]) + 1
+    later["observed_at_utc"] = cohort[-1]["observed_at_utc"]
+    later["payload"]["state"] = "STOPPED"
+    assets["ETH"].append(later)
+
+    with pytest.raises(ValueError, match="checkpoint asset state cutoff mismatch"):
+        build_live_checkpoint(
+            cohort,
+            assets,
+            run_id=_RUN_ID,
+            generated_at=datetime.fromisoformat(str(cohort[-1]["observed_at_utc"])),
+        )
+
+
+def test_clean_post_snapshot_stop_accepts_flat_venue_boundary() -> None:
+    """All STOPPED control states may follow one fully flat venue snapshot."""
+    lifecycle = {
+        "asset_states": {symbol: "STOPPED" for symbol in _SYMBOLS},
+    }
+    audit = {
+        "health": {
+            "assets": {
+                symbol: {
+                    "final_state": "FLAT",
+                    "position_size_signed": 0.0,
+                    "open_order_ids": [],
+                }
+                for symbol in _SYMBOLS
+            }
+        }
+    }
+
+    require_checkpoint_asset_state_consistency(lifecycle, audit)
+
+
+def test_post_snapshot_stop_accepts_protected_open_venue_boundary() -> None:
+    """Stopped workers may retain an explicitly protected venue position."""
+    lifecycle = {
+        "asset_states": {symbol: "STOPPED" for symbol in _SYMBOLS},
+    }
+    audit_assets = {
+        symbol: {
+            "final_state": "FLAT",
+            "position_size_signed": 0.0,
+            "open_order_ids": [],
+            "protected_if_open": True,
+            "stop_oid": None,
+        }
+        for symbol in _SYMBOLS
+    }
+    audit_assets["ETH"] = {
+        "final_state": "OPEN",
+        "position_size_signed": 0.5,
+        "open_order_ids": [123],
+        "protected_if_open": True,
+        "stop_oid": 123,
+    }
+
+    require_checkpoint_asset_state_consistency(
+        lifecycle,
+        {"health": {"assets": audit_assets}},
+    )
+
+
+def test_post_snapshot_stop_rejects_nonflat_venue_boundary() -> None:
+    """A STOPPED control state cannot conceal venue position or order state."""
+    lifecycle = {
+        "asset_states": {symbol: "STOPPED" for symbol in _SYMBOLS},
+    }
+    audit_assets = {
+        symbol: {
+            "final_state": "FLAT",
+            "position_size_signed": 0.0,
+            "open_order_ids": [],
+        }
+        for symbol in _SYMBOLS
+    }
+    audit_assets["ETH"] = {
+        "final_state": "OPEN",
+        "position_size_signed": 0.5,
+        "open_order_ids": [123],
+    }
+
+    with pytest.raises(ValueError, match="checkpoint asset state cutoff mismatch"):
+        require_checkpoint_asset_state_consistency(
+            lifecycle,
+            {"health": {"assets": audit_assets}},
+        )

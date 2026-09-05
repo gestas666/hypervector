@@ -1,0 +1,199 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v53-brentoil-candle-revision-technical-pause-v1",
+  "generated_at_utc": "2026-08-17T16:20:30Z",
+  "status": "technical_pause_no_live_change",
+  "problem_restatement": {
+    "input": "The isolated BRENTOIL oil-shock observer stopped refreshing while its unsigned raw event recorder and the public market remained available.",
+    "required_output": "Identify the exact failure, preserve causal evidence, and decide whether restarting or changing the report-only observer is justified.",
+    "constraints": [
+      "Do not mutate the active v53 backend, profile, routes, risk, sizing, or execution authority.",
+      "Do not rewrite a previously observed signal-bearing candle.",
+      "Do not infer strategy edge from one eligible shadow decision.",
+      "Do not weaken a technical provenance check to keep a low-priority candidate running."
+    ],
+    "success_criteria": [
+      "The stopped observer is reproduced against current public evidence.",
+      "Every changed candle field and timestamp is identified.",
+      "The prior v1 evidence remains immutable.",
+      "Any future restart uses a separately identified and preregistered observation contract."
+    ]
+  },
+  "observed_failure": {
+    "observer_mode": "brentoil_oil_shock_shadow_observer",
+    "symbol": "xyz:BRENTOIL",
+    "provider_id": "hip3_brentoil_oil_shock_reversion_bidirectional_5m_shadow_v1",
+    "last_successful_decision_time_ms": 1786955400000,
+    "last_successful_decision_time_utc": "2026-08-17T08:30:00Z",
+    "reproduced_exception_type": "ValueError",
+    "reproduced_exception_message": "shadow ledger contains a changed source candle",
+    "failed_closed": true,
+    "ledger_rewritten": false,
+    "live_v53_backend_changed": false,
+    "execution_authority": "none"
+  },
+  "source_reconciliation": {
+    "current_public_source": "hyperliquid_public_candleSnapshot_5m",
+    "current_frame_rows": 2303,
+    "stored_overlap_rows": 2210,
+    "changed_rows": 2,
+    "changed_signal_rows": 1,
+    "changed_fields_total": [
+      "close",
+      "volume"
+    ],
+    "rows": [
+      {
+        "bar_open_ms": 1786933500000,
+        "bar_open_utc": "2026-08-17T02:25:00Z",
+        "original_observation_delay_ms": 2966,
+        "stored": {
+          "volume": 1631.72
+        },
+        "current": {
+          "volume": 1631.9
+        },
+        "signal_field_changed": false
+      },
+      {
+        "bar_open_ms": 1786955100000,
+        "bar_open_utc": "2026-08-17T08:25:00Z",
+        "original_observation_delay_ms": 460,
+        "stored": {
+          "close": 86.729,
+          "volume": 4425.71
+        },
+        "current": {
+          "close": 86.728,
+          "volume": 4808.55
+        },
+        "signal_field_changed": true
+      }
+    ],
+    "prospective_delay_distribution": {
+      "rows": 425,
+      "minimum_ms": 34,
+      "median_ms": 2658,
+      "p90_ms": 4958,
+      "maximum_ms": 5691,
+      "rows_at_or_after_5000_ms": 41,
+      "fraction_at_or_after_5000_ms": 0.09647058823529411
+    }
+  },
+  "root_cause_assessment": {
+    "finding": "The observer accepted a just-closed public candle before its source values were stable. Hyperliquid later revised a signal-bearing close, and the immutable first-observation contract correctly aborted rather than rewriting history.",
+    "classification": "source_finalization_contract_mismatch",
+    "confidence": "high_for_observed_failure_medium_for_general_finalization_delay",
+    "support": [
+      "The exact current REST response differs from the immutable stored candle.",
+      "A bounded one-poll restart reproduced the same fail-closed exception.",
+      "The changed close was originally captured only 460 ms after bar close.",
+      "The public order book and recent candles were available when the failure was reproduced."
+    ],
+    "uncertainty": "The available evidence does not establish a universally safe minimum candle-finalization delay for this venue.",
+    "falsifier": "An exact source audit proving that the stored close was malformed locally, rather than subsequently revised by the public source, would replace this diagnosis."
+  },
+  "economic_priority": {
+    "development_nominal": {
+      "trades": 44,
+      "net_pnl_usd": 4.238715,
+      "profit_factor": 2.258518
+    },
+    "development_stress": {
+      "trades": 42,
+      "net_pnl_usd": -1.068481,
+      "profit_factor": 0.837156,
+      "positive_folds": 1,
+      "folds": 3
+    },
+    "technical_path_status": "unresolved",
+    "live_change_supported": false,
+    "priority_assessment": "lower_than_exact_v53_hype_lifecycle_and_fixed_mu_transport_window"
+  },
+  "validation_completed": {
+    "public_book_probe": {
+      "available": true,
+      "bid": 86.999,
+      "ask": 87.0,
+      "levels_per_side": 20,
+      "observed_at_utc": "2026-08-17T16:17:30Z"
+    },
+    "public_candle_probe": {
+      "available": true,
+      "rows": 288,
+      "latest_bar_open_utc": "2026-08-17T16:15:00Z"
+    },
+    "targeted_tests": {
+      "passed": 19,
+      "failed": 0,
+      "ruff": "pass"
+    },
+    "active_v53_backend_pids_before_and_after_probe": [
+      34259,
+      34260
+    ]
+  },
+  "recommendation": {
+    "Recommendation": "Keep the v1 BRENTOIL decision observer technically paused and preserve its ledger. Do not tolerate or overwrite signal-field revisions.",
+    "Why now": "The observer cannot resume against its current immutable source contract, and the candidate has negative stress development economics.",
+    "Evidence reviewed": "Exact candle ledger, current public REST candles and book, observer status and cursor, fail-closed storage implementation, targeted tests, and prior BRENTOIL development/canary journals.",
+    "Observed problem or opportunity": "A separate v2 report-only capture could test a delayed-finalization source contract without contaminating v1 evidence.",
+    "Applicable market regime": "All future BRENTOIL venue sessions; the proposed experiment concerns source finality rather than directional market regime.",
+    "Alternatives considered": "Blind restart, permit close revisions, overwrite v1, start an unlabeled fresh ledger, or pause and preregister a distinct v2 observer epoch.",
+    "Proposed live change": "none",
+    "Expected upside": "Prevents silent historical drift and avoids spending live-risk attention on a technically unresolved negative-stress candidate.",
+    "Main risks and failure modes": "A pause reduces prospective sample collection. A future delay that is too short can still revise; one that is too long can stale the entry opportunity.",
+    "Validation completed": "Failure reproduction, row-level source comparison, public venue availability, process isolation, targeted tests, and economic-priority comparison.",
+    "Validation still required": "Preregister a distinct v2 source identity, minimum and maximum finalization delays, a new immutable epoch, source-revision telemetry, and a fixed forward observation window.",
+    "Success metrics": "Zero signal-field revisions in the fixed v2 window, complete decision accounting, causal entry-delay evidence, and no pooling with v1 economics.",
+    "Failure / rollback triggers": "Any signal-field revision, missing bar, stale decision, identity collision, or evidence rewrite fails the v2 experiment closed.",
+    "Confidence level": "high on the technical pause; medium on delayed-finalization as the next source experiment; low on BRENTOIL economic edge",
+    "Explicit approval requested": false
+  },
+  "highest_value_next_investigation": {
+    "route": "hype_breakout_compression_alignment_bidirectional_v2|HYPE",
+    "experiment": "capture_first_exact_v53_eligible_and_resolved_lifecycle",
+    "reason": "It directly tests currently authorized capital and outranks repairing a negative-stress external candidate.",
+    "automatic_live_change": false
+  },
+  "evidence": [
+    {
+      "path": "data/live/research/brentoil_oil_shock_shadow/candles.jsonl",
+      "sha256": "2a7431a483c21321147285e9344694f6681734c501d778f027dae67b75abdc59",
+      "bytes": 1048046
+    },
+    {
+      "path": "data/runtime/research/brentoil_oil_shock_shadow_latest.json",
+      "sha256": "49a8a3d5ae3ffc16df1e701f20e12223be43006a0a3dec870094996615a64a52",
+      "bytes": 2005
+    },
+    {
+      "path": "src/hypervector/live/hip3_shadow_candle_storage.py",
+      "sha256": "291570c3fd7ac689b95a54bedf73b83337bce302fc39930b1d247bd0e7d58b84",
+      "bytes": 9389
+    },
+    {
+      "path": "src/hypervector/live/brentoil_oil_shock_shadow_runner.py",
+      "sha256": "a87d041620dcacd93d5c5b42596f859881f1b9870408791a868b312e991b008f",
+      "bytes": 18959
+    },
+    {
+      "path": "docs/research-journal/v51-oil-lane-development-comparison-v2.json",
+      "sha256": "4fa505edc74ac9241f63aa3d3edeb7e76e7bf345841b11dccae98b3db71fd0d5",
+      "bytes": 8754
+    },
+    {
+      "path": "docs/research-journal/v51-brentoil-outside-us-prospective-challenger-v3.json",
+      "sha256": "f300de1bc560decc7da510d8b1daafd73e4abe375212c2c3fdbc63343f107227",
+      "bytes": 7432
+    }
+  ],
+  "contract": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_live_change": false,
+    "automatic_promotion": false,
+    "runtime_strategy_changed": false,
+    "v1_evidence_rewritten": false
+  }
+}

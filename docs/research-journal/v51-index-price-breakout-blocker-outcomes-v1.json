@@ -1,0 +1,118 @@
+{
+  "schema_version": "v51_index_price_breakout_blocker_outcomes_v1",
+  "mode": "report_only",
+  "execution_authority": "none",
+  "automatic_live_change": false,
+  "runtime_strategy_changed": false,
+  "source_profile_id": "multi_asset_growth_first_5000_six_asset_profit_lock_candidate_v51",
+  "source_profile_fingerprint": "30cd54bb5b5b17249ae0a6a3b01d5702b276d51f8dc5ddd6b4d36ab6aa7d1908",
+  "source_run_id": "bidirectional-live-1786656816144",
+  "question": "Do exact live-source index observations with EMA and pressure confirmation but no price breakout show enough subsequent movement to justify relaxing the v51 price-breakout requirement?",
+  "method": {
+    "signal_source": "frozen prospective v51 live-v3 observer decisions",
+    "market_path_source": "unsigned Hyperliquid 15m candleSnapshot",
+    "candidate_definition": "EMA alignment true, pressure confirmation true, price breakout false",
+    "horizons_minutes": [
+      15,
+      30,
+      60
+    ],
+    "reference_price": "completed decision candle close",
+    "overlap_control": "all paths plus greedy non-overlapping path summary",
+    "stop_sensitivity_bps": 80.0,
+    "friction_policy": "twice the source-bound modeled taker entry fee plus entry slippage; descriptive symmetric round-trip sensitivity"
+  },
+  "evidence": [
+    {
+      "path": "../../data/logs/research/v51_sp500_price_blocker_outcomes_20260814_v2.json",
+      "sha256": "579b554ff1993535e53b8f12657035f18a7f889adbc3300683817c6dc097344e",
+      "bytes": 17691
+    },
+    {
+      "path": "../../data/logs/research/v51_spcx_price_blocker_outcomes_20260814_v2.json",
+      "sha256": "de3324f1707788d15fa4310c33fb93c1542189cc0a4d7801918a740a12ac4923",
+      "bytes": 21291
+    }
+  ],
+  "results": {
+    "xyz:SP500_long": {
+      "candidate_observations": 4,
+      "round_trip_friction_bps": 4.5341785526,
+      "resolved_paths": {
+        "15m": 4,
+        "30m": 4,
+        "60m": 4
+      },
+      "mean_after_friction_bps": {
+        "15m": -4.950733447573947,
+        "30m": -4.341789495646546,
+        "60m": -3.893066203568245
+      },
+      "greedy_independent_mean_after_friction_bps": {
+        "15m": -4.950733447573947,
+        "30m": -4.234926958688858,
+        "60m": -3.5938963846108627
+      },
+      "cost_clearing_paths": {
+        "15m": 0,
+        "30m": 0,
+        "60m": 0
+      },
+      "stop_touches": 0
+    },
+    "xyz:SPCX_short": {
+      "candidate_observations": 7,
+      "round_trip_friction_bps": 7.2311353082,
+      "resolved_paths": {
+        "15m": 7,
+        "30m": 7,
+        "60m": 5
+      },
+      "mean_after_friction_bps": {
+        "15m": -8.658090561342872,
+        "30m": -9.175122406260064,
+        "60m": -8.967359751109175
+      },
+      "greedy_independent_mean_after_friction_bps": {
+        "15m": -8.658090561342872,
+        "30m": -3.3021653545754575,
+        "60m": -1.1646614105400752
+      },
+      "cost_clearing_paths": {
+        "15m": 1,
+        "30m": 3,
+        "60m": 2
+      },
+      "stop_touches": 0
+    }
+  },
+  "decision": {
+    "status": "rejected",
+    "experiment": "remove_or_relax_price_breakout_requirement",
+    "parameter_change_supported": false,
+    "reason": "Every horizon had negative mean after modeled friction for both measured source-native sides. SP500 had zero cost-clearing paths; SPCX was mixed and remained negative under all-path, independent-path, and largest-observation sensitivity.",
+    "live_action": "keep the exact v51 price-breakout requirement unchanged"
+  },
+  "confidence": {
+    "level": "medium",
+    "basis": "exact source-native prospective decisions and causal completed market paths, but only four SP500 and seven SPCX candidate observations",
+    "economic_edge_confidence": "low because no executable entry quotes or completed v51 index lifecycles exist"
+  },
+  "reopen_condition": "A predeclared later live-source window must materially expand independent price-only blocker observations and remain positive after source-bound costs, largest-winner removal, and side-specific analysis without weakening data or freshness contracts.",
+  "limitations": [
+    "Decision close is not an executable entry quote.",
+    "Exit costs are a symmetric sensitivity derived from modeled entry costs because v51 has no index fills yet.",
+    "The study does not reproduce the active profit-lock or a complete lifecycle.",
+    "Small samples can miss a regime-specific effect.",
+    "No strategy, route, parameter, leverage, sizing, exit, or deployment behavior changed."
+  ],
+  "superseded_evidence": [
+    {
+      "paths": [
+        "../../data/logs/research/v51_sp500_price_blocker_outcomes_20260814_v1.json",
+        "../../data/logs/research/v51_spcx_price_blocker_outcomes_20260814_v1.json"
+      ],
+      "reason": "The v1 generator did not exclude a terminal forming candle. The v2 generator is TDD-protected and includes only bars whose close time is at or before observed_at."
+    }
+  ]
+}

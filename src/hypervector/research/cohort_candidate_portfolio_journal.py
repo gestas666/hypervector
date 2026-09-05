@@ -91,6 +91,7 @@ def _validated_replay(
     supported_modes = {
         "one_blocker_execution_feasibility",
         "eligible_policy_forward_observer",
+        "v51_sol_route_native_one_blocker_shadow",
     }
     if replay.get("schema_version") != 1 or replay.get("mode") not in supported_modes:
         raise ValueError("candidate portfolio replay envelope is invalid")
@@ -334,12 +335,18 @@ def _outcome(execution: Record | None) -> dict[str, object]:
 def _summary(rows: Sequence[Record]) -> dict[str, object]:
     classes = Counter(row["portfolio_classification"] for row in rows)
     resolved = sum(row["outcome_status"] == "resolved" for row in rows)
-    deployable = [
-        number(row.get("net_return_bps"), "deployable net return")
+    deployable_rows = [
+        row
         for row in rows
         if row["portfolio_classification"] == "deployable_flat_entry"
-        and row["outcome_status"] == "resolved"
     ]
+    deployable = [
+        number(row.get("net_return_bps"), "deployable net return")
+        for row in deployable_rows
+        if row["outcome_status"] == "resolved"
+    ]
+    active = sum(row.get("status") == "exit_pending" for row in deployable_rows)
+    unresolved = len(deployable_rows) - len(deployable) - active
     gains = sum(value for value in deployable if value > 0.0)
     losses = -sum(value for value in deployable if value < 0.0)
     absolute = sum(abs(value) for value in deployable)
@@ -355,6 +362,11 @@ def _summary(rows: Sequence[Record]) -> dict[str, object]:
             max((abs(value) for value in deployable), default=0.0) / absolute
             if absolute
             else None
+        ),
+        "deployable_active_pending": active,
+        "deployable_technically_unresolved": unresolved,
+        "deployable_observed_sides": sorted(
+            {text(row.get("side"), "deployable side") for row in deployable_rows}
         ),
         "existing_symbol_position": classes["existing_symbol_position"],
         "portfolio_capacity": classes["portfolio_capacity"],

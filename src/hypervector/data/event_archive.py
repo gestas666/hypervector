@@ -14,6 +14,8 @@ from uuid import uuid4
 import pyarrow as pa
 import pyarrow.parquet as pq
 
+from hypervector.data.event_archive_window import read_window_rows
+
 from hypervector.data.hl_events import (
     AssetContextEvent,
     BookLevel,
@@ -224,13 +226,13 @@ class EventArchive:
         ] = []
         events.extend(
             _l2_from_row(row)
-            for row in _read_window_parts(
+            for row in read_window_rows(
                 self._root, days, "l2.parquet", "exchange_ts_ms", start_ms, end_ms
             )
         )
         events.extend(
             _trade_from_row(row)
-            for row in _read_window_parts(
+            for row in read_window_rows(
                 self._root,
                 days,
                 "trades.parquet",
@@ -241,7 +243,7 @@ class EventArchive:
         )
         events.extend(
             _asset_context_from_row(row)
-            for row in _read_window_parts(
+            for row in read_window_rows(
                 self._root,
                 days,
                 "asset_context.parquet",
@@ -250,6 +252,32 @@ class EventArchive:
                 end_ns,
             )
         )
+        events.extend(_read_window_gaps(self._root, days, start_ns, end_ns))
+        return tuple(sorted(events, key=_window_event_key))
+
+    def replay_trade_window(
+        self,
+        start: datetime,
+        end: datetime,
+    ) -> tuple[PublicTradeEvent | StreamGap, ...]:
+        """Return only public trades and declared gaps inside one UTC interval."""
+        _validate_window(start, end)
+        days = _utc_days(start, end)
+        start_ms = int(start.timestamp() * 1_000)
+        end_ms = int(end.timestamp() * 1_000)
+        start_ns = int(start.timestamp() * 1_000_000_000)
+        end_ns = int(end.timestamp() * 1_000_000_000)
+        events: list[PublicTradeEvent | StreamGap] = [
+            _trade_from_row(row)
+            for row in read_window_rows(
+                self._root,
+                days,
+                "trades.parquet",
+                "exchange_ts_ms",
+                start_ms,
+                end_ms,
+            )
+        ]
         events.extend(_read_window_gaps(self._root, days, start_ns, end_ns))
         return tuple(sorted(events, key=_window_event_key))
 
@@ -282,23 +310,6 @@ def _read_parts(root: Path, dataset: str) -> tuple[Mapping[str, object], ...]:
     for path in sorted(root.glob(f"*/{dataset}/part-*.parquet")):
         for row in pq.read_table(path).to_pylist():
             rows.append(_mapping(row))
-    return tuple(rows)
-
-
-def _read_window_parts(
-    root: Path,
-    days: tuple[str, ...],
-    dataset: str,
-    timestamp_column: str,
-    start: int,
-    end: int,
-) -> tuple[Mapping[str, object], ...]:
-    rows: list[Mapping[str, object]] = []
-    filters = [(timestamp_column, ">=", start), (timestamp_column, "<", end)]
-    for day in days:
-        for path in sorted((root / day / dataset).glob("part-*.parquet")):
-            for row in pq.read_table(path, filters=filters).to_pylist():
-                rows.append(_mapping(row))
     return tuple(rows)
 
 

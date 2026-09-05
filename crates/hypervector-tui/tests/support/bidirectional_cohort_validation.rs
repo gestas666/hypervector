@@ -62,6 +62,20 @@ fn strategy_evidence_rejects_incomplete_provider_symbol_coverage() {
 }
 
 #[test]
+fn strategy_evidence_accepts_low_to_medium_confidence() {
+    let mut identity_row: Value = serde_json::from_str(&identity()).expect("identity row");
+    identity_row["payload"]["strategy_evidence"][0]["confidence"] = json!("low_to_medium");
+
+    let backend = parse_backend_telemetry(&format!("{}\n", identity_row))
+        .expect("supported research confidence");
+
+    assert_eq!(
+        backend.cohort.strategy_evidence[0].confidence,
+        "low_to_medium"
+    );
+}
+
+#[test]
 fn provider_sizing_above_the_asset_adapter_ceiling_is_rejected() {
     let mut identity_row: Value = serde_json::from_str(&identity()).expect("identity row");
     identity_row["payload"]["providers"][1]["sizing_overrides"] = json!({

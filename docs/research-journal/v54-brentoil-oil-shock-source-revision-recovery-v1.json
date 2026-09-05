@@ -1,0 +1,155 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v54-brentoil-oil-shock-source-revision-recovery-v1",
+  "generated_at_utc": "2026-08-18T06:17:20Z",
+  "status": "new_prospective_window_running_waiting_for_first_eligible_signal",
+  "problem_restatement": {
+    "input": "The original report-only BRENTOIL oil-shock observer stopped when Hyperliquid revised a completed candle after its first observation.",
+    "required_output": "Resume causal evidence collection without rewriting old evidence, weakening source checks, or changing the live v53 portfolio.",
+    "success_criteria": [
+      "Preserve the original observer ledger and its eligible short decision exactly as recorded.",
+      "Start a separately identified prospective window at a new cursor boundary.",
+      "Record every new completed five-minute decision once with no order or signing authority.",
+      "Fail closed on any source revision in the new window."
+    ]
+  },
+  "known_facts": {
+    "symbol": "xyz:BRENTOIL",
+    "provider_id": "hip3_brentoil_oil_shock_reversion_bidirectional_5m_shadow_v1",
+    "profile_id": "brentoil_oil_shock_reversion_5m_shadow_v1",
+    "timeframe": "5m",
+    "signal_ohlc_source": "hyperliquid_public_candleSnapshot_5m",
+    "original_window_decisions": 433,
+    "original_window_eligible_shorts": 1,
+    "original_window_source_revision_rows": 2,
+    "original_signal_field_revision": {
+      "bar_open_utc": "2026-08-17T08:25:00Z",
+      "stored_close": 86.729,
+      "current_close": 86.728,
+      "classification": "source_finalization_contract_mismatch"
+    },
+    "original_observer_restart_supported": false,
+    "source_revision_tolerance_widened": false,
+    "old_evidence_rewritten": false
+  },
+  "new_prospective_window": {
+    "observer_parent_pid_at_capture": 3506,
+    "observer_child_pid_at_capture": 3507,
+    "poll_seconds": 5,
+    "cursor_decision_time_ms": 1787033700000,
+    "decision_rows_total": 1,
+    "prospective_candle_rows_total": 1,
+    "eligible_decisions_total": 0,
+    "long_decisions_total": 0,
+    "short_decisions_total": 0,
+    "non_action_decisions_total": 1,
+    "source_revision_rows_total": 0,
+    "execution_authority": "none",
+    "report_only": true,
+    "orders_supported": false,
+    "signing_client_constructed": false,
+    "automatic_promotion": false,
+    "runtime_strategy_changed": false,
+    "first_decision": {
+      "decision_time_ms": 1787033700000,
+      "observed_at_ms": 1787033700205,
+      "decision_delay_ms": 205,
+      "candle_close": 89.692,
+      "trailing_return_bps": 16.97565333928841,
+      "shock_threshold_bps": 87.06403709003274,
+      "eligible": false,
+      "side": null,
+      "non_action_reason": "no_shock_onset"
+    }
+  },
+  "recommendation": "Continue the new BRENTOIL report-only window and resolve its first source-native oil-shock lifecycle if one occurs. Do not restore Range Onset, retired Swing, or the cross-asset breakout transfer; do not tune the threshold from this one non-action decision.",
+  "why_now": "The stale observer was a technical dead end, but BRENTOIL remains a liquid and diversifying candidate. A clean prospective epoch is the lowest-risk way to test the distinct oil-shock mechanism without contaminating prior evidence.",
+  "evidence_reviewed": [
+    "Original 433-decision observer ledger and exact stopped status.",
+    "Two public candle revisions, including one signal-bearing close revision.",
+    "New 2,303-candle bootstrap ledger and first post-bootstrap decision.",
+    "Existing three-trade canary reconciliation and negative-stress development result."
+  ],
+  "observed_problem_or_opportunity": "The source transport is running again under a clean epoch. No prospective economic edge is established because the new window has zero eligible signals and zero lifecycles.",
+  "applicable_market_regime": "Five-minute outsized BRENTOIL return shocks followed by a frozen mean-reversion onset; regime context is descriptive and does not silently gate the trial.",
+  "alternatives_considered": [
+    "Overwrite or tolerate the revised candle; rejected because it would corrupt causal evidence.",
+    "Restart against the old immutable ledger; rejected because the exact fail-closed exception reproduces.",
+    "Restore Range Onset or retired Swing; rejected because they do not answer the distinct oil-shock hypothesis.",
+    "Drop BRENTOIL immediately; deferred because the new mechanism has not yet produced a prospective lifecycle."
+  ],
+  "proposed_live_change": "none",
+  "expected_upside": "A fully attributable oil-specific lifecycle can test diversification and after-cost execution without exposing live capital.",
+  "main_risks_and_failure_modes": [
+    "The public candle source may revise another signal field.",
+    "Shock signals may be too sparse for timely inference.",
+    "Development stress economics are negative and historical paths are unresolved.",
+    "The three-trade canary result is largest-winner dependent and belongs to different strategy identities."
+  ],
+  "validation_completed": [
+    "Reproduced the old fail-closed source-revision error.",
+    "Preserved old ledgers without mutation.",
+    "Bootstrapped a separate cursor and ledger root.",
+    "Observed the first new completed decision with 205-millisecond delay.",
+    "Confirmed zero signer, order, promotion, or live-runtime authority."
+  ],
+  "validation_still_required": [
+    "At least one complete prospective lifecycle per side before bidirectional inference.",
+    "Exact entry, exit, fee, funding, slippage, and path-quality reconciliation.",
+    "Positive stress economics excluding the largest winner in predeclared OOS evidence.",
+    "Continued zero source-revision accounting in the new epoch."
+  ],
+  "success_metrics": [
+    "Every new completed five-minute bar produces exactly one decision.",
+    "Zero signal-field revisions and zero duplicate decisions.",
+    "Every eligible signal is followed by a fully resolved lifecycle.",
+    "Stress net and profit factor remain positive after removing the largest winner."
+  ],
+  "failure_or_rollback_triggers": [
+    "Any signal-field revision or source-identity mismatch stops the observer.",
+    "Any missing or duplicate decision invalidates the window.",
+    "Resolved prospective lifecycles remain negative or outlier-dependent.",
+    "Venue liquidity or measured friction becomes incompatible with planned size."
+  ],
+  "confidence_level": "High confidence in the source-revision diagnosis and observer isolation; low confidence in repeatable profitability until prospective lifecycles resolve.",
+  "claim_falsifiers": [
+    "A byte audit showing the old signal candle never changed would falsify the source-revision diagnosis.",
+    "Any new observer-produced order, signer, or live-route change would falsify isolation.",
+    "A sufficiently sized negative after-cost, ex-largest-winner forward sample would falsify the economic hypothesis."
+  ],
+  "explicit_approval_requested": false,
+  "single_highest_value_next_investigation": "Resolve the first source-native BRENTOIL v2 oil-shock lifecycle while the independent HYPE-native lifecycle watcher continues; do not repeat the already rejected SPCX archive reacquisition.",
+  "evidence": {
+    "original_pause_journal": {
+      "path": "docs/research-journal/v53-brentoil-candle-revision-technical-pause-v1.json",
+      "bytes": 9274,
+      "sha256": "cc5b9fe5cf485bc1cee0c90254c1436b3087a82a76aa05dcfb7f3c6fbb5406b9"
+    },
+    "new_decision_prefix": {
+      "path": "data/live/research/brentoil_oil_shock_shadow_v2_20260818/decisions.jsonl",
+      "rows": 1,
+      "prefix_bytes": 1020,
+      "prefix_sha256": "45c72d966577a1ee8ca05b02a15bdd503811184c80b3d9f06613440ba18f5adf"
+    },
+    "new_candle_prefix": {
+      "path": "data/live/research/brentoil_oil_shock_shadow_v2_20260818/candles.jsonl",
+      "rows": 2304,
+      "prefix_bytes": 875642,
+      "prefix_sha256": "05b871cf99686a2e06a04962216f5a0dada67ede7281aee4d000fc3052340186"
+    },
+    "new_status_at_capture": {
+      "path": "data/runtime/research/brentoil_oil_shock_shadow_v2_latest.json",
+      "bytes": 1964,
+      "sha256": "2baa77db2a7cab206eaea3f20c3a57edab37d504d30ad0f55790253b2a5587a6"
+    }
+  },
+  "contract": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_live_change": false,
+    "automatic_promotion": false,
+    "runtime_strategy_changed": false,
+    "old_evidence_rewritten": false,
+    "live_v53_changed": false
+  }
+}

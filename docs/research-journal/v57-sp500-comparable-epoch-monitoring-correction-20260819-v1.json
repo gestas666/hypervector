@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v57-sp500-source-comparable-epoch-monitoring-v1",
+  "recorded_at_utc": "2026-08-19T02:09:18Z",
+  "mode": "report_only",
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "automatic_retuning": false,
+  "runtime_strategy_changed": false,
+  "performance_gate": false,
+  "problem_restatement": "The continuous improvement digest exposed eight cumulative SP500 eligible decisions beside a repaired frozen-epoch lifecycle result with zero eligible entries. The two counters covered different source contracts and could be misread as missing lifecycle processing.",
+  "root_cause": {
+    "classification": "reporting_attribution_ambiguity",
+    "component": "external candidate observer projection",
+    "mechanism": "The observer status publishes whole-journal cumulative eligibility, while the repaired lifecycle hypothesis begins at decision_start_ms 1787103000000 after durable one-minute exit capture became source-complete.",
+    "last_pre_epoch_eligible_decision_ms": 1787098500000,
+    "distance_before_epoch_ms": 4500000,
+    "missing_execution_or_exit_logic": false,
+    "live_capital_impact_observed": false
+  },
+  "implemented_correction": {
+    "behavior": "Preserve cumulative observer totals and add a separately labeled source-comparable decision epoch derived from an identity-validated append-only journal prefix.",
+    "fail_closed_checks": [
+      "exact symbol, profile, and provider identity",
+      "report-only and execution-authority-none contract",
+      "prospective decision identity",
+      "ordered unique decision timestamps",
+      "no future evidence",
+      "eligibility and side reconciliation",
+      "prefix checksum unchanged during evaluation"
+    ],
+    "live_backend_changed": false,
+    "live_config_changed": false,
+    "strategy_or_risk_changed": false
+  },
+  "current_result": {
+    "digest_generated_at_utc": "2026-08-19T02:08:50.280292+00:00",
+    "decision_start_ms": 1787103000000,
+    "cumulative_observer_eligible_decisions": 8,
+    "source_comparable_decision_rows": 3,
+    "source_comparable_eligible_decisions": 0,
+    "source_comparable_long_decisions": 0,
+    "source_comparable_short_decisions": 0,
+    "source_comparable_state": "waiting_eligible_onset",
+    "prospective_lifecycle": null,
+    "live_authorized": false,
+    "strategy_edge_established": false,
+    "change_proposals": []
+  },
+  "validation": {
+    "tdd_red": "The new integration assertion failed with KeyError comparable_decision_epoch before implementation.",
+    "tdd_green": "The focused comparable-epoch and default-catalog tests passed after implementation.",
+    "broader_tests": "56 passed across external pipeline, improvement digest, continuous improvement, and live opportunity diagnostics.",
+    "ruff_check": "passed",
+    "ruff_format_check": "passed",
+    "git_diff_check": "passed",
+    "bounded_real_monitor": "published with cumulative eligible 8 and source-comparable eligible 0",
+    "continuous_monitor": "restarted report-only and published under PID 83577/83578",
+    "active_v57_backend_pid_unchanged": "83755/83756"
+  },
+  "source_evidence": {
+    "decision_journal_prefix": {
+      "path": "../../data/live/research/xyz_sp500_fresh15_v3_decisions.jsonl",
+      "rows": 402,
+      "bytes": 421975,
+      "sha256": "c11e29028bebe2b461fcdff75c0996cf05878664bec5188f09a5858567e9e5c3"
+    },
+    "external_pipeline": {
+      "path": "../../src/hypervector/research/cohort_external_asset_pipeline.py",
+      "bytes": 17522,
+      "sha256": "19dfbeb51f16ac2cc584ed8db85b7ab7f65fb5c03fc347f324a5c5de003cb906"
+    },
+    "comparable_epoch_parser": {
+      "path": "../../src/hypervector/research/cohort_external_comparable_epoch.py",
+      "bytes": 5575,
+      "sha256": "d02cb9519d5ba3da69843e911ac62e7b8dbb38fa438e05dd065604b5ce7ebc89"
+    },
+    "candidate_evidence_builder": {
+      "path": "../../src/hypervector/research/cohort_external_candidate_evidence.py",
+      "bytes": 3164,
+      "sha256": "0575490d37f415b8df86918a6d7e56efe4f532eddacbde1ecfe67f154dc3e207"
+    },
+    "candidate_catalog": {
+      "path": "../../configs/research/v51_external_asset_pipeline.json",
+      "bytes": 4866,
+      "sha256": "5097ec551e7325c0bc350d2e09c3aa6dc8b1697ecb5682db2e93f17add1bf69a"
+    }
+  },
+  "hypothesis_decision": {
+    "status": "accepted_monitoring_correction_hypothesis_remains_open",
+    "live_change_supported": false,
+    "reason": "The correction closes a measurement ambiguity but adds no source-comparable SP500 lifecycle or profitability evidence."
+  },
+  "single_highest_value_next_investigation": {
+    "action": "Resolve the first source-comparable SP500 eligible lifecycle under the unchanged fresh15 v3 entry and v51 exit contract.",
+    "why": "SP500 is the closest missing roster asset, its source pipeline is now attributable, and a resolved lifecycle has higher information value than relaxing entry gates or transferring another strategy.",
+    "minimum_diagnostic_evidence": "One technically resolved lifecycle per configured side.",
+    "minimum_change_evidence": "A predeclared source-complete window with exact fees, funding, quote timing, stop and profit-lock behavior, positive after-cost results, and positive largest-winner sensitivity.",
+    "capital_downside": "none from the report-only observer"
+  },
+  "alternatives": [
+    {
+      "option": "Treat all eight cumulative eligibles as repaired-epoch evidence",
+      "disposition": "rejected",
+      "reason": "Seven predate the repair and the latest pre-epoch short lacks a complete frozen one-minute exit prefix."
+    },
+    {
+      "option": "Relax SP500 gates to force cadence",
+      "disposition": "rejected",
+      "reason": "This would change the hypothesis before source-comparable expectancy exists."
+    },
+    {
+      "option": "Activate SP500 from cumulative observer counts",
+      "disposition": "rejected",
+      "reason": "Eligibility counts are not resolved fills, costs, PnL, or edge."
+    }
+  ],
+  "confidence": {
+    "root_cause": "high",
+    "monitoring_correction": "high",
+    "future_sp500_profitability": "low_unverified"
+  },
+  "falsifier": "Revise this record if a source-comparable decision is missing from the epoch count, an identity-mismatched or future row is accepted, the consumed prefix hash changes, the frozen route identity changes, or a resolved lifecycle contradicts the current zero-lifecycle state."
+}

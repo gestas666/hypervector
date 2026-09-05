@@ -1,0 +1,102 @@
+{
+  "schema_version": "v52_stop_only_stop_preserving_exit_remediation_v1",
+  "hypothesis_id": "v52-stop-only-stop-preserving-exit-remediation-v1",
+  "generated_at_utc": "2026-08-17T00:36:25Z",
+  "status": "approval_ready_not_deployed",
+  "problem_restatement": "Prevent scheduled, opposite-signal, and maximum-hold exits for stop-only positions from creating an avoidable unprotected interval while retaining exact restart and residual-order reconciliation.",
+  "root_cause": {
+    "confidence": "high",
+    "finding": "The stop-only close path canceled its sole venue-native stop before submitting the reduce-only close. The bracketed path already used the safer close-with-stop-armed ordering.",
+    "baseline_no_action": "Retaining the loaded implementation leaves stop-only BTC sweep and HYPE exits exposed to a cancel-to-close interval if an exit is triggered.",
+    "falsifier": "This diagnosis would be updated if the live adapter or venue proved that an armed reduce-only stop prevents a reduce-only close from executing; the existing bracketed path and its tests currently contradict that failure hypothesis."
+  },
+  "proposed_execution_change": {
+    "normal_close": "Submit the reduce-only close while the exact owned stop remains armed; cancel only the residual owned stop after venue exposure is zero; verify complete venue flatness before clearing local ownership.",
+    "rejected_close": "Perform bounded authoritative reconciliation; restore OPEN only if the original stop still protects the exact position, or attribute an intervening exact owned-stop fill.",
+    "missing_stop": "If residual exposure exists and the original stop is unexpectedly absent, place and verify one replacement stop; never treat an acknowledgement alone as verified protection.",
+    "restart": "A recovered filled close cancels only its still-visible owned residual stop and verifies venue flatness without resubmitting the close.",
+    "strategy_parameters_changed": false,
+    "asset_roster_changed": false,
+    "leverage_or_sizing_changed": false,
+    "exit_trigger_logic_changed": false
+  },
+  "validation": {
+    "focused_red_green_regressions": 7,
+    "expanded_non_network_tests_passed": 155,
+    "expanded_non_network_tests_failed": 0,
+    "ruff_check": "pass",
+    "ruff_format": "pass",
+    "diff_check": "pass",
+    "production_file_line_limit": "pass",
+    "production_function_line_limit": "pass",
+    "validated_failure_modes": [
+      "normal close precedes residual stop cancellation",
+      "rejected close retains the original stop",
+      "owned stop fill during a rejected close resolves exact FLAT",
+      "unexpectedly missing stop is replaced and venue-verified",
+      "unverified replacement acknowledgement faults instead of claiming OPEN",
+      "lost residual-cancel response recovers by exact OID after close",
+      "restart after filled close removes only the owned residual stop"
+    ]
+  },
+  "source_evidence": [
+    {
+      "path": "src/hypervector/live/sol_range_onset_stop_close.py",
+      "bytes": 7300,
+      "sha256": "2b020981e97c89d87ba159d4d43eeeecfd26306d4aa62805890ca49edb82c74b"
+    },
+    {
+      "path": "src/hypervector/live/sol_range_onset_engine.py",
+      "bytes": 17075,
+      "sha256": "7d1536ffaa301f927158b4961ff6622bf28f136df7cb6d329a8bb5a3c49064c0"
+    },
+    {
+      "path": "src/hypervector/live/sol_range_onset_exit_restart.py",
+      "bytes": 10836,
+      "sha256": "59050eba658f2eec94cf12763977416d5fa696c0b258bc1fcbd309b0e9748db7"
+    },
+    {
+      "path": "configs/multi_asset_growth_first_5000_evidence_bound_successor_v52.toml",
+      "sha256": "bcc46284503a2b38b43ee1f6dca473d32edfb7c9f2cb5cd50dd828f9dabe00fb"
+    }
+  ],
+  "current_runtime": {
+    "run_id": "bidirectional-live-1786885252328",
+    "profile_id": "multi_asset_growth_first_5000_evidence_bound_successor_v52",
+    "profile_fingerprint": "662d28b352cfc4f09e08c71ee67c8f044421483f2932539b09ea082b5e4f27f7",
+    "observed_at_utc": "2026-08-17T00:36:05.435081+00:00",
+    "lifecycle": "running_consistent",
+    "asset_states": {
+      "BTC": "FLAT",
+      "HYPE": "FLAT"
+    },
+    "faulted_assets": [],
+    "loaded_fix": false
+  },
+  "recommendation": {
+    "1_recommendation": "Approve a controlled v52 restart so the running backend loads the tested stop-preserving exit implementation.",
+    "2_why_now": "The current two-asset run is flat and healthy, but its already-running Python process still has the prior cancel-first implementation loaded.",
+    "3_evidence_reviewed": "Exact v52 config and checkpoint, stop-only and bracketed close paths, state machine, order journal/recovery path, restart code, and 155 relevant non-network tests.",
+    "4_observed_problem_or_opportunity": "The execution implementation—not the strategy trigger—creates an avoidable protection gap during a stop-only close.",
+    "5_applicable_market_regime": "All regimes and every stop-only v52 position; the defect is execution-path invariant.",
+    "6_alternatives_considered": "Do nothing; cancel first and replace on failure; keep the stop armed and reconcile residuals. The third option removes the normal naked interval while preserving fail-closed recovery.",
+    "7_proposed_live_change": "Restart the same v52 profile with unchanged strategies, assets, sizing, leverage, entry logic, stop distances, targets, and time exits, loading only the stop-preserving close implementation.",
+    "8_expected_upside": "Reduce capital-loss exposure during scheduled/opposite-signal exits and avoid unnecessary stop replacement on ordinary close rejection.",
+    "9_main_risks_and_failure_modes": "Close/stop race, residual cancel ambiguity, replacement stop acknowledgement without visibility, restart between close and cleanup, or unknown venue orders.",
+    "10_validation_completed": "Seven focused failure-mode regressions plus 155 expanded execution/configuration tests; source style and structural limits pass.",
+    "11_validation_still_required": "Fresh flat/order-free venue preflight, immutable prestart backup, controlled restart, poststart identity reconciliation, all-assets heartbeat advance, and TUI all-screen acceptance against the new run.",
+    "12_success_metrics": "No unprotected close interval; exact owned stop remains until zero exposure; residual stop removed only after zero exposure; no duplicate close; healthy poststart checkpoint and TUI.",
+    "13_failure_or_rollback_triggers": "Any non-flat or owned-order preflight, source/hash drift, restart identity mismatch, missing protection, unknown order, duplicate close, faulted asset, stale checkpoint, or failed poststart acceptance.",
+    "14_confidence_level": "high on the identified cancel-first defect and test-level remediation; medium on production behavior until one real protected lifecycle exercises the new path",
+    "15_explicit_approval_requested": true
+  },
+  "highest_value_next_investigation": {
+    "experiment": "first real v52 stop-preserving exit lifecycle audit",
+    "reason": "It is the earliest empirical falsifier of the corrected close/restart contract.",
+    "live_change_authority": "requires explicit restart approval"
+  },
+  "report_only": true,
+  "execution_authority": "none",
+  "automatic_live_change": false,
+  "runtime_strategy_changed": false
+}

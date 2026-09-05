@@ -179,6 +179,52 @@ def test_fault_after_durable_mutation_remains_ambiguous() -> None:
         reconcile_sol_startup(records=records, venue=_venue(0.0))
 
 
+def test_definitive_ioc_no_fill_fault_recovers_only_with_venue_flat() -> None:
+    """The recorded V80 no-match pattern must not poison a flat restart."""
+    client_order_id = "0x11111111111111111111111111111111"
+    records = [
+        _record("ENTRY_PENDING"),
+        {
+            "event_type": "order_intent",
+            "payload": {
+                "operation": "entry",
+                "client_order_id": client_order_id,
+            },
+        },
+        {
+            "event_type": "order_acknowledgement",
+            "payload": {
+                "operation": "entry",
+                "accepted": False,
+                "oid": None,
+                "status": "error",
+                "error": (
+                    "Order could not immediately match against any resting orders. "
+                    "asset=214"
+                ),
+                "client_order_id": client_order_id,
+            },
+        },
+        {
+            "event_type": "fault",
+            "payload": {
+                "reason": (
+                    "entry rejected: Order could not immediately match against any "
+                    "resting orders. asset=214"
+                )
+            },
+        },
+        _record("FAULTED"),
+    ]
+
+    outcome = reconcile_sol_startup(records=records, venue=_venue(0.0))
+
+    assert outcome.disposition == "flat"
+    assert outcome.ownership is None
+    with pytest.raises(SolStartupReconciliationError, match="unknown venue exposure"):
+        reconcile_sol_startup(records=records, venue=_venue(0.30))
+
+
 def test_verified_owned_position_and_exact_stop_can_be_restored() -> None:
     """Restart restores only matching position size and protective-order identity."""
     outcome = reconcile_sol_startup(

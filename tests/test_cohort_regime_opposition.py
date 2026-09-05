@@ -81,6 +81,38 @@ def test_opposition_episode_rejects_conflicting_duplicate_decisions() -> None:
         )
 
 
+def test_opposition_ignores_receipt_time_technical_unavailability() -> None:
+    """An observer outage is missing provider evidence, not a regime decision."""
+    unavailable = {
+        "strategy_id": "provider",
+        "symbol": "BTC",
+        "decision_time_ms": 90_123,
+        "reference_price": 100.0,
+        "decision_action": "technical_unavailable",
+        "eligible": False,
+        "reason": "observer_status_stale",
+        "side": None,
+        "backend_non_action_reason": "observer_status_stale",
+        "readiness": {
+            "side": None,
+            "blockers": ["observer_status_stale"],
+            "metrics": {"technical_availability": "unavailable"},
+        },
+    }
+
+    episode = build_regime_opposition_episode(
+        "long",
+        [unavailable],
+        [_evaluation(120_000, "RANGE")],
+        entry_timestamp_ms=0,
+        end_timestamp_ms=180_000,
+    )
+
+    assert episode["completed_decisions"] == 1
+    assert episode["unavailable_decisions"] == 1
+    assert episode["opposed_decisions"] == 0
+
+
 def test_support_decay_requires_five_contiguous_weak_decisions() -> None:
     """Mixed structure must persist before it can arm a report-only profit lock."""
     builder = getattr(

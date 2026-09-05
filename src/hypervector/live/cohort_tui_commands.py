@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from pathlib import Path
 import sys
 from typing import Protocol
@@ -11,9 +12,20 @@ from typing import Protocol
 from hypervector.live.eth_breakout_transfer_provider import (
     ETH_BREAKOUT_TRANSFER_STRATEGY,
 )
+from hypervector.live.hype_breakout_cohort_provider import (
+    HYPE_BREAKOUT_COHORT_STRATEGY,
+)
+from hypervector.live.hip3_fresh15_journal_provider import (
+    HIP3_INDEX_FRESH15_V3_STRATEGY,
+    require_fresh_index_observer,
+    require_fresh_index_observers,
+)
 from hypervector.live.multi_asset_live_config import (
     MultiAssetLiveConfig,
     MultiAssetLiveConfigError,
+)
+from hypervector.live.spcx_cash_session_breakout_provider import (
+    SPCX_CASH_SESSION_LONG_STRATEGY,
 )
 from hypervector.research.cohort_live_portfolio_archive import CohortAccountingEpoch
 
@@ -77,10 +89,15 @@ class MultiAssetTuiLaunch:
     audit_command: tuple[str, ...] | None
     startup_timeout_seconds: float
     accounting_epoch: CohortAccountingEpoch | None = None
+    dependency_command: tuple[str, ...] | None = None
 
 
-def backend_command(args: CohortTuiArguments) -> tuple[str, ...]:
+def backend_command(
+    args: CohortTuiArguments, config: MultiAssetLiveConfig
+) -> tuple[str, ...]:
     """Build the explicit live backend command."""
+    if index_observer_dependency_command(config) is None:
+        require_live_provider_dependencies(config)
     command = (
         sys.executable,
         "scripts/multi_asset_bidirectional_live.py",
@@ -96,6 +113,38 @@ def backend_command(args: CohortTuiArguments) -> tuple[str, ...]:
     if args.accounting_epoch_bundle is not None:
         command += ("--accounting-epoch-bundle", str(args.accounting_epoch_bundle))
     return command
+
+
+def require_live_provider_dependencies(config: MultiAssetLiveConfig) -> None:
+    """Fail closed when a configured external signal dependency is stale."""
+    if any(
+        provider.strategy_id == HIP3_INDEX_FRESH15_V3_STRATEGY
+        for provider in config.providers
+    ):
+        require_fresh_index_observers(datetime.now(UTC))
+    if any(
+        provider.strategy_id == SPCX_CASH_SESSION_LONG_STRATEGY
+        for provider in config.providers
+    ):
+        require_fresh_index_observer("xyz:SPCX", datetime.now(UTC))
+
+
+def index_observer_dependency_command(
+    config: MultiAssetLiveConfig,
+) -> tuple[str, ...] | None:
+    """Return the unsigned SPCX observer supervisor needed by V79."""
+    required = any(
+        provider.strategy_id == SPCX_CASH_SESSION_LONG_STRATEGY
+        for provider in config.providers
+    )
+    if not required:
+        return None
+    return (
+        sys.executable,
+        "scripts/index_hip3_breakout_shadow_observe.py",
+        "--symbol",
+        "xyz:SPCX",
+    )
 
 
 def require_checkpoint_accounting_epoch(
@@ -126,6 +175,7 @@ def observer_command(args: CohortTuiArguments) -> tuple[str, ...]:
 
 def tui_command(
     args: CohortTuiArguments,
+    config: MultiAssetLiveConfig,
     ledger: Path,
     *,
     include_checkpoint: bool,
@@ -141,13 +191,23 @@ def tui_command(
         if args.growth_preflight is not None
         else ()
     )
+    hype_l2_observer = (
+        (
+            "--hype-l2-observer-status",
+            str(_HYPE_L2_OBSERVER_STATUS),
+        )
+        if any(
+            provider.strategy_id == HYPE_BREAKOUT_COHORT_STRATEGY
+            for provider in config.providers
+        )
+        else ()
+    )
     return (
         *command,
         *lifecycle,
         *checkpoint,
         *growth,
-        "--hype-l2-observer-status",
-        str(_HYPE_L2_OBSERVER_STATUS),
+        *hype_l2_observer,
         "--hip3-roster-status",
         str(_HIP3_ROSTER_STATUS),
         "--cohort-command-inbox",
@@ -201,6 +261,7 @@ def checkpoint_command(
         "--research-sync-interval-seconds",
         str(_RESEARCH_SYNC_INTERVAL_SECONDS),
         "--venue-portfolio",
+        "--current-run-only",
         *_profile_bound_research_args(config),
     )
     if _eligible_policy_forward(config):
@@ -256,6 +317,8 @@ def audit_command(config: MultiAssetLiveConfig) -> tuple[str, ...]:
         "scripts/multi_asset_bidirectional_live_audit.py",
         "--ledger-root",
         str(config.cohort_ledger.parent),
+        "--history-scope",
+        "current-run",
         "--out-dir",
         str(_AUDIT_DIR),
     )

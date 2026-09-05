@@ -1,0 +1,102 @@
+{
+  "schema_version": "v58_sp500_partial_lifecycle_digest_projection_v1",
+  "observed_at_utc": "2026-08-19T07:22:04.049822+00:00",
+  "mode": "report_only_diagnostic_correction",
+  "hypothesis": "The central improvement digest omitted an already-captured SP500 open lifecycle because its external-candidate loader did not understand immutable partial replay evidence.",
+  "result": "confirmed_and_corrected",
+  "problem": {
+    "symbol": "xyz:SP500",
+    "provider_id": "hip3_breakout_pressure_sp500_spcx_fresh15s_bidirectional_v3",
+    "profile_id": "sp500_fresh15_pressure_shadow_research_v3",
+    "prior_digest_state": {
+      "comparable_eligible_short_decisions": 1,
+      "prospective_lifecycle": null,
+      "partial_lifecycle_visible": false
+    },
+    "root_cause": "The external loader supported mutable lifecycle-status schemas, while the SP500 evidence used immutable hip3_shadow_lifecycle_replay_v2 bytes and was intentionally absent from lifecycle_status_path.",
+    "impact": "Central traceability hid an open censored lifecycle. It did not change routing, execution, risk, PnL, or candidate ranking."
+  },
+  "correction": {
+    "projection_field": "external_asset_pipeline.candidates[].partial_lifecycle_evidence",
+    "evidence_state": "open_censored_lifecycle",
+    "nominal_completed": 0,
+    "nominal_censored": 1,
+    "stress_completed": 0,
+    "stress_censored": 1,
+    "pnl_claimed": false,
+    "live_change_supported": false,
+    "source_binding": {
+      "path": "data/logs/research/v58_sp500_fresh15_first_eligible_partial_lifecycle_20260819T0656Z_v1.json",
+      "sha256": "2bccf95ea9ea499b461f88d20d754987280c90d79cd9af3c9cc67eb34d463339",
+      "bytes": 1020489
+    }
+  },
+  "source_revision_evidence": [
+    {
+      "path": "configs/research/v51_external_asset_pipeline.json",
+      "sha256": "187f8e4ad8b88362a1b72cd57374c03b7ab81810ef0a51ff6dab9a0c81845511",
+      "bytes": 5505
+    },
+    {
+      "path": "src/hypervector/research/cohort_external_asset_pipeline.py",
+      "sha256": "51d833c297cf7f93d2686f2ee5d75ad68aed45e8d44923829fc8346ba94d8b18",
+      "bytes": 18193
+    },
+    {
+      "path": "src/hypervector/research/cohort_external_partial_lifecycle.py",
+      "sha256": "ee25d9387834193c2b592d2d4dbb27e933946ab973af4e39284f9edfe56671ff",
+      "bytes": 7508
+    },
+    {
+      "path": "tests/test_cohort_external_partial_lifecycle.py",
+      "sha256": "5f7023cc3e768136537f8ca9f65473285d1ecbe44a7d777ffd4648d535ba569b",
+      "bytes": 3904
+    },
+    {
+      "path": "tests/test_v57_sp500_external_candidate_integration.py",
+      "sha256": "e686dcb2cbeef04806ff87b417d167abb614eaf3a29ec048d31cdd9b2bf691cc",
+      "bytes": 2837
+    }
+  ],
+  "runtime_verification": {
+    "digest_path": "data/runtime/bidirectional_cohort/latest_improvement_digest.json",
+    "digest_sha256_at_verification": "6dd7ef1dbe2180ca79d1e7b615ef1a5915ceeaee60834d34ca5755bca7a0c501",
+    "digest_material_state_sha256": "0c234b4efa798506f50da40255e7b8f6349b8fd5a352bc4611a0099d7b61ab46",
+    "source_checkpoint_generated_at_utc": "2026-08-19T07:21:58.393333+00:00",
+    "highest_value_next_investigation_unchanged": "hype_breakout_compression_alignment_bidirectional_v2|HYPE",
+    "monitor_restarted_to_load_verified_source": true,
+    "v57_live_process_unchanged": true,
+    "v58_observer_process_unchanged": true,
+    "hype_and_mu_watchers_unchanged": true
+  },
+  "validation": {
+    "tdd_red": "The new module first failed import, then the end-to-end catalog test failed because partial_lifecycle_evidence was absent.",
+    "tdd_green": "44 focused external-pipeline, digest, and monitor tests passed in 1.29 seconds.",
+    "static_checks": "Ruff check, Ruff format check, four-file 500-line limits, 50-line function limits, artifact hash/bytes, digest contract, and process identity checks passed.",
+    "network_accessed": false
+  },
+  "authority": {
+    "execution_authority": "none",
+    "automatic_live_change": false,
+    "runtime_strategy_changed": false,
+    "risk_or_sizing_changed": false,
+    "candidate_ranking_changed": false,
+    "live_approval_requested": false
+  },
+  "uncertainties_and_failure_modes": [
+    "The immutable replay is a 41-minute censor snapshot, not a continuously updated lifecycle status.",
+    "A later configured exit requires a new immutable completed replay; this record must not be upgraded in place.",
+    "Artifact or identity byte drift now fails the digest refresh closed and leaves the last valid digest in place."
+  ],
+  "confidence": {
+    "level": "high",
+    "basis": "The original null was reproduced, both red tests were observed, exact source bytes were validated, the one-shot production path and restarted monitor emitted the bounded field, and authority/ranking invariants were asserted."
+  },
+  "falsifiers": [
+    "The source artifact hash or byte count differs from the catalog binding.",
+    "The digest reports completed lifecycles, PnL, or live_change_supported from this censored artifact.",
+    "The SP500 provider, profile, symbol, or replay schema differs from the bound contract.",
+    "The report-only correction changes v57/v58 execution behavior or research ranking."
+  ],
+  "next_action": "Continue source-native SP500 collection and publish a new immutable replay only after the configured stop, profit lock, eligible opposite intent, 24-hour fallback, or a technical evidence failure resolves the lifecycle."
+}

@@ -1,0 +1,268 @@
+{
+  "schema_version": "v51_spcx_source_native_open_lifecycle_audit_v1",
+  "generated_at_utc": "2026-08-15T20:13:18Z",
+  "mode": "report_only_open_lifecycle_audit",
+  "contract": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_live_change": false,
+    "runtime_strategy_changed": false
+  },
+  "runtime_identity": {
+    "active_run_id": "bidirectional-live-1786801038311",
+    "source_run_id": "bidirectional-live-1786691478619",
+    "profile_id": "multi_asset_growth_first_5000_six_asset_profit_lock_candidate_v51",
+    "profile_fingerprint": "30cd54bb5b5b17249ae0a6a3b01d5702b276d51f8dc5ddd6b4d36ab6aa7d1908",
+    "profile_history_scope": "compatible_profile_history",
+    "backend_state": "running_consistent",
+    "backend_process_health": "healthy",
+    "faulted_assets": []
+  },
+  "lifecycle": {
+    "lifecycle_id": "xyz:SPCX:517022750282",
+    "symbol": "xyz:SPCX",
+    "strategy_id": "hip3_breakout_pressure_sp500_spcx_fresh15s_bidirectional_v3",
+    "side": "short",
+    "decision_time_ms": 1786767300000,
+    "entry_oid": 517022750282,
+    "entry_venue_timestamp_ms": 1786767327326,
+    "entry_reference_price": 138.67,
+    "entry_price": 138.6232482662968,
+    "entry_size": 36.05,
+    "entry_slippage_bps": 3.3714382132537177,
+    "requested_notional_usd": 5000.0,
+    "leverage": 10,
+    "protective_stop_oid": 517022767203,
+    "protective_stop_trigger_price": 139.7321856,
+    "protective_stop_bps": 80.0,
+    "target_order": null,
+    "maximum_hold_seconds": 86400,
+    "deadline_timestamp_ms": 1786853700000,
+    "profit_lock": {
+      "policy": "completed_bar_trailing",
+      "activation_bps": 100.0,
+      "floor_bps": 40.0,
+      "giveback_bps": 80.0
+    },
+    "opposite_intent_exit": "selected_opposite_from_any_executable_provider_same_symbol"
+  },
+  "entry_signal_reconciliation": {
+    "observer_and_backend_identity_match": true,
+    "authoritative_side": "short",
+    "observer_eligible": true,
+    "backend_eligible": true,
+    "backend_routing_action": "enter",
+    "withheld_reason": null,
+    "completed_candle": {
+      "open": 139.64,
+      "high": 139.64,
+      "low": 138.66,
+      "close": 138.67,
+      "prior_32_bar_high": 141.15,
+      "prior_32_bar_low": 139.34,
+      "short_breakout_bps": 48.31614624648561
+    },
+    "trend": {
+      "ema_21": 139.9519924091744,
+      "ema_55": 140.09194713426862,
+      "ema_gap_bps": -10.092646217221713,
+      "short_alignment": true
+    },
+    "pressure": {
+      "depth_10_imbalance": -0.3307816034179442,
+      "minimum_absolute_imbalance": 0.1,
+      "snapshot_count": 162,
+      "end_boundary_age_ms": 774,
+      "decision_delay_ms": 5358,
+      "fresh": true,
+      "scan_complete": true,
+      "state_history_complete": true,
+      "short_confirmation": true
+    },
+    "raw_short_condition": true,
+    "reconstruction_source": "Hyperliquid public candleSnapshot 15m plus exact prospective pressure journal"
+  },
+  "execution_timeline": {
+    "observer_decision_observed_at_utc": "2026-08-15T04:15:05.358Z",
+    "backend_regime_decision_at_utc": "2026-08-15T04:15:26.244730Z",
+    "venue_entry_fill_at_utc": "2026-08-15T04:15:27.326Z",
+    "entry_ack_at_utc": "2026-08-15T04:15:27.407853Z",
+    "protective_stop_ack_at_utc": "2026-08-15T04:15:30.142201Z",
+    "stop_resting_reconciled_at_utc": "2026-08-15T04:15:31.716075Z",
+    "submission_and_protection_status": "accepted_filled_and_venue_protected"
+  },
+  "open_path_at_assessment": {
+    "checkpoint_generated_at_utc": "2026-08-15T20:12:44.005228Z",
+    "marked_net_pnl_usd": -29.915922,
+    "mark_price": 139.44,
+    "maximum_favorable_excursion_bps": 6.005361101976137,
+    "maximum_adverse_trade_candle_excursion_bps": 82.72434444042798,
+    "maximum_public_trade_candle_high": 139.77,
+    "maximum_venue_derived_mark_observed": 139.67,
+    "stop_trigger_price": 139.7321856,
+    "stop_trigger_crossed_by_observed_mark": false,
+    "profit_lock_activated": false,
+    "opposite_exit_signal_observed": false,
+    "estimated_exit_now_net_usd": -30.350233925834722,
+    "estimated_stop_net_usd": -40.88443487246364,
+    "status": "open_losing_source_native_lifecycle"
+  },
+  "compatible_route_history_at_assessment": {
+    "resolved_lifecycles": 2,
+    "open_lifecycles": 1,
+    "configured_long_lifecycles": 0,
+    "configured_short_lifecycles": 3,
+    "resolved": [
+      {
+        "lifecycle_id": "xyz:SPCX:516639241871",
+        "symbol": "xyz:SPCX",
+        "side": "short",
+        "exit_reason": "completed_bar_profit_lock",
+        "net_pnl_usd": 21.355552
+      },
+      {
+        "lifecycle_id": "xyz:SP500:516695933154",
+        "symbol": "xyz:SP500",
+        "side": "short",
+        "exit_reason": "maximum_hold_seconds",
+        "net_pnl_usd": 3.2296650000000007
+      }
+    ],
+    "resolved_net_pnl_usd": 24.585217,
+    "resolved_net_excluding_largest_winner_usd": 3.2296650000000007,
+    "current_open_marked_net_pnl_usd": -29.915922,
+    "resolved_plus_current_open_marked_net_pnl_usd": -5.330705,
+    "interpretation": "Two prior compatible source-native shorts closed profitably, but the current open short has erased their combined marked gain. No long-side lifecycle exists, and open marked PnL is not a realized result."
+  },
+  "causal_entry_comparison": {
+    "rows": [
+      {
+        "symbol": "xyz:SPCX",
+        "decision_time_ms": 1786716000000,
+        "local_session_time": "2026-08-14T10:00:00-04:00",
+        "outcome_status": "resolved_winner",
+        "net_pnl_usd": 21.355552,
+        "short_breakout_bps": 47.989529557187275,
+        "ema_21_55_gap_bps": -3.8462204736274965,
+        "depth_10_imbalance": -0.25866441982796673
+      },
+      {
+        "symbol": "xyz:SP500",
+        "decision_time_ms": 1786720500000,
+        "local_session_time": "2026-08-14T11:15:00-04:00",
+        "outcome_status": "resolved_winner",
+        "net_pnl_usd": 3.2296650000000007,
+        "short_breakout_bps": 4.882059715297898,
+        "ema_21_55_gap_bps": -1.5146262600513538,
+        "depth_10_imbalance": -0.2320826383166864
+      },
+      {
+        "symbol": "xyz:SPCX",
+        "decision_time_ms": 1786767300000,
+        "local_session_time": "2026-08-15T00:15:00-04:00",
+        "outcome_status": "open_adverse",
+        "marked_net_pnl_usd": -29.915922,
+        "short_breakout_bps": 48.31614624648561,
+        "ema_21_55_gap_bps": -10.092646217221713,
+        "depth_10_imbalance": -0.3307816034179442
+      }
+    ],
+    "finding": "The adverse open short had stronger bearish EMA and pressure readings than both winners and nearly the same breakout distance as the prior SPCX winner. No monotonic threshold on the existing signal-strength fields separates it from the winners.",
+    "session_observation": "The adverse trade occurred overnight while both winners entered during regular U.S. hours. This is a post-hoc N=3 distinction and does not support a live session gate without a predeclared larger source-native sample.",
+    "parameter_change_supported": false
+  },
+  "causal_assessment": {
+    "entry_implementation_defect_established": false,
+    "execution_degradation_established": false,
+    "protective_stop_defect_established": false,
+    "exit_defect_established": false,
+    "current_classification": "valid_source_native_signal_with_adverse_followthrough",
+    "reasoning": [
+      "Observer and backend selected the same exact side and decision boundary.",
+      "All three frozen entry legs were true: 32-bar price breakout, EMA21/55 alignment, and fresh depth-10 pressure.",
+      "The taker fill improved on the decision reference by 3.37 bps and the venue stop was promptly armed.",
+      "The public trade-candle high exceeded the stop price, but the observed venue-derived mark did not; no missed stop trigger is proven.",
+      "The lifecycle never reached its 100 bps profit-lock activation and no opposite provider signal has appeared.",
+      "Its price breakout, EMA alignment, and pressure were at least as strong as the prior winners, so a simple signal-strength threshold would not have prevented it without also being post-hoc."
+    ],
+    "uncertainty": "The lifecycle remains open. Compatible history contains two resolved winning shorts and this adverse open short, but no long-side lifecycle; three one-sided observations cannot establish or reject route expectancy. Canonical regime context is unavailable for this HIP-3 symbol."
+  },
+  "hypothesis_ledger": [
+    {
+      "hypothesis_id": "v51-spcx-source-native-short-followthrough",
+      "status": "being_tested",
+      "hypothesis": "A source-native SPCX breakout with exact price, EMA, and pressure agreement has positive expectancy after live costs.",
+      "current_evidence": "Two prior compatible source-native shorts closed for +$24.59 combined, while this third short is open at -$29.92 marked. The open loss is not evidence of an implementation bug and is not yet a completed economic outcome.",
+      "falsifiers": [
+        "repeated exact source-native entries fail on both sides after realistic costs",
+        "resolved live fills or exits materially violate the frozen execution contract",
+        "an authoritative opposite signal is ignored",
+        "the venue mark crosses the protective trigger without a stop fill",
+        "source identity or candle/pressure causality fails reconciliation"
+      ]
+    }
+  ],
+  "recommendation": {
+    "Recommendation": "Keep this protected lifecycle under its frozen v51 exit contract and evaluate the completed result before proposing a route change.",
+    "Why now": "The entry looked poor in hindsight, but exact reconstruction shows that every configured causal entry condition was satisfied and execution was within contract.",
+    "Evidence reviewed": [
+      "prospective SPCX v3 decision journal",
+      "live cohort intent-routing event",
+      "SPCX asset order, fill, stop, position, and reconciliation ledger",
+      "official completed 15-minute candle history",
+      "current open-trade reflection and one-minute path"
+    ],
+    "Observed problem or opportunity": "The current exact source-native short reversed immediately and has spent most of its lifecycle near the fixed stop, erasing the marked value of two prior resolved short winners.",
+    "Applicable market regime": "SPCX 15-minute breakout entries with aligned EMA21/55 and fresh depth-10 pressure.",
+    "Alternatives considered": [
+      "close or retune after one adverse open observation",
+      "tighten the stop post hoc",
+      "add a regime veto without compatible evidence",
+      "add a regular-session-only gate from the current N=3 session split",
+      "retain the frozen contract and collect the completed costed lifecycle"
+    ],
+    "Proposed live change": "none",
+    "Expected upside": "Avoids post-hoc optimization while preserving exact evidence about the current route.",
+    "Main risks and failure modes": [
+      "the stop can still realize approximately the modeled remaining loss",
+      "three compatible shorts and zero longs are too sparse and directionally incomplete to estimate expectancy",
+      "HIP-3 canonical regime context remains unavailable",
+      "archive-to-live source parity remains unresolved for historical extrapolation"
+    ],
+    "Validation completed": [
+      "entry condition anatomy reconstructed from exact official candles",
+      "three compatible index-short entry anatomies compared causally",
+      "observer/backend identity and side matched",
+      "routing, fill, fee, stop, and current position reconciled",
+      "trade-candle versus mark-trigger discrepancy resolved"
+    ],
+    "Validation still required": [
+      "capture the realized exit reason, fill, fee, funding, and slippage",
+      "compare realized exit with opposite-signal, profit-lock, stop, and time fallback behavior",
+      "collect at least one fully resolved long and additional resolved shorts",
+      "continue SP500 and SPCX source-native forward observation"
+    ],
+    "Success metrics": [
+      "all lifecycle events remain attributable to the frozen provider identity",
+      "venue stop remains continuously protected until another valid exit owns the close",
+      "every authoritative opposite signal is acted upon or explicitly accounted",
+      "resolved long and short samples support positive net expectancy after largest-winner sensitivity"
+    ],
+    "Failure / rollback triggers": [
+      "missing or ineffective protective stop",
+      "ignored authoritative opposite signal",
+      "fill or exit outside the declared execution contract",
+      "repeated resolved source-native losses that falsify route expectancy",
+      "source identity or causal input corruption"
+    ],
+    "Confidence level": "High that this entry followed the implemented v51 contract; medium that the current loss is ordinary adverse followthrough; low on route profitability because only two winning shorts are resolved, a third short is open and adverse, and no long has resolved.",
+    "Explicit approval requested": false
+  },
+  "sources": [
+    "data/live/research/xyz_spcx_fresh15_v3_decisions.jsonl",
+    "data/live/bidirectional_cohort/decisions.jsonl",
+    "data/live/bidirectional_cohort/xyz:spcx.jsonl",
+    "data/runtime/bidirectional_cohort/latest_checkpoint.json",
+    "Hyperliquid public candleSnapshot for xyz:SPCX at 15m"
+  ]
+}

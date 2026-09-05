@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v58-eth-r5-component-decay-exit-v1",
+  "revision_number": 2,
+  "recorded_at_utc": "2026-08-19T22:49:58Z",
+  "status": "rejected_historical_candidate",
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false,
+  "recommendation": "Retain the exact ETH native 12-hour exit and do not add the R5 persistent component-decay close.",
+  "why_now": "The current open ETH path exposed a profit-giveback question, but the preregistered fixed-entry historical test materially damaged development economics.",
+  "evidence_reviewed": [
+    "preregistered fixed ETH candidate contract",
+    "282 exact development control entries",
+    "56 exact opened-final control entries",
+    "causal completed-1m component telemetry",
+    "exact fees, funding, slippage, venue-stop precedence, side attribution, five development folds, drawdown, and largest-winner sensitivity"
+  ],
+  "observed_problem_or_opportunity": "A state-aware close improved the later 60-day headline, but the effect reversed severely in development and remained negative for later shorts.",
+  "applicable_market_regime": "ETH pullback lifecycles reaching at least 300 bps MFE before five completed minutes of component alignment at or below -0.5.",
+  "alternatives_considered": [
+    "unchanged native 12-hour exit",
+    "R2 and R5 static locks",
+    "4-hour and 8-hour holds",
+    "persistent structural-opposition loss exits",
+    "R5 persistent component-decay next-open exit"
+  ],
+  "proposed_live_change": "none",
+  "expected_upside": "Rejecting the candidate avoids replacing a positive development control with a negative, fold-unstable exit rule.",
+  "main_risks_and_failure_modes": "The unchanged native exit can still give back open profit; however, retuning the rejected component threshold on these same windows would introduce selection bias and can hide the observed side and partition reversal.",
+  "validation_completed": "Source-bound fixed-entry replay, zero unavailable component rows, 35/35 development and 8/8 opened-final trigger-to-exit reconciliation, entry-bar stop handling, next-open causality, protective-stop precedence, side results, five chronological folds, drawdown, and largest-winner sensitivity.",
+  "validation_still_required": "No validation is required for the rejection. A materially new future hypothesis requires a new preregistration and must not retune this threshold/persistence/activation triplet on the same historical windows.",
+  "success_metrics": "The candidate failed development net/PF improvement, development ex-largest positivity, development drawdown, development fold breadth, and opened-final both-side positivity.",
+  "failure_or_rollback_triggers": "No rollback applies because no live change occurred. Reopening requires genuinely future source-compatible evidence or a materially different mechanism with a changed causal assumption.",
+  "confidence_level": "high_for_rejecting_this_exact_candidate_medium_for_retaining_native_exit_low_for_long_run_route_edge",
+  "explicit_approval_requested": false,
+  "valid_artifact": {
+    "path": "../../data/logs/research/bidirectional_cohort/v58_eth_r5_component_decay_exit_20260819_v2.json",
+    "sha256": "1cfd7d207189823d94c38f60b848b93fa136e6d47fbb86028cea735616010f1e",
+    "bytes": 113889
+  },
+  "invalidated_prior_artifact": {
+    "path": "v58-eth-r5-component-decay-exit-v1-invalidation.json",
+    "reason": "native structural reversals were mistakenly granted candidate exit authority",
+    "economic_claims_valid": false
+  },
+  "results": {
+    "development": {
+      "trades": 282,
+      "triggers": 35,
+      "component_decay_exits": 35,
+      "unavailable_component_rows": 0,
+      "control_net_bps": 1657.9804255885545,
+      "candidate_net_bps": -392.5646897141826,
+      "candidate_minus_control_bps": -2050.545115302737,
+      "control_profit_factor": 1.1110897477996182,
+      "candidate_profit_factor": 0.9726949354076542,
+      "control_maximum_drawdown_bps": 1870.5521626289792,
+      "candidate_maximum_drawdown_bps": 1950.8721122291342,
+      "candidate_net_excluding_largest_winner_bps": -1068.289817859487,
+      "candidate_long_net_bps": -545.262858508006,
+      "candidate_short_net_bps": 152.69816879382353,
+      "positive_candidate_and_delta_folds": 1,
+      "required_positive_candidate_and_delta_folds": 3
+    },
+    "opened_final_60d": {
+      "trades": 56,
+      "triggers": 8,
+      "component_decay_exits": 8,
+      "unavailable_component_rows": 0,
+      "control_net_bps": 322.33121773480485,
+      "candidate_net_bps": 366.38816051104084,
+      "candidate_minus_control_bps": 44.056942776235985,
+      "control_profit_factor": 1.1207652329357494,
+      "candidate_profit_factor": 1.1372716917088073,
+      "control_maximum_drawdown_bps": 898.2244657142601,
+      "candidate_maximum_drawdown_bps": 841.7648946600401,
+      "candidate_net_excluding_largest_winner_bps": 82.65594984250185,
+      "candidate_long_net_bps": 516.2398888245781,
+      "candidate_short_net_bps": -149.85172831353725
+    }
+  },
+  "current_open_path": {
+    "used_for_historical_economic_selection": false,
+    "state_at_disposition": "open_and_protected",
+    "interpretation": "The current lifecycle motivated the question but cannot override the preregistered historical rejection."
+  },
+  "single_highest_value_next_investigation": "Continue exact resolution of the current ETH lifecycle and attribute its native exit, MFE, giveback, funding, and component path without selecting another exit rule from the open outcome.",
+  "falsifier": "A genuinely future, preregistered source-compatible sample could update the broad state-aware-exit hypothesis, but it cannot make this exact historical candidate pass its already-failed frozen criteria."
+}

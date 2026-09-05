@@ -73,6 +73,7 @@ class OxaArchiveAuditReport:
     public_trades: int
     raw_participant_fills: int
     coalesced_book_snapshots: int
+    censored_zero_size_book_snapshots: int
     empty_book_windows: int
     empty_trade_windows: int
     empty_book_ranges_utc: tuple[tuple[str, str], ...]
@@ -89,6 +90,7 @@ class _BundleStats:
     rows: int
     raw_fills: int
     coalesced: int
+    censored_zero_size: int
     evidence_bytes: int
 
 
@@ -127,6 +129,9 @@ def audit_oxa_archive(config: OxaArchiveAuditConfig) -> OxaArchiveAuditReport:
         public_trades=sum(item.rows for item in trades),
         raw_participant_fills=sum(item.raw_fills for item in trades),
         coalesced_book_snapshots=sum(item.coalesced for item in books),
+        censored_zero_size_book_snapshots=sum(
+            item.censored_zero_size for item in books
+        ),
         empty_book_windows=sum(item.rows == 0 for item in books),
         empty_trade_windows=sum(item.rows == 0 for item in trades),
         empty_book_ranges_utc=_coalesced_utc_ranges(empty_books),
@@ -224,7 +229,7 @@ def _optional_trade_bundle(
     end: datetime,
 ) -> tuple[dict[str, object], _BundleStats]:
     if directory is None:
-        return {}, _BundleStats(0, 0, 0, 0)
+        return {}, _BundleStats(0, 0, 0, 0, 0)
     manifest = _verified_manifest(directory, "trade", config, start, end)
     return manifest, _bundle_stats(manifest, "trade", directory)
 
@@ -334,11 +339,22 @@ def _bundle_stats(
     coalesced = (
         _count(manifest, "coalesced_same_ms", directory) if kind == "book" else 0
     )
+    censored = (
+        _optional_count(manifest, "censored_zero_size_snapshots", directory)
+        if kind == "book"
+        else 0
+    )
     files = manifest.get("files")
     if not isinstance(files, dict):
         raise ValueError(f"archive manifest has invalid file evidence: {directory}")
     byte_count = sum(_evidence_bytes(value, directory) for value in files.values())
-    return _BundleStats(rows, raw_fills, coalesced, byte_count)
+    return _BundleStats(rows, raw_fills, coalesced, censored, byte_count)
+
+
+def _optional_count(manifest: dict[str, object], key: str, directory: Path) -> int:
+    if key not in manifest:
+        return 0
+    return _count(manifest, key, directory)
 
 
 def _count(manifest: dict[str, object], key: str, directory: Path) -> int:

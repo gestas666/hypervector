@@ -7,10 +7,13 @@ from datetime import datetime, timezone
 
 from hypervector.live.bidirectional_intents import (
     IntentRoutingReport,
+    RoutingAction,
     StrategyIntent,
+    WithheldIntent,
 )
 from hypervector.live.cohort_backup_evidence import prestart_backup_payload
 from hypervector.live.cohort_durable_decisions import CohortDurableDecisionJournal
+from hypervector.live.cohort_durable_decision_recovery import durable_decision_records
 from hypervector.live.cohort_funding_window import CohortFundingWindow
 from hypervector.live.cohort_prestart_backup import CohortPrestartBackupResult
 from hypervector.live.cohort_runtime_fault import runtime_fault_payload
@@ -30,11 +33,11 @@ from hypervector.live.multi_asset_cohort_models import (
 )
 from hypervector.live.multi_asset_cohort_history import (
     asset_costs,
-    compatible_execution_rows,
     current_run_rows,
     fill_payloads,
     latest_book,
 )
+from hypervector.live.multi_asset_cohort_history_cache import CohortAssetHistoryCache
 from hypervector.live.multi_asset_strategy_evidence import (
     strategy_evidence_payloads,
 )
@@ -77,7 +80,7 @@ class MultiAssetCohortTelemetry:
         self._live_armed = (
             config.mode == "live" and config.enabled and config.accepts_live_risk
         )
-        records = ledger.read_all()
+        records = durable_decision_records(ledger)
         self._maximum_hold_decisions = CohortDurableDecisionJournal(
             records=records,
             event_type="maximum_hold_decision",
@@ -98,6 +101,7 @@ class MultiAssetCohortTelemetry:
         )
         if self._asset_ledgers and set(self._asset_ledgers) != set(config.symbols):
             raise ValueError("asset ledgers must cover every configured symbol")
+        self._asset_history_cache = _history_cache(self._asset_ledgers)
 
     def emit_configuration(self) -> None:
         """Publish enabled symbols, both sides, providers, and portfolio policy."""
@@ -152,28 +156,9 @@ class MultiAssetCohortTelemetry:
                 "evaluations": [evaluation.as_payload() for evaluation in evaluations],
                 "setup_coverage": self._setup_coverage_payload(),
                 "actions": [
-                    {
-                        "action": action.action,
-                        "strategy_id": action.strategy_id,
-                        "symbol": action.symbol,
-                        "side": action.side,
-                        "decision_time_ms": action.decision_time_ms,
-                        "reference_price": action.reference_price,
-                        "regime_alignment_score": action.regime_alignment_score,
-                        "regime_alignment_stance": action.regime_alignment_stance,
-                        "regime_decision_time_ms": action.regime_decision_time_ms,
-                        "regime_alignment_basis": action.regime_alignment_basis,
-                        "exit_reason": action.exit_reason,
-                    }
-                    for action in report.actions
+                    _routing_action_payload(action) for action in report.actions
                 ],
-                "withheld": [
-                    {
-                        **intent_payload(item.intent),
-                        "reason": item.reason,
-                    }
-                    for item in report.withheld
-                ],
+                "withheld": [_withheld_payload(item) for item in report.withheld],
             },
         )
 
@@ -218,10 +203,11 @@ class MultiAssetCohortTelemetry:
         """Publish shared capital and every symbol lifecycle in one row."""
         if tuple(asset.symbol for asset in assets) != self._config.symbols:
             raise ValueError("cohort snapshot symbols differ from configuration")
-        histories = {
-            symbol: compatible_execution_rows(ledger)
-            for symbol, ledger in self._asset_ledgers.items()
-        }
+        histories = (
+            {}
+            if self._asset_history_cache is None
+            else self._asset_history_cache.refresh()
+        )
         self._emit(
             "cohort_snapshot",
             {
@@ -297,9 +283,17 @@ class MultiAssetCohortTelemetry:
             },
         )
 
-    def emit_runtime_fault(self, *, exception_type: str) -> None:
+    def emit_runtime_fault(
+        self,
+        *,
+        exception_type: str,
+        failure_stage: str | None = None,
+    ) -> None:
         """Persist a terminal runtime fault class without leaking exception data."""
-        self._emit("runtime_fault", runtime_fault_payload(exception_type))
+        self._emit(
+            "runtime_fault",
+            runtime_fault_payload(exception_type, failure_stage=failure_stage),
+        )
 
     def emit_operator_command(self, payload: Mapping[str, object]) -> None:
         """Publish one audited manual-command lifecycle transition."""
@@ -404,6 +398,41 @@ class MultiAssetCohortTelemetry:
             if book is not None:
                 books.append(book)
         return books
+
+
+def _history_cache(
+    ledgers: Mapping[str, SolLiveLedger],
+) -> CohortAssetHistoryCache | None:
+    return CohortAssetHistoryCache(ledgers) if ledgers else None
+
+
+def _routing_action_payload(action: RoutingAction) -> dict[str, object]:
+    return {
+        "action": action.action,
+        "strategy_id": action.strategy_id,
+        "symbol": action.symbol,
+        "side": action.side,
+        "decision_time_ms": action.decision_time_ms,
+        "reference_price": action.reference_price,
+        "regime_alignment_score": action.regime_alignment_score,
+        "regime_alignment_stance": action.regime_alignment_stance,
+        "regime_decision_time_ms": action.regime_decision_time_ms,
+        "regime_alignment_basis": action.regime_alignment_basis,
+        "exit_reason": action.exit_reason,
+        "submission_observed_at_ms": action.submission_observed_at_ms,
+        "submission_age_ms": action.submission_age_ms,
+        "submission_limit_ms": action.submission_limit_ms,
+    }
+
+
+def _withheld_payload(item: WithheldIntent) -> dict[str, object]:
+    return {
+        **intent_payload(item.intent),
+        "reason": item.reason,
+        "submission_observed_at_ms": item.submission_observed_at_ms,
+        "submission_age_ms": item.submission_age_ms,
+        "submission_limit_ms": item.submission_limit_ms,
+    }
 
 
 def _validate_canonical_evaluations(

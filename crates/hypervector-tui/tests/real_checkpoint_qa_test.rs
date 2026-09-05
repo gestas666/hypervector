@@ -2,33 +2,20 @@ use std::path::PathBuf;
 
 use hypervector_tui::{
     App,
-    backend_growth_preflight::GrowthPreflightSource,
     backend_hip3_roster::Hip3RosterSource,
     backend_hype_l2_observer::HypeL2ObserverSource,
-    backend_telemetry::{BackendConnectionState, BackendTelemetrySource},
+    backend_telemetry::{BackendConnectionState, BackendTelemetrySnapshot, BackendTelemetrySource},
 };
 use ratatui::{Terminal, backend::TestBackend};
 
 const ACTIVE_LEDGER: &str = "data/live/bidirectional_cohort/decisions.jsonl";
 const ACTIVE_CHECKPOINT: &str = "data/runtime/bidirectional_cohort/latest_checkpoint.json";
-const GROWTH_PREFLIGHT: &str =
-    "data/runtime/bidirectional_cohort/latest_current_500_v39_preflight.json";
 const HYPE_L2_STATUS: &str = "data/runtime/research/hype_l2_ridge_observer_latest.json";
 const HIP3_ROSTER_STATUS: &str = "data/runtime/research/hip3_roster_latest.json";
-const ACTIVE_PROFILE: &str =
-    "multi_asset_bidirectional_hype_compression_range_retired_current_canary_v39";
+const ACTIVE_PROFILE: &str = "multi_asset_growth_first_5000_spcx_cash_open_v55";
 const ACTIVE_PROFILE_FINGERPRINT: &str =
-    "8785a2618d4e06d7b23886ee39a4c05caed6326641efe101ff52ab47bbdae6e5";
-const ACTIVE_SYMBOLS: [&str; 8] = [
-    "BTC",
-    "ETH",
-    "SOL",
-    "HYPE",
-    "xyz:SP500",
-    "xyz:SPCX",
-    "xyz:SNDK",
-    "xyz:BRENTOIL",
-];
+    "e918f81e55abb36ad207a1af69517dd4d8765b79eb972669195a6b180702d3c7";
+const ACTIVE_SYMBOLS: [&str; 3] = ["BTC", "HYPE", "xyz:SPCX"];
 
 struct RuntimeExpectations {
     dashboard: Vec<String>,
@@ -36,21 +23,29 @@ struct RuntimeExpectations {
 }
 
 #[test]
-#[ignore = "requires the local active v39 ledger and checkpoint"]
-fn active_v39_renders_all_nine_screens_at_160x50() {
+#[ignore = "requires the local active v55 ledger and checkpoint"]
+fn active_v55_renders_all_nine_screens_at_160x50() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let backend = load_v55_backend(&root);
+    let expectations = assert_v55_backend(&backend);
+    assert_v55_generation(&backend);
+    render_requested_screens(backend, &expectations);
+}
+
+fn load_v55_backend(root: &std::path::Path) -> BackendTelemetrySnapshot {
     let mut backend_source = BackendTelemetrySource::with_checkpoint_path(
         root.join(ACTIVE_LEDGER),
         Some(root.join(ACTIVE_CHECKPOINT)),
     );
     let mut backend = backend_source.refresh();
-    let mut growth_source = GrowthPreflightSource::new(Some(root.join(GROWTH_PREFLIGHT)));
     let mut hype_source = HypeL2ObserverSource::new(Some(root.join(HYPE_L2_STATUS)));
     let mut hip3_source = Hip3RosterSource::new(Some(root.join(HIP3_ROSTER_STATUS)));
-    backend.growth_preflight = growth_source.refresh();
     backend.hype_l2_observer = hype_source.refresh();
     backend.hip3_roster = hip3_source.refresh();
+    backend
+}
 
+fn assert_v55_backend(backend: &BackendTelemetrySnapshot) -> RuntimeExpectations {
     assert_eq!(backend.connection, BackendConnectionState::Connected);
     assert_eq!(backend.profile_id.as_deref(), Some(ACTIVE_PROFILE));
     assert_eq!(
@@ -62,10 +57,10 @@ fn active_v39_renders_all_nine_screens_at_160x50() {
         .trade_performance
         .as_ref()
         .expect("trade performance");
-    let all_closed = performance
-        .all_time_live
-        .as_ref()
-        .expect("all-time")
+    let all_closed = backend
+        .cohort_checkpoint
+        .all_time_performance()
+        .expect("epoch all-time")
         .total
         .closed_trades;
     let run_closed = performance
@@ -74,11 +69,11 @@ fn active_v39_renders_all_nine_screens_at_160x50() {
         .expect("current run")
         .total
         .closed_trades;
-    assert!(all_closed >= 59, "retired history disappeared");
-    assert!(run_closed >= 7, "current v39 history regressed");
-    assert_eq!(
-        backend.cohort_checkpoint.user_trade_reflections().len(),
-        all_closed
+    assert_eq!(all_closed, 0, "v55 accounting epoch must start at zero");
+    assert_eq!(run_closed, 0, "v55 has no completed lifecycle yet");
+    assert!(
+        backend.cohort_checkpoint.user_trade_reflections().len() >= 73,
+        "prior reflection history must remain inspectable"
     );
     let open = &backend.cohort_checkpoint.open_trade_reflections;
     for trade in open {
@@ -93,7 +88,10 @@ fn active_v39_renders_all_nine_screens_at_160x50() {
             trade.symbol
         );
     }
-    let expectations = runtime_expectations(all_closed, run_closed, open);
+    runtime_expectations(all_closed, run_closed, open)
+}
+
+fn assert_v55_generation(backend: &BackendTelemetrySnapshot) {
     let generation = backend
         .cohort_checkpoint
         .configuration_generation
@@ -109,23 +107,25 @@ fn active_v39_renders_all_nine_screens_at_160x50() {
         .current_provider_execution_scopes
         .as_ref()
         .expect("staged route scopes");
-    assert_eq!(scopes.values().map(Vec::len).sum::<usize>(), 14);
+    assert_eq!(scopes.values().map(Vec::len).sum::<usize>(), 4);
     assert_eq!(
         scopes
             .values()
             .flatten()
             .collect::<std::collections::BTreeSet<_>>()
             .len(),
-        8
+        3
     );
+}
 
+fn render_requested_screens(backend: BackendTelemetrySnapshot, expectations: &RuntimeExpectations) {
     let mut app = App::new("MULTI".into(), "1m".into(), vec![], true, false);
     app.detached_lifecycle = true;
     app.apply_backend_telemetry(backend);
     if std::env::var_os("HYPERVECTOR_QA_ALL").is_some() {
         for tab in 1..=9 {
             app.active_tab = tab - 1;
-            assert_rendered_screen(tab, &render(&app, 160, 50), &expectations);
+            assert_rendered_screen(tab, &render(&app, 160, 50), expectations);
         }
         return;
     }
@@ -137,12 +137,12 @@ fn active_v39_renders_all_nine_screens_at_160x50() {
     app.active_tab = tab - 1;
     let screen = render(&app, 160, 50);
     println!("\n===== SCREEN {tab} =====\n{screen}");
-    assert_rendered_screen(tab, &screen, &expectations);
+    assert_rendered_screen(tab, &screen, expectations);
 }
 
 #[test]
-#[ignore = "requires the local staged v51 accounting checkpoint"]
-fn staged_v51_epoch_renders_zero_all_time_without_erasing_prior_rows() {
+#[ignore = "requires the local active v55 accounting checkpoint"]
+fn active_v55_epoch_renders_zero_all_time_without_erasing_prior_rows() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
     let mut source = BackendTelemetrySource::with_checkpoint_path(
         root.join(ACTIVE_LEDGER),
@@ -164,6 +164,55 @@ fn staged_v51_epoch_renders_zero_all_time_without_erasing_prior_rows() {
     app.apply_backend_telemetry(backend);
     let screen = render(&app, 160, 50);
     assert!(screen.contains("ALL-TIME 0 CLOSED"), "{screen}");
+}
+
+#[test]
+#[ignore = "requires the local active v55 ledger and checkpoint"]
+fn active_v55_screen_two_diagnostic() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let mut source = BackendTelemetrySource::with_checkpoint_path(
+        root.join(ACTIVE_LEDGER),
+        Some(root.join(ACTIVE_CHECKPOINT)),
+    );
+    let backend = source.refresh();
+    assert_eq!(backend.connection, BackendConnectionState::Connected);
+    assert!(backend.cohort.setup_coverage.is_some());
+    let evaluation_count = backend.cohort.evaluations.len();
+    let action_count = backend.cohort.actions.len();
+    let withheld_count = backend.cohort.withheld.len();
+    let configured_sides = |strategy_id: &str| {
+        let provider = backend
+            .cohort
+            .providers
+            .iter()
+            .find(|provider| provider.strategy_id == strategy_id)
+            .expect("configured provider");
+        provider
+            .execution_side_overrides
+            .get("BTC")
+            .unwrap_or(&provider.sides)
+            .clone()
+    };
+    assert_eq!(
+        configured_sides("hulk_expansion_short_robust_v3"),
+        ["short"]
+    );
+    assert_eq!(
+        configured_sides("liquidity_sweep_long_1h_stop60_target60_v2"),
+        ["long"]
+    );
+    let mut app = App::new("MULTI".into(), "1m".into(), vec![], true, false);
+    app.detached_lifecycle = true;
+    app.apply_backend_telemetry(backend);
+    app.active_tab = 1;
+    let screen = render(&app, 160, 50);
+    assert!(screen.contains("BTC HULK SHORT [LIVE]"), "{screen}");
+    assert!(screen.contains("BTC SWEEP 60/60 [LIVE]"), "{screen}");
+    assert!(screen.contains("HYPE ALIGN [LIVE]"), "{screen}");
+    assert!(screen.contains("SPCX CASH OPEN [LIVE]"), "{screen}");
+    println!(
+        "\n===== V55 SCREEN 2 // EVAL {evaluation_count} ACTION {action_count} WITHHELD {withheld_count} =====\n{screen}"
+    );
 }
 
 fn runtime_expectations(
@@ -197,7 +246,7 @@ fn assert_rendered_screen(tab: usize, screen: &str, runtime: &RuntimeExpectation
         !screen.contains("PATH IDENTITY INVALID"),
         "screen {tab}\n{screen}"
     );
-    assert_screen_contract(tab, &screen);
+    assert_screen_contract(tab, screen);
     let values = match tab {
         1 => &runtime.dashboard,
         5 => &runtime.trades,
@@ -212,15 +261,56 @@ fn assert_rendered_screen(tab: usize, screen: &str, runtime: &RuntimeExpectation
 }
 
 fn assert_screen_contract(tab: usize, screen: &str) {
-    let expected: &[&str] = match tab {
+    for value in screen_contract(tab) {
+        assert!(
+            screen.contains(value),
+            "screen {tab} missing {value}\n{screen}"
+        );
+    }
+}
+
+fn screen_contract(tab: usize) -> &'static [&'static str] {
+    match tab {
+        1..=4 => primary_screen_contract(tab),
+        5..=9 => secondary_screen_contract(tab),
+        _ => unreachable!(),
+    }
+}
+
+fn primary_screen_contract(tab: usize) -> &'static [&'static str] {
+    match tab {
         1 => &[
             "PORTFOLIO PERFORMANCE // LIVE LEDGER",
             "LIVE POSITIONS",
-            "xyz:BRENTOIL",
+            "ASSETS 1-3 / 3",
+            "BTC",
+            "HYPE",
+            "xyz:SPCX",
         ],
-        2 => &["SETUPS 14/14 // COMPLETE", "ASSETS 8", "xyz:BRENTOIL"],
-        3 => &["BACKEND 1M OVERVIEW", "BTC 1M CANDLES", "SOL 1M CANDLES"],
-        4 => &["LIVE HYPERLIQUID L2", "EXACT LEVELS 20/20", "xyz:BRENTOIL"],
+        2 => &[
+            "SETUPS 4/4 // COMPLETE",
+            "ASSETS 3",
+            "BTC SWEEP 60/60",
+            "HYPE",
+            "SPCX CASH OPEN",
+        ],
+        3 => &[
+            "BACKEND 1M OVERVIEW",
+            "BTC 1M CANDLES",
+            "HYPE 1M CANDLES",
+            "SPCX 1M CANDLES",
+        ],
+        4 => &[
+            "SELECTED MARKET // MARKETS 1-3 / 3",
+            "LIVE HYPERLIQUID L2",
+            "EXACT LEVELS 20/20",
+        ],
+        _ => unreachable!(),
+    }
+}
+
+fn secondary_screen_contract(tab: usize) -> &'static [&'static str] {
+    match tab {
         5 => &["ALL-TIME", "CURRENT RUN"],
         6 => &[
             "MODE LIVE_EXECUTION",
@@ -233,22 +323,18 @@ fn assert_screen_contract(tab: usize, screen: &str) {
         ],
         8 => &[
             "REGIME COMMAND DECK",
-            "PROV-ONLY REG N/A",
+            "BTC",
+            "HYPE",
+            "SPCX",
             "Backend labels + causal evidence",
         ],
         9 => &[
             "PENDING RESTART PROFILE",
             "PENDING RESTART PROFILE  NONE // DISK MATCHES RUNTIME",
-            "NEXT ASSETS 8 // ROUTES EFFECTIVE 14 // NEXT 14 // SIDE SCOPES 28",
+            "NEXT ASSETS 3 // ROUTES EFFECTIVE 4 // NEXT 4 // SIDE SCOPES 6",
             "LIVE ARMING IS CLI-ONLY",
         ],
         _ => unreachable!(),
-    };
-    for value in expected {
-        assert!(
-            screen.contains(value),
-            "screen {tab} missing {value}\n{screen}"
-        );
     }
 }
 

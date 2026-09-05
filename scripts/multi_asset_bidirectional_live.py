@@ -4,8 +4,6 @@ from __future__ import annotations
 
 import argparse
 from datetime import UTC, datetime
-import hashlib
-import json
 from pathlib import Path
 import sys
 import time
@@ -25,9 +23,21 @@ from hypervector.live.cohort_prestart_backup import (
     CohortPrestartBackupResult,
     create_cohort_prestart_backup,
 )
+from hypervector.live.cohort_profile_change_approval import (
+    ProfileChangeApprovalError,
+    require_approved_profile_change,
+)
+from hypervector.live.cohort_profile_transition_evidence import (
+    require_completed_profile_transition as _require_completed_profile_transition,
+)
+from hypervector.live.cohort_profile_transition_venue import (
+    require_profile_transition_venue_boundary as _verify_profile_transition_venue_boundary,
+)
+from hypervector.live.cohort_runtime_fault import runtime_fault_arguments
 from hypervector.live.cohort_accounting_rollover import (
     load_required_accounting_epoch,
 )
+from hypervector.live.cohort_entry_submission import entry_delays_from_providers
 from hypervector.live.cohort_implementation_sources import (
     discover_cohort_implementation_sources,
 )
@@ -37,14 +47,9 @@ from hypervector.live.cohort_transition_drain import (
     CohortTransitionDrainSnapshot,
     ensure_transition_drain_startable,
     load_transition_drain_snapshot,
-    verify_completed_transition_drain_archive,
 )
-from hypervector.live.multi_asset_cohort_telemetry import (
-    MultiAssetCohortTelemetry,
-)
-from hypervector.live.multi_asset_intent_poller import (
-    ConfiguredMultiAssetIntentPoller,
-)
+from hypervector.live.multi_asset_cohort_telemetry import MultiAssetCohortTelemetry
+from hypervector.live.multi_asset_intent_poller import ConfiguredMultiAssetIntentPoller
 from hypervector.live.multi_asset_live_config import (
     AssetLiveConfig,
     MultiAssetLiveConfig,
@@ -70,9 +75,8 @@ from hypervector.runtime_lock import (
 )
 from hypervector.research.cohort_live_portfolio_archive import CohortAccountingEpoch
 
-_DEFAULT_CONFIG = Path(
-    "configs/multi_asset_bidirectional_complete_portfolio_canary_v25.toml"
-)
+_CONFIG_NAME = "multi_asset_bidirectional_complete_portfolio_canary_v25.toml"
+_DEFAULT_CONFIG = Path("configs") / _CONFIG_NAME
 _DEFAULT_BACKTEST_LAB = Path("../backtest-lab/backtest_lab")
 _REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 _MAX_READ_COALESCE_SECONDS = 10.0
@@ -166,6 +170,7 @@ def _run_locked(
     )
     _announce_backup(backup)
     _require_completed_profile_transition(config, backup)
+    require_approved_profile_change(config, backup)
     transition_drain = _create_transition_drain(
         transition_path,
         config,
@@ -213,6 +218,9 @@ def _create_runner(
             asset.symbol: asset.maximum_hold_seconds for asset in config.assets
         },
         execution_contracts=config.provider_execution_contracts,
+        maximum_entry_delay_ms_by_provider_symbol=entry_delays_from_providers(
+            config.providers
+        ),
         executable_provider_symbols=config.executable_provider_symbols,
         executable_provider_directions=config.executable_provider_directions,
         provider_entry_sizing=config.provider_entry_sizing,
@@ -241,7 +249,7 @@ def _run_guarded(
     try:
         return runner.run(max_polls=max_polls)
     except Exception as exc:
-        telemetry.emit_runtime_fault(exception_type=type(exc).__name__)
+        telemetry.emit_runtime_fault(**runtime_fault_arguments(exc))
         raise
 
 
@@ -293,97 +301,13 @@ def _announce_backup(backup: CohortPrestartBackupResult) -> None:
     )
 
 
-def _require_completed_profile_transition(
-    config: MultiAssetLiveConfig,
-    backup: CohortPrestartBackupResult,
-) -> None:
-    if not backup.strategy_changed:
-        return
-    prior_profile, prior_run = _previous_transition_identity(backup)
-    archive_root = _transition_archive_root(config)
-    matches = []
-    for path in sorted(archive_root.glob("transition_drain_*.json")):
-        snapshot = load_transition_drain_snapshot(path)
-        if (
-            snapshot.status == "completed"
-            and snapshot.profile_fingerprint == prior_profile
-            and snapshot.run_id == prior_run
-        ):
-            matches.append(path)
-    if len(matches) != 1:
-        raise CohortTransitionDrainError(
-            "changed profile requires exactly one completed drain archive "
-            f"for prior run {prior_run}; found {len(matches)}"
-        )
-    verify_completed_transition_drain_archive(
-        matches[0],
-        expected_run_id=prior_run,
-        expected_profile_fingerprint=prior_profile,
-    )
-
-
-def _previous_transition_identity(
-    backup: CohortPrestartBackupResult,
-) -> tuple[str, str]:
-    try:
-        encoded = backup.manifest_path.read_bytes()
-    except OSError as exc:
-        raise CohortTransitionDrainError(
-            f"verified backup manifest cannot be read: {exc}"
-        ) from exc
-    if hashlib.sha256(encoded).hexdigest() != backup.manifest_sha256:
-        raise CohortTransitionDrainError("verified backup manifest identity changed")
-    try:
-        manifest = json.loads(encoded)
-    except json.JSONDecodeError as exc:
-        raise CohortTransitionDrainError(
-            "verified backup manifest JSON is invalid"
-        ) from exc
-    previous = manifest.get("previous_identity") if isinstance(manifest, dict) else None
-    profile = (
-        previous.get("profile_fingerprint") if isinstance(previous, dict) else None
-    )
-    run_id = previous.get("run_id") if isinstance(previous, dict) else None
-    if (
-        not isinstance(profile, str)
-        or not profile
-        or not isinstance(run_id, str)
-        or not run_id
-    ):
-        raise CohortTransitionDrainError(
-            "changed profile lacks prior run identity in verified backup"
-        )
-    return profile, run_id
-
-
-def _transition_archive_root(config: MultiAssetLiveConfig) -> Path:
-    live_root = config.cohort_ledger.parent
-    data_root = live_root.parents[1]
-    return data_root / "backups" / live_root.name / "transition_drains"
-
-
-def _verify_profile_transition_venue_boundary(
-    config: MultiAssetLiveConfig,
-    backup: CohortPrestartBackupResult,
-    adapters: MultiAssetCohortAdapters,
-) -> None:
-    if not backup.strategy_changed:
-        return
-    for symbol in config.symbols:
-        venue = adapters.by_symbol[symbol].reconcile()
-        if venue.position.size_signed != 0.0 or venue.open_orders:
-            raise CohortTransitionDrainError(
-                f"changed-profile venue boundary for {symbol} "
-                "is not flat and order-free"
-            )
-
-
 def _create_adapters(config: MultiAssetLiveConfig) -> MultiAssetCohortAdapters:
     envelopes = tuple(
         AssetExecutionEnvelope(
             asset.symbol,
             asset.max_notional_usd,
             asset.market_slippage_cap_fraction,
+            asset.effective_entry_slippage_cap_fraction,
         )
         for asset in config.assets
     )
@@ -484,6 +408,7 @@ def main() -> int:
     except (
         FileNotFoundError,
         CohortPrestartBackupError,
+        ProfileChangeApprovalError,
         CohortTransitionDrainError,
         MultiAssetLiveConfigError,
         RuntimeLockError,

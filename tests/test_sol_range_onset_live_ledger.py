@@ -78,6 +78,51 @@ def test_restart_continues_sequence_without_truncating_history(tmp_path: Path) -
     assert [record["run_id"] for record in records] == ["run-001", "run-002"]
 
 
+def test_restart_sequence_recovery_does_not_materialize_complete_history(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Writer startup validates sequence without retaining every decoded row."""
+    path = tmp_path / "data/live/sol_range_onset_canary/decisions.jsonl"
+    first = _ledger(path)
+    _append_heartbeat(first, minute=0)
+
+    def forbidden_read_all(_self: SolLiveLedger) -> list[dict[str, object]]:
+        raise AssertionError("restart must not materialize complete history")
+
+    monkeypatch.setattr(SolLiveLedger, "read_all", forbidden_read_all)
+    restarted = _ledger(path, run_id="run-002")
+
+    assert restarted.end_cursor().next_sequence == 2
+
+
+def test_matching_read_filters_without_materializing_complete_history(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Recovery projections retain only selected rows during validation."""
+    path = tmp_path / "data/live/sol_range_onset_canary/decisions.jsonl"
+    ledger = _ledger(path)
+    _append_heartbeat(ledger, minute=0)
+    ledger.append(
+        event_type="effective_mode",
+        observed_at_utc="2026-07-31T12:01:00+00:00",
+        live_armed=True,
+        execution_authority="hyperliquid_mainnet",
+        payload={"state": "FLAT"},
+    )
+
+    def forbidden_read_all(_self: SolLiveLedger) -> list[dict[str, object]]:
+        raise AssertionError("filtered recovery must stream complete history")
+
+    monkeypatch.setattr(SolLiveLedger, "read_all", forbidden_read_all)
+    records = ledger.read_matching(
+        lambda record: record.get("event_type") == "effective_mode"
+    )
+
+    assert [record["sequence"] for record in records] == [2]
+
+
 @pytest.mark.parametrize(
     "path",
     [
@@ -184,3 +229,52 @@ def test_observer_ledger_uses_a_separate_domain_and_truthful_mode(
             execution_authority="hyperliquid_mainnet",
             payload={"status": "running"},
         )
+
+
+def test_cursor_reads_only_rows_appended_by_the_active_writer(tmp_path: Path) -> None:
+    """Incremental telemetry receives the exact suffix once and in sequence."""
+    path = tmp_path / "data/live/sol_range_onset_canary/decisions.jsonl"
+    ledger = _ledger(path)
+    _append_heartbeat(ledger, minute=0)
+    cursor = ledger.end_cursor()
+    _append_heartbeat(ledger, minute=1)
+
+    rows, advanced = ledger.read_from_cursor(cursor)
+
+    assert [row["sequence"] for row in rows] == [2]
+    assert ledger.read_from_cursor(advanced) == ([], advanced)
+
+
+def test_cursor_rejects_an_incomplete_appended_row(tmp_path: Path) -> None:
+    """A torn suffix cannot be ignored or represented as fresh telemetry."""
+    path = tmp_path / "data/live/sol_range_onset_canary/decisions.jsonl"
+    ledger = _ledger(path)
+    _append_heartbeat(ledger, minute=0)
+    cursor = ledger.end_cursor()
+    with path.open("ab") as handle:
+        handle.write(b'{"sequence":2')
+
+    with pytest.raises(SolLiveLedgerError, match="incomplete row"):
+        ledger.read_from_cursor(cursor)
+
+
+def test_cursor_rejects_a_second_writer_on_the_same_path(tmp_path: Path) -> None:
+    """A runtime cursor fails closed when another ledger instance appends."""
+    path = tmp_path / "data/live/sol_range_onset_canary/decisions.jsonl"
+    ledger = _ledger(path)
+    _append_heartbeat(ledger, minute=0)
+    cursor = ledger.end_cursor()
+    _append_heartbeat(_ledger(path, run_id="run-002"), minute=1)
+
+    with pytest.raises(SolLiveLedgerError, match="outside its active writer"):
+        ledger.read_from_cursor(cursor)
+
+
+def _append_heartbeat(ledger: SolLiveLedger, *, minute: int) -> None:
+    ledger.append(
+        event_type="heartbeat",
+        observed_at_utc=f"2026-07-31T12:{minute:02d}:00+00:00",
+        live_armed=True,
+        execution_authority="hyperliquid_mainnet",
+        payload={"status": "running"},
+    )

@@ -1,0 +1,131 @@
+{
+  "schema_version": "v53_hip3_top10_liquidity_screen_v1",
+  "created_at_utc": "2026-08-17T16:47:17Z",
+  "hypothesis_id": "V53_HIP3_TOP10_LIQUIDITY_SCREEN_V1",
+  "state": "screen_complete_no_new_qualified_candidate",
+  "mode": "report_only",
+  "execution_authority": "none",
+  "automatic_live_change": false,
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false,
+  "hypothesis": "The current top-ten xyz markets by venue-reported 24-hour notional volume may contain a diversified, technically feasible next research lane that does not reopen an already rejected mechanism or duplicate MU's semiconductor exposure.",
+  "current_live_baseline": {
+    "profile_id": "multi_asset_growth_first_5000_hype_freshness_repair_v53",
+    "profile_fingerprint": "f6378e473088b962724176f1b4aaf0857d4e2a6c3bf0103c2d1794d6bfd46a82",
+    "configured_assets": [
+      "BTC",
+      "HYPE"
+    ],
+    "live_change_proposed": false
+  },
+  "evidence": [
+    {
+      "path": "data/logs/research/hip3_liquidity_snapshot_20260817T1648Z_v1.json",
+      "bytes": 25567,
+      "sha256": "c67d2d7ba7f18a01188c006f8f10442f8410cc9aba14b9ed9fe5f39aa9e471f8",
+      "interpretation": "Exact public metaAndAssetCtxs snapshot at 2026-08-17T16:46:20.826583+00:00; 94 active markets ranked by venue-reported day notional volume with no credentials or execution client."
+    },
+    {
+      "path": "docs/research-journal/v53-xyz100-krown-trend-resumption-development-v1.json",
+      "bytes": 11969,
+      "sha256": "cc005179e36aebfd1fa13e91bae746970b7c09fe8080124200d7bf6dbb56a119",
+      "interpretation": "XYZ100's distinct Krown trend-resumption mechanism lost on both sides and all development folds; validation and holdout stayed closed."
+    },
+    {
+      "path": "docs/research-journal/v53-v51-final-loss-disposition-v1.json",
+      "bytes": 16933,
+      "sha256": "bd7e76a978c3d92696ac0da30d17126244327f80f1baa57f5fdc4a8de4dd36bc",
+      "interpretation": "The exact SP500/SPCX fresh-pressure v3 family lost $42.49 across its final compatible live lifecycles and cannot be reused unchanged."
+    },
+    {
+      "path": "docs/research-journal/v53-mu-shadow-lifecycle-replay-v5.json",
+      "bytes": 10638,
+      "sha256": "001cc6963ab7e1f7aa6d01c5d9a8e96819ef254c5094fdd41422bbc90bdc72dd",
+      "interpretation": "MU remains report-only because its apparent gain is largest-winner dependent; its frozen transport-parity window is still the highest-value active candidate experiment."
+    },
+    {
+      "path": "docs/research-journal/hip3-sndk-gold-brent-transfer-v3.json",
+      "bytes": 9923,
+      "sha256": "2c724eea7899b2a6f2e862b62f91027cd2e86e7f4dea5c9ab9db3bcbedcbf937",
+      "interpretation": "SNDK's pooled bidirectional transfer failed stress; selecting its positive short contribution after seeing results would require a separate preregistered hypothesis."
+    },
+    {
+      "path": "docs/research-journal/v51-compatible-performance-cause-diagnosis-v2.json",
+      "bytes": 13024,
+      "sha256": "c6d8289c09d96dacf3fd3e9e3c739ed2401e930b58263addbebf5fac18faa589",
+      "interpretation": "Prior compatible evidence records two SNDK long losses and negative, largest-winner-dependent BRENTOIL economics."
+    }
+  ],
+  "snapshot_top_ten": [
+    {
+      "rank": 1,
+      "symbol": "xyz:SNDK",
+      "day_notional_volume_usd": 592993930.52,
+      "disposition": "not_selected_semiconductor_lane_and_prior_bidirectional_evidence_failed"
+    },
+    {
+      "rank": 2,
+      "symbol": "xyz:SPCX",
+      "day_notional_volume_usd": 219501387.41,
+      "disposition": "not_selected_prior_pressure_mechanism_failed_new_mechanism_required"
+    },
+    {
+      "rank": 3,
+      "symbol": "xyz:SKHX",
+      "day_notional_volume_usd": 191359923.95,
+      "disposition": "excluded_by_operator_and_duplicates_mu_semiconductor_lane"
+    },
+    {
+      "rank": 4,
+      "symbol": "xyz:XYZ100",
+      "day_notional_volume_usd": 186286142.05,
+      "disposition": "rejected_distinct_krown_mechanism_failed_development"
+    },
+    {
+      "rank": 5,
+      "symbol": "xyz:MU",
+      "day_notional_volume_usd": 159944440.73,
+      "disposition": "active_report_only_candidate_transport_parity_collecting"
+    },
+    {
+      "rank": 6,
+      "symbol": "xyz:SP500",
+      "day_notional_volume_usd": 149414355.45,
+      "disposition": "not_selected_prior_pressure_mechanism_failed_new_mechanism_required"
+    },
+    {
+      "rank": 7,
+      "symbol": "xyz:DRAM",
+      "day_notional_volume_usd": 140990916.71,
+      "disposition": "not_selected_duplicates_mu_semiconductor_lane"
+    },
+    {
+      "rank": 8,
+      "symbol": "xyz:CL",
+      "day_notional_volume_usd": 129650330.19,
+      "disposition": "deferred_technical_path_unresolved_and_not_in_next_version_scope"
+    },
+    {
+      "rank": 9,
+      "symbol": "xyz:BRENTOIL",
+      "day_notional_volume_usd": 90319181.56,
+      "disposition": "deferred_negative_development_stress_and_source_revision_pause"
+    },
+    {
+      "rank": 10,
+      "symbol": "xyz:SKHY",
+      "day_notional_volume_usd": 88870337.81,
+      "disposition": "not_selected_underlying_identity_and_strategy_evidence_unverified"
+    }
+  ],
+  "decision": "Do not force a second non-crypto candidate merely to fill the roster. MU is the only current top-ten market with an active, preregistered, materially distinct experiment. Finish its frozen transport-parity window. Keep every other exact prior mechanism closed; a future SP500, SPCX, SNDK, CL, BRENTOIL, or XYZ100 experiment requires a genuinely distinct preregistered mechanism or its recorded reopen evidence.",
+  "single_highest_value_next_investigation": "Finalize the frozen MU transport-parity window at its 2026-08-17T19:00:00Z cutoff, then continue exact both-side lifecycle collection only if transport parity passes.",
+  "limitations": [
+    "Day volume and open interest measure capacity, not strategy edge or diversification.",
+    "The public market-context response supplies symbols but not a complete independently verified underlying-sector taxonomy; xyz:SKHY therefore remains identity-unresolved rather than being classified by inference.",
+    "A failed transferred mechanism does not prove every possible strategy on that asset fails; it does prohibit unchanged reuse without new causal evidence.",
+    "The ranking is point-in-time and may change, so later selection requires a new exact snapshot."
+  ],
+  "falsifier": "Reopen a market only if a new point-in-time liquidity snapshot remains adequate and a genuinely distinct preregistered mechanism passes causal development, untouched validation and holdout, exact execution stress, both-side robustness, and largest-winner removal. Update the MU priority after its fixed-window result without replacing or shrinking an unfavorable window.",
+  "approval_requested": false
+}

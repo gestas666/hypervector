@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v58-repaired-stale-cache-poller-bounded-acceptance-v1",
+  "generated_at_utc": "2026-08-19T17:31:36Z",
+  "status": "accepted_bounded_technical_smoke",
+  "mode": "report_only_observer_acceptance",
+  "parent_hypothesis": {
+    "hypothesis_id": "v58-v57-stale-candle-cache-root-cause-v1",
+    "path": "docs/research-journal/v58-v57-stale-candle-cache-root-cause-20260819-v1.json",
+    "sha256": "f990fe429e376f3dd6ec56b10973a486dfe3e9f15668aec8a4f1717d6525907d"
+  },
+  "experiment": {
+    "run_id": "bidirectional-observe-1787160565188",
+    "profile_id": "multi_asset_growth_first_5000_eight_asset_incremental_v58",
+    "profile_fingerprint": "6aa7215f183340db62b229893199be8ecdf45ffcdc970b9a4841fc0586227b60",
+    "start_utc": "2026-08-19T17:29:25.191047+00:00",
+    "end_utc": "2026-08-19T17:29:54.258521+00:00",
+    "duration_seconds": 29.067474,
+    "poll_cycles": 2,
+    "maximum_polls": 2,
+    "ledger_root": "data/observe/v58_eight_asset_repaired_probe_20260819_v1"
+  },
+  "technical_result": {
+    "complete": true,
+    "successful_poll_cycles": 2,
+    "degraded_poll_cycles": 0,
+    "runtime_faults": 0,
+    "expected_provider_symbols": 10,
+    "observed_provider_symbols": 10,
+    "duplicate_evaluations": 0,
+    "initial_candle_symbols": [
+      "BTC",
+      "ETH",
+      "SOL",
+      "HYPE",
+      "xyz:SP500",
+      "xyz:SPCX",
+      "xyz:SNDK",
+      "xyz:BRENTOIL"
+    ],
+    "initial_completed_one_minute_bars_per_symbol": 360,
+    "eligible_evaluations": 0,
+    "strategy_intents": 0,
+    "routed_actions": 0,
+    "orders_or_fills_observed": false
+  },
+  "interpretation": {
+    "supported": "A fresh process loaded from the repaired source can collect all eight exact assets and evaluate all ten V58 provider-symbol mappings for two bounded cycles without reproducing the cadence fault.",
+    "not_supported": [
+      "The 29-second run did not contain a real transport outage and therefore is not independent outage-recovery proof.",
+      "Zero eligible signals do not estimate strategy frequency or economic edge.",
+      "This report-only run does not establish live execution, fills, fees, funding, slippage, or profitability."
+    ],
+    "combined_evidence": "The simulated twelve-minute outage regression proves adaptive overlap behavior; this bounded public-data run separately proves current-source eight-asset startup and steady-state plumbing."
+  },
+  "evidence": {
+    "config": {
+      "path": "configs/multi_asset_growth_first_5000_eight_asset_incremental_v58.toml",
+      "sha256": "1c1c1656233b074df2ed3adcee8cb8cb2c58f0d191cc9f9ac34799478fca3378"
+    },
+    "poller": {
+      "path": "src/hypervector/live/multi_asset_intent_poller.py",
+      "sha256": "daef81d15e3ce947ec22c545e9c1d4d80ebf3b89353c85dcd4281f99ec0e5d40"
+    },
+    "outage_regression": {
+      "path": "tests/test_multi_asset_intent_poller_recovery.py",
+      "sha256": "35a456f2a4062b66f8c841526344a8be87661c9e0ff01a7e2e11c5c47a9c48a7",
+      "focused_result": "12 passed"
+    },
+    "ledger": {
+      "path": "data/observe/v58_eight_asset_repaired_probe_20260819_v1/decisions.jsonl",
+      "sha256": "ec30871e633c52e096db0ace27c93eecbec6446742df5d072aacc4504303db91",
+      "rows": 8
+    },
+    "immutable_audit": {
+      "path": "data/logs/research/bidirectional_cohort/v58_repaired_poller_two_cycle_probe_20260819_v1.json",
+      "sha256": "fc332d051314ff6b887844bc9ebd1f088d38efe00b852e4e9481dfe6d11cd64f"
+    }
+  },
+  "falsifiers": [
+    "The referenced ledger or immutable audit no longer matches its recorded SHA-256.",
+    "The audit does not reconcile eight exact symbols, ten provider-symbol mappings, two successful cycles, and zero technical gaps.",
+    "A repaired process reproduces the cadence ValueError with a source gap shorter than retained-history capacity.",
+    "Any row in the bounded run has live_armed=true or execution_authority other than none."
+  ],
+  "next_step": "Preserve the current old-identity observer until its preregistered ETH lifecycle resolves, then start the continuous report-only observer on repaired bytes under a new ledger identity and verify ongoing outage recovery before considering any live proposal.",
+  "confidence": {
+    "level": "high_for_bounded_technical_smoke_low_for_outage_recovery_and_economics",
+    "basis": "Exact source hashes, a stable eight-row ledger, immutable standard observer audit, complete provider coverage, and a separate deterministic outage regression.",
+    "limitation": "The bounded public-data run lasted only 29 seconds and observed no real transport outage or eligible lifecycle."
+  },
+  "authority": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_live_change": false,
+    "orders_supported": false,
+    "live_restart_authorized_by_this_artifact": false
+  }
+}

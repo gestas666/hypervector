@@ -1,0 +1,139 @@
+{
+  "schema_version": "v51_checkpoint_epoch_cache_and_hype_lifecycle_v1",
+  "generated_at_utc": "2026-08-14T12:05:44Z",
+  "status": "code_ready_deployment_deferred_until_flat",
+  "execution_authority": "none",
+  "report_only": true,
+  "automatic_live_change": false,
+  "runtime_strategy_changed": false,
+  "problem_restatement": "Screen 2 must display current v51 provider evaluations, routed and withheld outcomes, and live exposure without material checkpoint lag or mixed accounting scopes.",
+  "live_scope": {
+    "run_id": "bidirectional-live-1786691478619",
+    "profile_id": "multi_asset_growth_first_5000_six_asset_profit_lock_candidate_v51",
+    "profile_fingerprint": "30cd54bb5b5b17249ae0a6a3b01d5702b276d51f8dc5ddd6b4d36ab6aa7d1908",
+    "checkpoint_generated_at_utc": "2026-08-14T12:04:46.765874+00:00",
+    "backend_state": "running_consistent",
+    "backend_process_health": "healthy",
+    "faulted_assets": [],
+    "open_asset": "HYPE",
+    "position_size_signed": -88.28,
+    "owned_reduce_only_stop_oid": 516556877091,
+    "protected_if_open": true
+  },
+  "diagnosis": {
+    "observed_failure": "The running checkpoint worker repeatedly rejected the compatible execution-history cache because it compared the v51 accounting-epoch archive count with the broader all-time-live reflection count.",
+    "epoch_closed_lifecycles": 1,
+    "all_time_live_closed_lifecycles": 74,
+    "pre_fix_effect": "Every refresh fell back to rebuilding approximately 1.35 GB of cohort history plus asset ledgers, causing observed Screen 2 checkpoint lag from approximately 60 seconds to at least 158 seconds and multi-gigabyte worker memory use.",
+    "screen_two_rendering_assessment": "The current TUI renderer displayed the routed HYPE action, seven setup rows, and the live HYPE position when supplied a refreshed checkpoint. The missing-data symptom was upstream checkpoint latency, not a Screen 2 row-rendering omission.",
+    "root_cause_confidence": "high",
+    "root_cause_falsifier": "A deployed patched worker that still rejects the real compatible suffix, rebuilds the full projection each cycle, or leaves Screen 2 materially stale would falsify the diagnosis."
+  },
+  "validated_fix": {
+    "source": "src/hypervector/research/cohort_checkpoint_history.py",
+    "source_sha256": "a78834a708f328b1017a4ca9bcffabe0feaf953bc73501ba7ae27c854ae0e069",
+    "regression_test": "tests/test_cohort_checkpoint_history_accounting_epoch.py",
+    "regression_test_sha256": "ce187512ece33f14af41c1408addde3200ac8439290fc9427e1d2e4648f37553",
+    "behavior": "When the archive declares an accounting epoch, compare the bounded epoch archive only with the complete archive for that same epoch; preserve the legacy broad-history comparison when no epoch is declared.",
+    "real_data_probe": {
+      "elapsed_seconds": 4.857,
+      "snapshot_scope": "compatible_execution_history",
+      "cohort_bytes": 46855193,
+      "epoch_closed_lifecycles": 1,
+      "historical_closed_lifecycles": 74,
+      "current_run_fill_events": 8,
+      "open_lifecycles": 1,
+      "hype_state": "OPEN"
+    },
+    "verification": [
+      "The new regression failed before the implementation with the exact archive/reflection count mismatch.",
+      "The focused checkpoint suite passed 54 tests after implementation.",
+      "Ruff check and Ruff format check passed.",
+      "git diff --check passed.",
+      "A production-data probe selected the compatible suffix in 4.857 seconds and retained the open HYPE lifecycle."
+    ]
+  },
+  "active_hype_lifecycle": {
+    "provider_id": "hype_breakout_compression_pullback_bidirectional_v1",
+    "side": "short",
+    "decision_time_utc": "2026-08-14T11:55:00Z",
+    "entry_order_id": 516556857812,
+    "entry_vwap": 56.160851,
+    "filled_size": 88.28,
+    "filled_notional_usd": 4957.87994,
+    "entry_fee_usd": 2.141801,
+    "entry_slippage_bps_vs_reference": 8.38828,
+    "protective_stop_order_id": 516556877091,
+    "protective_stop_trigger": 56.6100864,
+    "stop_distance_bps": 80.0,
+    "maximum_hold_seconds": 28800,
+    "maximum_hold_policy": "extend_while_regime_supported",
+    "hard_maximum_hold_seconds": 86400,
+    "latest_observed_at_utc": "2026-08-14T12:06:04.993902+00:00",
+    "latest_unrealized_pnl_usd_before_exit_cost": 8.28518,
+    "monitoring_limitations": [
+      "The unrealized value is not realized profit and excludes the future exit fee and exit slippage.",
+      "One entry is insufficient to update the strategy's slippage distribution.",
+      "The lifecycle must finish under its frozen exit contract before exit quality can be assessed."
+    ]
+  },
+  "change_proposal": {
+    "Recommendation": "Deploy only the accounting-epoch-aware checkpoint cache fix at the next verified flat and owned-order-free restart boundary, then rerun the all-screen live acceptance checks.",
+    "Why now": "Screen 2 currently receives truthful but materially delayed data, and the unnecessary full-history rebuild consumes substantial CPU, memory, and disk I/O.",
+    "Evidence reviewed": "Current v51 checkpoint and ledgers, process table, exact Screen 2 render regressions, the pre-fix production failure, the post-fix real-data compatible-suffix probe, and 54 focused checkpoint tests.",
+    "Observed problem/opportunity": "Mixed accounting scopes invalidated a valid cache and delayed cockpit telemetry; the bounded epoch comparison restores fast, scope-correct checkpoint generation.",
+    "Applicable market regime": "Regime independent; this is an observability and accounting-scope correction.",
+    "Alternatives considered": "Leave the lag in place, hot-reload or kill the worker during an open trade, or hide broad all-time history. Leaving it unfixed is operationally weak; restarting while open is unsafe; hiding history would remove valid evidence.",
+    "Proposed live change": "Restart the unchanged v51 profile with the patched checkpoint code only after HYPE is flat and every cohort-owned order is absent. No strategy, route, asset, sizing, leverage, stop, target, or exit parameter changes.",
+    "Expected upside": "Restore bounded checkpoint refreshes, reduce memory and I/O pressure, and make Screen 2 reflect new actions and positions within the configured checkpoint cadence rather than one to more than two-and-a-half minutes late.",
+    "Main risks/failure modes": "Incorrect epoch matching could omit valid history; a careless restart could orphan an open lifecycle; low disk headroom could still interrupt telemetry writes even after the cache fix.",
+    "Validation completed": "Red-to-green unit regression, 54 focused tests, Ruff and diff checks, real-data suffix probe, and current-binary Screen 2 rendering with the routed HYPE action.",
+    "Validation still required": "Flat/order-free preflight, normal backend stop, fresh backup, patched restart, two successive bounded checkpoint refreshes, exact current/all-time reconciliation, all-nine-screen TUI acceptance, and a no-fault poststart window.",
+    "Success metrics": "Checkpoint refresh completes without full-projection fallback, compatible cohort bytes remain bounded near the verified suffix, Screen 2 shows the latest routed/withheld/open state within the configured cadence, and accounting-epoch plus all-time counts remain separately correct.",
+    "Failure/rollback triggers": "Any history omission, count/PnL mismatch, full-projection fallback, checkpoint age above 90 seconds, process fault, identity mismatch, or missing Screen 2 action/position data requires a normal flat-boundary rollback to the preserved prestart backup.",
+    "Confidence level": "High confidence in the diagnosed cache mismatch and code-level correction; medium confidence in deployed cadence until a flat-boundary restart and live acceptance prove it under the running workload.",
+    "Explicit approval requested": "Not yet. Request deployment only when the active HYPE lifecycle is closed and all owned orders are absent."
+  },
+  "highest_value_next_investigation": {
+    "selection": "Complete and reconcile the active HYPE lifecycle under its frozen v51 exit contract.",
+    "reason": "It is the only current capital exposure and provides immediate exact evidence about regime-supported extension, stop protection, profit retention, fees, funding, and exit slippage.",
+    "parallel_observation": "Continue exact source-native SP500 and SPCX lifecycle capture without changing their v51 parameters.",
+    "update_condition": "After HYPE closes, compare realized lifecycle economics with the entry state and frozen exit plan, then reassess whether an exit hypothesis is warranted."
+  },
+  "deployment_source_delta_audit": {
+    "active_prestart_bundle": "data/backups/bidirectional_cohort/prestart_20260814T071118.619065Z_30cd54bb5b5b",
+    "active_implementation_file_count": 1479,
+    "active_implementation_sha256": "f1f242d7cca6b059474ca86e12449f48f6abce44a38281c989dd7116d21989e6",
+    "current_discovered_implementation_file_count": 1492,
+    "changed_captured_files": 6,
+    "added_files": 13,
+    "removed_files": 0,
+    "missing_files": 0,
+    "live_execution_source_changes_since_active_start": 0,
+    "changed_checkpoint_projection_files": [
+      "src/hypervector/research/cohort_checkpoint_history.py",
+      "src/hypervector/research/cohort_live_archive_query.py"
+    ],
+    "changed_report_only_hip3_files": [
+      "src/hypervector/research/hip3_shadow_lifecycle_models.py",
+      "src/hypervector/research/hip3_shadow_lifecycle_replay.py",
+      "src/hypervector/research/hip3_shadow_signal_markouts.py",
+      "src/hypervector/research/hip3_transfer_sources.py"
+    ],
+    "added_file_scope": "All 13 additions are below src/hypervector/data or src/hypervector/research; none is imported by the automatic live execution entrypoint as a new strategy or risk authority.",
+    "assessment": "The current source delta does not change the frozen v51 strategy, route, asset, leverage, sizing, stop, target, maximum-hold, or order-execution contract. A later restart would load the approved submission-boundary freshness logic already present in the active bundle unchanged, plus the checkpoint/report-only changes listed here.",
+    "verification": [
+      "Every one of the 1479 active-bundle implementation paths was rehashed against the current filesystem.",
+      "No active-bundle source is missing and no source path was removed from current discovery.",
+      "The current v51 config SHA-256 remains f0f0fef087eb0a3412c2a917d2d9bd8f578b17e4a40d7c3729519a33cf4f9ab4.",
+      "The entry-submission and runner source hashes exactly match the active prestart bundle."
+    ],
+    "falsifier": "Any further source mutation, newly changed live execution module, changed v51 config hash, missing bundle path, or different discovery count invalidates this audit and requires a fresh exact delta before restart."
+  },
+  "operational_risk": {
+    "disk_capacity_used_pct": 98,
+    "disk_available_gib": 20,
+    "assessment": "Material telemetry-continuity risk; no files were removed because deletion requires an explicit, reviewed cleanup scope.",
+    "falsifier": "Sustained free-space recovery with no write failures or a capacity audit proving all required ledgers have adequate bounded growth would reduce this concern."
+  }
+}

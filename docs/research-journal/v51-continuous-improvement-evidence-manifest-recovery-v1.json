@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v51-continuous-improvement-evidence-manifest-recovery-v1",
+  "status": "accepted_technical_repair",
+  "recorded_at_utc": "2026-08-14T15:36:30Z",
+  "scope": {
+    "profile_id": "multi_asset_growth_first_5000_six_asset_profit_lock_candidate_v51",
+    "profile_fingerprint": "30cd54bb5b5b17249ae0a6a3b01d5702b276d51f8dc5ddd6b4d36ab6aa7d1908",
+    "run_id": "bidirectional-live-1786691478619",
+    "execution_authority": "none",
+    "live_runtime_changed": false
+  },
+  "observed_defect": {
+    "monitor_process_pid": 31043,
+    "monitor_state": "running_but_fail_closed",
+    "last_stale_digest_generated_at_utc": "2026-08-14T12:19:39.988958+00:00",
+    "failure": "research decision evidence mismatch",
+    "mismatched_evidence": [
+      {
+        "path": "docs/research-journal/v51-hype-compression-alignment-forward-v1.json",
+        "recorded_sha256": "06313fffdda0924b7e11608c696d277fcc79e51e85f10865fab5392244054f16",
+        "recorded_bytes": 9110,
+        "current_sha256": "622bc2cd0a5a2c50392970ef3294236cd2b5bbeb7b142adee89af8d6e891028b",
+        "current_bytes": 17094
+      },
+      {
+        "path": "docs/research-journal/v51-entry-submission-freshness-deployment-v1.json",
+        "recorded_sha256": "c94122a71c4f03bd9231448b27090968b03c3f5831184bbe7744f797c476a8de",
+        "recorded_bytes": 3689,
+        "current_sha256": "b64d3aa84d86ee30ec588bd0f38662e1e3c128189005c709b6245866aeeab7e7",
+        "current_bytes": 4291
+      }
+    ]
+  },
+  "repair": {
+    "path": "configs/research/cohort_improvement_decision_overrides_v51.json",
+    "action": "updated_only_the_two_stale_report_only_evidence_hash_and_size_pairs",
+    "current_sha256": "b1795eee36d4c5462ddc388c810d51bf59b0092d72ecc6e2edc9085c5a6b45af",
+    "research_config_only": true,
+    "strategy_or_execution_change": false
+  },
+  "validation": {
+    "evidence_mismatches_after_repair": 0,
+    "focused_tests": "42 passed in 0.72s",
+    "temporary_once_probe": "published",
+    "existing_process_restarted": false,
+    "existing_process_recovered": true,
+    "recovered_digest_generated_at_utc": "2026-08-14T15:34:46.650625+00:00",
+    "recovered_checkpoint_generated_at_utc": "2026-08-14T15:32:55.506018+00:00",
+    "recovered_closed_trades": 2,
+    "recovered_automatic_action": "none"
+  },
+  "limitations": [
+    "A running process is not proof that a fail-closed report was published; digest freshness must remain monitored.",
+    "Evidence hashes must be updated only after the referenced journal change is validated as intentional.",
+    "This repair restores research observability and does not establish strategy profitability."
+  ],
+  "falsifier": "Reject the repair if any declared evidence hash or byte count differs, if the existing monitor stops refreshing from fresh checkpoints, if the repair changes live routing or execution, or if a success-shaped digest publishes from mismatched evidence.",
+  "change_proposal": {
+    "Recommendation": "Retain strict evidence-hash validation and monitor digest freshness as a technical health signal.",
+    "Why now": "The continuous improvement process was alive but its output had been stale for more than three hours, interrupting the mandated observe-diagnose-research loop.",
+    "Evidence reviewed": "Process state and stack, digest and checkpoint timestamps, monitor stderr behavior reproduced with an isolated once probe, all 25 evidence references, the two changed journals, focused monitor/digest/history tests, and the recovered existing-process publication.",
+    "Observed problem or opportunity": "Two intentionally extended research journals invalidated their earlier manifest hashes, causing fail-closed refresh failures while the process remained healthy and sleeping between attempts.",
+    "Applicable market regime": "All regimes because evidence integrity and freshness are technical invariants.",
+    "Alternatives considered": "Ignore the stale digest, disable hash checks, restart the monitor, replace the journals, or update only the verified stale evidence identities.",
+    "Proposed live change": "None; this is a report-only evidence-manifest repair.",
+    "Expected upside": "Restores current, source-bound opportunity ranking and hypothesis tracking without weakening integrity checks or touching live execution.",
+    "Main risks and failure modes": "Approving an unintended journal mutation, recurrent hash drift, silent monitor failure, or confusing research recovery with a strategy edge.",
+    "Validation completed": "Zero remaining evidence mismatches, 42 focused tests, isolated once publication, existing-process automatic recovery, fresh checkpoint binding, and no backend PID/configuration change.",
+    "Validation still required": "Continue checking digest age and require each future journal revision to update its evidence identity only after content validation.",
+    "Success metrics": "Digest age remains within the monitor interval plus checkpoint processing time, every publication is bound to a fresh checkpoint and exact evidence manifest, and automatic_action remains explicit.",
+    "Failure / rollback triggers": "Any evidence mismatch, digest staleness beyond three monitor intervals, source checkpoint staleness, malformed report authority, or unexpected live-runtime mutation.",
+    "Confidence level": "High confidence in the diagnosed cause and recovery because the failure was reproduced and the unchanged process published successfully after the exact manifest repair.",
+    "Explicit approval requested": "None; the user's standing technical-defect authorization covers report-only observability repair, and no live strategy, risk, execution, or deployment setting changed."
+  },
+  "single_highest_value_next_investigation": "Resolve and reconcile the currently open HYPE and SP500 short lifecycles, with exact opposite-signal, native-exit, profit-lock, stop, cost, and missed-opportunity attribution."
+}

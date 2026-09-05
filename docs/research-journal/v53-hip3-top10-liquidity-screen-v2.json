@@ -1,0 +1,81 @@
+{
+  "schema_version": "v53_hip3_top10_liquidity_screen_v2",
+  "created_at_utc": "2026-08-17T20:17:00Z",
+  "hypothesis_id": "V53_HIP3_TOP10_LIQUIDITY_SCREEN_V2",
+  "state": "screen_disposition_corrected_no_new_qualified_candidate",
+  "mode": "report_only",
+  "execution_authority": "none",
+  "automatic_live_change": false,
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false,
+  "live_change_proposed": false,
+  "supersedes": {
+    "path": "docs/research-journal/v53-hip3-top10-liquidity-screen-v1.json",
+    "sha256": "244eeb3c18e938067e582e335e2819ebd671e46654f6bea71305b4f03c44f2a2",
+    "bytes": 6804,
+    "reason": "The v1 market-capacity ranking remains historical evidence, but its next-investigation sentence retained the failed MU-v1 cutoff after the observer repair and independent v2 preregistration."
+  },
+  "corrected_mu_window": {
+    "hypothesis_id": "MU_BREAKOUT_PRESSURE_TRANSPORT_PARITY_FORWARD_V2",
+    "first_decision_utc": "2026-08-17T20:00:00Z",
+    "last_decision_utc": "2026-08-18T19:45:00Z",
+    "end_exclusive_utc": "2026-08-18T20:00:00Z",
+    "expected_decisions": 96,
+    "observed_at_this_revision": 2,
+    "resolved_at_this_revision": 2,
+    "eligible_at_this_revision": 0,
+    "missing_at_this_revision": 0,
+    "unresolved_at_this_revision": 0,
+    "status_source": "data/runtime/research/mu_transport_parity_finalizer_v2_latest.json",
+    "status_source_is_mutable_projection": true
+  },
+  "evidence": [
+    {
+      "path": "docs/research-journal/v53-mu-transport-parity-forward-window-v2.json",
+      "sha256": "7245e990603d42debc1781b353f7cd75d45ad510f98ef9c16f5860b2a5fe1a36",
+      "bytes": 8769,
+      "interpretation": "Independent fixed 96-decision MU-v2 contract; no shrinkage, replacement, or retuning is allowed."
+    },
+    {
+      "path": "docs/research-journal/v53-mu-transport-window-final-result-and-observer-repair-v1.json",
+      "sha256": "6b5cd06f918e74085331dc6e696b150da945365e14e5685fd832d6ad2eaa4f89",
+      "bytes": 6250,
+      "interpretation": "The first MU window failed technically and remains preserved rather than being reused or relabeled."
+    },
+    {
+      "path": "docs/research-journal/v53-sp500-spcx-opening-range-breakout-development-result-v1.json",
+      "sha256": "24a593a7f0c90688ae64d1338940d09b5842123fa5cb6c96936d2786c3e36242",
+      "bytes": 3896,
+      "interpretation": "The distinct index opening-range family failed stress, largest-winner robustness, and technical-path checks; validation and holdout stayed sealed."
+    },
+    {
+      "path": "docs/research-journal/v53-brentoil-candle-revision-technical-pause-v1.json",
+      "sha256": "cc5b9fe5cf485bc1cee0c90254c1436b3087a82a76aa05dcfb7f3c6fbb5406b9",
+      "bytes": 9274,
+      "interpretation": "BRENTOIL remains deferred behind source-finality defects and negative stress development economics."
+    }
+  ],
+  "updated_disposition": {
+    "active_distinct_external_experiment": "MU_BREAKOUT_PRESSURE_TRANSPORT_PARITY_FORWARD_V2",
+    "sp500_spcx_opening_range": "rejected_development",
+    "brentoil": "deferred_source_finality_and_negative_stress",
+    "other_top_ten_markets": "unchanged_from_v1_no_qualified_candidate",
+    "second_external_live_route_ready": false
+  },
+  "decision": "Do not add a second non-crypto route from the current screen. Complete the independent MU-v2 window through 2026-08-18T20:00:00Z without retuning or replacement. Keep the failed MU-v1 window, rejected index opening-range family, and deferred BRENTOIL source experiment closed.",
+  "single_highest_value_next_investigation": "Complete and audit all 96 MU-v2 transport decisions while the first exact attributable v53 BTC or HYPE lifecycle capture remains armed.",
+  "minimum_update_evidence": "MU transport can advance only with 96/96 resolved decisions, zero missing or unresolved rows, zero source or entry-decision mismatches, and a non-vacuous entry event. Economic consideration additionally requires at least 20 independent exact-cost resolved lifecycles with both sides and positive stress net after largest-winner removal.",
+  "limitations": [
+    "The original point-in-time liquidity ranking measures capacity rather than edge.",
+    "Two resolved MU boundaries establish transport operation, not signal profitability.",
+    "No current external candidate has passed untouched validation and holdout.",
+    "The mutable MU status projection is observation metadata and is not part of the immutable source hashes."
+  ],
+  "confidence": {
+    "window_identity_correction": "high",
+    "current_external_candidate_ranking": "high",
+    "mu_future_profitability": "unknown"
+  },
+  "falsifier": "Update this disposition only if the fixed MU-v2 result changes the evidence state or a genuinely distinct preregistered mechanism passes causal development, untouched validation and holdout, exact execution stress, both-side robustness, and largest-winner removal.",
+  "approval_requested": false
+}

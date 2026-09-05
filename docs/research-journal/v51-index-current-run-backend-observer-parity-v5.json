@@ -1,0 +1,107 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v51-index-live-translation-current-run-v1",
+  "revision_number": 5,
+  "supersedes_revision_id": "v51-index-current-run-backend-observer-parity-v4",
+  "created_at_utc": "2026-08-15T09:08:00Z",
+  "strategy_id": "hip3_breakout_pressure_sp500_spcx_fresh15s_bidirectional_v3",
+  "symbol": "xyz:SP500+xyz:SPCX",
+  "status": "being_tested",
+  "hypothesis": "The exact v51 SP500/SPCX live-v3 route may retain an attributable after-cost edge when its backend and source-native observer decisions remain identical and complete lifecycles occur on both configured sides.",
+  "execution_authority": "none",
+  "report_only": true,
+  "automatic_promotion": false,
+  "automatic_live_change": false,
+  "runtime_strategy_changed": false,
+  "decision": "Continue the exact v51 SP500/SPCX route unchanged. The recovered live process now has 4/4 source-native observer decisions matching the executable backend with zero mismatches. All four decisions were ineligible, so economic and long-side evidence remain unchanged from revision 4.",
+  "confidence": "high_for_observed_recovered_run_transport_low_for_both_side_economic_edge",
+  "scope": {
+    "run_id": "bidirectional-live-1786782860118",
+    "profile_id": "multi_asset_growth_first_5000_six_asset_profit_lock_candidate_v51",
+    "profile_fingerprint": "30cd54bb5b5b17249ae0a6a3b01d5702b276d51f8dc5ddd6b4d36ab6aa7d1908",
+    "provider_id": "hip3_breakout_pressure_sp500_spcx_fresh15s_bidirectional_v3",
+    "comparison_start_utc": "2026-08-15T08:45:00Z",
+    "comparison_end_utc": "2026-08-15T09:00:00Z",
+    "symbols": [
+      "xyz:SP500",
+      "xyz:SPCX"
+    ]
+  },
+  "findings": {
+    "compared_decisions": 4,
+    "decisions_per_symbol": 2,
+    "decision_mismatches": 0,
+    "post_start_eligible_signals": 0,
+    "post_start_long_signals": 0,
+    "post_start_short_signals": 0,
+    "interpretation": "The recovered backend and independent observers agree on two consecutive completed 15-minute boundaries for each symbol. This extends transport continuity but is not a new profitability sample. The prior resolved SPCX short, still-open SP500 and SPCX shorts, and absence of attributable long lifecycles remain the economic evidence boundary."
+  },
+  "data_quality": {
+    "observer_rows_at_report_prefix": {
+      "xyz:SP500": 242,
+      "xyz:SPCX": 238
+    },
+    "source": "hyperliquid_mainnet_l2_rest",
+    "signal_ohlc_source": "hyperliquid_public_candleSnapshot_15m",
+    "report_authority_violations": 0,
+    "recovered_run_parity_resolved": true,
+    "remaining_source_blockers": [
+      "archive_public_trade_ohlc_vs_live_candleSnapshot_parity_unverified",
+      "archive_ws_l2Book_vs_live_rest_pressure_decision_parity_unresolved"
+    ]
+  },
+  "limitations": [
+    "Four matched decisions are insufficient to estimate mismatch probability.",
+    "No recovered-run decision was eligible, so this revision adds no entry, fill, exit, or PnL evidence.",
+    "The prior process supplied the only eligible v51 index signals and both were short.",
+    "SPCX remains a one-trade winner and is entirely largest-winner dependent.",
+    "SP500 and the second SPCX short remain open and their marked results are provisional.",
+    "The observer and backend can share the same upstream public-data defect.",
+    "Archive and live-v3 source identities remain non-interchangeable."
+  ],
+  "evidence": [
+    {
+      "path": "../../data/logs/research/v51_index_backend_observer_parity_recovered_run_20260815T0905Z_v2.json",
+      "role": "immutable_four_decision_recovered_run_parity",
+      "sha256": "ad8d7858e3f006d70726eea3f3debe63c997d463da05cf5f609b7df838ad559b",
+      "bytes": 3438
+    },
+    {
+      "path": "v51-index-current-run-backend-observer-parity-v4.json",
+      "role": "superseded_two_decision_recovered_run_parity",
+      "sha256": "6d2bfa4dc24d8477d5375793b95f1fcbe9b417eabe963f604872da4b0fe600a5",
+      "bytes": 7468
+    },
+    {
+      "path": "../../configs/multi_asset_growth_first_5000_six_asset_profit_lock_candidate_v51.toml",
+      "role": "active_v51_route_and_exit_contract",
+      "sha256": "f0f0fef087eb0a3412c2a917d2d9bd8f578b17e4a40d7c3729519a33cf4f9ab4",
+      "bytes": 3917
+    },
+    {
+      "path": "v51-index-current-run-backend-observer-parity-v3.json",
+      "role": "prior_process_76_decision_and_two_eligible_short_evidence",
+      "sha256": "0c9f9647aa730cefdba815b843700908cdde92b596154416eb6024a8f1de877c",
+      "bytes": 8853
+    }
+  ],
+  "falsifier": "Reject recovered-run transport parity if any later common completed boundary differs, any eligible observer signal lacks an attributable backend action or explicit position/router non-action, source coverage becomes incomplete, or run/profile/provider identity changes. Update economic confidence only with resolved, attributable long and short lifecycles after exact fees, funding, slippage, latency, stop behavior, exit attribution, and largest-winner sensitivity.",
+  "recommendation": {
+    "Recommendation": "Keep the exact v51 index route and 100/40/80 completed-bar profit-lock unchanged while collecting the first attributable long lifecycle and resolving both open index shorts.",
+    "Why now": "Two consecutive recovered boundaries preserve decision transport, while the unresolved question remains side-separated economics rather than signal delivery.",
+    "Evidence reviewed": "Immutable recovered-run 4/4 decision parity, prior 76/76 process-run parity, one resolved SPCX short, protected open SP500 and SPCX shorts, and exact v51 identity.",
+    "Observed problem or opportunity": "No eligible long onset has occurred in attributable v51 execution; the recovered process has added no eligible signal yet.",
+    "Applicable market regime": "Source-native completed-15m fresh breakout-pressure onsets with causal top-ten pressure age at or below 15 seconds.",
+    "Alternatives considered": "Retune thresholds for more signals, pool pre-v51 observer signals, infer edge from one winner, or continue the frozen source-native trial.",
+    "Proposed live change": "none",
+    "Expected upside": "Preserves an aligned live route while collecting unbiased long/short lifecycle evidence.",
+    "Main risks and failure modes": "Sparse and one-sided outcomes, shared upstream defects, right censoring, completed-bar exit gap risk, execution drag, and false confidence from one winner.",
+    "Validation completed": "Recovered-run identity binding, exact compatible-ledger suffix verification, 4/4 decision parity, authority-none observer contracts, and protected open-index lifecycle attribution.",
+    "Validation still required": "At least one resolved attributable long lifecycle, resolution of both open index shorts, more short outcomes, actual-minus-stress residuals, largest-winner sensitivity, and shared-portfolio interaction evidence.",
+    "Success metrics": "No unexplained eligible-without-action event; complete protection and flat/order reconciliation; positive side-separated after-cost economics; positive net excluding the largest winner when sample size permits; bounded execution residuals.",
+    "Failure / rollback triggers": "Any decision mismatch, unprotected exposure, orphan order, stale/conflicting attribution, repeated execution drag beyond stress, exit-branch mismatch, or a compatible predeclared sample with adverse after-cost expectancy.",
+    "Confidence level": "High confidence for two recovered common boundaries; low confidence in economic edge and long-side behavior.",
+    "Explicit approval requested": false
+  },
+  "single_highest_value_next_investigation": "Capture and resolve the first attributable v51 long lifecycle for SPCX while resolving the open SP500 and SPCX shorts under the frozen v51 exit contract."
+}

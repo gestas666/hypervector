@@ -74,6 +74,8 @@ fn staged_generation() -> CohortConfigurationGeneration {
         current_provider_execution_scopes: Some(v43_scopes()),
         current_provider_execution_directions: Some(v43_directions()),
         current_asset_sizing: None,
+        current_asset_entry_slippage_caps: None,
+        current_asset_market_slippage_caps: None,
         current_entry_context_overrides: Some(BTreeMap::new()),
         current_provider_sizing_overrides: Some(BTreeMap::new()),
         current_provider_directional_sizing_overrides: Some(BTreeMap::new()),

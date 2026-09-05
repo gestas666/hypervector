@@ -320,10 +320,29 @@ def _unique_trades(
     output: dict[str, PublicTradeEvent] = {}
     for event in trades:
         prior = output.get(event.trade_key)
-        if prior is not None and prior != event:
+        if prior is not None and _venue_trade_payload(prior) != _venue_trade_payload(
+            event
+        ):
             raise ValueError(f"conflicting public trade identity: {event.trade_key}")
-        output[event.trade_key] = event
+        if prior is None or event.received_ts_ns < prior.received_ts_ns:
+            output[event.trade_key] = event
     return tuple(output.values())
+
+
+def _venue_trade_payload(event: PublicTradeEvent) -> tuple[object, ...]:
+    """Return exchange-defined fields while excluding local receipt time."""
+    return (
+        event.symbol,
+        event.aggressor_side,
+        event.price,
+        event.size,
+        event.transaction_hash,
+        event.exchange_ts_ms,
+        event.trade_id,
+        event.buyer,
+        event.seller,
+        event.source,
+    )
 
 
 def _gap_quality(

@@ -878,6 +878,47 @@ The nine screens are:
    until separately validated.
 9. Config: effective-versus-draft restart profile editing. Validation/staging is
    allowed only while disarmed and never hot-mutates or arms the backend.
+
+#### Current V86 seven-asset live profile
+
+V86 displays exactly five crypto assets (`BTC`, `ETH`, `SOL`, `HYPE`, `ZEC`)
+followed by two non-crypto assets (`xyz:SPCX`, `xyz:SNDK`). GOLD, SP500, and
+BRENTOIL are absent. All nine exact provider-symbol routes remain visible.
+Six validated directions retain execution scope: BTC sweep long, ETH range
+long, SOL range short, HYPE alignment long, SPCX cash-session long, and SNDK
+breakout-pressure short. BTC robust Hulk short, BTC tuned Hulk short, and ZEC
+Donchian are `OBSERVE ONLY` and cannot submit an entry. V86 does not silently
+replace either retired route: the preregistered ZEC UT-Bot short challenger
+failed validation, so promoting it would not be evidence-coherent.
+
+The V85 owner stopped with every asset flat and order-free. Its exact terminal
+boundary is preserved in
+`data/backups/bidirectional_cohort/legacy_STOP_v85_bidirectional-live-1788487098219.json`.
+The V86 accounting epoch begins at `0/0/0` W/L/BE while preserving all prior
+backend ledgers and the final V85 checkpoint/preflight. Screen 2 exposes all
+nine entry/stop/target/hold and sizing contracts, including the three
+observe-only rows; Screen 5 separates current-epoch 0/0/0 from retained
+historical data. Every entry IOC remains bounded to 20 bps while reduce-only
+closes retain the separate 100 bps liveness envelope.
+
+With current explicit live-risk authorization, and only when no cohort backend
+already owns the runtime lock, use the unified one-command start:
+
+```bash
+cd /Users/gestas/Prototypes/hypervector && uv run python -m hypervector cohort-tui \
+  --mode live \
+  --config configs/multi_asset_growth_first_5000_seven_asset_failed_routes_retired_v86.toml \
+  --accounting-epoch-bundle data/backups/bidirectional_cohort/accounting_epochs/v86_failed_routes_retired_f454101e_20260904T1440Z \
+  --enabled --i-accept-live-risk
+```
+
+The profile fingerprint is
+`f454101eadaef46fd026c1a901bb7873bad61d7e7183a4c2e342e477e4e38733`.
+Startup remains fail-closed on stale or mismatched epoch identity, missing
+credentials, dependency failure, venue reconciliation, backup verification,
+or absent fresh telemetry. A successful preflight is point-in-time evidence;
+the first fresh V86 checkpoint must still pass post-start monitoring acceptance.
+
 Open lifecycles also show the causal entry structure-alignment score beside
 the latest score. When the backend has bound an active target, the reflection
 publishes its exact venue OID, limit price, and directional distance from the
@@ -888,17 +929,123 @@ Closed reflections retain the entry score. The rolling
    assigns rejected trades zero hypothetical PnL without capital reallocation,
    and cannot filter, size, route, close, or promote a strategy.
 
-Attach without starting any backend when one already exists:
+Attach read-only to the active V68 ledger/checkpoint without starting or arming
+another backend:
 
 ```bash
-uv run python -m hypervector cohort-tui --mode monitor
+uv run python -m hypervector cohort-tui \
+  --mode monitor \
+  --config configs/multi_asset_growth_first_5000_three_asset_btc_ioc_hardened_candidate_v68.toml
 ```
 
 Monitor-only attachment also reads the bounded rolling checkpoint when present
 at `data/runtime/bidirectional_cohort/latest_checkpoint.json`. It does not start
-an analysis or execution process. The dashboard distinguishes fresh, stale,
-unavailable, running-consistent, mixed, and post-stop lifecycle evidence; a
-missing checkpoint never changes backend facts or becomes an empty success.
+an analysis or execution process. The V68 view is bound to fingerprint
+`9c8df6faa8005290032802d58f7e53ec5cdc5b9605218bc426ee6d3a3b3b60fd`,
+shows BTC, HYPE, and SNDK, five provider-symbol routes, and six executable
+directional scopes. It excludes SOL, BRENTOIL, GOLD, ETH, SP500, and SPCX from
+the portfolio, setup, chart, depth, trade, control, regime, and config
+selectors. SNDK long is observation-only; its only executable side is short.
+The rejected bidirectional Hulk provider has no V68 execution scope. The Config
+view exposes the current effective venue market-order cap: BTC 20 bps, HYPE 100
+bps, and SNDK 100 bps.
+The dashboard distinguishes fresh, stale, unavailable, running-consistent,
+mixed, and post-stop lifecycle evidence; a missing checkpoint never changes
+backend facts or becomes an empty success.
+
+V66 run `bidirectional-live-1788257350726` stopped only after an exact flat,
+order-free snapshot. Its immutable final audit records zero orders, fills,
+closed trades, or faults and unchanged equity. The final source sequence was
+sealed as
+`data/backups/bidirectional_cohort/legacy_STOP_v66_bidirectional-live-1788257350726.json`
+with SHA-256
+`6edff32d7a2fdcf973d20bdf960e494efd90c0d5cb8432bca2a1634d12b4aa97`.
+Generate current mainnet transition evidence with this Info-only command,
+which reconciles all three V68 symbols plus retired SOL and never accepts a
+signing key or live-arm flags:
+
+```bash
+uv run python scripts/multi_asset_bidirectional_preflight.py \
+  --config configs/multi_asset_growth_first_5000_three_asset_btc_ioc_hardened_candidate_v68.toml \
+  --active-config configs/multi_asset_growth_first_5000_three_asset_evidence_scope_repaired_candidate_v67.toml \
+  --checkpoint data/runtime/bidirectional_cohort/latest_checkpoint.json \
+  --sizing-equity-usd 5000 \
+  --output data/logs/research/bidirectional_cohort/v68_btc_ioc_hardening_flat_5000_preflight_<UTC>.json
+```
+
+The 2026-09-01 13:20 UTC V68 artifact passed with three configured assets,
+three position slots, no transition blockers, and all retained and retired
+venue books flat/order-free/ledger-reconciled. Its SHA-256 is
+`a89b8c7d27a47b6dd1e0c816711b6a188148198c27d0bd208d04dcb64d53d102`.
+Venue state remains mutable, so a later launch must regenerate rather than
+silently reuse stale success evidence. Changed-profile startup independently
+reconciles all retained symbols through armed adapters and every retired symbol
+through Info-only readers before constructing engines.
+
+After current operator live-risk authorization, use the exact unified V68
+launcher:
+
+```bash
+uv run python -m hypervector cohort-tui \
+  --mode live \
+  --config configs/multi_asset_growth_first_5000_three_asset_btc_ioc_hardened_candidate_v68.toml \
+  --enabled --i-accept-live-risk
+```
+
+Startup still fails closed on an observer, credential, lock, archive, approval,
+pre-start backup, retained venue, retired SOL venue, or runtime identity
+mismatch. The approval and preflight grant no execution authority by
+themselves; only this explicit invocation carries the two live flags.
+
+The verified current V68 owner is run `bidirectional-live-1788269536520`, with
+prestart bundle `prestart_20260901T133216.520331Z_9c8df6faa800` and manifest
+SHA-256 `5dc359037a5739fea2c33f15c825540dbe1f351853a5830a7966a7741e69e22c`.
+The implementation SHA-256 is
+`0e171a0d04a2092d5fae9ca57853c2b0e8a475c3ff85ce73ce1d7d2e5fdc667a`.
+While that owner is running, use the monitor command above; a second live
+command correctly refuses the singleton backend lock. TUI-owned continuous and
+final live checkpoints are explicitly current-run-only, and the normal stopped
+run audit is bound to the fresh run with current-run history scope. These bounds
+preserve current operational telemetry and the cached portfolio archive without
+materializing the multi-gigabyte historical ledgers.
+
+For current run `bidirectional-live-1788269536520`, five additional
+execution-incapable lifecycle collectors are bound prospectively to the exact
+V68 provider-symbol routes and six configured directions. The frozen research
+decisions are in
+`configs/research/cohort_improvement_decision_overrides_v68.json`; current route
+states are `data/runtime/bidirectional_cohort/v68_*_lifecycle_latest.json`; the
+consolidated state is
+`data/runtime/bidirectional_cohort/latest_v68_improvement_digest.json`. These
+artifacts must never be rebound to another run. After a backend restart, create
+new run-specific boundaries and outputs before treating route lifecycle
+monitoring as current. The collectors and digest are report-only and cannot
+route, pause, close, retune, promote, or change a strategy.
+
+The V68 TUI also reads
+`data/runtime/research/hip3_roster_latest.json`. Treat that attachment as
+current only while `scripts/hip3_roster_observer.py` is actively publishing an
+`available`, `lifecycle=running` checkpoint. The current observer process
+handle is `68144`. Its 2026-09-01 refresh covers five HIP3 research markets
+with complete 20-by-20 books; SNDK growth mode and effective fee evidence are
+resolved. A stopped, unavailable, or older-than-five-minute file is explicitly
+stale and must not be described as complete current TUI data.
+
+Independently verify the launch-reported mandatory backup and active nine-screen
+TUI projection with:
+
+```bash
+uv run python scripts/cohort_prestart_backup_verify.py \
+  --bundle <launch-reported-prestart-bundle>
+
+cargo test -p hypervector-tui \
+  --test v68_current_runtime_qa_test -- --ignored
+```
+
+The TUI acceptance traverses paginated setup rows at 120x36 and renders all
+nine screens at 120x36, 160x50, and 190x52. The interactive launcher itself
+requires at least 100x28 and prints an explicit resize diagnostic below that
+hard floor.
 
 Publish one deterministic observer checkpoint manually without stopping or
 mutating the running observer:
@@ -940,11 +1087,15 @@ Its closed-trade inspector also renders backend-authored completed-path MFE,
 MAE, and peak giveback for ignored provider exits. Missing excursion fields
 remain explicitly unavailable; the TUI never derives replacements from the
 entry, exit, or current mark.
-The `ALL-TIME` row precedes `CURRENT RUN`. When backend process-run provenance
-is available, the title reports the number of trade-bearing process windows and
-explicitly labels them `NOT INDEPENDENT`; a process restart is not evidence of
-an independent market sample. These values come from resolved backend
-lifecycles; the TUI does not reconstruct or simulate performance.
+The operational `CURRENT RUN` row precedes `ALL-TIME`. A matching new run with
+no resolved closes is explicitly labeled `FRESH RUN 0/0`; a mismatched run
+identity is unavailable rather than displayed as a fabricated reset. All-time
+mixed-profile history remains visible as a separately labeled comparison.
+When backend process-run provenance is available, the title reports the number
+of trade-bearing process windows and explicitly labels them `NOT INDEPENDENT`;
+a process restart is not evidence of an independent market sample. These values
+come from resolved backend lifecycles; the TUI does not reconstruct or simulate
+performance.
 The research screen keeps current-profile profit-lock evidence separate from an
 explicit `ALL-LIVE ... MIXED CONTRACTS` mechanism view. The latter normalizes
 each lifecycle's actual and counterfactual net result by its own entry notional
@@ -1019,7 +1170,7 @@ bytes. Startup immediately restores each archive into the hash verifier and
 aborts if any copy, identity, or check fails. New live starts refuse an empty
 implementation source set. The bundle excludes `.env`, wallet keys, and API
 secrets. Large accumulated ledgers may extend live startup preparation; the
-unified supervisor allows 180 seconds by default and still refuses startup if
+unified supervisor allows 900 seconds by default and still refuses startup if
 verified fresh telemetry does not appear.
 
 After the verified bundle exists, the backend writes its non-secret provenance

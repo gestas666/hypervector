@@ -59,12 +59,46 @@ def test_accepts_capacity_above_the_configured_asset_count() -> None:
     ] == pytest.approx(0.02)
 
 
-def test_rejects_capacity_below_the_configured_asset_count() -> None:
-    """Every configured asset must retain one possible portfolio slot."""
+def test_accepts_observe_only_assets_outside_execution_capacity() -> None:
+    """Visible data-only assets must not consume executable portfolio slots."""
     records = _records()
     records[0]["payload"]["position_policy"]["maximum_concurrent_positions"] = 1
+    records[0]["payload"]["providers"] = [
+        {
+            "strategy_id": "executable",
+            "execution_symbols": ["BTC"],
+            "sizing_overrides": {},
+        },
+        {
+            "strategy_id": "observer",
+            "execution_symbols": [],
+            "sizing_overrides": {},
+        },
+    ]
 
-    with pytest.raises(ValueError, match="must cover configured assets"):
+    evidence = cohort_risk_utilization(records, run_id="live-a")
+
+    assert evidence["summary"]["configured_assets"] == 2
+    assert evidence["summary"]["executable_assets"] == 1
+    assert evidence["summary"]["configured_maximum_positions"] == 1
+    assert evidence["summary"][
+        "maximum_simultaneous_effective_margin_fraction"
+    ] == pytest.approx(0.01)
+
+
+def test_rejects_capacity_below_the_executable_asset_count() -> None:
+    """Every asset reachable by an execution provider must retain one slot."""
+    records = _records()
+    records[0]["payload"]["position_policy"]["maximum_concurrent_positions"] = 1
+    records[0]["payload"]["providers"] = [
+        {
+            "strategy_id": "executable",
+            "execution_symbols": ["BTC", "ETH"],
+            "sizing_overrides": {},
+        }
+    ]
+
+    with pytest.raises(ValueError, match="must cover executable assets"):
         cohort_risk_utilization(records, run_id="live-a")
 
 

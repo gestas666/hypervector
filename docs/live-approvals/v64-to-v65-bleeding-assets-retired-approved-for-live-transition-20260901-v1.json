@@ -1,0 +1,116 @@
+{
+  "schema_version": 1,
+  "document_type": "cohort_profile_change_approval",
+  "approval_status": "approved_for_live_transition",
+  "approved_at_utc": "2026-09-01T08:24:32Z",
+  "approved_by": "operator_in_conversation",
+  "operator_approval": "Do whatever is required so the TUI runs the new version live; if something broken will likely harm the portfolio, do not leave it broken.",
+  "execution_authority": "none",
+  "previous_profile": {
+    "profile_id": "multi_asset_growth_first_5000_eight_asset_gold_removed_candidate_v64",
+    "profile_fingerprint": "3a687cb3de08eb4d8df82b91e0c8f9af3c40c335bd15027554501f9516781d38"
+  },
+  "candidate_profile": {
+    "profile_id": "multi_asset_growth_first_5000_five_asset_bleeding_stopped_candidate_v65",
+    "profile_fingerprint": "167c090dc962b72f2e43c616f0f4cc8dfd9f70bda314ef0713a5a481a0590d0c"
+  },
+  "change_scopes": [
+    "retire_eth_after_repeated_negative_live_and_native_replay_evidence",
+    "retire_sp500_and_spcx_after_negative_after_cost_live_evidence",
+    "remove_all_ten_retired_symbol_side_execution_scopes_without_replacement",
+    "preserve_every_retained_v64_execution_contract"
+  ],
+  "recommendation_evidence": [
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v65_bleeding_asset_retirement_20260901_v1.json",
+      "sha256": "68ec0f31dc991b98f1381e8681d9750b2bc8b1c61238c8cf4bed45d69bb8db9d"
+    }
+  ],
+  "rollback": {
+    "config_path": "../../configs/multi_asset_growth_first_5000_eight_asset_gold_removed_candidate_v64.toml",
+    "profile_fingerprint": "3a687cb3de08eb4d8df82b91e0c8f9af3c40c335bd15027554501f9516781d38",
+    "sha256": "8d12a7bdae4bf34bc3896f4ab7f47f2b26f569967a85775d9d2989c8eb279ec7"
+  },
+  "retirements": [
+    {
+      "retired_scope": {
+        "strategy_id": "eth_breakout_precompression_pullback_bidirectional_v1",
+        "symbol": "ETH",
+        "side": "long"
+      },
+      "replacement_scope": null
+    },
+    {
+      "retired_scope": {
+        "strategy_id": "eth_breakout_precompression_pullback_bidirectional_v1",
+        "symbol": "ETH",
+        "side": "short"
+      },
+      "replacement_scope": null
+    },
+    {
+      "retired_scope": {
+        "strategy_id": "hulk_expansion_bidirectional_tuned_v2",
+        "symbol": "ETH",
+        "side": "long"
+      },
+      "replacement_scope": null
+    },
+    {
+      "retired_scope": {
+        "strategy_id": "hulk_expansion_bidirectional_tuned_v2",
+        "symbol": "ETH",
+        "side": "short"
+      },
+      "replacement_scope": null
+    },
+    {
+      "retired_scope": {
+        "strategy_id": "hip3_breakout_pressure_sp500_spcx_fresh15s_bidirectional_v3",
+        "symbol": "xyz:SP500",
+        "side": "long"
+      },
+      "replacement_scope": null
+    },
+    {
+      "retired_scope": {
+        "strategy_id": "hip3_breakout_pressure_sp500_spcx_fresh15s_bidirectional_v3",
+        "symbol": "xyz:SP500",
+        "side": "short"
+      },
+      "replacement_scope": null
+    },
+    {
+      "retired_scope": {
+        "strategy_id": "hip3_breakout_pressure_sp500_spcx_fresh15s_bidirectional_v3",
+        "symbol": "xyz:SPCX",
+        "side": "long"
+      },
+      "replacement_scope": null
+    },
+    {
+      "retired_scope": {
+        "strategy_id": "hip3_breakout_pressure_sp500_spcx_fresh15s_bidirectional_v3",
+        "symbol": "xyz:SPCX",
+        "side": "short"
+      },
+      "replacement_scope": null
+    },
+    {
+      "retired_scope": {
+        "strategy_id": "hip3_spcx_cash_open_gap_reversal_bidirectional_15m_v1",
+        "symbol": "xyz:SPCX",
+        "side": "long"
+      },
+      "replacement_scope": null
+    },
+    {
+      "retired_scope": {
+        "strategy_id": "hip3_spcx_cash_open_gap_reversal_bidirectional_15m_v1",
+        "symbol": "xyz:SPCX",
+        "side": "short"
+      },
+      "replacement_scope": null
+    }
+  ]
+}

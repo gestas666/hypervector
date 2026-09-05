@@ -218,6 +218,14 @@ def validate_archive_cadence(
         raise ValueError(
             f"HIP-3 {timeframe} maximum_hold_bars must equal {expected_hold}"
         )
+    validate_archive_bar_timing(bars, timeframe)
+
+
+def validate_archive_bar_timing(bars: pd.DataFrame, timeframe: str) -> None:
+    """Reconcile declared gaps and quote timing for one supported cadence."""
+    if timeframe not in {"5m", "15m"}:
+        raise ValueError("HIP-3 archive timeframe must be 5m or 15m")
+    minutes = 5 if timeframe == "5m" else 15
     elapsed = bars.index.to_series().diff().dt.total_seconds().iloc[1:]
     gaps = bars["gap_before_bars"].astype(int).iloc[1:]
     expected = (gaps + 1) * minutes * 60

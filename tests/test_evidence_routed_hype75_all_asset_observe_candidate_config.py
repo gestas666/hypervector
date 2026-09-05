@@ -123,12 +123,10 @@ def test_v11_adds_the_frozen_eth_transfer_as_observation_only() -> None:
     assert provider.execution.stop_bps == 60.0
     assert provider.execution.target_policy == "none"
     assert provider.execution.maximum_hold_seconds == 43_200
-    assert evidence["research_state"] == (
-        "side_relation_set_falsified_new_mechanism_required"
-    )
-    assert evidence["confidence"] == "medium"
+    assert evidence["research_state"] == "prospective_requalification_open_long_only"
+    assert evidence["confidence"] == "low"
     assert evidence["evidence_source"] == (
-        "docs/research-journal/eth-breakout-precompression-pullback-v6.json"
+        "docs/research-journal/eth-breakout-precompression-pullback-v17.json"
     )
     assert evidence["execution_effect"] == "report_only"
 

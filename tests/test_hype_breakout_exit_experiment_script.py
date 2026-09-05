@@ -5,6 +5,8 @@ from __future__ import annotations
 from importlib.util import module_from_spec, spec_from_file_location
 from pathlib import Path
 
+import pytest
+
 _SCRIPT = Path(__file__).parents[1] / "scripts" / "hype_breakout_exit_experiment.py"
 
 
@@ -25,6 +27,69 @@ def test_parser_supports_live_extension_parity_mode() -> None:
     )
 
     assert args.compare_live_extension is True
+
+
+def test_parser_supports_complete_v54_exit_contract() -> None:
+    """The runner exposes opposite-native-onset fixed versus extension replay."""
+    module = _load()
+    args = module.build_parser().parse_args(
+        ["--out", "result.json", "--compare-v54-exit-contract"]
+    )
+
+    assert args.compare_v54_exit_contract is True
+
+
+def test_parser_supports_v54_directional_authority_comparison() -> None:
+    """The runner exposes the post-observation HYPE side-authority audit."""
+    module = _load()
+    args = module.build_parser().parse_args(
+        ["--out", "result.json", "--compare-v54-entry-sides"]
+    )
+
+    assert args.compare_v54_entry_sides is True
+
+
+def test_parser_supports_v54_adverse_context_comparison() -> None:
+    """The runner exposes the single predeclared 15-minute context challenger."""
+    module = _load()
+    args = module.build_parser().parse_args(
+        ["--out", "result.json", "--compare-v54-adverse-15m-context"]
+    )
+
+    assert args.compare_v54_adverse_15m_context is True
+
+
+def test_runner_dispatches_v54_adverse_context_comparison(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The flag selects only the predeclared report-only context builder."""
+    module = _load()
+    args = module.build_parser().parse_args(
+        ["--out", "result.json", "--compare-v54-adverse-15m-context"]
+    )
+    seen: dict[str, object] = {}
+
+    def build(
+        market: object,
+        *,
+        holdout_days: int,
+        fold_count: int,
+    ) -> dict[str, object]:
+        seen.update(
+            market=market,
+            holdout_days=holdout_days,
+            fold_count=fold_count,
+        )
+        return {"execution_authority": "none", "development_comparison": {}}
+
+    monkeypatch.setattr(module, "build_hype_native_adverse_context_comparison", build)
+    market = object()
+
+    report, evidence = module._build_report(args, market, object(), object())
+
+    assert report["execution_authority"] == "none"
+    assert seen == {"market": market, "holdout_days": 60, "fold_count": 5}
+    assert evidence is None
 
 
 def test_parser_supports_breakout_entry_direction_comparison() -> None:

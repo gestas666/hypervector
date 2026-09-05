@@ -173,6 +173,66 @@ def test_protective_stop_precedes_a_pending_signal_exit_after_gap() -> None:
     assert trade.exit_price == pytest.approx(98.0)
 
 
+@pytest.mark.parametrize(
+    ("side", "entry_open", "anchor", "minimum", "maximum", "expected_stop"),
+    [
+        ("long", 102.0, 98.0, 60.0, 150.0, 102.0 * (1.0 - 0.015)),
+        ("long", 102.0, 101.5, 60.0, 150.0, 102.0 * (1.0 - 0.006)),
+        ("long", 98.0, 99.0, 60.0, 150.0, 98.0 * (1.0 - 0.006)),
+        ("short", 98.0, 102.0, 60.0, 150.0, 98.0 * (1.0 + 0.015)),
+        ("short", 98.0, 98.4, 60.0, 150.0, 98.0 * (1.0 + 0.006)),
+        ("short", 102.0, 101.0, 60.0, 150.0, 102.0 * (1.0 + 0.006)),
+    ],
+)
+def test_structural_stop_anchor_uses_actual_fill_and_clamps_distance(
+    side: str,
+    entry_open: float,
+    anchor: float,
+    minimum: float,
+    maximum: float,
+    expected_stop: float,
+) -> None:
+    """A causal signal anchor must bind from the next-open fill like live."""
+    market = _market(
+        [
+            (100.0, 100.2, 99.8, 100.0),
+            (entry_open, entry_open, entry_open, entry_open),
+            (entry_open, entry_open, entry_open, entry_open),
+        ],
+        entries={0: side},
+    )
+    market["candidate_stop_anchor"] = [anchor, float("nan"), float("nan")]
+    report = replay_hype_breakout_exits(
+        market,
+        HypeExitPolicy("structural_stop"),
+        _config(
+            stop_anchor_column="candidate_stop_anchor",
+            minimum_stop_bps=minimum,
+            maximum_stop_bps=maximum,
+        ),
+    )
+    assert report.trades[0].stop_price == pytest.approx(expected_stop)
+
+
+def test_structural_stop_contract_rejects_missing_anchor_column() -> None:
+    """A configured structural replay cannot silently fall back to fixed bps."""
+    market = _market(
+        [(100.0, 100.0, 100.0, 100.0)] * 3,
+        entries={0: "long"},
+    )
+
+    with pytest.raises(ValueError, match="stop anchor column"):
+        replay_hype_breakout_exits(
+            market,
+            HypeExitPolicy("structural_stop"),
+            _config(
+                stop_anchor_column="candidate_stop_anchor",
+                minimum_stop_bps=60.0,
+                maximum_stop_bps=120.0,
+            ),
+        )
+
+
 def test_funding_at_entry_boundary_belongs_only_to_preexisting_position() -> None:
     """A position opened after an hourly settlement does not inherit that charge."""
     market = _market(
@@ -211,6 +271,69 @@ def test_replay_serializes_overlapping_onsets_and_reports_costs() -> None:
     assert report.occupied_signals == 1
     assert report.total_fee_bps == pytest.approx(18.0)
     assert report.execution_authority == "none"
+
+
+def test_opposite_entry_signal_closes_without_same_cycle_reversal() -> None:
+    """Live-parity opposite intent closes next open without reversing immediately."""
+    market = _market(
+        [
+            (100.0, 100.0, 100.0, 100.0),
+            (100.0, 100.0, 100.0, 100.0),
+            (102.0, 102.0, 102.0, 102.0),
+            (103.0, 103.0, 103.0, 103.0),
+            (104.0, 104.0, 104.0, 104.0),
+        ],
+        entries={0: "long", 2: "short"},
+    )
+
+    report = replay_hype_breakout_exits(
+        market,
+        HypeExitPolicy("live_router_parity"),
+        _config(
+            stop_bps=500.0,
+            maximum_hold_minutes=10,
+            exit_on_opposite_signal=True,
+        ),
+    )
+
+    assert report.completed_trades == 1
+    assert report.occupied_signals == 1
+    assert report.trades[0].exit_time_utc == market.index[3].isoformat()
+    assert report.trades[0].exit_reason == "opposite_strategy_intent"
+    assert report.trades[0].gross_return_bps == pytest.approx(300.0)
+
+
+def test_long_only_authority_keeps_short_onset_as_exit_only() -> None:
+    """A disabled short side may close a long but cannot open short exposure."""
+    market = _market(
+        [(100.0, 100.0, 100.0, 100.0)] * 7,
+        entries={0: "long", 2: "short", 4: "short"},
+    )
+
+    report = replay_hype_breakout_exits(
+        market,
+        HypeExitPolicy("long_only"),
+        _config(exit_on_opposite_signal=True),
+        entry_sides=("long",),
+    )
+
+    assert report.completed_trades == 1
+    assert report.trades[0].side == "long"
+    assert report.trades[0].exit_reason == "opposite_strategy_intent"
+
+
+@pytest.mark.parametrize("entry_sides", [(), ("long", "long"), ("flat",)])
+def test_entry_authority_requires_unique_supported_sides(
+    entry_sides: tuple[str, ...],
+) -> None:
+    """Directional research authority must be explicit and unambiguous."""
+    with pytest.raises(ValueError, match="entry_sides"):
+        replay_hype_breakout_exits(
+            _market([(100.0, 100.0, 100.0, 100.0)] * 2),
+            HypeExitPolicy("invalid_sides"),
+            _config(),
+            entry_sides=entry_sides,
+        )
 
 
 def test_trade_records_conservative_favorable_and_adverse_excursion() -> None:

@@ -62,6 +62,38 @@ def _identity_line(
     ).encode()
 
 
+def _compatible_history() -> tuple[bytes, bytes, bytes, bytes]:
+    old = _identity_line(
+        1,
+        "run-old",
+        profile_id="profile-old",
+        profile_fingerprint="profile-fp-old",
+        run_fingerprint="run-fp-old",
+    ) + _run_line(2, "run-old", "heartbeat")
+    first = _identity_line(
+        3,
+        "run-compatible",
+        profile_id="profile-current",
+        profile_fingerprint="profile-fp-current",
+        run_fingerprint="run-fp-current",
+    ) + _run_line(4, "run-compatible", "fill")
+    intervening = _identity_line(
+        5,
+        "run-intervening",
+        profile_id="profile-other",
+        profile_fingerprint="profile-fp-other",
+        run_fingerprint="run-fp-other",
+    ) + _run_line(6, "run-intervening", "heartbeat")
+    current = _identity_line(
+        7,
+        "run-current",
+        profile_id="profile-current",
+        profile_fingerprint="profile-fp-current",
+        run_fingerprint="run-fp-current",
+    ) + _run_line(8, "run-current", "position")
+    return old, first, intervening, current
+
+
 def test_complete_ledger_preserves_all_rows_and_reports_source_bytes(
     tmp_path: Path,
 ) -> None:
@@ -156,34 +188,7 @@ def test_compatible_execution_snapshot_starts_at_earliest_matching_identity(
 ) -> None:
     """A rolling audit keeps adopted history without decoding older contracts."""
     path = tmp_path / "btc.jsonl"
-    old = _identity_line(
-        1,
-        "run-old",
-        profile_id="profile-old",
-        profile_fingerprint="profile-fp-old",
-        run_fingerprint="run-fp-old",
-    ) + _run_line(2, "run-old", "heartbeat")
-    first_compatible = _identity_line(
-        3,
-        "run-compatible",
-        profile_id="profile-current",
-        profile_fingerprint="profile-fp-current",
-        run_fingerprint="run-fp-current",
-    ) + _run_line(4, "run-compatible", "fill")
-    intervening = _identity_line(
-        5,
-        "run-intervening",
-        profile_id="profile-other",
-        profile_fingerprint="profile-fp-other",
-        run_fingerprint="run-fp-other",
-    ) + _run_line(6, "run-intervening", "heartbeat")
-    current = _identity_line(
-        7,
-        "run-current",
-        profile_id="profile-current",
-        profile_fingerprint="profile-fp-current",
-        run_fingerprint="run-fp-current",
-    ) + _run_line(8, "run-current", "position")
+    old, first_compatible, intervening, current = _compatible_history()
     path.write_bytes(old + first_compatible + intervening + current)
 
     with live_ledger_snapshot.snapshot_compatible_execution_ledger(
@@ -211,3 +216,159 @@ def test_compatible_execution_snapshot_starts_at_earliest_matching_identity(
             old + first_compatible + intervening + current
         )
         assert evidence["bytes"] == len(first_compatible + intervening + current)
+
+
+def test_compatible_execution_snapshot_reuses_validated_start_boundary(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Later rolling snapshots must not rescan immutable historical bytes."""
+    path = tmp_path / "btc.jsonl"
+    old = _identity_line(
+        1,
+        "run-old",
+        profile_id="profile-old",
+        profile_fingerprint="profile-fp-old",
+        run_fingerprint="run-fp-old",
+    )
+    current = _identity_line(
+        2,
+        "run-current",
+        profile_id="profile-current",
+        profile_fingerprint="profile-fp-current",
+        run_fingerprint="run-fp-current",
+    )
+    path.write_bytes(old + current)
+    with live_ledger_snapshot.snapshot_compatible_execution_ledger(
+        path, run_id="run-current"
+    ) as (_, first_evidence):
+        assert first_evidence["source_start_offset_cache_hit"] is False
+
+    def unexpected_scan(*_args: object, **_kwargs: object) -> int:
+        raise AssertionError("compatible execution history was rescanned")
+
+    monkeypatch.setattr(
+        live_ledger_snapshot,
+        "_earliest_identity_offset",
+        unexpected_scan,
+    )
+    with live_ledger_snapshot.snapshot_compatible_execution_ledger(
+        path, run_id="run-current"
+    ) as (rows, evidence):
+        assert [row["run_id"] for row in rows] == ["run-current"]
+        assert evidence["source_start_offset"] == len(old)
+        assert evidence["source_start_offset_cache_hit"] is True
+
+
+def test_compatible_execution_snapshot_rejects_cached_source_truncation(
+    tmp_path: Path,
+) -> None:
+    """A cached boundary cannot hide removal of already observed suffix bytes."""
+    path = tmp_path / "btc.jsonl"
+    old = _identity_line(
+        1,
+        "run-old",
+        profile_id="profile-old",
+        profile_fingerprint="profile-fp-old",
+        run_fingerprint="run-fp-old",
+    )
+    current = _identity_line(
+        2,
+        "run-current",
+        profile_id="profile-current",
+        profile_fingerprint="profile-fp-current",
+        run_fingerprint="run-fp-current",
+    )
+    position = _run_line(3, "run-current", "position")
+    path.write_bytes(old + current + position)
+    with live_ledger_snapshot.snapshot_compatible_execution_ledger(
+        path, run_id="run-current"
+    ):
+        pass
+
+    path.write_bytes(old + current)
+
+    with pytest.raises(ValueError, match="truncated after caching"):
+        with live_ledger_snapshot.snapshot_compatible_execution_ledger(
+            path, run_id="run-current"
+        ):
+            pass
+
+
+def test_compatible_execution_snapshot_caches_zero_start_boundary(
+    tmp_path: Path,
+) -> None:
+    """A compatible identity at byte zero must retain cache provenance."""
+    path = tmp_path / "btc.jsonl"
+    path.write_bytes(
+        _identity_line(
+            1,
+            "run-current",
+            profile_id="profile-current",
+            profile_fingerprint="profile-fp-current",
+            run_fingerprint="run-fp-current",
+        )
+    )
+
+    with live_ledger_snapshot.snapshot_compatible_execution_ledger(
+        path, run_id="run-current"
+    ) as (_, first):
+        assert first["source_start_offset_cache_hit"] is False
+    with live_ledger_snapshot.snapshot_compatible_execution_ledger(
+        path, run_id="run-current"
+    ) as (_, second):
+        assert second["source_start_offset_cache_hit"] is True
+
+
+def test_compatible_execution_snapshot_rejects_replaced_cached_source(
+    tmp_path: Path,
+) -> None:
+    """Replacing an append-only source cannot inherit its cached boundary."""
+    path = tmp_path / "btc.jsonl"
+    content = _identity_line(
+        1,
+        "run-current",
+        profile_id="profile-current",
+        profile_fingerprint="profile-fp-current",
+        run_fingerprint="run-fp-current",
+    )
+    path.write_bytes(content)
+    with live_ledger_snapshot.snapshot_compatible_execution_ledger(
+        path, run_id="run-current"
+    ):
+        pass
+    replacement = tmp_path / "replacement.jsonl"
+    replacement.write_bytes(content)
+    replacement.replace(path)
+
+    with pytest.raises(ValueError, match="identity changed after caching"):
+        with live_ledger_snapshot.snapshot_compatible_execution_ledger(
+            path, run_id="run-current"
+        ):
+            pass
+
+
+def test_compatible_execution_snapshot_rejects_changed_cached_boundary(
+    tmp_path: Path,
+) -> None:
+    """A same-identity mutation at the cached start row must fail closed."""
+    path = tmp_path / "btc.jsonl"
+    content = _identity_line(
+        1,
+        "run-current",
+        profile_id="profile-current",
+        profile_fingerprint="profile-fp-current",
+        run_fingerprint="run-fp-current",
+    )
+    path.write_bytes(content)
+    with live_ledger_snapshot.snapshot_compatible_execution_ledger(
+        path, run_id="run-current"
+    ):
+        pass
+    path.write_bytes(content.replace(b'"payload": {}', b'"payload": {"x": 1}'))
+
+    with pytest.raises(ValueError, match="boundary changed after caching"):
+        with live_ledger_snapshot.snapshot_compatible_execution_ledger(
+            path, run_id="run-current"
+        ):
+            pass

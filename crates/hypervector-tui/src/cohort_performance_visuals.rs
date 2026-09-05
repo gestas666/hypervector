@@ -90,13 +90,9 @@ pub(crate) fn render(frame: &mut Frame, app: &App, area: Rect) {
         .user_trade_reflections()
         .is_empty()
     {
-        render_empty(
-            frame,
-            app,
-            area,
-            " PERFORMANCE VISUALS ",
-            "Awaiting closed backend lifecycles",
-        );
+        let message = crate::cohort_trade_performance::empty_epoch_history_message(app)
+            .unwrap_or_else(|| "Awaiting closed backend lifecycles".into());
+        render_empty(frame, app, area, " PERFORMANCE VISUALS ", &message);
         return;
     }
     let columns = Layout::horizontal([

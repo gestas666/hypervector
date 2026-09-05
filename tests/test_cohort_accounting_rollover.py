@@ -14,6 +14,9 @@ from hypervector.live.cohort_accounting_rollover import (
     load_accounting_rollover_manifest,
     load_required_accounting_epoch,
 )
+from hypervector.live.cohort_accounting_continuation import (
+    build_accounting_continuation_manifest,
+)
 from hypervector.live.multi_asset_live_config import (
     MultiAssetLiveConfig,
     load_multi_asset_live_config,
@@ -29,7 +32,20 @@ _SIX_ASSET_PATH = Path(
 _PROFIT_PROTECTED_PATH = Path(
     "configs/multi_asset_growth_first_5000_six_asset_profit_lock_candidate_v51.toml"
 )
+_EVIDENCE_BOUND_PATH = Path(
+    "configs/multi_asset_growth_first_5000_evidence_bound_successor_v52.toml"
+)
+_V58_PATH = Path(
+    "configs/multi_asset_growth_first_5000_eight_asset_incremental_v58.toml"
+)
+_V59_PATH = Path(
+    "configs/multi_asset_growth_first_5000_eight_asset_sp500_short_containment_candidate_v59.toml"
+)
+_V79_PATH = Path(
+    "configs/multi_asset_growth_first_5000_seven_asset_all_active_v79.toml"
+)
 _NOW = datetime(2026, 8, 12, 23, 0, tzinfo=UTC)
+_V58_EPOCH_START_MS = 1_787_164_729_837
 
 
 def _configs() -> tuple[MultiAssetLiveConfig, MultiAssetLiveConfig]:
@@ -80,6 +96,13 @@ def _preflight(prior, successor) -> dict[str, object]:
             "technically_ready_for_profile_transition": True,
             "transition_blocking_assets": [],
         },
+        "assets": [
+            {
+                "symbol": symbol,
+                "sizing": {"actual_account_value_usd": 4_875.84},
+            }
+            for symbol in successor.symbols
+        ],
     }
 
 
@@ -123,11 +146,33 @@ def test_rollover_manifest_binds_zero_state_equity_and_preserved_history() -> No
         "all_time_closed_trades": 0,
         "current_run_closed_trades": 0,
         "open_lifecycles": 0,
-        "venue_equity_usd": 5_000.0,
+        "venue_equity_usd": 4_875.84,
+        "sizing_reference_equity_usd": 5_000.0,
     }
     assert report["preserved_prior_history"]["prestart_backup"]["sha256"] == "a" * 64
     assert report["preserved_prior_history"]["final_preflight"]["sha256"] == "c" * 64
     assert report["execution_authority"] == "none"
+
+
+def test_rollover_rejects_inconsistent_observed_venue_equity() -> None:
+    """Every asset preflight row must report one observed account value."""
+    prior, successor = _configs()
+    preflight = _preflight(prior, successor)
+    preflight["assets"][0]["sizing"]["actual_account_value_usd"] = 4_800.0
+
+    with pytest.raises(ValueError, match="observed venue equity differs"):
+        build_accounting_rollover_manifest(
+            prior,
+            successor,
+            _checkpoint(prior),
+            preflight,
+            _backup(prior, successor),
+            epoch_id="growth_5000_v49",
+            backup_bundle_evidence={"path": "backup", "sha256": "a" * 64, "bytes": 1},
+            checkpoint_evidence={"path": "checkpoint", "sha256": "b" * 64, "bytes": 2},
+            preflight_evidence={"path": "preflight", "sha256": "c" * 64, "bytes": 3},
+            now=_NOW,
+        )
 
 
 def test_rollover_rejects_nonflat_checkpoint() -> None:
@@ -223,6 +268,66 @@ def _raw_evidence(path: str, raw: bytes) -> dict[str, object]:
     return {"path": path, "sha256": hashlib.sha256(raw).hexdigest(), "bytes": len(raw)}
 
 
+def _published_continuation(
+    tmp_path: Path,
+) -> tuple[Path, MultiAssetLiveConfig, MultiAssetLiveConfig]:
+    prior = load_multi_asset_live_config(_V58_PATH, mode="observe")
+    successor = load_multi_asset_live_config(_V59_PATH, mode="observe")
+    bundle = tmp_path / "continuation"
+    bundle.mkdir()
+    checkpoint = _checkpoint(prior)
+    parent_epoch = {
+        "epoch_id": "v58_eight_asset_incremental_8a04636c_r2",
+        "profile_fingerprint": prior.profile_fingerprint,
+        "start_venue_timestamp_ms": _V58_EPOCH_START_MS,
+    }
+    checkpoint["audit"]["portfolio_archive"] = {
+        "accounting_epoch": parent_epoch,
+        "performance": {"total": {"closed_trades": 8}},
+    }
+    final_checkpoint = json.dumps(checkpoint, sort_keys=True).encode()
+    final_preflight = b'{"preflight":true}\n'
+    backup = tmp_path / "backup_manifest.json"
+    backup.write_bytes(b'{"backup":true}\n')
+    (bundle / "final_checkpoint.json").write_bytes(final_checkpoint)
+    (bundle / "final_preflight.json").write_bytes(final_preflight)
+    base = build_accounting_rollover_manifest(
+        prior,
+        successor,
+        checkpoint,
+        _preflight(prior, successor),
+        _backup(prior, successor),
+        epoch_id="v59_sp500_short_containment_c057882f",
+        backup_bundle_evidence=_raw_evidence(str(backup), backup.read_bytes()),
+        checkpoint_evidence=_raw_evidence("final_checkpoint.json", final_checkpoint),
+        preflight_evidence=_raw_evidence("final_preflight.json", final_preflight),
+        now=_NOW,
+    )
+    parent = {
+        "schema_version": 1,
+        "mode": "cohort_accounting_epoch_rollover_v1",
+        "successor_identity": {
+            "profile_id": prior.profile_id,
+            "profile_fingerprint": prior.profile_fingerprint,
+        },
+        "accounting_epoch": parent_epoch,
+    }
+    parent_raw = (json.dumps(parent, sort_keys=True) + "\n").encode()
+    (bundle / "parent_accounting_epoch_manifest.json").write_bytes(parent_raw)
+    report = build_accounting_continuation_manifest(
+        base,
+        parent,
+        checkpoint,
+        parent_manifest_evidence=_raw_evidence(
+            "parent_accounting_epoch_manifest.json", parent_raw
+        ),
+    )
+    (bundle / "manifest.json").write_text(
+        json.dumps(report, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    return bundle, prior, successor
+
+
 def test_rollover_loader_returns_exact_successor_accounting_epoch(
     tmp_path: Path,
 ) -> None:
@@ -251,6 +356,43 @@ def test_rollover_loader_rejects_a_different_successor(tmp_path: Path) -> None:
         load_accounting_rollover_manifest(bundle, prior)
 
 
+def test_rollover_loader_rejects_invalid_sizing_reference(tmp_path: Path) -> None:
+    """A published sizing scenario cannot masquerade as valid evidence."""
+    bundle, successor = _published_rollover(tmp_path)
+    manifest_path = bundle / "manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["acceptance"]["sizing_reference_equity_usd"] = 0.0
+    manifest_path.write_text(json.dumps(manifest) + "\n", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="sizing reference equity must be positive"):
+        load_accounting_rollover_manifest(bundle, successor)
+
+
+def test_rollover_loader_returns_exact_continued_profile_lineage(
+    tmp_path: Path,
+) -> None:
+    bundle, prior, successor = _published_continuation(tmp_path)
+
+    epoch = load_accounting_rollover_manifest(bundle, successor)
+
+    assert epoch.profile_fingerprint == successor.profile_fingerprint
+    assert epoch.start_venue_timestamp_ms == _V58_EPOCH_START_MS
+    assert epoch.included_profile_fingerprints == (
+        prior.profile_fingerprint,
+        successor.profile_fingerprint,
+    )
+
+
+def test_rollover_loader_rejects_changed_parent_epoch_evidence(tmp_path: Path) -> None:
+    bundle, _, successor = _published_continuation(tmp_path)
+    (bundle / "parent_accounting_epoch_manifest.json").write_text(
+        "changed\n", encoding="utf-8"
+    )
+
+    with pytest.raises(ValueError, match="parent accounting epoch evidence differs"):
+        load_accounting_rollover_manifest(bundle, successor)
+
+
 def test_v49_live_boundary_requires_the_clean_epoch_bundle() -> None:
     _, successor = _configs()
 
@@ -269,6 +411,30 @@ def test_v50_live_boundary_requires_its_own_clean_epoch_bundle() -> None:
 def test_v51_live_boundary_requires_its_own_clean_epoch_bundle() -> None:
     """The profit-protected successor cannot inherit any prior reporting epoch."""
     successor = load_multi_asset_live_config(_PROFIT_PROTECTED_PATH, mode="observe")
+
+    with pytest.raises(ValueError, match="requires --accounting-epoch-bundle"):
+        load_required_accounting_epoch(None, successor)
+
+
+def test_v52_live_boundary_requires_its_own_clean_epoch_bundle() -> None:
+    """The evidence-bound successor cannot inherit v51 accounting history."""
+    successor = load_multi_asset_live_config(_EVIDENCE_BOUND_PATH, mode="observe")
+
+    with pytest.raises(ValueError, match="requires --accounting-epoch-bundle"):
+        load_required_accounting_epoch(None, successor)
+
+
+def test_v59_live_boundary_requires_its_own_continuation_bundle() -> None:
+    """The contained successor cannot silently discard the active $5k epoch."""
+    successor = load_multi_asset_live_config(_V59_PATH, mode="observe")
+
+    with pytest.raises(ValueError, match="requires --accounting-epoch-bundle"):
+        load_required_accounting_epoch(None, successor)
+
+
+def test_v79_live_boundary_requires_its_own_clean_epoch_bundle() -> None:
+    """The seven-active-asset TUI cannot silently inherit prior counters."""
+    successor = load_multi_asset_live_config(_V79_PATH, mode="observe")
 
     with pytest.raises(ValueError, match="requires --accounting-epoch-bundle"):
         load_required_accounting_epoch(None, successor)

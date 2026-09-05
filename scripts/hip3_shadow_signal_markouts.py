@@ -20,6 +20,7 @@ from hypervector.research.hip3_shadow_signal_markouts import (
     Hip3ShadowMarkoutConfig,
     build_hip3_shadow_signal_markouts,
 )
+from hypervector.research.hip3_shadow_route_friction import shadow_route_friction
 
 Record = Mapping[str, object]
 
@@ -46,8 +47,7 @@ def run_command(args: argparse.Namespace) -> dict[str, object]:
     evidence = {name: file_evidence(path) for name, path in paths.items()}
     diagnostic = _json_object(paths["development_diagnostic"], "diagnostic")
     fee_report = _json_object(paths["fee_evidence"], "fee evidence")
-    latency = _development_latency(diagnostic, spec)
-    fee = _fee_bps(fee_report, spec)
+    fee, latency = shadow_route_friction(diagnostic, fee_report, spec)
     config = Hip3ShadowMarkoutConfig(
         spec.symbol,
         spec.provider_id,
@@ -92,82 +92,6 @@ def _spec(value: str) -> Hip3BreakoutShadowSpec:
     if len(matches) != 1:
         raise ValueError(f"HIP-3 markout has no frozen shadow spec for {symbol}")
     return matches[0]
-
-
-def _development_latency(report: Record, spec: Hip3BreakoutShadowSpec) -> float:
-    _require_diagnostic_contract(report)
-    if report.get("symbol") != spec.symbol:
-        raise ValueError("development diagnostic symbol is inconsistent")
-    track = _selected_track(report)
-    if (
-        track.get("provider_id") != spec.provider_id
-        or track.get("profile_id") != spec.profile_id
-    ):
-        raise ValueError("development diagnostic route identity is inconsistent")
-    if track.get("timeframe") != "15m" or track.get("family") != "breakout_pressure":
-        raise ValueError("development diagnostic track is unsupported")
-    if report.get("schema_version") == "mu_development_path_threshold_diagnostic_v1":
-        source = _mapping(report.get("inputs"), "diagnostic inputs")
-    else:
-        source = _mapping(
-            _mapping(report.get("route_specific_friction"), "route friction").get(
-                "15m"
-            ),
-            "15m route friction",
-        )
-    return _nonnegative_number(
-        source.get("nominal_latency_bps_per_side"), "nominal latency"
-    )
-
-
-def _selected_track(report: Record) -> Mapping[str, object]:
-    schema = report.get("schema_version")
-    if schema == "hip3_development_only_diagnostic_v1":
-        return _mapping(report.get("development_selected_track"), "selected track")
-    if schema == "mu_development_path_threshold_diagnostic_v1":
-        diagnostic = _mapping(report.get("diagnostic"), "diagnostic")
-        return _mapping(diagnostic.get("track"), "selected track")
-    raise ValueError("development diagnostic schema is unsupported")
-
-
-def _require_diagnostic_contract(report: Record) -> None:
-    schema = report.get("schema_version")
-    generic = (
-        schema == "hip3_development_only_diagnostic_v1"
-        and report.get("report_only") is True
-        and report.get("execution_authority") == "none"
-    )
-    mu_safe = (
-        schema == "mu_development_path_threshold_diagnostic_v1"
-        and report.get("execution_authority") == "none"
-        and report.get("automatic_promotion") is False
-        and report.get("validation_accessed") is False
-        and report.get("holdout_accessed") is False
-        and report.get("qualification_abort_preserved") is True
-    )
-    if not generic and not mu_safe:
-        raise ValueError("development diagnostic authority contract is invalid")
-
-
-def _fee_bps(report: Record, spec: Hip3BreakoutShadowSpec) -> float:
-    if (
-        report.get("execution_authority") != "none"
-        or report.get("report_only") is not True
-    ):
-        raise ValueError("fee evidence authority contract is invalid")
-    profile = report.get("profile")
-    if isinstance(profile, dict):
-        values = cast(dict[str, object], profile)
-        if values.get("symbol") != spec.symbol:
-            raise ValueError("fee evidence symbol is inconsistent")
-        fees = _mapping(values.get("fees"), "fee evidence")
-        return _nonnegative_number(fees.get("one_way_taker_fee_bps"), "taker fee")
-    if report.get("symbol") != spec.symbol:
-        raise ValueError("fee evidence symbol is inconsistent")
-    friction = _mapping(report.get("route_specific_friction"), "route friction")
-    values = _mapping(friction.get("15m"), "15m route friction")
-    rate = _nonnegative_number(values.get("effective_taker_fee_rate"), "taker rate")
-    return rate * 10_000.0
 
 
 def _json_object(path: Path, label: str) -> dict[str, object]:

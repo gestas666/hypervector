@@ -151,6 +151,116 @@ def test_absent_breakout_side_is_an_explicit_unavailable_category() -> None:
     ]
 
 
+def test_declared_warmup_anatomy_is_not_a_metric_coverage_gap() -> None:
+    """Declared price-anatomy warmup must remain unavailable, not missing."""
+    evidence = MetricDiagnosticsAccumulator((5,))
+    unavailable = {"condition_anatomy_status": "legacy_or_warmup_unavailable"}
+    _observe_resolved(evidence, 60_000, unavailable, -2.0)
+    measured = {"condition_anatomy_status": "available", "close": 140.0}
+    _observe_resolved(evidence, 360_000, measured, 8.0)
+
+    report = evidence.as_payload()
+
+    assert report["coverage"]["complete"] is True
+    assert report["coverage"]["metric_value_gaps"] == 0
+    assert report["metrics"]["close"]["missing_evaluations"] == 0
+    assert report["metrics"]["close"]["horizons"]["5"]["metric_missing"] == 0
+
+
+def test_declared_stale_pressure_is_unavailable_not_missing() -> None:
+    """A causally stale book cannot be misreported as dropped metric telemetry."""
+    evidence = MetricDiagnosticsAccumulator((5,))
+    stale = {
+        "pressure_status": "stale_candidate",
+        "imbalance_10": None,
+        "pressure_age_seconds": None,
+    }
+    _observe_resolved(evidence, 60_000, stale, -2.0)
+    measured = {
+        "pressure_status": "available",
+        "imbalance_10": 0.4,
+        "pressure_age_seconds": 10.0,
+    }
+    _observe_resolved(evidence, 360_000, measured, 8.0)
+
+    report = evidence.as_payload()
+
+    assert report["coverage"]["complete"] is True
+    assert report["coverage"]["metric_value_gaps"] == 0
+    for name in ("imbalance_10", "pressure_age_seconds"):
+        assert report["metrics"][name]["missing_evaluations"] == 0
+        assert report["metrics"][name]["horizons"]["5"]["metric_missing"] == 0
+
+
+def test_available_pressure_with_null_values_remains_missing() -> None:
+    """An available book status cannot hide absent pressure measurements."""
+    evidence = MetricDiagnosticsAccumulator((5,))
+    measured = {
+        "pressure_status": "available",
+        "imbalance_10": 0.4,
+        "pressure_age_seconds": 10.0,
+    }
+    _observe_resolved(evidence, 60_000, measured, 8.0)
+    missing = {
+        "pressure_status": "available",
+        "imbalance_10": None,
+        "pressure_age_seconds": None,
+    }
+    _observe_resolved(evidence, 360_000, missing, -2.0)
+
+    report = evidence.as_payload()
+
+    assert report["coverage"]["complete"] is False
+    assert report["coverage"]["metric_value_gaps"] == 2
+
+
+def test_inactive_stop_price_is_declared_unavailable_not_missing() -> None:
+    """A stop exists only for eligible entries and is not missing on a hold."""
+    evidence = MetricDiagnosticsAccumulator((5,))
+    evidence.observe_evaluation(
+        {"atr": 30.0, "stop_price": None},
+        explicitly_unavailable=frozenset({"stop_price"}),
+    )
+    evidence.observe_horizon(
+        {"atr": 30.0, "stop_price": None},
+        horizon_minutes=5,
+        decision_time_ms=60_000,
+        status="resolved",
+        directional_return_bps=-2.0,
+        explicitly_unavailable=frozenset({"stop_price"}),
+    )
+    _observe_resolved(
+        evidence,
+        360_000,
+        {"atr": 31.0, "stop_price": 946.5},
+        8.0,
+    )
+
+    report = evidence.as_payload()
+
+    assert report["coverage"]["complete"] is True
+    assert report["coverage"]["metric_value_gaps"] == 0
+    assert report["metrics"]["stop_price"]["missing_evaluations"] == 0
+    assert report["metrics"]["stop_price"]["horizons"]["5"]["metric_missing"] == 0
+
+
+def test_eligible_null_stop_price_remains_a_coverage_gap() -> None:
+    """Callers must not hide an absent stop when an entry claims eligibility."""
+    evidence = MetricDiagnosticsAccumulator((5,))
+    _observe_resolved(evidence, 60_000, {"atr": 30.0, "stop_price": None}, -2.0)
+    _observe_resolved(
+        evidence,
+        360_000,
+        {"atr": 31.0, "stop_price": 946.5},
+        8.0,
+    )
+
+    report = evidence.as_payload()
+
+    assert report["coverage"]["complete"] is False
+    assert report["coverage"]["metric_value_gaps"] == 1
+
+
 def test_metric_type_drift_and_unsupported_values_are_rejected() -> None:
     """Audit evidence fails explicitly instead of coercing incompatible values."""
     evidence = MetricDiagnosticsAccumulator((5,))

@@ -1,0 +1,95 @@
+{
+  "schema_version": "hypervector.v58_observer_schedule_aware_continuity_repair.v1",
+  "generated_at_utc": "2026-08-20T18:54:40Z",
+  "hypothesis_id": "v58-observer-schedule-aware-continuity-v1",
+  "status": "ACCEPTED_REPORT_ONLY_TECHNICAL_REPAIR",
+  "contract": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_promotion": false,
+    "performance_gate": false,
+    "runtime_strategy_changed": false,
+    "live_configuration_changed": false,
+    "orders_or_positions_changed": false
+  },
+  "problem_restatement": {
+    "observed_gap": "observer_heartbeat_gap_exceeds_entry_delay",
+    "prior_predicate": "Any heartbeat interval above the minimum provider entry-delay cap invalidated the complete observer window.",
+    "failure_mode": "A heartbeat emitted after telemetry completion could cross 30 seconds even when every scheduled provider-symbol decision was present and arrived within its route-specific deadline.",
+    "success_criterion": "Use exact provider cadence and entry-delay metadata to require every elapsed provider-symbol decision boundary, while retaining the heartbeat predicate for legacy identities without complete schedule metadata."
+  },
+  "implementation": {
+    "source": {
+      "path": "src/hypervector/research/cohort_observer_runtime_health.py",
+      "sha256": "c3d95f569fe4d161130b99d5af93ef96c8779cb177a13ecc4da56504ef6af4f4"
+    },
+    "unit_test": {
+      "path": "tests/test_cohort_observer_runtime_health.py",
+      "sha256": "a11e1c355901c20bf0703307355ac8bd31ad564c410825b40033754d6c852aee"
+    },
+    "integration_test": {
+      "path": "tests/test_multi_asset_observer_audit.py",
+      "sha256": "6390a67eb7e0ef25f5da8ed8f2bdf4598365c042a57b5cc03f9dd832918314aa"
+    },
+    "behavior": [
+      "Exclude pre_activation_readiness_seed evaluations from prospective schedule coverage.",
+      "Require every elapsed cadence boundary for every declared provider-symbol route.",
+      "Reject missing, off-grid, unknown-route, or route-deadline-late evaluations.",
+      "Retain conservative heartbeat-gap coverage for historical identities without complete timeframe and delay metadata."
+    ]
+  },
+  "immutable_acceptance": {
+    "path": "data/logs/research/v58_observer_schedule_aware_continuity_20260820_v1.json",
+    "bytes": 2232202,
+    "sha256": "c849c9263bf10b1607ad132d4a4e64e202054a429c85bc36609fdf7bd818b09a",
+    "ledger_prefix": {
+      "path": "data/observe/v58_eight_asset_prospective_20260819_v1/decisions.jsonl",
+      "bytes": 15675021,
+      "sha256": "94ca15cd1b07c1a0f5ae7f54d4c2762cb9e7122180051edf0d8fb1f89f14c774",
+      "last_observed_at_utc": "2026-08-20T18:54:12.994227+00:00",
+      "rows": 2404
+    },
+    "provider_symbol_routes_expected": 10,
+    "provider_symbol_routes_observed": 10,
+    "prospective_evaluations": 431,
+    "startup_seed_evaluations": 10,
+    "duplicate_evaluations": 0,
+    "future_decisions": 0,
+    "maximum_steady_state_arrival_seconds": 26.097860107421877,
+    "minimum_entry_delay_cap_seconds": 30,
+    "maximum_heartbeat_interval_seconds": 30.545253,
+    "poll_cycles": 721,
+    "degraded_poll_cycles": 63,
+    "technical_complete": true,
+    "technical_gaps": [],
+    "routed_actions": 0
+  },
+  "validation": {
+    "red_phase": "The timely complete schedule and late-decision falsifiers both failed under the heartbeat-only implementation.",
+    "focused_tests": "16 passed",
+    "broader_observer_tests": "43 passed",
+    "ruff_check": "passed",
+    "ruff_format_check": "passed",
+    "diff_check": "passed",
+    "runtime_checkpoint": "A newly loaded continuous checkpoint writer published technical_complete=true and technical_gaps=[] on repeated cycles."
+  },
+  "interpretation": {
+    "technical_conclusion": "The frozen observer prefix has complete schedule-level opportunity coverage under the declared provider cadences and entry-delay caps.",
+    "economic_conclusion": "No profitability conclusion follows. The prefix contains one report-only eligible intent and no routed action, order, fill, or resolved execution lifecycle.",
+    "live_change_supported": false,
+    "next_use": "Continue the preregistered prospective window and use the corrected technical predicate when assessing future route-level lifecycle evidence."
+  },
+  "confidence": {
+    "technical_repair": "high",
+    "frozen_prefix_coverage": "high",
+    "future_observer_availability": "medium",
+    "strategy_profitability": "low_unverified"
+  },
+  "falsifiers": [
+    "Any elapsed provider-symbol cadence boundary is absent from the frozen ledger prefix.",
+    "Any prospective evaluation is off-grid, unknown-route, duplicated, future-dated, or arrives after its route-specific entry-delay cap.",
+    "A historical identity without complete schedule metadata bypasses the conservative heartbeat fallback.",
+    "The report, ledger prefix, implementation, or test hashes do not reconcile to the declared identities.",
+    "The observer checkpoint acquires execution authority or changes the running V58 backend identity."
+  ]
+}

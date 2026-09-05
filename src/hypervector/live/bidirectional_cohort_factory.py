@@ -42,6 +42,7 @@ class AssetExecutionEnvelope:
     symbol: str
     max_notional_usd: float
     slippage_fraction: float
+    entry_slippage_fraction: float | None = None
     perp_dex: str = field(init=False)
 
     def __post_init__(self) -> None:
@@ -51,6 +52,12 @@ class AssetExecutionEnvelope:
             raise ValueError("asset max_notional_usd must be positive")
         if not 0.0 <= self.slippage_fraction <= 0.05:
             raise ValueError("asset slippage_fraction must be between zero and 0.05")
+        if self.entry_slippage_fraction is not None and not (
+            0.0 <= self.entry_slippage_fraction <= 0.05
+        ):
+            raise ValueError(
+                "asset entry_slippage_fraction must be between zero and 0.05"
+            )
         object.__setattr__(self, "symbol", identity.symbol)
         object.__setattr__(self, "perp_dex", identity.perp_dex)
 
@@ -153,6 +160,7 @@ def create_armed_multi_asset_adapters(
                 account_address=validated_address,
                 max_notional_usd=asset.max_notional_usd,
                 slippage_fraction=asset.slippage_fraction,
+                entry_slippage_fraction=asset.entry_slippage_fraction,
                 symbol=asset.symbol,
                 perp_dex=asset.perp_dex,
             )

@@ -11,7 +11,10 @@ from types import ModuleType
 
 import pytest
 
-from hypervector.research.cohort_live_portfolio_archive import CohortAccountingEpoch
+from hypervector.research.cohort_live_portfolio_archive import (
+    PORTFOLIO_ARCHIVE_PROJECTION_REVISION,
+    CohortAccountingEpoch,
+)
 
 SCRIPT = (
     Path(__file__).parents[1]
@@ -116,6 +119,7 @@ def test_isolated_worker_receives_all_three_epoch_fields(
     archive = {
         "schema_version": 1,
         "mode": "cohort_live_portfolio_archive_v1",
+        "projection_revision": PORTFOLIO_ARCHIVE_PROJECTION_REVISION,
         "accounting_epoch": EPOCH.to_dict(),
     }
 

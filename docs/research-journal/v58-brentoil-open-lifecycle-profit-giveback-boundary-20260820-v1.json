@@ -1,0 +1,274 @@
+{
+  "schema_version": 1,
+  "mode": "v58_brentoil_open_lifecycle_profit_giveback_boundary",
+  "hypothesis_id": "v58-brentoil-open-lifecycle-profit-giveback-boundary-v1",
+  "revision_number": 1,
+  "created_at_utc": "2026-08-20T21:11:37Z",
+  "status": "provisional_open_lifecycle_observation",
+  "live_identity": {
+    "run_id": "bidirectional-live-1787166474078",
+    "profile_id": "multi_asset_growth_first_5000_eight_asset_incremental_v58",
+    "profile_fingerprint": "8a04636c9ff60a7eae141381cb540d7c6ceed081097cda7d5e465d48faa5022b",
+    "provider_id": "hip3_breakout_pressure_sndk_gold_brent_fresh15s_bidirectional_v2",
+    "signal_strategy_id": "hip3_breakout_pressure_sndk_gold_brent_fresh15s_bidirectional_v2",
+    "route": "hip3_breakout_pressure_sndk_gold_brent_fresh15s_bidirectional_v2|xyz:BRENTOIL",
+    "symbol": "xyz:BRENTOIL",
+    "side": "long",
+    "lifecycle_id": "xyz:BRENTOIL:520642502465"
+  },
+  "frozen_observation": {
+    "checkpoint_generated_at_utc": "2026-08-20T21:01:39.180792+00:00",
+    "backend_state": "running_consistent",
+    "backend_process_health": "healthy",
+    "heartbeat_status": "running",
+    "heartbeat_age_seconds": 11.115487,
+    "runtime_faults": 0,
+    "configuration_matches_runtime": true,
+    "position_state": "open_protected",
+    "entry": {
+      "price": 91.565,
+      "size": 8.02,
+      "expected_reference_price": 91.564,
+      "timestamp_ms": 1787215515053,
+      "slippage_bps": 0.10921322790668547,
+      "entry_fee_usd": 0.063447
+    },
+    "marked_economics": {
+      "mark_price": 91.386,
+      "market_reference_price": 91.418,
+      "unrealized_pnl_usd": -1.43558,
+      "marked_net_pnl_usd": -1.3924500000000002,
+      "funding_usd": 0.106577,
+      "margin_used_usd": 145.490642,
+      "position_value_usd": 732.91572,
+      "leverage": 5.0,
+      "liquidation_price": 75.1230996867,
+      "liquidation_distance_pct": 17.795833402599957,
+      "status": "provisional_open"
+    },
+    "venue_protection": {
+      "reduce_only_stop_oid": 520642541320,
+      "stop_trigger_price": 90.83248,
+      "target_order": null,
+      "protected_if_open": true
+    },
+    "bound_exit_contract": {
+      "protective_stop_bps": 80.0,
+      "profit_lock_policy": "none",
+      "opposite_intent_exit_scope": "selected_opposite_from_any_executable_provider_same_symbol",
+      "maximum_hold_policy": "fixed",
+      "maximum_hold_seconds": 86400,
+      "maximum_hold_deadline_ms": 1787301900000,
+      "provider_recipe_exit_policy": "ignore"
+    },
+    "completed_one_minute_path": {
+      "completed_bars": 735,
+      "highest_price": 92.534,
+      "lowest_price": 90.888,
+      "maximum_favorable_excursion_bps": 105.82646207612179,
+      "maximum_adverse_excursion_bps": 73.93654780756708,
+      "current_directional_return_bps": -19.548954294763554,
+      "peak_giveback_bps": 125.37541637088535,
+      "continuous_path_claim": false
+    },
+    "current_signal_context": {
+      "decision_action": "hold",
+      "eligible": false,
+      "reason": "breakout_level_not_crossed",
+      "decision_time_ms": 1787259600000,
+      "pressure_status": "stale_candidate",
+      "pressure_available": false,
+      "price_breakout_present": false,
+      "opposite_exit_signal_observed": false,
+      "interpretation": "Stale pressure is a data-quality limitation, but this decision also failed the independently observed price-breakout condition; it is not classified as a missed opposite exit."
+    },
+    "native_profit_protection": {
+      "status": "no_open_profit",
+      "profit_lock_policy": "none",
+      "estimated_exit_now_net_usd": -1.4557729677496862,
+      "estimated_original_stop_net_usd": -5.8946198239999505,
+      "marked_to_stop_giveback_usd": 4.438846856250264,
+      "protected_profit_fraction": null,
+      "actual_exit_fill_claim": false
+    }
+  },
+  "diagnostic_exit_comparison": {
+    "snapshot_generated_at_utc": "2026-08-20T21:01:12.881537+00:00",
+    "measurement_scope": "open_completed_bar_counterfactual_excluding_funding_and_additional_exit_slippage",
+    "control": {
+      "policy_id": "native_v58_no_profit_lock",
+      "status": "open_below_entry_after_prior_favorable_excursion",
+      "estimated_current_exit_net_excluding_funding_usd": -1.5703692748320272,
+      "estimated_current_exit_net_including_accrued_funding_usd": -1.4637922748320866,
+      "actual_exit_fill_claim": false
+    },
+    "challengers": {
+      "a25_floor15_trail10": {
+        "policy_origin": "existing_predeclared_hype_profit_research_v1",
+        "status": "triggered_before_current_boundary",
+        "trigger_timestamp_ms": 1787219640000,
+        "estimated_net_pnl_excluding_funding_usd": 1.9267462928106416,
+        "estimated_minus_current_exit_net_excluding_funding_usd": 3.497115567642669
+      },
+      "a40_floor15_trail20": {
+        "policy_origin": "existing_predeclared_hype_profit_research_v1",
+        "status": "triggered_before_current_boundary",
+        "trigger_timestamp_ms": 1787220120000,
+        "estimated_net_pnl_excluding_funding_usd": 1.645854023635404,
+        "estimated_minus_current_exit_net_excluding_funding_usd": 3.2162232984674315
+      },
+      "a60_floor15_trail30": {
+        "policy_origin": "existing_predeclared_hype_profit_research_v1",
+        "status": "triggered_before_current_boundary",
+        "trigger_timestamp_ms": 1787229480000,
+        "estimated_net_pnl_excluding_funding_usd": 5.41763887815758,
+        "estimated_minus_current_exit_net_excluding_funding_usd": 6.988008152989607
+      }
+    },
+    "point_in_time_ordering": [
+      "a60_floor15_trail30",
+      "a25_floor15_trail10",
+      "a40_floor15_trail20",
+      "native_current_boundary"
+    ],
+    "interpretation": "All three transported diagnostic policies are ahead of the still-open native boundary at this observation. The strongest point-in-time diagnostic is 60/15/30, but this is a censored single-long observation and cannot select, rank, or activate a live policy."
+  },
+  "future_only_experiment_state": {
+    "hypothesis_id": "v58-brentoil-profit-lock-future-only-v1",
+    "capture_start_ms": 1787230859265,
+    "excluded_current_lifecycle": true,
+    "prospective_evaluations": 32,
+    "prospective_eligible_evaluations": 0,
+    "unattributed_eligible_evaluations": 0,
+    "attributable_long_entries": 0,
+    "attributable_short_entries": 0,
+    "resolved_lifecycles": 0,
+    "state": "awaiting_both_sides",
+    "minimum_diagnostic_evidence_met": false,
+    "live_change_supported": false
+  },
+  "research_disposition": {
+    "route_state": "older_route_negative_and_current_identity_unmeasured",
+    "current_hypothesis_state": "being_tested",
+    "current_lifecycle_permitted_use": "hypothesis_formation_and_operational_reconciliation_only",
+    "reason": "The lifecycle began before the future-only experiment was frozen, and its three transported lock policies have no BRENTOIL-native expectancy claim."
+  },
+  "Recommendation": "Keep the live V58 BRENTOIL entry, 80-bps venue stop, eligible-opposite-intent exit, and fixed 24-hour maximum hold unchanged. Reconcile the authoritative close, preserve this giveback observation, and continue the separately frozen future-only long-and-short profit-lock experiment.",
+  "Why now": "The open long reached 105.83 bps completed-bar MFE, surrendered 125.38 bps from that peak, and moved below entry while the native route has no profit lock. Every frozen diagnostic lock would have exited profitably before this boundary.",
+  "Evidence reviewed": "The exact V58 checkpoint snapshot, continuous-improvement snapshot, exact BRENTOIL lifecycle watcher snapshot, future-only route status, active V58 configuration, and both BRENTOIL preregistrations.",
+  "Observed problem or opportunity": "The native no-lock exit left a previously profitable BRENTOIL lifecycle exposed until an opposite eligible signal, 80-bps stop, or 24-hour deadline. This observation supports investigating profit capture, but it does not establish that any transported lock improves expectancy.",
+  "Applicable market regime": "Exact source-native BRENTOIL fresh15-v2 long lifecycle after a completed 15-minute breakout and fresh positive depth-10 pressure at entry. Canonical regime evidence is unavailable, so no broader regime claim is made.",
+  "Alternatives considered": "Close or modify the current lifecycle post hoc, install one of the three transported locks immediately, add a fixed target, activate provider recipe exits, or preserve the native control and collect future-only evidence. Immediate changes would confound this lifecycle and overfit one long path.",
+  "Proposed live change": null,
+  "Expected upside": "The preserved control yields an attributable final native outcome, while future-only comparison can test whether a profit lock improves realized after-cost retention across both configured sides without changing the entry mechanism.",
+  "Main risks and failure modes": "The native lifecycle can lose more before exit; the stop can gap; counterfactual exits omit funding and additional slippage; the three policies came from HYPE rather than BRENTOIL; one long path is selection-prone; canonical regime is unavailable; and future-only cadence may remain sparse or one-sided.",
+  "Validation completed": "Run/profile/route identity, actual entry fill, measured entry slippage and fee, venue-owned stop, bound native exit plan, completed-candle MFE/MAE/giveback, current signal state, current cost estimate, three fixed diagnostic trigger states, and exclusion from the future-only policy sample are reconciled.",
+  "Validation still required": "The authoritative exit fill and reason, exit depth/slippage, final fees and funding, final completed path, and at least one post-boundary fully resolved lifecycle per configured side with complete policy evidence. Any eventual live proposal also requires a separately frozen BRENTOIL-native selection and robustness contract.",
+  "Success metrics": "For the current diagnostic, obtain one technically complete post-boundary long and one technically complete post-boundary short with exact actual costs and all three frozen policy outcomes. This minimum updates diagnosis only; it is not a promotion threshold or performance gate.",
+  "Failure / rollback triggers": "No live change exists to roll back. Escalate if the venue stop is absent or not reduce-only, run/profile identity changes unexpectedly, the position disappears without an exact close lifecycle, funding or fill accounting does not reconcile, or completed-candle path coverage becomes technically invalid.",
+  "Confidence level": "High on current technical identity, protection, path measurements, and point-in-time arithmetic; low on economic inference because the lifecycle is open, excluded from selection, one-sided, and evaluated with transported policies.",
+  "Explicit approval requested": false,
+  "single_highest_value_next_investigation": "Reconcile the authoritative close of xyz:BRENTOIL:520642502465 against the unchanged native control and three frozen diagnostics, while continuing to collect the first attributable future-only long and short lifecycles without retuning.",
+  "falsifiers_and_update_triggers": [
+    "The exact venue close plus final costs reverses the point-in-time policy ordering or exposes a lifecycle accounting defect.",
+    "A future-only both-side sample satisfying the frozen diagnostic contract supports or contradicts one of the transported policies after exact costs.",
+    "The recorded checkpoint, continuous report, lifecycle status, or configuration cannot be reproduced from its declared snapshot hash and bytes.",
+    "The protective stop or bound execution-plan identity fails venue reconciliation.",
+    "A technical data gap invalidates completed-bar excursion or policy-trigger attribution."
+  ],
+  "limitations": [
+    "This artifact freezes a point-in-time open state and is not the authoritative final lifecycle outcome.",
+    "Marked PnL and current-exit estimates are provisional and are not actual exit fills.",
+    "Diagnostic policy economics exclude funding and additional exit slippage; the native comparison is therefore normalized to the same no-funding scope.",
+    "The current lifecycle predates the future-only boundary and may not select or rank a policy.",
+    "The three policy shapes were transported from prior HYPE research and are not BRENTOIL-native.",
+    "Canonical regime evidence is unavailable for this HIP-3 lifecycle.",
+    "No claim is made that a profit lock is optimal or that the native policy is broken.",
+    "This artifact cannot route, size, enter, close, restart, pause, retune, or promote a strategy."
+  ],
+  "evidence": [
+    {
+      "path": "data/runtime/bidirectional_cohort/latest_checkpoint.json",
+      "snapshot_generated_at_utc": "2026-08-20T21:01:39.180792+00:00",
+      "sha256": "1d8fd410e5335e26b891a122eb767b0d4741058034d9893676b40c831a924604",
+      "bytes": 11147490,
+      "role": "exact_point_in_time_live_checkpoint"
+    },
+    {
+      "path": "data/runtime/research/v58_continuous_improvement_latest.json",
+      "snapshot_generated_at_utc": "2026-08-20T21:01:12.881537+00:00",
+      "sha256": "7379a08104833edfaa85424158fefff52aa82d182877e1c56da49b56006de710",
+      "bytes": 204489,
+      "role": "continuous_improvement_hypothesis_and_policy_comparison"
+    },
+    {
+      "path": "data/runtime/research/v58_brentoil_profit_lock_future_only_latest.json",
+      "snapshot_observed_at_utc": "2026-08-20T21:01:39.180792+00:00",
+      "sha256": "b29f4c585129a11ab0960c8ada0c8b20217f3e2399140cb8413727e52497b9b0",
+      "bytes": 2900,
+      "role": "future_only_route_lifecycle_status"
+    },
+    {
+      "path": "data/runtime/research/v58_brentoil_live_lifecycle_latest.json",
+      "snapshot_generated_at_utc": "2026-08-20T21:02:08.911475+00:00",
+      "sha256": "e78cafe84508079954296ab9ba8cc54578ccc4e56f04041b304d45d3c74da5ae",
+      "bytes": 6981,
+      "role": "exact_live_lifecycle_identity_and_protection"
+    },
+    {
+      "path": "configs/multi_asset_growth_first_5000_eight_asset_incremental_v58.toml",
+      "sha256": "1c1c1656233b074df2ed3adcee8cb8cb2c58f0d191cc9f9ac34799478fca3378",
+      "bytes": 6142,
+      "role": "active_profile_and_native_exit_contract"
+    },
+    {
+      "path": "docs/research-journal/v58-brentoil-profit-lock-future-only-preregistration-20260820-v1.json",
+      "sha256": "1a281a52531e67e578fc15a0c36513c79dce7fd22bea46b53dfdb1ff4268d9ff",
+      "bytes": 4552,
+      "role": "future_only_experiment_contract"
+    },
+    {
+      "path": "data/logs/research/v58_brentoil_live_lifecycle_preregistration_20260820_v1.json",
+      "sha256": "2328952b1fc2fed3f90063b557e3ce2ee197be63a38421a3f92b96b51b555760",
+      "bytes": 2259,
+      "role": "exact_live_lifecycle_capture_contract"
+    }
+  ],
+  "generator_identity": [
+    {
+      "path": "src/hypervector/research/cohort_open_profit_lock_challenger.py",
+      "sha256": "76bcdcd55cc15e0b99c1952b2376ec5ce32d1ce1f12367bfe867a1c68969ca20",
+      "bytes": 10390
+    },
+    {
+      "path": "src/hypervector/research/v58_live_open_lifecycles.py",
+      "sha256": "a180af6d9744897527a4708a6d10fa87a03061029605c2c7eb386681692ed5a6",
+      "bytes": 19805
+    },
+    {
+      "path": "src/hypervector/research/v58_live_profit_lock_context.py",
+      "sha256": "eb9504b1f0e200985fca756b83177a9627a20d15f3482e9e35f0166c20d08150",
+      "bytes": 7492
+    },
+    {
+      "path": "src/hypervector/research/v58_current_investigation.py",
+      "sha256": "47863a5312bc480e3386a0839f55e8b425c9f4ef3fe3295cd69a8ee7f43afab5",
+      "bytes": 16065
+    },
+    {
+      "path": "src/hypervector/research/v58_brentoil_live_lifecycle.py",
+      "sha256": "653b043488deec1988c28e7f6e1c4c8dd75b1f5fa206e0cc2e7eb5cb3b831181",
+      "bytes": 18846
+    }
+  ],
+  "contract": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_live_change": false,
+    "automatic_retuning": false,
+    "automatic_promotion": false,
+    "runtime_strategy_changed": false,
+    "orders_or_fills_created": false,
+    "live_configuration_changed": false
+  }
+}

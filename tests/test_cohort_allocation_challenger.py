@@ -53,6 +53,22 @@ def test_account_value_changes_projection_but_never_candidate_eligibility() -> N
     assert challenger["candidate"]["effective_change"] is False
 
 
+def test_excludes_observe_only_assets_from_portfolio_margin() -> None:
+    """Displayed assets without executable routes cannot inflate live risk."""
+    risk = _risk(500.0)
+    risk["summary"]["executable_assets"] = 2
+    risk["summary"]["maximum_simultaneous_effective_margin_fraction"] = 0.04
+
+    challenger = build_allocation_challenger(risk, _scorecard())
+
+    assert challenger["portfolio"]["current_maximum_margin_fraction"] == pytest.approx(
+        0.04
+    )
+    assert challenger["portfolio"][
+        "candidate_maximum_margin_fraction"
+    ] == pytest.approx(0.06)
+
+
 def test_inert_cap_lift_is_not_published_as_an_active_challenger() -> None:
     """An already-loaded $75 target cannot masquerade as a future change."""
     risk = _risk(500.0)

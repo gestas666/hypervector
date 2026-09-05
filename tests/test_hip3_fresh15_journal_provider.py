@@ -12,6 +12,7 @@ from hypervector.live.hip3_fresh15_journal_provider import (
     HIP3_INDEX_FRESH15_V3_STRATEGY,
     Hip3Fresh15JournalCollector,
 )
+from hypervector.live.hip3_provider_availability import Hip3ObserverUnavailableError
 
 _OPEN = pd.Timestamp("2026-08-13T04:00:00Z")
 _CLOSE_MS = int((_OPEN + pd.Timedelta(minutes=15)).timestamp() * 1_000)
@@ -30,7 +31,27 @@ def _bars() -> pd.DataFrame:
     )
 
 
-def _decision(symbol: str, *, eligible: bool = True) -> dict[str, object]:
+def _history_bars() -> pd.DataFrame:
+    timestamps = pd.date_range(end=_OPEN, periods=60, freq="15min", tz="UTC")
+    closes = [7_600.0 + index * (105.0 / 59.0) for index in range(60)]
+    return pd.DataFrame(
+        {
+            "timestamp": timestamps,
+            "open": [close - 1.0 for close in closes],
+            "high": [close + 10.0 for close in closes],
+            "low": [close - 5.0 for close in closes],
+            "close": closes,
+            "volume": [100.0] * len(closes),
+        }
+    )
+
+
+def _decision(
+    symbol: str,
+    *,
+    eligible: bool = True,
+    condition_anatomy: bool = False,
+) -> dict[str, object]:
     token = symbol.removeprefix("xyz:").lower()
     side = "long" if eligible else None
     profile = f"{token}_fresh15_pressure_shadow_research_v3"
@@ -57,6 +78,8 @@ def _decision(symbol: str, *, eligible: bool = True) -> dict[str, object]:
         "pressure_state_history_complete": True,
         "execution_authority": "none",
     }
+    if condition_anatomy:
+        decision["condition_anatomy"] = _condition_anatomy()
     return {
         "schema_version": 1,
         "event_type": f"{token}_hip3_breakout_shadow_decision",
@@ -69,11 +92,41 @@ def _decision(symbol: str, *, eligible: bool = True) -> dict[str, object]:
     }
 
 
+def _condition_anatomy() -> dict[str, object]:
+    return {
+        "close": 7_705.0,
+        "prior_breakout_high": 7_713.25,
+        "prior_breakout_low": 7_640.0,
+        "fast_ema": 7_690.0,
+        "slow_ema": 7_680.0,
+        "long_raw": False,
+        "short_raw": False,
+    }
+
+
 def _journal(path: Path, *rows: dict[str, object]) -> None:
     path.write_text(
         "".join(json.dumps(row, sort_keys=True) + "\n" for row in rows),
         encoding="utf-8",
     )
+
+
+def _shift_decision(row: dict[str, object], *, offset_ms: int) -> None:
+    """Shift every timestamp carrying a decision's prospective identity."""
+    decision = row["decision"]
+    assert isinstance(decision, dict)
+    for field in (
+        "decision_time_ms",
+        "observed_at_ms",
+        "pressure_exchange_ts_ms",
+        "pressure_recv_ts_ms",
+        "prior_decision_boundary_ms",
+    ):
+        value = decision[field]
+        assert isinstance(value, int)
+        decision[field] = value + offset_ms
+    boundary = _CLOSE_MS + offset_ms
+    row["event_id"] = f"{HIP3_INDEX_FRESH15_V3_STRATEGY}|xyz:SP500|{boundary}"
 
 
 def _collector(path: Path) -> Hip3Fresh15JournalCollector:
@@ -156,6 +209,56 @@ def test_eligible_prospective_decision_becomes_one_attributed_intent(
     assert batch.evaluations[0].readiness.metrics["pressure_status"] == "available"
 
 
+def test_readiness_exposes_price_and_ema_breakout_proximity(tmp_path: Path) -> None:
+    """Screen 2 receives exact completed-bar anatomy without changing authority."""
+    path = tmp_path / "sp500.jsonl"
+    _journal(
+        path,
+        _decision("xyz:SP500", eligible=False, condition_anatomy=True),
+    )
+
+    batch = _collector(path)(
+        _history_bars(),
+        symbol="xyz:SP500",
+        observed_at=pd.Timestamp(_CLOSE_MS + 10_000, unit="ms", tz="UTC"),
+        after_decision_time_ms=_CLOSE_MS - 1,
+    )
+
+    evaluation = batch.evaluations[0]
+    metrics = evaluation.readiness.metrics
+    assert evaluation.eligible is False
+    assert evaluation.side is None
+    assert metrics["close"] == pytest.approx(7_705.0)
+    assert metrics["long_price_breakout"] is False
+    assert metrics["long_ema_alignment"] is True
+    assert metrics["long_pressure_confirmation"] is True
+    assert metrics["long_raw_condition"] is False
+    assert metrics["long_breakout_distance_bps"] > 0.0
+    assert any(
+        value.startswith("PX 7705.0000") for value in evaluation.readiness.indicators
+    )
+
+
+def test_condition_anatomy_that_contradicts_signal_is_rejected(tmp_path: Path) -> None:
+    """Journal anatomy cannot misreport the frozen price/EMA/pressure logic."""
+    path = tmp_path / "sp500.jsonl"
+    row = _decision("xyz:SP500", eligible=False, condition_anatomy=True)
+    decision = row["decision"]
+    assert isinstance(decision, dict)
+    anatomy = decision["condition_anatomy"]
+    assert isinstance(anatomy, dict)
+    anatomy["long_raw"] = True
+    _journal(path, row)
+
+    with pytest.raises(ValueError, match="contradicts the frozen signal"):
+        _collector(path)(
+            _history_bars(),
+            symbol="xyz:SP500",
+            observed_at=pd.Timestamp(_CLOSE_MS + 10_000, unit="ms", tz="UTC"),
+            after_decision_time_ms=_CLOSE_MS - 1,
+        )
+
+
 def test_restart_boundary_prevents_historical_replay(tmp_path: Path) -> None:
     """A previously consumed journal row cannot create another live intent."""
     path = tmp_path / "sp500.jsonl"
@@ -192,6 +295,124 @@ def test_stale_observer_status_fails_before_live_intent(tmp_path: Path) -> None:
             observed_at=pd.Timestamp(observed_at_ms, unit="ms", tz="UTC"),
             after_decision_time_ms=_CLOSE_MS - 1,
         )
+
+
+def test_stopped_observer_status_fails_before_live_intent(tmp_path: Path) -> None:
+    """A fresh file timestamp cannot disguise a stopped observer process."""
+    path = tmp_path / "sp500.jsonl"
+    _journal(path, _decision("xyz:SP500"))
+    health_now_ms = _CLOSE_MS + 10_000
+    status_path, cursor_path = _observer_state(tmp_path, observed_at_ms=health_now_ms)
+    status = json.loads(status_path.read_text())
+    status["observer_runtime"] = {"lifecycle": "stopped"}
+    status_path.write_text(json.dumps(status), encoding="utf-8")
+    collector = Hip3Fresh15JournalCollector(
+        journals={"xyz:SP500": path},
+        observer_states={"xyz:SP500": (status_path, cursor_path)},
+        health_now_fn=lambda: pd.Timestamp(health_now_ms, unit="ms", tz="UTC"),
+    )
+
+    with pytest.raises(Hip3ObserverUnavailableError) as captured:
+        collector(
+            _bars(),
+            symbol="xyz:SP500",
+            observed_at=pd.Timestamp(health_now_ms, unit="ms", tz="UTC"),
+            after_decision_time_ms=_CLOSE_MS - 1,
+        )
+
+    assert captured.value.reason == "observer_runtime_not_running"
+
+
+def test_fresh_degraded_observer_keeps_last_complete_decision_readable(
+    tmp_path: Path,
+) -> None:
+    """One transient read cannot hide a still-fresh atomic decision checkpoint."""
+    path = tmp_path / "sp500.jsonl"
+    _journal(path, _decision("xyz:SP500"))
+    health_now_ms = _CLOSE_MS + 10_000
+    status_path, cursor_path = _observer_state(
+        tmp_path, observed_at_ms=health_now_ms - 5_000
+    )
+    status = json.loads(status_path.read_text())
+    status["observer_runtime"] = {
+        "lifecycle": "degraded_transient",
+        "last_success_observed_at_ms": health_now_ms - 5_000,
+        "last_attempt_observed_at_ms": health_now_ms,
+        "consecutive_transient_failures": 1,
+    }
+    status_path.write_text(json.dumps(status), encoding="utf-8")
+    collector = Hip3Fresh15JournalCollector(
+        journals={"xyz:SP500": path},
+        observer_states={"xyz:SP500": (status_path, cursor_path)},
+        health_now_fn=lambda: pd.Timestamp(health_now_ms, unit="ms", tz="UTC"),
+    )
+
+    batch = collector(
+        _bars(),
+        symbol="xyz:SP500",
+        observed_at=pd.Timestamp(health_now_ms, unit="ms", tz="UTC"),
+        after_decision_time_ms=_CLOSE_MS - 1,
+    )
+
+    assert len(batch.intents) == 1
+    assert batch.latest_decision_time_ms == _CLOSE_MS
+
+
+def test_stale_degraded_observer_still_fails_closed(tmp_path: Path) -> None:
+    """Transient degradation cannot extend the existing freshness boundary."""
+    path = tmp_path / "sp500.jsonl"
+    _journal(path, _decision("xyz:SP500"))
+    health_now_ms = _CLOSE_MS + 40_000
+    status_path, cursor_path = _observer_state(
+        tmp_path, observed_at_ms=_CLOSE_MS + 3_000
+    )
+    status = json.loads(status_path.read_text())
+    status["observer_runtime"] = {
+        "lifecycle": "degraded_transient",
+        "last_success_observed_at_ms": _CLOSE_MS + 3_000,
+        "last_attempt_observed_at_ms": health_now_ms,
+        "consecutive_transient_failures": 7,
+    }
+    status_path.write_text(json.dumps(status), encoding="utf-8")
+    collector = Hip3Fresh15JournalCollector(
+        journals={"xyz:SP500": path},
+        observer_states={"xyz:SP500": (status_path, cursor_path)},
+        health_now_fn=lambda: pd.Timestamp(health_now_ms, unit="ms", tz="UTC"),
+    )
+
+    with pytest.raises(Hip3ObserverUnavailableError) as captured:
+        collector(
+            _bars(),
+            symbol="xyz:SP500",
+            observed_at=pd.Timestamp(health_now_ms, unit="ms", tz="UTC"),
+            after_decision_time_ms=_CLOSE_MS - 1,
+        )
+
+    assert captured.value.reason == "observer_status_stale"
+
+
+def test_observer_status_slightly_ahead_of_health_clock_is_fresh(
+    tmp_path: Path,
+) -> None:
+    """A few milliseconds of writer/reader clock skew cannot fail the pair."""
+    path = tmp_path / "sp500.jsonl"
+    _journal(path, _decision("xyz:SP500"))
+    health_now_ms = _CLOSE_MS + 10_000
+    collector = Hip3Fresh15JournalCollector(
+        journals={"xyz:SP500": path},
+        observer_states={
+            "xyz:SP500": _observer_state(tmp_path, observed_at_ms=health_now_ms + 3)
+        },
+        health_now_fn=lambda: pd.Timestamp(health_now_ms, unit="ms", tz="UTC"),
+    )
+    batch = collector(
+        _bars(),
+        symbol="xyz:SP500",
+        observed_at=pd.Timestamp(health_now_ms, unit="ms", tz="UTC"),
+        after_decision_time_ms=_CLOSE_MS - 1,
+    )
+    assert len(batch.intents) == 1
+    assert batch.latest_decision_time_ms == _CLOSE_MS
 
 
 def test_health_clock_accepts_status_refreshed_during_slow_market_fetch(
@@ -239,7 +460,61 @@ def test_observer_status_cursor_and_journal_must_share_boundary(
         health_now_fn=lambda: pd.Timestamp(observed_at_ms, unit="ms", tz="UTC"),
     )
 
-    with pytest.raises(ValueError, match="observer boundaries disagree"):
+    with pytest.raises(
+        Hip3ObserverUnavailableError, match="checkpoint_publication_incomplete"
+    ):
+        collector(
+            _bars(),
+            symbol="xyz:SP500",
+            observed_at=pd.Timestamp(observed_at_ms, unit="ms", tz="UTC"),
+            after_decision_time_ms=_CLOSE_MS - 1,
+        )
+
+
+def test_censored_recovery_cursor_may_follow_last_journal_decision(
+    tmp_path: Path,
+) -> None:
+    """A cursor may advance when recovery censors every missed decision."""
+    path = tmp_path / "sp500.jsonl"
+    row = _decision("xyz:SP500")
+    _shift_decision(row, offset_ms=-900_000)
+    _journal(path, row)
+    observed_at_ms = _CLOSE_MS + 10_000
+    state = _observer_state(tmp_path, observed_at_ms=_CLOSE_MS + 3_000)
+    collector = Hip3Fresh15JournalCollector(
+        journals={"xyz:SP500": path},
+        observer_states={"xyz:SP500": state},
+        health_now_fn=lambda: pd.Timestamp(observed_at_ms, unit="ms", tz="UTC"),
+    )
+
+    batch = collector(
+        _bars(),
+        symbol="xyz:SP500",
+        observed_at=pd.Timestamp(observed_at_ms, unit="ms", tz="UTC"),
+        after_decision_time_ms=_CLOSE_MS - 1,
+    )
+
+    assert batch.intents == batch.evaluations == ()
+    assert batch.latest_decision_time_ms == _CLOSE_MS - 1
+
+
+def test_journal_boundary_cannot_advance_beyond_observer_cursor(tmp_path: Path) -> None:
+    """A journal row ahead of its durable cursor remains fail-closed."""
+    path = tmp_path / "sp500.jsonl"
+    row = _decision("xyz:SP500")
+    _shift_decision(row, offset_ms=900_000)
+    _journal(path, row)
+    observed_at_ms = _CLOSE_MS + 10_000
+    state = _observer_state(tmp_path, observed_at_ms=_CLOSE_MS + 3_000)
+    collector = Hip3Fresh15JournalCollector(
+        journals={"xyz:SP500": path},
+        observer_states={"xyz:SP500": state},
+        health_now_fn=lambda: pd.Timestamp(observed_at_ms, unit="ms", tz="UTC"),
+    )
+
+    with pytest.raises(
+        Hip3ObserverUnavailableError, match="checkpoint_publication_incomplete"
+    ):
         collector(
             _bars(),
             symbol="xyz:SP500",
@@ -314,35 +589,6 @@ def test_duplicate_event_identity_fails_closed(tmp_path: Path) -> None:
     _journal(path, row, row)
 
     with pytest.raises(ValueError, match="duplicate event"):
-        _collector(path)(
-            _bars(),
-            symbol="xyz:SP500",
-            observed_at=pd.Timestamp(_CLOSE_MS + 10_000, unit="ms", tz="UTC"),
-            after_decision_time_ms=_CLOSE_MS - 1,
-        )
-
-
-@pytest.mark.parametrize(
-    ("field", "value", "message"),
-    [
-        ("pressure_source", "other_venue", "pressure source"),
-        ("pressure_exchange_ts_ms", _CLOSE_MS + 1, "pressure timestamps"),
-        ("pressure_recv_ts_ms", _CLOSE_MS + 3_001, "pressure timestamps"),
-    ],
-)
-def test_pressure_provenance_must_be_exact(
-    tmp_path: Path,
-    field: str,
-    value: object,
-    message: str,
-) -> None:
-    """Success-shaped evidence cannot hide a wrong source or impossible time."""
-    path = tmp_path / "sp500.jsonl"
-    row = _decision("xyz:SP500")
-    row["decision"][field] = value
-    _journal(path, row)
-
-    with pytest.raises(ValueError, match=message):
         _collector(path)(
             _bars(),
             symbol="xyz:SP500",

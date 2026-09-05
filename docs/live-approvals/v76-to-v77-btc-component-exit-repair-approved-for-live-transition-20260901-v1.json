@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "document_type": "cohort_profile_change_approval",
+  "approval_status": "approved_for_live_transition",
+  "approved_at_utc": "2026-09-02T00:03:12Z",
+  "approved_by": "operator_in_conversation",
+  "operator_approval": "If something is broken that will likely lead to a negative portfolio effect, do not leave it broken; fix the strategy entries, exits, take profit, stop loss, and related mechanics rather than discarding the roster.",
+  "execution_authority": "none",
+  "previous_profile": {
+    "profile_id": "multi_asset_growth_first_5000_seven_asset_validated_roster_candidate_v76",
+    "profile_fingerprint": "2a52693eff41d3020efa5d079fac502890ba6950dd8c2b06817da08f44e412f3"
+  },
+  "candidate_profile": {
+    "profile_id": "multi_asset_growth_first_5000_seven_asset_btc_component_exit_repair_v77",
+    "profile_fingerprint": "24c4d780f67cfa401249fe9aaffedf29b8446c57cc38e96c70e1982f04a4fe73"
+  },
+  "change_scopes": [
+    "replace_the_ambiguous_btc_hulk_delayed_component_floor_v1_identity_with_v2",
+    "retain_true_profit_floor_behavior_while_naming_adverse_reversal_containment",
+    "require_the_completed_close_to_cross_entry_before_reversal_containment_can_arm",
+    "preserve_the_later_completed_bar_confirmation_boundary",
+    "preserve_all_entries_sizing_stops_targets_holds_priorities_and_non_robust_v3_routes",
+    "preserve_the_v76_seven_asset_roster_and_execution_authority",
+    "transition_only_while_flat_owned_order_free_and_stop_file_guarded"
+  ],
+  "recommendation_evidence": [
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v77_btc_component_exit_repair_20260902_v1.json",
+      "sha256": "08457b23590795df782c1140ce7c7399900994296649384cc9948d06620c1de2"
+    }
+  ],
+  "rollback": {
+    "config_path": "../../configs/multi_asset_growth_first_5000_seven_asset_validated_roster_candidate_v76.toml",
+    "profile_fingerprint": "2a52693eff41d3020efa5d079fac502890ba6950dd8c2b06817da08f44e412f3",
+    "sha256": "9d686a6b36f89e3f615c8acf3a93f4c23df0c5bd2d97733359938b80d31758da"
+  },
+  "retirements": []
+}

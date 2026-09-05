@@ -6,7 +6,7 @@ use std::time::Duration;
 use clap::Parser;
 use color_eyre::Result;
 use crossterm::{
-    event::{self, DisableMouseCapture, Event, KeyCode, KeyEventKind},
+    event::{self, Event, KeyCode, KeyEventKind},
     execute,
     style::Print,
     terminal::{EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode},
@@ -17,7 +17,10 @@ use ratatui::backend::CrosstermBackend;
 use hypervector_tui::backend_growth_preflight::GrowthPreflightSource;
 use hypervector_tui::backend_hip3_roster::Hip3RosterSource;
 use hypervector_tui::backend_hype_l2_observer::HypeL2ObserverSource;
-use hypervector_tui::terminal_mouse::click_capture_sequence;
+use hypervector_tui::terminal_input::{
+    LIVE_INPUT_BATCH_LIMIT, SHUTDOWN_INPUT_DRAIN_LIMIT, drain_ready_events,
+};
+use hypervector_tui::terminal_mouse::mouse_reset_sequence;
 use hypervector_tui::{
     app::App, backend_telemetry::BackendTelemetrySource, cli_args::CliArgs,
     cohort_navigation::resolve_tab_navigation, data_loader::load_snapshots_with_metadata, ui,
@@ -27,6 +30,8 @@ type CockpitTerminal = Terminal<CrosstermBackend<io::Stdout>>;
 
 fn main() -> Result<()> {
     color_eyre::install()?;
+    let args = CliArgs::parse();
+    let mut terminal = start_terminal()?;
     let (
         mut app,
         mut backend_source,
@@ -34,8 +39,7 @@ fn main() -> Result<()> {
         mut hip3_source,
         mut growth_source,
         refresh_ms,
-    ) = prepare_app();
-    let mut terminal = start_terminal()?;
+    ) = prepare_app(args);
     let result = run_app(
         &mut terminal,
         &mut app,
@@ -52,7 +56,9 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-fn prepare_app() -> (
+fn prepare_app(
+    mut args: CliArgs,
+) -> (
     App,
     BackendTelemetrySource,
     HypeL2ObserverSource,
@@ -60,7 +66,6 @@ fn prepare_app() -> (
     GrowthPreflightSource,
     u64,
 ) {
-    let mut args = CliArgs::parse();
     let decisions_path = args.backend_ledger.clone().unwrap_or_else(|| {
         args.data_root
             .join("paper")
@@ -131,22 +136,41 @@ fn start_terminal() -> Result<CockpitTerminal> {
     let mut stdout = io::stdout();
     execute!(
         stdout,
-        DisableMouseCapture,
+        Print(mouse_reset_sequence()),
         EnterAlternateScreen,
-        Print(click_capture_sequence())
+        Print(mouse_reset_sequence()),
     )?;
+    drain_pending_input()?;
     let backend = CrosstermBackend::new(stdout);
     Ok(Terminal::new(backend)?)
 }
 
 fn restore_terminal(terminal: &mut CockpitTerminal) -> Result<()> {
-    disable_raw_mode()?;
-    execute!(
-        terminal.backend_mut(),
-        DisableMouseCapture,
-        LeaveAlternateScreen
+    let screen_result = (|| -> Result<()> {
+        execute!(
+            terminal.backend_mut(),
+            Print(mouse_reset_sequence()),
+            LeaveAlternateScreen,
+            Print(mouse_reset_sequence()),
+        )?;
+        terminal.show_cursor()?;
+        drain_pending_input()?;
+        Ok(())
+    })();
+    let raw_result = disable_raw_mode();
+    screen_result?;
+    raw_result?;
+    Ok(())
+}
+
+fn drain_pending_input() -> io::Result<()> {
+    drain_ready_events(
+        Duration::ZERO,
+        SHUTDOWN_INPUT_DRAIN_LIMIT,
+        event::poll,
+        event::read,
+        |_| false,
     )?;
-    terminal.show_cursor()?;
     Ok(())
 }
 
@@ -168,9 +192,17 @@ fn run_app<B: ratatui::backend::Backend>(
         ));
         terminal.draw(|f| ui::draw(f, app))?;
         let timeout = Duration::from_millis((refresh_ms as f64 / app.playback_speed) as u64);
-        if event::poll(timeout)? {
-            handle_input(app, event::read()?);
-        } else {
+        let consumed = drain_ready_events(
+            timeout,
+            LIVE_INPUT_BATCH_LIMIT,
+            event::poll,
+            event::read,
+            |input| {
+                handle_input(app, input);
+                app.should_quit
+            },
+        )?;
+        if consumed == 0 {
             app.on_tick();
         }
     }

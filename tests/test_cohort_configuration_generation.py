@@ -216,6 +216,7 @@ def test_generation_exposes_preserved_provider_exit_policy_without_authority() -
         "maximum_hold_seconds": 28_800,
         "maximum_hold_policy": "extend_while_regime_supported",
         "hard_maximum_hold_seconds": 86_400,
+        "maximum_hold_evidence_maximum_age_seconds": None,
         "provider_recipe_exit_policy": "ignore",
         "profit_lock_policy": "none",
         "profit_lock_activation_bps": None,
@@ -460,7 +461,13 @@ def test_generation_rejects_unknown_provider_recipe_exit_policy() -> None:
         _EXPECTATION,
         provider_exit_policies=(
             ProviderExitExpectation(
-                "provider", 28_800, "fixed", None, "sometimes", "none"
+                strategy_id="provider",
+                maximum_hold_seconds=28_800,
+                maximum_hold_policy="fixed",
+                hard_maximum_hold_seconds=None,
+                maximum_hold_evidence_maximum_age_seconds=None,
+                provider_recipe_exit_policy="sometimes",
+                profit_lock_policy="none",
             ),
         ),
     )
@@ -489,6 +496,7 @@ def test_generation_exposes_enabled_profit_lock_without_authority() -> None:
                 28_800,
                 "fixed",
                 None,
+                None,
                 "ignore",
                 "completed_bar_trailing",
                 25.0,
@@ -514,6 +522,7 @@ def test_generation_exposes_enabled_profit_lock_without_authority() -> None:
         "maximum_hold_seconds": 28_800,
         "maximum_hold_policy": "fixed",
         "hard_maximum_hold_seconds": None,
+        "maximum_hold_evidence_maximum_age_seconds": None,
         "provider_recipe_exit_policy": "ignore",
         "profit_lock_policy": "completed_bar_trailing",
         "profit_lock_activation_bps": 25.0,
@@ -522,6 +531,37 @@ def test_generation_exposes_enabled_profit_lock_without_authority() -> None:
     }
     assert evidence["execution_authority"] == "none"
     assert evidence["automatic_restart"] is False
+
+
+def test_v60_generation_exposes_btc_component_floor_without_authority() -> None:
+    """The checkpoint accepts only the exact staged BTC specialized policy."""
+    expectation = load_configuration_expectation(
+        Path(
+            "configs/multi_asset_growth_first_5000_eight_asset_"
+            "btc_hulk_smart_exit_candidate_v60.toml"
+        )
+    )
+
+    evidence = configuration_generation_evidence(
+        "runtime-profile",
+        expectation,
+        {
+            "BTC": {
+                "final_state": "FLAT",
+                "position_size_signed": 0.0,
+                "open_order_ids": [],
+            }
+        },
+    )
+
+    policy = evidence["current_provider_exit_policies"][
+        "hulk_expansion_short_robust_v3"
+    ]
+    assert policy["profit_lock_policy"] == "btc_hulk_delayed_component_floor_v1"
+    assert policy["profit_lock_activation_bps"] is None
+    assert policy["profit_lock_floor_bps"] is None
+    assert policy["profit_lock_giveback_bps"] is None
+    assert evidence["execution_authority"] == "none"
 
 
 def test_generation_exposes_directional_profit_lock_without_collapsing_scope(

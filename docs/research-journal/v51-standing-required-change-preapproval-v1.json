@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "decision_id": "v51-standing-required-change-preapproval-v1",
+  "recorded_at_utc": "2026-08-16T10:18:52Z",
+  "system_scope": "v51 continuous improvement and its validated successor remediation",
+  "source": {
+    "latest_operator_statement": "ive already pre approved all required changes",
+    "prior_operator_scope": [
+      "Fix a broken strategy, technical issue, logic error, or missing behavior that can cause further capital loss or reduce profitability.",
+      "Include an active strategy that evidence shows is bad and causing losses."
+    ]
+  },
+  "interpretation": {
+    "approval_status": "standing_preapproved_for_validated_required_changes",
+    "agent_may_apply_after_validation": true,
+    "agent_reapproval_required": false,
+    "approved_scope": [
+      "Verified technical defects, incorrect data flow, stale execution, missing safety, accounting, telemetry, or lifecycle behavior.",
+      "Verified broken, incorrectly applied, or internally inconsistent strategy entry or exit logic.",
+      "Evidence-supported containment, repair, replacement, or retirement of active strategy behavior causing capital loss or reducing expected profitability.",
+      "Required configuration, TUI, ledger, monitoring, and deployment changes that make an approved repair observable and operationally correct."
+    ],
+    "excluded_scope": [
+      "Speculative or unvalidated strategy and asset changes that are not required repairs.",
+      "Unsupported leverage, sizing, margin, or exposure increases.",
+      "Credential, wallet, secret, or withdrawal changes."
+    ]
+  },
+  "deployment_conditions": [
+    "The defect or adverse behavior is reproduced or supported by source-bound evidence.",
+    "The smallest appropriate repair is tested against the original failure and relevant regressions.",
+    "The current live identity and venue state are reconciled before mutation.",
+    "A recoverable before-state and rollback trigger are preserved.",
+    "Venue leverage and precision limits remain satisfied.",
+    "The exact changed behavior is monitored after deployment and reverted or contained if the falsifier occurs."
+  ],
+  "authority_boundaries": {
+    "automatic_live_change": false,
+    "live_arming_flags_required": true,
+    "validation_required": true,
+    "rollback_required": true,
+    "report_process_execution_authority": "none",
+    "meaning": "The agent may perform a validated in-scope change without another approval prompt; no report-only process or unattended rule gains order authority."
+  },
+  "confidence": {
+    "level": "high",
+    "basis": "Direct operator statements in the active conversation.",
+    "limitations": "Whether a proposed change is actually required remains an empirical engineering judgment and must satisfy the deployment conditions."
+  },
+  "falsifiers": [
+    "The operator revokes or narrows this standing approval.",
+    "The proposed action is outside the approved scope.",
+    "Validation does not reproduce the defect or support the adverse-behavior diagnosis.",
+    "The live identity, venue state, backup, or rollback contract cannot be verified."
+  ],
+  "contract": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_live_change": false,
+    "runtime_strategy_changed_by_this_record": false
+  }
+}

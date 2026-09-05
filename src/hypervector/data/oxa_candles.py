@@ -5,6 +5,7 @@ from __future__ import annotations
 import math
 from dataclasses import asdict, dataclass
 from datetime import datetime
+import json
 from pathlib import Path
 from typing import Literal
 
@@ -21,13 +22,25 @@ from hypervector.data.oxa_api import (
 from hypervector.data.provenance import normalize_ohlcv
 from hypervector.data.oxa_storage import (
     file_evidence,
+    open_text_reader,
     publish_immutable_directory,
+    verify_file_evidence,
     write_gzip_json,
     write_json,
 )
 
 CandleInterval = Literal["1m", "5m", "15m", "30m", "1h", "4h", "1d", "1w"]
 _INTERVALS = frozenset(("1m", "5m", "15m", "30m", "1h", "4h", "1d", "1w"))
+_PANDAS_FREQUENCIES = {
+    "1m": "1min",
+    "5m": "5min",
+    "15m": "15min",
+    "30m": "30min",
+    "1h": "1h",
+    "4h": "4h",
+    "1d": "1D",
+    "1w": "7D",
+}
 
 
 @dataclass(frozen=True)
@@ -217,6 +230,33 @@ def acquire_and_store_candles(
     }
 
 
+def read_complete_candle_evidence(
+    bundle: Path,
+    request: OxaCandleRequest,
+    *,
+    require_complete_cadence: bool = False,
+) -> tuple[pd.DataFrame, dict[str, object]]:
+    """Verify and reproduce one immutable candle bundle without network access."""
+    manifest = _read_candle_manifest(bundle)
+    _verify_manifest_request(manifest, request)
+    verify_file_evidence(bundle, manifest.get("files"))
+    pages = _read_manifest_pages(bundle, manifest, request)
+    reproduced = _merge_candles(list(pages), end_ms=int(request.end.timestamp() * 1000))
+    frame = pd.read_parquet(bundle / "candles.parquet")
+    _verify_reproduced_candles(frame, reproduced, manifest)
+    if require_complete_cadence:
+        _verify_complete_cadence(frame, request)
+    return frame, {
+        "bundle": str(bundle.resolve()),
+        "manifest": file_evidence(bundle / "manifest.json"),
+        "candles": file_evidence(bundle / "candles.parquet"),
+        "raw_page_count": len(pages),
+        "row_count": len(frame),
+        "raw_reproduction_matches": True,
+        "complete_cadence_required": require_complete_cadence,
+    }
+
+
 def repair_candle_cadence(
     frame: pd.DataFrame,
     *,
@@ -244,6 +284,108 @@ def repair_candle_cadence(
     indexed.loc[missing, "source"] = "hl_gap_fill"
     indexed.index.name = "timestamp"
     return normalize_ohlcv(indexed.reset_index()), int(missing.sum())
+
+
+def _read_candle_manifest(bundle: Path) -> dict[str, object]:
+    path = bundle / "manifest.json"
+    if not path.is_file():
+        raise FileNotFoundError(f"candle manifest is missing: {path}")
+    payload: object = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise ValueError("candle manifest must be an object")
+    return payload
+
+
+def _verify_manifest_request(
+    manifest: dict[str, object], request: OxaCandleRequest
+) -> None:
+    expected: dict[str, object] = {
+        "schema_version": 1,
+        "source": "0xarchive_hyperliquid_candles",
+        "venue": "hyperliquid",
+        "symbol": request.symbol,
+        "interval": request.interval,
+        "requested_start": request.start.isoformat(),
+        "requested_end": request.end.isoformat(),
+        "page_limit": request.limit,
+        "max_pages": request.max_pages,
+        "complete": True,
+        "continuation_cursor": None,
+    }
+    if any(manifest.get(key) != value for key, value in expected.items()):
+        raise ValueError("candle manifest differs from the exact request")
+
+
+def _read_manifest_pages(
+    bundle: Path,
+    manifest: dict[str, object],
+    request: OxaCandleRequest,
+) -> tuple[OxaCandlePage, ...]:
+    files = manifest.get("files")
+    if not isinstance(files, dict):
+        raise ValueError("candle manifest files must be an object")
+    paths = tuple(sorted(key for key in files if key.startswith("raw/")))
+    page_count = manifest.get("page_count")
+    if isinstance(page_count, bool) or not isinstance(page_count, int):
+        raise ValueError("candle manifest page count must be an integer")
+    if not paths or len(paths) != page_count:
+        raise ValueError("candle manifest raw-page coverage is inconsistent")
+    pages = tuple(_read_candle_page(bundle / path, request) for path in paths)
+    _verify_page_sequence(pages, manifest)
+    return pages
+
+
+def _read_candle_page(path: Path, request: OxaCandleRequest) -> OxaCandlePage:
+    with open_text_reader(path) as handle:
+        payload: object = json.load(handle)
+    return _parse_page(payload, request)
+
+
+def _verify_page_sequence(
+    pages: tuple[OxaCandlePage, ...], manifest: dict[str, object]
+) -> None:
+    request_ids = manifest.get("request_ids")
+    if not isinstance(request_ids, list) or any(
+        not isinstance(value, str) for value in request_ids
+    ):
+        raise ValueError("candle manifest request identifiers are invalid")
+    if tuple(request_ids) != tuple(page.request_id for page in pages):
+        raise ValueError("candle raw-page request identifiers differ from manifest")
+    if any(page.next_cursor is None for page in pages[:-1]):
+        raise ValueError("candle raw-page cursor chain terminates early")
+    if pages[-1].next_cursor is not None:
+        raise ValueError("candle raw-page cursor chain is incomplete")
+
+
+def _verify_reproduced_candles(
+    frame: pd.DataFrame,
+    reproduced: tuple[OxaCandle, ...],
+    manifest: dict[str, object],
+) -> None:
+    row_count = manifest.get("row_count")
+    if isinstance(row_count, bool) or not isinstance(row_count, int):
+        raise ValueError("candle manifest row count must be an integer")
+    if len(frame) != row_count or len(reproduced) != row_count:
+        raise ValueError("candle row count differs from manifest or raw pages")
+    expected = pd.DataFrame(candle.to_bar() for candle in reproduced)
+    try:
+        pd.testing.assert_frame_equal(frame, expected, check_exact=True)
+    except AssertionError as exc:
+        raise ValueError("candle Parquet differs from normalized raw pages") from exc
+
+
+def _verify_complete_cadence(frame: pd.DataFrame, request: OxaCandleRequest) -> None:
+    if "timestamp" not in frame.columns:
+        raise ValueError("candle Parquet is missing timestamp")
+    observed = pd.DatetimeIndex(pd.to_datetime(frame["timestamp"], utc=True))
+    expected = pd.date_range(
+        request.start,
+        request.end,
+        freq=_PANDAS_FREQUENCIES[request.interval],
+        inclusive="left",
+    )
+    if not observed.equals(expected):
+        raise ValueError("candle timestamps do not provide exact complete cadence")
 
 
 def _parse_page(payload: object, request: OxaCandleRequest) -> OxaCandlePage:

@@ -16,7 +16,7 @@ fn compact_dashboard_keeps_operational_truth_visible() {
         "OPEN 1 / 4",
         "VENUE BRACKET",
         "S12/T13@103.00",
-        "HK24H RX:I",
+        "HK24H/I/OFF",
         "BTC",
         "ETH",
         "SOL",
@@ -34,6 +34,42 @@ fn compact_dashboard_keeps_operational_truth_visible() {
         !screen.contains("███████POSITION"),
         "smashed gauge label\n{screen}"
     );
+}
+
+#[test]
+fn dashboard_discloses_v79_monitoring_acceptance_state() {
+    use hypervector_tui::backend_cohort_checkpoint::CohortPoststartAcceptance;
+
+    let mut app = cohort_app();
+    app.backend.cohort_checkpoint.poststart_acceptance = Some(CohortPoststartAcceptance {
+        version: "V79".into(),
+        accepted: true,
+        reasons: Vec::new(),
+        expected_routes: 9,
+        evaluated_routes: 9,
+        routes_with_metrics: 9,
+        open_positions: 0,
+        fills: 0,
+        costed_fills: 0,
+        closed_trades: 0,
+    });
+    let passed = render(&mut app, 0, 120, 36);
+    assert!(passed.contains("V79 CHECK PASS"), "{passed}");
+
+    app.backend.cohort_checkpoint.poststart_acceptance = Some(CohortPoststartAcceptance {
+        version: "V80".into(),
+        accepted: false,
+        reasons: vec!["provider_monitoring_incomplete".into()],
+        expected_routes: 9,
+        evaluated_routes: 8,
+        routes_with_metrics: 8,
+        open_positions: 0,
+        fills: 0,
+        costed_fills: 0,
+        closed_trades: 0,
+    });
+    let failed = render(&mut app, 0, 120, 36);
+    assert!(failed.contains("V80 CHECK FAIL"), "{failed}");
 }
 
 #[test]
@@ -219,7 +255,7 @@ fn dashboard_projects_authoritative_portfolio_trade_history() {
         "MAX DD 0.18%",
         "SIZE CAP 4/4",
         "RESERVE 3.97%",
-        "STRATEGY LEDGER // RUN | ALL-TIME MIXED PROFILES",
+        "STRATEGY LEDGER // RUN 1/0 | ALL-TIME MIXED",
         "HULK EXPANSION",
         "HT-Breakout",
     ] {
@@ -266,7 +302,7 @@ fn pooled_strategy_history_is_explicitly_labeled_mixed_profiles() {
 
     let dashboard = render(&mut app, 0, 120, 36);
     assert!(
-        dashboard.contains("STRATEGY LEDGER // RUN | ALL-TIME MIXED PROFILES"),
+        dashboard.contains("STRATEGY LEDGER // RUN 1/0 | ALL-TIME MIXED"),
         "{dashboard}"
     );
 
@@ -303,9 +339,13 @@ fn dashboard_does_not_erase_all_time_live_history_after_profile_change() {
     app.backend.cohort_checkpoint = checkpoint;
 
     let screen = render(&mut app, 0, 120, 36);
+    if std::env::var_os("HYPERVECTOR_VISUAL_SNAPSHOT").is_some() {
+        println!("120x36 FRESH RUN LEDGER\n{screen}");
+    }
 
     for expected in [
         "THIS RUN 0 CLOSED",
+        "FRESH RUN 0/0",
         "ALL-TIME 2 CLOSED",
         "HULK EXPANSION",
         "HT-Breakout",
@@ -314,6 +354,9 @@ fn dashboard_does_not_erase_all_time_live_history_after_profile_change() {
     }
 
     let trades = render(&mut app, 4, 165, 46);
+    if std::env::var_os("HYPERVECTOR_VISUAL_SNAPSHOT").is_some() {
+        println!("165x46 FRESH RUN TRADES\n{trades}");
+    }
     for expected in [
         "ARCHIVE 2",
         "PROFILE WINDOW 0T/2CFG",
@@ -324,10 +367,41 @@ fn dashboard_does_not_erase_all_time_live_history_after_profile_change() {
     ] {
         assert!(trades.contains(expected), "missing {expected}\n{trades}");
     }
+    let current_row = trades
+        .lines()
+        .find(|line| line.contains("CURRENT RUN") && line.contains("0/0/0"))
+        .expect("fresh current-run 0/0/0 row");
+    let current = trades.find(current_row).expect("current-run row offset");
+    let all_time = trades.find("ALL-TIME").expect("all-time row offset");
+    assert!(
+        current < all_time,
+        "fresh current-run ledger must precede historical totals\n{trades}",
+    );
 
     let regime = render(&mut app, 7, 165, 46);
     assert!(!regime.contains("AWAITING CLOSED LIFECYCLE"), "{regime}");
     assert!(regime.contains("BTC L -0.73 STOP"), "{regime}");
+}
+
+#[test]
+fn stale_zero_sample_cannot_claim_a_fresh_current_run_ledger() {
+    let mut app = cohort_app();
+    let mut checkpoint = trade_checkpoint();
+    let run = checkpoint
+        .trade_performance
+        .as_mut()
+        .and_then(|performance| performance.current_run.as_mut())
+        .expect("current-run fixture");
+    run.run_id = "different-run".into();
+    run.total = CohortTradePerformanceSummary::default();
+    run.by_strategy.clear();
+    app.backend.cohort_checkpoint = checkpoint;
+
+    let dashboard = render(&mut app, 0, 120, 36);
+
+    assert!(dashboard.contains("RUN UNAVAILABLE"), "{dashboard}",);
+    assert!(!dashboard.contains("FRESH RUN 0/0"), "{dashboard}");
+    assert!(!dashboard.contains("THIS RUN 0 CLOSED"), "{dashboard}");
 }
 
 #[test]
@@ -371,6 +445,7 @@ fn dashboard_prefers_durable_archive_and_labels_observation_only_assets() {
             by_strategy: performance.by_strategy.clone(),
         },
         accounting_epoch: None,
+        preserved_history: None,
     });
     app.backend.cohort_checkpoint = checkpoint;
 

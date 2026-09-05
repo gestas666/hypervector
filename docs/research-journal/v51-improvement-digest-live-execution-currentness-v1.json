@@ -1,0 +1,113 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v51-improvement-digest-live-execution-currentness-v1",
+  "status": "accepted_report_only_accounting_fix",
+  "recorded_at_utc": "2026-08-14T16:19:11.584429+00:00",
+  "problem": "The opportunity digest exposed a frozen HIP-3 cadence sentence saying no resolved v3 live outcomes even after the same scorecard contained one exact resolved SPCX lifecycle.",
+  "root_cause": "The live opportunity projection copied only strategy_scorecard.historical_cadence and omitted the already validated current execution and repeatability summaries.",
+  "before": {
+    "route": "hip3_breakout_pressure_sp500_spcx_fresh15s_bidirectional_v3|xyz:SPCX",
+    "historical_cadence": "prospective observer active; no resolved v3 live outcomes at review cutoff",
+    "current_execution_visible_in_opportunity_digest": false,
+    "authoritative_scorecard_closed_lifecycles": 1,
+    "authoritative_scorecard_net_pnl_usd": 21.355552,
+    "authoritative_scorecard_observed_sides": [
+      "short"
+    ]
+  },
+  "after": {
+    "historical_cadence_preserved_as_frozen_prior_evidence": true,
+    "historical_cadence_currentness": "superseded_by_current_live_execution",
+    "current_live_execution": {
+      "status": "resolved_lifecycles_available",
+      "closed_lifecycles": 1,
+      "wins": 1,
+      "losses": 0,
+      "breakeven": 0,
+      "observed_sides": [
+        "short"
+      ],
+      "net_pnl_usd": 21.355552,
+      "fees_usd": 0.855709,
+      "funding_usd": 0.0,
+      "net_return_on_margin_pct": 4.222156379857299,
+      "largest_winner_share_of_gross_profit_pct": 100.0,
+      "net_pnl_excluding_largest_winner_usd": 0.0
+    },
+    "highest_value_next_investigation": "collect the missing SPCX long and additional exact source-native lifecycles",
+    "change_proposals": []
+  },
+  "runtime_action": {
+    "restarted_process": "report-only cohort improvement monitor",
+    "old_pids": [
+      31042,
+      31043
+    ],
+    "new_pids": [
+      15165,
+      15166
+    ],
+    "trading_backend_restarted": false,
+    "live_configuration_changed": false,
+    "orders_or_positions_changed": false,
+    "execution_authority": "none"
+  },
+  "validation": {
+    "focused_tests": 45,
+    "focused_result": "passed",
+    "ruff_check": "passed",
+    "ruff_format": "passed",
+    "diff_check": "passed",
+    "real_digest_generated_at_utc": "2026-08-14T16:19:11.584429+00:00",
+    "real_digest_operational_status": "healthy",
+    "real_digest_unprotected_assets": []
+  },
+  "evidence": [
+    {
+      "path": "../../src/hypervector/research/cohort_live_opportunity_diagnostics.py",
+      "bytes": 14237,
+      "sha256": "7874e5176bb6678d816dacddae88786f231acf1414fa946642e584229caf0b4f"
+    },
+    {
+      "path": "../../tests/test_cohort_live_opportunity_diagnostics.py",
+      "bytes": 6299,
+      "sha256": "c2da43d0f137af2b27f135d26f1c98930a76e43fa59cd3ae62c3f2033668e023"
+    },
+    {
+      "path": "v51-spcx-first-source-native-lifecycle-v2.json",
+      "bytes": 10129,
+      "sha256": "1011184960030ee3e8dceee2fda2a79a2f2a60fba43eed8f1788061d3b77bbf8",
+      "role": "exact resolved SPCX lifecycle and replay-parity evidence"
+    }
+  ],
+  "limitations": [
+    "One winning short is technically attributable but cannot establish economic edge.",
+    "The frozen historical cadence remains useful provenance and is labeled superseded only for current live-count interpretation.",
+    "The correction projects validated scorecard values; it does not recompute raw trade accounting independently.",
+    "No SPCX long has resolved, so the configured bidirectional route remains incomplete."
+  ],
+  "falsifier": "The fix is falsified if a digest hides an identifiable lifecycle, disagrees with the authoritative provider-contract scorecard, labels frozen cadence as current, or changes any live execution behavior.",
+  "change_proposal": {
+    "Recommendation": "Retain the corrected report-only projection and continue collecting source-native SPCX long and additional short lifecycles.",
+    "Why now": "SPCX had already resolved a profitable v51 short, but the active opportunity surface still displayed a no-outcomes sentence that could misdirect prioritization.",
+    "Evidence reviewed": "Current checkpoint strategy scorecard, provider-contract performance, exact SPCX lifecycle journal, opportunity digest, projection implementation, and focused regression tests.",
+    "Observed problem or opportunity": "Current live execution existed but was absent from the route-level opportunity diagnostics; only a frozen prior cadence string was displayed.",
+    "Applicable market regime": "All exact v51 route diagnostics; the fix is accounting-only and independent of market regime.",
+    "Alternatives considered": "Rewrite immutable historical evidence, suppress cadence, rely on the TUI scorecard alone, or project current execution alongside frozen history.",
+    "Proposed live change": "None. This correction has report-only authority and cannot route, size, enter, exit, or alter strategy behavior.",
+    "Expected upside": "Prevents stale wording from hiding exact live outcomes and keeps the next investigation correctly focused on the missing SPCX long rather than repeating the resolved short diagnosis.",
+    "Main risks and failure modes": "Projection drift, malformed side summaries, duplicated accounting logic, or users treating one winning lifecycle as established edge.",
+    "Validation completed": "Red-green regression for resolved and zero-outcome routes, 45 focused tests, format/lint/diff checks, and real-digest reconciliation after a report-only monitor restart.",
+    "Validation still required": "Observe the next resolved long and short lifecycle and verify the projection updates side counts and economics without a process restart or source mismatch.",
+    "Success metrics": "Exact equality with scorecard closed counts, sides, PnL, costs, return, and concentration; frozen cadence explicitly labeled; zero execution authority.",
+    "Failure / rollback triggers": "Any scorecard mismatch, missing current lifecycle, invalid side, monitor publication failure, or evidence that this projection affects live runtime state.",
+    "Confidence level": "High confidence in the diagnosed reporting defect and corrected current digest; low confidence in SPCX economic edge because N=1 short and N=0 long.",
+    "Explicit approval requested": "No approval requested because no live behavior changed."
+  },
+  "contract": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_live_change": false,
+    "runtime_strategy_changed": false
+  }
+}

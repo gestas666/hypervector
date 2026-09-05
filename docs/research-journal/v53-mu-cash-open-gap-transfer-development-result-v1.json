@@ -1,0 +1,84 @@
+{
+  "schema_version": "v53_mu_cash_open_gap_transfer_development_result_v1",
+  "hypothesis_id": "V53_MU_CASH_OPEN_GAP_TRANSFER_V1",
+  "generated_at_utc": "2026-08-17T22:42:42Z",
+  "status": "rejected",
+  "decision": "reject_unchanged_transfer_without_tuning_or_oos_access",
+  "problem_restatement": "Test whether the unchanged preregistered SPCX 15-minute cash-open gap-reversal mechanism transfers to MU at an execution-capacity-supported notional.",
+  "preregistration_source": "docs/research-journal/v53-mu-cash-open-gap-transfer-preregistration-v1.json",
+  "immutable_result": {
+    "path": "data/logs/research/xyz_mu_cash_open_gap_reversal_development_20260817_v1.json",
+    "sha256": "c942d9212d473bd5992d81aa131fe25dc29d3bb4672323fa5f3696316f64001e",
+    "bytes": 261468
+  },
+  "frozen_contract": {
+    "symbol": "xyz:MU",
+    "timeframe": "15m",
+    "directions": [
+      "long",
+      "short"
+    ],
+    "gap_threshold_bps": 20.0,
+    "stop_bps": 80.0,
+    "maximum_hold_bars": 25,
+    "notional_usd_per_position": 2000.0,
+    "margin_fraction_of_5000": 0.04,
+    "leverage": 10.0,
+    "stress_slippage_bps_per_side": 18.81064884941181,
+    "parameter_changes_after_preregistration": []
+  },
+  "result": {
+    "development_trades": 20,
+    "development_trades_per_week": 3.700440528634361,
+    "nominal_wins": 4,
+    "nominal_losses": 16,
+    "nominal_net_usd": -89.30896550100542,
+    "nominal_profit_factor": 0.6594334359694289,
+    "nominal_net_without_largest_winner_usd": -152.8388383346915,
+    "stress_wins": 3,
+    "stress_losses": 17,
+    "stress_net_usd": -192.7355761844343,
+    "stress_profit_factor": 0.4282554907607975,
+    "stress_net_without_largest_winner_usd": -252.53467599852075,
+    "long_stress_net_usd": -36.051475373335585,
+    "long_stress_profit_factor": 0.7392801674793009,
+    "short_stress_net_usd": -156.68410081109872,
+    "short_stress_profit_factor": 0.21194648420993545,
+    "positive_stress_folds": 1,
+    "stress_fold_nets_usd": [
+      1.2226091591237704,
+      -119.40877063721621,
+      -76.32476864836302
+    ],
+    "liquidations": 0,
+    "unresolved_lifecycle_trades": 12,
+    "nominal_unresolved_union_bars": 32,
+    "stress_unresolved_union_bars": 31,
+    "stale_l2_entry_trades": 1
+  },
+  "preregistered_check_results": {
+    "nominal_net_positive": false,
+    "nominal_profit_factor_above_one": false,
+    "stress_net_positive": false,
+    "stress_profit_factor_above_one": false,
+    "stress_positive_without_largest_winner": false,
+    "both_directions_observed": true,
+    "at_least_two_positive_stress_folds": false,
+    "no_liquidations": true,
+    "technical_paths_resolved": false
+  },
+  "reasoning": "The unchanged transfer fails economically in aggregate, on both stress-tested directions, after largest-winner removal, and in two of three chronological stress folds. Technical incompleteness is an additional failure rather than the reason for withholding an otherwise positive strategy.",
+  "uncertainties_and_failure_modes": [
+    "Development evidence is selection evidence rather than untouched confirmation.",
+    "Twelve selected lifecycles overlap unresolved mark or L2 paths.",
+    "The fee model uses the current resolved account fee state historically.",
+    "The result rejects this exact transfer; it does not independently invalidate the SPCX development result."
+  ],
+  "falsifier_or_reopen_condition": "Do not retune this contract. Reopen MU only for a materially distinct preregistered causal mechanism with new evidence, or if exact missing path evidence proves the recorded economics materially wrong; unchanged side selection or threshold tuning is not sufficient.",
+  "validation_accessed": false,
+  "holdout_accessed": false,
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "proposed_live_change": null,
+  "runtime_strategy_changed": false
+}

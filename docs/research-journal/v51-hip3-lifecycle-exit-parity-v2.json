@@ -1,0 +1,148 @@
+{
+  "schema_version": "v51_hip3_lifecycle_exit_parity_v2",
+  "created_at_utc": "2026-08-15T16:02:00Z",
+  "status": "accepted_single_spcx_short_live_falsifier_passed",
+  "profile_id": "multi_asset_growth_first_5000_six_asset_profit_lock_candidate_v51",
+  "profile_fingerprint": "30cd54bb5b5b17249ae0a6a3b01d5702b276d51f8dc5ddd6b4d36ab6aa7d1908",
+  "supersedes": {
+    "path": "v51-hip3-lifecycle-exit-parity-v1.json",
+    "bytes": 5893,
+    "sha256": "652c3af548d65c46c4fe8fb906eed69dd1b3321a3b49d5c1a520a7397ce665f5"
+  },
+  "hypothesis": "The corrected v51 HIP-3 lifecycle replay should reproduce the live exit branch and remain close to realized after-cost economics for an attributable source-native lifecycle.",
+  "decision": "Accept technical exit-model parity for one SPCX short lifecycle only. Do not infer route profitability, bidirectional edge, or parameter optimality. Keep the live v51 route and exit contract unchanged while collecting the first resolved long and additional independent shorts.",
+  "confidence": {
+    "technical_exit_branch_parity": "high_for_one_spcx_short",
+    "execution_economic_parity": "medium_for_one_spcx_short",
+    "route_profitability": "low",
+    "bidirectional_edge": "unidentified"
+  },
+  "contract": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_live_change": false,
+    "automatic_promotion": false,
+    "runtime_strategy_changed": false,
+    "performance_gate": false
+  },
+  "frozen_exit_contract": {
+    "stop_bps": 80.0,
+    "target": "none",
+    "provider_recipe_exit": "ignore",
+    "opposite_intent_exit": "first later eligible opposite intent from the exact executable same-symbol provider",
+    "profit_lock": {
+      "clock": "completed_1m_bar",
+      "activation_bps": 100.0,
+      "floor_bps": 40.0,
+      "peak_giveback_bps": 80.0
+    },
+    "maximum_hold_seconds": 86400,
+    "maximum_hold_origin": "provider_decision_persisted_opened_at"
+  },
+  "spcx_short_live_reconciliation": {
+    "lifecycle_id": "xyz:SPCX:516639241871",
+    "decision_time_ms": 1786716000000,
+    "side": "short",
+    "live": {
+      "entry_expected_price": 137.53,
+      "entry_fill_price": 137.44513431182497,
+      "entry_venue_timestamp_ms": 1786716010930,
+      "exit_reason": "completed_bar_profit_lock",
+      "exit_expected_price": 136.76,
+      "exit_fill_price": 136.83,
+      "exit_venue_timestamp_ms": 1786717638710,
+      "fees_usd": 0.855709,
+      "funding_usd": 0.0,
+      "net_pnl_usd": 21.355552,
+      "net_return_bps": 43.028275747319675,
+      "maximum_favorable_excursion_bps": 124.05927065824551,
+      "peak_giveback_bps": 79.30437155578728
+    },
+    "replay_nominal": {
+      "entry_price": 137.59,
+      "entry_time_ms": 1786716003195,
+      "exit_reason": "profit_lock",
+      "exit_price": 136.77,
+      "exit_time_ms": 1786717620560,
+      "net_pnl_usd": 28.937251835162446,
+      "net_return_bps": 57.87450367032489
+    },
+    "replay_stress": {
+      "entry_price": 137.59,
+      "entry_time_ms": 1786716003195,
+      "exit_reason": "profit_lock",
+      "exit_price": 136.77,
+      "exit_time_ms": 1786717620560,
+      "net_pnl_usd": 22.848967954302868,
+      "net_return_bps": 45.69793590860574
+    },
+    "parity_deltas": {
+      "live_minus_replay_entry_time_ms": 7735,
+      "live_minus_replay_exit_time_ms": 18150,
+      "live_minus_stress_net_pnl_usd": -1.4934159543028697,
+      "live_minus_stress_net_return_bps": -2.669660161286065,
+      "exit_branch_match": true,
+      "decision_identity_match": true
+    },
+    "interpretation": "The corrected replay chose the same profit-lock branch and stayed within 2.67 net basis points of the live lifecycle under stress friction. This passes one technical falsifier but remains a single short-only observation."
+  },
+  "remaining_evidence_gaps": {
+    "sp500": {
+      "completed_lifecycles": 0,
+      "censored_lifecycles": 7,
+      "current_short_decision_identity_reproduced": true,
+      "reason": "mark_path_unresolved"
+    },
+    "spcx": {
+      "completed_lifecycles": 1,
+      "censored_lifecycles": 3,
+      "resolved_long_lifecycles": 0,
+      "resolved_short_lifecycles": 1,
+      "current_open_short_status": "right_censored_exit_event"
+    }
+  },
+  "risks_and_failure_modes": [
+    "One matching short lifecycle does not establish repeatability or expected value.",
+    "The replay consumes a fixed $5,000 notional while the live fill used the venue-rounded actual notional.",
+    "The sampled replay cannot reconstruct exact same-timestamp ordering between venue mark stops and backend exits.",
+    "Missing mark paths censor six historical SP500 longs, one SP500 short, one SPCX long, and one earlier SPCX short.",
+    "The current SPCX short is still open, so its exit branch and economics cannot yet be evaluated.",
+    "No resolved source-native long exists for either v51 index route."
+  ],
+  "validation_completed": [
+    "Exact v51 profile ID and fingerprint were bound by the replay.",
+    "The exact SPCX decision timestamp and side were reproduced.",
+    "The replay used the configured stop, profit lock, opposite-intent, and maximum-hold rules.",
+    "The live lifecycle was recovered from an immutable complete report-only cohort audit.",
+    "Nominal and stress replay outputs were published immutably with source and generator hashes."
+  ],
+  "validation_still_required": [
+    "Resolve the currently open SPCX short and compare its actual branch row-for-row.",
+    "Capture the first attributable eligible and fully resolved SP500 long.",
+    "Capture at least one resolved SPCX long and additional independent shorts.",
+    "Require compatible both-side after-cost evidence and largest-winner sensitivity before any live-change proposal."
+  ],
+  "minimum_evidence_for_change_proposal": "Use a preregistered compatible window with at least ten resolved lifecycles and at least three per side, exact fees, funding, slippage, latency, stop behavior, missed-opportunity review, positive net and profit factor after largest-winner removal, no lifecycle contributing more than half of net, and untouched forward confirmation. This is a review minimum, not statistical proof.",
+  "next_investigation": "Resolve the currently open SPCX short and capture the first fully resolved SP500 long under the unchanged v51 contract; rerun the same immutable parity check without retuning.",
+  "evidence": [
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/v51_spcx_exit_parity_20260815T1600Z_v1.json",
+      "bytes": 7581677,
+      "sha256": "34d5d1e173e4df0dffbb7dc419a947c4d29c3adf17235f42b242cd4e611f357f",
+      "role": "immutable exact-profile live lifecycle audit"
+    },
+    {
+      "path": "../../data/logs/research/v51_spcx_shadow_lifecycle_20260815T1557Z_v3.json",
+      "bytes": 2773941,
+      "sha256": "598a72b1d2281e6cd71b7f15da8cfb10b84bd160006f79152db2bdf21007d8c0",
+      "role": "corrected exact-v51 SPCX lifecycle replay"
+    },
+    {
+      "path": "../../data/logs/research/v51_sp500_shadow_lifecycle_20260815T1557Z_v3.json",
+      "bytes": 2778758,
+      "sha256": "0bd1a4004aaf7ba0f6a01e8bfac275f510299842647bfdc78cfa3ef0e1a4d67d",
+      "role": "corrected exact-v51 SP500 censored lifecycle replay"
+    }
+  ],
+  "falsifier": "Any later attributable lifecycle selecting a different exit branch than the corrected replay, exceeding the declared timing/friction sensitivity without an identified venue cause, or revealing a source/config identity mismatch invalidates this partial parity acceptance."
+}

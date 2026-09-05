@@ -251,6 +251,10 @@ def _artifact(
 
 
 def _contract(config: HypeExitReplayConfig) -> dict[str, object]:
+    execution = asdict(config)
+    for key in ("stop_anchor_column", "minimum_stop_bps", "maximum_stop_bps"):
+        if execution[key] is None:
+            del execution[key]
     return {
         "report_only": True,
         "execution_authority": "none",
@@ -258,7 +262,7 @@ def _contract(config: HypeExitReplayConfig) -> dict[str, object]:
         "runtime_strategy_changed": False,
         "control_side": "completed_hourly_sma_structural_direction",
         "challenger_rule": "enter_only_when_completed_5m_breakout_side_agrees",
-        "execution": asdict(config),
+        "execution": execution,
     }
 
 

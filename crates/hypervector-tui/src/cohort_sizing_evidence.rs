@@ -136,6 +136,53 @@ pub(crate) fn staged_provider_sizing_line<'a>(app: &'a App, symbol: &str) -> Lin
     ])
 }
 
+/// Format the asset-level IOC price-protection bound in the selected profile.
+pub(crate) fn asset_ioc_cap_line<'a>(app: &'a App, symbol: &str) -> Option<Line<'a>> {
+    let generation = app
+        .backend
+        .cohort_checkpoint
+        .configuration_generation
+        .as_ref();
+    let pending_close = generation
+        .and_then(|value| value.current_asset_market_slippage_caps.as_ref())
+        .and_then(|values| values.get(symbol));
+    let pending_entry = generation
+        .and_then(|value| value.current_asset_entry_slippage_caps.as_ref())
+        .and_then(|values| values.get(symbol))
+        .or(pending_close);
+    let effective = app
+        .backend
+        .cohort
+        .asset_configs
+        .iter()
+        .find(|asset| asset.symbol == symbol);
+    let pending_entry = pending_entry?;
+    let pending_close = pending_close?;
+    let effective_close = effective.and_then(|asset| asset.market_slippage_cap_fraction);
+    let effective_entry = effective.and_then(|asset| {
+        asset
+            .entry_slippage_cap_fraction
+            .or(asset.market_slippage_cap_fraction)
+    });
+    Some(Line::from(vec![
+        Span::raw(format!(
+            "NEXT-RUN IOC CAPS {symbol} ENTRY {:.1}bps // CLOSE {:.1}bps // ",
+            pending_entry * 10_000.0,
+            pending_close * 10_000.0,
+        )),
+        Span::styled(staged_activation(generation), app.theme.cyan),
+        Span::raw(format!(
+            " // EFFECTIVE ENTRY {} / CLOSE {}",
+            ioc_cap_label(effective_entry),
+            ioc_cap_label(effective_close),
+        )),
+    ]))
+}
+
+fn ioc_cap_label(value: Option<f64>) -> String {
+    value.map_or_else(|| "N/A".into(), |cap| format!("{:.1}bps", cap * 10_000.0))
+}
+
 fn staged_activation(generation: Option<&CohortConfigurationGeneration>) -> &'static str {
     if generation.is_some_and(|value| value.matches_runtime) {
         "CURRENT"

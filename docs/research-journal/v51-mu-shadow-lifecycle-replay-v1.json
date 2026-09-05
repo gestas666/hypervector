@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "mu-breakout-pressure-prospective-lifecycle-edge-v1",
+  "revision_number": 1,
+  "created_at_utc": "2026-08-14T07:58:10Z",
+  "strategy_id": "hip3_mu_full_l2_breakout_pressure_bidirectional_15m_v1",
+  "symbol": "xyz:MU",
+  "status": "observe",
+  "hypothesis": "The exact MU 15m breakout-pressure route may add a repeatable source-native edge after finite-depth fills, fees, funding, latency, stop behavior, and one-position-per-route lifecycle accounting.",
+  "decision": "Continue report-only prospective collection. Do not add MU to v51 or grant execution authority: only one of seven prospective onsets has a fully resolved lifecycle, all observed onsets are long, and the one resolved winner is insufficient to establish repeatability or bidirectional edge.",
+  "confidence": "low",
+  "falsifier": "Reject the candidate if a predeclared larger window is non-positive after stress costs or largest-winner removal, if both configured directions do not produce resolved evidence, or if source-native mark/depth gaps continue to prevent causal lifecycle resolution.",
+  "frozen_route": {
+    "symbol": "xyz:MU",
+    "provider_id": "hip3_mu_full_l2_breakout_pressure_bidirectional_15m_v1",
+    "profile_id": "mu_full_l2_breakout_pressure_bidirectional_15m_research_v1",
+    "timeframe": "15m",
+    "breakout_lookback_bars": 32,
+    "fast_ema": 9,
+    "slow_ema": 21,
+    "minimum_abs_imbalance": 0.1,
+    "maximum_stop_bps": 80.0,
+    "maximum_hold_minutes": 1440,
+    "notional_usd": 5000.0
+  },
+  "metrics": {
+    "prospective_onsets": 7,
+    "resolved_lifecycles": 1,
+    "censored_lifecycles": 6,
+    "resolved_long_lifecycles": 1,
+    "resolved_short_lifecycles": 0,
+    "nominal_net_pnl_usd": 37.46175820443962,
+    "nominal_net_return_bps": 74.92351640887924,
+    "stress_net_pnl_usd": 35.45385841207743,
+    "stress_net_return_bps": 70.90771682415486,
+    "net_without_largest_winner_usd": 0.0,
+    "first_censor_reason": "mark_path_unresolved",
+    "downstream_portfolio_state_censors": 4,
+    "entry_depth_censors": 1
+  },
+  "causal_correction": {
+    "superseded_artifact": "../../data/logs/research/xyz_mu_shadow_lifecycle_replay_20260814T074843Z_v3.json",
+    "superseded_sha256": "babef39ba8b833cb6ab833e62f761d9b3a2b0850fbdc6ea37190b9ef82139d61",
+    "error": "A post-entry censored lifecycle did not reserve the one-position route, allowing later onsets to be success-shaped as independent trades while hypothetical portfolio state was unresolved.",
+    "correction": "Post-entry censoring now blocks subsequent onsets until a complete modeled exit proves the route flat; unresolved downstream onsets are explicitly labeled portfolio_state_unresolved.",
+    "runtime_impact": "none",
+    "live_capital_impact": "none"
+  },
+  "evidence": [
+    {
+      "path": "../../data/logs/research/xyz_mu_shadow_lifecycle_replay_20260814T080219Z_v7.json",
+      "role": "immutable_source_native_causal_lifecycle_replay",
+      "sha256": "8a1ad317451966595dbc35cf297fc480a1856d611d6e24455e8945f7a93394c9",
+      "bytes": 7043609
+    },
+    {
+      "path": "../../data/logs/research/xyz_mu_15m_breakout_development_path_thresholds_20260608_20260716_v1.json",
+      "role": "development_selected_route_and_friction_contract",
+      "sha256": "f43aa04c6de678389ac3dba85c7a5566ad5412d6b4c87ff13cc3877210faa268",
+      "bytes": 322286
+    },
+    {
+      "path": "../../data/logs/research/xyz_mu_liquidity_profile_fee_sensitivity_20260810.json",
+      "role": "source_native_fee_and_depth_evidence",
+      "sha256": "2ae930f0a1b707f46fd2d764e5aad527fa6f8fdb4bcbfd6ef8602e6d3e0bb617",
+      "bytes": 6161
+    }
+  ],
+  "validation": {
+    "focused_tests_passed": 39,
+    "ruff_check": "pass",
+    "ruff_format_check": "pass",
+    "independent_reconciliation_errors": 0,
+    "verified_mark_files": 22657,
+    "verified_mark_rows": 224662,
+    "verified_generator_files": 15,
+    "candle_snapshot_hash_reconciled": true,
+    "funding_snapshot_hash_reconciled": true,
+    "journal_and_book_prefix_hashes_reconciled": true
+  },
+  "limitations": [
+    "Six of seven onset paths are technically censored and cannot support economic claims.",
+    "The sole resolved lifecycle is a long winner; there is no resolved short lifecycle.",
+    "Profit factor is undefined with no resolved loss and is not evidence of a deployable edge.",
+    "The resolved winner contributes all reported PnL; excluding it leaves zero.",
+    "Mark-triggered next-observed-depth exits are replay approximations, not historical venue fills.",
+    "No live strategy, asset, route, parameter, leverage, sizing, exit, execution, or deployment setting changed."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

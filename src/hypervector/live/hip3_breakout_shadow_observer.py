@@ -19,6 +19,8 @@ from hypervector.live.mu_hip3_breakout_shadow_runner import (
     MuHip3ShadowPollResult,
     MuHip3ShadowPaths,
 )
+from hypervector.live.multi_asset_market_bars import TransientCohortMarketDataError
+from hypervector.research.checkpoint_storage import write_atomic_json
 from hypervector.runtime_lock import cohort_checkpoint_runtime_lock
 
 
@@ -53,6 +55,17 @@ class ObserverConfig:
             raise ValueError("HIP-3 shadow observer must remain report-only")
 
 
+@dataclass
+class _ObserverRuntimeState:
+    """Durable lifecycle counters independent of strategy evidence."""
+
+    last_success_observed_at_ms: int | None = None
+    last_attempt_observed_at_ms: int | None = None
+    consecutive_transient_failures: int = 0
+    total_transient_failures: int = 0
+    last_transient_failure: dict[str, object] | None = None
+
+
 def build_parser(defaults: ObserverDefaults) -> argparse.ArgumentParser:
     """Build one standalone public-data observer command."""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -85,19 +98,47 @@ def run_observer(
     config: ObserverConfig,
     *,
     runner: MuHip3BreakoutShadowRunner,
+    spec: Hip3BreakoutShadowSpec,
     event_type: str = "mu_hip3_breakout_shadow_poll",
     clock_ms: Callable[[], int] = lambda: time.time_ns() // 1_000_000,
     sleeper: Callable[[float], None] = time.sleep,
     stop_requested: Callable[[], bool] = lambda: False,
+    stop_reason: Callable[[], str] = lambda: "stop_requested",
 ) -> int:
     """Capture books and decisions without constructing an order client."""
+    state = _restore_runtime_state(config.paths.status)
     polls = 0
-    while not stop_requested() and not _limit(config, polls):
-        result = runner.poll(observed_at_ms=clock_ms())
-        print(_poll_json(event_type, polls + 1, result), flush=True)
+    stopped = stop_requested()
+    last_observed_ms = state.last_success_observed_at_ms
+    while not stopped and not _limit(config, polls):
+        observed_ms = clock_ms()
+        last_observed_ms = observed_ms
+        state.last_attempt_observed_at_ms = observed_ms
+        try:
+            result = runner.poll(observed_at_ms=observed_ms)
+        except TransientCohortMarketDataError as exc:
+            _record_transient(state, observed_ms, exc)
+            _publish_runtime(config.paths.status, spec, state, "degraded_transient")
+        except Exception as exc:
+            _publish_runtime(config.paths.status, spec, state, "fault", fatal=exc)
+            raise
+        else:
+            _record_success(state, observed_ms)
+            _publish_runtime(config.paths.status, spec, state, "running")
+            print(_poll_json(event_type, polls + 1, result), flush=True)
         polls += 1
-        if not stop_requested() and not _limit(config, polls):
+        stopped = stop_requested()
+        if not stopped and not _limit(config, polls):
             sleeper(config.poll_seconds)
+    reason = stop_reason() if stopped else "bounded_completion"
+    _publish_runtime(
+        config.paths.status,
+        spec,
+        state,
+        "stopped",
+        stop_reason=reason,
+        observed_at_ms=last_observed_ms,
+    )
     return 0
 
 
@@ -110,8 +151,10 @@ def main_for(
     """Run one exact singleton research writer with clean stop handling."""
     config = config_from_args(build_parser(defaults).parse_args(argv))
     stopping = threading.Event()
+    received_signal: list[int] = []
 
-    def request_stop(_signum: int, _frame: FrameType | None) -> None:
+    def request_stop(signum: int, _frame: FrameType | None) -> None:
+        received_signal.append(signum)
         stopping.set()
 
     previous = {
@@ -126,9 +169,11 @@ def main_for(
             return run_observer(
                 config,
                 runner=runner,
+                spec=spec,
                 event_type=f"{_token(spec.symbol)}_hip3_breakout_shadow_poll",
                 sleeper=stopping.wait,
                 stop_requested=stopping.is_set,
+                stop_reason=lambda: _signal_stop_reason(received_signal),
             )
     finally:
         for current, handler in previous.items():
@@ -154,6 +199,127 @@ def _poll_json(
 
 def _limit(config: ObserverConfig, polls: int) -> bool:
     return config.max_polls is not None and polls >= config.max_polls
+
+
+def _record_transient(
+    state: _ObserverRuntimeState,
+    observed_at_ms: int,
+    error: TransientCohortMarketDataError,
+) -> None:
+    state.consecutive_transient_failures += 1
+    state.total_transient_failures += 1
+    state.last_transient_failure = {
+        "observed_at_ms": observed_at_ms,
+        "source": error.source,
+        "reason": error.reason,
+    }
+
+
+def _record_success(state: _ObserverRuntimeState, observed_at_ms: int) -> None:
+    state.last_success_observed_at_ms = observed_at_ms
+    state.consecutive_transient_failures = 0
+
+
+def _publish_runtime(
+    path: Path,
+    spec: Hip3BreakoutShadowSpec,
+    state: _ObserverRuntimeState,
+    lifecycle: str,
+    *,
+    stop_reason: str | None = None,
+    fatal: Exception | None = None,
+    observed_at_ms: int | None = None,
+) -> None:
+    payload = _load_status(path, spec)
+    if state.last_success_observed_at_ms is not None:
+        payload["observed_at_ms"] = state.last_success_observed_at_ms
+    elif observed_at_ms is not None:
+        payload["observed_at_ms"] = observed_at_ms
+    payload["observer_runtime"] = {
+        "lifecycle": lifecycle,
+        "last_success_observed_at_ms": state.last_success_observed_at_ms,
+        "last_attempt_observed_at_ms": state.last_attempt_observed_at_ms,
+        "consecutive_transient_failures": state.consecutive_transient_failures,
+        "total_transient_failures": state.total_transient_failures,
+        "last_transient_failure": state.last_transient_failure,
+        "stop_reason": stop_reason,
+        "fatal_exception_type": None if fatal is None else type(fatal).__name__,
+    }
+    write_atomic_json(path, payload)
+
+
+def _load_status(path: Path, spec: Hip3BreakoutShadowSpec) -> dict[str, object]:
+    if not path.exists():
+        return _base_status(spec)
+    value = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(value, dict) or value.get("execution_authority") != "none":
+        raise ValueError("HIP-3 observer status contract is invalid")
+    return {str(key): item for key, item in value.items()}
+
+
+def _base_status(spec: Hip3BreakoutShadowSpec) -> dict[str, object]:
+    return {
+        "schema_version": 1,
+        "mode": f"{_token(spec.symbol)}_hip3_breakout_shadow_observer",
+        "symbol": spec.symbol,
+        "provider_id": spec.provider_id,
+        "profile_id": spec.profile_id,
+        "execution_authority": "none",
+        "report_only": True,
+        "signing_client_constructed": False,
+        "orders_supported": False,
+        "runtime_strategy_changed": False,
+    }
+
+
+def _restore_runtime_state(path: Path) -> _ObserverRuntimeState:
+    if not path.exists():
+        return _ObserverRuntimeState()
+    value = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(value, dict) or not isinstance(
+        value.get("observer_runtime"), dict
+    ):
+        return _ObserverRuntimeState()
+    runtime = value["observer_runtime"]
+    return _ObserverRuntimeState(
+        last_success_observed_at_ms=_optional_nonnegative(
+            runtime.get("last_success_observed_at_ms")
+        ),
+        last_attempt_observed_at_ms=_optional_nonnegative(
+            runtime.get("last_attempt_observed_at_ms")
+        ),
+        consecutive_transient_failures=_nonnegative(
+            runtime.get("consecutive_transient_failures", 0)
+        ),
+        total_transient_failures=_nonnegative(
+            runtime.get("total_transient_failures", 0)
+        ),
+        last_transient_failure=_optional_mapping(runtime.get("last_transient_failure")),
+    )
+
+
+def _nonnegative(value: object) -> int:
+    if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+        raise ValueError("HIP-3 observer runtime counter is invalid")
+    return value
+
+
+def _optional_nonnegative(value: object) -> int | None:
+    return None if value is None else _nonnegative(value)
+
+
+def _optional_mapping(value: object) -> dict[str, object] | None:
+    if value is None:
+        return None
+    if not isinstance(value, dict) or not all(isinstance(key, str) for key in value):
+        raise ValueError("HIP-3 observer transient evidence is invalid")
+    return dict(value)
+
+
+def _signal_stop_reason(received: list[int]) -> str:
+    if not received:
+        return "stop_requested"
+    return f"signal_{signal.Signals(received[-1]).name.lower()}"
 
 
 def _token(symbol: str) -> str:

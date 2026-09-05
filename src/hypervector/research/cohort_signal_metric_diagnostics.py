@@ -6,10 +6,17 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 import math
 
-_MINUTE_MS = 60_000
+from hypervector.research.cohort_forward_paths import (
+    non_overlapping_count as _non_overlapping_count,
+)
+from hypervector.research.cohort_signal_metric_values import (
+    MetricAvailability,
+    MetricValue as _MetricValue,
+    metric_type as _metric_type,
+    usable_metrics as _usable_metrics,
+)
+
 _VALID_STATUSES = frozenset({"resolved", "censored", "missing_data"})
-_EXPLICIT_UNAVAILABLE_CATEGORIES = frozenset({"breakout_side"})
-_MetricValue = str | int | float | bool | None
 _CategoryKey = tuple[str, str]
 
 
@@ -174,6 +181,7 @@ class MetricDiagnosticsAccumulator:
             raise ValueError("metric horizons must be positive integer minutes")
         self._horizons = tuple(sorted(horizons))
         self._metrics: dict[str, _MetricEvidence] = {}
+        self._availability = MetricAvailability(self._horizons)
         self._horizon_calls = dict.fromkeys(self._horizons, 0)
         self._last_decision_time_ms: dict[int, int | None] = dict.fromkeys(
             self._horizons
@@ -181,14 +189,22 @@ class MetricDiagnosticsAccumulator:
         self._evaluations = 0
         self._evaluations_with_metrics = 0
 
-    def observe_evaluation(self, metrics: Mapping[str, object]) -> None:
+    def observe_evaluation(
+        self,
+        metrics: Mapping[str, object],
+        *,
+        explicitly_unavailable: frozenset[str] = frozenset(),
+    ) -> None:
         """Observe one deduplicated evaluation's point-in-time metric mapping."""
         usable = _usable_metrics(metrics)
+        unavailable = self._availability.observe_evaluation(
+            metrics, explicitly_unavailable
+        )
         prior_evaluations = self._evaluations
         self._evaluations += 1
         self._evaluations_with_metrics += bool(usable)
         for name, evidence in self._metrics.items():
-            if name not in usable:
+            if name not in usable and name not in unavailable:
                 evidence.missing_evaluations += 1
         for name, value in usable.items():
             evidence = self._metrics.get(name)
@@ -202,8 +218,10 @@ class MetricDiagnosticsAccumulator:
         *,
         horizon_minutes: int,
         decision_time_ms: int,
+        path_start_time_ms: int | None = None,
         status: str,
         directional_return_bps: float | None,
+        explicitly_unavailable: frozenset[str] = frozenset(),
     ) -> None:
         """Pair one metric map with an existing causal horizon resolution."""
         _validate_horizon_observation(
@@ -214,16 +232,24 @@ class MetricDiagnosticsAccumulator:
             directional_return_bps,
         )
         usable = _usable_metrics(metrics)
+        unavailable = self._availability.observe_horizon(
+            metrics, horizon_minutes, explicitly_unavailable
+        )
         unknown = set(usable).difference(self._metrics)
         if unknown:
             raise ValueError("metric horizon observed before its evaluation")
         self._advance_decision_time(horizon_minutes, decision_time_ms)
+        causal_start = (
+            decision_time_ms if path_start_time_ms is None else path_start_time_ms
+        )
+        if causal_start < decision_time_ms or causal_start % 60_000:
+            raise ValueError("metric path start must be aligned and causal")
         self._horizon_calls[horizon_minutes] += 1
         for name, evidence in self._metrics.items():
             horizon = evidence.horizons[horizon_minutes]
             value = usable.get(name)
             if value is None:
-                horizon.metric_missing += 1
+                horizon.metric_missing += name not in unavailable
                 if evidence.kind == "categorical":
                     horizon.last_category_key = None
                 continue
@@ -232,7 +258,7 @@ class MetricDiagnosticsAccumulator:
                 evidence,
                 horizon,
                 value,
-                decision_time_ms,
+                causal_start,
                 status,
                 directional_return_bps,
             )
@@ -268,46 +294,19 @@ class MetricDiagnosticsAccumulator:
             kind=kind,
             value_type=value_type,
             horizons={
-                value: _MetricHorizon(metric_missing=self._horizon_calls[value])
+                value: _MetricHorizon(
+                    metric_missing=self._availability.prior_horizon_gaps(
+                        name, value, self._horizon_calls[value]
+                    )
+                )
                 for value in self._horizons
             },
-            missing_evaluations=prior_evaluations,
+            missing_evaluations=self._availability.prior_evaluation_gaps(
+                name, prior_evaluations
+            ),
         )
         self._metrics[name] = evidence
         return evidence
-
-
-def _usable_metrics(metrics: Mapping[str, object]) -> dict[str, _MetricValue]:
-    output: dict[str, _MetricValue] = {}
-    for raw_name, raw_value in metrics.items():
-        if not isinstance(raw_name, str) or not raw_name.strip():
-            raise ValueError("metric names must be non-empty text")
-        name = raw_name.strip()
-        if raw_value is None:
-            if name not in _EXPLICIT_UNAVAILABLE_CATEGORIES:
-                continue
-            raw_value = "unavailable"
-        if not isinstance(raw_value, (str, int, float, bool)):
-            raise ValueError(f"metric {raw_name} has an unsupported value")
-        _metric_type(raw_value)
-        output[name] = raw_value
-    return output
-
-
-def _metric_type(value: _MetricValue) -> tuple[str, str]:
-    if isinstance(value, bool):
-        return "categorical", "bool"
-    if isinstance(value, int):
-        return "categorical", "int"
-    if isinstance(value, float):
-        if not math.isfinite(value):
-            raise ValueError("numeric metric values must be finite")
-        return "numeric", "float"
-    if isinstance(value, str):
-        if not value.strip():
-            raise ValueError("categorical metric values must be non-empty")
-        return "categorical", "str"
-    raise ValueError("metric has an unsupported value")
 
 
 def _observe_metric_value(
@@ -489,16 +488,3 @@ def _horizon_payload(
             for _, item in sorted(horizon.category_onsets.items())
         ]
     return output
-
-
-def _non_overlapping_count(
-    decision_times_ms: Sequence[int], horizon_minutes: int
-) -> int:
-    count = 0
-    next_available = -1
-    for decision_time_ms in sorted(decision_times_ms):
-        if decision_time_ms < next_available:
-            continue
-        count += 1
-        next_available = decision_time_ms + horizon_minutes * _MINUTE_MS
-    return count

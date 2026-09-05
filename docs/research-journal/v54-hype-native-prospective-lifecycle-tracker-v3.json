@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "generated_at_utc": "2026-08-18T06:06:37Z",
+  "hypothesis_id": "v54-hype-native-prospective-lifecycle-tracker-v3",
+  "supersedes": "v54-hype-native-prospective-lifecycle-tracker-v2",
+  "status": "continuous_report_only_watcher_running_waiting_for_signal",
+  "recommendation": "Continue the isolated HYPE-native long challenger and collect exact prospective lifecycles; do not transfer the mechanism across assets or request a live promotion from a zero-trade sample.",
+  "why_now": "The original HYPE-only seed remains the strongest evidence, cross-asset transfer is rejected, and the verified one-shot lifecycle tracker is now operating continuously instead of requiring manual refreshes.",
+  "evidence_reviewed": [
+    "docs/research-journal/v54-hype-native-prospective-lifecycle-tracker-v2.json",
+    "docs/research-journal/v54-hype-native-long-challenger-technical-disposition-v1.json",
+    "data/runtime/research/hype_native_v54_prospective_lifecycle_latest.json"
+  ],
+  "observed_problem_or_opportunity": "The isolated observer is technically healthy but has not produced a post-activation eligible HYPE long. The unresolved question is prospective after-cost lifecycle economics, not source-mechanism parity.",
+  "applicable_market_regime": "All prospectively observed HYPE regimes; regime is retained as context and does not silently gate the trial.",
+  "alternatives_considered": [
+    "Blindly transfer the HYPE mechanism to other assets; rejected by negative live evidence.",
+    "Add the tested 15-minute adverse-context censor; rejected because it worsened development and opened-period results.",
+    "Promote from the historical seed; deferred because the independent long-only forward sample is only two trades and is largest-winner dependent."
+  ],
+  "proposed_live_change": "None. The watcher is report-only, has execution_authority=none, and does not modify or restart v53.",
+  "expected_upside": "The next eligible HYPE-long signal will automatically create a causally attributable lifecycle record and later an immutable state snapshot without another manual research cycle.",
+  "main_risks_and_failure_modes": [
+    "Zero eligible signals still provide no economic evidence.",
+    "Funding and venue mark stop truth remain unavailable in the proxy contract.",
+    "A finite-depth book gap over 45000 milliseconds makes the lifecycle technically unresolved.",
+    "The observer could be too sparse to resolve the economic question quickly."
+  ],
+  "validation_completed": {
+    "watcher_pid": 2293,
+    "watch_interval_seconds": 30,
+    "status_path": "data/runtime/research/hype_native_v54_prospective_lifecycle_latest.json",
+    "snapshot_directory": "data/logs/research/hype_native_v54_prospective_lifecycles",
+    "run_id": "bidirectional-observe-1787029740833",
+    "profile_fingerprint": "1c0beafb19ef1b8c5594d3bf1aa6a23eeff12f28f540d958953cc25e8bff1643",
+    "watch_state_id": "ca6f96e9bc1de57c0b91bef0213df18371eaaafb22d9470e949b521317e94ca4",
+    "eligible_long_entries": 0,
+    "resolved_lifecycles": 0,
+    "execution_authority": "none",
+    "live_v53_backend_unchanged": true,
+    "live_v53_assets_flat": [
+      "BTC",
+      "HYPE"
+    ],
+    "focused_and_relevant_tests_passed": 27
+  },
+  "validation_still_required": [
+    "At least one eligible long and one complete causal lifecycle.",
+    "Exact funding and venue mark evidence before treating proxy PnL as live-execution parity.",
+    "A sufficient independent sample to evaluate profit factor and largest-winner dependence."
+  ],
+  "success_metrics": [
+    "Every eligible HYPE long is recorded exactly once.",
+    "Every resolved lifecycle includes after-friction proxy economics, excursion, and exit attribution.",
+    "Identity drift or evidence gaps fail closed.",
+    "No order, signer, routing, sizing, or live-configuration authority exists."
+  ],
+  "failure_or_rollback_triggers": "Stop the report-only watcher on identity drift, malformed ledger evidence, duplicate lifecycle publication, or loss of its runtime lock. No trading rollback applies because v53 is unchanged.",
+  "confidence_level": "High confidence in watcher isolation and exact identity binding from tests plus the real bounded run; low confidence in profitability until prospective lifecycles resolve.",
+  "claim_falsifiers": [
+    "Any watcher-produced action, order, signer, or live authority would falsify isolation.",
+    "Any duplicate or identity-mismatched lifecycle would falsify exact attribution.",
+    "A sufficiently sized negative after-cost, ex-largest-winner forward sample would falsify the HYPE-native economic hypothesis."
+  ],
+  "explicit_approval_requested": false
+}

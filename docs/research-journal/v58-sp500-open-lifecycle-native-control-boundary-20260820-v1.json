@@ -1,0 +1,264 @@
+{
+  "schema_version": 1,
+  "mode": "v58_sp500_open_lifecycle_native_control_boundary",
+  "hypothesis_id": "v58-sp500-open-lifecycle-native-control-boundary-v1",
+  "revision_number": 1,
+  "created_at_utc": "2026-08-20T20:58:07Z",
+  "status": "provisional_open_lifecycle_observation",
+  "live_identity": {
+    "run_id": "bidirectional-live-1787166474078",
+    "profile_id": "multi_asset_growth_first_5000_eight_asset_incremental_v58",
+    "profile_fingerprint": "8a04636c9ff60a7eae141381cb540d7c6ceed081097cda7d5e465d48faa5022b",
+    "provider_id": "hip3_breakout_pressure_sp500_spcx_fresh15s_bidirectional_v3",
+    "signal_strategy_id": "hip3_breakout_pressure_sp500_spcx_fresh15s_bidirectional_v3",
+    "route": "hip3_breakout_pressure_sp500_spcx_fresh15s_bidirectional_v3|xyz:SP500",
+    "symbol": "xyz:SP500",
+    "side": "short",
+    "lifecycle_id": "xyz:SP500:520755869955"
+  },
+  "frozen_observation": {
+    "checkpoint_generated_at_utc": "2026-08-20T20:55:52.469834+00:00",
+    "backend_state": "running_consistent",
+    "backend_process_health": "healthy",
+    "heartbeat_status": "running",
+    "heartbeat_age_seconds": 5.27938,
+    "runtime_faults": 0,
+    "configuration_matches_runtime": true,
+    "position_state": "open_protected",
+    "entry": {
+      "price": 7692.4,
+      "size": 0.223,
+      "expected_reference_price": 7692.1,
+      "timestamp_ms": 1787225415947,
+      "slippage_bps": -0.39001053028337174,
+      "entry_fee_usd": 0.148211
+    },
+    "marked_economics": {
+      "mark_price": 7646.5,
+      "market_reference_price": 7645.9,
+      "unrealized_pnl_usd": 10.2357,
+      "marked_net_pnl_usd": 10.076744,
+      "funding_usd": -0.010745000000000001,
+      "margin_used_usd": 353.157784,
+      "position_value_usd": 1705.1695,
+      "leverage": 5.0,
+      "liquidation_price": 9138.7793988367,
+      "liquidation_distance_pct": 19.51584906606551,
+      "status": "provisional_open"
+    },
+    "venue_protection": {
+      "reduce_only_stop_oid": 520755909739,
+      "stop_trigger_price": 7753.9392,
+      "target_order": null,
+      "protected_if_open": true
+    },
+    "bound_exit_contract": {
+      "protective_stop_bps": 80.0,
+      "profit_lock_policy": "completed_bar_trailing",
+      "profit_lock_activation_bps": 100.0,
+      "profit_lock_floor_bps": 40.0,
+      "profit_lock_giveback_bps": 80.0,
+      "opposite_intent_exit_scope": "selected_opposite_from_any_executable_provider_same_symbol",
+      "maximum_hold_policy": "fixed",
+      "maximum_hold_seconds": 86400,
+      "maximum_hold_deadline_ms": 1787311800000,
+      "provider_recipe_exit_policy": "ignore"
+    },
+    "completed_one_minute_path": {
+      "completed_bars": 564,
+      "highest_price": 7697.5,
+      "lowest_price": 7636.5,
+      "maximum_favorable_excursion_bps": 72.66912797046388,
+      "maximum_adverse_excursion_bps": 6.629920440954784,
+      "current_directional_return_bps": 59.66928396859195,
+      "peak_giveback_bps": 12.999844001871928,
+      "continuous_path_claim": false
+    },
+    "current_signal_context": {
+      "decision_action": "hold",
+      "eligible": false,
+      "reason": "fresh_breakout_onset_absent",
+      "decision_time_ms": 1787258700000,
+      "pressure_status": "available",
+      "pressure_age_seconds": 2.908,
+      "pressure_snapshot_count": 147,
+      "pressure_imbalance_10": 0.5909965958445829,
+      "opposite_exit_signal_observed": false
+    },
+    "native_profit_protection": {
+      "status": "open_profit_unprotected",
+      "activation_reached": false,
+      "reason": "completed_bar_maximum_favorable_excursion_is_below_100_bps",
+      "estimated_exit_now_net_usd": 9.929417364424626,
+      "estimated_original_stop_net_usd": -14.031594288000036,
+      "marked_to_stop_giveback_usd": 23.961011652424663,
+      "protected_profit_fraction": 0.0,
+      "actual_exit_fill_claim": false
+    }
+  },
+  "diagnostic_exit_comparison": {
+    "measurement_scope": "open_completed_bar_counterfactual_excluding_funding_and_additional_exit_slippage",
+    "control": {
+      "policy_id": "native_v58_100_40_80",
+      "status": "not_activated",
+      "estimated_current_exit_net_usd": 9.940162364424546,
+      "actual_exit_fill_claim": false
+    },
+    "challengers": {
+      "a25_floor15_trail10": {
+        "status": "triggered_before_current_boundary",
+        "estimated_net_pnl_excluding_funding_usd": 5.444316956964346,
+        "estimated_minus_current_exit_net_excluding_funding_usd": -4.495845407460201
+      },
+      "a40_floor15_trail20": {
+        "status": "triggered_before_current_boundary",
+        "estimated_net_pnl_excluding_funding_usd": 3.7362123894884585,
+        "estimated_minus_current_exit_net_excluding_funding_usd": -6.203949974936088
+      },
+      "a60_floor15_trail30": {
+        "status": "armed_not_triggered",
+        "activation_timestamp_ms": 1787255040000,
+        "active_stop_price": 7659.409499999999,
+        "estimated_net_pnl_excluding_funding_usd": 7.0610951345219775,
+        "estimated_minus_current_exit_net_excluding_funding_usd": -2.879067229902569
+      }
+    },
+    "point_in_time_ordering": [
+      "native_current_boundary",
+      "a60_floor15_trail30",
+      "a25_floor15_trail10",
+      "a40_floor15_trail20"
+    ],
+    "interpretation": "At this open boundary, retaining the native position is ahead of all three fixed lower-activation diagnostics. This is a censored observation, not an exit-policy selection or profitability claim."
+  },
+  "future_only_experiment_state": {
+    "hypothesis_id": "v58-sp500-lower-activation-profit-lock-future-only-v1",
+    "capture_start_ms": 1787233570889,
+    "excluded_current_lifecycle": true,
+    "prospective_evaluations": 29,
+    "prospective_eligible_evaluations": 1,
+    "unattributed_eligible_evaluations": 1,
+    "attributable_long_entries": 0,
+    "attributable_short_entries": 0,
+    "resolved_lifecycles": 0,
+    "state": "eligible_evidence_unattributed",
+    "minimum_diagnostic_evidence_met": false,
+    "live_change_supported": false
+  },
+  "prior_research_disposition": {
+    "hypothesis_id": "sp500-breakout-profit-lock-l2-proxy",
+    "decision": "reject_25_15_10_and_40_15_20_withhold_60_15_30",
+    "reason": "The tighter policies failed frozen validation or development requirements. The current open lifecycle is hypothesis-formation evidence and cannot reverse that disposition."
+  },
+  "Recommendation": "Keep the V58 SP500 entry, 80-bps venue stop, opposite-intent exit, 100/40/80 completed-bar profit lock, and 24-hour maximum-hold contract unchanged. Reconcile the authoritative venue close when it occurs and continue the separately frozen future-only long-and-short experiment.",
+  "Why now": "This lifecycle has the portfolio's largest marked-to-original-stop giveback, while actual capital remains open and the lower-activation future-only experiment still has no attributable lifecycle.",
+  "Evidence reviewed": "The exact V58 checkpoint prefix, the continuous-improvement report, the future-only route status, the exact V58 configuration, the preregistration and first occupied-signal journal, and the prior SP500 profit-lock disposition.",
+  "Observed problem or opportunity": "The open short is profitable but has no protected profit because its 72.67-bps completed-bar MFE is below the frozen 100-bps activation. This creates a profit-capture question, but every observed lower-activation challenger currently trails the native marked boundary.",
+  "Applicable market regime": "Exact source-native SP500 fresh15-v3 short lifecycle under the observed completed-15m breakout-pressure entry; no general regime or side claim is made.",
+  "Alternatives considered": "Close or change the live lifecycle post hoc, install 25/15/10, install 40/15/20, install 60/15/30, add a fixed target, or preserve the frozen native control. The first five would confound or overfit the open observation.",
+  "Proposed live change": null,
+  "Expected upside": "Preserving the control yields an attributable actual close and avoids converting one favorable open path into a retrospective exit rule. The future-only experiment can later test whether lower activation improves both sides after exact costs.",
+  "Main risks and failure modes": "The open profit can reverse before native activation; the stop can gap; current exit estimates omit future funding and additional slippage; one open short cannot establish expectancy; and future-only cadence may remain sparse or one-sided.",
+  "Validation completed": "Run/profile/route identity, actual entry fill, venue-owned protective stop, bound exit plan, completed-candle excursion coverage, current signal state, current cost accounting, three fixed diagnostic policy states, and future-only boundary exclusion are reconciled.",
+  "Validation still required": "The actual exit fill, exit depth/slippage, final fees and funding, final stop/opposite-signal/profit-lock/maximum-hold attribution, and at least one post-boundary resolved lifecycle per configured side with complete policy evidence.",
+  "Success metrics": "For diagnosis, resolve this exact close without technical gaps. For any later policy proposal, meet the preregistered both-side lifecycle minimum and show positive after-cost net, PF above 1, and positive largest-winner-removed results across causal development and independent forward evidence.",
+  "Failure / rollback triggers": "No live change exists to roll back. Escalate immediately if the stop is absent or non-reduce-only, run/profile identity changes unexpectedly, execution/funding evidence becomes unreconciled, or a close disappears without an exact lifecycle record.",
+  "Confidence level": "High on current technical reconciliation and arithmetic; low on economic inference because the lifecycle is still open, one-sided, and excluded from the future-only selection sample.",
+  "Explicit approval requested": false,
+  "single_highest_value_next_investigation": "Reconcile the actual close of xyz:SP500:520755869955 against the native 100/40/80 control and all three frozen diagnostic exits, then continue collecting the first attributable future-only long and short lifecycles without retuning.",
+  "falsifiers_and_update_triggers": [
+    "An exact venue close plus final costs reverses the current native-versus-challenger ordering.",
+    "A future-only both-side sample satisfying the frozen evidence contract supports a different exit policy after costs and largest-winner removal.",
+    "The recorded checkpoint, continuous report, or configuration identity cannot be reproduced from its declared hash and bytes.",
+    "The protective stop or execution-plan identity fails venue reconciliation.",
+    "A technical data gap invalidates completed-bar excursion or diagnostic-trigger attribution."
+  ],
+  "limitations": [
+    "This artifact freezes a point-in-time open state and is not the authoritative final lifecycle outcome.",
+    "Marked PnL and current-exit estimates are provisional and not actual exit fills.",
+    "Counterfactual diagnostic economics exclude funding and additional exit slippage.",
+    "The current lifecycle predates the future-only boundary and may not select or rank a policy.",
+    "The prior historical study uses causal L2-midpoint proxy OHLC rather than exact venue trade and mark OHLC.",
+    "No claim is made that the native policy is optimal; only that it leads these three challengers at this boundary.",
+    "This artifact cannot route, size, enter, close, restart, pause, retune, or promote a strategy."
+  ],
+  "evidence": [
+    {
+      "path": "data/runtime/bidirectional_cohort/latest_checkpoint.json",
+      "snapshot_generated_at_utc": "2026-08-20T20:55:52.469834+00:00",
+      "sha256": "b517ca5f6478665d13eb1a83496e5d6fd962bf028ececd6a15df014529cce39e",
+      "bytes": 11133775,
+      "role": "exact_point_in_time_live_checkpoint"
+    },
+    {
+      "path": "data/runtime/research/v58_continuous_improvement_latest.json",
+      "snapshot_generated_at_utc": "2026-08-20T20:54:51.112643+00:00",
+      "sha256": "069720e47ff85510d02124a38e38d4b45fc163fa64ce1c861fa7d1ddd1fbff1a",
+      "bytes": 204633,
+      "role": "continuous_improvement_selection_and_hypothesis_ledger"
+    },
+    {
+      "path": "data/runtime/research/v58_sp500_lower_activation_profit_lock_future_only_latest.json",
+      "snapshot_observed_at_utc": "2026-08-20T20:55:52.469834+00:00",
+      "sha256": "8cc96291d9918fa1da9da2233b86e8d4cf22846e162e2596c3bb3ba9cc93e583",
+      "bytes": 2904,
+      "role": "future_only_route_lifecycle_status"
+    },
+    {
+      "path": "configs/multi_asset_growth_first_5000_eight_asset_incremental_v58.toml",
+      "sha256": "1c1c1656233b074df2ed3adcee8cb8cb2c58f0d191cc9f9ac34799478fca3378",
+      "bytes": 6142,
+      "role": "active_profile_and_exit_contract"
+    },
+    {
+      "path": "docs/research-journal/v58-sp500-lower-activation-profit-lock-future-only-preregistration-20260820-v1.json",
+      "sha256": "e98efea4538fec337a22a557f545df34cc139310216276d165a5f6db537bf988",
+      "bytes": 5318,
+      "role": "future_only_experiment_contract"
+    },
+    {
+      "path": "docs/research-journal/v58-sp500-first-future-only-occupied-signal-20260820-v1.json",
+      "sha256": "93949317206070efdaa5bb9f16fce90040f2be14eb4390ba0df49785717b5474",
+      "bytes": 12113,
+      "role": "first_post_boundary_eligible_signal_occupied_by_current_short"
+    },
+    {
+      "path": "docs/research-journal/sp500-breakout-profit-lock-l2-proxy-v1.json",
+      "sha256": "954ddad2cb518f0fd9dbb002cf9b8213d628679f8a5ed8aa0fd730be24ef3dd1",
+      "bytes": 3709,
+      "role": "prior_fixed_policy_disposition"
+    }
+  ],
+  "generator_identity": [
+    {
+      "path": "src/hypervector/research/cohort_open_profit_lock_challenger.py",
+      "sha256": "76bcdcd55cc15e0b99c1952b2376ec5ce32d1ce1f12367bfe867a1c68969ca20",
+      "bytes": 10390
+    },
+    {
+      "path": "src/hypervector/research/v58_live_open_lifecycles.py",
+      "sha256": "a180af6d9744897527a4708a6d10fa87a03061029605c2c7eb386681692ed5a6",
+      "bytes": 19805
+    },
+    {
+      "path": "src/hypervector/research/v58_live_profit_lock_context.py",
+      "sha256": "eb9504b1f0e200985fca756b83177a9627a20d15f3482e9e35f0166c20d08150",
+      "bytes": 7492
+    },
+    {
+      "path": "src/hypervector/research/v58_current_investigation.py",
+      "sha256": "47863a5312bc480e3386a0839f55e8b425c9f4ef3fe3295cd69a8ee7f43afab5",
+      "bytes": 16065
+    }
+  ],
+  "contract": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_live_change": false,
+    "automatic_retuning": false,
+    "automatic_promotion": false,
+    "runtime_strategy_changed": false,
+    "orders_or_fills_created": false,
+    "live_configuration_changed": false
+  }
+}

@@ -32,6 +32,9 @@ from hypervector.research.cohort_signal_candidates import (
     SignalCandidate,
     evaluation_candidates,
 )
+from hypervector.research.cohort_signal_pressure_translation import (
+    build_signal_pressure_translation,
+)
 
 Record = Mapping[str, object]
 _DEFAULT_HORIZONS = (5, 15, 30, 60)
@@ -106,12 +109,7 @@ def build_orderbook_opportunity_diagnostics(
 ) -> dict[str, object]:
     """Relate causal one-blocker paths to the latest prior L2 observation."""
     horizons = validated_horizons(horizons_minutes)
-    if (
-        isinstance(maximum_book_age_ms, bool)
-        or not isinstance(maximum_book_age_ms, int)
-        or maximum_book_age_ms < 1
-    ):
-        raise ValueError("maximum book age must be a positive integer")
+    maximum_age = _validated_book_age(maximum_book_age_ms)
     hurdles = opportunity_hurdles(
         estimated_round_trip_friction_bps,
         robust_gross_move_bps,
@@ -127,21 +125,40 @@ def build_orderbook_opportunity_diagnostics(
             books,
             candles,
             horizons,
-            maximum_book_age_ms,
+            maximum_age,
             coverage,
             buckets,
         )
+    return _report(
+        horizons,
+        maximum_age,
+        hurdles,
+        coverage,
+        candidates,
+        books,
+        buckets,
+        provider_cadence_minutes,
+    )
+
+
+def _validated_book_age(value: int) -> int:
+    if isinstance(value, bool) or not isinstance(value, int) or value < 1:
+        raise ValueError("maximum book age must be a positive integer")
+    return value
+
+
+def _report(
+    horizons: Sequence[int],
+    maximum_book_age_ms: int,
+    hurdles: OpportunityHurdles,
+    coverage: _Coverage,
+    candidates: Sequence[SignalCandidate],
+    books: Mapping[str, tuple[CausalBookSnapshot, ...]],
+    buckets: Mapping[tuple[str, str, str, str], Mapping[int, _HorizonEvidence]],
+    provider_cadence_minutes: Mapping[str, int] | None,
+) -> dict[str, object]:
     return {
-        "contract": {
-            "report_only": True,
-            "execution_authority": "none",
-            "fills_assumed": False,
-            "pnl_claimed": False,
-            "thresholds_selected": False,
-            "orderbook_alignment_rule": (
-                "directional_opi_above_zero_at_routing_publication"
-            ),
-        },
+        "contract": _contract(),
         "horizons_minutes": list(horizons),
         "maximum_book_age_ms": maximum_book_age_ms,
         "opportunity_hurdles_bps": hurdles.as_payload(),
@@ -158,14 +175,38 @@ def build_orderbook_opportunity_diagnostics(
             horizons_minutes=horizons,
             provider_cadence_minutes=provider_cadence_minutes,
         ),
+        "eligible_pressure_translation": build_signal_pressure_translation(
+            candidates,
+            books,
+            maximum_book_age_ms,
+        ),
         "by_provider_symbol": _summaries(buckets, horizons, hurdles),
-        "limitations": [
-            "L2 snapshots are observations, not proof of queue position or fills",
-            "OPI sign is predeclared context and is not a fitted trading threshold",
-            "only non-overlapping paths support aligned-versus-opposed comparisons",
-            "small or one-sided samples remain descriptive rather than promotable",
-        ],
+        "limitations": _limitations(),
     }
+
+
+def _contract() -> dict[str, object]:
+    return {
+        "report_only": True,
+        "execution_authority": "none",
+        "fills_assumed": False,
+        "pnl_claimed": False,
+        "thresholds_selected": False,
+        "orderbook_alignment_rule": (
+            "directional_opi_above_zero_at_routing_publication"
+        ),
+        "path_start_policy": "first_full_minute_at_or_after_candidate_availability",
+    }
+
+
+def _limitations() -> list[str]:
+    return [
+        "L2 snapshots are observations, not proof of queue position or fills",
+        "OPI sign is predeclared context and is not a fitted trading threshold",
+        "only non-overlapping paths support aligned-versus-opposed comparisons",
+        "small or one-sided samples remain descriptive rather than promotable",
+        "a partial availability minute is excluded from forward candle paths",
+    ]
 
 
 def _provider_pressure_clock(
@@ -240,6 +281,7 @@ def _observe_candidate(
     for horizon in horizons:
         status, path = resolve_directional_path(
             decision_time_ms=candidate.decision_time_ms,
+            available_time_ms=candidate.available_time_ms,
             reference_price=candidate.reference_price,
             side=candidate.side,
             candles=candles.get(candidate.symbol, {}),

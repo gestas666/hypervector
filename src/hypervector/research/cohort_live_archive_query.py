@@ -6,6 +6,16 @@ import duckdb
 
 _TABLES = (
     (
+        "archive_cohort_run_profiles",
+        """
+        SELECT run_id, min(profile_fingerprint) AS profile_fingerprint
+        FROM cohort_live_events
+        WHERE ledger_symbol = 'PORTFOLIO'
+        GROUP BY run_id
+        HAVING count(DISTINCT profile_fingerprint) = 1
+        """,
+    ),
+    (
         "archive_attributed_fills",
         "SELECT * FROM cohort_live_attributed_fills",
     ),
@@ -23,13 +33,28 @@ _TABLES = (
     (
         "archive_entry_acknowledgements",
         """
-        SELECT ledger_symbol AS symbol, source_path, run_id, sequence,
-               profile_fingerprint,
+        SELECT ledger_symbol AS symbol, source_path, run_id,
+               min(sequence) AS sequence, profile_fingerprint,
                CAST(json_extract_string(payload, '$.oid') AS UBIGINT) AS entry_oid
         FROM cohort_live_events
         WHERE event_type = 'order_acknowledgement'
           AND json_extract_string(payload, '$.operation') = 'entry'
           AND CAST(json_extract_string(payload, '$.accepted') AS BOOLEAN) = TRUE
+        GROUP BY ledger_symbol, source_path, run_id, profile_fingerprint, entry_oid
+        """,
+    ),
+    (
+        "archive_open_position_events",
+        """
+        SELECT source_path, run_id, sequence,
+               CAST(json_extract_string(
+                   payload, '$.margin_used_usd') AS DOUBLE) AS margin_used_usd,
+               CAST(json_extract_string(
+                   payload, '$.leverage') AS DOUBLE) AS leverage
+        FROM cohort_live_events
+        WHERE event_type = 'position'
+          AND abs(CAST(json_extract_string(
+              payload, '$.size_signed') AS DOUBLE)) > 0.0
         """,
     ),
     (
@@ -38,22 +63,16 @@ _TABLES = (
         SELECT entry.symbol, entry.venue_timestamp_ms, entry.entry_oid,
                acknowledgement.source_path, acknowledgement.run_id,
                acknowledgement.profile_fingerprint,
-               min(position.sequence) AS position_sequence
+               position.sequence AS position_sequence
         FROM archive_entry_fills AS entry
         JOIN archive_entry_acknowledgements AS acknowledgement
           ON acknowledgement.symbol = entry.symbol
          AND acknowledgement.run_id = entry.entry_run_id
          AND acknowledgement.entry_oid = entry.entry_oid
-        JOIN cohort_live_events AS position
-          ON position.source_path = acknowledgement.source_path
+        ASOF JOIN archive_open_position_events AS position
+          ON acknowledgement.source_path = position.source_path
          AND position.run_id = acknowledgement.run_id
-         AND position.sequence > acknowledgement.sequence
-         AND position.event_type = 'position'
-         AND abs(CAST(json_extract_string(
-             position.payload, '$.size_signed') AS DOUBLE)) > 0.0
-        GROUP BY entry.symbol, entry.venue_timestamp_ms, entry.entry_oid,
-                 acknowledgement.source_path, acknowledgement.run_id,
-                 acknowledgement.profile_fingerprint
+         AND acknowledgement.sequence < position.sequence
         """,
     ),
     (
@@ -61,12 +80,9 @@ _TABLES = (
         """
         SELECT sequence.symbol, sequence.venue_timestamp_ms, sequence.entry_oid,
                sequence.profile_fingerprint,
-               CAST(json_extract_string(
-                   position.payload, '$.margin_used_usd') AS DOUBLE) AS margin_used_usd,
-               CAST(json_extract_string(
-                   position.payload, '$.leverage') AS DOUBLE) AS leverage
+               position.margin_used_usd, position.leverage
         FROM archive_entry_position_sequences AS sequence
-        JOIN cohort_live_events AS position
+        JOIN archive_open_position_events AS position
           ON position.source_path = sequence.source_path
          AND position.run_id = sequence.run_id
          AND position.sequence = sequence.position_sequence
@@ -111,12 +127,14 @@ SELECT close.symbol, close.strategy_id, close.entry_run_id,
        close.entry_direction, close.lifecycle_net_pnl_usd,
        close.lifecycle_fees_usd, close.lifecycle_funding_usd,
        position.margin_used_usd, position.leverage,
-       position.profile_fingerprint, position.entry_oid,
+       cohort.profile_fingerprint, position.entry_oid,
        exit.exit_venue_timestamp_ms
 FROM archive_close_orders AS close
 LEFT JOIN archive_entry_positions AS position
   ON position.symbol = close.symbol
  AND position.venue_timestamp_ms = close.entry_venue_timestamp_ms
+LEFT JOIN archive_cohort_run_profiles AS cohort
+  ON cohort.run_id = close.entry_run_id
 LEFT JOIN archive_exit_fills AS exit
   ON exit.symbol = close.symbol AND exit.exit_oid = close.exit_oid
 ORDER BY exit.exit_venue_timestamp_ms, close.symbol, close.exit_oid

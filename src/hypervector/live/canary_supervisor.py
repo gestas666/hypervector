@@ -5,9 +5,11 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 import json
+import os
 from pathlib import Path
+import signal
 import time
-from typing import Protocol
+from typing import BinaryIO, Protocol
 
 
 class CanaryBackendProcess(Protocol):
@@ -30,15 +32,64 @@ class LedgerStartupSnapshot:
     prior_run_ids: frozenset[str]
 
 
+def signal_process_group(process_group: int, sent_signal: signal.Signals) -> None:
+    """Signal one isolated child process group, tolerating an exit race."""
+    try:
+        os.killpg(process_group, sent_signal)
+    except ProcessLookupError:
+        return
+
+
 def capture_ledger_start(path: Path) -> LedgerStartupSnapshot:
     """Validate and capture one ledger's state before starting a backend."""
-    records = _json_records(path, offset=0, allow_incomplete=False)
-    run_ids = frozenset(
-        run_id
-        for record in records
-        if isinstance((run_id := record.get("run_id")), str) and run_id
-    )
-    return LedgerStartupSnapshot(initial_size=_file_size(path), prior_run_ids=run_ids)
+    try:
+        with path.open("rb") as handle:
+            handle.seek(0, 2)
+            initial_size = handle.tell()
+            handle.seek(0)
+            run_ids = _stream_run_ids(handle, path, initial_size)
+    except FileNotFoundError:
+        return LedgerStartupSnapshot(0, frozenset())
+    return LedgerStartupSnapshot(initial_size, run_ids)
+
+
+def _stream_run_ids(
+    handle: BinaryIO,
+    path: Path,
+    initial_size: int,
+) -> frozenset[str]:
+    """Validate one fixed prefix while retaining only non-secret run IDs."""
+    remaining = initial_size
+    run_ids: set[str] = set()
+    line_number = 0
+    while remaining:
+        raw = handle.readline(remaining)
+        if not raw:
+            raise CanarySupervisorError(f"canary ledger was truncated: {path}")
+        remaining -= len(raw)
+        line_number += 1
+        record = _decode_bounded_record(raw, line_number, path)
+        run_id = record.get("run_id")
+        if isinstance(run_id, str) and run_id:
+            run_ids.add(run_id)
+    return frozenset(run_ids)
+
+
+def _decode_bounded_record(
+    raw: bytes,
+    line_number: int,
+    path: Path,
+) -> dict[str, object]:
+    """Decode one complete bounded-prefix record."""
+    if not raw.endswith(b"\n"):
+        raise CanarySupervisorError(f"canary ledger has an incomplete row: {path}")
+    try:
+        line = raw.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise CanarySupervisorError(
+            f"canary ledger is not valid UTF-8: {path}"
+        ) from exc
+    return _decode_record(line, line_number, path)
 
 
 def wait_for_fresh_configuration_identity(
@@ -76,6 +127,33 @@ def wait_for_fresh_configuration_identity(
     raise CanarySupervisorError(
         f"{backend_label} backend telemetry not ready after {timeout_seconds:.1f}s; "
         f"inspect {log_path}"
+    )
+
+
+def wait_for_checkpoint_readiness(
+    checkpoint: CanaryBackendProcess,
+    *,
+    is_fresh: Callable[[], bool],
+    timeout_seconds: float,
+    log_path: Path,
+    sleep_fn: Callable[[float], None] = time.sleep,
+    monotonic_fn: Callable[[], float] = time.monotonic,
+) -> None:
+    """Wait until a recovered checkpoint writer publishes exact fresh telemetry."""
+    if timeout_seconds <= 0.0:
+        raise CanarySupervisorError("checkpoint timeout seconds must be positive")
+    deadline = monotonic_fn() + timeout_seconds
+    while monotonic_fn() < deadline:
+        result = checkpoint.poll()
+        if result is not None:
+            raise CanarySupervisorError(
+                f"cohort checkpoint writer exited with {result}; inspect {log_path}"
+            )
+        if is_fresh():
+            return
+        sleep_fn(0.25)
+    raise CanarySupervisorError(
+        f"cohort checkpoint not ready after {timeout_seconds:.1f}s; inspect {log_path}"
     )
 
 

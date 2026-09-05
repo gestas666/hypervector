@@ -185,6 +185,8 @@ def _require_complete_candle_coverage(
 
 def _route_config(path: Path, symbol: str) -> Hip3ProspectiveSignalParityConfig:
     report = _json_object(path, "development diagnostic")
+    if report.get("schema_version") == "v51_index_source_parity_forward_v1":
+        return _v51_index_route_config(report, symbol)
     if report.get("symbol") != symbol:
         raise ValueError("selected route symbol does not match requested symbol")
     _require_diagnostic_authority(report)
@@ -206,6 +208,35 @@ def _route_config(path: Path, symbol: str) -> Hip3ProspectiveSignalParityConfig:
         _text(track, "provider_id"),
         _text(track, "profile_id"),
         breakout,
+    )
+
+
+def _v51_index_route_config(
+    report: Mapping[str, object], symbol: str
+) -> Hip3ProspectiveSignalParityConfig:
+    """Load the exact report-only v51 index route contract."""
+    if (
+        report.get("mode") != "report_only"
+        or report.get("execution_authority") != "none"
+        or report.get("automatic_promotion") is not False
+        or report.get("runtime_strategy_changed") is not False
+    ):
+        raise ValueError("v51 index route authority contract is invalid")
+    raw = _mapping(report, "frozen_signal_contract")
+    provider = _text(raw, "provider_id")
+    profiles = _mapping(raw, "profile_ids")
+    route = f"{provider}|{symbol}"
+    if route not in _text_list(report.get("routes"), "v51 index routes"):
+        raise ValueError("selected route symbol does not match requested symbol")
+    breakout = Hip3BreakoutPressureConfig(
+        _integer(raw, "breakout_lookback_bars"),
+        _integer(raw, "fast_ema"),
+        _integer(raw, "slow_ema"),
+        _number(raw, "minimum_abs_imbalance"),
+        _number(raw, "signal_maximum_stop_bps"),
+    )
+    return Hip3ProspectiveSignalParityConfig(
+        symbol, provider, _text(profiles, symbol), breakout
     )
 
 
@@ -375,6 +406,15 @@ def _text(value: Mapping[str, object], key: str) -> str:
     selected = value.get(key)
     if not isinstance(selected, str) or not selected.strip():
         raise ValueError(f"prospective signal evidence {key} must be text")
+    return selected
+
+
+def _text_list(value: object, label: str) -> list[str]:
+    if not isinstance(value, list) or not value:
+        raise ValueError(f"prospective signal evidence {label} must be an array")
+    selected = [item for item in value if isinstance(item, str) and item.strip()]
+    if len(selected) != len(value) or len(set(selected)) != len(selected):
+        raise ValueError(f"prospective signal evidence {label} is invalid")
     return selected
 
 

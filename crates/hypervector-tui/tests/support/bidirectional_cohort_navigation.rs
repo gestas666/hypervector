@@ -85,8 +85,8 @@ fn selected_setup_opens_full_backend_evidence_modal() {
     for expected in [
         "SETUP INSPECTOR // EXACT DECISION EVIDENCE",
         "hypervelocity_source_follow_bidirectional_5m_v1",
-        "ARRIVAL 12:00:00 EDT",
-        "DECISION 11:59:59 EDT",
+        "ARRIVAL ET 12:00:00 EDT",
+        "DECISION ET 08-01 11:59:59 EDT",
         "READINESS 66.7%",
         "PRIMARY 5M TREND_UP",
         "WAITING 5M PRIMARY ONSET",

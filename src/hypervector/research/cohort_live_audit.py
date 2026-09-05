@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
+from datetime import datetime
+
 from hypervector.live.sol_range_onset_live_journal import build_live_journal
 from hypervector.research.cohort_canonical_regime_telemetry import (
     build_canonical_regime_telemetry_summary,
@@ -32,6 +34,9 @@ from hypervector.research.cohort_live_audit_values import (
 )
 from hypervector.research.cohort_live_audit_values import (
     mapping_list as _mapping_list,
+)
+from hypervector.research.cohort_live_audit_values import (
+    nonnegative_int as _nonnegative_int,
 )
 from hypervector.research.cohort_live_audit_values import (
     provider_cadence_minutes as _provider_cadence_minutes,
@@ -115,6 +120,8 @@ from hypervector.research.cohort_trade_reflections import (
 )
 
 Record = Mapping[str, object]
+_SUPPORT_DECAY_SOL_PROVIDER = "hype_breakout_onset_bidirectional_v1|SOL"
+_SUPPORT_DECAY_REQUIRED_POLICY = "a40_floor15_trail20"
 
 
 def audit_multi_asset_live_run(
@@ -128,11 +135,12 @@ def audit_multi_asset_live_run(
     cohort = validated_records(cohort_records, "cohort")
     selected, identity = select_armed_live_run(cohort, run_id)
     symbols = _configured_symbols(identity)
+    asset_cutoff = _latest_snapshot_time(selected)
     selected_assets, history_assets = select_asset_evidence(
         asset_records,
         symbols,
         _run_id(identity),
-        as_of=_timestamp(selected[-1]),
+        as_of=asset_cutoff,
     )
     all_time_source = all_time_asset_records or asset_records
     all_time_symbols = tuple(sorted(all_time_source))
@@ -140,7 +148,7 @@ def audit_multi_asset_live_run(
         all_time_source,
         all_time_symbols,
         _run_id(identity),
-        as_of=_timestamp(selected[-1]),
+        as_of=asset_cutoff,
     )
     journals = {
         symbol: build_live_journal(rebased(rows))
@@ -164,7 +172,7 @@ def audit_multi_asset_live_run(
     classification["strategy_scorecard"] = _live_scorecard(
         identity, classification, execution
     )
-    health = health_summary(selected_assets)
+    health = health_summary(selected, selected_assets)
     coverage = build_coverage(
         selected,
         symbols,
@@ -182,6 +190,16 @@ def audit_multi_asset_live_run(
         health,
         coverage,
     )
+
+
+def _latest_snapshot_time(selected: Sequence[Record]) -> datetime:
+    """Bind asset evidence to the latest authoritative portfolio snapshot."""
+    snapshots = tuple(
+        row for row in selected if row.get("event_type") == "cohort_snapshot"
+    )
+    if not snapshots:
+        raise ValueError("cohort audit requires a portfolio snapshot")
+    return _timestamp(snapshots[-1])
 
 
 def _live_scorecard(
@@ -397,13 +415,13 @@ def _resolved_exit_evidence(
             all_time_reflected_trades,
         )
     )
-    profit_lock["support_decay_all_time_live_mechanism"] = (
-        build_support_decay_profit_lock_mechanism(
-            all_time_cohort,
-            all_time_assets,
-            all_time_reflected_trades,
-        )
+    support_decay = build_support_decay_profit_lock_mechanism(
+        all_time_cohort,
+        all_time_assets,
+        all_time_reflected_trades,
     )
+    if _has_displayable_support_decay_sol_observation(support_decay):
+        profit_lock["support_decay_all_time_live_mechanism"] = support_decay
     profit_lock["support_decay_retrace_all_time_live_mechanism"] = (
         build_support_decay_retrace_mechanism(
             all_time_cohort,
@@ -424,6 +442,26 @@ def _resolved_exit_evidence(
             open_trades=open_reflected_trades,
         ),
     }
+
+
+def _has_displayable_support_decay_sol_observation(report: Record) -> bool:
+    providers = _mapping(report.get("by_provider_symbol"), "support-decay providers")
+    raw_sol = providers.get(_SUPPORT_DECAY_SOL_PROVIDER)
+    if raw_sol is None:
+        return False
+    sol = _mapping(raw_sol, "support-decay SOL provider")
+    policies = _mapping(sol.get("summary_by_policy"), "support-decay SOL policies")
+    a40 = _mapping(
+        policies.get(_SUPPORT_DECAY_REQUIRED_POLICY),
+        "support-decay SOL A40 policy",
+    )
+    return (
+        _nonnegative_int(
+            a40.get("eligible_lifecycles"),
+            "support-decay SOL A40 eligible lifecycles",
+        )
+        > 0
+    )
 
 
 def _audit_document(

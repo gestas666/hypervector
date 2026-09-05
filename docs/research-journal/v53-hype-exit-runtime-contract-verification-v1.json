@@ -1,0 +1,120 @@
+{
+  "schema_version": "v53_hype_exit_runtime_contract_verification_v1",
+  "created_at_utc": "2026-08-17T19:38:58Z",
+  "hypothesis_id": "V53_HYPE_EXIT_RUNTIME_PARITY_V1",
+  "state": "accepted_runtime_contract_forward_economics_pending",
+  "execution_authority": "none",
+  "report_only": true,
+  "automatic_live_change": false,
+  "runtime_strategy_changed": false,
+  "recommendation": "Keep the current v53 HYPE exit contract unchanged while capturing the first exact lifecycle. The runtime does close on a fresh eligible opposite aligned strategy intent; previously tested fixed profit locks and regime-loss exits underperformed the control.",
+  "runtime_identity": {
+    "run_id": "bidirectional-live-1786942233732",
+    "profile_id": "multi_asset_growth_first_5000_hype_freshness_repair_v53",
+    "profile_fingerprint": "f6378e473088b962724176f1b4aaf0857d4e2a6c3bf0103c2d1794d6bfd46a82",
+    "strategy_id": "hype_breakout_compression_alignment_bidirectional_v2",
+    "symbol": "HYPE"
+  },
+  "verified_runtime_contract": {
+    "position_policy": "enter_and_close",
+    "configured_sides": [
+      "long",
+      "short"
+    ],
+    "opposite_signal_exit": "A fresh eligible opposite aligned HYPE intent becomes a close action before any reversal entry.",
+    "same_side_signal": "Withheld while the same-side position is open; it cannot stack exposure.",
+    "protective_stop_bps": 80.0,
+    "fixed_target": null,
+    "soft_maximum_hold_seconds": 28800,
+    "hard_maximum_hold_seconds": 86400,
+    "maximum_hold_policy": "extend_while_regime_supported",
+    "provider_recipe_exit_policy": "ignore",
+    "provider_recipe_exit_policy_interpretation": "This disables a separate provider-authored exit_sides recipe. It does not disable the shared router's opposite-strategy-intent close path."
+  },
+  "research_exit_comparison": {
+    "control": {
+      "completed_trades": 138,
+      "net_return_bps": 1424.528247905308,
+      "profit_factor": 1.1571195502620892,
+      "maximum_drawdown_bps": 1500.0475218648126,
+      "net_excluding_largest_winner_bps": -584.448880123871
+    },
+    "fixed_profit_protection_challengers": {
+      "activation_25_floor_15_giveback_10_net_bps": -1850.4565209012687,
+      "activation_40_floor_15_giveback_20_net_bps": -1542.7352511968259,
+      "activation_60_floor_15_giveback_30_net_bps": -1525.0217173128394,
+      "development_disposition": "retain_control_exit"
+    },
+    "regime_loss_exit_challenger": {
+      "candidate_minus_actual_development_net_bps": -245.06983895740177,
+      "candidate_minus_actual_later_confirmation_net_bps": -275.48368402713015,
+      "disposition": "reject_transferred_exit"
+    },
+    "aligned_entry_development": {
+      "completed_trades": 41,
+      "net_return_bps": 2298.2324439484123,
+      "profit_factor": 1.8569147214819552,
+      "positive_folds": 3,
+      "fold_count": 5,
+      "net_excluding_largest_winner_bps": 289.2553159192332,
+      "short_net_excluding_largest_winner_bps": -351.354111800601
+    }
+  },
+  "source_evidence": [
+    {
+      "path": "configs/multi_asset_growth_first_5000_hype_freshness_repair_v53.toml",
+      "bytes": 2038,
+      "sha256": "d1f6a4e6eb77ba9d8ad1069e703e54611feeaacec6242ac0000eb6f0f0ee4f2b"
+    },
+    {
+      "path": "src/hypervector/live/bidirectional_intents.py",
+      "bytes": 14466,
+      "sha256": "3dc1f9ba864b055c307c8723b4fa0aef1ec1272880dc4f335367cdc6eb59d46b"
+    },
+    {
+      "path": "src/hypervector/live/cohort_routing_execution.py",
+      "bytes": 3948,
+      "sha256": "4c2f92d61c6f8fa524d1050622287c972fee18d6a0e665bdf1dd9974c887231d"
+    },
+    {
+      "path": "src/hypervector/live/hype_compression_alignment_provider.py",
+      "bytes": 3901,
+      "sha256": "262f3af23576bc1a52be8b8f4fa34092945ce84c46acba2c0ba36f72ac64a5d8"
+    },
+    {
+      "path": "data/logs/research/hype_compression_breakout_challenger_20260816_v6_alignment/report.json",
+      "bytes": 211167,
+      "sha256": "53c37e529f79223c5e7290a5cd07f5c95897be1850122bf091e5dfbcacb29354"
+    }
+  ],
+  "verification": {
+    "config_load_result": "exact profile, enter_and_close, both sides, HYPE execution scope",
+    "focused_tests": {
+      "command": "uv run pytest -q tests/test_bidirectional_intents.py tests/test_hype_compression_alignment_replay.py tests/test_hype_breakout_exit_replay.py -m 'not network'",
+      "passed": 37,
+      "failed": 0
+    }
+  },
+  "uncertainties_and_failure_modes": [
+    "An opposite candle, regime label, or raw price move is not sufficient; the close requires the complete fresh eligible opposite aligned strategy intent.",
+    "v53 has not yet produced an eligible HYPE event, so live decision-to-fill and exit execution parity remain unobserved.",
+    "Development performance was selected post hoc and forward confirmation remains sparse.",
+    "The short development side was positive overall but negative after removing its largest winner.",
+    "No fixed target can allow unrealized profit giveback, but the tested profit-lock alternatives caused materially worse development economics."
+  ],
+  "validation_still_required": [
+    "For the first HYPE lifecycle, reconcile the opposite-intent detector, close precedence, submission age, acknowledgement, fill, fees, funding, slippage, MFE, MAE, giveback, timer decision, and final net PnL.",
+    "Require exact compatible live evidence before proposing a different target, profit lock, regime-loss exit, or hold policy."
+  ],
+  "falsifiers": [
+    "A complete fresh eligible opposite aligned intent occurs while HYPE is open and no close action or explicit technical failure is emitted.",
+    "The first attributable v53 HYPE lifecycles repeatedly surrender material profit that a predeclared causal exit captures after costs without largest-winner dependence.",
+    "Observed live execution differs from the frozen 80 bps stop, 8h/24h timer, or opposite-intent runtime contract."
+  ],
+  "confidence": {
+    "runtime_opposite_intent_close_wiring": "high",
+    "current_exit_better_than_tested_challengers": "medium_high",
+    "future_live_profitability": "unknown"
+  },
+  "approval_requested": false
+}

@@ -38,11 +38,18 @@ def official_portfolio_fn() -> PortfolioFn:
     endpoint = str(constants.MAINNET_API_URL)
     if "testnet" in endpoint.lower():
         raise ValueError("venue portfolio refuses a testnet endpoint")
-    reader = HyperliquidPortfolioValueReader(
-        info=Info(endpoint, skip_ws=True),
-        account_address=address,
-    )
-    return lambda: reader.snapshot().as_payload()
+    reader: HyperliquidPortfolioValueReader | None = None
+
+    def read() -> dict[str, object]:
+        nonlocal reader
+        if reader is None:
+            reader = HyperliquidPortfolioValueReader(
+                info=Info(endpoint, skip_ws=True),
+                account_address=address,
+            )
+        return reader.snapshot().as_payload()
+
+    return read
 
 
 def official_funding_fn() -> FundingFn:

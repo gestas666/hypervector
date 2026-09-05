@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
+from copy import deepcopy
 from dataclasses import asdict, dataclass
 from datetime import datetime
 import hashlib
@@ -20,7 +21,7 @@ from hypervector.research.cohort_trade_performance import (
 )
 
 _SYMBOL_ORDER = ("BTC", "ETH", "SOL", "HYPE")
-PORTFOLIO_ARCHIVE_PROJECTION_REVISION = 2
+PORTFOLIO_ARCHIVE_PROJECTION_REVISION = 4
 _PROFILE_FINGERPRINT = re.compile(r"[0-9a-f]{64}")
 
 
@@ -31,6 +32,7 @@ class CohortAccountingEpoch:
     epoch_id: str
     profile_fingerprint: str
     start_venue_timestamp_ms: int
+    included_profile_fingerprints: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         """Reject an ambiguous or malformed accounting boundary."""
@@ -44,10 +46,31 @@ class CohortAccountingEpoch:
             or self.start_venue_timestamp_ms < 0
         ):
             raise ValueError("accounting epoch start timestamp is invalid")
+        included = self.included_profile_fingerprints
+        if included and (
+            len(included) != len(set(included))
+            or self.profile_fingerprint not in included
+            or any(not _PROFILE_FINGERPRINT.fullmatch(value) for value in included)
+        ):
+            raise ValueError("accounting epoch profile lineage is invalid")
+
+    @property
+    def effective_profile_fingerprints(self) -> tuple[str, ...]:
+        """Return the exact profile scope, including legacy single-profile epochs."""
+        return self.included_profile_fingerprints or (self.profile_fingerprint,)
 
     def to_dict(self) -> dict[str, object]:
         """Return the exact persisted reporting boundary."""
-        return asdict(self)
+        result: dict[str, object] = {
+            "epoch_id": self.epoch_id,
+            "profile_fingerprint": self.profile_fingerprint,
+            "start_venue_timestamp_ms": self.start_venue_timestamp_ms,
+        }
+        if self.included_profile_fingerprints:
+            result["included_profile_fingerprints"] = list(
+                self.included_profile_fingerprints
+            )
+        return result
 
 
 @dataclass(frozen=True)
@@ -139,6 +162,7 @@ def load_cohort_live_portfolio_archive(
     active_source = source or load_cohort_live_archive_source(database_path)
     if active_source.database_path != str(database_path.resolve()):
         raise ValueError("portfolio archive source belongs to a different database")
+    all_trades = tuple(_trade_record(row) for row in active_source.lifecycle_rows)
     selected_rows = _epoch_rows(active_source.lifecycle_rows, accounting_epoch)
     trades = tuple(_trade_record(row) for row in selected_rows)
     symbols = _ordered_symbols(trades)
@@ -165,7 +189,138 @@ def load_cohort_live_portfolio_archive(
     }
     if accounting_epoch is not None:
         result["accounting_epoch"] = accounting_epoch.to_dict()
+        result["preserved_history"] = _preserved_history(
+            all_trades,
+            active_source.observed_through_utc,
+        )
     return result
+
+
+def _preserved_history(
+    trades: Sequence[Mapping[str, object]],
+    observed_through_utc: datetime | None,
+) -> dict[str, object]:
+    """Describe retained backend history outside an active display epoch."""
+    trade_count = len(trades)
+    return {
+        "scope": "full_backend_history",
+        "symbols": list(_ordered_symbols(trades)),
+        "observed_through_utc": _timestamp_text(observed_through_utc),
+        "coverage": {
+            "complete": True,
+            "closed_orders": trade_count,
+            "leverage_matches": trade_count,
+        },
+        "performance": build_all_time_trade_performance(trades),
+    }
+
+
+def reconcile_accounting_epoch_archive(
+    archive: Mapping[str, object],
+    all_time_live: Mapping[str, object],
+    *,
+    observed_through_utc: datetime | None = None,
+) -> dict[str, object]:
+    """Refresh an epoch archive from complete checkpoint trade reflections."""
+    epoch_value = archive.get("accounting_epoch")
+    if epoch_value is None:
+        return deepcopy(dict(archive))
+    epoch = _accounting_epoch(epoch_value)
+    raw_trades = all_time_live.get("trades")
+    if not isinstance(raw_trades, Sequence) or isinstance(raw_trades, (str, bytes)):
+        raise ValueError("all-time trade reflections must be a sequence")
+    trades = tuple(_mapping_trade(value) for value in raw_trades)
+    selected = tuple(trade for trade in trades if _in_epoch(trade, epoch))
+    archived_coverage = archive.get("coverage")
+    if not isinstance(archived_coverage, Mapping):
+        raise ValueError("portfolio archive coverage must be an object")
+    archived_count = _nonnegative_integer(
+        archived_coverage.get("closed_orders"), "portfolio archive closed orders"
+    )
+    if len(selected) < archived_count:
+        return deepcopy(dict(archive))
+    identity = _reflection_identity(selected)
+    result = deepcopy(dict(archive))
+    result["symbols"] = list(_ordered_symbols(selected))
+    result["coverage"] = {
+        "complete": True,
+        "closed_orders": len(selected),
+        "leverage_matches": len(selected),
+    }
+    result["performance"] = build_all_time_trade_performance(selected)
+    if observed_through_utc is not None:
+        result["observed_through_utc"] = _timestamp_text(observed_through_utc)
+    result["performance_source"] = {
+        "mode": "accounting_epoch_trade_reflections_v1",
+        "closed_lifecycles": len(selected),
+        "sha256": identity,
+        "observed_through_utc": result.get("observed_through_utc"),
+    }
+    return result
+
+
+def _accounting_epoch(value: object) -> CohortAccountingEpoch:
+    if not isinstance(value, Mapping):
+        raise ValueError("portfolio archive accounting epoch must be an object")
+    included = value.get("included_profile_fingerprints", ())
+    if not isinstance(included, Sequence) or isinstance(included, (str, bytes)):
+        raise ValueError("accounting epoch profile lineage must be a sequence")
+    return CohortAccountingEpoch(
+        _text(value.get("epoch_id"), "accounting epoch id"),
+        _text(value.get("profile_fingerprint"), "accounting epoch profile"),
+        _nonnegative_integer(
+            value.get("start_venue_timestamp_ms"), "accounting epoch start"
+        ),
+        included_profile_fingerprints=tuple(
+            _text(item, "accounting epoch included profile") for item in included
+        ),
+    )
+
+
+def _mapping_trade(value: object) -> Mapping[str, object]:
+    if not isinstance(value, Mapping):
+        raise ValueError("all-time trade reflection must be an object")
+    return value
+
+
+def _in_epoch(trade: Mapping[str, object], epoch: CohortAccountingEpoch) -> bool:
+    profile = _text(trade.get("source_profile_fingerprint"), "trade profile")
+    exit_leg = trade.get("exit")
+    if not isinstance(exit_leg, Mapping):
+        raise ValueError("trade exit must be an object")
+    exit_ms = _nonnegative_integer(
+        exit_leg.get("venue_timestamp_ms"), "trade exit timestamp"
+    )
+    return (
+        profile in epoch.effective_profile_fingerprints
+        and exit_ms >= epoch.start_venue_timestamp_ms
+    )
+
+
+def _reflection_identity(trades: Sequence[Mapping[str, object]]) -> str:
+    identities = [
+        {
+            "lifecycle_id": _text(trade.get("lifecycle_id"), "trade lifecycle id"),
+            "profile": _text(trade.get("source_profile_fingerprint"), "trade profile"),
+            "exit_ms": _reflection_exit_ms(trade),
+            "net_pnl_usd": _number(trade.get("net_pnl_usd"), "trade net PnL"),
+        }
+        for trade in trades
+    ]
+    lifecycle_ids = {item["lifecycle_id"] for item in identities}
+    if len(lifecycle_ids) != len(identities):
+        raise ValueError("accounting epoch trade lifecycle identities are duplicated")
+    encoded = json.dumps(identities, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
+
+
+def _reflection_exit_ms(trade: Mapping[str, object]) -> int:
+    exit_leg = trade.get("exit")
+    if not isinstance(exit_leg, Mapping):
+        raise ValueError("trade exit must be an object")
+    return _nonnegative_integer(
+        exit_leg.get("venue_timestamp_ms"), "trade exit timestamp"
+    )
 
 
 def _epoch_rows(
@@ -174,11 +329,12 @@ def _epoch_rows(
 ) -> tuple[Sequence[object], ...]:
     if epoch is None:
         return tuple(rows)
+    profiles = frozenset(epoch.effective_profile_fingerprints)
     return tuple(
         row
         for row in rows
         if len(row) == 12
-        and row[9] == epoch.profile_fingerprint
+        and row[9] in profiles
         and _nonnegative_integer(row[11], "archive exit timestamp")
         >= epoch.start_venue_timestamp_ms
     )

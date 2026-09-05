@@ -1,0 +1,85 @@
+{
+  "schema_version": "v52_mu_transport_parity_forward_window_v1",
+  "generated_at_utc": "2026-08-16T18:45:26Z",
+  "amended_before_window_at_utc": "2026-08-16T18:47:41Z",
+  "amendment_reason": "Updated the frozen module hash after a behavior-preserving extraction required by the 50-line function limit; bounded parity tests remained green and the amendment preceded the first decision.",
+  "hypothesis_id": "MU_BREAKOUT_PRESSURE_TRANSPORT_PARITY_FORWARD_V1",
+  "status": "predeclared_collecting_report_only",
+  "scope": {
+    "symbol": "xyz:MU",
+    "provider_id": "hip3_mu_full_l2_breakout_pressure_bidirectional_15m_v1",
+    "profile_id": "mu_full_l2_breakout_pressure_bidirectional_15m_research_v1",
+    "timeframe": "15m",
+    "first_decision_ms": 1786906800000,
+    "first_decision_utc": "2026-08-16T19:00:00Z",
+    "last_decision_ms": 1786992300000,
+    "last_decision_utc": "2026-08-17T18:45:00Z",
+    "end_exclusive_ms": 1786993200000,
+    "end_exclusive_utc": "2026-08-17T19:00:00Z",
+    "expected_decisions": 96
+  },
+  "frozen_sources": {
+    "archive_pressure": "hyperliquid_ws_l2Book",
+    "observer_pressure": "hyperliquid_mainnet_l2_rest",
+    "strategy_candles": "hyperliquid_public_candleSnapshot_15m",
+    "comparison_candles": "hyperliquid_public_trades_15m_ohlc",
+    "source_journal": {
+      "path": "v52-mu-source-transport-parity-v1.json",
+      "sha256": "e3c57d42c15a1a8df169464fcbafba9ef87634886480a22d7e161afdf762397c"
+    },
+    "bounded_report_module_sha256": "3e6bf5d8cd6810c7e42b9242c50514765d473566bc1537874464e5cd830960d9",
+    "bounded_report_script_sha256": "585a60d19e2c7233ebd8d435daf5efae275b3b7ee4b553400d147c1d7894125e"
+  },
+  "contract": {
+    "report_only": true,
+    "execution_authority": "none",
+    "promotion_authority": "none",
+    "automatic_live_change": false,
+    "runtime_strategy_changed": false,
+    "no_window_shrinkage": true,
+    "no_replacement_window_after_failure": true,
+    "no_parameter_retuning_during_window": true
+  },
+  "technical_success": {
+    "expected_decisions": 96,
+    "missing_observer_decisions": 0,
+    "entry_decision_mismatches": 0,
+    "minimum_non_vacuous_entry_events": 1,
+    "identity_and_source_mismatches": 0,
+    "interpretation": "Success resolves this fixed transport-parity window only. It does not establish profitability or live promotion."
+  },
+  "technical_failure": {
+    "conditions": [
+      "any missing observer decision",
+      "any REST-versus-WebSocket entry decision mismatch",
+      "no entry event on either source",
+      "any identity, cadence, or source mismatch",
+      "any post-start parameter or generator change that affects decision reconstruction"
+    ],
+    "effect": "Keep MU source transport unresolved and out of the live roster; diagnose the exact failure without selecting a replacement interval."
+  },
+  "economic_boundary": {
+    "profitability_claim": false,
+    "live_change_proposal": null,
+    "additional_evidence_required": "At least 20 independent technically resolved lifecycles with both sides represented, exact fees/funding/depth/exits, and positive stress net after largest-winner removal."
+  },
+  "planned_validation": {
+    "window_policy": "explicit_requested_bounds backed by this pre-start journal",
+    "comparison_start_ms": 1786906800000,
+    "comparison_end_ms": 1786992300000,
+    "required_command_shape": "scripts/hip3_shadow_observer_decision_parity.py --start-ms 1786906800000 --end-ms 1786992300000",
+    "input_rule": "Generate fresh path, candle, and strategy-signal reports after the end-exclusive timestamp, then bind the observer journal snapshot and immutable generator identity.",
+    "publication_rule": "Publish one immutable result whether PASS or FAIL; do not omit or replace an unfavorable fixed window."
+  },
+  "priority": {
+    "active_live_highest_value_investigation": "first exact v52 HYPE eligible intent and resolved lifecycle",
+    "external_candidate_highest_value_investigation": "this fixed MU transport-parity window",
+    "reason": "HYPE directly informs funded v52 performance; MU transport parity is the highest-leverage technical blocker for a future non-crypto candidate."
+  },
+  "confidence": {
+    "window_integrity": "high",
+    "transport_parity_outcome": "unknown_until_window_closes",
+    "mu_profitability": "low"
+  },
+  "falsifier": "Any source, identity, generator, cadence, or ledger discontinuity invalidates the technical success claim and must be reported rather than bypassed."
+}
