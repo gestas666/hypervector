@@ -15,7 +15,7 @@ use crate::cohort_entry_context::{effective_entry_context, staged_entry_context}
 use crate::cohort_format::money;
 use crate::cohort_growth_preflight::growth_preflight_lines;
 use crate::cohort_operator::CohortAssetStageRequest;
-use crate::cohort_router_format::human_token;
+use crate::cohort_router_format::{direction_scope, human_token};
 use crate::cohort_sizing_evidence::{
     asset_ioc_cap_line, asset_sizing_line, staged_provider_sizing_line,
 };
@@ -218,7 +218,12 @@ fn effective_scope(app: &App) -> String {
     {
         return "OBSERVE ONLY".into();
     }
-    direction_scope(provider.execution_side_overrides.get(symbol))
+    direction_scope(Some(
+        provider
+            .execution_side_overrides
+            .get(symbol)
+            .unwrap_or(&provider.sides),
+    ))
 }
 
 fn draft_scope(app: &App, editor: &CohortConfigEditor) -> String {
@@ -241,18 +246,15 @@ fn draft_scope(app: &App, editor: &CohortConfigEditor) -> String {
             .cohort
             .providers
             .get(app.selected_cohort_provider_index)
-            .and_then(|value| value.execution_side_overrides.get(symbol));
+            .map(|value| {
+                value
+                    .execution_side_overrides
+                    .get(symbol)
+                    .unwrap_or(&value.sides)
+            });
         direction_scope(sides)
     } else {
         "OBSERVE ONLY".into()
-    }
-}
-
-fn direction_scope(sides: Option<&Vec<String>>) -> String {
-    match sides {
-        Some(values) if values.as_slice() == ["long"] => "EXECUTE LONG ONLY".into(),
-        Some(values) if values.as_slice() == ["short"] => "EXECUTE SHORT ONLY".into(),
-        _ => "EXECUTE LONG + SHORT".into(),
     }
 }
 

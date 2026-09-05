@@ -27,3 +27,19 @@ pub(crate) fn human_token(value: &str) -> String {
         _ => value.replace('_', " ").to_uppercase(),
     }
 }
+
+/// Format only declared executable directions; absent evidence stays unavailable.
+pub(crate) fn direction_scope(sides: Option<&Vec<String>>) -> String {
+    match sides {
+        Some(values) if values.as_slice() == ["long"] => "EXECUTE LONG ONLY".into(),
+        Some(values) if values.as_slice() == ["short"] => "EXECUTE SHORT ONLY".into(),
+        Some(values)
+            if values.len() == 2
+                && values.iter().any(|side| side == "long")
+                && values.iter().any(|side| side == "short") =>
+        {
+            "EXECUTE LONG + SHORT".into()
+        }
+        _ => "SCOPE UNAVAILABLE".into(),
+    }
+}

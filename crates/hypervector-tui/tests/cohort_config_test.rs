@@ -26,3 +26,4 @@ use tempfile::tempdir;
 include!("support/cohort_config_profile.rs");
 include!("support/cohort_config_evidence.rs");
 include!("support/cohort_config_slippage.rs");
+include!("support/cohort_observer_scope.rs");

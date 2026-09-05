@@ -131,10 +131,16 @@ fn render_close(frame: &mut Frame, app: &App, area: Rect) {
         .assets
         .iter()
         .find(|value| value.symbol == symbol);
-    let position = asset
-        .and_then(|value| value.position_side.as_deref())
-        .unwrap_or("FLAT")
-        .to_uppercase();
+    let position = asset.map_or_else(
+        || "UNOBSERVED".into(),
+        |value| {
+            value
+                .position_side
+                .as_deref()
+                .unwrap_or("FLAT")
+                .to_uppercase()
+        },
+    );
     let lines = vec![
         Line::from(vec![
             Span::raw("COIN "),

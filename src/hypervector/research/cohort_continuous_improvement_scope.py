@@ -9,7 +9,7 @@ _SIDES = frozenset({"long", "short"})
 
 
 def configured_research_directions(checkpoint: Record) -> dict[str, list[str]]:
-    """Prefer explicit observation sides while supporting legacy checkpoints."""
+    """Use executable sides for live routes and observed sides for observers."""
     generation = _mapping(
         checkpoint.get("configuration_generation"), "configuration generation"
     )
@@ -21,7 +21,14 @@ def configured_research_directions(checkpoint: Record) -> dict[str, list[str]]:
     if raw is None:
         raw = generation.get("current_provider_execution_directions")
     routes = _mapping(raw, "route directions")
-    return {route: _directions(value, route) for route, value in sorted(routes.items())}
+    directions = {
+        route: _directions(value, route) for route, value in sorted(routes.items())
+    }
+    for route, sides in configured_execution_directions(checkpoint).items():
+        if not set(sides).issubset(directions.get(route, [])):
+            raise ValueError(f"execution directions exceed observation: {route}")
+        directions[route] = sides
+    return directions
 
 
 def configured_execution_directions(checkpoint: Record) -> dict[str, list[str]]:

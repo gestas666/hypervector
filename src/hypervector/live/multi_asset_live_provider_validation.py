@@ -90,7 +90,7 @@ def validate_provider_scope(
     config: MultiAssetLiveConfig,
     enabled: set[str],
 ) -> None:
-    """Require exact scope, safe sizing, and aggregate two-sided coverage."""
+    """Require exact declared scope, safe sizing, and a provider for every asset."""
     supported = {symbol: set() for symbol in config.symbols}
     assets = {asset.symbol: asset for asset in config.assets}
     for provider in config.providers:
@@ -101,10 +101,10 @@ def validate_provider_scope(
         _validate_provider_source(provider)
         for symbol in provider.symbols:
             supported[symbol].update(provider.sides)
-    missing = [symbol for symbol, sides in supported.items() if sides != _BOTH_SIDES]
+    missing = [symbol for symbol, sides in supported.items() if not sides]
     if missing:
         raise MultiAssetLiveConfigError(
-            f"enabled symbols require both long and short providers: {missing}"
+            f"enabled symbols require at least one provider: {missing}"
         )
     if config.mode == "live" and not config.executable_provider_symbols:
         raise MultiAssetLiveConfigError(
