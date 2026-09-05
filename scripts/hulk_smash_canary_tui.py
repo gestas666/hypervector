@@ -71,13 +71,13 @@ def resolve_launch(
         enabled=args.enabled,
         accepts_live_risk=args.i_accept_live_risk,
     )
-    if not wallet_configured:
-        raise HulkSmashLiveConfigError(
-            "Hulk observer requires a configured public wallet address"
-        )
     if mode == "live":
         config.require_live_start(
             credentials_present=wallet_configured and signing_key_configured
+        )
+    elif not wallet_configured:
+        raise HulkSmashLiveConfigError(
+            "Hulk observer requires a configured public wallet address"
         )
     if args.startup_timeout_seconds <= 0.0:
         raise HulkSmashLiveConfigError("startup timeout seconds must be positive")

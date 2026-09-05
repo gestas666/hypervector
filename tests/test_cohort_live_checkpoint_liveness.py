@@ -56,7 +56,10 @@ def test_recent_execution_heartbeat_remains_running_consistent() -> None:
     assert lifecycle["cohort_heartbeat_age_seconds"] == 59.0
 
 
-def test_terminal_assets_keep_terminal_precedence_over_old_heartbeat() -> None:
+@pytest.mark.parametrize("age_seconds", [1, 61])
+def test_terminal_assets_keep_terminal_precedence_over_old_heartbeat(
+    age_seconds: int,
+) -> None:
     """A completed stop remains explicit instead of becoming process ambiguity."""
     cohort = _cohort_rows()
     heartbeat_at = datetime.fromisoformat(str(cohort[-1]["observed_at_utc"]))
@@ -65,13 +68,15 @@ def test_terminal_assets_keep_terminal_precedence_over_old_heartbeat() -> None:
         cohort,
         {symbol: _asset_rows(symbol) for symbol in _SYMBOLS},
         run_id=_RUN_ID,
-        generated_at=heartbeat_at + timedelta(seconds=61),
+        generated_at=heartbeat_at + timedelta(seconds=age_seconds),
         heartbeat_stale_after_seconds=60.0,
     )
 
     assert checkpoint["lifecycle"]["state"] == (
         "stale_running_heartbeat_after_asset_stop"
     )
+    assert checkpoint["lifecycle"]["backend_process_health"] == "stopped"
+    assert checkpoint["lifecycle"]["all_assets_terminal"] is True
 
 
 def test_runtime_fault_immediately_overrides_recent_running_heartbeat() -> None:

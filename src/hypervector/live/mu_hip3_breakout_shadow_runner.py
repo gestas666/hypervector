@@ -242,6 +242,7 @@ class MuHip3BreakoutShadowRunner:
             None,
             None,
         )
+        self._paths.journal.touch(exist_ok=True)
         _write_cursor(self._paths.cursor, cursor)
         return MuHip3ShadowPollResult((), True, observed_at_ms, boundary, 0)
 

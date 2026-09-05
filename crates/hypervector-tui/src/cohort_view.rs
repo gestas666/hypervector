@@ -125,9 +125,10 @@ fn status_line(app: &App) -> Line<'static> {
 }
 
 fn clean_stopped_snapshot(app: &App) -> bool {
-    app.backend.cohort_checkpoint.lifecycle_state.as_deref()
-        == Some("stale_running_heartbeat_after_asset_stop")
-        && !app.backend.cohort_checkpoint.asset_states.is_empty()
+    matches!(
+        app.backend.cohort_checkpoint.lifecycle_state.as_deref(),
+        Some("stale_running_heartbeat_after_asset_stop" | "stopped_consistent")
+    ) && !app.backend.cohort_checkpoint.asset_states.is_empty()
         && app
             .backend
             .cohort_checkpoint
@@ -217,12 +218,23 @@ mod tests {
     use crate::backend_cohort_checkpoint::CohortPoststartAcceptance;
 
     #[test]
+    fn stopped_label_requires_complete_terminal_asset_evidence() {
+        let mut app = App::new("MULTI".into(), "1m".into(), vec![], true, false);
+        app.backend.cohort_checkpoint.lifecycle_state = Some("stopped_consistent".into());
+        assert!(!clean_stopped_snapshot(&app));
+        app.backend.cohort_checkpoint.asset_states = [
+            ("BTC".into(), "STOPPED".into()),
+            ("ETH".into(), "OPEN".into()),
+        ]
+        .into();
+        assert!(!clean_stopped_snapshot(&app));
+    }
+
+    #[test]
     fn stopped_checkpoint_is_not_presented_as_armed_or_failed() {
         let mut app = App::new("MULTI".into(), "1m".into(), vec![], true, false);
         app.backend.connection = BackendConnectionState::Stale;
         app.backend.live_armed = Some(true);
-        app.backend.cohort_checkpoint.lifecycle_state =
-            Some("stale_running_heartbeat_after_asset_stop".into());
         app.backend.cohort_checkpoint.asset_states = [
             ("BTC".into(), "STOPPED".into()),
             ("ETH".into(), "STOPPED".into()),
@@ -241,15 +253,21 @@ mod tests {
             closed_trades: 0,
         });
 
-        let rendered = status_line(&app)
-            .spans
-            .iter()
-            .map(|span| span.content.as_ref())
-            .collect::<String>();
+        for state in [
+            "stale_running_heartbeat_after_asset_stop",
+            "stopped_consistent",
+        ] {
+            app.backend.cohort_checkpoint.lifecycle_state = Some(state.into());
+            let rendered = status_line(&app)
+                .spans
+                .iter()
+                .map(|span| span.content.as_ref())
+                .collect::<String>();
 
-        assert!(rendered.contains("STOPPED SNAPSHOT"));
-        assert!(rendered.contains("V80 RUN STOPPED"));
-        assert!(!rendered.contains("LAST CHECKPOINT ARMED"));
-        assert!(!rendered.contains("CHECK FAIL"));
+            assert!(rendered.contains("STOPPED SNAPSHOT"), "{state}: {rendered}");
+            assert!(rendered.contains("V80 RUN STOPPED"));
+            assert!(!rendered.contains("LAST CHECKPOINT ARMED"));
+            assert!(!rendered.contains("CHECK FAIL"));
+        }
     }
 }

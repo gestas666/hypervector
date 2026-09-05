@@ -105,6 +105,8 @@ def test_first_poll_bootstraps_durable_cursor_without_retroactive_decision(
     assert cursor["long_raw"] is None
     assert cursor["short_raw"] is None
     assert cursor["execution_authority"] == "none"
+    assert _paths(tmp_path).journal.is_file()
+    assert _paths(tmp_path).journal.read_bytes() == b""
     assert _jsonl(_paths(tmp_path).journal) == []
     candles = _jsonl(_candle_path(_paths(tmp_path)))
     assert len(candles) == 40
@@ -112,6 +114,23 @@ def test_first_poll_bootstraps_durable_cursor_without_retroactive_decision(
     assert all(row["prospective"] is False for row in candles)
     assert candles[-1]["symbol"] == "xyz:MU"
     assert candles[-1]["source"] == "hyperliquid_public_candleSnapshot_15m"
+
+
+def test_bootstrap_preserves_existing_invalid_journal_and_surfaces_error(
+    tmp_path: Path,
+) -> None:
+    """Initialization cannot erase prior bytes to manufacture a healthy journal."""
+    observed_ms = int(pd.Timestamp("2026-08-09T22:00:01Z").timestamp() * 1_000)
+    paths = _paths(tmp_path)
+    prior = b'{"event_type":"invalid_existing_event"}\n'
+    paths.journal.write_bytes(prior)
+    source = _Source([_book(observed_ms - 100, observed_ms - 50)], [_bars(40)])
+    runner = MuHip3BreakoutShadowRunner(source=source, paths=paths)
+
+    with pytest.raises(ValueError):
+        runner.poll(observed_at_ms=observed_ms)
+
+    assert paths.journal.read_bytes() == prior
 
 
 def test_book_capture_persists_exact_mu_top_ten_receipt_evidence(

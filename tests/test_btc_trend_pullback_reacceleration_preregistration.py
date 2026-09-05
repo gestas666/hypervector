@@ -23,6 +23,8 @@ def test_preregistration_is_report_only_and_source_bound() -> None:
     assert authority["runtime_strategy_changed"] is False
     for evidence in payload["source_evidence"].values():
         source = Path(evidence["path"])
+        if source.is_absolute() and "docs" in source.parts:
+            source = Path(*source.parts[source.parts.index("docs") :])
         content = source.read_bytes()
         assert len(content) == evidence["bytes"]
         assert sha256(content).hexdigest() == evidence["sha256"]

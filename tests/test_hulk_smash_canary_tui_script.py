@@ -6,7 +6,7 @@ from importlib.util import module_from_spec, spec_from_file_location
 from pathlib import Path
 import subprocess
 import sys
-from types import ModuleType
+from types import ModuleType, SimpleNamespace
 
 import pytest
 
@@ -239,6 +239,12 @@ def test_launcher_main_reports_disarmed_live_refusal_without_traceback(
     """An incomplete live request produces an actionable refusal."""
     module = _load_module()
     monkeypatch.setattr(sys, "argv", [str(SCRIPT), "--mode", "live"])
+    monkeypatch.setattr(module, "load_dotenv_if_present", lambda: ())
+    monkeypatch.setattr(
+        module,
+        "credential_presence_from_env",
+        lambda: SimpleNamespace(wallet_configured=False, signing_key_configured=False),
+    )
 
     result = module.main()
 

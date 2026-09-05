@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "portfolio-overhaul-evidence-foundation-20260905",
+  "revision_number": 1,
+  "supersedes_revision_id": null,
+  "created_at_utc": "2026-09-05T15:51:13.984218+00:00",
+  "strategy_id": "portfolio_research_and_diagnostics",
+  "symbol": "PORTFOLIO",
+  "status": "observe",
+  "hypothesis": "The next portfolio revision requires exact current-contract evidence and complete research indexing; terminal lifecycle telemetry and incomplete executable asset coverage are demonstrated gaps, while current V86 profitability remains unmeasured.",
+  "decision": "Continue the full requested overhaul from preserved V86 in an isolated worktree. Stage the reproduced terminal-health and TUI corrections, finish full verification, then reconcile the current six executable route contracts and the unindexed source research frontier before selecting the highest-value new experiment. Do not reopen rejected ideas without a changed assumption or new evidence. No live deployment or strategy was changed.",
+  "confidence": "high",
+  "falsifier": "A ledger prefix or canonical source hash mismatch, fresh venue exposure, different active owner/profile, inability to reproduce terminal-health defects, or exact current-contract executions that change the zero-trade finding requires updating this diagnosis. Economic conclusions require contract-compatible after-cost evidence, not mixed-version historical totals.",
+  "evidence": [
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/overhaul_source_integrity_20260905_v2.json",
+      "role": "source_integrity",
+      "sha256": "f786b748244ad2f53b9917a0bd22eed6c5647cc42f60a4f96cdaf5c506339600",
+      "bytes": 424259
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v86_overhaul_venue_snapshot_20260905_v1.json",
+      "role": "venue_snapshot",
+      "sha256": "86dac2ab87a616f95d192125784d323a8f43d320bf4c6f46b3788354b9c540d7",
+      "bytes": 19149
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/overhaul_all_live_archive_20260905_v1.json",
+      "role": "all_live_execution",
+      "sha256": "5abdfb57902e2cc91eed932e46428dd0577fdded7e1f87ec3b248f1470a2b4c6",
+      "bytes": 118071
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/overhaul_lifecycle_regression_evidence_20260905_v1.json",
+      "role": "terminal_health_regression",
+      "sha256": "7db5accbe8793d8125fe2d9c67a334f3363412fdbd4bebb1e6d5137a97b7eba8",
+      "bytes": 2024
+    }
+  ],
+  "metrics": {
+    "experiment_status": "being_tested",
+    "goal_status": "active",
+    "source_commit": "fac0369",
+    "current_run_id": "bidirectional-live-1788585501070",
+    "ledger_sources_verified": 11,
+    "canonical_journal_sources_verified": 276,
+    "source_journal_documents": 761,
+    "current_run_closed_trades": 0,
+    "historical_mixed_contract_closes": 124,
+    "historical_mixed_contract_net_pnl_usd": -329.976296,
+    "historical_mixed_contract_gross_market_pnl_usd": -251.076035,
+    "historical_mixed_contract_fees_usd": 81.072513,
+    "historical_mixed_contract_funding_usd": 2.172252,
+    "venue_open_positions": 0,
+    "venue_open_orders": 0,
+    "execution_collateral_usd": 4857.58724349,
+    "configured_assets": 7,
+    "executable_routes": 6,
+    "observe_only_routes": 3
+  },
+  "limitations": [
+    "High confidence applies to the observed source and venue facts; economic confidence for the current contract remains low.",
+    "Mixed strategy versions and changing sizes prevent interpreting 124 historical trades as one stationary independent sample.",
+    "The native archive is substantial but recent data coverage, causal strategy fidelity, funding and latency still require route-specific validation.",
+    "A completed source integrity check does not prove semantic correctness of every source row.",
+    "The new source revision, complete portfolio successor, continuous monitor and live transition remain unfinished."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

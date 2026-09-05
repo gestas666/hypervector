@@ -4,13 +4,15 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
+import pytest
 from hyperliquid.utils.error import ClientError
 
 import hypervector.research.cohort_checkpoint_venue as venue
+from hypervector.live.policy import SECRET_ENV_WALLET
 
 
 def test_portfolio_reader_initialization_is_lazy_and_retryable(
-    monkeypatch,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """A transient Info startup failure must not kill checkpoint publication."""
     attempts = 0
@@ -36,7 +38,7 @@ def test_portfolio_reader_initialization_is_lazy_and_retryable(
                 }
             )
 
-    monkeypatch.setenv("HYPERLIQUID_WALLET_ADDRESS", "0xpublic")
+    monkeypatch.setenv(SECRET_ENV_WALLET, "0xpublic")
     monkeypatch.setattr("hyperliquid.info.Info", FakeInfo)
     monkeypatch.setattr(venue, "HyperliquidPortfolioValueReader", FakeReader)
 

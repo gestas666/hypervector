@@ -98,7 +98,9 @@ def _process_health(state: str, heartbeat_status: str | None) -> str:
         return "faulted"
     if state == "backend_heartbeat_stale":
         return "stale"
-    if state in {"running_consistent", "stale_running_heartbeat_after_asset_stop"}:
+    if state in {"stopped_consistent", "stale_running_heartbeat_after_asset_stop"}:
+        return "stopped"
+    if state == "running_consistent":
         return "healthy"
     if heartbeat_status == "degraded":
         return "degraded"
