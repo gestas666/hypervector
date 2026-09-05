@@ -1,0 +1,95 @@
+{
+  "automatic_promotion": false,
+  "confidence": "medium_high",
+  "created_at_utc": "2026-09-05T17:52:12.798119+00:00",
+  "decision": "Continue testing. Extracted the four current crypto providers for 71 days with zero differences in 364 sampled rolling comparisons. Full six-route economics remain pending: the current SNDK provider demonstrably differs from its research onset rule. Resolve that exact contract defect before claiming joint current-policy fidelity. No live changes or profitability conclusion.",
+  "evidence": [
+    {
+      "bytes": 448296,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/overhaul_v86_core_provider_decisions_20260905_v1/manifest.json",
+      "role": "core_decision_manifest",
+      "sha256": "8508d4da803e9a036207c339b425b6e182a6f881d9409c3852beb601ac464354"
+    },
+    {
+      "bytes": 8232,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/overhaul_v86_core_provider_generator_20260905_v1.py",
+      "role": "archived_exact_generator",
+      "sha256": "53055b75bf36e1c920ecc811b8e5da03a9a2b70b018d5c4c083667949ed9e64b"
+    },
+    {
+      "bytes": 950707,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/overhaul_eth_hype_native_bindings_20260905_v1.json",
+      "role": "native_source_bindings",
+      "sha256": "f35c11c09fc0da9767c2d2ac5ec4ed4072f280cd62342e277b5c2b5579cf6adc"
+    },
+    {
+      "bytes": 10641,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/overhaul_sndk_current_onset_discrepancy_20260905_v1.json",
+      "role": "sndk_current_contract_discrepancy",
+      "sha256": "01bd7a9d15324e3960423e8a2050f77d78d6e9b0f479305695e37e6f4f83916b"
+    },
+    {
+      "bytes": 99,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/overhaul_core_provider_replay_tests_20260905_v1.txt",
+      "role": "offline_validation",
+      "sha256": "b8a137a79a8efaffae3244fd343d35ab1e0880dc4ebf346a27a23f09fafa59ed"
+    }
+  ],
+  "execution_authority": "none",
+  "falsifier": "Source or generator hash drift, mismatched provider identity/side/exit/sizing, future-information use, unsupported private-fill assumptions, marking through undocumented data gaps, double-counted positions, inconsistent fees/funding or rescaled predecessor trades presented as exact current-contract evidence invalidate the corresponding replay claim.",
+  "hypothesis": "The six current executable contracts can be causally reconstructed and combined on one account without substituting predecessor strategies, changing sizing precedence, or overstating portfolio fitness from isolated outcomes.",
+  "hypothesis_id": "portfolio-overhaul-exact-shared-replay-20260905",
+  "limitations": [
+    "No new profitability claim or deployment recommendation is made by preregistration.",
+    "Bar or book-mid proxies cannot prove private IOC fills, venue-native mark risk or public candle parity.",
+    "Independent future observations remain necessary to update weak current-contract samples."
+  ],
+  "metrics": {
+    "additional_delay_sensitivity_seconds": 30,
+    "candidate_contract_count": 1,
+    "core_decision_window_end_inclusive": "2026-07-28T00:00:00Z",
+    "core_decision_window_start_exclusive": "2026-05-18T00:00:00Z",
+    "core_eligible_entries": 20,
+    "core_evaluations": 308424,
+    "core_exit_evaluations": 66,
+    "cost_rule": "Use pinned venue fee rates and route-specific maker/taker role, historical funding cashflows and source-specific depth/latency; report unavailable fill precision explicitly.",
+    "date_selection_rule": "Use maximal verified common coverage for the six assets, with separate full-coverage route panels; freeze exact timestamps and hashes before joint returns. The registry envelope alone is not coverage.",
+    "entry_rule": "Production eligibility, directions, entry delay limits and 20-bps IOC caps remain binding; delayed orders that expire or cannot fill are reported missed, not assumed executed.",
+    "exit_rule": "Use exact provider targets, stops, opposite/recipe exits, profit-lock and soft/hard hold policies; preserve reduce-only ownership and realistic adverse ordering.",
+    "experiment_status": "being tested",
+    "extractor_statement_coverage_pct": 100,
+    "focused_tests_passed": 40,
+    "generator_provenance": "The exact generator bytes used for the large artifact are archived. The current CLI only extracts its parser/manifest helpers to meet function length limits; integration tests cover current CLI publication.",
+    "initial_equity_usd": 4857.58724349,
+    "live_change_requested": false,
+    "next_step": "Correct or explicitly replace SNDK current onset semantics using durable prior pressure state; preserve V86 as the control and validate restart, stale/gap boundaries and chronological replay before any live proposal.",
+    "nominal_additional_slippage_bps_per_side": 2.5,
+    "portfolio_rule": "One position per symbol, seven configured slots, six executable directions, shared causal equity, production directional sizing precedence and current notional caps. No arbitrary slot filling.",
+    "profile_fingerprint": "f454101eadaef46fd026c1a901bb7873bad61d7e7183a4c2e342e477e4e38733",
+    "profitability_evaluated": false,
+    "required_outputs": [
+      "coverage and censoring ledger",
+      "entry/exit decision parity",
+      "all valid trade and cost records",
+      "per-asset/side/month/regime outcomes",
+      "marked equity and drawdown",
+      "overlap, concentration and simultaneous loss",
+      "margin/occupancy and rejected/expired opportunities",
+      "nominal/stress/delay comparison",
+      "append-invariance and no-lookahead checks"
+    ],
+    "rolling_parity_checks": 364,
+    "rolling_parity_mismatches": 0,
+    "selection_disclosure": "All existing historical strategy partitions have been inspected under prior work. This is fidelity/interaction validation on opened data, not a new untouched holdout.",
+    "source_commit": "effb9f1",
+    "stress_additional_slippage_bps_per_side": 5.5,
+    "window_selection_disclosure": "Core extraction spans the first full UTC day following the SPCX archive lower envelope through the common core cache upper bound. This is an adapter validation panel, not a claim of maximal verified six-asset coverage. Joint return timestamps remain to be frozen after HIP-3 source and warmup validation."
+  },
+  "revision_number": 2,
+  "runtime_strategy_changed": false,
+  "schema_version": 1,
+  "status": "candidate",
+  "strategy_id": "v86_six_executable_contracts",
+  "supersedes_revision_id": "390908a621847e64a3fae1f5fbe0689c27d9a7cb630b53ec18dd199547d9c404",
+  "symbol": "PORTFOLIO"
+}

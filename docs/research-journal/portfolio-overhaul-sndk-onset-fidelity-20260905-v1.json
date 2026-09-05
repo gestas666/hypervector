@@ -1,0 +1,62 @@
+{
+  "automatic_promotion": false,
+  "confidence": "high",
+  "created_at_utc": "2026-09-05T17:52:12.798119+00:00",
+  "decision": "Accept the synthetic reproduction as a material signal-contract defect. Preserve the current profile as control; do not attribute realized losses without exact live lifecycle evidence. The highest-value next investigation is a durable prior-pressure corrective adapter, reusing the existing repaired index implementation rather than adding a new strategy family.",
+  "evidence": [
+    {
+      "bytes": 10641,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/overhaul_sndk_current_onset_discrepancy_20260905_v1.json",
+      "role": "reproduced_signal_discrepancy",
+      "sha256": "01bd7a9d15324e3960423e8a2050f77d78d6e9b0f479305695e37e6f4f83916b"
+    },
+    {
+      "bytes": 6433,
+      "path": "/Users/gestas/Prototypes/hypervector-overhaul-20260905/docs/research-journal/hip3-index-preclose-pressure-parity-v3.json",
+      "role": "prior_related_index_correction",
+      "sha256": "ae2085406ec5b4153b54d2d94f140ab706425fbd35f921080875dcbf55b07b5f"
+    },
+    {
+      "bytes": 99,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/overhaul_core_provider_replay_tests_20260905_v1.txt",
+      "role": "offline_diagnostic_integration",
+      "sha256": "b8a137a79a8efaffae3244fd343d35ab1e0880dc4ebf346a27a23f09fafa59ed"
+    }
+  ],
+  "execution_authority": "none",
+  "falsifier": "A frozen current collector that retains the prior raw state and emits no repeated onset under the same completed bars and fresh continuous pressure would falsify this reproduction. An explicitly approved state-entry strategy specification would change the intended-contract assessment; no such specification was identified in inspected SNDK records.",
+  "hypothesis": "The current SNDK provider resets prior pressure to zero and can label a continuing raw breakout as a fresh onset, unlike its research signal engine.",
+  "hypothesis_id": "portfolio-overhaul-sndk-onset-fidelity-20260905",
+  "limitations": [
+    "Synthetic cases prove entry disagreement, not a real loss or a profitable correction.",
+    "Old midpoint-only SNDK research also requires an explicit source approximation label.",
+    "No live process was launched or deployment configuration changed."
+  ],
+  "metrics": {
+    "acceptance_scope": "technical_discrepancy_only",
+    "boundaries_per_scenario": 2,
+    "current_live_close_loss_attribution": "not_established",
+    "currently_executable_direction": "short",
+    "experiment_status": "accepted",
+    "live_change_requested": false,
+    "mismatched_boundaries": 4,
+    "next_corrective_candidate_count": 1,
+    "planned_change": "Preserve previous raw pressure state causally and durably; keep current SNDK recipe, side, sizing, stop, hold and fees frozen while testing onset fidelity.",
+    "required_validation": [
+      "failing consecutive-continuation regression",
+      "fresh onset after a genuine reset",
+      "checkpoint restart and unknown prior state",
+      "late/stale/future pressure and missing-bar behavior",
+      "historical current-versus-corrected signal/lifecycle comparison",
+      "bounded unsigned observer and TUI route parity"
+    ],
+    "synthetic_scenarios": 2
+  },
+  "revision_number": 1,
+  "runtime_strategy_changed": false,
+  "schema_version": 1,
+  "status": "observe",
+  "strategy_id": "hip3_breakout_pressure_sndk_fresh15s_bidirectional_v3",
+  "supersedes_revision_id": null,
+  "symbol": "xyz:SNDK"
+}
