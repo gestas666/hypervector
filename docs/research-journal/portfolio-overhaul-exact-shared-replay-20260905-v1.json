@@ -1,0 +1,71 @@
+{
+  "automatic_promotion": false,
+  "confidence": "medium",
+  "created_at_utc": "2026-09-05T17:15:21.141314+00:00",
+  "decision": "Preregister one current-contract portfolio baseline. Bind native source coverage and exact provider replay adapters before evaluating joint economics. Reuse existing signal, execution and accounting modules. Record every technically valid outcome; no performance, drawdown, trade-count or regime-score abort gate. Do not alter live configuration.",
+  "evidence": [
+    {
+      "bytes": 18298,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/overhaul_v86_route_evidence_inventory_20260905_v1.json",
+      "role": "overhaul_v86_route_evidence_inventory_20260905_v1",
+      "sha256": "2f82943447d5997bbc9eecbdf1a2eb15bd5f31b575dd961cf191d0f1dcbbbd0a"
+    },
+    {
+      "bytes": 2004,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/overhaul_shared_replay_registry_bounds_20260905_v1.json",
+      "role": "overhaul_shared_replay_registry_bounds_20260905_v1",
+      "sha256": "574995c40949622c1c976593075e246178bcc1cdc4bb4eb7455c047d69b4b8c0"
+    },
+    {
+      "bytes": 6186,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/overhaul_v86_executable_capacity_20260905_v1.json",
+      "role": "overhaul_v86_executable_capacity_20260905_v1",
+      "sha256": "86ffb323495ff627c68585202886d19d21ecfd042281081568b835734afc3d36"
+    }
+  ],
+  "execution_authority": "none",
+  "falsifier": "Source or generator hash drift, mismatched provider identity/side/exit/sizing, future-information use, unsupported private-fill assumptions, marking through undocumented data gaps, double-counted positions, inconsistent fees/funding or rescaled predecessor trades presented as exact current-contract evidence invalidate the corresponding replay claim.",
+  "hypothesis": "The six current executable contracts can be causally reconstructed and combined on one account without substituting predecessor strategies, changing sizing precedence, or overstating portfolio fitness from isolated outcomes.",
+  "hypothesis_id": "portfolio-overhaul-exact-shared-replay-20260905",
+  "limitations": [
+    "No new profitability claim or deployment recommendation is made by preregistration.",
+    "Bar or book-mid proxies cannot prove private IOC fills, venue-native mark risk or public candle parity.",
+    "Independent future observations remain necessary to update weak current-contract samples."
+  ],
+  "metrics": {
+    "additional_delay_sensitivity_seconds": 30,
+    "candidate_contract_count": 1,
+    "cost_rule": "Use pinned venue fee rates and route-specific maker/taker role, historical funding cashflows and source-specific depth/latency; report unavailable fill precision explicitly.",
+    "date_selection_rule": "Use maximal verified common coverage for the six assets, with separate full-coverage route panels; freeze exact timestamps and hashes before joint returns. The registry envelope alone is not coverage.",
+    "entry_rule": "Production eligibility, directions, entry delay limits and 20-bps IOC caps remain binding; delayed orders that expire or cannot fill are reported missed, not assumed executed.",
+    "exit_rule": "Use exact provider targets, stops, opposite/recipe exits, profit-lock and soft/hard hold policies; preserve reduce-only ownership and realistic adverse ordering.",
+    "experiment_status": "proposed",
+    "initial_equity_usd": 4857.58724349,
+    "live_change_requested": false,
+    "next_step": "Bind ETH/HYPE candle and native-path sources plus SNDK book-only and SPCX public-trade source semantics; adapt the frozen current providers without relabeling the V11-only shared replay.",
+    "nominal_additional_slippage_bps_per_side": 2.5,
+    "portfolio_rule": "One position per symbol, seven configured slots, six executable directions, shared causal equity, production directional sizing precedence and current notional caps. No arbitrary slot filling.",
+    "profile_fingerprint": "f454101eadaef46fd026c1a901bb7873bad61d7e7183a4c2e342e477e4e38733",
+    "required_outputs": [
+      "coverage and censoring ledger",
+      "entry/exit decision parity",
+      "all valid trade and cost records",
+      "per-asset/side/month/regime outcomes",
+      "marked equity and drawdown",
+      "overlap, concentration and simultaneous loss",
+      "margin/occupancy and rejected/expired opportunities",
+      "nominal/stress/delay comparison",
+      "append-invariance and no-lookahead checks"
+    ],
+    "selection_disclosure": "All existing historical strategy partitions have been inspected under prior work. This is fidelity/interaction validation on opened data, not a new untouched holdout.",
+    "source_commit": "effb9f1",
+    "stress_additional_slippage_bps_per_side": 5.5
+  },
+  "revision_number": 1,
+  "runtime_strategy_changed": false,
+  "schema_version": 1,
+  "status": "candidate",
+  "strategy_id": "v86_six_executable_contracts",
+  "supersedes_revision_id": null,
+  "symbol": "PORTFOLIO"
+}
