@@ -1,0 +1,115 @@
+{
+  "automatic_promotion": false,
+  "confidence": "medium",
+  "created_at_utc": "2026-09-06T20:24:12.799136+00:00",
+  "decision": "Reject this window as a positive relaxation lead: all four horizon means are negative before and after the fixed deduction, and remain negative excluding the largest path. This is a retrospective descriptive result, not a rejection of the approved HYPE strategy or a test of an executable replacement. Keep exact native-lifecycle collection as the highest-value investigation.",
+  "evidence": [
+    {
+      "bytes": 4561,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/overhaul_v88_hype_first_five_hour_path_review_20260906_v1.json",
+      "role": "overhaul_v88_hype_first_five_hour_path_review_20260906_v1",
+      "sha256": "d92d5fcf6bce4ae2b37fa9de784e8034a3b6072162d8107f4d6e99f551c159f1"
+    },
+    {
+      "bytes": 2035331,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/overhaul_v88_hype_first_five_hour_path_review_20260906_v1_checkpoint.json",
+      "role": "overhaul_v88_hype_first_five_hour_path_review_20260906_v1_checkpoint",
+      "sha256": "d8cf0c515538c22d20e251632b3a6d0eaf226b37496f51459884e601b8298f21"
+    },
+    {
+      "bytes": 21373939,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/overhaul_v88_hype_first_five_hour_path_review_20260906_v1_ledger.jsonl",
+      "role": "overhaul_v88_hype_first_five_hour_path_review_20260906_v1_ledger",
+      "sha256": "622e59c242076d7b1321377f7e86cbe2a08a681359eb127c417a00d78682a1ab",
+      "source_read_end_byte": 4095927316,
+      "source_start_byte": 4074541641
+    },
+    {
+      "bytes": 8805,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/overhaul_v88_hype_first_five_hour_path_review_20260906_v1_generator.py",
+      "role": "overhaul_v88_hype_first_five_hour_path_review_20260906_v1_generator",
+      "sha256": "8ec412c74dac71f686840a5e0635fc35cd3e1aaa17ffb2b5101eaa2cab3d5a8d"
+    }
+  ],
+  "execution_authority": "none",
+  "falsifier": "A source-row or arithmetic discrepancy invalidates this numerical finding. Reopen the broader research question only with new non-overlapping observation windows or changed regime evidence, then preregister any executable rule and validate causal alignment, fees, funding, delay, depth and exits; do not retune thresholds on this sample.",
+  "hypothesis": "The frozen initial V88 observation window supplies a positive descriptive lead for HYPE long annotations missing only the breakout-onset condition, measured at the existing 5/15/30/60-minute horizons after the existing fixed 13-bps deduction.",
+  "hypothesis_id": "v88-hype-onset-missing-early-window-20260906",
+  "limitations": [
+    "Non-overlapping windows are not necessarily statistically independent; all are from one session and horizons overlap each other.",
+    "The 13-bps deduction is a fixed diagnostic assumption, not measured execution fees, impact, funding or fills.",
+    "These are ineligible long-side annotations. Removing the onset condition also requires explicit alignment and execution feasibility; this is not an executable strategy backtest.",
+    "SOL annotations currently describe long source context despite a short-only executable route; they are not evidence of SOL-short returns.",
+    "No runtime or strategy changes are authorized by this report. First native lifecycle evidence remains outstanding.",
+    "The diagnostic uses selected episode-onset candle paths and omits a complete executable alignment, entry and exit strategy; it is not a live PnL estimate.",
+    "The negative window does not prove future absence of an edge and does not authorize a portfolio or risk change."
+  ],
+  "metrics": {
+    "blocker_episodes": 39,
+    "candidate_minutes": 92,
+    "current_run_fills": 0,
+    "experiment_status": "rejected",
+    "fixed_friction_hurdle_bps": 13.0,
+    "future_native_lifecycle_evidence_complete": false,
+    "highest_value_next_investigation": "HYPE exact-run native entry/protection/hold/exit fidelity and later execution repeatability.",
+    "horizons": [
+      {
+        "censored_onsets": 1,
+        "cost_clearing_close_count": 3,
+        "fixed_friction_hurdle_bps": 13.0,
+        "horizon_minutes": 5,
+        "mean_after_fixed_hurdle_bps": -18.037589653872256,
+        "mean_excluding_largest_bps": -19.977044803018547,
+        "mean_gross_bps": -5.037589653872257,
+        "non_overlapping_resolved": 23,
+        "raw_path_reconciliation_passed": true
+      },
+      {
+        "censored_onsets": 3,
+        "cost_clearing_close_count": 1,
+        "fixed_friction_hurdle_bps": 13.0,
+        "horizon_minutes": 15,
+        "mean_after_fixed_hurdle_bps": -28.0620397821709,
+        "mean_excluding_largest_bps": -34.09141703897616,
+        "mean_gross_bps": -15.0620397821709,
+        "non_overlapping_resolved": 9,
+        "raw_path_reconciliation_passed": true
+      },
+      {
+        "censored_onsets": 6,
+        "cost_clearing_close_count": 1,
+        "fixed_friction_hurdle_bps": 13.0,
+        "horizon_minutes": 30,
+        "mean_after_fixed_hurdle_bps": -37.57514390251825,
+        "mean_excluding_largest_bps": -45.72218324395815,
+        "mean_gross_bps": -24.57514390251825,
+        "non_overlapping_resolved": 6,
+        "raw_path_reconciliation_passed": true
+      },
+      {
+        "censored_onsets": 9,
+        "cost_clearing_close_count": 0,
+        "fixed_friction_hurdle_bps": 13.0,
+        "horizon_minutes": 60,
+        "mean_after_fixed_hurdle_bps": -61.50924909362157,
+        "mean_excluding_largest_bps": -84.4551369696309,
+        "mean_gross_bps": -48.50924909362157,
+        "non_overlapping_resolved": 3,
+        "raw_path_reconciliation_passed": true
+      }
+    ],
+    "live_change_proposed": false,
+    "observed_through_checkpoint_utc": "2026-09-06T20:22:28.849391+00:00",
+    "raw_candle_reconciliation_passed": true,
+    "retrospective_exploratory_review": true,
+    "run_id": "bidirectional-live-1788707880582",
+    "scope": "positive_counterfactual_lead_in_this_frozen_window_only"
+  },
+  "revision_number": 1,
+  "runtime_strategy_changed": false,
+  "schema_version": 1,
+  "status": "reject",
+  "strategy_id": "hype_onset_missing_counterfactual_diagnostic",
+  "supersedes_revision_id": null,
+  "symbol": "HYPE"
+}
