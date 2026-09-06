@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "mode": "v57_exact_route_lifecycle_tracker_preregistration",
+  "hypothesis_id": "v88-hype-exact-execution-fidelity-v1",
+  "revision_number": 1,
+  "created_at_utc": "2026-09-06T15:27:39.837256+00:00",
+  "live_identity": {
+    "run_id": "bidirectional-live-1788707880582",
+    "profile_id": "multi_asset_growth_first_5000_four_core_evidence_candidate_v88",
+    "profile_fingerprint": "06e90a0c59b4b767fd14a61f3927553fc00b3017405193170101531204761d5f",
+    "provider_id": "hype_breakout_compression_alignment_bidirectional_v2",
+    "signal_strategy_id": "hype_breakout_compression_alignment_bidirectional_v2",
+    "symbol": "HYPE",
+    "route": "hype_breakout_compression_alignment_bidirectional_v2|HYPE",
+    "required_sides": [
+      "long"
+    ]
+  },
+  "prospective_boundary": {
+    "capture_start_utc": "2026-09-06T15:27:39.837256+00:00",
+    "capture_start_ms": 1788708459837,
+    "baseline_route_evaluations": 2,
+    "baseline_eligible_evaluations": 0,
+    "selection_rule": "Freeze current cumulative counters and current wall-clock cutoff before inspecting future attributable lifecycle outcomes. Exclude decisions preceding the cutoff."
+  },
+  "source_checkpoint": {
+    "path": "data/logs/research/bidirectional_cohort/overhaul_v88_live_preregistration_checkpoint_20260906_v1.json",
+    "sha256": "69f61179433aeae7b75aba528fb86cff5d9ad4a3a0b41ad85f3673aff37a4447",
+    "bytes": 1123415
+  },
+  "source_checkpoint_generated_at_utc": "2026-09-06T15:27:09.175987+00:00",
+  "implementation_evidence": [
+    {
+      "path": "src/hypervector/research/cohort_route_lifecycle_scope.py",
+      "sha256": "8c290e1877967187e1c659da53786f723947c294e7e4cabc3d76e30a2ddfabfc",
+      "bytes": 3246
+    },
+    {
+      "path": "src/hypervector/research/cohort_route_lifecycle_evidence.py",
+      "sha256": "4b6323fe7f73705658535d0b6e77c75c643b0aef170635620e3988092735ca7b",
+      "bytes": 18779
+    },
+    {
+      "path": "src/hypervector/research/cohort_route_lifecycle_values.py",
+      "sha256": "9edf4dc4098da1a8d3b10a15111e39923099322affcfeddfb4fc7cc8d3520c71",
+      "bytes": 5631
+    },
+    {
+      "path": "scripts/cohort_route_lifecycle_watch.py",
+      "sha256": "191d6975762b06f14a2ca7a3aa03feea172d000c399d7869f0e85012b8437107",
+      "bytes": 13829
+    }
+  ],
+  "minimum_diagnostic_evidence": {
+    "required": "One future attributable eligible decision and fully resolved lifecycle on the exact configured side.",
+    "promotion_threshold": false,
+    "performance_gate": false
+  },
+  "outputs": {
+    "mutable_status": "data/runtime/research/v88_hype_exact_execution_lifecycle_latest.json",
+    "immutable_final": "data/logs/research/bidirectional_cohort/v88-hype-exact-execution-lifecycle-20260906-v1-first-complete.json"
+  },
+  "decision": "Collect exact-run native execution evidence under the operator-started approved V88 profile. One resolved lifecycle validates plumbing only; manually reconcile source timing, fills, protection, hold, exit, fees and funding.",
+  "limitations": [
+    "The v57 mode string identifies the existing generic preregistration schema; this record binds only the specified V88 run.",
+    "This collector cannot establish profitability or reconstruct private evidence absent from source ledgers."
+  ],
+  "contract": {
+    "report_only": true,
+    "execution_authority": "none",
+    "automatic_live_change": false,
+    "automatic_retuning": false,
+    "automatic_promotion": false,
+    "runtime_strategy_changed": false
+  }
+}

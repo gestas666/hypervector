@@ -1,0 +1,186 @@
+{
+  "automatic_promotion": false,
+  "confidence": "medium",
+  "created_at_utc": "2026-09-06T15:47:35.655001+00:00",
+  "decision": "Operator retry on corrected source started approved V88. Twelve live startup checks, nine-tab terminal acceptance, four exact-run prospective lifecycle collectors, and the read-only improvement monitor are validated. The previous startup refusal is resolved; native order lifecycles and economic repeatability remain under investigation.",
+  "evidence": [
+    {
+      "bytes": 12144,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/overhaul_v88_live_monitoring_acceptance_20260906_v1.json",
+      "role": "overhaul_v88_live_monitoring_acceptance_20260906_v1",
+      "sha256": "d7525f2ab541908fd61b65d15b55e231698768fe4ab2256e3bb78273e68a6189"
+    },
+    {
+      "bytes": 10344,
+      "path": "/Users/gestas/Prototypes/hypervector/configs/research/cohort_improvement_decision_overrides_v88_live_20260906.json",
+      "role": "cohort_improvement_decision_overrides_v88_live_20260906",
+      "sha256": "4f7899f133551862f38a30a3eeba317a5ab780800275969f2b397c2f5d72cbc2"
+    },
+    {
+      "bytes": 1335583,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/overhaul_v88_monitoring_checkpoint_20260906_v1.json",
+      "role": "overhaul_v88_monitoring_checkpoint_20260906_v1",
+      "sha256": "481e378967fc1735a3194d68bbb6985ebf779471f5faed982aa276fb073e073a"
+    },
+    {
+      "bytes": 68772,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/overhaul_v88_monitoring_digest_20260906_v1.json",
+      "role": "overhaul_v88_monitoring_digest_20260906_v1",
+      "sha256": "5b818f1b617fd55844e753bd97f74a0a80af4bacbaf6f6bae482216a4fbfb8f8"
+    },
+    {
+      "bytes": 2605,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/overhaul_v88_monitoring_btc_20260906_v1.json",
+      "role": "overhaul_v88_monitoring_btc_20260906_v1",
+      "sha256": "3b60888f3cdb4180c1dd0ff092a6bf34709b967f9a9c0272b6139486345a46d4"
+    },
+    {
+      "bytes": 3453,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/research-journal/v88-btc-exact-execution-lifecycle-20260906-v1.json",
+      "role": "v88-btc-exact-execution-lifecycle-20260906-v1",
+      "sha256": "146a614ecdc232297fb752db2932221be6fbb13845a557207d84add67f43febf"
+    },
+    {
+      "bytes": 2577,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/overhaul_v88_monitoring_eth_20260906_v1.json",
+      "role": "overhaul_v88_monitoring_eth_20260906_v1",
+      "sha256": "a3c6e264ba8fa04632fe4928bcc776a9dfadde210d773712ed713bf9831eebfc"
+    },
+    {
+      "bytes": 3423,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/research-journal/v88-eth-exact-execution-lifecycle-20260906-v1.json",
+      "role": "v88-eth-exact-execution-lifecycle-20260906-v1",
+      "sha256": "355004c2b87e46dfbe212f729a2acbdaf6707d25b8ddda361bb531ef6d166331"
+    },
+    {
+      "bytes": 2583,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/overhaul_v88_monitoring_sol_20260906_v1.json",
+      "role": "overhaul_v88_monitoring_sol_20260906_v1",
+      "sha256": "13a7becf5c0d6a1d30929d6e4ce62bf46ff89ea31402f74275727bdc0c27427a"
+    },
+    {
+      "bytes": 3427,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/research-journal/v88-sol-exact-execution-lifecycle-20260906-v1.json",
+      "role": "v88-sol-exact-execution-lifecycle-20260906-v1",
+      "sha256": "e3916a074de7127bd9a70fdeaaf92bb2683da5b89dc4e739416f15af7d2bff14"
+    },
+    {
+      "bytes": 2640,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/overhaul_v88_monitoring_hype_20260906_v1.json",
+      "role": "overhaul_v88_monitoring_hype_20260906_v1",
+      "sha256": "17626a6b3c2c8a68385d006ec5c644ae2a929c97e294bd066913038435890237"
+    },
+    {
+      "bytes": 3488,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/research-journal/v88-hype-exact-execution-lifecycle-20260906-v1.json",
+      "role": "v88-hype-exact-execution-lifecycle-20260906-v1",
+      "sha256": "943639f5ce6197d361c5e4ab4e6c7f689e8db700f01fe98a28c92005f05704ca"
+    },
+    {
+      "bytes": 5495,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/overhaul_v88_live_startup_acceptance_20260906_v1.json",
+      "role": "overhaul_v88_live_startup_acceptance_20260906_v1",
+      "sha256": "3f808f9bb3d1d3d11752517ab19102b1977cbf95b9647cb24a252a1cf6538f0b"
+    },
+    {
+      "bytes": 1123913,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/overhaul_v88_live_terminal_acceptance_20260906_v2.json",
+      "role": "overhaul_v88_live_terminal_acceptance_20260906_v2",
+      "sha256": "b15c7ef4007898116a9491be3592471677673188f811fac83405f92cc83a75a9"
+    },
+    {
+      "bytes": 170724,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/overhaul_v88_live_terminal_floor_acceptance_20260906_v1.json",
+      "role": "overhaul_v88_live_terminal_floor_acceptance_20260906_v1",
+      "sha256": "6a87dfbc0bbe00d01b3bdfdae45163ac9758155c152f12441cffe55ce7d86954"
+    },
+    {
+      "bytes": 6930,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/reviews/2026-09-06-v88-live-startup-and-monitoring.md",
+      "role": "2026-09-06-v88-live-startup-and-monitoring",
+      "sha256": "e2ff843e0288ef7e35387af2a05bf0759e2b8512d666247f1e64739756b14cd0"
+    }
+  ],
+  "execution_authority": "none",
+  "falsifier": "A stale heartbeat, changed profile or direction scope, runtime fault, source mismatch, or actual exposure without required protection would invalidate the timestamped technical acceptance. Attributable future fills, exits, costs, and sufficient independent outcomes are required to update economic confidence.",
+  "hypothesis": "Retain four existing executable core mechanisms at unchanged risk while retiring unresolved HIP-3 routes and observation-only placeholders, with repaired technical evidence and continuous native execution review.",
+  "hypothesis_id": "portfolio-overhaul-four-core-live-proposal-20260905",
+  "limitations": [
+    "High confidence applies to timestamped technical checks; economic confidence remains limited by zero current-run fills.",
+    "The agent observed the operator-started live process and started only read-only collectors and display captures.",
+    "Text-cell captures validate navigation and displayed telemetry, not terminal colors or native order behavior.",
+    "Evidence snapshots are independently sampled and are not an atomic cross-source observation.",
+    "Collectors stop after a diagnostic lifecycle completes; review immutable results and revise monitor bindings before status staleness.",
+    "One completed lifecycle is diagnostic evidence, not proof of durable profitability."
+  ],
+  "metrics": {
+    "additional_routing_coverage_tests_passed": 50,
+    "approval_status": "accepted",
+    "approval_validation": "approved_profile_change",
+    "approved_source_commit": "67c6c406f6f353ead7e8617324b2915681a94c0d",
+    "below_floor_resize_notice_verified": true,
+    "candidate_profile_fingerprint": "06e90a0c59b4b767fd14a61f3927553fc00b3017405193170101531204761d5f",
+    "checkpoint_generated_at_utc": "2026-09-06T15:46:52.365563+00:00",
+    "current_run_fills": 0,
+    "current_run_open_positions": 0,
+    "deployed_unsigned_poll_cycles": 8,
+    "deployed_unsigned_strategy_intents": 0,
+    "deployed_unsigned_technical_complete": true,
+    "experiment_status": "being_tested",
+    "full_offline_tests_passed": 8001,
+    "highest_value_next_investigation": "HYPE exact-run native entry/hold/protection/exit fidelity and concentration, with run and cutoff bound before outcomes.",
+    "live_change_approved": true,
+    "live_deployed": true,
+    "live_execution_active": true,
+    "live_lifecycle_acceptance_complete": false,
+    "live_poll_cycles": 82,
+    "live_startup_accepted": true,
+    "live_startup_checks_passed": 12,
+    "live_terminal_dimensions_verified": [
+      "100x28",
+      "120x36",
+      "180x50",
+      "190x52"
+    ],
+    "live_terminal_inspectors_verified": 4,
+    "live_terminal_tabs_verified": 9,
+    "maximum_positions": 4,
+    "monitor_evidence_references_validated": 9,
+    "monitor_technical_gaps": [],
+    "new_direction_guard_branches_complete": true,
+    "next_step": "Review first future attributable native entry, protection, hold and exit evidence for each frozen route; prioritize HYPE execution fidelity and concentration. Keep the approved trading profile unchanged pending new evidence and required approval.",
+    "offline_network_tests_deselected": 4,
+    "offline_test_warnings": 27,
+    "operator_started": true,
+    "prestart_backup_validated": true,
+    "prior_startup_failure_resolved": true,
+    "read_only_improvement_monitor_running": true,
+    "read_only_lifecycle_collectors_running": 4,
+    "retained_parameters_changed": false,
+    "retained_sides": {
+      "BTC": "long",
+      "ETH": "long",
+      "HYPE": "long",
+      "SOL": "short"
+    },
+    "router_statement_coverage_percent": 88.37209302325581,
+    "run_id": "bidirectional-live-1788707880582",
+    "runtime_assembly_and_router_focused_tests_passed": 43,
+    "runtime_start_accepted": true,
+    "runtime_start_attempted_by_operator": true,
+    "runtime_strategy_settings_changed": false,
+    "rust_tests_ignored": 22,
+    "rust_tests_passed": 495,
+    "software_deployed": true,
+    "source_commit": "260c8904e4da324b8125253846626af3e038fc15",
+    "source_technical_repair_applied": true,
+    "startup_failure": null
+  },
+  "revision_number": 4,
+  "runtime_strategy_changed": false,
+  "schema_version": 1,
+  "status": "retain",
+  "strategy_id": "current_core_provider_portfolio_v88",
+  "supersedes_revision_id": "dbe514bbc2bf35c27e1119bf66007b149e84c00fb5a2d1507e6b2e008ba48790",
+  "symbol": "MULTI"
+}
