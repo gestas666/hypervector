@@ -1,0 +1,63 @@
+{
+  "approval_status": "approved_for_live_transition",
+  "approved_at_utc": "2026-09-06T13:51:17.495176+00:00",
+  "approved_by": "operator_in_conversation",
+  "candidate_profile": {
+    "profile_fingerprint": "06e90a0c59b4b767fd14a61f3927553fc00b3017405193170101531204761d5f",
+    "profile_id": "multi_asset_growth_first_5000_four_core_evidence_candidate_v88"
+  },
+  "change_scopes": [
+    "deploy_tested_source_commit_67c6c406f6f353ead7e8617324b2915681a94c0d",
+    "retain_btc_long_eth_long_sol_short_hype_long_with_existing_strategy_and_sizing",
+    "retire_zec_spcx_sndk_and_nonexecuting_btc_short_observation_rows",
+    "four_positions_maximum_one_per_asset_mainnet_isolated",
+    "start_read_only_checkpoint_and_improvement_sidecars",
+    "fresh_flat_order_free_transition_and_verified_prestart_backup_required",
+    "no_double_sizing_new_assets_ml_or_automatic_strategy_changes"
+  ],
+  "document_type": "cohort_profile_change_approval",
+  "execution_authority": "none",
+  "operator_approval": "approved",
+  "previous_profile": {
+    "profile_fingerprint": "f454101eadaef46fd026c1a901bb7873bad61d7e7183a4c2e342e477e4e38733",
+    "profile_id": "multi_asset_growth_first_5000_seven_asset_failed_routes_retired_v86"
+  },
+  "recommendation_evidence": [
+    {
+      "path": "../reviews/2026-09-05-v88-live-proposal.md",
+      "sha256": "74cea91764a4d9058c703d865dd2183cfc72462da212b96bfd75625bc45130a9"
+    },
+    {
+      "path": "../guides/cohort-live-transition-and-rollback-v88.md",
+      "sha256": "b85a8daaf76a45129afa152159bca71b275a811d131a62d3c3948e8c79e2d669"
+    },
+    {
+      "path": "../../data/logs/research/bidirectional_cohort/overhaul_v88_approval_package_identity_20260905_v1.json",
+      "sha256": "c3963470ed73c25490fc3d82c1627238b7ab9e5702b1204cab1bc6bf454d135a"
+    }
+  ],
+  "retirements": [
+    {
+      "replacement_scope": null,
+      "retired_scope": {
+        "side": "short",
+        "strategy_id": "hip3_breakout_pressure_sndk_fresh15s_bidirectional_v3",
+        "symbol": "xyz:SNDK"
+      }
+    },
+    {
+      "replacement_scope": null,
+      "retired_scope": {
+        "side": "long",
+        "strategy_id": "hip3_spcx_cash_session_fresh15_long_v4",
+        "symbol": "xyz:SPCX"
+      }
+    }
+  ],
+  "rollback": {
+    "config_path": "../../configs/multi_asset_growth_first_5000_seven_asset_failed_routes_retired_v86.toml",
+    "profile_fingerprint": "f454101eadaef46fd026c1a901bb7873bad61d7e7183a4c2e342e477e4e38733",
+    "sha256": "3476ebcc9ad8459c24940eecece6fb8492ab3582f7b06e2928f4ac98de51e69a"
+  },
+  "schema_version": 1
+}

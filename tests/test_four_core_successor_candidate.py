@@ -5,6 +5,7 @@ from pathlib import Path
 
 from hypervector.live.multi_asset_live_config import load_multi_asset_live_config
 from hypervector.live.cohort_pressure_dependencies import pressure_dependency_commands
+from hypervector.live.cohort_profile_change_approval import validate_profile_change_approval
 
 _BASELINE = Path(
     "configs/multi_asset_growth_first_5000_seven_asset_failed_routes_retired_v86.toml"
@@ -38,7 +39,11 @@ def test_candidate_retains_only_fully_executable_core_routes() -> None:
     assert candidate.margin_mode == "isolated"
     assert pressure_dependency_commands(candidate) == {}
     assert candidate.transition_approval is not None
-    assert not candidate.transition_approval.exists()
+    if candidate.transition_approval.exists():
+        approval = validate_profile_change_approval(
+            baseline, candidate, candidate.transition_approval
+        )
+        assert approval["state"] == "approved_profile_change"
 
 
 def test_asset_without_any_declared_provider_still_fails() -> None:
