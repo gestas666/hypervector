@@ -1,0 +1,90 @@
+{
+  "automatic_promotion": false,
+  "confidence": "medium",
+  "created_at_utc": "2026-09-06T14:26:39.048892+00:00",
+  "decision": "Operator attempted approved V88 launch. Fresh backup passed, but a second runtime validator rejected the one-sided BTC source. Reproduced and repaired the router constraint under the preapproved technical-defect mandate; actual V88 runner assembly and full offline suite now pass. No agent restart occurred and live acceptance remains outstanding.",
+  "evidence": [
+    {
+      "bytes": 6347,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/overhaul_v88_runtime_router_correction_acceptance_20260906_v1.json",
+      "role": "overhaul_v88_runtime_router_correction_acceptance_20260906_v1",
+      "sha256": "ed36094bef86b06ef2c76a1c8ce83e696bbe6e33bd9545973e618f7f77127bf1"
+    },
+    {
+      "bytes": 1698,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/overhaul_v88_operator_start_incident_20260906_v1.json",
+      "role": "overhaul_v88_operator_start_incident_20260906_v1",
+      "sha256": "b3265d71e1a0128acd013d75ba96ac33ad059d34c0b861d9903cd64b672186bf"
+    },
+    {
+      "bytes": 4833,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/reviews/2026-09-06-v88-runtime-router-correction.md",
+      "role": "2026-09-06-v88-runtime-router-correction",
+      "sha256": "2dc233a956a2a907876a65dc6b8d3fd175d2af669306854694e0d600f0351d96"
+    },
+    {
+      "bytes": 2558,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/live-approvals/v86-to-v88-four-core-evidence-pending-20260905-v1.json",
+      "role": "v86-to-v88-four-core-evidence-pending-20260905-v1",
+      "sha256": "15100764e065a1ae5d868f67ebb4091fa1a5bad0bcf23ce2a910c58d22069cf9"
+    }
+  ],
+  "execution_authority": "none",
+  "falsifier": "Rejection of the frozen profile during corrected real router/runtime assembly, acceptance of an undeclared provider direction, or failure of the next operator startup invalidates the technical readiness assessment. Economic uncertainty remains independently unresolved.",
+  "hypothesis": "Retain four existing executable core mechanisms at unchanged risk while retiring unresolved HIP-3 routes and observation-only placeholders, with repaired technical evidence and continuous native execution review.",
+  "hypothesis_id": "portfolio-overhaul-four-core-live-proposal-20260905",
+  "limitations": [
+    "The previous readiness assessment missed actual V88 runtime-router construction; this revision records the contradiction and targeted correction.",
+    "No corrected operator live restart or V88 checkpoint has been observed.",
+    "Future native entry/protection/hold/exit fidelity and profitability remain unverified.",
+    "The post-refusal flat/order-free venue snapshot is timestamped; the next launcher must reconcile freshly.",
+    "The four prospective lifecycle records and nine-screen live acceptance were prepared but not executed against the old V86 checkpoint.",
+    "The frozen trading profile and sizing remain unchanged; no new live strategy approval is requested."
+  ],
+  "metrics": {
+    "additional_routing_coverage_tests_passed": 50,
+    "approval_status": "accepted",
+    "approval_validation": "approved_profile_change",
+    "approved_source_commit": "67c6c406f6f353ead7e8617324b2915681a94c0d",
+    "candidate_profile_fingerprint": "06e90a0c59b4b767fd14a61f3927553fc00b3017405193170101531204761d5f",
+    "deployed_unsigned_poll_cycles": 8,
+    "deployed_unsigned_strategy_intents": 0,
+    "deployed_unsigned_technical_complete": true,
+    "experiment_status": "being_tested",
+    "full_offline_tests_passed": 8001,
+    "highest_value_next_investigation": "HYPE exact-run native entry/hold/protection/exit fidelity and concentration, with run and cutoff bound before outcomes.",
+    "live_change_approved": true,
+    "live_deployed": false,
+    "live_execution_active": false,
+    "maximum_positions": 4,
+    "new_direction_guard_branches_complete": true,
+    "next_step": "Operator retries the same approved command using corrected source; inspect actual fresh V88 checkpoint before starting report-only lifecycle collectors and improvement monitoring.",
+    "offline_network_tests_deselected": 4,
+    "offline_test_warnings": 27,
+    "prestart_backup_validated": true,
+    "retained_parameters_changed": false,
+    "retained_sides": {
+      "BTC": "long",
+      "ETH": "long",
+      "HYPE": "long",
+      "SOL": "short"
+    },
+    "router_statement_coverage_percent": 88.37209302325581,
+    "runtime_assembly_and_router_focused_tests_passed": 43,
+    "runtime_start_accepted": false,
+    "runtime_start_attempted_by_operator": true,
+    "runtime_strategy_settings_changed": false,
+    "rust_tests_ignored": 22,
+    "rust_tests_passed": 495,
+    "software_deployed": true,
+    "source_technical_repair_applied": true,
+    "startup_failure": "router_requires_both_directions_for_btc"
+  },
+  "revision_number": 3,
+  "runtime_strategy_changed": false,
+  "schema_version": 1,
+  "status": "candidate",
+  "strategy_id": "current_core_provider_portfolio_v88",
+  "supersedes_revision_id": "14f431417ceaddc388870d8a0a691c9bb5a815246136a12e2e49f39975b77db1",
+  "symbol": "MULTI"
+}

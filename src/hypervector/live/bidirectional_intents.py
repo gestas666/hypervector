@@ -167,7 +167,13 @@ class BidirectionalIntentRouter:
             raise ValueError("maximum_positions must be a positive integer")
         self._priorities = _capability_priorities(capabilities)
         self._position_policies = _capability_position_policies(capabilities)
-        self._symbols = _validate_bidirectional_symbols(capabilities)
+        self._sides = {
+            (capability.strategy_id, capability.symbol): capability.sides
+            for capability in capabilities
+        }
+        self._symbols = tuple(
+            dict.fromkeys(capability.symbol for capability in capabilities)
+        )
         self._maximum_positions = maximum_positions
 
     @property
@@ -276,6 +282,11 @@ class BidirectionalIntentRouter:
             raise ValueError(
                 f"undeclared strategy capability: {intent.strategy_id}/{intent.symbol}"
             )
+        if intent.side not in self._sides[key]:
+            raise ValueError(
+                "undeclared strategy direction: "
+                f"{intent.strategy_id}/{intent.symbol}/{intent.side}"
+            )
 
 
 def _capability_priorities(
@@ -297,23 +308,6 @@ def _capability_position_policies(
         (capability.strategy_id, capability.symbol): capability.position_policy
         for capability in capabilities
     }
-
-
-def _validate_bidirectional_symbols(
-    capabilities: tuple[StrategyCapability, ...],
-) -> tuple[str, ...]:
-    sides: dict[str, set[str]] = defaultdict(set)
-    order: list[str] = []
-    for capability in capabilities:
-        if capability.symbol not in sides:
-            order.append(capability.symbol)
-        sides[capability.symbol].update(capability.sides)
-    incomplete = [symbol for symbol in order if sides[symbol] != _BOTH_SIDES]
-    if incomplete:
-        raise ValueError(
-            f"enabled symbols require both long and short capability: {incomplete}"
-        )
-    return tuple(order)
 
 
 def _validate_positions(

@@ -66,7 +66,7 @@ def _flat() -> dict[str, PositionState]:
 @pytest.mark.parametrize("symbol", _SYMBOLS)
 @pytest.mark.parametrize("side", ["long", "short"])
 def test_every_enabled_symbol_routes_both_sides(symbol: str, side: str) -> None:
-    """No enabled coin is reduced to a one-sided execution path."""
+    """A declared bidirectional provider retains both routing directions."""
     router = BidirectionalIntentRouter(_capabilities(), maximum_positions=2)
 
     report = router.route((_intent(symbol, side),), positions=_flat())
@@ -77,19 +77,31 @@ def test_every_enabled_symbol_routes_both_sides(symbol: str, side: str) -> None:
     assert report.withheld == ()
 
 
-def test_one_sided_capability_is_rejected_at_configuration() -> None:
-    """A short-only strategy cannot satisfy a coin's portfolio contract."""
-    incomplete = (
+@pytest.mark.parametrize("side", ["long", "short"])
+def test_one_sided_capability_routes_only_its_declared_direction(side: str) -> None:
+    """A directional provider works without inventing opposite-side support."""
+    capabilities = (
         StrategyCapability(
-            strategy_id="short_only",
+            strategy_id="directional",
             symbol="BTC",
-            sides=frozenset({"short"}),
+            sides=frozenset({side}),
             priority=10,
         ),
     )
 
-    with pytest.raises(ValueError, match="both long and short"):
-        BidirectionalIntentRouter(incomplete, maximum_positions=2)
+    router = BidirectionalIntentRouter(capabilities, maximum_positions=1)
+    positions = {"BTC": PositionState("BTC", None)}
+    report = router.route(
+        (_intent("BTC", side, strategy="directional"),), positions=positions
+    )
+    assert [(action.symbol, action.side, action.action) for action in report.actions] == [
+        ("BTC", side, "enter")
+    ]
+    opposite = "short" if side == "long" else "long"
+    with pytest.raises(ValueError, match="undeclared strategy direction"):
+        router.route(
+            (_intent("BTC", opposite, strategy="directional"),), positions=positions
+        )
 
 
 def test_two_coins_may_enter_but_third_is_attributed_as_capacity_conflict() -> None:
