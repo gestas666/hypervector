@@ -1,0 +1,17 @@
+# Frozen frequency repair experiment
+
+Recorded before new strategy outcomes: 2026-09-07.
+
+The root cause under investigation is a restrictive entry mechanism, not an idle poller. V88 produced 108 modeled trades in 351 days, with 37% net winners and negative net after removing the top three winners. The current live prefix contains raw crosses/sweeps blocked by existing strategy predicates, without routing or execution faults.
+
+Test two fixed completed-hour Donchian mechanisms: 20/10 and 8/4 entry/exit channels, ATR20 times two stop anchors, both directions, next completed 15-minute open execution. Neither uses pressure, canonical regime admission, EMA alignment, or one-sided selection. The shorter channel is a frequency sensitivity, not a post-result threshold search. Both preserve fresh-onset semantics and reset indicators across missing data. Reuse the tested 4h Donchian primitives with an explicitly supported 1h cadence; preserve the existing 4h default.
+
+New symbols: exact `xyz:SPCX`, `xyz:SP500`, `xyz:SNDK`. Changed assumption relative to rejected prior recipes: a new price-channel mechanism, bidirectional opportunity, current native candleSnapshot bars, and a later chronology. Previous pressure/Swing/gap-reversal rejections remain recorded. GOLD's unresolved fee mode and prior negative standard-fee result make it a lower-priority addition; BRENTOIL remains an alternative, not an alias for WTI.
+
+Also test BTC, ETH, SOL, HYPE to repair the original portfolio objective. Use native 15m snapshots from 2026-07-19 through 2026-09-07 exclusive, with July19–21 warmup, July21–August18 development comparison, and August18–September7 chronological extension. These dates have been observed by other research and live systems. Neither partition is claimed pristine OOS. Do not adjust parameters after viewing the extension. Source fetch must reject incomplete expected coverage rather than fill invented bars. Separately compare the new mechanism with V88 on the previously examined 351-day four-core panel.
+
+Research size: $500 maximum notional per asset, 10x leverage, 2% margin fraction against $4857.58724349 reference equity, one position per asset, structural stops clamped to 20–250 bps, no profit target, 24h maximum hold. Fixed capped sizing is for comparable per-notional economics, not a decision to deploy it. Report broader portfolio risk before proposing sizing.
+
+Costs: 4.5 bps per-side core fees and 0.9 bps per-side HIP-3 growth-mode fees; extra adverse slippage 2.5 and 5.5 bps per side. A third case uses 9 bps per-side HIP-3 fees and 5.5 bps adverse slippage, exposing growth-mode dependence. Include the exact native hourly funding history. OHLC-based fills and liquidation marks are conditional proxies; depth, receipt latency and source revisions are not reconstructed. Current book spreads are observation context, not substituted historical quotes.
+
+Report every valid trial, both sides, trade count per calendar day and entry-active day, net win rate, average/median win and loss, mean holding time, net after largest and top-three removal, exit ambiguity, gap/terminal censoring, and time partitions. Preserve negative and zero-trade results. No automatic economic abort or live authority. Prefix invariance, hand-computable statistics and source coverage checks must pass before interpreting results. Reaching the user's activity target without cost-adjusted improvement is not a successful economic repair.

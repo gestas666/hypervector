@@ -62,6 +62,8 @@ from hypervector.live.research_pending_market_observer import (
     RESEARCH_PENDING_MARKET_OBSERVER_STRATEGY,
 )
 from hypervector.live.zec_donchian_provider import ZEC_DONCHIAN_LONG_STRATEGY
+from hypervector.live.hourly_price_provider import HOURLY_PRICE_STRATEGIES
+from hypervector.live.hourly_price_contract import validate_hourly_price_provider
 from hypervector.live.v79_provider_validation import (
     validate_directional_range,
     validate_spcx_cash_session_long,
@@ -261,6 +263,8 @@ def _validate_known_provider(provider: StrategyProviderConfig) -> None:
         validate_directional_range(provider)
     if strategy == ZEC_DONCHIAN_LONG_STRATEGY:
         validate_zec_donchian_long(provider)
+    if strategy in HOURLY_PRICE_STRATEGIES:
+        validate_hourly_price_provider(provider)
     if strategy == SPCX_CASH_SESSION_LONG_STRATEGY:
         validate_spcx_cash_session_long(provider)
 

@@ -1,4 +1,4 @@
-"""Causal completed-4h Donchian breakouts with ATR structural stops."""
+"""Causal completed-hour Donchian breakouts with ATR structural stops."""
 
 from __future__ import annotations
 
@@ -24,7 +24,7 @@ from hypervector.research.completed_signal_projection import (
 
 @dataclass(frozen=True)
 class DonchianAtrBreakoutConfig:
-    """Immutable parameters for the V75 channel-breakout contract."""
+    """Immutable channel parameters; the existing V75 defaults remain four-hour."""
 
     entry_channel_bars: int = 20
     exit_channel_bars: int = 10
@@ -40,7 +40,7 @@ class DonchianAtrBreakoutConfig:
             self.exit_channel_bars,
             self.atr_period,
         )
-        if any(isinstance(value, bool) or value < 1 for value in periods):
+        if any(type(value) is not int or value < 1 for value in periods):
             raise ValueError("Donchian and ATR periods must be positive integers")
         if self.entry_channel_bars < 2:
             raise ValueError("entry channel must contain at least two bars")
@@ -48,8 +48,15 @@ class DonchianAtrBreakoutConfig:
             raise ValueError("exit channel must be shorter than entry channel")
         if not math.isfinite(self.atr_multiple) or self.atr_multiple <= 0.0:
             raise ValueError("ATR multiple must be positive and finite")
-        if self.signal_hours != 4 or self.execution_minutes != 15:
-            raise ValueError("V75 requires completed 4h signals and 15m execution")
+        if (
+            type(self.signal_hours) is not int
+            or self.signal_hours not in {1, 4}
+            or type(self.execution_minutes) is not int
+            or self.execution_minutes != 15
+        ):
+            raise ValueError(
+                "Donchian requires completed 1h/4h signals and 15m execution"
+            )
 
 
 def build_donchian_atr_breakout_state(
@@ -125,7 +132,7 @@ def build_donchian_atr_breakout_signals(
     execution_bars: pd.DataFrame,
     config: DonchianAtrBreakoutConfig | None = None,
 ) -> pd.DataFrame:
-    """Project completed 4h channel decisions for next-15m-open execution."""
+    """Project completed channel decisions for next-15m-open execution."""
     cfg = config or DonchianAtrBreakoutConfig()
     frame = validated_ohlc_bars(execution_bars, label="Donchian/ATR breakout")
     signal_bars = complete_resampled_ohlc(
@@ -136,7 +143,11 @@ def build_donchian_atr_breakout_signals(
     state = build_donchian_atr_breakout_state(signal_bars, cfg)
     output = empty_directional_signals(
         frame.index,
-        signal_name="completed_4h_donchian_20_10_atr20_stop_v1",
+        signal_name=(
+            f"completed_{cfg.signal_hours}h_donchian_"
+            f"{cfg.entry_channel_bars}_{cfg.exit_channel_bars}_"
+            f"atr{cfg.atr_period}_stop_v1"
+        ),
         source_time_column="donchian_signal_bar_open",
     )
     project_completed_entries(

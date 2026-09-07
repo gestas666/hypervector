@@ -69,6 +69,10 @@ from hypervector.live.zec_donchian_provider import (
     ZEC_DONCHIAN_LONG_STRATEGY,
     ZecDonchianLongCollector,
 )
+from hypervector.live.hourly_price_provider import (
+    HOURLY_PRICE_STRATEGIES,
+    HourlyPriceCollector,
+)
 
 _HULK_STRATEGY = "hulk_expansion_bidirectional_tuned_v2"
 _RANGE_STRATEGY = "range_onset_bidirectional_v1"
@@ -96,6 +100,8 @@ def build_default_collector(
 ) -> DefaultProviderCollectorProtocol:
     """Build the concrete collector declared by one validated provider."""
     strategy = provider.strategy_id
+    if strategy in HOURLY_PRICE_STRATEGIES:
+        return HourlyPriceCollector(strategy_id=strategy)
     collector = _lab_collector(strategy, backtest_lab_root)
     if collector is not None:
         return collector

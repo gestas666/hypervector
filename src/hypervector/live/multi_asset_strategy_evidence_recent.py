@@ -1,6 +1,7 @@
 """Latest immutable route-evidence rows that supersede older summaries."""
 
 from typing import TypeAlias
+from hypervector.live.hourly_price_evidence import hourly_price_evidence_rows
 
 from hypervector.live.hype_native_breakout_provider import (
     HYPE_NATIVE_BREAKOUT_LONG_STRATEGY,
@@ -63,6 +64,7 @@ def recent_route_evidence_rows() -> tuple[EvidenceRow, ...]:
         + _v58_commodity_rows()
         + _research_pending_market_rows()
         + _sndk_onset_correction_rows()
+        + hourly_price_evidence_rows()
     )
 
 

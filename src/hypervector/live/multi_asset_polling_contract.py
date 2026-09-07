@@ -35,6 +35,7 @@ from hypervector.live.spcx_cash_session_breakout_provider import (
     SPCX_CASH_SESSION_LONG_STRATEGY,
 )
 from hypervector.live.zec_donchian_provider import ZEC_DONCHIAN_LONG_STRATEGY
+from hypervector.live.hourly_price_provider import HOURLY_PRICE_STRATEGIES
 from hypervector.live.research_pending_market_observer import (
     RESEARCH_PENDING_MARKET_OBSERVER_STRATEGY,
 )
@@ -67,6 +68,7 @@ SOURCE_TIMEFRAMES = {
     HIP3_SPCX_CASH_OPEN_STRATEGY: "15m",
     SPCX_CASH_SESSION_LONG_STRATEGY: "15m",
     ZEC_DONCHIAN_LONG_STRATEGY: "15m",
+    **{strategy: "15m" for strategy in HOURLY_PRICE_STRATEGIES},
     RESEARCH_PENDING_MARKET_OBSERVER_STRATEGY: "15m",
 }
 _MINUTES_PER_DAY = 24 * 60
@@ -97,5 +99,6 @@ READINESS_SEED_LOOKBACK_MINUTES = {
     HIP3_SPCX_CASH_OPEN_STRATEGY: _CASH_OPEN_SEED_LOOKBACK_MINUTES,
     SPCX_CASH_SESSION_LONG_STRATEGY: 375,
     ZEC_DONCHIAN_LONG_STRATEGY: 30 * _MINUTES_PER_DAY,
+    **{strategy: 2 * _MINUTES_PER_DAY for strategy in HOURLY_PRICE_STRATEGIES},
     RESEARCH_PENDING_MARKET_OBSERVER_STRATEGY: 16,
 }

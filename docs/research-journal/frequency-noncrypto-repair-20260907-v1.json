@@ -1,0 +1,744 @@
+{
+  "schema_version": 1,
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false,
+  "hypothesis_id": "frequency-noncrypto-repair-20260907",
+  "revision_number": 1,
+  "supersedes_revision_id": null,
+  "created_at_utc": "2026-09-07T11:28:34.485061+00:00",
+  "strategy_id": "multi_asset_growth_first_5000_noncrypto_research_v89",
+  "symbol": "PORTFOLIO",
+  "status": "candidate",
+  "confidence": "low",
+  "hypothesis": "Three exact non-crypto perps with causal hourly price mechanisms can increase observed entry activity while retaining the four core contracts. More frequent large winners and future net growth remain separate unproven hypotheses.",
+  "decision": "Accept the tested seven-asset implementation as a staged candidate with no automatic promotion. Add SPCX band recovery, SNDK 20/10 channel and BRENTOIL 8/4 channel. Retain all 216 case cells; do not replace core routes or add SP500/GOLD on this evidence. Economic readiness is unresolved: SNDK extension is negative and pooled adverse net becomes negative without its top three winners. Current V88 is stopped with operator_stop records; no live restart or activation was performed.",
+  "falsifier": "Any causal timestamp, side, duplicate or contract mismatch invalidates technical readiness. Prospective source/lifecycle discrepancies or weak cost-adjusted outcomes update the low economic confidence. Full joint-account and rolling-history comparisons are still needed; performance remains report-only.",
+  "evidence": [
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_hip3_public_qualification_20260907_v1.json",
+      "role": "immutable_observation_or_validation",
+      "sha256": "14b80e28bb6ccd590283618e7b97cc34eff05fdfac8f5c87801c89e2dc6cdbdb",
+      "bytes": 10162
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_repair_native_inputs_20260907_v1/manifest.json",
+      "role": "immutable_observation_or_validation",
+      "sha256": "e65ea600c47a566b39b7cb7adfc193ef2fb342a4b058b17895abcea21065741b",
+      "bytes": 7193
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_repair_brent_inputs_20260907_v1/manifest.json",
+      "role": "immutable_observation_or_validation",
+      "sha256": "5957646d0c97908c7f663d682f28010721f3ecbb139a87dbbc2bf397be21a2ac",
+      "bytes": 1076
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_repair_native_screen_20260907_v1.json",
+      "role": "immutable_observation_or_validation",
+      "sha256": "85d340e7b4d5322e4b9d85df82581d83dd6521d9ad0d958d4f2791d85b5ee420",
+      "bytes": 6353754
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_repair_reversion_screen_20260907_v1.json",
+      "role": "immutable_observation_or_validation",
+      "sha256": "23fd228e2db73281ad25e003e0d6215c7f2dfdcc1cd61869ca349359257bfb88",
+      "bytes": 3242282
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_repair_brent_screen_20260907_v1.json",
+      "role": "immutable_observation_or_validation",
+      "sha256": "e68f2fb8344c133f45aaf9467acd83699a2715f6087aafdd83aadaf97ef6105b",
+      "bytes": 1286857
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_repair_reconciliation_20260907_v1.json",
+      "role": "immutable_observation_or_validation",
+      "sha256": "c43667dec181e5a692d090de3dc4b1b2f182e995da856da53c3d4a17ded02d2b",
+      "bytes": 13253
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_repair_reconciliation_generator_20260907_v2.py",
+      "role": "immutable_observation_or_validation",
+      "sha256": "bfd9d32a393a4ae1490fa3aa82adff07c187481ce3e975766182aa2a915e80c0",
+      "bytes": 3852
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_repair_native_minute_parity_20260907_v1/report.json",
+      "role": "immutable_observation_or_validation",
+      "sha256": "010617c0f602dfd7126d8213294f240a53d02be99ac501025cf929c3c869afaf",
+      "bytes": 2447
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_repair_observer_audit_20260907_v1.json",
+      "role": "immutable_observation_or_validation",
+      "sha256": "dc3f2446644b58cabd283ab84fce495f44e94c670df33afa2893f0f331af4c62",
+      "bytes": 839658
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_repair_observer_audit_20260907_v2.json",
+      "role": "immutable_observation_or_validation",
+      "sha256": "6dd1b01fb8ccf8f2b70b6ccf0e0e1483469d09fbc402301a94024e06da1060e6",
+      "bytes": 876349
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_repair_terminal_acceptance_20260907_v2.json",
+      "role": "immutable_observation_or_validation",
+      "sha256": "543d0b5f1049dfb01ca6aa568099bd20004dea8f9f4060d590b0855d48d8b560",
+      "bytes": 1225261
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_repair_terminal_review_20260907_v1.json",
+      "role": "immutable_observation_or_validation",
+      "sha256": "b392c6c67ded4adcefcbb986acb9abf998542823db58ff27ef30ec9bc2ce2970",
+      "bytes": 2693
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_repair_terminal_acceptance_generator_20260907_v2.py",
+      "role": "immutable_observation_or_validation",
+      "sha256": "5f81c92708011f2ae8197f04ee01123b17743fdff60e1f43f9a730c79e7be558",
+      "bytes": 3892
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_repair_v88_final_state_20260907_v1.json",
+      "role": "immutable_observation_or_validation",
+      "sha256": "1d580ceeb30e3ed88d151f4ec712babc953365d6d072ffb663bb60eec044e4f3",
+      "bytes": 2935136
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_repair_full_tests_20260907_v1.txt",
+      "role": "immutable_observation_or_validation",
+      "sha256": "d3b318cee4f481c6a519a63393e11918d3147a2017d146b78ca8ea7fa6b88814",
+      "bytes": 751335
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_repair_fixture_rerun_20260907_v1.txt",
+      "role": "immutable_observation_or_validation",
+      "sha256": "bc6594e3f69fb0bf5f0759659e2316d4904a140476039a54aed9d397142e9a8d",
+      "bytes": 44416
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_repair_fixture_rerun_20260907_v2.txt",
+      "role": "immutable_observation_or_validation",
+      "sha256": "c95ead88a404bcf73f6813aca9bb41adb44d2593609e2601e1e7f33ce6a22025",
+      "bytes": 113
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_repair_original_path_fixture_test_20260907_v1.txt",
+      "role": "immutable_observation_or_validation",
+      "sha256": "8afe2471606046b386cbefd7224d475f9d94ddb804d914ca3a5b3472c14d8f5c",
+      "bytes": 98
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_repair_rust_tests_20260907_v2.txt",
+      "role": "immutable_observation_or_validation",
+      "sha256": "8bbe730310519fd6a95bc44af83c813c21004237e23ba64d4871933aa4f9ed9a",
+      "bytes": 57560
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_repair_rust_clippy_20260907_v1.txt",
+      "role": "immutable_observation_or_validation",
+      "sha256": "869a8c8a3fc927a2d9587e3d2519b6889dd57d2003d2d107b78c00d3944f3843",
+      "bytes": 3889
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_repair_final_focused_tests_20260907_v1.txt",
+      "role": "immutable_observation_or_validation",
+      "sha256": "86e43960904e50d3edc1fc2877c8572e6c267d7d48f338426232365266a553fd",
+      "bytes": 99
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_repair_preformat_sources_20260907_v1/brent_protocol_original_draft.md",
+      "role": "frozen_experiment_source",
+      "sha256": "a291f1f229fe1f98a18b0b221a3df4d955c52454c6d80a0aefc5255f3ef68a18",
+      "bytes": 1318
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_repair_preformat_sources_20260907_v1/docs/research/frequency-brent-extension-protocol-20260907.md",
+      "role": "frozen_experiment_source",
+      "sha256": "30acb953f7fbe2838176ee5ab4081c81d2f264a905f14f0958ba6b87822cd047",
+      "bytes": 1460
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_repair_preformat_sources_20260907_v1/docs/research/frequency-noncrypto-protocol-20260907.md",
+      "role": "frozen_experiment_source",
+      "sha256": "cc3006046c62e687d54c20d2864a3a8f9b57e09762e19ba014995badf8b9498a",
+      "bytes": 3465
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_repair_preformat_sources_20260907_v1/docs/research/frequency-noncrypto-reversion-protocol-20260907.md",
+      "role": "frozen_experiment_source",
+      "sha256": "8d87204580a7cf5b0b8855a38a7803816362cf5f8d4a267082ba8d7366981ba1",
+      "bytes": 1559
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_repair_preformat_sources_20260907_v1/manifest.json",
+      "role": "frozen_experiment_source",
+      "sha256": "7354b5717c7ad78670c206e3fb1a527217c0fc0d1fc9efcc0ccfec725e960a06",
+      "bytes": 11864
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_repair_preformat_sources_20260907_v1/scripts/frequency_repair_brent_screen.py",
+      "role": "frozen_experiment_source",
+      "sha256": "b08365903442ffd5e8dd128f8d485ceb1464b90b8dde0ef1852706681456ab78",
+      "bytes": 2085
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_repair_preformat_sources_20260907_v1/scripts/frequency_repair_inputs.py",
+      "role": "frozen_experiment_source",
+      "sha256": "20c8c0f57ff33ca2772649c75b4c6720132bf9edf8d77cd14b9b4fe59eb847c5",
+      "bytes": 4102
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_repair_preformat_sources_20260907_v1/scripts/frequency_repair_reversion_screen.py",
+      "role": "frozen_experiment_source",
+      "sha256": "fb8cd3184e7fcd48795968021ccca82230c73dc84430dae9e9a18aeb4bd26381",
+      "bytes": 2959
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_repair_preformat_sources_20260907_v1/scripts/frequency_repair_screen.py",
+      "role": "frozen_experiment_source",
+      "sha256": "81043265f9a81c86e28dee576832a03c0c7357b398da42b8f997ee2968f16aa2",
+      "bytes": 6551
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_repair_preformat_sources_20260907_v1/src/hypervector/research/completed_bar_indicators.py",
+      "role": "frozen_experiment_source",
+      "sha256": "2f82cb876fa00e5817c68561dad971a6a9c92c6870d04b0a6e92f0c772ae14b6",
+      "bytes": 4565
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_repair_preformat_sources_20260907_v1/src/hypervector/research/completed_signal_projection.py",
+      "role": "frozen_experiment_source",
+      "sha256": "a0b8da4b77a61beb6f5811c8d5ed704850c73ba8a1ac1fc4bc8eeba16fdd21ff",
+      "bytes": 2197
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_repair_preformat_sources_20260907_v1/src/hypervector/research/donchian_atr_breakout_signals.py",
+      "role": "frozen_experiment_source",
+      "sha256": "dde6eb4b5b5f78e1a8c27923ca11cc2e13437681134bfea283077083c2601572",
+      "bytes": 7566
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_repair_preformat_sources_20260907_v1/src/hypervector/research/hourly_band_reentry.py",
+      "role": "frozen_experiment_source",
+      "sha256": "38cb6b17a2ae74b21f82dfe60ccdb942cf7f9f025a5716b586ad2ab4ee5b91db",
+      "bytes": 3051
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_repair_preformat_sources_20260907_v1/src/hypervector/research/shared_bar_portfolio.py",
+      "role": "frozen_experiment_source",
+      "sha256": "22f61b1e734a1fca10136eec47750f81bd0f3567eed8a611104bc8643f45729f",
+      "bytes": 18675
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_repair_preformat_sources_20260907_v1/src/hypervector/research/shared_direction_portfolio.py",
+      "role": "frozen_experiment_source",
+      "sha256": "d675236d168daad9b73480be25124d63a6443525d919a9277745b8db3259bdc9",
+      "bytes": 6602
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_repair_preformat_sources_20260907_v1/src/hypervector/research/shared_portfolio_attribution.py",
+      "role": "frozen_experiment_source",
+      "sha256": "e16695e0031bf121df6b368490e8783f8d66dd6df7ca2c0837ba990824c6d704",
+      "bytes": 2046
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_repair_preformat_sources_20260907_v1/src/hypervector/research/shared_portfolio_barriers.py",
+      "role": "frozen_experiment_source",
+      "sha256": "20822026272254894a840eae59706167785e728503ee2a836ccc0f3230c2a59f",
+      "bytes": 2628
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_repair_preformat_sources_20260907_v1/src/hypervector/research/shared_portfolio_completed_peak_lock.py",
+      "role": "frozen_experiment_source",
+      "sha256": "a05f9b0c4f75bd53a39555436c95ca12e9186f302dbca2586395c3619a72698d",
+      "bytes": 3225
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_repair_preformat_sources_20260907_v1/src/hypervector/research/shared_portfolio_entry_barriers.py",
+      "role": "frozen_experiment_source",
+      "sha256": "af2e2a8ff5b158636041b19429aba2559c847b89fb227750f80ba70bfb84ea7c",
+      "bytes": 2510
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_repair_preformat_sources_20260907_v1/src/hypervector/research/shared_portfolio_inputs.py",
+      "role": "frozen_experiment_source",
+      "sha256": "873c83ba996b8b67f1aaad6d22a67afdebc42ae8e2e999cf63278892d515d272",
+      "bytes": 7441
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_repair_preformat_sources_20260907_v1/src/hypervector/research/shared_portfolio_models.py",
+      "role": "frozen_experiment_source",
+      "sha256": "a125eae9b4daad117c433f0edd3f7d46f26bf4db97ec0f4cdbb4d711fad60bfd",
+      "bytes": 10134
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_repair_preformat_sources_20260907_v1/src/hypervector/research/shared_portfolio_pricing.py",
+      "role": "frozen_experiment_source",
+      "sha256": "d69ad593856f40915cd7a53d42c2a254f019c9d2763caabcdcb8cbee58e2644d",
+      "bytes": 1561
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_repair_preformat_sources_20260907_v1/src/hypervector/research/shared_portfolio_profit_lock.py",
+      "role": "frozen_experiment_source",
+      "sha256": "998d24b851142effc5662cfd2ffe706bcc0f9ad8d58dd8a4cd32983e7a1cf319",
+      "bytes": 1642
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_repair_preformat_sources_20260907_v1/src/hypervector/research/shared_portfolio_quotes.py",
+      "role": "frozen_experiment_source",
+      "sha256": "6d912b970ae4b81672a946439c34d1027eecd66a1c6b6b52dfd84337acfd1874",
+      "bytes": 2457
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_repair_preformat_sources_20260907_v1/src/hypervector/research/shared_portfolio_reporting.py",
+      "role": "frozen_experiment_source",
+      "sha256": "ade48a6eae5e9ae896b97c7799124213d89a6e1697c8168eee32af94d75e3aea",
+      "bytes": 2514
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_repair_preformat_sources_20260907_v1/src/hypervector/research/shared_portfolio_signal_exits.py",
+      "role": "frozen_experiment_source",
+      "sha256": "caad537d8895d444be4ef5a730893b23ce67f0d14aa2e6783f01ce49d43edeb7",
+      "bytes": 1953
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_repair_preformat_sources_20260907_v1/src/hypervector/research/shared_portfolio_sizing.py",
+      "role": "frozen_experiment_source",
+      "sha256": "2d2416402eb97cbfd16644ce70177836bed3079f630b55ed4266f944bb4157e7",
+      "bytes": 1323
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_repair_preformat_sources_20260907_v1/src/hypervector/research/shared_trade_portfolio.py",
+      "role": "frozen_experiment_source",
+      "sha256": "e4aa351d4ee7f21e4767063bec6fafe6da769ef2bc99eab3f305a84744c42701",
+      "bytes": 9225
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_repair_preformat_sources_20260907_v1/src/hypervector/research/trade_activity.py",
+      "role": "frozen_experiment_source",
+      "sha256": "3b122263a7b2f85da3e397fc5f516465f43718b84ae2847fae03fe42cdd488ab",
+      "bytes": 3529
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector-frequency-20260907/configs/multi_asset_growth_first_5000_noncrypto_research_v89.toml",
+      "role": "candidate_implementation_or_review",
+      "sha256": "e92d3162d4ac73f4f3a52994205e73e20b01cc39604f1a6d0bcc949883a5a11f",
+      "bytes": 5663
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector-frequency-20260907/docs/reviews/2026-09-07-frequency-and-noncrypto-expansion.md",
+      "role": "candidate_implementation_or_review",
+      "sha256": "c4a430c498f7fb043fdcf6a7065654d2202215b633757800700502aad136cd68",
+      "bytes": 14591
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector-frequency-20260907/src/hypervector/live/hourly_price_provider.py",
+      "role": "candidate_implementation_or_review",
+      "sha256": "dc14c2fcafce23f0187d7797bee4b70f110cad840e92c11b6d51d7d2568d3660",
+      "bytes": 6691
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector-frequency-20260907/src/hypervector/live/hourly_price_contract.py",
+      "role": "candidate_implementation_or_review",
+      "sha256": "3dba0af0b7505212789d706c9a8bc2bb4145f93cfd5db834daccf8ba53de575f",
+      "bytes": 1805
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector-frequency-20260907/src/hypervector/live/hourly_price_evidence.py",
+      "role": "candidate_implementation_or_review",
+      "sha256": "bd3236e416b1d3205e4e14f1df3e8c71f0c0d8c4a01c574eb524a2c2570a2038",
+      "bytes": 1744
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector-frequency-20260907/src/hypervector/research/hourly_band_reentry.py",
+      "role": "candidate_implementation_or_review",
+      "sha256": "f5d7a8268117613ed3ccb10990756d0287e703784f981092c7f512b51d1041ec",
+      "bytes": 3401
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector-frequency-20260907/src/hypervector/research/trade_activity.py",
+      "role": "candidate_implementation_or_review",
+      "sha256": "34a5611c7d65e6f6ddf6d489821ea9f6f9633e78089bad243df75ae612dbca86",
+      "bytes": 3643
+    }
+  ],
+  "metrics": {
+    "case_count": 216,
+    "reconciled_trade_records": 8304,
+    "pooled_independent_new_assets": {
+      "nominal": {
+        "completed_trades": 160,
+        "calendar_days": 48.0,
+        "entry_active_days": 48,
+        "trades_per_calendar_day": 3.3333333333333335,
+        "trades_per_entry_active_day": 3.3333333333333335,
+        "wins": 68,
+        "losses": 92,
+        "breakeven": 0,
+        "net_win_rate_pct": 42.5,
+        "net_usd": 241.8718058595772,
+        "mean_net_usd": 1.5116987866223575,
+        "mean_win_usd": 13.214802362544331,
+        "median_win_usd": 6.678789259616073,
+        "mean_loss_usd": -7.138421247754754,
+        "median_loss_usd": -6.1483460405616315,
+        "net_excluding_largest_usd": 150.27621244722377,
+        "net_excluding_top_three_winners_usd": 12.71456040497796,
+        "mean_hold_hours": 10.7453125,
+        "maximum_entry_gap_hours": 30.0,
+        "median_entry_gap_hours": 5.0,
+        "execution_authority": "none"
+      },
+      "adverse": {
+        "completed_trades": 160,
+        "calendar_days": 48.0,
+        "entry_active_days": 48,
+        "trades_per_calendar_day": 3.3333333333333335,
+        "trades_per_entry_active_day": 3.3333333333333335,
+        "wins": 67,
+        "losses": 93,
+        "breakeven": 0,
+        "net_win_rate_pct": 41.875,
+        "net_usd": 197.50271175015723,
+        "mean_net_usd": 1.2343919484384827,
+        "mean_win_usd": 13.106900899490137,
+        "median_win_usd": 6.852446245294359,
+        "mean_loss_usd": -7.318920951781527,
+        "median_loss_usd": -6.429898343504081,
+        "net_excluding_largest_usd": 106.15230313467623,
+        "net_excluding_top_three_winners_usd": -30.727019240882953,
+        "mean_hold_hours": 10.7453125,
+        "maximum_entry_gap_hours": 30.0,
+        "median_entry_gap_hours": 5.0,
+        "execution_authority": "none"
+      },
+      "hip3_full_fee": {
+        "completed_trades": 160,
+        "calendar_days": 48.0,
+        "entry_active_days": 48,
+        "trades_per_calendar_day": 3.3333333333333335,
+        "trades_per_entry_active_day": 3.3333333333333335,
+        "wins": 61,
+        "losses": 99,
+        "breakeven": 0,
+        "net_win_rate_pct": 38.125,
+        "net_usd": 68.19882444135894,
+        "mean_net_usd": 0.4262426527584934,
+        "mean_win_usd": 13.538494498136677,
+        "median_win_usd": 7.572784481764175,
+        "mean_loss_usd": -7.653023635807863,
+        "median_loss_usd": -6.975363187225592,
+        "net_excluding_largest_usd": -22.415386098763705,
+        "net_excluding_top_three_winners_usd": -157.56383350280865,
+        "mean_hold_hours": 10.7453125,
+        "maximum_entry_gap_hours": 30.0,
+        "median_entry_gap_hours": 5.0,
+        "execution_authority": "none"
+      }
+    },
+    "selected_continuous_cases": [
+      {
+        "symbol": "xyz:SNDK",
+        "variant": "hourly_donchian_20_10_atr20",
+        "cost": "nominal",
+        "activity": {
+          "breakeven": 0,
+          "calendar_days": 48.0,
+          "completed_trades": 47,
+          "entry_active_days": 35,
+          "execution_authority": "none",
+          "losses": 32,
+          "maximum_entry_gap_hours": 90.0,
+          "mean_hold_hours": 11.52659574468085,
+          "mean_loss_usd": -10.197827373209284,
+          "mean_net_usd": 2.812639946787078,
+          "mean_win_usd": 30.568303562779317,
+          "median_entry_gap_hours": 22.0,
+          "median_loss_usd": -12.613746505263064,
+          "median_win_usd": 27.03533527897588,
+          "net_excluding_largest_usd": 40.59848408663923,
+          "net_excluding_top_three_winners_usd": -96.96316795560656,
+          "net_usd": 132.19407749899267,
+          "net_win_rate_pct": 31.914893617021278,
+          "trades_per_calendar_day": 0.9791666666666666,
+          "trades_per_entry_active_day": 1.3428571428571427,
+          "wins": 15
+        },
+        "ambiguous_exit_count": 1,
+        "uncertain_exit_count": 0
+      },
+      {
+        "symbol": "xyz:SNDK",
+        "variant": "hourly_donchian_20_10_atr20",
+        "cost": "adverse",
+        "activity": {
+          "breakeven": 0,
+          "calendar_days": 48.0,
+          "completed_trades": 47,
+          "entry_active_days": 35,
+          "execution_authority": "none",
+          "losses": 32,
+          "maximum_entry_gap_hours": 90.0,
+          "mean_hold_hours": 11.52659574468085,
+          "mean_loss_usd": -10.408427249153998,
+          "mean_net_usd": 2.571336425731616,
+          "mean_win_usd": 30.26149893215425,
+          "median_entry_gap_hours": 22.0,
+          "median_loss_usd": -12.777259724043379,
+          "median_win_usd": 26.751431408993668,
+          "net_excluding_largest_usd": 29.50240339390494,
+          "net_excluding_top_three_winners_usd": -107.37691898165424,
+          "net_usd": 120.85281200938594,
+          "net_win_rate_pct": 31.914893617021278,
+          "trades_per_calendar_day": 0.9791666666666666,
+          "trades_per_entry_active_day": 1.3428571428571427,
+          "wins": 15
+        },
+        "ambiguous_exit_count": 1,
+        "uncertain_exit_count": 0
+      },
+      {
+        "symbol": "xyz:SNDK",
+        "variant": "hourly_donchian_20_10_atr20",
+        "cost": "hip3_full_fee",
+        "activity": {
+          "breakeven": 0,
+          "calendar_days": 48.0,
+          "completed_trades": 47,
+          "entry_active_days": 35,
+          "execution_authority": "none",
+          "losses": 33,
+          "maximum_entry_gap_hours": 90.0,
+          "mean_hold_hours": 11.52659574468085,
+          "mean_loss_usd": -10.867525247860844,
+          "mean_net_usd": 1.7683485658527667,
+          "mean_win_usd": 31.552908269606284,
+          "median_entry_gap_hours": 22.0,
+          "median_loss_usd": -13.568760594101773,
+          "median_win_usd": 26.221267980854655,
+          "net_excluding_largest_usd": -7.501827945042606,
+          "net_excluding_top_three_winners_usd": -142.65027534908756,
+          "net_usd": 83.11238259508004,
+          "net_win_rate_pct": 29.78723404255319,
+          "trades_per_calendar_day": 0.9791666666666666,
+          "trades_per_entry_active_day": 1.3428571428571427,
+          "wins": 14
+        },
+        "ambiguous_exit_count": 1,
+        "uncertain_exit_count": 0
+      },
+      {
+        "symbol": "xyz:SPCX",
+        "variant": "hourly_band20_reentry_atr20_bidirectional_v1",
+        "cost": "nominal",
+        "activity": {
+          "breakeven": 0,
+          "calendar_days": 48.0,
+          "completed_trades": 52,
+          "entry_active_days": 38,
+          "execution_authority": "none",
+          "losses": 19,
+          "maximum_entry_gap_hours": 94.0,
+          "mean_hold_hours": 8.596153846153847,
+          "mean_loss_usd": -7.7868802341358085,
+          "mean_net_usd": 1.1248801584154846,
+          "mean_win_usd": 6.2558937177632,
+          "median_entry_gap_hours": 22.0,
+          "median_loss_usd": -8.308375811892429,
+          "median_win_usd": 4.855830059783206,
+          "net_excluding_largest_usd": 38.8616921304659,
+          "net_excluding_top_three_winners_usd": 6.763456452156497,
+          "net_usd": 58.4937682376052,
+          "net_win_rate_pct": 63.46153846153846,
+          "trades_per_calendar_day": 1.0833333333333333,
+          "trades_per_entry_active_day": 1.368421052631579,
+          "wins": 33
+        },
+        "ambiguous_exit_count": 0,
+        "uncertain_exit_count": 0
+      },
+      {
+        "symbol": "xyz:SPCX",
+        "variant": "hourly_band20_reentry_atr20_bidirectional_v1",
+        "cost": "adverse",
+        "activity": {
+          "breakeven": 0,
+          "calendar_days": 48.0,
+          "completed_trades": 52,
+          "entry_active_days": 38,
+          "execution_authority": "none",
+          "losses": 20,
+          "maximum_entry_gap_hours": 94.0,
+          "mean_hold_hours": 8.596153846153847,
+          "mean_loss_usd": -7.64230610569288,
+          "mean_net_usd": 0.8421293727557436,
+          "mean_win_usd": 6.144901546786134,
+          "median_entry_gap_hours": 22.0,
+          "median_loss_usd": -8.585230143569174,
+          "median_win_usd": 4.712660117796702,
+          "net_excluding_largest_usd": 24.4469305572041,
+          "net_excluding_top_three_winners_usd": -7.049453708107642,
+          "net_usd": 43.790727383298666,
+          "net_win_rate_pct": 61.53846153846154,
+          "trades_per_calendar_day": 1.0833333333333333,
+          "trades_per_entry_active_day": 1.368421052631579,
+          "wins": 32
+        },
+        "ambiguous_exit_count": 0,
+        "uncertain_exit_count": 0
+      },
+      {
+        "symbol": "xyz:SPCX",
+        "variant": "hourly_band20_reentry_atr20_bidirectional_v1",
+        "cost": "hip3_full_fee",
+        "activity": {
+          "breakeven": 0,
+          "calendar_days": 48.0,
+          "completed_trades": 52,
+          "entry_active_days": 38,
+          "execution_authority": "none",
+          "losses": 24,
+          "maximum_entry_gap_hours": 94.0,
+          "mean_hold_hours": 8.596153846153847,
+          "mean_loss_usd": -7.098618070119134,
+          "mean_net_usd": 0.03204782712041247,
+          "mean_win_usd": 6.144047167611451,
+          "median_entry_gap_hours": 22.0,
+          "median_loss_usd": -7.420686427310772,
+          "median_win_usd": 4.742771806254228,
+          "net_excluding_largest_usd": -16.883052467031746,
+          "net_excluding_top_three_winners_usd": -46.75694342238624,
+          "net_usd": 1.6664870102614486,
+          "net_win_rate_pct": 53.84615384615385,
+          "trades_per_calendar_day": 1.0833333333333333,
+          "trades_per_entry_active_day": 1.368421052631579,
+          "wins": 28
+        },
+        "ambiguous_exit_count": 0,
+        "uncertain_exit_count": 0
+      },
+      {
+        "symbol": "xyz:BRENTOIL",
+        "variant": "hourly_donchian_8_4_atr20",
+        "cost": "nominal",
+        "activity": {
+          "breakeven": 0,
+          "calendar_days": 48.0,
+          "completed_trades": 61,
+          "entry_active_days": 41,
+          "execution_authority": "none",
+          "losses": 41,
+          "maximum_entry_gap_hours": 41.0,
+          "mean_hold_hours": 11.975409836065573,
+          "mean_loss_usd": -4.450086692735604,
+          "mean_net_usd": 0.8390813134914646,
+          "mean_win_usd": 11.681875726256955,
+          "median_entry_gap_hours": 19.0,
+          "median_loss_usd": -4.531503984123269,
+          "median_win_usd": 9.228454658526953,
+          "net_excluding_largest_usd": 20.304668974045807,
+          "net_excluding_top_three_winners_usd": -24.974825386882515,
+          "net_usd": 51.18396012297934,
+          "net_win_rate_pct": 32.78688524590164,
+          "trades_per_calendar_day": 1.2708333333333333,
+          "trades_per_entry_active_day": 1.4878048780487805,
+          "wins": 20
+        },
+        "ambiguous_exit_count": 0,
+        "uncertain_exit_count": 0
+      },
+      {
+        "symbol": "xyz:BRENTOIL",
+        "variant": "hourly_donchian_8_4_atr20",
+        "cost": "adverse",
+        "activity": {
+          "breakeven": 0,
+          "calendar_days": 48.0,
+          "completed_trades": 61,
+          "entry_active_days": 41,
+          "execution_authority": "none",
+          "losses": 41,
+          "maximum_entry_gap_hours": 41.0,
+          "mean_hold_hours": 11.975409836065573,
+          "mean_loss_usd": -4.749850108021865,
+          "mean_net_usd": 0.5386749566798799,
+          "mean_win_usd": 11.380151339318456,
+          "median_entry_gap_hours": 19.0,
+          "median_loss_usd": -4.828722956908511,
+          "median_win_usd": 8.928536394979684,
+          "net_excluding_largest_usd": 2.2982654723127247,
+          "net_excluding_top_three_winners_usd": -42.40849202499662,
+          "net_usd": 32.85917235747267,
+          "net_win_rate_pct": 32.78688524590164,
+          "trades_per_calendar_day": 1.2708333333333333,
+          "trades_per_entry_active_day": 1.4878048780487805,
+          "wins": 20
+        },
+        "ambiguous_exit_count": 0,
+        "uncertain_exit_count": 0
+      },
+      {
+        "symbol": "xyz:BRENTOIL",
+        "variant": "hourly_donchian_8_4_atr20",
+        "cost": "hip3_full_fee",
+        "activity": {
+          "breakeven": 0,
+          "calendar_days": 48.0,
+          "completed_trades": 61,
+          "entry_active_days": 41,
+          "execution_authority": "none",
+          "losses": 42,
+          "maximum_entry_gap_hours": 41.0,
+          "mean_hold_hours": 11.975409836065573,
+          "mean_loss_usd": -5.444146978159795,
+          "mean_net_usd": -0.2718040190816805,
+          "mean_win_usd": 11.161796206248889,
+          "median_entry_gap_hours": 19.0,
+          "median_loss_usd": -5.229403311417433,
+          "median_win_usd": 8.27864136964385,
+          "net_excluding_largest_usd": -46.30632455343465,
+          "net_excluding_top_three_winners_usd": -89.43001333433716,
+          "net_usd": -16.58004516398251,
+          "net_win_rate_pct": 31.147540983606557,
+          "trades_per_calendar_day": 1.2708333333333333,
+          "trades_per_entry_active_day": 1.4878048780487805,
+          "wins": 19
+        },
+        "ambiguous_exit_count": 0,
+        "uncertain_exit_count": 0
+      }
+    ],
+    "observer_poll_cycles": 10,
+    "observer_provider_coverage": "7/7",
+    "observer_order_actions": 0,
+    "final_focused_tests_passed": 44,
+    "distinct_offline_tests_passed_across_runs": 8034,
+    "new_module_coverage_percent": 98,
+    "terminal_dimensions": [
+      [
+        120,
+        36
+      ],
+      [
+        100,
+        28
+      ],
+      [
+        190,
+        52
+      ]
+    ]
+  },
+  "limitations": [
+    "Previously examined history and sequential mechanism/asset selection; not pristine out of sample.",
+    "Pooled independent assets are not a seven-asset shared-account replay.",
+    "Candle fills, marks, liquidation and funding conversion are proxies; one SNDK liquidation/stop path is ambiguous.",
+    "Recursive ATR depends on startup history; three-day source comparison does not establish full-versus-rolling parity.",
+    "SNDK later partition loses, Brent full-fee stress loses, and pooled adverse profit is concentrated in its largest winners.",
+    "At 100x28, lower inspector indicators/blockers extend below the visible panel; full detail inspected at 120x36 and 190x52.",
+    "The stopped V88 records identify operator_stop but not the initiating actor. No live deployment or execution is part of this revision.",
+    "An initial Brent protocol draft reversed the SNDK partition characterization; exact draft is frozen and corrected values are in the tracked review."
+  ]
+}

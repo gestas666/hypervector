@@ -97,6 +97,12 @@ pub(crate) fn provider_alias(strategy_id: &str) -> &str {
         "SOL RANGE SHORT"
     } else if strategy_id == "zec_donchian_20_10_atr20_long_v1" {
         "ZEC DONCHIAN L"
+    } else if strategy_id == "hourly_band20_reentry_atr20_bidirectional_v1" {
+        "HOURLY RECOVERY"
+    } else if strategy_id == "hourly_donchian_20_10_atr20_bidirectional_v1" {
+        "HOURLY CHANNEL20"
+    } else if strategy_id == "hourly_donchian_8_4_atr20_bidirectional_v1" {
+        "HOURLY CHANNEL8"
     } else if strategy_id == "btc_hulk_money_flow_relaxed_fixed60_bidirectional_v1" {
         "BTC HULK FLOW60"
     } else if strategy_id == "hulk_expansion_short_robust_v3" {

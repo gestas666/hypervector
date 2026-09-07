@@ -122,7 +122,7 @@ def test_gap_resets_channels_and_atr_warmup() -> None:
         {"entry_channel_bars": 10, "exit_channel_bars": 10},
         {"atr_period": 0},
         {"atr_multiple": 0.0},
-        {"signal_hours": 1},
+        {"signal_hours": 2},
         {"execution_minutes": 5},
     ],
 )
