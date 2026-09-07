@@ -99,6 +99,7 @@ mod cohort_control;
 mod cohort_dashboard;
 mod cohort_depth;
 mod cohort_depth_analytics;
+mod cohort_detail_scroll;
 mod cohort_eligible_markouts;
 mod cohort_entry_context;
 mod cohort_equity_curve;

@@ -250,6 +250,8 @@ fn handle_key(app: &mut App, code: KeyCode) {
     {
         if is_modal_close_key(code) {
             app.close_cohort_modals();
+        } else {
+            app.handle_cohort_detail_scroll(code);
         }
     } else if app.show_event_detail_modal || app.show_trade_detail_modal {
         if is_modal_close_key(code) {
@@ -312,6 +314,12 @@ fn handle_primary_key(app: &mut App, code: KeyCode) {
         KeyCode::Char('P') if cohort_tab(app, 8) => app.cycle_cohort_config_provider(-1),
         KeyCode::PageDown if cohort_tab(app, 8) => app.page_cohort_config_context(1),
         KeyCode::PageUp if cohort_tab(app, 8) => app.page_cohort_config_context(-1),
+        KeyCode::PageDown if cohort_tab(app, 7) => {
+            app.cohort_regime_page = (app.cohort_regime_page + 1) % 3;
+        }
+        KeyCode::PageUp if cohort_tab(app, 7) => {
+            app.cohort_regime_page = (app.cohort_regime_page + 2) % 3;
+        }
         KeyCode::Char('d') if cohort_tab(app, 6) => app.toggle_cohort_operator_side(),
         _ => {}
     }

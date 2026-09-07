@@ -85,3 +85,28 @@ def test_provider_rejects_unqualified_symbol_and_unknown_recipe() -> None:
             observed_at=pd.Timestamp("2026-01-03T00:00Z"),
             after_decision_time_ms=None,
         )
+
+
+@pytest.mark.parametrize("strategy", sorted(HOURLY_PRICE_STRATEGIES))
+def test_hourly_readiness_publishes_displayable_prices_and_both_clocks(
+    strategy: str,
+) -> None:
+    """The inspector receives measured prices and distinguishes source from signal."""
+    bars = _bars()
+    batch = HourlyPriceCollector(strategy_id=strategy)(
+        bars,
+        symbol="xyz:SPCX",
+        observed_at=bars.timestamp.iloc[-1] + pd.Timedelta(minutes=15),
+        after_decision_time_ms=None,
+    )
+    readiness = batch.evaluations[-1].readiness
+    assert readiness.metrics["source_timeframe"] == "15m"
+    assert readiness.metrics["signal_timeframe"] == "1h"
+    assert any("ATR " in value for value in readiness.indicators)
+    if "donchian" in strategy:
+        for name in ("prior_entry_low", "prior_exit_high"):
+            assert isinstance(readiness.metrics[name], float)
+        assert any("ENTRY CHANNEL" in value for value in readiness.indicators)
+        assert any("EXIT CHANNEL" in value for value in readiness.indicators)
+    else:
+        assert any("BAND" in value for value in readiness.indicators)

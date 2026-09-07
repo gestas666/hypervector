@@ -4,13 +4,12 @@ use ratatui::{
     Frame,
     layout::{Constraint, Layout, Rect},
     text::{Line, Span},
-    widgets::{Clear, Paragraph},
 };
 
 use crate::app::App;
 use crate::backend_cohort::CohortFill;
 use crate::cohort_format::{fill_time, money, optional_bps};
-use crate::cohort_widgets::{panel, provider_alias};
+use crate::cohort_widgets::provider_alias;
 
 /// Render the currently selected exact venue fill.
 pub(crate) fn render(frame: &mut Frame, app: &App, area: Rect) {
@@ -30,11 +29,12 @@ pub(crate) fn render(frame: &mut Frame, app: &App, area: Rect) {
         return;
     };
     let modal = centered_rect(82, 70, area);
-    frame.render_widget(Clear, modal);
-    frame.render_widget(
-        Paragraph::new(fill_detail_lines(fill, app))
-            .block(panel(" FILL INSPECTOR // VENUE EVIDENCE ", app)),
+    crate::cohort_detail_scroll::render(
+        frame,
+        app,
         modal,
+        " FILL INSPECTOR // VENUE EVIDENCE ",
+        fill_detail_lines(fill, app),
     );
 }
 

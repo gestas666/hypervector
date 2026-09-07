@@ -16,9 +16,11 @@ from hypervector.live.canonical_regime_telemetry import (
     LEGACY_CANONICAL_REGIME_STRATEGY,
     CanonicalRegimeCollectorProtocol,
     CanonicalRegimeTelemetryCollector,
-    canonical_regime_symbols,
 )
 from hypervector.live.cohort_regime_routing import attach_regime_preferences
+from hypervector.live.configured_canonical_regime import (
+    configured_canonical_regime_symbols,
+)
 from hypervector.live.cohort_profit_lock_history import profit_lock_market_bars
 from hypervector.live.multi_asset_default_collectors import build_default_collector
 from hypervector.live.multi_asset_live_config import (
@@ -132,7 +134,7 @@ class ConfiguredMultiAssetIntentPoller:
         self._collectors = dict(collectors)
         self._canonical_regime_collector = canonical_regime_collector or (
             CanonicalRegimeTelemetryCollector(
-                symbols=canonical_regime_symbols(config.symbols),
+                symbols=configured_canonical_regime_symbols(config),
                 legacy_execution_enabled=False,
                 legacy_execution_symbols=frozenset(
                     symbol

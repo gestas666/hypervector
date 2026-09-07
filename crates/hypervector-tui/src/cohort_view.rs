@@ -187,7 +187,7 @@ fn context_help(app: &App) -> String {
         4 => " Quit  //  [←/→] Focus journal  [↑/↓] Select  [Enter] Exact details",
         5 => " Quit  //  [↑/↓] Select evidence  [Enter] Signal vs setup paths",
         6 => " Quit  //  [←/→] Coin [p/P] Provider [d] Side [↑/↓] Action [Enter] Review",
-        7 => " Quit  //  [←/→] Coin  //  Backend labels + causal evidence  //  Read-only",
+        7 => " Quit  //  [←/→] Coin [PgUp/PgDn] All panes // Backend labels + causal evidence",
         8 => " Quit  //  [←/→] Coin [p/P] Provider [↑/↓] Row [+/-] Adjust [Enter] Action",
         _ => " Quit  //  Backend-authored telemetry  //  Lifecycle follows launcher",
     };

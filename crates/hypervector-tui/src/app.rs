@@ -37,6 +37,9 @@ pub struct App {
     pub active_tab: usize,
     pub selected_cohort_setup_index: usize,
     pub show_cohort_setup_modal: bool,
+    pub cohort_detail_scroll: u16,
+    pub(crate) cohort_detail_max_scroll: std::cell::Cell<u16>,
+    pub cohort_regime_page: u8,
     pub show_cohort_chart_modal: bool,
     pub selected_cohort_chart_provider_index: usize,
     pub selected_cohort_symbol_index: usize,
@@ -109,6 +112,9 @@ macro_rules! initial_app_state {
             active_tab: 0,
             selected_cohort_setup_index: 0,
             show_cohort_setup_modal: false,
+            cohort_detail_scroll: 0,
+            cohort_detail_max_scroll: std::cell::Cell::new(0),
+            cohort_regime_page: 0,
             show_cohort_chart_modal: false,
             selected_cohort_chart_provider_index: 0,
             selected_cohort_symbol_index: 0,
@@ -181,6 +187,7 @@ impl App {
 
     /// Open setup details only when a real backend row is selected.
     pub fn toggle_cohort_setup_modal(&mut self) {
+        self.cohort_detail_scroll = 0;
         if self.selected_cohort_setup_index < self.backend.cohort.evaluations.len() {
             self.show_cohort_setup_modal = !self.show_cohort_setup_modal;
         }
@@ -227,6 +234,7 @@ impl App {
 
     /// Open exact path evidence only when a backend journal row exists.
     pub fn toggle_cohort_journal_modal(&mut self) {
+        self.cohort_detail_scroll = 0;
         if self.selected_cohort_journal_index
             < self
                 .backend
@@ -240,6 +248,7 @@ impl App {
 
     /// Close every cohort-specific modal without changing backend state.
     pub fn close_cohort_modals(&mut self) {
+        self.cohort_detail_scroll = 0;
         self.show_cohort_setup_modal = false;
         self.show_cohort_chart_modal = false;
         self.show_cohort_fill_modal = false;

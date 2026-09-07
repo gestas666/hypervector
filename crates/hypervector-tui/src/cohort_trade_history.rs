@@ -5,7 +5,7 @@ use ratatui::{
     layout::{Constraint, Flex, Layout, Rect},
     style::Style,
     text::{Line, Span},
-    widgets::{Cell, Clear, Paragraph, Row, Table, TableState, Wrap},
+    widgets::{Cell, Row, Table, TableState},
 };
 
 use crate::app::App;
@@ -193,12 +193,12 @@ pub(crate) fn render_detail(frame: &mut Frame, app: &App, area: Rect) {
         return;
     };
     let modal = centered_rect(88, 84, area);
-    frame.render_widget(Clear, modal);
-    frame.render_widget(
-        Paragraph::new(detail_lines(trade, app))
-            .wrap(Wrap { trim: true })
-            .block(panel(" CLOSED TRADE INSPECTOR // BACKEND JOURNAL ", app)),
+    crate::cohort_detail_scroll::render(
+        frame,
+        app,
         modal,
+        " CLOSED TRADE INSPECTOR // BACKEND JOURNAL ",
+        detail_lines(trade, app),
     );
 }
 

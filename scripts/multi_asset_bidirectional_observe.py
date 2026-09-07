@@ -13,7 +13,9 @@ import pandas as pd
 import requests
 
 from hypervector.data.hl import fetch_hl_ohlcv_snapshot
-from hypervector.live.canonical_regime_telemetry import canonical_regime_symbols
+from hypervector.live.configured_canonical_regime import (
+    configured_canonical_regime_symbols,
+)
 from hypervector.live.multi_asset_default_collectors import build_default_collector
 from hypervector.live.multi_asset_cohort_telemetry import MultiAssetCohortTelemetry
 from hypervector.live.multi_asset_intent_poller import (
@@ -227,8 +229,8 @@ def _build_observer_poller(
     fetch_bars: CohortBarFetcherProtocol,
     backtest_lab_root: Path,
 ) -> ConfiguredMultiAssetIntentPoller:
-    """Build exact providers and omit inapplicable core-only regime telemetry."""
-    if canonical_regime_symbols(config.symbols):
+    """Build exact providers and their explicitly supported descriptive telemetry."""
+    if configured_canonical_regime_symbols(config):
         return ConfiguredMultiAssetIntentPoller.with_default_collectors(
             config=config,
             fetch_bars=fetch_bars,

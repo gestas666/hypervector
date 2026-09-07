@@ -232,9 +232,9 @@ def _range_metrics(
         "raw_long_cross": long_cross,
         "raw_short_cross": short_cross,
         "regime_admitted": admitted,
-        "sma_fast": fast,
-        "sma_gap_bps": gap,
-        "sma_slow": slow,
+        "sma_fast": _optional_metric(fast),
+        "sma_gap_bps": _optional_metric(gap),
+        "sma_slow": _optional_metric(slow),
         "structural_direction": structural,
     }
 

@@ -210,7 +210,13 @@ def _project_channel_exits(
     state: pd.DataFrame,
     config: DonchianAtrBreakoutConfig,
 ) -> None:
-    telemetry = ("prior_entry_high", "prior_exit_low", "atr")
+    telemetry = (
+        "prior_entry_high",
+        "prior_entry_low",
+        "prior_exit_low",
+        "prior_exit_high",
+        "atr",
+    )
     for column in telemetry:
         output[column] = np.nan
     for signal_time, row in state.iterrows():

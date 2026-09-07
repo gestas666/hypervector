@@ -82,6 +82,7 @@ impl App {
 
     /// Toggle details only when the focused journal has the selected record.
     pub fn toggle_cohort_fill_modal(&mut self) {
+        self.cohort_detail_scroll = 0;
         let valid = match self.effective_cohort_trade_focus() {
             CohortTradeFocus::Lifecycles => {
                 self.selected_cohort_lifecycle_index

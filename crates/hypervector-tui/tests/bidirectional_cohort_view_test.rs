@@ -65,5 +65,6 @@ include!("support/bidirectional_cohort_trade_dashboard.rs");
 include!("support/bidirectional_cohort_research.rs");
 include!("support/bidirectional_cohort_fill_audit.rs");
 include!("support/bidirectional_cohort_navigation.rs");
+include!("support/bidirectional_cohort_accessibility.rs");
 include!("support/bidirectional_cohort_setup_charts.rs");
 include!("support/bidirectional_cohort_validation.rs");

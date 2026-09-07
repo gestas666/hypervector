@@ -42,7 +42,9 @@ HOURLY_PRICE_SYMBOLS = frozenset(
 _METRICS = (
     "atr",
     "prior_entry_high",
+    "prior_entry_low",
     "prior_exit_low",
+    "prior_exit_high",
     "band_mean",
     "band_lower",
     "band_upper",
@@ -162,7 +164,15 @@ def _readiness(
     metrics: dict[str, ReadinessMetric] = {
         column: _finite(signal.get(column)) for column in _METRICS if column in signal
     }
-    metrics.update({"stop_price": stop, "signal_hours": 1, "fresh_entry": eligible})
+    metrics.update(
+        {
+            "stop_price": stop,
+            "signal_hours": 1,
+            "fresh_entry": eligible,
+            "source_timeframe": "15m",
+            "signal_timeframe": "1h",
+        }
+    )
     blockers = (
         ()
         if eligible
@@ -178,8 +188,27 @@ def _readiness(
         indicators=(
             f"HOURLY HISTORY {'READY' if ready else 'WAIT'}",
             f"FRESH ENTRY {side.upper() if eligible and side else 'NONE'}",
+            *_price_indicators(signal),
         ),
         metrics=metrics,
+    )
+
+
+def _price_indicators(signal: pd.Series) -> tuple[str, ...]:
+    def price(name: str) -> str:
+        value = _finite(signal.get(name))
+        return "N/A" if value is None else f"{value:.6g}"
+
+    common = ("SOURCE 15M / SIGNAL COMPLETED 1H", f"ATR {price('atr')}")
+    if "band_mean" in signal:
+        return (
+            *common,
+            f"BAND {price('band_lower')} / {price('band_mean')} / {price('band_upper')}",
+        )
+    return (
+        *common,
+        f"ENTRY CHANNEL {price('prior_entry_low')} / {price('prior_entry_high')}",
+        f"EXIT CHANNEL {price('prior_exit_low')} / {price('prior_exit_high')}",
     )
 
 

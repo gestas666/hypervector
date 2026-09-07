@@ -21,6 +21,31 @@ BASELINE = Path(
 ADDITIONS = {"xyz:SPCX", "xyz:SNDK", "xyz:BRENTOIL"}
 
 
+def test_live_package_preserves_researched_contract_and_exact_operator_approval() -> (
+    None
+):
+    """Adding launch provenance cannot silently alter strategy, timing or sizing."""
+    from hypervector.live.cohort_profile_change_approval import (
+        validate_profile_change_approval,
+    )
+
+    original = load_multi_asset_live_config(PROFILE, mode="observe")
+    live = load_multi_asset_live_config(
+        Path("configs/multi_asset_growth_first_5000_noncrypto_live_v89.toml"),
+        mode="observe",
+    )
+    assert (
+        replace(live, transition_approval=None, source_path=original.source_path)
+        == original
+    )
+    baseline = load_multi_asset_live_config(BASELINE, mode="observe")
+    evidence = validate_profile_change_approval(
+        baseline, live, live.transition_approval
+    )
+    assert evidence["state"] == "approved_profile_change"
+    assert evidence["execution_authority"] == "none"
+
+
 def test_expansion_adds_three_sources_without_altering_current_execution_contracts() -> (
     None
 ):

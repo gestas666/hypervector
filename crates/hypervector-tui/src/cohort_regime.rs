@@ -20,6 +20,10 @@ const LEGACY_REGIME_PROVIDER: &str = "range_onset_bidirectional_v1";
 
 /// Render a full-screen explanation of backend regime and range evidence.
 pub(crate) fn render(frame: &mut Frame, app: &App, area: Rect) {
+    if app.cohort_regime_page != 0 {
+        render_detail_page(frame, app, area);
+        return;
+    }
     let lower_height = if area.height >= 40 {
         13
     } else if area.height >= 30 {
@@ -41,6 +45,29 @@ pub(crate) fn render(frame: &mut Frame, app: &App, area: Rect) {
     render_diagnostics(frame, app, sections[1]);
     if lower_height > 0 {
         render_lower_deck(frame, app, sections[2]);
+    }
+}
+
+fn render_detail_page(frame: &mut Frame, app: &App, area: Rect) {
+    let sections = Layout::vertical([
+        Constraint::Length(1),
+        Constraint::Percentage(50),
+        Constraint::Min(5),
+    ])
+    .split(area);
+    frame.render_widget(
+        Paragraph::new(format!(
+            " REGIME PAGE {}/3 // [PgUp/PgDn] PANES [Left/Right] COIN",
+            app.cohort_regime_page + 1,
+        )),
+        sections[0],
+    );
+    if app.cohort_regime_page == 1 {
+        render_label_tape(frame, app, sections[1]);
+        crate::cohort_regime_open::render(frame, app, sections[2]);
+    } else {
+        crate::cohort_regime_reflection::render(frame, app, sections[1]);
+        crate::cohort_regime_arbitration::render(frame, app, sections[2]);
     }
 }
 

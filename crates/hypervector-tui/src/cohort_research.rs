@@ -4,7 +4,7 @@ use ratatui::{
     Frame,
     layout::{Constraint, Direction, Layout, Rect},
     text::{Line, Span},
-    widgets::{Cell, Clear, Paragraph, Row, Table, TableState, Wrap},
+    widgets::{Cell, Paragraph, Row, Table, TableState},
 };
 
 use crate::app::App;
@@ -298,13 +298,13 @@ pub(crate) fn render_detail(frame: &mut Frame, app: &App, area: Rect) {
         return;
     };
     let modal = centered_rect(90, 82, area);
-    frame.render_widget(Clear, modal);
     let friction = provider_friction(app, item);
-    frame.render_widget(
-        Paragraph::new(detail_lines(item, friction, app))
-            .wrap(Wrap { trim: true })
-            .block(panel(" RESEARCH EVIDENCE INSPECTOR ", app)),
+    crate::cohort_detail_scroll::render(
+        frame,
+        app,
         modal,
+        " RESEARCH EVIDENCE INSPECTOR ",
+        detail_lines(item, friction, app),
     );
 }
 

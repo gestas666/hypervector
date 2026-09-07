@@ -6,7 +6,6 @@ use ratatui::{
     Frame,
     layout::{Constraint, Direction, Layout, Rect},
     text::{Line, Span},
-    widgets::{Clear, Paragraph, Wrap},
 };
 use serde_json::Value;
 
@@ -14,7 +13,7 @@ use crate::app::App;
 use crate::backend_cohort::CohortProviderEvaluation;
 use crate::cohort_route_authority::provider_route_label;
 use crate::cohort_route_contract::{execution_label, risk_label, timing_label};
-use crate::cohort_widgets::{panel, provider_alias, provider_identity_label};
+use crate::cohort_widgets::{provider_alias, provider_identity_label};
 
 const HULK_STRATEGY_ID: &str = "hulk_expansion_bidirectional_tuned_v2";
 const HULK_ENTRY_CONTRACT: &str = "hulk_expansion_moderate_adx_v1";
@@ -29,12 +28,12 @@ pub(crate) fn render(frame: &mut Frame, app: &App, area: Rect) {
         return;
     };
     let modal = centered_rect(88, 78, area);
-    frame.render_widget(Clear, modal);
-    frame.render_widget(
-        Paragraph::new(setup_lines(setup, app))
-            .wrap(Wrap { trim: true })
-            .block(panel(" SETUP INSPECTOR // EXACT DECISION EVIDENCE ", app)),
+    crate::cohort_detail_scroll::render(
+        frame,
+        app,
         modal,
+        " SETUP INSPECTOR // EXACT DECISION EVIDENCE ",
+        setup_lines(setup, app),
     );
 }
 
