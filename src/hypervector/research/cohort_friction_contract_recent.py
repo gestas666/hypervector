@@ -20,6 +20,10 @@ _V84_V79_CONTRACT_EVIDENCE = (
     "data/logs/research/bidirectional_cohort/"
     "v84_v79_friction_contract_completion_20260903_v1.json"
 )
+_V89_NOMINAL_CONTRACT_EVIDENCE = (
+    "data/logs/research/bidirectional_cohort/"
+    "v89_hourly_nominal_friction_contracts_20260907_v1.json"
+)
 
 
 def v58_commodity_fresh15_modeled_contracts() -> dict[
@@ -115,6 +119,32 @@ def v79_route_modeled_contracts() -> dict[tuple[str, str], ModeledExecutionContr
             "fixed_bps",
             120.0,
         ),
+    }
+
+
+def v89_hourly_modeled_contracts() -> dict[tuple[str, str], ModeledExecutionContract]:
+    """Return exact V89 nominal replay assumptions, not observed venue costs."""
+    contract = ModeledExecutionContract(
+        entry_liquidity="taker",
+        entry_fee_bps=0.9,
+        entry_slippage_bps=2.5,
+        stop_policy="structural_clamped_bps",
+        stop_bps=None,
+        minimum_stop_bps=20.0,
+        maximum_stop_bps=250.0,
+        maximum_hold_seconds=86_400,
+        maximum_hold_policy="fixed",
+        hard_maximum_hold_seconds=None,
+        target_policy="none",
+        target_liquidity=None,
+        target_bps=None,
+        target_r_multiple=None,
+        evidence_source=_V89_NOMINAL_CONTRACT_EVIDENCE,
+    )
+    return {
+        ("hourly_band20_reentry_atr20_bidirectional_v1", "xyz:SPCX"): contract,
+        ("hourly_donchian_20_10_atr20_bidirectional_v1", "xyz:SNDK"): contract,
+        ("hourly_donchian_8_4_atr20_bidirectional_v1", "xyz:BRENTOIL"): contract,
     }
 
 
