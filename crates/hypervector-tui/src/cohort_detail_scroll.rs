@@ -30,6 +30,7 @@ impl App {
 }
 
 pub(crate) fn render(frame: &mut Frame, app: &App, area: Rect, title: &str, lines: Vec<Line<'_>>) {
+    frame.render_widget(Clear, area);
     let block =
         panel(title, app).title_bottom(" [Up/Down PgUp/PgDn Home/End] SCROLL [Enter/Esc] CLOSE ");
     let inner = block.inner(area);
