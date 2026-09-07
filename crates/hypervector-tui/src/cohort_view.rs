@@ -138,6 +138,9 @@ fn clean_stopped_snapshot(app: &App) -> bool {
 }
 
 fn render_navigation(frame: &mut Frame, app: &App, area: Rect) {
+    const SPACED_NAVIGATION_WIDTH: u16 = 117;
+    let compact = area.width < SPACED_NAVIGATION_WIDTH;
+    let padding = if compact { "" } else { " " };
     let tabs = Tabs::new([
         "[1] PORT",
         "[2] SETUP",
@@ -150,8 +153,8 @@ fn render_navigation(frame: &mut Frame, app: &App, area: Rect) {
         "[9] CFG",
     ])
     .select(app.active_tab)
-    .divider(" │ ")
-    .padding(" ", " ")
+    .divider(if compact { "│" } else { " │ " })
+    .padding(padding, padding)
     .style(app.theme.muted)
     .highlight_style(app.theme.highlight);
     frame.render_widget(tabs, area);

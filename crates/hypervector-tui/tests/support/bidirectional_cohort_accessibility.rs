@@ -1,4 +1,14 @@
 #[test]
+fn minimum_size_navigation_displays_all_nine_tabs() {
+    let mut app = cohort_app();
+    let screen = render(&mut app, 0, 100, 28);
+    for label in ["[1] PORT", "[2] SETUP", "[3] CHART", "[4] DEPTH", "[5] TRADE",
+        "[6] LOG", "[7] OPS", "[8] REGIME", "[9] CFG"] {
+        assert!(screen.contains(label), "missing {label}\n{screen}");
+    }
+}
+
+#[test]
 fn compact_setup_inspector_scrolls_to_last_indicator_and_back() {
     use crossterm::event::KeyCode;
     let mut app = cohort_app();
