@@ -29,6 +29,10 @@ pub(crate) fn render(frame: &mut Frame, app: &App, area: Rect) {
         crate::cohort_observer_dashboard::render(frame, app, area);
         return;
     }
+    if area.width < 120 || area.height < 29 {
+        crate::cohort_compact_positions::render(frame, app, area);
+        return;
+    }
     let complete_portfolio = app.backend.cohort.assets.len() > PRIMARY_ASSET_COUNT;
     let position_height = position_height(area.height, complete_portfolio);
     let checkpoint_height = if complete_portfolio { 3 } else { 5 };
@@ -177,7 +181,7 @@ fn render_compact_positions(
     label: &str,
 ) {
     let rows = assets.iter().map(|asset| compact_asset_row(asset, app));
-    let widths = [13, 6, 7, 11, 11, 9, 8, 11, 16, 15].map(Constraint::Length);
+    let widths = [13, 6, 7, 11, 11, 9, 8, 13, 18, 13].map(Constraint::Length);
     let table = Table::new(rows, widths)
         .column_spacing(1)
         .header(

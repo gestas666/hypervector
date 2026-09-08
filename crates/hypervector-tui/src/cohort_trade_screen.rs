@@ -43,7 +43,7 @@ fn short_performance_height(app: &App, area_height: u16, area_width: u16) -> u16
     }
     crate::cohort_trade_performance::compact_height(app)
         .min(available)
-        .max(7)
+        .max(3)
 }
 
 fn render_tall(frame: &mut Frame, app: &App, area: Rect) {

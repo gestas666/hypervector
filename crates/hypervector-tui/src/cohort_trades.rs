@@ -24,7 +24,9 @@ pub(crate) fn render(frame: &mut Frame, app: &App, area: Rect) {
 }
 
 pub(crate) fn render_position_tracker(frame: &mut Frame, app: &App, area: Rect) {
-    if area.width >= 160 {
+    if area.width < 120 {
+        crate::cohort_compact_positions::render_tracker(frame, app, area);
+    } else if area.width >= 160 {
         render_wide_position_tracker(frame, app, area);
     } else {
         render_compact_position_tracker(frame, app, area);
@@ -42,9 +44,9 @@ fn render_compact_position_tracker(frame: &mut Frame, app: &App, area: Rect) {
         rows,
         [
             Constraint::Length(HIP3_SYMBOL_COLUMN_WIDTH),
-            Constraint::Length(6),
-            Constraint::Length(10),
-            Constraint::Length(10),
+            Constraint::Length(5),
+            Constraint::Length(9),
+            Constraint::Length(9),
             Constraint::Length(8),
             Constraint::Length(15),
             Constraint::Length(4),

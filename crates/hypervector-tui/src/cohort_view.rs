@@ -171,12 +171,22 @@ fn render_footer(frame: &mut Frame, app: &App, area: Rect) {
         Span::styled("[Tab]", app.theme.gold),
         Span::raw(" Next  "),
         Span::styled("[q]", app.theme.gold),
-        Span::raw(context_help(app)),
+        Span::raw(context_help(
+            app,
+            frame.area().width < 120 || frame.area().height < 36,
+        )),
     ]);
     frame.render_widget(Paragraph::new(text).block(panel(title, app)), area);
 }
 
-fn context_help(app: &App) -> String {
+fn context_help(app: &App, compact: bool) -> String {
+    if compact && app.active_tab == 0 {
+        return if app.detached_lifecycle {
+            " Quit keeps backend  //  [←/→] Asset/page  //  Details below".into()
+        } else {
+            " Quit  //  [←/→] Select asset / page  //  Exact details below".into()
+        };
+    }
     if app.detached_lifecycle && app.active_tab == 0 {
         return format!(
             " Quit leaves backend running  //  All {} configured assets visible",

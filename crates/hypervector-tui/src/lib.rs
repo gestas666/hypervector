@@ -92,6 +92,7 @@ mod cohort_application;
 mod cohort_chart;
 mod cohort_chart_detail;
 mod cohort_checkpoint_widget;
+mod cohort_compact_positions;
 mod cohort_config;
 mod cohort_config_exit;
 mod cohort_config_identity;
