@@ -50,6 +50,10 @@ fn stale_checkpoint_lifecycle_is_explicitly_at_snapshot() {
             screen.contains("AT SNAPSHOT RUNNING CONSISTENT"),
             "{screen}"
         );
+        assert!(
+            screen.contains("CHECKPOINT STALE | AT SNAPSHOT"),
+            "{screen}"
+        );
         assert!(!screen.contains("| RUNNING CONSISTENT |"), "{screen}");
     }
 }
@@ -101,6 +105,11 @@ fn fresh_checkpoint_with_backend_fault_keeps_current_import_status() {
     let screen = render(&mut app, 0, 160, 45);
     assert!(screen.contains("IMPORT OK"), "{screen}");
     assert!(screen.contains("BACKEND HEARTBEAT STALE"), "{screen}");
+    assert!(
+        screen.contains("SOURCE ISSUE | BACKEND HEARTBEAT STALE"),
+        "{screen}"
+    );
+    assert!(!screen.contains(">90S"), "{screen}");
     assert!(!screen.contains("IMPORT STALE"), "{screen}");
     assert!(!screen.contains("AT SNAPSHOT"), "{screen}");
 }

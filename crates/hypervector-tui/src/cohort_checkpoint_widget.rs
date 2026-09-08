@@ -195,8 +195,10 @@ fn forward_paths(checkpoint: &CohortCheckpointTelemetry) -> String {
 }
 
 fn freshness(checkpoint: &CohortCheckpointTelemetry) -> &'static str {
-    if checkpoint.stale {
-        "STALE >90S"
+    if checkpoint.publication_stale {
+        "CHECKPOINT STALE"
+    } else if checkpoint.stale {
+        "SOURCE ISSUE"
     } else {
         "FRESH"
     }
