@@ -68,14 +68,25 @@ trade identities; sampled marks cross the stop at each fill timestamp. All
 207 offline tests pass and the source-archive report replays byte-for-byte.
 Confidence is high in this arithmetic, low in a causal opening-session diagnosis.
 
-Next: `v89_noncrypto_cash_open_exposure_attribution_20260908_v1`. Preregister
-session calendar, local-time window and exposure attribution, then examine the
-already registered historical SNDK/SPCX shared-portfolio lifecycles and marks.
-Compare opening exposure with other exposure on the same days, retaining asset,
-direction and chronological partitions. This is descriptive research, not a
-fitted live filter. Prior session feasibility/source studies and the deferred
-SPCX crossing filter do not answer this joint exposure question. Keep the sealed
-prospective experiment unopened.
+The [cash-open exposure study](../reviews/2026-09-08-v89-cash-open-exposure.md)
+is complete. All 18 inherited cases reconcile across 99 SNDK/SPCX lifecycles.
+Primary opening attribution changes from −$3.887588 to −$83.505224 under the
+inherited late-intrabar clock while whole-trade net is conserved. Zero-duration
+boundary events account for −$13.261976 in the primary recorded result; positive
+opening exposure contributes +$9.374388 over 17 dates and 9.5 hours. These clocks
+and selected exposure dates cannot establish a useful live session filter.
+33 offline tests passed; independent SQL verifies 21,132 components, and the
+source archive reproduces all 55 output files byte-for-byte. Confidence is high
+in accounting and low in causal or policy interpretation.
+
+Next: `v89_sndk_opening_exit_clock_qualification_20260908_v1`. Inventory existing
+registered/archive evidence for the August 6 and 7 SNDK bars at 13:30 UTC,
+which explain $51.526027 of the $79.617635 timing sensitivity. Qualify finer
+price/mark clocks, gaps and the August 7 modeled stop-versus-liquidation
+ambiguity before any exit or session-policy proposal. The full-fee case also
+inherits a different modeled liquidation price; it is not a fee-only control.
+Existing SNDK onset/durable-correction studies do not answer this exact question.
+Keep the sealed prospective experiment unopened.
 
 Operational note: research import briefly deferred below 8 GiB free space and
 resumed automatically. A 180-sample observation at 13:43–13:46 UTC stayed above
