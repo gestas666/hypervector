@@ -1,6 +1,6 @@
-# Seven-asset prospective source collector: qualified minute, coarse cadence pending
+# Seven-asset prospective source collector: observed cadence qualified
 
-As of September 8, 2026, 19:49 UTC, the new research collector is running as
+As of September 8, 2026, 20:03 UTC, the new research collector is running as
 PID **15448**, with its own output directory and singleton lock. The existing
 SNDK/Brent collector, PID **75062**, remains running in its original worktree.
 Both experiments remain sealed against early economic outcome inspection.
@@ -33,7 +33,7 @@ the study end hour; final grace observations may remain in raw storage.
   reversion/recovery, metadata separation, exclusive end, rate budgeting,
   interruption, overrun and singleton lifecycle. The archived source independently
   ran the same 126 tests successfully. All 5,184 Git blobs match the archive.
-- **Seven independent reconciliation tests passed**, including deliberate raw,
+- **Nine independent reconciliation tests passed**, including deliberate raw,
   indexed-value and first/latest-clock corruption. The auditor imports no
   Hypervector implementation code.
 - Statement/branch coverage is 100% for the contract, transport, budget, envelope,
@@ -55,14 +55,26 @@ the study end hour; final grace observations may remain in raw storage.
   **2.082 seconds**, with no incomplete/deferred requests or next-minute overrun.
   All four first receipts met the sixty-second publication allowance.
 
-## Remaining qualification — medium confidence until measured
+## Scheduled coarse/hourly qualification — high confidence in observed cycle
 
-The actual **20:00 UTC** scheduled quarter/hour slot still needs observation for
-XYZ candles, all seven funding streams and both metadata dexes. An initial
-all-stream capture does not prove their sustained scheduled cadence. Prospective
-replay implementation and economic evaluation remain separate outstanding work;
-no new-study outcomes have been calculated. Do not extend or move the frozen
-calendar to obtain a favorable result.
+The actual **20:00 UTC** cycle completed **20 requests in 9.734 seconds**,
+with no incomplete/deferred requests or next-minute overrun. All seven completed
+candle identities and all seven actual funding settlements were indexed with
+first receipts within sixty seconds: maximum observed candle delay **7.587 s**,
+maximum funding delay **13.949 s**. Core metadata was read at 20:00:14.319 UTC;
+XYZ metadata at 20:00:14.684 UTC. Metadata freshness means successful reads;
+its exchange-publication lag is unknown, so zero lag is not inferred.
+
+A consistent immutable SQLite/raw snapshot at **20:03:32 UTC** independently
+reconciled **154 requests / 11,429 value versions**, with maximum rolling-minute
+weight **596** and **5,693,676 raw bytes**. This snapshot permits later audit while
+the original collector continues writing. Collector source hashes, PID/start,
+owned lock and the separate original collector were verified.
+
+This qualifies the observed collection and restart behavior. Sustained future
+coverage remains subject to monitoring. Prospective replay implementation and
+economic evaluation remain separate outstanding work; no new-study outcomes
+have been calculated. Keep the frozen calendar and both outcome seals intact.
 
 Measured response sizes project approximately **971 MB for fourteen days**,
 including a conservative cycle-file allowance and two SQLite value versions per
@@ -90,10 +102,25 @@ Key records: `source_freeze.json`, `source_archive_verification.json`,
 `independent_one_shot_audit.json`, `independent_resume_audit.json`,
 `resume_preservation.json`, `request_storage_projection.json`,
 `persistent_launch.json`, `persistent_initial_verification.json` and
-`scheduled_minute_qualification.json`.
+`scheduled_minute_qualification.json`, `scheduled_hour_qualification.json`,
+`scheduled_hour_interpretation.json`, `qualification_snapshot_manifest.json` and
+`independent_qualification_snapshot_audit.json`.
 
-Next: validate the actual 20:00 UTC coarse/hourly slot, append the qualification
-revision to the research journal, then qualify the preregistered replay using
-older pinned controls while keeping both prospective outcomes sealed.
+Next: qualify the preregistered replay using older pinned controls while keeping
+both prospective outcomes sealed. The inspected historical evaluator supplies
+fixed completed lifecycles; the new account contract requires dynamic equity,
+rounded quantities, native funding clocks and terminal open positions. The
+implementation/acceptance plan is
+`docs/plans/2026-09-08-v89-prospective-replay-qualification.md`.
 The continuous goal remains active. Existing deployment proposals remain pending;
 this public-source research launch does not apply a live allocation or strategy.
+
+
+The source qualification was appended as prospective hypothesis revision 2:
+`f14aae1bfa13f2a41a75d11f21e53230ddfc5698eabd74c4506f0760c6ba5198`.
+Its record is `docs/research-journal/v89-equal-cap-prospective-20260909-v2.json`,
+SHA-256 `e01f1eaea09f7c0aa765f8ca4ff23fa544d75e5b96dedfdbf55b02090e84695a`,
+112,077 bytes and 221 evidence files. DuckDB readback verified the revision,
+record hash/length, qualified collector, unqualified replay and null outcomes
+at September 8 20:08:21 UTC. The immutable qualification review in the evidence
+directory preserves the report as it stood at registration.
