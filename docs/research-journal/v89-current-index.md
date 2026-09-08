@@ -11,6 +11,22 @@ records carry `execution_authority=none`; they do not arm or manage orders.
 
 ## Current finding and next action
 
+Operational update at September 8 14:11 UTC: all seven asset ledgers end in
+`STOPPED / operator_stop` at 14:05:33 UTC. The tracked backend, supervisor and
+reporter processes are absent; the detached TUI remains open and displays stale
+telemetry. Its last checkpoint is from 14:04:48 UTC and cannot establish current
+armed execution. Unsigned native core and XYZ reads at 14:11:02–03 UTC report no
+positions or open orders. Confidence is high in those observed states; the
+shutdown requester remains unidentified. No stop file is currently present.
+The generic stop reason also covers termination and terminal-hangup signals.
+Evidence: `data/logs/research/bidirectional_cohort/v89_stopped_status_20260908T141101Z/`.
+The [stale-display correction](../reviews/2026-09-08-v89-stale-checkpoint-presentation.md)
+is now a verified candidate, source `d10b05b`: 521 tests and 27 final release
+renders pass. Publication freshness is distinct from backend health. Visible
+activation requires approval; shutdown attribution remains unresolved after the
+bounded log search. The two-stop economic audit below is the next research task.
+No process was started, stopped, restarted or armed by this diagnostic.
+
 [Chronological shared-account attribution](../reviews/2026-09-08-v89-shared-chronological-stability.md)
 is complete. Recorded/adverse results are +$183.56 over the first 28 days and
 −$87.44 over the later 20 days, with HYPE contributing −$71.47 in the latter.
@@ -95,6 +111,7 @@ hashes; do not append the same revisions under new identities just to copy docs.
 |---|---|
 | Entry dispatch deadline, source `3d204863af40536187df96f161f4874d9fa42166` | [Review](../reviews/2026-09-08-v89-entry-deadline-dispatch-proposal.md); 454 focused tests. Deployment approval is pending; do not re-ask without a relevant update. |
 | Bounded memory snapshot reader, source `7a30d04` | Journal `v89-memory-snapshot-20260908`, revision 3; reporting-only deployment proposal remains pending. Keep the rejected earlier candidate distinct. |
+| Stale TUI presentation, source `d10b05b` | [Review](../reviews/2026-09-08-v89-stale-checkpoint-presentation.md); 521 tests and 27 final optimized incident renders; detached monitor update awaits approval. |
 
 These are not deployment authorizations. Existing live process and configuration
 identity must be read from current evidence before reporting their state.
