@@ -79,14 +79,26 @@ and selected exposure dates cannot establish a useful live session filter.
 source archive reproduces all 55 output files byte-for-byte. Confidence is high
 in accounting and low in causal or policy interpretation.
 
-Next: `v89_sndk_opening_exit_clock_qualification_20260908_v1`. Inventory existing
-registered/archive evidence for the August 6 and 7 SNDK bars at 13:30 UTC,
-which explain $51.526027 of the $79.617635 timing sensitivity. Qualify finer
-price/mark clocks, gaps and the August 7 modeled stop-versus-liquidation
-ambiguity before any exit or session-policy proposal. The full-fee case also
-inherits a different modeled liquidation price; it is not a fee-only control.
-Existing SNDK onset/durable-correction studies do not answer this exact question.
-Keep the sealed prospective experiment unopened.
+The [SNDK exit-clock qualification](../reviews/2026-09-08-v89-sndk-exit-clock.md)
+is complete. August 7's first observed stop contact at 13:32:22.136 UTC precedes
+the first observed liquidation contact by 465.082 seconds; adjacent books have
+full modeled closing capacity. August 6's local stop contact occurs near the bar
+end at 13:44:14.141. Confidence is high in the sampled measurements, moderate
+in the challenge to liquidation-first bar attribution, and low in revised fills
+or profitability. No historical or live PnL was changed. Ninety offline tests,
+220 independent threshold-field checks, six Decimal depth walks and exact
+source-archive replay passed. The August 6 13:30 trade minute remains explicitly
+partial; same-millisecond end prints leave unique closes unresolved.
+
+Next: `v89_noncrypto_ambiguous_exit_event_replay_20260908_v1`. The full inventory
+finds one ambiguous accepted noncrypto lifecycle in every one of the 18 cases:
+SNDK August 7, among 99 accepted SNDK/SPCX lifecycles. Preregister and replay
+its complete entry-to-exit marks with all original cost thresholds and bounded
+execution assumptions, then reconcile lifecycle and shared-account attribution
+against the preserved conservative baseline. Sampling the prior 13:00–13:29
+portion is necessary before calling the observed stop its first lifecycle touch.
+This is research, not a live-rule or profitability approval. Keep the sealed
+prospective experiment unopened.
 
 Operational note: research import briefly deferred below 8 GiB free space and
 resumed automatically. A 180-sample observation at 13:43–13:46 UTC stayed above

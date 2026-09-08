@@ -1,0 +1,2797 @@
+{
+  "automatic_promotion": false,
+  "confidence": "high",
+  "created_at_utc": "2026-09-08T16:27:29.935029+00:00",
+  "decision": "Retain the sampled sequence finding: the August 7 local stop contact precedes the first observed adverse liquidation contact by 465.082 seconds, with sufficient nearby visible closing depth. This challenges liquidation-first attribution of the entire 15-minute bar but does not reconstruct an actual fill or revise portfolio PnL. High confidence in measurements, medium in within-bar interpretation, low in revised fill/profitability claims. The full 18-case inventory finds one unique ambiguous accepted noncrypto lifecycle, so next preregister its complete entry-to-exit event replay across every original cost contract.",
+  "evidence": [
+    {
+      "bytes": 1693566,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/hip3/xyz:SNDK/20260806T130000000000Z_20260806T140000000000Z_d20/books.jsonl.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "6eeb0654c1d49206a8639930514301f2967914e69fa962f4efa43de6acd6bcb2"
+    },
+    {
+      "bytes": 2292,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/hip3/xyz:SNDK/20260806T130000000000Z_20260806T140000000000Z_d20/manifest.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "48dcc27ecf9bd44938b95322c18fb188f0aeea13fb9d7e9a29714c500b7db1c3"
+    },
+    {
+      "bytes": 210690,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/hip3/xyz:SNDK/20260806T130000000000Z_20260806T140000000000Z_d20/raw/page-0001.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "18db0b1cb1f1b48c3c9fff6c177494db600ef528bb369d5db37361c6d1e35f1f"
+    },
+    {
+      "bytes": 215101,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/hip3/xyz:SNDK/20260806T130000000000Z_20260806T140000000000Z_d20/raw/page-0002.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "97e196d2639f8f42ac85da79fd5adedd56053975198073d71409931f92ec0491"
+    },
+    {
+      "bytes": 221796,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/hip3/xyz:SNDK/20260806T130000000000Z_20260806T140000000000Z_d20/raw/page-0003.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "90c808af344ca731a56b316fefbc20b2fd0e8a65e42befd93e79dc3e8844916c"
+    },
+    {
+      "bytes": 243572,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/hip3/xyz:SNDK/20260806T130000000000Z_20260806T140000000000Z_d20/raw/page-0004.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "488621b3c6604e82e03295be1aafe8e0ab27ce314f14078cc5f0bfe8473be850"
+    },
+    {
+      "bytes": 278002,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/hip3/xyz:SNDK/20260806T130000000000Z_20260806T140000000000Z_d20/raw/page-0005.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "1242926ba05ffd0f282ba65c3bbb75ea4e5b90823f6d889121eee746f160dbc0"
+    },
+    {
+      "bytes": 275136,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/hip3/xyz:SNDK/20260806T130000000000Z_20260806T140000000000Z_d20/raw/page-0006.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "aeb615625a4b0af9c099f29c8c71171943df6db326c7342357d1404503c26f6a"
+    },
+    {
+      "bytes": 277848,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/hip3/xyz:SNDK/20260806T130000000000Z_20260806T140000000000Z_d20/raw/page-0007.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "8b560ff3ef7deab353e4c4cd91f748fd3f18ccbc8368181ed2dc3c9a46b20956"
+    },
+    {
+      "bytes": 239029,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/hip3/xyz:SNDK/20260806T130000000000Z_20260806T140000000000Z_d20/raw/page-0008.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "c98c421715ab8da3cff02cc225e8627f1e471a8f4e302990a065c3ec741792c1"
+    },
+    {
+      "bytes": 518043,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/hip3/xyz:SNDK/20260807T132900000000Z_20260807T134600000000Z_d20/books.jsonl.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "0232ac854b3d7ba711c263c4c12d1d11812bb9b1d76b185bb28c9fd2d17a523b"
+    },
+    {
+      "bytes": 1386,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/hip3/xyz:SNDK/20260807T132900000000Z_20260807T134600000000Z_d20/manifest.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "51890dc9e9e144e50bd155c3be954f765f01a62aee0a9d3949f3b2883a227bd9"
+    },
+    {
+      "bytes": 265841,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/hip3/xyz:SNDK/20260807T132900000000Z_20260807T134600000000Z_d20/raw/page-0001.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "d17d8fcdcb6e467d851c043edf3327dec6ac7ac291320677f1f2e90965b4f7ad"
+    },
+    {
+      "bytes": 275945,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/hip3/xyz:SNDK/20260807T132900000000Z_20260807T134600000000Z_d20/raw/page-0002.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "43d8d9ad3a8f2866c3b91d777bbc63b8caa23bddc4d149eda635d3ca34539d5d"
+    },
+    {
+      "bytes": 60309,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/hip3/xyz:SNDK/20260807T132900000000Z_20260807T134600000000Z_d20/raw/page-0003.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "e240d9aaf90591d73ee3b79b4e2e9f7e23a2ce633f4fcab2b10e594f29e6104a"
+    },
+    {
+      "bytes": 1432,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T132900000000Z_20260806T133000000000Z_trades/manifest.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "7e1943b163ba5f775af0811484df06324f03c77f7734ec7c80555322c1b82029"
+    },
+    {
+      "bytes": 35219,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T132900000000Z_20260806T133000000000Z_trades/raw/page-0001.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "ca868312d51196cd82f0eb31f90174bd32d71849d92e612f198414dcb2cd427f"
+    },
+    {
+      "bytes": 37093,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T132900000000Z_20260806T133000000000Z_trades/raw/page-0002.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "9159f40624493fd080586172b516fdf3db5e4b1569981277f558ce16647573cf"
+    },
+    {
+      "bytes": 29877,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T132900000000Z_20260806T133000000000Z_trades/raw/page-0003.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "61473a5fd2910b553227c608106882b6c91b2179377f25b92824b324cf08a529"
+    },
+    {
+      "bytes": 23624,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T132900000000Z_20260806T133000000000Z_trades/trades.jsonl.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "fd28df2ab9431668baa92faed8bec1a6393fd1d9f91ef6b2466b4966c2349ca1"
+    },
+    {
+      "bytes": 817,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T132900000000Z_20260806T134600000000Z_prices/manifest.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "0040c40fdfdfd937e39f1c269932cbb471d03d764ac1e974ee363f759d36383e"
+    },
+    {
+      "bytes": 13114,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T132900000000Z_20260806T134600000000Z_prices/prices.parquet",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "e854ef7daf4f6a20f5e3ca4925abcc5c6d02d29ed04129cae51d1247ae382ce8"
+    },
+    {
+      "bytes": 4376,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T132900000000Z_20260806T134600000000Z_prices/raw/page-0001.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "6748fd5a2ea38d0e2dac402a2276a0f54839166775adfaf5646b2edf1452070d"
+    },
+    {
+      "bytes": 2770,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133000000000Z_20260806T133100000000Z_trades/manifest.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "4c3e6298701d5f85d4bb5d36ba7b496d8bc25bf548512bdcf23ed3c7d966116a"
+    },
+    {
+      "bytes": 32947,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133000000000Z_20260806T133100000000Z_trades/raw/page-0001.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "fe87e4650da96a6599c6f045ac5a9de35fb08f25461947b1e9e3606d452366f3"
+    },
+    {
+      "bytes": 27038,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133000000000Z_20260806T133100000000Z_trades/raw/page-0002.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "d91cd6abe53092062ba07fb731f7c26c0b9b9997cd2bdd63284471082c0b10d0"
+    },
+    {
+      "bytes": 32351,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133000000000Z_20260806T133100000000Z_trades/raw/page-0003.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "14cd0b30a538e8acc5682b34725e4507f08d2618018d628fcd3479944e891c31"
+    },
+    {
+      "bytes": 30422,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133000000000Z_20260806T133100000000Z_trades/raw/page-0004.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "8571d6482cc31bcb30f26056b1c14fa4d317238fcaaacc151e609bf730c35a6d"
+    },
+    {
+      "bytes": 30595,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133000000000Z_20260806T133100000000Z_trades/raw/page-0005.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "e9bfecd48489f97bec3fefe852be843b1032923ccf36d417062acdfacdd8c051"
+    },
+    {
+      "bytes": 35856,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133000000000Z_20260806T133100000000Z_trades/raw/page-0006.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "9454c01878b2b4dd0f7580b9045838347cb26c5dbf570d1b33f127b32522a9c1"
+    },
+    {
+      "bytes": 29291,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133000000000Z_20260806T133100000000Z_trades/raw/page-0007.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "d7f28c831c488b019c5f963a73036a6c59bd4c8df04a3fd7ebeaa40704c50c26"
+    },
+    {
+      "bytes": 32940,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133000000000Z_20260806T133100000000Z_trades/raw/page-0008.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "165bf771e79e929c652c55e0b1e660981793ddf94377d5914ffa3329fadf5d00"
+    },
+    {
+      "bytes": 34225,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133000000000Z_20260806T133100000000Z_trades/raw/page-0009.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "115564d18bc821be830dd96ecfc47425ae09a9a6aa0e82b9fa577dca08b0e322"
+    },
+    {
+      "bytes": 31126,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133000000000Z_20260806T133100000000Z_trades/raw/page-0010.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "70f9b809db476c8a776b5b813745d4ac3192065f779437fcb89e047357ca89b6"
+    },
+    {
+      "bytes": 74006,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133000000000Z_20260806T133100000000Z_trades/trades.jsonl.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "1c5bb9e04e83c26e14839edc7d736ca7841d67cf23e555bbb6a5006bf72340a8"
+    },
+    {
+      "bytes": 2180,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133100000000Z_20260806T133200000000Z_trades/manifest.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "f171b12b8825292f20be5e70e46f6b1e7b76ce2e6e8b564f4bc2d6206b39bb10"
+    },
+    {
+      "bytes": 32791,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133100000000Z_20260806T133200000000Z_trades/raw/page-0001.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "ce961112775b9f4116c6f409661f6f29334ea9adff6b77f814999117273e4d01"
+    },
+    {
+      "bytes": 33303,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133100000000Z_20260806T133200000000Z_trades/raw/page-0002.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "083e395f809567f598b5bb74c7069caab907605a1d7f1a63cf13630f3d9a85ae"
+    },
+    {
+      "bytes": 32529,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133100000000Z_20260806T133200000000Z_trades/raw/page-0003.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "50bcfee07fc8a3d3104151557bcb96dcd10d9c36c00a57910a56067a29161ac6"
+    },
+    {
+      "bytes": 29616,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133100000000Z_20260806T133200000000Z_trades/raw/page-0004.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "9618cc45d3264cdbe4a1825c8a8e6c645b0e1a7c84d1fd429a00841de0a8b714"
+    },
+    {
+      "bytes": 33283,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133100000000Z_20260806T133200000000Z_trades/raw/page-0005.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "8ebedfef537a458c7a69e45b5aa902ea7d8c90903800a275eeef13e65509dc53"
+    },
+    {
+      "bytes": 29806,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133100000000Z_20260806T133200000000Z_trades/raw/page-0006.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "d044a26007605d9434f883fa0d349ebffa8e1a2084eb52aacb09d31d06f6f22f"
+    },
+    {
+      "bytes": 11194,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133100000000Z_20260806T133200000000Z_trades/raw/page-0007.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "a4e6f429b1b49269989bb575ab9d83fe86e48530682379acfbec089f72132bab"
+    },
+    {
+      "bytes": 47800,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133100000000Z_20260806T133200000000Z_trades/trades.jsonl.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "893e3dd71972b82c4f1f1e8db50d8d08f635cbb2b6d4f919d31b8065f755f36d"
+    },
+    {
+      "bytes": 1992,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133200000000Z_20260806T133300000000Z_trades/manifest.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "740608679d6deb53e8e55be1a47c7668cceeb5cd949ac160548249d473b9edf8"
+    },
+    {
+      "bytes": 34579,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133200000000Z_20260806T133300000000Z_trades/raw/page-0001.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "b54466e9314bf9e89c40d8901edc74f41bbd0d38b7075abb7746d9ae1fc9a0fc"
+    },
+    {
+      "bytes": 31515,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133200000000Z_20260806T133300000000Z_trades/raw/page-0002.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "4a5ca16e1a624e4ce7139f782ea0d7115ea488965b97214be2942f9103c287ef"
+    },
+    {
+      "bytes": 32227,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133200000000Z_20260806T133300000000Z_trades/raw/page-0003.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "1d00321a6452ebebfe85a48cb1917b2eb3bd1497b09bfa75b082fcc1bdcefce4"
+    },
+    {
+      "bytes": 35267,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133200000000Z_20260806T133300000000Z_trades/raw/page-0004.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "789863fe96b00fef54a633adb6739d1bea915bed25276fa3f4d4e4dce85b321c"
+    },
+    {
+      "bytes": 30800,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133200000000Z_20260806T133300000000Z_trades/raw/page-0005.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "08f2c78b2feecebab2bdb6ec167bdbdc4a12631ac03ea813b9c7fc9d9f2edb22"
+    },
+    {
+      "bytes": 9968,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133200000000Z_20260806T133300000000Z_trades/raw/page-0006.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "41ae32e6a583876741b9de61b8297930989ce07ddc7699a2021214de2815b9df"
+    },
+    {
+      "bytes": 40543,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133200000000Z_20260806T133300000000Z_trades/trades.jsonl.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "8d21a1557df80294f567acf9dcf635daac27deb8fb7bdc91135505b2d31a16cf"
+    },
+    {
+      "bytes": 1618,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133300000000Z_20260806T133400000000Z_trades/manifest.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "49e2ffcde094041e5008b840b9f61c33f7fb9e5f44d09ce9006bcba146e97e40"
+    },
+    {
+      "bytes": 29783,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133300000000Z_20260806T133400000000Z_trades/raw/page-0001.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "da5864e8e084edf6f39fab6291927852dd0c876cca86c727b8809c04ba63f342"
+    },
+    {
+      "bytes": 33779,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133300000000Z_20260806T133400000000Z_trades/raw/page-0002.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "3441b11cd3f060410de97cb73d5233ec72939c490473697fead05e852d7c2803"
+    },
+    {
+      "bytes": 33773,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133300000000Z_20260806T133400000000Z_trades/raw/page-0003.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "9bac20d850ceb2d998cacebfcbc8cc77a7a9121769abddd4ca11f74ab168ad22"
+    },
+    {
+      "bytes": 8388,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133300000000Z_20260806T133400000000Z_trades/raw/page-0004.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "e1ee736044065e2e75a96c837ba1f3fbfda78c0f252972659ff57636650be307"
+    },
+    {
+      "bytes": 24969,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133300000000Z_20260806T133400000000Z_trades/trades.jsonl.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "0772d264880c261ca1ca0f1141a8810e397ef9c7e27b96a5a4fdff79f2d5bbb6"
+    },
+    {
+      "bytes": 1432,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133400000000Z_20260806T133500000000Z_trades/manifest.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "f5a78f8051c3dbaef0229d5665576e66aed82e2c387c757f2e2f6f09c6667db6"
+    },
+    {
+      "bytes": 31823,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133400000000Z_20260806T133500000000Z_trades/raw/page-0001.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "005decc110315ddec383d666710a2460a29afb24e6e2ad08fb6783efed3ede8f"
+    },
+    {
+      "bytes": 34079,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133400000000Z_20260806T133500000000Z_trades/raw/page-0002.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "4affce32d43ab01c52453c9bb5a0f29d7f6b42be7c1a98be59e43755821b7fcb"
+    },
+    {
+      "bytes": 28729,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133400000000Z_20260806T133500000000Z_trades/raw/page-0003.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "c6e1b7bf03296af9c6f381d60635c18feb7cd75a4fdd2394f9355005af632607"
+    },
+    {
+      "bytes": 22759,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133400000000Z_20260806T133500000000Z_trades/trades.jsonl.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "e81d046a24942f752b9ce224b3240db64d4075c69ccb163713257d1fd221fe20"
+    },
+    {
+      "bytes": 1806,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133500000000Z_20260806T133600000000Z_trades/manifest.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "c31e7a24c49fbb45333c704c27a9527085ee87efbd7e33692a79d5d7d5825ac1"
+    },
+    {
+      "bytes": 31202,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133500000000Z_20260806T133600000000Z_trades/raw/page-0001.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "79e4ed06b4abbaba6d41128e2a10384cc227b32b5a846a449f3c07a010056898"
+    },
+    {
+      "bytes": 34324,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133500000000Z_20260806T133600000000Z_trades/raw/page-0002.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "c2f9586ca268d88b679db4cb6fa685d7fc038249268c3ce363e90c1e141b39a9"
+    },
+    {
+      "bytes": 35193,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133500000000Z_20260806T133600000000Z_trades/raw/page-0003.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "868806b0ab5de5cf8575656f4d9de4fa2b60d37fa67ef683d5744957b47e5a57"
+    },
+    {
+      "bytes": 34839,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133500000000Z_20260806T133600000000Z_trades/raw/page-0004.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "302935cf9cfb8086c088ecef47ceaee056007a85239f3203d9e144f729ee3294"
+    },
+    {
+      "bytes": 14475,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133500000000Z_20260806T133600000000Z_trades/raw/page-0005.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "3503fa832cdb38daa6720d4bafc9eab0a930d0064d5c45b9dd3a5441c8b1bfaf"
+    },
+    {
+      "bytes": 34795,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133500000000Z_20260806T133600000000Z_trades/trades.jsonl.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "53ef631c1c86bda7befaeb1d490a3b204918428cf51098bd8f436ff311be9b37"
+    },
+    {
+      "bytes": 1618,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133600000000Z_20260806T133700000000Z_trades/manifest.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "9174d3e24574077873c1bc45843d2c656c85519083c9a845637363aedff88112"
+    },
+    {
+      "bytes": 33019,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133600000000Z_20260806T133700000000Z_trades/raw/page-0001.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "49a54e83efad8b2d827ebf0585a1f5b391c5fd5a45b9dccb284694b5bb847ee4"
+    },
+    {
+      "bytes": 35314,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133600000000Z_20260806T133700000000Z_trades/raw/page-0002.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "80ad10c4c8294cddf457b1c79bde128eb21e23718acadb9e7283ddca78a32ba7"
+    },
+    {
+      "bytes": 31846,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133600000000Z_20260806T133700000000Z_trades/raw/page-0003.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "bea66e9c7d61f3d5dfa5fbf315f40c60a6d391c2fadd2a5b73d031c8625d84c1"
+    },
+    {
+      "bytes": 5247,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133600000000Z_20260806T133700000000Z_trades/raw/page-0004.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "7fd062f4ed539134a7bc7f3b4cc6dda714ec7473efe8ed01d7289549fff58c01"
+    },
+    {
+      "bytes": 24720,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133600000000Z_20260806T133700000000Z_trades/trades.jsonl.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "f050e758ad8024e4752c081a066c5bb3cc61e7bec8edfed716ee396dffc9c336"
+    },
+    {
+      "bytes": 1432,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133700000000Z_20260806T133800000000Z_trades/manifest.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "639cdf258654b9fcc8a8d33a5c818e16fbbcf0f1ce26d3ab14bc178c7beea360"
+    },
+    {
+      "bytes": 31198,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133700000000Z_20260806T133800000000Z_trades/raw/page-0001.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "9c45ad9b694ec4e0d1bbbff80abb1c0f9e0762b8a07643966cbafdfa65381817"
+    },
+    {
+      "bytes": 34565,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133700000000Z_20260806T133800000000Z_trades/raw/page-0002.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "9fbe59c9739cb1f2914862e5e690b24bf9ab5e487c343a99294d22c701fb8923"
+    },
+    {
+      "bytes": 24870,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133700000000Z_20260806T133800000000Z_trades/raw/page-0003.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "d34fd369ddc23a36062b6ae7807ba55e0cbdeb56f11e00b1d4d09005e4345805"
+    },
+    {
+      "bytes": 21154,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133700000000Z_20260806T133800000000Z_trades/trades.jsonl.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "d903a8f3067b073e9e1817bc94d42f60e74a8bbb6852b096749c0fc8b89cc7bf"
+    },
+    {
+      "bytes": 1431,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133800000000Z_20260806T133900000000Z_trades/manifest.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "36d7930a4e5733756603420a4af94cff0dc4a2f7598da3554d2901c6423b85b9"
+    },
+    {
+      "bytes": 36772,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133800000000Z_20260806T133900000000Z_trades/raw/page-0001.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "21af632db5858c3623cd76fc2180737591742208c2cdb5219008d45af88f59f4"
+    },
+    {
+      "bytes": 32509,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133800000000Z_20260806T133900000000Z_trades/raw/page-0002.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "56d2d798734270f471be90b1d6d83073d4abad48d38e4625b1b562aee9232413"
+    },
+    {
+      "bytes": 7982,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133800000000Z_20260806T133900000000Z_trades/raw/page-0003.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "5d15d30b9692f1a9dd0f968e1fae08d5364de1f4275d2656365c340032e4f22a"
+    },
+    {
+      "bytes": 17882,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133800000000Z_20260806T133900000000Z_trades/trades.jsonl.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "447ad5cf7f8b55a649451c850f53c07e7d2a78e676afa38b8b91f35e369fc958"
+    },
+    {
+      "bytes": 1432,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133900000000Z_20260806T134000000000Z_trades/manifest.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "60a67d437e64807f12ba36cde7ac4094f0879252a141d7abdfb851f8351bd3d1"
+    },
+    {
+      "bytes": 31797,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133900000000Z_20260806T134000000000Z_trades/raw/page-0001.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "ea7c09a7218a1255e5c038eb6ceded038ea1ae9f37aa6f8b30a9582657cd6c0f"
+    },
+    {
+      "bytes": 34419,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133900000000Z_20260806T134000000000Z_trades/raw/page-0002.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "3242176c905d35fa23aca0dbd03cd9c6a9810b4e2a12c76b62dab937600e3895"
+    },
+    {
+      "bytes": 21362,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133900000000Z_20260806T134000000000Z_trades/raw/page-0003.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "0bcd469368c0cc1473a6aae165474620d0158f0b0c7f353c7a524868425793a9"
+    },
+    {
+      "bytes": 20203,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133900000000Z_20260806T134000000000Z_trades/trades.jsonl.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "792f5a9ee31c0b6feb46319756e4cf3b973e7b52d8a10c960c07524fb058c0ba"
+    },
+    {
+      "bytes": 1244,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T134000000000Z_20260806T134100000000Z_trades/manifest.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "b1a82d4e0eeda4aa609441b4f5ef24fd2e0b6300c8022ccd9dbf0fae31d2e2e3"
+    },
+    {
+      "bytes": 37653,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T134000000000Z_20260806T134100000000Z_trades/raw/page-0001.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "e0c43964e3d23898c7f8d870c882626553f1c029cf00279b9e03eb88fd571eb4"
+    },
+    {
+      "bytes": 33500,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T134000000000Z_20260806T134100000000Z_trades/raw/page-0002.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "4eedf6e1f1845577a667c54de124a6ba05c1107900184cb74a2ab1e6b8443045"
+    },
+    {
+      "bytes": 16114,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T134000000000Z_20260806T134100000000Z_trades/trades.jsonl.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "bd5573262de1dc8cfd9a03556e28280663b273965418f23359cdebcfc251b2b4"
+    },
+    {
+      "bytes": 1432,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T134100000000Z_20260806T134200000000Z_trades/manifest.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "502503f46635b18c5f731df259f7fc385f6cb943c0e4a71cd0752613e5be56c8"
+    },
+    {
+      "bytes": 33115,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T134100000000Z_20260806T134200000000Z_trades/raw/page-0001.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "7d750b371de1720368139719d379207fcccf1dd73357c7129da7080ff32deaf3"
+    },
+    {
+      "bytes": 36174,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T134100000000Z_20260806T134200000000Z_trades/raw/page-0002.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "c5fc351af32c4ee96067de9f9af64602863692e5e56044d0cc99cff839984876"
+    },
+    {
+      "bytes": 21845,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T134100000000Z_20260806T134200000000Z_trades/raw/page-0003.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "0a43eee7a8e8596bb5ffa0cb110c9a33bcd32d94823cef5ba21bbbf55dfc4841"
+    },
+    {
+      "bytes": 21746,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T134100000000Z_20260806T134200000000Z_trades/trades.jsonl.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "0bf745767fc5f095343741d04b0e00af57028fb192eef99c97583c0737714f77"
+    },
+    {
+      "bytes": 1432,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T134200000000Z_20260806T134300000000Z_trades/manifest.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "4931aad682cb5548a5b705c00f76344c6c1c6c507a469d2ebc12c03d0d08398c"
+    },
+    {
+      "bytes": 32600,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T134200000000Z_20260806T134300000000Z_trades/raw/page-0001.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "5614eb4bd2800fd0b81e13215e0fe3d4f6afcd57027b9891137d64f7146ea1b8"
+    },
+    {
+      "bytes": 37275,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T134200000000Z_20260806T134300000000Z_trades/raw/page-0002.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "5e548afb663a3c61eac5632fdce51466e11aa7aea85e0a5bf66a314dfb2a188c"
+    },
+    {
+      "bytes": 19663,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T134200000000Z_20260806T134300000000Z_trades/raw/page-0003.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "330b4f0ffca42a3e6975bbd8b1edd7ec6f1996bcbc7cdb762858f2e63f66b41a"
+    },
+    {
+      "bytes": 20384,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T134200000000Z_20260806T134300000000Z_trades/trades.jsonl.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "0bf8169dc9ff627be71a7ba056d12a0d44e6bafff8d71cfb92822dca36c12c27"
+    },
+    {
+      "bytes": 1431,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T134300000000Z_20260806T134400000000Z_trades/manifest.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "ff6771dd1ddd6d5107fe174f0aa09ce3c0fbf0be95d6a8a59f4872d9536790b9"
+    },
+    {
+      "bytes": 36956,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T134300000000Z_20260806T134400000000Z_trades/raw/page-0001.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "2cea928d2daca963a1a1f44ead5c09f3cd6499f2e997bc63dc2b5cfb9c4f4da6"
+    },
+    {
+      "bytes": 35120,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T134300000000Z_20260806T134400000000Z_trades/raw/page-0002.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "66db0dca7de1b052d4353a6f246e154af763c731ef8c2bd5b41d087297ab2e5e"
+    },
+    {
+      "bytes": 4997,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T134300000000Z_20260806T134400000000Z_trades/raw/page-0003.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "ed853013b00985854e2b3e231bd9e00debfb57ac78d6ebddcaa4c8dadc828ced"
+    },
+    {
+      "bytes": 17366,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T134300000000Z_20260806T134400000000Z_trades/trades.jsonl.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "e5abb3b69688e1503c74861c7adf0a46fc167cc07df13fcc90243fa40356dca7"
+    },
+    {
+      "bytes": 1619,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T134400000000Z_20260806T134500000000Z_trades/manifest.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "3111d71e04cc3d1ea9bcd7709aec9afd6166f90cb41fd1111a702c4e25a3ee56"
+    },
+    {
+      "bytes": 36198,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T134400000000Z_20260806T134500000000Z_trades/raw/page-0001.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "88e67955b213632c59b255d73bb9a848e8a1bf234bc0622b344d73210196bf04"
+    },
+    {
+      "bytes": 37231,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T134400000000Z_20260806T134500000000Z_trades/raw/page-0002.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "123f0058ac7ce52bc60c982ac542903d0f172d3105a0663b990e52a904fe73de"
+    },
+    {
+      "bytes": 34494,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T134400000000Z_20260806T134500000000Z_trades/raw/page-0003.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "6da2c977291d6fe506635c6a90d7e3ba42043ddff17d6f457ac1a187080dc6e3"
+    },
+    {
+      "bytes": 22547,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T134400000000Z_20260806T134500000000Z_trades/raw/page-0004.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "a94d75057f4fe42891403940eb6012d0a648bebd69ec528b16e6104e8265b6fe"
+    },
+    {
+      "bytes": 29787,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T134400000000Z_20260806T134500000000Z_trades/trades.jsonl.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "2f716ef8594fd53bd534b844388cdd9fc980c79d0a486faaf556c768e63d2c30"
+    },
+    {
+      "bytes": 1055,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T132900000000Z_20260807T133000000000Z_trades/manifest.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "c68e5d7ad02e2b3772ff75715f10ce8f53785cfce1a98299037c1e2f5be7a87d"
+    },
+    {
+      "bytes": 13565,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T132900000000Z_20260807T133000000000Z_trades/raw/page-0001.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "75455af063ce186a00eb36b57b55ce4fb687bd384a8dc291e9aabc601d184c89"
+    },
+    {
+      "bytes": 3307,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T132900000000Z_20260807T133000000000Z_trades/trades.jsonl.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "b232d7da22b8450deb1d890878162ce9d59aa95c3d140a9e2771aa7a3202dda1"
+    },
+    {
+      "bytes": 817,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T132900000000Z_20260807T134600000000Z_prices/manifest.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "d0fe81a4552b19992c1abb937f4d08d84edab07ece3f2cc8c303e5a6b2da5b85"
+    },
+    {
+      "bytes": 12704,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T132900000000Z_20260807T134600000000Z_prices/prices.parquet",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "5ff6078fbca02db3d2bad42a3811558e04e428a336a569ee999c41d656df3d27"
+    },
+    {
+      "bytes": 4312,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T132900000000Z_20260807T134600000000Z_prices/raw/page-0001.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "4eb413284aa4c8d5a3ac8b6b6d2b9a9fada7304c7a084a930f2a7c06a66b1365"
+    },
+    {
+      "bytes": 1805,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133000000000Z_20260807T133100000000Z_trades/manifest.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "88fd36daeaa1c3ab0b268e61fdbd9297c191f2320b2c2689142a1025bc7dded3"
+    },
+    {
+      "bytes": 34564,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133000000000Z_20260807T133100000000Z_trades/raw/page-0001.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "a15445220522f6b86db5879fcc88b18cc5cadf52fc75d253350f7f91e4cb8ac8"
+    },
+    {
+      "bytes": 34373,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133000000000Z_20260807T133100000000Z_trades/raw/page-0002.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "b67c4492edf42211f5207b2510280af24a7aba5d06959a89e80383b8564bcb4a"
+    },
+    {
+      "bytes": 33318,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133000000000Z_20260807T133100000000Z_trades/raw/page-0003.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "cd70b011cefa9b5374a0423cef02f780c0a298489b33a977bb48de933ef28b45"
+    },
+    {
+      "bytes": 32239,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133000000000Z_20260807T133100000000Z_trades/raw/page-0004.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "5a6aff5b443c2c889bd36c3a88f22703478b7f93d283724cef60b64a85b5b636"
+    },
+    {
+      "bytes": 8440,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133000000000Z_20260807T133100000000Z_trades/raw/page-0005.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "4638539e5139deb8202cfa258ee43981f56df215d05ef188b04705d1d38a977a"
+    },
+    {
+      "bytes": 33027,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133000000000Z_20260807T133100000000Z_trades/trades.jsonl.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "6111dd678f64a077eb0ce33bff6a4cb920f9b4711ad1131455a686cbef2d64a4"
+    },
+    {
+      "bytes": 1806,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133100000000Z_20260807T133200000000Z_trades/manifest.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "142f89e6e271066bd23d74e9538a315593c7299bb29896370c0a0da371cc124b"
+    },
+    {
+      "bytes": 34433,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133100000000Z_20260807T133200000000Z_trades/raw/page-0001.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "2d387edac5600291683a1b191bc72218e4008cc443635476fb05617684138456"
+    },
+    {
+      "bytes": 30430,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133100000000Z_20260807T133200000000Z_trades/raw/page-0002.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "f08534d626fd5be9bbb855238cf2005caa1b8a91fabe3a33d909255e3ff46461"
+    },
+    {
+      "bytes": 28234,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133100000000Z_20260807T133200000000Z_trades/raw/page-0003.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "876a7c649a43e13534c454c38168f31714ec1ddfd5bb553b79e2a61286a93ca7"
+    },
+    {
+      "bytes": 29308,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133100000000Z_20260807T133200000000Z_trades/raw/page-0004.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "8880469c11daa9fa7d29517aa665f9f7e83d881f733b787e196d7c5c036f6ba7"
+    },
+    {
+      "bytes": 16590,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133100000000Z_20260807T133200000000Z_trades/raw/page-0005.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "14c6a1f266bf9aba2656fa6c9b8e48048961026f09cb84cb57c4b4729a1c9bd1"
+    },
+    {
+      "bytes": 32589,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133100000000Z_20260807T133200000000Z_trades/trades.jsonl.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "5706bf785a64c1ed60e771f4d01d70a3372aa7c3bcef2e13888cb861e0c41ada"
+    },
+    {
+      "bytes": 1618,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133200000000Z_20260807T133300000000Z_trades/manifest.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "0f70284877139834b7063b490d1a56a78dccc4cf3e30861480729528727c63cd"
+    },
+    {
+      "bytes": 29682,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133200000000Z_20260807T133300000000Z_trades/raw/page-0001.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "7aab57b11919931bd47cd1a772f31e1eb5c0133352c2ba79a670c08039fc0bcd"
+    },
+    {
+      "bytes": 34166,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133200000000Z_20260807T133300000000Z_trades/raw/page-0002.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "834f63a764dfce77ec4d5535de9cc22eae615a332391753f9a93d7b294b70de3"
+    },
+    {
+      "bytes": 34346,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133200000000Z_20260807T133300000000Z_trades/raw/page-0003.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "cf7265d0a72a50855874ef00e953b33d270028774cbc28bd2e42f9fc226cd763"
+    },
+    {
+      "bytes": 9089,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133200000000Z_20260807T133300000000Z_trades/raw/page-0004.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "1a4a47b3b2dc28e1829a7c60d3d2608d810a7b5da80f1f8a4474568cb55b0821"
+    },
+    {
+      "bytes": 24788,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133200000000Z_20260807T133300000000Z_trades/trades.jsonl.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "8b22b993c32c598ebbf37edbbbfd7b6e95abdbdc228b1f84925193b91a15d7b3"
+    },
+    {
+      "bytes": 1243,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133300000000Z_20260807T133400000000Z_trades/manifest.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "0989886b5c097651a8e79ab2e36b6073ece45190e0f66c806cec37d39d288d10"
+    },
+    {
+      "bytes": 37738,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133300000000Z_20260807T133400000000Z_trades/raw/page-0001.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "4beafe11fbdd81d2ae14f3d72dce5570ec0cc98f5a24727dafaa2a4950f5cd30"
+    },
+    {
+      "bytes": 8116,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133300000000Z_20260807T133400000000Z_trades/raw/page-0002.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "0ade47dc3bf39ffa7835b7f273ecd04ce28aeb96b90e38366974490b96d6177a"
+    },
+    {
+      "bytes": 10581,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133300000000Z_20260807T133400000000Z_trades/trades.jsonl.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "cf3e7b54d2310f1d75bb23c7cfbe26b5a2f1efd577d1b8fb4fa31ca1dc20adec"
+    },
+    {
+      "bytes": 1244,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133400000000Z_20260807T133500000000Z_trades/manifest.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "e7584e9c79ec56f846706cd0859fa865022fd2335f414282898933b7d75b1c08"
+    },
+    {
+      "bytes": 38343,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133400000000Z_20260807T133500000000Z_trades/raw/page-0001.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "1c9473453165e91e50ba49a81bde252457f4678fd3213b3c7dccb1241c86f344"
+    },
+    {
+      "bytes": 12858,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133400000000Z_20260807T133500000000Z_trades/raw/page-0002.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "390ec7d7ce1ca93d8c1402850e2eef9949a0510223ad54cfac9ffd713dc605ab"
+    },
+    {
+      "bytes": 11695,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133400000000Z_20260807T133500000000Z_trades/trades.jsonl.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "32840f8702fb390adbdda93cda179cc7e5dddfec9ae1d3ef2a080b1d2de76b53"
+    },
+    {
+      "bytes": 1244,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133500000000Z_20260807T133600000000Z_trades/manifest.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "d7a1bd45c557e297c2f126981b741d76834fadd5eff2e66829814a7d6bb4d396"
+    },
+    {
+      "bytes": 33381,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133500000000Z_20260807T133600000000Z_trades/raw/page-0001.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "d7305c3403169b1dfa6973e0d421c67506ec5a7c0694c32b7872a1256f1ce391"
+    },
+    {
+      "bytes": 37044,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133500000000Z_20260807T133600000000Z_trades/raw/page-0002.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "291a791ae148bb81f9817d35cf4e26921b4071c21dfc685ecc22b09ffdff9481"
+    },
+    {
+      "bytes": 16063,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133500000000Z_20260807T133600000000Z_trades/trades.jsonl.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "ad279c0f11ee0f9ed1b6f086f1ad308a5b40526a3838bd6032f42b4d2f96e498"
+    },
+    {
+      "bytes": 1431,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133600000000Z_20260807T133700000000Z_trades/manifest.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "e8a5611fb3047dd5ddd0cc0db8fe3637424959e7b6e72091a97f4e2667372fdc"
+    },
+    {
+      "bytes": 35511,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133600000000Z_20260807T133700000000Z_trades/raw/page-0001.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "6fb21d8ca50a0aaed80854bd92a645bd4ac6588c2a96324fe700e229f0019f51"
+    },
+    {
+      "bytes": 38092,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133600000000Z_20260807T133700000000Z_trades/raw/page-0002.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "6d746453046e763e2f3919a15b8f49d77938f3dea695f49bb258b1a207150712"
+    },
+    {
+      "bytes": 3581,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133600000000Z_20260807T133700000000Z_trades/raw/page-0003.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "f7626654acc5d69ef1da8270d788ffca41692a3e47cef67bdc29f823d157bc1b"
+    },
+    {
+      "bytes": 17852,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133600000000Z_20260807T133700000000Z_trades/trades.jsonl.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "49df0d8c449ded01b98a0253896c817fda3aab3b3fdbfa384dc8ccd9a5a0497f"
+    },
+    {
+      "bytes": 1618,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133700000000Z_20260807T133800000000Z_trades/manifest.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "4e3b07bf1466f9749943fbf28aad42b561bb6956866675102e5d54986e9372bd"
+    },
+    {
+      "bytes": 31902,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133700000000Z_20260807T133800000000Z_trades/raw/page-0001.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "1de728d4d035f1523480523c595d09d1877b8fde29b3be15ce10f700bce963ab"
+    },
+    {
+      "bytes": 34960,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133700000000Z_20260807T133800000000Z_trades/raw/page-0002.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "b1bd0f6c76df1170b063e771b4ce68b950b232288aa03d7281c4ecb807a92ccd"
+    },
+    {
+      "bytes": 34567,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133700000000Z_20260807T133800000000Z_trades/raw/page-0003.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "d1997b549b6e6c41db172b862dde82916ebe4d7a6e8d8fa94cc548bf0834deca"
+    },
+    {
+      "bytes": 3676,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133700000000Z_20260807T133800000000Z_trades/raw/page-0004.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "4513b2e854d09ef6797cb96ebfc6899f026b966fb237d89ad54a188268684f05"
+    },
+    {
+      "bytes": 24530,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133700000000Z_20260807T133800000000Z_trades/trades.jsonl.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "a88cc6fc6c03868d57a59ae38e35328aba2d2f66340821dffeef924a55cb8ea5"
+    },
+    {
+      "bytes": 1244,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133800000000Z_20260807T133900000000Z_trades/manifest.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "d1e813bf94be01c1d423e0abc8c7e986a212c72f65377dae67c8297a45f1f501"
+    },
+    {
+      "bytes": 37118,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133800000000Z_20260807T133900000000Z_trades/raw/page-0001.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "b9d70440f8e3d4e611e9796d0fef900e8253b1bf39af29a77abfc72df14dee17"
+    },
+    {
+      "bytes": 17323,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133800000000Z_20260807T133900000000Z_trades/raw/page-0002.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "fae2a68259d9f837d6d382e69aa9977810db94551ee5d69aa55830f220abad13"
+    },
+    {
+      "bytes": 12423,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133800000000Z_20260807T133900000000Z_trades/trades.jsonl.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "5f2892f4cf13b2f266724d5df6a399f759dc449b83e9777001768de1499bc7d4"
+    },
+    {
+      "bytes": 1244,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133900000000Z_20260807T134000000000Z_trades/manifest.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "ce4a3d7cc69482ed01f83093c89b74a6cca546fdf5adebddbe8bd718701b7f04"
+    },
+    {
+      "bytes": 35481,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133900000000Z_20260807T134000000000Z_trades/raw/page-0001.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "638a2270411d4b4471b3934b22a69882807c46a91d92f42135a1ec6800c760c1"
+    },
+    {
+      "bytes": 27231,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133900000000Z_20260807T134000000000Z_trades/raw/page-0002.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "6f0721acc67aa7e3bdb1c77e208b40ceac1ba0ef4f78209aa2cdd5529918391a"
+    },
+    {
+      "bytes": 13993,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133900000000Z_20260807T134000000000Z_trades/trades.jsonl.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "56d4db7c881581cd96e7a1365b9326b08dab419c03e059c62fb858205b0cc24c"
+    },
+    {
+      "bytes": 1432,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T134000000000Z_20260807T134100000000Z_trades/manifest.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "4d207d75aa261549f9b13858d1ad6ca15654d64dd919bf95b7c8bed601cb18db"
+    },
+    {
+      "bytes": 36672,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T134000000000Z_20260807T134100000000Z_trades/raw/page-0001.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "2f169fc845e77f08c43b636fa6401848c95f1978acca69b11f4ab7d53c11465c"
+    },
+    {
+      "bytes": 37027,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T134000000000Z_20260807T134100000000Z_trades/raw/page-0002.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "b4a41db3db44a20d5eef4cc796f5b89349c2d244dca24339b684c03473476a5a"
+    },
+    {
+      "bytes": 11179,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T134000000000Z_20260807T134100000000Z_trades/raw/page-0003.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "facf488d9a1535e18114d91416ae0a446e065a5a8fd01caf856e2f94af3ef3aa"
+    },
+    {
+      "bytes": 19357,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T134000000000Z_20260807T134100000000Z_trades/trades.jsonl.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "6f644e99225f0e78ba6c3c06d37cc3361c72adca22950f6c88966a6437cb6d56"
+    },
+    {
+      "bytes": 1432,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T134100000000Z_20260807T134200000000Z_trades/manifest.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "b417a126f17d63ff0201c04ae3fbaf199662484bd7b128144d10483478f02455"
+    },
+    {
+      "bytes": 29892,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T134100000000Z_20260807T134200000000Z_trades/raw/page-0001.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "4482ce8770c20e3404a789ef4f3ce9c8b5ac60208502cdcc9257cbd1c6f94e6e"
+    },
+    {
+      "bytes": 36638,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T134100000000Z_20260807T134200000000Z_trades/raw/page-0002.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "2c9972f5ca4e5286c82d7f6184271011d5c9c4d2a4acf10704590c444a981698"
+    },
+    {
+      "bytes": 13640,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T134100000000Z_20260807T134200000000Z_trades/raw/page-0003.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "2447eb9e2c95aa44ed9418e010c2b51c05ba9b29e74a0036293dd3fbfae3e707"
+    },
+    {
+      "bytes": 18114,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T134100000000Z_20260807T134200000000Z_trades/trades.jsonl.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "617bdcfbeb924e8e504faafe7ce0a8082e90b0b8c8104c174ae9989972ce4a3f"
+    },
+    {
+      "bytes": 1055,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T134200000000Z_20260807T134300000000Z_trades/manifest.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "55805fa6520f97120975267b73b055d56f76ec11712d21802de1edfaee3f7a70"
+    },
+    {
+      "bytes": 35663,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T134200000000Z_20260807T134300000000Z_trades/raw/page-0001.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "be7bba7e3f1ed0b72ce6609e030d3ac74da1c55247bf19aeffcd543ded9190d0"
+    },
+    {
+      "bytes": 8029,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T134200000000Z_20260807T134300000000Z_trades/trades.jsonl.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "aaa1adcac81bd0e22ed98b287f0fb32f8f68172bb5af9491c05e803f13fdc171"
+    },
+    {
+      "bytes": 1243,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T134300000000Z_20260807T134400000000Z_trades/manifest.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "e2f0663aa03ba8bdc402d6fd496fa1d02aa99eefa158239039e71641300c76a8"
+    },
+    {
+      "bytes": 36035,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T134300000000Z_20260807T134400000000Z_trades/raw/page-0001.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "1b6b557c29bb566c2ec81d1ad87d8771bdaa55fe359b32a7118058a65692f685"
+    },
+    {
+      "bytes": 9463,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T134300000000Z_20260807T134400000000Z_trades/raw/page-0002.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "4418a8b319baa9c3122dcb320da77f6a7be33c145e56afe3668c027a80b10f32"
+    },
+    {
+      "bytes": 10245,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T134300000000Z_20260807T134400000000Z_trades/trades.jsonl.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "590286072ac40b4d814799e33e73b891cb709735eed50ce8eb70f69ae20815a5"
+    },
+    {
+      "bytes": 1055,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T134400000000Z_20260807T134500000000Z_trades/manifest.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "c4caa2bd06a9de3b9e953c3eae192b4cda69b3aa2aa3ede6ee3fb764f432cfd7"
+    },
+    {
+      "bytes": 32006,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T134400000000Z_20260807T134500000000Z_trades/raw/page-0001.json.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "4f73bd81a3f568fc6832c1c3e248aefbd9d75fb296002985e69de8f7216cbbc0"
+    },
+    {
+      "bytes": 7340,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T134400000000Z_20260807T134500000000Z_trades/trades.jsonl.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "eb5f660d7519cf3e1efeef170e60b5b8281c3ce069e030a702b5bf3acb505d99"
+    },
+    {
+      "bytes": 152713,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_repair_native_inputs_20260907_v1/xyz_SNDK/bars.parquet",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "a44ec8b62036379c80086c10eb83d341087f21add006d4278548228b9b546760"
+    },
+    {
+      "bytes": 18593,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_repair_native_inputs_20260907_v1/xyz_SNDK/funding.parquet",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "b470f16b691e61ca1b4aec1b97c4e5f18c1fd03dc6c691496b6bf8457471cb77"
+    },
+    {
+      "bytes": 143860,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_repair_native_inputs_20260907_v1/xyz_SPCX/bars.parquet",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "0b271e6b8393f2fe6b12f74e29423bba48d764f2e22c8b9f34480f25fb0fb920"
+    },
+    {
+      "bytes": 20524,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_repair_native_inputs_20260907_v1/xyz_SPCX/funding.parquet",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "3b2ef5eeebfc1c5c9a119be1b9065cfc46f00b1dfca673ea347d9b93897800bf"
+    },
+    {
+      "bytes": 2005542,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_hourly_history_parity_20260907_v1/report.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "a923bef195ea817785e3b87816752ea4dc41db97d2b9392c491da76ba40a9ec1"
+    },
+    {
+      "bytes": 6643,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_noncrypto_cash_open_exposure_attribution_20260908_v1/sensitivity_verification.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "bc42a74d3fdb3c30915972119fd0691e75f3eefb04601f0b560a096b12199cd2"
+    },
+    {
+      "bytes": 882,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_noncrypto_cash_open_exposure_attribution_20260908_v1/source_journal_inventory.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "20e38fdea146427eb64397b911a8f749f972ee657d770b8932f51813da06650b"
+    },
+    {
+      "bytes": 1387078,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_recorded_native_shared_portfolio_20260907_v1/report.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "1d51590d61f884171029df4392315f29ee85f24b52bbd180df3b7395ffdef8b8"
+    },
+    {
+      "bytes": 628265,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_shared_marked_portfolio_20260907_v2/report.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "379942d885d6fa3762ed7a3e0cb8c3383c80635be94e42342c5829d85e15592a"
+    },
+    {
+      "bytes": 57693,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_shared_portfolio_attribution_20260907_v3/report.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "c8932aef93534b33015ffe86563e84adbf3f04526924ea3973d34bcb0d8036c0"
+    },
+    {
+      "bytes": 13014,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_opening_exit_clock_qualification_20260908_v1/accepted_ambiguous_exit_inventory.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "c0b85bcc804b9d2592d23cbe760e3a0182cb471df03abb5cdadec1b64208fcbc"
+    },
+    {
+      "bytes": 178,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_opening_exit_clock_qualification_20260908_v1/archive_comparison.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "3980b57c8312cc1cb2cc46eda51071b93de142a67fcdb06f98cff109ee0da087"
+    },
+    {
+      "bytes": 99,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_opening_exit_clock_qualification_20260908_v1/archive_green.log",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "371f0c4eed959adcfd921fbc4e3a819fdac6436221647435c9148c76f58a152c"
+    },
+    {
+      "bytes": 4073,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_opening_exit_clock_qualification_20260908_v1/archive_red.log",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "9a2838ae536d2ce3eb7c4ceab99fa4b4d0e8c6aa12e2691315335991acb678d5"
+    },
+    {
+      "bytes": 104520,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_opening_exit_clock_qualification_20260908_v1/archive_report.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "78711f607ecb9360cdf01cd9c6680e04c42f7676f3a877a040f718a6735c3ab6"
+    },
+    {
+      "bytes": 1238,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_opening_exit_clock_qualification_20260908_v1/archive_report.log",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "8018766b1953431b8f45fe8fd6682e35086322b1c3b3a137eaa11fa7d885c4a2"
+    },
+    {
+      "bytes": 667,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_opening_exit_clock_qualification_20260908_v1/capture_2026-08-06_books.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "f4a6a5d3c3c7853ce4b69c521212e4d1416b38c1b2a826fa9efdce502e88a4e8"
+    },
+    {
+      "bytes": 1628,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_opening_exit_clock_qualification_20260908_v1/capture_2026-08-06_books.log",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "3be5b17fa08ab10318bfd2ca8a55d125ff42b57f582cf4823c85d9ba59431fa6"
+    },
+    {
+      "bytes": 559,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_opening_exit_clock_qualification_20260908_v1/capture_2026-08-06_books_verified.log",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "d9b13dfc6c4a378453056e2954e04dadab45e1c5328b528479a47f1307ec5878"
+    },
+    {
+      "bytes": 429,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_opening_exit_clock_qualification_20260908_v1/capture_2026-08-06_prices.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "cd1befaf0fa92fe91ef7d83694e4871d5283076332d4a482f402712107848bd1"
+    },
+    {
+      "bytes": 375,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_opening_exit_clock_qualification_20260908_v1/capture_2026-08-06_prices.log",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "2c093aaada1db92f6aaf9f2e7178c07a8255f183b7e7efa29f1e868de144c6c6"
+    },
+    {
+      "bytes": 5367,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_opening_exit_clock_qualification_20260908_v1/capture_2026-08-06_trades.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "7791372552ab4a805953d5ab12a67f8230e76f1725ee8a817c13077aac68e611"
+    },
+    {
+      "bytes": 6171,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_opening_exit_clock_qualification_20260908_v1/capture_2026-08-06_trades.log",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "cf347cdc541cb975a16ff781f2a0e3e8952e8305a0d31e2762ca1e780533299e"
+    },
+    {
+      "bytes": 666,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_opening_exit_clock_qualification_20260908_v1/capture_2026-08-07_books.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "760e055ad439370348d5df66c54d99be9607cc9447f72e321bb72884d2d1afba"
+    },
+    {
+      "bytes": 558,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_opening_exit_clock_qualification_20260908_v1/capture_2026-08-07_books_verified.log",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "b371774e93ed87dedb70a20a9bc0b18b7049d5db588eb1f2132ad7296f662e16"
+    },
+    {
+      "bytes": 429,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_opening_exit_clock_qualification_20260908_v1/capture_2026-08-07_prices.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "58a0861e727cf253b07ca75130ff53ab2a63ff068c6745d641ac52692c7a6a75"
+    },
+    {
+      "bytes": 375,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_opening_exit_clock_qualification_20260908_v1/capture_2026-08-07_prices.log",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "e31eaa8b8abc56c85b618b4f0989a382b6cf346386d5485db86705d55448cf73"
+    },
+    {
+      "bytes": 5365,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_opening_exit_clock_qualification_20260908_v1/capture_2026-08-07_trades.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "2d358943a4b671583edb32481111daf8a11285114b3f049cfbb120b0a7e3a94c"
+    },
+    {
+      "bytes": 6167,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_opening_exit_clock_qualification_20260908_v1/capture_2026-08-07_trades.log",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "7b1c78b790c7f8b00b74e20f845fce3c47333fb2d8b12297e09548b96bc3f316"
+    },
+    {
+      "bytes": 4736,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_opening_exit_clock_qualification_20260908_v1/coverage_final.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "a994ffb6c4e4d29d2d9147548abe89dc112f5015ba639ad5266d400bfe3b5716"
+    },
+    {
+      "bytes": 12822,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_opening_exit_clock_qualification_20260908_v1/current-index.md",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "33172e2b227dbd5bea4efc4d2f12ef3e8757ab715e02efba04f1ec4445868b57"
+    },
+    {
+      "bytes": 2,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_opening_exit_clock_qualification_20260908_v1/database_archive_inventory.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "bytes": 3102,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_opening_exit_clock_qualification_20260908_v1/existing_archive_inventory.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "d2e319cf50f71296ce1db451e95272e32d171c9aaf212b392aa5dd64b0f67781"
+    },
+    {
+      "bytes": 103840,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_opening_exit_clock_qualification_20260908_v1/first_report.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "077e27e002a330b8b858a595c9aef8c657c93cab75f7770668e479429c82f220"
+    },
+    {
+      "bytes": 914,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_opening_exit_clock_qualification_20260908_v1/first_report.log",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "ffe3157cf0c4c8b98bceee8dfc0de681c689194cce99152b7f37a76e77a3ea3a"
+    },
+    {
+      "bytes": 26,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_opening_exit_clock_qualification_20260908_v1/format_final.log",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "0321fffcb91606a42c0a19d8c1121d5c544379d663821fce616c71a7bb62f6b5"
+    },
+    {
+      "bytes": 232,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_opening_exit_clock_qualification_20260908_v1/independent_check.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "d5e4346f30f88f83262e67be2ffc5f69a29f0a216c6d7a750c3764233063dad6"
+    },
+    {
+      "bytes": 218,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_opening_exit_clock_qualification_20260908_v1/independent_check.log",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "7074ae4c118b170fb5a7d9d7fadcca3a32ec4ffed8f1397e3e39545807cdafbd"
+    },
+    {
+      "bytes": 6814,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_opening_exit_clock_qualification_20260908_v1/independent_check.py",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "ca5b0ae9f02904949332f3e51c063808599b1a9d316acf3dc242d12b448a8b0a"
+    },
+    {
+      "bytes": 4736,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_opening_exit_clock_qualification_20260908_v1/measurement_coverage.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "e90395f052e55fcf7183a907d395906687e28700b6ef9a91a9d17da48d8f175e"
+    },
+    {
+      "bytes": 99,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_opening_exit_clock_qualification_20260908_v1/measurement_green.log",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "05b413cdb3bb528f1d1589733e8a5f26f08e4ede5eb856957ba72ae1aefd34ca"
+    },
+    {
+      "bytes": 31976,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_opening_exit_clock_qualification_20260908_v1/measurement_red.log",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "e0836d7a31b6d7f227e300e938b987ad806bdb3047f972d4c12b878e2f516735"
+    },
+    {
+      "bytes": 397,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_opening_exit_clock_qualification_20260908_v1/preregistration.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "d831bc40919bb30204d080a9b9c2dade861322d04a4ae83b235447c9ba2db206"
+    },
+    {
+      "bytes": 3499,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_opening_exit_clock_qualification_20260908_v1/prior_hypothesis_inventory.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "70f5bc2426697f59cc808e65fe0b72ed850d2bf64dab5fa1db21583573ffb364"
+    },
+    {
+      "bytes": 5348,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_opening_exit_clock_qualification_20260908_v1/protocol.md",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "ea26749acbb34838fe4488ff6134045aac304a8768e217098afb6638ef6605c6"
+    },
+    {
+      "bytes": 104520,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_opening_exit_clock_qualification_20260908_v1/report.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "78711f607ecb9360cdf01cd9c6680e04c42f7676f3a877a040f718a6735c3ab6"
+    },
+    {
+      "bytes": 1238,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_opening_exit_clock_qualification_20260908_v1/report.log",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "8018766b1953431b8f45fe8fd6682e35086322b1c3b3a137eaa11fa7d885c4a2"
+    },
+    {
+      "bytes": 8787,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_opening_exit_clock_qualification_20260908_v1/review.md",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "01cdbfa65e2832a3997a9cd51f71836de99ad77d4583cdd811d49147ba9358a5"
+    },
+    {
+      "bytes": 19,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_opening_exit_clock_qualification_20260908_v1/ruff_final.log",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    {
+      "bytes": 29148114,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_opening_exit_clock_qualification_20260908_v1/source.tar.gz",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "66cd958bcb957cb3bbc23b4ee9cce7333ed94bc487aea6404de346a2a938ab20"
+    },
+    {
+      "bytes": 219,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_opening_exit_clock_qualification_20260908_v1/source_archive_verification.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "7fc005589947e6c5ab84dab9f6fbac1aacbda1e83174c0e077b271598ec1d4b9"
+    },
+    {
+      "bytes": 6343,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_opening_exit_clock_qualification_20260908_v1/structure_final.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "2013d25de6c894a7e8fb32877145d4ddad72aee45ab4411d1430012967cd9140"
+    },
+    {
+      "bytes": 928,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_opening_exit_clock_qualification_20260908_v1/tests_final.log",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "62e0eeda9f4c69b9fee53766070ee80f55717147c5474ecc9ceca8ad9685508f"
+    },
+    {
+      "bytes": 934,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_opening_exit_clock_qualification_20260908_v1/tests_first_complete.log",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "ae2ea1322b4ee3e7401b72f835c625d0624d7b6b337aec1ae62b2be8bd83d32c"
+    },
+    {
+      "bytes": 1290,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_opening_exit_clock_qualification_20260908_v1/tie_red.log",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "bd48a566e539fec1b4a3a785a80b499162746918c31c17749b01bdc8759f0267"
+    },
+    {
+      "bytes": 866,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_opening_exit_clock_qualification_20260908_v1/venue_documentation.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "2981214cde57cdb67918c339ce608771c854f87c27d01e280cab93661a5ce4ed"
+    },
+    {
+      "bytes": 5381,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_opening_exit_clock_qualification_20260908_v1/venue_liquidations.md",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "162afe17f94665546d4e4169591368921a06a94d3f7f48c8fbec6b1ee9394a57"
+    },
+    {
+      "bytes": 3360,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_opening_exit_clock_qualification_20260908_v1/venue_stops.md",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "af7240ed5739e5c323e494829ce4d43c794672012d60bfda0918d5c268d6a64b"
+    },
+    {
+      "bytes": 289757,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/research-journal/v89-cash-open-exposure-20260908-v1.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "2545bd5d71b7a09e1aab6f43b0fad48bdf25bac6e8c4d931c8306e38dfa4d16a"
+    },
+    {
+      "bytes": 48409,
+      "path": "/Users/gestas/Prototypes/hypervector-v89-portfolio-20260907/docs/research-journal/v89-recorded-native-source-sensitivity-20260907-v1.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "7e958253eefa428c4b6e205ceef8c0b88dffa0ba6caf0cd8b3adea2d7c42c1d2"
+    },
+    {
+      "bytes": 21095,
+      "path": "/Users/gestas/Prototypes/hypervector-v89-portfolio-20260907/docs/research-journal/v89-seven-asset-shared-marking-20260907-v1.json",
+      "role": "registered_source_raw_archive_measurement_or_validation",
+      "sha256": "73b69215ca6144d070aff30f7b829ea3e403524eb162c90c957003a4f8b3b281"
+    },
+    {
+      "bytes": 92597,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_opening_exit_clock_qualification_20260908_v1/evidence_manifest.json",
+      "role": "evidence_manifest",
+      "sha256": "b44486232ff3c229c14b053e1f8d7fdd192280c15677aed2d7f616b4be8f5b4e"
+    }
+  ],
+  "execution_authority": "none",
+  "falsifier": "Changed source hashes, contradictory raw normalization or independent arithmetic, denser marks contradicting the observed sequence, or inadequate closing depth. Revised modeled economics require complete entry-to-exit evidence and explicit latency, fees, funding and execution assumptions; the bounded sampled contacts alone are insufficient.",
+  "hypothesis": "Finer historical SNDK marks and public trade/book timestamps can qualify the two largest cash-open attribution clock drivers and the August 7 modeled stop-versus-liquidation sequence.",
+  "hypothesis_id": "v89_sndk_opening_exit_clock_qualification_20260908_v1",
+  "limitations": [
+    "The two dates were selected because they drive prior timing sensitivity on already explored historical data; this is not independent profitability validation.",
+    "Price samples have maximum gaps of 3.367 and 3.262 seconds; sampled contacts do not prove continuous event coverage or exact venue trigger times.",
+    "Acquisition starts at 13:29 UTC, after the original 11:00 and 13:00 entries; local first contacts are not qualified as first lifecycle contacts.",
+    "Depth snapshots precede or follow the sampled marks and do not reconstruct latency, order arrival, queue position or actual client fills.",
+    "The August 6 13:30-13:31 trade partition is capped at 10 pages with a continuation cursor after 13:30:55.391; its full-bar OHLC remains unavailable.",
+    "Complete participant pagination does not itself establish absence of vendor collection gaps.",
+    "Same-millisecond final prints contain different prices. Unique closes remain unresolved; registered closes are among the observed candidates. The intermediate trade-ID-selected close was corrected without modifying the source candle.",
+    "The older August 6 book manifest lacks the censor-count field. Raw replay derives zero censored rows and matches the publication; missing metadata was not replaced with an assumed zero.",
+    "Original full-fee liquidation thresholds change with entry fees; nominal, adverse and full-fee cases must remain distinct.",
+    "All 18 cases reuse one unique ambiguous accepted noncrypto trade among 99 lifecycles per case. No live PnL, strategy, deployment or process lifecycle was changed.",
+    "Coverage counts concern the pure threshold module, not all acquisition/archive I/O or the whole project.",
+    "The sealed September 8-22 prospective experiment remains unopened."
+  ],
+  "metrics": {
+    "accepted_noncrypto_per_case": 99,
+    "ambiguous_accepted_noncrypto_per_case": 1,
+    "archive_git_members_verified": 5109,
+    "archive_report_byte_equal": true,
+    "archive_report_bytes": 104520,
+    "independent_depth_vwap_comparisons": 6,
+    "independent_threshold_field_comparisons": 220,
+    "maximum_independent_depth_vwap_error": "1.99999878693E-13",
+    "next_hypothesis_id": "v89_noncrypto_ambiguous_exit_event_replay_20260908_v1",
+    "offline_tests_passed": 90,
+    "original_cases": 18,
+    "pure_threshold_branches": 14,
+    "pure_threshold_branches_covered": 14,
+    "pure_threshold_statements": 36,
+    "pure_threshold_statements_covered": 36,
+    "results": [
+      {
+        "actual_execution_reconstructed": false,
+        "bar_comparison": {
+          "boundary_price_candidates": {
+            "close": [
+              1246.0,
+              1246.1,
+              1246.2,
+              1246.3,
+              1246.4,
+              1246.5,
+              1246.6,
+              1246.7
+            ],
+            "open": [
+              1175.4
+            ]
+          },
+          "complete_participant_pagination": false,
+          "full_bar_minus_registered": null,
+          "full_bar_ohlc": null,
+          "observed_print_ohlc": {
+            "close": null,
+            "high": 1249.1,
+            "low": 1168.3,
+            "open": 1175.4
+          },
+          "public_prints_in_bar": 27899,
+          "registered_boundary_price_observed": {
+            "close": true,
+            "open": true
+          },
+          "registered_candle": {
+            "close": 1246.1,
+            "high": 1249.1,
+            "low": 1168.3,
+            "open": 1175.4
+          }
+        },
+        "boundary_trade_duplicates_coalesced": 0,
+        "capture_qualification": {
+          "books": [
+            {
+              "derived_censored_zero_size_snapshots": 0,
+              "derived_coalesced_same_ms": 0,
+              "manifest": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/hip3/xyz:SNDK/20260806T130000000000Z_20260806T140000000000Z_d20/manifest.json",
+              "manifest_censor_count_present": false,
+              "normalized_rows": 7871,
+              "raw_rows": 7871
+            }
+          ],
+          "prices": [
+            {
+              "complete": true,
+              "manifest": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T132900000000Z_20260806T134600000000Z_prices/manifest.json"
+            }
+          ],
+          "trades": [
+            {
+              "complete": true,
+              "continuation_cursor": null,
+              "manifest": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T132900000000Z_20260806T133000000000Z_trades/manifest.json",
+              "observed_end": "2026-08-06T13:29:59.933Z",
+              "public_trades": 1405,
+              "requested_end": "2026-08-06T13:30:00+00:00",
+              "requested_start": "2026-08-06T13:29:00+00:00",
+              "unresolved_fill_groups": 0
+            },
+            {
+              "complete": false,
+              "continuation_cursor": "1786023055391_41761780735917",
+              "manifest": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133000000000Z_20260806T133100000000Z_trades/manifest.json",
+              "observed_end": "2026-08-06T13:30:55.391Z",
+              "public_trades": 5000,
+              "requested_end": "2026-08-06T13:31:00+00:00",
+              "requested_start": "2026-08-06T13:30:00+00:00",
+              "unresolved_fill_groups": 0
+            },
+            {
+              "complete": true,
+              "continuation_cursor": null,
+              "manifest": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133100000000Z_20260806T133200000000Z_trades/manifest.json",
+              "observed_end": "2026-08-06T13:31:59.868Z",
+              "public_trades": 3167,
+              "requested_end": "2026-08-06T13:32:00+00:00",
+              "requested_start": "2026-08-06T13:31:00+00:00",
+              "unresolved_fill_groups": 0
+            },
+            {
+              "complete": true,
+              "continuation_cursor": null,
+              "manifest": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133200000000Z_20260806T133300000000Z_trades/manifest.json",
+              "observed_end": "2026-08-06T13:32:59.616Z",
+              "public_trades": 2679,
+              "requested_end": "2026-08-06T13:33:00+00:00",
+              "requested_start": "2026-08-06T13:32:00+00:00",
+              "unresolved_fill_groups": 0
+            },
+            {
+              "complete": true,
+              "continuation_cursor": null,
+              "manifest": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133300000000Z_20260806T133400000000Z_trades/manifest.json",
+              "observed_end": "2026-08-06T13:33:59.955Z",
+              "public_trades": 1618,
+              "requested_end": "2026-08-06T13:34:00+00:00",
+              "requested_start": "2026-08-06T13:33:00+00:00",
+              "unresolved_fill_groups": 0
+            },
+            {
+              "complete": true,
+              "continuation_cursor": null,
+              "manifest": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133400000000Z_20260806T133500000000Z_trades/manifest.json",
+              "observed_end": "2026-08-06T13:34:59.645Z",
+              "public_trades": 1477,
+              "requested_end": "2026-08-06T13:35:00+00:00",
+              "requested_start": "2026-08-06T13:34:00+00:00",
+              "unresolved_fill_groups": 0
+            },
+            {
+              "complete": true,
+              "continuation_cursor": null,
+              "manifest": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133500000000Z_20260806T133600000000Z_trades/manifest.json",
+              "observed_end": "2026-08-06T13:35:59.981Z",
+              "public_trades": 2208,
+              "requested_end": "2026-08-06T13:36:00+00:00",
+              "requested_start": "2026-08-06T13:35:00+00:00",
+              "unresolved_fill_groups": 0
+            },
+            {
+              "complete": true,
+              "continuation_cursor": null,
+              "manifest": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133600000000Z_20260806T133700000000Z_trades/manifest.json",
+              "observed_end": "2026-08-06T13:36:59.885Z",
+              "public_trades": 1599,
+              "requested_end": "2026-08-06T13:37:00+00:00",
+              "requested_start": "2026-08-06T13:36:00+00:00",
+              "unresolved_fill_groups": 0
+            },
+            {
+              "complete": true,
+              "continuation_cursor": null,
+              "manifest": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133700000000Z_20260806T133800000000Z_trades/manifest.json",
+              "observed_end": "2026-08-06T13:37:59.586Z",
+              "public_trades": 1342,
+              "requested_end": "2026-08-06T13:38:00+00:00",
+              "requested_start": "2026-08-06T13:37:00+00:00",
+              "unresolved_fill_groups": 0
+            },
+            {
+              "complete": true,
+              "continuation_cursor": null,
+              "manifest": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133800000000Z_20260806T133900000000Z_trades/manifest.json",
+              "observed_end": "2026-08-06T13:38:59.853Z",
+              "public_trades": 1103,
+              "requested_end": "2026-08-06T13:39:00+00:00",
+              "requested_start": "2026-08-06T13:38:00+00:00",
+              "unresolved_fill_groups": 0
+            },
+            {
+              "complete": true,
+              "continuation_cursor": null,
+              "manifest": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T133900000000Z_20260806T134000000000Z_trades/manifest.json",
+              "observed_end": "2026-08-06T13:39:59.786Z",
+              "public_trades": 1304,
+              "requested_end": "2026-08-06T13:40:00+00:00",
+              "requested_start": "2026-08-06T13:39:00+00:00",
+              "unresolved_fill_groups": 0
+            },
+            {
+              "complete": true,
+              "continuation_cursor": null,
+              "manifest": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T134000000000Z_20260806T134100000000Z_trades/manifest.json",
+              "observed_end": "2026-08-06T13:40:59.979Z",
+              "public_trades": 942,
+              "requested_end": "2026-08-06T13:41:00+00:00",
+              "requested_start": "2026-08-06T13:40:00+00:00",
+              "unresolved_fill_groups": 0
+            },
+            {
+              "complete": true,
+              "continuation_cursor": null,
+              "manifest": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T134100000000Z_20260806T134200000000Z_trades/manifest.json",
+              "observed_end": "2026-08-06T13:41:59.970Z",
+              "public_trades": 1314,
+              "requested_end": "2026-08-06T13:42:00+00:00",
+              "requested_start": "2026-08-06T13:41:00+00:00",
+              "unresolved_fill_groups": 0
+            },
+            {
+              "complete": true,
+              "continuation_cursor": null,
+              "manifest": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T134200000000Z_20260806T134300000000Z_trades/manifest.json",
+              "observed_end": "2026-08-06T13:42:59.988Z",
+              "public_trades": 1267,
+              "requested_end": "2026-08-06T13:43:00+00:00",
+              "requested_start": "2026-08-06T13:42:00+00:00",
+              "unresolved_fill_groups": 0
+            },
+            {
+              "complete": true,
+              "continuation_cursor": null,
+              "manifest": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T134300000000Z_20260806T134400000000Z_trades/manifest.json",
+              "observed_end": "2026-08-06T13:43:59.913Z",
+              "public_trades": 1053,
+              "requested_end": "2026-08-06T13:44:00+00:00",
+              "requested_start": "2026-08-06T13:43:00+00:00",
+              "unresolved_fill_groups": 0
+            },
+            {
+              "complete": true,
+              "continuation_cursor": null,
+              "manifest": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260806T134400000000Z_20260806T134500000000Z_trades/manifest.json",
+              "observed_end": "2026-08-06T13:44:59.888Z",
+              "public_trades": 1826,
+              "requested_end": "2026-08-06T13:45:00+00:00",
+              "requested_start": "2026-08-06T13:44:00+00:00",
+              "unresolved_fill_groups": 0
+            }
+          ]
+        },
+        "date": "2026-08-06",
+        "full_fee_mark_thresholds": {
+          "liquidation_price": {
+            "continuous_trigger_coverage": false,
+            "first_observed_touch": null,
+            "last_non_touch_before_first": null,
+            "last_observed_touch": null,
+            "left_censored_touch": false,
+            "maximum_price": "1249.2",
+            "maximum_valid_gap_including_edges_ms": 3367,
+            "minimum_price": "1169.2",
+            "missing_prices": 0,
+            "observations": 340,
+            "threshold": "1270.2340824540568",
+            "touch_count": 0,
+            "valid_prices": 340
+          },
+          "stop_price": {
+            "continuous_trigger_coverage": false,
+            "first_observed_touch": {
+              "at_ms": 1786023854141,
+              "price": "1246.3",
+              "relative_bar_ms": 854141
+            },
+            "last_non_touch_before_first": {
+              "at_ms": 1786023851049,
+              "price": "1243",
+              "relative_bar_ms": 851049
+            },
+            "last_observed_touch": {
+              "at_ms": 1786023947083,
+              "price": "1244.5",
+              "relative_bar_ms": 947083
+            },
+            "left_censored_touch": false,
+            "maximum_price": "1249.2",
+            "maximum_valid_gap_including_edges_ms": 3367,
+            "minimum_price": "1169.2",
+            "missing_prices": 0,
+            "observations": 340,
+            "threshold": "1243.7680511249996",
+            "touch_count": 32,
+            "valid_prices": 340
+          }
+        },
+        "observed_liquidation_minus_stop_ms": null,
+        "original_adverse_trade": {
+          "direction": "short",
+          "entry_position": 1580,
+          "entry_price": 1213.4322449999997,
+          "entry_time_utc": "2026-08-06T11:00:00+00:00",
+          "equity_after_usd": 4908.70043705406,
+          "equity_before_usd": 4921.547747720767,
+          "exit_position": 1590,
+          "exit_price": 1244.4521235531183,
+          "exit_reason": "stop",
+          "exit_time_utc": "2026-08-06T13:30:00+00:00",
+          "fees_usd": 0.09115036875,
+          "funding_cashflow_usd": 0.02571470204337615,
+          "gross_pnl_usd": -12.781874999999935,
+          "leverage": 10.0,
+          "liquidation_price": 1271.1701587573423,
+          "margin_usd": 50.0,
+          "net_pnl_usd": -12.847310666706559,
+          "notional_usd": 500.0,
+          "quantity": 0.41205432117060653,
+          "same_bar_ambiguous": false,
+          "signal_name": "completed_1h_donchian_20_10_atr20_stop_v1",
+          "signal_position": 1579,
+          "signal_time_utc": "2026-08-06T10:45:00+00:00",
+          "stop_price": 1243.7680511249996,
+          "target_price": null
+        },
+        "original_full_fee_trade": {
+          "direction": "short",
+          "entry_position": 1580,
+          "entry_price": 1213.4322449999997,
+          "entry_time_utc": "2026-08-06T11:00:00+00:00",
+          "equity_after_usd": 4892.471081331623,
+          "equity_before_usd": 4906.13874531708,
+          "exit_position": 1590,
+          "exit_price": 1244.4521235531183,
+          "exit_reason": "stop",
+          "exit_time_utc": "2026-08-06T13:30:00+00:00",
+          "fees_usd": 0.9115036874999999,
+          "funding_cashflow_usd": 0.02571470204337615,
+          "gross_pnl_usd": -12.781874999999935,
+          "leverage": 10.0,
+          "liquidation_price": 1270.2340824540568,
+          "margin_usd": 50.0,
+          "net_pnl_usd": -13.667663985456558,
+          "notional_usd": 500.0,
+          "quantity": 0.41205432117060653,
+          "same_bar_ambiguous": false,
+          "signal_name": "completed_1h_donchian_20_10_atr20_stop_v1",
+          "signal_position": 1579,
+          "signal_time_utc": "2026-08-06T10:45:00+00:00",
+          "stop_price": 1243.7680511249996,
+          "target_price": null
+        },
+        "thresholds": {
+          "mark_price": {
+            "liquidation_price": {
+              "continuous_trigger_coverage": false,
+              "first_observed_touch": null,
+              "last_non_touch_before_first": null,
+              "last_observed_touch": null,
+              "left_censored_touch": false,
+              "maximum_price": "1249.2",
+              "maximum_valid_gap_including_edges_ms": 3367,
+              "minimum_price": "1169.2",
+              "missing_prices": 0,
+              "observations": 340,
+              "threshold": "1271.1701587573423",
+              "touch_count": 0,
+              "valid_prices": 340
+            },
+            "stop_price": {
+              "continuous_trigger_coverage": false,
+              "first_observed_touch": {
+                "at_ms": 1786023854141,
+                "price": "1246.3",
+                "relative_bar_ms": 854141
+              },
+              "last_non_touch_before_first": {
+                "at_ms": 1786023851049,
+                "price": "1243",
+                "relative_bar_ms": 851049
+              },
+              "last_observed_touch": {
+                "at_ms": 1786023947083,
+                "price": "1244.5",
+                "relative_bar_ms": 947083
+              },
+              "left_censored_touch": false,
+              "maximum_price": "1249.2",
+              "maximum_valid_gap_including_edges_ms": 3367,
+              "minimum_price": "1169.2",
+              "missing_prices": 0,
+              "observations": 340,
+              "threshold": "1243.7680511249996",
+              "touch_count": 32,
+              "valid_prices": 340
+            }
+          },
+          "mid_price": {
+            "liquidation_price": {
+              "continuous_trigger_coverage": false,
+              "first_observed_touch": null,
+              "last_non_touch_before_first": null,
+              "last_observed_touch": null,
+              "left_censored_touch": false,
+              "maximum_price": "1248.2",
+              "maximum_valid_gap_including_edges_ms": 3367,
+              "minimum_price": "1173.2",
+              "missing_prices": 0,
+              "observations": 340,
+              "threshold": "1271.1701587573423",
+              "touch_count": 0,
+              "valid_prices": 340
+            },
+            "stop_price": {
+              "continuous_trigger_coverage": false,
+              "first_observed_touch": {
+                "at_ms": 1786023863057,
+                "price": "1246.05",
+                "relative_bar_ms": 863057
+              },
+              "last_non_touch_before_first": {
+                "at_ms": 1786023860034,
+                "price": "1243.05",
+                "relative_bar_ms": 860034
+              },
+              "last_observed_touch": {
+                "at_ms": 1786023950026,
+                "price": "1244.75",
+                "relative_bar_ms": 950026
+              },
+              "left_censored_touch": false,
+              "maximum_price": "1248.2",
+              "maximum_valid_gap_including_edges_ms": 3367,
+              "minimum_price": "1173.2",
+              "missing_prices": 0,
+              "observations": 340,
+              "threshold": "1243.7680511249996",
+              "touch_count": 30,
+              "valid_prices": 340
+            }
+          },
+          "oracle_price": {
+            "liquidation_price": {
+              "continuous_trigger_coverage": false,
+              "first_observed_touch": null,
+              "last_non_touch_before_first": null,
+              "last_observed_touch": null,
+              "left_censored_touch": false,
+              "maximum_price": "1248.9",
+              "maximum_valid_gap_including_edges_ms": 3367,
+              "minimum_price": "1167.7",
+              "missing_prices": 0,
+              "observations": 340,
+              "threshold": "1271.1701587573423",
+              "touch_count": 0,
+              "valid_prices": 340
+            },
+            "stop_price": {
+              "continuous_trigger_coverage": false,
+              "first_observed_touch": {
+                "at_ms": 1786023854141,
+                "price": "1245.9",
+                "relative_bar_ms": 854141
+              },
+              "last_non_touch_before_first": {
+                "at_ms": 1786023851049,
+                "price": "1242.5",
+                "relative_bar_ms": 851049
+              },
+              "last_observed_touch": {
+                "at_ms": 1786023947083,
+                "price": "1244.5",
+                "relative_bar_ms": 947083
+              },
+              "left_censored_touch": false,
+              "maximum_price": "1248.9",
+              "maximum_valid_gap_including_edges_ms": 3367,
+              "minimum_price": "1167.7",
+              "missing_prices": 0,
+              "observations": 340,
+              "threshold": "1243.7680511249996",
+              "touch_count": 32,
+              "valid_prices": 340
+            }
+          },
+          "public_trade_price": {
+            "liquidation_price": {
+              "continuous_trigger_coverage": false,
+              "first_observed_touch": null,
+              "last_non_touch_before_first": null,
+              "last_observed_touch": null,
+              "left_censored_touch": false,
+              "maximum_price": "1249.1",
+              "maximum_valid_gap_including_edges_ms": 4639,
+              "minimum_price": "1168.3",
+              "missing_prices": 0,
+              "observations": 29304,
+              "threshold": "1271.1701587573423",
+              "touch_count": 0,
+              "valid_prices": 29304
+            },
+            "stop_price": {
+              "continuous_trigger_coverage": false,
+              "first_observed_touch": {
+                "at_ms": 1786023850850,
+                "price": "1244.1",
+                "relative_bar_ms": 850850
+              },
+              "last_non_touch_before_first": {
+                "at_ms": 1786023850713,
+                "price": "1243.3",
+                "relative_bar_ms": 850713
+              },
+              "last_observed_touch": {
+                "at_ms": 1786023899888,
+                "price": "1246.1",
+                "relative_bar_ms": 899888
+              },
+              "left_censored_touch": false,
+              "maximum_price": "1249.1",
+              "maximum_valid_gap_including_edges_ms": 4639,
+              "minimum_price": "1168.3",
+              "missing_prices": 0,
+              "observations": 29304,
+              "threshold": "1243.7680511249996",
+              "touch_count": 1577,
+              "valid_prices": 29304
+            }
+          }
+        },
+        "trade_id": "xyz:SNDK|19",
+        "visible_closing_depth": {
+          "liquidation_price": null,
+          "stop_price": {
+            "bracket": {
+              "after": {
+                "best_ask": 1242.0,
+                "best_bid": 1241.9,
+                "spread_bps": 0.8051853939362217,
+                "ts_exchange_ms": 1786023854500,
+                "vendor_request_id": "18d23e07-59bd-46a8-bf69-f6bc7a22cd68",
+                "visible_fill": {
+                  "best_price": 1242.0,
+                  "complete": true,
+                  "filled_quantity": 0.41205432117060653,
+                  "impact_bps": 0.0,
+                  "levels_consumed": 1,
+                  "requested_quantity": 0.41205432117060653,
+                  "side": "buy",
+                  "unfilled_quantity": 0.0,
+                  "vwap": 1242.0,
+                  "worst_price": 1242.0
+                }
+              },
+              "before": {
+                "best_ask": 1241.8,
+                "best_bid": 1241.7,
+                "spread_bps": 0.8053150795241317,
+                "ts_exchange_ms": 1786023854000,
+                "vendor_request_id": "18d23e07-59bd-46a8-bf69-f6bc7a22cd68",
+                "visible_fill": {
+                  "best_price": 1241.8,
+                  "complete": true,
+                  "filled_quantity": 0.41205432117060653,
+                  "impact_bps": 0.0,
+                  "levels_consumed": 1,
+                  "requested_quantity": 0.41205432117060653,
+                  "side": "buy",
+                  "unfilled_quantity": 0.0,
+                  "vwap": 1241.8,
+                  "worst_price": 1241.8
+                }
+              }
+            },
+            "complete_depth_walks": 2229,
+            "maximum_observation_gap_ms": 500,
+            "maximum_spread_bps": 33.12805266511013,
+            "observations": 2229,
+            "observations_are_actual_client_fills": false
+          }
+        },
+        "whole_lifecycle_pnl_revised": false
+      },
+      {
+        "actual_execution_reconstructed": false,
+        "bar_comparison": {
+          "boundary_price_candidates": {
+            "close": [
+              1264.7,
+              1264.8,
+              1264.9
+            ],
+            "open": [
+              1310.2
+            ]
+          },
+          "complete_participant_pagination": true,
+          "full_bar_minus_registered": {
+            "close": null,
+            "high": 0.0,
+            "low": 0.0,
+            "open": 0.0
+          },
+          "full_bar_ohlc": {
+            "close": null,
+            "high": 1310.5,
+            "low": 1246.8,
+            "open": 1310.2
+          },
+          "observed_print_ohlc": {
+            "close": null,
+            "high": 1310.5,
+            "low": 1246.8,
+            "open": 1310.2
+          },
+          "public_prints_in_bar": 16101,
+          "registered_boundary_price_observed": {
+            "close": true,
+            "open": true
+          },
+          "registered_candle": {
+            "close": 1264.9,
+            "high": 1310.5,
+            "low": 1246.8,
+            "open": 1310.2
+          }
+        },
+        "boundary_trade_duplicates_coalesced": 0,
+        "capture_qualification": {
+          "books": [
+            {
+              "derived_censored_zero_size_snapshots": 0,
+              "derived_coalesced_same_ms": 0,
+              "manifest": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/hip3/xyz:SNDK/20260807T132900000000Z_20260807T134600000000Z_d20/manifest.json",
+              "manifest_censor_count_present": true,
+              "normalized_rows": 2227,
+              "raw_rows": 2227
+            }
+          ],
+          "prices": [
+            {
+              "complete": true,
+              "manifest": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T132900000000Z_20260807T134600000000Z_prices/manifest.json"
+            }
+          ],
+          "trades": [
+            {
+              "complete": true,
+              "continuation_cursor": null,
+              "manifest": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T132900000000Z_20260807T133000000000Z_trades/manifest.json",
+              "observed_end": "2026-08-07T13:29:59.959Z",
+              "public_trades": 167,
+              "requested_end": "2026-08-07T13:30:00+00:00",
+              "requested_start": "2026-08-07T13:29:00+00:00",
+              "unresolved_fill_groups": 0
+            },
+            {
+              "complete": true,
+              "continuation_cursor": null,
+              "manifest": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133000000000Z_20260807T133100000000Z_trades/manifest.json",
+              "observed_end": "2026-08-07T13:30:59.608Z",
+              "public_trades": 2097,
+              "requested_end": "2026-08-07T13:31:00+00:00",
+              "requested_start": "2026-08-07T13:30:00+00:00",
+              "unresolved_fill_groups": 0
+            },
+            {
+              "complete": true,
+              "continuation_cursor": null,
+              "manifest": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133100000000Z_20260807T133200000000Z_trades/manifest.json",
+              "observed_end": "2026-08-07T13:31:59.939Z",
+              "public_trades": 2271,
+              "requested_end": "2026-08-07T13:32:00+00:00",
+              "requested_start": "2026-08-07T13:31:00+00:00",
+              "unresolved_fill_groups": 0
+            },
+            {
+              "complete": true,
+              "continuation_cursor": null,
+              "manifest": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133200000000Z_20260807T133300000000Z_trades/manifest.json",
+              "observed_end": "2026-08-07T13:32:59.718Z",
+              "public_trades": 1620,
+              "requested_end": "2026-08-07T13:33:00+00:00",
+              "requested_start": "2026-08-07T13:32:00+00:00",
+              "unresolved_fill_groups": 0
+            },
+            {
+              "complete": true,
+              "continuation_cursor": null,
+              "manifest": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133300000000Z_20260807T133400000000Z_trades/manifest.json",
+              "observed_end": "2026-08-07T13:33:59.707Z",
+              "public_trades": 598,
+              "requested_end": "2026-08-07T13:34:00+00:00",
+              "requested_start": "2026-08-07T13:33:00+00:00",
+              "unresolved_fill_groups": 0
+            },
+            {
+              "complete": true,
+              "continuation_cursor": null,
+              "manifest": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133400000000Z_20260807T133500000000Z_trades/manifest.json",
+              "observed_end": "2026-08-07T13:34:59.764Z",
+              "public_trades": 653,
+              "requested_end": "2026-08-07T13:35:00+00:00",
+              "requested_start": "2026-08-07T13:34:00+00:00",
+              "unresolved_fill_groups": 0
+            },
+            {
+              "complete": true,
+              "continuation_cursor": null,
+              "manifest": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133500000000Z_20260807T133600000000Z_trades/manifest.json",
+              "observed_end": "2026-08-07T13:35:59.815Z",
+              "public_trades": 970,
+              "requested_end": "2026-08-07T13:36:00+00:00",
+              "requested_start": "2026-08-07T13:35:00+00:00",
+              "unresolved_fill_groups": 0
+            },
+            {
+              "complete": true,
+              "continuation_cursor": null,
+              "manifest": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133600000000Z_20260807T133700000000Z_trades/manifest.json",
+              "observed_end": "2026-08-07T13:36:59.901Z",
+              "public_trades": 1040,
+              "requested_end": "2026-08-07T13:37:00+00:00",
+              "requested_start": "2026-08-07T13:36:00+00:00",
+              "unresolved_fill_groups": 0
+            },
+            {
+              "complete": true,
+              "continuation_cursor": null,
+              "manifest": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133700000000Z_20260807T133800000000Z_trades/manifest.json",
+              "observed_end": "2026-08-07T13:37:59.964Z",
+              "public_trades": 1541,
+              "requested_end": "2026-08-07T13:38:00+00:00",
+              "requested_start": "2026-08-07T13:37:00+00:00",
+              "unresolved_fill_groups": 0
+            },
+            {
+              "complete": true,
+              "continuation_cursor": null,
+              "manifest": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133800000000Z_20260807T133900000000Z_trades/manifest.json",
+              "observed_end": "2026-08-07T13:38:59.954Z",
+              "public_trades": 724,
+              "requested_end": "2026-08-07T13:39:00+00:00",
+              "requested_start": "2026-08-07T13:38:00+00:00",
+              "unresolved_fill_groups": 0
+            },
+            {
+              "complete": true,
+              "continuation_cursor": null,
+              "manifest": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T133900000000Z_20260807T134000000000Z_trades/manifest.json",
+              "observed_end": "2026-08-07T13:39:59.711Z",
+              "public_trades": 831,
+              "requested_end": "2026-08-07T13:40:00+00:00",
+              "requested_start": "2026-08-07T13:39:00+00:00",
+              "unresolved_fill_groups": 0
+            },
+            {
+              "complete": true,
+              "continuation_cursor": null,
+              "manifest": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T134000000000Z_20260807T134100000000Z_trades/manifest.json",
+              "observed_end": "2026-08-07T13:40:59.549Z",
+              "public_trades": 1143,
+              "requested_end": "2026-08-07T13:41:00+00:00",
+              "requested_start": "2026-08-07T13:40:00+00:00",
+              "unresolved_fill_groups": 0
+            },
+            {
+              "complete": true,
+              "continuation_cursor": null,
+              "manifest": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T134100000000Z_20260807T134200000000Z_trades/manifest.json",
+              "observed_end": "2026-08-07T13:41:59.582Z",
+              "public_trades": 1160,
+              "requested_end": "2026-08-07T13:42:00+00:00",
+              "requested_start": "2026-08-07T13:41:00+00:00",
+              "unresolved_fill_groups": 0
+            },
+            {
+              "complete": true,
+              "continuation_cursor": null,
+              "manifest": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T134200000000Z_20260807T134300000000Z_trades/manifest.json",
+              "observed_end": "2026-08-07T13:42:59.778Z",
+              "public_trades": 443,
+              "requested_end": "2026-08-07T13:43:00+00:00",
+              "requested_start": "2026-08-07T13:42:00+00:00",
+              "unresolved_fill_groups": 0
+            },
+            {
+              "complete": true,
+              "continuation_cursor": null,
+              "manifest": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T134300000000Z_20260807T134400000000Z_trades/manifest.json",
+              "observed_end": "2026-08-07T13:43:59.811Z",
+              "public_trades": 614,
+              "requested_end": "2026-08-07T13:44:00+00:00",
+              "requested_start": "2026-08-07T13:43:00+00:00",
+              "unresolved_fill_groups": 0
+            },
+            {
+              "complete": true,
+              "continuation_cursor": null,
+              "manifest": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260807T134400000000Z_20260807T134500000000Z_trades/manifest.json",
+              "observed_end": "2026-08-07T13:44:59.805Z",
+              "public_trades": 396,
+              "requested_end": "2026-08-07T13:45:00+00:00",
+              "requested_start": "2026-08-07T13:44:00+00:00",
+              "unresolved_fill_groups": 0
+            }
+          ]
+        },
+        "date": "2026-08-07",
+        "full_fee_mark_thresholds": {
+          "liquidation_price": {
+            "continuous_trigger_coverage": false,
+            "first_observed_touch": {
+              "at_ms": 1786110004087,
+              "price": "1249.7",
+              "relative_bar_ms": 604087
+            },
+            "last_non_touch_before_first": {
+              "at_ms": 1786110001224,
+              "price": "1250.2",
+              "relative_bar_ms": 601224
+            },
+            "last_observed_touch": {
+              "at_ms": 1786110010248,
+              "price": "1246.9",
+              "relative_bar_ms": 610248
+            },
+            "left_censored_touch": false,
+            "maximum_price": "1310",
+            "maximum_valid_gap_including_edges_ms": 3262,
+            "minimum_price": "1246.7",
+            "missing_prices": 0,
+            "observations": 340,
+            "threshold": "1250.0932259605263",
+            "touch_count": 3,
+            "valid_prices": 340
+          },
+          "stop_price": {
+            "continuous_trigger_coverage": false,
+            "first_observed_touch": {
+              "at_ms": 1786109542136,
+              "price": "1282.2",
+              "relative_bar_ms": 142136
+            },
+            "last_non_touch_before_first": {
+              "at_ms": 1786109539121,
+              "price": "1286.6",
+              "relative_bar_ms": 139121
+            },
+            "last_observed_touch": {
+              "at_ms": 1786110358357,
+              "price": "1257.1",
+              "relative_bar_ms": 958357
+            },
+            "left_censored_touch": false,
+            "maximum_price": "1310",
+            "maximum_valid_gap_including_edges_ms": 3262,
+            "minimum_price": "1246.7",
+            "missing_prices": 0,
+            "observations": 340,
+            "threshold": "1285.269009375",
+            "touch_count": 235,
+            "valid_prices": 340
+          }
+        },
+        "observed_liquidation_minus_stop_ms": 465082,
+        "original_adverse_trade": {
+          "direction": "long",
+          "entry_position": 1684,
+          "entry_price": 1318.224625,
+          "entry_time_utc": "2026-08-07T13:00:00+00:00",
+          "equity_after_usd": 4882.344380159323,
+          "equity_before_usd": 4908.70043705406,
+          "exit_position": 1686,
+          "exit_price": 1248.9692660171054,
+          "exit_reason": "liquidation",
+          "exit_time_utc": "2026-08-07T13:30:00+00:00",
+          "fees_usd": 0.08763584210526318,
+          "funding_cashflow_usd": 0.0,
+          "gross_pnl_usd": -26.268421052631556,
+          "leverage": 10.0,
+          "liquidation_price": 1248.9692660171054,
+          "margin_usd": 50.0,
+          "net_pnl_usd": -26.35605689473682,
+          "notional_usd": 500.0,
+          "quantity": 0.3792980274511258,
+          "same_bar_ambiguous": true,
+          "signal_name": "completed_1h_donchian_20_10_atr20_stop_v1",
+          "signal_position": 1683,
+          "signal_time_utc": "2026-08-07T12:45:00+00:00",
+          "stop_price": 1285.269009375,
+          "target_price": null
+        },
+        "original_full_fee_trade": {
+          "direction": "long",
+          "entry_position": 1684,
+          "entry_price": 1318.224625,
+          "entry_time_utc": "2026-08-07T13:00:00+00:00",
+          "equity_after_usd": 4865.752233963202,
+          "equity_before_usd": 4892.471081331623,
+          "exit_position": 1686,
+          "exit_price": 1250.0932259605263,
+          "exit_reason": "liquidation",
+          "exit_time_utc": "2026-08-07T13:30:00+00:00",
+          "fees_usd": 0.8767421052631579,
+          "funding_cashflow_usd": 0.0,
+          "gross_pnl_usd": -25.842105263157926,
+          "leverage": 10.0,
+          "liquidation_price": 1250.0932259605263,
+          "margin_usd": 50.0,
+          "net_pnl_usd": -26.718847368421084,
+          "notional_usd": 500.0,
+          "quantity": 0.3792980274511258,
+          "same_bar_ambiguous": true,
+          "signal_name": "completed_1h_donchian_20_10_atr20_stop_v1",
+          "signal_position": 1683,
+          "signal_time_utc": "2026-08-07T12:45:00+00:00",
+          "stop_price": 1285.269009375,
+          "target_price": null
+        },
+        "thresholds": {
+          "mark_price": {
+            "liquidation_price": {
+              "continuous_trigger_coverage": false,
+              "first_observed_touch": {
+                "at_ms": 1786110007218,
+                "price": "1246.7",
+                "relative_bar_ms": 607218
+              },
+              "last_non_touch_before_first": {
+                "at_ms": 1786110004087,
+                "price": "1249.7",
+                "relative_bar_ms": 604087
+              },
+              "last_observed_touch": {
+                "at_ms": 1786110010248,
+                "price": "1246.9",
+                "relative_bar_ms": 610248
+              },
+              "left_censored_touch": false,
+              "maximum_price": "1310",
+              "maximum_valid_gap_including_edges_ms": 3262,
+              "minimum_price": "1246.7",
+              "missing_prices": 0,
+              "observations": 340,
+              "threshold": "1248.9692660171054",
+              "touch_count": 2,
+              "valid_prices": 340
+            },
+            "stop_price": {
+              "continuous_trigger_coverage": false,
+              "first_observed_touch": {
+                "at_ms": 1786109542136,
+                "price": "1282.2",
+                "relative_bar_ms": 142136
+              },
+              "last_non_touch_before_first": {
+                "at_ms": 1786109539121,
+                "price": "1286.6",
+                "relative_bar_ms": 139121
+              },
+              "last_observed_touch": {
+                "at_ms": 1786110358357,
+                "price": "1257.1",
+                "relative_bar_ms": 958357
+              },
+              "left_censored_touch": false,
+              "maximum_price": "1310",
+              "maximum_valid_gap_including_edges_ms": 3262,
+              "minimum_price": "1246.7",
+              "missing_prices": 0,
+              "observations": 340,
+              "threshold": "1285.269009375",
+              "touch_count": 235,
+              "valid_prices": 340
+            }
+          },
+          "mid_price": {
+            "liquidation_price": {
+              "continuous_trigger_coverage": false,
+              "first_observed_touch": {
+                "at_ms": 1786110007218,
+                "price": "1248.65",
+                "relative_bar_ms": 607218
+              },
+              "last_non_touch_before_first": {
+                "at_ms": 1786110004087,
+                "price": "1250.55",
+                "relative_bar_ms": 604087
+              },
+              "last_observed_touch": {
+                "at_ms": 1786110013177,
+                "price": "1248.65",
+                "relative_bar_ms": 613177
+              },
+              "left_censored_touch": false,
+              "maximum_price": "1309.35",
+              "maximum_valid_gap_including_edges_ms": 3262,
+              "minimum_price": "1248.65",
+              "missing_prices": 0,
+              "observations": 340,
+              "threshold": "1248.9692660171054",
+              "touch_count": 3,
+              "valid_prices": 340
+            },
+            "stop_price": {
+              "continuous_trigger_coverage": false,
+              "first_observed_touch": {
+                "at_ms": 1786109542136,
+                "price": "1284.65",
+                "relative_bar_ms": 142136
+              },
+              "last_non_touch_before_first": {
+                "at_ms": 1786109539121,
+                "price": "1297.05",
+                "relative_bar_ms": 139121
+              },
+              "last_observed_touch": {
+                "at_ms": 1786110358357,
+                "price": "1256.55",
+                "relative_bar_ms": 958357
+              },
+              "left_censored_touch": false,
+              "maximum_price": "1309.35",
+              "maximum_valid_gap_including_edges_ms": 3262,
+              "minimum_price": "1248.65",
+              "missing_prices": 0,
+              "observations": 340,
+              "threshold": "1285.269009375",
+              "touch_count": 236,
+              "valid_prices": 340
+            }
+          },
+          "oracle_price": {
+            "liquidation_price": {
+              "continuous_trigger_coverage": false,
+              "first_observed_touch": {
+                "at_ms": 1786110007218,
+                "price": "1245.7",
+                "relative_bar_ms": 607218
+              },
+              "last_non_touch_before_first": {
+                "at_ms": 1786110004087,
+                "price": "1249.2",
+                "relative_bar_ms": 604087
+              },
+              "last_observed_touch": {
+                "at_ms": 1786110010248,
+                "price": "1245.9",
+                "relative_bar_ms": 610248
+              },
+              "left_censored_touch": false,
+              "maximum_price": "1310",
+              "maximum_valid_gap_including_edges_ms": 3262,
+              "minimum_price": "1245.7",
+              "missing_prices": 0,
+              "observations": 340,
+              "threshold": "1248.9692660171054",
+              "touch_count": 2,
+              "valid_prices": 340
+            },
+            "stop_price": {
+              "continuous_trigger_coverage": false,
+              "first_observed_touch": {
+                "at_ms": 1786109542136,
+                "price": "1282.2",
+                "relative_bar_ms": 142136
+              },
+              "last_non_touch_before_first": {
+                "at_ms": 1786109539121,
+                "price": "1286.6",
+                "relative_bar_ms": 139121
+              },
+              "last_observed_touch": {
+                "at_ms": 1786110358357,
+                "price": "1256.1",
+                "relative_bar_ms": 958357
+              },
+              "left_censored_touch": false,
+              "maximum_price": "1310",
+              "maximum_valid_gap_including_edges_ms": 3262,
+              "minimum_price": "1245.7",
+              "missing_prices": 0,
+              "observations": 340,
+              "threshold": "1285.269009375",
+              "touch_count": 236,
+              "valid_prices": 340
+            }
+          },
+          "public_trade_price": {
+            "liquidation_price": {
+              "continuous_trigger_coverage": false,
+              "first_observed_touch": {
+                "at_ms": 1786110004634,
+                "price": "1248.8",
+                "relative_bar_ms": 604634
+              },
+              "last_non_touch_before_first": {
+                "at_ms": 1786110004634,
+                "price": "1249.1",
+                "relative_bar_ms": 604634
+              },
+              "last_observed_touch": {
+                "at_ms": 1786110009367,
+                "price": "1248.7",
+                "relative_bar_ms": 609367
+              },
+              "left_censored_touch": false,
+              "maximum_price": "1310.5",
+              "maximum_valid_gap_including_edges_ms": 3984,
+              "minimum_price": "1246.8",
+              "missing_prices": 0,
+              "observations": 16268,
+              "threshold": "1248.9692660171054",
+              "touch_count": 239,
+              "valid_prices": 16268
+            },
+            "stop_price": {
+              "continuous_trigger_coverage": false,
+              "first_observed_touch": {
+                "at_ms": 1786109533398,
+                "price": "1285",
+                "relative_bar_ms": 133398
+              },
+              "last_non_touch_before_first": {
+                "at_ms": 1786109533353,
+                "price": "1285.3",
+                "relative_bar_ms": 133353
+              },
+              "last_observed_touch": {
+                "at_ms": 1786110299805,
+                "price": "1264.7",
+                "relative_bar_ms": 899805
+              },
+              "left_censored_touch": false,
+              "maximum_price": "1310.5",
+              "maximum_valid_gap_including_edges_ms": 3984,
+              "minimum_price": "1246.8",
+              "missing_prices": 0,
+              "observations": 16268,
+              "threshold": "1285.269009375",
+              "touch_count": 9882,
+              "valid_prices": 16268
+            }
+          }
+        },
+        "trade_id": "xyz:SNDK|20",
+        "visible_closing_depth": {
+          "liquidation_price": {
+            "bracket": {
+              "after": {
+                "best_ask": 1248.1,
+                "best_bid": 1247.9,
+                "spread_bps": 1.6025641025626451,
+                "ts_exchange_ms": 1786110007500,
+                "vendor_request_id": "37d981d7-db60-45e6-acb6-01b9dab0e29f",
+                "visible_fill": {
+                  "best_price": 1247.9,
+                  "complete": true,
+                  "filled_quantity": 0.3792980274511258,
+                  "impact_bps": 0.0,
+                  "levels_consumed": 1,
+                  "requested_quantity": 0.3792980274511258,
+                  "side": "sell",
+                  "unfilled_quantity": 0.0,
+                  "vwap": 1247.9,
+                  "worst_price": 1247.9
+                }
+              },
+              "before": {
+                "best_ask": 1247.3,
+                "best_bid": 1246.9,
+                "spread_bps": 3.207441263730764,
+                "ts_exchange_ms": 1786110007000,
+                "vendor_request_id": "37d981d7-db60-45e6-acb6-01b9dab0e29f",
+                "visible_fill": {
+                  "best_price": 1246.9,
+                  "complete": true,
+                  "filled_quantity": 0.3792980274511258,
+                  "impact_bps": 0.7660440795198564,
+                  "levels_consumed": 2,
+                  "requested_quantity": 0.3792980274511258,
+                  "side": "sell",
+                  "unfilled_quantity": 0.0,
+                  "vwap": 1246.8044819637248,
+                  "worst_price": 1246.8
+                }
+              }
+            },
+            "complete_depth_walks": 2226,
+            "maximum_observation_gap_ms": 1500,
+            "maximum_spread_bps": 19.842057224493036,
+            "observations": 2226,
+            "observations_are_actual_client_fills": false
+          },
+          "stop_price": {
+            "bracket": {
+              "after": {
+                "best_ask": 1282.4,
+                "best_bid": 1282.2,
+                "spread_bps": 1.5596974187011265,
+                "ts_exchange_ms": 1786109542500,
+                "vendor_request_id": "8cb11fd6-2142-4414-a9e6-8c0aed382c90",
+                "visible_fill": {
+                  "best_price": 1282.2,
+                  "complete": true,
+                  "filled_quantity": 0.3792980274511258,
+                  "impact_bps": 0.0,
+                  "levels_consumed": 1,
+                  "requested_quantity": 0.3792980274511258,
+                  "side": "sell",
+                  "unfilled_quantity": 0.0,
+                  "vwap": 1282.2,
+                  "worst_price": 1282.2
+                }
+              },
+              "before": {
+                "best_ask": 1282.6,
+                "best_bid": 1282.5,
+                "spread_bps": 0.779696697983775,
+                "ts_exchange_ms": 1786109542000,
+                "vendor_request_id": "8cb11fd6-2142-4414-a9e6-8c0aed382c90",
+                "visible_fill": {
+                  "best_price": 1282.5,
+                  "complete": true,
+                  "filled_quantity": 0.3792980274511258,
+                  "impact_bps": 0.0,
+                  "levels_consumed": 1,
+                  "requested_quantity": 0.3792980274511258,
+                  "side": "sell",
+                  "unfilled_quantity": 0.0,
+                  "vwap": 1282.5,
+                  "worst_price": 1282.5
+                }
+              }
+            },
+            "complete_depth_walks": 2226,
+            "maximum_observation_gap_ms": 1500,
+            "maximum_spread_bps": 19.842057224493036,
+            "observations": 2226,
+            "observations_are_actual_client_fills": false
+          }
+        },
+        "whole_lifecycle_pnl_revised": false
+      }
+    ],
+    "source_commit": "89345494eac8494909751c1730e202537c4db189",
+    "unique_ambiguous_trade_id": "xyz:SNDK|20"
+  },
+  "revision_number": 1,
+  "runtime_strategy_changed": false,
+  "schema_version": 1,
+  "status": "retain",
+  "strategy_id": "v89_sndk_historical_exit_clock_qualification",
+  "supersedes_revision_id": null,
+  "symbol": "XYZ:SNDK"
+}
