@@ -1,0 +1,157 @@
+{
+  "automatic_promotion": false,
+  "confidence": "medium",
+  "created_at_utc": "2026-09-08T04:28:21.479499+00:00",
+  "decision": "The positive control and nine attribution tests passed. A fifteen-minute diagnostic is running with an immutable eight-minute prefix. Temporary reporter ledger copies are confirmed; root attribution remains incomplete.",
+  "evidence": [
+    {
+      "bytes": 3523,
+      "path": "/Users/gestas/Prototypes/hypervector-v89-storage-spcx-20260908/docs/reviews/2026-09-08-v89-process-storage-investigation.md",
+      "role": "source_observation_or_validation",
+      "sha256": "f7666329dfc2415cee8b72e30df76bf730b2e48fd2faca15543b05bead7457f5"
+    },
+    {
+      "bytes": 9399,
+      "path": "/Users/gestas/Prototypes/hypervector-v89-storage-spcx-20260908/scripts/v89_process_storage_capture.py",
+      "role": "source_observation_or_validation",
+      "sha256": "212dd491e561269ee973a915b86352ce818f9855bcb699f096abca001309baca"
+    },
+    {
+      "bytes": 2151,
+      "path": "/Users/gestas/Prototypes/hypervector-v89-storage-spcx-20260908/tests/test_v89_process_storage_capture.py",
+      "role": "source_observation_or_validation",
+      "sha256": "7a79c3d7ab387699e93a1d6418d6bc834cf7e4ee4bf8bc78c4e23c9d2ed6ff1e"
+    },
+    {
+      "bytes": 944,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_process_diskio_positive_control_20260908_v1.json",
+      "role": "source_observation_or_validation",
+      "sha256": "8e61fb39393b0edf5e9b55814f5d01421a3c4bfcf1e54e0e51e9e4c93ae6861b"
+    },
+    {
+      "bytes": 34136,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_process_diskio_probe_20260908_v1",
+      "role": "source_observation_or_validation",
+      "sha256": "1086ffc9a3af96bb9cc48ddd917e630d4edb42cfdd4351a8507d5ef6d09f02be"
+    },
+    {
+      "bytes": 1572,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_process_diskio_probe_20260908_v1.c",
+      "role": "source_observation_or_validation",
+      "sha256": "56b090350723e59ad5c0c1758e14be1b27962e98f17f7c2f5d580352fade0279"
+    },
+    {
+      "bytes": 2031,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_process_storage_capture_20260908_v1.log",
+      "role": "source_observation_or_validation",
+      "sha256": "3dcdcafa19cf9907b684cf7b4c83d517494d6f122e3fa1420d85cdbb448cbd94"
+    },
+    {
+      "bytes": 688,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_process_storage_capture_20260908_v1/failure_acceptance.json",
+      "role": "source_observation_or_validation",
+      "sha256": "f066cc8b812c1d3643b17fb814d2a9da6d369e1373a24e069967d03a5b3091bb"
+    },
+    {
+      "bytes": 2116,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_process_storage_capture_20260908_v1/manifest.json",
+      "role": "source_observation_or_validation",
+      "sha256": "e3a307d68a45b6297b748b55f4c9fa2eaf535943dc4dedad5c2ceddc220d98a8"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_process_storage_capture_20260908_v1/samples.jsonl",
+      "role": "source_observation_or_validation",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 9307,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_process_storage_capture_20260908_v1/source.py",
+      "role": "source_observation_or_validation",
+      "sha256": "7ffe8b9fdc27734f1abb87ef86245a4541a7afb8200ae118a93fd65a2dea05e9"
+    },
+    {
+      "bytes": 1382,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_process_storage_midpoint_20260908_v1/capture_status.json",
+      "role": "source_observation_or_validation",
+      "sha256": "9164fa280a4c7108d40617ee6ba88bd51e12d32bb61e49c39a6df0c511231b9a"
+    },
+    {
+      "bytes": 2116,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_process_storage_midpoint_20260908_v1/manifest.json",
+      "role": "source_observation_or_validation",
+      "sha256": "9e386e581aa46c02bf6e637d6f3aa29d3f3a63f85d6bc0ecefa1f61cf02ec1e7"
+    },
+    {
+      "bytes": 17651767,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_process_storage_midpoint_20260908_v1/samples.jsonl",
+      "role": "source_observation_or_validation",
+      "sha256": "46ee533e14f68f805d452176ad741db9cb615857efed4ba4e5b5536a6d55c16d"
+    },
+    {
+      "bytes": 9399,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_process_storage_midpoint_20260908_v1/source.py",
+      "role": "source_observation_or_validation",
+      "sha256": "212dd491e561269ee973a915b86352ce818f9855bcb699f096abca001309baca"
+    },
+    {
+      "bytes": 98,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_process_storage_tests_20260908_v1.log",
+      "role": "source_observation_or_validation",
+      "sha256": "7fca7a8d71c9c2029ca566d01d2e9026fb3d599af3b46d7ed5cab69ea30e0d09"
+    },
+    {
+      "bytes": 98,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_process_storage_tests_20260908_v2.log",
+      "role": "source_observation_or_validation",
+      "sha256": "4326a6149a721258a65f0bb6017df2bef4fecac91560bf07f2f16de8517a5865"
+    },
+    {
+      "bytes": 924689,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_storage_all_open_file_stats_20260908_v1.json",
+      "role": "source_observation_or_validation",
+      "sha256": "4a56bd01ca19daa9c6b6a53b4b4e1d8321395846c06ef224ac585aaadbf9df2c"
+    },
+    {
+      "bytes": 1825348,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_storage_all_open_files_20260908_v1.txt",
+      "role": "source_observation_or_validation",
+      "sha256": "0d13ac0704abacdf0a220dd2e89227fe7b00e38a40cb9fba029eaf37de3501ed"
+    },
+    {
+      "bytes": 29,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_storage_fs_usage_probe_20260908_v1.log",
+      "role": "source_observation_or_validation",
+      "sha256": "9b3a3b7a78f239c4473bb193476b1a860c91f1c2b4fab9c7639eceea414a60fb"
+    }
+  ],
+  "execution_authority": "none",
+  "falsifier": "A mismatched positive control, reused PID attribution, changed source hash or contradictory file ownership invalidates the corresponding observation. Allocation tied to another writer would update the root diagnosis.",
+  "hypothesis": "Process I/O and writable-file observations can distinguish known reporting overhead from the unexplained larger filesystem capacity swings.",
+  "hypothesis_id": "v89-reporting-process-storage-20260908",
+  "limitations": [
+    "Process disk I/O is not net filesystem allocation.",
+    "Permission-restricted counters and 59 file metadata observations leave incomplete system coverage.",
+    "Five-second samples can miss short-lived processes and files.",
+    "The running experiment is not yet a completed fifteen-minute result.",
+    "Reporter temporary copies do not account for the full observed multi-gigabyte space changes."
+  ],
+  "metrics": {
+    "frozen_prefix_samples": 97,
+    "offline_tests_passed": 9,
+    "peak_sampler_duration_seconds": 0.12798758293502033,
+    "planned_samples": 181,
+    "positive_control_bytes": 16777216,
+    "positive_control_observed_write_delta": 16777216,
+    "prefix_maximum_free_bytes": 15297503232,
+    "prefix_minimum_free_bytes": 9873084416,
+    "reporter_observed_write_bytes": 1927217152
+  },
+  "revision_number": 1,
+  "runtime_strategy_changed": false,
+  "schema_version": 1,
+  "status": "observe",
+  "strategy_id": "research_reporting_storage",
+  "supersedes_revision_id": null,
+  "symbol": "PORTFOLIO"
+}
