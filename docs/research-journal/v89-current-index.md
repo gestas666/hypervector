@@ -122,17 +122,29 @@ archive replay pass. Confidence is high in this narrow sample, low in durable
 liquidity or future edge. Current capacity does not revise the historical
 drawdown/exposure trade-off or prove changed-size historical fills.
 
-Next: [inactive allocation and serializer correction](../plans/2026-09-08-v89-inactive-allocation-proposal.md).
-At 18:22 UTC a pure round trip reproduced a staging defect: the current serializer
-widens BTC provider sides to long/short and its output fails the observe loader.
-It also omits all seven explicit entry-slippage caps. Main and research source
-copies match. This is a generated-file defect, not established live impact or
-shutdown causation. Prepare an isolated correction, regression evidence and the
-exact inactive allocation before a separately frozen prospective comparison.
-Preserve original controls, signal/stop behavior and the existing seal. No live
-change is authorized by the research result.
+The [staging correction](../reviews/2026-09-08-v89-staging-roundtrip-correction.md)
+is prepared in isolated commit `a676db5`, not deployed. The serializer's BTC
+direction widening and omitted entry caps were reproduced; the correction also
+preserves flat-entry position policy and validates generated fingerprints before
+publication. Forty-one acceptance tests and archived reproduction pass. The
+original main source remains unchanged; financial impact or shutdown causation
+is not established.
 
-At 18:14:25 UTC the tracked backend, supervisor, reporter and former monitor
+The [exact inactive allocation proposal](../proposals/v89-equal-cap-20260908/recommendation.md)
+contains separate original/equal configs, complete typed and independent raw-TOML
+parity, and fixed cost contracts. Source `1e720d5` reproduces both files and the
+comparison byte-for-byte. The prospective economic contract is registered for
+**September 9 00:00–September 23 00:00 UTC**, with 24 cells / 12 pairs and a
+first-receipt/adverse/recorded-bar primary. It is **not running**: source collector
+and replay qualification remain outstanding. No live allocation approval is
+requested; preserve both the new and existing outcome seals.
+
+Next: implement and qualify the separate seven-asset prospective source collector
+against that fixed calendar, preserving raw/version/timing evidence. Do not alter
+the existing SNDK/Brent collector or inspect either experiment's early outcomes.
+No live change is authorized by the research result.
+
+At 18:55:38 UTC the tracked backend, supervisor, reporter and former monitor
 remain absent, and the checkpoint remains from 14:04:48. The live profile bytes
 are unchanged. This process/configuration observation does not refresh the
 14:11 native account snapshot or identify the shutdown requester.
@@ -185,6 +197,7 @@ hashes; do not append the same revisions under new identities just to copy docs.
 |---|---|
 | Entry dispatch deadline, source `3d204863af40536187df96f161f4874d9fa42166` | [Review](../reviews/2026-09-08-v89-entry-deadline-dispatch-proposal.md); 454 focused tests. Deployment approval is pending; do not re-ask without a relevant update. |
 | Bounded memory snapshot reader, source `7a30d04` | Journal `v89-memory-snapshot-20260908`, revision 3; reporting-only deployment proposal remains pending. Keep the rejected earlier candidate distinct. |
+| Configuration-staging correction, source `a676db5` | [Review](../reviews/2026-09-08-v89-staging-roundtrip-correction.md); exact V89/flat-entry regressions, serialized fingerprint validation and 41 acceptance tests. Source application only requires explicit approval; no trading/profile restart accompanies it. |
 
 These are not deployment authorizations. Existing live process and configuration
 identity must be read from current evidence before reporting their state.
