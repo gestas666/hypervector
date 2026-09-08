@@ -1,0 +1,762 @@
+{
+  "automatic_promotion": false,
+  "confidence": "high",
+  "created_at_utc": "2026-09-08T15:22:34.150609+00:00",
+  "decision": "Retain the exact descriptive reconciliation: -10.796513 USD combined net, of which -9.7972 is entry-to-retained-trigger PnL and -0.8236 trigger-to-fill PnL. Both exits match public prints and observed marks cross their retained thresholds at the fill timestamp. No live rule change is justified by two losses; latency and a causal cash-open effect remain unresolved. Next preregister historical shared-portfolio cash-open exposure attribution. The approved monitor later exited; no lifecycle action was taken.",
+  "evidence": [
+    {
+      "bytes": 168985,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/hip3/xyz:SNDK/20260908T132900000000Z_20260908T133500000000Z_d20/books.jsonl.gz",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "53b4e4318f53e9c1facbcc3abd9b55de279c96a371ee577b65e74a26f6d62cc1"
+    },
+    {
+      "bytes": 1010,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/hip3/xyz:SNDK/20260908T132900000000Z_20260908T133500000000Z_d20/manifest.json",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "400aced77ab22f3494a6cea8a62151f7dfded8d5d7f60cfada988b0060509d8c"
+    },
+    {
+      "bytes": 197655,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/hip3/xyz:SNDK/20260908T132900000000Z_20260908T133500000000Z_d20/raw/page-0001.json.gz",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "2071ba50dc0719b14d3d72b6d908ff3ffea3b4b053dc434e53e84e4e78e2b6f6"
+    },
+    {
+      "bytes": 155257,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/hip3/xyz:SPCX/20260908T132900000000Z_20260908T133500000000Z_d20/books.jsonl.gz",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "888f48e7108c02bcaadc4f0fdf0c87fe7f19b1c0574f002c6c7182c00dbe6bc5"
+    },
+    {
+      "bytes": 1010,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/hip3/xyz:SPCX/20260908T132900000000Z_20260908T133500000000Z_d20/manifest.json",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "761c8ec88cab38d4139bf85e86d8f5300b92997b1fb1d50eb93f20be326efb84"
+    },
+    {
+      "bytes": 183606,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/hip3/xyz:SPCX/20260908T132900000000Z_20260908T133500000000Z_d20/raw/page-0001.json.gz",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "8d2b8f453085f3773f77d22a068f513258ea28751f23a8283c9c6c336955cb5d"
+    },
+    {
+      "bytes": 816,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260908T132900000000Z_20260908T133500000000Z_prices/manifest.json",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "2a7aaa459b5e438e9d6948d067e2c87ffa80f197f2d06ad55ec76664c0033424"
+    },
+    {
+      "bytes": 7180,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260908T132900000000Z_20260908T133500000000Z_prices/prices.parquet",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "3627cc14b1a0c902b584631f07878b1e46b5156ffac3cab4f8df1402246b1562"
+    },
+    {
+      "bytes": 1731,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260908T132900000000Z_20260908T133500000000Z_prices/raw/page-0001.json.gz",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "d2aa044aa6ea2c759d9ee1a4ac168fce7bc26f20f45931bdd3dc3e0fcf3cd9af"
+    },
+    {
+      "bytes": 1833,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260908T132900000000Z_20260908T133500000000Z_trades/manifest.json",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "408294114f4ac9abaef4b985887b770c43458f5797f56375d5cf11666a243d91"
+    },
+    {
+      "bytes": 34567,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260908T132900000000Z_20260908T133500000000Z_trades/raw/page-0001.json.gz",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "8e0265511987edb9b1d66ef9b3428b2d4fbc436fb8dfa011ce247c0ddd3b89ea"
+    },
+    {
+      "bytes": 33247,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260908T132900000000Z_20260908T133500000000Z_trades/raw/page-0002.json.gz",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "f050f896a90e933c4f42850f16c916e2eecfe3176600494b6b31e8ce6f5228f5"
+    },
+    {
+      "bytes": 35700,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260908T132900000000Z_20260908T133500000000Z_trades/raw/page-0003.json.gz",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "e81bde2cb9998bd820a9d5a78f7e5320f9fa405d03c01cdc2bf4d6066500d821"
+    },
+    {
+      "bytes": 36283,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260908T132900000000Z_20260908T133500000000Z_trades/raw/page-0004.json.gz",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "c9515b3d407464c921204964d45521a4258533e141f60d1929ee7bbcdd0eed65"
+    },
+    {
+      "bytes": 33733,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260908T132900000000Z_20260908T133500000000Z_trades/raw/page-0005.json.gz",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "321c9d765a18737edbc482d3c36844fa8f96cfa78483438553389b69dc466c8c"
+    },
+    {
+      "bytes": 39743,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260908T132900000000Z_20260908T133500000000Z_trades/trades.jsonl.gz",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "63c5dbcc38ae8404352a49d097e608b02e7d520f0b78faa261fb2a8803eede56"
+    },
+    {
+      "bytes": 1431,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260908T133000000000Z_20260908T133100000000Z_trades/manifest.json",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "0385c3fb35dd255be75f7ccdbb6026fa2c67b15cd9f01d7b7574c3d16527656d"
+    },
+    {
+      "bytes": 30977,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260908T133000000000Z_20260908T133100000000Z_trades/raw/page-0001.json.gz",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "bc64a6bcdc6dbaaffc77c0e7f9276515d2f85cb635841a04f8e8276411140a4b"
+    },
+    {
+      "bytes": 36031,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260908T133000000000Z_20260908T133100000000Z_trades/raw/page-0002.json.gz",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "4aca482aa202e1d2c9dd613c9b4669f6f610c586fc4c6a1920fd6dc8c83076f9"
+    },
+    {
+      "bytes": 32371,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260908T133000000000Z_20260908T133100000000Z_trades/raw/page-0003.json.gz",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "930f7c386356de5b1f808645259f1a4ddcfc5d38e4fb7686c7ac7b88da93edc8"
+    },
+    {
+      "bytes": 23095,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SNDK/20260908T133000000000Z_20260908T133100000000Z_trades/trades.jsonl.gz",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "9b4d0be28841e7191957651879e835ea109f9de585aa782f0ea0380cc59015ec"
+    },
+    {
+      "bytes": 816,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SPCX/20260908T132900000000Z_20260908T133500000000Z_prices/manifest.json",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "aad0bfcd5ec093099a53ef088eb0f27ba7e33fc45be2976a0dd0372bb53cf052"
+    },
+    {
+      "bytes": 7192,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SPCX/20260908T132900000000Z_20260908T133500000000Z_prices/prices.parquet",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "5daf59222f7d501a5be3f67cdae58f5d7b84bc1fe3b8bd6e956afdea53712cff"
+    },
+    {
+      "bytes": 1579,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SPCX/20260908T132900000000Z_20260908T133500000000Z_prices/raw/page-0001.json.gz",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "43b3e6d677e085c82226c6543d0e483b39bb8ffd1e87a305d863f97710fe439c"
+    },
+    {
+      "bytes": 1833,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SPCX/20260908T132900000000Z_20260908T133500000000Z_trades/manifest.json",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "e90b59cc43bbf2ad49637decbe0b24b52cb2f3c0c13de796189aea1492f36c04"
+    },
+    {
+      "bytes": 41036,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SPCX/20260908T132900000000Z_20260908T133500000000Z_trades/raw/page-0001.json.gz",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "061aa23577a789e211d418feab396ef60f39863f5037a49297f166dbcdd7f28c"
+    },
+    {
+      "bytes": 34847,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SPCX/20260908T132900000000Z_20260908T133500000000Z_trades/raw/page-0002.json.gz",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "3bf9b3eb3adea1845aaedd93a88478b10d9567dfade6d3c55c08b7e575dea176"
+    },
+    {
+      "bytes": 38033,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SPCX/20260908T132900000000Z_20260908T133500000000Z_trades/raw/page-0003.json.gz",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "40d226e4c0684c85faffff1e0f1457782df20f135eb301ce0b7071dee2f62e50"
+    },
+    {
+      "bytes": 42023,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SPCX/20260908T132900000000Z_20260908T133500000000Z_trades/raw/page-0004.json.gz",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "0acda398a5b837552cc730741f2d695c8ead6f8fdedcfe5501b214830a0ef047"
+    },
+    {
+      "bytes": 43929,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SPCX/20260908T132900000000Z_20260908T133500000000Z_trades/raw/page-0005.json.gz",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "e7eaca921bf3f9181fa37f4f8e70cadc92767c316ab168bd3c50cce789791030"
+    },
+    {
+      "bytes": 37508,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SPCX/20260908T132900000000Z_20260908T133500000000Z_trades/trades.jsonl.gz",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "9fa512be91361f5a0a27831e934311b27891d951bc733945d9b93489a3078cde"
+    },
+    {
+      "bytes": 1618,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SPCX/20260908T133200000000Z_20260908T133300000000Z_trades/manifest.json",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "fa5a4bb127402dfdf84f4ba9916d7e1c21b9943bea183a283eaca15a1b794a21"
+    },
+    {
+      "bytes": 40110,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SPCX/20260908T133200000000Z_20260908T133300000000Z_trades/raw/page-0001.json.gz",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "3eab87921a2dba7f09274404948da75a53ac7d8d6eabb07ab5afedacfbc671e5"
+    },
+    {
+      "bytes": 43420,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SPCX/20260908T133200000000Z_20260908T133300000000Z_trades/raw/page-0002.json.gz",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "21071409fe3312b9ec101736bf97b56230f5fcec14977d6622648d9dbadfe719"
+    },
+    {
+      "bytes": 42134,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SPCX/20260908T133200000000Z_20260908T133300000000Z_trades/raw/page-0003.json.gz",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "4fcbdc7d83f00b1815bad4ccc7c60e0e30c4fd2d0f79c4c5fb43956c350125c8"
+    },
+    {
+      "bytes": 32981,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SPCX/20260908T133200000000Z_20260908T133300000000Z_trades/raw/page-0004.json.gz",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "a2c0cf3c3348627d4da11de46040f38abcbdfbf33456817c2be11608ef8a0560"
+    },
+    {
+      "bytes": 28807,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/xyz:SPCX/20260908T133200000000Z_20260908T133300000000Z_trades/trades.jsonl.gz",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "c76af1a8e0fff5751b913a60d8d44cb670cc6a3f89a58fbc5bc9ebbb27fb7b6d"
+    },
+    {
+      "bytes": 2014,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_noncrypto_opening_stop_execution_20260908_v1/archive_capture.json",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "0c12b39db10c812c02045dd1e9088a41d65a5b566c7b7f232c20fb0d8df8189d"
+    },
+    {
+      "bytes": 2689,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_noncrypto_opening_stop_execution_20260908_v1/archive_initial_source.py",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "ff85ed5c5f129c4f815eacb0ed05cc53e466d5c541ab17eaaa45a87c45e80f4f"
+    },
+    {
+      "bytes": 147,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_noncrypto_opening_stop_execution_20260908_v1/archive_inventory.json",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "e9d1f13d2aae4b8522c7b2ba3b10664451eaf7152257ea085392bebc9f258276"
+    },
+    {
+      "bytes": 229,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_noncrypto_opening_stop_execution_20260908_v1/archive_replay.log",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "ba84980a5dec8106b6ba68878e761c93ec0d880de2375d2486523f80ee20ae17"
+    },
+    {
+      "bytes": 10089,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_noncrypto_opening_stop_execution_20260908_v1/archive_report.json",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "f5b3a8256c71158e02beea6f0926322ffe610e4725de5a8c6a09a7a1e90788f4"
+    },
+    {
+      "bytes": 1961,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_noncrypto_opening_stop_execution_20260908_v1/capture_manifest.json",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "74392ce4707fc90a3b48ff20cc86309df36a04650c4f25db35a2db180de27d12"
+    },
+    {
+      "bytes": 5134,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_noncrypto_opening_stop_execution_20260908_v1/capture_source.py",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "4d4a693fa385c14f2a9036ed7066ff88a58efb96be9c4800419774642eb3b1bb"
+    },
+    {
+      "bytes": 3939549,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_noncrypto_opening_stop_execution_20260908_v1/checkpoint.json",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "1da06530d4f31dd0aa57b667998b0a375866e380dfca858f01197e4270e34e93"
+    },
+    {
+      "bytes": 14840,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_noncrypto_opening_stop_execution_20260908_v1/coverage_final.json",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "3b507395c5aff7843cf3f847e954e28d0589509edf831c941c5579185ee96d44"
+    },
+    {
+      "bytes": 14962,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_noncrypto_opening_stop_execution_20260908_v1/coverage_first.json",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "a4e2334ab2d06b70ac2e30cc8416c733fdcbd20346fe5ecc5ba4643c5175980d"
+    },
+    {
+      "bytes": 1042,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_noncrypto_opening_stop_execution_20260908_v1/coverage_first.log",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "69efe667cff856367219958eac973d229566b29d5bc26e1b060eb198c78ab09c"
+    },
+    {
+      "bytes": 11180,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_noncrypto_opening_stop_execution_20260908_v1/current_index.md",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "1f3e8dedb2f042ae50f9ba8fac9665ddcc455bf889e97c5656425fa086e0bc04"
+    },
+    {
+      "bytes": 99,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_noncrypto_opening_stop_execution_20260908_v1/economics_first.log",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "39e814dc0b61ed654c2c87baf71f55b1966a02074b78bbc637984d67e91c07e9"
+    },
+    {
+      "bytes": 1080,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_noncrypto_opening_stop_execution_20260908_v1/economics_red.log",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "2c70a871aa01563af36ba094c6abaa6b5188ba6434761e1db35d4d03f8841afd"
+    },
+    {
+      "bytes": 20740,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_noncrypto_opening_stop_execution_20260908_v1/evidence_manifest.json",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "bb96305005c7a012ac33b6f159fbedb4e5c8c583be4c25a958de604518bf0144"
+    },
+    {
+      "bytes": 3988,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_noncrypto_opening_stop_execution_20260908_v1/fills.json",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "1a548427b3159c622c8e6cab4a12ac0106b7c98db73eda96972ccdf6e2299a26"
+    },
+    {
+      "bytes": 179,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_noncrypto_opening_stop_execution_20260908_v1/focused_first.log",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "7b0e2eab3ade55250ed5871c267972a8d63801c20fc899075fb333ce9e919384"
+    },
+    {
+      "bytes": 864,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_noncrypto_opening_stop_execution_20260908_v1/focused_trade_capture.json",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "c1a01884b6fbb74cdb82c02f6a139bb6624ae49a4119787f0e6d7dce99307834"
+    },
+    {
+      "bytes": 26,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_noncrypto_opening_stop_execution_20260908_v1/format_final.log",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "2ce9758b9f8abd876ec3e76c589e099e8b05377b1e7ea2331e81ee80f07bdff8"
+    },
+    {
+      "bytes": 5578,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_noncrypto_opening_stop_execution_20260908_v1/funding.json",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "4c02ecc282217c492fc915105cffb0e81e3400f80c5ee83611c572cd6460a912"
+    },
+    {
+      "bytes": 1009,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_noncrypto_opening_stop_execution_20260908_v1/independent_check.json",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "4120032b87125a20c3574176f32a23150be585c70b5aeb7e3b2bcd3cd1a000ba"
+    },
+    {
+      "bytes": 3303,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_noncrypto_opening_stop_execution_20260908_v1/independent_check.py",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "88c6d84b6b86bfe2a73e67f805f96dd8ca6493468e033a7f0f079dba919d443f"
+    },
+    {
+      "bytes": 1090,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_noncrypto_opening_stop_execution_20260908_v1/market_red.log",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "076f77b99ac25579a4da1472b59e539f2ce47f2d9cec802cf7f8e9dc144bbbd3"
+    },
+    {
+      "bytes": 34387,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_noncrypto_opening_stop_execution_20260908_v1/metadata.json",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "3f7fb1a9e1bd77cb968d678df08909e3ceacb50a677495e8ace1aec29ff78433"
+    },
+    {
+      "bytes": 1272,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_noncrypto_opening_stop_execution_20260908_v1/monitor_exit_observation.json",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "01afca28fbc193c2dbb25e6872141dda786d10c3eb44bbae9bcf56ede876490e"
+    },
+    {
+      "bytes": 3014,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_noncrypto_opening_stop_execution_20260908_v1/related_completed_decisions.json",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "30af3224e2b7b3c1ead01998cb432be3e4751390b689d7fb7d3b3cb6cca141b0"
+    },
+    {
+      "bytes": 1439,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_noncrypto_opening_stop_execution_20260908_v1/related_hypothesis_inventory.json",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "235436440044c001d73d8f20662b07804d6880bb3e61cae4de3e9f2b906b644f"
+    },
+    {
+      "bytes": 10089,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_noncrypto_opening_stop_execution_20260908_v1/report.json",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "f5b3a8256c71158e02beea6f0926322ffe610e4725de5a8c6a09a7a1e90788f4"
+    },
+    {
+      "bytes": 7680,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_noncrypto_opening_stop_execution_20260908_v1/review.md",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "596e4b764ebe2e4ef2c53ab739378b0b429328831feda577c8a91240ab63684e"
+    },
+    {
+      "bytes": 19,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_noncrypto_opening_stop_execution_20260908_v1/ruff_final.log",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    {
+      "bytes": 29081891,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_noncrypto_opening_stop_execution_20260908_v1/source.tar.gz",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "5bdd73ae6d3a17be23101155cf24fe7944b692339840846d1954f936f98fc653"
+    },
+    {
+      "bytes": 1600,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_noncrypto_opening_stop_execution_20260908_v1/source_verification.json",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "1c67771c6896c25210ffa043720ac084171848f920ceec3728e0d7a27ba728be"
+    },
+    {
+      "bytes": 1073,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_noncrypto_opening_stop_execution_20260908_v1/tests_final.log",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "4708ebbac4185723f345a09c033b1a478a936073e488ff4e3f8dea12fa420f84"
+    },
+    {
+      "bytes": 5747,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_noncrypto_opening_stop_execution_20260908_v1/unchanged_live_config.toml",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "696fa385d588d29ca0a6dcc1539a7e11d37af58c9523fd6ed3e5a473bc4a08a3"
+    },
+    {
+      "bytes": 20141486,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_noncrypto_opening_stop_execution_20260908_v1/xyz:SNDK.jsonl",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "1716e17748a5120fe30f724fd42240bfdf02311f364a9fe2e86742e1f120be69"
+    },
+    {
+      "bytes": 1017,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_noncrypto_opening_stop_execution_20260908_v1/xyz:SNDK_entry.json",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "e6ad5bdc3314090291494c022958cb398754557fc616cb72bc6fa27d6b0bba58"
+    },
+    {
+      "bytes": 1029,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_noncrypto_opening_stop_execution_20260908_v1/xyz:SNDK_stop.json",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "5cc46f117b0568b709f8391f0047fd4cc236ecddacbcca93b0f9bd78e2be198e"
+    },
+    {
+      "bytes": 25634249,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_noncrypto_opening_stop_execution_20260908_v1/xyz:SPCX.jsonl",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "3a5e9ad278ea1c2182efa192f8db6fcd3fedbd2c54e971cec6e7ce131c13e6fc"
+    },
+    {
+      "bytes": 1013,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_noncrypto_opening_stop_execution_20260908_v1/xyz:SPCX_entry.json",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "4195dbe2287c977abdd1a9e2f07f088842cfb41e4f37f131697982b4ea17e42b"
+    },
+    {
+      "bytes": 1029,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_noncrypto_opening_stop_execution_20260908_v1/xyz:SPCX_stop.json",
+      "role": "frozen_native_market_audit_or_validation",
+      "sha256": "fcd7d3e1355eaccd0d7d1f97930d4e20d0ba024873fd83cfad50a56f55272e57"
+    }
+  ],
+  "execution_authority": "none",
+  "falsifier": "Changed evidence hashes, conflicting resting order quantity/trigger, unmatched native fill or funding identity, failed independent totals or raw archive replay, or denser venue events contradicting the sampled trigger explanation.",
+  "hypothesis": "The two new SNDK/SPCX opening stop-outs can be separated into configured barrier loss, extra execution price movement and costs using exact native/ledger identities and bounded public history.",
+  "hypothesis_id": "v89_noncrypto_opening_stop_execution_20260908_v1",
+  "limitations": [
+    "Two completed trades do not estimate a win probability or causal regime effect.",
+    "Resting trigger prices are retained parsed native observations, not raw pretrigger envelopes.",
+    "Final native stop status clears triggerPx; it is not the original trigger price.",
+    "Sampled marks/books leave continuous trigger timing and actual trigger-to-fill latency unresolved.",
+    "Visible depth is hypothetical execution capacity, not a reconstruction of the client's order queue.",
+    "Initial six-minute public trade requests hit page caps; complete exit-minute requests are analyzed.",
+    "Local fill-record lag is polling/reporting delay, not stop placement or trigger latency.",
+    "Coverage counts concern two pure calculation modules, not every acquisition or I/O module.",
+    "Historical opening-session attribution is a new descriptive question on already explored data; it would not independently validate a filter.",
+    "Monitor exit requester is unknown. The latest preserved flat/no-orders native snapshot is 14:11 UTC, not a current account-state guarantee."
+  ],
+  "metrics": {
+    "archive_git_members_verified": 5087,
+    "archive_report_byte_equal": true,
+    "assets": [
+      {
+        "books": {
+          "bracket": {
+            "after": {
+              "best_ask": 1783.2,
+              "best_bid": 1783.1,
+              "spread_bps": 0.5608053164351648,
+              "ts_exchange_ms": 1788874228000,
+              "vendor_request_id": "5738e05e-fb3f-4bd3-94fa-842395554784",
+              "visible_fill": {
+                "best_price": 1783.2,
+                "complete": true,
+                "filled_quantity": 0.283,
+                "impact_bps": 1.093836942203108,
+                "levels_consumed": 2,
+                "requested_quantity": 0.283,
+                "side": "buy",
+                "unfilled_quantity": 0.0,
+                "vwap": 1783.3950530035336,
+                "worst_price": 1783.4
+              }
+            },
+            "before": {
+              "best_ask": 1782.8,
+              "best_bid": 1782.5,
+              "spread_bps": 1.682887835525507,
+              "ts_exchange_ms": 1788874227500,
+              "vendor_request_id": "5738e05e-fb3f-4bd3-94fa-842395554784",
+              "visible_fill": {
+                "best_price": 1782.8,
+                "complete": true,
+                "filled_quantity": 0.283,
+                "impact_bps": 0.0,
+                "levels_consumed": 1,
+                "requested_quantity": 0.283,
+                "side": "buy",
+                "unfilled_quantity": 0.0,
+                "vwap": 1782.8,
+                "worst_price": 1782.8
+              }
+            }
+          },
+          "complete_depth_walks": 787,
+          "maximum_observation_gap_ms": 500,
+          "maximum_spread_bps": 12.453300124533259,
+          "observations": 787,
+          "observations_are_actual_client_fills": false
+        },
+        "economics": {
+          "anchor_rounding_pnl_usd": "-0.006560706748314",
+          "barrier_pnl_usd": "-6.4807",
+          "entry_oid": 539043720855,
+          "entry_price": "1761.2",
+          "exit_oid": 539043759446,
+          "exit_price": "1786.3",
+          "fees_usd": "0.086740",
+          "fill_to_record_us": 11997613,
+          "first_resting_observation_utc": "2026-09-08T07:00:23.908864+00:00",
+          "funding_usd": "-0.026031",
+          "gross_pnl_usd": "-7.1033",
+          "holding_time_ms": 23408737,
+          "last_resting_observation_utc": "2026-09-08T13:30:24.916808+00:00",
+          "net_pnl_usd": "-7.216071",
+          "quantity": "0.283",
+          "resting_observations": 1563,
+          "settlements": 6,
+          "stop_intent_utc": "2026-09-08T07:00:20.958182+00:00",
+          "strategy_anchor": "1784.076817290642",
+          "symbol": "xyz:SNDK",
+          "trigger_to_fill_adverse_bps": "12.33114735721091867047811221",
+          "trigger_to_fill_latency_ms": null,
+          "trigger_to_fill_pnl_usd": "-0.6226",
+          "venue_trigger": "1784.1"
+        },
+        "marks": {
+          "bracket": {
+            "after": {
+              "mark_price": "1785",
+              "mid_price": "1781.25",
+              "oracle_price": "1785",
+              "source": "0xarchive_hyperliquid_prices",
+              "timestamp": "2026-09-08T13:30:27.920Z",
+              "ts_ms": 1788874227920
+            },
+            "before": {
+              "mark_price": "1785",
+              "mid_price": "1781.25",
+              "oracle_price": "1785",
+              "source": "0xarchive_hyperliquid_prices",
+              "timestamp": "2026-09-08T13:30:27.920Z",
+              "ts_ms": 1788874227920
+            }
+          },
+          "continuous_trigger_coverage": false,
+          "first_observed_touch": {
+            "mark_price": "1785",
+            "mid_price": "1781.25",
+            "oracle_price": "1785",
+            "source": "0xarchive_hyperliquid_prices",
+            "timestamp": "2026-09-08T13:30:27.920Z",
+            "ts_ms": 1788874227920
+          },
+          "maximum_valid_mark_gap_ms": 3163,
+          "missing_marks": 0,
+          "observations": 120,
+          "observed_touches_through_fill": 1,
+          "trigger_latency_ms": null,
+          "valid_marks": 120
+        },
+        "public_exit_match": {
+          "aggressor_side": "buy",
+          "price": "1786.3",
+          "size": "0.283",
+          "source": "0xarchive_hyperliquid_public_trades",
+          "symbol": "xyz:SNDK",
+          "trade_id": 136053813729470,
+          "trade_id_source": "vendor",
+          "ts_exchange_ms": 1788874227920,
+          "vendor_request_id": "55c5443e-1d65-46c9-a327-3882c6ef3673"
+        },
+        "public_trades_in_exit_minute": 1449
+      },
+      {
+        "books": {
+          "bracket": {
+            "after": {
+              "best_ask": 148.21,
+              "best_bid": 148.18,
+              "spread_bps": 2.024359796214524,
+              "ts_exchange_ms": 1788874354000,
+              "vendor_request_id": "e3e875bb-c9e7-45af-87f7-2708fa3aa31d",
+              "visible_fill": {
+                "best_price": 148.18,
+                "complete": true,
+                "filled_quantity": 3.35,
+                "impact_bps": 0.0,
+                "levels_consumed": 1,
+                "requested_quantity": 3.35,
+                "side": "sell",
+                "unfilled_quantity": 0.0,
+                "vwap": 148.18,
+                "worst_price": 148.18
+              }
+            },
+            "before": {
+              "best_ask": 147.77,
+              "best_bid": 147.75,
+              "spread_bps": 1.3535462912838545,
+              "ts_exchange_ms": 1788874353611,
+              "vendor_request_id": "e3e875bb-c9e7-45af-87f7-2708fa3aa31d",
+              "visible_fill": {
+                "best_price": 147.75,
+                "complete": true,
+                "filled_quantity": 3.35,
+                "impact_bps": 0.0,
+                "levels_consumed": 1,
+                "requested_quantity": 3.35,
+                "side": "sell",
+                "unfilled_quantity": 0.0,
+                "vwap": 147.75,
+                "worst_price": 147.75
+              }
+            }
+          },
+          "complete_depth_walks": 787,
+          "maximum_observation_gap_ms": 500,
+          "maximum_spread_bps": 12.116316639741978,
+          "observations": 787,
+          "observations_are_actual_client_fills": false
+        },
+        "economics": {
+          "anchor_rounding_pnl_usd": "-0.0160250895089105",
+          "barrier_pnl_usd": "-3.3165",
+          "entry_oid": 539125419115,
+          "entry_price": "148.76",
+          "exit_oid": 539125458790,
+          "exit_price": "147.71",
+          "fees_usd": "0.085810",
+          "fill_to_record_us": 5831849,
+          "first_resting_observation_utc": "2026-09-08T09:00:20.109755+00:00",
+          "funding_usd": "0.022868",
+          "gross_pnl_usd": "-3.5175",
+          "holding_time_ms": 16338845,
+          "last_resting_observation_utc": "2026-09-08T13:32:24.411729+00:00",
+          "net_pnl_usd": "-3.580442",
+          "quantity": "3.35",
+          "resting_observations": 1091,
+          "settlements": 4,
+          "stop_intent_utc": "2026-09-08T09:00:17.143428+00:00",
+          "strategy_anchor": "147.77478360880863",
+          "symbol": "xyz:SPCX",
+          "trigger_to_fill_adverse_bps": "4.060364079312445015903092644",
+          "trigger_to_fill_latency_ms": null,
+          "trigger_to_fill_pnl_usd": "-0.2010",
+          "venue_trigger": "147.77"
+        },
+        "marks": {
+          "bracket": {
+            "after": {
+              "mark_price": "147.75",
+              "mid_price": "148.165",
+              "oracle_price": "147.78",
+              "source": "0xarchive_hyperliquid_prices",
+              "timestamp": "2026-09-08T13:32:33.954Z",
+              "ts_ms": 1788874353954
+            },
+            "before": {
+              "mark_price": "147.75",
+              "mid_price": "148.165",
+              "oracle_price": "147.78",
+              "source": "0xarchive_hyperliquid_prices",
+              "timestamp": "2026-09-08T13:32:33.954Z",
+              "ts_ms": 1788874353954
+            }
+          },
+          "continuous_trigger_coverage": false,
+          "first_observed_touch": {
+            "mark_price": "147.75",
+            "mid_price": "148.165",
+            "oracle_price": "147.78",
+            "source": "0xarchive_hyperliquid_prices",
+            "timestamp": "2026-09-08T13:32:33.954Z",
+            "ts_ms": 1788874353954
+          },
+          "maximum_valid_mark_gap_ms": 3163,
+          "missing_marks": 0,
+          "observations": 120,
+          "observed_touches_through_fill": 1,
+          "trigger_latency_ms": null,
+          "valid_marks": 120
+        },
+        "public_exit_match": {
+          "aggressor_side": "sell",
+          "price": "147.71",
+          "size": "3.35",
+          "source": "0xarchive_hyperliquid_public_trades",
+          "symbol": "xyz:SPCX",
+          "trade_id": 934378940745630,
+          "trade_id_source": "vendor",
+          "ts_exchange_ms": 1788874353954,
+          "vendor_request_id": "f1a9784b-42ff-4027-8f6a-6da189be1e7e"
+        },
+        "public_trades_in_exit_minute": 1888
+      }
+    ],
+    "barrier_share_of_net_loss_pct": "90.74411340031730615245866883",
+    "independent_economic_comparisons": 18,
+    "next_hypothesis_id": "v89_noncrypto_cash_open_exposure_attribution_20260908_v1",
+    "offline_tests_passed": 207,
+    "pure_calculation_branches": 48,
+    "pure_calculation_branches_covered": 48,
+    "pure_calculation_statements": 158,
+    "pure_calculation_statements_covered": 158,
+    "resting_order_observations": 2654,
+    "source_commit": "cdf7a2f15db02d9b1a4c696c6c304d42c30d4a2f",
+    "totals": {
+      "anchor_rounding_pnl_usd": "-0.0225857962572245",
+      "barrier_pnl_usd": "-9.7972",
+      "fees_usd": "0.172550",
+      "funding_usd": "-0.003163",
+      "gross_pnl_usd": "-10.6208",
+      "net_pnl_usd": "-10.796513",
+      "trigger_to_fill_pnl_usd": "-0.8236"
+    }
+  },
+  "revision_number": 1,
+  "runtime_strategy_changed": false,
+  "schema_version": 1,
+  "status": "retain",
+  "strategy_id": "v89_noncrypto_native_protective_stop_audit",
+  "supersedes_revision_id": null,
+  "symbol": "MULTI"
+}

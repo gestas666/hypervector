@@ -2,7 +2,7 @@
 
 Updated September 8, 2026. This index is research navigation, not a live-state
 checkpoint. Read `data/runtime/bidirectional_cohort/latest_checkpoint.json`
-for current execution, fills, faults and positions. Do not infer current state
+for recorded execution, fills, faults and positions, and verify its age and process liveness. Do not infer current state
 from older HANDOFF entries or an old research-roster checkpoint.
 
 The active goal attachment permits research and proposals, and reserves live
@@ -22,12 +22,13 @@ The generic stop reason also covers termination and terminal-hangup signals.
 Evidence: `data/logs/research/bidirectional_cohort/v89_stopped_status_20260908T141101Z/`.
 The [stale-display correction](../reviews/2026-09-08-v89-stale-checkpoint-presentation.md)
 was [approved and installed](../reviews/2026-09-08-v89-stale-tui-deployment.md),
-source `d10b05b`, main source commit `02dd3b9`. The new detached monitor is PID
-88441 in Terminal window 5958 at 160x50. Visible status qualifies the historical
-checkpoint; all seven assets and nine-view navigation are present. The backend
-and reporter remain stopped. Shutdown attribution remains unresolved after the
-bounded log search. The two-stop economic audit below is the next research task.
-No process was started, stopped, restarted or armed by this diagnostic.
+source `d10b05b`, main source commit `02dd3b9`. The detached monitor was verified as PID
+88441 in Terminal window 5958 at 160x50 with all seven assets and nine-view
+navigation. At 15:15:54 UTC that monitor is absent and the window reports
+`[Process completed]`; its exit requester is unresolved. The approved binary
+remains installed. The backend and reporter remain stopped. No process lifecycle
+action was taken by the subsequent economic audit. Shutdown attribution remains
+unresolved after the bounded log search.
 
 [Chronological shared-account attribution](../reviews/2026-09-08-v89-shared-chronological-stability.md)
 is complete. Recorded/adverse results are +$183.56 over the first 28 days and
@@ -58,12 +59,23 @@ retained case. The August 26 stop-switch explains 91.54% of the nominal/adverse
 difference, but excluding it still leaves the other later-period adverse trades
 at −$47.69. This is descriptive arithmetic, not a fitted exit recommendation.
 
-Next: `v89_noncrypto_opening_stop_execution_20260908_v1`. Audit the new current-run
-SNDK short stop at September 8 13:30:27.920 UTC and SPCX long stop at
-13:32:33.954 UTC. Reconcile native wire thresholds, fills, fees/funding and bounded
-public trades/books; distinguish configured barrier loss from extra slippage.
-Inventory existing evidence first and keep the sealed prospective experiment
-unopened. These are new live fills, separate from the previous first-close audits.
+The [two-stop execution audit](../reviews/2026-09-08-v89-opening-stop-execution.md)
+is complete: SNDK −$7.216071 and SPCX −$3.580442 net. Retained stop-price loss
+accounts for −$9.7972 (90.744% of combined net loss), trigger-to-fill movement
+−$0.8236, fees −$0.172550 and net funding −$0.003163. Both exits match public
+trade identities; sampled marks cross the stop at each fill timestamp. All
+2,654 resting-stop observations are consistent. Exact latency remains unresolved.
+207 offline tests pass and the source-archive report replays byte-for-byte.
+Confidence is high in this arithmetic, low in a causal opening-session diagnosis.
+
+Next: `v89_noncrypto_cash_open_exposure_attribution_20260908_v1`. Preregister
+session calendar, local-time window and exposure attribution, then examine the
+already registered historical SNDK/SPCX shared-portfolio lifecycles and marks.
+Compare opening exposure with other exposure on the same days, retaining asset,
+direction and chronological partitions. This is descriptive research, not a
+fitted live filter. Prior session feasibility/source studies and the deferred
+SPCX crossing filter do not answer this joint exposure question. Keep the sealed
+prospective experiment unopened.
 
 Operational note: research import briefly deferred below 8 GiB free space and
 resumed automatically. A 180-sample observation at 13:43–13:46 UTC stayed above
