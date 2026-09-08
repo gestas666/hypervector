@@ -1,0 +1,245 @@
+{
+  "automatic_promotion": false,
+  "confidence": "high",
+  "created_at_utc": "2026-09-08T05:46:29.947265+00:00",
+  "decision": "Keep candidate 00237bb rejected. Copy-only controls isolate the retaining primitive, while 32 mapped-copy hash checks and stable mapped RSS justify implementing and testing a new backing store. No production reader replacement or deployment is accepted yet.",
+  "evidence": [
+    {
+      "bytes": 33988,
+      "path": "/Library/Developer/CommandLineTools/SDKs/MacOSX26.5.sdk/usr/include/malloc/malloc.h",
+      "role": "source_observation_or_validation",
+      "sha256": "b86fab47ff11f522c1495469969c093fe63bb0dfec5376f37d4b72ebb75fa121"
+    },
+    {
+      "bytes": 12134400,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_memory_snapshot_baseline_source_0d83e1a.tar",
+      "role": "source_observation_or_validation",
+      "sha256": "9eb8b2294139d582098ae9a5bf124118f1f399b44aaf7fb6c8dc9dd926fc3c47"
+    },
+    {
+      "bytes": 12165120,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_memory_snapshot_candidate_source_00237bb.tar",
+      "role": "source_observation_or_validation",
+      "sha256": "08cd137659ad289a1659437736aafa84e521d229b8a042b527ee68fd6ac67d14"
+    },
+    {
+      "bytes": 6091,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_memory_snapshot_inputs_20260908_v1/manifest.json",
+      "role": "source_observation_or_validation",
+      "sha256": "1b50c9de28a0d7d497efc62a70dd969be0b0d73909ca2a1d9c6542924ddc512d"
+    },
+    {
+      "bytes": 6822,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_snapshot_allocator_relief_20260908_v1/allocator_relief.json",
+      "role": "source_observation_or_validation",
+      "sha256": "d93383afa8a3c3206a0ad14d413ee3ff7e035185ad927dedde7d0a950e642cad"
+    },
+    {
+      "bytes": 180002,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_snapshot_allocator_relief_20260908_v1/report.json",
+      "role": "source_observation_or_validation",
+      "sha256": "4697fbcd12fc214b27643fac16eb7529e8195cf35f6bec317badcca457b7cf7e"
+    },
+    {
+      "bytes": 7942,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_snapshot_allocator_relief_20260908_v1.log",
+      "role": "source_observation_or_validation",
+      "sha256": "11dd80e4d146c711377f37eebd69cafb8af4d219c10dad133ad8566db0994f59"
+    },
+    {
+      "bytes": 179965,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_snapshot_memory_diagnostic_baseline_20260908_v1/report.json",
+      "role": "source_observation_or_validation",
+      "sha256": "0a76929f63ce11b5ef3137f9b46db67dc14a6349abed72a49411ff63c307d51f"
+    },
+    {
+      "bytes": 7706,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_snapshot_memory_diagnostic_baseline_20260908_v1.log",
+      "role": "source_observation_or_validation",
+      "sha256": "d30dd1411785bacc31a54b70fff5444c51f7dd66a444569a10097cf6f6e7f2fd"
+    },
+    {
+      "bytes": 180022,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_snapshot_memory_diagnostic_candidate_20260908_v1/report.json",
+      "role": "source_observation_or_validation",
+      "sha256": "2a5ff5427dda8bbbce22cc61a347c969ae0e43acc4f48121dc44a09f7eed4760"
+    },
+    {
+      "bytes": 7661,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_snapshot_memory_diagnostic_candidate_20260908_v1.log",
+      "role": "source_observation_or_validation",
+      "sha256": "f5e9c388583de50436ed7e0b2bffd407cc47751de92f09828bad192f7e202923"
+    },
+    {
+      "bytes": 1350,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_snapshot_mmap_control_20260908_v1/report.json",
+      "role": "source_observation_or_validation",
+      "sha256": "2bdb3f1a98e52801a14c645721fc9ad2f93a216917ace8d20ed14d0b543326f8"
+    },
+    {
+      "bytes": 592,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_snapshot_mmap_control_20260908_v1.log",
+      "role": "source_observation_or_validation",
+      "sha256": "148097112f10261fc64dc62158830edb2abbbb86e34927c225d037442544ed5b"
+    },
+    {
+      "bytes": 1368,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_snapshot_stage_copy_20260908_v1/report.json",
+      "role": "source_observation_or_validation",
+      "sha256": "2a78a79c667a913d1ded7ad818d8c2921d2f1eabfb323ea48758ed4f45c39f91"
+    },
+    {
+      "bytes": 596,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_snapshot_stage_copy_20260908_v1.log",
+      "role": "source_observation_or_validation",
+      "sha256": "939dfc9f6b59007f3dde78d12973935e0d3773f38b78068e87161104b4f70ede"
+    },
+    {
+      "bytes": 1357,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_snapshot_stage_file_json_20260908_v1/report.json",
+      "role": "source_observation_or_validation",
+      "sha256": "a28e3fb336e19be8331d830172d12726c916e7e11f8870be7ba345662452858d"
+    },
+    {
+      "bytes": 580,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_snapshot_stage_file_json_20260908_v1.log",
+      "role": "source_observation_or_validation",
+      "sha256": "a6a37555c2bf363285d5ef56d37febea1fc3406fc746ca67b35c66ea199d9797"
+    },
+    {
+      "bytes": 1368,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_snapshot_stage_hash_20260908_v1/report.json",
+      "role": "source_observation_or_validation",
+      "sha256": "c5cbc2bc99d6b1ac2305b3c9895c7b71d9e0d0a3f54fa2cc0c4a9a7cf10f4878"
+    },
+    {
+      "bytes": 596,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_snapshot_stage_hash_20260908_v1.log",
+      "role": "source_observation_or_validation",
+      "sha256": "0d2e33098a37299cbf7269c101fa022980b8ca310e6eeff3b2fad53c2928f20a"
+    },
+    {
+      "bytes": 1352,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_snapshot_stage_json_20260908_v1/report.json",
+      "role": "source_observation_or_validation",
+      "sha256": "01032d140203f6895e67d4ba827ca4c06d68ce4577fd75604d1a6306e5c12140"
+    },
+    {
+      "bytes": 580,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_snapshot_stage_json_20260908_v1.log",
+      "role": "source_observation_or_validation",
+      "sha256": "03d33b9723eebc02598fcb4bbb7c6cf806438c258137f235ee4a861b9348a1f4"
+    },
+    {
+      "bytes": 1352,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_snapshot_stage_text_20260908_v1/report.json",
+      "role": "source_observation_or_validation",
+      "sha256": "e4b280b9f32fca56ec5945a446e5fa7c23d80a689c6d4a624ac5be1aa9a70c11"
+    },
+    {
+      "bytes": 580,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_snapshot_stage_text_20260908_v1.log",
+      "role": "source_observation_or_validation",
+      "sha256": "7b2f4264331d4d2e64dc14d4ebfe6de822d7ff180ccfbd49e35c1ac4bea89c6f"
+    },
+    {
+      "bytes": 4245,
+      "path": "/Users/gestas/Prototypes/hypervector-v89-storage-spcx-20260908/docs/reviews/2026-09-08-v89-snapshot-memory-attribution.md",
+      "role": "source_observation_or_validation",
+      "sha256": "00a7bd5494e4a025e3c7a89c81a7997221589e04f5f3feb59b15795e80a36e49"
+    },
+    {
+      "bytes": 1508,
+      "path": "/Users/gestas/Prototypes/hypervector-v89-storage-spcx-20260908/scripts/v89_snapshot_allocator_relief.py",
+      "role": "source_observation_or_validation",
+      "sha256": "81356bcc7bf6a13ed31738f65ffb478e450327a989eadf32bee8b8df6f78d8e0"
+    },
+    {
+      "bytes": 3041,
+      "path": "/Users/gestas/Prototypes/hypervector-v89-storage-spcx-20260908/scripts/v89_snapshot_memory_diagnostic.py",
+      "role": "source_observation_or_validation",
+      "sha256": "811ca38d30903630ac233814770b9b74f3ea1b6aea35ad9cb2312ca50abbed30"
+    },
+    {
+      "bytes": 2977,
+      "path": "/Users/gestas/Prototypes/hypervector-v89-storage-spcx-20260908/scripts/v89_snapshot_memory_stages.py",
+      "role": "source_observation_or_validation",
+      "sha256": "4f9b4447dbc2c15418bf7949c4affd61556c5a783e796065eef13e2eb57a85a4"
+    },
+    {
+      "bytes": 2625,
+      "path": "/Users/gestas/Prototypes/hypervector-v89-storage-spcx-20260908/scripts/v89_snapshot_mmap_control.py",
+      "role": "source_observation_or_validation",
+      "sha256": "de59151d02fd24aa00382d586508a470153f425e2b03f747d43218c104d618f5"
+    }
+  ],
+  "execution_authority": "none",
+  "falsifier": "A corrected reader must reproduce full output, spill and failure semantics, and baseline-comparable repeated-process memory. Any byte mismatch, remaining growth, or unreleased mapping rejects it.",
+  "hypothesis": "The rejected reader retains native memory during spool copying; anonymous mapped storage may remove that specific growth.",
+  "hypothesis_id": "v89-memory-snapshot-20260908",
+  "limitations": [
+    "Primitive-level mapping controls do not prove complete checkpoint behavior.",
+    "The exact allocator/runtime internals behind spool-copy retention remain unverified.",
+    "The pressure-relief intervention did not release the retained memory.",
+    "Whole-filesystem allocation swings remain unattributed."
+  ],
+  "metrics": {
+    "allocator_relief_reported_released_bytes": 0,
+    "candidate_native_rss_after_gc": 949223424,
+    "candidate_native_rss_after_three_cycles": 952369152,
+    "candidate_traced_live_bytes_after_three_cycles": 40447,
+    "mapped_copy_hash_checks": 32,
+    "mapped_cycles": 4,
+    "resident_bytes_by_stage": {
+      "copy": [
+        259063808,
+        413089792,
+        563363840,
+        713637888,
+        863911936
+      ],
+      "file_json": [
+        258818048,
+        292208640,
+        294731776,
+        296828928,
+        298926080
+      ],
+      "hash": [
+        258883584,
+        412909568,
+        563183616,
+        713457664,
+        863748096
+      ],
+      "json": [
+        259244032,
+        430948352,
+        586563584,
+        737886208,
+        890257408
+      ],
+      "mmap_copy_and_hash": [
+        258129920,
+        260800512,
+        263012352,
+        263012352,
+        263012352
+      ],
+      "text": [
+        258588672,
+        412336128,
+        562610176,
+        712884224,
+        863158272
+      ]
+    }
+  },
+  "revision_number": 2,
+  "runtime_strategy_changed": false,
+  "schema_version": 1,
+  "status": "reject",
+  "strategy_id": "research_reporting_storage",
+  "supersedes_revision_id": "5fd3689d5a2472f3ed4b25f8b29d27939ac1771a484aba71bbd77d11d33dadd2",
+  "symbol": "PORTFOLIO"
+}
