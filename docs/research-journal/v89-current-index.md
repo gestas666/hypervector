@@ -90,15 +90,29 @@ or profitability. No historical or live PnL was changed. Ninety offline tests,
 source-archive replay passed. The August 6 13:30 trade minute remains explicitly
 partial; same-millisecond end prints leave unique closes unresolved.
 
-Next: `v89_noncrypto_ambiguous_exit_event_replay_20260908_v1`. The full inventory
-finds one ambiguous accepted noncrypto lifecycle in every one of the 18 cases:
-SNDK August 7, among 99 accepted SNDK/SPCX lifecycles. Preregister and replay
-its complete entry-to-exit marks with all original cost thresholds and bounded
-execution assumptions, then reconcile lifecycle and shared-account attribution
-against the preserved conservative baseline. Sampling the prior 13:00–13:29
-portion is necessary before calling the observed stop its first lifecycle touch.
-This is research, not a live-rule or profitability approval. Keep the sealed
-prospective experiment unopened.
+The [SNDK conditional event replay](../reviews/2026-09-08-v89-ambiguous-exit-replay.md)
+is complete. Full entry-window marks confirm no earlier observed stop contact.
+All 18 original baselines reproduce exactly; all 144 conditional full-account
+replays reconcile. Primary SNDK loss changes from $26.36 to $13.79, full-period
+modeled net from $96.12 to $108.68, while later-20-day net stays −$87.44 and
+maximum dollar drawdown stays $198.69. Full-fee recorded cases remain negative.
+Seventy-nine offline tests, 120 independent Decimal fields, 9,999,696 independently
+checked path rows and frozen-source replay pass. Confidence is high in arithmetic
+and low in actual hypothetical-fill attainability or future profitability.
+
+Next: [fixed equal-cap allocation benchmark](../plans/2026-09-08-v89-equal-cap-allocation.md),
+`v89_equal_cap_allocation_benchmark_20260908_v1`, preregistered in `0561860`.
+Compare current $2,500 BTC/HYPE and $500 other route caps against $7,500 / 7 per
+route. Keep the total configured notional budget, seven routes and leverage;
+report the changed margin and execution requirements. Preserve original and
+event-adjusted controls, all source/cost/clock variants and the explored
+chronological split. Fit no weights or new entry/exit thresholds. No live change
+or sealed prospective outcome access is authorized by this research plan.
+
+At 17:16:50 UTC the tracked backend, supervisor, reporter and former monitor
+remain absent, and the checkpoint remains from 14:04:48. The live profile bytes
+are unchanged. This process/configuration observation does not refresh the
+14:11 native account snapshot or identify the shutdown requester.
 
 Operational note: research import briefly deferred below 8 GiB free space and
 resumed automatically. A 180-sample observation at 13:43–13:46 UTC stayed above
