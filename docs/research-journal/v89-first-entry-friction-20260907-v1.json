@@ -1,0 +1,168 @@
+{
+  "automatic_promotion": false,
+  "confidence": "high",
+  "created_at_utc": "2026-09-08T01:48:30.329222+00:00",
+  "decision": "Retain this bounded entry qualification. Preserve the 2.761-second venue protection interval and stale-quote attribution limit; complete exit/funding/PnL qualification remains open.",
+  "evidence": [
+    {
+      "bytes": 4270,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_current_fee_evidence_20260907_v1/report.json",
+      "role": "source_observation_or_validation",
+      "sha256": "6aa9d9fc41f48a4858932f13f2b73c765ddb72a2db50c98de1393eaeb9de82a3"
+    },
+    {
+      "bytes": 672,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_friction_green_20260907_v1.log",
+      "role": "source_observation_or_validation",
+      "sha256": "ea0ff359d338fd2e5daa9bc909e9287863a1899fded7f08b31c1dad3ff09bae6"
+    },
+    {
+      "bytes": 1111,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_friction_red_20260907_v1.log",
+      "role": "source_observation_or_validation",
+      "sha256": "a4dd173437ae0ed46da2c25ed663a63f74ac982fd8f0bb372858f917aeb5e673"
+    },
+    {
+      "bytes": 10893,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_first_entry_friction_20260907_v1.json",
+      "role": "source_observation_or_validation",
+      "sha256": "652aa09dabb30ed77e616aa05577237108ed76784a3f4f0f877749427b0ec6ca"
+    },
+    {
+      "bytes": 2887,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_first_entry_friction_20260907_v1.log",
+      "role": "source_observation_or_validation",
+      "sha256": "d50c3c51621cd506bb700c64b4af2389c9f2e42cbc647f9a4e5266fd95abddad"
+    },
+    {
+      "bytes": 2899,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_first_entry_venue_20260907_v1/capture_source.py",
+      "role": "source_observation_or_validation",
+      "sha256": "66bbce3708568ad18aab67caf9cbfdaa69d5a171a054c220f60f06e916bca76d"
+    },
+    {
+      "bytes": 818,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_first_entry_venue_20260907_v1/entry_status.json",
+      "role": "source_observation_or_validation",
+      "sha256": "6bf9ce78dd2badda25bde7efcf06905bb8864e8a1dc6218e4baff85088a0e41d"
+    },
+    {
+      "bytes": 1033,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_first_entry_venue_20260907_v1/manifest.json",
+      "role": "source_observation_or_validation",
+      "sha256": "b2bbf142ded2ee3058373b886f2fece63b36d752c41abc6a3728784cf5553ade"
+    },
+    {
+      "bytes": 37864,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_first_entry_venue_20260907_v1/metadata.json",
+      "role": "source_observation_or_validation",
+      "sha256": "eb08ae0c72f7cf1219f99d817a74970c9f4fc6c2d3147b8de5ac4112a156e4ff"
+    },
+    {
+      "bytes": 686,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_first_entry_venue_20260907_v1/open_orders.json",
+      "role": "source_observation_or_validation",
+      "sha256": "b7e9a01751326c62d8bfb001e12a310bb3e3f3d429356215d1151fa15794d0c0"
+    },
+    {
+      "bytes": 1317,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_first_entry_venue_20260907_v1/perp_state.json",
+      "role": "source_observation_or_validation",
+      "sha256": "5ddee0e3fc4ba2af4afbc6e329f174c454f3a6923f9c5304d236b6b64d7f2645"
+    },
+    {
+      "bytes": 839,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_first_entry_venue_20260907_v1/stop_status.json",
+      "role": "source_observation_or_validation",
+      "sha256": "b829676f7fcba549f9720e1c1f11296568449381cdc866c94e8f2f6022f3a05c"
+    },
+    {
+      "bytes": 5746772,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_first_sndk_entry_20260907_v1/SNDK.jsonl",
+      "role": "source_observation_or_validation",
+      "sha256": "1a34fe7625047454835ab05218f0ea9dc8f88549d66be5ee8b669317eaeb909e"
+    },
+    {
+      "bytes": 8853,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_first_sndk_entry_20260907_v1/acceptance.json",
+      "role": "source_observation_or_validation",
+      "sha256": "abbb4ff69a37365b95c77c343543f0e85c9005912c91c498330a0a5e993a403f"
+    },
+    {
+      "bytes": 2448940,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_first_sndk_entry_20260907_v1/checkpoint.json",
+      "role": "source_observation_or_validation",
+      "sha256": "69f040ce4af26c945f8d8dbf58a3f04c50d2f597b22ece479effc17c3cf7e037"
+    },
+    {
+      "bytes": 35439966,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_first_sndk_entry_20260907_v1/cohort.jsonl",
+      "role": "source_observation_or_validation",
+      "sha256": "d7965041919ecdabcfd4f4e3384ad1e25d1a0127a674523fdca0f4cb37f0dced"
+    },
+    {
+      "bytes": 9537,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_hourly_nominal_friction_contracts_20260907_v1.json",
+      "role": "source_observation_or_validation",
+      "sha256": "e01c173df1804d1bffd42d7c8eff40ddb2a0af4c840921ccf8b972ba7a115350"
+    },
+    {
+      "bytes": 11934,
+      "path": "/Users/gestas/Prototypes/hypervector-v89-live-parity-20260907/scripts/v89_first_entry_friction.py",
+      "role": "source_observation_or_validation",
+      "sha256": "69c4f165e87aa98f40e3d1e9cfa64fdf19a8a99a2da882543e65eb02d26e24c8"
+    },
+    {
+      "bytes": 1336,
+      "path": "/Users/gestas/Prototypes/hypervector-v89-live-parity-20260907/src/hypervector/research/entry_price_decomposition.py",
+      "role": "source_observation_or_validation",
+      "sha256": "334ce10219fd7de6f86df92180506c857dcc90646ba85a5f1ca9ab61ec164cd4"
+    },
+    {
+      "bytes": 2187,
+      "path": "/Users/gestas/Prototypes/hypervector-v89-live-parity-20260907/tests/test_entry_price_decomposition.py",
+      "role": "source_observation_or_validation",
+      "sha256": "d94f9be966b7c7f03edf3073ea96db80c2609106b9cceec766dbb15030dee32e"
+    },
+    {
+      "bytes": 8466,
+      "path": "/Users/gestas/Prototypes/hypervector-v89-open-position-tui-20260907/docs/reviews/2026-09-07-v89-entry-friction-and-open-position-tui.md",
+      "role": "source_observation_or_validation",
+      "sha256": "e5cb3a2827be4813115c9417aee416dbdc04de4935e8fad0c3288e2cdf36ec7e"
+    }
+  ],
+  "execution_authority": "none",
+  "falsifier": "A native fill, order, quantity, leverage or fee identity disagrees, a required stop is absent/undersized, or a same-input replay changes the entry.",
+  "hypothesis": "The first observed SNDK entry matches the recorded IOC, source-backed size/fee assumptions and native protective-stop identity.",
+  "hypothesis_id": "v89-first-entry-friction-20260907",
+  "limitations": [
+    "One open lifecycle is not a profitability sample.",
+    "Prior sampled quote residual combines subsequent market movement and execution effects.",
+    "Sequential native reads are not an atomic snapshot.",
+    "Sampled stop presence does not prove continuous presence or eventual fill price.",
+    "Entry-only costs do not qualify exit costs or historical fee regimes.",
+    "Full initial indicator input history is not reconstructed.",
+    "No configured protection deadline violation was identified; the measured gap is not a guarantee of safe execution."
+  ],
+  "metrics": {
+    "current_turn_classification": "progress",
+    "entry_fee_bps": 0.8639879904785325,
+    "fee_minus_current_formula_usd": -5.977600000053873e-07,
+    "native_checks_matching": 15,
+    "post_stop_reconciliations_matching": 12,
+    "post_stop_reconciliations_mismatching": 0,
+    "quote_age_at_local_intent_ms": 6677.164000000001,
+    "reference_to_fill_bps": -23.235229032970892,
+    "source_commit": "50f8e80",
+    "statement_coverage_pct": 100,
+    "unit_tests_passed": 25,
+    "venue_fill_to_stop_open_ms": 2761
+  },
+  "revision_number": 1,
+  "runtime_strategy_changed": false,
+  "schema_version": 1,
+  "status": "retain",
+  "strategy_id": "multi_asset_growth_first_5000_noncrypto_research_v89",
+  "supersedes_revision_id": null,
+  "symbol": "xyz:SNDK"
+}
