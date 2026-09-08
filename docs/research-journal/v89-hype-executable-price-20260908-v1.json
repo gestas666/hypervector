@@ -1,0 +1,956 @@
+{
+  "automatic_promotion": false,
+  "confidence": "high",
+  "created_at_utc": "2026-09-08T12:57:05.443636+00:00",
+  "decision": "Retain this event-specific entry-price qualification. All 84 post-publication snapshots contain sufficient visible asks for both modeled quantities; maximum VWAP is 81.888 versus modeled adverse entry 81.91002575. Every resulting unrounded 80-bps stop is below the recorded 09:23 candle low. This is not a recovered fill or revised trade outcome. Next qualify historical mark-price trigger evidence before changing any lifecycle conclusion.",
+  "evidence": [
+    {
+      "bytes": 48409,
+      "path": "/Users/gestas/Prototypes/hypervector-v89-portfolio-20260907/docs/research-journal/v89-recorded-native-source-sensitivity-20260907-v1.json",
+      "role": "registered_historical_price_input",
+      "sha256": "7e958253eefa428c4b6e205ceef8c0b88dffa0ba6caf0cd8b3adea2d7c42c1d2"
+    },
+    {
+      "bytes": 21095,
+      "path": "/Users/gestas/Prototypes/hypervector-v89-portfolio-20260907/docs/research-journal/v89-seven-asset-shared-marking-20260907-v1.json",
+      "role": "registered_historical_price_input",
+      "sha256": "73b69215ca6144d070aff30f7b829ea3e403524eb162c90c957003a4f8b3b281"
+    },
+    {
+      "bytes": 10628,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/HYPE/20260826T022500000000Z_20260826T022600000000Z_d20/books.jsonl.gz",
+      "role": "registered_historical_price_input",
+      "sha256": "3f323da7b2c7ac3fd635d8835bcb21183834a8b49a3c51b432fbb8d6d78d3339"
+    },
+    {
+      "bytes": 1001,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/HYPE/20260826T022500000000Z_20260826T022600000000Z_d20/manifest.json",
+      "role": "registered_historical_price_input",
+      "sha256": "b2a31a6688b39ef1f960afb717fbf1c3d31f156fac30fdd0022ad093198ba33b"
+    },
+    {
+      "bytes": 13710,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/HYPE/20260826T022500000000Z_20260826T022600000000Z_d20/raw/page-0001.json.gz",
+      "role": "registered_historical_price_input",
+      "sha256": "dfc38a179bdab25687c7404d42ab0b89bccd46ebb1af16ee72fb922c363d5db8"
+    },
+    {
+      "bytes": 1045,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/HYPE/20260826T022500000000Z_20260826T022600000000Z_trades/manifest.json",
+      "role": "registered_historical_price_input",
+      "sha256": "fd3dab048bed687e86aabcd96dec669b37638d4aab7558ccfb0b8ad4ce5b6a0b"
+    },
+    {
+      "bytes": 27826,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/HYPE/20260826T022500000000Z_20260826T022600000000Z_trades/raw/page-0001.json.gz",
+      "role": "registered_historical_price_input",
+      "sha256": "b64dc8f44b9816d1c13a8d1f1e91d325f0bf60c359a255d70d25bd10138c73d3"
+    },
+    {
+      "bytes": 4659,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/HYPE/20260826T022500000000Z_20260826T022600000000Z_trades/trades.jsonl.gz",
+      "role": "registered_historical_price_input",
+      "sha256": "df67f35647f573f0c28eea4a25f0b2d73523bdaf7b1821f04b497dbea4852a11"
+    },
+    {
+      "bytes": 466,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_hype_aug26_executable_price_20260908_v1/archive_replay.log",
+      "role": "hype_executable_price_verification",
+      "sha256": "5e55b17cf2c387732de6481ecbc9c83909383d48d6194f0225bd77ad9b738de4"
+    },
+    {
+      "bytes": 3479,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_hype_aug26_executable_price_20260908_v1/archive_replay.py",
+      "role": "hype_executable_price_verification",
+      "sha256": "6ef56c38aa30860f23982aaba5357cadaa2f5e7caceebbcf66124ce0e65e271a"
+    },
+    {
+      "bytes": 162,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_hype_aug26_executable_price_20260908_v1/archive_replay_result.json",
+      "role": "hype_executable_price_verification",
+      "sha256": "6557d2813a7bfe8cd1a04788da87f63e3493c3ad9d8f48ab1357b1c972c5d4ca"
+    },
+    {
+      "bytes": 7043,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_hype_aug26_executable_price_20260908_v1/current_index.md",
+      "role": "hype_executable_price_verification",
+      "sha256": "6cf30e29d90736b7af3de6ed584d65aeef25e55bbc25cbb8cb17c29f7eb78c2b"
+    },
+    {
+      "bytes": 1061,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_hype_aug26_executable_price_20260908_v1/existing_archive_inventory.json",
+      "role": "hype_executable_price_verification",
+      "sha256": "dcb084d208002cfe91679793291c0d1083316c19107aba31b477e1cf0773ff9b"
+    },
+    {
+      "bytes": 188,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_hype_aug26_executable_price_20260908_v1/implementation_revision.json",
+      "role": "hype_executable_price_verification",
+      "sha256": "2746a71fa19170fd25629493646cb4c02b471cc6b63186949799f0c14c9bffd1"
+    },
+    {
+      "bytes": 248,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_hype_aug26_executable_price_20260908_v1/independent_decimal_verification.json",
+      "role": "hype_executable_price_verification",
+      "sha256": "55677911d93cf7cf427a60d1b9e7e7b77841a2bafbf1ed80913d96b04667619c"
+    },
+    {
+      "bytes": 2831,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_hype_aug26_executable_price_20260908_v1/independent_verify.py",
+      "role": "hype_executable_price_verification",
+      "sha256": "c46474a46a9f34ff2301809e08d1040a306b19fe70dfb0ae78d5e48e3dd29537"
+    },
+    {
+      "bytes": 187923,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_hype_aug26_executable_price_20260908_v1/initial/report.json",
+      "role": "hype_executable_price_verification",
+      "sha256": "5261aa649a251015875a0408a8526e2a8ac03a5f41b9b4be2b0b32306e47b81d"
+    },
+    {
+      "bytes": 14099,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_hype_aug26_executable_price_20260908_v1/initial/v89_hype_executable_price.py",
+      "role": "hype_executable_price_verification",
+      "sha256": "27d6a1e1cbc1cc8f40f494da2bc201889926defe3942c8b78cbbe3658f30b776"
+    },
+    {
+      "bytes": 14163,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_hype_aug26_executable_price_20260908_v1/initial/v89_hype_price_audit.py",
+      "role": "hype_executable_price_verification",
+      "sha256": "e29d6532229083ba3423a8bd515b17f2a8a97ab42334888b1cb7adabf7eb0063"
+    },
+    {
+      "bytes": 1358,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_hype_aug26_executable_price_20260908_v1/publication_extraction.json",
+      "role": "hype_executable_price_verification",
+      "sha256": "a166c96c6712f4a18ac01f24e7c39da8a084a37bfd1f81a0bdae3b50583f004c"
+    },
+    {
+      "bytes": 8839,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_hype_aug26_executable_price_20260908_v1/review.md",
+      "role": "hype_executable_price_verification",
+      "sha256": "5c1e0f347842fcf7bd1944d3b8e6fb6e4b4b641f172ac003c458f60fe43528bf"
+    },
+    {
+      "bytes": 28513475,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_hype_aug26_executable_price_20260908_v1/source.tar.gz",
+      "role": "hype_executable_price_verification",
+      "sha256": "359f4cbd7ee0754ac260cf610ee7836a272213605fdd42bc0e52e40cbd3b2259"
+    },
+    {
+      "bytes": 271,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_hype_aug26_executable_price_20260908_v1/source_commit_parity.json",
+      "role": "hype_executable_price_verification",
+      "sha256": "267d5043f9d318263c0d30a5efdb1855b097f640aaa15c4d1e10ddb12a3f7246"
+    },
+    {
+      "bytes": 952397,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_hype_aug26_executable_price_20260908_v1/source_manifest.json",
+      "role": "hype_executable_price_verification",
+      "sha256": "4df8b6ed3defee88b352374fa47bbb3144464613363a6bf8b19c6eacb8d900cd"
+    },
+    {
+      "bytes": 725,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_hype_aug26_executable_price_20260908_v1/static_validation.json",
+      "role": "hype_executable_price_verification",
+      "sha256": "c3c3816286fb855054576d4247af3ecd694ccdf11b617a2d442d1770b47afadc"
+    },
+    {
+      "bytes": 86016,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_hype_aug26_executable_price_20260908_v1/validation_archive/coverage.data",
+      "role": "hype_executable_price_verification",
+      "sha256": "158424b92065f3e7fc02f9e02a15c91b3d4eda28134939bed1da385851925ba5"
+    },
+    {
+      "bytes": 36945,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_hype_aug26_executable_price_20260908_v1/validation_archive/coverage.json",
+      "role": "hype_executable_price_verification",
+      "sha256": "0433096cea391bb53560f895f5720aea452a0033ff761b8520df4b2457ff93e6"
+    },
+    {
+      "bytes": 423,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_hype_aug26_executable_price_20260908_v1/validation_archive/replay.log",
+      "role": "hype_executable_price_verification",
+      "sha256": "4d8157dd8914702b7704b1ae90eb0003202636da74869e9fd454ef7572077909"
+    },
+    {
+      "bytes": 187923,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_hype_aug26_executable_price_20260908_v1/validation_archive/replay/report.json",
+      "role": "hype_executable_price_verification",
+      "sha256": "5261aa649a251015875a0408a8526e2a8ac03a5f41b9b4be2b0b32306e47b81d"
+    },
+    {
+      "bytes": 11602,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_hype_aug26_executable_price_20260908_v1/validation_archive/tests.junit.xml",
+      "role": "hype_executable_price_verification",
+      "sha256": "53498d7c3e9a8d76f3c56205f7074c9d41f04eaf69a66d874d65ac5a1e52fa9b"
+    },
+    {
+      "bytes": 179,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_hype_aug26_executable_price_20260908_v1/validation_archive/tests.log",
+      "role": "hype_executable_price_verification",
+      "sha256": "bd333acd2a9db3eaefddd87e3b470bea6d913903e7f1b97b164a3e77b6d77ee5"
+    },
+    {
+      "bytes": 510,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_hype_aug26_executable_price_20260908_v1/validation_archive/verification.json",
+      "role": "hype_executable_price_verification",
+      "sha256": "d3f3859bec39f9df99c1ca69a932cff6b0d10fc0b7b02cde562e31201ebc7c2f"
+    },
+    {
+      "bytes": 81920,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_hype_aug26_executable_price_20260908_v1/validation_current/coverage.data",
+      "role": "hype_executable_price_verification",
+      "sha256": "27135b696e9265253bf93588ce60166395b09364178c573c147086d8392b8f5a"
+    },
+    {
+      "bytes": 37085,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_hype_aug26_executable_price_20260908_v1/validation_current/coverage.json",
+      "role": "hype_executable_price_verification",
+      "sha256": "dbe8fac07cb811eb6ac1c13f4d8eb109a2230e3d840c862d88520f40bfbcee46"
+    },
+    {
+      "bytes": 187923,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_hype_aug26_executable_price_20260908_v1/validation_current/replay/report.json",
+      "role": "hype_executable_price_verification",
+      "sha256": "5261aa649a251015875a0408a8526e2a8ac03a5f41b9b4be2b0b32306e47b81d"
+    },
+    {
+      "bytes": 9623,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_hype_aug26_executable_price_20260908_v1/validation_current/tests.junit.xml",
+      "role": "hype_executable_price_verification",
+      "sha256": "7ddd69bf7476da2eca4857a9e60f9b2e8848ca4b7c6b637d38b73e5aed31f363"
+    },
+    {
+      "bytes": 179,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_hype_aug26_executable_price_20260908_v1/validation_current/tests.log",
+      "role": "hype_executable_price_verification",
+      "sha256": "59096f0c356e4ef774a842e272a3c436cf10be10e4a5a4343d06e5ee13ab27d6"
+    },
+    {
+      "bytes": 540,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_hype_aug26_executable_price_20260908_v1/validation_current/verification.json",
+      "role": "hype_executable_price_verification",
+      "sha256": "518b7db5174a331fb18bbc8bb6b2c0a3704250a488c31bc0cb9663d662592b9d"
+    },
+    {
+      "bytes": 86016,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_hype_aug26_executable_price_20260908_v1/validation_final/coverage.data",
+      "role": "hype_executable_price_verification",
+      "sha256": "f59cdfb06852a5bbf54a53f39400d2cd0461cf5133e97e1d8d21604bb72ef98d"
+    },
+    {
+      "bytes": 36945,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_hype_aug26_executable_price_20260908_v1/validation_final/coverage.json",
+      "role": "hype_executable_price_verification",
+      "sha256": "fae6a8f2395f3966ab71c26bacd686cce088dd11611592f6609f3935ef957fc8"
+    },
+    {
+      "bytes": 421,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_hype_aug26_executable_price_20260908_v1/validation_final/replay.log",
+      "role": "hype_executable_price_verification",
+      "sha256": "f3000a7b0ea5e06921d63c33e8ead365cb3d24ef79ee71a2310bf41752b5776b"
+    },
+    {
+      "bytes": 187923,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_hype_aug26_executable_price_20260908_v1/validation_final/replay/report.json",
+      "role": "hype_executable_price_verification",
+      "sha256": "5261aa649a251015875a0408a8526e2a8ac03a5f41b9b4be2b0b32306e47b81d"
+    },
+    {
+      "bytes": 11602,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_hype_aug26_executable_price_20260908_v1/validation_final/tests.junit.xml",
+      "role": "hype_executable_price_verification",
+      "sha256": "0c33853fb40d6b1c667a3c486aeb82a1fc4b5dbf55a1711b96b4785950b6c894"
+    },
+    {
+      "bytes": 179,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_hype_aug26_executable_price_20260908_v1/validation_final/tests.log",
+      "role": "hype_executable_price_verification",
+      "sha256": "92547da78cd2987bd51093c8a33c16782a8e619785f9894d700be9fc5a532e98"
+    },
+    {
+      "bytes": 508,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_hype_aug26_executable_price_20260908_v1/validation_final/verification.json",
+      "role": "hype_executable_price_verification",
+      "sha256": "cd3083ff0014b7cd4d727af84508234dab97c8b2f0d1577bfa0d646435910558"
+    },
+    {
+      "bytes": 488,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_hype_aug26_executable_price_20260908_v1/venue_trigger_documentation.json",
+      "role": "hype_executable_price_verification",
+      "sha256": "e8c63e1420efa36b57c088b0a33463ce54cd574446127a96d6d264cd31b610ba"
+    },
+    {
+      "bytes": 2717,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_hype_aug26_executable_price_20260908_v1/verify.py",
+      "role": "hype_executable_price_verification",
+      "sha256": "b7b9e1d8ec811b452b587eeebddfb36039fe27feb3072215cc9b091f66598242"
+    },
+    {
+      "bytes": 15874591,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_recorded_native_events_20260907_v1/events.parquet",
+      "role": "registered_historical_price_input",
+      "sha256": "cc4b68f5912a7a2308e8e5f72a6feac1ff7024b2e836e811ae2ead3edeaf889c"
+    },
+    {
+      "bytes": 5963787,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_recorded_native_hybrid_inputs_20260907_v1/first/HYPE/bars.parquet",
+      "role": "registered_historical_price_input",
+      "sha256": "9d31160156a677cee5706db343e548ae8ed0ae415c5a7a670cbf8ff0904e2f7e"
+    },
+    {
+      "bytes": 63285,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_recorded_native_lifecycles_20260907_v1/first.json",
+      "role": "registered_historical_price_input",
+      "sha256": "0cc12304f1440b6e22e490ca7e8d9a783799e96140754567ceda17f4b5a30dcb"
+    },
+    {
+      "bytes": 1387078,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_recorded_native_shared_portfolio_20260907_v1/report.json",
+      "role": "registered_historical_price_input",
+      "sha256": "1d51590d61f884171029df4392315f29ee85f24b52bbd180df3b7395ffdef8b8"
+    },
+    {
+      "bytes": 85340,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_research_navigation_reconciliation_20260908_v1/journal_inventory.json",
+      "role": "registered_historical_price_input",
+      "sha256": "444c808d03395c1eda372d1320bdc50035ccf3b992bdb8e9611be79a2e51c079"
+    }
+  ],
+  "execution_authority": "none",
+  "falsifier": "Changed source hashes, raw-normalized discrepancies, a different first publication, incorrect timestamp boundaries, insufficient depth or contradictory independent calculations invalidate the corresponding bounded finding. Qualified clock-skew, mark-price, venue-rounding, exit-price or actual fill evidence may update the execution interpretation.",
+  "hypothesis": "Test the known source-sensitive August 26 HYPE entry-price assumption using original recorded publication timing and independently archived depth/public trades at both frozen modeled quantities.",
+  "hypothesis_id": "v89_hype_aug26_executable_price_reconstruction_v1",
+  "limitations": [
+    "Event-time depth is not evidence of client receipt, latency or achievable fills.",
+    "All snapshots are correlated observations of one retrospective entry.",
+    "Visible depth omits cancellations, hidden liquidity and later market impact.",
+    "Stop comparison is unrounded candle-threshold arithmetic, not a revised lifecycle or venue-trigger assertion.",
+    "Original modeled quantities are retained; venue lot-size rounding is not simulated.",
+    "The local publication clock and venue event clock were not independently skew-calibrated; signed timestamp differences are not measured client latency.",
+    "Current venue documentation identifies mark price as the TP/SL trigger; candle lows do not reconstruct that historical trigger series.",
+    "High confidence applies to source and numerical reconstruction. Confidence in achievable fills, a revised trade outcome or future profitability is low.",
+    "One end-boundary book is preserved in the archive and excluded from the end-exclusive analysis.",
+    "The first audit attempt correctly stopped on an incorrect expected source-origin label in the new wrapper; the label was corrected to the observed recorded_native schema before the completed replay. No live fault or behavior change occurred."
+  ],
+  "metrics": {
+    "archive_members": 5054,
+    "archive_report_exact": true,
+    "book_coverage": {
+      "excluded_at_end": 1,
+      "first_timestamp_us": 1787711100500000,
+      "last_timestamp_us": 1787711159500000,
+      "maximum_gap_us": 500000,
+      "post_publication_snapshots": 84,
+      "requested_snapshots": 131,
+      "used_snapshots": 130
+    },
+    "cases": [
+      {
+        "assumptions": {
+          "comparison_low": 81.242,
+          "modeled_entry_price": 81.88546625000001,
+          "name": "nominal",
+          "next_open_price": 81.865,
+          "quantity": 30.530448374897052,
+          "reference_price": 81.859,
+          "stop_bps": 80.0
+        },
+        "before_publication": {
+          "best_ask": 81.888,
+          "best_bid": 81.887,
+          "comparison_low_touches_stop": false,
+          "cost_from_next_open_bps": 2.8095034508031516,
+          "cost_from_reference_bps": 3.5426770422311535,
+          "difference_from_modeled_entry_bps": 0.3094260942783604,
+          "executable_vwap": 81.888,
+          "hypothetical_stop_price": 81.232896,
+          "spread_bps": 0.12211876049516408,
+          "timestamp_ms": 1787711121000,
+          "vendor_request_id": "76b10f4a-c2b2-43b7-82e7-8fc6aa5c0a4c",
+          "visible_fill": {
+            "best_price": 81.888,
+            "complete": true,
+            "filled_quantity": 30.530448374897052,
+            "impact_bps": 0.0,
+            "levels_consumed": 1,
+            "requested_quantity": 30.530448374897052,
+            "side": "buy",
+            "unfilled_quantity": 0.0,
+            "vwap": 81.888,
+            "worst_price": 81.888
+          }
+        },
+        "before_publication_distance_us": -69494,
+        "offset_probes": [
+          {
+            "offset_seconds": 0,
+            "quote": {
+              "best_ask": 81.877,
+              "best_bid": 81.876,
+              "comparison_low_touches_stop": false,
+              "cost_from_next_open_bps": 1.4658278873755572,
+              "cost_from_reference_bps": 2.1989029917296814,
+              "difference_from_modeled_entry_bps": -1.0339136342171098,
+              "executable_vwap": 81.877,
+              "hypothetical_stop_price": 81.221984,
+              "spread_bps": 0.1221351669881546,
+              "timestamp_ms": 1787711121500,
+              "vendor_request_id": "76b10f4a-c2b2-43b7-82e7-8fc6aa5c0a4c",
+              "visible_fill": {
+                "best_price": 81.877,
+                "complete": true,
+                "filled_quantity": 30.530448374897052,
+                "impact_bps": 0.0,
+                "levels_consumed": 1,
+                "requested_quantity": 30.530448374897052,
+                "side": "buy",
+                "unfilled_quantity": 0.0,
+                "vwap": 81.877,
+                "worst_price": 81.877
+              }
+            },
+            "signed_distance_us": 430506,
+            "status": "observed",
+            "target_us": 1787711121069494
+          },
+          {
+            "offset_seconds": 1,
+            "quote": {
+              "best_ask": 81.87,
+              "best_bid": 81.866,
+              "comparison_low_touches_stop": false,
+              "cost_from_next_open_bps": 0.6107616197398156,
+              "cost_from_reference_bps": 1.3437740505014721,
+              "difference_from_modeled_entry_bps": -1.888766188714227,
+              "executable_vwap": 81.87,
+              "hypothetical_stop_price": 81.21504,
+              "spread_bps": 0.48859139102028737,
+              "timestamp_ms": 1787711122500,
+              "vendor_request_id": "76b10f4a-c2b2-43b7-82e7-8fc6aa5c0a4c",
+              "visible_fill": {
+                "best_price": 81.87,
+                "complete": true,
+                "filled_quantity": 30.530448374897052,
+                "impact_bps": 0.0,
+                "levels_consumed": 1,
+                "requested_quantity": 30.530448374897052,
+                "side": "buy",
+                "unfilled_quantity": 0.0,
+                "vwap": 81.87,
+                "worst_price": 81.87
+              }
+            },
+            "signed_distance_us": 430506,
+            "status": "observed",
+            "target_us": 1787711122069494
+          },
+          {
+            "offset_seconds": 2,
+            "quote": {
+              "best_ask": 81.877,
+              "best_bid": 81.876,
+              "comparison_low_touches_stop": false,
+              "cost_from_next_open_bps": 1.8134545008025407,
+              "cost_from_reference_bps": 2.5465550850633405,
+              "difference_from_modeled_entry_bps": -0.6863739057222501,
+              "executable_vwap": 81.87984584527082,
+              "hypothetical_stop_price": 81.22480707850865,
+              "spread_bps": 0.1221351669881546,
+              "timestamp_ms": 1787711123500,
+              "vendor_request_id": "76b10f4a-c2b2-43b7-82e7-8fc6aa5c0a4c",
+              "visible_fill": {
+                "best_price": 81.877,
+                "complete": true,
+                "filled_quantity": 30.530448374897055,
+                "impact_bps": 0.34757566481857793,
+                "levels_consumed": 3,
+                "requested_quantity": 30.530448374897052,
+                "side": "buy",
+                "unfilled_quantity": 0.0,
+                "vwap": 81.87984584527082,
+                "worst_price": 81.888
+              }
+            },
+            "signed_distance_us": 430506,
+            "status": "observed",
+            "target_us": 1787711123069494
+          },
+          {
+            "offset_seconds": 5,
+            "quote": {
+              "best_ask": 81.881,
+              "best_bid": 81.88,
+              "comparison_low_touches_stop": false,
+              "cost_from_next_open_bps": 1.9544371831674097,
+              "cost_from_reference_bps": 2.6875481010029443,
+              "difference_from_modeled_entry_bps": -0.545426460218757,
+              "executable_vwap": 81.881,
+              "hypothetical_stop_price": 81.225952,
+              "spread_bps": 0.12212920048177221,
+              "timestamp_ms": 1787711126500,
+              "vendor_request_id": "76b10f4a-c2b2-43b7-82e7-8fc6aa5c0a4c",
+              "visible_fill": {
+                "best_price": 81.881,
+                "complete": true,
+                "filled_quantity": 30.530448374897052,
+                "impact_bps": 0.0,
+                "levels_consumed": 1,
+                "requested_quantity": 30.530448374897052,
+                "side": "buy",
+                "unfilled_quantity": 0.0,
+                "vwap": 81.881,
+                "worst_price": 81.881
+              }
+            },
+            "signed_distance_us": 430506,
+            "status": "observed",
+            "target_us": 1787711126069494
+          },
+          {
+            "offset_seconds": 10,
+            "quote": {
+              "best_ask": 81.88,
+              "best_bid": 81.879,
+              "comparison_low_touches_stop": false,
+              "cost_from_next_open_bps": 1.8322848592194467,
+              "cost_from_reference_bps": 2.5653868236846282,
+              "difference_from_modeled_entry_bps": -0.6675482537183453,
+              "executable_vwap": 81.88,
+              "hypothetical_stop_price": 81.22496,
+              "spread_bps": 0.12213069205241407,
+              "timestamp_ms": 1787711131500,
+              "vendor_request_id": "76b10f4a-c2b2-43b7-82e7-8fc6aa5c0a4c",
+              "visible_fill": {
+                "best_price": 81.88,
+                "complete": true,
+                "filled_quantity": 30.530448374897052,
+                "impact_bps": 0.0,
+                "levels_consumed": 1,
+                "requested_quantity": 30.530448374897052,
+                "side": "buy",
+                "unfilled_quantity": 0.0,
+                "vwap": 81.88,
+                "worst_price": 81.88
+              }
+            },
+            "signed_distance_us": 430506,
+            "status": "observed",
+            "target_us": 1787711131069494
+          },
+          {
+            "offset_seconds": 30,
+            "quote": {
+              "best_ask": 81.888,
+              "best_bid": 81.887,
+              "comparison_low_touches_stop": false,
+              "cost_from_next_open_bps": 2.8095034508031516,
+              "cost_from_reference_bps": 3.5426770422311535,
+              "difference_from_modeled_entry_bps": 0.3094260942783604,
+              "executable_vwap": 81.888,
+              "hypothetical_stop_price": 81.232896,
+              "spread_bps": 0.12211876049516408,
+              "timestamp_ms": 1787711151500,
+              "vendor_request_id": "76b10f4a-c2b2-43b7-82e7-8fc6aa5c0a4c",
+              "visible_fill": {
+                "best_price": 81.888,
+                "complete": true,
+                "filled_quantity": 30.530448374897052,
+                "impact_bps": 0.0,
+                "levels_consumed": 1,
+                "requested_quantity": 30.530448374897052,
+                "side": "buy",
+                "unfilled_quantity": 0.0,
+                "vwap": 81.888,
+                "worst_price": 81.888
+              }
+            },
+            "signed_distance_us": 430506,
+            "status": "observed",
+            "target_us": 1787711151069494
+          }
+        ],
+        "post_publication_summary": {
+          "complete_quotes": 84,
+          "insufficient_depth_quotes": 0,
+          "maximum_cost_from_next_open_bps": 2.8095034508031516,
+          "maximum_vwap": 81.888,
+          "minimum_cost_from_next_open_bps": -1.7801100252733157,
+          "minimum_vwap": 81.8504271292781,
+          "quotes_at_or_below_modeled_entry": 52,
+          "quotes_with_stop_at_or_above_comparison_low": 0,
+          "snapshots": 84
+        }
+      },
+      {
+        "assumptions": {
+          "comparison_low": 81.242,
+          "modeled_entry_price": 81.91002575,
+          "name": "adverse",
+          "next_open_price": 81.865,
+          "quantity": 30.52129427513945,
+          "reference_price": 81.859,
+          "stop_bps": 80.0
+        },
+        "before_publication": {
+          "best_ask": 81.888,
+          "best_bid": 81.887,
+          "comparison_low_touches_stop": false,
+          "cost_from_next_open_bps": 2.8095034508031516,
+          "cost_from_reference_bps": 3.5426770422311535,
+          "difference_from_modeled_entry_bps": -2.689017589522611,
+          "executable_vwap": 81.888,
+          "hypothetical_stop_price": 81.232896,
+          "spread_bps": 0.12211876049516408,
+          "timestamp_ms": 1787711121000,
+          "vendor_request_id": "76b10f4a-c2b2-43b7-82e7-8fc6aa5c0a4c",
+          "visible_fill": {
+            "best_price": 81.888,
+            "complete": true,
+            "filled_quantity": 30.52129427513945,
+            "impact_bps": 0.0,
+            "levels_consumed": 1,
+            "requested_quantity": 30.52129427513945,
+            "side": "buy",
+            "unfilled_quantity": 0.0,
+            "vwap": 81.888,
+            "worst_price": 81.888
+          }
+        },
+        "before_publication_distance_us": -69494,
+        "offset_probes": [
+          {
+            "offset_seconds": 0,
+            "quote": {
+              "best_ask": 81.877,
+              "best_bid": 81.876,
+              "comparison_low_touches_stop": false,
+              "cost_from_next_open_bps": 1.4658278873755572,
+              "cost_from_reference_bps": 2.1989029917296814,
+              "difference_from_modeled_entry_bps": -4.031954537628747,
+              "executable_vwap": 81.877,
+              "hypothetical_stop_price": 81.221984,
+              "spread_bps": 0.1221351669881546,
+              "timestamp_ms": 1787711121500,
+              "vendor_request_id": "76b10f4a-c2b2-43b7-82e7-8fc6aa5c0a4c",
+              "visible_fill": {
+                "best_price": 81.877,
+                "complete": true,
+                "filled_quantity": 30.52129427513945,
+                "impact_bps": 0.0,
+                "levels_consumed": 1,
+                "requested_quantity": 30.52129427513945,
+                "side": "buy",
+                "unfilled_quantity": 0.0,
+                "vwap": 81.877,
+                "worst_price": 81.877
+              }
+            },
+            "signed_distance_us": 430506,
+            "status": "observed",
+            "target_us": 1787711121069494
+          },
+          {
+            "offset_seconds": 1,
+            "quote": {
+              "best_ask": 81.87,
+              "best_bid": 81.866,
+              "comparison_low_touches_stop": false,
+              "cost_from_next_open_bps": 0.6107616197398156,
+              "cost_from_reference_bps": 1.3437740505014721,
+              "difference_from_modeled_entry_bps": -4.886550777332651,
+              "executable_vwap": 81.87,
+              "hypothetical_stop_price": 81.21504,
+              "spread_bps": 0.48859139102028737,
+              "timestamp_ms": 1787711122500,
+              "vendor_request_id": "76b10f4a-c2b2-43b7-82e7-8fc6aa5c0a4c",
+              "visible_fill": {
+                "best_price": 81.87,
+                "complete": true,
+                "filled_quantity": 30.52129427513945,
+                "impact_bps": 0.0,
+                "levels_consumed": 1,
+                "requested_quantity": 30.52129427513945,
+                "side": "buy",
+                "unfilled_quantity": 0.0,
+                "vwap": 81.87,
+                "worst_price": 81.87
+              }
+            },
+            "signed_distance_us": 430506,
+            "status": "observed",
+            "target_us": 1787711122069494
+          },
+          {
+            "offset_seconds": 2,
+            "quote": {
+              "best_ask": 81.877,
+              "best_bid": 81.876,
+              "comparison_low_touches_stop": false,
+              "cost_from_next_open_bps": 1.8131557608013193,
+              "cost_from_reference_bps": 2.546256323165443,
+              "difference_from_modeled_entry_bps": -3.6848175895244424,
+              "executable_vwap": 81.8798433996358,
+              "hypothetical_stop_price": 81.22480465243872,
+              "spread_bps": 0.1221351669881546,
+              "timestamp_ms": 1787711123500,
+              "vendor_request_id": "76b10f4a-c2b2-43b7-82e7-8fc6aa5c0a4c",
+              "visible_fill": {
+                "best_price": 81.877,
+                "complete": true,
+                "filled_quantity": 30.521294275139454,
+                "impact_bps": 0.3472769685997079,
+                "levels_consumed": 3,
+                "requested_quantity": 30.52129427513945,
+                "side": "buy",
+                "unfilled_quantity": 0.0,
+                "vwap": 81.8798433996358,
+                "worst_price": 81.888
+              }
+            },
+            "signed_distance_us": 430506,
+            "status": "observed",
+            "target_us": 1787711123069494
+          },
+          {
+            "offset_seconds": 5,
+            "quote": {
+              "best_ask": 81.881,
+              "best_bid": 81.88,
+              "comparison_low_touches_stop": false,
+              "cost_from_next_open_bps": 1.9544371831674097,
+              "cost_from_reference_bps": 2.6875481010029443,
+              "difference_from_modeled_entry_bps": -3.5436138292265156,
+              "executable_vwap": 81.881,
+              "hypothetical_stop_price": 81.225952,
+              "spread_bps": 0.12212920048177221,
+              "timestamp_ms": 1787711126500,
+              "vendor_request_id": "76b10f4a-c2b2-43b7-82e7-8fc6aa5c0a4c",
+              "visible_fill": {
+                "best_price": 81.881,
+                "complete": true,
+                "filled_quantity": 30.52129427513945,
+                "impact_bps": 0.0,
+                "levels_consumed": 1,
+                "requested_quantity": 30.52129427513945,
+                "side": "buy",
+                "unfilled_quantity": 0.0,
+                "vwap": 81.881,
+                "worst_price": 81.881
+              }
+            },
+            "signed_distance_us": 430506,
+            "status": "observed",
+            "target_us": 1787711126069494
+          },
+          {
+            "offset_seconds": 10,
+            "quote": {
+              "best_ask": 81.88,
+              "best_bid": 81.879,
+              "comparison_low_touches_stop": false,
+              "cost_from_next_open_bps": 1.8322848592194467,
+              "cost_from_reference_bps": 2.5653868236846282,
+              "difference_from_modeled_entry_bps": -3.6656990063270736,
+              "executable_vwap": 81.88,
+              "hypothetical_stop_price": 81.22496,
+              "spread_bps": 0.12213069205241407,
+              "timestamp_ms": 1787711131500,
+              "vendor_request_id": "76b10f4a-c2b2-43b7-82e7-8fc6aa5c0a4c",
+              "visible_fill": {
+                "best_price": 81.88,
+                "complete": true,
+                "filled_quantity": 30.52129427513945,
+                "impact_bps": 0.0,
+                "levels_consumed": 1,
+                "requested_quantity": 30.52129427513945,
+                "side": "buy",
+                "unfilled_quantity": 0.0,
+                "vwap": 81.88,
+                "worst_price": 81.88
+              }
+            },
+            "signed_distance_us": 430506,
+            "status": "observed",
+            "target_us": 1787711131069494
+          },
+          {
+            "offset_seconds": 30,
+            "quote": {
+              "best_ask": 81.888,
+              "best_bid": 81.887,
+              "comparison_low_touches_stop": false,
+              "cost_from_next_open_bps": 2.8095034508031516,
+              "cost_from_reference_bps": 3.5426770422311535,
+              "difference_from_modeled_entry_bps": -2.689017589522611,
+              "executable_vwap": 81.888,
+              "hypothetical_stop_price": 81.232896,
+              "spread_bps": 0.12211876049516408,
+              "timestamp_ms": 1787711151500,
+              "vendor_request_id": "76b10f4a-c2b2-43b7-82e7-8fc6aa5c0a4c",
+              "visible_fill": {
+                "best_price": 81.888,
+                "complete": true,
+                "filled_quantity": 30.52129427513945,
+                "impact_bps": 0.0,
+                "levels_consumed": 1,
+                "requested_quantity": 30.52129427513945,
+                "side": "buy",
+                "unfilled_quantity": 0.0,
+                "vwap": 81.888,
+                "worst_price": 81.888
+              }
+            },
+            "signed_distance_us": 430506,
+            "status": "observed",
+            "target_us": 1787711151069494
+          }
+        ],
+        "post_publication_summary": {
+          "complete_quotes": 84,
+          "insufficient_depth_quotes": 0,
+          "maximum_cost_from_next_open_bps": 2.8095034508031516,
+          "maximum_vwap": 81.888,
+          "minimum_cost_from_next_open_bps": -1.7801310132706285,
+          "minimum_vwap": 81.85042695745986,
+          "quotes_at_or_below_modeled_entry": 84,
+          "quotes_with_stop_at_or_above_comparison_low": 0,
+          "snapshots": 84
+        }
+      }
+    ],
+    "combined_coverage_including_reused_depth_module_percent": 94.5179584120983,
+    "completed_investigation": true,
+    "end_us": 1787711160000000,
+    "git_tracked_files_matching_archive": 5052,
+    "highest_value_next_investigation": {
+      "hypothesis_id": "v89_hype_aug26_mark_trigger_reconstruction_v1",
+      "investigation": "Inventory and qualify historical mark-price coverage around the August 26 09:22-09:24 UTC stop-switch interval, retaining original entry cases and trigger/rounding semantics. Require the whole holding interval before asserting a revised lifecycle. No live change or sealed prospective outcome reads.",
+      "status": "proposed"
+    },
+    "independent_decimal_verification": {
+      "execution_authority": "none",
+      "independent_decimal_quote_checks": 168,
+      "maximum_absolute_residual_usd": "2.351996604267E-14",
+      "stop_threshold_classifications_exact": true,
+      "tolerance_usd": "1e-10",
+      "vwap_and_stop_comparisons": 336
+    },
+    "offline_tests_current_and_archive": 93,
+    "post_publication_trades": {
+      "buy_quantity": 4571.14,
+      "count": 172,
+      "excluded_at_end": 0,
+      "first_timestamp_us": 1787711121262000,
+      "last_timestamp_us": 1787711159932000,
+      "maximum_price": 81.888,
+      "minimum_price": 81.832,
+      "quantity": 6376.89,
+      "sell_quantity": 1805.75,
+      "vwap": 81.87319424829344
+    },
+    "pricing_branches": "58/58",
+    "pricing_statements": "151/151",
+    "publication": {
+      "first": {
+        "bar": {
+          "close": 81.859,
+          "high": 81.88,
+          "low": 81.794,
+          "open": 81.864,
+          "timestamp_ms": 1787711040000,
+          "volume": 1479.37
+        },
+        "event_id": "3bbd5904e1f970919d04856fa5a4febadfd5f6068f454b8cec4d1436abf17c80",
+        "observed_at_utc": "2026-08-26T02:25:21.069494+00:00",
+        "run_id": "bidirectional-live-1787564992209",
+        "source_path": "/Users/gestas/Prototypes/hypervector/data/live/bidirectional_cohort/decisions.jsonl"
+      },
+      "matching_publications": 1,
+      "publications": [
+        {
+          "bar": {
+            "close": 81.859,
+            "high": 81.88,
+            "low": 81.794,
+            "open": 81.864,
+            "timestamp_ms": 1787711040000,
+            "volume": 1479.37
+          },
+          "event_id": "3bbd5904e1f970919d04856fa5a4febadfd5f6068f454b8cec4d1436abf17c80",
+          "observed_at_utc": "2026-08-26T02:25:21.069494+00:00",
+          "run_id": "bidirectional-live-1787564992209",
+          "source_path": "/Users/gestas/Prototypes/hypervector/data/live/bidirectional_cohort/decisions.jsonl"
+        }
+      ]
+    },
+    "publication_us": 1787711121069494,
+    "reference_bars": {
+      "comparison": {
+        "close": 81.27,
+        "high": 81.416,
+        "low": 81.242,
+        "open": 81.416,
+        "recorded_event_id": "96407bf82774741eb3683c0600f51286c55b8ed4d527bb79c2600e107101eaa9",
+        "recorded_observation_lag_seconds": 14.889187,
+        "recorded_observed_at_utc": "2026-08-26 09:24:14.889187+00:00",
+        "recorded_run_id": "bidirectional-live-1787564992209",
+        "source": "hl",
+        "source_origin": "recorded_native",
+        "timestamp": "2026-08-26 09:23:00+00:00",
+        "volume": 15667.05
+      },
+      "entry": {
+        "close": 81.834,
+        "high": 81.888,
+        "low": 81.832,
+        "open": 81.865,
+        "recorded_event_id": "3c42b16992c97a196846560bf1066c94310c9805f023d4c82d5ee530e46d4bf3",
+        "recorded_observation_lag_seconds": 14.643828,
+        "recorded_observed_at_utc": "2026-08-26 02:26:14.643828+00:00",
+        "recorded_run_id": "bidirectional-live-1787564992209",
+        "source": "hl",
+        "source_origin": "recorded_native",
+        "timestamp": "2026-08-26 02:25:00+00:00",
+        "volume": 9785.55
+      },
+      "signal": {
+        "close": 81.859,
+        "high": 81.88,
+        "low": 81.794,
+        "open": 81.864,
+        "recorded_event_id": "3bbd5904e1f970919d04856fa5a4febadfd5f6068f454b8cec4d1436abf17c80",
+        "recorded_observation_lag_seconds": 21.069494,
+        "recorded_observed_at_utc": "2026-08-26 02:25:21.069494+00:00",
+        "recorded_run_id": "bidirectional-live-1787564992209",
+        "source": "hl",
+        "source_origin": "recorded_native",
+        "timestamp": "2026-08-26 02:24:00+00:00",
+        "volume": 1479.37
+      }
+    },
+    "source_revision": "2130d18ad630fd06df3d9044a13c71d05ea563ad",
+    "source_wrapper_branches": "52/54",
+    "source_wrapper_statements": "155/157",
+    "start_us": 1787711100000000,
+    "trades": {
+      "buy_quantity": 6593.06,
+      "count": 253,
+      "excluded_at_end": 0,
+      "first_timestamp_us": 1787711100005000,
+      "last_timestamp_us": 1787711159932000,
+      "maximum_price": 81.888,
+      "minimum_price": 81.832,
+      "quantity": 9785.55,
+      "sell_quantity": 3192.4900000000002,
+      "vwap": 81.87579802055072
+    }
+  },
+  "revision_number": 1,
+  "runtime_strategy_changed": false,
+  "schema_version": 1,
+  "status": "observe",
+  "strategy_id": "hype_breakout_compression_alignment_bidirectional_v2",
+  "supersedes_revision_id": null,
+  "symbol": "HYPE"
+}

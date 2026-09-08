@@ -19,10 +19,18 @@ marked-day contributions gives −$77.62. Confidence is high in the reconciled
 arithmetic and low in a causal regime-shift interpretation. Both periods have
 already been explored.
 
-Next: `v89_hype_aug26_executable_price_reconstruction_v1`, the historical book
-and trade reconstruction specified in that review. It addresses the known
-August 26 02:25 source-sensitive entry; it is not a new strategy search or an
-assertion that a live order was missed.
+The subsequent [HYPE executable-price reconstruction](../reviews/2026-09-08-v89-hype-executable-price.md)
+is also complete. All 84 post-publication books have sufficient depth at both
+modeled quantities; maximum entry VWAP is $81.888, below the modeled adverse
+$81.91002575. Every resulting unrounded 80-bps stop is below the recorded
+09:23 candle low. Confidence is high in the bounded arithmetic and low in any
+revised-trade claim; this does not establish client fills or venue stop triggers.
+
+Next: `v89_hype_aug26_mark_trigger_reconstruction_v1`. Qualify historical
+mark-price coverage around 09:22–09:24 UTC, retaining every original entry-price
+case and the actual trigger/rounding semantics. Complete holding-interval
+coverage is required before asserting a revised lifecycle. Inventory existing
+sources first. This is research only, and the sealed experiment remains unopened.
 
 ## Completed evidence to reuse
 
@@ -34,6 +42,7 @@ assertion that a live order was missed.
 | Current HIP-3 fees | [Fee qualification](../reviews/2026-09-07-v89-current-fee-qualification.md); current metadata is separately qualified and does not establish historical fees. |
 | Core inactivity | [Opportunity attribution](../reviews/2026-09-08-v89-core-opportunity-attribution.md); frozen run prefix through 10:40 UTC has zero eligible core entries. This is a bounded observation, not a forecast. |
 | HYPE input arithmetic | [Native compression parity](../reviews/2026-09-08-v89-hype-native-compression.md); 907 publications match the independent calculation. Revision 2 corrects the obsolete follow-up, preserving the numerical result. |
+| HYPE August 26 entry price | [Executable-price reconstruction](../reviews/2026-09-08-v89-hype-executable-price.md); 131 books, 253 public trades, 93 offline tests and exact source-archive replay. The adverse entry exceeds every observed post-publication depth walk; the complete lifecycle remains unresolved. |
 
 The four September 7 studies were found in
 `/Users/gestas/Prototypes/hypervector-v89-portfolio-20260907` and registered in
