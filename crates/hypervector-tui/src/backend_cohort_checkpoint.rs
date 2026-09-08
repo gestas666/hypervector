@@ -67,6 +67,7 @@ const OBSERVER_MODE: &str = "multi_asset_bidirectional_observer_checkpoint";
 /// Latest aggregate technical and statistical evidence from the Python sidecar.
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct CohortCheckpointTelemetry {
+    pub research_sync: Option<crate::backend_cohort_research_sync::CohortResearchSync>,
     pub configured: bool,
     pub available: bool,
     pub stale: bool,
@@ -165,6 +166,7 @@ struct CheckpointDocument {
     schema_version: u64,
     mode: String,
     generated_at_utc: String,
+    research_sync: Option<Value>,
     #[serde(default)]
     venue_portfolio: Option<Value>,
     status: Option<UnavailableStatus>,

@@ -19,6 +19,7 @@ use super::{
 pub(super) fn parse_live(
     document: CheckpointDocument,
 ) -> Result<CohortCheckpointTelemetry, String> {
+    let research_sync = crate::backend_cohort_research_sync::project(document.research_sync)?;
     let (venue_portfolio, venue_portfolio_issue) =
         project_venue_portfolio(document.venue_portfolio.clone())?;
     let configuration_generation =
@@ -38,6 +39,7 @@ pub(super) fn parse_live(
         configuration_generation,
     )?;
     checkpoint.poststart_acceptance = poststart_acceptance;
+    checkpoint.research_sync = research_sync;
     Ok(checkpoint)
 }
 

@@ -36,6 +36,11 @@ from hypervector.research.cohort_background_sync import (
     BackgroundResearchSync,
     ResearchSyncError,
 )
+from hypervector.research.cohort_checkpoint_logging import (
+    emit_event as _emit_event,
+    log_background_sync as _log_background_sync,
+)
+from hypervector.research.cohort_research_sync_telemetry import ResearchSyncTelemetry
 from hypervector.research.cohort_checkpoint_accounting import (
     bind_sync_to_accounting_epoch as _bind_sync_to_accounting_epoch,
     research_worker_command as _research_worker_command,
@@ -175,6 +180,11 @@ def _run_owned_checkpoint_loop(
                     or (controller is not None and controller.portfolio_archive is None)
                 ),
                 sleep_fn=sleep_fn,
+                research_sync=(
+                    ResearchSyncTelemetry(enabled=False).snapshot()
+                    if controller is None
+                    else controller.telemetry.snapshot()
+                ),
             )
             sleep_fn(args.interval_seconds)
     finally:
@@ -218,7 +228,8 @@ def _run_once(
     funding_fn: FundingFn | None,
     sleep_fn: Callable[[float], None],
 ) -> int:
-    _, sync_ok, archive = _sync_if_due(args, sync_fn, 0.0)
+    telemetry = ResearchSyncTelemetry(enabled=args.research_database is not None)
+    _, sync_ok, archive = _sync_if_due(args, sync_fn, 0.0, telemetry=telemetry)
     published = _publish_once(
         args,
         publish_fn,
@@ -227,6 +238,7 @@ def _run_once(
         archive,
         current_run_only=args.current_run_only,
         sleep_fn=sleep_fn,
+        research_sync=telemetry.snapshot(),
     )
     return 0 if published and sync_ok else 2
 
@@ -269,27 +281,6 @@ def _loaded_accounting_epoch(
     return epoch
 
 
-def _log_background_sync(controller: BackgroundResearchSync) -> None:
-    report = controller.pop_report()
-    if report is not None:
-        _emit_event(
-            "cohort_research_sync",
-            {"result": report},
-        )
-    error = controller.pop_error()
-    if error is not None:
-        print(f"cohort research sync failed: {error}", file=sys.stderr)
-
-
-def _emit_event(event: str, fields: Mapping[str, object]) -> None:
-    payload = {
-        "event": event,
-        "execution_authority": "none",
-        **fields,
-    }
-    print(json.dumps(payload, sort_keys=True), file=sys.stderr, flush=True)
-
-
 def _publish_once(
     args: argparse.Namespace,
     publish_fn: PublishFn,
@@ -299,6 +290,7 @@ def _publish_once(
     *,
     current_run_only: bool = False,
     sleep_fn: Callable[[float], None],
+    research_sync: Mapping[str, object] | None = None,
 ) -> bool:
     venue_portfolio = (
         _portfolio_evidence(portfolio_fn)
@@ -314,6 +306,7 @@ def _publish_once(
                 funding_fn,
                 portfolio_archive,
                 current_run_only,
+                research_sync,
             )
         except (duckdb.Error, FileNotFoundError, ValueError) as exc:
             if attempt + 1 < _SNAPSHOT_ATTEMPTS:
@@ -350,6 +343,7 @@ def _publish_snapshot(
     funding_fn: FundingFn | None = None,
     portfolio_archive: Mapping[str, object] | None = None,
     current_run_only: bool = False,
+    research_sync: Mapping[str, object] | None = None,
 ) -> None:
     if publish_fn is publish_live_checkpoint:
         _publish_real_snapshot(
@@ -359,6 +353,7 @@ def _publish_snapshot(
             funding_fn,
             portfolio_archive,
             current_run_only,
+            research_sync,
         )
         return
     publish_fn(
@@ -377,6 +372,7 @@ def _publish_real_snapshot(
     funding_fn: FundingFn | None,
     portfolio_archive: Mapping[str, object] | None,
     current_run_only: bool = False,
+    research_sync: Mapping[str, object] | None = None,
 ) -> None:
     refreshed = publish_rolling_checkpoint(
         publish_fn,
@@ -400,6 +396,7 @@ def _publish_real_snapshot(
             else args.asymmetric_forward_journal
         ),
         accounting_epoch=_loaded_accounting_epoch(args),
+        research_sync=research_sync,
     )
     if refreshed:
         _emit_event(
@@ -412,29 +409,28 @@ def _sync_if_due(
     args: argparse.Namespace,
     sync_fn: SyncFn,
     next_sync_at: float,
+    *,
+    telemetry: ResearchSyncTelemetry | None = None,
 ) -> tuple[float, bool, Mapping[str, object] | None]:
     now = time.monotonic()
     if args.research_database is None or now < next_sync_at:
         return next_sync_at, True, None
+    if telemetry is not None:
+        telemetry.begin_attempt()
     try:
         result = sync_fn(args.research_database, args.ledger_root)
         archive = _portfolio_archive(result, _loaded_accounting_epoch(args))
     except ResearchSyncError as exc:
+        if telemetry is not None:
+            telemetry.failed(str(exc))
         print(f"cohort research sync failed: {exc}", file=sys.stderr)
         return next_sync_at, False, None
     public_result = {
         key: value for key, value in result.items() if key != "portfolio_archive"
     }
-    print(
-        json.dumps(
-            {
-                "event": "cohort_research_sync",
-                "execution_authority": "none",
-                "result": public_result,
-            },
-            sort_keys=True,
-        )
-    )
+    if telemetry is not None:
+        telemetry.succeeded(public_result)
+    _emit_event("cohort_research_sync", {"result": public_result}, stream=sys.stdout)
     return now + args.research_sync_interval_seconds, True, archive
 
 

@@ -8,6 +8,7 @@ import sys
 from types import ModuleType
 
 import pytest
+from hypervector.research.cohort_research_sync_telemetry import ResearchSyncTelemetry
 
 SCRIPT = (
     Path(__file__).parents[1]
@@ -34,6 +35,7 @@ def test_initial_sync_publishes_bounded_current_run_without_archive(
 
     class PendingSync:
         portfolio_archive = None
+        telemetry = ResearchSyncTelemetry()
 
         def poll(self, *, now: float) -> None:
             del now

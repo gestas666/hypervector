@@ -7,6 +7,12 @@ from concurrent.futures import Future, ThreadPoolExecutor
 from pathlib import Path
 import shutil
 
+from hypervector.research.cohort_research_sync_telemetry import (
+    Clock,
+    ResearchSyncTelemetry,
+    utc_now,
+)
+
 SyncFn = Callable[[Path, Path], Mapping[str, object]]
 _MINIMUM_RESEARCH_SYNC_FREE_BYTES = 8 * 1024**3
 
@@ -27,6 +33,7 @@ class BackgroundResearchSync:
         *,
         minimum_free_bytes: int = _MINIMUM_RESEARCH_SYNC_FREE_BYTES,
         portfolio_archive: Mapping[str, object] | None = None,
+        clock: Clock = utc_now,
     ) -> None:
         if interval_seconds <= 0.0:
             raise ValueError("research sync interval must be positive")
@@ -43,12 +50,14 @@ class BackgroundResearchSync:
         self.portfolio_archive = portfolio_archive
         self.report: dict[str, object] | None = None
         self.error: str | None = None
+        self.telemetry = ResearchSyncTelemetry(clock=clock)
 
     def poll(self, *, now: float) -> None:
         """Consume a completed worker and schedule another without waiting."""
         if self._consume_completed():
             self._next_sync_at = now + self._interval_seconds
         if self._future is None and now >= self._next_sync_at:
+            self.telemetry.begin_attempt()
             if not self._has_disk_headroom():
                 self._next_sync_at = now + self._interval_seconds
                 return
@@ -64,6 +73,7 @@ class BackgroundResearchSync:
             available = shutil.disk_usage(self._database_path.parent).free
         except OSError as exc:
             self.error = f"research sync deferred: disk headroom unavailable: {exc}"
+            self.telemetry.failed(self.error, state="deferred")
             return False
         if available >= self._minimum_free_bytes:
             return True
@@ -71,6 +81,7 @@ class BackgroundResearchSync:
             "research sync deferred: available disk space is below the "
             f"required {self._minimum_free_bytes} bytes"
         )
+        self.telemetry.failed(self.error, state="deferred")
         return False
 
     def wait_for_completion(self, *, timeout: float) -> None:
@@ -104,12 +115,14 @@ class BackgroundResearchSync:
             archive = _portfolio_archive(result)
         except ResearchSyncError as exc:
             self.error = str(exc)
+            self.telemetry.failed(self.error)
             return True
         if archive is not None:
             self.portfolio_archive = archive
         self.report = {
             key: value for key, value in result.items() if key != "portfolio_archive"
         }
+        self.telemetry.succeeded(self.report)
         self.error = None
         return False
 

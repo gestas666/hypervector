@@ -205,6 +205,7 @@ def publish_live_checkpoint(
     compatible_execution_history: bool = False,
     complete_historical_checkpoint: Mapping[str, object] | None = None,
     current_run_only: bool = False,
+    research_sync: Mapping[str, object] | None = None,
 ) -> dict[str, object]:
     """Snapshot complete ledger prefixes and atomically replace one report."""
     if compatible_execution_history and run_id is None:
@@ -356,6 +357,8 @@ def publish_live_checkpoint(
             config_path,
             observed_at=observed_at,
         )
+    if research_sync is not None:
+        checkpoint["research_sync"] = dict(research_sync)
     write_atomic_json(destination, checkpoint)
     return checkpoint
 

@@ -35,6 +35,7 @@ def publish_rolling_checkpoint(
     asymmetric_forward_journal_path: Path | None,
     current_run_only: bool = False,
     accounting_epoch: CohortAccountingEpoch | None = None,
+    research_sync: Mapping[str, object] | None = None,
 ) -> bool:
     """Publish bounded history, falling back to full only when history changed."""
     complete = None if once else load_cached_complete_checkpoint(destination)
@@ -50,14 +51,13 @@ def publish_rolling_checkpoint(
         eligible_policy_forward,
         funding_evidence_fn,
         portfolio_archive
-        or load_cached_portfolio_archive(
-            destination,
-            accounting_epoch=accounting_epoch,
-        ),
+        or load_cached_portfolio_archive(destination, accounting_epoch=accounting_epoch),
         asymmetric_forward_journal_path,
         complete,
         bounded_current_run,
     )
+    if research_sync is not None:
+        options["research_sync"] = research_sync
     try:
         publish_fn(ledger_root, destination, **options)
     except HistoricalProjectionStale:

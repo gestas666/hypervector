@@ -161,6 +161,10 @@ fn render_navigation(frame: &mut Frame, app: &App, area: Rect) {
 }
 
 fn render_footer(frame: &mut Frame, app: &App, area: Rect) {
+    let mut title = Line::from(" OPERATOR CONTROLS //");
+    title
+        .spans
+        .extend(crate::cohort_research_sync::status_line(app).spans);
     let text = Line::from(vec![
         Span::styled(" [1-9]", app.theme.gold),
         Span::raw(" Views  "),
@@ -169,10 +173,7 @@ fn render_footer(frame: &mut Frame, app: &App, area: Rect) {
         Span::styled("[q]", app.theme.gold),
         Span::raw(context_help(app)),
     ]);
-    frame.render_widget(
-        Paragraph::new(text).block(panel(" OPERATOR CONTROLS ", app)),
-        area,
-    );
+    frame.render_widget(Paragraph::new(text).block(panel(title, app)), area);
 }
 
 fn context_help(app: &App) -> String {
