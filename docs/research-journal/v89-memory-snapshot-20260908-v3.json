@@ -1,0 +1,469 @@
+{
+  "automatic_promotion": false,
+  "confidence": "high",
+  "created_at_utc": "2026-09-08T06:26:13.176639+00:00",
+  "decision": "Candidate 7a30d04 accepted offline. Reporting-only source and rollback bundle prepared. Human deployment approval and live reporter/TUI acceptance remain pending. Candidate 00237bb remains rejected.",
+  "evidence": [
+    {
+      "bytes": 6495,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_mapped_snapshot_acceptance_20260908_v1.json",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "71af638365925e81ce18dc2e5ee91533e5d87b74b780219ad3e3c1d03d5894a2"
+    },
+    {
+      "bytes": 2777130,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_mapped_snapshot_benchmark_20260908_v1/baseline_1/checkpoint.json",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "e71c47e7e0d51c5464848c1556e668170d9bf4cf656964c1c1180daf78a3f94c"
+    },
+    {
+      "bytes": 166760,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_mapped_snapshot_benchmark_20260908_v1/baseline_1/measurement.json",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "5115b3c990a11a5962d058846601e8dc32f5708360687ebd31c5d70b0b9c16c7"
+    },
+    {
+      "bytes": 2777130,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_mapped_snapshot_benchmark_20260908_v1/baseline_2/checkpoint.json",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "e71c47e7e0d51c5464848c1556e668170d9bf4cf656964c1c1180daf78a3f94c"
+    },
+    {
+      "bytes": 166752,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_mapped_snapshot_benchmark_20260908_v1/baseline_2/measurement.json",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "771669faa6d2266c66962d0d5b801852f4cbd46ec5c639f1abcde59d0627b217"
+    },
+    {
+      "bytes": 2777130,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_mapped_snapshot_benchmark_20260908_v1/baseline_3/checkpoint.json",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "e71c47e7e0d51c5464848c1556e668170d9bf4cf656964c1c1180daf78a3f94c"
+    },
+    {
+      "bytes": 166743,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_mapped_snapshot_benchmark_20260908_v1/baseline_3/measurement.json",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "1faa8266ee66179fa664cd088d626d2a0790ecab6923d19f34b3414cc2ec11dd"
+    },
+    {
+      "bytes": 2777130,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_mapped_snapshot_benchmark_20260908_v1/candidate_1/checkpoint.json",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "e71c47e7e0d51c5464848c1556e668170d9bf4cf656964c1c1180daf78a3f94c"
+    },
+    {
+      "bytes": 167016,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_mapped_snapshot_benchmark_20260908_v1/candidate_1/measurement.json",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "9d4c608666f15ce5fb1c21513de22398ca14548a3357fc20d2a4de88848947f8"
+    },
+    {
+      "bytes": 2777130,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_mapped_snapshot_benchmark_20260908_v1/candidate_2/checkpoint.json",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "e71c47e7e0d51c5464848c1556e668170d9bf4cf656964c1c1180daf78a3f94c"
+    },
+    {
+      "bytes": 167004,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_mapped_snapshot_benchmark_20260908_v1/candidate_2/measurement.json",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "2ada67ec2cb436a700837faa63d4026a915532d7672a82029f77fd43b8688733"
+    },
+    {
+      "bytes": 2777130,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_mapped_snapshot_benchmark_20260908_v1/candidate_3/checkpoint.json",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "e71c47e7e0d51c5464848c1556e668170d9bf4cf656964c1c1180daf78a3f94c"
+    },
+    {
+      "bytes": 167005,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_mapped_snapshot_benchmark_20260908_v1/candidate_3/measurement.json",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "3f67e14b84ff2d11bb29e8f8be4f7b25f0da898ba296d67c309994311c2a2517"
+    },
+    {
+      "bytes": 341,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_mapped_snapshot_benchmark_baseline_1_20260908_v1.log",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "3998cac5228a9f004a5f994b95ed5f809688de000bbdf175f817c8706ef95f64"
+    },
+    {
+      "bytes": 340,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_mapped_snapshot_benchmark_baseline_2_20260908_v1.log",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "eaddc3beb7c7b3dbd80d8573d393cd80be61b3803991583915c00a9e87e0d6ff"
+    },
+    {
+      "bytes": 339,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_mapped_snapshot_benchmark_baseline_3_20260908_v1.log",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "7841e71396b95fa8b2e499a2d1025607f94dbe2436b4aaa5a41366d08e392a9c"
+    },
+    {
+      "bytes": 339,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_mapped_snapshot_benchmark_candidate_1_20260908_v1.log",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "5a13694aa61ff19fa03d801524db31f8531ed6f165f04ed75be3383b90e7ffdd"
+    },
+    {
+      "bytes": 339,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_mapped_snapshot_benchmark_candidate_2_20260908_v1.log",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "a185c566149dbe89bb86f8b3a39b5ff77abfad8e0305e21ecd5a2ea41839d780"
+    },
+    {
+      "bytes": 338,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_mapped_snapshot_benchmark_candidate_3_20260908_v1.log",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "c863afa60d49d7594327cd4412830005a6246ebe8c9f4d92e63efa19637b02d2"
+    },
+    {
+      "bytes": 3176064,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_mapped_snapshot_current_baseline_20260908_v1/checkpoint.json",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "1f599c239c64bc139c7b819a097b04c81c9b8761ce0f544f6c7579c81fb564f4"
+    },
+    {
+      "bytes": 166743,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_mapped_snapshot_current_baseline_20260908_v1/measurement.json",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "94ee2b7e9adb34c61ddc800d119a36b38f131c7a8d1d2222efba8531423d3ea9"
+    },
+    {
+      "bytes": 335,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_mapped_snapshot_current_baseline_20260908_v1.log",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "b149507f77ccedce1d0819511122572166fa71b1ea1e53bd2562ce20b0e24575"
+    },
+    {
+      "bytes": 3176064,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_mapped_snapshot_current_candidate_20260908_v1/checkpoint.json",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "1f599c239c64bc139c7b819a097b04c81c9b8761ce0f544f6c7579c81fb564f4"
+    },
+    {
+      "bytes": 166996,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_mapped_snapshot_current_candidate_20260908_v1/measurement.json",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "1de5d688b82dcd88d845b1f6a9af74aa6b313dd3c318a95174ff46339093b1e6"
+    },
+    {
+      "bytes": 335,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_mapped_snapshot_current_candidate_20260908_v1.log",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "e365125659a5dbbae24749087f94b8313d3b0c9d36b388a790f6a05c98fafce9"
+    },
+    {
+      "bytes": 192,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_mapped_snapshot_current_freeze_20260908_v1.log",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "5f39355db941728d1dbb79b5977ad5e72c5c7889ec2963988fa4feb04dde77b3"
+    },
+    {
+      "bytes": 6091,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_mapped_snapshot_current_inputs_20260908_v1/manifest.json",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "bfe121d8a56e542e0e218e7ba456b935be9d5cd359911c20fdd6d315a2f2b6c5"
+    },
+    {
+      "bytes": 8408,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_mapped_snapshot_deployment_20260908_v1/RUNBOOK.md",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "fbeec5487b78a81263386726d428e2ee0617895c89c70816dd06f138a2b2ffcf"
+    },
+    {
+      "bytes": 4964,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_mapped_snapshot_deployment_20260908_v1/maintenance.json",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "4fd6d6fcaaa89aef410f1ebc8aad4d9a0bbc0cb2df36c907f3c0fa0590ba0e43"
+    },
+    {
+      "bytes": 3176,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_mapped_snapshot_deployment_20260908_v1/preparation_integrity.json",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "08e0893d5027ea850fb087b09b6b6dd228506c8ad20b111e69bb40db426dbdc3"
+    },
+    {
+      "bytes": 2777130,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_mapped_snapshot_forced_spill_20260908_v1/checkpoint.json",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "e71c47e7e0d51c5464848c1556e668170d9bf4cf656964c1c1180daf78a3f94c"
+    },
+    {
+      "bytes": 167009,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_mapped_snapshot_forced_spill_20260908_v1/measurement.json",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "53babe31456f0a0c6f0852df36dbfea4c2e71f548fe5daa87479ce1eafe588b9"
+    },
+    {
+      "bytes": 282,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_mapped_snapshot_forced_spill_20260908_v1/stress_contract.json",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "f1d51d3ec14fa908c73f61e7b03328574f7684fe6b79d2b265264608ac88c3d6"
+    },
+    {
+      "bytes": 3393,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_mapped_snapshot_integration_red_20260908_v1.log",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "05558d146298435819fd4af28f59becb2d18b5a66701bf44711cf0d306076718"
+    },
+    {
+      "bytes": 31818,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_mapped_snapshot_red_20260908_v1.log",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "d4dba8b1463171ea6e62b462c2b4e533bfd672bdb23ded878f3df0dfe317c175"
+    },
+    {
+      "bytes": 963,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_mapped_snapshot_regression_20260908_v1.log",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "1be3b6010a49c50a61c417e8bbb0963078e2f7253df8352fb650b864331e9a9b"
+    },
+    {
+      "bytes": 2777130,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_mapped_snapshot_soak_baseline_20260908_v1/checkpoint_0.json",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "e71c47e7e0d51c5464848c1556e668170d9bf4cf656964c1c1180daf78a3f94c"
+    },
+    {
+      "bytes": 2777130,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_mapped_snapshot_soak_baseline_20260908_v1/checkpoint_1.json",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "e71c47e7e0d51c5464848c1556e668170d9bf4cf656964c1c1180daf78a3f94c"
+    },
+    {
+      "bytes": 2777130,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_mapped_snapshot_soak_baseline_20260908_v1/checkpoint_2.json",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "e71c47e7e0d51c5464848c1556e668170d9bf4cf656964c1c1180daf78a3f94c"
+    },
+    {
+      "bytes": 2777130,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_mapped_snapshot_soak_baseline_20260908_v1/checkpoint_3.json",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "e71c47e7e0d51c5464848c1556e668170d9bf4cf656964c1c1180daf78a3f94c"
+    },
+    {
+      "bytes": 2777130,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_mapped_snapshot_soak_baseline_20260908_v1/checkpoint_4.json",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "e71c47e7e0d51c5464848c1556e668170d9bf4cf656964c1c1180daf78a3f94c"
+    },
+    {
+      "bytes": 2777130,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_mapped_snapshot_soak_baseline_20260908_v1/checkpoint_5.json",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "e71c47e7e0d51c5464848c1556e668170d9bf4cf656964c1c1180daf78a3f94c"
+    },
+    {
+      "bytes": 2777130,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_mapped_snapshot_soak_baseline_20260908_v1/checkpoint_6.json",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "e71c47e7e0d51c5464848c1556e668170d9bf4cf656964c1c1180daf78a3f94c"
+    },
+    {
+      "bytes": 2777130,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_mapped_snapshot_soak_baseline_20260908_v1/checkpoint_7.json",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "e71c47e7e0d51c5464848c1556e668170d9bf4cf656964c1c1180daf78a3f94c"
+    },
+    {
+      "bytes": 170873,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_mapped_snapshot_soak_baseline_20260908_v1/report.json",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "85105536c1eba6c8a3de416320e315bebcbb349a64745c77dd237c0e2519b930"
+    },
+    {
+      "bytes": 3546,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_mapped_snapshot_soak_baseline_20260908_v1.log",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "effc8358157f46f30cedfc3ca8d8d1b80fdaf0e4588937fbc966e687065abc2e"
+    },
+    {
+      "bytes": 2777130,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_mapped_snapshot_soak_candidate_20260908_v1/checkpoint_0.json",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "e71c47e7e0d51c5464848c1556e668170d9bf4cf656964c1c1180daf78a3f94c"
+    },
+    {
+      "bytes": 2777130,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_mapped_snapshot_soak_candidate_20260908_v1/checkpoint_1.json",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "e71c47e7e0d51c5464848c1556e668170d9bf4cf656964c1c1180daf78a3f94c"
+    },
+    {
+      "bytes": 2777130,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_mapped_snapshot_soak_candidate_20260908_v1/checkpoint_2.json",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "e71c47e7e0d51c5464848c1556e668170d9bf4cf656964c1c1180daf78a3f94c"
+    },
+    {
+      "bytes": 2777130,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_mapped_snapshot_soak_candidate_20260908_v1/checkpoint_3.json",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "e71c47e7e0d51c5464848c1556e668170d9bf4cf656964c1c1180daf78a3f94c"
+    },
+    {
+      "bytes": 2777130,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_mapped_snapshot_soak_candidate_20260908_v1/checkpoint_4.json",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "e71c47e7e0d51c5464848c1556e668170d9bf4cf656964c1c1180daf78a3f94c"
+    },
+    {
+      "bytes": 2777130,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_mapped_snapshot_soak_candidate_20260908_v1/checkpoint_5.json",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "e71c47e7e0d51c5464848c1556e668170d9bf4cf656964c1c1180daf78a3f94c"
+    },
+    {
+      "bytes": 2777130,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_mapped_snapshot_soak_candidate_20260908_v1/checkpoint_6.json",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "e71c47e7e0d51c5464848c1556e668170d9bf4cf656964c1c1180daf78a3f94c"
+    },
+    {
+      "bytes": 2777130,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_mapped_snapshot_soak_candidate_20260908_v1/checkpoint_7.json",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "e71c47e7e0d51c5464848c1556e668170d9bf4cf656964c1c1180daf78a3f94c"
+    },
+    {
+      "bytes": 171090,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_mapped_snapshot_soak_candidate_20260908_v1/report.json",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "bc08cabb639ad056ae1ce1ec47b91c5d4dc78f159fb98ab56a37fe5ce2e78bc5"
+    },
+    {
+      "bytes": 3525,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_mapped_snapshot_soak_candidate_20260908_v1.log",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "63702082d9a0f62b5c7256604e7c87d9ee0e3b4794196943a999ec798a8721bd"
+    },
+    {
+      "bytes": 12185600,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_mapped_snapshot_source_7a30d04.tar",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "3095ed5e92ad17600e00fed1ba36458835061a16d6e0c68b92ac266a24757008"
+    },
+    {
+      "bytes": 727,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_mapped_snapshot_unit_20260908_v1.log",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "a26a67a9a1da0884185e29051221b5d83896026fc0c149b3f18f356108eb1cd4"
+    },
+    {
+      "bytes": 12134400,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_memory_snapshot_baseline_source_0d83e1a.tar",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "9eb8b2294139d582098ae9a5bf124118f1f399b44aaf7fb6c8dc9dd926fc3c47"
+    },
+    {
+      "bytes": 6091,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_memory_snapshot_inputs_20260908_v1/manifest.json",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "1b50c9de28a0d7d497efc62a70dd969be0b0d73909ca2a1d9c6542924ddc512d"
+    },
+    {
+      "bytes": 8408,
+      "path": "/Users/gestas/Prototypes/hypervector-v89-storage-spcx-20260908/docs/reviews/2026-09-08-v89-mapped-snapshot-proposal.md",
+      "role": "frozen_observation_validation_or_prepared_proposal",
+      "sha256": "fbeec5487b78a81263386726d428e2ee0617895c89c70816dd06f138a2b2ffcf"
+    }
+  ],
+  "execution_authority": "none",
+  "falsifier": "A complete output mismatch, leaked mapping/spill file, or reproducible candidate-specific sustained memory growth rejects this acceptance; live checkpoint or TUI discrepancies require diagnosis before deployment acceptance.",
+  "hypothesis": "Mapped snapshot storage preserves the complete reporting output while reducing snapshot write I/O without the previous heap-buffer memory growth.",
+  "hypothesis_id": "v89-memory-snapshot-20260908",
+  "limitations": [
+    "Fixed-prefix memory stability does not bound decoded history growth as the live run accumulates rows.",
+    "Physical disk writes are not net filesystem allocation.",
+    "An unexplained 18.1-second baseline timing outlier is retained; no latency advantage is claimed.",
+    "Actual long-lived reporter and monitor acceptance remains pending deployment.",
+    "Confidence is high for measured parity and write reduction, moderate for long-lived behavior until deployment observation.",
+    "This reporting change does not increase trade frequency or establish a profitable trading edge."
+  ],
+  "metrics": {
+    "candidate_source_files_verified": 1338,
+    "checkpoint_count": 25,
+    "forced_spill": {
+      "execution_authority": "none",
+      "full_checkpoint_equal_to_baseline": true,
+      "latency_not_comparable_due_to_preimport": true,
+      "override_scope": "isolated test process only",
+      "runtime_memory_limit_bytes": 33554432,
+      "spill_files_closed": true,
+      "spill_files_created": 1
+    },
+    "fresh_fixture_closed_trades": 1,
+    "fresh_fixture_fills": 4,
+    "fresh_fixture_generated_at_utc": "2026-09-08T06:08:45.848778+00:00",
+    "median_disk_write_reduction_pct": 98.15413891531874,
+    "regression_tests_passed": 148,
+    "repeated_process_measurements": {
+      "baseline": {
+        "disk_write_bytes": 1189576704,
+        "first_after_resident_bytes": 579043328,
+        "first_peak_rss_bytes": 1116930048,
+        "last_after_resident_bytes": 633290752,
+        "last_before_resident_bytes": 501645312,
+        "last_peak_rss_bytes": 1131364352,
+        "publications": 8
+      },
+      "candidate": {
+        "disk_write_bytes": 22249472,
+        "first_after_resident_bytes": 574619648,
+        "first_peak_rss_bytes": 1116520448,
+        "last_after_resident_bytes": 634241024,
+        "last_before_resident_bytes": 511885312,
+        "last_peak_rss_bytes": 1127104512,
+        "publications": 8
+      }
+    },
+    "single_process_measurements": {
+      "baseline": {
+        "disk_write_bytes": {
+          "max": 152768512,
+          "median": 150671360,
+          "min": 120225792
+        },
+        "elapsed_seconds_including_imports": {
+          "max": 18.105969791999087,
+          "median": 4.63170224998612,
+          "min": 4.582184457918629
+        },
+        "maximum_rss_bytes": {
+          "max": 1127383040,
+          "median": 1119453184,
+          "min": 1112293376
+        }
+      },
+      "candidate": {
+        "disk_write_bytes": {
+          "max": 2781184,
+          "median": 2781184,
+          "min": 2781184
+        },
+        "elapsed_seconds_including_imports": {
+          "max": 4.720503167016432,
+          "median": 4.672385958023369,
+          "min": 4.58737524994649
+        },
+        "maximum_rss_bytes": {
+          "max": 1118781440,
+          "median": 1116667904,
+          "min": 1116389376
+        }
+      }
+    },
+    "snapshot_modules_statement_and_branch_coverage_pct": 100,
+    "source_commit": "7a30d04"
+  },
+  "revision_number": 3,
+  "runtime_strategy_changed": false,
+  "schema_version": 1,
+  "status": "observe",
+  "strategy_id": "research_reporting_storage",
+  "supersedes_revision_id": "6dbddce685d331c3460b1c6375752b1f3e7b88fae6e376d1ffd1af2fc522a81b",
+  "symbol": "PORTFOLIO"
+}
