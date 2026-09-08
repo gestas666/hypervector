@@ -111,16 +111,22 @@ high confidence in arithmetic and low confidence in future edge or actual
 changed-size execution. Ninety-two offline tests, independent Decimal/funding/
 path checks and source-archive replay pass. Fit no intermediate weights.
 
-Next: [bounded quote and cost feasibility](../plans/2026-09-08-v89-equal-cap-quote-feasibility.md),
-`v89_equal_cap_quote_feasibility_20260908_v1`, preregistered in `e762d26`.
-Compare original and equal-cap quantities across exact configured sides using
-unsigned current mainnet metadata and 36 rounds of seven-asset L2 snapshots.
-Keep failures, rounding differences, insufficient depth and fee stresses explicit.
-No strategy replay or performance outcome is acquired by that capacity probe.
-Prepare a concrete inactive allocation/prospective proposal only after the
-qualification; no live change or early sealed-outcome access is authorized.
+The [bounded quote and cost qualification](../reviews/2026-09-08-v89-equal-cap-quote-feasibility.md)
+is complete, source `c28c241`. All 252 snapshots and 720 direction/cap probes
+are usable/complete in the fixed 18:03:20–18:09:13 UTC sample. Equal-cap minimum
+visible capacity is 20.95 times quantity (HYPE); all current leverage and size
+metadata qualify. Current unaligned taker assumptions are 4.32 bps/side core
+and 0.864 bps/side XYZ, with a separate 8.64 bps/side no-growth XYZ stress.
+Fifty-seven offline tests, all 27,216 independent Decimal fields and byte-exact
+archive replay pass. Confidence is high in this narrow sample, low in durable
+liquidity or future edge. Current capacity does not revise the historical
+drawdown/exposure trade-off or prove changed-size historical fills.
 
-At 17:48:33 UTC the tracked backend, supervisor, reporter and former monitor
+Next: prepare the exact inactive equal-cap configuration and a separately frozen
+prospective comparison contract, preserving original controls and unchanged
+signal/stop behavior. No live change or early sealed-outcome access is authorized.
+
+At 18:14:25 UTC the tracked backend, supervisor, reporter and former monitor
 remain absent, and the checkpoint remains from 14:04:48. The live profile bytes
 are unchanged. This process/configuration observation does not refresh the
 14:11 native account snapshot or identify the shutdown requester.
