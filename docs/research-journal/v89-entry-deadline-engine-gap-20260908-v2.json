@@ -1,0 +1,594 @@
+{
+  "automatic_promotion": false,
+  "confidence": "high",
+  "created_at_utc": "2026-09-08T08:43:27.594727+00:00",
+  "decision": "Accept source candidate 3d20486 for review: 454 focused tests pass in the worktree and frozen archive, all 229 changed executable lines and 72 changed branches are covered, 16 final-guard mutation controls fail as expected, and four cross-version flat recovery cases pass with the compatibility reader retained. Require separate approval and user-run live deployment; no runtime settings or order processes changed.",
+  "evidence": [
+    {
+      "bytes": 1029,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/acceptance.json",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "3fbe96114be339a64f2ae6a44f8eedb22c516743fb6512779c341f1b37eebac2"
+    },
+    {
+      "bytes": 580,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/archive_replay.log",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "84c7368781e7b36b72e2b0387e850d2566e6c91c8050214615d0138f4b7a933e"
+    },
+    {
+      "bytes": 66084,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/archive_replay_junit.xml",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "39d7b8488c80c2f7fb1f4228f6a6d98387002cecd80f8a2b4c57fdc20717b60e"
+    },
+    {
+      "bytes": 4354,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/baseline_red.log",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "6e4e7d5a5121f3d1468beeca0be367fe8699c747a2fcf86bdfc6379cb17c1e54"
+    },
+    {
+      "bytes": 55827,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/candidate.patch",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "9ae40251e12bc1b6ff36ecf9099b518d6f6c9fee6ba8c92e37bf301a8692e07b"
+    },
+    {
+      "bytes": 14694,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/candidate_files/src/hypervector/live/bidirectional_intents.py",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "47de902119a5f72c1afc7a92fa57c9e856f59f801e0b42e07142d4e3c74a3278"
+    },
+    {
+      "bytes": 6157,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/candidate_files/src/hypervector/live/cohort_entry_submission.py",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "cd6b464e9d6f48fd12923c8cb5558f15a6b3c99f55367bc5f16101b44a5f730a"
+    },
+    {
+      "bytes": 4206,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/candidate_files/src/hypervector/live/cohort_routing_execution.py",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "10c24c2cf67b020b73300b5090eb18c91bcd185ca671ab6ffe902d83f09bf9c9"
+    },
+    {
+      "bytes": 3663,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/candidate_files/src/hypervector/live/entry_submission_deadline.py",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "04ed3818b53c47fc54f5d2dbe0291839c78fbaf22eee24c8924fc90a5a436437"
+    },
+    {
+      "bytes": 14210,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/candidate_files/src/hypervector/live/hyperliquid_btc_adapter.py",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "756adb68afa58927faa6333b2c702da992a918f42842bd14370e2e13f2a018af"
+    },
+    {
+      "bytes": 11183,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/candidate_files/src/hypervector/live/hyperliquid_protocol.py",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "4dbc7f6d799c2e6ea971f29ba810af08a53be66eee8c1577f4e717e56fdc41c5"
+    },
+    {
+      "bytes": 7442,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/candidate_files/src/hypervector/live/hyperliquid_sol_adapter.py",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "ddd8cb3ce2c685cc0bb457a5166a5868e5733eb86b0ecd89d1078d7518737911"
+    },
+    {
+      "bytes": 4849,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/candidate_files/src/hypervector/live/multi_asset_cohort_payloads.py",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "324951e68fd077295cbe159c2054a9ff3b9af8ac3efc04e99737cc3382ec6f67"
+    },
+    {
+      "bytes": 18818,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/candidate_files/src/hypervector/live/multi_asset_cohort_telemetry.py",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "74899600f8dd325fdd072eb27e40d169f158c5cc243f403e9458e4420d28be45"
+    },
+    {
+      "bytes": 4813,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/candidate_files/src/hypervector/live/multi_asset_directional_adapter.py",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "1aec68abbfa16fa50c6de9dcc4a60278cd11c363fa12054b6cd1417c41eb3521"
+    },
+    {
+      "bytes": 3665,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/candidate_files/src/hypervector/live/multi_asset_live_protocols.py",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "17318fe85cb0790affd57005355213ec85528db84ef27cf3e17d93d39c6deb0d"
+    },
+    {
+      "bytes": 18934,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/candidate_files/src/hypervector/live/multi_asset_live_runner.py",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "d547f43cc21405d1ca2d49febf8181583f59b17c57039978aa33350ab6879f34"
+    },
+    {
+      "bytes": 9835,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/candidate_files/src/hypervector/live/multi_asset_live_runner_support.py",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "57bf4701651d2e0c4056be3ad4b7e9c29fa51b06e531d9071f9c1ad82c1b7b8e"
+    },
+    {
+      "bytes": 9994,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/candidate_files/src/hypervector/live/sol_order_restart.py",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "459a14de0fd8fe68c71809d917bd58426f6d392a710bb24c56571ff887dae946"
+    },
+    {
+      "bytes": 13191,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/candidate_files/src/hypervector/live/sol_order_submission.py",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "c4c2eb74b51be770645825fa50a06a34a3bd43ba312bb3f9210ee85d0984c1e6"
+    },
+    {
+      "bytes": 18779,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/candidate_files/src/hypervector/live/sol_range_onset_engine.py",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "b312d72fdaa57dac1f02c62307b0606c109c0a3f8a5c8a5fb8114395b74dddf1"
+    },
+    {
+      "bytes": 5632,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/candidate_files/src/hypervector/live/sol_range_onset_engine_events.py",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "3ddb70d50868eae25ecc05edce88e7f06110aa736889202d052546df3ba00a92"
+    },
+    {
+      "bytes": 14570,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/candidate_files/src/hypervector/live/sol_range_onset_ledger.py",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "3ef67e0550750314dc7f8a6350ed8cbf471d703bcc8c013fddf6b0e5ae7627a3"
+    },
+    {
+      "bytes": 17084,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/candidate_files/src/hypervector/research/cohort_entry_age_diagnostics.py",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "1f0babe95b89d963116b61ca1cd9214463596fa3febc016776a7668645a0fce0"
+    },
+    {
+      "bytes": 4877190,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/candidate_source.tar.gz",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "a2a8e3178cfd736b3a83617f433e4d7b74b79a382ac2c1da6586bd9b4b8a45f5"
+    },
+    {
+      "bytes": 4555,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/changed_coverage.json",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "3c73ce2d953a195c7eb8c8d025723205c5a5f656014b86b6074bbd6063bdae42"
+    },
+    {
+      "bytes": 1120,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/coverage.rc",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "dd6721979a97a9c876cd8f5564a4a9a1d4fe8f198003e83ddebf5aa611d54bc0"
+    },
+    {
+      "bytes": 294773,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/coverage_final.json",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "f2bb38905186ab7c70844e981b7739674a0a402b74defe2bca0145ad92155dc5"
+    },
+    {
+      "bytes": 12852422,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/coverage_initial.json",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "835db77400ade9f595baec7854133bd2acad8d086f218fc6c9695cedce22621c"
+    },
+    {
+      "bytes": 264,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/dependency_versions.json",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "cc7d097e988e2f24f5c45d452f815b0886575b05c6f92fc6a88af7537b18d3cd"
+    },
+    {
+      "bytes": 1331,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/installed_sdk_entry_methods.py.txt",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "a41d7aed24bdde6e3086365651cbd40605e7ec7c5015975128d31134bc574ddf"
+    },
+    {
+      "bytes": 1723,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/missing_provider_archive_replay.log",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "6758aa82b677e0ab8ed44c676120f9ca804a505b5670df44898f8ae3cf64769e"
+    },
+    {
+      "bytes": 67016,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/missing_provider_archive_replay_junit.xml",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "5c482ca3422035e7d402d95d4eef7709c25a27cfb1fa9a24b84af551c8ce1f0c"
+    },
+    {
+      "bytes": 7114,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/mutation.log",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "dc02d9143390ee5dc62cadf367a717b89fa27b0fb72db6e5f795e90a7e60e239"
+    },
+    {
+      "bytes": 352,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/mutation_command.json",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "65dfe0eab2bb31d595ec15c39fa3663539c515130baf7ef8b7e3bcfb67047f93"
+    },
+    {
+      "bytes": 7598,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/mutation_junit.xml",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "6835f000c766007963eb76d225b5e210f5a64fdee7b7d47e62a0c1adbadda556"
+    },
+    {
+      "bytes": 14608,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/prior_files/src/hypervector/live/bidirectional_intents.py",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "64c2c90225d2cdbc45d5277050ab190da4d0b323903f348fa55250bec84babad"
+    },
+    {
+      "bytes": 5283,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/prior_files/src/hypervector/live/cohort_entry_submission.py",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "2f860213b2d22fc70564c50be3eb5aad814bc4d51d629ac96584bf6f218aa9c6"
+    },
+    {
+      "bytes": 3948,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/prior_files/src/hypervector/live/cohort_routing_execution.py",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "4c2f92d61c6f8fa524d1050622287c972fee18d6a0e665bdf1dd9974c887231d"
+    },
+    {
+      "bytes": 13980,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/prior_files/src/hypervector/live/hyperliquid_btc_adapter.py",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "a425ac1e0de053034c0b3f51be32a3cf71770306ce00fcfd3f805676920a6286"
+    },
+    {
+      "bytes": 11040,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/prior_files/src/hypervector/live/hyperliquid_protocol.py",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "7827d1ed1bdefc955e0ff1d6ad7a97dd28142efacd277dd8c4777b67fa83054f"
+    },
+    {
+      "bytes": 7212,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/prior_files/src/hypervector/live/hyperliquid_sol_adapter.py",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "dfa2af0f8199572f3a1d690fc1644c0ed67af88f1a6d410d9f5839381f7fd849"
+    },
+    {
+      "bytes": 3355,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/prior_files/src/hypervector/live/multi_asset_cohort_payloads.py",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "4d52bc5bad20ff65d5e5adf31492e344be04109dd5c82a11b65f5db4bf1d4c9c"
+    },
+    {
+      "bytes": 19794,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/prior_files/src/hypervector/live/multi_asset_cohort_telemetry.py",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "1df4d2c62e0623e09cb6f45698728fd7af9ea920019b37a7d1f7e058ac91174d"
+    },
+    {
+      "bytes": 4551,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/prior_files/src/hypervector/live/multi_asset_directional_adapter.py",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "e70a2fd482bbd85408d0ff0276058032ccfc2f8b2e3f210d0fb4b1aa9892e480"
+    },
+    {
+      "bytes": 3523,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/prior_files/src/hypervector/live/multi_asset_live_protocols.py",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "ec88c764c833b75b5fe67ba10c89561f611cb3805bde501d82869cecdff5a741"
+    },
+    {
+      "bytes": 19209,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/prior_files/src/hypervector/live/multi_asset_live_runner.py",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "c86cc2a8e6904aed9604f5618857d2da08007f8f73590240d36cb5faab1e5b13"
+    },
+    {
+      "bytes": 9320,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/prior_files/src/hypervector/live/multi_asset_live_runner_support.py",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "07e8be405151b6cbf88c8a505ed724136ad42b2cf9757e8c3489d163efbd741b"
+    },
+    {
+      "bytes": 6673,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/prior_files/src/hypervector/live/sol_order_restart.py",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "d46279a85a9fe17e4e8be1c4a5a485d49baf204e49783fa6007a0e3b486e92e9"
+    },
+    {
+      "bytes": 11764,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/prior_files/src/hypervector/live/sol_order_submission.py",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "1e76914849ce5c4113d06cf402c0b2dc73ff50efa235305792d229a37287604f"
+    },
+    {
+      "bytes": 18198,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/prior_files/src/hypervector/live/sol_range_onset_engine.py",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "344e34badac22ea25f65144e074808d31614f8dc85a2126370f3c3f95d87079e"
+    },
+    {
+      "bytes": 5522,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/prior_files/src/hypervector/live/sol_range_onset_engine_events.py",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "9b31fd1cef1bdab6cc0172fb88654cf7a49813be118b5344ae88c1088e71c620"
+    },
+    {
+      "bytes": 14539,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/prior_files/src/hypervector/live/sol_range_onset_ledger.py",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "2bdafcce57a8231ed58c0805a0b049874fce78cebdf9a8aadf80c327ace44b6e"
+    },
+    {
+      "bytes": 15036,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/prior_files/src/hypervector/research/cohort_entry_age_diagnostics.py",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "c5a5b4bc31cdd3cae87e54a142a6af58113e1fe07969aa745c485a8f228f5c23"
+    },
+    {
+      "bytes": 8413,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/proposal.md",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "e2f8254ba7987995dab6a87273e4c4bd2dfc0f54707b9ab7cea7620c0da6fccc"
+    },
+    {
+      "bytes": 957990,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/provider_source.tar.gz",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "8664e75570773439179e88de782120a288992bde047efa1779c324c5cd94bfa0"
+    },
+    {
+      "bytes": 107369,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/provider_source_manifest.json",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "aa39ab2237475d6cd25f8095ea3b7e378809b50c572830ad834bcde34c00c82c"
+    },
+    {
+      "bytes": 4090,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/regression.log",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "22bc0c58d42e58da32de747fddae233da4b1cc3d607f76480413b5cc350c5a3c"
+    },
+    {
+      "bytes": 2692,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/regression_command.json",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "52a902944a51585d22482be0e29d0552c0756d03667be2a25fe6653036222fd3"
+    },
+    {
+      "bytes": 66085,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/regression_junit.xml",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "96c4d7e0b1ec79aa2019ba765319a4e8edb227ac2b27fb27c6334642ed54bc76"
+    },
+    {
+      "bytes": 294192,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/regression_round1/coverage_final.json",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "e0e71d7f5df51f9a5339089c1220fbad78cff80d59657301a1d296285aa84098"
+    },
+    {
+      "bytes": 5425,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/regression_round1/regression.log",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "57268f4dcb306df20921ebb61e492c0fde271b5d2695f1b359c15384508f0302"
+    },
+    {
+      "bytes": 2599,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/regression_round1/regression_command.json",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "6da8100fcfe10c4c9100cd415168052b7148f54f52d697e59222348cfdd59832"
+    },
+    {
+      "bytes": 64370,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/regression_round1/regression_junit.xml",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "a81b07a28f9609b59c2714948c69ad479ff05ff6dfc7241cb1dda6b3d88f73ff"
+    },
+    {
+      "bytes": 1965,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/regression_round1/regression_selection.json",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "bf3273388785402c21118cce66d232bcaa533e84ad1c83bfc749740a0f4a5a86"
+    },
+    {
+      "bytes": 4555,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/regression_round2/changed_coverage.json",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "d5af06783ff22aa38143a94fede909b4dd30f254d69efe3dd245ddf43044a8a1"
+    },
+    {
+      "bytes": 294207,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/regression_round2/coverage_final.json",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "2b9c46a6c24b29c82c31c18c9201fcb72a21815c31f62b6974d46b4fd566d8b3"
+    },
+    {
+      "bytes": 4090,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/regression_round2/regression.log",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "d2f0ca355e0d59e57ebfa309044f18acb50b3b2c4f07153920f2fcfb1a92a2da"
+    },
+    {
+      "bytes": 66085,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/regression_round2/regression_junit.xml",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "43437df2fe98b74d6eceede89c18decbaa3fb2d41b3b51c88c9dd94bb0e651e0"
+    },
+    {
+      "bytes": 2058,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/regression_selection.json",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "b37f736e72f48b725f3e2b0a662d7f39db5a4c18a8a1285d4dc1ea2a22bf9146"
+    },
+    {
+      "bytes": 12134400,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/rollback_base_source.tar",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "de06005a9c419573f1b4bb2a4e3fcd1934d98da4e8692cca5af2bfc252af6eca"
+    },
+    {
+      "bytes": 13446,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/rollback_ledgers/adapter_dispatch_before_flat.jsonl",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "c65fcfd5d6e8cc118f798d6a39ae448dca94e6211a4e5cc8c5f3927279107ea8"
+    },
+    {
+      "bytes": 14131,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/rollback_ledgers/adapter_dispatch_complete.jsonl",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "2b31ca1301eea86c064ae40d7eec99ca9ddb55e4ab53342e794da6df3f7ade42"
+    },
+    {
+      "bytes": 13438,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/rollback_ledgers/sdk_dispatch_before_flat.jsonl",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "4556c51d02fcdd97ef4bf41a5dea96cd45adcfa61a5cbc0a30fe6ca3d18358b2"
+    },
+    {
+      "bytes": 14123,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/rollback_ledgers/sdk_dispatch_complete.jsonl",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "bbe2f662a86376ef81c842bdc81a11d60cd7aee50303ce45fbe9695917c5a304"
+    },
+    {
+      "bytes": 327,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/rollback_legacy.log",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "83ca7dd5319f88a4d21471dadf3b6b0daf3514552b4ee3f6263e0658a25dd947"
+    },
+    {
+      "bytes": 385,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/rollback_legacy_control.json",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "38f3af94eaccc058bb2f57c4bb0cc98ac8e321e7d1beccf9a38bc9efce9709ca"
+    },
+    {
+      "bytes": 604,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/rollback_manifest.json",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "2d40c3073a34b15454cb8f9fcb63ce9142abbc49b05f773e43248a5cc1ad8743"
+    },
+    {
+      "bytes": 604,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/rollback_manifest_before_validation_refactor.json",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "a5b8e91e8996d84a3854b43accf148b53497734d7cf67bd63bee471f27d83b52"
+    },
+    {
+      "bytes": 4057,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/rollback_probe.py",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "3bf82d8e3d7938b9de6fcc147028a692e537b740553a3d672010bedbb49696b4"
+    },
+    {
+      "bytes": 531,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/rollback_recover.log",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "edffb6ea45efb281219ef9bbf4089925cba302d1634912a01649ec3817163a5c"
+    },
+    {
+      "bytes": 531,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/rollback_recover_before_validation_refactor.log",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "edffb6ea45efb281219ef9bbf4089925cba302d1634912a01649ec3817163a5c"
+    },
+    {
+      "bytes": 701,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/rollback_recovery.json",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "589a3a88e48fe3760b5e6179b39e99e5fde3865e88eeb39b5a7fa9a1f6c11c06"
+    },
+    {
+      "bytes": 701,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/rollback_recovery_before_validation_refactor.json",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "589a3a88e48fe3760b5e6179b39e99e5fde3865e88eeb39b5a7fa9a1f6c11c06"
+    },
+    {
+      "bytes": 997,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/runtime_review_boundary.json",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "67a6692eb0fa415ca279e777558bfd174b11796d6dabc3f6439731eab139d222"
+    },
+    {
+      "bytes": 1005,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/sdk_guard_mutation.py",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "0dcdffbd721d1e591f220607d5b694ac397292d1b297203ecad5fbedf384baf4"
+    },
+    {
+      "bytes": 617015,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/source_manifest.json",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "26d953da3d3b1873d9912865911c6e157ab85282252c4f097e1453fcc9e5e3a9"
+    },
+    {
+      "bytes": 2936,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_candidate_20260908_v1/static_validation.json",
+      "role": "entry_deadline_candidate_source_test_or_recovery_evidence",
+      "sha256": "074d3cdd569cac3763ddb910355113180a6f18b972d977b36077b51f378ed7d8"
+    }
+  ],
+  "execution_authority": "none",
+  "falsifier": "A changed evidence hash, failed frozen replay, expired SDK-boundary check, unresolved or resurrected unsent intent, duplicate recovery dispatch, altered exit/protection behavior, or phase label contradicting its observed timestamp invalidates this acceptance. No financial benefit is established.",
+  "hypothesis": "Explicit per-entry checks after blocking reconciliation, durable intent persistence and adapter preparation can restore the configured local freshness contract while preserving recovery and accurate telemetry.",
+  "hypothesis_id": "v89-entry-deadline-engine-gap-20260908",
+  "limitations": [
+    "SDK signing, process scheduling, HTTP transmission and venue receipt occur after the local check; this is not a hard venue-arrival deadline.",
+    "The four audited live entries had acknowledgements within the configured limit; no live breach frequency or attributed loss is established.",
+    "All injected execution and rollback operations used fake venues. The four rollback cases establish flat recovery, not open-position rollback.",
+    "Rolling back after new markers requires retaining sol_order_restart.py; preserve post-deployment history.",
+    "A failed non-submission evidence write remains a technical failure with an unresolved intent.",
+    "Aggregate touched-module coverage includes uncovered legacy branches; every changed executable line and branch was covered.",
+    "Frozen portable tests require the separately pinned adjacent backtest-lab Python source package.",
+    "The mapped reporting proposal remains separate; no live promotion or prospective outcome inspection is authorized by this journal."
+  ],
+  "metrics": {
+    "active_source_matches_prior": true,
+    "automatic_promotion": false,
+    "base_commit": "3b31a002193b346929c9930538f4c3e8f49a414a",
+    "candidate_commit": "3d204863af40536187df96f161f4874d9fa42166",
+    "changed_branches": 72,
+    "changed_coverage_complete": true,
+    "changed_executable_lines": 229,
+    "changed_source_files": 19,
+    "execution_authority": "none",
+    "financial_performance_claim": null,
+    "frozen_archive_replay": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 454
+    },
+    "live_acceptance": "not_performed",
+    "mutation_expected_failures": {
+      "errors": 0,
+      "failures": 16,
+      "skipped": 0,
+      "tests": 16
+    },
+    "regression": {
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0,
+      "tests": 454
+    },
+    "rollback_cases": 4,
+    "rollback_compatibility_file": "src/hypervector/live/sol_order_restart.py",
+    "runtime_strategy_changed": false,
+    "schema_version": 1,
+    "static_validation": "passed_with_documented_preexisting_size_exceptions",
+    "status": "validated_offline_candidate"
+  },
+  "revision_number": 2,
+  "runtime_strategy_changed": false,
+  "schema_version": 1,
+  "status": "candidate",
+  "strategy_id": "cohort_execution",
+  "supersedes_revision_id": "ec8e6c261e8c7cfd037fb758597292e17f02ddde0f9353bcbce65426567ae0dc",
+  "symbol": "MULTI"
+}
