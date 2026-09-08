@@ -98,14 +98,18 @@ input mismatch, missing causal publication, incorrect window boundary or changed
 source identity would update this diagnosis. Numerical parity does not validate
 profitability, fills at larger size or a forecast of future trade frequency.
 
-The highest-value next investigation is
-`v89_seven_asset_common_window_joint_marking_v1`: compare the seven current
-contracts with the retained four-core portfolio over their common available
-historical interval, using existing approved research inputs, shared capital,
-actual configured caps, marked positions, fees, funding and declared slippage
-cases. First verify compatible source identities and time coverage, then freeze
-the common interval and comparison before running it. The
-[expansion review](2026-09-07-frequency-and-noncrypto-expansion.md) explicitly
-identified that pooling the three additions was not a shared-account simulation.
-This addresses combined drawdown, exposure and margin use without opening sealed
-prospective outcomes or searching new strategy parameters.
+Correction, September 8: the proposed follow-up
+`v89_seven_asset_common_window_joint_marking_v1` is withdrawn because the
+[seven-asset shared study](2026-09-07-v89-seven-asset-shared-marking.md) and
+[recorded-source sensitivity](2026-09-07-v89-recorded-native-source-sensitivity.md)
+already existed in another worktree and DuckDB. The earlier expansion review
+was no longer the latest evidence. Revision 2 of this hypothesis records the
+correction; the original revision and its frozen review remain unchanged.
+
+The distinct [chronological attribution](2026-09-08-v89-shared-chronological-stability.md)
+is now complete. It identifies later-period modeled losses and makes historical
+executable-price reconstruction of the known August 26 HYPE source-sensitive
+entry the next investigation. See the
+[current research index](../research-journal/v89-current-index.md) before
+selecting another experiment. This correction changes no input-parity finding
+or live behavior.

@@ -1,5 +1,14 @@
 # HANDOFF — hypervector
 
+**Current navigation, September 8, 2026:** read the
+[V89 research index](docs/research-journal/v89-current-index.md) first. It links
+the completed shared studies, latest chronological attribution, corrected
+follow-up, pending proposals and sealed prospective boundary. Read the current
+runtime checkpoint for live state; the historical notes below are not current
+execution or research status.
+
+---
+
 **Saved:** 2026-09-04 16:12 EDT — V86 BTC sweep execution-contract evidence corrected.
 **Project:** `/Users/gestas/Prototypes/hypervector`
 **User:** Albert
