@@ -21,9 +21,11 @@ shutdown requester remains unidentified. No stop file is currently present.
 The generic stop reason also covers termination and terminal-hangup signals.
 Evidence: `data/logs/research/bidirectional_cohort/v89_stopped_status_20260908T141101Z/`.
 The [stale-display correction](../reviews/2026-09-08-v89-stale-checkpoint-presentation.md)
-is now a verified candidate, source `d10b05b`: 521 tests and 27 final release
-renders pass. Publication freshness is distinct from backend health. Visible
-activation requires approval; shutdown attribution remains unresolved after the
+was [approved and installed](../reviews/2026-09-08-v89-stale-tui-deployment.md),
+source `d10b05b`, main source commit `02dd3b9`. The new detached monitor is PID
+88441 in Terminal window 5958 at 160x50. Visible status qualifies the historical
+checkpoint; all seven assets and nine-view navigation are present. The backend
+and reporter remain stopped. Shutdown attribution remains unresolved after the
 bounded log search. The two-stop economic audit below is the next research task.
 No process was started, stopped, restarted or armed by this diagnostic.
 
@@ -111,7 +113,6 @@ hashes; do not append the same revisions under new identities just to copy docs.
 |---|---|
 | Entry dispatch deadline, source `3d204863af40536187df96f161f4874d9fa42166` | [Review](../reviews/2026-09-08-v89-entry-deadline-dispatch-proposal.md); 454 focused tests. Deployment approval is pending; do not re-ask without a relevant update. |
 | Bounded memory snapshot reader, source `7a30d04` | Journal `v89-memory-snapshot-20260908`, revision 3; reporting-only deployment proposal remains pending. Keep the rejected earlier candidate distinct. |
-| Stale TUI presentation, source `d10b05b` | [Review](../reviews/2026-09-08-v89-stale-checkpoint-presentation.md); 521 tests and 27 final optimized incident renders; detached monitor update awaits approval. |
 
 These are not deployment authorizations. Existing live process and configuration
 identity must be read from current evidence before reporting their state.
