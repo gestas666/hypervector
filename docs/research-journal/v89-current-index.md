@@ -100,16 +100,27 @@ Seventy-nine offline tests, 120 independent Decimal fields, 9,999,696 independen
 checked path rows and frozen-source replay pass. Confidence is high in arithmetic
 and low in actual hypothetical-fill attainability or future profitability.
 
-Next: [fixed equal-cap allocation benchmark](../plans/2026-09-08-v89-equal-cap-allocation.md),
-`v89_equal_cap_allocation_benchmark_20260908_v1`, preregistered in `0561860`.
-Compare current $2,500 BTC/HYPE and $500 other route caps against $7,500 / 7 per
-route. Keep the total configured notional budget, seven routes and leverage;
-report the changed margin and execution requirements. Preserve original and
-event-adjusted controls, all source/cost/clock variants and the explored
-chronological split. Fit no weights or new entry/exit thresholds. No live change
-or sealed prospective outcome access is authorized by this research plan.
+The [fixed equal-cap benchmark](../reviews/2026-09-08-v89-equal-cap-allocation.md)
+is complete. All 36 comparisons improve full-window modeled net and increase
+maximum dollar drawdown. Recorded/adverse/original-exit net changes from $96.12
+to $369.09, dollar drawdown from $198.69 to $288.19, and later-period net from
+−$87.44 to −$52.43. Full-fee later net worsens from −$137.28 to −$159.23. The
+$7,500 summed cap budget is preserved, but average entry-notional exposure
+roughly doubles from $871.82 to $1,763.33. Retain a research candidate, with
+high confidence in arithmetic and low confidence in future edge or actual
+changed-size execution. Ninety-two offline tests, independent Decimal/funding/
+path checks and source-archive replay pass. Fit no intermediate weights.
 
-At 17:16:50 UTC the tracked backend, supervisor, reporter and former monitor
+Next: [bounded quote and cost feasibility](../plans/2026-09-08-v89-equal-cap-quote-feasibility.md),
+`v89_equal_cap_quote_feasibility_20260908_v1`, preregistered in `e762d26`.
+Compare original and equal-cap quantities across exact configured sides using
+unsigned current mainnet metadata and 36 rounds of seven-asset L2 snapshots.
+Keep failures, rounding differences, insufficient depth and fee stresses explicit.
+No strategy replay or performance outcome is acquired by that capacity probe.
+Prepare a concrete inactive allocation/prospective proposal only after the
+qualification; no live change or early sealed-outcome access is authorized.
+
+At 17:48:33 UTC the tracked backend, supervisor, reporter and former monitor
 remain absent, and the checkpoint remains from 14:04:48. The live profile bytes
 are unchanged. This process/configuration observation does not refresh the
 14:11 native account snapshot or identify the shutdown requester.
