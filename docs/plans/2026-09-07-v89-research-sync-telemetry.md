@@ -113,3 +113,13 @@ An explicit read-only integration run rendered 27 actual-ledger screens at
 and correctly showed IMPORT DISABLED; it did not replace the active checkpoint.
 Continuous reporter adoption and actual successful-import display remain the
 final Task 4 acceptance steps.
+
+Task 4 subsequently passed. Main received the reporting correction as `2986216`.
+Only the old report-only worker was stopped; the replacement imported 38 and
+then 288 events. Its new section reached the active checkpoint. A further 27
+actual-checkpoint captures passed, and the installed release binary displayed
+IMPORT OK, import age/count, seven assets and LIVE EXECUTION ARMED in a 120x36
+terminal. Quitting that separately owned detached monitor returned zero while
+the original supervisor, backend and TUI retained their process lifetimes.
+The original foreground TUI still uses its existing binary; open a new monitor
+to use the updated display. See the accompanying review for evidence and rollback.
