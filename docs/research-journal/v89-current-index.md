@@ -26,11 +26,19 @@ $81.91002575. Every resulting unrounded 80-bps stop is below the recorded
 09:23 candle low. Confidence is high in the bounded arithmetic and low in any
 revised-trade claim; this does not establish client fills or venue stop triggers.
 
-Next: `v89_hype_aug26_mark_trigger_reconstruction_v1`. Qualify historical
-mark-price coverage around 09:22–09:24 UTC, retaining every original entry-price
-case and the actual trigger/rounding semantics. Complete holding-interval
-coverage is required before asserting a revised lifecycle. Inventory existing
-sources first. This is research only, and the sealed experiment remains unopened.
+The [HYPE mark and historical execution study](../reviews/2026-09-08-v89-hype-mark-trigger.md)
+is complete. Ten public-matched fills reconcile an older V61 trade to +$52.769613
+net, with different size and exit settings. The 476 vendor marks and 1,899 native
+position marks show no observed threshold touch; their gaps prevent a continuous
+trigger claim. No current V89 PnL is revised. There is no reason to repeat the
+same sparse acquisition without denser evidence.
+
+Next: `v89_hype_later_period_exit_attribution_v1`. Partition the existing HYPE
+modeled lifecycles across the already declared first-28/later-20-day split by
+protective stop, provider exit and maximum hold, with exact direction and cost
+attribution. Inventory the journal before starting; preserve this trade's mark
+ambiguity and the existing source/cost variants. Fit no new thresholds and keep
+the sealed prospective experiment unopened.
 
 ## Completed evidence to reuse
 
@@ -43,6 +51,7 @@ sources first. This is research only, and the sealed experiment remains unopened
 | Core inactivity | [Opportunity attribution](../reviews/2026-09-08-v89-core-opportunity-attribution.md); frozen run prefix through 10:40 UTC has zero eligible core entries. This is a bounded observation, not a forecast. |
 | HYPE input arithmetic | [Native compression parity](../reviews/2026-09-08-v89-hype-native-compression.md); 907 publications match the independent calculation. Revision 2 corrects the obsolete follow-up, preserving the numerical result. |
 | HYPE August 26 entry price | [Executable-price reconstruction](../reviews/2026-09-08-v89-hype-executable-price.md); 131 books, 253 public trades, 93 offline tests and exact source-archive replay. The adverse entry exceeds every observed post-publication depth walk; the complete lifecycle remains unresolved. |
+| HYPE August 26 marks and actual execution | [Mark qualification](../reviews/2026-09-08-v89-hype-mark-trigger.md); older V61 +$52.769613 reconciled, 30 sampled threshold comparisons unresolved between observations; 81 offline tests and exact archive replay. |
 
 The four September 7 studies were found in
 `/Users/gestas/Prototypes/hypervector-v89-portfolio-20260907` and registered in
