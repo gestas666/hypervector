@@ -122,9 +122,15 @@ archive replay pass. Confidence is high in this narrow sample, low in durable
 liquidity or future edge. Current capacity does not revise the historical
 drawdown/exposure trade-off or prove changed-size historical fills.
 
-Next: prepare the exact inactive equal-cap configuration and a separately frozen
-prospective comparison contract, preserving original controls and unchanged
-signal/stop behavior. No live change or early sealed-outcome access is authorized.
+Next: [inactive allocation and serializer correction](../plans/2026-09-08-v89-inactive-allocation-proposal.md).
+At 18:22 UTC a pure round trip reproduced a staging defect: the current serializer
+widens BTC provider sides to long/short and its output fails the observe loader.
+It also omits all seven explicit entry-slippage caps. Main and research source
+copies match. This is a generated-file defect, not established live impact or
+shutdown causation. Prepare an isolated correction, regression evidence and the
+exact inactive allocation before a separately frozen prospective comparison.
+Preserve original controls, signal/stop behavior and the existing seal. No live
+change is authorized by the research result.
 
 At 18:14:25 UTC the tracked backend, supervisor, reporter and former monitor
 remain absent, and the checkpoint remains from 14:04:48. The live profile bytes
