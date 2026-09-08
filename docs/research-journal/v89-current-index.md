@@ -33,12 +33,25 @@ position marks show no observed threshold touch; their gaps prevent a continuous
 trigger claim. No current V89 PnL is revised. There is no reason to repeat the
 same sparse acquisition without denser evidence.
 
-Next: `v89_hype_later_period_exit_attribution_v1`. Partition the existing HYPE
-modeled lifecycles across the already declared first-28/later-20-day split by
-protective stop, provider exit and maximum hold, with exact direction and cost
-attribution. Inventory the journal before starting; preserve this trade's mark
-ambiguity and the existing source/cost variants. Fit no new thresholds and keep
-the sealed prospective experiment unopened.
+The [HYPE exit attribution](../reviews/2026-09-08-v89-hype-exit-attribution.md)
+is complete. Six recorded-source modeled longs produce −$46.23 nominal and
+−$99.26 adverse over 48 days. Price PnL is negative before fees/funding in every
+retained case. The August 26 stop-switch explains 91.54% of the nominal/adverse
+difference, but excluding it still leaves the other later-period adverse trades
+at −$47.69. This is descriptive arithmetic, not a fitted exit recommendation.
+
+Next: `v89_noncrypto_opening_stop_execution_20260908_v1`. Audit the new current-run
+SNDK short stop at September 8 13:30:27.920 UTC and SPCX long stop at
+13:32:33.954 UTC. Reconcile native wire thresholds, fills, fees/funding and bounded
+public trades/books; distinguish configured barrier loss from extra slippage.
+Inventory existing evidence first and keep the sealed prospective experiment
+unopened. These are new live fills, separate from the previous first-close audits.
+
+Operational note: research import briefly deferred below 8 GiB free space and
+resumed automatically. A 180-sample observation at 13:43–13:46 UTC stayed above
+11.7 GiB and captured a successful import. It did not reproduce the shortage.
+The capacity cause remains unresolved; the mapped-reader proposal measures write
+I/O reduction and is not established as a net-space fix.
 
 ## Completed evidence to reuse
 
@@ -52,6 +65,7 @@ the sealed prospective experiment unopened.
 | HYPE input arithmetic | [Native compression parity](../reviews/2026-09-08-v89-hype-native-compression.md); 907 publications match the independent calculation. Revision 2 corrects the obsolete follow-up, preserving the numerical result. |
 | HYPE August 26 entry price | [Executable-price reconstruction](../reviews/2026-09-08-v89-hype-executable-price.md); 131 books, 253 public trades, 93 offline tests and exact source-archive replay. The adverse entry exceeds every observed post-publication depth walk; the complete lifecycle remains unresolved. |
 | HYPE August 26 marks and actual execution | [Mark qualification](../reviews/2026-09-08-v89-hype-mark-trigger.md); older V61 +$52.769613 reconciled, 30 sampled threshold comparisons unresolved between observations; 81 offline tests and exact archive replay. |
+| HYPE losses by exit mechanism | [Exit attribution](../reviews/2026-09-08-v89-hype-exit-attribution.md); all 18 cases and 54 marked-period totals reconcile; six distinct recorded longs, no opposite-signal exits; 22 offline tests and exact archive replay. |
 
 The four September 7 studies were found in
 `/Users/gestas/Prototypes/hypervector-v89-portfolio-20260907` and registered in

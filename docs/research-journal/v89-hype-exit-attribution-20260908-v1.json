@@ -1,0 +1,831 @@
+{
+  "automatic_promotion": false,
+  "confidence": "high",
+  "created_at_utc": "2026-09-08T14:01:27.779356+00:00",
+  "decision": "Retain the descriptive attribution. Six recorded-source modeled longs yield -46.232216 USD nominal and -99.256353 adverse; price PnL is already negative before fees/funding in every scenario. The August 26 stop-switch accounts for 91.54% of the nominal/adverse difference, but remains an unresolved venue-trigger counterfactual. No new exit or sizing rule is justified by six explored trades. Next audit the two new current-run noncrypto protective-stop fills. A separate three-minute disk observation captured a successful import but did not reproduce or resolve the earlier storage shortage.",
+  "evidence": [
+    {
+      "bytes": 48409,
+      "path": "/Users/gestas/Prototypes/hypervector-v89-portfolio-20260907/docs/research-journal/v89-recorded-native-source-sensitivity-20260907-v1.json",
+      "role": "registered_source",
+      "sha256": "7e958253eefa428c4b6e205ceef8c0b88dffa0ba6caf0cd8b3adea2d7c42c1d2"
+    },
+    {
+      "bytes": 21095,
+      "path": "/Users/gestas/Prototypes/hypervector-v89-portfolio-20260907/docs/research-journal/v89-seven-asset-shared-marking-20260907-v1.json",
+      "role": "registered_source",
+      "sha256": "73b69215ca6144d070aff30f7b829ea3e403524eb162c90c957003a4f8b3b281"
+    },
+    {
+      "bytes": 112938,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_chronological_stability_20260908_v1/validation_final/replay/report.json",
+      "role": "registered_source",
+      "sha256": "94059608b888ee91eaa8a3f99e1383c2343e117c461bb35995f631b142614634"
+    },
+    {
+      "bytes": 63285,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_recorded_native_lifecycles_20260907_v1/first.json",
+      "role": "registered_source",
+      "sha256": "0cc12304f1440b6e22e490ca7e8d9a783799e96140754567ceda17f4b5a30dcb"
+    },
+    {
+      "bytes": 63284,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_recorded_native_lifecycles_20260907_v1/last.json",
+      "role": "registered_source",
+      "sha256": "ac696d3a3955f83dbfe5e70932652882c423113aa90dee28904ff45aabf58712"
+    },
+    {
+      "bytes": 1387078,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_recorded_native_shared_portfolio_20260907_v1/report.json",
+      "role": "registered_source",
+      "sha256": "1d51590d61f884171029df4392315f29ee85f24b52bbd180df3b7395ffdef8b8"
+    },
+    {
+      "bytes": 85340,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_research_navigation_reconciliation_20260908_v1/journal_inventory.json",
+      "role": "registered_source",
+      "sha256": "444c808d03395c1eda372d1320bdc50035ccf3b992bdb8e9611be79a2e51c079"
+    },
+    {
+      "bytes": 127779,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_shared_core_lifecycles_20260907_v1.json",
+      "role": "registered_source",
+      "sha256": "d4bc071efda2be01a4b479667bdbd89f9ed967fd2006f27c09b654c93e68c7d0"
+    },
+    {
+      "bytes": 628265,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_shared_marked_portfolio_20260907_v2/report.json",
+      "role": "registered_source",
+      "sha256": "379942d885d6fa3762ed7a3e0cb8c3383c80635be94e42342c5829d85e15592a"
+    },
+    {
+      "bytes": 57693,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_shared_portfolio_attribution_20260907_v3/report.json",
+      "role": "registered_source",
+      "sha256": "c8932aef93534b33015ffe86563e84adbf3f04526924ea3973d34bcb0d8036c0"
+    },
+    {
+      "bytes": 136881,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/research-journal/v89-shared-chronological-stability-20260908-v1.json",
+      "role": "registered_source",
+      "sha256": "7cec3ef596a7b73c867a86dac46e9145e494bb4525399a0cf3ef586073de41c4"
+    },
+    {
+      "bytes": 240920,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_hype_exit_attribution_20260908_v1/archive_replay/report.json",
+      "role": "exit_attribution_or_separate_storage_observation",
+      "sha256": "c381379690c18d6b7b68451ec44e8f7ba929c3a8a10be467c10d8c69de59b5e6"
+    },
+    {
+      "bytes": 100,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_hype_exit_attribution_20260908_v1/archive_replay/source.json",
+      "role": "exit_attribution_or_separate_storage_observation",
+      "sha256": "468465c9360e188edd496d42f48346159fc3e94fac2e0c6b1baca2d2993fd7ba"
+    },
+    {
+      "bytes": 45,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_hype_exit_attribution_20260908_v1/archive_replay.log",
+      "role": "exit_attribution_or_separate_storage_observation",
+      "sha256": "402d0b416541488b82cbfb9dab14dc39453f067f935154fc4ed3bb33d5b791cb"
+    },
+    {
+      "bytes": 2245,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_hype_exit_attribution_20260908_v1/cost_sensitivity_summary.json",
+      "role": "exit_attribution_or_separate_storage_observation",
+      "sha256": "16b1a0a26a96854c115d9f7fe14576bf92794409c410e8f8cd47b72dc9ddb1a6"
+    },
+    {
+      "bytes": 7184,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_hype_exit_attribution_20260908_v1/coverage.json",
+      "role": "exit_attribution_or_separate_storage_observation",
+      "sha256": "3ab15b7bec3fec207f2db9d186c3b1c4f3aebc5588eef39e8b9df44a58fe0c55"
+    },
+    {
+      "bytes": 7196,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_hype_exit_attribution_20260908_v1/coverage_final.json",
+      "role": "exit_attribution_or_separate_storage_observation",
+      "sha256": "0d0cf26a2e4b6e4dcd5e86b646041069488a08e8b7517c7c8a6925cb7121cfe7"
+    },
+    {
+      "bytes": 8974,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_hype_exit_attribution_20260908_v1/current_index.md",
+      "role": "exit_attribution_or_separate_storage_observation",
+      "sha256": "38d06f20666fac0b232005cc92b63cfcc2e128fc27f52062458efc2dbf114c80"
+    },
+    {
+      "bytes": 240920,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_hype_exit_attribution_20260908_v1/final/report.json",
+      "role": "exit_attribution_or_separate_storage_observation",
+      "sha256": "c381379690c18d6b7b68451ec44e8f7ba929c3a8a10be467c10d8c69de59b5e6"
+    },
+    {
+      "bytes": 100,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_hype_exit_attribution_20260908_v1/final/source.json",
+      "role": "exit_attribution_or_separate_storage_observation",
+      "sha256": "468465c9360e188edd496d42f48346159fc3e94fac2e0c6b1baca2d2993fd7ba"
+    },
+    {
+      "bytes": 208,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_hype_exit_attribution_20260908_v1/independent_verification.json",
+      "role": "exit_attribution_or_separate_storage_observation",
+      "sha256": "f4d9590c8e1b5700a37ea67895760c0c92aacb49077cfe0a5abef9c8673ad949"
+    },
+    {
+      "bytes": 240920,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_hype_exit_attribution_20260908_v1/initial/report.json",
+      "role": "exit_attribution_or_separate_storage_observation",
+      "sha256": "c381379690c18d6b7b68451ec44e8f7ba929c3a8a10be467c10d8c69de59b5e6"
+    },
+    {
+      "bytes": 100,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_hype_exit_attribution_20260908_v1/initial/source.json",
+      "role": "exit_attribution_or_separate_storage_observation",
+      "sha256": "40804e1f4ec4cce1582ad8de3133ee60452fe32de0d7368249c97c085b3656f6"
+    },
+    {
+      "bytes": 7542,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_hype_exit_attribution_20260908_v1/review.md",
+      "role": "exit_attribution_or_separate_storage_observation",
+      "sha256": "426bcf54045a85041d8e692772a8696426f728da6fa09dc8c05d10230966cbc1"
+    },
+    {
+      "bytes": 29030907,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_hype_exit_attribution_20260908_v1/source.tar.gz",
+      "role": "exit_attribution_or_separate_storage_observation",
+      "sha256": "c873fb4b09fe45b22f6b21ffe8dc33e0ffc13d416e1f5c9eff149598828ef8dd"
+    },
+    {
+      "bytes": 580,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_hype_exit_attribution_20260908_v1/source_bundle_verification.json",
+      "role": "exit_attribution_or_separate_storage_observation",
+      "sha256": "f32bc8356e828bda410ad1e55dc8ed4dd7f75ffda21256b071ea36bc295f9128"
+    },
+    {
+      "bytes": 360,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_hype_exit_attribution_20260908_v1/static_validation.json",
+      "role": "exit_attribution_or_separate_storage_observation",
+      "sha256": "82124a166dcb0445ffe6fd499569adac85642720d8bf07925e9f7dd615c0541b"
+    },
+    {
+      "bytes": 579660,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_disk_pressure_observation_20260908T1344Z/samples.jsonl",
+      "role": "exit_attribution_or_separate_storage_observation",
+      "sha256": "1d5cb06b2b7c800ec5e487610b1c913ec64db0748e9db5a6000b5f1e889054d7"
+    },
+    {
+      "bytes": 1075,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_disk_pressure_observation_20260908T1344Z/summary.json",
+      "role": "exit_attribution_or_separate_storage_observation",
+      "sha256": "ad7e953105e9928eb6e2b5805f19266cfd169c7d003d5dbf97a6bdc3da1f9e12"
+    }
+  ],
+  "execution_authority": "none",
+  "falsifier": "Changed source hashes, missing or ambiguous lifecycle joins, wrong exit-clock transformations, failed shared marked-period totals or independent replay, or denser venue-trigger evidence contradicting the August 26 interpretation.",
+  "hypothesis": "Attribute the already modeled HYPE chronological losses by exact lifecycle exit mechanism and costs, retaining source and mark-trigger uncertainty.",
+  "hypothesis_id": "v89_hype_later_period_exit_attribution_v1",
+  "limitations": [
+    "All scenarios reuse the already explored July 21 to September 7 history; they are sensitivity controls, not independent evidence or out-of-sample tests.",
+    "Recorded source has six HYPE longs; the archive source has five. Small samples cannot establish a causal regime shift or dependable win probability.",
+    "Exit labels and excursions describe the modeled candle path, not observed venue stop triggers or executable peak exits. August 26 mark-trigger ambiguity remains unresolved.",
+    "No current-strategy PnL is replaced with the older V61 actual trade; no entry, exit, size, leverage or other live setting is changed.",
+    "Complete lifecycle attribution reconciles here because no HYPE position crosses the frozen August 18 boundary; the implementation rejects such crossings rather than approximating marked carry.",
+    "Fee and funding estimates inherit the registered modeling assumptions. Opposite-signal exit absence is an observation, not proof that honoring or ignoring it is equivalent in other paths.",
+    "The separate storage observation is sampled and does not establish the cause of the earlier disk-headroom interruption."
+  ],
+  "metrics": {
+    "archive_members_verified": 5066,
+    "archive_report_matches_final": true,
+    "cost_sensitivity": {
+      "aug26_change_usd": "-48.536712001982277",
+      "aug26_share_of_delta_pct": "91.53701420912713141971030579",
+      "execution_authority": "none",
+      "full_nominal_to_adverse_delta_usd": "-53.024137198854247",
+      "method": "Arithmetic attribution between saved scenarios; excluding the disputed trade is sensitivity arithmetic, not a new simulation.",
+      "paired_case_changes": [
+        {
+          "adverse_exit": "protective_stop",
+          "adverse_net": "-23.76044629939073",
+          "aug26_trigger_ambiguity": false,
+          "change_usd": "-0.743618393672063",
+          "entry_time_ms": 1784611500000,
+          "nominal_exit": "protective_stop",
+          "nominal_net": "-23.016827905718667"
+        },
+        {
+          "adverse_exit": "protective_stop",
+          "adverse_net": "-23.633218495497573",
+          "aug26_trigger_ambiguity": false,
+          "change_usd": "-0.743656552473253",
+          "entry_time_ms": 1784805900000,
+          "nominal_exit": "protective_stop",
+          "nominal_net": "-22.88956194302432"
+        },
+        {
+          "adverse_exit": "maximum_hold",
+          "adverse_net": "19.602356672912308",
+          "aug26_trigger_ambiguity": false,
+          "change_usd": "-1.512964114496437",
+          "entry_time_ms": 1785828600000,
+          "nominal_exit": "maximum_hold",
+          "nominal_net": "21.115320787408745"
+        },
+        {
+          "adverse_exit": "protective_stop",
+          "adverse_net": "-24.0542147692376",
+          "aug26_trigger_ambiguity": false,
+          "change_usd": "-0.743530285158517",
+          "entry_time_ms": 1787420700000,
+          "nominal_exit": "protective_stop",
+          "nominal_net": "-23.310684484079083"
+        },
+        {
+          "adverse_exit": "protective_stop",
+          "adverse_net": "-23.775272934414907",
+          "aug26_trigger_ambiguity": true,
+          "change_usd": "-48.536712001982277",
+          "entry_time_ms": 1787711100000,
+          "nominal_exit": "maximum_hold",
+          "nominal_net": "24.76143906756737"
+        },
+        {
+          "adverse_exit": "protective_stop",
+          "adverse_net": "-23.6355570851774",
+          "aug26_trigger_ambiguity": false,
+          "change_usd": "-0.7436558510717",
+          "entry_time_ms": 1787903700000,
+          "nominal_exit": "protective_stop",
+          "nominal_net": "-22.8919012341057"
+        }
+      ],
+      "remaining_extension_adverse_net_excluding_aug26_usd": "-47.6897718544150"
+    },
+    "distinct_recorded_hype_lifecycles": 6,
+    "marked_period_totals_reconciled": 54,
+    "next_hypothesis": "v89_noncrypto_opening_stop_execution_20260908_v1",
+    "no_opposite_signal_exits": true,
+    "pure_branches": "26/26",
+    "pure_statements": "64/64",
+    "recorded_source_periods": {
+      "adverse": {
+        "development": {
+          "ambiguous_aug26_trades": 0,
+          "breakeven": 0,
+          "by_exit": {
+            "maximum_hold": {
+              "breakeven": 0,
+              "fees_usd": "2.2599483814228765",
+              "funding_usd": "-0.2452092187234995",
+              "gross_usd": "22.10751427305869747073525778",
+              "losses": 0,
+              "net_usd": "19.602356672912308",
+              "trades": 1,
+              "wins": 1
+            },
+            "opposite_signal": {
+              "breakeven": 0,
+              "fees_usd": "0",
+              "funding_usd": "0",
+              "gross_usd": "0",
+              "losses": 0,
+              "net_usd": "0",
+              "trades": 0,
+              "wins": 0
+            },
+            "protective_stop": {
+              "breakeven": 0,
+              "fees_usd": "4.4807723999999998",
+              "funding_usd": "-0.184892394888093667",
+              "gross_usd": "-42.72800000000020781084928307",
+              "losses": 2,
+              "net_usd": "-47.393664794888303",
+              "trades": 2,
+              "wins": 0
+            }
+          },
+          "by_side": {
+            "long": {
+              "breakeven": 0,
+              "fees_usd": "6.7407207814228763",
+              "funding_usd": "-0.430101613611593167",
+              "gross_usd": "-20.62048572694151034011402529",
+              "losses": 2,
+              "net_usd": "-27.791308121975995",
+              "trades": 3,
+              "wins": 1
+            },
+            "short": {
+              "breakeven": 0,
+              "fees_usd": "0",
+              "funding_usd": "0",
+              "gross_usd": "0",
+              "losses": 0,
+              "net_usd": "0",
+              "trades": 0,
+              "wins": 0
+            }
+          },
+          "fees_usd": "6.7407207814228763",
+          "funding_usd": "-0.430101613611593167",
+          "gross_usd": "-20.62048572694151034011402529",
+          "losses": 2,
+          "net_usd": "-27.791308121975995",
+          "trades": 3,
+          "wins": 1
+        },
+        "extension": {
+          "ambiguous_aug26_trades": 1,
+          "breakeven": 0,
+          "by_exit": {
+            "maximum_hold": {
+              "breakeven": 0,
+              "fees_usd": "0",
+              "funding_usd": "0",
+              "gross_usd": "0",
+              "losses": 0,
+              "net_usd": "0",
+              "trades": 0,
+              "wins": 0
+            },
+            "opposite_signal": {
+              "breakeven": 0,
+              "fees_usd": "0",
+              "funding_usd": "0",
+              "gross_usd": "0",
+              "losses": 0,
+              "net_usd": "0",
+              "trades": 0,
+              "wins": 0
+            },
+            "protective_stop": {
+              "breakeven": 0,
+              "fees_usd": "6.7211585999999995",
+              "funding_usd": "-0.65188618882903969",
+              "gross_usd": "-64.09200000000092837465728785",
+              "losses": 3,
+              "net_usd": "-71.465044788829907",
+              "trades": 3,
+              "wins": 0
+            }
+          },
+          "by_side": {
+            "long": {
+              "breakeven": 0,
+              "fees_usd": "6.7211585999999995",
+              "funding_usd": "-0.65188618882903969",
+              "gross_usd": "-64.09200000000092837465728785",
+              "losses": 3,
+              "net_usd": "-71.465044788829907",
+              "trades": 3,
+              "wins": 0
+            },
+            "short": {
+              "breakeven": 0,
+              "fees_usd": "0",
+              "funding_usd": "0",
+              "gross_usd": "0",
+              "losses": 0,
+              "net_usd": "0",
+              "trades": 0,
+              "wins": 0
+            }
+          },
+          "fees_usd": "6.7211585999999995",
+          "funding_usd": "-0.65188618882903969",
+          "gross_usd": "-64.09200000000092837465728785",
+          "losses": 3,
+          "net_usd": "-71.465044788829907",
+          "trades": 3,
+          "wins": 0
+        },
+        "full": {
+          "ambiguous_aug26_trades": 1,
+          "breakeven": 0,
+          "by_exit": {
+            "maximum_hold": {
+              "breakeven": 0,
+              "fees_usd": "2.2599483814228765",
+              "funding_usd": "-0.2452092187234995",
+              "gross_usd": "22.10751427305869747073525778",
+              "losses": 0,
+              "net_usd": "19.602356672912308",
+              "trades": 1,
+              "wins": 1
+            },
+            "opposite_signal": {
+              "breakeven": 0,
+              "fees_usd": "0",
+              "funding_usd": "0",
+              "gross_usd": "0",
+              "losses": 0,
+              "net_usd": "0",
+              "trades": 0,
+              "wins": 0
+            },
+            "protective_stop": {
+              "breakeven": 0,
+              "fees_usd": "11.2019309999999993",
+              "funding_usd": "-0.836778583717133357",
+              "gross_usd": "-106.8200000000011361855065709",
+              "losses": 5,
+              "net_usd": "-118.858709583718210",
+              "trades": 5,
+              "wins": 0
+            }
+          },
+          "by_side": {
+            "long": {
+              "breakeven": 0,
+              "fees_usd": "13.4618793814228758",
+              "funding_usd": "-1.081987802440632857",
+              "gross_usd": "-84.71248572694243871477131314",
+              "losses": 5,
+              "net_usd": "-99.256352910805902",
+              "trades": 6,
+              "wins": 1
+            },
+            "short": {
+              "breakeven": 0,
+              "fees_usd": "0",
+              "funding_usd": "0",
+              "gross_usd": "0",
+              "losses": 0,
+              "net_usd": "0",
+              "trades": 0,
+              "wins": 0
+            }
+          },
+          "fees_usd": "13.4618793814228758",
+          "funding_usd": "-1.081987802440632857",
+          "gross_usd": "-84.71248572694243871477131314",
+          "losses": 5,
+          "net_usd": "-99.256352910805902",
+          "trades": 6,
+          "wins": 1
+        }
+      },
+      "nominal": {
+        "development": {
+          "ambiguous_aug26_trades": 0,
+          "breakeven": 0,
+          "by_exit": {
+            "maximum_hold": {
+              "breakeven": 0,
+              "fees_usd": "2.2606295548974342",
+              "funding_usd": "-0.24528276310302166",
+              "gross_usd": "23.62123310540903584424793185",
+              "losses": 0,
+              "net_usd": "21.115320787408745",
+              "trades": 1,
+              "wins": 1
+            },
+            "opposite_signal": {
+              "breakeven": 0,
+              "fees_usd": "0",
+              "funding_usd": "0",
+              "gross_usd": "0",
+              "losses": 0,
+              "net_usd": "0",
+              "trades": 0,
+              "wins": 0
+            },
+            "protective_stop": {
+              "breakeven": 0,
+              "fees_usd": "4.481442",
+              "funding_usd": "-0.184947848743096368",
+              "gross_usd": "-41.23999999999975490693772776",
+              "losses": 2,
+              "net_usd": "-45.906389848742987",
+              "trades": 2,
+              "wins": 0
+            }
+          },
+          "by_side": {
+            "long": {
+              "breakeven": 0,
+              "fees_usd": "6.7420715548974342",
+              "funding_usd": "-0.430230611846118028",
+              "gross_usd": "-17.61876689459071906268979591",
+              "losses": 2,
+              "net_usd": "-24.791069061334242",
+              "trades": 3,
+              "wins": 1
+            },
+            "short": {
+              "breakeven": 0,
+              "fees_usd": "0",
+              "funding_usd": "0",
+              "gross_usd": "0",
+              "losses": 0,
+              "net_usd": "0",
+              "trades": 0,
+              "wins": 0
+            }
+          },
+          "fees_usd": "6.7420715548974342",
+          "funding_usd": "-0.430230611846118028",
+          "gross_usd": "-17.61876689459071906268979591",
+          "losses": 2,
+          "net_usd": "-24.791069061334242",
+          "trades": 3,
+          "wins": 1
+        },
+        "extension": {
+          "ambiguous_aug26_trades": 1,
+          "breakeven": 0,
+          "by_exit": {
+            "maximum_hold": {
+              "breakeven": 0,
+              "fees_usd": "2.2622389095207722",
+              "funding_usd": "-0.17389873573871237",
+              "gross_usd": "27.19757671282692256541025103",
+              "losses": 0,
+              "net_usd": "24.76143906756737",
+              "trades": 1,
+              "wins": 1
+            },
+            "opposite_signal": {
+              "breakeven": 0,
+              "fees_usd": "0",
+              "funding_usd": "0",
+              "gross_usd": "0",
+              "losses": 0,
+              "net_usd": "0",
+              "trades": 0,
+              "wins": 0
+            },
+            "protective_stop": {
+              "breakeven": 0,
+              "fees_usd": "4.4814419999999997",
+              "funding_usd": "-0.481143718184617305",
+              "gross_usd": "-41.23999999999999773653437468",
+              "losses": 2,
+              "net_usd": "-46.202585718184783",
+              "trades": 2,
+              "wins": 0
+            }
+          },
+          "by_side": {
+            "long": {
+              "breakeven": 0,
+              "fees_usd": "6.7436809095207719",
+              "funding_usd": "-0.655042453923329675",
+              "gross_usd": "-14.04242328717307517112412365",
+              "losses": 2,
+              "net_usd": "-21.441146650617413",
+              "trades": 3,
+              "wins": 1
+            },
+            "short": {
+              "breakeven": 0,
+              "fees_usd": "0",
+              "funding_usd": "0",
+              "gross_usd": "0",
+              "losses": 0,
+              "net_usd": "0",
+              "trades": 0,
+              "wins": 0
+            }
+          },
+          "fees_usd": "6.7436809095207719",
+          "funding_usd": "-0.655042453923329675",
+          "gross_usd": "-14.04242328717307517112412365",
+          "losses": 2,
+          "net_usd": "-21.441146650617413",
+          "trades": 3,
+          "wins": 1
+        },
+        "full": {
+          "ambiguous_aug26_trades": 1,
+          "breakeven": 0,
+          "by_exit": {
+            "maximum_hold": {
+              "breakeven": 0,
+              "fees_usd": "4.5228684644182064",
+              "funding_usd": "-0.41918149884173403",
+              "gross_usd": "50.81880981823595840965818288",
+              "losses": 0,
+              "net_usd": "45.876759854976115",
+              "trades": 2,
+              "wins": 2
+            },
+            "opposite_signal": {
+              "breakeven": 0,
+              "fees_usd": "0",
+              "funding_usd": "0",
+              "gross_usd": "0",
+              "losses": 0,
+              "net_usd": "0",
+              "trades": 0,
+              "wins": 0
+            },
+            "protective_stop": {
+              "breakeven": 0,
+              "fees_usd": "8.9628839999999997",
+              "funding_usd": "-0.666091566927713673",
+              "gross_usd": "-82.47999999999975264347210244",
+              "losses": 4,
+              "net_usd": "-92.108975566927770",
+              "trades": 4,
+              "wins": 0
+            }
+          },
+          "by_side": {
+            "long": {
+              "breakeven": 0,
+              "fees_usd": "13.4857524644182061",
+              "funding_usd": "-1.085273065769447703",
+              "gross_usd": "-31.66119018176379423381391956",
+              "losses": 4,
+              "net_usd": "-46.232215711951655",
+              "trades": 6,
+              "wins": 2
+            },
+            "short": {
+              "breakeven": 0,
+              "fees_usd": "0",
+              "funding_usd": "0",
+              "gross_usd": "0",
+              "losses": 0,
+              "net_usd": "0",
+              "trades": 0,
+              "wins": 0
+            }
+          },
+          "fees_usd": "13.4857524644182061",
+          "funding_usd": "-1.085273065769447703",
+          "gross_usd": "-31.66119018176379423381391956",
+          "losses": 4,
+          "net_usd": "-46.232215711951655",
+          "trades": 6,
+          "wins": 2
+        }
+      }
+    },
+    "scenario_count": 18,
+    "scenario_totals": [
+      {
+        "cost": "nominal",
+        "gross_usd": "-58.90493970696429869069717643",
+        "net_usd": "-71.039802326371500",
+        "source_variant": "archive",
+        "timing": "recorded_bar_clock"
+      },
+      {
+        "cost": "nominal",
+        "gross_usd": "-58.90493970696429869069717643",
+        "net_usd": "-71.039802326371500",
+        "source_variant": "archive",
+        "timing": "late_intrabar_exit"
+      },
+      {
+        "cost": "adverse",
+        "gross_usd": "-63.39463084393321470803150659",
+        "net_usd": "-75.527199841669323",
+        "source_variant": "archive",
+        "timing": "recorded_bar_clock"
+      },
+      {
+        "cost": "adverse",
+        "gross_usd": "-63.39463084393321470803150659",
+        "net_usd": "-75.527199841669323",
+        "source_variant": "archive",
+        "timing": "late_intrabar_exit"
+      },
+      {
+        "cost": "hip3_full_fee",
+        "gross_usd": "-63.39463084393321470803150659",
+        "net_usd": "-75.527199841669323",
+        "source_variant": "archive",
+        "timing": "recorded_bar_clock"
+      },
+      {
+        "cost": "hip3_full_fee",
+        "gross_usd": "-63.39463084393321470803150659",
+        "net_usd": "-75.527199841669323",
+        "source_variant": "archive",
+        "timing": "late_intrabar_exit"
+      },
+      {
+        "cost": "nominal",
+        "gross_usd": "-31.66119018176379423381391956",
+        "net_usd": "-46.232215711951655",
+        "source_variant": "first",
+        "timing": "recorded_bar_clock"
+      },
+      {
+        "cost": "nominal",
+        "gross_usd": "-31.66119018176379423381391956",
+        "net_usd": "-46.232215711951655",
+        "source_variant": "first",
+        "timing": "late_intrabar_exit"
+      },
+      {
+        "cost": "adverse",
+        "gross_usd": "-84.71248572694243871477131314",
+        "net_usd": "-99.256352910805902",
+        "source_variant": "first",
+        "timing": "recorded_bar_clock"
+      },
+      {
+        "cost": "adverse",
+        "gross_usd": "-84.71248572694243871477131314",
+        "net_usd": "-99.256352910805902",
+        "source_variant": "first",
+        "timing": "late_intrabar_exit"
+      },
+      {
+        "cost": "hip3_full_fee",
+        "gross_usd": "-84.71248572694243871477131314",
+        "net_usd": "-99.256352910805902",
+        "source_variant": "first",
+        "timing": "recorded_bar_clock"
+      },
+      {
+        "cost": "hip3_full_fee",
+        "gross_usd": "-84.71248572694243871477131314",
+        "net_usd": "-99.256352910805902",
+        "source_variant": "first",
+        "timing": "late_intrabar_exit"
+      },
+      {
+        "cost": "nominal",
+        "gross_usd": "-31.66119018176379423381391956",
+        "net_usd": "-46.232215711951655",
+        "source_variant": "last",
+        "timing": "recorded_bar_clock"
+      },
+      {
+        "cost": "nominal",
+        "gross_usd": "-31.66119018176379423381391956",
+        "net_usd": "-46.232215711951655",
+        "source_variant": "last",
+        "timing": "late_intrabar_exit"
+      },
+      {
+        "cost": "adverse",
+        "gross_usd": "-84.71248572694243871477131314",
+        "net_usd": "-99.256352910805902",
+        "source_variant": "last",
+        "timing": "recorded_bar_clock"
+      },
+      {
+        "cost": "adverse",
+        "gross_usd": "-84.71248572694243871477131314",
+        "net_usd": "-99.256352910805902",
+        "source_variant": "last",
+        "timing": "late_intrabar_exit"
+      },
+      {
+        "cost": "hip3_full_fee",
+        "gross_usd": "-84.71248572694243871477131314",
+        "net_usd": "-99.256352910805902",
+        "source_variant": "last",
+        "timing": "recorded_bar_clock"
+      },
+      {
+        "cost": "hip3_full_fee",
+        "gross_usd": "-84.71248572694243871477131314",
+        "net_usd": "-99.256352910805902",
+        "source_variant": "last",
+        "timing": "late_intrabar_exit"
+      }
+    ],
+    "source_revision": "aef8172ab53869d595fbf8231987d87165e9dd24",
+    "storage_observation": {
+      "below_8gib_samples": 0,
+      "execution_authority": "none",
+      "first_at_utc": "2026-09-08T13:43:31.621216+00:00",
+      "interval_seconds": 1,
+      "last_at_utc": "2026-09-08T13:46:35.791847+00:00",
+      "last_successes": [
+        "2026-09-08T13:42:26.213590+00:00",
+        "2026-09-08T13:45:03.592883+00:00"
+      ],
+      "limitations": [
+        "One-second samples can miss shorter allocation peaks.",
+        "Matching temporary files are across the user temp directory; ownership of every file is not established.",
+        "One observed successful import cannot explain the earlier shortage or establish permanent recovery.",
+        "The existing mapped-reader benchmark measures write I/O, not net filesystem space, and its deployment remains pending."
+      ],
+      "maximum_duckdb_spill_bytes": 0,
+      "maximum_free_bytes": 13032529920,
+      "maximum_matching_snapshot_allocation_bytes": 785031168,
+      "minimum_free_bytes": 12585840640,
+      "minimum_matching_snapshot_allocation_bytes": 486858752,
+      "permanent_cause_established": false,
+      "samples": 180,
+      "sync_states": {
+        "ready": 142,
+        "running": 38
+      }
+    },
+    "tests_passed": 22
+  },
+  "revision_number": 1,
+  "runtime_strategy_changed": false,
+  "schema_version": 1,
+  "status": "observe",
+  "strategy_id": "hype_breakout_compression_alignment_bidirectional_v2",
+  "supersedes_revision_id": null,
+  "symbol": "HYPE"
+}
