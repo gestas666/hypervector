@@ -69,5 +69,6 @@ include!("support/bidirectional_cohort_accessibility.rs");
 include!("support/bidirectional_cohort_setup_charts.rs");
 include!("support/bidirectional_cohort_validation.rs");
 include!("support/cohort_research_sync_view.rs");
+include!("support/cohort_stale_checkpoint_view.rs");
 
 include!("support/cohort_open_position_columns.rs");

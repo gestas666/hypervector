@@ -103,6 +103,11 @@ fn fingerprint_prefix(value: &str) -> String {
 fn live_line(checkpoint: &CohortCheckpointTelemetry) -> String {
     let freshness = freshness(checkpoint);
     let lifecycle = human_token(checkpoint.lifecycle_state.as_deref().unwrap_or("unknown"));
+    let lifecycle = if checkpoint.publication_stale {
+        format!("AT SNAPSHOT {lifecycle}")
+    } else {
+        lifecycle
+    };
     let coverage = match checkpoint.coverage_complete {
         Some(true) => "COVERAGE COMPLETE".into(),
         Some(false) => format!("GAPS {}", checkpoint.technical_gaps.len()),

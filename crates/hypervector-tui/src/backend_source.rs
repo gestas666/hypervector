@@ -203,6 +203,7 @@ impl BackendTelemetrySource {
             let mut checkpoint = self.checkpoint_cached.clone();
             checkpoint.stale = true;
             checkpoint.issue = Some("checkpoint disappeared; showing last aggregate".into());
+            checkpoint.publication_stale = true;
             checkpoint
         } else {
             CohortCheckpointTelemetry::unavailable(format!(
@@ -217,6 +218,7 @@ impl BackendTelemetrySource {
             let mut checkpoint = self.checkpoint_cached.clone();
             checkpoint.stale = true;
             checkpoint.issue = Some(issue);
+            checkpoint.publication_stale = true;
             checkpoint
         } else {
             CohortCheckpointTelemetry::unavailable(issue)
@@ -334,10 +336,10 @@ fn apply_checkpoint_freshness(
     modified: SystemTime,
     now: SystemTime,
 ) -> CohortCheckpointTelemetry {
-    checkpoint.stale = checkpoint.stale
-        || now
-            .duration_since(modified)
-            .is_ok_and(|age| age > CHECKPOINT_INACTIVITY_LIMIT);
+    checkpoint.publication_stale = now
+        .duration_since(modified)
+        .is_ok_and(|age| age > CHECKPOINT_INACTIVITY_LIMIT);
+    checkpoint.stale |= checkpoint.publication_stale;
     if checkpoint.stale && checkpoint.issue.is_none() {
         checkpoint.issue = Some("checkpoint has not refreshed for more than 90s".into());
     }
@@ -347,6 +349,10 @@ fn apply_checkpoint_freshness(
 #[cfg(test)]
 #[path = "backend_source_test_fixtures.rs"]
 mod test_fixtures;
+
+#[cfg(test)]
+#[path = "backend_source_publication_tests.rs"]
+mod publication_tests;
 
 #[cfg(test)]
 mod tests {

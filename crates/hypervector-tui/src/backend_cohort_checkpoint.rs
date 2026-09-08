@@ -71,6 +71,8 @@ pub struct CohortCheckpointTelemetry {
     pub configured: bool,
     pub available: bool,
     pub stale: bool,
+    /// The checkpoint publication is old or retained after a failed refresh.
+    pub publication_stale: bool,
     pub generated_at_utc: Option<String>,
     pub run_id: Option<String>,
     pub profile_id: Option<String>,
