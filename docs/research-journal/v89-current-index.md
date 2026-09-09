@@ -11,43 +11,39 @@ records carry `execution_authority=none`; they do not arm or manage orders.
 
 ## Current finding and next action
 
-September 9 update: journal revision 16 qualifies complete synthetic source
-calendars in research source `7dfdef3`. The final archive passes 1,205 offline
-tests and reproduces all 24 synthetic cases / 168 closed-trade comparisons byte
-for byte. Seven terminal positions remain open with independently reconciled
-marks, costs and position margin. See the
-[source-calendar review](../reviews/2026-09-09-v89-source-calendar-integration.md)
-and [revision 16](v89-equal-cap-prospective-20260909-v16.json).
+September 9 update: journal revision 17 launches the full historical core-provider
+comparison from verified source `04ec3a0`. Both worktree and archive pass 129 offline
+tests. At 09:16:16 UTC parent PID 80776 and four workers were active; 17 complete
+chunks / 24,480 of 552,960 comparisons had zero differences. An independent reader
+verified every published timestamp, identity, file hash and disagreement count.
+This prefix does not establish full agreement. The full report is not yet present.
+See the [launch review](../reviews/2026-09-09-v89-historical-provider-parity-launch.md)
+and [revision 17](v89-equal-cap-prospective-20260909-v17.json).
 
-Consecutive bars now preserve the exact completed-provider decision in the next
-admission, and the report comparator rejects nonfinite numeric values. Complete
-native grids, explicit funding hours, source identities and phase clocks are
-verified before account events are exposed. Unit coverage is complete for the
-two new research modules (113 statements / 36 branches). The combined worktree
-run reported twelve unresolved SQLite ResourceWarnings; the archive reported none.
+Poll tool session 34414 and the same parent process. Results are under
+`data/logs/research/bidirectional_cohort/v89_full_provider_regime_parity_20260909_v1/run/`.
+Preserve the running archive extraction. Every comparison uses the registered
+native bars, including genuine gaps, rather than the later continuity proxies.
+All 18 archived execution/regime fields are compared; current full payloads are
+retained without claiming unavailable historical readiness-field agreement.
 
-These cases use programmed 2030 decisions and explicit admission ranks. Full
-historical provider/regime output, global conflict selection and the frozen
-prospective evaluator remain unqualified. Historical HYPE UNKNOWN compatibility
-is unresolved. Next: compare complete historical provider/regime decisions and
-routing order against the frozen models and controls, preserving the original
-HYPE support formula and holding clock. Both prospective outcome seals remain
-intact; no reliable profitability improvement or live deployment is established.
-Confidence is high in the documented synthetic scope and low in future returns;
-failed historical parity or independent reproduction would update it.
+In parallel, reuse the existing noncrypto hourly controls and finish quarter-hour
+publication, missing fourteen-day initialization, canonical conflicts, cross-symbol
+order and HYPE UNKNOWN compatibility. Existing controls have 1,152 hourly decisions
+per asset. The old frequency worktree contains later code changes; its current
+contents are not the frozen runner. Full prospective evaluator qualification and
+profitable strategy improvement remain unestablished. Both outcome seals remain.
 
-The seven-asset and SNDK/Brent collectors continue source capture. At September 9
-07:58:55 UTC both had matching live process identities, fresh heartbeats and no
-reported error. All fifteen and eleven collector source pins matched, and both
-live-profile copies were unchanged. No matching trading engine or TUI was found.
-This local observation does not refresh venue positions, orders or account value.
+The earlier source-calendar milestone remains valid within its synthetic scope:
+source `7dfdef3`, 1,205 offline tests, 24 artificial cases and 168 independently
+reconciled closed-trade comparisons. See the
+[source-calendar review](../reviews/2026-09-09-v89-source-calendar-integration.md).
+Those programmed 2030 decisions do not prove native strategy performance.
 
-Earlier source/account milestones include the
-[chronological coordinator](../reviews/2026-09-09-v89-portfolio-coordinator.md),
-[captured-source entries](../reviews/2026-09-09-v89-source-portfolio-binding.md)
-and [side-specific completions](../reviews/2026-09-09-v89-provider-completion-binding.md).
-The source-only milestone reproduces 24,544 observed bindings exactly. Those
-counts are source observations, not trades or evidence of improved returns.
+At the September 9 09:16 UTC launch health check both source collectors had fresh
+heartbeats, matching processes, no reported error and all 26 source pins unchanged.
+Both live-profile hashes were unchanged. No matching trading engine, reporter or
+TUI was found. No venue positions, orders or account-value snapshot was read.
 
 ## Historical September 8 findings and intermediate next actions
 
