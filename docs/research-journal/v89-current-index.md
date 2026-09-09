@@ -7,6 +7,22 @@ outcome was refreshed for this update.
 
 ## Current finding and next action
 
+The [complete historical price/funding binding](../reviews/2026-09-09-v89-historical-market-binding.md)
+is qualified from source `c55c04b`: all fourteen price cases, 580,608 prices and
+16,128 funding observations reproduce from the verified archive. All 67 focused
+tests pass in both trees. Original provider grids remain separate from 152
+explicit continuity rows (76 per source variant); all funding references use
+retained candle prices. The named timestamp-index reader defect is corrected.
+See [market binding revision 1](v89-historical-market-binding-20260909-v1.json).
+
+Next connect these tables to native entry sizing, actual decision-time positions
+and configured exits under the full account plan. Historical venue precision,
+complete canonical history and HYPE UNKNOWN compatibility remain required.
+At 18:43:31 UTC, canonical parent PID 26037/four workers remain alive in exec
+session **32156**. Twelve complete chunks contain 17,280 independently checked
+observations; the full export is unfinished. Preserve the job and both outcome
+seals. The source/probe jobs for this market qualification are complete.
+
 The [market binding and canonical export startup](../reviews/2026-09-09-v89-market-binding-canonical-export-start.md)
 is recorded from source `c02c9c6`: 39 focused tests pass in source and archive;
 all eight real initial canonical payloads match. At September 9 18:24:42 UTC,
