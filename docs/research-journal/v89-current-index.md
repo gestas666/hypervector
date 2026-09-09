@@ -7,19 +7,29 @@ outcome was refreshed for this update.
 
 ## Current finding and next action
 
-A subsequent [dynamic entry-boundary diagnostic](../reviews/2026-09-09-v89-native-account-entry-boundary.md)
-now supplies an exact integration counterexample. Across 24 synthetic seven-slot
-comparisons, applying native entry selection/ranks leaves all retained account
-values unchanged. Across 24 two-slot controls, native routing withholds SOL while
-the original account admits it after same-cycle exits. All 96 artifacts reproduce
-byte-for-byte from frozen source; 5,328 independent Decimal checks reconcile, with
-maximum error 5.4650e-13. These are one-hour synthetic prefixes, not historical
-profits, terminal evaluator acceptance or evidence of a seven-slot live defect.
-See [its journal](v89-native-account-routing-20260909-v1.json) and the
-[typed integration plan](../plans/2026-09-09-v89-native-account-routing-integration.md).
-Replace the process-local diagnostic instrumentation with typed source/calendar
-entry routing at the actual decision-position boundary. Native configured closes
-still require their own complete account/holding-clock integration.
+The [typed native account integration](../reviews/2026-09-09-v89-typed-native-account-routing.md)
+is frozen as `585b484747b33acd948bff5c38f090f896e58418`: 341 tests pass in both
+worktree and archive; all 96 diagnostic artifacts reproduce exactly and their
+account values match the previous diagnostic. Its 2,880 native cycles preserve
+actual decision-time positions and complete controller payloads. Independent
+Decimal checks total 5,328. Native entry admission/ranks and reconciled configured
+close prices now drive the research account; publication is atomic.
+
+Complete two-day synthetic tests cover both HYPE holding deadlines and clocks,
+open terminal positions, and protective-stop precedence. UNKNOWN at the HYPE soft
+boundary still fails explicitly without account mutation. These are bounded
+research findings, not historical profits, live changes or complete evaluator
+qualification. See [revision 2](v89-native-account-routing-20260909-v2.json).
+
+Next, qualify historical source gaps before complete dynamic account assembly.
+Core account-window missing minutes are BTC 18, ETH 20, SOL 19 and HYPE 19 in
+both first/last variants. XYZ quarter bars cover the account window completely,
+with the previously declared short warmup. Preserve all 48 days and original
+axes; retain missing intervals explicitly instead of silently replacing sources.
+The [source-gap plan](../plans/2026-09-09-v89-historical-account-source-gaps.md),
+original [integration plan](../plans/2026-09-09-v89-native-account-routing-integration.md),
+and preceding [diagnostic](../reviews/2026-09-09-v89-native-account-entry-boundary.md)
+retain the full scope and lineage.
 
 Journal revision 22 qualifies native configured-exit routing compatibility from
 `9e3ecac3d5a63564e2065052c0bbaaa340b2d006`: 748,800 exact hypothetical cycles,
