@@ -1,71 +1,74 @@
 # Current V89 research index
 
 Updated September 9, 2026. This is research navigation, not a live-state checkpoint.
-The active goal permits research and proposals and reserves live strategy,
-execution and deployment changes for explicit approval. Both prospective outcome
-seals remain active. Source/process health does not establish live armed execution
-or account outcomes; no account outcome was refreshed for this update.
+The active mandate permits research and proposals; live changes remain subject
+to explicit approval. Both prospective outcome seals remain active. No account
+outcome was refreshed for this update.
 
 ## Current finding and next action
 
-Journal revision 21 qualifies the reusable authenticated historical snapshot
-reader from `eba80126287845b2d77875d6f961b6bdf49241e9`. It preserves complete
-provider publications, readiness, exit fields, absent results and exact source
-JSON lines. It rejects altered file identities, duplicate/missing scheduled rows,
-wrong variants, shifted stream starts, noncausal clocks and non-finite JSON.
-Catalog coverage alone does not establish payload validation; consume all records.
-See the [reader review](../reviews/2026-09-09-v89-authenticated-historical-snapshot-reader.md)
-and [revision 21](v89-equal-cap-prospective-20260909-v21.json).
+Journal revision 22 qualifies native configured-exit routing compatibility from
+`9e3ecac3d5a63564e2065052c0bbaaa340b2d006`: 748,800 exact hypothetical cycles,
+zero native differences and independent reconciliation to raw provider publications.
+See the [routing review](../reviews/2026-09-09-v89-native-configured-exit-routing.md)
+and [revision 22](v89-equal-cap-prospective-20260909-v22.json).
 
-All 127 focused tests pass in worktree and archive. The three new modules cover
-all 222 statements and 72 branches; all 5,412 archived Git blobs and executable
-modes remain unchanged after the tests and historical exercise.
+Two first-core/XYZ history pairs cover all 48 days, July 21 through September 7.
+Each supplies 69,120 minute sets, 290,304 provider records, 295 entry intents and
+1,605 evaluations with exit flags. Two last-core pairs cover the common four-day
+prefix through July 25, each with 5,760 minute sets and 29 intents. These are
+provider observations repeated across explicit hypothetical position contexts,
+not executed trades or account returns. All four full 48-day pairs remain required.
 
-The immutable revision-20 snapshot supplies two available first-core history
-pairs over (July 21, August 21] UTC. Each contains 44,640 minute sets, 187,488
-scheduled provider records, 195 entry intents and 1,044 evaluations carrying
-exit-side flags. These are provider observations, not trades or executed exits.
-Exact source-line hashes match independent compressed-file traversal. All earlier
-30,240 first/full-prefix compiled minute sets reproduce exactly. Both last-source
-requests remain explicitly unavailable in that snapshot; no alternative source
-or later start is substituted. All 824 consumed evidence references reauthenticate.
+The shared native decoder now preserves target anchors, numeric types and all
+complete evaluation/readiness fields. Configured native closes, timer/recipe/
+profit scopes, fresh publication order, source withholding and entry-only ranks
+are preserved by the routing projection. All 221 focused tests are recorded as
+passing in worktree and archive; all 178 statements and 50 branches in the three
+measured modules are covered. All 5,421 archived Git blobs/modes remain exact.
+The independent verifier reauthenticates 1,088 consumed references and rejects
+mutated target anchors, entry ranks, omitted withholding and duplicate entries.
 
-Next, continue the original [historical routing plan](../plans/2026-09-09-v89-historical-routing-qualification.md):
-compare complete native/research publication and routing with economic action
-fields, configured ordering and withholding reasons preserved. Decode complete
-provider evaluations losslessly for configured exits. The existing HYPE decoder
-is not a lossless general decoder: it omits target anchors and normalizes values.
-Reuse the existing independent canonical source binder and label counterfactual
-position contexts. Integrate configured exits and dynamic account state after
-those contracts reconcile. All 48 historical days and all four variant pairs
-remain required; the new prefixes do not complete that scope.
+Next, continue the original [historical routing plan](../plans/2026-09-09-v89-historical-routing-qualification.md)
+by integrating native routing at the actual decision-position boundary, after
+earlier-bar exits and before current-opening exits/risk. Join native actions to
+source-priced entry plans; retain every withholding reason and rank. Reconcile
+configured closes against original frozen pending-exit/holding semantics before
+applying account events. Preserve source decision, knowledge and model clocks.
+The account must carry dynamic equity, rounded size, fees, funding, barriers and
+terminal open positions across the fixed source/cost/clock variants.
 
-The full retained-source XYZ provider comparison remains complete: 27,648 quarter
-decisions, 6,912 archived hourly checks and 288 daily chunks, with zero differences.
-Its session 54747 exited successfully at 11:29:37 UTC; do not restart it.
-Original initialization gaps and missing native one-minute XYZ evidence remain
-explicit. Agreement does not establish independent indicator correctness or profits.
+The historical compatibility probe uses five declared synthetic position contexts
+and a $100 close reference. It does not qualify full native poll transport,
+historical source-age withholding receipts, independent canonical history, HYPE
+soft-extension intervals or active profit-lock policies. Complete native controller
+journal payloads are not retained in cycle rows, only counts. No economic result,
+strategy-reachable position path or prospective result is inferred.
 
-At 12:24:34 UTC, core parent PID 80776 and its four workers are present; its log
-reports 383,040/552,960 checks in 266 completed chunks, with zero differences.
-This is fresh log progress, not new independent verification of every payload.
-The last independently verified core snapshot remains 321,120 checks. Preserve
-core session 34414 and its running archive; do not restart after an observation
-timeout. Both collectors have live PIDs, no reported errors, heartbeats under
-29 seconds and all 26 source pins unchanged. Live-profile hashes are unchanged.
+The complete XYZ comparison remains 27,648 quarter decisions, 6,912 archived
+hourly checks and 288 daily chunks with zero differences; its job finished at
+11:29:37 UTC. Do not restart it. Missing initialization and native minute data
+remain explicit. The independent 13:00:08 UTC core snapshot contains 426,240
+checks in 296 chunks. At 13:32:11 UTC the original core parent/four workers are
+present, with 450,720/552,960 checks and zero differences reported in its log.
+That later log progress is not fresh independent payload verification. Preserve
+session 34414 and its frozen archive while the remaining last-source streams run.
 
-Revision 19's signal-time occupancy correction remains qualified within its
-reproduced synthetic scope; its actual historical financial impact is unmeasured.
-Revision 20's independent canonical HYPE probes reproduce two inherited soft
-exit timestamps across four source/time cases and six repeated cost memberships;
-they do not qualify whole-history or future UNKNOWN handling.
+At the same health check both source collectors have live PIDs, no reported
+errors, heartbeats under five seconds and all 26 source pins unchanged. Both
+live-profile hashes are unchanged. Research process health establishes neither
+live armed execution nor current account outcomes.
 
-Revision 21 contains 3,831 evidence references and preserves the complete 3,806
-reference prefix from revision 20. All 21 database columns, exact JSON value
-types and both document copies reconcile. New evidence is under
-`data/logs/research/bidirectional_cohort/v89_historical_snapshot_20260909_v1/`.
-No live lifecycle, strategy, sizing, execution, deployment or TUI change was made.
-No profitable live recommendation or full prospective evaluator is established.
+Revision 19's signal-time occupancy correction remains qualified in its reproduced
+synthetic scope; historical financial impact is unmeasured. Revision 20's HYPE
+canonical probes cover two inherited soft deadlines, not whole-history or future
+UNKNOWN handling. Revision 21's authenticated reader remains available; its older
+prefix measurements are retained as historical evidence, not current scope.
+
+Revision 22 contains 4,020 references, preserving revision 21's complete 3,831
+reference prefix. Evidence is under
+`data/logs/research/bidirectional_cohort/v89_historical_exit_routing_20260909_v1/`.
+No profitable live recommendation or complete prospective evaluator is established.
 
 ## Historical September 8 findings and intermediate next actions
 
