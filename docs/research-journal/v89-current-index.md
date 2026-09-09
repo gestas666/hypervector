@@ -7,6 +7,17 @@ outcome was refreshed for this update.
 
 ## Current finding and next action
 
+The [market binding and canonical export startup](../reviews/2026-09-09-v89-market-binding-canonical-export-start.md)
+is recorded from source `c02c9c6`: 39 focused tests pass in source and archive;
+all eight real initial canonical payloads match. At September 9 18:24:42 UTC,
+the complete historical canonical export is running with four workers, parent
+PID 26037, exec session **32156**, and zero finished daily chunks. Preserve the
+job under `v89_historical_canonical_history_20260909_v1`; do not restart it.
+Original real-history market binding and full native account outcomes remain
+unfinished. Next join those inputs while the independent canonical export runs,
+preserving the complete account plan and both prospective outcome seals.
+Startup free disk is 7,505,145,856 bytes; monitor output growth and source health.
+
 The [historical publication binding](../reviews/2026-09-09-v89-historical-provider-binding.md)
 is qualified as an account input: all 580,608 publications across fourteen
 unique streams retain native admission, complete exits, original gaps and
