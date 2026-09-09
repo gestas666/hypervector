@@ -7,6 +7,24 @@ outcome was refreshed for this update.
 
 ## Current finding and next action
 
+The [native HYPE holding correction](../reviews/2026-09-09-v89-native-hype-hold-qualification.md)
+is independently reproduced from `5fcb533`: 363 account regressions plus five
+oracle tests pass in the worktree, and all 368 pass in its archive. Every one
+of 69,984 synthetic policy combinations agrees with independent Fraction
+arithmetic; complete comparison files are byte-identical. Provider/canonical
+observations remain independent, observed UNKNOWN follows the native policy,
+and original accepted-entry clocks and protective-stop precedence survive.
+See [holding revision 1](v89-native-hype-hold-20260909-v1.json).
+
+This supersedes the earlier unsupported-UNKNOWN limitation for native synthetic
+account routing. It does not establish historical financial improvement. New
+historical venue-unit and entry bindings are being implemented separately.
+Finish the full original account matrix and independent canonical history;
+retain both prospective outcome seals. The original canonical job is confirmed
+live in exec session 32156 and has not been restarted.
+
+The preceding completed market-input qualification and retained lineage follow.
+
 The [complete historical price/funding binding](../reviews/2026-09-09-v89-historical-market-binding.md)
 is qualified from source `c55c04b`: all fourteen price cases, 580,608 prices and
 16,128 funding observations reproduce from the verified archive. All 67 focused
