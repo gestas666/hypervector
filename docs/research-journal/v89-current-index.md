@@ -11,58 +11,68 @@ records carry `execution_authority=none`; they do not arm or manage orders.
 
 ## Current finding and next action
 
-September 9 update: journal revision 19 records a reproduced research admission
-bug and its bounded correction. A signal emitted while its asset position was
-open could become a replacement after a same-decision exit. The original bar
-engine closes without re-entry in five ETH/SOL/SPCX/SNDK/Brent controls. Restoring
-the old admission helper produces two target round trips instead of one in all
-eight synthetic ETH/SPCX source-and-clock cases; the correction produces one and
-retains the excluded proposal. Historical financial impact remains unmeasured.
-See the [occupancy/routing review](../reviews/2026-09-09-v89-signal-time-occupancy-and-routing.md)
-and [revision 19](v89-equal-cap-prospective-20260909-v19.json).
+September 9 update: journal revision 20 independently verifies the complete
+retained-source XYZ comparison: 27,648 quarter decisions, 6,912 archived hourly
+checks, six streams and 288 daily chunks, with zero differences. SPCX, SNDK and
+Brent each complete both full-prefix and rolling-fourteen-day histories. The
+worker/session 54747 exited successfully at 11:29:37 UTC; do not restart it.
+All fourteen inputs, 1,876 implementation pins and 5,389 archived Git blobs/modes
+remain exact. The original twelve-day initialization gap stays explicit.
+See the [complete XYZ/input review](../reviews/2026-09-09-v89-complete-xyz-and-historical-routing-inputs.md)
+and [revision 20](v89-equal-cap-prospective-20260909-v20.json).
 
-Source `bb5c302b8018bf6546a389320daef64e1cebf869` passes 1,205 archived tests
-across 64 files, including all allocation tests and selected native poller/routing
-checks. All 5,399 Git blobs and executable modes remain exact afterward. The
-68-test targeted run covers all 77 statements and 22 branches in entry admission
-and the new offline routing projection. The archived test selection differs from
-the earlier worktree selection; consult its retained manifest for exact scope.
+Source `b297eee771244904b3f65fc14bd2f8ebe4cfb6de` adds lossless historical intent
+decoding and complete scheduled minute sets. Its 45 new tests plus sixteen
+existing projection/preference tests pass in worktree and archive; all 101 new
+statements and 40 branches are covered. The archived compiler reproduces the
+independent first-core/full-prefix-XYZ inventory for (July 21, August 11]: 30,240
+minute sets, 127,008 scheduled provider rows and 139 exact entry intents. Nine
+minutes have two different assets' intents; no same-asset duplicate is observed.
+These are inputs, not executed trades or routed account results.
 
-The new projection covers supplied fresh intents, native publication order,
-causal canonical preference and controlled routing. It is not wired into the
-source calendar. Complete historical eligible sets, configured exits and dynamic
-account routing remain unqualified. Next: qualify those together, then measure
-the correction on permitted historical inputs ending September 7. Keep original
-HYPE UNKNOWN semantics and both prospective outcome seals unchanged.
+The comparison payloads lack independent canonical telemetry. Reuse the existing
+source-bound canonical collector instead of relabeling provider diagnostics or
+inventing XYZ minute candles. Next, follow the
+[historical routing plan](../plans/2026-09-09-v89-historical-routing-qualification.md):
+finish the reusable authenticated snapshot reader, compare complete native and
+research routing, then integrate configured exits and dynamic account state.
+The final scope remains all 48 days and all declared variant pairs. A shorter
+prefix does not qualify that full scope or the prospective evaluator.
 
-The independently verified 10:53:17 UTC historical snapshot contains 259,200 of
-552,960 core minute comparisons and 21,024 of 27,648 XYZ quarter comparisons,
-with zero differences. BTC's two source streams and SPCX/SNDK's two history
-conventions are complete within this scope. Missing XYZ initialization remains
-explicit; comparison agreement establishes neither profitability nor full
-prospective evaluator qualification.
+Four archived HYPE source/time probes cover two inherited soft-deadline times
+(August 4 15:30 and August 26 10:25 UTC), repeated across six source/cost memberships.
+Independent native canonical evidence agrees with the original exit decisions;
+weighted scores are 1/6 and 1/4, below the existing 1/2 threshold. Sixty-two
+additional related archive tests pass, and the four cases reproduce exactly.
+This does not qualify future UNKNOWN handling or whole-history canonical behavior.
+No historical return, fill or lifecycle is revised.
 
-The same core parent PID 80776/four workers (session 34414) and XYZ PID 83558
-(session 54747) are present at 11:00:33 UTC. Preserve their running archives and
-poll the same handles. Their output roots remain
-`data/logs/research/bidirectional_cohort/v89_full_provider_regime_parity_20260909_v1/`
-and `data/logs/research/bidirectional_cohort/v89_xyz_provider_history_20260909_v1/`.
-New correction evidence is in
-`data/logs/research/bidirectional_cohort/v89_routing_contract_20260909_v1/`.
+All 5,404 Git blobs and executable modes in the new archive remain unchanged
+after tests and historical exercises. At the independently checked 11:41:31 UTC
+snapshot, the core job has 321,120 of 552,960 minute comparisons with zero
+differences. BTC's two streams are complete; the remaining core scope is pending.
+Parent PID 80776/four workers (session 34414) are present at 11:44:22 UTC.
+Preserve its running archive and poll the same handle. Source collectors have
+matching live PIDs, heartbeats under sixteen seconds, no reported error and all
+26 code pins unchanged. Both live-profile hashes remain unchanged.
 
-At 11:00:33 UTC both source collectors have matching live PIDs, heartbeats under
-27 seconds, no reported error and all 26 code pins unchanged. Both live-profile
-hashes remain unchanged. No live lifecycle, execution or TUI change was made,
-and no venue account or sealed prospective outcome was read. Journal revision 19
-retains 3,544 evidence references and preserves all 3,248 revision-18 references;
-all 21 database columns and both source-document copies reconcile exactly.
+New evidence is in
+`data/logs/research/bidirectional_cohort/v89_historical_routing_20260909_v1/`.
+The completed XYZ run remains in
+`data/logs/research/bidirectional_cohort/v89_xyz_provider_history_20260909_v1/`;
+the active core run remains in
+`data/logs/research/bidirectional_cohort/v89_full_provider_regime_parity_20260909_v1/`.
+Journal revision 20 retains 3,806 references and preserves all 3,544 revision-19
+references. All 21 database columns, exact JSON value types and both document
+copies reconcile. No live lifecycle, execution, strategy, sizing or TUI change
+was made, and no venue account or sealed prospective outcome was read.
 
-The previous bounded HYPE finding remains: 6,368 holding-decision checks and six
-soft-deadline checks show no UNKNOWN, absent or null regime during the six
-inherited modeled lifetimes. This does not support UNKNOWN handling as their loss
-explanation; compatibility on other lifetimes remains unqualified. The earlier
-24-cell synthetic accounting result retains its programmed-signal scope, which
-did not exercise the newly reproduced admission collision.
+Revision 19's signal-time occupancy correction remains accepted within its
+reproduced synthetic scope: the original bar engine closes without same-decision
+replacement, and all eight ETH/SPCX source/clock controls retain one round trip
+instead of two. Its actual historical financial impact is still unmeasured.
+The earlier HYPE UNKNOWN join found no UNKNOWN/absent/null states during the six
+inherited modeled lifetimes. Neither result establishes a profitable live fix.
 
 ## Historical September 8 findings and intermediate next actions
 
