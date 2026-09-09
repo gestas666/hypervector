@@ -11,35 +11,43 @@ records carry `execution_authority=none`; they do not arm or manage orders.
 
 ## Current finding and next action
 
-September 9 update: the seven-asset source collector is running and qualified
-for source capture; the full prospective evaluator is not yet qualified. Source
-and account milestones through journal revision 15 include the archived
+September 9 update: journal revision 16 qualifies complete synthetic source
+calendars in research source `7dfdef3`. The final archive passes 1,205 offline
+tests and reproduces all 24 synthetic cases / 168 closed-trade comparisons byte
+for byte. Seven terminal positions remain open with independently reconciled
+marks, costs and position margin. See the
+[source-calendar review](../reviews/2026-09-09-v89-source-calendar-integration.md)
+and [revision 16](v89-equal-cap-prospective-20260909-v16.json).
+
+Consecutive bars now preserve the exact completed-provider decision in the next
+admission, and the report comparator rejects nonfinite numeric values. Complete
+native grids, explicit funding hours, source identities and phase clocks are
+verified before account events are exposed. Unit coverage is complete for the
+two new research modules (113 statements / 36 branches). The combined worktree
+run reported twelve unresolved SQLite ResourceWarnings; the archive reported none.
+
+These cases use programmed 2030 decisions and explicit admission ranks. Full
+historical provider/regime output, global conflict selection and the frozen
+prospective evaluator remain unqualified. Historical HYPE UNKNOWN compatibility
+is unresolved. Next: compare complete historical provider/regime decisions and
+routing order against the frozen models and controls, preserving the original
+HYPE support formula and holding clock. Both prospective outcome seals remain
+intact; no reliable profitability improvement or live deployment is established.
+Confidence is high in the documented synthetic scope and low in future returns;
+failed historical parity or independent reproduction would update it.
+
+The seven-asset and SNDK/Brent collectors continue source capture. At September 9
+07:58:55 UTC both had matching live process identities, fresh heartbeats and no
+reported error. All fifteen and eleven collector source pins matched, and both
+live-profile copies were unchanged. No matching trading engine or TUI was found.
+This local observation does not refresh venue positions, orders or account value.
+
+Earlier source/account milestones include the
 [chronological coordinator](../reviews/2026-09-09-v89-portfolio-coordinator.md),
 [captured-source entries](../reviews/2026-09-09-v89-source-portfolio-binding.md)
-and [side-specific provider completions](../reviews/2026-09-09-v89-provider-completion-binding.md).
-The latest milestone passes 1,148 offline tests in the worktree and archive.
-The preceding source milestone reproduces 24,544 source-only bindings exactly.
-Both prospective outcome seals remain intact.
-
-The completion dispatcher now respects the provider's named exit sides. Complete
-provider/canonical payloads, selected/first candle identities, stale-entry exits
-and native HYPE opposite-close authority are retained. Unavailable and UNKNOWN
-regime values remain explicit; historical HYPE UNKNOWN compatibility remains
-unqualified. The broader worktree test run reported twelve unclosed-SQLite
-ResourceWarnings; the archive run reported none.
-
-Next: assemble source-backed calendar bars with bound entries, completions and
-native funding, then verify complete historical provider/regime parity and the
-frozen 24-cell evaluator. The older daily gap bug is corrected in the research
-checkout. No reliable profitability improvement or live deployment is established
-by these engineering milestones. Confidence is high for their documented test
-scope and low for future returns; failed full-provider parity or independent
-replay would update it.
-
-The September 9 07:05 UTC local process check found two data collectors and no
-matching trading engine or TUI. Both collectors reported no error; all fifteen
-seven-asset and eleven SNDK/Brent source pins matched. The live profile remains
-unchanged. These local observations do not refresh the last venue account snapshot.
+and [side-specific completions](../reviews/2026-09-09-v89-provider-completion-binding.md).
+The source-only milestone reproduces 24,544 observed bindings exactly. Those
+counts are source observations, not trades or evidence of improved returns.
 
 ## Historical September 8 findings and intermediate next actions
 
