@@ -7,6 +7,24 @@ outcome was refreshed for this update.
 
 ## Current finding and next action
 
+The [historical calendar/native account integration](../reviews/2026-09-09-v89-historical-calendar-integration-start.md)
+is frozen at `d7b44cb` with 117 passing focused tests. A fixed 35-day first-source
+canonical prefix (201,600 observations) reproduces byte-for-byte in worktree and
+archive; all 291 references are reauthenticated. This source-reader result does
+not qualify the complete 48-day account or later-source variants.
+
+Broader regression sessions **44606** (worktree) and **32391** (archive) remain
+live at September 9 21:05 UTC. Preserve their source and original canonical
+export session **32156**. Complete regression/archive qualification, then the
+full historical input loader, 48-case native account run and independent
+reconciliation. The next implementation checkout is
+`/Users/gestas/Prototypes/hypervector-v89-history-runner-20260909`, based on `d7b44cb`;
+the existing storage/SPCX worktree remains the fixed regression source.
+Both outcome seals remain intact. No historical financial improvement or live
+change has been established.
+
+The preceding completed entry qualification and retained lineage follow.
+
 The [historical entry and venue binding](../reviews/2026-09-09-v89-historical-entry-venue-binding.md)
 is reproduced from `7f690ac`: 555 selected tests passed in both worktree and
 verified archive, with 198/200 measured statements covered. The original
