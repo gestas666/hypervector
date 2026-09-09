@@ -7,23 +7,24 @@ outcome was refreshed for this update.
 
 ## Current finding and next action
 
-The [historical source-gap qualification](../reviews/2026-09-09-v89-historical-source-gap-qualification.md)
-is complete in bounded retained-source scope, source `24c8ad1`. All 76 account
-and 21 warmup gaps reconcile independently. Recorded candles cover 41 account
-gaps, but all 53 underlying observations are flat and zero-volume with absent
-per-bar source labels. Annual-cache replacements are explicitly `hl_gap_fill`.
-Official scheduled windows overlap 71 account gaps, with three immediately before
-a scheduled start; exact execution prices and stop paths remain unqualified.
-Both reports reproduce exactly from the archive. See
-[revision 1](v89-historical-source-gaps-20260909-v1.json).
+The [missing-candle market study](../reviews/2026-09-09-v89-gap-market-observations.md)
+qualifies separate observed quotes for both unmatched August 1 SOL minutes.
+Each has 131 book observations, no observed public trades and one sparse mark.
+Missing candles do not establish a flat market or absent quotes; exact fills and
+continuous stop paths remain unresolved. Original provider grids are unchanged.
+Source `f2808cc` passes 126 offline tests in worktree and archive; both reports
+reproduce exactly, and all 24 consumed references are reauthenticated.
+See [source-gap revision 2](v89-historical-source-gaps-20260909-v2.json), which
+preserves revision 1 and its 76 account/21 warmup gap qualification.
 
-Next inspect retained native/vendor evidence for the two unmatched August 1 SOL
-minutes and remaining intervals, then qualify explicit gap-bearing market
-availability in the complete dynamic account. Preserve the original provider
-grids, full 48 days and all source/cost/clock/allocation axes. No economic outcome
-or live state was refreshed by this source-only study. At 15:35:36 UTC the original
-core comparison log reports 535,680/552,960 checks with zero differences; this is
-log progress, not a fresh independent payload audit.
+The original core comparison finished September 9 at 16:08:41 UTC. Its completion
+log reports eight streams, 552,960 checks and zero mismatches. Independent final
+payload verification remains outstanding. Do not restart the completed job.
+Next follow the [complete account qualification plan](../plans/2026-09-09-v89-gap-market-account-followup.md):
+authenticate final provider outputs, qualify the initial boundary and explicit
+market availability, then assemble the complete dynamically sized native account.
+Preserve all 48 days and every original source/cost/clock/allocation case. No
+economic result or live state was refreshed by this source-only study.
 
 The [typed native account integration](../reviews/2026-09-09-v89-typed-native-account-routing.md)
 is frozen as `585b484747b33acd948bff5c38f090f896e58418`: 341 tests pass in both

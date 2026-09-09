@@ -1,0 +1,932 @@
+{
+  "automatic_promotion": false,
+  "confidence": "high",
+  "created_at_utc": "2026-09-09T16:21:11.638372+00:00",
+  "decision": "Retain the two missing SOL minutes as missing trade candles with separately observed changing quotes and sparse marks. Exact fills and continuous trigger paths remain unqualified. Preserve all original provider grids and full 48-day source/cost/clock/allocation scope. Independently verify the completed provider comparison and qualify explicit market availability in the complete dynamically sized native account. No account outcome or live change follows from this result.",
+  "evidence": [
+    {
+      "bytes": 170,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_source_gap_qualification_20260909_v1/archive_independent.log",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "b1f9205e04d02b0395d1ab40122b2761533bfbfc67049b6789b3bb34db95e5da"
+    },
+    {
+      "bytes": 1830,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_source_gap_qualification_20260909_v1/archive_probe.log",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "a0a5425f168425adec6b2033487b4bae57e39e918f056e3cf54d1fed1b144461"
+    },
+    {
+      "bytes": 90750,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_source_gap_qualification_20260909_v1/archive_reproduction/gap_qualification.json",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "94939d8458db099e42aa68c57daa5a1f9555e21c97aa3bbf7b566f73811b8d35"
+    },
+    {
+      "bytes": 182,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_source_gap_qualification_20260909_v1/archive_reproduction/independent_gap_verified_v2.json",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "911dbf10ee8881578755dd17cc11f0cee33447c7030cf006373aacc0024d343f"
+    },
+    {
+      "bytes": 511,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_source_gap_qualification_20260909_v1/archive_reproduction_verified.json",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "b513e5cc44ea80d18dd8c0b2982b20afffe6c694bfb40e20f544be146e41aabf"
+    },
+    {
+      "bytes": 13014449,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_source_gap_qualification_20260909_v1/cache_snapshot/BTC_1m_365d.parquet",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "b0742553ebeaa7cb4af6fabfd496f5462354cb541705fd0ca5ec222dc21e15d8"
+    },
+    {
+      "bytes": 11949012,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_source_gap_qualification_20260909_v1/cache_snapshot/ETH_1m_365d.parquet",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "e10e00209f1584151c23a69d39116485d7c241e00d4a8c2031f7e624a431bd84"
+    },
+    {
+      "bytes": 11858713,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_source_gap_qualification_20260909_v1/cache_snapshot/HYPE_1m_365d.parquet",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "3dba115ac49c71f4b52d69849eaf69ab1da23e82ebb0326e9738cf35b0d159d2"
+    },
+    {
+      "bytes": 11280544,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_source_gap_qualification_20260909_v1/cache_snapshot/SOL_1m_365d.parquet",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "f7fd76f5042c0a59aefdc7fb213a85324928e1d67715970e0536b608ff357530"
+    },
+    {
+      "bytes": 1655,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_source_gap_qualification_20260909_v1/cache_snapshot_manifest.json",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "924907169d779e1cc8d1d1062728b84b40b524a3b6d3bd3395af6d1104f2af03"
+    },
+    {
+      "bytes": 170,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_source_gap_qualification_20260909_v1/final_independent_corrected.log",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "b1f9205e04d02b0395d1ab40122b2761533bfbfc67049b6789b3bb34db95e5da"
+    },
+    {
+      "bytes": 1234,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_source_gap_qualification_20260909_v1/final_probe.log",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "e5cc603c22bcaeebb6d0ef0c6b16d84b480047b3945ea009bb1d0b54647830ad"
+    },
+    {
+      "bytes": 1830,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_source_gap_qualification_20260909_v1/final_probe_corrected.log",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "a0a5425f168425adec6b2033487b4bae57e39e918f056e3cf54d1fed1b144461"
+    },
+    {
+      "bytes": 90750,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_source_gap_qualification_20260909_v1/final_verification/gap_qualification.json",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "94939d8458db099e42aa68c57daa5a1f9555e21c97aa3bbf7b566f73811b8d35"
+    },
+    {
+      "bytes": 182,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_source_gap_qualification_20260909_v1/final_verification/independent_gap_verified_v2.json",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "911dbf10ee8881578755dd17cc11f0cee33447c7030cf006373aacc0024d343f"
+    },
+    {
+      "bytes": 90750,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_source_gap_qualification_20260909_v1/gap_qualification.json",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "94939d8458db099e42aa68c57daa5a1f9555e21c97aa3bbf7b566f73811b8d35"
+    },
+    {
+      "bytes": 705,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_source_gap_qualification_20260909_v1/independent_probe_corrected.log",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "f84d2bd7e758c4024cdae05abbc92d8df6c8e052586566dd26c23136564485fb"
+    },
+    {
+      "bytes": 1311,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_source_gap_qualification_20260909_v1/independent_probe_initial.log",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "1a7938c6989d46f3ed445e32af4ea7f625608db9520905d6c5610a8f384072fe"
+    },
+    {
+      "bytes": 9719,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_source_gap_qualification_20260909_v1/independent_probe_initial.py",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "fc329cc742f4e37079f46b1c7203c1e93df9d189f33f1b7e8ddb0e4ec2e6dd27"
+    },
+    {
+      "bytes": 9740,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_source_gap_qualification_20260909_v1/independent_probe_timezone_attempt.py",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "1275f14e033aa4ccfac0cadb55e08174e38c4df2ca3550ef6f0d9afcc27a15f6"
+    },
+    {
+      "bytes": 1830,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_source_gap_qualification_20260909_v1/probe.log",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "a0a5425f168425adec6b2033487b4bae57e39e918f056e3cf54d1fed1b144461"
+    },
+    {
+      "bytes": 349,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_source_gap_qualification_20260909_v1/public_source_receipt.json",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "5f6457a45f044dac9579cf48c798ec2ce662040403e108322061f3df27d4905c"
+    },
+    {
+      "bytes": 113120,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_source_gap_qualification_20260909_v1/scheduled-maintenances.json",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "ee278aed34b41ea63546c278ccf4256b7011451530f0f908aa9f14ba5cbc1859"
+    },
+    {
+      "bytes": 33029804,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_source_gap_qualification_20260909_v1/source_24c8ad14fe7593ebadce692fc60b0b2e46d1ca2e.tar.gz",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "a8daad1b3f9fba145d555ca19ee24428c2348cb69658facff2522fd76de611d8"
+    },
+    {
+      "bytes": 684,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_source_gap_qualification_20260909_v1/source_archive_verified.json",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "7bda70bc13ba9e72d6960bdb4d69da5646d372bdfa8bcb528fbc472844fd8820"
+    },
+    {
+      "bytes": 324,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_source_gap_qualification_20260909_v1/source_structure_verified.json",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "ec4149f25899651424750659472e8d5b837bd41a25c1af541687a47acb5d3658"
+    },
+    {
+      "bytes": 15874591,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_recorded_native_events_20260907_v1/events.parquet",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "cc4b68f5912a7a2308e8e5f72a6feac1ff7024b2e836e811ae2ead3edeaf889c"
+    },
+    {
+      "bytes": 5829198,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_recorded_native_hybrid_inputs_20260907_v1/first/BTC/bars.parquet",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "a03cb51a4f9083dd1a6d178a748fa7c681c2685a2fa5dcacf4cd6accda982095"
+    },
+    {
+      "bytes": 5275505,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_recorded_native_hybrid_inputs_20260907_v1/first/ETH/bars.parquet",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "b2c3ad1091c066720e6ff7c033fcb117be60b5b2a33223c17767397ed1a21347"
+    },
+    {
+      "bytes": 5963787,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_recorded_native_hybrid_inputs_20260907_v1/first/HYPE/bars.parquet",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "9d31160156a677cee5706db343e548ae8ed0ae415c5a7a670cbf8ff0904e2f7e"
+    },
+    {
+      "bytes": 5325239,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_recorded_native_hybrid_inputs_20260907_v1/first/SOL/bars.parquet",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "64b2e2d5d6fb7c7bd1723f03ddf9d359c3afc020ec5d9aa99d0945ef93652c6d"
+    },
+    {
+      "bytes": 5204519,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_recorded_native_hybrid_inputs_20260907_v1/last/BTC/bars.parquet",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "18e0bbd31d45b2bd042b45606386e2a8c5de2295b62d983205eadb7b6e7b1fa8"
+    },
+    {
+      "bytes": 4742847,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_recorded_native_hybrid_inputs_20260907_v1/last/ETH/bars.parquet",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "bb8e9eec2a06edea14ff1641a4d5d240e4a50938318af174df9e4d380aff673a"
+    },
+    {
+      "bytes": 5321067,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_recorded_native_hybrid_inputs_20260907_v1/last/HYPE/bars.parquet",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "f64007d1c3ef5f00bf109674e6e1dc8f93a378c8500a96a14447947ec338d863"
+    },
+    {
+      "bytes": 4768036,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_recorded_native_hybrid_inputs_20260907_v1/last/SOL/bars.parquet",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "70736f811adc4cd0e9ba7b46071740b5c23c57cff273de5982c36f8eaa9b160c"
+    },
+    {
+      "bytes": 38586,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_recorded_native_hybrid_inputs_20260907_v1/manifest.json",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "54e6cf5e5fa35567d711da1bdae56d735bc3df573c596c6f766ec95385a5ac6e"
+    },
+    {
+      "bytes": 16592866,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_recorded_native_hybrid_inputs_20260907_v1/observations.parquet",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "114977a947d472c37057d0665a6aa5afdd387e5b172d91976e6d486bb0b77ece"
+    },
+    {
+      "bytes": 2521,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/plans/2026-09-09-v89-historical-account-source-gaps.md",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "47f863b3da2654619b5493162f3e3c92ac371f5a8b701c249701f05a9161fda5"
+    },
+    {
+      "bytes": 48409,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/research-journal/v89-recorded-native-source-sensitivity-20260907-v1.json",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "7e958253eefa428c4b6e205ceef8c0b88dffa0ba6caf0cd8b3adea2d7c42c1d2"
+    },
+    {
+      "bytes": 4437,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/reviews/2026-09-09-v89-historical-source-gap-qualification.md",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "378dc4065a79f2454854f6d76e9fca298c886534acb765e1377b1548f21f0c10"
+    },
+    {
+      "bytes": 15607,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/SOL/20260801T135400000000Z_20260801T135700000000Z_d20/books.jsonl.gz",
+      "role": "historical_gap_market_qualification",
+      "sha256": "3483ac64389210a791e1da933f6e9b4ffe317f3bddecd6127a8798541e7a203b"
+    },
+    {
+      "bytes": 1001,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/SOL/20260801T135400000000Z_20260801T135700000000Z_d20/manifest.json",
+      "role": "historical_gap_market_qualification",
+      "sha256": "01961554377d2c6c7ecdb496ed4e7699035a357e5de4980ed32421e2c2fe7a13"
+    },
+    {
+      "bytes": 22653,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/SOL/20260801T135400000000Z_20260801T135700000000Z_d20/raw/page-0001.json.gz",
+      "role": "historical_gap_market_qualification",
+      "sha256": "4832ef4ff62ff8e24422dda78de86f0029bbc20cf5e5a842d7614094be2bf471"
+    },
+    {
+      "bytes": 804,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/SOL/20260801T135400000000Z_20260801T135700000000Z_prices/manifest.json",
+      "role": "historical_gap_market_qualification",
+      "sha256": "7cbf2db5c909ec89290e6fab675fea95a98443b36baa16e52810a20c003b810a"
+    },
+    {
+      "bytes": 4089,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/SOL/20260801T135400000000Z_20260801T135700000000Z_prices/prices.parquet",
+      "role": "historical_gap_market_qualification",
+      "sha256": "ec4297e4016beb802839b80f7c71e86a5b14d61a384a4a6468ff546d03aa513a"
+    },
+    {
+      "bytes": 252,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/SOL/20260801T135400000000Z_20260801T135700000000Z_prices/raw/page-0001.json.gz",
+      "role": "historical_gap_market_qualification",
+      "sha256": "bd354391d942965914dfcbed5c9b5ceb51554f7ae20cc0f1f4ac41c1147ed645"
+    },
+    {
+      "bytes": 1041,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/SOL/20260801T135400000000Z_20260801T135700000000Z_trades/manifest.json",
+      "role": "historical_gap_market_qualification",
+      "sha256": "8d97280a6cb47f32c1e0a35a0e2406d09a6254e33f57c08314a1f88752cc0ae2"
+    },
+    {
+      "bytes": 2455,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/SOL/20260801T135400000000Z_20260801T135700000000Z_trades/raw/page-0001.json.gz",
+      "role": "historical_gap_market_qualification",
+      "sha256": "f7b2dc2c559bd1bd3fbea7d421dd4387d9f155b6d3b27f80223a0879fb53c4e2"
+    },
+    {
+      "bytes": 548,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/SOL/20260801T135400000000Z_20260801T135700000000Z_trades/trades.jsonl.gz",
+      "role": "historical_gap_market_qualification",
+      "sha256": "3aa6dcf2a6ef04dfc9272feb71252f83db9c024e76025f36d63b8bd239185131"
+    },
+    {
+      "bytes": 14083,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/SOL/20260801T164600000000Z_20260801T164900000000Z_d20/books.jsonl.gz",
+      "role": "historical_gap_market_qualification",
+      "sha256": "9b0ca928c6716c66bd82efbe856de1a3f8a0576e2e7b53ae0b4ee1e419ec2420"
+    },
+    {
+      "bytes": 1001,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/SOL/20260801T164600000000Z_20260801T164900000000Z_d20/manifest.json",
+      "role": "historical_gap_market_qualification",
+      "sha256": "008b2c5500c1d6545e8963e79704aede2081bdb490540ce63d91ae7ec05e84d9"
+    },
+    {
+      "bytes": 21025,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/SOL/20260801T164600000000Z_20260801T164900000000Z_d20/raw/page-0001.json.gz",
+      "role": "historical_gap_market_qualification",
+      "sha256": "c46178fcbade6f335e75c27019a2cec70365874ee474decc29bedd61df79c0c4"
+    },
+    {
+      "bytes": 804,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/SOL/20260801T164600000000Z_20260801T164900000000Z_prices/manifest.json",
+      "role": "historical_gap_market_qualification",
+      "sha256": "f6758c77a67ab0c91be66a96126287d0ca94ca74ded79d3c62326058f3801e16"
+    },
+    {
+      "bytes": 4113,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/SOL/20260801T164600000000Z_20260801T164900000000Z_prices/prices.parquet",
+      "role": "historical_gap_market_qualification",
+      "sha256": "946897e348a0b964e3d8cf928a1c20a3395f408ccaa94e3b99089e530873b255"
+    },
+    {
+      "bytes": 258,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/SOL/20260801T164600000000Z_20260801T164900000000Z_prices/raw/page-0001.json.gz",
+      "role": "historical_gap_market_qualification",
+      "sha256": "93368def7fd50f5ff9fbf2cce4e2cfea0751033f0751604c9217be88b0250d8b"
+    },
+    {
+      "bytes": 1041,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/SOL/20260801T164600000000Z_20260801T164900000000Z_trades/manifest.json",
+      "role": "historical_gap_market_qualification",
+      "sha256": "6ba59bc776953a0cf4445916db94dabac155478f4ef527def9855f6a7a79b6c3"
+    },
+    {
+      "bytes": 2784,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/SOL/20260801T164600000000Z_20260801T164900000000Z_trades/raw/page-0001.json.gz",
+      "role": "historical_gap_market_qualification",
+      "sha256": "90371684f654d77ca90455bd686283fe74ba69575976b229ea157c4907f89cf5"
+    },
+    {
+      "bytes": 570,
+      "path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/SOL/20260801T164600000000Z_20260801T164900000000Z_trades/trades.jsonl.gz",
+      "role": "historical_gap_market_qualification",
+      "sha256": "474259b9bca7a1b8c14d64ef7bdf37b6e73ab9c0ff8662c01afda7a1e7d56db0"
+    },
+    {
+      "bytes": 1383,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_gap_market_evidence_20260909_v1/acquisition_contract.json",
+      "role": "historical_gap_market_qualification",
+      "sha256": "a5884141acdaac11d3e43263af118d83c1b6069ad685c2b61cc1ee84cba576cd"
+    },
+    {
+      "bytes": 522,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_gap_market_evidence_20260909_v1/all_targeted_final.log",
+      "role": "historical_gap_market_qualification",
+      "sha256": "97cce377eb1271b2857820cfd1e858c7e02abcc06e7cfe6aef4c7326c1d428d7"
+    },
+    {
+      "bytes": 201,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_gap_market_evidence_20260909_v1/archive_independent.json",
+      "role": "historical_gap_market_qualification",
+      "sha256": "f1faa65e525539e32b8c822b7c7c8c2435d76c31d749bd8392f9bb65c164642e"
+    },
+    {
+      "bytes": 187,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_gap_market_evidence_20260909_v1/archive_independent.log",
+      "role": "historical_gap_market_qualification",
+      "sha256": "8644a228cdd20e6270094639dcdcb7ad7c37b9537889047f37efdb45a48ecb7f"
+    },
+    {
+      "bytes": 11527,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_gap_market_evidence_20260909_v1/archive_report.json",
+      "role": "historical_gap_market_qualification",
+      "sha256": "8947e88c7d647c9674a4d299faebbd842113fbbaafb4f1f15dc13de3c62e9716"
+    },
+    {
+      "bytes": 1085,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_gap_market_evidence_20260909_v1/archive_report.log",
+      "role": "historical_gap_market_qualification",
+      "sha256": "b66baeca0532f6ba8c345e6de82a95a3ffb02273ed720e5c2f69e31471465e9a"
+    },
+    {
+      "bytes": 710,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_gap_market_evidence_20260909_v1/archive_reproduction_verified.json",
+      "role": "historical_gap_market_qualification",
+      "sha256": "a546846d17523080152d0f9f560468e5cc76b495ce6fa60d1d647f187dff8797"
+    },
+    {
+      "bytes": 180,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_gap_market_evidence_20260909_v1/archive_tests.log",
+      "role": "historical_gap_market_qualification",
+      "sha256": "d466ede1b29df20ce9f8a23d4d0b7478ceeab39904e40e485451140c823d2bb0"
+    },
+    {
+      "bytes": 377,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_gap_market_evidence_20260909_v1/core_completion_observed.json",
+      "role": "historical_gap_market_qualification",
+      "sha256": "91770e42c69323458a956673f29a433f9af996d824d2118c2ca65824373e65ca"
+    },
+    {
+      "bytes": 13869,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_gap_market_evidence_20260909_v1/coverage.json",
+      "role": "historical_gap_market_qualification",
+      "sha256": "21cf7416ebbb0550831fe78d7a4f68640ea4f37fee9c697f01789d1af8d35358"
+    },
+    {
+      "bytes": 13897,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_gap_market_evidence_20260909_v1/coverage_before_cli_exit.json",
+      "role": "historical_gap_market_qualification",
+      "sha256": "d6df6def7605093f8c218873f47d130fcd4de6401b261d8ab7f349821acbb047"
+    },
+    {
+      "bytes": 13891,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_gap_market_evidence_20260909_v1/coverage_combined_final.json",
+      "role": "historical_gap_market_qualification",
+      "sha256": "4025b06173e12af706b897221456689416f654bb348901527e2ac62d5f3cd7cb"
+    },
+    {
+      "bytes": 13939,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_gap_market_evidence_20260909_v1/coverage_filename_verified.json",
+      "role": "historical_gap_market_qualification",
+      "sha256": "1f59cbf89985b1b468fcffcf656dc94b2bca805033909fa155802c921adaee73"
+    },
+    {
+      "bytes": 13897,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_gap_market_evidence_20260909_v1/coverage_unit_final.json",
+      "role": "historical_gap_market_qualification",
+      "sha256": "b5906c4ddc1178c76fa85d98b90fa5c080c1be53ea2c64388261095074b6c3ea"
+    },
+    {
+      "bytes": 99,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_gap_market_evidence_20260909_v1/family_green.log",
+      "role": "historical_gap_market_qualification",
+      "sha256": "44ee263ad74f8fcefbf7d2950f63d012a0d0bfc807634337f027506a0c89e993"
+    },
+    {
+      "bytes": 11339,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_gap_market_evidence_20260909_v1/family_red.log",
+      "role": "historical_gap_market_qualification",
+      "sha256": "5ddc71006c9d98969f5255ea6b932a36402cf9f05d02de2bdcb82c4d00f62856"
+    },
+    {
+      "bytes": 99,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_gap_market_evidence_20260909_v1/gap_market_boundaries.log",
+      "role": "historical_gap_market_qualification",
+      "sha256": "d9e5a637488ff5ea2417fcf6c9c4a5486b8897cb05fe124f3b9f5e63c5d92c62"
+    },
+    {
+      "bytes": 430,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_gap_market_evidence_20260909_v1/gap_market_final.log",
+      "role": "historical_gap_market_qualification",
+      "sha256": "51be10f23d49506825e90694abc512414d25c13806ddd09930819c984a96b22b"
+    },
+    {
+      "bytes": 99,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_gap_market_evidence_20260909_v1/gap_market_green.log",
+      "role": "historical_gap_market_qualification",
+      "sha256": "d03cc19cf84e30f3887c1bd85b303dfed7dd9a82e2551fac5cd3ffaca6854353"
+    },
+    {
+      "bytes": 201,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_gap_market_evidence_20260909_v1/independent.json",
+      "role": "historical_gap_market_qualification",
+      "sha256": "f1faa65e525539e32b8c822b7c7c8c2435d76c31d749bd8392f9bb65c164642e"
+    },
+    {
+      "bytes": 1013,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_gap_market_evidence_20260909_v1/independent.log",
+      "role": "historical_gap_market_qualification",
+      "sha256": "60f8dc447d98b83068385d1bfdf0921cd32ba9fe38d59811fce28184f8fa2fc9"
+    },
+    {
+      "bytes": 187,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_gap_market_evidence_20260909_v1/independent_corrected.log",
+      "role": "historical_gap_market_qualification",
+      "sha256": "8644a228cdd20e6270094639dcdcb7ad7c37b9537889047f37efdb45a48ecb7f"
+    },
+    {
+      "bytes": 201,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_gap_market_evidence_20260909_v1/independent_final.json",
+      "role": "historical_gap_market_qualification",
+      "sha256": "f1faa65e525539e32b8c822b7c7c8c2435d76c31d749bd8392f9bb65c164642e"
+    },
+    {
+      "bytes": 187,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_gap_market_evidence_20260909_v1/independent_final.log",
+      "role": "historical_gap_market_qualification",
+      "sha256": "8644a228cdd20e6270094639dcdcb7ad7c37b9537889047f37efdb45a48ecb7f"
+    },
+    {
+      "bytes": 7495,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_gap_market_evidence_20260909_v1/independent_initial.py",
+      "role": "historical_gap_market_qualification",
+      "sha256": "950d99ef32defcc14dcc98d917714d2817980f2d6a1ecf9c7167bfa50707225c"
+    },
+    {
+      "bytes": 1071,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_gap_market_evidence_20260909_v1/minute_summary_red.log",
+      "role": "historical_gap_market_qualification",
+      "sha256": "1f9fc1b6ce09eb2249164d83a915510783256ddaff1786ed5e6e54ef4dd86ff2"
+    },
+    {
+      "bytes": 724,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_gap_market_evidence_20260909_v1/pagination_documentation_evidence.json",
+      "role": "historical_gap_market_qualification",
+      "sha256": "6af3133aecaa1915b70f60339acad689d030d0b06d7ddae9472b28a0e74fc26e"
+    },
+    {
+      "bytes": 801,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_gap_market_evidence_20260909_v1/quote_acquisition_contract.json",
+      "role": "historical_gap_market_qualification",
+      "sha256": "4fc3063f2b6596eb84783226bc5f6927be63cd8d1dd7d90b910aaaa0230e379f"
+    },
+    {
+      "bytes": 11527,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_gap_market_evidence_20260909_v1/report.json",
+      "role": "historical_gap_market_qualification",
+      "sha256": "8947e88c7d647c9674a4d299faebbd842113fbbaafb4f1f15dc13de3c62e9716"
+    },
+    {
+      "bytes": 1085,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_gap_market_evidence_20260909_v1/report.log",
+      "role": "historical_gap_market_qualification",
+      "sha256": "b66baeca0532f6ba8c345e6de82a95a3ffb02273ed720e5c2f69e31471465e9a"
+    },
+    {
+      "bytes": 11527,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_gap_market_evidence_20260909_v1/report_filename_coverage.json",
+      "role": "historical_gap_market_qualification",
+      "sha256": "8947e88c7d647c9674a4d299faebbd842113fbbaafb4f1f15dc13de3c62e9716"
+    },
+    {
+      "bytes": 1085,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_gap_market_evidence_20260909_v1/report_filename_coverage.log",
+      "role": "historical_gap_market_qualification",
+      "sha256": "b66baeca0532f6ba8c345e6de82a95a3ffb02273ed720e5c2f69e31471465e9a"
+    },
+    {
+      "bytes": 11527,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_gap_market_evidence_20260909_v1/report_reproduced.json",
+      "role": "historical_gap_market_qualification",
+      "sha256": "8947e88c7d647c9674a4d299faebbd842113fbbaafb4f1f15dc13de3c62e9716"
+    },
+    {
+      "bytes": 1446,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_gap_market_evidence_20260909_v1/report_reproduced.log",
+      "role": "historical_gap_market_qualification",
+      "sha256": "f1567033ab57066c5c44c410a6a7227d4a47777380374dc7749bc7b301dec9d0"
+    },
+    {
+      "bytes": 989,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_gap_market_evidence_20260909_v1/sol_1355_acquisition.log",
+      "role": "historical_gap_market_qualification",
+      "sha256": "f4441c341964e5a348b1d06bac4406c923006c3f09f916bb47760d834581a5f6"
+    },
+    {
+      "bytes": 927,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_gap_market_evidence_20260909_v1/sol_1355_book_acquisition.log",
+      "role": "historical_gap_market_qualification",
+      "sha256": "2f9b060eaa87e9d1fcb5a1994b5018a261f75fb75b945e2020654ee4352414bc"
+    },
+    {
+      "bytes": 721,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_gap_market_evidence_20260909_v1/sol_1355_price_acquisition.log",
+      "role": "historical_gap_market_qualification",
+      "sha256": "2c58f117ed8040db3d4304f237580668d6574c39332d15514d22512c3ee8d0bf"
+    },
+    {
+      "bytes": 989,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_gap_market_evidence_20260909_v1/sol_1647_acquisition.log",
+      "role": "historical_gap_market_qualification",
+      "sha256": "9142bb80908a93b8b8b5edb6d6983bfd6d9df2f6bbe5ded57ad8cfc2b0e3cfe9"
+    },
+    {
+      "bytes": 927,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_gap_market_evidence_20260909_v1/sol_1647_book_acquisition.log",
+      "role": "historical_gap_market_qualification",
+      "sha256": "a285b33e07b385e308b11c6da146ff18fa7de3d10b9fab7e4ee4ebd3b70d6ab5"
+    },
+    {
+      "bytes": 721,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_gap_market_evidence_20260909_v1/sol_1647_price_acquisition.log",
+      "role": "historical_gap_market_qualification",
+      "sha256": "4bf0a0c9c8094c4510543f83131d34c752580be80cef3b07d55376d5a9c0df54"
+    },
+    {
+      "bytes": 674,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_gap_market_evidence_20260909_v1/source_archive_verified.json",
+      "role": "historical_gap_market_qualification",
+      "sha256": "854de41773ee8bc42a6c4e446377642bdf6a101dc11fe374e1386c492c19e2c2"
+    },
+    {
+      "bytes": 33039514,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_gap_market_evidence_20260909_v1/source_f2808ccbadaa19b33aadad6ce4d3a029d2922783.tar.gz",
+      "role": "historical_gap_market_qualification",
+      "sha256": "e09836648d3a48d246436d1f9cbe781883d3a45d0ef25c2a501b96fae6035bbb"
+    },
+    {
+      "bytes": 1300,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_gap_market_evidence_20260909_v1/source_structure_verified.json",
+      "role": "historical_gap_market_qualification",
+      "sha256": "eae812f0fb9de205c97fb4853e38f57d57b40dda0efb62a7d651d981c8d893dd"
+    },
+    {
+      "bytes": 3476,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/plans/2026-09-09-v89-gap-market-account-followup.md",
+      "role": "historical_gap_market_qualification",
+      "sha256": "95cad29fb4457e809aa32a2e90dcad7e2c30ee87c059d6e9eb87d61e8043b245"
+    },
+    {
+      "bytes": 4368,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/reviews/2026-09-09-v89-gap-market-observations.md",
+      "role": "historical_gap_market_qualification",
+      "sha256": "8f2c089cbec8640da1426d87a8a247497f0c24b47fdc34c88fd0e29f2b15827c"
+    }
+  ],
+  "execution_authority": "none",
+  "falsifier": "Changed registered identities, incorrect minute bounds, raw/normalized disagreement, altered counts or failed independent/archive reproduction invalidate the affected findings. Denser observed marks or actual execution records can update trigger or fill uncertainty; sampled quotes alone cannot.",
+  "hypothesis": "Authenticated raw market captures can distinguish missing trade candles from available quotes and sparse marks without replacing the frozen historical provider inputs.",
+  "hypothesis_id": "v89_historical_source_gap_qualification_20260909_v1",
+  "limitations": [
+    "Zero-volume flat candles do not establish executable prices or stop paths.",
+    "Raw event candles omit per-bar source labels; gap-fill origin is unproven.",
+    "Scheduled windows are approximate; overlap does not prove no trading.",
+    "Cache gap-fill values are modeled carry-forwards, not recovered trades.",
+    "This bounded source search does not establish that no other evidence exists.",
+    "Only four frozen annual caches and the registered raw/normalized market export were searched in this bounded study; other retained native/vendor data has not been ruled out.",
+    "The independent verifier checks interval fields, raw OHLCV/provenance and maintenance associations; it does not independently reconstruct annual-cache OHLCV values.",
+    "Both prospective outcome seals remain intact. The complete 48-day dynamically sized native account and financial impact remain outstanding.",
+    "Complete vendor pagination is not independent proof of venue-wide completeness.",
+    "No trade prints is distinct from no market quotes; quotes are not trade candles.",
+    "Observed top-20 books do not establish actual fills or changed-size execution.",
+    "Marks are sparse and cannot establish a continuous stop-trigger path.",
+    "First/latest provider source variants remain unchanged; this is separate market evidence.",
+    "Historical exchange timestamps do not establish contemporaneous local receipt times.",
+    "Final core completion counts are observed from the run log; independent final-payload verification remains outstanding.",
+    "Coverage across unit/regression tests and offline CLI replay is not unit-only coverage."
+  ],
+  "metrics": {
+    "account_gaps_immediately_before_scheduled_start": 3,
+    "account_gaps_inside_scheduled_maintenance": 71,
+    "account_missing_asset_minutes": 76,
+    "archive_git_blobs_and_modes_verified": 5453,
+    "core_completion_observed": {
+      "completion_event": {
+        "at_utc": "2026-09-09T16:08:41.659155+00:00",
+        "checks": 552960,
+        "event": "run_completed",
+        "mismatches": 0,
+        "pid": 80776,
+        "streams": 8
+      },
+      "execution_authority": "none",
+      "observed_at_utc": "2026-09-09T16:20:10.124695+00:00",
+      "scope": "Observed completion log only; full final payload verification remains outstanding."
+    },
+    "exact_archive_artifacts": 2,
+    "execution_prices_qualified": 0,
+    "gap_market_qualification": {
+      "archive_offline_tests_passed": 126,
+      "candle_rows_inserted": 0,
+      "combined_branch_coverage": {
+        "covered": 33,
+        "total": 40
+      },
+      "combined_statement_coverage": {
+        "covered": 142,
+        "total": 149
+      },
+      "exact_archive_artifacts": 2,
+      "independent_verification": {
+        "deliberate_mutations_rejected": 4,
+        "execution_authority": "none",
+        "raw_book_observations": 787,
+        "raw_participant_fills": 66,
+        "raw_price_observations": 6,
+        "summary_fields_verified": 30
+      },
+      "observed_market_gap_minutes": 2,
+      "source_references_reauthenticated": 24,
+      "windows": [
+        {
+          "label": "1355",
+          "sources": [
+            {
+              "complete_pagination": true,
+              "kind": "books",
+              "manifest_path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/SOL/20260801T135400000000Z_20260801T135700000000Z_d20/manifest.json",
+              "raw_normalization_matches": true,
+              "request_ids": [
+                "c58d00fe-21bc-4306-9134-bbf2d5aa0f0d"
+              ],
+              "rows_in_retained_bundle": 394
+            },
+            {
+              "complete_pagination": true,
+              "kind": "trades",
+              "manifest_path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/SOL/20260801T135400000000Z_20260801T135700000000Z_trades/manifest.json",
+              "raw_normalization_matches": true,
+              "request_ids": [
+                "757f139a-b8dd-4335-a677-165cc6d3e12d"
+              ],
+              "rows_in_retained_bundle": 16
+            },
+            {
+              "complete_pagination": true,
+              "kind": "prices",
+              "manifest_path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/SOL/20260801T135400000000Z_20260801T135700000000Z_prices/manifest.json",
+              "raw_normalization_matches": true,
+              "request_ids": [
+                "f19c9f4e-7179-466b-b5f3-37343607edae"
+              ],
+              "rows_in_retained_bundle": 3
+            }
+          ],
+          "summary": {
+            "actual_or_changed_size_fill_claimed": false,
+            "book_observations": 131,
+            "candle_reconstructed": false,
+            "continuous_trigger_coverage": false,
+            "first_book_after_minute_start_ms": 0,
+            "last_book_to_minute_end_ms": 500,
+            "mark_observations": 1,
+            "mark_timestamps_ms": [
+              1785592500760
+            ],
+            "maximum_book_observation_gap_ms": 500,
+            "minute_start_ms": 1785592500000,
+            "observed_ask_range": [
+              "72.927",
+              "72.929"
+            ],
+            "observed_bid_range": [
+              "72.926",
+              "72.928"
+            ],
+            "observed_mark_range": [
+              "72.928",
+              "72.928"
+            ],
+            "trade_observations": 0,
+            "valid_mark_observations": 1
+          },
+          "symbol": "SOL"
+        },
+        {
+          "label": "1647",
+          "sources": [
+            {
+              "complete_pagination": true,
+              "kind": "books",
+              "manifest_path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/SOL/20260801T164600000000Z_20260801T164900000000Z_d20/manifest.json",
+              "raw_normalization_matches": true,
+              "request_ids": [
+                "eb0ce9f8-4645-425f-942e-dff3753a8f15"
+              ],
+              "rows_in_retained_bundle": 393
+            },
+            {
+              "complete_pagination": true,
+              "kind": "trades",
+              "manifest_path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/SOL/20260801T164600000000Z_20260801T164900000000Z_trades/manifest.json",
+              "raw_normalization_matches": true,
+              "request_ids": [
+                "6a302f1a-d502-4a85-8508-4efde851e0c7"
+              ],
+              "rows_in_retained_bundle": 17
+            },
+            {
+              "complete_pagination": true,
+              "kind": "prices",
+              "manifest_path": "/Users/gestas/Prototypes/hypervector/data/cache/vendor/0xarchive/hyperliquid/SOL/20260801T164600000000Z_20260801T164900000000Z_prices/manifest.json",
+              "raw_normalization_matches": true,
+              "request_ids": [
+                "f3436f98-904c-402e-acc4-7d1f92124dc3"
+              ],
+              "rows_in_retained_bundle": 3
+            }
+          ],
+          "summary": {
+            "actual_or_changed_size_fill_claimed": false,
+            "book_observations": 131,
+            "candle_reconstructed": false,
+            "continuous_trigger_coverage": false,
+            "first_book_after_minute_start_ms": 0,
+            "last_book_to_minute_end_ms": 500,
+            "mark_observations": 1,
+            "mark_timestamps_ms": [
+              1785602876423
+            ],
+            "maximum_book_observation_gap_ms": 500,
+            "minute_start_ms": 1785602820000,
+            "observed_ask_range": [
+              "72.795",
+              "72.799"
+            ],
+            "observed_bid_range": [
+              "72.794",
+              "72.798"
+            ],
+            "observed_mark_range": [
+              "72.795",
+              "72.795"
+            ],
+            "trade_observations": 0,
+            "valid_mark_observations": 1
+          },
+          "symbol": "SOL"
+        }
+      ],
+      "worktree_offline_tests_passed": 126
+    },
+    "independent_verification": {
+      "deliberate_mutations_rejected": 4,
+      "execution_authority": "none",
+      "independent_raw_observations": 53,
+      "independent_sql_gap_rows": 97,
+      "source_references_verified": 18
+    },
+    "original_provider_grids_modified": false,
+    "positive_volume_raw_observations": 0,
+    "previous_source_commit": "24c8ad14fe7593ebadce692fc60b0b2e46d1ca2e",
+    "raw_events": 6,
+    "raw_observations": 53,
+    "recorded_account_gap_minutes": 41,
+    "source_commit": "f2808ccbadaa19b33aadad6ce4d3a029d2922783",
+    "strategy_or_account_outcomes_evaluated": false,
+    "summary": [
+      {
+        "annual_cache_gap_fill_minutes": 5,
+        "inside_scheduled_maintenance": 5,
+        "minute_before_scheduled_start": 0,
+        "minutes_with_recorded_candles": 0,
+        "missing_minutes": 5,
+        "phase": "warmup",
+        "raw_observations": 0,
+        "symbol": "BTC"
+      },
+      {
+        "annual_cache_gap_fill_minutes": 3,
+        "inside_scheduled_maintenance": 17,
+        "minute_before_scheduled_start": 1,
+        "minutes_with_recorded_candles": 10,
+        "missing_minutes": 18,
+        "phase": "account",
+        "raw_observations": 13,
+        "symbol": "BTC"
+      },
+      {
+        "annual_cache_gap_fill_minutes": 5,
+        "inside_scheduled_maintenance": 5,
+        "minute_before_scheduled_start": 0,
+        "minutes_with_recorded_candles": 0,
+        "missing_minutes": 5,
+        "phase": "warmup",
+        "raw_observations": 0,
+        "symbol": "ETH"
+      },
+      {
+        "annual_cache_gap_fill_minutes": 3,
+        "inside_scheduled_maintenance": 19,
+        "minute_before_scheduled_start": 1,
+        "minutes_with_recorded_candles": 11,
+        "missing_minutes": 20,
+        "phase": "account",
+        "raw_observations": 14,
+        "symbol": "ETH"
+      },
+      {
+        "annual_cache_gap_fill_minutes": 6,
+        "inside_scheduled_maintenance": 5,
+        "minute_before_scheduled_start": 0,
+        "minutes_with_recorded_candles": 0,
+        "missing_minutes": 6,
+        "phase": "warmup",
+        "raw_observations": 0,
+        "symbol": "SOL"
+      },
+      {
+        "annual_cache_gap_fill_minutes": 3,
+        "inside_scheduled_maintenance": 17,
+        "minute_before_scheduled_start": 0,
+        "minutes_with_recorded_candles": 9,
+        "missing_minutes": 19,
+        "phase": "account",
+        "raw_observations": 12,
+        "symbol": "SOL"
+      },
+      {
+        "annual_cache_gap_fill_minutes": 5,
+        "inside_scheduled_maintenance": 5,
+        "minute_before_scheduled_start": 0,
+        "minutes_with_recorded_candles": 0,
+        "missing_minutes": 5,
+        "phase": "warmup",
+        "raw_observations": 0,
+        "symbol": "HYPE"
+      },
+      {
+        "annual_cache_gap_fill_minutes": 3,
+        "inside_scheduled_maintenance": 18,
+        "minute_before_scheduled_start": 1,
+        "minutes_with_recorded_candles": 11,
+        "missing_minutes": 19,
+        "phase": "account",
+        "raw_observations": 14,
+        "symbol": "HYPE"
+      }
+    ],
+    "unmatched_account_gaps": [
+      "SOL 2026-08-01T13:55:00+00:00",
+      "SOL 2026-08-01T16:47:00+00:00"
+    ],
+    "warmup_missing_asset_minutes": 21
+  },
+  "revision_number": 2,
+  "runtime_strategy_changed": false,
+  "schema_version": 1,
+  "status": "observe",
+  "strategy_id": "v89_historical_account_source_qualification",
+  "supersedes_revision_id": "a259510aa8c0b26fe80de66e39622ce3a820889e34441468330048fed4db18de",
+  "symbol": "MULTI"
+}
