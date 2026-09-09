@@ -1,6 +1,6 @@
 # Current V89 research index
 
-Updated September 8, 2026. This index is research navigation, not a live-state
+Updated September 9, 2026. This index is research navigation, not a live-state
 checkpoint. Read `data/runtime/bidirectional_cohort/latest_checkpoint.json`
 for recorded execution, fills, faults and positions, and verify its age and process liveness. Do not infer current state
 from older HANDOFF entries or an old research-roster checkpoint.
@@ -10,6 +10,28 @@ strategy, execution and deployment changes for explicit human approval. Research
 records carry `execution_authority=none`; they do not arm or manage orders.
 
 ## Current finding and next action
+
+September 9 update: the seven-asset source collector is running and qualified
+for source capture; the full prospective evaluator is not yet qualified. Source
+and account milestones through journal revision 14 now include the archived
+[chronological coordinator](../reviews/2026-09-09-v89-portfolio-coordinator.md)
+and [captured-source entry binding](../reviews/2026-09-09-v89-source-portfolio-binding.md).
+The latest milestone passes 1,103 offline tests in the worktree and archive,
+reproduces 24,544 source-only bindings exactly, and retains all outcome seals.
+
+Next: translate complete provider exits and regime evidence into source-backed
+calendar bars, then qualify the complete 24-cell evaluator. The older daily
+gap bug is now corrected in the research checkout. No reliable profitability
+improvement or live deployment is established by these engineering milestones.
+Confidence is high for their documented test/source scope and low for future
+returns; failed full-provider parity or independent replay would update it.
+
+The September 9 06:09 UTC local process check found two data collectors and no
+matching trading engine or TUI. At 06:36 UTC the collectors remain alive and
+all fifteen source pins and the live profile remain unchanged. These local
+observations do not refresh the last venue account snapshot.
+
+## Historical September 8 findings and intermediate next actions
 
 Operational update at September 8 14:11 UTC: all seven asset ledgers end in
 `STOPPED / operator_stop` at 14:05:33 UTC. The tracked backend, supervisor and
