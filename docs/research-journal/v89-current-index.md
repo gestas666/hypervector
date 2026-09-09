@@ -7,6 +7,23 @@ outcome was refreshed for this update.
 
 ## Current finding and next action
 
+The [historical publication binding](../reviews/2026-09-09-v89-historical-provider-binding.md)
+is qualified as an account input: all 580,608 publications across fourteen
+unique streams retain native admission, complete exits, original gaps and
+explicit modeled timing. The final frozen source `28c1b34` reproduces the
+complete binding report and the recovered initial publications; 338 tests pass
+in both worktree and archive. All fourteen initial provider publications and
+eight core canonical observations bind with zero initial entry intents.
+See [binding revision 1](v89-historical-provider-binding-20260909-v1.json).
+
+Next assemble the complete historical price/account calendar, keeping original
+provider grids separate from observed-market evidence and explicit conditional
+price proxies. Whole-history canonical availability and HYPE UNKNOWN soft-hold
+handling remain required. Preserve all 48 days and original source/cost/clock/
+allocation cases; these input checks are not account outcomes or live changes.
+
+The preceding complete-history qualification and retained lineage follow.
+
 The [complete provider history](../reviews/2026-09-09-v89-complete-provider-history.md)
 is now independently verified: 552,960 core checks in 384 daily chunks and
 27,648 XYZ quarter checks plus 6,912 archived hours in 288 chunks, with zero
