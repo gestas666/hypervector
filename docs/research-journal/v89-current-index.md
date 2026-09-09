@@ -7,6 +7,32 @@ outcome was refreshed for this update.
 
 ## Current finding and next action
 
+The [complete provider history](../reviews/2026-09-09-v89-complete-provider-history.md)
+is now independently verified: 552,960 core checks in 384 daily chunks and
+27,648 XYZ quarter checks plus 6,912 archived hours in 288 chunks, with zero
+differences. Final reports, manifests, frozen implementations and source inputs
+reconcile. The original jobs are complete; do not restart them.
+
+All four complete source pairs pass authenticated payload decoding: each has
+69,120 minute sets, 290,304 provider records and 295 entry intents. Raw-to-typed
+publication fields and raw comparison/intent relationships reconcile exactly.
+These are source observations, not routed positions, trades or account returns.
+The initial July 21 boundary now has 14 native provider and eight core canonical
+publications, independently reproduced from direct SQL source reads and an older
+frozen archive. XYZ warmup/canonical limits and original source gaps remain explicit.
+See [complete-history revision 1](v89-complete-provider-history-20260909-v1.json).
+
+Next implement explicit historical availability at the provider/account boundary,
+keeping the native signal grid separate from conditional execution prices. Supply
+required canonical history and preserve all 48 days, original source/cost/clock/
+allocation cases, native decision positions, configured exits and terminal open
+positions. The [account plan](../plans/2026-09-09-v89-gap-market-account-followup.md)
+remains the complete scope. HYPE UNKNOWN soft-deadline compatibility and full
+historical dynamic account outcomes remain outstanding.
+
+Prior checkpoint and retained lineage follow; the complete-history finding above
+supersedes earlier progress counts and initial-boundary omissions.
+
 The [missing-candle market study](../reviews/2026-09-09-v89-gap-market-observations.md)
 qualifies separate observed quotes for both unmatched August 1 SOL minutes.
 Each has 131 book observations, no observed public trades and one sparse mark.
