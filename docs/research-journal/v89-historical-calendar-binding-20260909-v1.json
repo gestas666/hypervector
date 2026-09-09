@@ -1,0 +1,2005 @@
+{
+  "automatic_promotion": false,
+  "confidence": "high",
+  "created_at_utc": "2026-09-09T21:31:17.761926+00:00",
+  "decision": "Retain the calendar/native account building block from d7b44cb: 1034 selected tests pass in both source and archive, and all 201600 canonical prefix observations reproduce byte-for-byte. Continue the full 48-case historical account plan. No complete historical account return, profitable improvement or live readiness is established.",
+  "evidence": [
+    {
+      "bytes": 6106,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/historical_calendar_evidence_green_20260909.log",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "9f66c634df3f952c905e2ef9a5eb00c2e410a40c351516218f9c08588a783df7"
+    },
+    {
+      "bytes": 5158,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/historical_calendar_evidence_red_20260909.log",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "05ce09d95a45cfbba3d49b06019d9e12730ae05c2f289d6e6dd3b299b39e1845"
+    },
+    {
+      "bytes": 1157,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/historical_calendar_focused_20260909.log",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "e9a46d5c723237c1edadcaa5aa4cab4e37e9c96c1bcf0890babdb63e184aca8b"
+    },
+    {
+      "bytes": 99,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/historical_canonical_binding_green_20260909.log",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "1ddde72b840a42069726149d875cb8734d2168b532238b8706c5c03ed0f82cb9"
+    },
+    {
+      "bytes": 19543,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/historical_canonical_binding_red_20260909.log",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "f5225f55ff5ffaa1d1ddabe807ada6260fa9f237bc3a2de7f20cd6693ecb2f4c"
+    },
+    {
+      "bytes": 180,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/historical_native_account_green_20260909.log",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "6db21152d04b5e43bbee0599e763c523b82a17a58f0b0e2ff13f2e368ebab510"
+    },
+    {
+      "bytes": 64986,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/historical_native_account_red_20260909.log",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "25c613a70237f0479852e554f5bf174ee77e9b5e9cb812c855504178e7d7afd7"
+    },
+    {
+      "bytes": 100,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/historical_portfolio_calendar_green_20260909.log",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "2a26290c6133b878b62615cb6d0df6971129d03c58268a9127dd0e410af07169"
+    },
+    {
+      "bytes": 132136,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/historical_portfolio_calendar_red_20260909.log",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "44aed6c1ca5fa3e5e7e37bddfd95ff5223f2e574fa55b5e50848897e76b459f1"
+    },
+    {
+      "bytes": 1640,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_calendar_qualification_20260909_v1/archive_canonical_report.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "b064c547dc0af757d5096be9095f43acca8997c41cc82a725851bb284012a188"
+    },
+    {
+      "bytes": 7618,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_calendar_qualification_20260909_v1/archive_tests.log",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "808a46c3fd2ff19336b302ff95332ddf9e2e0b3a27a9af63e9abeda079505994"
+    },
+    {
+      "bytes": 6507,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_calendar_qualification_20260909_v1/build_journal.py",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "abc358f64ca83be0033f442076b9882dd26400a342fe58e276439bca6f2bcabb"
+    },
+    {
+      "bytes": 133528,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_calendar_qualification_20260909_v1/canonical_prefix_manifest.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "1d7ab2442b0cbcb819e3afeca068eba4c96983003dd1c14a5097ed9c01e50c90"
+    },
+    {
+      "bytes": 421,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_calendar_qualification_20260909_v1/canonical_prefix_verified.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "7abfb24d9bf54e5d7652c218412cf0b607f43a9fa15019ec650596b8352f7b69"
+    },
+    {
+      "bytes": 4655,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_calendar_qualification_20260909_v1/qualify_canonical_prefix.py",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "6feb46409bcd6e22fca35a0f2ffc2acbedcdd0919f99f6e5a1d1948a0a3c50e2"
+    },
+    {
+      "bytes": 32764759,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_calendar_qualification_20260909_v1/source.tar.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "a725810442ba9dd87edd4de6cfc1ab6cb96f2af87e040890650c3b73d28dc108"
+    },
+    {
+      "bytes": 579,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_calendar_qualification_20260909_v1/source_verified.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "905726db6851bde6db47c9ce9c4dae7262d6d84c6558a883e1ca7f90a78719b9"
+    },
+    {
+      "bytes": 1642,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_calendar_qualification_20260909_v1/verified.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "de55d834f11aaa11ca6709d1c61b45296ad4b91173693e23f3bb6d975e0dde87"
+    },
+    {
+      "bytes": 4164,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_calendar_qualification_20260909_v1/verify_completed.py",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "1f308d1ca983541e61182563499bd032e7f1b15b7942e4c4bd71c01ed0b68ae1"
+    },
+    {
+      "bytes": 1640,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_calendar_qualification_20260909_v1/worktree_canonical_report.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "b064c547dc0af757d5096be9095f43acca8997c41cc82a725851bb284012a188"
+    },
+    {
+      "bytes": 310974,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_calendar_qualification_20260909_v1/worktree_implementation.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "7668f3a0cf6dd518606f5448a938b7282a2865866b7a22fc520e56db590ade5b"
+    },
+    {
+      "bytes": 7618,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_calendar_qualification_20260909_v1/worktree_tests.log",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "4581f68f63a1fe3ee94c11e23ce5cf04fb5e10b198245ef3fb1f4fe516659710"
+    },
+    {
+      "bytes": 294380,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260721/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "0ac4bcb0be8549cbe0dfd3b28de548e56d0b8768842965493bca27621bcaa0ca"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260721/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "859f66709a696d2707e09638849f75321fd80d35b3ad938746d94f26a688201d"
+    },
+    {
+      "bytes": 296254,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260722/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "a45b20c94eda4001e99ff0d550289e376c9e237cab34722e2d73f12be5cdb195"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260722/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "2fb9daa9904ab61af1cc0a8706d9c9af390feaa66eeae9a8698a16b3c686b1a0"
+    },
+    {
+      "bytes": 294123,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260723/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "24c4c3c8a36c189458ebd8a69e8b6a8c725298fbeeeb886a6c9e7f56da60555d"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260723/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "e6e67fd8bd07f13c670dc8556d57db54d18354d3325aad903f5aeeccdb9f0f36"
+    },
+    {
+      "bytes": 295028,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260724/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "601158e63f51440a8c2c40a91d67a92759cad4c6b7d06f32fe79fda0b267c26d"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260724/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "104ad0626c24dbdfc7393219418d237c0678eeb62b872215b551d6c0dec78bea"
+    },
+    {
+      "bytes": 285041,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260725/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "c7fba1e2c946b59b472f67ab400d03c8686d250f423e52240ed9316153ebd813"
+    },
+    {
+      "bytes": 412,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260725/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "6e8c111f849bfa3824b6c99aa8fb24844051df5e418a8d2e2a1c8eebc5c9f4df"
+    },
+    {
+      "bytes": 293298,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260726/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "e814c82e9f83b46dbe6119fce3e0076b9f300a6b2e51bae323a0ffae6db9dadf"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260726/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "6377209ee97d0c7805be72561549358b22d3901151952e1f3512c5db38ade94f"
+    },
+    {
+      "bytes": 300780,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260727/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "92b6b200021c170acb1f262e73e7d54acd098331ac8672c9de7b1d01ee61114f"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260727/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "da02c422632c0e14c12fa8aa51be9cb41ef7af23f3c4352883a5a79482658113"
+    },
+    {
+      "bytes": 295667,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260728/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "5092dafd74bd18119b11f4470efbe628bb549a6c2b3ba3fd8ba5f6ca8d0afd5c"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260728/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "b17134931876430d1e453b326baf706978df09c3c33cdf06f5398dde5b0be4c9"
+    },
+    {
+      "bytes": 296896,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260729/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "583d6eeee7c9871c54f1f6117710f8a1984726a57fbb94ba0c0d2b3e00b21758"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260729/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "593627c811c41eee895b348f1fecb6b72f95b42880fd2a1adc91dd1dd4d76d5c"
+    },
+    {
+      "bytes": 295384,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260730/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "5ea10ef157c7d9d520afde5b21ff1cb0216e000cc2c578e697befbd08185e8de"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260730/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "bc61409996409a2342c7def824d0efde4444ec4012d09babf292afeb14331bde"
+    },
+    {
+      "bytes": 293597,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260731/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "87914198eb422051137fa09beeaf6276cd4637a51c54567b0756670d9fc40599"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260731/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "c23790b06617d8cd4930242f273e998092e31e821c7927bf29a6d90b0b3c3329"
+    },
+    {
+      "bytes": 279387,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260801/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "a28d28bdfd9aaae9af26a6460468b8c2e4cdef4c2b2297d0abfe3339dd16c0d9"
+    },
+    {
+      "bytes": 412,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260801/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "a680080b3c4f9dc698566ca7390519dd0937bb078ba5d6df29bf3a83820b1cea"
+    },
+    {
+      "bytes": 294089,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260802/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "6cc93341aab02f96ffcb8d37509612bc1559286b84fe9cc79d8d722072402486"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260802/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "e3cc3ef375d3e64fec8d776d8851ae7726d9071d664a0decc49f01ad954fbc34"
+    },
+    {
+      "bytes": 297827,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260803/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "8b41044b121d4df913977050a4b2b0ef60f5498cf1d1bc60279a549c626449b1"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260803/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "4fec1e7d305f7b26c0fe8abf29e9c711c4ef1f3e9dc4794c7b1c1e71b9fede6f"
+    },
+    {
+      "bytes": 296403,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260804/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "859df4ebb9762046e64305e0e60b260fa85c103b0a88617e28235dfe17d3d637"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260804/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "a8ef915b594c65b679f35966c2f75e497dc003c6521d4322da71da16cc5aa8a0"
+    },
+    {
+      "bytes": 295090,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260805/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "3fb2e608c5a0628565bd3585fa0b81eff56f350b195bb4db9d730199baef9b19"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260805/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "b51d33f998e3a888dafc69df0ac4a8038b8178e950263b415e92b3894bddbd05"
+    },
+    {
+      "bytes": 293580,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260806/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "ad38a871666e14905165dd4610d5b13b4771813666bcc704d5b5a402f299714b"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260806/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "ca5dc70b8dc8a58f4a860406ae088816cde695cd4bd0ef1946e8b1a2b1ec5cdf"
+    },
+    {
+      "bytes": 291927,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260807/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "915b320562d2b6a66aa8bea051858edfd7734e5ee6906930dc999fd451953950"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260807/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "03ed4f2b99f68fd89865592f610e8fac243376e7eb1d165ab49aeba196cff644"
+    },
+    {
+      "bytes": 276199,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260808/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "be2a490f7f9cabc7a17ab1d3fc4477f8aac307d12a83d0606c1866d70d10ff82"
+    },
+    {
+      "bytes": 412,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260808/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "4bf585a296c84dbb1bd8878ae81c633a451b5257bb330bd6785bbf6195db65e8"
+    },
+    {
+      "bytes": 282729,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260809/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "f779570e51eaa5585a2dc9f95fe3b77def971ba396a1a4ebfd227f287eb593f2"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260809/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "aaaec3ae145ca2444dc5dd3146c25029c811e7fc463d044e1d3cc5a3194d1dde"
+    },
+    {
+      "bytes": 296730,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260810/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "2f6b30fd186bb8a88db81e5daa86d58f4a153ffb1640cf1672a0c989bc8b6a7f"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260810/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "9ea2191b36f2ef4a5ff999fcd038f8f84561aca7edc9e438eed0e3cd2adc8a72"
+    },
+    {
+      "bytes": 289843,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260811/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "29fe7d398db23f4791140ab1f617c6db708806688621a2d5153c8fad2e232aa4"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260811/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "525969afc26b36790adda2451ee90e01bb6e90a8521ea72b7d72a986cc4276f6"
+    },
+    {
+      "bytes": 292786,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260812/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "6b8fa64d9deda408dcd4d0beaeef9a998652601c4fe88ffcc549865c39ab88a2"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260812/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "7c2241fa4cb995b00e0a2bf38034f77ded2b15e1094f3178a3b4d696d9e9ac25"
+    },
+    {
+      "bytes": 294566,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260813/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "b255433ca3511246e0cfebd4b48fc375e1994094b01134fd67f4162e6faeab3f"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260813/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "6ccfcfbc9c55289b9ea3af6057f18f5b0720034394ad015294a4709278b07bbe"
+    },
+    {
+      "bytes": 292274,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260814/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "6ebb61d5aea11c4f5b0c2732a528f3fb61cbec5b46d98242f25bc0b3540f9645"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260814/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "6ab2136819d360d4379dc092c88564ab84dddedc9551440994ed834ea9b09306"
+    },
+    {
+      "bytes": 276874,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260815/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "3b847ec6fd53de58d525d7cb188cc55cafd31f81c5101d973f48bab13909e92f"
+    },
+    {
+      "bytes": 412,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260815/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "bf4262ed2e233bbc1cdf48c7fde2f42049b1a1c42650ede2d0ae0a989720eda4"
+    },
+    {
+      "bytes": 277180,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260816/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "2f32a33f06a356118eb5551a1e8d434d40613ef9af38e79dfb366f00134dc9fc"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260816/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "33eec1faf7bd915b55adb191586afb2c2eb7dcb5be71ef96f5baf916390b42ea"
+    },
+    {
+      "bytes": 294500,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260817/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "e6b3201c541d63b7974b8bf98f9c846e0a97cf87471b2805407c1fea8a367d33"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260817/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "38a7e659f5d4290d645da63aee50af6bef07039786682b59b5e927a5f1947bd1"
+    },
+    {
+      "bytes": 291092,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260818/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "cbf9aed9fc24e25f1aa254691a2f9a3f50496ba7127260b40fbd15fe9fd9db84"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260818/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "7ac27f96d0bdd362fca32b7b4519abae67ae9710395691de91646bb84dc7a5cf"
+    },
+    {
+      "bytes": 293175,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260819/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "bb056af5f08a72d3cfddfe399a8b75f5e4806640f7ee7914c009b1405110bbac"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260819/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "b934784efa75d3384b84e34150060778f69069abf4e9a28260222a8719c873da"
+    },
+    {
+      "bytes": 297886,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260820/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "1db2be5dc4a135edcedda44272a8598a328d9d690c38150db6e2666588a365f8"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260820/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "b6a8d8490973b62e103ba4b9eb5c5ffb3c9728e2f1281787d68a562269e29389"
+    },
+    {
+      "bytes": 298143,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260821/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "57e5630a2ee005ab21cb564a5d178fdf6e50a1a02fde576d5079f4127d4b14d1"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260821/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "faf0e994f25cf51b80c6c528f05d33ccc8827ba978723964d2e6859561519f9a"
+    },
+    {
+      "bytes": 298586,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260822/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "540d32976b928d434903c81086518bfa12bd17b80232bbe7d43d5c3a97a7d57d"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260822/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "1efd09c4ad88457887f71b84f67d9cb28831483accef4c8ebd188f3845a9ca83"
+    },
+    {
+      "bytes": 293097,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260823/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "be05dd56ebe4532ee52466e41ea1170e0d2681288fb9bbaa508112258847c859"
+    },
+    {
+      "bytes": 412,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260823/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "349967d99cf939e188c9f9875379ca218feea73e340f13a2b8b57769e2f797d7"
+    },
+    {
+      "bytes": 301837,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260824/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "fce8fe98975d661f0c6737d937f62b00caff37fd0eaf290fd8543cacf49a9fab"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/20260824/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "6e0d153f11fc13b5aa2ba61f4f6d381a811f8d162ec8062bd7ee76bd0ac3d4b3"
+    },
+    {
+      "bytes": 4853,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/initial.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "841d34a0a4095bd17ff46512d16b711ae781682c971316bc090c26216ba326d9"
+    },
+    {
+      "bytes": 16042,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/BTC_first/inputs.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "6ba6805ff9d6232e0eb2905302fba1d1dd6478339b6c808ba6871e4d6bd35b89"
+    },
+    {
+      "bytes": 294558,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260721/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "1f803c4d678764342af105ee1ed25008ac9c045f3ef320a00b5d204c9ce9ffc2"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260721/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "970c6336ba67c459ab4d1ca5cbdcfcd921de09ef03c062f31b39119982eda856"
+    },
+    {
+      "bytes": 296564,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260722/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "72200f85d21acadb30a41a3febca75366d0bca9d4329f65d56498d182534ce2a"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260722/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "59832c7c2485c6c2102d53852eaa69087ce3cb52439d91d066fe74cdf71ad98a"
+    },
+    {
+      "bytes": 295479,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260723/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "a2461ea550ad47729c822df43d72d3d3f2161e6259bc9131bf8e0ac22975a157"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260723/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "f2f708b082fa57bdea0366a0fcdc0e3971c0265a5dd08794b8bd65f072a26221"
+    },
+    {
+      "bytes": 294329,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260724/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "d4c0971e953f765d2476bc8f40842d1ee9c00418b9978fcaebde07a4cb3763c8"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260724/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "27ecce05efd4c6f18bacbba1015b926401a469eecb2803242a7f60ef028c221a"
+    },
+    {
+      "bytes": 285430,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260725/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "d204583b3bf07654eadd448609d2a3c8dbf8f6a2322e647a99bfb589c74183ef"
+    },
+    {
+      "bytes": 412,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260725/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "6828074196120ae7f34a64eacc632e6a0161d703a0c607049b8cd6801b9ea601"
+    },
+    {
+      "bytes": 294111,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260726/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "61ab1a5ca2d59775be557fc64932ef2acec1b6bc738fb8e371a9f32dbcce3f4c"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260726/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "9c06a677428543e2c1ec745dbca48e1bdf01696ab69abed90019a72a4920e281"
+    },
+    {
+      "bytes": 300497,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260727/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "04855bb2f0f345e25a50c147ccce25a843ae200cadff685b1d6c79d9dbc89e30"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260727/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "540a153b31af9bc932640edae128cdbcd399ee8302f7e5c1af7a6ee431250cbc"
+    },
+    {
+      "bytes": 295460,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260728/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "6fbf6e3d8b3b2ab5a2d09fd118161461adfd4a58f8e2cab439b5ad9ef0b6a8ab"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260728/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "3d5ea03089b47f113a9ebfcfe3111284c1a3415b804a31e65e816d4dd835826c"
+    },
+    {
+      "bytes": 296343,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260729/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "e4ca77c94705a9d52a2f867a8fbe6b585fe0d30b7ebfad7af274610719300194"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260729/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "92af080dc17f6c7e642461bedba78ee41a09639783eb1821876e6909d2e39067"
+    },
+    {
+      "bytes": 295521,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260730/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "3cc18988fd82988c516ea91a31aa109a4e1b5ddbe08dc8d1b5a8048062846547"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260730/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "801846138154192824013cdd0a553939152acc10c95c68bfcf6c507ae6f97ca7"
+    },
+    {
+      "bytes": 293071,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260731/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "27c651727fa2616f33442fc36836cc7dbd6aa5a55a8d78d72851b72c692aceaa"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260731/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "20abdfd946c1c43206ab37f1e6205fb70e7d229936fb0e874acc99aa61b5b9d9"
+    },
+    {
+      "bytes": 282395,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260801/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "6c680d929cd48bbda56c16e84652d0415d467b8e34ab7f50afe97d96569d3b20"
+    },
+    {
+      "bytes": 412,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260801/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "298fc1fa448e2a5711a1bed2161ebf350e21dc958a1bf0dde81df5f74c40f3e3"
+    },
+    {
+      "bytes": 296119,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260802/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "572167f582995e17816adf09bcfcbc1e200b5a38412392463b2669e447a573d4"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260802/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "7e7c5196c40a7711c2ba16fc26f218fddae572f96d87cd650e041158f18b4569"
+    },
+    {
+      "bytes": 299883,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260803/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "dddd861823e6e29f3e238802b1ad723858e4a9a6fe071154e63162ee7a4ec27f"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260803/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "b8452762912f0b480c63fdaa472616e6c71c60abd6f3adc4719627665c56f611"
+    },
+    {
+      "bytes": 297004,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260804/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "71d44016dfd5eea122914ba2f1a59e21cdc614e712c7d1f835c3c9489252ac50"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260804/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "6e925f23dbcdbccf8f37fa8fa335368508d3e3170045da5690cbfd853f7116d6"
+    },
+    {
+      "bytes": 294885,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260805/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "ebbff6a7bc2a396ecfb428a2d5315a6bba5915bed2c5dde4a095d9c636a74e0c"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260805/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "837c44dc19c05194fceb0331045d587bd12e951b9d42b5a470e1d2b6f1081ac2"
+    },
+    {
+      "bytes": 293818,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260806/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "8f7749ac702eeeb9d59234ae0296822a65007d2de91332a13c5b66a18c9b1dd6"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260806/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "46fd781afc45f761414ca2c6a244fb21ad027a09c01e0553fc1dc5963a4b6ff6"
+    },
+    {
+      "bytes": 292609,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260807/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "b4a184d58b4fb5f24b48e7e867de1e792e8a14aeec638c0ee3b5eff0d5970e33"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260807/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "0b3732ce531b84d64d177407296773c3533b01106565fb06d36182d45909d936"
+    },
+    {
+      "bytes": 277773,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260808/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "b2ddb7321959a3ec745434bda8f6d2201a2ca3142a5c06a0436b0866b4467b03"
+    },
+    {
+      "bytes": 412,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260808/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "15e4fbe973cdc1cd5db19d78b90f5d55f2252628807079dbd2ea698f441cfb2a"
+    },
+    {
+      "bytes": 286486,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260809/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "231788af39d4ed1d98c623b3ee5f0c8c7f47b1a713f59d908c387464df137ef5"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260809/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "77203bf6c89c2b84a343a1afaa1d5a666c3f8a83496ac3bde14286b33b93b19f"
+    },
+    {
+      "bytes": 297626,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260810/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "73766eb05044ac6118fbf277be9555c6073a1a76dcb06b27682da96fad5e9299"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260810/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "73e3ab73fc1613132197064afa12d6610ef6706ed8ae0c5658bd43df530b726a"
+    },
+    {
+      "bytes": 291190,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260811/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "a1fab696815a4d49f809eb741eea3f6621c7393ea73a0765f9bc4e6d49fed7e6"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260811/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "0f83d330fffa7500be622a8e1b89da87cd15164c4dc4782072e250bc6e8f7486"
+    },
+    {
+      "bytes": 291988,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260812/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "46ff954603150c4bd4ac34f28d2247468fdd379281195a3469a65e514aeae388"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260812/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "b8bccf6ddc5560e23e3b07a191fb5fb6776d9962a6a52ba9c6ae629a56160c99"
+    },
+    {
+      "bytes": 293260,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260813/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "ec9829434ad08f5f7a3801766a5d717f8c1669fc5b85dd5e5e6fe645a9bd8e15"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260813/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "e7254de58c7e2c0d988683c1da36f7cd8f503dc9dd483e38b7b0a0f16c7bf34e"
+    },
+    {
+      "bytes": 291768,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260814/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "08bb1de8b64941d098210b9dc88c11eccd4a90d08bf918c21c721514eaaebc63"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260814/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "d140991d5cf62cc17d78c1946a9d9fd8655ed2228484f9426b3cbabc89433989"
+    },
+    {
+      "bytes": 272960,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260815/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "1bba6389cb86e5b7d603a431ea5bfd3a592763175b820611a0bc06f70f03642d"
+    },
+    {
+      "bytes": 412,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260815/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "7b2e11bc9efa7ad97806f4fc40b82a1fe78be4fd852fce5087fe62bf28aad41c"
+    },
+    {
+      "bytes": 281370,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260816/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "0142f62644c9f28d1edad9dae4a9c53a75439f895ee818746a43eb7af4d45ffe"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260816/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "51a2b46557d6ef9ef03be38b597c373ea73bc325faea382a4aa5b6dc12d1971a"
+    },
+    {
+      "bytes": 295464,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260817/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "f4dea9f108a68437a4857489ebedf186169847a796666c135329fb727c707617"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260817/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "1ebc795497ffbf1c82e9d49f5251f18e6297bb52de3f097070ec173d50486dc2"
+    },
+    {
+      "bytes": 291141,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260818/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "bc17043a7a168c03e94eaf0f502abaaca4ddb03f9ddcee0938b12eda422f0547"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260818/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "8fff7e9ed12dba2795f883e98a5b3a377b895ab5bd49f9f745893bdf18ecd863"
+    },
+    {
+      "bytes": 293348,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260819/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "56c17fb74c41e11fec23e2126f98fb466c0cba068dbdf22399ee25e22a2fa21a"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260819/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "e03a590f80d117e92201816509e718e40f865a8fa9c1a5ab7d6e0bc679d1f795"
+    },
+    {
+      "bytes": 298026,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260820/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "d4926b273a820f61df826c584bab668b581a3db5ae5ee9a2272078b20a3d357b"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260820/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "4a92ebaf87537f312ddb65c04c4138733560ee47a0c8300d651b9e1fcfba7579"
+    },
+    {
+      "bytes": 298567,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260821/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "a62d6b30d9d2c5fc0cfa39a31b77de3632cbfcb6ce5657fad80c4f8bebefbc96"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260821/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "54f35debfc946ebf6c117f5d959ea5c77b9e1ef7114ec4401de287920fc32eb3"
+    },
+    {
+      "bytes": 298984,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260822/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "db308136e2f3685910dd4f55d9db6f4c629d373a27ef4b596db87b7bed885ff3"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260822/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "81054c6e1262ac03c2edf7c7d352db6732b423bd0302f0419a5b62d0a04be35b"
+    },
+    {
+      "bytes": 293942,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260823/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "8820083eaaf4ae0749b37cc20c5505ef3d6f028d1af17f4f611d283cb45ae9d2"
+    },
+    {
+      "bytes": 412,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260823/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "72481fb1b558abfa72382ec82c586738ed2166e10e87bf6770a328add8c7f4e6"
+    },
+    {
+      "bytes": 303440,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260824/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "7ddfc5981afce9a241285f8e82e213268524471d4c8ed3eb60396207e3f7ac92"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/20260824/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "dd7137467d391d673406b7f1ce294a81cd3c9ee9a1752f573c4142b7e7e6378d"
+    },
+    {
+      "bytes": 4825,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/initial.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "123e890ba36ae40025936dae9200eb2680bc5b298d23dc564196a9ef124be13e"
+    },
+    {
+      "bytes": 16046,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/ETH_first/inputs.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "98ff9631ca0496bd92ebcf88d763a6752aa44d640106c0d4a433d63880690339"
+    },
+    {
+      "bytes": 298687,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260721/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "dc74fddfb597bf6c4e7c1f73f2fde7cb97c4290d1fa5bc0d16df721921daaba2"
+    },
+    {
+      "bytes": 411,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260721/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "5bf8c0cdb0fa78a23a66e0768c7e4386e171347eaa346ae1eca268dcedb9d318"
+    },
+    {
+      "bytes": 299900,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260722/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "f9b8dce2128a3bc4cc99c6cd58fda565eb85b24b5812c395bae9b12276d8780c"
+    },
+    {
+      "bytes": 411,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260722/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "05742e1145366b453ca89f625aad7455812fe668dbc2142a38b2ceec238ae4c1"
+    },
+    {
+      "bytes": 300786,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260723/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "23afb3d6d60f9ba1abcccb87be63b6970a11da88c2717f38a9f287e87b721a20"
+    },
+    {
+      "bytes": 411,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260723/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "555f8eab5a5c8bb7fbefef510f4efbcd12da5e9652f39681e3ca5a129e7c7d59"
+    },
+    {
+      "bytes": 299943,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260724/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "d4ee5e46769868476d7118549162e11cf457bb221c2be75517f7d5a2d4372492"
+    },
+    {
+      "bytes": 411,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260724/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "6a79dc723306f0f779962e6e01769229dc6618446711beb911f366add489cce8"
+    },
+    {
+      "bytes": 294693,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260725/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "e2ab71eddbc4209687de7ac3ccb4b27e7d79bc1bbf68d8f6b8bbfd4872ac0d2b"
+    },
+    {
+      "bytes": 413,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260725/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "d35073f70d6a0cc9fa55a66c80e6783a2bc624df7bd561674bf73e7db62d562b"
+    },
+    {
+      "bytes": 302470,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260726/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "aad25eefc4602d57bdbdaa868a2a8e2bf2e3defa482490f0141250bec953a1d3"
+    },
+    {
+      "bytes": 411,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260726/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "6feac28d6252bbee3f2e6f6db032f35937612d84878da21a2d474300a89e95fc"
+    },
+    {
+      "bytes": 303486,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260727/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "0be6eecd6a11b13c17a1306020b84f402c0df7783075baeb85cb5c5e604a4fe1"
+    },
+    {
+      "bytes": 411,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260727/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "7375abbfd04b2d020dd01c432460a65aa6d6795adbf71db434d69c5024d2d3b5"
+    },
+    {
+      "bytes": 299747,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260728/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "cbca7916888b49f3822da1c3b65b188b737930f5f8f2b4da083dc2695656c562"
+    },
+    {
+      "bytes": 411,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260728/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "43771aab0eafa431181fb3bb193a3d8ab6f11ba14c81638bdfe1b11bb9996305"
+    },
+    {
+      "bytes": 301105,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260729/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "30d145b85cc113f113269bd4f013af52acae3b6b4921584280a19671e07d5a71"
+    },
+    {
+      "bytes": 411,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260729/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "5e0de91e7a4411da30a54471e720c8129e0c649449cd22c879e6c910d144c50b"
+    },
+    {
+      "bytes": 299254,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260730/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "c6e473791e30c33c7492f288ba309d607d821953b77993d8992e8ceedb0548bb"
+    },
+    {
+      "bytes": 411,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260730/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "7a991270f7ccc197e6f1d67230ed689096ec0cf6117895d02b50bec299e07a0f"
+    },
+    {
+      "bytes": 299812,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260731/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "fe1a5dcece5a56e791cdd6871b9eb8f2b7ef447d23668fb20c8e2f7c9c5a1edd"
+    },
+    {
+      "bytes": 411,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260731/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "6124b4f9ca7ec93c5cc75530bfbf82981769ce237b8fea22e833f2cae4840254"
+    },
+    {
+      "bytes": 294833,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260801/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "1c7901b183f06af264498f408506a39f313e1609ac104319a856739db3622ed9"
+    },
+    {
+      "bytes": 413,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260801/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "c5cc7110d8b8d8b90ca4625a0de20a5dcca4dd78054971b9219a99bfda8d9dd8"
+    },
+    {
+      "bytes": 300718,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260802/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "d89f729d63e88653cafdaccd769c6ea3ecf77a55a5c48340d0dff94db2632f23"
+    },
+    {
+      "bytes": 411,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260802/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "d8d98c2d97e46c444a83667fce457e2a1371cdecace409018873e2451a3223e1"
+    },
+    {
+      "bytes": 302127,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260803/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "0ad47e980e6b589dccbdef03332890a5cb1d1a8d3224a54e712b5f4f322f1a4f"
+    },
+    {
+      "bytes": 411,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260803/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "0599cf78c368a9f211b19da86d609196cd46ccc86b9c9872ae48c3d9b77a6e20"
+    },
+    {
+      "bytes": 299593,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260804/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "c9aec752d1229ecc2b8e0547ba3908fd5ea1220bac32417b6b9bd849c56f35a0"
+    },
+    {
+      "bytes": 411,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260804/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "45463383955de7e908845958146f8d12d7eb0cc770dcb785c9962c897f28b582"
+    },
+    {
+      "bytes": 298749,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260805/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "bdf6b3e5d593097d993c83bc2895b8e53b820314e11ec114e28d0065b6c35167"
+    },
+    {
+      "bytes": 411,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260805/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "3a10adab481563a9febf8eb041333852ead185d6ed983e8c426f1ef2c61b249a"
+    },
+    {
+      "bytes": 298852,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260806/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "2b2afdd342249833730d098d866bda3aba6bb070492f8108a8b787e19b6dbde6"
+    },
+    {
+      "bytes": 411,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260806/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "01a3bee4fed12b62741d59234a370d4cc949704f831375e13dc9dc78d92fde31"
+    },
+    {
+      "bytes": 297531,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260807/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "f4c750d036d8fb82f77d03f92f3e61698fa1b012045fadd6deed14c4c2ede349"
+    },
+    {
+      "bytes": 411,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260807/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "d6d851cb4978300e64439928af6eb6b1f3d44918a27f337cbc20a8477ec64f85"
+    },
+    {
+      "bytes": 294000,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260808/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "6d1532e9d063396841507d5680fcdf1f49a981e6703341e2bab85c463dd74319"
+    },
+    {
+      "bytes": 413,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260808/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "585ebc98742ceafc5745d39effdebd5802df11239a6cb6d722bf7241a9490da9"
+    },
+    {
+      "bytes": 300911,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260809/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "faba448822214f0b5a6eb4dd1f9700ccc838ec491745afa6a1b5ed687375d5ca"
+    },
+    {
+      "bytes": 411,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260809/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "f7159e1d05cc00974316d82dba70f75e649f5666cfb10e92a6fb9ea7db1543d4"
+    },
+    {
+      "bytes": 303276,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260810/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "196d943a3ab69f9bb36e35bd938ccde01eb027aaff50267f906af0baf2f7ad52"
+    },
+    {
+      "bytes": 411,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260810/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "683a5c7849e0df89d6e4cbb075104a8e9e50f8942a10ec291b38302e6ccd6004"
+    },
+    {
+      "bytes": 298462,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260811/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "835130d30d0969e37bca2ce5ce2d64b0f29532d0f8a0797e698fc60ca04ef373"
+    },
+    {
+      "bytes": 411,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260811/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "dd35eb032535f0d3203fa4af5cea91c29ed55224956c006e687c781d5a6b836e"
+    },
+    {
+      "bytes": 297569,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260812/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "0f55d9241fa3256e7eb2e2df773e0363193d2bcc7a0a416658642d7f265ae4b9"
+    },
+    {
+      "bytes": 411,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260812/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "52954ac92fa1a8de3c0eafa07dc7d4b670817e728fd42b1cf4cae5ed9cb702e9"
+    },
+    {
+      "bytes": 299443,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260813/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "eedd4e71d666cd426c2cf955087476e2c67f17979c59e6f6bf51004656da2d95"
+    },
+    {
+      "bytes": 411,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260813/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "99d1319da8a3d330f40c9437fb4951f46fec5f321b6e5cda47bec39139c1ad2e"
+    },
+    {
+      "bytes": 297779,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260814/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "28facaa41c3f8d63ccca6af3c671fa4e88a0333c06ba3ad6478340b1d74d973d"
+    },
+    {
+      "bytes": 411,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260814/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "8c7ffbecf680b4775096096bc2932e1542cbc56f827634295b00482208f8e474"
+    },
+    {
+      "bytes": 293924,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260815/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "01b794430c93d850ec5f2aa5393fc77a45a980ea48cbfc127cd05172d8b94aac"
+    },
+    {
+      "bytes": 413,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260815/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "33343d73fb18e61fafdaf8243540d3df16007592c3ce19ecc3dfbb86439febdc"
+    },
+    {
+      "bytes": 302251,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260816/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "f498a7994fe4120c732e201cad4d0ebf4fda589e532d0ae1b6673863c26280cb"
+    },
+    {
+      "bytes": 411,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260816/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "6df6b4b02f0e34cfb1f9ca99f0e6503f030e9dd0dd86763b6e7584ff6bc594cc"
+    },
+    {
+      "bytes": 301042,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260817/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "7f9bf37ad9595899cb9e0e67771c0b2de4a264f9cde28a2081a3e3bc9593c4cd"
+    },
+    {
+      "bytes": 411,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260817/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "e261e48a9c1d0a049a0b28e400c30e431168c2a55c7e1083f721a835f9d4a2ff"
+    },
+    {
+      "bytes": 299174,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260818/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "8baff23cc08039918b48a60628a9036e684fcdb18bedcf6432d086d8837a7570"
+    },
+    {
+      "bytes": 411,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260818/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "71e8f592fc086d6ed1489e99056fb4c74ec792fba6b1cc62ac8dca4e9db64d76"
+    },
+    {
+      "bytes": 297890,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260819/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "2196bc9432689676cfc6385eb46968f22b9952f1b6397ab7310d6a797a9eb132"
+    },
+    {
+      "bytes": 411,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260819/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "17b10aaae6adab569006b4406ae129551fc25f1ccdefe64b9e607fcda7f27ab0"
+    },
+    {
+      "bytes": 300724,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260820/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "4970440fc66704a921764b5e87ccc5112bf05a0697958e7501d7643a4e03f896"
+    },
+    {
+      "bytes": 411,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260820/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "4056bc1694155c373aea470817f9d5e89730cd5bad38c0a93baf8a9a5f03f83f"
+    },
+    {
+      "bytes": 302136,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260821/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "b111501db62d01195bdbfdc72e61a9b99869ea70af583215340ff567dd0bbb9e"
+    },
+    {
+      "bytes": 411,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260821/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "8f2842c085a9f721f514ddf2d88e32fbfd0dcf89809a9ddc2107b63a9998a2d4"
+    },
+    {
+      "bytes": 302833,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260822/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "bbc5e942508a50990569e54ef459104952c8183592770090431dc3a367bca8ef"
+    },
+    {
+      "bytes": 411,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260822/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "52ea0034b74237dc672a33222ff8b151a1a577f74df516d029ca04c9f2063f25"
+    },
+    {
+      "bytes": 297769,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260823/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "1a28c63edb6d3a402afcf63a8acb36baaba73bd68ef31669f2a739ff4976c23c"
+    },
+    {
+      "bytes": 413,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260823/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "136e94445cd4ee38378b0193013e5f837d93bc9d76dd909b7d49228769d8802f"
+    },
+    {
+      "bytes": 306159,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260824/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "a7be5de46f051bcd2851fc01565339600e49a12494166392ed931a819653d197"
+    },
+    {
+      "bytes": 411,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/20260824/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "d383effbd2c26536cd1618451eb35e537abf26562fccdb7e5d9fb9fb22841975"
+    },
+    {
+      "bytes": 4869,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/initial.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "a873ec80fd8874e7370ab75cc2b5c231fbb8437fa38bc42559ea3d8ed15786ad"
+    },
+    {
+      "bytes": 16101,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/HYPE_first/inputs.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "ca6f20e6c2e3f8d86109fa1b83fb13e6d72475cdba1d0f5c2c79bb6a2869adeb"
+    },
+    {
+      "bytes": 298639,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260721/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "9a9910f69314f4114699a0bb40ffb46498111dd0786efffa25e0f6656293c1ef"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260721/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "e733d00b21926f55598639f4819164e01249af593e9e5ee11d9af13e507551ac"
+    },
+    {
+      "bytes": 298879,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260722/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "5023b6fc3c0eb3952381027736384157a061242a2f4172c1a32475456b7db0a6"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260722/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "6926fc85fedb4f66c7eff8b1434aa4cd3933e3bd50b9525e2c344a214ea85d9c"
+    },
+    {
+      "bytes": 296754,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260723/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "379c069056ae76fe8dc58db90012e0011db5d2211850935d50c7f77b877d5357"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260723/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "25eac6f4b60ce1d5bd74d35f2035856fe7188e595e58eb2b76626d1b9191f74e"
+    },
+    {
+      "bytes": 296291,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260724/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "39a8bd607cbe7f9b3ada9bd03e6cf9c746d17eed24683d1c3820b2f3b901d748"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260724/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "73ea6ce2dcd3d7acc79c6a4e190e35861f60cb14c1d6a72e18361f5ca08694ae"
+    },
+    {
+      "bytes": 290661,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260725/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "74fd1cbd07e57de2deae524893da2f734dea5fc1676acddc98b23b3f1cf19b2e"
+    },
+    {
+      "bytes": 412,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260725/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "0e7b017f9e74eab38482a865b3a515a1bf58f9cacdfdf16bda6c4ceabb7d9f78"
+    },
+    {
+      "bytes": 298130,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260726/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "102501f291f39757e57c42d56246b958c4522b4849f858f8595318ed2086b0b1"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260726/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "933d3f258c12b16fa72b70c7c36648ef80f5564221be36765981cb24d9f18812"
+    },
+    {
+      "bytes": 303038,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260727/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "01da4b23eb0175b0cef36ee06d555c119b53572bbe7bd883c9cb1ce73cc874fa"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260727/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "27811f4945216e3efaf3a58d14016aa69f0f5fdc6d92adc6600fc6d386215c74"
+    },
+    {
+      "bytes": 297549,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260728/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "b64c62d4ed008072ca3cd7375069d70c0e4871d3956f096c18198ed674b15eec"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260728/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "396c11363238dee7c769cecf04b1530f65bf5d7912813e76890443422146715d"
+    },
+    {
+      "bytes": 299238,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260729/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "61ac6611a30aef199c47ea709ef2e42635cdf72166b834ca019bcdf59f230176"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260729/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "18a633bad95e926e04f7cad802731b54e6dd1781fdb920f05775d73b1ac9c794"
+    },
+    {
+      "bytes": 298542,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260730/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "d83014e8e8c1b71039f6db8ea8f6ebf11294ffdf1486eeb9f128f716263c3300"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260730/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "2c686a0483db691dd9ae031847fff1200688b958f8eb3c044cf1c19f7cd98914"
+    },
+    {
+      "bytes": 297900,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260731/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "a7e1cba1f60b941345cc5dc5fae4a77f3ba5bf54f84f67993f2fe7a95ec3dab4"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260731/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "6d97503a1058ef86d68da54f51845e6d01af045cba30312bcc515f4a67bb2f7e"
+    },
+    {
+      "bytes": 278400,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260801/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "a28e3eb055a2a020fece8c2e89b30e2335ad2d55263d850342db9b42e5b81f90"
+    },
+    {
+      "bytes": 412,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260801/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "b76c3ded5f3342206f5470b15f83a69ad30df5f825ed2a49e7a6fb4418056764"
+    },
+    {
+      "bytes": 300827,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260802/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "b2a9c5a1555a2dfa984988b70c84607c9b4bffe9a384d10fd4085a83186c09a2"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260802/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "ad73bdf8aa5edcb84f05a81639ad58ce7d418c22b6be925ff7c1c9e935b001a7"
+    },
+    {
+      "bytes": 300707,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260803/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "6d65389470290434ab1bef00b6656046c4a0ab223fae5aca11f76d5feee06a93"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260803/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "1e9b9ff776e16cdcd97039de754c727855e59f5cbd93818647b0a5f14e7419c5"
+    },
+    {
+      "bytes": 299781,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260804/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "e262a5273c4d429573c2f9892b524850c2ddc1dc6645b42398868e82fdea4f92"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260804/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "38307aced995e4e45a51d6c63f2421d53a85ecb7330e2a85496260aeefe91d03"
+    },
+    {
+      "bytes": 298159,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260805/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "716a4c0c2e77aa1b93445322f556e9aff4494ee75d35d9bd7648e5d9fd00f37c"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260805/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "644e6528181e7a06680696419c2ab58a7d4a18ed6fcc36943261e0058f3def32"
+    },
+    {
+      "bytes": 296976,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260806/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "99db1a1e423f5da4ec193704b71ce67058a7bcfd9ebb707d57f79a51cfee8be9"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260806/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "e7941d6a18a0922dd1aa57cff834ac8c6e370019822ab73439b822bdda7219bb"
+    },
+    {
+      "bytes": 296463,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260807/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "52231b62f7b481b3ffbda122d01e5e255d411056771180fa6507d27a6f9556f0"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260807/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "b01f7a1bf1fe9f4c8c5f422edc98b948b3c8303067a0fa60de9f331ec602b259"
+    },
+    {
+      "bytes": 289341,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260808/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "e6a43b1567bdd2022bba2e9275e45e49e9411f4cef5889fbcb68c3927d244051"
+    },
+    {
+      "bytes": 412,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260808/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "16b05422a6e38a71c1709db4dcd53bfcb9b65a9bbc0764e074f749a71e130567"
+    },
+    {
+      "bytes": 300267,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260809/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "e7ef5d52a57790f1c90c422a81a52a619d9bc072835103588a606487aa5f356c"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260809/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "9a80f16f7a0224e36dc231a8f3b42c73ff456674391815c0035412a298060e7f"
+    },
+    {
+      "bytes": 303455,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260810/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "4443c88bac2e3c4fc45734bcce709daef9be978c431535700726d7a0ffc658cf"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260810/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "d9aa6bfe7d24621ae662beb447fbae514aa24fcc807b20fe0ac3155a868c29cd"
+    },
+    {
+      "bytes": 296444,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260811/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "1993dbd0e05bfa5b8da47c8cfc8fc075c5c8515295ddf9c1f2beb82c6bb6ff96"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260811/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "b79eef7901cea7b30aae65fcc0eccca90f7ebd50c2b603f3a76d434b5a634b0c"
+    },
+    {
+      "bytes": 295395,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260812/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "30791ab1da971c1a223fb34aacc255ecf010b12a89bd221bdef9ab58051a7eb6"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260812/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "67a138dd16f4ab6ba0a3b6e5babeb676293e8a752eb939792b2476da9d70586f"
+    },
+    {
+      "bytes": 296198,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260813/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "fb3054f788cf5944e03b0a3e1a2c60592be23e31fc6ebbcd4aa6ae7e1e9945d9"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260813/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "0af84ed01a4dbb966374894286888821a3e0b0d6f50f45e884142ec3537c3754"
+    },
+    {
+      "bytes": 295968,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260814/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "b064e09502d13af0009933117df7785ebeaeded2fde310427ad502c48c62cb49"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260814/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "76f6839f6e161a5c506e7603dbd9a69e47c865f8890b6af6e00efa2c4f73b407"
+    },
+    {
+      "bytes": 286916,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260815/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "a1bceec135f208d88a366a2e47fdb916e98c630f05c34e0b8fa660f3515c39da"
+    },
+    {
+      "bytes": 412,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260815/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "edfb2f28f5ed554121657eb71d013f22f08723fa14130fc5c86c00c108854180"
+    },
+    {
+      "bytes": 293342,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260816/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "9814224bf8858d309d1d066c814607bb8bff675b83f2a35053506f4d72b2a711"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260816/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "73b14837a76f422f0434114d2f825fcd84df2a12aa9ffdf21fae8d456af33a6c"
+    },
+    {
+      "bytes": 299865,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260817/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "aa83506185d227e0917ca55cebb1686a0ad005e2bbb70a89b5bcad0414ab0bc5"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260817/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "d8be868c72b8ddd9ac69a3eae815149fe18b5fff9613e9e826cd15459ce6e976"
+    },
+    {
+      "bytes": 295721,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260818/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "cc8200386b179daf646cf9181ff8cf0a3fe299bf64fb288a70fccb94e2512690"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260818/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "ae7470e4d8585644da093f32ae54e98b27679331b1b7eedabe187788d9504efe"
+    },
+    {
+      "bytes": 295064,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260819/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "56672b53010c9a783d42318a80804c7ca64e08167d09594a2c2525adf26771f5"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260819/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "5518801e882bc71cc533d1fb95cdcaaf796eec7336887226da4b89d61ae47122"
+    },
+    {
+      "bytes": 299209,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260820/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "cb477bcabf96556ea53ef4ec4490c5e7b33de6c61742ae1ecfa4b72f02e5f43d"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260820/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "1cf82a965028fed636d9f74e1ff7ace00eb78baf41a13af9ef04d3678c0095c5"
+    },
+    {
+      "bytes": 299399,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260821/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "6a03fe0f355c27cf49888936b7c697de62f667f769238669838627ff92114163"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260821/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "e353b70cf2b4c14e11739a7ea617bfeb05f561f4f22c1a65af61b607b2c28384"
+    },
+    {
+      "bytes": 301354,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260822/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "4ef4e56ed85039904e4d0d58dac1595795395a940b4eb409ff4c8ec103fa4a8c"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260822/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "d6993db76562b93ce2792048e38342fe10629106e62a9595fd168ccad8755ec9"
+    },
+    {
+      "bytes": 295956,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260823/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "c3beb10cd2673031c3f001acf78729f13193029b81eea6114184b78af1677f95"
+    },
+    {
+      "bytes": 412,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260823/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "b88ea0ed8d30b028208d63ead8583fe0fb4c2dd40c1cfb101d61aac834e34d7c"
+    },
+    {
+      "bytes": 305537,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260824/canonical.jsonl.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "a3e07cf7a643b92a1972b419b165475bb4280dfee617a2c4e523cae0a4f07c05"
+    },
+    {
+      "bytes": 410,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/20260824/summary.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "50089fb52f584446c2f03c0b89c27cebe2e735e3178c6d0c0151dd897d7175dd"
+    },
+    {
+      "bytes": 4869,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/initial.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "4cab40ad3ceb0465373f22a689c0ff129e673ddf6f16f5affb3ef7e736b69161"
+    },
+    {
+      "bytes": 16904,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/SOL_first/inputs.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "463e23d4e2527cb73c9b52e2b0c381e050ade5d2e54e4283da65a16762f46db5"
+    },
+    {
+      "bytes": 325090,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/export/manifest.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "9b6401e9ddcd41706b9835a926932dd945386dd87a96cf6bd1c7898b75fac6a8"
+    },
+    {
+      "bytes": 33476155,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/source.tar.gz",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "8e7a22d97a42e411682174bfe9b4393ca43f51e336d33dc4e3c56c9759f94b22"
+    },
+    {
+      "bytes": 330,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/source_verified.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "a42cb834c1322887061175dadb92b43cafd1728b857fdfdc34e44de0328131c2"
+    },
+    {
+      "bytes": 3476,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/plans/2026-09-09-v89-gap-market-account-followup.md",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "95cad29fb4457e809aa32a2e90dcad7e2c30ee87c059d6e9eb87d61e8043b245"
+    },
+    {
+      "bytes": 2244961,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/research-journal/v89-complete-provider-history-20260909-v1.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "228dae41ed91dc23b2fbb82dd34083a0fbd65a7b0ac733574e97804c27f1c6dd"
+    },
+    {
+      "bytes": 13843,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/research-journal/v89-historical-entry-binding-20260909-v1.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "cb005fe7b32b504cffe75efb709cedda2ab523b3cf1b2b5b98341c6681594502"
+    },
+    {
+      "bytes": 40027,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/research-journal/v89-historical-market-binding-20260909-v1.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "81bd357a05d8294a04e7b3b719c793ad497ad36319429197e57ea9d8de6bfe45"
+    },
+    {
+      "bytes": 646896,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/research-journal/v89-historical-provider-binding-20260909-v1.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "1fc0ea1f21e00a5852aecf29d6f65bd2dd14c8a7c25936008829b67e431655e1"
+    },
+    {
+      "bytes": 11337,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/research-journal/v89-native-hype-hold-20260909-v1.json",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "9a04ae42b7e1738c2e42ec0543cd9dd6dd7d342a3b96beeadba9db0c23fcc903"
+    },
+    {
+      "bytes": 3197,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/reviews/2026-09-09-v89-historical-calendar-integration-start.md",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "b48d1c8dda3d1f9b081c613a2a5c46cad4e663cbdbd96e93ca78113a5a197c2a"
+    },
+    {
+      "bytes": 4535,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/reviews/2026-09-09-v89-historical-calendar-qualification.md",
+      "role": "historical_calendar_native_account_qualification",
+      "sha256": "5e8ce1d31e6e275b1a126350c677e5a7a66814fe110bac38c7dd958a41b5cc91"
+    }
+  ],
+  "execution_authority": "none",
+  "falsifier": "Changed source identities, concealed conditional prices, fabricated historical receipts, omitted calendar members, changed native admission or holding policy, failed archive reproduction or unexplained full account differences invalidate the affected qualification.",
+  "hypothesis": "Authenticated historical provider and independent canonical evidence can feed native account admission, decision-time positions and configured exits through a complete conditional calendar without altering original grids or inventing receipt authority.",
+  "hypothesis_id": "v89_historical_calendar_native_account_binding_20260909_v1",
+  "limitations": [
+    "Synthetic account tests and a 35-day first-source canonical prefix do not qualify the complete 48-day historical account or later-source canonical streams.",
+    "The complete eight-stream canonical export remains running. Preserve its original job; no whole-history economic result is available.",
+    "The new complete-export catalog and account-source assembler are separate uncommitted implementation work outside d7b44cb and outside this source qualification.",
+    "Seven selected modules cover 564/591 statements. Complete branch/system coverage and resource cleanup are not claimed; both suites contain ten unclosed SQLite connection warnings.",
+    "Publication knowledge and price-phase clocks remain explicitly modeled; original provider gaps and conditional continuity rows remain distinguishable from market observations.",
+    "September 8 venue size/leverage captures remain static assumptions with historical availability unverified. They do not replace original cost or margin-tier contracts.",
+    "Complete original 48-day source/cost/clock/allocation account paths, economic reconciliation and frozen reproduction remain required before recommendations.",
+    "No live strategy, source, sizing, execution, configuration, deployment or process lifecycle changed. Both prospective outcome seals remain intact; no early account outcomes were inspected."
+  ],
+  "metrics": {
+    "automatic_promotion": false,
+    "both_implementations_unchanged": true,
+    "canonical_prefix_checks": 201600,
+    "canonical_prefix_days": 35,
+    "canonical_references_reauthenticated": 291,
+    "canonical_report": {
+      "bytes": 1640,
+      "sha256": "b064c547dc0af757d5096be9095f43acca8997c41cc82a725851bb284012a188"
+    },
+    "canonical_reports_byte_equal": true,
+    "complete_historical_account_evaluated": false,
+    "covered_statements": 564,
+    "execution_authority": "none",
+    "financial_improvement_established": false,
+    "focused_calendar_native_tests": 117,
+    "implementation_members": 1916,
+    "measured_statements": 591,
+    "missing_current_in_fixed_canonical_prefix": 57,
+    "observed_unknown_in_fixed_canonical_prefix": 6470,
+    "regressions": [
+      {
+        "bytes": 7618,
+        "log": "worktree_tests.log",
+        "passed": 1034,
+        "seconds": 974.53,
+        "sha256": "4581f68f63a1fe3ee94c11e23ce5cf04fb5e10b198245ef3fb1f4fe516659710",
+        "warnings": 10
+      },
+      {
+        "bytes": 7618,
+        "log": "archive_tests.log",
+        "passed": 1034,
+        "seconds": 982.17,
+        "sha256": "808a46c3fd2ff19336b302ff95332ddf9e2e0b3a27a9af63e9abeda079505994",
+        "warnings": 10
+      }
+    ],
+    "research_phase": "complete_historical_account_assembly_and_economics_being_tested",
+    "runtime_strategy_changed": false,
+    "source_archive": {
+      "bytes": 32764759,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_calendar_qualification_20260909_v1/source.tar.gz",
+      "sha256": "a725810442ba9dd87edd4de6cfc1ab6cb96f2af87e040890650c3b73d28dc108"
+    },
+    "source_commit": "d7b44cb6f517a2c3ee98a3f9b0338e517a490a64",
+    "synthetic_calendar_cases": 48,
+    "verified_at_utc": "2026-09-09T21:29:34.992269+00:00",
+    "warning_scope": "Ten unclosed SQLite connection ResourceWarnings per suite; no failure reported. Resource lifecycle qualification is not claimed."
+  },
+  "revision_number": 1,
+  "runtime_strategy_changed": false,
+  "schema_version": 1,
+  "status": "retain",
+  "strategy_id": "v89_historical_native_account_inputs",
+  "supersedes_revision_id": null,
+  "symbol": "MULTI"
+}

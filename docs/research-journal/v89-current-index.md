@@ -7,21 +7,35 @@ outcome was refreshed for this update.
 
 ## Current finding and next action
 
-The [historical calendar/native account integration](../reviews/2026-09-09-v89-historical-calendar-integration-start.md)
-is frozen at `d7b44cb` with 117 passing focused tests. A fixed 35-day first-source
-canonical prefix (201,600 observations) reproduces byte-for-byte in worktree and
-archive; all 291 references are reauthenticated. This source-reader result does
-not qualify the complete 48-day account or later-source variants.
+The [historical calendar/native account qualification](../reviews/2026-09-09-v89-historical-calendar-qualification.md)
+is complete from frozen source `d7b44cb`: **1,034 selected tests pass in both
+worktree and archive**, with ten unclosed SQLite connection warnings in each.
+Seven measured modules cover 564/591 statements (95%); this is bounded mechanics
+validation, not full-system or resource-lifecycle qualification. Both original
+regression sessions 44606/32391 returned zero and must not be restarted.
 
-Broader regression sessions **44606** (worktree) and **32391** (archive) remain
-live at September 9 21:05 UTC. Preserve their source and original canonical
-export session **32156**. Complete regression/archive qualification, then the
-full historical input loader, 48-case native account run and independent
-reconciliation. The next implementation checkout is
-`/Users/gestas/Prototypes/hypervector-v89-history-runner-20260909`, based on `d7b44cb`;
-the existing storage/SPCX worktree remains the fixed regression source.
-Both outcome seals remain intact. No historical financial improvement or live
-change has been established.
+All 1,916 Python/lock implementation members remain unchanged in both source
+trees. The fixed 35-day first-source canonical prefix reproduces byte-for-byte:
+201,600 observations, 57 missing-current and 6,470 UNKNOWN. All 291 references
+were reauthenticated after the suites finished. The completed qualification is
+[journaled as revision 1](v89-historical-calendar-binding-20260909-v1.json).
+
+The separate complete-export catalog and account-source assembler in
+`/Users/gestas/Prototypes/hypervector-v89-history-runner-20260909` have 14 and nine
+passing focused tests, respectively. They remain uncommitted integration work
+outside the frozen qualification. Finish source review/validation, actual
+registered-file loading and the full 48-case native account runner, then
+independently reconcile and reproduce every complete path. The original
+[full account plan](../plans/2026-09-09-v89-gap-market-account-followup.md) remains
+in force; no complete historical financial result or profitable live fix is
+established. Do not repeat the completed source probes.
+
+At September 9 21:27:46 UTC, canonical export session **32156**, parent PID 26037,
+remains active; logs report 43 first-source days per core asset, and the complete
+eight-stream report is absent. Preserve the original export. Both prospective
+collectors are present. No matching local trading backend, checkpoint writer or
+TUI is found; the saved checkpoint remains September 8 14:04:48 UTC. This does
+not refresh venue positions or account PnL. Both outcome seals remain intact.
 
 The preceding completed entry qualification and retained lineage follow.
 
