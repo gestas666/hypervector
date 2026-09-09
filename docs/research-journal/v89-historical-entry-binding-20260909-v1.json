@@ -1,0 +1,229 @@
+{
+  "automatic_promotion": false,
+  "confidence": "high",
+  "created_at_utc": "2026-09-09T20:29:35.946492+00:00",
+  "decision": "Accept the reproduced entry adapter and source-backed static venue assumptions from 7f690ac. All 555 tests pass in source and archive; original venue reports reproduce byte-for-byte. Continue complete historical calendar and native routing integration on all original cases. No historical account return, economic improvement or live change is established.",
+  "evidence": [
+    {
+      "bytes": 13674,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/historical_entry_binding_green_20260909.log",
+      "role": "historical_entry_and_static_venue_unit_qualification",
+      "sha256": "9227946372204183cc4f3728bdf0c36377f2a7f6a7bc88c67d5242e8e489e173"
+    },
+    {
+      "bytes": 2699,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/historical_entry_binding_green_v2_20260909.log",
+      "role": "historical_entry_and_static_venue_unit_qualification",
+      "sha256": "3ff9c5ee05f62c463f5dfdf76063682c4c1ad23ca1faff52b15ef832280dabce"
+    },
+    {
+      "bytes": 1147,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/historical_entry_binding_green_v3_20260909.log",
+      "role": "historical_entry_and_static_venue_unit_qualification",
+      "sha256": "60c1cf963cb8b4244c7bf43341c2281fd7164dc04a1d871b6b8c24a583534ebb"
+    },
+    {
+      "bytes": 45894,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/historical_entry_binding_red_20260909.log",
+      "role": "historical_entry_and_static_venue_unit_qualification",
+      "sha256": "a5bc22f8abbb0a0229d1f4b2fbd6c58e91da115805c51006ca11ac80ade9de71"
+    },
+    {
+      "bytes": 812,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/historical_venue_catalog_green_20260909.log",
+      "role": "historical_entry_and_static_venue_unit_qualification",
+      "sha256": "da8c9dfcaca44263747077efaa2bcbd47e979e884d13b8e71e33d1804999eaa9"
+    },
+    {
+      "bytes": 21919,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/historical_venue_catalog_red_20260909.log",
+      "role": "historical_entry_and_static_venue_unit_qualification",
+      "sha256": "036e3c645fd7ec5c55f98ab36d4f896ec0c30815425827028a3b2604fe5c6516"
+    },
+    {
+      "bytes": 735,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/historical_venue_units_green_20260909.log",
+      "role": "historical_entry_and_static_venue_unit_qualification",
+      "sha256": "1cfdf3e6fa507f8c6d408ee337d4da20508317b565004651188d6965c1ebec66"
+    },
+    {
+      "bytes": 43158,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/historical_venue_units_red_20260909.log",
+      "role": "historical_entry_and_static_venue_unit_qualification",
+      "sha256": "7f964e320e60100d18a3a288815cfd8290d1789271313f2f7e63aa05f9055062"
+    },
+    {
+      "bytes": 23994,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_equal_cap_quote_feasibility_20260908_v1/capture/meta_core.json",
+      "role": "historical_entry_and_static_venue_unit_qualification",
+      "sha256": "57466affb2c65ffc2e5586e6a50e3705861125ffbc32a95cf3b37b7d88783da3"
+    },
+    {
+      "bytes": 34432,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_equal_cap_quote_feasibility_20260908_v1/capture/meta_xyz.json",
+      "role": "historical_entry_and_static_venue_unit_qualification",
+      "sha256": "5650fed721b3141453712d7712261d81473378567487de9c98def3d9ec966f59"
+    },
+    {
+      "bytes": 1558,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_entry_qualification_20260909_v1/archive_tests.log",
+      "role": "historical_entry_and_static_venue_unit_qualification",
+      "sha256": "0994cf6352b8da9651afce839f7ead42b916c22771b28ebc519dce424d3394af"
+    },
+    {
+      "bytes": 334332,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_entry_qualification_20260909_v1/archive_venue_report.json",
+      "role": "historical_entry_and_static_venue_unit_qualification",
+      "sha256": "92a9489934c33b9a15e7bb913028a1b69117e0c266809126b9a5b2847b39c5cb"
+    },
+    {
+      "bytes": 121,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_entry_qualification_20260909_v1/archive_venue_run.log",
+      "role": "historical_entry_and_static_venue_unit_qualification",
+      "sha256": "59a38cc850d600e8fe99b5fad9b0b768e512280f2b0339987670b51063a8d354"
+    },
+    {
+      "bytes": 6179,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_entry_qualification_20260909_v1/build_journal.py",
+      "role": "historical_entry_and_static_venue_unit_qualification",
+      "sha256": "4711d5132aaa42faf3305e5a98f57ac1e7fad2d04da159a30d21ed846f821a24"
+    },
+    {
+      "bytes": 4860,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_entry_qualification_20260909_v1/profile_24h.log",
+      "role": "historical_entry_and_static_venue_unit_qualification",
+      "sha256": "a1d3a9e5cac62dea5e8a5eb6c06a3079316b7cc4d8b8d301bcc1029802876b65"
+    },
+    {
+      "bytes": 67033,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_entry_qualification_20260909_v1/profile_24h.pstats",
+      "role": "historical_entry_and_static_venue_unit_qualification",
+      "sha256": "b930079450796465107591594cf48ded8eba90e1f30267aad7926a28cbbf0920"
+    },
+    {
+      "bytes": 325966,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_entry_qualification_20260909_v1/profile_24h_summary.json",
+      "role": "historical_entry_and_static_venue_unit_qualification",
+      "sha256": "9d2d8d52c9e72ccacbe90b1ba4fc6c863366c51a9b77ed93d7c32e5def66eeed"
+    },
+    {
+      "bytes": 4259,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_entry_qualification_20260909_v1/qualify_venue_inputs.py",
+      "role": "historical_entry_and_static_venue_unit_qualification",
+      "sha256": "da3fb22a8abbc14731e35f4b902f9bf333be1159c51348dd39d5e7b64a3f7a1f"
+    },
+    {
+      "bytes": 33510098,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_entry_qualification_20260909_v1/source.tar.gz",
+      "role": "historical_entry_and_static_venue_unit_qualification",
+      "sha256": "d9f836a48b9c43bab79b498cc41f82d987ad6f3c492b6ca94eae5d8153eb913f"
+    },
+    {
+      "bytes": 576,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_entry_qualification_20260909_v1/source_verified.json",
+      "role": "historical_entry_and_static_venue_unit_qualification",
+      "sha256": "e0290c5f6249f8a093da9eb1f7aa028425b5b4607f1d3f41dc57630f8b582b53"
+    },
+    {
+      "bytes": 628,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_entry_qualification_20260909_v1/verified.json",
+      "role": "historical_entry_and_static_venue_unit_qualification",
+      "sha256": "0bceabbe8a784f3ea1ca138905cdd5fb9aa71172b98e79e1e3e3845817d4fddf"
+    },
+    {
+      "bytes": 1558,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_entry_qualification_20260909_v1/worktree_tests.log",
+      "role": "historical_entry_and_static_venue_unit_qualification",
+      "sha256": "34faadd874270f40c10a4fd90e2a8e2054f75b1b798abdf68d2225844d29c186"
+    },
+    {
+      "bytes": 325864,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_entry_qualification_20260909_v1/worktree_validation_manifest.json",
+      "role": "historical_entry_and_static_venue_unit_qualification",
+      "sha256": "e9cb8fa767d91a5fd7947a8d8beff5c66c0d5330e92f1613ac8038d325228fbb"
+    },
+    {
+      "bytes": 334332,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_entry_qualification_20260909_v1/worktree_venue_report.json",
+      "role": "historical_entry_and_static_venue_unit_qualification",
+      "sha256": "92a9489934c33b9a15e7bb913028a1b69117e0c266809126b9a5b2847b39c5cb"
+    },
+    {
+      "bytes": 121,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_entry_qualification_20260909_v1/worktree_venue_run.log",
+      "role": "historical_entry_and_static_venue_unit_qualification",
+      "sha256": "59a38cc850d600e8fe99b5fad9b0b768e512280f2b0339987670b51063a8d354"
+    },
+    {
+      "bytes": 3476,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/plans/2026-09-09-v89-gap-market-account-followup.md",
+      "role": "historical_entry_and_static_venue_unit_qualification",
+      "sha256": "95cad29fb4457e809aa32a2e90dcad7e2c30ee87c059d6e9eb87d61e8043b245"
+    },
+    {
+      "bytes": 207440,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/research-journal/v89-equal-cap-quote-feasibility-20260908-v1.json",
+      "role": "historical_entry_and_static_venue_unit_qualification",
+      "sha256": "62443f8bd1fac1fe241c4fe7149c8bc27307046b3c187fce39c950345f1564b6"
+    },
+    {
+      "bytes": 40027,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/research-journal/v89-historical-market-binding-20260909-v1.json",
+      "role": "historical_entry_and_static_venue_unit_qualification",
+      "sha256": "81bd357a05d8294a04e7b3b719c793ad497ad36319429197e57ea9d8de6bfe45"
+    },
+    {
+      "bytes": 11337,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/research-journal/v89-native-hype-hold-20260909-v1.json",
+      "role": "historical_entry_and_static_venue_unit_qualification",
+      "sha256": "9a04ae42b7e1738c2e42ec0543cd9dd6dd7d342a3b96beeadba9db0c23fcc903"
+    },
+    {
+      "bytes": 4032,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/reviews/2026-09-09-v89-historical-entry-venue-binding.md",
+      "role": "historical_entry_and_static_venue_unit_qualification",
+      "sha256": "0c2f5a3365e31b7fce445ef7cfc3afda44813e54bee74f0f85730f06cffd028e"
+    }
+  ],
+  "execution_authority": "none",
+  "falsifier": "Changed registered source bytes, concealed price proxies, manufactured historical receipts, changed sizing precedence, detached anchors, incorrect account rounding, failed archive reproduction or unexplained complete-account differences invalidate the affected qualification.",
+  "hypothesis": "Authenticated historical publications and price members can feed the existing rounded account entry economics while later captured venue units remain explicitly static, historically unverified assumptions.",
+  "hypothesis_id": "v89_historical_entry_binding_20260909_v1",
+  "limitations": [
+    "The account-entry tests are synthetic 2030 cases. They do not reconstruct complete historical accounts or establish actual fills, profit, diversification or attainable changed-size execution.",
+    "The seven actual metadata members were captured September 8, after the historical window. Their original capture clocks remain explicit; historical size and leverage rules remain unverified static assumptions.",
+    "Current captured fee or margin-tier fields do not replace the original historical cost or liquidation scenarios.",
+    "Four measured logic modules have complete statement coverage; catalog statements are 26/28 in unit tests and its original registration constructor is also exercised by both real-file runs. No complete branch or system coverage is claimed.",
+    "The 24-hour 3.84-second profile covers synthetic account advancement only; it excludes calendar creation and does not establish complete-history throughput.",
+    "Complete historical calendar assembly, native decision-time positions/routing/exits, whole-history independent canonical evidence, fees/funding and terminal positions remain required on every original source/cost/clock/allocation axis.",
+    "The subsequent historical completion projection is unfinished integration work outside this frozen source and must not be treated as qualified by its archive tests.",
+    "No live strategy, configuration, process lifecycle, execution client, deployment or account outcome was changed; both prospective outcome seals remain intact."
+  ],
+  "metrics": {
+    "archive_tests_passed": 555,
+    "complete_historical_account_evaluated": false,
+    "execution_authority": "none",
+    "historical_account_evaluated": false,
+    "historical_venue_availability_verified": false,
+    "independent_venue_field_checks": 42,
+    "measured_statements_covered": 198,
+    "measured_statements_total": 200,
+    "research_phase": "complete_historical_native_account_integration_being_tested",
+    "source_commit": "7f690ac764bdfbb73e9509a92d5954562387ca8d",
+    "source_references_reauthenticated": 3,
+    "synthetic_entry_allocations": 2,
+    "synthetic_entry_assets": 7,
+    "venue_report_bytes": 334332,
+    "venue_report_sha256": "92a9489934c33b9a15e7bb913028a1b69117e0c266809126b9a5b2847b39c5cb",
+    "venue_reports_byte_equal": true,
+    "verified_at_utc": "2026-09-09T20:21:28.657731+00:00",
+    "worktree_tests_passed": 555
+  },
+  "revision_number": 1,
+  "runtime_strategy_changed": false,
+  "schema_version": 1,
+  "status": "retain",
+  "strategy_id": "v89_historical_native_account_inputs",
+  "supersedes_revision_id": null,
+  "symbol": "MULTI"
+}

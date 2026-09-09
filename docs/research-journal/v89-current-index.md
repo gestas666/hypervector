@@ -7,6 +7,29 @@ outcome was refreshed for this update.
 
 ## Current finding and next action
 
+The [historical entry and venue binding](../reviews/2026-09-09-v89-historical-entry-venue-binding.md)
+is reproduced from `7f690ac`: 555 selected tests passed in both worktree and
+verified archive, with 198/200 measured statements covered. The original
+seven-asset venue report reproduces byte-for-byte; all 42 independent field/type
+checks agree. September 8 captured size/leverage units remain explicit static
+assumptions, with historical availability unverified. See
+[entry binding revision 1](v89-historical-entry-binding-20260909-v1.json).
+
+The subsequent completion projection has 195 passing focused/calendar tests,
+but complete historical calendar assembly and native decision-time routing are
+unfinished. Continue the full original account plan, preserving every source,
+cost, clock and allocation case. No revised historical return or profitable
+live recommendation is established.
+
+At September 9 20:29 UTC, the original canonical export parent and both source
+collectors are present. The last independently verified canonical prefix is
+122,400 checks in 85 complete daily chunks at 19:56 UTC; the full export remains
+unfinished. Preserve that job and both prospective outcome seals. No local
+trading backend, checkpoint writer or TUI is found; the checkpoint remains
+September 8 14:04:48 UTC. This does not refresh venue positions or account PnL.
+
+The preceding native holding qualification and retained lineage follow.
+
 The [native HYPE holding correction](../reviews/2026-09-09-v89-native-hype-hold-qualification.md)
 is independently reproduced from `5fcb533`: 363 account regressions plus five
 oracle tests pass in the worktree, and all 368 pass in its archive. Every one
