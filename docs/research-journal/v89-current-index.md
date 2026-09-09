@@ -7,6 +7,20 @@ outcome was refreshed for this update.
 
 ## Current finding and next action
 
+A subsequent [dynamic entry-boundary diagnostic](../reviews/2026-09-09-v89-native-account-entry-boundary.md)
+now supplies an exact integration counterexample. Across 24 synthetic seven-slot
+comparisons, applying native entry selection/ranks leaves all retained account
+values unchanged. Across 24 two-slot controls, native routing withholds SOL while
+the original account admits it after same-cycle exits. All 96 artifacts reproduce
+byte-for-byte from frozen source; 5,328 independent Decimal checks reconcile, with
+maximum error 5.4650e-13. These are one-hour synthetic prefixes, not historical
+profits, terminal evaluator acceptance or evidence of a seven-slot live defect.
+See [its journal](v89-native-account-routing-20260909-v1.json) and the
+[typed integration plan](../plans/2026-09-09-v89-native-account-routing-integration.md).
+Replace the process-local diagnostic instrumentation with typed source/calendar
+entry routing at the actual decision-position boundary. Native configured closes
+still require their own complete account/holding-clock integration.
+
 Journal revision 22 qualifies native configured-exit routing compatibility from
 `9e3ecac3d5a63564e2065052c0bbaaa340b2d006`: 748,800 exact hypothetical cycles,
 zero native differences and independent reconciliation to raw provider publications.
