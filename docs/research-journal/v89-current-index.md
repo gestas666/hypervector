@@ -11,49 +11,58 @@ records carry `execution_authority=none`; they do not arm or manage orders.
 
 ## Current finding and next action
 
-September 9 update: journal revision 18 verifies that UNKNOWN regime handling
-has no overlap with the six inherited modeled HYPE lifetimes. The independent
-join checks 6,368 decisions across 24 repeated source/cost lifecycle instances
-and six soft-deadline decisions: no UNKNOWN, absent or null states. This does
-not support UNKNOWN handling as the explanation for those modeled losses.
-The research/live rule difference remains unqualified for other lifetimes.
-See the [XYZ/HYPE review](../reviews/2026-09-09-v89-xyz-launch-hype-unknown-overlap.md)
-and [revision 18](v89-equal-cap-prospective-20260909-v18.json).
+September 9 update: journal revision 19 records a reproduced research admission
+bug and its bounded correction. A signal emitted while its asset position was
+open could become a replacement after a same-decision exit. The original bar
+engine closes without re-entry in five ETH/SOL/SPCX/SNDK/Brent controls. Restoring
+the old admission helper produces two target round trips instead of one in all
+eight synthetic ETH/SPCX source-and-clock cases; the correction produces one and
+retains the excluded proposal. Historical financial impact remains unmeasured.
+See the [occupancy/routing review](../reviews/2026-09-09-v89-signal-time-occupancy-and-routing.md)
+and [revision 19](v89-equal-cap-prospective-20260909-v19.json).
 
-HYPE diagnostic source `87ebb3e` passes 56 tests in worktree and archive, with
-99% test statement/branch coverage. All 5,392 archived Git blobs and modes
-remain unchanged after tests and replay. An independent reader authenticates
-123 inputs and reconciles every modeled lifetime. Preserve the original
-completed-bar clock and HYPE formula; do not silently relabel UNKNOWN.
+Source `bb5c302b8018bf6546a389320daef64e1cebf869` passes 1,205 archived tests
+across 64 files, including all allocation tests and selected native poller/routing
+checks. All 5,399 Git blobs and executable modes remain exact afterward. The
+68-test targeted run covers all 77 statements and 22 branches in entry admission
+and the new offline routing projection. The archived test selection differs from
+the earlier worktree selection; consult its retained manifest for exact scope.
 
-The complete historical core and XYZ comparisons remain running. The independent
-10:12:11 UTC snapshot verifies 203,040 of 552,960 core minute comparisons and
-12,384 of 27,648 XYZ quarter-hour comparisons, with zero differences. BTC and
-SPCX have both source/history streams complete; the remaining scope is pending.
-These comparisons establish neither profitable strategies nor a fully qualified
-prospective evaluator. The missing twelve-day XYZ initialization remains explicit.
+The new projection covers supplied fresh intents, native publication order,
+causal canonical preference and controlled routing. It is not wired into the
+source calendar. Complete historical eligible sets, configured exits and dynamic
+account routing remain unqualified. Next: qualify those together, then measure
+the correction on permitted historical inputs ending September 7. Keep original
+HYPE UNKNOWN semantics and both prospective outcome seals unchanged.
 
-Core source `04ec3a0` runs as parent PID 80776 with four workers / tool session
-34414. XYZ source `fc7383f` runs as PID 83558 / session 54747, with 167 tests in
-both worktree and archive and six exact real smoke files. Poll these same live
-jobs and preserve their archive expansions. Their output roots are
+The independently verified 10:53:17 UTC historical snapshot contains 259,200 of
+552,960 core minute comparisons and 21,024 of 27,648 XYZ quarter comparisons,
+with zero differences. BTC's two source streams and SPCX/SNDK's two history
+conventions are complete within this scope. Missing XYZ initialization remains
+explicit; comparison agreement establishes neither profitability nor full
+prospective evaluator qualification.
+
+The same core parent PID 80776/four workers (session 34414) and XYZ PID 83558
+(session 54747) are present at 11:00:33 UTC. Preserve their running archives and
+poll the same handles. Their output roots remain
 `data/logs/research/bidirectional_cohort/v89_full_provider_regime_parity_20260909_v1/`
 and `data/logs/research/bidirectional_cohort/v89_xyz_provider_history_20260909_v1/`.
-Growing logs are not pinned as completed evidence.
+New correction evidence is in
+`data/logs/research/bidirectional_cohort/v89_routing_contract_20260909_v1/`.
 
-Next: compare native canonical preference and routing with the research adapter
-on complete historical eligible sets and controlled conflicts. Same-symbol
-regime/priority ranking differs from cross-symbol first-occurrence order.
-Preserve all original entry, cost, hold and source contracts; keep future UNKNOWN
-compatibility explicit. Read historical evidence ending September 7 and synthetic
-cases only. Both prospective outcome seals remain intact.
+At 11:00:33 UTC both source collectors have matching live PIDs, heartbeats under
+27 seconds, no reported error and all 26 code pins unchanged. Both live-profile
+hashes remain unchanged. No live lifecycle, execution or TUI change was made,
+and no venue account or sealed prospective outcome was read. Journal revision 19
+retains 3,544 evidence references and preserves all 3,248 revision-18 references;
+all 21 database columns and both source-document copies reconcile exactly.
 
-At 10:13:45 UTC both source collectors have live matching PIDs, heartbeats under
-nine seconds, no reported error and all 26 code pins unchanged. Both live-profile
-hashes remain unchanged. No live lifecycle or execution change was made; no venue
-account state or prospective outcome was read. The earlier source-calendar
-qualification remains limited to its synthetic scope: source `7dfdef3`, 1,205
-offline tests, 24 artificial cases and 168 reconciled closed-trade comparisons.
+The previous bounded HYPE finding remains: 6,368 holding-decision checks and six
+soft-deadline checks show no UNKNOWN, absent or null regime during the six
+inherited modeled lifetimes. This does not support UNKNOWN handling as their loss
+explanation; compatibility on other lifetimes remains unqualified. The earlier
+24-cell synthetic accounting result retains its programmed-signal scope, which
+did not exercise the newly reproduced admission collision.
 
 ## Historical September 8 findings and intermediate next actions
 
