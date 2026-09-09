@@ -7,6 +7,54 @@ outcome was refreshed for this update.
 
 ## Current finding and next action
 
+The [complete account runner and resource revision](../reviews/2026-09-09-v89-historical-account-runner-resources.md)
+is frozen as `a86bd6f` in
+`/Users/gestas/Prototypes/hypervector-v89-history-storage-20260909`.
+Its combined worktree suite passed **81 tests in 613.77 seconds**, with
+541/583 measured statements covered (93%). The preceding runner `4409147`
+passed 54 focused tests and **1,809 regressions** across 99 additional modules.
+The resource revision changes three implementation members; the other 1,921
+Python/lock members and those 99 test modules remain identical.
+
+Lossless XZ reduced one complete two-day event stream from 16,660,872 to
+1,262,280 bytes. Streaming independent reconciliation reduced observed peak
+memory from 623.69 to 58.83 MiB and from 795.78 to 78.03 MiB across the two
+synthetic exit clocks. Both full ledger results match, including when run from
+the verified archive. These measurements do not qualify full-history resource
+use, financial performance or live readiness.
+
+The archive's full suite completed: **81 passed in 615.05 seconds**, with the
+same coverage. Session **92583** returned zero and must not be restarted. Results are under
+`data/logs/research/bidirectional_cohort/v89_historical_account_storage_qualification_20260909_v1/`.
+All 5,549 extracted regular files, their executable bits, source-commit metadata
+and 1,924 implementation members were verified before that run. Archive real-file
+loader preflight session **89888** completed zero: all 14 original market cases,
+580,608 prices and 16,128 funding observations match the previous raw-member
+hashes and counts. Its report is `archive_market_preflight.json`.
+All tests, extracted source files, original input references and complete
+resource comparisons were reauthenticated after completion. This is recorded
+in [runner/resource revision 1](v89-historical-account-runner-resources-20260909-v1.json),
+database revision `9d964102839c2efb72a42fcc596be2787ed5070e0fc01afa5f94b0bef497b2c7`.
+All 88 evidence references, 21 database fields and four journal copies match.
+Preserve the frozen implementation and completed evidence.
+Do not repeat the completed worktree suites or resource probes without new evidence.
+
+At September 9 23:04:31 UTC, original canonical export **32156**, parent 26037,
+is active and its final report is absent. It has 259/384 daily summaries (67%):
+48 in every first-source stream, and last counts BTC 17, ETH 17, SOL 17, HYPE 16.
+Both known prospective collector PIDs remain present. No prospective account
+outcome was reconstructed, and no live process or configuration changed.
+
+Next authenticate the full canonical catalog and run, independently reconcile and
+reproduce the complete original 48-case historical matrix. No full historical
+account outcome or profitable live improvement has been established. There is
+no defensible go-live ETA. Current handoff notes are
+`v89_historical_account_storage_qualification_20260909_v1/next_complete_account_notes.md`
+under the same research log directory.
+
+The preceding qualification and progress records below are retained lineage;
+their earlier job states and implementation status are superseded by this entry.
+
 The [historical calendar/native account qualification](../reviews/2026-09-09-v89-historical-calendar-qualification.md)
 is complete from frozen source `d7b44cb`: **1,034 selected tests pass in both
 worktree and archive**, with ten unclosed SQLite connection warnings in each.
@@ -20,22 +68,48 @@ trees. The fixed 35-day first-source canonical prefix reproduces byte-for-byte:
 were reauthenticated after the suites finished. The completed qualification is
 [journaled as revision 1](v89-historical-calendar-binding-20260909-v1.json).
 
-The separate complete-export catalog and account-source assembler in
-`/Users/gestas/Prototypes/hypervector-v89-history-runner-20260909` have 14 and nine
-passing focused tests, respectively. They remain uncommitted integration work
-outside the frozen qualification. Finish source review/validation, actual
-registered-file loading and the full 48-case native account runner, then
-independently reconcile and reproduce every complete path. The original
-[full account plan](../plans/2026-09-09-v89-gap-market-account-followup.md) remains
-in force; no complete historical financial result or profitable live fix is
-established. Do not repeat the completed source probes.
+The separate implementation in
+`/Users/gestas/Prototypes/hypervector-v89-history-runner-20260909` now includes
+the complete-export catalog, original-file loader, account-source assembler,
+full account runner, independent committed-ledger audit and 48-case coordinator.
+It remains uncommitted integration work outside the frozen qualification.
+Its combined focused suite completed: **54 passed in 299.51 seconds**, covering
+520/569 measured statements (91%). The independent audit module alone measures
+77%; the aggregate is not a claim of complete fault-path coverage. Both
+two-day synthetic clock controls reconcile and reproduce every output byte.
+These synthetic checks do not qualify full historical financial outcomes.
 
-At September 9 21:27:46 UTC, canonical export session **32156**, parent PID 26037,
-remains active; logs report 43 first-source days per core asset, and the complete
-eight-stream report is absent. Preserve the original export. Both prospective
-collectors are present. No matching local trading backend, checkpoint writer or
-TUI is found; the saved checkpoint remains September 8 14:04:48 UTC. This does
-not refresh venue positions or account PnL. Both outcome seals remain intact.
+The original-file preflight completed September 9 22:14:34 UTC. All fourteen
+market cases match the preceding qualification's raw price/funding members:
+580,608 prices and 16,128 funding observations. Original provider registrations,
+snapshot and initial files authenticate. Complete canonical export qualification
+remains pending; later venue captures remain explicit historical assumptions.
+Evidence is under `data/logs/research/bidirectional_cohort/` in
+`historical_account_runner_focused_20260909.log` and
+`v89_historical_account_runner_preflight_20260909_v1.json`.
+
+Additional regressions across **99 affected test modules** started September 9
+22:24:42 UTC in session **67677**, with results under
+`v89_historical_account_runner_regressions_20260909_v1/`. They were still running
+at 22:25 UTC. Preserve that job and leave the tested Python/lock and test sources
+unchanged. Next finish technical qualification, freeze and reproduce this runner,
+then time the first full historical account case and complete all original 48
+comparisons. No complete historical financial result or profitable live fix is
+established. The original
+[full account plan](../plans/2026-09-09-v89-gap-market-account-followup.md) remains
+in force; do not repeat completed source probes without new evidence.
+
+At September 9 22:22:39 UTC, canonical export session **32156**, parent PID 26037,
+remains active. All four first-source streams have 48 daily summaries; last-source
+counts are BTC 8, ETH 7, SOL 7 and HYPE 7. Thus 221/384 daily summaries are present
+(58%), but the complete eight-stream report is absent. Roughly three more hours
+for the export is a medium-confidence throughput estimate, not a launch deadline;
+slower remaining work or an export failure would change it. Preserve the export.
+Both previously identified prospective collector PIDs remain present. No matching
+local trading backend, checkpoint writer or TUI is found; checkpoint file mtime
+remains September 8 14:04:56 UTC. This does not refresh venue positions or account
+PnL. Both outcome seals remain intact, and no live configuration or process was
+changed. A defensible go-live ETA is not yet available.
 
 The preceding completed entry qualification and retained lineage follow.
 

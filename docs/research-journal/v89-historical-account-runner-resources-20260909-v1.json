@@ -1,0 +1,623 @@
+{
+  "automatic_promotion": false,
+  "confidence": "high",
+  "created_at_utc": "2026-09-09T23:17:45.604816+00:00",
+  "decision": "Retain the a86bd6f account runner and resource revision as qualified research mechanics: 81 tests pass in both source and verified archive, all fourteen original market cases match, and complete synthetic audit results reproduce with preserved event bytes and lower measured memory. Continue the full 48-case historical account experiment. No historical return improvement, profitable live fix or live readiness is established.",
+  "evidence": [
+    {
+      "bytes": 178587,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_repair_brent_inputs_20260907_v1/xyz_BRENTOIL/bars.parquet",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "e07f7073f624c4a68759395cf280389d8f9f9bfca86f5c9a7b6142d85e0de501"
+    },
+    {
+      "bytes": 19535,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_repair_brent_inputs_20260907_v1/xyz_BRENTOIL/funding.parquet",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "c8ec6763671b31f0c3543291b255daa2d39370694f818e212067f878c6981641"
+    },
+    {
+      "bytes": 152713,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_repair_native_inputs_20260907_v1/xyz_SNDK/bars.parquet",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "a44ec8b62036379c80086c10eb83d341087f21add006d4278548228b9b546760"
+    },
+    {
+      "bytes": 18593,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_repair_native_inputs_20260907_v1/xyz_SNDK/funding.parquet",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "b470f16b691e61ca1b4aec1b97c4e5f18c1fd03dc6c691496b6bf8457471cb77"
+    },
+    {
+      "bytes": 143860,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_repair_native_inputs_20260907_v1/xyz_SPCX/bars.parquet",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "0b271e6b8393f2fe6b12f74e29423bba48d764f2e22c8b9f34480f25fb0fb920"
+    },
+    {
+      "bytes": 20524,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/frequency_repair_native_inputs_20260907_v1/xyz_SPCX/funding.parquet",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "3b2ef5eeebfc1c5c9a119be1b9065cfc46f00b1dfca673ea347d9b93897800bf"
+    },
+    {
+      "bytes": 1476,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/historical_account_runner_focused_20260909.log",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "aa4f2f1a788eba835505065bb3fe1519a4b6eab14a0ed735ba6524c8a4e45ac1"
+    },
+    {
+      "bytes": 63935,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/historical_account_storage_faults_20260909.log",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "23d762b8f247744d7fc306c2d6169f7d4658f2a458b5328b49ad72dc749b2218"
+    },
+    {
+      "bytes": 67556,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/historical_account_storage_faults_v2_20260909.log",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "38310bb980d36ea9a8bcb014c8fef51fd93bd7156fff86d708140cb47cedc1aa"
+    },
+    {
+      "bytes": 791,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/historical_account_storage_faults_v3_20260909.log",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "48915ea9bbad2eca6525b06838571de46b87cb983c69a10ba14a9497f2366cc9"
+    },
+    {
+      "bytes": 3612,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/historical_account_storage_red_20260909.log",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "81c8a706097d51ed327fb75e777a0e393fc84d7d27895fac108c131cd39c4d9f"
+    },
+    {
+      "bytes": 99,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/historical_account_stream_audit_green_20260909.log",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "aedeec9bfebf4b0fdfb1f8420d7147b555d6302bb6190553b456e8e4e10ab90d"
+    },
+    {
+      "bytes": 5880,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/historical_account_stream_audit_red_20260909.log",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "f76c3f54a3581b5a3fda6fb74418acb1a5b6277ed231ad7cfccf2cdcf1bcdfbe"
+    },
+    {
+      "bytes": 402501,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_complete_provider_history_20260909_v1/completed_prefix_independent_verified.json",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "c329719184bf29bd5b1468169a175ae7e4c158d9a3e6fb4356302ce4c968da36"
+    },
+    {
+      "bytes": 223215,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_complete_provider_history_20260909_v1/initial_boundary_publications.json",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "059d97c5065743ee03fdc8e90b6212a0bda5adfaae5fd0b2e05104e05f107f7f"
+    },
+    {
+      "bytes": 333196,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_account_runner_preflight_20260909_v1.json",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "abc52c3c20d16ad2586758e845837b93c308868b327a010f617a26126f7fedff"
+    },
+    {
+      "bytes": 329724,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_account_runner_qualification_20260909_v1/source.json",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "4b6132bb21bc4ea18d992113e1efa9b9508655362451c7991acaefac6a295402"
+    },
+    {
+      "bytes": 33571851,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_account_runner_qualification_20260909_v1/source.tar.gz",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "651d438fe6ca97b3b18b09f7fa46dcad2e2b6a11bbbb7c8c9eeb203ce32fe1f1"
+    },
+    {
+      "bytes": 349168,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_account_runner_regressions_20260909_v1/manifest.json",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "a5b61e3985c968e8dfd5179c533411f3141b73aff94737d5ce99a2be1f591685"
+    },
+    {
+      "bytes": 275,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_account_runner_regressions_20260909_v1/result.json",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "db85523acc9d4847dc1ec010cf70c5d96391f6cb3675f3dbd223f3cda6fb3c10"
+    },
+    {
+      "bytes": 2113,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_account_runner_regressions_20260909_v1/tests.log",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "4846d0ea8722c942a915999b9bc95492fb7f1a9f5de0a3b37bc5918c3d4fd87c"
+    },
+    {
+      "bytes": 3253,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_account_storage_probe_20260909_v1/audit_memory_probe.py",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "92a89ce47b8409b67c34fafd71e7ab43d1ec4a90aeed3c82a2b78b0ceb730a0a"
+    },
+    {
+      "bytes": 12928,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_account_storage_probe_20260909_v1/complete_xz_controls/late_intrabar_exit/account.json.xz",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "de6cbf53bca6a5e32adb009168944f95419233d626807eee89549b9745458dc7"
+    },
+    {
+      "bytes": 1323324,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_account_storage_probe_20260909_v1/complete_xz_controls/late_intrabar_exit/events.jsonl.xz",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "8a519af3f55edafbca67c115dfae9c8ced7a9e63a86c8062dd64fcfaef708c11"
+    },
+    {
+      "bytes": 74279,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_account_storage_probe_20260909_v1/complete_xz_controls/late_intrabar_exit/manifest.json",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "cd48b7b66705a1f3bfbda3f4677827a4841473d1dccee304ce2f56d5f8602224"
+    },
+    {
+      "bytes": 724,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_account_storage_probe_20260909_v1/complete_xz_controls/late_intrabar_exit/report.json",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "16e669bdeeef554de95bdf7b9fab9e992ec84cbf397a955ded7cb168734b685e"
+    },
+    {
+      "bytes": 9852,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_account_storage_probe_20260909_v1/complete_xz_controls/recorded_bar_clock/account.json.xz",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "f0318ec388287bbecbf20710ca1d3189b01276848b51674250bae38642b61831"
+    },
+    {
+      "bytes": 1262208,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_account_storage_probe_20260909_v1/complete_xz_controls/recorded_bar_clock/events.jsonl.xz",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "351e45f4a57caec030d4f36fe7d1da97da67ddd96a5c199ede0d7fb33ca3ea7f"
+    },
+    {
+      "bytes": 74279,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_account_storage_probe_20260909_v1/complete_xz_controls/recorded_bar_clock/manifest.json",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "5196f2ece861ed3838e5b071e6985e663011e6f2bd5a96a8cf4552b25763146e"
+    },
+    {
+      "bytes": 723,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_account_storage_probe_20260909_v1/complete_xz_controls/recorded_bar_clock/report.json",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "ab8b428fd3127c340a56d57a7ca11a2f90e961cc273e56a38a7754e65d513aac"
+    },
+    {
+      "bytes": 1347,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_account_storage_probe_20260909_v1/late_intrabar_exit_eager_memory.json",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "6011caf12f5eebde02b83a2705027f117f5392330dcdc864ce41e2ba70fd70ba"
+    },
+    {
+      "bytes": 1605,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_account_storage_probe_20260909_v1/late_intrabar_exit_stream_memory.json",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "7bd45eaa6b5b9dc55fe926d0dee1cadb1b128d932a3f78574b4e5b659e555348"
+    },
+    {
+      "bytes": 16660872,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_account_storage_probe_20260909_v1/reconstructed_original_events.jsonl.gz",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "0c873e733738a934a8d8c8b0ee77547c1c621e785bf31ca913a20816e14b0d9b"
+    },
+    {
+      "bytes": 1347,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_account_storage_probe_20260909_v1/recorded_bar_clock_eager_memory.json",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "3a820d388b88e9bc602b2785123b7c930376335756cec49631eac113feb7fade"
+    },
+    {
+      "bytes": 1607,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_account_storage_probe_20260909_v1/recorded_bar_clock_stream_memory.json",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "a41fa838f0f71d4bf87e2512d77fca55a7ed0892ce8eb0cf6342f2d184f41d31"
+    },
+    {
+      "bytes": 1754,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_account_storage_probe_20260909_v1/report.json",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "3b403df882dd3e5a56c0218113b5682aa4cfe893c422c7104c3970a1d1fdcc03"
+    },
+    {
+      "bytes": 3990,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_account_storage_probe_20260909_v1/retained_account_controls.json",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "aaaa4c4d280e9b2a20c97a1891f01840ea9ec18692b2d02152ca7f589ba6122f"
+    },
+    {
+      "bytes": 808,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_account_storage_probe_20260909_v1/retained_source.json",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "fa59b88edb65900bf17708f449be5c1bc20342c6c47814ef94422a1ed50f9b1e"
+    },
+    {
+      "bytes": 1840068,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_account_storage_probe_20260909_v1/synthetic_recorded_events_preset_1.jsonl.xz",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "b8c57e59330c55cda56c43d35bfef7356cbbce5251aeedd80ced24b5cf0c9b33"
+    },
+    {
+      "bytes": 1262280,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_account_storage_probe_20260909_v1/synthetic_recorded_events_preset_6.jsonl.xz",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "b72132b3f460fb86b2b8f7ec93e10b398bc754e068f0675d7da6776cac630ff5"
+    },
+    {
+      "bytes": 331221,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_account_storage_qualification_20260909_v1/archive_manifest.json",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "317543f4da5fdf0f3aa55bf6cafe8775b3e3c0956cedd4c321cf8c6fce098a65"
+    },
+    {
+      "bytes": 333867,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_account_storage_qualification_20260909_v1/archive_market_preflight.json",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "cd493a9b39d6a4c6a27d3534f7af5be13d7d98ba13a3fc950449be4a30ae63b3"
+    },
+    {
+      "bytes": 1422,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_account_storage_qualification_20260909_v1/archive_resource_probe/late_intrabar_exit_eager_memory.json",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "19638f37b01ffbe9cbde408dea32d64a0c2720e6f627c4673cdbe25d239fe030"
+    },
+    {
+      "bytes": 1681,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_account_storage_qualification_20260909_v1/archive_resource_probe/late_intrabar_exit_stream_memory.json",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "3741fc1fc6619ba71ae94005730dec34137705d8cb54a623f12bdcec530fcce1"
+    },
+    {
+      "bytes": 1423,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_account_storage_qualification_20260909_v1/archive_resource_probe/recorded_bar_clock_eager_memory.json",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "57824e51e26745834ff35207e58501a8c1dddd70a7902979459f0eb5f8bede3b"
+    },
+    {
+      "bytes": 1682,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_account_storage_qualification_20260909_v1/archive_resource_probe/recorded_bar_clock_stream_memory.json",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "f6a5307253b628c76b0ab9a7fc3d70625a3f781e749a7ca0788fd07a66e06718"
+    },
+    {
+      "bytes": 231,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_account_storage_qualification_20260909_v1/archive_result.json",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "5800fa94be57e8feb5d8a7d7a1e7f24c348115e7dc611868c45e7d61e40f42f2"
+    },
+    {
+      "bytes": 1525,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_account_storage_qualification_20260909_v1/archive_tests.log",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "e7af6c4a7b16c64e77b0fd35149626985c1009761f630167c8b9fdf3d6c95d21"
+    },
+    {
+      "bytes": 10391,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_account_storage_qualification_20260909_v1/build_journal.py",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "3ff7b527d1763c99147c92eeeebd7b116dbc60ebb0d7829dfb4ed413c4bb24f5"
+    },
+    {
+      "bytes": 780,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_account_storage_qualification_20260909_v1/source.json",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "e99f94ae7cf9515eebc3ea3848fb94e8fd66390191d04d1b7acc6a4b2d15dd7b"
+    },
+    {
+      "bytes": 33574528,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_account_storage_qualification_20260909_v1/source.tar.gz",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "6ac7e4a8a61ecf384790b9557ff52adcc325efe1a30ff0bc4f292afca3d0d67a"
+    },
+    {
+      "bytes": 1576,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_account_storage_qualification_20260909_v1/verification.log",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "c189e4e98d8df977cb2c7ba4234a87b65e0468b250900dc870b4e6908623c3c8"
+    },
+    {
+      "bytes": 1802,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_account_storage_qualification_20260909_v1/verified.json",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "245c44e7ad6ccfc9aed323ef326d9eb1121d21ca193f4136cf72d74da258abb9"
+    },
+    {
+      "bytes": 8773,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_account_storage_qualification_20260909_v1/verify_completed.py",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "19ae9a6cddc14ecc5f0d00de6aeff4765132e3e85198e98f8e943b9ac4490ca8"
+    },
+    {
+      "bytes": 330615,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_account_storage_qualification_20260909_v1/worktree_manifest.json",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "2d697eedc257b9528f2b8b4c7b4ef8eed51999500805fdf9da6baf99ffbfb1bf"
+    },
+    {
+      "bytes": 231,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_account_storage_qualification_20260909_v1/worktree_result.json",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "47151a34cd512a7c3578d6251d76f2ac514302df3cb9450e6386529691d72356"
+    },
+    {
+      "bytes": 1525,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_account_storage_qualification_20260909_v1/worktree_tests.log",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "5490201c4265403d43bda0a3f02d7f394678e9816e86b60c4e7e1b007fcf82bc"
+    },
+    {
+      "bytes": 33476155,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_canonical_history_20260909_v1/source.tar.gz",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "8e7a22d97a42e411682174bfe9b4393ca43f51e336d33dc4e3c56c9759f94b22"
+    },
+    {
+      "bytes": 5829198,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_recorded_native_hybrid_inputs_20260907_v1/first/BTC/bars.parquet",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "a03cb51a4f9083dd1a6d178a748fa7c681c2685a2fa5dcacf4cd6accda982095"
+    },
+    {
+      "bytes": 5879112,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_recorded_native_hybrid_inputs_20260907_v1/first/BTC/continuity.parquet",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "0fc71bc32aa51747f28f38e657a4f49e453155a7da13e233333ca299e7b4b59d"
+    },
+    {
+      "bytes": 5275505,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_recorded_native_hybrid_inputs_20260907_v1/first/ETH/bars.parquet",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "b2c3ad1091c066720e6ff7c033fcb117be60b5b2a33223c17767397ed1a21347"
+    },
+    {
+      "bytes": 5253249,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_recorded_native_hybrid_inputs_20260907_v1/first/ETH/continuity.parquet",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "115558f77539041c6a3feb5c52087231e49497607834131657756bfe017daf6d"
+    },
+    {
+      "bytes": 5963787,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_recorded_native_hybrid_inputs_20260907_v1/first/HYPE/bars.parquet",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "9d31160156a677cee5706db343e548ae8ed0ae415c5a7a670cbf8ff0904e2f7e"
+    },
+    {
+      "bytes": 5984719,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_recorded_native_hybrid_inputs_20260907_v1/first/HYPE/continuity.parquet",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "905420a7e904234eda649914ee6fc281593394d28d74bfe2e413b5102877f738"
+    },
+    {
+      "bytes": 5325239,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_recorded_native_hybrid_inputs_20260907_v1/first/SOL/bars.parquet",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "64b2e2d5d6fb7c7bd1723f03ddf9d359c3afc020ec5d9aa99d0945ef93652c6d"
+    },
+    {
+      "bytes": 5307704,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_recorded_native_hybrid_inputs_20260907_v1/first/SOL/continuity.parquet",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "e10090fb12bdad6de9e924dce8abf5c2840c3844f1838f17771af22e84a211a1"
+    },
+    {
+      "bytes": 5204519,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_recorded_native_hybrid_inputs_20260907_v1/last/BTC/bars.parquet",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "18e0bbd31d45b2bd042b45606386e2a8c5de2295b62d983205eadb7b6e7b1fa8"
+    },
+    {
+      "bytes": 5198530,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_recorded_native_hybrid_inputs_20260907_v1/last/BTC/continuity.parquet",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "85787e4e2966085cca0dc2596f45e2446bdd7a581d7d9eb0220a7c8ae1e671bf"
+    },
+    {
+      "bytes": 4742847,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_recorded_native_hybrid_inputs_20260907_v1/last/ETH/bars.parquet",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "bb8e9eec2a06edea14ff1641a4d5d240e4a50938318af174df9e4d380aff673a"
+    },
+    {
+      "bytes": 4692359,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_recorded_native_hybrid_inputs_20260907_v1/last/ETH/continuity.parquet",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "411ab36bffa9167835df4bb930ee8948b9c6bee5c535a881d470db6d5b225a3c"
+    },
+    {
+      "bytes": 5321067,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_recorded_native_hybrid_inputs_20260907_v1/last/HYPE/bars.parquet",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "f64007d1c3ef5f00bf109674e6e1dc8f93a378c8500a96a14447947ec338d863"
+    },
+    {
+      "bytes": 5315227,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_recorded_native_hybrid_inputs_20260907_v1/last/HYPE/continuity.parquet",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "c8a5a2d034801e1f8e53db3bf505ed98d44959a303954fee20a30534b5bbacd3"
+    },
+    {
+      "bytes": 4768036,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_recorded_native_hybrid_inputs_20260907_v1/last/SOL/bars.parquet",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "70736f811adc4cd0e9ba7b46071740b5c23c57cff273de5982c36f8eaa9b160c"
+    },
+    {
+      "bytes": 4747301,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_recorded_native_hybrid_inputs_20260907_v1/last/SOL/continuity.parquet",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "fc625921899082e7b9c0f202de82f9a33034c39de51f9991abc970157178e4ec"
+    },
+    {
+      "bytes": 15989,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_shared_verified_core_inputs_20260907_v1/BTC/funding.parquet",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "bd66b722bf07d93b33c05bd467813c5c1a175471fec09e1b2f2253cb89ac7bde"
+    },
+    {
+      "bytes": 15367,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_shared_verified_core_inputs_20260907_v1/ETH/funding.parquet",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "d2e2a7d6625833e18e7cebfba91ef34951a814086d5a526410f220071874c85b"
+    },
+    {
+      "bytes": 14864,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_shared_verified_core_inputs_20260907_v1/HYPE/funding.parquet",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "9c567701419d0cb24517dee5546f99b934a26e4b2f569b49e22ae47822a4c357"
+    },
+    {
+      "bytes": 17123,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_shared_verified_core_inputs_20260907_v1/SOL/funding.parquet",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "826d8580ffbd7fe1cacd99cc9bcfb043a4e04b579354697b9c75803fe2ee567e"
+    },
+    {
+      "bytes": 3476,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/plans/2026-09-09-v89-gap-market-account-followup.md",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "95cad29fb4457e809aa32a2e90dcad7e2c30ee87c059d6e9eb87d61e8043b245"
+    },
+    {
+      "bytes": 2244961,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/research-journal/v89-complete-provider-history-20260909-v1.json",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "228dae41ed91dc23b2fbb82dd34083a0fbd65a7b0ac733574e97804c27f1c6dd"
+    },
+    {
+      "bytes": 287649,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/research-journal/v89-equal-cap-allocation-20260908-v1.json",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "23df0a8d87d4d32549b847c6c03ca178ca81096d351f1ffd1ba652571009bd2b"
+    },
+    {
+      "bytes": 120667,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/research-journal/v89-historical-calendar-binding-20260909-v1.json",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "3b41dd28cc70f36a9f5406d011aadd626f7131b98feae8cadbffc441f2b5030f"
+    },
+    {
+      "bytes": 13843,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/research-journal/v89-historical-entry-binding-20260909-v1.json",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "cb005fe7b32b504cffe75efb709cedda2ab523b3cf1b2b5b98341c6681594502"
+    },
+    {
+      "bytes": 40027,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/research-journal/v89-historical-market-binding-20260909-v1.json",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "81bd357a05d8294a04e7b3b719c793ad497ad36319429197e57ea9d8de6bfe45"
+    },
+    {
+      "bytes": 646896,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/research-journal/v89-historical-provider-binding-20260909-v1.json",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "1fc0ea1f21e00a5852aecf29d6f65bd2dd14c8a7c25936008829b67e431655e1"
+    },
+    {
+      "bytes": 11337,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/research-journal/v89-native-hype-hold-20260909-v1.json",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "9a04ae42b7e1738c2e42ec0543cd9dd6dd7d342a3b96beeadba9db0c23fcc903"
+    },
+    {
+      "bytes": 48409,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/research-journal/v89-recorded-native-source-sensitivity-20260907-v1.json",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "7e958253eefa428c4b6e205ceef8c0b88dffa0ba6caf0cd8b3adea2d7c42c1d2"
+    },
+    {
+      "bytes": 6578,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/reviews/2026-09-09-v89-historical-account-runner-resources.md",
+      "role": "historical_account_runner_and_resource_qualification",
+      "sha256": "7813d049f2f1da209503dfea7a16f0f1e656f8dcd0b1d4c08667244191c559ca"
+    }
+  ],
+  "execution_authority": "none",
+  "falsifier": "Changed original source identities, missing timestamps or native frames, altered decoded event bytes, unexplained independent cash/quantity/fee/funding differences, failed frozen reproduction or resource failure in complete historical cases invalidate the affected qualification.",
+  "hypothesis": "Complete original historical source/cost/clock/allocation cases can be evaluated by the native account engine with reproducible full-event evidence and independent Decimal-ledger reconciliation, using lossless compression and streaming audit reads without changing trading decisions.",
+  "hypothesis_id": "v89_historical_account_runner_resources_20260909_v1",
+  "limitations": [
+    "The complete canonical export is still running; the full eight-stream catalog and all 48 original historical account cases remain unfinished.",
+    "Two-day synthetic controls and mechanics tests do not establish historical profitability, live execution feasibility or a go-live deadline.",
+    "The independent Decimal audit qualifies the complete committed account ledger. Source-price selection and native routing require their separate source/native qualifications; the ledger oracle does not independently prove them.",
+    "Storage and peak-memory observations apply to the measured synthetic controls. Full-history size, memory, throughput and complete matrix duration remain unmeasured.",
+    "The eager memory reference retains full decoded event frames while using the same calendar and posting oracle. It isolates retention cost and is not a separate frozen historical engine release.",
+    "The old temporary gzip source expired; recovery from its lossless XZ copy matched the previously measured full byte identity. Retained synthetic account manifests do not qualify expired temporary source fixtures.",
+    "The baseline's 1809 additional regressions ran before three resource-related implementation changes. The other 1921 Python/lock members and all 99 broad test modules match; the newer 81-test suite was reproduced in both trees.",
+    "Seven measured modules cover 541 of 583 statements. Complete branch, whole-system and live deployment coverage are not claimed; separate CLI subprocess checks pass outside the coverage collection.",
+    "Publication availability and price-phase clocks remain explicitly modeled. Conditional continuity prices do not prove historical quotes, fills or stop paths. September 8 venue captures remain later static assumptions.",
+    "No live strategy, asset universe, sizing, leverage, risk, execution, deployment configuration or process lifecycle changed. Both prospective outcome seals remain intact; no early prospective account outcomes were reconstructed."
+  ],
+  "metrics": {
+    "archive_memory": {
+      "late_intrabar_exit": {
+        "eager_peak_bytes": 834551808,
+        "ledger_results_equal": true,
+        "stream_peak_bytes": 82329600
+      },
+      "recorded_bar_clock": {
+        "eager_peak_bytes": 654442496,
+        "ledger_results_equal": true,
+        "stream_peak_bytes": 62324736
+      }
+    },
+    "archive_runtime_reproduction_complete": true,
+    "automatic_promotion": false,
+    "code": {
+      "archive_regular_files_verified": 5549,
+      "both_implementations_unchanged": true,
+      "implementation_members": 1924
+    },
+    "covered_statements": 541,
+    "execution_authority": "none",
+    "financial_improvement_established": false,
+    "full_historical_account_evaluated": false,
+    "markets": {
+      "funding_rows": 16128,
+      "market_cases": 14,
+      "market_members_match": true,
+      "market_references_reauthenticated": 33,
+      "price_rows": 580608
+    },
+    "measured_statements": 583,
+    "prior_additional_regressions": 1809,
+    "prior_focused_tests": 54,
+    "research_phase": "full_historical_account_matrix_pending_canonical_export",
+    "runtime_strategy_changed": false,
+    "source_archive": {
+      "bytes": 33574528,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_account_storage_qualification_20260909_v1/source.tar.gz",
+      "sha256": "6ac7e4a8a61ecf384790b9557ff52adcc325efe1a30ff0bc4f292afca3d0d67a"
+    },
+    "source_commit": "a86bd6f9022339b875ce9a8ba883b15ad76f0c7b",
+    "storage": {
+      "complete_stream_bytes": 245190604,
+      "complete_stream_sha256": "6d6a0516cabc39b727cd758ea26497c908f20dd34fc6059caa40c7a8d9ef18d9",
+      "gzip_bytes": 16660872,
+      "lossless_round_trip_equal": true,
+      "retained_complete_account_files": 8,
+      "xz_preset_6_bytes": 1262280
+    },
+    "tests": {
+      "archive": {
+        "passed": 81,
+        "seconds": 615.05
+      },
+      "worktree": {
+        "passed": 81,
+        "seconds": 613.77
+      }
+    },
+    "unchanged_baseline_implementation_members": 1921,
+    "unchanged_prior_broad_test_modules": 99,
+    "verified_at_utc": "2026-09-09T23:13:49.752299+00:00"
+  },
+  "revision_number": 1,
+  "runtime_strategy_changed": false,
+  "schema_version": 1,
+  "status": "retain",
+  "strategy_id": "v89_historical_native_account_inputs",
+  "supersedes_revision_id": null,
+  "symbol": "MULTI"
+}
