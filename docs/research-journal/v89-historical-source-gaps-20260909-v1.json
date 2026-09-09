@@ -1,0 +1,378 @@
+{
+  "automatic_promotion": false,
+  "confidence": "high",
+  "created_at_utc": "2026-09-09T15:39:58.676851+00:00",
+  "decision": "Accept the bounded gap classification. Recorded flat zero-volume candles and explicitly tagged annual-cache gap fills do not establish execution prices. Keep source gaps explicit; inspect retained native/vendor evidence for the two unmatched August 1 SOL minutes and other uncovered intervals before implementing gap-bearing dynamic account availability. Preserve the complete original historical scope. No account outcome was evaluated or live change deployed.",
+  "evidence": [
+    {
+      "bytes": 170,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_source_gap_qualification_20260909_v1/archive_independent.log",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "b1f9205e04d02b0395d1ab40122b2761533bfbfc67049b6789b3bb34db95e5da"
+    },
+    {
+      "bytes": 1830,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_source_gap_qualification_20260909_v1/archive_probe.log",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "a0a5425f168425adec6b2033487b4bae57e39e918f056e3cf54d1fed1b144461"
+    },
+    {
+      "bytes": 90750,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_source_gap_qualification_20260909_v1/archive_reproduction/gap_qualification.json",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "94939d8458db099e42aa68c57daa5a1f9555e21c97aa3bbf7b566f73811b8d35"
+    },
+    {
+      "bytes": 182,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_source_gap_qualification_20260909_v1/archive_reproduction/independent_gap_verified_v2.json",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "911dbf10ee8881578755dd17cc11f0cee33447c7030cf006373aacc0024d343f"
+    },
+    {
+      "bytes": 511,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_source_gap_qualification_20260909_v1/archive_reproduction_verified.json",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "b513e5cc44ea80d18dd8c0b2982b20afffe6c694bfb40e20f544be146e41aabf"
+    },
+    {
+      "bytes": 13014449,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_source_gap_qualification_20260909_v1/cache_snapshot/BTC_1m_365d.parquet",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "b0742553ebeaa7cb4af6fabfd496f5462354cb541705fd0ca5ec222dc21e15d8"
+    },
+    {
+      "bytes": 11949012,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_source_gap_qualification_20260909_v1/cache_snapshot/ETH_1m_365d.parquet",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "e10e00209f1584151c23a69d39116485d7c241e00d4a8c2031f7e624a431bd84"
+    },
+    {
+      "bytes": 11858713,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_source_gap_qualification_20260909_v1/cache_snapshot/HYPE_1m_365d.parquet",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "3dba115ac49c71f4b52d69849eaf69ab1da23e82ebb0326e9738cf35b0d159d2"
+    },
+    {
+      "bytes": 11280544,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_source_gap_qualification_20260909_v1/cache_snapshot/SOL_1m_365d.parquet",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "f7fd76f5042c0a59aefdc7fb213a85324928e1d67715970e0536b608ff357530"
+    },
+    {
+      "bytes": 1655,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_source_gap_qualification_20260909_v1/cache_snapshot_manifest.json",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "924907169d779e1cc8d1d1062728b84b40b524a3b6d3bd3395af6d1104f2af03"
+    },
+    {
+      "bytes": 170,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_source_gap_qualification_20260909_v1/final_independent_corrected.log",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "b1f9205e04d02b0395d1ab40122b2761533bfbfc67049b6789b3bb34db95e5da"
+    },
+    {
+      "bytes": 1234,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_source_gap_qualification_20260909_v1/final_probe.log",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "e5cc603c22bcaeebb6d0ef0c6b16d84b480047b3945ea009bb1d0b54647830ad"
+    },
+    {
+      "bytes": 1830,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_source_gap_qualification_20260909_v1/final_probe_corrected.log",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "a0a5425f168425adec6b2033487b4bae57e39e918f056e3cf54d1fed1b144461"
+    },
+    {
+      "bytes": 90750,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_source_gap_qualification_20260909_v1/final_verification/gap_qualification.json",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "94939d8458db099e42aa68c57daa5a1f9555e21c97aa3bbf7b566f73811b8d35"
+    },
+    {
+      "bytes": 182,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_source_gap_qualification_20260909_v1/final_verification/independent_gap_verified_v2.json",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "911dbf10ee8881578755dd17cc11f0cee33447c7030cf006373aacc0024d343f"
+    },
+    {
+      "bytes": 90750,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_source_gap_qualification_20260909_v1/gap_qualification.json",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "94939d8458db099e42aa68c57daa5a1f9555e21c97aa3bbf7b566f73811b8d35"
+    },
+    {
+      "bytes": 705,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_source_gap_qualification_20260909_v1/independent_probe_corrected.log",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "f84d2bd7e758c4024cdae05abbc92d8df6c8e052586566dd26c23136564485fb"
+    },
+    {
+      "bytes": 1311,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_source_gap_qualification_20260909_v1/independent_probe_initial.log",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "1a7938c6989d46f3ed445e32af4ea7f625608db9520905d6c5610a8f384072fe"
+    },
+    {
+      "bytes": 9719,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_source_gap_qualification_20260909_v1/independent_probe_initial.py",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "fc329cc742f4e37079f46b1c7203c1e93df9d189f33f1b7e8ddb0e4ec2e6dd27"
+    },
+    {
+      "bytes": 9740,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_source_gap_qualification_20260909_v1/independent_probe_timezone_attempt.py",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "1275f14e033aa4ccfac0cadb55e08174e38c4df2ca3550ef6f0d9afcc27a15f6"
+    },
+    {
+      "bytes": 1830,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_source_gap_qualification_20260909_v1/probe.log",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "a0a5425f168425adec6b2033487b4bae57e39e918f056e3cf54d1fed1b144461"
+    },
+    {
+      "bytes": 349,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_source_gap_qualification_20260909_v1/public_source_receipt.json",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "5f6457a45f044dac9579cf48c798ec2ce662040403e108322061f3df27d4905c"
+    },
+    {
+      "bytes": 113120,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_source_gap_qualification_20260909_v1/scheduled-maintenances.json",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "ee278aed34b41ea63546c278ccf4256b7011451530f0f908aa9f14ba5cbc1859"
+    },
+    {
+      "bytes": 33029804,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_source_gap_qualification_20260909_v1/source_24c8ad14fe7593ebadce692fc60b0b2e46d1ca2e.tar.gz",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "a8daad1b3f9fba145d555ca19ee24428c2348cb69658facff2522fd76de611d8"
+    },
+    {
+      "bytes": 684,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_source_gap_qualification_20260909_v1/source_archive_verified.json",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "7bda70bc13ba9e72d6960bdb4d69da5646d372bdfa8bcb528fbc472844fd8820"
+    },
+    {
+      "bytes": 324,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_source_gap_qualification_20260909_v1/source_structure_verified.json",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "ec4149f25899651424750659472e8d5b837bd41a25c1af541687a47acb5d3658"
+    },
+    {
+      "bytes": 15874591,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_recorded_native_events_20260907_v1/events.parquet",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "cc4b68f5912a7a2308e8e5f72a6feac1ff7024b2e836e811ae2ead3edeaf889c"
+    },
+    {
+      "bytes": 5829198,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_recorded_native_hybrid_inputs_20260907_v1/first/BTC/bars.parquet",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "a03cb51a4f9083dd1a6d178a748fa7c681c2685a2fa5dcacf4cd6accda982095"
+    },
+    {
+      "bytes": 5275505,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_recorded_native_hybrid_inputs_20260907_v1/first/ETH/bars.parquet",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "b2c3ad1091c066720e6ff7c033fcb117be60b5b2a33223c17767397ed1a21347"
+    },
+    {
+      "bytes": 5963787,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_recorded_native_hybrid_inputs_20260907_v1/first/HYPE/bars.parquet",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "9d31160156a677cee5706db343e548ae8ed0ae415c5a7a670cbf8ff0904e2f7e"
+    },
+    {
+      "bytes": 5325239,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_recorded_native_hybrid_inputs_20260907_v1/first/SOL/bars.parquet",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "64b2e2d5d6fb7c7bd1723f03ddf9d359c3afc020ec5d9aa99d0945ef93652c6d"
+    },
+    {
+      "bytes": 5204519,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_recorded_native_hybrid_inputs_20260907_v1/last/BTC/bars.parquet",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "18e0bbd31d45b2bd042b45606386e2a8c5de2295b62d983205eadb7b6e7b1fa8"
+    },
+    {
+      "bytes": 4742847,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_recorded_native_hybrid_inputs_20260907_v1/last/ETH/bars.parquet",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "bb8e9eec2a06edea14ff1641a4d5d240e4a50938318af174df9e4d380aff673a"
+    },
+    {
+      "bytes": 5321067,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_recorded_native_hybrid_inputs_20260907_v1/last/HYPE/bars.parquet",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "f64007d1c3ef5f00bf109674e6e1dc8f93a378c8500a96a14447947ec338d863"
+    },
+    {
+      "bytes": 4768036,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_recorded_native_hybrid_inputs_20260907_v1/last/SOL/bars.parquet",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "70736f811adc4cd0e9ba7b46071740b5c23c57cff273de5982c36f8eaa9b160c"
+    },
+    {
+      "bytes": 38586,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_recorded_native_hybrid_inputs_20260907_v1/manifest.json",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "54e6cf5e5fa35567d711da1bdae56d735bc3df573c596c6f766ec95385a5ac6e"
+    },
+    {
+      "bytes": 16592866,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_recorded_native_hybrid_inputs_20260907_v1/observations.parquet",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "114977a947d472c37057d0665a6aa5afdd387e5b172d91976e6d486bb0b77ece"
+    },
+    {
+      "bytes": 2521,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/plans/2026-09-09-v89-historical-account-source-gaps.md",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "47f863b3da2654619b5493162f3e3c92ac371f5a8b701c249701f05a9161fda5"
+    },
+    {
+      "bytes": 48409,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/research-journal/v89-recorded-native-source-sensitivity-20260907-v1.json",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "7e958253eefa428c4b6e205ceef8c0b88dffa0ba6caf0cd8b3adea2d7c42c1d2"
+    },
+    {
+      "bytes": 4437,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/reviews/2026-09-09-v89-historical-source-gap-qualification.md",
+      "role": "historical_market_source_or_qualification",
+      "sha256": "378dc4065a79f2454854f6d76e9fca298c886534acb765e1377b1548f21f0c10"
+    }
+  ],
+  "execution_authority": "none",
+  "falsifier": "Changed registered source identities, missing or duplicated intervals, raw candle/provenance disagreement, incorrect scheduled-window associations or failed independent/archive reproduction invalidate the affected finding. New exact observed price or no-trading evidence can update interval qualification; maintenance timing alone cannot.",
+  "hypothesis": "Retained raw market observations, immutable cache snapshots and official maintenance records can qualify the provenance of missing historical core minutes without replacing frozen provider grids.",
+  "hypothesis_id": "v89_historical_source_gap_qualification_20260909_v1",
+  "limitations": [
+    "Zero-volume flat candles do not establish executable prices or stop paths.",
+    "Raw event candles omit per-bar source labels; gap-fill origin is unproven.",
+    "Scheduled windows are approximate; overlap does not prove no trading.",
+    "Cache gap-fill values are modeled carry-forwards, not recovered trades.",
+    "This bounded source search does not establish that no other evidence exists.",
+    "Only four frozen annual caches and the registered raw/normalized market export were searched in this bounded study; other retained native/vendor data has not been ruled out.",
+    "The independent verifier checks interval fields, raw OHLCV/provenance and maintenance associations; it does not independently reconstruct annual-cache OHLCV values.",
+    "Both prospective outcome seals remain intact. The complete 48-day dynamically sized native account and financial impact remain outstanding."
+  ],
+  "metrics": {
+    "account_gaps_immediately_before_scheduled_start": 3,
+    "account_gaps_inside_scheduled_maintenance": 71,
+    "account_missing_asset_minutes": 76,
+    "archive_git_blobs_and_modes_verified": 5447,
+    "exact_archive_artifacts": 2,
+    "execution_prices_qualified": 0,
+    "independent_verification": {
+      "deliberate_mutations_rejected": 4,
+      "execution_authority": "none",
+      "independent_raw_observations": 53,
+      "independent_sql_gap_rows": 97,
+      "source_references_verified": 18
+    },
+    "original_provider_grids_modified": false,
+    "positive_volume_raw_observations": 0,
+    "raw_events": 6,
+    "raw_observations": 53,
+    "recorded_account_gap_minutes": 41,
+    "source_commit": "24c8ad14fe7593ebadce692fc60b0b2e46d1ca2e",
+    "strategy_or_account_outcomes_evaluated": false,
+    "summary": [
+      {
+        "annual_cache_gap_fill_minutes": 5,
+        "inside_scheduled_maintenance": 5,
+        "minute_before_scheduled_start": 0,
+        "minutes_with_recorded_candles": 0,
+        "missing_minutes": 5,
+        "phase": "warmup",
+        "raw_observations": 0,
+        "symbol": "BTC"
+      },
+      {
+        "annual_cache_gap_fill_minutes": 3,
+        "inside_scheduled_maintenance": 17,
+        "minute_before_scheduled_start": 1,
+        "minutes_with_recorded_candles": 10,
+        "missing_minutes": 18,
+        "phase": "account",
+        "raw_observations": 13,
+        "symbol": "BTC"
+      },
+      {
+        "annual_cache_gap_fill_minutes": 5,
+        "inside_scheduled_maintenance": 5,
+        "minute_before_scheduled_start": 0,
+        "minutes_with_recorded_candles": 0,
+        "missing_minutes": 5,
+        "phase": "warmup",
+        "raw_observations": 0,
+        "symbol": "ETH"
+      },
+      {
+        "annual_cache_gap_fill_minutes": 3,
+        "inside_scheduled_maintenance": 19,
+        "minute_before_scheduled_start": 1,
+        "minutes_with_recorded_candles": 11,
+        "missing_minutes": 20,
+        "phase": "account",
+        "raw_observations": 14,
+        "symbol": "ETH"
+      },
+      {
+        "annual_cache_gap_fill_minutes": 6,
+        "inside_scheduled_maintenance": 5,
+        "minute_before_scheduled_start": 0,
+        "minutes_with_recorded_candles": 0,
+        "missing_minutes": 6,
+        "phase": "warmup",
+        "raw_observations": 0,
+        "symbol": "SOL"
+      },
+      {
+        "annual_cache_gap_fill_minutes": 3,
+        "inside_scheduled_maintenance": 17,
+        "minute_before_scheduled_start": 0,
+        "minutes_with_recorded_candles": 9,
+        "missing_minutes": 19,
+        "phase": "account",
+        "raw_observations": 12,
+        "symbol": "SOL"
+      },
+      {
+        "annual_cache_gap_fill_minutes": 5,
+        "inside_scheduled_maintenance": 5,
+        "minute_before_scheduled_start": 0,
+        "minutes_with_recorded_candles": 0,
+        "missing_minutes": 5,
+        "phase": "warmup",
+        "raw_observations": 0,
+        "symbol": "HYPE"
+      },
+      {
+        "annual_cache_gap_fill_minutes": 3,
+        "inside_scheduled_maintenance": 18,
+        "minute_before_scheduled_start": 1,
+        "minutes_with_recorded_candles": 11,
+        "missing_minutes": 19,
+        "phase": "account",
+        "raw_observations": 14,
+        "symbol": "HYPE"
+      }
+    ],
+    "unmatched_account_gaps": [
+      "SOL 2026-08-01T13:55:00+00:00",
+      "SOL 2026-08-01T16:47:00+00:00"
+    ],
+    "warmup_missing_asset_minutes": 21
+  },
+  "revision_number": 1,
+  "runtime_strategy_changed": false,
+  "schema_version": 1,
+  "status": "observe",
+  "strategy_id": "v89_historical_account_source_qualification",
+  "supersedes_revision_id": null,
+  "symbol": "MULTI"
+}
