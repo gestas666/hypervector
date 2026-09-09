@@ -13,23 +13,33 @@ records carry `execution_authority=none`; they do not arm or manage orders.
 
 September 9 update: the seven-asset source collector is running and qualified
 for source capture; the full prospective evaluator is not yet qualified. Source
-and account milestones through journal revision 14 now include the archived
-[chronological coordinator](../reviews/2026-09-09-v89-portfolio-coordinator.md)
-and [captured-source entry binding](../reviews/2026-09-09-v89-source-portfolio-binding.md).
-The latest milestone passes 1,103 offline tests in the worktree and archive,
-reproduces 24,544 source-only bindings exactly, and retains all outcome seals.
+and account milestones through journal revision 15 include the archived
+[chronological coordinator](../reviews/2026-09-09-v89-portfolio-coordinator.md),
+[captured-source entries](../reviews/2026-09-09-v89-source-portfolio-binding.md)
+and [side-specific provider completions](../reviews/2026-09-09-v89-provider-completion-binding.md).
+The latest milestone passes 1,148 offline tests in the worktree and archive.
+The preceding source milestone reproduces 24,544 source-only bindings exactly.
+Both prospective outcome seals remain intact.
 
-Next: translate complete provider exits and regime evidence into source-backed
-calendar bars, then qualify the complete 24-cell evaluator. The older daily
-gap bug is now corrected in the research checkout. No reliable profitability
-improvement or live deployment is established by these engineering milestones.
-Confidence is high for their documented test/source scope and low for future
-returns; failed full-provider parity or independent replay would update it.
+The completion dispatcher now respects the provider's named exit sides. Complete
+provider/canonical payloads, selected/first candle identities, stale-entry exits
+and native HYPE opposite-close authority are retained. Unavailable and UNKNOWN
+regime values remain explicit; historical HYPE UNKNOWN compatibility remains
+unqualified. The broader worktree test run reported twelve unclosed-SQLite
+ResourceWarnings; the archive run reported none.
 
-The September 9 06:09 UTC local process check found two data collectors and no
-matching trading engine or TUI. At 06:36 UTC the collectors remain alive and
-all fifteen source pins and the live profile remain unchanged. These local
-observations do not refresh the last venue account snapshot.
+Next: assemble source-backed calendar bars with bound entries, completions and
+native funding, then verify complete historical provider/regime parity and the
+frozen 24-cell evaluator. The older daily gap bug is corrected in the research
+checkout. No reliable profitability improvement or live deployment is established
+by these engineering milestones. Confidence is high for their documented test
+scope and low for future returns; failed full-provider parity or independent
+replay would update it.
+
+The September 9 07:05 UTC local process check found two data collectors and no
+matching trading engine or TUI. Both collectors reported no error; all fifteen
+seven-asset and eleven SNDK/Brent source pins matched. The live profile remains
+unchanged. These local observations do not refresh the last venue account snapshot.
 
 ## Historical September 8 findings and intermediate next actions
 
