@@ -7,6 +7,36 @@ update evaluates only the original historical window ending September 7 UTC.
 
 ## Current finding and next action
 
+**September 10 09:09 UTC prospective collection-integrity update:** the original
+matrix has **30/48** completed receipts. The original coordinator and reporting
+handoff remain active with four historical workers; sessions 33137 and 44667
+were polled live. Main source/configuration and the installed TUI are unchanged.
+
+The [independent timestamp audit](../reviews/2026-09-10-v89-prospective-collection-health.md)
+authenticates 11,017 committed raw requests and reconciles all 21,776 first
+candle/funding identities with the two SQLite snapshots. All four coverage
+sections per asset match the saved 08:58 UTC health clocks. Mature prospective
+rows have zero missing or late observations. Warmup first-receipt delays remain
+separate. Both original collector PIDs/locks and 26 source pins plus two protocols
+match before/after; no prospective market values or trading outcomes are evaluated.
+
+The timing module passes 26 synthetic tests with 97/97 statements and 44/44
+branches covered. Archive membership and in-place reproduction pass. The
+[portable reproduction addendum](../reviews/2026-09-10-v89-prospective-health-reproduction.md)
+corrects the first helper's absolute-path comparison: reproduce_v2.py obtains
+identical results from 40 unchanged copied evidence files. Original evidence
+and the first journal revision are retained. Latest revision
+`f96eb1f962d78a494e5bf7adf1573186c4ff6e69566287770ba01a2df945f30b`
+has all 21 fields and 33 direct references verified.
+
+This completes the current bounded collection audit; do not repeat it without
+new drift, coverage or fault evidence. Keep both economic outcome seals intact.
+Next complete the original historical matrix and full report, then finalize
+the concrete deployment decision. Review ETA remains provisionally September 10
+13:00–19:00 Eastern; no live-start ETA or financial improvement is established.
+
+The earlier updates below retain their evidence lineage.
+
 **September 10 08:32 UTC combined deployment-review update:** the original
 matrix has **26/48** completed receipts, four active workers and the reporting
 handoff waiting on its original coordinator. Sessions 33137 and 44667 were
