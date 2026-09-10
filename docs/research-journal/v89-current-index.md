@@ -3,11 +3,55 @@
 Updated September 10, 2026 UTC. This is research navigation, not a live-state checkpoint.
 The active mandate permits research and proposals; live changes remain subject
 to explicit approval. Both prospective outcome seals remain active. The latest
-update completes the revised exact technical deployment/rollback package while
-the original audit and automatic final-review handoff continue.
+update completes native depth qualification and records the completed original
+accounting audit and automatic financial-review publication.
 Historical studies remain bounded to the window ending September 7 UTC.
 
 ## Current finding and next action
+
+**September 10 18:45 UTC native TUI qualification and completed financial report:**
+The original reporter completed **48/48 case audits** at 18:36:32 UTC and exited
+zero. Its original observer and automatic handoff also exited zero. The
+[complete financial report](../../data/logs/research/bidirectional_cohort/v89_complete_review_presentation_20260910_v2/report.html)
+contains all 48 cases and 144 paired comparisons. Its three charts, seven tables,
+source interaction and desktop/narrow browser verification pass. Thirteen
+prepared artifact identities plus the final HTML match the completion receipts.
+Do not restart or duplicate the completed pipeline.
+
+The completed matrix retains 177 trades and 3.6875 entries/day in every case.
+Core-history revisions leave the compared economics unchanged; XYZ-history
+differences are under $0.000003 net. Recorded/repaired exit clocks leave cash
+unchanged but affect measured exposure and some drawdowns. Cost assumptions and
+allocation drive the material differences. The earlier six-case findings remain
+consistent: current sizing returns +$196.85 nominal, +$95.72 with adverse slippage,
+and -$33.44 under full HIP-3 fee stress. Equal caps have about twice the average
+exposure; their larger dollar profits do not establish independent edge. The
+later period remains negative for current sizing in all three cost cases. These
+are historical results, not a newly unseen holdout or future-profitability proof.
+
+The [native depth correction](../reviews/2026-09-10-v89-native-depth-freshness.md)
+is committed separately at `564d72e81539afdd3e2979beea4086a655ec4350`.
+Candidate executable SHA256 is
+`382253cacea78e51c2dbc0c7e396eda0d24d2c025ae7854e867cd2c78ad329d1`.
+It adds dated book age, independent checkpoint health, visible depth ranges and
+bounded arrow/page navigation. All 320 related Rust tests pass, twelve native
+depth checks pass and fifteen native paging checks pass. All nine views are
+visited at three sizes; all 24 non-Depth view texts match the baseline. Seven
+historical fixture assets are selected individually and 4,424 displayed values
+independently reconcile. Current V89/Brent/account acceptance remains separate.
+
+Journal `9e481c5a1465c4ca2a4e41f7c6867af031e0798802aa5aa3434ab04bbb7b4e77`
+has all 21 stored fields and 37 direct references verified. The evidence archive
+verifies 542 members; the Rust source archive authenticates 354 Git blobs/modes.
+No installed runtime, profile, TUI or live process changed. The prior V2 package
+remains preserved; composing this correction selects 72 source/test paths.
+
+The next action is the exact 72-path combined installation/compatible rollback
+rehearsal and final combined recommendation. Fresh account/order/owner checks,
+selected release approval and same-run live acceptance remain required. Following
+the completed audit and TUI qualification, the working user-run activation
+window is **16:00–18:00 Eastern today**, low-to-medium confidence and conditional
+on those remaining steps. Both prospective outcome seals remain intact.
 
 **September 10 17:19 UTC revised technical package:**
 The [V2 release proposal](../proposals/v89-technical-release-20260910-v2/recommendation.md)
