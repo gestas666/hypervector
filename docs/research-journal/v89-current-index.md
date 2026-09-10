@@ -7,6 +7,46 @@ update evaluates only the original historical window ending September 7 UTC.
 
 ## Current finding and next action
 
+**September 10 12:54 UTC daily concentration and recovery update:**
+[Corrected daily attribution](../reviews/2026-09-10-v89-daily-asset-interactions.md)
+reconciles the current 177-trade account across six fixed historical cases.
+Under full fees, SNDK contributes **64.51%** of daily variance with current sizing
+and **72.86%** with equal caps. At least two assets lose marked cash on **26/48**
+days in both cases; the worst days are -$69.94 and -$149.88. Equal caps do not
+produce equal observed economic risk. These are explored strategy-PnL statistics,
+not underlying-market correlations or a forecast of future diversification.
+
+Research source 1e85d79 passes all 100 worktree/archive tests, covering 146/146
+new statements and 52/52 branches. All 288 scenario-day totals and earlier/later
+asset components reconcile. Independent Decimal cash checks pass 16,128 values;
+DuckDB passes 1,548 statistics checks. Journal
+`6493f7458331677b0f05b7ebea82636a72b422d132fcd770ef636c33c467f177`
+has all 21 fields and 29 direct references verified.
+
+The original matrix reached **45/48** and terminated with `paused_storage`;
+its old observer then refused the absent complete report. The
+[verified package-cache recovery](../reviews/2026-09-10-v89-uv-cache-recovery.md)
+retains a 508.82 MB archive of 102,808 entries and measures 1.914 GB of free-space
+increase during targeted cleanup. Installed environments, project configuration,
+TUI bytes and unrelated cache archives are preserved. The exact original research
+resume command continues the same matrix and 45 receipts, with unchanged source
+and storage reservations. At 12:46:59 UTC, coordinator 27267, workers 27279/27280
+and reporter observer 27361 are live; one final case remains queued and free space
+is 4.094 GB. Both old terminal records remain available.
+
+The revised complete-review planning target is **14:00–16:30 Eastern today**,
+with low-to-medium confidence. This replaces the earlier 13:00–16:30 estimate;
+it is not a live-start ETA. Capacity for the last launch, measured case duration
+and the four-to-six-hour reporting allowance remain assumptions. Recovery journal
+`3949d2d4f89621e2726bd52a99af672da19f0c80cfc3cdaaef056780e567afa2`
+has all 21 fields and 29 direct references verified.
+
+Next complete the original matrix and its unchanged full-report command, then
+combine the cost/source/clock contrasts with the corrected concentration and SNDK
+follow-through evidence. No allocation, strategy, leverage or live execution
+change is selected here. Both prospective seals and the uninstalled technical
+release remain intact. The earlier updates below retain their evidence lineage.
+
 **September 10 11:49 UTC SNDK and capacity update:** the original historical
 matrix has **42/48** receipts. Storage pressure temporarily reduced concurrency
 to one worker. Five [verified release-cache recoveries](../reviews/2026-09-10-v89-release-cache-recovery.md)
