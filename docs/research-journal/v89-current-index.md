@@ -3,10 +3,42 @@
 Updated September 10, 2026 UTC. This is research navigation, not a live-state checkpoint.
 The active mandate permits research and proposals; live changes remain subject
 to explicit approval. Both prospective outcome seals remain active. The latest
-update refreshes current fees and qualifies the derived report preparation.
+update starts the report-only final-review handoff and records remaining fee uncertainty.
 Historical studies remain bounded to the window ending September 7 UTC.
 
 ## Current finding and next action
+
+**September 10 15:30 UTC automatic report-handoff update:**
+The [final-review handoff](../reviews/2026-09-10-v89-final-review-handoff.md) is
+running as **PID 40699 / session 57237**. It waits for the exact original
+reporting observer **27361** to terminate, then runs only the frozen V2
+preparation and canonical HTML delivery/verification. Do not manually launch
+the same V2 preparation concurrently. No live process or deployment is started.
+
+All **51 tests** pass, including stage-failure, exact dependency-path and
+browser-receipt controls. Source coverage is 70/71 statements and 27/28 branches;
+the remaining top-level invocation has now been observed running. The operator
+pins 2,184 references and a byte-verified three-member source archive. Journal
+`848da4e39495c017da9d59552271182ccfa489d734cff6314e0f338c3904ef56`
+has all 21 stored fields and 15 direct references verified.
+
+At **15:24:28 UTC**, the original reporter **35528** remains active at 100% CPU
+with **12/48 case audits complete**. All 48 simulations are finished; neither
+new report stage has started. The reused wait helper's matrix event label refers
+here to waiting on reporting observer 27361. The complete original publication,
+real final reconciliation and HTML acceptance remain pending. The prior
+**16:00–19:00 Eastern** conditional user-run live estimate remains low confidence.
+
+[Collateral qualification](../reviews/2026-09-10-v89-aligned-quote-qualification.md)
+maps all seven markets to token 0, USDC. The legacy alignment request returns
+HTTP 422 and is absent from current API documentation. Current documentation
+also distinguishes AQAv1 fee benefits from AQAv2, which gives none. Eligibility
+therefore remains unresolved; no extra discount or historical substitution is
+applied, and the frozen V2 report needs no further revision. Do not repeat that
+legacy request without new contract evidence. Journal
+`42a310ce41ac92a75f3eed7eb3cd11487be7adbde14e573b28af1972778387e4`
+has all 21 stored fields and 11 direct references verified. Both prospective
+seals, the root implementation, installed TUI and live settings remain unchanged.
 
 **September 10 15:00 UTC current-fee and report-context update:**
 [Fresh fee evidence](../reviews/2026-09-10-v89-current-fee-refresh.md), captured

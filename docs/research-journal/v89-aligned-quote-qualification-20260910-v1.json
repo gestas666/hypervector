@@ -1,0 +1,101 @@
+{
+  "automatic_promotion": false,
+  "confidence": "high",
+  "created_at_utc": "2026-09-10T15:27:51.150300+00:00",
+  "decision": "Retain explicit unresolved aligned-discount eligibility. All seven markets map to token 0 USDC; the older alignment request returns HTTP 422 and is absent from current docs. AQAv2 gives no fee benefit. Do not repeat this query without new contract evidence or change any fee assumption.",
+  "evidence": [
+    {
+      "bytes": 2690,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/reviews/2026-09-10-v89-aligned-quote-qualification.md",
+      "role": "bounded current observation, source, validation or report-only handoff evidence",
+      "sha256": "ee02d96d8ffcbab33bea9fbff4f0f54aea79557a85a275ae0eef2c8db82aa058"
+    },
+    {
+      "bytes": 1218,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_aligned_quote_qualification_20260910_v1/PLAN.md",
+      "role": "bounded current observation, source, validation or report-only handoff evidence",
+      "sha256": "7c4f7b87953d0a984bcd6a54fda0e7f375792ef19772288a43ca38cd51c5cff1"
+    },
+    {
+      "bytes": 3820,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_aligned_quote_qualification_20260910_v1/capture.py",
+      "role": "bounded current observation, source, validation or report-only handoff evidence",
+      "sha256": "fe20fe846c63f6825d8a1cb39a15d026396189206941afc264517839e470f83c"
+    },
+    {
+      "bytes": 59,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_aligned_quote_qualification_20260910_v1/capture.log",
+      "role": "bounded current observation, source, validation or report-only handoff evidence",
+      "sha256": "84fb780c2912075bd73f537cda38155d65f8bc7e91b404a6a83a381cb6b6b66b"
+    },
+    {
+      "bytes": 851,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_aligned_quote_qualification_20260910_v1/documentation.json",
+      "role": "bounded current observation, source, validation or report-only handoff evidence",
+      "sha256": "a49cef65fd6ec0e05f3280188b03591ceb187cffb53166f93babe876d5063503"
+    },
+    {
+      "bytes": 6814,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_aligned_quote_qualification_20260910_v1/aligned_quote_docs.md",
+      "role": "bounded current observation, source, validation or report-only handoff evidence",
+      "sha256": "14ebdc13e0521440601d0f0d95ff93abfaef74ca0f5dbf5afe60081383d00230"
+    },
+    {
+      "bytes": 55013,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_aligned_quote_qualification_20260910_v1/info_endpoint_docs.md",
+      "role": "bounded current observation, source, validation or report-only handoff evidence",
+      "sha256": "f4228fc7734af5dbf420e5bdf2b25c248a5b5287035ab2d8a645dc14ce64f0bd"
+    },
+    {
+      "bytes": 445,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_aligned_quote_qualification_20260910_v1/core_metadata.json",
+      "role": "bounded current observation, source, validation or report-only handoff evidence",
+      "sha256": "23fc26ba77ac55e4be32b3b154cff55e5835ad439a4f23fa3c50b0a48b013dd4"
+    },
+    {
+      "bytes": 455,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_aligned_quote_qualification_20260910_v1/xyz_metadata.json",
+      "role": "bounded current observation, source, validation or report-only handoff evidence",
+      "sha256": "6043d0dd81f40fdbdfac11d979fb2ee9da35f02490079e6831a84949c79a78e9"
+    },
+    {
+      "bytes": 404,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_aligned_quote_qualification_20260910_v1/tokens.json",
+      "role": "bounded current observation, source, validation or report-only handoff evidence",
+      "sha256": "c25aa8472941dfada38dfd8a0949c35773583f63eb34f0a5d60918f22fb2cbe6"
+    },
+    {
+      "bytes": 445,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_aligned_quote_qualification_20260910_v1/alignment_0.json",
+      "role": "bounded current observation, source, validation or report-only handoff evidence",
+      "sha256": "0005bb97d154c28689e6c49930f2bf0372925e726d9d164f9ab5dc8501d7688b"
+    }
+  ],
+  "execution_authority": "none",
+  "falsifier": "Changed source, protocol or process identity, unexplained publication mismatch, or newer authoritative evidence requires a superseding review.",
+  "hypothesis": "Current public collateral metadata and available official API documentation can resolve whether the existing fee projection should include an aligned-quote discount.",
+  "hypothesis_id": "v89-aligned-quote-qualification-20260910-v1",
+  "limitations": [
+    "HTTP 422 does not establish that USDC is aligned or unaligned.",
+    "Current documentation separates AQAv1 fee benefits from AQAv2, which provides none.",
+    "The probe does not establish realized fees, historical fee states or future profitability."
+  ],
+  "metrics": {
+    "account_requests": 0,
+    "alignment_eligibility_resolved": false,
+    "alignment_probe_http_status": 422,
+    "collateral_token_index": 0,
+    "collateral_token_name": "USDC",
+    "configured_markets_bound": 7,
+    "current_turn_classification": "progress",
+    "live_configuration_changed": false,
+    "public_requests": 4
+  },
+  "revision_number": 1,
+  "runtime_strategy_changed": false,
+  "schema_version": 1,
+  "status": "observe",
+  "strategy_id": "multi_asset_growth_first_5000_noncrypto_research_v89",
+  "supersedes_revision_id": null,
+  "symbol": "PORTFOLIO"
+}

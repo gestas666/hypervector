@@ -1,0 +1,132 @@
+{
+  "automatic_promotion": false,
+  "confidence": "high",
+  "created_at_utc": "2026-09-10T15:27:51.152736+00:00",
+  "decision": "Retain the qualified running handoff PID 40699/session 57237. It waits on original observer 27361, then runs only the frozen V2 preparation and canonical HTML verification. Current stages remain pending; there is no live execution or deployment authority.",
+  "evidence": [
+    {
+      "bytes": 4424,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/reviews/2026-09-10-v89-final-review-handoff.md",
+      "role": "bounded current observation, source, validation or report-only handoff evidence",
+      "sha256": "9a891a507ada34c7099e1536bbb341ad2f7abf4ea0bda7a28ed953c69167a3f9"
+    },
+    {
+      "bytes": 1726,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_final_review_handoff_20260910_v1/PLAN.md",
+      "role": "bounded current observation, source, validation or report-only handoff evidence",
+      "sha256": "ebfd57fb31795c8b2c59db31c094d945bdf1bb3403a390a6c71a27ce6773f8c4"
+    },
+    {
+      "bytes": 6041,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_final_review_handoff_20260910_v1/final_review_handoff.py",
+      "role": "bounded current observation, source, validation or report-only handoff evidence",
+      "sha256": "fab91b17c93b0c86c18327c2ae6ca707254716759ef37c88cdce2e5f8d4b3461"
+    },
+    {
+      "bytes": 9840,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_final_review_handoff_20260910_v1/test_final_review_handoff.py",
+      "role": "bounded current observation, source, validation or report-only handoff evidence",
+      "sha256": "a0a9c5a2facc43e2473d928c79517ec9d311971318b3c82427d79627be248144"
+    },
+    {
+      "bytes": 5586,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_final_review_handoff_20260910_v1/source.tar.gz",
+      "role": "bounded current observation, source, validation or report-only handoff evidence",
+      "sha256": "1607de8d829b2562ad22cfa4cfeffdd092e5f9f39d81b42c7f056cebb86c8b52"
+    },
+    {
+      "bytes": 700664,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_final_review_handoff_20260910_v1/launch.json",
+      "role": "bounded current observation, source, validation or report-only handoff evidence",
+      "sha256": "e035502e308b529956c53adbfd9e2e792a24e98946062709768dce4429afa42e"
+    },
+    {
+      "bytes": 810,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_final_review_handoff_20260910_v1/qualification.json",
+      "role": "bounded current observation, source, validation or report-only handoff evidence",
+      "sha256": "5e68a6431f659ada1706b3b245012a46fdc50b4a7d640ded8e727f0f22b97d58"
+    },
+    {
+      "bytes": 99,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_final_review_handoff_20260910_v1/tests_initial.log",
+      "role": "bounded current observation, source, validation or report-only handoff evidence",
+      "sha256": "f59644cda5203f12f4b1912301948d494943aafe7f803d8ca71d3ff46d83713a"
+    },
+    {
+      "bytes": 1068,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_final_review_handoff_20260910_v1/tests_qualified.log",
+      "role": "bounded current observation, source, validation or report-only handoff evidence",
+      "sha256": "a5a10e88db40f82932778b676537a94085112d426e8c0fb4f3084e9fcfbea57b"
+    },
+    {
+      "bytes": 1071,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_final_review_handoff_20260910_v1/tests_qualified_v2.log",
+      "role": "bounded current observation, source, validation or report-only handoff evidence",
+      "sha256": "b7f49ec88007afa7815bc76c91bf3c04fe4d35b1810f69882a53863133fbcf73"
+    },
+    {
+      "bytes": 1154,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_final_review_handoff_20260910_v1/tests_red.log",
+      "role": "bounded current observation, source, validation or report-only handoff evidence",
+      "sha256": "31e57c1b55b175f2c257be07b52db53c9c42d97ce967004a6c03c7a110e24f0a"
+    },
+    {
+      "bytes": 1728,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_final_review_handoff_20260910_v1/dependency_identity_red.log",
+      "role": "bounded current observation, source, validation or report-only handoff evidence",
+      "sha256": "001aec9407d9206e5d8b8e285313f5dcff9b20d754a3c651593d700fa034012f"
+    },
+    {
+      "bytes": 6312,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_final_review_handoff_20260910_v1/coverage_v2.json",
+      "role": "bounded current observation, source, validation or report-only handoff evidence",
+      "sha256": "21ac1e0c92b9e5f7e653d69472bc8ccfb63c1e7f800b1bf5f70fcacb7dbfdb48"
+    },
+    {
+      "bytes": 229,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_final_review_handoff_20260910_v1/started.json",
+      "role": "bounded current observation, source, validation or report-only handoff evidence",
+      "sha256": "59d64c234c6166c05fe7ec481ae2ca4d802c180ae30cf183cfb9fffba35c1671"
+    },
+    {
+      "bytes": 637,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_final_review_handoff_20260910_v1/runtime_verified.json",
+      "role": "bounded current observation, source, validation or report-only handoff evidence",
+      "sha256": "dc10b71ed762e694f43eea7cce90ea9dcfc119c915cbdad6936429a85bc7f492"
+    }
+  ],
+  "execution_authority": "none",
+  "falsifier": "Changed source, protocol or process identity, unexplained publication mismatch, or newer authoritative evidence requires a superseding review.",
+  "hypothesis": "An exact report-only handoff can remove a manual launch delay while refusing incomplete source publication, changed preparation scope and unverified HTML delivery.",
+  "hypothesis_id": "v89-final-review-handoff-20260910-v1",
+  "limitations": [
+    "Synthetic controls and verified startup do not establish completed financial preparation or actual browser acceptance.",
+    "The original audit remains running; missing completion or failed stages require diagnosis without automatic retries.",
+    "Live release approval, fresh account/order/source checks and all nine TUI views remain separate."
+  ],
+  "metrics": {
+    "actual_report_complete": false,
+    "covered_branches": 27,
+    "covered_statements": 70,
+    "current_turn_classification": "progress",
+    "handoff_pid": 40699,
+    "live_readiness_established": false,
+    "measured_branches": 28,
+    "measured_statements": 71,
+    "new_tests": 26,
+    "original_case_audits_at_1524_utc": 12,
+    "original_reporter_pid": 35528,
+    "pinned_references": 2184,
+    "producer_observer_pid": 27361,
+    "reused_tests": 25,
+    "source_archive_members": 3,
+    "tests_passed": 51
+  },
+  "revision_number": 1,
+  "runtime_strategy_changed": false,
+  "schema_version": 1,
+  "status": "retain",
+  "strategy_id": "multi_asset_growth_first_5000_noncrypto_research_v89",
+  "supersedes_revision_id": null,
+  "symbol": "PORTFOLIO"
+}
