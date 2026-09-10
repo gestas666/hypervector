@@ -3,10 +3,36 @@
 Updated September 10, 2026 UTC. This is research navigation, not a live-state checkpoint.
 The active mandate permits research and proposals; live changes remain subject
 to explicit approval. Both prospective outcome seals remain active. The latest
-update starts the report-only final-review handoff and records remaining fee uncertainty.
+update independently refreshes collector timing/coverage while the original
+audit and automatic final-review handoff continue.
 Historical studies remain bounded to the window ending September 7 UTC.
 
 ## Current finding and next action
+
+**September 10 15:51 UTC prospective-health refresh:**
+The [fresh timing audit](../reviews/2026-09-10-v89-prospective-health-refresh.md)
+reconciles **12,964 committed responses and 23,611 first-observation identities**
+at the two saved 15:46 UTC heartbeats. No mature prospective candle or funding
+identity is missing or late. The exact qualified audit source and retained-only
+reproduction agree; 74 prior qualification references, 26 collector sources
+and both protocols match. The unchanged timing implementation reuses its
+26-test, full statement/branch qualification; no fresh test run is claimed.
+
+The original collectors retain their process identities and writer locks. Both
+economic outcome seals remain intact. The new journal revision
+`1eec81a936d2ea1e2568c73ebc2873894efb0e3f26ab433928e5a224ad715a8c`
+has all **21 stored fields, 24 direct references and 50 captured manifest files**
+verified. Preserve the earlier snapshots; this refresh adds 1,947 requests and
+1,835 first identities without a collector or live change.
+
+At **15:48:08 UTC**, reporter **35528** is active at 99% CPU with **17/48 final
+case audits complete**. All 48 simulations are finished; observer **27361** and
+automatic final-report handoff **40699** remain active. Complete financial
+publication and final HTML acceptance are pending. Do not launch duplicate
+preparation. The highest-value economic step remains the original full report.
+The **16:00–19:00 Eastern** conditional user-run live estimate remains low
+confidence, requiring complete reporting, exact release approval and fresh
+account/order/TUI acceptance. Installed source and TUI remain unchanged.
 
 **September 10 15:30 UTC automatic report-handoff update:**
 The [final-review handoff](../reviews/2026-09-10-v89-final-review-handoff.md) is

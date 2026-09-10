@@ -1,0 +1,212 @@
+{
+  "automatic_promotion": false,
+  "confidence": "high",
+  "created_at_utc": "2026-09-10T15:50:13.583732+00:00",
+  "decision": "Retain the unchanged collectors. The September 10 15:46 UTC snapshots independently reconcile all committed raw first-observation clocks, index identities and coverage, extending the earlier snapshot by 1,947 requests and 1,835 first identities. Retained-evidence reproduction agrees. Keep both financial outcome seals intact and prioritize completion of the original 48-case audit/report. This refresh authorizes no collector, strategy, allocation, deployment or live process change.",
+  "evidence": [
+    {
+      "bytes": 1383,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_collection_health_20260910_v2/PLAN.md",
+      "role": "prospective_timing_health_refresh",
+      "sha256": "32d264fe31be0ce210adcf910ac063cd4210a20acec0fdbd22fa8e3c52c3b22f"
+    },
+    {
+      "bytes": 23480,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_collection_health_20260910_v2/source_reuse.json",
+      "role": "prospective_timing_health_refresh",
+      "sha256": "87f5e70a7bcd1d725905e5cf6d26a5af4e66748da1f4333053ddb9790994067b"
+    },
+    {
+      "bytes": 23850,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_collection_health_20260910_v2/acceptance.json",
+      "role": "prospective_timing_health_refresh",
+      "sha256": "fd821997ee76c3ed0484a09398ea981ca82d62fce005e07ddb416ef05ba7da84"
+    },
+    {
+      "bytes": 383,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_collection_health_20260910_v2/reproduction.json",
+      "role": "prospective_timing_health_refresh",
+      "sha256": "6fc6c844aad5fbfa1dea364a4abd30b5be5146b768542c724f038da9b2f9d7b1"
+    },
+    {
+      "bytes": 1328,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_collection_health_20260910_v2/runtime_observation.json",
+      "role": "prospective_timing_health_refresh",
+      "sha256": "24442b5f079747cf7766d6c145c1fa5d93936257a06c2102142e483b4a0d4ecb"
+    },
+    {
+      "bytes": 14561,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_collection_health_20260910_v2/evidence_manifest.json",
+      "role": "prospective_timing_health_refresh",
+      "sha256": "7aa6b45ccea259fd80a8caec8110fc66de571cc1f4933c6f6a9b9f4fbeb46354"
+    },
+    {
+      "bytes": 156,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_collection_health_20260910_v2/audit.log",
+      "role": "prospective_timing_health_refresh",
+      "sha256": "0e59bca466c7dd015aae920f24d877e722a806e176737358e8acdb3ae541d9b2"
+    },
+    {
+      "bytes": 227,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_collection_health_20260910_v2/reproduction.log",
+      "role": "prospective_timing_health_refresh",
+      "sha256": "0d2fa6749049dc46b4fc226a616849e88127db35808969aa033e0b6fb5a0978a"
+    },
+    {
+      "bytes": 5373,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_collection_health_20260910_v2/pair/manifest.json",
+      "role": "prospective_timing_health_refresh",
+      "sha256": "3e3bc0704ee1a7809e3de4997f23b04648918f2429db1a8be747da4ba8cf051b"
+    },
+    {
+      "bytes": 4282,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_collection_health_20260910_v2/pair/health_before.json",
+      "role": "prospective_timing_health_refresh",
+      "sha256": "b14ba9adf13a1c9f6017d7b3c0c9f70bce3ab4dfc1881e5430b81e0f336a4372"
+    },
+    {
+      "bytes": 4282,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_collection_health_20260910_v2/pair/health_after.json",
+      "role": "prospective_timing_health_refresh",
+      "sha256": "b14ba9adf13a1c9f6017d7b3c0c9f70bce3ab4dfc1881e5430b81e0f336a4372"
+    },
+    {
+      "bytes": 733184,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_collection_health_20260910_v2/pair/capture.sqlite3",
+      "role": "prospective_timing_health_refresh",
+      "sha256": "d6e183d8a4eb376cccc6fa26b047a019fcbae6e13baa2fbf19d616d4e20901c7"
+    },
+    {
+      "bytes": 3227582,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_collection_health_20260910_v2/pair/raw.tar.gz",
+      "role": "prospective_timing_health_refresh",
+      "sha256": "53baf4b483ae5b0226ecb9518d00972413b7b7327016268c16e357f5dabad270"
+    },
+    {
+      "bytes": 7998,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_collection_health_20260910_v2/pair/acceptance.json",
+      "role": "prospective_timing_health_refresh",
+      "sha256": "f8519282c14124af4aa8b5a8d2b51a4713d53cf1b0f43e8b0ecaa904b2caf989"
+    },
+    {
+      "bytes": 15378,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_collection_health_20260910_v2/seven/manifest.json",
+      "role": "prospective_timing_health_refresh",
+      "sha256": "47d9a323ba375a986520d333d1a2a354bbb0b25568729eb292298d340cf66aa9"
+    },
+    {
+      "bytes": 9403,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_collection_health_20260910_v2/seven/health_before.json",
+      "role": "prospective_timing_health_refresh",
+      "sha256": "380ce5914ebf461b4c086c302756872b71734ca9c00bf13c18a76baed47cc75a"
+    },
+    {
+      "bytes": 9403,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_collection_health_20260910_v2/seven/health_after.json",
+      "role": "prospective_timing_health_refresh",
+      "sha256": "380ce5914ebf461b4c086c302756872b71734ca9c00bf13c18a76baed47cc75a"
+    },
+    {
+      "bytes": 13795328,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_collection_health_20260910_v2/seven/capture.sqlite3",
+      "role": "prospective_timing_health_refresh",
+      "sha256": "d99f6a795ee2a8b90aa537e73a790c0c7b153189252ee908655f069fee142a33"
+    },
+    {
+      "bytes": 13596939,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_collection_health_20260910_v2/seven/raw.tar.gz",
+      "role": "prospective_timing_health_refresh",
+      "sha256": "a3c5c3f47480efd20d3e7eb30801ce76c45dc4a5f15bf4a74d96df31f8efd5fd"
+    },
+    {
+      "bytes": 13527,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_collection_health_20260910_v2/seven/acceptance.json",
+      "role": "prospective_timing_health_refresh",
+      "sha256": "18ba02ff4c48d5d4787fb199355910d80c42106f8191c080c91febaa63b8c52a"
+    },
+    {
+      "bytes": 4740,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/reviews/2026-09-10-v89-prospective-health-refresh.md",
+      "role": "prospective_timing_health_refresh",
+      "sha256": "1a7fdaa65b29f6cbe9bb4fbaa83a825e9899cf5cdd404cd7e10590ce831f2515"
+    },
+    {
+      "bytes": 14911,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/research-journal/v89-prospective-collection-health-20260910-v2.json",
+      "role": "prospective_timing_health_refresh",
+      "sha256": "520885aa6f737bbddf624e0853b00caad66ac834f9a5e221b7f9057046450091"
+    },
+    {
+      "bytes": 566,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_collection_health_20260910_v1/tests.log",
+      "role": "prospective_timing_health_refresh",
+      "sha256": "3c3b7531463e1d34d58703f393df01d4c1de666513bcd2c9c4378dff6eed84a7"
+    },
+    {
+      "bytes": 9762,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_collection_health_20260910_v1/coverage.json",
+      "role": "prospective_timing_health_refresh",
+      "sha256": "83160514d5839e548612c82e8e0eff25201802ff1b7b8c0ceabe37d83bd568bd"
+    }
+  ],
+  "execution_authority": "none",
+  "falsifier": "A changed source/evidence hash, inconsistent saved clock, wrong collector ownership, raw/index first-timing difference, missing grid identity, later publication delay or collector fault updates or invalidates the corresponding scoped finding. This audit does not establish economic performance or live readiness.",
+  "hypothesis": "The two unchanged prospective collectors retain complete and timely mature first-observation evidence, independently reproducible from committed raw response bytes and index timestamps.",
+  "hypothesis_id": "v89_prospective_collection_health_20260910_v1",
+  "limitations": [
+    "Coverage is conditional on the saved September 10 15:46 UTC heartbeats and the frozen 60-second publication allowance; future uptime and final window closure are not certified.",
+    "Only committed indexed raw requests and candle/funding first-observation timing are reconciled. Unindexed in-flight files, every value-version digest and market-value correctness are outside scope.",
+    "Late warmup remains distinct from timely prospective first observation. No signal, price, funding-rate, position, trade, return or account-outcome analysis was performed.",
+    "Both collectors retain their process ownership and source identities. This does not establish current venue positions/orders, liquidity, actual fills or profitability.",
+    "The implementation is byte-identical to the previously qualified source. Its 26-test full timing coverage is reused, not reported as a new test run.",
+    "The full historical audit/report and concrete deployment decision remain incomplete. The conditional 16:00-19:00 Eastern user-run launch estimate remains low confidence and depends on full reporting, exact approval and fresh live acceptance."
+  ],
+  "metrics": {
+    "additional_first_identities_since_prior": 1835,
+    "additional_requests_since_prior": 1947,
+    "archive_reproduction_matches": true,
+    "collector_source_pins_matching": 26,
+    "complete_financial_report_published": false,
+    "evidence_manifest_files": 50,
+    "failed_requests": 0,
+    "final_report_handoff_active": true,
+    "first_timing_identities_reconciled": 23611,
+    "fresh_test_run": false,
+    "historical_audits_completed": 17,
+    "historical_cases_total": 48,
+    "historical_simulations_completed": 48,
+    "invalid_requests": 0,
+    "live_or_collector_changes": false,
+    "live_readiness_established": false,
+    "original_reporting_active": true,
+    "outcomes_evaluated": false,
+    "pair_candles_per_asset": 239,
+    "pair_funding_per_asset": 60,
+    "pair_health_at_utc": "2026-09-10T15:46:07.237000+00:00",
+    "pair_requests": 1234,
+    "prior_qualified_references_matching": 74,
+    "prospective_late": 0,
+    "prospective_missing": 0,
+    "protocol_pins_matching": 2,
+    "raw_archive_uncompressed_bytes": 108749030,
+    "raw_requests_authenticated": 12964,
+    "reused_synthetic_tests_passed": 26,
+    "reused_timing_branches_covered": 44,
+    "reused_timing_branches_total": 44,
+    "reused_timing_statements_covered": 97,
+    "reused_timing_statements_total": 97,
+    "runtime_observed_at_utc": "2026-09-10T15:48:08.722281+00:00",
+    "seven_asset_requests": 11730,
+    "seven_core_candles_per_asset": 2385,
+    "seven_funding_per_asset": 40,
+    "seven_health_at_utc": "2026-09-10T15:46:36.527000+00:00",
+    "seven_xyz_candles_per_asset": 159
+  },
+  "revision_number": 3,
+  "runtime_strategy_changed": false,
+  "schema_version": 1,
+  "status": "retain",
+  "strategy_id": "multi_asset_growth_first_5000_noncrypto_research_v89",
+  "supersedes_revision_id": "f96eb1f962d78a494e5bf7adf1573186c4ff6e69566287770ba01a2df945f30b",
+  "symbol": "PORTFOLIO"
+}
