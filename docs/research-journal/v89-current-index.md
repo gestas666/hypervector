@@ -7,6 +7,25 @@ update evaluates only the original historical window ending September 7 UTC.
 
 ## Current finding and next action
 
+**September 10 09:25 UTC execution-time forecast:** 30/48 receipts are complete,
+with four workers active and fourteen queued. The [measured operational forecast](../reviews/2026-09-10-v89-historical-completion-forecast.md)
+uses 27 comparable completed runtimes and preserves original case order. Its
+worker-finish scenarios span 08:22–09:15 Eastern; the revised complete-review
+planning target is September 10 **12:30–16:00 Eastern**, with low-to-medium
+confidence. Final authentication and resource changes remain uncertainties.
+Free disk is 9.26 GB; remaining retained output is 3.37 GB at the largest observed
+case size. These are scenarios, not hard future bounds or a live-start ETA.
+
+While the original jobs continue, the already complete predeclared higher-fee
+late-exit-clock cases 10/11 are being analyzed using unchanged reporter 3400457.
+Their outputs will be compared with cases 8/9. This is partial progress on an
+original contrast, not a replacement for the complete 48-case report. The clock
+convention is not arbitrary venue latency or adverse fill-price simulation.
+Evidence root: `v89_full_fee_exit_clock_comparison_20260910_v1/`.
+Both prospective seals and the live deployment state remain unchanged.
+
+The earlier updates below retain their evidence lineage.
+
 **September 10 09:09 UTC prospective collection-integrity update:** the original
 matrix has **30/48** completed receipts. The original coordinator and reporting
 handoff remain active with four historical workers; sessions 33137 and 44667
