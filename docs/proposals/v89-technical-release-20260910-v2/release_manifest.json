@@ -1,0 +1,852 @@
+{
+  "base_commit": "b3df618fd606deb6e1bd6883dc427cb7f74a8534",
+  "binaries": {
+    "candidate": {
+      "bytes": 10241936,
+      "mode": "0o755",
+      "sha256": "604307380b4b047453e0492a349760e737c58da3a917f37305feb39072af3ea3",
+      "source_path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_deadline_tui_20260910_v1/candidate_tui"
+    },
+    "prior": {
+      "bytes": 10160480,
+      "mode": "0o755",
+      "sha256": "95f87cdcd49e5aa0068b7ebf8d4bef2b18d5f3efa7692291fc9aeabc83623d8f",
+      "source_path": "/Users/gestas/Prototypes/hypervector/target/release/tui-regime-detector"
+    }
+  },
+  "candidate": {
+    "crates/hypervector-tui/src/backend_cohort_checkpoint.rs": {
+      "bytes": 15004,
+      "exists": true,
+      "git_blob": "c96ff187f9a2053946f45082dc03bcb5e64dbdae",
+      "git_mode": "100644",
+      "sha256": "758cbdf9cb02a45ea992b49fe2eb66e6fcda5197ef1fddc8828aa97f7af63876"
+    },
+    "crates/hypervector-tui/src/backend_cohort_checkpoint_live.rs": {
+      "bytes": 4276,
+      "exists": true,
+      "git_blob": "62740c9722f6a6c33b45f39a72481d243f530b66",
+      "git_mode": "100644",
+      "sha256": "0e13ce367d417006998083ec1c54d4d25bc95f907b062c0d3a0cf86248a4469e"
+    },
+    "crates/hypervector-tui/src/backend_cohort_checkpoint_projection.rs": {
+      "bytes": 10952,
+      "exists": true,
+      "git_blob": "7f220408b4c71ff4e09019b5947361e78194c65b",
+      "git_mode": "100644",
+      "sha256": "bf65e450e2f2a5645b8221adee6f69fcfec1c8016fb322871ca413bbdedaa786"
+    },
+    "crates/hypervector-tui/src/backend_cohort_entry_deadline.rs": {
+      "bytes": 7370,
+      "exists": true,
+      "git_blob": "e4a8f34b778e32357ffc49fbc9d6b37786158a87",
+      "git_mode": "100644",
+      "sha256": "8dd6497a52f7e1bbcc47423460a3beef70970694501cf120ad5d2614642578f0"
+    },
+    "crates/hypervector-tui/src/cohort_setup_deadline.rs": {
+      "bytes": 2001,
+      "exists": true,
+      "git_blob": "8aed409e6eef6de54b91817be218133033376441",
+      "git_mode": "100644",
+      "sha256": "e68db51533b44dc2f212a759575d48426da2abd10053a2867b7595d6e1d76e6d"
+    },
+    "crates/hypervector-tui/src/cohort_setup_detail.rs": {
+      "bytes": 16337,
+      "exists": true,
+      "git_blob": "50517523c4068f8550573a78d7e374786f9c8abe",
+      "git_mode": "100644",
+      "sha256": "6e3e4382d5a5b5e7f11b1cca2d56457879c1af14bd689e8316398d0ca3bd3e74"
+    },
+    "crates/hypervector-tui/src/lib.rs": {
+      "bytes": 5854,
+      "exists": true,
+      "git_blob": "bf12e84139186136fba84216dab2e7f37f08e3aa",
+      "git_mode": "100644",
+      "sha256": "3f42a0f161a64afea31c483499367c1cb225eb04b758fe1f6696743707b79e0b"
+    },
+    "crates/hypervector-tui/tests/bidirectional_cohort_view_test.rs": {
+      "bytes": 3926,
+      "exists": true,
+      "git_blob": "73b74e2d9cefb03576fbefc5e4ab7b97c9f5e5ae",
+      "git_mode": "100644",
+      "sha256": "42d7b5b12d06695fa9bc82f01c16e54ef00e7a6927ee2abb5afe39ee842355f1"
+    },
+    "crates/hypervector-tui/tests/cohort_entry_deadline_test.rs": {
+      "bytes": 13169,
+      "exists": true,
+      "git_blob": "54df683496a6799a52c0e15d0cd80add3f4db592",
+      "git_mode": "100644",
+      "sha256": "29c0c0b11b9be607267dd541d0695c055d12d8b4d5091eaf1f3a2587b6aeccd8"
+    },
+    "crates/hypervector-tui/tests/fixtures/cohort_entry_deadline_2030.json": {
+      "bytes": 17713,
+      "exists": true,
+      "git_blob": "54b5a4f2a3207004e0e3ba8921960a558f8d35c2",
+      "git_mode": "100644",
+      "sha256": "c49e395e7d11053059eb5a735f9504a7163daf9fe4972a314936607505fa9b63"
+    },
+    "crates/hypervector-tui/tests/support/cohort_entry_deadline_fixtures.rs": {
+      "bytes": 1605,
+      "exists": true,
+      "git_blob": "c026f00a4d10b3560a5b02f2928fad77d46d9fe3",
+      "git_mode": "100644",
+      "sha256": "bf13551ccc871c76e7b2070f267a535a3cf61e79a5bcf3b49dd3836bcffc4d48"
+    },
+    "crates/hypervector-tui/tests/support/cohort_entry_deadline_view.rs": {
+      "bytes": 2863,
+      "exists": true,
+      "git_blob": "6c92fe1a6955950d8d086d12e8112a4a3c483931",
+      "git_mode": "100644",
+      "sha256": "65b18e7afdf7cdafc96ac5545bffce25e2a97f84e3423bdab3eb446e0893c536"
+    },
+    "scripts/multi_asset_bidirectional_canary_tui.py": {
+      "bytes": 16938,
+      "exists": true,
+      "git_blob": "238b402a4f8e828995225ccddb7f8ec83522c6bd",
+      "git_mode": "100644",
+      "sha256": "265d5782eeeb296910d979bf8753044d4b64ddc2b1371161bd0a28d9d1d3aaf5"
+    },
+    "src/hypervector/cli_cohort.py": {
+      "bytes": 8196,
+      "exists": true,
+      "git_blob": "dcc2cb9b050f84d1787272a863e7c53a31464d55",
+      "git_mode": "100644",
+      "sha256": "39e899c48f769ff118298d97fea1120327d0e94ca40578db19b2f9c79f0c6f88"
+    },
+    "src/hypervector/live/bidirectional_intents.py": {
+      "bytes": 14694,
+      "exists": true,
+      "git_blob": "f689d7da2096909150d26fff2228ef85179842da",
+      "git_mode": "100644",
+      "sha256": "47de902119a5f72c1afc7a92fa57c9e856f59f801e0b42e07142d4e3c74a3278"
+    },
+    "src/hypervector/live/cohort_entry_submission.py": {
+      "bytes": 6157,
+      "exists": true,
+      "git_blob": "97456a33d554a461b55b41cb4d8513077eac00fa",
+      "git_mode": "100644",
+      "sha256": "cd6b464e9d6f48fd12923c8cb5558f15a6b3c99f55367bc5f16101b44a5f730a"
+    },
+    "src/hypervector/live/cohort_profile_stage.py": {
+      "bytes": 9897,
+      "exists": true,
+      "git_blob": "84ef8c4939a3a3b3de88c4587c021e6e691b9831",
+      "git_mode": "100644",
+      "sha256": "46ae2ebf0242104efb849ab5b40fa6e2489008ced6034f814738e4388c9f1644"
+    },
+    "src/hypervector/live/cohort_routing_execution.py": {
+      "bytes": 4206,
+      "exists": true,
+      "git_blob": "0e91986f762ac6205aa0a799f42ebe21bbbf5988",
+      "git_mode": "100644",
+      "sha256": "10c24c2cf67b020b73300b5090eb18c91bcd185ca671ab6ffe902d83f09bf9c9"
+    },
+    "src/hypervector/live/cohort_tui_binary.py": {
+      "bytes": 2519,
+      "exists": true,
+      "git_blob": "15f35c57da43f614ee85ae8b1e26f36b78c60106",
+      "git_mode": "100644",
+      "sha256": "90418e7ec52958357084ef87d68b162bf792e35c32c3845675936b8b15ee03c7"
+    },
+    "src/hypervector/live/cohort_tui_commands.py": {
+      "bytes": 12281,
+      "exists": true,
+      "git_blob": "0048823d4486afe6cf65262c8f328c1ec3bd0476",
+      "git_mode": "100644",
+      "sha256": "0d46cc76b71bd1ad8c4a8dcddaf6e868b7128e17dfd0ce8cb39bd65ec4b89dbb"
+    },
+    "src/hypervector/live/cohort_tui_launch_options.py": {
+      "bytes": 2893,
+      "exists": true,
+      "git_blob": "ef5df9ba7e34a9ba7b3bb138f99050bac2635dfa",
+      "git_mode": "100644",
+      "sha256": "fd6e5490b335f85c564ba0600f725d80a2046f6ace453399adccc4dc4c2b222e"
+    },
+    "src/hypervector/live/entry_submission_deadline.py": {
+      "bytes": 3663,
+      "exists": true,
+      "git_blob": "7b33e2af0a439ddc2d2a9e3e02fbd2677d4aad3d",
+      "git_mode": "100644",
+      "sha256": "04ed3818b53c47fc54f5d2dbe0291839c78fbaf22eee24c8924fc90a5a436437"
+    },
+    "src/hypervector/live/hyperliquid_btc_adapter.py": {
+      "bytes": 14210,
+      "exists": true,
+      "git_blob": "0d93137aba51cae2292450afefbe9ca49a1b90f6",
+      "git_mode": "100644",
+      "sha256": "756adb68afa58927faa6333b2c702da992a918f42842bd14370e2e13f2a018af"
+    },
+    "src/hypervector/live/hyperliquid_protocol.py": {
+      "bytes": 11183,
+      "exists": true,
+      "git_blob": "0d39df0c0e62fce91ce85fb104641cd3a4d0c21f",
+      "git_mode": "100644",
+      "sha256": "4dbc7f6d799c2e6ea971f29ba810af08a53be66eee8c1577f4e717e56fdc41c5"
+    },
+    "src/hypervector/live/hyperliquid_sol_adapter.py": {
+      "bytes": 7442,
+      "exists": true,
+      "git_blob": "56a88b523c557cf70d87723b287d3094d260757c",
+      "git_mode": "100644",
+      "sha256": "ddd8cb3ce2c685cc0bb457a5166a5868e5733eb86b0ecd89d1078d7518737911"
+    },
+    "src/hypervector/live/multi_asset_cohort_payloads.py": {
+      "bytes": 4849,
+      "exists": true,
+      "git_blob": "803bb67821d9b04a736e6fe67a4f20f1e6e6f197",
+      "git_mode": "100644",
+      "sha256": "324951e68fd077295cbe159c2054a9ff3b9af8ac3efc04e99737cc3382ec6f67"
+    },
+    "src/hypervector/live/multi_asset_cohort_telemetry.py": {
+      "bytes": 18818,
+      "exists": true,
+      "git_blob": "7b184d298e3d1fae6dd9b5848a88a3317afd8cc6",
+      "git_mode": "100644",
+      "sha256": "74899600f8dd325fdd072eb27e40d169f158c5cc243f403e9458e4420d28be45"
+    },
+    "src/hypervector/live/multi_asset_directional_adapter.py": {
+      "bytes": 4813,
+      "exists": true,
+      "git_blob": "71d1d7006ea2bf93a02b73bfb3d760cae1501499",
+      "git_mode": "100644",
+      "sha256": "1aec68abbfa16fa50c6de9dcc4a60278cd11c363fa12054b6cd1417c41eb3521"
+    },
+    "src/hypervector/live/multi_asset_live_protocols.py": {
+      "bytes": 3665,
+      "exists": true,
+      "git_blob": "0b33236bb667c5c41a2c22d9f503109425c66aec",
+      "git_mode": "100644",
+      "sha256": "17318fe85cb0790affd57005355213ec85528db84ef27cf3e17d93d39c6deb0d"
+    },
+    "src/hypervector/live/multi_asset_live_runner.py": {
+      "bytes": 18934,
+      "exists": true,
+      "git_blob": "176dabddff30ffc4cad0f0302c652a53bec399f0",
+      "git_mode": "100644",
+      "sha256": "d547f43cc21405d1ca2d49febf8181583f59b17c57039978aa33350ab6879f34"
+    },
+    "src/hypervector/live/multi_asset_live_runner_support.py": {
+      "bytes": 9835,
+      "exists": true,
+      "git_blob": "ce4762af1b48316d08407e0a6d3c61171ab69136",
+      "git_mode": "100644",
+      "sha256": "57bf4701651d2e0c4056be3ad4b7e9c29fa51b06e531d9071f9c1ad82c1b7b8e"
+    },
+    "src/hypervector/live/sol_order_restart.py": {
+      "bytes": 9994,
+      "exists": true,
+      "git_blob": "68b1d71f9c35e60ee0f1ad50ad04b471aec7a9cb",
+      "git_mode": "100644",
+      "sha256": "459a14de0fd8fe68c71809d917bd58426f6d392a710bb24c56571ff887dae946"
+    },
+    "src/hypervector/live/sol_order_submission.py": {
+      "bytes": 13191,
+      "exists": true,
+      "git_blob": "90fc4dd20e739328924e59ffbeb27c557e729085",
+      "git_mode": "100644",
+      "sha256": "c4c2eb74b51be770645825fa50a06a34a3bd43ba312bb3f9210ee85d0984c1e6"
+    },
+    "src/hypervector/live/sol_range_onset_engine.py": {
+      "bytes": 18779,
+      "exists": true,
+      "git_blob": "628b6bdd88120dd76228b8b3fbad5af5eb4c8b16",
+      "git_mode": "100644",
+      "sha256": "b312d72fdaa57dac1f02c62307b0606c109c0a3f8a5c8a5fb8114395b74dddf1"
+    },
+    "src/hypervector/live/sol_range_onset_engine_events.py": {
+      "bytes": 5632,
+      "exists": true,
+      "git_blob": "a436a425e7efa1899d3e64617952bb009b22f31c",
+      "git_mode": "100644",
+      "sha256": "3ddb70d50868eae25ecc05edce88e7f06110aa736889202d052546df3ba00a92"
+    },
+    "src/hypervector/live/sol_range_onset_ledger.py": {
+      "bytes": 14570,
+      "exists": true,
+      "git_blob": "4bc06930e27b383ae4d66ce72947347894bb877a",
+      "git_mode": "100644",
+      "sha256": "3ef67e0550750314dc7f8a6350ed8cbf471d703bcc8c013fddf6b0e5ae7627a3"
+    },
+    "src/hypervector/paper/report.py": {
+      "bytes": 7419,
+      "exists": true,
+      "git_blob": "8b9f8d562aee149aa3b742f132e5b7fac2c35b3b",
+      "git_mode": "100644",
+      "sha256": "0c850644896793010e47171924918cbe6a0415cbfafc1154a58fe6a70743f317"
+    },
+    "src/hypervector/research/checkpoint_ledger_projection.py": {
+      "bytes": 11320,
+      "exists": true,
+      "git_blob": "b9e85a35fbcee1da47cb6b5892edf5734c377499",
+      "git_mode": "100644",
+      "sha256": "678dfaecf568dc1ab23457a05c53021d3a2b7115b169e5afb88971b10a63888d"
+    },
+    "src/hypervector/research/cohort_entry_age_diagnostics.py": {
+      "bytes": 17084,
+      "exists": true,
+      "git_blob": "1e4fc79194091bbd95cacb29453d930697881367",
+      "git_mode": "100644",
+      "sha256": "1f0babe95b89d963116b61ca1cd9214463596fa3febc016776a7668645a0fce0"
+    },
+    "src/hypervector/research/cohort_live_checkpoint.py": {
+      "bytes": 19701,
+      "exists": true,
+      "git_blob": "9bec355d510e6532c6311a2a2f6bcacffe837a41",
+      "git_mode": "100644",
+      "sha256": "d0ff89cd3a04ba35df721191f37b45814b4ee5a99264aa4bead1a0aa1b66f0c2"
+    },
+    "src/hypervector/research/ledger_snapshot_io.py": {
+      "bytes": 5862,
+      "exists": true,
+      "git_blob": "a668d50fbf6a85d37214c40c2388bb79ab90535e",
+      "git_mode": "100644",
+      "sha256": "d8d27f15c7d7331f8e14a076a75ea7f845503918ee24cdcf8349f96279c6d2ac"
+    },
+    "src/hypervector/research/live_ledger_snapshot.py": {
+      "bytes": 13777,
+      "exists": true,
+      "git_blob": "eea8b500f788c6797fb0ff39a1bde29a762bf305",
+      "git_mode": "100644",
+      "sha256": "65f0ad606ce38fc1a651fab55c780d4fd96e6ece36d6e9d2f118778a544914bc"
+    },
+    "src/hypervector/research/mapped_snapshot_file.py": {
+      "bytes": 5757,
+      "exists": true,
+      "git_blob": "fe99c8d5edeea1b885bb8f892a70663801aff9ac",
+      "git_mode": "100644",
+      "sha256": "ebbc233d1fac1d165f918f9cc251d7ddf0bae76266ed7a8da49c06f42c0555d6"
+    },
+    "tests/entry_deadline_fixtures.py": {
+      "bytes": 6257,
+      "exists": true,
+      "git_blob": "4f80fa5d8e7e1c9bd81143c4a2470c09b2e1ef71",
+      "git_mode": "100644",
+      "sha256": "83faad7624d22d61fe01ddc7545fa159d02e830ddb9339213b63fe132036fe25"
+    },
+    "tests/test_cohort_accounting_epoch_tui_boundary.py": {
+      "bytes": 3526,
+      "exists": true,
+      "git_blob": "95d28d659bf10cff3f552ae145e640add9ccef8a",
+      "git_mode": "100644",
+      "sha256": "a729f9a2fdec5787a78fa4b6fc78bbca2d91148d281522451e4e61175bb5b312"
+    },
+    "tests/test_cohort_entry_age_diagnostics.py": {
+      "bytes": 8972,
+      "exists": true,
+      "git_blob": "98597b06346dcc1571a588ca9a23dbf0080f9e73",
+      "git_mode": "100644",
+      "sha256": "51de729df9b23bf3590e08c9830aa8aaa4deaa9e7591fd6c6cd6e2564e86b0ce"
+    },
+    "tests/test_cohort_profile_stage_roundtrip.py": {
+      "bytes": 7348,
+      "exists": true,
+      "git_blob": "0a4eb1e03de816a74b50904f9f34f8fe24794281",
+      "git_mode": "100644",
+      "sha256": "132a5ce38c05ea454c897223b3f0c57b94a38f3f6999bb5473be54d650d187c8"
+    },
+    "tests/test_cohort_tui_binary.py": {
+      "bytes": 5050,
+      "exists": true,
+      "git_blob": "e12527a5b1ae503a1d9bca25b128690f54a709aa",
+      "git_mode": "100644",
+      "sha256": "a962a5a421eb27aeac272f4cb1cef5e3ef3d267e2c6fdd2d372f0959edec3b7b"
+    },
+    "tests/test_cohort_tui_binary_launch.py": {
+      "bytes": 8035,
+      "exists": true,
+      "git_blob": "1fe8e4439fe9426b2cf7a959e55bd7690286c026",
+      "git_mode": "100644",
+      "sha256": "90303295ef656b783d07dec66574eeb561449a2809e67cadb55321c42912e881"
+    },
+    "tests/test_entry_deadline_adapters.py": {
+      "bytes": 4883,
+      "exists": true,
+      "git_blob": "ebc6e32f13922431fdfbe0a0f94d827ff4d98209",
+      "git_mode": "100644",
+      "sha256": "cffad45aabf725731e883741b5aaeb21e3c44df266dbfe05052394249a3e10be"
+    },
+    "tests/test_entry_deadline_diagnostics.py": {
+      "bytes": 3995,
+      "exists": true,
+      "git_blob": "134700f5d97b90317a45f11a9f1d93673355aed3",
+      "git_mode": "100644",
+      "sha256": "91bd55378a94e1a36d566d0fd7c4a7b108fdb54d89b7f429f1b1e8f04ab6c35e"
+    },
+    "tests/test_entry_deadline_dispatch.py": {
+      "bytes": 8440,
+      "exists": true,
+      "git_blob": "7f0c3599c63284ab16ea5c089c3268aeddbc85e1",
+      "git_mode": "100644",
+      "sha256": "9e061529b9abdaeaaf4e93c2086e8be9be7ce1dfdad0a2589f08cdff354218c7"
+    },
+    "tests/test_entry_deadline_failures.py": {
+      "bytes": 3467,
+      "exists": true,
+      "git_blob": "53c7fe1a52d8e53b07c84a3427549b0f4def8127",
+      "git_mode": "100644",
+      "sha256": "01130cb9e947b7b3af0c0880879412a5f4060ec299a793c2fa2a2a16832fe14a"
+    },
+    "tests/test_entry_not_submitted_restart.py": {
+      "bytes": 4270,
+      "exists": true,
+      "git_blob": "79846fbc5da8a3a86500be42285ea32655dff511",
+      "git_mode": "100644",
+      "sha256": "4349aa5e8ada7b7b514012e0a217908aad88c2bf3b3a14b3067760161598e755"
+    },
+    "tests/test_entry_submission_deadline.py": {
+      "bytes": 2803,
+      "exists": true,
+      "git_blob": "2070298c1b77b17f16f71bc8dee75660979d4e5a",
+      "git_mode": "100644",
+      "sha256": "5570f048c24eed16cd21bd5f56a8151cc1df32d95ff0adaafbe00d0412fa6163"
+    },
+    "tests/test_mapped_snapshot_file.py": {
+      "bytes": 10530,
+      "exists": true,
+      "git_blob": "9fad32a84a24b809fd06296dbcaa2ef698a1af0d",
+      "git_mode": "100644",
+      "sha256": "c5d6b0c515717434d24a4c3038103826c3640bef33196231d3db154714cd7be8"
+    },
+    "tests/test_memory_ledger_snapshot.py": {
+      "bytes": 12575,
+      "exists": true,
+      "git_blob": "eb635be742fbd7aba013e1015920bd799ff42238",
+      "git_mode": "100644",
+      "sha256": "f66d7aca795918e83dff41d4e79726756265be1fbde8f7a3dcf1986dbe1d799f"
+    },
+    "tests/test_multi_asset_entry_submission_freshness.py": {
+      "bytes": 6538,
+      "exists": true,
+      "git_blob": "6c65fd8ac4095222590e0b1710dcc1b0aaee4207",
+      "git_mode": "100644",
+      "sha256": "fa516baa964e18190bfa288334a87a8f6cab16515ab31306035e948b8113c0e2"
+    },
+    "tests/test_multi_asset_live_runner.py": {
+      "bytes": 37368,
+      "exists": true,
+      "git_blob": "40b1592741ac96513531719983ae16b7314d2111",
+      "git_mode": "100644",
+      "sha256": "f86f73446b39ccf9913b63e747af74be6fe7083310853630eed9866a6dbca51b"
+    },
+    "tests/test_observe_only_routing_isolation.py": {
+      "bytes": 8787,
+      "exists": true,
+      "git_blob": "1fed2e6f0d19bf16f24eed800e2354b9a2a00154",
+      "git_mode": "100644",
+      "sha256": "a8411ca8f748e0d7698775947952b8e71d3569b027252bfbe36ce052629c8af1"
+    }
+  },
+  "candidate_commit": "e8dbdaff68700bd2fe61c4104e4e4d317f429db0",
+  "compatibility_paths": [
+    "scripts/multi_asset_bidirectional_canary_tui.py",
+    "src/hypervector/cli_cohort.py",
+    "src/hypervector/live/cohort_tui_binary.py",
+    "src/hypervector/live/cohort_tui_commands.py",
+    "src/hypervector/live/cohort_tui_launch_options.py",
+    "src/hypervector/live/sol_order_restart.py",
+    "tests/test_cohort_accounting_epoch_tui_boundary.py",
+    "tests/test_cohort_tui_binary.py",
+    "tests/test_cohort_tui_binary_launch.py"
+  ],
+  "deployment_approved": false,
+  "execution_authority": "none",
+  "implementation_paths": 38,
+  "install_patch_sha256": "8a1727b6842b5c53ad6e20a35aed952e257a8bbe51f310965b78a0cae30877d0",
+  "main_head": "815e9cd49c6982d2bcab7673ea4193e099e80718",
+  "paths": [
+    "crates/hypervector-tui/src/backend_cohort_checkpoint.rs",
+    "crates/hypervector-tui/src/backend_cohort_checkpoint_live.rs",
+    "crates/hypervector-tui/src/backend_cohort_checkpoint_projection.rs",
+    "crates/hypervector-tui/src/backend_cohort_entry_deadline.rs",
+    "crates/hypervector-tui/src/cohort_setup_deadline.rs",
+    "crates/hypervector-tui/src/cohort_setup_detail.rs",
+    "crates/hypervector-tui/src/lib.rs",
+    "crates/hypervector-tui/tests/bidirectional_cohort_view_test.rs",
+    "crates/hypervector-tui/tests/cohort_entry_deadline_test.rs",
+    "crates/hypervector-tui/tests/fixtures/cohort_entry_deadline_2030.json",
+    "crates/hypervector-tui/tests/support/cohort_entry_deadline_fixtures.rs",
+    "crates/hypervector-tui/tests/support/cohort_entry_deadline_view.rs",
+    "scripts/multi_asset_bidirectional_canary_tui.py",
+    "src/hypervector/cli_cohort.py",
+    "src/hypervector/live/bidirectional_intents.py",
+    "src/hypervector/live/cohort_entry_submission.py",
+    "src/hypervector/live/cohort_profile_stage.py",
+    "src/hypervector/live/cohort_routing_execution.py",
+    "src/hypervector/live/cohort_tui_binary.py",
+    "src/hypervector/live/cohort_tui_commands.py",
+    "src/hypervector/live/cohort_tui_launch_options.py",
+    "src/hypervector/live/entry_submission_deadline.py",
+    "src/hypervector/live/hyperliquid_btc_adapter.py",
+    "src/hypervector/live/hyperliquid_protocol.py",
+    "src/hypervector/live/hyperliquid_sol_adapter.py",
+    "src/hypervector/live/multi_asset_cohort_payloads.py",
+    "src/hypervector/live/multi_asset_cohort_telemetry.py",
+    "src/hypervector/live/multi_asset_directional_adapter.py",
+    "src/hypervector/live/multi_asset_live_protocols.py",
+    "src/hypervector/live/multi_asset_live_runner.py",
+    "src/hypervector/live/multi_asset_live_runner_support.py",
+    "src/hypervector/live/sol_order_restart.py",
+    "src/hypervector/live/sol_order_submission.py",
+    "src/hypervector/live/sol_range_onset_engine.py",
+    "src/hypervector/live/sol_range_onset_engine_events.py",
+    "src/hypervector/live/sol_range_onset_ledger.py",
+    "src/hypervector/paper/report.py",
+    "src/hypervector/research/checkpoint_ledger_projection.py",
+    "src/hypervector/research/cohort_entry_age_diagnostics.py",
+    "src/hypervector/research/cohort_live_checkpoint.py",
+    "src/hypervector/research/ledger_snapshot_io.py",
+    "src/hypervector/research/live_ledger_snapshot.py",
+    "src/hypervector/research/mapped_snapshot_file.py",
+    "tests/entry_deadline_fixtures.py",
+    "tests/test_cohort_accounting_epoch_tui_boundary.py",
+    "tests/test_cohort_entry_age_diagnostics.py",
+    "tests/test_cohort_profile_stage_roundtrip.py",
+    "tests/test_cohort_tui_binary.py",
+    "tests/test_cohort_tui_binary_launch.py",
+    "tests/test_entry_deadline_adapters.py",
+    "tests/test_entry_deadline_diagnostics.py",
+    "tests/test_entry_deadline_dispatch.py",
+    "tests/test_entry_deadline_failures.py",
+    "tests/test_entry_not_submitted_restart.py",
+    "tests/test_entry_submission_deadline.py",
+    "tests/test_mapped_snapshot_file.py",
+    "tests/test_memory_ledger_snapshot.py",
+    "tests/test_multi_asset_entry_submission_freshness.py",
+    "tests/test_multi_asset_live_runner.py",
+    "tests/test_observe_only_routing_isolation.py"
+  ],
+  "prepared_at_utc": "2026-09-10T17:07:10.348400+00:00",
+  "prior": {
+    "crates/hypervector-tui/src/backend_cohort_checkpoint.rs": {
+      "bytes": 14911,
+      "exists": true,
+      "git_blob": "57740b5ee33ba8a3a285417544fc1d4bcb52b3a6",
+      "git_mode": "100644",
+      "sha256": "3732def51f4424da0373963d357bdbf3203a021c14821467a2ee489b3da2b4d0"
+    },
+    "crates/hypervector-tui/src/backend_cohort_checkpoint_live.rs": {
+      "bytes": 4140,
+      "exists": true,
+      "git_blob": "11852cb882d86345af40592907e564798d5ceb52",
+      "git_mode": "100644",
+      "sha256": "122147004b4e7723687d32993115decd38a5f6dfcaec8aaa57eb1efda5fc200b"
+    },
+    "crates/hypervector-tui/src/backend_cohort_checkpoint_projection.rs": {
+      "bytes": 10245,
+      "exists": true,
+      "git_blob": "21c86e7e1b6fa60fb4db5bb01fe80496f9b5b64b",
+      "git_mode": "100644",
+      "sha256": "5b5247638df55081d03c7c8a80673508e540827e4ee294956d75c5ec5502f148"
+    },
+    "crates/hypervector-tui/src/backend_cohort_entry_deadline.rs": {
+      "exists": false
+    },
+    "crates/hypervector-tui/src/cohort_setup_deadline.rs": {
+      "exists": false
+    },
+    "crates/hypervector-tui/src/cohort_setup_detail.rs": {
+      "bytes": 16099,
+      "exists": true,
+      "git_blob": "1232b55441ab614bb7894fe689af2dfc59d0660e",
+      "git_mode": "100644",
+      "sha256": "8b98a59c24aca6300fddf95f04e7cd8225aa843cf3cd815a09e9eb323dfb8625"
+    },
+    "crates/hypervector-tui/src/lib.rs": {
+      "bytes": 5784,
+      "exists": true,
+      "git_blob": "e0681db8d9525d13de5e1bdeb73dc7c54b7fa43d",
+      "git_mode": "100644",
+      "sha256": "ecfa48bd66bc93e6ea183c568e9872d31898adae400a6649eb3484583e100d0f"
+    },
+    "crates/hypervector-tui/tests/bidirectional_cohort_view_test.rs": {
+      "bytes": 3791,
+      "exists": true,
+      "git_blob": "a99d2c62500c344649dea99165ce03fbe7e3a434",
+      "git_mode": "100644",
+      "sha256": "75e8e53d6cbb72611559200b494ed413cc30dfe3fc1f656f5cb48df60fd6d012"
+    },
+    "crates/hypervector-tui/tests/cohort_entry_deadline_test.rs": {
+      "exists": false
+    },
+    "crates/hypervector-tui/tests/fixtures/cohort_entry_deadline_2030.json": {
+      "exists": false
+    },
+    "crates/hypervector-tui/tests/support/cohort_entry_deadline_fixtures.rs": {
+      "exists": false
+    },
+    "crates/hypervector-tui/tests/support/cohort_entry_deadline_view.rs": {
+      "exists": false
+    },
+    "scripts/multi_asset_bidirectional_canary_tui.py": {
+      "bytes": 19369,
+      "exists": true,
+      "git_blob": "7a2466560fbe1500ab32f26f8afce52c014102f7",
+      "git_mode": "100644",
+      "sha256": "0e4a2b613bb9e6ef68120ecd1f55878a2a435b7f0f842b6721b96ba00e2d836a"
+    },
+    "src/hypervector/cli_cohort.py": {
+      "bytes": 7975,
+      "exists": true,
+      "git_blob": "efaf9a0ea167efbca3cc5c79c138257ba247feb4",
+      "git_mode": "100644",
+      "sha256": "b72516a8e1be1001e7b52c3a7255cb5343a27d7dc945f4c88320ada028f41a4a"
+    },
+    "src/hypervector/live/bidirectional_intents.py": {
+      "bytes": 14608,
+      "exists": true,
+      "git_blob": "66a664c3b700a2e80961fe75dc025329fbe1112c",
+      "git_mode": "100644",
+      "sha256": "64c2c90225d2cdbc45d5277050ab190da4d0b323903f348fa55250bec84babad"
+    },
+    "src/hypervector/live/cohort_entry_submission.py": {
+      "bytes": 5283,
+      "exists": true,
+      "git_blob": "b963a225877904e2072b60cfcf01f034231c9427",
+      "git_mode": "100644",
+      "sha256": "2f860213b2d22fc70564c50be3eb5aad814bc4d51d629ac96584bf6f218aa9c6"
+    },
+    "src/hypervector/live/cohort_profile_stage.py": {
+      "bytes": 9243,
+      "exists": true,
+      "git_blob": "c0af210843960816eb4d18783a000fd2349e7027",
+      "git_mode": "100644",
+      "sha256": "14a6a769dbaeef19a56405dae12d4bf515f50b540c4bebe081659a5337508ca7"
+    },
+    "src/hypervector/live/cohort_routing_execution.py": {
+      "bytes": 3948,
+      "exists": true,
+      "git_blob": "13a1c0f8a46fc1365642433498845e2c109f4af4",
+      "git_mode": "100644",
+      "sha256": "4c2f92d61c6f8fa524d1050622287c972fee18d6a0e665bdf1dd9974c887231d"
+    },
+    "src/hypervector/live/cohort_tui_binary.py": {
+      "exists": false
+    },
+    "src/hypervector/live/cohort_tui_commands.py": {
+      "bytes": 11282,
+      "exists": true,
+      "git_blob": "90f27cbedcc317673e32a91b091851daa59bbf12",
+      "git_mode": "100644",
+      "sha256": "bf55ada9aee7962bf4e36e14f419ea34d11cd76105d40b1ff2d934489d18a024"
+    },
+    "src/hypervector/live/cohort_tui_launch_options.py": {
+      "exists": false
+    },
+    "src/hypervector/live/entry_submission_deadline.py": {
+      "exists": false
+    },
+    "src/hypervector/live/hyperliquid_btc_adapter.py": {
+      "bytes": 13980,
+      "exists": true,
+      "git_blob": "2487b0acd3d1639d6ddb432c3987ad178e7ecf97",
+      "git_mode": "100644",
+      "sha256": "a425ac1e0de053034c0b3f51be32a3cf71770306ce00fcfd3f805676920a6286"
+    },
+    "src/hypervector/live/hyperliquid_protocol.py": {
+      "bytes": 11040,
+      "exists": true,
+      "git_blob": "fffe6ee34e1e10280f380f3d739558cd56d10d24",
+      "git_mode": "100644",
+      "sha256": "7827d1ed1bdefc955e0ff1d6ad7a97dd28142efacd277dd8c4777b67fa83054f"
+    },
+    "src/hypervector/live/hyperliquid_sol_adapter.py": {
+      "bytes": 7212,
+      "exists": true,
+      "git_blob": "1d1fc6372a8684bf2f72d23e5a4e87a3fd2d39dd",
+      "git_mode": "100644",
+      "sha256": "dfa2af0f8199572f3a1d690fc1644c0ed67af88f1a6d410d9f5839381f7fd849"
+    },
+    "src/hypervector/live/multi_asset_cohort_payloads.py": {
+      "bytes": 3355,
+      "exists": true,
+      "git_blob": "f4d3ecb48d139b936d993d858def01f533ca161a",
+      "git_mode": "100644",
+      "sha256": "4d52bc5bad20ff65d5e5adf31492e344be04109dd5c82a11b65f5db4bf1d4c9c"
+    },
+    "src/hypervector/live/multi_asset_cohort_telemetry.py": {
+      "bytes": 19794,
+      "exists": true,
+      "git_blob": "ad334bb4430434cc2c753acbfa17a83d2454f3f3",
+      "git_mode": "100644",
+      "sha256": "1df4d2c62e0623e09cb6f45698728fd7af9ea920019b37a7d1f7e058ac91174d"
+    },
+    "src/hypervector/live/multi_asset_directional_adapter.py": {
+      "bytes": 4551,
+      "exists": true,
+      "git_blob": "79613a269bb92b410a15ba39d1685026707d37b0",
+      "git_mode": "100644",
+      "sha256": "e70a2fd482bbd85408d0ff0276058032ccfc2f8b2e3f210d0fb4b1aa9892e480"
+    },
+    "src/hypervector/live/multi_asset_live_protocols.py": {
+      "bytes": 3523,
+      "exists": true,
+      "git_blob": "6d15283c746853546af385498e86b08d9bb2aa58",
+      "git_mode": "100644",
+      "sha256": "ec88c764c833b75b5fe67ba10c89561f611cb3805bde501d82869cecdff5a741"
+    },
+    "src/hypervector/live/multi_asset_live_runner.py": {
+      "bytes": 19209,
+      "exists": true,
+      "git_blob": "e6b8723c0373fce262b2dfc918a1d1789195a89d",
+      "git_mode": "100644",
+      "sha256": "c86cc2a8e6904aed9604f5618857d2da08007f8f73590240d36cb5faab1e5b13"
+    },
+    "src/hypervector/live/multi_asset_live_runner_support.py": {
+      "bytes": 9320,
+      "exists": true,
+      "git_blob": "1bd81be040965c0296f5fb746e313c88203b889e",
+      "git_mode": "100644",
+      "sha256": "07e8be405151b6cbf88c8a505ed724136ad42b2cf9757e8c3489d163efbd741b"
+    },
+    "src/hypervector/live/sol_order_restart.py": {
+      "bytes": 6673,
+      "exists": true,
+      "git_blob": "360d441c742f0850ad9618ef7eba05202b325be6",
+      "git_mode": "100644",
+      "sha256": "d46279a85a9fe17e4e8be1c4a5a485d49baf204e49783fa6007a0e3b486e92e9"
+    },
+    "src/hypervector/live/sol_order_submission.py": {
+      "bytes": 11764,
+      "exists": true,
+      "git_blob": "d3cc3c69947f340e3e1686122f7bb35fd3cc0fb3",
+      "git_mode": "100644",
+      "sha256": "1e76914849ce5c4113d06cf402c0b2dc73ff50efa235305792d229a37287604f"
+    },
+    "src/hypervector/live/sol_range_onset_engine.py": {
+      "bytes": 18198,
+      "exists": true,
+      "git_blob": "f3337a146a20c49e00c2db195d483cf994b1dc20",
+      "git_mode": "100644",
+      "sha256": "344e34badac22ea25f65144e074808d31614f8dc85a2126370f3c3f95d87079e"
+    },
+    "src/hypervector/live/sol_range_onset_engine_events.py": {
+      "bytes": 5522,
+      "exists": true,
+      "git_blob": "372fa2d14005e2822296cf4899b4679e9f2e0bce",
+      "git_mode": "100644",
+      "sha256": "9b31fd1cef1bdab6cc0172fb88654cf7a49813be118b5344ae88c1088e71c620"
+    },
+    "src/hypervector/live/sol_range_onset_ledger.py": {
+      "bytes": 14539,
+      "exists": true,
+      "git_blob": "d11e8ac315ae7f7889241f0f7857886e7c4cebc6",
+      "git_mode": "100644",
+      "sha256": "2bdafcce57a8231ed58c0805a0b049874fce78cebdf9a8aadf80c327ace44b6e"
+    },
+    "src/hypervector/paper/report.py": {
+      "bytes": 7119,
+      "exists": true,
+      "git_blob": "dfa9c42520184cc3b492376a67d4b2530694accc",
+      "git_mode": "100644",
+      "sha256": "855de5c3444eba3cd520d68ef9d142e306d76075d42bf3fa6928df6651805f16"
+    },
+    "src/hypervector/research/checkpoint_ledger_projection.py": {
+      "bytes": 11136,
+      "exists": true,
+      "git_blob": "3965d0e674b08ac8ed94c2eac94981aaf6d6957c",
+      "git_mode": "100644",
+      "sha256": "5161ae634900973b5ba40d82fa4c7c7669b56624642fd5f0aea0255afc192580"
+    },
+    "src/hypervector/research/cohort_entry_age_diagnostics.py": {
+      "bytes": 15036,
+      "exists": true,
+      "git_blob": "088ac93e04d9f328e9e41230a0fcb27a8af59a63",
+      "git_mode": "100644",
+      "sha256": "c5a5b4bc31cdd3cae87e54a142a6af58113e1fe07969aa745c485a8f228f5c23"
+    },
+    "src/hypervector/research/cohort_live_checkpoint.py": {
+      "bytes": 19687,
+      "exists": true,
+      "git_blob": "5178a21648d0bed16cfd07767acda26e05fe42c2",
+      "git_mode": "100644",
+      "sha256": "1806efacc9525d352a1db790b3ab2af2f163e717eb12005823fa1821d0161509"
+    },
+    "src/hypervector/research/ledger_snapshot_io.py": {
+      "exists": false
+    },
+    "src/hypervector/research/live_ledger_snapshot.py": {
+      "bytes": 17356,
+      "exists": true,
+      "git_blob": "91c303ebf630aedafc32727eaa8f52b0f0986463",
+      "git_mode": "100644",
+      "sha256": "47143b739ae625ddbe2cd0cecb03afd9e2663582fd63c5b43a16084d99eafdd7"
+    },
+    "src/hypervector/research/mapped_snapshot_file.py": {
+      "exists": false
+    },
+    "tests/entry_deadline_fixtures.py": {
+      "exists": false
+    },
+    "tests/test_cohort_accounting_epoch_tui_boundary.py": {
+      "bytes": 3208,
+      "exists": true,
+      "git_blob": "fc82498c5d3c7a90e45d49d904fa95e2ee325a5f",
+      "git_mode": "100644",
+      "sha256": "72d4b61748e0d1d6c2d90d37487bda5e9379c6dc8404059093207cff99045f14"
+    },
+    "tests/test_cohort_entry_age_diagnostics.py": {
+      "bytes": 8746,
+      "exists": true,
+      "git_blob": "0d06f7831554ed529c13dd18c4956bd4c5744ae5",
+      "git_mode": "100644",
+      "sha256": "571a31a4f349b8095b9bd5e91fe63f9daac0026ec09ef12d27811ae531be31b9"
+    },
+    "tests/test_cohort_profile_stage_roundtrip.py": {
+      "exists": false
+    },
+    "tests/test_cohort_tui_binary.py": {
+      "exists": false
+    },
+    "tests/test_cohort_tui_binary_launch.py": {
+      "exists": false
+    },
+    "tests/test_entry_deadline_adapters.py": {
+      "exists": false
+    },
+    "tests/test_entry_deadline_diagnostics.py": {
+      "exists": false
+    },
+    "tests/test_entry_deadline_dispatch.py": {
+      "exists": false
+    },
+    "tests/test_entry_deadline_failures.py": {
+      "exists": false
+    },
+    "tests/test_entry_not_submitted_restart.py": {
+      "exists": false
+    },
+    "tests/test_entry_submission_deadline.py": {
+      "exists": false
+    },
+    "tests/test_mapped_snapshot_file.py": {
+      "exists": false
+    },
+    "tests/test_memory_ledger_snapshot.py": {
+      "exists": false
+    },
+    "tests/test_multi_asset_entry_submission_freshness.py": {
+      "bytes": 6311,
+      "exists": true,
+      "git_blob": "607f73a4734a59feb14cb481a56668fe1989ec24",
+      "git_mode": "100644",
+      "sha256": "934bd7e01533876a42ae6381961180cfaec66a838926def1147847ae01d5497d"
+    },
+    "tests/test_multi_asset_live_runner.py": {
+      "bytes": 37084,
+      "exists": true,
+      "git_blob": "8dde3795137542825d6cd895bfd909d6ecc595ac",
+      "git_mode": "100644",
+      "sha256": "4f4d1e408e1ed62dedaca0e682d23f61988e40b1ffa9cf9a62246bee04b8e72d"
+    },
+    "tests/test_observe_only_routing_isolation.py": {
+      "bytes": 8552,
+      "exists": true,
+      "git_blob": "ee33a75c8795829f47b2364831b62ffcf5c807d3",
+      "git_mode": "100644",
+      "sha256": "dccfa454d8d35dd6383518d929934944a187243703f2ba188e11eb072fc24865"
+    }
+  },
+  "prior_python_recovery_baseline_unchanged": true,
+  "rollback_patch_sha256": "3496a49cd114c9ea294dc304d04d4e00940b2e4a54bf3b3e7e23cbc0fff8835f",
+  "test_fixture_paths": 22
+}

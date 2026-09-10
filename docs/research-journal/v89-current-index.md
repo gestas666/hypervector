@@ -3,11 +3,45 @@
 Updated September 10, 2026 UTC. This is research navigation, not a live-state checkpoint.
 The active mandate permits research and proposals; live changes remain subject
 to explicit approval. Both prospective outcome seals remain active. The latest
-update qualifies explicit prebuilt TUI selection while the original audit and
-automatic final-review handoff continue.
+update completes the revised exact technical deployment/rollback package while
+the original audit and automatic final-review handoff continue.
 Historical studies remain bounded to the window ending September 7 UTC.
 
 ## Current finding and next action
+
+**September 10 17:19 UTC revised technical package:**
+The [V2 release proposal](../proposals/v89-technical-release-20260910-v2/recommendation.md)
+supersedes the preserved V1 deployment scope. Candidate
+`e8dbdaff68700bd2fe61c4104e4e4d317f429db0` contains 60 paths: 38 implementation
+files and 22 tests/fixtures. Exact installation and compatible rollback pass in
+the separate V2 rehearsal checkout. Both resulting compositions pass 129 related
+launcher tests and live/monitor command probes against the intended executable.
+All foreground invocation is mocked; no native TUI or live process starts.
+
+Rollback restores 51 paths and retains exactly nine compatibility paths: the
+restart reader and eight launcher source/test paths. The prior binary therefore
+also uses explicit authenticated selection. Twenty packaging control tests pass;
+the archive verifies all 141 members, bytes and modes. All 530 provider and ten
+SDK source pins match at 17:15 UTC. The old 602 Python/544 Rust qualifications are
+reused only for unchanged source, not reported as new runs.
+
+Journal revision 2
+`19755ad57b9fc8ba245146ba6547454a1d1973406917e39b5a8dd5f735ebf121`
+has all 21 stored fields, 41 direct references and its revision chain verified.
+The source archive is 7,619,897 bytes, SHA256
+`1b498a3ae8bec33fdebaeabf711a77dd9b4a20cb69ab5c859eeead0d6b341810`.
+Installed runtime/profile/TUI remain unchanged. The rehearsal checkout is not a
+launch directory; use only the revised approved deployment instructions later.
+
+At the saved 17:16 UTC observation, the original reporter is active with **33/48
+final case audits** complete; all 48 simulations are finished. The report observer,
+automatic final-review handoff and both collectors remain active. No canonical
+local live process is present, and current venue state has not been reverified.
+The highest-value next step is the original complete financial publication and
+its already-running final-review handoff; do not duplicate preparation. Final
+selected approval, fresh account/order/owner/native checks and actual nine-view
+TUI/reporting acceptance remain required. The conditional **16:00–19:00 Eastern**
+live planning window remains low confidence. Both prospective seals are intact.
 
 **September 10 16:59 UTC launcher qualification:**
 The [prebuilt launcher correction](../reviews/2026-09-10-v89-prebuilt-tui-launch.md)

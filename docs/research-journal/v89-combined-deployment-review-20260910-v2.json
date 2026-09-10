@@ -1,0 +1,305 @@
+{
+  "automatic_promotion": false,
+  "confidence": "high",
+  "created_at_utc": "2026-09-10T17:17:41.714662+00:00",
+  "decision": "Retain exact candidate e8dbdaff68700bd2fe61c4104e4e4d317f429db0 as the superseding technical release proposal. Isolated installation verifies all 60 paths and full source scope; rollback restores 51 and retains exactly nine compatibility paths. Both compositions pass 129 launcher regressions and live/monitor probes against the correct actual binary bytes with mocked foreground invocation. Main runtime/profile/TUI remain unchanged. Combine this completed technical package with the original full financial report before requesting final selected approval; no installation or live execution is authorized.",
+  "evidence": [
+    {
+      "bytes": 5510,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_combined_deployment_review_20260910_v2/PLAN.md",
+      "role": "combined_release_v2_exact_offline_qualification",
+      "sha256": "126049da9eb4b8861ea193183e87ac40747397cb379044de2cc24f97090c10ba"
+    },
+    {
+      "bytes": 6268,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_combined_deployment_review_20260910_v2/prepare.py",
+      "role": "combined_release_v2_exact_offline_qualification",
+      "sha256": "12e5cb981feaa56ef3ce1f7bf0b7c5509647a03ed3ccdded5c91a5e59a24d3cb"
+    },
+    {
+      "bytes": 6426,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_combined_deployment_review_20260910_v2/rehearse.py",
+      "role": "combined_release_v2_exact_offline_qualification",
+      "sha256": "5848760d230c240588b41e301215750bdf80c6962fdcbd06400e2a8924fa2430"
+    },
+    {
+      "bytes": 5067,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_combined_deployment_review_20260910_v2/launch_probe.py",
+      "role": "combined_release_v2_exact_offline_qualification",
+      "sha256": "364f88a3d4e3d86953d3325b30a80348f2524929fa1b3ae8f57261bf90131f08"
+    },
+    {
+      "bytes": 4424,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_combined_deployment_review_20260910_v2/qualification_runner.py",
+      "role": "combined_release_v2_exact_offline_qualification",
+      "sha256": "3d0a5736b52999fc68208d1988475e3d6b1eb925b4570cb7f57704cc09256bdd"
+    },
+    {
+      "bytes": 8142,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_combined_deployment_review_20260910_v2/test_packet.py",
+      "role": "combined_release_v2_exact_offline_qualification",
+      "sha256": "422070de67b0d26b024384e8deb22c3e70bf053e8b4de70f7185bb74ebd48f32"
+    },
+    {
+      "bytes": 1457,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_combined_deployment_review_20260910_v2/operator_source_manifest.json",
+      "role": "combined_release_v2_exact_offline_qualification",
+      "sha256": "8e53c9f1208c101501a7de4d0c5334a9a61e81333ba336ad60343624ea56bb86"
+    },
+    {
+      "bytes": 34203,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_combined_deployment_review_20260910_v2/release_manifest.json",
+      "role": "combined_release_v2_exact_offline_qualification",
+      "sha256": "5945a84a613c6993498e7e97ba27948da02dcc10de3848c957e05812aa5af5a5"
+    },
+    {
+      "bytes": 247725,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_combined_deployment_review_20260910_v2/install.patch",
+      "role": "combined_release_v2_exact_offline_qualification",
+      "sha256": "8a1727b6842b5c53ad6e20a35aed952e257a8bbe51f310965b78a0cae30877d0"
+    },
+    {
+      "bytes": 208740,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_combined_deployment_review_20260910_v2/rollback_compatible.patch",
+      "role": "combined_release_v2_exact_offline_qualification",
+      "sha256": "3496a49cd114c9ea294dc304d04d4e00940b2e4a54bf3b3e7e23cbc0fff8835f"
+    },
+    {
+      "bytes": 10160480,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_combined_deployment_review_20260910_v2/binaries/prior_tui",
+      "role": "combined_release_v2_exact_offline_qualification",
+      "sha256": "95f87cdcd49e5aa0068b7ebf8d4bef2b18d5f3efa7692291fc9aeabc83623d8f"
+    },
+    {
+      "bytes": 10241936,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_combined_deployment_review_20260910_v2/binaries/candidate_tui",
+      "role": "combined_release_v2_exact_offline_qualification",
+      "sha256": "604307380b4b047453e0492a349760e737c58da3a917f37305feb39072af3ea3"
+    },
+    {
+      "bytes": 102,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_combined_deployment_review_20260910_v2/prepare.log",
+      "role": "combined_release_v2_exact_offline_qualification",
+      "sha256": "9f7b95547e0519d5c38038bb726c062d97db6178c704a53389dceee55b6a6737"
+    },
+    {
+      "bytes": 1835,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_combined_deployment_review_20260910_v2/tests_red.log",
+      "role": "combined_release_v2_exact_offline_qualification",
+      "sha256": "a6e46980ee976f728178048ad63f1089c4577778f1ec1f42dd5bb5b4aa5b4567"
+    },
+    {
+      "bytes": 99,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_combined_deployment_review_20260910_v2/tests_qualified.log",
+      "role": "combined_release_v2_exact_offline_qualification",
+      "sha256": "5ef97ac2a556a403f6c7cd967fe2b594832bb86b4986478fde21647688986199"
+    },
+    {
+      "bytes": 99,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_combined_deployment_review_20260910_v2/tests_coverage.log",
+      "role": "combined_release_v2_exact_offline_qualification",
+      "sha256": "033fb2c250179ef897c71b5e827c29cc42a4963d2e60fca95af2a591d57b8fd8"
+    },
+    {
+      "bytes": 35765,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_combined_deployment_review_20260910_v2/coverage_combined.json",
+      "role": "combined_release_v2_exact_offline_qualification",
+      "sha256": "b229ef68385a906bd7d7c43282076cf5a14ca112e4a0efb1df5734ccc64d1434"
+    },
+    {
+      "bytes": 3035,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_combined_deployment_review_20260910_v2/applied_state.json",
+      "role": "combined_release_v2_exact_offline_qualification",
+      "sha256": "4004f7209571fa0408ab169ef90954adc553d6be3da7580a3f443daeb4b2e542"
+    },
+    {
+      "bytes": 7190,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_combined_deployment_review_20260910_v2/rehearsal_acceptance.json",
+      "role": "combined_release_v2_exact_offline_qualification",
+      "sha256": "9376f92c6ebd10c3fc1148aa45d04103625ba874d0ebcf5a219237f5d651c699"
+    },
+    {
+      "bytes": 5122,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_combined_deployment_review_20260910_v2/qualification.json",
+      "role": "combined_release_v2_exact_offline_qualification",
+      "sha256": "6339d5e36f2acbcefaa2b2e859dc4f59c8d37a1dfc6f3410cd29480d5bd6bdcf"
+    },
+    {
+      "bytes": 1246,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_combined_deployment_review_20260910_v2/runtime_observation.json",
+      "role": "combined_release_v2_exact_offline_qualification",
+      "sha256": "92b4cc3582d9a46ef425476197bd2e632bde1a0d47febab09e834188afe5b7c7"
+    },
+    {
+      "bytes": 7619897,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_combined_deployment_review_20260910_v2/release_bundle.tar.gz",
+      "role": "combined_release_v2_exact_offline_qualification",
+      "sha256": "1b498a3ae8bec33fdebaeabf711a77dd9b4a20cb69ab5c859eeead0d6b341810"
+    },
+    {
+      "bytes": 28144,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_combined_deployment_review_20260910_v2/archive_manifest.json",
+      "role": "combined_release_v2_exact_offline_qualification",
+      "sha256": "3d7fc2426b004184f8a100c8aafa02747a2b79fd338e1e8654e0395ab39a9209"
+    },
+    {
+      "bytes": 556,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_combined_deployment_review_20260910_v2/archive_acceptance.json",
+      "role": "combined_release_v2_exact_offline_qualification",
+      "sha256": "31c73310b1f199cfc73108a7e145346fdccf199346b76f9d6c803f8b9aa96f7d"
+    },
+    {
+      "bytes": 1740,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_combined_deployment_review_20260910_v2/candidate_tests_started.json",
+      "role": "combined_release_v2_exact_offline_qualification",
+      "sha256": "fd7c3dde89fcdd9cb20fbd6e25f6fcf921fe2166462cc829cc688210b8e49842"
+    },
+    {
+      "bytes": 180,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_combined_deployment_review_20260910_v2/candidate_tests.log",
+      "role": "combined_release_v2_exact_offline_qualification",
+      "sha256": "4a3f2901c34180502e5c9808181638fa009141330995e6e693877929364f6bf7"
+    },
+    {
+      "bytes": 164,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_combined_deployment_review_20260910_v2/candidate_tests_exit.json",
+      "role": "combined_release_v2_exact_offline_qualification",
+      "sha256": "e3ed3a21612615218f4b62119ccb6ae84b540f032973f797b61ddb9f64858695"
+    },
+    {
+      "bytes": 1176,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_combined_deployment_review_20260910_v2/candidate_launch_probe_started.json",
+      "role": "combined_release_v2_exact_offline_qualification",
+      "sha256": "44c49890700259fec6d636706c1407c3377509a9de8663a470c4259329ced00b"
+    },
+    {
+      "bytes": 2405,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_combined_deployment_review_20260910_v2/candidate_launch_probe.log",
+      "role": "combined_release_v2_exact_offline_qualification",
+      "sha256": "686a30c11b05d2635889abc4254acddfd4a3285eec500a83d07810b7555e1b5e"
+    },
+    {
+      "bytes": 164,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_combined_deployment_review_20260910_v2/candidate_launch_probe_exit.json",
+      "role": "combined_release_v2_exact_offline_qualification",
+      "sha256": "2c751130e02c2647b1eee20c352d84a6922db2389675a8f1322b5343ab06b23c"
+    },
+    {
+      "bytes": 1740,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_combined_deployment_review_20260910_v2/prior_tests_started.json",
+      "role": "combined_release_v2_exact_offline_qualification",
+      "sha256": "0ae15202672b9c725cf41b48afd05c97bfe9b5ecf1f46e4fd4889cb7d4519406"
+    },
+    {
+      "bytes": 180,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_combined_deployment_review_20260910_v2/prior_tests.log",
+      "role": "combined_release_v2_exact_offline_qualification",
+      "sha256": "74fc19f628de44acb00ae7598003890aba8dfa33a17053a712d60905058dae02"
+    },
+    {
+      "bytes": 164,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_combined_deployment_review_20260910_v2/prior_tests_exit.json",
+      "role": "combined_release_v2_exact_offline_qualification",
+      "sha256": "82ef50f8c814b8b108591e6bb6fd4bca52c2ed5e9946ff6cd0dcea0f2f0e4bb6"
+    },
+    {
+      "bytes": 1168,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_combined_deployment_review_20260910_v2/prior_launch_probe_started.json",
+      "role": "combined_release_v2_exact_offline_qualification",
+      "sha256": "e985dec34da8a75cff75b2a7e537d3eb6c7fe197bc55ce32c4804d7c81a1073b"
+    },
+    {
+      "bytes": 2401,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_combined_deployment_review_20260910_v2/prior_launch_probe.log",
+      "role": "combined_release_v2_exact_offline_qualification",
+      "sha256": "83b024697dcc083dd8bf7e5cc9323fa05becbbf7a1d9aee61b78b866681e2f96"
+    },
+    {
+      "bytes": 164,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_combined_deployment_review_20260910_v2/prior_launch_probe_exit.json",
+      "role": "combined_release_v2_exact_offline_qualification",
+      "sha256": "a69db8b45c3d2312cf660fd5c2eea9ebf3e3b86384c0e9ec7632960b8fee11f1"
+    },
+    {
+      "bytes": 14025,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/research-journal/v89-combined-deployment-review-20260910-v1.json",
+      "role": "combined_release_v2_exact_offline_qualification",
+      "sha256": "685272be93f497324f762427e4d50b0162c908424214e51acb19668b177b1e39"
+    },
+    {
+      "bytes": 12900,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/research-journal/v89-prebuilt-tui-launcher-20260910-v1.json",
+      "role": "combined_release_v2_exact_offline_qualification",
+      "sha256": "78d22505eb59bbcc85393ed6364cdec80a190e6d73d09996d048eb957fcb994b"
+    },
+    {
+      "bytes": 8374,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/proposals/v89-technical-release-20260910-v2/deployment-and-rollback.md",
+      "role": "combined_release_v2_exact_offline_qualification",
+      "sha256": "5b61bab61ad9438f9bd0607945ff295f978188984a7f831ec29013ae0caedb34"
+    },
+    {
+      "bytes": 8440,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/proposals/v89-technical-release-20260910-v2/recommendation.md",
+      "role": "combined_release_v2_exact_offline_qualification",
+      "sha256": "41e6aff0622b9101bf7e4ee7ee9092bfde4bf0e6ac31ebe256745abb78143834"
+    },
+    {
+      "bytes": 34203,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/proposals/v89-technical-release-20260910-v2/release_manifest.json",
+      "role": "combined_release_v2_exact_offline_qualification",
+      "sha256": "5945a84a613c6993498e7e97ba27948da02dcc10de3848c957e05812aa5af5a5"
+    }
+  ],
+  "execution_authority": "none",
+  "falsifier": "Different source/profile/binary/provider identity, an installation or rollback difference outside the manifest, wrong executable selection, failed command or lifecycle validation, or contradictory fresh account/TUI acceptance invalidates the corresponding result. Offline qualification does not establish future profitability or current venue state.",
+  "hypothesis": "The complete 60-path technical candidate can be installed and compatibly rolled back while both resulting source compositions explicitly select their qualified TUI executable and preserve existing launcher lifecycle contracts.",
+  "hypothesis_id": "v89_combined_deployment_review_20260910_v1",
+  "limitations": [
+    "The two 129-test runs exercise different source compositions with the same related regression selection; they are not 258 independent tests. The old 602 Python and 544 Rust counts are prior qualification evidence, not fresh runs.",
+    "Command probes traverse both parsers and verify imported project paths and actual executable hashes, but foreground execution is mocked. No native terminal, signer, order client or live supervisor is run.",
+    "The retained nine-path rollback includes the new restart reader and eight launcher source/test paths. Baseline technical limitations return with the other 51 paths and the prior display; open-position rollback is not qualified.",
+    "Eight retained same-machine legacy fixtures and existing historical backup references are required. The saved checkpoint is used only for the unchanged retired-filename exclusion test. No prospective financial outcomes are evaluated.",
+    "Packaging operator statement coverage ranges from 86.44% to 95.31% and branch coverage from 60% to 85%; not every operator failure branch is unit tested. The new runtime binary verifier has its separately recorded full statement/branch coverage.",
+    "Executable verification retains a filesystem check-to-exec race. Omitting both binary-selection flags retains the development Cargo path; the reviewed commands include both.",
+    "The original complete financial publication, final selected approval, fresh account/order/owner/native checks, user-run startup, all nine TUI views and eight-publication/15-minute reporting acceptance remain pending. Local process absence is not current venue-flat evidence."
+  ],
+  "metrics": {
+    "archive_bytes": 7619897,
+    "archive_members_verified": 141,
+    "candidate_tests_passed": 129,
+    "command_probes": 4,
+    "compatibility_paths_retained": 9,
+    "execution_clients_created": false,
+    "implementation_files": 38,
+    "installed": false,
+    "live_readiness_established": false,
+    "main_source_profile_tui_unchanged": true,
+    "native_tui_run": false,
+    "no_new_602_or_544_test_run": true,
+    "old_52_package_paths_unchanged": true,
+    "original_case_audits_completed": 33,
+    "original_simulations_completed": 48,
+    "packaging_control_tests_passed": 20,
+    "prior_direct_references_verified": 60,
+    "prior_existing_files": 37,
+    "prior_python_tests_reused": 602,
+    "prior_rust_tests_reused": 544,
+    "prospective_outcomes_evaluated": false,
+    "provider_files_verified": 530,
+    "restored_paths": 51,
+    "rollback_tests_passed": 129,
+    "runtime_observed_at_utc": "2026-09-10T17:16:25.786458+00:00",
+    "rust_cargo_profiles_unchanged": true,
+    "sdk_files_verified": 10,
+    "source_test_paths": 60,
+    "test_fixture_files": 22
+  },
+  "revision_number": 2,
+  "runtime_strategy_changed": false,
+  "schema_version": 1,
+  "status": "candidate",
+  "strategy_id": "multi_asset_growth_first_5000_noncrypto_research_v89",
+  "supersedes_revision_id": "8b7fa6e540c7cece7a2ed6e60b62fde0940cc81e64b8ce5b0d3dc8ec1b35d2dc",
+  "symbol": "PORTFOLIO"
+}
