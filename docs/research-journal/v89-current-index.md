@@ -3,9 +3,34 @@
 Updated September 10, 2026 UTC. This is research navigation, not a live-state checkpoint.
 The active mandate permits research and proposals; live changes remain subject
 to explicit approval. Both prospective outcome seals remain active. The latest
-update evaluates only the original historical window ending September 7 UTC.
+update qualifies report preparation and records original matrix completion.
+Historical studies remain bounded to the window ending September 7 UTC.
 
 ## Current finding and next action
+
+**September 10 14:19 UTC complete-matrix and review-preparation update:**
+All **48/48 original historical cases are complete**. The exact resumed coordinator
+exited successfully at 14:14:28 UTC; the unchanged full-report observer started
+reporter 35528 at 14:14:32 UTC. That reporting process is confirmed running.
+The completed matrix is not yet the final 48-case financial analysis publication.
+
+[Complete-review preparation](../reviews/2026-09-10-v89-complete-review-preparation.md)
+is frozen in a 14-member archive. All **84 worktree/archive tests** pass, with
+353/353 statements and 124/124 branches covered across the seven tested modules.
+It retains 48 cases, 144 paired differences, original companion bindings,
+negative/undefined results and explicit financial units. Source checks pin 2,006
+references and verify 390 imported local modules. Journal
+`0c840ed6848277082e4b9bfa42dc70457b46f435f6a120453775af2dc4a2bc06`
+has all 21 stored fields and 22 direct references verified. The actual entrypoint,
+historical reconciliation and portable HTML/browser acceptance remain pending.
+
+The review planning window is now **14:15–16:30 Eastern today**, with low-to-medium
+confidence, using the actual reporter start plus the existing four-to-six-hour
+reporting allowance. The user-requested **conditional live ballpark is 16:00–19:00
+Eastern**, with low confidence. It assumes complete reporting, an explicitly
+approved final release scope, fresh account/order/source/dependency checks and
+successful user-run startup/TUI acceptance. It is not a confirmed launch time.
+Both prospective seals remain intact; the technical package is still uninstalled.
 
 **September 10 12:54 UTC daily concentration and recovery update:**
 [Corrected daily attribution](../reviews/2026-09-10-v89-daily-asset-interactions.md)
