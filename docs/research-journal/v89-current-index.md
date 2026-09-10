@@ -7,6 +7,46 @@ update evaluates only the original historical window ending September 7 UTC.
 
 ## Current finding and next action
 
+**September 10 10:22 UTC XYZ-history comparison:** the original matrix has
+**34/48** completed receipts, four active workers and its original coordinator
+and reporting handoff active. Sessions 33137 and 44667 were polled live. Free
+disk is 7.74 GB; no local live backend or TUI matched.
+
+The [original adverse-cost XYZ-history comparison](../reviews/2026-09-10-v89-adverse-xyz-history-comparison.md)
+is complete for cases 4/16 and 5/17. The new account analyses finish at 10:13:55
+UTC; sessions 77458, 91301 and comparison session 96911 are terminal and
+successful. All 177 ordered trades, entry prices, exit times, quantities,
+holding periods, funding and capital exposure agree per allocation. Reported
+proposal dispositions are byte-identical; other economic sections retain small
+numeric differences rather than rounding them away.
+
+Twenty-six stop exits per allocation differ: six SPCX, eight SNDK and twelve
+Brent. An independent trace authenticates 44 provider files, finds only changed
+raw stop anchors in the affected intents, and reproduces exit prices and cash.
+The largest price difference is $0.0000020703; rolling-minus-full account changes
+are -$0.0000012488 control and -$0.0000026781 equal. Cash residuals stay below
+1.34e-12 dollars. The earlier zero-difference provider checks compared each
+variant to its own reference; they did not assert equal anchors across variants.
+
+All 2,464 unique references authenticate, all four cases conserve seven equity
+totals and their fresh/retained independent audits match. Twenty other manifest
+fields agree; 144 daily provider bindings change between history variants.
+Ten scope tests pass with the isolated frozen-source configuration. Initial
+pytest import failures are retained and excluded from validation. Journal
+`fdf5d6f6e8b5de8116ff6d0d0a8ed320930366fdf22401a149781c5e592babe8`
+has all 21 fields and 45 direct references verified.
+
+Retain this completed contrast without selecting a history window by its tiny
+cash difference. Next finish the original matrix and qualified full report,
+then assess the complete fee/allocation/source/clock contrasts and segment and
+concentration evidence together. Do not repeat the accepted partial studies
+merely to show progress. Main runtime/configuration and installed TUI remain
+unchanged; both prospective outcome seals remain intact. The complete-review
+target remains provisionally September 10 **12:30–16:00 Eastern**, with
+low-to-medium confidence and no verified live-start ETA.
+
+The earlier updates below retain their evidence lineage.
+
 **September 10 09:58 UTC core-revision comparison:** the original matrix now
 has **34/48** completed receipts, four active workers and its original coordinator
 and reporting handoff active. Sessions 33137 and 44667 were polled live. Free

@@ -1,0 +1,343 @@
+{
+  "automatic_promotion": false,
+  "confidence": "high",
+  "created_at_utc": "2026-09-10T10:21:47.616687+00:00",
+  "decision": "Retain the bounded history comparison without changing the history setting. All 177 ordered trades, entry prices, exit times, quantities, holding periods, funding, capital exposure and reported proposal dispositions agree. Twenty-six modeled stop exits have tiny retained anchor differences; independently traced prices, fees and cash explain less than $0.000003 of account difference per allocation. This gives no economically material history-selection benefit in these cases and does not replace the complete 48-case report.",
+  "evidence": [
+    {
+      "bytes": 1321,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_adverse_xyz_history_comparison_20260910_v1/PLAN.md",
+      "role": "original_adverse_xyz_history_comparison",
+      "sha256": "41729016093986f8b0cf0bebc6670e83a4a636400fd03dba9193658053cd49c9"
+    },
+    {
+      "bytes": 3509,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_adverse_xyz_history_comparison_20260910_v1/analyze.py",
+      "role": "original_adverse_xyz_history_comparison",
+      "sha256": "6ecffce0ae75e4b221df017bcc4f6a67a6059b54fc8970d0b0b5d33f3c0eecac"
+    },
+    {
+      "bytes": 7361,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_adverse_xyz_history_comparison_20260910_v1/compare.py",
+      "role": "original_adverse_xyz_history_comparison",
+      "sha256": "3794d2161ae70b6e2cbb427a2694040eee2b4a978016ca400b0cd5050da73060"
+    },
+    {
+      "bytes": 2366,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_adverse_xyz_history_comparison_20260910_v1/test_comparison.py",
+      "role": "original_adverse_xyz_history_comparison",
+      "sha256": "27ea28f6554b3f3e9c1273dc05ecd2fdb4807ba86f668ace340d382ca9dea557"
+    },
+    {
+      "bytes": 5251,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_adverse_xyz_history_comparison_20260910_v1/verify_scope.py",
+      "role": "original_adverse_xyz_history_comparison",
+      "sha256": "fb1d68bbd1b2aa59ffee937834893a50e5817202ad718ac8d0936415c26ca808"
+    },
+    {
+      "bytes": 6655,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_adverse_xyz_history_comparison_20260910_v1/trace_stop_differences.py",
+      "role": "original_adverse_xyz_history_comparison",
+      "sha256": "ad1dab53bb3ec1717bc589e427afad46c88a285097457eb793787101ab7330ff"
+    },
+    {
+      "bytes": 816,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_adverse_xyz_history_comparison_20260910_v1/analyze_changes.patch",
+      "role": "original_adverse_xyz_history_comparison",
+      "sha256": "e17aa8f7512903fe2e51e37e0960b8d80e03df99a8f41426541c6ce46cdddbd3"
+    },
+    {
+      "bytes": 2903,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_adverse_xyz_history_comparison_20260910_v1/compare_changes.patch",
+      "role": "original_adverse_xyz_history_comparison",
+      "sha256": "c5ecff5dcc3703d964a843ef0541423156227c50a8e3b4c6487f30c70994fef0"
+    },
+    {
+      "bytes": 695,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_adverse_xyz_history_comparison_20260910_v1/reuse_provenance.json",
+      "role": "original_adverse_xyz_history_comparison",
+      "sha256": "773742ae89ef1b5d99da0573c2f4b2c30aaeaaca16b050e61ff22b629ac75922"
+    },
+    {
+      "bytes": 655,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_adverse_xyz_history_comparison_20260910_v1/comparison_structure_v2.json",
+      "role": "original_adverse_xyz_history_comparison",
+      "sha256": "49d61f6df775095fdc6de481f4a2d2a1bb95fa6b0cdcf3d9065feaa173030f8f"
+    },
+    {
+      "bytes": 829,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_adverse_xyz_history_comparison_20260910_v1/axis_test_validation.json",
+      "role": "original_adverse_xyz_history_comparison",
+      "sha256": "a5259f597608892f33c126f1090a81340ba4b04b651275870703391eaf7b34b6"
+    },
+    {
+      "bytes": 12473,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_adverse_xyz_history_comparison_20260910_v1/axis_tests_red.log",
+      "role": "original_adverse_xyz_history_comparison",
+      "sha256": "6a5a422b9b3487601f939594e43fe2ef33f3cab02cd26c39d506118ddd1da668"
+    },
+    {
+      "bytes": 12473,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_adverse_xyz_history_comparison_20260910_v1/axis_tests_green.log",
+      "role": "original_adverse_xyz_history_comparison",
+      "sha256": "7e926b2d912ed99f09ec47c08f3d5daa4abf995a5e98df468419ceb2ad9dff18"
+    },
+    {
+      "bytes": 7416,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_adverse_xyz_history_comparison_20260910_v1/axis_tests_red_v2.log",
+      "role": "original_adverse_xyz_history_comparison",
+      "sha256": "719fa95c8464a751278d1e3dafe1ada99e1f04254a9b2c1a8fef522b90c498a1"
+    },
+    {
+      "bytes": 99,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_adverse_xyz_history_comparison_20260910_v1/axis_tests_green_v2.log",
+      "role": "original_adverse_xyz_history_comparison",
+      "sha256": "4e626eab17316f604d67a5f3e26b7abe90b818bd251ba5ad805735b29b4528d7"
+    },
+    {
+      "bytes": 19,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_adverse_xyz_history_comparison_20260910_v1/ruff.log",
+      "role": "original_adverse_xyz_history_comparison",
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    {
+      "bytes": 784665,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_adverse_xyz_history_comparison_20260910_v1/comparison.json",
+      "role": "original_adverse_xyz_history_comparison",
+      "sha256": "a2601b382ea7dd4a8e16bf6da1965b60497a17ef008a4dfbca8f8ccfc51f2ff3"
+    },
+    {
+      "bytes": 1835,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_adverse_xyz_history_comparison_20260910_v1/comparison.log",
+      "role": "original_adverse_xyz_history_comparison",
+      "sha256": "fa0b9756ac749a31239f16661e75429a5ddd2c53b579752237ecfa08c9335b24"
+    },
+    {
+      "bytes": 10708,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_adverse_xyz_history_comparison_20260910_v1/source_scope_check.json",
+      "role": "original_adverse_xyz_history_comparison",
+      "sha256": "7bf96ec59639e92f9907ecf435376dbf98284d519bd5aa371acf3eae32547e89"
+    },
+    {
+      "bytes": 3048,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_adverse_xyz_history_comparison_20260910_v1/independent_section_equality.json",
+      "role": "original_adverse_xyz_history_comparison",
+      "sha256": "de6dd4750e89cb49cfc9f2b6c7bfed79934a828110a8448d4c8a5489573dc0b8"
+    },
+    {
+      "bytes": 138525,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_adverse_xyz_history_comparison_20260910_v1/stop_anchor_trace.json",
+      "role": "original_adverse_xyz_history_comparison",
+      "sha256": "8d5047f7bf12d4981b9629e870453553ea130004c70da7c1ecc81c7d95e1fe24"
+    },
+    {
+      "bytes": 905,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_adverse_xyz_history_comparison_20260910_v1/stop_anchor_trace.log",
+      "role": "original_adverse_xyz_history_comparison",
+      "sha256": "cf8a526da0f1ae28ea4a7ff0f663b19d69ecfa52525a444ca98cc7c02fc31028"
+    },
+    {
+      "bytes": 12268,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_adverse_xyz_history_comparison_20260910_v1/comparison_source.tar.gz",
+      "role": "original_adverse_xyz_history_comparison",
+      "sha256": "e2517a61d43c000a23e705693aff6dcd4355ee3475526694d4d4fc9a4cf159fc"
+    },
+    {
+      "bytes": 217,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_adverse_xyz_history_comparison_20260910_v1/source_archive_verified.json",
+      "role": "original_adverse_xyz_history_comparison",
+      "sha256": "8fcd94d99c9d5ef25e14baa2df32b790fbb3da1bcec8c9e87c4ac6461055248d"
+    },
+    {
+      "bytes": 1065083,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_original_account_case_04_analysis_20260910_v1/analysis_report.json",
+      "role": "original_adverse_xyz_history_comparison",
+      "sha256": "f0b8e9f0f3349c92c76950b14eddf7586864f5117d7b2818325a4f8cf0d3da1b"
+    },
+    {
+      "bytes": 1950,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_original_account_case_04_analysis_20260910_v1/analysis_provenance.json",
+      "role": "original_adverse_xyz_history_comparison",
+      "sha256": "0e1c43d2ef8e67d41cd8f96fee0fb9ac4460894999a3ada149f50e695667ea20"
+    },
+    {
+      "bytes": 1578,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_original_account_case_04_analysis_20260910_v1/case_receipt.json",
+      "role": "original_adverse_xyz_history_comparison",
+      "sha256": "6ffc0c44740692a1c2f5e2a9e7ce2a2a8a670c5021317bc9b40d63766f8c7b0c"
+    },
+    {
+      "bytes": 1557,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_original_account_case_04_analysis_20260910_v1/launch.json",
+      "role": "original_adverse_xyz_history_comparison",
+      "sha256": "d61a9ac582a47948bd31591c3c8e6bb3789c24a2eb85a19fc13140bcd4d34fcb"
+    },
+    {
+      "bytes": 1064841,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_original_account_case_05_analysis_20260910_v1/analysis_report.json",
+      "role": "original_adverse_xyz_history_comparison",
+      "sha256": "f3ae162beea5a086bf60bdb5eefdfb192b08f0f874c336f38b5e8645dd724e91"
+    },
+    {
+      "bytes": 1950,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_original_account_case_05_analysis_20260910_v1/analysis_provenance.json",
+      "role": "original_adverse_xyz_history_comparison",
+      "sha256": "887a90d5caf8eaaae30c0ba125031ef489d4c65e6cbeefaabb8779cbbdd05f88"
+    },
+    {
+      "bytes": 1570,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_original_account_case_05_analysis_20260910_v1/case_receipt.json",
+      "role": "original_adverse_xyz_history_comparison",
+      "sha256": "99a4349ab65e9f5b5cb50f77c19b330b061cb13da52baf63d77b838b8d3fd634"
+    },
+    {
+      "bytes": 1555,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_original_account_case_05_analysis_20260910_v1/launch.json",
+      "role": "original_adverse_xyz_history_comparison",
+      "sha256": "258c51a155bdf98e70e71c7fd20331ee589330184c64df1194a79c214f84b072"
+    },
+    {
+      "bytes": 1065078,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_original_account_case_16_analysis_20260910_v1/analysis_report.json",
+      "role": "original_adverse_xyz_history_comparison",
+      "sha256": "ea47f4571cbb807bcb7e8df6244985797d2427bf39ed164d2215b15c6363ee3a"
+    },
+    {
+      "bytes": 1962,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_original_account_case_16_analysis_20260910_v1/analysis_provenance.json",
+      "role": "original_adverse_xyz_history_comparison",
+      "sha256": "48a101638d5d42035922f78de51d79b79ae36af3cb9e0fa8af15678a5a094bb5"
+    },
+    {
+      "bytes": 1578,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_original_account_case_16_analysis_20260910_v1/case_receipt.json",
+      "role": "original_adverse_xyz_history_comparison",
+      "sha256": "333030ab6c049be426aa67c55fad786f64eeda1cfc59208d4528f0291d740879"
+    },
+    {
+      "bytes": 1203,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_original_account_case_16_analysis_20260910_v1/launch.json",
+      "role": "original_adverse_xyz_history_comparison",
+      "sha256": "f4a5725849c677a4cbb89a9e2e239194476fd723756efda92e21aac3d84e2761"
+    },
+    {
+      "bytes": 1064832,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_original_account_case_17_analysis_20260910_v1/analysis_report.json",
+      "role": "original_adverse_xyz_history_comparison",
+      "sha256": "75ef338a758e334b7a7fe0ee2fca818356f6512f293ebc952cb5340cee5ba312"
+    },
+    {
+      "bytes": 1962,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_original_account_case_17_analysis_20260910_v1/analysis_provenance.json",
+      "role": "original_adverse_xyz_history_comparison",
+      "sha256": "78174215eb599a3c9962aa66398e1f6dc6bc0d2de6dd506a4d9b531b965ad89a"
+    },
+    {
+      "bytes": 1570,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_original_account_case_17_analysis_20260910_v1/case_receipt.json",
+      "role": "original_adverse_xyz_history_comparison",
+      "sha256": "96e867ae5e48624be5f2ad45fa031c601ad689160dd6acb94af27b241db0ffd0"
+    },
+    {
+      "bytes": 1199,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_original_account_case_17_analysis_20260910_v1/launch.json",
+      "role": "original_adverse_xyz_history_comparison",
+      "sha256": "8ac492dcbac2a0f9a824002e06867ffb187a23a524f878f8f119a41edd4e8061"
+    },
+    {
+      "bytes": 5846,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/reviews/2026-09-10-v89-adverse-xyz-history-comparison.md",
+      "role": "original_adverse_xyz_history_comparison",
+      "sha256": "86c56b9d703366d24e70048b0d8cef1ce23d2700dcd354c667fc40ee178a21d8"
+    },
+    {
+      "bytes": 5544,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/reviews/2026-09-09-v89-complete-provider-history.md",
+      "role": "original_adverse_xyz_history_comparison",
+      "sha256": "9913b488261983a03709a4e79398156b3ea449a2bcf43151a4a4224340885d70"
+    },
+    {
+      "bytes": 7300,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/reviews/2026-09-09-v89-complete-xyz-and-historical-routing-inputs.md",
+      "role": "original_adverse_xyz_history_comparison",
+      "sha256": "b28d54a3dcae046dd9795cdb2e4ecdba2b6edb1395979ea8118e35834e80c025"
+    },
+    {
+      "bytes": 330537,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_account_reporting_qualification_20260910_v1/source.json",
+      "role": "original_adverse_xyz_history_comparison",
+      "sha256": "2eab9c8dbab79fccf125f9661c89814374cd10d0763b8dc1506a09afd5c10367"
+    },
+    {
+      "bytes": 2006,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_account_reporting_qualification_20260910_v1/verified.json",
+      "role": "original_adverse_xyz_history_comparison",
+      "sha256": "98e8a42b04bf5001ab6dfd233bdaa61bcc90ab6f2256c9b5916c9affdaea49b3"
+    }
+  ],
+  "execution_authority": "none",
+  "falsifier": "Changed source/artifact identities, a changed non-history setting, unexplained cash or stop-price residual, or altered trade selection invalidates the corresponding scoped finding. Other histories, missing initialization, different costs and actual venue fills can differ.",
+  "hypothesis": "The original full-prefix versus rolling-fourteen-day XYZ provider-history axis may change complete-account routing, exits, cash results or capital use; compare original adverse-cost, recorded-clock cases with first core observations and each allocation fixed.",
+  "hypothesis_id": "v89_adverse_xyz_history_comparison_20260910_v1",
+  "limitations": [
+    "Four original historical cases do not replace the complete 48-case report and are not newly unseen holdout evidence.",
+    "Economic sections are not byte-identical: the report preserves small stop-price and cash differences rather than rounding them away. Only reported proposal dispositions are byte-identical among the five compared sections.",
+    "The earlier zero-difference provider qualification compared each variant with its own reference, not numeric equality between different history windows.",
+    "The raw-anchor trace authenticates 44 provider files and independently explains the affected modeled fills/cash. It does not independently implement ATR or prove actual venue ticks or fills.",
+    "Original initialization gaps, hybrid provenance, conditional execution-price proxies and modeled costs retain their prior limitations. Later-segment losses and higher-fee sensitivity remain unresolved by history-window invariance.",
+    "Both prospective outcome seals remain intact. No live strategy, history selection, allocation, risk, execution, deployment or TUI setting changed."
+  ],
+  "metrics": {
+    "average_gross_notional_ratio_from_history": 1.0,
+    "axis_contract_tests_passed": 10,
+    "changed_stop_exits_by_asset": {
+      "xyz:BRENTOIL": 12,
+      "xyz:SNDK": 8,
+      "xyz:SPCX": 6
+    },
+    "changed_stop_exits_per_contrast": 26,
+    "changed_trade_field_names": [
+      "exit_fees_usd",
+      "gross_pnl_usd",
+      "net_pnl_usd",
+      "valuation_price"
+    ],
+    "complete_matrix_evaluated": false,
+    "conserved_equity_totals_per_case": 7,
+    "control_equity_difference_usd": -1.2488280844991095e-06,
+    "equal_equity_difference_usd": -2.6781162887346e-06,
+    "history_bindings_per_variant": 144,
+    "live_performance_established": false,
+    "maximum_absolute_arithmetic_residual": 2.2737367544323206e-13,
+    "maximum_absolute_exit_price_delta_usd": 2.070298478429322e-06,
+    "maximum_absolute_portfolio_reconciliation_residual_usd": 1.3358203432289883e-12,
+    "new_case_analyses": [
+      16,
+      17
+    ],
+    "ordered_trades_per_case": 177,
+    "original_case_indices": [
+      4,
+      5,
+      16,
+      17
+    ],
+    "provider_files_traced": 44,
+    "references_per_case": {
+      "16": 2294,
+      "17": 2294,
+      "4": 2297,
+      "5": 2297
+    },
+    "reporter_commit": "34004579e2cb21d13c55e01c47fa6f69e70d76ff",
+    "unchanged_manifest_fields_per_contrast": 20,
+    "unique_authenticated_references": 2464
+  },
+  "revision_number": 1,
+  "runtime_strategy_changed": false,
+  "schema_version": 1,
+  "status": "retain",
+  "strategy_id": "multi_asset_growth_first_5000_noncrypto_research_v89",
+  "supersedes_revision_id": null,
+  "symbol": "PORTFOLIO"
+}
