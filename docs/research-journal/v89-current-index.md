@@ -7,10 +7,26 @@ update evaluates only the original historical window ending September 7 UTC.
 
 ## Current finding and next action
 
-**September 10 05:57 UTC full-fee and technical integration update:** the
-original coordinator remains active with **11/48** completed cases. Its
-reporting handoff remains active; preserve sessions 33137 and 44667 and their
-frozen sources. Four replay workers were active at 05:50 UTC, with 14.16 GB free.
+**September 10 06:56 UTC TUI qualification update:** the original coordinator
+remains active with **18/48** completed cases. Its reporting handoff remains
+active; preserve sessions 33137 and 44667 and their frozen sources. Four replay
+workers are active, with 12.07 GB free. No local live backend or TUI matched.
+
+The [entry-deadline TUI correction](../reviews/2026-09-10-v89-entry-deadline-tui.md)
+is frozen as `b73b112282d5e7ab7ec04d431f87554739a98f8a`. Both the checkout and
+archive pass 534 Rust tests, with 23 existing runtime-dependent tests ignored
+and identical test identities. All 5,153 Git blobs match. Clippy and formatting
+pass; three configured disarmed inspector captures retain the route plan and
+exact timing evidence. Legacy clocks do not become SDK proof. The September 4
+fixture needed by the existing V86 screen test is retained separately with the
+archive. Rust statement/branch coverage and fresh live acceptance remain
+outstanding; this is offline evidence, not full technical readiness or a profit
+forecast. The journal revision is
+`fa31518dc1ab4cd31ffbe5f36b1212cdb9a6a9decede5897fe858a6610f20437`;
+all 21 fields and 27 direct references match. The candidate is not installed.
+The installed TUI hash remains `95f87cdcd49e5aa0068b7ebf8d4bef2b18d5f3efa7692291fc9aeabc83623d8f`.
+Next measure the remaining Rust coverage and finish the original matrix and
+complete report before the combined deployment review.
 
 The [full-fee allocation comparison](../reviews/2026-09-10-v89-full-fee-account-comparison.md)
 is complete and journaled. Control returns -$33.44 (-0.69%) with $233.56 maximum
@@ -25,9 +41,9 @@ revision is `53fde070dd6f0a1bc2168a3722c70274e9b25c5cde9b83230aa0c0727e2e5247`;
 all 21 fields and 25 direct references are verified. Both case analyses are
 terminal; do not rerun sessions 16258 or 19954.
 
-The [combined technical candidate](../reviews/2026-09-10-v89-technical-release-integration.md)
-is frozen as `71fbf0541fd1360e726f49b7de89ae905912020c` in the isolated technical
-release checkout. Its 26 implementation files preserve the exact deadline,
+The [Python technical integration base](../reviews/2026-09-10-v89-technical-release-integration.md)
+was frozen as `71fbf0541fd1360e726f49b7de89ae905912020c` in the isolated technical
+release checkout; its Python, scripts and profiles are unchanged in the new TUI candidate. Its 26 implementation files preserve the exact deadline,
 mapped-reader and staging proposals. All 602 focused tests across 56 modules
 pass in the worktree and retained archive, with identical test identities and
 no unexpected Python socket events. All 5,144 Git blobs and 530 adjacent provider
