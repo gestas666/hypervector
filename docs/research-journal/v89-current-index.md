@@ -2,10 +2,137 @@
 
 Updated September 10, 2026 UTC. This is research navigation, not a live-state checkpoint.
 The active mandate permits research and proposals; live changes remain subject
-to explicit approval. Both prospective outcome seals remain active. No account
-outcome was refreshed for this update.
+to explicit approval. Both prospective outcome seals remain active. The latest
+update evaluates only the original historical window ending September 7 UTC.
 
 ## Current finding and next action
+
+**September 10 04:20 UTC active-matrix update:**
+the [resumable coordinator](../reviews/2026-09-10-v89-resumable-account-matrix.md)
+is frozen as `2486adf`, with 55 passing tests in both worktree and verified
+archive, plus the real registered-source preflight. All three original completed
+cases were adopted with fresh independent audits. Session **33137** remains
+active: coordinator PID 72423 and four workers 72894, 72895, 73247 and 73270.
+Do not duplicate or restart them. All 48 original cases remain required.
+
+The [initial account comparison](../reviews/2026-09-10-v89-initial-account-comparison.md)
+authenticates 2,303 unique references and seven equity totals per case. Equal
+allocation returns +$491.17 (+10.11%) versus control +$196.85 (+4.05%), alongside
+2.0209 times average gross exposure and drawdown $264.87 versus $140.67.
+Both contain the same 177 closed trade identities, with 41.81% wins. Removing
+the equal case's three largest winners leaves +$0.27. The nominal control late
+clock retains the same net return and drawdown, with 68 changed exit timestamps.
+These three cases do not establish a dependable improvement or live readiness.
+The comparison journal is database revision
+`267a25b8eb5e43c1d04efd68cd2ff6bd9a69896bf209b4ad0bfbf01845fc653a`;
+all 21 fields and 16 direct references match the retained record.
+
+The [backup block-sharing operation](../reviews/2026-09-10-v89-backup-block-sharing.md)
+preserved all 36.85 GB of historical backup bytes and checked metadata, with a
+verified recovery image retained before replacement. Twenty tests pass in both
+worktree and retained source. The current database remained unchanged during
+that operation. No physical storage savings are established. Do not repeat this
+capacity hypothesis without new evidence or remove either historical image.
+The later authorized journal append updates the current research database.
+Free space was 5.13 GB at 04:18:36 UTC; another-drive question remains pending.
+
+At 04:20 UTC the first two active workers had 23,214/69,121 and 39,260/138,241
+complete event lines in their bounded XZ prefixes, after about 24 minutes of
+worker lifetime. Their XZ files remain incomplete. This supersedes the isolated
+runtime estimate: a provisional 16–20 hours of remaining replay at current
+concurrency has low confidence until the first parallel batch completes, with
+reporting and reproduction additional. Storage or resource contention can extend
+it. No matching local live backend, checkpoint writer, TUI launcher or TUI was
+observed in the 04:18:36 UTC process snapshot. No live-start ETA is established.
+Both prospective seals remain intact. Next complete the original adverse-cost
+comparisons and all remaining cases; no live process or configuration changed.
+
+The older job states below are retained lineage, superseded by this update.
+
+**September 10 02:25 UTC completed-account update:**
+the [first complete historical account](../reviews/2026-09-10-v89-first-complete-account-result.md)
+finished at 02:02:46 UTC, analysis at 02:10:14 UTC, and retained verification at
+02:20:24 UTC. Sessions 91963 and 38167 are complete; do not restart them.
+Nominal control: +$196.85 (+4.05%), 177 closed trades, 41.81% wins, maximum marked
+drawdown $140.67 (2.74%). Earlier 28 days: +$214.58; later 20 days: -$17.73.
+Removing three largest closed winners leaves -$31.83. This is one of 48 cases,
+not a complete comparison, prospective result or evidence of live improvement.
+Both independent audits agree; 2,281 references and seven equity totals reconcile.
+
+Measured account/audit runtime is 1,931.31 seconds, setup 199.62 seconds, peak RSS
+15.75 GiB and complete case output 184,712,040 bytes. Four-worker full-matrix
+runtime projects to roughly 6.5 hours before reporting and reproduction, with
+medium confidence. Output at this case's size projects to 8.87 GB before overhead;
+available disk is 5.01 GB. The alternate-storage question remains pending.
+No matching local live backend, checkpoint writer, TUI or account replay worker
+was observed. The full matrix has not started; no live-start ETA is established.
+Preserve the original 48-case scope and completed evidence. Next resolve output
+storage and execute all cases, followed by authenticated comparison and reproduction.
+
+The older job states below are retained lineage, superseded by this update.
+
+**September 10 01:55 UTC reporting and resource update:**
+the [complete reporting pipeline](../reviews/2026-09-10-v89-complete-account-reporting.md)
+is frozen as `34004579e2cb21d13c55e01c47fa6f69e70d76ff`. All 199 integrated tests
+pass in the worktree (186.28 seconds) and verified archive (188.20 seconds), with
+998/1,030 measured statements covered. Archive session **20419** returned zero;
+all 5,574 regular files and 1,933 implementation members were rechecked afterward.
+Session 12717 is also complete. Do not repeat those runs without changed evidence.
+Use `v89_historical_account_reporting_qualification_20260910_v1/verified.json`.
+
+The archive repair is [journaled](v89-canonical-archive-layout-repair-20260910-v1.json)
+as database revision `d76f0a26ed8f098b136a8317717457ebae89f8cb2c1c0b023c32d0e0db9b07c7`.
+All 1,255 references, 21 database fields and three journal copies match as checked
+at 01:48:25 UTC. The new research review and journal are now pinned evidence.
+
+The real first case remains active as **91963 / PID 62107**. At 01:48:30 UTC,
+an explicitly bounded compressed-prefix read counted 14,980 of 69,121 expected
+event lines (21.7%) in 40,053,732 compressed bytes. It decoded 1,998,433,350 bytes;
+no XZ footer or completed pilot report was present. This was process progress
+only, without evaluating account metrics. Events and manifest now exist, so the
+run has progressed beyond calendar construction. Preserve the active attempt.
+
+Available disk was approximately 4.8 GiB at 01:51 UTC. Linear extrapolation of
+that single prefix suggests roughly 9 GB for 48 event files before account and
+late-clock overhead; this is a planning estimate, not measured full-case storage.
+There is no additional mounted user data drive. Disposable pytest data totals only
+113 MiB and the main Rust release tree 535 MiB; neither resolves the projected
+shortfall. Ten retained source extractions total 2.17 GiB and their archives remain
+intact; none was removed. An asynchronous question asks for an alternate drive
+with at least 15 GB available. The current first case still has room and continues;
+do not substitute a partial matrix or remove source evidence to fit the disk.
+
+**September 10 01:40 UTC update:** the original canonical export is complete:
+session 32156 returned zero at 01:17:49 UTC with all eight streams, 384 daily
+chunks and 552,960 checks. The first waiting account attempt returned one before
+simulation because its archive reader did not recognize the original `source/`
+wrapper. The [archive-layout correction](../reviews/2026-09-10-v89-canonical-archive-layout-repair.md)
+is frozen as `69dd84a990836c30cd56b1effa524b0e20f88acd`; all 29 relevant tests and
+the full original catalog preflight pass in both worktree and verified archive.
+Exactly one predecessor implementation member changes. Preserve the completed
+export, failed first attempt and all qualified source archives.
+
+The same original first 48-day account case is now running as session **91963**,
+PID **62107**, under `v89_first_complete_historical_account_20260910_v2/`.
+Its source assembly completed in 199.62 seconds at 01:30:35 UTC. At 01:38 UTC it
+was active at about one CPU core with roughly 13.5 GiB RSS, no observed swap use
+and 5.22 GiB free disk. The machine has 96 GiB physical RAM. No completed account
+result or full-matrix runtime estimate exists yet. Do not restart the active
+attempt or modify its operator, launch record or frozen source.
+
+The isolated reporting worktree now includes the authenticated matrix catalog
+reader, complete case publisher and CLI. Its 15 catalog tests and eight publisher/
+CLI tests pass separately; the latter covers explicit report identity, source
+conservation, fresh-versus-retained audit agreement and deterministic complete
+publication. These tests use catalog and metric fixtures, not historical financial
+outcomes. The real native per-case integration remains separately required.
+The complete integrated reporting suite is running in session **12717**, logged
+as `historical_account_reporting_integrated_20260910.log`. Preserve its Python,
+lock and test sources until terminal. Current additions are not yet committed or
+archive-qualified. Next finish this reporting qualification while preserving the
+real account attempt, then use its measured resources to run every original case.
+
+The older job states below are retained lineage and are superseded by this update.
 
 The [complete account runner and resource revision](../reviews/2026-09-09-v89-historical-account-runner-resources.md)
 is frozen as `a86bd6f` in
@@ -39,14 +166,15 @@ All 88 evidence references, 21 database fields and four journal copies match.
 Preserve the frozen implementation and completed evidence.
 Do not repeat the completed worktree suites or resource probes without new evidence.
 
-At September 10 00:33:10 UTC, the waiting first-case operator confirms that the
+At September 10 01:14:11 UTC, the waiting first-case operator confirms that the
 original canonical export **32156**, parent 26037, remains active under its
-original process identity. It has 340/384 daily summaries (89%); the final export
+original process identity. It has 379/384 daily summaries (98.7%); the final export
 report remains absent. The September 9 21:00–22:00 EDT export estimate remains
-a throughput estimate, not a live launch deadline. At 23:50 UTC both known
-prospective collector PIDs were present; no matching local live backend,
-checkpoint writer or TUI was observed. The checkpoint remains dated September 8
-14:04:48 UTC. This is not a fresh venue account observation.
+a throughput estimate, not a live launch deadline. At September 10 01:10 UTC both
+known prospective collector PIDs were present; no matching local live backend,
+checkpoint writer or TUI was observed. The checkpoint remains generated September 8
+14:04:48.752796 UTC, with file mtime 14:04:56.843048 UTC. This is not a fresh venue
+account observation. Available disk was 5.43 GiB at 01:10 UTC.
 
 The [first complete case operator](../plans/2026-09-09-v89-first-complete-account-timing.md)
 is active in session **87769**, PID 52810. Its read-only check completed zero,
@@ -70,11 +198,34 @@ records the complete evidence under
 `v89_historical_account_analysis_qualification_20260910_v1/`.
 This is bounded synthetic reporting qualification. It retains incurred fees and
 funding on open positions, reconciles all contributions to terminal equity and
-preserves audited near-zero closed-result signs. Native pre-account exclusions
-and complete case/matrix report assembly remain open. The earlier 29-test path
+preserves audited near-zero closed-result signs. The earlier 29-test path
 component and its retained probes remain lineage under
 `v89_historical_account_path_metrics_qualification_20260909_v1/`.
 No prospective outcome, live process or live configuration changed.
+
+Subsequent report assembly is implemented in the same isolated analysis worktree,
+with its new files still uncommitted and not yet frozen or archive-qualified.
+Native source-priced proposal fates conserve route exclusions and committed
+account dispositions. Group reports retain all seven assets, every registered
+strategy and both directions, with explicit zero-activity rows. Marked-day
+concentration remains distinct from closed-winner concentration. The complete
+per-case facade freshly authenticates sources and independently reconciles the
+account before combining these reports. Its combined native suite completed:
+**67 passed in 184.82 seconds**, covering 231/235 statements (98%). Evidence is
+`historical_account_case_report_native_20260910.log` under the research log directory.
+
+The pure 48-case comparison component now retains canonical case order and every
+single-axis contrast: 144 pairs, including all three pairwise cost comparisons.
+Its fixed primary allocation contrast is first/full-prefix/adverse/recorded-clock
+control versus equal. Negative results survive; undefined ratios remain null.
+Incomplete or duplicate cases, conflicting contracts, live authority and sealed
+outcomes fail explicitly. The comparison and grouped-metric suite completed:
+**32 passed in 1.84 seconds**, with 95/95 comparison and 46/48 grouping statements
+covered. Evidence is `historical_account_comparisons_scope_20260910.log`.
+These are synthetic arithmetic and scope tests, not historical financial results.
+The final authenticated matrix publishing coordinator, its integration tests and
+frozen reproduction remain unfinished. A pure metric comparison does not itself
+authenticate original account files; that responsibility remains with its caller.
 
 Next authenticate the full canonical catalog and run, independently reconcile and
 reproduce the complete original 48-case historical matrix. No full historical
