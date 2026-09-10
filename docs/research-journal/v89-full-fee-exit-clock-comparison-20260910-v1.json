@@ -1,0 +1,236 @@
+{
+  "automatic_promotion": false,
+  "confidence": "high",
+  "created_at_utc": "2026-09-10T09:39:08.880617+00:00",
+  "decision": "Retain the original higher-fee clock comparison. Each allocation preserves all 177 trade identities and all non-clock fields. Sixty-nine exit timestamps shift and mean holding rises 4.81920 minutes; average gross exposure rises 0.7325%/0.7481%. Net equity, fees, funding, prices and maximum marked drawdown are unchanged. This convention supplies no added profitability or adverse-fill evidence; complete all original matrix cases before the final deployment decision.",
+  "evidence": [
+    {
+      "bytes": 1070,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_full_fee_exit_clock_comparison_20260910_v1/PLAN.md",
+      "role": "original_higher_fee_exit_clock_comparison",
+      "sha256": "eaeae539fea24b6b07ec62563ae0ba0e8f52c533109a3375e965aa4c67e9da5a"
+    },
+    {
+      "bytes": 3509,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_full_fee_exit_clock_comparison_20260910_v1/analyze.py",
+      "role": "original_higher_fee_exit_clock_comparison",
+      "sha256": "f086c55e635577aae9a5d0e266f6571ea8ae61db3addcf2d89c7ea15e9b1ec2d"
+    },
+    {
+      "bytes": 7254,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_full_fee_exit_clock_comparison_20260910_v1/compare.py",
+      "role": "original_higher_fee_exit_clock_comparison",
+      "sha256": "f9a7a084df9f109fe0900e72808324701bc861c15c6a02c92549f35b7a598a39"
+    },
+    {
+      "bytes": 497,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_full_fee_exit_clock_comparison_20260910_v1/analysis_driver_identity.json",
+      "role": "original_higher_fee_exit_clock_comparison",
+      "sha256": "70352ef193c700b37c4d7c8f6b0b6759668d0e663d45ba1dbf90b5f021ca7602"
+    },
+    {
+      "bytes": 759807,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_full_fee_exit_clock_comparison_20260910_v1/comparison.json",
+      "role": "original_higher_fee_exit_clock_comparison",
+      "sha256": "8010132480733882b66630e227bd1156deb68736e6c64523834b6487b69a0fab"
+    },
+    {
+      "bytes": 1322,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_full_fee_exit_clock_comparison_20260910_v1/comparison.log",
+      "role": "original_higher_fee_exit_clock_comparison",
+      "sha256": "9dc9e8bc85e9265760a00b400a2142a8e8c5dc6e5157e16ea285972758fe48d8"
+    },
+    {
+      "bytes": 1006,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_full_fee_exit_clock_comparison_20260910_v1/independent_clock_arithmetic.json",
+      "role": "original_higher_fee_exit_clock_comparison",
+      "sha256": "4420df58d241a3238117d3bd8fd65b94e066b7a79274956fada051decfaa7a59"
+    },
+    {
+      "bytes": 175,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_full_fee_exit_clock_comparison_20260910_v1/publication_checks.json",
+      "role": "original_higher_fee_exit_clock_comparison",
+      "sha256": "0a7a753072f61a0761ba0365a84bd08e572a8304143caa6bf8a9a9b387ef202a"
+    },
+    {
+      "bytes": 6479,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_full_fee_exit_clock_comparison_20260910_v1/comparison_source.tar.gz",
+      "role": "original_higher_fee_exit_clock_comparison",
+      "sha256": "242d0e61acef53bdd6834585068d9494b7d24921b2852a3ade187f3623b287e8"
+    },
+    {
+      "bytes": 125,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_full_fee_exit_clock_comparison_20260910_v1/source_archive_verified.json",
+      "role": "original_higher_fee_exit_clock_comparison",
+      "sha256": "989f2687a84260324378dc8367c10909d64c6f7320fa9860ef196c997edeae3a"
+    },
+    {
+      "bytes": 1064867,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_original_account_case_08_analysis_20260910_v1/analysis_report.json",
+      "role": "original_higher_fee_exit_clock_comparison",
+      "sha256": "6ea3bbdb9ccc752f7d7ad1be03578cb109c8f25ec98f63b362f4c0d058d4f0ed"
+    },
+    {
+      "bytes": 1950,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_original_account_case_08_analysis_20260910_v1/analysis_provenance.json",
+      "role": "original_higher_fee_exit_clock_comparison",
+      "sha256": "214477ebc25a39e51e45c739565fe770468f74264f6c8afff88b32359b9b062a"
+    },
+    {
+      "bytes": 1602,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_original_account_case_08_analysis_20260910_v1/case_receipt.json",
+      "role": "original_higher_fee_exit_clock_comparison",
+      "sha256": "e003d1c2161355830f9b4544127b004e5a856405c2429a85029c7adb771fae5b"
+    },
+    {
+      "bytes": 1620,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_original_account_case_08_analysis_20260910_v1/launch.json",
+      "role": "original_higher_fee_exit_clock_comparison",
+      "sha256": "084da2edb447ad8e83f60fe675458a02377c12dba220e6e2129e41b012f5864b"
+    },
+    {
+      "bytes": 1064615,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_original_account_case_09_analysis_20260910_v1/analysis_report.json",
+      "role": "original_higher_fee_exit_clock_comparison",
+      "sha256": "798ba77ea76647d7a7675da1d9066ba49c3dfcc508ebe3ae36635b52ee9244c4"
+    },
+    {
+      "bytes": 1950,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_original_account_case_09_analysis_20260910_v1/analysis_provenance.json",
+      "role": "original_higher_fee_exit_clock_comparison",
+      "sha256": "5467468ed633681f5a515b03c71ca618fa63cf9e4ec6eb2b82f4f4aa0761acd9"
+    },
+    {
+      "bytes": 1594,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_original_account_case_09_analysis_20260910_v1/case_receipt.json",
+      "role": "original_higher_fee_exit_clock_comparison",
+      "sha256": "9a60b331abc78337e32f2250fe8887dade96e5bbf7118ee5d36a1d00fe4ac952"
+    },
+    {
+      "bytes": 1618,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_original_account_case_09_analysis_20260910_v1/launch.json",
+      "role": "original_higher_fee_exit_clock_comparison",
+      "sha256": "658463c695865b29a19848e23b0ce8d6bc198eb8b14aa967b4de2f4433833013"
+    },
+    {
+      "bytes": 1065848,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_original_account_case_10_analysis_20260910_v1/analysis_report.json",
+      "role": "original_higher_fee_exit_clock_comparison",
+      "sha256": "49b2e8bef40471feeff1e01f7d6b3a4df4afe5ecc5c417d352352a1a6654866d"
+    },
+    {
+      "bytes": 1961,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_original_account_case_10_analysis_20260910_v1/analysis_provenance.json",
+      "role": "original_higher_fee_exit_clock_comparison",
+      "sha256": "8ae7ff425055a3da003c86e7cedc75985730d1829f81a377a9436d725e513ee9"
+    },
+    {
+      "bytes": 1602,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_original_account_case_10_analysis_20260910_v1/case_receipt.json",
+      "role": "original_higher_fee_exit_clock_comparison",
+      "sha256": "1e7ea8e03c1a21e69fcca225a62d049e99e2e96cb7317fd01f0d491f4b062228"
+    },
+    {
+      "bytes": 937,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_original_account_case_10_analysis_20260910_v1/launch.json",
+      "role": "original_higher_fee_exit_clock_comparison",
+      "sha256": "a70dbe55070c8eea3679f679a033696fbbbc5b8b7436d9cec23b340b7a77bbb7"
+    },
+    {
+      "bytes": 1065597,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_original_account_case_11_analysis_20260910_v1/analysis_report.json",
+      "role": "original_higher_fee_exit_clock_comparison",
+      "sha256": "604585c088a6befd97c7a4cc69f9e6801fe75dee35ab1292dd8dcdc10a25220d"
+    },
+    {
+      "bytes": 1961,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_original_account_case_11_analysis_20260910_v1/analysis_provenance.json",
+      "role": "original_higher_fee_exit_clock_comparison",
+      "sha256": "77c9e4c0d9d475076225930c11cb8ee30ce9cc1426378fe6454b35a7d5ab7c56"
+    },
+    {
+      "bytes": 1594,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_original_account_case_11_analysis_20260910_v1/case_receipt.json",
+      "role": "original_higher_fee_exit_clock_comparison",
+      "sha256": "923a6abbdb6d0cef6b8c1f157ce90826e6ed5625a1f933b6ae27a26174bf7f0b"
+    },
+    {
+      "bytes": 933,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_original_account_case_11_analysis_20260910_v1/launch.json",
+      "role": "original_higher_fee_exit_clock_comparison",
+      "sha256": "fb7f69ac638f23acf05a20c75ac864cd19c6277f3c8247581d7646143366bc69"
+    },
+    {
+      "bytes": 4383,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/reviews/2026-09-10-v89-full-fee-exit-clock-comparison.md",
+      "role": "original_higher_fee_exit_clock_comparison",
+      "sha256": "4c151252430284b25c317b6251660c0bf06fa0edab060c3c514b8ee444cf098a"
+    },
+    {
+      "bytes": 330537,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_account_reporting_qualification_20260910_v1/source.json",
+      "role": "original_higher_fee_exit_clock_comparison",
+      "sha256": "2eab9c8dbab79fccf125f9661c89814374cd10d0763b8dc1506a09afd5c10367"
+    },
+    {
+      "bytes": 2006,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_account_reporting_qualification_20260910_v1/verified.json",
+      "role": "original_higher_fee_exit_clock_comparison",
+      "sha256": "98e8a42b04bf5001ab6dfd233bdaa61bcc90ab6f2256c9b5916c9affdaea49b3"
+    }
+  ],
+  "execution_authority": "none",
+  "falsifier": "Changed artifact or source hashes, wrong original case identity, unmatched trade fields, inconsistent timestamp/holding arithmetic, nonconserved equity or disagreement between fresh and retained independent audits invalidates the corresponding scoped result. Actual live fills or new source variants may differ from this modeled clock convention.",
+  "hypothesis": "The original higher-fee recorded-bar and late-intrabar clock cases can quantify exit-timing sensitivity in net equity, cash costs and capital use without changing source history, strategy or allocation.",
+  "hypothesis_id": "v89_full_fee_exit_clock_comparison_20260910_v1",
+  "limitations": [
+    "These are four predeclared historical cases from a 48-case matrix, not a completed full comparison or new out-of-sample evidence.",
+    "The late-intrabar convention shifts modeled exit timestamps while retaining the source-selected fill prices in these cases; it does not simulate arbitrary venue latency or adverse execution prices.",
+    "Higher XYZ fees are the predeclared stress assumption, not proof of actual historical discount states or current account fee eligibility.",
+    "Qualified accounting and source authentication do not establish live liquidity, native order acceptance, future profitability or robustness to unmodeled frictions.",
+    "Both prospective outcome seals remain intact. No live strategy, allocation, leverage, execution, deployment or TUI installation changed."
+  ],
+  "metrics": {
+    "adverse_live_fill_quality_established": false,
+    "all_non_clock_trade_fields_unchanged": true,
+    "changed_exits_per_allocation": 69,
+    "complete_matrix_evaluated": false,
+    "control_average_notional_increase_pct": 0.732491923505596,
+    "control_net_usd": -33.437249998406514,
+    "drawdown_difference_from_clock_usd": 0,
+    "equal_average_notional_increase_pct": 0.748107210528226,
+    "equal_net_usd": 91.9971661780346,
+    "equity_totals_conserved_per_case": 7,
+    "mean_holding_increase_minutes": 4.819202542372842,
+    "minute_shifted_exits": 13,
+    "net_difference_from_clock_usd": 0,
+    "new_case_analyses": [
+      10,
+      11
+    ],
+    "original_case_indices": [
+      8,
+      9,
+      10,
+      11
+    ],
+    "quarter_shifted_exits": 56,
+    "references_per_case": {
+      "10": 2294,
+      "11": 2294,
+      "8": 2297,
+      "9": 2297
+    },
+    "reporter_commit": "34004579e2cb21d13c55e01c47fa6f69e70d76ff",
+    "trades_per_case": 177,
+    "unchanged_exits": 108,
+    "unique_authenticated_references": 2321
+  },
+  "revision_number": 1,
+  "runtime_strategy_changed": false,
+  "schema_version": 1,
+  "status": "retain",
+  "strategy_id": "multi_asset_growth_first_5000_noncrypto_research_v89",
+  "supersedes_revision_id": null,
+  "symbol": "PORTFOLIO"
+}

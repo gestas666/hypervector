@@ -7,6 +7,38 @@ update evaluates only the original historical window ending September 7 UTC.
 
 ## Current finding and next action
 
+**September 10 09:40 UTC higher-fee clock comparison:** original cases 10/11
+are now independently analyzed and [compared with cases 8/9](../reviews/2026-09-10-v89-full-fee-exit-clock-comparison.md).
+The two new analyses finished successfully around 09:30 UTC; sessions 15529 and
+56172 are terminal. The comparison session 97445 is terminal and successful.
+No native replay was repeated.
+
+Both allocations preserve all 177 ordered trade identities and every non-clock
+field. Fifty-six exits move 899,999 ms, thirteen move 59,999 ms, and 108 remain
+unchanged. Mean holding increases 4.81920 minutes; average gross exposure rises
+0.7325% for control and 0.7481% for equal. Fees, funding, prices, net results and
+maximum marked drawdown remain identical. This measures the modeled exit-clock
+convention and provides no adverse-live-fill or additional profitability proof.
+
+All 2,321 unique references authenticate; each new case checks 2,294 references,
+and all four cases conserve seven equity totals with matching fresh/retained
+independent audits. Separate arithmetic reproduces every timing/holding change.
+Qualified reporter source is unchanged. The journal revision
+`5ca7cd0154b0f3673158d0bd5078b4b4952b5f991e544398ab6fdf7fa900bb67`
+has all 21 fields and 29 direct evidence references verified. The new 6.99-minute
+late-clock runs remain consistent with the full-report four-to-six-hour allowance.
+
+At 09:39:58 UTC the original matrix still has **30/48** receipts, four active
+workers and the original coordinator/handoff active. Sessions 33137 and 44667
+were polled live. Free disk is 8.62 GB; no local live backend or TUI matched.
+Main runtime/configuration and the installed TUI remain unchanged. Preserve both
+prospective seals. Next finish the remaining original cases and qualified full
+report; do not repeat this accepted partial analysis merely for progress. The
+review target remains provisionally September 10 **12:30–16:00 Eastern**, with
+low-to-medium confidence and no substantiated live-start ETA.
+
+The earlier updates below retain their evidence lineage.
+
 **September 10 09:25 UTC execution-time forecast:** 30/48 receipts are complete,
 with four workers active and fourteen queued. The [measured operational forecast](../reviews/2026-09-10-v89-historical-completion-forecast.md)
 uses 27 comparable completed runtimes and preserves original case order. Its
