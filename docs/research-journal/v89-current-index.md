@@ -7,6 +7,52 @@ update evaluates only the original historical window ending September 7 UTC.
 
 ## Current finding and next action
 
+**September 10 04:58 UTC storage and primary-comparison update:**
+the original matrix now has **7/48** completed receipts and four active workers.
+Session **33137** / coordinator PID 72423 remains active; workers at 04:55:31 UTC
+were 76470, 76472, 76810 and 77207. The initial four coordinator-launched workers
+finished in approximately 39.99, 41.07, 50.38 and 50.62 minutes. Their inferred
+start times and receipt timestamps are retained in
+`v89_matrix_resource_diagnosis_20260910_v1/first_batch_timing.json`.
+This supersedes the incomplete-prefix estimate: remaining replay is approximately
+**8–12 hours at four workers**, with medium confidence and final reporting and
+reproduction additional. Larger variants or resource contention can extend it.
+
+The [worktree cache recovery](../reviews/2026-09-10-v89-worktree-storage-recovery.md)
+resolves the current matrix capacity shortfall. Both inactive debug trees were
+completely archived, their 114,230 source entries reverified, then only those
+backed-up trees removed. Observed cleanup increases total 13.59 GB; the retained
+archives occupy 3.95 GB. Available disk was 15.67 GB at 04:55:31 UTC. The installed
+release TUI hash is unchanged, and no research data, live ledger or configuration
+was removed. An additional drive is no longer needed for this run at measured
+case sizes. Recovery is journaled as database revision
+`9ba38172a938d68a98130c87e160d231dc056da77c9d3e12671b5c28165596e6`;
+all 21 fields and 20 references match, including both retained archives.
+
+The [fixed primary adverse-cost pair](../reviews/2026-09-10-v89-primary-adverse-account-comparison.md)
+is complete and independently reconciled. Control returns +$95.72 (+1.97%) with
+$198.28 drawdown; equal allocation returns +$368.92 (+7.59%) with $287.72 drawdown.
+The same 177 closed trade identities occur in both, with 40.68% wins. Equal
+allocation adds $273.20 net and $89.44 marked drawdown with 2.0236 times average
+gross exposure. Later 20-day results are -$87.24 and -$51.87. Removing the three
+largest winners leaves -$132.05 and -$119.81. These are sensitivity diagnostics,
+not implicit gates, and the full matrix is still required.
+This comparison is database revision
+`8a99c663a2e0662ffb953d92143e8bdf1633df1e1833a2b54f88987e42a2747b`;
+all 21 fields and 16 direct references match. Each case separately reauthenticates
+2,297 references and conserves seven equity totals.
+
+Cases 04/05 and their analyses/verification are complete; do not rerun sessions
+45167 or 30353. Both cache archives, verifiers and cleanups are complete. Preserve
+the backups and operator evidence under `v89_worktree_debug_recovery_20260910_v1`.
+No live backend, checkpoint writer or TUI matched the 04:55 process inventory.
+Both prospective seals remain intact; no live-start ETA or live change is claimed.
+Next finish the registered full HIP-3 fee and remaining source/timing cases,
+then publish the complete authenticated 48-case analysis using frozen reporter
+3400457. Avoid changing the active 69dd84a engine or 2486adf coordinator.
+
+The older job states below are retained lineage, superseded by this update.
+
 **September 10 04:20 UTC active-matrix update:**
 the [resumable coordinator](../reviews/2026-09-10-v89-resumable-account-matrix.md)
 is frozen as `2486adf`, with 55 passing tests in both worktree and verified
