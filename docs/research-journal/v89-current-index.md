@@ -7,6 +7,21 @@ update evaluates only the original historical window ending September 7 UTC.
 
 ## Current finding and next action
 
+**September 10 05:23 UTC reporting-handoff update:** the original matrix has
+**8/48** completed cases and four active workers. The qualified
+[reporting handoff](../reviews/2026-09-10-v89-complete-reporting-handoff.md)
+is now waiting as PID 79587 / session 44667 on original coordinator PID 72423.
+Its ownership lock is held; 25 focused tests pass in both worktree and retained
+source (94% statement coverage). Real preflight authenticates 1,951 references.
+After original producer completion it invokes unchanged reporter 3400457 for
+all 48 cases. It cannot restart replay or promote a strategy. Preserve its
+operator and source while active. Free disk is 14.95 GB; no local live backend,
+checkpoint writer or TUI matched. Replay is estimated around 09:00–13:00 Eastern
+September 10, medium confidence; final reporting/reproduction are additional.
+No go-live ETA is established. Both prospective outcome seals remain active.
+
+The earlier updates below retain their findings and evidence lineage.
+
 **September 10 04:58 UTC storage and primary-comparison update:**
 the original matrix now has **7/48** completed receipts and four active workers.
 Session **33137** / coordinator PID 72423 remains active; workers at 04:55:31 UTC
