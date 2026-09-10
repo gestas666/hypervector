@@ -70,3 +70,41 @@ controls. It is not an independently reproduced release or historical economic
 result. The authenticated account reader, trade/cost/open-exposure attribution,
 full matrix comparison and complete frozen reproduction remain required. The
 original producer and the qualified `a86bd6f` replay engine were not changed.
+
+## Reader and trade qualification, September 10 00:33 UTC
+
+The authenticated reader and closed/open trade attribution are now implemented
+and qualified as source `e3b55984bfeb3aef3276facb86f37598a232482c`.
+The combined 87-test suite passes in the worktree and verified archive, covering
+400/413 measured statements (97%). Complete native two-day accounts under both
+clocks reconcile source identities, independent account postings, path changes
+and trade contributions. Negative equity remains a result; audited closed-result
+signs remain unchanged within reconciliation tolerance. The
+[qualification review](../reviews/2026-09-10-v89-account-analysis-qualification.md)
+records commands, evidence, coverage and limits. This supersedes the preceding
+component entry's unfinished reader/trade status. Full historical outcomes have
+not yet been evaluated.
+
+## Remaining report assembly
+
+Trace every original source-priced entry proposal to its recorded pre-account
+routing exclusion or committed account disposition. `source_event.entries`,
+`new_rejected_entries` and `committed_batch.entries` retain the necessary evidence.
+Join accepted and rejected account dispositions by trade identity and timestamp.
+Require conservation without double counting exclusions or treating routine empty
+provider evaluations as missed trades. Account-level rejection counts alone do
+not explain every proposal that failed to open a position.
+
+Aggregate reconciled contribution rows by asset, strategy and direction. Keep
+terminal open exposure and closed-trade outcomes explicit. Preserve full marked
+daily and original 28/20-period account changes, and distinguish removal of the
+largest positive days from removal of the largest closed-trade winners when
+describing concentration. These are diagnostic calculations, not new trial gates.
+
+The final coordinator must authenticate the complete original 48-case report,
+its case/manifest/source-pair identities and the original allocation fingerprints.
+Publish every source, cost, clock and allocation case and paired differences;
+do not select cases based on their sign or silently replace the control case.
+Identify the frozen replay engine separately from the reporting implementation.
+The first timing pilot remains a single measured case and cannot stand in for
+the complete matrix or authorize a live recommendation.

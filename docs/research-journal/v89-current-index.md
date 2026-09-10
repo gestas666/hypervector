@@ -1,6 +1,6 @@
 # Current V89 research index
 
-Updated September 9, 2026. This is research navigation, not a live-state checkpoint.
+Updated September 10, 2026 UTC. This is research navigation, not a live-state checkpoint.
 The active mandate permits research and proposals; live changes remain subject
 to explicit approval. Both prospective outcome seals remain active. No account
 outcome was refreshed for this update.
@@ -39,9 +39,9 @@ All 88 evidence references, 21 database fields and four journal copies match.
 Preserve the frozen implementation and completed evidence.
 Do not repeat the completed worktree suites or resource probes without new evidence.
 
-At September 9 23:59:08 UTC, the waiting first-case operator confirms that the
+At September 10 00:33:10 UTC, the waiting first-case operator confirms that the
 original canonical export **32156**, parent 26037, remains active under its
-original process identity. It has 309/384 daily summaries (80%); the final export
+original process identity. It has 340/384 daily summaries (89%); the final export
 report remains absent. The September 9 21:00–22:00 EDT export estimate remains
 a throughput estimate, not a live launch deadline. At 23:50 UTC both known
 prospective collector PIDs were present; no matching local live backend,
@@ -59,13 +59,21 @@ No completed pilot result or full 48-case matrix exists yet. Preserve its
 
 The separate [complete account analysis](../plans/2026-09-09-v89-complete-account-analysis.md)
 worktree is `/Users/gestas/Prototypes/hypervector-v89-history-analysis-20260909`,
-source `10df2eb`. The first path-metrics component passed 29 tests (118/118
-measured statements), plus both retained complete synthetic account probes.
-Daily and original-period marked equity changes reconcile to independently
-audited terminal equity. The probe authenticated 15 references; its report is
-under `v89_historical_account_path_metrics_qualification_20260909_v1/`.
-This is bounded arithmetic qualification. The artifact reader, full trade and
-cost attribution, complete matrix analysis and frozen reproduction remain open.
+source `e3b55984bfeb3aef3276facb86f37598a232482c`. Its authenticated artifact reader,
+path metrics and closed/open trade attribution passed **87 tests** in the worktree
+(172.11 seconds) and verified archive (172.00 seconds). Coverage is 400/413 measured
+statements: path and trade arithmetic 100%, reader 90%. All 1,927 implementation
+members and seven pinned test/support sources remained unchanged during each run;
+all 5,559 regular archive members and executable modes were rechecked afterward.
+The [account analysis qualification](../reviews/2026-09-10-v89-account-analysis-qualification.md)
+records the complete evidence under
+`v89_historical_account_analysis_qualification_20260910_v1/`.
+This is bounded synthetic reporting qualification. It retains incurred fees and
+funding on open positions, reconciles all contributions to terminal equity and
+preserves audited near-zero closed-result signs. Native pre-account exclusions
+and complete case/matrix report assembly remain open. The earlier 29-test path
+component and its retained probes remain lineage under
+`v89_historical_account_path_metrics_qualification_20260909_v1/`.
 No prospective outcome, live process or live configuration changed.
 
 Next authenticate the full canonical catalog and run, independently reconcile and
