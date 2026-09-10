@@ -3,11 +3,39 @@
 Updated September 10, 2026 UTC. This is research navigation, not a live-state checkpoint.
 The active mandate permits research and proposals; live changes remain subject
 to explicit approval. Both prospective outcome seals remain active. The latest
-update independently refreshes collector timing/coverage while the original
-audit and automatic final-review handoff continue.
+update qualifies explicit prebuilt TUI selection while the original audit and
+automatic final-review handoff continue.
 Historical studies remain bounded to the window ending September 7 UTC.
 
 ## Current finding and next action
+
+**September 10 16:59 UTC launcher qualification:**
+The [prebuilt launcher correction](../reviews/2026-09-10-v89-prebuilt-tui-launch.md)
+at `e8dbdaff68700bd2fe61c4104e4e4d317f429db0` passes 129 related tests in the
+worktree and restored source. Explicit path/hash selection reaches both CLI
+layers, refuses executable drift before child startup and foreground invocation,
+and preserves existing lifecycle behavior. The selected native executable passes
+help-only invocation. Actual terminal and live acceptance remain unverified.
+
+Correction to the prior packaging readiness scope: the old file-installation
+rehearsal did not prove executable selection; the installed launcher still uses
+Cargo and its build metadata is absent. A superseding 60-path installation and
+compatible rollback packet is the next technical step. The old 52-path packet
+remains preserved. No candidate code or TUI has been installed.
+
+Journal `23e39426da3800404b7d3b6dcd2eaee49c549e7294a63e737921d70015c5b88d`
+has all 21 stored fields and 25 direct references verified. Two temporary restored
+source copies were removed after all 10,430 source/fixture/log files matched
+retained backups; all archives and supplemental evidence remain available.
+
+At 16:52:27 UTC the original reporter remains active at 100% CPU with **28/48
+final case audits** complete. All 48 simulations are finished; both original
+observers and collectors remain active, and no canonical local live process is
+present. Final report publication is pending. Do not start duplicate preparation.
+The conditional live ballpark remains **16:00–19:00 Eastern today**, low confidence,
+requiring the report, revised package, final selected approval and fresh
+account/order/TUI acceptance. Current venue flatness is not established by the
+local process check. Both prospective financial outcome seals remain intact.
 
 **September 10 15:51 UTC prospective-health refresh:**
 The [fresh timing audit](../reviews/2026-09-10-v89-prospective-health-refresh.md)

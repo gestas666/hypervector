@@ -1,0 +1,207 @@
+{
+  "automatic_promotion": false,
+  "confidence": "high",
+  "created_at_utc": "2026-09-10T16:43:17.398334+00:00",
+  "decision": "Retain candidate e8dbdaff68700bd2fe61c4104e4e4d317f429db0 and prepare a superseding combined deployment/compatible rollback packet. The current 52-file packet does not include explicit prebuilt executable selection. Both parser layers preserve the proposed path/hash, all 129 launcher-dependent checks pass in the worktree and restored archive, and the retained native binary passes help-only execution. No installed source, live configuration, process or TUI changed. Final exact deployment approval and fresh live acceptance remain required.",
+  "evidence": [
+    {
+      "bytes": 2735,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prebuilt_tui_launcher_qualification_20260910_v1/PLAN.md",
+      "role": "verified_prebuilt_tui_launch_qualification",
+      "sha256": "5b51ec056818e5042d950448a15baae7630e01fd23759ea6ccf4b10702bfbcba"
+    },
+    {
+      "bytes": 1822,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prebuilt_tui_launcher_qualification_20260910_v1/baseline.json",
+      "role": "verified_prebuilt_tui_launch_qualification",
+      "sha256": "1ad6a3460d66b58c7e6cbedd80bb72655bbbaca884d558c52eda1437f613d3ee"
+    },
+    {
+      "bytes": 655,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prebuilt_tui_launcher_qualification_20260910_v1/source_commit.json",
+      "role": "verified_prebuilt_tui_launch_qualification",
+      "sha256": "be4b21f68044a92f6a1057367e41bc7a93a962449d04a21803f167856f309491"
+    },
+    {
+      "bytes": 3631,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prebuilt_tui_launcher_qualification_20260910_v1/source_commit_v2.json",
+      "role": "verified_prebuilt_tui_launch_qualification",
+      "sha256": "5d32c928839e0caed41bccd576aa36db16e3a28a1d194e866ade5ad6b8454bd9"
+    },
+    {
+      "bytes": 5626,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prebuilt_tui_launcher_qualification_20260910_v1/qualification.json",
+      "role": "verified_prebuilt_tui_launch_qualification",
+      "sha256": "70134cadb2a0d9be3fed5c7d8d03124c0b7654554cfc78bc9eb7dc9082eb537c"
+    },
+    {
+      "bytes": 33105841,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prebuilt_tui_launcher_qualification_20260910_v1/source_v2.tar.gz",
+      "role": "verified_prebuilt_tui_launch_qualification",
+      "sha256": "4d793e15d4e005bb1c2fda5ecaf7d590393047f01c82b72c482f3e0c3c7b55a7"
+    },
+    {
+      "bytes": 438,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prebuilt_tui_launcher_qualification_20260910_v1/source_archive_v2_verified.json",
+      "role": "verified_prebuilt_tui_launch_qualification",
+      "sha256": "5df7a3047ad10ac5ebf52b81ed5f096926000e2e5cfc362b490354c2119bcd4d"
+    },
+    {
+      "bytes": 6762,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prebuilt_tui_launcher_qualification_20260910_v1/supplemental_fixture_manifest.json",
+      "role": "verified_prebuilt_tui_launch_qualification",
+      "sha256": "f4d6e3d3f29df4ab5ea5cebd9a5739219b59961711d74c363cb8182ad0c66e5c"
+    },
+    {
+      "bytes": 2163,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prebuilt_tui_launcher_qualification_20260910_v1/worktree_v2_tests_command.json",
+      "role": "verified_prebuilt_tui_launch_qualification",
+      "sha256": "fcb136b5ef852fc481175158584d0d89d16f1c0e144eda3d7a22ebe5aa5b6f1f"
+    },
+    {
+      "bytes": 180,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prebuilt_tui_launcher_qualification_20260910_v1/tests_worktree_v2.log",
+      "role": "verified_prebuilt_tui_launch_qualification",
+      "sha256": "4d6c559697e495f8a9b959fdbd32236337d6a3dab49b37e1d6fdcfd43fed8481"
+    },
+    {
+      "bytes": 2396,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prebuilt_tui_launcher_qualification_20260910_v1/archive_v2_tests_command.json",
+      "role": "verified_prebuilt_tui_launch_qualification",
+      "sha256": "edcaed3cf347a123dc6f3398ae2b869d44c05e181c3991997af6f7d25b5f39db"
+    },
+    {
+      "bytes": 180,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prebuilt_tui_launcher_qualification_20260910_v1/tests_archive_v2.log",
+      "role": "verified_prebuilt_tui_launch_qualification",
+      "sha256": "521f726925062c174113f06b41d0f5e4b13287673d0601fac1093c5eb5fcae50"
+    },
+    {
+      "bytes": 54890,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prebuilt_tui_launcher_qualification_20260910_v1/coverage_archive_v2.json",
+      "role": "verified_prebuilt_tui_launch_qualification",
+      "sha256": "1b1d06ccf3fe6526b1934281973c89e912c706af830a5ae0a2b8ed61185f81bb"
+    },
+    {
+      "bytes": 791,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prebuilt_tui_launcher_qualification_20260910_v1/native_help_verified.json",
+      "role": "verified_prebuilt_tui_launch_qualification",
+      "sha256": "bf6beef60da76987ebb9f9f32389f861a281ca909e66182d874d6988a697fddc"
+    },
+    {
+      "bytes": 1646,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prebuilt_tui_launcher_qualification_20260910_v1/native_help.stdout",
+      "role": "verified_prebuilt_tui_launch_qualification",
+      "sha256": "c9118badba2bf09906e43f3912d604ace630058f1903b126cb5b02124966834f"
+    },
+    {
+      "bytes": 1697,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prebuilt_tui_launcher_qualification_20260910_v1/proposed_command_verified.json",
+      "role": "verified_prebuilt_tui_launch_qualification",
+      "sha256": "e234ccf023e1e798644c34c9727984af3c8fddcf9a29adb46a81f95d154370aa"
+    },
+    {
+      "bytes": 1141,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prebuilt_tui_launcher_qualification_20260910_v1/runtime_observation.json",
+      "role": "verified_prebuilt_tui_launch_qualification",
+      "sha256": "29aef51cf0dae7d450d964930a82a8420ecc65fff182518a65676d24af3390a6"
+    },
+    {
+      "bytes": 60865,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prebuilt_tui_launcher_qualification_20260910_v1/tests_red.log",
+      "role": "verified_prebuilt_tui_launch_qualification",
+      "sha256": "7abdde973644d9efea2b9b2930f797ab99895200faa65fa5c48fa02c14494392"
+    },
+    {
+      "bytes": 6206,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prebuilt_tui_launcher_qualification_20260910_v1/tests_regression_initial.log",
+      "role": "verified_prebuilt_tui_launch_qualification",
+      "sha256": "df84276b7f86e903c397df7d53b6f55740a794cfe2a71d86e6fd9121caff9c5f"
+    },
+    {
+      "bytes": 2061,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prebuilt_tui_launcher_qualification_20260910_v1/tests_boundary_red.log",
+      "role": "verified_prebuilt_tui_launch_qualification",
+      "sha256": "abd1a11e26485e1b0c3cc8bd2ae7fd7336dcff8ed2a52372100cb2a3a9cf0461"
+    },
+    {
+      "bytes": 2506,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prebuilt_tui_launcher_qualification_20260910_v1/tests_qualified.log",
+      "role": "verified_prebuilt_tui_launch_qualification",
+      "sha256": "5ef9e3ecfb9c8fe47df31787c07122a98379bb470c5d9d80eed5d7b9f357827c"
+    },
+    {
+      "bytes": 18336,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prebuilt_tui_launcher_qualification_20260910_v1/tests_archive.log",
+      "role": "verified_prebuilt_tui_launch_qualification",
+      "sha256": "0845609ec7f7fb3b47955dae065eb5c2191c3af9783f41b5a90f8a86b6dcf13b"
+    },
+    {
+      "bytes": 10308,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/reviews/2026-09-10-v89-prebuilt-tui-launch.md",
+      "role": "verified_prebuilt_tui_launch_qualification",
+      "sha256": "827a3ce88b8fb110e6037876bc64dc7969896590edad2d6a2c2e58d37b8af216"
+    },
+    {
+      "bytes": 5762,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prebuilt_tui_launcher_qualification_20260910_v1/source_copy_cleanup_plan.json",
+      "role": "backed_up_restored_source_copy_cleanup",
+      "sha256": "ca3c43a28a94876789db17739d00670710f13c9a33f315217014b7bdf76e930f"
+    },
+    {
+      "bytes": 860,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prebuilt_tui_launcher_qualification_20260910_v1/source_copy_cleanup.json",
+      "role": "backed_up_restored_source_copy_cleanup",
+      "sha256": "fbd3ddf6100486c970893d1e5358cb13464b1d063edc2bc6588e564b74963a59"
+    }
+  ],
+  "execution_authority": "none",
+  "falsifier": "Changed source or executable identity, lost CLI/data arguments, a process starting after failed verification, broken existing lifecycle/accounting interfaces, or contradictory native acceptance invalidates the corresponding offline finding. This qualification does not establish live or financial readiness.",
+  "hypothesis": "Explicit authenticated selection can use the qualified TUI executable without the current cohort launcher invoking Cargo after backend startup, while preserving command data and owned lifecycle behavior.",
+  "hypothesis_id": "v89_prebuilt_tui_launcher_20260910_v1",
+  "limitations": [
+    "Binary verification retains a final filesystem check-to-exec race; a matching digest establishes identity, not arbitrary executable safety or actual display acceptance.",
+    "Omitting both new options retains the existing development Cargo command. The reviewed release command must explicitly select the installed candidate and its hash.",
+    "All real process/order boundaries in the new lifecycle tests are mocked. Actual native execution is limited to --help, before terminal/data initialization.",
+    "Legacy qualification uses eight exact local evidence files and existing authenticated historical backup references; it is same-machine qualification, not a self-contained external deployment. The latest checkpoint is inspected only by an opaque retired-filename exclusion test.",
+    "The argument/validation helper has 31/34 statements and 7/10 branches covered. Existing invalid-option paths and broader supervisor coverage are not claimed as fully covered.",
+    "The earlier archive records a compatibility issue from moving the accounting loader and three missing-fixture failures; the final source preserves that original interface and the complete restored run passes.",
+    "The superseding installation/compatible rollback packet, original economic report, final human approval and fresh account/order/all-nine-view acceptance remain incomplete. Both prospective financial outcome seals remain intact.",
+    "Restored test copies were removed after complete backup verification. Reproduction requires archived source restored with pinned Git modes and all eight retained fixtures; original test logs and both source archives remain available."
+  ],
+  "metrics": {
+    "archive_tests_passed": 129,
+    "both_parser_layers_match": true,
+    "cargo_build_executed": false,
+    "cleanup_files_verified": 10430,
+    "cleanup_free_space_increase_bytes": 468942848,
+    "combined_candidate_source_test_paths": 60,
+    "installed": false,
+    "live_readiness_established": false,
+    "native_help_exit_code": 0,
+    "new_binary_branches_covered": 14,
+    "new_binary_branches_total": 14,
+    "new_binary_statements_covered": 44,
+    "new_binary_statements_total": 44,
+    "new_runtime_paths": 5,
+    "original_case_audits_completed": 27,
+    "original_simulations_completed": 48,
+    "proposed_live_command_executed": false,
+    "prospective_outcomes_evaluated": false,
+    "restored_source_copies_removed": 2,
+    "runtime_observed_at_utc": "2026-09-10T16:43:17.356400+00:00",
+    "source_archive_bytes": 33105841,
+    "source_archive_git_blobs_verified": 5210,
+    "supplemental_fixture_bytes": 9315461,
+    "supplemental_fixture_files": 8,
+    "test_files": 21,
+    "worktree_tests_passed": 129
+  },
+  "revision_number": 1,
+  "runtime_strategy_changed": false,
+  "schema_version": 1,
+  "status": "candidate",
+  "strategy_id": "multi_asset_growth_first_5000_noncrypto_research_v89",
+  "supersedes_revision_id": null,
+  "symbol": "PORTFOLIO"
+}
