@@ -1,0 +1,234 @@
+{
+  "automatic_promotion": false,
+  "confidence": "high",
+  "created_at_utc": "2026-09-10T11:47:39.779171+00:00",
+  "decision": "Retain the descriptive trace. Full-fee long winners decline from seven of eighteen earlier entries to two of eleven later entries; all nine winners reach the 24-hour hold limit. Stop frequency increases with little change in average gross stop loss. This is consistent with weaker follow-through, but does not establish a causal filter or executable profit-lock policy. Combine with the complete original matrix and preserve prior rejected/accepted study dispositions.",
+  "evidence": [
+    {
+      "bytes": 3176,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_trade_driver_diagnostic_20260910_v1/PLAN.md",
+      "role": "v89_sndk_trade_driver_diagnostic_20260910_v1",
+      "sha256": "0f58488adc7643f683d8a07a25e8d4dddad7bf8acbad56be402dc8f60e65a49b"
+    },
+    {
+      "bytes": 192,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_trade_driver_diagnostic_20260910_v1/analysis.log",
+      "role": "v89_sndk_trade_driver_diagnostic_20260910_v1",
+      "sha256": "5483167145a4d53973e6fef6fc928a2beb86f6778ed9af85959bc2e9b8d56118"
+    },
+    {
+      "bytes": 9597,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_trade_driver_diagnostic_20260910_v1/analyze_sndk.py",
+      "role": "v89_sndk_trade_driver_diagnostic_20260910_v1",
+      "sha256": "82e277a392a7e4e1a0660e13acedb11360838c90fdbca8cbaf5a2792e727871a"
+    },
+    {
+      "bytes": 33072,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_trade_driver_diagnostic_20260910_v1/archive_coverage.json",
+      "role": "v89_sndk_trade_driver_diagnostic_20260910_v1",
+      "sha256": "daa99318c2b255c3f2b6f88433f044ed044a32eb71d20cbaa464fee362d7b89a"
+    },
+    {
+      "bytes": 314,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_trade_driver_diagnostic_20260910_v1/archive_tests.log",
+      "role": "v89_sndk_trade_driver_diagnostic_20260910_v1",
+      "sha256": "ab398ca81fc6fe3c4e826cbb0cec41e3478f04d0347329fcbb8756e314a303d3"
+    },
+    {
+      "bytes": 134569,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_trade_driver_diagnostic_20260910_v1/case_00.json",
+      "role": "v89_sndk_trade_driver_diagnostic_20260910_v1",
+      "sha256": "4b82dee77033910e18b08582eebe7df57cdb43db178bcd6c449c4934df05e539"
+    },
+    {
+      "bytes": 134444,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_trade_driver_diagnostic_20260910_v1/case_01.json",
+      "role": "v89_sndk_trade_driver_diagnostic_20260910_v1",
+      "sha256": "b3a5d6d9caaebe261883e2143cb7ec238ea7f7a415cf78128621c44d8280d887"
+    },
+    {
+      "bytes": 134601,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_trade_driver_diagnostic_20260910_v1/case_04.json",
+      "role": "v89_sndk_trade_driver_diagnostic_20260910_v1",
+      "sha256": "00a26e078ae64959c5cec1b533df82e12b726364d1102ebca6421b58e6258111"
+    },
+    {
+      "bytes": 134374,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_trade_driver_diagnostic_20260910_v1/case_05.json",
+      "role": "v89_sndk_trade_driver_diagnostic_20260910_v1",
+      "sha256": "6c5ec7e2c0a6a3da938a18d919767ef440f1090a5cc852a73c27da94c87eb60c"
+    },
+    {
+      "bytes": 134277,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_trade_driver_diagnostic_20260910_v1/case_08.json",
+      "role": "v89_sndk_trade_driver_diagnostic_20260910_v1",
+      "sha256": "790a9c2851c2b9558dfb9bb6f8c80f59d80faef5f9e19fc01da2204bc870818e"
+    },
+    {
+      "bytes": 134122,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_trade_driver_diagnostic_20260910_v1/case_09.json",
+      "role": "v89_sndk_trade_driver_diagnostic_20260910_v1",
+      "sha256": "5329c521a5d3442c03824464fa07b8b19b64330db5cdbd7c82dbc778679d468c"
+    },
+    {
+      "bytes": 910282,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_trade_driver_diagnostic_20260910_v1/diagnostic.json",
+      "role": "v89_sndk_trade_driver_diagnostic_20260910_v1",
+      "sha256": "4800e02c85e774b24411057eed08ed16cc0e8982abb1cf5ce8542fe243786e82"
+    },
+    {
+      "bytes": 806,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_trade_driver_diagnostic_20260910_v1/independent_check.log",
+      "role": "v89_sndk_trade_driver_diagnostic_20260910_v1",
+      "sha256": "e7b01d13ca388293922687f2ab3b4e48b792f324ec96a329864b992e33c2afe3"
+    },
+    {
+      "bytes": 6004,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_trade_driver_diagnostic_20260910_v1/independent_check.py",
+      "role": "v89_sndk_trade_driver_diagnostic_20260910_v1",
+      "sha256": "433ca0d8db14b73f9f9c47fd3316c349914d96fd89c1229631601874473916c6"
+    },
+    {
+      "bytes": 19,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_trade_driver_diagnostic_20260910_v1/independent_ruff.log",
+      "role": "v89_sndk_trade_driver_diagnostic_20260910_v1",
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    {
+      "bytes": 2412,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_trade_driver_diagnostic_20260910_v1/independent_source.tar.gz",
+      "role": "v89_sndk_trade_driver_diagnostic_20260910_v1",
+      "sha256": "a0330cfff9931939e94525ac9f365b5e38c134aa1c00af62400049a57269fee8"
+    },
+    {
+      "bytes": 1028,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_trade_driver_diagnostic_20260910_v1/independent_verified.json",
+      "role": "v89_sndk_trade_driver_diagnostic_20260910_v1",
+      "sha256": "1cdafafd5c0b91df5b75e35dc56d78debaf1a7d1809ec642da733eff494ced7e"
+    },
+    {
+      "bytes": 7651,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_trade_driver_diagnostic_20260910_v1/metrics_coverage.json",
+      "role": "v89_sndk_trade_driver_diagnostic_20260910_v1",
+      "sha256": "68086b67dabf2fa7d4fb39178d518729b2e3397419d94068b7866b7d944d2e7c"
+    },
+    {
+      "bytes": 883,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_trade_driver_diagnostic_20260910_v1/metrics_green.log",
+      "role": "v89_sndk_trade_driver_diagnostic_20260910_v1",
+      "sha256": "fbd6a303559e025b189ddc528c10d4e666c144d44458fdcb6c3c63b0881fe1f8"
+    },
+    {
+      "bytes": 2055,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_trade_driver_diagnostic_20260910_v1/metrics_red.log",
+      "role": "v89_sndk_trade_driver_diagnostic_20260910_v1",
+      "sha256": "db2fe2f058ee0ac0d3a9109d3af7964001a935dd8aa75cf7629156b5664a4512"
+    },
+    {
+      "bytes": 19,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_trade_driver_diagnostic_20260910_v1/operator_ruff.log",
+      "role": "v89_sndk_trade_driver_diagnostic_20260910_v1",
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    {
+      "bytes": 8520,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_trade_driver_diagnostic_20260910_v1/operator_source.tar.gz",
+      "role": "v89_sndk_trade_driver_diagnostic_20260910_v1",
+      "sha256": "06fa7385dfae776c6f2c8f36375d837db38f734710365eef0d0a040701246cdd"
+    },
+    {
+      "bytes": 471,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_trade_driver_diagnostic_20260910_v1/qualified.json",
+      "role": "v89_sndk_trade_driver_diagnostic_20260910_v1",
+      "sha256": "c01f70b1327079f8d8410865570aaebc53f5dac06290b7a6867a140c6d82d084"
+    },
+    {
+      "bytes": 8637,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_trade_driver_diagnostic_20260910_v1/qualified_coverage.json",
+      "role": "v89_sndk_trade_driver_diagnostic_20260910_v1",
+      "sha256": "435eb6c35ce9f01e0a9bcf9ee71b5bcc44cd573b244e3435fa4d76b2d04f1abc"
+    },
+    {
+      "bytes": 885,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_trade_driver_diagnostic_20260910_v1/qualified_tests.log",
+      "role": "v89_sndk_trade_driver_diagnostic_20260910_v1",
+      "sha256": "1b9b8a58f36dc21c82ecee1c2033b18548e328a6cd6c6310b4ee21fcd16203c8"
+    },
+    {
+      "bytes": 6954,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_trade_driver_diagnostic_20260910_v1/sndk_metrics.py",
+      "role": "v89_sndk_trade_driver_diagnostic_20260910_v1",
+      "sha256": "3abc60206ad2f9dac879a35fd657bced7e3a550ac3ff442f95bf4e5961460c65"
+    },
+    {
+      "bytes": 3115,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_trade_driver_diagnostic_20260910_v1/source_manifest.json",
+      "role": "v89_sndk_trade_driver_diagnostic_20260910_v1",
+      "sha256": "7f3a7727eba631cfef0ddde1f2e8a924a3d4bf18ac88fb1ae99414f4879952e5"
+    },
+    {
+      "bytes": 2235,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_trade_driver_diagnostic_20260910_v1/test_sndk_context.py",
+      "role": "v89_sndk_trade_driver_diagnostic_20260910_v1",
+      "sha256": "7309ef4b2d8cfba5c15af967855c80e669b18a8e9a1f861e7b8cdfa41c868a1a"
+    },
+    {
+      "bytes": 4209,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_trade_driver_diagnostic_20260910_v1/test_sndk_metrics.py",
+      "role": "v89_sndk_trade_driver_diagnostic_20260910_v1",
+      "sha256": "19e668ac215c74c114691aacf85540ba5694f88642d00f08e2e66e7aaf72d74d"
+    },
+    {
+      "bytes": 5605,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/reviews/2026-09-10-v89-sndk-trade-drivers.md",
+      "role": "v89_sndk_trade_driver_diagnostic_20260910_v1",
+      "sha256": "504f1f6b44457009e6529b5d35df2ca339667cc162d436e942e8449747034aed"
+    }
+  ],
+  "execution_authority": "none",
+  "falsifier": "Changed source identities, mismatched accepted publication clocks, missing held bars, contradictory independent raw-account/SQL arithmetic or different boundary ownership invalidate the corresponding measurement. New unsealed evidence or different fills can change interpretation.",
+  "hypothesis": "Trace the SNDK period decline through exact accepted entry publications, full lifecycle entry cohorts, exit reasons and completely held 15-minute close paths in six fixed original cases.",
+  "hypothesis_id": "v89_sndk_trade_driver_diagnostic_20260910_v1",
+  "limitations": [
+    "Selection follows a previously examined period deterioration; six related historical cases are not new or independent holdouts.",
+    "Entry cohorts retain full lifecycle outcomes and differ from marked account periods for one carried SNDK long.",
+    "Completed-close excursions exclude partial and exit-bar future prices; they are not continuous extrema, venue marks or executable peak exits.",
+    "First-hour paths are conditional on surviving at least an hour; sample composition can bias entry-quality interpretation.",
+    "Causal ATR/channel observations supply no fitted or validated live threshold. A changed exit can also interrupt large winners.",
+    "Only the metric/context module has the stated 100% unit coverage; the driver uses historical source/cash checks.",
+    "All source, cost, fill, initialization and conditional execution-price limitations remain. Both prospective seals remain intact; no live change occurred."
+  ],
+  "metrics": {
+    "archive_members": 5,
+    "complete_matrix_evaluated": false,
+    "control_earlier_long_entry_cohort_net_usd": 130.63356811929575,
+    "control_later_long_entry_cohort_net_usd": -35.16416944603212,
+    "earlier_long_stop_exits": 7,
+    "earlier_long_trades": 18,
+    "earlier_long_wins": 7,
+    "execution_authority": "none",
+    "independent_archive_sha256": "a0330cfff9931939e94525ac9f365b5e38c134aa1c00af62400049a57269fee8",
+    "independent_comparisons": 2070,
+    "later_long_stop_exits": 8,
+    "later_long_trades": 11,
+    "later_long_wins": 2,
+    "live_performance_established": false,
+    "marked_cash_totals_reconciled": 18,
+    "metric_branches_covered": 28,
+    "metric_statements_covered": 89,
+    "repeated_case_trade_rows": 282,
+    "source_files_unchanged": true,
+    "status": "pass",
+    "tests_archive": 40,
+    "tests_worktree": 40,
+    "unique_authenticated_references": 2367,
+    "unique_trade_identities": 47
+  },
+  "revision_number": 1,
+  "runtime_strategy_changed": false,
+  "schema_version": 1,
+  "status": "retain",
+  "strategy_id": "multi_asset_growth_first_5000_noncrypto_research_v89",
+  "supersedes_revision_id": null,
+  "symbol": "PORTFOLIO"
+}

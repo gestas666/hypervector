@@ -7,6 +7,50 @@ update evaluates only the original historical window ending September 7 UTC.
 
 ## Current finding and next action
 
+**September 10 11:49 UTC SNDK and capacity update:** the original historical
+matrix has **42/48** receipts. Storage pressure temporarily reduced concurrency
+to one worker. Five [verified release-cache recoveries](../reviews/2026-09-10-v89-release-cache-recovery.md)
+preserve all top-level executable/library files and retain 917.81 MB of complete
+archives covering 9,535 entries. At 11:42 UTC, capacity is 5.38 GB and the original
+coordinator has restored three workers without restarting or changing its 2 GiB
+reserve and 1 GiB per-case reservation. Main source/configuration and the installed
+TUI bytes remain unchanged. Further capacity growth can reduce concurrency again.
+
+The revised complete-review target is **13:00–16:30 Eastern, September 10**,
+with low-to-medium confidence. It uses six remaining original identities, the
+three captured active elapsed times, two/three subsequent-worker scenarios and
+the existing four-to-six-hour full-report allowance. This replaces the earlier
+12:30–16:00 planning range and is not a live-start ETA. Fewer than two sustained
+workers or further technical delays require another update.
+
+The [SNDK trade trace](../reviews/2026-09-10-v89-sndk-trade-drivers.md) is complete
+for six fixed historical cases. Full-fee long entry cohorts have seven winners
+from eighteen earlier entries and two from eleven later entries. All nine
+winners reach the 24-hour hold limit. Stop exits rise from seven to eight while
+mean gross stop returns remain near -207 bps. This supports a descriptive
+follow-through hypothesis, not a validated entry filter or profit-lock policy.
+First-hour returns are conditional on continued holding and remain explicitly
+censored for shorter trades. Earlier/later entry cohorts differ from marked
+periods for one carried long.
+
+Forty synthetic tests pass in the operators and frozen archive, with 89/89
+statements and 28/28 branches covered in the metric/context module. The trace
+authenticates 2,367 references and retains the same 47 SNDK identities per case.
+Independent raw-account Decimal arithmetic and DuckDB native-price queries pass
+2,070 comparisons; eighteen marked cash totals match the prior attribution.
+Journal 18ce14aafaf13ae9a62e467bda74c6af5d769d74085c6ddd5fe0a58c9cbe00fa
+has 21 fields and 30 direct references verified. Recovery journal
+b8b10920fcb0066028e92530b1ab877d18d2727e5ff14675a272d235278a7de9
+has 21 fields and 85 references verified.
+
+Next finish the original matrix and unchanged full-report handoff, then combine
+the complete source/cost/clock/allocation contrasts with the retained period and
+SNDK diagnoses. Do not reopen the rejected faster-entry study or repeat accepted
+clock/stop work without new evidence. Both prospective outcome seals and the
+uninstalled technical release remain intact; live execution remains off locally.
+
+The earlier updates below retain their evidence lineage.
+
 **September 10 11:16 UTC period-driver diagnostic:** the original matrix has
 **38/48** receipts and four active workers. The original coordinator and reporting
 handoff were polled live. The historical completion/review forecast remains
