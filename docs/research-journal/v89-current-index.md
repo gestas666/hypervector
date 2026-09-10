@@ -7,6 +7,49 @@ update evaluates only the original historical window ending September 7 UTC.
 
 ## Current finding and next action
 
+**September 10 05:57 UTC full-fee and technical integration update:** the
+original coordinator remains active with **11/48** completed cases. Its
+reporting handoff remains active; preserve sessions 33137 and 44667 and their
+frozen sources. Four replay workers were active at 05:50 UTC, with 14.16 GB free.
+
+The [full-fee allocation comparison](../reviews/2026-09-10-v89-full-fee-account-comparison.md)
+is complete and journaled. Control returns -$33.44 (-0.69%) with $233.56 maximum
+marked drawdown; equal returns +$92.00 (+1.89%) with $365.68 drawdown. Both have
+177 closed trades, 66 wins and 111 losses. Later segments are -$137.03 and
+-$158.60. The full-period equal-allocation difference is +$125.43, with $132.11
+more drawdown and 2.0236 times average gross exposure. Each case authenticates
+2,297 references and seven equity totals. The higher entry fee also moves one
+modeled SNDK liquidation price; independent collateral arithmetic explains
+that gross-price effect, and all other non-fee trade fields match. The journal
+revision is `53fde070dd6f0a1bc2168a3722c70274e9b25c5cde9b83230aa0c0727e2e5247`;
+all 21 fields and 25 direct references are verified. Both case analyses are
+terminal; do not rerun sessions 16258 or 19954.
+
+The [combined technical candidate](../reviews/2026-09-10-v89-technical-release-integration.md)
+is frozen as `71fbf0541fd1360e726f49b7de89ae905912020c` in the isolated technical
+release checkout. Its 26 implementation files preserve the exact deadline,
+mapped-reader and staging proposals. All 602 focused tests across 56 modules
+pass in the worktree and retained archive, with identical test identities and
+no unexpected Python socket events. All 5,144 Git blobs and 530 adjacent provider
+sources match before and after archive testing. This is journal revision
+`5d8d234f53ef20c2655206b60e340f8cdba8ec15efeab9757880cb2cee3454b7`;
+all 21 fields and 19 direct references are verified. Main source/configuration
+and the installed TUI remain unchanged. No combined deployment is authorized.
+
+New retained timing observations put sequential full reporting at about
+4.37 hours before additional overhead. Use **4–6 hours after replay**
+as a low-to-medium-confidence planning range, not a statistical interval.
+Together with the existing 09:00–13:00 Eastern replay estimate, the first full
+historical report is provisionally **13:00–19:00 Eastern September 10**.
+Reproduction, deployment approval and live acceptance are additional and have
+no established ETA. The timing basis and caveats are retained in
+`v89_full_fee_historical_account_comparison_20260910_v1/reporting_duration_estimate.json`.
+Both prospective outcome seals and the complete original 48-case scope remain
+intact. Next finish the remaining original source/timing cases and the complete
+report before a concrete deployment recommendation.
+
+The earlier updates below retain their evidence lineage.
+
 **September 10 05:23 UTC reporting-handoff update:** the original matrix has
 **8/48** completed cases and four active workers. The qualified
 [reporting handoff](../reviews/2026-09-10-v89-complete-reporting-handoff.md)
