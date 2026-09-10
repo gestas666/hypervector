@@ -3,11 +3,47 @@
 Updated September 10, 2026 UTC. This is research navigation, not a live-state checkpoint.
 The active mandate permits research and proposals; live changes remain subject
 to explicit approval. Both prospective outcome seals remain active. The latest
-update completes the combined 72-path release rehearsal and financial/technical
-recommendation, including the native depth correction and original full report.
+update completes fresh unsigned operational checks and pre-transition preservation
+for the combined 72-path release and completed financial/technical recommendation.
 Historical studies remain bounded to the window ending September 7 UTC.
 
 ## Current finding and next action
+
+**September 10 19:32 UTC fresh operational readiness and backup:**
+The [readiness review](../reviews/2026-09-10-v89-release-readiness.md) records fresh
+native core/XYZ account reads at 19:17:32–33 UTC: no positions or open orders.
+The existing Info-only seven-asset preflight completed zero at 19:18:59, with
+sizing, displayed depth and ledger reconciliation passing. Native saved leverage
+and isolated margin settings match all seven configured assets at 19:22:02–04.
+Account value is approximately $4,836.47; this observation is not a return estimate.
+
+Seven current live ledgers end in September 8 `STOPPED` records with zero size
+and no owned order IDs. Nine existing ownership locks have no active owner;
+their contents/times remain unchanged. STOP and drain markers are absent, and
+the operator inbox has zero pending and zero claimed commands. At 19:27:36 UTC
+no canonical local runtime is present and both original collectors remain active.
+These observations supersede reliance on the old September 8 venue snapshot;
+they are sequential and must be refreshed at the actual maintenance boundary.
+
+Pre-transition preservation completed 19:27:01 UTC. The verified bundle contains
+1,924 files, including 1,869 implementation sources, 8,175,290,477 restored bytes
+and 881,638,405 compressed bytes. Manifest SHA256 is
+`928ebd40d92c056b62fff7e3f687cbc14ae54b4ddd41f881bae91bdc6ec6df9f`.
+The prior TUI and 78 operator-control/history files are separately preserved.
+The stopped ledger sizes/times remain unchanged. This is not a live launch;
+the eventual launcher must create its own run-specific backup.
+
+Journal `39f2564884af077e79f1f74203b9b84304a432409e3bea9f54a6336778b8dbd5`
+has all 21 stored fields and 45 direct references verified. The readiness archive
+verifies 41 members, 3,894,587 bytes, SHA256
+`bb96c0653fef509b58c47209f1315cfc06251d28501fb643afa9a429aa45176b`.
+
+The exact V3 source/TUI installation is now approval-ready. The next action is
+the selected installation decision, followed by authorized installation and
+user-run activation with fresh boundary reads and same-run nine-view/reporting
+acceptance. The conditional activation window remains 16:00–18:00 Eastern today.
+Installed runtime/profile/TUI are unchanged, the original financial pipeline is
+complete, and both prospective outcome seals remain intact.
 
 **September 10 19:13 UTC combined release and review completed:**
 The [V3 combined recommendation](../proposals/v89-technical-release-20260910-v3/recommendation.md)
