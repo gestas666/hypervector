@@ -3,11 +3,53 @@
 Updated September 10, 2026 UTC. This is research navigation, not a live-state checkpoint.
 The active mandate permits research and proposals; live changes remain subject
 to explicit approval. Both prospective outcome seals remain active. The latest
-update completes native depth qualification and records the completed original
-accounting audit and automatic financial-review publication.
+update completes the combined 72-path release rehearsal and financial/technical
+recommendation, including the native depth correction and original full report.
 Historical studies remain bounded to the window ending September 7 UTC.
 
 ## Current finding and next action
+
+**September 10 19:13 UTC combined release and review completed:**
+The [V3 combined recommendation](../proposals/v89-technical-release-20260910-v3/recommendation.md)
+selects candidate `564d72e81539afdd3e2979beea4086a655ec4350`, 72 source/test
+paths (46 implementation, 26 tests/fixtures) and TUI executable SHA256
+`382253cacea78e51c2dbc0c7e396eda0d24d2c025ae7854e867cd2c78ad329d1`.
+Exact isolated installation and compatible rollback finished at 18:57:14 UTC.
+Both compositions passed the same 129 related regressions and two mocked
+live/monitor command probes. Rollback restores 63 paths and retains exactly nine
+compatibility paths. This is not a claim of 258 distinct tests or live startup.
+
+Thirty-three packaging controls pass. The new native source-identity guard has
+full statement/branch coverage; other operator coverage remains partial. All
+117 retained source copies, 530 provider files, ten SDK files and 78 direct
+prior/native journal references reauthenticate. The 48 completed case reports,
+financial manifest/report, thirteen prepared presentation artifacts and final
+HTML also match. The original pipeline remains complete and was not restarted.
+
+The proposal combines the separately completed 320-test/native nine-view TUI
+acceptance with the 48-case/144-comparison financial results. Cost sensitivity,
+later-period weakness and increased equal-allocation exposure remain material.
+It preserves the current V89 profile; no higher-return live strategy is claimed.
+All older packets, reports and prospective outcome seals remain preserved.
+
+Journal revision 3
+`15aa0be4dbe5c2d9e52f90367d89c1d8627144fd6ae257cf061fa083c750d617`
+has all 21 stored fields, 47 direct references and its predecessor verified.
+The release archive is 7,704,294 bytes and verifies 168 members, SHA256
+`5fb9aeae579f8ad24e933b2e3831f0bc3be6e51c6e9a860031cda068653b9557`.
+
+The corrected 19:09:41 UTC process inventory confirms both original collectors
+active and finds no canonical local live process. The first inventory's macOS
+`comm` field was truncated; it is retained as superseded evidence and cannot
+prove process absence. Current venue positions/orders remain unverified.
+Installed runtime/profile/TUI are unchanged; the V3 rehearsal checkout is left
+in compatible rollback state and is not a launch directory.
+
+The next action is fresh account/order/owner/native-setting reconciliation and
+the selected release approval, followed by user-run activation and same-run
+TUI/reporting acceptance. The conditional activation-ready estimate remains
+**16:00–18:00 Eastern today**, moderate confidence. A failed technical check
+would update that estimate. No new historical matrix is needed for this release.
 
 **September 10 18:45 UTC native TUI qualification and completed financial report:**
 The original reporter completed **48/48 case audits** at 18:36:32 UTC and exited
