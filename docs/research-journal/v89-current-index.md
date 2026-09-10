@@ -7,6 +7,37 @@ update evaluates only the original historical window ending September 7 UTC.
 
 ## Current finding and next action
 
+**September 10 09:58 UTC core-revision comparison:** the original matrix now
+has **34/48** completed receipts, four active workers and its original coordinator
+and reporting handoff active. Sessions 33137 and 44667 were polled live. Free
+disk is 8.47 GB; no local live backend or TUI matched.
+
+The [original adverse-cost core comparison](../reviews/2026-09-10-v89-adverse-core-revision-comparison.md)
+is complete for cases 4/28 and 5/29. The two new analyses finish at 09:50 UTC;
+sessions 37395, 6066 and comparison session 67882 are terminal and successful.
+All 177 ordered trades and canonical serialized path, trade, group, concentration
+and proposal-disposition sections match exactly within each allocation. No prices,
+fees, funding, PnL, exposure or reported proposal dispositions change. This extends
+the earlier older-replay first/latest result to the current complete account engine
+and equal-allocation counterpart; it supplies no additional financial advantage.
+
+Nineteen non-source manifest fields match per contrast. Route execution, units,
+funding and counts match; declared core price/canonical bindings change, while
+XYZ keeps its physical inputs. All 2,516 unique references authenticate, and all
+four cases conserve seven equity totals with matching independent audits. Separate
+section hashes reproduce the economic equality. The journal revision
+`0876adec09206ee71ff8d877626907e6f6b9a75c9c5bf614a88677d7c58b7776`
+has all 21 fields and 34 direct references verified. Main runtime/configuration
+and installed TUI remain unchanged, and both prospective seals remain intact.
+
+Retain the completed comparison; do not repeat it merely to show progress. The
+remaining predeclared XYZ-history axis can be inspected while the original matrix
+and full-report handoff continue. The complete-review target remains provisionally
+September 10 **12:30–16:00 Eastern**, with low-to-medium confidence and no verified
+live-start ETA.
+
+The earlier updates below retain their evidence lineage.
+
 **September 10 09:40 UTC higher-fee clock comparison:** original cases 10/11
 are now independently analyzed and [compared with cases 8/9](../reviews/2026-09-10-v89-full-fee-exit-clock-comparison.md).
 The two new analyses finished successfully around 09:30 UTC; sessions 15529 and
