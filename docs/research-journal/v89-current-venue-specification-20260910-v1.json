@@ -1,0 +1,269 @@
+{
+  "automatic_promotion": false,
+  "confidence": "high",
+  "created_at_utc": "2026-09-10T08:15:29.283116+00:00",
+  "decision": "Retain this seven-asset specification qualification for technical deployment review. All 30 direction rows and seven SDK IDs reconcile. No limit, sizing, route or execution correction is indicated by this sample; live readiness and profitability remain unestablished.",
+  "evidence": [
+    {
+      "bytes": 2007,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_current_venue_specification_20260910_v1/protocol.md",
+      "role": "current_venue_specification",
+      "sha256": "8a9e6c3b636ce3832deb28fd3326c24c1c8c14d5e5ca42a209b59f1d49144867"
+    },
+    {
+      "bytes": 2996,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_current_venue_specification_20260910_v1/capture.py",
+      "role": "current_venue_specification",
+      "sha256": "ea85c8d0d7d23cac2a44981238c5b23518a3df41ab66eb8407a391ecb25a5a25"
+    },
+    {
+      "bytes": 1902,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_current_venue_specification_20260910_v1/capture_acceptance.json",
+      "role": "current_venue_specification",
+      "sha256": "c2a4f1c6fdd7985d69fbf6d6901c4866e6a74e364236a1a4740dec4a984c674f"
+    },
+    {
+      "bytes": 23994,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_current_venue_specification_20260910_v1/capture/meta_core.json",
+      "role": "current_venue_specification",
+      "sha256": "d73acb8cb685ac07d017debf07fc8df810b4fe6c36709ef4c545724b247ad56a"
+    },
+    {
+      "bytes": 34432,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_current_venue_specification_20260910_v1/capture/meta_xyz.json",
+      "role": "current_venue_specification",
+      "sha256": "699cdd183c18bd8af237e35c39b479bfce32737fec1b930823d2503ab49e156b"
+    },
+    {
+      "bytes": 26802,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_current_venue_specification_20260910_v1/capture/dexes.json",
+      "role": "current_venue_specification",
+      "sha256": "ab1950f4589a5dd8d5ce28f0f296d57e69bafc30bfbc82ae1e67ec5886088f45"
+    },
+    {
+      "bytes": 5747,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_current_venue_specification_20260910_v1/capture/live_profile.toml",
+      "role": "current_venue_specification",
+      "sha256": "696fa385d588d29ca0a6dcc1539a7e11d37af58c9523fd6ed3e5a473bc4a08a3"
+    },
+    {
+      "bytes": 32182,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_current_venue_specification_20260910_v1/capture/metadata.md",
+      "role": "current_venue_specification",
+      "sha256": "1b9d14665c030b68d257a29f365489be3074bb3a0e57a83069966174cbe790ae"
+    },
+    {
+      "bytes": 2265,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_current_venue_specification_20260910_v1/capture/asset_ids.md",
+      "role": "current_venue_specification",
+      "sha256": "eec6b95ef1bf184fef4e29effb3f23e6297757c899aa77110d108686011ae0ae"
+    },
+    {
+      "bytes": 1561,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_current_venue_specification_20260910_v1/capture/precision.md",
+      "role": "current_venue_specification",
+      "sha256": "1114a12bc134c7d0e004002e67a3103bb7835f13ec34329d5409c1f895830a10"
+    },
+    {
+      "bytes": 4279,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_current_venue_specification_20260910_v1/margin-tiers.md",
+      "role": "current_venue_specification",
+      "sha256": "f6e6f5ec37b26359e128983b9c94bc3ab4b1736b471da9234620834f6546bbaf"
+    },
+    {
+      "bytes": 319,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_current_venue_specification_20260910_v1/margin-tiers-receipt.json",
+      "role": "current_venue_specification",
+      "sha256": "e6a4df71f79245c397dd93f1a4b368f411a6e9622d6f5c863c1139e9537a4177"
+    },
+    {
+      "bytes": 6603,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_current_venue_specification_20260910_v1/inputs/control.toml",
+      "role": "current_venue_specification",
+      "sha256": "9a58356ff46f9165dbe14bae0a5730b6bfcffcde1b6cb9772806db49613a1bc2"
+    },
+    {
+      "bytes": 6901,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_current_venue_specification_20260910_v1/inputs/equal.toml",
+      "role": "current_venue_specification",
+      "sha256": "375160fcb3b6ad49569c3db32917a886c55d791c51ec6e12326b08ded86b316e"
+    },
+    {
+      "bytes": 23779,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_current_venue_specification_20260910_v1/report.json",
+      "role": "current_venue_specification",
+      "sha256": "4fe304cb920b6b82f8af7b95a59d42b0df811490bb14033f0807798a68681409"
+    },
+    {
+      "bytes": 126,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_current_venue_specification_20260910_v1/independent_audit.json",
+      "role": "current_venue_specification",
+      "sha256": "7a3c4cfe73a070d6b30c42e401ef7cc1b159058a4934ba79c1dcedb886ff841a"
+    },
+    {
+      "bytes": 2112,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_current_venue_specification_20260910_v1/acceptance.json",
+      "role": "current_venue_specification",
+      "sha256": "630622a030c363795ec5bfc8d4d21dcf3b6afdf13248adf4cfd4e525288dfd7e"
+    },
+    {
+      "bytes": 130,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_current_venue_specification_20260910_v1/archive_import_parity.json",
+      "role": "current_venue_specification",
+      "sha256": "52b2a5c97f3125e74c0fde548af2b3a9f0d807a6128dc07556b5b3ee7b5ae50d"
+    },
+    {
+      "bytes": 252,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_current_venue_specification_20260910_v1/environment.json",
+      "role": "current_venue_specification",
+      "sha256": "e544a77537a1adfe23bd08eea9190fc76ee4c39e910e32d1aefb1118251eeb4b"
+    },
+    {
+      "bytes": 556509,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_current_venue_specification_20260910_v1/study_source.tar.gz",
+      "role": "current_venue_specification",
+      "sha256": "55cf91a05b046ee222c6f1f6e5380233630912130d432b8c3602c0086367ee15"
+    },
+    {
+      "bytes": 47172,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_current_venue_specification_20260910_v1/archive_manifest.json",
+      "role": "current_venue_specification",
+      "sha256": "8768960e83c62660b7815dfa27e902f6522a072611fde71a203ce7f908b09ab8"
+    },
+    {
+      "bytes": 90977,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_current_venue_specification_20260910_v1/import_manifest.json",
+      "role": "current_venue_specification",
+      "sha256": "4acce7a7cc8b9efbdac164be86f1b38f3a5bd78087b52326da9341e1e347bcd4"
+    },
+    {
+      "bytes": 2816,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_current_venue_specification_20260910_v1/vendor_manifest.json",
+      "role": "current_venue_specification",
+      "sha256": "af358893083e2ba57db139cb327d12129e7978cf49d0d594202f2a811dda23fe"
+    },
+    {
+      "bytes": 441,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_current_venue_specification_20260910_v1/qualification.log",
+      "role": "current_venue_specification",
+      "sha256": "8e7341a300cf110503830d1aae96808f6109daa5bae8365b20f2bb9620567054"
+    },
+    {
+      "bytes": 39109,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_current_venue_specification_20260910_v1/qualification/result.json",
+      "role": "current_venue_specification",
+      "sha256": "40c4e2720fd9b0d318a04f685adbe52eb3f944ce9a1bba516ad6edce582d6616"
+    },
+    {
+      "bytes": 20528,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_current_venue_specification_20260910_v1/qualification/coverage.json",
+      "role": "current_venue_specification",
+      "sha256": "9c227a380de488c0e39558c7187a29f35105e96675b562639c77d743260f3295"
+    },
+    {
+      "bytes": 10903,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_current_venue_specification_20260910_v1/qualification/tests.xml",
+      "role": "current_venue_specification",
+      "sha256": "d232ca1853c73898d88eaccd422fb9428ec11b13a672d79ae855d759a28d524f"
+    },
+    {
+      "bytes": 449,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_current_venue_specification_20260910_v1/archive_qualification.log",
+      "role": "current_venue_specification",
+      "sha256": "5db4a440b422ad44df033876d34742051b9cc8e6a78e32a800a2091abadb6e34"
+    },
+    {
+      "bytes": 55153,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_current_venue_specification_20260910_v1/archive_qualification/result.json",
+      "role": "current_venue_specification",
+      "sha256": "934e62c5a64456b2109672a7837ea1f1af1210b55f4db67fe22cf921a6f67b42"
+    },
+    {
+      "bytes": 20552,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_current_venue_specification_20260910_v1/archive_qualification/coverage.json",
+      "role": "current_venue_specification",
+      "sha256": "021e70ca5ae9c72c3d3ce24890003ce29382ff466fe3ef9f56d068ae2e12fb12"
+    },
+    {
+      "bytes": 11351,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_current_venue_specification_20260910_v1/archive_qualification/tests.xml",
+      "role": "current_venue_specification",
+      "sha256": "cd12d2615ca399322817ca997a5d206e33840270337478da0b99dd77f652c19c"
+    },
+    {
+      "bytes": 959,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_current_venue_specification_20260910_v1/runtime_observation.json",
+      "role": "current_venue_specification",
+      "sha256": "5ca328d85dcdcf804f61b09b9f8641808f30306d61742f1b56c03cb232c76ea1"
+    },
+    {
+      "bytes": 19,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_current_venue_specification_20260910_v1/style.log",
+      "role": "current_venue_specification",
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    {
+      "bytes": 1032,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_current_venue_specification_20260910_v1/structure.json",
+      "role": "current_venue_specification",
+      "sha256": "d8a90766a047cbcd894e8d7d261d4a1eda1e8f6e5021546589e553244546210e"
+    },
+    {
+      "bytes": 6403,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/reviews/2026-09-10-v89-current-venue-specification.md",
+      "role": "current_venue_specification",
+      "sha256": "2630f1805d2e8f9da30f339f1356f4840ed378b3b52ff052eca49cad3f1a7caa"
+    },
+    {
+      "bytes": 8876,
+      "path": "/Users/gestas/Prototypes/hypervector-v89-storage-spcx-20260908/scripts/v89_quote_capture.py",
+      "role": "current_venue_specification",
+      "sha256": "9f195eca08eec2f68889003c79ac7fca0a150e8e95134e3f290c781256382ace"
+    }
+  ],
+  "execution_authority": "none",
+  "falsifier": "Changed metadata/profile/source bytes, raw audit mismatch, different SDK mapping, unsupported flags or failed archived reproduction would update or invalidate the captured-sample qualification.",
+  "hypothesis": "The unchanged V89 and existing control/equal profiles remain compatible with captured public precision, leverage tiers and official SDK identities.",
+  "hypothesis_id": "v89_current_venue_specification_20260910_v1",
+  "limitations": [
+    "One sequential public metadata sample does not establish current account state, active market availability, native order acceptance, liquidity or profitability.",
+    "Optional marginMode and onlyIsolated flags remain unreported; account mode and leverage settings need fresh deployment verification.",
+    "Each allocation cap is evaluated independently without reading current positions.",
+    "XYZ builtin tiers use the documented ID-below-50 convention, explicitly labeled and checked for contradictory definitions.",
+    "Spot scope is excluded with an empty fixture in the offline SDK Info initializer. No signer or Exchange client is constructed.",
+    "Third-party dependencies use the recorded environment; imported analysis and SDK source, lockfile and fixed inputs are preserved.",
+    "Live source, profiles and processes were unchanged; both prospective outcome seals remain intact."
+  ],
+  "metrics": {
+    "archive_members_verified": 275,
+    "assets": 7,
+    "direction_rows_verified": 30,
+    "imported_modules_verified": 242,
+    "independent_market_checks": 112,
+    "independent_statements_covered": 88,
+    "independent_statements_total": 88,
+    "installed_tui_unchanged": true,
+    "live_readiness_established": false,
+    "main_source_and_profiles_unchanged": true,
+    "profiles": 3,
+    "public_info_requests": 3,
+    "report_statements_covered": 74,
+    "report_statements_total": 78,
+    "specification_branches_covered": 32,
+    "specification_branches_total": 32,
+    "specification_compatible": true,
+    "specification_statements_covered": 77,
+    "specification_statements_total": 77,
+    "test_identities_match": true,
+    "tests_passed_archive": 56,
+    "tests_passed_working": 56,
+    "unexpected_socket_events": 0
+  },
+  "revision_number": 1,
+  "runtime_strategy_changed": false,
+  "schema_version": 1,
+  "status": "retain",
+  "strategy_id": "multi_asset_growth_first_5000_noncrypto_research_v89",
+  "supersedes_revision_id": null,
+  "symbol": "PORTFOLIO"
+}

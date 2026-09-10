@@ -7,6 +7,40 @@ update evaluates only the original historical window ending September 7 UTC.
 
 ## Current finding and next action
 
+**September 10 08:16 UTC current venue-specification update:** the original
+matrix is now **24/48** complete, with four active workers and reporting handoff
+PID 79587 waiting on coordinator 72423. Sessions 33137 and 44667 were both
+polled live in this turn. Free disk is 10.41 GB; no local live backend or TUI
+matched the final process inventory. Preserve the original matrix/report sources.
+
+The [fresh specification qualification](../reviews/2026-09-10-v89-current-venue-specification.md)
+reconciles all seven asset identities and 30 direction rows across the unchanged
+live and inactive control/equal profiles. Requested leverage fits current tiers;
+configured venue maxima and size precision match public metadata. Official SDK
+IDs match an independent dex/index calculation. XYZ IDs 10/20 use the explicitly
+documented builtin margin rule; optional margin-mode flags remain unreported.
+No current account state, native order acceptance, liquidity, fees or profitability
+was established. This sample indicates no venue-limit, sizing or routing correction.
+
+All 56 focused tests pass in working and frozen source, with matching identities
+and coverage. Specification logic covers 77/77 statements and 32/32 branches;
+the independent auditor covers 88/88 statements and 10/10 branches. All 275
+archive files and 242 actually imported analysis/SDK modules are byte-verified.
+No unexpected socket event occurs under the tested network guard. Journal
+revision `e1e1edf07415bb87eca494da8deedb2a936631527c213181781b16d6d92fcdb3`
+has all 21 fields and 36 direct references verified. Main source, three profiles,
+and installed TUI remain unchanged. No live start or deployment was performed.
+
+The next economic action remains completing all original matrix cases and the
+qualified full report. Replay is provisionally 09:00–13:00 Eastern September 10;
+full reporting is 13:00–19:00 Eastern, with low-to-medium confidence and fresh
+execution/TUI acceptance additional. No live-start ETA is established. Prepare
+the exact combined technical deployment/rollback review from the already
+qualified candidates without re-running accepted suites or changing live files.
+Both prospective outcome seals remain intact.
+
+The earlier updates below retain their evidence lineage.
+
 **September 10 07:43 UTC coverage qualification update:** the original
 coordinator remains active with **22/48** completed cases and four workers.
 The reporting handoff remains active; preserve sessions 33137 and 44667 and
