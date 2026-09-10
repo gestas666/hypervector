@@ -7,26 +7,37 @@ update evaluates only the original historical window ending September 7 UTC.
 
 ## Current finding and next action
 
-**September 10 06:56 UTC TUI qualification update:** the original coordinator
-remains active with **18/48** completed cases. Its reporting handoff remains
-active; preserve sessions 33137 and 44667 and their frozen sources. Four replay
-workers are active, with 12.07 GB free. No local live backend or TUI matched.
+**September 10 07:43 UTC coverage qualification update:** the original
+coordinator remains active with **22/48** completed cases and four workers.
+The reporting handoff remains active; preserve sessions 33137 and 44667 and
+all original replay/reporting sources. Free disk is 11.06 GB after the verified
+coverage-cache cleanup. No local live backend or TUI matched.
 
-The [entry-deadline TUI correction](../reviews/2026-09-10-v89-entry-deadline-tui.md)
-is frozen as `b73b112282d5e7ab7ec04d431f87554739a98f8a`. Both the checkout and
-archive pass 534 Rust tests, with 23 existing runtime-dependent tests ignored
-and identical test identities. All 5,153 Git blobs match. Clippy and formatting
-pass; three configured disarmed inspector captures retain the route plan and
-exact timing evidence. Legacy clocks do not become SDK proof. The September 4
-fixture needed by the existing V86 screen test is retained separately with the
-archive. Rust statement/branch coverage and fresh live acceptance remain
-outstanding; this is offline evidence, not full technical readiness or a profit
-forecast. The journal revision is
-`fa31518dc1ab4cd31ffbe5f36b1212cdb9a6a9decede5897fe858a6610f20437`;
-all 21 fields and 27 direct references match. The candidate is not installed.
-The installed TUI hash remains `95f87cdcd49e5aa0068b7ebf8d4bef2b18d5f3efa7692291fc9aeabc83623d8f`.
-Next measure the remaining Rust coverage and finish the original matrix and
-complete report before the combined deployment review.
+The [coverage-qualified test candidate](../reviews/2026-09-10-v89-entry-deadline-tui-coverage.md)
+is frozen as `f00b6b8d22cf59285a313b7de1166cccecbe52ca`, with runtime source
+unchanged from `b73b112`. Checkout and archive both pass 544 release tests,
+with the same 23 runtime-dependent tests ignored and identical test identities.
+All 5,156 Git blobs match. The decoder and display helper have 130/130 and
+43/43 measured lines covered; regions are 183/185 and 58/58. The changed
+integration functions and predicate closure cover 54/54 regions. These exact
+metrics reproduce from the archive. Branch and MC/DC metrics are unavailable;
+this is scoped coverage, not a whole-TUI or live-acceptance claim. Clippy and
+formatting pass. Journal revision
+`f4e05d5c78baf4da3921148eb90a0cc25c0e8e9bb6b5d3314c9f34bb82a46902`
+has all 21 fields and 44 direct references verified.
+
+The temporary coverage target was backed up, independently restored and all
+1,571 entries verified before removal. The retained archive is 166.32 MB;
+cleanup showed 601.19 MB additional free space. Exact test binaries, profiles,
+source archives and reports remain. Do not recreate the completed coverage
+cache or rerun these accepted checks without a new change or failure.
+The [original TUI qualification](../reviews/2026-09-10-v89-entry-deadline-tui.md)
+retains its configured inspector captures and the September 4 V86 fixture.
+The installed TUI remains unchanged at
+`95f87cdcd49e5aa0068b7ebf8d4bef2b18d5f3efa7692291fc9aeabc83623d8f`.
+Next perform a public venue/configuration-specification check, while preserving
+both prospective outcome seals, then finish the complete original matrix and
+report for the combined deployment review. No live change is authorized here.
 
 The [full-fee allocation comparison](../reviews/2026-09-10-v89-full-fee-account-comparison.md)
 is complete and journaled. Control returns -$33.44 (-0.69%) with $233.56 maximum
