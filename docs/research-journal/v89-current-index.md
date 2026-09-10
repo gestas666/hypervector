@@ -7,6 +7,47 @@ update evaluates only the original historical window ending September 7 UTC.
 
 ## Current finding and next action
 
+**September 10 08:32 UTC combined deployment-review update:** the original
+matrix has **26/48** completed receipts, four active workers and the reporting
+handoff waiting on its original coordinator. Sessions 33137 and 44667 were
+polled live. Free disk is 10.04 GB; no local live backend or TUI matched.
+
+The [combined technical proposal](../proposals/v89-technical-release-20260910/recommendation.md)
+is now concrete, with its [verified rehearsal](../reviews/2026-09-10-v89-combined-deployment-review.md).
+The package contains 33 implementation files and 19 tests/fixtures from f00b6b8,
+plus the accepted TUI binary. In a new detached rehearsal checkout, all 52 paths
+and complete code/config/test scope matched the candidate after application.
+Compatible rollback restored the prior package and binary while retaining only
+qualified sol_order_restart.py. Its Python baseline and recovery-reader bytes
+match the prior flat fake-venue proof. Open-position rollback remains unqualified.
+Main source/configuration and the installed TUI remain unchanged.
+
+The packet independently restores 104 files, including before/after source and
+both binaries, with exact contents and modes. All 530 pinned provider Python
+files and ten SDK source files match. The previously accepted 602 Python and
+544 Rust tests were reused after proving relevant source equality; no accepted
+suite was repeated merely for packaging. Journal revision
+`8b7fa6e540c7cece7a2ed6e60b62fde0940cc81e64b8ce5b0d3dc8ec1b35d2dc`
+has all 21 fields and 35 direct references verified.
+
+The reviewed runbook specifies static verification, exact pending approval scope,
+fresh prestart ownership/account evidence, coordinated source/binary loading,
+nine-view TUI acceptance, reporting observation and history-preserving rollback.
+No deployment, process transition or live activation was authorized or performed.
+Do not rerun this completed rehearsal or mutate its retained artifacts. Its
+isolated checkout is intentionally left in the compatible rollback state.
+
+Next finish the original 48-case matrix and qualified full report. While those
+jobs continue, check the two prospective collectors' current process identity,
+heartbeat, source pins and collection coverage only; their outcomes remain sealed.
+The last collector PID inventory was September 10 01:10 UTC and the earlier
+full heartbeat/source check was September 9 13:32 UTC. Do not reconstruct signals,
+positions, trades or returns. Replay/report timing remains the prior provisional
+September 10 09:00–13:00 / 13:00–19:00 Eastern ranges; live-start timing remains
+unestablished and requires the remaining evidence and explicit selected scope.
+
+The earlier updates below retain their evidence lineage.
+
 **September 10 08:16 UTC current venue-specification update:** the original
 matrix is now **24/48** complete, with four active workers and reporting handoff
 PID 79587 waiting on coordinator 72423. Sessions 33137 and 44667 were both
