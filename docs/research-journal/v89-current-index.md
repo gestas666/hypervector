@@ -39,11 +39,34 @@ All 88 evidence references, 21 database fields and four journal copies match.
 Preserve the frozen implementation and completed evidence.
 Do not repeat the completed worktree suites or resource probes without new evidence.
 
-At September 9 23:04:31 UTC, original canonical export **32156**, parent 26037,
-is active and its final report is absent. It has 259/384 daily summaries (67%):
-48 in every first-source stream, and last counts BTC 17, ETH 17, SOL 17, HYPE 16.
-Both known prospective collector PIDs remain present. No prospective account
-outcome was reconstructed, and no live process or configuration changed.
+At September 9 23:59:08 UTC, the waiting first-case operator confirms that the
+original canonical export **32156**, parent 26037, remains active under its
+original process identity. It has 309/384 daily summaries (80%); the final export
+report remains absent. The September 9 21:00–22:00 EDT export estimate remains
+a throughput estimate, not a live launch deadline. At 23:50 UTC both known
+prospective collector PIDs were present; no matching local live backend,
+checkpoint writer or TUI was observed. The checkpoint remains dated September 8
+14:04:48 UTC. This is not a fresh venue account observation.
+
+The [first complete case operator](../plans/2026-09-09-v89-first-complete-account-timing.md)
+is active in session **87769**, PID 52810. Its read-only check completed zero,
+and its explicit research run is waiting for the original producer to finish.
+It will use the qualified `a86bd6f` engine for the first predeclared full 48-day
+case, then independently audit the account and measure runtime, disk and memory.
+No completed pilot result or full 48-case matrix exists yet. Preserve its
+`operator.py` and exclusive `launch.json` under
+`v89_first_complete_historical_account_20260909_v1/`.
+
+The separate [complete account analysis](../plans/2026-09-09-v89-complete-account-analysis.md)
+worktree is `/Users/gestas/Prototypes/hypervector-v89-history-analysis-20260909`,
+source `10df2eb`. The first path-metrics component passed 29 tests (118/118
+measured statements), plus both retained complete synthetic account probes.
+Daily and original-period marked equity changes reconcile to independently
+audited terminal equity. The probe authenticated 15 references; its report is
+under `v89_historical_account_path_metrics_qualification_20260909_v1/`.
+This is bounded arithmetic qualification. The artifact reader, full trade and
+cost attribution, complete matrix analysis and frozen reproduction remain open.
+No prospective outcome, live process or live configuration changed.
 
 Next authenticate the full canonical catalog and run, independently reconcile and
 reproduce the complete original 48-case historical matrix. No full historical
