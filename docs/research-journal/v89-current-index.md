@@ -7,6 +7,36 @@ update evaluates only the original historical window ending September 7 UTC.
 
 ## Current finding and next action
 
+**September 10 11:16 UTC period-driver diagnostic:** the original matrix has
+**38/48** receipts and four active workers. The original coordinator and reporting
+handoff were polled live. The historical completion/review forecast remains
+provisional; no live-start time is established.
+
+The [six-case marked-period attribution](../reviews/2026-09-10-v89-historical-period-drivers.md)
+and [portable report](../../data/logs/research/bidirectional_cohort/v89_historical_period_driver_diagnostics_20260910_v1/report.html)
+are complete. Gross weakening explains most of the earlier-to-later decline.
+Full-fee fees per day fall, although the later fee bills deepen losses. SNDK
+contributes 61.15% of control and 81.97% of equal-allocation daily deterioration.
+Entries fall 14.73%, from 3.93 to 3.35 per calendar day. The earlier/later windows
+remain the original 28/20-day historical periods.
+
+Research source c72682e passes 104 worktree and archive tests; new modules have
+148/148 statements and 48/48 branches covered. The evaluation authenticates
+2,353 references. Independent raw-account Decimal arithmetic reconciles 1,302
+values with a maximum residual below $0.000000000003. All 65 report aggregates
+match the retained calculations and actual local SQL projections; packaged
+browser/source verification passes at desktop and narrow widths.
+
+Journal revision
+`677a81b8aa11494b5fa1ecbee1a743c647a3db3743a33ede8abea0339ae1d5c2`
+has all 21 fields and 53 direct references verified. Retain this descriptive
+diagnostic without choosing an allocation or removing an asset. Next trace SNDK
+long concentration, entry evidence and exit paths, reusing earlier clock/stop
+research rather than repeating accepted studies. The original 48-case work,
+both prospective seals and the uninstalled technical package remain unchanged.
+
+The earlier updates below retain their evidence lineage.
+
 **September 10 10:22 UTC XYZ-history comparison:** the original matrix has
 **34/48** completed receipts, four active workers and its original coordinator
 and reporting handoff active. Sessions 33137 and 44667 were polled live. Free

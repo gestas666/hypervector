@@ -1,0 +1,458 @@
+{
+  "automatic_promotion": false,
+  "confidence": "high",
+  "created_at_utc": "2026-09-10T11:15:11.406790+00:00",
+  "decision": "Retain the independently reconciled six-case attribution. Gross weakening dominates the period-to-period decline. Full-fee fees per day fall, although the later fee bills deepen losses. SNDK contributes 61% of control and 82% of equal-allocation daily deterioration; prioritize its long entry/exit and concentration review, with prior-art checks. No allocation or live change is selected; the original 48-case report remains required.",
+  "evidence": [
+    {
+      "bytes": 3096,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_period_driver_diagnostics_20260910_v1/PLAN.md",
+      "role": "historical_period_driver_diagnostic",
+      "sha256": "6697271e0ed2cb5b555a746a336f1c1e704d867019b333b9d37bb79a4d4b0f9e"
+    },
+    {
+      "bytes": 1161,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_period_driver_diagnostics_20260910_v1/analysis.log",
+      "role": "historical_period_driver_diagnostic",
+      "sha256": "2a37f8c5f3bb66ecf9c5cc141953e9ceed090b7e02eed2a0eaf4c7a9d9837c95"
+    },
+    {
+      "bytes": 7105,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_period_driver_diagnostics_20260910_v1/analyze_periods.py",
+      "role": "historical_period_driver_diagnostic",
+      "sha256": "6a30075c4d032039ba84089d62e84f2e3f24f7a2782bd8adedd4ee603a127283"
+    },
+    {
+      "bytes": 14625,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_period_driver_diagnostics_20260910_v1/archive_coverage.json",
+      "role": "historical_period_driver_diagnostic",
+      "sha256": "638ede325a11390207613b6e5622906af1c76dbe4ce9bf5f1307cdb9042f2f7d"
+    },
+    {
+      "bytes": 216,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_period_driver_diagnostics_20260910_v1/archive_identity_verified.json",
+      "role": "historical_period_driver_diagnostic",
+      "sha256": "86cb82d2f0be6a26b95a8fbab5a7914d061b7dd08256d5946a776f105e0f437c"
+    },
+    {
+      "bytes": 1167,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_period_driver_diagnostics_20260910_v1/archive_tests.log",
+      "role": "historical_period_driver_diagnostic",
+      "sha256": "3a5cb3c005332dedf3613e4aeae198118029243a93f7ea31146ace2d033d8695"
+    },
+    {
+      "bytes": 24327,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_period_driver_diagnostics_20260910_v1/artifact.json",
+      "role": "historical_period_driver_diagnostic",
+      "sha256": "462d6614d97091c5e03f9027acd2c43df8c690906602affa4a7021f44b2271cc"
+    },
+    {
+      "bytes": 24327,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_period_driver_diagnostics_20260910_v1/artifact_v1.json",
+      "role": "historical_period_driver_diagnostic",
+      "sha256": "462d6614d97091c5e03f9027acd2c43df8c690906602affa4a7021f44b2271cc"
+    },
+    {
+      "bytes": 30909,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_period_driver_diagnostics_20260910_v1/artifact_v2.json",
+      "role": "historical_period_driver_diagnostic",
+      "sha256": "fb34ff622c7693dbf06b995914b29922736e9e0a86fe2ff3ebf8a83ba5058c86"
+    },
+    {
+      "bytes": 345,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_period_driver_diagnostics_20260910_v1/artifact_validation_v1.json",
+      "role": "historical_period_driver_diagnostic",
+      "sha256": "f981948fc96529d08c1b20bc34a6bc01877bf17149767c3df99eb68035163c29"
+    },
+    {
+      "bytes": 192743,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_period_driver_diagnostics_20260910_v1/boundary_event.json",
+      "role": "historical_period_driver_diagnostic",
+      "sha256": "2a3a23d641db296741040033885391a6bfce81ee6f190a277edd3fd2fa0fc234"
+    },
+    {
+      "bytes": 244382,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_period_driver_diagnostics_20260910_v1/case_00.json",
+      "role": "historical_period_driver_diagnostic",
+      "sha256": "3723442c267bde05ebbddd1f978db7ed3aad1d46d17ef1d9eacc2e645ec053fa"
+    },
+    {
+      "bytes": 244104,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_period_driver_diagnostics_20260910_v1/case_01.json",
+      "role": "historical_period_driver_diagnostic",
+      "sha256": "abe721d4707317a7caa413618e90c85893f0f7f7de47e2ce336e0cfa0f77ab5d"
+    },
+    {
+      "bytes": 244390,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_period_driver_diagnostics_20260910_v1/case_04.json",
+      "role": "historical_period_driver_diagnostic",
+      "sha256": "e89e235e7fbc3225ad9f220c96cf29d65a585a0f92fbd5c52d2bce2993649fd9"
+    },
+    {
+      "bytes": 244044,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_period_driver_diagnostics_20260910_v1/case_05.json",
+      "role": "historical_period_driver_diagnostic",
+      "sha256": "dc569e24d6b74b934cb1e8d16857cf42fae3eddf345b7f5710855fcb80a937c9"
+    },
+    {
+      "bytes": 243903,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_period_driver_diagnostics_20260910_v1/case_08.json",
+      "role": "historical_period_driver_diagnostic",
+      "sha256": "43d58ab41895f89ddc06820876ba4f2d7eac0743700c0ea26ad04064387a3c12"
+    },
+    {
+      "bytes": 243514,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_period_driver_diagnostics_20260910_v1/case_09.json",
+      "role": "historical_period_driver_diagnostic",
+      "sha256": "eeddd617a24c43231afc89042f886c8667904a164393346f641a3118049dfa44"
+    },
+    {
+      "bytes": 1183,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_period_driver_diagnostics_20260910_v1/cash_identity_red.log",
+      "role": "historical_period_driver_diagnostic",
+      "sha256": "ebda8754cf548f4aa552574b5ee32983033a0e19cf6a141c2347dd73a5c94489"
+    },
+    {
+      "bytes": 14610,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_period_driver_diagnostics_20260910_v1/coverage_expanded.json",
+      "role": "historical_period_driver_diagnostic",
+      "sha256": "6ab12623fd069bbee4e526c64a50d20359e616991fac2c7fd5a550281c3b55ff"
+    },
+    {
+      "bytes": 1087,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_period_driver_diagnostics_20260910_v1/coverage_expanded.log",
+      "role": "historical_period_driver_diagnostic",
+      "sha256": "34ff05e626b274921aae694160e019a29cd9bcf66a01b2e8e5cc1036cc4c5506"
+    },
+    {
+      "bytes": 14656,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_period_driver_diagnostics_20260910_v1/coverage_initial.json",
+      "role": "historical_period_driver_diagnostic",
+      "sha256": "0fef8c47f98f6f5b67b8b7a7f630ceae028c1d5a4354959aeb02028eee59dac5"
+    },
+    {
+      "bytes": 1112,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_period_driver_diagnostics_20260910_v1/coverage_initial.log",
+      "role": "historical_period_driver_diagnostic",
+      "sha256": "a72ee39694cd2d412034f5db07c168468dfef84759f861a82d0be524d973ab89"
+    },
+    {
+      "bytes": 14625,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_period_driver_diagnostics_20260910_v1/coverage_qualified.json",
+      "role": "historical_period_driver_diagnostic",
+      "sha256": "8ce0e61840c75f2a30a8afe14012d3f9f31463bb76569f74b143b3e730147f93"
+    },
+    {
+      "bytes": 1137990,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_period_driver_diagnostics_20260910_v1/diagnostic.json",
+      "role": "historical_period_driver_diagnostic",
+      "sha256": "6a6f5487629f53c68161b334cae965103c8a15f42c50303ef6448ab10eea215c"
+    },
+    {
+      "bytes": 1740,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_period_driver_diagnostics_20260910_v1/final_artifact_verified.json",
+      "role": "historical_period_driver_diagnostic",
+      "sha256": "788aabba39e6df52994bf4b1bd2ee029314f312c6b9fcde137ee89864385fc63"
+    },
+    {
+      "bytes": 53937,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_period_driver_diagnostics_20260910_v1/independent_period_check.json",
+      "role": "historical_period_driver_diagnostic",
+      "sha256": "a9fcf4ec40f07b002f0f042afb0d07cf38b5e2eb02d9427c586ae3b566dea633"
+    },
+    {
+      "bytes": 677,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_period_driver_diagnostics_20260910_v1/independent_period_check.log",
+      "role": "historical_period_driver_diagnostic",
+      "sha256": "f59455f2cf4ce8df8cd201edaf966eb1df7b21db5f7db128a7913e33433f584d"
+    },
+    {
+      "bytes": 7206,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_period_driver_diagnostics_20260910_v1/independent_period_check.py",
+      "role": "historical_period_driver_diagnostic",
+      "sha256": "e39e0cb481a4fca1561c669f7f5c60a1674873a21aa3685281dd9b2f47917d57"
+    },
+    {
+      "bytes": 53937,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_period_driver_diagnostics_20260910_v1/independent_period_check_v2.json",
+      "role": "historical_period_driver_diagnostic",
+      "sha256": "319f6358ae73716cbfe9e875c1c1fcbde9b02889ce636366eeed811da4cc1d28"
+    },
+    {
+      "bytes": 677,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_period_driver_diagnostics_20260910_v1/independent_period_check_v2.log",
+      "role": "historical_period_driver_diagnostic",
+      "sha256": "fe5194e8440abb7dc1b5f786a821213dc85758fba8087c1ae6ff6c5cecc81ab6"
+    },
+    {
+      "bytes": 7302,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_period_driver_diagnostics_20260910_v1/independent_period_check_v2.py",
+      "role": "historical_period_driver_diagnostic",
+      "sha256": "9544b3494aece51bf673acc7e6bd5f9c73edce54c2f59e07b66e2e3e4f860c1d"
+    },
+    {
+      "bytes": 2636,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_period_driver_diagnostics_20260910_v1/operator_archive_verified.json",
+      "role": "historical_period_driver_diagnostic",
+      "sha256": "2ed7ec5d7b6f58f21e668fd164be7a9f744a606dd6ae823079eb26886d557c6e"
+    },
+    {
+      "bytes": 19,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_period_driver_diagnostics_20260910_v1/operator_ruff.log",
+      "role": "historical_period_driver_diagnostic",
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    {
+      "bytes": 14551,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_period_driver_diagnostics_20260910_v1/operator_source.tar.gz",
+      "role": "historical_period_driver_diagnostic",
+      "sha256": "1ff02dbf3b994e26327a2fcd9f7b9b00e17252e788c147ccb3319dabe040b4b0"
+    },
+    {
+      "bytes": 827,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_period_driver_diagnostics_20260910_v1/operator_structure.json",
+      "role": "historical_period_driver_diagnostic",
+      "sha256": "ccdf8d93da0c99c34af1ce83f7cbdbae9433d19972db05f75319ace956b9d32a"
+    },
+    {
+      "bytes": 5852,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_period_driver_diagnostics_20260910_v1/period_diagnostic_inputs.py",
+      "role": "historical_period_driver_diagnostic",
+      "sha256": "63b78c93ae737a6b6f975a1e25d9413e624c422802ec667146d9a2c4cdd775d2"
+    },
+    {
+      "bytes": 16906,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_period_driver_diagnostics_20260910_v1/prepare_report.py",
+      "role": "historical_period_driver_diagnostic",
+      "sha256": "c8651a0ac8f44f462a16051035f65ca3fd5787a12767e21a4cd796d380eb6e3b"
+    },
+    {
+      "bytes": 15155,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_period_driver_diagnostics_20260910_v1/prepare_report_v1.py",
+      "role": "historical_period_driver_diagnostic",
+      "sha256": "8c134b21198e82c3944db6898bb55e90df9608f2afc39eb66d7e382abf0ee4db"
+    },
+    {
+      "bytes": 612367,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_period_driver_diagnostics_20260910_v1/report.html",
+      "role": "historical_period_driver_diagnostic",
+      "sha256": "e3ba079e290bdd3ffb1558b636d0a2011e9c14c07828b1cf264e9e2b63988586"
+    },
+    {
+      "bytes": 1046,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_period_driver_diagnostics_20260910_v1/report_delivery.log",
+      "role": "historical_period_driver_diagnostic",
+      "sha256": "5fcf57f77163327186f474e8827fc7d38d03a4e7964e45f36b40ae6fcd223094"
+    },
+    {
+      "bytes": 3389,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_period_driver_diagnostics_20260910_v1/report_plan.md",
+      "role": "historical_period_driver_diagnostic",
+      "sha256": "4657e3d6ab0fb0b9c3aee974e64e82440dda8c8d4af0f7931bea98510d27492b"
+    },
+    {
+      "bytes": 331560,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_period_driver_diagnostics_20260910_v1/source.json",
+      "role": "historical_period_driver_diagnostic",
+      "sha256": "8df473c211bc431ab09716884346b7f4496890af2ecd8a8b570664af16f89910"
+    },
+    {
+      "bytes": 33828512,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_period_driver_diagnostics_20260910_v1/source.tar.gz",
+      "role": "historical_period_driver_diagnostic",
+      "sha256": "245568e939a70bdef9c27c9d2a96193bbe41cab572ae5b64693a9dbb5d836623"
+    },
+    {
+      "bytes": 856,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_period_driver_diagnostics_20260910_v1/structure.json",
+      "role": "historical_period_driver_diagnostic",
+      "sha256": "f92f4b535c3fcba51ad61aab48dec7f0cab2aef33ab04290a3e1964348e0e813"
+    },
+    {
+      "bytes": 99,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_period_driver_diagnostics_20260910_v1/tests_green_initial.log",
+      "role": "historical_period_driver_diagnostic",
+      "sha256": "0fb96f6d1e2f42c7eedae497baee4197bb19f4f3713d4a5a32704a2af364f4dd"
+    },
+    {
+      "bytes": 1169,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_period_driver_diagnostics_20260910_v1/tests_qualified.log",
+      "role": "historical_period_driver_diagnostic",
+      "sha256": "2a58013c1b13e72d1a723ae324071165f8beff31e7909febf6d3ad364f378a1d"
+    },
+    {
+      "bytes": 28070,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_period_driver_diagnostics_20260910_v1/tests_red.log",
+      "role": "historical_period_driver_diagnostic",
+      "sha256": "be3733475fa772c566801bb80bee7ca9bdffae9f88fa7ef7c14dd48de5aa0d84"
+    },
+    {
+      "bytes": 1100,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_period_driver_diagnostics_20260910_v1/verified.json",
+      "role": "historical_period_driver_diagnostic",
+      "sha256": "e64cadad4f05a3f4aba4e4f15efb7fe4f81aff3fad304391cbaaee6dffb5d154"
+    },
+    {
+      "bytes": 908,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_period_driver_diagnostics_20260910_v1/source_rows/asset_drivers.json",
+      "role": "historical_period_driver_diagnostic",
+      "sha256": "b618300df7b8f780d1821c032e4785836c8cd3f6dd3c2daffb7bb89a764b3da6"
+    },
+    {
+      "bytes": 427,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_period_driver_diagnostics_20260910_v1/source_rows/cash_drivers.json",
+      "role": "historical_period_driver_diagnostic",
+      "sha256": "f9e80baa25c443a1bb13eae14238a1e9df6937fed70f8f5cfe8e657ba7eb6efb"
+    },
+    {
+      "bytes": 6487,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_period_driver_diagnostics_20260910_v1/source_rows/path.json",
+      "role": "historical_period_driver_diagnostic",
+      "sha256": "5c2970ff71f5ad232197c5240d6140fa239ccd296a5c2243ac37245b19be37c9"
+    },
+    {
+      "bytes": 1724,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_historical_period_driver_diagnostics_20260910_v1/source_rows/scenarios.json",
+      "role": "historical_period_driver_diagnostic",
+      "sha256": "0142458778a8eb0e7c1e8f25cbb3c5d0a80b3e316f33745dbd795ece885142da"
+    },
+    {
+      "bytes": 5682,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/reviews/2026-09-10-v89-historical-period-drivers.md",
+      "role": "historical_period_driver_diagnostic",
+      "sha256": "a6d367e90157c44433defdc7ddf92d022c52a10fdd97fbf9d17905ba91e0e0b3"
+    }
+  ],
+  "execution_authority": "none",
+  "falsifier": "Changed source identities, incorrect split ownership, unexplained component residuals or contradictory independent raw-account arithmetic invalidate the affected calculation. Different histories, fills, fee eligibility or new unsealed evidence may change interpretation.",
+  "hypothesis": "Explain the original earlier 28-day versus later 20-day marked account deterioration by gross PnL, fees, funding, assets and directions while preserving boundary ownership and original cost/allocation identities.",
+  "hypothesis_id": "v89_historical_period_driver_diagnostics_20260910_v1",
+  "limitations": [
+    "Six related original historical cases do not replace the full 48-case report and are not independent or newly unseen holdouts.",
+    "Earlier and later windows span 28 and 20 calendar days, respectively; comparisons use daily normalization and marked boundary allocation rather than exit-date grouping.",
+    "Asset and direction attribution is descriptive, not causal regime proof or evidence for removing or reweighting an asset.",
+    "The six observed accounts end flat; general terminal-open behavior is validated using synthetic fixtures.",
+    "Original initialization gaps, conditional missing-minute execution prices, and modeled fees/slippage remain limitations. Gross PnL already includes execution-price effects.",
+    "The first report payload failed SQL-source validation. The final payload uses actual local DuckDB projections of unchanged reviewed aggregates, retaining the first attempt.",
+    "Both prospective seals remain intact. No live strategy, risk, allocation, execution, deployment or installed TUI changed."
+  ],
+  "metrics": {
+    "complete_matrix_evaluated": false,
+    "covered_branches": 48,
+    "covered_statements": 148,
+    "earlier_days": 28,
+    "earlier_entries": 110,
+    "full_fee_cases": [
+      {
+        "case_index": 8,
+        "daily_cash_change": {
+          "entry_fees_usd": -0.16188254145805825,
+          "exit_fees_usd": -0.050422951568344754,
+          "funding_cashflow_usd": -0.04834992738127874,
+          "gross_pnl_usd": -10.71511638595327,
+          "net_pnl_usd": -10.551160820308144,
+          "realized_gross_pnl_usd": -5.982746181124707,
+          "unrealized_pnl_usd": -4.732370204828561
+        },
+        "period_cash": {
+          "earlier": {
+            "entry_fees_usd": 50.795540468514226,
+            "exit_fees_usd": 49.55681838030454,
+            "funding_cashflow_usd": -0.32734400514034684,
+            "gross_pnl_usd": 204.2715165918222,
+            "net_pnl_usd": 103.59181373786309,
+            "realized_gross_pnl_usd": 149.06053086882233,
+            "unrealized_pnl_usd": 55.21098572299988
+          },
+          "full": {
+            "entry_fees_usd": 83.84041854543464,
+            "exit_fees_usd": 83.94608676344089,
+            "funding_cashflow_usd": -1.5281596992947406,
+            "gross_pnl_usd": 135.8774150097727,
+            "net_pnl_usd": -33.43724999839757,
+            "realized_gross_pnl_usd": 135.8774150097727,
+            "unrealized_pnl_usd": 0.0
+          },
+          "later": {
+            "entry_fees_usd": 33.044878076920426,
+            "exit_fees_usd": 34.38926838313635,
+            "funding_cashflow_usd": -1.200815694154394,
+            "gross_pnl_usd": -68.3941015820495,
+            "net_pnl_usd": -137.02906373626067,
+            "realized_gross_pnl_usd": -13.183115859049623,
+            "unrealized_pnl_usd": -55.21098572299988
+          }
+        }
+      },
+      {
+        "case_index": 9,
+        "daily_cash_change": {
+          "entry_fees_usd": -0.5544783435917653,
+          "exit_fees_usd": -0.3130410785355182,
+          "funding_cashflow_usd": -0.07450797522258815,
+          "gross_pnl_usd": -17.672492587625587,
+          "net_pnl_usd": -16.879481140720895,
+          "realized_gross_pnl_usd": -7.524728210311324,
+          "unrealized_pnl_usd": -10.147764377314264
+        },
+        "period_cash": {
+          "earlier": {
+            "entry_fees_usd": 101.19693497189017,
+            "exit_fees_usd": 98.54567585096527,
+            "funding_cashflow_usd": 0.04798621330564937,
+            "gross_pnl_usd": 450.2869181884877,
+            "net_pnl_usd": 250.5922935789379,
+            "realized_gross_pnl_usd": 331.8963337864879,
+            "unrealized_pnl_usd": 118.39058440199975
+          },
+          "full": {
+            "entry_fees_usd": 162.39089307997642,
+            "exit_fees_usd": 162.6746227452301,
+            "funding_cashflow_usd": -1.407897424499221,
+            "gross_pnl_usd": 418.4705794277528,
+            "net_pnl_usd": 91.99716617804705,
+            "realized_gross_pnl_usd": 418.4705794277528,
+            "unrealized_pnl_usd": 0.0
+          },
+          "later": {
+            "entry_fees_usd": 61.19395810808625,
+            "exit_fees_usd": 64.12894689426483,
+            "funding_cashflow_usd": -1.4558836378048705,
+            "gross_pnl_usd": -31.816338760734865,
+            "net_pnl_usd": -158.59512740089082,
+            "realized_gross_pnl_usd": 86.57424564126488,
+            "unrealized_pnl_usd": -118.39058440199975
+          }
+        }
+      }
+    ],
+    "independent_values": 1302,
+    "later_days": 20,
+    "later_entries": 67,
+    "live_performance_established": false,
+    "maximum_absolute_residual_usd": 2.714205015e-12,
+    "new_tests": 47,
+    "original_case_indices": [
+      0,
+      1,
+      4,
+      5,
+      8,
+      9
+    ],
+    "report_aggregate_rows": 65,
+    "report_browser_verification": "passed",
+    "reused_regressions": 57,
+    "source_commit": "c72682e57e9d6d59f224f7a18d0e092d592a87d5",
+    "tests_archive": 104,
+    "tests_worktree": 104,
+    "unique_authenticated_references": 2353
+  },
+  "revision_number": 1,
+  "runtime_strategy_changed": false,
+  "schema_version": 1,
+  "status": "retain",
+  "strategy_id": "multi_asset_growth_first_5000_noncrypto_research_v89",
+  "supersedes_revision_id": null,
+  "symbol": "PORTFOLIO"
+}
