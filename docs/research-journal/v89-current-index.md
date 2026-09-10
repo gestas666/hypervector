@@ -3,10 +3,42 @@
 Updated September 10, 2026 UTC. This is research navigation, not a live-state checkpoint.
 The active mandate permits research and proposals; live changes remain subject
 to explicit approval. Both prospective outcome seals remain active. The latest
-update qualifies report preparation and records original matrix completion.
+update refreshes current fees and qualifies the derived report preparation.
 Historical studies remain bounded to the window ending September 7 UTC.
 
 ## Current finding and next action
+
+**September 10 15:00 UTC current-fee and report-context update:**
+[Fresh fee evidence](../reviews/2026-09-10-v89-current-fee-refresh.md), captured
+at 14:46:13–14:46:15 UTC, confirms growth mode enabled and scale 1.0 for SPCX,
+SNDK and Brent. The account's base 4.5 bps taker rate and 4% referral discount
+project **0.864 bps per side** for those three and **4.32 bps** for core assets.
+The 9 bps full-fee scenario remains an adverse fee-state stress. Today's inputs
+do not reconstruct historical fees and replace no frozen scenario assumptions.
+All 30 focused tests, 140 source references and seven independent rate checks
+pass. Fee journal revision
+`577635ebf5ba7227d6dbdc3c046cf59e6fa3c941c081772b98b9d31e8bea883d`
+has all 21 stored fields and 17 direct references verified.
+
+[Complete-review preparation V2](../reviews/2026-09-10-v89-complete-review-fee-context.md)
+adds that accepted snapshot, summarizes all three cost anchors and explicitly
+labels the full-fee path/concentration/cohort displays as stress. It preserves
+all 48 original cases and 144 paired comparisons. All **93 tests** pass; seven
+report modules cover 361/361 statements and 124/124 branches. The source-bound
+fee loader separately covers nine statements and four branches. Fifteen archive
+members, 2,171 references and 390 imported local modules are verified. Journal
+`28db9d2a50b52f3a041e550cd3c4cf31cc47ad040762b660ca25f4ba7f946e9c`
+has all 21 fields and 18 direct references verified. Use V2's
+`prepare_command.json` after the unchanged original publisher completes.
+The V1 preparation and its unexecuted command remain preserved.
+
+At 14:58:15 UTC, original reporter **35528** is running at approximately 100%
+CPU with **7/48 case audits complete**; all 48 simulations have finished. The
+full publication and real final reconciliation/HTML acceptance remain pending.
+The prior conditional user-run live estimate of **16:00–19:00 Eastern today**
+remains low confidence, subject to complete reporting, final selected approval,
+fresh account/order/source checks and successful TUI acceptance. No original
+job, live setting, installed TUI or prospective outcome seal is changed.
 
 **September 10 14:19 UTC complete-matrix and review-preparation update:**
 All **48/48 original historical cases are complete**. The exact resumed coordinator

@@ -1,0 +1,150 @@
+{
+  "automatic_promotion": false,
+  "confidence": "high",
+  "created_at_utc": "2026-09-10T14:49:39.386078+00:00",
+  "decision": "Refresh retains growth mode enabled and scale 1.0 for SPCX/SNDK/Brent: 0.864 bps per side, core 4.32 bps after referral. Preserve all historical assumptions and label 9 bps as stress in a derived review preparation. No live change.",
+  "evidence": [
+    {
+      "bytes": 4915,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/reviews/2026-09-10-v89-current-fee-refresh.md",
+      "role": "current fee observation, source, validation or review",
+      "sha256": "1ec22cb15b7b0ba5dc4251509d4facdc5042479ed48b221cda407224b9c7b97d"
+    },
+    {
+      "bytes": 6760,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/research-journal/v89-current-hip3-fee-qualification-20260907-v1.json",
+      "role": "current fee observation, source, validation or review",
+      "sha256": "ee8ce235a7daf22946277ee8cfa44319740a355cdc06002acda114e9e20bf3c2"
+    },
+    {
+      "bytes": 2041,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_current_fee_refresh_20260910_v1/PLAN.md",
+      "role": "current fee observation, source, validation or review",
+      "sha256": "903c39fd55bd8ebf32e0480586be3e60b56a5ab65572dea5f8950b1940972e63"
+    },
+    {
+      "bytes": 31380,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_current_fee_refresh_20260910_v1/source_manifest.json",
+      "role": "current fee observation, source, validation or review",
+      "sha256": "0664e4659727e0fc9e15e7abe5edd2a72b8a629786ffc2e4e4012e12c9a7db55"
+    },
+    {
+      "bytes": 4751,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_current_fee_refresh_20260910_v1/source.tar.gz",
+      "role": "current fee observation, source, validation or review",
+      "sha256": "7627308b3b3dfbbffbc65ae197cb9a14703788207426823749b4fa6466936a7d"
+    },
+    {
+      "bytes": 252,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_current_fee_refresh_20260910_v1/qualification.json",
+      "role": "current fee observation, source, validation or review",
+      "sha256": "e0bb86cf07662914e1aa5b2df9d706158997397450ad99ff71d8f201cbd7bacb"
+    },
+    {
+      "bytes": 12174,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_current_fee_refresh_20260910_v1/fees_documentation.md",
+      "role": "current fee observation, source, validation or review",
+      "sha256": "75e55504b1b887a89e1668a9544d09b013242747bcc29f8648a5410142a71258"
+    },
+    {
+      "bytes": 826,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_current_fee_refresh_20260910_v1/capture_command.json",
+      "role": "current fee observation, source, validation or review",
+      "sha256": "7bca3eae960c0b72a5e4931be959f2e67e6d8c3f4e3735594533870577ce0dda"
+    },
+    {
+      "bytes": 582,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_current_fee_refresh_20260910_v1/snapshot/fee_inputs.json",
+      "role": "current fee observation, source, validation or review",
+      "sha256": "9ae0de279794eab16114f6127cccce27c89139020a8333bc0a17d8e1286e6f9e"
+    },
+    {
+      "bytes": 5358,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_current_fee_refresh_20260910_v1/snapshot/report.json",
+      "role": "current fee observation, source, validation or review",
+      "sha256": "61066bc77830760288f55ba84fb22464559fadcc1f71a0b9fdc6bfe502e27a6b"
+    },
+    {
+      "bytes": 7799,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_current_fee_refresh_20260910_v1/coverage.json",
+      "role": "current fee observation, source, validation or review",
+      "sha256": "63270c6d315097734bc904ffb6ddf0a2a9cb799b084bc4b9dd62c151a45ac84f"
+    },
+    {
+      "bytes": 1234,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_current_fee_refresh_20260910_v1/tests_qualified.log",
+      "role": "current fee observation, source, validation or review",
+      "sha256": "d0fe631c34e116aa9d3ce3a3239327e19e3ed8074fc4457cdbd05f82bd180fb6"
+    },
+    {
+      "bytes": 11693,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_current_fee_refresh_20260910_v1/tests_initial.log",
+      "role": "current fee observation, source, validation or review",
+      "sha256": "a042937283511017a06b142c36fa4d6cdf99c1613be095396c4b6e9cbc8c24d3"
+    },
+    {
+      "bytes": 1130,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_current_fee_refresh_20260910_v1/tests_red.log",
+      "role": "current fee observation, source, validation or review",
+      "sha256": "a79aaf2fff51affa52043b5656bc7dc3abc5033679e7fa67b762683b7df64a9e"
+    },
+    {
+      "bytes": 2599,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_current_fee_refresh_20260910_v1/source/capture_fee_refresh.py",
+      "role": "current fee observation, source, validation or review",
+      "sha256": "5690725872dc2832ecdafaa8ca1b6df2cb4b7efa72fb20fa85443a123767b310"
+    },
+    {
+      "bytes": 2166,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_current_fee_refresh_20260910_v1/source/fee_snapshot.py",
+      "role": "current fee observation, source, validation or review",
+      "sha256": "6d14f28ea1ea98aa441ff2ab4984738cad633bbdec81e5a4e3b94a06f80b53fd"
+    },
+    {
+      "bytes": 5354,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_current_fee_refresh_20260910_v1/source/test_fee_snapshot.py",
+      "role": "current fee observation, source, validation or review",
+      "sha256": "b910ba0a294ce6311090f0505c26bad87c45c984616549f63b1012b8707498a2"
+    }
+  ],
+  "execution_authority": "none",
+  "falsifier": "Changed growth mode, deployer scale, account tier or referral eligibility, changed source hashes, or unexplained realized fill fees require a superseding qualification.",
+  "hypothesis": "Current account and market metadata can qualify the live HIP-3 cost assumption without retrofitting current discounts into historical results.",
+  "hypothesis_id": "v89-current-hip3-fee-qualification-20260907",
+  "limitations": [
+    "Current metadata cannot reconstruct historical or future fee states.",
+    "Aligned-quote status remains unresolved; no aligned discount is assumed.",
+    "Projected rates do not establish realized fees, fills or future profitability.",
+    "Only allowlisted response projections are retained; complete native replies are discarded.",
+    "Current observation covers September 10 14:46:13-14:46:15 UTC only.",
+    "Broader growth-scale domain compatibility is not established by the observed scale 1.0."
+  ],
+  "metrics": {
+    "account_base_taker_fee_bps": 4.5,
+    "active_referral_discount": 0.04,
+    "archive_members_verified": 4,
+    "current_turn_classification": "progress",
+    "focused_tests_passed": 30,
+    "independent_decimal_rates": 7,
+    "live_backend_restarted": false,
+    "live_configuration_changed": false,
+    "markets_growth_mode_enabled": 3,
+    "observed_markets": 7,
+    "prior_turn_classification": "verified_wait",
+    "projected_core_taker_fee_bps": 4.32,
+    "projected_hip3_taker_fee_bps": 0.864,
+    "projection_branches_covered": 8,
+    "projection_branches_total": 8,
+    "projection_statements_covered": 27,
+    "projection_statements_total": 27,
+    "prospective_outcomes_opened": false,
+    "source_references_verified": 140
+  },
+  "revision_number": 2,
+  "runtime_strategy_changed": false,
+  "schema_version": 1,
+  "status": "retain",
+  "strategy_id": "multi_asset_growth_first_5000_noncrypto_research_v89",
+  "supersedes_revision_id": "e06fa7cc80e0cc17148ae2543ca131248ff38ba03b026e8e104d5c26321f3861",
+  "symbol": "PORTFOLIO"
+}
