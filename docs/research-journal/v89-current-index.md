@@ -1,14 +1,53 @@
 # Current V89 research index
 
 Updated September 11, 2026 UTC. This is research navigation, not a live-state checkpoint.
-The active mandate permits research and proposals; live changes remain subject
-to explicit approval. Both prospective outcome seals remain active. The latest
-update records actual V3 live execution, source reconciliation and restoration
-of the existing read-only HIP-3 roster feed. The user-started backend is running;
-read a fresh checkpoint and process/account observation for its current state.
+The active mandate permits research and proposals and preapproves evidenced
+corrective technical fixes; live strategy and deployment changes remain subject
+to the explicit approval boundary. Both prospective outcome seals remain active.
+The latest update records the installed report-only hourly-funding correction.
+The user-started backend is running; read a fresh checkpoint and process/account
+observation for its current state.
 Historical studies remain bounded to the window ending September 7 UTC.
 
 ## Current finding and next action
+
+**September 11 15:08 UTC / 11:08 Eastern funding repair:**
+The [funding review](../reviews/2026-09-11-v89-roster-funding.md) records the
+source omission and its installed correction at
+`40154844348faf50dab7d905aa4d12defbad86bf`. The nine paths match isolated
+candidate `caa6904a0e5968552beafea876fd7bd5549c37c3`; 58 focused tests passed,
+the new funding reader and affected critical paths have full measured coverage,
+and Ruff passed. Ten candidate rates matched raw venue responses. Eighteen
+candidate and nine production funding cells matched the installed native TUI,
+including explicit fresh/stopped labels. Original Terminal access remains
+blocked; isolated native rendering does not verify that window.
+
+Only Info-only observer PID 37491 was gracefully replaced after confirmed
+exit. PID 44983, birth `31776092912024`, published available/running reports
+at 15:04:44 and 15:07:12 UTC with all five funding values. Its output and
+120-second post-collection delay are unchanged. The original trading owners
+and both collectors retained their process births. Seven prior files were
+preserved; the profile, binary, trading parameters and supervision policy are
+unchanged. The old full-source match to candidate `564d72e` now has this
+explicit nine-path report-only correction; no trading release change is implied.
+
+The 15:08:35 UTC checkpoint reports the same running-consistent live run, six
+fills, two closes totaling **-$27.994028 net**, and one open SNDK lifecycle.
+The next investigation is **decision-to-fill latency attribution** for the
+three actual entries, especially 28,601 ms against the configured 30,000-ms
+limit. Reconstruct available stage clocks and report missing timing evidence
+before proposing a correction. No limit relaxation, strategy retuning or
+prospective hypothetical outcome evaluation is authorized by this research.
+
+Funding journal
+`73e6355fccb9a36f619ec799e11ad5d9981aaf71540458f714795ead68dd2c60`
+has all 21 stored fields, 17 direct references and 100 manifest members
+verified. The first append met a transient lock held by PID 45970; that
+process was confirmed absent before the successful retry. The evidence and
+rollback are complete; no approval is pending for this report-only correction.
+
+The following live-acceptance and installation notes describe their dated
+capture boundaries; their former missing-funding action is resolved above.
 
 **September 11 14:17 UTC / 10:17 Eastern live acceptance:**
 The [live acceptance review](../reviews/2026-09-11-v89-live-acceptance.md) records

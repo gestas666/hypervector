@@ -10,10 +10,16 @@ source/TUI is installed at `4b241ef`. User-started run
 `bidirectional-live-1789122347122` is observed live; its first two closes lost
 $27.994028 net and a subsequent SNDK short was natively reconciled with its stop.
 See the [live acceptance review](docs/reviews/2026-09-11-v89-live-acceptance.md).
-The read-only HIP-3 roster observer is restored; its missing hourly-funding
-field is the next isolated telemetry repair. Original-window visual acceptance
-remains blocked by Computer Use. Trading settings and prospective seals remain
-unchanged. Preserve the existing live owner and both prospective collectors.
+The read-only HIP-3 hourly-funding repair is installed at `4015484` and its
+replacement observer PID 44983 published two verified advancing reports. See
+the [funding review](docs/reviews/2026-09-11-v89-roster-funding.md): 58 focused
+tests passed, 10 candidate venue rates and 27 native funding cells matched.
+The 15:08 UTC checkpoint still reports two closes at -$27.994028 net and one
+open SNDK lifecycle. Next: attribute the three actual entries' decision-to-fill
+latency, including the 28,601-ms fill against the 30,000-ms limit, before any
+proposal. Original-window visual acceptance remains blocked by Computer Use.
+Trading settings and prospective seals remain unchanged. Preserve the existing
+live owner, new Info-only roster producer and both prospective collectors.
 The historical notes below are not current execution or research status.
 
 ---
