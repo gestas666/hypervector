@@ -8,6 +8,50 @@ Historical studies remain bounded to their recorded windows.
 
 ## Current finding and next action
 
+**September 11 18:02 UTC / 14:02 Eastern full-backend recovery evidence:**
+The [recovery review](../reviews/2026-09-11-v89-whole-launcher-recovery.md) verifies
+the unchanged candidate `0c2b819` on complete, authenticated ledger clones.
+Fresh identity appeared after **678.716 s**, within the actual 900-second default;
+two complete accounting cycles finished with worker exit zero after **694.902 s**.
+The supervisor's initial ledger inventory took a separate 23.962 s. This single
+local result is not a worst-case startup or real-network latency guarantee.
+
+One +$0.004137 credit was appended exactly once. Both funding windows, snapshots
+and heartbeats agree; retained fills and charged fees are unique. Exact SNDK
+ownership and execution plan persist, and all seven final clone states are
+`STOPPED / bounded_run_complete`. Six configured flat-asset leverage settings
+were acknowledged only by strict mocks; no orders were requested. All original
+ledgers and clone prefixes, three complete backups, and eleven candidate source
+files were verified. The candidate remains **uninstalled**.
+
+The first two attempts remain preserved: V1 exposed the existing flat-asset
+leverage reassertion; V2 reached fresh identity but failed on missing scripted
+market-bar keys before complete publication. A subsequent actual checkpoint
+projection rejected the fixed clock's duplicate book-receive timestamps for all
+seven assets. That is a simulation limitation, not a demonstrated production
+defect. No checkpoint/TUI acceptance is claimed from this replay.
+
+At 17:34:32 UTC, actual Info-only preflight reconciled all seven assets, resolved
+fees, sizing and visible planned depth, and observed unified account reference
+equity **$4,807.25695649**. Its flat-transition condition is false because protected
+SNDK remains open. At 17:51:05 UTC, further native reads confirmed the same
+-0.306 short, 10x isolated, exact full-size stop at 1669.9, and -$2.9988 unrealized.
+These are sequential point-in-time facts. The five original trading/TUI owners
+remain absent and seven original terminal records unchanged; all three observer
+births and both prospective outcome seals are preserved.
+
+Journal `e5a8faa2fa8241147d550cc27e227a63a727a60c9ff7d76c9f1c096d66ebd4be`
+verifies 21 stored fields, 16 direct references and 109 manifest members. The
+initial journal contract omission rejected before database access; its invalid
+source and error log remain preserved with the corrected verified append.
+Highest-value next investigation: **advancing-clock recovery and checkpoint/TUI
+projection**, retaining the actual checkpoint chronology validator and complete
+accounting history. No real runtime, source installation or financial change
+occurred. Stop intent and both source-only proposals remain separate pending
+decisions; no economic-return claim is supported.
+
+The following dated entries retain their original evidence boundaries.
+
 **September 11 16:55 UTC / 12:55 Eastern funding-recovery correction:**
 The [restart accounting review](../reviews/2026-09-11-v89-restart-accounting.md)
 records the installed same-day recovery of +$0.004137 funding exactly once, with

@@ -8,7 +8,7 @@ User-started V3 run `bidirectional-live-1789122347122` stopped at **15:37:14 UTC
 with seven `STOPPED / operator_stop` records. All five original trading/TUI
 processes were absent at 15:54:41, and those terminal ledger rows were unchanged.
 The stop's origin/intent remains unproven; a user clarification is pending.
-At **16:47:52 UTC**, unsigned native reads again found a **0.306 SNDK short at 10x
+At **17:51:05 UTC**, unsigned native reads again found a **0.306 SNDK short at 10x
 isolated**, with its exact full-size reduce-only Stop Market OID `542326955281`
 open at trigger **1669.9**. Strategy-managed exits and new entries are stopped.
 Two completed trades total **-$27.994028 net**, excluding the open lifecycle.
@@ -41,17 +41,33 @@ with no duplicate retained fills or fees. It reproduces a fixed-24-hour startup
 window omission at a synthetic longer-downtime clock. Candidate `0c2b819` recovers
 the exact durable cursor and paginates funding; it is **not installed**.
 The exact committed source passed 136 focused tests and isolated rollback.
-Both new modules have full measured statement/branch coverage; whole-launch
-readiness remains unverified. Six prior files and eleven candidate files are
+Both new modules have full measured statement/branch coverage. Six prior files and eleven candidate files are
 preserved. The source-only installation proposal awaits explicit approval.
 Journal `09ce322fd1b8f3190bea4c597ed5876367d9caa85f1282529f956707aa4c75e9`
 verifies 21 stored fields, 13 references and 65 manifest members.
-Next: whole-launch recovery timing on the retained ledger sizes and projection
-of the first reconciled funding batch, using isolated state and mocked financial
-boundaries. The extra 4.3 GB cohort scan needs comparison with the launcher's
-900-second default readiness timeout. No live restart or installation occurred;
-stop intent, this correction and the optional candle-session proposal remain
-separate pending decisions.
+The [full-backend recovery review](docs/reviews/2026-09-11-v89-whole-launcher-recovery.md)
+now verifies a successful full-size isolated replay: fresh identity in **678.716 s**
+against the unchanged 900-second timeout, two complete accounting cycles, and
+worker exit zero after 694.902 s. Initial supervisor inventory took a separate
+23.962 s. One +$0.004137 funding credit was appended, with no duplicate fill or
+charged fee, exact open SNDK ownership, and all seven final clone states stopped.
+The six expected flat-asset leverage acknowledgements were simulated; no order
+was requested and no real financial instruction was sent. Two earlier fixture
+failures are retained, all 24 original/clone-prefix comparisons passed, and all
+three prestart backups were reverified.
+
+Journal `e5a8faa2fa8241147d550cc27e227a63a727a60c9ff7d76c9f1c096d66ebd4be`
+verifies 21 stored fields, 16 references and 109 manifest members. An initial
+journal metadata omission rejected before database access; the original source
+and failure log are retained alongside the corrected, verified append.
+The follow-up checkpoint publisher rejected duplicate book-receive timestamps
+from the fixed simulation clock; no checkpoint was produced. This does not prove
+a production clock defect. Next: **coherent advancing-clock recovery, checkpoint
+history/funding projection and isolated native TUI acceptance**. The successful
+backend replay does not qualify current strategy candles, unified collateral,
+fresh venue latency, or the separate checkpoint/TUI service path.
+No live restart or installation occurred; stop intent, this correction and the
+optional candle-session proposal remain separate pending decisions.
 
 Approved V3 source/TUI remains installed at `4b241ef`, with the read-only funding
 repair at `4015484`. Info-only roster PID 44983 and prospective collectors
