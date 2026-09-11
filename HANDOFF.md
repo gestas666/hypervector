@@ -1,26 +1,40 @@
 # HANDOFF — hypervector
 
 **Current navigation, September 11, 2026 UTC:** read the
-[V89 research index](docs/research-journal/v89-current-index.md) first. It links
-the completed shared studies, latest chronological attribution, corrected
-follow-up, pending proposals and sealed prospective boundary. Read the current
-runtime checkpoint together with fresh process/account observations for live
-state; an old checkpoint does not establish current execution. The approved V3
-source/TUI is installed at `4b241ef`. User-started run
-`bidirectional-live-1789122347122` is observed live; its first two closes lost
-$27.994028 net and a subsequent SNDK short was natively reconciled with its stop.
-See the [live acceptance review](docs/reviews/2026-09-11-v89-live-acceptance.md).
-The read-only HIP-3 hourly-funding repair is installed at `4015484` and its
-replacement observer PID 44983 published two verified advancing reports. See
-the [funding review](docs/reviews/2026-09-11-v89-roster-funding.md): 58 focused
-tests passed, 10 candidate venue rates and 27 native funding cells matched.
-The 15:08 UTC checkpoint still reports two closes at -$27.994028 net and one
-open SNDK lifecycle. Next: attribute the three actual entries' decision-to-fill
-latency, including the 28,601-ms fill against the 30,000-ms limit, before any
-proposal. Original-window visual acceptance remains blocked by Computer Use.
-Trading settings and prospective seals remain unchanged. Preserve the existing
-live owner, new Info-only roster producer and both prospective collectors.
-The historical notes below are not current execution or research status.
+[V89 research index](docs/research-journal/v89-current-index.md) first. Historical
+notes below do not establish current execution or research state.
+
+User-started V3 run `bidirectional-live-1789122347122` stopped at **15:37:14 UTC**
+with seven `STOPPED / operator_stop` records. All five original trading/TUI
+processes were absent at 15:54:41, and those terminal ledger rows were unchanged.
+The stop's origin/intent remains unproven; a user clarification is pending.
+At **15:52:43 UTC**, unsigned native reads found a **0.306 SNDK short at 10x
+isolated**, with its exact full-size reduce-only Stop Market OID `542326955281`
+open at trigger **1669.9**. Strategy-managed exits and new entries are stopped.
+Two completed trades total **-$27.994028 net**, excluding the open lifecycle.
+Read fresh process/account evidence before describing current state.
+
+The [entry-latency review](docs/reviews/2026-09-11-v89-entry-latency.md) completes
+attribution of all three entries. Each met its 30-second **SDK-dispatch** limit;
+the smallest headroom was 2.294 seconds. Four paired unsigned transport trials
+saved a median **3.026991 seconds**, with all 28 asset-frame pairs identical.
+Isolated candidate `f59d54cf40cf80111b1691a86395326693b0c103` changes one live
+launcher source and adds one test file. It is **not installed**. Its 62 focused
+tests, final five-test refactor check, source checks and isolated rollback passed.
+The optional source-only installation awaits explicit approval and includes no
+restart or order action. No economic improvement is established.
+
+Journal `a986c57ae736900a2cbc46f3cbe39c6dde9277c092cb5835c708ff056abf09ff`
+verifies all 21 stored fields, 18 direct references and 123 manifest members.
+Next: offline exact-state SNDK restart-adoption validation, preserving its position,
+native stop and persisted execution plan without duplicate mutation. Do not infer
+restart intent from an old approval or a stale running heartbeat.
+
+Approved V3 source/TUI remains installed at `4b241ef`, with the read-only funding
+repair at `4015484`. Info-only roster PID 44983 and prospective collectors
+75062/15448 retain their process births; both hypothetical outcome seals remain
+intact. Original Terminal visual acceptance remains unverified after Computer Use
+rejected access. Preserve all frozen release evidence and the current live state.
 
 ---
 

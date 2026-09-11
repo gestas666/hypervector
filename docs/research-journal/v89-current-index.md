@@ -1,15 +1,54 @@
 # Current V89 research index
 
 Updated September 11, 2026 UTC. This is research navigation, not a live-state checkpoint.
-The active mandate permits research and proposals and preapproves evidenced
-corrective technical fixes; live strategy and deployment changes remain subject
-to the explicit approval boundary. Both prospective outcome seals remain active.
-The latest update records the installed report-only hourly-funding correction.
-The user-started backend is running; read a fresh checkpoint and process/account
-observation for its current state.
-Historical studies remain bounded to the window ending September 7 UTC.
+The mandate permits research and proposals and preapproves evidenced corrective
+technical fixes; optional live execution/deployment changes require explicit
+approval. Both prospective hypothetical outcome seals remain active.
+Historical studies remain bounded to their recorded windows.
 
 ## Current finding and next action
+
+**September 11 15:54 UTC / 11:54 Eastern stopped boundary and latency candidate:**
+The [entry-latency review](../reviews/2026-09-11-v89-entry-latency.md) records
+seven `STOPPED / operator_stop` terminal records at 15:37:14 UTC, unchanged at
+15:54:41, with the five original CLI/supervisor/backend/checkpoint/TUI processes
+absent. No runtime owner was signaled by this investigation. The stop category
+does not prove who initiated it; the stop-intent clarification remains pending.
+The stale final running heartbeat does not establish active execution.
+
+Native reads completed **15:52:43 UTC**: core flat/order-free; XYZ has one SNDK
+short **-0.306 at 10x isolated**, with exact full-size reduce-only buy Stop Market
+OID `542326955281`, trigger **1669.9**, still open. Its marked unrealized result
+was -$5.0796 at that capture. Strategy-managed exits and new entries are stopped.
+The final checkpoint's **two closes / -$27.994028 net** exclude this open position.
+Refresh account/process observations before interpreting these as current state.
+
+Three exact entry lifecycles were decomposed and reproduced. SDK dispatch ages
+were 18.633, 27.706 and 21.495 seconds against a 30-second limit; no observed
+violation exists. The SNDK long waited through BTC's preceding protected-entry
+workflow. The candidate preserves that sequencing. Four counterbalanced public
+candle comparisons saved **3.026991 seconds median / 44.9513% of fetch time**;
+all 28 paired frames were identical. This measures transport, not profit or
+future latency guarantees.
+
+Candidate `f59d54cf40cf80111b1691a86395326693b0c103` is clean in the isolated
+candle-session worktree and **not installed**. Its exact two-path source-only
+installation is approval-ready, with no automatic restart or order action.
+62 focused tests passed; a subsequent test-only refactor passed its five tests.
+The changed command function has 100% statement/branch coverage. Ruff and actual
+isolated rollback/restoration passed; diagnostic tests passed 40 cases and the
+current analyzer reproduced all three reports. Initial fixture/test-first
+failures are retained in the evidence packet.
+
+Journal `a986c57ae736900a2cbc46f3cbe39c6dde9277c092cb5835c708ff056abf09ff`
+verifies all 21 stored fields, 18 direct references and 123 manifest members.
+Highest-value next investigation: **offline exact-state restart adoption** for the
+remaining SNDK lifecycle, proving no duplicate position/stop/plan mutation before
+a concrete recovery decision. Both prospective outcome studies remain sealed.
+The roster producer 44983 and collectors 75062/15448 retain their original births.
+
+The following dated notes preserve prior capture boundaries. Their running-state
+and next-action statements are historical, not current instructions.
 
 **September 11 15:08 UTC / 11:08 Eastern funding repair:**
 The [funding review](../reviews/2026-09-11-v89-roster-funding.md) records the
