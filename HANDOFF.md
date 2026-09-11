@@ -4,76 +4,63 @@
 [V89 research index](docs/research-journal/v89-current-index.md) first. Historical
 notes below do not establish current execution or research state.
 
-User-started V3 run `bidirectional-live-1789122347122` stopped at **15:37:14 UTC**
-with seven `STOPPED / operator_stop` records. All five original trading/TUI
-processes were absent at 15:54:41, and those terminal ledger rows were unchanged.
-The stop's origin/intent remains unproven; a user clarification is pending.
-At **17:51:05 UTC**, unsigned native reads again found a **0.306 SNDK short at 10x
-isolated**, with its exact full-size reduce-only Stop Market OID `542326955281`
-open at trigger **1669.9**. Strategy-managed exits and new entries are stopped.
-Two completed trades total **-$27.994028 net**, excluding the open lifecycle.
-Read fresh process/account evidence before describing current state.
+The [checkpoint/TUI recovery review](docs/reviews/2026-09-11-v89-checkpoint-recovery.md)
+now covers isolated candidate **a0352a5**, including funding recovery **0c2b819**.
+It repairs inherited lifecycle checkpoint publication, explicit missing provider
+context, stopped-backend authority labels/manual controls, and current-run
+execution-quality fill scope. The complete 34-file source/test patch and exact
+TUI binary passed disposable apply/rollback/reapply verification. They are
+**not installed**; no runtime was restarted and no financial instruction was sent.
 
-The [entry-latency review](docs/reviews/2026-09-11-v89-entry-latency.md) completes
-attribution of all three entries. Each met its 30-second **SDK-dispatch** limit;
-the smallest headroom was 2.294 seconds. Four paired unsigned transport trials
-saved a median **3.026991 seconds**, with all 28 asset-frame pairs identical.
-Isolated candidate `f59d54cf40cf80111b1691a86395326693b0c103` changes one live
-launcher source and adds one test file. It is **not installed**. Its 62 focused
-tests, final five-test refactor check, source checks and isolated rollback passed.
-The optional source-only installation awaits explicit approval and includes no
-restart or order action. No economic improvement is established.
+Validation: **158 focused Python tests**, **564 Rust tests**, 23 existing ignored
+Rust tests, all-target Clippy, formatting, and Ruff for all 19 proposed Python
+files passed. Both new Python recovery modules have full measured statement and
+branch coverage. Full-backend advancing-clock V4 completed two simulated cycles,
+with fresh identity in **655.943 s** against the unchanged 900-second timeout;
+initial inventory took a separate 23.031 s. One +$0.004137 funding row and no new
+fills/charged fees were appended. Eight original ledgers and eight clone prefixes
+were preserved, and all 1,889 prestart backup files were verified.
 
-Journal `a986c57ae736900a2cbc46f3cbe39c6dde9277c092cb5835c708ff056abf09ff`
-verifies all 21 stored fields, 18 direct references and 123 manifest members.
-The [offline adoption review](docs/reviews/2026-09-11-v89-sndk-restart-adoption.md)
-now verifies restoration from all 22,569 exact-profile records: position, native
-stop, original entry clock and complete execution plan retained, with only two
-mocked reads and zero mutations. Seven altered-ownership cases rejected; 22
-existing regressions passed. The original ledger hash is unchanged. This is
-engine-startup evidence, not live-launch acceptance; synthetic preflight metadata
-was explicitly labeled and its initial missing-fee fixture failure was retained.
-Adoption journal `c30d2adfb8d23ab5c132a90f7545bc95f45bf9d835dc0bd40037cf6a39910ba4`
-verifies 21 stored fields, 13 references and 20 manifest members.
-The [restart accounting review](docs/reviews/2026-09-11-v89-restart-accounting.md)
-verifies recovery of the actual +$0.004137 post-stop funding credit exactly once,
-with no duplicate retained fills or fees. It reproduces a fixed-24-hour startup
-window omission at a synthetic longer-downtime clock. Candidate `0c2b819` recovers
-the exact durable cursor and paginates funding; it is **not installed**.
-The exact committed source passed 136 focused tests and isolated rollback.
-Both new modules have full measured statement/branch coverage. Six prior files and eleven candidate files are
-preserved. The source-only installation proposal awaits explicit approval.
-Journal `09ce322fd1b8f3190bea4c597ed5876367d9caa85f1282529f956707aa4c75e9`
-verifies 21 stored fields, 13 references and 65 manifest members.
-The [full-backend recovery review](docs/reviews/2026-09-11-v89-whole-launcher-recovery.md)
-now verifies a successful full-size isolated replay: fresh identity in **678.716 s**
-against the unchanged 900-second timeout, two complete accounting cycles, and
-worker exit zero after 694.902 s. Initial supervisor inventory took a separate
-23.962 s. One +$0.004137 funding credit was appended, with no duplicate fill or
-charged fee, exact open SNDK ownership, and all seven final clone states stopped.
-The six expected flat-asset leverage acknowledgements were simulated; no order
-was requested and no real financial instruction was sent. Two earlier fixture
-failures are retained, all 24 original/clone-prefix comparisons passed, and all
-three prestart backups were reverified.
+The actual candidate checkpoint publisher completed in **0.669425 s**. Two
+native captures produced **54 frames**: nine views at three sizes, first from
+the simulated recovery and then from the actual recorded V3 checkpoint. All
+passed the scoped accounting/stopped-authority checks. The recorded checkpoint
+contains all seven provider contexts, 978 evaluations, actual candles, depth,
+trades and regime data. **Full live acceptance remains false**: 100x28 OPS action
+details compress/clip; all paged assets/details, fresh complete provider signals,
+and the actually installed user Terminal remain unqualified.
 
-Journal `e5a8faa2fa8241147d550cc27e227a63a727a60c9ff7d76c9f1c096d66ebd4be`
-verifies 21 stored fields, 16 references and 109 manifest members. An initial
-journal metadata omission rejected before database access; the original source
-and failure log are retained alongside the corrected, verified append.
-The follow-up checkpoint publisher rejected duplicate book-receive timestamps
-from the fixed simulation clock; no checkpoint was produced. This does not prove
-a production clock defect. Next: **coherent advancing-clock recovery, checkpoint
-history/funding projection and isolated native TUI acceptance**. The successful
-backend replay does not qualify current strategy candles, unified collateral,
-fresh venue latency, or the separate checkpoint/TUI service path.
-No live restart or installation occurred; stop intent, this correction and the
-optional candle-session proposal remain separate pending decisions.
+Research journal **d055d1e5838e6a47f54bd2e2e38b837fb8b9ae538f7238cffd56564a968614f3**
+verifies 21 stored fields, 22 direct references and **529 frozen evidence files**.
+Earlier fixture, cache, parser and native display failures remain preserved.
+Highest-value next investigation: **compact OPS usability, then complete all
+seven assets' paged data and provider-readiness acceptance**. Full live and
+strategy readiness remain the broader objective; this is a scoped correction.
 
-Approved V3 source/TUI remains installed at `4b241ef`, with the read-only funding
-repair at `4015484`. Info-only roster PID 44983 and prospective collectors
-75062/15448 retain their process births; both hypothetical outcome seals remain
-intact. Original Terminal visual acceptance remains unverified after Computer Use
-rejected access. Preserve all frozen release evidence and the current live state.
+Unsigned native reads at **20:05:34 UTC** found the same **0.306 SNDK short at
+1629.2, 10x isolated**, with exact full-size reduce-only Stop Market OID
+**542326955281** open at trigger **1669.9**. Unrealized PnL was **-$1.071**; six
+native hourly funding credits sum to **+$0.033164**. Core was flat/order-free,
+and no fill after the recorded stop appeared in that bounded query. These are
+sequential point-in-time observations. The seven original STOPPED records and
+original cohort/SNDK hashes were unchanged. All five original trading/TUI PIDs
+were absent; three read-only observers were present. System process permission
+limits prevent a machine-wide absence claim. Refresh before describing current
+venue state. Strategy-managed exits and new entries from the original run remain
+stopped; the origin/intent of that earlier operator_stop is unproven.
+
+The objective's Human control clause requires explicit approval before live
+execution-behavior or deployment changes. The combined source/TUI installation
+proposal is concrete and pending. The optional candle-session candidate f59d54c
+remains separate. Both prospective hypothetical outcome seals are intact. No
+profit improvement is established by the technical acceptance.
+
+Disk cleanup completed at **20:00:40 UTC**: measured **2.163 GB net** recovered,
+**21.487 GB free** at that time, with verified backups outside the repositories.
+Regenerated candidate compiler caches and eight already-trashed folders were
+removed; candidate/installed executables, source and active research data were
+preserved. Do not infer that later builds or collectors leave that free space
+unchanged.
 
 ---
 

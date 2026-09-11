@@ -1,12 +1,53 @@
 # Current V89 research index
 
 Updated September 11, 2026 UTC. This is research navigation, not a live-state checkpoint.
-The mandate permits research and proposals and preapproves evidenced corrective
-technical fixes; optional live execution/deployment changes require explicit
-approval. Both prospective hypothetical outcome seals remain active.
+The mandate permits research, testing and proposals. Its Human control clause
+requires explicit approval before live execution-behavior or deployment changes. Both prospective hypothetical outcome seals remain active.
 Historical studies remain bounded to their recorded windows.
 
 ## Current finding and next action
+
+**September 11 20:12 UTC / 16:12 Eastern checkpoint and TUI recovery evidence:**
+The [combined technical review](../reviews/2026-09-11-v89-checkpoint-recovery.md)
+binds candidate **a0352a5** (including funding candidate **0c2b819**) to a complete
+34-file source/test patch and the exact tested TUI binary. Inherited lifecycle
+publication, explicit missing provider context, stopped-backend authority and
+current-run fill-quality scope are corrected in the isolated candidate. Exact
+source and executable installation/rollback/reinstallation passed on copies.
+No source/TUI installation, restart or real financial instruction occurred.
+
+The 158 focused Python tests, 564 Rust tests, all-target Clippy, formatting and
+19-file Python Ruff checks passed; 23 existing Rust tests remain ignored. The
+advancing-clock V4 full-backend replay completed two simulated cycles, produced
+one +$0.004137 funding row with no new fills/charged fees, preserved all eight
+original ledgers and clone prefixes, and verified 1,889 backup files. Readiness
+was 655.943 s within 900 s, plus 23.031 s initial inventory; this single local
+measurement is not a worst-case startup guarantee. Actual checkpoint publication
+then completed in 0.669425 s on the bounded recovered-run inputs.
+
+The same final binary rendered 54 native frames across two source-backed cases:
+27 from simulated recovery and 27 from the actual stopped V3 checkpoint. All
+passed scoped stopped-state/accounting checks; the actual recording includes
+seven provider contexts, 978 evaluations, candles, depth, trades and regimes.
+**Full live acceptance is unproven.** At 100x28, OPS details compress/clip; all
+paged assets/details and fresh complete strategy/data readiness remain pending.
+
+At 20:05:34 UTC unsigned native reads still found the 0.306 SNDK short, 10x
+isolated, exact full-size stop at 1669.9, and -$1.071 unrealized. Six native
+hourly funding credits total +$0.033164. Core was flat/order-free. Original
+terminal records and cohort/SNDK hashes were unchanged; original trading/TUI
+PIDs were absent and three read-only observers present. Permission-limited
+process-name inspection is not proof of machine-wide launcher absence.
+
+Journal **d055d1e5838e6a47f54bd2e2e38b837fb8b9ae538f7238cffd56564a968614f3**
+verifies all 21 stored columns, 22 direct references and 529 frozen files.
+Earlier failed attempts remain retained. Highest-value next investigation:
+**compact OPS usability, followed by complete seven-asset paged data and provider
+readiness**. Explicit approval is requested for the reviewed combined source/TUI
+installation under the objective's Human control clause; no economic promotion
+is supported. Both prospective hypothetical outcome seals remain intact.
+
+The following dated entries retain their original evidence boundaries.
 
 **September 11 18:02 UTC / 14:02 Eastern full-backend recovery evidence:**
 The [recovery review](../reviews/2026-09-11-v89-whole-launcher-recovery.md) verifies
