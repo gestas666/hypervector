@@ -7,6 +7,38 @@ Historical studies remain bounded to their recorded windows.
 
 ## Current finding and next action
 
+**September 11 21:30 UTC / 17:30 Eastern complete chart/control evidence:**
+The [updated installation review](../reviews/2026-09-11-v89-complete-chart-controls.md)
+proposes candidate **05809a9**, including funding/checkpoint recovery, compact
+controls, BTC hourly candles and complete scrollable chart evidence. The exact
+44-file package and executable passed apply/rollback/reapply on copies; neither
+was installed and the trading backend was not restarted.
+
+**578 Rust tests**, Clippy, formatting and release build passed; 23 existing tests
+remain ignored. Prior focused Python recovery evidence applies to 19 byte-identical
+Python files. **410 native frames** passed scoped all-asset checks: 21 chart,
+21 OPS and 21 setup-inspector cases, plus all 840 distinct depth levels. Earlier
+failures and capture/test-fixture errors remain preserved.
+
+Five fresh unsigned observer polls yielded 7/7 provider coverage, 10 unique
+HOLD evaluations, 35 native books and 361 completed consecutive candles per
+asset. Exact providers/assets/policies/runtime settings matched the recorded
+configuration. Current completed provider clocks were verified; this 76-second
+window supplies no trade-frequency or profitability proof. The observer exited
+0 at its poll bound; its last heartbeat is not proof it remains alive.
+
+At 21:25:15 UTC the SNDK short and full-size 1669.9 stop remained present,
+with -$0.5508 unrealized and +$0.036281 native cash funding. Original run PIDs
+were absent; ledger/profile/binary identities were preserved.
+
+Journal **8db64a648c339d93184cb222483e27a60febc357afef191cf8993af8f022a27f**
+verifies 21 stored fields, 19 direct references and **2,675 frozen files**.
+Highest-value next investigation: **fresh observer checkpoint/TUI and complete
+configuration-workflow acceptance**. Installed-terminal and full live/strategy
+readiness remain unproven. No economic promotion; prospective seals intact.
+
+## Earlier checkpoint recovery finding
+
 **September 11 20:12 UTC / 16:12 Eastern checkpoint and TUI recovery evidence:**
 The [combined technical review](../reviews/2026-09-11-v89-checkpoint-recovery.md)
 binds candidate **a0352a5** (including funding candidate **0c2b819**) to a complete

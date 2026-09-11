@@ -4,63 +4,60 @@
 [V89 research index](docs/research-journal/v89-current-index.md) first. Historical
 notes below do not establish current execution or research state.
 
-The [checkpoint/TUI recovery review](docs/reviews/2026-09-11-v89-checkpoint-recovery.md)
-now covers isolated candidate **a0352a5**, including funding recovery **0c2b819**.
-It repairs inherited lifecycle checkpoint publication, explicit missing provider
-context, stopped-backend authority labels/manual controls, and current-run
-execution-quality fill scope. The complete 34-file source/test patch and exact
-TUI binary passed disposable apply/rollback/reapply verification. They are
-**not installed**; no runtime was restarted and no financial instruction was sent.
+The [complete chart/control review](docs/reviews/2026-09-11-v89-complete-chart-controls.md)
+now proposes isolated candidate **05809a9**, including prior funding/checkpoint
+recovery and new compact OPS, BTC 1h chart, and bounded chart-evidence scrolling.
+The exact **44-file** package and TUI passed disposable apply/rollback/reapply
+verification. They are **not installed**; no trading backend was restarted and
+no financial instruction was sent.
 
-Validation: **158 focused Python tests**, **564 Rust tests**, 23 existing ignored
-Rust tests, all-target Clippy, formatting, and Ruff for all 19 proposed Python
-files passed. Both new Python recovery modules have full measured statement and
-branch coverage. Full-backend advancing-clock V4 completed two simulated cycles,
-with fresh identity in **655.943 s** against the unchanged 900-second timeout;
-initial inventory took a separate 23.031 s. One +$0.004137 funding row and no new
-fills/charged fees were appended. Eight original ledgers and eight clone prefixes
-were preserved, and all 1,889 prestart backup files were verified.
+Final validation: **578 Rust tests passed**, 23 existing ignored; all-target
+Clippy, formatting and release build passed. All 19 proposed Python files match
+the earlier 158-test recovery candidate. **410 native frames** cover every asset
+at 100x28, 120x36 and 190x52. All 21 chart cases expose exact backend indicators,
+complete source/authority/effect and working Home restore. All 21 OPS cases and
+21 setup inspectors passed; all 840 unique depth levels matched backend values.
+BTC now displays five recorded complete hourly candles. Native sessions exited
+0, with network/file writes denied. Images are labeled native-cell
+reconstructions with a disclosed font fallback; the user Terminal is untested.
 
-The actual candidate checkpoint publisher completed in **0.669425 s**. Two
-native captures produced **54 frames**: nine views at three sizes, first from
-the simulated recovery and then from the actual recorded V3 checkpoint. All
-passed the scoped accounting/stopped-authority checks. The recorded checkpoint
-contains all seven provider contexts, 978 evaluations, actual candles, depth,
-trades and regime data. **Full live acceptance remains false**: 100x28 OPS action
-details compress/clip; all paged assets/details, fresh complete provider signals,
-and the actually installed user Terminal remain unqualified.
+A separate unsigned observer completed **five polls** from 21:17:37 to 21:18:53
+UTC with 7/7 provider scopes, 10 unique evaluations, 35 twenty-level books and
+361 consecutive completed candles per asset. Provider/asset/policy/runtime
+settings matched the recorded configuration exactly. Latest decisions matched
+the current completed provider clocks; all were HOLD. The roughly 76-second
+sample does not establish trading frequency, fills, costs or profitability.
+The first launch was refused for an invalid observer output path and retained;
+the corrected attempt exited 0. Its final heartbeat says running, while its
+process is terminal; do not mistake that row for a currently live backend.
 
-Research journal **d055d1e5838e6a47f54bd2e2e38b837fb8b9ae538f7238cffd56564a968614f3**
-verifies 21 stored fields, 22 direct references and **529 frozen evidence files**.
-Earlier fixture, cache, parser and native display failures remain preserved.
-Highest-value next investigation: **compact OPS usability, then complete all
-seven assets' paged data and provider-readiness acceptance**. Full live and
-strategy readiness remain the broader objective; this is a scoped correction.
+Journal **8db64a648c339d93184cb222483e27a60febc357afef191cf8993af8f022a27f**
+verifies all 21 stored fields, 19 direct references and **2,675 frozen files**.
+Compact-capture failures, the unsupported-hour finding and clipped provider
+provenance remain retained. Highest-value next investigation: **fresh observer
+checkpoint/TUI and full configuration-workflow acceptance**. Full live and
+strategy readiness, installed-terminal acceptance and economic improvement
+remain unproven. Both prospective hypothetical outcome seals remain unopened.
 
-Unsigned native reads at **20:05:34 UTC** found the same **0.306 SNDK short at
-1629.2, 10x isolated**, with exact full-size reduce-only Stop Market OID
-**542326955281** open at trigger **1669.9**. Unrealized PnL was **-$1.071**; six
-native hourly funding credits sum to **+$0.033164**. Core was flat/order-free,
-and no fill after the recorded stop appeared in that bounded query. These are
-sequential point-in-time observations. The seven original STOPPED records and
-original cohort/SNDK hashes were unchanged. All five original trading/TUI PIDs
-were absent; three read-only observers were present. System process permission
-limits prevent a machine-wide absence claim. Refresh before describing current
-venue state. Strategy-managed exits and new entries from the original run remain
-stopped; the origin/intent of that earlier operator_stop is unproven.
+Unsigned venue reads at **21:25:15 UTC** found the same **0.306 SNDK short at
+1629.2, 10x isolated**, with the exact full-size reduce-only Stop Market OID
+**542326955281** open at **1669.9**. Unrealized PnL was **-$0.5508**; seven native
+funding cash flows sum to **+$0.036281**. Core was flat/order-free. No fill after
+the original stop appeared in the bounded query. Original trading/TUI PIDs
+were absent; terminal records and original cohort/SNDK hashes were unchanged.
+These sequential observations require refreshing before a current-state claim.
+System process permissions limit machine-wide process-name absence claims.
 
-The objective's Human control clause requires explicit approval before live
-execution-behavior or deployment changes. The combined source/TUI installation
-proposal is concrete and pending. The optional candle-session candidate f59d54c
-remains separate. Both prospective hypothetical outcome seals are intact. No
-profit improvement is established by the technical acceptance.
+The objective Human control clause requires explicit approval before live
+execution-behavior or deployment changes. The updated installation proposal is
+concrete; installing it and restarting execution are separate actions. The
+optional candle-session candidate f59d54c remains excluded.
 
-Disk cleanup completed at **20:00:40 UTC**: measured **2.163 GB net** recovered,
-**21.487 GB free** at that time, with verified backups outside the repositories.
-Regenerated candidate compiler caches and eight already-trashed folders were
-removed; candidate/installed executables, source and active research data were
-preserved. Do not infer that later builds or collectors leave that free space
-unchanged.
+The latest drive cleanup recovered **3.303 GB net**, leaving **22.282 GB free**
+at 20:51:37 UTC. Verified backups and restore instructions are outside the
+repositories. Subsequent candidate builds temporarily restored compiler caches;
+free space measured about **20.085 GB** at this publication boundary. Code,
+settings, finished executables and trading data were preserved.
 
 ---
 
