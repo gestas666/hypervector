@@ -6,8 +6,14 @@ the completed shared studies, latest chronological attribution, corrected
 follow-up, pending proposals and sealed prospective boundary. Read the current
 runtime checkpoint together with fresh process/account observations for live
 state; an old checkpoint does not establish current execution. The approved V3
-source/TUI is installed at `4b241ef`; the backend remains stopped and startup is
-user-run. See the [installation record and command](docs/reviews/2026-09-11-v89-v3-installed.md).
+source/TUI is installed at `4b241ef`. User-started run
+`bidirectional-live-1789122347122` is observed live; its first two closes lost
+$27.994028 net and a subsequent SNDK short was natively reconciled with its stop.
+See the [live acceptance review](docs/reviews/2026-09-11-v89-live-acceptance.md).
+The read-only HIP-3 roster observer is restored; its missing hourly-funding
+field is the next isolated telemetry repair. Original-window visual acceptance
+remains blocked by Computer Use. Trading settings and prospective seals remain
+unchanged. Preserve the existing live owner and both prospective collectors.
 The historical notes below are not current execution or research status.
 
 ---

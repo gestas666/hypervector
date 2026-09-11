@@ -3,11 +3,51 @@
 Updated September 11, 2026 UTC. This is research navigation, not a live-state checkpoint.
 The active mandate permits research and proposals; live changes remain subject
 to explicit approval. Both prospective outcome seals remain active. The latest
-update records the approved V3 source/TUI installation and its fresh verification.
-The backend remains stopped; live startup stays user-run.
+update records actual V3 live execution, source reconciliation and restoration
+of the existing read-only HIP-3 roster feed. The user-started backend is running;
+read a fresh checkpoint and process/account observation for its current state.
 Historical studies remain bounded to the window ending September 7 UTC.
 
 ## Current finding and next action
+
+**September 11 14:17 UTC / 10:17 Eastern live acceptance:**
+The [live acceptance review](../reviews/2026-09-11-v89-live-acceptance.md) records
+user-started run `bidirectional-live-1789122347122`, active since its first
+backend event at 10:35:44 UTC. All seven assets have complete telemetry. The
+first two closes, BTC and SNDK longs, lost **$27.994028 net after fees**.
+All six native fills reconcile, including a subsequent SNDK short; its observed
+0.306 position at 10× isolated leverage has a full-size reduce-only stop.
+All three entries dispatched and filled within their 30-second limits.
+These are actual-account observations, not evidence that the strategy will win.
+
+The 15-minute reporting observation retained 181 process samples, 31 checkpoint
+captures / 28 distinct publications and 248 exact ledger-prefix comparisons.
+Reporter writes measured 79.16 MiB; maximum captured checkpoint age was 33.856 s.
+Nine views at three sizes, all seven depth selections and all twenty Brent
+levels at each size were captured with the installed native binary. The
+original Terminal window remains unverified because Computer Use blocked access.
+The isolated native renderer does not satisfy that original-window check.
+
+The stopped September 5 auxiliary roster producer was restored without
+restarting the trading owner, primary reporter or TUI. Fresh native panels now
+show `HIP-3 LIVE` / `CURRENT`. Twelve observer/factory tests passed. Funding
+still shows `N/A` because the Info-only producer omits its optional hourly
+funding field. This is the **next source-backed telemetry repair**, to be
+developed in isolation with missing/invalid/stale-input and display-unit checks.
+The observer's future supervision also needs an explicit deployment design.
+
+Runtime source/profile/binary identities still match the approved installation;
+the run-specific backup reverified 1,928 files, including 1,874 implementation
+sources. No trading settings changed. Both prospective outcome seals and both
+original collectors remain active. Actual-account monitoring is disclosed;
+neither compared hypothetical outcome study was evaluated. The broader goal
+remains active. The following installation/stopped-state notes are historical.
+
+Live acceptance journal
+`2fd93dbb082ee4cb9f2101a3f3253f67bc83991aedaa2ddaed94cabb144193da`
+has all 21 stored fields, 20 direct references and 513 manifest members
+verified. The first append encountered a transient DuckDB lock; its owner
+exited before the successful retry. No trading process was restarted.
 
 **September 11 03:32 UTC / September 10 23:32 Eastern V3 installed:**
 The [installation review](../reviews/2026-09-11-v89-v3-installed.md) records the
