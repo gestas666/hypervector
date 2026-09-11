@@ -8,6 +8,34 @@ Historical studies remain bounded to their recorded windows.
 
 ## Current finding and next action
 
+**September 11 16:07 UTC / 12:07 Eastern offline recovery evidence:**
+The [SNDK adoption review](../reviews/2026-09-11-v89-sndk-restart-adoption.md)
+records an exact installed-engine startup replay from 22,569 profile records.
+It restored size -0.306, entry OID `542326864971`, stop OID `542326955281`, original
+entry time and the complete provider plan. Only mocked preflight/reconciliation
+reads occurred; no financial mutation or original ledger change occurred.
+Seven altered-ownership cases rejected at the pure reconciler; 22 existing
+restart/reconciliation regressions passed. Synthetic preflight metadata does not
+prove fresh venue eligibility or a full live launcher. The initial missing HIP-3
+fee fixture failure is retained alongside the successful replay.
+
+Unsigned native reads completed **16:07:50 UTC**: the same 0.306 SNDK short at
+10x isolated and full-size reduce-only Stop Market at 1669.9 remained open;
+core was flat/order-free. Marked unrealized PnL was -$3.4272 at that capture.
+The original trading/TUI processes remained absent and seven terminal records
+unchanged. Strategy-managed exits remain stopped. The stop-intent clarification
+and optional source-only latency installation decision remain pending.
+
+Adoption journal `c30d2adfb8d23ab5c132a90f7545bc95f45bf9d835dc0bd40037cf6a39910ba4`
+verifies 21 stored fields, 13 direct references and 20 manifest members.
+Next: **stop-to-restart fill/funding continuity** using exact ledger and unsigned
+venue records. Engine ownership restoration is supported within the replay;
+accounting continuity and fresh whole-launcher preflight remain separate checks.
+No live source/runtime/profile/order/TUI change occurred. Both prospective
+hypothetical outcome seals and their original collectors remain intact.
+
+The following dated entries retain their original capture boundaries and actions.
+
 **September 11 15:54 UTC / 11:54 Eastern stopped boundary and latency candidate:**
 The [entry-latency review](../reviews/2026-09-11-v89-entry-latency.md) records
 seven `STOPPED / operator_stop` terminal records at 15:37:14 UTC, unchanged at

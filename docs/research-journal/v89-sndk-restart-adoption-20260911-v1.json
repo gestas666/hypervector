@@ -1,0 +1,165 @@
+{
+  "automatic_promotion": false,
+  "confidence": "high",
+  "created_at_utc": "2026-09-11T16:09:55.663923+00:00",
+  "decision": "Accept the bounded offline engine-adoption hypothesis. Keep the live run stopped pending stop-intent clarification and preserve its native protection. Next: audit post-stop fill and funding continuity before an authorized whole-launcher recovery. The optional candle-session candidate remains uninstalled.",
+  "evidence": [
+    {
+      "bytes": 1070,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_restart_adoption_20260911_v1/experiment_plan.json",
+      "role": "exact_stopped_sndk_offline_adoption_validation",
+      "sha256": "e5440c6b3e4f64042319556cb15fb392e26fd990a5279852ecda688be063b39f"
+    },
+    {
+      "bytes": 9286,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_restart_adoption_20260911_v1/run_recovery.py",
+      "role": "exact_stopped_sndk_offline_adoption_validation",
+      "sha256": "25477e07337815b73dc730f67a97e550814ae1e6b8a13ab2a8c9d810c5fb9881"
+    },
+    {
+      "bytes": 9202,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_restart_adoption_20260911_v1/run_recovery.executed_v1.py",
+      "role": "exact_stopped_sndk_offline_adoption_validation",
+      "sha256": "8a99365208e542dced2670e5619b9dcabb3535fd2fbaed137c1d9da5a0b3a6f3"
+    },
+    {
+      "bytes": 3049,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_restart_adoption_20260911_v1/assessment.json",
+      "role": "exact_stopped_sndk_offline_adoption_validation",
+      "sha256": "22abc5c1c9d706845af55b3b05f8d7e1db659b1b70bd2a0792ccc27535bef82d"
+    },
+    {
+      "bytes": 2401,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_restart_adoption_20260911_v1/verification.json",
+      "role": "exact_stopped_sndk_offline_adoption_validation",
+      "sha256": "259abcc30365cb3907227f44e44dca82daa5ed6e1c7f8bdfc11ae120325a9ed2"
+    },
+    {
+      "bytes": 99,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_restart_adoption_20260911_v1/regression.log",
+      "role": "exact_stopped_sndk_offline_adoption_validation",
+      "sha256": "801032ef42d7fc6eea34f61c9b80660f8f21c7bdc1fbeb2b01b67f4430f78144"
+    },
+    {
+      "bytes": 1890,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_restart_adoption_20260911_v1/run.log",
+      "role": "exact_stopped_sndk_offline_adoption_validation",
+      "sha256": "9cd882cd992158b9107039711d07209f70500ba29e2412139be9393922d41fbf"
+    },
+    {
+      "bytes": 3050,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_restart_adoption_20260911_v1/run_attempt_2.log",
+      "role": "exact_stopped_sndk_offline_adoption_validation",
+      "sha256": "e9dccc33bfab246fab1708230c567feb969fecf723a48e51463f6bc274d5d26b"
+    },
+    {
+      "bytes": 1934252,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_restart_adoption_20260911_v1/exact_profile_records.json.gz",
+      "role": "exact_stopped_sndk_offline_adoption_validation",
+      "sha256": "d0d87122d35b2a9bf8e938252cda7c2be8b47222a8b521038d938f996ab3ddc6"
+    },
+    {
+      "bytes": 1034,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_restart_adoption_20260911_v1/closing_boundary.json",
+      "role": "exact_stopped_sndk_offline_adoption_validation",
+      "sha256": "0d78bd3eaf304e2a26d88ae08842a677aa23df28f479a7e09aa3495f5a5b2d2e"
+    },
+    {
+      "bytes": 5732,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_restart_adoption_20260911_v1/evidence_manifest.json",
+      "role": "exact_stopped_sndk_offline_adoption_validation",
+      "sha256": "da3a8c04f02b9668b6d690bf84260c1a0d40e3769119db78882eb898cc1c0e88"
+    },
+    {
+      "bytes": 5217,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/reviews/2026-09-11-v89-sndk-restart-adoption.md",
+      "role": "exact_stopped_sndk_offline_adoption_validation",
+      "sha256": "9f862fe32ccf414f8325c39eaba983852530ab6ad7c592259a8f456a1b943ff1"
+    },
+    {
+      "bytes": 10446,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/research-journal/v89-entry-latency-20260911-v1.json",
+      "role": "exact_stopped_sndk_offline_adoption_validation",
+      "sha256": "eab70b7fc3c795165c188fce0a61c392166991a6e413f3bae9601cd96a38196f"
+    }
+  ],
+  "execution_authority": "none",
+  "falsifier": "Changed profile/position/stop identity, missing or duplicate financial mutation, changed hold clock or execution plan, source checksum mismatch or a failed live-boundary reconciliation would invalidate applying this replay to a later restart.",
+  "hypothesis": "Installed engine startup restores exact stopped SNDK ownership, stop, original hold clock and execution plan without duplicate financial mutation when retained profile history matches the venue snapshot.",
+  "hypothesis_id": "v89_sndk_restart_adoption_20260911_v1",
+  "limitations": [
+    "Synthetic preflight fees/precision/market metadata do not establish current venue eligibility.",
+    "Native exposure evidence is the frozen 15:52:43 UTC sequential snapshot.",
+    "Only engine startup was exercised; no live launcher, SDK, signing credentials or continuing strategy loop.",
+    "Simulated telemetry is research output and has no execution authority despite engine-authored live-mode fields.",
+    "Negative cases exercise the pure reconciler, not seven full live-command invocations.",
+    "Twenty-two focused regression passes and seven pure-reconciler negative cases do not prove a full launcher invocation.",
+    "Initial synthetic HIP-3 fee fixture omission caused a retained failed replay; production code was unchanged.",
+    "The original stop intent and candidate installation decision remain pending. Both prospective outcome studies remain sealed."
+  ],
+  "metrics": {
+    "automatic_promotion": false,
+    "evidence_manifest_files": 20,
+    "exact_profile_records": 22569,
+    "execution_authority": "none",
+    "experiment_exit_code": 0,
+    "financial_mutations_in_replay": 0,
+    "highest_value_next_investigation": "Audit exact post-stop fill/funding continuity against venue records and persisted lifecycle identity.",
+    "live_restarted": false,
+    "native_at_utc": "2026-09-11T16:07:50.271130+00:00",
+    "native_signed_sndk_size": "-0.306",
+    "native_stop_full_size_reduce_only_open": true,
+    "native_stop_oid": 542326955281,
+    "negative_reconciler_cases": 7,
+    "network_calls_in_replay": 0,
+    "original_ledger_sha256": "41a941368e3e2f161ea0d3464caba1d884ac51173c5d5cd47cf9cdfe0eeb0907",
+    "original_run_id": "bidirectional-live-1789122347122",
+    "positive_engine_startup_cases": 1,
+    "regression_exit_code": 0,
+    "regression_tests_passed": 22,
+    "restored_snapshot": {
+      "close_oid": null,
+      "entry_oid": 542326864971,
+      "execution_plan": {
+        "entry_liquidity": "taker_ioc",
+        "hard_maximum_hold_seconds": null,
+        "maximum_hold_evidence_maximum_age_seconds": null,
+        "maximum_hold_policy": "fixed",
+        "maximum_hold_seconds": 86400,
+        "maximum_stop_bps": 250.0,
+        "minimum_stop_bps": 20.0,
+        "profit_lock_activation_bps": null,
+        "profit_lock_floor_bps": null,
+        "profit_lock_giveback_bps": null,
+        "profit_lock_policy": "none",
+        "provider_recipe_exit_policy": "honor",
+        "safety_stop_overlay": false,
+        "stop_anchor": 1673.1726065095456,
+        "stop_bps": null,
+        "stop_policy": "structural_clamped_bps",
+        "strategy_id": "hourly_donchian_20_10_atr20_bidirectional_v1",
+        "target_anchor": null,
+        "target_bps": null,
+        "target_policy": "none",
+        "target_r_multiple": null
+      },
+      "last_fault": null,
+      "opened_at_ms": 1789135200000,
+      "position_size_signed": -0.306,
+      "state": "OPEN",
+      "stop_oid": 542326955281,
+      "stop_reason": null,
+      "target_oid": null,
+      "target_price": null
+    },
+    "runtime_strategy_changed": false,
+    "transport_candidate_installed": false
+  },
+  "revision_number": 1,
+  "runtime_strategy_changed": false,
+  "schema_version": 1,
+  "status": "retain",
+  "strategy_id": "multi_asset_growth_first_5000_noncrypto_research_v89",
+  "supersedes_revision_id": null,
+  "symbol": "PORTFOLIO"
+}

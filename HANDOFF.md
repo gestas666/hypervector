@@ -8,7 +8,7 @@ User-started V3 run `bidirectional-live-1789122347122` stopped at **15:37:14 UTC
 with seven `STOPPED / operator_stop` records. All five original trading/TUI
 processes were absent at 15:54:41, and those terminal ledger rows were unchanged.
 The stop's origin/intent remains unproven; a user clarification is pending.
-At **15:52:43 UTC**, unsigned native reads found a **0.306 SNDK short at 10x
+At **16:07:50 UTC**, unsigned native reads again found a **0.306 SNDK short at 10x
 isolated**, with its exact full-size reduce-only Stop Market OID `542326955281`
 open at trigger **1669.9**. Strategy-managed exits and new entries are stopped.
 Two completed trades total **-$27.994028 net**, excluding the open lifecycle.
@@ -26,9 +26,18 @@ restart or order action. No economic improvement is established.
 
 Journal `a986c57ae736900a2cbc46f3cbe39c6dde9277c092cb5835c708ff056abf09ff`
 verifies all 21 stored fields, 18 direct references and 123 manifest members.
-Next: offline exact-state SNDK restart-adoption validation, preserving its position,
-native stop and persisted execution plan without duplicate mutation. Do not infer
-restart intent from an old approval or a stale running heartbeat.
+The [offline adoption review](docs/reviews/2026-09-11-v89-sndk-restart-adoption.md)
+now verifies restoration from all 22,569 exact-profile records: position, native
+stop, original entry clock and complete execution plan retained, with only two
+mocked reads and zero mutations. Seven altered-ownership cases rejected; 22
+existing regressions passed. The original ledger hash is unchanged. This is
+engine-startup evidence, not live-launch acceptance; synthetic preflight metadata
+was explicitly labeled and its initial missing-fee fixture failure was retained.
+Adoption journal `c30d2adfb8d23ab5c132a90f7545bc95f45bf9d835dc0bd40037cf6a39910ba4`
+verifies 21 stored fields, 13 references and 20 manifest members.
+Next: audit stop-to-restart fill/funding continuity. Keep the pending stop-intent
+clarification and optional source-installation decision separate; no live restart
+or source installation has occurred.
 
 Approved V3 source/TUI remains installed at `4b241ef`, with the read-only funding
 repair at `4015484`. Info-only roster PID 44983 and prospective collectors
