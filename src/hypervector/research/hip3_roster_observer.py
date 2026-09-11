@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
+import math
 from typing import Protocol
 
 from hypervector.live.hyperliquid_protocol import (
@@ -62,15 +63,25 @@ class Hip3RosterObserver:
         *,
         readers: Mapping[str, Hip3ReaderProtocol],
         markets: tuple[Hip3MarketSpec, ...] = ACTIVE_HIP3_MARKETS,
+        funding_source: Callable[[], Mapping[str, float | None]] | None = None,
     ) -> None:
+        """Bind the exact reader roster and optional unsigned funding source."""
         _validate_reader_roster(readers, markets)
         self._readers = dict(readers)
         self._markets = markets
+        self._funding_source = funding_source
 
     def snapshot(self, observed_at: datetime) -> dict[str, object]:
         """Read every market or raise without publishing partial success."""
         timestamp = _utc_timestamp(observed_at)
-        rows = [self._market_snapshot(spec) for spec in self._markets]
+        funding = self._funding_source() if self._funding_source is not None else None
+        if self._funding_source is not None and not isinstance(funding, Mapping):
+            raise ValueError("HIP-3 funding source must return a mapping")
+        if funding is not None and set(funding) != {
+            spec.symbol for spec in self._markets
+        }:
+            raise ValueError("HIP-3 funding roster mismatch")
+        rows = [self._market_snapshot(spec, funding) for spec in self._markets]
         return {
             "schema_version": 1,
             "mode": "hip3_roster_observer_checkpoint",
@@ -86,7 +97,11 @@ class Hip3RosterObserver:
             "signing_client_constructed": False,
         }
 
-    def _market_snapshot(self, spec: Hip3MarketSpec) -> dict[str, object]:
+    def _market_snapshot(
+        self,
+        spec: Hip3MarketSpec,
+        funding: Mapping[str, float | None] | None,
+    ) -> dict[str, object]:
         reader = self._readers[spec.symbol]
         preflight = reader.preflight(expected_max_leverage=spec.expected_max_leverage)
         if preflight.market.symbol != spec.symbol:
@@ -97,10 +112,34 @@ class Hip3RosterObserver:
         return {
             "symbol": spec.symbol,
             "venue_namespace": spec.symbol.partition(":")[0],
-            "venue": _venue_payload(preflight, fee_metadata),
+            "venue": {
+                **_venue_payload(preflight, fee_metadata),
+                **_funding_payload(spec.symbol, funding),
+            },
             "book": _book_payload(book),
             "account": _account_payload(preflight, orders),
         }
+
+
+def _funding_payload(
+    symbol: str,
+    funding: Mapping[str, float | None] | None,
+) -> dict[str, object]:
+    rate = funding[symbol] if funding is not None else None
+    if rate is not None and (
+        isinstance(rate, bool)
+        or not isinstance(rate, (int, float))
+        or not math.isfinite(rate)
+    ):
+        raise ValueError(f"{symbol} funding must be a finite number or unavailable")
+    status = "unconfigured" if funding is None else "unavailable"
+    return {
+        "funding_rate_hourly": rate,
+        "funding_status": "available" if rate is not None else status,
+        "funding_source": "hyperliquid_info_metaAndAssetCtxs"
+        if funding is not None
+        else None,
+    }
 
 
 def unavailable_hip3_roster_checkpoint(

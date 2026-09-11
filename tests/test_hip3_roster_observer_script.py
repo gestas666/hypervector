@@ -3,13 +3,19 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from collections.abc import Mapping
 from importlib.util import module_from_spec, spec_from_file_location
 import json
 from pathlib import Path
 import sys
 from types import ModuleType
+from types import SimpleNamespace
+
+import pytest
 
 from hypervector.live.hyperliquid_sol_parsing import HyperliquidAdapterError
+from hypervector.research.hip3_roster_observer import ACTIVE_HIP3_MARKETS
+from test_hip3_roster_observer import _Reader
 
 
 SCRIPT = Path(__file__).parents[1] / "scripts" / "hip3_roster_observer.py"
@@ -123,3 +129,40 @@ def test_typed_venue_schema_failure_publishes_unavailable_checkpoint(
         "type": "HyperliquidAdapterError",
         "message": "perp dex schema is invalid",
     }
+
+
+def test_default_observer_wires_shared_funding_into_real_projection(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The CLI must actually connect funding instead of leaving an optional source empty."""
+    module = _load_module()
+    readers = {
+        spec.symbol: _Reader(spec.symbol, spec.expected_max_leverage)
+        for spec in ACTIVE_HIP3_MARKETS
+    }
+    calls: list[tuple[str, ...]] = []
+
+    def sources(
+        *, symbols: tuple[str, ...], environ: Mapping[str, str]
+    ) -> SimpleNamespace:
+        """Return same-client source-shaped fixtures with no network capability."""
+        calls.append(symbols)
+        return SimpleNamespace(
+            readers=readers,
+            funding=SimpleNamespace(snapshot=lambda: dict.fromkeys(readers, 0.0000125)),
+        )
+
+    monkeypatch.setattr(
+        module, "create_read_only_hip3_roster_sources", sources, raising=False
+    )
+    monkeypatch.setattr(
+        module,
+        "create_read_only_hip3_roster_readers",
+        lambda **_kwargs: readers,
+        raising=False,
+    )
+    result = module._build_observer().snapshot(datetime(2026, 9, 11, 14, 0, tzinfo=UTC))
+    assert all(
+        row["venue"]["funding_rate_hourly"] == 0.0000125 for row in result["markets"]
+    )
+    assert calls == [tuple(readers)]

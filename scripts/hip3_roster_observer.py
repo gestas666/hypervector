@@ -19,7 +19,7 @@ from hyperliquid.utils.error import ClientError, ServerError  # type: ignore[imp
 from requests import RequestException
 
 from hypervector.live.hyperliquid_hip3_roster_factory import (
-    create_read_only_hip3_roster_readers,
+    create_read_only_hip3_roster_sources,
 )
 from hypervector.live.hyperliquid_sol_factory import SolSdkFactoryError
 from hypervector.live.hyperliquid_sol_parsing import HyperliquidAdapterError
@@ -140,11 +140,13 @@ def _reached_limit(config: ObserverConfig, polls: int) -> bool:
 
 def _build_observer() -> Hip3RosterObserver:
     symbols = tuple(spec.symbol for spec in ACTIVE_HIP3_MARKETS)
-    readers = create_read_only_hip3_roster_readers(
+    sources = create_read_only_hip3_roster_sources(
         symbols=symbols,
         environ=os.environ,
     )
-    return Hip3RosterObserver(readers=readers)
+    return Hip3RosterObserver(
+        readers=sources.readers, funding_source=sources.funding.snapshot
+    )
 
 
 def _write_start_failure(config: ObserverConfig, error: Exception) -> int:

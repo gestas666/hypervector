@@ -139,6 +139,112 @@ def test_checkpoint_exposes_depth_windows_and_account_truth() -> None:
     assert market["account"]["position"]["size_signed"] == 0.0
 
 
+def test_checkpoint_publishes_exact_hourly_funding_from_one_source_read() -> None:
+    """The existing TUI funding field must receive signed hourly rates, including zero."""
+    readers = {
+        spec.symbol: _Reader(spec.symbol, spec.expected_max_leverage)
+        for spec in ACTIVE_HIP3_MARKETS
+    }
+    rates = dict(zip(readers, (0.0000125, -0.00002, 0.0, None, 0.00003)))
+    calls = 0
+
+    def funding() -> dict[str, float | None]:
+        """Return one complete shared funding snapshot."""
+        nonlocal calls
+        calls += 1
+        return rates
+
+    result = Hip3RosterObserver(readers=readers, funding_source=funding).snapshot(
+        datetime(2026, 9, 11, 14, 0, tzinfo=UTC)
+    )
+
+    assert calls == 1
+    assert result["execution_authority"] == "none"
+    for market in result["markets"]:
+        assert market["venue"]["funding_rate_hourly"] == rates[market["symbol"]]
+        assert market["venue"]["funding_source"] == "hyperliquid_info_metaAndAssetCtxs"
+    assert result["markets"][3]["venue"]["funding_status"] == "unavailable"
+    assert result["markets"][2]["venue"]["funding_status"] == "available"
+
+
+@pytest.mark.parametrize("value", [float("nan"), float("inf"), True, "0.01"])
+def test_checkpoint_rejects_invalid_funding_source_values(value: object) -> None:
+    """Invalid funding cannot become a plausible number in the native display."""
+    readers = {
+        spec.symbol: _Reader(spec.symbol, spec.expected_max_leverage)
+        for spec in ACTIVE_HIP3_MARKETS
+    }
+    rates = dict.fromkeys(readers, value)
+    observer = Hip3RosterObserver(readers=readers, funding_source=lambda: rates)
+    with pytest.raises(ValueError, match="funding.*finite number"):
+        observer.snapshot(datetime(2026, 9, 11, 14, 0, tzinfo=UTC))
+
+
+@pytest.mark.parametrize("rates", [{}, {"cash:WTI": 0.001}])
+def test_checkpoint_rejects_funding_roster_mismatch(
+    rates: dict[str, float | None],
+) -> None:
+    """A missing or wrong namespace must not silently assign another market's rate."""
+    readers = {
+        spec.symbol: _Reader(spec.symbol, spec.expected_max_leverage)
+        for spec in ACTIVE_HIP3_MARKETS
+    }
+    observer = Hip3RosterObserver(readers=readers, funding_source=lambda: rates)
+    with pytest.raises(ValueError, match="funding roster mismatch"):
+        observer.snapshot(datetime(2026, 9, 11, 14, 0, tzinfo=UTC))
+
+
+def test_checkpoint_explicitly_labels_unconfigured_funding() -> None:
+    """Legacy callers remain compatible while exposing why funding is absent."""
+    readers = {
+        spec.symbol: _Reader(spec.symbol, spec.expected_max_leverage)
+        for spec in ACTIVE_HIP3_MARKETS
+    }
+    result = Hip3RosterObserver(readers=readers).snapshot(
+        datetime(2026, 9, 11, 14, 0, tzinfo=UTC)
+    )
+    assert all(row["venue"]["funding_rate_hourly"] is None for row in result["markets"])
+    assert all(
+        row["venue"]["funding_status"] == "unconfigured" for row in result["markets"]
+    )
+
+
+@pytest.mark.parametrize("response", [None, []])
+def test_configured_funding_source_cannot_silently_become_unconfigured(
+    response: object,
+) -> None:
+    """A malformed configured source must not pass as a legacy optional omission."""
+    readers = {
+        spec.symbol: _Reader(spec.symbol, spec.expected_max_leverage)
+        for spec in ACTIVE_HIP3_MARKETS
+    }
+    observer = Hip3RosterObserver(readers=readers, funding_source=lambda: response)
+    with pytest.raises(ValueError, match="funding source must return a mapping"):
+        observer.snapshot(datetime(2026, 9, 11, 14, 0, tzinfo=UTC))
+
+
+def test_checkpoint_refreshes_funding_without_reusing_failed_previous_poll() -> None:
+    """A failed refresh propagates to the sidecar's unavailable-state publisher."""
+    readers = {
+        spec.symbol: _Reader(spec.symbol, spec.expected_max_leverage)
+        for spec in ACTIVE_HIP3_MARKETS
+    }
+    calls = 0
+
+    def funding() -> dict[str, float | None]:
+        """Supply one valid poll followed by an explicit source failure."""
+        nonlocal calls
+        calls += 1
+        if calls == 2:
+            raise ValueError("funding refresh failed")
+        return dict.fromkeys(readers, 0.00001)
+
+    observer = Hip3RosterObserver(readers=readers, funding_source=funding)
+    observer.snapshot(datetime(2026, 9, 11, 14, 0, tzinfo=UTC))
+    with pytest.raises(ValueError, match="funding refresh failed"):
+        observer.snapshot(datetime(2026, 9, 11, 14, 2, tzinfo=UTC))
+
+
 def test_checkpoint_exposes_effective_hip3_fees_not_raw_account_rates() -> None:
     """Growth-mode telemetry must not label base user fees as executable rates."""
     readers = {

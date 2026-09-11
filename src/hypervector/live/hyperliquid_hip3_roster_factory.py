@@ -3,18 +3,29 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import dataclass
 
 from hypervector.data.oxa_api import validate_hip3_symbol
 from hypervector.live.hyperliquid_hip3_factory import (
     Hip3ReadOnlySdkBuilderProtocol,
 )
 from hypervector.live.hyperliquid_perp_reader import HyperliquidPerpReader
+from hypervector.live.hyperliquid_protocol import HyperliquidInfoProtocol
 from hypervector.live.hyperliquid_sol_factory import OfficialSolReadOnlySdkBuilder
 from hypervector.live.hyperliquid_sol_parsing import (
     HyperliquidAdapterError,
     validate_address,
 )
 from hypervector.live.policy import SECRET_ENV_WALLET
+from hypervector.research.hip3_roster_funding import Hip3RosterFundingReader
+
+
+@dataclass(frozen=True)
+class Hip3RosterSources:
+    """Same-client market/account readers and public funding telemetry."""
+
+    readers: Mapping[str, HyperliquidPerpReader]
+    funding: Hip3RosterFundingReader
 
 
 def create_read_only_hip3_roster_readers(
@@ -24,6 +35,29 @@ def create_read_only_hip3_roster_readers(
     builder: Hip3ReadOnlySdkBuilderProtocol | None = None,
 ) -> dict[str, HyperliquidPerpReader]:
     """Build exact same-dex readers around one shared Info-only SDK client."""
+    readers, _info = _build_roster(symbols=symbols, environ=environ, builder=builder)
+    return readers
+
+
+def create_read_only_hip3_roster_sources(
+    *,
+    symbols: tuple[str, ...],
+    environ: Mapping[str, str],
+    builder: Hip3ReadOnlySdkBuilderProtocol | None = None,
+) -> Hip3RosterSources:
+    """Share one unsigned Info client across account, book and funding sources."""
+    readers, info = _build_roster(symbols=symbols, environ=environ, builder=builder)
+    return Hip3RosterSources(
+        readers, Hip3RosterFundingReader(info=info, symbols=symbols)
+    )
+
+
+def _build_roster(
+    *,
+    symbols: tuple[str, ...],
+    environ: Mapping[str, str],
+    builder: Hip3ReadOnlySdkBuilderProtocol | None,
+) -> tuple[dict[str, HyperliquidPerpReader], HyperliquidInfoProtocol]:
     dex = _shared_roster_dex(symbols)
     address = (environ.get(SECRET_ENV_WALLET) or "").strip()
     if not address:
@@ -31,7 +65,7 @@ def create_read_only_hip3_roster_readers(
     validated_address = validate_address(address)
     sdk_builder = builder if builder is not None else OfficialSolReadOnlySdkBuilder()
     info = sdk_builder.build(perp_dexes=(dex,))
-    return {
+    readers = {
         symbol: HyperliquidPerpReader(
             info=info,
             account_address=validated_address,
@@ -40,6 +74,7 @@ def create_read_only_hip3_roster_readers(
         )
         for symbol in symbols
     }
+    return readers, info
 
 
 def _shared_roster_dex(symbols: tuple[str, ...]) -> str:

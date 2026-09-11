@@ -16,6 +16,12 @@ _ADDRESS = "0x1111111111111111111111111111111111111111"
 class _Info:
     """Placeholder Info-only client sufficient for construction tests."""
 
+    def post(self, path: str, payload: dict[str, object]) -> object:
+        """Supply only the precise public context request in source wiring tests."""
+        assert path == "/info"
+        assert payload == {"type": "metaAndAssetCtxs", "dex": "xyz"}
+        return [{"universe": [{"name": "xyz:SPCX"}]}, [{"funding": "0.00001"}]]
+
 
 class _Builder:
     """Record how many exact namespace-aware SDK clients were constructed."""
@@ -51,6 +57,23 @@ def test_roster_factory_shares_one_info_only_client() -> None:
         "xyz:GOLD",
         "xyz:BRENTOIL",
     )
+    assert builder.calls == [("xyz",)]
+
+
+def test_roster_sources_share_one_info_client_for_books_accounts_and_funding() -> None:
+    """Adding funding must not build a signer or an SDK client per asset."""
+    from hypervector.live.hyperliquid_hip3_roster_factory import (
+        create_read_only_hip3_roster_sources,
+    )
+
+    builder = _Builder()
+    sources = create_read_only_hip3_roster_sources(
+        symbols=("xyz:SPCX",),
+        environ={SECRET_ENV_WALLET: _ADDRESS},
+        builder=builder,
+    )
+    assert tuple(sources.readers) == ("xyz:SPCX",)
+    assert sources.funding.snapshot() == {"xyz:SPCX": 0.00001}
     assert builder.calls == [("xyz",)]
 
 

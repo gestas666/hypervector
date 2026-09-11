@@ -120,6 +120,16 @@ def parse_hip3_mark_snapshot(
 ) -> tuple[AssetContextEvent, ...]:
     """Bind requested symbols to position-aligned public context records."""
     _require_positive_integer(received_ts_ns, "received_ts_ns")
+    contexts = select_hip3_asset_contexts(response, symbols=symbols)
+    return tuple(_event(symbol, contexts[symbol], received_ts_ns) for symbol in symbols)
+
+
+def select_hip3_asset_contexts(
+    response: object,
+    *,
+    symbols: tuple[str, ...],
+) -> dict[str, Mapping[str, object]]:
+    """Resolve each requested identity exactly once in aligned metadata/context arrays."""
     pair = _sequence(response, "metaAndAssetCtxs response")
     if len(pair) != 2:
         raise ValueError("metaAndAssetCtxs must contain metadata and contexts")
@@ -128,9 +138,22 @@ def parse_hip3_mark_snapshot(
     contexts = _sequence(pair[1], "HIP-3 contexts")
     if len(universe) != len(contexts):
         raise ValueError("HIP-3 universe and contexts must be position-aligned")
-    return tuple(
-        _event(symbol, universe, contexts, received_ts_ns) for symbol in symbols
-    )
+    selected = {}
+    for symbol in symbols:
+        matches = [
+            index
+            for index, raw in enumerate(universe)
+            if _mapping(raw, "HIP-3 market").get("name") == symbol
+        ]
+        if len(matches) != 1:
+            raise ValueError(f"HIP-3 mark symbol {symbol} must resolve exactly once")
+        selected[symbol] = _mapping(contexts[matches[0]], f"{symbol} context")
+    return selected
+
+
+def parse_optional_hip3_funding(value: object, *, symbol: str) -> float | None:
+    """Keep absent funding unavailable and otherwise require a finite decimal string."""
+    return None if value is None else _decimal(value, f"{symbol} funding")
 
 
 def run_hip3_mark_recorder(
@@ -173,18 +196,9 @@ def run_hip3_mark_recorder(
 
 def _event(
     symbol: str,
-    universe: Sequence[object],
-    contexts: Sequence[object],
+    context: Mapping[str, object],
     received_ts_ns: int,
 ) -> AssetContextEvent:
-    matches = [
-        index
-        for index, raw in enumerate(universe)
-        if _mapping(raw, "HIP-3 market").get("name") == symbol
-    ]
-    if len(matches) != 1:
-        raise ValueError(f"HIP-3 mark symbol {symbol} must resolve exactly once")
-    context = _mapping(contexts[matches[0]], f"{symbol} context")
     return AssetContextEvent(
         symbol=symbol,
         observed_ts_ms=received_ts_ns // 1_000_000,
