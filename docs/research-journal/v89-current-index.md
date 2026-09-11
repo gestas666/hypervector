@@ -1,13 +1,42 @@
 # Current V89 research index
 
-Updated September 10, 2026 UTC. This is research navigation, not a live-state checkpoint.
+Updated September 11, 2026 UTC. This is research navigation, not a live-state checkpoint.
 The active mandate permits research and proposals; live changes remain subject
 to explicit approval. Both prospective outcome seals remain active. The latest
-update completes fresh unsigned operational checks and pre-transition preservation
-for the combined 72-path release and completed financial/technical recommendation.
+update records the approved V3 source/TUI installation and its fresh verification.
+The backend remains stopped; live startup stays user-run.
 Historical studies remain bounded to the window ending September 7 UTC.
 
 ## Current finding and next action
+
+**September 11 03:32 UTC / September 10 23:32 Eastern V3 installed:**
+The [installation review](../reviews/2026-09-11-v89-v3-installed.md) records the
+actual approval, exact 72-path source installation at `4b241ef0b5fe5c5c785ad11804be5417a7bf5dab`,
+and TUI SHA256 `382253cacea78e51c2dbc0c7e396eda0d24d2c025ae7854e867cd2c78ad329d1`.
+The full selected source scope matches candidate `564d72e81539afdd3e2979beea4086a655ec4350`.
+All 354 related Python regressions passed in main; two mocked command probes and
+native executable help passed. The exact binary retains its prior 320-test and
+nine-view native replay qualification. Current live account display acceptance
+still requires a new run.
+
+Fresh unsigned core/XYZ reads, seven-asset preflight and native settings checks
+passed at approximately 03:27–03:28 UTC: flat/order-free, reconciled, no technical
+readiness reasons. Nine locks were unowned, pending/claimed commands were empty,
+and no canonical live process was present. All 530 provider files, ten SDK files
+and 1,924 backup archives/current source files reauthenticated. The new boundary
+preserves the approval, prior TUI/profile and 78 current operator-control files.
+
+Installation journal `604cfccd31e115ba5ae4535a88f34150a5286946bfa14ae87959f99f623b7ee4`
+has all 21 stored fields and 54 direct evidence references verified. The source
+installation is committed separately from this report-only journal append.
+
+The next action is the **user-run command in the installation review**, followed
+by fresh same-run nine-view/Brent acceptance, eight mapped-reader publications
+and a 15-minute I/O observation. No further installation approval is pending.
+The prior afternoon ETA is superseded by this completed installation. The V89
+trading profile and both prospective seals remain unchanged. Everything below
+is dated historical evidence; earlier uninstalled/pending statements describe
+their capture time.
 
 **September 10 19:32 UTC fresh operational readiness and backup:**
 The [readiness review](../reviews/2026-09-10-v89-release-readiness.md) records fresh

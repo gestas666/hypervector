@@ -1,11 +1,14 @@
 # HANDOFF — hypervector
 
-**Current navigation, September 8, 2026:** read the
+**Current navigation, September 11, 2026 UTC:** read the
 [V89 research index](docs/research-journal/v89-current-index.md) first. It links
 the completed shared studies, latest chronological attribution, corrected
 follow-up, pending proposals and sealed prospective boundary. Read the current
-runtime checkpoint for live state; the historical notes below are not current
-execution or research status.
+runtime checkpoint together with fresh process/account observations for live
+state; an old checkpoint does not establish current execution. The approved V3
+source/TUI is installed at `4b241ef`; the backend remains stopped and startup is
+user-run. See the [installation record and command](docs/reviews/2026-09-11-v89-v3-installed.md).
+The historical notes below are not current execution or research status.
 
 ---
 
