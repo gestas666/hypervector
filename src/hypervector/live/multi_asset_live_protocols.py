@@ -9,6 +9,7 @@ from typing import Protocol
 from hypervector.live.bidirectional_intents import IntentRoutingReport, StrategyIntent
 from hypervector.live.cohort_entry_sizing import CohortEntrySizing
 from hypervector.live.cohort_funding_window import CohortFundingWindow
+from hypervector.live.entry_submission_deadline import EntrySubmissionDeadline
 from hypervector.live.hyperliquid_protocol import SolReconciliationSnapshot
 from hypervector.live.multi_asset_cohort_telemetry import (
     AssetCohortSnapshot,
@@ -43,6 +44,7 @@ class MultiAssetEngineProtocol(Protocol):
         mark_price: float,
         decision_time_ms: int | None = None,
         entry_sizing: CohortEntrySizing | None = None,
+        entry_deadline: EntrySubmissionDeadline | None = None,
     ) -> SolLiveSnapshot: ...
 
     def exit(self, *, mark_price: float, reason: str) -> SolLiveSnapshot: ...

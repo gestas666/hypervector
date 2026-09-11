@@ -77,12 +77,31 @@ fn project_live_checkpoint(
         venue_portfolio_issue,
         live_audit_status,
     };
-    let mut output = CohortCheckpointTelemetry::default();
+    let mut output = CohortCheckpointTelemetry {
+        entry_deadlines: take_entry_deadlines(audit.routing.as_mut())?,
+        ..CohortCheckpointTelemetry::default()
+    };
     apply_live_counts(&mut output, &audit, forward);
     apply_live_research(&mut output, &mut audit, &header.identity)?;
     apply_live_trades(&mut output, &mut audit)?;
     apply_live_header(&mut output, header);
     Ok(output)
+}
+
+fn take_entry_deadlines(
+    routing: Option<&mut crate::backend_cohort_checkpoint_live::LiveRoutingEvidence>,
+) -> Result<Option<crate::backend_cohort_entry_deadline::CohortEntryDeadlines>, String> {
+    let Some(routing) = routing else {
+        return Ok(None);
+    };
+    if routing
+        .entry_age_diagnostics
+        .as_ref()
+        .is_some_and(|value| value.enter_actions > routing.actions)
+    {
+        return Err("entry deadline actions exceed the routing audit count".into());
+    }
+    crate::backend_cohort_entry_deadline::project(routing.entry_age_diagnostics.take())
 }
 
 struct LiveIdentity {

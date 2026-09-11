@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+import math
 from collections.abc import Mapping
 from datetime import datetime
-import math
 from typing import Protocol
 
 from hypervector.live.bidirectional_intents import (
@@ -116,6 +116,21 @@ def reconcile_engines(
             funding_end_time_ms=funding_end_time_ms,
         )
         for symbol in symbols
+    )
+
+
+def asset_snapshots(
+    symbols: tuple[str, ...],
+    engines: Mapping[str, ReconciliationEngine],
+    venues: tuple[SolReconciliationSnapshot, ...],
+    reference_prices: Mapping[str, float],
+) -> tuple[AssetCohortSnapshot, ...]:
+    """Project each reconciled venue using its corresponding engine state."""
+    return tuple(
+        asset_snapshot(
+            symbol, engines[symbol].snapshot, venue, reference_prices.get(symbol)
+        )
+        for symbol, venue in zip(symbols, venues, strict=True)
     )
 
 

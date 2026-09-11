@@ -17,8 +17,15 @@ from hypervector.live.canary_supervisor import (
     signal_process_group as _signal_process_group,
     wait_for_fresh_configuration_identity,
 )
-from hypervector.live.cohort_accounting_rollover import (
-    load_required_accounting_epoch,
+from hypervector.live.cohort_accounting_rollover import load_required_accounting_epoch
+from hypervector.live.cohort_tui_binary import (
+    load_tui_binary,
+    run_tui as _run_tui,
+    verify_tui_command,
+)
+from hypervector.live.cohort_tui_launch_options import (
+    build_parser,
+    validate_launch_args as _validate_launch_args,
 )
 from hypervector.live.cohort_monitor_identity import (
     active_ledger_identity,
@@ -30,9 +37,8 @@ from hypervector.live.cohort_tui_commands import (
     MultiAssetTuiLaunch,
     audit_command as _audit_command,
     backend_command as _backend_command,
-    checkpoint_command as _checkpoint_command,
+    launch_checkpoint_command as _launch_checkpoint_command,
     observer_audit_command as _observer_audit_command,
-    observer_checkpoint_command as _observer_checkpoint_command,
     observer_command as _observer_command,
     index_observer_dependency_command as _index_observer_dependency_command,
     require_live_provider_dependencies as _require_live_provider_dependencies,
@@ -55,49 +61,10 @@ from hypervector.research.cohort_live_portfolio_archive import CohortAccountingE
 _DEFAULT_CONFIG = Path(
     "configs/multi_asset_bidirectional_evidence_roster_canary_v36.toml"
 )
-_DEFAULT_BACKTEST_LAB = Path("../backtest-lab/backtest_lab")
 _BACKEND_LOG = Path("data/runtime/bidirectional_cohort/backend.log")
 _CHECKPOINT_LOG = Path("data/runtime/bidirectional_cohort/checkpoint.log")
 _DEPENDENCY_LOG = Path("data/runtime/bidirectional_cohort/spcx_observer.log")
-_DEFAULT_STARTUP_TIMEOUT_SECONDS = 900.0
 _CHECKPOINT_FRESHNESS_SECONDS = 90.0
-
-
-def build_parser() -> argparse.ArgumentParser:
-    """Build an observe-default and explicitly armed live supervisor."""
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "--mode",
-        choices=("observe", "monitor", "live"),
-        default="observe",
-    )
-    parser.add_argument("--config", type=Path)
-    parser.add_argument(
-        "--staged-config",
-        type=Path,
-        help="optional report-only next profile to compare with the active monitor ledger",
-    )
-    parser.add_argument(
-        "--growth-preflight",
-        type=Path,
-        help="optional read-only sizing evidence for the staged monitor profile",
-    )
-    parser.add_argument(
-        "--backtest-lab-root",
-        type=Path,
-        default=_DEFAULT_BACKTEST_LAB,
-    )
-    parser.add_argument("--enabled", action="store_true")
-    parser.add_argument("--i-accept-live-risk", action="store_true")
-    parser.add_argument("--accounting-epoch-bundle", type=Path)
-    parser.add_argument("--resume-transition-drain", action="store_true")
-    parser.add_argument("--refresh-ms", type=int, default=500)
-    parser.add_argument(
-        "--startup-timeout-seconds",
-        type=float,
-        default=_DEFAULT_STARTUP_TIMEOUT_SECONDS,
-    )
-    return parser
 
 
 def resolve_launch(
@@ -144,32 +111,6 @@ def _load_launch_configs(
     return mode, config, staged_config
 
 
-def _validate_launch_args(
-    args: argparse.Namespace,
-    mode: Literal["observe", "live"],
-    config: MultiAssetLiveConfig,
-    staged_config: MultiAssetLiveConfig | None,
-    credentials_present: bool,
-) -> None:
-    if (
-        staged_config is not None
-        and staged_config.cohort_ledger != config.cohort_ledger
-    ):
-        raise MultiAssetLiveConfigError(
-            "active and staged profiles must use the same cohort ledger"
-        )
-    if mode == "live":
-        config.require_live_start(credentials_present=credentials_present)
-    elif args.resume_transition_drain:
-        raise MultiAssetLiveConfigError("transition drain recovery requires live mode")
-    if args.startup_timeout_seconds <= 0.0 or args.refresh_ms < 100:
-        raise MultiAssetLiveConfigError("invalid TUI refresh or startup timeout")
-    if args.mode == "observe" and args.accounting_epoch_bundle is not None:
-        raise MultiAssetLiveConfigError(
-            "--accounting-epoch-bundle requires live or monitor mode"
-        )
-
-
 def _launch_accounting_epoch(
     args: argparse.Namespace,
     config: MultiAssetLiveConfig,
@@ -196,6 +137,7 @@ def _resolved_launch(
     staged_config: MultiAssetLiveConfig | None,
     accounting_epoch: CohortAccountingEpoch | None,
 ) -> MultiAssetTuiLaunch:
+    tui_binary = load_tui_binary(args.tui_bin, args.tui_bin_sha256)
     backend = (
         _backend_command(args, config)
         if mode == "live"
@@ -207,22 +149,13 @@ def _resolved_launch(
         config=config,
         staged_config=staged_config,
         backend_command=backend,
-        checkpoint_command=(
-            _checkpoint_command(
-                config,
-                staged_config=staged_config,
-                accounting_epoch_bundle=args.accounting_epoch_bundle,
-            )
-            if mode == "live" or args.mode == "monitor"
-            else _observer_checkpoint_command(config)
-            if args.mode == "observe"
-            else None
-        ),
+        checkpoint_command=_launch_checkpoint_command(args, config, staged_config),
         tui_command=_tui_command(
             args,
             config,
             config.cohort_ledger,
             include_checkpoint=True,
+            tui_binary=tui_binary,
         ),
         audit_command=(
             _audit_command(config)
@@ -233,6 +166,7 @@ def _resolved_launch(
         ),
         startup_timeout_seconds=args.startup_timeout_seconds,
         accounting_epoch=accounting_epoch,
+        tui_binary=tui_binary,
         dependency_command=(
             _index_observer_dependency_command(config) if mode == "live" else None
         ),
@@ -241,6 +175,7 @@ def _resolved_launch(
 
 def run_supervisor(launch: MultiAssetTuiLaunch) -> int:
     """Attach directly or supervise exactly one live backend and read-only TUI."""
+    verify_tui_command(launch.tui_command, launch.tui_binary)
     if launch.backend_command is None:
         return _run_monitor(launch)
     if launch.config.stop_file.exists():
@@ -293,7 +228,7 @@ def _run_live_supervisor(launch: MultiAssetTuiLaunch) -> int:
                 )
             if checkpoint_command is not None:
                 checkpoint = _start_checkpoint_monitor(checkpoint_command)
-            tui_returncode = subprocess.run(launch.tui_command, check=False).returncode
+            tui_returncode = _run_tui(launch)
         finally:
             if checkpoint is not None:
                 checkpoint_failure = _stop_checkpoint_monitor(checkpoint)
@@ -374,7 +309,7 @@ def _run_monitor(launch: MultiAssetTuiLaunch) -> int:
                 )
             )
     try:
-        tui_returncode = subprocess.run(launch.tui_command, check=False).returncode
+        tui_returncode = _run_tui(launch)
     finally:
         if checkpoint is not None:
             checkpoint_failure = _stop_checkpoint_monitor(checkpoint)

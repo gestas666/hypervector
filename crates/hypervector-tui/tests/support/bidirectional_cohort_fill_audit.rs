@@ -124,101 +124,102 @@ fn full_fill_audit_includes_the_eastern_date_for_multiday_history() {
     assert!(full_audit.contains("08-01 11:59 EDT"), "{full_audit}");
 }
 
+const SECONDARY_SCREEN_CONTRACTS: [(usize, &[&str]); 8] = [
+    (
+        1,
+        &[
+            "ROUTED 1",
+            "WITHHELD 1",
+            "SLOTS 1 / 4",
+            "SETUP READINESS",
+            "11:59:59 EDT",
+        ],
+    ),
+    (
+        2,
+        &[
+            "BACKEND 1M OVERVIEW",
+            "DETAIL USES PROVIDER TF + INDICATORS",
+            "BTC 1M CANDLES",
+            "3 bars",
+            "PRICE",
+        ],
+    ),
+    (
+        3,
+        &[
+            "BACKEND L2 SNAPSHOT",
+            "BOOK AGE",
+            "BID DEPTH",
+            "ASK DEPTH",
+            "ORDER PRESSURE",
+            "hyperliquid_mainnet_l2_rest",
+        ],
+    ),
+    (
+        4,
+        &[
+            "VENUE FILL LEGS",
+            "Open Long",
+            "RANGE ONSET",
+            "MARGIN/NOTIONAL",
+            "LIQ PX / DIST",
+            "FEES / FUND",
+        ],
+    ),
+    (
+        5,
+        &["RESEARCH JOURNAL", "No rolling checkpoint is available"],
+    ),
+    (
+        6,
+        &[
+            "MANUAL STRATEGY ENTRY",
+            "MANUAL POSITION CLOSE",
+            "TRANSITION DRAIN",
+            "LIVE BACKEND ARMED // REQUEST CHANNEL UNAVAILABLE",
+            "DRAIN UNKNOWN // BACKEND STATUS UNAVAILABLE",
+            "STATE UNAVAILABLE // DO NOT INFER INACTIVE",
+            "NO BACKEND DRAIN STATUS WAS REPORTED",
+            "NO DRAIN REQUEST STATUS CLAIMED",
+        ],
+    ),
+    (
+        7,
+        &[
+            "REGIME COMMAND DECK",
+            "RANGE DETECTOR",
+            "COMPRESSION + BREAKOUT ENGINE",
+            "TREND STACK",
+            "ROUTING ARBITRATION",
+        ],
+    ),
+    (
+        8,
+        &[
+            "RESTART PROFILE EDITOR",
+            "EFFECTIVE BACKEND",
+            "DRAFT CLEAN",
+            "SELECTED COIN BTC",
+            "RESEARCH CONTRADICTORY // CONF HIGH",
+            "POSITION SLOTS",
+            "1 PER ASSET",
+            "POLL INTERVAL",
+            "LEVERAGE",
+            "MARGIN FRACTION",
+            "EXEC TAKER IOC | STOP STRUCT 20-75bps | TARGET 3.0R | HOLD 24H",
+            "PROVIDER / COIN SCOPE",
+            "VALIDATE & STAGE NEW PROFILE",
+            "DISCARD DRAFT",
+            "PRESTART BACKUP UNAVAILABLE",
+        ],
+    ),
+];
+
 #[test]
 fn secondary_screens_are_practical_at_acceptance_width() {
     let mut app = cohort_app();
-    let cases: [(usize, &[&str]); 8] = [
-        (
-            1,
-            &[
-                "ROUTED 1",
-                "WITHHELD 1",
-                "SLOTS 1 / 4",
-                "SETUP READINESS",
-                "11:59:59 EDT",
-            ],
-        ),
-        (
-            2,
-            &[
-                "BACKEND 1M OVERVIEW",
-                "DETAIL USES PROVIDER TF + INDICATORS",
-                "BTC 1M CANDLES",
-                "3 bars",
-                "PRICE",
-            ],
-        ),
-        (
-            3,
-            &[
-                "LIVE HYPERLIQUID L2",
-                "TOP OF BOOK",
-                "BID DEPTH",
-                "ASK DEPTH",
-                "ORDER PRESSURE",
-                "hyperliquid_mainnet_l2_rest",
-            ],
-        ),
-        (
-            4,
-            &[
-                "VENUE FILL LEGS",
-                "Open Long",
-                "RANGE ONSET",
-                "MARGIN/NOTIONAL",
-                "LIQ PX / DIST",
-                "FEES / FUND",
-            ],
-        ),
-        (
-            5,
-            &["RESEARCH JOURNAL", "No rolling checkpoint is available"],
-        ),
-        (
-            6,
-            &[
-                "MANUAL STRATEGY ENTRY",
-                "MANUAL POSITION CLOSE",
-                "TRANSITION DRAIN",
-                "LIVE BACKEND ARMED // REQUEST CHANNEL UNAVAILABLE",
-                "DRAIN UNKNOWN // BACKEND STATUS UNAVAILABLE",
-                "STATE UNAVAILABLE // DO NOT INFER INACTIVE",
-                "NO BACKEND DRAIN STATUS WAS REPORTED",
-                "NO DRAIN REQUEST STATUS CLAIMED",
-            ],
-        ),
-        (
-            7,
-            &[
-                "REGIME COMMAND DECK",
-                "RANGE DETECTOR",
-                "COMPRESSION + BREAKOUT ENGINE",
-                "TREND STACK",
-                "ROUTING ARBITRATION",
-            ],
-        ),
-        (
-            8,
-            &[
-                "RESTART PROFILE EDITOR",
-                "EFFECTIVE BACKEND",
-                "DRAFT CLEAN",
-                "SELECTED COIN BTC",
-                "RESEARCH CONTRADICTORY // CONF HIGH",
-                "POSITION SLOTS",
-                "1 PER ASSET",
-                "POLL INTERVAL",
-                "LEVERAGE",
-                "MARGIN FRACTION",
-                "EXEC TAKER IOC | STOP STRUCT 20-75bps | TARGET 3.0R | HOLD 24H",
-                "PROVIDER / COIN SCOPE",
-                "VALIDATE & STAGE NEW PROFILE",
-                "DISCARD DRAFT",
-                "PRESTART BACKUP UNAVAILABLE",
-            ],
-        ),
-    ];
-    for (tab, expected_values) in cases {
+    for (tab, expected_values) in SECONDARY_SCREEN_CONTRACTS {
         let screen = render(&mut app, tab, 120, 36);
         if std::env::var_os("HYPERVECTOR_VISUAL_SNAPSHOT").is_some() {
             println!("120x36 TAB {}\n{screen}", tab + 1);

@@ -61,6 +61,8 @@ def _register_tui(
     )
     parser.add_argument("--config", type=Path)
     parser.add_argument("--backtest-lab-root", type=Path)
+    parser.add_argument("--tui-bin", type=Path)
+    parser.add_argument("--tui-bin-sha256")
     parser.add_argument("--enabled", action="store_true")
     parser.add_argument("--i-accept-live-risk", action="store_true")
     parser.add_argument("--accounting-epoch-bundle", type=Path)
@@ -132,6 +134,8 @@ def _tui_command(args: argparse.Namespace) -> tuple[str, ...]:
     command = _base_command("multi_asset_bidirectional_canary_tui.py")
     command += _optional_path("--config", args.config)
     command += _optional_path("--backtest-lab-root", args.backtest_lab_root)
+    command += _optional_path("--tui-bin", args.tui_bin)
+    command += _optional_value("--tui-bin-sha256", args.tui_bin_sha256)
     command += _optional_path(
         "--accounting-epoch-bundle",
         args.accounting_epoch_bundle,

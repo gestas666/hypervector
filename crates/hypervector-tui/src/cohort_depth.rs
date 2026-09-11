@@ -9,7 +9,8 @@ use ratatui::{
 
 use crate::app::App;
 use crate::backend_cohort::{CohortBookLevel, CohortBookSnapshot};
-use crate::cohort_format::fill_time;
+use crate::cohort_book_age::{book_age, receive_delay};
+use crate::cohort_format::book_date_time;
 use crate::cohort_widgets::{page_label, panel, render_empty, selected_page};
 
 const MARKET_TABS_PER_PAGE: usize = 4;
@@ -78,7 +79,7 @@ fn render_missing_symbol(frame: &mut Frame, app: &App, area: Rect) {
         frame,
         app,
         body,
-        " LIVE HYPERLIQUID L2 ",
+        " BACKEND L2 SNAPSHOT ",
         "No enabled market reported",
     );
 }
@@ -94,7 +95,7 @@ fn render_missing_book(frame: &mut Frame, app: &App, area: Rect, symbol: &str) {
         frame,
         app,
         body,
-        " LIVE HYPERLIQUID L2 // BACKEND SOURCE REQUIRED ",
+        " BACKEND L2 SNAPSHOT // BACKEND SOURCE REQUIRED ",
         &format!(
             "{symbol} depth unavailable in the current cohort projection; no synthetic levels generated"
         ),
@@ -131,7 +132,7 @@ fn render_symbol_tabs(frame: &mut Frame, app: &App, area: Rect) {
 }
 
 fn render_summary(frame: &mut Frame, app: &App, area: Rect, book: &CohortBookSnapshot) {
-    let transport_ms = book.recv_ts_ms.saturating_sub(book.exchange_ts_ms);
+    let transport = receive_delay(book.recv_ts_ms, book.exchange_ts_ms);
     let lines = vec![
         Line::from(vec![
             Span::styled(
@@ -141,48 +142,53 @@ fn render_summary(frame: &mut Frame, app: &App, area: Rect, book: &CohortBookSna
             Span::raw(format!(
                 "  //  SPREAD {:.3} bps  //  VENUE {}",
                 book.spread_bps,
-                fill_time(book.exchange_ts_ms),
+                book_date_time(book.exchange_ts_ms),
             )),
         ]),
         Line::from(format!(
-            "SOURCE {}  //  RECEIVE DELTA {}ms  //  EXACT LEVELS {}/{}",
+            "SOURCE {}  //  RECEIVE DELTA {}  //  EXACT LEVELS {}/{}",
             book.source,
-            transport_ms,
+            transport,
             book.bids.len(),
             book.asks.len(),
         )),
         hip3_summary_line(app),
     ];
     frame.render_widget(
-        Paragraph::new(lines).block(panel(
-            " LIVE HYPERLIQUID L2 // TOP OF BOOK // MAINNET ",
-            app,
-        )),
+        Paragraph::new(lines).block(panel(summary_title(app, book), app)),
         area,
     );
 }
 
+fn summary_title(app: &App, book: &CohortBookSnapshot) -> String {
+    let checkpoint = &app.backend.cohort_checkpoint;
+    let health = if !checkpoint.configured {
+        "CHECKPOINT NOT CONFIGURED"
+    } else if !checkpoint.available {
+        "CHECKPOINT UNAVAILABLE"
+    } else if checkpoint.publication_stale {
+        "CHECKPOINT STALE"
+    } else if checkpoint.stale {
+        "CHECKPOINT SOURCE ISSUE"
+    } else {
+        "CHECKPOINT FRESH"
+    };
+    let age = book_age(book.exchange_ts_ms, chrono::Utc::now().timestamp_millis());
+    format!(" BACKEND L2 SNAPSHOT // {health} // {age} // MAINNET ")
+}
+
 fn render_ladders(frame: &mut Frame, app: &App, area: Rect, book: &CohortBookSnapshot) {
+    const LADDER_CHROME_HEIGHT: u16 = 4;
+    let rows = usize::from(area.height.saturating_sub(LADDER_CHROME_HEIGHT));
+    let total = book.bids.len().max(book.asks.len());
+    app.cohort_depth_viewport
+        .set(app.cohort_depth_viewport.get().resized(rows, total));
     let columns = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
         .split(area);
-    render_side(
-        frame,
-        app,
-        columns[0],
-        " BID DEPTH // BEST FIRST ",
-        &book.bids,
-        true,
-    );
-    render_side(
-        frame,
-        app,
-        columns[1],
-        " ASK DEPTH // BEST FIRST ",
-        &book.asks,
-        false,
-    );
+    render_side(frame, app, columns[0], "BID", &book.bids, true);
+    render_side(frame, app, columns[1], "ASK", &book.asks, false);
 }
 
 fn render_side(
@@ -198,7 +204,13 @@ fn render_side(
         .iter()
         .map(|level| level.size)
         .fold(0.0_f64, f64::max);
-    let rows = side_rows(levels, app, bid, maximum);
+    let range = app.cohort_depth_viewport.get().range(levels.len());
+    let visible = if range.is_empty() {
+        format!("NONE / {}", levels.len())
+    } else {
+        page_label(&range, levels.len())
+    };
+    let rows = side_rows(levels, app, bid, maximum, range);
     let table = Table::new(
         rows,
         [
@@ -213,18 +225,30 @@ fn render_side(
     .header(Row::new(["#", "PRICE", "SIZE", "CUM", "ORD", "DEPTH"]).style(app.theme.header))
     .footer(Row::new(vec![
         Cell::from(""),
-        Cell::from("TOTAL"),
+        Cell::from("TOTAL ALL"),
         Cell::from(format!("{total:.5}")),
     ]))
-    .block(panel(title, app));
+    .block(panel(format!(" {title} DEPTH // LEVELS {visible} "), app));
     frame.render_widget(table, area);
 }
 
-fn side_rows(levels: &[CohortBookLevel], app: &App, bid: bool, maximum: f64) -> Vec<Row<'static>> {
-    let mut cumulative = 0.0;
+fn side_rows(
+    levels: &[CohortBookLevel],
+    app: &App,
+    bid: bool,
+    maximum: f64,
+    range: std::ops::Range<usize>,
+) -> Vec<Row<'static>> {
+    let mut cumulative: f64 = levels
+        .iter()
+        .take(range.start)
+        .map(|level| level.size)
+        .sum();
     levels
         .iter()
         .enumerate()
+        .skip(range.start)
+        .take(range.len())
         .map(|(index, level)| {
             cumulative += level.size;
             let bar = depth_bar(level.size, maximum, 8);

@@ -3,16 +3,16 @@
 from __future__ import annotations
 
 from dataclasses import replace
-from decimal import Decimal, InvalidOperation, ROUND_DOWN
+from decimal import ROUND_DOWN, Decimal, InvalidOperation
 
 from hyperliquid.utils.types import Cloid  # type: ignore[import-untyped]
 
+from hypervector.live.entry_submission_deadline import EntrySubmissionDeadline
 from hypervector.live.hyperliquid_protocol import (
     HyperliquidExchangeProtocol,
     HyperliquidInfoProtocol,
     HyperliquidOrderAck,
 )
-from hypervector.live.hyperliquid_sol_reader import SolHyperliquidReader
 from hypervector.live.hyperliquid_sol_parsing import (
     SOL_SYMBOL,
     HyperliquidAdapterError,
@@ -26,6 +26,7 @@ from hypervector.live.hyperliquid_sol_parsing import (
     positive_integer,
     require_ok,
 )
+from hypervector.live.hyperliquid_sol_reader import SolHyperliquidReader
 from hypervector.live.sol_order_identity import validate_client_order_id
 from hypervector.live.sol_order_transport import (
     call_ambiguous_cancel_mutation,
@@ -84,6 +85,7 @@ class SolHyperliquidAdapter(SolHyperliquidReader):
         requested_notional_usd: float,
         mark_price: float,
         client_order_id: str,
+        entry_deadline: EntrySubmissionDeadline | None = None,
     ) -> HyperliquidOrderAck:
         """Submit one cap-checked, lot-rounded SOL opening order."""
         notional = positive_finite(requested_notional_usd, "requested_notional_usd")
@@ -94,6 +96,8 @@ class SolHyperliquidAdapter(SolHyperliquidReader):
         price = positive_finite(mark_price, "mark_price")
         size = self._round_size_down(notional / price)
         identity = validate_client_order_id(client_order_id)
+        if entry_deadline is not None:
+            entry_deadline.check("sdk_dispatch")
         response = call_ambiguous_order_mutation(
             operation="entry",
             client_order_id=identity,

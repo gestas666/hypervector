@@ -4,6 +4,8 @@ from dataclasses import replace
 from datetime import UTC, datetime
 from pathlib import Path
 
+from multi_asset_live_runner_fixtures import execution_contract, venue_snapshot
+
 from hypervector.live.bidirectional_intents import (
     BidirectionalIntentRouter,
     StrategyCapability,
@@ -11,11 +13,11 @@ from hypervector.live.bidirectional_intents import (
 )
 from hypervector.live.cohort_entry_sizing import CohortEntrySizing
 from hypervector.live.cohort_funding_window import CohortFundingWindow
+from hypervector.live.entry_submission_deadline import EntrySubmissionDeadline
 from hypervector.live.hyperliquid_protocol import SolReconciliationSnapshot
 from hypervector.live.multi_asset_intent_poller import CohortIntentPoll
 from hypervector.live.multi_asset_live_runner import MultiAssetLiveRunner
 from hypervector.live.sol_range_onset_state import SolLiveSnapshot, SolLiveState
-from multi_asset_live_runner_fixtures import execution_contract, venue_snapshot
 
 _OBSERVED_AT = datetime(2026, 8, 5, 12, tzinfo=UTC)
 _OBSERVED_MS = int(_OBSERVED_AT.timestamp() * 1_000)
@@ -60,11 +62,14 @@ class _Engine:
         mark_price: float,
         decision_time_ms: int | None = None,
         entry_sizing: CohortEntrySizing | None = None,
+        entry_deadline: EntrySubmissionDeadline | None = None,
     ) -> SolLiveSnapshot:
         """Record the selected entry and project an open position."""
         del mark_price, entry_sizing
         if decision_time_ms is None:
             raise ValueError("test entry requires a decision timestamp")
+        if entry_deadline is not None:
+            entry_deadline.check("adapter_dispatch")
         self.entries.append(side)
         signed = 1.0 if side == "long" else -1.0
         self.current = SolLiveSnapshot(

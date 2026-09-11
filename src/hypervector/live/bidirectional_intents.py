@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+import math
 from collections import defaultdict
 from dataclasses import dataclass
-import math
 from typing import Literal
 
 from hypervector.live.perp_venue_identity import parse_perp_venue_identity
@@ -127,6 +127,7 @@ class RoutingAction:
     submission_observed_at_ms: int | None = None
     submission_age_ms: int | None = None
     submission_limit_ms: int | None = None
+    submission_boundary: str | None = None
 
 
 @dataclass(frozen=True)
@@ -138,6 +139,7 @@ class WithheldIntent:
     submission_observed_at_ms: int | None = None
     submission_age_ms: int | None = None
     submission_limit_ms: int | None = None
+    submission_boundary: str | None = None
 
 
 @dataclass(frozen=True)

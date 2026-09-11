@@ -86,6 +86,10 @@ pub(crate) fn fill_full_date_time(value: u64) -> String {
     eastern_timestamp(value, "%m-%d %H:%M:%S %Z")
 }
 
+pub(crate) fn book_date_time(value: u64) -> String {
+    eastern_timestamp(value, "%Y-%m-%d %H:%M:%S %Z")
+}
+
 fn eastern_timestamp(value: u64, format: &str) -> String {
     i64::try_from(value)
         .ok()

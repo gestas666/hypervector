@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
+import json
+import os
 from collections.abc import Callable, Iterator, Mapping
 from dataclasses import dataclass
 from datetime import datetime, timezone
-import json
-import os
 from pathlib import Path
 from typing import Literal
 
@@ -21,6 +21,7 @@ SOL_LIVE_EVENT_TYPES = frozenset(
         "cancel_intent",
         "order_acknowledgement",
         "entry_not_filled",
+        "entry_not_submitted",
         "fill",
         "stop_order",
         "target_order",

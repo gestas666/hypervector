@@ -40,6 +40,15 @@ pub(crate) fn render(frame: &mut Frame, app: &App, area: Rect) {
 fn setup_lines<'a>(setup: &'a CohortProviderEvaluation, app: &'a App) -> Vec<Line<'a>> {
     let mut lines = identity_lines(setup, app);
     lines.extend(configured_contract_lines(setup, app));
+    lines.extend(
+        crate::cohort_setup_deadline::summary_lines(
+            &app.backend.cohort_checkpoint,
+            &setup.strategy_id,
+            &setup.symbol,
+        )
+        .into_iter()
+        .map(Line::from),
+    );
     lines.extend(research_lines(setup, app));
     lines.extend(regime_lines(setup));
     lines.extend(hype_entry_attribution_lines(setup, app));

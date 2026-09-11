@@ -88,6 +88,7 @@ pub struct CohortCheckpointTelemetry {
     pub readiness_evaluations: Option<usize>,
     pub strategy_intents: Option<usize>,
     pub routing_actions: Option<usize>,
+    pub entry_deadlines: Option<crate::backend_cohort_entry_deadline::CohortEntryDeadlines>,
     pub live_audit_status: Option<CohortLiveAuditStatus>,
     pub forward_evaluations: Option<usize>,
     pub eligible_signals: Option<usize>,

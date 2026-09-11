@@ -314,6 +314,8 @@ fn handle_primary_key(app: &mut App, code: KeyCode) {
         KeyCode::Char('P') if cohort_tab(app, 8) => app.cycle_cohort_config_provider(-1),
         KeyCode::PageDown if cohort_tab(app, 8) => app.page_cohort_config_context(1),
         KeyCode::PageUp if cohort_tab(app, 8) => app.page_cohort_config_context(-1),
+        KeyCode::PageDown if cohort_tab(app, 3) => app.page_cohort_depth(1),
+        KeyCode::PageUp if cohort_tab(app, 3) => app.page_cohort_depth(-1),
         KeyCode::PageDown if cohort_tab(app, 7) => {
             app.cohort_regime_page = (app.cohort_regime_page + 1) % 3;
         }
@@ -378,6 +380,8 @@ fn handle_selection(app: &mut App, forward: bool) {
     match (app.backend.is_multi_asset_cohort(), app.active_tab, forward) {
         (true, 1, true) => app.select_next_cohort_setup(),
         (true, 1, false) => app.select_prev_cohort_setup(),
+        (true, 3, true) => app.move_cohort_depth(1),
+        (true, 3, false) => app.move_cohort_depth(-1),
         (true, 4, true) => app.select_next_cohort_trade_record(),
         (true, 4, false) => app.select_prev_cohort_trade_record(),
         (true, 5, true) => app.select_next_cohort_journal(),

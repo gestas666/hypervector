@@ -2,6 +2,16 @@
 
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from pathlib import Path
+
+from test_multi_asset_live_runner import (
+    _SYMBOLS,
+    _contract,
+    _Engine,
+    _Poller,
+    _router,
+    _Telemetry,
+)
 
 from hypervector.live.bidirectional_intents import RoutingAction, StrategyIntent
 from hypervector.live.cohort_entry_submission import (
@@ -9,16 +19,9 @@ from hypervector.live.cohort_entry_submission import (
     execute_fresh_routed_actions,
     stale_entry_before_submission,
 )
+from hypervector.live.entry_submission_deadline import EntrySubmissionDeadline
 from hypervector.live.multi_asset_live_runner import MultiAssetLiveRunner
 from hypervector.live.sol_range_onset_engine_contract import SolEntryNotFilledError
-from test_multi_asset_live_runner import (
-    _Engine,
-    _Poller,
-    _SYMBOLS,
-    _Telemetry,
-    _contract,
-    _router,
-)
 
 
 class _ThirtySecondPoller(_Poller):
@@ -67,7 +70,7 @@ def test_fresh_entry_serializes_exact_submission_boundary_evidence() -> None:
         (action,),
         now_ms=lambda: 31_000,
         delays={("hulk", "BTC"): 30_000},
-        execute=executed.append,
+        execute=lambda action, _: executed.append(action),
     )
 
     assert withheld == ()
@@ -83,7 +86,9 @@ def test_ioc_no_fill_is_reported_and_does_not_abort_later_actions() -> None:
     second = RoutingAction("enter", "hulk", "BTC", "short", 1_000, 100.0)
     attempted: list[RoutingAction] = []
 
-    def execute(action: RoutingAction) -> None:
+    def execute(
+        action: RoutingAction, _deadline: EntrySubmissionDeadline | None
+    ) -> None:
         attempted.append(action)
         if action.symbol == "ZEC":
             raise SolEntryNotFilledError("IOC entry not filled")
@@ -130,7 +135,7 @@ def test_submission_guard_never_withholds_an_automatic_close() -> None:
         (action,),
         now_ms=unexpected_clock_read,
         delays={("hulk", "BTC"): 30_000},
-        execute=executed.append,
+        execute=lambda action, _: executed.append(action),
     )
 
     assert submitted == (action,)
@@ -138,7 +143,9 @@ def test_submission_guard_never_withholds_an_automatic_close() -> None:
     assert executed == [action]
 
 
-def test_automatic_entry_is_rechecked_immediately_before_submission(tmp_path) -> None:
+def test_automatic_entry_is_rechecked_immediately_before_submission(
+    tmp_path: Path,
+) -> None:
     """Cycle work cannot push a previously fresh entry beyond its deadline."""
     decision = datetime(2026, 8, 1, 12, 0, 0, tzinfo=UTC)
     clock = iter(

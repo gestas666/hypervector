@@ -72,3 +72,7 @@ include!("support/cohort_research_sync_view.rs");
 include!("support/cohort_stale_checkpoint_view.rs");
 
 include!("support/cohort_open_position_columns.rs");
+
+#[path = "support/cohort_entry_deadline_fixtures.rs"]
+mod entry_deadline_fixtures;
+include!("support/cohort_entry_deadline_view.rs");

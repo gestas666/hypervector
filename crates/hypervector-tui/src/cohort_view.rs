@@ -197,7 +197,7 @@ fn context_help(app: &App, compact: bool) -> String {
         0 => " Quit  //  All assets visible  //  Backend-authored telemetry",
         1 => " Quit  //  [↑/↓] Select setup  [Enter] Full backend evidence",
         2 => " Quit  //  [←/→] Select coin  [Enter] Strategy + timeframe detail",
-        3 => " Quit  //  [←/→] Select coin  //  Backend-authored L2 only",
+        3 => " Quit  //  [←/→] Coin [↑/↓] Depth [PgUp/PgDn] Page",
         4 => " Quit  //  [←/→] Focus journal  [↑/↓] Select  [Enter] Exact details",
         5 => " Quit  //  [↑/↓] Select evidence  [Enter] Signal vs setup paths",
         6 => " Quit  //  [←/→] Coin [p/P] Provider [d] Side [↑/↓] Action [Enter] Review",

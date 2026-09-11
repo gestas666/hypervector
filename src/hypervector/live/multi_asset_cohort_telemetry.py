@@ -7,30 +7,20 @@ from datetime import datetime, timezone
 
 from hypervector.live.bidirectional_intents import (
     IntentRoutingReport,
-    RoutingAction,
     StrategyIntent,
-    WithheldIntent,
 )
-from hypervector.live.cohort_backup_evidence import prestart_backup_payload
-from hypervector.live.cohort_durable_decisions import CohortDurableDecisionJournal
-from hypervector.live.cohort_durable_decision_recovery import durable_decision_records
-from hypervector.live.cohort_funding_window import CohortFundingWindow
-from hypervector.live.cohort_prestart_backup import CohortPrestartBackupResult
-from hypervector.live.cohort_runtime_fault import runtime_fault_payload
-from hypervector.live.cohort_regime_routing import routing_policy_payload
-from hypervector.live.cohort_transition_drain import CohortTransitionDrain
 from hypervector.live.canonical_regime_telemetry import (
     CANONICAL_REGIME_TELEMETRY_STRATEGY,
 )
-from hypervector.live.multi_asset_cohort_payloads import (
-    asset_config_payload,
-    intent_payload,
-    provider_config_payload,
-)
-from hypervector.live.multi_asset_cohort_models import (
-    AssetCohortSnapshot,
-    SharedAccountFacts,
-)
+from hypervector.live.cohort_backup_evidence import prestart_backup_payload
+from hypervector.live.cohort_durable_decision_recovery import durable_decision_records
+from hypervector.live.cohort_durable_decisions import CohortDurableDecisionJournal
+from hypervector.live.cohort_funding_window import CohortFundingWindow
+from hypervector.live.cohort_prestart_backup import CohortPrestartBackupResult
+from hypervector.live.cohort_regime_routing import routing_policy_payload
+from hypervector.live.cohort_runtime_fault import runtime_fault_payload
+from hypervector.live.cohort_transition_drain import CohortTransitionDrain
+from hypervector.live.hyperliquid_protocol import SolBookSnapshot
 from hypervector.live.multi_asset_cohort_history import (
     asset_costs,
     current_run_rows,
@@ -38,16 +28,30 @@ from hypervector.live.multi_asset_cohort_history import (
     latest_book,
 )
 from hypervector.live.multi_asset_cohort_history_cache import CohortAssetHistoryCache
-from hypervector.live.multi_asset_strategy_evidence import (
-    strategy_evidence_payloads,
+from hypervector.live.multi_asset_cohort_models import (
+    AssetCohortSnapshot,
+    SharedAccountFacts,
 )
+from hypervector.live.multi_asset_cohort_payloads import (
+    asset_config_payload,
+    intent_payload,
+    provider_config_payload,
+)
+from hypervector.live.multi_asset_cohort_payloads import (
+    routing_action_payload as _routing_action_payload,
+)
+from hypervector.live.multi_asset_cohort_payloads import (
+    withheld_intent_payload as _withheld_payload,
+)
+from hypervector.live.multi_asset_intent_poller import CohortMarketBar
 from hypervector.live.multi_asset_live_config import MultiAssetLiveConfig
 from hypervector.live.multi_asset_market_telemetry import (
     unseen_market_candle_payload,
 )
-from hypervector.live.multi_asset_intent_poller import CohortMarketBar
 from hypervector.live.multi_asset_signal_source import ProviderEvaluation
-from hypervector.live.hyperliquid_protocol import SolBookSnapshot
+from hypervector.live.multi_asset_strategy_evidence import (
+    strategy_evidence_payloads,
+)
 from hypervector.live.sol_range_onset_ledger import SolLiveLedger
 
 
@@ -404,35 +408,6 @@ def _history_cache(
     ledgers: Mapping[str, SolLiveLedger],
 ) -> CohortAssetHistoryCache | None:
     return CohortAssetHistoryCache(ledgers) if ledgers else None
-
-
-def _routing_action_payload(action: RoutingAction) -> dict[str, object]:
-    return {
-        "action": action.action,
-        "strategy_id": action.strategy_id,
-        "symbol": action.symbol,
-        "side": action.side,
-        "decision_time_ms": action.decision_time_ms,
-        "reference_price": action.reference_price,
-        "regime_alignment_score": action.regime_alignment_score,
-        "regime_alignment_stance": action.regime_alignment_stance,
-        "regime_decision_time_ms": action.regime_decision_time_ms,
-        "regime_alignment_basis": action.regime_alignment_basis,
-        "exit_reason": action.exit_reason,
-        "submission_observed_at_ms": action.submission_observed_at_ms,
-        "submission_age_ms": action.submission_age_ms,
-        "submission_limit_ms": action.submission_limit_ms,
-    }
-
-
-def _withheld_payload(item: WithheldIntent) -> dict[str, object]:
-    return {
-        **intent_payload(item.intent),
-        "reason": item.reason,
-        "submission_observed_at_ms": item.submission_observed_at_ms,
-        "submission_age_ms": item.submission_age_ms,
-        "submission_limit_ms": item.submission_limit_ms,
-    }
 
 
 def _validate_canonical_evaluations(

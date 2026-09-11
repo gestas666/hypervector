@@ -4,32 +4,36 @@ from dataclasses import replace
 from datetime import UTC, datetime
 from pathlib import Path
 
+from multi_asset_live_runner_fixtures import (
+    execution_contract as _contract,
+)
+from multi_asset_live_runner_fixtures import (
+    venue_snapshot as _venue,
+)
+
 from hypervector.live.bidirectional_intents import (
     BidirectionalIntentRouter,
     StrategyCapability,
     StrategyIntent,
 )
+from hypervector.live.cohort_entry_sizing import CohortEntrySizing
+from hypervector.live.cohort_execution_plan import ProviderExecutionContract
+from hypervector.live.cohort_funding_window import CohortFundingWindow
 from hypervector.live.cohort_operator_commands import (
     CohortOperatorClaim,
     CohortOperatorCommand,
 )
 from hypervector.live.cohort_transition_drain import CohortTransitionDrain
-from hypervector.live.cohort_entry_sizing import CohortEntrySizing
-from hypervector.live.cohort_execution_plan import ProviderExecutionContract
-from hypervector.live.cohort_funding_window import CohortFundingWindow
+from hypervector.live.entry_submission_deadline import EntrySubmissionDeadline
 from hypervector.live.hyperliquid_protocol import SolReconciliationSnapshot
-from hypervector.live.multi_asset_live_runner import MultiAssetLiveRunner
 from hypervector.live.multi_asset_intent_poller import (
     CohortIntentPoll,
     CohortMarketBar,
 )
+from hypervector.live.multi_asset_live_runner import MultiAssetLiveRunner
 from hypervector.live.multi_asset_signal_source import ProviderEvaluation
 from hypervector.live.provider_readiness import SignalReadiness
 from hypervector.live.sol_range_onset_state import SolLiveSnapshot, SolLiveState
-from multi_asset_live_runner_fixtures import (
-    execution_contract as _contract,
-    venue_snapshot as _venue,
-)
 
 _SYMBOLS = ("BTC", "ETH", "SOL", "HYPE")
 
@@ -71,8 +75,11 @@ class _Engine:
         mark_price: float,
         decision_time_ms: int | None = None,
         entry_sizing: CohortEntrySizing | None = None,
+        entry_deadline: EntrySubmissionDeadline | None = None,
     ) -> SolLiveSnapshot:
         assert decision_time_ms is not None
+        if entry_deadline is not None:
+            entry_deadline.check("adapter_dispatch")
         size = 1.0 if side == "long" else -1.0
         self.entries.append((side, mark_price, decision_time_ms))
         self.entry_sizing.append(entry_sizing)

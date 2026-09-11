@@ -8,11 +8,11 @@ from dataclasses import dataclass
 import hashlib
 import json
 from pathlib import Path
-import tempfile
-from typing import BinaryIO
 
-from hypervector.data.oxa_storage import file_evidence
-from hypervector.paper.report import load_decision_rows
+from hypervector.research.ledger_snapshot_io import (
+    ProjectedLedgerRows,
+    loaded_suffix_snapshot as _loaded_suffix_snapshot,
+)
 
 _REVERSE_SCAN_BYTES = 1024 * 1024
 _COMPATIBLE_SCOPE = "compatible_execution_history"
@@ -28,15 +28,6 @@ class _CompatibleExecutionBoundary:
     source_device: int
     source_inode: int
     observed_bytes: int
-
-
-@dataclass(frozen=True)
-class ProjectedLedgerRows:
-    """Selected source rows plus the complete validated source sequence range."""
-
-    rows: list[dict[str, object]]
-    source_sequence_start: int
-    source_sequence_end: int
 
 
 _COMPATIBLE_BOUNDARIES: dict[
@@ -135,10 +126,13 @@ def snapshot_projected_compatible_execution_ledger(
     path: Path,
     *,
     run_id: str,
-    projector: Callable[[Path], ProjectedLedgerRows],
+    projector: Callable[[Path], ProjectedLedgerRows] | None = None,
+    stream_projector: Callable[[Iterator[str]], ProjectedLedgerRows] | None = None,
     allow_incomplete_tail: bool = False,
 ) -> Iterator[tuple[list[dict[str, object]], dict[str, object]]]:
-    """Stream-project a stable compatible suffix without materializing all rows."""
+    """Project a frozen compatible suffix through one path or stream consumer."""
+    if (projector is None) == (stream_projector is None):
+        raise ValueError("exactly one path or stream projector is required")
     if not path.is_file():
         raise FileNotFoundError(f"live decisions ledger does not exist: {path}")
     identity = _selected_execution_identity(path, run_id)
@@ -160,6 +154,7 @@ def snapshot_projected_compatible_execution_ledger(
         allow_incomplete_tail=allow_incomplete_tail,
         evidence_extra=evidence_extra,
         projector=projector,
+        stream_projector=stream_projector,
     ) as (rows, evidence):
         _advance_compatible_boundary(boundary, evidence)
         yield rows, evidence
@@ -235,84 +230,6 @@ def _boundary_line(path: Path, offset: int) -> bytes:
     if not raw.endswith(b"\n"):
         raise ValueError("compatible execution boundary is not a complete row")
     return raw
-
-
-@contextmanager
-def _loaded_suffix_snapshot(
-    path: Path,
-    *,
-    start_offset: int,
-    allow_incomplete_tail: bool,
-    evidence_extra: Mapping[str, object],
-    projector: Callable[[Path], ProjectedLedgerRows] | None = None,
-) -> Iterator[tuple[list[dict[str, object]], dict[str, object]]]:
-    with tempfile.NamedTemporaryFile(
-        prefix="live-ledger-",
-        suffix=".jsonl",
-        mode="w+b",
-    ) as out:
-        with path.open("rb") as source:
-            source.seek(start_offset)
-            suffix_bytes, suffix_stable_bytes = _copy_observed_prefix(source, out)
-        observed_bytes = start_offset + suffix_bytes
-        stable_bytes = start_offset + suffix_stable_bytes
-        dropped_bytes = observed_bytes - stable_bytes
-        if dropped_bytes and not allow_incomplete_tail:
-            raise ValueError(
-                f"live decisions ledger has an incomplete trailing JSONL record: {path}"
-            )
-        if dropped_bytes:
-            out.truncate(suffix_stable_bytes)
-        out.flush()
-        snapshot = Path(out.name)
-        projection = None if projector is None else projector(snapshot)
-        rows = (
-            load_decision_rows(snapshot)
-            if projection is None
-            else _rebase_projected_rows(projection)
-        )
-        evidence = file_evidence(snapshot)
-        if allow_incomplete_tail or start_offset > 0:
-            evidence.update(
-                {
-                    "source_bytes_observed": observed_bytes,
-                    "stable_bytes": stable_bytes,
-                    "dropped_tail_bytes": dropped_bytes,
-                    "incomplete_tail_dropped": dropped_bytes > 0,
-                }
-            )
-        if start_offset > 0:
-            evidence["source_start_offset"] = start_offset
-        if projection is not None:
-            evidence.update(
-                {
-                    "source_sequence_start": projection.source_sequence_start,
-                    "source_sequence_end": projection.source_sequence_end,
-                    "projected_record_count": len(rows),
-                }
-            )
-        evidence.update(evidence_extra)
-        yield rows, evidence
-
-
-def _rebase_projected_rows(projection: ProjectedLedgerRows) -> list[dict[str, object]]:
-    rows = projection.rows
-    if not rows:
-        raise ValueError("compatible execution projection contains no records")
-    source_sequences = [row.get("sequence") for row in rows]
-    if not all(
-        isinstance(value, int) and not isinstance(value, bool)
-        for value in source_sequences
-    ):
-        raise ValueError("compatible execution projection has invalid sequence")
-    if source_sequences != sorted(set(source_sequences)):
-        raise ValueError("compatible execution projection is not source ordered")
-    if (
-        source_sequences[0] < projection.source_sequence_start
-        or source_sequences[-1] > projection.source_sequence_end
-    ):
-        raise ValueError("compatible execution projection exceeds source range")
-    return [{**row, "sequence": index} for index, row in enumerate(rows, 1)]
 
 
 def latest_decision_ledger_event(path: Path, event_type: str) -> dict[str, object]:
@@ -448,16 +365,3 @@ def _reverse_complete_lines(path: Path) -> Iterator[tuple[int, bytes]]:
                 offset += len(part) + 1
             yield from reversed(located)
             cursor = start
-
-
-def _copy_observed_prefix(source: BinaryIO, target: BinaryIO) -> tuple[int, int]:
-    """Copy bytes and return observed length plus last complete-line boundary."""
-    observed_bytes = 0
-    stable_bytes = 0
-    while chunk := source.read(1024 * 1024):
-        target.write(chunk)
-        last_newline = chunk.rfind(b"\n")
-        if last_newline >= 0:
-            stable_bytes = observed_bytes + last_newline + 1
-        observed_bytes += len(chunk)
-    return observed_bytes, stable_bytes

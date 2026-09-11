@@ -62,6 +62,7 @@ def test_exact_submission_evidence_proves_entry_enforcement() -> None:
             eligible=True,
             enter_action=True,
             submission_age_ms=29_000,
+            submission_boundary="sdk_dispatch",
         ),
         _identity(),
     )
@@ -72,7 +73,7 @@ def test_exact_submission_evidence_proves_entry_enforcement() -> None:
     assert report["submitted_entries"] == 1
     assert route["maximum_submission_age_ms"] == 29_000
     assert route["minimum_submission_headroom_ms"] == 1_000
-    assert route["status"] == "submission_contract_enforced"
+    assert route["status"] == "sdk_dispatch_contract_observed"
 
 
 def test_stale_submission_evidence_proves_fail_closed_withholding() -> None:
@@ -98,7 +99,7 @@ def test_stale_submission_evidence_proves_fail_closed_withholding() -> None:
     assert report["submission_timestamp_observed"] is True
     assert report["stale_entries_withheld"] == 1
     assert route["maximum_withheld_submission_age_ms"] == 31_000
-    assert route["status"] == "submission_contract_enforced"
+    assert route["status"] == "stale_entry_withholding_observed"
 
 
 def test_exact_limit_remains_within_contract() -> None:
@@ -194,6 +195,7 @@ def _cycle(
     enter_action: bool = False,
     readiness_seed: bool = False,
     submission_age_ms: int | None = None,
+    submission_boundary: str | None = None,
 ) -> list[dict[str, object]]:
     evaluation = {
         "strategy_id": "provider_v1",
@@ -204,24 +206,9 @@ def _cycle(
             "pre_activation_readiness_seed" if readiness_seed else None
         ),
     }
-    actions = []
-    if enter_action:
-        action: dict[str, object] = {
-            "action": "enter",
-            "strategy_id": "provider_v1",
-            "symbol": "BTC",
-            "side": "long",
-            "decision_time_ms": _DECISION_MS,
-        }
-        if submission_age_ms is not None:
-            action.update(
-                {
-                    "submission_observed_at_ms": _DECISION_MS + submission_age_ms,
-                    "submission_age_ms": submission_age_ms,
-                    "submission_limit_ms": 30_000,
-                }
-            )
-        actions.append(action)
+    actions = (
+        [_entry_action(submission_age_ms, submission_boundary)] if enter_action else []
+    )
     return [
         {
             "event_type": "intent_routing",
@@ -243,6 +230,27 @@ def _cycle(
             },
         },
     ]
+
+
+def _entry_action(age_ms: int | None, boundary: str | None) -> dict[str, object]:
+    action: dict[str, object] = {
+        "action": "enter",
+        "strategy_id": "provider_v1",
+        "symbol": "BTC",
+        "side": "long",
+        "decision_time_ms": _DECISION_MS,
+    }
+    if age_ms is not None:
+        action.update(
+            {
+                "submission_observed_at_ms": _DECISION_MS + age_ms,
+                "submission_age_ms": age_ms,
+                "submission_limit_ms": 30_000,
+            }
+        )
+    if boundary is not None:
+        action["submission_boundary"] = boundary
+    return action
 
 
 def _utc_text(timestamp_ms: int) -> str:

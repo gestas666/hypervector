@@ -43,6 +43,7 @@ pub struct App {
     pub show_cohort_chart_modal: bool,
     pub selected_cohort_chart_provider_index: usize,
     pub selected_cohort_symbol_index: usize,
+    pub(crate) cohort_depth_viewport: std::cell::Cell<crate::cohort_depth_viewport::DepthViewport>,
     pub cohort_trade_focus: CohortTradeFocus,
     pub selected_cohort_lifecycle_index: usize,
     pub selected_cohort_fill_index: usize,
@@ -118,6 +119,7 @@ macro_rules! initial_app_state {
             show_cohort_chart_modal: false,
             selected_cohort_chart_provider_index: 0,
             selected_cohort_symbol_index: 0,
+            cohort_depth_viewport: std::cell::Cell::default(),
             cohort_trade_focus: CohortTradeFocus::Lifecycles,
             selected_cohort_lifecycle_index: 0,
             selected_cohort_fill_index: 0,
@@ -198,12 +200,17 @@ impl App {
         let count = self.backend.cohort.enabled_symbols.len();
         if count == 0 {
             self.selected_cohort_symbol_index = 0;
+            self.cohort_depth_viewport.set(Default::default());
             return;
         }
+        let previous = self.selected_cohort_symbol_index;
         self.selected_cohort_symbol_index = self
             .selected_cohort_symbol_index
             .saturating_add_signed(delta)
             .min(count - 1);
+        if previous != self.selected_cohort_symbol_index {
+            self.cohort_depth_viewport.set(Default::default());
+        }
     }
 
     /// Return the selected cohort symbol without manufacturing a default.

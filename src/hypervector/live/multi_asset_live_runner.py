@@ -1,68 +1,71 @@
 from __future__ import annotations
 
+import time
 from collections.abc import Callable, Mapping
 from datetime import datetime
 from pathlib import Path
-import time
 
-from hyperliquid.utils.error import ClientError, ServerError  # type: ignore[import-untyped]
+from hyperliquid.utils.error import (  # type: ignore[import-untyped]
+    ClientError,
+    ServerError,
+)
 from requests import RequestException
 
+from hypervector.live import cohort_execution_contract_selection as contract_selection
 from hypervector.live.bidirectional_intents import (
     BidirectionalIntentRouter,
     IntentRoutingReport,
     RoutingAction,
 )
-from hypervector.live.cohort_execution_plan import ProviderExecutionContract
-from hypervector.live import cohort_execution_contract_selection as contract_selection
 from hypervector.live.cohort_entry_sizing import CohortEntrySizing
 from hypervector.live.cohort_entry_submission import (
     EntryDelayMap,
     execute_fresh_routed_actions,
     validate_entry_delays,
 )
+from hypervector.live.cohort_execution_plan import ProviderExecutionContract
 from hypervector.live.cohort_funding_window import committed_funding_window
-from hypervector.live.cohort_transition_drain import CohortTransitionDrain
+from hypervector.live.cohort_maximum_hold_policy import (
+    EvaluationKey,
+    update_latest_evaluations,
+)
 from hypervector.live.cohort_route_cycle import (
     route_cycle,
     validate_and_build_exit_controllers,
 )
 from hypervector.live.cohort_routing_execution import execute_routing_action
-from hypervector.live.cohort_maximum_hold_policy import (
-    EvaluationKey,
-    update_latest_evaluations,
-)
+from hypervector.live.cohort_transition_drain import CohortTransitionDrain
+from hypervector.live.entry_submission_deadline import EntrySubmissionDeadline
+from hypervector.live.hyperliquid_protocol import SolReconciliationSnapshot
 from hypervector.live.multi_asset_execution_authority import (
     create_operator_processor,
     effective_execution_directions,
     hold_milliseconds,
 )
-from hypervector.live.multi_asset_cohort_telemetry import AssetCohortSnapshot
+from hypervector.live.multi_asset_intent_poller import (
+    CohortIntentPoll,
+)
+from hypervector.live.multi_asset_live_protocols import (
+    CohortTelemetryProtocol,
+    MultiAssetEngineProtocol,
+    MultiAssetIntentPollerProtocol,
+)
 from hypervector.live.multi_asset_live_runner_support import (
     MultiAssetLiveRunnerError,
     all_flat_and_unowned,
-    asset_snapshot,
+    asset_snapshots,
     aware,
     reconcile_engines,
     remaining_delay,
     shared_account_facts,
     validate_max_polls,
 )
-from hypervector.live.multi_asset_intent_poller import (
-    CohortIntentPoll,
-)
-from hypervector.live.hyperliquid_protocol import SolReconciliationSnapshot
 from hypervector.live.multi_asset_market_bars import TransientCohortMarketDataError
-from hypervector.live.multi_asset_live_protocols import (
-    CohortTelemetryProtocol,
-    MultiAssetEngineProtocol,
-    MultiAssetIntentPollerProtocol,
-)
-from hypervector.live.multi_asset_signal_source import ProviderEvaluation
 from hypervector.live.multi_asset_operator_runtime import (
     CohortOperatorExecutionError,
     OperatorCommandSourceProtocol,
 )
+from hypervector.live.multi_asset_signal_source import ProviderEvaluation
 from hypervector.live.sol_range_onset_state import SolLiveState
 from hypervector.live.transient_transport import transient_read_failure_reason
 
@@ -386,7 +389,9 @@ class MultiAssetLiveRunner:
         self._complete_transition_drain_if_ready()
         self._telemetry.emit_snapshot(
             account=shared_account_facts(self._symbols, venues),
-            assets=self._asset_snapshots(venues, poll.reference_prices),
+            assets=asset_snapshots(
+                self._symbols, self._engines, venues, poll.reference_prices
+            ),
         )
         if not self._profit_lock_controller.cycle_degraded:
             self._telemetry.emit_heartbeat()
@@ -444,28 +449,18 @@ class MultiAssetLiveRunner:
         self._stop_all("operator_stop")
         return polls
 
-    def _execute(self, action: RoutingAction) -> None:
+    def _execute(
+        self,
+        action: RoutingAction,
+        entry_deadline: EntrySubmissionDeadline | None = None,
+    ) -> None:
         execute_routing_action(
             action,
             engine=self._engines[action.symbol],
             contracts=self._execution_contracts,
             directional_sizing=self._provider_directional_entry_sizing,
             fallback_sizing=self._provider_entry_sizing,
-        )
-
-    def _asset_snapshots(
-        self,
-        venues: tuple[SolReconciliationSnapshot, ...],
-        reference_prices: Mapping[str, float],
-    ) -> tuple[AssetCohortSnapshot, ...]:
-        return tuple(
-            asset_snapshot(
-                symbol,
-                self._engines[symbol].snapshot,
-                venue,
-                reference_prices.get(symbol),
-            )
-            for symbol, venue in zip(self._symbols, venues, strict=True)
+            entry_deadline=entry_deadline,
         )
 
     def _shutdown_requested(self) -> bool:

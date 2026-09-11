@@ -228,7 +228,7 @@ def publish_live_checkpoint(
                 cohort_path,
                 allow_incomplete_tail=True,
                 run_id=run_id,
-                projector=compact_cohort_ledger_rows,
+                stream_projector=compact_cohort_ledger_rows,
             )
         else:
             cohort_snapshot = snapshot_decision_ledger(
@@ -262,7 +262,7 @@ def publish_live_checkpoint(
                     path,
                     allow_incomplete_tail=True,
                     run_id=audit_run_id(identity),
-                    projector=partial(
+                    stream_projector=partial(
                         compact_asset_ledger_rows,
                         current_run_id=audit_run_id(identity),
                         as_of=cohort_snapshot_cutoff,

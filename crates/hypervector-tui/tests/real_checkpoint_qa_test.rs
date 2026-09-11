@@ -302,7 +302,7 @@ fn primary_screen_contract(tab: usize) -> &'static [&'static str] {
         ],
         4 => &[
             "SELECTED MARKET // MARKETS 1-3 / 3",
-            "LIVE HYPERLIQUID L2",
+            "BACKEND L2 SNAPSHOT",
             "EXACT LEVELS 20/20",
         ],
         _ => unreachable!(),

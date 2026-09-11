@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from hypervector.live.entry_submission_deadline import EntrySubmissionDeadline
 from hypervector.live.hyperliquid_btc_adapter import BtcHyperliquidAdapter
 from hypervector.live.hyperliquid_protocol import (
     HyperliquidOrderAck,
@@ -48,6 +49,7 @@ class MultiAssetDirectionalAdapter:
         requested_notional_usd: float,
         mark_price: float,
         client_order_id: str,
+        entry_deadline: EntrySubmissionDeadline | None = None,
     ) -> HyperliquidOrderAck:
         """Submit one cap-checked IOC directional entry."""
         return self._delegate.submit_market_entry(
@@ -55,6 +57,9 @@ class MultiAssetDirectionalAdapter:
             requested_notional_usd=requested_notional_usd,
             mark_price=mark_price,
             client_order_id=client_order_id,
+            **(
+                {"entry_deadline": entry_deadline} if entry_deadline is not None else {}
+            ),
         )
 
     def place_protective_stop(

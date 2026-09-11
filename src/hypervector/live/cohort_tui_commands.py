@@ -9,6 +9,7 @@ from pathlib import Path
 import sys
 from typing import Protocol
 
+from hypervector.live.cohort_tui_binary import VerifiedTuiBinary
 from hypervector.live.eth_breakout_transfer_provider import (
     ETH_BREAKOUT_TRANSFER_STRATEGY,
 )
@@ -91,6 +92,7 @@ class MultiAssetTuiLaunch:
     startup_timeout_seconds: float
     accounting_epoch: CohortAccountingEpoch | None = None
     dependency_command: tuple[str, ...] | None = None
+    tui_binary: VerifiedTuiBinary | None = None
 
 
 def backend_command(
@@ -195,9 +197,10 @@ def tui_command(
     ledger: Path,
     *,
     include_checkpoint: bool,
+    tui_binary: VerifiedTuiBinary | None = None,
 ) -> tuple[str, ...]:
     """Build the read-only Rust cockpit command."""
-    command = _tui_base_command(args)
+    command = _tui_base_command(args, tui_binary)
     lifecycle = ("--detached-lifecycle",) if args.mode == "monitor" else ()
     checkpoint = (
         ("--cohort-checkpoint", str(CHECKPOINT_OUTPUT)) if include_checkpoint else ()
@@ -233,16 +236,25 @@ def tui_command(
     )
 
 
-def _tui_base_command(args: CohortTuiArguments) -> tuple[str, ...]:
+def _tui_base_command(
+    args: CohortTuiArguments, tui_binary: VerifiedTuiBinary | None
+) -> tuple[str, ...]:
+    prefix = (
+        (str(tui_binary.path),)
+        if tui_binary is not None
+        else (
+            "cargo",
+            "run",
+            "--release",
+            "-p",
+            "hypervector-tui",
+            "--bin",
+            "tui-regime-detector",
+            "--",
+        )
+    )
     return (
-        "cargo",
-        "run",
-        "--release",
-        "-p",
-        "hypervector-tui",
-        "--bin",
-        "tui-regime-detector",
-        "--",
+        *prefix,
         "--symbol",
         "MULTI",
         "--timeframe",
@@ -253,6 +265,23 @@ def _tui_base_command(args: CohortTuiArguments) -> tuple[str, ...]:
         "--initial-tab",
         "2" if args.mode == "observe" else "1",
     )
+
+
+def launch_checkpoint_command(
+    args: CohortTuiArguments,
+    config: MultiAssetLiveConfig,
+    staged_config: MultiAssetLiveConfig | None,
+) -> tuple[str, ...]:
+    """Keep live/monitor checkpoint arguments separate from observer projection."""
+    if args.mode in {"live", "monitor"}:
+        return checkpoint_command(
+            config,
+            staged_config=staged_config,
+            accounting_epoch_bundle=args.accounting_epoch_bundle,
+        )
+    if args.mode == "observe":
+        return observer_checkpoint_command(config)
+    raise MultiAssetLiveConfigError(f"unsupported TUI mode: {args.mode}")
 
 
 def checkpoint_command(

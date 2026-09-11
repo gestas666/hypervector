@@ -2,12 +2,49 @@
 
 from __future__ import annotations
 
-from hypervector.live.bidirectional_intents import StrategyIntent
+from hypervector.live.bidirectional_intents import (
+    RoutingAction,
+    StrategyIntent,
+    WithheldIntent,
+)
 from hypervector.live.cohort_profit_lock_override import grouped_profit_lock_payload
 from hypervector.live.multi_asset_live_config import (
     AssetLiveConfig,
     StrategyProviderConfig,
 )
+
+
+def routing_action_payload(action: RoutingAction) -> dict[str, object]:
+    """Serialize an action with the timestamp and boundary actually checked."""
+    return {
+        "action": action.action,
+        "strategy_id": action.strategy_id,
+        "symbol": action.symbol,
+        "side": action.side,
+        "decision_time_ms": action.decision_time_ms,
+        "reference_price": action.reference_price,
+        "regime_alignment_score": action.regime_alignment_score,
+        "regime_alignment_stance": action.regime_alignment_stance,
+        "regime_decision_time_ms": action.regime_decision_time_ms,
+        "regime_alignment_basis": action.regime_alignment_basis,
+        "exit_reason": action.exit_reason,
+        "submission_observed_at_ms": action.submission_observed_at_ms,
+        "submission_age_ms": action.submission_age_ms,
+        "submission_limit_ms": action.submission_limit_ms,
+        "submission_boundary": action.submission_boundary,
+    }
+
+
+def withheld_intent_payload(item: WithheldIntent) -> dict[str, object]:
+    """Serialize a non-action without pretending its clock observed dispatch."""
+    return {
+        **intent_payload(item.intent),
+        "reason": item.reason,
+        "submission_observed_at_ms": item.submission_observed_at_ms,
+        "submission_age_ms": item.submission_age_ms,
+        "submission_limit_ms": item.submission_limit_ms,
+        "submission_boundary": item.submission_boundary,
+    }
 
 
 def asset_config_payload(asset: AssetLiveConfig) -> dict[str, object]:

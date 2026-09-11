@@ -81,6 +81,9 @@ pub(crate) struct LiveAuditEvidence {
 pub(crate) struct LiveRoutingEvidence {
     pub(crate) actions: usize,
     pub(crate) strategy_intents: usize,
+    #[serde(default)]
+    pub(crate) entry_age_diagnostics:
+        Option<crate::backend_cohort_entry_deadline::CohortEntryDeadlines>,
 }
 
 #[derive(Debug, Deserialize)]

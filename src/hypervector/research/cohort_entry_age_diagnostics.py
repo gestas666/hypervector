@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from datetime import UTC, datetime
 
+from hypervector.live.entry_submission_deadline import SUBMISSION_BOUNDARIES
 from hypervector.research.cohort_live_audit_values import (
     nonnegative_int,
     object_list,
@@ -34,12 +35,13 @@ def build_entry_age_diagnostics(
     routes = {route: _finalize_route(row) for route, row in aggregates.items()}
     submitted = sum(int(row["submitted_entries"]) for row in routes.values())
     stale = sum(int(row["stale_entries_withheld"]) for row in routes.values())
-    late = sum(int(row["submitted_entries_over_limit"]) for row in routes.values())
+    late = sum(int(row["sdk_dispatches_over_limit"]) for row in routes.values())
+    dispatch_checks = sum(int(row["sdk_dispatch_checks"]) for row in routes.values())
     enter_actions = sum(int(row["enter_actions"]) for row in routes.values())
     observed = submitted + stale > 0
-    enforcement = observed and submitted == enter_actions
+    enforcement = dispatch_checks > 0 and dispatch_checks == enter_actions and late == 0
     return {
-        "contract": _contract(enforcement),
+        "contract": _contract(),
         "paired_cycles": len(pairs),
         "evaluations": sum(int(row["evaluations"]) for row in routes.values()),
         "eligible_evaluations": sum(
@@ -55,6 +57,7 @@ def build_entry_age_diagnostics(
             for row in routes.values()
         ),
         "submitted_entries": submitted,
+        "sdk_dispatch_checks": dispatch_checks,
         "stale_entries_withheld": stale,
         "executed_late_entries_proven": late > 0,
         "submission_timestamp_observed": observed,
@@ -162,6 +165,7 @@ def _consume_enter_action(
         submission_age, headroom = evidence
         row["submitted_entries"] = int(row["submitted_entries"]) + 1
         _update_submission_extrema(row, submission_age, headroom)
+        _count_submission_boundary(row, action.get("submission_boundary"), headroom)
         if headroom < 0:
             row["submitted_entries_over_limit"] = (
                 int(row["submitted_entries_over_limit"]) + 1
@@ -204,7 +208,14 @@ def _submission_evidence(
         "submission_limit_ms",
     )
     values = tuple(row.get(key) for key in keys)
+    boundary = row.get("submission_boundary")
+    if boundary is not None and (
+        not isinstance(boundary, str) or boundary not in SUBMISSION_BOUNDARIES
+    ):
+        raise ValueError("unsupported submission boundary")
     if all(value is None for value in values):
+        if boundary is not None:
+            raise ValueError("submission boundary lacks clock evidence")
         return None
     if any(value is None for value in values):
         raise ValueError("submission evidence must be complete")
@@ -214,6 +225,20 @@ def _submission_evidence(
     if limit != configured_limit or observed - decision_ms != age:
         raise ValueError("submission evidence does not reconcile")
     return age, limit - age
+
+
+def _count_submission_boundary(
+    row: dict[str, object], boundary: object, headroom: int
+) -> None:
+    if boundary == "sdk_dispatch":
+        row["sdk_dispatch_checks"] = int(row["sdk_dispatch_checks"]) + 1
+        row["sdk_dispatches_over_limit"] = int(row["sdk_dispatches_over_limit"]) + int(
+            headroom < 0
+        )
+    elif boundary == "adapter_dispatch":
+        row["adapter_dispatch_checks"] = int(row["adapter_dispatch_checks"]) + 1
+    else:
+        row["admission_or_legacy_checks"] = int(row["admission_or_legacy_checks"]) + 1
 
 
 def _update_submission_extrema(
@@ -327,6 +352,10 @@ def _empty_route(limit_ms: int) -> dict[str, object]:
         "excluded_pre_activation_readiness_seeds": 0,
         "enter_actions": 0,
         "submitted_entries": 0,
+        "sdk_dispatch_checks": 0,
+        "sdk_dispatches_over_limit": 0,
+        "adapter_dispatch_checks": 0,
+        "admission_or_legacy_checks": 0,
         "stale_entries_withheld": 0,
         "submitted_entries_over_limit": 0,
         "maximum_submission_age_ms": None,
@@ -345,10 +374,26 @@ def _empty_route(limit_ms: int) -> dict[str, object]:
 
 
 def _finalize_route(row: Mapping[str, object]) -> dict[str, object]:
-    if int(row["submitted_entries_over_limit"]):
+    if int(row["sdk_dispatches_over_limit"]):
         status = "executed_submission_contract_breach"
-    elif int(row["submitted_entries"]) or int(row["stale_entries_withheld"]):
-        status = "submission_contract_enforced"
+    elif int(row["submitted_entries_over_limit"]):
+        status = "recorded_check_contract_breach"
+    elif (
+        int(row["sdk_dispatch_checks"])
+        and row["sdk_dispatch_checks"] == row["enter_actions"]
+    ):
+        status = "sdk_dispatch_contract_observed"
+    elif (
+        int(row["adapter_dispatch_checks"])
+        and row["adapter_dispatch_checks"] == row["enter_actions"]
+    ):
+        status = "adapter_dispatch_check_observed"
+    elif int(row["sdk_dispatch_checks"]) or int(row["adapter_dispatch_checks"]):
+        status = "mixed_submission_boundaries_observed"
+    elif int(row["submitted_entries"]):
+        status = "admission_check_observed"
+    elif int(row["stale_entries_withheld"]):
+        status = "stale_entry_withholding_observed"
     elif int(row["enter_actions_routing_emission_over_limit"]):
         status = "potential_submission_contract_breach"
     else:
@@ -375,19 +420,20 @@ def _timestamp_ms(row: Record) -> int:
     return delta.days * 86_400_000 + delta.seconds * 1_000 + delta.microseconds // 1_000
 
 
-def _contract(enforcement_observed: bool) -> dict[str, object]:
+def _contract() -> dict[str, object]:
     return {
         "report_only": True,
         "execution_authority": "none",
         "automatic_live_change": False,
         "automatic_pause": False,
-        "entry_enforcement_changed": enforcement_observed,
+        "entry_enforcement_changed": False,
     }
 
 
 def _limitations() -> list[str]:
     return [
         "legacy routing rows without submission evidence remain timing inferences",
+        "legacy or admission-stage timestamps do not prove final dispatch checks",
         "over-limit ineligible evaluations expose cycle headroom rather than missed trades",
-        "venue acknowledgement latency begins after the observed submission boundary",
+        "SDK signing, scheduling, transmission and acknowledgement follow the SDK-dispatch check",
     ]

@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
 import math
 import time
+from collections.abc import Callable, Mapping
 from typing import Protocol
 
+from hypervector.live.entry_submission_deadline import (
+    EntryDeadlineExpired,
+    EntrySubmissionDeadline,
+)
 from hypervector.live.hyperliquid_protocol import (
     HyperliquidOrderAck,
     HyperliquidOrderStatus,
@@ -87,30 +91,69 @@ class SolOrderSubmission:
         side: str,
         requested_notional_usd: float,
         mark_price: float,
+        entry_deadline: EntrySubmissionDeadline | None = None,
     ) -> HyperliquidOrderAck:
         """Persist entry identity, submit it, and verify acknowledgement identity."""
         client_order_id = validate_client_order_id(self._client_order_id_fn())
-        self._events.emit(
-            "order_intent",
-            {
-                "operation": "entry",
-                "client_order_id": client_order_id,
-                "side": side,
-                "requested_notional_usd": requested_notional_usd,
-                "mark_price": mark_price,
-            },
+        self._emit_entry_intent(
+            client_order_id,
+            side,
+            requested_notional_usd,
+            mark_price,
+            entry_deadline,
         )
         try:
+            if entry_deadline is not None:
+                entry_deadline.check("adapter_dispatch")
             ack = self._adapter.submit_entry(
                 side=side,
                 requested_notional_usd=requested_notional_usd,
                 mark_price=mark_price,
                 client_order_id=client_order_id,
+                **(
+                    {"entry_deadline": entry_deadline}
+                    if entry_deadline is not None
+                    else {}
+                ),
             )
+        except EntryDeadlineExpired as exc:
+            self._events.emit(
+                "entry_not_submitted",
+                {
+                    "operation": "entry",
+                    "client_order_id": client_order_id,
+                    "submitted": False,
+                    "reason": "stale_before_submission",
+                    **exc.observation.as_payload(),
+                },
+            )
+            raise
         except SolOrderTransportError as exc:
             ack = self._recover_ack(exc)
         self._require_matching_ack("entry", client_order_id, ack)
         return ack
+
+    def _emit_entry_intent(
+        self,
+        client_order_id: str,
+        side: str,
+        notional: float,
+        price: float,
+        deadline: EntrySubmissionDeadline | None,
+    ) -> None:
+        payload: dict[str, object] = {
+            "operation": "entry",
+            "client_order_id": client_order_id,
+            "side": side,
+            "requested_notional_usd": notional,
+            "mark_price": price,
+        }
+        if deadline is not None:
+            payload["entry_deadline"] = {
+                "decision_time_ms": deadline.decision_time_ms,
+                "limit_ms": deadline.limit_ms,
+            }
+        self._events.emit("order_intent", payload)
 
     def place_protective_stop(
         self,

@@ -14,6 +14,7 @@ from hypervector.live.multi_asset_live_config import (
     AssetLiveConfig,
     MultiAssetLiveConfig,
     StrategyProviderConfig,
+    load_multi_asset_live_config,
     validate_multi_asset_live_config,
 )
 
@@ -30,8 +31,14 @@ def stage_cohort_profile(
     content = _toml(candidate)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     temporary = output_path.with_name(f".{output_path.name}.{os.getpid()}.tmp")
-    temporary.write_text(content, encoding="utf-8")
-    os.replace(temporary, output_path)
+    try:
+        temporary.write_text(content, encoding="utf-8")
+        serialized = load_multi_asset_live_config(temporary, mode="observe")
+        if serialized.profile_fingerprint != candidate.profile_fingerprint:
+            raise ValueError("staged serialization changed the profile fingerprint")
+        os.replace(temporary, output_path)
+    finally:
+        temporary.unlink(missing_ok=True)
     return (
         f"staged profile written to {output_path}; apply only by disarmed restart; "
         f"fingerprint {candidate.profile_fingerprint[:12]}"
@@ -56,6 +63,7 @@ def _candidate(
         mode="observe",
         enabled=False,
         accepts_live_risk=False,
+        transition_approval=None,
     )
 
 
@@ -123,11 +131,11 @@ def _toml(config: MultiAssetLiveConfig) -> str:
 
 
 def _asset_toml(asset: AssetLiveConfig) -> list[str]:
-    return [
+    lines = [
         "",
         "[[assets]]",
         f"symbol = {_quoted(asset.symbol)}",
-        'sides = ["long", "short"]',
+        f"sides = {_strings(tuple(sorted(asset.sides)))}",
         f"leverage = {asset.leverage}",
         f"venue_max_leverage = {asset.venue_max_leverage}",
         f"margin_fraction = {asset.margin_fraction}",
@@ -136,6 +144,9 @@ def _asset_toml(asset: AssetLiveConfig) -> list[str]:
         f"stop_bps = {asset.stop_bps}",
         f"maximum_hold_seconds = {asset.maximum_hold_seconds}",
     ]
+    if asset.entry_slippage_cap_fraction is not None:
+        lines.append(f"entry_slippage_cap_fraction = {asset.entry_slippage_cap_fraction}")
+    return lines
 
 
 def _provider_toml(provider: StrategyProviderConfig) -> list[str]:
@@ -144,11 +155,12 @@ def _provider_toml(provider: StrategyProviderConfig) -> list[str]:
         "[[providers]]",
         f"strategy_id = {_quoted(provider.strategy_id)}",
         f"symbols = {_strings(provider.symbols)}",
-        'sides = ["long", "short"]',
+        f"sides = {_strings(tuple(sorted(provider.sides)))}",
         f"priority = {provider.priority}",
         f"timeframe = {_quoted(provider.timeframe)}",
         f"maximum_entry_delay_seconds = {provider.maximum_entry_delay_seconds}",
         f"execution_symbols = {_strings(provider.execution_symbols)}",
+        f"position_policy = {_quoted(provider.position_policy)}",
         f"execution = {_inline_table(provider.execution.as_payload())}",
     ]
     if provider.source_profile is not None:

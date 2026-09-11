@@ -8,7 +8,6 @@ from typing import Literal
 
 from hypervector.live.sol_order_identity import validate_client_order_id
 
-
 SolOrderOperation = Literal["entry", "protective_stop", "target", "reduce_only_close"]
 _OPERATIONS = frozenset({"entry", "protective_stop", "target", "reduce_only_close"})
 _ACK_EVENTS = frozenset(
@@ -43,7 +42,17 @@ def pending_order_intent(
     records: Sequence[Mapping[str, object]],
 ) -> PendingSolOrderIntent | None:
     """Return the sole unresolved CLOID intent or fail on ambiguous history."""
+    pending, _ = _pending_intent_state(records)
+    if len(pending) > 1:
+        raise SolOrderRestartError("multiple unresolved order intents remain")
+    return next(iter(pending.values()), None)
+
+
+def _pending_intent_state(
+    records: Sequence[Mapping[str, object]],
+) -> tuple[dict[str, PendingSolOrderIntent], set[str]]:
     pending: dict[str, PendingSolOrderIntent] = {}
+    unsent: set[str] = set()
     for record in records:
         event_type = record.get("event_type")
         payload = _mapping(record.get("payload"), "order event payload")
@@ -51,21 +60,100 @@ def pending_order_intent(
             intent = _parse_intent(record, payload)
             if intent.client_order_id in pending:
                 raise SolOrderRestartError("duplicate unresolved client order id")
+            if intent.client_order_id in unsent:
+                raise SolOrderRestartError("a non-submitted entry identity was reused")
             pending[intent.client_order_id] = intent
+            continue
+        if event_type == "entry_not_submitted":
+            client_id = _resolve_non_submitted(payload, pending)
+            pending.pop(client_id)
+            unsent.add(client_id)
             continue
         if event_type in _ACK_EVENTS:
             raw_client_id = payload.get("client_order_id")
             if isinstance(raw_client_id, str):
+                if raw_client_id in unsent:
+                    raise SolOrderRestartError(
+                        "non-submitted entry has a contradictory acknowledgement"
+                    )
                 pending.pop(raw_client_id, None)
-    if len(pending) > 1:
-        raise SolOrderRestartError("multiple unresolved order intents remain")
-    return next(iter(pending.values()), None)
+    return pending, unsent
+
+
+def _resolve_non_submitted(
+    payload: Mapping[str, object],
+    pending: Mapping[str, PendingSolOrderIntent],
+) -> str:
+    fields = {
+        "operation",
+        "client_order_id",
+        "submitted",
+        "reason",
+        "decision_time_ms",
+        "submission_observed_at_ms",
+        "submission_age_ms",
+        "submission_limit_ms",
+        "submission_boundary",
+    }
+    if (
+        set(payload) != fields
+        or payload["operation"] != "entry"
+        or payload["submitted"] is not False
+    ):
+        raise SolOrderRestartError("malformed non-submitted entry outcome")
+    client_id = payload["client_order_id"]
+    if not isinstance(client_id, str) or client_id not in pending:
+        raise SolOrderRestartError("non-submitted entry lacks matching pending intent")
+    intent = pending[client_id]
+    if intent.operation != "entry" or payload["reason"] != "stale_before_submission":
+        raise SolOrderRestartError(
+            "non-submission cannot resolve this operation or reason"
+        )
+    boundary = payload["submission_boundary"]
+    if not isinstance(boundary, str) or boundary not in {
+        "adapter_dispatch",
+        "sdk_dispatch",
+    }:
+        raise SolOrderRestartError("non-submission has an unsupported boundary")
+    contract = _mapping(intent.payload.get("entry_deadline"), "entry deadline contract")
+    _validate_expiry_timing(payload, contract)
+    return client_id
+
+
+def _validate_expiry_timing(
+    payload: Mapping[str, object], contract: Mapping[str, object]
+) -> None:
+    decision, observed, age, limit = (
+        _integer_milliseconds(payload[name])
+        for name in (
+            "decision_time_ms",
+            "submission_observed_at_ms",
+            "submission_age_ms",
+            "submission_limit_ms",
+        )
+    )
+    if decision < 0 or limit <= 0 or observed - decision != age or age <= limit:
+        raise SolOrderRestartError("non-submission timing does not establish expiry")
+    if (
+        type(contract.get("decision_time_ms")) is not int
+        or type(contract.get("limit_ms")) is not int
+        or contract["decision_time_ms"] != decision
+        or contract["limit_ms"] != limit
+    ):
+        raise SolOrderRestartError("non-submission differs from the persisted deadline")
+
+
+def _integer_milliseconds(value: object) -> int:
+    if type(value) is int:
+        return value
+    raise SolOrderRestartError("non-submission timing must use integer milliseconds")
 
 
 def interrupted_lifecycle_intent(
     records: Sequence[Mapping[str, object]],
 ) -> PendingSolOrderIntent | None:
     """Return the intent after the latest still-pending lifecycle transition."""
+    _, unsent = _pending_intent_state(records)
     state_index, operation = _latest_pending_state(records)
     if state_index is None or operation is None:
         return None
@@ -75,7 +163,7 @@ def interrupted_lifecycle_intent(
             continue
         payload = _mapping(record.get("payload"), "order intent payload")
         intent = _parse_intent(record, payload)
-        if intent.operation == operation:
+        if intent.operation == operation and intent.client_order_id not in unsent:
             matching.append(intent)
     if len(matching) > 1:
         raise SolOrderRestartError("multiple intents exist for pending lifecycle")

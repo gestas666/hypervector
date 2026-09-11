@@ -41,6 +41,7 @@ def _live_args(module: ModuleType, *, bundle: bool) -> object:
 
 
 def test_v49_unified_live_launch_refuses_a_missing_epoch() -> None:
+    """A profile with a required rollover cannot start without its evidence."""
     module = _load()
 
     with pytest.raises(ValueError, match="requires --accounting-epoch-bundle"):
@@ -52,6 +53,7 @@ def test_v49_unified_live_launch_refuses_a_missing_epoch() -> None:
 def test_v49_unified_launch_binds_epoch_to_backend_and_checkpoint(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    """The resolved epoch reaches both owned commands with the selected profile."""
     module = _load()
     epoch = CohortAccountingEpoch("growth_5000_v49", "a" * 64, 1)
     calls: list[tuple[Path, str]] = []
@@ -76,6 +78,7 @@ def test_v49_unified_launch_binds_epoch_to_backend_and_checkpoint(
 
 
 def test_parser_exposes_the_epoch_as_an_explicit_operator_input() -> None:
+    """Retain the exact operator-selected accounting bundle path."""
     module = _load()
 
     args = module.build_parser().parse_args(
@@ -86,6 +89,7 @@ def test_parser_exposes_the_epoch_as_an_explicit_operator_input() -> None:
 
 
 def test_recent_checkpoint_must_carry_the_exact_epoch() -> None:
+    """Checkpoint freshness does not substitute for matching accounting identity."""
     module = _load()
     epoch = CohortAccountingEpoch("growth_5000_v49", "a" * 64, 1)
     unscoped = {"audit": {"portfolio_archive": {"schema_version": 1}}}

@@ -11,6 +11,7 @@ from hypervector.live.cohort_execution_plan import (
     BoundExecutionPlan,
     ProviderExecutionContract,
 )
+from hypervector.live.entry_submission_deadline import EntrySubmissionDeadline
 from hypervector.live.multi_asset_live_protocols import MultiAssetEngineProtocol
 from hypervector.live.multi_asset_live_runner_support import entry_provider_strategy_id
 
@@ -79,6 +80,7 @@ def execute_routing_action(
     ],
     directional_sizing: Mapping[tuple[str, str, str], CohortEntrySizing],
     fallback_sizing: Mapping[tuple[str, str], CohortEntrySizing],
+    entry_deadline: EntrySubmissionDeadline | None = None,
 ) -> None:
     """Bind, journal, and execute one already-admitted routing action."""
     plan = contract_selection.bind_execution_plan(contracts, action)
@@ -95,6 +97,9 @@ def execute_routing_action(
             mark_price=action.reference_price,
             decision_time_ms=action.decision_time_ms,
             entry_sizing=sizing,
+            **(
+                {"entry_deadline": entry_deadline} if entry_deadline is not None else {}
+            ),
         )
         return
     engine.exit(mark_price=action.reference_price, reason=routing_exit_reason(action))

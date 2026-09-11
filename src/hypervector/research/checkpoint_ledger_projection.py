@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
+from contextlib import nullcontext
 from dataclasses import dataclass, field
 from datetime import datetime
 import json
@@ -150,13 +151,13 @@ class _AssetProjection:
         self.selected[_sequence(row)] = row
 
 
-def compact_cohort_ledger_rows(path: Path) -> ProjectedLedgerRows:
+def compact_cohort_ledger_rows(path: Path | Iterable[str]) -> ProjectedLedgerRows:
     """Retain exact cohort events while collapsing repeated portfolio states."""
     return _project_rows(path, _CohortProjection())
 
 
 def compact_asset_ledger_rows(
-    path: Path,
+    path: Path | Iterable[str],
     *,
     current_run_id: str,
     as_of: datetime | None = None,
@@ -169,10 +170,15 @@ def compact_asset_ledger_rows(
     return _project_rows(path, _AssetProjection(current_run_id.strip(), as_of))
 
 
-def _project_rows(path: Path, state: _ProjectionState) -> ProjectedLedgerRows:
+def _project_rows(
+    path: Path | Iterable[str], state: _ProjectionState
+) -> ProjectedLedgerRows:
     source_start: int | None = None
     source_end: int | None = None
-    with path.open(encoding="utf-8") as handle:
+    source = (
+        path.open(encoding="utf-8") if isinstance(path, Path) else nullcontext(path)
+    )
+    with source as handle:
         for line_number, line in enumerate(handle, start=1):
             raw = line.strip()
             if not raw:

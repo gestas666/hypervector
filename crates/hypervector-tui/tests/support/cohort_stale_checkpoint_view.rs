@@ -68,13 +68,35 @@ fn stale_checkpoint_import_warning_preserves_existing_panes() {
             let missing = render(&mut app, tab, width, height);
             let body_rows = usize::from(height - 3);
             assert_eq!(
-                baseline.lines().take(body_rows).collect::<Vec<_>>(),
-                missing.lines().take(body_rows).collect::<Vec<_>>(),
+                baseline
+                    .lines()
+                    .take(body_rows)
+                    .map(without_elapsed_book_age)
+                    .collect::<Vec<_>>(),
+                missing
+                    .lines()
+                    .take(body_rows)
+                    .map(without_elapsed_book_age)
+                    .collect::<Vec<_>>(),
                 "tab {tab} at {width}x{height}"
             );
             app = stale_checkpoint_app();
         }
     }
+}
+
+fn without_elapsed_book_age(line: &str) -> String {
+    let Some((prefix, age_and_venue)) = line.split_once("BOOK AGE ") else {
+        return line.to_string();
+    };
+    let (age, suffix) = age_and_venue.split_once(" // MAINNET").expect("book venue");
+    assert!(
+        age.strip_suffix('s')
+            .and_then(|value| value.parse::<f64>().ok())
+            .is_some()
+    );
+    let border = suffix.trim_start_matches([' ', '─']);
+    format!("{prefix}BOOK AGE <elapsed> // MAINNET{border}")
 }
 
 #[test]

@@ -51,9 +51,12 @@ class SolLiveEngineEvents:
         ack: HyperliquidOrderAck,
         *,
         event_type: str = "order_acknowledgement",
+        extra_payload: Mapping[str, object] | None = None,
     ) -> None:
         """Write one normalized exchange acknowledgement."""
-        self._telemetry.emit_ack(operation, ack, event_type=event_type)
+        self._telemetry.emit_ack(
+            operation, ack, event_type=event_type, extra_payload=extra_payload
+        )
 
     def emit_close_intent(self, *, reason: str, stop_oid: int) -> None:
         """Persist why an exit began before mutating venue orders."""

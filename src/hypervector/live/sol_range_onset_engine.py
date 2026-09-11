@@ -1,30 +1,34 @@
 """Fail-closed live lifecycle for the frozen SOL range-onset canary."""
 
 from __future__ import annotations
+
+import time
 from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
-import time
 from typing import NoReturn
+
 from hypervector.live.cohort_entry_sizing import CohortEntrySizing
 from hypervector.live.cohort_execution_plan import BoundExecutionPlan
+from hypervector.live.entry_submission_deadline import (
+    EntryDeadlineExpired,
+    EntrySubmissionDeadline,
+)
 from hypervector.live.hyperliquid_protocol import (
     HyperliquidOrderAck,
     SolLiveAdapterProtocol,
     SolReconciliationSnapshot,
 )
-from hypervector.live.sol_range_onset_config import SolRangeOnsetConfig
-from hypervector.live.sol_range_onset_bracket_exit import reconcile_owned_bracket_exit
+from hypervector.live.sol_order_identity import new_client_order_id
+from hypervector.live.sol_order_submission import SolOrderSubmission
 from hypervector.live.sol_range_onset_bracket_close import close_bracketed_position
+from hypervector.live.sol_range_onset_bracket_exit import reconcile_owned_bracket_exit
+from hypervector.live.sol_range_onset_config import SolRangeOnsetConfig
 from hypervector.live.sol_range_onset_consistency import (
     SolReconciliationPoller,
     protected_order_visible,
     protective_stop_fill_visible,
 )
-from hypervector.live.sol_range_onset_engine_events import SolLiveEngineEvents
-from hypervector.live.sol_range_onset_execution_plan import entry_notional
-from hypervector.live.sol_range_onset_execution_plan import legacy_execution_plan
-from hypervector.live.sol_range_onset_execution_plan import validate_entry_direction
 from hypervector.live.sol_range_onset_engine_contract import (
     SolEntryNotFilledError,
     SolLiveEngineError,
@@ -32,22 +36,28 @@ from hypervector.live.sol_range_onset_engine_contract import (
     require_started,
     resolve_decision_time_ms,
 )
+from hypervector.live.sol_range_onset_engine_events import SolLiveEngineEvents
+from hypervector.live.sol_range_onset_execution_plan import (
+    entry_notional,
+    legacy_execution_plan,
+    validate_entry_direction,
+)
 from hypervector.live.sol_range_onset_ledger import SolLiveLedger
 from hypervector.live.sol_range_onset_live_telemetry import SolLiveTelemetry
-from hypervector.live.sol_order_identity import new_client_order_id
-from hypervector.live.sol_order_submission import SolOrderSubmission
-from hypervector.live.sol_range_onset_startup import prepare_sol_live_startup
-from hypervector.live.sol_range_onset_stop_close import close_stop_only_position
-from hypervector.live.sol_range_onset_stop_entry import (
-    place_and_verify_entry_protection,
-)
-from hypervector.live.sol_range_onset_verification import verify_open_snapshot
-from hypervector.live.sol_range_onset_verification import verify_protected_position
 from hypervector.live.sol_range_onset_reconcile import SolStartupReconciliationError
+from hypervector.live.sol_range_onset_startup import prepare_sol_live_startup
 from hypervector.live.sol_range_onset_state import (
     SolLiveSnapshot,
     SolLiveState,
     SolLiveStateMachine,
+)
+from hypervector.live.sol_range_onset_stop_close import close_stop_only_position
+from hypervector.live.sol_range_onset_stop_entry import (
+    place_and_verify_entry_protection,
+)
+from hypervector.live.sol_range_onset_verification import (
+    verify_open_snapshot,
+    verify_protected_position,
 )
 
 _TELEMETRY_DEPTH_LEVELS = 20
@@ -131,6 +141,7 @@ class SolRangeOnsetLiveEngine:
         mark_price: float,
         decision_time_ms: int | None = None,
         entry_sizing: CohortEntrySizing | None = None,
+        entry_deadline: EntrySubmissionDeadline | None = None,
     ) -> SolLiveSnapshot:
         """Submit, reconcile, and protect one SOL entry before reporting OPEN."""
         require_started(self._started)
@@ -152,6 +163,7 @@ class SolRangeOnsetLiveEngine:
             side=side,
             mark_price=mark_price,
             notional=notional,
+            entry_deadline=entry_deadline,
         )
         return self._protect_reconciled_entry(
             side=side,
@@ -167,16 +179,30 @@ class SolRangeOnsetLiveEngine:
         side: str,
         mark_price: float,
         notional: float,
+        entry_deadline: EntrySubmissionDeadline | None = None,
     ) -> tuple[HyperliquidOrderAck, SolReconciliationSnapshot]:
         plan = self._pending_execution_plan or legacy_execution_plan(self._config)
         self._machine.begin_entry(execution_plan=plan)
         self._events.emit_state()
-        ack = self._orders.submit_entry(
-            side=side,
-            requested_notional_usd=notional,
-            mark_price=mark_price,
+        try:
+            ack = self._orders.submit_entry(
+                side=side,
+                requested_notional_usd=notional,
+                mark_price=mark_price,
+                entry_deadline=entry_deadline,
+            )
+        except EntryDeadlineExpired:
+            self._machine.confirm_entry_not_filled()
+            self._pending_execution_plan = None
+            self._events.emit_state()
+            raise
+        self._events.emit_ack(
+            "entry",
+            ack,
+            extra_payload=(
+                entry_deadline.last_observation.as_payload() if entry_deadline else None
+            ),
         )
-        self._events.emit_ack("entry", ack)
         if not ack.accepted or ack.oid is None:
             if _is_expected_ioc_no_fill(plan, ack):
                 self._confirm_ioc_no_fill(ack)

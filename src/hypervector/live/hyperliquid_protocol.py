@@ -5,6 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Protocol, runtime_checkable
 
+from hypervector.live.entry_submission_deadline import EntrySubmissionDeadline
+
 
 @dataclass(frozen=True)
 class SolMarketMetadata:
@@ -360,6 +362,7 @@ class SolLiveAdapterProtocol(Protocol):
         requested_notional_usd: float,
         mark_price: float,
         client_order_id: str,
+        entry_deadline: EntrySubmissionDeadline | None = None,
     ) -> HyperliquidOrderAck:
         """Submit one bounded opening order."""
         ...

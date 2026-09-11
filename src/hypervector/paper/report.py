@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 from collections import Counter
+from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
@@ -38,19 +39,28 @@ def load_decision_rows(path: Path | str) -> list[dict[str, Any]]:
     p = Path(path)
     if not p.is_file():
         return []
-    rows: list[dict[str, Any]] = []
     with p.open(encoding="utf-8") as fh:
-        for line_no, line in enumerate(fh, start=1):
-            text = line.strip()
-            if not text:
-                continue
-            try:
-                obj = json.loads(text)
-            except json.JSONDecodeError as exc:
-                raise ValueError(f"invalid JSONL at {p}:{line_no}: {exc}") from exc
-            if not isinstance(obj, dict):
-                raise ValueError(f"decision row must be object at {p}:{line_no}")
-            rows.append(obj)
+        return load_decision_stream(fh, source_label=str(p))
+
+
+def load_decision_stream(
+    lines: Iterable[str], *, source_label: str
+) -> list[dict[str, object]]:
+    """Load the same strict JSONL records from a caller-owned immutable stream."""
+    rows: list[dict[str, object]] = []
+    for line_no, line in enumerate(lines, start=1):
+        text = line.strip()
+        if not text:
+            continue
+        try:
+            obj = json.loads(text)
+        except json.JSONDecodeError as exc:
+            raise ValueError(
+                f"invalid JSONL at {source_label}:{line_no}: {exc}"
+            ) from exc
+        if not isinstance(obj, dict):
+            raise ValueError(f"decision row must be object at {source_label}:{line_no}")
+        rows.append(obj)
     return rows
 
 
