@@ -8,6 +8,42 @@ Historical studies remain bounded to their recorded windows.
 
 ## Current finding and next action
 
+**September 11 16:55 UTC / 12:55 Eastern funding-recovery correction:**
+The [restart accounting review](../reviews/2026-09-11-v89-restart-accounting.md)
+records the installed same-day recovery of +$0.004137 funding exactly once, with
+four retained native fills and their fees still unique across three replays and
+two telemetry instances. A separately labeled synthetic restart beyond 24 hours
+excludes that known credit under the installed fixed lookback. Candidate
+`0c2b81933f4df480e0e8bb6b5289b8ea47504761` restores the actual committed cursor
+at 15:37:02.134 UTC and paginates funding account-wide before symbol filtering.
+The known credit remains in both tested candidate windows. There is no proven
+irrecoverable omission at the same-day capture and no economic-return claim.
+
+The isolated 11-file source-only proposal is **not installed**. The exact commit
+passed 136 focused tests, Ruff, source-size checks and actual isolated rollback
+and restoration. The two new modules have full measured statement/branch
+coverage; this is not full-system coverage or live-launch acceptance. Six prior
+files and all candidate files are preserved. Its installation decision is
+separate from the pending candle-session proposal and stop-intent clarification.
+
+At 16:47:52 UTC, native reads found the same -0.306 SNDK short at 10x isolated,
+with exact full-size reduce-only stop `542326955281` open at 1669.9. Marked
+unrealized PnL was -$0.5202 at that capture; core was flat/order-free. Seven
+terminal records, original cohort/SNDK hashes, profile/TUI hashes and surviving
+observer process births were verified. Original trading processes remain absent;
+strategy-managed exits and new entries remain stopped. No prospective outcomes
+were evaluated and no financial instruction was sent.
+
+Journal `09ce322fd1b8f3190bea4c597ed5876367d9caa85f1282529f956707aa4c75e9`
+verifies 21 stored fields, 13 references and 65 manifest members.
+Highest-value next investigation: **whole-launch recovery readiness and first
+reconciled accounting projection**, using actual retained ledger sizes with
+isolated state and mocked financial boundaries. Measure the added 4.3 GB scan
+against the launcher's 900-second default readiness timeout. Fresh venue
+reconciliation remains required before an authorized live recovery.
+
+The following dated entries retain their original evidence boundaries.
+
 **September 11 16:07 UTC / 12:07 Eastern offline recovery evidence:**
 The [SNDK adoption review](../reviews/2026-09-11-v89-sndk-restart-adoption.md)
 records an exact installed-engine startup replay from 22,569 profile records.

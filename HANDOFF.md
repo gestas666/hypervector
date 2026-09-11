@@ -8,7 +8,7 @@ User-started V3 run `bidirectional-live-1789122347122` stopped at **15:37:14 UTC
 with seven `STOPPED / operator_stop` records. All five original trading/TUI
 processes were absent at 15:54:41, and those terminal ledger rows were unchanged.
 The stop's origin/intent remains unproven; a user clarification is pending.
-At **16:07:50 UTC**, unsigned native reads again found a **0.306 SNDK short at 10x
+At **16:47:52 UTC**, unsigned native reads again found a **0.306 SNDK short at 10x
 isolated**, with its exact full-size reduce-only Stop Market OID `542326955281`
 open at trigger **1669.9**. Strategy-managed exits and new entries are stopped.
 Two completed trades total **-$27.994028 net**, excluding the open lifecycle.
@@ -35,9 +35,23 @@ engine-startup evidence, not live-launch acceptance; synthetic preflight metadat
 was explicitly labeled and its initial missing-fee fixture failure was retained.
 Adoption journal `c30d2adfb8d23ab5c132a90f7545bc95f45bf9d835dc0bd40037cf6a39910ba4`
 verifies 21 stored fields, 13 references and 20 manifest members.
-Next: audit stop-to-restart fill/funding continuity. Keep the pending stop-intent
-clarification and optional source-installation decision separate; no live restart
-or source installation has occurred.
+The [restart accounting review](docs/reviews/2026-09-11-v89-restart-accounting.md)
+verifies recovery of the actual +$0.004137 post-stop funding credit exactly once,
+with no duplicate retained fills or fees. It reproduces a fixed-24-hour startup
+window omission at a synthetic longer-downtime clock. Candidate `0c2b819` recovers
+the exact durable cursor and paginates funding; it is **not installed**.
+The exact committed source passed 136 focused tests and isolated rollback.
+Both new modules have full measured statement/branch coverage; whole-launch
+readiness remains unverified. Six prior files and eleven candidate files are
+preserved. The source-only installation proposal awaits explicit approval.
+Journal `09ce322fd1b8f3190bea4c597ed5876367d9caa85f1282529f956707aa4c75e9`
+verifies 21 stored fields, 13 references and 65 manifest members.
+Next: whole-launch recovery timing on the retained ledger sizes and projection
+of the first reconciled funding batch, using isolated state and mocked financial
+boundaries. The extra 4.3 GB cohort scan needs comparison with the launcher's
+900-second default readiness timeout. No live restart or installation occurred;
+stop intent, this correction and the optional candle-session proposal remain
+separate pending decisions.
 
 Approved V3 source/TUI remains installed at `4b241ef`, with the read-only funding
 repair at `4015484`. Info-only roster PID 44983 and prospective collectors
