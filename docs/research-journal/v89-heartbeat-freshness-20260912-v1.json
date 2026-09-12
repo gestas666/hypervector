@@ -1,0 +1,223 @@
+{
+  "automatic_promotion": false,
+  "confidence": "high",
+  "created_at_utc": "2026-09-12T03:59:29.763263+00:00",
+  "decision": "Candidate 1b5eaa9 passed the scoped health/lifecycle/native acceptance and 64-file executable rollback rehearsal. Request installation approval; no installation, restart or economic promotion. Continue unsealed entry-frequency and opportunity-cost analysis while approval is pending.",
+  "evidence": [
+    {
+      "bytes": 1499,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_heartbeat_freshness_20260912_v1/experiment_plan.json",
+      "role": "heartbeat_lifecycle_market_clock_validation",
+      "sha256": "44b457933705040b037c839c05f1dc9b0244dc698d50e795fee1fb99e3650595"
+    },
+    {
+      "bytes": 1038,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_heartbeat_freshness_20260912_v1/goal_turn_audit.json",
+      "role": "heartbeat_lifecycle_market_clock_validation",
+      "sha256": "27aa40df515ab1d9097227923d746f15148cd84bbf36a1bbc7e34650b9c220ca"
+    },
+    {
+      "bytes": 1806,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_heartbeat_freshness_20260912_v1/assessment.json",
+      "role": "heartbeat_lifecycle_market_clock_validation",
+      "sha256": "99ef5bc79647e51448f769efbc8fa49bd7b8eaea500c8fb9c89897826f2db1d6"
+    },
+    {
+      "bytes": 1719,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_heartbeat_freshness_20260912_v1/validation_summary.json",
+      "role": "heartbeat_lifecycle_market_clock_validation",
+      "sha256": "b6d1d0dcf0eda449012fe35e81b51d5d06934a761688faf6f70c689bc9d7ae08"
+    },
+    {
+      "bytes": 8912,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_heartbeat_freshness_20260912_v1/native_clock_verification.json",
+      "role": "heartbeat_lifecycle_market_clock_validation",
+      "sha256": "a377efbde099a6f26c6f90e479796eb861c151e280c16fdba5063440316d3371"
+    },
+    {
+      "bytes": 231,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_heartbeat_freshness_20260912_v1/native_advancement.json",
+      "role": "heartbeat_lifecycle_market_clock_validation",
+      "sha256": "1b7cb8be1718f2db86e71ca130ce83ba86368b54daf5fe449ee86afe18081311"
+    },
+    {
+      "bytes": 1030,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_heartbeat_freshness_20260912_v1/visual_inspection.json",
+      "role": "heartbeat_lifecycle_market_clock_validation",
+      "sha256": "538e724cbeb9ac3115b936ee6be442a4162e380aa20e5cd998a1470eef93b9c5"
+    },
+    {
+      "bytes": 1709,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_heartbeat_freshness_20260912_v1/fresh_assessment.json",
+      "role": "heartbeat_lifecycle_market_clock_validation",
+      "sha256": "e8e3f9f56c43a842226da13b75983df438001feaa6ee4edfdc6f362e571a73b7"
+    },
+    {
+      "bytes": 1100381,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_heartbeat_freshness_20260912_v1/observer_checkpoint.json",
+      "role": "heartbeat_lifecycle_market_clock_validation",
+      "sha256": "c6c23c498512a6995397e624a4f4cdc11fdb32b01e01aeeec3bcb66c138b38a6"
+    },
+    {
+      "bytes": 1395,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_heartbeat_freshness_20260912_v1/candidate_commit.json",
+      "role": "heartbeat_lifecycle_market_clock_validation",
+      "sha256": "9055545798fbb9cb4de26b5111fdc7de2f2409ba17ee6a241d944ed1855330af"
+    },
+    {
+      "bytes": 381,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_heartbeat_freshness_20260912_v1/renderer_binary.json",
+      "role": "heartbeat_lifecycle_market_clock_validation",
+      "sha256": "c5bce96ee28372dfb6432e25047ae8d0fd0f2c173e3c4fd8c48eea7395ceb77a"
+    },
+    {
+      "bytes": 2683,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_heartbeat_freshness_20260912_v1/validated_source_manifest.json",
+      "role": "heartbeat_lifecycle_market_clock_validation",
+      "sha256": "addc68dcec1f3d15c4558c2e4f963fc2e24a84a75e8d3f0e6f7733ceef0dac03"
+    },
+    {
+      "bytes": 4356,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_heartbeat_freshness_20260912_v1/installation_candidate.json",
+      "role": "heartbeat_lifecycle_market_clock_validation",
+      "sha256": "3373e777234e6fb6794592baf3c5c9b264f1befb21c198e456acc37ef542650c"
+    },
+    {
+      "bytes": 205235,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_heartbeat_freshness_20260912_v1/installation_candidate.patch",
+      "role": "heartbeat_lifecycle_market_clock_validation",
+      "sha256": "9c866a0a8e0b18e82c876a5f3bcf3447b80a7150defb1f13724b6f7f8a135e9e"
+    },
+    {
+      "bytes": 15274,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_heartbeat_freshness_20260912_v1/installation_rehearsal.json",
+      "role": "heartbeat_lifecycle_market_clock_validation",
+      "sha256": "281f33df622a61eb6af501b650eff563660843d2aa59d94cdf9c60b69dae4bca"
+    },
+    {
+      "bytes": 139864,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_heartbeat_freshness_20260912_v1/installation_prior_sources.tar.gz",
+      "role": "heartbeat_lifecycle_market_clock_validation",
+      "sha256": "ab21894efaca5ed5b37d9f0f043414c45b51dd3e5b58c2e977f97c231900e2ad"
+    },
+    {
+      "bytes": 1087,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_heartbeat_freshness_20260912_v1/validation_steps.json",
+      "role": "heartbeat_lifecycle_market_clock_validation",
+      "sha256": "d7fd65b8929b87897b1d3a36725cd8b14999d03dbe62a5ed08a0f93373e64386"
+    },
+    {
+      "bytes": 67167,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_heartbeat_freshness_20260912_v1/rust_full_v2.log",
+      "role": "heartbeat_lifecycle_market_clock_validation",
+      "sha256": "8b007d031fd57a7367b3a4c92acc3e5c577b2e4dbf91532f98a86ee87ac2b685"
+    },
+    {
+      "bytes": 593,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_heartbeat_freshness_20260912_v1/python_final_v3.log",
+      "role": "heartbeat_lifecycle_market_clock_validation",
+      "sha256": "29acebc53d9162a8f7f0a37b43b5326891b8a9824f5476ec3c65234a0f782c09"
+    },
+    {
+      "bytes": 2653366,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_heartbeat_freshness_20260912_v1/python_coverage_final.json",
+      "role": "heartbeat_lifecycle_market_clock_validation",
+      "sha256": "9272fb1198614821c75b00265379ba3b5c34b3b205cf9856b50e1d1c75526668"
+    },
+    {
+      "bytes": 804,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_heartbeat_freshness_20260912_v1/publication_boundary/verified.json",
+      "role": "heartbeat_lifecycle_market_clock_validation",
+      "sha256": "2d3b658a95d57c1ec2158e04ac0e0d370451c907eb10d837fc08ffc95e01731f"
+    },
+    {
+      "bytes": 1514,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_heartbeat_freshness_20260912_v1/integrity.json",
+      "role": "heartbeat_lifecycle_market_clock_validation",
+      "sha256": "4fd4b691e978efe119ca4c145e01ae575c5e664c4a1322928f8926b5af3b9ada"
+    },
+    {
+      "bytes": 72259,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_heartbeat_freshness_20260912_v1/evidence_manifest.json",
+      "role": "heartbeat_lifecycle_market_clock_validation",
+      "sha256": "adc9e2b830953634f54b4de7555b0eb4baf7d4b1b67086fa9835b3e311cf8c65"
+    },
+    {
+      "bytes": 9369,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/reviews/2026-09-12-v89-heartbeat-freshness.md",
+      "role": "heartbeat_lifecycle_market_clock_validation",
+      "sha256": "f402d9bed522804387b63ba1413f54a5c2952ffe4a9c8d96755e7806525f890e"
+    },
+    {
+      "bytes": 12471,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/research-journal/v89-configuration-workflow-20260912-v1.json",
+      "role": "heartbeat_lifecycle_market_clock_validation",
+      "sha256": "1e256554a49a35360b037f5a7114d4381c3811ded5d30c2843e38b89f87eb7dc"
+    }
+  ],
+  "execution_authority": "none",
+  "falsifier": "Stale evidence presented as current, a stopped or faulted backend shown as healthy, unrelated writes reviving authority, incorrect source clocks, changed polling evidence, an unintended financial action, or source/binary/rollback mismatch invalidates the corresponding technical result.",
+  "hypothesis": "Run-bound heartbeat and terminal evidence can make cohort health truthful independently of file writes, while source-specific ages preserve market-clock meaning.",
+  "hypothesis_id": "v89_heartbeat_freshness_20260912_v1",
+  "limitations": [
+    "Native candidate captures are not the installed user Terminal.",
+    "A short 14-poll observer measures neither fills nor profitability.",
+    "Abrupt exits without terminal evidence require heartbeat inactivity detection after 60 seconds.",
+    "Broader Python branch coverage remains incomplete; stated statement coverage exceeds 85 percent in changed modules.",
+    "Prior recovery and configuration components inherit their earlier scoped validation.",
+    "Both prospective hypothetical outcome seals remain unopened.",
+    "Installation and live changes require explicit approval under the Human control clause."
+  ],
+  "metrics": {
+    "asset_size_cases": 21,
+    "candidate_binary_sha256": "eaf4d25836ff0533b6b451f887921d97eed9af9aa021a70fade47408c5aeb9a1",
+    "candidate_commit": "1b5eaa90118b868e5084cd750fb0fa96faabbd40",
+    "candidate_installed": false,
+    "economic_improvement_established": false,
+    "evidence_manifest_files": 253,
+    "fresh_books": 98,
+    "fresh_polls": 14,
+    "fresh_provider_scopes": 7,
+    "fresh_unique_evaluations": 19,
+    "full_live_acceptance": false,
+    "installed_binary_sha256": "382253cacea78e51c2dbc0c7e396eda0d24d2c025ae7854e867cd2c78ad329d1",
+    "native_frames": 66,
+    "patch_files": 64,
+    "python_files": 34,
+    "python_passed": 176,
+    "rust_ignored": 23,
+    "rust_passed": 605,
+    "source_and_binary_rollback_verified": true,
+    "venue_boundary": {
+      "core_flat_order_free": true,
+      "execution_authority": "none",
+      "fills_after_original_stop": 0,
+      "full_size_reduce_only_stop_verified": true,
+      "funding_cash_usd": "0.096169",
+      "funding_rows": 13,
+      "limitation": "Sequential unsigned observations; bounded fill/funding query; process permissions limit machine-wide absence claims.",
+      "native_responses_verified": 7,
+      "original_ledgers_unchanged": true,
+      "original_pids_absent": true,
+      "position": {
+        "entry_price": "1629.2",
+        "leverage": 10,
+        "margin_mode": "isolated",
+        "signed_size": "-0.306",
+        "symbol": "xyz:SNDK",
+        "unrealized_pnl_usd": "-1.8666"
+      },
+      "stop_oid": 542326955281,
+      "stop_trigger": "1669.9",
+      "venue_at_utc": "2026-09-12T03:54:54.427759+00:00",
+      "verified_at_utc": "2026-09-12T03:56:37.711682+00:00"
+    }
+  },
+  "revision_number": 1,
+  "runtime_strategy_changed": false,
+  "schema_version": 1,
+  "status": "candidate",
+  "strategy_id": "multi_asset_bidirectional_cohort",
+  "supersedes_revision_id": null,
+  "symbol": "MULTI"
+}

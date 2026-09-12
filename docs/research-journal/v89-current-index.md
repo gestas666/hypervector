@@ -7,6 +7,40 @@ Historical studies remain bounded to their recorded windows.
 
 ## Current finding and next action
 
+**September 12 04:00 UTC heartbeat and terminal health:**
+The [installation review](../reviews/2026-09-12-v89-heartbeat-freshness.md) records
+candidate **1b5eaa9**, which repairs the previous freshness gap. The exact
+**64-file package and executable** passed apply/rollback/reapply on disposable
+copies. No installation or trading restart occurred.
+
+**605 Rust tests and 176 Python tests passed**, with Clippy, formatting, Ruff
+and release build. Twenty-three existing Rust tests remain ignored. The two
+changed Python modules exceed 85% statement coverage; broader branch coverage
+remains incomplete. The new terminal emitter's lines and branches are covered.
+
+**66 native frames** independently verify advancing, stopped and stale states
+at three terminal sizes. All 21 asset/chart cases match source candle and book
+clocks, and the header follows actual heartbeats. A 14-poll public observer
+covered all seven provider scopes, emitted 98 books, and ended normally with
+an explicit terminal event that preserves polling statistics. It supplied no
+eligible entries, orders, fills or new economic evidence.
+
+Journal **deb6157577730f7fce086c57d25f59c995a16afb48694581a1e72532591b6a79** verifies 21 stored fields, 25 direct references and
+253 frozen files. Preserve this candidate and study; continue new work in an
+isolated worktree. Both prospective hypothetical outcome seals remain unopened.
+
+**Next:** installation decision on this exact package, followed by actual
+installed-runtime acceptance after approval. While pending, investigate entry
+frequency and opportunity cost for the seven configured routes using unsealed
+evidence. Full live/strategy readiness remains unproven.
+
+The 03:54:54 UTC unsigned boundary retained the SNDK short and full-size
+1669.9 stop, with −$1.8666 unrealized and +$0.096169 summed funding cash flows.
+Core was flat/order-free; original process and ledger checks were unchanged.
+These are bounded sequential observations, not current-state guarantees.
+
+## Previous configuration-workflow acceptance
+
 **September 12 03:00 UTC / September 11 23:00 Eastern configuration workflow:**
 The [new review](../reviews/2026-09-12-v89-configuration-workflow.md) records
 candidate **ca8247b**, combining prior recovery/chart fixes with complete CFG

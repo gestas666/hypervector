@@ -2,79 +2,70 @@
 
 **Current navigation, September 12, 2026 UTC:** read the
 [V89 research index](docs/research-journal/v89-current-index.md) and
-[configuration-workflow review](docs/reviews/2026-09-12-v89-configuration-workflow.md).
-Historical notes below do not establish current execution or research state.
+[heartbeat/lifecycle installation review](docs/reviews/2026-09-12-v89-heartbeat-freshness.md).
+Historical notes below do not establish current runtime or research state.
 
-Isolated candidate **ca8247b3c01ac408a190cffe3cf3fb16e90bc6be** now adds complete
-configuration context paging, preserved inactive provider policy, and exact
-run/profile/request-bound staging acknowledgement to the prior recovery and
-chart fixes. Its combined **52-file package and exact TUI** passed disposable
-installation/rollback/reinstallation. Nothing was installed and no trading
-backend was restarted. Candidate worktree:
-`/Users/gestas/Prototypes/hypervector-v89-config-context-20260912`.
-It is committed, clean and bound by frozen evidence; use a new worktree for the
-next correction instead of changing this evidence-bound candidate.
+Candidate **1b5eaa90118b868e5084cd750fb0fa96faabbd40** fixes the prior observed
+freshness gap: run-bound heartbeats establish cohort health independently of
+file writes or acknowledgements, normal observer exit emits `runtime_stopped`,
+and chart inspectors expose source-1m candle and venue-book ages. Terminal
+faults remain explicit; stale/stopped displays do not imply a running backend.
+Normal-stop events preserve poll counts and cadence. The 60-second heartbeat
+inactivity limit remains relevant to abrupt exits without terminal evidence.
 
-Final publication checks: **587 Rust tests passed**, 23 existing ignored;
-**439 Python tests passed across 89 files**. All-target Clippy, formatting,
-Ruff and the release build passed. Changed Python module statement coverage
-is 90.0% and 91.67%; branch coverage remains incomplete. The selected tests do
-not establish full Python-package coverage.
+The consolidated **64-file package and exact TUI** passed disposable
+installation/rollback/reinstallation. It includes the earlier reviewed recovery,
+chart, control and configuration fixes. No production code/binary installation,
+trading restart, parameter change, or financial request occurred. Candidate:
+`/Users/gestas/Prototypes/hypervector-v89-heartbeat-freshness-20260912`.
+It is clean and bound by frozen evidence. Use a new worktree for further edits.
 
-Independent native verification passed **588 frames**, all 11 editor rows for
-seven assets at 100x28, 120x36 and 190x52, complete scope/outcome paging,
-21 real disarmed staged profiles and exact chart-source parity. Native sessions
-exited normally; the Rust process had no network access and could write only
-its isolated request inbox. Python processed only stage-profile requests and
-appended 63 actual disarmed operator rows to a copied ledger. Source observer
-prefix/checkpoint hashes and effective runtime settings were unchanged.
-Three native-cell reconstructions were inspected; installed Terminal remains
-untested. The fixed identity summary can clip, but complete text is reachable
-in the scope pane.
+**605 Rust tests passed**, 23 existing ignored; **176 Python tests passed across
+34 files**. Clippy, formatting, Ruff and release build passed. Runner statement
+coverage is 90.08%; telemetry is 92.86%. Broader branch coverage remains
+incomplete; the new terminal emitter's executable lines and branches are covered.
+The original module-targeted coverage import error and other failed attempts
+remain in the study; directory-targeted coverage passed the complete final scope.
 
-The separate five-poll unsigned observer's ledger spans **01:49:15.853771 to
-01:50:27.312286 UTC**, 71.459 seconds (outer process about 75 seconds). It yielded
-7/7 provider scopes, 10 unique evaluations, 35 books and 361 consecutive minute
-candles per asset. All latest decisions were HOLD. Incremental updates split
-six symbols and SPCX and must be merged by symbol. This bounded process exited
-before native staging; no continuously fresh backend or strategy edge follows.
+Independent verification passed **66 native frames**, including all nine
+advancing views and seven chart inspectors at 100x28, 120x36 and 190x52, plus
+stale and stopped PORT/OPS/CFG views. All 21 chart source clocks matched actual
+candle/book timestamps; three advancing actual heartbeat clocks were observed.
+Three native-cell reconstructions were inspected. The actual installed user
+Terminal and live activation remain untested.
 
-**Highest-value next investigation: backend heartbeat and market freshness.**
-Native evidence shows `BACKEND CONNECTED` on the recorded, exited observer.
-`backend_source.rs::apply_live_freshness` currently checks only armed live
-ledgers using file modification time; operator events also advance the shared
-SYNC timestamp. Reproduce observer inactivity and armed acknowledgement-only
-updates, distinguish heartbeat/market age from request outcomes, and verify
-recovery with an advancing public observer/checkpoint. Full operational,
-installed-terminal and economic readiness remain unproven.
+The isolated public observer completed **14 successful polls**, 7 provider
+scopes, 19 unique evaluations and 98 books, with no eligible entries or routed
+actions. It recorded 363 completed candles per asset (364 SPCX), accepted its
+isolated STOP request, emitted normal termination, and exited 0. Its read-only
+checkpoint also exited 0. This is technical evidence, not an execution or return
+sample. Both prospective hypothetical outcome seals remain unopened.
 
-Journal **2df98c9cf91657a1b8100349dc19be46e238cd061e6220b318bb87f593bd37de**
-verifies all 21 columns, 23 direct references and **1,570 frozen files** under
-`data/logs/research/bidirectional_cohort/v89_config_workflow_acceptance_20260912_v1`.
-Do not change frozen artifacts. Prior chart/recovery evidence remains retained.
-Both prospective hypothetical outcome seals remain unopened.
+Journal **deb6157577730f7fce086c57d25f59c995a16afb48694581a1e72532591b6a79** verifies all **21 stored fields**, **25 direct references**
+and **253 frozen files** under
+`data/logs/research/bidirectional_cohort/v89_heartbeat_freshness_20260912_v1`.
+Prior configuration evidence remains in its separate frozen study and review.
 
-Seven authenticated unsigned venue responses at **02:51:59 UTC** showed the
-same **0.306 SNDK short at 1629.2, 10x isolated**, with **−$2.0808 unrealized**.
-The exact full-size reduce-only Stop Market OID **542326955281** remains open
-at **1669.9**. Twelve funding cash-flow rows total **+$0.095905**. Core was
-flat/order-free and no fill after the original stop appeared in the bounded
-query. Original trading PIDs were absent; original ledger hashes and seven
-terminal records were unchanged. Refresh these sequential observations before
-making a present-tense claim. Process permissions limit machine-wide absence
-claims.
+At **03:54:54 UTC**, seven unsigned reads showed the existing **0.306 SNDK short
+at 1629.2, 10x isolated**, **−$1.8666 unrealized**, and the full-size reduce-only
+Stop Market OID **542326955281** at **1669.9**. Thirteen funding cash rows total
+**+$0.096169**. Core was flat/order-free; no later fill appeared in the bounded
+query. Original trading PIDs were absent and original ledger/profile/binary
+hashes were unchanged. Refresh before making current-state claims; process
+permissions limit machine-wide absence statements.
 
-The objective's Human control clause requires explicit approval before live
-execution-behavior or deployment changes. The concrete candidate package is
-recorded; resolve the freshness gap before a consolidated installation request.
-No installation, restart, parameter change, or financial request occurred.
+**Next:** obtain the explicit installation decision for the exact 64-file
+candidate under the objective's Human control clause. Installation approval is
+not a trading-start instruction. After approval, verify the installed runtime.
+While approval is pending, investigate seven-route entry frequency and
+opportunity cost using unsealed historical/public evidence; distinguish recipe
+cadence, implementation delay and selection effects. Full live and economic
+readiness remain unproven; the broad continuous objective remains active.
 
-The user's latest disk cleanup recovered **7.168 GB net**, with **24.066 GB free**
-at 02:44:36 UTC. Ten unused npm caches were removed after all 576,919 archive
-entries were verified. The 2.266 GB compressed backup and restore instructions
-are under `~/Library/Logs/Codex-Disk-Cleanup/20260912T023446Z`. Active package
-caches, project/trading files and protected executables/configuration were
-preserved. Free space changes with background activity.
+The latest disk-cleanup request recovered **1.0218 GB net** with a verified
+160 MB backup under `~/Library/Logs/Codex-Disk-Cleanup/20260912T032405Z`.
+Active browser caches were excluded. Free space is variable with builds and
+background activity; the verified cleanup-completion reading was 24.217 GB.
 
 ---
 
