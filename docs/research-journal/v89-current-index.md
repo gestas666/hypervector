@@ -7,19 +7,53 @@ Historical studies remain bounded to their recorded windows.
 
 ## Current finding and next action
 
-**Active source reconciliation:** the [capture checkpoint](../reviews/2026-09-12-v89-sndk-source-capture.md)
-retains separately collected 0xArchive HIP-3 responses for August 19 with complete ordered
-**1,440 minute rows / 96 quarter-hour rows**, no duplicate clocks or missing slots, and
-preserved exclusive-end rows. Four quality responses remain retained; exact
-symbol metadata omits candle coverage. The initial reader's optional-cursor
-mistake is corrected, with the failed phase preserved and no repeated minute GET.
-Source **a17dadbb416d5f95608e799f0cc0d819069d2cc6** passes **38 offline tests** in
-the worktree and nine-file archive. **Price agreement and original exit-clock
-semantics remain unverified**; complete those next, then independently reconcile
-and journal the diagnosis. Do not repeat acquisition or the completed sensitivity
-studies. The latest unsigned account boundary is **08:35:12 UTC**: existing
-SNDK short/full-size 1669.9 stop, **-$0.0918 unrealized**, **+$0.084062** funding
-cash over 18 rows, core flat/order-free and no additional bounded fill.
+**Completed SNDK source/exit reconciliation:** the
+[review](../reviews/2026-09-12-v89-sndk-source-reconciliation.md) establishes
+**-674.5263651827 bps (-6.7453%)** for the selected August 19 hour in all four
+price reconstructions. Native raw matches its Parquet normalization exactly.
+Native/vendor differences remain in 11 opening and five closing cells, with
+maximum differences **2.5181/1.2793 bps**; highs, lows and the selected
+13:00/13:30/13:45/14:00 completed-close anchors agree.
+
+The original **-$13.6563** modeled net loss and recorded 5.5 bps entry/exit
+slippage reconcile. Its **13:30 UTC** exit is a historical modeled bar-opening
+clock; completion is **13:45** and source knowledge **13:45:10**. Vendor minute
+trade prices first cross the stop reference within **13:30–13:31**, which does
+not establish a physical mark trigger or fill timestamp. High confidence is
+limited to the scoped measurements and original model semantics. This explored
+diagnostic adds no out-of-sample or future-profit evidence.
+
+Source **b4aaf94a56f77556497fe2f0da1490fbb3f7e4a6** is frozen and clean.
+**78 offline tests** pass, arithmetic statement/branch coverage is 100%, and
+combined analysis coverage is 92%. The corrected **142-file** archive reproduces
+**10 outputs byte-for-byte**. Independent SQL verifies **1,728 comparison
+cells**, **1,440 minute rows**, **18 summaries** and all four anchor series.
+Earlier failed capture/analysis/archive attempts remain retained.
+
+Journal **1ff84a1b3724f2a86d902f7a2e6fbc251d1055dcd7b106ba9c0b6a04e61f5429**
+([source record](v89-sndk-source-reconciliation-20260912-v1.json)) binds
+**30 references**, **296 frozen files** and **24 original input refs**. The
+**09:56:00 UTC** audit verifies all 21 normalized journal columns, source archive,
+reproduction, 13 retained HTTP responses and unchanged installed/candidate hashes.
+The primary price report preserves its pre-independent stage marker; the separate
+completed SQL and reproduction receipts establish final verification.
+
+**Single next investigation:** quantify propagation of the 16 source opening/closing
+differences into the already-published SNDK entry-quality and matched-background
+measurements touching August 19. Preserve original entries, outcomes and control
+memberships; compare both sources symmetrically, without PnL-based source choice
+or filter fitting. Acquisition, source numerical comparison and exit-clock
+reconciliation are complete and should not be repeated as new trials.
+
+The latest retained unsigned account boundary is **09:37:22 UTC**: existing
+**-0.306 SNDK** short with full-size **1669.9** reduce-only stop, **-$0.0612**
+unrealized, **+$0.081031** funding cash over 19 rows, core flat/order-free and
+no additional bounded fill. Original runner PIDs are absent in the observed
+scope; process visibility is limited. Refresh before current-state claims.
+Both installation questions remain pending and both prospective seals remain unopened.
+Broad live readiness is unproven.
+
+## Previous day-influence finding
 
 **September 12 SNDK day influence audit:**
 The [review](../reviews/2026-09-12-v89-sndk-day-influence.md) retains every one
@@ -58,7 +92,7 @@ flat/order-free; the bounded fill query has the original entry and no additional
 fill. Original runner PIDs are absent and terminal/profile/TUI/ledger identities
 are unchanged. Refresh before current-state claims; process visibility is limited.
 
-**Single next investigation:** qualify independently collected historical SNDK
+**Historical next step (now completed above):** qualify independently collected historical SNDK
 prices, including existing 0xArchive coverage, and reconcile the influential
 August 19 path with the original modeled entry, stop exit and one-hour target.
 Separate feed disagreement and post-exit price movement from the actual modeled

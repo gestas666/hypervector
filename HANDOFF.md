@@ -5,26 +5,47 @@
 [heartbeat/lifecycle installation review](docs/reviews/2026-09-12-v89-heartbeat-freshness.md).
 Historical notes below do not establish current runtime or research state.
 
-**Active investigation:** the [SNDK source-capture checkpoint](docs/reviews/2026-09-12-v89-sndk-source-capture.md)
-completes bounded acquisition and clock qualification, with **1,440 minute and
-96 quarter-hour rows**, no duplicate clocks or missing slots inside August 19.
-The extra end-boundary rows remain preserved. Source **a17dadbb416d5f95608e799f0cc0d819069d2cc6**
-is clean in `hypervector-v89-sndk-source-20260912`; **38 offline tests** pass in
-the worktree and the nine-file archive. The initial optional-cursor parsing
-failure and original minute response remain retained; only the outstanding
-15m request was made during recovery. Exact vendor quality metadata omits candles.
+**Latest completed investigation:** the [SNDK source/exit reconciliation](docs/reviews/2026-09-12-v89-sndk-source-reconciliation.md)
+corroborates the selected August 19 hour's **-6.7453%** completed-close return
+across native raw, native Parquet, vendor quarters and aggregated vendor minutes.
+The original **-$13.6563** modeled net loss reconciles. Its recorded **13:30 UTC**
+exit is a modeled bar-opening attribution; the consumed bar completes at
+**13:45**, with source knowledge at **13:45:10**. A physical fill time remains
+unverified. Eleven native/vendor opens and five closes differ slightly; all
+highs/lows and the four selected completed-close anchors agree.
 
-**Immediate next work:** numeric/source reproduction, full-day OHLCV comparison,
-vendor minute aggregation, and original account exit-clock semantics. Those
-checks and the final source-reconciliation journal are unfinished. Do not repeat
-acquisition or publish price-agreement conclusions from timestamp coverage.
-At **08:35:12 UTC**, unsigned venue evidence retains the original SNDK short and
-full-size 1669.9 stop, **-$0.0918 unrealized** and **+$0.084062** funding cash over
-18 rows. Core is flat/order-free, no additional bounded fill appears, original
-runner PIDs are absent, and terminal/profile/TUI/ledger identities are unchanged.
-Both seals remain unopened. Refresh before current-state claims.
+Source **b4aaf94a56f77556497fe2f0da1490fbb3f7e4a6** is frozen and clean in
+`hypervector-v89-sndk-source-20260912`. **78 offline tests** pass; the corrected
+142-file archive reproduces **10 files byte-for-byte**. Independent SQL checks
+**1,728 comparison cells**, **1,440 minute rows**, **18 field summaries** and
+four anchor series. Arithmetic statement/branch coverage is 100%; combined
+analysis coverage is 92%. The incomplete first archive and earlier failures
+remain retained. High confidence applies to these measurements and original
+model semantics; causal explanations and future profitability remain low confidence.
 
-**Latest research:** the [SNDK day influence audit](docs/reviews/2026-09-12-v89-sndk-day-influence.md)
+Journal **1ff84a1b3724f2a86d902f7a2e6fbc251d1055dcd7b106ba9c0b6a04e61f5429**
+binds **30 direct references**, **296 frozen files** and **24 original input refs**.
+The **09:56:00 UTC** publication audit verifies the full archive, reproduction,
+13 HTTP envelopes and all **21 normalized database fields**. See the
+[journal record](docs/research-journal/v89-sndk-source-reconciliation-20260912-v1.json).
+
+**Single next investigation:** propagate the 16 observed opening/closing
+source differences into the fixed original SNDK entry-quality and matched-background
+measurements touching August 19. Preserve all original entries, outcomes and
+control memberships; compare sources symmetrically and quantify affected cells
+and aggregate shifts. Do not choose a source or fit a filter by PnL. Source
+acquisition, numerical comparison and the original exit-clock diagnosis are complete.
+
+At the **09:37:22 UTC** unsigned account capture, the original **-0.306 SNDK**
+short retains its full-size **1669.9** reduce-only native stop, **-$0.0612**
+unrealized and **+$0.081031** funding cash over 19 rows. Core is flat/order-free
+and no additional bounded fill appears. Original runner PIDs are absent in the
+observed scope; process visibility is limited. The publication audit confirms
+unchanged installed profile/TUI/ledgers and both uninstalled candidates.
+Both prospective seals remain unopened. Refresh before current-state claims;
+broader live readiness remains unproven and both installation questions remain pending.
+
+**Previous research:** the [SNDK day influence audit](docs/reviews/2026-09-12-v89-sndk-day-influence.md)
 completes all **96 fixed omission scenarios**. The long one-hour gap retains
 its negative sign under both modes and matching methods, but dropping August 19's
 entry moves the primary gap from **-66.25 to -8.28 bps**, and the day-class gap
@@ -57,7 +78,7 @@ contains the original entry and no additional fill; original runner PIDs are
 absent. Seven terminal rows and installed profile/TUI/ledger hashes remain
 unchanged. Refresh before current-state claims; process visibility is limited.
 
-**Next research:** qualify independent historical SNDK price coverage, including
+**Historical next step (now completed above):** qualify independent historical SNDK price coverage, including
 existing 0xArchive data, and reconcile the influential August 19 path with its
 original modeled entry, stop exit and one-hour target. Distinguish feed
 disagreement and post-exit movement from the actual modeled loss. Preserve
