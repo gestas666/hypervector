@@ -58,6 +58,7 @@ impl App {
 
     /// Open the selected coin's read-only strategy chart inspector.
     pub fn toggle_cohort_chart_modal(&mut self) {
+        self.cohort_detail_scroll = 0;
         if self.selected_cohort_symbol().is_some() {
             self.select_available_chart_provider();
             self.show_cohort_chart_modal = !self.show_cohort_chart_modal;
@@ -66,6 +67,7 @@ impl App {
 
     /// Cycle through configured providers that observe the selected chart coin.
     pub fn cycle_cohort_chart_provider(&mut self, delta: isize) {
+        self.cohort_detail_scroll = 0;
         let eligible = self.chart_provider_indices();
         if eligible.is_empty() {
             return;
@@ -185,10 +187,13 @@ impl App {
 
     /// Page through the audited scope context without changing the editable draft.
     pub fn page_cohort_config_context(&mut self, delta: isize) {
-        const CONTEXT_PAGE_STEP: usize = 5;
+        let maximum = self.cohort_config_context_max_scroll.get();
+        let page = self.cohort_config_context_page_rows.get() as isize;
         self.cohort_config_context_offset = self
             .cohort_config_context_offset
-            .saturating_add_signed(delta.saturating_mul(CONTEXT_PAGE_STEP as isize));
+            .min(maximum)
+            .saturating_add_signed(delta.saturating_mul(page))
+            .min(maximum);
     }
 
     /// Adjust the selected numeric draft setting without mutating the running backend.
@@ -215,6 +220,7 @@ impl App {
     /// Toggle scope, stage a full profile, or discard the draft for the selected row.
     pub fn activate_cohort_config_row(&mut self) {
         self.cohort_notice = None;
+        self.cohort_profile_request = None;
         match self.cohort_config_selected_index {
             7 => self.toggle_cohort_config_scope(),
             9 => self.stage_cohort_profile(),
@@ -246,6 +252,7 @@ impl App {
     /// Validate display-visible prerequisites before showing confirmation.
     pub fn prepare_cohort_confirmation(&mut self) {
         self.cohort_notice = None;
+        self.cohort_profile_request = None;
         match self.build_cohort_draft() {
             Ok(draft) => self.cohort_confirmation = Some(draft),
             Err(message) => self.cohort_notice = Some(message),
@@ -386,6 +393,11 @@ impl App {
         let result = self.write_cohort_profile_stage();
         self.cohort_notice = Some(match result {
             Ok(request_id) => {
+                self.cohort_profile_request =
+                    crate::cohort_profile_request::ProfileRequest::from_backend(
+                        &self.backend,
+                        request_id.clone(),
+                    );
                 format!("STAGED PROFILE {request_id} SUBMITTED // BACKEND VALIDATION PENDING")
             }
             Err(message) => format!("PROFILE NOT STAGED // {message}"),
@@ -439,6 +451,7 @@ impl App {
 /// Return whether fresh backend telemetry grants access to the local request inbox.
 pub(crate) fn cohort_backend_accepts_operator_requests(app: &App) -> bool {
     app.backend.connection == BackendConnectionState::Connected
+        && !app.backend.cohort_backend_is_stopped()
         && app.backend.live_armed == Some(true)
         && app.backend.execution_authority.as_deref() == Some("hyperliquid_mainnet")
 }

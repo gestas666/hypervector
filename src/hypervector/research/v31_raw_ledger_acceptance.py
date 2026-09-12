@@ -5,7 +5,10 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 import math
 
-from hypervector.live.cohort_funding_window import CohortFundingWindow
+from hypervector.live.cohort_funding_window import (
+    CohortFundingWindow,
+    funding_window_from_payload,
+)
 from hypervector.research.cohort_live_audit_values import (
     mapping,
     nonnegative_int,
@@ -18,7 +21,6 @@ from hypervector.research.candidate_raw_acceptance_report import (
 from hypervector.research.v31_poststart_acceptance import PRESSURE_ROUTES
 from hypervector.research.v31_raw_identity import (
     V31_SYMBOLS,
-    boolean_value,
     is_asset_event,
     is_run_event,
     ledger_sequence,
@@ -384,30 +386,7 @@ def _funding_cursor(
 
 
 def _window(row: Record) -> CohortFundingWindow:
-    payload = mapping(row.get("payload"), "funding window payload")
-    if payload.get("boundary_semantics") != _BOUNDARY_SEMANTICS:
-        raise ValueError("funding window boundary semantics are invalid")
-    return CohortFundingWindow(
-        funding_start_time_ms=nonnegative_int(
-            payload.get("funding_start_time_ms"), "funding start"
-        ),
-        initial_funding_end_time_ms=nonnegative_int(
-            payload.get("initial_funding_end_time_ms"), "initial funding end"
-        ),
-        provider_cutoff_time_ms=nonnegative_int(
-            payload.get("provider_cutoff_time_ms"), "provider cutoff"
-        ),
-        committed_funding_end_time_ms=nonnegative_int(
-            payload.get("committed_funding_end_time_ms"), "committed funding end"
-        ),
-        next_funding_start_time_ms=nonnegative_int(
-            payload.get("next_funding_start_time_ms"), "next funding start"
-        ),
-        action_count=nonnegative_int(payload.get("action_count"), "action count"),
-        post_action_reconciliation=boolean_value(
-            payload.get("post_action_reconciliation"), "post-action reconciliation"
-        ),
-    )
+    return funding_window_from_payload(row.get("payload"))
 
 
 def _cursor_contiguous(windows: Sequence[CohortFundingWindow]) -> bool:

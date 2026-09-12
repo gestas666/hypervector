@@ -123,7 +123,7 @@ The exact backend vocabulary is
   reconciliation polls must not duplicate candle timestamps; later events
   contain only newly completed bars.
 - Enter opens the selected strategy and coin. Its chart uses the provider's
-  configured 1m, 5m, 15m, or 30m decision clock. Higher-timeframe candles are
+  configured 1m, 5m, 15m, 30m, or 1h decision clock. Higher-timeframe candles are
   view-only aggregates of consecutive backend-completed 1m bars; incomplete or
   gapped buckets are excluded and labeled rather than inferred.
 - Missing chart history displays an explicit awaiting-data state. A flat line
@@ -188,7 +188,8 @@ At 120x36 and 190x52, verify all of the following against
   The detail renders completed candles at the provider `DECISION TF`, shows
   recorded 1m/5m/15m state, readiness, indicators, blockers, and matching
   strategy-evidence provenance, and never borrows indicators from another
-  provider. Incomplete higher-timeframe buckets are absent and explicitly
+  provider. Page Up/Down and Home/End must expose the complete provider
+  evidence without moving candles; changing provider resets the evidence scroll. Incomplete higher-timeframe buckets are absent and explicitly
   labeled. A configured provider without a current evaluation says the evidence
   is unavailable.
 - Depth screen shows every reported exact bid and ask up to the venue-native
@@ -221,6 +222,16 @@ At 120x36 and 190x52, verify all of the following against
   For the v25 trial profile it must expose all 24 exact provider/asset scopes.
   Observe mode remains globally disarmed despite those declared scopes; the
   TUI must not confuse eligibility with an armed order client.
+  At 100x28, 120x36 and 190x52, PgUp/PgDn must traverse every wrapped context
+  row without gaps or accumulated overscroll. Complete source identity,
+  provider policy, sizing evidence and backend request reasons remain reachable;
+  the arming notice stays visible. Compact footers retain edit/action keys.
+  A staged scope removal preserves inactive overrides for an exact later
+  re-enable, while the explicit execution-symbol set remains the authority.
+  ETH/SOL directional recipes may be observe-only with their original side and
+  stop contracts retained. Completed/rejected staging acknowledgements replace
+  the pending notice only for the matching request, run and profile. Discard
+  restores the effective local draft; it does not delete a backend-staged file.
 - Regime screen pages through the synchronized nine-asset matrix from the
   backend range-onset provider: 1m execution state, authoritative 5m primary,
   non-veto 15m context, canonical call, structure strength, and decision time.

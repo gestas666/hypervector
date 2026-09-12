@@ -347,6 +347,7 @@ def _start_checkpoint_monitor(
     with _CHECKPOINT_LOG.open("ab", buffering=0) as checkpoint_log:
         return subprocess.Popen(
             command,
+            stdin=subprocess.DEVNULL,
             stdout=checkpoint_log,
             stderr=subprocess.STDOUT,
             start_new_session=True,

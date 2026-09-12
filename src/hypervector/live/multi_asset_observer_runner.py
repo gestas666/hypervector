@@ -87,6 +87,10 @@ class ObserverTelemetryProtocol(Protocol):
         """Persist observer liveness without implying execution health."""
         ...
 
+    def emit_stopped(self, *, reason: str) -> None:
+        """Persist normal completion without concealing an unrecoverable fault."""
+        ...
+
     def emit_poll_degraded(self, *, source: str, reason: str) -> None:
         """Persist one recoverable public-data failure."""
         ...
@@ -167,10 +171,12 @@ class MultiAssetObserverRunner:
                 )
             polls += 1
             if max_polls is not None and polls >= max_polls:
+                self._telemetry.emit_stopped(reason="bounded_run_complete")
                 return polls
             if not self._shutdown_requested():
                 elapsed = self._monotonic_fn() - cycle_started
                 self._sleep_fn(max(0.0, self._poll_seconds - elapsed))
+        self._telemetry.emit_stopped(reason="operator_stop")
         return polls
 
     def _poll_once(self, *, require_full_coverage: bool) -> None:

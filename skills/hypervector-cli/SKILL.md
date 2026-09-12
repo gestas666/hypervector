@@ -878,6 +878,14 @@ The nine screens are:
    until separately validated.
 9. Config: effective-versus-draft restart profile editing. Validation/staging is
    allowed only while disarmed and never hot-mutates or arms the backend.
+   PgUp/PgDn traverses wrapped source, policy, sizing and request evidence with
+   bounded pages. All profile-identity text remains reachable below the summary.
+   Completed or rejected backend acknowledgements replace the pending message
+   only for the matching request/run/profile. Discard restores local effective
+   values and leaves a previously staged file intact. Disabling a provider/coin
+   scope retains its inactive policy overrides, including ETH/SOL direction
+   limits, so re-enabling preserves those settings. Stored overrides grant no
+   authority outside the explicit execution-symbol set.
 
 #### Current V86 seven-asset live profile
 
@@ -1071,13 +1079,13 @@ candlestick panes from backend-authored completed 1-minute OHLCV. Left/right
 selects any configured core or HIP-3 asset and Enter opens a focused read-only
 chart inspector.
 That inspector joins only the selected provider and coin, labels the configured
-provider clock as `DECISION TF`, renders completed 1m/5m/15m/30m candles for
+provider clock as `DECISION TF`, renders completed 1m/5m/15m/30m/1h candles for
 that clock, and shows recorded 1m/5m/15m states, readiness, indicators,
 blockers, research provenance, and optional source profile. Higher-timeframe
 candles are view-only aggregates of consecutive backend-completed 1m bars;
 incomplete or gapped buckets are excluded. The inspector does not call the
 provider clock an execution timeframe or borrow another provider's evidence;
-missing current evidence remains explicitly unavailable.
+missing current evidence remains explicitly unavailable. Page Up/Down and Home/End scroll the selected provider evidence independently of the candles; Up/Down continues to select providers.
 Tall dashboards add a zero-baseline cumulative closed-PnL trace, chronological
 outcome tape, separate long/short W-L and net-PnL ledgers, and observed venue
 fill friction. Screen 5 retains portfolio and per-strategy W/L, win rate, net

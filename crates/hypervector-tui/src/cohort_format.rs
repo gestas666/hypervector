@@ -8,6 +8,9 @@ use crate::app::App;
 use crate::backend_telemetry::BackendConnectionState;
 
 pub(crate) fn connection_label(app: &App) -> &'static str {
+    if app.backend.cohort_backend_is_stopped() {
+        return "BACKEND STOPPED";
+    }
     match app.backend.connection {
         BackendConnectionState::Connected => "BACKEND CONNECTED",
         BackendConnectionState::Stale => "BACKEND STALE",
@@ -17,6 +20,9 @@ pub(crate) fn connection_label(app: &App) -> &'static str {
 }
 
 pub(crate) fn connection_style(app: &App) -> Style {
+    if app.backend.cohort_backend_is_stopped() {
+        return app.theme.gold;
+    }
     match app.backend.connection {
         BackendConnectionState::Connected => app.theme.bull,
         BackendConnectionState::Stale => app.theme.gold,

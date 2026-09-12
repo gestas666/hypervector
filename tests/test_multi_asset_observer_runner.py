@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import replace
 from datetime import UTC, datetime
 from pathlib import Path
@@ -81,6 +82,9 @@ class _Telemetry:
 
     def emit_heartbeat(self) -> None:
         self.events.append("heartbeat")
+
+    def emit_stopped(self, *, reason: str) -> None:
+        self.events.append(f"stopped:{reason}")
 
     def emit_poll_degraded(self, *, source: str, reason: str) -> None:
         self.degraded_polls.append((source, reason))
@@ -174,6 +178,8 @@ def _runner(
     poll: CohortIntentPoll,
     *,
     emit_configuration_on_start: bool = True,
+    sleep_fn: Callable[[float], None] | None = None,
+    signal_stop_requested: Callable[[], bool] | None = None,
 ) -> tuple[MultiAssetObserverRunner, _Poller, _Telemetry]:
     poller = _Poller(poll)
     telemetry = _Telemetry()
@@ -185,9 +191,9 @@ def _runner(
         telemetry=telemetry,
         stop_file=tmp_path / "STOP",
         now_fn=lambda: _OBSERVED,
-        sleep_fn=lambda _seconds: None,
+        sleep_fn=sleep_fn or (lambda _seconds: None),
         poll_seconds=15.0,
-        signal_stop_requested=lambda: False,
+        signal_stop_requested=signal_stop_requested or (lambda: False),
         emit_configuration_on_start=emit_configuration_on_start,
     )
     return runner, poller, telemetry
@@ -204,7 +210,13 @@ def test_resumed_observer_does_not_duplicate_configuration_identity(
     )
 
     assert runner.run(max_polls=1) == 1
-    assert telemetry.events == ["market_books", "market_bars", "routing", "heartbeat"]
+    assert telemetry.events == [
+        "market_books",
+        "market_bars",
+        "routing",
+        "heartbeat",
+        "stopped:bounded_run_complete",
+    ]
 
 
 def test_observer_retries_transient_public_l2_failure(tmp_path: Path) -> None:
@@ -230,7 +242,7 @@ def test_observer_retries_transient_public_l2_failure(tmp_path: Path) -> None:
     assert telemetry.degraded_polls == [
         ("hyperliquid_public_l2", "transport_timeout_retry_exhausted")
     ]
-    assert telemetry.events[-1] == "heartbeat"
+    assert telemetry.events[-2:] == ["heartbeat", "stopped:bounded_run_complete"]
 
 
 def test_observer_publishes_full_readiness_and_withholds_every_intent(
@@ -248,6 +260,7 @@ def test_observer_publishes_full_readiness_and_withholds_every_intent(
         "market_bars",
         "routing",
         "heartbeat",
+        "stopped:bounded_run_complete",
     ]
     assert telemetry.routing is not None
     intents, report, evaluations = telemetry.routing
@@ -302,6 +315,7 @@ def test_observer_publishes_independent_canonical_regime_evidence(
         "canonical_regimes",
         "routing",
         "heartbeat",
+        "stopped:bounded_run_complete",
     ]
 
 

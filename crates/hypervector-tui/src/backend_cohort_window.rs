@@ -45,6 +45,7 @@ struct CohortWindow {
     maximum_hold_events: usize,
     market_book_retained: bool,
     heartbeat_retained: bool,
+    terminal_events: HashSet<String>,
     unsupported_event: bool,
     routing: RoutingWindow,
     candle_template: Option<(usize, Value)>,
@@ -62,6 +63,7 @@ impl Default for CohortWindow {
             maximum_hold_events: 0,
             market_book_retained: false,
             heartbeat_retained: false,
+            terminal_events: HashSet::new(),
             unsupported_event: false,
             routing: RoutingWindow {
                 actions_remaining: ACTION_LIMIT,
@@ -115,6 +117,9 @@ impl CohortWindow {
             Some("strategy_intent") => self.retain_strategy_intent(index, line),
             Some("operator_command") => self.retain_operator_event(index, line),
             Some("maximum_hold_decision") => self.retain_maximum_hold_event(index, line),
+            Some(event @ ("runtime_stopped" | "runtime_fault")) => {
+                self.retain_terminal(index, line, event)
+            }
             Some("market_books") if !self.market_book_retained => {
                 self.retain(index, line);
                 self.market_book_retained = true;
@@ -128,6 +133,12 @@ impl CohortWindow {
             _ => self.unsupported_event = true,
         }
         Ok(())
+    }
+
+    fn retain_terminal(&mut self, index: usize, line: &str, event: &str) {
+        if self.terminal_events.insert(event.to_owned()) {
+            self.retain(index, line);
+        }
     }
 
     fn retain_snapshot(&mut self, index: usize, line: &str) {

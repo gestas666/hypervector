@@ -452,6 +452,7 @@ def _sync_research_database(
     try:
         completed = subprocess.run(
             command,
+            stdin=subprocess.DEVNULL,
             capture_output=True,
             text=True,
             timeout=300.0,

@@ -125,6 +125,15 @@ pub struct CohortCheckpointTelemetry {
 }
 
 impl CohortCheckpointTelemetry {
+    /// Identify a stopped run only when every reported asset is terminal.
+    pub fn is_stopped_snapshot(&self) -> bool {
+        matches!(
+            self.lifecycle_state.as_deref(),
+            Some("stale_running_heartbeat_after_asset_stop" | "stopped_consistent")
+        ) && !self.asset_states.is_empty()
+            && self.asset_states.values().all(|state| state == "STOPPED")
+    }
+
     /// Return the complete user ledger, with legacy compatible-history fallback.
     pub fn user_trade_reflections(&self) -> &[CohortTradeReflection] {
         if self.all_time_trade_reflections.is_empty() {
@@ -276,6 +285,8 @@ pub(crate) struct CoverageEvidence {
 #[derive(Debug, Deserialize)]
 pub(crate) struct ReadinessEvidence {
     pub(crate) evaluations: usize,
+    #[serde(default)]
+    pub(crate) missing_provider_symbols: Vec<String>,
     #[serde(default)]
     pub(crate) by_provider_symbol: BTreeMap<String, ObserverProviderReadiness>,
 }

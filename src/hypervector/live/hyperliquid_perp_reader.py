@@ -31,7 +31,6 @@ from hypervector.live.hyperliquid_sol_account import parse_account_mode
 from hypervector.live.hyperliquid_sol_parsing import (
     HyperliquidAdapterError,
     mapping,
-    nonnegative_integer,
     parse_fees,
     parse_fill,
     parse_open_order,
@@ -41,6 +40,7 @@ from hypervector.live.hyperliquid_sol_parsing import (
     sequence,
     validate_address,
 )
+from hypervector.live.hyperliquid_user_funding_history import read_user_funding_history
 from hypervector.live.sol_order_identity import validate_client_order_id
 
 
@@ -177,14 +177,8 @@ class HyperliquidPerpReader:
         end_time_ms: int,
     ) -> tuple[SolFundingPayment, ...]:
         """Return exact bounded funding rows for only this symbol."""
-        start = nonnegative_integer(start_time_ms, "funding start_time_ms")
-        end = nonnegative_integer(end_time_ms, "funding end_time_ms")
-        if end < start:
-            raise HyperliquidAdapterError("funding end must not precede start")
-        response = self._info.user_funding_history(
-            self._address,
-            startTime=start,
-            endTime=end,
+        response = read_user_funding_history(
+            self._info, self._address, start_time_ms, end_time_ms
         )
         return parse_funding_for_symbol(response, self._symbol)
 

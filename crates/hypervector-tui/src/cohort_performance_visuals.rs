@@ -56,7 +56,8 @@ fn summarize_direction<'a>(
     })
 }
 
-fn summarize_fills(fills: &[CohortFill]) -> FillQuality {
+fn summarize_fills<'a>(fills: impl Iterator<Item = &'a CohortFill>) -> FillQuality {
+    let fills = fills.collect::<Vec<_>>();
     let slippage = fills
         .iter()
         .filter_map(|fill| fill.slippage_bps)
@@ -71,7 +72,7 @@ fn summarize_fills(fills: &[CohortFill]) -> FillQuality {
         .collect::<Vec<_>>();
     FillQuality {
         measured: fills.len(),
-        total_fees_usd: fills.iter().map(|fill| fill.fee_usd).sum(),
+        total_fees_usd: fills.iter().fold(0.0, |total, fill| total + fill.fee_usd),
         mean_slippage_bps: mean(&slippage),
         mean_ack_ms: mean(&acknowledgement),
         mean_markout_bps: mean(&markout),
@@ -357,14 +358,46 @@ fn direction_pnl_line<'a>(value: &OutcomeSummary, app: &App) -> Line<'a> {
 }
 
 fn render_execution_friction(frame: &mut Frame, app: &App, area: Rect) {
+    let Some(run_id) = app.backend.run_id.as_deref() else {
+        render_empty(
+            frame,
+            app,
+            area,
+            " EXECUTION FRICTION ",
+            "CURRENT RUN ID UNAVAILABLE",
+        );
+        return;
+    };
     let fills = if app.backend.cohort_checkpoint.fill_details.is_empty() {
         &app.backend.cohort.fills
     } else {
         &app.backend.cohort_checkpoint.fill_details
     };
-    let quality = summarize_fills(fills);
+    let quality = summarize_fills(
+        fills
+            .iter()
+            .filter(|fill| fill.origin_run_id.as_deref() == Some(run_id)),
+    );
+    let unattributed = fills
+        .iter()
+        .filter(|fill| fill.origin_run_id.is_none())
+        .count();
+    let prior = fills.len() - quality.measured - unattributed;
+    let lines = execution_friction_lines(app, &quality, prior, unattributed);
+    frame.render_widget(
+        Paragraph::new(lines).block(panel(" EXECUTION FRICTION // CURRENT RUN ", app)),
+        area,
+    );
+}
+
+fn execution_friction_lines(
+    app: &App,
+    quality: &FillQuality,
+    prior: usize,
+    unattributed: usize,
+) -> Vec<Line<'static>> {
     let closed_funding = current_run_performance(app).map(|value| value.funding_usd);
-    let lines = vec![
+    vec![
         Line::from(format!("CURRENT RUN FILL LEGS {}", quality.measured)),
         friction_line("SLIPPAGE", quality.mean_slippage_bps, "bps", app),
         friction_line("ACK", quality.mean_ack_ms, "ms", app),
@@ -378,14 +411,10 @@ fn render_execution_friction(frame: &mut Frame, app: &App, area: Rect) {
             ),
         )),
         Line::from(Span::styled(
-            "VENUE FILL LEGS // NO ESTIMATES",
+            format!("PRIOR {prior} // UNATTRIBUTED {unattributed}"),
             app.theme.muted,
         )),
-    ];
-    frame.render_widget(
-        Paragraph::new(lines).block(panel(" EXECUTION FRICTION // CURRENT RUN ", app)),
-        area,
-    );
+    ]
 }
 
 fn profit_factor_label(value: &CohortTradePerformanceSummary) -> String {

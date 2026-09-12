@@ -13,6 +13,7 @@ use serde_json::Value;
 
 pub use crate::backend_cohort_book::{CohortBookLevel, CohortBookSnapshot};
 use crate::backend_cohort_candles::candle_history;
+pub use crate::backend_cohort_health::CohortHeartbeat;
 pub use crate::backend_cohort_operator::{CohortOperatorEvent, CohortTransitionDrainTelemetry};
 pub use crate::backend_cohort_readiness::{
     CohortProviderEvaluation, CohortSetupCoverage, CohortSignalReadiness,
@@ -373,6 +374,9 @@ pub struct BackendCohortTelemetry {
     pub operator_events: Vec<CohortOperatorEvent>,
     pub transition_drain: Option<CohortTransitionDrainTelemetry>,
     pub last_observed_at: Option<String>,
+    pub heartbeat: Option<CohortHeartbeat>,
+    pub runtime_fault_at: Option<String>,
+    pub runtime_stopped_at: Option<String>,
 }
 
 /// Parse cohort-specific rows, failing if a cohort ledger is structurally invalid.
@@ -408,6 +412,9 @@ pub(crate) fn project_cohort(rows: &[&LedgerRow]) -> Result<BackendCohortTelemet
     apply_latest_snapshot(rows, &mut cohort)?;
     routing::apply_routing_history(rows, &mut cohort)?;
     cohort.last_observed_at = rows.last().map(|row| row.feed_ts.clone());
+    cohort.heartbeat = crate::backend_cohort_health::project_heartbeat(rows);
+    cohort.runtime_fault_at = crate::backend_cohort_health::project_fault(rows);
+    cohort.runtime_stopped_at = crate::backend_cohort_health::project_stopped(rows);
     Ok(cohort)
 }
 

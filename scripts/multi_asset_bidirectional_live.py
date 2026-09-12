@@ -4,9 +4,12 @@ from __future__ import annotations
 
 import argparse
 from datetime import UTC, datetime
+from functools import partial
 from pathlib import Path
 import sys
 import time
+
+import requests
 
 from hypervector.data.hl import fetch_hl_ohlcv_snapshot
 from hypervector.live.bidirectional_cohort_factory import (
@@ -140,13 +143,14 @@ def run_live(args: argparse.Namespace) -> int:
         raise MultiAssetLiveConfigError(
             f"operator stop file exists; inspect before removing: {config.stop_file}"
         )
-    poller = ConfiguredMultiAssetIntentPoller.with_default_collectors(
-        config=config,
-        fetch_bars=fetch_hl_ohlcv_snapshot,
-        backtest_lab_root=args.backtest_lab_root.resolve(),
-    )
-    with bidirectional_live_runtime_lock(config.cohort_ledger):
-        return _run_locked(args, config, presence, poller)
+    with requests.Session() as candle_session:
+        poller = ConfiguredMultiAssetIntentPoller.with_default_collectors(
+            config=config,
+            fetch_bars=partial(fetch_hl_ohlcv_snapshot, session=candle_session),
+            backtest_lab_root=args.backtest_lab_root.resolve(),
+        )
+        with bidirectional_live_runtime_lock(config.cohort_ledger):
+            return _run_locked(args, config, presence, poller)
 
 
 def _run_locked(
@@ -214,6 +218,7 @@ def _create_runner(
         sleep_fn=time.sleep,
         poll_seconds=config.poll_seconds,
         signal_stop_requested=lambda: stop.requested,
+        funding_recovery_start_ms=telemetry.funding_recovery_start_ms,
         maximum_hold_seconds_by_symbol={
             asset.symbol: asset.maximum_hold_seconds for asset in config.assets
         },

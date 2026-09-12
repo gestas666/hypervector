@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping, Sequence
 from contextlib import ExitStack
 from datetime import datetime, timezone
-from functools import partial
 from pathlib import Path
 
 from hypervector.research.cohort_configuration_generation import (
@@ -26,7 +25,6 @@ from hypervector.research.cohort_checkpoint_archive_validation import (
     refresh_accounting_epoch_archive as _refresh_accounting_epoch_archive,
 )
 from hypervector.research.checkpoint_ledger_projection import (
-    compact_asset_ledger_rows,
     compact_cohort_ledger_rows,
 )
 from hypervector.research.cohort_checkpoint_opportunity import (
@@ -53,6 +51,10 @@ from hypervector.research.cohort_eligible_policy_funding import (
 )
 from hypervector.live.multi_asset_live_config import load_multi_asset_live_config
 from hypervector.research.cohort_live_audit import audit_multi_asset_live_run
+from hypervector.research.cohort_checkpoint_asset_snapshots import (
+    recover_cohort_execution_identities,
+    snapshot_checkpoint_assets,
+)
 from hypervector.research.cohort_live_audit_values import (
     configured_symbols,
     run_id as audit_run_id,
@@ -248,34 +250,21 @@ def publish_live_checkpoint(
             cohort_path,
             configured_symbols(identity),
         )
-        asset_rows: dict[str, list[dict[str, object]]] = {}
-        asset_evidence: dict[str, dict[str, object]] = {}
-        for symbol, path in asset_paths.items():
-            if current_run_only:
-                asset_snapshot = snapshot_current_run_ledger(
-                    path,
-                    allow_incomplete_tail=True,
-                    run_id=audit_run_id(identity),
-                )
-            elif compatible_execution_history:
-                asset_snapshot = snapshot_projected_compatible_execution_ledger(
-                    path,
-                    allow_incomplete_tail=True,
-                    run_id=audit_run_id(identity),
-                    stream_projector=partial(
-                        compact_asset_ledger_rows,
-                        current_run_id=audit_run_id(identity),
-                        as_of=cohort_snapshot_cutoff,
-                    ),
-                )
-            else:
-                asset_snapshot = snapshot_decision_ledger(
-                    path,
-                    allow_incomplete_tail=True,
-                )
-            rows, evidence = stack.enter_context(asset_snapshot)
-            asset_rows[symbol] = rows
-            asset_evidence[symbol] = {"path": str(path), **evidence}
+        asset_rows, asset_evidence = snapshot_checkpoint_assets(
+            stack,
+            asset_paths,
+            run_id=audit_run_id(identity),
+            as_of=cohort_snapshot_cutoff,
+            current_run_only=current_run_only,
+            compatible_execution_history=compatible_execution_history,
+        )
+        if current_run_only:
+            cohort_rows, cohort_evidence = recover_cohort_execution_identities(
+                cohort_path,
+                cohort_rows,
+                cohort_evidence,
+                asset_rows,
+            )
         if current_run_only:
             retired_rows, retired_evidence = {}, {}
         else:

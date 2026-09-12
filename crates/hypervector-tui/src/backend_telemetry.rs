@@ -230,6 +230,25 @@ macro_rules! empty_backend_snapshot {
 }
 
 impl BackendTelemetrySnapshot {
+    /// Return whether this run explicitly published a stopped backend state.
+    pub fn cohort_backend_is_stopped(&self) -> bool {
+        if self.connection == BackendConnectionState::Error
+            || self.cohort.runtime_fault_at.is_some()
+        {
+            return false;
+        }
+        self.cohort_checkpoint.is_stopped_snapshot()
+            || self
+                .cohort
+                .runtime_stopped_at
+                .as_deref()
+                .is_some_and(|at| chrono::DateTime::parse_from_rfc3339(at).is_ok())
+            || self.cohort.heartbeat.as_ref().is_some_and(|heartbeat| {
+                heartbeat.status.as_deref() == Some("stopped")
+                    && chrono::DateTime::parse_from_rfc3339(&heartbeat.observed_at).is_ok()
+            })
+    }
+
     /// Report whether the backend is the Apex execution-measurement market maker.
     pub fn is_apex_mm(&self) -> bool {
         self.strategy_name.as_deref() == Some("apex_regime_mm_v2")

@@ -30,19 +30,44 @@ impl App {
 }
 
 pub(crate) fn render(frame: &mut Frame, app: &App, area: Rect, title: &str, lines: Vec<Line<'_>>) {
+    render_with_controls(
+        frame,
+        app,
+        area,
+        title,
+        lines,
+        " [Up/Down PgUp/PgDn Home/End] SCROLL [Enter/Esc] CLOSE ",
+    );
+}
+
+/// Render bounded wrapped evidence with controls suited to the panel width.
+pub(crate) fn render_with_controls(
+    frame: &mut Frame,
+    app: &App,
+    area: Rect,
+    title: &str,
+    lines: Vec<Line<'_>>,
+    controls: &'static str,
+) {
     frame.render_widget(Clear, area);
-    let block =
-        panel(title, app).title_bottom(" [Up/Down PgUp/PgDn Home/End] SCROLL [Enter/Esc] CLOSE ");
+    let block = panel(title, app).title_bottom(controls);
     let inner = block.inner(area);
-    let paragraph = Paragraph::new(lines).wrap(Wrap { trim: true });
-    let maximum = paragraph
-        .line_count(inner.width)
-        .saturating_sub(usize::from(inner.height));
-    let maximum = u16::try_from(maximum).unwrap_or(u16::MAX);
+    let (paragraph, _, maximum) =
+        bounded_paragraph(lines, inner.width, inner.height, app.cohort_detail_scroll);
     app.cohort_detail_max_scroll.set(maximum);
     frame.render_widget(block, area);
-    frame.render_widget(
-        paragraph.scroll((app.cohort_detail_scroll.min(maximum), 0)),
-        inner,
-    );
+    frame.render_widget(paragraph, inner);
+}
+
+/// Wrap evidence and clamp its viewport to the actual terminal-row extent.
+pub(crate) fn bounded_paragraph(
+    lines: Vec<Line<'_>>,
+    width: u16,
+    height: u16,
+    offset: u16,
+) -> (Paragraph<'_>, usize, u16) {
+    let paragraph = Paragraph::new(lines).wrap(Wrap { trim: true });
+    let total = paragraph.line_count(width);
+    let maximum = u16::try_from(total.saturating_sub(usize::from(height))).unwrap_or(u16::MAX);
+    (paragraph.scroll((offset.min(maximum), 0)), total, maximum)
 }

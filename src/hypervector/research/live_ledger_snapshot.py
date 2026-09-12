@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterator, Mapping
 from contextlib import contextmanager
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 import hashlib
 import json
 from pathlib import Path
@@ -365,3 +365,89 @@ def _reverse_complete_lines(path: Path) -> Iterator[tuple[int, bytes]]:
                 offset += len(part) + 1
             yield from reversed(located)
             cursor = start
+
+
+_CONFIGURATION_BOUNDARIES: dict[tuple[Path, str], _CompatibleExecutionBoundary] = {}
+
+
+def configuration_identity_ancestry(
+    path: Path, run_ids: frozenset[str], *, before_offset: int
+) -> tuple[list[dict[str, object]], list[dict[str, object]]]:
+    """Read authenticated prior identity rows without materializing their runs."""
+    resolved = path.resolve()
+    missing = {
+        run for run in run_ids if (resolved, run) not in _CONFIGURATION_BOUNDARIES
+    }
+    if missing:
+        _cache_configuration_boundaries(path, missing, before_offset)
+    rows: list[dict[str, object]] = []
+    evidence: list[dict[str, object]] = []
+    for run in sorted(run_ids):
+        boundary = _CONFIGURATION_BOUNDARIES[(resolved, run)]
+        if boundary.start_offset >= before_offset:
+            raise ValueError(
+                f"cohort ancestry identity is not prior to current run: {run}"
+            )
+        _validate_compatible_boundary(boundary)
+        raw = _boundary_line(path, boundary.start_offset)
+        row = _ancestry_identity(raw, run)
+        rows.append(row)
+        _CONFIGURATION_BOUNDARIES[(resolved, run)] = replace(
+            boundary, observed_bytes=max(boundary.observed_bytes, path.stat().st_size)
+        )
+        evidence.append(
+            {
+                "run_id": run,
+                "source_offset": boundary.start_offset,
+                "bytes": len(raw),
+                "sha256": boundary.start_line_sha256,
+                "source_device": boundary.source_device,
+                "source_inode": boundary.source_inode,
+                "source_sequence": row.get("sequence"),
+            }
+        )
+    return sorted(rows, key=_ancestry_sequence), evidence
+
+
+def _cache_configuration_boundaries(
+    path: Path, missing: set[str], before_offset: int
+) -> None:
+    source = path.stat()
+    for offset, raw in _reverse_complete_lines(path):
+        if offset >= before_offset:
+            continue
+        row = _configuration_identity(raw)
+        if row is None or row.get("run_id") not in missing:
+            continue
+        run = _identity_text(row, "run_id")
+        line = _boundary_line(path, offset)
+        _CONFIGURATION_BOUNDARIES[(path.resolve(), run)] = _CompatibleExecutionBoundary(
+            path.resolve(),
+            _execution_identity(row),
+            offset,
+            hashlib.sha256(line).hexdigest(),
+            source.st_dev,
+            source.st_ino,
+            source.st_size,
+        )
+        missing.remove(run)
+        if not missing:
+            return
+    raise ValueError(
+        f"prior cohort configuration identities missing: {sorted(missing)}"
+    )
+
+
+def _ancestry_identity(raw: bytes, run_id: str) -> dict[str, object]:
+    row = _configuration_identity(raw)
+    if row is None or row.get("run_id") != run_id:
+        raise ValueError(f"cohort ancestry run identity changed: {run_id}")
+    _ancestry_sequence(row)
+    return dict(row)
+
+
+def _ancestry_sequence(row: Mapping[str, object]) -> int:
+    value = row.get("sequence")
+    if isinstance(value, bool) or not isinstance(value, int) or value < 1:
+        raise ValueError("cohort ancestry source sequence must be a positive integer")
+    return value

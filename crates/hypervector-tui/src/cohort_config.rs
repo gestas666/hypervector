@@ -11,6 +11,7 @@ use crate::app::App;
 use crate::backend_cohort::{CohortAssetConfig, CohortProviderExecutionContract};
 use crate::cohort_config_identity::{identity_lines, scope_matrix_lines, staged_provider_scope};
 use crate::cohort_config_state::CohortConfigEditor;
+use crate::cohort_detail_scroll::bounded_paragraph;
 use crate::cohort_entry_context::{effective_entry_context, staged_entry_context};
 use crate::cohort_format::money;
 use crate::cohort_growth_preflight::growth_preflight_lines;
@@ -23,11 +24,11 @@ use crate::cohort_widgets::{panel, provider_alias, render_empty};
 
 /// Render effective values beside a complete restart-only draft profile.
 pub(crate) fn render(frame: &mut Frame, app: &App, area: Rect) {
-    let (identity_height, editor_height) = if area.height < 32 { (7, 14) } else { (8, 15) };
+    let (identity_height, editor_height) = if area.height < 32 { (6, 14) } else { (8, 15) };
     let sections = Layout::vertical([
         Constraint::Length(identity_height),
         Constraint::Length(editor_height),
-        Constraint::Min(8),
+        Constraint::Min(9),
     ])
     .split(area);
     render_identity(frame, app, sections[0]);
@@ -259,14 +260,34 @@ fn draft_scope(app: &App, editor: &CohortConfigEditor) -> String {
 }
 
 fn render_context(frame: &mut Frame, app: &App, editor: Option<&CohortConfigEditor>, area: Rect) {
-    let lines = bounded_context_lines(
-        context_lines(app, editor),
-        usize::from(area.height.saturating_sub(2)),
-        app.cohort_config_context_offset,
-    );
+    const FOOTER_ROWS: u16 = 2;
+    let mut lines = context_lines(app, editor);
+    let Some(safety) = lines.pop() else {
+        return;
+    };
+    let block = panel(" PROFILE SCOPE // AUDITED REQUEST STATUS ", app);
+    let inner = block.inner(area);
+    let rows = inner.height.saturating_sub(FOOTER_ROWS);
+    let offset = u16::try_from(app.cohort_config_context_offset).unwrap_or(u16::MAX);
+    let (paragraph, total, maximum) = bounded_paragraph(lines, inner.width, rows, offset);
+    app.cohort_config_context_max_scroll
+        .set(usize::from(maximum));
+    app.cohort_config_context_page_rows.set(usize::from(rows));
+    let start = usize::from(offset.min(maximum));
+    let end = (start + usize::from(rows)).min(total);
+    let omitted = total.saturating_sub(end - start);
+    let footer = vec![
+        Line::from(format!(
+            "CONTENT WINDOW {}-{end} / {total} // {omitted} LINES OMITTED // [PgUp/PgDn] Scope",
+            start + 1,
+        )),
+        safety,
+    ];
+    frame.render_widget(block, area);
+    frame.render_widget(paragraph, Rect::new(inner.x, inner.y, inner.width, rows));
     frame.render_widget(
-        Paragraph::new(lines).block(panel(" PROFILE SCOPE // AUDITED REQUEST STATUS ", app)),
-        area,
+        Paragraph::new(footer),
+        Rect::new(inner.x, inner.y + rows, inner.width, inner.height - rows),
     );
 }
 
@@ -293,10 +314,10 @@ fn context_lines<'a>(app: &'a App, editor: Option<&CohortConfigEditor>) -> Vec<L
     let scope = editor
         .and_then(|_| app.cohort_config_scope_summary())
         .unwrap_or_else(|| "SCOPE UNAVAILABLE".into());
-    let notice = app
-        .cohort_notice
-        .as_deref()
-        .unwrap_or("No request pending. Changes remain local until VALIDATE & STAGE is selected.");
+    let notice = crate::cohort_profile_request::notice(
+        app,
+        "No request pending. Changes remain local until VALIDATE & STAGE is selected.",
+    );
     let wallet = configured_label(app.backend.wallet_configured);
     let signer = configured_label(app.backend.signing_key_configured);
     let mut lines = vec![
@@ -340,7 +361,11 @@ fn context_lines<'a>(app: &'a App, editor: Option<&CohortConfigEditor>) -> Vec<L
         Line::from(Span::styled(notice.to_string(), app.theme.muted)),
     ]);
     lines.extend(growth_preflight_lines(app, coin));
-    lines.extend(scope_matrix_lines(app, editor));
+    let mut scopes = scope_matrix_lines(app, editor);
+    let safety = scopes.pop();
+    lines.extend(scopes);
+    lines.extend(identity_lines(app));
+    lines.extend(safety);
     lines
 }
 
@@ -416,40 +441,6 @@ fn target_contract(contract: &CohortProviderExecutionContract) -> String {
         "absolute_anchor" => "DYNAMIC PRIOR-CLOSE".into(),
         _ => "UNKNOWN".into(),
     }
-}
-
-fn bounded_context_lines<'a>(
-    mut lines: Vec<Line<'a>>,
-    capacity: usize,
-    offset: usize,
-) -> Vec<Line<'a>> {
-    if lines.len() <= capacity {
-        return lines;
-    }
-    let Some(safety) = lines.pop() else {
-        return Vec::new();
-    };
-    if capacity == 0 {
-        return Vec::new();
-    }
-    if capacity == 1 {
-        return vec![safety];
-    }
-    let total_content = lines.len();
-    let visible_capacity = capacity - 2;
-    let max_offset = total_content.saturating_sub(visible_capacity);
-    let start = offset.min(max_offset);
-    let end = (start + visible_capacity).min(total_content);
-    let visible = end - start;
-    let omitted = total_content - visible;
-    lines = lines.into_iter().skip(start).take(visible).collect();
-    lines.push(Line::from(format!(
-        "CONTENT WINDOW {}-{} / {total_content} // {omitted} LINES OMITTED // [PgUp/PgDn] Scope",
-        start + 1,
-        end,
-    )));
-    lines.push(safety);
-    lines
 }
 
 fn configured_label(value: Option<bool>) -> &'static str {

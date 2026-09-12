@@ -29,7 +29,7 @@ def validate_directional_range(provider: StrategyProviderConfig) -> None:
         and provider.sides == _BOTH_SIDES
         and provider.timeframe == "1m"
         and provider.maximum_entry_delay_seconds == 60
-        and provider.execution_symbols == (symbol,)
+        and provider.execution_symbols in ((), (symbol,))
         and provider.executable_sides(symbol) == frozenset({side})
         and provider.position_policy == "enter_and_close"
         and execution.entry_liquidity == "taker_ioc"
@@ -44,7 +44,7 @@ def validate_directional_range(provider: StrategyProviderConfig) -> None:
     )
     if not valid:
         raise MultiAssetLiveConfigError(
-            "directional range routes require exact ETH-long or SOL-short 1m "
+            "directional range routes require optional ETH-long or SOL-short 1m "
             "authority, a 60 bps stop, opposite-onset exit, and 48h fallback"
         )
 

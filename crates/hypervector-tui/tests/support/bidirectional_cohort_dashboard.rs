@@ -8,7 +8,7 @@ fn compact_dashboard_keeps_operational_truth_visible() {
     for expected in [
         "HYPERVECTOR // SHARED COHORT",
         "LIVE EXECUTION ARMED",
-        "SYNC 12:00:00 EDT",
+        "HEARTBEAT N/A",
         "USDC COLL $503.16",
         "SOURCE UNIFIED SPOT",
         "MARGIN UTIL",
@@ -460,6 +460,9 @@ fn dashboard_prefers_durable_archive_and_labels_observation_only_assets() {
 fn tall_trade_workspace_renders_a_scaled_closed_equity_instrument() {
     let mut app = cohort_app();
     app.backend.cohort_checkpoint = trade_checkpoint();
+    app.backend.cohort.fills[0]
+        .origin_run_id
+        .clone_from(&app.backend.run_id);
 
     let screen = render(&mut app, 4, 160, 48);
     if std::env::var_os("HYPERVECTOR_VISUAL_SNAPSHOT").is_some() {

@@ -316,6 +316,9 @@ fn apply_live_freshness(
     modified: SystemTime,
     now: SystemTime,
 ) -> BackendTelemetrySnapshot {
+    if !snapshot.cohort.enabled_symbols.is_empty() {
+        return crate::backend_cohort_health::apply(snapshot, now, LIVE_LEDGER_INACTIVITY_LIMIT);
+    }
     let armed_live = snapshot.connection == BackendConnectionState::Connected
         && snapshot.execution_mode.as_deref() == Some("live")
         && snapshot.live_armed == Some(true);

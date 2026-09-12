@@ -265,6 +265,9 @@ fn handle_key(app: &mut App, code: KeyCode) {
 
 fn handle_chart_modal_key(app: &mut App, code: KeyCode) {
     match code {
+        KeyCode::PageDown | KeyCode::PageUp | KeyCode::Home | KeyCode::End => {
+            app.handle_cohort_detail_scroll(code);
+        }
         KeyCode::Down | KeyCode::Right | KeyCode::Char('j') => {
             app.cycle_cohort_chart_provider(1);
         }

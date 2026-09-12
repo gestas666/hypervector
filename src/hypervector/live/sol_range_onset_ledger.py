@@ -47,6 +47,7 @@ SOL_LIVE_EVENT_TYPES = frozenset(
         "cohort_snapshot",
         "heartbeat",
         "runtime_fault",
+        "runtime_stopped",
     }
 )
 _SECRET_KEY_FRAGMENTS = ("private_key", "api_key", "secret", "mnemonic")

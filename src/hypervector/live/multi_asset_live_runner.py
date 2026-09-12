@@ -24,6 +24,7 @@ from hypervector.live.cohort_entry_submission import (
     validate_entry_delays,
 )
 from hypervector.live.cohort_execution_plan import ProviderExecutionContract
+from hypervector.live.cohort_funding_recovery import initial_funding_cursor
 from hypervector.live.cohort_funding_window import committed_funding_window
 from hypervector.live.cohort_maximum_hold_policy import (
     EvaluationKey,
@@ -69,7 +70,6 @@ from hypervector.live.multi_asset_signal_source import ProviderEvaluation
 from hypervector.live.sol_range_onset_state import SolLiveState
 from hypervector.live.transient_transport import transient_read_failure_reason
 
-_FUNDING_LOOKBACK_MS = 86_400_000
 _ContractMap = Mapping[
     contract_selection.ExecutionContractKey, ProviderExecutionContract
 ]
@@ -107,24 +107,8 @@ class MultiAssetLiveRunner:
         operator_commands: OperatorCommandSourceProtocol | None = None,
         transition_drain: CohortTransitionDrain | None = None,
         monotonic_fn: Callable[[], float] = time.monotonic,
+        funding_recovery_start_ms: int | None = None,
     ) -> None:
-        self._assign_strategy_dependencies(
-            symbols,
-            engines,
-            router,
-            intent_poller,
-            telemetry,
-            maximum_hold_seconds_by_symbol,
-            execution_contracts,
-            maximum_entry_delay_ms_by_provider_symbol,
-            executable_provider_symbols,
-            executable_provider_directions,
-            provider_entry_sizing or {},
-            provider_directional_entry_sizing or {},
-            operator_commands,
-            transition_drain,
-            poll_seconds,
-        )
         self._assign_runtime_dependencies(
             telemetry,
             stop_file,
@@ -134,6 +118,22 @@ class MultiAssetLiveRunner:
             signal_stop_requested,
             monotonic_fn,
         )
+        self._funding_recovery_start_ms = funding_recovery_start_ms
+        self._assign_strategy_dependencies(
+            symbols,
+            engines,
+            router,
+            intent_poller,
+            maximum_hold_seconds_by_symbol,
+            execution_contracts,
+            maximum_entry_delay_ms_by_provider_symbol,
+            executable_provider_symbols,
+            executable_provider_directions,
+            provider_entry_sizing or {},
+            provider_directional_entry_sizing or {},
+            operator_commands,
+            transition_drain,
+        )
 
     def _assign_strategy_dependencies(
         self,
@@ -141,7 +141,6 @@ class MultiAssetLiveRunner:
         engines: Mapping[str, MultiAssetEngineProtocol],
         router: BidirectionalIntentRouter,
         intent_poller: MultiAssetIntentPollerProtocol,
-        telemetry: CohortTelemetryProtocol,
         maximum_holds: Mapping[str, int],
         contracts: _ContractMap,
         entry_delays: EntryDelayMap,
@@ -151,7 +150,6 @@ class MultiAssetLiveRunner:
         directional_sizing: _DirectionalSizingMap,
         operator_commands: OperatorCommandSourceProtocol | None,
         transition_drain: CohortTransitionDrain | None,
-        poll_seconds: float,
     ) -> None:
         self._symbols, self._engines = symbols, engines
         self._router, self._intent_poller = router, intent_poller
@@ -160,8 +158,8 @@ class MultiAssetLiveRunner:
             symbols=symbols,
             engines=engines,
             router=router,
-            telemetry=telemetry,
-            poll_seconds=poll_seconds,
+            telemetry=self._telemetry,
+            poll_seconds=self._poll_seconds,
             contracts=contracts,
             executable_pairs=executable_pairs,
             executable_directions=executable_directions,
@@ -178,7 +176,7 @@ class MultiAssetLiveRunner:
         )
         self._assign_operator_dependencies(
             operator_commands,
-            telemetry,
+            self._telemetry,
             engines,
             executable_pairs,
             effective_directions,
@@ -294,11 +292,14 @@ class MultiAssetLiveRunner:
             raise MultiAssetLiveRunnerError("cohort runner has already started")
         if self._shutdown_requested():
             raise MultiAssetLiveRunnerError("operator stop requested before startup")
+        funding_start = initial_funding_cursor(
+            activation_time_ms, self._funding_recovery_start_ms
+        )
         if start_engines:
             for symbol in self._symbols:
                 self._engines[symbol].start()
         self._intent_poller.activate(activation_time_ms)
-        self._funding_start_ms = max(0, activation_time_ms - _FUNDING_LOOKBACK_MS)
+        self._funding_start_ms = funding_start
         self._telemetry.emit_configuration()
         self._started = True
 

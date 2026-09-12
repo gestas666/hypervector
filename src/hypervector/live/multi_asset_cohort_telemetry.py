@@ -15,6 +15,7 @@ from hypervector.live.canonical_regime_telemetry import (
 from hypervector.live.cohort_backup_evidence import prestart_backup_payload
 from hypervector.live.cohort_durable_decision_recovery import durable_decision_records
 from hypervector.live.cohort_durable_decisions import CohortDurableDecisionJournal
+from hypervector.live.cohort_funding_recovery import recover_funding_cursor
 from hypervector.live.cohort_funding_window import CohortFundingWindow
 from hypervector.live.cohort_prestart_backup import CohortPrestartBackupResult
 from hypervector.live.cohort_regime_routing import routing_policy_payload
@@ -106,6 +107,11 @@ class MultiAssetCohortTelemetry:
         if self._asset_ledgers and set(self._asset_ledgers) != set(config.symbols):
             raise ValueError("asset ledgers must cover every configured symbol")
         self._asset_history_cache = _history_cache(self._asset_ledgers)
+
+    @property
+    def funding_recovery_start_ms(self) -> int | None:
+        """Return the exact-profile durable funding boundary for a new owner."""
+        return recover_funding_cursor(self._ledger, self._config.profile_fingerprint)
 
     def emit_configuration(self) -> None:
         """Publish enabled symbols, both sides, providers, and portfolio policy."""
@@ -268,6 +274,12 @@ class MultiAssetCohortTelemetry:
     def emit_heartbeat(self) -> None:
         """Publish process liveness without inventing market state."""
         self._emit("heartbeat", {"status": "running"})
+
+    def emit_stopped(self, *, reason: str) -> None:
+        """Publish explicit normal termination under the same backend identity."""
+        if reason not in {"bounded_run_complete", "operator_stop"}:
+            raise ValueError("unsupported observer stop reason")
+        self._emit("runtime_stopped", {"reason": reason})
 
     def emit_funding_reconciliation_window(self, window: CohortFundingWindow) -> None:
         """Publish the exact committed funding cursor for one poll cycle."""

@@ -289,8 +289,24 @@ def _entry_context(
     signal = index.evaluations.get((source_run_id, strategy, symbol, decision_ms))
     canonical = exact_canonical_evaluation(index, source_run_id, symbol, decision_ms)
     return {
-        "signal_provider": project_regime_context(signal or signal_regime),
+        "signal_provider": (
+            project_regime_context(signal)
+            if signal is not None
+            else _journal_entry_context(signal_regime)
+        ),
         "canonical_regime": project_regime_context(canonical),
+    }
+
+
+def _journal_entry_context(regime: Record) -> dict[str, object]:
+    """Retain observed entry regime fields while labeling unavailable readiness."""
+    nonnegative_int(regime.get("decision_time_ms"), "entry regime decision time")
+    return {
+        **regime,
+        "status": "observed",
+        "source": "asset_entry_journal",
+        "readiness": None,
+        "readiness_status": "unavailable_cohort_entry_evaluation",
     }
 
 

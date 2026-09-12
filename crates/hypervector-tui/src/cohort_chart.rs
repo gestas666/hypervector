@@ -18,7 +18,12 @@ use crate::theme::CockpitTheme;
 const AXIS_WIDTH: u16 = 11;
 const MAX_VISIBLE_CANDLES: usize = 90;
 const MINUTE_MS: u64 = 60_000;
+const HOUR_MINUTES: usize = 60;
 const CHARTS_PER_PAGE: usize = 4;
+
+#[cfg(test)]
+#[path = "cohort_chart_tests.rs"]
+mod tests;
 
 /// Render four selectable candlestick panes from backend completed 1-minute bars.
 pub(crate) fn render(frame: &mut Frame, app: &App, area: Rect) {
@@ -264,6 +269,7 @@ fn decision_timeframe_candles(
         .strip_suffix('m')
         .and_then(|value| value.parse::<usize>().ok())
         .filter(|value| matches!(value, 1 | 5 | 15 | 30))
+        .or_else(|| (timeframe == "1h").then_some(HOUR_MINUTES))
         .ok_or_else(|| {
             format!(
                 "UNSUPPORTED DECISION TIMEFRAME {}",

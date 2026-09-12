@@ -147,7 +147,7 @@ def _validate_entry_capability(provider: StrategyProviderConfig) -> None:
 
 
 def _validate_provider_overrides(provider: StrategyProviderConfig) -> None:
-    execution = set(provider.execution_symbols)
+    observed = set(provider.symbols)
     override_symbols = {symbol for symbol, _ in provider.execution_side_overrides}
     context_symbols = {symbol for symbol, _ in provider.entry_context_overrides}
     stop_symbols = {symbol for symbol, _ in provider.stop_bps_overrides}
@@ -163,9 +163,9 @@ def _validate_provider_overrides(provider: StrategyProviderConfig) -> None:
         (lock_symbols, "profit_lock_overrides"),
     )
     for symbols, label in checks:
-        if not symbols.issubset(execution):
+        if not symbols.issubset(observed):
             raise MultiAssetLiveConfigError(
-                f"provider {label} must reference execution_symbols"
+                f"provider {label} must reference observed symbols"
             )
     for _symbol, sides in provider.execution_side_overrides:
         if not sides.issubset(provider.sides):

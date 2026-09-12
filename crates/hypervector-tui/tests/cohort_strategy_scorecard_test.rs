@@ -462,3 +462,5 @@ fn live_checkpoint() -> Value {
     });
     document
 }
+
+include!("support/cohort_checkpoint_missing_readiness.rs");

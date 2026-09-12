@@ -31,11 +31,7 @@ pub(crate) fn provider_journal(
 ) -> Result<Vec<CohortObserverProviderEvidence>, String> {
     let readiness = &readiness_evidence.by_provider_symbol;
     let outcomes = &signal_outcomes.by_provider_symbol;
-    let keys = readiness
-        .keys()
-        .chain(outcomes.keys())
-        .cloned()
-        .collect::<BTreeSet<_>>();
+    let keys = provider_journal_keys(readiness_evidence, signal_outcomes)?;
     if let Some(scorecard) = strategy_scorecard {
         validate_strategy_scorecard(scorecard, &keys)?;
         if expected_execution_outcomes
@@ -67,6 +63,30 @@ pub(crate) fn provider_journal(
             )
         })
         .collect()
+}
+
+fn provider_journal_keys(
+    readiness: &ReadinessEvidence,
+    outcomes: &ObserverSignalOutcomesEvidence,
+) -> Result<BTreeSet<String>, String> {
+    let missing = readiness
+        .missing_provider_symbols
+        .iter()
+        .collect::<BTreeSet<_>>();
+    if missing.len() != readiness.missing_provider_symbols.len()
+        || missing
+            .iter()
+            .any(|key| readiness.by_provider_symbol.contains_key(*key))
+    {
+        return Err("missing readiness providers must be unique and unobserved".into());
+    }
+    Ok(readiness
+        .by_provider_symbol
+        .keys()
+        .chain(outcomes.by_provider_symbol.keys())
+        .chain(missing)
+        .cloned()
+        .collect())
 }
 
 fn provider_journal_row(

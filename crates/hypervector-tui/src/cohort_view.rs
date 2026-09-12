@@ -72,12 +72,13 @@ fn status_line(app: &App) -> Line<'static> {
     let sync = app
         .backend
         .cohort
-        .last_observed_at
-        .as_deref()
+        .heartbeat
+        .as_ref()
+        .map(|heartbeat| heartbeat.observed_at.as_str())
         .map(eastern_time)
         .unwrap_or_else(|| "N/A".into());
     let pulse = ["·", "∙", "●", "∙"][(app.tick_count % 4) as usize];
-    let stopped = clean_stopped_snapshot(app);
+    let stopped = app.backend.cohort_backend_is_stopped();
     let (authority, authority_style) = match (
         stopped,
         app.backend.connection,
@@ -94,13 +95,29 @@ fn status_line(app: &App) -> Line<'static> {
     let mut spans = vec![
         Span::styled(format!(" {pulse} "), connection_style(app)),
         Span::styled(connection_label(app), connection_style(app)),
-        Span::raw("  //  SYNC "),
+        Span::raw(" | HEARTBEAT "),
         Span::styled(sync, app.theme.cyan),
-        Span::raw("  //  "),
+        Span::raw(" | "),
         Span::styled(authority, authority_style),
     ];
+    append_acceptance(app, &mut spans, stopped);
+    if app.detached_lifecycle {
+        spans.push(Span::raw(" | "));
+        spans.push(Span::styled(
+            if stopped || app.backend.connection != BackendConnectionState::Connected {
+                "MONITOR-ONLY QUIT"
+            } else {
+                "BACKEND PERSISTS ON QUIT"
+            },
+            app.theme.cyan,
+        ));
+    }
+    Line::from(spans)
+}
+
+fn append_acceptance(app: &App, spans: &mut Vec<Span<'static>>, stopped: bool) {
     if let Some(acceptance) = &app.backend.cohort_checkpoint.poststart_acceptance {
-        spans.push(Span::raw("  //  "));
+        spans.push(Span::raw(" | "));
         let verdict = if stopped {
             "RUN STOPPED"
         } else if acceptance.accepted {
@@ -117,24 +134,6 @@ fn status_line(app: &App) -> Line<'static> {
             },
         ));
     }
-    if app.detached_lifecycle {
-        spans.push(Span::raw("  //  "));
-        spans.push(Span::styled("BACKEND PERSISTS ON QUIT", app.theme.cyan));
-    }
-    Line::from(spans)
-}
-
-fn clean_stopped_snapshot(app: &App) -> bool {
-    matches!(
-        app.backend.cohort_checkpoint.lifecycle_state.as_deref(),
-        Some("stale_running_heartbeat_after_asset_stop" | "stopped_consistent")
-    ) && !app.backend.cohort_checkpoint.asset_states.is_empty()
-        && app
-            .backend
-            .cohort_checkpoint
-            .asset_states
-            .values()
-            .all(|state| state == "STOPPED")
 }
 
 fn render_navigation(frame: &mut Frame, app: &App, area: Rect) {
@@ -180,6 +179,21 @@ fn render_footer(frame: &mut Frame, app: &App, area: Rect) {
 }
 
 fn context_help(app: &App, compact: bool) -> String {
+    if compact && app.active_tab == 6 {
+        return " Quit [←/→] Coin [p/P] Provider [d] Side [↑/↓] Act [Enter] Review".into();
+    }
+    if compact && app.active_tab == 8 {
+        return " Quit [←/→] Coin [p/P] Prov [↑/↓] Row [+/-] Edit [Enter] Act".into();
+    }
+    if app.detached_lifecycle && app.active_tab == 0 && app.backend.cohort_backend_is_stopped() {
+        return " Quit monitor  //  Backend stopped  //  [←/→] Asset/page".into();
+    }
+    if app.detached_lifecycle
+        && app.active_tab == 0
+        && app.backend.connection != BackendConnectionState::Connected
+    {
+        return " Quit monitor  //  Backend health unknown  //  [←/→] Asset/page".into();
+    }
     if compact && app.active_tab == 0 {
         return if app.detached_lifecycle {
             " Quit keeps backend  //  [←/→] Asset/page  //  Details below".into()
@@ -235,13 +249,13 @@ mod tests {
     fn stopped_label_requires_complete_terminal_asset_evidence() {
         let mut app = App::new("MULTI".into(), "1m".into(), vec![], true, false);
         app.backend.cohort_checkpoint.lifecycle_state = Some("stopped_consistent".into());
-        assert!(!clean_stopped_snapshot(&app));
+        assert!(!app.backend.cohort_backend_is_stopped());
         app.backend.cohort_checkpoint.asset_states = [
             ("BTC".into(), "STOPPED".into()),
             ("ETH".into(), "OPEN".into()),
         ]
         .into();
-        assert!(!clean_stopped_snapshot(&app));
+        assert!(!app.backend.cohort_backend_is_stopped());
     }
 
     #[test]

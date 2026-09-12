@@ -67,9 +67,13 @@ include!("support/bidirectional_cohort_fill_audit.rs");
 include!("support/bidirectional_cohort_navigation.rs");
 include!("support/bidirectional_cohort_accessibility.rs");
 include!("support/bidirectional_cohort_setup_charts.rs");
+include!("support/cohort_hourly_charts.rs");
+include!("support/cohort_chart_detail_scroll.rs");
 include!("support/bidirectional_cohort_validation.rs");
 include!("support/cohort_research_sync_view.rs");
 include!("support/cohort_stale_checkpoint_view.rs");
+include!("support/cohort_restart_truth.rs");
+include!("support/cohort_compact_ops.rs");
 
 include!("support/cohort_open_position_columns.rs");
 

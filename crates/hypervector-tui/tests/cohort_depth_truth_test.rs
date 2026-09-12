@@ -120,7 +120,10 @@ fn scrolling_exposes_every_source_level_with_correct_cumulative_and_full_totals(
                 assert_eq!(row[2], format!("{:.5}", rank as f64));
                 assert_eq!(row[3], format!("{:.5}", (rank * (rank + 1) / 2) as f64));
                 assert_eq!(row[4], rank.to_string());
-                prices.insert(format!("{:.8}", row[1].parse::<f64>().expect("exact price")));
+                prices.insert(format!(
+                    "{:.8}",
+                    row[1].parse::<f64>().expect("exact price")
+                ));
             }
             app.move_cohort_depth(1);
         }

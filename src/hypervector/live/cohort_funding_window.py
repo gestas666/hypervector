@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 
 
@@ -85,3 +86,33 @@ def committed_funding_window(
         action_count=action_count,
         post_action_reconciliation=post_action,
     )
+
+
+def funding_window_from_payload(value: object) -> CohortFundingWindow:
+    """Decode and validate the same durable cursor contract used by live and audit."""
+    if not isinstance(value, Mapping):
+        raise ValueError("funding window payload must be an object")
+    if (
+        value.get("boundary_semantics")
+        != "contiguous_cursor_with_inclusive_venue_deduplication"
+    ):
+        raise ValueError("funding window boundary semantics are invalid")
+    post_action = value.get("post_action_reconciliation")
+    if not isinstance(post_action, bool):
+        raise ValueError("post-action reconciliation state must be boolean")
+    return CohortFundingWindow(
+        funding_start_time_ms=_integer(value, "funding_start_time_ms"),
+        initial_funding_end_time_ms=_integer(value, "initial_funding_end_time_ms"),
+        provider_cutoff_time_ms=_integer(value, "provider_cutoff_time_ms"),
+        committed_funding_end_time_ms=_integer(value, "committed_funding_end_time_ms"),
+        next_funding_start_time_ms=_integer(value, "next_funding_start_time_ms"),
+        action_count=_integer(value, "action_count"),
+        post_action_reconciliation=post_action,
+    )
+
+
+def _integer(payload: Mapping[str, object], name: str) -> int:
+    value = payload.get(name)
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise ValueError(f"funding window {name} must be an integer")
+    return value

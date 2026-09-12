@@ -13,15 +13,30 @@ use crate::cohort_application::cohort_backend_accepts_operator_requests;
 use crate::cohort_operator::{CohortOperatorAction, CohortOperatorDraft};
 use crate::cohort_widgets::{panel, provider_alias};
 
+const FULL_OPERATOR_BODY_HEIGHT: u16 = 29;
+const MIN_BORDERED_NOTICE_HEIGHT: u16 = 3;
+const MIN_COMMAND_TABLE_HEIGHT: u16 = 4;
+const COMMAND_SYMBOL_WIDTH: u16 = 12;
+
 pub(crate) fn render(frame: &mut Frame, app: &App, area: Rect) {
-    let sections = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([
+    let constraints = if area.height < FULL_OPERATOR_BODY_HEIGHT {
+        [
+            Constraint::Length(3),
+            Constraint::Length(13),
+            Constraint::Length(2),
+            Constraint::Min(3),
+        ]
+    } else {
+        [
             Constraint::Length(4),
             Constraint::Length(13),
             Constraint::Length(4),
             Constraint::Min(8),
-        ])
+        ]
+    };
+    let sections = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints(constraints)
         .split(area);
     render_authority(frame, app, sections[0]);
     render_actions(frame, app, sections[1]);
@@ -36,6 +51,8 @@ fn render_authority(frame: &mut Frame, app: &App, area: Rect) {
         "LIVE BACKEND ARMED // REQUEST CHANNEL ENABLED"
     } else if backend_armed {
         "LIVE BACKEND ARMED // REQUEST CHANNEL UNAVAILABLE"
+    } else if app.backend.cohort_backend_is_stopped() {
+        "BACKEND STOPPED // MANUAL REQUESTS DISABLED"
     } else if app.backend.connection == BackendConnectionState::Stale {
         "BACKEND STALE // MANUAL REQUESTS DISABLED"
     } else if app.backend.connection != BackendConnectionState::Connected {
@@ -107,7 +124,7 @@ fn render_entry(frame: &mut Frame, app: &App, area: Rect) {
                 .to_uppercase()
         )),
         Line::from("BYPASS: strategy prerequisites only"),
-        Line::from("RETAIN: capacity, isolated risk, stop, venue checks"),
+        Line::from("RETAIN: capacity, risk, stop, venue checks"),
         Line::from(if selected {
             "SELECTED // [Enter] REVIEW"
         } else {
@@ -165,29 +182,28 @@ fn render_close(frame: &mut Frame, app: &App, area: Rect) {
 }
 
 fn render_notice(frame: &mut Frame, app: &App, area: Rect) {
-    let message = app.cohort_notice.as_deref().unwrap_or(
+    let message = crate::cohort_profile_request::notice(
+        app,
         "Choose an action, then review. Enter opens confirmation; no request is sent without [y].",
     );
-    frame.render_widget(
-        Paragraph::new(message)
-            .style(app.theme.gold)
-            .block(panel(" COMMAND STATUS ", app)),
-        area,
-    );
+    let paragraph = Paragraph::new(message.as_ref())
+        .style(app.theme.gold)
+        .wrap(Wrap { trim: true });
+    let paragraph = if area.height < MIN_BORDERED_NOTICE_HEIGHT {
+        paragraph
+    } else {
+        paragraph.block(panel(" COMMAND STATUS ", app))
+    };
+    frame.render_widget(paragraph, area);
 }
 
 fn render_history(frame: &mut Frame, app: &App, area: Rect) {
     if app.backend.cohort.operator_events.is_empty() {
-        let message = if backend_is_armed(app) {
-            "NO MANUAL COMMANDS RECORDED // AUTO ROUTING CONTINUES"
-        } else {
-            "NO MANUAL COMMANDS RECORDED // BACKEND NOT LIVE"
-        };
-        frame.render_widget(
-            Paragraph::new(message)
-                .block(panel(" AUDITED COMMAND LIFECYCLE // BACKEND LEDGER ", app)),
-            area,
-        );
+        render_empty_history(frame, app, area);
+        return;
+    }
+    if area.height < MIN_COMMAND_TABLE_HEIGHT {
+        render_latest_command(frame, app, area);
         return;
     }
     let rows = app
@@ -212,7 +228,7 @@ fn render_history(frame: &mut Frame, app: &App, area: Rect) {
             Constraint::Length(10),
             Constraint::Length(11),
             Constraint::Length(18),
-            Constraint::Length(6),
+            Constraint::Length(COMMAND_SYMBOL_WIDTH),
             Constraint::Length(7),
             Constraint::Min(30),
         ],
@@ -230,6 +246,40 @@ fn render_history(frame: &mut Frame, app: &App, area: Rect) {
     )
     .block(panel(" AUDITED COMMAND LIFECYCLE // BACKEND LEDGER ", app));
     frame.render_widget(table, area);
+}
+
+fn render_empty_history(frame: &mut Frame, app: &App, area: Rect) {
+    let message = if backend_is_armed(app) {
+        "NO MANUAL COMMANDS RECORDED // AUTO ROUTING CONTINUES"
+    } else {
+        "NO MANUAL COMMANDS RECORDED // BACKEND NOT LIVE"
+    };
+    frame.render_widget(
+        Paragraph::new(message).block(panel(" AUDITED COMMAND LIFECYCLE // BACKEND LEDGER ", app)),
+        area,
+    );
+}
+
+fn render_latest_command(frame: &mut Frame, app: &App, area: Rect) {
+    let event = app
+        .backend
+        .cohort
+        .operator_events
+        .last()
+        .expect("nonempty history checked before compact rendering");
+    let text = format!(
+        "{} {} {} {} {} // {}",
+        event.request_id.chars().take(8).collect::<String>(),
+        event.status.to_uppercase(),
+        event.action.as_deref().unwrap_or("N/A"),
+        event.symbol.as_deref().unwrap_or("N/A"),
+        event.side.as_deref().unwrap_or("N/A"),
+        event.reason.as_deref().unwrap_or("N/A"),
+    );
+    frame.render_widget(
+        Paragraph::new(text).block(panel(" LATEST BACKEND COMMAND ", app)),
+        area,
+    );
 }
 
 pub(crate) fn render_confirmation(frame: &mut Frame, app: &App, area: Rect) {
@@ -297,7 +347,9 @@ fn drain_authority_line(app: &App) -> Line<'static> {
 }
 
 fn transition_drain_authority(app: &App) -> &'static str {
-    if app.backend.connection != BackendConnectionState::Connected {
+    if app.backend.cohort_backend_is_stopped()
+        || app.backend.connection != BackendConnectionState::Connected
+    {
         return "LAST DRAIN CHECKPOINT ONLY // BACKEND NOT LIVE";
     }
     match app
@@ -322,7 +374,9 @@ fn transition_drain_card_lines(app: &App, selected: bool) -> Vec<Line<'static>> 
         " // [↓] SELECT"
     };
     let state = app.backend.cohort.transition_drain.as_ref();
-    if app.backend.connection != BackendConnectionState::Connected {
+    if app.backend.cohort_backend_is_stopped()
+        || app.backend.connection != BackendConnectionState::Connected
+    {
         let status = state.map_or("UNAVAILABLE", |value| match value.status.as_str() {
             "inactive" => "INACTIVE",
             "active" => "ACTIVE",

@@ -47,13 +47,13 @@ fn directional_summary_retains_wins_losses_and_net_pnl() {
 
 #[test]
 fn fill_summary_does_not_invent_missing_measurements() {
-    let fills = vec![
+    let fills = [
         fill(Some(-2.0), Some(1_000), None),
         fill(Some(4.0), None, Some(3.0)),
     ];
 
     assert_eq!(
-        summarize_fills(&fills),
+        summarize_fills(fills.iter()),
         FillQuality {
             measured: 2,
             total_fees_usd: 0.02,

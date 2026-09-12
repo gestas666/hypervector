@@ -4,7 +4,7 @@ use ratatui::{
     Frame,
     layout::{Constraint, Direction, Layout, Rect},
     text::{Line, Span},
-    widgets::{Clear, Paragraph, Wrap},
+    widgets::{Clear, Paragraph},
 };
 
 use crate::app::App;
@@ -29,7 +29,7 @@ pub(crate) fn render(frame: &mut Frame, app: &App, area: Rect) {
     let timeframe = selected_provider(app, symbol)
         .map(|provider| provider.timeframe.as_str())
         .unwrap_or("N/A");
-    let rows = Layout::vertical([Constraint::Length(2), Constraint::Min(12)]).split(inner);
+    let rows = Layout::vertical([Constraint::Length(3), Constraint::Min(12)]).split(inner);
     frame.render_widget(Paragraph::new(header(app, symbol, timeframe)), rows[0]);
     let columns =
         Layout::horizontal([Constraint::Percentage(61), Constraint::Percentage(39)]).split(rows[1]);
@@ -58,11 +58,35 @@ fn header(app: &App, symbol: &str, timeframe: &str) -> Vec<Line<'static>> {
             Span::styled(format!("VIEW {}", timeframe.to_uppercase()), app.theme.cyan),
             Span::raw(format!(" // {source} // {provider_count} STRATEGY VIEW(S)")),
         ]),
+        market_clock_line(app, symbol),
         Line::from(Span::styled(
-            "[↑/↓] STRATEGY  //  [Enter/Esc] CLOSE  //  DISPLAY ONLY",
+            "[↑/↓] STRATEGY // [PgUp/Dn Home/End] DETAILS // [Enter/Esc] CLOSE // DISPLAY ONLY",
             app.theme.muted,
         )),
     ]
+}
+
+fn market_clock_line(app: &App, symbol: &str) -> Line<'static> {
+    let now = chrono::Utc::now().timestamp_millis();
+    let candles = app
+        .backend
+        .cohort
+        .candle_history
+        .get(symbol)
+        .map(Vec::as_slice)
+        .unwrap_or(&[]);
+    let candle_age = crate::cohort_book_age::candle_age(candles, now);
+    let book_time = app
+        .backend
+        .cohort
+        .books
+        .get(symbol)
+        .map_or(0, |book| book.exchange_ts_ms);
+    let book_age = crate::cohort_book_age::book_age(book_time, now);
+    Line::from(Span::styled(
+        format!("{candle_age} // {book_age}"),
+        app.theme.gold,
+    ))
 }
 
 fn selected_provider<'a>(app: &'a App, symbol: &str) -> Option<&'a CohortProvider> {
@@ -75,6 +99,7 @@ fn selected_provider<'a>(app: &'a App, symbol: &str) -> Option<&'a CohortProvide
 
 fn render_provider(frame: &mut Frame, app: &App, area: Rect, symbol: &str) {
     let Some(provider) = selected_provider(app, symbol) else {
+        app.cohort_detail_max_scroll.set(0);
         render_empty(
             frame,
             app,
@@ -86,16 +111,17 @@ fn render_provider(frame: &mut Frame, app: &App, area: Rect, symbol: &str) {
     };
     let evaluation = latest_evaluation(app, provider, symbol);
     let lines = provider_lines(provider, evaluation, app);
-    frame.render_widget(
-        Paragraph::new(lines).wrap(Wrap { trim: true }).block(panel(
-            format!(
-                " {} // DECISION TF {} ",
-                provider_alias(&provider.strategy_id),
-                provider.timeframe.to_uppercase()
-            ),
-            app,
-        )),
+    crate::cohort_detail_scroll::render_with_controls(
+        frame,
+        app,
         area,
+        &format!(
+            " {} // DECISION TF {} ",
+            provider_alias(&provider.strategy_id),
+            provider.timeframe.to_uppercase()
+        ),
+        lines,
+        " [PgUp/Dn Home/End] Scroll ",
     );
 }
 
