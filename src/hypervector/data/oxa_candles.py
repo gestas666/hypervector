@@ -7,17 +7,18 @@ from dataclasses import asdict, dataclass
 from datetime import datetime
 import json
 from pathlib import Path
-from typing import Literal
 
 import pandas as pd
 
 from hypervector.data.oxa_api import (
-    API_ROOT,
     HttpSession,
     OxaRestClient,
     parse_utc_timestamp_ms,
-    validate_symbol,
     validate_window,
+)
+from hypervector.data.oxa_candle_request import (
+    CandleInterval as CandleInterval,
+    OxaCandleRequest as OxaCandleRequest,
 )
 from hypervector.data.provenance import normalize_ohlcv
 from hypervector.data.oxa_storage import (
@@ -29,8 +30,6 @@ from hypervector.data.oxa_storage import (
     write_json,
 )
 
-CandleInterval = Literal["1m", "5m", "15m", "30m", "1h", "4h", "1d", "1w"]
-_INTERVALS = frozenset(("1m", "5m", "15m", "30m", "1h", "4h", "1d", "1w"))
 _PANDAS_FREQUENCIES = {
     "1m": "1min",
     "5m": "5min",
@@ -41,41 +40,6 @@ _PANDAS_FREQUENCIES = {
     "1d": "1D",
     "1w": "7D",
 }
-
-
-@dataclass(frozen=True)
-class OxaCandleRequest:
-    """Explicit bounds for one Hyperliquid OHLCV history request."""
-
-    symbol: str
-    start: datetime
-    end: datetime
-    interval: CandleInterval = "1m"
-    limit: int = 10_000
-    max_pages: int = 20
-    timeout_seconds: float = 30.0
-
-    def __post_init__(self) -> None:
-        validate_symbol(self.symbol)
-        validate_window(self.start, self.end)
-        if self.interval not in _INTERVALS:
-            raise ValueError("unsupported candle interval")
-        if not 1 <= self.limit <= 10_000:
-            raise ValueError("candle limit must be between 1 and 10000")
-        if self.max_pages < 1 or self.timeout_seconds <= 0.0:
-            raise ValueError("candle max_pages and timeout must be positive")
-
-    def params(self, cursor: str | None = None) -> dict[str, int | str]:
-        """Build bounded candle query parameters without credentials."""
-        params: dict[str, int | str] = {
-            "start": int(self.start.timestamp() * 1000),
-            "end": int(self.end.timestamp() * 1000),
-            "interval": self.interval,
-            "limit": self.limit,
-        }
-        if cursor is not None:
-            params["cursor"] = cursor
-        return params
 
 
 @dataclass(frozen=True)
@@ -145,7 +109,7 @@ class OxaCandleClient:
     ) -> OxaCandlePage:
         """Fetch and validate one bounded candle page."""
         payload = self._client.get(
-            f"/candles/{request.symbol}",
+            request.route(),
             params=request.params(cursor),
             timeout=request.timeout_seconds,
         )
@@ -172,15 +136,10 @@ def candle_output_directory(data_root: Path | str, request: OxaCandleRequest) ->
     """Return the immutable bundle directory for one candle window."""
     stamp = "%Y%m%dT%H%M%S%fZ"
     window = f"{request.start.strftime(stamp)}_{request.end.strftime(stamp)}"
-    return (
-        Path(data_root)
-        / "cache"
-        / "vendor"
-        / "0xarchive"
-        / "hyperliquid"
-        / request.symbol
-        / f"{window}_candles_{request.interval}"
-    )
+    root = Path(data_root) / "cache" / "vendor" / "0xarchive" / "hyperliquid"
+    if request.market_family == "hip3":
+        root /= "hip3"
+    return root / request.symbol / f"{window}_candles_{request.interval}"
 
 
 def store_candle_history(
@@ -217,7 +176,8 @@ def acquire_and_store_candles(
     return {
         "ok": True,
         "venue": "hyperliquid",
-        "source": "0xarchive_hyperliquid_candles",
+        "source": request.source,
+        "market_family": request.market_family,
         "symbol": request.symbol,
         "interval": request.interval,
         "row_count": len(result.candles),
@@ -301,7 +261,8 @@ def _verify_manifest_request(
 ) -> None:
     expected: dict[str, object] = {
         "schema_version": 1,
-        "source": "0xarchive_hyperliquid_candles",
+        "source": request.source,
+        "source_api": request.source_api,
         "venue": "hyperliquid",
         "symbol": request.symbol,
         "interval": request.interval,
@@ -312,6 +273,8 @@ def _verify_manifest_request(
         "complete": True,
         "continuation_cursor": None,
     }
+    if request.market_family == "hip3" or "market_family" in manifest:
+        expected["market_family"] = request.market_family
     if any(manifest.get(key) != value for key, value in expected.items()):
         raise ValueError("candle manifest differs from the exact request")
 
@@ -473,8 +436,9 @@ def _manifest(
 ) -> dict[str, object]:
     return {
         "schema_version": 1,
-        "source": "0xarchive_hyperliquid_candles",
-        "source_api": f"{API_ROOT}/candles/{{symbol}}",
+        "source": request.source,
+        "source_api": request.source_api,
+        "market_family": request.market_family,
         "venue": "hyperliquid",
         "symbol": request.symbol,
         "interval": request.interval,

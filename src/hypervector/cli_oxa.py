@@ -10,6 +10,10 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from hypervector.data.oxa_api import OxaHistoryError
+from hypervector.cli_oxa_candle_cache import (
+    install_candle_cache as _install_candle_cache,
+    validate_candle_cache_interval,
+)
 
 
 def add_oxa_parsers(subparsers: argparse._SubParsersAction) -> None:
@@ -74,6 +78,7 @@ def _add_context_fetch_parsers(subparsers: argparse._SubParsersAction) -> None:
         help="Fetch bounded Hyperliquid-native OHLCV candles from 0xArchive",
     )
     candles.add_argument("--symbol", default="BTC")
+    candles.add_argument("--market-family", choices=("core", "hip3"), default="core")
     candles.add_argument("--start", required=True, type=_parse_utc_datetime)
     candles.add_argument("--end", required=True, type=_parse_utc_datetime)
     candles.add_argument(
@@ -273,6 +278,8 @@ def cmd_oxa_candle_fetch(args: argparse.Namespace) -> int:
     )
 
     try:
+        if args.install_research_cache:
+            validate_candle_cache_interval(args)
         request = OxaCandleRequest(
             args.symbol,
             args.start,
@@ -281,6 +288,7 @@ def cmd_oxa_candle_fetch(args: argparse.Namespace) -> int:
             args.limit,
             args.max_pages,
             args.timeout,
+            market_family=args.market_family,
         )
         report = acquire_and_store_candles(
             data_root=args.data_root,
@@ -432,30 +440,6 @@ def _research_database_path(args: argparse.Namespace) -> Path:
     if args.database is not None:
         return Path(args.database)
     return paths_for(args.data_root).research_db
-
-
-def _install_candle_cache(
-    args: argparse.Namespace, report: dict[str, object]
-) -> tuple[str, int]:
-    import pandas as pd
-
-    from hypervector.data.cache import ParquetCache
-    from hypervector.data.oxa_candles import repair_candle_cadence
-    from hypervector.data.pipeline import cache_key
-
-    duration_days = (args.end - args.start).total_seconds() / 86_400
-    if not duration_days.is_integer():
-        raise ValueError("research cache installation requires a whole-day window")
-    candles_path = report.get("candles_path")
-    if not isinstance(candles_path, str):
-        raise ValueError("candle acquisition did not return a Parquet path")
-    frame = pd.read_parquet(candles_path)
-    frame, gap_fills = repair_candle_cadence(frame, start=args.start, end=args.end)
-    cache = ParquetCache(Path(args.data_root) / "cache")
-    installed = cache.save(
-        cache_key(args.symbol, args.interval, int(duration_days)), frame
-    )
-    return str(installed.resolve()), gap_fills
 
 
 def _add_window_args(parser: argparse.ArgumentParser) -> None:
