@@ -5,6 +5,32 @@
 [heartbeat/lifecycle installation review](docs/reviews/2026-09-12-v89-heartbeat-freshness.md).
 Historical notes below do not establish current runtime or research state.
 
+**Latest research:** the [historical waiting-time review](docs/reviews/2026-09-12-v89-entry-waiting-time.md)
+extends the already completed September 10 financial report; no matrix or reporter
+was restarted. Its 48 cases share 177 trade identities and 167 entry episodes.
+Empty four/eight/twelve-hour portfolio windows account for 51.44%/24.80%/11.74%
+of complete hourly-start windows. Core crypto has 17 trades and 35 zero-entry days
+in the 48-day history. Under adverse costs, only 8/27 episodes following waits of
+at least twelve hours are profitable. These are dependent, previously examined
+historical observations, not future probabilities or an entry-filter proposal.
+
+The isolated research source is `f1fa951ba708a531daad9ce83c2324e77f62c7fa` in
+`hypervector-v89-entry-waiting-20260912`. Twenty-nine offline tests pass with
+50/50 arithmetic statements and 14/14 branches covered. Independent SQL matches
+150,432 window/day/gap rows and 2,520 outcome fields; eight corrupted results are
+rejected, and five final files reproduce byte-for-byte. Sixty-four direct historical
+input identities authenticate. Both prospective hypothetical seals remain unopened.
+
+At 04:34:55 UTC the existing SNDK short and full-size 1669.9 stop remain present,
+with -$1.4076 unrealized and +$0.095742 summed funding cash flows. Core is flat and
+order-free in that unsigned capture. Original trading PIDs, terminal rows, profile,
+binary and ledger identities are unchanged. Refresh before current-state claims.
+
+**Next research:** predeclare an additional public-only paired timing run for the
+existing candle-fetch session candidate, preserving payload equality and order
+sequencing. The current 64-file installation decision below remains pending;
+the waiting-time study selects no live change.
+
 Candidate **1b5eaa90118b868e5084cd750fb0fa96faabbd40** fixes the prior observed
 freshness gap: run-bound heartbeats establish cohort health independently of
 file writes or acknowledgements, normal observer exit emits `runtime_stopped`,
@@ -58,14 +84,19 @@ permissions limit machine-wide absence statements.
 candidate under the objective's Human control clause. Installation approval is
 not a trading-start instruction. After approval, verify the installed runtime.
 While approval is pending, investigate seven-route entry frequency and
-opportunity cost using unsealed historical/public evidence; distinguish recipe
-cadence, implementation delay and selection effects. Full live and economic
-readiness remain unproven; the broad continuous objective remains active.
+opportunity cost using unsealed historical/public evidence. The completed
+waiting-time study above now supplies the cadence measurement; next validate
+the existing public candle-fetch session candidate's timing and payload parity.
+Full live and economic readiness remain unproven; the broad continuous objective
+remains active.
 
-The latest disk-cleanup request recovered **1.0218 GB net** with a verified
-160 MB backup under `~/Library/Logs/Codex-Disk-Cleanup/20260912T032405Z`.
-Active browser caches were excluded. Free space is variable with builds and
-background activity; the verified cleanup-completion reading was 24.217 GB.
+The latest disk-cleanup request recovered **2.2080 GB net** with a verified
+2.419 GB zstd recovery archive under
+`~/Library/Logs/Codex-Disk-Cleanup/20260912T041158Z`.
+Generated debug caches from two idle candidate worktrees were cleared; source,
+executables, trading data and prior backups were preserved. Free space varies;
+the 04:20 UTC cleanup-completion reading was 26.090 GB. An initially larger gzip
+backup was replaced only after the smaller archive's decoded bytes were verified.
 
 ---
 

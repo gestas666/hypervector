@@ -7,6 +7,41 @@ Historical studies remain bounded to their recorded windows.
 
 ## Current finding and next action
 
+**September 12 historical waiting-time analysis:**
+The [new review](../reviews/2026-09-12-v89-entry-waiting-time.md) extends the
+already completed September 10 matrix and report, which were not restarted.
+All 48 scenarios share **177 trades and 167 unique entry timestamps**. Complete
+hourly-start four/eight/twelve-hour windows had no portfolio entry in
+**51.44%/24.80%/11.74%** of observations. Core crypto supplied 17 trades and
+35 zero-entry calendar days. Under adverse costs, **8 of 27** portfolio entry
+episodes after waits of at least twelve hours were profitable; their net was
+**-$127.61**. Fixed wait bins select no new entry filter or sizing rule.
+
+This is a previously explored 48-day historical sample. Hourly windows overlap;
+separate fixed-grid windows can remain serially dependent. The three cases after
+24-hour waits are especially sparse. These fractions do not establish future
+waiting times, return probabilities or current execution health.
+
+Source **f1fa951** remains in the isolated `hypervector-v89-entry-waiting-20260912`
+worktree. **29 offline tests** pass, covering all 50 arithmetic statements and
+14 branches. Independent SQL on original account case files reconciles **150,432
+window/day/gap rows and 2,520 outcome fields**, with maximum cash residual
+5.6843e-14 USD. Eight corrupted results are rejected. Five final outputs reproduce
+byte-for-byte; 64 direct historical/presentation inputs authenticate.
+
+At **04:34:55 UTC**, seven unsigned responses retain the existing **0.306 SNDK
+short and full-size 1669.9 stop**, -$1.4076 unrealized, and +$0.095742 in 14 summed
+funding cash rows. Core is flat/order-free in that capture. Original trading PIDs,
+terminal rows and source/profile/binary/ledger boundaries are unchanged; process
+visibility has documented limits. Both prospective seals remain unopened.
+
+**Next research:** extend the pending candle-fetch session candidate's four paired
+public observations using a predeclared payload-parity and timing experiment.
+No deployment or financial behavior changed; the latest 64-file installation
+decision below remains pending. The journal is
+`v89-entry-waiting-time-20260912-v1.json`; full verification receipts are in
+`data/logs/research/bidirectional_cohort/v89_entry_waiting_time_20260912_v1`.
+
 **September 12 04:00 UTC heartbeat and terminal health:**
 The [installation review](../reviews/2026-09-12-v89-heartbeat-freshness.md) records
 candidate **1b5eaa9**, which repairs the previous freshness gap. The exact

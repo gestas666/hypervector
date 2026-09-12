@@ -1,0 +1,156 @@
+{
+  "automatic_promotion": false,
+  "confidence": "high",
+  "created_at_utc": "2026-09-12T04:41:18.655263+00:00",
+  "decision": "Retain the authenticated historical waiting-time measurements. Four-hour and eight-hour empty windows occur frequently, especially for core crypto. No wait-based filter or sizing change is supported. Next extend the existing candle-fetch session candidate with predeclared public-only paired timing observations; preserve all payloads and order-management sequencing.",
+  "evidence": [
+    {
+      "bytes": 11687,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_waiting_time_20260912_v1/artifact_manifest.json",
+      "role": "historical_waiting_time_measurement",
+      "sha256": "4534d934d0decb541c3b3e02aecc8c6bc9b5e7dc6d32a15aaa68ddf55a3529c2"
+    },
+    {
+      "bytes": 1813,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_waiting_time_20260912_v1/source.json",
+      "role": "historical_waiting_time_measurement",
+      "sha256": "351a9d1176ba5579ad472b806fc9a006e4fae4d68fd037702ce33bc5fb1eb419"
+    },
+    {
+      "bytes": 10696,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_waiting_time_20260912_v1/source.tar.gz",
+      "role": "historical_waiting_time_measurement",
+      "sha256": "f054785c62e593034cc9b8d71c97a470475a4e013ef7bec34cf49f4aeaca973d"
+    },
+    {
+      "bytes": 14809186,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_waiting_time_20260912_v1/result.json",
+      "role": "historical_waiting_time_measurement",
+      "sha256": "ed82db998fcf105ef4a501171d47b2c2a193156d36bc780b8fc0f376dcdcdafa"
+    },
+    {
+      "bytes": 19780,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_waiting_time_20260912_v1/input_references.json",
+      "role": "historical_waiting_time_measurement",
+      "sha256": "5ebc843eb111e567a67acd12d258ce9b6b446cf1c67c7f377f05cd7a1ff8b170"
+    },
+    {
+      "bytes": 262,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_waiting_time_20260912_v1/independent_verification.json",
+      "role": "historical_waiting_time_measurement",
+      "sha256": "0ed20359cb66545c61f4fcceaa0c491eea32e74ff29e45683e3f32faef421f96"
+    },
+    {
+      "bytes": 1086,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_waiting_time_20260912_v1/negative_controls.json",
+      "role": "historical_waiting_time_measurement",
+      "sha256": "f68a969365dde5c3e1b1650036d2fa080ac0ba0ca810d32083a0dd3edcf15ee7"
+    },
+    {
+      "bytes": 369,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_waiting_time_20260912_v1/reproduction_verified.json",
+      "role": "historical_waiting_time_measurement",
+      "sha256": "05fac100d4f43a7b6a441a73a4a685c0ab96c0c71c087d7bf86dcc7b93373e57"
+    },
+    {
+      "bytes": 869,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_waiting_time_20260912_v1/tests_final.log",
+      "role": "historical_waiting_time_measurement",
+      "sha256": "4399f1d50973077a33ba5696433081fe07ac65a4f51b384f55fe3e4af6939be9"
+    },
+    {
+      "bytes": 6639,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_waiting_time_20260912_v1/coverage_final.json",
+      "role": "historical_waiting_time_measurement",
+      "sha256": "f25d2d77138affb3bd0427587e259d6ec6affacf258c6d784dce34b915166214"
+    },
+    {
+      "bytes": 969,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_waiting_time_20260912_v1/structure_verified.json",
+      "role": "historical_waiting_time_measurement",
+      "sha256": "e8768e24573dd1028be3a88f191a41a620a1b9f7f26e457ec920d8fb5620d91f"
+    },
+    {
+      "bytes": 19,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_waiting_time_20260912_v1/lint_final.log",
+      "role": "historical_waiting_time_measurement",
+      "sha256": "82b3e6a6c090a57601d22943bd23fca9218d1031dbe5a7b754092f9a156b4f18"
+    },
+    {
+      "bytes": 757,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_waiting_time_20260912_v1/operator_notes.json",
+      "role": "historical_waiting_time_measurement",
+      "sha256": "203d24a92e6cdf5eb032ff3609338c5cc78a722465c799554c5a21c6a69c8dfd"
+    },
+    {
+      "bytes": 4070,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_waiting_time_20260912_v1/publication_boundary/closing_boundary.json",
+      "role": "historical_waiting_time_measurement",
+      "sha256": "6ab10d51fb8aefb69c2c319c7e6f2f64e6eb1bec897c0f1ae8ad80da51108730"
+    },
+    {
+      "bytes": 154,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_entry_waiting_time_20260912_v1/publication_boundary/verified.json",
+      "role": "historical_waiting_time_measurement",
+      "sha256": "c622cb3ccdcd7eb9b20c872c2cf6190729e201271eddc011317c14300302de8a"
+    },
+    {
+      "bytes": 9233,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/reviews/2026-09-12-v89-entry-waiting-time.md",
+      "role": "review",
+      "sha256": "d57c6f3467dc11270410fcf35950019d8c5dff6e9ef309528af5e6f06948d5f8"
+    }
+  ],
+  "execution_authority": "none",
+  "falsifier": "Changed source identities, inconsistent scenario schedules, wrong half-open interval or censoring semantics, failed SQL reconciliation, scenario pooling, or nonreproducing outputs invalidate the corresponding historical measurement. New causal observations under unchanged profile/source coverage could update cadence expectations; future profitability is unresolved.",
+  "hypothesis": "The historical average entry rate hides multi-hour inactivity; preceding inactivity alone does not establish higher subsequent net win probability. Measure complete waiting windows and fixed episode-outcome bins without tuning a strategy.",
+  "hypothesis_id": "v89_entry_waiting_time_20260912_v1",
+  "limitations": [
+    "Previously explored 48-day history is not a fresh holdout.",
+    "Hourly waiting windows overlap; separate fixed-grid windows may remain serially dependent.",
+    "Simultaneous entries are grouped for episode outcomes, whose first left-censored episode is excluded.",
+    "Original historical prices, fees, funding, slippage and timing assumptions were reused; no new independent financial replay was run.",
+    "Wait bins mix asset, side, time and regime composition; no causal effect, fitted filter or future win probability is established.",
+    "Sparse per-asset core histories and only three portfolio episodes after 24-hour waits limit interpretation.",
+    "Pure arithmetic coverage is complete; full orchestration unit coverage is not claimed.",
+    "The backend remains stopped; historical inactivity does not establish current live cadence. Both prospective outcome seals remain unopened."
+  ],
+  "metrics": {
+    "adverse_net_after_at_least_12h_wait_usd": -127.60933541218066,
+    "adverse_profitable_episodes_after_at_least_12h_wait": 8,
+    "arithmetic_branches_covered": 14,
+    "arithmetic_branches_total": 14,
+    "arithmetic_statements_covered": 50,
+    "arithmetic_statements_total": 50,
+    "core_trades": 17,
+    "core_zero_entry_calendar_days": 35,
+    "corrupted_results_rejected": 8,
+    "direct_historical_files_authenticated": 64,
+    "entry_episodes": 167,
+    "episodes_after_at_least_12h_wait": 27,
+    "frozen_artifact_files": 36,
+    "hip3_trades": 160,
+    "historical_days": 48,
+    "independent_outcome_fields": 2520,
+    "independent_window_day_gap_rows": 150432,
+    "maximum_outcome_residual_usd": 5.684341886080802e-14,
+    "offline_tests_passed": 29,
+    "portfolio_complete_12h_windows": 1141,
+    "portfolio_complete_4h_windows": 1149,
+    "portfolio_complete_8h_windows": 1145,
+    "portfolio_empty_12h_windows": 134,
+    "portfolio_empty_4h_windows": 591,
+    "portfolio_empty_8h_windows": 284,
+    "reproduced_files": 5,
+    "scenarios_authenticated": 48,
+    "source_commit": "f1fa951ba708a531daad9ce83c2324e77f62c7fa",
+    "unique_trade_identities": 177
+  },
+  "revision_number": 1,
+  "runtime_strategy_changed": false,
+  "schema_version": 1,
+  "status": "retain",
+  "strategy_id": "multi_asset_bidirectional_cohort",
+  "supersedes_revision_id": null,
+  "symbol": "MULTI"
+}
