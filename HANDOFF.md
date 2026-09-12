@@ -5,6 +5,25 @@
 [heartbeat/lifecycle installation review](docs/reviews/2026-09-12-v89-heartbeat-freshness.md).
 Historical notes below do not establish current runtime or research state.
 
+**Active investigation:** the [SNDK source-capture checkpoint](docs/reviews/2026-09-12-v89-sndk-source-capture.md)
+completes bounded acquisition and clock qualification, with **1,440 minute and
+96 quarter-hour rows**, no duplicate clocks or missing slots inside August 19.
+The extra end-boundary rows remain preserved. Source **a17dadbb416d5f95608e799f0cc0d819069d2cc6**
+is clean in `hypervector-v89-sndk-source-20260912`; **38 offline tests** pass in
+the worktree and the nine-file archive. The initial optional-cursor parsing
+failure and original minute response remain retained; only the outstanding
+15m request was made during recovery. Exact vendor quality metadata omits candles.
+
+**Immediate next work:** numeric/source reproduction, full-day OHLCV comparison,
+vendor minute aggregation, and original account exit-clock semantics. Those
+checks and the final source-reconciliation journal are unfinished. Do not repeat
+acquisition or publish price-agreement conclusions from timestamp coverage.
+At **08:35:12 UTC**, unsigned venue evidence retains the original SNDK short and
+full-size 1669.9 stop, **-$0.0918 unrealized** and **+$0.084062** funding cash over
+18 rows. Core is flat/order-free, no additional bounded fill appears, original
+runner PIDs are absent, and terminal/profile/TUI/ledger identities are unchanged.
+Both seals remain unopened. Refresh before current-state claims.
+
 **Latest research:** the [SNDK day influence audit](docs/reviews/2026-09-12-v89-sndk-day-influence.md)
 completes all **96 fixed omission scenarios**. The long one-hour gap retains
 its negative sign under both modes and matching methods, but dropping August 19's

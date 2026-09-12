@@ -7,6 +7,20 @@ Historical studies remain bounded to their recorded windows.
 
 ## Current finding and next action
 
+**Active source reconciliation:** the [capture checkpoint](../reviews/2026-09-12-v89-sndk-source-capture.md)
+retains separately collected 0xArchive HIP-3 responses for August 19 with complete ordered
+**1,440 minute rows / 96 quarter-hour rows**, no duplicate clocks or missing slots, and
+preserved exclusive-end rows. Four quality responses remain retained; exact
+symbol metadata omits candle coverage. The initial reader's optional-cursor
+mistake is corrected, with the failed phase preserved and no repeated minute GET.
+Source **a17dadbb416d5f95608e799f0cc0d819069d2cc6** passes **38 offline tests** in
+the worktree and nine-file archive. **Price agreement and original exit-clock
+semantics remain unverified**; complete those next, then independently reconcile
+and journal the diagnosis. Do not repeat acquisition or the completed sensitivity
+studies. The latest unsigned account boundary is **08:35:12 UTC**: existing
+SNDK short/full-size 1669.9 stop, **-$0.0918 unrealized**, **+$0.084062** funding
+cash over 18 rows, core flat/order-free and no additional bounded fill.
+
 **September 12 SNDK day influence audit:**
 The [review](../reviews/2026-09-12-v89-sndk-day-influence.md) retains every one
 of 48 date omissions under two fixed modes: remove that date's entry anchors,
