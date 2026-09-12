@@ -7,6 +7,53 @@ Historical studies remain bounded to their recorded windows.
 
 ## Current finding and next action
 
+**September 12 SNDK matched-background comparison:**
+The [review](../reviews/2026-09-12-v89-sndk-background.md) compares all 47 accepted
+entries with fixed non-entry hours in the same cohort and UTC hour, plus a
+weekday/weekend sensitivity. Both use the native completed close at the anchor.
+Earlier/later long one-hour entry means are **-16.10/-90.07 bps**, versus
+**+7.82/+0.09 bps** in their matched backgrounds. The **-73.98 bps** entry gap
+splits into **-7.73 bps** background change and **-66.25 bps** excess change.
+Day-class matching retains **-61.23 bps** excess change. This is consistent with
+entry-associated weakness under these controls; causality and future profit
+remain unproven. Short-side changes vary across horizons.
+
+All **4,608 calendar rows**, **376 comparisons**, **32 groups**, **16 decompositions**
+and **1,128 modeled/native price-basis rows** reconcile independently. One unique
+24-hour entry target is missing; all missing calendar targets and control
+memberships remain explicit. The price-basis bridge explains the difference
+from the preceding modeled-entry study without revising fees, fills or PnL.
+
+**67 offline tests** pass. Arithmetic has full statement/branch coverage;
+orchestration coverage is separately disclosed. The first archive replay found
+sub-tolerance parallel SQL aggregation differences in the verifier digest.
+A one-line single-thread setting and failing-then-passing repeatability test
+resolve that issue. Final source **03f153f131a1b1dcf7d2ca9a4ccfc312315f9f47** is
+clean and frozen; all seven data files plus the independent receipt reproduce
+byte-for-byte from the 15-file archive. Original source/results are preserved.
+
+Journal **b73568200da6adfb09b1327e896c39847f4c80755d25a3bcccd1c92c5f470bd0**
+binds **25 direct references**, **117 frozen files** and **2,375 prior input
+references**, plus 11 pinned prior-study artifacts. All 21 normalized database
+fields and the source archive were verified. Both installation proposals remain
+unchanged and uninstalled; both prospective seals remain unopened.
+
+At **06:47:14 UTC**, seven authenticated unsigned responses show the existing
+**-0.306 SNDK** position, **-$0.7956 unrealized**, and its full-size 1669.9
+reduce-only native stop. Funding cash totals **+$0.092131** across 16 rows.
+Core is flat/order-free, the bounded fill query contains the original entry,
+and original runner PIDs are absent. Terminal/profile/binary/ledger identities
+are unchanged. Refresh before current-state claims; process visibility is limited.
+
+**Single next investigation:** predeclare a day-level influence audit of the
+new matched excess and earlier/later gap, retaining every omission scenario.
+Large moves and the small later cohort warrant this sensitivity check before
+claiming a stable regime or signal cause. Fit no live filter from this explored
+history. The original held-path, fixed-horizon and matched-background studies
+are complete and should not be repeated as new trials.
+
+## Previous holding-period selection finding
+
 **September 12 SNDK fixed-horizon entry diagnostic:**
 The [new review](../reviews/2026-09-12-v89-sndk-fixed-horizon.md) includes all
 47 accepted entries at predeclared 15-minute, 1-hour, 4-hour and 24-hour targets,

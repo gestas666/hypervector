@@ -5,36 +5,41 @@
 [heartbeat/lifecycle installation review](docs/reviews/2026-09-12-v89-heartbeat-freshness.md).
 Historical notes below do not establish current runtime or research state.
 
-**Latest research:** the [SNDK fixed-horizon review](docs/reviews/2026-09-12-v89-sndk-fixed-horizon.md)
-measures all 47 accepted entries, including early exits. Earlier/later long
-one-hour means change from the old held-only **+22.21/-38.83 bps** to
-**-20.49/-97.38 bps**. Later longs remain weaker; the earlier positive mean was
-conditional on remaining open. This is a signed price-path diagnostic, excluding
-exit execution, fees and funding, not a policy backtest or future probability.
+**Latest research:** the [SNDK matched-background review](docs/reviews/2026-09-12-v89-sndk-background.md)
+finds that the later long one-hour deficit remains after cohort/hour matching.
+Earlier/later native entry means are **-16.10/-90.07 bps**, matched backgrounds
+**+7.82/+0.09 bps**, and matched excess **-23.92/-90.17 bps**. Of the **-73.98 bps**
+entry change, **-7.73 bps** is background change and **-66.25 bps** is excess
+change. Weekday/weekend matching retains **-61.23 bps** excess change.
+High confidence applies to historical measurement, not causality or future profit.
 
-Research source **feabbfa6641087692419cebc5f150c192a70f24b** is clean in
-`hypervector-v89-sndk-fixed-horizon-20260912`. **68 offline tests** pass; arithmetic
-and input qualification have full statement/branch coverage. Separate SQL/Decimal
-checks reconcile all 1,128 horizon rows, 288 groups, 96 selection effects and
-282 original-hour comparisons. Nine output files reproduce byte-for-byte from
-the 10-file archive. Six missing rows represent one unique right-censored 24-hour
-target, not six independent cases. All 47 one-hour targets are observed.
+Source **03f153f131a1b1dcf7d2ca9a4ccfc312315f9f47** is clean in
+`hypervector-v89-sndk-background-20260912`. **67 offline tests** pass; arithmetic
+has full statement/branch coverage. Independent SQL/Decimal checks reconcile
+4,608 calendar rows, 376 comparisons, 32 groups, 16 decompositions and 1,128
+modeled/native price-basis rows. Seven data artifacts plus the final independent
+receipt reproduce byte-for-byte from the 15-file archive. The verifier-only
+single-thread fix resolves sub-tolerance floating-order digest variation;
+original operator results and both verifier versions remain retained.
 
-Journal **aeeb16da596109ef885b9c5bbae7fde1164685434dc7802f174d4e34fe2ca0f0** binds
-19 direct references, 75 frozen files and 2,375 authenticated prior inputs.
-The two-file session candidate and 64-file installation package below remain
-unchanged, uninstalled and unactivated. Both prospective seals remain unopened.
+Journal **b73568200da6adfb09b1327e896c39847f4c80755d25a3bcccd1c92c5f470bd0** binds
+25 direct references, 117 frozen files, 2,375 prior input references and 11
+pinned prior-study artifacts. All 21 normalized database fields were verified.
+One unique later-long 24-hour target is unavailable. Both installation candidates
+remain unchanged and uninstalled; both prospective seals remain unopened.
 
-At **06:01:13 UTC** the existing SNDK short and full-size 1669.9 native stop
-remain present, with **-$1.53 unrealized** and **+$0.092131** summed funding cash
-flows across 16 rows. Core is flat/order-free in that unsigned capture. Original
-trading PIDs remain absent; terminal/profile/binary/ledger identities are unchanged.
+At **06:47:14 UTC**, the existing SNDK short and full-size 1669.9 reduce-only
+native stop remain present, with **-$0.7956 unrealized** and **+$0.092131** summed
+funding cash across 16 rows. Core is flat/order-free. The bounded fill query
+contains the original entry, original trading PIDs are absent, and all seven
+terminal rows plus installed profile/binary/ledger hashes remain unchanged.
 Refresh before current-state claims; machine-wide process visibility is limited.
 
-**Next research:** predeclare calendar-hour matched background SNDK forward-price
-controls, with the same causal price convention and historical periods, to test
-whether weaker later long follow-through is entry-specific or shared by the asset.
-Keep missing/censored controls explicit and select no fitted live filter.
+**Next research:** predeclare a day-level influence audit of the newly measured
+matched-excess gap. Retain every omission scenario, quantify the influence of
+large moves, and propose no fitted live rule from this explored history.
+The [fixed-horizon study](docs/reviews/2026-09-12-v89-sndk-fixed-horizon.md) and
+background comparison are complete; do not repeat them as new trials.
 
 The prior [session-latency extension](docs/reviews/2026-09-12-v89-session-latency-extension.md)
 is complete: all 16 pairs favor reuse, median saving 1.856397 seconds / 44.5684%,
