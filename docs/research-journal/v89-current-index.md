@@ -7,6 +7,45 @@ Historical studies remain bounded to their recorded windows.
 
 ## Current finding and next action
 
+**September 12 SNDK fixed-horizon entry diagnostic:**
+The [new review](../reviews/2026-09-12-v89-sndk-fixed-horizon.md) includes all
+47 accepted entries at predeclared 15-minute, 1-hour, 4-hour and 24-hour targets,
+including trades that exited earlier. Holding-period selection materially changes
+the old first-hour interpretation: earlier long means move from **+22.21 to
+-20.49 bps**, later long means from **-38.83 to -97.38 bps**. The later long
+cohort remains weaker. Short-side changes are mixed, and price paths after exit
+are not actual trade PnL or a validated holding-policy counterfactual.
+
+All **1,128 case-entry-horizon rows**, **288 groups**, **96 selection effects**
+and **282 old one-hour observations** reconcile independently. There are 47
+unique identities, not 282 independent case entries. Six missing rows represent
+one later-long 24-hour target beyond the source end. All 47 one-hour targets
+are observed. **68 offline tests** pass; metric and input-validation statement/
+branch coverage is complete. Nine outputs reproduce byte-for-byte from the
+10-file archive. Operator/verifier branch coverage remains separately disclosed.
+
+Source **feabbfa6641087692419cebc5f150c192a70f24b** is frozen and clean in
+`hypervector-v89-sndk-fixed-horizon-20260912`. Journal
+**aeeb16da596109ef885b9c5bbae7fde1164685434dc7802f174d4e34fe2ca0f0** binds
+19 direct references, 75 frozen files and 2,375 authenticated prior inputs.
+The two-file session and 64-file heartbeat/TUI proposals remain unchanged and
+uninstalled. Both prospective hypothetical outcome seals remain unopened.
+
+At **06:01:13 UTC**, seven authenticated unsigned responses retain the existing
+0.306 SNDK short and full-size 1669.9 native stop, **-$1.53 unrealized** and
+**+$0.092131** summed funding cash across 16 rows. Core is flat/order-free;
+original trading PIDs are absent and terminal/profile/binary/ledger identities
+are unchanged. Refresh before current-state claims.
+
+**Single next investigation:** predeclare calendar-hour matched background SNDK
+forward-price controls using the same causal price convention and historical
+periods. Test whether weaker later longs are entry-specific or reflect background
+asset movement. Preserve all controls and missing horizons; do not fit a live
+filter from this explored history. Held-path and fixed-horizon diagnostics are
+complete and should not be repeated.
+
+## Previous public transport finding
+
 **September 12 public session-latency extension:**
 The [supplemental review](../reviews/2026-09-12-v89-session-latency-extension.md)
 records a completed fixed 16-pair experiment: reuse is faster in all 16, with

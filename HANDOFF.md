@@ -5,39 +5,44 @@
 [heartbeat/lifecycle installation review](docs/reviews/2026-09-12-v89-heartbeat-freshness.md).
 Historical notes below do not establish current runtime or research state.
 
-**Latest research:** the [session-latency extension](docs/reviews/2026-09-12-v89-session-latency-extension.md)
-completed its fixed 16 public-only pairs without restart. Reuse was faster in
-16/16 pairs: median **1.856397 seconds / 44.5684%**. All 112 paired frames and
-9,408 raw-derived cells reconcile; 225 attempts include one recovered baseline
-ConnectionError, retained in the primary results. Four reused sessions close
-correctly; actual idle intervals span about 15–84 seconds. This small fixed
-five-minute candle workload does not establish cold-start, fill or profit gains.
+**Latest research:** the [SNDK fixed-horizon review](docs/reviews/2026-09-12-v89-sndk-fixed-horizon.md)
+measures all 47 accepted entries, including early exits. Earlier/later long
+one-hour means change from the old held-only **+22.21/-38.83 bps** to
+**-20.49/-97.38 bps**. Later longs remain weaker; the earlier positive mean was
+conditional on remaining open. This is a signed price-path diagnostic, excluding
+exit execution, fees and funding, not a policy backtest or future probability.
 
-Research source **ce60c08e7af750eb6e0ff58da7b4fb062fb50c90** is clean in
-`hypervector-v89-session-latency-20260912`. **53 offline tests** pass, including
-29 synthetic verifier-corruption controls. Independent verification reproduces
-byte-for-byte. Journal **afdc83805f111fb7cb76d0a30d36fe3562a48e46596c9c576c85a31a33b0c3b4**
-binds 16 direct references, 631 frozen files and 11 archived source/plan files.
-The existing two-file session candidate remains distinct from the pending
-64-file installation package below. Neither was installed or activated.
+Research source **feabbfa6641087692419cebc5f150c192a70f24b** is clean in
+`hypervector-v89-sndk-fixed-horizon-20260912`. **68 offline tests** pass; arithmetic
+and input qualification have full statement/branch coverage. Separate SQL/Decimal
+checks reconcile all 1,128 horizon rows, 288 groups, 96 selection effects and
+282 original-hour comparisons. Nine output files reproduce byte-for-byte from
+the 10-file archive. Six missing rows represent one unique right-censored 24-hour
+target, not six independent cases. All 47 one-hour targets are observed.
 
-At **05:32:18 UTC** the existing SNDK short and full-size 1669.9 stop remain
-present, with -$1.4076 unrealized and +$0.089007 summed funding cash flows across
-15 rows. Core is flat/order-free in that unsigned capture. Original trading
-PIDs remain absent and original terminal/profile/binary/ledger identities are
-unchanged. Refresh before current-state claims. Both prospective seals remain
-unopened.
+Journal **aeeb16da596109ef885b9c5bbae7fde1164685434dc7802f174d4e34fe2ca0f0** binds
+19 direct references, 75 frozen files and 2,375 authenticated prior inputs.
+The two-file session candidate and 64-file installation package below remain
+unchanged, uninstalled and unactivated. Both prospective seals remain unopened.
 
-**Next research:** remove holding-period selection from the existing SNDK
-first-hour diagnostic: predeclare fixed horizons, then reconstruct forward paths
-for all 47 accepted entries, including early exits and both directions. Retain
-missing/censored horizons; do not repeat completed held-bar excursion analysis
-or fit a live rule from this previously examined historical sample.
+At **06:01:13 UTC** the existing SNDK short and full-size 1669.9 native stop
+remain present, with **-$1.53 unrealized** and **+$0.092131** summed funding cash
+flows across 16 rows. Core is flat/order-free in that unsigned capture. Original
+trading PIDs remain absent; terminal/profile/binary/ledger identities are unchanged.
+Refresh before current-state claims; machine-wide process visibility is limited.
 
-The prior [waiting-time study](docs/reviews/2026-09-12-v89-entry-waiting-time.md)
-is complete: 177 identities / 167 episodes, 51.44% empty four-hour windows,
-24.80% empty eight-hour windows, and only 8/27 adverse-cost profitable episodes
-after waits of at least twelve hours. The September 10 matrix was not restarted.
+**Next research:** predeclare calendar-hour matched background SNDK forward-price
+controls, with the same causal price convention and historical periods, to test
+whether weaker later long follow-through is entry-specific or shared by the asset.
+Keep missing/censored controls explicit and select no fitted live filter.
+
+The prior [session-latency extension](docs/reviews/2026-09-12-v89-session-latency-extension.md)
+is complete: all 16 pairs favor reuse, median saving 1.856397 seconds / 44.5684%,
+112 paired frames exact and 225 attempts retained. Its optional two-file proposal
+remains separate. The [waiting-time study](docs/reviews/2026-09-12-v89-entry-waiting-time.md)
+is also complete: 177 identities / 167 episodes, 51.44% empty four-hour windows,
+and 8/27 adverse-cost profitable episodes after waits of at least twelve hours.
+The September 10 matrix and prior studies were not restarted.
 
 Candidate **1b5eaa90118b868e5084cd750fb0fa96faabbd40** fixes the prior observed
 freshness gap: run-bound heartbeats establish cohort health independently of
@@ -91,8 +96,8 @@ permissions limit machine-wide absence statements.
 **Next:** obtain the explicit installation decision for the exact 64-file
 candidate under the objective's Human control clause. Installation approval is
 not a trading-start instruction. After approval, verify the installed runtime.
-While approval is pending, continue the SNDK fixed-horizon investigation above.
-The waiting-time and extended public candle-session timing studies are complete.
+While approval is pending, continue the calendar-hour background investigation
+above. The fixed-horizon, waiting-time and extended session-timing studies are complete.
 Full live and economic readiness remain unproven; the broad continuous objective
 remains active.
 
