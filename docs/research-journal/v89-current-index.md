@@ -7,6 +7,42 @@ Historical studies remain bounded to their recorded windows.
 
 ## Current finding and next action
 
+**September 12 public session-latency extension:**
+The [supplemental review](../reviews/2026-09-12-v89-session-latency-extension.md)
+records a completed fixed 16-pair experiment: reuse is faster in all 16, with
+median paired saving **1.856397 seconds / 44.5684%**. All **112 paired frames**
+match; **9,408 raw-derived cells** reconcile. All **225 HTTP attempts** are
+retained, including one recovered baseline ConnectionError. Four independent
+session contexts close after their final requests. Actual idle intervals reach
+83.635 seconds; session identities do not prove underlying TCP reuse.
+
+Research source **ce60c08** passes **53 offline tests**, including 29 synthetic
+corruption controls. Its independent report reproduces byte-for-byte. This is
+one location, one short fixed five-minute candle window, and no economic or
+live-fill experiment. Keep the older four-pair workload separate. High confidence
+applies to measured evidence; future latency benefit has medium confidence.
+
+Journal **afdc83805f111fb7cb76d0a30d36fe3562a48e46596c9c576c85a31a33b0c3b4** binds
+16 direct references, 631 frozen study files and 11 archived source/plan files.
+The original two-file session proposal remains distinct from the pending
+64-file heartbeat/lifecycle installation packet. Neither is installed, expanded
+or activated by this experiment. Both prospective outcome seals remain unopened.
+
+At **05:32:18 UTC**, seven authenticated unsigned responses retain the existing
+**0.306 SNDK short and full-size 1669.9 stop**, -$1.4076 unrealized, and
++$0.089007 summed funding cash flows across 15 rows. Core is flat/order-free in
+that capture. Original trading PIDs remain absent, terminal rows and installed
+profile/binary/ledger identities unchanged. Refresh before current-state claims.
+
+**Single next investigation:** reconstruct fixed-horizon forward paths for all
+47 accepted SNDK entry identities, including early-exit trades and both sides,
+to remove holding-period selection from the prior first-hour diagnostic.
+Predeclare horizons and source requirements, retain missing/censored observations,
+and select no fitted policy or live change. Existing held-bar excursion work is
+complete and should not be repeated.
+
+## Previous historical cadence finding
+
 **September 12 historical waiting-time analysis:**
 The [new review](../reviews/2026-09-12-v89-entry-waiting-time.md) extends the
 already completed September 10 matrix and report, which were not restarted.

@@ -5,31 +5,39 @@
 [heartbeat/lifecycle installation review](docs/reviews/2026-09-12-v89-heartbeat-freshness.md).
 Historical notes below do not establish current runtime or research state.
 
-**Latest research:** the [historical waiting-time review](docs/reviews/2026-09-12-v89-entry-waiting-time.md)
-extends the already completed September 10 financial report; no matrix or reporter
-was restarted. Its 48 cases share 177 trade identities and 167 entry episodes.
-Empty four/eight/twelve-hour portfolio windows account for 51.44%/24.80%/11.74%
-of complete hourly-start windows. Core crypto has 17 trades and 35 zero-entry days
-in the 48-day history. Under adverse costs, only 8/27 episodes following waits of
-at least twelve hours are profitable. These are dependent, previously examined
-historical observations, not future probabilities or an entry-filter proposal.
+**Latest research:** the [session-latency extension](docs/reviews/2026-09-12-v89-session-latency-extension.md)
+completed its fixed 16 public-only pairs without restart. Reuse was faster in
+16/16 pairs: median **1.856397 seconds / 44.5684%**. All 112 paired frames and
+9,408 raw-derived cells reconcile; 225 attempts include one recovered baseline
+ConnectionError, retained in the primary results. Four reused sessions close
+correctly; actual idle intervals span about 15–84 seconds. This small fixed
+five-minute candle workload does not establish cold-start, fill or profit gains.
 
-The isolated research source is `f1fa951ba708a531daad9ce83c2324e77f62c7fa` in
-`hypervector-v89-entry-waiting-20260912`. Twenty-nine offline tests pass with
-50/50 arithmetic statements and 14/14 branches covered. Independent SQL matches
-150,432 window/day/gap rows and 2,520 outcome fields; eight corrupted results are
-rejected, and five final files reproduce byte-for-byte. Sixty-four direct historical
-input identities authenticate. Both prospective hypothetical seals remain unopened.
+Research source **ce60c08e7af750eb6e0ff58da7b4fb062fb50c90** is clean in
+`hypervector-v89-session-latency-20260912`. **53 offline tests** pass, including
+29 synthetic verifier-corruption controls. Independent verification reproduces
+byte-for-byte. Journal **afdc83805f111fb7cb76d0a30d36fe3562a48e46596c9c576c85a31a33b0c3b4**
+binds 16 direct references, 631 frozen files and 11 archived source/plan files.
+The existing two-file session candidate remains distinct from the pending
+64-file installation package below. Neither was installed or activated.
 
-At 04:34:55 UTC the existing SNDK short and full-size 1669.9 stop remain present,
-with -$1.4076 unrealized and +$0.095742 summed funding cash flows. Core is flat and
-order-free in that unsigned capture. Original trading PIDs, terminal rows, profile,
-binary and ledger identities are unchanged. Refresh before current-state claims.
+At **05:32:18 UTC** the existing SNDK short and full-size 1669.9 stop remain
+present, with -$1.4076 unrealized and +$0.089007 summed funding cash flows across
+15 rows. Core is flat/order-free in that unsigned capture. Original trading
+PIDs remain absent and original terminal/profile/binary/ledger identities are
+unchanged. Refresh before current-state claims. Both prospective seals remain
+unopened.
 
-**Next research:** predeclare an additional public-only paired timing run for the
-existing candle-fetch session candidate, preserving payload equality and order
-sequencing. The current 64-file installation decision below remains pending;
-the waiting-time study selects no live change.
+**Next research:** remove holding-period selection from the existing SNDK
+first-hour diagnostic: predeclare fixed horizons, then reconstruct forward paths
+for all 47 accepted entries, including early exits and both directions. Retain
+missing/censored horizons; do not repeat completed held-bar excursion analysis
+or fit a live rule from this previously examined historical sample.
+
+The prior [waiting-time study](docs/reviews/2026-09-12-v89-entry-waiting-time.md)
+is complete: 177 identities / 167 episodes, 51.44% empty four-hour windows,
+24.80% empty eight-hour windows, and only 8/27 adverse-cost profitable episodes
+after waits of at least twelve hours. The September 10 matrix was not restarted.
 
 Candidate **1b5eaa90118b868e5084cd750fb0fa96faabbd40** fixes the prior observed
 freshness gap: run-bound heartbeats establish cohort health independently of
@@ -83,20 +91,17 @@ permissions limit machine-wide absence statements.
 **Next:** obtain the explicit installation decision for the exact 64-file
 candidate under the objective's Human control clause. Installation approval is
 not a trading-start instruction. After approval, verify the installed runtime.
-While approval is pending, investigate seven-route entry frequency and
-opportunity cost using unsealed historical/public evidence. The completed
-waiting-time study above now supplies the cadence measurement; next validate
-the existing public candle-fetch session candidate's timing and payload parity.
+While approval is pending, continue the SNDK fixed-horizon investigation above.
+The waiting-time and extended public candle-session timing studies are complete.
 Full live and economic readiness remain unproven; the broad continuous objective
 remains active.
 
-The latest disk-cleanup request recovered **2.2080 GB net** with a verified
-2.419 GB zstd recovery archive under
-`~/Library/Logs/Codex-Disk-Cleanup/20260912T041158Z`.
-Generated debug caches from two idle candidate worktrees were cleared; source,
-executables, trading data and prior backups were preserved. Free space varies;
-the 04:20 UTC cleanup-completion reading was 26.090 GB. An initially larger gzip
-backup was replaced only after the smaller archive's decoded bytes were verified.
+The latest disk cleanup recovered **2.6535 GB net** by losslessly recompressing
+seven earlier recovery archives. Updated recovery instructions and verified
+checksums are under `~/Library/Logs/Codex-Disk-Cleanup/20260912T051953Z`.
+Projects, trading data and personal files were preserved. The final September 12
+05:25 UTC reading was **28.175 GB free**; subsequent writes change availability.
+The earlier 04:20 cleanup and its separate zstd backup remain recorded.
 
 ---
 
