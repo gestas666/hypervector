@@ -20,6 +20,9 @@ fn open_regime_trade_reflection() -> CohortOpenTradeReflection {
         target_order_price: Some(62_200.0),
         target_directional_distance_bps: Some(70.4),
         exit_plan: CohortOpenExitPlan {
+            opened_at_ms: None,
+            timer_origin: None,
+            as_of_timestamp_ms: None,
             maximum_hold_seconds: 28_800,
             maximum_hold_policy: "fixed".into(),
             provider_recipe_exit_policy: "ignore".into(),

@@ -39,6 +39,10 @@ pub fn render(frame: &mut Frame, app: &App) {
         _ => crate::cohort_config::render(frame, app, sections[1]),
     }
     render_footer(frame, app, sections[2]);
+    render_modals(frame, app);
+}
+
+fn render_modals(frame: &mut Frame, app: &App) {
     if app.show_cohort_setup_modal {
         crate::cohort_setup_detail::render(frame, app, frame.area());
     }
@@ -175,7 +179,13 @@ fn render_footer(frame: &mut Frame, app: &App, area: Rect) {
             frame.area().width < 120 || frame.area().height < 36,
         )),
     ]);
-    frame.render_widget(Paragraph::new(text).block(panel(title, app)), area);
+    let block = panel(title, app);
+    let block = if let Some(warning) = crate::cohort_open_hold_view::warning(app) {
+        block.title_bottom(Line::from(Span::styled(warning, app.theme.gate_blocked)))
+    } else {
+        block
+    };
+    frame.render_widget(Paragraph::new(text).block(block), area);
 }
 
 fn context_help(app: &App, compact: bool) -> String {

@@ -56,13 +56,14 @@ pub(crate) fn risk_label(
     )
 }
 
-/// Format arrival time, full decision date, and measured decision age.
+/// Distinguish arrival lag from elapsed observation age.
 pub(crate) fn timing_label(evaluation: &CohortProviderEvaluation) -> String {
     format!(
-        "ARRIVAL ET {} // DECISION ET {} // AGE {}",
+        "ARRIVAL ET {} // DECISION ET {} // ARRIVAL LAG {} // {}",
         eastern_time(&evaluation.observed_at),
         fill_full_date_time(evaluation.decision_time_ms),
         age_label(evaluation),
+        crate::cohort_strategy_context::evidence_age(evaluation, crate::cohort_open_hold::now_ms()),
     )
 }
 

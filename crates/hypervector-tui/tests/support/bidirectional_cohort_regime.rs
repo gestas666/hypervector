@@ -236,7 +236,7 @@ fn dedicated_regime_screen_projects_backend_multitimeframe_and_range_evidence() 
     assert!(screen.contains("ENTRY COMPONENT +0.50 ALIGNED"), "{screen}");
     assert!(screen.contains("EXIT  S:RANGE C:RANGE"), "{screen}");
     assert!(screen.contains("5M -11.6bps REVERSED"), "{screen}");
-    assert!(screen.contains("OPEN TRADE // REGIME DRIFT"), "{screen}");
+    assert!(screen.contains("OPEN SNAP //"), "{screen}");
     assert!(screen.contains("BK:S STR:S ALIGNED"), "{screen}");
     assert!(screen.contains("BTC S 5.5h"), "{screen}");
     assert!(screen.contains("S#508726918963@63418.32"), "{screen}");

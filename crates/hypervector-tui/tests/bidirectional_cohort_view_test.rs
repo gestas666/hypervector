@@ -80,3 +80,6 @@ include!("support/cohort_open_position_columns.rs");
 #[path = "support/cohort_entry_deadline_fixtures.rs"]
 mod entry_deadline_fixtures;
 include!("support/cohort_entry_deadline_view.rs");
+
+include!("support/cohort_open_hold_view.rs");
+include!("support/cohort_strategy_context.rs");

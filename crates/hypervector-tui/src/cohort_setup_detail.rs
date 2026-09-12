@@ -53,6 +53,16 @@ fn setup_lines<'a>(setup: &'a CohortProviderEvaluation, app: &'a App) -> Vec<Lin
     lines.extend(regime_lines(setup));
     lines.extend(hype_entry_attribution_lines(setup, app));
     lines.extend(readiness_lines(setup, app));
+    lines.extend(
+        crate::cohort_strategy_context::planning_lines(
+            setup,
+            &app.backend.cohort.regime_history,
+            crate::cohort_open_hold::now_ms(),
+        )
+        .into_iter()
+        .map(Line::from),
+    );
+    lines.push(Line::from("BACKEND EVIDENCE ONLY // [Enter/Esc] CLOSE"));
     lines
 }
 
@@ -167,7 +177,7 @@ fn readiness_lines<'a>(setup: &'a CohortProviderEvaluation, app: &App) -> Vec<Li
     vec![
         Line::from(readiness_summary(setup)),
         Line::from(""),
-        Line::from(Span::styled("LIVE INDICATORS", app.theme.cyan)),
+        Line::from(Span::styled("RECORDED INDICATORS", app.theme.cyan)),
         Line::from(if readiness.indicators.is_empty() {
             "N/A".into()
         } else {
@@ -186,10 +196,6 @@ fn readiness_lines<'a>(setup: &'a CohortProviderEvaluation, app: &App) -> Vec<Li
                 .join("  ·  ")
         }),
         Line::from(""),
-        Line::from(Span::styled(
-            "BACKEND EVIDENCE ONLY  //  [Enter/Esc] CLOSE",
-            app.theme.muted,
-        )),
     ]
 }
 

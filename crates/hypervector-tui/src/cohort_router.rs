@@ -360,7 +360,7 @@ fn evaluation_header(wide: bool) -> Row<'static> {
     if wide {
         Row::new([
             "SIGNAL DATE ET",
-            "AGE",
+            "LAG",
             "COIN",
             "PROVIDER [AUTH]",
             "BIAS",
@@ -368,7 +368,7 @@ fn evaluation_header(wide: bool) -> Row<'static> {
             "MET",
             "ENT/OPEN/EXIT",
             "SIGNAL / WHY",
-            "LIVE INDICATORS",
+            "RECORDED INDICATORS",
             "NEXT GAPS",
         ])
     } else {

@@ -236,7 +236,7 @@ fn selected_chart_opens_strategy_and_multitimeframe_detail() {
 
     for expected in [
         "BTC STRATEGY CHART // BACKEND EVIDENCE",
-        "VIEW 5M // AGGREGATED FROM BACKEND COMPLETED 1M",
+        "VIEW 5M // SOURCE TF 5M // AGGREGATED FROM BACKEND COMPLETED 1M",
         "HV SOURCE 5M // DECISION TF 5M",
         "DECISION HOLD // ELIGIBLE NO",
         "REGIME 1M N/A // 5M TREND_UP // 15M N/A",
@@ -291,7 +291,7 @@ fn selected_strategy_chart_uses_its_completed_decision_timeframe() {
     let screen = render(&mut app, 2, 165, 46);
 
     for expected in [
-        "VIEW 5M // AGGREGATED FROM BACKEND COMPLETED 1M",
+        "VIEW 5M // SOURCE TF 5M // AGGREGATED FROM BACKEND COMPLETED 1M",
         "BTC 5M CANDLES",
         "1 bar",
         "INCOMPLETE 5M EXCLUDED",

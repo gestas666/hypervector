@@ -11,7 +11,7 @@ use crate::backend_cohort_checkpoint::{CohortCheckpointTelemetry, parse_cohort_c
 use crate::backend_ledger_reader::IncrementalBackendLedger;
 use crate::backend_observer::{SourceLongOutcomeTelemetry, parse_source_long_outcome};
 use crate::backend_telemetry::{BackendConnectionState, BackendTelemetrySnapshot};
-const LIVE_LEDGER_INACTIVITY_LIMIT: Duration = Duration::from_secs(60);
+pub(crate) const LIVE_LEDGER_INACTIVITY_LIMIT: Duration = Duration::from_secs(60);
 const CHECKPOINT_INACTIVITY_LIMIT: Duration = Duration::from_secs(90);
 /// File-backed telemetry source with last-known-good retention.
 pub struct BackendTelemetrySource {

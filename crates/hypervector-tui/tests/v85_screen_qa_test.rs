@@ -92,7 +92,7 @@ fn v85_screen_2_has_every_route_and_marks_the_retired_route_observe_only() {
         "SIGNAL DATE ET",
         "AGE",
         "1D9H7M",
-        "LIVE INDICATORS",
+        "RECORDED INDICATORS",
         "NEXT GAPS",
     ] {
         assert!(pages.contains(label), "screen 2 missing {label}");

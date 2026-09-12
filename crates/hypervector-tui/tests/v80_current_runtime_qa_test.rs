@@ -86,7 +86,7 @@ fn v80_exposes_complete_setup_and_trade_screens() {
         "V80 RUN STOPPED",
         "ARRIVAL ET",
         "DECISION ET",
-        "LIVE INDICATORS",
+        "RECORDED INDICATORS",
         "NEXT GAPS",
         "FORCED EXIT OFF",
     ] {

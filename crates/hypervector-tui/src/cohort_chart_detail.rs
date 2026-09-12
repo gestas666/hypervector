@@ -27,7 +27,12 @@ pub(crate) fn render(frame: &mut Frame, app: &App, area: Rect) {
     let inner = block.inner(modal);
     frame.render_widget(block, modal);
     let timeframe = selected_provider(app, symbol)
-        .map(|provider| provider.timeframe.as_str())
+        .map(|provider| {
+            crate::cohort_strategy_context::signal_timeframe(
+                provider,
+                latest_evaluation(app, provider, symbol),
+            )
+        })
         .unwrap_or("N/A");
     let rows = Layout::vertical([Constraint::Length(3), Constraint::Min(12)]).split(inner);
     frame.render_widget(Paragraph::new(header(app, symbol, timeframe)), rows[0]);
@@ -56,7 +61,12 @@ fn header(app: &App, symbol: &str, timeframe: &str) -> Vec<Line<'static>> {
     vec![
         Line::from(vec![
             Span::styled(format!("VIEW {}", timeframe.to_uppercase()), app.theme.cyan),
-            Span::raw(format!(" // {source} // {provider_count} STRATEGY VIEW(S)")),
+            Span::raw(format!(
+                " // SOURCE TF {} // {source} // {provider_count} STRATEGY VIEW(S)",
+                selected_provider(app, symbol)
+                    .map_or("N/A", |provider| provider.timeframe.as_str())
+                    .to_uppercase()
+            )),
         ]),
         market_clock_line(app, symbol),
         Line::from(Span::styled(
@@ -118,7 +128,7 @@ fn render_provider(frame: &mut Frame, app: &App, area: Rect, symbol: &str) {
         &format!(
             " {} // DECISION TF {} ",
             provider_alias(&provider.strategy_id),
-            provider.timeframe.to_uppercase()
+            crate::cohort_strategy_context::signal_timeframe(provider, evaluation).to_uppercase()
         ),
         lines,
         " [PgUp/Dn Home/End] Scroll ",
@@ -200,7 +210,7 @@ fn decision_lines(value: &CohortProviderEvaluation, app: &App) -> Vec<Line<'stat
 fn indicator_lines(value: &CohortProviderEvaluation, app: &App) -> Vec<Line<'static>> {
     vec![
         Line::from(""),
-        Line::from(Span::styled("LIVE STRATEGY INDICATORS", app.theme.cyan)),
+        Line::from(Span::styled("RECORDED STRATEGY INDICATORS", app.theme.cyan)),
         Line::from(if value.readiness.indicators.is_empty() {
             "UNAVAILABLE".into()
         } else {

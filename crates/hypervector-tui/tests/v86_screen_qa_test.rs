@@ -86,7 +86,7 @@ fn v86_screen_2_retains_all_assets_routes_metrics_and_retirement_labels() {
         "ARRIVAL ET",
         "DECISION ET",
         "SIGNAL DATE ET",
-        "LIVE INDICATORS",
+        "RECORDED INDICATORS",
         "NEXT GAPS",
     ] {
         assert!(pages.contains(label), "screen 2 missing {label}");

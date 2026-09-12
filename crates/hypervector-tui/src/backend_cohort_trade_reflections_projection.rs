@@ -91,7 +91,11 @@ pub(crate) fn project_open_trade_reflections(
     {
         return Err("open-trade reflection count disagrees with execution evidence".into());
     }
-    value.trades.into_iter().map(project_open_trade).collect()
+    value
+        .trades
+        .into_iter()
+        .map(|raw| project_open_trade(raw, value.as_of_timestamp_ms))
+        .collect()
 }
 
 pub(super) fn validate_identity(raw: &RawTradeReflection) -> Result<(), String> {
@@ -197,4 +201,16 @@ fn validate_relation(
         }
         _ => Err("trade-reflection entry mechanism relation is invalid".into()),
     }
+}
+
+pub(super) fn apply_open_identity(
+    projected: &mut CohortOpenTradeReflection,
+    raw: &RawOpenTradeReflection,
+) {
+    projected.lifecycle_id = raw.lifecycle_id.clone();
+    projected.source_run_id = raw.source_run_id.clone();
+    projected.symbol = raw.symbol.clone();
+    projected.strategy_id = raw.strategy_id.clone();
+    projected.side = raw.side.clone();
+    projected.holding_time_ms = raw.holding_time_ms;
 }

@@ -57,7 +57,7 @@ mod models;
 mod projection;
 
 pub use models::{CohortTradeReflection, CohortTradeRegimeContext};
-use projection::{project_context, validate_identity, validate_open_identity};
+use projection::{apply_open_identity, project_context, validate_identity, validate_open_identity};
 pub(crate) use projection::{
     project_open_trade_reflections, project_trade_reflections, provider_contract_outcome_count,
 };
@@ -95,6 +95,7 @@ struct AllTimeTradeReflectionEvidence {
 #[derive(Debug, Deserialize)]
 pub(crate) struct OpenTradeReflectionEvidence {
     contract: ReflectionContract,
+    as_of_timestamp_ms: Option<u64>,
     open_lifecycles: usize,
     trades: Vec<RawOpenTradeReflection>,
 }
@@ -374,7 +375,10 @@ struct OpenOrderInputs {
     ignored_provider_exit: Option<RawIgnoredProviderExit>,
 }
 
-fn project_open_trade(raw: RawOpenTradeReflection) -> Result<CohortOpenTradeReflection, String> {
+fn project_open_trade(
+    raw: RawOpenTradeReflection,
+    as_of: Option<u64>,
+) -> Result<CohortOpenTradeReflection, String> {
     validate_open_identity(&raw)?;
     validate_optional_regime_assessment(raw.entry_regime_assessment.as_ref())?;
     validate_regime_assessment(&raw.regime_assessment)?;
@@ -382,7 +386,8 @@ fn project_open_trade(raw: RawOpenTradeReflection) -> Result<CohortOpenTradeRefl
     apply_open_identity(&mut projected, &raw);
     let stop = project_protective_stop(raw.protective_stop)?;
     let target = project_target_order(raw.target_order)?;
-    let exit_plan = project_open_exit_plan(&raw.strategy_id, raw.exit_plan)?;
+    let mut exit_plan = project_open_exit_plan(&raw.strategy_id, raw.exit_plan)?;
+    exit_plan.bind_observation(as_of)?;
     apply_open_orders(
         &mut projected,
         OpenOrderInputs {
@@ -410,15 +415,6 @@ fn project_open_trade(raw: RawOpenTradeReflection) -> Result<CohortOpenTradeRefl
     projected.active_lifecycle_marked_net_pnl_usd =
         raw.marked_economics.active_lifecycle_marked_net_pnl_usd;
     Ok(projected)
-}
-
-fn apply_open_identity(projected: &mut CohortOpenTradeReflection, raw: &RawOpenTradeReflection) {
-    projected.lifecycle_id = raw.lifecycle_id.clone();
-    projected.source_run_id = raw.source_run_id.clone();
-    projected.symbol = raw.symbol.clone();
-    projected.strategy_id = raw.strategy_id.clone();
-    projected.side = raw.side.clone();
-    projected.holding_time_ms = raw.holding_time_ms;
 }
 
 fn apply_open_orders(

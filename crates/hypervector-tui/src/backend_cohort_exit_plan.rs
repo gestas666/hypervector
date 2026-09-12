@@ -4,9 +4,15 @@ use serde::Deserialize;
 
 use crate::backend_cohort::profit_lock_contract_valid;
 
+#[path = "backend_cohort_exit_plan_clocks.rs"]
+mod clocks;
+
 /// Backend-authored maximum-hold deadline for one open lifecycle.
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct CohortOpenExitPlan {
+    pub opened_at_ms: Option<u64>,
+    pub timer_origin: Option<String>,
+    pub as_of_timestamp_ms: Option<u64>,
     pub maximum_hold_seconds: u64,
     pub maximum_hold_policy: String,
     pub provider_recipe_exit_policy: String,
@@ -30,6 +36,8 @@ pub struct CohortOpenExitPlan {
 
 #[derive(Debug, Deserialize)]
 pub(crate) struct RawOpenExitPlan {
+    opened_at_ms: Option<u64>,
+    timer_origin: Option<String>,
     maximum_hold_seconds: u64,
     #[serde(default = "fixed_policy")]
     maximum_hold_policy: String,
@@ -71,35 +79,12 @@ pub(crate) fn project_open_exit_plan(
     let soft_deadline = raw
         .soft_deadline_timestamp_ms
         .unwrap_or(raw.deadline_timestamp_ms);
-    let allowed_hold_ms = raw
-        .hard_maximum_hold_seconds
-        .unwrap_or(raw.maximum_hold_seconds)
-        .checked_mul(1_000)
-        .ok_or_else(|| "open exit-plan maximum hold overflows milliseconds".to_string())?;
-    if raw.maximum_hold_seconds == 0
-        || raw.deadline_timestamp_ms == 0
-        || soft_deadline == 0
-        || raw.remaining_time_ms > allowed_hold_ms
-        || raw.expired != (raw.remaining_time_ms == 0)
-        || !valid_extension(&raw, soft_deadline)
-        || !matches!(
-            raw.source.as_str(),
-            "bound_execution_plan" | "asset_runtime_default"
-        )
-        || raw.controller != "cohort_maximum_hold"
-        || !matches!(raw.provider_recipe_exit_policy.as_str(), "ignore" | "honor")
-        || !profit_lock_contract_valid(
-            Some(strategy_id),
-            &raw.profit_lock_policy,
-            raw.profit_lock_activation_bps,
-            raw.profit_lock_floor_bps,
-            raw.profit_lock_giveback_bps,
-        )
-        || !valid_opposite_exit_contract(&raw)
-    {
-        return Err("open exit-plan identity is invalid".into());
-    }
+    validate_plan(&raw, soft_deadline, strategy_id)?;
+    clocks::validate_origin(&raw, soft_deadline)?;
     Ok(CohortOpenExitPlan {
+        opened_at_ms: raw.opened_at_ms,
+        timer_origin: raw.timer_origin,
+        as_of_timestamp_ms: None,
         maximum_hold_seconds: raw.maximum_hold_seconds,
         maximum_hold_policy: raw.maximum_hold_policy,
         provider_recipe_exit_policy: raw.provider_recipe_exit_policy,
@@ -122,6 +107,42 @@ pub(crate) fn project_open_exit_plan(
     })
 }
 
+fn validate_plan(
+    raw: &RawOpenExitPlan,
+    soft_deadline: u64,
+    strategy_id: &str,
+) -> Result<(), String> {
+    let allowed_hold_ms = raw
+        .hard_maximum_hold_seconds
+        .unwrap_or(raw.maximum_hold_seconds)
+        .checked_mul(1_000)
+        .ok_or_else(|| "open exit-plan maximum hold overflows milliseconds".to_string())?;
+    if raw.maximum_hold_seconds == 0
+        || raw.deadline_timestamp_ms == 0
+        || soft_deadline == 0
+        || raw.remaining_time_ms > allowed_hold_ms
+        || raw.expired != (raw.remaining_time_ms == 0)
+        || !valid_extension(raw, soft_deadline)
+        || !matches!(
+            raw.source.as_str(),
+            "bound_execution_plan" | "asset_runtime_default"
+        )
+        || raw.controller != "cohort_maximum_hold"
+        || !matches!(raw.provider_recipe_exit_policy.as_str(), "ignore" | "honor")
+        || !profit_lock_contract_valid(
+            Some(strategy_id),
+            &raw.profit_lock_policy,
+            raw.profit_lock_activation_bps,
+            raw.profit_lock_floor_bps,
+            raw.profit_lock_giveback_bps,
+        )
+        || !valid_opposite_exit_contract(raw)
+    {
+        return Err("open exit-plan identity is invalid".into());
+    }
+    Ok(())
+}
+
 fn valid_opposite_exit_contract(raw: &RawOpenExitPlan) -> bool {
     let unavailable = raw.opposite_intent_exit_scope == "unavailable"
         && raw.opposite_intent_arbitration == "unavailable";
@@ -138,6 +159,9 @@ fn valid_extension(raw: &RawOpenExitPlan, soft_deadline: u64) -> bool {
             && !raw.extension_active
             && raw.deadline_timestamp_ms == soft_deadline;
     }
+    if raw.maximum_hold_policy != "extend_while_regime_supported" {
+        return false;
+    }
     let (Some(hard_seconds), Some(hard_deadline)) = (
         raw.hard_maximum_hold_seconds,
         raw.hard_deadline_timestamp_ms,
@@ -146,7 +170,13 @@ fn valid_extension(raw: &RawOpenExitPlan, soft_deadline: u64) -> bool {
     };
     hard_seconds > raw.maximum_hold_seconds
         && hard_deadline > soft_deadline
-        && (!raw.extension_active || raw.deadline_timestamp_ms == hard_deadline)
+        && (raw.deadline_timestamp_ms
+            == if raw.extension_active {
+                hard_deadline
+            } else {
+                soft_deadline
+            })
+        && (!raw.extension_active || raw.regime_context == "still_directionally_supported")
         && matches!(
             raw.regime_context.as_str(),
             "still_directionally_supported"
@@ -203,3 +233,7 @@ mod tests {
         assert_eq!(plan.profit_lock_giveback_bps, Some(10.0));
     }
 }
+
+#[cfg(test)]
+#[path = "backend_cohort_exit_plan_clock_tests.rs"]
+mod clock_tests;

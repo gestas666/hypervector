@@ -136,6 +136,7 @@ fn parses_report_only_trade_regime_reflection() {
                 }]
             },
             "open_trade_reflections": {
+                "as_of_timestamp_ms":1785619886090,
                 "contract": {
                     "report_only": true,
                     "execution_authority": "none",
@@ -153,7 +154,7 @@ fn parses_report_only_trade_regime_reflection() {
                     "profit_protection":{"status":"open_profit_unprotected","reported_marked_net_pnl_usd":0.103396,"estimated_exit_now_net_usd":0.092,"estimated_stop_net_usd":-0.210,"marked_to_stop_giveback_usd":0.302,"protected_profit_fraction":0.0,"stop_distance_from_mark_bps":124.08,"measured_entry_fee_rate_bps":4.32,"estimated_current_exit_fee_usd":0.011396,"estimated_stop_exit_fee_usd":0.0115,"method":"measured_entry_fee_rate_no_future_funding_or_slippage"},
                     "target_order":{"oid":508726919999,"limit_price":62200.0,"directional_distance_bps":70.4},
                     "holding_time_ms": 19886090,
-                    "exit_plan":{"maximum_hold_seconds":28800,"deadline_timestamp_ms":1785628800000,"remaining_time_ms":8913910,"expired":false,"source":"asset_runtime_default","controller":"cohort_maximum_hold","opposite_intent_exit_scope":"selected_opposite_from_any_executable_provider_same_symbol","opposite_intent_arbitration":"regime_then_priority"},
+                    "exit_plan":{"opened_at_ms":1785600000000,"timer_origin":"persisted_runtime_opened_at","maximum_hold_seconds":28800,"deadline_timestamp_ms":1785628800000,"remaining_time_ms":8913910,"expired":false,"source":"asset_runtime_default","controller":"cohort_maximum_hold","opposite_intent_exit_scope":"selected_opposite_from_any_executable_provider_same_symbol","opposite_intent_arbitration":"regime_then_priority"},
                     "path_since_entry":{"status":"observed","completed_bars":331,"first_timestamp_ms":1785600060000,"last_timestamp_ms":1785619920000,"highest_price":63402.0,"lowest_price":62590.0,"current_directional_return_bps":43.56,"maximum_favorable_excursion_bps":51.66,"maximum_adverse_excursion_bps":77.88,"peak_giveback_bps":8.10},
                     "path_since_soft_deadline":{"status":"observed","boundary_timestamp_ms":1785628800000,"baseline_timestamp_ms":1785628740000,"baseline_price":63200.0,"completed_bars":31,"first_timestamp_ms":1785628800000,"last_timestamp_ms":1785630660000,"highest_price":63500.0,"lowest_price":63150.0,"current_directional_return_bps":12.5,"maximum_favorable_excursion_bps":47.5,"maximum_adverse_excursion_bps":7.9,"peak_giveback_bps":35.0},
                     "post_soft_trail_challenger":{"schema_version":1,"mode":"cohort_open_post_soft_trail_challenger_v1","contract":{"report_only":true,"execution_authority":"none","runtime_strategy_changed":false,"automatic_strategy_changes":false,"performance_gate":false,"balance_gate":false},"status":"observed","soft_deadline_timestamp_ms":1785628800000,"as_of_timestamp_ms":1785630720000,"baseline_timestamp_ms":1785628740000,"baseline_price":63200.0,"completed_post_soft_bars":31,"policies":{"20bps":{"giveback_bps":20.0,"status":"triggered","trigger_timestamp_ms":1785629100000,"trigger_reference_price":63373.0,"best_completed_price_before_trigger":63500.0,"active_trail_price":63373.0},"30bps":{"giveback_bps":30.0,"status":"triggered","trigger_timestamp_ms":1785629400000,"trigger_reference_price":63309.5,"best_completed_price_before_trigger":63500.0,"active_trail_price":63309.5},"40bps":{"giveback_bps":40.0,"status":"armed_not_triggered","trigger_timestamp_ms":null,"trigger_reference_price":null,"best_completed_price":63500.0,"active_trail_price":63246.0}}},
@@ -328,6 +329,9 @@ fn parses_report_only_trade_regime_reflection() {
     assert_eq!(reflection.exit_maximum_hold_context, "mixed_or_transition");
     assert_eq!(parsed.open_trade_reflections.len(), 1);
     let open = &parsed.open_trade_reflections[0];
+    assert_eq!(open.exit_plan.as_of_timestamp_ms, Some(1_785_619_886_090));
+    assert_eq!(open.exit_plan.opened_at_ms, Some(1_785_600_000_000));
+    assert_eq!(open.exit_plan.timer_origin.as_deref(), Some("persisted_runtime_opened_at"));
     assert_eq!(open.symbol, "BTC");
     assert_eq!(open.protective_stop_oid, Some(508_726_918_963));
     assert_eq!(open.protective_stop_price, Some(63_418.32));

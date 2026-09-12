@@ -36,14 +36,25 @@ pub(crate) fn render(frame: &mut Frame, app: &App, area: Rect) {
         ))]
     } else {
         selected
-            .into_iter()
+            .iter()
+            .copied()
             .flat_map(|index| trade_lines(app, &reflections[index], area.width))
             .collect()
     };
-    let title = if area.width < 60 {
-        " OPEN TRADE // REGIME DRIFT "
+    let title = if let Some(trade) = reflections.get(selected.first().copied().unwrap_or(0)) {
+        let clock = crate::cohort_open_hold::clock_labels(
+            &trade.exit_plan,
+            crate::cohort_open_hold::now_ms(),
+        );
+        format!(
+            " OPEN SNAP // {} // {} ",
+            clock.origin.replace(" CLOCK", ""),
+            clock.evidence.replace("AGE ", "")
+        )
+    } else if area.width < 60 {
+        " OPEN TRADE // REGIME DRIFT ".into()
     } else {
-        " OPEN TRADE // ENTRY → CURRENT REGIME "
+        " OPEN TRADE // ENTRY → CURRENT REGIME ".into()
     };
     frame.render_widget(Paragraph::new(lines).block(panel(title, app)), area);
 }
@@ -165,7 +176,7 @@ fn compact_trade_line<'a>(app: &'a App, trade: &'a CohortOpenTradeReflection) ->
 
 fn stop_line<'a>(app: &'a App, trade: &'a CohortOpenTradeReflection) -> Line<'a> {
     let stop = match (trade.protective_stop_oid, trade.protective_stop_price) {
-        (Some(oid), Some(price)) => format!("STOP #{oid} @{price:.2}"),
+        (Some(oid), Some(price)) => format!("LAST STOP #{oid} @{price:.2}"),
         _ => "STOP N/A".into(),
     };
     Line::from(Span::styled(stop, app.theme.bull))
@@ -252,7 +263,7 @@ fn timer_line<'a>(app: &'a App, trade: &'a CohortOpenTradeReflection) -> Line<'a
     };
     Line::from(Span::styled(
         format!(
-            "{timer} | {} | {} | LEFT {} | {} | {}",
+            "{timer} | {} | {} | SNAP LEFT {} | {} | {}",
             recipe_exit_label(&plan.provider_recipe_exit_policy),
             profit_lock_label(plan),
             remaining_label(plan.remaining_time_ms, plan.expired),
