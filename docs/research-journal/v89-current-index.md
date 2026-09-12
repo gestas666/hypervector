@@ -1,11 +1,52 @@
 # Current V89 research index
 
-Updated September 11, 2026 UTC. This is research navigation, not a live-state checkpoint.
+Updated September 12, 2026 UTC. This is research navigation, not a live-state checkpoint.
 The mandate permits research, testing and proposals. Its Human control clause
 requires explicit approval before live execution-behavior or deployment changes. Both prospective hypothetical outcome seals remain active.
 Historical studies remain bounded to their recorded windows.
 
 ## Current finding and next action
+
+**September 12 03:00 UTC / September 11 23:00 Eastern configuration workflow:**
+The [new review](../reviews/2026-09-12-v89-configuration-workflow.md) records
+candidate **ca8247b**, combining prior recovery/chart fixes with complete CFG
+paging, retained inactive policy, and matching staging outcomes. The exact
+**52-file package and TUI** passed disposable apply/rollback/reapply; neither
+was installed and no trading backend was restarted.
+
+**587 Rust and 439 Python tests passed**, plus Clippy, formatting, Ruff and
+release build. Twenty-three existing Rust tests remain ignored; broader Python
+branch coverage is incomplete. **588 native frames** independently verify
+21 asset/size cases, all 231 selected editor rows, complete scope/outcome text,
+21 real disarmed staged profiles and exact chart closes/decision clocks.
+Three representative native-cell images were inspected. Installed Terminal and
+live activation remain untested.
+
+The new unsigned five-poll observer provided 7/7 provider scopes, 10 unique
+HOLD evaluations, 35 books and 361 causal completed minute candles per asset.
+Its ledger spans 71.459 seconds and its process exited before staging captures.
+Incremental six-symbol and SPCX updates were correctly merged. This does not
+establish trade cadence, execution quality or profitability.
+
+**Next: heartbeat and per-asset market freshness independent of operator
+acknowledgements.** The exited observer still displays BACKEND CONNECTED;
+source inspection finds only armed-live inactivity checking, based on file
+mtime, and a shared SYNC clock advanced by operator events. Test observer
+inactivity and armed acknowledgement-only updates, then an advancing public
+observer/checkpoint lifecycle. This is a remaining operational requirement.
+
+At 02:51:59 UTC the SNDK short and full-size 1669.9 stop were still present,
+with −$2.0808 unrealized and +$0.095905 summed native funding cash flows.
+Core was flat/order-free. Original trading PIDs were absent and ledger hashes
+were preserved. These are bounded sequential observations.
+
+Journal **2df98c9cf91657a1b8100349dc19be46e238cd061e6220b318bb87f593bd37de**
+verifies 21 stored fields, 23 direct references and **1,570 frozen files**.
+Keep its candidate worktree and artifacts unchanged. Full live/strategy
+readiness remains unproven; no economic promotion or deployment. Both
+prospective outcome seals remain unopened.
+
+## Previous chart and control acceptance
 
 **September 11 21:30 UTC / 17:30 Eastern complete chart/control evidence:**
 The [updated installation review](../reviews/2026-09-11-v89-complete-chart-controls.md)

@@ -1,63 +1,80 @@
 # HANDOFF — hypervector
 
-**Current navigation, September 11, 2026 UTC:** read the
-[V89 research index](docs/research-journal/v89-current-index.md) first. Historical
-notes below do not establish current execution or research state.
+**Current navigation, September 12, 2026 UTC:** read the
+[V89 research index](docs/research-journal/v89-current-index.md) and
+[configuration-workflow review](docs/reviews/2026-09-12-v89-configuration-workflow.md).
+Historical notes below do not establish current execution or research state.
 
-The [complete chart/control review](docs/reviews/2026-09-11-v89-complete-chart-controls.md)
-now proposes isolated candidate **05809a9**, including prior funding/checkpoint
-recovery and new compact OPS, BTC 1h chart, and bounded chart-evidence scrolling.
-The exact **44-file** package and TUI passed disposable apply/rollback/reapply
-verification. They are **not installed**; no trading backend was restarted and
-no financial instruction was sent.
+Isolated candidate **ca8247b3c01ac408a190cffe3cf3fb16e90bc6be** now adds complete
+configuration context paging, preserved inactive provider policy, and exact
+run/profile/request-bound staging acknowledgement to the prior recovery and
+chart fixes. Its combined **52-file package and exact TUI** passed disposable
+installation/rollback/reinstallation. Nothing was installed and no trading
+backend was restarted. Candidate worktree:
+`/Users/gestas/Prototypes/hypervector-v89-config-context-20260912`.
+It is committed, clean and bound by frozen evidence; use a new worktree for the
+next correction instead of changing this evidence-bound candidate.
 
-Final validation: **578 Rust tests passed**, 23 existing ignored; all-target
-Clippy, formatting and release build passed. All 19 proposed Python files match
-the earlier 158-test recovery candidate. **410 native frames** cover every asset
-at 100x28, 120x36 and 190x52. All 21 chart cases expose exact backend indicators,
-complete source/authority/effect and working Home restore. All 21 OPS cases and
-21 setup inspectors passed; all 840 unique depth levels matched backend values.
-BTC now displays five recorded complete hourly candles. Native sessions exited
-0, with network/file writes denied. Images are labeled native-cell
-reconstructions with a disclosed font fallback; the user Terminal is untested.
+Final publication checks: **587 Rust tests passed**, 23 existing ignored;
+**439 Python tests passed across 89 files**. All-target Clippy, formatting,
+Ruff and the release build passed. Changed Python module statement coverage
+is 90.0% and 91.67%; branch coverage remains incomplete. The selected tests do
+not establish full Python-package coverage.
 
-A separate unsigned observer completed **five polls** from 21:17:37 to 21:18:53
-UTC with 7/7 provider scopes, 10 unique evaluations, 35 twenty-level books and
-361 consecutive completed candles per asset. Provider/asset/policy/runtime
-settings matched the recorded configuration exactly. Latest decisions matched
-the current completed provider clocks; all were HOLD. The roughly 76-second
-sample does not establish trading frequency, fills, costs or profitability.
-The first launch was refused for an invalid observer output path and retained;
-the corrected attempt exited 0. Its final heartbeat says running, while its
-process is terminal; do not mistake that row for a currently live backend.
+Independent native verification passed **588 frames**, all 11 editor rows for
+seven assets at 100x28, 120x36 and 190x52, complete scope/outcome paging,
+21 real disarmed staged profiles and exact chart-source parity. Native sessions
+exited normally; the Rust process had no network access and could write only
+its isolated request inbox. Python processed only stage-profile requests and
+appended 63 actual disarmed operator rows to a copied ledger. Source observer
+prefix/checkpoint hashes and effective runtime settings were unchanged.
+Three native-cell reconstructions were inspected; installed Terminal remains
+untested. The fixed identity summary can clip, but complete text is reachable
+in the scope pane.
 
-Journal **8db64a648c339d93184cb222483e27a60febc357afef191cf8993af8f022a27f**
-verifies all 21 stored fields, 19 direct references and **2,675 frozen files**.
-Compact-capture failures, the unsupported-hour finding and clipped provider
-provenance remain retained. Highest-value next investigation: **fresh observer
-checkpoint/TUI and full configuration-workflow acceptance**. Full live and
-strategy readiness, installed-terminal acceptance and economic improvement
-remain unproven. Both prospective hypothetical outcome seals remain unopened.
+The separate five-poll unsigned observer's ledger spans **01:49:15.853771 to
+01:50:27.312286 UTC**, 71.459 seconds (outer process about 75 seconds). It yielded
+7/7 provider scopes, 10 unique evaluations, 35 books and 361 consecutive minute
+candles per asset. All latest decisions were HOLD. Incremental updates split
+six symbols and SPCX and must be merged by symbol. This bounded process exited
+before native staging; no continuously fresh backend or strategy edge follows.
 
-Unsigned venue reads at **21:25:15 UTC** found the same **0.306 SNDK short at
-1629.2, 10x isolated**, with the exact full-size reduce-only Stop Market OID
-**542326955281** open at **1669.9**. Unrealized PnL was **-$0.5508**; seven native
-funding cash flows sum to **+$0.036281**. Core was flat/order-free. No fill after
-the original stop appeared in the bounded query. Original trading/TUI PIDs
-were absent; terminal records and original cohort/SNDK hashes were unchanged.
-These sequential observations require refreshing before a current-state claim.
-System process permissions limit machine-wide process-name absence claims.
+**Highest-value next investigation: backend heartbeat and market freshness.**
+Native evidence shows `BACKEND CONNECTED` on the recorded, exited observer.
+`backend_source.rs::apply_live_freshness` currently checks only armed live
+ledgers using file modification time; operator events also advance the shared
+SYNC timestamp. Reproduce observer inactivity and armed acknowledgement-only
+updates, distinguish heartbeat/market age from request outcomes, and verify
+recovery with an advancing public observer/checkpoint. Full operational,
+installed-terminal and economic readiness remain unproven.
 
-The objective Human control clause requires explicit approval before live
-execution-behavior or deployment changes. The updated installation proposal is
-concrete; installing it and restarting execution are separate actions. The
-optional candle-session candidate f59d54c remains excluded.
+Journal **2df98c9cf91657a1b8100349dc19be46e238cd061e6220b318bb87f593bd37de**
+verifies all 21 columns, 23 direct references and **1,570 frozen files** under
+`data/logs/research/bidirectional_cohort/v89_config_workflow_acceptance_20260912_v1`.
+Do not change frozen artifacts. Prior chart/recovery evidence remains retained.
+Both prospective hypothetical outcome seals remain unopened.
 
-The latest drive cleanup recovered **3.303 GB net**, leaving **22.282 GB free**
-at 20:51:37 UTC. Verified backups and restore instructions are outside the
-repositories. Subsequent candidate builds temporarily restored compiler caches;
-free space measured about **20.085 GB** at this publication boundary. Code,
-settings, finished executables and trading data were preserved.
+Seven authenticated unsigned venue responses at **02:51:59 UTC** showed the
+same **0.306 SNDK short at 1629.2, 10x isolated**, with **−$2.0808 unrealized**.
+The exact full-size reduce-only Stop Market OID **542326955281** remains open
+at **1669.9**. Twelve funding cash-flow rows total **+$0.095905**. Core was
+flat/order-free and no fill after the original stop appeared in the bounded
+query. Original trading PIDs were absent; original ledger hashes and seven
+terminal records were unchanged. Refresh these sequential observations before
+making a present-tense claim. Process permissions limit machine-wide absence
+claims.
+
+The objective's Human control clause requires explicit approval before live
+execution-behavior or deployment changes. The concrete candidate package is
+recorded; resolve the freshness gap before a consolidated installation request.
+No installation, restart, parameter change, or financial request occurred.
+
+The user's latest disk cleanup recovered **7.168 GB net**, with **24.066 GB free**
+at 02:44:36 UTC. Ten unused npm caches were removed after all 576,919 archive
+entries were verified. The 2.266 GB compressed backup and restore instructions
+are under `~/Library/Logs/Codex-Disk-Cleanup/20260912T023446Z`. Active package
+caches, project/trading files and protected executables/configuration were
+preserved. Free space changes with background activity.
 
 ---
 
