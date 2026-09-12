@@ -5,41 +5,45 @@
 [heartbeat/lifecycle installation review](docs/reviews/2026-09-12-v89-heartbeat-freshness.md).
 Historical notes below do not establish current runtime or research state.
 
-**Latest research:** the [SNDK matched-background review](docs/reviews/2026-09-12-v89-sndk-background.md)
-finds that the later long one-hour deficit remains after cohort/hour matching.
-Earlier/later native entry means are **-16.10/-90.07 bps**, matched backgrounds
-**+7.82/+0.09 bps**, and matched excess **-23.92/-90.17 bps**. Of the **-73.98 bps**
-entry change, **-7.73 bps** is background change and **-66.25 bps** is excess
-change. Weekday/weekend matching retains **-61.23 bps** excess change.
-High confidence applies to historical measurement, not causality or future profit.
+**Latest research:** the [SNDK day influence audit](docs/reviews/2026-09-12-v89-sndk-day-influence.md)
+completes all **96 fixed omission scenarios**. The long one-hour gap retains
+its negative sign under both modes and matching methods, but dropping August 19's
+entry moves the primary gap from **-66.25 to -8.28 bps**, and the day-class gap
+from **-61.23 to -3.10 bps**. Price-window omissions leave **-8.65/-2.89 bps**.
+Long 15-minute/four-hour signs persist; long 24-hour and several short-side signs
+can reverse. High confidence applies to this historical measurement, not a
+causal regime explanation or future profit. These ranges are not confidence intervals.
 
-Source **03f153f131a1b1dcf7d2ca9a4ccfc312315f9f47** is clean in
-`hypervector-v89-sndk-background-20260912`. **67 offline tests** pass; arithmetic
-has full statement/branch coverage. Independent SQL/Decimal checks reconcile
-4,608 calendar rows, 376 comparisons, 32 groups, 16 decompositions and 1,128
-modeled/native price-basis rows. Seven data artifacts plus the final independent
-receipt reproduce byte-for-byte from the 15-file archive. The verifier-only
-single-thread fix resolves sub-tolerance floating-order digest variation;
-original operator results and both verifier versions remain retained.
+Source **0654f937d95ceb9fd3876d6527197844c7d806e3** is clean and frozen in
+`hypervector-v89-sndk-influence-20260912`; predeclared plan is **c77cfe94**.
+**65 offline tests** pass, with **72/72 arithmetic statements and 28/28 branches**
+covered. Independent SQL reconciles **35,246 included comparisons**, **850
+exclusions**, **3,072 groups**, **1,536 decompositions**, **64 group ranges** and
+**32 gap ranges**. All 36,096 baseline roster slots are retained or explicitly
+excluded. The 24-file source archive reproduces **104 files byte-for-byte**;
+a fresh complete SQL/replay check also passes. Other module coverage is partial
+and disclosed. Original source-end missing prices remain explicit.
 
-Journal **b73568200da6adfb09b1327e896c39847f4c80755d25a3bcccd1c92c5f470bd0** binds
-25 direct references, 117 frozen files, 2,375 prior input references and 11
-pinned prior-study artifacts. All 21 normalized database fields were verified.
-One unique later-long 24-hour target is unavailable. Both installation candidates
-remain unchanged and uninstalled; both prospective seals remain unopened.
+Journal **d72bdcb3acebc59fc46c85ada2add4ef831b3fc902b683503c2d00f627d1bf32**
+binds **25 direct references**, **273 frozen files**, **2,375 prior input refs**,
+**10 baseline refs** and **12 operator source pins**. All **21 normalized database
+fields** and source/evidence/reproduction checks pass at **08:06:18 UTC**.
+Both isolated installation candidates remain clean, unchanged and uninstalled;
+both prospective hypothetical outcome seals remain unopened.
 
-At **06:47:14 UTC**, the existing SNDK short and full-size 1669.9 reduce-only
-native stop remain present, with **-$0.7956 unrealized** and **+$0.092131** summed
-funding cash across 16 rows. Core is flat/order-free. The bounded fill query
-contains the original entry, original trading PIDs are absent, and all seven
-terminal rows plus installed profile/binary/ledger hashes remain unchanged.
-Refresh before current-state claims; machine-wide process visibility is limited.
+At **07:47:23 UTC**, the existing SNDK short and full-size 1669.9 reduce-only
+native stop remain present, with **-$0.306 unrealized** and **+$0.091831** summed
+funding cash across 17 rows. Core is flat/order-free. The bounded fill query
+contains the original entry and no additional fill; original runner PIDs are
+absent. Seven terminal rows and installed profile/TUI/ledger hashes remain
+unchanged. Refresh before current-state claims; process visibility is limited.
 
-**Next research:** predeclare a day-level influence audit of the newly measured
-matched-excess gap. Retain every omission scenario, quantify the influence of
-large moves, and propose no fitted live rule from this explored history.
-The [fixed-horizon study](docs/reviews/2026-09-12-v89-sndk-fixed-horizon.md) and
-background comparison are complete; do not repeat them as new trials.
+**Next research:** qualify independent historical SNDK price coverage, including
+existing 0xArchive data, and reconcile the influential August 19 path with its
+original modeled entry, stop exit and one-hour target. Distinguish feed
+disagreement and post-exit movement from the actual modeled loss. Preserve
+sources, fit no live filter and choose no source by PnL. The held-path,
+fixed-horizon, background and day-influence studies are complete.
 
 The prior [session-latency extension](docs/reviews/2026-09-12-v89-session-latency-extension.md)
 is complete: all 16 pairs favor reuse, median saving 1.856397 seconds / 44.5684%,
@@ -101,17 +105,19 @@ permissions limit machine-wide absence statements.
 **Next:** obtain the explicit installation decision for the exact 64-file
 candidate under the objective's Human control clause. Installation approval is
 not a trading-start instruction. After approval, verify the installed runtime.
-While approval is pending, continue the calendar-hour background investigation
-above. The fixed-horizon, waiting-time and extended session-timing studies are complete.
+While approval is pending, continue the SNDK price-source and exit reconciliation
+above. The day-influence, background, fixed-horizon, waiting-time and extended
+session-timing studies are complete.
 Full live and economic readiness remain unproven; the broad continuous objective
 remains active.
 
-The latest disk cleanup recovered **2.6535 GB net** by losslessly recompressing
-seven earlier recovery archives. Updated recovery instructions and verified
-checksums are under `~/Library/Logs/Codex-Disk-Cleanup/20260912T051953Z`.
-Projects, trading data and personal files were preserved. The final September 12
-05:25 UTC reading was **28.175 GB free**; subsequent writes change availability.
-The earlier 04:20 cleanup and its separate zstd backup remain recorded.
+The latest user-requested disk cleanup recovered **1.0788 GB net**, retaining a
+verified compressed backup of 3,317 compiler-cache entries from an inactive
+older worktree. All 1,267 protected artifacts and both checked repository states
+remain unchanged. Recovery instructions are under
+`~/Library/Logs/Codex-Disk-Cleanup/20260912T075530Z`; free space measured
+**30.744 GB** at **07:56:47 UTC**. Earlier cleanup receipts remain retained.
+Subsequent writes change available space.
 
 ---
 

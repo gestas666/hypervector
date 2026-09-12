@@ -1,0 +1,273 @@
+{
+  "automatic_promotion": false,
+  "confidence": "high",
+  "created_at_utc": "2026-09-12T08:05:49.411725+00:00",
+  "decision": "Retain the influence diagnosis. Long 15-minute, one-hour and four-hour gap signs survive every single-day omission, but August 19 reduces the one-hour primary gap from -66.25 to -8.28 bps and day-class gap from -61.23 to -3.10 bps. Long 24-hour and several short-side signs reverse. Next qualify independent SNDK price coverage and reconcile the August 19 path against its original stop exit; no fitted filter or live change is proposed.",
+  "evidence": [
+    {
+      "bytes": 525164,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_day_influence_20260912_v1/report.json",
+      "role": "day_influence_measurement",
+      "sha256": "afb730b978eaa575740d528db0eb0198a13f47548bb22987befff39f7057bac8"
+    },
+    {
+      "bytes": 502,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_day_influence_20260912_v1/independent_verified.json",
+      "role": "day_influence_measurement",
+      "sha256": "753d210ea2c16bedb832db35052cb41163ad3e45928a1979d2ac20efdfbaadb2"
+    },
+    {
+      "bytes": 620,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_day_influence_20260912_v1/prepublication_reverification.json",
+      "role": "day_influence_measurement",
+      "sha256": "cda41e01f25ef8654c0f7e7205551864ef0c415d2aefc20bdfd0a2f6dcaf392d"
+    },
+    {
+      "bytes": 2539,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_day_influence_20260912_v1/reproduction_verified.json",
+      "role": "day_influence_measurement",
+      "sha256": "4897079b9b378f2ea9d363af7a6f06c5d162ab1a01d3ee9ddb2a1be6eb70112d"
+    },
+    {
+      "bytes": 39574,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_day_influence_20260912_v1/source.tar.gz",
+      "role": "day_influence_measurement",
+      "sha256": "a3bea363ebad3d4ce2e4f10751cb5b60f5468309c2245ea8dfaf4d244a8869c2"
+    },
+    {
+      "bytes": 4542,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_day_influence_20260912_v1/source_archive_manifest.json",
+      "role": "day_influence_measurement",
+      "sha256": "90fed04b080bffc29b82106b28426e9cbeb2ec73d07fc4512eaa80feded81152"
+    },
+    {
+      "bytes": 85456,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_day_influence_20260912_v1/artifact_manifest.json",
+      "role": "day_influence_measurement",
+      "sha256": "9004276296153a5ccb9d5e0e44c12f12fabfe222a0d78956eb15816b508a5fff"
+    },
+    {
+      "bytes": 2757,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_day_influence_20260912_v1/prepared.json",
+      "role": "day_influence_measurement",
+      "sha256": "575436506172103104134293d633ffe20a409c4e0057060ff465938f780aaae3"
+    },
+    {
+      "bytes": 2317,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_day_influence_20260912_v1/prepared_inputs.json",
+      "role": "day_influence_measurement",
+      "sha256": "a5d85ac4e6abced3888cf9821b71b8baa4511de540375f1fd274e6ee551a386e"
+    },
+    {
+      "bytes": 2547,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_day_influence_20260912_v1/baseline_result_references.json",
+      "role": "day_influence_measurement",
+      "sha256": "4dd4d49f0975324333f125a028e10e023ed4696dd67b1543a47c08b5218b6a3c"
+    },
+    {
+      "bytes": 675155,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_day_influence_20260912_v1/input_references.json",
+      "role": "day_influence_measurement",
+      "sha256": "3bf259e01376ad5ebcbad2e0cd4dccba222faf67964e9d3b93abdb716174a837"
+    },
+    {
+      "bytes": 257,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_day_influence_20260912_v1/price_reference.json",
+      "role": "day_influence_measurement",
+      "sha256": "ee364dae5583466e74971960fdcd8db83c49c2405f6da1662037bccec670c037"
+    },
+    {
+      "bytes": 2325,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_day_influence_20260912_v1/source_pins.json",
+      "role": "day_influence_measurement",
+      "sha256": "110c5221482c43a186b80fc0c5a3371e7c201fbf10ca064e93f2eab048334d8c"
+    },
+    {
+      "bytes": 628,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_day_influence_20260912_v1/source_qualification.json",
+      "role": "day_influence_measurement",
+      "sha256": "ca9d00a6b49dc6f2c7947c2c82ea462c89b2a76c98b66a4ffa59aa26c323eb78"
+    },
+    {
+      "bytes": 439,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_day_influence_20260912_v1/tests_candidate.log",
+      "role": "day_influence_measurement",
+      "sha256": "60eb91b12fb0ff05658706bc4505fb9fac1ea1620d54e5c2625315823ec90a91"
+    },
+    {
+      "bytes": 29875,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_day_influence_20260912_v1/coverage_candidate.json",
+      "role": "day_influence_measurement",
+      "sha256": "51a1ba6977bf4c97b56caf29e313b8ececc5649bdad81ef36259348745cdc1cc"
+    },
+    {
+      "bytes": 1043,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_day_influence_20260912_v1/quality_checks.json",
+      "role": "day_influence_measurement",
+      "sha256": "771d5e0a8a31034e93c19359638001ff45dd3b52a9752de569704004279c52ab"
+    },
+    {
+      "bytes": 449,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_day_influence_20260912_v1/environment.json",
+      "role": "day_influence_measurement",
+      "sha256": "a25fb19f3dbb5e462a7f5c390b4b5c096cbc6c4dd4f18900ff6ba09ec7f0c99c"
+    },
+    {
+      "bytes": 3860,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_day_influence_20260912_v1/review_metrics.json",
+      "role": "day_influence_measurement",
+      "sha256": "c39df3ce38791050bd753358ed03ff839b640616d38b82c29148f8e2f150e96b"
+    },
+    {
+      "bytes": 595,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_day_influence_20260912_v1/publication_candidate_boundary.json",
+      "role": "day_influence_measurement",
+      "sha256": "bf6b4e541302a136de2a395c14d4143425f814b78ed101b77675f2299755e71d"
+    },
+    {
+      "bytes": 797,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_day_influence_20260912_v1/publication_candidate_artifacts.json",
+      "role": "day_influence_measurement",
+      "sha256": "eca9004f75aa9237caf9a4d1b004fca89ed152fc3c1940685b196225619dbf65"
+    },
+    {
+      "bytes": 4070,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_day_influence_20260912_v1/publication_boundary/closing_boundary.json",
+      "role": "day_influence_measurement",
+      "sha256": "3d6d2f709fd098664c3b6dad8de5862d060b7dbee3bda30e5e31d8c63a06ed0b"
+    },
+    {
+      "bytes": 2170,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_day_influence_20260912_v1/publication_boundary/native_final/native_after_stop_assessment.json",
+      "role": "day_influence_measurement",
+      "sha256": "7c7e13fd41a5312e979c644ac2b276b51a1d55d2d9e6231480840cfcfe58decb"
+    },
+    {
+      "bytes": 3324,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_day_influence_20260912_v1/publication_boundary/response_integrity.json",
+      "role": "day_influence_measurement",
+      "sha256": "98d6d570da9a3d3a49b8cacbc60744edaa81e7da2c0245450b4b49b175b59405"
+    },
+    {
+      "bytes": 13000,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/reviews/2026-09-12-v89-sndk-day-influence.md",
+      "role": "human_review",
+      "sha256": "1512845b28a224c7c7199fc09aa98cfee1527dc1a74522084658af4bd09fb31c"
+    }
+  ],
+  "execution_authority": "none",
+  "falsifier": "High confidence applies only to the fixed historical measurement. Changed source identities, omitted or reinserted roster rows, arithmetic mismatches, failed archive reproduction, or journal inconsistency invalidate it. Independent feed evidence and fresh periods can update its market interpretation.",
+  "hypothesis": "Quantify whether matched SNDK excess and earlier/later differences depend on individual entry dates or overlapping price days under a fixed complete omission grid.",
+  "hypothesis_id": "v89_sndk_day_influence_20260912_v1",
+  "limitations": [
+    "The 96 scenarios resample one explored 47-entry history, not new independent market observations.",
+    "Forty-eight omission dates include dates with no entries in a group; earlier/later long entry dates number 15/10 and short dates 12/6.",
+    "Single-day sensitivity ranges are not confidence intervals, future win probabilities, or exhaustive multi-day perturbations.",
+    "Price-window omission intentionally removes broad cross-day source exposure and is not a causal decomposition.",
+    "One unique later-long 24-hour source-end target remains unavailable; missing prices and controls are not zero-filled.",
+    "Gross native-price diagnostics may extend after a modeled exit and are not actual account PnL or a holding-policy counterfactual.",
+    "SQL and archive checks verify computation conditional on inputs, not external feed truth or historical trigger semantics.",
+    "Only new arithmetic has complete statement and branch coverage; other module coverage is separately disclosed in the review.",
+    "No strategy, execution, risk, universe, deployment or TUI change is made. Both existing installation proposals remain pending and both prospective seals remain unopened.",
+    "The account snapshot is timestamped; process permissions limit machine-wide absence claims."
+  ],
+  "metrics": {
+    "account_funding_cash_rows": 17,
+    "account_funding_cash_usdc": "0.091831",
+    "account_observed_at_utc": "2026-09-12T07:47:23.170895+00:00",
+    "account_sndk_position": "-0.306",
+    "account_sndk_unrealized_usdc": "-0.306",
+    "account_stop_oid": 542326955281,
+    "account_stop_trigger": "1669.9",
+    "archived_sources": 24,
+    "arithmetic_branches": [
+      28,
+      28
+    ],
+    "arithmetic_statements": [
+      72,
+      72
+    ],
+    "baseline_references": 10,
+    "byte_identical_reproduced_files": 104,
+    "decomposition_ranges": 32,
+    "decomposition_rows": 1536,
+    "direct_references": 25,
+    "excluded_comparisons": 850,
+    "frozen_files": 273,
+    "group_ranges": 64,
+    "group_rows": 3072,
+    "included_comparisons": 35246,
+    "maximum_decimal_shift_residual_bps": 2.842170943040401e-14,
+    "offline_tests_passed": 65,
+    "omission_dates": 48,
+    "one_hour_long_gap_sensitivities": [
+      {
+        "baseline": -66.24643846842689,
+        "maximum": -8.280708019536878,
+        "maximum_absolute_shift": 57.965730448890014,
+        "maximum_absolute_shift_days": [
+          1787097600000
+        ],
+        "method": "same_hour",
+        "minimum": -109.52862744856208,
+        "mode": "entry_day",
+        "negative": 48,
+        "positive": 0
+      },
+      {
+        "baseline": -61.230733576141446,
+        "maximum": -3.0952862147064586,
+        "maximum_absolute_shift": 58.135447361434984,
+        "maximum_absolute_shift_days": [
+          1787097600000
+        ],
+        "method": "same_hour_day_class",
+        "minimum": -104.91936118722475,
+        "mode": "entry_day",
+        "negative": 48,
+        "positive": 0
+      },
+      {
+        "baseline": -66.24643846842689,
+        "maximum": -8.654734351983887,
+        "maximum_absolute_shift": 57.591704116443,
+        "maximum_absolute_shift_days": [
+          1787097600000
+        ],
+        "method": "same_hour",
+        "minimum": -109.67401468520782,
+        "mode": "price_window_day",
+        "negative": 48,
+        "positive": 0
+      },
+      {
+        "baseline": -61.230733576141446,
+        "maximum": -2.8919305670029765,
+        "maximum_absolute_shift": 58.33880300913847,
+        "maximum_absolute_shift_days": [
+          1787097600000
+        ],
+        "method": "same_hour_day_class",
+        "minimum": -105.13719839776837,
+        "mode": "price_window_day",
+        "negative": 48,
+        "positive": 0
+      }
+    ],
+    "operator_source_pins": 12,
+    "plan_commit": "c77cfe94eda728266fe4494a34fbbb340af2e22c",
+    "prior_lineage_references": 2375,
+    "roster_slots": 36096,
+    "scenarios": 96,
+    "source_commit": "0654f937d95ceb9fd3876d6527197844c7d806e3",
+    "unique_entries": 47
+  },
+  "revision_number": 1,
+  "runtime_strategy_changed": false,
+  "schema_version": 1,
+  "status": "retain",
+  "strategy_id": "hourly_donchian_20_10_atr20_bidirectional_v1",
+  "supersedes_revision_id": null,
+  "symbol": "xyz:SNDK"
+}

@@ -7,6 +7,53 @@ Historical studies remain bounded to their recorded windows.
 
 ## Current finding and next action
 
+**September 12 SNDK day influence audit:**
+The [review](../reviews/2026-09-12-v89-sndk-day-influence.md) retains every one
+of 48 date omissions under two fixed modes: remove that date's entry anchors,
+or remove all overlapping signal/control price windows. Both original matching
+methods and all four horizons remain fixed. This is 96 dependent sensitivity
+scenarios over 47 entries, not new independent market observations.
+
+The later-minus-earlier long one-hour matched-excess gap retains its negative
+sign in every scenario, but dropping August 19's entry moves it from **-66.25
+to -8.28 bps**; day-class matching moves from **-61.23 to -3.10 bps**. Price-window
+omission leaves corresponding gaps at **-8.65/-2.89 bps**. Long 15-minute and
+four-hour gap signs also survive every omission; long 24-hour signs can reverse.
+Several short-side signs depend on omitted dates and matching method. High
+confidence applies to historical measurement, not causal regime attribution
+or future profit. The ranges are not confidence intervals or a live filter.
+
+**65 offline tests** pass; new arithmetic has **72/72 statements and 28/28
+branches** covered. Independent SQL reconciles **35,246 included comparisons**,
+**850 exclusions**, **3,072 groups**, **1,536 decompositions**, **64 group ranges**
+and **32 gap ranges**. All 36,096 roster slots remain accounted for. The 24-file
+source archive reproduces **104 artifacts byte-for-byte**, including all 96
+trials and the independent receipt. A fresh prepublication SQL/replay check passes.
+
+Source **0654f937d95ceb9fd3876d6527197844c7d806e3** is frozen and clean in
+`hypervector-v89-sndk-influence-20260912`. Journal **d72bdcb3acebc59fc46c85ada2add4ef831b3fc902b683503c2d00f627d1bf32**
+binds **25 direct references**, **273 frozen files**, **2,375 prior input
+references**, **10 baseline pins** and **12 operator source pins**. All **21
+normalized database fields** pass the 08:06:18 UTC publication audit. Both
+installation candidates remain unchanged and uninstalled; both seals remain unopened.
+
+At **07:47:23 UTC**, seven authenticated unsigned responses retain the existing
+**-0.306 SNDK** position, **-$0.306 unrealized**, and full-size **1669.9** reduce-only
+native stop. Seventeen funding cash rows sum to **+$0.091831**. Core is
+flat/order-free; the bounded fill query has the original entry and no additional
+fill. Original runner PIDs are absent and terminal/profile/TUI/ledger identities
+are unchanged. Refresh before current-state claims; process visibility is limited.
+
+**Single next investigation:** qualify independently collected historical SNDK
+prices, including existing 0xArchive coverage, and reconcile the influential
+August 19 path with the original modeled entry, stop exit and one-hour target.
+Separate feed disagreement and post-exit price movement from the actual modeled
+loss. Preserve all sources and do not choose a feed or fit a filter by PnL.
+The held-path, fixed-horizon, matched-background and day-influence studies are
+complete; do not repeat their measurements as new trials.
+
+## Previous matched-background finding
+
 **September 12 SNDK matched-background comparison:**
 The [review](../reviews/2026-09-12-v89-sndk-background.md) compares all 47 accepted
 entries with fixed non-entry hours in the same cohort and UTC hour, plus a
