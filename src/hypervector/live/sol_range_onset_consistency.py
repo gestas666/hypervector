@@ -10,6 +10,8 @@ from hypervector.live.hyperliquid_protocol import (
     SolReconciliationSnapshot,
 )
 from hypervector.live.sol_range_onset_state import SolLiveSnapshot, SolLiveState
+from hypervector.live.sol_protective_order import protective_stop_covers
+from hypervector.live.sol_execution_evidence import partial_close_size
 from hypervector.live.sol_range_onset_reconcile import (
     RecoveredSolOwnership,
     owned_protective_stop_fill,
@@ -33,9 +35,7 @@ class SolReconciliationPoller:
         before_retry: Callable[[], None] | None = None,
     ) -> None:
         if isinstance(attempts, bool) or not isinstance(attempts, int) or attempts < 1:
-            raise SolReconciliationPolicyError(
-                "reconciliation attempts must be positive"
-            )
+            raise SolReconciliationPolicyError("reconciliation attempts must be positive")
         if not math.isfinite(delay_seconds) or delay_seconds < 0.0:
             raise SolReconciliationPolicyError(
                 "reconciliation delay must be nonnegative and finite"
@@ -68,8 +68,14 @@ class SolReconciliationPoller:
         if state.state is not SolLiveState.OPEN or state.stop_oid is None:
             return self._adapter.reconcile()
         return self.wait_for(
-            lambda venue: _open_visible(state, venue)
-            or protective_stop_fill_visible(state, venue)
+            lambda venue: _open_visible(state, venue) or protective_stop_fill_visible(state, venue)
+        )
+
+    def wait_for_close(self, state: SolLiveSnapshot, close_oid: int) -> SolReconciliationSnapshot:
+        """Wait for flat or a partial reduction with complete exact-order fill evidence."""
+        return self.wait_for(
+            lambda venue: venue.position.size_signed == 0.0
+            or partial_close_size(state, venue, close_oid) is not None
         )
 
 
@@ -80,12 +86,8 @@ def protected_order_visible(
     position_size_signed: float,
 ) -> bool:
     """Report whether the expected reduce-only trigger is venue-visible."""
-    expected = abs(position_size_signed)
     return any(
-        order.oid == stop_oid
-        and order.reduce_only
-        and order.is_trigger
-        and math.isclose(order.size, expected, rel_tol=0.0, abs_tol=1e-9)
+        order.oid == stop_oid and protective_stop_covers(order, position_size_signed)
         for order in venue.open_orders
     )
 

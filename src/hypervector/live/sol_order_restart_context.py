@@ -2,16 +2,19 @@
 
 from __future__ import annotations
 
+import math
 from collections.abc import Mapping
 from dataclasses import dataclass
-import math
 
 from hypervector.live.cohort_execution_plan import (
     BoundExecutionPlan,
     CohortExecutionPlanError,
 )
-from hypervector.live.sol_order_restart import SolOrderRestartError
 from hypervector.live.sol_order_identity import validate_client_order_id
+from hypervector.live.sol_order_restart import (
+    PendingSolOrderIntent,
+    SolOrderRestartError,
+)
 
 
 @dataclass(frozen=True)
@@ -52,6 +55,47 @@ def pending_position_context_for_intent(
     client_order_id: str,
 ) -> PendingPositionContext:
     """Parse the exact lifecycle state immediately preceding one intent."""
+    return _position_context(
+        _state_for_intent(records, expected_state, client_order_id)
+    )
+
+
+def execution_plan_for_intent(
+    records: list[dict[str, object]],
+    expected_state: str,
+    client_order_id: str,
+) -> BoundExecutionPlan | None:
+    """Restore the plan bound to an exact intent, including after a later fault."""
+    payload = _state_for_intent(records, expected_state, client_order_id)
+    return _execution_plan(payload.get("execution_plan"))
+
+
+def pending_entry_opened_at_ms(
+    pending: PendingSolOrderIntent, venue_timestamp_ms: int
+) -> int:
+    """Preserve the durable decision; legacy intents retain their venue-time fallback."""
+    if pending.operation != "entry":
+        raise SolOrderRestartError("entry clock requires an entry intent")
+    venue_time = _nonnegative_integer(venue_timestamp_ms, "entry venue timestamp")
+    if "entry_deadline" not in pending.payload:
+        return venue_time
+    deadline = pending.payload["entry_deadline"]
+    if not isinstance(deadline, Mapping):
+        raise SolOrderRestartError("pending entry deadline must be an object")
+    decision = _nonnegative_integer(
+        deadline.get("decision_time_ms"), "entry decision time"
+    )
+    _positive_integer(deadline.get("limit_ms"), "entry deadline limit")
+    if decision > venue_time:
+        raise SolOrderRestartError(
+            "entry decision time exceeds recovered venue timestamp"
+        )
+    return decision
+
+
+def _state_for_intent(
+    records: list[dict[str, object]], expected_state: str, client_order_id: str
+) -> Mapping[str, object]:
     identity = validate_client_order_id(client_order_id)
     intent_indexes: list[int] = []
     for index, record in enumerate(records):
@@ -74,7 +118,7 @@ def pending_position_context_for_intent(
             raise SolOrderRestartError(
                 f"pending order requires local state {expected_state}"
             )
-        return _position_context(payload)
+        return payload
     raise SolOrderRestartError("pending intent lacks a preceding state transition")
 
 

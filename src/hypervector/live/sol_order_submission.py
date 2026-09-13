@@ -5,6 +5,7 @@ from __future__ import annotations
 import math
 import time
 from collections.abc import Callable, Mapping
+from dataclasses import replace
 from typing import Protocol
 
 from hypervector.live.entry_submission_deadline import (
@@ -20,6 +21,11 @@ from hypervector.live.hyperliquid_sol_parsing import (
     HyperliquidOrderUnavailableError,
 )
 from hypervector.live.sol_order_identity import validate_client_order_id
+from hypervector.live.sol_execution_evidence import (
+    canceled_close_fill_size,
+    canceled_close_has_no_observed_fill,
+    canceled_entry_fill_size,
+)
 from hypervector.live.sol_order_transport import (
     SolCancelTransportError,
     SolOrderTransportError,
@@ -36,9 +42,7 @@ class SolOrderRecoveryError(RuntimeError):
     def __init__(self, *, operation: str, client_order_id: str) -> None:
         self.operation = operation
         self.client_order_id = validate_client_order_id(client_order_id)
-        super().__init__(
-            f"{operation} remains ambiguous after exact client-order lookup"
-        )
+        super().__init__(f"{operation} remains ambiguous after exact client-order lookup")
 
 
 class SolCancelRecoveryError(RuntimeError):
@@ -110,11 +114,7 @@ class SolOrderSubmission:
                 requested_notional_usd=requested_notional_usd,
                 mark_price=mark_price,
                 client_order_id=client_order_id,
-                **(
-                    {"entry_deadline": entry_deadline}
-                    if entry_deadline is not None
-                    else {}
-                ),
+                **({"entry_deadline": entry_deadline} if entry_deadline is not None else {}),
             )
         except EntryDeadlineExpired as exc:
             self._events.emit(
@@ -129,7 +129,7 @@ class SolOrderSubmission:
             )
             raise
         except SolOrderTransportError as exc:
-            ack = self._recover_ack(exc)
+            ack = self._recover_ack(exc, operation="entry")
         self._require_matching_ack("entry", client_order_id, ack)
         return ack
 
@@ -179,7 +179,7 @@ class SolOrderSubmission:
                 client_order_id=client_order_id,
             )
         except SolOrderTransportError as exc:
-            ack = self._recover_ack(exc)
+            ack = self._recover_ack(exc, operation="protective_stop")
         self._require_matching_ack("protective stop", client_order_id, ack)
         return ack
 
@@ -207,7 +207,7 @@ class SolOrderSubmission:
                 client_order_id=client_order_id,
             )
         except SolOrderTransportError as exc:
-            ack = self._recover_ack(exc)
+            ack = self._recover_ack(exc, operation="reduce_only_close")
         self._require_matching_ack("reduce-only close", client_order_id, ack)
         return ack
 
@@ -235,7 +235,7 @@ class SolOrderSubmission:
                 client_order_id=client_order_id,
             )
         except SolOrderTransportError as exc:
-            ack = self._recover_ack(exc)
+            ack = self._recover_ack(exc, operation="target")
         self._require_matching_ack("target", client_order_id, ack)
         return ack
 
@@ -264,14 +264,17 @@ class SolOrderSubmission:
             "target",
             "reduce_only_close",
         }:
-            raise SolOrderSubmissionError(
-                f"unsupported order recovery operation: {operation!r}"
-            )
+            raise SolOrderSubmissionError(f"unsupported order recovery operation: {operation!r}")
         validated_id = validate_client_order_id(client_order_id)
         status = self._recover_status(operation, validated_id)
-        ack = self._status_ack(status, recovered_after_restart=True)
+        ack = replace(self._confirmed_status_ack(operation, status), recovered_after_restart=True)
         self._require_matching_ack(operation, validated_id, ack)
         return ack
+
+    def recover_existing_cancel(self, oid: int) -> HyperliquidOrderAck:
+        """Resolve a committed cancel by its original OID without another mutation."""
+        ack = self._recover_cancel_ack(_positive_oid(oid))
+        return replace(ack, recovered_after_restart=True)
 
     @staticmethod
     def _require_matching_ack(
@@ -281,13 +284,45 @@ class SolOrderSubmission:
     ) -> None:
         if ack.client_order_id != client_order_id:
             raise SolOrderSubmissionError(
-                f"{operation} acknowledgement client order id does not match "
-                "durable intent"
+                f"{operation} acknowledgement client order id does not match durable intent"
             )
 
-    def _recover_ack(self, failure: SolOrderTransportError) -> HyperliquidOrderAck:
+    def _recover_ack(
+        self, failure: SolOrderTransportError, *, operation: str
+    ) -> HyperliquidOrderAck:
         status = self._recover_status(failure.operation, failure.client_order_id)
-        return self._status_ack(status, recovered_after_transport_error=True)
+        return replace(
+            self._confirmed_status_ack(operation, status),
+            recovered_after_transport_error=True,
+        )
+
+    def _confirmed_status_ack(
+        self, operation: str, status: HyperliquidOrderStatus
+    ) -> HyperliquidOrderAck:
+        ack = self._status_ack(status)
+        if operation not in {"entry", "reduce_only_close"} or status.status != "canceled":
+            return ack
+        if operation == "reduce_only_close" and status.original_size is None:
+            return ack
+        if status.client_order_id is None:
+            raise SolOrderSubmissionError("canceled execution status lacks client order identity")
+        check = canceled_entry_fill_size if operation == "entry" else canceled_close_fill_size
+        for attempt in range(self._recovery_attempts):
+            venue = self._adapter.reconcile()
+            quantity = check(status, venue)
+            if quantity is not None:
+                return replace(ack, accepted=True, error=None, filled_size=quantity)
+            if venue.is_flat:
+                return ack
+            if operation == "reduce_only_close" and canceled_close_has_no_observed_fill(
+                status, venue
+            ):
+                return ack
+            if attempt + 1 < self._recovery_attempts:
+                self._sleep_fn(self._recovery_delay_seconds)
+        error = SolOrderRecoveryError(operation=operation, client_order_id=status.client_order_id)
+        self._events.fault(f"{error}; client_order_id={status.client_order_id}")
+        raise error
 
     def _recover_status(
         self,
@@ -324,7 +359,6 @@ class SolOrderSubmission:
                 accepted=accepted,
                 oid=status.oid,
                 status=status.status,
-                filled_size=status.size if status.status == "filled" else None,
                 error=None if accepted else status.status,
                 recovered_after_transport_error=True,
                 venue_timestamp_ms=status.status_timestamp_ms,
@@ -343,7 +377,6 @@ class SolOrderSubmission:
             accepted=accepted,
             oid=status.oid,
             status=status.status,
-            filled_size=status.size if status.status == "filled" else None,
             error=None if accepted else status.status,
             client_order_id=status.client_order_id,
             recovered_after_transport_error=recovered_after_transport_error,

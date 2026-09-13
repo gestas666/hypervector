@@ -1,0 +1,62 @@
+{
+  "filled": {
+    "response": {
+      "status": "order",
+      "order": {
+        "order": {
+          "coin": "xyz:SNDK",
+          "side": "A",
+          "limitPx": "1628.6",
+          "sz": "0.0",
+          "oid": 542326864971,
+          "timestamp": 1789135222977,
+          "triggerCondition": "N/A",
+          "isTrigger": false,
+          "triggerPx": "0.0",
+          "children": [],
+          "isPositionTpsl": false,
+          "reduceOnly": false,
+          "orderType": "Limit",
+          "origSz": "0.306",
+          "tif": "Ioc",
+          "cloid": "0x1ac638cf838338931b759cbfb6e48aca"
+        },
+        "status": "filled",
+        "statusTimestamp": 1789135222977
+      }
+    },
+    "received_at_utc": "2026-09-13T01:01:36.422273+00:00",
+    "source_path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_native_recovery_status_20260913_v1/order_542326864971.json",
+    "source_sha256": "c02548d875abd8741b501efa9e5c2aeea4a8c4c45e4d8d73724bfb87e4b438b3"
+  },
+  "open": {
+    "response": {
+      "status": "order",
+      "order": {
+        "order": {
+          "coin": "xyz:SNDK",
+          "side": "B",
+          "limitPx": "1669.9",
+          "sz": "0.306",
+          "oid": 542326955281,
+          "timestamp": 1789135226243,
+          "triggerCondition": "Price above 1669.9",
+          "isTrigger": true,
+          "triggerPx": "1669.9",
+          "children": [],
+          "isPositionTpsl": false,
+          "reduceOnly": true,
+          "orderType": "Stop Market",
+          "origSz": "0.306",
+          "tif": null,
+          "cloid": "0xf7bcae0c8cafe6f8829e8832524ca343"
+        },
+        "status": "open",
+        "statusTimestamp": 1789135226243
+      }
+    },
+    "received_at_utc": "2026-09-13T01:01:36.782358+00:00",
+    "source_path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_native_recovery_status_20260913_v1/order_542326955281.json",
+    "source_sha256": "744a9617e5ee6783db2aa6e62f2e4c0304d653704ebc7d25d097fe8277f74789"
+  }
+}

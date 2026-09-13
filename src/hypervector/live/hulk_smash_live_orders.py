@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 import time
+from collections.abc import Callable
 
 from hypervector.live.hulk_smash_live_decisions import HulkSmashLiveDecision
 from hypervector.live.hulk_smash_live_protocol import HulkSmashVenueProtocol
@@ -261,7 +261,6 @@ def _status_ack(status: HyperliquidOrderStatus) -> HyperliquidOrderAck:
         accepted=accepted,
         oid=status.oid,
         status=status.status,
-        filled_size=status.size if status.status == "filled" else None,
         error=None if accepted else status.status,
         client_order_id=status.client_order_id,
         recovered_after_transport_error=True,
@@ -275,7 +274,6 @@ def _cancel_status_ack(status: HyperliquidOrderStatus) -> HyperliquidOrderAck:
         accepted=accepted,
         oid=status.oid,
         status=status.status,
-        filled_size=status.size if status.status == "filled" else None,
         error=None if accepted else status.status,
         recovered_after_transport_error=True,
         venue_timestamp_ms=status.status_timestamp_ms,

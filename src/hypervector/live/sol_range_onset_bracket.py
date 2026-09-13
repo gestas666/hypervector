@@ -9,6 +9,7 @@ from hypervector.live.hyperliquid_protocol import (
     SolReconciliationSnapshot,
 )
 from hypervector.live.hyperliquid_sol_parsing import normalize_perp_price
+from hypervector.live.sol_protective_order import protective_stop_covers
 
 _MAXIMUM_PERP_SIZE_DECIMALS = 6
 
@@ -43,7 +44,7 @@ def complete_bracket_visible(
     if observed != expected:
         return False
     stop = next(order for order in venue.open_orders if order.oid == stop_oid)
-    return _stop_matches(stop, position_size_signed) and target_order_visible(
+    return protective_stop_covers(stop, position_size_signed) and target_order_visible(
         venue,
         target_oid=target_oid,
         position_size_signed=position_size_signed,
@@ -70,8 +71,7 @@ def owned_exit_reason(
     valid = [
         fill
         for fill in fills
-        if fill.side == expected_side
-        and fill.direction.strip().lower() == expected_direction
+        if fill.side == expected_side and fill.direction.strip().lower() == expected_direction
     ]
     if not math.isclose(
         sum(fill.size for fill in valid),
@@ -86,15 +86,6 @@ def owned_exit_reason(
     if target_oid is not None and filled_oids == {target_oid}:
         return "target"
     return "mixed_bracket_exit" if filled_oids else None
-
-
-def _stop_matches(order: SolOpenOrder, position_size_signed: float) -> bool:
-    return (
-        order.reduce_only
-        and order.is_trigger
-        and _close_side(order, position_size_signed)
-        and _size_matches(order, position_size_signed)
-    )
 
 
 def _target_matches(

@@ -209,9 +209,7 @@ class SolLiveStateMachine:
         """Record reconciled exposure before submitting its venue stop."""
         self._require(SolLiveState.ENTRY_PENDING, "begin_protection")
         if self._snapshot.entry_oid is None:
-            raise SolLiveStateError(
-                "entry acknowledgement is required before protection"
-            )
+            raise SolLiveStateError("entry acknowledgement is required before protection")
         size = float(position_size_signed)
         if size == 0.0:
             raise SolLiveStateError("protected position size must be nonzero")
@@ -316,15 +314,28 @@ class SolLiveStateMachine:
 
     def restore_protection_after_exit_failure(self, *, stop_oid: int) -> None:
         """Return to OPEN after a failed close is re-protected at the venue."""
-        self._require(
-            SolLiveState.EXIT_PENDING, "restore_protection_after_exit_failure"
-        )
+        self._require(SolLiveState.EXIT_PENDING, "restore_protection_after_exit_failure")
         self._snapshot = replace(
             self._snapshot,
             state=SolLiveState.OPEN,
             stop_oid=_oid(stop_oid, "stop_oid"),
             close_oid=None,
         )
+
+    def acknowledge_partial_close(self, *, position_size_signed: float) -> None:
+        """Persist a verified same-direction remainder while retaining its original clock."""
+        self._require(SolLiveState.EXIT_PENDING, "acknowledge_partial_close")
+        previous = self._snapshot.position_size_signed
+        remaining = position_size_signed
+        if (
+            self._snapshot.close_oid is None
+            or isinstance(remaining, bool)
+            or not math.isfinite(remaining)
+            or remaining * previous <= 0.0
+            or abs(remaining) >= abs(previous)
+        ):
+            raise SolLiveStateError("partial close requires an acknowledged exact reduction")
+        self._snapshot = replace(self._snapshot, position_size_signed=remaining)
 
     def confirm_flat(self) -> None:
         """Clear order identity only after venue reconciliation verifies flat."""
@@ -352,10 +363,7 @@ class SolLiveStateMachine:
         if not message:
             raise SolLiveStateError("stop reason must be non-empty")
         state = self._snapshot.state
-        if (
-            self._snapshot.position_size_signed != 0.0
-            and self._snapshot.stop_oid is None
-        ):
+        if self._snapshot.position_size_signed != 0.0 and self._snapshot.stop_oid is None:
             raise SolLiveStateError("cannot stop while exposure is unprotected")
         if state not in {SolLiveState.DISARMED, SolLiveState.FLAT, SolLiveState.OPEN}:
             raise SolLiveStateError(f"{state.value} cannot transition via stop")

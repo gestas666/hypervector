@@ -157,7 +157,11 @@ class HyperliquidPostOnlyOrder:
 
 @dataclass(frozen=True)
 class HyperliquidOrderStatus:
-    """Normalized order-status response from the info endpoint."""
+    """Order status with remaining size; original quantity may be unavailable.
+
+    Neither quantity is an authenticated executed-fill total. Recover economic
+    fills from fill history and exposure from account reconciliation.
+    """
 
     oid: int
     symbol: str
@@ -165,6 +169,7 @@ class HyperliquidOrderStatus:
     size: float
     status_timestamp_ms: int
     client_order_id: str | None = None
+    original_size: float | None = None
 
 
 @dataclass(frozen=True)

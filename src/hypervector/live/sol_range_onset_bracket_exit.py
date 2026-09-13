@@ -20,12 +20,12 @@ def reconcile_owned_bracket_exit(
     orders: SolOrderSubmission,
     events: SolLiveEngineEvents,
     poller: SolReconciliationPoller,
-) -> bool:
-    """Clean exact residual siblings and transition an owned close to FLAT."""
+) -> SolReconciliationSnapshot | None:
+    """Return the final owned-exit snapshot after verified sibling cleanup, if applicable."""
     if venue.position.size_signed != 0.0:
-        return False
+        return None
     if snapshot.target_oid is None:
-        return False
+        return None
     if snapshot.stop_oid is None:
         _fault(events, "open flat reconciliation lacks stop ownership")
     reason = owned_exit_reason(
@@ -36,9 +36,7 @@ def reconcile_owned_bracket_exit(
     )
     if reason is None:
         _fault(events, "flat reconciliation lacks a complete owned exit fill")
-    owned = {snapshot.stop_oid}
-    if snapshot.target_oid is not None:
-        owned.add(snapshot.target_oid)
+    owned = {snapshot.stop_oid, snapshot.target_oid}
     unknown = [order.oid for order in venue.open_orders if order.oid not in owned]
     if unknown:
         _fault(events, f"flat reconciliation contains unknown orders: {unknown}")
@@ -55,7 +53,7 @@ def reconcile_owned_bracket_exit(
         reason=reason,
         owned_oids=tuple(sorted(owned)),
     )
-    return True
+    return after
 
 
 def _fault(events: SolLiveEngineEvents, reason: str) -> NoReturn:

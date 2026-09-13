@@ -14,7 +14,7 @@ def test_cancel_race_accepts_exact_filled_or_canceled_terminal_status() -> None:
 
     assert filled.accepted is True
     assert filled.status == "filled"
-    assert filled.filled_size == 0.00019
+    assert filled.filled_size is None
     assert canceled.accepted is True
     assert canceled.status == "canceled"
 

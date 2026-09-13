@@ -10,6 +10,8 @@ from hypervector.live.hyperliquid_protocol import (
 )
 from hypervector.live.sol_order_restart import PendingSolOrderIntent
 from hypervector.live.sol_order_restart_context import PendingPositionContext
+from hypervector.live.sol_partial_close import acknowledge_protected_partial_close
+from hypervector.live.sol_close_restart_context import PARTIAL_CLOSE_UNRESOLVED
 from hypervector.live.sol_order_submission import (
     SolOrderRecoveryError,
     SolOrderSubmission,
@@ -69,7 +71,7 @@ def recover_bracket_exit(
         return "complete"
     ack = _recover_close_ack(events, orders, pending)
     events.emit_ack("reduce_only_close_restart_recovery", ack, event_type="close")
-    if ack.status in {"canceled", "rejected"}:
+    if not ack.accepted and ack.status in {"canceled", "rejected"}:
         _restore_open_bracket(context, venue, machine, events, orders, poller)
         return "complete"
     _complete_recovered_close(context, venue, ack, machine, events, orders, poller)
@@ -134,20 +136,32 @@ def _complete_recovered_close(
     orders: SolOrderSubmission,
     poller: SolReconciliationPoller,
 ) -> None:
-    if not ack.accepted or ack.oid is None or ack.status != "filled":
+    if not ack.accepted or ack.oid is None or ack.status not in {"filled", "canceled"}:
         _fault(events, "recovered bracket close is unresolved")
+    machine.acknowledge_close(ack.oid)
     after_close = venue
     if after_close.position.size_signed != 0.0:
-        after_close = poller.wait_for(
-            lambda current: current.position.size_signed == 0.0
-        )
+        after_close = poller.wait_for_close(machine.snapshot, ack.oid)
     if after_close.position.size_signed != 0.0:
-        _fault(events, "recovered bracket close retains venue exposure")
+        if acknowledge_protected_partial_close(
+            venue=after_close, close_oid=ack.oid, machine=machine, events=events
+        ):
+            restore_target_after_close_failure(
+                snapshot=machine.snapshot,
+                venue=after_close,
+                target_price=context.target_price or 0.0,
+                machine=machine,
+                events=events,
+                orders=orders,
+                poller=poller,
+                failure="partial close restart",
+            )
+            return
+        _fault(events, PARTIAL_CLOSE_UNRESOLVED)
     _cancel_owned_residuals(context, after_close, orders, events)
     after = poller.wait_for(lambda current: current.is_flat)
     if not after.is_flat:
         _fault(events, "recovered bracket close residual cleanup is not flat")
-    machine.acknowledge_close(ack.oid)
     machine.confirm_flat()
     events.emit_close_complete(reason="restart_recovery", oid=ack.oid)
     events.emit_reconciliation(after)

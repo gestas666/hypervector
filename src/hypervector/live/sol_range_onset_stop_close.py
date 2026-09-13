@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import math
 from typing import Protocol
 
 from hypervector.live.hyperliquid_protocol import SolReconciliationSnapshot
 from hypervector.live.sol_order_submission import SolOrderSubmission
+from hypervector.live.sol_partial_close import acknowledge_protected_partial_close
 from hypervector.live.sol_range_onset_consistency import (
     SolReconciliationPoller,
     protected_order_visible,
@@ -98,13 +100,32 @@ def _submit_and_verify_close(
             restore_missing_protection=restore_missing_protection,
         )
     machine.acknowledge_close(close.oid)
-    after_close = poller.wait_for(lambda current: current.position.size_signed == 0.0)
+    after_close = poller.wait_for_close(machine.snapshot, close.oid)
     if after_close.position.size_signed != 0.0:
-        if not after_close.open_orders and restore_missing_protection(
-            after_close, trigger_price
+        if acknowledge_protected_partial_close(
+            venue=after_close, close_oid=close.oid, machine=machine, events=events
         ):
+            machine.restore_protection_after_exit_failure(stop_oid=snapshot.stop_oid or 0)
+            events.emit_state()
+            return machine.snapshot
+        if not after_close.open_orders and restore_missing_protection(after_close, trigger_price):
             return machine.snapshot
         _fault(events, "close acknowledged but protected exposure remains")
+    return _finish_full_close(
+        after_close, snapshot, close.oid, reason, machine, events, orders, poller
+    )
+
+
+def _finish_full_close(
+    after_close: SolReconciliationSnapshot,
+    snapshot: SolLiveSnapshot,
+    close_oid: int,
+    reason: str,
+    machine: SolLiveStateMachine,
+    events: SolLiveEngineEvents,
+    orders: SolOrderSubmission,
+    poller: SolReconciliationPoller,
+) -> SolLiveSnapshot:
     after = cancel_residual_stop_after_close(
         venue=after_close,
         stop_oid=snapshot.stop_oid or 0,
@@ -115,7 +136,7 @@ def _submit_and_verify_close(
     if not after.is_flat:
         _fault(events, "post-close residual stop cleanup did not reconcile flat")
     machine.confirm_flat()
-    events.emit_close_complete(reason=reason, oid=close.oid)
+    events.emit_close_complete(reason=reason, oid=close_oid)
     events.emit_reconciliation(after)
     events.emit_state()
     return machine.snapshot
@@ -154,6 +175,13 @@ def _reconcile_rejected_close(
             reason="protective_stop_during_rejected_exit",
         )
         return machine.snapshot
+    if not math.isclose(
+        after.position.size_signed,
+        snapshot.position_size_signed,
+        rel_tol=0.0,
+        abs_tol=1e-9,
+    ):
+        _fault(events, "rejected close changed position; execution evidence required")
     if not after.open_orders and restore_missing_protection(after, trigger_price):
         return machine.snapshot
     _require_stop_only(after, snapshot, events)

@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
-from typing import NoReturn
-
 from hypervector.live.hyperliquid_protocol import (
-    HyperliquidOrderAck,
     SolLiveAdapterProtocol,
     SolReconciliationSnapshot,
+)
+from hypervector.live.sol_cancel_restart import reconcile_cancel_fault
+from hypervector.live.sol_cancel_restart_context import cancel_fault_context
+from hypervector.live.sol_close_restart_context import (
+    records_before_partial_close_fault,
 )
 from hypervector.live.sol_order_restart import (
     PendingSolOrderIntent,
@@ -16,25 +18,20 @@ from hypervector.live.sol_order_restart import (
     pending_order_intent,
 )
 from hypervector.live.sol_order_restart_context import (
-    PendingPositionContext,
-    execution_plan_for_state,
+    execution_plan_for_intent,
     latest_lifecycle_state,
-    owned_open_record,
-    pending_position_context,
+    pending_entry_opened_at_ms,
     positive_number,
     required_text,
 )
 from hypervector.live.sol_order_submission import (
-    SolOrderRecoveryError,
     SolOrderSubmission,
-    SolOrderSubmissionError,
 )
-from hypervector.live.sol_range_onset_consistency import SolReconciliationPoller
-from hypervector.live.sol_range_onset_config import SolRangeOnsetConfig
 from hypervector.live.sol_range_onset_bracket_exit import (
     reconcile_owned_bracket_exit,
 )
-from hypervector.live.sol_range_onset_engine_contract import SolLiveEngineError
+from hypervector.live.sol_range_onset_config import SolRangeOnsetConfig
+from hypervector.live.sol_range_onset_consistency import SolReconciliationPoller
 from hypervector.live.sol_range_onset_engine_events import SolLiveEngineEvents
 from hypervector.live.sol_range_onset_exit_restart import (
     RecoveredPendingEntry,
@@ -48,7 +45,10 @@ from hypervector.live.sol_range_onset_reconcile import (
     reconcile_sol_startup,
 )
 from hypervector.live.sol_range_onset_state import SolLiveStateMachine
+from hypervector.live.sol_range_onset_stop_restart import recover_pending_stop
+from hypervector.live.sol_range_onset_target import EmergencyFlattenProtocol
 from hypervector.live.sol_range_onset_target_restart import recover_pending_target
+from hypervector.live.sol_startup_support import _fault_and_raise, _recover_intent_ack
 
 
 def prepare_sol_live_startup(
@@ -60,18 +60,27 @@ def prepare_sol_live_startup(
     events: SolLiveEngineEvents,
     orders: SolOrderSubmission,
     poller: SolReconciliationPoller,
+    emergency_flatten: EmergencyFlattenProtocol,
 ) -> RecoveredPendingEntry | None:
     """Preflight venue state and return any filled entry needing protection."""
-    prior_records = _profile_records(ledger, config.profile_fingerprint)
+    try:
+        prior_records = _profile_recovery_records(ledger, config.profile_fingerprint)
+        cancel_context = cancel_fault_context(prior_records)
+    except SolOrderRestartError as exc:
+        _fault_and_raise(events, exc)
     machine.begin_preflight()
     events.emit("session_start", {"state": "PREFLIGHT"})
     events.emit_state()
     preflight = adapter.preflight(expected_max_leverage=int(config.venue_max_leverage))
     venue = adapter.reconcile()
     events.emit_preflight(preflight, venue)
+    if cancel_context is not None:
+        venue = reconcile_cancel_fault(cancel_context, orders, poller, events)
+        prior_records = cancel_context.records
     pending = _pending_intent(prior_records, events)
     if pending is not None:
         return _recover_pending_mutation(
+            emergency_flatten=emergency_flatten,
             adapter=adapter,
             config=config,
             events=events,
@@ -118,6 +127,7 @@ def _recover_pending_mutation(
     poller: SolReconciliationPoller,
     records: list[dict[str, object]],
     venue: SolReconciliationSnapshot,
+    emergency_flatten: EmergencyFlattenProtocol,
 ) -> RecoveredPendingEntry | None:
     if pending.operation == "entry":
         return _recover_pending_entry(
@@ -131,7 +141,9 @@ def _recover_pending_mutation(
             venue=venue,
         )
     if pending.operation == "protective_stop":
-        return _recover_pending_stop(
+        return recover_pending_stop(
+            poller=poller,
+            emergency_flatten=emergency_flatten,
             config=config,
             events=events,
             machine=machine,
@@ -141,10 +153,7 @@ def _recover_pending_mutation(
             venue=venue,
         )
     if pending.operation == "target":
-        _recover_target_mutation(
-            adapter, events, machine, orders, pending, records, venue
-        )
-        return None
+        return _recover_target_mutation(adapter, events, machine, orders, pending, records, venue)
     return recover_pending_exit(
         adapter=adapter,
         config=config,
@@ -265,15 +274,14 @@ def _recover_pending_entry(
         events.emit_state()
         return None
     if ack.oid is None or ack.venue_timestamp_ms is None:
-        _fault_and_raise(
-            events, SolOrderRestartError("recovered entry identity incomplete")
-        )
+        _fault_and_raise(events, SolOrderRestartError("recovered entry identity incomplete"))
+    if ack.status == "canceled":
+        venue = adapter.reconcile()
     if venue.position.size_signed == 0.0:
-        _fault_and_raise(
-            events, SolOrderRestartError("recovered entry has no exposure")
-        )
+        _fault_and_raise(events, SolOrderRestartError("recovered entry has no exposure"))
     try:
-        plan = execution_plan_for_state(records, "ENTRY_PENDING")
+        plan = execution_plan_for_intent(records, "ENTRY_PENDING", pending.client_order_id)
+        opened_at_ms = pending_entry_opened_at_ms(pending, ack.venue_timestamp_ms)
     except SolOrderRestartError as exc:
         _fault_and_raise(events, exc)
     machine.restore_pending_entry(entry_oid=ack.oid, execution_plan=plan)
@@ -283,105 +291,8 @@ def _recover_pending_entry(
         mark_price=mark_price,
         ack=ack,
         venue=venue,
-        opened_at_ms=ack.venue_timestamp_ms,
+        opened_at_ms=opened_at_ms,
     )
-
-
-def _recover_pending_stop(
-    *,
-    config: SolRangeOnsetConfig,
-    events: SolLiveEngineEvents,
-    machine: SolLiveStateMachine,
-    orders: SolOrderSubmission,
-    pending: PendingSolOrderIntent,
-    records: list[dict[str, object]],
-    venue: SolReconciliationSnapshot,
-) -> RecoveredPendingEntry | None:
-    try:
-        context = pending_position_context(records, "PROTECTING")
-    except SolOrderRestartError as exc:
-        _fault_and_raise(events, exc)
-    ack = _recover_intent_ack(events, orders, pending)
-    events.emit_ack("protective_stop_restart_recovery", ack, event_type="stop_order")
-    if ack.status in {"canceled", "rejected"}:
-        return resume_unprotected_position(
-            events=events,
-            machine=machine,
-            records=records,
-            expected_state="PROTECTING",
-            venue=venue,
-        )
-    if not ack.accepted or ack.oid is None:
-        _fault_and_raise(events, SolOrderRestartError("recovered stop is unresolved"))
-    if ack.status == "filled" and venue.position.size_signed != 0.0:
-        return resume_unprotected_position(
-            events=events,
-            machine=machine,
-            records=records,
-            expected_state="PROTECTING",
-            venue=venue,
-            allow_reduced_size=True,
-        )
-    return _finalize_recovered_stop(
-        context=context,
-        ack=ack,
-        events=events,
-        machine=machine,
-        venue=venue,
-        expected_profile_fingerprint=config.profile_fingerprint,
-    )
-
-
-def _finalize_recovered_stop(
-    *,
-    context: PendingPositionContext,
-    ack: HyperliquidOrderAck,
-    events: SolLiveEngineEvents,
-    machine: SolLiveStateMachine,
-    venue: SolReconciliationSnapshot,
-    expected_profile_fingerprint: str,
-) -> None:
-    if ack.oid is None:
-        _fault_and_raise(events, SolOrderRestartError("recovered stop lacks oid"))
-    machine.restore_protecting_position(
-        entry_oid=context.entry_oid,
-        position_size_signed=context.position_size_signed,
-        opened_at_ms=context.opened_at_ms,
-        execution_plan=context.execution_plan,
-    )
-    events.emit_state()
-    record = owned_open_record(context, ack.oid, expected_profile_fingerprint)
-    try:
-        recovered = reconcile_sol_startup(
-            records=[record],
-            venue=venue,
-            expected_profile_fingerprint=expected_profile_fingerprint,
-        )
-    except SolStartupReconciliationError as exc:
-        _fault_and_raise(events, exc)
-    events.emit_reconciliation(venue)
-    if recovered.disposition == "protective_stop_filled":
-        events.confirm_stop_fill_during_protection(stop_oid=ack.oid)
-        return None
-    machine.confirm_protection(stop_oid=ack.oid)
-    events.emit_state()
-    return None
-
-
-def _recover_intent_ack(
-    events: SolLiveEngineEvents,
-    orders: SolOrderSubmission,
-    pending: PendingSolOrderIntent,
-) -> HyperliquidOrderAck:
-    try:
-        return orders.recover_existing_intent(
-            operation=pending.operation,
-            client_order_id=pending.client_order_id,
-        )
-    except SolOrderRecoveryError as exc:
-        raise SolLiveEngineError(str(exc)) from exc
-    except SolOrderSubmissionError as exc:
-        _fault_and_raise(events, exc)
 
 
 def _confirm_rejected_entry_is_flat(
@@ -483,16 +394,11 @@ def _restore_owned_position(
     )
 
 
-def _fault_and_raise(events: SolLiveEngineEvents, error: Exception) -> NoReturn:
-    reason = str(error)
-    events.fault(reason)
-    raise SolLiveEngineError(reason) from error
-
-
-def _profile_records(
+def _profile_recovery_records(
     ledger: SolLiveLedger,
     expected_profile_fingerprint: str,
 ) -> list[dict[str, object]]:
-    return ledger.read_matching(
+    records = ledger.read_matching(
         lambda record: record.get("profile_fingerprint") == expected_profile_fingerprint
     )
+    return records_before_partial_close_fault(records)

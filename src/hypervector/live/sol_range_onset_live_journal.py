@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from collections import Counter
 from collections.abc import Mapping, Sequence
 
@@ -21,6 +22,15 @@ from hypervector.live.sol_range_onset_live_journal_protection import (
     protective_stop_attribution,
 )
 
+from hypervector.live.sol_range_onset_live_journal_orders import (
+    accepted_entry_acks as _accepted_entry_acks,
+    close_fill_records,
+    exit_order_ids,
+    intent_for_ack as _intent_for_ack,
+    partial_exit_oids,
+    weighted_exit_reference,
+)
+
 Record = Mapping[str, object]
 
 
@@ -31,7 +41,7 @@ def build_live_journal(records: Sequence[Record]) -> dict[str, object]:
     closed: list[dict[str, object]] = []
     open_lifecycles: list[dict[str, object]] = []
     for index, entry in enumerate(entries):
-        end_sequence = _next_entry_sequence(entries, index)
+        end_sequence = _next_entry_sequence(entries, index, ordered)
         lifecycle = _build_lifecycle(ordered, entry, end_sequence)
         if lifecycle.get("status") == "closed":
             closed.append(lifecycle)
@@ -74,21 +84,12 @@ def _validated_records(records: Sequence[Record]) -> tuple[Record, ...]:
     return ordered
 
 
-def _accepted_entry_acks(records: Sequence[Record]) -> list[Record]:
-    return [
-        record
-        for record in records
-        if record.get("event_type") == "order_acknowledgement"
-        and _payload(record).get("operation") == "entry"
-        and _payload(record).get("accepted") is True
-        and _positive_int(_payload(record).get("oid")) is not None
-    ]
-
-
-def _next_entry_sequence(entries: Sequence[Record], index: int) -> int | None:
+def _next_entry_sequence(
+    entries: Sequence[Record], index: int, records: Sequence[Record]
+) -> int | None:
     if index + 1 >= len(entries):
         return None
-    return _sequence(entries[index + 1])
+    return _sequence(_intent_for_ack(records, entries[index + 1]) or entries[index + 1])
 
 
 def _build_lifecycle(
@@ -97,10 +98,10 @@ def _build_lifecycle(
     end_sequence: int | None,
 ) -> dict[str, object]:
     entry_oid = _required_positive_int(_payload(entry_ack).get("oid"), "entry oid")
-    start = _sequence(entry_ack)
+    entry_intent = _intent_for_ack(records, entry_ack)
+    start = _sequence(entry_intent or entry_ack)
     window = _window(records, start, end_sequence)
     entry_fills = _fills_for_oid(window, entry_oid)
-    entry_intent = _intent_for_ack(records, entry_ack)
     close_event = _verified_close(window)
     base = _entry_attribution(records, entry_ack, entry_intent, entry_fills)
     base["entry_oid"] = entry_oid
@@ -109,13 +110,21 @@ def _build_lifecycle(
         base.update({"status": "entry_unfilled", "exit_oid": None})
         return base
     if close_event is None:
+        partial_fills = close_fill_records(
+            window,
+            partial_exit_oids(window),
+            _required_direction(base.get("direction")),
+        )
         entry_stats = _fill_summary(entry_fills)
+        partial_stats = _fill_summary(partial_fills)
         entry_time = _required_int(entry_stats.get("venue_timestamp_ms"), "entry time")
         base.update(
             {
                 "status": "open",
                 "exit_oid": None,
-                "fees_usd": _required_float(entry_stats.get("fees_usd")),
+                "fees_usd": _required_float(entry_stats.get("fees_usd"))
+                + _required_float(partial_stats.get("fees_usd")),
+                "realized_exit_pnl_usd": sum(_fill_closed_pnl(row) for row in partial_fills),
                 "funding_usd": _funding_between(window, entry_time, None),
             }
         )
@@ -133,8 +142,8 @@ def _entry_attribution(
     side = _direction(intent_payload, entry_fills)
     expected = _optional_positive_float(intent_payload.get("mark_price"))
     fill = _fill_summary(entry_fills)
-    before = _last_before(records, "reconciliation", _sequence(entry_ack))
     decision_boundary = _sequence(entry_intent or entry_ack)
+    before = _last_before(records, "reconciliation", decision_boundary)
     decision = _last_before(records, "regime_decision", decision_boundary)
     position = _first_after(records, "position", _sequence(entry_ack), nonflat=True)
     liquidation = _first_after(records, "liquidation_price", _sequence(entry_ack))
@@ -143,9 +152,7 @@ def _entry_attribution(
         "direction": side,
         "entry": _execution_leg(fill, expected, side, entering=True),
         "entry_regime": _regime_payload(decision),
-        "requested_notional_usd": _optional_float(
-            intent_payload.get("requested_notional_usd")
-        ),
+        "requested_notional_usd": _optional_float(intent_payload.get("requested_notional_usd")),
         "margin_used_usd": _payload_value(position, "margin_used_usd"),
         "leverage": _payload_value(position, "leverage"),
         "liquidation_price": _payload_value(liquidation, "value"),
@@ -160,16 +167,56 @@ def _close_attribution(
     close_event: Record,
     entry_fills: Sequence[Record],
 ) -> dict[str, object]:
-    exit_oid = _resolved_exit_oid(close_event, window)
-    exit_fills = _fills_for_oid(window, exit_oid)
+    exit_oids = exit_order_ids(close_event, window)
+    direct = _positive_int(_payload(close_event).get("oid"))
+    exit_oid = direct if direct is not None else (exit_oids[0] if len(exit_oids) == 1 else None)
+    direction = _required_direction(base.get("direction"))
+    exit_fills = close_fill_records(window, exit_oids, direction)
     if not exit_fills:
         base.update({"status": "close_unfilled", "exit_oid": exit_oid})
         return base
-    direction = _required_direction(base.get("direction"))
-    exit_intent = _intent_for_oid(records, exit_oid)
-    expected = _exit_reference(exit_intent)
+    expected = weighted_exit_reference(records, exit_fills)
     entry_stats = _fill_summary(entry_fills)
     exit_stats = _fill_summary(exit_fills)
+    if not math.isclose(
+        _required_float(exit_stats["size"]),
+        _required_float(entry_stats["size"]),
+        rel_tol=0.0,
+        abs_tol=1e-9,
+    ):
+        base.update(status="close_incomplete", exit_oid=exit_oid, exit_oids=exit_oids)
+        return base
+    exit_stats["venue_timestamp_ms"] = max(
+        _required_int(_payload(row).get("venue_timestamp_ms"), "exit time") for row in exit_fills
+    )
+    base.update(
+        _closed_fields(
+            records,
+            window,
+            base,
+            close_event,
+            entry_stats,
+            exit_stats,
+            exit_fills,
+            expected,
+        )
+    )
+    base.update(exit_oid=exit_oid, exit_oids=exit_oids)
+    base["account_value_change_usd"] = _account_delta(base)
+    return base
+
+
+def _closed_fields(
+    records: Sequence[Record],
+    window: Sequence[Record],
+    base: Mapping[str, object],
+    close_event: Record,
+    entry_stats: Mapping[str, object],
+    exit_stats: Mapping[str, object],
+    exit_fills: Sequence[Record],
+    expected: float | None,
+) -> dict[str, object]:
+    direction = _required_direction(base.get("direction"))
     entry_time = _required_int(entry_stats.get("venue_timestamp_ms"), "entry time")
     exit_time = _required_int(exit_stats.get("venue_timestamp_ms"), "exit time")
     funding = _funding_between(window, entry_time, exit_time)
@@ -179,52 +226,25 @@ def _close_attribution(
     gross = sum(_fill_closed_pnl(record) for record in exit_fills)
     account_after_usd = _account_after_usd(records, close_event)
     exit_decision = _last_before(records, "regime_decision", _sequence(close_event) + 1)
-    base.update(
-        {
-            "status": "closed",
-            "exit_oid": exit_oid,
-            "exit": _execution_leg(exit_stats, expected, direction, entering=False),
-            "exit_regime": _regime_payload(exit_decision),
-            "exit_reason": _payload(close_event).get("reason"),
-            "holding_time_ms": exit_time - entry_time,
-            "closed_pnl_before_friction_usd": gross,
-            "fees_usd": fees,
-            "funding_usd": funding,
-            "net_pnl_usd": gross - fees + funding,
-            "account_value_after_usd": account_after_usd,
-            "sampled_mid_path": _path_attribution(
-                window,
-                direction,
-                _required_float(entry_stats.get("price")),
-                entry_time,
-                exit_time,
-            ),
-        }
-    )
-    base["account_value_change_usd"] = _account_delta(base)
-    return base
-
-
-def _resolved_exit_oid(close_event: Record, window: Sequence[Record]) -> int:
-    direct = _positive_int(_payload(close_event).get("oid"))
-    if direct is not None:
-        return direct
-    owned = _payload(close_event).get("owned_oids")
-    if not isinstance(owned, list):
-        raise ValueError("live journal bracket close owned_oids must be a list")
-    owned_oids = {_required_positive_int(value, "owned oid") for value in owned}
-    filled_oids = {
-        _required_positive_int(_payload(record).get("oid"), "fill oid")
-        for record in window
-        if record.get("event_type") == "fill"
-        and str(_payload(record).get("direction", "")).lower().startswith("close ")
-        and _positive_int(_payload(record).get("oid")) in owned_oids
+    return {
+        "status": "closed",
+        "exit": _execution_leg(exit_stats, expected, direction, entering=False),
+        "exit_regime": _regime_payload(exit_decision),
+        "exit_reason": _payload(close_event).get("reason"),
+        "holding_time_ms": exit_time - entry_time,
+        "closed_pnl_before_friction_usd": gross,
+        "fees_usd": fees,
+        "funding_usd": funding,
+        "net_pnl_usd": gross - fees + funding,
+        "account_value_after_usd": account_after_usd,
+        "sampled_mid_path": _path_attribution(
+            window,
+            direction,
+            _required_float(entry_stats.get("price")),
+            entry_time,
+            exit_time,
+        ),
     }
-    if len(filled_oids) != 1:
-        raise ValueError(
-            "live journal bracket close must have exactly one filled owned oid"
-        )
-    return next(iter(filled_oids))
 
 
 def _account_after_usd(records: Sequence[Record], close_event: Record) -> object:
@@ -259,13 +279,11 @@ def _fill_summary(records: Sequence[Record]) -> dict[str, object]:
     prices = [_required_float(_payload(record).get("price")) for record in records]
     fees = sum(_required_float(_payload(record).get("fee_usd")) for record in records)
     timestamps = [
-        _required_int(_payload(record).get("venue_timestamp_ms"), "fill time")
-        for record in records
+        _required_int(_payload(record).get("venue_timestamp_ms"), "fill time") for record in records
     ]
     return {
         "venue_timestamp_ms": min(timestamps),
-        "price": sum(price * size for price, size in zip(prices, sizes, strict=True))
-        / total,
+        "price": sum(price * size for price, size in zip(prices, sizes, strict=True)) / total,
         "size": total,
         "fees_usd": fees,
     }
@@ -282,9 +300,7 @@ def _path_attribution(
         _required_float(_payload(record).get("mid_px"))
         for record in records
         if record.get("event_type") == "book_observation"
-        and start_ms
-        <= _required_int(_payload(record).get("exchange_ts_ms"), "book time")
-        <= end_ms
+        and start_ms <= _required_int(_payload(record).get("exchange_ts_ms"), "book time") <= end_ms
     ]
     if not mids:
         return {
@@ -293,8 +309,7 @@ def _path_attribution(
             "maximum_adverse_pct": None,
         }
     returns = [
-        (mid / entry_price - 1.0) * (1.0 if direction == "long" else -1.0) * 100.0
-        for mid in mids
+        (mid / entry_price - 1.0) * (1.0 if direction == "long" else -1.0) * 100.0 for mid in mids
     ]
     return {
         "observations": len(mids),
@@ -317,24 +332,16 @@ def _trade_summary(
         "losses": sum(value < 0.0 for value in pnls),
         "net_pnl_usd": sum(pnls),
         "fees_usd": sum(_required_float(trade.get("fees_usd")) for trade in closed),
-        "funding_usd": sum(
-            _required_float(trade.get("funding_usd")) for trade in closed
-        ),
+        "funding_usd": sum(_required_float(trade.get("funding_usd")) for trade in closed),
         "profit_factor": profits / losses if losses else None,
     }
 
 
 def _observation_summary(records: Sequence[Record]) -> dict[str, object]:
     event_counts = Counter(str(record.get("event_type")) for record in records)
-    decisions = [
-        record for record in records if record.get("event_type") == "regime_decision"
-    ]
-    actions = Counter(
-        str(_payload(record).get("decision_action")) for record in decisions
-    )
-    regimes = Counter(
-        str(_payload(record).get("primary_regime")) for record in decisions
-    )
+    decisions = [record for record in records if record.get("event_type") == "regime_decision"]
+    actions = Counter(str(_payload(record).get("decision_action")) for record in decisions)
+    regimes = Counter(str(_payload(record).get("primary_regime")) for record in decisions)
     return {
         "event_counts": dict(sorted(event_counts.items())),
         "decision_actions": dict(sorted(actions.items())),
@@ -376,46 +383,13 @@ def _verified_close(records: Sequence[Record]) -> Record | None:
         (
             record
             for record in records
-            if record.get("event_type") == "close"
-            and _payload(record).get("verified_flat") is True
+            if record.get("event_type") == "close" and _payload(record).get("verified_flat") is True
         ),
         None,
     )
 
 
-def _intent_for_ack(records: Sequence[Record], ack: Record) -> Record | None:
-    client_id = _payload(ack).get("client_order_id")
-    if not isinstance(client_id, str):
-        return None
-    return next(
-        (
-            record
-            for record in reversed(records[: _sequence(ack) - 1])
-            if record.get("event_type") == "order_intent"
-            and _payload(record).get("client_order_id") == client_id
-        ),
-        None,
-    )
-
-
-def _intent_for_oid(records: Sequence[Record], oid: int) -> Record | None:
-    ack = next(
-        (
-            record
-            for record in records
-            if record.get("event_type")
-            in {"close", "stop_order", "target_order", "order_acknowledgement"}
-            and _payload(record).get("oid") == oid
-            and isinstance(_payload(record).get("client_order_id"), str)
-        ),
-        None,
-    )
-    return _intent_for_ack(records, ack) if ack is not None else None
-
-
-def _last_before(
-    records: Sequence[Record], event_type: str, sequence: int
-) -> Record | None:
+def _last_before(records: Sequence[Record], event_type: str, sequence: int) -> Record | None:
     matches = [
         record
         for record in records
@@ -452,36 +426,21 @@ def _regime_payload(record: Record | None) -> dict[str, object] | None:
     return {key: payload.get(key) for key in keys}
 
 
-def _funding_between(
-    records: Sequence[Record], start_ms: int, end_ms: int | None
-) -> float:
+def _funding_between(records: Sequence[Record], start_ms: int, end_ms: int | None) -> float:
     return sum(
         _required_float(_payload(record).get("usdc_delta"))
         for record in records
         if record.get("event_type") == "funding"
-        and start_ms
-        <= _required_int(_payload(record).get("venue_timestamp_ms"), "funding time")
+        and start_ms <= _required_int(_payload(record).get("venue_timestamp_ms"), "funding time")
         and (
             end_ms is None
-            or _required_int(_payload(record).get("venue_timestamp_ms"), "funding time")
-            <= end_ms
+            or _required_int(_payload(record).get("venue_timestamp_ms"), "funding time") <= end_ms
         )
     )
 
 
 def _fill_closed_pnl(record: Record) -> float:
     return _required_float(_payload(record).get("closed_pnl_usd"))
-
-
-def _exit_reference(intent: Record | None) -> float | None:
-    if intent is None:
-        return None
-    payload = _payload(intent)
-    return _optional_positive_float(
-        payload.get("mark_price")
-        or payload.get("trigger_price")
-        or payload.get("limit_price")
-    )
 
 
 def _direction(intent: Mapping[str, object], fills: Sequence[Record]) -> str:

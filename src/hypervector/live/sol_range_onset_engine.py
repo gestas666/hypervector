@@ -56,6 +56,7 @@ from hypervector.live.sol_range_onset_stop_entry import (
     place_and_verify_entry_protection,
 )
 from hypervector.live.sol_range_onset_verification import (
+    verify_canceled_entry_exposure,
     verify_open_snapshot,
     verify_protected_position,
 )
@@ -89,11 +90,12 @@ class SolRangeOnsetLiveEngine:
         self._now_fn = now_fn
         self._telemetry = SolLiveTelemetry(config=config, ledger=ledger, now_fn=now_fn)
         self._machine = SolLiveStateMachine()
-        self._events = SolLiveEngineEvents(
-            telemetry=self._telemetry, machine=self._machine
-        )
+        self._events = SolLiveEngineEvents(telemetry=self._telemetry, machine=self._machine)
         self._orders = SolOrderSubmission(
-            adapter=adapter, events=self._events, client_order_id_fn=client_order_id_fn
+            adapter=adapter,
+            events=self._events,
+            client_order_id_fn=client_order_id_fn,
+            sleep_fn=sleep_fn,
         )
         self._poller = SolReconciliationPoller(
             adapter=adapter,
@@ -115,6 +117,7 @@ class SolRangeOnsetLiveEngine:
         if self._started:
             raise SolLiveEngineError("SOL live engine has already started")
         pending = prepare_sol_live_startup(
+            emergency_flatten=self._emergency_flatten,
             config=self._config,
             adapter=self._adapter,
             ledger=self._ledger,
@@ -210,9 +213,7 @@ class SolRangeOnsetLiveEngine:
             self._events.fault(reason)
             raise SolLiveEngineError(reason)
         self._machine.acknowledge_entry(ack.oid)
-        venue = self._poller.wait_for(
-            lambda snapshot: snapshot.position.size_signed != 0.0
-        )
+        venue = self._poller.wait_for(lambda snapshot: snapshot.position.size_signed != 0.0)
         return ack, venue
 
     def _confirm_ioc_no_fill(self, ack: HyperliquidOrderAck) -> NoReturn:
@@ -237,6 +238,7 @@ class SolRangeOnsetLiveEngine:
     ) -> SolLiveSnapshot:
         if entry_ack.oid is None:
             raise SolLiveEngineError("accepted entry is missing venue order id")
+        verify_canceled_entry_exposure(entry_ack, venue, self._events.fault)
         position = venue.position
         validate_entry_direction(
             side=side,
@@ -280,9 +282,7 @@ class SolRangeOnsetLiveEngine:
         """Cancel owned protection, reduce-only close, and verify flat."""
         require_started(self._started)
         if self.snapshot.state is not SolLiveState.OPEN:
-            raise SolLiveEngineError(
-                f"exit requires OPEN, observed {self.snapshot.state.value}"
-            )
+            raise SolLiveEngineError(f"exit requires OPEN, observed {self.snapshot.state.value}")
         before = self._poller.wait_for_state(self.snapshot)
         snapshot = self.snapshot
         verify_open_snapshot(snapshot, before)
@@ -325,21 +325,21 @@ class SolRangeOnsetLiveEngine:
         require_started(self._started)
         venue = self._poller.wait_for_state(self.snapshot)
         try:
-            if (
-                self.snapshot.state is SolLiveState.OPEN
-                and reconcile_owned_bracket_exit(
+            bracket_exit = (
+                reconcile_owned_bracket_exit(
                     snapshot=self.snapshot,
                     venue=venue,
                     orders=self._orders,
                     events=self._events,
                     poller=self._poller,
                 )
-            ):
-                pass
+                if self.snapshot.state is SolLiveState.OPEN
+                else None
+            )
+            if bracket_exit is not None:
+                venue = bracket_exit
             elif protective_stop_fill_visible(self.snapshot, venue):
-                self._events.confirm_protective_stop_fill(
-                    stop_oid=self.snapshot.stop_oid or 0
-                )
+                self._events.confirm_protective_stop_fill(stop_oid=self.snapshot.stop_oid or 0)
             elif self.snapshot.state is SolLiveState.OPEN:
                 verify_open_snapshot(self.snapshot, venue)
             elif self.snapshot.state is SolLiveState.FLAT and not venue.is_flat:
@@ -350,9 +350,7 @@ class SolRangeOnsetLiveEngine:
             self._events.fault(f"continuous reconciliation failed: {exc}")
             raise SolLiveEngineError(str(exc)) from exc
         self._events.emit_reconciliation(venue)
-        self._telemetry.emit_book(
-            self._adapter.book_snapshot(depth_levels=_TELEMETRY_DEPTH_LEVELS)
-        )
+        self._telemetry.emit_book(self._adapter.book_snapshot(depth_levels=_TELEMETRY_DEPTH_LEVELS))
         payments = self._adapter.funding_payments(
             start_time_ms=funding_start_time_ms,
             end_time_ms=funding_end_time_ms,
@@ -408,9 +406,7 @@ class SolRangeOnsetLiveEngine:
             position_size_signed=venue.position.size_signed,
             trigger_price=trigger_price,
         )
-        self._events.emit_ack(
-            "replacement_protective_stop", ack, event_type="stop_order"
-        )
+        self._events.emit_ack("replacement_protective_stop", ack, event_type="stop_order")
         return self._finish_missing_protection(venue, ack)
 
     def _finish_missing_protection(
@@ -467,9 +463,7 @@ class SolRangeOnsetLiveEngine:
             event_type="close",
         )
         after = self._poller.wait_for(lambda snapshot: snapshot.is_flat)
-        suffix = (
-            "" if after.position.size_signed == 0.0 else "; emergency close not flat"
-        )
+        suffix = "" if after.position.size_signed == 0.0 else "; emergency close not flat"
         failure = reason + suffix
         self._events.fault(failure)
         raise SolLiveEngineError(failure)

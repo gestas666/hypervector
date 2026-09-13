@@ -2,11 +2,56 @@
 
 from __future__ import annotations
 
+import math
+from collections.abc import Callable
+
 from hypervector.live.cohort_execution_plan import BoundExecutionPlan
-from hypervector.live.hyperliquid_protocol import SolReconciliationSnapshot
+from hypervector.live.hyperliquid_protocol import (
+    HyperliquidOrderAck,
+    SolReconciliationSnapshot,
+)
+from hypervector.live.sol_execution_evidence import (
+    QUANTITY_TOLERANCE,
+    owned_fill_quantity,
+)
 from hypervector.live.sol_range_onset_engine_contract import SolLiveEngineError
 from hypervector.live.sol_range_onset_reconcile import reconcile_sol_startup
 from hypervector.live.sol_range_onset_state import SolLiveSnapshot
+
+
+def verify_canceled_entry_exposure(
+    ack: HyperliquidOrderAck,
+    venue: SolReconciliationSnapshot,
+    fault: Callable[[str], None],
+) -> None:
+    """Recheck the current canceled-entry fill attribution immediately before protection."""
+    if ack.status != "canceled":
+        return
+    if not _canceled_entry_matches(ack, venue):
+        reason = "canceled entry fill evidence conflicts with current exposure"
+        fault(reason)
+        raise SolLiveEngineError(reason)
+
+
+def _canceled_entry_matches(ack: HyperliquidOrderAck, venue: SolReconciliationSnapshot) -> bool:
+    if not ack.accepted or ack.oid is None or ack.venue_timestamp_ms is None:
+        return False
+    size = venue.position.size_signed
+    quantity = owned_fill_quantity(
+        venue,
+        ack.oid,
+        position_size_signed=size,
+        entering=True,
+        earliest_ms=0,
+        latest_ms=ack.venue_timestamp_ms,
+    )
+    return (
+        not venue.open_orders
+        and quantity is not None
+        and ack.filled_size is not None
+        and math.isclose(quantity, ack.filled_size, rel_tol=0.0, abs_tol=QUANTITY_TOLERANCE)
+        and math.isclose(quantity, abs(size), rel_tol=0.0, abs_tol=QUANTITY_TOLERANCE)
+    )
 
 
 def verify_protected_position(
@@ -34,9 +79,7 @@ def verify_protected_position(
                     "position_size_signed": position_size_signed,
                     "opened_at_ms": opened_at_ms,
                     "execution_plan": (
-                        execution_plan.as_payload()
-                        if execution_plan is not None
-                        else None
+                        execution_plan.as_payload() if execution_plan is not None else None
                     ),
                 },
             }

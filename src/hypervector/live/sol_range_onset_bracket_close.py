@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import math
 from typing import NoReturn
 
 from hypervector.live.hyperliquid_protocol import SolReconciliationSnapshot
 from hypervector.live.sol_order_submission import SolOrderSubmission
+from hypervector.live.sol_partial_close import acknowledge_protected_partial_close
 from hypervector.live.sol_range_onset_bracket import (
     complete_bracket_visible,
     owned_exit_reason,
@@ -42,13 +44,10 @@ def close_bracketed_position(
     cancel = orders.cancel_order(target_oid)
     events.emit_ack("cancel_target_for_close", cancel)
     prepared = poller.wait_for(
-        lambda current: current.position.size_signed == 0.0
-        or not _has_order(current, target_oid)
+        lambda current: current.position.size_signed == 0.0 or not _has_order(current, target_oid)
     )
     if prepared.position.size_signed == 0.0:
-        return _complete_intervening_exit(
-            snapshot, prepared, machine, events, orders, poller
-        )
+        return _complete_intervening_exit(snapshot, prepared, machine, events, orders, poller)
     _require_stop_only(prepared, stop_oid, snapshot.position_size_signed, events)
     return _close_with_stop_armed(
         snapshot=snapshot,
@@ -83,29 +82,93 @@ def _close_with_stop_armed(
     )
     events.emit_ack("reduce_only_close", close, event_type="close")
     if not close.accepted or close.oid is None:
-        return restore_target_after_close_failure(
-            snapshot=snapshot,
-            venue=venue,
-            target_price=target_price,
-            machine=machine,
-            events=events,
-            orders=orders,
-            poller=poller,
-            failure=f"reduce-only close rejected: {close.error or close.status}",
+        return _recover_rejected_close(
+            snapshot,
+            machine,
+            events,
+            orders,
+            poller,
+            f"reduce-only close rejected: {close.error or close.status}",
         )
     machine.acknowledge_close(close.oid)
-    after_close = poller.wait_for(lambda current: current.position.size_signed == 0.0)
+    after_close = poller.wait_for_close(machine.snapshot, close.oid)
     if after_close.position.size_signed != 0.0:
+        if acknowledge_protected_partial_close(
+            venue=after_close, close_oid=close.oid, machine=machine, events=events
+        ):
+            return restore_target_after_close_failure(
+                snapshot=machine.snapshot,
+                venue=after_close,
+                target_price=target_price,
+                machine=machine,
+                events=events,
+                orders=orders,
+                poller=poller,
+                failure="partial close",
+            )
         _fault(events, "close acknowledged but protected exposure remains")
+    return _finish_full_close(
+        after_close, stop_oid, close.oid, reason, machine, events, orders, poller
+    )
+
+
+def _finish_full_close(
+    after_close: SolReconciliationSnapshot,
+    stop_oid: int,
+    close_oid: int,
+    reason: str,
+    machine: SolLiveStateMachine,
+    events: SolLiveEngineEvents,
+    orders: SolOrderSubmission,
+    poller: SolReconciliationPoller,
+) -> SolLiveSnapshot:
     _cancel_residual_orders(after_close, {stop_oid}, orders, events)
     after = poller.wait_for(lambda current: current.is_flat)
     if not after.is_flat:
         _fault(events, "post-close residual stop cleanup did not reconcile flat")
     machine.confirm_flat()
-    events.emit_close_complete(reason=reason, oid=close.oid)
+    events.emit_close_complete(reason=reason, oid=close_oid)
     events.emit_reconciliation(after)
     events.emit_state()
     return machine.snapshot
+
+
+def _recover_rejected_close(
+    snapshot: SolLiveSnapshot,
+    machine: SolLiveStateMachine,
+    events: SolLiveEngineEvents,
+    orders: SolOrderSubmission,
+    poller: SolReconciliationPoller,
+    failure: str,
+) -> SolLiveSnapshot:
+    stop_oid, _, target_price = _required_bracket(snapshot)
+    venue = poller.wait_for(
+        lambda current: current.position.size_signed == 0.0
+        or protected_order_visible(
+            current,
+            stop_oid=stop_oid,
+            position_size_signed=snapshot.position_size_signed,
+        )
+    )
+    if venue.position.size_signed == 0.0:
+        return _complete_intervening_exit(snapshot, venue, machine, events, orders, poller)
+    if not math.isclose(
+        venue.position.size_signed,
+        snapshot.position_size_signed,
+        rel_tol=0.0,
+        abs_tol=1e-9,
+    ):
+        _fault(events, "rejected close changed position; execution evidence required")
+    return restore_target_after_close_failure(
+        snapshot=snapshot,
+        venue=venue,
+        target_price=target_price,
+        machine=machine,
+        events=events,
+        orders=orders,
+        poller=poller,
+        failure=failure,
+    )
 
 
 def _complete_intervening_exit(

@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import math
+from dataclasses import dataclass
 from typing import NoReturn
 
 from hypervector.live.hyperliquid_protocol import (
@@ -19,6 +19,7 @@ from hypervector.live.sol_order_restart_context import (
     PendingPositionContext,
     owned_open_record,
     pending_position_context,
+    pending_position_context_for_intent,
 )
 from hypervector.live.sol_order_submission import (
     SolOrderRecoveryError,
@@ -28,6 +29,8 @@ from hypervector.live.sol_order_submission import (
 from hypervector.live.sol_range_onset_bracket_close_restart import (
     recover_bracket_exit,
 )
+from hypervector.live.sol_partial_close import acknowledge_protected_partial_close
+from hypervector.live.sol_close_restart_context import PARTIAL_CLOSE_UNRESOLVED
 from hypervector.live.sol_range_onset_config import SolRangeOnsetConfig
 from hypervector.live.sol_range_onset_consistency import SolReconciliationPoller
 from hypervector.live.sol_range_onset_engine_contract import SolLiveEngineError
@@ -66,7 +69,7 @@ def recover_pending_exit(
     venue: SolReconciliationSnapshot,
 ) -> RecoveredPendingEntry | None:
     """Recover an exact interrupted exit or return exposure for reprotection."""
-    context = _exit_context(events, records)
+    context = _exit_context(events, records, pending)
     if context.target_oid is not None:
         disposition = recover_bracket_exit(
             context=context,
@@ -85,12 +88,11 @@ def recover_pending_exit(
                 expected_state="EXIT_PENDING",
                 venue=venue,
                 allow_reduced_size=pending is not None,
+                context=context,
             )
         return None
     if pending is None:
-        return _recover_exit_without_close(
-            adapter, config, events, machine, records, venue
-        )
+        return _recover_exit_without_close(adapter, config, events, machine, records, venue)
     return _recover_pending_close(
         adapter, config, events, machine, orders, pending, poller, records, venue
     )
@@ -104,10 +106,12 @@ def resume_unprotected_position(
     expected_state: str,
     venue: SolReconciliationSnapshot,
     allow_reduced_size: bool = False,
+    context: PendingPositionContext | None = None,
 ) -> RecoveredPendingEntry:
     """Adopt exact unprotected exposure so the engine immediately protects it."""
     try:
-        context = pending_position_context(records, expected_state)
+        if context is None:
+            context = pending_position_context(records, expected_state)
     except SolOrderRestartError as exc:
         _fault(events, exc)
     observed_size = venue.position.size_signed
@@ -141,8 +145,10 @@ def _recover_exit_without_close(
     machine: SolLiveStateMachine,
     records: list[dict[str, object]],
     venue: SolReconciliationSnapshot,
+    context: PendingPositionContext | None = None,
 ) -> RecoveredPendingEntry | None:
-    context = _exit_context(events, records)
+    if context is None:
+        context = _exit_context(events, records)
     if context.stop_oid is None:
         _fault(events, SolOrderRestartError("pending exit lacks stop oid"))
     if venue.position.size_signed != 0.0 and not venue.open_orders:
@@ -152,6 +158,7 @@ def _recover_exit_without_close(
             records=records,
             expected_state="EXIT_PENDING",
             venue=venue,
+            context=context,
         )
     try:
         record = owned_open_record(
@@ -190,16 +197,16 @@ def _recover_pending_close(
     records: list[dict[str, object]],
     venue: SolReconciliationSnapshot,
 ) -> RecoveredPendingEntry | None:
-    context = _exit_context(events, records)
+    context = _exit_context(events, records, pending)
     if context.stop_oid is None:
         _fault(events, SolOrderRestartError("pending close lacks stop oid"))
     ack = _recover_ack(events, orders, pending)
     events.emit_ack("reduce_only_close_restart_recovery", ack, event_type="close")
-    if ack.status in {"canceled", "rejected"}:
+    if not ack.accepted and ack.status in {"canceled", "rejected"}:
         return _recover_exit_without_close(
-            adapter, config, events, machine, records, venue
+            adapter, config, events, machine, records, venue, context
         )
-    if not ack.accepted or ack.oid is None or ack.status != "filled":
+    if not ack.accepted or ack.oid is None or ack.status not in {"filled", "canceled"}:
         _fault(events, SolOrderRestartError("recovered close is unresolved"))
     if venue.position.size_signed != 0.0 and not venue.open_orders:
         return resume_unprotected_position(
@@ -209,6 +216,7 @@ def _recover_pending_close(
             expected_state="EXIT_PENDING",
             venue=venue,
             allow_reduced_size=True,
+            context=context,
         )
     _complete_pending_close(
         context=context,
@@ -241,6 +249,16 @@ def _complete_pending_close(
     )
     events.emit_state()
     machine.acknowledge_close(close_oid)
+    if venue.position.size_signed != 0.0:
+        venue = poller.wait_for_close(machine.snapshot, close_oid)
+    if acknowledge_protected_partial_close(
+        venue=venue, close_oid=close_oid, machine=machine, events=events
+    ):
+        machine.restore_protection_after_exit_failure(stop_oid=context.stop_oid or 0)
+        events.emit_state()
+        return
+    if venue.position.size_signed != 0.0:
+        _fault(events, SolOrderRestartError(PARTIAL_CLOSE_UNRESOLVED))
     after = cancel_residual_stop_after_close(
         venue=venue,
         stop_oid=context.stop_oid,
@@ -315,8 +333,13 @@ def _recovered_entry(
 def _exit_context(
     events: SolLiveEngineEvents,
     records: list[dict[str, object]],
+    pending: PendingSolOrderIntent | None = None,
 ) -> PendingPositionContext:
     try:
+        if pending is not None:
+            return pending_position_context_for_intent(
+                records, "EXIT_PENDING", pending.client_order_id
+            )
         return pending_position_context(records, "EXIT_PENDING")
     except SolOrderRestartError as exc:
         _fault(events, exc)

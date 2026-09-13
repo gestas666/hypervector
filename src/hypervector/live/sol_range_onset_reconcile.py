@@ -20,6 +20,7 @@ from hypervector.live.sol_range_onset_bracket import (
     owned_exit_reason,
 )
 from hypervector.live.sol_range_onset_engine_contract import is_ioc_no_fill_error
+from hypervector.live.sol_protective_order import protective_stop_covers
 
 _VENUE_MUTATION_INTENTS = frozenset({"order_intent", "cancel_intent"})
 
@@ -102,9 +103,7 @@ def _records_for_profile(
     if expected_profile_fingerprint is None:
         return tuple(records)
     if not expected_profile_fingerprint.strip():
-        raise SolStartupReconciliationError(
-            "expected profile fingerprint must be non-empty"
-        )
+        raise SolStartupReconciliationError("expected profile fingerprint must be non-empty")
     return tuple(
         record
         for record in records
@@ -140,13 +139,9 @@ def _recover_local_state(
         if size == 0.0:
             return state, None
         target_oid = _optional_positive_oid(payload.get("target_oid"), "target_oid")
-        target_price = _optional_positive_number(
-            payload.get("target_price"), "target_price"
-        )
+        target_price = _optional_positive_number(payload.get("target_price"), "target_price")
         if (target_oid is None) != (target_price is None):
-            raise SolStartupReconciliationError(
-                "target ownership requires both oid and price"
-            )
+            raise SolStartupReconciliationError("target ownership requires both oid and price")
         ownership = RecoveredSolOwnership(
             entry_oid=_positive_oid(payload.get("entry_oid"), "entry_oid"),
             stop_oid=_positive_oid(payload.get("stop_oid"), "stop_oid"),
@@ -185,9 +180,7 @@ def _is_preflight_only_fault(records: Sequence[Mapping[str, object]]) -> bool:
     if position_size != 0.0:
         return False
     intervening = records[previous_index + 1 : fault_index + 1]
-    return not any(
-        record.get("event_type") in _VENUE_MUTATION_INTENTS for record in intervening
-    )
+    return not any(record.get("event_type") in _VENUE_MUTATION_INTENTS for record in intervening)
 
 
 def _is_ioc_no_fill_fault(records: Sequence[Mapping[str, object]]) -> bool:
@@ -205,8 +198,7 @@ def _is_ioc_no_fill_fault(records: Sequence[Mapping[str, object]]) -> bool:
     relevant = [
         record
         for record in records[pending_index + 1 : fault_index]
-        if record.get("event_type")
-        in {"order_intent", "order_acknowledgement", "fault"}
+        if record.get("event_type") in {"order_intent", "order_acknowledgement", "fault"}
     ]
     if [record.get("event_type") for record in relevant] != [
         "order_intent",
@@ -237,13 +229,9 @@ def _reconcile_without_open_ownership(
     venue: SolReconciliationSnapshot,
 ) -> SolStartupReconciliation:
     if venue.position.size_signed != 0.0:
-        raise SolStartupReconciliationError(
-            "unknown venue exposure exists without local ownership"
-        )
+        raise SolStartupReconciliationError("unknown venue exposure exists without local ownership")
     if venue.open_orders:
-        raise SolStartupReconciliationError(
-            "unknown venue order exists without local ownership"
-        )
+        raise SolStartupReconciliationError("unknown venue order exists without local ownership")
     return SolStartupReconciliation("flat", None)
 
 
@@ -255,9 +243,7 @@ def owned_protective_stop_fill(
     if venue.position.size_signed != 0.0 or venue.open_orders:
         return False
     expected_side = "A" if ownership.position_size_signed > 0.0 else "B"
-    expected_direction = (
-        "close long" if ownership.position_size_signed > 0.0 else "close short"
-    )
+    expected_direction = "close long" if ownership.position_size_signed > 0.0 else "close short"
     matching = [
         fill
         for fill in venue.fills
@@ -291,9 +277,7 @@ def _verify_owned_position(
         )
     matching = [order for order in venue.open_orders if order.oid == ownership.stop_oid]
     if not matching:
-        raise SolStartupReconciliationError(
-            f"protective stop {ownership.stop_oid} is missing"
-        )
+        raise SolStartupReconciliationError(f"protective stop {ownership.stop_oid} is missing")
     if ownership.target_oid is not None and ownership.target_price is not None:
         if not complete_bracket_visible(
             venue,
@@ -312,16 +296,11 @@ def _verify_owned_position(
 def _verify_stop(order: SolOpenOrder, position_size_signed: float) -> None:
     if not order.reduce_only or not order.is_trigger:
         raise SolStartupReconciliationError("owned stop is not a reduce-only trigger")
-    if not math.isclose(
-        order.size,
-        abs(position_size_signed),
-        rel_tol=0.0,
-        abs_tol=1e-9,
-    ):
-        raise SolStartupReconciliationError("protective stop size mismatch")
     expected_side = "A" if position_size_signed > 0.0 else "B"
     if order.side != expected_side:
         raise SolStartupReconciliationError("protective stop side mismatch")
+    if not protective_stop_covers(order, position_size_signed):
+        raise SolStartupReconciliationError("protective stop size mismatch")
 
 
 def _mapping(value: object, label: str) -> Mapping[str, object]:
@@ -379,6 +358,4 @@ def _execution_plan(value: object) -> BoundExecutionPlan | None:
     try:
         return BoundExecutionPlan.from_payload(value)
     except CohortExecutionPlanError as exc:
-        raise SolStartupReconciliationError(
-            f"invalid persisted execution plan: {exc}"
-        ) from exc
+        raise SolStartupReconciliationError(f"invalid persisted execution plan: {exc}") from exc

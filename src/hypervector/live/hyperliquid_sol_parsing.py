@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
 import math
+from collections.abc import Mapping, Sequence
 
 from hypervector.live.hyperliquid_protocol import (
     HyperliquidFeeSchedule,
@@ -18,7 +18,6 @@ from hypervector.live.hyperliquid_protocol import (
     SolOpenOrder,
     SolPositionSnapshot,
 )
-from hypervector.live.sol_order_identity import validate_client_order_id
 
 SOL_SYMBOL = "SOL"
 _PRICE_SIGNIFICANT_FIGURES, _PERP_MAX_DECIMAL_BASE = 5, 6
@@ -201,9 +200,7 @@ def _parse_position(value: Mapping[str, object]) -> SolPositionSnapshot:
         entry_price=optional_number(value.get("entryPx"), "entryPx"),
         liquidation_price=optional_number(value.get("liquidationPx"), "liquidationPx"),
         margin_used_usd=nonnegative_number(value.get("marginUsed"), "marginUsed"),
-        position_value_usd=nonnegative_number(
-            value.get("positionValue"), "positionValue"
-        ),
+        position_value_usd=nonnegative_number(value.get("positionValue"), "positionValue"),
         unrealized_pnl_usd=number(value.get("unrealizedPnl"), "unrealizedPnl"),
         leverage_type=leverage_type,
         leverage=positive_integer(leverage.get("value"), "SOL leverage value"),
@@ -235,9 +232,7 @@ def parse_open_order(value: object) -> SolOpenOrder:
         is_trigger=boolean(order.get("isTrigger"), "open order isTrigger"),
         trigger_price=optional_number(order.get("triggerPx"), "triggerPx"),
         order_type=text(order.get("orderType"), "open order type"),
-        timestamp_ms=nonnegative_integer(
-            order.get("timestamp"), "open order timestamp"
-        ),
+        timestamp_ms=nonnegative_integer(order.get("timestamp"), "open order timestamp"),
         limit_price=optional_number(order.get("limitPx"), "limitPx"),
     )
 
@@ -289,47 +284,15 @@ def parse_order_status(
     expected_oid: int | None = None,
     expected_client_order_id: str | None = None,
 ) -> HyperliquidOrderStatus:
-    """Parse and identity-check one order-status response."""
-    if (expected_oid is None) == (expected_client_order_id is None):
-        raise HyperliquidAdapterError(
-            "order status requires exactly one expected order identity"
-        )
-    response = mapping(value, "order status response")
-    if response.get("status") == "unknownOid":
-        identity = expected_oid or expected_client_order_id
-        raise HyperliquidOrderUnavailableError(
-            f"order {identity} status is not yet visible"
-        )
-    if response.get("status") != "order":
-        raise HyperliquidAdapterError("order status response has an unknown status")
-    outer = mapping(response.get("order"), "order status")
-    order = mapping(outer.get("order"), "order status details")
-    oid = positive_integer(order.get("oid"), "order status oid")
-    if expected_oid is not None and oid != expected_oid:
-        raise HyperliquidAdapterError(
-            f"order status oid mismatch: expected {expected_oid}, observed {oid}"
-        )
-    raw_client_id = order.get("cloid")
-    client_id = (
-        None
-        if raw_client_id is None
-        else validate_client_order_id(text(raw_client_id, "order status cloid"))
+    """Parse remaining/original quantities and verify exact order identity."""
+    from hypervector.live.hyperliquid_order_status import (
+        parse_order_status as parse_status,
     )
-    if expected_client_order_id is not None and client_id != expected_client_order_id:
-        raise HyperliquidAdapterError(
-            "order status client order id mismatch: "
-            f"expected {expected_client_order_id}, observed {client_id}"
-        )
-    return HyperliquidOrderStatus(
-        oid=oid,
-        symbol=text(order.get("coin"), "order status coin"),
-        status=text(outer.get("status"), "order status"),
-        size=positive_number(order.get("sz"), "order status size"),
-        status_timestamp_ms=nonnegative_integer(
-            outer.get("statusTimestamp"),
-            "order status timestamp",
-        ),
-        client_order_id=client_id,
+
+    return parse_status(
+        value,
+        expected_oid=expected_oid,
+        expected_client_order_id=expected_client_order_id,
     )
 
 
@@ -351,8 +314,7 @@ def parse_order_acks(
     error = _top_level_error(response)
     if error is not None:
         return tuple(
-            HyperliquidOrderAck(False, None, "error", error=error)
-            for _ in range(expected_count)
+            HyperliquidOrderAck(False, None, "error", error=error) for _ in range(expected_count)
         )
     statuses = _ack_statuses(response, operation)
     if len(statuses) != expected_count:
@@ -384,24 +346,16 @@ def _parse_order_status(
                 optional_number(details.get("totalSz"), "filled size"),
                 optional_number(details.get("avgPx"), "average price"),
             )
-    raise HyperliquidAdapterError(
-        f"{operation} status {index} returned unknown acknowledgement"
-    )
+    raise HyperliquidAdapterError(f"{operation} status {index} returned unknown acknowledgement")
 
 
 def parse_cancel_ack(value: object, oid: int) -> HyperliquidOrderAck:
-    """Normalize an exact-order cancellation response."""
-    response = mapping(value, "cancel response")
-    error = _top_level_error(response)
-    if error is not None:
-        return HyperliquidOrderAck(False, oid, "error", error=error)
-    statuses = _ack_statuses(response, "cancel")
-    if statuses[0] == "success":
-        return HyperliquidOrderAck(True, oid, "canceled")
-    first = statuses[0]
-    if isinstance(first, Mapping) and "error" in first:
-        return HyperliquidOrderAck(False, oid, "error", error=str(first["error"]))
-    raise HyperliquidAdapterError("cancel returned unknown acknowledgement")
+    """Normalize one exact-order cancellation response."""
+    from hypervector.live.hyperliquid_order_status import (
+        parse_cancel_ack as parse_cancel,
+    )
+
+    return parse_cancel(value, oid)
 
 
 def _ack_statuses(response: Mapping[str, object], operation: str) -> Sequence[object]:
@@ -442,9 +396,7 @@ def validate_address(value: str) -> str:
     """Validate an account address without returning or logging credentials."""
     address = value.strip()
     if len(address) != 42 or not address.startswith("0x"):
-        raise HyperliquidAdapterError(
-            "account_address must be a 42-character 0x address"
-        )
+        raise HyperliquidAdapterError("account_address must be a 42-character 0x address")
     return address
 
 
