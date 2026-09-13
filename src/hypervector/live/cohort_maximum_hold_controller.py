@@ -44,11 +44,17 @@ class CohortMaximumHoldController:
         observed_ms: int,
         reference_prices: Mapping[str, float],
         evaluations: EvaluationMap,
+        *,
+        unconditional_only: bool = False,
     ) -> tuple[set[str], tuple[RoutingAction, ...]]:
         """Return deterministic close actions and their same-cycle exclusions."""
         actions: list[RoutingAction] = []
         expired: set[str] = set()
         for symbol in self._symbols:
+            if unconditional_only and _needs_fresh_context(
+                self._engines[symbol].snapshot, observed_ms
+            ):
+                continue
             action = self._action(symbol, observed_ms, reference_prices, evaluations)
             if action is None:
                 continue
@@ -175,6 +181,25 @@ class CohortMaximumHoldController:
             return existing
         self._telemetry.emit_maximum_hold_decision(payload)
         return payload
+
+
+def _needs_fresh_context(snapshot: SolLiveSnapshot, observed_ms: int) -> bool:
+    """Skip extension soft decisions during acquisition failure, preserving hard caps."""
+    plan, opened = snapshot.execution_plan, snapshot.opened_at_ms
+    if plan is None or plan.maximum_hold_policy == "fixed":
+        return False
+    if (
+        snapshot.state is not SolLiveState.OPEN
+        or opened is None
+        or opened > observed_ms
+    ):
+        return False
+    hard = plan.hard_maximum_hold_seconds
+    if hard is None:
+        raise MultiAssetLiveRunnerError(
+            "regime-supported extension lacks a hard maximum hold"
+        )
+    return observed_ms - opened < hard * 1_000
 
 
 def _validate_recorded_identity(

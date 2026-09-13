@@ -12,6 +12,7 @@ from hyperliquid.utils.error import (  # type: ignore[import-untyped]
 from requests import RequestException
 
 from hypervector.live import cohort_execution_contract_selection as contract_selection
+from hypervector.live.cohort_degraded_deadlines import poll_with_deadlines
 from hypervector.live.bidirectional_intents import (
     BidirectionalIntentRouter,
     IntentRoutingReport,
@@ -315,7 +316,7 @@ class MultiAssetLiveRunner:
         )
         observed = aware(self._now_fn())
         observed_ms = int(observed.timestamp() * 1_000)
-        poll = self._intent_poller.poll(observed)
+        poll = poll_with_deadlines(self, observed, funding_start_ms)
         self._latest_evaluations = update_latest_evaluations(
             self._latest_evaluations,
             poll.all_evaluations,
@@ -363,6 +364,7 @@ class MultiAssetLiveRunner:
         funding_start_ms: int,
         funding_end_ms: int,
         observed_ms: int,
+        heartbeat: bool = True,
     ) -> IntentRoutingReport:
         executed, submission_withheld = execute_fresh_routed_actions(
             routed_actions,
@@ -394,7 +396,7 @@ class MultiAssetLiveRunner:
                 self._symbols, self._engines, venues, poll.reference_prices
             ),
         )
-        if not self._profit_lock_controller.cycle_degraded:
+        if heartbeat and not self._profit_lock_controller.cycle_degraded:
             self._telemetry.emit_heartbeat()
         return report
 
