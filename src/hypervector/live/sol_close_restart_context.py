@@ -8,7 +8,7 @@ from hypervector.live.sol_order_restart_context import (
 )
 
 PARTIAL_CLOSE_UNRESOLVED = "close acknowledged but protected exposure remains"
-_READ_ONLY = frozenset(
+READ_ONLY_RESTART_EVENTS = frozenset(
     {
         "session_start",
         "effective_mode",
@@ -94,7 +94,7 @@ def _retry_record(
     record: Mapping[str, object], client_id: str, expected: Mapping[str, object]
 ) -> bool:
     kind, payload = record.get("event_type"), record.get("payload")
-    if kind in _READ_ONLY:
+    if kind in READ_ONLY_RESTART_EVENTS:
         return True
     if not isinstance(payload, Mapping):
         return False

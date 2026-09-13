@@ -21,6 +21,8 @@ from hypervector.live.sol_range_onset_bracket import (
 )
 from hypervector.live.sol_range_onset_engine_contract import is_ioc_no_fill_error
 from hypervector.live.sol_protective_order import protective_stop_covers
+from hypervector.live.sol_order_restart import SolOrderRestartError
+from hypervector.live.sol_protective_restart_context import records_for_late_protective_exit
 
 _VENUE_MUTATION_INTENTS = frozenset({"order_intent", "cancel_intent"})
 
@@ -64,6 +66,7 @@ def reconcile_sol_startup(
 ) -> SolStartupReconciliation:
     """Return a safe flat/open disposition or raise on ambiguous ownership."""
     scoped_records = _records_for_profile(records, expected_profile_fingerprint)
+    scoped_records = _recover_late_protective_records(scoped_records, venue)
     local = _recover_local_state(scoped_records)
     if local is None:
         return _reconcile_without_open_ownership(venue)
@@ -94,6 +97,15 @@ def reconcile_sol_startup(
         return SolStartupReconciliation("protective_stop_filled", ownership)
     _verify_owned_position(ownership, venue)
     return SolStartupReconciliation("restore_open", ownership)
+
+
+def _recover_late_protective_records(
+    records: tuple[Mapping[str, object], ...], venue: SolReconciliationSnapshot
+) -> tuple[Mapping[str, object], ...]:
+    try:
+        return tuple(records_for_late_protective_exit([dict(record) for record in records], venue))
+    except SolOrderRestartError as exc:
+        raise SolStartupReconciliationError(str(exc)) from exc
 
 
 def _records_for_profile(
