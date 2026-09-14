@@ -157,6 +157,9 @@ pub(crate) fn provider_identity_label(strategy_id: &str) -> String {
 
 /// Format venue stop protection directly from backend position and stop facts.
 pub(crate) fn protection_label(asset: &CohortAssetSnapshot) -> String {
+    if let Some(label) = crate::cohort_protective_progress::protection_override(asset) {
+        return label.into();
+    }
     match (
         asset.position_side.as_deref(),
         asset.stop_oid,
@@ -255,6 +258,11 @@ fn compact_price(price: f64) -> String {
 
 /// Style venue stop protection for fast operator recognition.
 pub(crate) fn protection_style(asset: &CohortAssetSnapshot, app: &App) -> Style {
+    if asset.protective_exit_pending == Some(true)
+        || asset.stop_protection.as_deref() == Some("missing")
+    {
+        return app.theme.gate_blocked;
+    }
     match (asset.position_side.as_deref(), asset.stop_oid) {
         (None, _) => app.theme.muted,
         (Some(_), Some(_)) => app.theme.bull,

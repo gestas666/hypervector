@@ -200,7 +200,7 @@ fn render_compact_positions(
             .style(app.theme.header),
         )
         .block(panel(
-            format!(" LIVE POSITIONS // ASSETS {label} // ONE PER ASSET "),
+            position_title(app, assets, label, "ONE PER ASSET"),
             app,
         ));
     frame.render_widget(table, area);
@@ -258,10 +258,7 @@ fn render_wide_positions(
             .style(app.theme.header),
         )
         .block(panel(
-            format!(
-                " LIVE POSITIONS // ASSETS {label} // {} ",
-                position_source_label(app)
-            ),
+            position_title(app, assets, label, position_source_label(app)),
             app,
         ));
     frame.render_widget(table, area);
@@ -275,6 +272,19 @@ fn position_source_label(app: &App) -> &'static str {
             "BACKEND TELEMETRY UNAVAILABLE"
         }
     }
+}
+
+fn position_title(app: &App, assets: &[CohortAssetSnapshot], label: &str, source: &str) -> String {
+    let selected = assets.iter().find(|asset| {
+        Some(asset.symbol.as_str()) == app.selected_cohort_symbol()
+            && asset.position_side.is_some()
+            && asset.partial_exit_fill_count.is_some()
+    });
+    let detail = selected.map_or_else(
+        || source.into(),
+        crate::cohort_protective_progress::detail_title,
+    );
+    format!(" LIVE POSITIONS // ASSETS {label} // {detail} ")
 }
 
 fn wide_asset_row<'a>(asset: &'a CohortAssetSnapshot, app: &App) -> Row<'a> {

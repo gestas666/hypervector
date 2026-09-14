@@ -11,6 +11,10 @@ use serde::Deserialize;
 use serde::de::DeserializeOwned;
 use serde_json::Value;
 
+#[path = "backend_cohort_asset_snapshot.rs"]
+mod asset_snapshot;
+pub use asset_snapshot::CohortAssetSnapshot;
+
 pub use crate::backend_cohort_book::{CohortBookLevel, CohortBookSnapshot};
 use crate::backend_cohort_candles::candle_history;
 pub use crate::backend_cohort_health::CohortHeartbeat;
@@ -222,65 +226,6 @@ pub struct CohortRoutingPolicy {
 struct CohortPositionPolicy {
     max_positions_per_symbol: usize,
     maximum_concurrent_positions: usize,
-}
-
-/// Venue-backed position and lifecycle state for one coin.
-#[derive(Debug, Clone, PartialEq, Deserialize)]
-pub struct CohortAssetSnapshot {
-    pub symbol: String,
-    pub state: String,
-    pub direction_capability: Vec<String>,
-    pub position_size_signed: f64,
-    pub position_side: Option<String>,
-    pub entry_oid: Option<u64>,
-    pub stop_oid: Option<u64>,
-    pub target_oid: Option<u64>,
-    pub target_price: Option<f64>,
-    pub execution_plan: Option<CohortExecutionPlan>,
-    pub last_fault: Option<String>,
-    pub mark_price: Option<f64>,
-    #[serde(default)]
-    pub market_reference_price: Option<f64>,
-    #[serde(default)]
-    pub mark_price_source: Option<String>,
-    pub entry_price: Option<f64>,
-    pub liquidation_price: Option<f64>,
-    pub liquidation_distance_pct: Option<f64>,
-    pub margin_used_usd: f64,
-    pub position_value_usd: f64,
-    pub unrealized_pnl_usd: f64,
-    pub leverage: Option<u64>,
-    pub fees_net_usd: Option<f64>,
-    pub funding_net_usd: Option<f64>,
-    pub realized_pnl_usd: Option<f64>,
-    pub fill_count: Option<usize>,
-    #[serde(default)]
-    pub cost_scope: Option<String>,
-}
-
-impl CohortAssetSnapshot {
-    /// Align position economics to the venue account snapshot timestamp.
-    pub fn reconcile_position_mark(&mut self) -> Result<(), String> {
-        let market_reference = self.market_reference_price.or(self.mark_price);
-        self.market_reference_price = market_reference;
-        if self.position_size_signed == 0.0 {
-            self.mark_price_source = Some("market_reference".into());
-            return Ok(());
-        }
-        let mark = self.position_value_usd / self.position_size_signed.abs();
-        if !mark.is_finite() || mark <= 0.0 {
-            return Err(format!(
-                "{} open position has invalid venue-implied mark",
-                self.symbol
-            ));
-        }
-        self.mark_price = Some(mark);
-        self.mark_price_source = Some("venue_position_value_div_size".into());
-        self.liquidation_distance_pct = self
-            .liquidation_price
-            .map(|liquidation| (liquidation - mark).abs() / mark * 100.0);
-        Ok(())
-    }
 }
 
 /// One exact venue fill plus backend-derived execution-quality measurements.

@@ -131,6 +131,7 @@ mod cohort_performance_visuals;
 mod cohort_portfolio_scoreboard;
 mod cohort_profile_request;
 mod cohort_profit_lock_labels;
+mod cohort_protective_progress;
 mod cohort_regime;
 mod cohort_regime_arbitration;
 mod cohort_regime_dynamics;

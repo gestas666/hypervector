@@ -152,6 +152,9 @@ fn asset_row<'a>(asset: &'a CohortAssetSnapshot, app: &App) -> Row<'a> {
 }
 
 fn stop_label(asset: &CohortAssetSnapshot) -> String {
+    if let Some(label) = crate::cohort_protective_progress::protection_override(asset) {
+        return label.into();
+    }
     match (asset.position_side.as_deref(), asset.stop_oid) {
         (None, _) => "FLAT".into(),
         (Some(_), Some(oid)) => format!("STOP #{oid}"),
@@ -196,7 +199,7 @@ fn render_detail(frame: &mut Frame, app: &App, area: Rect, asset: Option<&Cohort
     ];
     frame.render_widget(
         Paragraph::new(lines).block(panel(
-            format!(" SELECTED {} // PRICES ABOVE ~ ROUNDED ", asset.symbol),
+            crate::cohort_protective_progress::detail_title(asset),
             app,
         )),
         area,

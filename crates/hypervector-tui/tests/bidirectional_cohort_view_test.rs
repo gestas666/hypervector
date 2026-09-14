@@ -76,6 +76,7 @@ include!("support/cohort_restart_truth.rs");
 include!("support/cohort_compact_ops.rs");
 
 include!("support/cohort_open_position_columns.rs");
+include!("support/cohort_partial_protection_view.rs");
 
 #[path = "support/cohort_entry_deadline_fixtures.rs"]
 mod entry_deadline_fixtures;
