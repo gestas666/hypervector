@@ -27,6 +27,21 @@ from hypervector.live.sol_order_restart_context import (
 from hypervector.live.sol_order_submission import (
     SolOrderSubmission,
 )
+from hypervector.live.sol_partial_protective_recovery import (
+    SolPartialProtectiveRecovery,
+)
+from hypervector.live.sol_partial_protective_restart_context import (
+    records_before_partial_protective_fault,
+)
+from hypervector.live.sol_protective_cleanup_checkpoint import (
+    pending_protective_cleanup,
+)
+from hypervector.live.sol_protective_execution_evidence import (
+    ProtectiveExecutionEvidenceError,
+)
+from hypervector.live.sol_protective_journal import (
+    validate_latest_protective_checkpoint,
+)
 from hypervector.live.sol_range_onset_bracket_exit import (
     reconcile_owned_bracket_exit,
 )
@@ -39,6 +54,7 @@ from hypervector.live.sol_range_onset_exit_restart import (
     resume_unprotected_position,
 )
 from hypervector.live.sol_range_onset_ledger import SolLiveLedger
+from hypervector.live.sol_range_onset_live_journal_orders import intent_for_oid
 from hypervector.live.sol_range_onset_reconcile import (
     RecoveredSolOwnership,
     SolStartupReconciliationError,
@@ -49,6 +65,7 @@ from hypervector.live.sol_range_onset_stop_restart import recover_pending_stop
 from hypervector.live.sol_range_onset_target import EmergencyFlattenProtocol
 from hypervector.live.sol_range_onset_target_restart import recover_pending_target
 from hypervector.live.sol_startup_support import _fault_and_raise, _recover_intent_ack
+from hypervector.live.sol_startup_receipt_consistency import wait_for_stable_startup
 
 
 def prepare_sol_live_startup(
@@ -61,23 +78,17 @@ def prepare_sol_live_startup(
     orders: SolOrderSubmission,
     poller: SolReconciliationPoller,
     emergency_flatten: EmergencyFlattenProtocol,
+    partial_protective: SolPartialProtectiveRecovery | None = None,
 ) -> RecoveredPendingEntry | None:
     """Preflight venue state and return any filled entry needing protection."""
-    try:
-        prior_records = _profile_recovery_records(ledger, config.profile_fingerprint)
-        cancel_context = cancel_fault_context(prior_records)
-    except SolOrderRestartError as exc:
-        _fault_and_raise(events, exc)
-    machine.begin_preflight()
-    events.emit("session_start", {"state": "PREFLIGHT"})
-    events.emit_state()
-    preflight = adapter.preflight(expected_max_leverage=int(config.venue_max_leverage))
-    venue = adapter.reconcile()
-    events.emit_preflight(preflight, venue)
-    if cancel_context is not None:
-        venue = reconcile_cancel_fault(cancel_context, orders, poller, events)
-        prior_records = cancel_context.records
-    pending = _pending_intent(prior_records, events)
+    prior_records, venue = _preflight_recovery(
+        config, adapter, ledger, machine, events, orders, poller
+    )
+    cleaned, pending = _pending_after_cleanup(partial_protective, prior_records, venue, events)
+    if cleaned:
+        return None
+    if _resume_partial_protection(partial_protective, prior_records, venue, pending, events):
+        return None
     if pending is not None:
         return _recover_pending_mutation(
             emergency_flatten=emergency_flatten,
@@ -103,6 +114,53 @@ def prepare_sol_live_startup(
     )
 
 
+def _resume_partial_protection(
+    recovery: SolPartialProtectiveRecovery | None,
+    records: list[dict[str, object]],
+    venue: SolReconciliationSnapshot,
+    pending: PendingSolOrderIntent | None,
+    events: SolLiveEngineEvents,
+) -> bool:
+    try:
+        return recovery is not None and recovery.resume(records, venue, pending)
+    except (
+        SolStartupReconciliationError,
+        SolOrderRestartError,
+        ProtectiveExecutionEvidenceError,
+    ) as exc:
+        _fault_and_raise(events, exc)
+
+
+def _preflight_recovery(
+    config: SolRangeOnsetConfig,
+    adapter: SolLiveAdapterProtocol,
+    ledger: SolLiveLedger,
+    machine: SolLiveStateMachine,
+    events: SolLiveEngineEvents,
+    orders: SolOrderSubmission,
+    poller: SolReconciliationPoller,
+) -> tuple[list[dict[str, object]], SolReconciliationSnapshot]:
+    try:
+        prior_records = _profile_recovery_records(ledger, config.profile_fingerprint)
+        cancel_context = (
+            None
+            if pending_protective_cleanup(prior_records) is not None
+            else cancel_fault_context(prior_records)
+        )
+    except SolOrderRestartError as exc:
+        _fault_and_raise(events, exc)
+    machine.begin_preflight()
+    events.emit("session_start", {"state": "PREFLIGHT"})
+    events.emit_state()
+    preflight = adapter.preflight(expected_max_leverage=int(config.venue_max_leverage))
+    venue = adapter.reconcile()
+    events.emit_preflight(preflight, venue)
+    if cancel_context is not None:
+        venue = reconcile_cancel_fault(cancel_context, orders, poller, events)
+        prior_records = cancel_context.records
+    return prior_records, venue
+
+
 def _pending_intent(
     records: list[dict[str, object]],
     events: SolLiveEngineEvents,
@@ -114,6 +172,24 @@ def _pending_intent(
         return pending
     except SolOrderRestartError as exc:
         _fault_and_raise(events, exc)
+
+
+def _pending_after_cleanup(
+    recovery: SolPartialProtectiveRecovery | None,
+    records: list[dict[str, object]],
+    venue: SolReconciliationSnapshot,
+    events: SolLiveEngineEvents,
+) -> tuple[bool, PendingSolOrderIntent | None]:
+    try:
+        if recovery is not None and recovery.resume_cleanup(records, venue):
+            return True, None
+    except (
+        SolStartupReconciliationError,
+        SolOrderRestartError,
+        ProtectiveExecutionEvidenceError,
+    ) as exc:
+        _fault_and_raise(events, exc)
+    return False, _pending_intent(records, events)
 
 
 def _recover_pending_mutation(
@@ -326,13 +402,17 @@ def _restore_stable_startup(
     venue: SolReconciliationSnapshot,
 ) -> None:
     try:
-        recovered = reconcile_sol_startup(
+        recovered, confirmed = wait_for_stable_startup(
             records=records,
             venue=venue,
             expected_profile_fingerprint=config.profile_fingerprint,
+            poller=poller,
         )
     except SolStartupReconciliationError as exc:
         _fault_and_raise(events, exc)
+    if confirmed is not venue:
+        events.emit_reconciliation(confirmed)
+        venue = confirmed
     ownership = recovered.ownership
     if recovered.disposition == "owned_bracket_filled" and ownership is not None:
         _complete_stable_bracket_exit(
@@ -389,6 +469,7 @@ def _restore_owned_position(
         position_size_signed=ownership.position_size_signed,
         opened_at_ms=ownership.opened_at_ms,
         execution_plan=ownership.execution_plan,
+        protective_progress=ownership.protective_progress,
         target_oid=ownership.target_oid,
         target_price=ownership.target_price,
     )
@@ -401,4 +482,12 @@ def _profile_recovery_records(
     records = ledger.read_matching(
         lambda record: record.get("profile_fingerprint") == expected_profile_fingerprint
     )
-    return records_before_partial_close_fault(records)
+    if pending_protective_cleanup(records) is None:
+        records = records_before_partial_protective_fault(
+            records_before_partial_close_fault(records)
+        )
+    try:
+        validate_latest_protective_checkpoint(records, intent_for_oid)
+    except ValueError as exc:
+        raise SolOrderRestartError(f"protective checkpoint validation failed: {exc}") from exc
+    return records

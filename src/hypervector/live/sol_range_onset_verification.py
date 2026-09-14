@@ -17,6 +17,9 @@ from hypervector.live.sol_execution_evidence import (
 from hypervector.live.sol_range_onset_engine_contract import SolLiveEngineError
 from hypervector.live.sol_range_onset_reconcile import reconcile_sol_startup
 from hypervector.live.sol_range_onset_state import SolLiveSnapshot
+from hypervector.live.sol_protective_execution_evidence import (
+    ProtectiveExecutionProgress,
+)
 
 
 def verify_canceled_entry_exposure(
@@ -64,6 +67,7 @@ def verify_protected_position(
     target_oid: int | None = None,
     target_price: float | None = None,
     execution_plan: BoundExecutionPlan | None = None,
+    protective_progress: ProtectiveExecutionProgress = ProtectiveExecutionProgress(),
 ) -> bool:
     """Return whether exact ownership resolved as an already-filled stop."""
     result = reconcile_sol_startup(
@@ -78,6 +82,7 @@ def verify_protected_position(
                     "target_price": target_price,
                     "position_size_signed": position_size_signed,
                     "opened_at_ms": opened_at_ms,
+                    "protective_progress": protective_progress.as_payload(),
                     "execution_plan": (
                         execution_plan.as_payload() if execution_plan is not None else None
                     ),
@@ -104,5 +109,6 @@ def verify_open_snapshot(
         position_size_signed=snapshot.position_size_signed,
         opened_at_ms=snapshot.opened_at_ms,
         execution_plan=snapshot.execution_plan,
+        protective_progress=snapshot.protective_progress,
         venue=venue,
     )

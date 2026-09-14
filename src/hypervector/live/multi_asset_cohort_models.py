@@ -54,6 +54,11 @@ class AssetCohortSnapshot:
     target_price: float | None = None
     execution_plan: BoundExecutionPlan | None = None
     market_reference_price: float | None = None
+    opened_at_ms: int | None = None
+    protective_exit_pending: bool | None = None
+    partial_exit_fill_count: int | None = None
+    partial_exit_size: float | None = None
+    stop_protection: str | None = None
 
     @property
     def position_side(self) -> str | None:
@@ -77,9 +82,7 @@ class AssetCohortSnapshot:
             "target_oid": self.target_oid,
             "target_price": self.target_price,
             "execution_plan": (
-                self.execution_plan.as_payload()
-                if self.execution_plan is not None
-                else None
+                self.execution_plan.as_payload() if self.execution_plan is not None else None
             ),
             "last_fault": self.last_fault,
             "mark_price": self.mark_price,
@@ -92,6 +95,11 @@ class AssetCohortSnapshot:
             "position_value_usd": self.position_value_usd,
             "unrealized_pnl_usd": self.unrealized_pnl_usd,
             "leverage": self.leverage,
+            "opened_at_ms": self.opened_at_ms,
+            "protective_exit_pending": self.protective_exit_pending,
+            "partial_exit_fill_count": self.partial_exit_fill_count,
+            "partial_exit_size": self.partial_exit_size,
+            "stop_protection": self.stop_protection,
         }
 
     @property

@@ -5,6 +5,9 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import datetime
 
+from hypervector.live.cohort_execution_plan import BoundExecutionPlan
+from hypervector.live.hyperliquid_protocol import HyperliquidOrderAck
+
 _IOC_NO_FILL_FRAGMENT = "could not immediately match against any resting orders"
 
 
@@ -52,3 +55,18 @@ def resolve_decision_time_ms(
     if observed.tzinfo is None or observed.utcoffset() is None:
         raise SolLiveEngineError("now_fn must return a timezone-aware datetime")
     return int(observed.timestamp() * 1_000)
+
+
+def is_expected_ioc_no_fill(
+    plan: BoundExecutionPlan,
+    ack: HyperliquidOrderAck,
+) -> bool:
+    """Recognize only Hyperliquid's definitive IOC no-match acknowledgement."""
+    return bool(
+        plan.entry_liquidity == "taker_ioc"
+        and not ack.accepted
+        and ack.oid is None
+        and ack.status == "error"
+        and ack.error is not None
+        and is_ioc_no_fill_error(ack.error)
+    )

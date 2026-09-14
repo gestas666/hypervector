@@ -185,6 +185,7 @@ def _complete_intervening_exit(
         stop_oid=stop_oid,
         target_oid=target_oid,
         position_size_signed=snapshot.position_size_signed,
+        protective_progress=snapshot.protective_progress,
     )
     if exit_reason is None:
         _fault(events, "flat close preparation lacks exact owned bracket fill")

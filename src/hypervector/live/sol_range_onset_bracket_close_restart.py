@@ -55,6 +55,7 @@ def recover_bracket_exit(
         position_size_signed=context.position_size_signed,
         opened_at_ms=context.opened_at_ms,
         execution_plan=context.execution_plan,
+        protective_progress=context.protective_progress,
         target_oid=target_oid,
         target_price=target_price,
     )

@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from datetime import datetime, timezone
 
+from hypervector.live.hyperliquid_fill_identity import fill_trade_id, ledger_trade_id
 from hypervector.live.hyperliquid_protocol import (
     HyperliquidOrderAck,
     SolBookSnapshot,
@@ -14,7 +15,6 @@ from hypervector.live.hyperliquid_protocol import (
     SolReconciliationSnapshot,
     SolVenuePreflight,
 )
-from hypervector.live.hyperliquid_fill_identity import fill_trade_id, ledger_trade_id
 from hypervector.live.multi_asset_preflight_fees import preflight_fee_payload
 from hypervector.live.sol_range_onset_config import SolRangeOnsetConfig
 from hypervector.live.sol_range_onset_ledger import SolLiveLedger
@@ -119,9 +119,7 @@ class SolLiveTelemetry:
                 "order_type": "market",
                 "time_in_force": "ioc",
                 "fill_identity": "hyperliquid_tid",
-                "market_slippage_cap_fraction": (
-                    self._config.market_slippage_cap_fraction
-                ),
+                "market_slippage_cap_fraction": (self._config.market_slippage_cap_fraction),
             },
         }
 
@@ -134,9 +132,7 @@ class SolLiveTelemetry:
                 "account_value_usd": venue.account.account_value_usd,
                 "withdrawable_usd": venue.account.withdrawable_usd,
                 "open_order_ids": [order.oid for order in venue.open_orders],
-                "open_orders": [
-                    _open_order_payload(order) for order in venue.open_orders
-                ],
+                "open_orders": [_open_order_payload(order) for order in venue.open_orders],
                 "fill_ids": [fill.oid for fill in venue.fills],
                 "fill_trade_ids": [fill_trade_id(fill) for fill in venue.fills],
             },
@@ -174,12 +170,8 @@ class SolLiveTelemetry:
                 "spread_bps": book.spread_bps,
                 "bid_depth_ratio": book.bid_depth / book.ask_depth,
                 "opi": book.order_pressure,
-                "bids": [
-                    {"price": level.price, "size": level.size} for level in book.bids
-                ],
-                "asks": [
-                    {"price": level.price, "size": level.size} for level in book.asks
-                ],
+                "bids": [{"price": level.price, "size": level.size} for level in book.bids],
+                "asks": [{"price": level.price, "size": level.size} for level in book.asks],
             },
         )
 
@@ -187,10 +179,7 @@ class SolLiveTelemetry:
         if not isinstance(fill, SolFill):
             raise SolLiveTelemetryError("reconciliation fill has an invalid type")
         key = fill_trade_id(fill)
-        if (
-            self._run_started_at_ms is not None
-            and fill.timestamp_ms < self._run_started_at_ms
-        ):
+        if self._run_started_at_ms is not None and fill.timestamp_ms < self._run_started_at_ms:
             self._seen_fills.add(key)
             self._seen_fill_fees.add(key)
             return
@@ -279,26 +268,7 @@ class SolLiveTelemetry:
 
     def emit_state(self, snapshot: SolLiveSnapshot) -> None:
         """Record the complete recoverable lifecycle identity."""
-        self.emit(
-            "state_transition",
-            {
-                "state": snapshot.state.value,
-                "entry_oid": snapshot.entry_oid,
-                "stop_oid": snapshot.stop_oid,
-                "target_oid": snapshot.target_oid,
-                "close_oid": snapshot.close_oid,
-                "position_size_signed": snapshot.position_size_signed,
-                "opened_at_ms": snapshot.opened_at_ms,
-                "last_fault": snapshot.last_fault,
-                "stop_reason": snapshot.stop_reason,
-                "execution_plan": (
-                    snapshot.execution_plan.as_payload()
-                    if snapshot.execution_plan is not None
-                    else None
-                ),
-                "target_price": snapshot.target_price,
-            },
-        )
+        self.emit("state_transition", snapshot.as_payload())
 
     def _now_utc(self) -> str:
         value = self._now_fn()

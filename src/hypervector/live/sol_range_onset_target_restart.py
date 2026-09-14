@@ -14,6 +14,7 @@ from hypervector.live.sol_order_restart import (
     SolOrderRestartError,
 )
 from hypervector.live.sol_order_restart_context import (
+    PendingPositionContext,
     pending_position_context_for_intent,
 )
 from hypervector.live.sol_order_submission import (
@@ -41,27 +42,7 @@ def recover_pending_target(
     venue: SolReconciliationSnapshot,
 ) -> None:
     """Adopt the exact target CLOID or fail with the original stop preserved."""
-    try:
-        context = pending_position_context_for_intent(
-            records,
-            "TARGET_PENDING",
-            pending.client_order_id,
-        )
-    except SolOrderRestartError as exc:
-        _fault(events, exc)
-    if context.stop_oid is None or context.target_price is None:
-        _fault(events, SolOrderRestartError("pending target lacks stop or price"))
-    if context.execution_plan is None:
-        _fault(events, SolOrderRestartError("pending target lacks execution plan"))
-    machine.restore_target_pending(
-        entry_oid=context.entry_oid,
-        stop_oid=context.stop_oid,
-        position_size_signed=context.position_size_signed,
-        opened_at_ms=context.opened_at_ms,
-        target_price=context.target_price,
-        execution_plan=context.execution_plan,
-    )
-    events.emit_state()
+    context = _restore_pending_target(records, pending, machine, events)
     ack = _recover_ack(events, orders, pending)
     events.emit_ack("target_restart_recovery", ack, event_type="target_order")
     if not ack.accepted or ack.oid is None:
@@ -89,6 +70,37 @@ def recover_pending_target(
     machine.confirm_target(target_oid=ack.oid)
     events.emit_reconciliation(venue)
     events.emit_state()
+
+
+def _restore_pending_target(
+    records: list[dict[str, object]],
+    pending: PendingSolOrderIntent,
+    machine: SolLiveStateMachine,
+    events: SolLiveEngineEvents,
+) -> PendingPositionContext:
+    try:
+        context = pending_position_context_for_intent(
+            records,
+            "TARGET_PENDING",
+            pending.client_order_id,
+        )
+    except SolOrderRestartError as exc:
+        _fault(events, exc)
+    if context.stop_oid is None or context.target_price is None:
+        _fault(events, SolOrderRestartError("pending target lacks stop or price"))
+    if context.execution_plan is None:
+        _fault(events, SolOrderRestartError("pending target lacks execution plan"))
+    machine.restore_target_pending(
+        entry_oid=context.entry_oid,
+        stop_oid=context.stop_oid,
+        position_size_signed=context.position_size_signed,
+        opened_at_ms=context.opened_at_ms,
+        target_price=context.target_price,
+        execution_plan=context.execution_plan,
+        protective_progress=context.protective_progress,
+    )
+    events.emit_state()
+    return context
 
 
 def _recover_ack(
@@ -123,6 +135,7 @@ def _complete_flat_target(
         stop_oid=stop_oid,
         target_oid=target_oid,
         position_size_signed=position_size_signed,
+        protective_progress=machine.snapshot.protective_progress,
     )
     if reason != "target":
         _fault(events, SolOrderRestartError("recovered target fill is not exact"))

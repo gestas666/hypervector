@@ -66,6 +66,7 @@ def _confirm_stop_fill(
         stop_oid=stop_oid,
         position_size_signed=local.position_size_signed,
         opened_at_ms=local.opened_at_ms,
+        protective_progress=local.protective_progress,
     )
     if not owned_protective_stop_fill(ownership, venue):
         _fault(events, "cancel reconciliation reported unexplained flat state")

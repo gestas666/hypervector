@@ -5,12 +5,26 @@ import math
 
 from hypervector.live.hyperliquid_protocol import SolReconciliationSnapshot
 from hypervector.live.sol_close_restart_context import READ_ONLY_RESTART_EVENTS
-from hypervector.live.sol_execution_evidence import QUANTITY_TOLERANCE, owned_fill_quantity
+from hypervector.live.sol_execution_evidence import (
+    QUANTITY_TOLERANCE,
+    owned_fill_quantity,
+)
 from hypervector.live.sol_order_restart import SolOrderRestartError
 from hypervector.live.sol_order_restart_context import (
     PendingPositionContext,
     pending_position_context,
 )
+from hypervector.live.sol_protective_checkpoint import (
+    protective_progress_from_state,
+    venue_without_credited_fills,
+)
+from hypervector.live.sol_protective_execution_evidence import (
+    ProtectiveExecutionProgress,
+)
+from hypervector.live.sol_protective_journal import (
+    validate_latest_protective_checkpoint,
+)
+from hypervector.live.sol_range_onset_live_journal_orders import intent_for_oid
 
 UNRESOLVED_PROTECTIVE_EXIT = "protective exit history remains unresolved"
 _RETRY_FAULTS = frozenset(
@@ -40,7 +54,8 @@ def records_for_late_protective_exit(
     if start is None:
         return records
     fault = next(
-        (i for i in range(start + 1, len(records)) if records[i].get("event_type") == "fault"), None
+        (i for i in range(start + 1, len(records)) if records[i].get("event_type") == "fault"),
+        None,
     )
     if fault is None:
         return records
@@ -54,6 +69,10 @@ def records_for_late_protective_exit(
     )
     if reason != expected:
         return records
+    try:
+        validate_latest_protective_checkpoint(records[: start + 1], intent_for_oid)
+    except ValueError as exc:
+        raise SolOrderRestartError(f"protective checkpoint validation failed: {exc}") from exc
     _validate_retry_suffix(records[start + 1 :], _payload(records[start]), expected)
     _require_complete_exit(context, venue)
     return records[:fault]
@@ -92,7 +111,14 @@ def _validate_retry_suffix(
                 if preflight
                 else original
             )
-            if all(payload.get(key) == expected.get(key) for key in _IDENTITY_FIELDS):
+            progress = (
+                ProtectiveExecutionProgress()
+                if preflight
+                else protective_progress_from_state(original)
+            )
+            if all(payload.get(key) == expected.get(key) for key in _IDENTITY_FIELDS) and (
+                protective_progress_from_state(payload) == progress
+            ):
                 continue
         raise SolOrderRestartError("protective restart has contradictory later evidence")
 
@@ -100,6 +126,7 @@ def _validate_retry_suffix(
 def _require_complete_exit(
     context: PendingPositionContext, venue: SolReconciliationSnapshot
 ) -> None:
+    venue = venue_without_credited_fills(venue, context.protective_progress)
     if context.stop_oid is None or context.stop_oid == context.target_oid:
         raise SolOrderRestartError("protective restart requires distinct owned order identities")
     owned = {context.stop_oid}

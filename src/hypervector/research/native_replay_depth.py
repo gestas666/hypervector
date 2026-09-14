@@ -83,7 +83,7 @@ class BookLiquidity:
             raise ValueError("IOC side must be buy or sell")
         require_amount(quantity, "IOC quantity", positive=True)
         require_amount(limit_price, "IOC limit", positive=True)
-        _require_lot(quantity, self.book.quantity_step)
+        validate_lot_quantity(quantity, self.book.quantity_step)
         with localcontext() as context:
             context.prec = REPLAY_DECIMAL_PRECISION
             matches, remaining = _walk(self._levels[side], side, quantity, limit_price)
@@ -102,7 +102,10 @@ class BookLiquidity:
         return result
 
 
-def _require_lot(quantity: Decimal, step: Decimal) -> None:
+def validate_lot_quantity(quantity: Decimal, step: Decimal) -> None:
+    """Require a positive exact lot before accepting or consuming an order."""
+    require_amount(quantity, "lot quantity", positive=True)
+    require_amount(step, "quantity step", positive=True)
     with localcontext() as context:
         context.prec = REPLAY_DECIMAL_PRECISION
         if quantity % step:
@@ -115,9 +118,11 @@ def _validate_levels(levels: tuple[ExactLevel, ...], side: str, step: Decimal) -
     for row in levels:
         if not isinstance(row, ExactLevel):
             raise ValueError("recorded book sides require ExactLevel values")
-        _require_lot(row.quantity, step)
+        validate_lot_quantity(row.quantity, step)
     for left, right in zip(levels, levels[1:]):
-        if (side == "buy" and left.price >= right.price) or (side == "sell" and left.price <= right.price):
+        if (side == "buy" and left.price >= right.price) or (
+            side == "sell" and left.price <= right.price
+        ):
             raise ValueError("recorded book levels must have strictly ordered prices")
 
 

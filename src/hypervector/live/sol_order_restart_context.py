@@ -6,6 +6,11 @@ import math
 from collections.abc import Mapping
 from dataclasses import dataclass
 
+from hypervector.live.sol_protective_execution_evidence import (
+    ProtectiveExecutionProgress,
+)
+from hypervector.live.sol_protective_checkpoint import protective_progress_from_state
+
 from hypervector.live.cohort_execution_plan import (
     BoundExecutionPlan,
     CohortExecutionPlanError,
@@ -28,6 +33,7 @@ class PendingPositionContext:
     execution_plan: BoundExecutionPlan | None = None
     target_oid: int | None = None
     target_price: float | None = None
+    protective_progress: ProtectiveExecutionProgress = ProtectiveExecutionProgress()
 
 
 def pending_position_context(
@@ -42,9 +48,7 @@ def pending_position_context(
         if not isinstance(payload, Mapping):
             raise SolOrderRestartError("state transition payload must be an object")
         if payload.get("state") != expected_state:
-            raise SolOrderRestartError(
-                f"pending order requires local state {expected_state}"
-            )
+            raise SolOrderRestartError(f"pending order requires local state {expected_state}")
         return _position_context(payload)
     raise SolOrderRestartError("pending order lacks a state transition")
 
@@ -55,9 +59,7 @@ def pending_position_context_for_intent(
     client_order_id: str,
 ) -> PendingPositionContext:
     """Parse the exact lifecycle state immediately preceding one intent."""
-    return _position_context(
-        _state_for_intent(records, expected_state, client_order_id)
-    )
+    return _position_context(_state_for_intent(records, expected_state, client_order_id))
 
 
 def execution_plan_for_intent(
@@ -70,9 +72,7 @@ def execution_plan_for_intent(
     return _execution_plan(payload.get("execution_plan"))
 
 
-def pending_entry_opened_at_ms(
-    pending: PendingSolOrderIntent, venue_timestamp_ms: int
-) -> int:
+def pending_entry_opened_at_ms(pending: PendingSolOrderIntent, venue_timestamp_ms: int) -> int:
     """Preserve the durable decision; legacy intents retain their venue-time fallback."""
     if pending.operation != "entry":
         raise SolOrderRestartError("entry clock requires an entry intent")
@@ -82,14 +82,10 @@ def pending_entry_opened_at_ms(
     deadline = pending.payload["entry_deadline"]
     if not isinstance(deadline, Mapping):
         raise SolOrderRestartError("pending entry deadline must be an object")
-    decision = _nonnegative_integer(
-        deadline.get("decision_time_ms"), "entry decision time"
-    )
+    decision = _nonnegative_integer(deadline.get("decision_time_ms"), "entry decision time")
     _positive_integer(deadline.get("limit_ms"), "entry deadline limit")
     if decision > venue_time:
-        raise SolOrderRestartError(
-            "entry decision time exceeds recovered venue timestamp"
-        )
+        raise SolOrderRestartError("entry decision time exceeds recovered venue timestamp")
     return decision
 
 
@@ -115,9 +111,7 @@ def _state_for_intent(
         if not isinstance(payload, Mapping):
             raise SolOrderRestartError("state transition payload must be an object")
         if payload.get("state") != expected_state:
-            raise SolOrderRestartError(
-                f"pending order requires local state {expected_state}"
-            )
+            raise SolOrderRestartError(f"pending order requires local state {expected_state}")
         return payload
     raise SolOrderRestartError("pending intent lacks a preceding state transition")
 
@@ -126,15 +120,12 @@ def _position_context(payload: Mapping[str, object]) -> PendingPositionContext:
     return PendingPositionContext(
         entry_oid=_positive_integer(payload.get("entry_oid"), "entry_oid"),
         stop_oid=_optional_positive_integer(payload.get("stop_oid"), "stop_oid"),
-        position_size_signed=_nonzero_number(
-            payload.get("position_size_signed"), "position size"
-        ),
+        position_size_signed=_nonzero_number(payload.get("position_size_signed"), "position size"),
         opened_at_ms=_nonnegative_integer(payload.get("opened_at_ms"), "opened_at_ms"),
         execution_plan=_execution_plan(payload.get("execution_plan")),
+        protective_progress=protective_progress_from_state(payload),
         target_oid=_optional_positive_integer(payload.get("target_oid"), "target_oid"),
-        target_price=_optional_positive_number(
-            payload.get("target_price"), "target_price"
-        ),
+        target_price=_optional_positive_number(payload.get("target_price"), "target_price"),
     )
 
 
@@ -168,12 +159,11 @@ def owned_open_record(
             "position_size_signed": context.position_size_signed,
             "opened_at_ms": context.opened_at_ms,
             "execution_plan": (
-                context.execution_plan.as_payload()
-                if context.execution_plan is not None
-                else None
+                context.execution_plan.as_payload() if context.execution_plan is not None else None
             ),
             "target_oid": context.target_oid,
             "target_price": context.target_price,
+            "protective_progress": context.protective_progress.as_payload(),
         },
     }
     if profile_fingerprint is not None:
@@ -191,9 +181,7 @@ def execution_plan_for_state(
             continue
         payload = record.get("payload")
         if not isinstance(payload, Mapping) or payload.get("state") != expected_state:
-            raise SolOrderRestartError(
-                f"pending order requires local state {expected_state}"
-            )
+            raise SolOrderRestartError(f"pending order requires local state {expected_state}")
         return _execution_plan(payload.get("execution_plan"))
     raise SolOrderRestartError("pending order lacks a state transition")
 

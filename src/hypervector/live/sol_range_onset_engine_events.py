@@ -54,9 +54,7 @@ class SolLiveEngineEvents:
         extra_payload: Mapping[str, object] | None = None,
     ) -> None:
         """Write one normalized exchange acknowledgement."""
-        self._telemetry.emit_ack(
-            operation, ack, event_type=event_type, extra_payload=extra_payload
-        )
+        self._telemetry.emit_ack(operation, ack, event_type=event_type, extra_payload=extra_payload)
 
     def emit_close_intent(self, *, reason: str, stop_oid: int) -> None:
         """Persist why an exit began before mutating venue orders."""
@@ -103,6 +101,11 @@ class SolLiveEngineEvents:
                 "verified_flat": True,
             },
         )
+        self.emit_state()
+
+    def confirm_recorded_owned_exit(self) -> None:
+        """Persist FLAT after independently verifying an already-recorded economic completion."""
+        self._machine.confirm_owned_bracket_exit()
         self.emit_state()
 
     def confirm_stop_fill_during_protection(self, *, stop_oid: int) -> None:

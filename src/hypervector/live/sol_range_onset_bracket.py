@@ -10,6 +10,10 @@ from hypervector.live.hyperliquid_protocol import (
 )
 from hypervector.live.hyperliquid_sol_parsing import normalize_perp_price
 from hypervector.live.sol_protective_order import protective_stop_covers
+from hypervector.live.sol_protective_execution_evidence import (
+    ProtectiveExecutionProgress,
+)
+from hypervector.live.sol_protective_checkpoint import venue_without_credited_fills
 
 _MAXIMUM_PERP_SIZE_DECIMALS = 6
 
@@ -58,10 +62,12 @@ def owned_exit_reason(
     stop_oid: int,
     target_oid: int | None,
     position_size_signed: float,
+    protective_progress: ProtectiveExecutionProgress = ProtectiveExecutionProgress(),
 ) -> str | None:
     """Classify a complete close from exact owned stop/target fill identities."""
     if venue.position.size_signed != 0.0:
         return None
+    venue = venue_without_credited_fills(venue, protective_progress)
     owned = {stop_oid}
     if target_oid is not None:
         owned.add(target_oid)

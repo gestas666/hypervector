@@ -53,6 +53,69 @@ def complete_entry_protection(
         machine.confirm_protection(stop_oid=stop_oid)
         events.emit_state()
         return machine.snapshot
+    target_oid, venue = _place_and_poll_target(
+        position_size_signed,
+        stop_oid,
+        target_price,
+        mark_price,
+        machine,
+        events,
+        orders,
+        poller,
+        emergency_flatten,
+    )
+    if venue.position.size_signed == 0.0:
+        return _complete_immediate_target(
+            venue=venue,
+            stop_oid=stop_oid,
+            target_oid=target_oid,
+            position_size_signed=position_size_signed,
+            machine=machine,
+            events=events,
+            orders=orders,
+            poller=poller,
+        )
+    return _confirm_resting_target(
+        venue, stop_oid, target_oid, position_size_signed, target_price, machine, events
+    )
+
+
+def _confirm_resting_target(
+    venue: SolReconciliationSnapshot,
+    stop_oid: int,
+    target_oid: int,
+    position_size_signed: float,
+    target_price: float,
+    machine: SolLiveStateMachine,
+    events: SolLiveEngineEvents,
+) -> SolLiveSnapshot:
+    if not complete_bracket_visible(
+        venue,
+        stop_oid=stop_oid,
+        target_oid=target_oid,
+        position_size_signed=position_size_signed,
+        target_price=target_price,
+    ):
+        reason = "target acknowledged but complete bracket is not venue-visible"
+        events.fault(reason)
+        raise SolLiveEngineError(reason)
+    machine.confirm_target(target_oid=target_oid)
+    events.emit_reconciliation(venue)
+    events.emit_state()
+    return machine.snapshot
+
+
+def _place_and_poll_target(
+    position_size_signed: float,
+    stop_oid: int,
+    target_price: float,
+    mark_price: float,
+    machine: SolLiveStateMachine,
+    events: SolLiveEngineEvents,
+    orders: SolOrderSubmission,
+    poller: SolReconciliationPoller,
+    emergency_flatten: EmergencyFlattenProtocol,
+) -> tuple[int, SolReconciliationSnapshot]:
     machine.begin_target(stop_oid=stop_oid, target_price=target_price)
     events.emit_state()
     ack = orders.place_target(
@@ -77,31 +140,7 @@ def complete_entry_protection(
             target_price=target_price,
         )
     )
-    if venue.position.size_signed == 0.0:
-        return _complete_immediate_target(
-            venue=venue,
-            stop_oid=stop_oid,
-            target_oid=ack.oid,
-            position_size_signed=position_size_signed,
-            machine=machine,
-            events=events,
-            orders=orders,
-            poller=poller,
-        )
-    if not complete_bracket_visible(
-        venue,
-        stop_oid=stop_oid,
-        target_oid=ack.oid,
-        position_size_signed=position_size_signed,
-        target_price=target_price,
-    ):
-        reason = "target acknowledged but complete bracket is not venue-visible"
-        events.fault(reason)
-        raise SolLiveEngineError(reason)
-    machine.confirm_target(target_oid=ack.oid)
-    events.emit_reconciliation(venue)
-    events.emit_state()
-    return machine.snapshot
+    return ack.oid, venue
 
 
 def _complete_immediate_target(
@@ -120,6 +159,7 @@ def _complete_immediate_target(
         stop_oid=stop_oid,
         target_oid=target_oid,
         position_size_signed=position_size_signed,
+        protective_progress=machine.snapshot.protective_progress,
     )
     if reason != "target":
         events.fault("flat during target placement lacks exact target fill")

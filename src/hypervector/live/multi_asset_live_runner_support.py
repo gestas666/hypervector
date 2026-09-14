@@ -20,6 +20,7 @@ from hypervector.live.multi_asset_cohort_telemetry import (
 )
 from hypervector.live.perp_venue_identity import parse_perp_venue_identity
 from hypervector.live.sol_range_onset_state import SolLiveSnapshot, SolLiveState
+from hypervector.live.sol_protective_order import protective_stop_covers
 
 
 class MultiAssetLiveRunnerError(RuntimeError):
@@ -71,11 +72,7 @@ def validate_runtime(
 def entry_provider_strategy_id(strategy_id: str) -> str:
     """Recover the selected provider from a manual-entry attribution id."""
     prefix = "operator_override:"
-    return (
-        strategy_id.removeprefix(prefix)
-        if strategy_id.startswith(prefix)
-        else strategy_id
-    )
+    return strategy_id.removeprefix(prefix) if strategy_id.startswith(prefix) else strategy_id
 
 
 def shared_account_facts(
@@ -86,9 +83,7 @@ def shared_account_facts(
     if not venues:
         raise MultiAssetLiveRunnerError("shared account reconciliation is empty")
     if len(symbols) != len(venues):
-        raise MultiAssetLiveRunnerError(
-            "shared account symbols and venue snapshots must agree"
-        )
+        raise MultiAssetLiveRunnerError("shared account symbols and venue snapshots must agree")
     namespaces: dict[str, SolReconciliationSnapshot] = {}
     for symbol, venue in zip(symbols, venues, strict=True):
         namespace = parse_perp_venue_identity(symbol).perp_dex
@@ -127,9 +122,7 @@ def asset_snapshots(
 ) -> tuple[AssetCohortSnapshot, ...]:
     """Project each reconciled venue using its corresponding engine state."""
     return tuple(
-        asset_snapshot(
-            symbol, engines[symbol].snapshot, venue, reference_prices.get(symbol)
-        )
+        asset_snapshot(symbol, engines[symbol].snapshot, venue, reference_prices.get(symbol))
         for symbol, venue in zip(symbols, venues, strict=True)
     )
 
@@ -178,7 +171,21 @@ def asset_snapshot(
         target_price=snapshot.target_price,
         execution_plan=snapshot.execution_plan,
         market_reference_price=mark_price,
+        opened_at_ms=snapshot.opened_at_ms,
+        protective_exit_pending=snapshot.protective_progress.stop_exit_required,
+        partial_exit_fill_count=len(snapshot.protective_progress.fills),
+        partial_exit_size=math.fsum(fill.size for fill in snapshot.protective_progress.fills),
+        stop_protection=_stop_protection(snapshot, venue),
     )
+
+
+def _stop_protection(snapshot: SolLiveSnapshot, venue: SolReconciliationSnapshot) -> str:
+    if venue.position.size_signed == 0.0:
+        return "flat"
+    stops = [order for order in venue.open_orders if order.oid == snapshot.stop_oid]
+    if len(stops) == 1 and protective_stop_covers(stops[0], venue.position.size_signed):
+        return "covering"
+    return "missing"
 
 
 def _venue_synchronous_mark(
@@ -210,9 +217,7 @@ def aware(value: datetime) -> datetime:
 
 def validate_max_polls(value: int | None) -> None:
     """Reject invalid bounded-run counts."""
-    if value is not None and (
-        isinstance(value, bool) or not isinstance(value, int) or value <= 0
-    ):
+    if value is not None and (isinstance(value, bool) or not isinstance(value, int) or value <= 0):
         raise MultiAssetLiveRunnerError("max_polls must be a positive integer")
 
 
@@ -258,10 +263,6 @@ def _validate_provider_contracts(
         raise MultiAssetLiveRunnerError("runner requires an executable provider pair")
     provider_ids = {strategy for strategy, _ in pairs}
     if not provider_ids.issubset(contracts):
-        raise MultiAssetLiveRunnerError(
-            "executable providers require execution contracts"
-        )
+        raise MultiAssetLiveRunnerError("executable providers require execution contracts")
     if any(symbol not in symbols for _, symbol in pairs):
-        raise MultiAssetLiveRunnerError(
-            "executable provider pairs reference an unknown symbol"
-        )
+        raise MultiAssetLiveRunnerError("executable provider pairs reference an unknown symbol")

@@ -3,8 +3,14 @@
 from dataclasses import dataclass
 from decimal import Decimal
 
+from hypervector.research.native_replay_account import ReplayPosition
 from hypervector.research.native_replay_depth import IocMatch, RecordedBook
-from hypervector.research.native_replay_events import FillEvent, require_amount, require_clock, require_name
+from hypervector.research.native_replay_events import (
+    FillEvent,
+    require_amount,
+    require_clock,
+    require_name,
+)
 
 
 @dataclass(frozen=True)
@@ -65,6 +71,15 @@ class AcceptedIoc:
     book: RecordedBook
     timing: ReceiptTiming
     maximum_book_delay_ms: int
-    match: IocMatch
+    match: IocMatch | None = None
     applied: bool = False
     fills: tuple[FillEvent, ...] = ()
+    position_before: ReplayPosition | None = None
+    position_after: ReplayPosition | None = None
+
+    @property
+    def completed_match(self) -> IocMatch:
+        """Require economic matching rather than projecting an unexecuted future fill."""
+        if self.match is None:
+            raise ValueError("scheduled order has not reached its economic matching clock")
+        return self.match

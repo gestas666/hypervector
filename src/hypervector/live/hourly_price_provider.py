@@ -13,6 +13,7 @@ from hypervector.live.hip3_provider_inputs import (
 )
 from hypervector.live.multi_asset_signal_source import IntentBatch, ProviderEvaluation
 from hypervector.live.provider_readiness import ReadinessMetric, SignalReadiness
+from hypervector.research.completed_bar_indicators import validated_ohlc_bars
 from hypervector.research.donchian_atr_breakout_signals import (
     DonchianAtrBreakoutConfig,
     build_donchian_atr_breakout_signals,
@@ -92,6 +93,11 @@ class HourlyPriceCollector:
         frame, positions, boundary = completed_hip3_inputs(
             bars, observed_at, after_decision_time_ms
         )
+        if not positions:
+            validated_ohlc_bars(frame, label="hourly price")
+            if not frame.index.floor("15min").equals(frame.index):
+                raise ValueError("source bars are not aligned to their UTC boundaries")
+            return IntentBatch((), boundary, ())
         signals = build_hourly_price_signals(frame, self._strategy_id)
         metrics = [column for column in _METRICS if column in signals]
         segments = frame.gap_before_bars.gt(0).cumsum()
@@ -141,11 +147,7 @@ def _evaluation(
         eligible=eligible,
         reason=reason,
         side=side,
-        decision_action=f"enter_{side}"
-        if eligible
-        else "close_open_position"
-        if exits
-        else "hold",
+        decision_action=f"enter_{side}" if eligible else "close_open_position" if exits else "hold",
         readiness=readiness,
         trigger="completed_hourly_price" if eligible else "none",
         exit_sides=exits,
@@ -174,11 +176,7 @@ def _readiness(
         }
     )
     blockers = (
-        ()
-        if eligible
-        else ("awaiting_hourly_setup",)
-        if ready
-        else ("hourly_history_unready",)
+        () if eligible else ("awaiting_hourly_setup",) if ready else ("hourly_history_unready",)
     )
     return SignalReadiness(
         side=side,
@@ -215,9 +213,7 @@ def _price_indicators(signal: pd.Series) -> tuple[str, ...]:
 def _intent(row: ProviderEvaluation) -> StrategyIntent:
     stop = row.readiness.metrics["stop_price"]
     if row.side not in {"long", "short"} or not isinstance(stop, float):
-        raise ValueError(
-            "eligible hourly price decision requires a side and finite stop"
-        )
+        raise ValueError("eligible hourly price decision requires a side and finite stop")
     return StrategyIntent(
         strategy_id=row.strategy_id,
         symbol=row.symbol,
@@ -230,10 +226,6 @@ def _intent(row: ProviderEvaluation) -> StrategyIntent:
 
 
 def _finite(value: object) -> float | None:
-    if (
-        isinstance(value, (int, float))
-        and not isinstance(value, bool)
-        and math.isfinite(value)
-    ):
+    if isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value):
         return float(value)
     return None

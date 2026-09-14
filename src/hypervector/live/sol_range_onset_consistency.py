@@ -109,6 +109,7 @@ def protective_stop_fill_visible(
         state.stop_oid,
         state.position_size_signed,
         state.opened_at_ms,
+        protective_progress=state.protective_progress,
     )
     return owned_protective_stop_fill(ownership, venue)
 

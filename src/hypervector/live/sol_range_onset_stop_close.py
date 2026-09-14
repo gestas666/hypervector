@@ -166,6 +166,7 @@ def _reconcile_rejected_close(
             stop_oid=stop_oid,
             position_size_signed=snapshot.position_size_signed,
             opened_at_ms=snapshot.opened_at_ms or 0,
+            protective_progress=snapshot.protective_progress,
         )
         if not owned_protective_stop_fill(ownership, after):
             _fault(events, "rejected close reconciled unexplained flat state")

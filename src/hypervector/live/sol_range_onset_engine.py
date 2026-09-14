@@ -32,7 +32,7 @@ from hypervector.live.sol_range_onset_consistency import (
 from hypervector.live.sol_range_onset_engine_contract import (
     SolEntryNotFilledError,
     SolLiveEngineError,
-    is_ioc_no_fill_error,
+    is_expected_ioc_no_fill,
     require_started,
     resolve_decision_time_ms,
 )
@@ -59,6 +59,12 @@ from hypervector.live.sol_range_onset_verification import (
     verify_canceled_entry_exposure,
     verify_open_snapshot,
     verify_protected_position,
+)
+from hypervector.live.sol_partial_protective_recovery import (
+    SolPartialProtectiveRecovery,
+)
+from hypervector.live.sol_protective_execution_evidence import (
+    ProtectiveExecutionEvidenceError,
 )
 
 _TELEMETRY_DEPTH_LEVELS = 20
@@ -105,6 +111,13 @@ class SolRangeOnsetLiveEngine:
             before_retry=reconciliation_cache_invalidator,
         )
         self._started = False
+        self._partial_protective = SolPartialProtectiveRecovery(
+            machine=self._machine,
+            events=self._events,
+            orders=self._orders,
+            poller=self._poller,
+            now_fn=self._now_fn,
+        )
         self._pending_execution_plan: BoundExecutionPlan | None = None
 
     @property
@@ -117,6 +130,7 @@ class SolRangeOnsetLiveEngine:
         if self._started:
             raise SolLiveEngineError("SOL live engine has already started")
         pending = prepare_sol_live_startup(
+            partial_protective=self._partial_protective,
             emergency_flatten=self._emergency_flatten,
             config=self._config,
             adapter=self._adapter,
@@ -207,7 +221,7 @@ class SolRangeOnsetLiveEngine:
             ),
         )
         if not ack.accepted or ack.oid is None:
-            if _is_expected_ioc_no_fill(plan, ack):
+            if is_expected_ioc_no_fill(plan, ack):
                 self._confirm_ioc_no_fill(ack)
             reason = f"entry rejected: {ack.error or ack.status}"
             self._events.fault(reason)
@@ -284,6 +298,9 @@ class SolRangeOnsetLiveEngine:
         if self.snapshot.state is not SolLiveState.OPEN:
             raise SolLiveEngineError(f"exit requires OPEN, observed {self.snapshot.state.value}")
         before = self._poller.wait_for_state(self.snapshot)
+        before = self._reconcile_owned_lifecycle(before)
+        if self.snapshot.state is not SolLiveState.OPEN:
+            return self.snapshot
         snapshot = self.snapshot
         verify_open_snapshot(snapshot, before)
         if snapshot.target_oid is not None:
@@ -324,7 +341,23 @@ class SolRangeOnsetLiveEngine:
         """Refresh authoritative exposure, fills, fees, and funding payments."""
         require_started(self._started)
         venue = self._poller.wait_for_state(self.snapshot)
+        venue = self._reconcile_owned_lifecycle(venue)
+        self._events.emit_reconciliation(venue)
+        self._telemetry.emit_book(self._adapter.book_snapshot(depth_levels=_TELEMETRY_DEPTH_LEVELS))
+        payments = self._adapter.funding_payments(
+            start_time_ms=funding_start_time_ms,
+            end_time_ms=funding_end_time_ms,
+        )
+        self._telemetry.emit_funding_payments(payments)
+        return venue
+
+    def _reconcile_owned_lifecycle(
+        self, venue: SolReconciliationSnapshot
+    ) -> SolReconciliationSnapshot:
         try:
+            partial = self._partial_protective.reconcile(venue)
+            if partial is not None:
+                venue = partial
             bracket_exit = (
                 reconcile_owned_bracket_exit(
                     snapshot=self.snapshot,
@@ -346,16 +379,9 @@ class SolRangeOnsetLiveEngine:
                 raise SolStartupReconciliationError(
                     "venue is not flat while local lifecycle is FLAT"
                 )
-        except SolStartupReconciliationError as exc:
+        except (SolStartupReconciliationError, ProtectiveExecutionEvidenceError) as exc:
             self._events.fault(f"continuous reconciliation failed: {exc}")
             raise SolLiveEngineError(str(exc)) from exc
-        self._events.emit_reconciliation(venue)
-        self._telemetry.emit_book(self._adapter.book_snapshot(depth_levels=_TELEMETRY_DEPTH_LEVELS))
-        payments = self._adapter.funding_payments(
-            start_time_ms=funding_start_time_ms,
-            end_time_ms=funding_end_time_ms,
-        )
-        self._telemetry.emit_funding_payments(payments)
         return venue
 
     def record_strategy_decision(self, payload: dict[str, object]) -> None:
@@ -467,18 +493,3 @@ class SolRangeOnsetLiveEngine:
         failure = reason + suffix
         self._events.fault(failure)
         raise SolLiveEngineError(failure)
-
-
-def _is_expected_ioc_no_fill(
-    plan: BoundExecutionPlan,
-    ack: HyperliquidOrderAck,
-) -> bool:
-    """Recognize only Hyperliquid's definitive IOC no-match acknowledgement."""
-    return bool(
-        plan.entry_liquidity == "taker_ioc"
-        and not ack.accepted
-        and ack.oid is None
-        and ack.status == "error"
-        and ack.error is not None
-        and is_ioc_no_fill_error(ack.error)
-    )

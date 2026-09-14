@@ -127,6 +127,7 @@ def resume_unprotected_position(
     machine.restore_pending_entry(
         entry_oid=context.entry_oid,
         execution_plan=context.execution_plan,
+        protective_progress=context.protective_progress,
     )
     events.emit_state()
     return _recovered_entry(
@@ -246,6 +247,7 @@ def _complete_pending_close(
         position_size_signed=context.position_size_signed,
         opened_at_ms=context.opened_at_ms,
         execution_plan=context.execution_plan,
+        protective_progress=context.protective_progress,
     )
     events.emit_state()
     machine.acknowledge_close(close_oid)
@@ -302,6 +304,7 @@ def _restore_open(
         position_size_signed=context.position_size_signed,
         opened_at_ms=context.opened_at_ms,
         execution_plan=context.execution_plan,
+        protective_progress=context.protective_progress,
     )
 
 

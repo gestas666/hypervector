@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
-from collections import Counter
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime
+import math
 
 from hypervector.live.sol_range_onset_live_journal import build_live_journal
 from hypervector.live.sol_range_onset_ledger import SolLiveLedger
+from hypervector.live.sol_protective_order import QUANTITY_TOLERANCE
 
 
 @dataclass(frozen=True)
@@ -71,13 +72,9 @@ def fill_payloads(
     books = _book_marks(rows)
     trade_details = _trade_details_by_exit_oid(rows)
     active_strategy: str | None = None
+    remaining_size = 0.0
     output: list[dict[str, object]] = []
     fill_rows = _unique_rows(rows, "fill", "trade_id")
-    remaining_closes = Counter(
-        _integer_value(_payload(row), "oid")
-        for row in fill_rows
-        if _text_value(_payload(row), "direction").lower().startswith("close ")
-    )
     for row in fill_rows:
         fill = _payload(row)
         context = contexts.get(_integer_value(fill, "oid"))
@@ -89,10 +86,12 @@ def fill_payloads(
         )
         if direction.lower().startswith("open "):
             active_strategy = strategy
+            remaining_size = math.fsum((remaining_size, _number_value(fill, "size")))
         elif direction.lower().startswith("close "):
-            remaining_closes[_integer_value(fill, "oid")] -= 1
-            if remaining_closes[_integer_value(fill, "oid")] == 0:
+            remaining_size = math.fsum((remaining_size, -_number_value(fill, "size")))
+            if remaining_size <= QUANTITY_TOLERANCE:
                 active_strategy = None
+                remaining_size = 0.0
         output.append(
             _fill_payload(
                 symbol,
@@ -113,11 +112,7 @@ def latest_book(
 ) -> dict[str, object] | None:
     """Return the latest current-run L2 observation for one symbol."""
     latest = next(
-        (
-            _payload(row)
-            for row in reversed(rows)
-            if row.get("event_type") == "book_observation"
-        ),
+        (_payload(row) for row in reversed(rows) if row.get("event_type") == "book_observation"),
         None,
     )
     return None if latest is None else {"symbol": symbol, **latest}
@@ -175,20 +170,27 @@ def _trade_details_by_exit_oid(
         for row in rows
     ):
         return {}
-    rebased = tuple(
-        {**row, "sequence": index} for index, row in enumerate(rows, start=1)
-    )
+    rebased = tuple({**row, "sequence": index} for index, row in enumerate(rows, start=1))
     journal = build_live_journal(rebased)
     trades = journal.get("trades")
     if not isinstance(trades, list):
         raise ValueError("live journal trades must be a list")
-    return {_trade_exit_oid(trade): _trade_details(trade) for trade in trades}
+    return {oid: _trade_details(trade) for trade in trades for oid in _trade_exit_oids(trade)}
 
 
-def _trade_exit_oid(value: object) -> int:
+def _trade_exit_oids(value: object) -> tuple[int, ...]:
     if not isinstance(value, Mapping):
         raise ValueError("live journal trade must be an object")
-    return _integer_value(value, "exit_oid")
+    oids = value.get("exit_oids")
+    if oids is None:
+        return (_integer_value(value, "exit_oid"),)
+    if not isinstance(oids, (list, tuple)) or not oids:
+        raise ValueError("live journal trade exit_oids must be a nonempty list")
+    if any(isinstance(oid, bool) or not isinstance(oid, int) or oid <= 0 for oid in oids):
+        raise ValueError("live journal trade exit_oids must contain positive integers")
+    if len(set(oids)) != len(oids):
+        raise ValueError("live journal trade exit_oids must be unique")
+    return tuple(oids)
 
 
 def _trade_details(value: object) -> dict[str, object]:

@@ -2,47 +2,18 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, replace
-from enum import Enum
+from dataclasses import replace
 import math
 
 from hypervector.live.cohort_execution_plan import BoundExecutionPlan
-
-
-class SolLiveState(str, Enum):
-    """Mutually exclusive lifecycle states for one SOL execution authority."""
-
-    DISARMED = "DISARMED"
-    PREFLIGHT = "PREFLIGHT"
-    FLAT = "FLAT"
-    ENTRY_PENDING = "ENTRY_PENDING"
-    PROTECTING = "PROTECTING"
-    TARGET_PENDING = "TARGET_PENDING"
-    OPEN = "OPEN"
-    EXIT_PENDING = "EXIT_PENDING"
-    FAULTED = "FAULTED"
-    STOPPED = "STOPPED"
-
-
-class SolLiveStateError(RuntimeError):
-    """A requested transition violates the SOL canary lifecycle."""
-
-
-@dataclass(frozen=True)
-class SolLiveSnapshot:
-    """Auditable state and known venue identities for one SOL position."""
-
-    state: SolLiveState = SolLiveState.DISARMED
-    entry_oid: int | None = None
-    stop_oid: int | None = None
-    target_oid: int | None = None
-    close_oid: int | None = None
-    position_size_signed: float = 0.0
-    opened_at_ms: int | None = None
-    last_fault: str | None = None
-    stop_reason: str | None = None
-    execution_plan: BoundExecutionPlan | None = None
-    target_price: float | None = None
+from hypervector.live.sol_protective_execution_evidence import (
+    ProtectiveExecutionProgress,
+)
+from hypervector.live.sol_live_snapshot import (
+    SolLiveSnapshot,
+    SolLiveState,
+    SolLiveStateError,
+)
 
 
 class SolLiveStateMachine:
@@ -76,6 +47,7 @@ class SolLiveStateMachine:
         execution_plan: BoundExecutionPlan | None = None,
         target_oid: int | None = None,
         target_price: float | None = None,
+        protective_progress: ProtectiveExecutionProgress = ProtectiveExecutionProgress(),
     ) -> None:
         """Restore only an owned, venue-verified position and protective stop."""
         self._require(SolLiveState.PREFLIGHT, "restore_protected_position")
@@ -90,6 +62,7 @@ class SolLiveStateMachine:
             position_size_signed=size,
             opened_at_ms=opened_at_ms,
             execution_plan=execution_plan,
+            protective_progress=protective_progress,
             target_price=target_price,
         )
 
@@ -98,6 +71,7 @@ class SolLiveStateMachine:
         *,
         entry_oid: int,
         execution_plan: BoundExecutionPlan | None = None,
+        protective_progress: ProtectiveExecutionProgress = ProtectiveExecutionProgress(),
     ) -> None:
         """Restore a venue-verified committed entry before adding protection."""
         self._require(SolLiveState.PREFLIGHT, "restore_pending_entry")
@@ -105,6 +79,7 @@ class SolLiveStateMachine:
             state=SolLiveState.ENTRY_PENDING,
             entry_oid=_oid(entry_oid, "entry_oid"),
             execution_plan=execution_plan,
+            protective_progress=protective_progress,
         )
 
     def restore_protecting_position(
@@ -114,6 +89,7 @@ class SolLiveStateMachine:
         position_size_signed: float,
         opened_at_ms: int,
         execution_plan: BoundExecutionPlan | None = None,
+        protective_progress: ProtectiveExecutionProgress = ProtectiveExecutionProgress(),
     ) -> None:
         """Restore venue exposure whose committed stop is being recovered."""
         self._require(SolLiveState.PREFLIGHT, "restore_protecting_position")
@@ -124,6 +100,7 @@ class SolLiveStateMachine:
             position_size_signed=position_size_signed,
             opened_at_ms=opened_at_ms,
             execution_plan=execution_plan,
+            protective_progress=protective_progress,
         )
 
     def restore_exit_pending(
@@ -136,6 +113,7 @@ class SolLiveStateMachine:
         execution_plan: BoundExecutionPlan | None = None,
         target_oid: int | None = None,
         target_price: float | None = None,
+        protective_progress: ProtectiveExecutionProgress = ProtectiveExecutionProgress(),
     ) -> None:
         """Restore exact ownership while a committed close is resolved."""
         self._require(SolLiveState.PREFLIGHT, "restore_exit_pending")
@@ -146,6 +124,7 @@ class SolLiveStateMachine:
             position_size_signed=position_size_signed,
             opened_at_ms=opened_at_ms,
             execution_plan=execution_plan,
+            protective_progress=protective_progress,
             target_oid=target_oid,
             target_price=target_price,
         )
@@ -159,6 +138,7 @@ class SolLiveStateMachine:
         opened_at_ms: int,
         target_price: float,
         execution_plan: BoundExecutionPlan,
+        protective_progress: ProtectiveExecutionProgress = ProtectiveExecutionProgress(),
     ) -> None:
         """Restore protected exposure whose target mutation is unresolved."""
         self._require(SolLiveState.PREFLIGHT, "restore_target_pending")
@@ -172,6 +152,7 @@ class SolLiveStateMachine:
             position_size_signed=size,
             opened_at_ms=_timestamp_ms(opened_at_ms, "opened_at_ms"),
             execution_plan=execution_plan,
+            protective_progress=protective_progress,
             target_price=_positive_price(target_price, "target_price"),
         )
 
@@ -337,6 +318,41 @@ class SolLiveStateMachine:
             raise SolLiveStateError("partial close requires an acknowledged exact reduction")
         self._snapshot = replace(self._snapshot, position_size_signed=remaining)
 
+    def acknowledge_protective_execution(
+        self, *, position_size_signed: float, progress: ProtectiveExecutionProgress
+    ) -> None:
+        """Retain proved partial receipts, original ownership and any required stop exit."""
+        before = self._snapshot
+        old = before.protective_progress
+        size = position_size_signed
+        if (
+            before.state not in {SolLiveState.OPEN, SolLiveState.EXIT_PENDING}
+            or isinstance(size, bool)
+            or not math.isfinite(size)
+            or size == 0
+            or (size > 0) != (before.position_size_signed > 0)
+            or abs(size) >= abs(before.position_size_signed)
+            or len(progress.fills) <= len(old.fills)
+            or progress.fills[: len(old.fills)] != old.fills
+            or (old.stop_exit_required and not progress.stop_exit_required)
+        ):
+            raise SolLiveStateError("protective execution requires a cumulative owned reduction")
+        executed = math.fsum(fill.size for fill in progress.fills[len(old.fills) :])
+        if not math.isclose(
+            executed,
+            abs(before.position_size_signed) - abs(size),
+            rel_tol=0.0,
+            abs_tol=1e-9,
+        ):
+            raise SolLiveStateError("protective execution receipts mismatch the remaining size")
+        self._snapshot = replace(
+            before,
+            position_size_signed=size,
+            protective_progress=progress,
+            close_oid=None,
+            state=SolLiveState.EXIT_PENDING if progress.stop_exit_required else SolLiveState.OPEN,
+        )
+
     def confirm_flat(self) -> None:
         """Clear order identity only after venue reconciliation verifies flat."""
         self._require(SolLiveState.EXIT_PENDING, "confirm_flat")
@@ -410,6 +426,7 @@ def _owned_position_snapshot(
     execution_plan: BoundExecutionPlan | None = None,
     target_oid: int | None = None,
     target_price: float | None = None,
+    protective_progress: ProtectiveExecutionProgress = ProtectiveExecutionProgress(),
 ) -> SolLiveSnapshot:
     size = float(position_size_signed)
     if size == 0.0:
@@ -425,6 +442,7 @@ def _owned_position_snapshot(
         position_size_signed=size,
         opened_at_ms=_timestamp_ms(opened_at_ms, "opened_at_ms"),
         execution_plan=execution_plan,
+        protective_progress=protective_progress,
         target_oid=normalized_target_oid,
         target_price=normalized_target_price,
     )

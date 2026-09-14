@@ -1,6 +1,7 @@
 """Attribute durable entry/restart identities and every confirmed exit order."""
 
 from collections.abc import Mapping, Sequence
+from hypervector.live.sol_protective_journal import protective_checkpoint_exit_oids
 
 from hypervector.live.sol_range_onset_live_journal_values import (
     optional_positive_float,
@@ -71,7 +72,7 @@ def intent_for_oid(records: Sequence[Record], oid: int) -> Record | None:
 
 def partial_exit_oids(records: Sequence[Record]) -> set[int]:
     """Select only explicitly verified partial reductions with durable close ownership."""
-    owned: set[int] = set()
+    owned = protective_checkpoint_exit_oids(records, intent_for_oid)
     for record in records:
         body = payload(record)
         if record.get("event_type") != "close" or body.get("partial") is not True:

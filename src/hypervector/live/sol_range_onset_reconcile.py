@@ -4,6 +4,14 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+
+from hypervector.live.sol_protective_execution_evidence import (
+    ProtectiveExecutionProgress,
+)
+from hypervector.live.sol_protective_checkpoint import (
+    protective_progress_from_state,
+    venue_without_credited_fills,
+)
 import math
 from typing import Literal
 
@@ -22,13 +30,19 @@ from hypervector.live.sol_range_onset_bracket import (
 from hypervector.live.sol_range_onset_engine_contract import is_ioc_no_fill_error
 from hypervector.live.sol_protective_order import protective_stop_covers
 from hypervector.live.sol_order_restart import SolOrderRestartError
-from hypervector.live.sol_protective_restart_context import records_for_late_protective_exit
+from hypervector.live.sol_protective_restart_context import (
+    records_for_late_protective_exit,
+)
 
 _VENUE_MUTATION_INTENTS = frozenset({"order_intent", "cancel_intent"})
 
 
 class SolStartupReconciliationError(RuntimeError):
     """Local ownership and authoritative venue state cannot be reconciled."""
+
+
+class SolStartupReceiptPending(SolStartupReconciliationError):
+    """Known local exposure is venue-flat but its exact owned exit proof is not visible."""
 
 
 @dataclass(frozen=True)
@@ -42,6 +56,7 @@ class RecoveredSolOwnership:
     execution_plan: BoundExecutionPlan | None = None
     target_oid: int | None = None
     target_price: float | None = None
+    protective_progress: ProtectiveExecutionProgress = ProtectiveExecutionProgress()
 
 
 @dataclass(frozen=True)
@@ -134,6 +149,7 @@ def _owned_bracket_exit_reason(
         stop_oid=ownership.stop_oid,
         target_oid=ownership.target_oid,
         position_size_signed=ownership.position_size_signed,
+        protective_progress=ownership.protective_progress,
     )
 
 
@@ -165,6 +181,7 @@ def _recover_local_state(
             execution_plan=_execution_plan(payload.get("execution_plan")),
             target_oid=target_oid,
             target_price=target_price,
+            protective_progress=protective_progress_from_state(payload),
         )
         return state, ownership
     return None
@@ -254,6 +271,7 @@ def owned_protective_stop_fill(
     """Verify that a flat venue was produced by the exact complete owned stop."""
     if venue.position.size_signed != 0.0 or venue.open_orders:
         return False
+    venue = venue_without_credited_fills(venue, ownership.protective_progress)
     expected_side = "A" if ownership.position_size_signed > 0.0 else "B"
     expected_direction = "close long" if ownership.position_size_signed > 0.0 else "close short"
     matching = [
@@ -283,7 +301,12 @@ def _verify_owned_position(
         rel_tol=0.0,
         abs_tol=1e-9,
     ):
-        raise SolStartupReconciliationError(
+        owned_oids = {ownership.stop_oid, ownership.target_oid}
+        pending = observed_size == 0.0 and all(
+            order.oid in owned_oids for order in venue.open_orders
+        )
+        error_type = SolStartupReceiptPending if pending else SolStartupReconciliationError
+        raise error_type(
             "position size mismatch: "
             f"local={ownership.position_size_signed:g} venue={observed_size:g}"
         )

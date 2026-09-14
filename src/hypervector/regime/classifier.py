@@ -57,29 +57,21 @@ class RegimeClassifierConfig:
         _require_percentile("trend_strength_percentile", self.trend_strength_percentile)
         _require_percentile("range_strength_percentile", self.range_strength_percentile)
         if self.range_strength_percentile > self.trend_strength_percentile:
-            raise ValueError(
-                "range_strength_percentile must be <= trend_strength_percentile"
-            )
+            raise ValueError("range_strength_percentile must be <= trend_strength_percentile")
         _require_non_negative("minimum_trend_gap_bps", self.minimum_trend_gap_bps)
         if self.range_filter not in {"bbwp", "choppiness"}:
             raise ValueError("range_filter must be bbwp|choppiness")
         _require_integer("choppiness_length", self.choppiness_length, minimum=2)
-        _require_percentile(
-            "choppiness_range_threshold", self.choppiness_range_threshold
-        )
+        _require_percentile("choppiness_range_threshold", self.choppiness_range_threshold)
         _require_integer("bbwp_length", self.bbwp_length, minimum=2)
         _require_integer("bbwp_lookback", self.bbwp_lookback, minimum=5)
-        _require_percentile(
-            "bbwp_compression_threshold", self.bbwp_compression_threshold
-        )
+        _require_percentile("bbwp_compression_threshold", self.bbwp_compression_threshold)
         _require_integer("rsi_length", self.rsi_length, minimum=2)
         _require_integer("rsi_signal_length", self.rsi_signal_length, minimum=2)
         _require_non_negative("coiling_width_bps", self.coiling_width_bps)
         _require_integer("breakout_lookback", self.breakout_lookback, minimum=2)
         _require_non_negative("breakout_clearance_bps", self.breakout_clearance_bps)
-        _require_integer(
-            "breakout_volume_lookback", self.breakout_volume_lookback, minimum=1
-        )
+        _require_integer("breakout_volume_lookback", self.breakout_volume_lookback, minimum=1)
         _require_positive("breakout_volume_multiple", self.breakout_volume_multiple)
 
 
@@ -103,7 +95,8 @@ def _require_positive(name: str, value: float) -> None:
         raise ValueError(f"{name} must be finite and positive")
 
 
-def _validate_bars(df: pd.DataFrame) -> None:
+def validate_regime_bars(df: pd.DataFrame) -> None:
+    """Reject malformed OHLCV input independently of indicator construction."""
     required = {"open", "high", "low", "close", "volume"}
     missing = required.difference(df.columns)
     if missing:
@@ -147,9 +140,7 @@ def _breakout_features(
     close = df["close"].astype(float)
     prior_high = df["high"].shift(1).rolling(cfg.breakout_lookback).max()
     prior_low = df["low"].shift(1).rolling(cfg.breakout_lookback).min()
-    prior_volume = (
-        df["volume"].astype(float).shift(1).rolling(cfg.breakout_volume_lookback).mean()
-    )
+    prior_volume = df["volume"].astype(float).shift(1).rolling(cfg.breakout_volume_lookback).mean()
     clearance = cfg.breakout_clearance_bps / 10_000.0
     volume = df["volume"].astype(float)
     volume_ratio = volume / prior_volume.replace(0.0, np.nan)
@@ -187,9 +178,7 @@ def _structure_features(
     cfg: RegimeClassifierConfig,
 ) -> pd.DataFrame:
     close = df["close"].astype(float)
-    gap = (ema(close, cfg.ema_fast) - ema(close, cfg.ema_slow)) / close.replace(
-        0.0, np.nan
-    )
+    gap = (ema(close, cfg.ema_fast) - ema(close, cfg.ema_slow)) / close.replace(0.0, np.nan)
     strength_bps = gap.abs() * 10_000.0
     width = bollinger_width(close, length=cfg.bbwp_length)
     width_rank = percentile_rank(width, cfg.structure_lookback)
@@ -201,9 +190,7 @@ def _structure_features(
     compression = bbwp_percentile < cfg.bbwp_compression_threshold
     choppiness = choppiness_index(df["high"], df["low"], close, cfg.choppiness_length)
     range_filter_active = (
-        compression
-        if cfg.range_filter == "bbwp"
-        else choppiness >= cfg.choppiness_range_threshold
+        compression if cfg.range_filter == "bbwp" else choppiness >= cfg.choppiness_range_threshold
     )
     return pd.DataFrame(
         {
@@ -228,9 +215,7 @@ def _assign_primary(
     breakout: pd.DataFrame,
     cfg: RegimeClassifierConfig,
 ) -> pd.Series:
-    primary = pd.Series(
-        PrimaryRegime.TRANSITION.value, index=features.index, dtype=object
-    )
+    primary = pd.Series(PrimaryRegime.TRANSITION.value, index=features.index, dtype=object)
     strong = features["strength_rank"] >= cfg.trend_strength_percentile
     enough_gap = features["strength_bps"] >= cfg.minimum_trend_gap_bps
     trend = strong | (features["strength_bps"] >= 2.0 * cfg.minimum_trend_gap_bps)
@@ -244,12 +229,8 @@ def _assign_primary(
         | features["range_filter_active"]
     )
     primary = primary.mask(range_state, PrimaryRegime.RANGE.value)
-    primary = primary.mask(
-        trend & (features["gap"] > 0.0), PrimaryRegime.TREND_UP.value
-    )
-    primary = primary.mask(
-        trend & (features["gap"] < 0.0), PrimaryRegime.TREND_DOWN.value
-    )
+    primary = primary.mask(trend & (features["gap"] > 0.0), PrimaryRegime.TREND_UP.value)
+    primary = primary.mask(trend & (features["gap"] < 0.0), PrimaryRegime.TREND_DOWN.value)
     primary = primary.mask(
         breakout["upward"] | breakout["downward"],
         PrimaryRegime.BREAKOUT.value,
@@ -347,7 +328,7 @@ def classify_timeframe(
     config: RegimeClassifierConfig | None = None,
 ) -> pd.DataFrame:
     """Classify completed bars without using any future value."""
-    _validate_bars(df)
+    validate_regime_bars(df)
     cfg = config or RegimeClassifierConfig()
     features = _structure_features(df, cfg)
     breakout = _breakout_features(df, cfg)

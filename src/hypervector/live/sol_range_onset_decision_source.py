@@ -12,7 +12,7 @@ from hypervector.live.provider_readiness import ReadinessMetric, SignalReadiness
 from hypervector.regime.composite import classify_multitimeframe
 from hypervector.regime.component_telemetry import build_regime_component_frame
 from hypervector.research.range_onset_observation import (
-    prepare_completed_range_onset_frames,
+    completed_range_onset_bars,
 )
 from hypervector.research.range_onset_signals import build_range_onset_signals
 
@@ -27,21 +27,21 @@ def build_completed_live_decisions(
 ) -> tuple[SolLiveDecision, ...]:
     """Return every unseen completed-bar decision in chronological order."""
     after = _optional_timestamp(after_decision_time_ms)
-    bars, signals, regimes = prepare_completed_range_onset_frames(
-        raw_bars,
-        observed_at=observed_at,
-        signal_builder=build_range_onset_signals,
-        regime_builder=classify_multitimeframe,
-    )
+    bars = completed_range_onset_bars(raw_bars, observed_at=observed_at)
+    positions = bars.index
+    if after is not None:
+        if after >= int((positions[-1] + _MINUTE).timestamp() * 1_000):
+            return ()
+        positions = positions[positions + _MINUTE > pd.Timestamp(after, unit="ms", tz="UTC")]
+    signals = build_range_onset_signals(bars)
+    regimes = classify_multitimeframe(bars)
     _validate_alignment(bars, signals, regimes)
     components = build_regime_component_frame(bars)
     _validate_alignment(bars, components, regimes)
     decisions: list[SolLiveDecision] = []
-    for timestamp in bars.index:
+    for timestamp in positions:
         decision_time = pd.Timestamp(timestamp) + _MINUTE
         decision_ms = int(decision_time.timestamp() * 1_000)
-        if after is not None and decision_ms <= after:
-            continue
         decisions.append(
             _decision_from_rows(
                 decision_ms,
@@ -114,9 +114,7 @@ def _range_readiness(
     crossed = long_cross or short_cross
     admitted = bool(signal["regime_admitted"])
     conditions = (history_ready, admitted, crossed)
-    blockers = tuple(
-        name for name, met in zip(_RANGE_BLOCKERS, conditions, strict=True) if not met
-    )
+    blockers = tuple(name for name, met in zip(_RANGE_BLOCKERS, conditions, strict=True) if not met)
     structural = str(signal["structural_direction"])
     side = (
         "long"
@@ -143,9 +141,7 @@ def _range_readiness(
             context_indicator,
         ),
         metrics={
-            **_range_metrics(
-                fast, slow, gap, long_cross, short_cross, admitted, structural
-            ),
+            **_range_metrics(fast, slow, gap, long_cross, short_cross, admitted, structural),
             **_regime_metrics(regime),
             **_component_metrics(components),
             "dual_mtf_context_challenger_admitted": context_admitted,
@@ -213,9 +209,7 @@ CANONICAL_REGIME_TEXT_METRIC_FIELDS = frozenset(
     | {"regime_range_filter_name"}
 )
 CANONICAL_REGIME_BOOLEAN_METRIC_FIELDS = frozenset(
-    name
-    for name in CANONICAL_REGIME_METRIC_FIELDS
-    if "coiling" in name or "range_cause" in name
+    name for name in CANONICAL_REGIME_METRIC_FIELDS if "coiling" in name or "range_cause" in name
 )
 
 
@@ -274,11 +268,7 @@ def _range_cause_indicator(values: pd.Series) -> str:
         "regime_5m_range_cause_strength",
         "regime_5m_range_cause_gap",
     )
-    active = [
-        name
-        for name, field in zip(names, fields, strict=True)
-        if values.get(field) is True
-    ]
+    active = [name for name, field in zip(names, fields, strict=True) if values.get(field) is True]
     return "5M RANGE CAUSES " + ("+".join(active) if active else "NONE/UNAVAILABLE")
 
 
@@ -380,13 +370,7 @@ def _indicator(label: str, value: object, suffix: str) -> str:
 def _direction_indicator(label: str, value: object) -> str:
     number = _optional_metric(value)
     state = (
-        "N/A"
-        if number is None
-        else "UP"
-        if number > 0.0
-        else "DOWN"
-        if number < 0.0
-        else "NEUTRAL"
+        "N/A" if number is None else "UP" if number > 0.0 else "DOWN" if number < 0.0 else "NEUTRAL"
     )
     return f"{label} {state}"
 

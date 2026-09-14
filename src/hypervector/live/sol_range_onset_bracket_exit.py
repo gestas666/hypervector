@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import math
 from typing import NoReturn
 
-from hypervector.live.hyperliquid_protocol import SolReconciliationSnapshot
+from hypervector.live.hyperliquid_protocol import SolOpenOrder, SolReconciliationSnapshot
+from hypervector.live.sol_execution_evidence import QUANTITY_TOLERANCE
 from hypervector.live.sol_order_submission import SolOrderSubmission
 from hypervector.live.sol_range_onset_bracket import owned_exit_reason
 from hypervector.live.sol_range_onset_consistency import SolReconciliationPoller
@@ -33,6 +35,7 @@ def reconcile_owned_bracket_exit(
         stop_oid=snapshot.stop_oid,
         target_oid=snapshot.target_oid,
         position_size_signed=snapshot.position_size_signed,
+        protective_progress=snapshot.protective_progress,
     )
     if reason is None:
         _fault(events, "flat reconciliation lacks a complete owned exit fill")
@@ -41,6 +44,8 @@ def reconcile_owned_bracket_exit(
     if unknown:
         _fault(events, f"flat reconciliation contains unknown orders: {unknown}")
     for order in venue.open_orders:
+        if _original_order_filled(order, venue, snapshot.position_size_signed):
+            continue
         ack = orders.cancel_order(order.oid)
         events.emit_ack("cancel_residual_bracket_after_fill", ack)
         if not ack.accepted:
@@ -54,6 +59,27 @@ def reconcile_owned_bracket_exit(
         owned_oids=tuple(sorted(owned)),
     )
     return after
+
+
+def _original_order_filled(
+    order: SolOpenOrder, venue: SolReconciliationSnapshot, position_size_signed: float
+) -> bool:
+    """A complete original quantity is executed even if its open-order receipt is stale."""
+    side = "A" if position_size_signed > 0.0 else "B"
+    direction = "close long" if position_size_signed > 0.0 else "close short"
+    filled = sum(
+        fill.size
+        for fill in venue.fills
+        if fill.oid == order.oid
+        and fill.side == side
+        and fill.direction.strip().lower() == direction
+    )
+    return (
+        order.reduce_only
+        and order.side == side
+        and order.original_size > 0.0
+        and math.isclose(filled, order.original_size, rel_tol=0.0, abs_tol=QUANTITY_TOLERANCE)
+    )
 
 
 def _fault(events: SolLiveEngineEvents, reason: str) -> NoReturn:
