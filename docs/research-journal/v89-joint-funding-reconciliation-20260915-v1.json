@@ -1,0 +1,162 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v89-joint-funding-reconciliation-20260915",
+  "revision_number": 1,
+  "supersedes_revision_id": null,
+  "created_at_utc": "2026-09-15T20:41:40.143888+00:00",
+  "strategy_id": "multi_asset_bidirectional_cohort",
+  "symbol": "MULTI",
+  "status": "retain",
+  "hypothesis": "The first joint SPCX-long/SNDK-short funding settlement remains uniquely attributed per asset, including SNDK restart recovery, and reconciles with observed isolated collateral and checkpoint costs.",
+  "decision": "Retain the captured accounting boundary. All 269 selected rows match native ledger bytes; all 260 sampled positions and 1300 independently computed cash fields reconcile exactly. No live change is warranted by this sample.",
+  "confidence": "high",
+  "falsifier": "Contradictory raw source evidence, missing/duplicate/cross-asset funding, changed ownership or leverage, unexplained cash or a later failure of the same identity reopens the affected accounting conclusion.",
+  "evidence": [
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/docs/reviews/2026-09-15-v89-joint-funding-reconciliation.md",
+      "role": "validation_00_2026-09-15-v89-joint-funding-reconciliation.md",
+      "sha256": "f1abf0e21bae29c08b83069d32825c54212363767fb889759634d5ddcbb75931",
+      "bytes": 6772
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_joint_funding_20260915_v1/plan.json",
+      "role": "validation_01_plan.json",
+      "sha256": "491b22234584ec98c37b4f981f08db7fc2002daeeb1f9ccab79e34faecc789f2",
+      "bytes": 1857
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_joint_funding_20260915_v1/capture.py",
+      "role": "validation_02_capture.py",
+      "sha256": "86b82fc5bc750ae4a57590e0da572ca97c83dbcb8b90dcf238c7b0a14531d46c",
+      "bytes": 5805
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_joint_funding_20260915_v1/capture_manifest.json",
+      "role": "validation_03_capture_manifest.json",
+      "sha256": "c6012f0dadb913b0656edd226d3e0a474639186db32880d0df378de41d575f06",
+      "bytes": 5283
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_joint_funding_20260915_v1/source_records.json",
+      "role": "validation_04_source_records.json",
+      "sha256": "bc6f9c8817fb284783e2d86dfc5acd047d52ee49bcf0b1053339b5f2953d866c",
+      "bytes": 347596
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_joint_funding_20260915_v1/checkpoint.json",
+      "role": "validation_05_checkpoint.json",
+      "sha256": "bbb89614708f81e289618bf5b5f4e6a6d17411a724b5b8a4ace61c13f7d2ffa9",
+      "bytes": 3312380
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_joint_funding_20260915_v1/validate.py",
+      "role": "validation_06_validate.py",
+      "sha256": "9a95e0799405b31702f1729ba1abacb8972845b3332f889d0378f53566d889d7",
+      "bytes": 10960
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_joint_funding_20260915_v1/validation.json",
+      "role": "validation_07_validation.json",
+      "sha256": "d2d4898db666b73b96fbde81c9d4cdd91c648f3d8fe3b8b20e7a4308e1604fb2",
+      "bytes": 104196
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_joint_funding_20260915_v1/validation.log",
+      "role": "validation_08_validation.log",
+      "sha256": "8c19e05b03f71508d1698f622abc0e1a77a9353d8f59d69a6c52603af0ce0f5a",
+      "bytes": 1310
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_joint_funding_20260915_v1/independent_sql.py",
+      "role": "validation_09_independent_sql.py",
+      "sha256": "aa562038702bdd1713fc8c320990988c2a6b6bb6fa35d255da92b49f7694886b",
+      "bytes": 4351
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_joint_funding_20260915_v1/independent_sql_verified.json",
+      "role": "validation_10_independent_sql_verified.json",
+      "sha256": "ec7b4ff7aa20d34a7259025d3ad1613a8dc5f09b4a1231b28161df5e7766110f",
+      "bytes": 1686
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_joint_funding_20260915_v1/independent_sql.log",
+      "role": "validation_11_independent_sql.log",
+      "sha256": "ff7b84341d7dc234b5aa7abdbd96df673b9b37db3e6f8cd601ba657c7dafcbfc",
+      "bytes": 126
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_joint_funding_20260915_v1/independent_sql_initial_failure.log",
+      "role": "validation_12_independent_sql_initial_failure.log",
+      "sha256": "10edc3d67deb4875c9741725ad32a5b67fb32dcd83d478c2cc868d032a0ea02d",
+      "bytes": 1402
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_joint_funding_20260915_v1/independent_sql_timezone_failure.log",
+      "role": "validation_13_independent_sql_timezone_failure.log",
+      "sha256": "98f7ff01a0c55961050ea10df19234988bc6a06cc6eeb2b8b4bd38b8ebf77c98",
+      "bytes": 551
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_joint_funding_20260915_v1/timezone_and_source_review.json",
+      "role": "validation_14_timezone_and_source_review.json",
+      "sha256": "f8edaa20f0ce515ae97ee54f484b5f40c6f9526c172e0f3fa8310c9708e136fd",
+      "bytes": 2568
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_joint_funding_20260915_v1/reproduce.py",
+      "role": "validation_15_reproduce.py",
+      "sha256": "0d4bdb40c3bab2831cbcec64d0a9c250b362b342dbe666e7849af40b64f89ed9",
+      "bytes": 2317
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_joint_funding_20260915_v1/reproduction_verified.json",
+      "role": "validation_16_reproduction_verified.json",
+      "sha256": "ad76a0d0a17818c6eec61026304bc989c06422a16afb81079366a48e343704c1",
+      "bytes": 431
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_joint_funding_20260915_v1/reproduction.log",
+      "role": "validation_17_reproduction.log",
+      "sha256": "683607fc72acc742a0e966e69d6c9ec623de61a72b008502a942d8528f018afe",
+      "bytes": 107
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_joint_funding_20260915_v1/watch_next_transition.py",
+      "role": "validation_18_watch_next_transition.py",
+      "sha256": "ceff99aa201701ce06ea5b3f53407250a4645487243da1a95b8edded672d016b",
+      "bytes": 4601
+    }
+  ],
+  "metrics": {
+    "pipeline_status": "accepted_bounded_live_funding_reconciliation",
+    "cutoff_utc": "2026-09-15T20:28:40.176510+00:00",
+    "source_records_authenticated": 269,
+    "position_records": 260,
+    "independent_cash_fields": 1300,
+    "max_residual_usd": 0.0,
+    "negative_controls_rejected": 11,
+    "spcx_new_funding_usd": -0.003112,
+    "sndk_new_funding_usd": 0.003119,
+    "spcx_lifecycle_funding_usd": -0.003112,
+    "sndk_lifecycle_funding_usd": 0.012831,
+    "joint_new_funding_usd": 7e-06,
+    "transport_interval_observations": 2,
+    "same_timestamp_and_zero_hash_preserved_by_asset": true,
+    "reproduction_exact": true,
+    "analysis_timezone_error_corrected": true,
+    "runtime_source_changed": false,
+    "watcher_pid": 70121,
+    "watcher_tool_session": 19855,
+    "next_investigation": "Next new entry, exit, protective change or fault in the actual native run; await the specific read-only watcher handle rather than repeat completed studies."
+  },
+  "limitations": [
+    "One settlement hour, two assets and repeated position observations, not independent economic trials.",
+    "Recorded backend/venue fields; funding price calculation and offsetting external collateral changes not independently reconstructed.",
+    "Two observations straddle funding transport timing.",
+    "Timezone review is limited to named current installed sources; not all historical archived analysis.",
+    "No strategy change or profit claim; prospective outcome seals remain unopened."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}
