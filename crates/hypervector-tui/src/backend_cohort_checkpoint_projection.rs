@@ -177,6 +177,7 @@ fn apply_live_counts(
     output.five_minute_paths_independent = forward.independent;
     output.observer_provider_journal = forward.journal;
     output.closed_trades = Some(audit.execution.closed_trades);
+    output.execution_scope = audit.execution.scope.clone();
     output.net_pnl_usd = Some(audit.execution.net_pnl_usd);
 }
 

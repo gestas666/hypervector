@@ -63,6 +63,10 @@ def _register_tui(
     parser.add_argument("--backtest-lab-root", type=Path)
     parser.add_argument("--tui-bin", type=Path)
     parser.add_argument("--tui-bin-sha256")
+    parser.add_argument(
+        "--independent-monitor", action="store_true",
+        help="open an updated read-only monitor alongside an existing cohort session",
+    )
     parser.add_argument("--enabled", action="store_true")
     parser.add_argument("--i-accept-live-risk", action="store_true")
     parser.add_argument("--accounting-epoch-bundle", type=Path)
@@ -131,7 +135,12 @@ def _register_audit_delta(
 def _tui_command(args: argparse.Namespace) -> tuple[str, ...]:
     mode = str(args.mode)
     _require_live_authority(args, live=mode == "live")
-    command = _base_command("multi_asset_bidirectional_canary_tui.py")
+    if args.independent_monitor and mode != "monitor":
+        raise ValueError("independent monitor requires monitor mode")
+    command = _base_command(
+        "cohort_independent_monitor.py" if args.independent_monitor
+        else "multi_asset_bidirectional_canary_tui.py"
+    )
     command += _optional_path("--config", args.config)
     command += _optional_path("--backtest-lab-root", args.backtest_lab_root)
     command += _optional_path("--tui-bin", args.tui_bin)

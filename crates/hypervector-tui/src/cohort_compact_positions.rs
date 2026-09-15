@@ -11,7 +11,8 @@ use crate::{
     App,
     backend_cohort::CohortAssetSnapshot,
     cohort_format::{
-        compact_number, money, number, optional_money, optional_signed_money, percent, signed_money,
+        compact_number, leverage_pair, money, number, optional_money, optional_signed_money,
+        percent, signed_money,
     },
     cohort_widgets::{
         execution_plan_label, page_label, panel, position_style, protection_style, render_empty,
@@ -45,7 +46,7 @@ pub(crate) fn render(frame: &mut Frame, app: &App, area: Rect) {
         app,
         sections[1],
         &assets[visible],
-        &format!(" LIVE POSITIONS // ASSETS {label} // [←/→] SELECT "),
+        &format!(" LIVE POSITIONS // ASSETS {label} // LEV C/V=CONFIG/VENUE // [←/→] "),
     );
     render_detail(frame, app, sections[2], assets.get(selected).copied());
 }
@@ -58,7 +59,7 @@ pub(crate) fn render_tracker(frame: &mut Frame, app: &App, area: Rect) {
         .len()
         .min(usize::from(area.height.saturating_sub(TABLE_CHROME)));
     let label = format!(
-        " OPEN RISK // {count}/{} ASSETS // OPEN FIRST // [1] ALL + DETAILS ",
+        " OPEN RISK // {count}/{} ASSETS // LEV C/V=CONFIG/VENUE // [1] DETAILS ",
         assets.len()
     );
     render_table(frame, app, area, &assets[..count], &label);
@@ -102,10 +103,10 @@ fn render_table(
     assets: &[&CohortAssetSnapshot],
     title: &str,
 ) {
-    let widths = [12, 5, 9, 9, 7, 16, 11, 18].map(Constraint::Length);
+    let widths = [13, 5, 9, 9, 7, 16, 11, 9, 18].map(Constraint::Length);
     let rows = assets.iter().map(|asset| asset_row(asset, app));
     let table = Table::new(rows, widths)
-        .column_spacing(1)
+        .column_spacing(u16::from(area.width >= 110))
         .header(
             Row::new([
                 "COIN",
@@ -115,6 +116,7 @@ fn render_table(
                 "U/PNL",
                 "MARGIN/NOTIONAL",
                 "FEES/FUND",
+                "LEV C/V",
                 "VENUE STOP",
             ])
             .style(app.theme.header),
@@ -147,6 +149,7 @@ fn asset_row<'a>(asset: &'a CohortAssetSnapshot, app: &App) -> Row<'a> {
             optional_money(asset.fees_net_usd),
             optional_signed_money(asset.funding_net_usd)
         )),
+        Cell::from(ratatui::text::Line::from(leverage_pair(asset, app)).right_aligned()),
         Cell::from(stop_label(asset)).style(protection_style(asset, app)),
     ])
 }
@@ -173,15 +176,13 @@ fn render_detail(frame: &mut Frame, app: &App, area: Rect, asset: Option<&Cohort
         );
         return;
     };
-    let leverage = asset
-        .leverage
-        .map_or_else(|| "N/A".into(), |value| format!("{value}x"));
+    let leverage = leverage_pair(asset, app);
     let target = asset
         .target_oid
         .map_or_else(|| "NONE".into(), |oid| format!("#{oid}"));
     let lines = vec![
         Line::from(format!(
-            "STATE {}  SIZE {:.8}  LEV {leverage}  TARGET {target}",
+            "STATE {}  SIZE {:.8}  LEV C/V {leverage}  TARGET {target}",
             asset.state, asset.position_size_signed
         )),
         Line::from(format!(

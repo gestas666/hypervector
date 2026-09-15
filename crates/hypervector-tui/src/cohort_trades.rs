@@ -9,7 +9,7 @@ use ratatui::{
 use crate::app::App;
 use crate::backend_cohort::{CohortAssetSnapshot, CohortFill};
 use crate::cohort_format::{
-    compact_number, fill_date_time, fill_time, markout, money, number, optional_bps,
+    compact_number, fill_date_time, fill_time, leverage_pair, markout, money, number, optional_bps,
     optional_money, optional_signed_money, percent, signed_money,
 };
 use crate::cohort_trade_selection::CohortTradeFocus;
@@ -49,13 +49,13 @@ fn render_compact_position_tracker(frame: &mut Frame, app: &App, area: Rect) {
             Constraint::Length(9),
             Constraint::Length(8),
             Constraint::Length(15),
-            Constraint::Length(4),
+            Constraint::Length(9),
             Constraint::Length(17),
             Constraint::Length(12),
             Constraint::Min(18),
         ],
     )
-    .column_spacing(1)
+    .column_spacing(u16::from(area.width >= 126))
     .header(
         Row::new([
             "COIN",
@@ -64,7 +64,7 @@ fn render_compact_position_tracker(frame: &mut Frame, app: &App, area: Rect) {
             "MARK",
             "U/PNL",
             "MARGIN/NOTIONAL",
-            "LEV",
+            "LEV C/V",
             "LIQ PX / DIST",
             "FEES / FUND",
             "VENUE BRACKET",
@@ -92,11 +92,7 @@ fn compact_position_row<'a>(asset: &'a CohortAssetSnapshot, app: &App) -> Row<'a
             money(asset.margin_used_usd),
             money(asset.position_value_usd),
         )),
-        Cell::from(
-            asset
-                .leverage
-                .map_or_else(|| "-".into(), |value| format!("{value}x")),
-        ),
+        Cell::from(ratatui::text::Line::from(leverage_pair(asset, app)).right_aligned()),
         Cell::from(format!(
             "{} / {}",
             compact_number(asset.liquidation_price),
@@ -128,7 +124,7 @@ fn render_wide_position_tracker(frame: &mut Frame, app: &App, area: Rect) {
             Constraint::Length(10),
             Constraint::Length(9),
             Constraint::Length(11),
-            Constraint::Length(5),
+            Constraint::Length(9),
             Constraint::Length(11),
             Constraint::Length(9),
             Constraint::Length(11),
@@ -137,7 +133,7 @@ fn render_wide_position_tracker(frame: &mut Frame, app: &App, area: Rect) {
             Constraint::Min(16),
         ],
     )
-    .column_spacing(1)
+    .column_spacing(u16::from(area.width >= 166))
     .header(
         Row::new([
             "COIN",
@@ -147,7 +143,7 @@ fn render_wide_position_tracker(frame: &mut Frame, app: &App, area: Rect) {
             "U/PNL",
             "MARGIN",
             "NOTIONAL",
-            "LEV",
+            "LEV C/V",
             "LIQ PX",
             "LIQ DIST",
             "FEES",
@@ -175,11 +171,7 @@ fn position_row<'a>(asset: &'a CohortAssetSnapshot, app: &App) -> Row<'a> {
         Cell::from(signed_money(asset.unrealized_pnl_usd)).style(position_style(asset, app)),
         Cell::from(money(asset.margin_used_usd)),
         Cell::from(money(asset.position_value_usd)),
-        Cell::from(
-            asset
-                .leverage
-                .map_or_else(|| "-".into(), |value| format!("{value}x")),
-        ),
+        Cell::from(ratatui::text::Line::from(leverage_pair(asset, app)).right_aligned()),
         Cell::from(number(asset.liquidation_price)),
         Cell::from(percent(asset.liquidation_distance_pct)),
         Cell::from(optional_money(asset.fees_net_usd)),

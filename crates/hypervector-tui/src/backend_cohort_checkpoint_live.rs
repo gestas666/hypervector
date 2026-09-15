@@ -88,6 +88,8 @@ pub(crate) struct LiveRoutingEvidence {
 
 #[derive(Debug, Deserialize)]
 pub(crate) struct ExecutionEvidence {
+    #[serde(default)]
+    pub(crate) scope: Option<String>,
     pub(crate) closed_trades: usize,
     #[serde(default)]
     pub(crate) open_lifecycles: Option<usize>,

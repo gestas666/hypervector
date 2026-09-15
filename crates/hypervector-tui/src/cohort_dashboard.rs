@@ -11,7 +11,7 @@ use crate::app::App;
 use crate::backend_cohort::CohortAssetSnapshot;
 use crate::backend_telemetry::BackendConnectionState;
 use crate::cohort_format::{
-    money, number, optional_money, optional_signed_money, percent, signed_money,
+    leverage_pair, money, number, optional_money, optional_signed_money, percent, signed_money,
 };
 use crate::cohort_widgets::{
     WIDE_WIDTH, execution_plan_label, page_label, panel, position_style, protection_label,
@@ -181,9 +181,9 @@ fn render_compact_positions(
     label: &str,
 ) {
     let rows = assets.iter().map(|asset| compact_asset_row(asset, app));
-    let widths = [13, 6, 7, 11, 11, 9, 8, 13, 18, 13].map(Constraint::Length);
+    let widths = [13, 6, 7, 11, 11, 9, 8, 13, 9, 18, 13].map(Constraint::Length);
     let table = Table::new(rows, widths)
-        .column_spacing(1)
+        .column_spacing(u16::from(area.width >= 130))
         .header(
             Row::new([
                 "COIN",
@@ -194,6 +194,7 @@ fn render_compact_positions(
                 "U/PNL",
                 "LIQ DIST",
                 "COSTS",
+                "LEV C/V",
                 "VENUE BRACKET",
                 "PLAN/FAULT",
             ])
@@ -221,6 +222,7 @@ fn compact_asset_row<'a>(asset: &'a CohortAssetSnapshot, app: &App) -> Row<'a> {
         Cell::from(signed_money(asset.unrealized_pnl_usd)).style(position_style(asset, app)),
         Cell::from(percent(asset.liquidation_distance_pct)),
         Cell::from(cost_label(asset)),
+        Cell::from(ratatui::text::Line::from(leverage_pair(asset, app)).right_aligned()),
         Cell::from(protection_label(asset)).style(protection_style(asset, app)),
         fault_cell(asset, app),
     ])
@@ -234,9 +236,9 @@ fn render_wide_positions(
     label: &str,
 ) {
     let rows = assets.iter().map(|asset| wide_asset_row(asset, app));
-    let widths = [13, 6, 8, 10, 11, 11, 11, 9, 9, 10, 9, 12, 4, 20, 12].map(Constraint::Length);
+    let widths = [13, 6, 8, 10, 11, 11, 11, 9, 9, 10, 9, 12, 9, 20, 12].map(Constraint::Length);
     let table = Table::new(rows, widths)
-        .column_spacing(1)
+        .column_spacing(u16::from(area.width >= 176))
         .header(
             Row::new([
                 "COIN",
@@ -251,7 +253,7 @@ fn render_wide_positions(
                 "NOTIONAL",
                 "U/PNL",
                 "FEES/FUND",
-                "LEV",
+                "LEV C/V",
                 "VENUE BRACKET",
                 "PLAN/FAULT",
             ])
@@ -284,7 +286,7 @@ fn position_title(app: &App, assets: &[CohortAssetSnapshot], label: &str, source
         || source.into(),
         crate::cohort_protective_progress::detail_title,
     );
-    format!(" LIVE POSITIONS // ASSETS {label} // {detail} ")
+    format!(" LIVE POSITIONS // ASSETS {label} // {detail} // LEV C/V=CONFIG/VENUE ")
 }
 
 fn wide_asset_row<'a>(asset: &'a CohortAssetSnapshot, app: &App) -> Row<'a> {
@@ -306,11 +308,7 @@ fn wide_asset_row<'a>(asset: &'a CohortAssetSnapshot, app: &App) -> Row<'a> {
         Cell::from(money(asset.position_value_usd)),
         Cell::from(signed_money(asset.unrealized_pnl_usd)).style(position_style(asset, app)),
         Cell::from(cost_label(asset)),
-        Cell::from(
-            asset
-                .leverage
-                .map_or_else(|| "-".into(), |value| format!("{value}x")),
-        ),
+        Cell::from(ratatui::text::Line::from(leverage_pair(asset, app)).right_aligned()),
         Cell::from(protection_label(asset)).style(protection_style(asset, app)),
         fault_cell(asset, app),
     ])

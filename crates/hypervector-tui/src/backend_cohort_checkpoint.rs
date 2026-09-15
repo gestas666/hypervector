@@ -96,6 +96,7 @@ pub struct CohortCheckpointTelemetry {
     pub five_minute_paths_independent: Option<usize>,
     pub forward_path_coverage_complete: Option<bool>,
     pub closed_trades: Option<usize>,
+    pub execution_scope: Option<String>,
     pub net_pnl_usd: Option<f64>,
     pub venue_portfolio: Option<CohortVenuePortfolio>,
     pub venue_portfolio_issue: Option<String>,

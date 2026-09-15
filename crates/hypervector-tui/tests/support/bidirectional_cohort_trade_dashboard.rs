@@ -245,6 +245,7 @@ fn dashboard_exposes_rolling_analysis_freshness_and_evidence_limits() {
         coverage_complete: Some(true),
         readiness_evaluations: Some(8),
         closed_trades: Some(2),
+        execution_scope: Some("current_run".into()),
         net_pnl_usd: Some(1.25),
         evidence_state: Some("descriptive_trade_evidence".into()),
         ..CohortCheckpointTelemetry::default()

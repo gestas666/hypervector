@@ -6,6 +6,20 @@ use ratatui::style::Style;
 
 use crate::app::App;
 use crate::backend_telemetry::BackendConnectionState;
+use crate::backend_cohort::CohortAssetSnapshot;
+
+/// Show configured and venue position leverage without substituting one for the other.
+pub(crate) fn leverage_pair(asset: &CohortAssetSnapshot, app: &App) -> String {
+    let configured = app.backend.cohort.asset_configs.iter()
+        .find(|config| config.symbol == asset.symbol)
+        .map_or_else(|| "N/A".into(), |config| format!("{}x", config.leverage));
+    let venue = if asset.position_size_signed == 0.0 {
+        "-".into()
+    } else {
+        asset.leverage.map_or_else(|| "N/A".into(), |value| format!("{value}x"))
+    };
+    format!("{configured}/{venue}")
+}
 
 pub(crate) fn connection_label(app: &App) -> &'static str {
     if app.backend.cohort_backend_is_stopped() {

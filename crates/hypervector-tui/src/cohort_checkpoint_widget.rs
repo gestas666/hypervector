@@ -148,13 +148,18 @@ fn poststart_acceptance_line(checkpoint: &CohortCheckpointTelemetry) -> Option<S
 }
 
 fn run_performance(checkpoint: &CohortCheckpointTelemetry) -> String {
+    let scope = match checkpoint.execution_scope.as_deref() {
+        Some("compatible_profile_history") => "PROFILE",
+        Some("current_run") => "RUN",
+        _ => "SCOPE N/A",
+    };
     let count = checkpoint
         .closed_trades
         .map_or_else(|| "N/A".into(), |value| value.to_string());
     let pnl = checkpoint
         .net_pnl_usd
         .map_or_else(|| "N/A".into(), signed_amount);
-    format!("RUN {count}C NET {pnl}")
+    format!("{scope} {count}C NET {pnl}")
 }
 
 fn all_time_performance(checkpoint: &CohortCheckpointTelemetry) -> String {
@@ -332,6 +337,7 @@ mod tests {
             lifecycle_state: Some("running_consistent".into()),
             coverage_complete: Some(true),
             readiness_evaluations: Some(2_011),
+            execution_scope: Some("current_run".into()),
             closed_trades: Some(0),
             net_pnl_usd: Some(0.0),
             evidence_state: Some("no_closed_trade_evidence".into()),
@@ -359,6 +365,7 @@ mod tests {
     #[test]
     fn live_line_preserves_an_explicit_zero_trade_accounting_epoch() {
         let checkpoint = CohortCheckpointTelemetry {
+            execution_scope: Some("current_run".into()),
             closed_trades: Some(0),
             net_pnl_usd: Some(0.0),
             trade_performance: Some(CohortTradePerformance {

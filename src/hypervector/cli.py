@@ -2710,7 +2710,8 @@ def _load_dotenv_if_present() -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
-    if argv is None:
+    """Dispatch commands without loading credentials for independent monitoring."""
+    if argv is None and "--independent-monitor" not in sys.argv[1:]:
         _load_dotenv_if_present()
     parser = build_parser()
     args = parser.parse_args(argv)
