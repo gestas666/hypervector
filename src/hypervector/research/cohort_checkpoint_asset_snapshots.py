@@ -12,12 +12,14 @@ from hypervector.research.checkpoint_ledger_projection import compact_asset_ledg
 from hypervector.research.cohort_asset_checkpoint_recovery import (
     snapshot_current_asset_ledger,
 )
+from hypervector.research.cohort_entry_context_recovery import recover_entry_context
 from hypervector.research.cohort_live_audit_summaries import rebased
 from hypervector.research.cohort_live_audit_values import (
     mapping_list,
     nonnegative_int,
     payload,
     text,
+    timestamp,
 )
 from hypervector.research.live_ledger_snapshot import (
     configuration_identity_ancestry,
@@ -86,7 +88,7 @@ def recover_cohort_execution_identities(
     evidence: dict[str, object],
     assets: Mapping[str, Sequence[Record]],
 ) -> tuple[list[dict[str, object]], dict[str, object]]:
-    """Add only prior configuration rows needed to attribute recovered entries."""
+    """Restore prior identities and exact entry context for recovered lifecycles."""
     known = {text(row.get("run_id"), "cohort run") for row in cohort}
     required = {
         text(row.get("run_id"), "entry run")
@@ -104,9 +106,17 @@ def recover_cohort_execution_identities(
     identities, facts = configuration_identity_ancestry(
         path, frozenset(required), before_offset=offset
     )
-    return list(rebased([*identities, *cohort])), {
+    cutoff = timestamp(next(row for row in reversed(cohort)
+                            if row.get("event_type") == "cohort_snapshot"))
+    context, context_facts = recover_entry_context(
+        path, assets, identities, facts, before_offset=offset, as_of=cutoff,
+    )
+    prior = sorted([*identities, *context], key=lambda row: nonnegative_int(
+        row.get("sequence"), "entry context sequence"))
+    return list(rebased([*prior, *cohort])), {
         **evidence,
         "snapshot_scope": "current_run_with_execution_identities",
         "telemetry_scope": "current_run",
         "execution_identity_ancestry": facts,
+        "entry_context_ancestry": context_facts,
     }

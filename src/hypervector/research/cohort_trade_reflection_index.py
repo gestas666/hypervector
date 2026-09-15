@@ -22,6 +22,7 @@ from hypervector.research.cohort_live_audit_values import (
 Record = Mapping[str, object]
 _MINUTE_MS = 60_000
 _READINESS_SEED_REASON = "pre_activation_readiness_seed"
+RECOVERED_ENTRY_EVALUATIONS = "recovered_entry_evaluations"
 
 
 @dataclass(frozen=True)
@@ -126,6 +127,12 @@ def build_reflection_evidence_index(
             )
         elif row.get("event_type") == "market_candles":
             _index_candles(row, values, candles, candle_versions)
+    for row in records:
+        if row.get("event_type") == RECOVERED_ENTRY_EVALUATIONS:
+            _index_evaluations(
+                row, payload(row), evaluations, latest_by_run, timelines,
+                timeline_decisions,
+            )
     ordered = {
         key: tuple(sorted(items, key=_evaluation_time))
         for key, items in timelines.items()
@@ -157,6 +164,8 @@ def _index_evaluations(
                 raise ValueError("conflicting duplicate trade-reflection evaluation")
             continue
         evaluations[key] = evaluation
+        if row.get("event_type") == RECOVERED_ENTRY_EVALUATIONS:
+            continue
         latest_by_run[(run_id, strategy, symbol)] = evaluation
         timeline_key = (strategy, symbol, decision_ms)
         if timeline_key not in timeline_decisions:
