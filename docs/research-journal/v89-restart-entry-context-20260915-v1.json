@@ -1,0 +1,229 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v89-restart-entry-context-20260915",
+  "revision_number": 1,
+  "supersedes_revision_id": null,
+  "created_at_utc": "2026-09-15T19:21:14.836435+00:00",
+  "strategy_id": "v89_cohort_monitor_integrity",
+  "symbol": "PORTFOLIO",
+  "status": "retain",
+  "hypothesis": "Inherited lifecycle entry indicators and canonical context must bind to their recorded source run, provider, symbol and decision after a reporting restart.",
+  "decision": "Accepted and installed. Recover exact recorded entry evaluations without adding sparse annotations to latest-state or continuous timelines. Same-input native comparison restores eight closed entries and the inherited SNDK entry, preserving execution and current telemetry. Installed terminal verifies leverage and recovered entry assessment.",
+  "confidence": "high",
+  "falsifier": "Incorrect source binding, changed accounting/current telemetry, timeline contamination, missing entry evidence that exists in compatible records, publication latency beyond operational freshness or an authority escape reopens the repair.",
+  "evidence": [
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/docs/reviews/2026-09-15-v89-restart-entry-context.md",
+      "role": "validation_00_2026-09-15-v89-restart-entry-context.md",
+      "sha256": "61d5b95debc142289c531973add7dc99a46d7a572df08e477de98a1fee0cfd57",
+      "bytes": 7975
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_restart_entry_context_20260915_v1/reproduction.json",
+      "role": "validation_01_reproduction.json",
+      "sha256": "3a0171ca679aa3ee6a8129a07e770cab16b076015f290c3248c3818063fe27c5",
+      "bytes": 7057
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_restart_entry_context_20260915_v1/baseline_checkpoint.json",
+      "role": "validation_02_baseline_checkpoint.json",
+      "sha256": "a233961a7c73b0fd679ca2b5e78f854b2e77c449823d09a40b36a98e075492b0",
+      "bytes": 2629349
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_restart_entry_context_20260915_v1/entry_context_red.log",
+      "role": "validation_03_entry_context_red.log",
+      "sha256": "86e65faa0219729ea27f30aec66b60c8e14bdfc08cf689b6c72e2d88c14d4868",
+      "bytes": 1363
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_restart_entry_context_20260915_v1/entry_context_red_2.log",
+      "role": "validation_04_entry_context_red_2.log",
+      "sha256": "494a7a8626d7433310a62efe6934a9b1b5d9c84d2a3d1b0ef582636e4cc8009f",
+      "bytes": 3330
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_restart_entry_context_20260915_v1/context_regression_final.xml",
+      "role": "validation_05_context_regression_final.xml",
+      "sha256": "9bfe72d76f24096769248688db1714a5c428d5f6139f177f5411c9c630de04ab",
+      "bytes": 23834
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_restart_entry_context_20260915_v1/coverage_final.json",
+      "role": "validation_06_coverage_final.json",
+      "sha256": "a1ec39793de2f17f6d4e8180a68ff7e89135a6f9b99a73d7e2e8afdae93a6b8d",
+      "bytes": 14467
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_restart_entry_context_20260915_v1/installed_regression.xml",
+      "role": "validation_07_installed_regression.xml",
+      "sha256": "8f43b3a8d17486e30b67c6ea7c8102fc88ed26525f7007fb2277ca1a4b79dba0",
+      "bytes": 23834
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_restart_entry_context_20260915_v1/frozen_inputs.json",
+      "role": "validation_08_frozen_inputs.json",
+      "sha256": "518e8a0cab5a9500a41d887ba1051940b77095687cc198d6f7bd93758be724c4",
+      "bytes": 8695585
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_restart_entry_context_20260915_v1/same_input_before.json",
+      "role": "validation_09_same_input_before.json",
+      "sha256": "520cab9ddc8c04142cffd9587b9d919ff7e9e5125ff1e04b2b46b13522829dca",
+      "bytes": 1790098
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_restart_entry_context_20260915_v1/same_input_after.json",
+      "role": "validation_10_same_input_after.json",
+      "sha256": "6fb14107dd7a711f4b2ccb8bd9cbeebf93a6b12ea6b2665afaa58eff71cb6f7c",
+      "bytes": 1873326
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_restart_entry_context_20260915_v1/same_input_comparison.json",
+      "role": "validation_11_same_input_comparison.json",
+      "sha256": "f4498d1819383ed272d831063bec4b9166e472b1340dc88fb0c90cb55794103e",
+      "bytes": 255912
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_restart_entry_context_20260915_v1/actual_publication_validation.json",
+      "role": "validation_12_actual_publication_validation.json",
+      "sha256": "d873ceb371173a6df83b3e8656539f612e0ac699150725a4664f004be3ab9bdb",
+      "bytes": 10804
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_restart_entry_context_20260915_v1/validate_real_context.py",
+      "role": "validation_13_validate_real_context.py",
+      "sha256": "1d59d964e45aa60c28006af96e795cb4abd9a32287ea91ca1ccd5a7d2e07eb91",
+      "bytes": 5614
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_restart_entry_context_20260915_v1/installation/installed.json",
+      "role": "validation_14_installed.json",
+      "sha256": "3038991f6753a9b0e59ef7579949187b6eee3aa108d2133ca25c5a94094391b9",
+      "bytes": 2612
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_restart_entry_context_20260915_v1/installation/source.patch",
+      "role": "validation_15_source.patch",
+      "sha256": "9b1224a307c33797eecdef5275ec1ff6eca5413880f53fdd89e6a2364327e1c8",
+      "bytes": 25800
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_restart_entry_context_20260915_v1/installed_pty_1/verified.json",
+      "role": "validation_16_verified.json",
+      "sha256": "dd4241f73d3735242480b251e6accdad545886d2c89d02c78e4df3ac39d48239",
+      "bytes": 2318
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_restart_entry_context_20260915_v1/installed_pty_1/checkpoint.json",
+      "role": "validation_17_checkpoint.json",
+      "sha256": "b3e4503b359a0ad049424e80b659a3685f2199ed8277614fd2af3b783b587e09",
+      "bytes": 3262765
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_restart_entry_context_20260915_v1/installed_pty_1/captures/closed_entry_context.txt",
+      "role": "validation_18_closed_entry_context.txt",
+      "sha256": "c1cf8d7a959de7db5283abe190d3a8dd3455e1c80c251949c2d6897dd1fdb785",
+      "bytes": 12741
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_restart_entry_context_20260915_v1/installed_pty_1/captures/tab8.txt",
+      "role": "validation_19_tab8.txt",
+      "sha256": "0e43ccafac3fbfc3115e82cfae298d5a9d2e850ce53ad395019dcbccf71e9a36",
+      "bytes": 18050
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_restart_entry_context_20260915_v1/installed_pty_1/captures/portfolio_100x28.txt",
+      "role": "validation_20_portfolio_100x28.txt",
+      "sha256": "84cf9de5e4a0550dcd5d875b65abe087c719fce666cd2db370523ed5051a0216",
+      "bytes": 4417
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_restart_entry_context_20260915_v1/installed_pty_1/captures/portfolio_120x36.txt",
+      "role": "validation_21_portfolio_120x36.txt",
+      "sha256": "5e504be82ce5fec6ddd4677660149b03a7a0ec6d20d4dd2a328fcf2f93d39140",
+      "bytes": 7106
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_restart_entry_context_20260915_v1/installed_pty_1/captures/portfolio_160x40.txt",
+      "role": "validation_22_portfolio_160x40.txt",
+      "sha256": "ce61adec5d5f7eb93da5479bfd7c22d3dd93a7304f54c0ac05c848e67150243d",
+      "bytes": 10050
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_restart_entry_context_20260915_v1/installed_pty_1/captures/portfolio_190x52.txt",
+      "role": "validation_23_portfolio_190x52.txt",
+      "sha256": "0150c992570b7d846411ac71488c039f9198d506a627b32b8878dbeff2db70b5",
+      "bytes": 14386
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_restart_entry_context_20260915_v1/capture_entry_context.py",
+      "role": "validation_24_capture_entry_context.py",
+      "sha256": "73a8afce6827f8d1f2fd8c6cc8da345a4397fd37dfe003a8315199160c182467",
+      "bytes": 8752
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_restart_entry_context_20260915_v1/guard_v2/sitecustomize.py",
+      "role": "validation_25_sitecustomize.py",
+      "sha256": "8cd8a49346fac9e8261f6f79d317c7b8b229ee3ee9d48cdc25de0c0d3ee2624b",
+      "bytes": 2167
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_restart_entry_context_20260915_v1/independent_monitor.sb",
+      "role": "validation_26_independent_monitor.sb",
+      "sha256": "ec551d91e159444cf7d966577bf59944295e5750c2780e47e7049128f4ac48c9",
+      "bytes": 396
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_restart_entry_context_20260915_v1/session_protection.json",
+      "role": "validation_27_session_protection.json",
+      "sha256": "504c8387b85ce976f895cd0aeb4e03d33a78918edd1b8b1ad4fd24f50d364428",
+      "bytes": 906
+    }
+  ],
+  "metrics": {
+    "pipeline_status": "accepted_installed_and_terminal_verified",
+    "candidate_commit": "7d8e7a304086dc5f8fd0a93383b0cbce3d6af47f",
+    "installed_commit": "4dc5cc86b9c5bf1080aace94f4771e40bb4b6606",
+    "candidate_tests_passed": 160,
+    "installed_tests_passed": 160,
+    "new_module_statement_coverage_pct": 98,
+    "affected_statement_coverage_pct": 98,
+    "recovered_entry_decisions": 9,
+    "recovered_evaluations": 18,
+    "recovered_closed_entries": 8,
+    "recovered_open_entries": 1,
+    "prior_scan_bytes": 199744909,
+    "cold_publication_seconds_excluding_comparison": 3.6959040830006415,
+    "repeat_publication_seconds": 1.8918631660017127,
+    "instrumented_peak_rss_bytes": 431587328,
+    "exact_prior_entry_context_equal": true,
+    "current_telemetry_and_execution_unchanged": true,
+    "timeline_recovered": false,
+    "installed_terminal_tabs": 9,
+    "installed_terminal_sizes": 4,
+    "installed_monitor_exit_code": 0,
+    "terminal_restored": true,
+    "owned_reporter_reaped": true,
+    "protected_files_unchanged": 5503,
+    "original_processes_preserved": 5,
+    "run_id": "bidirectional-live-1789497016143",
+    "fills": 20,
+    "projected_fills": 20,
+    "current_run_fills": 1,
+    "closed_trades": 8,
+    "open_lifecycles": 2,
+    "closed_net_pnl_usd": -25.609303,
+    "next_investigation": "Reconcile the new SPCX provider/regime/receipt/covering-stop chain and follow inherited SNDK through its eventual exit."
+  },
+  "limitations": [
+    "Existing combined TUI and loaded reporter are unchanged; start the versioned independent monitor to consume the installed reporting repair.",
+    "Exact entry recovery does not reconstruct a complete historical regime path or absent exit context; provider-omitted regime fields remain unavailable.",
+    "Canonical independent and legacy source keys are alternatives; nine absent legacy aliases are not missing independent canonical context.",
+    "Publication timing measures the initial candidate on the captured bounded range; final duplicate-order hardening passed installed tests and terminal verification.",
+    "The ledger is append-only; scan cost grows with the required historical range. Tests do not establish universal bug freedom or profitability."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}
