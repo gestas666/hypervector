@@ -206,6 +206,7 @@ def _create_runner(
     run_id: str,
 ) -> MultiAssetLiveRunner:
     """Construct the runtime only after every startup boundary has passed."""
+    poller.bind_startup_input_observer(telemetry.startup_input_observer())
     stop = install_process_signal_stop()
     return MultiAssetLiveRunner(
         symbols=config.symbols,

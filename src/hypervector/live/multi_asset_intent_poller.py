@@ -18,6 +18,7 @@ from hypervector.live.canonical_regime_telemetry import (
     CanonicalRegimeTelemetryCollector,
 )
 from hypervector.live.cohort_regime_routing import attach_regime_preferences
+from hypervector.live.cohort_startup_candle_recorder import StartupCandleObserver
 from hypervector.live.configured_canonical_regime import (
     configured_canonical_regime_symbols,
 )
@@ -147,6 +148,14 @@ class ConfiguredMultiAssetIntentPoller:
         self._boundaries: dict[tuple[str, str], int] | None = None
         self._one_minute_cache: dict[str, pd.DataFrame] = {}
         self._readiness_seed_pending = False
+        self._startup_input_observer: StartupCandleObserver | None = None
+        self._activation_time_ms: int | None = None
+
+    def bind_startup_input_observer(self, observer: StartupCandleObserver) -> None:
+        """Bind one evidence observer before activation and initial data fetch."""
+        if self._boundaries is not None or self._startup_input_observer is not None:
+            raise MultiAssetIntentPollerError("startup input observer is already bound or active")
+        self._startup_input_observer = observer
 
     @classmethod
     def with_default_collectors(
@@ -189,6 +198,7 @@ class ConfiguredMultiAssetIntentPoller:
             for symbol in provider.symbols
         }
         self._canonical_regime_collector.activate(activation_time_ms)
+        self._activation_time_ms = activation_time_ms
         self._readiness_seed_pending = True
 
     def poll(self, observed_at: datetime) -> CohortIntentPoll:
@@ -436,6 +446,10 @@ class ConfiguredMultiAssetIntentPoller:
             for symbol, frame in fresh.items()
         }
         self._one_minute_cache = retained
+        if self._startup_input_observer is not None:
+            assert self._activation_time_ms is not None
+            self._startup_input_observer(retained, self._activation_time_ms, observed_ms)
+            self._startup_input_observer = None
         result = {(symbol, "1m"): frame for symbol, frame in retained.items()}
         result.update(
             {

@@ -20,6 +20,7 @@ from hypervector.live.cohort_funding_window import CohortFundingWindow
 from hypervector.live.cohort_prestart_backup import CohortPrestartBackupResult
 from hypervector.live.cohort_regime_routing import routing_policy_payload
 from hypervector.live.cohort_runtime_fault import runtime_fault_payload
+from hypervector.live.cohort_startup_candle_recorder import CohortStartupCandleRecorder
 from hypervector.live.cohort_transition_drain import CohortTransitionDrain
 from hypervector.live.hyperliquid_protocol import SolBookSnapshot
 from hypervector.live.multi_asset_cohort_history import (
@@ -107,6 +108,12 @@ class MultiAssetCohortTelemetry:
         if self._asset_ledgers and set(self._asset_ledgers) != set(config.symbols):
             raise ValueError("asset ledgers must cover every configured symbol")
         self._asset_history_cache = _history_cache(self._asset_ledgers)
+
+    def startup_input_observer(self) -> CohortStartupCandleRecorder:
+        """Bind exact startup evidence to this ledger's run and publication path."""
+        return CohortStartupCandleRecorder(
+            self._config, self._ledger.path.parent, self._ledger.run_id, self._emit,
+        )
 
     @property
     def funding_recovery_start_ms(self) -> int | None:

@@ -50,6 +50,9 @@ data/
   live/                  # Live only — never share files with paper/
     bidirectional_cohort/
       decisions.jsonl    # Append-only cohort authority and telemetry
+      startup_inputs/<run-id-sha256>/
+        manifest.json    # Initial retained candle inputs, run identity and hashes
+        candles-*.parquet # Full initial 1m frames, separate from 360-bar chart tails
       transition_drain.json # Durable active/completed next-start blocker
       operator_commands/ # Identity-bound TUI requests and outcomes
     hulk_smash/
@@ -68,6 +71,22 @@ data/
       transition_drains/
         transition_drain_<UTC>_<request>.json # Recoverable completed drain evidence
 ```
+
+### Startup candle evidence
+
+The cohort launcher captures startup candle inputs once, before resampling and
+provider evaluation. The `startup_candle_inputs` ledger event records either
+`captured` with the manifest SHA256 or `unavailable` with the explicit failure.
+The manifest distinguishes requested lookback from actual row/time coverage;
+an incomplete current candle can be present, so replay must apply the provider's
+original completion cutoff. These are retained input frames, not raw HTTP
+responses. Capture has no execution authority and archive failure adds no trading
+gate. A failed authoritative ledger write retains its existing failure behavior.
+
+Authenticate replay with `load_startup_candles(manifest_path, manifest_sha256,
+context)` from `hypervector.live.cohort_startup_candles`, using the event's exact
+context and hash. Bundles are immutable and accumulate once per run; no automatic
+deletion or retroactive reconstruction of older startup inputs is performed.
 
 ### Metalabel bundle (optional conviction scale)
 

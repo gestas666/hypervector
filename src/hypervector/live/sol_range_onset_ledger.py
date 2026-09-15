@@ -39,6 +39,7 @@ SOL_LIVE_EVENT_TYPES = frozenset(
         "intent_routing",
         "canonical_regime_evaluations",
         "market_candles",
+        "startup_candle_inputs",
         "market_books",
         "operator_command",
         "maximum_hold_decision",
