@@ -1,0 +1,167 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v89-spcx-entry-reconciliation-20260915",
+  "revision_number": 1,
+  "supersedes_revision_id": null,
+  "created_at_utc": "2026-09-15T19:41:27.946107+00:00",
+  "strategy_id": "hourly_band20_reentry_atr20_bidirectional_v1",
+  "symbol": "xyz:SPCX",
+  "status": "retain",
+  "hypothesis": "The new SPCX long should reproduce the completed-hour band-reentry conditions and retain exact causal routing, costs, leverage and covering protection despite opposing canonical trend context.",
+  "decision": "Retain the reconciled entry evidence; no strategy change. Independent bands and the conditional ATR update match, exact receipts/costs reconcile and all 100 sampled post-ack stops cover the position. The original ATR initialization remains unverified because original startup inputs were not retained.",
+  "confidence": "high",
+  "falsifier": "Contradictory exact source candles, provider conditions, route/fill identities, quantity, leverage, costs or stop evidence reopens the corresponding technical conclusion. Open marks and one crossing annotation do not establish an economic filter.",
+  "evidence": [
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/docs/reviews/2026-09-15-v89-spcx-entry-reconciliation.md",
+      "role": "validation_00_2026-09-15-v89-spcx-entry-reconciliation.md",
+      "sha256": "281d39e8e271deddfe0024a1b15e7cf72646a387acfac20524aa6a1b95cd1e67",
+      "bytes": 6991
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_spcx_entry_audit_20260915_v1/capture_manifest.json",
+      "role": "validation_01_capture_manifest.json",
+      "sha256": "cad64ebe7347e6fa71c7741d25da1f5790c5b0163b0e0549a8b1e456b2ad866a",
+      "bytes": 1601
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_spcx_entry_audit_20260915_v1/checkpoint.json",
+      "role": "validation_02_checkpoint.json",
+      "sha256": "d50b2d2ad40a6758ee2937361f1778b45167e82e220e03e9e8767fc8b59f262b",
+      "bytes": 3148615
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_spcx_entry_audit_20260915_v1/cohort_current_run.jsonl",
+      "role": "validation_03_cohort_current_run.jsonl",
+      "sha256": "8e1b5e44a5a66fa7a764eb85704d0ce227d4904684141381c27c3edc879b4b72",
+      "bytes": 7804362
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_spcx_entry_audit_20260915_v1/spcx_current_run.jsonl",
+      "role": "validation_04_spcx_current_run.jsonl",
+      "sha256": "9c1bb7bbfe00a3fd0277daa5c94165f7f795450e0f2627fac8116268b2e0ffda",
+      "bytes": 1032983
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_spcx_entry_audit_20260915_v1/spcx_execution_events.json",
+      "role": "validation_05_spcx_execution_events.json",
+      "sha256": "03e7542a6465677bf629051f075416aaedea6fdde63cca6738cb944573ce6e12",
+      "bytes": 7032
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_spcx_entry_audit_20260915_v1/spcx_entry_cohort_context.json",
+      "role": "validation_06_spcx_entry_cohort_context.json",
+      "sha256": "42c19c199b063458d795202970fcc906c96a2362ec78c29c49b673204552e746",
+      "bytes": 9968
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_spcx_entry_audit_20260915_v1/duckdb_spcx_candles.json",
+      "role": "validation_07_duckdb_spcx_candles.json",
+      "sha256": "8b3fda83fd43a9f867d4337abb573aedd2b41a43a85739fbaba8ce3386f74954",
+      "bytes": 204645
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_spcx_entry_audit_20260915_v1/chart_candle_parity.json",
+      "role": "validation_08_chart_candle_parity.json",
+      "sha256": "820ebd87f3cd536301f0078273620d24c5d22748aab886cec53838730eb3e612",
+      "bytes": 299
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_spcx_entry_audit_20260915_v1/native_inputs/native_1m.json",
+      "role": "validation_09_native_1m.json",
+      "sha256": "4862b1cdf3b0070d441bfb0188b7ba0888b112b3d62fa8a69dc8b6916b3a3686",
+      "bytes": 265617
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_spcx_entry_audit_20260915_v1/native_inputs/manifest.json",
+      "role": "validation_10_manifest.json",
+      "sha256": "923495b51c3145d10fcbe1749c12eba2783a226b211f76273408dd005cf33c9e",
+      "bytes": 456
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_spcx_entry_audit_20260915_v1/capture_native_candles.py",
+      "role": "validation_11_capture_native_candles.py",
+      "sha256": "9757051643a99a0e33366fdcae7d9e2729ffccc3159c703cebda9539bd625391",
+      "bytes": 2666
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_spcx_entry_audit_20260915_v1/independent_indicator_math.py",
+      "role": "validation_12_independent_indicator_math.py",
+      "sha256": "aaf130639c48fe821ebc369ed74641f0032751a4078ce5c9580d8c6ad5953d37",
+      "bytes": 3646
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_spcx_entry_audit_20260915_v1/audit_entry.py",
+      "role": "validation_13_audit_entry.py",
+      "sha256": "2c1a9792d65d348dec5aaf785ec1be20d8b413c17e7e7da05f3e3c970489cc8c",
+      "bytes": 16990
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_spcx_entry_audit_20260915_v1/entry_validation.json",
+      "role": "validation_14_entry_validation.json",
+      "sha256": "843bd60b2bffb40f551b5418f4084a14675a7f3064c6423a015719bc98d24d3e",
+      "bytes": 5005
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_spcx_entry_audit_20260915_v1/verification.json",
+      "role": "validation_15_verification.json",
+      "sha256": "06b955e953f12e3e1ec31e803a51c7d4dd2ef828ba8120bdb91ccd614149bf31",
+      "bytes": 1369
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_spcx_entry_audit_20260915_v1/reproduce_supplement.py",
+      "role": "validation_16_reproduce_supplement.py",
+      "sha256": "0a0cc100278f15d22e9240ca893d316e087d3aed0b5836783ed8fded131152c6",
+      "bytes": 4609
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_spcx_entry_audit_20260915_v1/reproduction_verified.json",
+      "role": "validation_17_reproduction_verified.json",
+      "sha256": "e2bf83910d6d30d131690783bc64123dde675119da6d50ebf24fd6147f3f0ff3",
+      "bytes": 576
+    }
+  ],
+  "metrics": {
+    "pipeline_status": "accepted_bounded_entry_reconciliation",
+    "run_id": "bidirectional-live-1789497016143",
+    "entry_oid": 546010609566,
+    "entry_trade_id": 981345012427962,
+    "stop_oid": 546010759610,
+    "entry_decision_ms": 1789498800000,
+    "native_minute_rows": 1500,
+    "complete_hours": 25,
+    "chart_overlap_minutes": 617,
+    "chart_observations_compared": 857,
+    "chart_ohlcv_mismatches": 0,
+    "maximum_band_absolute_delta": 3.410605131648481e-13,
+    "price_crossing_contribution_fraction": 0.43792677639144545,
+    "conditional_atr_reconciles": true,
+    "original_atr_initialization_verified": false,
+    "filled_notional_usd": 499.7147,
+    "size": 3.47,
+    "entry_price": 144.01,
+    "leverage": 10,
+    "entry_fee_usd": 0.043175,
+    "entry_fee_bps": 0.8639929944026061,
+    "reference_to_fill_slippage_bps": 0.694444444444553,
+    "dispatch_age_ms": 19432,
+    "dispatch_limit_ms": 30000,
+    "full_stop_reconciliations": 100,
+    "stop_trigger_price": 142.09,
+    "stop_distance_bps": 133.3240747170327,
+    "negative_controls_rejected": 14,
+    "frozen_replay_exact": true,
+    "network_denied_during_validation": true,
+    "next_investigation": "Validate bounded exact startup candle-input provenance without changing trading decisions or restarting the financial backend."
+  },
+  "limitations": [
+    "Single open lifecycle at the cutoff; no completed outcome or economic filter inference.",
+    "Retrospective public candles agree with recorded bands and overlaps but are not the original startup snapshot; original ATR seed unresolved.",
+    "Observed stop presence is sampled; local/venue timing mixes clocks and does not prove continuous protection.",
+    "Earlier quote age prevents identifying instantaneous market impact.",
+    "No strategy/settings/deployment or financial process lifecycle changes; prospective outcome seals remain unopened."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}
