@@ -20,6 +20,8 @@ from hypervector.live.sol_range_onset_config import SolRangeOnsetConfig
 from hypervector.live.sol_range_onset_ledger import SolLiveLedger
 from hypervector.live.sol_range_onset_state import SolLiveSnapshot
 
+_RECOVERY_EVENT_TYPES = frozenset({"fill", "fee", "funding"})
+
 
 class SolLiveTelemetryError(RuntimeError):
     """Live telemetry cannot produce a valid authoritative record."""
@@ -38,7 +40,10 @@ class SolLiveTelemetry:
         self._config = config
         self._ledger = ledger
         self._now_fn = now_fn
-        existing = ledger.read_all()
+        existing = ledger.read_matching(
+            lambda row: row.get("sequence") == 1
+            or row.get("event_type") in _RECOVERY_EVENT_TYPES
+        )
         self._fresh_ledger = not existing
         self._run_started_at_ms = _ledger_started_at_ms(existing)
         self._seen_fills = _existing_fill_keys(existing, "fill")
