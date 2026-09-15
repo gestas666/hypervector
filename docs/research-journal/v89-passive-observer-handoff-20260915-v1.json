@@ -1,0 +1,116 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v89-passive-observer-handoff-20260915",
+  "revision_number": 1,
+  "supersedes_revision_id": null,
+  "created_at_utc": "2026-09-15T22:52:41.513593+00:00",
+  "strategy_id": "multi_asset_bidirectional_cohort",
+  "symbol": "MULTI",
+  "status": "retain",
+  "hypothesis": "A passive watcher can miss final-sleep and turnover events unless it drains the final interval and resumes saved byte offsets.",
+  "decision": "Retain the tested passive observer adapter. The original final-sleep miss is reproduced; seven synthetic cases pass, and eight native handoff ranges independently reconcile. The successor is active with a finite deadline; no live execution or strategy behavior changes.",
+  "confidence": "high",
+  "falsifier": "A missing qualifying row, first-scan/native byte mismatch, changed retained source or ledger identity, wrong backend/run binding, duplicate owner or incomplete terminal receipt reopens this diagnostic.",
+  "evidence": [
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/docs/reviews/2026-09-15-v89-passive-observer-handoff.md",
+      "role": "observer_handoff_00_2026-09-15-v89-passive-observer-handoff.md",
+      "sha256": "875e5e6cd86f028ab279e6a039c9f6cb5935a3d80d5e509c0b478d65639d7268",
+      "bytes": 4987
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_native_observer_handoff_20260915_v1/watch_handoff.py",
+      "role": "observer_handoff_01_watch_handoff.py",
+      "sha256": "eb37d510a6779ddd6620895ba1bb73e72d9d6527ddfce352dc5638a155a709be",
+      "bytes": 6480
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_native_observer_handoff_20260915_v1/test_observer_handoff.py",
+      "role": "observer_handoff_02_test_observer_handoff.py",
+      "sha256": "53ae10bf1eef82be564a8bed9801d9f5a790ce97a0812fef8e6f974da557c567",
+      "bytes": 5285
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_native_observer_handoff_20260915_v1/tests.log",
+      "role": "observer_handoff_03_tests.log",
+      "sha256": "6aa6bbe3c2a72553ab895d60d027b0b170747a8f0f8f472a110ae2d54698c152",
+      "bytes": 98
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_native_observer_handoff_20260915_v1/overlap_anchor.json",
+      "role": "observer_handoff_04_overlap_anchor.json",
+      "sha256": "db8298bd7b68c450c2f51f4e3f9b9ad2aa535f2e6fb3c34c75bb170223ed0ef7",
+      "bytes": 2448
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_native_observer_handoff_20260915_v1/deadline_tail_reproduction.json",
+      "role": "observer_handoff_05_deadline_tail_reproduction.json",
+      "sha256": "87e907d9459c9500797439a9e35975b46cdb0bec6fef1a23808bf490d81a41e3",
+      "bytes": 1095
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_native_observer_handoff_20260915_v1/first_scan.json",
+      "role": "observer_handoff_06_first_scan.json",
+      "sha256": "dcad22933b1cffe966b948dff15f5063fb36b4474f714b63ecb80d3ff849784a",
+      "bytes": 1610
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_native_observer_handoff_20260915_v1/handoff_started.json",
+      "role": "observer_handoff_07_handoff_started.json",
+      "sha256": "df93394c058024f533b69b86c7e43ebf8067e3c91f7d63751bda2ff19147507a",
+      "bytes": 523
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_native_observer_handoff_20260915_v1/verify_handoff.py",
+      "role": "observer_handoff_08_verify_handoff.py",
+      "sha256": "377b394bdced59d5c5b2feb56fa7e12a60ad978c95b4c86ae512c118031816c9",
+      "bytes": 4298
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_native_observer_handoff_20260915_v1/handoff_verified.json",
+      "role": "observer_handoff_09_handoff_verified.json",
+      "sha256": "f4febc237df8e1b1012fedf6e8dec923251354d83e895d41909d480230ce729a",
+      "bytes": 6023
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_joint_funding_20260915_v1/watch_next_transition.py",
+      "role": "observer_handoff_10_watch_next_transition.py",
+      "sha256": "ceff99aa201701ce06ea5b3f53407250a4645487243da1a95b8edded672d016b",
+      "bytes": 4601
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_joint_funding_20260915_v1/watch_result.json",
+      "role": "observer_handoff_11_watch_result.json",
+      "sha256": "f3d262b5fdc862410e30d391a2d9ed64381bafa8d40c16b58e315a5ed1e3c936",
+      "bytes": 261
+    }
+  ],
+  "metrics": {
+    "pipeline_status": "accepted_passive_observation_repair_native_terminal_pending",
+    "tests_passed": 7,
+    "original_final_sleep_miss_reproduced": true,
+    "original_terminal_at_utc": "2026-09-15T22:39:23.988303+00:00",
+    "overlap_anchor_at_utc": "2026-09-15T22:37:54.202074+00:00",
+    "successor_started_at_utc": "2026-09-15T22:49:45.457768+00:00",
+    "ledgers_verified": 8,
+    "bytes_verified": 3916995,
+    "rows_verified": 1530,
+    "handoff_matching_events": 0,
+    "watcher_pid": 17371,
+    "tool_session_id": 27304,
+    "maximum_seconds": 7200,
+    "financial_process_identities_preserved": 5,
+    "production_source_changes": 0,
+    "next_investigation": "Inspect the same finite observer for its first native lifecycle/protection/fault transition or actual terminal deadline; preserve final cursors for any next handoff."
+  },
+  "limitations": [
+    "Tests use synthetic rows and clocks; the native two-hour terminal outcome is pending.",
+    "The first scan proves only the exact eight saved byte intervals, not later event absence.",
+    "Only the explicit trigger event types and bound run are selected.",
+    "No profitability improvement, strategy validity or universal bug-freedom claim.",
+    "No financial process control, strategy/configuration change or prospective outcome inspection occurred."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}
