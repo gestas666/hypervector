@@ -65,8 +65,14 @@ def build_hourly_band_reentry_signals(execution_bars: pd.DataFrame) -> pd.DataFr
 def _hourly_state(frame: pd.DataFrame) -> pd.DataFrame:
     segments = contiguous_segment_ids(frame.index, pd.Timedelta(hours=SIGNAL_HOURS))
     grouped = frame.close.groupby(segments, sort=False)
-    mean = grouped.transform(lambda values: values.rolling(PERIOD).mean())
-    deviation = grouped.transform(lambda values: values.rolling(PERIOD).std(ddof=0))
+    mean = grouped.transform(
+        lambda values: values.rolling(PERIOD).apply(np.mean, raw=True)
+    )
+    deviation = grouped.transform(
+        lambda values: values.rolling(PERIOD).apply(
+            np.std, raw=True, kwargs={"ddof": 0}
+        )
+    )
     lower, upper = (
         mean - BAND_DEVIATIONS * deviation,
         mean + BAND_DEVIATIONS * deviation,
