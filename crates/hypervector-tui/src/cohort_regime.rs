@@ -168,10 +168,15 @@ fn matrix_values(
 }
 
 fn provider_call(provider: &CohortProviderEvaluation) -> String {
+    if provider.exit_sides.as_ref().is_some_and(|sides| !sides.is_empty()) {
+        return crate::cohort_provider_action::compact_action_label(provider);
+    }
     let action = match provider.decision_action.as_str() {
         "hold" => "HOLD",
         "enter_long" | "enter_short" => "ENTER",
-        "close_long" | "close_short" | "close_open_position" => "CLOSE",
+        "close_long" | "close_short" | "close_open_position" => {
+            return crate::cohort_provider_action::compact_action_label(provider);
+        }
         _ => "EVENT",
     };
     format!("PROV {action}")

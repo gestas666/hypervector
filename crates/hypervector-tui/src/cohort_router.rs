@@ -302,11 +302,11 @@ pub(crate) fn evaluation_status(evaluation: &CohortProviderEvaluation) -> String
     match (evaluation.score, evaluation.minimum_score) {
         (Some(score), Some(required)) => format!(
             "{} {score}/{required} · {reason}",
-            evaluation.decision_action.to_uppercase(),
+            crate::cohort_provider_action::action_label(evaluation),
         ),
         _ => format!(
             "{} {} {} · {reason}",
-            evaluation.decision_action.to_uppercase(),
+            crate::cohort_provider_action::action_label(evaluation),
             evaluation.primary_regime.as_deref().unwrap_or("--"),
             evaluation
                 .confidence
@@ -319,7 +319,7 @@ fn compact_evaluation_status(evaluation: &CohortProviderEvaluation) -> String {
     if let Some(reason) = evaluation.backend_non_action_reason.as_deref() {
         return format!("READINESS ONLY · {}", human_token(reason));
     }
-    let action = evaluation.decision_action.to_uppercase();
+    let action = crate::cohort_provider_action::action_label(evaluation);
     match (evaluation.score, evaluation.minimum_score) {
         (Some(score), Some(required)) => format!("{action} · {score}/{required}"),
         _ => format!(

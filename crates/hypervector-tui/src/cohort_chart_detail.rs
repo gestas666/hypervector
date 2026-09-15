@@ -171,8 +171,8 @@ fn decision_lines(value: &CohortProviderEvaluation, app: &App) -> Vec<Line<'stat
     let readiness = &value.readiness;
     vec![
         Line::from(format!(
-            "DECISION {} // ELIGIBLE {}",
-            value.decision_action.to_uppercase(),
+            "PROVIDER DECISION {} // ENTRY ELIGIBLE {}",
+            crate::cohort_provider_action::action_label(value),
             if value.eligible { "YES" } else { "NO" }
         )),
         Line::from(format!(

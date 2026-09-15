@@ -37,6 +37,10 @@ pub struct CohortProviderEvaluation {
     pub decision_time_ms: u64,
     pub reference_price: f64,
     pub decision_action: String,
+    #[serde(default)]
+    pub exit_sides: Option<Vec<String>>,
+    #[serde(default)]
+    pub exit_reason: Option<String>,
     pub eligible: bool,
     pub reason: String,
     #[serde(default)]

@@ -85,3 +85,4 @@ include!("support/cohort_entry_deadline_view.rs");
 include!("support/cohort_open_hold_view.rs");
 include!("support/cohort_strategy_context.rs");
 include!("support/cohort_leverage_scope_view.rs");
+include!("support/cohort_provider_exit_side_view.rs");

@@ -127,12 +127,15 @@ fn identity_lines<'a>(setup: &'a CohortProviderEvaluation, app: &App) -> Vec<Lin
             setup.reference_price,
         )),
         Line::from(format!(
-            "DECISION {}  //  ELIGIBLE {}  //  REASON {}",
-            setup.decision_action.to_uppercase(),
+            "PROVIDER DECISION {}  //  ENTRY ELIGIBLE {}  //  REASON {}",
+            crate::cohort_provider_action::action_label(setup),
             yes_no(setup.eligible),
             setup.reason,
         )),
     ];
+    if let Some(reason) = setup.exit_reason.as_deref() {
+        lines.push(Line::from(format!("EXIT RECIPE {reason} // PROVIDER SIGNAL ONLY")));
+    }
     if let Some(reason) = setup.backend_non_action_reason.as_deref() {
         lines.push(Line::from(Span::styled(
             format!(

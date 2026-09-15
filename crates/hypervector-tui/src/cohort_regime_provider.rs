@@ -95,8 +95,8 @@ fn provider_lines<'a>(app: &'a App, value: &'a CohortProviderEvaluation) -> Vec<
             )),
         ]),
         Line::from(format!(
-            "ACTION {}  //  ELIGIBLE {}  //  READY {:.0}%",
-            value.decision_action.to_uppercase(),
+            "PROVIDER SIGNAL {}  //  ENTRY ELIGIBLE {}  //  READY {:.0}%",
+            crate::cohort_provider_action::action_label(value),
             if value.eligible { "YES" } else { "NO" },
             value.readiness.readiness_fraction * 100.0,
         )),
@@ -124,7 +124,7 @@ fn compact_line<'a>(app: &'a App, value: &'a CohortProviderEvaluation) -> Line<'
         Span::styled(provider_alias(&value.strategy_id), app.theme.title),
         Span::raw(format!(
             "  {:>4}  {:>3}  {:>3.0}%",
-            value.decision_action.to_uppercase(),
+            crate::cohort_provider_action::action_label(value),
             if value.eligible { "YES" } else { "NO" },
             value.readiness.readiness_fraction * 100.0,
         )),

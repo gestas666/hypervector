@@ -130,6 +130,7 @@ mod cohort_orderbook_opportunity;
 mod cohort_performance_visuals;
 mod cohort_portfolio_scoreboard;
 mod cohort_profile_request;
+mod cohort_provider_action;
 mod cohort_profit_lock_labels;
 mod cohort_protective_progress;
 mod cohort_regime;

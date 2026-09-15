@@ -238,7 +238,7 @@ fn selected_chart_opens_strategy_and_multitimeframe_detail() {
         "BTC STRATEGY CHART // BACKEND EVIDENCE",
         "VIEW 5M // SOURCE TF 5M // AGGREGATED FROM BACKEND COMPLETED 1M",
         "HV SOURCE 5M // DECISION TF 5M",
-        "DECISION HOLD // ELIGIBLE NO",
+        "PROVIDER DECISION HOLD // ENTRY ELIGIBLE NO",
         "REGIME 1M N/A // 5M TREND_UP // 15M N/A",
         "READINESS 66.7% // 2/3",
         "5M TREND_UP",
