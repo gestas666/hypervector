@@ -15,6 +15,7 @@ from hypervector.research.cohort_live_audit_history import select_asset_evidence
 from hypervector.research.cohort_live_audit_summaries import rebased
 from hypervector.research.cohort_live_audit_values import (
     mapping_list,
+    nonnegative_int,
     number,
     payload,
     positive_int,
@@ -34,6 +35,7 @@ class _Dependencies:
     reasons: set[str] = field(default_factory=set)
     entry_oids: set[int] = field(default_factory=set)
     closed_oids: set[int] = field(default_factory=set)
+    minimum_fill_count: int = 0
 
 
 @contextmanager
@@ -43,12 +45,13 @@ def snapshot_current_asset_ledger(
     run_id: str,
     as_of: datetime,
     allow_incomplete_tail: bool = False,
+    minimum_fill_count: int = 0,
 ) -> Iterator[tuple[list[dict[str, object]], dict[str, object]]]:
     """Keep the current run unless its accounting depends on prior execution."""
     with snapshot_current_run_ledger(
         path, run_id=run_id, allow_incomplete_tail=allow_incomplete_tail
     ) as (rows, evidence):
-        dependencies = _execution_dependencies(rows, run_id, as_of)
+        dependencies = _execution_dependencies(rows, run_id, as_of, minimum_fill_count)
         if not dependencies.reasons:
             yield rows, evidence
             return
@@ -66,22 +69,26 @@ def snapshot_current_asset_ledger(
             history_recovery_reasons=sorted(dependencies.reasons),
             inherited_entry_oids=sorted(dependencies.entry_oids),
             inherited_closed_oids=sorted(dependencies.closed_oids),
+            projected_fill_count=dependencies.minimum_fill_count,
         )
         yield rows, evidence
 
 
 def _execution_dependencies(
-    rows: Sequence[Record], run_id: str, as_of: datetime
+    rows: Sequence[Record], run_id: str, as_of: datetime, minimum_fill_count: int
 ) -> _Dependencies:
     if as_of.tzinfo is None or as_of.utcoffset() is None:
         raise ValueError("asset recovery cutoff must be timezone-aware")
     dependencies = _Dependencies()
+    minimum_fill_count = nonnegative_int(minimum_fill_count, "projected fill count")
+    current_fills = 0
     entries: set[int] = set()
     for row in rows:
         if row.get("run_id") != run_id or timestamp(row) > as_of:
             continue
         values = payload(row)
         event = row.get("event_type")
+        current_fills += event == "fill"
         if event == "order_acknowledgement" and values.get("operation") == "entry":
             if values.get("accepted") is True:
                 entries.add(positive_int(values.get("oid"), "entry oid"))
@@ -92,6 +99,9 @@ def _execution_dependencies(
                 dependencies.reasons.add("entry_owned_before_current_run")
         if not entries:
             _add_preentry_dependency(row, dependencies)
+    if current_fills < minimum_fill_count:
+        dependencies.reasons.add("prior_fills_in_cohort_projection")
+        dependencies.minimum_fill_count = minimum_fill_count
     return dependencies
 
 
@@ -123,6 +133,12 @@ def _validate_inherited_execution(
     )
     symbol = text(payload(identity).get("symbol"), "asset symbol")
     _, history = select_asset_evidence({symbol: rows}, (symbol,), run_id, as_of=as_of)
+    fill_count = sum(row.get("event_type") == "fill" for row in history[symbol])
+    if fill_count < dependencies.minimum_fill_count:
+        raise ValueError(
+            f"{symbol} projected fill count {dependencies.minimum_fill_count} exceeds "
+            f"compatible execution history count {fill_count}"
+        )
     journal = build_live_journal(rebased(history[symbol]))
     closed = mapping_list(journal.get("trades"), "closed lifecycles")
     active = mapping_list(journal.get("open_lifecycles"), "open lifecycles")

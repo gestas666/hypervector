@@ -52,6 +52,7 @@ from hypervector.research.cohort_eligible_policy_funding import (
 from hypervector.live.multi_asset_live_config import load_multi_asset_live_config
 from hypervector.research.cohort_live_audit import audit_multi_asset_live_run
 from hypervector.research.cohort_checkpoint_asset_snapshots import (
+    projected_asset_fill_counts,
     recover_cohort_execution_identities,
     snapshot_checkpoint_assets,
 )
@@ -239,12 +240,11 @@ def publish_live_checkpoint(
             )
         cohort_rows, cohort_evidence = stack.enter_context(cohort_snapshot)
         _, identity = select_armed_live_run(cohort_rows, run_id)
-        cohort_snapshot_cutoff = ledger_timestamp(
-            _required_latest_event(
-                _run_rows(cohort_rows, audit_run_id(identity)),
-                "cohort_snapshot",
-            )
+        latest_snapshot = _required_latest_event(
+            _run_rows(cohort_rows, audit_run_id(identity)),
+            "cohort_snapshot",
         )
+        cohort_snapshot_cutoff = ledger_timestamp(latest_snapshot)
         asset_paths = _asset_paths(
             ledger_root,
             cohort_path,
@@ -257,6 +257,7 @@ def publish_live_checkpoint(
             as_of=cohort_snapshot_cutoff,
             current_run_only=current_run_only,
             compatible_execution_history=compatible_execution_history,
+            projected_fill_counts=projected_asset_fill_counts(latest_snapshot),
         )
         if current_run_only:
             cohort_rows, cohort_evidence = recover_cohort_execution_identities(

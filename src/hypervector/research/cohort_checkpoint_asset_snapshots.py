@@ -13,7 +13,12 @@ from hypervector.research.cohort_asset_checkpoint_recovery import (
     snapshot_current_asset_ledger,
 )
 from hypervector.research.cohort_live_audit_summaries import rebased
-from hypervector.research.cohort_live_audit_values import payload, text
+from hypervector.research.cohort_live_audit_values import (
+    mapping_list,
+    nonnegative_int,
+    payload,
+    text,
+)
 from hypervector.research.live_ledger_snapshot import (
     configuration_identity_ancestry,
     snapshot_decision_ledger,
@@ -21,6 +26,19 @@ from hypervector.research.live_ledger_snapshot import (
 )
 
 Record = Mapping[str, object]
+
+
+def projected_asset_fill_counts(snapshot: Record) -> dict[str, int]:
+    """Recover available compatible-history counts from the causal cohort snapshot."""
+    counts: dict[str, int] = {}
+    for asset in mapping_list(payload(snapshot).get("assets"), "snapshot assets"):
+        if "fill_count" not in asset:
+            continue
+        symbol = text(asset.get("symbol"), "snapshot asset symbol")
+        if symbol in counts:
+            raise ValueError(f"duplicate snapshot asset fill count: {symbol}")
+        counts[symbol] = nonnegative_int(asset.get("fill_count"), "asset fill count")
+    return counts
 
 
 def snapshot_checkpoint_assets(
@@ -31,6 +49,7 @@ def snapshot_checkpoint_assets(
     as_of: datetime,
     current_run_only: bool,
     compatible_execution_history: bool,
+    projected_fill_counts: Mapping[str, int] | None = None,
 ) -> tuple[dict[str, list[dict[str, object]]], dict[str, dict[str, object]]]:
     """Freeze each asset in the requested execution-history scope."""
     assets: dict[str, list[dict[str, object]]] = {}
@@ -38,7 +57,11 @@ def snapshot_checkpoint_assets(
     for symbol, path in paths.items():
         if current_run_only:
             snapshot = snapshot_current_asset_ledger(
-                path, run_id=run_id, as_of=as_of, allow_incomplete_tail=True
+                path,
+                run_id=run_id,
+                as_of=as_of,
+                allow_incomplete_tail=True,
+                minimum_fill_count=(projected_fill_counts or {}).get(symbol, 0),
             )
         elif compatible_execution_history:
             snapshot = snapshot_projected_compatible_execution_ledger(
