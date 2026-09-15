@@ -1,0 +1,188 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v89-entry-deadline-engine-gap-20260908",
+  "revision_number": 3,
+  "supersedes_revision_id": "f00c5edeadc465e7891612088c532756f3d1607d7aaf1945d873faa84e40c57c",
+  "created_at_utc": "2026-09-15T22:00:40.152235+00:00",
+  "strategy_id": "cohort_execution",
+  "symbol": "MULTI",
+  "status": "retain",
+  "hypothesis": "The prior entry-deadline candidate has been incorporated into the qualified native release; its pending-candidate journal status no longer reflects authenticated source installation.",
+  "decision": "Retain the integrated successor and close the stale pending-candidate status. All 19 relevant prestart sources match the qualified release, including the unchanged original central guard. No further execution change is justified by this reconciliation.",
+  "confidence": "high",
+  "falsifier": "Changed archive hash, missing final guard, resurrected unsent intent or contradictory native source/execution evidence reopens this conclusion.",
+  "evidence": [
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/docs/reviews/2026-09-15-v89-entry-deadline-status-reconciled.md",
+      "role": "evidence_00_2026-09-15-v89-entry-deadline-status-reconciled.md",
+      "sha256": "306e9a41aa86569fe6664661a0a7cebda095a3d46183e0cccba45f1f6471a000",
+      "bytes": 2578
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/docs/research-journal/v89-entry-deadline-engine-gap-20260908-v2.json",
+      "role": "evidence_01_v89-entry-deadline-engine-gap-20260908-v2.json",
+      "sha256": "1e1867eb79796dafa2a9d5a747d9cde57021d92b986efe276a70f78637313407",
+      "bytes": 36285
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/backups/bidirectional_cohort/prestart_20260915T183016.143980Z_39e334fc97f3/manifest.json",
+      "role": "evidence_02_manifest.json",
+      "sha256": "9f20a7a850c2625c977c59ba7d292a9d9c1a09e56b5f71e73d7759445ae76029",
+      "bytes": 946706
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_band_history_install_20260915_v1/prestart_source_comparison.json",
+      "role": "evidence_03_prestart_source_comparison.json",
+      "sha256": "e027d6ca7ce9dca6d30d212d33cf26169f1532f11310ee3464c8cd98c53b1da4",
+      "bytes": 11881
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_release_source_20260914_v1/backend_installation/installed.json",
+      "role": "evidence_04_installed.json",
+      "sha256": "0eac3600f8dbf837380567a529e023891b4a4e3ae342ff6f241bc1e1f97aa9c2",
+      "bytes": 5773
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/docs/reviews/2026-09-14-v89-qualified-native-release.md",
+      "role": "evidence_05_2026-09-14-v89-qualified-native-release.md",
+      "sha256": "792b67874e6a7800242965ce438947191da502e6320c8531a51dc1e12e8a7fa3",
+      "bytes": 13234
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_band_history_install_20260915_v1/prestart_sources/src/hypervector/live/bidirectional_intents.py",
+      "role": "evidence_06_bidirectional_intents.py",
+      "sha256": "47de902119a5f72c1afc7a92fa57c9e856f59f801e0b42e07142d4e3c74a3278",
+      "bytes": 14694
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_band_history_install_20260915_v1/prestart_sources/src/hypervector/live/cohort_entry_submission.py",
+      "role": "evidence_07_cohort_entry_submission.py",
+      "sha256": "cd6b464e9d6f48fd12923c8cb5558f15a6b3c99f55367bc5f16101b44a5f730a",
+      "bytes": 6157
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_band_history_install_20260915_v1/prestart_sources/src/hypervector/live/cohort_routing_execution.py",
+      "role": "evidence_08_cohort_routing_execution.py",
+      "sha256": "10c24c2cf67b020b73300b5090eb18c91bcd185ca671ab6ffe902d83f09bf9c9",
+      "bytes": 4206
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_band_history_install_20260915_v1/prestart_sources/src/hypervector/live/entry_submission_deadline.py",
+      "role": "evidence_09_entry_submission_deadline.py",
+      "sha256": "04ed3818b53c47fc54f5d2dbe0291839c78fbaf22eee24c8924fc90a5a436437",
+      "bytes": 3663
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_band_history_install_20260915_v1/prestart_sources/src/hypervector/live/hyperliquid_btc_adapter.py",
+      "role": "evidence_10_hyperliquid_btc_adapter.py",
+      "sha256": "756adb68afa58927faa6333b2c702da992a918f42842bd14370e2e13f2a018af",
+      "bytes": 14210
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_band_history_install_20260915_v1/prestart_sources/src/hypervector/live/hyperliquid_protocol.py",
+      "role": "evidence_11_hyperliquid_protocol.py",
+      "sha256": "33bb40e7d79a915b59b3d8f45b53cb7ac3d348d83d43c225c99b4c9b14483a43",
+      "bytes": 11392
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_band_history_install_20260915_v1/prestart_sources/src/hypervector/live/hyperliquid_sol_adapter.py",
+      "role": "evidence_12_hyperliquid_sol_adapter.py",
+      "sha256": "ddd8cb3ce2c685cc0bb457a5166a5868e5733eb86b0ecd89d1078d7518737911",
+      "bytes": 7442
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_band_history_install_20260915_v1/prestart_sources/src/hypervector/live/multi_asset_cohort_payloads.py",
+      "role": "evidence_13_multi_asset_cohort_payloads.py",
+      "sha256": "324951e68fd077295cbe159c2054a9ff3b9af8ac3efc04e99737cc3382ec6f67",
+      "bytes": 4849
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_band_history_install_20260915_v1/prestart_sources/src/hypervector/live/multi_asset_cohort_telemetry.py",
+      "role": "evidence_14_multi_asset_cohort_telemetry.py",
+      "sha256": "5b851054e3689578f6bae11e70c4fbd2ff2afaa9137cb97023624fc27f9c2e80",
+      "bytes": 19458
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_band_history_install_20260915_v1/prestart_sources/src/hypervector/live/multi_asset_directional_adapter.py",
+      "role": "evidence_15_multi_asset_directional_adapter.py",
+      "sha256": "1aec68abbfa16fa50c6de9dcc4a60278cd11c363fa12054b6cd1417c41eb3521",
+      "bytes": 4813
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_band_history_install_20260915_v1/prestart_sources/src/hypervector/live/multi_asset_live_protocols.py",
+      "role": "evidence_16_multi_asset_live_protocols.py",
+      "sha256": "17318fe85cb0790affd57005355213ec85528db84ef27cf3e17d93d39c6deb0d",
+      "bytes": 3665
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_band_history_install_20260915_v1/prestart_sources/src/hypervector/live/multi_asset_live_runner.py",
+      "role": "evidence_17_multi_asset_live_runner.py",
+      "sha256": "da27670c6c986340c9ba8ee0dc047b5654d38562d7043f3a350a3e85766a7d5a",
+      "bytes": 19220
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_band_history_install_20260915_v1/prestart_sources/src/hypervector/live/multi_asset_live_runner_support.py",
+      "role": "evidence_18_multi_asset_live_runner_support.py",
+      "sha256": "a946dd364eb39366b9a1e6553a449fb6ed039976614db4939cc00ee06e804696",
+      "bytes": 10503
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_band_history_install_20260915_v1/prestart_sources/src/hypervector/live/sol_order_restart.py",
+      "role": "evidence_19_sol_order_restart.py",
+      "sha256": "459a14de0fd8fe68c71809d917bd58426f6d392a710bb24c56571ff887dae946",
+      "bytes": 9994
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_band_history_install_20260915_v1/prestart_sources/src/hypervector/live/sol_order_submission.py",
+      "role": "evidence_20_sol_order_submission.py",
+      "sha256": "f260c4fb0efa68feac73d8d4b0e19f2bbd0311607d62c7813692aa745b87940f",
+      "bytes": 14993
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_band_history_install_20260915_v1/prestart_sources/src/hypervector/live/sol_range_onset_engine.py",
+      "role": "evidence_21_sol_range_onset_engine.py",
+      "sha256": "7ac193d88265c2984ad91cf281f8256d27c597d1b22157483579161c52071f62",
+      "bytes": 19513
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_band_history_install_20260915_v1/prestart_sources/src/hypervector/live/sol_range_onset_engine_events.py",
+      "role": "evidence_22_sol_range_onset_engine_events.py",
+      "sha256": "998307bdc1f813abbe7026661adbdf5a9d77aa7508cd4af0bc3c9623c902ed3b",
+      "bytes": 5837
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_band_history_install_20260915_v1/prestart_sources/src/hypervector/live/sol_range_onset_ledger.py",
+      "role": "evidence_23_sol_range_onset_ledger.py",
+      "sha256": "17fe486df57751878fbad98395bfe4dc244f8ee37bd55c121f0edb652cfa4a9f",
+      "bytes": 14597
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_band_history_install_20260915_v1/prestart_sources/src/hypervector/research/cohort_entry_age_diagnostics.py",
+      "role": "evidence_24_cohort_entry_age_diagnostics.py",
+      "sha256": "1f0babe95b89d963116b61ca1cd9214463596fa3febc016776a7668645a0fce0",
+      "bytes": 17084
+    }
+  ],
+  "metrics": {
+    "pipeline_status": "accepted_in_installed_successor",
+    "old_candidate_commit": "3d204863af40536187df96f161f4874d9fa42166",
+    "qualified_successor_commit": "d01abba1deb2c54141ef88a9b8dce2a6ff95335f",
+    "candidate_source_files": 19,
+    "prestart_matches_qualified_successor": 19,
+    "prestart_matches_original_candidate": 11,
+    "later_qualified_file_revisions": 8,
+    "new_execution_source_changes": 0,
+    "runtime_strategy_changed": false,
+    "fresh_live_expired_entry_exercise": false,
+    "next_investigation": "Do not reopen without contradictory source or native execution evidence."
+  },
+  "limitations": [
+    "Source provenance confirms integration and bundle identity, not observation of every active in-memory code path.",
+    "No new live expired-entry experiment was performed; prior fake-venue tests remain historical evidence.",
+    "Final local checks cannot guarantee venue receipt timing after signing, scheduling and transmission.",
+    "No financial benefit was measured; all prior revisions and rollback limitations remain preserved."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}
