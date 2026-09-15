@@ -1,0 +1,232 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v89-provider-exit-side-display-20260915",
+  "revision_number": 1,
+  "supersedes_revision_id": null,
+  "created_at_utc": "2026-09-15T21:27:05.566682+00:00",
+  "strategy_id": "multi_asset_bidirectional_cohort",
+  "symbol": "MULTI",
+  "status": "retain",
+  "hypothesis": "The 21:00 UTC SPCX provider signal targets shorts while the actual lifecycle is long; native exit-side evidence is lost in the TUI display model and can misrepresent position management.",
+  "decision": "Retain the side-correct backend behavior and install the authenticated display-only repair. The monitor now preserves exit targets, simultaneous entry/exit signals and explicit missing-side uncertainty.",
+  "confidence": "high",
+  "falsifier": "A wrong or clipped displayed target, loss of simultaneous signal evidence, fabricated legacy side, lost leverage, changed execution behavior or contradictory native record reopens the affected conclusion.",
+  "evidence": [
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/docs/reviews/2026-09-15-v89-provider-exit-side-display.md",
+      "role": "validation_00_2026-09-15-v89-provider-exit-side-display.md",
+      "sha256": "9283bcd2d392209bd9134fa75396cc2e286573a963a65a1ca9330f36189f44a1",
+      "bytes": 6253
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/docs/plans/2026-09-15-v89-provider-exit-side-display.md",
+      "role": "validation_01_2026-09-15-v89-provider-exit-side-display.md",
+      "sha256": "e005468e81802002e0efe8d1535ad9116e7b0cff95142c8b455196e37a40b740",
+      "bytes": 1421
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_exit_side_display_20260915_v1/capture_manifest.json",
+      "role": "validation_02_capture_manifest.json",
+      "sha256": "723ce79b518ec23ff2fae50c664cefdd59f248a135fc6d00addb6ec095c286f9",
+      "bytes": 723
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_exit_side_display_20260915_v1/routing.jsonl",
+      "role": "validation_03_routing.jsonl",
+      "sha256": "d260c365a5d1ca5f7a4276d336dce5508c290f8c86923282628469f8c7d26915",
+      "bytes": 14430
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_exit_side_display_20260915_v1/checkpoint.json",
+      "role": "validation_04_checkpoint.json",
+      "sha256": "398ed773217724d48e8876d110c1ef00aeca567aad36d0487519a61229fbe427",
+      "bytes": 3340297
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_exit_side_display_20260915_v1/terminal_ledger.jsonl",
+      "role": "validation_05_terminal_ledger.jsonl",
+      "sha256": "16b824002814964f838d4d95b47a12a4d09ca687e1d230a169bb8315f66362af",
+      "bytes": 88792
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_exit_side_display_20260915_v1/terminal_inputs_manifest.json",
+      "role": "validation_06_terminal_inputs_manifest.json",
+      "sha256": "3f2ff3816b16e5ec329121f61301e048b3a86ac3dfa146c8c72c6d3625452e40",
+      "bytes": 1591
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_exit_side_display_20260915_v1/capture_terminal_inputs.py",
+      "role": "validation_07_capture_terminal_inputs.py",
+      "sha256": "0c7293b1e20a10e27f8a2c24a9de09088322a43e3f44122d8ea9c5b25f954b84",
+      "bytes": 3791
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_exit_side_display_20260915_v1/validate_native_exit.py",
+      "role": "validation_08_validate_native_exit.py",
+      "sha256": "c57acc78cade4f7c5d5a32d994c59db73f30c52ef0f5925313f5b6de08dc3945",
+      "bytes": 2966
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_exit_side_display_20260915_v1/native_exit_verified.json",
+      "role": "validation_09_native_exit_verified.json",
+      "sha256": "e8f830c409aeaa0a8007cad315ecc30b0bd5afce4a8cb7466ba1c43d3ba36d9c",
+      "bytes": 281
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_exit_side_display_20260915_v1/red-render.log",
+      "role": "validation_10_red-render.log",
+      "sha256": "02e22241eefda43407d645fc18dd2b7390c53b322758423363687761031d1c14",
+      "bytes": 6000
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_exit_side_display_20260915_v1/red-views.log",
+      "role": "validation_11_red-views.log",
+      "sha256": "7941ef8dec8d99f04808545bba5c017dd821f540f0422df8ccf9434a3e07ea58",
+      "bytes": 10336
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_exit_side_display_20260915_v1/red-legacy.log",
+      "role": "validation_12_red-legacy.log",
+      "sha256": "9af7144fd2f0b88af3c4a5fd67e797a8c204738933805eca8da82825a97bf67c",
+      "bytes": 6904
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_exit_side_display_20260915_v1/red-simultaneous.log",
+      "role": "validation_13_red-simultaneous.log",
+      "sha256": "a16fbf7a96d35d355983aa792def1711e3518cfc55d47d7a7ec935bdb4f1370a",
+      "bytes": 7034
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_exit_side_display_20260915_v1/rust-suite-final.log",
+      "role": "validation_14_rust-suite-final.log",
+      "sha256": "bf4e6d3e25e0acd73708ae8859c22e452f4b34f892fe521a0b25d8bbdec76b57",
+      "bytes": 71852
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_exit_side_display_20260915_v1/installed-rust-suite.log",
+      "role": "validation_15_installed-rust-suite.log",
+      "sha256": "2cdd01a9331289297eaa2df42c5a83ab4c56352496f993f47801582494773bb3",
+      "bytes": 71896
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_exit_side_display_20260915_v1/exit-controller.log",
+      "role": "validation_16_exit-controller.log",
+      "sha256": "23a7967b0e78f625b0ede644c4500d575e290131f962d80b182d2016db34c621",
+      "bytes": 99
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_exit_side_display_20260915_v1/release-build-final.log",
+      "role": "validation_17_release-build-final.log",
+      "sha256": "05122184d45cedb9baf06078518b46d58f00cb2f143cffc3f09e20913bf72303",
+      "bytes": 196
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_exit_side_display_20260915_v1/capture_terminal.py",
+      "role": "validation_18_capture_terminal.py",
+      "sha256": "9c1dc41ebe25bb16cd88b9cf882e264764d9b18111319735c116c665d46871ae",
+      "bytes": 4562
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_exit_side_display_20260915_v1/capture_terminal_initial.py",
+      "role": "validation_19_capture_terminal_initial.py",
+      "sha256": "5ea72202d049ab90275cc7f71ba965a2580a7b1091f5150522d4158061c99832",
+      "bytes": 4558
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_exit_side_display_20260915_v1/terminal_read_only.sb",
+      "role": "validation_20_terminal_read_only.sb",
+      "sha256": "9c78572e6a745964c260a488a227c4d9a9805e5bf3d0eb2168913612657b2ccc",
+      "bytes": 137
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_exit_side_display_20260915_v1/candidate-terminal-1.log",
+      "role": "validation_21_candidate-terminal-1.log",
+      "sha256": "83243dd9131cc54c5df67e8713dd41938adf199193cf933c427f5e16a127cbeb",
+      "bytes": 5548
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_exit_side_display_20260915_v1/candidate_terminal_final/verified.json",
+      "role": "validation_22_verified.json",
+      "sha256": "d785d15e5d854df6eecaf688514155b25f60ed58aaffc4a9de0a3eccaadeef54",
+      "bytes": 333
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_exit_side_display_20260915_v1/installed_terminal/verified.json",
+      "role": "validation_23_verified.json",
+      "sha256": "bdb6d36cb8814c1e599d8bca7808fdad558d515b7bc08d8355003cf3f15a1da2",
+      "bytes": 333
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_exit_side_display_20260915_v1/terminal_capture_manifest.json",
+      "role": "validation_24_terminal_capture_manifest.json",
+      "sha256": "6b40383b9ad19cc2b74ba7096b1a38d611e623ffcfe67681d4af5cc6d372c0d2",
+      "bytes": 15982
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_exit_side_display_20260915_v1/qualification.json",
+      "role": "validation_25_qualification.json",
+      "sha256": "03a9b755e2831939fdd9a4c39e5c03be50df1e3dfb672de0c645693e4799d6a5",
+      "bytes": 1668
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_exit_side_display_20260915_v1/install_display.py",
+      "role": "validation_26_install_display.py",
+      "sha256": "2286677908eaf0318aee25bd5da4557ab7a4ee7a766fe1c9a4cf23ad14471c67",
+      "bytes": 2647
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_exit_side_display_20260915_v1/installation/source.patch",
+      "role": "validation_27_source.patch",
+      "sha256": "b6c8d5493623710b936fdabd126bc5f99970e8cb711ae673d217728f1d8fb4de",
+      "bytes": 19025
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_exit_side_display_20260915_v1/installation/installed.json",
+      "role": "validation_28_installed.json",
+      "sha256": "3b3289aa4bda4ba9356c50828cee47a3cc1cd7913c6c1ec0821a4a9785438176",
+      "bytes": 4449
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_exit_side_display_20260915_v1/installation/reused_installer.json",
+      "role": "validation_29_reused_installer.json",
+      "sha256": "2f9e6f753f050c3d71f80393f80d2a7ea2ff61edefda9b8f20bc3f04620fdcf7",
+      "bytes": 379
+    }
+  ],
+  "metrics": {
+    "pipeline_status": "accepted_display_repair",
+    "source_sequence": 607914,
+    "native_exit_sides": [
+      "short"
+    ],
+    "actual_position_side": "long",
+    "native_actions": 0,
+    "payload_roundtrip_exact": true,
+    "native_long_exit_fact": null,
+    "counterfactual_short_exit_fact": "hourly_price_recipe_exit",
+    "installed_rust_tests_passed": 655,
+    "installed_rust_tests_ignored": 23,
+    "controller_tests_passed": 11,
+    "native_terminal_sizes": [
+      "100x28",
+      "120x36",
+      "190x52"
+    ],
+    "final_terminal_artifacts_verified": 56,
+    "protected_other_files_unchanged_at_installation": 5514,
+    "source_commit": "66e6fc84c1c8ff35cc77333fcec33f3160c1103a",
+    "binary_sha256": "52df3fbb38a0a91f8e4577bebb7884da537dc8c3c8fd35411751684d7866bc84",
+    "runtime_strategy_changed": false,
+    "next_investigation": "Next native lifecycle, protection change or fault from existing watcher PID70121/session19855; current opposite-side SPCX exit is explained."
+  },
+  "limitations": [
+    "One native decision boundary; no estimate of strategy expectancy or future returns.",
+    "Actual terminal captures use a frozen selected ledger and do not establish current freshness or replay completeness.",
+    "Legacy side uncertainty remains explicit; named fixture-dependent Rust tests remain ignored.",
+    "Original running combined TUI remains on its original executable; the separate versioned monitor must be opened to see the correction.",
+    "No live financial process control or strategy changes; prospective seals remain unopened."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}
