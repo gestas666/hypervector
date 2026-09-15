@@ -1,0 +1,135 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v89_combined_deployment_review_20260910_v1",
+  "revision_number": 4,
+  "supersedes_revision_id": "15aa0be4dbe5c2d9e52f90367d89c1d8627144fd6ae257cf061fa083c750d617",
+  "created_at_utc": "2026-09-15T22:13:31.385807+00:00",
+  "strategy_id": "multi_asset_growth_first_5000_noncrypto_research_v89",
+  "symbol": "PORTFOLIO",
+  "status": "retain",
+  "hypothesis": "The complete 72-path technical candidate can be installed and compatibly rolled back with authenticated executable selection, while the completed 48-case historical report provides a traceable financial basis for preserving the current profile.",
+  "decision": "Reconcile the stale candidate status with the authenticated installed successor. Preserve the original qualification and append the September 12 installation and current-source evidence. The superseded technical packet no longer awaits separate installation; no new code, runtime action or economic promotion is performed.",
+  "confidence": "high",
+  "falsifier": "A changed source/archive hash, missing candidate implementation in the installed successor or a contradictory behavior regression reopens this record. Source identity does not prove every active in-memory path or future behavior.",
+  "evidence": [
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/docs/reviews/2026-09-15-v89-candidate-installation-audit.md",
+      "role": "installation_provenance_00_2026-09-15-v89-candidate-installation-audit.md",
+      "sha256": "1ce08b803eb1cada03e6c314e242c18cd21cd488d424b97ccbfa5944654e87bd",
+      "bytes": 6127
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_candidate_installation_audit_20260915_v1/candidate_inventory.json",
+      "role": "installation_provenance_01_candidate_inventory.json",
+      "sha256": "d45c44aaaef5108913f054d6e18b0575d7099d72338c7d7b9648adc1f0c68bec",
+      "bytes": 28090
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_candidate_installation_audit_20260915_v1/source_comparison.json",
+      "role": "installation_provenance_02_source_comparison.json",
+      "sha256": "27c6052e419148be9f80415fcb3dea523eb1f5d1ea2aa7a60f81bcc1cec4cfd8",
+      "bytes": 89127
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_candidate_installation_audit_20260915_v1/installation_verified.json",
+      "role": "installation_provenance_03_installation_verified.json",
+      "sha256": "8f4ec02ca0470fb689ee2b5acd540b2ec7d586e4b32575ba5a579680a1f94e8f",
+      "bytes": 53351
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_candidate_installation_audit_20260915_v1/verify_installation.py",
+      "role": "installation_provenance_04_verify_installation.py",
+      "sha256": "c5d1ad8924a2ff3df1ae4b964b0ec02e24ffa954f900139559baff34b4b96502",
+      "bytes": 6330
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_candidate_installation_audit_20260915_v1/verification.log",
+      "role": "installation_provenance_05_verification.log",
+      "sha256": "3679eb61fff44eb859a10f15fe95d131fa070a238ee5c61d52bcd1db892a0d6e",
+      "bytes": 149
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_candidate_installation_audit_20260915_v1/frozen_source_manifest.json",
+      "role": "installation_provenance_06_frozen_source_manifest.json",
+      "sha256": "53d2514a890ac741636b7058cfc2903e70cb761d72cc5503c5ab82ae2c9d0411",
+      "bytes": 53590
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_technical_install_20260912_v1/authorization_and_scope.json",
+      "role": "installation_provenance_07_authorization_and_scope.json",
+      "sha256": "8ffa886be0268368af526863b061f7ad785b3870bbc4c79f325097c1174c4744",
+      "bytes": 815
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_technical_install_20260912_v1/installation_verified.json",
+      "role": "installation_provenance_08_installation_verified.json",
+      "sha256": "f8be52c8ddf3c6c2331c3f1a0c66e61ffd83f1083d5e088ce8794674da8c19e4",
+      "bytes": 9633
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_technical_install_20260912_v1/final_source_rehearsal.json",
+      "role": "installation_provenance_09_final_source_rehearsal.json",
+      "sha256": "b80d7bb47a6985a2a3e688734349c131da3cb9173ad8e40f02c03d4f220a758e",
+      "bytes": 234
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/docs/reviews/2026-09-12-v89-technical-updates-installed.md",
+      "role": "installation_provenance_10_2026-09-12-v89-technical-updates-installed.md",
+      "sha256": "6b0e9519ecf0a17c96284e05df169ac1b47a4af34db7ebd31b5a36826ae64372",
+      "bytes": 8416
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/docs/reviews/2026-09-14-v89-qualified-native-release.md",
+      "role": "installation_provenance_11_2026-09-14-v89-qualified-native-release.md",
+      "sha256": "792b67874e6a7800242965ce438947191da502e6320c8531a51dc1e12e8a7fa3",
+      "bytes": 13234
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_exit_side_display_20260915_v1/qualification.json",
+      "role": "installation_provenance_12_qualification.json",
+      "sha256": "03a9b755e2831939fdd9a4c39e5c03be50df1e3dfb672de0c645693e4799d6a5",
+      "bytes": 1668
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/docs/research-journal/v89-combined-deployment-review-20260910-v3.json",
+      "role": "installation_provenance_13_v89-combined-deployment-review-20260910-v3.json",
+      "sha256": "00bd9d58b65fcf4312a70d82369930150eabee1a70a51ec6964ce16fa16b9e6c",
+      "bytes": 22500
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_candidate_installation_audit_20260915_v1/v89_combined_deployment_review_20260910_v1-successor.diff",
+      "role": "installation_provenance_14_v89_combined_deployment_review_20260910_v1-successor.diff",
+      "sha256": "8faa6ce1b444f9169f176ea54b497df627fc522a85d0e0ddf16d0d061fde15a7",
+      "bytes": 13296
+    }
+  ],
+  "metrics": {
+    "pipeline_status": "accepted_in_installed_successor",
+    "original_candidate_commit": "564d72e81539afdd3e2979beea4086a655ec4350",
+    "technical_installation_commit": "1fba938c7e2067f79190b93d738d6125add71dd5",
+    "operational_tree_audited": "af9c604568755299d3ad8ec33916a6b6a72c974a",
+    "candidate_paths_checked": 13,
+    "current_paths_equal_original_candidate": 6,
+    "current_paths_with_later_changes": 7,
+    "candidate_paths_absent": 0,
+    "candidate_paths_still_at_parent": 0,
+    "aggregate_unique_source_test_paths": 111,
+    "aggregate_prestart_sources_authenticated": 39,
+    "historical_installation_hashes_verified": 69,
+    "new_production_source_changes": 0,
+    "fresh_test_suite_run": false,
+    "runtime_strategy_changed": false,
+    "next_investigation": "Reopen only with contradictory source or behavior evidence; this superseded technical packet no longer awaits installation approval."
+  },
+  "limitations": [
+    "This is a source-provenance and journal-status reconciliation; historical test counts are not fresh test results.",
+    "Candidate files include later qualified changes; identical whole-file hashes are not asserted where those changes exist.",
+    "The prestart bundle contains only 39 of the aggregate 111 source/test paths; installed TUI source/binary and runtime imports have distinct evidence.",
+    "The original running TUI remains on its original executable; no user-window upgrade is claimed.",
+    "No strategy expectancy, financial improvement or universally bug-free behavior is established.",
+    "No financial process control or production source change occurred; the independent equal-cap economic candidate and prospective seals remain unchanged."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}
