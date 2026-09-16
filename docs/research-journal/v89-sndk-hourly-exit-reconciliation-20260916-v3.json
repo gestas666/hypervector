@@ -1,0 +1,403 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v89_sndk_hourly_exit_reconciliation_20260916_v1",
+  "strategy_id": "hourly_donchian_20_10_atr20_bidirectional_v1",
+  "symbol": "xyz:SNDK",
+  "hypothesis": "The observed SNDK short completed through its configured hourly recipe exit, with native costs and funding fully explaining net realized cash.",
+  "status": "observe",
+  "execution_authority": "none",
+  "runtime_strategy_changed": false,
+  "automatic_promotion": false,
+  "created_at_utc": "2026-09-16T11:37:25.477530+00:00",
+  "revision_number": 3,
+  "confidence": "high",
+  "decision": "Native asset state resolves the local interruption: STOPPED/operator_stop at 16:41:33.263198 UTC, then exact OPEN adoption at 18:41:39.019858 UTC. Same covering venue stop and exposure observed on both sides; continuous venue protection remains unqualified. Preserve the earlier exit/cash results and seven missing decisions. A separate lifecycle-reporting candidate is proposed and not installed.",
+  "falsifier": "Changed native source bytes, inconsistent stop or position identities, altered execution plan, new order operations, changed fill identities or contradictory event ordering reopen the continuity finding. Earlier exit and accounting falsifiers remain applicable.",
+  "evidence": [
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/docs/reviews/2026-09-16-v89-sndk-hourly-exit-reconciliation.md",
+      "bytes": 5956,
+      "sha256": "27fb6c3df36a3632127bacd414556adee1e8a489becd10cffbebc06bf853bbc3",
+      "role": "sndk_exit_0"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/sndk_exit_20260916_v1/accounting_reconciliation.json",
+      "bytes": 1247,
+      "sha256": "e68013e5bd7ba68a07b05a75f06477db911d2a0a410d71f587d6667479fcaaaf",
+      "role": "sndk_exit_1"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/sndk_exit_20260916_v1/accounting_source_records.json",
+      "bytes": 22458,
+      "sha256": "27704f41af6e9ca809cf95254286ec974a844dc9a3f895b600bb46c7ddc7f601",
+      "role": "sndk_exit_2"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/sndk_exit_20260916_v1/reconcile.py",
+      "bytes": 4611,
+      "sha256": "31caeef9ce8b75ecf68f4098d9469ec754ffb6ff93768deab1e89f97aed14abc",
+      "role": "sndk_exit_3"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/sndk_exit_20260916_v1/capture.json",
+      "bytes": 1254,
+      "sha256": "e323833e9e5dd95dafdb7eade0137a9cf55d3e6c901d70e9e6199c04ba50bf5c",
+      "role": "sndk_exit_4"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/sndk_exit_20260916_v1/trade_reflection.json",
+      "bytes": 16992,
+      "sha256": "69f5059fe931ca032df6d0d75215c8eb0af331c9b57ef5b86b4994572e884ec7",
+      "role": "sndk_exit_5"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/sndk_exit_20260916_v1/xyz:sndk.jsonl.tail",
+      "bytes": 73198,
+      "sha256": "4f752a49cafa172f00845fb2f75771f1bf49ef71a1c853404dc8845e6aabce10",
+      "role": "sndk_exit_6"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/sndk_exit_20260916_v1/decisions.jsonl.tail",
+      "bytes": 498485,
+      "sha256": "8605344bac3f4080090f8b17a70b48395dbc03f81033aecc4831f6d5a0ac93ca",
+      "role": "sndk_exit_7"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/sndk_exit_watch_handoff.py",
+      "bytes": 2641,
+      "sha256": "ed932ea894686acf2e88cfcf2e6cb3db92a09e2a9c605be8dc744345e6950829",
+      "role": "sndk_exit_8"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/docs/reviews/2026-09-16-v89-sndk-exit-signal-reconstruction.md",
+      "bytes": 7127,
+      "sha256": "03fea6f45393c2dc0b9065e95028cb020403a20dbb2994601d6d20eb215eefa5",
+      "role": "sndk_signal_0"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/sndk_exit_signal_v1/verification.json",
+      "bytes": 3691,
+      "sha256": "176869d28369411255ff9c2735c261e9fff02720c30b726d198e5489b563ffc3",
+      "role": "sndk_signal_1"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/sndk_exit_signal_v1/capture.json",
+      "bytes": 2180,
+      "sha256": "531814eb842afe58b5fb0fd86574c32bb94a9e37027ee5a395c9ca86649632f0",
+      "role": "sndk_signal_2"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/sndk_exit_signal_v1/scope.json",
+      "bytes": 1035,
+      "sha256": "54eccae7faefe9d12b35cb93d0d4e2edcd3e01693ffe5e17e97a731d2682348c",
+      "role": "sndk_signal_3"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/sndk_exit_signal_v1/prior_prefix.jsonl.xz",
+      "bytes": 1321284,
+      "sha256": "35923020a9a94c083707d2962ab41d253a50b4b9c6bd395e2a97e54c1ff08786",
+      "role": "sndk_signal_4"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/sndk_exit_signal_v1/prior_selected_records.json",
+      "bytes": 2025500,
+      "sha256": "6d137252558d0d1b1a97cc29e59594439f6484b2086aca57f58bc49c4c78cd2d",
+      "role": "sndk_signal_5"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/sndk_exit_signal_v1/sndk_signal_audit.py",
+      "bytes": 15379,
+      "sha256": "4bbeff91ef8f513d7722b0f6b68da9ca39452c164933ac499d8dfb9e403fdd37",
+      "role": "sndk_signal_6"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/sndk_exit_signal_v1/test_sndk_signal.py",
+      "bytes": 3518,
+      "sha256": "b58944ddffde3b82628e6590d20e265cd8cff136ff27582b3b4849a2064f7689",
+      "role": "sndk_signal_7"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/sndk_exit_signal_v1/test_sndk_boundaries.py",
+      "bytes": 2440,
+      "sha256": "9ec8f01efef4b93063a8dedc93b7f87e0592e941072d3ebf5e6bd3fb669333c7",
+      "role": "sndk_signal_8"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/sndk_exit_signal_v1/audit.sb",
+      "bytes": 513,
+      "sha256": "3298072117c58839b7857e47add7eb6816b84d17a9d1c03b24f8f0fc8024d608",
+      "role": "sndk_signal_9"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/sndk_exit_signal_v1/analysis.json",
+      "bytes": 10606,
+      "sha256": "d34ac2fbbf1ea672b79393bd1b5fc09aa70d2cbf8c5316a32755fc97d1efdecf",
+      "role": "sndk_signal_10"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/sndk_exit_signal_v1/reproduction.json",
+      "bytes": 10606,
+      "sha256": "d34ac2fbbf1ea672b79393bd1b5fc09aa70d2cbf8c5316a32755fc97d1efdecf",
+      "role": "sndk_signal_11"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/sndk_exit_signal_v1/analysis.txt",
+      "bytes": 137,
+      "sha256": "427a387272529b068f7aa73813c9bfa3eacac8bd5d03b9902e4735c43cc02b98",
+      "role": "sndk_signal_12"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/sndk_exit_signal_v1/reproduction.txt",
+      "bytes": 137,
+      "sha256": "427a387272529b068f7aa73813c9bfa3eacac8bd5d03b9902e4735c43cc02b98",
+      "role": "sndk_signal_13"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/sndk_exit_signal_v1/red.txt",
+      "bytes": 28781,
+      "sha256": "e4a1105bb68d327a856515f5fe718cfbd46c194d3d36d852474783943ba02d3c",
+      "role": "sndk_signal_14"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/sndk_exit_signal_v1/tests_v1.txt",
+      "bytes": 37504,
+      "sha256": "5820de793f49ac531a0d2ba507a0fe6477f3cd0b5258fdf4785615ffa5ebee2b",
+      "role": "sndk_signal_15"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/sndk_exit_signal_v1/tests_v2.txt",
+      "bytes": 99,
+      "sha256": "dbb52695fa945f9f2d3206b34515c09fc5be51a4002308dfa0475343b4bd4ed5",
+      "role": "sndk_signal_16"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/sndk_exit_signal_v1/tests_v3.txt",
+      "bytes": 1257,
+      "sha256": "c7a1df632bd4defe901427558dcc2f24f978923f862d5fff0f39b22a9c1e95e6",
+      "role": "sndk_signal_17"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/sndk_exit_signal_v1/boundary_red.txt",
+      "bytes": 4872,
+      "sha256": "2ecf347eb34ff8c1df9b50e85e06abd0ff9a6af691dcfa83847ed00f376854ce",
+      "role": "sndk_signal_18"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/sndk_exit_signal_v1/coverage_v1.json",
+      "bytes": 15173,
+      "sha256": "e627a9297efc4e20e2cb0c0bf555f5b1af1dbece262e199aa07b2c569d022f1b",
+      "role": "sndk_signal_19"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/sndk_exit_signal_v1/journal_before_v2.json",
+      "bytes": 6732,
+      "sha256": "982a09d67771fd5adbb54d5b0068a0ae2797436b5d92ec4b2d8634901daa7a1e",
+      "role": "sndk_signal_20"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/spcx_exit_signal_v1/capture.json",
+      "bytes": 1977,
+      "sha256": "c789409b356b088bd6923484b5f639433e08f84fc4209bfdaede4484d3fde11c",
+      "role": "sndk_signal_21"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/spcx_exit_signal_v1/audit_signal.py",
+      "bytes": 15166,
+      "sha256": "a87f561cd4bda68a87183e59ed82f13e5f8c810d71679da8d715d9ecab86eb83",
+      "role": "sndk_signal_22"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/spcx_exit_signal_v1/selected_records.json",
+      "bytes": 12871743,
+      "sha256": "f49f65a1d147419dc0b608f1789f48ff4c42154635d74c26e00eedd483a08f51",
+      "role": "sndk_signal_23"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/spcx_exit_signal_v1/cohort_prefix.jsonl.xz",
+      "bytes": 9317304,
+      "sha256": "17d8644a9c7e950a46f8a99ed8633b07bb3b42bfb7887b52e36d7e9059be2764",
+      "role": "sndk_signal_24"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/src/hypervector/research/donchian_atr_breakout_signals.py",
+      "bytes": 7681,
+      "sha256": "4fa29db4abcbb0d034b5e8862e9d1c98899d2b69e142204f5721db8446aee186",
+      "role": "sndk_signal_25"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/docs/reviews/2026-09-16-v89-lifecycle-receipts-and-sndk-continuity.md",
+      "bytes": 7416,
+      "sha256": "b9ff9406024d9e8d23110e1a7da5a5e5165fd30c6252666b0c19a2075a5b1496",
+      "role": "sndk_continuity_0"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/sndk_restart_continuity_v1/capture.json",
+      "bytes": 3063,
+      "sha256": "8f5ad97a1fc80b0665b93daef78947bb318a62450a3a93abf59e5b657ce10aa6",
+      "role": "sndk_continuity_1"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/sndk_restart_continuity_v1/prior.jsonl.xz",
+      "bytes": 159860,
+      "sha256": "916604f7ab3e73ba6e87d692024d667705a4fbfcc652bf4362fa9fb4830f569f",
+      "role": "sndk_continuity_2"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/sndk_restart_continuity_v1/current.jsonl.xz",
+      "bytes": 9984,
+      "sha256": "3b9c408ae05f6fc91469b5216d4184cd714e034e020add0ec52f16dde6203092",
+      "role": "sndk_continuity_3"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/sndk_restart_continuity_v1/prior_selected.json",
+      "bytes": 2593399,
+      "sha256": "942ace7e2212f6be42a25c2cf1a8720fef22991f34467826dfdede2799608ed7",
+      "role": "sndk_continuity_4"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/sndk_restart_continuity_v1/current_selected.json",
+      "bytes": 129819,
+      "sha256": "dce37b1ce06af704199eca57ead5e0cb6b928765870636e0e76ec3e556c5f095",
+      "role": "sndk_continuity_5"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/sndk_restart_continuity_v1/audit_continuity.py",
+      "bytes": 7148,
+      "sha256": "4a08320cb7fd5914debfbe9f64f0a26bf18b3e9ab3eddb39b1e795c2d6c54a2d",
+      "role": "sndk_continuity_6"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/sndk_restart_continuity_v1/test_continuity.py",
+      "bytes": 3367,
+      "sha256": "00e686330a27205b50d2ba4d07375659b558ab4db998406a53485a5ba41548e8",
+      "role": "sndk_continuity_7"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/sndk_restart_continuity_v1/red.txt",
+      "bytes": 29933,
+      "sha256": "ed1e6cde3b2a7a28b834a5727d4c13da88a34741d60609245933f946a6b1c3fa",
+      "role": "sndk_continuity_8"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/sndk_restart_continuity_v1/tests_v1.txt",
+      "bytes": 99,
+      "sha256": "7c2881e72db05752ad9ec472b4fc8e907985ee0367cb0a16809ce0a81173f0cb",
+      "role": "sndk_continuity_9"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/sndk_restart_continuity_v1/analysis.json",
+      "bytes": 943,
+      "sha256": "1efe84c8f769a35ed29c32161e830b0074b92b697de94fa384bf4b3448d82749",
+      "role": "sndk_continuity_10"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/sndk_restart_continuity_v1/reproduction.json",
+      "bytes": 943,
+      "sha256": "1efe84c8f769a35ed29c32161e830b0074b92b697de94fa384bf4b3448d82749",
+      "role": "sndk_continuity_11"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/sndk_restart_continuity_v1/analysis.txt",
+      "bytes": 117,
+      "sha256": "a833cb32fdb9f51bf6381408a494e193c99c3a3caed78d5c62fe93520966d50f",
+      "role": "sndk_continuity_12"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/sndk_restart_continuity_v1/reproduction.txt",
+      "bytes": 117,
+      "sha256": "a833cb32fdb9f51bf6381408a494e193c99c3a3caed78d5c62fe93520966d50f",
+      "role": "sndk_continuity_13"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/sndk_restart_continuity_v1/audit.sb",
+      "bytes": 527,
+      "sha256": "d9565c6fb370c20c0c1126bb8a2746ffe3ffcec96bdc1eb0b759e74449bf1223",
+      "role": "sndk_continuity_14"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/sndk_restart_continuity_v1/verification_v1.json",
+      "bytes": 4462,
+      "sha256": "ded07d5ea5141307044390e509fb13de0432577863dc5e740d62d427bbc2ed04",
+      "role": "sndk_continuity_15"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/sndk_restart_continuity_v1/journal_before_v3.json",
+      "bytes": 24701,
+      "sha256": "89893dea84f9b84177102c2937cd9a5357ba8d0ac0df980806e2e2a8aff592dc",
+      "role": "sndk_continuity_16"
+    }
+  ],
+  "metrics": {
+    "entry_oid": 545845583477,
+    "exit_oid": 546496662445,
+    "size": 0.326,
+    "leverage": 10,
+    "entry_price": 1531.7,
+    "exit_price": 1545.3,
+    "gross_pnl_usd": -4.4336,
+    "fees_usd": 0.086667,
+    "funding_usd": 0.074819,
+    "net_pnl_usd": -4.445448,
+    "native_records_verified": 17,
+    "funding_receipts": 15,
+    "holding_time_ms": 54006144,
+    "new_completed_lifecycles": 1,
+    "verified_flat": true,
+    "remaining_sndk_orders": 0,
+    "financial_process_control": false,
+    "original_ten_candles_independently_recomputed": true,
+    "next_investigation": "Continue the original full native/source/account comparison; inspect actual execution or collector terminal events. Lifecycle-reporting patch awaits explicit deployment approval.",
+    "previous_goal_turn_classification": "progress: completed independent SNDK exit-signal reconstruction",
+    "this_goal_turn_classification": "progress: resolved recorded local stop and qualified an isolated lifecycle-reporting candidate",
+    "expected_quarter_hour_decisions": 60,
+    "observed_decisions": 53,
+    "nonseed_observed_decisions": 52,
+    "missing_decision_ms": [
+      1789490700000,
+      1789491600000,
+      1789492500000,
+      1789493400000,
+      1789494300000,
+      1789495200000,
+      1789496100000
+    ],
+    "fully_reconstructed_hourly_decisions": 12,
+    "nonhourly_decisions_checked": 40,
+    "incomplete_hourly_decisions": 1,
+    "incomplete_hourly_missing_minutes": 43,
+    "cross_run_overlap_minutes": 240,
+    "final_prior_exit_high": 1544.6,
+    "final_prior_exit_low": 1516.4,
+    "final_close": 1544.8,
+    "final_causal_native_minutes": 660,
+    "complete_hold_validation": false,
+    "earlier_verified_short_exits": 0,
+    "cohort_observation_gap_ms": 7225507.806884766,
+    "retained_source_rows": 17577,
+    "tests_passed": 25,
+    "reproduced_result_sha256": "d34ac2fbbf1ea672b79393bd1b5fc09aa70d2cbf8c5316a32755fc97d1efdecf",
+    "local_stop_reason": "operator_stop",
+    "local_stopped_to_open_seconds": 7205.75666,
+    "stopped_at_utc": "2026-09-15T16:41:33.263198+00:00",
+    "recovered_open_at_utc": "2026-09-15T18:41:39.019858+00:00",
+    "same_observed_stop_oid": 545845630697,
+    "stop_trigger_price": 1561.5,
+    "new_run_order_operations": 0,
+    "new_run_reconciliations": 23,
+    "continuous_local_management": false,
+    "continuous_venue_stop_presence_qualified": false,
+    "native_continuity_tests": 16,
+    "continuity_reproduction_sha256": "1efe84c8f769a35ed29c32161e830b0074b92b697de94fa384bf4b3448d82749"
+  },
+  "limitations": [
+    "One loss and a matching configured exit do not establish strategy expectancy.",
+    "Seven expected decisions are missing; the 18:30 record was a delayed pre-activation seed.",
+    "At 19:00 the exact channel lacks 43 earlier minutes; retained highs rule out the short exit but do not qualify the full channel.",
+    "Original ATR initialization, entry signal, private fill counterfactuals and real prospective study outcomes are not qualified.",
+    "No live parameter, strategy, universe, execution or deployment change.",
+    "Native asset state now proves a local STOPPED interval; it does not identify the stop-file or signal source or operator identity.",
+    "The same covering stop is observed before and after the interval; continuous venue presence is not independently observed.",
+    "The lifecycle-reporting candidate is not installed, and no financial process was controlled."
+  ],
+  "supersedes_revision_id": "feec32f582bc0aae293797cd37589259d9c9676746851e5a0fdbe4d2348ad491"
+}
