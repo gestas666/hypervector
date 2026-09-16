@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v89_sndk_hourly_exit_reconciliation_20260916_v1",
+  "strategy_id": "hourly_donchian_20_10_atr20_bidirectional_v1",
+  "symbol": "xyz:SNDK",
+  "hypothesis": "The observed SNDK short completed through its configured hourly recipe exit, with native costs and funding fully explaining net realized cash.",
+  "status": "observe",
+  "execution_authority": "none",
+  "runtime_strategy_changed": false,
+  "automatic_promotion": false,
+  "created_at_utc": "2026-09-16T07:16:49.613756+00:00",
+  "revision_number": 1,
+  "confidence": "high",
+  "decision": "Native accounting reconciles. Retain the new loss as one lifecycle in the declared exit-quality/account comparison; no live retuning from this single trade. Source-channel recomputation and complete account attribution remain qualified limits.",
+  "falsifier": "Changed native ledger bytes, missing or repeated settlements, non-reconciling costs/net, duplicate closes or disagreement with original channel candles reopen the respective finding.",
+  "evidence": [
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/docs/reviews/2026-09-16-v89-sndk-hourly-exit-reconciliation.md",
+      "bytes": 5956,
+      "sha256": "27fb6c3df36a3632127bacd414556adee1e8a489becd10cffbebc06bf853bbc3",
+      "role": "sndk_exit_0"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/sndk_exit_20260916_v1/accounting_reconciliation.json",
+      "bytes": 1247,
+      "sha256": "e68013e5bd7ba68a07b05a75f06477db911d2a0a410d71f587d6667479fcaaaf",
+      "role": "sndk_exit_1"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/sndk_exit_20260916_v1/accounting_source_records.json",
+      "bytes": 22458,
+      "sha256": "27704f41af6e9ca809cf95254286ec974a844dc9a3f895b600bb46c7ddc7f601",
+      "role": "sndk_exit_2"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/sndk_exit_20260916_v1/reconcile.py",
+      "bytes": 4611,
+      "sha256": "31caeef9ce8b75ecf68f4098d9469ec754ffb6ff93768deab1e89f97aed14abc",
+      "role": "sndk_exit_3"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/sndk_exit_20260916_v1/capture.json",
+      "bytes": 1254,
+      "sha256": "e323833e9e5dd95dafdb7eade0137a9cf55d3e6c901d70e9e6199c04ba50bf5c",
+      "role": "sndk_exit_4"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/sndk_exit_20260916_v1/trade_reflection.json",
+      "bytes": 16992,
+      "sha256": "69f5059fe931ca032df6d0d75215c8eb0af331c9b57ef5b86b4994572e884ec7",
+      "role": "sndk_exit_5"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/sndk_exit_20260916_v1/xyz:sndk.jsonl.tail",
+      "bytes": 73198,
+      "sha256": "4f752a49cafa172f00845fb2f75771f1bf49ef71a1c853404dc8845e6aabce10",
+      "role": "sndk_exit_6"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/sndk_exit_20260916_v1/decisions.jsonl.tail",
+      "bytes": 498485,
+      "sha256": "8605344bac3f4080090f8b17a70b48395dbc03f81033aecc4831f6d5a0ac93ca",
+      "role": "sndk_exit_7"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/sndk_exit_watch_handoff.py",
+      "bytes": 2641,
+      "sha256": "ed932ea894686acf2e88cfcf2e6cb3db92a09e2a9c605be8dc744345e6950829",
+      "role": "sndk_exit_8"
+    }
+  ],
+  "metrics": {
+    "entry_oid": 545845583477,
+    "exit_oid": 546496662445,
+    "size": 0.326,
+    "leverage": 10,
+    "entry_price": 1531.7,
+    "exit_price": 1545.3,
+    "gross_pnl_usd": -4.4336,
+    "fees_usd": 0.086667,
+    "funding_usd": 0.074819,
+    "net_pnl_usd": -4.445448,
+    "native_records_verified": 17,
+    "funding_receipts": 15,
+    "holding_time_ms": 54006144,
+    "new_completed_lifecycles": 1,
+    "verified_flat": true,
+    "remaining_sndk_orders": 0,
+    "financial_process_control": false,
+    "original_ten_candles_independently_recomputed": false,
+    "next_investigation": "Complete daily cash and seven/seven attribution preserving real carried inventory and native funding offsets.",
+    "previous_goal_turn_classification": "no_progress_on_research; user leverage question addressed with verified old/new TUI identities",
+    "this_goal_turn_classification": "progress"
+  },
+  "limitations": [
+    "One completed trade does not establish a broken strategy or prospective edge.",
+    "Favorable candle excursion is not an executable counterfactual profit.",
+    "Most retained regime-opposition observations for this inherited trade are unavailable.",
+    "Observed predicate agrees with reported channel; original ten candles have not been independently recomputed here.",
+    "No live parameter, strategy, universe, execution or deployment change."
+  ]
+}
