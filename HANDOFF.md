@@ -1,3 +1,39 @@
+## September 16: later receipt adapter qualified; historical checklist corrected
+
+The isolated source reader at **8793320e456cb607c7776d2fbf964a5da40d4e3e**
+preserves the explicit later study identity through authenticated snapshot/tape
+conversion. Candidate and archive each pass **102 tests**, covering all **185
+statements / 48 branches** in the three affected modules; ten inherited fixture
+resource warnings remain. All 5,710 archived source files retain exact bytes
+and executable bits after testing. The actual source conversion reconciles
+**33,613 requests / 1,256,247 receipts / 57,725 first/latest value versions**.
+Source/raw archives and failed-test evidence are retained. No runtime installation,
+financial process control, changed economics or outcome evaluation occurred.
+
+**Correction to the earlier next-work checklist:** native historical routing and
+dynamic account integration were already completed, as was the complete
+**48-case September 10 historical matrix**. Report SHA256
+`4648cc0a47b69e9f54ec2c13378ae24aa315099fd06c5777cc201cbdb97566cf`.
+Do not reimplement or rerun that completed work from the stale revision-22 gaps.
+
+**Next highest-value investigation:** implement the reproduced captured-only
+September 9–23 warmup boundary and exact later source-view identity. The original
+warmup loader still requires eighteen historical-prefix sources. Exclude older
+seed rows, retain missing observations and both causal receipt variants. Then
+qualify the separate prospective clock/account/output path and all 24 cells;
+the historical writer is not prospective qualification. Future warmup and the
+full economic evaluator remain unqualified; preserve every original/later seal.
+
+Review: `docs/reviews/2026-09-16-v89-prospective-source-adapter.md`.
+Evidence: `data/logs/research/bidirectional_cohort/v89_prospective_adapter_reconciliation_20260916_v1/`.
+Journal v4 revision **8f4b9f5064977a132b28d408fd402ea720c6378f80601a0ed8c7b4e7bbcb0572**.
+The diagnostic observer resumed from prior terminal cursors at **03:14:29 UTC**,
+PID **16340/session81488**, deadline near **05:14:29 UTC**. Its first scan has zero
+matching events. Lifecycle observer **71235/session76010** remains live to its
+04:57:48 deadline. Four research collectors and all five financial process births
+were revalidated; no control action taken. Persistent recovery approval remains
+pending. Continuous goal active; broader full-replay qualification is unfinished.
+
 ## September 16: later allocation scheduled hour verified
 
 The actual **03:00 UTC** cycle extends the source qualification below: **20 complete
