@@ -1,3 +1,30 @@
+## September 16, 13:45 UTC: monitor launch repaired; original backend stopped
+
+The independent monitor startup fix is installed and committed as `ad6f94a`.
+Six clean-environment regressions reproduced `ModuleNotFoundError: scripts`;
+41 candidate and 41 installed tests pass after correcting the direct/module
+import distinction. The updated TUI binary still matches SHA256
+`52df3fbb38a0a91f8e4577bebb7884da537dc8c3c8fd35411751684d7866bc84` and both
+leverage display tests pass. Review: `docs/reviews/2026-09-16-v89-monitor-clean-launch.md`.
+
+Original backend 30603 and its supervisor/reporter/TUI disappeared after a native
+STOPPED transition at 13:38:31 UTC. The last Brent position was -4.9 at 10x
+isolated at 13:38:27 UTC; current venue state is unverified. The user was asked
+whether the stop was intentional. No financial process control occurred in this
+work. A fresh independent monitor cannot attach to the old shared checkpoint.
+
+Research candidate `3d4de3c` remains isolated: 158 candidate and 158 archive tests,
+252 unchanged sampled native outputs, and 16 unmocked entry/exit/late/revised
+receipt controls. ETH/SOL median paired computation reductions are 43.62%/42.03%.
+Review commit `47c7c00`; journal v2 revision
+`78d9d09e086e3128672818eaecb4fe994d69117c1d1c95037ec48a216f7fcfad`,
+68 matching references, zero changed/missing. Full-period equivalence remains
+pending; original source/reproduction jobs and the account waiter retain their
+original source. Do not reopen completed old investigations from the dated notes
+below. Establish the backend stop/current exposure, then continue the preserved
+research jobs. Persistent collector recovery and lifecycle reporting installation
+questions remain pending; outcome seals remain closed.
+
 ## September 16: captured-account writer and independent archive parity
 
 Isolated source `445dcca706296eb4186cb20e8401e139ceb22873` binds the original/later studies to unchanged economics and real seals, authenticates selected sources and full opening warmup, and retains compressed native account evidence. Candidate: 128 tests, 252/252 statements and 96/96 branches. All 24 two-day synthetic cells independently reconcile; archived source passes 58 guard tests and reproduces every cell's calendar/event/account bytes. Quiet accounts, terminal opens, source drift and deterministic reruns are covered. This is programmed-provider component qualification, not complete prospective strategy/economic qualification.
@@ -404,52 +431,817 @@ Financial process control remains prohibited, prospective seals remain unopened,
 and the continuous research goal remains active. This turn made implementation,
 validation, storage and evidence-traceability progress; profitability is unproven.
 
+## September 15, 23:09 UTC: complementary diagnostic observer active
+
+A separate passive watch now covers degraded heartbeats, strategy intents,
+withheld/eligible/action routing rows and explicit entry non-submission/no-fill.
+Fourteen baseline cases reproduced the old lifecycle-only scope gap; all 31
+corrected-scope tests pass. Four authenticated prestart source files contain
+five relevant functions identical to current source. Independent SQL reconciles
+10,295,189 bytes / 4,064 native overlap rows with zero matching diagnostics;
+seven positive and three negative controls behave as expected. The verifier's
+initial SQL precedence failure was corrected and retained. No actual missed
+live diagnostic or economic improvement is established by this overlap.
+
+**Two distinct read-only scopes remain active; poll the existing handles:**
+- Lifecycle watcher: PID **17371**, exec session **27304**, deadline near
+  September 16 **00:49:45 UTC**, evidence `v89_native_observer_handoff_20260915_v1`.
+- Diagnostic companion: PID **67653**, exec session **82480**, started
+  23:09:07.268269 UTC, deadline near **01:09:07 UTC**, evidence
+  `v89_diagnostic_event_watch_20260915_v1`.
+
+Both result paths are under `data/logs/research/bidirectional_cohort/` in their
+named directories. No output from a tool wait is not terminal; do not duplicate
+or replace a watcher for that reason. Inspect its actual event/deadline result
+and retained final cursors before continuing. Classify withheld signals from
+native evidence rather than treating each as a fault. Financial process control
+remains prohibited; all five user-session process birth identities match.
+
+Review: `docs/reviews/2026-09-15-v89-diagnostic-event-observation.md`.
+Journal revision `ca94562ba0db6dbee5ca465591a8580196e0b23c62f4aed0c9ec4c303f100ba0`: 25 references match,
+none changed or missing. A transient database lock cleared on retry without
+interrupting its writer. Production source, live strategy/configuration and
+financial processes are unchanged. Prospective seals remain unopened.
+Next: first new diagnostic or lifecycle evidence; startup-source qualification
+after a normal user-controlled backend start. Completed studies need no repeat.
+This turn made scoped observation-coverage progress; the continuous goal is active.
+
+## September 15, 22:49 UTC: passive observer handoff repaired and active
+
+The prior observer actually ended at 22:39:23.988303 UTC with
+`observation_deadline`, tool exit 0. PID 70121 / session 19855 is terminal;
+do not poll or restart that handle. A synthetic late fill exposed a final-sleep
+blind interval. The retained old source/result were preserved; the new adapter
+restores saved offsets and incomplete prefixes and reads once more at deadline.
+Seven synthetic tests pass. An independent reader verifies 3,916,995 bytes /
+1,530 complete rows across eight saved handoff intervals with zero qualifying
+lifecycle/fault events. This is observer evidence, not a trading-engine repair
+or profit claim. Five financial-session identities remain unchanged.
+
+The successor started 22:49:45.457768 UTC: **PID 17371 / exec session 27304**.
+It is agent-owned, read-only and bounded to 7,200 seconds, near September 16
+00:49:45 UTC. Poll that same handle; a wait with no output is not terminal and
+does not justify another watcher. On an actual event inspect its native rows;
+on actual deadline inspect `watch_result.json` and `final_cursors.json` before
+another handoff. No financial process control is permitted.
+
+Evidence: `data/logs/research/bidirectional_cohort/v89_native_observer_handoff_20260915_v1/`.
+Review: `docs/reviews/2026-09-15-v89-passive-observer-handoff.md`.
+Journal revision `99bcf8b86946d1515cef21a09e66d0f9d128330272e873d178b4f0977c298833`: 12 matching references,
+zero changed or missing. The observer's native terminal outcome remains pending.
+
+The leverage display repair is already installed in the separate versioned
+`...-20260915-exits` monitor (SHA256 52df3fbb...6bc84); current user TUI PID 62017
+still runs the original executable. Current native SPCX/SNDK positions reported
+10x; two focused leverage layout/missing-data tests passed on this continuation.
+Do not repeat the completed leverage or routing studies. The guide carries the
+monitor command. Band-history and startup-candle source remain installed but
+await a normal user-controlled backend start. Prospective seals stay unopened.
+Continuous goal remains active; this turn made scoped observer-repair progress.
+
+## September 15, 22:33 UTC: current-run publication and routing coverage verified
+
+The native interval 18:41:51.993041–22:20:09.776771 UTC contains 869 routing
+records and 713 provider evaluations. All seven configured source-clock grids
+are complete, without duplicate decisions. Two eligible publications correspond
+to two durable intents: SPCX entered; SNDK was withheld because its short already
+existed under the configured one-position-per-symbol policy. The prior snapshot
+supports that reason. No eligible router publication is unaccounted for here.
+
+Source authentication: 3,919 native rows scanned, 1,741 selected rows matched to
+DuckDB and independently reauthenticated by byte offsets. Independent SQL agrees
+with all seven provider summaries; seven corrupted copies are rejected. The
+analysis harness initially misused Counter(mapping), was corrected to count
+keys, and retains the failed attempt. No production source or runtime changed.
+This does not replay upstream signals, reconstruct initial indicators, estimate
+profitable expectancy, or imply rare signals have a higher win probability.
+
+Review: `docs/reviews/2026-09-15-v89-current-run-routing-coverage.md`.
+Journal revision: `55c21d4ca92590fd5369c1c05d2ff64e28c0d60aa4333dff795d0b5fa502fc8d`; 11 references match,
+none changed or missing. Evidence: `data/logs/research/bidirectional_cohort/v89_current_routing_audit_20260915_v1/`.
+Do not dump its 31 MB native projection or full checkpoint to the console.
+
+Next: confirmed existing watcher PID 70121 / session 19855 through its finite
+22:39:14 UTC deadline. Poll the same handle; inspect an event or actual terminal
+result. Do not start a duplicate watcher because an observation wait expires.
+The current band fix and startup-candle capture remain installed but unactivated
+in backend PID 30603; verify only after a normal user-controlled backend start.
+No financial process control is permitted. Prospective seals remain unopened.
+Continuous goal remains active; completed technical/routing audits need no repeat.
+
+## September 15, 22:17 UTC: all stale technical candidate statuses reconciled
+
+The full `hypothesis_id LIKE 'v89%'` query covers both hyphens and underscores.
+It found thirteen older technical candidate records plus the separate equal-cap
+economic candidate. The thirteen technical records are now `retain`, with their
+own immutable superseding revisions. All 69 historical installation hashes,
+111 current source/test files and 39 available compressed/decompressed prestart
+sources authenticate. Source copies and successor diffs are retained. No further
+missing correction like the separately repaired band defect was found in this
+scope. This is provenance qualification, not a new behavioral or profit claim.
+
+All 195 new reference checks and 639 historical reference checks match;
+none is missing or changed. Those counts include shared references, not unique
+experiments. There are 166 frozen source/diff artifacts. Original current TUI
+ownership and activation limits remain explicit. No production source, profile,
+financial process or existing test result was changed. No old suite was rerun.
+
+Review: `docs/reviews/2026-09-15-v89-candidate-installation-audit.md`.
+Evidence/revision IDs: `data/logs/research/bidirectional_cohort/v89_candidate_installation_audit_20260915_v1/journal_verification.json`.
+The only remaining V89 latest `candidate` is the research-only equal-cap
+allocation hypothesis. Observation records are not automatically pending work;
+do not repeat their completed successor studies. The current band repair and
+startup-candle capture await the next normal user-controlled backend start.
+
+Next: existing read-only watcher PID 70121 / session 19855, bounded to 22:39 UTC.
+Revalidate/poll the same handle; do not restart it because an observation wait
+expires. Its result belongs under `v89_joint_funding_20260915_v1/watch_result.json`.
+Investigate new native lifecycle, protection or fault evidence. No financial
+process control is permitted. Prospective seals remain unopened. Goal active.
+
+## September 15, 21:57 UTC: band-history correction installed; activation pending
+
+A pending September 7 correction was missing from the qualified release and
+current prestart source. The preserved regression reproduced opposite exit
+flags for identical final 20-hour SPCX windows. Installed source `600d1a1`
+(candidate `f579cbf`) now reduces mean and population deviation within each
+window. Two regressions detect both errors; all three restored-defect controls
+fail. 36 candidate and 36 installed tests pass with 100% changed-module coverage.
+
+The repeated 1,152-hour / three-history study removes one exit disagreement.
+All nine cost-case results and 468 repeated trade records remain exactly equal;
+1,181 complete windows agree exactly, and 1,500 retained native SPCX minutes
+preserve the recent entry. This is a numerical consistency repair, with no
+measured profit uplift. ATR seed dependence remains separate. The first
+negative-control run exposed missing deviation coverage; it was repaired and
+its failed result retained before installation.
+
+The source is installed, but existing backend PID 30603 retains its previous
+imported calculation. No financial process was controlled. Activation waits for
+the next normal user-controlled backend start; verify its prestart source and
+startup-candle provenance then. Installation preserved 5,530 other files,
+all three TUI binaries and five financial-session process identities. The
+latest separate monitor already displays configured/venue leverage and explicit
+exit sides; do not repeat its completed acceptance tests or unchanged commands.
+
+Review: `docs/reviews/2026-09-15-v89-band-history-invariance-installed.md`.
+Evidence and rollback: `data/logs/research/bidirectional_cohort/v89_band_history_install_20260915_v1/`.
+Band hypothesis revision 2 is `4d0b4983894b5039ac59b1b9585f79a147a8d3bc47b34678326cdcac934a2eeb`
+with 41 matching new references (118 across history), none changed or missing.
+The old deadline candidate is separately reconciled as already integrated:
+19/19 prestart files match the qualified successor, 11/19 match the original
+candidate. Revision 3 is `4383137ed298367d2ce58a7a25b7369303ab5104266736951bb26b67af3bac19`,
+25 matching new references (146 across history), none changed or missing.
+No second execution change was needed. Serialize journal CLI reports because
+the command may acquire a writer lock; the transient collision was retained.
+
+Next: inspect a new native lifecycle/protection/fault event from the existing
+read-only watcher PID 70121 / tool session 19855, bounded through about 22:39 UTC.
+Inspect `v89_joint_funding_20260915_v1/watch_result.json` when it terminates;
+empty timed output is not completion. At the 22:01 UTC checkpoint, backend
+health is healthy, faults zero, 20 fills, eight closed and two open lifecycles.
+Continuous goal remains active. Prospective seals remain unopened.
+
+## September 15: provider exit-side display installed
+
+The 21:00 UTC SPCX recipe signal targeted shorts; the native account held a
+long, so the backend correctly took no action. The monitor had discarded the
+exit-side field. Installed source `66e6fc8` now displays explicit exit sides,
+simultaneous entry/exit signals, and missing-side uncertainty. The separate
+`-20260915-exits` binary retains the leverage repair. Installed validation:
+655 Rust tests passed, 23 fixture-dependent skips, 11 exit-controller tests,
+and frozen native terminal captures at three sizes. See
+[the validation](docs/reviews/2026-09-15-v89-provider-exit-side-display.md).
+
+The original financial session remains untouched. The read-only transition
+watcher remains PID 70121 / tool session 19855, bounded through approximately
+22:39 UTC. Next: investigate a new native lifecycle or fault; do not repeat the
+explained opposite-side exit diagnosis. Prospective seals remain unopened.
+
+## September 15: joint funding and inherited-lifecycle accounting verified
+
+The first joint SPCX-long/SNDK-short funding hour reconciles separately per asset. At 20:00:00.033 UTC, SPCX paid $0.003112 and SNDK received $0.003119; their identical timestamp and zero transaction hash do not collapse asset identity. All 260 sampled positions agree exactly with entry/fee/funding net collateral, including SNDK's inherited entry and four current-run funding receipts. One transport-interval observation per asset is explicit. These are repeated observations around one settlement, not independent economic trials.
+
+All 269 selected source records match ledger byte ranges; independent SQL matches 1,300 cash fields and 11 corrupted copies are rejected. Frozen network-denied reproduction passes. The new analysis SQL's inferred-timestamp cast was corrected after the independent check caught it. A scoped review found no corresponding defect in the current integer-epoch book/trade importer or explicitly offset-parsed cohort importer. No runtime source, strategy or settings changed.
+
+Review: `docs/reviews/2026-09-15-v89-joint-funding-reconciliation.md`. Journal: `docs/research-journal/v89-joint-funding-reconciliation-20260915-v1.json`. DuckDB revision `eba7db3c140b062e453a4114ae5561a9b1ec094957ad70d31e173a2380b9c86b` has 19 matching references. Evidence: `data/logs/research/bidirectional_cohort/v89_joint_funding_20260915_v1/`.
+
+**Next action:** await the specific read-only transition watcher, PID 70121 / tool session 19855, after revalidating that handle. It watches current run `bidirectional-live-1789497016143` for new order/fill/stop/target/close/fault/stopped events or backend identity change, with a two-hour finite observation deadline. Its terminal result will be `watch_result.json` in the evidence directory. No financial process control is permitted. An empty timed tool poll is not termination; inspect the same handle. Investigate a real new event instead of repeating leverage, funding or prior strategy studies. Current startup-input capture awaits the next normal user-controlled restart. Continuous goal remains active; prospective seals remain unopened.
+
+---
+
+## September 15, 20:14 UTC: exact startup input capture installed
+
+Installed source `d373079c6dbd55f2fc538e21bc757432ff6c28e4` matches candidate `bd8f15fd8e108eef2a430364dea67b74a78b6e5e`. Future normal backend startups capture full initial retained 1m frames before provider evaluation. Immutable Parquet manifests bind profile/run/cutoff and actual coverage; expected archive failure is explicit and adds no trading gate. Original startup inputs from the currently running process remain unavailable. No financial restart, signalling or execution action occurred.
+
+131 candidate and 131 installed tests passed; both new modules have 100% statement coverage (156 statements). Exact frozen SPCX replay preserves all 1,500 input rows, hourly indicator values, four provider evaluations and one intent. Synthetic seven-asset capture took 20.1 ms / 1.61 MB at 35,007 rows and 50.0 ms / 6.49 MB at the 141,127-row retention bound; these are single measurements, not upper bounds. The candidate loader's post-hash replacement race was reproduced and fixed before installation. 5,508 other files, both TUI binaries and user PIDs 29190/29191/30603/62016/62017 were preserved; reverse patch checked.
+
+Review: `docs/reviews/2026-09-15-v89-startup-candle-provenance.md`. Journal: `docs/research-journal/v89-startup-candle-provenance-20260915-v1.json`. DuckDB revision `26812ce677a5b715564519a486637715114620c657c5b35bfca8552b15b93dd5`. Evidence and rollback: `data/logs/research/bidirectional_cohort/v89_startup_candle_provenance_20260915_v1/`.
+
+The 20:14:12 UTC checkpoint remains 20/20 fills, eight closed, two open, one current-run fill. SPCX and SNDK each report 10x venue leverage. The original combined TUI uses the older executable; the independent versioned monitor command in `docs/guides/cohort-strategy-regime-monitor.md` shows configured/venue leverage. Keep the original combined session open. Leverage and entry-context fixes are installed and qualified; do not repeat unchanged tests.
+
+**Next highest-value investigation:** review new entry/exit or protection receipts from SPCX/SNDK for execution and final-cost consistency; authenticate the first startup archive after a normal user-controlled restart. Do not infer a profitable strategy modification from reproducibility or short open marks. Initial archives do not capture every later candle revision. Continuous goal remains active; prospective outcome seals remain unopened.
+
+---
+
+## September 15: new SPCX entry independently reconciled
+
+The 19:00 UTC SPCX long, entry OID 546010609566 / stop 546010759610, satisfies the fixed hourly band-reentry inequalities. Independent Decimal bands differ from recorded values by at most 3.41e-13; 617 overlapping minute candles match across all OHLCV fields. The crossing is 43.79% price rise / 56.21% band decline. Canonical trend opposition is recorded and does not violate the configured mean-reversion contract. Do not reopen the deferred crossing filter from this one open trade.
+
+3.47 at 144.01 gives $499.7147 notional, 10x isolated, $0.043175 entry fee and $49.928295 initial margin after fee. Dispatch age 19.432 seconds is within the configured 30 seconds. All 100 captured post-stop reconciliations retain the full-size reduce-only sell at 142.09; the fixed deadline is September 16 19:00 UTC. The sampled prefix ends September 15 19:25:22 UTC. Mixed-clock fill-to-stop-ack observation is about 4.659 seconds, not a continuous-protection guarantee.
+
+Offline acceptance rejects 14 corrupted copies and reproduces exactly. No trading code, parameters, deployment, process lifecycle or positions were changed. The original ATR seed remains unverified; only the exact recurrence from the recorded prior value is proved. The reconstructed 25-hour seed is not substituted for the original input history.
+
+Review: `docs/reviews/2026-09-15-v89-spcx-entry-reconciliation.md`. Journal `docs/research-journal/v89-spcx-entry-reconciliation-20260915-v1.json`, DuckDB revision `dfb5d6835adea0ff8d5ef369ca29eae4fb979b2f4f37e80fdbf99e977de7359f`. Evidence: `data/logs/research/bidirectional_cohort/v89_spcx_entry_audit_20260915_v1/`.
+
+**Next highest-value investigation:** design and validate bounded capture of the exact startup candle inputs so future ATR initialization is reproducible. Preserve current financial backend ownership; no restart for observability. Continue open-lifecycle reconciliation when new receipts/exits arrive. Existing leverage/context fixes are already installed and verified and need no repeated test loop. Continuous goal remains active; prospective outcome seals remain unopened.
+
+---
+
+## September 15, 19:18 UTC: restart entry context repaired and terminal verified
+
+Installed reporting commit `4dc5cc86b9c5bf1080aace94f4771e40bb4b6606` matches candidate `7d8e7a304086dc5f8fd0a93383b0cbce3d6af47f`. The current-run publisher now restores exact recorded entry evaluations for inherited lifecycles. Recovered annotations populate exact entry lookup only, leaving continuous timelines and current-run telemetry unchanged. Same-input native evidence restored eight closed entry contexts and the inherited SNDK entry; SNDK matches its pre-restart entry-context object exactly. Missing original provider fields remain unavailable.
+
+160 candidate and 160 installed tests passed; affected-module statement coverage 98%. Actual installed independent monitor opened all nine panes and both setup/closed-trade inspectors, showed leverage at four sizes, and displayed recovered SNDK entry support +1.00. Its own reporter PID 57028 was reaped, exit code 0, terminal restored. User session PIDs 29190/29191/30603/62016/62017 were preserved. No financial process control or strategy change occurred.
+
+At the captured 19:18 UTC checkpoint, compatible history is 20/20 fills, eight closed and two open lifecycles, one current-run fill and closed net −$25.609303. SPCX is newly long and SNDK remains short; both display configured/venue leverage 10x/10x. The original combined TUI/reporter are still loaded with their earlier code. Use the independent command in the review to consume the new reporting implementation, keeping the original combined session open. The versioned executable/hash remains unchanged from the leverage installation.
+
+Review: `docs/reviews/2026-09-15-v89-restart-entry-context.md`. Journal: `docs/research-journal/v89-restart-entry-context-20260915-v1.json`, DuckDB revision `8c91924dbdd68c80775fef5a31505eb17e726594ecdac0560c5ffe049a4bcb7d`. Evidence and rollback: `data/logs/research/bidirectional_cohort/v89_restart_entry_context_20260915_v1/`.
+
+**Next investigation:** reconcile the new SPCX entry's exact provider/regime/receipt/covering-stop chain and follow inherited SNDK through its eventual exit. The broader continuous research goal remains active. Do not repeat unchanged leverage/restart tests or qualification without new evidence. High confidence applies to the reproduced defect and tested/captured boundaries, not universal bug freedom or future returns.
+
+Earlier dated state follows.
+
+---
+
+## September 15: independent monitor and leverage display installed
+
+Installed monitor source `ab5647461f7cf29fe1f5bcdf2427b99b97738c50` matches candidate `f719ee56f6d30d5c979dd811be018d8002406b41`. Versioned executable `target/release/tui-regime-detector-v89-monitor-20260915` has SHA256 `09066c5c1c1e869866a7e339643b1fce7ab59e02e04dbbd670de4651ba8a9006`. Portfolio/trade rows show configured/venue leverage at compact and wide sizes; rolling history is labeled PROFILE. Independent mode removes credentials/operator authority and owns only its reporter/TUI. The original combined window still owns the financial backend.
+
+650 Rust tests passed (23 fixture-dependent ignored), 114 candidate and 114 installed Python tests passed. Eight installed terminal captures and two live independent-monitor runs verified all nine panes, setup details, exact 19/19-fill accounting, normal/fault cleanup and terminal restoration. Installation preserved 5,482 unrelated paths and the previous executable. All five current user-session processes survived both live tests.
+
+Current user-run backend PID 30603 / supervisor 29191 / run `bidirectional-live-1789497016143`; reporter 62016 and original TUI 62017. The earlier session is terminal. The new session recovered SNDK short .326, entry OID 545845583477 and stop OID 545845630697. Captured startup through 18:47:25 UTC contains no new order operations and reports zero faults. The standard reporter now includes the previous historical accounting fix; the running original TUI still uses its pinned old binary.
+
+Use the independent command in `docs/guides/cohort-strategy-regime-monitor.md` in another terminal. Do not close the combined window as a TUI update. High confidence is scoped to the tested source, inputs, sizes and captured lifecycle prefix; future outcomes remain unproven.
+
+Review: `docs/reviews/2026-09-15-v89-independent-monitor-and-leverage.md`. Journal: `docs/research-journal/v89-independent-monitor-leverage-20260915-v1.json`, DuckDB revision `ba042819bf42cd5e02e599ed40ca4e65468734a55059bc51dcae12fb16277f81`. Evidence and rollback: `data/logs/research/bidirectional_cohort/v89_independent_monitor_20260915_v1/`.
+
+**Next highest-value investigation:** follow the recovered SNDK lifecycle through its existing exit/protection policy and reconcile its costs; audit the next eligible provider/regime/route/receipt chain. Do not reopen unchanged qualification or infer strategy breakage from a sparse sample. The full continuous research objective remains active.
+
+Earlier entries below describe their dated state and are superseded by this entry.
+
+---
+
+## September 15: live backend running; reporting history fix installed, activation pending
+
+User-started backend PID 93674 / run `bidirectional-live-1789482753345` has fresh native heartbeats. Its inherited SNDK short closed through the existing maximum-hold policy, net +$23.503364 after lifecycle costs. At 15:54 UTC all seven assets were reported flat, all seven provider pairs observed, zero eligible entry intents and zero faults. This is operational evidence, not a profitability guarantee.
+
+Found and repaired a current-run checkpoint defect that omitted completed history on flat BTC/SPCX/Brent restarts. The corrected exact history is 18 fills / eight closes, compatible-profile net −$25.609303; the old reporter showed nine fills / +$1.735446. Candidate `6e0431c1956eb4a32123b726f1edee14970cfff3`; installed source `1b82bab190036e6efc7758ed6418e57e9fffc94f`. 146 candidate tests and 22 installed tests pass; independent frozen and actual-ledger accounting reconcile. Installation preserved 5,484 other protected paths and the financial backend process identity.
+
+**The active reporter PID 23862 has NOT reloaded the correction.** The combined TUI PID 23863 belongs to supervisor 92726; quitting it stops its owned backend. No unsupported reporter replacement or financial process control was performed. Validate fresh corrected accounting at the next normal reporter start; source installation is not active-TUI acceptance. Next investigate the first newly eligible entry against provider/regime/route/receipt/protection/cash evidence. Do not rerun unchanged historical qualification or weaken entry conditions merely because this short observation had no entries.
+
+See [report](docs/reviews/2026-09-15-v89-flat-restart-history.md) and `docs/research-journal/v89-flat-restart-accounting-20260915-v1.json`. Evidence and exact rollback bytes: `data/logs/research/bidirectional_cohort/v89_live_operational_20260915_v1/`.
+
+Current installed startup supplement: code `8c3ee9d`, [September 15 history and memory validation](docs/reviews/2026-09-15-v89-startup-history-and-memory.md). The combined backend/TUI command is documented there. The previous user startup exited without a new heartbeat; cause remains unverified.
+
+## September 14 V89 checkpoint v19 — qualified backend and TUI installed
+
+The qualified backend is installed at commit `1d5a8b0d917aa79915680cca333de13304f42db0`.
+All 94 changed files match candidate `d01abba`; final installed checks passed
+18 native cases with 401 matching project imports. TUI SHA256 remains
+`eada0b1359d6ea16e84dfb3d35b46538f95b6dd04cc1945f1a64d0614b5c3d9e`.
+
+The uninterrupted 44-hour scenario completed 10,557 polls, 11 fill legs and
+74 funding receipts with exact accounting. Final modeled equity was
+$5,033.28070452355614, including $31.1126 unrealized. The selected short sample
+does not establish strategy expectancy. Cold-history differences, including
+three slightly different simulated stop requests, are explained and retained.
+The complete monitor/checkpoint and installation checks passed.
+
+Fresh unsigned venue receipts at 17:59 UTC and installed pure startup checks
+reconciled six flat assets and the existing SNDK short of 0.306 with owned
+full-size stop 542326955281. Its original holding deadline has elapsed; the
+unchanged restored plan retains the configured overdue close request on restart.
+No financial backend was started. Final financial start remains user-run.
+After starting it, reopen the TUI so its checkpoint writer binds to the new run.
+
+[Qualified release and startup commands](docs/reviews/2026-09-14-v89-qualified-native-release.md)
+· [Monitor guide](docs/guides/cohort-strategy-regime-monitor.md)
+· journal revision `bc2438ec75556530fbed28e31f41eac3362ee707d6b59d4af835b806fd187863`.
+Source-bound final evidence and publication verification:
+`data/logs/research/bidirectional_cohort/v89_release_source_20260914_v1/`.
+
+High confidence is limited to the reported technical evidence; future returns
+and unseen venue behavior remain uncertain. The original September 14 1–5 p.m.
+Eastern release target was not reset; installation and final checks completed
+within it. Next: observe user-run startup/new monitor attachment, then review
+new native lifecycle evidence. Do not rerun completed scenarios unchanged.
+
+---
+
+Earlier checkpoint entries below are historical and superseded by V19.
+
+> September 14 TUI installation: the qualified partial-protection monitor is now
+> installed at root commit `cb536602e01983b57c3ab08d777632d6f4b6fecb`.
+> Binary SHA256 `eada0b1359d6ea16e84dfb3d35b46538f95b6dd04cc1945f1a64d0614b5c3d9e`.
+> See `docs/reviews/2026-09-14-v89-partial-protection-tui-installed.md` and the
+> updated monitor guide. The complete backend release remains under recorded
+> portfolio validation; no backend or financial execution was started.
+
+## September 14 V89 checkpoint v18 — recorded portfolio and bracket recovery
+
+Candidate source `be5119d35c488a1ec7b15840f4bc31f4c2caee26`; publication `d01abba`.
+The first continuous native portfolio completed 717 polls and one SOL short/stop
+lifecycle: net -$3.5644142916159934, independent Fraction account difference zero.
+The corrected rerun preserves result/poll/fetch bytes exactly. A 14-day-history
+control produces the same trades/cash, with differing readiness metrics.
+
+Fixed the reproduced BTC startup fault when fill history precedes terminal order
+status. Exact owned completed fills avoid unnecessary cancellation; sibling
+cleanup and bounded final flat reconciliation remain required. The related suite
+passes 1,086 cases, with all 553 imported source hashes matching. The changed
+module has 46/46 statements and 18/18 instrumented branches covered.
+
+Brent archive gaps repeatedly make hourly/regime inputs unready; longer history
+does not repair those gaps. Native hourly data has finite ATR in the same hours.
+Do not infer a live-feed defect or fill unverified missing minutes. The next
+fixed native-candle day is September 12 12:00 through September 13 12:00 UTC.
+All seven native histories have exact overlapping OHLCV and no minute gaps.
+
+[Review](/Users/gestas/Prototypes/hypervector-v89-native-account-replay-20260912/docs/reviews/2026-09-14-v89-recorded-portfolio-and-bracket-recovery.md)
+· journal revision `735a8fc5cd66a63dfa00a877c776ea11e1bc557f3ac0ceabf5cf567fe893191b`.
+Next-run evidence: `data/logs/research/bidirectional_cohort/v89_native_candle_portfolio_20260914_v1`.
+Check its actual process and completion receipts before resuming any job.
+
+One lifecycle does not validate profitability or full portfolio behavior. Queue,
+partial collateral/liquidation, final release qualification, backend/TUI agreement
+and installation remain unfinished. The full goal stays active. The 24–48-hour
+estimate remains low-confidence and conditional on findings; the user permits
+reasonable evidence-backed extension. No installation or backend launch occurred.
+Conditional startup approval persists; final live-money launch remains user-run.
+Installed TUI remains `844d7955`; candidate TUI remains `eada0b13`.
+
+---
+
+## September 13 V89 checkpoint v17 — protective execution and startup recovery
+
+Candidate source `a899c4a110e122f176c1dd87fb0149d2757816f6`; publication `a4fe615`.
+The broad offline suite passed 1,270 cases. A final 671-case suite qualified the
+subsequent orphan-stop receipt correction: 1,279 distinct cases overall.
+New protective execution coverage is 70/70 statements and 22/22 branches;
+the bounded startup consistency helper has 18/18 statements covered.
+
+Fixed the reproduced startup fault when venue-flat precedes owned stop receipts,
+using the existing bounded read policy and exact ownership proof. Replay now
+matches IOC orders at economic time, shares finite stop depth, respects protective
+arrival/cancel races and preserves delayed order revisions. Original authenticated
+SPCX receipts reject the equal-trigger/limit stop defect hypothesis.
+
+All seven assets now have a common authenticated July 21 21:00 UTC–July 22 01:00 UTC
+source window: 119,248 book snapshots and 15,348 prices. Its 550 missing midpoints
+remain missing. Source availability is not a completed portfolio experiment.
+
+[Review](/Users/gestas/Prototypes/hypervector-v89-native-account-replay-20260912/docs/reviews/2026-09-13-v89-protective-events-and-startup-receipts.md)
+· journal revision `fbda9a6fa6553f03a307ac3756b723fe795f5deb149239ab2164654b2da931e4`.
+[Detailed handoff](/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_protective_event_execution_20260913_v1/HANDOFF.md).
+
+Next: continuous native portfolio execution on those recorded sources, independent
+receipt-visibility stress, queue/funding/collateral qualification, final installation
+and backend/TUI agreement. The full goal remains active. User accepts a 24–48-hour
+working estimate with reasonable evidence-backed extension; confidence remains low.
+No installation or backend launch occurred. Conditional approval persists; final
+live-money launch is user-run. Installed source/TUI remain `a0e53e74` / `844d7955`.
+
+---
+
+## September 13 V89 checkpoint v16 — causal feed and polling repair
+
+Candidate source `1d335b4778c09e04a2af626f6e73db24cb594533`: 504 offline cases pass,
+447 imported module hashes verified. Twelve complete native poll outputs match
+the previous source, with the same 84 requests; median idle CPU cost improves
+from 1.93 s to 0.44 s (4.42x). Eight continuous full-runner polls preserve all
+56 acquisition clocks. These are bounded no-entry controls, not portfolio returns.
+
+All seven long candle sources are authenticated (620,370 rows). Paired native
+captures establish 66 omitted empty archive minutes. Reconstructing those verified
+minutes removes SPCX/SNDK UNKNOWN-versus-TREND_DOWN differences at both warm
+cutoffs; price and indicator differences remain. Do not fill unexplained gaps.
+
+[Review](/Users/gestas/Prototypes/hypervector-v89-native-account-replay-20260912/docs/reviews/2026-09-13-v89-continuous-feed-and-polling.md) · journal revision `f45bafd8a10cff792b89153fdb1e35608419ef56d979b5b5b59b2adae040b68f`.
+No installation or live-money launch occurred. Conditional start approval persists;
+final live-money launch is user-run. Installed source remains `a0e53e74`, installed
+TUI `844d7955`, candidate TUI `eada0b13`.
+
+Next: source-backed protective stop/target execution with shared finite IOC depth,
+then entry-rich continuous portfolio validation and qualified installation. Resolve
+future IOC depth reservation, event arrival ordering, partial collateral and
+oracle/funding joins. Do not restart completed data jobs or repeat the passing CPU
+experiment without new evidence. The full research goal remains active.
+
+---
+
+## September 13 v15 — offline SDK, native runner and completed source recovery
+
+Source `00397407f2e5863ba45abb5d9a24f6bb349524f4`; journal revision
+`8a771923132bd63b3e905336b4928f9b31bc31357da7101076eb795a46965b6e`.
+[Review](/Users/gestas/Prototypes/hypervector-v89-native-account-replay-20260912/docs/reviews/2026-09-13-v89-native-sdk-runner-candidate.md) and [verification](/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_native_sdk_ports_20260913_v1/verified_candidate.json).
+321 related cases reproduce with 415 identical imported modules. The new
+`v89_native_account_replay.py` command reproduces three original cold/warm
+control polls with native SDK/account/telemetry; these no-entry controls do not
+establish continuous historical portfolio returns. Native per-asset ledger
+identities, original decision clocks, missing-midpoint handling, post-only
+rejection and funding during SDK/acquisition waits now have regression evidence.
+
+All 2,204 planned book hours (16,220,356 snapshots) and price hours (2,400,795
+observations) are recovered and authenticated. Both acquisition jobs are terminal
+success; do not restart them. Preserve 29,662 explicit missing midpoint fields.
+At 11:41 UTC the 0.306 SNDK short and its reduce-only stop at 1669.9 remained
+open. Fresh local sequence 336473 remains STOPPED/operator_stop with the original
+September 12 14:00 UTC holding deadline. Later venue observations can update this.
+
+Next: causal historical candle acquisition and measured continuous native polling,
+then protective executions sharing finite book depth with IOC orders, oracle as-of
+settlements and explicit partial collateral. Resolve IOC reservation/event order
+before claiming protective matching. Do not substitute the old 177 planning trades
+for native decisions. The complete research mandate remains active. Installed
+source `a0e53e7` and TUI `844d7955...` remain unchanged; candidate TUI remains
+`eada0b13...`. Conditional backend approval is recorded; final money launch is
+user-run. No backend was started.
+
+## 2026-09-13 recorded-source checkpoint — v14
+
+High confidence within the tested scope: candidate source `6b10b639df70d5e19e0d1ca11114cb491258df5a`
+authenticates original orderbook pages and prevents repeated retrievals from
+replenishing finite snapshot liquidity. The exact 240 related Python cases pass
+in source and archive; 357 loaded modules match. Initial authenticated coverage:
+719 book hours / 4,605,741 snapshots and 8,400 official funding rows covering all
+177 planning trades. At 10:16 UTC, missing-source recovery had additionally
+qualified 242 book hours and stored 346 price hours (price parity pending).
+Full native seven-asset portfolio replay remains unfinished; no launch occurred.
+Installed source is still a0e53e74 and installed TUI hash remains 844d7955a2a4….
+
+At the 09:48 UTC venue observation, retained SNDK exposure was 19.8 hours beyond
+its original holding deadline, with a matching stop and STOPPED local state.
+The user was notified that this position needs manual attention. Preserve that
+timestamp; do not present it as a fresh account observation.
+
+[Review](/Users/gestas/Prototypes/hypervector-v89-native-account-replay-20260912/docs/reviews/2026-09-13-v89-recorded-lifecycle-sources-candidate.md) · [Journal v14](/Users/gestas/Prototypes/hypervector-v89-native-account-replay-20260912/docs/research-journal/v89-native-account-replay-20260912-v14.json)
+
+Evidence: `data/logs/research/bidirectional_cohort/v89_recorded_lifecycle_sources_20260913_v1/`.
+Revision: `17dde126d57f730de135feec444fd339db858cf36d4ead70ad0dce33608ba440`.
+The depth and price downloaders are still running (terminal handles 2039 and
+22140). Resume those handles or inspect their incremental receipt logs; do not
+launch duplicate jobs. Next: finish SDK-shaped offline ports and join actual
+poller/runner decisions with recorded depth, mark/oracle and funding inputs.
+Conditional backend approval remains recorded; final live-money launch is user-run.
+
+---
+
 # HANDOFF — hypervector
+
+**Latest partial-exit cleanup candidate — 2026-09-13T09:26:31.841823+00:00:**
+The [cleanup and shared-runner review](/Users/gestas/Prototypes/hypervector-v89-native-account-replay-20260912/docs/reviews/2026-09-13-v89-partial-exit-cleanup-candidate.md)
+records candidate `7f51417a2983827c25fcb0cc5ecd82e2abf8b0b7`:
+**1,517 distinct Python cases**, the exact **453-case archive subset**, and
+**647 TUI tests** pass (23 pre-existing skips). The three new cleanup modules have
+full measured statement/branch coverage. Completed exits survive cleanup faults
+and process death without duplicate closure; later contradictory evidence is rejected.
+Four simultaneous seven-asset cases match independent rational account arithmetic,
+and their complete emitted streams pass compact and wide TUI checks.
+These use recorded acquisition with prescribed executions and do not prove strategy edge.
+**Candidate not installed; whole-system readiness remains unestablished.**
+No money backend was started. Conditional approval persists; final live launch is user-run.
+Next: complete the recorded portfolio replay with entry-rich holding windows,
+qualified depth, fees, funding, collateral and scheduling interactions.
+Research revision: `7127ac11fb83e5a18aa49c4fc9d77348403fad17cef51b321a8f4f34f97ef2cb`. No fresh account observation is claimed.
+
+Earlier checkpoint notes follow; they do not override this current candidate status.
+
+**Latest partial-protective recovery candidate — 2026-09-13T08:22:25.749510+00:00:**
+The [integrated recovery and TUI review](/Users/gestas/Prototypes/hypervector-v89-native-account-replay-20260912/docs/reviews/2026-09-13-v89-partial-protective-recovery-candidate.md) supersedes the earlier
+receipt-only checkpoint. All **22 previously failing engine cases now pass**;
+**1,445 Python tests**, the same **381-case archive subset**, and **645 TUI tests**
+(23 existing skips) pass. Exact partial receipts, stop-exit obligations, original
+clocks, multi-order economics and current stop coverage are integrated in candidate
+`6b4112f20ff0ac723e45b387c7a8016eda754030`.
+**Candidate not installed; whole-system readiness remains unestablished.**
+ROOT runtime and TUI remain unchanged, and no money backend was started.
+Conditional approval remains recorded. Next: remaining contradictory-evidence
+and cleanup/recovery paths, then simultaneous seven-asset portfolio economics.
+Research revision: `1b4cc6810df3489a6cd361162d9065eae9a7722a3b33ac95b969d8c47fe9172c`. No fresh account observation is claimed.
+
+Earlier checkpoint notes follow; they do not override this current candidate status.
+
+**Partial protective execution remains unresolved — 2026-09-13T07:00:21.831262+00:00:**
+The [partial-protection checkpoint](/Users/gestas/Prototypes/hypervector-v89-native-account-replay-20260912/docs/reviews/2026-09-13-v89-partial-protective-execution-checkpoint.md)
+records **22 distinct failing native-engine cases**. Owned partial stops leave
+unmanaged residual exposure; BTC partial targets retain protection but fault at
+position-size reconciliation. Initial 32 runs contained ten duplicate direction
+selections; the corrected matrix covers each configured direction exactly once.
+
+**Component progress, not an installed recovery fix:** source `e4f982d` adds strict
+cumulative receipt accounting. **152 component cases pass** in source and archive;
+134 statements and 52 branches are covered without exclusions. All 1,134 prior
+successful cases remain passing. The broad source result is **1,286 passed,
+22 failed**, and retains pytest exit 1. There are 570 matching archived input
+identities and 337 matching archive-exercised imports.
+
+**Next:** persist receipt credit and the original stop-exit obligation through
+lifecycle/restart recovery; complete only the verified remaining stop exposure;
+retain partial exit fees/P&L; then qualify the actual seven-asset runner and TUI
+state. Native collateral evidence and recorded entry-rich economics remain open.
+No strategy/risk tuning, runtime installation, backend start or financial
+transaction occurred. ROOT remains `a0e53e7`; TUI hash is unchanged. Conditional
+start approval is retained; final money startup remains user-run.
+
+Journal `f488e7a2323b03e943c3b58d5ef2e6d401dc075b100cf4cdc9448f2279eb0db3`
+independently verifies all 21 fields and 115 evidence references. The 06:44:24 UTC
+process check found no exact known backend/TUI argument tokens; no new native
+account observation was made. Earlier installed checkpoints below remain dated.
+
+---
+
+**Installed acquisition-failure deadline correction — 2026-09-13T06:09:21.590630+00:00:**
+The [deadline recovery review](/Users/gestas/Prototypes/hypervector-v89-native-account-replay-20260912/docs/reviews/2026-09-13-v89-degraded-deadline-recovery-installed.md)
+records the correction installed at `a0e53e74b6a0e84e5f73e7cd9164ed2bef46e7ca`,
+matching source `6556506eaa6bade7b9507afe82bc9be593a0f42d`. **1,134 tests pass in
+source, archive and ROOT**, with 565 matching project imports and exact per-file
+coverage. Both installed SNDK controls reach an inert 0.306 close boundary.
+
+**Found and fixed:** unrelated BTC candle acquisition failure prevented an
+already-due SNDK fixed-hold close. Fresh venue reconciliation now precedes
+unconditional fixed/fallback/hard deadline handling, retaining the original
+clock and error, without a healthy heartbeat or invented soft regime decision.
+Nine behavior failures were reproduced; 31 new deadline/guard cases pass.
+The new module covers 40 executable statements and 12 branches completely;
+three exclusions are solely type-checking imports. The 36 installed files
+include prior v9 research/test support, with verified backups and rollback.
+
+**Dated account observation — 2026-09-13 05:58:07 UTC:** SNDK short **-0.306**,
+isolated 10x, matching full-size reduce-only stop **1669.9**, approximately
+**15.97 hours past** its recorded fixed holding limit. No other position/order
+appeared in the core/xyz responses. The stopped backend explains the missing
+local timed exit; the acquisition defect was separately reproduced offline.
+No backend or financial transaction was started. TUI binary/profile unchanged.
+
+**Next:** native partial protective-fill reconciliation through the actual runner,
+remaining exposure/clock/collateral evidence, then recorded entry-rich portfolio
+economics. Complete latest readiness/profitability remain unestablished; do not
+introduce return or drawdown gates or repeat completed bar/history matrices.
+Conditional backend approval remains retained; final money startup is user-run.
+
+Journal `41476aed3fab573bd0b48fc4a29067e705faa1551934e4854a9d884229b8ba35` independently verifies all 21 fields and
+158 evidence references. Raw installed import inventory retains
+its 1,363 .venv library files and two harness aliases separately from the 565
+matching project files. Earlier checkpoints below remain historical evidence.
+
+---
+
+**Configured runner / overdue-position checkpoint — 2026-09-13T05:24:31.891865+00:00:**
+The [recorded runner and SNDK review](/Users/gestas/Prototypes/hypervector-v89-native-account-replay-20260912/docs/reviews/2026-09-13-v89-configured-runner-replay.md)
+records **1,073 source/archive tests**, all prior 1,026 cases, 519 matching
+loaded file identities and exact per-file coverage. Recorded acquisition now
+flows through the actual configured poller, seven native engines and cohort
+telemetry. This revision is research-only; installed runtime remains
+`9be9dd6fe2659b826412799bc82851018543a6ab`, and the TUI binary/profile are unchanged.
+
+**Immediate operational finding:** at **2026-09-13 05:04:57 UTC**, the existing
+SNDK short **-0.306** remained open approximately **15.08 hours beyond** its
+recorded fixed 24-hour limit. Its matching full-size reduce-only stop **1669.9**
+was reported open. The actual ledger tail still matched STOPPED ownership;
+the 05:16:02 UTC process check found no exact known cohort/TUI entrypoint.
+These are dated observations. No backend was started or order submitted.
+
+**Highest-value next task:** prove exact overdue SNDK recovery, original hold
+clock and timed-close ordering through the native runner, including unrelated
+acquisition failure. Partial protection/collateral and complete recorded
+entry/close portfolio economics remain unfinished. Three zero-entry capture
+polls and synthetic protective receipts do not establish profitability or
+full readiness. Nearby depth candidates exist for 61/177 nominal entries;
+their bytes/full hold windows are not yet qualified.
+
+The new fetch source covers 122 statements and 44 branches completely; all
+32 patch paths reverse/reapply and 5,378 installed references remained unchanged.
+Journal `9ec9451b54172ce7736c50fe049f5977f950debb3711588b843d791f5d9b6cdb` independently verifies all 21 fields and
+65 evidence references. Conditional startup approval is
+retained; final real-money startup remains user-run. Earlier checkpoints below
+remain historical evidence. Do not repeat completed bar/history matrices.
+
+---
+
+**Installed late protective-recovery checkpoint — 2026-09-13T04:27:19.605871+00:00:**
+The [late protective-fill recovery review](/Users/gestas/Prototypes/hypervector-v89-native-account-replay-20260912/docs/reviews/2026-09-13-v89-late-protective-recovery-installed.md)
+records the correction installed at `9be9dd6fe2659b826412799bc82851018543a6ab`, matching
+source `ddd6c78a97e26e4ab8dd97e02d2854f2cb542519`. **1,026 tests pass in source, archive and
+ROOT**, with **489 matching imported files** and exact per-file coverage.
+Five installed files have verified backups/rollback. The new recovery module
+covers **74 statements and 38 branches without exclusions**. Existing profile
+and TUI binary remain unchanged; no backend was started.
+
+**New finding/fix:** all 16 delayed protective-history cases reproduced lost
+stop-only ownership or blocked BTC bracket recovery across repeated startups.
+Recovery now retains original OPEN identity only through consistent read-only
+failure history and requires exact complete, unique owned fills. All 16 native
+engine cases plus 44 adverse/context checks pass, including journal/cash and
+no-duplicate-execution checks.
+
+Unsigned core/xyz observation at **2026-09-13 04:13:25 UTC** showed the existing
+**SNDK short -0.306**, isolated 10x, and matching reduce-only stop **1669.9**;
+no other positions/orders appeared. This is a dated observation, not continuous
+monitoring. The scoped process check at 04:23:02 UTC found no known cohort
+backend or regime-TUI entrypoint.
+
+**Remaining:** partial protective execution/collateral and complete recorded
+acquisition/poller/runner portfolio economics. The highest-value next task is
+that actual configured runner integration, including recovery boundaries and
+unrelated fault histories. Full latest readiness/profitability remain
+unestablished. Conditional backend approval is retained; final real-money
+startup remains user-run. Do not repeat completed bar/history matrices.
+
+Journal `b1df6da953fb1f29e9eac020ae1d254321a755027faaa46c2e7efd01dba6d801` independently verifies all 21 fields and
+54 evidence references. Earlier checkpoints below
+remain historical evidence.
+
+---
+
+**Installed correction checkpoint — 2026-09-13T04:06:14.855247+00:00:**
+The [protective reconciliation and installation review](/Users/gestas/Prototypes/hypervector-v89-native-account-replay-20260912/docs/reviews/2026-09-13-v89-protective-reconciliation-installed.md)
+records the cumulative recovery/journal corrections now **installed** in ROOT
+at `52b9b9fbe53a752a603eda9221723fa2619ac342`, matching source `efccbc9e86e57d1d245a7228eb702438ecdb1755`.
+**966 tests pass in source, archive and ROOT**, with **486 matching imported files**
+and exact per-file coverage. The 74-file change set includes 29 live runtime
+files, seven replay source files and 38 test/support/fixture files. Backups,
+cumulative rollback and installed CLI status checks pass. The live profile and
+installed TUI binary are unchanged; no backend was started.
+
+**New fix:** return and publish the verified final reconciliation after an owned
+BTC stop/target fill and sibling cleanup. Six stale-snapshot failures were
+reproduced; 30 protective-observation cases and six adverse cleanup checks pass.
+The cleanup module covers 37 statements and 16 branches without exclusions.
+
+**Remaining evidence:** 864,933 bounded native position observations contain no
+captured nonflat reduction; all 11 ledger prefixes / 8.62 GB authenticate. This
+leaves partial collateral release unqualified. Next test protective fills with
+history beyond the bounded window, repeated restart and partial exposure, then
+complete recorded acquisition/poller/runner and portfolio economics. Full latest
+readiness and profitability remain unestablished. Existing conditional backend
+approval is retained; final real-money execution remains user-run.
+
+Journal `ac6ec3a6fdc418f53563c97ae37189fab600e03d179a111b28431e7462a6e643` independently verifies all 21 fields and
+57 evidence references. Earlier uninstalled notes below are historical.
+
+---
+
+**Latest corrective release checkpoint — 2026-09-13T03:25:29.725103+00:00:**
+The [partial recovery correction review](/Users/gestas/Prototypes/hypervector-v89-native-account-replay-20260912/docs/reviews/2026-09-13-v89-partial-recovery-corrections.md)
+records the correction of the five prior diagnostic failures, plus reproduced
+journal omissions and stale position restoration after contradictory close
+rejection. Source `8d676ed28261e292753ce43eba349e489ce9b0ba` passes **903 tests** in both source
+and archive, with **467 matching imported files** and exact per-file coverage.
+The five new critical modules cover **199 statements and 90 branches**, without
+exclusions. Patch reversal/reapplication and installed-file preservation pass.
+
+**High confidence for these scoped corrections:** owned partial execution,
+remaining protection, original holding clock, repeated delayed-fill restart and
+complete journal fees/P&L. Full native collateral, intrapoll protective execution
+and recorded acquisition/full-runner integration remain unfinished. These are
+synthetic technical scenarios; future profitability is unestablished.
+
+**Next investigation:** native collateral and protective-fill interleaving before
+full-runner qualification. The candidate remains **uninstalled**; the installed
+TUI is unchanged. Conditional latest-ready backend-start approval is recorded.
+No backend was started, and final real-money execution remains user-run.
+
+Journal revision `8e848bebcc94195410398da3d39a7f7f687f764fde705626f0c3b62908394f1d` independently verifies all **21 fields**
+and **49 evidence references**. Earlier navigation is preserved below as history.
+
+---
+
+**Latest readiness finding — 2026-09-13T02:29:19.989855+00:00:**
+The [partial recovery review](/Users/gestas/Prototypes/hypervector-v89-native-account-replay-20260912/docs/reviews/2026-09-13-v89-native-partial-recovery-gaps.md)
+records **five reproduced failures**: one canceled-remainder entry recovery case
+and four BTC/SNDK partial-close cases. **41 cases pass**, including all 38 prior
+full-fill/restart cases. The frozen overlay/archive reproduces the same outcomes
+with all 328 imported project/test files authenticated. This is a diagnostic
+checkpoint, with no new runtime correction or release-readiness claim.
+
+**Next implementation:** exact fill/position ownership and remaining protection
+through partial entry/close and repeated restart. Partial native status/collateral
+remain explicit scenario limits. The preceding 769-test recovery package retains
+its separate qualification. Conditional latest-ready backend-start approval is
+recorded. No backend was started; latest readiness remains incomplete.
+
+Journal revision `06373ceb047f39de0d3cefd077091d0e5cc1a037e85ddba62b72eafa68d22199`
+is independently verified. Earlier navigation is preserved below as history.
+
+---
+
+**Latest update — September 13, 2026, 02:05 UTC:**
+The [native recovery correction review](/Users/gestas/Prototypes/hypervector-v89-native-account-replay-20260912/docs/reviews/2026-09-13-v89-native-recovery-corrections.md) supersedes the implementation status below.
+Source `097737340ca318410b69c32568dca611324cf27b` passes **769 tests** in both
+source and extracted archive, with identical detailed coverage and 451 loaded
+source hashes. Five new runtime modules cover **199 statements / 68 branches**
+fully. The 23-file patch reverses/reapplies to exact prior/candidate hashes.
+
+The corrections cover native filled-order remaining size, shared recovery clock,
+original pending-intent context and holding deadline, configured BTC targets,
+and cancel-timeout recovery across repeated restarts. High confidence applies
+to the authenticated parser case and synthetic tested recovery boundaries;
+historical loss attribution and improved returns are unestablished.
+
+Journal revision `902763528b8f6e9d2d6b863cff2d6767bf70108e2f5b0afc1e42da0bdedadeab`
+is independently verified. **Next:** partial-fill exposure/collateral and full
+acquisition/runner integration. Full seven-asset readiness remains under test.
+The user's conditional approval to start the latest backend when ready is
+recorded; no repeat approval for that same start is needed. The candidate is
+**not installed**, and no backend was started. Final real-money start is user-run.
+The previously verified strategy/regime TUI is unchanged.
+
+Prior navigation is preserved below and does not establish current readiness.
+
+---
+
+**Current research update — September 13, 2026 UTC:**
+The [native IOC/receipt review](/Users/gestas/Prototypes/hypervector-v89-native-account-replay-20260912/docs/reviews/2026-09-13-v89-recorded-ioc-venue.md) is the latest implementation result.
+Source `5079a3a5597b573cbe143c27e39c9373b4da5e02` reproduces from its archive:
+**270 tests**, **32 raw-book rational comparisons**, eight new native-adapter
+cases, and **647 statements / 208 branches** covered across seven replay modules.
+Exact capped depth, partial/no-fill outcomes, delayed visibility, lost responses
+and partial-close economics are implemented in the isolated research worktree.
+The [preceding account bridge](/Users/gestas/Prototypes/hypervector-v89-native-account-replay-20260912/docs/reviews/2026-09-12-v89-native-account-bridge.md) retains source-backed SNDK balance/funding
+reconciliation and 56 synthetic seven-asset engine lifecycles.
+
+Journal revision **fe8eccf037ceac892d266990d8e9b0a20ca6e588a1b2a6a78853806ecc6ccf96**
+passes all 21 normalized fields and 61 direct evidence references. The hypothesis
+remains **being tested**. No new market-return outcomes or sealed prospective
+outcomes were evaluated, and no live strategy/profile/execution change was made.
+
+**Next investigation:** integrate the new IOC venue into the existing actual
+seven-engine fixture and source-backed account projection; complete stop/target
+visibility, engine response-loss recovery and native partial-close collateral,
+then join recorded acquisition and the full poll/hold/recipe runner. Full
+seven-asset live readiness and profitability remain unproven. Do not restart
+the completed 48-case bar matrix or history-initialization study without new evidence.
+
+The [installed strategy/regime monitor](/Users/gestas/Prototypes/hypervector/docs/reviews/2026-09-12-v89-strategy-regime-monitor-installed.md)
+and its corrected authenticated launch command remain installed. Earlier
+pending-installation statements below are historical and superseded by the
+September 12 installation records. The following prior navigation is retained
+without changing its original bytes.
+
+---
 
 **Current navigation, September 12, 2026 UTC:** read the
 [V89 research index](docs/research-journal/v89-current-index.md) and
 [heartbeat/lifecycle installation review](docs/reviews/2026-09-12-v89-heartbeat-freshness.md).
 Historical notes below do not establish current runtime or research state.
 
-**Latest completed investigation:** the [SNDK source/exit reconciliation](docs/reviews/2026-09-12-v89-sndk-source-reconciliation.md)
-corroborates the selected August 19 hour's **-6.7453%** completed-close return
-across native raw, native Parquet, vendor quarters and aggregated vendor minutes.
-The original **-$13.6563** modeled net loss reconciles. Its recorded **13:30 UTC**
-exit is a modeled bar-opening attribution; the consumed bar completes at
-**13:45**, with source knowledge at **13:45:10**. A physical fill time remains
-unverified. Eleven native/vendor opens and five closes differ slightly; all
-highs/lows and the four selected completed-close anchors agree.
+**Latest completed investigation:** the [SNDK source-difference propagation](docs/reviews/2026-09-12-v89-sndk-source-propagation.md)
+shows that the observed feed differences do **not materially change** the fixed
+entry-quality finding. All **47 entries**, **4,608 calendar paths**, **376 matched
+comparisons** and **1,128 modeled-entry target measurements** remain accounted for.
+No entry or modeled-entry return changes. One matched excess changes by
+**0.0327392255 bps**; the maximum aggregate gap shift is **0.0054565376 bps**.
+The primary long one-hour gap remains **-66.24644 bps**, day-class **-61.23073 bps**,
+and all 16 gap signs persist. Opening differences are unused in these fixed
+completed-close measurements; original modeled fills were not repriced.
 
-Source **b4aaf94a56f77556497fe2f0da1490fbb3f7e4a6** is frozen and clean in
-`hypervector-v89-sndk-source-20260912`. **78 offline tests** pass; the corrected
-142-file archive reproduces **10 files byte-for-byte**. Independent SQL checks
-**1,728 comparison cells**, **1,440 minute rows**, **18 field summaries** and
-four anchor series. Arithmetic statement/branch coverage is 100%; combined
-analysis coverage is 92%. The incomplete first archive and earlier failures
-remain retained. High confidence applies to these measurements and original
-model semantics; causal explanations and future profitability remain low confidence.
+Source **d05c390b0defdb541e2e38aa1fe52649b161ea95** is frozen and clean in
+`hypervector-v89-sndk-propagation-20260912`; protocol commit **63867100** predates
+evaluation. **52 offline tests** pass, 90% combined statement/branch coverage,
+100% endpoint arithmetic. Independent raw-JSON SQL verifies every calendar,
+comparison, modeled-entry row, all 32 groups, 16 gaps and 16 source-cell uses.
+The **11-file archive** reproduces **six outputs byte-for-byte**. High confidence
+applies to this bounded historical sensitivity; causal and future-profit
+confidence remain low. Only qualified August 19 closes were perturbed.
 
-Journal **1ff84a1b3724f2a86d902f7a2e6fbc251d1055dcd7b106ba9c0b6a04e61f5429**
-binds **30 direct references**, **296 frozen files** and **24 original input refs**.
-The **09:56:00 UTC** publication audit verifies the full archive, reproduction,
-13 HTTP envelopes and all **21 normalized database fields**. See the
-[journal record](docs/research-journal/v89-sndk-source-reconciliation-20260912-v1.json).
+Journal **2a42a67b1a3f3c9a4eff1bbb6d72821802eb999de318424977db79198e602c6c**
+binds **21 direct references**, **54 frozen files** and **six original input refs**.
+The **10:22:26 UTC** publication audit verifies the archive, reproduction,
+all **21 normalized database fields** and unchanged installed/candidate hashes.
+See the [journal source](docs/research-journal/v89-sndk-source-propagation-20260912-v1.json).
 
-**Single next investigation:** propagate the 16 observed opening/closing
-source differences into the fixed original SNDK entry-quality and matched-background
-measurements touching August 19. Preserve all original entries, outcomes and
-control memberships; compare sources symmetrically and quantify affected cells
-and aggregate shifts. Do not choose a source or fit a filter by PnL. Source
-acquisition, numerical comparison and the original exit-clock diagnosis are complete.
+**Single next investigation:** qualify retained entry-time trend, volatility and
+breakout-context evidence for the fixed original SNDK entries and controls,
+then predeclare regime/context comparisons before outcome attribution. Preserve
+both directions, cohorts and August 19 influence. This tests whether weakness
+clusters in observed conditions; it does not justify a fitted live filter.
+Source acquisition, source/exit reconciliation and source propagation are complete.
 
-At the **09:37:22 UTC** unsigned account capture, the original **-0.306 SNDK**
-short retains its full-size **1669.9** reduce-only native stop, **-$0.0612**
-unrealized and **+$0.081031** funding cash over 19 rows. Core is flat/order-free
-and no additional bounded fill appears. Original runner PIDs are absent in the
-observed scope; process visibility is limited. The publication audit confirms
-unchanged installed profile/TUI/ledgers and both uninstalled candidates.
-Both prospective seals remain unopened. Refresh before current-state claims;
-broader live readiness remains unproven and both installation questions remain pending.
+The preceding [source/exit reconciliation](docs/reviews/2026-09-12-v89-sndk-source-reconciliation.md)
+corroborates **-6.7453%** for the selected August 19 hour in all four price series
+and reconciles the original **-$13.6563** modeled net loss. The **13:30** recorded
+exit clock is a modeled bar-opening attribution; completion is **13:45**, source
+knowledge **13:45:10**, and physical fill time remains unverified. Its source
+**b4aaf94a** and journal **1ff84a1b3724f2a86d902f7a2e6fbc251d1055dcd7b106ba9c0b6a04e61f5429**
+remain frozen; 78 tests and ten reproduced outputs passed.
+
+The **09:37:22 UTC** unsigned account snapshot retains the **-0.306 SNDK** short,
+full-size **1669.9** reduce-only stop, **-$0.0612** unrealized and **+$0.081031**
+funding cash over 19 rows. It is inherited dated evidence, **not a new account
+or process refresh**. The latest publication audit rechecks local installed and
+candidate file hashes only. Both installation questions remain pending and both
+prospective seals remain unopened. Broad live readiness remains unproven.
 
 **Previous research:** the [SNDK day influence audit](docs/reviews/2026-09-12-v89-sndk-day-influence.md)
 completes all **96 fixed omission scenarios**. The long one-hour gap retains

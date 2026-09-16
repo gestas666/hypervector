@@ -48,8 +48,31 @@ The TUI repair makes the dated evidence visible; it does not resume local exit m
 cd /Users/gestas/Prototypes/hypervector
 .venv/bin/python -m hypervector cohort-tui --mode monitor \
   --config configs/multi_asset_growth_first_5000_noncrypto_live_v89.toml \
-  --tui-bin target/release/tui-regime-detector
+  --tui-bin target/release/tui-regime-detector \
+  --tui-bin-sha256 844d7955a2a4498db90413f3ec0d98003e68d4f5b6554835e9fe7da310cab2ae
 ```
+
+September 12 launch correction: the previous command omitted the required
+`--tui-bin-sha256` and reproducibly exited with status 2 before opening the
+display. The command above supplies the installed binary's verified hash.
+Monitor mode may start a report-only checkpoint writer; it does not restart
+strategy execution. See `docs/guides/cohort-strategy-regime-monitor.md` for the
+current controls and freshness limits. This corrects the launch instructions;
+the original direct-binary native acceptance did not test that launcher command.
+
+Revalidation completed at **2026-09-12 23:01 UTC**: 641 Rust tests passed,
+23 existing fixture-dependent tests were ignored, and 39 focused Python launcher
+and stale-attachment tests passed. Formatting and Clippy passed. The installed
+binary and all 30 installed update files still match their installation hashes.
+Forty fresh native views verified all seven strategy inspectors, the signal
+charts and regime pages; the corrected documented launcher separately opened
+all nine views and quit with status 0. Reconstructed terminal-cell images for
+the SNDK inspector/chart and regime/configuration views were inspected.
+The runtime ledger, selected live configuration and checkpoint hashes remained
+unchanged. No execution runner or TUI process remained after the checks.
+Evidence: `data/logs/research/bidirectional_cohort/v89_tui_launch_revalidation_20260912_v1/verified.json`.
+These checks validate the installed monitor; the stopped strategy's evidence
+remains dated. The original Terminal.app was not inspected.
 
 Use **2 → select setup → Enter → PgUp/PgDn** for the strategy's plan, indicators and corresponding regimes; **3 → Enter** for the focused signal chart; **8 → PgUp/PgDn** for the complete regime workstation; **9** for effective settings and the separate draft. Closing a monitor does not create execution authority.
 

@@ -41,9 +41,15 @@ and decision time. This can choose an entry or an opposite-intent exit.
 This is conflict preference, not a standalone gate: a lone intent remains
 routable even when its score is opposed. Canonical regime changes do not by
 themselves force an exit, change leverage, or change size. Screen 2 persists
-and displays the exact score, stance, timestamp, and basis. Screen 9 remains
+and displays the exact score, stance, timestamp, and basis. Screen 8 remains
 the full diagnostic workstation and must not infer execution authority from
 report-only component alignment.
+
+For the installed V89 monitor, use the authenticated launch command and
+strategy planning controls in `docs/guides/cohort-strategy-regime-monitor.md`.
+Screen 2's setup inspector separates recorded provider indicators, canonical
+context at the strategy decision and the latest recorded canonical context.
+Screen 9 separates effective settings from a local next-run draft.
 
 The telemetry collector may recover several completed bars in one cycle. The
 durable identity is `(strategy_id, symbol, decision_time_ms)`; recovered rows

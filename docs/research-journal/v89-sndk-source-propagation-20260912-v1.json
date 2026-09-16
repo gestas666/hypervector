@@ -1,0 +1,245 @@
+{
+  "automatic_promotion": false,
+  "confidence": "high",
+  "created_at_utc": "2026-09-12T10:22:12.840047+00:00",
+  "decision": "Accept the fixed arithmetic sensitivity. Reject these observed source differences as a material explanation for the measured entry weakness: zero entry and modeled-entry returns change, one matched excess changes by 0.0327392255 bps, and the largest aggregate excess-gap shift is 0.0054565376 bps. All gap signs persist. Next qualify entry-time regime and context evidence before predeclared attribution; do not choose a source by PnL or fit a live filter.",
+  "evidence": [
+    {
+      "bytes": 6629,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/reviews/2026-09-12-v89-sndk-source-propagation.md",
+      "role": "final_bounded_source_propagation_review",
+      "sha256": "cb5791b9b334f41b19c55c0a933d965f202f0aa0b7fab6ffbb377238bae8df21"
+    },
+    {
+      "bytes": 18031,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_source_propagation_20260912_v1/artifact_manifest.json",
+      "role": "all_frozen_artifacts",
+      "sha256": "188bb78a66ddc97774dc4923a301b53825ad01dbaa5a3f71ce69104dd4b05593"
+    },
+    {
+      "bytes": 1896,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_source_propagation_20260912_v1/prepared.json",
+      "role": "six_predeclared_authenticated_inputs",
+      "sha256": "26da13e2245b9aa119fe5aaeb3d3c29077d8a6f9cebfd9bf1a3fe3d86a3496bd"
+    },
+    {
+      "bytes": 2378,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_source_propagation_20260912_v1/summary.json",
+      "role": "complete_change_magnitude_summary",
+      "sha256": "3a9b0bcade70b47c403647c575bad3ed722f35125119f6cd1247551664eb0059"
+    },
+    {
+      "bytes": 65640,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_source_propagation_20260912_v1/analysis/report.json",
+      "role": "all_original_and_perturbed_groups_and_gaps",
+      "sha256": "0341df533092ba529982558a72a9937b588095db755fdd35b53d491e22e9d39f"
+    },
+    {
+      "bytes": 2877530,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_source_propagation_20260912_v1/analysis/calendar.json",
+      "role": "all_original_and_perturbed_calendar_paths",
+      "sha256": "52f490208b88c8bc4d55cead3e38987f1b857a19b59006c7c8c9642c1c2aa715"
+    },
+    {
+      "bytes": 801100,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_source_propagation_20260912_v1/analysis/comparisons.json",
+      "role": "fixed_entry_control_memberships_and_return_changes",
+      "sha256": "5e2c1e94e5b5fb92596ca9fb316cbe8105c1e65288a478cf4ca40b6ed10d6b82"
+    },
+    {
+      "bytes": 729531,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_source_propagation_20260912_v1/analysis/bridge.json",
+      "role": "all_fixed_modeled_entry_return_perturbations",
+      "sha256": "ce759ae027fe0697c8b95e3925e1e2b1fa0484ffe2ee8ffcc70fa79a2b58c1a5"
+    },
+    {
+      "bytes": 4775,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_source_propagation_20260912_v1/analysis/difference_uses.json",
+      "role": "all_sixteen_differing_source_cells_and_exact_uses",
+      "sha256": "23568c959565d142db2f70fd2d11737194b1407e108b972b452eff8b62308632"
+    },
+    {
+      "bytes": 3402,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_source_propagation_20260912_v1/independent_verified_v3.json",
+      "role": "complete_independent_raw_json_sql_verification",
+      "sha256": "a49028ce3fe9f973d692f98c5997327214f074ea745a6ffa0831bb8e72d851a2"
+    },
+    {
+      "bytes": 1602,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_source_propagation_20260912_v1/reproduction_verified.json",
+      "role": "six_byte_identical_outputs_and_terminal_command_codes",
+      "sha256": "d6e276e41d335d467518ac6aca2091b5adad34d8985e45abac18356ca3a50751"
+    },
+    {
+      "bytes": 2230,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_source_propagation_20260912_v1/source_archive_manifest.json",
+      "role": "eleven_committed_runtime_source_files",
+      "sha256": "eb8ee442a1a1a343295f869ee1faed14b49517f00b4cdc301c5a8d195c79cc7f"
+    },
+    {
+      "bytes": 119502,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_source_propagation_20260912_v1/source.tar.gz",
+      "role": "complete_runnable_source_archive",
+      "sha256": "4f1ac8002439ff09fe91eb64b69fb09d22e336d9fe3f78837a5fe08d5cebd9a0"
+    },
+    {
+      "bytes": 1090,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_source_propagation_20260912_v1/tests_verified_v3.log",
+      "role": "fifty_two_offline_tests_and_coverage",
+      "sha256": "a478384738344bc3eb26bdbda55f8165013e3aaad5bed6dba675732e5f7492fb"
+    },
+    {
+      "bytes": 34795,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_source_propagation_20260912_v1/coverage_verified_v3.json",
+      "role": "machine_readable_coverage",
+      "sha256": "bd1f1878229e909eca2d2c94ffc165484b0990e06417e428eaa04642d93d9c6c"
+    },
+    {
+      "bytes": 99,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_source_propagation_20260912_v1/archive_tests.log",
+      "role": "frozen_archive_offline_tests",
+      "sha256": "0e875d2375d90063c77bc3f89932ceae595a7c127de45c4e0839c6bb16ad9d75"
+    },
+    {
+      "bytes": 186,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_source_propagation_20260912_v1/environment.json",
+      "role": "recorded_python_dependencies",
+      "sha256": "e58d3cb430fea3ca20b1dd9c3fea0e9013a49ea814c056f59baa893026eb7d8a"
+    },
+    {
+      "bytes": 1184,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_source_propagation_20260912_v1/publication_boundary_inheritance.json",
+      "role": "dated_account_boundary_and_local_hash_check_scope",
+      "sha256": "82c98fce81023ca27717aa3f729a3b706c73821ddaa34969edb7c5349d310ca4"
+    },
+    {
+      "bytes": 4517,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_source_propagation_20260912_v1/publication_audit.py",
+      "role": "full_publication_and_journal_verifier",
+      "sha256": "7f651e67ea8cc08221cebc9a222045b1157247e1b0d1621cafb08f7e2f46f0a8"
+    },
+    {
+      "bytes": 2191,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_source_propagation_20260912_v1/README.md",
+      "role": "standalone_reproduction_commands",
+      "sha256": "103279b584d24eca5d78b47b44833e4fe8bef8a921092747ec57bedf4d756a11"
+    },
+    {
+      "bytes": 8425,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_sndk_day_influence_20260912_v1/publication_audit.py",
+      "role": "pinned_shared_archive_boundary_and_journal_verifier",
+      "sha256": "a419ab402e146fb25256815deb4f09ca7ac0ffc970effe8e4913d7a8e588b1d1"
+    }
+  ],
+  "execution_authority": "none",
+  "falsifier": "Changed input or committed source bytes, a changed original entry/control/coverage roster, failed byte reproduction, or an independent SQL discrepancy invalidates the corresponding measurement. New source days, executable market evidence or prospective outcomes could update broader conclusions.",
+  "hypothesis": "The exact observed native/vendor source differences can be propagated through the fixed original SNDK entry and matched-background measurements without changing sample membership, original trade accounting or outcome coverage.",
+  "hypothesis_id": "v89_sndk_source_propagation_20260912_v1",
+  "limitations": [
+    "Conditional source perturbation uses vendor closes only on the qualified August 19 day and original native prices elsewhere; not a full vendor-history backtest.",
+    "Original modeled entry prices, quantities, fees, funding, exits and PnL remain fixed; unused opening differences were not tested in fill repricing or signal resimulation.",
+    "Repeated horizons, controls and six cases are dependent observations over the same 47 entries.",
+    "Explored historical sensitivity adds no out-of-sample or prospective evidence and cannot establish market-regime causality or future profit.",
+    "Candles cannot establish physical fills, venue mark triggers, executable liquidity or whole-history source accuracy.",
+    "Original missing endpoints remain missing; 1e-8 bps is the disclosed numerical reconciliation and changed-cell counting tolerance.",
+    "Primary report stage marker remains pre-independent; final independent_verified_v3.json establishes completed verification.",
+    "The retained 09:37:22 UTC account/process boundary is inherited, with no new account capture; the publication audit checks current local installed/candidate hashes.",
+    "Both installation questions and broad live readiness remain unresolved; both prospective outcome seals remain unopened."
+  ],
+  "metrics": {
+    "arithmetic_statement_branch_coverage_percent": 100,
+    "automatic_promotion": false,
+    "byte_identical_outputs": 6,
+    "calendar_rows": 4608,
+    "causal_and_future_profit_confidence": "low",
+    "change_count_tolerance_bps": 1e-08,
+    "changed_calendar_rows": 2,
+    "changed_control_means": 1,
+    "changed_entry_returns": 0,
+    "changed_excess_returns": 1,
+    "changed_modeled_entry_returns": 0,
+    "combined_statement_branch_coverage_percent": 90,
+    "comparison_rows": 376,
+    "execution_authority": "none",
+    "frozen_files": 54,
+    "gap_sign_changes": 0,
+    "hypothesis_status": "accepted",
+    "maximum_absolute_calendar_shift_bps": 1.2772207676096805,
+    "maximum_absolute_comparison_shift_bps": 0.03273922552088493,
+    "maximum_absolute_gap_shift_bps": 0.005456537586866261,
+    "measurement_confidence": "high",
+    "modeled_entry_rows": 1128,
+    "next_hypothesis": {
+      "constraints": "Qualify causal feature coverage; predeclare comparisons before testing; original entries, directions, cohorts and controls fixed; retain August 19 influence; no fitted live filter or prospective seal access.",
+      "question": "Do retained entry-time trend, volatility and breakout-context measurements explain where fixed SNDK matched entry excess differs?",
+      "status": "proposed"
+    },
+    "offline_tests_passed": 52,
+    "plan_commit": "63867100e558019b208aa4fe09fe8c8aa9820db5",
+    "primary_long_one_hour_gaps": [
+      {
+        "horizon_minutes": 60,
+        "method": "same_hour",
+        "original": {
+          "background_change_bps": -7.730379773156281,
+          "earlier_comparisons": 18,
+          "entry_change_bps": -73.97681824158316,
+          "excess_change_bps": -66.24643846842689,
+          "later_comparisons": 11,
+          "residual_bps": 1.4210854715202004e-14
+        },
+        "perturbed": {
+          "background_change_bps": -7.730379773156325,
+          "earlier_comparisons": 18,
+          "entry_change_bps": -73.97681824158377,
+          "excess_change_bps": -66.24643846842744,
+          "later_comparisons": 11,
+          "residual_bps": 0.0
+        },
+        "side": "long",
+        "source_deltas": {
+          "background_change_bps": -4.3520742565306136e-14,
+          "entry_change_bps": -6.110667527536862e-13,
+          "excess_change_bps": -5.542233338928781e-13
+        }
+      },
+      {
+        "horizon_minutes": 60,
+        "method": "same_hour_day_class",
+        "original": {
+          "background_change_bps": -12.746084665441696,
+          "earlier_comparisons": 18,
+          "entry_change_bps": -73.97681824158316,
+          "excess_change_bps": -61.230733576141446,
+          "later_comparisons": 11,
+          "residual_bps": -1.4210854715202004e-14
+        },
+        "perturbed": {
+          "background_change_bps": -12.746084665441735,
+          "earlier_comparisons": 18,
+          "entry_change_bps": -73.97681824158377,
+          "excess_change_bps": -61.23073357614203,
+          "later_comparisons": 11,
+          "residual_bps": -7.105427357601002e-15
+        },
+        "side": "long",
+        "source_deltas": {
+          "background_change_bps": -3.907985046680551e-14,
+          "entry_change_bps": -6.110667527536862e-13,
+          "excess_change_bps": -5.826450433232822e-13
+        }
+      }
+    ],
+    "runtime_strategy_changed": false,
+    "source_archive_files": 11,
+    "source_commit": "d05c390b0defdb541e2e38aa1fe52649b161ea95",
+    "source_differences_explain_measured_entry_weakness": "rejected_for_fixed_qualified_scope"
+  },
+  "revision_number": 1,
+  "runtime_strategy_changed": false,
+  "schema_version": 1,
+  "status": "retain",
+  "strategy_id": "hourly_donchian_20_10_atr20_bidirectional_v1",
+  "supersedes_revision_id": null,
+  "symbol": "xyz:SNDK"
+}

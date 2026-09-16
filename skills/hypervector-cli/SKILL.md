@@ -176,6 +176,12 @@ cargo run -p hypervector-tui --bin tui-regime-detector -- --symbol BTC --timefra
 
 ### 6A. Shared Cohort Live Launcher and Monitor
 
+The installed V89 command, seven-asset scope and strategy/regime planning keys
+are documented in `docs/guides/cohort-strategy-regime-monitor.md`. When selecting
+the prebuilt executable, supply both `--tui-bin` and its verified
+`--tui-bin-sha256`; a path alone is rejected before the TUI starts. The older
+profile examples below describe their named generations.
+
 The monitor must name the exact active profile. It validates the selected
 profile ID and fingerprint against the latest armed ledger identity before it
 attaches, and it rejects checkpoints from another run:
@@ -190,7 +196,7 @@ The monitor does not start, stop, or replace the live order backend. Screen 2
 shows provider readiness, selected/withheld intents, and the backend-authored
 regime conflict preference. On a backend started with the current profile,
 same-coin conflicts rank causal regime alignment before provider priority. Lone
-signals remain ungated and forced regime-only exits are disabled. Screen 9 is
+signals remain ungated and forced regime-only exits are disabled. Screen 8 is
 the full backend-authored Regime Command Deck. Quitting the TUI leaves the
 backend running.
 

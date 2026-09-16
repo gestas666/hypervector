@@ -22,6 +22,10 @@ cargo test -p hypervector-tui
 Human acceptance uses a terminal at least 120 columns wide. Any mismatch with
 the ledger is a failure even when the display looks plausible.
 
+For the installed seven-asset V89 cohort, use the current command and screen
+map in [Strategy and regime monitoring](cohort-strategy-regime-monitor.md).
+The default observer and earlier profile examples below retain their own scope.
+
 The shared nine-asset core plus HIP-3 cohort has an additional compact
 acceptance floor of 120x36 and a hard usability floor of 100x28. Below the hard
 floor, the TUI must show an explicit resize diagnostic rather than clipped
