@@ -1,3 +1,11 @@
+## September 16: captured-account writer and independent archive parity
+
+Isolated source `445dcca706296eb4186cb20e8401e139ceb22873` binds the original/later studies to unchanged economics and real seals, authenticates selected sources and full opening warmup, and retains compressed native account evidence. Candidate: 128 tests, 252/252 statements and 96/96 branches. All 24 two-day synthetic cells independently reconcile; archived source passes 58 guard tests and reproduces every cell's calendar/event/account bytes. Quiet accounts, terminal opens, source drift and deterministic reruns are covered. This is programmed-provider component qualification, not complete prospective strategy/economic qualification.
+
+Review: `docs/reviews/2026-09-16-v89-captured-account-writer.md`. Plan: `docs/plans/2026-09-16-v89-prospective-account-integration.md`. Evidence: `data/logs/research/bidirectional_cohort/v89_captured_account_integration_20260916_v1/`. Journal v6: `d9b1afa31d5678f985ea688a8bb29f84da99e1880162781a23a6816c12a3b555`. No runtime installation, live configuration change, financial process control or sealed outcome evaluation. The completed historical 48-case matrix remains unchanged.
+
+**Next investigation:** implement and qualify complete authenticated source-to-native-provider/canonical calendar assembly and the 24-cell economic report, including all daily contributions and seven/seven attribution. Resolve knowledge-time selection against prior clock controls. Do not repeat the finished TUI fix or historical matrix. The continuous goal remains active; persistent recovery approval is still pending.
+
 ## September 16: captured-only later warmup qualified
 
 The isolated source assembler at **7f4f818890c1a420bcd2d75f452dbceedb5e1343**

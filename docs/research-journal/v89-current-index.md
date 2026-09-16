@@ -1,3 +1,7 @@
+## September 16: captured-account writer and independent archive parity
+
+Source `445dcca`: 128 candidate tests, full affected coverage, 24 independently reconciled synthetic cells and exact archived account bytes; 58 archive guard tests. [Review](../reviews/2026-09-16-v89-captured-account-writer.md); [journal v6](v89-equal-cap-followup-20260923-v6.json), revision `d9b1afa31d5678f985ea688a8bb29f84da99e1880162781a23a6816c12a3b555`. Full source-to-native-provider assembly, economic reporting and future source coverage remain incomplete. No live change or early outcomes.
+
 ## September 16: captured-only later warmup qualified
 
 The isolated source assembler at **7f4f818890c1a420bcd2d75f452dbceedb5e1343**
