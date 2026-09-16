@@ -1,3 +1,49 @@
+## September 16, 20:22 UTC: independent native-minute collector is running
+
+The approved entry-protection deployment below remains live; do not repeat its
+approval or restart. Backend 83722/reporter 18490/TUI 42506 retain authenticated
+identities. The 20:21:47 checkpoint reports running_consistent, 217 polls, zero
+faults and the same protected SPCX/Brent shorts. No financial source, settings
+or process changed during the independent acquisition work.
+
+New public collector **44810**, born **20:16:04.403419 UTC**, is running in tool
+session **42625**. Command SHA
+`822c3a7eacc2e2b9cae8bbafc5184ed6208b9d4099358bef499db4138d8acf69`.
+Worktree `/Users/gestas/Prototypes/hypervector-v89-native-minute-continuation-20260916`;
+source **abd49d993c0375be71f7892884db9b4971671520**, verifier **999fe1c**,
+branch `research/v89-native-minute-continuation-20260916`, committed/pushed.
+Do not edit its twenty frozen source files or manifest in place.
+
+Capture output `data/logs/research/bidirectional_cohort/v89_native_minute_continuation_capture_20260916_v1`.
+It writes `latest.json`, `native.sqlite3`, `manifest.json` and immutable `raw/`.
+Manifest SHA `05dc3c9f8df8c80d1aa722e2268442265b379dcdd1c4f5d09fc9acd1aafe8f9d`.
+First six receipts: 987 observations, 966 distinct minutes (SPCX/SNDK/Brent
+321/322/323), continuous from September 16 14:58 through 20:18/20:19/20:20.
+One valid SNDK zero-volume candle; no failed/invalid/late response. Independent
+HTTP/Decimal replay and archive reproduction match every indexed field.
+211+211 collector tests and 6+6 independent verifier controls passed; new
+collector modules cover 445 statements/128 branches, all exercised.
+
+Preflight found overlapping existing public-collector bursts estimated at
+1,256 weight/minute (122 authenticated receipts), no captured 429. Other IP
+traffic remains unmeasured. New collector enforces peer-health/weight admission,
+quarter-hour blackout, durable one-per-minute spacing and 429 cooldown. Existing
+collectors remain unchanged. Investigate shared public budget coordination next;
+do not infer a rejected financial order from estimated traffic alone.
+
+Review `docs/reviews/2026-09-16-v89-native-minute-continuation.md`; evidence
+`data/logs/research/bidirectional_cohort/v89_native_minute_continuation_qualification_20260916_v1`.
+The original September 16 history-length study remains deferred. Continuous
+fourteen-day native history is only possible September 21 13:34 UTC, subject to
+coverage and precedence qualification; receipt cutoff 13:40. Preserve four
+existing collectors, native source/reproduction/account jobs and sealed outcomes.
+The continuous goal remains active.
+
+Collector journal v1 revision
+`3c322660c008ffcb5dd8b0432521fc16b3b669b98df6e35f638c4b1925fb759a`
+has 176 matching evidence references, none changed/missing. Its review, raw
+prefixes, test transcripts and source archives are pinned; do not edit them.
+
 ## September 16, 19:32 UTC: approved protection fix is live and verified
 
 The user explicitly replied `approved` to the proposed installation and controlled
