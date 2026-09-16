@@ -22,6 +22,7 @@ SOL_LIVE_EVENT_TYPES = frozenset(
         "order_acknowledgement",
         "entry_not_filled",
         "entry_not_submitted",
+        "entry_reconciliation_failure",
         "fill",
         "stop_order",
         "target_order",

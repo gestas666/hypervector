@@ -20,6 +20,10 @@ from hypervector.live.hyperliquid_protocol import (
     SolReconciliationSnapshot,
 )
 from hypervector.live.sol_order_identity import new_client_order_id
+from hypervector.live.sol_entry_read_recovery import (
+    EntryReconciliationUnavailable,
+    EntrySubmissionRuntime,
+)
 from hypervector.live.sol_order_submission import SolOrderSubmission
 from hypervector.live.sol_range_onset_bracket_close import close_bracketed_position
 from hypervector.live.sol_range_onset_bracket_exit import reconcile_owned_bracket_exit
@@ -30,9 +34,8 @@ from hypervector.live.sol_range_onset_consistency import (
     protective_stop_fill_visible,
 )
 from hypervector.live.sol_range_onset_engine_contract import (
-    SolEntryNotFilledError,
+    SolEntryNotFilledError as SolEntryNotFilledError,
     SolLiveEngineError,
-    is_expected_ioc_no_fill,
     require_started,
     resolve_decision_time_ms,
 )
@@ -119,6 +122,9 @@ class SolRangeOnsetLiveEngine:
             now_fn=self._now_fn,
         )
         self._pending_execution_plan: BoundExecutionPlan | None = None
+        self._entry_submission = EntrySubmissionRuntime(
+            config, self._machine, self._events, self._orders, self._poller
+        )
 
     @property
     def snapshot(self) -> SolLiveSnapshot:
@@ -176,70 +182,42 @@ class SolRangeOnsetLiveEngine:
             fault=self._events.fault,
             sizing=entry_sizing,
         )
-        ack, after_entry = self._submit_and_reconcile_entry(
+        return self._enter_with_protection(
             side=side,
             mark_price=mark_price,
             notional=notional,
             entry_deadline=entry_deadline,
-        )
-        return self._protect_reconciled_entry(
-            side=side,
-            mark_price=mark_price,
-            entry_ack=ack,
-            venue=after_entry,
-            opened_at_ms=resolve_decision_time_ms(decision_time_ms, self._now_fn),
+            decision_time_ms=decision_time_ms,
         )
 
-    def _submit_and_reconcile_entry(
+    def _enter_with_protection(
         self,
         *,
         side: str,
         mark_price: float,
         notional: float,
+        decision_time_ms: int | None,
         entry_deadline: EntrySubmissionDeadline | None = None,
-    ) -> tuple[HyperliquidOrderAck, SolReconciliationSnapshot]:
+    ) -> SolLiveSnapshot:
         plan = self._pending_execution_plan or legacy_execution_plan(self._config)
-        self._machine.begin_entry(execution_plan=plan)
-        self._events.emit_state()
         try:
-            ack = self._orders.submit_entry(
-                side=side,
-                requested_notional_usd=notional,
-                mark_price=mark_price,
-                entry_deadline=entry_deadline,
+            ack, venue = self._entry_submission.submit_and_reconcile(
+                side=side, mark_price=mark_price, notional=notional,
+                plan=plan, entry_deadline=entry_deadline,
             )
         except EntryDeadlineExpired:
-            self._machine.confirm_entry_not_filled()
             self._pending_execution_plan = None
-            self._events.emit_state()
             raise
-        self._events.emit_ack(
-            "entry",
-            ack,
-            extra_payload=(
-                entry_deadline.last_observation.as_payload() if entry_deadline else None
-            ),
+        except EntryReconciliationUnavailable as failure:
+            return self._entry_submission.protect_after_read_failure(
+                failure=failure, side=side, mark_price=mark_price,
+                opened_at_ms=resolve_decision_time_ms(decision_time_ms, self._now_fn),
+                emergency_flatten=self._emergency_flatten,
+            )
+        return self._protect_reconciled_entry(
+            side=side, mark_price=mark_price, entry_ack=ack, venue=venue,
+            opened_at_ms=resolve_decision_time_ms(decision_time_ms, self._now_fn),
         )
-        if not ack.accepted or ack.oid is None:
-            if is_expected_ioc_no_fill(plan, ack):
-                self._confirm_ioc_no_fill(ack)
-            reason = f"entry rejected: {ack.error or ack.status}"
-            self._events.fault(reason)
-            raise SolLiveEngineError(reason)
-        self._machine.acknowledge_entry(ack.oid)
-        venue = self._poller.wait_for(lambda snapshot: snapshot.position.size_signed != 0.0)
-        return ack, venue
-
-    def _confirm_ioc_no_fill(self, ack: HyperliquidOrderAck) -> NoReturn:
-        venue = self._poller.wait_for(lambda snapshot: snapshot.is_flat)
-        self._events.emit_reconciliation(venue)
-        if not venue.is_flat:
-            reason = "IOC no-fill acknowledgement conflicts with venue exposure"
-            self._events.fault(reason)
-            raise SolLiveEngineError(reason)
-        reason = f"IOC entry not filled: {ack.error}"
-        self._events.confirm_entry_not_filled(reason=reason)
-        raise SolEntryNotFilledError(reason)
 
     def _protect_reconciled_entry(
         self,
