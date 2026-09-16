@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v89-quarter-entry-followup-20260923",
+  "revision_number": 1,
+  "supersedes_revision_id": null,
+  "created_at_utc": "2026-09-16T00:32:45.173695+00:00",
+  "strategy_id": "sndk_brent_quarter_entry_comparison",
+  "symbol": "MULTI",
+  "status": "observe",
+  "hypothesis": "A separately declared complete later block can test the original fixed quarter-entry comparison after the first block lost timely coverage.",
+  "decision": "Preregister September 23 04:00 through October 7 04:00 UTC, preserving the original source, four arms, three costs, warmup seed and reporting obligations. Qualify a separately named collector before the fixed start. Keep both original studies and their seals intact. No outcome computation, strategy promotion or live change is authorized.",
+  "confidence": "high",
+  "falsifier": "Date changes, different parameters or seed history, missing timely source coverage, broken source identity, or early outcome inspection invalidate the corresponding later-block claim.",
+  "evidence": [
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/docs/plans/2026-09-16-v89-prospective-gap-disposition.md",
+      "role": "followup_protocol_00",
+      "sha256": "2120fa6bd22e894990bf7a16d91b029cb3b37c39c4a094bdc470569d9650e1ef",
+      "bytes": 4214
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_gap_recovery_20260916_v1/frozen_quarter_entry_comparison.md",
+      "role": "followup_protocol_01",
+      "sha256": "1f943618a09e1722cae3f27b0c14c30d37dbb19edec1b5936285866161f5983c",
+      "bytes": 5465
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_gap_recovery_20260916_v1/followup_source_pin.json",
+      "role": "followup_protocol_02",
+      "sha256": "3d1ac94a7b362e06b15734ced008281e1e64c4f0ebb626976ba31cba9d05e620",
+      "bytes": 455
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_gap_recovery_20260916_v1/pair/source/11_v89-quarter-entry-prospective-20260908.md",
+      "role": "followup_protocol_03",
+      "sha256": "34736e0cf1635116a2d360ec83a1ed954aa1b5a70c1b93908dd7faf79af7efd6",
+      "bytes": 3445
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_gap_recovery_20260916_v1/gap_timing_verified.json",
+      "role": "followup_protocol_04",
+      "sha256": "74149d3ccbc0f27e75241fb8ba1644829c0c1b41703b8babc66743daa040ea55",
+      "bytes": 20067
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/docs/research-journal/v89-prospective-collection-health-20260916-v4.json",
+      "role": "followup_protocol_05",
+      "sha256": "ec9c573fbc463eff8c2f6df2b8c94684afc4bb0a861d99af59004eeb0155ce91",
+      "bytes": 29543
+    }
+  ],
+  "metrics": {
+    "pipeline_status": "preregistered_collector_not_implemented_or_launched",
+    "start_utc": "2026-09-23T04:00:00+00:00",
+    "exclusive_end_and_seal_utc": "2026-10-07T04:00:00+00:00",
+    "calendar_days": 14,
+    "arms": 4,
+    "cost_cases": 3,
+    "original_strategy_commit": "1dc57ec54a815ee5e19382dbe606eb250ca9a3dc",
+    "next_investigation": "Qualify separately pinned source collection and scheduling before the declared start, retaining original studies."
+  },
+  "limitations": [
+    "This protocol is not evidence of a running future collector or a completed economic comparison.",
+    "Current account monitoring continues, so market exposure is not fully blinded.",
+    "The live faster-entry proposal remains rejected; later results have no automatic promotion authority."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

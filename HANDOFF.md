@@ -1,3 +1,56 @@
+## September 16: stopped prospective collectors discovered and resumed
+
+A fresh source-health check found both original public-data collectors stopped
+at **September 13 23:01:29.064 UTC**, roughly 49 hours before discovery. Old PIDs
+75062/15448 are absent and their locks unowned; both saved states are `stopped`
+with no error. Stop origin is unknown. This is new evidence, not a repeat of the
+September 10 healthy-source observation. Original financial outcome seals stay
+closed; original timely prospective coverage is now explicitly incomplete.
+
+After read-only SQLite backups and 26 source/two protocol hash checks, the exact
+frozen research collectors were resumed with credential-free environments:
+- Pair collector: **PID 43671 / exec session 14590**, cwd
+  `/Users/gestas/Prototypes/hypervector-v89-prospective-20260908`.
+- Seven-asset collector: **PID 45939 / exec session 63338**, cwd
+  `/Users/gestas/Prototypes/hypervector-v89-storage-spcx-20260908`.
+
+Both current writer locks and heartbeats are verified. All **35,586 original
+requests** and **46,100 first value-version observations** survive unchanged;
+independent raw/index/Python/SQL timing agrees. Two deliberately changed first
+receipts were rejected in private copies. Raw archives authenticate **35,641**
+post-resume request members. Backfilled observations stay late. At the actual
+**00:30 UTC** quarter, all five XYZ streams arrived in **6,149–9,604 ms**. All
+older candle gaps and pair funding gaps recovered. Seven-asset funding still
+has **one old September 15 00:00 identity per asset**, due for normal recovery
+at **September 16 01:00 UTC**. Inspect that evidence without market outcomes.
+
+**Next highest-value work:** add passive collector-health observation for these
+two jobs; then verify the scheduled 01:00 funding recovery. Do not modify their
+frozen source or manifests. A stopped/stale job needs an explicit retained
+observation; neither financial watcher covers research-source health. Do not
+claim the original blocks regained timely coverage because missing counts fell.
+
+Review: `docs/reviews/2026-09-16-v89-prospective-gap-recovery.md`.
+Evidence: `data/logs/research/bidirectional_cohort/v89_prospective_gap_recovery_20260916_v1/`.
+Health revision **ec72f5c3c55eb2a9c3262878e654df2e982a24949d776c22e734ebfb799ca612**:
+75 current / 155 history references match; none missing or changed. Initial
+registration identity mismatch and transient DB lock were retained and corrected.
+
+The original pair protocol requires a later full block. Separate preregistration
+`v89-quarter-entry-followup-20260923` fixes **September 23 04:00–October 7 04:00 UTC**,
+with unchanged source `1dc57ec`, warmup seed, four arms and three costs. Original
+September 22/23 seals and windows remain unchanged. The later collector has NOT
+been implemented or launched; qualify a separate manifest before the fixed start.
+Its journal **8335204b297a120ccd4c48832fb8fe481663c135836ea2be21276180815d8147** has
+six matching references. See `docs/plans/2026-09-16-v89-prospective-gap-disposition.md`.
+
+Financial-session PIDs 29190/29191/30603/62016/62017 remain preserved; no financial
+process control, economic outcome inspection or live policy change occurred.
+Existing lifecycle **17371/session27304** and diagnostic **67653/session82480**
+watchers were polled live and remain pending near 00:49:45/01:09:07 UTC. Poll the
+same handles; save final cursors on a real terminal result before any successor.
+The continuous goal remains active; this turn made source-recovery progress.
+
 ## September 15 cleanup: storage headroom and bounded journal verification
 
 Installed research-only source commit **f1088d1** replaces whole-artifact reads
