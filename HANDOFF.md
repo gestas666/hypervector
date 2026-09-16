@@ -1,3 +1,32 @@
+## September 16, 17:28 UTC: noncrypto archive replacement rejected by source parity
+
+New retrospective HIP-3 1m acquisition covers the declared September 2 14:59 to
+September 16 14:59 exclusive window. SPCX/SNDK/Brent return 18,804/19,620/19,981
+of 20,160 expected minutes. Within captured completed native overlap, 451 absent
+minutes all have zero native volume, but 1,416 of 14,872 shared candles also have
+OHLC differences. Maximum open differences are 0.15/3.40/0.05. Do not infer all
+full-window gaps are zero-volume or that either source is corrupt. Filling gaps
+alone cannot establish native equivalence. All three fail predeclared acceptance.
+
+Tools **9defa8bb6558da1b860ca1e4c342ab1c11e316c1** are committed and pushed on
+`research/v89-restart-warmup-coverage-20260916`. Primary and independent original
+HTTP/Decimal readers reproduce every complete comparison object from the Git
+archive. 79 controls pass twice; comparison helper 36/36 statements, 12/12
+branches. All 20 archived files and 9 declared source references are unchanged.
+Review: `docs/reviews/2026-09-16-v89-restart-noncrypto-source-parity.md`.
+Journal v3 revision `027630cdb226ec7777affe05ee7633f128f24f4be519fa325bcb8dd6eb892ce1`.
+
+Prior core source coverage remains qualified; seven-asset changed-history
+provider comparison remains deferred for exact native noncrypto history and
+cross-source revision policy. Seek earlier native 1m snapshots in documented
+qualification artifacts; do not repeat identical vendor acquisition/parity or
+reverse-resample existing 15m collectors. Preserve pinned evidence and the
+existing source/reproduction/account jobs; their terminal results are pending.
+No live source/process/settings or cache changed and no provider or economic
+outcomes were computed. Backend 67727, reporter 6596 and TUI 42506 remain active;
+the prior resume approval was already executed. Separate installation approvals
+remain separate. The continuous goal remains active.
+
 ## September 16, 16:02 UTC: actual restart inputs reproduce published indicators
 
 The previously unverified startup-capture activation is now qualified for run
