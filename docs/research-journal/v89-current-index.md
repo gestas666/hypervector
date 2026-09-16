@@ -1,3 +1,24 @@
+## September 16, 15:41 UTC: startup recovery candidate qualified offline
+
+Candidate `fb8414c20b39a30d553afbcbba6b1c0e57a4fcc9` is committed/pushed and
+isolated. Its combined durable-decision/funding recovery retains full row
+validation and invalidates changed or already consumed generations. Candidate
+and frozen archive each passed 162 tests; helper coverage is 81 statements and
+18 branches, all covered. The complete 625,900-row / 4.56 GB frozen cohort
+recovered exactly equal decision objects, funding cursor and next sequence.
+Native runs exited 0; all source files/modes, archives and declaration pins match.
+Three passes became two: 251.1504s to 166.4964s in one shared-host comparison.
+The 33.71% reduction applies only to this cohort recovery component.
+
+Review: `docs/reviews/2026-09-16-v89-cohort-startup-recovery.md`.
+Hypothesis `v89_cohort_startup_recovery_20260916_v1`, candidate revision
+`13f5dfd9c9ba25d6e0a9f01af36fd22065a24ec1d4ee76e088d4dcf68e9278c5`,
+24 matching references, none changed/missing. No live source installation or
+financial process control occurred in this experiment. Separate installation
+approval and next approved startup acceptance remain required. Backend remains
+healthy at the dated 15:40:22 UTC checkpoint: 167 polls, zero faults. Ongoing
+full-window research processes retain their identities; real outcomes stay sealed.
+
 ## September 16, 15:04 UTC: approved live backend restored
 
 The user approved `approve to unstop it`. Backend **67727** (birth

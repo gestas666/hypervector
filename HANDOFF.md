@@ -1,3 +1,30 @@
+## September 16, 15:41 UTC: startup recovery candidate qualified offline
+
+Isolated candidate **fb8414c20b39a30d553afbcbba6b1c0e57a4fcc9** is committed and
+pushed on `fix/v89-cohort-startup-recovery-20260916`. It combines initial durable
+decision/funding selection with generation invalidation and single-use reuse.
+Full native cohort validation remains. Candidate and independent archive each
+passed **162 tests**; three helpers have **81/81 statements and 18/18 branches**.
+
+Full frozen 4,556,975,836-byte / 625,900-row recovery produced exactly equal
+complete decision maps, funding cursor and next-sequence cursor. Baseline three
+passes took 251.1504s; candidate two passes took 166.4964s. One shared-host pair
+saved 84.65s / 33.71% in the measured component; this excludes asset recovery,
+backup/provider startup and does not establish a full restart ETA. Both native
+processes exited 0. All archived files/modes and declared evidence pins passed.
+Review: `docs/reviews/2026-09-16-v89-cohort-startup-recovery.md`.
+Journal revision `13f5dfd9c9ba25d6e0a9f01af36fd22065a24ec1d4ee76e088d4dcf68e9278c5`
+has 24 matching references, none changed/missing. Do not edit pinned artifacts.
+
+Candidate is **not installed live**. Obtain separate source-installation approval;
+do not restart the healthy backend merely for this optimization. Current backend
+67727, reporter 6596 and TUI 42506 were preserved. At 15:40:22 UTC the checkpoint
+remained `running_consistent`, 167 polls, zero faults. All eleven ongoing research
+process identities matched the prior checkpoint; real outcomes remain sealed.
+Full-window/account qualification remains pending. Avoid reopening completed
+startup investigations; the next high-value evidence is complete native source
+equivalence and subsequent account qualification from the preserved jobs.
+
 ## September 16, 15:04 UTC: approved live backend restored
 
 The user approved `approve to unstop it`. Backend **67727** (birth
