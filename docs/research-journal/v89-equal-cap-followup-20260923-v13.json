@@ -1,0 +1,231 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v89_equal_cap_followup_20260923_v1",
+  "strategy_id": "v89_fixed_total_notional_equal_cap_followup",
+  "symbol": "MULTI",
+  "hypothesis": "A separately declared complete later source block can test the unchanged allocation comparison after the original block lost timely observations.",
+  "status": "observe",
+  "execution_authority": "none",
+  "runtime_strategy_changed": false,
+  "automatic_promotion": false,
+  "created_at_utc": "2026-09-16T09:47:05.998343+00:00",
+  "revision_number": 13,
+  "supersedes_revision_id": "e2b910d5a1527deb8df77cb1cfef1c8f512bcd221ad2d32fdbd37b1db808ff2e",
+  "confidence": "high",
+  "decision": "Qualify full native-source reuse metadata and deterministic account/report comparisons, repair self-comparison acceptance, and attach a sandboxed passive downstream handoff to the existing native collection job. Candidate and frozen archive each pass 87 checks; nine handoff controls pass. Complete native account execution remains pending.",
+  "falsifier": "Incomplete or changed sources can reach account work; a single artifact can count as repeat execution; original cases, clocks, costs or provenance change; independent accounting or repeated complete outputs disagree.",
+  "evidence": [
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/docs/reviews/2026-09-16-v89-native-account-reuse-handoff.md",
+      "bytes": 7799,
+      "sha256": "de8578bb1e61c8458231e7d2ceba70dd3f30c579dcdda50fec50fc8730a07b17",
+      "role": "native_reuse_handoff_00_2026-09-16-v89-native-account-reuse-handoff.md"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_reuse_source_v1.tar.gz",
+      "bytes": 34158737,
+      "sha256": "847b1c47bb97265ba2474f9c2e43ef296fbff69af741a9d253ab11b329cd0c07",
+      "role": "native_reuse_handoff_01_native_reuse_source_v1.tar.gz"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_reuse_source_manifest_v1.json",
+      "bytes": 1087262,
+      "sha256": "e1f78fe8fbb56cfc8c4874a0b27c0202cbfc06fe1e0ec7d4eefae052e7f40b5d",
+      "role": "native_reuse_handoff_02_native_reuse_source_manifest_v1.json"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_reuse_red_v1.txt",
+      "bytes": 104560,
+      "sha256": "76c1404182e736cc9c5e0948cfde166e2fbc63933037d69f3276f18cf96b3622",
+      "role": "native_reuse_handoff_03_native_reuse_red_v1.txt"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_reuse_distinct_red_v1.txt",
+      "bytes": 2986,
+      "sha256": "8bd7764149ea86618d1b95bf82f77071eb0920f21e299a1eb82b95afceca07c6",
+      "role": "native_reuse_handoff_04_native_reuse_distinct_red_v1.txt"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_reuse_tests_v4.txt",
+      "bytes": 958,
+      "sha256": "cc6f8b56a67bbe9b1bda355d91a90bf8eeac0a96420ccc8ac97530537862c86a",
+      "role": "native_reuse_handoff_05_native_reuse_tests_v4.txt"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_reuse_coverage_v3.json",
+      "bytes": 14471,
+      "sha256": "baf86659f56ee53afed018a3ee99fe9c9b334854a45b5f411de042cc170ca9bf",
+      "role": "native_reuse_handoff_06_native_reuse_coverage_v3.json"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_reuse_archive_tests_v1.txt",
+      "bytes": 180,
+      "sha256": "6d24bd20a5244998ce6e990e58bd1d0d5fee6d383693dfe45dfb0bb1a1359b8c",
+      "role": "native_reuse_handoff_07_native_reuse_archive_tests_v1.txt"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_reuse_qualification_v1.json",
+      "bytes": 7999,
+      "sha256": "c3068b109e266168f7a192540d27f8f487a5e9d8a4993ca1aefbbd5cfa46f7ab",
+      "role": "native_reuse_handoff_08_native_reuse_qualification_v1.json"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/run_native_account_handoff_v1.py",
+      "bytes": 14873,
+      "sha256": "b091a644a8974d84d48623c880f4a2c5d73bf5e731014817aef8811ae8e7525d",
+      "role": "native_reuse_handoff_09_run_native_account_handoff_v1.py"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/run_native_account_handoff_v2.py",
+      "bytes": 1034,
+      "sha256": "65b577e9b734e12c508240e1e454643bd6aa15b2b939a28b06bfab560bce3fce",
+      "role": "native_reuse_handoff_10_run_native_account_handoff_v2.py"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/test_native_account_handoff_v1.py",
+      "bytes": 5630,
+      "sha256": "76db2d47f48c0811762f338653656cd1ce092715f20c2ab70578d077014ef985",
+      "role": "native_reuse_handoff_11_test_native_account_handoff_v1.py"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/test_native_account_handoff_v2.py",
+      "bytes": 1795,
+      "sha256": "bcd61d28148df027c78bfb8a6644ba952d45df535894f20575f63c22decb9934",
+      "role": "native_reuse_handoff_12_test_native_account_handoff_v2.py"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_handoff_tests_v5.txt",
+      "bytes": 98,
+      "sha256": "50813bfa5ce82c778cf81288f77d8f9ccb28fb7559faf404e3d1f2d438405776",
+      "role": "native_reuse_handoff_13_native_handoff_tests_v5.txt"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_handoff_inspector_final_tests.txt",
+      "bytes": 98,
+      "sha256": "06ddfb28e27d979f5a838dbef804065fff847615db4344cc366aa5bca4d1a842",
+      "role": "native_reuse_handoff_14_native_handoff_inspector_final_tests.txt"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_account_handoff_preflight_v1.json",
+      "bytes": 927,
+      "sha256": "e053f12a9703e3dcfe5fb05edd90210759a60a73b3344a16b69fe11f74be46bd",
+      "role": "native_reuse_handoff_15_native_account_handoff_preflight_v1.json"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_account_handoff_preflight_request_v1.json",
+      "bytes": 2351,
+      "sha256": "c94162d316487c52ce7d022f4d3f7cb62fb2b37c1bbb32738f17187ea1cbac93",
+      "role": "native_reuse_handoff_16_native_account_handoff_preflight_request_v1.json"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_account_handoff_request_v1.json",
+      "bytes": 2351,
+      "sha256": "39eef92d5ac96e4ee956a97f4037f4359951a443eb81c8e52ad80800603d5ae8",
+      "role": "native_reuse_handoff_17_native_account_handoff_request_v1.json"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_account_handoff_request_v2.json",
+      "bytes": 2989,
+      "sha256": "2d572c60df020bdef47bb404701b5f1238cace3cde031c1594e21e5b9037a37d",
+      "role": "native_reuse_handoff_18_native_account_handoff_request_v2.json"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_account_handoff_v1.sb",
+      "bytes": 679,
+      "sha256": "896b2c71df445bc1cb11274d9fd7ff9fecb91647301f15bf16e8cc8c721a5f8b",
+      "role": "native_reuse_handoff_19_native_account_handoff_v1.sb"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_account_handoff_v2.sb",
+      "bytes": 679,
+      "sha256": "0f6ca1d36a120cc8a7c0981ad5cebf77f49c92b762bbad36bcaff49d487eea77",
+      "role": "native_reuse_handoff_20_native_account_handoff_v2.sb"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_account_handoff_v1/failure.json",
+      "bytes": 179,
+      "sha256": "6365284bd5ee733520734e68132d3f4c53cb439ee84df47fdb471def1febbea7",
+      "role": "native_reuse_handoff_21_failure.json"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_account_handoff_v1.txt",
+      "bytes": 2315,
+      "sha256": "4fe88bd41f60a7b9637a26815f9e775312f32de41c65ef4c1e7bf5bac1d6768f",
+      "role": "native_reuse_handoff_22_native_account_handoff_v1.txt"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_account_handoff_v1/scope.json",
+      "bytes": 8551,
+      "sha256": "64e83c08a3c31055ce7c0a036d3db465c1000a3b793531ff9ad174d22ddc1dab",
+      "role": "native_reuse_handoff_23_scope.json"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_account_handoff_v2/scope.json",
+      "bytes": 8804,
+      "sha256": "23682dbeb8e162348d0e8fc3b027013456723e15b13b3c946bec087ff1be1ee2",
+      "role": "native_reuse_handoff_24_scope.json"
+    }
+  ],
+  "metrics": {
+    "qualification_commit": "38bdf78c5ef5ee2c777e90dfac2ce478a26af554",
+    "candidate_tests": 87,
+    "archive_tests": 87,
+    "new_metadata_tests": 42,
+    "handoff_tests": 9,
+    "inspector_final_tests": 3,
+    "metadata_helper_coverage": {
+      "covered_branches": 68,
+      "covered_lines": 153,
+      "excluded_lines": 0,
+      "missing_branches": 0,
+      "missing_lines": 0,
+      "num_branches": 68,
+      "num_partial_branches": 0,
+      "num_statements": 153,
+      "percent_branches_covered": 100.0,
+      "percent_branches_covered_display": "100",
+      "percent_covered": 100.0,
+      "percent_covered_display": "100",
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100"
+    },
+    "archive_members": 5782,
+    "matching_native_python_files": 1960,
+    "matching_implementation_files_including_lock": 1961,
+    "reviewed_implementation_differences": 3,
+    "distinct_output_regression_reproduced_and_fixed": true,
+    "source_job_pid": 29346,
+    "source_job_session": 49265,
+    "source_progress_at_receipt": {
+      "native_decisions_completed": 6300,
+      "variant": "first_receipts",
+      "variant_seconds": 5060.927227375003
+    },
+    "handoff_pid": 56931,
+    "handoff_session": 66861,
+    "handoff_status": "waiting_for_registered_source_completion",
+    "first_handoff_terminal": "PermissionError executing setuid /bin/ps inside sandbox; evidence preserved",
+    "second_handoff_inspector": "psutil read-only API; exact birth and command validated inside sandbox",
+    "source_restarted": false,
+    "financial_process_control": false,
+    "full_native_accounts_qualified": false,
+    "real_market_outcomes_evaluated": false,
+    "source_recomputation_qualified": false,
+    "account_runs_required": 48,
+    "deterministic_artifact_pairs_required": 72,
+    "economic_case_pairs_required": 24,
+    "byte_identical_reanalysis_files_required": 26,
+    "previous_goal_turn_classification": "progress: identified old running TUI and freshly verified installed leverage rendering",
+    "this_goal_turn_classification": "progress",
+    "next_investigation": "Follow the exact native source job and the attached account handoff; inspect complete source artifacts and diagnose any actual account/reconciliation failure without shortening the registered study."
+  },
+  "limitations": [
+    "Metadata/comparison and substituted orchestration tests do not qualify full native accounts or profitable outcomes.",
+    "Both full native variants must finish and authenticate before any account work starts.",
+    "Trusted deserialization is confined to the original fixed-local fabricated-source artifacts; no public pickle loader or seal override was added.",
+    "Native source recomputation remains separate from repeat account execution on retained source decisions.",
+    "Real prospective outcomes remain sealed at their original study dates.",
+    "No live strategy, asset, leverage, sizing, risk, execution or deployment setting changed.",
+    "Persistent collector recovery deployment still awaits the previously requested human response."
+  ]
+}
