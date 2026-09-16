@@ -71,7 +71,8 @@ def snapshot_checkpoint_assets(
                 run_id=run_id,
                 allow_incomplete_tail=True,
                 stream_projector=partial(
-                    compact_asset_ledger_rows, current_run_id=run_id, as_of=as_of
+                    compact_asset_ledger_rows, current_run_id=run_id, as_of=as_of,
+                    include_post_cutoff_lifecycle=True,
                 ),
             )
         else:

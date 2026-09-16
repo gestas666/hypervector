@@ -72,6 +72,7 @@ class _CohortProjection:
 class _AssetProjection:
     current_run_id: str
     as_of: datetime | None = None
+    include_post_cutoff_lifecycle: bool = False
     selected: dict[int, Record] = field(default_factory=dict)
     latest_current: dict[str, Record] = field(default_factory=dict)
     pending_reconciliation: Record | None = None
@@ -83,6 +84,12 @@ class _AssetProjection:
     def accept(self, row: Record) -> None:
         """Retain execution facts and only lifecycle-relevant cycle samples."""
         if self.as_of is not None and _timestamp(row) > self.as_of:
+            if (
+                self.include_post_cutoff_lifecycle
+                and row.get("run_id") == self.current_run_id
+                and row.get("event_type") == "state_transition"
+            ):
+                self._select(row)
             return
         event_type = _text(row.get("event_type"), "asset event type")
         if (
@@ -161,13 +168,21 @@ def compact_asset_ledger_rows(
     *,
     current_run_id: str,
     as_of: datetime | None = None,
+    include_post_cutoff_lifecycle: bool = False,
 ) -> ProjectedLedgerRows:
-    """Retain exact asset lifecycles without materializing every poll sample."""
+    """Compact asset facts, optionally retaining later current-process states.
+
+    Later states support process liveness only; audit consumers must still apply
+    their economic cutoff before calculating position or trade evidence.
+    """
     if not current_run_id.strip():
         raise ValueError("current_run_id must be non-empty")
     if as_of is not None and (as_of.tzinfo is None or as_of.utcoffset() is None):
         raise ValueError("asset projection cutoff must be timezone-aware")
-    return _project_rows(path, _AssetProjection(current_run_id.strip(), as_of))
+    return _project_rows(
+        path,
+        _AssetProjection(current_run_id.strip(), as_of, include_post_cutoff_lifecycle),
+    )
 
 
 def _project_rows(

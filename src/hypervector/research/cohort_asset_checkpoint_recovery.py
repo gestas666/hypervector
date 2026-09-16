@@ -60,7 +60,8 @@ def snapshot_current_asset_ledger(
         run_id=run_id,
         allow_incomplete_tail=allow_incomplete_tail,
         stream_projector=partial(
-            compact_asset_ledger_rows, current_run_id=run_id, as_of=as_of
+            compact_asset_ledger_rows, current_run_id=run_id, as_of=as_of,
+            include_post_cutoff_lifecycle=True,
         ),
     ) as (rows, evidence):
         _validate_inherited_execution(rows, run_id, as_of, dependencies)
