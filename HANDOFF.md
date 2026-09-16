@@ -1,3 +1,59 @@
+## September 16, 21:04 UTC: public-request audit qualified; live backend healthy
+
+The approved protection installation/restart remains complete. Fresh process
+birth and command identities match backend 83722, reporter 18490 and TUI 42506;
+checkpoint 21:03:29.485985 UTC reports running_consistent, 384 polls, zero faults
+and the same protected SPCX/Brent shorts. Profile hash is unchanged. All five
+public collectors retain fresh health, and the source/reproduction/account jobs
+continue. No financial or active collector process/source/configuration changed.
+Do not repeat the consumed restart approval or restart the healthy backend.
+
+Public-request investigation is complete for its fixed 19:30–20:30 UTC trace:
+582 HTTP-200 requests, median 319 ms, p95 588 ms, maximum 1,146 ms. Estimated
+rolling-minute peak is 1,220–1,256; accounting and other-IP traffic remain
+unmeasured, so this does not establish a live request failure. Exact in-flight
+grouping identifies 264 extra requests with matching body bytes and 5,650 upper
+weight (45.3% of this hour's estimated upper weight). Some other payload repeats
+are minutes apart and must not be counted as immediately removable.
+
+Twelve fixed-workload models preserve exact requests, original collector order,
+one in-flight request per collector, causality and planned rolling capacity.
+600 weight/minute creates eight newly late fresh-query proxies; 900 and 1,200
+create none in this trace. Ten-second duration sensitivity creates 64 at every
+budget. FIFO/fresh-first coincide. These are query deadline proxies, not real
+per-observation replay, and do not model actual replanning or prove optimality.
+Do not install a blanket budget from this analysis.
+
+Isolated worktree:
+`/Users/gestas/Prototypes/hypervector-v89-public-request-coordination-20260916`.
+Branch `research/v89-public-request-coordination-20260916`, committed/pushed at
+**4b60bfca85ce63f7737485cf49500704bac20678**. 46 candidate and 46 archive tests
+passed; independent raw arithmetic and all twelve complete simulation objects
+reproduce exactly. Three new modules cover 190/191 statements and 79/80 branches;
+the remaining branch is a defensive no-progress guard under validated inputs.
+Archive has 3,662 verified files, SHA
+`0f01d9c4677b7680a2f29cd55f67f36411aca2f38cb792707c50217ca1b6cd23`.
+
+Review: `docs/reviews/2026-09-16-v89-public-request-coordination.md`.
+Evidence: `data/logs/research/bidirectional_cohort/v89_public_request_coordination_20260916_v1`.
+Journal v1 revision
+`bc027521754d5b9ea128c42fac3cc7b83cb5a6f0b1d5cc5a8376b70dc11a8a54`
+has 667 matching evidence references, none changed/missing. The review, source
+archive, transcripts, analysis and original raw inputs are pinned; do not edit.
+
+Highest-value next offline experiment: exact-scope in-flight public-request
+sharing with distinct subscriber receipt lineage. Validate cancellation,
+deadlines, leader errors/429, crash recovery and study declaration continuity
+before proposing deployment. Existing collectors and manifests remain frozen;
+no sharing service has been implemented or authorized for deployment. This is
+an efficiency candidate, with no asserted profitability or execution-failure
+effect. The continuous goal remains active and this turn made progress.
+
+Watcher 82186 ended normally at its six-hour observation deadline,
+**20:51:46.710898 UTC**. Its status is observation_deadline,
+1,429 cycles, automatic_restart=false. This is not collector 51194 stopping.
+Preserve the three completed watcher records rather than attempting restarts.
+
 ## September 16, 20:22 UTC: independent native-minute collector is running
 
 The approved entry-protection deployment below remains live; do not repeat its
