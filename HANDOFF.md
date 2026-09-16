@@ -1,3 +1,44 @@
+## September 16: captured-only later warmup qualified
+
+The isolated source assembler at **7f4f818890c1a420bcd2d75f452dbceedb5e1343**
+now authenticates the exact later study/seed and restricts initialization to
+**September 9–23**. Candidate and extracted archive each pass **297 tests**,
+covering **237/237 statements and 68/68 branches** in the two affected modules;
+twelve inherited SQLite fixture resource warnings remain. All **5,714 archived
+source files** retain their bytes and executable bits after reproduction.
+
+Both source variants independently reconcile **43,179 available candles, 1,204
+funding hours and seven metadata values**, including source hashes and both
+clocks, against the original authenticated index. Both exclude **150,427 older
+seed receipts**. All fourteen candle/funding grids are complete through
+**September 16 03:00 UTC exclusive**. The dated snapshot explicitly retains
+**41,493 missing candles / 1,148 missing funding hours per variant** for the full
+future warmup. No future values, signals or allocation outcomes were imputed.
+
+**Next highest-value investigation:** assemble the prospective captured-source
+to native-account caller, exact original/later sealed calendars and captured
+output provenance. `SourcePortfolioCalendar` is already supported by native
+routing frames/account routing. The historical writer only accepts historical
+or synthetic source kinds and reports `historical_conditional`; use a separately
+qualified prospective path. Preserve all **24 cells**, original provider/regime
+publications, modeled clocks, costs, funding, reservations, rounded dynamic
+quantities and terminal marks, with independent accounting. The complete 48-case
+historical matrix already exists; do not reimplement or rerun it. Full future
+warmup and the full economic evaluator remain pending; all seals unchanged.
+
+Review: `docs/reviews/2026-09-16-v89-captured-warmup.md`.
+Plan: `docs/plans/2026-09-16-v89-captured-warmup.md`.
+Evidence: `data/logs/research/bidirectional_cohort/v89_captured_warmup_20260916_v1/`.
+Journal v5 revision **e3557cf79ba6a373404ca126358251d4e807452ff8d9e57158368bee0172f9bf**:
+**24 current / 241 history** evidence references match; none changed or missing.
+Implementation remains isolated; ROOT runtime source and five user-owned
+financial process births were preserved. Four collector processes remain active;
+later pair/seven health watches report healthy at 03:51 UTC. Native diagnostic
+and lifecycle observers remain PID16340/session81488 to ~05:14 UTC and
+PID71235/session76010 to ~04:57 UTC. Empty polls are not terminal. Persistent
+research recovery deployment still awaits the earlier separate approval.
+Continuous goal active; source integrity progress does not establish profitability.
+
 ## September 16: later receipt adapter qualified; historical checklist corrected
 
 The isolated source reader at **8793320e456cb607c7776d2fbf964a5da40d4e3e**
