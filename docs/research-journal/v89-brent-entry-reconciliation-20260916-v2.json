@@ -1,0 +1,559 @@
+{
+  "automatic_promotion": false,
+  "confidence": "high",
+  "created_at_utc": "2026-09-16T12:44:01.154120+00:00",
+  "decision": "The 600-minute native window supports the fresh hourly short, one ATR recurrence, configured 10x isolated leverage and 28 covering stop observations. First and last cash endpoints reconcile; original ATR seed, exact opening mark and final outcome remain unqualified.",
+  "evidence": [
+    {
+      "bytes": 2871,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/brent_entry_20260916_v1/capture.json",
+      "role": "brent_entry_v2_0",
+      "sha256": "02488711d1fa391bcea976aa763b9f3940c34db9b33051223a7310015a38b06b"
+    },
+    {
+      "bytes": 10498,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/brent_entry_20260916_v1/entry_receipt.json",
+      "role": "brent_entry_v2_1",
+      "sha256": "895c56f29903a03c8bed63f529b095b71feb40c2e8521b9df324e2d42f647020"
+    },
+    {
+      "bytes": 3672,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/capture_brent_entry_v1.py",
+      "role": "brent_entry_v2_2",
+      "sha256": "22cf95ec3a0cf1c844f4c138e6df592fb6a0daec2b1d4d22738c5b1f49179c61"
+    },
+    {
+      "bytes": 15166,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/spcx_exit_signal_v1/audit_signal.py",
+      "role": "brent_entry_v2_3",
+      "sha256": "a87f561cd4bda68a87183e59ed82f13e5f8c810d71679da8d715d9ecab86eb83"
+    },
+    {
+      "bytes": 2028,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/resume_brent_observers_v1.py",
+      "role": "brent_entry_v2_4",
+      "sha256": "f03920d5d616ca264d84c340742dbb71bafe05d440bff42ff375540aa2ac7cd9"
+    },
+    {
+      "bytes": 55940,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/brent_entry_20260916_v1/xyz:brentoil.jsonl.xz",
+      "role": "brent_entry_v2_5",
+      "sha256": "fb12e4d4d828f3bf6ba22ae24a816911c8db7382b66f0a63a26cf168319a734d"
+    },
+    {
+      "bytes": 2137276,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/brent_entry_20260916_v1/xyz:brentoil.jsonl.selected.json",
+      "role": "brent_entry_v2_6",
+      "sha256": "b46355d954a88b59f6fafc235f216041eac024198d01adf10b9421960094adc3"
+    },
+    {
+      "bytes": 1474924,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/brent_entry_20260916_v1/decisions.jsonl.xz",
+      "role": "brent_entry_v2_7",
+      "sha256": "502c5ad8af106d4e61383ed571e024021cfe5e2252a1e56a74e40fa67fe4c8e4"
+    },
+    {
+      "bytes": 56655466,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/brent_entry_20260916_v1/decisions.jsonl.selected.json",
+      "role": "brent_entry_v2_8",
+      "sha256": "99eb82ad27d1bee4f5f38986637413f0edcd66d9c1e7b0898828d9cfb28dfd53"
+    },
+    {
+      "bytes": 6039,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_lifecycle_followup_1106_v1/watch_result.json",
+      "role": "brent_entry_v2_9",
+      "sha256": "b624636c1664161ed1f09abd12a4b61cf337aac32dc03c80cc513a0671a60ed3"
+    },
+    {
+      "bytes": 1643,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_lifecycle_followup_1106_v1/final_cursors.json",
+      "role": "brent_entry_v2_10",
+      "sha256": "4f245ef5478ad3a5180358115cea164830f64b665ee92979a5bbe8d99f823c6c"
+    },
+    {
+      "bytes": 3703,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_lifecycle_followup_brent1200_v1/anchor.json",
+      "role": "brent_entry_v2_11",
+      "sha256": "1577f4c9e3deea641169324e44afb95a290ecdb4f0af1cad3031be745ec81a3e"
+    },
+    {
+      "bytes": 277,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_lifecycle_followup_brent1200_v1/started.json",
+      "role": "brent_entry_v2_12",
+      "sha256": "c5ff12c8d0d5b530fd642767b9c4e3622973f6df3663554c2ed6c7ffd011a033"
+    },
+    {
+      "bytes": 1610,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_lifecycle_followup_brent1200_v1/first_scan.json",
+      "role": "brent_entry_v2_13",
+      "sha256": "916e5f25494b31a952f81959c7715ca78843cdf722a7b76724d04f8344b0c305"
+    },
+    {
+      "bytes": 26913,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_diagnostic_followup_1106_v1/watch_result.json",
+      "role": "brent_entry_v2_14",
+      "sha256": "9db1ee5ccff75849b18ae7868af79d955e5c03f4432f764a405d06bd76746e07"
+    },
+    {
+      "bytes": 1643,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_diagnostic_followup_1106_v1/final_cursors.json",
+      "role": "brent_entry_v2_15",
+      "sha256": "182716a28fd80dddd8f358c2857e2581e6ac946381075568ef114091e5e328bb"
+    },
+    {
+      "bytes": 3707,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_diagnostic_followup_brent1200_v1/anchor.json",
+      "role": "brent_entry_v2_16",
+      "sha256": "d85102e14742799a437f9ecb80148b2031cea49af517e13c1fd881998a4390f6"
+    },
+    {
+      "bytes": 278,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_diagnostic_followup_brent1200_v1/started.json",
+      "role": "brent_entry_v2_17",
+      "sha256": "84bb12b2810fb7f2e21746252e91fa005b1bc817bf3ae293cc1a0bb07b42380b"
+    },
+    {
+      "bytes": 1610,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_diagnostic_followup_brent1200_v1/first_scan.json",
+      "role": "brent_entry_v2_18",
+      "sha256": "1491a875490a6c8d3509bee975acdab5580f03fc13738a1983c36c42947bb992"
+    },
+    {
+      "bytes": 1060,
+      "path": "/Users/gestas/Prototypes/hypervector/data/backups/bidirectional_cohort/prestart_20260915T183016.143980Z_39e334fc97f3/files/target_config.gz",
+      "role": "brent_entry_v2_19",
+      "sha256": "716ebe0a69412dd03bf597757113f816efed69d91021d0f23c6e8f1ddcc50319"
+    },
+    {
+      "bytes": 5747,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/brent_entry_signal_v1/backend_source/multi_asset_growth_first_5000_noncrypto_live_v89.toml",
+      "role": "brent_entry_v2_20",
+      "sha256": "696fa385d588d29ca0a6dcc1539a7e11d37af58c9523fd6ed3e5a473bc4a08a3"
+    },
+    {
+      "bytes": 2561,
+      "path": "/Users/gestas/Prototypes/hypervector/data/backups/bidirectional_cohort/prestart_20260915T183016.143980Z_39e334fc97f3/files/implementation_repository_0173.gz",
+      "role": "brent_entry_v2_21",
+      "sha256": "dda6bd40223c71827306dff5757d148296e0cc503fa0d29afacf1d7ad87ed64d"
+    },
+    {
+      "bytes": 7803,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/brent_entry_signal_v1/backend_source/hourly_price_provider.py",
+      "role": "brent_entry_v2_22",
+      "sha256": "7b8fb8af0888ff5db1efe72ac5291ebe54dc2e8b2c5eadf1e03b09039a59b499"
+    },
+    {
+      "bytes": 2645,
+      "path": "/Users/gestas/Prototypes/hypervector/data/backups/bidirectional_cohort/prestart_20260915T183016.143980Z_39e334fc97f3/files/implementation_repository_0211.gz",
+      "role": "brent_entry_v2_23",
+      "sha256": "2aa8c2c36d24119800329680c3e052daad97735463dcb7508a9ed803e0e66bb2"
+    },
+    {
+      "bytes": 9534,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/brent_entry_signal_v1/backend_source/hyperliquid_perp_parsing.py",
+      "role": "brent_entry_v2_24",
+      "sha256": "c6baca909ab1126f9288344c43286d40e7c86cc9432a2235068469c6403c7b0c"
+    },
+    {
+      "bytes": 2210,
+      "path": "/Users/gestas/Prototypes/hypervector/data/backups/bidirectional_cohort/prestart_20260915T183016.143980Z_39e334fc97f3/files/implementation_repository_0212.gz",
+      "role": "brent_entry_v2_25",
+      "sha256": "3b04ce75f1f3838f348501002d207a27ccb37868b87257adec71ec457768aa2e"
+    },
+    {
+      "bytes": 8453,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/brent_entry_signal_v1/backend_source/hyperliquid_perp_reader.py",
+      "role": "brent_entry_v2_26",
+      "sha256": "f850f06b63f6ab5d3e8b36871f924d347ea2dcd1c0c7a7d38f03017b429e83de"
+    },
+    {
+      "bytes": 1518,
+      "path": "/Users/gestas/Prototypes/hypervector/data/backups/bidirectional_cohort/prestart_20260915T183016.143980Z_39e334fc97f3/files/implementation_repository_0215.gz",
+      "role": "brent_entry_v2_27",
+      "sha256": "ab148534b8048ba709c722a5d960c12869e3164a7b39195563240eacb0b58732"
+    },
+    {
+      "bytes": 4509,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/brent_entry_signal_v1/backend_source/hyperliquid_sol_account.py",
+      "role": "brent_entry_v2_28",
+      "sha256": "1362eda1e0ee15780981e6d997a7e723e8e76c2620e8314f746d865cef8ea715"
+    },
+    {
+      "bytes": 5053,
+      "path": "/Users/gestas/Prototypes/hypervector/data/backups/bidirectional_cohort/prestart_20260915T183016.143980Z_39e334fc97f3/files/implementation_repository_0218.gz",
+      "role": "brent_entry_v2_29",
+      "sha256": "2fecafc34a3455b527022285f32abf41714c8faf871075d2ecc1aba56b563db4"
+    },
+    {
+      "bytes": 19582,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/brent_entry_signal_v1/backend_source/hyperliquid_sol_parsing.py",
+      "role": "brent_entry_v2_30",
+      "sha256": "a45743c50b011c31b6b4c2daece23a5bb37bc9d788f1ecf9d5e9583d74414148"
+    },
+    {
+      "bytes": 1665,
+      "path": "/Users/gestas/Prototypes/hypervector/data/backups/bidirectional_cohort/prestart_20260915T183016.143980Z_39e334fc97f3/files/implementation_repository_0752.gz",
+      "role": "brent_entry_v2_31",
+      "sha256": "d468c169e126cd956209795dcc1087d9ce92b2e16afabcf905c3329325206c79"
+    },
+    {
+      "bytes": 4565,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/brent_entry_signal_v1/backend_source/completed_bar_indicators.py",
+      "role": "brent_entry_v2_32",
+      "sha256": "2f82cb876fa00e5817c68561dad971a6a9c92c6870d04b0a6e92f0c772ae14b6"
+    },
+    {
+      "bytes": 812,
+      "path": "/Users/gestas/Prototypes/hypervector/data/backups/bidirectional_cohort/prestart_20260915T183016.143980Z_39e334fc97f3/files/implementation_repository_0753.gz",
+      "role": "brent_entry_v2_33",
+      "sha256": "f3753e5029e9072d67524ee13b0ec1b8f9164606401bdc99978ea572f3b7c9d8"
+    },
+    {
+      "bytes": 2197,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/brent_entry_signal_v1/backend_source/completed_signal_projection.py",
+      "role": "brent_entry_v2_34",
+      "sha256": "a0b8da4b77a61beb6f5811c8d5ed704850c73ba8a1ac1fc4bc8eeba16fdd21ff"
+    },
+    {
+      "bytes": 2174,
+      "path": "/Users/gestas/Prototypes/hypervector/data/backups/bidirectional_cohort/prestart_20260915T183016.143980Z_39e334fc97f3/files/implementation_repository_0793.gz",
+      "role": "brent_entry_v2_35",
+      "sha256": "0037ab6beb4766efcec01219d92635a12c3bc9139ea7c0ee75d1ecaad5e8d2b5"
+    },
+    {
+      "bytes": 7681,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/brent_entry_signal_v1/backend_source/donchian_atr_breakout_signals.py",
+      "role": "brent_entry_v2_36",
+      "sha256": "4fa29db4abcbb0d034b5e8862e9d1c98899d2b69e142204f5721db8446aee186"
+    },
+    {
+      "bytes": 3646,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_spcx_entry_audit_20260915_v1/independent_indicator_math.py",
+      "role": "brent_entry_v2_37",
+      "sha256": "aaf130639c48fe821ebc369ed74641f0032751a4078ce5c9580d8c6ad5953d37"
+    },
+    {
+      "bytes": 1601,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_spcx_entry_audit_20260915_v1/capture_manifest.json",
+      "role": "brent_entry_v2_38",
+      "sha256": "cad64ebe7347e6fa71c7741d25da1f5790c5b0163b0e0549a8b1e456b2ad866a"
+    },
+    {
+      "bytes": 9317304,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/spcx_exit_signal_v1/cohort_prefix.jsonl.xz",
+      "role": "brent_entry_v2_39",
+      "sha256": "17d8644a9c7e950a46f8a99ed8633b07bb3b42bfb7887b52e36d7e9059be2764"
+    },
+    {
+      "bytes": 260123634,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/brent_entry_signal_v1/earlier_cohort_selected.json",
+      "role": "brent_entry_v2_40",
+      "sha256": "c38b391062c1039755ea6c8ec3e9bb29210e935adb8f6370f079633093b9cb7b"
+    },
+    {
+      "bytes": 1977,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/spcx_exit_signal_v1/capture.json",
+      "role": "brent_entry_v2_41",
+      "sha256": "c789409b356b088bd6923484b5f639433e08f84fc4209bfdaede4484d3fde11c"
+    },
+    {
+      "bytes": 265617,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_spcx_entry_audit_20260915_v1/native_inputs/native_1m.json",
+      "role": "brent_entry_v2_42",
+      "sha256": "4862b1cdf3b0070d441bfb0188b7ba0888b112b3d62fa8a69dc8b6916b3a3686"
+    },
+    {
+      "bytes": 5861,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/prepare_brent_signal_v1.py",
+      "role": "brent_entry_v2_43",
+      "sha256": "2035c5ae0872bbe9b947a1de83ea698044e9e566b9ec34c2c873e1fb8bb1ba66"
+    },
+    {
+      "bytes": 946706,
+      "path": "/Users/gestas/Prototypes/hypervector/data/backups/bidirectional_cohort/prestart_20260915T183016.143980Z_39e334fc97f3/manifest.json",
+      "role": "brent_entry_v2_44",
+      "sha256": "9f20a7a850c2625c977c59ba7d292a9d9c1a09e56b5f71e73d7759445ae76029"
+    },
+    {
+      "bytes": 14670,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/brent_entry_signal_v1/capture.json",
+      "role": "brent_entry_v2_45",
+      "sha256": "9315d0be0986c0f2842468d0b5725d97addbd1aedd798ec693f8d6ea371a6a7b"
+    },
+    {
+      "bytes": 20061,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/brent_entry_signal_v1/brent_entry_audit.py",
+      "role": "brent_entry_v2_46",
+      "sha256": "83e89d736b38649605287b87c2e10c9792dede45f955b308b4a667bfcc0fa9d1"
+    },
+    {
+      "bytes": 18112,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/brent_entry_signal_v1/brent_entry_audit_before_boundaries.py",
+      "role": "brent_entry_v2_47",
+      "sha256": "bcd3fa2ccb1586ea2aaf3e75b2392ec4d89e63b51fd36e689682c34ebb2a5f3f"
+    },
+    {
+      "bytes": 5350,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/brent_entry_signal_v1/test_brent_entry_audit.py",
+      "role": "brent_entry_v2_48",
+      "sha256": "be2a2ee456c84de02e616ad4ba6944c812c3a4873d0a1977d191d94857b94552"
+    },
+    {
+      "bytes": 1476,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/brent_entry_signal_v1/test_brent_audit_boundaries.py",
+      "role": "brent_entry_v2_49",
+      "sha256": "8c5d70a7624d664a80f76d0451e697d88f553096995f8318f0ce2df2499aa11b"
+    },
+    {
+      "bytes": 44327,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/brent_entry_signal_v1/red.txt",
+      "role": "brent_entry_v2_50",
+      "sha256": "94a9eacf93242f771e31be01e01f6d27eb1b1e8c6774dec1d1264218d00f9953"
+    },
+    {
+      "bytes": 4871,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/brent_entry_signal_v1/boundary_red.txt",
+      "role": "brent_entry_v2_51",
+      "sha256": "0afe0222c73c0152d377e593c7ecb7464de286e9dd1ca56bdb604eb991f7b995"
+    },
+    {
+      "bytes": 99,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/brent_entry_signal_v1/tests_v1.txt",
+      "role": "brent_entry_v2_52",
+      "sha256": "ea5f1fcd74c3fff0d1d7ef93407ddeb5e9f1e404f774249a82722c61a573bec7"
+    },
+    {
+      "bytes": 1266,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/brent_entry_signal_v1/tests_v2.txt",
+      "role": "brent_entry_v2_53",
+      "sha256": "a5d2226c9c62c8b4315e3a9b90a5de3f8625cbfe8f5b1850791fbdc3e28fa9a4"
+    },
+    {
+      "bytes": 1272,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/brent_entry_signal_v1/tests_final.txt",
+      "role": "brent_entry_v2_54",
+      "sha256": "78e35f9913e99970ebd84a14ecebead4ee1c2c5ec58ce3dac1b53fba8ddcfe6c"
+    },
+    {
+      "bytes": 15832,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/brent_entry_signal_v1/coverage_final.json",
+      "role": "brent_entry_v2_55",
+      "sha256": "43bb2f46c8303c7505cb63cb0487aba41616f8a239695cc1a94cd184de2faf7b"
+    },
+    {
+      "bytes": 17881,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/brent_entry_signal_v1/analysis.json",
+      "role": "brent_entry_v2_56",
+      "sha256": "b0b11d13d92da60f6d74303a0ca125513723308ad146c4d94ac3c7c22c0279a1"
+    },
+    {
+      "bytes": 17881,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/brent_entry_signal_v1/reproduction.json",
+      "role": "brent_entry_v2_57",
+      "sha256": "b0b11d13d92da60f6d74303a0ca125513723308ad146c4d94ac3c7c22c0279a1"
+    },
+    {
+      "bytes": 316,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/brent_entry_signal_v1/audit.sb",
+      "role": "brent_entry_v2_58",
+      "sha256": "598f4b35aaa91ed4c3cedbfd94e35a6a213bb52e9a0fec8912d9044e7684ab66"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/brent_entry_signal_v1/analysis_run.txt",
+      "role": "brent_entry_v2_59",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/brent_entry_signal_v1/reproduction_run.txt",
+      "role": "brent_entry_v2_60",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 1336,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/brent_entry_signal_v1/verification.json",
+      "role": "brent_entry_v2_61",
+      "sha256": "cb47a7531de9abd699162710aabe3e4d3c6a0ea17c2a2c6f8dbe8fed7122e2e8"
+    },
+    {
+      "bytes": 5745,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/finalize_brent_audit_v1.py",
+      "role": "brent_entry_v2_62",
+      "sha256": "626efc72a528ee187373a80d8d675ab77505819e6e60cf0c0e1f78241f5b409b"
+    },
+    {
+      "bytes": 9146,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/research-journal/v89-brent-entry-reconciliation-20260916-v1.json",
+      "role": "brent_entry_v2_63",
+      "sha256": "1829761fb3f993e153456edde047127ace0c5a9240fbdcee9d0876d24f50ab9e"
+    },
+    {
+      "bytes": 5398,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/reviews/2026-09-16-v89-brent-entry-signal-and-margin.md",
+      "role": "brent_entry_v2_64",
+      "sha256": "3963ee7b86f821be4496da24e785bd2adaf4e6c4ff2fca0930cd49a2342b0625"
+    },
+    {
+      "bytes": 27163,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/brent_entry_signal_v1/journal_rejected_missing_parent.json",
+      "role": "rejected_unpublished_draft",
+      "sha256": "777a7bb83b673a21dae5253a9a696c6f1fc9a76d14e4f051ec926a1d8ee8dcc7"
+    },
+    {
+      "bytes": 63,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/brent_entry_signal_v1/journal_append.json",
+      "role": "missing_parent_error",
+      "sha256": "3824e93a129332b6855582bff3a708ac0a2cf44850ca237f8ab7823d5b44692b"
+    },
+    {
+      "bytes": 380,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/brent_entry_20260916_v1/journal_append.json",
+      "role": "prior_revision_append",
+      "sha256": "5e3e15a38eaa76a0e7c0fd0431b538344e5fbdf513a172e6268626715c21babf"
+    },
+    {
+      "bytes": 1571,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/repair_brent_journal_parent_v1.py",
+      "role": "parent_metadata_repair",
+      "sha256": "0f629adacac17172aa994712bc62f8a27b2b51127ccd2fb50750a34777b46fd4"
+    }
+  ],
+  "execution_authority": "none",
+  "falsifier": "Different native identity, size, leverage, protection coverage, noncausal or mismatched hourly inputs, or unexplained venue cash movement changes this assessment.",
+  "hypothesis": "The new Brent short should match its causal hourly breakout evidence, configured exposure and native protective stop; reconcile original sources before drawing an economic conclusion.",
+  "hypothesis_id": "v89_brent_entry_reconciliation_20260916_v1",
+  "limitations": [
+    "Confidence is high for the byte-authenticated window ending 12:06:38 UTC, not later coverage.",
+    "Original ATR seed remains unqualified; only one recurrence from recorded prior ATR was checked.",
+    "Inferred opening mark 101.90 is not independently observed; full margin-source qualification remains incomplete.",
+    "Twelve of 28 intermediate account/position pairs differ; valuation asynchrony is only a possible explanation.",
+    "Two identical runs establish repeatability of one audit, not independent implementation agreement.",
+    "An open trade and regime alignment do not establish profitable expectancy or a final trade outcome."
+  ],
+  "metrics": {
+    "audit_outputs_identical": true,
+    "audit_tests_passed": 38,
+    "cash_audit": {
+      "account_value_before_entry_usd": "4828.10005949",
+      "endpoint_account_value_identity": true,
+      "entry_fee_usd": "0.043131",
+      "exact_opening_mark_verified": false,
+      "first_position_unrealized_pnl_usd": "-0.049",
+      "implied_mark_under_documented_initial_margin_model": "101.900000",
+      "isolated_collateral_minus_pnl_usd": "49.985869",
+      "latest_position_at_utc": "2026-09-16T12:06:38.433224+00:00",
+      "latest_position_unrealized_pnl_usd": "0.196",
+      "non_atomic_read_explanation": "non-atomic valuation is a possible explanation; exact request clocks unavailable",
+      "position_samples": 28,
+      "same_poll_account_position_differences_usd": [
+        "0E-8",
+        "0E-8",
+        "0E-8",
+        "-0.09800000",
+        "0E-8",
+        "-0.04900000",
+        "0E-8",
+        "0.04900000",
+        "-0.04900000",
+        "-0.04900000",
+        "0.04900000",
+        "0E-8",
+        "0E-8",
+        "-0.14700000",
+        "0.04900000",
+        "0.09800000",
+        "-0.04900000",
+        "0E-8",
+        "-0.04900000",
+        "0E-8",
+        "0E-8",
+        "0.04900000",
+        "0E-8",
+        "0E-8",
+        "0E-8",
+        "0E-8",
+        "0E-8",
+        "0E-8"
+      ],
+      "same_poll_account_position_matches": 16,
+      "withdrawable_reduction_usd": "50.02900000"
+    },
+    "closed_outcome_qualified": false,
+    "configured_notional_cap_usd": "500",
+    "covering_stop_size": 4.9,
+    "difference_interpretation": "Fill-price-only model is insufficient; opening mark is unverified.",
+    "difference_requiring_margin_source_reconciliation_usd": "0.107800",
+    "endpoint_cash_reconciled": true,
+    "entry_fee_usd": "0.043131",
+    "entry_notional_usd": "499.212",
+    "entry_oid": 546683502888,
+    "entry_price": 101.88,
+    "entry_venue_timestamp_ms": 1789560009802,
+    "exposure_audit": {
+      "covering_stop_observations": 28,
+      "entry_notional_usd": "499.212",
+      "entry_oid": 546683502888,
+      "fill_to_stop_ack_ms": 2711.578857421875,
+      "observed_leverage": 10,
+      "positions_checked": 28,
+      "stop_oid": 546683530230,
+      "submission_age_ms": 8652
+    },
+    "fill_trade_id": 683093478056778,
+    "financial_process_control": false,
+    "hourly_entry_predicate_reconciled": true,
+    "latest_position_at_utc": "2026-09-16T12:06:38.433224+00:00",
+    "leverage_type": "isolated",
+    "live_parameters_changed": false,
+    "margin_identity_reconciled": false,
+    "observed_leverage": 10,
+    "observed_margin_minus_unrealized_pnl_usd": "49.985869",
+    "one_hour_atr_recurrence_reconciled": true,
+    "regime_audit": {
+      "short_alignment_score": "0.8333333333333333333333333333",
+      "states_1m_5m_15m": [
+        "TRANSITION",
+        "TREND_DOWN",
+        "TREND_DOWN"
+      ],
+      "win_probability": false
+    },
+    "signal_audit": {
+      "asset_decision_publication_ms": 1789560008651.773,
+      "atr_recurrence_absolute_error": "4E-17",
+      "complete_hours": 10,
+      "entry_channel_low": "101.94",
+      "entry_close": "101.89",
+      "expected_atr_from_previous_record": "0.64729900971814806",
+      "expected_stop_anchor": "103.1845980194362962",
+      "fresh_short_entry": true,
+      "latest_candle_publication_ms": 1789560008650.148,
+      "previous_close": "102.4",
+      "previous_short_breakout": false,
+      "recorded_atr": "0.6472990097181481",
+      "source_minutes": 600,
+      "true_range": "0.59"
+    },
+    "signed_size": -4.9,
+    "simple_entry_notional_over_leverage_minus_fee_usd": "49.878069",
+    "source_signal_reconstruction_complete": false,
+    "stop_oid": 546683530230,
+    "successor_pids": [
+      52603,
+      52607
+    ],
+    "successor_sessions": [
+      84387,
+      18821
+    ],
+    "venue_stop_price": 103.18
+  },
+  "revision_number": 2,
+  "runtime_strategy_changed": false,
+  "schema_version": 1,
+  "status": "observe",
+  "strategy_id": "hourly_donchian_8_4_atr20_bidirectional_v1",
+  "supersedes_revision_id": "421fdcd14dba79086e7487a63dd238327e261f5ae0a52b716d2e7f8edeb6f7a9",
+  "symbol": "xyz:BRENTOIL"
+}
