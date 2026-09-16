@@ -1,0 +1,304 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v89-build-cache-headroom-20260915",
+  "revision_number": 1,
+  "supersedes_revision_id": null,
+  "created_at_utc": "2026-09-16T00:03:13.574878+00:00",
+  "strategy_id": "multi_asset_bidirectional_cohort",
+  "symbol": "MULTI",
+  "status": "retain",
+  "hypothesis": "Backed-up inactive build-cache removal can add disk headroom while bounded evidence hashing avoids archive-sized research-journal allocations.",
+  "decision": "Retain the verified two-cache cleanup and installed streaming journal verification. Every restored source file matched before deletion; 19 candidate and 19 installed tests pass, and the real 1.57 GiB archive verifies through append/report at roughly 2.14 MiB peak traced Python allocation. Two prior research records now resolve exact original source bytes through immutable snapshots. No trading strategy, setting or financial process was changed.",
+  "confidence": "high",
+  "falsifier": "Backup mismatch, lost protected artifact, changed process identity, missed corruption, altered journal identity/error semantics, archive-sized evidence allocation, or incorrect recovered source hash reopens the corresponding repair.",
+  "evidence": [
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/docs/reviews/2026-09-15-v89-build-cache-headroom.md",
+      "role": "cache_journal_00_2026-09-15-v89-build-cache-headroom.md",
+      "sha256": "bdc65e71677c2ab00eaec28af551c2a886003c1c4a7f83ea783add415266f79f",
+      "bytes": 8903
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_build_cache_headroom_20260915_v1/post_cleanup_verification.json",
+      "role": "cache_journal_01_post_cleanup_verification.json",
+      "sha256": "3dfaf021396afc308d87e1090a47e900f3c35bbaafe8d202b2d3d5937094dbf5",
+      "bytes": 1767
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/backups/build_cache_cleanup/20260915T233304Z/incremental-caches.tar.zst",
+      "role": "cache_journal_02_incremental-caches.tar.zst",
+      "sha256": "5ce661aec58f4dcde0e757500d1246fb366c3f7eaf86442e52eeb27aef34a2e3",
+      "bytes": 1689844989
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/backups/build_cache_cleanup/20260915T233304Z/manifest.json",
+      "role": "cache_journal_03_manifest.json",
+      "sha256": "81e7bcfee6b21606500639ea551d2a14747bf3f76ce6340b6988542144769990",
+      "bytes": 8499649
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/backups/build_cache_cleanup/20260915T233304Z/archive_created.json",
+      "role": "cache_journal_04_archive_created.json",
+      "sha256": "13eda8a5bbb5a4dc46908b13e793fb49ba69dab5f6463ff8395fe3b1bd675d4c",
+      "bytes": 762
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/backups/build_cache_cleanup/20260915T233304Z/verification.json",
+      "role": "cache_journal_05_verification.json",
+      "sha256": "5feaf0a914c6f11248f191ade39668e05691c03a9063f06f7aa1cfb1d36729f0",
+      "bytes": 1333
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/backups/build_cache_cleanup/20260915T233304Z/verification_final.log",
+      "role": "cache_journal_06_verification_final.log",
+      "sha256": "41a3afc47a08080941f1079a91aed08ede629fc12815bf5ff6727fc814159c0c",
+      "bytes": 87
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/backups/build_cache_cleanup/20260915T233304Z/verification.log",
+      "role": "cache_journal_07_verification.log",
+      "sha256": "7bab0f4915641a614b8228d0769f5c786fdd933ffa35e94fe06670d18c3bf1f2",
+      "bytes": 646
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/backups/build_cache_cleanup/20260915T233304Z/verify_archive.py",
+      "role": "cache_journal_08_verify_archive.py",
+      "sha256": "95d5648939a13b0008304da634798aa6388abbe04c1f32cb0dbce3af0f6bf8ff",
+      "bytes": 5695
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/backups/build_cache_cleanup/20260915T233304Z/verify_archive_initial.py",
+      "role": "cache_journal_09_verify_archive_initial.py",
+      "sha256": "0bb41ab525e8ac2dc1e0301e6ac4fdf6f098ff35a67795ab4eb3a94e79070cb4",
+      "bytes": 6361
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/backups/build_cache_cleanup/20260915T233304Z/cleanup_preflight.json",
+      "role": "cache_journal_10_cleanup_preflight.json",
+      "sha256": "c9ed66bd911173749c4cd4edbc0883b10ccaa5712300af86e3e37d9005d6b70d",
+      "bytes": 1164
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/backups/build_cache_cleanup/20260915T233304Z/cleanup_applied.json",
+      "role": "cache_journal_11_cleanup_applied.json",
+      "sha256": "228fee316c31c339e4278a2308a89b13b426954a1d990a4a0515ce2b113e0b67",
+      "bytes": 1999
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_build_cache_headroom_20260915_v1/journal_memory/source_backup.json",
+      "role": "cache_journal_12_source_backup.json",
+      "sha256": "43e0d2774d96332c56c9717aa7bb05d04ab5e2fdd04e30336ef3958a9e512049",
+      "bytes": 990
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_build_cache_headroom_20260915_v1/journal_memory/installed_portfolio_research_journal_before.py",
+      "role": "cache_journal_13_installed_portfolio_research_journal_before.py",
+      "sha256": "9e5871f4ac4d2e2b4ffe98403a2c0c8e4669a4e8872947c39c641ca82a83a356",
+      "bytes": 16671
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_build_cache_headroom_20260915_v1/journal_memory/installed_portfolio_research_journal.py",
+      "role": "cache_journal_14_installed_portfolio_research_journal.py",
+      "sha256": "41b12cbdb7ca5efd9c5654549157b1d115474bec9f7022fe75c606aeac3662aa",
+      "bytes": 16735
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_build_cache_headroom_20260915_v1/journal_memory/installed_test_portfolio_research_journal_streaming.py",
+      "role": "cache_journal_15_installed_test_portfolio_research_journal_streaming.py",
+      "sha256": "a8c489ce2eca78cf0ac3a7dd34a18dedc207e17e7a38616e92586f7601e03925",
+      "bytes": 6391
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_build_cache_headroom_20260915_v1/journal_memory/used_oxa_storage.py",
+      "role": "cache_journal_16_used_oxa_storage.py",
+      "sha256": "abf1cc8c044d4e394c3c5bcca334e1e4d0052bda4acc3159a47de8857a95e17e",
+      "bytes": 5267
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_build_cache_headroom_20260915_v1/journal_memory/source.patch",
+      "role": "cache_journal_17_source.patch",
+      "sha256": "30976f557a4930c320dbc0c4e8b142d0103d73b5397b8b514f90fe1e18db34a5",
+      "bytes": 8101
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_build_cache_headroom_20260915_v1/journal_memory/installation.json",
+      "role": "cache_journal_18_installation.json",
+      "sha256": "c946cb0f75a7fd006566c3e1a14f5a21bc4738c0c55de7b3cebca1bf9331a8dd",
+      "bytes": 950
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_build_cache_headroom_20260915_v1/journal_memory/baseline_tests.log",
+      "role": "cache_journal_19_baseline_tests.log",
+      "sha256": "318aae34cf3ab29d07e3cad53c7fe2589e44da9ea7752edbccfe63f848dddc06",
+      "bytes": 20603
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_build_cache_headroom_20260915_v1/journal_memory/candidate_tests_final.log",
+      "role": "cache_journal_20_candidate_tests_final.log",
+      "sha256": "c05774cedd7fd498ae9b05c64c39be9068af94512a4caeb7b9c6aca55190ddfe",
+      "bytes": 6496
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_build_cache_headroom_20260915_v1/journal_memory/candidate_tests_verified.log",
+      "role": "cache_journal_21_candidate_tests_verified.log",
+      "sha256": "a58f2b87f884a6153c543454b31f6f9b8ee3b2830ee8113118b1664de5f7d3ae",
+      "bytes": 99
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_build_cache_headroom_20260915_v1/journal_memory/installed_tests.log",
+      "role": "cache_journal_22_installed_tests.log",
+      "sha256": "8e9e9da786319fafe815a26879451183a048bb042cf41eff3abc76c8cdcb1cb9",
+      "bytes": 99
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_build_cache_headroom_20260915_v1/journal_memory/candidate_coverage.json",
+      "role": "cache_journal_23_candidate_coverage.json",
+      "sha256": "d4d164288cc8538e5331888c2b352ebd5ab62d05eaac28989b86707b742da38c",
+      "bytes": 16433
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_build_cache_headroom_20260915_v1/journal_memory/coverage_summary.json",
+      "role": "cache_journal_24_coverage_summary.json",
+      "sha256": "23c2a926fb6bc350f833dfb9940ff55ec31f7bdbb46aa74217125cfed84375b6",
+      "bytes": 316
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_build_cache_headroom_20260915_v1/journal_memory/verify_large_backup.py",
+      "role": "cache_journal_25_verify_large_backup.py",
+      "sha256": "1fc2696713a8d4886b2ba564d6ee8def784120a947608229d2538f28819432c5",
+      "bytes": 3506
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_build_cache_headroom_20260915_v1/journal_memory/candidate_large_backup/verified.json",
+      "role": "cache_journal_26_verified.json",
+      "sha256": "a174137c21a0e96b81c36d94dd01fce09a1f4aac0db48b1e6ec611bb386bdf20",
+      "bytes": 927
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_build_cache_headroom_20260915_v1/journal_memory/installed_large_backup/verified.json",
+      "role": "cache_journal_27_verified.json",
+      "sha256": "0bef2117d2b527fb3f5eb6cb869ff1635bd2b07acdd4fa27c7b82e91934002bd",
+      "bytes": 892
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_build_cache_headroom_20260915_v1/journal_memory/legacy_evidence_locator_records.json",
+      "role": "cache_journal_28_legacy_evidence_locator_records.json",
+      "sha256": "edddfe34b29eb1609d219cb6b385e0e2324b5ba368821a81d6bb78c92f8b7fc1",
+      "bytes": 834
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_build_cache_headroom_20260915_v1/journal_memory/stateful_prior_source_drift.json",
+      "role": "cache_journal_29_stateful_prior_source_drift.json",
+      "sha256": "759115d27aed4c4f4a6d88662b7ba3a3b2cff9caf82fc8e94b0d91a6ad27b24f",
+      "bytes": 1788
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_build_cache_headroom_20260915_v1/journal_memory/recovered_legacy_source_provenance.json",
+      "role": "cache_journal_30_recovered_legacy_source_provenance.json",
+      "sha256": "17acc8983d9e3ab4c423662c551ccd95872a2c2e6eaa31d34a02217c857b8f59",
+      "bytes": 2016
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_build_cache_headroom_20260915_v1/journal_memory/legacy_locator_verified.json",
+      "role": "cache_journal_31_legacy_locator_verified.json",
+      "sha256": "cc57c9da0c7a5b908ff486aba85bab5ec30ba42598b2fdc067520ee680db3aa0",
+      "bytes": 746
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_build_cache_headroom_20260915_v1/journal_memory/full_execution_locator_append.json",
+      "role": "cache_journal_32_full_execution_locator_append.json",
+      "sha256": "34374ddbc65a3f98060a23e4d5af51022088cd044d2436a31ffa71f5328b0f04",
+      "bytes": 373
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_build_cache_headroom_20260915_v1/journal_memory/stateful_execution_locator_append.stderr",
+      "role": "cache_journal_33_stateful_execution_locator_append.stderr",
+      "sha256": "6bc4211a5e41cd7625c6e535115683ccf93bc99f057982355c8b943173f8fbb2",
+      "bytes": 134
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_build_cache_headroom_20260915_v1/journal_memory/stateful_execution_locator_append_final.json",
+      "role": "cache_journal_34_stateful_execution_locator_append_final.json",
+      "sha256": "af35b54fa0332cd294e4d1f1150031ccfca5232759cb77ebf67ebabed8009f73",
+      "bytes": 377
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_build_cache_headroom_20260915_v1/journal_memory/post_install_verification.json",
+      "role": "cache_journal_35_post_install_verification.json",
+      "sha256": "02526e7a84e143a07d770043da7f5b5ed4e9016b2e05a221834a5d3178e12620",
+      "bytes": 1262
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_build_cache_headroom_20260915_v1/journal_memory/retained_legacy_sources/crates/hypervector-tui/src/cohort_format.rs",
+      "role": "cache_journal_36_cohort_format.rs",
+      "sha256": "9cbd94e2cac7d4234308e44995e3851a639be97571a98c9cd4c3be736ba8acff",
+      "bytes": 3473
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_build_cache_headroom_20260915_v1/journal_memory/retained_legacy_sources/crates/hypervector-tui/src/cohort_view.rs",
+      "role": "cache_journal_37_cohort_view.rs",
+      "sha256": "5e0f57843c7e1479e87e75a9a2e72e7a928950e5ea002ebdc63115570bb857d6",
+      "bytes": 11530
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_build_cache_headroom_20260915_v1/journal_memory/retained_legacy_sources/src/hypervector/live/cohort_maximum_hold_controller.py",
+      "role": "cache_journal_38_cohort_maximum_hold_controller.py",
+      "sha256": "b2ac7d642f20e57db2e2e1cb951852f1444e1a0ef9263f8b4061f937a5d5e977",
+      "bytes": 8448
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_build_cache_headroom_20260915_v1/journal_memory/retained_legacy_sources/src/hypervector/live/sol_range_onset_engine.py",
+      "role": "cache_journal_39_sol_range_onset_engine.py",
+      "sha256": "b312d72fdaa57dac1f02c62307b0606c109c0a3f8a5c8a5fb8114395b74dddf1",
+      "bytes": 18779
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/docs/research-journal/v89-sndk-full-execution-20260912-v2-evidence-locator.json",
+      "role": "cache_journal_40_v89-sndk-full-execution-20260912-v2-evidence-locator.json",
+      "sha256": "36f08da1fd749f8d92e1db17ea08c047a8e47421335d41b73e3f319d603b31d7",
+      "bytes": 1200091
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/docs/research-journal/v89-sndk-stateful-execution-20260912-v2-evidence-locator.json",
+      "role": "cache_journal_41_v89-sndk-stateful-execution-20260912-v2-evidence-locator.json",
+      "sha256": "8b5b8430d7ac27a66536baa13d5bc6c61d5f19e7d3933be49e625692006a3278",
+      "bytes": 1681191
+    }
+  ],
+  "metrics": {
+    "pipeline_status": "accepted_installed_technical_repair",
+    "removed_cache_directories": 2,
+    "backup_source_files_verified": 21897,
+    "source_logical_bytes": 5430030785,
+    "retained_archive_bytes": 1689844989,
+    "observed_immediate_net_space_increase_bytes": 1656942592,
+    "later_available_bytes": 28560445440,
+    "baseline_regression_failures": 6,
+    "candidate_tests_passed": 19,
+    "installed_tests_passed": 19,
+    "module_statements": 225,
+    "covered_statements": 205,
+    "changed_function_statement_coverage_percent": 100,
+    "maximum_hash_read_bytes": 1048576,
+    "installed_append_peak_traced_python_bytes": 2108587,
+    "installed_report_peak_traced_python_bytes": 2241076,
+    "reference_maintenance_current_matching": 6992,
+    "reference_maintenance_current_changed": 0,
+    "reference_maintenance_current_missing": 0,
+    "legacy_reference_changes_preserved_in_history": 6,
+    "financial_process_births_preserved": 5,
+    "protected_file_hashes_preserved": 4,
+    "next_investigation": "Inspect the next actual lifecycle or diagnostic event from the existing passive observers; do not repeat completed studies or open prospective seals."
+  },
+  "limitations": [
+    "The net space gain is an observed filesystem change; concurrent writes and shared blocks were not isolated. Headroom remains limited.",
+    "Future Rust builds may run longer and recreate the removed incremental caches.",
+    "Traced memory excludes imported modules and native DuckDB allocations; it is not whole-process RSS.",
+    "Historical original revisions still correctly report mutable source drift; new revisions match preserved original bytes. Underlying economic findings are unchanged.",
+    "No strategy edge, profitability improvement, universal bug freedom or live policy change is established.",
+    "Lifecycle observer 17371/session27304 and diagnostic observer67653/session82480 remain pending; prospective seals remain unopened."
+  ],
+  "execution_authority": "none",
+  "automatic_promotion": false,
+  "runtime_strategy_changed": false
+}

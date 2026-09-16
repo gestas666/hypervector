@@ -12,6 +12,8 @@ import re
 
 import duckdb
 
+from hypervector.data.oxa_storage import file_evidence
+
 PORTFOLIO_RESEARCH_SCHEMA_SQL = """
 CREATE TABLE IF NOT EXISTS portfolio_research_revisions (
     revision_id VARCHAR PRIMARY KEY,
@@ -243,10 +245,10 @@ def _evidence_reference(value: object, base: Path) -> _EvidenceReference:
         raise FileNotFoundError(f"research evidence file is missing: {path}")
     expected_sha = _required_sha256(row.get("sha256"), "evidence sha256")
     expected_bytes = _nonnegative_integer(row.get("bytes"), "evidence bytes")
-    content = path.read_bytes()
-    if _bytes_sha256(content) != expected_sha:
+    observed = file_evidence(path)
+    if observed["sha256"] != expected_sha:
         raise ValueError(f"evidence SHA-256 mismatch: {path}")
-    if len(content) != expected_bytes:
+    if observed["bytes"] != expected_bytes:
         raise ValueError(f"evidence byte-count mismatch: {path}")
     return _EvidenceReference(
         str(path), _text(row, "role"), expected_sha, expected_bytes
@@ -371,8 +373,8 @@ def _file_integrity(row: Mapping[str, object]) -> str:
     path = Path(_text(row, "path"))
     if not path.is_file():
         return "missing"
-    content = path.read_bytes()
-    matches = len(content) == row.get("bytes") and _bytes_sha256(content) == row.get(
+    observed = file_evidence(path)
+    matches = observed["bytes"] == row.get("bytes") and observed["sha256"] == row.get(
         "sha256"
     )
     return "matching" if matches else "changed"
