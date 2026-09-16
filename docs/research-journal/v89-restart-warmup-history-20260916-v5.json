@@ -1,0 +1,95 @@
+{
+  "automatic_promotion": false,
+  "confidence": "high",
+  "created_at_utc": "2026-09-16T18:27:15.220760+00:00",
+  "decision": "The four additional export files, eleven dated worktree cache inventories and bounded shadow query add no qualifying native minute history. Original September 16 comparison remains deferred. A distinct future capture/comparison is planned but not implemented or started; new SPCX entry diagnostics took priority.",
+  "evidence": [
+    {
+      "bytes": 11539,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_native_history_continuation_20260916_v1/bounded_source_search.json",
+      "role": "bounded_native_search_0",
+      "sha256": "b2b9080992a922915302c5ed8610207aacdcfb6dcf80cc47c67ada3c9f48a265"
+    },
+    {
+      "bytes": 4917,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/plans/2026-09-16-v89-native-history-continuation.md",
+      "role": "bounded_native_search_1",
+      "sha256": "84496a2500879f38b07700d1186744d99f052ac606a7e1d73a47274d52c10b29"
+    },
+    {
+      "bytes": 94659,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/research-journal/v89-restart-warmup-history-20260916-v4.json",
+      "role": "bounded_native_search_2",
+      "sha256": "4b9c98684bff8f887a707fca386dca108344e4f1f00ba44bd7ddd74b9053df48"
+    },
+    {
+      "bytes": 9251,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/reviews/2026-09-16-v89-restart-native-snapshot-supplement.md",
+      "role": "bounded_native_search_3",
+      "sha256": "2b88c290edb04cefc9e7273e323690132248d21eeef6c1ff8df13081f569f1c1"
+    },
+    {
+      "bytes": 3456,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_restart_native_snapshot_supplement_20260916_v1/final_validation.json",
+      "role": "bounded_native_search_4",
+      "sha256": "bb3d05ce1cdf7374e8aa1b8b53b7140509abd80f548f74fcfafb281c63d8e1fc"
+    },
+    {
+      "bytes": 177606,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/hip3_swing_ha_transfer_sndk_gold_disabled_brent_v1.sources.parquet",
+      "role": "bounded_native_search_5",
+      "sha256": "23b36701d6ee7c4145758261064b205e6fdf2a3484e264fc1c044b22f17793d1"
+    },
+    {
+      "bytes": 177606,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/hip3_swing_ha_transfer_sndk_gold_enabled_brent_v1.sources.parquet",
+      "role": "bounded_native_search_6",
+      "sha256": "23b36701d6ee7c4145758261064b205e6fdf2a3484e264fc1c044b22f17793d1"
+    },
+    {
+      "bytes": 106029,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/hip3_swing_ha_transfer_sp500_spcx_v1.sources.parquet",
+      "role": "bounded_native_search_7",
+      "sha256": "671c0be4b0e403937182e2d7f88839d34f365bf93e739dcbee047c2079cf8cfa"
+    },
+    {
+      "bytes": 106029,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/hip3_swing_ha_transfer_sp500_spcx_v2.sources.parquet",
+      "role": "bounded_native_search_8",
+      "sha256": "671c0be4b0e403937182e2d7f88839d34f365bf93e739dcbee047c2079cf8cfa"
+    }
+  ],
+  "execution_authority": "none",
+  "falsifier": "New authenticated native one-minute source bytes in the specific remaining intervals, a contradictory bounded query result or altered source identities would update this coverage conclusion. Future coverage and receipt policies must be qualified separately.",
+  "hypothesis": "The actual restart retained about 3.5 days despite a 14-day request; a fixed-cutoff full-history comparison could quantify whether this changes native indicator or signal outputs.",
+  "hypothesis_id": "v89-restart-warmup-history-20260916",
+  "limitations": [
+    "Search scope is bounded; absence here does not establish absence from every filesystem or external archive.",
+    "Future window eligibility is conditional on continued native coverage and declared receipt/revision policies.",
+    "This plan does not complete the original September 16 comparison or provide a go-live ETA.",
+    "No existing collector, financial source/process or live deployment changed."
+  ],
+  "metrics": {
+    "conditional_earliest_new_fourteen_day_window_end_utc": "2026-09-21T13:34:00+00:00",
+    "dated_worktree_top_cache_inventories": 11,
+    "experiment_state": "deferred_missing_original_native_noncrypto_minutes",
+    "future_capture_state": "planned_not_implemented_not_running",
+    "matching_shadow_rows": 0,
+    "new_qualifying_minutes": 0,
+    "provider_outputs_computed": false,
+    "real_outcomes_evaluated": false,
+    "remaining_minutes": {
+      "xyz:BRENTOIL": 2795,
+      "xyz:SNDK": 1268,
+      "xyz:SPCX": 454
+    },
+    "source_exports_inspected": 4
+  },
+  "revision_number": 5,
+  "runtime_strategy_changed": false,
+  "schema_version": 1,
+  "status": "observe",
+  "strategy_id": "multi_asset_bidirectional_cohort",
+  "supersedes_revision_id": "ad510ead4f80938907b510e1a8a1958d91ae224ff3ad5af7c71ccfbd5e677851",
+  "symbol": "MULTI"
+}
