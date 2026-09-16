@@ -1,3 +1,34 @@
+## September 16, 15:04 UTC: approved live backend restored
+
+The user approved `approve to unstop it`. Backend **67727** (birth
+14:46:18.755897 UTC) is live as `bidirectional-live-1789569979897` with the same
+V89 profile/settings. Backup verified, 86 restart/ownership/launcher tests passed,
+and first live heartbeat appeared at 14:59:17 UTC. Two fresh checkpoints show
+`running_consistent`, zero faults, all seven provider/asset pairs and six flat
+assets plus Brent short 4.9 at 10x isolated with its original stop. Exact entry,
+stop, opened-at clock and execution plan were adopted without startup duplication.
+[Restart review](../reviews/2026-09-16-v89-authorized-backend-restart.md).
+
+Reporter **6596** (birth 15:00:39.457270 UTC) now owns the checkpoint for that run;
+TUI **42506** remains open in the user's Warp terminal. Actual installed-binary
+captures show live armed status, configured/venue leverage and strategy/regime
+panels. Backend and replacement reporter run independently of the monitor.
+Old reporter 42503 is exited but unreaped by its original monitor parent; that
+monitor may report the interrupted reporter on quit. Do not mistake it for an
+active writer or a financial backend failure. No source/settings changes or
+automatic restart deployment were made. Original stop cause remains unverified.
+
+Full-window research driver **e50e6d8** is committed/pushed and remains isolated,
+PID **30609**, with 52 candidate and 52 frozen orchestration/comparator tests.
+Journal v3 revision `fc01fcbe4c9d35db247d3f7bc1fc1439ebc1e543205c3345d14b65573e519cb1`
+has 87 matching references, none changed/missing. Documentation is committed and
+pushed as **f2bb884**. Full-window source equality, account qualification and
+real sealed outcomes remain pending; no research candidate was installed live.
+Later-seven passive watch v1 completed at its deadline; successor v2 is PID
+**82186**, session **93785**, birth **14:51:46.039500 UTC**, through about 20:51 UTC.
+The collectors and original source/reproduction/account jobs were preserved.
+Other persistent recovery/lifecycle source-installation questions remain separate.
+
 ## September 16, 14:14 UTC: stopped checkpoint and visible leverage
 
 The [stopped-checkpoint repair](../reviews/2026-09-16-v89-stopped-checkpoint-recovery.md)
