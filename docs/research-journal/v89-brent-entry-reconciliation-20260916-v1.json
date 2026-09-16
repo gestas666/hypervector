@@ -1,0 +1,171 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v89_brent_entry_reconciliation_20260916_v1",
+  "strategy_id": "hourly_donchian_8_4_atr20_bidirectional_v1",
+  "symbol": "xyz:BRENTOIL",
+  "hypothesis": "The new Brent short should match its causal hourly breakout evidence, configured exposure and native protective stop; reconcile original sources before drawing an economic conclusion.",
+  "status": "observe",
+  "execution_authority": "none",
+  "runtime_strategy_changed": false,
+  "automatic_promotion": false,
+  "created_at_utc": "2026-09-16T12:12:47.819258+00:00",
+  "revision_number": 1,
+  "confidence": "high",
+  "decision": "Native byte-authenticated records show one 4.9-unit short fill at 101.88 with observed 10x isolated leverage and a covering 4.9-unit reduce-only buy Stop Market at 103.18. Continue causal signal and margin-source reconciliation; the open trade outcome remains unqualified.",
+  "falsifier": "Different native identity, size, leverage, protection coverage, noncausal or mismatched hourly inputs, or unexplained venue cash movement changes this assessment.",
+  "evidence": [
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/brent_entry_20260916_v1/capture.json",
+      "bytes": 2871,
+      "sha256": "02488711d1fa391bcea976aa763b9f3940c34db9b33051223a7310015a38b06b",
+      "role": "brent_entry_0"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/brent_entry_20260916_v1/entry_receipt.json",
+      "bytes": 10498,
+      "sha256": "895c56f29903a03c8bed63f529b095b71feb40c2e8521b9df324e2d42f647020",
+      "role": "brent_entry_1"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/capture_brent_entry_v1.py",
+      "bytes": 3672,
+      "sha256": "22cf95ec3a0cf1c844f4c138e6df592fb6a0daec2b1d4d22738c5b1f49179c61",
+      "role": "brent_entry_2"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/spcx_exit_signal_v1/audit_signal.py",
+      "bytes": 15166,
+      "sha256": "a87f561cd4bda68a87183e59ed82f13e5f8c810d71679da8d715d9ecab86eb83",
+      "role": "brent_entry_3"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/resume_brent_observers_v1.py",
+      "bytes": 2028,
+      "sha256": "f03920d5d616ca264d84c340742dbb71bafe05d440bff42ff375540aa2ac7cd9",
+      "role": "brent_entry_4"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/brent_entry_20260916_v1/xyz:brentoil.jsonl.xz",
+      "bytes": 55940,
+      "sha256": "fb12e4d4d828f3bf6ba22ae24a816911c8db7382b66f0a63a26cf168319a734d",
+      "role": "brent_entry_5"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/brent_entry_20260916_v1/xyz:brentoil.jsonl.selected.json",
+      "bytes": 2137276,
+      "sha256": "b46355d954a88b59f6fafc235f216041eac024198d01adf10b9421960094adc3",
+      "role": "brent_entry_6"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/brent_entry_20260916_v1/decisions.jsonl.xz",
+      "bytes": 1474924,
+      "sha256": "502c5ad8af106d4e61383ed571e024021cfe5e2252a1e56a74e40fa67fe4c8e4",
+      "role": "brent_entry_7"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/brent_entry_20260916_v1/decisions.jsonl.selected.json",
+      "bytes": 56655466,
+      "sha256": "99eb82ad27d1bee4f5f38986637413f0edcd66d9c1e7b0898828d9cfb28dfd53",
+      "role": "brent_entry_8"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_lifecycle_followup_1106_v1/watch_result.json",
+      "bytes": 6039,
+      "sha256": "b624636c1664161ed1f09abd12a4b61cf337aac32dc03c80cc513a0671a60ed3",
+      "role": "brent_entry_9"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_lifecycle_followup_1106_v1/final_cursors.json",
+      "bytes": 1643,
+      "sha256": "4f245ef5478ad3a5180358115cea164830f64b665ee92979a5bbe8d99f823c6c",
+      "role": "brent_entry_10"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_lifecycle_followup_brent1200_v1/anchor.json",
+      "bytes": 3703,
+      "sha256": "1577f4c9e3deea641169324e44afb95a290ecdb4f0af1cad3031be745ec81a3e",
+      "role": "brent_entry_11"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_lifecycle_followup_brent1200_v1/started.json",
+      "bytes": 277,
+      "sha256": "c5ff12c8d0d5b530fd642767b9c4e3622973f6df3663554c2ed6c7ffd011a033",
+      "role": "brent_entry_12"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_lifecycle_followup_brent1200_v1/first_scan.json",
+      "bytes": 1610,
+      "sha256": "916e5f25494b31a952f81959c7715ca78843cdf722a7b76724d04f8344b0c305",
+      "role": "brent_entry_13"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_diagnostic_followup_1106_v1/watch_result.json",
+      "bytes": 26913,
+      "sha256": "9db1ee5ccff75849b18ae7868af79d955e5c03f4432f764a405d06bd76746e07",
+      "role": "brent_entry_14"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_diagnostic_followup_1106_v1/final_cursors.json",
+      "bytes": 1643,
+      "sha256": "182716a28fd80dddd8f358c2857e2581e6ac946381075568ef114091e5e328bb",
+      "role": "brent_entry_15"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_diagnostic_followup_brent1200_v1/anchor.json",
+      "bytes": 3707,
+      "sha256": "d85102e14742799a437f9ecb80148b2031cea49af517e13c1fd881998a4390f6",
+      "role": "brent_entry_16"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_diagnostic_followup_brent1200_v1/started.json",
+      "bytes": 278,
+      "sha256": "84bb12b2810fb7f2e21746252e91fa005b1bc817bf3ae293cc1a0bb07b42380b",
+      "role": "brent_entry_17"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_diagnostic_followup_brent1200_v1/first_scan.json",
+      "bytes": 1610,
+      "sha256": "1491a875490a6c8d3509bee975acdab5580f03fc13738a1983c36c42947bb992",
+      "role": "brent_entry_18"
+    }
+  ],
+  "metrics": {
+    "entry_oid": 546683502888,
+    "fill_trade_id": 683093478056778,
+    "entry_venue_timestamp_ms": 1789560009802,
+    "entry_price": 101.88,
+    "signed_size": -4.9,
+    "entry_notional_usd": "499.212",
+    "configured_notional_cap_usd": "500",
+    "observed_leverage": 10,
+    "leverage_type": "isolated",
+    "stop_oid": 546683530230,
+    "covering_stop_size": 4.9,
+    "venue_stop_price": 103.18,
+    "entry_fee_usd": "0.043131",
+    "latest_position_at_utc": "2026-09-16T12:06:38.433224+00:00",
+    "observed_margin_minus_unrealized_pnl_usd": "49.985869",
+    "simple_entry_notional_over_leverage_minus_fee_usd": "49.878069",
+    "difference_requiring_margin_source_reconciliation_usd": "0.107800",
+    "source_signal_reconstruction_complete": false,
+    "margin_identity_reconciled": false,
+    "closed_outcome_qualified": false,
+    "financial_process_control": false,
+    "live_parameters_changed": false,
+    "successor_pids": [
+      52603,
+      52607
+    ],
+    "successor_sessions": [
+      84387,
+      18821
+    ]
+  },
+  "limitations": [
+    "High confidence applies to the captured native receipt fields and their source byte matches.",
+    "The source entry predicate and original recursive ATR seed are not yet reconstructed for this entry.",
+    "Observed margin minus unrealized PnL differs by $0.107800 from entry notional/leverage minus entry fee; that simple model is unqualified for this position, not an established execution defect.",
+    "An open trade and a regime-alignment diagnostic do not establish profitable expectancy.",
+    "The captured position ends at 12:06:38 UTC; passive successors retain later event coverage without financial authority."
+  ]
+}
