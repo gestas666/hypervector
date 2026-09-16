@@ -1,0 +1,475 @@
+{
+  "automatic_promotion": false,
+  "confidence": "high",
+  "created_at_utc": "2026-09-16T01:03:11.333236+00:00",
+  "decision": "Installed and qualified a separate finite passive health watch; both frozen collectors are healthy at observed attachment and saved stopped states trigger alerts. All seven old funding gaps recovered at the scheduled 01:00 UTC cycle, and the seven new funding identities were timely. Original timely coverage remains incomplete; preserve seals and qualify the separate preregistered later pair block.",
+  "evidence": [
+    {
+      "bytes": 6700,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/reviews/2026-09-16-v89-prospective-health-watch.md",
+      "role": "health_watch_000_2026-09-16-v89-prospective-health-watch.md",
+      "sha256": "4d31db2ac551e5ecc1aaf2a4a2815874ca1a02832d0e7c1f130dc21741e24961"
+    },
+    {
+      "bytes": 2026,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/plans/2026-09-16-v89-prospective-health-watch.md",
+      "role": "health_watch_001_2026-09-16-v89-prospective-health-watch.md",
+      "sha256": "e2158f3f05822a4d7eca99e4c3e2e9a77785599129da037b357d6925fa32c969"
+    },
+    {
+      "bytes": 29543,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/research-journal/v89-prospective-collection-health-20260916-v4.json",
+      "role": "health_watch_002_v89-prospective-collection-health-20260916-v4.json",
+      "sha256": "ec9c573fbc463eff8c2f6df2b8c94684afc4bb0a861d99af59004eeb0155ce91"
+    },
+    {
+      "bytes": 179,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_health_watch_20260916_v1/candidate_tests.txt",
+      "role": "health_watch_003_candidate_tests.txt",
+      "sha256": "a9e64f522733cb6029f32e2b07a6e915b1909bb4d91f1c58bc3e1066bd3ca758"
+    },
+    {
+      "bytes": 1347,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_health_watch_20260916_v1/collector_pins.json",
+      "role": "health_watch_004_collector_pins.json",
+      "sha256": "13ebbf7fccffbe358a01dfd220db807119d69387d2d4753fbbf643f8f429cd89"
+    },
+    {
+      "bytes": 17899,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_health_watch_20260916_v1/coverage.json",
+      "role": "health_watch_005_coverage.json",
+      "sha256": "c65d2bbd12666d46a93ea8e8f2fd2d4599ee24156a01038c7f779fe8a6099c80"
+    },
+    {
+      "bytes": 67,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_health_watch_20260916_v1/funding_counts_reproduced.txt",
+      "role": "health_watch_006_funding_counts_reproduced.txt",
+      "sha256": "923487663a4d1d2c8ac4ba22e106003c50d323df4387eb41ce550744fa7f2259"
+    },
+    {
+      "bytes": 35033088,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_health_watch_20260916_v1/funding_recovery/capture.sqlite3",
+      "role": "health_watch_007_capture.sqlite3",
+      "sha256": "07d7e03b18e0e138daa703b9eb034a611c91782d2617141e3231013d35e60e88"
+    },
+    {
+      "bytes": 10829,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_health_watch_20260916_v1/funding_recovery/health.json",
+      "role": "health_watch_008_health.json",
+      "sha256": "97ebd5e45fc79e3e6bbdbe7e3627481a4bd15a7033675598f2ac38686748527d"
+    },
+    {
+      "bytes": 1130,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_health_watch_20260916_v1/funding_recovery/independent_counts.json",
+      "role": "health_watch_009_independent_counts.json",
+      "sha256": "7e04f34b7ee39301f469d4999857bd47ce3f3c4aa2968d0a15515074e092b2c7"
+    },
+    {
+      "bytes": 3592,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_health_watch_20260916_v1/funding_recovery/raw/1789520414423_0fb8bb6fa92b4ec8b67d15a1d72d8fc4.json",
+      "role": "health_watch_010_1789520414423_0fb8bb6fa92b4ec8b67d15a1d72d8fc4.json",
+      "sha256": "d15b9954f4b1484d0ff7b4c793575b6dc738c23e4f689ba9edbe27fa877890f8"
+    },
+    {
+      "bytes": 3628,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_health_watch_20260916_v1/funding_recovery/raw/1789520414995_e47b8dfeb9b64d548daafad79d72af8e.json",
+      "role": "health_watch_011_1789520414995_e47b8dfeb9b64d548daafad79d72af8e.json",
+      "sha256": "ce780d369873968bb7c5e2c6571eac892a476faf247de5473cacc263ffac7ccb"
+    },
+    {
+      "bytes": 3628,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_health_watch_20260916_v1/funding_recovery/raw/1789520415585_e9354938ee284f4f85ad049a852d5add.json",
+      "role": "health_watch_012_1789520415585_e9354938ee284f4f85ad049a852d5add.json",
+      "sha256": "88e65ee1660a7794a6283e226fb66e2c79020032605fed2296a0cb93adddf6d7"
+    },
+    {
+      "bytes": 3626,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_health_watch_20260916_v1/funding_recovery/raw/1789520416158_902536088fdf4b02b686d6f981d179f8.json",
+      "role": "health_watch_013_1789520416158_902536088fdf4b02b686d6f981d179f8.json",
+      "sha256": "afa780d11725b9b8f86a9b64872e9a447b265c70a79c63db5524e1ed91291b89"
+    },
+    {
+      "bytes": 3790,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_health_watch_20260916_v1/funding_recovery/raw/1789520416726_f1a135e057df4fdca48223cd509310a5.json",
+      "role": "health_watch_014_1789520416726_f1a135e057df4fdca48223cd509310a5.json",
+      "sha256": "627fb1008a64381c3542014ad33fb3a8ec1db68399af5e58da1d3ecc07dca5af"
+    },
+    {
+      "bytes": 3758,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_health_watch_20260916_v1/funding_recovery/raw/1789520417311_ce587c81eaa046bab9f449dac4f8554f.json",
+      "role": "health_watch_015_1789520417311_ce587c81eaa046bab9f449dac4f8554f.json",
+      "sha256": "e0c922341a90fa3a367e240b287364ad2964e03e4f2a7bafec3540b2ed8136c0"
+    },
+    {
+      "bytes": 3898,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_health_watch_20260916_v1/funding_recovery/raw/1789520417921_b86f6764175d4d3583c00927f5687b6c.json",
+      "role": "health_watch_016_1789520417921_b86f6764175d4d3583c00927f5687b6c.json",
+      "sha256": "2a08a47ec802a23dc28c500d5b223fa86717d0f574c98e613536ede444e4a33b"
+    },
+    {
+      "bytes": 972,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_health_watch_20260916_v1/funding_recovery/raw/1789520420064_78a37f5531f644718333fc0af7837006.json",
+      "role": "health_watch_017_1789520420064_78a37f5531f644718333fc0af7837006.json",
+      "sha256": "cd45720aa24014c90bbf91d51596663fa412a28207bc535590db41ac4b2a376a"
+    },
+    {
+      "bytes": 972,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_health_watch_20260916_v1/funding_recovery/raw/1789520420667_b63e58de649f4952a6d4f29a220213ef.json",
+      "role": "health_watch_018_1789520420667_b63e58de649f4952a6d4f29a220213ef.json",
+      "sha256": "c84f3516697066b3f1875acc0f647b1aac31fd549c4afbfaf02ea4833da28a15"
+    },
+    {
+      "bytes": 972,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_health_watch_20260916_v1/funding_recovery/raw/1789520421266_8241ab96133243e7a3286a57278a3876.json",
+      "role": "health_watch_019_1789520421266_8241ab96133243e7a3286a57278a3876.json",
+      "sha256": "97dd9faee411801c53579cf9276224ea0c368144fba954f3f32e50bff10cc84f"
+    },
+    {
+      "bytes": 982,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_health_watch_20260916_v1/funding_recovery/raw/1789520468058_6c4076be1a924626ad87b1b7866f9fb7.json",
+      "role": "health_watch_020_1789520468058_6c4076be1a924626ad87b1b7866f9fb7.json",
+      "sha256": "c0fd623d1fbbfb70b26d17ff86fb30ceb5a3d9980c545d7e2186fe26844fc74a"
+    },
+    {
+      "bytes": 1006,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_health_watch_20260916_v1/funding_recovery/raw/1789520468738_8ab3d6e043234e6f8d0167833562cfa6.json",
+      "role": "health_watch_021_1789520468738_8ab3d6e043234e6f8d0167833562cfa6.json",
+      "sha256": "fae9be1d58e73b9153e2095df785ff3407f0ec1684a57d95e4f66d3f01c040f6"
+    },
+    {
+      "bytes": 998,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_health_watch_20260916_v1/funding_recovery/raw/1789520469338_d49239829d70463d93bdb4ab8c61bcb6.json",
+      "role": "health_watch_022_1789520469338_d49239829d70463d93bdb4ab8c61bcb6.json",
+      "sha256": "e309bff0820e8dd18b51ec1b711dd54985b1616bd9f9d9fc4ac383209951a8c3"
+    },
+    {
+      "bytes": 1018,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_health_watch_20260916_v1/funding_recovery/raw/1789520469967_82beef6ef78843679ed7be5a172c39d9.json",
+      "role": "health_watch_023_1789520469967_82beef6ef78843679ed7be5a172c39d9.json",
+      "sha256": "0b07e9afaa1f716dbb76570b4e32b68edaba0bacb32761656b8f848c9f26523d"
+    },
+    {
+      "bytes": 4176,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_health_watch_20260916_v1/funding_recovery/verified.json",
+      "role": "health_watch_024_verified.json",
+      "sha256": "b71731880fb5209f74330be429568b0399f3c4ffe38396679152b6e338121a46"
+    },
+    {
+      "bytes": 126,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_health_watch_20260916_v1/funding_verification.txt",
+      "role": "health_watch_025_funding_verification.txt",
+      "sha256": "125d101a976738a67ab2075a0c2eac420d183b1b171686d708b98ff5a1decac8"
+    },
+    {
+      "bytes": 5373,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_health_watch_20260916_v1/historical_failure/pair/manifest.json",
+      "role": "health_watch_026_manifest.json",
+      "sha256": "3e3bc0704ee1a7809e3de4997f23b04648918f2429db1a8be747da4ba8cf051b"
+    },
+    {
+      "bytes": 15378,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_health_watch_20260916_v1/historical_failure/seven/manifest.json",
+      "role": "health_watch_027_manifest.json",
+      "sha256": "47d9a323ba375a986520d333d1a2a354bbb0b25568729eb292298d340cf66aa9"
+    },
+    {
+      "bytes": 1394,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_health_watch_20260916_v1/historical_failure_pins.json",
+      "role": "health_watch_028_historical_failure_pins.json",
+      "sha256": "feb685742629dee1dcbb5ec61cb6f2af1fcd8c08186c929e3202487a93bd733d"
+    },
+    {
+      "bytes": 3971,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_health_watch_20260916_v1/installation_before.json",
+      "role": "health_watch_029_installation_before.json",
+      "sha256": "d14830b770230f2964986cf63166443b4f72c20f2a17c5f4195727a61b30311d"
+    },
+    {
+      "bytes": 972,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_health_watch_20260916_v1/installation_verified.json",
+      "role": "health_watch_030_installation_verified.json",
+      "sha256": "5f8a4664bd780eb67543746421a60e32b85e97d84458252cd30c12b8ddc13aa6"
+    },
+    {
+      "bytes": 694,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_health_watch_20260916_v1/installed_negative/initial.json",
+      "role": "health_watch_031_initial.json",
+      "sha256": "98fc2c09fd44f03a9b306f9de9a8d69587dbed5048cb6aa30884e1edebfb8b6e"
+    },
+    {
+      "bytes": 1738,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_health_watch_20260916_v1/installed_negative/pins.json",
+      "role": "health_watch_032_pins.json",
+      "sha256": "8ee1fe86aa1ff2d4f9fdb791e65612a74900ea030ae65b5805267fc3d0c9bd1a"
+    },
+    {
+      "bytes": 694,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_health_watch_20260916_v1/installed_negative/result.json",
+      "role": "health_watch_033_result.json",
+      "sha256": "98fc2c09fd44f03a9b306f9de9a8d69587dbed5048cb6aa30884e1edebfb8b6e"
+    },
+    {
+      "bytes": 208,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_health_watch_20260916_v1/installed_negative/start.json",
+      "role": "health_watch_034_start.json",
+      "sha256": "5a01aef689aad4586814b532b9d98736dbde4c286479807427cf7a4eeb56494a"
+    },
+    {
+      "bytes": 19412,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_health_watch_20260916_v1/installed_smoke/initial.json",
+      "role": "health_watch_035_initial.json",
+      "sha256": "ca6da6ec635aa23af28f147a06b6f8f05fbcfe43961a7f6a7c302db990f4d091"
+    },
+    {
+      "bytes": 1682,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_health_watch_20260916_v1/installed_smoke/pins.json",
+      "role": "health_watch_036_pins.json",
+      "sha256": "9638a9c6ede172468e7a8f4ef504a62b5d7d2fcc109959e79debfce91bef600a"
+    },
+    {
+      "bytes": 19422,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_health_watch_20260916_v1/installed_smoke/result.json",
+      "role": "health_watch_037_result.json",
+      "sha256": "5d3ba2a7fcd2589f62fa9166de35a0573658fb8c9dcf9c6b6663561b3215a575"
+    },
+    {
+      "bytes": 208,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_health_watch_20260916_v1/installed_smoke/start.json",
+      "role": "health_watch_038_start.json",
+      "sha256": "fd0a090e55d5b8c6c50bcb2145bccbab7150fe69c2c8f51268a88df6a79981b5"
+    },
+    {
+      "bytes": 179,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_health_watch_20260916_v1/installed_tests.txt",
+      "role": "health_watch_039_installed_tests.txt",
+      "sha256": "26ee89878aee33dcf8457cf58054fe5d86eedbb5468a85a3b576fb2399cfb810"
+    },
+    {
+      "bytes": 19698,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_health_watch_20260916_v1/live_and_historical_validation.json",
+      "role": "health_watch_040_live_and_historical_validation.json",
+      "sha256": "eb7a9158de51ecb8daf21ac6f9b173e45fcb288c532275ea752ab8f70a546e05"
+    },
+    {
+      "bytes": 19411,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_health_watch_20260916_v1/live_watch/initial.json",
+      "role": "health_watch_041_initial.json",
+      "sha256": "0290c7903d16d0fb59ba72ab815b8d43e49e6004d000020122dc225d2d694295"
+    },
+    {
+      "bytes": 1682,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_health_watch_20260916_v1/live_watch/pins.json",
+      "role": "health_watch_042_pins.json",
+      "sha256": "9638a9c6ede172468e7a8f4ef504a62b5d7d2fcc109959e79debfce91bef600a"
+    },
+    {
+      "bytes": 212,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_health_watch_20260916_v1/live_watch/start.json",
+      "role": "health_watch_043_start.json",
+      "sha256": "cf3826dccb3f8dceb13e32762f60a904c211c9f974e206efb61cf92f895fa9e9"
+    },
+    {
+      "bytes": 21792,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_health_watch_20260916_v1/live_watch_started.json",
+      "role": "health_watch_044_live_watch_started.json",
+      "sha256": "856976f45c0c324f207eaaf39cfac9840fa3dc3f2f854a17507e58aee12cd7f2"
+    },
+    {
+      "bytes": 1610,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_health_watch_20260916_v1/native_lifecycle/first_scan.json",
+      "role": "health_watch_045_first_scan.json",
+      "sha256": "162bd90f354287b3798444d615c25aaefc2a6aaa81e279e667092fa48181de95"
+    },
+    {
+      "bytes": 523,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_health_watch_20260916_v1/native_lifecycle/handoff_started.json",
+      "role": "health_watch_046_handoff_started.json",
+      "sha256": "a3e4f53e14451e8349665268ec2ddb848292c8130769e2b222b737fc13f7fd6a"
+    },
+    {
+      "bytes": 2458,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_health_watch_20260916_v1/native_lifecycle/overlap_anchor.json",
+      "role": "health_watch_047_overlap_anchor.json",
+      "sha256": "d2aa46f4893007d052c63bd9d6725b392dd6708c090e6ef22f2f66441e94d689"
+    },
+    {
+      "bytes": 849,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_health_watch_20260916_v1/native_lifecycle/resume.py",
+      "role": "health_watch_048_resume.py",
+      "sha256": "05b56dacf3d012f1e045ae145396818273113438c90bce5816cd90f39c307d1e"
+    },
+    {
+      "bytes": 2380,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_health_watch_20260916_v1/native_lifecycle/source_reuse.json",
+      "role": "health_watch_049_source_reuse.json",
+      "sha256": "996e7d3e95914635c5f43ae737b71e225cfb74f3484401397abd69757b450a97"
+    },
+    {
+      "bytes": 3211,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_health_watch_20260916_v1/protected_processes_verified.json",
+      "role": "health_watch_050_protected_processes_verified.json",
+      "sha256": "a187e1150ec835f167d63cce294fe527ee9f199b74f7e805d1415b3dcb4ffc59"
+    },
+    {
+      "bytes": 1238,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_health_watch_20260916_v1/red.txt",
+      "role": "health_watch_051_red.txt",
+      "sha256": "4f13c3b78b9d270496caef3a5bb1b9e3eeaef99dd3ac0c1e925181516e6cdd9a"
+    },
+    {
+      "bytes": 6398,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_health_watch_20260916_v1/red_missing_contracts.txt",
+      "role": "health_watch_052_red_missing_contracts.txt",
+      "sha256": "ac7b03ba59ed8d52b5f18afd47656b3af2fa26cb5a1ede57e106a8bc2afbd18f"
+    },
+    {
+      "bytes": 1506,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_health_watch_20260916_v1/source/scripts/prospective_collector_health_watch.py",
+      "role": "health_watch_053_prospective_collector_health_watch.py",
+      "sha256": "574a9153cac28dfdbd13ad0ee51e06d63750ade67939f7738c840763eb4e83d8"
+    },
+    {
+      "bytes": 10111,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_health_watch_20260916_v1/source/src/hypervector/research/prospective_collector_health.py",
+      "role": "health_watch_054_prospective_collector_health.py",
+      "sha256": "7b59689306abca232f7652a5b99ff205b2a21eed82320f0ddf0f0934d5dc2c6e"
+    },
+    {
+      "bytes": 2451,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_health_watch_20260916_v1/source/src/hypervector/research/prospective_collector_watch.py",
+      "role": "health_watch_055_prospective_collector_watch.py",
+      "sha256": "63f77dbd51d8eb1467043490ee6df72ba0a140eac2d68eabd581d34a15994c25"
+    },
+    {
+      "bytes": 13612,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_health_watch_20260916_v1/source/tests/test_prospective_collector_health.py",
+      "role": "health_watch_056_test_prospective_collector_health.py",
+      "sha256": "8c70e0a9e0e8a99eed6fa2cf9abe1d6267afa94b96c3fb9f3ff8d3c54a87cdfc"
+    },
+    {
+      "bytes": 706,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_health_watch_20260916_v1/source_structure_verified.json",
+      "role": "health_watch_057_source_structure_verified.json",
+      "sha256": "0a403e853070024c6ce38b0ffb3f129abd714156bfc8758d4dce5cf155fd6b28"
+    },
+    {
+      "bytes": 2125,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_health_watch_20260916_v1/verify_funding_counts.py",
+      "role": "health_watch_058_verify_funding_counts.py",
+      "sha256": "4ab5260e9dc00d35498850f40fdf6d7f80b7f398bf2ba28ab3d18ac755b269b6"
+    },
+    {
+      "bytes": 5672,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_health_watch_20260916_v1/verify_funding_recovery.py",
+      "role": "health_watch_059_verify_funding_recovery.py",
+      "sha256": "627608e4c2ba282493393ee4e6589a0595ff441ddc4d9c982b89440499dc83e7"
+    },
+    {
+      "bytes": 4294,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_health_watch_20260916_v1/historical_failure/pair/latest.json",
+      "role": "historical_stopped_health_pair",
+      "sha256": "57ce56d3f9a5e885abd3f779a4795a3f8f638c4a19f727ce48bc01f0ed0b0ed7"
+    },
+    {
+      "bytes": 9446,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_prospective_health_watch_20260916_v1/historical_failure/seven/latest.json",
+      "role": "historical_stopped_health_seven",
+      "sha256": "881d6b28bdb9c855bcf958b0a0085bd7fc81c5c94b001debf302c4bb9c13d150"
+    }
+  ],
+  "execution_authority": "none",
+  "falsifier": "A falsely healthy absent/stopped/stale collector, source or process mismatch, raw/index/SQL timing disagreement, missing final inspection, corrupted receipt or new interruption reopens the corresponding finding.",
+  "hypothesis": "Frozen forward studies need continuously retained first-observation evidence; a later historical backfill cannot restore timely collection.",
+  "hypothesis_id": "v89_prospective_collection_health_20260910_v1",
+  "limitations": [
+    "Original stopped-process origin is unknown.",
+    "Original timely prospective coverage remains incomplete after backfill.",
+    "Observer death requires external follow-up; no independent OS notification or automatic restart is implemented.",
+    "Runtime healthy status is a point-in-time technical observation, not economic validity or expected profitability.",
+    "The later September 23 04:00\u2013October 7 04:00 pair collector still needs separate implementation and qualification.",
+    "No sealed economic outcomes were evaluated."
+  ],
+  "metrics": {
+    "branches": 92,
+    "covered_branches": 92,
+    "covered_statements": 191,
+    "funding": {
+      "counts": {
+        "BTC": {
+          "captured": 170,
+          "expected": 170,
+          "late": 49,
+          "missing": 0,
+          "timely": 121
+        },
+        "ETH": {
+          "captured": 170,
+          "expected": 170,
+          "late": 49,
+          "missing": 0,
+          "timely": 121
+        },
+        "HYPE": {
+          "captured": 170,
+          "expected": 170,
+          "late": 49,
+          "missing": 0,
+          "timely": 121
+        },
+        "SOL": {
+          "captured": 170,
+          "expected": 170,
+          "late": 49,
+          "missing": 0,
+          "timely": 121
+        },
+        "xyz:BRENTOIL": {
+          "captured": 170,
+          "expected": 170,
+          "late": 49,
+          "missing": 0,
+          "timely": 121
+        },
+        "xyz:SNDK": {
+          "captured": 170,
+          "expected": 170,
+          "late": 49,
+          "missing": 0,
+          "timely": 121
+        },
+        "xyz:SPCX": {
+          "captured": 170,
+          "expected": 170,
+          "late": 49,
+          "missing": 0,
+          "timely": 121
+        }
+      },
+      "cutoff_ms": 1789520470590,
+      "execution_authority": "none",
+      "new_delay_ms_max": 18436,
+      "new_delay_ms_min": 14874,
+      "outcomes_evaluated": false,
+      "snapshot_health_stable": true,
+      "sql_python_health_agree": true
+    },
+    "heartbeat_threshold_seconds": 120,
+    "lifecycle_successor_pid": 50314,
+    "lifecycle_successor_session": 51386,
+    "observer_duration_seconds": 21600,
+    "observer_interval_seconds": 15,
+    "observer_pid": 47064,
+    "observer_session": 24644,
+    "pipeline_status": "health_watch_active_followup_collector_not_yet_qualified",
+    "statements": 191,
+    "tests_candidate": 78,
+    "tests_installed": 78
+  },
+  "revision_number": 5,
+  "runtime_strategy_changed": false,
+  "schema_version": 1,
+  "status": "observe",
+  "strategy_id": "multi_asset_growth_first_5000_noncrypto_research_v89",
+  "supersedes_revision_id": "ec72f5c3c55eb2a9c3262878e654df2e982a24949d776c22e734ebfb799ca612",
+  "symbol": "PORTFOLIO"
+}

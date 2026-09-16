@@ -1,3 +1,50 @@
+## September 16: passive collector health watch installed; funding recovered
+
+A separate report-only observer is installed and active: **PID 47064 / exec
+session 24644**, born **00:55:41 UTC**, six-hour deadline near **06:55:41 UTC**.
+It checks both frozen public-source collectors every 15 seconds and retains an
+alert on stopped/stale/malformed state, PID/birth/command mismatch, missing or
+ambiguous writer lock, and pinned manifest/source/protocol changes. Heartbeat
+threshold is 120 seconds; no automatic restart or financial authority exists.
+Candidate and installed tests each pass **78**, with **191/191 statements and
+92/92 branches** covered in the two health modules. Actual installed positive
+CLI exits 0 at its final read; both retained historical stopped states alert and
+exit 2. Source copies and failed regressions are retained.
+
+The scheduled **01:00 UTC** seven-asset funding cycle recovered all seven older
+September 15 00:00 identities. All seven new 01:00 identities arrived within
+**14,874–18,436 ms**. Fourteen selected raw/index tuples authenticate, an altered
+first receipt is rejected, and independent Python/SQL/health counts agree:
+**170 expected, 170 captured, 0 missing, 49 late, 121 timely per asset**. The old
+outage remains late/incomplete timely study coverage; no economic seal opened.
+
+Journal revision **a93bf345e345dd0d78f836b9f9c4cd0acd41daeec37aa7ae8adbdc7d2d041f94**
+has **62 current / 217 history** matching references, zero changed/missing.
+Review: `docs/reviews/2026-09-16-v89-prospective-health-watch.md`.
+Evidence: `data/logs/research/bidirectional_cohort/v89_prospective_health_watch_20260916_v1/`.
+Rollback is limited to the four newly installed files listed in its authenticated
+installation receipt; preserve original collectors, binaries and all evidence.
+
+The old lifecycle observer **17371/session27304** actually ended at **00:49:57
+UTC**, deadline with no matching event. Its eight final cursors are retained.
+The exact qualified reader resumed from them: **PID 50314 / session51386**,
+verified process birth **00:56:58 UTC**, deadline near **02:56:58 UTC**. The review
+labels launch start 00:56:57; use the verified process birth here for timing.
+First scan at 00:56:58.237 UTC found no matching handoff events. Diagnostic
+**67653/session82480** remains pending near **01:09:07 UTC**. Poll these same
+handles and inspect actual terminal receipts/cursors before any successor.
+Pair collector **43671/session14590** and seven-asset **45939/session63338** are
+live; their original source and manifests remain pinned. Financial process
+births **29190/29191/30603/62016/62017** were preserved.
+
+**Next highest-value work:** implement and qualify the separate preregistered
+SNDK/Brent capture for **September 23 04:00–October 7 04:00 UTC**. Use the original
+source/seed requirements in `docs/plans/2026-09-16-v89-prospective-gap-disposition.md`.
+It is not yet implemented or launched. Original September 22/23 seals remain.
+The health watcher itself needs live-handle follow-up; it is not an independent
+OS alert service and cannot report after its own death. The continuous goal
+remains active. This turn made tested implementation and source-recovery progress.
+
 ## September 16: stopped prospective collectors discovered and resumed
 
 A fresh source-health check found both original public-data collectors stopped

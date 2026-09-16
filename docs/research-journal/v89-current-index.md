@@ -1,3 +1,19 @@
+## September 16 passive collector health and funding recovery
+
+- Installed passive observer: 78 candidate + 78 installed tests; 191 statements
+  and 92 branches covered. PID47064/session24644, 15-second checks, deadline
+  approximately 06:55:41 UTC; runtime authority none, no automatic restart.
+- All seven old funding gaps recovered at 01:00 UTC. Seven new receipts timely
+  at 14,874–18,436 ms; raw/index/Python/SQL agree. Each stream: 170 expected,
+  170 captured, zero missing, 49 late, 121 timely. Original timely coverage stays
+  incomplete; sealed economic results remain unopened.
+- Revision 5 `a93bf345e345dd0d78f836b9f9c4cd0acd41daeec37aa7ae8adbdc7d2d041f94`:
+  62 current / 217 history references match, zero changed or missing.
+- Review: `docs/reviews/2026-09-16-v89-prospective-health-watch.md`.
+- Next: qualify the separate September 23 04:00–October 7 04:00 SNDK/Brent capture.
+  Lifecycle successor50314/session51386 resumes final cursors, deadline02:56:58;
+  diagnostic67653/session82480 remains due01:09:07. Financial processes untouched.
+
 ## September 16: stopped prospective collectors discovered and resumed
 
 A fresh source-health check found both original public-data collectors stopped
