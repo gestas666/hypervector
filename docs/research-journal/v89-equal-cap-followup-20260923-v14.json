@@ -1,0 +1,273 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v89_equal_cap_followup_20260923_v1",
+  "strategy_id": "v89_fixed_total_notional_equal_cap_followup",
+  "symbol": "MULTI",
+  "hypothesis": "A separately declared complete later source block can test the unchanged allocation comparison after the original block lost timely observations.",
+  "status": "observe",
+  "execution_authority": "none",
+  "runtime_strategy_changed": false,
+  "automatic_promotion": false,
+  "created_at_utc": "2026-09-16T10:41:56.752813+00:00",
+  "revision_number": 14,
+  "supersedes_revision_id": "e6b4c4d74dd78b227ddb1e7617dafbaee17c01f93955d4246bf62508e285b6a5",
+  "confidence": "high",
+  "decision": "Qualify exact complete native-record comparison and start a separate sandboxed fourteen-day fabricated source regeneration. Both original variants, every native field and all funding selections must reproduce. The original source and account-handoff processes continue unchanged; complete source regeneration and native accounts remain pending.",
+  "falsifier": "The regeneration reuses retained native decisions, omits a original variant or clock grid, removes source fields, accepts common malformed outputs, loses original economic/source identity, exposes real sealed outcomes, or differs from original complete native records.",
+  "evidence": [
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/docs/reviews/2026-09-16-v89-native-source-reproduction.md",
+      "bytes": 8341,
+      "sha256": "95a9be736b5bc7d27fb939da45911816131a9ee2c1555823a4fd510e5ee66622",
+      "role": "native_source_regeneration_00_2026-09-16-v89-native-source-reproduction.md"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_source_reproduction_tooling_v1.tar.gz",
+      "bytes": 8207,
+      "sha256": "8ec02550436fdd5d698b30c4f006207f3b720ffbd6d3e07739eb38109047e7b0",
+      "role": "native_source_regeneration_01_native_source_reproduction_tooling_v1.tar.gz"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_source_reproduction_tooling_manifest_v1.json",
+      "bytes": 2114,
+      "sha256": "5b7fedca22fb1b0a7c4c657e7fcbcb0666551c6bee90e594c0b5ec49faa3339a",
+      "role": "native_source_regeneration_02_native_source_reproduction_tooling_manifest_v1.json"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/run_native_source_reproduction_v1.py",
+      "bytes": 8514,
+      "sha256": "767af8a1da4a537d7a0cfe973aeeef042254634f12e38fcc06a978187c0951f0",
+      "role": "native_source_regeneration_03_run_native_source_reproduction_v1.py"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/test_native_source_reproduction_driver.py",
+      "bytes": 4446,
+      "sha256": "1bff2bfbc7893368456c660d56163bced09307794f65bad059be945d3a43e486",
+      "role": "native_source_regeneration_04_test_native_source_reproduction_driver.py"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_source_reproduction_request_v1.json",
+      "bytes": 2101,
+      "sha256": "9d7f9cd8855fbef17cf2c38e4d9b70fedf73cc9b3a0c471f99119c29c744402e",
+      "role": "native_source_regeneration_05_native_source_reproduction_request_v1.json"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_source_reproduction_v1.sb",
+      "bytes": 1084,
+      "sha256": "7b6722f6b0e2434168d34e6e13994a15a4ddd503a873e83bee7a5b56c5d62b1d",
+      "role": "native_source_regeneration_06_native_source_reproduction_v1.sb"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_source_reproduction_preflight_v1.json",
+      "bytes": 10137,
+      "sha256": "599102957783137b59c1e9a56e6a8028f0d37afab13be45ababcd644e2cdca59",
+      "role": "native_source_regeneration_07_native_source_reproduction_preflight_v1.json"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_source_reproduction_preflight_v1.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "role": "native_source_regeneration_08_native_source_reproduction_preflight_v1.txt"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_source_reproduction_launch_v1.json",
+      "bytes": 6128,
+      "sha256": "a74ec0b4942b7e0ca08a73cbed3e98fcc498c862c498ead048e20fa8e35200d2",
+      "role": "native_source_regeneration_09_native_source_reproduction_launch_v1.json"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_source_reproduction_v1/scope.json",
+      "bytes": 4182,
+      "sha256": "efa70e173aadaf99306143cb210ed8bd7260d768bbebf979d6a3eb61cf09ca36",
+      "role": "native_source_regeneration_10_scope.json"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_source_reproduction_red_v1.txt",
+      "bytes": 63222,
+      "sha256": "4c7815a515dafdfb2df9bebb23f4ea68bfbc35c74dc9ddd9a9316bd9893572ef",
+      "role": "native_source_regeneration_11_native_source_reproduction_red_v1.txt"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_source_reproduction_red_v2.txt",
+      "bytes": 64083,
+      "sha256": "1f3d7faaf953f01cd290aceeee7b47b5408335cefc0cca2bac18c62201c55d7d",
+      "role": "native_source_regeneration_12_native_source_reproduction_red_v2.txt"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_source_reproduction_tests_v1.txt",
+      "bytes": 100,
+      "sha256": "185166996a0ab4fb72b4bb02f3bf02d66ed1023311618c7abf0bc9f037dad7d3",
+      "role": "native_source_regeneration_13_native_source_reproduction_tests_v1.txt"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_source_reproduction_tests_v2.txt",
+      "bytes": 8142,
+      "sha256": "fbce56a6c3e74b9020bbcb923c85f431c728444dfe6725271277a2a064932a2e",
+      "role": "native_source_regeneration_14_native_source_reproduction_tests_v2.txt"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_source_reproduction_tests_v3.txt",
+      "bytes": 180,
+      "sha256": "b4fcd0fa13f0cff7a9d5053660832ba590590193898dce3cac1503d746906e10",
+      "role": "native_source_regeneration_15_native_source_reproduction_tests_v3.txt"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_source_reproduction_coverage.json",
+      "bytes": 6713,
+      "sha256": "19466c2d1f2f83adfc78eaed04dca523da082b34b7fde8d8ac6f9f6ef08cf0fb",
+      "role": "native_source_regeneration_16_native_source_reproduction_coverage.json"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_source_driver_red.txt",
+      "bytes": 7060,
+      "sha256": "023215ac4e94cbb46dc7743251a8244009eb5d6dda32c05542ede71b993fb661",
+      "role": "native_source_regeneration_17_native_source_driver_red.txt"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_source_driver_tests_v1.txt",
+      "bytes": 9764,
+      "sha256": "4b3edd6cb41e56861a636d91a69d50402650ddce6c08c9c994220be41809f634",
+      "role": "native_source_regeneration_18_native_source_driver_tests_v1.txt"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_source_driver_tests_v2.txt",
+      "bytes": 98,
+      "sha256": "e40091f8a619fd44842a08a183df49b733c82574f6f302212fca70eb77dc3013",
+      "role": "native_source_regeneration_19_native_source_driver_tests_v2.txt"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_source_reproduction_archive_tests_v1.txt",
+      "bytes": 180,
+      "sha256": "4041abc2f1553c162764096c24bf41816424f8579d5e769132f75877dcb54211",
+      "role": "native_source_regeneration_20_native_source_reproduction_archive_tests_v1.txt"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_source_serialization_probe_v1.py",
+      "bytes": 3197,
+      "sha256": "0700e20f364f928d830b8010daec44960a9b3ad07caafee8fd98cfff587bd629",
+      "role": "native_source_regeneration_21_native_source_serialization_probe_v1.py"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_source_serialization_probe_v1.sb",
+      "bytes": 1666,
+      "sha256": "67364adb1a7cfc3d83adbcf3d61af1b652c45bbc385a8734eed6f7c15876071a",
+      "role": "native_source_regeneration_22_native_source_serialization_probe_v1.sb"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_source_serialization_probe_v1.jsonl",
+      "bytes": 111277,
+      "sha256": "a4ce4b5aeb388c23c0413f6e3d5fed574fb128c22637d0b30f49c784c4b3386c",
+      "role": "native_source_regeneration_23_native_source_serialization_probe_v1.jsonl"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_source_serialization_probe_v1.json",
+      "bytes": 617,
+      "sha256": "522f23c3f67d9dfdf9f00ca570fda2d6daf36491aa204c6fcda4a06c1f99d012",
+      "role": "native_source_regeneration_24_native_source_serialization_probe_v1.json"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_source_serialization_probe_v1.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "role": "native_source_regeneration_25_native_source_serialization_probe_v1.txt"
+    }
+  ],
+  "metrics": {
+    "qualification_commit": "38bdf78c5ef5ee2c777e90dfac2ce478a26af554",
+    "candidate_tests": 87,
+    "archive_tests": 87,
+    "new_metadata_tests": 42,
+    "handoff_tests": 9,
+    "inspector_final_tests": 3,
+    "metadata_helper_coverage": {
+      "covered_branches": 68,
+      "covered_lines": 153,
+      "excluded_lines": 0,
+      "missing_branches": 0,
+      "missing_lines": 0,
+      "num_branches": 68,
+      "num_partial_branches": 0,
+      "num_statements": 153,
+      "percent_branches_covered": 100.0,
+      "percent_branches_covered_display": "100",
+      "percent_covered": 100.0,
+      "percent_covered_display": "100",
+      "percent_statements_covered": 100.0,
+      "percent_statements_covered_display": "100"
+    },
+    "archive_members": 5782,
+    "matching_native_python_files": 1960,
+    "matching_implementation_files_including_lock": 1961,
+    "reviewed_implementation_differences": 3,
+    "distinct_output_regression_reproduced_and_fixed": true,
+    "source_job_pid": 29346,
+    "source_job_session": 49265,
+    "source_progress_at_receipt": {
+      "variant": "first_receipts",
+      "native_decisions_completed": 10584,
+      "variant_seconds": 8561.798978917002
+    },
+    "handoff_pid": 56931,
+    "handoff_session": 66861,
+    "handoff_status": "waiting_for_registered_source_completion",
+    "first_handoff_terminal": "PermissionError executing setuid /bin/ps inside sandbox; evidence preserved",
+    "second_handoff_inspector": "psutil read-only API; exact birth and command validated inside sandbox",
+    "source_restarted": false,
+    "financial_process_control": false,
+    "full_native_accounts_qualified": false,
+    "real_market_outcomes_evaluated": false,
+    "source_recomputation_qualified": false,
+    "account_runs_required": 48,
+    "deterministic_artifact_pairs_required": 72,
+    "economic_case_pairs_required": 24,
+    "byte_identical_reanalysis_files_required": 26,
+    "previous_goal_turn_classification": "progress: completed independently reconstructed SPCX exit/hold signal audit and verified journal revision",
+    "this_goal_turn_classification": "progress",
+    "next_investigation": "Follow original complete source job, account handoff and separate full source regeneration; compare every native record after authenticated completion. Inspect new native execution events without repeating completed audits.",
+    "native_regeneration": {
+      "comparator_commit": "9a5c86145ca30dd1a975e29e03104eb371bc0128",
+      "candidate_comparison_tests": 74,
+      "new_comparator_tests": 32,
+      "driver_tests": 4,
+      "frozen_tooling_archive_tests": 78,
+      "comparator_coverage": {
+        "covered_lines": 62,
+        "num_statements": 62,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100",
+        "num_branches": 32,
+        "num_partial_branches": 0,
+        "covered_branches": 32,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100"
+      },
+      "actual_native_probe_pairs": 14,
+      "actual_native_probe_calls": 28,
+      "pid": 4501,
+      "session": 34720,
+      "birth_utc": "2026-09-16T10:38:20.622737+00:00",
+      "native_publications_required": 169358,
+      "funding_records_required": 4704,
+      "source_recomputation_qualified": false,
+      "status": "running_full_native_collection",
+      "tooling_archive_sha256": "8ec02550436fdd5d698b30c4f006207f3b720ffbd6d3e07739eb38109047e7b0"
+    }
+  },
+  "limitations": [
+    "Metadata/comparison and substituted orchestration tests do not qualify full native accounts or profitable outcomes.",
+    "Both full native variants must finish and authenticate before any account work starts.",
+    "Trusted deserialization is confined to the original fixed-local fabricated-source artifacts; no public pickle loader or seal override was added.",
+    "Native source recomputation remains separate from repeat account execution on retained source decisions.",
+    "Real prospective outcomes remain sealed at their original study dates.",
+    "No live strategy, asset, leverage, sizing, risk, execution or deployment setting changed.",
+    "Persistent collector recovery deployment still awaits the previously requested human response.",
+    "The complete native regeneration comparison has started but is not yet qualified.",
+    "Exact deterministic repetition cannot exclude defects shared by both executions.",
+    "The actual-native probe covers only the first fabricated decision of each asset/variant; full-period behavior remains the running experiment."
+  ]
+}
