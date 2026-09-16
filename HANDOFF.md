@@ -1,3 +1,64 @@
+## September 16: later seven-asset source collector qualified and active
+
+The new separately registered source capture is running in frozen worktree
+`/Users/gestas/Prototypes/hypervector-v89-equal-cap-followup-20260923`.
+Source commit **f446c2b6f1ad642e881d649d22061aee7d8fcb99**;
+manifest SHA256 **14341a8df3ebdabb4e4d6a8f61f86f0b7a5e00991f99955709476d09e7cd1b41**.
+Collector **PID 51194 / exec session 15611**, born **02:50:15 UTC**;
+capture root `data/logs/research/bidirectional_cohort/v89_equal_cap_followup_market_capture_20260923_v1`.
+Dates and seal remain **September 23 00:00–October 7 00:00 UTC**. The original
+studies and their timely-gap deficiencies remain separately reportable.
+
+A new index rebuilt **33,430 authenticated raw requests / 57,530 value versions**
+with exact complete initial first/latest fields. Subsequent capture preserved
+all original first receipts. Archive verifies all 33,430 members / 249,854,734 raw
+bytes, compressed to 53,348,548 bytes. All five economic artifacts remain exact;
+25 source/evidence pins plus the separate protocol authenticate. The fixed
+September 9–23 warmup is complete only through September 16 02:00 UTC in the seed;
+future warmup remains pending, and older archive records must not extend it.
+
+The retained final run passes **171 offline tests**, covering **361/361 statements
+and 124/124 branches** in five affected modules. Real once capture has 20 complete
+queries, zero incomplete/deferred, normal stopped health and zero prospective
+rows; its tool exit-code receipt is unavailable and no exit code is claimed.
+Actual scheduled **02:51 UTC** crypto receipts arrived **5,441–20,566 ms** after
+availability; exact raw/index identities match and four changed clocks reject.
+Quarter/hour slots remain a bounded follow-up check, not claimed qualified here.
+Original fifteen collector sources and eight existing process births survived.
+
+New passive health watch **PID 52875 / session 90483**, born **02:50:53 UTC**,
+six-hour deadline near **08:50:53 UTC**. Existing pair/seven watches remain
+47064/session24644 (06:55:41) and 30308/session28210 (07:27:09).
+No persistent recovery job was installed; the pending three-job approval does
+not cover this fourth collector. The finite health watch has no restart or
+independent OS notification authority.
+
+The earlier lifecycle reader actually ended **02:57:07 UTC**, observation_deadline,
+with no matching transition and eight final cursors. Its qualified successor is
+**PID 71235 / session 76010**, born **02:57:48 UTC**, deadline near **04:57:48 UTC**,
+under this turn's `native_lifecycle/`. First scan preserves all eight offsets and
+finds zero matching events. Diagnostic **PID 93556/session21203** remains pending
+near **03:13:22 UTC**. Inspect actual terminal receipts before a successor; empty
+output is not termination. Financial processes remain user-owned and untouched.
+
+Review: `docs/reviews/2026-09-16-v89-equal-cap-followup-capture-qualified.md`.
+Plan: `docs/plans/2026-09-16-v89-equal-cap-followup-qualification.md`.
+Evidence: `data/logs/research/bidirectional_cohort/v89_equal_cap_followup_qualification_20260916_v1/`.
+Journal **1d5e538471f86e7d846fa5a1565c0a652df4b1742dd366dd22fa3e00588e40de**:
+**102 current / 164 history** references match, none changed/missing.
+
+**Next highest-value investigation:** reconcile original frozen dynamic-evaluator
+integration requirements against the completed native components, then bind
+native routing at the actual decision-position boundary to independently
+reconciled account effects. Read the September 8 prospective replay qualification
+plan and revision-22 gaps, checking authoritative later implementations before
+assuming they are still open. The complete **24-cell** replay is unqualified;
+current live-release qualification and fixed-trade rescaling are insufficient.
+Preserve registered economics, original holding semantics, all cost/source/clock
+axes and the original September 22/23 and later October 7 seals. Inspect any new
+native diagnostic promptly. The continuous goal remains active; this turn made
+qualified real-capture, archival, scheduled-receipt and journal progress.
+
 ## September 16: collector shutdown cause and recovery launcher qualified
 
 The common September 13 stops strongly coincide with a host shutdown. Retained

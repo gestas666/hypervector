@@ -1,0 +1,157 @@
+{
+  "allocation_record": {
+    "bytes": 287649,
+    "sha256": "23df0a8d87d4d32549b847c6c03ca178ca81096d351f1ffd1ba652571009bd2b"
+  },
+  "execution_authority": "none",
+  "original_source": {
+    "bytes": 5747,
+    "sha256": "696fa385d588d29ca0a6dcc1539a7e11d37af58c9523fd6ed3e5a473bc4a08a3"
+  },
+  "profiles": [
+    {
+      "active_configuration_changed": false,
+      "all_fields_match_allowlist": true,
+      "asset_changes": [
+        {
+          "leverage": 20.0,
+          "original_cap_usd": 2500.0,
+          "original_margin_fraction": 0.05,
+          "proposed_cap_usd": 2500.0,
+          "proposed_margin_fraction": 0.05,
+          "symbol": "BTC"
+        },
+        {
+          "leverage": 15.0,
+          "original_cap_usd": 500.0,
+          "original_margin_fraction": 0.02,
+          "proposed_cap_usd": 500.0,
+          "proposed_margin_fraction": 0.02,
+          "symbol": "ETH"
+        },
+        {
+          "leverage": 15.0,
+          "original_cap_usd": 500.0,
+          "original_margin_fraction": 0.02,
+          "proposed_cap_usd": 500.0,
+          "proposed_margin_fraction": 0.02,
+          "symbol": "SOL"
+        },
+        {
+          "leverage": 10.0,
+          "original_cap_usd": 2500.0,
+          "original_margin_fraction": 0.08,
+          "proposed_cap_usd": 2500.0,
+          "proposed_margin_fraction": 0.08,
+          "symbol": "HYPE"
+        },
+        {
+          "leverage": 10.0,
+          "original_cap_usd": 500.0,
+          "original_margin_fraction": 0.02,
+          "proposed_cap_usd": 500.0,
+          "proposed_margin_fraction": 0.02,
+          "symbol": "xyz:SPCX"
+        },
+        {
+          "leverage": 10.0,
+          "original_cap_usd": 500.0,
+          "original_margin_fraction": 0.02,
+          "proposed_cap_usd": 500.0,
+          "proposed_margin_fraction": 0.02,
+          "symbol": "xyz:SNDK"
+        },
+        {
+          "leverage": 10.0,
+          "original_cap_usd": 500.0,
+          "original_margin_fraction": 0.02,
+          "proposed_cap_usd": 500.0,
+          "proposed_margin_fraction": 0.02,
+          "symbol": "xyz:BRENTOIL"
+        }
+      ],
+      "bytes": 6603,
+      "candidate_profile_fingerprint": "225a5312b1048045617666ab9a681394bb3a85d8c4083587ef6535ee2f8aecfd",
+      "cohort_ledger": "data/research/v89_allocation_prospective_20260908/control/decisions.jsonl",
+      "execution_authority": "none",
+      "file": "control.toml",
+      "sha256": "9a58356ff46f9165dbe14bae0a5730b6bfcffcde1b6cb9772806db49613a1bc2",
+      "source_profile_fingerprint": "39e334fc97f3cbe21bac30e53e91524d6a4cf9727370a0f69bc2d51039667f7a",
+      "stale_transition_approval_removed": true,
+      "stop_file": "data/research/v89_allocation_prospective_20260908/control/STOP",
+      "variant": "control"
+    },
+    {
+      "active_configuration_changed": false,
+      "all_fields_match_allowlist": true,
+      "asset_changes": [
+        {
+          "leverage": 20.0,
+          "original_cap_usd": 2500.0,
+          "original_margin_fraction": 0.05,
+          "proposed_cap_usd": 1071.4285714285713,
+          "proposed_margin_fraction": 0.02142857142857143,
+          "symbol": "BTC"
+        },
+        {
+          "leverage": 15.0,
+          "original_cap_usd": 500.0,
+          "original_margin_fraction": 0.02,
+          "proposed_cap_usd": 1071.4285714285713,
+          "proposed_margin_fraction": 0.04285714285714286,
+          "symbol": "ETH"
+        },
+        {
+          "leverage": 15.0,
+          "original_cap_usd": 500.0,
+          "original_margin_fraction": 0.02,
+          "proposed_cap_usd": 1071.4285714285713,
+          "proposed_margin_fraction": 0.04285714285714286,
+          "symbol": "SOL"
+        },
+        {
+          "leverage": 10.0,
+          "original_cap_usd": 2500.0,
+          "original_margin_fraction": 0.08,
+          "proposed_cap_usd": 1071.4285714285713,
+          "proposed_margin_fraction": 0.03428571428571429,
+          "symbol": "HYPE"
+        },
+        {
+          "leverage": 10.0,
+          "original_cap_usd": 500.0,
+          "original_margin_fraction": 0.02,
+          "proposed_cap_usd": 1071.4285714285713,
+          "proposed_margin_fraction": 0.04285714285714286,
+          "symbol": "xyz:SPCX"
+        },
+        {
+          "leverage": 10.0,
+          "original_cap_usd": 500.0,
+          "original_margin_fraction": 0.02,
+          "proposed_cap_usd": 1071.4285714285713,
+          "proposed_margin_fraction": 0.04285714285714286,
+          "symbol": "xyz:SNDK"
+        },
+        {
+          "leverage": 10.0,
+          "original_cap_usd": 500.0,
+          "original_margin_fraction": 0.02,
+          "proposed_cap_usd": 1071.4285714285713,
+          "proposed_margin_fraction": 0.04285714285714286,
+          "symbol": "xyz:BRENTOIL"
+        }
+      ],
+      "bytes": 6901,
+      "candidate_profile_fingerprint": "a18b98c80e59e07e286fb14e66e2dff0c358a980e248c2e75e25848d5223b98a",
+      "cohort_ledger": "data/research/v89_allocation_prospective_20260908/equal/decisions.jsonl",
+      "execution_authority": "none",
+      "file": "equal.toml",
+      "sha256": "375160fcb3b6ad49569c3db32917a886c55d791c51ec6e12326b08ded86b316e",
+      "source_profile_fingerprint": "39e334fc97f3cbe21bac30e53e91524d6a4cf9727370a0f69bc2d51039667f7a",
+      "stale_transition_approval_removed": true,
+      "stop_file": "data/research/v89_allocation_prospective_20260908/equal/STOP",
+      "variant": "equal"
+    }
+  ]
+}

@@ -1,3 +1,15 @@
+## September 16: separate later allocation collector qualified
+
+Source capture for `v89_equal_cap_followup_20260923_v1` is active, PID51194/session15611;
+health watch PID52875/session90483. Fixed September 23–October 7 UTC block, unchanged
+24-cell economic comparison, full future warmup and dynamic replay still pending.
+33,430 raw requests / 57,530 value versions rebuilt exactly; 171 tests, complete
+361-statement/124-branch measured coverage; actual minute receipts authenticate.
+Journal revision `1d5e538471f86e7d846fa5a1565c0a652df4b1742dd366dd22fa3e00588e40de`,
+102 current / 164 historical references match. See
+`docs/reviews/2026-09-16-v89-equal-cap-followup-capture-qualified.md` and current HANDOFF.
+No financial process or live allocation change; persistent recovery remains pending.
+
 ## September 16 — shutdown diagnosis and qualified recovery
 
 Host shutdown evidence is retained; exact initiator remains unknown. Research
