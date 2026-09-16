@@ -1,0 +1,307 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v89_equal_cap_followup_20260923_v1",
+  "strategy_id": "v89_fixed_total_notional_equal_cap_followup",
+  "symbol": "MULTI",
+  "hypothesis": "A separately declared complete later source block can test the unchanged allocation comparison after the original block lost timely observations.",
+  "status": "observe",
+  "execution_authority": "none",
+  "runtime_strategy_changed": false,
+  "automatic_promotion": false,
+  "created_at_utc": "2026-09-16T06:53:09.581086+00:00",
+  "revision_number": 9,
+  "supersedes_revision_id": "ce2685db9b4b01f567c32aca2ac36590c85dea1a07fe19c0448602a5e42774ce",
+  "confidence": "high",
+  "decision": "Qualify captured artifact authentication and native-clock case metrics in the isolated research candidate. Correct the reproduced three-way funding-record gap. Candidate and archive each pass 191 tests; core account artifacts and all non-evidence report fields reproduce. The previous native-prefix archive also completed 169 tests and 24-cell artifact reproduction. Daily cash integration and the complete 24-case real study remain unfinished; no live change or opened outcome seals.",
+  "falsifier": "Changed registration or early seal access, altered funding or account postings, missing source clocks or boundaries, changed historical behavior, incorrect provenance relocation, omitted attribution or failed source reproduction reopens the corresponding component.",
+  "evidence": [
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/docs/reviews/2026-09-16-v89-captured-case-report-qualification.md",
+      "bytes": 7459,
+      "sha256": "be5fe7b30b2e0d4bf6dc6659a6ca0472f7e89bdc286401aaf7bc6f305a4f76ab",
+      "role": "captured_reporting_review"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/captured_analysis_reader_red.txt",
+      "bytes": 2343,
+      "sha256": "560fe9abf0a18747d01d9d3a1688ee6dea851b2760837bf786f514de49874977",
+      "role": "captured_reporting_0"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/captured_reconcile_faults_red_v1.txt",
+      "bytes": 4525,
+      "sha256": "7dc96bdf5972c5add781159d28a073fa2994cd65443298d784310f9824baec2b",
+      "role": "captured_reporting_1"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/captured_analysis_tests_v2.txt",
+      "bytes": 458,
+      "sha256": "9042e6382adb7cb5eb55ff76de8950e9b91369dae7d5f8d03e81c89805fa9536",
+      "role": "captured_reporting_2"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/captured_case_report_red_v1.txt",
+      "bytes": 1810,
+      "sha256": "b7e378dd3c76168599bc64da2f29461aa9e85750a76991941b2a4e4362a6c999",
+      "role": "captured_reporting_3"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/captured_path_metrics_red_v1.txt",
+      "bytes": 1369,
+      "sha256": "926d1bec2fd208de46443c4711d317f30b7e9421240edcff7d7c279900ca6e2f",
+      "role": "captured_reporting_4"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/captured_case_metrics_tests_v1.txt",
+      "bytes": 543,
+      "sha256": "94a5421a9f5545fcd2394ac5176b3580194e06b021dfb95014fe59906bdf7784",
+      "role": "captured_reporting_5"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/captured_scope_tests_v1.txt",
+      "bytes": 99,
+      "sha256": "01f989315ef566ae4ea444e490e913c2ffa64bbacb1c686a7b34a7451a6a2998",
+      "role": "captured_reporting_6"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/captured_report_tests_v1.txt",
+      "bytes": 2133,
+      "sha256": "f201851f73512547dc011db2c765930cd41ae669c633c1bd08bbb3bf57f1f0bb",
+      "role": "captured_reporting_7"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/captured_report_coverage_v1.json",
+      "bytes": 68240,
+      "sha256": "14acfcaaf367021c76cea0936ecd1edbee802a16899ab97f2efbd5b95b712456",
+      "role": "captured_reporting_8"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/reporting_source_v1.tar.gz",
+      "bytes": 34117760,
+      "sha256": "bcab2f2347c8b32e5a3ff0a73a14b93d92661bcb7b65b7c3248174c67eb97517",
+      "role": "captured_reporting_9"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/reporting_source_manifest_v1.json",
+      "bytes": 1083022,
+      "sha256": "d3aad64ff3d1b4cfa59de4032f4fad5241512d41c55c034c7a1eb53596672468",
+      "role": "captured_reporting_10"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/reporting_archive_tests_v1.txt",
+      "bytes": 1789,
+      "sha256": "52028ec885fd73821dcc218cfd0fca7200994152fadd69818752732655a20b4e",
+      "role": "captured_reporting_11"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/captured_reporting_archive_reproduction_v1.json",
+      "bytes": 4655,
+      "sha256": "2c3b1d0fe6fd8fe8f06219d31124a0ebcaba788fc30eeb87d679f8bee115c2c3",
+      "role": "captured_reporting_12"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/archive_prefix_reproduction_v1.json",
+      "bytes": 51945,
+      "sha256": "00456c013887451823d6cc6d9ac070546cf3578e24be8a052998fbc52fcbe07a",
+      "role": "captured_reporting_13"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/archive_tests_v1.txt",
+      "bytes": 1752,
+      "sha256": "99caaefe58343e8dd975e4106472bb1e47dc4ba3c8c024d3ef43f0717806a650",
+      "role": "captured_reporting_14"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/captured_daily_boundary_scope_rejection_v1.json",
+      "bytes": 505,
+      "sha256": "0bffb43d915862a28d9249eb874683c9b1ed4b92ddd7ae22adb13752a21788e1",
+      "role": "captured_reporting_15"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/captured_daily_boundary_probe_v1.py",
+      "bytes": 3939,
+      "sha256": "0214a3b4fb30ed142a8e2adffb7568353cbc3940bcdc0266e464844ce7d802bb",
+      "role": "captured_reporting_16"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/captured_daily_boundary_probe_v1.json",
+      "bytes": 14181,
+      "sha256": "bbe25b3d5a345f87414dd47cbb58779674b9309d540846c8ef942e2a7d8b4264",
+      "role": "captured_reporting_17"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/captured_daily_boundary_probe_v1.txt",
+      "bytes": 77,
+      "sha256": "74e94789a42db60cbee97e1a6000a15f8c26dea4e5c92cfbd70f3454fd60f7ab",
+      "role": "captured_reporting_18"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/captured_reporting_qualification_v1.json",
+      "bytes": 12076,
+      "sha256": "4682b94b234853fda5bdf885cc3661bf036e4289f1e3b4c902832f9ef2a68e34",
+      "role": "captured_reporting_qualification"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/docs/research-journal/v89-equal-cap-followup-20260923-v8.json",
+      "bytes": 14948,
+      "sha256": "94c24c7161a0970fb1d18efca6cff36ed7a8bfdab60882425579f9c01fb1a5d7",
+      "role": "previous_revision"
+    }
+  ],
+  "metrics": {
+    "candidate_commit": "d534174507583c155b2dd00aa0f956aa7804e2c8",
+    "reporting_commit": "69296bf24fbd682c79ba88527d5b6b41d15b445d",
+    "candidate_tests": 191,
+    "archived_tests": 191,
+    "source_archive_members": 5757,
+    "source_archive_sha256": "bcab2f2347c8b32e5a3ff0a73a14b93d92661bcb7b65b7c3248174c67eb97517",
+    "current_module_coverage": {
+      "scripts/v89_captured_account_analysis_files.py": {
+        "covered_lines": 107,
+        "num_statements": 108,
+        "percent_covered": 98.61111111111111,
+        "percent_covered_display": "99",
+        "missing_lines": 1,
+        "excluded_lines": 0,
+        "percent_statements_covered": 99.07407407407408,
+        "percent_statements_covered_display": "99",
+        "num_branches": 36,
+        "num_partial_branches": 1,
+        "covered_branches": 35,
+        "missing_branches": 1,
+        "percent_branches_covered": 97.22222222222223,
+        "percent_branches_covered_display": "97"
+      },
+      "scripts/v89_captured_account_case_report.py": {
+        "covered_lines": 35,
+        "num_statements": 36,
+        "percent_covered": 94.73684210526316,
+        "percent_covered_display": "95",
+        "missing_lines": 1,
+        "excluded_lines": 0,
+        "percent_statements_covered": 97.22222222222223,
+        "percent_statements_covered_display": "97",
+        "num_branches": 2,
+        "num_partial_branches": 1,
+        "covered_branches": 1,
+        "missing_branches": 1,
+        "percent_branches_covered": 50.0,
+        "percent_branches_covered_display": "50"
+      },
+      "scripts/v89_captured_account_reconcile.py": {
+        "covered_lines": 47,
+        "num_statements": 47,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100",
+        "num_branches": 20,
+        "num_partial_branches": 0,
+        "covered_branches": 20,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100"
+      },
+      "src/hypervector/research/captured_account_schedule.py": {
+        "covered_lines": 95,
+        "num_statements": 95,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100",
+        "num_branches": 30,
+        "num_partial_branches": 0,
+        "covered_branches": 30,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100"
+      },
+      "src/hypervector/research/historical_account_entry_fates.py": {
+        "covered_lines": 143,
+        "num_statements": 143,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100",
+        "num_branches": 44,
+        "num_partial_branches": 0,
+        "covered_branches": 44,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100"
+      },
+      "src/hypervector/research/historical_account_path_metrics.py": {
+        "covered_lines": 123,
+        "num_statements": 123,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100",
+        "num_branches": 46,
+        "num_partial_branches": 0,
+        "covered_branches": 46,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100"
+      },
+      "src/hypervector/research/historical_account_trade_metrics.py": {
+        "covered_lines": 168,
+        "num_statements": 168,
+        "percent_covered": 100.0,
+        "percent_covered_display": "100",
+        "missing_lines": 0,
+        "excluded_lines": 0,
+        "percent_statements_covered": 100.0,
+        "percent_statements_covered_display": "100",
+        "num_branches": 36,
+        "num_partial_branches": 0,
+        "covered_branches": 36,
+        "missing_branches": 0,
+        "percent_branches_covered": 100.0,
+        "percent_branches_covered_display": "100"
+      }
+    },
+    "core_artifact_byte_reproduction": true,
+    "exact_report_non_evidence_reproduction": true,
+    "whole_report_bytes_equal": false,
+    "report_provenance_relocation_verified": true,
+    "previous_native_prefix_archive": {
+      "commit": "e680b31ff1668c6c0f9913ca655c6dab0067cf47",
+      "tests": 169,
+      "cells": 24,
+      "artifact_files": 72,
+      "byte_reproduction_with_multiplicity": true
+    },
+    "complete_synthetic_case_days": 2,
+    "complete_synthetic_case_count": 1,
+    "complete_synthetic_funding_observations": 336,
+    "daily_probe_boundaries": 3,
+    "daily_probe_marks_per_boundary": 7,
+    "daily_probe_reconciled": true,
+    "full_prospective_evaluator_qualified": false,
+    "economic_replay_qualified": false,
+    "real_market_outcomes_evaluated": false,
+    "financial_process_control": false,
+    "next_investigation": "Complete captured daily cash-component and seven/seven attribution with exact boundary marks and carried positions, then explicit cost/market assumptions and all 24 cases.",
+    "pipeline_status": "captured_case_authentication_and_metrics_qualified_daily_and_full_matrix_pending",
+    "previous_goal_turn_classification": "no_progress_on_research; user TUI issue addressed",
+    "this_goal_turn_classification": "progress"
+  },
+  "limitations": [
+    "The complete two-day case uses programmed provider outputs; actual native strategy qualification remains separately bounded to one-hour controls.",
+    "Only one complete synthetic case report is qualified here; fourteen daily cash contributions, seven/seven captured attribution and the full 24-case report remain unfinished.",
+    "Two defensive reporting branches are not exercised; their exact locations are recorded.",
+    "Full-period native throughput and additional nontrivial native route/hold controls remain outstanding.",
+    "Report artifacts retain distinct local provenance; only the core account files reproduce byte-for-byte.",
+    "Outcome seals remain unchanged and no real prospective outcomes were read.",
+    "No runtime installation or financial process control. Persistent collector recovery deployment still awaits the separate existing human response."
+  ]
+}
