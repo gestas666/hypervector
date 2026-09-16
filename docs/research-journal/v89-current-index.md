@@ -1,3 +1,10 @@
+## September 16: later allocation quarter/hour source check complete
+
+Actual 03:00 UTC: 14 timely candle/funding first identities and seven exact
+metadata identities authenticate; 20 complete requests, 14 changed-clock controls
+reject. Journal v3 `f1539510cff013e65ea012e32bf1a46cd13beee6dd3bd4384577045bf5da5448` has 22 current / 186 historical references matching.
+Future coverage/warmup and full dynamic replay remain unqualified; no live change.
+
 ## September 16: separate later allocation collector qualified
 
 Source capture for `v89_equal_cap_followup_20260923_v1` is active, PID51194/session15611;

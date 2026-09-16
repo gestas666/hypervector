@@ -1,3 +1,21 @@
+## September 16: later allocation scheduled hour verified
+
+The actual **03:00 UTC** cycle extends the source qualification below: **20 complete
+public requests**, zero incomplete, all **14 candle/funding first identities** match
+raw captures and arrive **5,439–14,795 ms** after native availability. All seven
+metadata identities match exact raw payloads; their receipt timing does not prove
+exchange publication latency. Fourteen altered receipt clocks are rejected.
+This resolves the earlier pending scheduled quarter/hour check; future warmup,
+future study coverage and the complete dynamic 24-cell replay remain unqualified.
+
+Journal `v89-equal-cap-followup-20260923-v3.json`, revision **f1539510cff013e65ea012e32bf1a46cd13beee6dd3bd4384577045bf5da5448**:
+**22 current / 186 history** references match, zero changed/missing. Exact receipts,
+immutable snapshot and verifier are `hour_verified.json`, `hour_source.sqlite3`
+and `qualify_hour.py` in the same qualification evidence directory. Earlier
+published review/v2 references remain immutable and retain their dated scope.
+Collector/observer handles and next replay-integration investigation remain as
+specified immediately below. Continuous goal active; financial processes untouched.
+
 ## September 16: later seven-asset source collector qualified and active
 
 The new separately registered source capture is running in frozen worktree
