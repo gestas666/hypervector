@@ -1,3 +1,20 @@
+## September 16, 14:14 UTC: stopped checkpoint and visible leverage
+
+The [stopped-checkpoint repair](../reviews/2026-09-16-v89-stopped-checkpoint-recovery.md)
+is installed as `12c376d`, with 150 candidate and 150 installed tests and successful
+native-ledger reconstruction. The read-only monitor is open, its checkpoint
+refreshes, and it shows `LEV C/V`, Brent `10x/10x`, `BACKEND STOPPED` and
+`LOCAL EXITS OFF`. All source ledger hashes remain unchanged. Confidence is high
+for the observed reporting repair; dated strategy and venue evidence remain dated.
+
+At 13:55:29 UTC unsigned venue observations found only Brent short 4.9 at 10x
+isolated, with its full-size stop order open. The original backend remains absent;
+its stop intent and cause are unconfirmed. No financial process control occurred.
+The earlier Git backlog and completed task branches are committed and pushed.
+Preserve ongoing full-source/reproduction/account research and the unchanged
+outcome seals. The isolated decision-reuse candidate still lacks full-period
+equivalence qualification. Existing approval questions remain pending.
+
 ## September 16, 13:45 UTC: current operational and research checkpoint
 
 The [clean monitor launch fix](../reviews/2026-09-16-v89-monitor-clean-launch.md)

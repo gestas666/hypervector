@@ -18,6 +18,22 @@ financial backend. It requires fresh same-run shared reporting and does not
 load credentials, submit operator commands, make network requests or write the
 research database. A stale or mismatched source fails explicitly.
 
+If the shared reporter is absent, use the normal read-only monitor. It starts
+its own checkpoint reporter, can query unsigned venue information and can refresh
+the reporting database. It does not start the financial backend:
+
+```bash
+cd /Users/gestas/Prototypes/hypervector
+.venv/bin/python -m hypervector cohort-tui --mode monitor \
+  --config configs/multi_asset_growth_first_5000_noncrypto_live_v89.toml \
+  --tui-bin target/release/tui-regime-detector-v89-monitor-20260915-exits \
+  --tui-bin-sha256 52df3fbb38a0a91f8e4577bebb7884da537dc8c3c8fd35411751684d7866bc84
+```
+
+The [stopped-checkpoint repair](../reviews/2026-09-16-v89-stopped-checkpoint-recovery.md)
+preserves the stopped backend state when older trade history must be recovered.
+A fresh report does not make its last strategy indicators current.
+
 The monitor labels provider exits by their recorded target side (`EXIT SHORT`,
 for example), separately from entry eligibility and actual execution receipts.
 Missing exit-side evidence remains `EXIT SIDE N/A`. See the

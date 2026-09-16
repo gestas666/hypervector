@@ -1,3 +1,29 @@
+## September 16, 14:14 UTC: leverage visible; stopped checkpoint repair installed
+
+Reporting repair `12c376d` is installed; candidate `e894b26`. It preserves
+current-process stop records during compatible trade-history projection without
+changing the economic cutoff or consistency guard. Candidate and installed
+source each passed 150 tests. Reconstruction from native evidence succeeded;
+all 11 ledger hashes and 5,631 other tracked file contents were preserved.
+Review: `docs/reviews/2026-09-16-v89-stopped-checkpoint-recovery.md`.
+
+The read-only monitor is open in Terminal window 526, tty `/dev/ttys008`. CLI
+79095, supervisor 79099, reporter 79551 and TUI 79552 started at 14:13 UTC.
+Its checkpoint refreshed at 14:14:05 UTC and its display shows `BACKEND STOPPED`,
+`LEV C/V`, Brent `10x/10x` and `LOCAL EXITS OFF`. The original financial backend
+remains stopped; its initiating cause and user intent remain unconfirmed.
+Unsigned venue observations completed at 13:55:29 UTC found only Brent short
+4.9 at 10x isolated and stop 546683530230 open for the full size at 103.18.
+These are dated observations, not a guarantee of present venue state.
+
+The previous Git backlog is committed and pushed through `563986e`, including
+the completed monitor-import and native-decision-reuse branches. Continue
+committing validated work and verifying remote synchronization. Source/reproduction
+research jobs, the account waiter and four collectors remain separate from
+financial execution. Preserve their process identities and sealed outcomes.
+Pending recovery deployment and backend lifecycle-receipt approval questions
+are unchanged. Older sections below retain historical status only.
+
 ## September 16, 13:45 UTC: monitor launch repaired; original backend stopped
 
 The independent monitor startup fix is installed and committed as `ad6f94a`.
