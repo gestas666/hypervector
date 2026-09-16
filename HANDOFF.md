@@ -1,3 +1,57 @@
+## September 16: later SNDK/Brent collector qualified and active
+
+The separately preregistered research capture is implemented and running in
+`/Users/gestas/Prototypes/hypervector-v89-followup-capture-20260916`.
+**Collector PID 27818 / exec session 16122**, birth **01:26:12 UTC**. Capture root:
+`data/logs/research/bidirectional_cohort/v89_quarter_entry_followup_capture_20260923_v1/`.
+Its phase is `before_start`; dates stay **September 23 04:00–October 7 04:00 UTC**.
+Outcome seal stays October 7 04:00. This is research collection, not a financial
+restart or a claim that the future study is already complete.
+
+All eleven original engine files, four July 19–September 7 historical sources,
+original protocol and economic comparison plan authenticate. The new wrapper
+retains the original September 7 bootstrap and source commit 1dc57ec. A new index
+rebuilt **2,854 raw requests / 2,460 value versions** with exact original first
+receipts. Complete warmup is verified through **September 16 01:00 UTC**, with
+later warmup still accumulating. A separate 7,453,620-byte archive verifies all
+2,854 members / 45,227,848 raw bytes. No historic lateness was relabelled.
+
+**95 offline tests pass**, with **158/158 statements and 64/64 branches** in the
+two new modules. A real once capture had five queries, zero incomplete. At the
+actual **01:30 UTC** quarter, SNDK/Brent first receipts were **5,561/6,114 ms**;
+raw/index identities agree and all imported seed rows remain unchanged.
+Manifest SHA256 **3af8d214e533c2e66828995a14447768b69bd03111816aecfe9a4a33a4714e79**.
+The new collector files and protocol are now frozen; make a separately declared
+revision if later evidence requires source changes.
+
+Third-collector passive health: **PID 30308 / session 28210**, birth 01:27:09 UTC,
+six-hour deadline near **07:27:09 UTC**. Original pair/seven health watch remains
+**47064/session 24644**, deadline 06:55:41. Original collectors remain
+**43671/session 14590** and **45939/session 63338**; financial PIDs
+29190/29191/30603/62016/62017 retain their prior births. Poll existing handles;
+empty output is not termination. No observer promises independent OS alerts.
+
+Diagnostic **67653/session 82480** actually ended **01:09:17 UTC**, deadline with
+no matching event. Its final eight cursors resumed with the exact qualified
+scope as **PID 93556 / session 21203**, birth **01:13:22 UTC**, deadline near
+**03:13:22 UTC**. First scan found no overlap diagnostics. Lifecycle
+**50314/session 51386** remains due 02:56:58. Preserve their actual terminal
+results and cursors before any successor; do not poll the old terminal handles.
+
+Journal revision **730ee13dad16c0f063ca0d9c366b79d85f2a800fc6a10051d573ef8f1dab9a45**:
+**60 current / 66 history** references match, zero changed or missing.
+Review: `docs/reviews/2026-09-16-v89-followup-capture-qualified.md`.
+Evidence: `data/logs/research/bidirectional_cohort/v89_followup_capture_qualification_20260916_v1/`.
+
+**Next highest-value investigation:** trace the common September 13 23:01:29 UTC
+collector interruption in retained local process/session/OS evidence. Its cause
+is unproven; simultaneous graceful stops do not identify a sender. This is a
+new bounded cause investigation, not another completed study or repeated uptime
+check. Continue current observers while investigating. Preserve original
+September 22/23 seals, the later October 7 seal, and the faster-entry rejection.
+The continuous goal stays active. This turn made qualified implementation,
+real-source continuity and scheduled-capture progress.
+
 ## September 16: passive collector health watch installed; funding recovered
 
 A separate report-only observer is installed and active: **PID 47064 / exec

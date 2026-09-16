@@ -1,3 +1,18 @@
+## September 16 later pair capture qualified
+
+- Separate fixed September 23 04:00–October 7 04:00 study is collecting pre-start
+  warmup. Collector 27818/session 16122; health 30308/session 28210 due 07:27:09 UTC.
+- Original eleven engine files/four historical inputs preserved. Rebuilt 2,854
+  requests/2,460 value versions exactly; warmup through September 16 01:00.
+- 95 offline tests; 158 statements/64 branches covered in new modules. Actual
+  01:30 quarter arrived in 5,561 ms SNDK / 6,114 ms Brent. No economic outcomes read.
+- Journal v2 `730ee13dad16c0f063ca0d9c366b79d85f2a800fc6a10051d573ef8f1dab9a45`:
+  60 current/66 history references match, none changed/missing.
+- Review: `docs/reviews/2026-09-16-v89-followup-capture-qualified.md`.
+- Next: investigate common September 13 collector interruption using retained
+  local evidence; cause unknown. Diagnostic successor 93556/session 21203 resumes
+  final cursors, deadline 03:13:22; lifecycle 50314/session 51386 due 02:56:58.
+
 ## September 16 passive collector health and funding recovery
 
 - Installed passive observer: 78 candidate + 78 installed tests; 191 statements
