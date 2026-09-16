@@ -1,3 +1,22 @@
+## September 16, 16:02 UTC: actual startup capture activation qualified
+
+Research tools `379685adb55ecb8639971dd09ecf16b22cc90893` reproduce the first poll
+from its actual 35,736 captured minute rows: seven strategy records, fourteen
+regime records, 2,520 chart candles, zero intents. Three complete repetitions
+include committed Git-archive tooling. Independent Decimal arithmetic matches
+all fourteen published hourly metrics across SPCX/SNDK/Brent (maximum error
+8.672e-15). Nine controls plus archive repetition pass with complete 83-statement,
+36-branch helper coverage; archived native startup/poller tests pass 57/57 with
+their original fixtures. Source coverage is roughly 3.5 days, not fourteen days.
+
+Review: `docs/reviews/2026-09-16-v89-actual-startup-input-replay.md`.
+Existing hypothesis `v89-startup-candle-provenance-20260915` now has retain v2,
+revision `ab94fea4313e3fa5fe8e59589d52581a12fef2f59d49ee8fef318cf5a90f31f0`.
+The source inputs newly available after the approved restart justified this
+investigation. Old missing entry seeds remain unknown; profitability and future
+revisions remain outside this acceptance. No financial process/source change.
+Longer native-source and shared-account research qualification remains pending.
+
 ## September 16, 15:41 UTC: startup recovery candidate qualified offline
 
 Candidate `fb8414c20b39a30d553afbcbba6b1c0e57a4fcc9` is committed/pushed and

@@ -1,3 +1,31 @@
+## September 16, 16:02 UTC: actual restart inputs reproduce published indicators
+
+The previously unverified startup-capture activation is now qualified for run
+`bidirectional-live-1789569979897`. Its exact first-poll slice and original
+35,736 retained minute rows reproduce seven provider evaluations, fourteen regime
+records (two minute boundaries across seven assets), 2,520 chart candles and zero
+intents. Three native repetitions include committed Git-archive tooling; all
+1,399 repository implementation files match the pre-start backup. Actual source
+coverage is about 3.5 days, distinct from the requested fourteen days.
+
+Independent Decimal aggregation/ATR/band/channel calculation matches fourteen
+published metrics across SPCX, SNDK and Brent; maximum error 8.672e-15. Nine
+hand-calculated controls pass, including archive repetition, with 83/83 statements
+and 36/36 branches covered. Archived startup/poller tests pass 57/57 with original
+project fixtures. The absent legacy fixture, observe-mode label mismatch and
+initial seven-versus-fourteen regime count error are preserved and explained.
+
+Tools **379685adb55ecb8639971dd09ecf16b22cc90893** are committed/pushed on
+`research/v89-restart-input-replay-20260916`. Review:
+`docs/reviews/2026-09-16-v89-actual-startup-input-replay.md`.
+Journal v2 revision `ab94fea4313e3fa5fe8e59589d52581a12fef2f59d49ee8fef318cf5a90f31f0`.
+No financial source, process or settings changed. Original older trade seeds
+remain unqualified; this does not establish strategy expectancy. Native first
+heartbeat is now located at 14:58:52.292200 UTC, earlier than the previously
+first-observed 14:59:17 receipt. Preserve pinned evidence; do not repeat this
+audit without a new capture or contradiction. Complete native source/account
+qualification remains the highest-value pending evidence from existing jobs.
+
 ## September 16, 15:41 UTC: startup recovery candidate qualified offline
 
 Isolated candidate **fb8414c20b39a30d553afbcbba6b1c0e57a4fcc9** is committed and
