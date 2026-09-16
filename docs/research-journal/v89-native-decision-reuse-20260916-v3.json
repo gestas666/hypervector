@@ -1,0 +1,163 @@
+{
+  "automatic_promotion": false,
+  "confidence": "high",
+  "created_at_utc": "2026-09-16T14:48:06.066451+00:00",
+  "decision": "Continue the separately frozen full-window equivalence experiment. Candidate and archive orchestration tests pass and native full-scope startup is observed; complete equivalence remains pending.",
+  "evidence": [
+    {
+      "bytes": 6375,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/reviews/2026-09-16-v89-native-reuse-full-window.md",
+      "role": "native_reuse_full_window_v3_0",
+      "sha256": "34bd62130047a503561567ccc567b965aa84b27a579f023811a026614295d401"
+    },
+    {
+      "bytes": 2355,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/plans/2026-09-16-v89-native-reuse-full-window.md",
+      "role": "native_reuse_full_window_v3_1",
+      "sha256": "7dffc5adee61f6d9e38a0f79af329bb0b86629e34f2de4e9ad7ae07736b07fac"
+    },
+    {
+      "bytes": 21324,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/research-journal/v89-native-decision-reuse-20260916-v2.json",
+      "role": "native_reuse_full_window_v3_2",
+      "sha256": "a8afbaa12ceede6bfc9659bb7e6c7bc355390ddcbb0f47134fd494ceed5af4a5"
+    },
+    {
+      "bytes": 1835,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_decision_reuse_full_window_request_v1.json",
+      "role": "native_reuse_full_window_v3_3",
+      "sha256": "191d0f550f9906c4f6c076c7fd52cb86ec131af53147b3014f61209c704073c1"
+    },
+    {
+      "bytes": 7624,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_decision_reuse_full_window_tooling_v1/run_native_decision_reuse_full_window_v1.py",
+      "role": "native_reuse_full_window_v3_4",
+      "sha256": "ddccdc3558d8b0e469d12b6eea5f24f4b5f9efc4408d7576a32e3072694761f4"
+    },
+    {
+      "bytes": 7865,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_decision_reuse_full_window_tooling_v1/test_native_decision_reuse_full_window_driver.py",
+      "role": "native_reuse_full_window_v3_5",
+      "sha256": "cbeb0117ea68276836c1af3860ea4b69f2d8f2d3092bf2625d582e950c2bdce7"
+    },
+    {
+      "bytes": 1123,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_decision_reuse_full_window_tooling_v1/declaration.json",
+      "role": "native_reuse_full_window_v3_6",
+      "sha256": "d39d9847c667ebd8455e585cb04e941393a97888b632c6ac61286acf33c8a2bd"
+    },
+    {
+      "bytes": 526,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_decision_reuse_full_window_tooling_v1/sandbox.sb",
+      "role": "native_reuse_full_window_v3_7",
+      "sha256": "6dee9e574aad3e6e767167cb37a80061b3ac17b6e697bbdb53ad316181d048bc"
+    },
+    {
+      "bytes": 766,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_decision_reuse_full_window_validation_v1/green_expanded.txt",
+      "role": "native_reuse_full_window_v3_8",
+      "sha256": "61ea9ff534cfa0068279f136825bff5f2f899112640885479c5ee07a479de29a"
+    },
+    {
+      "bytes": 1551,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_decision_reuse_full_window_validation_v1/archive_tests_scoped.txt",
+      "role": "native_reuse_full_window_v3_9",
+      "sha256": "a769af9c2b5ec251b58da03a47858395170df04a770d05a3c2bc56030ed3c0c7"
+    },
+    {
+      "bytes": 4264,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_decision_reuse_full_window_validation_v1/preflight.json",
+      "role": "native_reuse_full_window_v3_10",
+      "sha256": "5b73e55890f55f2ba3d2d9f5d0260065683c994581fbcf64d6696726230c36b8"
+    },
+    {
+      "bytes": 1525,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_decision_reuse_full_window_validation_v1/launch_verified.json",
+      "role": "native_reuse_full_window_v3_11",
+      "sha256": "5056f116d947fff27fcd7e592f9be2562366ca9aaae8bd419d518feb42b35cf7"
+    },
+    {
+      "bytes": 211,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_decision_reuse_full_window_validation_v1/source_verified.json",
+      "role": "native_reuse_full_window_v3_12",
+      "sha256": "a73db03313161145766d623d8e354e00f5ff7e7f91f824afcdc17c2db30bdfda"
+    },
+    {
+      "bytes": 8182,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_decision_reuse_full_window_validation_v1/combined_coverage.json",
+      "role": "native_reuse_full_window_v3_13",
+      "sha256": "52fcb0e5776053ab76ef08d7bad8e1abe0e213a505a8827e1aac220351fd3ecf"
+    },
+    {
+      "bytes": 515,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_decision_reuse_full_window_validation_v1/sandbox_validation.json",
+      "role": "native_reuse_full_window_v3_14",
+      "sha256": "45faf6bbc08e8117d176fc85e8e64e8ecbea03d2cc04945eae898b75ea377aea"
+    },
+    {
+      "bytes": 12696,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_decision_reuse_full_window_validation_v1/red.txt",
+      "role": "native_reuse_full_window_v3_15",
+      "sha256": "bb6c590ea92bf07a1101b2daaa120194f2c2c63287ee263de39581f17bbb04f9"
+    },
+    {
+      "bytes": 2056,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_decision_reuse_full_window_validation_v1/preflight.txt",
+      "role": "native_reuse_full_window_v3_16",
+      "sha256": "672d990aada967de833c01e75f5bf5d3518171eeeb79ce8570cddc1c6a3d5e4b"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_decision_reuse_full_window_validation_v1/preflight_import_order_corrected.txt",
+      "role": "native_reuse_full_window_v3_17",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 2081,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/native_decision_reuse_full_window_validation_v1/archive_tests.txt",
+      "role": "native_reuse_full_window_v3_18",
+      "sha256": "6ec70a09447895f2d4341441efe3f9adecb28647da6ebfeea858caf1975cde87"
+    }
+  ],
+  "execution_authority": "none",
+  "falsifier": "Any altered native record, causal clock, provenance, grid, source identity, scope or exception invalidates equivalence; missing completion cannot count as qualification.",
+  "hypothesis": "Identical ETH/SOL provider and canonical computations can be shared within a source window while preserving every native result and error.",
+  "hypothesis_id": "v89_native_decision_reuse_20260916_v1",
+  "limitations": [
+    "High confidence is limited to authenticated scope, tested orchestration and recorded startup.",
+    "The 72-hour technical bound is not an ETA; full source equality and account/economic qualification are outstanding.",
+    "The original baseline and regeneration processes remain unchanged.",
+    "Sandbox policy denies networking; socket creation alone was not represented as a dynamic network-access denial test.",
+    "Unit coverage is 76%; the higher combined coverage includes actual metadata preflight.",
+    "This research revision grants no financial authority. The user separately approved restarting the existing live configuration after the research launch."
+  ],
+  "metrics": {
+    "account_qualification_complete": false,
+    "archive_tests": 52,
+    "candidate_commit": "3d4de3cab712129353d2e4710846d7da475fbfde",
+    "candidate_tests": 52,
+    "combined_test_and_preflight_branches": 24,
+    "combined_test_and_preflight_covered_branches": 23,
+    "combined_test_and_preflight_covered_statements": 79,
+    "combined_test_and_preflight_statements": 80,
+    "driver_commit": "e50e6d89968dfc31e8189ed1a5a6626783f168ba",
+    "financial_process_control": false,
+    "full_period_equivalence_qualified": false,
+    "funding_records_per_variant": 2352,
+    "initial_native_publications_verified": 252,
+    "installed": false,
+    "native_decisions_per_variant": 84679,
+    "phase": "being_tested",
+    "real_outcomes_opened": false,
+    "research_pid": 30609,
+    "unit_only_percent_covered": 76,
+    "variants": 2
+  },
+  "revision_number": 3,
+  "runtime_strategy_changed": false,
+  "schema_version": 1,
+  "status": "candidate",
+  "strategy_id": "v89_native_research_computation",
+  "supersedes_revision_id": "78d9d09e086e3128672818eaecb4fe994d69117c1d1c95037ec48a216f7fcfad",
+  "symbol": "MULTI"
+}
