@@ -1,3 +1,42 @@
+## September 15 cleanup: storage headroom and bounded journal verification
+
+Installed research-only source commit **f1088d1** replaces whole-artifact reads
+with the existing 1 MiB streaming checksum helper. Six regressions failed before
+repair; candidate and installed checks each pass **19 tests**. Module statement
+coverage is 91.11%, with 100% of statements in both changed functions exercised.
+The real 1,689,844,989-byte backup verifies through append and report at about
+2.14 MiB peak traced Python allocation; this excludes native allocations/RSS.
+The initial coverage-import failure was retained and resolved by file selection.
+
+Two inactive Rust incremental caches were removed only after full backup restore
+and all 21,897 file comparisons passed. Observed net headroom gain was **1.54 GiB**
+with the **1.57 GiB** archive retained. Headroom remains limited; future Rust
+builds can recreate the caches. Compiled binaries, source, trading evidence,
+prior versions and all five financial-process birth identities were preserved.
+
+Two prior SNDK journal revisions referenced mutable source paths. New revisions
+preserve the original reviewed bytes and all economic findings: **6,992 current
+references match**, none changed or missing. Four older source drifts were also
+recovered exactly from Git. Original revisions remain intact and correctly show
+six changed historical references. No old experiment was rerun or reopened.
+
+Review: `docs/reviews/2026-09-15-v89-build-cache-headroom.md`.
+Main journal: `docs/research-journal/v89-build-cache-headroom-20260915-v1.json`.
+Revision **af874ec0ff19ed8616de39cdf9bd4f6aefd3a1580227c0efb2dacb0fc50d94b6**:
+**42 matching evidence references**, none changed or missing.
+Evidence: `data/logs/research/bidirectional_cohort/v89_build_cache_headroom_20260915_v1/`.
+Backup: `data/backups/build_cache_cleanup/20260915T233304Z/`.
+The source rollback patch passed reverse-check; no financial restart occurred.
+
+**Next:** inspect the first real event or actual terminal receipt from the same
+lifecycle observer **PID 17371 / session 27304** and diagnostic observer
+**PID 67653 / session 82480**. Both were polled live during this continuation;
+empty tool output is not termination. Their deadlines remain near September 16
+00:49:45 and 01:09:07 UTC. Save and inspect final cursors before a successor.
+Financial process control remains prohibited, prospective seals remain unopened,
+and the continuous research goal remains active. This turn made implementation,
+validation, storage and evidence-traceability progress; profitability is unproven.
+
 # HANDOFF — hypervector
 
 **Current navigation, September 12, 2026 UTC:** read the
