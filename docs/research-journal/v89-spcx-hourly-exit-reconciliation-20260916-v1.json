@@ -1,0 +1,157 @@
+{
+  "schema_version": 1,
+  "hypothesis_id": "v89_spcx_hourly_exit_reconciliation_20260916_v1",
+  "strategy_id": "hourly_band20_reentry_atr20_bidirectional_v1",
+  "symbol": "xyz:SPCX",
+  "hypothesis": "The observed SPCX hourly recipe exit has one complete native close chain and reconciles exactly after all owned funding and fill costs.",
+  "status": "observe",
+  "execution_authority": "none",
+  "runtime_strategy_changed": false,
+  "automatic_promotion": false,
+  "created_at_utc": "2026-09-16T09:07:34.526136+00:00",
+  "revision_number": 1,
+  "confidence": "high",
+  "decision": "Accept the native-byte-matched accounting and recorded close-chain reconciliation. The small positive result does not justify a strategy or exit-policy change. Preserve original allocation research seals and continue passive diagnostics.",
+  "falsifier": "Changed native ledger bytes, missing owned hourly funding, duplicated close, inconsistent fill size/side, residual orders or position, or a contradicted recorded hourly exit predicate reopens this audit.",
+  "evidence": [
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/docs/reviews/2026-09-16-v89-spcx-hourly-exit-reconciliation.md",
+      "bytes": 5080,
+      "sha256": "05ef08152c98db040550d36162d0a9824c27a9e2735682e6dc9d1dfae1c85ce9",
+      "role": "spcx_hourly_exit_00_2026-09-16-v89-spcx-hourly-exit-reconciliation.md"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/spcx_exit_20260916_v1/capture.json",
+      "bytes": 1202,
+      "sha256": "bfc3c857644bc78d05052bd40f5863e23a5714645c25a02c1c0e489138e6a2ea",
+      "role": "spcx_hourly_exit_01_capture.json"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/spcx_exit_20260916_v1/checkpoint.json",
+      "bytes": 3952384,
+      "sha256": "7924f26409eceee7967a70aaac8ec8aeba2d6aa073aa570fa22c5046cdc73e98",
+      "role": "spcx_hourly_exit_02_checkpoint.json"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/spcx_exit_20260916_v1/trade_reflection.json",
+      "bytes": 22388,
+      "sha256": "e9de3cb5ae618a90c7c1d903c4df1c8a1b24465bc70f7a1299b6807c556a5dd4",
+      "role": "spcx_hourly_exit_03_trade_reflection.json"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/spcx_exit_20260916_v1/accounting_source_records.json",
+      "bytes": 21127,
+      "sha256": "9c48d90fa4fbc9950c0d5bd7ae8dc7c2593e64522280047a677baa967fee2f6d",
+      "role": "spcx_hourly_exit_04_accounting_source_records.json"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/spcx_exit_20260916_v1/accounting_reconciliation.json",
+      "bytes": 1246,
+      "sha256": "659aadc450b1874845d395599220af0298122f200ad76c0b7dbba92b705efd10",
+      "role": "spcx_hourly_exit_05_accounting_reconciliation.json"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/spcx_exit_20260916_v1/execution_reconciliation.json",
+      "bytes": 2388,
+      "sha256": "8275de54992788108b0f80965893af29bcfbeac8fadba356cdd0f24c6148992e",
+      "role": "spcx_hourly_exit_06_execution_reconciliation.json"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/spcx_exit_20260916_v1/reconcile.py",
+      "bytes": 4606,
+      "sha256": "a025d34721e5d1fd4d2ba484af05d30dde8bcdd7eae9da44705d0596fa502827",
+      "role": "spcx_hourly_exit_07_reconcile.py"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/sndk_exit_lifecycle_followup_v1/watch_result.json",
+      "bytes": 3176,
+      "sha256": "3d4a63d0955d5aeeabb9af6f379154d9d4a5ac5645c7b2f73c1daa372c6888ed",
+      "role": "spcx_hourly_exit_08_watch_result.json"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/sndk_exit_diagnostic_followup_v1/watch_result.json",
+      "bytes": 25362,
+      "sha256": "2263518a6832ecf6d7108a0ef53e5e5a724aaa25d04ad78809cc33e65d3ea920",
+      "role": "spcx_hourly_exit_09_watch_result.json"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/spcx_exit_lifecycle_followup_v1/anchor.json",
+      "bytes": 3764,
+      "sha256": "c625a62a9cfced0904375b17c6e612b563b20166d5b9f604880d2d0df260d59a",
+      "role": "spcx_hourly_exit_10_anchor.json"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/spcx_exit_diagnostic_followup_v1/anchor.json",
+      "bytes": 3521,
+      "sha256": "cc99aeabe01f6fcd6b3cbebcf7909ef389515f681f097e93fa2067f359b6e677",
+      "role": "spcx_hourly_exit_11_anchor.json"
+    },
+    {
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_captured_provider_assembly_20260916_v1/spcx_exit_watch_handoff.py",
+      "bytes": 2641,
+      "sha256": "1cd61b13ca1977fc4236d1a4b58c2007373f66fa9d87ea6e3023ea794b0b3047",
+      "role": "spcx_hourly_exit_12_spcx_exit_watch_handoff.py"
+    }
+  ],
+  "metrics": {
+    "lifecycle": "xyz:SPCX:546010609566",
+    "entry_oid": 546010609566,
+    "exit_oid": 546576225156,
+    "native_records_verified": 16,
+    "funding_receipts": 14,
+    "gross_usd": "0.6940",
+    "fees_usd": "0.086410",
+    "funding_usd": "-0.039983",
+    "net_usd": "0.567607",
+    "holding_time_ms": 50394958,
+    "leverage": 10.0,
+    "verified_flat": true,
+    "open_orders_empty": true,
+    "all_seven_flat_in_captured_checkpoint": true,
+    "reported_recipe_predicate_consistent": true,
+    "raw_band_independently_recomputed": false,
+    "compatible_profile_history": {
+      "scope": "compatible_profile_history",
+      "fills": 22,
+      "closed_trades": 10,
+      "open_lifecycles": 0,
+      "wins": 2,
+      "losses": 8,
+      "net_pnl_usd": -29.487143999999997
+    },
+    "completed_hold_capture": {
+      "authoritative_gross_return_bps": 13.887924449690994,
+      "completed_bars": 839,
+      "economic_hurdle_basis": "actual_fees_and_funding_over_filled_entry_notional",
+      "economic_outcome": "profitable_after_costs",
+      "first_completed_candle_timestamp_ms": 1789498860000,
+      "gross_mfe_capture_ratio": 0.46511627906979164,
+      "highest_observed_price": 144.44,
+      "last_completed_candle_timestamp_ms": 1789549140000,
+      "lowest_observed_price": 142.4,
+      "maximum_adverse_excursion_bps": 111.79779182001192,
+      "maximum_favorable_excursion_bps": 29.859037566835056,
+      "maximum_net_excursion_bps": 27.329734346417485,
+      "maximum_net_excursion_executable": false,
+      "observed_cost_hurdle_bps": 2.5293032204175705,
+      "peak_giveback_bps": 15.97111311714361,
+      "price_gross_reconciliation_gap_bps": 4.5297099404706387e-13,
+      "realized_gross_return_bps": 13.887924449691447,
+      "realized_net_return_bps": 11.358621229273423,
+      "status": "resolved"
+    },
+    "native_lifecycle_observer_pid": 57652,
+    "native_lifecycle_observer_session": 69919,
+    "diagnostic_observer_pid": 57672,
+    "diagnostic_observer_session": 44554,
+    "financial_process_control": false,
+    "real_prospective_study_outcomes_evaluated": false
+  },
+  "limitations": [
+    "One realized win does not establish expectancy or validate a live strategy change.",
+    "Compatible history includes prior runs and must not be labeled as ten new current-run entries.",
+    "Reported band mean was not independently reconstructed from raw hourly candles in this audit.",
+    "Observed favorable/adverse candle extrema are not executable counterfactual profit.",
+    "Flat and empty-order state applies to the captured evidence prefix; later native events can change it."
+  ]
+}
