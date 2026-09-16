@@ -18,7 +18,10 @@ from hypervector.live.multi_asset_live_config import load_multi_asset_live_confi
 from hypervector.live.process_signal_stop import install_process_signal_stop
 from hypervector.research.cohort_independent_checkpoint import publish_independent_checkpoint
 from hypervector.runtime_lock import RuntimeLockError, cohort_checkpoint_runtime_lock
-from scripts.multi_asset_bidirectional_canary_tui import resolve_launch
+if __package__:
+    from .multi_asset_bidirectional_canary_tui import resolve_launch
+else:
+    from multi_asset_bidirectional_canary_tui import resolve_launch
 
 
 def build_parser() -> argparse.ArgumentParser:
