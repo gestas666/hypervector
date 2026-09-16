@@ -1,3 +1,38 @@
+## September 16, 19:07 UTC: confirmed-fill protection candidate awaits deployment approval
+
+The approved backend resume was already completed. Backend 67727, reporter 6596
+and TUI 42506 retained their authenticated process identities at 19:04 UTC;
+checkpoint `running_consistent`, 981 polls, zero faults, Brent/SPCX open with
+covering stops. Do not restart this healthy backend under the earlier unstop
+approval to activate a newly proposed execution change.
+
+Investigation of SPCX's 3.885160-second acknowledgement-to-PROTECTING interval
+reproduced a critical offline failure: an exhausted reconciliation read after
+a confirmed entry fill raises without a stop attempt. Actual SPCX received its
+stop; this defect was not observed on that trade. Candidate
+**0fa2940c369c2b11cfca1b17e98787d2ad74340e** is committed/pushed on
+`research/v89-entry-protection-20260916`, not installed in the live source tree.
+It attempts durable protection using only a qualified direct IOC filled
+acknowledgement after a known venue read failure, then retains full post-stop
+verification. Ambiguous acknowledgements and complete venue outages remain
+limitations; ordinary successful ordering, settings and strategies are unchanged.
+
+440 tests passed across 52 files with network and sensitive/runtime access
+denied. New helper: 84/84 statements, 12/12 branches. Four complete fake-adapter
+baseline/candidate traces match exactly (66,429 bytes each). Git/worktree/archive
+bytes, eleven baseline backup sources, and actual scratch reverse/forward patch
+probes match. Review: `docs/reviews/2026-09-16-v89-entry-read-failure-protection.md`.
+Journal v1 `1bda7523fbc2ebda8f48040c6ed133d8f2ba90ec44a5ff5c4f65d15601850dca`
+has 37 matching references, none missing/changed. Do not modify pinned evidence.
+
+Request explicit approval to install this exact candidate and activate it via
+controlled restart, preserving the current profile and verifying existing
+position/stop adoption. This is separate from pending startup optimization,
+lifecycle receipt and persistent collector installation approvals. No financial
+source, configuration or process changed. Continue native source/account jobs
+and planned native-minute continuation while approval is pending; no early
+sealed-study outcomes. The continuous goal remains active.
+
 ## September 16, 17:54 UTC: native snapshots close 27,454 missing minutes
 
 Sixteen retained native sources now supply 19,706/18,892/17,365 of the expected
