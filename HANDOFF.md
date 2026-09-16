@@ -1,3 +1,69 @@
+## September 16, 21:59 UTC: durable sharing kernel and fresh trace qualified offline
+
+Backend 83722/reporter 18490/TUI 42506 retain their authenticated process
+identities. Checkpoint 21:59:13.624786 UTC is running_consistent, 606 polls,
+zero faults, with the same protected SPCX/Brent positions. All five collectors
+have fresh health; nine active research process identities match. No financial
+source/configuration/process or active collector/study declaration changed.
+The approved protection deployment/restart remains complete; do not repeat it.
+
+New isolated worktree:
+`/Users/gestas/Prototypes/hypervector-v89-public-request-sharing-20260916`.
+Branch `research/v89-public-request-sharing-20260916`, committed/pushed at
+**4a13f106230ae85c1acd64792d606b7b2d9c22d3**. The SQLite kernel grants exact
+public requests once, permits earlier admission only with explicit consent,
+and retains distinct subscriber registration/receipt hashes and transport lineage.
+Cancellation, deadlines, lease recovery, failed publication and HTTP 429 remain
+explicit. Four real processes produce one grant; an abruptly exited worker's
+transport expires without regrant or resurrection. No HTTP/IPC adapter is installed.
+
+119 candidate and 119 archive tests pass. Broker modules exercise 221/221
+statements and 72/72 branches. Including replay: 307/308 statements and 101/102
+branches; only the defensive unexpected-delivery guard remains unexercised.
+Independent raw/SQLite verification passes, and all complete final replay JSON
+and SQLite files reproduce byte for byte from the archive. 3,675 source files
+match Git, worktree and extraction. Final archive SHA
+`4bf7ec9c7d9d546f6456c5d35cfafc9aa97382224d89e3aa9a19c92353fe6eec`.
+
+One-second consent shares 264/582 requests in the first development hour and
+reduces modeled known peak weight 1,256 -> 846. The first later window,
+21:15–21:35, contains one genuine 105 ms public ConnectionError. Initial replay
+rejected it; preserve that failure. Expanding replay to retain transport errors
+and unknown weight made that window development evidence. It now preserves all
+208 window outcomes, shares 93 requests, and reduces known modeled peak 516 ->
+302. No timing or sharing parameter was retuned. The actual failed query's seven
+minutes are all present: one captured before the failed attempt, six afterward,
+with honest later receipt times. This does not establish a trading failure or
+rate-limit cause. Native collector 44810 remains healthy; do not restart it.
+
+Fresh comparison was declared at 21:39:30 UTC for 21:45–21:55 and captured at
+21:57:13.772307, after the 21:56 earliest capture. All 105 window requests returned
+HTTP 200. One-second consent shares 48, lowers modeled peak 516 -> 258 and total
+known weight 2,217 -> 1,203; one collector request shifts later. There are no
+changed bodies/outcomes or newly late/unavailable query proxies. Maximum modeled
+subscriber delay is 45 ms; advance 447 ms. Strict consent shares two requests at
+the same recorded millisecond. These are fixed-workload model results, with zero
+broker/IPC overhead assumed, not production latency or profitability evidence.
+
+Review: `docs/reviews/2026-09-16-v89-public-request-sharing.md`.
+Evidence: `data/logs/research/bidirectional_cohort/v89_public_request_sharing_20260916_v1`.
+Journal v1 revision
+`5141d8c4e1c62ec76bb36395f9fb090c9d0bdb4ab3565351df01d4b50cc33286`
+has 1,097 matching evidence references, none changed/missing. Review, raw inputs,
+archives, SQLite ledgers, declarations and transcripts are pinned; do not edit.
+Earlier success-only archive 62b22ab is retained alongside final 4a13f10.
+
+Next high-value task: isolated transport/clock/IPC and aggregate-admission
+integration with actual process-boundary failure/deadline controls. Physical
+publication/delivery timing, complete HTTP-status/lease-expiry adaptive replay
+and collector/study continuity remain unqualified. Shared leader failure can
+worsen a follower outcome, as the deliberate failure-fanout control shows.
+Do not use future response equality to admit sharing or relabel prior receipts.
+No concrete deployment proposal is ready; obtain approval for any later change
+to existing deployment configuration after integration is reviewable. Preserve
+native/source/reproduction/account jobs and sealed prospective outcomes. The
+continuous goal remains active; this turn made progress.
+
 ## September 16, 21:04 UTC: public-request audit qualified; live backend healthy
 
 The approved protection installation/restart remains complete. Fresh process
