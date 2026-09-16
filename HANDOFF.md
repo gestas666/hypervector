@@ -1,3 +1,32 @@
+## September 16, 17:54 UTC: native snapshots close 27,454 missing minutes
+
+Sixteen retained native sources now supply 19,706/18,892/17,365 of the expected
+20,160 startup-input minutes for SPCX/SNDK/Brent. All 295,415 OHLCV field
+comparisons across the declared source pairs are exactly equal, including
+first/latest cohort-publication variants. Nine source-incomplete profiler rows
+are excluded. These are repeated source overlaps, not independent observations
+or a completed fourteen-day provider/expectancy experiment.
+
+Tools **15338eda071f3dbbdb8c773360926941cf527d49** are committed/pushed on
+`research/v89-restart-warmup-coverage-20260916`. Candidate and network-denied
+archive each pass 119 controls; new receipt helper has 73/73 statements and
+32/32 branches covered. A source-replacement race in the new offline reader was
+reproduced and fixed by decoding authenticated bytes directly. All 24 archived
+files and 36 declared references match. Review:
+`docs/reviews/2026-09-16-v89-restart-native-snapshot-supplement.md`.
+Journal v4 revision `ad510ead4f80938907b510e1a8a1958d91ae224ff3ad5af7c71ccfbd5e677851`.
+
+Remaining exact UTC intervals: SPCX September 2 23:14–September 3 06:47 (454
+minutes); SNDK that interval plus September 7 00:00–13:33 (1,268 total); Brent
+September 2 14:59–September 3 23:59 plus September 7 00:00–13:33 (2,795 total).
+Seek earlier retained native responses/inputs for those intervals only. The
+September 12 discovered response is 15m and cannot fill them. Do not repeat the
+completed sixteen-source audit, vendor replacement rejection or core collector
+audit without new evidence. The full seven-asset history-length comparison and
+core source-revision/precedence qualification remain pending. Preserve existing
+native source/reproduction/account jobs and real outcome seals. No live source,
+configuration, financial process or cache changed. The continuous goal is active.
+
 ## September 16, 17:28 UTC: noncrypto archive replacement rejected by source parity
 
 New retrospective HIP-3 1m acquisition covers the declared September 2 14:59 to
