@@ -1,3 +1,54 @@
+## September 16, 19:32 UTC: approved protection fix is live and verified
+
+The user explicitly replied `approved` to the proposed installation and controlled
+restart of candidate **0fa2940c369c2b11cfca1b17e98787d2ad74340e**. That approval is
+current and applies to this deployment; do not request it again. Candidate content
+was cherry-picked as **9dc9cf66d87d0bf6cd6f5719b2406b1e15ed64b5**, pushed and verified.
+All five installed files match candidate hashes. 440 installed tests passed;
+115 pre-stop shutdown/restart/backup/lock controls passed. The prior source
+archive and seven stopped ledger boundaries are retained before installation.
+
+Backend 67727 received SIGTERM at a protected operation boundary and exited.
+All seven asset ledgers recorded STOPPED; Brent and SPCX retained exact ownership.
+Unsigned checks before shutdown and during initialization returned five flat
+assets and the same protected 10x isolated shorts: SPCX -3.31, entry 546992644531,
+stop 546992931088 at 153.41; Brent -4.9, entry 546683502888, stop 546683530230 at
+103.18. The new standalone backend is **83722**, born **19:15:04.695263 UTC**,
+with the unchanged profile and explicit live flags. Run
+`bidirectional-live-1789586105858` published its first native heartbeat at
+19:27:47.307500 UTC. Fresh checkpoints at 19:28:53.321438 and 19:29:28.066953 UTC
+both show running_consistent and zero faults; the second has eight polls.
+All seven native startup prefixes preserve ownership, full plans and original
+entry clocks, with no order/cancel/stop/target/close submission events.
+
+Startup backup verified:
+`prestart_20260916T191505.858445Z_39e334fc97f3`, manifest SHA
+`6d3b434e1a0ce998c6dc44a0e69b55742cc283bb93d2c23af3afb9387c615705`,
+1,930 implementation files, implementation SHA
+`bb0a45996f63d310760e38936b741eefdfeead5ca614cfceca2087220232b9d6`.
+Exactly two source files changed and one was added; 1,927 are unchanged.
+Current source hashes match the new manifest. Profile and strategy settings
+remain unchanged. Reporter 6596 exited and replacement **18490**, born
+**19:28:12.080519 UTC**, is explicitly bound to the new run. User TUI 42506
+remains open. Both positions and their exact full-size reduce-only stops were
+independently confirmed by unsigned venue reads after startup.
+
+Installation/restart acceptance is complete. All nine pages of the installed
+binary rendered in a separate network-denied 170x45 terminal, with live-armed,
+running-consistent, setup/regime, 10x/10x leverage, both stop IDs and disk/runtime
+profile parity visible. The capture exited zero and preserved backend identity.
+Review: `docs/reviews/2026-09-16-v89-entry-read-failure-protection-installed.md`.
+Journal v2 revision
+`6330b7d527e2cd36ddf8da4dc51630a4f52161a7e291bf71756c33951a86a434`
+has 70 new references and 107 matching historical references, none changed/missing.
+Evidence:
+`data/logs/research/bidirectional_cohort/v89_entry_protection_install_20260916_v1/`.
+Its `capture_tui.py` uses an isolated terminal decoder and denies network
+and runtime writes for the test TUI. No production dependency or TUI binary changed.
+The unrelated native-minute collector work is paused, not implemented or launched.
+Other pending deployments remain separate. Continuous goal active; source/account
+jobs and sealed outcomes remain protected.
+
 ## September 16, 19:07 UTC: confirmed-fill protection candidate awaits deployment approval
 
 The approved backend resume was already completed. Backend 67727, reporter 6596

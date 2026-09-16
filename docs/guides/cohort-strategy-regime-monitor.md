@@ -81,9 +81,11 @@ acceptance does not establish strategy profitability or fresh venue state.
 
 ## Current running session — September 16
 
-The [approved September 16 restart](../reviews/2026-09-16-v89-authorized-backend-restart.md)
-started the financial backend independently of the monitor. Run
-`bidirectional-live-1789569979897` was verified healthy at 15:04 UTC. Use the normal
+The [approved protection-fix deployment](../reviews/2026-09-16-v89-entry-read-failure-protection-installed.md)
+restarted the financial backend independently of the monitor. Run
+`bidirectional-live-1789586105858`, backend 83722 and reporter 18490 were verified
+healthy after the 19:27 UTC startup. The nine-screen installed monitor shows
+the restored SPCX/Brent stops and configured/venue leverage. Use the normal
 read-only monitor command above to attach; closing it leaves this backend running.
 Do not start another live launcher while the existing backend owns the account.
 The combined launcher below has a different lifecycle: quitting its TUI stops its
