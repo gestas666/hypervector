@@ -1,3 +1,13 @@
+## September 16 — shutdown diagnosis and qualified recovery
+
+Host shutdown evidence is retained; exact initiator remains unknown. Research
+recovery candidate **0903791** passes 145 tests and a real harmless launchd
+rehearsal. Three persistent jobs are prepared, **not activated; approval pending**.
+[Review](../reviews/2026-09-16-v89-collector-shutdown-recovery.md).
+Health revision **f7a510bed16e2eafdbf46f305b5f6b68a634ed857d5a9e700c652772cbed0a3b**, 61 current / 278 history references match.
+Original late gaps and fixed outcome seals remain unchanged. Next: new native
+lifecycle/diagnostic evidence, then exact research-job activation if approved.
+
 ## September 16 later pair capture qualified
 
 - Separate fixed September 23 04:00–October 7 04:00 study is collecting pre-start

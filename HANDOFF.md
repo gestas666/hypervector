@@ -1,3 +1,52 @@
+## September 16: collector shutdown cause and recovery launcher qualified
+
+The common September 13 stops strongly coincide with a host shutdown. Retained
+Codex desktop logs record the macOS shutdown request at **23:01:06.566 UTC**;
+both collectors stopped without error **22.498 seconds later**. macOS last
+independently records that shutdown/reboot. The initiator and exact signal sender
+remain unknown. The current three-directory scan found no matching restart jobs.
+This supersedes the previous cause-unknown investigation; do not repeat it
+without contradictory evidence. Original timely gaps remain incomplete.
+
+A bounded public-research recovery launcher is qualified in frozen worktree
+`/Users/gestas/Prototypes/hypervector-v89-collector-recovery-20260916`.
+Implementation commit **0903791**; source hashes are preserved in the evidence
+bundle. **145 tests pass**, changed health/recovery modules **323/323 statements,
+154/154 branches**. A real harmless exec and a temporary launchd interval
+rehearsal passed; the temporary job was removed and absence verified. No host
+reboot occurred. The three actual collectors returned already_running and all
+collector/financial process births were preserved.
+
+Three exact job specifications/plists are prepared but **not installed or
+loaded**. Persistent automatic recovery is a deployment configuration change;
+explicit approval is pending under the user goal's human-control clause.
+They authenticate frozen source/interpreter pins, never kill a live collector,
+record attempts before exec, permit at most three starts/hour spaced 60 seconds,
+and refuse starts at/after each study end. They cannot collect while the host is
+off/asleep or before login and are not an independent heartbeat monitor after
+exec. Preserve the existing finite passive watches.
+
+Review: `docs/reviews/2026-09-16-v89-collector-shutdown-recovery.md`.
+Plan: `docs/plans/2026-09-16-v89-collector-recovery-launcher.md`.
+Evidence: `data/logs/research/bidirectional_cohort/v89_collector_shutdown_recovery_20260916_v1/`.
+Journal **f7a510bed16e2eafdbf46f305b5f6b68a634ed857d5a9e700c652772cbed0a3b**:
+**61 current / 278 history** references match, none changed/missing.
+
+**Next highest-value work:** inspect a new native lifecycle/diagnostic event
+against source, execution costs and regime context while awaiting the specific
+research-deployment approval. If approved, reauthenticate the exact artifacts,
+install/load only their three labels, and verify same-process no-op attachment;
+do not restart a financial process. The original September 22/23 and later
+October 7 outcome seals remain closed.
+
+Live handles last re-polled this turn: lifecycle **51386/PID50314** (deadline
+02:56:58 UTC), diagnostic **21203/PID93556** (03:13:22), original collector health
+**24644/PID47064** (06:55:41), followup health **28210/PID30308** (07:27:09).
+All returned live handles with no terminal result. Continue the same handles;
+empty output is not termination. Collector PIDs43671/45939/27818 remain live.
+The continuous goal remains active; this turn made source-cause and tested
+recovery implementation progress. Financial execution remains user-controlled.
+
 ## September 16: later SNDK/Brent collector qualified and active
 
 The separately preregistered research capture is implemented and running in
