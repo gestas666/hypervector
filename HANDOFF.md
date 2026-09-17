@@ -1,3 +1,69 @@
+## September 17, 17:30 UTC: collector admission/return lineage qualified offline; pre-ingestion and full scheduling next
+
+Source **eb8b2cd06f15dae9b57616bfca50ef42f235c1a7** is committed/pushed on
+`research/v89-collector-lineage-20260917`, worktree
+`/Users/gestas/Prototypes/hypervector-v89-collector-lineage-20260917`.
+Its parent is ca9445af. The prior goal turn and this turn made concrete progress.
+The continuous goal remains active; no live deployment or trading change occurred.
+
+**503 tests pass in the final worktree; 503 pass from the archive.** Focused suite:
+62 controls; all five new candidate modules cover **267/267 statements and
+98/98 branches** in focused and archived runs. This coverage is not a claim about
+all old dependencies, the research harness, production adoption or profitability.
+Ruff and file/function/return-annotation checks pass for 21 changed Python files.
+The earlier 494-test run preceded setup/raw-size hardening and nine more controls.
+
+The opt-in `PublicCollectorLedger` commits original registration, queue grant and
+admission together, or retains a durable no-dispatch deferral. Same attempt IDs
+cannot silently become later retries. Unversioned namespace adoption and ordinary
+service submission bypass are rejected. Immutable returns bind original service
+acknowledgement, actual client-reported API return and exact original raw receipt.
+Late API return, lost acknowledgement and actual raw local failure cannot become
+usable responses. Raw files have a 16 MiB bound. Failed setup releases its lock.
+Accounting conserves subscribers and authenticated distinct transport identities;
+unfinished/abandoned work and unknown venue charging remain explicit.
+
+Each final source independently verifies **14 complete original-producer cases**,
+including five lineage cases: 70 original producer executions, 25 with new ledger.
+Matrix local attempts / transports / no-dispatch deferrals:
+complete **5/2/0**, incomplete200 **9/3/0**, retry503 **9/3/0**, persistent429
+**13/2/8**. Original raw/index/ingest/reopen/recovery remain intact in these cases.
+Ten independent-verifier controls include nine corrupt-report cases with renewed
+content hashes. Initial failures for local-API-failure precedence, boolean schema,
+setup lock leakage and raw read bound are retained; these were OFFLINE defects.
+
+Evidence root `data/logs/research/bidirectional_cohort/v89_public_collector_lineage_20260917_v1`.
+Final `candidate_final_tmp`, `archive_full_tmp`, logs, coverage and independent
+verification summaries are FROZEN. Do not reuse their pytest basetemps.
+`source.tar`: **3277 files / 25,364,480 bytes**, SHA
+**7f27c8ce261db31f15ef55e1fde3c64a00fbb24b796f6bac22e19ffefd37cfe4**.
+All source/archive/extracted bytes and 152 original/archived producer files matched.
+The older producer archive/inventory remains reused unchanged. No original study
+source or capture root was altered, and no sealed prospective economics were read.
+
+Journal `v89-public-collector-lineage` revision1
+**3d1553cd9b04a056dd4a6a752fc10abe0f869b42662950a1235c984d2a39f446**:
+**1749 matching evidence references, zero changed/missing**. Frozen review:
+`docs/reviews/2026-09-17-v89-public-collector-lineage.md`; frozen source record:
+`docs/research-journal/v89-public-collector-lineage-20260917-v1.json`.
+Do not modify the review or record after this append. Append future revisions.
+
+Next highest-value investigation: **pre-ingestion availability and full producer
+scheduling**, including native durable reservations, unchanged per-study budgets,
+shared429 policy, full-loop cancellation/deadline/restart and frozen-study migration.
+The current harness records lineage AFTER original ingestion/recovery; it does not
+enforce availability before the original consumer ingests. Native outer scheduling
+is still unqualified. Synthetic SNDK candles, empty headers, 1000ms explicit earlier
+consent and trusted local clocks remain limitations. A durable call-start record
+does not prove wire arrival or venue charging; no actual quota discount is installed.
+Finish a concrete validated proposal before requesting live approval.
+
+Runtime v41 at **17:27:02 UTC**: all eleven identities match, 5270 polls, zero faults,
+running_consistent, collector ages 10.52–25.22 seconds, unchanged live config.
+Native baseline/reproduction/candidate first-variant decisions **20916/21168/27468**;
+no failures/final results. Preserve those existing running processes.
+Runtime/progress checkpoint v41 is in the captured-provider assembly evidence root.
+
 ## September 17, 16:42 UTC: actual frozen capture/store handoff qualified; admission lineage next
 
 Final source **ca9445af15b0a88ec3ebe4918860e99705d3d602**, branch
