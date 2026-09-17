@@ -1,0 +1,118 @@
+{
+  "automatic_promotion": false,
+  "confidence": "high",
+  "created_at_utc": "2026-09-17T14:00:01.776822+00:00",
+  "decision": "Supersede the Python exit-124 fallback with OS-default SIGALRM in the isolated coordinator candidate. Prior evidence remains frozen; deployment remains unapproved.",
+  "evidence": [
+    {
+      "bytes": 98,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_coordinator_20260917_v1/alarm_green.txt",
+      "role": "public_coordinator_0_alarm_green.txt",
+      "sha256": "0d8a33fdc4fefe69f276ece6fcdc423f088957e15735f62d9e2611a13d0c621e"
+    },
+    {
+      "bytes": 1570,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_coordinator_20260917_v1/alarm_red.txt",
+      "role": "public_coordinator_1_alarm_red.txt",
+      "sha256": "59f34890434d85d13089fe0a7521f8b964ee5950c00547a35c2c88f501e962c3"
+    },
+    {
+      "bytes": 341,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_coordinator_20260917_v1/archive_tests.txt",
+      "role": "public_coordinator_2_archive_tests.txt",
+      "sha256": "5edd1121ee7b0dbb936d5cffb4f5529aac63cbe82ca0bfa06460dae5d283f6b5"
+    },
+    {
+      "bytes": 612,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_coordinator_20260917_v1/archive_verification.json",
+      "role": "public_coordinator_3_archive_verification.json",
+      "sha256": "f241e500d4b04bb97714e15567275c9781a1f103b3c561461b3ef11e75b69b4c"
+    },
+    {
+      "bytes": 66389,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_coordinator_20260917_v1/final_coverage.json",
+      "role": "public_coordinator_4_final_coverage.json",
+      "sha256": "797ba91a4bb8c8230a1999490576559efe11336c6fea91e7ca57e72f8f2f91bd"
+    },
+    {
+      "bytes": 8322,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_coordinator_20260917_v1/independent_archive_verification.json",
+      "role": "public_coordinator_5_independent_archive_verification.json",
+      "sha256": "bfe6ce5de0444d0e3e2e06261b464a35344a0808ac127b3c91658436578b3cc6"
+    },
+    {
+      "bytes": 2921,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_coordinator_20260917_v1/orphan_header_green.txt",
+      "role": "public_coordinator_6_orphan_header_green.txt",
+      "sha256": "a636c32a5bf432f3f606d49ff77c6ec7953d490e9d92b8677724abb2f8bfdef3"
+    },
+    {
+      "bytes": 2683,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_coordinator_20260917_v1/orphan_header_negative_control_v2.txt",
+      "role": "public_coordinator_7_orphan_header_negative_control_v2.txt",
+      "sha256": "2c1c95aa851525f6cb6df7ae78b46525a362925bb87061c9032109ce188a2768"
+    },
+    {
+      "bytes": 2908,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_coordinator_20260917_v1/orphan_header_red.txt",
+      "role": "public_coordinator_8_orphan_header_red.txt",
+      "sha256": "cb3ce4c65709387f107d1885aac96400f471ab634b934769c60f04ca227716a8"
+    },
+    {
+      "bytes": 351,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_coordinator_20260917_v1/qualified_tests.txt",
+      "role": "public_coordinator_9_qualified_tests.txt",
+      "sha256": "95e4b5b8b5ffa3f207535d7304d73b180ee8944d7b85c6a84398bf90d043256e"
+    },
+    {
+      "bytes": 98,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_coordinator_20260917_v1/reopen_test.txt",
+      "role": "public_coordinator_10_reopen_test.txt",
+      "sha256": "8707f6d4c96754710bf0a62f35c31285b102588e841b88c1f9f5d0aae715dadd"
+    },
+    {
+      "bytes": 29224960,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_coordinator_20260917_v1/source.tar",
+      "role": "public_coordinator_11_source.tar",
+      "sha256": "155238d819d5b2215b29e039c8faa310cec0b203eee1e7be9322cec36bc55abf"
+    },
+    {
+      "bytes": 905053,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_coordinator_20260917_v1/source_manifest.json",
+      "role": "public_coordinator_12_source_manifest.json",
+      "sha256": "8532bc701b535c84795f87f88d7432828c860f7f80375c4eb37aadeda86040d6"
+    },
+    {
+      "bytes": 9994,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/reviews/2026-09-17-v89-public-coordinator.md",
+      "role": "public_coordinator_13_2026-09-17-v89-public-coordinator.md",
+      "sha256": "01d6e6f07950abe5e369aea83ffac09fe128e9cb42cf1cabfb7b8a604f31f31f"
+    }
+  ],
+  "execution_authority": "none",
+  "falsifier": "A live orphan after the declared locked-SQLite test deadline, false completed receipt, scope mismatch or failed archive reproduction invalidates the updated worker claim.",
+  "hypothesis": "An OS-default child alarm can terminate the public worker during SQLite C waits that delayed the prior Python callback after supervisor loss.",
+  "hypothesis_id": "v89-public-http-worker",
+  "limitations": [
+    "The preceding worker tests did not qualify SQLite C busy waits; the new physical failure updated that assessment.",
+    "Default signal termination remains subject to OS scheduling and uninterruptible work.",
+    "Injected code must not replace the child signal policy; a surviving supervisor can kill a deliberately uncooperative test worker.",
+    "This is a research candidate; existing collectors and live backend are unchanged."
+  ],
+  "metrics": {
+    "archive_tests": 279,
+    "candidate_tests": 279,
+    "locked_sqlite_orphan_control_passed": true,
+    "python_callback_fallback_superseded": true,
+    "runtime_deployment_changed": false,
+    "source_commit": "39e96dea9daa2d9307edf82513e8a3766a42b9b2",
+    "worker_os_default_alarm_installed_in_candidate": true
+  },
+  "revision_number": 2,
+  "runtime_strategy_changed": false,
+  "schema_version": 1,
+  "status": "candidate",
+  "strategy_id": "v89_public_transport_research",
+  "supersedes_revision_id": "4431e3d934e12943e5c574a1b7c6550ae37eade064cba514be75ab95a1138951",
+  "symbol": "BTC,ETH,SOL,HYPE,xyz:SPCX,xyz:SNDK,xyz:BRENTOIL"
+}

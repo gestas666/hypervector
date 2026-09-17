@@ -1,3 +1,82 @@
+## September 17, 13:56 UTC: per-grant coordinator qualified; aggregate admission/client service next
+
+Candidate **39e96dea9daa2d9307edf82513e8a3766a42b9b2** is committed/pushed on
+`research/v89-public-coordinator-20260917`, worktree
+`/Users/gestas/Prototypes/hypervector-v89-public-coordinator-20260917`.
+It builds on **29f4d09**; existing logical/owned broker source is unchanged.
+No collector, financial source/configuration, live process or TUI was deployed.
+
+**279 candidate controls** passed (278 combined + one durable-reopen test), and
+**279 pass together from the archived source**. Changed modules cover 603/603
+statements and 198/198 branches with multiprocessing coverage. Independent stdlib
+verification authenticates 14 candidate and 14 archived ledgers/captures. Their
+terminal dispositions/status/body lengths and subscriber preparation/delivery
+states match; real timestamps/PIDs differ. Do not claim byte-identical physical runs.
+
+Important correction: the preceding worker's Python SIGALRM callback could be
+blocked by SQLite's C busy wait after supervisor loss. The physical locked-database
+orphan control failed. The worker now installs SIGALRM's OS default termination,
+which passes that same test while the database remains locked. The old exit-124
+Python callback is removed. Previous frozen evidence remains intact; worker journal
+revision 2 explicitly supersedes that fallback assessment. No hard real-time claim
+under uninterruptible OS work is made.
+
+Coordinator API: `PublicTransportCoordinator(path, capture_root, clock=wall_ms,
+lease_ms=10000, cooldown_ms=300000, worker_timeout_ms=8000, body_limit=8388608)`;
+`subscribe`, `dispatch(ticket)`, `recover(transport_id)`, `outcome(transport_id)`,
+`prepare_delivery`, `acknowledge`, `cancel`. Registration and grant reservation
+are atomic. Original positive tickets dispatch once. Per-grant OS locks serialize
+owners; admitted PID/birth identifies actual worker liveness. A late child cannot
+admit after recovery. Child admission rechecks scope/policy, lease, 429 cooldown
+and pending subscribers before HTTP. Header observation applies 429 cooldown before
+streaming and does not extend it again during publication or recovery.
+
+Complete worker bodies publish through the existing broker response helpers.
+Partial/expired/abandoned results have no consumable broker body, while the separate
+coordinator outcome retains status, raw evidence and unknown clocks honestly. If a
+worker received 429 but its header transaction never committed, verified-dead-worker
+recovery authenticates the stable raw prefix and applies cooldown without inventing
+a completed receipt. A disabled-recovery negative control loses that known 429.
+Corruption, cross-grant capture, rollback, cancellation, concurrent followers and
+wrong-process controls pass. Direct kernel mutation bypasses this new protocol;
+use the coordinator API.
+
+Archive: 3,719 files, 29,224,960 bytes, SHA
+`155238d819d5b2215b29e039c8faa310cec0b203eee1e7be9322cec36bc55abf`.
+Every extracted source file was rechecked after archive tests. Evidence root:
+`data/logs/research/bidirectional_cohort/v89_public_coordinator_20260917_v1`.
+Preserve selected `candidate_test_tmp` and `archive_test_tmp` ledgers and their
+capture files; they are journal-pinned. Do not reuse those pytest basetemp paths.
+Development logs include real failed controls and one invalid-import negative
+harness invocation; final/archive results are authoritative, not `green` filenames.
+
+Coordinator journal revision **30afaa7ccd17dc565df6abbd2c0d4569a5b4e9405822346cd9c4246a8f2dd741**:
+239 matching evidence references, zero changed/missing.
+Worker journal revision 2 **8a5b9be3f04be1f5805a287c57e7a0badbb8afd8c2001ec3fde94c22a48416c7**:
+237 matching references across both revisions, zero changed/missing.
+Review: `docs/reviews/2026-09-17-v89-public-coordinator.md`.
+Records: `docs/research-journal/v89-public-coordinator-20260917-v1.json` and
+`docs/research-journal/v89-public-http-worker-20260917-v2.json`.
+
+Next highest-value task: use a NEW isolated revision/worktree from 39e96de to
+qualify bounded aggregate worker/queue/weight admission and a complete client IPC
+service, preserving original temporal consent and lost-acknowledgement truth.
+Per-grant ownership does NOT limit aggregate concurrent workers or shared-IP load.
+Recovery is explicit per transport; no background service schedules it yet. Physical
+startup, lock and client delivery overhead must enter a declared failure-aware replay.
+Do not reinterpret the prior zero-overhead sharing model as deployment evidence,
+and do not install an arbitrary conservative request budget. Collector/study
+continuity and deployment still require a concrete reviewed proposal and approval.
+Independent offline work remains authorized; this turn is progress, not blocked.
+
+At 13:56:44 UTC all 11 runtime/collector/research process identities matched.
+Checkpoint running_consistent, 4,428 polls, zero faults; SNDK and Brent open with
+recorded protective stops. Collector health ages 0.34–7.78 seconds; live config SHA
+unchanged. Native baseline/reproduction reached 7,056 first-variant decisions each,
+candidate 9,072, without failures or final qualification results. Do not restart
+those jobs. Full source comparisons and account qualification remain pending.
+The backend is already live. The continuous research goal remains active.
+
 ## September 17, 13:13 UTC: bounded public worker qualified; coordinator integration next
 
 Standalone HTTP worker candidate **29f4d098ba8eb277476c640ecfcc70c168b99b6d** is
