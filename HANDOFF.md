@@ -1,3 +1,66 @@
+## September 17, 13:13 UTC: bounded public worker qualified; coordinator integration next
+
+Standalone HTTP worker candidate **29f4d098ba8eb277476c640ecfcc70c168b99b6d** is
+committed/pushed on `research/v89-public-http-worker-20260917`, worktree
+`/Users/gestas/Prototypes/hypervector-v89-public-http-worker-20260917`.
+This adds research-only modules/tests/verifier/plan on owned-clock **3252022**;
+existing broker, collectors, live configuration and financial source are unchanged.
+
+**217 candidate + 217 archive tests pass** (159 prior + 58 new). New modules cover
+206/206 statements and 58/58 branches with multiprocessing coverage. Real processes
+cover partial failures, 429/307/503, oversized/decoded compressed bodies, pre/post
+header crashes, cleanup failures, ignored signals and a physically killed supervisor.
+Separate parent and child deadlines prevent the tested orphan request from persisting.
+The child's fallback alarm starts at its entry point and uses emergency exit 124;
+a parent crash leaves partial raw evidence without a fabricated receipt. Kill/OS/
+filesystem limits are explicit in the review; there is no hard real-time claim.
+
+API in `public_http_worker.py`: `run_public_worker(payload, directory, timeout_ms=8000,
+body_limit=8388608, session_factory=public_session)`, `read_public_capture(directory)`,
+`read_public_body(directory)`. Each call creates an exclusive directory and one
+fresh worker; it does NOT enforce durable one-dispatch-per-broker-grant. A new
+directory is a separate invocation. Scope is the existing validated public Info
+payload only. No redirects/retries/env proxy/netrc discovery. Body bytes are decoded
+entity bytes, not raw compressed wire bytes. Only header status/timing is retained.
+
+Request/start/header/terminal/supervisor/body files feed authenticated receipts.
+Partial status and transport error are separate; body reads reject incomplete or
+failed workers even after full EOF. Supervisor observations cannot replace unknown
+worker receipt clocks. The current broker accepts status XOR error, so integration
+must retain worker provenance and apply partial-429 cooldown without inventing a
+complete response. No such adapter or aggregate admission service exists yet.
+
+Independent stdlib verification matches status/availability/body lengths across
+15 candidate and 15 archive cases. Real timestamps/PIDs differ. Candidate measured
+startup delay was 410–447 ms under coverage, archived non-coverage 354–379 ms.
+Those are local fabricated-process observations, not venue benchmarks. Include
+physical overhead in future sharing/delivery replay; the earlier zero-overhead
+logical model alone does not qualify this transport.
+
+Archive: 3,698 files, 29,112,320 bytes, SHA
+`82cd0fc018f19f68b45c0f9315b35a81a0af4be293cdd4ca9a352c5e26c3aec8`.
+Evidence root: `data/logs/research/bidirectional_cohort/v89_public_http_worker_20260917_v1`.
+Preserve selected `final_test_tmp` and `archive_test_tmp` capture directories; their
+files are journal-pinned. Do not reuse those pytest basetemp paths or mutate source.
+Journal `docs/research-journal/v89-public-http-worker-20260917-v1.json`, revision
+**4431e3d934e12943e5c574a1b7c6550ae37eade064cba514be75ab95a1138951**:
+223 matching references, zero changed/missing.
+Review: `docs/reviews/2026-09-17-v89-public-http-worker.md`.
+
+Next: use a NEW isolated revision/worktree from 29f4d09 to integrate durable dispatch
+ownership, partial-status publication and abandoned-worker recovery. Then qualify
+bounded aggregate admission and complete subscriber IPC/delivery under failures.
+Existing collector/study continuity and deployment require a separate reviewable
+proposal and approval; independent offline integration remains authorized.
+
+At 13:13:34 UTC all 11 backend/reporter/TUI/collector/research process identities
+matched. Latest checkpoint running_consistent, 4,256 polls, zero faults; SNDK and
+Brent open with recorded protective stops. Five collector health records were fresh
+and error-free. Native baseline/reproduction each reached 4,032 first-variant
+decisions, candidate 5,292, without failure or final qualification output. Do not
+restart those jobs. Full source comparisons and account qualification remain pending.
+The continuous goal remains active; this turn made progress and is not blocked.
+
 ## September 17, 12:46 UTC: owned-clock component qualified; HTTP coordinator still pending
 
 Public transport integration steps 1–2 now have an isolated, committed/pushed
