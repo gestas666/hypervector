@@ -1,3 +1,66 @@
+## September 17, 12:46 UTC: owned-clock component qualified; HTTP coordinator still pending
+
+Public transport integration steps 1–2 now have an isolated, committed/pushed
+candidate at **3252022c47cce8c400e9909a3cec4f9dcac8c16b**, branch
+`research/v89-public-transport-20260917`, worktree
+`/Users/gestas/Prototypes/hypervector-v89-public-transport-20260917`.
+The adapter samples wall time after SQLite lock acquisition and retains original
+client intent separately from broker registration. Immutable preparation and
+acknowledgement records distinguish broker operation starts from client-reported
+arrival. Late client reads are unavailable; a client crash before acknowledgement
+leaves delivery unconfirmed. No financial or collector deployment occurred.
+
+159 candidate + 159 archived tests pass, including the prior 119 controls and
+40 new owned-clock controls. Real OS pipes/processes exercise timely delivery,
+late delivery and client exit code 7 before acknowledgement. SQL failure controls
+prove atomic registration/preparation/acknowledgement behavior. Corruption and
+cross-namespace controls reject altered or unowned provenance. Coverage across
+the modified kernel and new adapter/records: 298/299 statements, 91/92 branches;
+one defensive missing-preparation guard remains unexercised. Do not claim 100%
+combined coverage. Kernel and record module individually cover all their paths.
+
+The original logical replay report and both SQLite databases remain byte-identical
+to the journal-pinned fresh trace, and reproduce from the new source archive.
+Archive: 3,684 verified files, 29,050,880 bytes, SHA
+`e570db020dd2b3d49efcba6e0cd0db3a04ede710907ea26b441056e3bc676dd3`.
+Evidence root:
+`data/logs/research/bidirectional_cohort/v89_public_transport_clock_20260917_v1`.
+Preserve its archive, source extraction, tests, replay ledgers and three selected
+`archive_test_tmp/test_client_process_arrival_or{0,1,2}/broker.sqlite3` files.
+Those are retained evidence; do not rerun pytest with that same basetemp.
+
+Public API in `public_share_owned.py`:
+`OwnedPublicShareBroker(path, clock=wall_ms, lease_ms=10000, cooldown_ms=300000)`;
+`subscribe` accepts original client identity/deadline/earliest-admission consent;
+`publish` accepts real worker start/receipt/status/body/error and owns its own
+publication-start clock; `prepare_delivery` reports no client arrival;
+`acknowledge` receives the prepared hash and a trusted local client receipt time.
+Cancellation is only before preparation; recovery expires leases without retry.
+Receipt fields use `broker_publication_started_ms`, `broker_prepared_ms`,
+`client_received_ms`, and `acknowledgement_started_ms`. Start clocks do not claim
+commit completion. Client arrival is currently trusted same-host reporting,
+not remote authentication. The underlying logical kernel API remains unchanged.
+
+Next high-value task is integration step 3: bounded public HTTP worker/coordinator,
+including full wall deadlines, body limits, partial-response/header/error truth,
+dispatch ownership, worker crashes and lost acknowledgements. Then qualify
+aggregate admission and failure-aware complete process replay. A complete
+coordinator and collector/study continuity proposal do not exist yet. Do not
+install this component into existing collectors or reinterpret their receipts.
+Use a new isolated revision for further work; the current evidence is frozen.
+
+At 12:46:08 UTC backend 83722/reporter 18490/TUI 42506 and five collector identities
+matched. Checkpoint running_consistent, 4,148 polls, zero faults. Collector health
+ages were 0.8–26.9 seconds. Native retention reruns remain alive with no failure:
+baseline 47871 at 2,016 decisions, reproduction 47885 at 2,016, candidate 47893 at
+2,772, all first_receipts. Their scopes, source and output are unchanged; do not
+restart. Full native source comparisons and account qualification remain pending.
+
+Review: `docs/reviews/2026-09-17-v89-public-transport-clocks.md`.
+Journal: `docs/research-journal/v89-public-transport-owned-clocks-20260917-v1.json`.
+The continuous goal remains active. Previous and current continuations made
+progress; neither is blocked on approval for independent offline work.
+
 ## September 17: failed native persistence repaired; three fresh qualifications running
 
 On continuation, source jobs 29346, 4501 and 30609 had exited with the same
