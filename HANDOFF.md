@@ -1,3 +1,75 @@
+## September 17: failed native persistence repaired; three fresh qualifications running
+
+On continuation, source jobs 29346, 4501 and 30609 had exited with the same
+`TypeError: cannot pickle 'mappingproxy' object` at the original driver's
+`pickle.dump`. Their first variants had reached the full count assertions,
+but every retained XZ file contains zero uncompressed bytes. Dependent account
+job 56931 stopped with an explicit source-process failure at 05:24:03 UTC.
+These are failed qualifications, not completed results. Preserve all old source,
+logs, scopes and 32-byte artifacts. The previous serialization probe tested
+JSON only and did not qualify the actual pickle boundary.
+
+Offline repair is committed/pushed at
+**9be01119925b7f3a0ddbb75580d2c8ab78ac3f08** in
+`/Users/gestas/Prototypes/hypervector-v89-native-retention-repair-20260917`,
+branch `research/v89-native-retention-repair-20260917`.
+An instance-local Pickler reducer preserves immutable mappings; compressed
+files publish atomically and exclusively. Original native archives remain
+unchanged. JSON completion writers use the prior qualified atomic helper.
+38 candidate + 38 archive tests pass; persistence covers 41 statements/4 branches
+completely. Actual probes cover 14 native decisions, 14 funding records and
+14 immutable readiness mappings each. Development/archive typed values and
+canonical bytes agree in a separate decoder process. Raw pickle bytes differ
+with frozen-set enumeration/memo order; do not claim binary reproduction.
+
+Repair evidence/output root:
+`data/logs/research/bidirectional_cohort/v89_native_retention_repair_20260917_v1`.
+Source archive SHA
+`9a48920501e29d0d621813c1dfd359ce891376c5869027b6aa39dcc2b60dcc95`
+has nine verified members. Frozen tooling is in `tooling/`; `request.json`,
+archive, tests, probe artifacts and review are journal-pinned. Do not edit them.
+
+Fresh research processes, all with successful startup persistence probes and
+at least 252 first-variant decisions recorded:
+
+| Mode | PID / tool session | Birth UTC | Command SHA-256 |
+| --- | --- | --- | --- |
+| Baseline | 47871 / 16645 | 2026-09-17 12:14:05.450151 | `0436c0d249d4ce285c1435cfa9348f274d90e34eac2fb4079dfb57f40acd6837` |
+| Independent reproduction | 47885 / 14402 | 2026-09-17 12:14:06.617259 | `cfba614d6637d5d8e0eaa0fec76aaefb3ee29eee866a5a478ddf790406abc559` |
+| Decision-reuse candidate | 47893 / 59812 | 2026-09-17 12:14:07.783482 | `a947ae2f265ad20806f64035f3bf1b9459ab63ad551d69b8a58e6de45301ef78` |
+
+Hash commands with SHA-256 of `json.dumps(process.cmdline())`.
+Scopes, output and logs use `baseline`, `reproduction`, `candidate` under the
+new output root. Baseline/reproduction import account archive **38bdf78**;
+candidate imports **3d4de3c**. Original preparation authenticates the reviewed
+archive differences and original fabricated inputs. All runs are network-denied
+and may write only their own output/temp directories. Each retains the 72-hour
+technical bound; rough observed-throughput estimate is 40–45 hours baseline and
+30–35 hours candidate, not a go-live ETA. Both complete variants are required.
+
+No replacement account handoff is running. When complete sources exist, use
+the existing catalog authenticator and full-grid comparator with the new fixed
+scopes/paths, compare baseline vs independent reproduction and candidate for
+both variants, then prepare the separate account qualification. A source
+`qualification_result.json` alone does not qualify reproduction or accounts.
+Do not load an unverified or partial artifact, and do not reuse the old failed
+scope as if it described these new processes.
+
+At 12:15:17 UTC, backend 83722, reporter 18490, TUI 42506 and all five collectors
+retained authenticated identities. Checkpoint running_consistent, zero faults,
+seven assets flat; collector health 6.7–9.9 seconds old. No live source/config/
+process or existing collector changed. The approved live restart remains complete.
+Public-sharing transport integration was deferred behind this newly observed
+research defect; prior sharing findings remain intact. Real studies stay sealed.
+
+Review: `docs/reviews/2026-09-17-v89-native-retention-repair.md`.
+Journal revision
+**e0f9af7a990ea550e2665339fa479e7bf91c2154b06b9e90585ac408ed0e754a**
+has 114 matching references, zero changed/missing. Continuous goal remains active;
+this continuation made progress. Next useful independent task while full runs
+compute: resume isolated public transport/clock integration, preserving these
+new job identities and pending full source/account comparisons.
+
 ## September 16, 21:59 UTC: durable sharing kernel and fresh trace qualified offline
 
 Backend 83722/reporter 18490/TUI 42506 retain their authenticated process
