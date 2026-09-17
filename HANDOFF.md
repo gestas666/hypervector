@@ -1,3 +1,82 @@
+## September 17, 18:15 UTC: original full collector loops measured; durable ingestion enforcement next
+
+Source **2a38d4d97e2e82b4fde4f890a004059ac47c1615** is committed/pushed on
+`research/v89-collector-ingestion-20260917`, worktree
+`/Users/gestas/Prototypes/hypervector-v89-collector-ingestion-20260917`.
+Parent eb8b2cd06. This goal turn made concrete progress. The intervening SNDK exit
+answer did not advance the research goal; its current-position question is answered.
+No live configuration, strategy, order, original collector or TUI was changed.
+
+**27 tests pass from candidate source and 27 from its archive.** Five actual frozen
+source interpreters exercise original `_Collector.run`, capture, normalization,
+indexing/recovery, budget and native peer guard: **25 scenarios / 675 raw attempts
+per final run**. Independent raw/SQLite/source/scheduling verifiers pass. New six
+research modules cover **491/495 statements and 117/122 branches**; both verifier
+modules have 100% measured statement/branch coverage. Original producer or whole
+system coverage is not claimed. Ruff and 500/50/return-annotation checks pass.
+
+Measured original policies differ: old SNDK/Brent and follow-up have NO local
+RequestBudget, 5 complete/15 persistent429 attempts per fixture cycle, and finish
+3 retries despite cancellation on first429. Seven-asset originals use a restored
+600-weight rolling local budget, 20/60 attempts, and cancel after 1. Native uses
+pre-HTTP durable reservations, six rotating recent/history slots, 60s spacing,
+300s429 cooldown, and a 10s receipt-cutoff admission allowance. In both budgeted
+sources, three first-run cycles include two deadline deferrals before cancellation;
+all 56 first-run attempts are accounted for in each final source run.
+
+Critical integration counterexample: raw-persisted-before-consume failure recovers
+1/10/7 observations in old/budgeted/native stores without any service-return proof.
+This is a failure of the proposed unguarded adoption assumption, NOT an observed
+failed shared-service delivery in current production. Old schema opener accepts an
+added table; newer quarter/native openers reject it. Do not assume one migration
+contract. Native reservation-only failure retains its slot and blocks immediate
+re-dispatch. Budget restoration retains orphan obligations and rolling limits.
+
+Fixture-only cancellation leakage into reconstructed runtime was reproduced and
+fixed. Preserve `cancel_red.txt` and failed earlier runs. **Final evidence roots**:
+`candidate_final_v2_tmp` and `archive_test_tmp` below
+`data/logs/research/bidirectional_cohort/v89_public_collector_ingestion_20260917_v1`.
+Do not overwrite these directories or their reports. `candidate_final_tmp` is an
+older passing run before that fixture correction, not final acceptance.
+
+Source archive `source.tar.gz`: **5692 files / 33,742,403 bytes**, SHA
+**f0f51d3ae7398a8d80f97c23bad12655a34e42865f285d3e52ac8610fc10fbe9**.
+All source/extracted bytes plus 152 original/copied producer files matched after
+archive tests. The redundant uncompressed tar was removed only after verified
+compression. Frozen review:
+`docs/reviews/2026-09-17-v89-public-collector-ingestion-baseline.md`.
+Journal `v89-public-collector-ingestion`, revision1
+**042e4c45579fe79493d5d91e266ce6a6c09e81c88c23ed2d1d52aae576cb2ab0**,
+**2344 matching references, zero changed/missing**, status observe.
+Frozen source record `docs/research-journal/v89-public-collector-ingestion-20260917-v1.json`.
+Do not amend either frozen document or pinned source. Append future revisions.
+
+Next highest-value work: **implement durable versioned pre-ingestion authorization
+and guarded recovery**, plan Tasks 2–4 in the isolated source. Create a NEW worktree
+from 2a38d4d because this baseline source is pinned. Preserve original normalization,
+raw attempts and local obligations; missing exact admission/return binding must not
+be inferred from similar payloads or clocks. Include caller receipt witness and
+failure between raw fsync, service return, local authorization and index commit.
+Then integrate full service-backed loops, real process kill/restart and explicit
+frozen-study migration before presenting a concrete live adoption proposal.
+Do not repeat this completed baseline as a substitute for implementation.
+
+Limits: deterministic logical clocks and fabricated candle/funding/metadata data;
+empty native peers with simulated fresh health. Store/runtime reconstruction occurs
+within each source interpreter and crashes are explicit exceptions. No real OS
+restart, CLI singleton/manifest wrappers, power-loss, wall-alarm, latency, venue
+charge, production shared-IP headroom or financial-benefit qualification. Shared
+service and its return ledger are absent from this baseline; prior lineage harness
+still binds returns AFTER ingestion. Broad continuous goal remains incomplete.
+
+Runtime v42 at **18:11:22 UTC**: all eleven identities match, running_consistent,
+5447 polls, zero faults, collector ages14.30–28.73s, unchanged live configuration.
+Three existing native comparisons remain live, first variant: baseline23940,
+reproduction23940, candidate31248 decisions; no final/failure. Preserve them.
+Brent's latest live short closed via hourly recipe at 17:00 UTC for about -$5.24
+net; this single outcome does not establish strategy failure. SNDK remained open
+at the last read. No sealed prospective economics were inspected.
+
 ## September 17, 17:30 UTC: collector admission/return lineage qualified offline; pre-ingestion and full scheduling next
 
 Source **eb8b2cd06f15dae9b57616bfca50ef42f235c1a7** is committed/pushed on
