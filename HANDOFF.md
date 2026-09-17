@@ -1,3 +1,74 @@
+## September 17, 19:08 UTC: durable collector authorization implemented and qualified offline
+
+Source **7cb79c32a753d5360754d96643795efea4f15e16** is committed and pushed on
+`research/v89-collector-enforcement-20260917`, worktree
+`/Users/gestas/Prototypes/hypervector-v89-collector-enforcement-20260917`.
+Parent 2a38d4d. This goal turn made concrete implementation/validation progress;
+the preceding SNDK position answer did not advance the research goal. The full
+continuous goal remains active. No live deployment or original study was changed.
+
+The service now issues namespace-bound ingestion permission from original saved
+admission/return/raw evidence, independently checking caller receipt deadline.
+Persistent SQL guards retain original normalization while excluding unavailable
+responses from insertion or refresh. Bindings commit before original transactions;
+missing exact service authorization fails recovery. Binding-only orphans recover
+only from already-issued service evidence. Missing raw evidence fails closed.
+Reopen requires exact namespace, class/contract/schema/identity and persistent guards.
+New ingestion and native reservation cannot precede required recovery.
+
+Five candidate defects were reproduced and repaired: pre-recovery ingestion,
+missing binding-only raw detection, lost original identity validation, SQLite URI
+metacharacter handling and malformed namespace family validation. The qualification
+wrapper's Popen-annotation failure was separate; preserve its failed artifacts.
+
+**754 regression tests passed, 58 skipped** for separately selected historic fixtures.
+**65 focused tests passed from candidate and archive**, with network and writes to
+live/runtime/research databases OS-denied. Five actual original import trees run
+available/late caller cases: **10 producer cases per run / three schema families**.
+This invokes original `_capture_once`, store ingestion and close/reopen/recovery;
+**it does not qualify the full service-backed `_Collector.run` or OS kill/restart**.
+Independent raw/service/SQL/normalized-value/source checks verify all ten cases per
+final run. Native original reservation-only restart retains its 60s spacing.
+Late duplicate values cannot refresh an existing observation. Partial original SQL
+failure rolls back request and observation rows while preserving authorization.
+
+Measured coverage: **516/536 statements, 124/144 branches** over seven affected
+modules; ingestion service and public ledger API have 100% measured coverage.
+Not complete guard/original-producer/whole-system coverage. Ruff, diff and changed
+source 500/50/annotation checks pass. Exact source/archive **5,707 files** and all
+**152 original/copied producer files** match after tests. Compressed source archive
+32,988,288 bytes, SHA **6ebd08dcd61182cf1a3008b362baa38cb6c97a6221a550882011824ce5fa8c27**.
+
+Evidence root: `data/logs/research/bidirectional_cohort/v89_public_collector_enforcement_20260917_v1`.
+Final paths: `candidate_final_v2_tmp/`, `archive_tmp/`, corresponding logs/coverage/
+independent reports. `candidate_final.txt` is the failed instrumentation run, not
+final acceptance. The source worktree and these evidence files are now pinned;
+create a new worktree for subsequent changes instead of editing them.
+Review: `docs/reviews/2026-09-17-v89-public-collector-enforcement.md`.
+Journal `v89-public-collector-ingestion`, revision2
+**9969bec8520d50a53918f8509199bec28aa3136cb5a0135476d07b8c3378b7ca**,
+**4,182 matching / zero changed or missing references** across both revisions.
+Source record: `docs/research-journal/v89-public-collector-ingestion-20260917-v2.json`.
+A transient reporter DuckDB lock cleared naturally; no process was stopped.
+
+**Next highest-value work: complete service-backed original scheduler integration.**
+Start a new isolated worktree from 7cb79c3. Use the actual original loops and retain
+each source's own budget/reservation/retry/cancellation/peer/deadline policy. Test
+actual process kill/restart across raw fsync, saved return, issued authorization,
+local binding and original SQL commit. Add explicit unavailable-response telemetry,
+full-grid/accounting reconciliation, and measure whole-study startup cost/memory.
+Saved return without issued authorization currently remains unresolved; recovery
+must not invent API-return provenance. Qualify explicit new-study declaration,
+migration and rollback before a concrete live adoption proposal. Do not repeat
+finished baseline checks as a substitute for integration. Task 2's stored boundary
+is qualified to the above scope; Tasks 3–4 and operational acceptance remain open.
+
+Runtime v43 at **19:04:21 UTC**: all eleven identities match; backend
+running_consistent, 5,660 polls, zero faults, unchanged config; collector ages
+14.17–26.36s. Existing native jobs remain live, first variant: baseline27,468,
+reproduction27,468, candidate35,532; no final/failure. Preserve backend, TUI, five
+frozen collectors and those three jobs. Prospective outcomes remain sealed.
+
 ## September 17, 18:15 UTC: original full collector loops measured; durable ingestion enforcement next
 
 Source **2a38d4d97e2e82b4fde4f890a004059ac47c1615** is committed/pushed on
