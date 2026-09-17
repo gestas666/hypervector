@@ -1,3 +1,77 @@
+## September 17, 15:37 UTC: physical workload runner qualified; full comparison RUNNING
+
+Offline source **8c6d1831fbb406e28c41669e7264af12c9fd1ff8** is committed/pushed on
+`research/v89-public-workload-20260917`, worktree
+`/Users/gestas/Prototypes/hypervector-v89-public-workload-20260917`.
+The actual full-run declaration freezes runtime source **b85936caff95a6a274cd28f54304c062cfe94484**;
+the later commit only splits an accounting test fixture. All seven research modules
+still match the declaration. Do not edit these modules while the full run is active.
+
+**44 focused controls pass; 395 public controls pass together from both archives**
+(final archive 103.60 seconds). Independent stdlib verification authenticates three
+small complete physical arms from candidate and final archive: each has three
+requests, all timely; independent/strict/opt-in use 3/3/2 fabricated HTTP calls.
+This is control evidence, NOT the full 113-request benefit comparison.
+
+Input validation covers 35/35 statements, 14/14 branches; accounting 36/36, 10/10.
+All seven research modules cover 453/506 statements and 107/138 branches (86.96%
+combined), not 100%. The full source archive has 3,866 files, 30,218,240 bytes, SHA
+`9a772ce6a0d8431aa2be7456873fcd1d26e2716559923388c6e852a1c80e6d0d`.
+Files match Git/worktree/extraction and were rechecked after archived tests.
+
+Two OFFLINE harness defects were caught and repaired: legacy metadata query records
+omitted dex while the wire payload explicitly said xyz; and a two-read clock race
+could generate a negative sleep. Source bytes were not changed. All 113 payloads
+now preflight before startup. Independent verifier controls also exposed missing
+checks for derived cost/freshness fields and unreported raw attempts; these checks
+now reject the modified copies. A physical failure-fanout control confirms sharing
+can remove a follower's otherwise successful response.
+
+The first full run is TERMINAL FAILED (session 1901, exit 1) on legacy metadata.
+Its `full_run.txt`, `full_run/`, `declaration.json` and `runner_v1.tar` are preserved.
+The repaired run is ACTIVE, **session 46959**, PID **59503**, birth
+**1789658921.025786**, command SHA
+`9fa5a0a94702000bf12117a6c4cda652c9e73027dbf7401389bf462f551adf28`.
+At 15:35:42 UTC its original process identity matched; independent arm had 76
+completed requests at the last periodic log. No arm was complete at that snapshot.
+
+Evidence root `data/logs/research/bidirectional_cohort/v89_public_workload_20260917_v1`.
+ACTIVE log **full_run_v2.txt**, outputs **full_run_v2/**, immutable declaration
+**declaration_v2.json**, SHA
+`50f6f5f21c7efd30b69d67fb08e5a626fbf440c92b7f84a7f74fbef7cc000fb0`.
+Three sequential arms replay all 113 attempts at original speed (about 32 minutes
+from 15:28:42 UTC total, subject to process/scheduler delays). Do NOT restart on a
+polling timeout. Verify the existing handle/PID birth and command first.
+
+The independent arm calls existing single-attempt capture. Service arms include
+real worker startup, SQLite, process-pipe reads and acknowledgements, strict or
+explicit 1000ms earlier consent. Deadline = original translated due + 10000ms;
+queueing cannot extend it. Five worker slots, 113 preconnected finite peers, no
+weight quota. Original fixed leader response/duration; no adaptive replanning,
+retry invention, changing venue data, rate feedback or global-IP headroom proof.
+No financial outcomes or sealed prospective economics were evaluated.
+
+Next highest-value action: complete and independently verify ALL three full arms
+using `research/v89_public_workload_20260917/verify.py`, the original input path from
+`declaration_v2.json`, that declaration, and the three arm directories. Retain every
+newly late/unavailable response and changed status/body. Only then assess adoption
+and plan collector receipt compatibility/continuity. Do not substitute control
+results for full-workload evidence, retune a quota to pass, or deploy implicitly.
+
+Journal revision **44d77eff6ee59c49ea83e418e5c7a55d0e6ea02f92320745d413ab3f98661451**:
+**392 matching references, zero changed/missing**. Frozen artifacts include source
+archives/manifests, selected `revised_tmp` and `archive_v2_tmp` cases, initial failed
+run, runtime/launch/progress observations and review. Do not overwrite or reuse
+these paths. Active v2 log/results are intentionally NOT pinned; journal them only
+when complete in a new revision. Review: `docs/reviews/2026-09-17-v89-public-workload-runner.md`.
+Record: `docs/research-journal/v89-public-workload-20260917-v1.json`.
+
+At 15:30:55 UTC all 11 existing runtime/research identities matched, checkpoint
+running_consistent, 4,806 polls, zero faults, collector ages 8.36–18.28s and unchanged
+live config. Native baseline/reproduction/candidate: 13,356 / 13,356 / 17,388
+first-variant decisions, no failures/final results. These jobs remain untouched.
+Backend already live. This turn is progress; continuous goal remains active.
+
 ## September 17, 14:55 UTC: bounded public service qualified; collector workload comparison next
 
 Candidate **194b217e936240d1f76a207b9c6279e076f0b99a** is committed/pushed on
