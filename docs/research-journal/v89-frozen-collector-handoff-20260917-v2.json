@@ -1,0 +1,2609 @@
+{
+  "automatic_promotion": false,
+  "confidence": "medium",
+  "created_at_utc": "2026-09-17T16:41:37.978677+00:00",
+  "decision": "Retain an offline handoff harness. Capture/store and original retry contracts are qualified for the declared synthetic cases; shared 429 cooldown creates eight local deferrals without HTTP and requires versioned admission/lineage before adoption. Final test selection requires an explicit frozen inventory; absent optional fixtures skip rather than failing ordinary test runs.",
+  "evidence": [
+    {
+      "bytes": 430,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/handoff0/run/27818/config.json",
+      "role": "final_handoff_0_config.json",
+      "sha256": "f08560a49e4b3c8cbb38e0db1704006329ef8da9b36999dd8831fc49a03ebfba"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/handoff0/run/27818/stderr.txt",
+      "role": "final_handoff_1_stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 24576,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/handoff0/run/27818/store/capture.sqlite3",
+      "role": "final_handoff_2_capture.sqlite3",
+      "sha256": "8cdfc77c8e690636de952f3aa217d86788c574443a70374c02b1ba8493d7fc12"
+    },
+    {
+      "bytes": 878,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/handoff0/run/27818/store/raw/1789663243996_b56e0f1a17d0401fbff1155245b087f3.json",
+      "role": "final_handoff_3_1789663243996_b56e0f1a17d0401fbff1155245b087f3.json",
+      "sha256": "c6a66a1617d20e7cad9981e0ca2ad6df79537ea803f57fc4a4f367a5f3652cd7"
+    },
+    {
+      "bytes": 425,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/handoff0/run/43671/config.json",
+      "role": "final_handoff_4_config.json",
+      "sha256": "7466c04cc416be848b71a94fcc3b157427fa0938162418898252dc22cff7a165"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/handoff0/run/43671/stderr.txt",
+      "role": "final_handoff_5_stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 24576,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/handoff0/run/43671/store/capture.sqlite3",
+      "role": "final_handoff_6_capture.sqlite3",
+      "sha256": "56697c731e3be4e3f492a079d35c05b688f2c60f04c5cae473413a1ce58aa584"
+    },
+    {
+      "bytes": 878,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/handoff0/run/43671/store/raw/1789663243996_f8f385b0096648bca20015a359781ad6.json",
+      "role": "final_handoff_7_1789663243996_f8f385b0096648bca20015a359781ad6.json",
+      "sha256": "19ab5691a7b94216c02aacbdb68f6021ff8cd3e8fd7496215f4f1d3cd69f3839"
+    },
+    {
+      "bytes": 438,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/handoff0/run/44810/config.json",
+      "role": "final_handoff_8_config.json",
+      "sha256": "e327789e84bbd294abeb886144689ced76e3a991e9071c362e9ecc22474d8b3e"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/handoff0/run/44810/stderr.txt",
+      "role": "final_handoff_9_stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 36864,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/handoff0/run/44810/store/native.sqlite3",
+      "role": "final_handoff_10_native.sqlite3",
+      "sha256": "067fcef845dd2c9d8208877bb95d92c4c1952de02c540de3319940d1b7950e4a"
+    },
+    {
+      "bytes": 888,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/handoff0/run/44810/store/raw/1789663244013_41b3f3a8f49e45f692865463560e6e21.json",
+      "role": "final_handoff_11_1789663244013_41b3f3a8f49e45f692865463560e6e21.json",
+      "sha256": "5a3a684e5759c819870751edc9cb4434d9996d3d4c0d106982f799aec5b59071"
+    },
+    {
+      "bytes": 8192,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/handoff0/run/44810/v89_equal_cap_followup_market_capture_20260923_v1/capture.sqlite3",
+      "role": "final_handoff_12_capture.sqlite3",
+      "sha256": "de3608e3bb349aca76f4035033cc3cdab933c914e5aae2146028329918ab5064"
+    },
+    {
+      "bytes": 77,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/handoff0/run/44810/v89_equal_cap_followup_market_capture_20260923_v1/latest.json",
+      "role": "final_handoff_13_latest.json",
+      "sha256": "016215bdaa480e1768e41fc1c5eb25bbb2180cecf0c3591a80a3094d8096b2eb"
+    },
+    {
+      "bytes": 8192,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/handoff0/run/44810/v89_equal_cap_market_capture_20260908_v1/capture.sqlite3",
+      "role": "final_handoff_14_capture.sqlite3",
+      "sha256": "de3608e3bb349aca76f4035033cc3cdab933c914e5aae2146028329918ab5064"
+    },
+    {
+      "bytes": 77,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/handoff0/run/44810/v89_equal_cap_market_capture_20260908_v1/latest.json",
+      "role": "final_handoff_15_latest.json",
+      "sha256": "9f7d11d22ce5e8c16f7e1781854fc5e85c869ca607f27520410cfa834cc20ca0"
+    },
+    {
+      "bytes": 8192,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/handoff0/run/44810/v89_prospective_market_capture_20260908_v1/capture.sqlite3",
+      "role": "final_handoff_16_capture.sqlite3",
+      "sha256": "de3608e3bb349aca76f4035033cc3cdab933c914e5aae2146028329918ab5064"
+    },
+    {
+      "bytes": 77,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/handoff0/run/44810/v89_prospective_market_capture_20260908_v1/latest.json",
+      "role": "final_handoff_17_latest.json",
+      "sha256": "dcdebcc18e5c2bc8bc9066f72622148809e91ecbcf1c418d4632663123f444f0"
+    },
+    {
+      "bytes": 8192,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/handoff0/run/44810/v89_quarter_entry_followup_capture_20260923_v1/capture.sqlite3",
+      "role": "final_handoff_18_capture.sqlite3",
+      "sha256": "de3608e3bb349aca76f4035033cc3cdab933c914e5aae2146028329918ab5064"
+    },
+    {
+      "bytes": 77,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/handoff0/run/44810/v89_quarter_entry_followup_capture_20260923_v1/latest.json",
+      "role": "final_handoff_19_latest.json",
+      "sha256": "727b897dfc244ca85b16c62df3b9af0099eafec29762350104cd59c47fd0fc1c"
+    },
+    {
+      "bytes": 426,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/handoff0/run/45939/config.json",
+      "role": "final_handoff_20_config.json",
+      "sha256": "0cf8f31e7fd8fccc5420da6bb486a80e69fcf5c5d9ba0039438e60509f4e9d08"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/handoff0/run/45939/stderr.txt",
+      "role": "final_handoff_21_stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 32768,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/handoff0/run/45939/store/capture.sqlite3",
+      "role": "final_handoff_22_capture.sqlite3",
+      "sha256": "5f8b3f9f61690c303ffaaa2f3cad40f8f46c57a7c6fcf2c9b68e84027a55fdbd"
+    },
+    {
+      "bytes": 893,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/handoff0/run/45939/store/raw/1789663243996_b1abd4124cb34695af03ac13aaa96130.json",
+      "role": "final_handoff_23_1789663243996_b1abd4124cb34695af03ac13aaa96130.json",
+      "sha256": "832f40d8a721b9b22fa87b5b65afdddcb83d6834ac362d8db799489e052e0af1"
+    },
+    {
+      "bytes": 432,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/handoff0/run/51194/config.json",
+      "role": "final_handoff_24_config.json",
+      "sha256": "1cf021c50265af18d299d1d5a25b28021d515ccdac964cf083d2e800fb5c298f"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/handoff0/run/51194/stderr.txt",
+      "role": "final_handoff_25_stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 32768,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/handoff0/run/51194/store/capture.sqlite3",
+      "role": "final_handoff_26_capture.sqlite3",
+      "sha256": "3863a02c97224156c7ebffab2b99bab15193e56f7a5dac8c829d7f86b1f4ce8b"
+    },
+    {
+      "bytes": 893,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/handoff0/run/51194/store/raw/1789663244003_969c8c1ee48443be8ba703ccf923e179.json",
+      "role": "final_handoff_27_1789663244003_969c8c1ee48443be8ba703ccf923e179.json",
+      "sha256": "14db71399f35a2d7d4fd9dc2defc9f80ffd1c842086570ad3cdef808dccf5b9c"
+    },
+    {
+      "bytes": 176128,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/handoff0/run/broker.sqlite3",
+      "role": "final_handoff_28_broker.sqlite3",
+      "sha256": "77f34e4a9574c38deb616e8aed1900c03b1ff905b92fe2fd93f0e909e8b00402"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/handoff0/run/captures/.dispatch-locks/070676aaeea13bb94b8b4612866c2a21b46cf49fb3bb8b598d2b52633b8d1b62.lock",
+      "role": "final_handoff_29_070676aaeea13bb94b8b4612866c2a21b46cf49fb3bb8b598d2b52633b8d1b62.lock",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/handoff0/run/captures/.dispatch-locks/bfd2f205cba0643c262d2e682d24c53d63ab720a4699b49ef25b44c898746cbf.lock",
+      "role": "final_handoff_30_bfd2f205cba0643c262d2e682d24c53d63ab720a4699b49ef25b44c898746cbf.lock",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/handoff0/run/captures/.service.lock",
+      "role": "final_handoff_31_.service.lock",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 136,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/handoff0/run/captures/070676aaeea13bb94b8b4612866c2a21b46cf49fb3bb8b598d2b52633b8d1b62/body.bin",
+      "role": "final_handoff_32_body.bin",
+      "sha256": "833b9b6106b025cbffc8366dfaec06fd708dbee6f236a61902afbd1c05d891a1"
+    },
+    {
+      "bytes": 74,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/handoff0/run/captures/070676aaeea13bb94b8b4612866c2a21b46cf49fb3bb8b598d2b52633b8d1b62/headers.json",
+      "role": "final_handoff_33_headers.json",
+      "sha256": "71f17758a1e52e95255a10c9122cee2bff36f0672af4be10a2ecf6a35319683e"
+    },
+    {
+      "bytes": 2003,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/handoff0/run/captures/070676aaeea13bb94b8b4612866c2a21b46cf49fb3bb8b598d2b52633b8d1b62/receipt.json",
+      "role": "final_handoff_34_receipt.json",
+      "sha256": "3591d040f54384bc5cf724cdfa135c05510a363aede96fb5bafc168efc303631"
+    },
+    {
+      "bytes": 557,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/handoff0/run/captures/070676aaeea13bb94b8b4612866c2a21b46cf49fb3bb8b598d2b52633b8d1b62/request.json",
+      "role": "final_handoff_35_request.json",
+      "sha256": "ced03344f3a13762d90ce7905a49b384e00ab95598e7fd1df1e1612049249d43"
+    },
+    {
+      "bytes": 34,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/handoff0/run/captures/070676aaeea13bb94b8b4612866c2a21b46cf49fb3bb8b598d2b52633b8d1b62/started.json",
+      "role": "final_handoff_36_started.json",
+      "sha256": "c98bbbfafd4141dd551f1301e99ce5f3cf9448bd0cf18e57da547fc58eb2c6f5"
+    },
+    {
+      "bytes": 211,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/handoff0/run/captures/070676aaeea13bb94b8b4612866c2a21b46cf49fb3bb8b598d2b52633b8d1b62/supervisor.json",
+      "role": "final_handoff_37_supervisor.json",
+      "sha256": "605108137689ba0847583081b6e3b1dca9b7f64697410a4833eea2e7db96fc8e"
+    },
+    {
+      "bytes": 188,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/handoff0/run/captures/070676aaeea13bb94b8b4612866c2a21b46cf49fb3bb8b598d2b52633b8d1b62/terminal.json",
+      "role": "final_handoff_38_terminal.json",
+      "sha256": "be7d64aa434e2a30154660e6763fcf57936425673abb83f6ba308a3c294e0d21"
+    },
+    {
+      "bytes": 135,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/handoff0/run/captures/bfd2f205cba0643c262d2e682d24c53d63ab720a4699b49ef25b44c898746cbf/body.bin",
+      "role": "final_handoff_39_body.bin",
+      "sha256": "9218d1d6dcf1ad0cb07718e1c803cf9ec4495495b89f99d670e82e51330f4932"
+    },
+    {
+      "bytes": 74,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/handoff0/run/captures/bfd2f205cba0643c262d2e682d24c53d63ab720a4699b49ef25b44c898746cbf/headers.json",
+      "role": "final_handoff_40_headers.json",
+      "sha256": "893396e1bcf586e0a59af0491c61ae36590458597b74c8cc753accce4e265b2f"
+    },
+    {
+      "bytes": 2003,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/handoff0/run/captures/bfd2f205cba0643c262d2e682d24c53d63ab720a4699b49ef25b44c898746cbf/receipt.json",
+      "role": "final_handoff_41_receipt.json",
+      "sha256": "deb1d6e5d76e44859a36786c0f03c641ca17f6eb3e0d6969a65211239fff4a43"
+    },
+    {
+      "bytes": 556,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/handoff0/run/captures/bfd2f205cba0643c262d2e682d24c53d63ab720a4699b49ef25b44c898746cbf/request.json",
+      "role": "final_handoff_42_request.json",
+      "sha256": "b7d275abcba3a0405f222bc6297a4612b3ffcd93d1f4e8557e73035f03e8a778"
+    },
+    {
+      "bytes": 34,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/handoff0/run/captures/bfd2f205cba0643c262d2e682d24c53d63ab720a4699b49ef25b44c898746cbf/started.json",
+      "role": "final_handoff_43_started.json",
+      "sha256": "af988155b32edf933bf6e155f9b249c7b0174d7d079030c8727c247460c0ff9c"
+    },
+    {
+      "bytes": 212,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/handoff0/run/captures/bfd2f205cba0643c262d2e682d24c53d63ab720a4699b49ef25b44c898746cbf/supervisor.json",
+      "role": "final_handoff_44_supervisor.json",
+      "sha256": "871aed0dfa212ddc15c26083c7c26e10203c68ef5c3ea7e2ac885b419e3a79d2"
+    },
+    {
+      "bytes": 188,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/handoff0/run/captures/bfd2f205cba0643c262d2e682d24c53d63ab720a4699b49ef25b44c898746cbf/terminal.json",
+      "role": "final_handoff_45_terminal.json",
+      "sha256": "772a35d4988c654f71d3b1801379ef180c1182515122e2a046c8e2737a52bd8c"
+    },
+    {
+      "bytes": 49979,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/handoff0/run/input_inventory.json",
+      "role": "final_handoff_46_input_inventory.json",
+      "sha256": "02c7196bbd6a402c1f218d0e50017327956cc269c8121a8107816f82c21c5c12"
+    },
+    {
+      "bytes": 119546,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/handoff0/run/result.json",
+      "role": "final_handoff_47_result.json",
+      "sha256": "d03cc9dd8539e16ef75ea56289a39991663af9b78de140a9e3761abc9b3265ba"
+    },
+    {
+      "bytes": 174,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/handoff0/run/staging.json",
+      "role": "final_handoff_48_staging.json",
+      "sha256": "1e3fa53a5c9223a9c9fb764c8653612b7350b5564ff83db190021d14e4f72276"
+    },
+    {
+      "bytes": 453,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret0/run/27818/config.json",
+      "role": "final_handoff_49_config.json",
+      "sha256": "a61b0ada1173b2f21e7c53ead6eb2a2c84c9c4de564cf99daf2c4ba5adfd9f62"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret0/run/27818/stderr.txt",
+      "role": "final_handoff_50_stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 24576,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret0/run/27818/store/capture.sqlite3",
+      "role": "final_handoff_51_capture.sqlite3",
+      "sha256": "6253baffa35811744eab5929390aa58c6be43a7ff5982fe88f73e8f8ddb9da4f"
+    },
+    {
+      "bytes": 878,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret0/run/27818/store/raw/1789663226586_ae84840cfe224b7ca56b28b6745b653c.json",
+      "role": "final_handoff_52_1789663226586_ae84840cfe224b7ca56b28b6745b653c.json",
+      "sha256": "0df8c9e934033c3c504648922a06ec73b1e881d2f55af53c2d82230810c425c2"
+    },
+    {
+      "bytes": 448,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret0/run/43671/config.json",
+      "role": "final_handoff_53_config.json",
+      "sha256": "5a5be749468c8c919cceefe906d7fb67b2f02f7b6fb55d425fbd7511b0773772"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret0/run/43671/stderr.txt",
+      "role": "final_handoff_54_stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 24576,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret0/run/43671/store/capture.sqlite3",
+      "role": "final_handoff_55_capture.sqlite3",
+      "sha256": "a7f49a928ecf3fb3da0f538caad8f9cb2713e3adba2bcfd39a46bc8b9537cccb"
+    },
+    {
+      "bytes": 878,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret0/run/43671/store/raw/1789663226576_555b7663d6f64e11b63430e48899ca5f.json",
+      "role": "final_handoff_56_1789663226576_555b7663d6f64e11b63430e48899ca5f.json",
+      "sha256": "a1f1d3105c90e5157f4301b0be6160649b31b65858545fc6d19c44271fb2d1f0"
+    },
+    {
+      "bytes": 461,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret0/run/44810/config.json",
+      "role": "final_handoff_57_config.json",
+      "sha256": "188fa5a22d6ee1bb5efcb3cd8acd727a97771a0c969453ed5376fbb432ac480b"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret0/run/44810/stderr.txt",
+      "role": "final_handoff_58_stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 36864,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret0/run/44810/store/native.sqlite3",
+      "role": "final_handoff_59_native.sqlite3",
+      "sha256": "03b82b70189a84d1024abcf073388a402c61f04ff1b1d1ef535a4fe8760c50c0"
+    },
+    {
+      "bytes": 888,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret0/run/44810/store/raw/1789663226601_3cf6d39f6b13405d899b16b8636ce02d.json",
+      "role": "final_handoff_60_1789663226601_3cf6d39f6b13405d899b16b8636ce02d.json",
+      "sha256": "f049eb7d78f6b41d921120d63d2b4b749d8b0461fbfb911d254301311715bd6e"
+    },
+    {
+      "bytes": 8192,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret0/run/44810/v89_equal_cap_followup_market_capture_20260923_v1/capture.sqlite3",
+      "role": "final_handoff_61_capture.sqlite3",
+      "sha256": "de3608e3bb349aca76f4035033cc3cdab933c914e5aae2146028329918ab5064"
+    },
+    {
+      "bytes": 77,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret0/run/44810/v89_equal_cap_followup_market_capture_20260923_v1/latest.json",
+      "role": "final_handoff_62_latest.json",
+      "sha256": "148729bc995f7a966f40b29726aa1ebb3bc0a3b6ac849cfbf83cb7cda01243fa"
+    },
+    {
+      "bytes": 8192,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret0/run/44810/v89_equal_cap_market_capture_20260908_v1/capture.sqlite3",
+      "role": "final_handoff_63_capture.sqlite3",
+      "sha256": "de3608e3bb349aca76f4035033cc3cdab933c914e5aae2146028329918ab5064"
+    },
+    {
+      "bytes": 77,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret0/run/44810/v89_equal_cap_market_capture_20260908_v1/latest.json",
+      "role": "final_handoff_64_latest.json",
+      "sha256": "fcde74dc073f0ec2e359060c2f26878c1da234156899286c2af6436bc907dcfe"
+    },
+    {
+      "bytes": 8192,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret0/run/44810/v89_prospective_market_capture_20260908_v1/capture.sqlite3",
+      "role": "final_handoff_65_capture.sqlite3",
+      "sha256": "de3608e3bb349aca76f4035033cc3cdab933c914e5aae2146028329918ab5064"
+    },
+    {
+      "bytes": 77,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret0/run/44810/v89_prospective_market_capture_20260908_v1/latest.json",
+      "role": "final_handoff_66_latest.json",
+      "sha256": "a4a0b625fc9350e9020ffe6993e7fb5b1c5627d0b22ec6044619d61f336d1da4"
+    },
+    {
+      "bytes": 8192,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret0/run/44810/v89_quarter_entry_followup_capture_20260923_v1/capture.sqlite3",
+      "role": "final_handoff_67_capture.sqlite3",
+      "sha256": "de3608e3bb349aca76f4035033cc3cdab933c914e5aae2146028329918ab5064"
+    },
+    {
+      "bytes": 77,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret0/run/44810/v89_quarter_entry_followup_capture_20260923_v1/latest.json",
+      "role": "final_handoff_68_latest.json",
+      "sha256": "148729bc995f7a966f40b29726aa1ebb3bc0a3b6ac849cfbf83cb7cda01243fa"
+    },
+    {
+      "bytes": 449,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret0/run/45939/config.json",
+      "role": "final_handoff_69_config.json",
+      "sha256": "14212451d87ae1cc630e85c6fa448041598a5aeec874dcb90b3cd13c042c4a50"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret0/run/45939/stderr.txt",
+      "role": "final_handoff_70_stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 32768,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret0/run/45939/store/capture.sqlite3",
+      "role": "final_handoff_71_capture.sqlite3",
+      "sha256": "ba5e3a4b05e3acfaeb15b22a550b32dfd4cd685321c8638a2a89a4ab3dacba5c"
+    },
+    {
+      "bytes": 893,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret0/run/45939/store/raw/1789663226583_9845211c35f64c5a8d3fbc1bc2875870.json",
+      "role": "final_handoff_72_1789663226583_9845211c35f64c5a8d3fbc1bc2875870.json",
+      "sha256": "fb0b66ecd9b103d5f15fc289ca8835c5b63fd03fae905e1b556cdee01b7cad62"
+    },
+    {
+      "bytes": 455,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret0/run/51194/config.json",
+      "role": "final_handoff_73_config.json",
+      "sha256": "102b329518e1527dc275b46ae033211e71a4eaed457a1ce533334d936846dab1"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret0/run/51194/stderr.txt",
+      "role": "final_handoff_74_stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 32768,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret0/run/51194/store/capture.sqlite3",
+      "role": "final_handoff_75_capture.sqlite3",
+      "sha256": "f212c4b6d6ac5fe445cb4e3d849bfc3599784e9c77778f23edd01f98607171ae"
+    },
+    {
+      "bytes": 893,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret0/run/51194/store/raw/1789663226585_bb863aac05f9426bb0851ce074baf867.json",
+      "role": "final_handoff_76_1789663226585_bb863aac05f9426bb0851ce074baf867.json",
+      "sha256": "eaeac1c8cf10492241ca5905cdd4d1860902c848e04d0a57bac3c4eda9e37036"
+    },
+    {
+      "bytes": 49979,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret0/run/input_inventory.json",
+      "role": "final_handoff_77_input_inventory.json",
+      "sha256": "02c7196bbd6a402c1f218d0e50017327956cc269c8121a8107816f82c21c5c12"
+    },
+    {
+      "bytes": 59317,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret0/run/result.json",
+      "role": "final_handoff_78_result.json",
+      "sha256": "96ccb67b8be83eaf42072a084c88ba6384b5c25b900ff95031dda2d70fbb279f"
+    },
+    {
+      "bytes": 174,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret0/run/staging.json",
+      "role": "final_handoff_79_staging.json",
+      "sha256": "cd5295e4dce77c705cdfa3034cf71703d4cd0d41b468e92e8e717992a4a005bc"
+    },
+    {
+      "bytes": 453,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret1/run/27818/config.json",
+      "role": "final_handoff_80_config.json",
+      "sha256": "ee072ad2b102b760b904fd0d5656077cbd8990d5011a46b34fcdca378d2e1603"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret1/run/27818/stderr.txt",
+      "role": "final_handoff_81_stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 24576,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret1/run/27818/store/capture.sqlite3",
+      "role": "final_handoff_82_capture.sqlite3",
+      "sha256": "86f465efc00a10a5bb3422bbd9a08042298d5716eaf7c3174804801a52b6ed14"
+    },
+    {
+      "bytes": 698,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret1/run/27818/store/raw/1789663227185_5dc2d4efa2b94d83aa30b3b3caad26ab.json",
+      "role": "final_handoff_83_1789663227185_5dc2d4efa2b94d83aa30b3b3caad26ab.json",
+      "sha256": "58a83da66d28ae9e3f78336d707b18fe52a9e29e77f54c4e3a7d8ef947ee553e"
+    },
+    {
+      "bytes": 878,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret1/run/27818/store/raw/1789663228280_975249406f40462782a45d9461efeb18.json",
+      "role": "final_handoff_84_1789663228280_975249406f40462782a45d9461efeb18.json",
+      "sha256": "e21b0ff48b8999524f6da78b8874d1e06c85f8d93d5839786be1b39766cd4728"
+    },
+    {
+      "bytes": 448,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret1/run/43671/config.json",
+      "role": "final_handoff_85_config.json",
+      "sha256": "3fdd184fea75b2af630fd8e4a6a08c53a41cc50c14f1100b1854f4860da1084a"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret1/run/43671/stderr.txt",
+      "role": "final_handoff_86_stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 24576,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret1/run/43671/store/capture.sqlite3",
+      "role": "final_handoff_87_capture.sqlite3",
+      "sha256": "1933acf0a40bfdc4632a954900591c9bc182ee930d4e95c06ebe4535e5fcdaed"
+    },
+    {
+      "bytes": 698,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret1/run/43671/store/raw/1789663227181_cbd36ad0cef34dc5a026a060aa57ef44.json",
+      "role": "final_handoff_88_1789663227181_cbd36ad0cef34dc5a026a060aa57ef44.json",
+      "sha256": "944adb4685d320751d584036a4f3cd441a41ffb154040024f43591ff6a2a83b6"
+    },
+    {
+      "bytes": 878,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret1/run/43671/store/raw/1789663228220_750b8384cb134eff97ebce01c3ec69d4.json",
+      "role": "final_handoff_89_1789663228220_750b8384cb134eff97ebce01c3ec69d4.json",
+      "sha256": "5b795656aec5966f4a0e710fccc8c944c88d64a3cfd77fd05e0a9da7dd88527b"
+    },
+    {
+      "bytes": 461,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret1/run/44810/config.json",
+      "role": "final_handoff_90_config.json",
+      "sha256": "61b495903f92a881837526cfc29f48d979f25d383d9a73776fca83bf0581453f"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret1/run/44810/stderr.txt",
+      "role": "final_handoff_91_stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 36864,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret1/run/44810/store/native.sqlite3",
+      "role": "final_handoff_92_native.sqlite3",
+      "sha256": "9b03651c43e703b7ee292aefe12a80225751d3c73f980113c751696f58ffadc4"
+    },
+    {
+      "bytes": 712,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret1/run/44810/store/raw/1789663227200_609a530876c444ffa2feccaf666ad94e.json",
+      "role": "final_handoff_93_1789663227200_609a530876c444ffa2feccaf666ad94e.json",
+      "sha256": "f3c91d86db6c4df269ac37b3214e410854caa95a849e71563219b7909a0c80d5"
+    },
+    {
+      "bytes": 8192,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret1/run/44810/v89_equal_cap_followup_market_capture_20260923_v1/capture.sqlite3",
+      "role": "final_handoff_94_capture.sqlite3",
+      "sha256": "de3608e3bb349aca76f4035033cc3cdab933c914e5aae2146028329918ab5064"
+    },
+    {
+      "bytes": 77,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret1/run/44810/v89_equal_cap_followup_market_capture_20260923_v1/latest.json",
+      "role": "final_handoff_95_latest.json",
+      "sha256": "4b49a6262d709bf73c608f951247cc4776f8e4a90e0c19e252df099aa6e9c516"
+    },
+    {
+      "bytes": 8192,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret1/run/44810/v89_equal_cap_market_capture_20260908_v1/capture.sqlite3",
+      "role": "final_handoff_96_capture.sqlite3",
+      "sha256": "de3608e3bb349aca76f4035033cc3cdab933c914e5aae2146028329918ab5064"
+    },
+    {
+      "bytes": 77,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret1/run/44810/v89_equal_cap_market_capture_20260908_v1/latest.json",
+      "role": "final_handoff_97_latest.json",
+      "sha256": "f69b7d86ee7c4083f754f6ce167cfdf2b92c52210ec5fb9d7c92e3b7ca393c5d"
+    },
+    {
+      "bytes": 8192,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret1/run/44810/v89_prospective_market_capture_20260908_v1/capture.sqlite3",
+      "role": "final_handoff_98_capture.sqlite3",
+      "sha256": "de3608e3bb349aca76f4035033cc3cdab933c914e5aae2146028329918ab5064"
+    },
+    {
+      "bytes": 77,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret1/run/44810/v89_prospective_market_capture_20260908_v1/latest.json",
+      "role": "final_handoff_99_latest.json",
+      "sha256": "f506d49b905c7dfa0d3d61e5798a0735709db0320c328b5599ea0cb342ef1f39"
+    },
+    {
+      "bytes": 8192,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret1/run/44810/v89_quarter_entry_followup_capture_20260923_v1/capture.sqlite3",
+      "role": "final_handoff_100_capture.sqlite3",
+      "sha256": "de3608e3bb349aca76f4035033cc3cdab933c914e5aae2146028329918ab5064"
+    },
+    {
+      "bytes": 77,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret1/run/44810/v89_quarter_entry_followup_capture_20260923_v1/latest.json",
+      "role": "final_handoff_101_latest.json",
+      "sha256": "ec6338b9c7ffd91b31457a5f8381b2c59f7f56ed35a6182c16880540b93a8ba6"
+    },
+    {
+      "bytes": 449,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret1/run/45939/config.json",
+      "role": "final_handoff_102_config.json",
+      "sha256": "bc98d198c746842adf36096e7591fd31076acf5d68e925adcc39f080781961fd"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret1/run/45939/stderr.txt",
+      "role": "final_handoff_103_stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 32768,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret1/run/45939/store/capture.sqlite3",
+      "role": "final_handoff_104_capture.sqlite3",
+      "sha256": "21a25b752df98e41d141ba17cf7ea74275ede81c5a2148673eb4d98017e7a7bd"
+    },
+    {
+      "bytes": 713,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret1/run/45939/store/raw/1789663227185_1ada58aa076c4a26a4f733759d0de4dd.json",
+      "role": "final_handoff_105_1789663227185_1ada58aa076c4a26a4f733759d0de4dd.json",
+      "sha256": "ef227ab864ecc42aa15612d70423a11411defe59a9da4db0e54c2c18d7b67a67"
+    },
+    {
+      "bytes": 893,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret1/run/45939/store/raw/1789663228248_e8f0b9eb472640bcac6e22df5e884218.json",
+      "role": "final_handoff_106_1789663228248_e8f0b9eb472640bcac6e22df5e884218.json",
+      "sha256": "2b40aa8b127f901e937b84d39644a6ce515c9d611e2e02e8b2c4327fdcbaa830"
+    },
+    {
+      "bytes": 455,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret1/run/51194/config.json",
+      "role": "final_handoff_107_config.json",
+      "sha256": "45e60e9738f5d8bfa47d192c9d97ffc720ea24ae1fbb912edc433b375fb6384b"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret1/run/51194/stderr.txt",
+      "role": "final_handoff_108_stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 32768,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret1/run/51194/store/capture.sqlite3",
+      "role": "final_handoff_109_capture.sqlite3",
+      "sha256": "a92bcc02fa97c40c5bb1ba377ecbaac7cf6089dcb7cdfc75ddd4d4838534cc09"
+    },
+    {
+      "bytes": 713,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret1/run/51194/store/raw/1789663227189_afee036b18b7449486e0244a918e7443.json",
+      "role": "final_handoff_110_1789663227189_afee036b18b7449486e0244a918e7443.json",
+      "sha256": "6b5733fe6de16c7db66ea9d0ac86f22137ee3aba2139de07b566fc50c552deed"
+    },
+    {
+      "bytes": 893,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret1/run/51194/store/raw/1789663228306_585f56db02c74195a7d7daa66c46fdd4.json",
+      "role": "final_handoff_111_1789663228306_585f56db02c74195a7d7daa66c46fdd4.json",
+      "sha256": "cf1f656f0566aa71f7550ff29b5d89d25737c9b3cc48ab31ade82c7ecbb720ff"
+    },
+    {
+      "bytes": 49979,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret1/run/input_inventory.json",
+      "role": "final_handoff_112_input_inventory.json",
+      "sha256": "02c7196bbd6a402c1f218d0e50017327956cc269c8121a8107816f82c21c5c12"
+    },
+    {
+      "bytes": 66938,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret1/run/result.json",
+      "role": "final_handoff_113_result.json",
+      "sha256": "0e23b9b095e8e5ff02e26a419319b949a221d80b80c948b4c757926c421045cd"
+    },
+    {
+      "bytes": 174,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret1/run/staging.json",
+      "role": "final_handoff_114_staging.json",
+      "sha256": "ae7f58bf439311b1d74ea45f0ca13887f2a62731dac31da0959b07542683e816"
+    },
+    {
+      "bytes": 453,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret2/run/27818/config.json",
+      "role": "final_handoff_115_config.json",
+      "sha256": "1769f837dc3ba5e468c03937a80b91068f011b035f8b6810ca48554f48a97a27"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret2/run/27818/stderr.txt",
+      "role": "final_handoff_116_stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 24576,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret2/run/27818/store/capture.sqlite3",
+      "role": "final_handoff_117_capture.sqlite3",
+      "sha256": "772b9e16b39c02a11310ecd730780c841fa361c0c4b45091d532b12b33df556f"
+    },
+    {
+      "bytes": 878,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret2/run/27818/store/raw/1789663228799_51a5cf19c0f143d7a0018afa01ce6cf6.json",
+      "role": "final_handoff_118_1789663228799_51a5cf19c0f143d7a0018afa01ce6cf6.json",
+      "sha256": "f728cc61ce5cae6f3f253ed9d9dcd87194a95d7a7d0e540fc8e9aafaa924dba1"
+    },
+    {
+      "bytes": 878,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret2/run/27818/store/raw/1789663229841_f754b920ddc744a98a89ba5ce2ea7257.json",
+      "role": "final_handoff_119_1789663229841_f754b920ddc744a98a89ba5ce2ea7257.json",
+      "sha256": "d080db3ef570abf4462ad5b251522d3d733e7347356e99e6bc49b24d758d7ab3"
+    },
+    {
+      "bytes": 448,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret2/run/43671/config.json",
+      "role": "final_handoff_120_config.json",
+      "sha256": "54fa1e7b4fa71f9e35baa79be98dd25f68fb9429fe5405d2e6fb7cfab09d42ef"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret2/run/43671/stderr.txt",
+      "role": "final_handoff_121_stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 24576,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret2/run/43671/store/capture.sqlite3",
+      "role": "final_handoff_122_capture.sqlite3",
+      "sha256": "98a743001e9cff4d1e29b8885b029746f8a8ba8a3a319de891ea336cf2f2b826"
+    },
+    {
+      "bytes": 878,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret2/run/43671/store/raw/1789663228801_094de4d1792f4f9192ea9eaa58c7b28d.json",
+      "role": "final_handoff_123_1789663228801_094de4d1792f4f9192ea9eaa58c7b28d.json",
+      "sha256": "fe3501dd368f7dbf33671e4871dbf2ae41785059aaef39e62f2ba22a9d9d5e16"
+    },
+    {
+      "bytes": 878,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret2/run/43671/store/raw/1789663229858_9a98369ee4514e0a9de83164bfa2aa46.json",
+      "role": "final_handoff_124_1789663229858_9a98369ee4514e0a9de83164bfa2aa46.json",
+      "sha256": "58977b93ad755a0334ffe9f4a869b27e01401cd529e22209d9bd6ec117ce08ba"
+    },
+    {
+      "bytes": 461,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret2/run/44810/config.json",
+      "role": "final_handoff_125_config.json",
+      "sha256": "eb65bc4c24c54681072bf8fafc568f92f235386625ca8222d4cb9e3766e0bbc0"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret2/run/44810/stderr.txt",
+      "role": "final_handoff_126_stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 36864,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret2/run/44810/store/native.sqlite3",
+      "role": "final_handoff_127_native.sqlite3",
+      "sha256": "affbf2b29820c59825a8c85fe87e1fef9e6778c05eab18e8058506e520103c47"
+    },
+    {
+      "bytes": 888,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret2/run/44810/store/raw/1789663228816_3748c6bb15b34c229b0f8c2d6706197d.json",
+      "role": "final_handoff_128_1789663228816_3748c6bb15b34c229b0f8c2d6706197d.json",
+      "sha256": "21e8ca9b37e591d67300c17993363afa75f8d562c9de73eb160324ebe6fb2a53"
+    },
+    {
+      "bytes": 8192,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret2/run/44810/v89_equal_cap_followup_market_capture_20260923_v1/capture.sqlite3",
+      "role": "final_handoff_129_capture.sqlite3",
+      "sha256": "de3608e3bb349aca76f4035033cc3cdab933c914e5aae2146028329918ab5064"
+    },
+    {
+      "bytes": 77,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret2/run/44810/v89_equal_cap_followup_market_capture_20260923_v1/latest.json",
+      "role": "final_handoff_130_latest.json",
+      "sha256": "5dfd466d59a0132cbbc6333d246d00e149b94d00c1bcde88195ec44df3280bd5"
+    },
+    {
+      "bytes": 8192,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret2/run/44810/v89_equal_cap_market_capture_20260908_v1/capture.sqlite3",
+      "role": "final_handoff_131_capture.sqlite3",
+      "sha256": "de3608e3bb349aca76f4035033cc3cdab933c914e5aae2146028329918ab5064"
+    },
+    {
+      "bytes": 77,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret2/run/44810/v89_equal_cap_market_capture_20260908_v1/latest.json",
+      "role": "final_handoff_132_latest.json",
+      "sha256": "e3180e0fcd2d4c45c4fad06e261727cbb2699ce6e80a66aacc620cf7e06f7ccd"
+    },
+    {
+      "bytes": 8192,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret2/run/44810/v89_prospective_market_capture_20260908_v1/capture.sqlite3",
+      "role": "final_handoff_133_capture.sqlite3",
+      "sha256": "de3608e3bb349aca76f4035033cc3cdab933c914e5aae2146028329918ab5064"
+    },
+    {
+      "bytes": 77,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret2/run/44810/v89_prospective_market_capture_20260908_v1/latest.json",
+      "role": "final_handoff_134_latest.json",
+      "sha256": "0c752980fc3bfc363dad284c3478d7558efed627608896e3fd696d74e3f166ed"
+    },
+    {
+      "bytes": 8192,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret2/run/44810/v89_quarter_entry_followup_capture_20260923_v1/capture.sqlite3",
+      "role": "final_handoff_135_capture.sqlite3",
+      "sha256": "de3608e3bb349aca76f4035033cc3cdab933c914e5aae2146028329918ab5064"
+    },
+    {
+      "bytes": 77,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret2/run/44810/v89_quarter_entry_followup_capture_20260923_v1/latest.json",
+      "role": "final_handoff_136_latest.json",
+      "sha256": "c8ec4bd416cd328d59cbc11a1b6c137b5edce34732afac17612330135846b203"
+    },
+    {
+      "bytes": 449,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret2/run/45939/config.json",
+      "role": "final_handoff_137_config.json",
+      "sha256": "76d4411c87e36c247e7c53c7dc948bd69edec708344f344ee92a0b52babb64c6"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret2/run/45939/stderr.txt",
+      "role": "final_handoff_138_stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 32768,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret2/run/45939/store/capture.sqlite3",
+      "role": "final_handoff_139_capture.sqlite3",
+      "sha256": "7818f36bcc050fdd59712dc94f8dae3b1feb093a7014407da4df75dc0b392184"
+    },
+    {
+      "bytes": 893,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret2/run/45939/store/raw/1789663228801_0f61a221987c470dbc19e52e4e6eb33b.json",
+      "role": "final_handoff_140_1789663228801_0f61a221987c470dbc19e52e4e6eb33b.json",
+      "sha256": "a7329d318698a030517685745dedf2c673af408b440aef1e605de001539c4c2c"
+    },
+    {
+      "bytes": 893,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret2/run/45939/store/raw/1789663229885_de6fd2560c03464fbae82e0cde7e5fe2.json",
+      "role": "final_handoff_141_1789663229885_de6fd2560c03464fbae82e0cde7e5fe2.json",
+      "sha256": "e4959757f999d74ee0b1743f0f74adbf34a0549ebd0c95d9459d58f5acfed892"
+    },
+    {
+      "bytes": 455,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret2/run/51194/config.json",
+      "role": "final_handoff_142_config.json",
+      "sha256": "ae406f38e722873ad599ffa77ad7ec07cb8cc914d7c241f5368214c30e1f8ced"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret2/run/51194/stderr.txt",
+      "role": "final_handoff_143_stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 32768,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret2/run/51194/store/capture.sqlite3",
+      "role": "final_handoff_144_capture.sqlite3",
+      "sha256": "bf8edb0b7d033bdd2ce473755f4d55e7ba88b9e7e02e123772be4ad95197c764"
+    },
+    {
+      "bytes": 893,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret2/run/51194/store/raw/1789663228806_054f4648e0ea4d79b67f5dcfca63c0c3.json",
+      "role": "final_handoff_145_1789663228806_054f4648e0ea4d79b67f5dcfca63c0c3.json",
+      "sha256": "bcdd771d3b2d45fd4874bf65c6bb503b1b3f811d4d5da2588cee8b9479b3212e"
+    },
+    {
+      "bytes": 893,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret2/run/51194/store/raw/1789663229913_6965e97c47154488bf4586a78f05d46a.json",
+      "role": "final_handoff_146_1789663229913_6965e97c47154488bf4586a78f05d46a.json",
+      "sha256": "6fb2eaadef0f49902c97d13643e36b77960590cce03c45399b0d6bcf51ae8f84"
+    },
+    {
+      "bytes": 49979,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret2/run/input_inventory.json",
+      "role": "final_handoff_147_input_inventory.json",
+      "sha256": "02c7196bbd6a402c1f218d0e50017327956cc269c8121a8107816f82c21c5c12"
+    },
+    {
+      "bytes": 68747,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret2/run/result.json",
+      "role": "final_handoff_148_result.json",
+      "sha256": "bb0d38b6a21e124458b016bc026231c95cfcd8599e704e4ba7f569a2a671e44c"
+    },
+    {
+      "bytes": 174,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret2/run/staging.json",
+      "role": "final_handoff_149_staging.json",
+      "sha256": "0fa7d0d8684a1909f1370eb04698793e64e0ff261a306325023ef7207fecbbbd"
+    },
+    {
+      "bytes": 453,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret3/run/27818/config.json",
+      "role": "final_handoff_150_config.json",
+      "sha256": "e354e5225f3ce7c32649fabb96cbfa50828ae1597d6fcd2a93cf1d7130376636"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret3/run/27818/stderr.txt",
+      "role": "final_handoff_151_stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 24576,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret3/run/27818/store/capture.sqlite3",
+      "role": "final_handoff_152_capture.sqlite3",
+      "sha256": "3779959de73b22c39cd3e1747034bc3c7eff842e16ed9c692cad264b0f088e41"
+    },
+    {
+      "bytes": 878,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret3/run/27818/store/raw/1789663230420_9e0606244b7f4edb91fa60857d9b02ce.json",
+      "role": "final_handoff_153_1789663230420_9e0606244b7f4edb91fa60857d9b02ce.json",
+      "sha256": "95fff495ea738d7d9ee88abb0c4699e62d6b99a6e2f6b3313c0fc4fca3624c5a"
+    },
+    {
+      "bytes": 878,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret3/run/27818/store/raw/1789663231502_6cf348c8e05449a9a5f0fb12954f800f.json",
+      "role": "final_handoff_154_1789663231502_6cf348c8e05449a9a5f0fb12954f800f.json",
+      "sha256": "03d2e9c1014c0c3cbe8d521b35722038aeac898adae554b831646d23933a9615"
+    },
+    {
+      "bytes": 878,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret3/run/27818/store/raw/1789663233553_b143465aeed74fce9c3fb3a69696ef18.json",
+      "role": "final_handoff_155_1789663233553_b143465aeed74fce9c3fb3a69696ef18.json",
+      "sha256": "146cbb16a915af17dffb4335dd1ac0f8523d2e007038b62381183d6270014d85"
+    },
+    {
+      "bytes": 448,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret3/run/43671/config.json",
+      "role": "final_handoff_156_config.json",
+      "sha256": "ba6e5eae0ca51f30cf3e1b78e26a21b1a5ff31550973603dba7096b9d3ccca69"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret3/run/43671/stderr.txt",
+      "role": "final_handoff_157_stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 24576,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret3/run/43671/store/capture.sqlite3",
+      "role": "final_handoff_158_capture.sqlite3",
+      "sha256": "13a9d5c59d8477cad80cdd31d77ef263ed57e5c8b21d588d7264de4e3d151577"
+    },
+    {
+      "bytes": 878,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret3/run/43671/store/raw/1789663230418_f1393b6a26f6470782574492b53c210e.json",
+      "role": "final_handoff_159_1789663230418_f1393b6a26f6470782574492b53c210e.json",
+      "sha256": "8f29e5823956555da5fb98ec53033b6959893c7090f7c1ea17153ac100889a16"
+    },
+    {
+      "bytes": 878,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret3/run/43671/store/raw/1789663231460_ef0f4b5931b54ecda8f48a7c37ca489d.json",
+      "role": "final_handoff_160_1789663231460_ef0f4b5931b54ecda8f48a7c37ca489d.json",
+      "sha256": "d2f1947ef855f07536e6a3ae6ed43795fbd4229184cb83adf32c210c8d5744d5"
+    },
+    {
+      "bytes": 878,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret3/run/43671/store/raw/1789663233502_df1f368114d041c0a4b3f237b056b1d6.json",
+      "role": "final_handoff_161_1789663233502_df1f368114d041c0a4b3f237b056b1d6.json",
+      "sha256": "c0ee6769ca67571e7d7fdc63f9a681df3475802cf756411629f9300357bd2146"
+    },
+    {
+      "bytes": 461,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret3/run/44810/config.json",
+      "role": "final_handoff_162_config.json",
+      "sha256": "b4f00829d33bd919a0d2f0f34e91c57fc5356baaf3e190c2998991db8c2a6233"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret3/run/44810/stderr.txt",
+      "role": "final_handoff_163_stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 36864,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret3/run/44810/store/native.sqlite3",
+      "role": "final_handoff_164_native.sqlite3",
+      "sha256": "dbb6fb1e254a7dcbbb826c7d1a00235bb206fdb8fc6021164d6e96d3c9391537"
+    },
+    {
+      "bytes": 888,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret3/run/44810/store/raw/1789663230435_f81042f2a6764517b6ab25403751d725.json",
+      "role": "final_handoff_165_1789663230435_f81042f2a6764517b6ab25403751d725.json",
+      "sha256": "e6a4efb99f9f667fdf08a7bc3f038ed471f05b85b7abdaed72c76bb9d30c2133"
+    },
+    {
+      "bytes": 8192,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret3/run/44810/v89_equal_cap_followup_market_capture_20260923_v1/capture.sqlite3",
+      "role": "final_handoff_166_capture.sqlite3",
+      "sha256": "de3608e3bb349aca76f4035033cc3cdab933c914e5aae2146028329918ab5064"
+    },
+    {
+      "bytes": 77,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret3/run/44810/v89_equal_cap_followup_market_capture_20260923_v1/latest.json",
+      "role": "final_handoff_167_latest.json",
+      "sha256": "4ef783526561330a70e33a58af1a20eb9298ad12e0f485909dc5842c319bbf6a"
+    },
+    {
+      "bytes": 8192,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret3/run/44810/v89_equal_cap_market_capture_20260908_v1/capture.sqlite3",
+      "role": "final_handoff_168_capture.sqlite3",
+      "sha256": "de3608e3bb349aca76f4035033cc3cdab933c914e5aae2146028329918ab5064"
+    },
+    {
+      "bytes": 77,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret3/run/44810/v89_equal_cap_market_capture_20260908_v1/latest.json",
+      "role": "final_handoff_169_latest.json",
+      "sha256": "4b9c5156a48d4926628772ceead892cdc802efeab5b068dd5cd0bb5578a4bd02"
+    },
+    {
+      "bytes": 8192,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret3/run/44810/v89_prospective_market_capture_20260908_v1/capture.sqlite3",
+      "role": "final_handoff_170_capture.sqlite3",
+      "sha256": "de3608e3bb349aca76f4035033cc3cdab933c914e5aae2146028329918ab5064"
+    },
+    {
+      "bytes": 77,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret3/run/44810/v89_prospective_market_capture_20260908_v1/latest.json",
+      "role": "final_handoff_171_latest.json",
+      "sha256": "a6fc552c055a025321b9742a28ddddca915423726caf18ebb21c498379b7f54b"
+    },
+    {
+      "bytes": 8192,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret3/run/44810/v89_quarter_entry_followup_capture_20260923_v1/capture.sqlite3",
+      "role": "final_handoff_172_capture.sqlite3",
+      "sha256": "de3608e3bb349aca76f4035033cc3cdab933c914e5aae2146028329918ab5064"
+    },
+    {
+      "bytes": 77,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret3/run/44810/v89_quarter_entry_followup_capture_20260923_v1/latest.json",
+      "role": "final_handoff_173_latest.json",
+      "sha256": "b91dbaf661d95486c384a438df5e909e942397cec986e02ae841d62f3bd53397"
+    },
+    {
+      "bytes": 449,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret3/run/45939/config.json",
+      "role": "final_handoff_174_config.json",
+      "sha256": "601922670004a1c5ac3f04d0767df98f4bd27e0364b9f7f8b0cf7ad35ec04e06"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret3/run/45939/stderr.txt",
+      "role": "final_handoff_175_stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 32768,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret3/run/45939/store/capture.sqlite3",
+      "role": "final_handoff_176_capture.sqlite3",
+      "sha256": "9f48093fede4e281d9a0ff140986c73bb90cc916e252015166b9543386485c6c"
+    },
+    {
+      "bytes": 893,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret3/run/45939/store/raw/1789663230423_e23161725fe949f698817c58c82b3ebb.json",
+      "role": "final_handoff_177_1789663230423_e23161725fe949f698817c58c82b3ebb.json",
+      "sha256": "d93e74aeddff5986afbe0ae2bf94f23a1a6d2e3b58aeed92b2b86d8bbaa9b314"
+    },
+    {
+      "bytes": 893,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret3/run/45939/store/raw/1789663231481_5e40237224744125891e0561e609bbf2.json",
+      "role": "final_handoff_178_1789663231481_5e40237224744125891e0561e609bbf2.json",
+      "sha256": "8080e3d4ded02b58c35360b66f58b631d3a4600780a8460df254330e4cf35f4e"
+    },
+    {
+      "bytes": 893,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret3/run/45939/store/raw/1789663233521_817cb1f2ba56401a970e083086061d3a.json",
+      "role": "final_handoff_179_1789663233521_817cb1f2ba56401a970e083086061d3a.json",
+      "sha256": "337eb2ba19711c7750f1fc520fbc29aa9b0c4c490bda6f3df6a1cba9b452a0e6"
+    },
+    {
+      "bytes": 455,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret3/run/51194/config.json",
+      "role": "final_handoff_180_config.json",
+      "sha256": "b84bc9f37e48364b3716b4e6b4cb40ea6735a54fcca4dd22a030f56fe5ea3c2e"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret3/run/51194/stderr.txt",
+      "role": "final_handoff_181_stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 32768,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret3/run/51194/store/capture.sqlite3",
+      "role": "final_handoff_182_capture.sqlite3",
+      "sha256": "d8eaca2db6c7f879fc5b0803fedd5c2bfc4e548ddb18979742428a5e5040ce4c"
+    },
+    {
+      "bytes": 893,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret3/run/51194/store/raw/1789663230426_b30f3897e8884373bb9c86ec675bb3f5.json",
+      "role": "final_handoff_183_1789663230426_b30f3897e8884373bb9c86ec675bb3f5.json",
+      "sha256": "12ee7787682bd8fe98c1d6c6b3f7b2fd7ce3555ccb8c9a1ed33a4e86d68d2f86"
+    },
+    {
+      "bytes": 893,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret3/run/51194/store/raw/1789663231541_ec7f663382644cf3afe6c418291773a8.json",
+      "role": "final_handoff_184_1789663231541_ec7f663382644cf3afe6c418291773a8.json",
+      "sha256": "04a59c2f0fcdd65ac84127972c9f0240c6420398b6ffe8445a6f1faab0719f53"
+    },
+    {
+      "bytes": 893,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret3/run/51194/store/raw/1789663233575_93e4a9fbf37d41f5bd012ee823e9f658.json",
+      "role": "final_handoff_185_1789663233575_93e4a9fbf37d41f5bd012ee823e9f658.json",
+      "sha256": "e2d593d8c6f66c2304cba5ee514c9957d94ad79aa8ebfc278b5d34dff91ef017"
+    },
+    {
+      "bytes": 49979,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret3/run/input_inventory.json",
+      "role": "final_handoff_186_input_inventory.json",
+      "sha256": "02c7196bbd6a402c1f218d0e50017327956cc269c8121a8107816f82c21c5c12"
+    },
+    {
+      "bytes": 76676,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret3/run/result.json",
+      "role": "final_handoff_187_result.json",
+      "sha256": "1c69d3504bd98c2efaecf05aedc55c61b8a2cfc38ffa9cede44195d7ce85d713"
+    },
+    {
+      "bytes": 174,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret3/run/staging.json",
+      "role": "final_handoff_188_staging.json",
+      "sha256": "e196f1fb8868b5334a5d63b79594e71abcbe749f2f15dbf31b5dddfc36f563b7"
+    },
+    {
+      "bytes": 453,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret4/run/27818/config.json",
+      "role": "final_handoff_189_config.json",
+      "sha256": "02f1e7ae5c1420d1ebfc3ee87b5c353cc2f7c6b59b82b7aa344a6da59ce464d9"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret4/run/27818/stderr.txt",
+      "role": "final_handoff_190_stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 24576,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret4/run/27818/store/capture.sqlite3",
+      "role": "final_handoff_191_capture.sqlite3",
+      "sha256": "7e91ba45730cfa94ecf4d1501475b7189e5f3dc55b7bf12fb2f3e0fb6ea558e1"
+    },
+    {
+      "bytes": 878,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret4/run/27818/store/raw/1789663234082_7a3c3afe22a54e18b94b9c936dc9f84e.json",
+      "role": "final_handoff_192_1789663234082_7a3c3afe22a54e18b94b9c936dc9f84e.json",
+      "sha256": "b967e2f875c9ad6f8c4c21ffb1298c44236abb0be9c7d56f50b036fbb5908bdc"
+    },
+    {
+      "bytes": 448,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret4/run/43671/config.json",
+      "role": "final_handoff_193_config.json",
+      "sha256": "6c35bd1670a4fcad03e00170f575df7fe39ac19e2e43f89322ce5366f28ac856"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret4/run/43671/stderr.txt",
+      "role": "final_handoff_194_stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 24576,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret4/run/43671/store/capture.sqlite3",
+      "role": "final_handoff_195_capture.sqlite3",
+      "sha256": "4323dbb0fc8cc117fe7f34266f297b42a5177e7051c57bddcacd282d089beff0"
+    },
+    {
+      "bytes": 878,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret4/run/43671/store/raw/1789663234080_747ad0c670fe4fcc94a1de3491b51252.json",
+      "role": "final_handoff_196_1789663234080_747ad0c670fe4fcc94a1de3491b51252.json",
+      "sha256": "46faad3beef2ea0de5ebc3d2271e26573bf43ac3eb9bbc9ff6326b8a757bb50e"
+    },
+    {
+      "bytes": 461,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret4/run/44810/config.json",
+      "role": "final_handoff_197_config.json",
+      "sha256": "8bfc498701287ae18b0c759ed2fd448df36b4d815efc4186888a26c2905d0df5"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret4/run/44810/stderr.txt",
+      "role": "final_handoff_198_stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 36864,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret4/run/44810/store/native.sqlite3",
+      "role": "final_handoff_199_native.sqlite3",
+      "sha256": "8d941eeb51caa93730bbf11e9ecf7e776581574aeaeeef20cfbcfb197e73326c"
+    },
+    {
+      "bytes": 888,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret4/run/44810/store/raw/1789663234095_be4ba2d3418e4642bf1da57e211a2ade.json",
+      "role": "final_handoff_200_1789663234095_be4ba2d3418e4642bf1da57e211a2ade.json",
+      "sha256": "7fc7f9de2cea591518a660227d8d2d11182d799005af916f56aa7ef9e2ab903a"
+    },
+    {
+      "bytes": 8192,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret4/run/44810/v89_equal_cap_followup_market_capture_20260923_v1/capture.sqlite3",
+      "role": "final_handoff_201_capture.sqlite3",
+      "sha256": "de3608e3bb349aca76f4035033cc3cdab933c914e5aae2146028329918ab5064"
+    },
+    {
+      "bytes": 77,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret4/run/44810/v89_equal_cap_followup_market_capture_20260923_v1/latest.json",
+      "role": "final_handoff_202_latest.json",
+      "sha256": "828040d66eef745a2b99fc8e57251171ca88542a0ec799896059026aca3ffeb9"
+    },
+    {
+      "bytes": 8192,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret4/run/44810/v89_equal_cap_market_capture_20260908_v1/capture.sqlite3",
+      "role": "final_handoff_203_capture.sqlite3",
+      "sha256": "de3608e3bb349aca76f4035033cc3cdab933c914e5aae2146028329918ab5064"
+    },
+    {
+      "bytes": 77,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret4/run/44810/v89_equal_cap_market_capture_20260908_v1/latest.json",
+      "role": "final_handoff_204_latest.json",
+      "sha256": "8a64cebff3c0d2f0edc9686c0b6b44f3d43912f91bde920f916bdc8defd1753e"
+    },
+    {
+      "bytes": 8192,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret4/run/44810/v89_prospective_market_capture_20260908_v1/capture.sqlite3",
+      "role": "final_handoff_205_capture.sqlite3",
+      "sha256": "de3608e3bb349aca76f4035033cc3cdab933c914e5aae2146028329918ab5064"
+    },
+    {
+      "bytes": 77,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret4/run/44810/v89_prospective_market_capture_20260908_v1/latest.json",
+      "role": "final_handoff_206_latest.json",
+      "sha256": "dc7e58332816f24a783154e613dc6ddad7a6d5372d15fd1974a1d203e70e85c8"
+    },
+    {
+      "bytes": 8192,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret4/run/44810/v89_quarter_entry_followup_capture_20260923_v1/capture.sqlite3",
+      "role": "final_handoff_207_capture.sqlite3",
+      "sha256": "de3608e3bb349aca76f4035033cc3cdab933c914e5aae2146028329918ab5064"
+    },
+    {
+      "bytes": 77,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret4/run/44810/v89_quarter_entry_followup_capture_20260923_v1/latest.json",
+      "role": "final_handoff_208_latest.json",
+      "sha256": "828040d66eef745a2b99fc8e57251171ca88542a0ec799896059026aca3ffeb9"
+    },
+    {
+      "bytes": 449,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret4/run/45939/config.json",
+      "role": "final_handoff_209_config.json",
+      "sha256": "ff603b57e08257f45527c152661d8202c86762d1868d39c157fb558236f88811"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret4/run/45939/stderr.txt",
+      "role": "final_handoff_210_stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 32768,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret4/run/45939/store/capture.sqlite3",
+      "role": "final_handoff_211_capture.sqlite3",
+      "sha256": "e6655a22de219d2f51172d1d8d7e7d9dcaaf6bce7eeb25670e6d7e630eac8a42"
+    },
+    {
+      "bytes": 893,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret4/run/45939/store/raw/1789663234080_ae82e0414397440cadf29ee2cad2f679.json",
+      "role": "final_handoff_212_1789663234080_ae82e0414397440cadf29ee2cad2f679.json",
+      "sha256": "2a363f82dfaf03e4e20f3304bcf829547e8bbe1f280c7c33e0c49bedd2833e77"
+    },
+    {
+      "bytes": 455,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret4/run/51194/config.json",
+      "role": "final_handoff_213_config.json",
+      "sha256": "6ea908317e6164ec0d2afd1d8f18ae1f40c4cbfcca9a13d34dc812187d168547"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret4/run/51194/stderr.txt",
+      "role": "final_handoff_214_stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 32768,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret4/run/51194/store/capture.sqlite3",
+      "role": "final_handoff_215_capture.sqlite3",
+      "sha256": "53916dfc0c08fa78a2b4efcc55cdf031f6aff01e2652df6d1503f7f6031e9093"
+    },
+    {
+      "bytes": 893,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret4/run/51194/store/raw/1789663234080_f6acee8bd7bd411ba2fff90b7c16075d.json",
+      "role": "final_handoff_216_1789663234080_f6acee8bd7bd411ba2fff90b7c16075d.json",
+      "sha256": "60f841279acd2a77cd012e324b8b9c0804aa5ef850607d7f352785714daca7bd"
+    },
+    {
+      "bytes": 184320,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret4/run/broker.sqlite3",
+      "role": "final_handoff_217_broker.sqlite3",
+      "sha256": "406b9979507a3a585474fd25584db0707c1cb33b2bf39a3f6802fe390c7b26e4"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret4/run/captures/.dispatch-locks/8e595695a3b63af80e00d63e0294474d9dd3a6ccef97b2e4f76903d947ea5b3d.lock",
+      "role": "final_handoff_218_8e595695a3b63af80e00d63e0294474d9dd3a6ccef97b2e4f76903d947ea5b3d.lock",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret4/run/captures/.dispatch-locks/bfd2f205cba0643c262d2e682d24c53d63ab720a4699b49ef25b44c898746cbf.lock",
+      "role": "final_handoff_219_bfd2f205cba0643c262d2e682d24c53d63ab720a4699b49ef25b44c898746cbf.lock",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret4/run/captures/.service.lock",
+      "role": "final_handoff_220_.service.lock",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 136,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret4/run/captures/8e595695a3b63af80e00d63e0294474d9dd3a6ccef97b2e4f76903d947ea5b3d/body.bin",
+      "role": "final_handoff_221_body.bin",
+      "sha256": "833b9b6106b025cbffc8366dfaec06fd708dbee6f236a61902afbd1c05d891a1"
+    },
+    {
+      "bytes": 74,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret4/run/captures/8e595695a3b63af80e00d63e0294474d9dd3a6ccef97b2e4f76903d947ea5b3d/headers.json",
+      "role": "final_handoff_222_headers.json",
+      "sha256": "8824714ea8468e3312ca677e231ae69089fe2e47efa95486a85902c61898c684"
+    },
+    {
+      "bytes": 2004,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret4/run/captures/8e595695a3b63af80e00d63e0294474d9dd3a6ccef97b2e4f76903d947ea5b3d/receipt.json",
+      "role": "final_handoff_223_receipt.json",
+      "sha256": "9a6fc64508888f698f5c3bde357f6477e00d1f6e2d67355b33464ebc224450e3"
+    },
+    {
+      "bytes": 557,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret4/run/captures/8e595695a3b63af80e00d63e0294474d9dd3a6ccef97b2e4f76903d947ea5b3d/request.json",
+      "role": "final_handoff_224_request.json",
+      "sha256": "8c5df691fd6607196dfe78cee5b84c3f9641440b0df6fd39699e6cd924bb1731"
+    },
+    {
+      "bytes": 34,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret4/run/captures/8e595695a3b63af80e00d63e0294474d9dd3a6ccef97b2e4f76903d947ea5b3d/started.json",
+      "role": "final_handoff_225_started.json",
+      "sha256": "4e7f85dc4b909e09da2c63e448b83aa88d6ebe13fd6819c206e0d0e17a2653cb"
+    },
+    {
+      "bytes": 212,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret4/run/captures/8e595695a3b63af80e00d63e0294474d9dd3a6ccef97b2e4f76903d947ea5b3d/supervisor.json",
+      "role": "final_handoff_226_supervisor.json",
+      "sha256": "f9f88f4efb7de337fd4e78a3cb4036235832fae44c450369a1fc8d56b1d3227f"
+    },
+    {
+      "bytes": 188,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret4/run/captures/8e595695a3b63af80e00d63e0294474d9dd3a6ccef97b2e4f76903d947ea5b3d/terminal.json",
+      "role": "final_handoff_227_terminal.json",
+      "sha256": "5dd87f3c6287105cb532a4bbcad8f5319163f9c5999172b08d83058bfaeb789c"
+    },
+    {
+      "bytes": 135,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret4/run/captures/bfd2f205cba0643c262d2e682d24c53d63ab720a4699b49ef25b44c898746cbf/body.bin",
+      "role": "final_handoff_228_body.bin",
+      "sha256": "9218d1d6dcf1ad0cb07718e1c803cf9ec4495495b89f99d670e82e51330f4932"
+    },
+    {
+      "bytes": 74,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret4/run/captures/bfd2f205cba0643c262d2e682d24c53d63ab720a4699b49ef25b44c898746cbf/headers.json",
+      "role": "final_handoff_229_headers.json",
+      "sha256": "114c7d38bc5a06e339ec052d3f18c3f399a48eae433038cfc9dfa5f04648ee17"
+    },
+    {
+      "bytes": 2003,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret4/run/captures/bfd2f205cba0643c262d2e682d24c53d63ab720a4699b49ef25b44c898746cbf/receipt.json",
+      "role": "final_handoff_230_receipt.json",
+      "sha256": "6adf1acf2b7ac8a8b20e98df6d3cd1f38708ffcb0e8dcee7cd17304141819cae"
+    },
+    {
+      "bytes": 556,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret4/run/captures/bfd2f205cba0643c262d2e682d24c53d63ab720a4699b49ef25b44c898746cbf/request.json",
+      "role": "final_handoff_231_request.json",
+      "sha256": "c42e60a5b9c64d9fdf53b0391f40dad1161d8055ef4b4978a6d7ad2a168b7ae2"
+    },
+    {
+      "bytes": 34,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret4/run/captures/bfd2f205cba0643c262d2e682d24c53d63ab720a4699b49ef25b44c898746cbf/started.json",
+      "role": "final_handoff_232_started.json",
+      "sha256": "b6b1815d030956764bec2180a86bed7644d3d8e13e4b019a34fcbc141e21104d"
+    },
+    {
+      "bytes": 212,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret4/run/captures/bfd2f205cba0643c262d2e682d24c53d63ab720a4699b49ef25b44c898746cbf/supervisor.json",
+      "role": "final_handoff_233_supervisor.json",
+      "sha256": "8410bffe22894bac9a0130bad6dd4d93f9f622bb0d479bf68022c8f60e37b4fd"
+    },
+    {
+      "bytes": 188,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret4/run/captures/bfd2f205cba0643c262d2e682d24c53d63ab720a4699b49ef25b44c898746cbf/terminal.json",
+      "role": "final_handoff_234_terminal.json",
+      "sha256": "fbc2701ac0b7fa4758943b2f27c110e846aa4e73158767c46ab97e6f6a8f2f67"
+    },
+    {
+      "bytes": 49979,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret4/run/input_inventory.json",
+      "role": "final_handoff_235_input_inventory.json",
+      "sha256": "02c7196bbd6a402c1f218d0e50017327956cc269c8121a8107816f82c21c5c12"
+    },
+    {
+      "bytes": 119665,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret4/run/result.json",
+      "role": "final_handoff_236_result.json",
+      "sha256": "20b8bd74cdb20fd2a10e51842dedd5341a518ee8b8b18f163cbe510055837093"
+    },
+    {
+      "bytes": 174,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret4/run/staging.json",
+      "role": "final_handoff_237_staging.json",
+      "sha256": "1c86fbe5f87299ce2889f022cfc6fa41df7afb8851969cf08f8eb74143ab7589"
+    },
+    {
+      "bytes": 453,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/27818/config.json",
+      "role": "final_handoff_238_config.json",
+      "sha256": "981047e8fbeb448b1db154837522f14e0625296416b4c3e9436dbd6ec1579295"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/27818/stderr.txt",
+      "role": "final_handoff_239_stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 24576,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/27818/store/capture.sqlite3",
+      "role": "final_handoff_240_capture.sqlite3",
+      "sha256": "3d0fe9f5f7e711d855be77449be34ae1dad134fdd9d882691a82e73c5b346604"
+    },
+    {
+      "bytes": 698,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/27818/store/raw/1789663235095_07856247b81e4bf0abda236af76389be.json",
+      "role": "final_handoff_241_1789663235095_07856247b81e4bf0abda236af76389be.json",
+      "sha256": "3122d042fc4522790d43d05fa0c6c757cc8a6c8215d005e3a58cffad20044946"
+    },
+    {
+      "bytes": 878,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/27818/store/raw/1789663236581_a0b8b46e7bae4a1fa8f3a38c264ae6af.json",
+      "role": "final_handoff_242_1789663236581_a0b8b46e7bae4a1fa8f3a38c264ae6af.json",
+      "sha256": "eb9637500900abe509940d1e7f75586af99b624af5f3730e399cad20eb05f5f3"
+    },
+    {
+      "bytes": 448,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/43671/config.json",
+      "role": "final_handoff_243_config.json",
+      "sha256": "ddec730a07a50dbe2850f68a739e2292039014107bd96e51ea57a6926002abee"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/43671/stderr.txt",
+      "role": "final_handoff_244_stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 24576,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/43671/store/capture.sqlite3",
+      "role": "final_handoff_245_capture.sqlite3",
+      "sha256": "188e4f81719a0d673b0b9d05f406b29aab1fc57a8753b8f7e157ce177cee2120"
+    },
+    {
+      "bytes": 698,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/43671/store/raw/1789663235080_cf2397b4d2ed4f8496a1187f22e32317.json",
+      "role": "final_handoff_246_1789663235080_cf2397b4d2ed4f8496a1187f22e32317.json",
+      "sha256": "f3a032ff8188c78317b1d50765fcba3d27758a5b59fcd79af6e14f46a0c7b0a4"
+    },
+    {
+      "bytes": 878,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/43671/store/raw/1789663236574_adcc7ac3464a4f0593ecc93428ec2993.json",
+      "role": "final_handoff_247_1789663236574_adcc7ac3464a4f0593ecc93428ec2993.json",
+      "sha256": "21d44e3448c7a571888fe0f3cca0b61d36e5186278f2f155e31bafdbe7e02523"
+    },
+    {
+      "bytes": 461,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/44810/config.json",
+      "role": "final_handoff_248_config.json",
+      "sha256": "5a7562adb63bf0582370723c9a669780c3421eb45550b682521890356a0d8a7c"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/44810/stderr.txt",
+      "role": "final_handoff_249_stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 36864,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/44810/store/native.sqlite3",
+      "role": "final_handoff_250_native.sqlite3",
+      "sha256": "78187e5049c2f3e3b2cdc83669086a87a7230457ba93cfa5ca14d623db8a26ca"
+    },
+    {
+      "bytes": 712,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/44810/store/raw/1789663235108_ee8765304fcf421581624e44bacd740a.json",
+      "role": "final_handoff_251_1789663235108_ee8765304fcf421581624e44bacd740a.json",
+      "sha256": "a113136732fbba18b095d1aa4420080bfb3dc9cc54c916c6774b3ccf99374dac"
+    },
+    {
+      "bytes": 8192,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/44810/v89_equal_cap_followup_market_capture_20260923_v1/capture.sqlite3",
+      "role": "final_handoff_252_capture.sqlite3",
+      "sha256": "de3608e3bb349aca76f4035033cc3cdab933c914e5aae2146028329918ab5064"
+    },
+    {
+      "bytes": 77,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/44810/v89_equal_cap_followup_market_capture_20260923_v1/latest.json",
+      "role": "final_handoff_253_latest.json",
+      "sha256": "4554eb0fa7cce72c64d9b7831f5afae3a6352443025fc5bc7ba059ca31b2cde0"
+    },
+    {
+      "bytes": 8192,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/44810/v89_equal_cap_market_capture_20260908_v1/capture.sqlite3",
+      "role": "final_handoff_254_capture.sqlite3",
+      "sha256": "de3608e3bb349aca76f4035033cc3cdab933c914e5aae2146028329918ab5064"
+    },
+    {
+      "bytes": 77,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/44810/v89_equal_cap_market_capture_20260908_v1/latest.json",
+      "role": "final_handoff_255_latest.json",
+      "sha256": "2859138d38f8823d2568d3a75ae0f41f04faad33aeb3ae95f2be5633b513da6f"
+    },
+    {
+      "bytes": 8192,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/44810/v89_prospective_market_capture_20260908_v1/capture.sqlite3",
+      "role": "final_handoff_256_capture.sqlite3",
+      "sha256": "de3608e3bb349aca76f4035033cc3cdab933c914e5aae2146028329918ab5064"
+    },
+    {
+      "bytes": 77,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/44810/v89_prospective_market_capture_20260908_v1/latest.json",
+      "role": "final_handoff_257_latest.json",
+      "sha256": "1c7703bfc3fe0c6ba124c8de64a24535ad773ebd4100a981c0d254a458d7a88b"
+    },
+    {
+      "bytes": 8192,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/44810/v89_quarter_entry_followup_capture_20260923_v1/capture.sqlite3",
+      "role": "final_handoff_258_capture.sqlite3",
+      "sha256": "de3608e3bb349aca76f4035033cc3cdab933c914e5aae2146028329918ab5064"
+    },
+    {
+      "bytes": 77,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/44810/v89_quarter_entry_followup_capture_20260923_v1/latest.json",
+      "role": "final_handoff_259_latest.json",
+      "sha256": "5a4ae1e9806118e8e2ab4f572b382d294928d280a0af3ddc32d2aa2a414ed0a4"
+    },
+    {
+      "bytes": 449,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/45939/config.json",
+      "role": "final_handoff_260_config.json",
+      "sha256": "b927a942b92172866992a06c087b532b584643b4299aaf4e9b5f85abb9f98b91"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/45939/stderr.txt",
+      "role": "final_handoff_261_stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 32768,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/45939/store/capture.sqlite3",
+      "role": "final_handoff_262_capture.sqlite3",
+      "sha256": "589106214b84fffeb12b10cf0f2562295e5d89f8f42e8ebfa4840852bfd4d350"
+    },
+    {
+      "bytes": 713,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/45939/store/raw/1789663235091_d7b910f99573451ab6e2e46f686f9c90.json",
+      "role": "final_handoff_263_1789663235091_d7b910f99573451ab6e2e46f686f9c90.json",
+      "sha256": "e3ab3b402ca86489a2cd6a511e755e9cf538e068460ae1df04b17034a4c28cea"
+    },
+    {
+      "bytes": 893,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/45939/store/raw/1789663236574_79ebd6e0ba2a4b73a2175e1d707daf87.json",
+      "role": "final_handoff_264_1789663236574_79ebd6e0ba2a4b73a2175e1d707daf87.json",
+      "sha256": "55a6c52eec773c215bdbbaa73deee19a32492c999cad39295e3878ead735e135"
+    },
+    {
+      "bytes": 455,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/51194/config.json",
+      "role": "final_handoff_265_config.json",
+      "sha256": "cdbcc1e01c536a16609a418b56ccd23b7d08c08bf350f7cc6b182e1f51107c81"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/51194/stderr.txt",
+      "role": "final_handoff_266_stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 32768,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/51194/store/capture.sqlite3",
+      "role": "final_handoff_267_capture.sqlite3",
+      "sha256": "d885ff600a656508a7c9e673f9d1c0ff12ac68a3575271c2006f3bcf37461032"
+    },
+    {
+      "bytes": 713,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/51194/store/raw/1789663235095_07f41c439ff043c8b9365659eb096c88.json",
+      "role": "final_handoff_268_1789663235095_07f41c439ff043c8b9365659eb096c88.json",
+      "sha256": "1051aaca7b809c25bf37b639251088023f41ba2668a3bac323043f19468bd144"
+    },
+    {
+      "bytes": 893,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/51194/store/raw/1789663236578_b0a0904be2094c8eab3f81704e8547b6.json",
+      "role": "final_handoff_269_1789663236578_b0a0904be2094c8eab3f81704e8547b6.json",
+      "sha256": "fed943d26af22fa78dc5fcf32aa3fbeadaedaa09402d04791e0888a4ad37477f"
+    },
+    {
+      "bytes": 229376,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/broker.sqlite3",
+      "role": "final_handoff_270_broker.sqlite3",
+      "sha256": "00becd4f92bbafc729d6fbda4e7a974cb01b83e18bbb64de401f93e0e9f9f255"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/captures/.dispatch-locks/070676aaeea13bb94b8b4612866c2a21b46cf49fb3bb8b598d2b52633b8d1b62.lock",
+      "role": "final_handoff_271_070676aaeea13bb94b8b4612866c2a21b46cf49fb3bb8b598d2b52633b8d1b62.lock",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/captures/.dispatch-locks/2a97bcf419ee886ca085292391bef49e2eca6435c25db5bbfc901d5321c98239.lock",
+      "role": "final_handoff_272_2a97bcf419ee886ca085292391bef49e2eca6435c25db5bbfc901d5321c98239.lock",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/captures/.dispatch-locks/bfd2f205cba0643c262d2e682d24c53d63ab720a4699b49ef25b44c898746cbf.lock",
+      "role": "final_handoff_273_bfd2f205cba0643c262d2e682d24c53d63ab720a4699b49ef25b44c898746cbf.lock",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/captures/.service.lock",
+      "role": "final_handoff_274_.service.lock",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 2,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/captures/070676aaeea13bb94b8b4612866c2a21b46cf49fb3bb8b598d2b52633b8d1b62/body.bin",
+      "role": "final_handoff_275_body.bin",
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "bytes": 74,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/captures/070676aaeea13bb94b8b4612866c2a21b46cf49fb3bb8b598d2b52633b8d1b62/headers.json",
+      "role": "final_handoff_276_headers.json",
+      "sha256": "c887bf883ee445d3dd59f44e4ab9225d464182128517e29149ef0a59db598cb1"
+    },
+    {
+      "bytes": 1999,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/captures/070676aaeea13bb94b8b4612866c2a21b46cf49fb3bb8b598d2b52633b8d1b62/receipt.json",
+      "role": "final_handoff_277_receipt.json",
+      "sha256": "f1513630c6dfa0d56311b445f35cd549f828f575150a0a1c1e56822c7d8c02ec"
+    },
+    {
+      "bytes": 557,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/captures/070676aaeea13bb94b8b4612866c2a21b46cf49fb3bb8b598d2b52633b8d1b62/request.json",
+      "role": "final_handoff_278_request.json",
+      "sha256": "2404f8cae4337e64be89b169daab157af3a864e906c9b8c8a0eb59ddd3b2e7d0"
+    },
+    {
+      "bytes": 34,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/captures/070676aaeea13bb94b8b4612866c2a21b46cf49fb3bb8b598d2b52633b8d1b62/started.json",
+      "role": "final_handoff_279_started.json",
+      "sha256": "65f6ae506ba24dde6bfb9671165dba4e506501b42fe2ec0bd11e70ece46ad76e"
+    },
+    {
+      "bytes": 211,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/captures/070676aaeea13bb94b8b4612866c2a21b46cf49fb3bb8b598d2b52633b8d1b62/supervisor.json",
+      "role": "final_handoff_280_supervisor.json",
+      "sha256": "b2ec9b7af57082d191b872d176fdb77862d26860844d22e86b66ad442a81a201"
+    },
+    {
+      "bytes": 186,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/captures/070676aaeea13bb94b8b4612866c2a21b46cf49fb3bb8b598d2b52633b8d1b62/terminal.json",
+      "role": "final_handoff_281_terminal.json",
+      "sha256": "0ca5c9d8549d39ac1130b50aab1574c56c83dce73ab9a70584451a96a2f770f5"
+    },
+    {
+      "bytes": 136,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/captures/2a97bcf419ee886ca085292391bef49e2eca6435c25db5bbfc901d5321c98239/body.bin",
+      "role": "final_handoff_282_body.bin",
+      "sha256": "833b9b6106b025cbffc8366dfaec06fd708dbee6f236a61902afbd1c05d891a1"
+    },
+    {
+      "bytes": 74,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/captures/2a97bcf419ee886ca085292391bef49e2eca6435c25db5bbfc901d5321c98239/headers.json",
+      "role": "final_handoff_283_headers.json",
+      "sha256": "a41d677a044a1dde57289e57e474fa92402802d53f8676b1557d8f842ca6cd07"
+    },
+    {
+      "bytes": 2004,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/captures/2a97bcf419ee886ca085292391bef49e2eca6435c25db5bbfc901d5321c98239/receipt.json",
+      "role": "final_handoff_284_receipt.json",
+      "sha256": "2904f4862bd164189de87ef28313a5f6cc895f9ea94ad04b3ed38bc02cb5f5d7"
+    },
+    {
+      "bytes": 557,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/captures/2a97bcf419ee886ca085292391bef49e2eca6435c25db5bbfc901d5321c98239/request.json",
+      "role": "final_handoff_285_request.json",
+      "sha256": "d04861e4bef4e985a2bace3011a2312c258027ba45addfc7c43e7b93fc73f49e"
+    },
+    {
+      "bytes": 34,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/captures/2a97bcf419ee886ca085292391bef49e2eca6435c25db5bbfc901d5321c98239/started.json",
+      "role": "final_handoff_286_started.json",
+      "sha256": "73495c73c4a0808aab307aca454ff302f41063878ac0b2792a8e9fb85e4beeb1"
+    },
+    {
+      "bytes": 212,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/captures/2a97bcf419ee886ca085292391bef49e2eca6435c25db5bbfc901d5321c98239/supervisor.json",
+      "role": "final_handoff_287_supervisor.json",
+      "sha256": "80514a7aea561f57a2d0de68a355a9937a602fd7ccf618e3f5a75e0d1746b997"
+    },
+    {
+      "bytes": 188,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/captures/2a97bcf419ee886ca085292391bef49e2eca6435c25db5bbfc901d5321c98239/terminal.json",
+      "role": "final_handoff_288_terminal.json",
+      "sha256": "b9142cfdfa081b19f88cc1b92885c00c1346a467c813f7c36f763653b3d07fc3"
+    },
+    {
+      "bytes": 2,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/captures/bfd2f205cba0643c262d2e682d24c53d63ab720a4699b49ef25b44c898746cbf/body.bin",
+      "role": "final_handoff_289_body.bin",
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "bytes": 74,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/captures/bfd2f205cba0643c262d2e682d24c53d63ab720a4699b49ef25b44c898746cbf/headers.json",
+      "role": "final_handoff_290_headers.json",
+      "sha256": "10bbed5d6b297befcc37d99fca5d33a5fd2763d613886992e1055e8a759c6f26"
+    },
+    {
+      "bytes": 1998,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/captures/bfd2f205cba0643c262d2e682d24c53d63ab720a4699b49ef25b44c898746cbf/receipt.json",
+      "role": "final_handoff_291_receipt.json",
+      "sha256": "8d4aa2fe434d427a177afad9b7461b58276b542c06bc6c5d846c36e9873f003f"
+    },
+    {
+      "bytes": 556,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/captures/bfd2f205cba0643c262d2e682d24c53d63ab720a4699b49ef25b44c898746cbf/request.json",
+      "role": "final_handoff_292_request.json",
+      "sha256": "b8def54c85ab558d3ed6bcf4c4ae7ed874228240460bb9c534a94b53d9e73255"
+    },
+    {
+      "bytes": 34,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/captures/bfd2f205cba0643c262d2e682d24c53d63ab720a4699b49ef25b44c898746cbf/started.json",
+      "role": "final_handoff_293_started.json",
+      "sha256": "59dd2b32c3194c357e20bb9cbd8a00fc24ed3e29e3d6437783b63ee3f325aadb"
+    },
+    {
+      "bytes": 211,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/captures/bfd2f205cba0643c262d2e682d24c53d63ab720a4699b49ef25b44c898746cbf/supervisor.json",
+      "role": "final_handoff_294_supervisor.json",
+      "sha256": "76991561d0497bf159114da5f7815fe3e697c9b83b50fa30e32386a3b61be175"
+    },
+    {
+      "bytes": 186,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/captures/bfd2f205cba0643c262d2e682d24c53d63ab720a4699b49ef25b44c898746cbf/terminal.json",
+      "role": "final_handoff_295_terminal.json",
+      "sha256": "4a1a9cff1e43c0d5efe80106be301c3693c48f240a45f9e133f6e3c1dc5fb48e"
+    },
+    {
+      "bytes": 49979,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/input_inventory.json",
+      "role": "final_handoff_296_input_inventory.json",
+      "sha256": "02c7196bbd6a402c1f218d0e50017327956cc269c8121a8107816f82c21c5c12"
+    },
+    {
+      "bytes": 173757,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/result.json",
+      "role": "final_handoff_297_result.json",
+      "sha256": "206997cbf2c00fbc5d7ca3fe82bb798e7760484774055d1cbc4f664c22a2d31b"
+    },
+    {
+      "bytes": 174,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret5/run/staging.json",
+      "role": "final_handoff_298_staging.json",
+      "sha256": "be66fe375a1d68d886e528d33f8014b26ded915371c256c17d13598a8829faae"
+    },
+    {
+      "bytes": 453,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/27818/config.json",
+      "role": "final_handoff_299_config.json",
+      "sha256": "694bf339ff7560280bbff68fb831a82d78a839d94b0d7365d6cca136d29c47a0"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/27818/stderr.txt",
+      "role": "final_handoff_300_stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 24576,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/27818/store/capture.sqlite3",
+      "role": "final_handoff_301_capture.sqlite3",
+      "sha256": "48fe9937f46a01214b1e5d67c454bf0ed4f5973f3f422fb45fb6682e5228688f"
+    },
+    {
+      "bytes": 878,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/27818/store/raw/1789663237552_75c755947294494b9554dee527ba0ec9.json",
+      "role": "final_handoff_302_1789663237552_75c755947294494b9554dee527ba0ec9.json",
+      "sha256": "40dd4eb50cee293168687ffd5b09c3e185d55d313b612a5f726a8910f3d60250"
+    },
+    {
+      "bytes": 878,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/27818/store/raw/1789663239055_47b207b81f3e46238a6894d49bf99040.json",
+      "role": "final_handoff_303_1789663239055_47b207b81f3e46238a6894d49bf99040.json",
+      "sha256": "716717ad05c57348711c0851fe1a4deb911a7003c54017434750c9b216d9819e"
+    },
+    {
+      "bytes": 448,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/43671/config.json",
+      "role": "final_handoff_304_config.json",
+      "sha256": "0802370209a901de608a7558f7dafa57daac5a3e8f2327f3a64742edaeeb702c"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/43671/stderr.txt",
+      "role": "final_handoff_305_stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 24576,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/43671/store/capture.sqlite3",
+      "role": "final_handoff_306_capture.sqlite3",
+      "sha256": "bc38180cb5e8ff716eab970595df0619230edf1c95482d1bf3438a6670920ead"
+    },
+    {
+      "bytes": 878,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/43671/store/raw/1789663237550_f5ce242cf26b477f8719b242fae6381d.json",
+      "role": "final_handoff_307_1789663237550_f5ce242cf26b477f8719b242fae6381d.json",
+      "sha256": "bef016b42e10138e08a56673fc9aaa3c2db43bdab8026b780fa55bc10a366379"
+    },
+    {
+      "bytes": 878,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/43671/store/raw/1789663239053_67ddaf147c1844a3875014753e374f2a.json",
+      "role": "final_handoff_308_1789663239053_67ddaf147c1844a3875014753e374f2a.json",
+      "sha256": "090d25fb29081212652f38bda39080c891ffbaada2eab0deae0bcff83e441a1d"
+    },
+    {
+      "bytes": 461,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/44810/config.json",
+      "role": "final_handoff_309_config.json",
+      "sha256": "9ea8105c87b4595ea1358d8aaf19319938c0ea37ee654af85a1e9fef813b952c"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/44810/stderr.txt",
+      "role": "final_handoff_310_stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 36864,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/44810/store/native.sqlite3",
+      "role": "final_handoff_311_native.sqlite3",
+      "sha256": "ec7fab4d5f4774ee197199b92df222eb7efeb8358b949dc614c6280eb30ad2a7"
+    },
+    {
+      "bytes": 888,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/44810/store/raw/1789663237569_4a05ba501ecc4143a417b0efe4d8a3f6.json",
+      "role": "final_handoff_312_1789663237569_4a05ba501ecc4143a417b0efe4d8a3f6.json",
+      "sha256": "40eff201b66e750f4fbba7e8e733a5a44e15138489ddd3ad7ceaa9b1fc5f188d"
+    },
+    {
+      "bytes": 8192,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/44810/v89_equal_cap_followup_market_capture_20260923_v1/capture.sqlite3",
+      "role": "final_handoff_313_capture.sqlite3",
+      "sha256": "de3608e3bb349aca76f4035033cc3cdab933c914e5aae2146028329918ab5064"
+    },
+    {
+      "bytes": 77,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/44810/v89_equal_cap_followup_market_capture_20260923_v1/latest.json",
+      "role": "final_handoff_314_latest.json",
+      "sha256": "0114806cf1f26ede701743940662addfa36a121e8dbe15f02b767fd69f23ebe9"
+    },
+    {
+      "bytes": 8192,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/44810/v89_equal_cap_market_capture_20260908_v1/capture.sqlite3",
+      "role": "final_handoff_315_capture.sqlite3",
+      "sha256": "de3608e3bb349aca76f4035033cc3cdab933c914e5aae2146028329918ab5064"
+    },
+    {
+      "bytes": 77,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/44810/v89_equal_cap_market_capture_20260908_v1/latest.json",
+      "role": "final_handoff_316_latest.json",
+      "sha256": "8e2634a69f208cf15ca6b964f62d2c89a1fc170d47ca8d82bc8eb605f2ecbc51"
+    },
+    {
+      "bytes": 8192,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/44810/v89_prospective_market_capture_20260908_v1/capture.sqlite3",
+      "role": "final_handoff_317_capture.sqlite3",
+      "sha256": "de3608e3bb349aca76f4035033cc3cdab933c914e5aae2146028329918ab5064"
+    },
+    {
+      "bytes": 77,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/44810/v89_prospective_market_capture_20260908_v1/latest.json",
+      "role": "final_handoff_318_latest.json",
+      "sha256": "6340e2e523be0b61655ee18b728d072f8f59e34a7777137f1e2e9f5d79be5c39"
+    },
+    {
+      "bytes": 8192,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/44810/v89_quarter_entry_followup_capture_20260923_v1/capture.sqlite3",
+      "role": "final_handoff_319_capture.sqlite3",
+      "sha256": "de3608e3bb349aca76f4035033cc3cdab933c914e5aae2146028329918ab5064"
+    },
+    {
+      "bytes": 77,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/44810/v89_quarter_entry_followup_capture_20260923_v1/latest.json",
+      "role": "final_handoff_320_latest.json",
+      "sha256": "16300c9e696daa7f3ef668a421188024445e6972b2cf64bce94f52ca935069fc"
+    },
+    {
+      "bytes": 449,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/45939/config.json",
+      "role": "final_handoff_321_config.json",
+      "sha256": "4b266fc4b736c016cedc5d0fc7caa06cd8a48304d25ee36679dee51960ca356a"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/45939/stderr.txt",
+      "role": "final_handoff_322_stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 32768,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/45939/store/capture.sqlite3",
+      "role": "final_handoff_323_capture.sqlite3",
+      "sha256": "223f1bc660bcaa99db22a9fa6ed2dd3f00d436d8370b8dbdbcf99cd3976a2474"
+    },
+    {
+      "bytes": 893,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/45939/store/raw/1789663237555_14d7c3c989e24953bad34cf95598a50d.json",
+      "role": "final_handoff_324_1789663237555_14d7c3c989e24953bad34cf95598a50d.json",
+      "sha256": "5a32e61c95b7f6505293e22d26e82f12c58f0f58029933c7ce6e719ffa6dbef5"
+    },
+    {
+      "bytes": 893,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/45939/store/raw/1789663239055_50915955d1734680902ed5c66b6adf01.json",
+      "role": "final_handoff_325_1789663239055_50915955d1734680902ed5c66b6adf01.json",
+      "sha256": "13fc691d6c70a3a053e572371c1e9d7d2d1b19aad550b10a600781cabed4c4bb"
+    },
+    {
+      "bytes": 455,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/51194/config.json",
+      "role": "final_handoff_326_config.json",
+      "sha256": "36f4ac867c61ebb6f26a80e351e4fe39bb4a0b1d2655a237b0a79d6f07432dd4"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/51194/stderr.txt",
+      "role": "final_handoff_327_stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 32768,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/51194/store/capture.sqlite3",
+      "role": "final_handoff_328_capture.sqlite3",
+      "sha256": "decebf253c7dc381ca73b40fb9994db485ffc893186d617714d0415149496bb1"
+    },
+    {
+      "bytes": 893,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/51194/store/raw/1789663237556_16a0449c117b42f387d1dc549c403c39.json",
+      "role": "final_handoff_329_1789663237556_16a0449c117b42f387d1dc549c403c39.json",
+      "sha256": "90defc17701434ab9d0b3c498e025e24f51f9ead9ecaf03fc62bfe6d2e8c797a"
+    },
+    {
+      "bytes": 893,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/51194/store/raw/1789663239065_a3b731673b434890a8914c300cba2049.json",
+      "role": "final_handoff_330_1789663239065_a3b731673b434890a8914c300cba2049.json",
+      "sha256": "72a0183b31d66de79d78353ee6621dd5705cbdc77c10bb5c86e08af9a1f5f788"
+    },
+    {
+      "bytes": 253952,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/broker.sqlite3",
+      "role": "final_handoff_331_broker.sqlite3",
+      "sha256": "b65eafc7c906616cd8b37cacfa9fb3cbcb6d1c1c2a524b70075bc54f256505f6"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/captures/.dispatch-locks/070676aaeea13bb94b8b4612866c2a21b46cf49fb3bb8b598d2b52633b8d1b62.lock",
+      "role": "final_handoff_332_070676aaeea13bb94b8b4612866c2a21b46cf49fb3bb8b598d2b52633b8d1b62.lock",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/captures/.dispatch-locks/2a97bcf419ee886ca085292391bef49e2eca6435c25db5bbfc901d5321c98239.lock",
+      "role": "final_handoff_333_2a97bcf419ee886ca085292391bef49e2eca6435c25db5bbfc901d5321c98239.lock",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/captures/.dispatch-locks/bfd2f205cba0643c262d2e682d24c53d63ab720a4699b49ef25b44c898746cbf.lock",
+      "role": "final_handoff_334_bfd2f205cba0643c262d2e682d24c53d63ab720a4699b49ef25b44c898746cbf.lock",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/captures/.service.lock",
+      "role": "final_handoff_335_.service.lock",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 136,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/captures/070676aaeea13bb94b8b4612866c2a21b46cf49fb3bb8b598d2b52633b8d1b62/body.bin",
+      "role": "final_handoff_336_body.bin",
+      "sha256": "833b9b6106b025cbffc8366dfaec06fd708dbee6f236a61902afbd1c05d891a1"
+    },
+    {
+      "bytes": 74,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/captures/070676aaeea13bb94b8b4612866c2a21b46cf49fb3bb8b598d2b52633b8d1b62/headers.json",
+      "role": "final_handoff_337_headers.json",
+      "sha256": "660e49d9289dd17ea7d91a8f848d02e93531a4a3a64cdb75a7ac03dde7ac41b3"
+    },
+    {
+      "bytes": 2003,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/captures/070676aaeea13bb94b8b4612866c2a21b46cf49fb3bb8b598d2b52633b8d1b62/receipt.json",
+      "role": "final_handoff_338_receipt.json",
+      "sha256": "53c63a94d8c8763331f612792b0703a8cb95bf0611d8d8fe8ae64ad97eb88fdc"
+    },
+    {
+      "bytes": 557,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/captures/070676aaeea13bb94b8b4612866c2a21b46cf49fb3bb8b598d2b52633b8d1b62/request.json",
+      "role": "final_handoff_339_request.json",
+      "sha256": "69de1b1f58766c71407238ac1f57947ac7e5e88eb0b6bce0ae039be0b5e9210e"
+    },
+    {
+      "bytes": 34,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/captures/070676aaeea13bb94b8b4612866c2a21b46cf49fb3bb8b598d2b52633b8d1b62/started.json",
+      "role": "final_handoff_340_started.json",
+      "sha256": "ce0b269c05550576b26eb9c697fda6886692552082a9feafd5815223e80ba63a"
+    },
+    {
+      "bytes": 211,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/captures/070676aaeea13bb94b8b4612866c2a21b46cf49fb3bb8b598d2b52633b8d1b62/supervisor.json",
+      "role": "final_handoff_341_supervisor.json",
+      "sha256": "392008588aa2c7c71189760480e686e46c0b780445253cf01e4dd492c4818527"
+    },
+    {
+      "bytes": 188,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/captures/070676aaeea13bb94b8b4612866c2a21b46cf49fb3bb8b598d2b52633b8d1b62/terminal.json",
+      "role": "final_handoff_342_terminal.json",
+      "sha256": "5d77c9f22c7ff4b07c6f65d99e2a5d36eaeb5ad795d70037a8294db6ad2f6872"
+    },
+    {
+      "bytes": 136,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/captures/2a97bcf419ee886ca085292391bef49e2eca6435c25db5bbfc901d5321c98239/body.bin",
+      "role": "final_handoff_343_body.bin",
+      "sha256": "833b9b6106b025cbffc8366dfaec06fd708dbee6f236a61902afbd1c05d891a1"
+    },
+    {
+      "bytes": 74,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/captures/2a97bcf419ee886ca085292391bef49e2eca6435c25db5bbfc901d5321c98239/headers.json",
+      "role": "final_handoff_344_headers.json",
+      "sha256": "efcc5b69428efefec90a29abc6cadd4982e74d829ac1b51cb9b1a431123f4cfb"
+    },
+    {
+      "bytes": 2004,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/captures/2a97bcf419ee886ca085292391bef49e2eca6435c25db5bbfc901d5321c98239/receipt.json",
+      "role": "final_handoff_345_receipt.json",
+      "sha256": "7298a49e2dd9340bb7ffe6c1938114a9d6daa48152737bd800269099d6eb4623"
+    },
+    {
+      "bytes": 557,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/captures/2a97bcf419ee886ca085292391bef49e2eca6435c25db5bbfc901d5321c98239/request.json",
+      "role": "final_handoff_346_request.json",
+      "sha256": "224493f088e580dd05bfe8298ad44edd38f46e3645c1f9ff47e41262d3e83250"
+    },
+    {
+      "bytes": 34,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/captures/2a97bcf419ee886ca085292391bef49e2eca6435c25db5bbfc901d5321c98239/started.json",
+      "role": "final_handoff_347_started.json",
+      "sha256": "aa59e600fac4dd9d792d282ed287036ddbd0127c350b3718748b6ed066b5633f"
+    },
+    {
+      "bytes": 212,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/captures/2a97bcf419ee886ca085292391bef49e2eca6435c25db5bbfc901d5321c98239/supervisor.json",
+      "role": "final_handoff_348_supervisor.json",
+      "sha256": "86db2e80fe4e939de28f7f0677df7fe5bc0298867fdee6f1195d226b16adcbe9"
+    },
+    {
+      "bytes": 188,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/captures/2a97bcf419ee886ca085292391bef49e2eca6435c25db5bbfc901d5321c98239/terminal.json",
+      "role": "final_handoff_349_terminal.json",
+      "sha256": "2a8339ac864c543b1b0ab60815fd0f4625b620c77ef966908b756fd9f301ded3"
+    },
+    {
+      "bytes": 135,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/captures/bfd2f205cba0643c262d2e682d24c53d63ab720a4699b49ef25b44c898746cbf/body.bin",
+      "role": "final_handoff_350_body.bin",
+      "sha256": "9218d1d6dcf1ad0cb07718e1c803cf9ec4495495b89f99d670e82e51330f4932"
+    },
+    {
+      "bytes": 74,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/captures/bfd2f205cba0643c262d2e682d24c53d63ab720a4699b49ef25b44c898746cbf/headers.json",
+      "role": "final_handoff_351_headers.json",
+      "sha256": "37ad9fec86eb0a3616ae59c406cd92c15f3bf20df2b68d4e0580727320b2d822"
+    },
+    {
+      "bytes": 2002,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/captures/bfd2f205cba0643c262d2e682d24c53d63ab720a4699b49ef25b44c898746cbf/receipt.json",
+      "role": "final_handoff_352_receipt.json",
+      "sha256": "e02dc0ed49f1c2d5208e0af760f7e6bde2a81b5afdefa3d301afac21e88a4c86"
+    },
+    {
+      "bytes": 556,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/captures/bfd2f205cba0643c262d2e682d24c53d63ab720a4699b49ef25b44c898746cbf/request.json",
+      "role": "final_handoff_353_request.json",
+      "sha256": "c5a448487ff03d875a1fe77af63eb6dba7db7ae038897cf0efde66cd6a077aed"
+    },
+    {
+      "bytes": 34,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/captures/bfd2f205cba0643c262d2e682d24c53d63ab720a4699b49ef25b44c898746cbf/started.json",
+      "role": "final_handoff_354_started.json",
+      "sha256": "69a8600b8ed1040b8889a82eb89c0cc52632a3ed00dfc93008e1e9655916f7bc"
+    },
+    {
+      "bytes": 211,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/captures/bfd2f205cba0643c262d2e682d24c53d63ab720a4699b49ef25b44c898746cbf/supervisor.json",
+      "role": "final_handoff_355_supervisor.json",
+      "sha256": "12383fb5b35486a839f4bfa5c32d68baaadcf5a273ee36d4bed312545dca6b73"
+    },
+    {
+      "bytes": 188,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/captures/bfd2f205cba0643c262d2e682d24c53d63ab720a4699b49ef25b44c898746cbf/terminal.json",
+      "role": "final_handoff_356_terminal.json",
+      "sha256": "de9fe71d7ed6445e88c44cb2cf682081647b4796235cbc1da454a9728e0291fa"
+    },
+    {
+      "bytes": 49979,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/input_inventory.json",
+      "role": "final_handoff_357_input_inventory.json",
+      "sha256": "02c7196bbd6a402c1f218d0e50017327956cc269c8121a8107816f82c21c5c12"
+    },
+    {
+      "bytes": 177378,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/result.json",
+      "role": "final_handoff_358_result.json",
+      "sha256": "ec13e071ed63b3a8c8162ef7dd16fd5f7d66de2282f33ccf4537d791b4c982cf"
+    },
+    {
+      "bytes": 174,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret6/run/staging.json",
+      "role": "final_handoff_359_staging.json",
+      "sha256": "3ecde31cc00ba5883dbdf3467fb141d1b25710becead74c71bdb2f3f116a0766"
+    },
+    {
+      "bytes": 453,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret7/run/27818/config.json",
+      "role": "final_handoff_360_config.json",
+      "sha256": "28de22c552b38f93e6bb32373a849bb7c6470b94d2958809ea8835422aeea10d"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret7/run/27818/stderr.txt",
+      "role": "final_handoff_361_stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 24576,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret7/run/27818/store/capture.sqlite3",
+      "role": "final_handoff_362_capture.sqlite3",
+      "sha256": "287a08b77599f559bd5ce188781ee7c41aa636ce6bcb61385b36649c829049db"
+    },
+    {
+      "bytes": 878,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret7/run/27818/store/raw/1789663240019_ae06195fca09437d8c0c9008608f5848.json",
+      "role": "final_handoff_363_1789663240019_ae06195fca09437d8c0c9008608f5848.json",
+      "sha256": "3f78e64b309d51a516d43fac0041521b86feca22239b54f1ac144f9d98637cee"
+    },
+    {
+      "bytes": 749,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret7/run/27818/store/raw/1789663241530_48fe813344494d198bc6ebe114669115.json",
+      "role": "final_handoff_364_1789663241530_48fe813344494d198bc6ebe114669115.json",
+      "sha256": "123ca3210226440aec25c4988f32048803c9ce898fe2ab2668d95fac59fd0362"
+    },
+    {
+      "bytes": 749,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret7/run/27818/store/raw/1789663243535_4f9654f2075142a49bcdd173d9ffabee.json",
+      "role": "final_handoff_365_1789663243535_4f9654f2075142a49bcdd173d9ffabee.json",
+      "sha256": "7a21658067a566590b10b5cde72e8bb6b7bae2c6f1ce065b0410f0ab92608a49"
+    },
+    {
+      "bytes": 448,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret7/run/43671/config.json",
+      "role": "final_handoff_366_config.json",
+      "sha256": "ece44c86688270eded12ca51d601f97952a256994b5c0f894a1a651e21fe7173"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret7/run/43671/stderr.txt",
+      "role": "final_handoff_367_stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 24576,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret7/run/43671/store/capture.sqlite3",
+      "role": "final_handoff_368_capture.sqlite3",
+      "sha256": "68e83da074e659ec23b18cde4d5d14ad9a27de395ccfaf8df10e33beaf95d4a9"
+    },
+    {
+      "bytes": 878,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret7/run/43671/store/raw/1789663240020_d136f7195481435d9ab85d5ad034406a.json",
+      "role": "final_handoff_369_1789663240020_d136f7195481435d9ab85d5ad034406a.json",
+      "sha256": "23204198fa10413b67749c5e990d5fc26b903df158251b04b5d3c525d6ae263b"
+    },
+    {
+      "bytes": 749,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret7/run/43671/store/raw/1789663241525_d218dc51bf004eda8292b154f9deea92.json",
+      "role": "final_handoff_370_1789663241525_d218dc51bf004eda8292b154f9deea92.json",
+      "sha256": "82430683493237f736f3b88314d1771d27529aadf1c71e3859856626f181b141"
+    },
+    {
+      "bytes": 749,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret7/run/43671/store/raw/1789663243531_8f889524c1914c95b627ab009f140dd4.json",
+      "role": "final_handoff_371_1789663243531_8f889524c1914c95b627ab009f140dd4.json",
+      "sha256": "087a213088884ac50caaae26aa6b8e991e43b36ee5664c0238834278e85998e8"
+    },
+    {
+      "bytes": 461,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret7/run/44810/config.json",
+      "role": "final_handoff_372_config.json",
+      "sha256": "b5395ecbc567f03447a518b1f665bcc6089397e181e1fef03d2d9b396f83eaf6"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret7/run/44810/stderr.txt",
+      "role": "final_handoff_373_stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 36864,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret7/run/44810/store/native.sqlite3",
+      "role": "final_handoff_374_native.sqlite3",
+      "sha256": "c0631a152b1bf36aac54b14e84413a6e4d1a2e9e4260990515e2fc156ef601b3"
+    },
+    {
+      "bytes": 888,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret7/run/44810/store/raw/1789663240036_34d362fdf3df4fb9a19c474bf26994e9.json",
+      "role": "final_handoff_375_1789663240036_34d362fdf3df4fb9a19c474bf26994e9.json",
+      "sha256": "430948848a2f718eeff445ed9cd9e80bce2a982d321d5adc562ada8268c9dee9"
+    },
+    {
+      "bytes": 8192,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret7/run/44810/v89_equal_cap_followup_market_capture_20260923_v1/capture.sqlite3",
+      "role": "final_handoff_376_capture.sqlite3",
+      "sha256": "de3608e3bb349aca76f4035033cc3cdab933c914e5aae2146028329918ab5064"
+    },
+    {
+      "bytes": 77,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret7/run/44810/v89_equal_cap_followup_market_capture_20260923_v1/latest.json",
+      "role": "final_handoff_377_latest.json",
+      "sha256": "fbc31f62bc3b3971e6d0600d48885ec5091ba179a49ab6242319d6996cb79443"
+    },
+    {
+      "bytes": 8192,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret7/run/44810/v89_equal_cap_market_capture_20260908_v1/capture.sqlite3",
+      "role": "final_handoff_378_capture.sqlite3",
+      "sha256": "de3608e3bb349aca76f4035033cc3cdab933c914e5aae2146028329918ab5064"
+    },
+    {
+      "bytes": 77,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret7/run/44810/v89_equal_cap_market_capture_20260908_v1/latest.json",
+      "role": "final_handoff_379_latest.json",
+      "sha256": "99fedd72f46a41310d89922d5fba0f2697964e344c3a977def6bda9691e400a0"
+    },
+    {
+      "bytes": 8192,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret7/run/44810/v89_prospective_market_capture_20260908_v1/capture.sqlite3",
+      "role": "final_handoff_380_capture.sqlite3",
+      "sha256": "de3608e3bb349aca76f4035033cc3cdab933c914e5aae2146028329918ab5064"
+    },
+    {
+      "bytes": 77,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret7/run/44810/v89_prospective_market_capture_20260908_v1/latest.json",
+      "role": "final_handoff_381_latest.json",
+      "sha256": "403c0b33e8f07ef0f677e27aaa63345ffb5c5fee046e35e578da3a8becccf91c"
+    },
+    {
+      "bytes": 8192,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret7/run/44810/v89_quarter_entry_followup_capture_20260923_v1/capture.sqlite3",
+      "role": "final_handoff_382_capture.sqlite3",
+      "sha256": "de3608e3bb349aca76f4035033cc3cdab933c914e5aae2146028329918ab5064"
+    },
+    {
+      "bytes": 77,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret7/run/44810/v89_quarter_entry_followup_capture_20260923_v1/latest.json",
+      "role": "final_handoff_383_latest.json",
+      "sha256": "fbc31f62bc3b3971e6d0600d48885ec5091ba179a49ab6242319d6996cb79443"
+    },
+    {
+      "bytes": 449,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret7/run/45939/config.json",
+      "role": "final_handoff_384_config.json",
+      "sha256": "5c6698e23dbca888add319a5f8b04092b42a84330a483ff25ef9a785058426e7"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret7/run/45939/stderr.txt",
+      "role": "final_handoff_385_stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 32768,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret7/run/45939/store/capture.sqlite3",
+      "role": "final_handoff_386_capture.sqlite3",
+      "sha256": "5767efac69f7ac1b87178c5cf724d76b072de105098ca70db43f5bb8995f3edd"
+    },
+    {
+      "bytes": 893,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret7/run/45939/store/raw/1789663240019_9178d917ea12411c832e6db411e2767d.json",
+      "role": "final_handoff_387_1789663240019_9178d917ea12411c832e6db411e2767d.json",
+      "sha256": "5ad4f5a4cf6c8cc2498f5f0b253b25eb6b77a928ab2d3c50fb013820e6e835ce"
+    },
+    {
+      "bytes": 764,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret7/run/45939/store/raw/1789663241521_332a993396c84c41ac758adeb90df5b0.json",
+      "role": "final_handoff_388_1789663241521_332a993396c84c41ac758adeb90df5b0.json",
+      "sha256": "f0b06174550260bdf3cd95e62f2229ccb9897687ebccba897b8b0858e65de43c"
+    },
+    {
+      "bytes": 764,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret7/run/45939/store/raw/1789663243535_cb04434b8367479faa324a395af339fb.json",
+      "role": "final_handoff_389_1789663243535_cb04434b8367479faa324a395af339fb.json",
+      "sha256": "df7628f2e84d08805c708317a37b34ed9403c723cc08ea14ac4a56ea6ee258e1"
+    },
+    {
+      "bytes": 455,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret7/run/51194/config.json",
+      "role": "final_handoff_390_config.json",
+      "sha256": "dc2cd0d0c29c300f0ec809baf8b4a0e7d37331c42d837a4f6717d87633f0e6f1"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret7/run/51194/stderr.txt",
+      "role": "final_handoff_391_stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 32768,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret7/run/51194/store/capture.sqlite3",
+      "role": "final_handoff_392_capture.sqlite3",
+      "sha256": "62eb4616d29d87998c4106019b3feb7c073464c95c5c4844a9edbcee52ac4505"
+    },
+    {
+      "bytes": 893,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret7/run/51194/store/raw/1789663240026_73101f2b43c94baaab656c798198e5a5.json",
+      "role": "final_handoff_393_1789663240026_73101f2b43c94baaab656c798198e5a5.json",
+      "sha256": "434c54cafb6070541cb1807160127beaf6bc15fa0c0b6a6758630aea2d84a44e"
+    },
+    {
+      "bytes": 764,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret7/run/51194/store/raw/1789663241532_f7d41976623c49a0a30b1c531269836c.json",
+      "role": "final_handoff_394_1789663241532_f7d41976623c49a0a30b1c531269836c.json",
+      "sha256": "8dec6531aa24f10093e4c3a7a202998d3814f01d0a7cbfdf3d2a98b98fabdab2"
+    },
+    {
+      "bytes": 764,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret7/run/51194/store/raw/1789663243542_1907cc053fae4971a640b325792e4ac7.json",
+      "role": "final_handoff_395_1789663243542_1907cc053fae4971a640b325792e4ac7.json",
+      "sha256": "8448ac771cbe70914790c19390e2ca50a428dba555651f3b9e9a9032d249bd82"
+    },
+    {
+      "bytes": 180224,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret7/run/broker.sqlite3",
+      "role": "final_handoff_396_broker.sqlite3",
+      "sha256": "c71577e30dc1e02a29df7e5f3a5f9b58e02fe7d681d3975699be745b99033058"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret7/run/captures/.dispatch-locks/8e595695a3b63af80e00d63e0294474d9dd3a6ccef97b2e4f76903d947ea5b3d.lock",
+      "role": "final_handoff_397_8e595695a3b63af80e00d63e0294474d9dd3a6ccef97b2e4f76903d947ea5b3d.lock",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret7/run/captures/.dispatch-locks/bfd2f205cba0643c262d2e682d24c53d63ab720a4699b49ef25b44c898746cbf.lock",
+      "role": "final_handoff_398_bfd2f205cba0643c262d2e682d24c53d63ab720a4699b49ef25b44c898746cbf.lock",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret7/run/captures/.service.lock",
+      "role": "final_handoff_399_.service.lock",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 136,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret7/run/captures/8e595695a3b63af80e00d63e0294474d9dd3a6ccef97b2e4f76903d947ea5b3d/body.bin",
+      "role": "final_handoff_400_body.bin",
+      "sha256": "833b9b6106b025cbffc8366dfaec06fd708dbee6f236a61902afbd1c05d891a1"
+    },
+    {
+      "bytes": 74,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret7/run/captures/8e595695a3b63af80e00d63e0294474d9dd3a6ccef97b2e4f76903d947ea5b3d/headers.json",
+      "role": "final_handoff_401_headers.json",
+      "sha256": "0e3c3502dd570a94d6c375243012eb775a2fec03e6a7028e2c9f3b6c8d08ff00"
+    },
+    {
+      "bytes": 2004,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret7/run/captures/8e595695a3b63af80e00d63e0294474d9dd3a6ccef97b2e4f76903d947ea5b3d/receipt.json",
+      "role": "final_handoff_402_receipt.json",
+      "sha256": "7f62e848b86e008a2c811edf3218ea0f399533439fa486c6913111d08b969e99"
+    },
+    {
+      "bytes": 557,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret7/run/captures/8e595695a3b63af80e00d63e0294474d9dd3a6ccef97b2e4f76903d947ea5b3d/request.json",
+      "role": "final_handoff_403_request.json",
+      "sha256": "552b87e64434839bf2411816decd384251efe2db2c75066a814b0c2058dde041"
+    },
+    {
+      "bytes": 34,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret7/run/captures/8e595695a3b63af80e00d63e0294474d9dd3a6ccef97b2e4f76903d947ea5b3d/started.json",
+      "role": "final_handoff_404_started.json",
+      "sha256": "8430f41ae8676758c2b81e8c004079d8477d6db3d0d5c3253ebab11691436acc"
+    },
+    {
+      "bytes": 212,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret7/run/captures/8e595695a3b63af80e00d63e0294474d9dd3a6ccef97b2e4f76903d947ea5b3d/supervisor.json",
+      "role": "final_handoff_405_supervisor.json",
+      "sha256": "0a8bd2059267ceae8ee0a4b7664cd7f50cd7490de3373b6819cb942f3db68b2e"
+    },
+    {
+      "bytes": 188,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret7/run/captures/8e595695a3b63af80e00d63e0294474d9dd3a6ccef97b2e4f76903d947ea5b3d/terminal.json",
+      "role": "final_handoff_406_terminal.json",
+      "sha256": "67487ffb866528285996916d972e58e73f6a07c508b138354e0dc9be0c9d42cb"
+    },
+    {
+      "bytes": 135,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret7/run/captures/bfd2f205cba0643c262d2e682d24c53d63ab720a4699b49ef25b44c898746cbf/body.bin",
+      "role": "final_handoff_407_body.bin",
+      "sha256": "9218d1d6dcf1ad0cb07718e1c803cf9ec4495495b89f99d670e82e51330f4932"
+    },
+    {
+      "bytes": 74,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret7/run/captures/bfd2f205cba0643c262d2e682d24c53d63ab720a4699b49ef25b44c898746cbf/headers.json",
+      "role": "final_handoff_408_headers.json",
+      "sha256": "dfc905ba53833399968670e5625c4db8a81f2d9f0f85ac8c32696ca38140d1d6"
+    },
+    {
+      "bytes": 2002,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret7/run/captures/bfd2f205cba0643c262d2e682d24c53d63ab720a4699b49ef25b44c898746cbf/receipt.json",
+      "role": "final_handoff_409_receipt.json",
+      "sha256": "74ad6359c7ee79273b8e0bb0e445bbf39f4756590982cf98a597a9480ebcac7c"
+    },
+    {
+      "bytes": 556,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret7/run/captures/bfd2f205cba0643c262d2e682d24c53d63ab720a4699b49ef25b44c898746cbf/request.json",
+      "role": "final_handoff_410_request.json",
+      "sha256": "01a2bdaaeff67f65df5478d272849f4704eee6805280717b35afc2cfd7758fa5"
+    },
+    {
+      "bytes": 34,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret7/run/captures/bfd2f205cba0643c262d2e682d24c53d63ab720a4699b49ef25b44c898746cbf/started.json",
+      "role": "final_handoff_411_started.json",
+      "sha256": "a1091d69d783870ef9befa99ae3f06289dd76fcb87fcdd53d4c7069160acfa23"
+    },
+    {
+      "bytes": 211,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret7/run/captures/bfd2f205cba0643c262d2e682d24c53d63ab720a4699b49ef25b44c898746cbf/supervisor.json",
+      "role": "final_handoff_412_supervisor.json",
+      "sha256": "cb9f0c47e151303963dd7e1f951a13c0f91600d89e7502460634379d7309b41e"
+    },
+    {
+      "bytes": 188,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret7/run/captures/bfd2f205cba0643c262d2e682d24c53d63ab720a4699b49ef25b44c898746cbf/terminal.json",
+      "role": "final_handoff_413_terminal.json",
+      "sha256": "c9e8f209d55661728a81dedd0df2230fa99973162f34b17c6e6f86f22ff6b99b"
+    },
+    {
+      "bytes": 49979,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret7/run/input_inventory.json",
+      "role": "final_handoff_414_input_inventory.json",
+      "sha256": "02c7196bbd6a402c1f218d0e50017327956cc269c8121a8107816f82c21c5c12"
+    },
+    {
+      "bytes": 140191,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret7/run/result.json",
+      "role": "final_handoff_415_result.json",
+      "sha256": "16c3d5e742184174166002f3b87859232a2b13fafa0ef539409f026da20a0271"
+    },
+    {
+      "bytes": 174,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_test_tmp/test_five_frozen_producers_ret7/run/staging.json",
+      "role": "final_handoff_416_staging.json",
+      "sha256": "6fad48122b6072dc78c8196d9878b0f567df015f9c8d8021bee91959f033a160"
+    },
+    {
+      "bytes": 100,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_tests.txt",
+      "role": "final_handoff_417_archive_v2_tests.txt",
+      "sha256": "4e89b9a4db3018f40fc1f4a68d0aebb82da4a3b792875d0012ea154a18d4a330"
+    },
+    {
+      "bytes": 19027,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/archive_v2_verification.json",
+      "role": "final_handoff_418_archive_v2_verification.json",
+      "sha256": "e725d08e48c67df751efa54dbb329321fdbbba239dd82abc0a49e30b57760cf9"
+    },
+    {
+      "bytes": 338,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/final_source_verification.json",
+      "role": "final_handoff_419_final_source_verification.json",
+      "sha256": "a6550081d4e5f165942dbc3bb4639d17e58f37467607f9cb86897c552dc06727"
+    },
+    {
+      "bytes": 110,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/optional_fixture_tests.txt",
+      "role": "final_handoff_420_optional_fixture_tests.txt",
+      "sha256": "d956c9420a2c468cd7e6c6d8a01c4756b3bf2e5ef6f371943e5e0120093b384d"
+    },
+    {
+      "bytes": 277245,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/source_manifest_v2.json",
+      "role": "final_handoff_421_source_manifest_v2.json",
+      "sha256": "5c8751c8b328ab6cbb1c21a85e8e66d7099046b821c1448f3ddfa24909f58de8"
+    },
+    {
+      "bytes": 13373440,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1/source_v2.tar",
+      "role": "final_handoff_422_source_v2.tar",
+      "sha256": "1107b67f660923738518af41a83a54635fe05ed891e8c6f75f263e35fd839e2d"
+    },
+    {
+      "bytes": 765073,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/research-journal/v89-frozen-collector-handoff-20260917-v1.json",
+      "role": "final_handoff_423_v89-frozen-collector-handoff-20260917-v1.json",
+      "sha256": "bc597afba64a16362ccf3448e07cc29fcc24ecd263694a52b6dd76d57fecb763"
+    },
+    {
+      "bytes": 1639,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/reviews/2026-09-17-v89-frozen-collector-fixture-selection.md",
+      "role": "final_handoff_424_2026-09-17-v89-frozen-collector-fixture-selection.md",
+      "sha256": "ce1d25fe90491f28321436299db3299afd6dad6a29ceeb073d9447b316d590f6"
+    }
+  ],
+  "execution_authority": "none",
+  "falsifier": "Changed source or raw bytes, fabricated earlier receipt availability, altered persisted rows, missing attempts or false shared physical-call accounting would invalidate the reported contract. Full scheduling and study migration remain unqualified.",
+  "hypothesis": "The real service can deliver into all five actual frozen capture/store implementations while preserving receipt and storage evidence; admission and transport accounting differences must remain explicit.",
+  "hypothesis_id": "v89-frozen-collector-handoff",
+  "limitations": [
+    "Research relay, synthetic candles and empty response headers; no current trading data or financial outcomes.",
+    "Native original _capture admission path is exercised, but full scheduling and durable slot reservation are not.",
+    "Earlier consent of 1000ms is explicit proposed fixture behavior; original collector consent is not assumed.",
+    "Direct fabricated HTTP is serialized by the parent; these cases are not a latency benchmark.",
+    "Full cancellation, lost acknowledgement, API-return expiry, other query kinds, headers, large responses, adaptation, restart and study migration remain unqualified.",
+    "Original local raw schemas still see deferral as a failed local call; physical transport lineage is separate research evidence, not an installed accounting repair.",
+    "Coverage percentages have not been measured and this harness is not qualified production adapter code.",
+    "No live approval or deployment is requested."
+  ],
+  "metrics": {
+    "archive_tests": 24,
+    "blackout_cases_rechecked": 9,
+    "candidate_tests": 24,
+    "collector_adoption_qualified": false,
+    "complete_direct_mock_calls": 5,
+    "complete_service_mock_calls": 2,
+    "final_archive_tests": 24,
+    "final_archive_verified_cases": 9,
+    "financial_benefit_established": false,
+    "frozen_producer_sources": 5,
+    "full_scheduler_exercised": false,
+    "harness_archive_files": 1477,
+    "manifest_listed_source_references": 88,
+    "native_slot_reservation_exercised": false,
+    "partial_direct_mock_calls": 9,
+    "partial_service_mock_calls": 3,
+    "producer_archive_files": 152,
+    "producer_executions_per_source": 45,
+    "rate429_direct_mock_calls": 13,
+    "rate429_service_deferrals_without_http": 8,
+    "rate429_service_mock_calls": 2,
+    "research_modules_unchanged_from_initial_qualification": true,
+    "retry503_direct_mock_calls": 9,
+    "retry503_service_mock_calls": 3,
+    "source_commit": "ca9445af15b0a88ec3ebe4918860e99705d3d602",
+    "verified_cases_per_source": 9,
+    "without_inventory_passed": 6,
+    "without_inventory_skipped": 18
+  },
+  "revision_number": 2,
+  "runtime_strategy_changed": false,
+  "schema_version": 1,
+  "status": "candidate",
+  "strategy_id": "v89_public_transport_research",
+  "supersedes_revision_id": "1c933a25a5af867014a9fe9e0701c9a1b0b532741b90b5593821b0570f5d54ea",
+  "symbol": "xyz:SNDK"
+}

@@ -1,3 +1,73 @@
+## September 17, 16:42 UTC: actual frozen capture/store handoff qualified; admission lineage next
+
+Final source **ca9445af15b0a88ec3ebe4918860e99705d3d602**, branch
+`research/v89-collector-adapter-20260917`, worktree
+`/Users/gestas/Prototypes/hypervector-v89-collector-adapter-20260917`, committed/pushed.
+Only two optional-fixture test markers differ from initial source **7ce7c8d**;
+all six research modules are unchanged. No production module or live deployment
+changed. The prior goal turn and this turn both made concrete progress.
+
+**24 candidate tests pass; 24 initial-archive and 24 final-archive tests pass**.
+Nine full cases per source independently authenticate raw/index/receipt evidence.
+Each case runs the five actual producer implementations in separate interpreters,
+with original capture, original store ingest, reopen and original recovery. Native
+uses original `_Collector._capture` and real peer guard over isolated empty peer
+fixtures, but NOT full native scheduling or durable slot reservation.
+
+Matrix direct/service mock calls: complete **5/2**; incomplete-200 then complete
+**9/3**; 503 then complete **9/3**; persistent429 **13/2**. Local calls remain
+5/9/9/13 in each mode. Service429 creates **eight deferrals without HTTP**.
+Quarter collectors retain their retries; native admits once. This is an explicit
+adoption difference, not a deployed fault or proof of financial benefit.
+Research consent permits 1000ms earlier admission but cannot cross the preceding
+call's return on retry. The direct relay serializes fabricated HTTP; no latency
+benchmark claim. Headers are empty and only synthetic SNDK candles are exercised.
+
+Initial missing candle trade count was corrected in the fixture. A later run
+hit the original native +/-90s quarter blackout: native correctly made zero calls.
+All nine failed cases recheck that guard result at retained fixture heartbeat
+clocks. Response qualification now stages BEFORE startup outside the blackout;
+no original in-flight deadline is extended. Six staging boundary controls pass.
+Keep `candidate_final_tmp` as failed blackout evidence; it is NOT a passing run.
+
+Evidence root `data/logs/research/bidirectional_cohort/v89_public_collector_adapter_20260917_v1`.
+Final runs `candidate_final_v2_tmp`, `archive_test_tmp`, `archive_v2_test_tmp`;
+independent summaries `candidate_final_verification.json`, `archive_verification.json`,
+`archive_v2_verification.json`. All are FROZEN. Final harness `source_v2.tar`:
+1477 files / 13,373,440 bytes, SHA
+`1107b67f660923738518af41a83a54635fe05ed891e8c6f75f263e35fd839e2d`.
+Frozen producer archive: 152 files / 901,120 bytes, SHA
+`2abfb95ea146f04520ece9d1772e61a9c607aaea8f6dffee02c5933a2036cf9b`.
+Original producer, committed harness and extracted source bytes were rechecked.
+Without explicit `HYPERVECTOR_COLLECTOR_INVENTORY`, ordinary runs report six passes
+and eighteen fixture skips; these skips are NOT qualification. Full runs select
+the original or archived authenticated inventory and execute all 24 tests.
+Coverage was not measured; no full-production or 100-percent coverage claim.
+
+Journal `v89-frozen-collector-handoff` revision2
+**0a2cdef3c7581d045c9432df525fab19a8310097781dcf734888144b6d1898f9**:
+**2270 matching references across both revisions; zero changed/missing**.
+Reviews `docs/reviews/2026-09-17-v89-frozen-collector-handoff.md` and
+`docs/reviews/2026-09-17-v89-frozen-collector-fixture-selection.md`, plus both
+`docs/research-journal/v89-frozen-collector-handoff-20260917-v*.json`, are frozen.
+Do not overwrite artifacts, reuse pinned test roots, or amend reviews.
+
+Next highest-value investigation: versioned admission and authenticated transport
+lineage. A no-dispatch deferral must not masquerade as a physical HTTP request;
+subscriber raw receipts must retain actual return/ingestion clocks and original
+per-study budgets. Clarify proposed shared429 cooldown semantics explicitly.
+Then exercise full scheduling/store-driven recovery, native reservations,
+cancellation/lost ack/deadline return, headers, crash/restart and study continuity.
+Keep the five original collectors/study roots untouched. No deployment approval
+is requested before a concrete validated proposal.
+
+Runtime snapshot v40 at **16:37:49 UTC**: all eleven existing identities match,
+5072 polls, zero faults, running_consistent, collector ages 11.83–29.68 seconds,
+unchanged live config. Native baseline/reproduction/candidate first-variant
+decisions **17892/17892/23184**, no failures/final results. Those original jobs
+remain running. Progress checkpoint v40 is in the captured-provider assembly root.
+Continuous goal remains active; no trading strategy or orders changed this turn.
+
 ## September 17, 16:12 UTC: full workload verified; collector compatibility is next
 
 The original full replay **session 46959 / PID 59503 finished with exit 0**;
