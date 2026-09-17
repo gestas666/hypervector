@@ -1,3 +1,68 @@
+## September 17, 16:12 UTC: full workload verified; collector compatibility is next
+
+The original full replay **session 46959 / PID 59503 finished with exit 0**;
+last client completed **16:00:26.403 UTC**. Do not restart it. All three complete
+arms independently authenticate 113 matching status/body responses, all timely.
+Independent / strict / explicit 1000ms earlier-consent used **113 / 102 / 61**
+fabricated HTTP calls, known mock upper weights **2385 / 2152 / 1287**.
+Additional paired read delay min/median/p95/max: strict **463/1042/2372/2850 ms**;
+earlier-consent **406/970/2467/2938 ms**. Neither service arm newly lost or delayed
+a response beyond its deadline. This is one fixed historical replay, not venue
+rate headroom, adaptive-collector qualification or financial benefit.
+
+Comparator/probe **b60985097f9c3974f7655e7be8dc215ea2f3e6e6** is committed/pushed
+on `research/v89-collector-compatibility-20260917`, worktree
+`/Users/gestas/Prototypes/hypervector-v89-collector-compatibility-20260917`.
+Eight focused tests pass from candidate and archive; full unmocked comparison
+reproduces exactly. Synthetic peer projection reproduces except source path.
+Final `source_v3.tar`: 1468 files, 13,322,240 bytes, SHA
+`061efac8744960e9d65e8c608c570e9c476cf5f5c6f37dab780172f1fc26db96`.
+Committed/candidate/extracted bytes match and were rechecked after execution.
+Retain failed test log and v2 archive (missing transitive service verifier);
+the final archive corrects that packaging issue. No production source changed.
+
+Evidence root `data/logs/research/bidirectional_cohort/v89_public_collector_compatibility_20260917_v1`.
+Review `docs/reviews/2026-09-17-v89-public-workload-comparison.md` and journal
+`docs/research-journal/v89-public-workload-20260917-v2.json` are now FROZEN.
+Revision **7de3fd93021296d32c9a4bdbf16b54705ca93b38bd0b2f95ea17090c29de895e**
+supersedes v1; **2780 references match across both revisions, zero changed/missing**.
+Finished `full_run_v2/`, its log, all comparison/projection artifacts and source
+inventory are pinned. Do not overwrite, rerun into these roots or edit archives.
+
+All 88 manifest-listed source files of the five collectors matched. They run
+five DISTINCT frozen worktrees: prospective, storage-spcx, followup-capture,
+equal-cap-followup and native-minute-continuation. The independent replay arm
+uses a shared single-attempt primitive, NOT their full frozen loops. Receipt
+timestamps occur after HTTP abstraction return and before fsync/ingestion.
+Harness iteration completion is NOT actual collector ingestion.
+
+The unchanged native guard counts 28 synthetic subscriber receipts as weight
+588 even with seven proposed transport labels. Those labels prove no transports;
+no discount is authorized. Current independent collectors are counted correctly.
+An adapter needs authenticated transport lineage and explicit per-subscriber
+receipt/admission semantics, plus preservation of retries/cooldowns, local
+budgets, receipt deadlines, native reservations and original study continuity.
+
+Next highest-value investigation: offline closed-loop adapter contract tests
+against all five authenticated producers. Exercise actual API return, durable
+acknowledgement, raw receipt, ingestion, store-driven recovery, partial data,
+429, expiry, cancellation and restart. Keep original collectors/roots untouched.
+No live adoption approval is requested until a concrete validated proposal exists.
+
+At 16:05:52 UTC all eleven existing runtime/research identities matched;
+4945 polls, zero faults, running_consistent, collector ages 3.31–15.01 seconds,
+unchanged config. Native first-variant progress **15624 / 15624 / 20412**;
+no failures/final results. Full native source/account comparison remains running.
+Continuous goal remains active; this turn made progress. Runtime snapshot v39
+and progress checkpoint v39 are in the captured-provider assembly evidence root.
+
+User SNDK question answered with fresh 16:03:07 UTC venue evidence: long 0.321
+at 1553.20, leverage 10x; venue full reduce-only Stop Market **1531.40**,
+OID **547778677258**. Latest hourly long exit is close strictly below prior
+10-hour low **1528.60**, rolling each hour. Fixed time exit September 18
+08:00 EDT; selected executable opposite short can close. No TP, trailing stop
+or profit lock. Backend healthy; no orders/settings changed for the question.
+
 ## September 17, 15:37 UTC: physical workload runner qualified; full comparison RUNNING
 
 Offline source **8c6d1831fbb406e28c41669e7264af12c9fd1ff8** is committed/pushed on
