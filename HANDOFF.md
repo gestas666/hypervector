@@ -1,3 +1,83 @@
+## September 17, 14:55 UTC: bounded public service qualified; collector workload comparison next
+
+Candidate **194b217e936240d1f76a207b9c6279e076f0b99a** is committed/pushed on
+`research/v89-public-service-20260917`, worktree
+`/Users/gestas/Prototypes/hypervector-v89-public-service-20260917`, based on **39e96de**.
+The active backend, TUI, five collectors and three native jobs were not changed.
+
+**351 candidate controls pass** (350 combined + one added deferral-integrity control),
+and **351 pass together from archived source**. Seven changed production modules
+cover 534/534 statements and 168/168 branches, including threads and multiprocessing.
+Independent stdlib verification authenticates 16 candidate + 16 archived ledgers,
+18 terminal grants each. Grant/status and client delivery states match; actual clocks,
+PIDs and observation timing differ. Do not claim byte-identical physical runs.
+
+The initial large-response test found a real offline-candidate defect: an invalid
+acknowledgement could be durably written before verifying complete frame transmission.
+The guard now precedes the ledger write; the same control passes. A physically
+stalled leader leaves its shared follower independently deliverable. No deployed
+code contained this new candidate defect.
+
+API: `AdmissionLimits(max_workers, max_subscribers, planned_weight=None, window_ms=None)`;
+`PublicRequestService(path, capture_root, admission_limits=..., ...)` is an exclusive
+context manager with `submit(intent)`, `pump()`, `prepare(request_id)`,
+`acknowledge(request_id, envelope_sha256, client_received_ms=...)`, and
+`deferral(transport_id)`. `PublicPipeChannel`/`PublicPipeServer`/`PublicPipeClient`
+provide the complete bounded path over preconnected local process pipes.
+
+Queue authorization and original subscription commit atomically. Restart can
+schedule an unconsumed original grant; a living orphan retains its slot and is not
+redispatched. Deferrals retain first/latest times and reasons plus count. Original
+deadlines remain unchanged. Prepared-but-unacknowledged subscribers retain capacity
+until acknowledgement or deadline. Optional planned weight is local policy, not
+actual venue cost/global-IP headroom; no budget is installed by default. Ongoing
+reservations cannot age out. Completed admitted failures are not refunded.
+
+Actual client reads and durable acknowledgements remain distinct. Late data loses
+body availability; lost acknowledgement stays unconfirmed. Frozen envelopes cannot
+gain later diagnostics. Frame limits do not establish a particular RSS bound.
+The service is a library with preconnected peers, not an installed daemon or dynamic
+listener. No historical ledger retention/long-duration resource qualification exists.
+
+Eight complete process-pipe controls measured service startup/registration 487–507 ms
+under coverage and 378–396 ms from archive; per-worker startup 436–453 / 371–391 ms;
+small timely delivery 7–13 / 5–13 ms. These are fabricated local HTTP scenarios,
+not venue latency or profitability evidence. Service startup applies to a new
+service process, not necessarily every persistent-service request. Non-IPC unit
+cases in the verifier report clock deltas; they are not physical pipe measurements.
+
+Full tracked-tree archive: 5,642 files, 222,136,320 bytes, SHA
+`134e287d29d61bc3c475a593d62553b4f4720bace21380a9f4b955a56e13a2ca`.
+It includes historical tracked docs, unlike the previous source-only archives.
+All files match Git blobs/candidate/extraction and were rechecked after tests.
+Evidence root: `data/logs/research/bidirectional_cohort/v89_public_service_20260917_v1`.
+Do not overwrite its artifacts or reuse `candidate_test_tmp`/`archive_test_tmp`:
+selected ledgers/captures are frozen journal evidence. Development logs retain
+fixture failures and the premature-acknowledgement defect; final/archive tests govern.
+
+Journal revision **88bb3f0f068fc6f47f00c5c979cde26eee44a59c2d9b72fb490fcefb9dc098eb**:
+356 matching references, zero changed/missing.
+Review: `docs/reviews/2026-09-17-v89-public-service.md`.
+Record: `docs/research-journal/v89-public-service-20260917-v1.json`.
+
+Next highest-value investigation: use a NEW isolated worktree/revision for a declared
+collector-workload comparison of complete service and independent requests, with
+physical startup, queue and IPC costs, original temporal consent, short deadlines,
+partial failures, 429 and unknown external-IP traffic. Preserve current study
+collectors. Do not reopen the prior zero-overhead replay as deployment proof, or
+install an arbitrary conservative quota. Collector adapter/receipt compatibility,
+continuity and operational deployment need a concrete proposal and separate approval.
+This turn is progress; independent offline research remains authorized.
+
+At 14:55:32 UTC all 11 recorded process identities matched; checkpoint
+`running_consistent`, 4,665 polls, zero faults, SNDK/Brent open with recorded stops.
+Collector health ages were 16.34–25.70 seconds; live config hash unchanged.
+Native baseline/reproduction/candidate had 10,836 / 10,836 / 14,364 first-variant
+decisions, no failure or final qualification artifacts. Do not restart these jobs.
+Full native source comparison/account handoff is still pending. Backend already live;
+continuous goal remains active. Latest fresh observation: `runtime_snapshot_v37.json`
+in the captured-provider assembly evidence root; latest progress checkpoint v37.
+
 ## September 17, 13:56 UTC: per-grant coordinator qualified; aggregate admission/client service next
 
 Candidate **39e96dea9daa2d9307edf82513e8a3766a42b9b2** is committed/pushed on
