@@ -1,3 +1,61 @@
+## September 18, 05:30 UTC: abandoned-request continuation and reader cleanup qualified offline
+
+The continuous research goal remains active. This goal turn made implementation,
+validation and journal progress; the intervening SNDK exit answer alone was no
+progress on that goal. The objective file was read before resuming.
+
+Source **24babd99171b180805ee216a5c17647dcc34c76a**, branch
+`research/v89-abandoned-attempt-recovery-20260918`, passed 227 tests with one skip
+from source and archive. Actual 300-second owner-loss studies retained all five
+failed original attempts and resumed every collector with new request IDs before
+unchanged deadlines. Subsequent request counts were [10,56,10,56,1] and
+[5,40,5,40,4]. Independent raw/index/source, history-prefix, budget and reservation
+checks passed. Prior failed witnesses remain explicit; no fabricated returns or
+observations. Source/archive: 5,836 files, 11,672 matches, zero changed/missing.
+Both suites retain 70 summarized plus five additional SQLite resource warnings.
+Review: `docs/reviews/2026-09-18-abandoned-attempt-continuation-validation.md`.
+
+The warning was reproduced as one unclosed connection per offline
+`committed_index` read. Successor **b2c7436d88ee202a867db3c9723798b05c02fc89**,
+branch `research/v89-recovery-reader-cleanup-20260918`, explicitly closes that
+reader. Seven real-connection tests failed before and passed after the fix.
+Candidate/archive each passed 234 tests, one explicit new-continuation skip,
+with resource/unraisable warnings treated as errors. Both inspected log sets
+contain zero ResourceWarning messages. All 5,837 source files match both trees.
+Review: `docs/reviews/2026-09-18-recovery-reader-cleanup-validation.md`.
+Both source branches are committed, pushed, clean and immutable for next work.
+
+The initial study-scale component probe measured the actual status reader at
+0/100/1,000/10,000/46,807 synthetic begin-only attempts. At the largest count,
+median status time was 0.56546 seconds and cumulative process peak RSS 169.4 MB;
+file descriptors stayed at six. No raw bodies, returns, authorizations or actual
+scheduler requests were represented. This does not establish a live deadline
+failure or complete-history recovery performance. Review:
+`docs/reviews/2026-09-18-collector-scale-component-probe.md`.
+
+Journal revisions: abandoned recovery e5bcfd443c09 (18,144 matching references),
+reader cleanup 2826a9a84770 (9,685), study scale 38557c5d936c (16). All have zero
+changed/missing references. Completed source extraction compaction recovered
+229,629,952 observed bytes after archive, byte and open-handle verification;
+5,814 paths and file contents remain intact. Full evidence and journal records
+are retained under their v89_public_*_20260918_v1 directories.
+
+Runtime snapshot v76 at 05:30:06 UTC verifies all eleven identities: backend
+running_consistent, 8,147 polls, zero faults, unchanged live configuration;
+collector health ages 0.16–13.41 seconds. Native baseline/reproduction remain on
+first_receipts (67,284/67,536 decisions); candidate is on latest_revisions (1,764).
+All three comparison jobs remain live without terminal failure/results. Preserve
+backend, reporter, TUI, original five collectors and those exact jobs.
+
+**Next highest-value investigation:** extend the declared study-scale probe to
+complete/mixed histories with valid original normalization and service evidence,
+then measure full bridge/IPC/raw/replay startup and original deadline effects.
+Use a new isolated worktree from b2c7436; do not edit frozen source or pinned
+artifacts. No cache or validation shortcut is justified by the initial component
+measurement. Operational new-study launch/migration/rollback, network headroom,
+power loss, sealed prospective outcomes, economic validation and explicit live
+change approval remain open. No new live deployment was performed.
+
 ## September 17, 19:08 UTC: durable collector authorization implemented and qualified offline
 
 Source **7cb79c32a753d5360754d96643795efea4f15e16** is committed and pushed on

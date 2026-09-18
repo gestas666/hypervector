@@ -1,0 +1,204 @@
+{
+  "automatic_promotion": false,
+  "confidence": "high",
+  "created_at_utc": "2026-09-18T05:29:45.623586+00:00",
+  "decision": "Record the 0.565-second median at 46807 synthetic begin-only entries; prioritize completed/mixed-history and full bridge recovery measurement before proposing optimization.",
+  "evidence": [
+    {
+      "bytes": 2211,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_scale_20260918_v1/declaration.json",
+      "role": "completed_000000",
+      "sha256": "dddf7c9b5a30c5893c8d4fb04a6e8a5dd29f7addca4b0cc9e87c51367e46bdb8"
+    },
+    {
+      "bytes": 383,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_scale_20260918_v1/sample_0.json",
+      "role": "completed_000001",
+      "sha256": "ecefc2251530d5d5d35f1dd64415a48ff6bbadedc814a0564ad392e9c10b0691"
+    },
+    {
+      "bytes": 385,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_scale_20260918_v1/sample_100.json",
+      "role": "completed_000002",
+      "sha256": "a8f62297af147ccba031de40876fe376278c592f6e2775e2065cc9f1552e6c7c"
+    },
+    {
+      "bytes": 380,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_scale_20260918_v1/sample_1000.json",
+      "role": "completed_000003",
+      "sha256": "32e373d5d9a01d67e9975d6f13f4eee25dd11eeb8b9afce88ba88212189fcb78"
+    },
+    {
+      "bytes": 374,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_scale_20260918_v1/sample_10000.json",
+      "role": "completed_000004",
+      "sha256": "ead10c172e3b6a1837839685b183089d23510effacf54f5eaebce2b86e192133"
+    },
+    {
+      "bytes": 371,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_scale_20260918_v1/sample_46807.json",
+      "role": "completed_000005",
+      "sha256": "d01f4eb68a3269c49455c17a2ce9d1a822974c5b3e79fca5883918453e989e35"
+    },
+    {
+      "bytes": 4278,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_scale_20260918_v1/status_probe.py",
+      "role": "completed_000006",
+      "sha256": "89ed9cd40282e9504e60f1158a0d8f90b4439dd8888147125887de911b0f732c"
+    },
+    {
+      "bytes": 1698,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_scale_20260918_v1/status_probe.txt",
+      "role": "completed_000007",
+      "sha256": "f61de8d26cf781f6018947b50a448532bac8df7fb7d0a4678b0f1ff6c182439f"
+    },
+    {
+      "bytes": 2443,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_scale_20260918_v1/status_probe_result.json",
+      "role": "completed_000008",
+      "sha256": "0c872437c2d202bc774d78041d93c7821fa5ba45c9151f6252aedc3d29ce4aa9"
+    },
+    {
+      "bytes": 57344,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_scale_20260918_v1/store/capture.sqlite3",
+      "role": "completed_000009",
+      "sha256": "a5fe5fe02357d9581b48240ccb5ee11c737c649fd2baf2621e9184d724ab5040"
+    },
+    {
+      "bytes": 0,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_scale_20260918_v1/store/ingestion.lock",
+      "role": "completed_000010",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 23134208,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_collector_scale_20260918_v1/store/ingestion_attempts.sqlite3",
+      "role": "completed_000011",
+      "sha256": "c879dffe6d25c970278feaf45467fbfe73646942bba8217c2febc2d93eaf3db9"
+    },
+    {
+      "bytes": 33895667,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_recovery_reader_cleanup_20260918_v1/source.tar.gz",
+      "role": "completed_000012",
+      "sha256": "9d75b05c21f6af1f1f910279710d3774d58c83d4b06eb795e964242b6dd75cf5"
+    },
+    {
+      "bytes": 1096148,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_recovery_reader_cleanup_20260918_v1/source_manifest.json",
+      "role": "completed_000013",
+      "sha256": "793f6f1962336cc991c6678f4a886eae103f70ea5739c768126cb770cc96fd27"
+    },
+    {
+      "bytes": 11655,
+      "path": "/Users/gestas/Prototypes/hypervector/data/logs/research/bidirectional_cohort/v89_public_recovery_reader_cleanup_20260918_v1/terminal_qualification.json",
+      "role": "completed_000014",
+      "sha256": "9f5800927b59d1ded88c18261f5515a112233595043b7b371c72e67ecf4a7e45"
+    },
+    {
+      "bytes": 2940,
+      "path": "/Users/gestas/Prototypes/hypervector/docs/reviews/2026-09-18-collector-scale-component-probe.md",
+      "role": "completed_000015",
+      "sha256": "f79575ad36a32a9d1581fbb50e76d6d4a4637986004fb645cd03728df5663a65"
+    }
+  ],
+  "execution_authority": "none",
+  "falsifier": "Incorrect status counts/provenance or failed source reproduction invalidates the measurement; broader real-path timing can revise its practical importance.",
+  "hypothesis": "Full-history attempt authentication contributes material per-publication cost as a collector history grows.",
+  "hypothesis_id": "v89-public-collector-study-scale",
+  "limitations": [
+    "One component, one shared macOS host, five repeated warm-cache calls per declared size.",
+    "Synthetic begin-only API-created journals omit raw, returns, permissions, IPC and original replay costs.",
+    "Process peak RSS is cumulative rather than isolated per-call allocation.",
+    "No end-to-end deadline failure, live defect, profitable strategy improvement or complete study-scale acceptance is claimed."
+  ],
+  "metrics": {
+    "declaration_sha256": "dddf7c9b5a30c5893c8d4fb04a6e8a5dd29f7addca4b0cc9e87c51367e46bdb8",
+    "execution_authority": "none",
+    "finished_at_utc": "2026-09-18T05:26:19.567165+00:00",
+    "full_study_qualification": false,
+    "samples": [
+      {
+        "attempts": 0,
+        "journal_bytes": 28672,
+        "median_seconds": 5.67499955650419e-05,
+        "open_file_descriptors_before_and_after": 6,
+        "process_peak_rss_bytes": 30441472,
+        "seed_wall_seconds": 8.750066626816988e-07,
+        "status_wall_seconds": [
+          0.00021816699882037938,
+          5.67499955650419e-05,
+          6.700001540593803e-05,
+          4.795799031853676e-05,
+          4.51250234618783e-05
+        ]
+      },
+      {
+        "attempts": 100,
+        "journal_bytes": 77824,
+        "median_seconds": 0.0011934999783989042,
+        "open_file_descriptors_before_and_after": 6,
+        "process_peak_rss_bytes": 30638080,
+        "seed_wall_seconds": 0.03524533400195651,
+        "status_wall_seconds": [
+          0.0012802089913748205,
+          0.0011934999783989042,
+          0.0012316250067669898,
+          0.0011730830010492355,
+          0.0011426249984651804
+        ]
+      },
+      {
+        "attempts": 1000,
+        "journal_bytes": 524288,
+        "median_seconds": 0.011354875023243949,
+        "open_file_descriptors_before_and_after": 6,
+        "process_peak_rss_bytes": 34996224,
+        "seed_wall_seconds": 0.32077066699275747,
+        "status_wall_seconds": [
+          0.01181237501441501,
+          0.011354875023243949,
+          0.011482000001706183,
+          0.010605874995235354,
+          0.010863290983252227
+        ]
+      },
+      {
+        "attempts": 10000,
+        "journal_bytes": 4960256,
+        "median_seconds": 0.12015420800889842,
+        "open_file_descriptors_before_and_after": 6,
+        "process_peak_rss_bytes": 62275584,
+        "seed_wall_seconds": 4.706558583973674,
+        "status_wall_seconds": [
+          0.12015420800889842,
+          0.1193976670037955,
+          0.11764687500544824,
+          0.12042575000668876,
+          0.12125629201182164
+        ]
+      },
+      {
+        "attempts": 46807,
+        "journal_bytes": 23134208,
+        "median_seconds": 0.5654567920137197,
+        "open_file_descriptors_before_and_after": 6,
+        "process_peak_rss_bytes": 169443328,
+        "seed_wall_seconds": 26.808334333007224,
+        "status_wall_seconds": [
+          0.5654567920137197,
+          0.556417041021632,
+          0.5773613330093212,
+          0.5935884579957929,
+          0.5484184170200024
+        ]
+      }
+    ]
+  },
+  "revision_number": 1,
+  "runtime_strategy_changed": false,
+  "schema_version": 1,
+  "status": "candidate",
+  "strategy_id": "v89_public_transport_research",
+  "supersedes_revision_id": null,
+  "symbol": "BTC"
+}
