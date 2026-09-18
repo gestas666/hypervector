@@ -1,3 +1,71 @@
+## September 18, 06:29 UTC: authentic history recovery qualified; scale pilot stopped on clock regression
+
+The continuous research goal remains active. This turn made implementation,
+validation, journal and storage-recovery progress. The preceding SNDK answer was
+no progress on the continuous goal. The objective file was read before resuming.
+
+Source **29765f3c0c7002258f189d10a775c1d43aa351cb** is committed, pushed and clean
+on `research/v89-complete-history-scale-20260918`, worktree
+`/Users/gestas/Prototypes/hypervector-v89-complete-history-scale-20260918`.
+Actual original `_capture_once`, raw writes, service workers/acknowledgements,
+permissions and normalization now generate authenticated synthetic histories.
+Fresh original processes invoke complete bridge/service/raw/store recovery.
+Immutable compact recipes bound worker fixture serialization; streamed traces
+retain evidence. The accounting comparator authenticates seals and excludes only
+fresh observation time/checksum from content equality.
+
+Candidate/archive each passed **275 tests, one explicit long-continuation skip**,
+204.47/207.11s. Small complete/mixed cases use nine requests per original, preserve
+all rows/raw bytes/availability, and dispatch zero new recovery requests. Twelve
+corruption cases fail explicitly across all three schemas. Both runs inspect
+156 logs with no ResourceWarning; coverage is 339/342 statements, 87/90 branches
+in measured parent/helper modules, excluding isolated original child coverage.
+All 5,849 source files match both trees; 11,698 matches, zero changed/missing.
+Archive SHA 759058f2b19322dccd0893bbeee4a4daeacc5e69b71b48dc6fb992aebd480091.
+
+**The 1,500-attempt pilot failed, not qualified.** After 315 admissions/301
+transports it stopped before recovery on `1789712102592 < 1789712102649` (57ms).
+A worker also rejected a 42ms regression. 310 original raw/indexed receipts and
+five incomplete attempts remain retained. Both failing calls sample real wall
+time after BEGIN IMMEDIATE. Underlying cause is unresolved: later 120-second
+paired wall/monotonic probe (40,015 samples) observed no rollback. Two existing
+clock-policy tests confirm that rejecting backward time is intentional. Do not
+clamp clocks, extend deadlines, fabricate returns, or restart the failed pilot.
+
+The full target remains [3889,46807,3899,46796,1576]. Original scheduler pacing,
+quarter budgets/reservations and native spacing are not qualified by the history
+builder. Large response windows also remain unqualified after the failed pilot.
+
+Disk shortage explicitly deferred research imports. After verified backups,
+idle retired-build cleanup and package-specific uv cache cleanup, free space
+recovered; at 06:21:28 UTC sync imported 2,461 events and returned to ready.
+No application server was stopped. Installed dependency imports and TUI checksum
+remain verified. Backup locations, the guarded-cleanup wait, subsequent checks
+and package-specific force operation are documented in the scoped review.
+
+Review: `docs/reviews/2026-09-18-complete-history-recovery-validation.md`.
+Evidence: `data/logs/research/bidirectional_cohort/v89_public_complete_history_scale_20260918_v1`.
+Journal `v89-public-collector-study-scale`, revision2
+**3366bde27f6cfcc6772748881a59372ab446ae0722de114d0a75eb6b42b95e39**:
+23,001 references across revisions match; zero changed/missing. New revision pins
+22,985 files / 1,336,534,937 bytes. This source and evidence are now frozen.
+
+Runtime v79 at **06:29:33 UTC** verifies all eleven identities, running_consistent,
+8,386 polls, zero faults, unchanged live config; collector ages 7.93–26.41s.
+Native baseline/reproduction first_receipts 71,064/71,316; candidate
+latest_revisions 6,300. All three jobs remain live without terminal results/failure.
+Preserve backend, reporter, TUI, five actual collectors and these exact jobs.
+
+**Next highest-value investigation:** use a new isolated successor from 29765f3
+for clock provenance at serialized broker operations in a newly declared larger
+pilot. Determine actual host rollback versus an unobserved future committed tick;
+retain paired event-time wall/monotonic evidence without changing receipt/deadline
+semantics. A passing repeat alone cannot explain the failure. Then complete the
+observed-scale recovery and original scheduler deadline qualification. Operational
+installation/migration/rollback, power loss, network headroom, native comparisons,
+sealed prospective evidence, economic validation, explicit live-change approval
+and final TUI acceptance remain open. No live deployment occurred.
+
 ## September 18, 05:30 UTC: abandoned-request continuation and reader cleanup qualified offline
 
 The continuous research goal remains active. This goal turn made implementation,
