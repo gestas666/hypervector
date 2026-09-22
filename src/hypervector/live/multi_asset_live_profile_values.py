@@ -40,6 +40,10 @@ def provider_profile_values(config: StrategyProviderConfig) -> dict[str, object]
     execution = values.get("execution")
     if not isinstance(execution, dict):
         return values
+    if config.execution.stop_risk_budget is None:
+        execution.pop("stop_risk_budget")
+    if config.execution.adaptive_exit_policy == "none":
+        execution.pop("adaptive_exit_policy")
     if config.execution.provider_recipe_exit_policy == "ignore":
         execution.pop("provider_recipe_exit_policy")
     if config.execution.maximum_hold_evidence_maximum_age_seconds is None:

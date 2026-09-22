@@ -5,6 +5,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
+from hyperliquid.utils.error import ServerError
 from test_multi_asset_live_runner import (
     _Engine,
     _Poller,
@@ -201,3 +202,35 @@ def test_supervised_data_failure_reports_degraded_after_required_exit(
         ("BTC_candles", "transport_timeout_retry_exhausted")
     ]
     assert telemetry.heartbeats == 0
+
+
+def test_failed_deadline_close_is_never_reported_as_a_degraded_poll(
+    tmp_path: Path,
+) -> None:
+    """The unconditional deadline path submits orders inside the acquisition failure.
+
+    `poll_with_deadlines` closes owned positions before re-raising the market-data
+    error, so a transport failure on the close leaves the lifecycle mid-flight. The
+    run loop must surface it instead of recording a degraded poll and continuing —
+    this path exists precisely to protect a position while data is broken.
+    """
+    runner, owned, telemetry = runner_fixture(
+        tmp_path, age_ms=SOFT_MS, side=-0.25, extension=False
+    )
+    attempted: list[tuple[float, str]] = []
+
+    def failing_exit(
+        *, mark_price: float, reason: str, **_kwargs: object
+    ) -> SolLiveSnapshot:
+        attempted.append((mark_price, reason))
+        raise ServerError(502, "Bad Gateway")
+
+    owned.exit = failing_exit
+
+    with pytest.raises(ServerError):
+        runner.run(max_polls=1)
+
+    assert attempted == [(REFERENCE_PRICE, "maximum_hold_seconds")]
+    assert not telemetry.degraded_polls, (
+        "a failed deadline close must not be recorded as a degraded poll"
+    )

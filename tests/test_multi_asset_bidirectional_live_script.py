@@ -20,9 +20,13 @@ from hypervector.live.cohort_transition_drain import CohortTransitionDrain
 from hypervector.live.cohort_transition_drain import archive_completed_transition_drain
 from hypervector.live.cohort_transition_drain import load_transition_drain_snapshot
 from hypervector.live.multi_asset_live_config import MultiAssetLiveConfigError
+from hypervector.live.multi_asset_live_runner_support import MultiAssetLiveRunnerError
 
 SCRIPT = Path(__file__).parents[1] / "scripts" / "multi_asset_bidirectional_live.py"
 V25 = Path("configs/multi_asset_bidirectional_complete_portfolio_canary_v25.toml")
+V90_CONFIG = Path(
+    "configs/multi_asset_growth_first_5000_bankroll_builder_candidate_v90.toml"
+)
 
 
 def _load_module() -> ModuleType:
@@ -148,6 +152,55 @@ def test_guarded_runner_journals_unhandled_fault_before_reraising() -> None:
         live_script._run_guarded(runner, telemetry, max_polls=None)
 
     telemetry.emit_runtime_fault.assert_called_once_with(exception_type="RuntimeError")
+
+
+def test_runner_construction_refusal_exits_fail_closed(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """A construction-time runtime-validation refusal must not read as a crash.
+
+    The supervisor holds on exit 2 and relaunches on any other nonzero code, so a
+    refusal that exits 1 costs a full prestart backup and ledger replay per retry.
+    """
+    live_script = _load_module()
+    parser = SimpleNamespace(parse_args=lambda: _args())
+    monkeypatch.setattr(live_script, "load_dotenv_if_present", lambda: None)
+    monkeypatch.setattr(live_script, "build_parser", lambda: parser)
+
+    def refuse(_args: argparse.Namespace) -> int:
+        raise MultiAssetLiveRunnerError(
+            "provider entry sizing exceeds executable provider-symbol scope"
+        )
+
+    monkeypatch.setattr(live_script, "run_live", refuse)
+
+    assert live_script.main() == live_script.EXIT_START_REFUSED == 2
+    assert "live start refused" in capsys.readouterr().err
+
+
+def test_fault_after_start_keeps_the_restartable_exit_code(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A fault raised after the cohort started is a crash, never a refusal.
+
+    ValueError and MultiAssetLiveRunnerError both reach the refusal table, so the
+    run phase must be marked explicitly or the supervisor would hold a backend
+    that only needed a bounded restart.
+    """
+    live_script = _load_module()
+    parser = SimpleNamespace(parse_args=lambda: _args())
+    monkeypatch.setattr(live_script, "load_dotenv_if_present", lambda: None)
+    monkeypatch.setattr(live_script, "build_parser", lambda: parser)
+
+    for cause in (ValueError("mid-run"), MultiAssetLiveRunnerError("mid-run")):
+
+        def fail(_args: argparse.Namespace, cause: Exception = cause) -> int:
+            raise live_script.CohortRunFailure(str(cause)) from cause
+
+        monkeypatch.setattr(live_script, "run_live", fail)
+
+        assert live_script.main() == live_script.EXIT_RUN_FAILED == 1
 
 
 def test_router_declares_both_sides_for_every_provider_and_symbol() -> None:
@@ -939,3 +992,111 @@ def test_live_telemetry_receives_verified_backup_identity(
     row = json.loads(config.cohort_ledger.read_text().splitlines()[0])
     assert row["payload"]["prestart_backup"]["manifest_sha256"] == "a" * 64
     assert row["payload"]["prestart_backup"]["implementation_sha256"] == "b" * 64
+
+
+def _neutralize_start_boundaries(
+    live_script: ModuleType,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Stub every start boundary so only the construction/run split is exercised."""
+    for name in (
+        "_transition_recovery",
+        "_require_completed_profile_transition",
+        "require_approved_profile_change",
+        "_verify_profile_transition_venue_boundary",
+        "_announce_backup",
+    ):
+        monkeypatch.setattr(live_script, name, lambda *_a, **_k: None)
+    monkeypatch.setattr(
+        live_script, "discover_cohort_implementation_sources", lambda *_a: {"x": SCRIPT}
+    )
+    monkeypatch.setattr(
+        live_script, "create_cohort_prestart_backup", lambda *_a, **_k: Mock()
+    )
+    monkeypatch.setattr(live_script, "_create_transition_drain", lambda *_a: Mock())
+    monkeypatch.setattr(live_script, "_create_adapters", lambda *_a: Mock())
+    monkeypatch.setattr(live_script, "_create_engines", lambda *_a: ({}, {}))
+    monkeypatch.setattr(live_script, "_create_telemetry", lambda *_a: Mock())
+
+
+def test_locked_start_separates_construction_refusal_from_a_run_fault(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The phase boundary is the runner's construction, not the first poll.
+
+    Anything the runner's own validation refuses is a start refusal the operator
+    must resolve; anything raised once that runner is polling is a crash a bounded
+    restart may clear.
+    """
+    live_script = _load_module()
+    config = live_script.load_multi_asset_live_config(
+        "configs/multi_asset_bidirectional_canary.toml",
+        mode="live",
+        enabled=True,
+        accepts_live_risk=True,
+    )
+    args = _args(enabled=True, i_accept_live_risk=True)
+    presence = live_script.CredentialPresence(True, True)
+    _neutralize_start_boundaries(live_script, monkeypatch)
+
+    def refuse_construction(*_a: object, **_k: object) -> object:
+        raise MultiAssetLiveRunnerError("provider entry sizing exceeds executable scope")
+
+    monkeypatch.setattr(live_script, "_create_runner", refuse_construction)
+    with pytest.raises(MultiAssetLiveRunnerError, match="exceeds executable scope"):
+        live_script._run_locked(args, config, presence, Mock())
+
+    monkeypatch.setattr(live_script, "_create_runner", lambda *_a, **_k: Mock())
+
+    def fault_while_running(*_a: object, **_k: object) -> int:
+        raise ValueError("mid-run venue detail")
+
+    monkeypatch.setattr(live_script, "_run_guarded", fault_while_running)
+    with pytest.raises(live_script.CohortRunFailure) as raised:
+        live_script._run_locked(args, config, presence, Mock())
+
+    assert isinstance(raised.value.__cause__, ValueError)
+
+
+def test_configuration_refusal_precedes_the_backup_and_the_venue_client(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A refusal knowable from the profile must not cost an armed startup.
+
+    The runner's construction-time validation used to run after the mandatory
+    pre-start backup, the full ledger replay and the construction of a
+    signing-capable venue client.
+    """
+    live_script = _load_module()
+
+    def forbidden(*_args: object, **_kwargs: object) -> object:
+        raise AssertionError("expensive startup ran before configuration validation")
+
+    monkeypatch.setattr(live_script, "create_cohort_prestart_backup", forbidden)
+    monkeypatch.setattr(live_script, "create_armed_multi_asset_adapters", forbidden)
+    monkeypatch.setattr(
+        live_script.ConfiguredMultiAssetIntentPoller,
+        "with_default_collectors",
+        forbidden,
+    )
+    monkeypatch.setattr(
+        live_script,
+        "credential_presence_from_env",
+        lambda: live_script.CredentialPresence(True, True),
+    )
+
+    def refuse(_config: object) -> None:
+        raise MultiAssetLiveRunnerError(
+            "provider entry sizing exceeds executable provider-symbol scope"
+        )
+
+    monkeypatch.setattr(live_script, "validate_runtime_configuration", refuse)
+
+    with pytest.raises(MultiAssetLiveRunnerError, match="exceeds executable"):
+        live_script.run_live(
+            _args(
+                config=V90_CONFIG,
+                enabled=True,
+                i_accept_live_risk=True,
+            )
+        )

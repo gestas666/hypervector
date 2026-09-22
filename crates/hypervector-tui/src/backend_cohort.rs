@@ -79,6 +79,8 @@ pub struct CohortExecutionPlan {
     #[serde(default = "ignored_provider_recipe_exit_policy")]
     pub provider_recipe_exit_policy: String,
     #[serde(default = "disabled_profit_lock_policy")]
+    pub adaptive_exit_policy: String,
+    #[serde(default = "disabled_profit_lock_policy")]
     pub profit_lock_policy: String,
     #[serde(default)]
     pub profit_lock_activation_bps: Option<f64>,
@@ -107,6 +109,8 @@ pub struct CohortProviderExecutionContract {
     pub hard_maximum_hold_seconds: Option<u64>,
     #[serde(default = "ignored_provider_recipe_exit_policy")]
     pub provider_recipe_exit_policy: String,
+    #[serde(default = "disabled_profit_lock_policy")]
+    pub adaptive_exit_policy: String,
     #[serde(default = "disabled_profit_lock_policy")]
     pub profit_lock_policy: String,
     #[serde(default)]

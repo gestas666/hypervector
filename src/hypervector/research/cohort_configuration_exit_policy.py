@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from dataclasses import asdict
 import math
 
 from hypervector.live.btc_hulk_delayed_component_floor import (
@@ -12,6 +13,7 @@ from hypervector.live.btc_hulk_robust_short_provider import (
     HULK_ROBUST_SHORT_STRATEGY,
 )
 from hypervector.live.multi_asset_live_config import MultiAssetLiveConfig
+from hypervector.live.cohort_stop_risk_sizing import StopRiskBudget
 
 
 @dataclass(frozen=True)
@@ -28,6 +30,8 @@ class ProviderExitExpectation:
     profit_lock_activation_bps: float | None = None
     profit_lock_floor_bps: float | None = None
     profit_lock_giveback_bps: float | None = None
+    adaptive_exit_policy: str = "none"
+    stop_risk_budget: StopRiskBudget | None = None
 
 
 @dataclass(frozen=True)
@@ -119,11 +123,15 @@ def _expectation(strategy_id: str, contract: object) -> ProviderExitExpectation:
         contract.profit_lock_activation_bps,
         contract.profit_lock_floor_bps,
         contract.profit_lock_giveback_bps,
+        contract.adaptive_exit_policy,
+        contract.stop_risk_budget,
     )
 
 
 def _policy_payload(row: ProviderExitExpectation) -> dict[str, object]:
     return {
+        **({"stop_risk_budget": asdict(row.stop_risk_budget)} if row.stop_risk_budget is not None else {}),
+        **({"adaptive_exit_policy": row.adaptive_exit_policy} if row.adaptive_exit_policy != "none" else {}),
         "maximum_hold_seconds": row.maximum_hold_seconds,
         "maximum_hold_policy": row.maximum_hold_policy,
         "hard_maximum_hold_seconds": row.hard_maximum_hold_seconds,
@@ -166,6 +174,7 @@ def _validate_exit_policy(
         or not (fixed or bool(extended))
         or row.provider_recipe_exit_policy not in {"ignore", "honor"}
         or not _profit_lock_valid(row)
+        or row.adaptive_exit_policy not in {"none", "regime_book_profit_retention_v1"}
     ):
         raise ValueError("provider exit policy is invalid")
 

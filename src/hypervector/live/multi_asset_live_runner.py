@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import time
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Iterator, Mapping
+from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
 
@@ -53,6 +54,7 @@ from hypervector.live.multi_asset_live_protocols import (
     MultiAssetIntentPollerProtocol,
 )
 from hypervector.live.multi_asset_live_runner_support import (
+    CohortDegradedBlindnessError,
     MultiAssetLiveRunnerError,
     all_flat_and_unowned,
     asset_snapshots,
@@ -71,6 +73,11 @@ from hypervector.live.multi_asset_signal_source import ProviderEvaluation
 from hypervector.live.sol_range_onset_state import SolLiveState
 from hypervector.live.transient_transport import transient_read_failure_reason
 
+# One hour of blindness at the configured 15s cadence. Long enough that an
+# ordinary gateway flap never trips it, bounded so a permanent outage cannot be
+# reported as a running cohort.
+_DEFAULT_DEGRADED_POLL_BOUND = 240
+
 _ContractMap = Mapping[
     contract_selection.ExecutionContractKey, ProviderExecutionContract
 ]
@@ -84,6 +91,7 @@ class MultiAssetLiveRunner:
     _funding_start_ms: int | None
     _latest_evaluations: dict[EvaluationKey, ProviderEvaluation]
     _started: bool
+    _execution_phase_failed: bool
 
     def __init__(
         self,
@@ -109,6 +117,7 @@ class MultiAssetLiveRunner:
         transition_drain: CohortTransitionDrain | None = None,
         monotonic_fn: Callable[[], float] = time.monotonic,
         funding_recovery_start_ms: int | None = None,
+        maximum_consecutive_degraded_polls: int = _DEFAULT_DEGRADED_POLL_BOUND,
     ) -> None:
         self._assign_runtime_dependencies(
             telemetry,
@@ -120,6 +129,7 @@ class MultiAssetLiveRunner:
             monotonic_fn,
         )
         self._funding_recovery_start_ms = funding_recovery_start_ms
+        self._maximum_consecutive_degraded_polls = maximum_consecutive_degraded_polls
         self._assign_strategy_dependencies(
             symbols,
             engines,
@@ -281,6 +291,7 @@ class MultiAssetLiveRunner:
         self._signal_stop_requested = signal_stop_requested
         self._monotonic_fn = monotonic_fn
         self._funding_start_ms, self._started = None, False
+        self._execution_phase_failed = False
 
     def start(
         self,
@@ -308,6 +319,7 @@ class MultiAssetLiveRunner:
         """Run one deterministic reconcile, intent, execution, and telemetry cycle."""
         if not self._started or self._funding_start_ms is None:
             raise MultiAssetLiveRunnerError("cohort runner is not started")
+        self._execution_phase_failed = False
         funding_start_ms = self._funding_start_ms
         funding_observed = aware(self._now_fn())
         funding_end_ms = int(funding_observed.timestamp() * 1_000)
@@ -324,6 +336,49 @@ class MultiAssetLiveRunner:
         self._telemetry.emit_market_bars(poll.market_bars)
         if poll.regime_evaluations:
             self._telemetry.emit_canonical_regimes(poll.regime_evaluations)
+        with self.execution_phase():
+            report = self._execute_cycle(
+                poll=poll,
+                venues=venues,
+                funding_start_ms=funding_start_ms,
+                funding_end_ms=funding_end_ms,
+                observed_ms=observed_ms,
+            )
+        return len(report.actions)
+
+    @contextmanager
+    def execution_phase(self) -> Iterator[None]:
+        """Mark a region that can submit, amend or cancel a real order.
+
+        A transport failure raised inside one of these regions is not a retryable
+        read: the venue may already hold a position whose local lifecycle is
+        mid-flight, so the run loop must surface it instead of degrading the poll.
+        The original exception is re-raised untouched so its traceback still
+        classifies the exact failure stage.
+        """
+        try:
+            yield
+        except BaseException:
+            self._execution_phase_failed = True
+            raise
+
+    def _execute_cycle(
+        self,
+        *,
+        poll: CohortIntentPoll,
+        venues: tuple[SolReconciliationSnapshot, ...],
+        funding_start_ms: int,
+        funding_end_ms: int,
+        observed_ms: int,
+    ) -> IntentRoutingReport:
+        """Run the order-capable half of one cycle.
+
+        Everything from here on can submit, amend or cancel a real order, and the
+        reads that verify those submissions run inside it. A transport failure
+        raised here is not a retryable read: the venue may already hold a position
+        whose local lifecycle is mid-flight, and only a full startup
+        reconciliation can resolve that.
+        """
         operator_actions, affected = self._run_operator_commands(poll, observed_ms)
         routed = route_cycle(
             symbols=self._symbols,
@@ -341,7 +396,7 @@ class MultiAssetLiveRunner:
             executable_directions=self._executable_provider_directions,
             transition_drain=self._transition_drain,
         )
-        report = self._finish_cycle(
+        return self._finish_cycle(
             poll=poll,
             operator_actions=operator_actions,
             routed=routed,
@@ -351,7 +406,6 @@ class MultiAssetLiveRunner:
             funding_end_ms=funding_end_ms,
             observed_ms=observed_ms,
         )
-        return len(report.actions)
 
     def _finish_cycle(
         self,
@@ -421,23 +475,32 @@ class MultiAssetLiveRunner:
         validate_max_polls(max_polls)
         activation = aware(self._now_fn())
         self.start(activation_time_ms=int(activation.timestamp() * 1_000))
-        polls = 0
+        polls, degraded_streak = 0, 0
         while not self._shutdown_requested():
             cycle_started = self._monotonic_fn()
             try:
                 self.poll_once()
+                degraded_streak = 0
             except TransientCohortMarketDataError as exc:
+                if self._execution_phase_failed:
+                    raise
+                degraded_streak += 1
                 self._telemetry.emit_poll_degraded(
                     source=exc.source,
                     reason=exc.reason,
                 )
             except (RequestException, ClientError, ServerError) as exc:
                 reason = transient_read_failure_reason(exc)
-                if reason is None:
+                if reason is None or self._execution_phase_failed:
                     raise
+                degraded_streak += 1
                 self._telemetry.emit_poll_degraded(
                     source="hyperliquid_account_reconciliation",
                     reason=reason,
+                )
+            if degraded_streak >= self._maximum_consecutive_degraded_polls:
+                raise CohortDegradedBlindnessError(
+                    f"market data degraded for {degraded_streak} consecutive polls"
                 )
             polls += 1
             if self._transition_drain_complete:

@@ -753,8 +753,20 @@ def test_exhausted_candle_transport_is_classified_without_advancing_boundaries(
     _assert_transient_fetch_failure_preserves_boundaries(error, reason)
 
 
-def test_non_rate_limit_candle_http_error_remains_fatal() -> None:
-    """Only the proven 429 transport condition receives cycle-level recovery."""
+@pytest.mark.parametrize("status", [500, 502, 503, 504])
+def test_exhausted_candle_server_error_preserves_boundaries(status: int) -> None:
+    """A temporary server failure withholds this cycle without losing intents."""
+    response = requests.Response()
+    response.status_code = status
+    error = requests.HTTPError("temporary server failure", response=response)
+    _assert_transient_fetch_failure_preserves_boundaries(
+        error, "http_server_retry_exhausted"
+    )
+
+
+@pytest.mark.parametrize("status", [400, 401, 403, 404, 501])
+def test_permanent_candle_http_error_remains_fatal(status: int) -> None:
+    """Invalid requests and unsupported APIs cannot become temporary-data gaps."""
     config = load_multi_asset_live_config(
         "configs/multi_asset_bidirectional_canary.toml",
         mode="observe",
@@ -764,7 +776,7 @@ def test_non_rate_limit_candle_http_error_remains_fatal() -> None:
         for provider in config.providers
     }
     response = requests.Response()
-    response.status_code = 500
+    response.status_code = status
 
     def fetch(
         symbol: str,

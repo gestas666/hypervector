@@ -7,16 +7,20 @@ from requests import ConnectionError, HTTPError, RequestException, Timeout
 
 from hypervector.live.multi_asset_market_bars import TransientCohortMarketDataError
 
+_RECOVERABLE_HTTP_SERVER_STATUSES = frozenset({500, 502, 503, 504})
+
 
 def transient_read_failure_reason(exc: Exception) -> str | None:
     """Return a retry reason only for transport failures safe to retry later."""
     if isinstance(exc, HTTPError):
         response = exc.response
-        return (
-            "http_429_retry_exhausted"
-            if response is not None and response.status_code == 429
-            else None
-        )
+        if response is None:
+            return None
+        if response.status_code == 429:
+            return "http_429_retry_exhausted"
+        if response.status_code in _RECOVERABLE_HTTP_SERVER_STATUSES:
+            return "http_server_retry_exhausted"
+        return None
     if isinstance(exc, Timeout):
         return "transport_timeout_retry_exhausted"
     if isinstance(exc, ConnectionError):

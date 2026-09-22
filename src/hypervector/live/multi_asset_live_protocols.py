@@ -8,9 +8,11 @@ from typing import Protocol
 
 from hypervector.live.bidirectional_intents import IntentRoutingReport, StrategyIntent
 from hypervector.live.cohort_entry_sizing import CohortEntrySizing
+from hypervector.live.cohort_startup_candle_recorder import StartupCandleObserver
 from hypervector.live.cohort_funding_window import CohortFundingWindow
 from hypervector.live.entry_submission_deadline import EntrySubmissionDeadline
-from hypervector.live.hyperliquid_protocol import SolReconciliationSnapshot
+from hypervector.live.hyperliquid_protocol import SolReconciliationSnapshot, SolBookSnapshot
+from hypervector.live.cohort_adaptive_exit_journal import AdaptiveExitJournal
 from hypervector.live.multi_asset_cohort_telemetry import (
     AssetCohortSnapshot,
     SharedAccountFacts,
@@ -25,6 +27,9 @@ class MultiAssetEngineProtocol(Protocol):
 
     @property
     def snapshot(self) -> SolLiveSnapshot: ...
+
+    @property
+    def latest_book(self) -> SolBookSnapshot | None: ...
 
     def start(self) -> SolLiveSnapshot: ...
 
@@ -59,9 +64,14 @@ class MultiAssetIntentPollerProtocol(Protocol):
 
     def poll(self, observed_at: datetime) -> CohortIntentPoll: ...
 
+    def bind_startup_input_observer(self, observer: StartupCandleObserver) -> None: ...
+
 
 class CohortTelemetryProtocol(Protocol):
     """Read-only TUI projection boundary."""
+
+    @property
+    def adaptive_exit_journal(self) -> AdaptiveExitJournal: ...
 
     def emit_configuration(self) -> None: ...
 

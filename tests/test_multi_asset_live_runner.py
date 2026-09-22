@@ -4,6 +4,9 @@ from dataclasses import replace
 from datetime import UTC, datetime
 from pathlib import Path
 
+import pytest
+from hyperliquid.utils.error import ServerError
+
 from multi_asset_live_runner_fixtures import (
     execution_contract as _contract,
 )
@@ -19,6 +22,7 @@ from hypervector.live.bidirectional_intents import (
 from hypervector.live.cohort_entry_sizing import CohortEntrySizing
 from hypervector.live.cohort_execution_plan import ProviderExecutionContract
 from hypervector.live.cohort_funding_window import CohortFundingWindow
+from hypervector.live.cohort_runtime_fault import runtime_failure_stage
 from hypervector.live.cohort_operator_commands import (
     CohortOperatorClaim,
     CohortOperatorCommand,
@@ -31,6 +35,10 @@ from hypervector.live.multi_asset_intent_poller import (
     CohortMarketBar,
 )
 from hypervector.live.multi_asset_live_runner import MultiAssetLiveRunner
+from hypervector.live.multi_asset_live_runner_support import (
+    CohortDegradedBlindnessError,
+)
+from hypervector.live.multi_asset_market_bars import TransientCohortMarketDataError
 from hypervector.live.multi_asset_signal_source import ProviderEvaluation
 from hypervector.live.provider_readiness import SignalReadiness
 from hypervector.live.sol_range_onset_state import SolLiveSnapshot, SolLiveState
@@ -1069,3 +1077,157 @@ def test_observe_only_provider_direction_is_journaled_but_not_executed(
     assert [(item.intent.symbol, item.reason) for item in report.withheld] == [
         ("ETH", "provider_direction_observe_only")
     ]
+
+
+class _ReadFailureAfterSubmission(_Engine):
+    """An engine whose post-submission verification read fails transiently.
+
+    This is the real shape from `place_and_verify_entry_protection`: the entry and
+    the protective stop are already submitted, and the read that confirms the stop
+    is visible raises. The position exists; the lifecycle is mid-flight.
+    """
+
+    def __init__(self, symbol: str) -> None:
+        super().__init__(symbol)
+        self.submitted = False
+
+    def enter(self, **kwargs: object) -> SolLiveSnapshot:
+        self.submitted = True
+        self.current = SolLiveSnapshot(state=SolLiveState.PROTECTING)
+        raise ServerError(502, "Bad Gateway")
+
+
+def test_transient_read_failure_before_execution_still_degrades(
+    tmp_path: Path,
+) -> None:
+    """A read-phase transport failure stays a degraded poll, not a crash."""
+    runner, engines, telemetry = _runner(tmp_path, ())
+    failures = iter([ServerError(502, "Bad Gateway"), None])
+
+    original = engines["BTC"].reconcile_telemetry
+
+    def flaky(**kwargs: object) -> SolReconciliationSnapshot:
+        failure = next(failures, None)
+        if failure is not None:
+            raise failure
+        return original(**kwargs)
+
+    engines["BTC"].reconcile_telemetry = flaky
+
+    assert runner.run(max_polls=1) == 1
+    assert ("hyperliquid_account_reconciliation", "http_server_retry_exhausted") in (
+        telemetry.degraded_polls
+    )
+
+
+def test_read_failure_after_order_submission_is_never_degraded(
+    tmp_path: Path,
+) -> None:
+    """A transport failure raised at or after a mutation must reach the operator.
+
+    Swallowing it leaves the engine mid-lifecycle: `_reconcile_owned_lifecycle`
+    branches only on OPEN and FLAT, and the profit-lock, recipe and maximum-hold
+    controllers all skip a snapshot that is not OPEN, so a real position would
+    never be evaluated for exit again while heartbeats kept reporting `running`.
+    """
+    engines = {symbol: _Engine(symbol) for symbol in _SYMBOLS}
+    engines["BTC"] = _ReadFailureAfterSubmission("BTC")
+    telemetry = _Telemetry(None)
+    executable_pairs = frozenset(("hulk", symbol) for symbol in _SYMBOLS)
+    runner = MultiAssetLiveRunner(
+        symbols=_SYMBOLS,
+        engines=engines,
+        router=_router(),
+        intent_poller=_Poller((_intent("BTC", "long"),), (), ()),
+        telemetry=telemetry,
+        stop_file=tmp_path / "STOP",
+        now_fn=lambda: datetime(2026, 8, 1, 12, tzinfo=UTC),
+        sleep_fn=lambda _: None,
+        poll_seconds=15.0,
+        signal_stop_requested=lambda: False,
+        maximum_hold_seconds_by_symbol={symbol: 28_800 for symbol in _SYMBOLS},
+        execution_contracts={"hulk": _contract()},
+        maximum_entry_delay_ms_by_provider_symbol={
+            pair: 60_000 for pair in executable_pairs
+        },
+        executable_provider_symbols=executable_pairs,
+    )
+
+    with pytest.raises(ServerError) as raised:
+        runner.run(max_polls=1)
+
+    assert engines["BTC"].submitted is True
+    assert not telemetry.degraded_polls, (
+        "a post-submission failure must not be recorded as a degraded poll"
+    )
+    # The original fault propagates, so the operator still gets an exact stage
+    # instead of a wrapper's "unclassified".
+    assert runtime_failure_stage(raised.value) == "entry_submission"
+
+
+class _BlindPoller(_Poller):
+    """Fail acquisition on demand so the degraded bound can be exercised."""
+
+    failure = TransientCohortMarketDataError(
+        source="BTC_candles", reason="transport_timeout_retry_exhausted"
+    )
+
+    def __init__(self, pattern: tuple[bool, ...]) -> None:
+        super().__init__((), (), ())
+        self._pattern = iter(pattern)
+
+    def poll(self, observed_at: datetime) -> CohortIntentPoll:
+        if next(self._pattern, True):
+            raise self.failure
+        return super().poll(observed_at)
+
+
+def _blind_runner(
+    tmp_path: Path, pattern: tuple[bool, ...], bound: int
+) -> tuple[MultiAssetLiveRunner, _Telemetry]:
+    telemetry = _Telemetry(None)
+    pairs = frozenset(("hulk", symbol) for symbol in _SYMBOLS)
+    runner = MultiAssetLiveRunner(
+        symbols=_SYMBOLS,
+        engines={symbol: _Engine(symbol) for symbol in _SYMBOLS},
+        router=_router(),
+        intent_poller=_BlindPoller(pattern),
+        telemetry=telemetry,
+        stop_file=tmp_path / "STOP",
+        now_fn=lambda: datetime(2026, 8, 1, 12, tzinfo=UTC),
+        sleep_fn=lambda _: None,
+        poll_seconds=15.0,
+        signal_stop_requested=lambda: False,
+        maximum_hold_seconds_by_symbol={symbol: 28_800 for symbol in _SYMBOLS},
+        execution_contracts={"hulk": _contract()},
+        maximum_entry_delay_ms_by_provider_symbol={pair: 60_000 for pair in pairs},
+        executable_provider_symbols=pairs,
+        maximum_consecutive_degraded_polls=bound,
+    )
+    return runner, telemetry
+
+
+def test_sustained_blindness_escalates_instead_of_degrading_forever(
+    tmp_path: Path,
+) -> None:
+    """A permanently failing feed must stop reporting a running cohort.
+
+    `emit_poll_degraded` appends to the same ledger whose mtime is the supervisor's
+    only liveness probe, so an unbounded degraded loop refreshes the very signal
+    that would otherwise reveal the blindness.
+    """
+    runner, telemetry = _blind_runner(tmp_path, (True,) * 10, bound=3)
+
+    with pytest.raises(CohortDegradedBlindnessError):
+        runner.run(max_polls=50)
+
+    assert len(telemetry.degraded_polls) == 3
+
+
+def test_a_single_recovery_clears_the_degraded_streak(tmp_path: Path) -> None:
+    """Intermittent failures must never accumulate toward the blindness bound."""
+    pattern = (True, False, True, False, True, False)
+    runner, telemetry = _blind_runner(tmp_path, pattern, bound=3)
+
+    assert runner.run(max_polls=6) == 6
+    assert len(telemetry.degraded_polls) == 3

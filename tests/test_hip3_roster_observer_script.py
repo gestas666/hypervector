@@ -161,8 +161,134 @@ def test_default_observer_wires_shared_funding_into_real_projection(
         lambda **_kwargs: readers,
         raising=False,
     )
-    result = module._build_observer().snapshot(datetime(2026, 9, 11, 14, 0, tzinfo=UTC))
+    observer, _archived = module._build_observer()
+    result = observer.snapshot(datetime(2026, 9, 11, 14, 0, tzinfo=UTC))
     assert all(
         row["venue"]["funding_rate_hourly"] == 0.0000125 for row in result["markets"]
     )
     assert calls == [tuple(readers)]
+
+
+def test_parser_enables_durable_research_history_by_default() -> None:
+    """The launched observer must enable capture without undocumented extra wiring."""
+    module = _load_module()
+    config = module.config_from_args(module.build_parser().parse_args([]))
+    assert getattr(config, "context_history", None) == Path(
+        "data/research/hip3_asset_context"
+    )
+
+
+def test_capture_wiring_reuses_one_request_for_telemetry_and_history(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A complete CLI poll archives real context fields through the shared reader."""
+    from hypervector.research.hip3_roster_funding import Hip3RosterFundingReader
+    from test_hip3_roster_funding import _Info
+
+    module = _load_module()
+    readers = {
+        spec.symbol: _Reader(spec.symbol, spec.expected_max_leverage)
+        for spec in ACTIVE_HIP3_MARKETS
+    }
+    response = [
+        {"universe": [{"name": symbol} for symbol in readers]},
+        [
+            {
+                "funding": "0.0001",
+                "premium": "0.001",
+                "markPx": "100.1",
+                "oraclePx": "100",
+            }
+            for _ in readers
+        ],
+    ]
+    info = _Info(response)
+    sources = SimpleNamespace(
+        readers=readers,
+        funding=Hip3RosterFundingReader(info=info, symbols=tuple(readers)),
+    )
+    monkeypatch.setattr(
+        module, "create_read_only_hip3_roster_sources", lambda **_: sources
+    )
+    assert "context_history" in module.ObserverConfig.__dataclass_fields__
+    observer, _archived = module._build_observer(context_history=tmp_path)
+    result = observer.snapshot(datetime.now(UTC))
+    assert result["status"] == "available"
+    assert len(info.calls) == 1
+    assert len(list(tmp_path.glob("*.jsonl"))) == 1
+
+
+def test_failed_poll_records_one_gap_without_repeating_it_at_shutdown(
+    tmp_path: Path,
+) -> None:
+    """A failed endpoint poll remains explicit in the public research timeline."""
+    module = _load_module()
+    assert "context_history" in module.ObserverConfig.__dataclass_fields__
+    config = module.ObserverConfig(
+        output=tmp_path / "latest.json",
+        max_polls=1,
+        context_history=tmp_path / "history",
+    )
+    module.run_observer(config, observer=_Observer(ValueError("unavailable")))
+    rows = [
+        json.loads(line)
+        for p in config.context_history.glob("*.jsonl")
+        for line in p.read_text().splitlines()
+    ]
+    assert len(rows) == 1
+    assert rows[0]["status"] == "unavailable"
+    assert rows[0]["markets"] is None
+    assert rows[0]["error_type"] == "ValueError"
+
+
+def test_research_archive_failure_never_stops_roster_telemetry(
+    tmp_path: Path,
+) -> None:
+    """A report-only archive must not take down the supervisor's fee evidence.
+
+    `_publish` wrote the gap record outside any handler, so one torn JSONL tail
+    turned into an unrecoverable launchd crash loop while the roster checkpoint
+    still looked fresh on disk.
+    """
+    module = _load_module()
+    history = tmp_path / "history"
+    history.mkdir()
+    (history / (datetime.now(UTC).date().isoformat() + ".jsonl")).write_text(
+        '{"partial":'
+    )
+    config = module.ObserverConfig(
+        output=tmp_path / "roster.json", context_history=history
+    )
+    payload = {"status": "unavailable", "error": {"type": "ServerError"}}
+
+    module._publish(config, payload, lifecycle="running", polls=1)
+
+    assert json.loads((tmp_path / "roster.json").read_text())["status"] == (
+        "unavailable"
+    )
+
+
+def test_an_archived_poll_is_not_also_recorded_as_a_gap(tmp_path: Path) -> None:
+    """The capture runs first; a later per-market failure is not a missing poll."""
+    module = _load_module()
+    history = tmp_path / "history"
+    config = module.ObserverConfig(
+        output=tmp_path / "roster.json", context_history=history
+    )
+    payload = {"status": "unavailable", "error": {"type": "ServerError"}}
+
+    module._publish(
+        config, payload, lifecycle="running", polls=1, archived=True
+    )
+    assert not list(history.glob("*.jsonl"))
+
+    module._publish(
+        config, payload, lifecycle="running", polls=2, archived=False
+    )
+    rows = [
+        json.loads(line)
+        for path in history.glob("*.jsonl")
+        for line in path.read_text().splitlines()
+    ]
+    assert [row["status"] for row in rows] == ["unavailable"]

@@ -115,5 +115,8 @@ def test_new_tui_rows_report_measured_activity_and_mixed_evidence() -> None:
         evidence = strategy_research_evidence(provider.strategy_id, provider.symbols[0])
         assert evidence.research_state != "unreviewed_exact_mapping"
         assert evidence.confidence == "low"
-        assert "48 days" in evidence.cadence
+        # Evidence is global per route and a later review may supersede a row;
+        # the 48-day V89 screen must remain disclosed either as the cadence or
+        # inside the superseding summary.
+        assert "48 days" in evidence.cadence or "48-day" in evidence.summary
         assert evidence.execution_effect == "report_only"

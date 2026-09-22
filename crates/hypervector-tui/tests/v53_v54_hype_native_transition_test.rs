@@ -185,11 +185,13 @@ fn pending_size(leverage: f64, margin: f64, cap: f64) -> CohortPendingAssetSizin
 
 fn native_exit() -> CohortPendingExitPolicy {
     CohortPendingExitPolicy {
+        stop_risk_budget: None,
         maximum_hold_seconds: 28_800,
         maximum_hold_policy: "fixed".into(),
         hard_maximum_hold_seconds: None,
         maximum_hold_evidence_maximum_age_seconds: None,
         provider_recipe_exit_policy: "ignore".into(),
+        adaptive_exit_policy: "none".into(),
         profit_lock_policy: "none".into(),
         profit_lock_activation_bps: None,
         profit_lock_floor_bps: None,

@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from dataclasses import asdict, dataclass
-import math
 from typing import Literal
 
+from hypervector.live.cohort_execution_plan_parsing import (
+    _mapping, _text, _positive, _optional_number, _integer_field, _optional_integer_field, _positive_integer, _boolean,
+)
+
+from hypervector.live.cohort_adaptive_exit_policy import ADAPTIVE_EXIT_POLICY
+from hypervector.live.cohort_stop_risk_sizing import StopRiskBudget
 from hypervector.live.cohort_execution_plan_validation import (
     CohortExecutionPlanError,
     validate_profit_lock_contract,
@@ -57,13 +61,17 @@ class ProviderExecutionContract:
     hard_maximum_hold_seconds: int | None = None
     maximum_hold_evidence_maximum_age_seconds: int | None = None
     provider_recipe_exit_policy: ProviderRecipeExitPolicy = "ignore"
+    adaptive_exit_policy: str = "none"
     profit_lock_policy: ProfitLockPolicy = "none"
     profit_lock_activation_bps: float | None = None
     profit_lock_floor_bps: float | None = None
     profit_lock_giveback_bps: float | None = None
+    stop_risk_budget: StopRiskBudget | None = None
 
     def __post_init__(self) -> None:
         """Reject missing parameters and ambiguous policy combinations."""
+        if self.stop_risk_budget is not None and not isinstance(self.stop_risk_budget, StopRiskBudget):
+            raise CohortExecutionPlanError("stop_risk_budget must be a typed risk budget")
         if self.entry_liquidity not in _ENTRY_LIQUIDITIES:
             raise CohortExecutionPlanError("unsupported entry liquidity")
         if self.stop_policy not in _STOP_POLICIES:
@@ -71,6 +79,10 @@ class ProviderExecutionContract:
         if self.target_policy not in _TARGET_POLICIES:
             raise CohortExecutionPlanError("unsupported target policy")
         _positive_integer(self.maximum_hold_seconds, "maximum_hold_seconds")
+        if self.adaptive_exit_policy not in {"none", ADAPTIVE_EXIT_POLICY}:
+            raise CohortExecutionPlanError("unsupported adaptive exit policy")
+        if self.adaptive_exit_policy != "none" and self.profit_lock_policy != "none":
+            raise CohortExecutionPlanError("adaptive and legacy profit locks cannot overlap")
         _validate_stop_contract(self)
         _validate_target_contract(self)
         _validate_maximum_hold_contract(self)
@@ -111,18 +123,24 @@ class ProviderExecutionContract:
             strategy_id=strategy,
             stop_anchor=anchor,
             target_anchor=target,
-            **asdict(self),
+            **{**asdict(self), "stop_risk_budget": self.stop_risk_budget},
         )
 
     def as_payload(self) -> dict[str, object]:
         """Return a JSON-safe configuration projection."""
-        return asdict(self)
+        payload = asdict(self)
+        if self.stop_risk_budget is None:
+            payload.pop("stop_risk_budget")
+        if self.adaptive_exit_policy == "none":
+            payload.pop("adaptive_exit_policy")
+        return payload
 
     @classmethod
     def from_payload(cls, value: object) -> ProviderExecutionContract:
         """Parse one strict provider configuration object."""
         row = _mapping(value, "provider execution contract")
         return cls(
+            stop_risk_budget=StopRiskBudget.from_payload(row.get("stop_risk_budget")),
             entry_liquidity=_entry_liquidity(row.get("entry_liquidity")),
             stop_policy=_stop_policy(row.get("stop_policy")),
             target_policy=_target_policy(row.get("target_policy")),
@@ -153,6 +171,7 @@ class ProviderExecutionContract:
             provider_recipe_exit_policy=_provider_recipe_exit_policy(
                 row.get("provider_recipe_exit_policy", "ignore")
             ),
+            adaptive_exit_policy=_text(row.get("adaptive_exit_policy", "none"), "adaptive_exit_policy"),
             profit_lock_policy=_profit_lock_policy(
                 row.get("profit_lock_policy", "none")
             ),
@@ -190,14 +209,17 @@ class BoundExecutionPlan:
     hard_maximum_hold_seconds: int | None = None
     maximum_hold_evidence_maximum_age_seconds: int | None = None
     provider_recipe_exit_policy: ProviderRecipeExitPolicy = "ignore"
+    adaptive_exit_policy: str = "none"
     profit_lock_policy: ProfitLockPolicy = "none"
     profit_lock_activation_bps: float | None = None
     profit_lock_floor_bps: float | None = None
     profit_lock_giveback_bps: float | None = None
+    stop_risk_budget: StopRiskBudget | None = None
 
     def __post_init__(self) -> None:
         """Reuse contract validation and require dynamic structural evidence."""
         ProviderExecutionContract(
+            stop_risk_budget=self.stop_risk_budget,
             entry_liquidity=self.entry_liquidity,
             stop_policy=self.stop_policy,
             target_policy=self.target_policy,
@@ -214,6 +236,7 @@ class BoundExecutionPlan:
                 self.maximum_hold_evidence_maximum_age_seconds
             ),
             provider_recipe_exit_policy=self.provider_recipe_exit_policy,
+            adaptive_exit_policy=self.adaptive_exit_policy,
             profit_lock_policy=self.profit_lock_policy,
             profit_lock_activation_bps=self.profit_lock_activation_bps,
             profit_lock_floor_bps=self.profit_lock_floor_bps,
@@ -232,13 +255,19 @@ class BoundExecutionPlan:
 
     def as_payload(self) -> dict[str, object]:
         """Return the complete plan for durable state transitions."""
-        return asdict(self)
+        payload = asdict(self)
+        if self.stop_risk_budget is None:
+            payload.pop("stop_risk_budget")
+        if self.adaptive_exit_policy == "none":
+            payload.pop("adaptive_exit_policy")
+        return payload
 
     @classmethod
     def from_payload(cls, value: object) -> BoundExecutionPlan:
         """Restore one exact execution plan from a ledger payload."""
         row = _mapping(value, "execution_plan")
         return cls(
+            stop_risk_budget=StopRiskBudget.from_payload(row.get("stop_risk_budget")),
             strategy_id=_text(row.get("strategy_id"), "strategy_id"),
             entry_liquidity=_entry_liquidity(row.get("entry_liquidity")),
             stop_policy=_stop_policy(row.get("stop_policy")),
@@ -272,6 +301,7 @@ class BoundExecutionPlan:
             provider_recipe_exit_policy=_provider_recipe_exit_policy(
                 row.get("provider_recipe_exit_policy", "ignore")
             ),
+            adaptive_exit_policy=_text(row.get("adaptive_exit_policy", "none"), "adaptive_exit_policy"),
             profit_lock_policy=_profit_lock_policy(
                 row.get("profit_lock_policy", "none")
             ),
@@ -389,69 +419,6 @@ def _validate_maximum_hold_contract(contract: ProviderExecutionContract) -> None
             evidence_age,
             "maximum_hold_evidence_maximum_age_seconds",
         )
-
-
-def _mapping(value: object, label: str) -> Mapping[str, object]:
-    if not isinstance(value, Mapping) or not all(isinstance(key, str) for key in value):
-        raise CohortExecutionPlanError(f"{label} must be an object")
-    return value
-
-
-def _text(value: object, label: str) -> str:
-    if not isinstance(value, str) or not value.strip():
-        raise CohortExecutionPlanError(f"{label} must be non-empty text")
-    return value.strip()
-
-
-def _positive(value: object, label: str) -> float:
-    number = _number(value, label)
-    if number <= 0.0:
-        raise CohortExecutionPlanError(f"{label} must be positive")
-    return number
-
-
-def _optional_number(value: object, label: str) -> float | None:
-    return None if value is None else _number(value, label)
-
-
-def _number(value: object, label: str) -> float:
-    if isinstance(value, bool) or not isinstance(value, (int, float)):
-        raise CohortExecutionPlanError(f"{label} must be numeric")
-    number = float(value)
-    if not math.isfinite(number):
-        raise CohortExecutionPlanError(f"{label} must be finite")
-    return number
-
-
-def _integer(value: object, label: str) -> int:
-    if isinstance(value, bool) or not isinstance(value, int):
-        raise CohortExecutionPlanError(f"{label} must be an integer")
-    return value
-
-
-def _integer_field(row: Mapping[str, object], key: str) -> int:
-    return _integer(row.get(key), key)
-
-
-def _optional_integer(value: object, label: str) -> int | None:
-    return None if value is None else _integer(value, label)
-
-
-def _optional_integer_field(row: Mapping[str, object], key: str) -> int | None:
-    return _optional_integer(row.get(key), key)
-
-
-def _positive_integer(value: object, label: str) -> int:
-    number = _integer(value, label)
-    if number <= 0:
-        raise CohortExecutionPlanError(f"{label} must be positive")
-    return number
-
-
-def _boolean(value: object, label: str) -> bool:
-    if not isinstance(value, bool):
-        raise CohortExecutionPlanError(f"{label} must be boolean")
-    return value
 
 
 def _entry_liquidity(value: object) -> EntryLiquidity:

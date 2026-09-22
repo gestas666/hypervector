@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>EnvironmentVariables</key>
+	<dict>
+		<key>PYTHONPATH</key>
+		<string>/Users/gestas/Prototypes/hypervector/src</string>
+		<key>PYTHONUNBUFFERED</key>
+		<string>1</string>
+	</dict>
+	<key>KeepAlive</key>
+	<dict>
+		<key>SuccessfulExit</key>
+		<false/>
+	</dict>
+	<key>Label</key>
+	<string>local.hypervector.cohort.checkpoint</string>
+	<key>ProcessType</key>
+	<string>Interactive</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/Users/gestas/Prototypes/hypervector/.venv/bin/python</string>
+		<string>-u</string>
+		<string>/Users/gestas/Prototypes/hypervector/scripts/multi_asset_bidirectional_live_checkpoint.py</string>
+		<string>--ledger-root</string>
+		<string>data/live/bidirectional_cohort</string>
+		<string>--out</string>
+		<string>data/runtime/bidirectional_cohort/latest_checkpoint.json</string>
+		<string>--config</string>
+		<string>configs/multi_asset_growth_first_5000_bankroll_builder_candidate_v90.toml</string>
+		<string>--research-database</string>
+		<string>data/research/market.duckdb</string>
+		<string>--research-sync-interval-seconds</string>
+		<string>120</string>
+		<string>--venue-portfolio</string>
+		<string>--current-run-only</string>
+		<string>--disable-asymmetric-forward-observer</string>
+		<string>--follow-latest-run</string>
+	</array>
+	<key>RunAtLoad</key>
+	<true/>
+	<key>StandardErrorPath</key>
+	<string>/Users/gestas/Prototypes/hypervector/data/runtime/bidirectional_cohort/checkpoint.launchd.log</string>
+	<key>StandardOutPath</key>
+	<string>/Users/gestas/Prototypes/hypervector/data/runtime/bidirectional_cohort/checkpoint.launchd.log</string>
+	<key>ThrottleInterval</key>
+	<integer>30</integer>
+	<key>WorkingDirectory</key>
+	<string>/Users/gestas/Prototypes/hypervector</string>
+</dict>
+</plist>

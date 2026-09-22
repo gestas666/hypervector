@@ -11,6 +11,9 @@ enum ProfitLockLabelMode {
 
 /// Format the compact open-position profit-lock contract.
 pub(crate) fn compact_profit_lock_label(plan: &CohortOpenExitPlan) -> String {
+    if plan.adaptive_exit_policy == "regime_book_profit_retention_v1" {
+        return "PL:ADAPTIVE".into();
+    }
     compact_profit_lock_contract_label(
         &plan.profit_lock_policy,
         plan.profit_lock_activation_bps,
@@ -53,6 +56,9 @@ pub(crate) fn plan_profit_lock_label(
 
 /// Format the detailed open-position profit-lock contract.
 pub(crate) fn profit_lock_label(plan: &CohortOpenExitPlan) -> String {
+    if plan.adaptive_exit_policy == "regime_book_profit_retention_v1" {
+        return "ADAPTIVE PROFIT FLOOR / REGIME / BOOK".into();
+    }
     format_profit_lock(
         &plan.profit_lock_policy,
         plan.profit_lock_activation_bps,
@@ -178,4 +184,18 @@ mod tests {
             "PROFIT LOCK FLOOR/REVERSAL CONTAINMENT",
         );
     }
+}
+
+#[test]
+fn adaptive_exit_is_visible_as_active_profit_protection() {
+    let plan = CohortOpenExitPlan {
+        adaptive_exit_policy: "regime_book_profit_retention_v1".into(),
+        profit_lock_policy: "none".into(),
+        ..Default::default()
+    };
+    assert_eq!(compact_profit_lock_label(&plan), "PL:ADAPTIVE");
+    assert_eq!(
+        profit_lock_label(&plan),
+        "ADAPTIVE PROFIT FLOOR / REGIME / BOOK"
+    );
 }

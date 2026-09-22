@@ -26,6 +26,7 @@ fn open_regime_trade_reflection() -> CohortOpenTradeReflection {
             maximum_hold_seconds: 28_800,
             maximum_hold_policy: "fixed".into(),
             provider_recipe_exit_policy: "ignore".into(),
+            adaptive_exit_policy: "none".into(),
             profit_lock_policy: "none".into(),
             profit_lock_activation_bps: None,
             profit_lock_floor_bps: None,

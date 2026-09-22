@@ -105,6 +105,7 @@ def test_checkpoint_reports_exact_active_roster_and_historical_wti() -> None:
         "xyz:SNDK",
         "xyz:GOLD",
         "xyz:BRENTOIL",
+        "xyz:TSLA",
     ]
     assert result["execution_authority"] == "none"
     assert result["report_only"] is True
@@ -145,7 +146,7 @@ def test_checkpoint_publishes_exact_hourly_funding_from_one_source_read() -> Non
         spec.symbol: _Reader(spec.symbol, spec.expected_max_leverage)
         for spec in ACTIVE_HIP3_MARKETS
     }
-    rates = dict(zip(readers, (0.0000125, -0.00002, 0.0, None, 0.00003)))
+    rates = dict(zip(readers, (0.0000125, -0.00002, 0.0, None, 0.00003, 0.00001)))
     calls = 0
 
     def funding() -> dict[str, float | None]:

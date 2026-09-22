@@ -5,6 +5,9 @@ from __future__ import annotations
 import time
 from collections.abc import Callable
 from datetime import datetime
+
+from hyperliquid.utils.error import ClientError, ServerError
+from requests.exceptions import RequestException
 from pathlib import Path
 from typing import NoReturn
 
@@ -17,6 +20,7 @@ from hypervector.live.entry_submission_deadline import (
 from hypervector.live.hyperliquid_protocol import (
     HyperliquidOrderAck,
     SolLiveAdapterProtocol,
+    SolBookSnapshot,
     SolReconciliationSnapshot,
 )
 from hypervector.live.sol_order_identity import new_client_order_id
@@ -69,6 +73,7 @@ from hypervector.live.sol_partial_protective_recovery import (
 from hypervector.live.sol_protective_execution_evidence import (
     ProtectiveExecutionEvidenceError,
 )
+from hypervector.live.cohort_stop_risk_sizing import size_for_stop_risk
 
 _TELEMETRY_DEPTH_LEVELS = 20
 
@@ -114,6 +119,7 @@ class SolRangeOnsetLiveEngine:
             before_retry=reconciliation_cache_invalidator,
         )
         self._started = False
+        self._latest_book: SolBookSnapshot | None = None
         self._partial_protective = SolPartialProtectiveRecovery(
             machine=self._machine,
             events=self._events,
@@ -130,6 +136,11 @@ class SolRangeOnsetLiveEngine:
     def snapshot(self) -> SolLiveSnapshot:
         """Return the current immutable execution state."""
         return self._machine.snapshot
+
+    @property
+    def latest_book(self) -> SolBookSnapshot | None:
+        """Return the last reconciled read-only book without another network call."""
+        return self._latest_book
 
     def start(self) -> SolLiveSnapshot:
         """Run preflight and reconcile venue ownership before any strategy action."""
@@ -200,6 +211,14 @@ class SolRangeOnsetLiveEngine:
         entry_deadline: EntrySubmissionDeadline | None = None,
     ) -> SolLiveSnapshot:
         plan = self._pending_execution_plan or legacy_execution_plan(self._config)
+        if plan.stop_risk_budget is not None:
+            risk = size_for_stop_risk(
+                plan=plan, budget=plan.stop_risk_budget, mark_price=mark_price, side=side,
+                entry_slippage_fraction=self._config.effective_entry_slippage_cap_fraction,
+                original_notional_usd=notional,
+            )
+            self._events.emit("entry_stop_risk_sizing", risk.as_payload())
+            notional = risk.notional_usd
         try:
             ack, venue = self._entry_submission.submit_and_reconcile(
                 side=side, mark_price=mark_price, notional=notional,
@@ -321,7 +340,9 @@ class SolRangeOnsetLiveEngine:
         venue = self._poller.wait_for_state(self.snapshot)
         venue = self._reconcile_owned_lifecycle(venue)
         self._events.emit_reconciliation(venue)
-        self._telemetry.emit_book(self._adapter.book_snapshot(depth_levels=_TELEMETRY_DEPTH_LEVELS))
+        book = self._adapter.book_snapshot(depth_levels=_TELEMETRY_DEPTH_LEVELS)
+        self._telemetry.emit_book(book)
+        self._latest_book = book
         payments = self._adapter.funding_payments(
             start_time_ms=funding_start_time_ms,
             end_time_ms=funding_end_time_ms,
@@ -360,6 +381,11 @@ class SolRangeOnsetLiveEngine:
         except (SolStartupReconciliationError, ProtectiveExecutionEvidenceError) as exc:
             self._events.fault(f"continuous reconciliation failed: {exc}")
             raise SolLiveEngineError(str(exc)) from exc
+        except (RequestException, ClientError, ServerError) as exc:
+            raise SolLiveEngineError(
+                "lifecycle reconciliation failed during an order-capable operation; "
+                "recover the durable order identity before resuming"
+            ) from exc
         return venue
 
     def record_strategy_decision(self, payload: dict[str, object]) -> None:

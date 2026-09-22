@@ -48,17 +48,18 @@ def _finish_unconditional_deadlines(
     if not actions:
         return
     report = IntentRoutingReport(actions, ())
-    runner._finish_cycle(
-        poll=CohortIntentPoll((), prices),
-        operator_actions=(),
-        routed=report,
-        routed_actions=actions,
-        venues=venues,
-        funding_start_ms=funding_start_ms,
-        funding_end_ms=funding_end_ms,
-        observed_ms=observed_ms,
-        heartbeat=False,
-    )
+    with runner.execution_phase():
+        runner._finish_cycle(
+            poll=CohortIntentPoll((), prices),
+            operator_actions=(),
+            routed=report,
+            routed_actions=actions,
+            venues=venues,
+            funding_start_ms=funding_start_ms,
+            funding_end_ms=funding_end_ms,
+            observed_ms=observed_ms,
+            heartbeat=False,
+        )
 
 
 def reconciled_position_prices(

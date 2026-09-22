@@ -12,7 +12,9 @@ from hypervector.live.cohort_execution_plan import (
     BoundExecutionPlan,
     ProviderExecutionContract,
 )
+import hypervector.live.cohort_route_cycle as route_cycle_module
 from hypervector.live.cohort_profit_lock_controller import CohortProfitLockController
+from multi_asset_live_runner_fixtures import execution_contract as _contract
 from hypervector.live.multi_asset_market_bars import CohortMarketBar
 from hypervector.live.multi_asset_live_runner_support import MultiAssetLiveRunnerError
 from hypervector.live.sol_range_onset_ledger import SOL_LIVE_EVENT_TYPES
@@ -259,3 +261,29 @@ def test_persisted_lock_rejects_corrupted_trigger_boundary() -> None:
 
     with pytest.raises(MultiAssetLiveRunnerError, match="trigger boundary"):
         _actions((), telemetry=telemetry, observed_ms=240_000)
+
+
+def test_required_plan_symbols_include_a_directional_profit_lock_override() -> None:
+    """A bound lock must latch its fail-closed plan requirement.
+
+    `provider_execution_contracts` resolves direction, then symbol, then provider;
+    deriving required_plan_symbols from the provider entry alone let a symbol whose
+    lock is bound per (provider, symbol, side) restart planless with the
+    controller's lost-plan check disarmed.
+    """
+    locked = replace(
+        _contract(),
+        profit_lock_policy="completed_bar_trailing",
+        profit_lock_activation_bps=100.0,
+        profit_lock_floor_bps=25.0,
+        profit_lock_giveback_bps=50.0,
+    )
+    contracts = {"hulk": _contract(), ("hulk", "SOL", "long"): locked}
+
+    symbols = route_cycle_module._profit_lock_symbols(
+        contracts,
+        frozenset({("hulk", "SOL"), ("hulk", "BTC")}),
+        frozenset({("hulk", "SOL", "long"), ("hulk", "BTC", "short")}),
+    )
+
+    assert symbols == frozenset({"SOL"})

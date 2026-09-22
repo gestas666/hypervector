@@ -372,3 +372,29 @@ def test_compatible_execution_snapshot_rejects_changed_cached_boundary(
             path, run_id="run-current"
         ):
             pass
+
+
+def test_every_reverse_reader_ignores_a_torn_final_line(tmp_path: Path) -> None:
+    """`_reverse_complete_lines` promises complete lines; it must deliver them.
+
+    The guard was added at one call site only, so the sibling readers that share
+    this generator still parsed a partially written final record.
+    """
+    path = tmp_path / "decisions.jsonl"
+    complete = _line(1) + _line(2)
+    path.write_bytes(complete + b'{"sequence":3, "payl')
+
+    located = list(live_ledger_snapshot._reverse_complete_lines(path))
+
+    assert [json.loads(raw)["sequence"] for _offset, raw in located] == [2, 1]
+    assert all(offset + len(raw) < len(complete) + 1 for offset, raw in located)
+
+
+def test_a_newline_terminated_ledger_yields_every_record(tmp_path: Path) -> None:
+    """Skipping the tail must never drop a legitimately terminated final row."""
+    path = tmp_path / "decisions.jsonl"
+    path.write_bytes(_line(1) + _line(2) + _line(3))
+
+    located = list(live_ledger_snapshot._reverse_complete_lines(path))
+
+    assert [json.loads(raw)["sequence"] for _offset, raw in located] == [3, 2, 1]

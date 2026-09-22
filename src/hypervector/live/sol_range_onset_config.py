@@ -86,6 +86,11 @@ class SolRangeOnsetConfig:
     accepts_live_risk: bool
 
     @property
+    def effective_entry_slippage_cap_fraction(self) -> float:
+        """Expose the legacy opening cap to shared pre-entry risk calculations."""
+        return self.market_slippage_cap_fraction
+
+    @property
     def profile_fingerprint(self) -> str:
         """Hash stable strategy, risk, venue, and ledger settings."""
         payload = asdict(self)

@@ -37,7 +37,8 @@ def profit_lock_history_limits(
         )
         if terminal is None:
             raise ValueError("profit-lock provider lacks a terminal hold")
-        warmup = _component_warmup_bars(contract.profit_lock_policy)
+        warmup = max(21 if contract.adaptive_exit_policy != "none" else 0,
+                     _component_warmup_bars(contract.profit_lock_policy))
         bars = terminal // _SECONDS_PER_MINUTE + _BOUNDARY_BARS + warmup
         for symbol in symbols:
             limits[symbol] = max(limits.get(symbol, 0), bars)
@@ -51,7 +52,7 @@ def _component_warmup_bars(policy: str) -> int:
 
 
 def _lock_enabled_symbols(provider: StrategyProviderConfig) -> set[str]:
-    if provider.execution.profit_lock_policy != "none":
+    if provider.execution.profit_lock_policy != "none" or provider.execution.adaptive_exit_policy != "none":
         return set(provider.symbols)
     return {
         override.symbol

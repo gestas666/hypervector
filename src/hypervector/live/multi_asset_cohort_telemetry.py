@@ -15,6 +15,7 @@ from hypervector.live.canonical_regime_telemetry import (
 from hypervector.live.cohort_backup_evidence import prestart_backup_payload
 from hypervector.live.cohort_durable_decision_recovery import durable_decision_records
 from hypervector.live.cohort_durable_decisions import CohortDurableDecisionJournal
+from hypervector.live.cohort_adaptive_exit_journal import AdaptiveExitJournal
 from hypervector.live.cohort_funding_recovery import recover_funding_cursor
 from hypervector.live.cohort_funding_window import CohortFundingWindow
 from hypervector.live.cohort_prestart_backup import CohortPrestartBackupResult
@@ -87,6 +88,7 @@ class MultiAssetCohortTelemetry:
             config.mode == "live" and config.enabled and config.accepts_live_risk
         )
         records = durable_decision_records(ledger)
+        self._adaptive_exit_journal = AdaptiveExitJournal(records, self._emit)
         self._maximum_hold_decisions = CohortDurableDecisionJournal(
             records=records,
             event_type="maximum_hold_decision",
@@ -108,6 +110,11 @@ class MultiAssetCohortTelemetry:
         if self._asset_ledgers and set(self._asset_ledgers) != set(config.symbols):
             raise ValueError("asset ledgers must cover every configured symbol")
         self._asset_history_cache = _history_cache(self._asset_ledgers)
+
+    @property
+    def adaptive_exit_journal(self) -> AdaptiveExitJournal:
+        """Return entry-bound durable observations for adaptive exit control."""
+        return self._adaptive_exit_journal
 
     def startup_input_observer(self) -> CohortStartupCandleRecorder:
         """Bind exact startup evidence to this ledger's run and publication path."""

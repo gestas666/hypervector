@@ -4,7 +4,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from hypervector.live.hourly_price_provider import HOURLY_PRICE_SYMBOLS
+from hypervector.live.hourly_price_provider import (
+    HOURLY_PRICE_SYMBOLS,
+    PROTECTED_DONCHIAN20_STRATEGY,
+    PROTECTED_DONCHIAN20_SYMBOLS,
+)
 from hypervector.live.multi_asset_live_config_parsing import MultiAssetLiveConfigError
 
 if TYPE_CHECKING:
@@ -28,7 +32,7 @@ def validate_hourly_price_provider(provider: StrategyProviderConfig) -> None:
         and execution.maximum_hold_seconds == 86400
         and execution.maximum_hold_policy == "fixed"
         and execution.provider_recipe_exit_policy == "honor"
-        and execution.profit_lock_policy == "none"
+        and _valid_profit_lock(provider)
         and not execution.safety_stop_overlay
         and not provider.execution_side_overrides
         and not provider.stop_bps_overrides
@@ -37,5 +41,19 @@ def validate_hourly_price_provider(provider: StrategyProviderConfig) -> None:
     if not valid:
         raise MultiAssetLiveConfigError(
             "hourly price research requires qualified symbols, both sides, 15m source, "
-            "30-second entry age, 20-250 bps structural stops, recipe exits and 24h fallback"
+            "30-second entry age, 20-250 bps structural stops, recipe exits, 24h fallback "
+            "and the exact identity-bound profit-lock contract"
         )
+
+
+def _valid_profit_lock(provider: StrategyProviderConfig) -> bool:
+    execution = provider.execution
+    if provider.strategy_id != PROTECTED_DONCHIAN20_STRATEGY:
+        return execution.profit_lock_policy == "none"
+    return (
+        set(provider.symbols).issubset(PROTECTED_DONCHIAN20_SYMBOLS)
+        and execution.profit_lock_policy == "completed_bar_trailing"
+        and execution.profit_lock_activation_bps == 100.0
+        and execution.profit_lock_floor_bps == 25.0
+        and execution.profit_lock_giveback_bps == 50.0
+    )

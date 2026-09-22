@@ -6,6 +6,7 @@ from collections.abc import Callable, Mapping, Sequence
 import json
 from pathlib import Path
 
+from hypervector.live.multi_asset_live_config import load_multi_asset_live_config
 from hypervector.research.cohort_checkpoint_history import HistoricalProjectionStale
 from hypervector.research.cohort_configuration_generation import (
     load_configuration_expectation,
@@ -14,6 +15,7 @@ from hypervector.research.cohort_live_portfolio_archive import (
     PORTFOLIO_ARCHIVE_PROJECTION_REVISION,
     CohortAccountingEpoch,
 )
+from hypervector.research.live_ledger_snapshot import latest_decision_ledger_event
 
 PublishFn = Callable[..., dict[str, object]]
 
@@ -36,14 +38,21 @@ def publish_rolling_checkpoint(
     current_run_only: bool = False,
     accounting_epoch: CohortAccountingEpoch | None = None,
     research_sync: Mapping[str, object] | None = None,
+    follow_latest_run: bool = False,
 ) -> bool:
     """Publish bounded history, falling back to full only when history changed."""
+    if follow_latest_run:
+        requested_run_id = _latest_completed_run(
+            ledger_root, config_path, requested_run_id
+        )
     complete = None if once else load_cached_complete_checkpoint(destination)
-    transition_seed = _cached_profile_differs_from_config(complete, config_path)
-    bounded_current_run = current_run_only or transition_seed
-    selected_run_id = _selected_run_id(requested_run_id, complete)
+    bounded_current_run = (
+        current_run_only
+        or follow_latest_run
+        or _cached_profile_differs_from_config(complete, config_path)
+    )
     options = _publish_options(
-        selected_run_id,
+        _selected_run_id(requested_run_id, complete),
         config_path,
         venue_portfolio,
         opportunity_matrix_path,
@@ -51,13 +60,25 @@ def publish_rolling_checkpoint(
         eligible_policy_forward,
         funding_evidence_fn,
         portfolio_archive
-        or load_cached_portfolio_archive(destination, accounting_epoch=accounting_epoch),
+        or load_cached_portfolio_archive(
+            destination, accounting_epoch=accounting_epoch
+        ),
         asymmetric_forward_journal_path,
         complete,
         bounded_current_run,
     )
     if research_sync is not None:
         options["research_sync"] = research_sync
+    return _publish_with_history_fallback(publish_fn, ledger_root, destination, options)
+
+
+def _publish_with_history_fallback(
+    publish_fn: PublishFn,
+    ledger_root: Path,
+    destination: Path,
+    options: dict[str, object],
+) -> bool:
+    """Retry publication with full history only when the cached signature changed."""
     try:
         publish_fn(ledger_root, destination, **options)
     except HistoricalProjectionStale:
@@ -66,6 +87,32 @@ def publish_rolling_checkpoint(
         publish_fn(ledger_root, destination, **options)
         return True
     return False
+
+
+def _latest_completed_run(
+    ledger_root: Path, config_path: Path, requested_run_id: str | None
+) -> str:
+    """Follow complete live snapshots of the configured profile, without signing."""
+    if requested_run_id is not None:
+        raise ValueError("--follow-latest-run cannot be combined with --run-id")
+    row = latest_decision_ledger_event(
+        ledger_root / "decisions.jsonl", "cohort_snapshot"
+    )
+    config = load_multi_asset_live_config(config_path, mode="observe")
+    expected = {
+        "profile_id": config.profile_id,
+        "profile_fingerprint": config.profile_fingerprint,
+        "execution_mode": "live",
+        "execution_authority": "hyperliquid_mainnet",
+    }
+    if row.get("live_armed") is not True or any(
+        row.get(key) != value for key, value in expected.items()
+    ):
+        raise ValueError("--follow-latest-run requires a matching armed live profile")
+    run_id = row.get("run_id")
+    if not isinstance(run_id, str) or not run_id.strip():
+        raise ValueError("--follow-latest-run snapshot has no run identity")
+    return run_id.strip()
 
 
 def _cached_profile_differs_from_config(

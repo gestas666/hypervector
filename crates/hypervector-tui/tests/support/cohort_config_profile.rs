@@ -297,11 +297,13 @@ fn renders_the_external_next_flat_profile_and_restart_blockers() {
         current_provider_exit_policies: Some(BTreeMap::from([(
             "hype_breakout_onset_bidirectional_v1".into(),
             CohortPendingExitPolicy {
+                stop_risk_budget: None,
                 maximum_hold_seconds: 28_800,
                 maximum_hold_policy: "extend_while_regime_supported".into(),
                 hard_maximum_hold_seconds: Some(86_400),
                 maximum_hold_evidence_maximum_age_seconds: None,
                 provider_recipe_exit_policy: "ignore".into(),
+                adaptive_exit_policy: "none".into(),
                 profit_lock_policy: "none".into(),
                 profit_lock_activation_bps: None,
                 profit_lock_floor_bps: None,

@@ -102,7 +102,10 @@ def test_observer_binding_is_fixed_before_activation() -> None:
         collectors={p.strategy_id: _Collector(p.strategy_id, emit=False) for p in config.providers},
         canonical_regime_collector=_CanonicalCollector(),
     )
-    observer = lambda *args: None
+
+    def observer(*_args: object) -> None:
+        return None
+
     poller.bind_startup_input_observer(observer)
     with pytest.raises(MultiAssetIntentPollerError, match="observer"):
         poller.bind_startup_input_observer(observer)

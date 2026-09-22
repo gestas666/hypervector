@@ -96,6 +96,40 @@ fn accepts_one_sided_provider_without_losing_bidirectional_asset() {
 }
 
 #[test]
+fn accepts_inert_direction_override_on_an_observe_only_symbol() {
+    let symbols = vec!["ETH".into()];
+    let assets = vec![asset("ETH")];
+    let mut observe_only = provider(&symbols);
+    observe_only.execution_symbols = Some(vec![]);
+    observe_only.execution_side_overrides = BTreeMap::from([("ETH".into(), vec!["long".into()])]);
+    let policy = CohortPositionPolicy {
+        max_positions_per_symbol: 1,
+        maximum_concurrent_positions: 1,
+    };
+
+    validate_identity(&symbols, &assets, &[observe_only], &policy)
+        .expect("the backend derives executable directions from execution symbols alone");
+}
+
+#[test]
+fn rejects_direction_override_on_an_undeclared_symbol() {
+    let symbols = vec!["ETH".into()];
+    let assets = vec![asset("ETH")];
+    let mut stray = provider(&symbols);
+    stray.execution_symbols = Some(vec!["ETH".into()]);
+    stray.execution_side_overrides = BTreeMap::from([("BTC".into(), vec!["long".into()])]);
+    let policy = CohortPositionPolicy {
+        max_positions_per_symbol: 1,
+        maximum_concurrent_positions: 1,
+    };
+
+    let error = validate_identity(&symbols, &assets, &[stray], &policy)
+        .expect_err("a provider cannot narrow a symbol it never declared");
+
+    assert!(error.contains("direction scope is invalid"));
+}
+
+#[test]
 fn rejects_position_capacity_below_enabled_asset_count() {
     let symbols: Vec<String> = vec!["BTC".into(), "ETH".into()];
     let assets = symbols

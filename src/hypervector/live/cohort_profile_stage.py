@@ -214,6 +214,8 @@ def _inline_table(values: dict[str, object]) -> str:
             token = str(value).lower()
         elif isinstance(value, str):
             token = _quoted(value)
+        elif isinstance(value, dict):
+            token = _inline_table(value)
         else:
             token = str(value)
         fields.append(f"{key} = {token}")

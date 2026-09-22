@@ -16,6 +16,7 @@ pub struct CohortOpenExitPlan {
     pub maximum_hold_seconds: u64,
     pub maximum_hold_policy: String,
     pub provider_recipe_exit_policy: String,
+    pub adaptive_exit_policy: String,
     pub profit_lock_policy: String,
     pub profit_lock_activation_bps: Option<f64>,
     pub profit_lock_floor_bps: Option<f64>,
@@ -45,6 +46,8 @@ pub(crate) struct RawOpenExitPlan {
     hard_maximum_hold_seconds: Option<u64>,
     #[serde(default = "ignored_provider_recipe_exit_policy")]
     provider_recipe_exit_policy: String,
+    #[serde(default = "disabled_profit_lock_policy")]
+    adaptive_exit_policy: String,
     #[serde(default = "disabled_profit_lock_policy")]
     profit_lock_policy: String,
     #[serde(default)]
@@ -88,6 +91,7 @@ pub(crate) fn project_open_exit_plan(
         maximum_hold_seconds: raw.maximum_hold_seconds,
         maximum_hold_policy: raw.maximum_hold_policy,
         provider_recipe_exit_policy: raw.provider_recipe_exit_policy,
+        adaptive_exit_policy: raw.adaptive_exit_policy,
         profit_lock_policy: raw.profit_lock_policy,
         profit_lock_activation_bps: raw.profit_lock_activation_bps,
         profit_lock_floor_bps: raw.profit_lock_floor_bps,
@@ -135,6 +139,10 @@ fn validate_plan(
             raw.profit_lock_activation_bps,
             raw.profit_lock_floor_bps,
             raw.profit_lock_giveback_bps,
+        )
+        || !matches!(
+            raw.adaptive_exit_policy.as_str(),
+            "none" | "regime_book_profit_retention_v1"
         )
         || !valid_opposite_exit_contract(raw)
     {

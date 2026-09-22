@@ -32,6 +32,7 @@ ACTIVE_HIP3_MARKETS = (
     Hip3MarketSpec("xyz:SNDK", 10),
     Hip3MarketSpec("xyz:GOLD", 25),
     Hip3MarketSpec("xyz:BRENTOIL", 20),
+    Hip3MarketSpec("xyz:TSLA", 20),
 )
 
 

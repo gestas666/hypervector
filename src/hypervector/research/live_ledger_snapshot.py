@@ -238,7 +238,7 @@ def latest_decision_ledger_event(path: Path, event_type: str) -> dict[str, objec
         raise FileNotFoundError(f"live decisions ledger does not exist: {path}")
     if not isinstance(event_type, str) or not event_type.strip():
         raise ValueError("ledger event type must be non-empty text")
-    for _, raw in _reverse_complete_lines(path):
+    for _offset, raw in _reverse_complete_lines(path):
         if event_type.encode("utf-8") not in raw:
             continue
         value: object = json.loads(raw)
@@ -343,9 +343,19 @@ def _configuration_identity(raw: bytes) -> Mapping[str, object] | None:
 
 
 def _reverse_complete_lines(path: Path) -> Iterator[tuple[int, bytes]]:
-    """Yield complete non-empty lines newest-first with bounded memory."""
+    """Yield complete non-empty lines newest-first with bounded memory.
+
+    A live ledger is appended to while it is read, so its final line may be a
+    partial write. Skipping it here keeps the guarantee in one place: every reader
+    that shares this generator was otherwise parsing that torn record.
+    """
+    size = path.stat().st_size
+    if not size:
+        return
     with path.open("rb") as handle:
-        cursor = path.stat().st_size
+        handle.seek(size - 1)
+        terminated = handle.read(1) == b"\n"
+        cursor = size
         carry = b""
         while cursor > 0:
             start = max(0, cursor - _REVERSE_SCAN_BYTES)
@@ -360,7 +370,7 @@ def _reverse_complete_lines(path: Path) -> Iterator[tuple[int, bytes]]:
                 offset = 0
             located: list[tuple[int, bytes]] = []
             for part in parts:
-                if part:
+                if part and (terminated or offset + len(part) < size):
                     located.append((offset, part))
                 offset += len(part) + 1
             yield from reversed(located)

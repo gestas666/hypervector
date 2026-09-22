@@ -134,11 +134,13 @@ fn staged_generation() -> CohortConfigurationGeneration {
         current_provider_exit_policies: Some(BTreeMap::from([(
             CASH_OPEN.into(),
             CohortPendingExitPolicy {
+                stop_risk_budget: None,
                 maximum_hold_seconds: 22_500,
                 maximum_hold_policy: "fixed".into(),
                 hard_maximum_hold_seconds: None,
                 maximum_hold_evidence_maximum_age_seconds: None,
                 provider_recipe_exit_policy: "honor".into(),
+                adaptive_exit_policy: "none".into(),
                 profit_lock_policy: "none".into(),
                 profit_lock_activation_bps: None,
                 profit_lock_floor_bps: None,

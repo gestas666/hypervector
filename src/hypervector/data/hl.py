@@ -33,6 +33,7 @@ _INTERVAL_MS = {"1m": 60_000, "5m": 300_000, "15m": 900_000, "1h": 3_600_000}
 _SLEEP_S = 0.05
 _MILLIS_PER_DAY = 24 * 60 * 60 * 1000
 _SNAPSHOT_RETRY_DELAYS = (1.0, 2.0, 4.0)
+_SNAPSHOT_RETRYABLE_HTTP_STATUSES = frozenset({429, 500, 502, 503, 504})
 _MAX_RETRY_AFTER_SECONDS = 15.0
 
 
@@ -302,9 +303,19 @@ def fetch_hl_ohlcv_snapshot(
         payload,
         sleep_fn,
     )
-    raw = response.json()
+    try:
+        raw = response.json()
+    except ValueError as exc:
+        # A gateway that rewrites the body still returns 200; classify it as the
+        # transport degradation it is so the cohort degrades and still runs its
+        # unconditional deadline exits, instead of hard-exiting the backend.
+        raise requests.exceptions.InvalidJSONError(
+            "HL candleSnapshot response is not JSON", response=response
+        ) from exc
     if not isinstance(raw, list):
-        raise RuntimeError("HL candleSnapshot response must be a list")
+        raise requests.exceptions.InvalidJSONError(
+            "HL candleSnapshot response must be a list", response=response
+        )
     frame = bars_from_hl_payload(raw, source="hl")
     return _bounded_candle_frame(frame, start, end)
 
@@ -329,13 +340,17 @@ def _request_hl_candle_snapshot(
             )
             sleep_fn(delay)
             continue
-        if response.status_code != 429:
+        if response.status_code not in _SNAPSHOT_RETRYABLE_HTTP_STATUSES:
             response.raise_for_status()
             return response
         if attempt == attempts - 1:
             response.raise_for_status()
         delay = _snapshot_retry_delay(response, attempt)
-        logger.warning("HL candle snapshot throttled; retrying in %.1fs", delay)
+        logger.warning(
+            "HL candle snapshot HTTP %d; retrying in %.1fs",
+            response.status_code,
+            delay,
+        )
         sleep_fn(delay)
     raise RuntimeError("HL candle snapshot retry loop exhausted")
 

@@ -34,6 +34,7 @@ class _ExitContract:
     floor_bps: float | None
     giveback_bps: float | None
     source: str
+    adaptive_exit_policy: str = "none"
 
 
 def build_open_exit_plan(
@@ -55,6 +56,7 @@ def build_open_exit_plan(
         raise ValueError(f"{symbol} runtime timer starts after the checkpoint")
     deadlines = _deadline_values(contract, opened_at_ms, as_of_ms, regime_context)
     return {
+        **({"adaptive_exit_policy": contract.adaptive_exit_policy} if contract.adaptive_exit_policy != "none" else {}),
         "maximum_hold_seconds": contract.soft_seconds,
         "maximum_hold_policy": contract.policy,
         "hard_maximum_hold_seconds": contract.hard_seconds,
@@ -146,7 +148,10 @@ def _parse_contract(values: Record, symbol: str, source: str) -> _ExitContract:
     if recipe not in {"ignore", "honor"}:
         raise ValueError(f"{symbol} provider recipe exit policy is unsupported")
     lock = _parse_profit_lock(values, symbol)
-    return _ExitContract(soft, policy, hard, recipe, *lock, source)
+    adaptive = values.get("adaptive_exit_policy", "none")
+    if adaptive not in {"none", "regime_book_profit_retention_v1"}:
+        raise ValueError("unsupported adaptive exit projection")
+    return _ExitContract(soft, policy, hard, recipe, *lock, source, adaptive)
 
 
 def _parse_profit_lock(

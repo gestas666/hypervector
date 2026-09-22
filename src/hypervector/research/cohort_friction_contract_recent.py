@@ -1,5 +1,8 @@
 """Modeled contracts for recent additive provider identities."""
 
+from dataclasses import replace
+from functools import cache
+
 from hypervector.research.cohort_friction_contract_models import (
     ModeledExecutionContract,
 )
@@ -23,6 +26,16 @@ _V84_V79_CONTRACT_EVIDENCE = (
 _V89_NOMINAL_CONTRACT_EVIDENCE = (
     "data/logs/research/bidirectional_cohort/"
     "v89_hourly_nominal_friction_contracts_20260907_v1.json"
+)
+_V90_HOURLY_DONCHIAN20 = "hourly_donchian_20_10_atr20_bidirectional_v1"
+_V90_ADVERSE_ENTRY_SLIPPAGE_BPS = 5.5
+_V90_ROSTER_SCREEN_EVIDENCE = (
+    "data/logs/research/bidirectional_cohort/"
+    "v90_expansion_screen_20260920_v1/exit_policy_v90_roster_63d.json"
+)
+_V90_BREADTH_SCREEN_EVIDENCE = (
+    "data/logs/research/bidirectional_cohort/"
+    "v90_expansion_screen_20260920_v1/screen_breadth_H1.json"
 )
 
 
@@ -145,6 +158,37 @@ def v89_hourly_modeled_contracts() -> dict[tuple[str, str], ModeledExecutionCont
         ("hourly_band20_reentry_atr20_bidirectional_v1", "xyz:SPCX"): contract,
         ("hourly_donchian_20_10_atr20_bidirectional_v1", "xyz:SNDK"): contract,
         ("hourly_donchian_8_4_atr20_bidirectional_v1", "xyz:BRENTOIL"): contract,
+    }
+
+
+@cache
+def v90_hourly_modeled_contracts() -> dict[tuple[str, str], ModeledExecutionContract]:
+    """Return the V90 replay assumptions for the routes it moved or added.
+
+    Derived from the V89 hourly contract by ``replace`` so the execution shape has
+    one source of truth. Each route is bound to the **adverse** cost arm of the
+    screen it cites (``declared_grid.costs.adverse`` in the evidence file): 5.5 bps
+    entry slippage, 0.9 bps fee per side on growth-mode HIP-3 markets and 4.5 bps
+    on the core perp. That is the only arm in those files whose fee convention
+    matches V89's, and it is above the measured live rates (0.864 / 4.32 fees,
+    0.8 bps entry slippage), so friction parity compares live fills against a
+    conservative modelled number. Only routes with a published screen cell are
+    listed, so an unresearched symbol still resolves to no contract.
+    """
+    base = v89_hourly_modeled_contracts()[(_V90_HOURLY_DONCHIAN20, "xyz:SNDK")]
+    routes = {
+        "SOL": (4.5, _V90_ROSTER_SCREEN_EVIDENCE),
+        "xyz:BRENTOIL": (0.9, _V90_ROSTER_SCREEN_EVIDENCE),
+        "xyz:TSLA": (0.9, _V90_BREADTH_SCREEN_EVIDENCE),
+    }
+    return {
+        (_V90_HOURLY_DONCHIAN20, symbol): replace(
+            base,
+            entry_fee_bps=fee,
+            entry_slippage_bps=_V90_ADVERSE_ENTRY_SLIPPAGE_BPS,
+            evidence_source=evidence,
+        )
+        for symbol, (fee, evidence) in routes.items()
     }
 
 

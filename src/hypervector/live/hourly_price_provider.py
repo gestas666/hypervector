@@ -25,8 +25,21 @@ from hypervector.research.hourly_band_reentry import (
 
 DONCHIAN20_STRATEGY = "hourly_donchian_20_10_atr20_bidirectional_v1"
 DONCHIAN8_STRATEGY = "hourly_donchian_8_4_atr20_bidirectional_v1"
+PROTECTED_DONCHIAN20_STRATEGY = (
+    "hourly_donchian_20_10_atr20_profit_lock_bidirectional_v2"
+)
+# The identity-bound lock contract is only evidenced on these three routes
+# (docs/reviews/2026-09-21-v90-profit-protection-readiness.md). The validator
+# pins the symbol set as well as the lock parameters, so the protected identity
+# cannot be armed on a market that has no protected-exit evidence.
+PROTECTED_DONCHIAN20_SYMBOLS = frozenset({"SOL", "xyz:SNDK", "xyz:BRENTOIL"})
 HOURLY_PRICE_STRATEGIES = frozenset(
-    {DONCHIAN20_STRATEGY, DONCHIAN8_STRATEGY, BAND_REENTRY_STRATEGY}
+    {
+        DONCHIAN20_STRATEGY,
+        DONCHIAN8_STRATEGY,
+        BAND_REENTRY_STRATEGY,
+        PROTECTED_DONCHIAN20_STRATEGY,
+    }
 )
 HOURLY_PRICE_SYMBOLS = frozenset(
     {
@@ -38,6 +51,12 @@ HOURLY_PRICE_SYMBOLS = frozenset(
         "xyz:SP500",
         "xyz:SNDK",
         "xyz:BRENTOIL",
+        # V90 addition. Screened 2026-09-20 on 52 days of venue history against a
+        # bar declared before the results (docs/plans/2026-09-20-v90-aggressive-
+        # bankroll-builder.md section 10.6); it failed that bar on one condition
+        # and is admitted as an operator scope choice at the screened $500
+        # contract, not as evidence of edge.
+        "xyz:TSLA",
     }
 )
 _METRICS = (
@@ -56,7 +75,11 @@ def build_hourly_price_signals(bars: pd.DataFrame, strategy_id: str) -> pd.DataF
     """Resolve an exact immutable mechanism shared by research and publication."""
     if strategy_id == BAND_REENTRY_STRATEGY:
         return build_hourly_band_reentry_signals(bars)
-    channels = {DONCHIAN20_STRATEGY: (20, 10), DONCHIAN8_STRATEGY: (8, 4)}
+    channels = {
+        DONCHIAN20_STRATEGY: (20, 10),
+        DONCHIAN8_STRATEGY: (8, 4),
+        PROTECTED_DONCHIAN20_STRATEGY: (20, 10),
+    }
     if strategy_id not in channels:
         raise ValueError(f"unsupported hourly price strategy: {strategy_id}")
     entry, exit_channel = channels[strategy_id]
@@ -147,7 +170,11 @@ def _evaluation(
         eligible=eligible,
         reason=reason,
         side=side,
-        decision_action=f"enter_{side}" if eligible else "close_open_position" if exits else "hold",
+        decision_action=f"enter_{side}"
+        if eligible
+        else "close_open_position"
+        if exits
+        else "hold",
         readiness=readiness,
         trigger="completed_hourly_price" if eligible else "none",
         exit_sides=exits,
@@ -176,7 +203,11 @@ def _readiness(
         }
     )
     blockers = (
-        () if eligible else ("awaiting_hourly_setup",) if ready else ("hourly_history_unready",)
+        ()
+        if eligible
+        else ("awaiting_hourly_setup",)
+        if ready
+        else ("hourly_history_unready",)
     )
     return SignalReadiness(
         side=side,
@@ -213,7 +244,9 @@ def _price_indicators(signal: pd.Series) -> tuple[str, ...]:
 def _intent(row: ProviderEvaluation) -> StrategyIntent:
     stop = row.readiness.metrics["stop_price"]
     if row.side not in {"long", "short"} or not isinstance(stop, float):
-        raise ValueError("eligible hourly price decision requires a side and finite stop")
+        raise ValueError(
+            "eligible hourly price decision requires a side and finite stop"
+        )
     return StrategyIntent(
         strategy_id=row.strategy_id,
         symbol=row.symbol,
@@ -226,6 +259,10 @@ def _intent(row: ProviderEvaluation) -> StrategyIntent:
 
 
 def _finite(value: object) -> float | None:
-    if isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value):
+    if (
+        isinstance(value, (int, float))
+        and not isinstance(value, bool)
+        and math.isfinite(value)
+    ):
         return float(value)
     return None

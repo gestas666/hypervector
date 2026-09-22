@@ -80,6 +80,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--out", type=Path, default=_DEFAULT_OUTPUT)
     parser.add_argument("--config", type=Path, default=_DEFAULT_CONFIG)
     parser.add_argument("--run-id")
+    parser.add_argument("--follow-latest-run", action="store_true")
     parser.add_argument("--interval-seconds", type=float, default=30.0)
     parser.add_argument("--research-database", type=Path)
     parser.add_argument("--accounting-epoch-bundle", type=Path)
@@ -379,6 +380,7 @@ def _publish_real_snapshot(
         args.ledger_root,
         args.out,
         requested_run_id=args.run_id,
+        follow_latest_run=getattr(args, "follow_latest_run", False),
         config_path=args.config,
         once=args.once,
         venue_portfolio=venue_portfolio,

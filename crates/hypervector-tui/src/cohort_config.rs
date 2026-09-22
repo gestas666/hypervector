@@ -385,6 +385,9 @@ fn provider_contract(value: Option<&CohortProviderExecutionContract>) -> String 
 }
 
 fn profit_lock_contract(contract: &CohortProviderExecutionContract) -> String {
+    if contract.adaptive_exit_policy == "regime_book_profit_retention_v1" {
+        return "ADAPTIVE REGIME/BOOK PROFIT RETENTION".into();
+    }
     if contract.profit_lock_policy == "none" {
         return "OFF".into();
     }
@@ -472,6 +475,7 @@ mod tests {
             maximum_hold_policy: "fixed".into(),
             hard_maximum_hold_seconds: None,
             provider_recipe_exit_policy: "ignore".into(),
+            adaptive_exit_policy: "none".into(),
             profit_lock_policy: "btc_hulk_delayed_component_floor_v1".into(),
             profit_lock_activation_bps: None,
             profit_lock_floor_bps: None,
@@ -480,6 +484,7 @@ mod tests {
 
         assert_eq!(profit_lock_contract(&contract), "DELAYED COMPONENT FLOOR");
         let versioned = CohortProviderExecutionContract {
+            adaptive_exit_policy: "none".into(),
             profit_lock_policy: "btc_hulk_delayed_component_exit_v2".into(),
             ..contract
         };

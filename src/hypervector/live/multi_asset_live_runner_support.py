@@ -27,6 +27,17 @@ class MultiAssetLiveRunnerError(RuntimeError):
     """The cohort cannot preserve causal shared-account execution."""
 
 
+class CohortDegradedBlindnessError(MultiAssetLiveRunnerError):
+    """Market data has failed for longer than the configured technical bound.
+
+    Degraded polls append to the same ledger whose modification time is the
+    supervisor's only liveness probe, so an unbounded degraded loop reports a
+    healthy backend that has not seen a price in hours. This is a technical
+    failure, not a strategy gate: it ends the process so startup reconciliation
+    and the supervisor's restart accounting engage.
+    """
+
+
 class ReconciliationEngine(Protocol):
     """Minimum engine surface needed by shared reconciliation helpers."""
 

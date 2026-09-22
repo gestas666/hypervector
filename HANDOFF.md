@@ -1,3 +1,599 @@
+# Current follow-up — V92 sizing defect fixed at source; V91 still paused, 2026-09-22 17:07 UTC
+
+Session resumed from the handoff at 16:44 UTC and re-verified the pause first.
+Supervisor `status` at 16:46:11 UTC: `backend_alive false`, `problems
+[backend_process_absent, backend_heartbeat_stale]`, `free_disk_gib 17.44`.
+Restart state still holds `clean_exit_operator_stop_or_bounded_run` with
+`session_active false`; the last supervisor event is the 15:43:39 UTC clean exit
+of PID 1619. The checkpoint at 16:46:22 UTC shows all eight assets `STOPPED`,
+drain `completed`, execution collateral $4,825.33307049. launchd: `supervise` idle
+(exit 0, not relaunched), checkpoint writer 1175, watch 1613 and roster observer
+73311 running. No live process, profile, approval or binary was touched.
+
+**Defect found and fixed in the unapproved V92 path.** `size_for_stop_risk`
+evaluated `plan.stop_price` at both modeled fill bounds. For a structural stop
+whose anchor lay inside the entry slippage interval (within 20 bps of the mark
+for `entry_slippage_cap_fraction = 0.002`), the favorable bound made the anchor
+non-adverse and `CohortExecutionPlanError` was raised **before submission**.
+That exception is a `ValueError`: nothing in `execute_routing_action`, the route
+cycle or `run()` handles it, so the backend would have exited 1 and the
+supervisor would have restarted it (~13 min, ~1.2 GB bundle) on a market
+condition, repeatedly while the signal persisted. Reproduced with a direct probe
+(long anchor 99.9 at mark 100 raised; 99.79 sized). Fix in
+`cohort_stop_risk_sizing.py::_worst_loss`: the stop must resolve at the mark
+itself (an anchor not adverse at the mark still refuses), and a modeled fill more
+favorable than the anchor is skipped because it cannot be the worst loss and the
+post-fill protection path rejects it independently. Worst loss stays at the
+adverse bound or the short-side clamp turning point, so every previously valid
+sizing is unchanged: the recorded SNDK counterfactual recomputes identically
+(notional $372.1328542575805, quantity 0.19615879724715646, loss $10). Tests
+added: four inside-interval cases and four not-adverse-at-mark cases in
+`tests/test_cohort_stop_risk_sizing.py`, and a long/short engine replay in
+`tests/test_cohort_stop_risk_engine.py` that opens and protects with an anchor
+10 bps from the mark. Focused suites: 41 passed. Ruff check and format clean.
+Post-fix hashes (the V92 staging manifest records the pre-fix values):
+`cohort_stop_risk_sizing.py 14851e0a8df9…`, `test_cohort_stop_risk_sizing.py
+9b6746fb189b…`, `test_cohort_stop_risk_engine.py e6e710b54a30…`.
+Full non-network Python suite after the fix: **10,254 passed** (4 network
+deselected, 27 warnings) in 618.58 s, exit 0, at 17:06 UTC; the ten new tests
+account for the increase from 10,244. No Rust source changed. Both the V92
+proposal and the V91 profile still pass `cohort_runtime_validation_check.py`
+in observe mode.
+
+**Pre-existing hazard recorded, not fixed.** Independently of the budget, a fill
+more favorable than a structural anchor (long fill at or below the anchor) makes
+`plan.stop_price` raise after `begin_protection` in
+`sol_range_onset_engine.py` and again in `sol_entry_read_recovery.py` during
+restart recovery, leaving a position without its stop while the process faults.
+It needs an anchor within the IOC slippage cap and a fill on the favorable side of
+it, which the hourly ATR-based anchors make rare, but the recovery path should
+be made to clamp or flatten rather than re-raise. V91 shares this path.
+
+**Stray lock removed.** `scripts/data/runtime/bidirectional_cohort/
+supervisor_events.supervisor.lock` (0 bytes, no holder per `lsof`) and its empty
+parents are gone; `scripts/data/` no longer appears as untracked.
+
+**Disk is the binding operational constraint.** The volume is at 99%: 17.4 GiB
+free against the supervisor's 10 GiB launch floor and ~1.2 GB per armed start;
+it was 27.6 GiB at 06:45 UTC and 19.3 GiB at 14:27 UTC. Measured consumers:
+`data/research` 155 GiB (market.duckdb 44, hip3_market.duckdb 24,
+`data/research/backups` 69), `data/cache` 111 GiB (`vendor` 102, `events` 9.1),
+`data/logs/research` 96 GiB, `data/backups` 79 GiB (183 entries under
+`bidirectional_cohort`, 65 GiB, prestart bundles ~1.2 GB each back to
+2026-08-05), `data/live` 13 GiB, sibling worktrees 81 GiB (of which
+`hypervector-overhaul-20260905/data` is a 44 GiB copy that a September 5 note
+says was preserved deliberately), main `target` 4.9 GiB and `.venv` 1.5 GiB.
+Nothing was deleted; every candidate is a backup, a research store or a
+preserved worktree and needs the operator's choice.
+
+**Git.** The last commit is 2026-09-18 (`4731eac`). Four days of V90/V91/V92
+work are uncommitted: 60 modified tracked files (+2,033/−214) and 84 untracked
+files including both live configs, both approvals, the supervisor scripts and
+every review. A disk-full event or an accidental checkout would lose the running
+system's own configuration. Committing is still the operator's call.
+
+**Decision still open** (unchanged from the V92 review): continue the pause,
+review and approve the $10 sizing proposal, restart V91 unchanged, or deploy a
+tested replacement. Nothing in this session changes the recommendation to keep
+the pause until a concrete strategy/risk decision exists. Any restart needs a
+fresh flat/order-free venue check, a transition approval and free disk above
+the floor after the prestart bundle.
+
+---
+
+# Current repair — V92 source implemented; V91 remains paused, 2026-09-22
+
+The user requested correction after authorizing V91's drain. An optional explicit
+estimated dollar stop-loss budget is now implemented in the real entry path,
+with pre-order telemetry, bound-plan recovery and staged configuration/TUI
+projection. Existing profiles omit it and retain their identity and behavior.
+
+`configs/multi_asset_v92_risk_control_proposal.toml` is a **proposal only**: $10
+estimated stop loss including 20bps cost allowance, per position; existing entry
+rules retained. It has no transition approval and is not selected by launchd.
+Gaps and execution/carrying costs can exceed the modeled allowance. It is not a
+profitable strategy claim. Do not clear the hold or restart trading based on this
+source repair.
+
+Frozen entry and early-failure comparisons produced 96 reported economic cells.
+All four variants lost on the one-year four-crypto screen after both tested cost
+scenarios. The recent extension limit and early-loss overlay removed winners.
+Neither received live authority. ML remains report-only.
+
+Validation: **10,244 Python tests passed** (4 network deselected); **659 Rust
+tests passed** (25 ignored); changed-file Ruff and offline proposal runtime
+validation passed. V91 retains its original fingerprint.
+
+See [V92 repair review](docs/reviews/2026-09-22-v92-strategy-repair.md) for the
+proposal, comparisons, validation, limitations and rollback. Artifacts and exact
+source backup/manifest are under
+`data/logs/research/bidirectional_cohort/v92_strategy_repair_20260922/`.
+Unsigned venue preflight at 16:26:21 UTC confirmed flat, zero orders and
+$4,825.33307049 equity. A 16:32:42 UTC process check found no live backend and
+confirmed the completed drain and durable operator hold. The roster observer
+continues to publish read-only telemetry.
+
+---
+
+# Current operation — V91 intentionally paused, 2026-09-22 15:43 UTC
+
+**User-authorized transition drain completed; live backend exited normally.**
+The first V91 trade, xyz:SNDK long, lost $44.950445 net. Its sampled best gross
+profit was $3.6936, below the adaptive policy's activation requirement. Exact
+replay of all 247 adaptive observations matches the deployed policy; this does
+not establish economic effectiveness. No crypto entry qualified during the run.
+
+Drain request `56999fac5da145bd8d21c408ca568353` completed at
+15:43:20.365457 UTC for run `bidirectional-live-1790073983560`. Backend PID 1619
+exited code 0 at 15:43:39 UTC. The supervisor has durable hold
+`clean_exit_operator_stop_or_bounded_run` and `session_active = false`.
+**The user's latest pause instruction supersedes the earlier live deployment
+instruction. Do not clear the hold or restart trading without new authorization.**
+
+See [first-trade incident and next comparisons](docs/reviews/2026-09-22-v91-first-trade-incident.md).
+The generic health command reports an absent backend because trading is
+intentionally stopped; completed drain and venue checks are the pause evidence.
+
+---
+
+# Previous operation — V91 adaptive eight-asset transition, 2026-09-22
+
+**Status: LIVE ARMED; acceptance passed at 11:03:58 UTC.** V90 completed its
+authorized drain before the independently verified flat/order-free transition.
+Supervisor PID 1616 owns V91 backend PID 1619; current run is
+`bidirectional-live-1790073983560`. Ten healthy heartbeats, all eight executable
+scopes, fresh canonical/book telemetry and the matching checkpoint were verified.
+The actual cockpit projection passed at both acceptance sizes. The cohort is flat
+and awaiting normal entry signals; no order was forced for acceptance.
+
+The current profile is
+`configs/multi_asset_growth_first_5000_adaptive_eight_asset_v91.toml`, fingerprint
+`00ca7e008e8b2ec7cbeac4b9541cabf39a8576a23769b92a169e984616fe8d8c`.
+All eight assets are executable under the retained entry-side/sizing contracts.
+Profit protection is `regime_book_profit_retention_v1`, not the earlier fixed
+100/25/50 proposal. Ridge continuation predictions are report-only.
+
+Current procedure: [V91 deployment and rollback v2](docs/plans/2026-09-22-v91-deployment-and-rollback-v2.md).
+Current evidence: [V91 review and acceptance](docs/reviews/2026-09-22-v91-code-review-and-acceptance.md)
+and [frozen research/sizing report](docs/reviews/2026-09-22-v91-adaptive-exit-research.md).
+These supersede operating instructions below and the historical V90 aggressive,
+profit-protection, readiness and activation proposals. Those documents are
+retained intact because previous approvals hash their contents.
+
+The host loads a 60-second launchd exit timeout; the corrected supervisor persists
+a stop before its 30-second child wait. Actual disposable launchd acceptance
+passed. Native live-process termination is not used for failure injection.
+The user's explicit eight-asset live request remains the deployment authority.
+
+---
+
+## September 22, 08:05 UTC: every confirmed review finding closed; suite fully green
+
+Live run `bidirectional-live-1790053305835` was never touched: `running_consistent`,
+0 faults, all 8 assets FLAT, equity $4,870.28, supervisor `problems []`. **All of
+this is source only — the running backend, the launchd agents and the live config
+keep their current code until they are restarted.**
+
+Of 26 adversarially confirmed findings plus 7 critic findings, **all are now fixed
+or refuted**. The full Python suite is **10,144 passed / 0 failed** (from 10,060
+passed / 15 failed at the start of the session), Rust 657 passed, ruff clean
+repo-wide, the pre-arm gate accepts V90 and the V90 cockpit QA passes against the
+live run.
+
+**Execution path.** The order-capable half of every cycle is now marked by
+`MultiAssetLiveRunner.execution_phase()`; a transport failure raised inside it
+re-raises the original exception instead of degrading the poll. Two such regions
+existed: the normal cycle, and `poll_with_deadlines` →
+`_finish_unconditional_deadlines`, which submits closes during an acquisition
+failure. Sustained blindness is now bounded: `CohortDegradedBlindnessError` ends
+the process after `maximum_consecutive_degraded_polls` (default 240 ≈ 1 h at 15 s),
+because `emit_poll_degraded` refreshes the same ledger mtime the supervisor reads
+as liveness. A 200 response carrying a non-list body is now a
+`requests.InvalidJSONError`, so it degrades and still runs the unconditional
+deadline exits instead of hard-exiting.
+
+**Startup.** `validate_runtime_configuration` in the new
+`hypervector/live/cohort_runtime_preflight.py` runs immediately after the profile
+loads — before the pre-start backup, the ledger replay and any authenticated venue
+client. `scripts/cohort_runtime_validation_check.py` calls the *same* function, so
+the gate can no longer drift from the runner. Exit codes: construction refusals
+report 2 (hold), run-phase faults report 1 (restart), and the gate reserves 1 for
+runner objections while every loader refusal reports 2.
+
+**Supervisor.** The startup handler no longer spans the supervised lifetime, so a
+mid-session `OSError` records `supervisor_faulted` and holds under health polling
+instead of reporting a start refusal and orphaning an armed child. A competing
+owner is alerted and monitored rather than bounced into launchd's KeepAlive loop.
+An unwritable restart journal refuses the launch and latches `hold_persisted =
+False` instead of unwinding into a relaunchable exit. `_terminate_group` reports
+whether the child actually ended, an unfinished stop alerts and latches
+`operator_stop_grace_expired`, and the plist now sets `ExitTimeOut: 180` so launchd
+cannot SIGKILL the supervisor mid-grace. The dead-man ping is unconditional — host
+liveness is not data freshness. `file_age_seconds` fails closed on a backward clock
+step (`ledger_mtime_in_future`). The alerter has a churn floor that any
+not-yet-alerted label bypasses. The watch agent applies the startup grace and keeps
+its own journals so alerts are no longer delivered twice. `SupervisorPaths` roots
+are absolute: a stray `scripts/data/runtime/.../supervisor_events.supervisor.lock`
+proved the cwd-relative defaults could split the exclusivity guarantee — **that
+stray directory still needs removing by hand.** Insufficient free disk is now a
+launch precondition (`refused_insufficient_free_disk`), because every armed start
+writes a ~1.2 GB bundle before it can reach any refusal.
+
+**Roster observer.** `context_record` is strict only for the roster symbols the
+supervisor reads; any other market in the ~123-market dex degrades to
+`{"symbol", "parse_error"}` with an `unparsed_market_count`. The gap-record write in
+`_publish` is guarded, so a torn JSONL tail can no longer crash-loop the observer
+(the tail guard itself stays strict — damage stays intact, by design). A poll the
+capture already archived is no longer double-counted as a gap.
+`prune_context_history` applies a 30-day window to the ~24 MB/day capture.
+
+**Evidence integrity.** The xyz:SNDK row — the largest executable route — quoted
+the roster screen's payoff ratio as its profit factor and took its adverse net from
+a different screen run at 10x. Corrected against
+`exit_policy_v90_roster_63d.json`: measured +$177.96, **adverse +$134.47**, payoff
+ratio 2.82, **PF 1.48**; the three-positive-blocks claim is now attributed to the
+10x screen with its adverse arm stated as 2 of 3. `_V90_COMMON` no longer claims the
+adverse-arm contract for xyz:SNDK, which keeps the frozen V89 nominal 2.5 bps
+contract. A new test reads the screen JSON and asserts the row matches it cell for
+cell, so this cannot drift again. `_profit_lock_symbols` now resolves contracts with
+the same direction-then-symbol-then-provider precedence the execution path uses, so
+a lock bound per (provider, symbol, side) latches its fail-closed plan requirement.
+
+**Refuted, with evidence.** Critic finding 2 (any hourly route could arm an
+arbitrary trailing lock through `profit_lock_overrides`) is **false**: the loader
+already refuses it via `not provider.profit_lock_overrides`, verified by injecting
+the override into the live profile. Three earlier "gate gaps" were also false — the
+loader fails closed before those validators are reachable.
+
+**Test posture.** `_reverse_complete_lines` now skips a torn final line for every
+reader that shares it, not just the one call site that was guarded.
+`MultiAssetIntentPollerProtocol` declares `bind_startup_input_observer`.
+`test_native_runner_recorded_control` compares recorded telemetry with a 1e-12
+tolerance instead of bit-exact float equality: the only difference was one ULP
+(rel 3e-15) in two xyz:SPCX band bounds, which asserts arithmetic order rather than
+behaviour. `pythonpath` gained `"."`, un-darkening 8 previously un-collectable files.
+
+**Still requires an operator decision:** the V90 config, its approval and the three
+doc evidence files the approval hashes are untracked in git. Any clean or checkout
+would leave the running cohort unable to restart. Commit them before the next
+restart window.
+
+## September 22, 07:10 UTC: PROTECTING swallow fixed on operator instruction (not deferred to flat)
+
+The operator directed the fix now rather than at a flat boundary. **Source only —
+the running process keeps the old code until it is restarted.** Run
+`bidirectional-live-1790053305835` was untouched and stayed `running_consistent`,
+0 faults, all 8 assets FLAT, equity $4,870.28 throughout.
+
+Reproduced first, then fixed. `run()`'s `except (RequestException, ClientError,
+ServerError)` and its `TransientCohortMarketDataError` arm wrapped **all** of
+`poll_once`, including order submission and the reads that verify it. A 502 raised
+after an entry was submitted was classified transient and recorded as a degraded
+poll; the engine stayed in `PROTECTING`, which
+`_reconcile_owned_lifecycle` does not branch on and which the profit-lock, recipe
+and maximum-hold controllers all skip (they require `OPEN`) — so a real position
+would never be evaluated for exit again while heartbeats kept reporting `running`.
+
+Two order-capable regions existed, not one:
+1. `poll_once` → `_run_operator_commands` / `route_cycle` / `_finish_cycle`.
+2. `poll_with_deadlines` → `_finish_unconditional_deadlines` → `_finish_cycle`,
+   which submits **closes** during an acquisition failure. This second path was the
+   worse one: it exists precisely to protect a position while data is broken, and a
+   failed close there was silently degraded. Both had a failing test before the fix
+   (`DID NOT RAISE`).
+
+Fix: `MultiAssetLiveRunner.execution_phase()`, a context manager that sets
+`_execution_phase_failed` and re-raises the **original** exception untouched; both
+regions are wrapped, the flag resets at the top of every `poll_once`, and both
+handlers in `run()` re-raise instead of degrading when it is set. Re-raising the
+original rather than wrapping keeps `runtime_failure_stage` exact — a test asserts
+the post-submission fault still classifies as `entry_submission` rather than
+`unclassified`.
+
+Recovery is now the designed one: the fault leaves `run()`, `_run_guarded` journals
+it, `CohortRunFailure` maps it to exit 1, the supervisor restarts, and
+`sol_range_onset_startup.py:283` resolves the `PROTECTING` lifecycle against the
+venue. Behaviour that was deliberately preserved: an ordinary read-phase transport
+failure still degrades, and a *successful* unconditional deadline close still
+degrades on its original market-data error.
+
+**Consequence to accept:** a transport failure during execution now restarts the
+backend instead of continuing. The window is narrow (venue mutation plus its
+verification read, not ordinary reads), but each restart costs ~13 min and a
+~1.2 GB prestart bundle against 27 GiB free, and the budget is 5 restarts per 6 h.
+This raises the priority of the prestart-bundle retention question (148 bundles,
+61.7 GiB) and of critic finding 1 — `free_disk_low` alerts but never gates a launch.
+
+Tests: 3 added, **10,121 passed / 1 failed** (the one failure is the pre-existing
+1-ULP float-equality drift in `test_native_runner_recorded_control.py`, reproduced
+on a clean HEAD worktree). Rust 657 passed. `cohort_runtime_validation_check.py`
+still accepts V90 in live mode; the V90 cockpit QA test still passes against the
+live run. ruff clean.
+
+Source identity drift now also covers `src/hypervector/live/multi_asset_live_runner.py`
+and `src/hypervector/live/cohort_degraded_deadlines.py`, both hashed into the live
+implementation manifest. The running run still records 1932 files / `430cab68af65…`;
+a restart re-baselines it and is not gated by the drift.
+
+## September 22, 06:45 UTC: V90 still live and flat; TUI was blind to V90 and is fixed
+
+Run `bidirectional-live-1790053305835` has been up ~1h45m: `running_consistent`,
+0 faults, 0 fills, all 8 assets FLAT, equity unchanged at $4,870.28, poll cadence
+14.95s median, execution parity 8/8 aligned. Supervisor probe healthy, `problems []`.
+Nothing in this session touched the live config, the approval, the running process
+or any launchd agent.
+
+**The cockpit could not display V90 at all.** `backend_cohort_validation.rs`
+`invalid_direction_scope` refused any `execution_side_overrides` entry whose symbol
+was not in `execution_symbols`. V90 demoted ETH, HYPE and xyz:SPCX to observe-only
+(`execution_symbols = []`) but kept their side overrides, so the TUI rejected the
+whole telemetry document with `BACKEND ERROR: invalid multi-asset cohort telemetry:
+cohort provider direction scope is invalid` — no assets, no routes, no portfolio.
+Same residue class as the `sizing_overrides` that cost the 13.5-minute armed start.
+
+The backend treats those overrides as inert: `executable_provider_directions`
+iterates `execution_symbols` only, and the loader's own rule
+(`multi_asset_live_provider_validation.py:166`) requires override symbols ⊆
+`provider.symbols`, not ⊆ `execution_symbols`. The TUI validator was the single
+outlier — `cohort_application.rs:20-26` already gates on `execution_symbols`, so an
+inert override could never project as authority. Fixed the validator to mirror the
+backend rule. The live config was **not** edited: that would change the fingerprint
+and break the running profile binding.
+
+Verified against the live run: profile, fingerprint `c8938787268c…` and run id all
+match; 8 symbols incl. xyz:TSLA; 5 providers / 8 routes; coverage 8/8 complete;
+BTC + 4 hourly-channel routes `[LIVE]`, ETH/HYPE/SPCX `[OBS]`; `LOCK OFF`
+everywhere; all 9 screens render at 176x65 and at the 120x36 acceptance floor;
+first load of the 6.2 GB ledger takes 0.76s. New `crates/hypervector-tui/tests/
+v90_screen_qa_test.rs` pins this (ignored by default, needs the live ledger); two
+validator unit regressions added. Rust 657 passed / 0 failed. Release binary
+rebuilt: `4f1eaa3bb1ae82d0…`. Attach read-only with:
+
+```bash
+uv run python -m hypervector cohort-tui --mode monitor \
+  --config configs/multi_asset_growth_first_5000_bankroll_builder_candidate_v90.toml
+```
+
+The launchd checkpoint writer holds the output lock, so monitor mode starts no
+second writer; `--detached-lifecycle` means quitting leaves the backend running.
+Add `--independent-monitor` to publish a separate checkpoint under
+`data/runtime/bidirectional_cohort/monitors/<uuid>/` instead of sharing the
+launchd one.
+
+**Both recorded follow-ups are done.** (1) Exit codes: `MultiAssetLiveRunnerError`
+now maps to `EXIT_START_REFUSED = 2`, and the run phase is marked with
+`CohortRunFailure` so a mid-run `ValueError` can no longer be misread as a start
+refusal and hold the backend down — that second half was an unrecorded defect the
+review confirmed 3/3 at high severity. `_run_guarded` keeps re-raising the original
+fault so its stage classification stays exact; the marker is applied at the phase
+boundary in `_run_locked`. (2) Disk: `HealthThresholds.minimum_free_disk_gib`
+(default 10.0, `--free-disk-gib`) with `free_disk_low` / `free_disk_unavailable`
+problems and `free_disk_gib` on every report. **The running supervisor still has
+the old code — the guard applies at its next start; `status` is one-shot and
+already reports it.** Measured: 27.6 GiB free, 148 prestart bundles totalling
+61.7 GiB, cohort ledger growing ~178 MB/day, ~1.2 GB per armed start. No backup
+was deleted.
+
+An 11-dimension, 144-agent adversarial review (2-of-3 verification) raised 44
+findings; 26 confirmed, 18 rejected, plus 7 critic findings. Full result:
+`/private/tmp/.../tasks/w7f626adm.output`. Three confirmed findings were the exit-code
+defects already fixed above. **Highest remaining, independently re-verified:** a
+venue read failure raised *after* an order mutation is classified transient by
+`transient_read_failure_reason` and swallowed by `run()`'s blanket
+`except (RequestException, ClientError, ServerError)` around all of `poll_once`,
+leaving the engine in `PROTECTING` — and `_reconcile_owned_lifecycle`
+(`sol_range_onset_engine.py:332`) branches only on OPEN and FLAT, while the
+profit-lock and maximum-hold controllers skip anything not OPEN. Confirmed
+structurally; `_partial_protective.reconcile` does run state-independently and any
+fix must account for it. The `ServerError >= 500` arm predates V90; the
+uncommitted diff newly widened `HTTPError` 500/502/503/504 to transient. **Fix at a
+flat boundary, not mid-run.** Also open: `supervise()`'s
+`except (ValueError, OSError)` spans the whole session; the installed plist dropped
+`--adopt`; a crash loop can fill the volume because `free_disk_low` only alerts.
+
+Test posture improved: `pythonpath` gained `"."`, which un-darkened 8 previously
+un-collectable files (22 tests). Suite went from 10,060 passed / 15 failed to
+**10,118 passed / 1 failed**. The one failure is pre-existing and reproduces on a
+clean HEAD worktree: `test_native_runner_recorded_control.py` compares recorded
+telemetry by exact float equality and `xyz:SPCX` `band_lower`/`band_upper` differ
+by one ULP (rel 3e-15) — cosmetic, cannot flip any decision; fix by tolerance or
+by regenerating the fixture, operator's call. Also completed
+`MultiAssetIntentPollerProtocol` with `bind_startup_input_observer`, which the
+entrypoint has always called.
+
+**Source identity drift:** `scripts/multi_asset_bidirectional_live.py` and
+`pyproject.toml` are both hashed into the live implementation manifest
+(`implementation_repository_0000/0001`). The running run recorded 1932 files /
+`430cab68af65…`; both files now differ on disk. The running process is unaffected
+(modules were loaded at 05:01) and a restart is **not** gated by this — approval
+keys on the profile fingerprint, which is unchanged — but the run's recorded
+manifest no longer describes disk, and the next armed start re-baselines it.
+
+## September 22, 05:18 UTC: V90 IS LIVE — run `bidirectional-live-1790053305835`, supervised
+
+The operator approved V90 in conversation ("approave everything for v90 to go live
+now"). Activation followed `docs/proposals/v90-supervisor-20260920/v90-activation.md`:
+approval signed and validated; Info-only preflight flat/order-free/reconciled on all
+8 assets (withdrawable $4,870.28); drain `af62626d…` archived to
+`data/backups/bidirectional_cohort/transition_drains/transition_drain_20260922T044216Z_…`;
+preflight re-run with no blocked section; roster observer restarted and now covers
+xyz:TSLA (growth mode on, 0.864 bps); V89 checkpoint follower stopped (final
+checkpoint retained under `data/backups/v90_activation_20260922T0441Z/`); V90
+supervisor bootstrapped with both arm flags.
+
+**First armed start failed closed at runtime validation** after a 13.5-minute
+replay: `provider entry sizing exceeds executable provider-symbol scope`. Cause:
+`sizing_overrides` on the observe-only ETH and HYPE providers. The loader, the
+read-only preflight and the observe runner all accept that shape; only
+`MultiAssetLiveRunner` → `validate_runtime` refuses it. The supervisor correctly
+treated exit 1 as a crash and relaunched; the loop was stopped by bootout and the
+orphaned second child was terminated with SIGTERM before it could reach the same
+refusal. No order was ever placed; the venue stayed flat throughout (preflight 3).
+Fix: removed the two inert override tables (no executable scope, size or leverage
+changed). New fingerprint **`c8938787268cfa94fd6c92026c191985a11c0225325452f415787b23fe6cb841`**;
+approval regenerated, re-signed with the same operator words, and carries a
+`post_approval_correction_20260922T0457Z…` scope. New pre-arm gate:
+`scripts/cohort_runtime_validation_check.py` reproduces `validate_runtime` offline
+(tests in `tests/test_cohort_runtime_validation_check.py`); it refuses the broken
+profile with the exact live message and accepts V90 and V89. **Run it before every
+armed start.**
+
+Second armed start succeeded: prestart bundle `prestart_20260922T050145.835341Z_c8938787268c`,
+first ledger write at ~15 min, first V90 checkpoint 05:18:00 UTC. Verified: run,
+profile and fingerprint match; executable routes are exactly BTC sweep + Donchian
+20/10 on SOL / xyz:SNDK / xyz:BRENTOIL / xyz:TSLA; ETH / HYPE / SPCX observe-only;
+0 faults; 0 fills; flat; planned SNDK $1,948.11 at 8x (margin $243.51), the others
+$506–584 at 8x, BTC $535.73 at 10x; no cap binds; maximum simultaneous margin
+10.2%; venue isolated leverage recorded 8.0 on all four hourly routes. Supervisor
+probe: all healthy, `problems []`. Loaded agents: cohort.supervise (owner of pid
+78254), cohort.checkpoint (V90, follow-latest-run), cohort.watch, research.roster_observer.
+
+Two follow-ups recorded, not done: (1) the live entrypoint exits 1 on
+`MultiAssetLiveRunnerError`, so a fail-closed refusal is indistinguishable from a
+crash to the supervisor and costs a full replay per retry — map it to exit 2; (2)
+disk is 33 GiB free at 97%; each start writes a ~900 MB bundle and the two aborted
+starts added one. Stop with the `STOP` file, never `kill`.
+
+## September 21, later: option B adopted — V90 unlocked, xyz:TSLA added, approval still a draft
+
+The operator reviewed the protected V90 proposal and chose **option B** of
+`docs/reviews/2026-09-21-v90-profit-lock-exit-review.md`: **no profit lock on any
+route.** Measured with the live controller's own lock function on the routes V90
+funds (SOL, SNDK, Brent; 63 days; 160 control trades), the 100/25/50 lock cut net
+from +$417 to +$137 at measured cost and took xyz:SNDK from +$178 to +$1; it
+inverts the payoff ratio (2.62 → 0.84) and 50 bps is 0.57 of one median SNDK hour.
+The protected `…_profit_lock_bidirectional_v2` identity remains in source, frozen
+and unconfigured; its contract tests now run on a derived configuration.
+
+Candidate `configs/multi_asset_growth_first_5000_bankroll_builder_candidate_v90.toml`,
+fingerprint **`360de4e99df22b2766a891b034fe76fd58a95a7bf7b1dd77ef9f86dd4b8b6a22`**
+(supersedes `b34fd819…25d2`). Executable: BTC sweep at ~$536/10x; SOL, xyz:SNDK,
+xyz:BRENTOIL and **xyz:TSLA** on the unlocked `hourly_donchian_20_10_atr20_bidirectional_v1`
+at 8x (SNDK mf 0.05 ≈ $1,948; the others ≈ $506–584). ETH/HYPE/SPCX observe-only.
+`maximum_positions = 8`. Executable book ≈ $4,081 notional (0.84x), $497 margin
+(10.2%). No executable cap binds. Loads in observe and live; six negative controls
+refused, including profit-lock keys on the v1 identity.
+
+TSLA is an operator scope choice, not evidence of edge: it was the only new market
+of 18 positive in all three blocks on the 52-day breadth screen but failed the
+pre-declared bar on one condition (below time-in-market-scaled buy-and-hold by
+$20.65, t = 0.54). Budget zero. Source changes for it: `xyz:TSLA` added to
+`HOURLY_PRICE_SYMBOLS`; `Hip3MarketSpec("xyz:TSLA", 20)` added to the roster
+observer (restart the observer to cover it); `v90_hourly_modeled_contracts()` adds
+source-bound friction contracts for SOL (4.5 bps), BRENTOIL and TSLA (0.9 bps)
+without touching the frozen V89 table; three low-confidence evidence rows added.
+
+Approval `docs/live-approvals/v89-to-v90-bankroll-builder-pending-20260920-v1.json`
+regenerated for the new fingerprint: 7 retirements, 6 added scopes, structure
+accepted by the validator, status `draft_pending_operator_approval` and refused by
+the loader. Tests: `tests/test_v90_option_b_package.py` (17), `test_v90_profit_protection.py`
+(14, repointed), `test_v90_transition_package.py` (3), roster fixtures extended;
+1,852 passed in the scoped sweep. Trading remains stopped and flat; the completed
+drain marker is preserved; the V90 service definitions remain unloaded.
+
+An independent code review of the package found no crashes or regressions and
+nine evidence-integrity/cleanup items; the four substantive ones are fixed: (1)
+the V90 friction contracts are now derived from the V89 contract by `replace` and
+bound to the screens' **adverse** arm (5.5 bps slippage) instead of a fee/slippage
+pair no screen ran; (2) the TSLA evidence row states its screen ran at 10x; (3)
+xyz:SNDK gained a superseding V90 evidence row that names the 3.9x size increase
+as an unvalidated risk preference and keeps the 48-day record; (4) the protected
+`…_v2` identity now pins its symbol set (`PROTECTED_DONCHIAN20_SYMBOLS`) so it
+cannot be armed on a market without protected-exit evidence — a latent gap in the
+earlier prepared package. Data-dependent tests skip off-machine. Fingerprint and
+approval hashes are unchanged by these source-only fixes.
+
+## September 21, 07:11 UTC: V89 recovered from candle HTTP 502; drain remains active
+
+## September 21: flat; maintenance deployed; protected V90 prepared
+
+V89 drain completed 14:00:20 UTC, run `bidirectional-live-1789973504608`. Fresh
+unsigned preflight at 14:50 UTC confirms flat, no orders and reconciled ledgers.
+Trading remains stopped: the user repeatedly objected to large profit givebacks
+and explicitly asked for V90 readiness. Do not restart unprotected V89.
+
+Read-only roster observer, checkpoint follower and watchdog are loaded. The
+observer now retains full public xyz premium/oracle context and preserves history
+across restart. Backup: `maintenance_20260921T1436Z` under the cohort backup root;
+acceptance: `data/logs/operations/v89_flat_maintenance_20260921T1422Z/`. The
+backend supervisor is not loaded. Preserve the completed drain marker.
+
+Protected V90 uses the new hourly provider identity with 100/25/50-bps profit
+protection, retains BTC's 60-bps target, and keeps the proposed allocation. Read
+`docs/reviews/2026-09-21-v90-profit-protection-readiness.md` and
+`docs/proposals/v90-supervisor-20260920/v90-activation.md`. SNDK size is ~3.9x
+the old cap; the exit change does not validate that increase. Candidate fingerprint
+`b34fd819076cd8b0cf143d9d4cae9a0e6637a508daf2ed35f6570cfb245025d2`. Approval
+remains a draft. Exit/configuration regressions passed 183 tests, focused coverage
+46 tests, package checks 3 tests and additional operations regressions 136 tests.
+Exact candidate copy/backup evidence is retained in
+`data/logs/research/v90_profit_protection_20260921/deployment-v90-candidate.json`.
+Prepared V90 service definitions remain unloaded; activation is the remaining
+operator decision, followed by the runbook's fresh venue/archive/approval checks. The historical
+notes below predate the completed drain and maintenance deployment.
+
+
+The backend exited at 06:16 UTC after a public candle HTTP 502 bypassed existing
+retry/degraded-read handling. Unchanged production V89 was recovered using the
+supported `--resume-transition-drain` path after unsigned venue reconciliation
+and an independently verified mandatory backup. New backend PID 97443, run
+`bidirectional-live-1789973504608`; checkpoint writer PID 98930 is rebound to that
+run. At 07:11:19 UTC ten healthy cycles showed no new routing/order submissions,
+no current fault, and active drain. SNDK long 0.279 and SPCX short 3.24 were
+reconciled with full reduce-only stop coverage. Research synchronization is ready.
+
+Read `docs/reviews/2026-09-21-v89-gateway-recovery.md` for evidence and remaining
+limits. The retry/classification repair is staged only, with 231 passing targeted
+tests. Production source remains unchanged; the same 502 failure is possible
+until flat-boundary installation. Observer/watchdog/supervisor installation is
+still pending flat. V90 sizing remains pending. Use the current completed drain
+run ID at eventual archive; recovery changed it from the September 16 run.
+
+## September 21, 05:37 UTC: V89 transition drain activated by operator request
+
+The operator explicitly answered "Activate transition drain." The existing
+backend, PID 83722 and run `bidirectional-live-1789586105858`, acknowledged request
+`af62626d50cc4b10880109cb6eef735c` at 05:37:30.617927 UTC. Its durable marker and
+subsequent cohort snapshots report `active`; new entries are withheld. SNDK long
+and SPCX short remain open with covering stop protection and no reported faults.
+Existing strategy/protective exits continue; no manual close was requested.
+
+Request, pre-action checkpoint, acknowledgement and verification evidence live
+in the original checkout at
+`data/logs/operations/v89_transition_drain_20260921T053727Z/`.
+The earlier maintenance authorization remains valid at flat/order-free state;
+V90 allocation remains pending. No staged source has been deployed. When the
+drain completes and the backend stops, verify venue state, back up, and use the
+completed-drain archive helper before the V89 maintenance restart. See the
+updated deployment runbook. Do not clear an active marker or restart an ordinary
+live command during the drain.
+
+## September 20: monitoring/capture prepared; rollout waits for flat
+
+The operator approved observer restoration, monitoring/restart repairs and
+research capture when flat, followed by proposal/code review. Implementation is
+isolated at `/Users/gestas/Prototypes/hypervector-v90-monitoring-capture-20260920`
+on `fix/v90-monitoring-capture-20260920`; the original live checkout is unchanged.
+No drain was activated and no service was installed or restarted. The latest
+checked live checkpoint still had SOL and xyz:BRENTOIL open.
+
+Read `docs/reviews/2026-09-20-v90-monitoring-capture-acceptance.md` for changes,
+167 passing focused tests, 91% measured coverage, successful real disarmed
+observe restart acceptance, and the full-suite baseline limitations. Rust passed
+655 tests with historical fixtures. The exact-path observe resume requirement is
+now in the deployment runbook. Persistent restart holds require explicit
+operator recovery; a launchd restart does not reset them.
+
+Corrected transition/sizing review:
+`docs/reviews/2026-09-20-v90-transition-readiness.md`. V90 remains pending; this
+maintenance approval does not activate its larger allocation. At flat, recheck
+unsigned venue positions/orders and owner identity, back up source/plists, then
+follow `docs/proposals/v90-supervisor-20260920/deployment-and-rollback.md`.
+Deployment hashes and verification logs are retained below
+`data/logs/research/v90_monitoring_capture_20260920/`. Do not copy staged source
+into the armed checkout before the authorized boundary. No forced close is
+authorized to accelerate it.
+
 ## September 18, 06:29 UTC: authentic history recovery qualified; scale pilot stopped on clock regression
 
 The continuous research goal remains active. This turn made implementation,

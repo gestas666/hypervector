@@ -8,6 +8,7 @@ from functools import partial
 from pathlib import Path
 import sys
 import time
+import traceback
 
 import requests
 
@@ -19,7 +20,10 @@ from hypervector.live.bidirectional_cohort_factory import (
 )
 from hypervector.live.bidirectional_intents import (
     BidirectionalIntentRouter,
-    StrategyCapability,
+)
+from hypervector.live.cohort_runtime_preflight import (
+    build_cohort_router,
+    validate_runtime_configuration,
 )
 from hypervector.live.cohort_prestart_backup import (
     CohortPrestartBackupError,
@@ -60,6 +64,7 @@ from hypervector.live.multi_asset_live_config import (
     load_multi_asset_live_config,
 )
 from hypervector.live.multi_asset_live_runner import MultiAssetLiveRunner
+from hypervector.live.multi_asset_live_runner_support import MultiAssetLiveRunnerError
 from hypervector.live.cohort_operator_commands import (
     CohortOperatorInbox,
     operator_command_maximum_age_seconds,
@@ -84,6 +89,22 @@ _DEFAULT_BACKTEST_LAB = Path("../backtest-lab/backtest_lab")
 _REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 _MAX_READ_COALESCE_SECONDS = 10.0
 _READ_COALESCE_POLL_FRACTION = 0.8
+EXIT_RUN_FAILED = 1
+EXIT_START_REFUSED = 2
+
+
+class CohortRunFailure(RuntimeError):
+    """A failure raised after the runner was built, never a start refusal.
+
+    ``ValueError`` and ``MultiAssetLiveRunnerError`` can both be raised while the
+    start boundaries are still being checked and long after the first poll. The
+    supervisor holds on ``EXIT_START_REFUSED`` and relaunches on any other nonzero
+    code, so the two phases must stay distinguishable: a refusal a human has to
+    resolve must not be retried, and a crash a bounded restart would clear must
+    not park the backend. ``_run_guarded`` keeps re-raising the original fault so
+    its stage classification stays exact; this marker is applied one level up, at
+    the phase boundary itself.
+    """
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -109,22 +130,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 def build_router(config: MultiAssetLiveConfig) -> BidirectionalIntentRouter:
     """Construct declared provider capabilities without performance gates."""
-    capabilities = tuple(
-        StrategyCapability(
-            provider.strategy_id,
-            symbol,
-            provider.sides,
-            provider.priority,
-            provider.position_policy,
-        )
-        for symbol in config.symbols
-        for provider in config.providers
-        if symbol in provider.symbols
-    )
-    return BidirectionalIntentRouter(
-        capabilities,
-        maximum_positions=config.maximum_positions,
-    )
+    return build_cohort_router(config)
 
 
 def run_live(args: argparse.Namespace) -> int:
@@ -138,6 +144,9 @@ def run_live(args: argparse.Namespace) -> int:
     presence = credential_presence_from_env()
     credentials_present = presence.wallet_configured and presence.signing_key_configured
     config.require_live_start(credentials_present=credentials_present)
+    # Everything the runner refuses at construction is knowable here, before the
+    # mandatory backup, the ledger replay and any authenticated venue client.
+    validate_runtime_configuration(config)
     _accounting_epoch(args, config)
     if config.stop_file.exists():
         raise MultiAssetLiveConfigError(
@@ -194,7 +203,10 @@ def _run_locked(
     runner = _create_runner(
         config, engines, poller, telemetry, transition_drain, run_id
     )
-    return _run_guarded(runner, telemetry, max_polls=args.max_polls)
+    try:
+        return _run_guarded(runner, telemetry, max_polls=args.max_polls)
+    except Exception as exc:
+        raise CohortRunFailure(str(exc)) from exc
 
 
 def _create_runner(
@@ -411,17 +423,22 @@ def main() -> int:
     try:
         run_live(build_parser().parse_args())
         return 0
+    except CohortRunFailure as exc:
+        cause = exc.__cause__ or exc
+        traceback.print_exception(cause)
+        return EXIT_RUN_FAILED
     except (
         FileNotFoundError,
         CohortPrestartBackupError,
         ProfileChangeApprovalError,
         CohortTransitionDrainError,
         MultiAssetLiveConfigError,
+        MultiAssetLiveRunnerError,
         RuntimeLockError,
         ValueError,
     ) as exc:
         print(f"live start refused: {exc}", file=sys.stderr)
-        return 2
+        return EXIT_START_REFUSED
 
 
 if __name__ == "__main__":

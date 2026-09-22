@@ -3,6 +3,7 @@
 from datetime import datetime
 from hashlib import sha256
 import json
+import math
 from pathlib import Path
 
 from native_replay_protective_fixture import ProtectiveEngineFixture
@@ -59,13 +60,47 @@ def _assert_recorded_telemetry(rows: list[dict[str, object]]) -> None:
     ]
     snapshots = [row["payload"] for row in rows if row["event_type"] == "cohort_snapshot"]
     for baseline, route, snapshot in zip(expected, routing, snapshots, strict=True):
-        assert route["evaluations"] == _live_expected_evaluations(baseline["evaluations"])
+        _assert_equivalent(
+            route["evaluations"], _live_expected_evaluations(baseline["evaluations"])
+        )
         assert route["setup_coverage"]["complete"] is True
         assert {
             asset["symbol"]: asset["market_reference_price"] for asset in snapshot["assets"]
         } == baseline["reference_prices"]
     for actual, baseline in zip(regimes, expected[1:], strict=True):
-        assert actual == _live_expected_evaluations(baseline["regime_evaluations"])
+        _assert_equivalent(actual, _live_expected_evaluations(baseline["regime_evaluations"]))
+
+
+def _assert_equivalent(actual: object, expected: object, path: str = "") -> None:
+    """Compare recorded telemetry, absorbing last-bit float drift only.
+
+    Derived indicator values are floating point, so bit-exact equality against a
+    recorded fixture asserts the arithmetic *order* of the whole stack rather than
+    its result: a change in evaluation order moves a value by one ULP and fails a
+    parity check that is meant to detect behaviour changes. The tolerance below is
+    three orders of magnitude tighter than any meaningful price or indicator
+    difference, so a real regression still fails.
+    """
+    if isinstance(expected, float) and isinstance(actual, (int, float)):
+        assert math.isclose(actual, expected, rel_tol=1e-12, abs_tol=1e-12), (
+            f"{path}: {actual!r} != {expected!r}"
+        )
+        return
+    if isinstance(expected, dict):
+        assert isinstance(actual, dict), f"{path}: {type(actual)} is not a mapping"
+        assert set(actual) == set(expected), (
+            f"{path}: keys differ {sorted(set(actual) ^ set(expected))}"
+        )
+        for key in expected:
+            _assert_equivalent(actual[key], expected[key], f"{path}.{key}")
+        return
+    if isinstance(expected, list):
+        assert isinstance(actual, list), f"{path}: {type(actual)} is not a list"
+        assert len(actual) == len(expected), f"{path}: length differs"
+        for index, (left, right) in enumerate(zip(actual, expected, strict=True)):
+            _assert_equivalent(left, right, f"{path}[{index}]")
+        return
+    assert actual == expected, f"{path}: {actual!r} != {expected!r}"
 
 
 def _live_expected_evaluations(evaluations: list[dict[str, object]]) -> list[dict[str, object]]:

@@ -34,7 +34,7 @@ packages = ["src/hypervector"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["src", "scripts"]
+pythonpath = ["src", "scripts", "."]
 markers = [
     "network: hits live Hyperliquid/Binance/Bybit APIs (skipped by default)",
 ]

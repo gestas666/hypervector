@@ -22,6 +22,9 @@ from hypervector.live.btc_hulk_delayed_component_floor import (
     evaluate_delayed_component_floor,
 )
 from hypervector.live.cohort_execution_plan import BoundExecutionPlan
+from hypervector.live.cohort_profit_lock_values import _positive_price, _integer, _text
+from hypervector.live.cohort_adaptive_exit_controller import adaptive_exit_action
+from hypervector.live.multi_asset_signal_source import ProviderEvaluation
 from hypervector.live.multi_asset_live_protocols import (
     CohortTelemetryProtocol,
     MultiAssetEngineProtocol,
@@ -76,6 +79,7 @@ class CohortProfitLockController:
         entry_prices: Mapping[str, float],
         market_bars: Mapping[str, tuple[CohortMarketBar, ...]],
         excluded_symbols: set[str],
+        evaluations: tuple[ProviderEvaluation, ...] = (),
     ) -> tuple[set[str], tuple[RoutingAction, ...]]:
         """Return journaled close actions from exact completed-bar prefixes."""
         self._cycle_degraded = False
@@ -85,7 +89,7 @@ class CohortProfitLockController:
             if symbol in excluded_symbols:
                 continue
             action = self._action(
-                symbol, observed_ms, reference_prices, entry_prices, market_bars
+                symbol, observed_ms, reference_prices, entry_prices, market_bars, evaluations
             )
             if action is not None:
                 closing.add(symbol)
@@ -99,7 +103,18 @@ class CohortProfitLockController:
         reference_prices: Mapping[str, float],
         entry_prices: Mapping[str, float],
         market_bars: Mapping[str, tuple[CohortMarketBar, ...]],
+        evaluations: tuple[ProviderEvaluation, ...],
     ) -> RoutingAction | None:
+        engine = self._engines[symbol]
+        plan = engine.snapshot.execution_plan
+        if plan is not None and plan.adaptive_exit_policy != "none":
+            return adaptive_exit_action(
+                symbol=symbol, snapshot=engine.snapshot, book=engine.latest_book,
+                observed_ms=observed_ms, entry_price=entry_prices.get(symbol),
+                market_bars=market_bars.get(symbol, ()), evaluations=evaluations,
+                journal=self._telemetry.adaptive_exit_journal,
+                degraded=self._adaptive_degraded,
+            )
         identity = self._identity(symbol)
         if identity is None:
             return None
@@ -127,6 +142,10 @@ class CohortProfitLockController:
             mark,
             exit_reason=_text(decision.get("exit_reason"), "exit_reason"),
         )
+
+    def _adaptive_degraded(self, *, source: str, reason: str) -> None:
+        self._cycle_degraded = True
+        self._telemetry.emit_poll_degraded(source=source, reason=reason)
 
     def _identity(
         self, symbol: str
@@ -442,23 +461,6 @@ def _validate_recorded_boundaries(
         )
 
 
-def _positive_price(value: object, label: str, symbol: str) -> float:
-    if isinstance(value, bool) or not isinstance(value, (int, float)):
-        raise MultiAssetLiveRunnerError(f"{symbol} profit lock lacks a {label}")
-    price = float(value)
-    if not math.isfinite(price) or price <= 0.0:
-        raise MultiAssetLiveRunnerError(f"{symbol} profit lock has invalid {label}")
-    return price
-
-
-def _integer(value: object, label: str) -> int:
-    if isinstance(value, bool) or not isinstance(value, int):
-        raise MultiAssetLiveRunnerError(
-            f"persisted profit-lock {label} must be an integer"
-        )
-    return value
-
-
 def _exit_reason(plan: BoundExecutionPlan, activation_mode: object = None) -> str:
     if plan.profit_lock_policy == BTC_HULK_DELAYED_COMPONENT_FLOOR_POLICY.policy_id:
         return "btc_hulk_delayed_component_profit_floor"
@@ -477,11 +479,3 @@ def _policy_contract(plan: BoundExecutionPlan) -> dict[str, object] | None:
             delayed_component_policy(plan.profit_lock_policy)
         )
     return None
-
-
-def _text(value: object, label: str) -> str:
-    if not isinstance(value, str) or not value.strip():
-        raise MultiAssetLiveRunnerError(
-            f"persisted profit-lock {label} must be non-empty text"
-        )
-    return value.strip()

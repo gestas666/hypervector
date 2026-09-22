@@ -55,7 +55,7 @@ def _attach(
 ) -> StrategyIntent:
     if evaluation is None:
         return intent
-    score = _alignment_score(intent.side, evaluation)
+    score = canonical_alignment_score(intent.side, evaluation)
     if score is None:
         return intent
     return replace(
@@ -67,7 +67,8 @@ def _attach(
     )
 
 
-def _alignment_score(side: str, evaluation: ProviderEvaluation) -> float | None:
+def canonical_alignment_score(side: str, evaluation: ProviderEvaluation) -> float | None:
+    """Return causal signed canonical alignment shared by routing and exits."""
     side_sign = 1 if side == "long" else -1
     weighted = 0.0
     observed = 0.0

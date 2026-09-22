@@ -41,9 +41,29 @@ pub struct CohortPendingAssetSizing {
     pub max_notional_usd: f64,
 }
 
-/// Exit-timer contract from one provider in the selected restart profile.
+/// Estimated stop-loss allowance from one provider in the selected profile.
+#[derive(Debug, Clone, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct CohortStopRiskBudget {
+    pub maximum_loss_usd: f64,
+    pub cost_buffer_bps: f64,
+}
+
+impl CohortStopRiskBudget {
+    /// Refuse nonfinite or nonpositive budgets and invalid cost allowances.
+    pub fn valid(&self) -> bool {
+        self.maximum_loss_usd.is_finite()
+            && self.maximum_loss_usd > 0.0
+            && self.cost_buffer_bps.is_finite()
+            && (0.0..10_000.0).contains(&self.cost_buffer_bps)
+    }
+}
+
+/// Exit and risk contract from one provider in the selected restart profile.
 #[derive(Debug, Clone, Deserialize, PartialEq)]
 pub struct CohortPendingExitPolicy {
+    #[serde(default)]
+    pub stop_risk_budget: Option<CohortStopRiskBudget>,
     pub maximum_hold_seconds: u64,
     pub maximum_hold_policy: String,
     pub hard_maximum_hold_seconds: Option<u64>,
@@ -51,6 +71,8 @@ pub struct CohortPendingExitPolicy {
     pub maximum_hold_evidence_maximum_age_seconds: Option<u64>,
     #[serde(default = "ignored_provider_recipe_exit_policy")]
     pub provider_recipe_exit_policy: String,
+    #[serde(default = "disabled_profit_lock_policy")]
+    pub adaptive_exit_policy: String,
     #[serde(default = "disabled_profit_lock_policy")]
     pub profit_lock_policy: String,
     #[serde(default)]
@@ -284,6 +306,11 @@ fn pending_exit_policy_valid(strategy_id: &str, policy: &CohortPendingExitPolicy
         _ => false,
     };
     policy.maximum_hold_seconds > 0
+        && policy.stop_risk_budget.as_ref().is_none_or(CohortStopRiskBudget::valid)
+        && matches!(
+            policy.adaptive_exit_policy.as_str(),
+            "none" | "regime_book_profit_retention_v1"
+        )
         && evidence_age_valid
         && contract_valid
         && matches!(

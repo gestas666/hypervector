@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
+from pathlib import Path
 from typing import Protocol, runtime_checkable
 
 from hypervector.data.hip3_mark_snapshot_recorder import (
@@ -10,6 +12,10 @@ from hypervector.data.hip3_mark_snapshot_recorder import (
     select_hip3_asset_contexts,
 )
 from hypervector.data.oxa_api import validate_hip3_symbol
+from hypervector.research.hip3_context_history import (
+    append_context_record,
+    context_record,
+)
 
 
 @runtime_checkable
@@ -35,9 +41,28 @@ class Hip3RosterFundingReader:
 
     def snapshot(self) -> dict[str, float | None]:
         """Fetch once per call and preserve missing values without reusing old rates."""
-        response = self._info.post(
-            "/info", {"type": "metaAndAssetCtxs", "dex": self._dex}
+        return self._rates(self._response())
+
+    def snapshot_with_capture(self, directory: Path) -> dict[str, float | None]:
+        """Archive normalized public context for every market, then return rates."""
+        response = self._response()
+        observed_at = datetime.now(UTC)
+        rates = self._rates(response)
+        self.last_capture_archived = False
+        record = context_record(
+            response,
+            dex=self._dex,
+            observed_at=observed_at,
+            required_symbols=self._symbols,
         )
+        append_context_record(directory, record)
+        self.last_capture_archived = True
+        return rates
+
+    def _response(self) -> object:
+        return self._info.post("/info", {"type": "metaAndAssetCtxs", "dex": self._dex})
+
+    def _rates(self, response: object) -> dict[str, float | None]:
         contexts = select_hip3_asset_contexts(response, symbols=self._symbols)
         return {
             symbol: parse_optional_hip3_funding(

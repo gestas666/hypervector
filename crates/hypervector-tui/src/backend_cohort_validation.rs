@@ -193,6 +193,10 @@ pub(super) fn validate_identity(
     if providers.iter().any(|provider| {
         provider.execution.as_ref().is_some_and(|execution| {
             !recipe_exit_policy_valid(&execution.provider_recipe_exit_policy)
+                || !matches!(
+                    execution.adaptive_exit_policy.as_str(),
+                    "none" | "regime_book_profit_retention_v1"
+                )
                 || !super::profit_lock_contract_valid(
                     Some(&provider.strategy_id),
                     &execution.profit_lock_policy,
@@ -231,15 +235,19 @@ fn provider_sides_valid(sides: &[String]) -> bool {
         || matches!(sides, [long, short] if long == "long" && short == "short")
 }
 
+/// Mirror the backend's own direction scope, which narrows only executed sides.
+///
+/// The backend derives executable directions from `execution_symbols` alone, so a
+/// side override on a symbol the provider declares but does not execute is inert
+/// there. This projection must accept exactly what the execution authority
+/// accepts: refusing an inert override would blank the whole cockpit for a live
+/// cohort the backend is running normally.
 fn invalid_direction_scope(provider: &CohortProvider) -> bool {
     provider
         .execution_side_overrides
         .iter()
         .any(|(symbol, sides)| {
-            provider
-                .execution_symbols
-                .as_ref()
-                .is_none_or(|symbols| !symbols.contains(symbol))
+            !provider.symbols.contains(symbol)
                 || sides.is_empty()
                 || sides.iter().any(|side| side != "long" && side != "short")
                 || has_duplicates(sides)
@@ -304,6 +312,10 @@ pub(super) fn validate_snapshot(
     if assets.iter().any(|asset| {
         asset.execution_plan.as_ref().is_some_and(|plan| {
             !recipe_exit_policy_valid(&plan.provider_recipe_exit_policy)
+                || !matches!(
+                    plan.adaptive_exit_policy.as_str(),
+                    "none" | "regime_book_profit_retention_v1"
+                )
                 || !super::profit_lock_contract_valid(
                     Some(&plan.strategy_id),
                     &plan.profit_lock_policy,

@@ -227,12 +227,16 @@ pub(crate) fn execution_plan_label(asset: &CohortAssetSnapshot) -> String {
     } else {
         "I"
     };
-    let profit_lock = plan_profit_lock_label(
-        &plan.profit_lock_policy,
-        plan.profit_lock_activation_bps,
-        plan.profit_lock_floor_bps,
-        plan.profit_lock_giveback_bps,
-    );
+    let profit_lock = if plan.adaptive_exit_policy == "regime_book_profit_retention_v1" {
+        "AD".into()
+    } else {
+        plan_profit_lock_label(
+            &plan.profit_lock_policy,
+            plan.profit_lock_activation_bps,
+            plan.profit_lock_floor_bps,
+            plan.profit_lock_giveback_bps,
+        )
+    };
     let soft_hours = plan.maximum_hold_seconds / 3_600;
     if plan.maximum_hold_policy == "extend_while_regime_supported" {
         return plan.hard_maximum_hold_seconds.map_or_else(

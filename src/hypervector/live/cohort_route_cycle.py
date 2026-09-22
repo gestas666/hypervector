@@ -13,6 +13,9 @@ from hypervector.live.bidirectional_intents import (
     WithheldIntent,
 )
 from hypervector.live.cohort_entry_sizing import CohortEntrySizing
+from hypervector.live.cohort_execution_contract_selection import (
+    select_execution_contract,
+)
 from hypervector.live.cohort_execution_plan import ProviderExecutionContract
 from hypervector.live.cohort_maximum_hold_controller import (
     CohortMaximumHoldController,
@@ -89,7 +92,9 @@ def validate_and_build_exit_controllers(
         engines=engines,
         fallback_hold_ms=bounded_fallbacks,
         telemetry=telemetry,
-        required_plan_symbols=_profit_lock_symbols(contracts, executable_pairs),
+        required_plan_symbols=_profit_lock_symbols(
+            contracts, executable_pairs, executable_directions
+        ),
     )
 
 
@@ -161,12 +166,28 @@ def build_exit_controllers(
 def _profit_lock_symbols(
     contracts: Mapping[str, ProviderExecutionContract],
     executable_pairs: frozenset[tuple[str, str]],
+    executable_directions: frozenset[tuple[str, str, str]],
 ) -> frozenset[str]:
-    return frozenset(
-        symbol
-        for provider, symbol in executable_pairs
-        if contracts[provider].profit_lock_policy != "none"
-    )
+    """Return every symbol whose resolved contract binds a profit lock.
+
+    Resolution must use the same direction-then-symbol-then-provider precedence the
+    execution path uses. Reading the provider entry alone let a lock bound per
+    (provider, symbol, side) go unrecorded, so a planless restart never tripped the
+    controller's fail-closed check for a lost execution plan.
+    """
+    locked: set[str] = set()
+    for provider, symbol in executable_pairs:
+        sides = [
+            side
+            for candidate, market, side in executable_directions
+            if candidate == provider and market == symbol
+        ]
+        for side in sides or [None]:
+            contract = select_execution_contract(contracts, provider, symbol, side)
+            if contract is not None and (contract.profit_lock_policy != "none" or contract.adaptive_exit_policy != "none"):
+                locked.add(symbol)
+                break
+    return frozenset(locked)
 
 
 def configured_exit_batch(
@@ -201,6 +222,7 @@ def configured_exit_batch(
         entry_prices=entry_prices,
         market_bars=poll.exit_bars,
         excluded_symbols=expired | recipe_symbols,
+        evaluations=tuple(evaluations.values()),
     )
     return CohortExitBatch(
         expired | recipe_symbols | lock_symbols,
