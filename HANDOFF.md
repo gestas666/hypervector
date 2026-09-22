@@ -1,3 +1,68 @@
+# Current work — exit policy v2 built and staged as V93 proposal; V91 still paused, 2026-09-22
+
+The operator approved ("approved please complete") replacing the passive exit
+stack after the V91 first-trade incident. The work is complete at source and
+fully tested; **nothing live was touched**: V91 remains paused under the durable
+supervisor hold, no approval, binary selection or launchd agent changed.
+
+**Evidence first.** 139 recorded live trades were reconstructed from the asset
+ledgers with their 15-second executable-quote paths (`data/logs/research/
+bidirectional_cohort/v93_exit_design_probe_20260922/`). Since 2026-09-07 the
+median trade reached +64 bps and closed at −33 bps. On the frozen 430-trade
+recent Donchian screen every unconditional ATR-scaled ratchet loses $140 to $400
+against baseline (it cuts the SNDK/SOL tail), matching the repository's earlier
+fixed-lock results. The composite that acts only when a run has failed wins:
+profit floor at +0.5R once +2R is reached, plus a 0.5R-giveback ratchet that
+fires only when the canonical regime opposes the position. Recent screen
++$91 to +$115 (both costs, all three blocks positive, zero winners over $20 cut),
+one-year crypto −$26 to +$44, live paths +$23. A venue break-even stop after 2R
+is positive on every screen (+$20 to +$90). `scripts/v93_exit_v2_matrix.py`
+reproduces the tables with input hashes (`reproduction_v1/report.json`).
+
+**Built.** `regime_flip_floor_retention_v2` in
+`cohort_adaptive_exit_policy.py` (frozen constants: activation 0.5R, giveback
+0.5R, opposed alignment ≤ −0.5, floor arms at 2R at +0.5R, break-even 25 bps),
+dispatched by `cohort_adaptive_exit_controller.py` with durable observations,
+restart recovery and refusal of v1 rows for the same lifecycle. The runner moves
+the venue stop to break-even once the floor arms: `cohort_breakeven_stop.py`
+(three attempts per lifecycle), engine `raise_protective_stop` using a single
+venue `modify` through `SolOrderSubmission.modify_protective_stop`, a new
+OPEN→OPEN `replace_protection` transition, `protective_stop_raised` and
+`breakeven_stop_attempt` ledger events, and restart recovery of an interrupted
+raise from the venue's view of the client order id (no fault). The structural
+anchor hazard is fixed: a fill more favorable than the anchor uses the minimum
+clamp and journals `structural_anchor_overrun`; routing refuses and journals an
+entry whose anchor is not adverse to the reference price. Policy names live in
+one registry (`ADAPTIVE_EXIT_POLICIES`, Python and Rust); the cockpit labels v2.
+
+**Proposal.** `configs/multi_asset_growth_first_5000_exit_v2_v93_proposal.toml`
+= V91 + v2 on all five providers + `stop_risk_budget {25.0, 20}`; fingerprint
+`aaf4fe14a15129b4ddbb009c30370ac6007b26587788325dd6371d2b695c1586`; accepted by
+`cohort_runtime_validation_check.py` in observe mode; V91 fingerprint unchanged.
+It has **no transition approval** and is not selected by launchd. Deploying it
+needs: a transition approval JSON, a fresh flat/order-free venue check, free disk
+above the 10 GiB floor plus the 1.2 GB bundle (17 GiB free now), and the
+rebuilt cockpit binary `target/release/tui-regime-detector`
+sha256 `b8f0f35f0bb341e2dec13b90700c8306d55107f2a2a24ab550fe30ae4d0356d2`.
+
+**Validation.** Rust: 660 passed, 25 ignored, release build clean. Ruff check
+and format clean on every changed Python file (20 pre-existing files were
+reformatted by `ruff format`; no logic change in those hunks).
+Full non-network Python suite: **10,292 passed**, 0 failed (4 network
+deselected) in 627.52 s at 20:38 UTC. Two pre-existing tests were updated
+to the new contracts: the replay SDK exchange port implements `modify_order`
+so it still satisfies `HyperliquidExchangeProtocol`, and the execution-plan
+test now asserts that a non-adverse structural anchor at fill resolves to the
+minimum clamp on the adverse side instead of raising.
+
+Records: spec `docs/superpowers/specs/2026-09-22-exit-policy-v2-design.md`,
+plan `docs/plans/2026-09-22-v93-exit-policy-v2.md`, review
+`docs/reviews/2026-09-22-v93-exit-policy-v2.md`. The inherited V90–V92 work was
+committed first as `dd01363`; this session's work is the following commit.
+Disk reclaim was **not** performed (no option was chosen).
+
+---
+
 # Current follow-up — V92 sizing defect fixed at source; V91 still paused, 2026-09-22 17:07 UTC
 
 Session resumed from the handoff at 16:44 UTC and re-verified the pause first.

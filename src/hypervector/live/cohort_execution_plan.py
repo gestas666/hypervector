@@ -6,10 +6,17 @@ from dataclasses import asdict, dataclass
 from typing import Literal
 
 from hypervector.live.cohort_execution_plan_parsing import (
-    _mapping, _text, _positive, _optional_number, _integer_field, _optional_integer_field, _positive_integer, _boolean,
+    _mapping,
+    _text,
+    _positive,
+    _optional_number,
+    _integer_field,
+    _optional_integer_field,
+    _positive_integer,
+    _boolean,
 )
 
-from hypervector.live.cohort_adaptive_exit_policy import ADAPTIVE_EXIT_POLICY
+from hypervector.live.cohort_adaptive_exit_policy import ADAPTIVE_EXIT_POLICIES
 from hypervector.live.cohort_stop_risk_sizing import StopRiskBudget
 from hypervector.live.cohort_execution_plan_validation import (
     CohortExecutionPlanError,
@@ -70,8 +77,12 @@ class ProviderExecutionContract:
 
     def __post_init__(self) -> None:
         """Reject missing parameters and ambiguous policy combinations."""
-        if self.stop_risk_budget is not None and not isinstance(self.stop_risk_budget, StopRiskBudget):
-            raise CohortExecutionPlanError("stop_risk_budget must be a typed risk budget")
+        if self.stop_risk_budget is not None and not isinstance(
+            self.stop_risk_budget, StopRiskBudget
+        ):
+            raise CohortExecutionPlanError(
+                "stop_risk_budget must be a typed risk budget"
+            )
         if self.entry_liquidity not in _ENTRY_LIQUIDITIES:
             raise CohortExecutionPlanError("unsupported entry liquidity")
         if self.stop_policy not in _STOP_POLICIES:
@@ -79,10 +90,12 @@ class ProviderExecutionContract:
         if self.target_policy not in _TARGET_POLICIES:
             raise CohortExecutionPlanError("unsupported target policy")
         _positive_integer(self.maximum_hold_seconds, "maximum_hold_seconds")
-        if self.adaptive_exit_policy not in {"none", ADAPTIVE_EXIT_POLICY}:
+        if self.adaptive_exit_policy not in ADAPTIVE_EXIT_POLICIES:
             raise CohortExecutionPlanError("unsupported adaptive exit policy")
         if self.adaptive_exit_policy != "none" and self.profit_lock_policy != "none":
-            raise CohortExecutionPlanError("adaptive and legacy profit locks cannot overlap")
+            raise CohortExecutionPlanError(
+                "adaptive and legacy profit locks cannot overlap"
+            )
         _validate_stop_contract(self)
         _validate_target_contract(self)
         _validate_maximum_hold_contract(self)
@@ -171,7 +184,9 @@ class ProviderExecutionContract:
             provider_recipe_exit_policy=_provider_recipe_exit_policy(
                 row.get("provider_recipe_exit_policy", "ignore")
             ),
-            adaptive_exit_policy=_text(row.get("adaptive_exit_policy", "none"), "adaptive_exit_policy"),
+            adaptive_exit_policy=_text(
+                row.get("adaptive_exit_policy", "none"), "adaptive_exit_policy"
+            ),
             profit_lock_policy=_profit_lock_policy(
                 row.get("profit_lock_policy", "none")
             ),
@@ -301,7 +316,9 @@ class BoundExecutionPlan:
             provider_recipe_exit_policy=_provider_recipe_exit_policy(
                 row.get("provider_recipe_exit_policy", "ignore")
             ),
-            adaptive_exit_policy=_text(row.get("adaptive_exit_policy", "none"), "adaptive_exit_policy"),
+            adaptive_exit_policy=_text(
+                row.get("adaptive_exit_policy", "none"), "adaptive_exit_policy"
+            ),
             profit_lock_policy=_profit_lock_policy(
                 row.get("profit_lock_policy", "none")
             ),
@@ -354,13 +371,23 @@ class BoundExecutionPlan:
         if self.stop_policy == "fixed_bps":
             return _positive(self.stop_bps, "stop_bps")
         anchor = _positive(self.stop_anchor, "stop_anchor")
-        adverse = anchor < entry_price if side == "long" else anchor > entry_price
-        if not adverse:
-            raise CohortExecutionPlanError("structural stop anchor must remain adverse")
-        raw = abs(anchor - entry_price) / entry_price * 10_000.0
         minimum = _positive(self.minimum_stop_bps, "minimum_stop_bps")
         maximum = _positive(self.maximum_stop_bps, "maximum_stop_bps")
+        if self.structural_anchor_overrun(entry_price, side):
+            # A fill more favorable than the anchor cannot use it as a stop; the
+            # clamp floor is the tightest protection the contract allows.
+            return minimum
+        raw = abs(anchor - entry_price) / entry_price * 10_000.0
         return min(maximum, max(minimum, raw))
+
+    def structural_anchor_overrun(self, entry_price: float, side: str) -> bool:
+        """Report whether the structural anchor is not adverse to this price."""
+        if self.stop_policy != "structural_clamped_bps":
+            return False
+        entry = _positive(entry_price, "entry_price")
+        _side(side)
+        anchor = _positive(self.stop_anchor, "stop_anchor")
+        return anchor >= entry if side == "long" else anchor <= entry
 
 
 def _validate_stop_contract(contract: ProviderExecutionContract) -> None:

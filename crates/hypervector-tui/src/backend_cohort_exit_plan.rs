@@ -140,9 +140,8 @@ fn validate_plan(
             raw.profit_lock_floor_bps,
             raw.profit_lock_giveback_bps,
         )
-        || !matches!(
+        || !crate::backend_cohort_configuration::adaptive_exit_policy_valid(
             raw.adaptive_exit_policy.as_str(),
-            "none" | "regime_book_profit_retention_v1"
         )
         || !valid_opposite_exit_contract(raw)
     {

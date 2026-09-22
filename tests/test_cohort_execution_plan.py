@@ -51,8 +51,10 @@ def test_structural_plan_clamps_anchor_and_resolves_three_r_short_target() -> No
     assert plan.target_price(entry_price=100.0, side="short") == pytest.approx(97.75)
 
 
-def test_structural_plan_rejects_non_adverse_anchor_at_fill() -> None:
-    """A stale structural anchor cannot silently become a favorable stop."""
+def test_structural_plan_clamps_non_adverse_anchor_at_fill_to_minimum_distance() -> (
+    None
+):
+    """A stale structural anchor cannot become a favorable stop; it falls back to the clamp floor."""
     plan = ProviderExecutionContract(
         entry_liquidity="taker_ioc",
         stop_policy="structural_clamped_bps",
@@ -62,8 +64,10 @@ def test_structural_plan_rejects_non_adverse_anchor_at_fill() -> None:
         maximum_hold_seconds=86_400,
     ).bind(strategy_id="hulk", stop_anchor=99.0)
 
-    with pytest.raises(CohortExecutionPlanError, match="adverse"):
-        plan.stop_price(entry_price=100.0, side="short")
+    assert plan.structural_anchor_overrun(100.0, "short")
+    assert not plan.structural_anchor_overrun(100.0, "long")
+    assert plan.stop_price(entry_price=100.0, side="short") == pytest.approx(100.2)
+    assert plan.stop_price(entry_price=100.0, side="long") == pytest.approx(99.25)
 
 
 def test_provider_recipe_exit_policy_defaults_ignore_and_round_trips_honor() -> None:

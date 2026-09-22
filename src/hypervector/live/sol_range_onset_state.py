@@ -190,7 +190,9 @@ class SolLiveStateMachine:
         """Record reconciled exposure before submitting its venue stop."""
         self._require(SolLiveState.ENTRY_PENDING, "begin_protection")
         if self._snapshot.entry_oid is None:
-            raise SolLiveStateError("entry acknowledgement is required before protection")
+            raise SolLiveStateError(
+                "entry acknowledgement is required before protection"
+            )
         size = float(position_size_signed)
         if size == 0.0:
             raise SolLiveStateError("protected position size must be nonzero")
@@ -288,6 +290,13 @@ class SolLiveStateMachine:
             close_oid=None,
         )
 
+    def replace_protection(self, *, stop_oid: int) -> None:
+        """Swap the owned stop identity for a raised venue stop while staying OPEN."""
+        self._require(SolLiveState.OPEN, "replace_protection")
+        if self._snapshot.stop_oid is None:
+            raise SolLiveStateError("protection replacement requires an owned stop")
+        self._snapshot = replace(self._snapshot, stop_oid=_oid(stop_oid, "stop_oid"))
+
     def acknowledge_close(self, close_oid: int) -> None:
         """Attach the reduce-only close order ID pending flat reconciliation."""
         self._require(SolLiveState.EXIT_PENDING, "acknowledge_close")
@@ -295,7 +304,9 @@ class SolLiveStateMachine:
 
     def restore_protection_after_exit_failure(self, *, stop_oid: int) -> None:
         """Return to OPEN after a failed close is re-protected at the venue."""
-        self._require(SolLiveState.EXIT_PENDING, "restore_protection_after_exit_failure")
+        self._require(
+            SolLiveState.EXIT_PENDING, "restore_protection_after_exit_failure"
+        )
         self._snapshot = replace(
             self._snapshot,
             state=SolLiveState.OPEN,
@@ -315,7 +326,9 @@ class SolLiveStateMachine:
             or remaining * previous <= 0.0
             or abs(remaining) >= abs(previous)
         ):
-            raise SolLiveStateError("partial close requires an acknowledged exact reduction")
+            raise SolLiveStateError(
+                "partial close requires an acknowledged exact reduction"
+            )
         self._snapshot = replace(self._snapshot, position_size_signed=remaining)
 
     def acknowledge_protective_execution(
@@ -336,7 +349,9 @@ class SolLiveStateMachine:
             or progress.fills[: len(old.fills)] != old.fills
             or (old.stop_exit_required and not progress.stop_exit_required)
         ):
-            raise SolLiveStateError("protective execution requires a cumulative owned reduction")
+            raise SolLiveStateError(
+                "protective execution requires a cumulative owned reduction"
+            )
         executed = math.fsum(fill.size for fill in progress.fills[len(old.fills) :])
         if not math.isclose(
             executed,
@@ -344,13 +359,17 @@ class SolLiveStateMachine:
             rel_tol=0.0,
             abs_tol=1e-9,
         ):
-            raise SolLiveStateError("protective execution receipts mismatch the remaining size")
+            raise SolLiveStateError(
+                "protective execution receipts mismatch the remaining size"
+            )
         self._snapshot = replace(
             before,
             position_size_signed=size,
             protective_progress=progress,
             close_oid=None,
-            state=SolLiveState.EXIT_PENDING if progress.stop_exit_required else SolLiveState.OPEN,
+            state=SolLiveState.EXIT_PENDING
+            if progress.stop_exit_required
+            else SolLiveState.OPEN,
         )
 
     def confirm_flat(self) -> None:
@@ -379,7 +398,10 @@ class SolLiveStateMachine:
         if not message:
             raise SolLiveStateError("stop reason must be non-empty")
         state = self._snapshot.state
-        if self._snapshot.position_size_signed != 0.0 and self._snapshot.stop_oid is None:
+        if (
+            self._snapshot.position_size_signed != 0.0
+            and self._snapshot.stop_oid is None
+        ):
             raise SolLiveStateError("cannot stop while exposure is unprotected")
         if state not in {SolLiveState.DISARMED, SolLiveState.FLAT, SolLiveState.OPEN}:
             raise SolLiveStateError(f"{state.value} cannot transition via stop")

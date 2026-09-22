@@ -8,8 +8,12 @@ from typing import Literal
 
 from hypervector.live.sol_order_identity import validate_client_order_id
 
-SolOrderOperation = Literal["entry", "protective_stop", "target", "reduce_only_close"]
-_OPERATIONS = frozenset({"entry", "protective_stop", "target", "reduce_only_close"})
+SolOrderOperation = Literal[
+    "entry", "protective_stop", "raise_protective_stop", "target", "reduce_only_close"
+]
+_OPERATIONS = frozenset(
+    {"entry", "protective_stop", "raise_protective_stop", "target", "reduce_only_close"}
+)
 _ACK_EVENTS = frozenset(
     {"order_acknowledgement", "stop_order", "target_order", "close"}
 )

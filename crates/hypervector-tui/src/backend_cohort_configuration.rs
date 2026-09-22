@@ -6,6 +6,18 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use crate::backend_cohort::{CohortProviderSizing, profit_lock_contract_valid};
 
+/// Adaptive exit policy names the backend may bind; mirrors the Python registry.
+pub(crate) const ADAPTIVE_EXIT_POLICIES: [&str; 3] = [
+    "none",
+    "regime_book_profit_retention_v1",
+    "regime_flip_floor_retention_v2",
+];
+
+/// Whether a serialized adaptive exit policy name is one the cockpit understands.
+pub(crate) fn adaptive_exit_policy_valid(policy: &str) -> bool {
+    ADAPTIVE_EXIT_POLICIES.contains(&policy)
+}
+
 /// Advisory configuration-generation status with no execution authority.
 #[derive(Debug, Clone, PartialEq)]
 pub struct CohortConfigurationGeneration {
@@ -307,10 +319,7 @@ fn pending_exit_policy_valid(strategy_id: &str, policy: &CohortPendingExitPolicy
     };
     policy.maximum_hold_seconds > 0
         && policy.stop_risk_budget.as_ref().is_none_or(CohortStopRiskBudget::valid)
-        && matches!(
-            policy.adaptive_exit_policy.as_str(),
-            "none" | "regime_book_profit_retention_v1"
-        )
+        && adaptive_exit_policy_valid(policy.adaptive_exit_policy.as_str())
         && evidence_age_valid
         && contract_valid
         && matches!(

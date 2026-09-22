@@ -23,7 +23,11 @@ from hypervector.live.btc_hulk_delayed_component_floor import (
 )
 from hypervector.live.cohort_execution_plan import BoundExecutionPlan
 from hypervector.live.cohort_profit_lock_values import _positive_price, _integer, _text
-from hypervector.live.cohort_adaptive_exit_controller import adaptive_exit_action
+from hypervector.live.cohort_adaptive_exit_controller import (
+    adaptive_exit_action,
+    retention_breakeven_requested,
+)
+from hypervector.live.cohort_adaptive_exit_policy import RETENTION_EXIT_POLICY
 from hypervector.live.multi_asset_signal_source import ProviderEvaluation
 from hypervector.live.multi_asset_live_protocols import (
     CohortTelemetryProtocol,
@@ -65,11 +69,17 @@ class CohortProfitLockController:
             )
         self._required_plan_symbols = required_plan_symbols
         self._cycle_degraded = False
+        self._breakeven_requests: frozenset[str] = frozenset()
 
     @property
     def cycle_degraded(self) -> bool:
         """Report whether the current cycle lacked required causal candles."""
         return self._cycle_degraded
+
+    @property
+    def breakeven_requests(self) -> frozenset[str]:
+        """Symbols whose durable v2 state armed the profit floor during this cycle."""
+        return self._breakeven_requests
 
     def actions(
         self,
@@ -85,15 +95,29 @@ class CohortProfitLockController:
         self._cycle_degraded = False
         closing: set[str] = set()
         actions: list[RoutingAction] = []
+        breakeven: set[str] = set()
         for symbol in self._symbols:
             if symbol in excluded_symbols:
                 continue
             action = self._action(
-                symbol, observed_ms, reference_prices, entry_prices, market_bars, evaluations
+                symbol,
+                observed_ms,
+                reference_prices,
+                entry_prices,
+                market_bars,
+                evaluations,
             )
             if action is not None:
                 closing.add(symbol)
                 actions.append(action)
+            elif self._retention_bound(symbol) and retention_breakeven_requested(
+                symbol=symbol,
+                snapshot=self._engines[symbol].snapshot,
+                entry_price=entry_prices.get(symbol),
+                journal=self._telemetry.adaptive_exit_journal,
+            ):
+                breakeven.add(symbol)
+        self._breakeven_requests = frozenset(breakeven)
         return closing, tuple(actions)
 
     def _action(
@@ -109,9 +133,13 @@ class CohortProfitLockController:
         plan = engine.snapshot.execution_plan
         if plan is not None and plan.adaptive_exit_policy != "none":
             return adaptive_exit_action(
-                symbol=symbol, snapshot=engine.snapshot, book=engine.latest_book,
-                observed_ms=observed_ms, entry_price=entry_prices.get(symbol),
-                market_bars=market_bars.get(symbol, ()), evaluations=evaluations,
+                symbol=symbol,
+                snapshot=engine.snapshot,
+                book=engine.latest_book,
+                observed_ms=observed_ms,
+                entry_price=entry_prices.get(symbol),
+                market_bars=market_bars.get(symbol, ()),
+                evaluations=evaluations,
                 journal=self._telemetry.adaptive_exit_journal,
                 degraded=self._adaptive_degraded,
             )
@@ -142,6 +170,10 @@ class CohortProfitLockController:
             mark,
             exit_reason=_text(decision.get("exit_reason"), "exit_reason"),
         )
+
+    def _retention_bound(self, symbol: str) -> bool:
+        plan = self._engines[symbol].snapshot.execution_plan
+        return plan is not None and plan.adaptive_exit_policy == RETENTION_EXIT_POLICY
 
     def _adaptive_degraded(self, *, source: str, reason: str) -> None:
         self._cycle_degraded = True

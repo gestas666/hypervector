@@ -193,9 +193,8 @@ pub(super) fn validate_identity(
     if providers.iter().any(|provider| {
         provider.execution.as_ref().is_some_and(|execution| {
             !recipe_exit_policy_valid(&execution.provider_recipe_exit_policy)
-                || !matches!(
+                || !crate::backend_cohort_configuration::adaptive_exit_policy_valid(
                     execution.adaptive_exit_policy.as_str(),
-                    "none" | "regime_book_profit_retention_v1"
                 )
                 || !super::profit_lock_contract_valid(
                     Some(&provider.strategy_id),
@@ -312,9 +311,8 @@ pub(super) fn validate_snapshot(
     if assets.iter().any(|asset| {
         asset.execution_plan.as_ref().is_some_and(|plan| {
             !recipe_exit_policy_valid(&plan.provider_recipe_exit_policy)
-                || !matches!(
+                || !crate::backend_cohort_configuration::adaptive_exit_policy_valid(
                     plan.adaptive_exit_policy.as_str(),
-                    "none" | "regime_book_profit_retention_v1"
                 )
                 || !super::profit_lock_contract_valid(
                     Some(&plan.strategy_id),

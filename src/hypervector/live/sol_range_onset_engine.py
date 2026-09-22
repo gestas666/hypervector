@@ -104,7 +104,9 @@ class SolRangeOnsetLiveEngine:
         self._now_fn = now_fn
         self._telemetry = SolLiveTelemetry(config=config, ledger=ledger, now_fn=now_fn)
         self._machine = SolLiveStateMachine()
-        self._events = SolLiveEngineEvents(telemetry=self._telemetry, machine=self._machine)
+        self._events = SolLiveEngineEvents(
+            telemetry=self._telemetry, machine=self._machine
+        )
         self._orders = SolOrderSubmission(
             adapter=adapter,
             events=self._events,
@@ -213,7 +215,10 @@ class SolRangeOnsetLiveEngine:
         plan = self._pending_execution_plan or legacy_execution_plan(self._config)
         if plan.stop_risk_budget is not None:
             risk = size_for_stop_risk(
-                plan=plan, budget=plan.stop_risk_budget, mark_price=mark_price, side=side,
+                plan=plan,
+                budget=plan.stop_risk_budget,
+                mark_price=mark_price,
+                side=side,
                 entry_slippage_fraction=self._config.effective_entry_slippage_cap_fraction,
                 original_notional_usd=notional,
             )
@@ -221,20 +226,28 @@ class SolRangeOnsetLiveEngine:
             notional = risk.notional_usd
         try:
             ack, venue = self._entry_submission.submit_and_reconcile(
-                side=side, mark_price=mark_price, notional=notional,
-                plan=plan, entry_deadline=entry_deadline,
+                side=side,
+                mark_price=mark_price,
+                notional=notional,
+                plan=plan,
+                entry_deadline=entry_deadline,
             )
         except EntryDeadlineExpired:
             self._pending_execution_plan = None
             raise
         except EntryReconciliationUnavailable as failure:
             return self._entry_submission.protect_after_read_failure(
-                failure=failure, side=side, mark_price=mark_price,
+                failure=failure,
+                side=side,
+                mark_price=mark_price,
                 opened_at_ms=resolve_decision_time_ms(decision_time_ms, self._now_fn),
                 emergency_flatten=self._emergency_flatten,
             )
         return self._protect_reconciled_entry(
-            side=side, mark_price=mark_price, entry_ack=ack, venue=venue,
+            side=side,
+            mark_price=mark_price,
+            entry_ack=ack,
+            venue=venue,
             opened_at_ms=resolve_decision_time_ms(decision_time_ms, self._now_fn),
         )
 
@@ -272,6 +285,17 @@ class SolRangeOnsetLiveEngine:
             )
         plan = self.snapshot.execution_plan or legacy_execution_plan(self._config)
         side_name = "long" if position.size_signed > 0.0 else "short"
+        if plan.structural_anchor_overrun(position.entry_price, side_name):
+            self._events.emit(
+                "structural_anchor_overrun",
+                {
+                    "entry_price": position.entry_price,
+                    "side": side_name,
+                    "stop_anchor": plan.stop_anchor,
+                    "applied_stop_bps": plan.minimum_stop_bps,
+                    "source": "entry_protection",
+                },
+            )
         trigger = plan.stop_price(
             entry_price=position.entry_price,
             side=side_name,
@@ -289,11 +313,72 @@ class SolRangeOnsetLiveEngine:
             emergency_flatten=self._emergency_flatten,
         )
 
+    def raise_protective_stop(self, *, trigger_price: float) -> bool:
+        """Move the owned reduce-only stop to a more favorable trigger while staying OPEN.
+
+        Returns True only after the venue shows the replacement covering the
+        position. A rejected replacement leaves the original stop untouched and
+        returns False; it never faults the process on its own.
+        """
+        require_started(self._started)
+        snapshot = self.snapshot
+        if snapshot.state is not SolLiveState.OPEN or snapshot.stop_oid is None:
+            return False
+        venue = self._poller.wait_for_state(snapshot)
+        venue = self._reconcile_owned_lifecycle(venue)
+        snapshot = self.snapshot
+        if snapshot.state is not SolLiveState.OPEN or snapshot.stop_oid is None:
+            return False
+        current = next(
+            (order for order in venue.open_orders if order.oid == snapshot.stop_oid),
+            None,
+        )
+        size = snapshot.position_size_signed
+        if current is None or current.trigger_price is None or size == 0.0:
+            return False
+        favorable = (
+            trigger_price > current.trigger_price
+            if size > 0.0
+            else trigger_price < current.trigger_price
+        )
+        if not favorable:
+            return False
+        previous_oid = snapshot.stop_oid
+        ack = self._orders.modify_protective_stop(
+            oid=previous_oid, position_size_signed=size, trigger_price=trigger_price
+        )
+        self._events.emit_ack("protective_stop_raise", ack, event_type="stop_order")
+        if not ack.accepted or ack.oid is None:
+            return False
+        self._machine.replace_protection(stop_oid=ack.oid)
+        self._events.emit_state()
+        protected = self._poller.wait_for(
+            lambda latest: protected_order_visible(
+                latest, stop_oid=ack.oid or 0, position_size_signed=size
+            )
+            or latest.position.size_signed == 0.0
+        )
+        self._events.emit_reconciliation(protected)
+        self._events.emit(
+            "protective_stop_raised",
+            {
+                "previous_stop_oid": previous_oid,
+                "stop_oid": ack.oid,
+                "previous_trigger_price": current.trigger_price,
+                "trigger_price": trigger_price,
+                "position_size_signed": size,
+                "venue_visible": protected.position.size_signed != 0.0,
+            },
+        )
+        return True
+
     def exit(self, *, mark_price: float, reason: str) -> SolLiveSnapshot:
         """Cancel owned protection, reduce-only close, and verify flat."""
         require_started(self._started)
         if self.snapshot.state is not SolLiveState.OPEN:
-            raise SolLiveEngineError(f"exit requires OPEN, observed {self.snapshot.state.value}")
+            raise SolLiveEngineError(
+                f"exit requires OPEN, observed {self.snapshot.state.value}"
+            )
         before = self._poller.wait_for_state(self.snapshot)
         before = self._reconcile_owned_lifecycle(before)
         if self.snapshot.state is not SolLiveState.OPEN:
@@ -371,7 +456,9 @@ class SolRangeOnsetLiveEngine:
             if bracket_exit is not None:
                 venue = bracket_exit
             elif protective_stop_fill_visible(self.snapshot, venue):
-                self._events.confirm_protective_stop_fill(stop_oid=self.snapshot.stop_oid or 0)
+                self._events.confirm_protective_stop_fill(
+                    stop_oid=self.snapshot.stop_oid or 0
+                )
             elif self.snapshot.state is SolLiveState.OPEN:
                 verify_open_snapshot(self.snapshot, venue)
             elif self.snapshot.state is SolLiveState.FLAT and not venue.is_flat:
@@ -436,7 +523,9 @@ class SolRangeOnsetLiveEngine:
             position_size_signed=venue.position.size_signed,
             trigger_price=trigger_price,
         )
-        self._events.emit_ack("replacement_protective_stop", ack, event_type="stop_order")
+        self._events.emit_ack(
+            "replacement_protective_stop", ack, event_type="stop_order"
+        )
         return self._finish_missing_protection(venue, ack)
 
     def _finish_missing_protection(
@@ -493,7 +582,9 @@ class SolRangeOnsetLiveEngine:
             event_type="close",
         )
         after = self._poller.wait_for(lambda snapshot: snapshot.is_flat)
-        suffix = "" if after.position.size_signed == 0.0 else "; emergency close not flat"
+        suffix = (
+            "" if after.position.size_signed == 0.0 else "; emergency close not flat"
+        )
         failure = reason + suffix
         self._events.fault(failure)
         raise SolLiveEngineError(failure)

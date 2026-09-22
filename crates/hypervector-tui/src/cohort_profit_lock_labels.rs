@@ -14,6 +14,9 @@ pub(crate) fn compact_profit_lock_label(plan: &CohortOpenExitPlan) -> String {
     if plan.adaptive_exit_policy == "regime_book_profit_retention_v1" {
         return "PL:ADAPTIVE".into();
     }
+    if plan.adaptive_exit_policy == "regime_flip_floor_retention_v2" {
+        return "PL:ADAPTIVE2".into();
+    }
     compact_profit_lock_contract_label(
         &plan.profit_lock_policy,
         plan.profit_lock_activation_bps,
@@ -58,6 +61,9 @@ pub(crate) fn plan_profit_lock_label(
 pub(crate) fn profit_lock_label(plan: &CohortOpenExitPlan) -> String {
     if plan.adaptive_exit_policy == "regime_book_profit_retention_v1" {
         return "ADAPTIVE PROFIT FLOOR / REGIME / BOOK".into();
+    }
+    if plan.adaptive_exit_policy == "regime_flip_floor_retention_v2" {
+        return "REGIME-FLIP RATCHET 0.5R / FLOOR +0.5R AFTER 2R / BREAK-EVEN STOP".into();
     }
     format_profit_lock(
         &plan.profit_lock_policy,

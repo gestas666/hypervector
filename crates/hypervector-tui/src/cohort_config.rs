@@ -388,6 +388,9 @@ fn profit_lock_contract(contract: &CohortProviderExecutionContract) -> String {
     if contract.adaptive_exit_policy == "regime_book_profit_retention_v1" {
         return "ADAPTIVE REGIME/BOOK PROFIT RETENTION".into();
     }
+    if contract.adaptive_exit_policy == "regime_flip_floor_retention_v2" {
+        return "ADAPTIVE REGIME-FLIP RATCHET / PROFIT FLOOR v2".into();
+    }
     if contract.profit_lock_policy == "none" {
         return "OFF".into();
     }

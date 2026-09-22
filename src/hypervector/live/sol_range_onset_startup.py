@@ -64,6 +64,8 @@ from hypervector.live.sol_range_onset_state import SolLiveStateMachine
 from hypervector.live.sol_range_onset_stop_restart import recover_pending_stop
 from hypervector.live.sol_range_onset_target import EmergencyFlattenProtocol
 from hypervector.live.sol_range_onset_target_restart import recover_pending_target
+from hypervector.live.hyperliquid_protocol import HyperliquidOrderAck
+from hypervector.live.hyperliquid_sol_parsing import HyperliquidOrderUnavailableError
 from hypervector.live.sol_startup_support import _fault_and_raise, _recover_intent_ack
 from hypervector.live.sol_startup_receipt_consistency import wait_for_stable_startup
 
@@ -84,10 +86,14 @@ def prepare_sol_live_startup(
     prior_records, venue = _preflight_recovery(
         config, adapter, ledger, machine, events, orders, poller
     )
-    cleaned, pending = _pending_after_cleanup(partial_protective, prior_records, venue, events)
+    cleaned, pending = _pending_after_cleanup(
+        partial_protective, prior_records, venue, events
+    )
     if cleaned:
         return None
-    if _resume_partial_protection(partial_protective, prior_records, venue, pending, events):
+    if _resume_partial_protection(
+        partial_protective, prior_records, venue, pending, events
+    ):
         return None
     if pending is not None:
         return _recover_pending_mutation(
@@ -229,7 +235,21 @@ def _recover_pending_mutation(
             venue=venue,
         )
     if pending.operation == "target":
-        return _recover_target_mutation(adapter, events, machine, orders, pending, records, venue)
+        return _recover_target_mutation(
+            adapter, events, machine, orders, pending, records, venue
+        )
+    if pending.operation == "raise_protective_stop":
+        return _recover_pending_raise(
+            adapter=adapter,
+            config=config,
+            events=events,
+            machine=machine,
+            orders=orders,
+            pending=pending,
+            poller=poller,
+            records=records,
+            venue=venue,
+        )
     return recover_pending_exit(
         adapter=adapter,
         config=config,
@@ -241,6 +261,77 @@ def _recover_pending_mutation(
         records=records,
         venue=venue,
     )
+
+
+def _recover_pending_raise(
+    *,
+    adapter: SolLiveAdapterProtocol,
+    config: SolRangeOnsetConfig,
+    events: SolLiveEngineEvents,
+    machine: SolLiveStateMachine,
+    orders: SolOrderSubmission,
+    pending: PendingSolOrderIntent,
+    poller: SolReconciliationPoller,
+    records: list[dict[str, object]],
+    venue: SolReconciliationSnapshot,
+) -> RecoveredPendingEntry | None:
+    """Adopt a stop raised just before a crash, then resume the OPEN lifecycle exactly."""
+    previous_oid = pending.payload.get("oid")
+    try:
+        status = adapter.order_status_by_client_id(pending.client_order_id)
+    except HyperliquidOrderUnavailableError:
+        # The venue never indexed the replacement identity: the original stop still
+        # governs, and the normal OPEN recovery verifies it against the venue below.
+        status = None
+    if status is not None:
+        ack = HyperliquidOrderAck(
+            accepted=status.status in {"open", "filled"},
+            oid=status.oid,
+            status=status.status,
+            client_order_id=status.client_order_id,
+        )
+        events.emit_ack(
+            "protective_stop_raise_restart_recovery", ack, event_type="stop_order"
+        )
+        if ack.accepted and ack.oid is not None and ack.oid != previous_oid:
+            _adopt_raised_stop(records, previous_oid, ack.oid)
+            events.emit(
+                "protective_stop_raised",
+                {
+                    "previous_stop_oid": previous_oid,
+                    "stop_oid": ack.oid,
+                    "previous_trigger_price": None,
+                    "trigger_price": pending.payload.get("trigger_price"),
+                    "position_size_signed": pending.payload.get("position_size_signed"),
+                    "recovered_after_restart": True,
+                },
+            )
+    return _recover_latest_state(
+        adapter=adapter,
+        config=config,
+        events=events,
+        machine=machine,
+        orders=orders,
+        poller=poller,
+        records=records,
+        venue=venue,
+    )
+
+
+def _adopt_raised_stop(
+    records: list[dict[str, object]], previous_oid: object, stop_oid: int
+) -> None:
+    for index in range(len(records) - 1, -1, -1):
+        record = records[index]
+        if record.get("event_type") != "state_transition":
+            continue
+        payload = record.get("payload")
+        if not isinstance(payload, dict) or payload.get("state") != "OPEN":
+            return
+        if payload.get("stop_oid") != previous_oid:
+            return
+        records[index] = {**record, "payload": {**payload, "stop_oid": stop_oid}}
+        return
 
 
 def _recover_target_mutation(
@@ -350,13 +441,19 @@ def _recover_pending_entry(
         events.emit_state()
         return None
     if ack.oid is None or ack.venue_timestamp_ms is None:
-        _fault_and_raise(events, SolOrderRestartError("recovered entry identity incomplete"))
+        _fault_and_raise(
+            events, SolOrderRestartError("recovered entry identity incomplete")
+        )
     if ack.status == "canceled":
         venue = adapter.reconcile()
     if venue.position.size_signed == 0.0:
-        _fault_and_raise(events, SolOrderRestartError("recovered entry has no exposure"))
+        _fault_and_raise(
+            events, SolOrderRestartError("recovered entry has no exposure")
+        )
     try:
-        plan = execution_plan_for_intent(records, "ENTRY_PENDING", pending.client_order_id)
+        plan = execution_plan_for_intent(
+            records, "ENTRY_PENDING", pending.client_order_id
+        )
         opened_at_ms = pending_entry_opened_at_ms(pending, ack.venue_timestamp_ms)
     except SolOrderRestartError as exc:
         _fault_and_raise(events, exc)
@@ -489,5 +586,7 @@ def _profile_recovery_records(
     try:
         validate_latest_protective_checkpoint(records, intent_for_oid)
     except ValueError as exc:
-        raise SolOrderRestartError(f"protective checkpoint validation failed: {exc}") from exc
+        raise SolOrderRestartError(
+            f"protective checkpoint validation failed: {exc}"
+        ) from exc
     return records

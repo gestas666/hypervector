@@ -160,6 +160,17 @@ class EntrySubmissionRuntime:
             position_size_signed=size, opened_at_ms=opened_at_ms
         )
         self.events.emit_state()
+        if plan.structural_anchor_overrun(price, side):
+            self.events.emit(
+                "structural_anchor_overrun",
+                {
+                    "entry_price": price,
+                    "side": side,
+                    "stop_anchor": plan.stop_anchor,
+                    "applied_stop_bps": plan.minimum_stop_bps,
+                    "source": "entry_read_recovery",
+                },
+            )
         trigger = plan.stop_price(entry_price=price, side=side)
         return place_and_verify_entry_protection(
             config=self.config,

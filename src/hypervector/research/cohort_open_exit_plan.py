@@ -6,6 +6,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 import math
 
+from hypervector.live.cohort_adaptive_exit_policy import ADAPTIVE_EXIT_POLICIES
 from hypervector.live.cohort_execution_plan_validation import (
     CohortExecutionPlanError,
     validate_profit_lock_contract,
@@ -56,7 +57,11 @@ def build_open_exit_plan(
         raise ValueError(f"{symbol} runtime timer starts after the checkpoint")
     deadlines = _deadline_values(contract, opened_at_ms, as_of_ms, regime_context)
     return {
-        **({"adaptive_exit_policy": contract.adaptive_exit_policy} if contract.adaptive_exit_policy != "none" else {}),
+        **(
+            {"adaptive_exit_policy": contract.adaptive_exit_policy}
+            if contract.adaptive_exit_policy != "none"
+            else {}
+        ),
         "maximum_hold_seconds": contract.soft_seconds,
         "maximum_hold_policy": contract.policy,
         "hard_maximum_hold_seconds": contract.hard_seconds,
@@ -149,7 +154,7 @@ def _parse_contract(values: Record, symbol: str, source: str) -> _ExitContract:
         raise ValueError(f"{symbol} provider recipe exit policy is unsupported")
     lock = _parse_profit_lock(values, symbol)
     adaptive = values.get("adaptive_exit_policy", "none")
-    if adaptive not in {"none", "regime_book_profit_retention_v1"}:
+    if adaptive not in ADAPTIVE_EXIT_POLICIES:
         raise ValueError("unsupported adaptive exit projection")
     return _ExitContract(soft, policy, hard, recipe, *lock, source, adaptive)
 

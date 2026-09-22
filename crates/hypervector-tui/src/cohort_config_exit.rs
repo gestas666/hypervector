@@ -88,6 +88,9 @@ fn pending_profit_lock(policy: &CohortPendingExitPolicy) -> String {
     if policy.adaptive_exit_policy == "regime_book_profit_retention_v1" {
         return "ADAPTIVE REGIME/BOOK PROFIT RETENTION".into();
     }
+    if policy.adaptive_exit_policy == "regime_flip_floor_retention_v2" {
+        return "ADAPTIVE REGIME-FLIP RATCHET / PROFIT FLOOR v2".into();
+    }
     profit_lock_label(
         &policy.profit_lock_policy,
         policy.profit_lock_activation_bps,
@@ -132,6 +135,27 @@ mod tests {
     use super::{directional_profit_locks, hold_contract, profit_lock_label, risk_budget_label};
     use crate::backend_cohort_configuration::CohortPendingExitPolicy;
     use std::collections::BTreeMap;
+
+    #[test]
+    fn retention_v2_policy_is_valid_and_labeled() {
+        let raw = serde_json::json!({
+            "maximum_hold_seconds": 3600,
+            "maximum_hold_policy": "fixed",
+            "hard_maximum_hold_seconds": null,
+            "adaptive_exit_policy": "regime_flip_floor_retention_v2"
+        });
+        let policy: CohortPendingExitPolicy = serde_json::from_value(raw).unwrap();
+        assert!(crate::backend_cohort_configuration::adaptive_exit_policy_valid(
+            policy.adaptive_exit_policy.as_str()
+        ));
+        assert_eq!(
+            super::pending_profit_lock(&policy),
+            "ADAPTIVE REGIME-FLIP RATCHET / PROFIT FLOOR v2"
+        );
+        assert!(!crate::backend_cohort_configuration::adaptive_exit_policy_valid(
+            "regime_flip_floor_retention_v3"
+        ));
+    }
 
     #[test]
     fn risk_budget_projection_is_explicit_optional_and_validated() {

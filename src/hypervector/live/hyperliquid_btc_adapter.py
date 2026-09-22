@@ -294,6 +294,44 @@ class BtcHyperliquidAdapter(HyperliquidPerpReader):
             client_order_id=identity,
         )
 
+    def modify_protective_stop(
+        self,
+        *,
+        oid: int,
+        position_size_signed: float,
+        trigger_price: float,
+        client_order_id: str,
+    ) -> HyperliquidOrderAck:
+        """Replace one owned reduce-only stop with a new trigger in a single venue action."""
+        order_id = positive_integer(oid, "oid")
+        position = nonzero_finite(position_size_signed, "position_size_signed")
+        price = normalize_perp_price(trigger_price, self._market().size_decimals)
+        identity = validate_client_order_id(client_order_id)
+        response = call_ambiguous_order_mutation(
+            operation="raise_protective_stop",
+            client_order_id=identity,
+            mutation=lambda: self._exchange.modify_order(
+                order_id,
+                self.symbol,
+                position < 0.0,
+                self._round_size_down(abs(position)),
+                price,
+                {
+                    "trigger": {
+                        "triggerPx": price,
+                        "isMarket": True,
+                        "tpsl": "sl",
+                    }
+                },
+                reduce_only=True,
+                cloid=Cloid.from_str(identity),
+            ),
+        )
+        return replace(
+            parse_order_ack(response, operation="protective stop raise"),
+            client_order_id=identity,
+        )
+
     def cancel_order(self, oid: int) -> HyperliquidOrderAck:
         """Cancel exactly one BTC order."""
         order_id = positive_integer(oid, "oid")

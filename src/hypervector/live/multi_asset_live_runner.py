@@ -13,6 +13,7 @@ from hyperliquid.utils.error import (  # type: ignore[import-untyped]
 from requests import RequestException
 
 from hypervector.live import cohort_execution_contract_selection as contract_selection
+from hypervector.live.cohort_breakeven_stop import raise_breakeven_stops
 from hypervector.live.cohort_degraded_deadlines import poll_with_deadlines
 from hypervector.live.bidirectional_intents import (
     BidirectionalIntentRouter,
@@ -206,6 +207,7 @@ class MultiAssetLiveRunner:
         transition_drain: CohortTransitionDrain | None,
     ) -> None:
         self._latest_evaluations = {}
+        self._breakeven_attempts: dict[tuple[str, int], int] = {}
         self._operator_processor = create_operator_processor(
             commands,
             telemetry,
@@ -433,7 +435,8 @@ class MultiAssetLiveRunner:
         self._telemetry.emit_routing(
             poll.all_intents, report, poll.telemetry_evaluations
         )
-        post_action = bool(report.actions)
+        raised = self._raise_breakeven_stops(report, venues)
+        post_action = bool(report.actions) or raised
         if post_action:
             venues = reconcile_engines(
                 self._symbols, self._engines, funding_start_ms, observed_ms
@@ -453,6 +456,39 @@ class MultiAssetLiveRunner:
         if heartbeat and not self._profit_lock_controller.cycle_degraded:
             self._telemetry.emit_heartbeat()
         return report
+
+    def _raise_breakeven_stops(
+        self,
+        report: IntentRoutingReport,
+        venues: Mapping[str, SolReconciliationSnapshot]
+        | tuple[SolReconciliationSnapshot, ...],
+    ) -> bool:
+        """Move venue stops to break-even for v2 lifecycles whose floor armed this cycle."""
+        requests = self._profit_lock_controller.breakeven_requests
+        if not requests:
+            return False
+        by_symbol = (
+            dict(zip(self._symbols, venues, strict=True))
+            if isinstance(venues, tuple)
+            else dict(venues)
+        )
+        return raise_breakeven_stops(
+            requests=requests,
+            closed_symbols={
+                action.symbol for action in report.actions if action.action == "close"
+            },
+            symbols=self._symbols,
+            venues=by_symbol,
+            raise_stop=lambda symbol, trigger: self._engines[
+                symbol
+            ].raise_protective_stop(trigger_price=trigger),
+            attempts=self._breakeven_attempts,
+            lifecycle_oids={
+                symbol: self._engines[symbol].snapshot.entry_oid
+                for symbol in self._symbols
+            },
+            emit=self._telemetry.emit_breakeven_stop_attempt,
+        )
 
     def _run_operator_commands(
         self,

@@ -11,7 +11,10 @@ from hypervector.live.cohort_entry_sizing import CohortEntrySizing
 from hypervector.live.cohort_startup_candle_recorder import StartupCandleObserver
 from hypervector.live.cohort_funding_window import CohortFundingWindow
 from hypervector.live.entry_submission_deadline import EntrySubmissionDeadline
-from hypervector.live.hyperliquid_protocol import SolReconciliationSnapshot, SolBookSnapshot
+from hypervector.live.hyperliquid_protocol import (
+    SolReconciliationSnapshot,
+    SolBookSnapshot,
+)
 from hypervector.live.cohort_adaptive_exit_journal import AdaptiveExitJournal
 from hypervector.live.multi_asset_cohort_telemetry import (
     AssetCohortSnapshot,
@@ -53,6 +56,8 @@ class MultiAssetEngineProtocol(Protocol):
     ) -> SolLiveSnapshot: ...
 
     def exit(self, *, mark_price: float, reason: str) -> SolLiveSnapshot: ...
+
+    def raise_protective_stop(self, *, trigger_price: float) -> bool: ...
 
     def stop(self, reason: str) -> SolLiveSnapshot: ...
 
@@ -106,6 +111,10 @@ class CohortTelemetryProtocol(Protocol):
     ) -> None: ...
 
     def emit_poll_degraded(self, *, source: str, reason: str) -> None: ...
+
+    def emit_breakeven_stop_attempt(
+        self, event: str, payload: Mapping[str, object]
+    ) -> None: ...
 
     def emit_operator_command(self, payload: Mapping[str, object]) -> None: ...
 

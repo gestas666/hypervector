@@ -90,6 +90,22 @@ class MultiAssetDirectionalAdapter:
             client_order_id=client_order_id,
         )
 
+    def modify_protective_stop(
+        self,
+        *,
+        oid: int,
+        position_size_signed: float,
+        trigger_price: float,
+        client_order_id: str,
+    ) -> HyperliquidOrderAck:
+        """Move one owned reduce-only stop to a new trigger."""
+        return self._delegate.modify_protective_stop(
+            oid=oid,
+            position_size_signed=position_size_signed,
+            trigger_price=trigger_price,
+            client_order_id=client_order_id,
+        )
+
     def cancel_order(self, oid: int) -> HyperliquidOrderAck:
         """Cancel one symbol-scoped order."""
         return self._delegate.cancel_order(oid)

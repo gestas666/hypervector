@@ -327,6 +327,20 @@ class HyperliquidExchangeProtocol(Protocol):
         """Submit multiple explicit orders in one signed exchange action."""
         ...
 
+    def modify_order(
+        self,
+        oid: int,
+        name: str,
+        is_buy: bool,
+        sz: float,
+        limit_px: float,
+        order_type: object,
+        reduce_only: bool = False,
+        cloid: object | None = None,
+    ) -> object:
+        """Replace one resting order in a single venue action."""
+        ...
+
     def cancel(self, name: str, oid: int) -> object:
         """Cancel exactly one order by venue order ID."""
         ...
@@ -390,6 +404,17 @@ class SolLiveAdapterProtocol(Protocol):
         client_order_id: str,
     ) -> HyperliquidOrderAck:
         """Place one reduce-only post-only target."""
+        ...
+
+    def modify_protective_stop(
+        self,
+        *,
+        oid: int,
+        position_size_signed: float,
+        trigger_price: float,
+        client_order_id: str,
+    ) -> HyperliquidOrderAck:
+        """Move one owned reduce-only stop to a new trigger in a single venue action."""
         ...
 
     def cancel_order(self, oid: int) -> HyperliquidOrderAck:

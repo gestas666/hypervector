@@ -16,14 +16,19 @@ from hypervector.live.multi_asset_live_protocols import MultiAssetEngineProtocol
 from hypervector.live.multi_asset_live_runner_support import entry_provider_strategy_id
 
 
+STRUCTURAL_ANCHOR_REFUSAL = "structural_anchor_not_adverse"
+
+
 def routing_decision_payload(
     action: RoutingAction,
     execution_plan: BoundExecutionPlan | None,
     entry_sizing: CohortEntrySizing | None,
     sizing_source: str,
+    entry_refusal: str | None = None,
 ) -> dict[str, object]:
     """Serialize one routed action with its immutable execution contract."""
     return {
+        **({"entry_refusal": entry_refusal} if entry_refusal is not None else {}),
         "strategy_id": action.strategy_id,
         "symbol": action.symbol,
         "side": action.side,
@@ -88,9 +93,18 @@ def execute_routing_action(
     sizing, source = select_entry_sizing(
         provider, action.symbol, action.side, directional_sizing, fallback_sizing
     )
-    engine.record_strategy_decision(
-        routing_decision_payload(action, plan, sizing, source)
+    refusal = (
+        STRUCTURAL_ANCHOR_REFUSAL
+        if action.action == "enter"
+        and plan is not None
+        and plan.structural_anchor_overrun(action.reference_price, action.side)
+        else None
     )
+    engine.record_strategy_decision(
+        routing_decision_payload(action, plan, sizing, source, entry_refusal=refusal)
+    )
+    if refusal is not None:
+        return
     if action.action == "enter":
         engine.enter(
             side=action.side,

@@ -42,7 +42,9 @@ class SolOrderRecoveryError(RuntimeError):
     def __init__(self, *, operation: str, client_order_id: str) -> None:
         self.operation = operation
         self.client_order_id = validate_client_order_id(client_order_id)
-        super().__init__(f"{operation} remains ambiguous after exact client-order lookup")
+        super().__init__(
+            f"{operation} remains ambiguous after exact client-order lookup"
+        )
 
 
 class SolCancelRecoveryError(RuntimeError):
@@ -114,7 +116,11 @@ class SolOrderSubmission:
                 requested_notional_usd=requested_notional_usd,
                 mark_price=mark_price,
                 client_order_id=client_order_id,
-                **({"entry_deadline": entry_deadline} if entry_deadline is not None else {}),
+                **(
+                    {"entry_deadline": entry_deadline}
+                    if entry_deadline is not None
+                    else {}
+                ),
             )
         except EntryDeadlineExpired as exc:
             self._events.emit(
@@ -181,6 +187,37 @@ class SolOrderSubmission:
         except SolOrderTransportError as exc:
             ack = self._recover_ack(exc, operation="protective_stop")
         self._require_matching_ack("protective stop", client_order_id, ack)
+        return ack
+
+    def modify_protective_stop(
+        self,
+        *,
+        oid: int,
+        position_size_signed: float,
+        trigger_price: float,
+    ) -> HyperliquidOrderAck:
+        """Persist the raise intent, replace the stop, and verify acknowledgement identity."""
+        client_order_id = validate_client_order_id(self._client_order_id_fn())
+        self._events.emit(
+            "order_intent",
+            {
+                "operation": "raise_protective_stop",
+                "client_order_id": client_order_id,
+                "oid": _positive_oid(oid),
+                "position_size_signed": position_size_signed,
+                "trigger_price": trigger_price,
+            },
+        )
+        try:
+            ack = self._adapter.modify_protective_stop(
+                oid=oid,
+                position_size_signed=position_size_signed,
+                trigger_price=trigger_price,
+                client_order_id=client_order_id,
+            )
+        except SolOrderTransportError as exc:
+            ack = self._recover_ack(exc, operation="raise_protective_stop")
+        self._require_matching_ack("protective stop raise", client_order_id, ack)
         return ack
 
     def close_position(
@@ -261,13 +298,18 @@ class SolOrderSubmission:
         if operation not in {
             "entry",
             "protective_stop",
+            "raise_protective_stop",
             "target",
             "reduce_only_close",
         }:
-            raise SolOrderSubmissionError(f"unsupported order recovery operation: {operation!r}")
+            raise SolOrderSubmissionError(
+                f"unsupported order recovery operation: {operation!r}"
+            )
         validated_id = validate_client_order_id(client_order_id)
         status = self._recover_status(operation, validated_id)
-        ack = replace(self._confirmed_status_ack(operation, status), recovered_after_restart=True)
+        ack = replace(
+            self._confirmed_status_ack(operation, status), recovered_after_restart=True
+        )
         self._require_matching_ack(operation, validated_id, ack)
         return ack
 
@@ -300,13 +342,22 @@ class SolOrderSubmission:
         self, operation: str, status: HyperliquidOrderStatus
     ) -> HyperliquidOrderAck:
         ack = self._status_ack(status)
-        if operation not in {"entry", "reduce_only_close"} or status.status != "canceled":
+        if (
+            operation not in {"entry", "reduce_only_close"}
+            or status.status != "canceled"
+        ):
             return ack
         if operation == "reduce_only_close" and status.original_size is None:
             return ack
         if status.client_order_id is None:
-            raise SolOrderSubmissionError("canceled execution status lacks client order identity")
-        check = canceled_entry_fill_size if operation == "entry" else canceled_close_fill_size
+            raise SolOrderSubmissionError(
+                "canceled execution status lacks client order identity"
+            )
+        check = (
+            canceled_entry_fill_size
+            if operation == "entry"
+            else canceled_close_fill_size
+        )
         for attempt in range(self._recovery_attempts):
             venue = self._adapter.reconcile()
             quantity = check(status, venue)
@@ -320,7 +371,9 @@ class SolOrderSubmission:
                 return ack
             if attempt + 1 < self._recovery_attempts:
                 self._sleep_fn(self._recovery_delay_seconds)
-        error = SolOrderRecoveryError(operation=operation, client_order_id=status.client_order_id)
+        error = SolOrderRecoveryError(
+            operation=operation, client_order_id=status.client_order_id
+        )
         self._events.fault(f"{error}; client_order_id={status.client_order_id}")
         raise error
 

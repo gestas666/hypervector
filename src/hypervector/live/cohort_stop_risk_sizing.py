@@ -7,8 +7,6 @@ from dataclasses import asdict, dataclass
 import math
 from typing import TYPE_CHECKING
 
-from hypervector.live.cohort_execution_plan_validation import CohortExecutionPlanError
-
 if TYPE_CHECKING:
     from hypervector.live.cohort_execution_plan import BoundExecutionPlan
 
@@ -136,17 +134,9 @@ def _worst_loss(
             boundary = plan.stop_anchor / denominator
             if low < boundary < high:
                 prices.append(boundary)
-    # The plan must resolve a stop at the mark itself; an anchor that is not adverse
-    # there cannot size an order and is refused before any submission.
-    points = [(mark, plan.stop_price(entry_price=mark, side=side))]
-    for price in prices:
-        try:
-            points.append((price, plan.stop_price(entry_price=price, side=side)))
-        except CohortExecutionPlanError:
-            # A modeled fill more favorable than the structural anchor has no
-            # bound stop and cannot be the worst loss; post-fill protection
-            # rejects such a fill independently, so it must not fault the entry.
-            continue
+    # The mark is always modeled; a fill more favorable than a structural anchor
+    # falls back to the contract's minimum clamp inside plan.stop_price.
+    points = [(p, plan.stop_price(entry_price=p, side=side)) for p in (mark, *prices)]
     estimates = [
         (p, s, abs(p - s) + p * budget.cost_buffer_bps / BPS_PER_UNIT)
         for p, s in points

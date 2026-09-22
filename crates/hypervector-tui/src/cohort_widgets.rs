@@ -229,6 +229,8 @@ pub(crate) fn execution_plan_label(asset: &CohortAssetSnapshot) -> String {
     };
     let profit_lock = if plan.adaptive_exit_policy == "regime_book_profit_retention_v1" {
         "AD".into()
+    } else if plan.adaptive_exit_policy == "regime_flip_floor_retention_v2" {
+        "AD2".into()
     } else {
         plan_profit_lock_label(
             &plan.profit_lock_policy,

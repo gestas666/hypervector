@@ -5,7 +5,6 @@ from dataclasses import replace
 import pytest
 
 from hypervector.live.cohort_execution_plan import ProviderExecutionContract
-from hypervector.live.cohort_execution_plan_validation import CohortExecutionPlanError
 from hypervector.live.cohort_stop_risk_sizing import StopRiskBudget, size_for_stop_risk
 
 
@@ -217,17 +216,14 @@ def test_structural_anchor_inside_modeled_fill_interval_sizes_from_adverse_bound
     assert result.estimated_loss_usd == pytest.approx(10)
     for step in range(401):
         fill = 99.8 + step / 1000
-        try:
-            stop = plan.stop_price(entry_price=fill, side=side)
-        except CohortExecutionPlanError:
-            continue
+        stop = plan.stop_price(entry_price=fill, side=side)
         assert result.quantity * (abs(fill - stop) + fill * 0.002) <= 10 + 1e-9
 
 
 @pytest.mark.parametrize(
     "side,anchor", [("long", 100.0), ("long", 100.1), ("short", 100.0), ("short", 99.9)]
 )
-def test_structural_anchor_not_adverse_at_mark_is_refused(
+def test_structural_anchor_not_adverse_at_mark_sizes_from_minimum_clamp(
     side: str, anchor: float
 ) -> None:
     plan = replace(
@@ -237,12 +233,16 @@ def test_structural_anchor_not_adverse_at_mark_is_refused(
         minimum_stop_bps=20,
         maximum_stop_bps=250,
     ).bind(strategy_id="test", stop_anchor=anchor)
-    with pytest.raises(CohortExecutionPlanError):
-        size_for_stop_risk(
-            plan=plan,
-            budget=StopRiskBudget(10, 20),
-            mark_price=100,
-            side=side,
-            entry_slippage_fraction=0.002,
-            original_notional_usd=2000,
-        )
+    assert plan.structural_anchor_overrun(100.0, side)
+    result = size_for_stop_risk(
+        plan=plan,
+        budget=StopRiskBudget(10, 20),
+        mark_price=100,
+        side=side,
+        entry_slippage_fraction=0.002,
+        original_notional_usd=5000,
+    )
+    assert result.estimated_loss_usd == pytest.approx(10)
+    assert abs(
+        result.entry_bound - result.stop_bound
+    ) / result.entry_bound * 1e4 == pytest.approx(20, abs=1e-6)

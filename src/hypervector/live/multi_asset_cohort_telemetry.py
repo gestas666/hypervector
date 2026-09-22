@@ -119,7 +119,10 @@ class MultiAssetCohortTelemetry:
     def startup_input_observer(self) -> CohortStartupCandleRecorder:
         """Bind exact startup evidence to this ledger's run and publication path."""
         return CohortStartupCandleRecorder(
-            self._config, self._ledger.path.parent, self._ledger.run_id, self._emit,
+            self._config,
+            self._ledger.path.parent,
+            self._ledger.run_id,
+            self._emit,
         )
 
     @property
@@ -298,6 +301,14 @@ class MultiAssetCohortTelemetry:
     def emit_funding_reconciliation_window(self, window: CohortFundingWindow) -> None:
         """Publish the exact committed funding cursor for one poll cycle."""
         self._emit("funding_reconciliation_window", window.as_payload())
+
+    def emit_breakeven_stop_attempt(
+        self, event: str, payload: Mapping[str, object]
+    ) -> None:
+        """Publish one bounded attempt to move a venue stop to break-even."""
+        if event != "breakeven_stop_attempt":
+            raise ValueError("unsupported break-even stop event")
+        self._emit(event, dict(payload))
 
     def emit_poll_degraded(self, *, source: str, reason: str) -> None:
         """Publish one skipped transient-read cycle without claiming success."""

@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from dataclasses import asdict
 import math
 
+from hypervector.live.cohort_adaptive_exit_policy import ADAPTIVE_EXIT_POLICIES
 from hypervector.live.btc_hulk_delayed_component_floor import (
     BTC_HULK_DELAYED_COMPONENT_POLICY_IDS,
 )
@@ -130,8 +131,16 @@ def _expectation(strategy_id: str, contract: object) -> ProviderExitExpectation:
 
 def _policy_payload(row: ProviderExitExpectation) -> dict[str, object]:
     return {
-        **({"stop_risk_budget": asdict(row.stop_risk_budget)} if row.stop_risk_budget is not None else {}),
-        **({"adaptive_exit_policy": row.adaptive_exit_policy} if row.adaptive_exit_policy != "none" else {}),
+        **(
+            {"stop_risk_budget": asdict(row.stop_risk_budget)}
+            if row.stop_risk_budget is not None
+            else {}
+        ),
+        **(
+            {"adaptive_exit_policy": row.adaptive_exit_policy}
+            if row.adaptive_exit_policy != "none"
+            else {}
+        ),
         "maximum_hold_seconds": row.maximum_hold_seconds,
         "maximum_hold_policy": row.maximum_hold_policy,
         "hard_maximum_hold_seconds": row.hard_maximum_hold_seconds,
@@ -174,7 +183,7 @@ def _validate_exit_policy(
         or not (fixed or bool(extended))
         or row.provider_recipe_exit_policy not in {"ignore", "honor"}
         or not _profit_lock_valid(row)
-        or row.adaptive_exit_policy not in {"none", "regime_book_profit_retention_v1"}
+        or row.adaptive_exit_policy not in ADAPTIVE_EXIT_POLICIES
     ):
         raise ValueError("provider exit policy is invalid")
 

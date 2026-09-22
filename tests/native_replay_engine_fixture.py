@@ -11,9 +11,17 @@ from pathlib import Path
 from unittest.mock import create_autospec
 
 from hypervector.live.hyperliquid_btc_adapter import BtcHyperliquidAdapter
-from hypervector.live.hyperliquid_protocol import HyperliquidExchangeProtocol, HyperliquidInfoProtocol
-from hypervector.live.multi_asset_directional_adapter import MultiAssetDirectionalAdapter
-from hypervector.live.multi_asset_live_config import AssetLiveConfig, load_multi_asset_live_config
+from hypervector.live.hyperliquid_protocol import (
+    HyperliquidExchangeProtocol,
+    HyperliquidInfoProtocol,
+)
+from hypervector.live.multi_asset_directional_adapter import (
+    MultiAssetDirectionalAdapter,
+)
+from hypervector.live.multi_asset_live_config import (
+    AssetLiveConfig,
+    load_multi_asset_live_config,
+)
 from hypervector.live.multi_asset_live_runner_support import shared_account_facts
 from hypervector.live.sol_range_onset_engine import SolRangeOnsetLiveEngine
 from hypervector.live.sol_range_onset_ledger import SolLiveLedger
@@ -29,7 +37,15 @@ from hypervector.research.native_replay_unified import (
 from test_native_replay_adapter import ADDRESS, denied
 
 D = Decimal
-SIZE_DECIMALS = {"BTC": 5, "ETH": 4, "SOL": 2, "HYPE": 2, "xyz:SPCX": 2, "xyz:SNDK": 3, "xyz:BRENTOIL": 2}
+SIZE_DECIMALS = {
+    "BTC": 5,
+    "ETH": 4,
+    "SOL": 2,
+    "HYPE": 2,
+    "xyz:SPCX": 2,
+    "xyz:SNDK": 3,
+    "xyz:BRENTOIL": 2,
+}
 FEE_RATE = D("0.0009")
 RECEIPT_LATENCY_MS = 500
 
@@ -37,7 +53,9 @@ RECEIPT_LATENCY_MS = 500
 class EngineReplayFixture:
     """One shared economic account with seven native engine/adapter consumers."""
 
-    def __init__(self, root: Path, *, partial_entry: bool, initial_cash: Decimal) -> None:
+    def __init__(
+        self, root: Path, *, partial_entry: bool, initial_cash: Decimal
+    ) -> None:
         """Build inert ports and redirect every native ledger to the pytest directory."""
         self.config = load_multi_asset_live_config(
             "configs/multi_asset_growth_first_5000_noncrypto_live_v89.toml",
@@ -51,7 +69,9 @@ class EngineReplayFixture:
         self.clock = ReplayClock(1_789_135_200_000)
         self.account = ExactFillAccount(initial_cash, self.symbols)
         self.marks = dict.fromkeys(self.symbols, D(100))
-        self.account.mark(self.clock.next_stamp(), source_time_ms=self.clock.now_ms, prices=self.marks)
+        self.account.mark(
+            self.clock.next_stamp(), source_time_ms=self.clock.now_ms, prices=self.marks
+        )
         self.orders: dict[int, dict[str, object]] = {}
         self.fills: list[dict[str, object]] = []
         self.collateral: dict[str, IsolatedCollateral] = {}
@@ -68,27 +88,43 @@ class EngineReplayFixture:
 
     def _ports(self) -> tuple[HyperliquidInfoProtocol, HyperliquidExchangeProtocol]:
         info = create_autospec(HyperliquidInfoProtocol, instance=True, spec_set=True)
-        exchange = create_autospec(HyperliquidExchangeProtocol, instance=True, spec_set=True)
-        for name in ("market_open", "market_close", "order", "cancel", "bulk_orders", "update_leverage"):
+        exchange = create_autospec(
+            HyperliquidExchangeProtocol, instance=True, spec_set=True
+        )
+        for name in (
+            "market_open",
+            "market_close",
+            "order",
+            "cancel",
+            "bulk_orders",
+            "update_leverage",
+            "modify_order",
+        ):
             getattr(exchange, name).side_effect = denied
         info.query_user_abstraction_state.return_value = "unifiedAccount"
         info.spot_user_state.side_effect = lambda address: self.wire().spot_state
         info.user_state.side_effect = lambda address, dex: self.wire().perp_states[dex]
-        info.frontend_open_orders.side_effect = lambda address, dex: list(self.orders.values())
+        info.frontend_open_orders.side_effect = lambda address, dex: list(
+            self.orders.values()
+        )
         info.user_fills.side_effect = lambda address: self.fills
         info.meta.side_effect = self._metadata
-        info.all_mids.side_effect = lambda dex: {symbol: str(mark) for symbol, mark in self.marks.items()}
+        info.all_mids.side_effect = lambda dex: {
+            symbol: str(mark) for symbol, mark in self.marks.items()
+        }
         info.user_fees.return_value = {
             "userAddRate": "0.00015",
             "userCrossRate": str(FEE_RATE),
             "activeReferralDiscount": "0",
         }
         info.perp_dexs.return_value = [None, {"name": "xyz"}]
+        info.query_order_by_oid.side_effect = self._query_order
         exchange.update_leverage.side_effect = self._leverage
         exchange.market_open.side_effect = self._open
         exchange.market_close.side_effect = self._close
         exchange.order.side_effect = self._stop
         exchange.cancel.side_effect = self._cancel
+        exchange.modify_order.side_effect = self._modify
         return info, exchange
 
     def _metadata(self, dex: str = "") -> dict[str, object]:
@@ -121,7 +157,12 @@ class EngineReplayFixture:
 
     def engine(self, asset: AssetLiveConfig) -> SolRangeOnsetLiveEngine:
         """Construct the real engine around fake SDK ports, without its armed factory."""
-        config = replace(asset, live_ledger=self.root / "live/bidirectional_cohort" / f"{asset.symbol}.jsonl")
+        config = replace(
+            asset,
+            live_ledger=self.root
+            / "live/bidirectional_cohort"
+            / f"{asset.symbol}.jsonl",
+        )
         adapter = MultiAssetDirectionalAdapter(
             BtcHyperliquidAdapter(
                 info=self._info,
@@ -172,31 +213,62 @@ class EngineReplayFixture:
         return self._oid
 
     def _open(
-        self, name: str, is_buy: bool, sz: float, *, px: float, slippage: float, cloid: object
+        self,
+        name: str,
+        is_buy: bool,
+        sz: float,
+        *,
+        px: float,
+        slippage: float,
+        cloid: object,
     ) -> object:
         assert px == 100 and abs(self.prices[name] / D(str(px)) - 1) <= D(str(slippage))
         quantity = D(str(sz))
         self.entry_requests.append((name, quantity))
         if self.partial_entry:
-            quantity = (quantity / 2).quantize(D(1).scaleb(-SIZE_DECIMALS[name]), rounding=ROUND_DOWN)
+            quantity = (quantity / 2).quantize(
+                D(1).scaleb(-SIZE_DECIMALS[name]), rounding=ROUND_DOWN
+            )
         return self._fill(name, is_buy, quantity, reduce_only=False, cloid=cloid)
 
-    def _close(self, name: str, *, sz: float, px: float, slippage: float, cloid: object) -> object:
+    def _close(
+        self, name: str, *, sz: float, px: float, slippage: float, cloid: object
+    ) -> object:
         assert px == 100 and abs(self.prices[name] / D(str(px)) - 1) <= D(str(slippage))
         position = self.account.snapshot().positions[name]
         self.close_requests.append(
-            {"stop_present": any(order["coin"] == name for order in self.orders.values())}
+            {
+                "stop_present": any(
+                    order["coin"] == name for order in self.orders.values()
+                )
+            }
         )
-        return self._fill(name, position.quantity_signed < 0, D(str(sz)), reduce_only=True, cloid=cloid)
+        return self._fill(
+            name,
+            position.quantity_signed < 0,
+            D(str(sz)),
+            reduce_only=True,
+            cloid=cloid,
+        )
 
     def _fill(
-        self, name: str, is_buy: bool, quantity: Decimal, *, reduce_only: bool, cloid: object
+        self,
+        name: str,
+        is_buy: bool,
+        quantity: Decimal,
+        *,
+        reduce_only: bool,
+        cloid: object,
     ) -> object:
         oid, dispatch = self._next_oid(), self.clock.now_ms
         self.clock.advance_to(dispatch + RECEIPT_LATENCY_MS)
         price = self.prices[name]
         self.marks[name] = price
-        self.account.mark(self.clock.next_stamp(), source_time_ms=self.clock.now_ms, prices={name: price})
+        self.account.mark(
+            self.clock.next_stamp(),
+            source_time_ms=self.clock.now_ms,
+            prices={name: price},
+        )
         before = self.account.snapshot()
         fee = quantity * price * FEE_RATE
         event = FillEvent(
@@ -222,10 +294,16 @@ class EngineReplayFixture:
         else:
             initial = after.positions[name].allocated_initial_margin_usd
             rate = D("0.5") / D(str(self.assets[name].venue_max_leverage))
-            self.collateral[name] = IsolatedCollateral(initial - fee, (MaintenanceTier(D(0), rate, D(0)),))
-        self._record_fill(event, after.realized_gross_usd - before.realized_gross_usd, cloid)
+            self.collateral[name] = IsolatedCollateral(
+                initial - fee, (MaintenanceTier(D(0), rate, D(0)),)
+            )
+        self._record_fill(
+            event, after.realized_gross_usd - before.realized_gross_usd, cloid
+        )
         self.mutations.append("close" if reduce_only else "entry")
-        return self._ack({"filled": {"oid": oid, "totalSz": str(quantity), "avgPx": str(price)}})
+        return self._ack(
+            {"filled": {"oid": oid, "totalSz": str(quantity), "avgPx": str(price)}}
+        )
 
     def _record_fill(self, event: FillEvent, gross: Decimal, cloid: object) -> None:
         is_buy, reduce_only = event.side == "buy", event.reduce_only
@@ -285,6 +363,50 @@ class EngineReplayFixture:
         self.mutations.append("stop" if trigger else "target")
         return self._ack({"resting": {"oid": oid}})
 
+    def _query_order(self, user: str, identity: object) -> object:
+        for order in self.orders.values():
+            if order["oid"] == identity or order.get("cloid") == identity:
+                return {
+                    "status": "order",
+                    "order": {
+                        "order": dict(order),
+                        "status": "open",
+                        "statusTimestamp": self.clock.now_ms,
+                    },
+                }
+        return {"status": "unknownOid"}
+
+    def _modify(
+        self,
+        oid: int,
+        name: str,
+        is_buy: bool,
+        sz: float,
+        limit_px: float,
+        order_type: object,
+        reduce_only: bool = False,
+        cloid: object | None = None,
+    ) -> object:
+        assert reduce_only and "trigger" in order_type
+        previous = self.orders.get(oid)
+        if previous is None or previous["coin"] != name:
+            return self._ack({"error": "Order not found"})
+        del self.orders[oid]
+        new_oid = self._next_oid()
+        self.orders[new_oid] = {
+            **previous,
+            "oid": new_oid,
+            "sz": str(sz),
+            "origSz": str(sz),
+            "side": "B" if is_buy else "A",
+            "triggerPx": str(order_type["trigger"]["triggerPx"]),
+            "limitPx": str(limit_px),
+            "timestamp": self.clock.now_ms,
+            "cloid": str(cloid),
+        }
+        self.mutations.append("modify")
+        return self._ack({"resting": {"oid": new_oid}})
+
     def _cancel(self, name: str, oid: int) -> object:
         assert self.orders[oid]["coin"] == name
         self.cancel_requests.append(
@@ -299,7 +421,10 @@ class EngineReplayFixture:
 
     @staticmethod
     def _ack(status: object) -> dict[str, object]:
-        return {"status": "ok", "response": {"type": "order", "data": {"statuses": [status]}}}
+        return {
+            "status": "ok",
+            "response": {"type": "order", "data": {"statuses": [status]}},
+        }
 
     def assert_native_account_agreement(self) -> None:
         """Require native reconciliation and namespace aggregation to match exact economics."""
@@ -307,4 +432,6 @@ class EngineReplayFixture:
         facts = shared_account_facts(tuple(self.adapters), venues)
         view = self.account.snapshot()
         assert abs(D(str(facts.account_value_usd)) - view.equity_usd) < D("1e-10")
-        assert abs(D(str(facts.total_notional_position_usd)) - view.gross_notional_usd) < D("1e-10")
+        assert abs(
+            D(str(facts.total_notional_position_usd)) - view.gross_notional_usd
+        ) < D("1e-10")
