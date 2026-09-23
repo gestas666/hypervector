@@ -1,3 +1,80 @@
+# Current operation — V93 LIVE ARMED, exit policy v2 active, 2026-09-23 21:02 UTC
+
+**Status: LIVE ARMED; first lifecycle open and protected.** The operator said
+"go live"; the runbook was executed in full. Supervisor PID 34903 (launchd
+`local.hypervector.cohort.supervise`, loaded exit timeout 60) owns backend PID
+34924; run `bidirectional-live-1790196314874`; profile
+`multi_asset_growth_first_5000_exit_v2_v93` fingerprint
+`33131f1898d86dda4f5cab2b6091748144f6a81da29b9c9464a644b330dc3e05`; `LIVE ARMED`
+with `hyperliquid_mainnet` authority in the ledger. Pre-start backup
+`prestart_20260923T204514.874327Z_33131f1898d8` verified (1,946 implementation
+files, identity `b36284f392d2…`). Approval `v91-to-v93-exit-policy-v2-20260923-v1`
+validated; the old run's drain archived at 19:45:18 UTC; unsigned preflight
+exit 0 (flat, zero orders, equity $4,825.33). Restart journal fresh (hold null,
+session active). Disk 20 GiB after the bundle (build caches reclaimed with
+`cargo clean`; nothing under `data/` deleted).
+
+Launch 20:45:13 UTC → session start 20:59:21 → first heartbeat 21:00 → supervisor
+`healthy: true, problems []` at 21:01:10 UTC. Checkpoint `running_consistent`,
+0 faults, all eight assets present, `current_provider_exit_policies` show
+`regime_flip_floor_retention_v2` and the $25/20 bps budget on every provider.
+
+**First V93 trade, xyz:SPCX long** (hourly band20 reentry, completed-hour signal
+at 21:00, reference 148.81): `entry_stop_risk_sizing` journaled before the
+order (estimated loss $7.46 of the $25 budget; the $500 notional cap bound),
+entry filled 3.35 @ 148.80 (oid 554598179756), protective stop resting at
+147.1848 (oid 554598197976), OPEN with `protected_if_open: true`. v2 observations
+are journaled every poll (R = 108.5 bps, not yet armed, canonical alignment
+−0.83). The break-even raise and the floor arm only after +2R; the regime-flip
+ratchet only after +0.5R.
+
+Watch commands: `uv run python scripts/cohort_backend_supervisor.py status`;
+`uv run python -m hypervector cohort-tui --mode monitor --config
+configs/multi_asset_growth_first_5000_exit_v2_v93_proposal.toml` (release binary
+sha256 `b8f0f35f0bb341e2dec13b90700c8306d55107f2a2a24ab550fe30ae4d0356d2`).
+Rollback preserves ownership: normal drain/stop, verify flat, restore the three
+plists from `data/backups/bidirectional_cohort/v93_deployment_20260923T1945Z/launchd/`
+and the V91 profile. Do not hot-revert while SPCX is open.
+
+---
+
+# Go-live in progress — V93 prepared and gated on free disk, 2026-09-23 19:50 UTC
+
+The operator said "go live". Every pre-launch step of the V91 runbook is done
+except the launch itself, which the supervisor would refuse: **free disk is
+8.7 GiB against the 10 GiB launch floor** (`free_disk_low`). Deleting build
+caches to clear it was denied at the permission prompt, so the reclaim choice
+is the operator's. Nothing live has started.
+
+Done and verified:
+- Approval `docs/live-approvals/v91-to-v93-exit-policy-v2-20260923-v1.json`
+  (committed `b42c025`), bound under `[runtime]` in the V93 profile; the bound
+  fingerprint is `33131f1898d86dda4f5cab2b6091748144f6a81da29b9c9464a644b330dc3e05`
+  and `validate_profile_change_approval` accepts it (no retired scopes).
+- Pre-arm gate: `cohort_runtime_validation_check.py --mode live` accepts V93.
+- Old run `bidirectional-live-1790073983560` drain archived to
+  `data/backups/bidirectional_cohort/transition_drains/transition_drain_20260923T194518Z_…json`.
+- Unsigned venue preflight after the archive: exit 0, all eight assets flat,
+  zero orders, ledger reconciled, sizing ready at equity $4,825.33307049
+  (`data/logs/operations/v93_go_live_20260923T1945Z/venue_preflight_after_archive.json`).
+- Deployment backup `data/backups/bidirectional_cohort/v93_deployment_20260923T1945Z/`
+  holds the three installed plists, the held restart journal, config, approval,
+  manifest, and staged V93 plists under `launchd_new/` (not installed).
+
+Remaining launch sequence once disk is above the floor: `launchctl bootout`
+the loaded-but-exited supervise service, move the held restart journal into the
+deployment backup (the command changes, so the journal must be archived), install
+the staged supervise and checkpoint plists, `launchctl bootstrap` checkpoint then
+supervise, then verify heartbeat, profile fingerprint `33131f18…`, source
+identity, eight executable scopes and cockpit projection. The cockpit binary is
+`target/release/tui-regime-detector` sha256 `b8f0f35f…`.
+
+Reclaim candidates measured: 138 prestart bundles older than 2026-09-09 (52 GiB),
+main `target/debug` 4.8 GiB, sibling worktree build dirs ~8.5 GiB, uv cache
+12 GiB, the September 5 overhaul worktree's 44 GiB data copy.
+
+---
+
 # Current work — exit policy v2 built and staged as V93 proposal; V91 still paused, 2026-09-22
 
 The operator approved ("approved please complete") replacing the passive exit
