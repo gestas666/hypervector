@@ -19,10 +19,10 @@ def test_v93_is_v91_plus_v2_exits_and_a_25_dollar_budget() -> None:
     )
     assert (
         candidate.profile_fingerprint
-        == "aaf4fe14a15129b4ddbb009c30370ac6007b26587788325dd6371d2b695c1586"
+        == "33131f1898d86dda4f5cab2b6091748144f6a81da29b9c9464a644b330dc3e05"
     )
     assert not candidate.enabled and not candidate.accepts_live_risk
-    assert candidate.transition_approval is None
+    assert str(candidate.transition_approval).endswith("v91-to-v93-exit-policy-v2-20260923-v1.json")
     assert candidate.maximum_positions == original.maximum_positions == 8
     assert [asset.symbol for asset in candidate.assets] == [
         asset.symbol for asset in original.assets

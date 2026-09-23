@@ -11,6 +11,7 @@ maximum_positions = 8
 [runtime]
 cohort_ledger = "data/live/bidirectional_cohort/decisions.jsonl"
 stop_file = "data/live/bidirectional_cohort/STOP"
+transition_approval = "docs/live-approvals/v91-to-v93-exit-policy-v2-20260923-v1.json"
 poll_seconds = 15.0
 lookback_days = 14
 
