@@ -9,6 +9,9 @@ from hypervector.live.sol_range_onset_ledger import SolLiveLedger
 _EVENT_TYPES = frozenset(
     {"maximum_hold_decision", "provider_exit_decision", "profit_lock_decision"}
 )
+# Adaptive observations are inspected (and a missing lifecycle raises) even
+# though none is returned directly, so they belong to the declared selection.
+_INSPECTED_EVENT_TYPES = _EVENT_TYPES | {"adaptive_exit_observation"}
 
 
 def durable_decision_records(ledger: SolLiveLedger) -> list[dict[str, object]]:
@@ -24,7 +27,7 @@ def durable_decision_records(ledger: SolLiveLedger) -> list[dict[str, object]]:
         latest[payload["lifecycle_id"]] = dict(record)
         return False
 
-    records = ledger.read_matching(retain)
+    records = ledger.read_matching(retain, event_types=_INSPECTED_EVENT_TYPES)
     return records + list(latest.values())
 
 

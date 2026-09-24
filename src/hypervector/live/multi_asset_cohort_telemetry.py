@@ -16,6 +16,7 @@ from hypervector.live.cohort_backup_evidence import prestart_backup_payload
 from hypervector.live.cohort_durable_decision_recovery import durable_decision_records
 from hypervector.live.cohort_durable_decisions import CohortDurableDecisionJournal
 from hypervector.live.cohort_adaptive_exit_journal import AdaptiveExitJournal
+from hypervector.live.cohort_breakeven_events import BREAKEVEN_EVENTS
 from hypervector.live.cohort_funding_recovery import recover_funding_cursor
 from hypervector.live.cohort_funding_window import CohortFundingWindow
 from hypervector.live.cohort_prestart_backup import CohortPrestartBackupResult
@@ -305,8 +306,8 @@ class MultiAssetCohortTelemetry:
     def emit_breakeven_stop_attempt(
         self, event: str, payload: Mapping[str, object]
     ) -> None:
-        """Publish one bounded attempt to move a venue stop to break-even."""
-        if event != "breakeven_stop_attempt":
+        """Publish one break-even raise attempt, guarded skip or exhaustion warning."""
+        if event not in BREAKEVEN_EVENTS:
             raise ValueError("unsupported break-even stop event")
         self._emit(event, dict(payload))
 

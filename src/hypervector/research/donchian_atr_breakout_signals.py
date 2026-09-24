@@ -32,6 +32,9 @@ class DonchianAtrBreakoutConfig:
     atr_multiple: float = 2.0
     signal_hours: int = 4
     execution_minutes: int = 15
+    # Skip a short onset whose close is less than this many ATR beyond the prior
+    # entry-channel low. None keeps every existing recipe unfiltered.
+    minimum_short_extension_atr: float | None = None
 
     def __post_init__(self) -> None:
         """Reject incoherent channel, volatility, or clock parameters."""
@@ -57,6 +60,14 @@ class DonchianAtrBreakoutConfig:
             raise ValueError(
                 "Donchian requires completed 1h/4h signals and 15m execution"
             )
+        minimum = self.minimum_short_extension_atr
+        if minimum is not None and (
+            isinstance(minimum, bool)
+            or not isinstance(minimum, (int, float))
+            or not math.isfinite(minimum)
+            or minimum <= 0.0
+        ):
+            raise ValueError("minimum short extension must be a positive finite ATR")
 
 
 def build_donchian_atr_breakout_state(
@@ -104,6 +115,12 @@ def build_donchian_atr_breakout_state(
         segments,
         cfg.atr_period,
     )
+    if cfg.minimum_short_extension_atr is not None:
+        # Filter after the onset so a skipped breakdown never creates a later one.
+        short_entry &= (
+            _short_extension_atr(entry_low, close, atr)
+            >= cfg.minimum_short_extension_atr
+        )
     stop = _entry_stops(
         close,
         atr,
@@ -146,7 +163,7 @@ def build_donchian_atr_breakout_signals(
         signal_name=(
             f"completed_{cfg.signal_hours}h_donchian_"
             f"{cfg.entry_channel_bars}_{cfg.exit_channel_bars}_"
-            f"atr{cfg.atr_period}_stop_v1"
+            f"atr{cfg.atr_period}_stop{_short_filter_label(cfg)}_v1"
         ),
         source_time_column="donchian_signal_bar_open",
     )
@@ -190,6 +207,21 @@ def _fresh_onset(
             same_segment and active[position] and not active[position - 1]
         )
     return result
+
+
+def _short_extension_atr(
+    prior_low: NDArray[np.float64],
+    close: NDArray[np.float64],
+    atr: NDArray[np.float64],
+) -> NDArray[np.float64]:
+    """Breakdown depth beyond the prior low in ATR; NaN compares as not strong."""
+    with np.errstate(divide="ignore", invalid="ignore"):
+        return (prior_low - close) / atr
+
+
+def _short_filter_label(config: DonchianAtrBreakoutConfig) -> str:
+    minimum = config.minimum_short_extension_atr
+    return "" if minimum is None else f"_short_ext{minimum:g}atr"
 
 
 def _entry_stops(

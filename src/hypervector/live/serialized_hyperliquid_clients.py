@@ -282,6 +282,31 @@ class SerializedHyperliquidExchange:
             )
         )
 
+    def modify_order(
+        self,
+        oid: int,
+        name: str,
+        is_buy: bool,
+        sz: float,
+        limit_px: float,
+        order_type: object,
+        reduce_only: bool = False,
+        cloid: object | None = None,
+    ) -> object:
+        """Modify one resting order in place under shared serialization."""
+        return self._mutate(
+            lambda: self._delegate.modify_order(
+                oid,
+                name,
+                is_buy,
+                sz,
+                limit_px,
+                order_type,
+                reduce_only=reduce_only,
+                cloid=cloid,
+            )
+        )
+
     def cancel(self, name: str, oid: int) -> object:
         """Cancel one order under shared serialization."""
         return self._mutate(lambda: self._delegate.cancel(name, oid))

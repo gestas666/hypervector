@@ -141,6 +141,7 @@ fn staged_generation() -> CohortConfigurationGeneration {
                 maximum_hold_evidence_maximum_age_seconds: None,
                 provider_recipe_exit_policy: "honor".into(),
                 adaptive_exit_policy: "none".into(),
+                breakeven_stop_target: "entry_offset".into(),
                 profit_lock_policy: "none".into(),
                 profit_lock_activation_bps: None,
                 profit_lock_floor_bps: None,

@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from dataclasses import asdict
 import math
 
-from hypervector.live.cohort_adaptive_exit_policy import ADAPTIVE_EXIT_POLICIES
+from hypervector.live.cohort_adaptive_exit_policy import (
+    ADAPTIVE_EXIT_POLICIES,
+    RETENTION_EXIT_POLICY,
+)
 from hypervector.live.btc_hulk_delayed_component_floor import (
     BTC_HULK_DELAYED_COMPONENT_POLICY_IDS,
 )
@@ -33,6 +35,7 @@ class ProviderExitExpectation:
     profit_lock_giveback_bps: float | None = None
     adaptive_exit_policy: str = "none"
     stop_risk_budget: StopRiskBudget | None = None
+    breakeven_stop_target: str = "entry_offset"
 
 
 @dataclass(frozen=True)
@@ -126,19 +129,25 @@ def _expectation(strategy_id: str, contract: object) -> ProviderExitExpectation:
         contract.profit_lock_giveback_bps,
         contract.adaptive_exit_policy,
         contract.stop_risk_budget,
+        contract.breakeven_stop_target,
     )
 
 
 def _policy_payload(row: ProviderExitExpectation) -> dict[str, object]:
     return {
         **(
-            {"stop_risk_budget": asdict(row.stop_risk_budget)}
+            {"stop_risk_budget": row.stop_risk_budget.as_payload()}
             if row.stop_risk_budget is not None
             else {}
         ),
         **(
             {"adaptive_exit_policy": row.adaptive_exit_policy}
             if row.adaptive_exit_policy != "none"
+            else {}
+        ),
+        **(
+            {"breakeven_stop_target": row.breakeven_stop_target}
+            if row.breakeven_stop_target != "entry_offset"
             else {}
         ),
         "maximum_hold_seconds": row.maximum_hold_seconds,
@@ -184,8 +193,18 @@ def _validate_exit_policy(
         or row.provider_recipe_exit_policy not in {"ignore", "honor"}
         or not _profit_lock_valid(row)
         or row.adaptive_exit_policy not in ADAPTIVE_EXIT_POLICIES
+        or not _breakeven_target_valid(row)
     ):
         raise ValueError("provider exit policy is invalid")
+
+
+def _breakeven_target_valid(row: ProviderExitExpectation) -> bool:
+    if row.breakeven_stop_target == "entry_offset":
+        return True
+    return (
+        row.breakeven_stop_target == "floor"
+        and row.adaptive_exit_policy == RETENTION_EXIT_POLICY
+    )
 
 
 def _profit_lock_valid(row: ProviderExitExpectation) -> bool:

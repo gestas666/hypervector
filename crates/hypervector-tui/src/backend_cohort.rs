@@ -80,6 +80,8 @@ pub struct CohortExecutionPlan {
     pub provider_recipe_exit_policy: String,
     #[serde(default = "disabled_profit_lock_policy")]
     pub adaptive_exit_policy: String,
+    #[serde(default = "crate::backend_cohort_configuration::entry_offset_breakeven_stop_target")]
+    pub breakeven_stop_target: String,
     #[serde(default = "disabled_profit_lock_policy")]
     pub profit_lock_policy: String,
     #[serde(default)]
@@ -111,6 +113,8 @@ pub struct CohortProviderExecutionContract {
     pub provider_recipe_exit_policy: String,
     #[serde(default = "disabled_profit_lock_policy")]
     pub adaptive_exit_policy: String,
+    #[serde(default = "crate::backend_cohort_configuration::entry_offset_breakeven_stop_target")]
+    pub breakeven_stop_target: String,
     #[serde(default = "disabled_profit_lock_policy")]
     pub profit_lock_policy: String,
     #[serde(default)]

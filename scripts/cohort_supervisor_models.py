@@ -19,6 +19,19 @@ DEADMAN_ENV = "HYPERVECTOR_DEADMAN_URL"
 EXIT_OPERATOR_STOP = 0
 EXIT_START_REFUSED = 2
 EXIT_STOP_INCOMPLETE = 5
+# Problems that can cost the live book. Only these, and the supervisor's own
+# lifecycle notices (give-up, hold, fault), may reach a push channel. Roster
+# observer and HIP-3 fee-evidence problems stay in the local journal and banner.
+BACKEND_CRITICAL_PROBLEMS = frozenset(
+    {
+        "backend_polls_degraded",
+        "backend_process_absent",
+        "backend_heartbeat_stale",
+        "free_disk_low",
+        "free_disk_warning",
+        "protection_warning",
+    }
+)
 
 
 @dataclass(frozen=True)
@@ -45,6 +58,11 @@ class HealthThresholds:
     hip3_fee_bps: float = 1.5
     fee_lookback_hours: float = 24.0
     minimum_free_disk_gib: float = 10.0
+    # Early warning above the launch floor, so space is reclaimed before a
+    # restart is refused rather than after.
+    free_disk_warning_gib: float = 14.0
+    degraded_polls_with_positions: int = 2
+    degraded_seconds: float = 300.0
 
     def __post_init__(self) -> None:
         """Reject unusable thresholds before any monitoring loop starts."""
@@ -80,6 +98,21 @@ def require_positive(value: float, label: str) -> None:
 
 
 @dataclass(frozen=True)
+class DegradedStreak:
+    """The backend's current run of degraded polls, read from the ledger tail."""
+
+    polls: int
+    started_at_utc: str
+    duration_seconds: float
+    # False when the streak began before the tail window, so the duration and
+    # poll count are lower bounds.
+    complete: bool
+    source: str | None
+    reason: str | None
+    open_position_count: int | None
+
+
+@dataclass(frozen=True)
 class HealthReport:
     """One read-only observation of the live system."""
 
@@ -94,6 +127,9 @@ class HealthReport:
     hip3_fee_regime: dict[str, str] = field(default_factory=dict)
     free_disk_gib: float | None = None
     problems: tuple[str, ...] = ()
+    backend_degraded: DegradedStreak | None = None
+    protection_warnings: tuple[dict[str, object], ...] = ()
+    problem_details: dict[str, str] = field(default_factory=dict)
 
     @property
     def healthy(self) -> bool:

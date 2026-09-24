@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, replace
+from collections.abc import Mapping
+from dataclasses import dataclass, fields, replace
 from pathlib import Path
 from typing import Literal
 
@@ -29,6 +30,7 @@ from hypervector.live.multi_asset_live_config_parsing import (
     optional_strings as _optional_strings,
     positive_number_overrides as _positive_number_overrides,
     provider_position_policy as _provider_position_policy,
+    require_known_keys as _require_known_keys,
     require_live_start as _require_live,
     side_overrides as _side_overrides,
     sides as _sides,
@@ -47,6 +49,64 @@ from hypervector.live.perp_venue_identity import parse_perp_venue_identity
 
 LiveMode = Literal["observe", "live"]
 _BOTH_SIDES = frozenset({"long", "short"})
+# Every key the loader consumes; any other key is refused so a typo cannot
+# silently fall back to a default. A checked-in profile key that is read by
+# another consumer must be added here with a comment naming that consumer.
+_TOP_LEVEL_KEYS = frozenset(
+    {
+        "profile",
+        "network",
+        "margin_mode",
+        "maximum_positions",
+        "runtime",
+        "assets",
+        "providers",
+    }
+)
+_RUNTIME_KEYS = frozenset(
+    {
+        "cohort_ledger",
+        "stop_file",
+        "poll_seconds",
+        "lookback_days",
+        "transition_approval",
+    }
+)
+_ASSET_KEYS = frozenset(
+    {
+        "symbol",
+        "sides",
+        "leverage",
+        "venue_max_leverage",
+        "margin_fraction",
+        "max_notional_usd",
+        "market_slippage_cap_fraction",
+        "stop_bps",
+        "maximum_hold_seconds",
+        "entry_slippage_cap_fraction",
+    }
+)
+_PROVIDER_KEYS = frozenset(
+    {
+        "strategy_id",
+        "symbols",
+        "sides",
+        "priority",
+        "timeframe",
+        "maximum_entry_delay_seconds",
+        "execution_symbols",
+        "execution",
+        "source_profile",
+        "execution_side_overrides",
+        "entry_context_overrides",
+        "stop_bps_overrides",
+        "sizing_overrides",
+        "directional_sizing_overrides",
+        "profit_lock_overrides",
+        "position_policy",
+    }
+)
+_EXECUTION_KEYS = frozenset(field.name for field in fields(ProviderExecutionContract))
 
 
 @dataclass(frozen=True)
@@ -329,10 +389,12 @@ def load_multi_asset_live_config(
     if mode not in {"observe", "live"}:
         raise MultiAssetLiveConfigError("mode must be observe or live")
     raw = _load_toml(Path(path))
+    _require_known_keys(raw, _TOP_LEVEL_KEYS, "top-level table")
     profile_id = _text(raw, "profile")
     network = _text(raw, "network")
     margin_mode = _text(raw, "margin_mode")
     runtime = _mapping(raw.get("runtime"), "runtime")
+    _require_known_keys(runtime, _RUNTIME_KEYS, "[runtime]")
     cohort_ledger = Path(_text(runtime, "cohort_ledger"))
     assets = _assets(
         raw.get("assets"),
@@ -382,6 +444,8 @@ def _assets(
     accepts_live_risk: bool,
 ) -> tuple[AssetLiveConfig, ...]:
     rows = _mapping_rows(value, "assets")
+    for row in rows:
+        _require_known_keys(row, _ASSET_KEYS, f"[[assets]] {_row_name(row, 'symbol')}")
     return tuple(
         AssetLiveConfig(
             parent_profile_id=parent_profile_id,
@@ -410,6 +474,13 @@ def _assets(
 
 
 def _providers(value: object) -> tuple[StrategyProviderConfig, ...]:
+    rows = _mapping_rows(value, "providers")
+    for row in rows:
+        name = f"[[providers]] {_row_name(row, 'strategy_id')}"
+        _require_known_keys(row, _PROVIDER_KEYS, name)
+        execution = row.get("execution")
+        if isinstance(execution, Mapping):
+            _require_known_keys(execution, _EXECUTION_KEYS, f"{name} execution")
     return tuple(
         StrategyProviderConfig(
             strategy_id=_text(row, "strategy_id"),
@@ -448,8 +519,13 @@ def _providers(value: object) -> tuple[StrategyProviderConfig, ...]:
             ),
             position_policy=_provider_position_policy(row.get("position_policy")),
         )
-        for row in _mapping_rows(value, "providers")
+        for row in rows
     )
+
+
+def _row_name(row: Mapping[str, object], key: str) -> str:
+    value = row.get(key)
+    return value.strip() if isinstance(value, str) and value.strip() else "(unnamed)"
 
 
 def _validate_config(config: MultiAssetLiveConfig) -> None:

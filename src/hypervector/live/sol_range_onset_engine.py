@@ -73,7 +73,10 @@ from hypervector.live.sol_partial_protective_recovery import (
 from hypervector.live.sol_protective_execution_evidence import (
     ProtectiveExecutionEvidenceError,
 )
-from hypervector.live.cohort_stop_risk_sizing import size_for_stop_risk
+from hypervector.live.cohort_stop_risk_sizing import (
+    StopRiskAccountValueError,
+    size_for_stop_risk,
+)
 
 _TELEMETRY_DEPTH_LEVELS = 20
 
@@ -201,6 +204,7 @@ class SolRangeOnsetLiveEngine:
             notional=notional,
             entry_deadline=entry_deadline,
             decision_time_ms=decision_time_ms,
+            account_value_usd=before.account.account_value_usd,
         )
 
     def _enter_with_protection(
@@ -211,17 +215,27 @@ class SolRangeOnsetLiveEngine:
         notional: float,
         decision_time_ms: int | None,
         entry_deadline: EntrySubmissionDeadline | None = None,
+        account_value_usd: float | None = None,
     ) -> SolLiveSnapshot:
         plan = self._pending_execution_plan or legacy_execution_plan(self._config)
         if plan.stop_risk_budget is not None:
-            risk = size_for_stop_risk(
-                plan=plan,
-                budget=plan.stop_risk_budget,
-                mark_price=mark_price,
-                side=side,
-                entry_slippage_fraction=self._config.effective_entry_slippage_cap_fraction,
-                original_notional_usd=notional,
-            )
+            try:
+                risk = size_for_stop_risk(
+                    plan=plan,
+                    budget=plan.stop_risk_budget,
+                    mark_price=mark_price,
+                    side=side,
+                    entry_slippage_fraction=self._config.effective_entry_slippage_cap_fraction,
+                    original_notional_usd=notional,
+                    account_value_usd=account_value_usd,
+                )
+            except StopRiskAccountValueError as exc:
+                # An equity-fraction budget never sizes on a guessed equity; the
+                # entry is refused as a journaled technical failure.
+                self._pending_execution_plan = None
+                reason = f"entry refused: {exc}"
+                self._events.fault(reason)
+                raise SolLiveEngineError(reason) from exc
             self._events.emit("entry_stop_risk_sizing", risk.as_payload())
             notional = risk.notional_usd
         try:

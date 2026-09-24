@@ -389,6 +389,9 @@ fn profit_lock_contract(contract: &CohortProviderExecutionContract) -> String {
         return "ADAPTIVE REGIME/BOOK PROFIT RETENTION".into();
     }
     if contract.adaptive_exit_policy == "regime_flip_floor_retention_v2" {
+        if contract.breakeven_stop_target == "floor" {
+            return "ADAPTIVE REGIME-FLIP RATCHET / PROFIT FLOOR v2 / VENUE STOP TO FLOOR".into();
+        }
         return "ADAPTIVE REGIME-FLIP RATCHET / PROFIT FLOOR v2".into();
     }
     if contract.profit_lock_policy == "none" {
@@ -479,6 +482,7 @@ mod tests {
             hard_maximum_hold_seconds: None,
             provider_recipe_exit_policy: "ignore".into(),
             adaptive_exit_policy: "none".into(),
+            breakeven_stop_target: "entry_offset".into(),
             profit_lock_policy: "btc_hulk_delayed_component_floor_v1".into(),
             profit_lock_activation_bps: None,
             profit_lock_floor_bps: None,
@@ -494,6 +498,23 @@ mod tests {
         assert_eq!(
             profit_lock_contract(&versioned),
             "FLOOR / REVERSAL CONTAINMENT"
+        );
+        let retention = CohortProviderExecutionContract {
+            adaptive_exit_policy: "regime_flip_floor_retention_v2".into(),
+            profit_lock_policy: "none".into(),
+            ..versioned
+        };
+        assert_eq!(
+            profit_lock_contract(&retention),
+            "ADAPTIVE REGIME-FLIP RATCHET / PROFIT FLOOR v2"
+        );
+        let floor = CohortProviderExecutionContract {
+            breakeven_stop_target: "floor".into(),
+            ..retention
+        };
+        assert_eq!(
+            profit_lock_contract(&floor),
+            "ADAPTIVE REGIME-FLIP RATCHET / PROFIT FLOOR v2 / VENUE STOP TO FLOOR"
         );
     }
 }

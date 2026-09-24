@@ -15,10 +15,18 @@ import urllib.error
 import urllib.request
 
 from cohort_supervisor_models import (
+    BACKEND_CRITICAL_PROBLEMS,
     SupervisorPaths,
     HealthReport,
     WEBHOOK_ENV,
 )
+
+BACKEND_CRITICAL = "backend_critical"
+INFORMATIONAL = "informational"
+CRITICAL_TITLE = "HYPERVECTOR BACKEND ALERT"
+NOTICE_TITLE = "Hypervector notice"
+BACKEND_RECOVERED_TITLE = "Hypervector backend recovered"
+RECOVERED_TITLE = "Hypervector recovered"
 
 
 class AlertSink(Protocol):
@@ -86,6 +94,25 @@ class WebhookSink:
             _delivery_failure("webhook", type(exc).__name__)
 
 
+class BackendCriticalOnly:
+    """Forward only backend-critical alerts to a push channel.
+
+    Roster-observer and HIP-3 fee-evidence problems flap and cannot by
+    themselves cost the live book, so they stay in the local journal and banner
+    and a push always means the backend needs attention. A record without a
+    class is not forwarded.
+    """
+
+    def __init__(self, sink: AlertSink) -> None:
+        """Wrap one push channel."""
+        self._sink = sink
+
+    def send(self, title: str, body: str, record: dict[str, object]) -> None:
+        """Deliver the alert only when the alerter classed it backend-critical."""
+        if record.get("alert_class") == BACKEND_CRITICAL:
+            self._sink.send(title, body, record)
+
+
 class Alerter:
     """Alert on every change of the problem set, then remind while unhealthy."""
 
@@ -111,6 +138,9 @@ class Alerter:
         self._alerted_labels: set[str] = set()
         self._suppressed = 0
         self._last_sent = 0.0
+        # Whether the newest alert delivered was backend-critical, so the push
+        # channel also learns when that condition clears.
+        self._critical_pushed = False
 
     def observe(self, report: HealthReport, now: float) -> bool:
         """Send at most one alert for this report. Return whether one was sent."""
@@ -133,33 +163,66 @@ class Alerter:
                 self._suppressed += 1
                 return False
             self._alerted_labels.clear()
+            pushed, self._critical_pushed = self._critical_pushed, False
             self.emit(
-                "Hypervector recovered", "all probes healthy", asdict(report), now
+                RECOVERED_TITLE,
+                "all probes healthy",
+                asdict(report),
+                now,
+                critical=pushed,
             )
             return True
+        critical = any(problem in BACKEND_CRITICAL_PROBLEMS for problem in problems)
         unreported = [problem for problem in problems if problem not in self._alerted_labels]
         if not unreported and not reminder_due and within_floor:
+            if self._critical_pushed and not critical:
+                # Retry once the floor passes: a phone left on a backend alert
+                # must learn that the backend-critical condition cleared.
+                self._last_problems = previous
             self._suppressed += 1
             return False
         self._alerted_labels.update(problems)
-        self.emit("HYPERVECTOR ALERT", self._body(problems), asdict(report), now)
+        title = CRITICAL_TITLE if critical else NOTICE_TITLE
+        if not critical and self._critical_pushed:
+            title = BACKEND_RECOVERED_TITLE
+        pushed = critical or self._critical_pushed
+        self._critical_pushed = critical
+        self.emit(title, self._body(report), asdict(report), now, critical=pushed)
         return True
 
-    def _body(self, problems: tuple[str, ...]) -> str:
-        body = ", ".join(problems)
+    def _body(self, report: HealthReport) -> str:
+        ordered = sorted(
+            report.problems, key=lambda problem: problem not in BACKEND_CRITICAL_PROBLEMS
+        )
+        details = report.problem_details
+        body = ", ".join(
+            f"{problem} ({details[problem]})" if problem in details else problem
+            for problem in ordered
+        )
         if not self._suppressed:
             return body
         suppressed, self._suppressed = self._suppressed, 0
         return f"{body} (+{suppressed} suppressed transitions)"
 
     def emit(
-        self, title: str, body: str, record: dict[str, object], now: float
+        self,
+        title: str,
+        body: str,
+        record: dict[str, object],
+        now: float,
+        *,
+        critical: bool = True,
     ) -> None:
-        """Deliver one explicit alert to every sink."""
+        """Deliver one explicit alert to every sink.
+
+        Direct callers are the supervisor's lifecycle notices (give-up, hold,
+        fault, disk refusal), which are backend-critical by default.
+        """
         self._last_sent = now
         stamped = {
             "alerted_at_utc": datetime.fromtimestamp(now, UTC).isoformat(),
             **record,
+            "alert_class": BACKEND_CRITICAL if critical else INFORMATIONAL,
         }
         for sink in self._sinks:
             try:
@@ -169,13 +232,17 @@ class Alerter:
 
 
 def build_sinks(paths: SupervisorPaths, *, notifications: bool) -> list[AlertSink]:
-    """Assemble the durable journal plus any operator-enabled channels."""
+    """Assemble the durable journal plus any operator-enabled channels.
+
+    The journal and the local banner receive every alert; the push webhook
+    receives backend-critical alerts only.
+    """
     sinks: list[AlertSink] = [JsonlSink(paths.alerts)]
     if notifications and Path("/usr/bin/osascript").exists():
         sinks.append(MacNotificationSink())
     webhook = os.environ.get(WEBHOOK_ENV, "").strip()
     if webhook:
-        sinks.append(WebhookSink(webhook))
+        sinks.append(BackendCriticalOnly(WebhookSink(webhook)))
     return sinks
 
 

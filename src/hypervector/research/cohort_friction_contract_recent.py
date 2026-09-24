@@ -37,6 +37,10 @@ _V90_BREADTH_SCREEN_EVIDENCE = (
     "data/logs/research/bidirectional_cohort/"
     "v90_expansion_screen_20260920_v1/screen_breadth_H1.json"
 )
+_V94_STRONG_SHORT_DONCHIAN20 = "hourly_donchian_20_10_atr20_strong_short_v1"
+_V94_WEAK_SHORT_RESCORE_EVIDENCE = (
+    "docs/research-journal/v94-weak-short-rescore-20260924-v1.json"
+)
 
 
 def v58_commodity_fresh15_modeled_contracts() -> dict[
@@ -189,6 +193,31 @@ def v90_hourly_modeled_contracts() -> dict[tuple[str, str], ModeledExecutionCont
             evidence_source=evidence,
         )
         for symbol, (fee, evidence) in routes.items()
+    }
+
+
+@cache
+def v94_strong_short_modeled_contracts() -> dict[
+    tuple[str, str], ModeledExecutionContract
+]:
+    """Return the V94 strong-short replay assumptions for the four Donchian routes.
+
+    The execution shape is the V89 hourly contract, unchanged. The pre-registered
+    re-score ran every route at the V90 screen grid's measured and adverse arms;
+    each route here is bound to the **adverse** arm (5.5 bps entry slippage, 0.9
+    bps fee on HIP-3 and 4.5 bps on the core perp), as the V90 routes are. That
+    includes xyz:SNDK, whose v1 route keeps the frozen V89 nominal contract.
+    """
+    base = v89_hourly_modeled_contracts()[(_V90_HOURLY_DONCHIAN20, "xyz:SNDK")]
+    fees = {"SOL": 4.5, "xyz:SNDK": 0.9, "xyz:BRENTOIL": 0.9, "xyz:TSLA": 0.9}
+    return {
+        (_V94_STRONG_SHORT_DONCHIAN20, symbol): replace(
+            base,
+            entry_fee_bps=fee,
+            entry_slippage_bps=_V90_ADVERSE_ENTRY_SLIPPAGE_BPS,
+            evidence_source=_V94_WEAK_SHORT_RESCORE_EVIDENCE,
+        )
+        for symbol, fee in fees.items()
     }
 
 

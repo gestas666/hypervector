@@ -11,6 +11,7 @@ from hypervector.live.hourly_price_provider import (
     DONCHIAN8_STRATEGY,
     PROTECTED_DONCHIAN20_SYMBOLS,
     PROTECTED_DONCHIAN20_STRATEGY,
+    STRONG_SHORT_DONCHIAN20_STRATEGY,
 )
 
 EvidenceRow = tuple[str, str, str, str, str, str, str]
@@ -31,11 +32,21 @@ _V90_COMMON = (
     "mechanism on most symbols. Not untouched OOS or live fills."
 )
 _PROTECTED_REVIEW = "docs/reviews/2026-09-21-v90-profit-protection-readiness.md"
+_V94_RESCORE = "docs/research-journal/v94-weak-short-rescore-20260924-v1.json"
+_V94_COMMON = (
+    " Mechanism level, pre-registered bar passed 4 of 4 (V93 sizing, v2 exits): "
+    "recent 8-asset +$431.39 measured / +$547.75 adverse, one-year crypto "
+    "+$798.30 / +$1,065.87, live-4 recent +$210.09 / +$289.65. Not out of sample: "
+    "the 1 ATR split was found on these same windows after 5 split families were "
+    "examined. The live-4 gain is SNDK-concentrated (without SNDK -$2.65 measured "
+    "/ +$25.35 adverse), and the rule also skips winners (largest $66.58 recent). "
+    "The modeled contract is the re-score's adverse arm. Not live fills."
+)
 
 
 def hourly_price_evidence_rows() -> tuple[EvidenceRow, ...]:
     """Expose measured cadence and limitations without changing route authority."""
-    return _v89_rows() + _v90_rows() + _protected_rows()
+    return _v89_rows() + _v90_rows() + _protected_rows() + _v94_strong_short_rows()
 
 
 def _v89_rows() -> tuple[EvidenceRow, ...]:
@@ -163,4 +174,48 @@ def _protected_rows() -> tuple[EvidenceRow, ...]:
             _PROTECTED_REVIEW,
         )
         for symbol in sorted(PROTECTED_DONCHIAN20_SYMBOLS)
+    )
+
+
+def _v94_strong_short_rows() -> tuple[EvidenceRow, ...]:
+    """The 2026-09-24 weak-short re-score, quoted per route from its recent cell.
+
+    The rule ships on every Donchian route because it passed at mechanism level;
+    the per-route deltas below are small samples and two of them are negative.
+    """
+    routes = (
+        (
+            "SOL",
+            "18 weak shorts skipped / recent window",
+            "Recent-window delta -$19.11 measured / -$7.24 adverse; one-year "
+            "+$190.29 / +$240.19 over 122-123 skipped shorts.",
+        ),
+        (
+            "xyz:SNDK",
+            "20 weak shorts skipped / recent window",
+            "Recent-window delta +$212.74 measured / +$264.30 adverse; this route "
+            "carries most of the live-4 gain.",
+        ),
+        (
+            "xyz:BRENTOIL",
+            "18 weak shorts skipped / recent window",
+            "Recent-window delta +$20.98 measured / +$28.21 adverse.",
+        ),
+        (
+            "xyz:TSLA",
+            "17 weak shorts skipped / recent window",
+            "Recent-window delta -$4.52 measured / +$4.39 adverse.",
+        ),
+    )
+    return tuple(
+        (
+            STRONG_SHORT_DONCHIAN20_STRATEGY,
+            symbol,
+            "preregistered_rescore_passed_in_sample",
+            "low",
+            cadence,
+            route + _V94_COMMON,
+            _V94_RESCORE,
+        )
+        for symbol, cadence, route in routes
     )

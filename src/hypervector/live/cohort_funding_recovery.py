@@ -19,7 +19,9 @@ def recover_funding_cursor(
     """Recover the last committed query, or the first known profile activation."""
     records = ledger.read_matching(
         lambda row: row.get("profile_fingerprint") == profile_fingerprint
-        and row.get("event_type") in _RECOVERY_EVENTS
+        and row.get("event_type") in _RECOVERY_EVENTS,
+        event_types=_RECOVERY_EVENTS,
+        profile_fingerprint=profile_fingerprint,
     )
     if not records:
         return None

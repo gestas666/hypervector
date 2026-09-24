@@ -28,7 +28,11 @@ from cohort_supervisor_health import (
 )
 from cohort_supervisor_alerts import Alerter, append_jsonl
 from cohort_supervisor_state import RestartJournal, supervisor_lock
-from cohort_supervisor_restart_policy import decide_restart as decide_restart
+from cohort_supervisor_restart_policy import (
+    charges_restart_budget,
+    decide_restart as decide_restart,
+)
+from cohort_supervisor_venue_wait import VenueWait, backend_venue_wait
 from cohort_supervisor_observation import (
     _StopFlag, SupervisorRuntime, wait_for_adopted_exit,
 )
@@ -92,6 +96,8 @@ class _Session:
     working_directory: Path
     deadman_url: str | None
     maximum_launches: int | None
+    charge_next_launch: bool = True
+    child_log_offset: int = 0
 
     def run(self, adopt: bool, adopted_exit_policy: str) -> int:
         """Supervise, converting any unexpected fault into a monitored hold.
@@ -145,7 +151,9 @@ class _Session:
             starved = self._insufficient_free_disk()
             if starved is not None:
                 return starved
-            if not self.journal.reserve(self.runtime.now(), self.policy):
+            if not self.journal.reserve(
+                self.runtime.now(), self.policy, charged=self.charge_next_launch
+            ):
                 _event(
                     self.paths,
                     "restart_decision",
@@ -268,6 +276,7 @@ class _Session:
             log.write(
                 f"\n=== supervisor launch {launches} at {datetime.fromtimestamp(started, UTC).isoformat()} ===\n".encode()
             )
+            self.child_log_offset = log.tell()
             child = subprocess.Popen(
                 list(self.command),
                 cwd=self.working_directory,
@@ -314,7 +323,19 @@ class _Session:
             policy=self.policy,
             now=self.runtime.now(),
         )
-        _event(self.paths, "restart_decision", **asdict(decision), exit_code=code)
+        refusal = (
+            _start_refusal_reason(self.paths.child_log, self.child_log_offset)
+            if code == EXIT_START_REFUSED
+            else None
+        )
+        _event(
+            self.paths,
+            "restart_decision",
+            **asdict(decision),
+            exit_code=code,
+            **({} if refusal is None else {"refusal_reason": refusal}),
+        )
+        self.charge_next_launch = charges_restart_budget(code)
         if decision.action != "restart":
             self.journal.hold(decision.reason)
         if decision.action == "stop":
@@ -380,7 +401,12 @@ def _watch_child(
     A hung-but-alive backend is alerted, never killed: an open position keeps its
     venue-native stop, and SIGTERM is the operator-stop path, so killing on a
     heuristic would convert a telemetry problem into an execution event.
+
+    A backend waiting for the venue before its start is announced as waiting,
+    not reported as a stale heartbeat: its startup grace begins when the wait
+    ends, because its ledger replay and engine starts only begin then.
     """
+    grace_anchor, waiting = started, False
     while True:
         code = child.poll()
         if code is not None:
@@ -400,7 +426,13 @@ def _watch_child(
             code = child.poll()
             return EXIT_STOP_INCOMPLETE if code is None else code
         now = runtime.now()
-        warming = now - started < policy.startup_grace_seconds
+        wait = backend_venue_wait(paths.process_lock, child.pid, now)
+        if wait is not None:
+            grace_anchor = now
+            if not waiting:
+                _announce_venue_wait(paths, alerter, wait, now)
+        waiting = wait is not None
+        warming = now - grace_anchor < policy.startup_grace_seconds
         report = evaluate_health(
             paths,
             thresholds,
@@ -411,6 +443,45 @@ def _watch_child(
         alerter.observe(report, now)
         runtime.deadman(deadman_url)
         _interruptible_sleep(interval, stop, runtime)
+
+
+_REFUSAL_PREFIX = "live start refused: "
+_REFUSAL_TAIL_BYTES = 64 * 1024
+_REFUSAL_MAXIMUM_CHARACTERS = 500
+
+
+def _start_refusal_reason(child_log: Path, offset: int) -> str | None:
+    """Return the backend's own refusal line from this launch's output, if any.
+
+    Only bytes written after this launch's header are read, so an earlier
+    launch's refusal is never attributed to this one. The reason stays in the
+    local event journal, beside the log it was copied from.
+    """
+    try:
+        with child_log.open("rb") as handle:
+            end = handle.seek(0, os.SEEK_END)
+            handle.seek(max(offset, end - _REFUSAL_TAIL_BYTES))
+            tail = handle.read().decode("utf-8", errors="replace")
+    except OSError:
+        return None
+    for line in reversed(tail.splitlines()):
+        if line.startswith(_REFUSAL_PREFIX):
+            reason = line[len(_REFUSAL_PREFIX) :].strip()
+            return reason[:_REFUSAL_MAXIMUM_CHARACTERS] or None
+    return None
+
+
+def _announce_venue_wait(
+    paths: SupervisorPaths, alerter: Alerter, wait: VenueWait, now: float
+) -> None:
+    detail = asdict(wait)
+    _event(paths, "backend_waiting_for_venue", **detail)
+    alerter.emit(
+        "HYPERVECTOR BACKEND WAITING FOR VENUE",
+        "backend_waiting_for_venue",
+        detail,
+        now,
+    )
 
 
 def _hold(

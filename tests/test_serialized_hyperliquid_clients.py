@@ -258,3 +258,59 @@ def test_info_read_retry_exhaustion_preserves_last_transport_error() -> None:
         wrapped.user_fills("0x1")
     assert caught.value is errors[-1]
     assert info.user_fills.call_count == 3
+
+
+def test_serialized_exchange_implements_every_exchange_protocol_method() -> None:
+    """A protocol method missing from the wrapper fails at the first live call."""
+    required = {
+        name
+        for name, value in vars(HyperliquidExchangeProtocol).items()
+        if callable(value) and not name.startswith("_")
+    }
+
+    missing = sorted(
+        name for name in required if not hasattr(SerializedHyperliquidExchange, name)
+    )
+
+    assert "modify_order" in required
+    assert missing == []
+
+
+def test_modify_order_delegates_every_argument_and_invalidates_truth() -> None:
+    """The venue stop raise reaches the SDK intact and refreshes account truth."""
+    clock = _Clock()
+    info = Mock(spec=HyperliquidInfoProtocol)
+    exchange = Mock(spec=HyperliquidExchangeProtocol)
+    info.user_state.side_effect = ({"version": 1}, {"version": 2})
+    exchange.modify_order.return_value = {"status": "ok"}
+    wrapped_info, wrapped_exchange = shared_serialized_clients(
+        info,
+        exchange,
+        read_coalesce_seconds=10.0,
+        monotonic_fn=clock,
+    )
+    order_type = {"trigger": {"triggerPx": 99.3, "isMarket": True, "tpsl": "sl"}}
+
+    assert wrapped_info.user_state("0x1") == {"version": 1}
+    assert wrapped_exchange.modify_order(
+        555018726035,
+        "xyz:BRENTOIL",
+        False,
+        5.84,
+        99.3,
+        order_type,
+        reduce_only=True,
+        cloid="0xabc",
+    ) == {"status": "ok"}
+
+    exchange.modify_order.assert_called_once_with(
+        555018726035,
+        "xyz:BRENTOIL",
+        False,
+        5.84,
+        99.3,
+        order_type,
+        reduce_only=True,
+        cloid="0xabc",
+    )
+    assert wrapped_info.user_state("0x1") == {"version": 2}

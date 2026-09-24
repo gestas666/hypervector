@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 import time
 from collections.abc import Callable, Iterator, Mapping
 from contextlib import contextmanager
@@ -74,10 +75,14 @@ from hypervector.live.multi_asset_signal_source import ProviderEvaluation
 from hypervector.live.sol_range_onset_state import SolLiveState
 from hypervector.live.transient_transport import transient_read_failure_reason
 
-# One hour of blindness at the configured 15s cadence. Long enough that an
-# ordinary gateway flap never trips it, bounded so a permanent outage cannot be
-# reported as a running cohort.
-_DEFAULT_DEGRADED_POLL_BOUND = 240
+# One hour of account blindness, measured on the monotonic clock. A poll whose
+# transport retries are exhausted lands about two minutes after the previous one,
+# so a bound counted in polls stretched to hours. Long enough that an ordinary
+# gateway flap never trips it, bounded so a process whose own account reads have
+# failed for an hour cannot be reported as a running cohort. When a fresh
+# session cannot reach the venue either, a relaunch cannot help, so the runner
+# keeps polling in place; the supervisor's degraded-poll problem reports that.
+_DEFAULT_DEGRADED_SECONDS = 3_600.0
 
 _ContractMap = Mapping[
     contract_selection.ExecutionContractKey, ProviderExecutionContract
@@ -118,7 +123,8 @@ class MultiAssetLiveRunner:
         transition_drain: CohortTransitionDrain | None = None,
         monotonic_fn: Callable[[], float] = time.monotonic,
         funding_recovery_start_ms: int | None = None,
-        maximum_consecutive_degraded_polls: int = _DEFAULT_DEGRADED_POLL_BOUND,
+        maximum_degraded_seconds: float = _DEFAULT_DEGRADED_SECONDS,
+        venue_unreachable_reason: Callable[[], str | None] | None = None,
     ) -> None:
         self._assign_runtime_dependencies(
             telemetry,
@@ -130,7 +136,8 @@ class MultiAssetLiveRunner:
             monotonic_fn,
         )
         self._funding_recovery_start_ms = funding_recovery_start_ms
-        self._maximum_consecutive_degraded_polls = maximum_consecutive_degraded_polls
+        self._maximum_degraded_seconds = _degraded_bound(maximum_degraded_seconds)
+        self._venue_unreachable_reason = venue_unreachable_reason
         self._assign_strategy_dependencies(
             symbols,
             engines,
@@ -208,6 +215,7 @@ class MultiAssetLiveRunner:
     ) -> None:
         self._latest_evaluations = {}
         self._breakeven_attempts: dict[tuple[str, int], int] = {}
+        self._breakeven_skips: dict[tuple[str, int], tuple[str, int]] = {}
         self._operator_processor = create_operator_processor(
             commands,
             telemetry,
@@ -435,7 +443,7 @@ class MultiAssetLiveRunner:
         self._telemetry.emit_routing(
             poll.all_intents, report, poll.telemetry_evaluations
         )
-        raised = self._raise_breakeven_stops(report, venues)
+        raised = self._raise_breakeven_stops(report, venues, observed_ms)
         post_action = bool(report.actions) or raised
         if post_action:
             venues = reconcile_engines(
@@ -462,11 +470,13 @@ class MultiAssetLiveRunner:
         report: IntentRoutingReport,
         venues: Mapping[str, SolReconciliationSnapshot]
         | tuple[SolReconciliationSnapshot, ...],
+        observed_ms: int | None = None,
     ) -> bool:
         """Move venue stops to break-even for v2 lifecycles whose floor armed this cycle."""
         requests = self._profit_lock_controller.breakeven_requests
         if not requests:
             return False
+        requested = tuple(symbol for symbol in self._symbols if symbol in requests)
         by_symbol = (
             dict(zip(self._symbols, venues, strict=True))
             if isinstance(venues, tuple)
@@ -488,6 +498,16 @@ class MultiAssetLiveRunner:
                 for symbol in self._symbols
             },
             emit=self._telemetry.emit_breakeven_stop_attempt,
+            plans={
+                symbol: self._engines[symbol].snapshot.execution_plan
+                for symbol in requested
+            },
+            books={symbol: self._engines[symbol].latest_book for symbol in requested},
+            observed_ms=observed_ms,
+            stop_oids={
+                symbol: self._engines[symbol].snapshot.stop_oid for symbol in requested
+            },
+            skips=self._breakeven_skips,
         )
 
     def _run_operator_commands(
@@ -511,16 +531,18 @@ class MultiAssetLiveRunner:
         validate_max_polls(max_polls)
         activation = aware(self._now_fn())
         self.start(activation_time_ms=int(activation.timestamp() * 1_000))
-        polls, degraded_streak = 0, 0
+        polls, blind_since, blind_polls = 0, None, 0
         while not self._shutdown_requested():
             cycle_started = self._monotonic_fn()
             try:
                 self.poll_once()
-                degraded_streak = 0
+                blind_since, blind_polls = None, 0
             except TransientCohortMarketDataError as exc:
                 if self._execution_phase_failed:
                     raise
-                degraded_streak += 1
+                # Reconciliation and the unconditional deadlines completed before
+                # public data failed, so the account itself is not blind.
+                blind_since, blind_polls = None, 0
                 self._telemetry.emit_poll_degraded(
                     source=exc.source,
                     reason=exc.reason,
@@ -529,15 +551,13 @@ class MultiAssetLiveRunner:
                 reason = transient_read_failure_reason(exc)
                 if reason is None or self._execution_phase_failed:
                     raise
-                degraded_streak += 1
+                blind_since = cycle_started if blind_since is None else blind_since
+                blind_polls += 1
                 self._telemetry.emit_poll_degraded(
                     source="hyperliquid_account_reconciliation",
                     reason=reason,
                 )
-            if degraded_streak >= self._maximum_consecutive_degraded_polls:
-                raise CohortDegradedBlindnessError(
-                    f"market data degraded for {degraded_streak} consecutive polls"
-                )
+                self._raise_if_blind_too_long(blind_since, blind_polls)
             polls += 1
             if self._transition_drain_complete:
                 self._stop_all("operator_transition_drain_complete")
@@ -550,6 +570,22 @@ class MultiAssetLiveRunner:
                 self._sleep_fn(remaining_delay(self._poll_seconds, elapsed))
         self._stop_all("operator_stop")
         return polls
+
+    def _raise_if_blind_too_long(self, blind_since: float, blind_polls: int) -> None:
+        blind_seconds = self._monotonic_fn() - blind_since
+        if blind_seconds < self._maximum_degraded_seconds:
+            return
+        probe = self._venue_unreachable_reason
+        if probe is not None and probe() is not None:
+            # A fresh session cannot reach the venue either: the host or the
+            # venue is offline, and a relaunch would only wait in its start
+            # probe before a bundle and a full replay. Keep polling in place.
+            return
+        raise CohortDegradedBlindnessError(
+            f"account reconciliation unavailable for {blind_seconds:.0f}s "
+            f"across {blind_polls} consecutive polls"
+            + ("" if probe is None else " while a fresh public venue read succeeds")
+        )
 
     def _execute(
         self,
@@ -592,3 +628,11 @@ class MultiAssetLiveRunner:
             snapshot = self._engines[symbol].snapshot
             if snapshot.state in {SolLiveState.FLAT, SolLiveState.OPEN}:
                 self._engines[symbol].stop(reason)
+
+
+def _degraded_bound(seconds: float) -> float:
+    if isinstance(seconds, bool) or not math.isfinite(seconds) or seconds <= 0.0:
+        raise MultiAssetLiveRunnerError(
+            "maximum_degraded_seconds must be positive and finite"
+        )
+    return float(seconds)

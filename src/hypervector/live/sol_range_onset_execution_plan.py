@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+import math
 from typing import NoReturn, Protocol
 
 from hypervector.live.cohort_entry_sizing import CohortEntrySizing
@@ -56,6 +57,10 @@ def entry_notional(
     sizing: CohortEntrySizing | None = None,
 ) -> float:
     """Return bounded notional or durably fault a non-positive live account."""
+    if not math.isfinite(account_value_usd):
+        reason = "live account value must be finite and positive"
+        fault(reason)
+        raise SolLiveEngineError(reason)
     if account_value_usd <= 0.0:
         reason = "live account value must be positive"
         fault(reason)

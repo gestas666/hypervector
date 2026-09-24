@@ -17,6 +17,7 @@ from hypervector.research.cohort_friction_contract_recent import (
     v79_route_modeled_contracts,
     v89_hourly_modeled_contracts,
     v90_hourly_modeled_contracts,
+    v94_strong_short_modeled_contracts,
 )
 from hypervector.research.eth_pullback_replay import ETH_PULLBACK_STRATEGY
 from hypervector.research.hype_breakout_exit_models import HypeExitReplayConfig
@@ -64,6 +65,7 @@ def modeled_contract(
     route = (strategy, symbol)
     exact = v89_hourly_modeled_contracts().get(route)
     exact = exact or v90_hourly_modeled_contracts().get(route)
+    exact = exact or v94_strong_short_modeled_contracts().get(route)
     exact = exact or v79_route_modeled_contracts().get(route)
     exact = exact or _hip3_modeled_contracts().get(route)
     return exact or _modeled_contracts().get(strategy)

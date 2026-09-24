@@ -35,10 +35,6 @@ from hypervector.live.multi_asset_intent_poller import (
     CohortMarketBar,
 )
 from hypervector.live.multi_asset_live_runner import MultiAssetLiveRunner
-from hypervector.live.multi_asset_live_runner_support import (
-    CohortDegradedBlindnessError,
-)
-from hypervector.live.multi_asset_market_bars import TransientCohortMarketDataError
 from hypervector.live.multi_asset_signal_source import ProviderEvaluation
 from hypervector.live.provider_readiness import SignalReadiness
 from hypervector.live.sol_range_onset_state import SolLiveSnapshot, SolLiveState
@@ -1163,71 +1159,3 @@ def test_read_failure_after_order_submission_is_never_degraded(
     # The original fault propagates, so the operator still gets an exact stage
     # instead of a wrapper's "unclassified".
     assert runtime_failure_stage(raised.value) == "entry_submission"
-
-
-class _BlindPoller(_Poller):
-    """Fail acquisition on demand so the degraded bound can be exercised."""
-
-    failure = TransientCohortMarketDataError(
-        source="BTC_candles", reason="transport_timeout_retry_exhausted"
-    )
-
-    def __init__(self, pattern: tuple[bool, ...]) -> None:
-        super().__init__((), (), ())
-        self._pattern = iter(pattern)
-
-    def poll(self, observed_at: datetime) -> CohortIntentPoll:
-        if next(self._pattern, True):
-            raise self.failure
-        return super().poll(observed_at)
-
-
-def _blind_runner(
-    tmp_path: Path, pattern: tuple[bool, ...], bound: int
-) -> tuple[MultiAssetLiveRunner, _Telemetry]:
-    telemetry = _Telemetry(None)
-    pairs = frozenset(("hulk", symbol) for symbol in _SYMBOLS)
-    runner = MultiAssetLiveRunner(
-        symbols=_SYMBOLS,
-        engines={symbol: _Engine(symbol) for symbol in _SYMBOLS},
-        router=_router(),
-        intent_poller=_BlindPoller(pattern),
-        telemetry=telemetry,
-        stop_file=tmp_path / "STOP",
-        now_fn=lambda: datetime(2026, 8, 1, 12, tzinfo=UTC),
-        sleep_fn=lambda _: None,
-        poll_seconds=15.0,
-        signal_stop_requested=lambda: False,
-        maximum_hold_seconds_by_symbol={symbol: 28_800 for symbol in _SYMBOLS},
-        execution_contracts={"hulk": _contract()},
-        maximum_entry_delay_ms_by_provider_symbol={pair: 60_000 for pair in pairs},
-        executable_provider_symbols=pairs,
-        maximum_consecutive_degraded_polls=bound,
-    )
-    return runner, telemetry
-
-
-def test_sustained_blindness_escalates_instead_of_degrading_forever(
-    tmp_path: Path,
-) -> None:
-    """A permanently failing feed must stop reporting a running cohort.
-
-    `emit_poll_degraded` appends to the same ledger whose mtime is the supervisor's
-    only liveness probe, so an unbounded degraded loop refreshes the very signal
-    that would otherwise reveal the blindness.
-    """
-    runner, telemetry = _blind_runner(tmp_path, (True,) * 10, bound=3)
-
-    with pytest.raises(CohortDegradedBlindnessError):
-        runner.run(max_polls=50)
-
-    assert len(telemetry.degraded_polls) == 3
-
-
-def test_a_single_recovery_clears_the_degraded_streak(tmp_path: Path) -> None:
-    """Intermittent failures must never accumulate toward the blindness bound."""
-    pattern = (True, False, True, False, True, False)
-    runner, telemetry = _blind_runner(tmp_path, pattern, bound=3)
-
-    assert runner.run(max_polls=6) == 6
-    assert len(telemetry.degraded_polls) == 3

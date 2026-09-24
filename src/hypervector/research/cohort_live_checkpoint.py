@@ -69,6 +69,7 @@ from hypervector.research.cohort_historical_asset_ledgers import (
 from hypervector.research.cohort_opportunity_matrix_provenance import (
     opportunity_matrix_provenance,
 )
+from hypervector.research.cohort_protection_warnings import protection_warnings
 from hypervector.research.cohort_risk_utilization import cohort_risk_utilization
 from hypervector.research.cohort_side_composition import build_side_composition
 from hypervector.research.cohort_transition_checkpoint import transition_drain_summary
@@ -161,20 +162,21 @@ def build_live_checkpoint(
         heartbeat_stale_after_seconds=heartbeat_stale_after_seconds,
     )
     require_checkpoint_asset_state_consistency(lifecycle, audit)
+    latest_snapshot = _latest_event(
+        _run_rows(cohort_records, selected_run_id), "cohort_snapshot"
+    )
     checkpoint: dict[str, object] = {
         "schema_version": 1,
         "mode": "multi_asset_bidirectional_live_checkpoint",
         "generated_at_utc": _aware_isoformat(observed_at),
         "checkpoint_contract": _checkpoint_contract(),
         "lifecycle": lifecycle,
-        "transition_drain": transition_drain_summary(
-            _latest_event(
-                _run_rows(cohort_records, selected_run_id), "cohort_snapshot"
-            ),
-            selected_run_id,
-        ),
+        "transition_drain": transition_drain_summary(latest_snapshot, selected_run_id),
         "audit": audit,
     }
+    warnings = protection_warnings(cohort_records, latest_snapshot)
+    if warnings:
+        checkpoint["protection_warnings"] = warnings
     if configuration_expectation is not None:
         runtime_fingerprint = _text(
             run.get("profile_fingerprint"),

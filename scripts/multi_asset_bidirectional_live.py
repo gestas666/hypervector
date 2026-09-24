@@ -13,6 +13,7 @@ import traceback
 import requests
 
 from hypervector.data.hl import fetch_hl_ohlcv_snapshot
+from hypervector.live import cohort_venue_start_probe as venue_probe
 from hypervector.live.bidirectional_cohort_factory import (
     AssetExecutionEnvelope,
     MultiAssetCohortAdapters,
@@ -48,6 +49,7 @@ from hypervector.live.cohort_entry_submission import entry_delays_from_providers
 from hypervector.live.cohort_implementation_sources import (
     discover_cohort_implementation_sources,
 )
+from hypervector.live.hyperliquid_perp_reader import VenueMetadataMismatchError
 from hypervector.live.cohort_transition_drain import (
     CohortTransitionDrain,
     CohortTransitionDrainError,
@@ -64,7 +66,10 @@ from hypervector.live.multi_asset_live_config import (
     load_multi_asset_live_config,
 )
 from hypervector.live.multi_asset_live_runner import MultiAssetLiveRunner
-from hypervector.live.multi_asset_live_runner_support import MultiAssetLiveRunnerError
+from hypervector.live.multi_asset_live_runner_support import (
+    CohortDegradedBlindnessError,
+    MultiAssetLiveRunnerError,
+)
 from hypervector.live.cohort_operator_commands import (
     CohortOperatorInbox,
     operator_command_maximum_age_seconds,
@@ -91,6 +96,11 @@ _MAX_READ_COALESCE_SECONDS = 10.0
 _READ_COALESCE_POLL_FRACTION = 0.8
 EXIT_RUN_FAILED = 1
 EXIT_START_REFUSED = 2
+# The account stayed unreconciled past the runner's wall-clock bound. The
+# supervisor relaunches this without charging its crash budget: the relaunch
+# waits in process for the venue before any bundle or replay. Must equal
+# scripts/cohort_supervisor_restart_policy.py EXIT_DEGRADED_BLINDNESS.
+EXIT_DEGRADED_BLINDNESS = 4
 
 
 class CohortRunFailure(RuntimeError):
@@ -168,10 +178,13 @@ def _run_locked(
     presence: CredentialPresence,
     poller: ConfiguredMultiAssetIntentPoller,
 ) -> int:
-    now = datetime.now(UTC)
-    run_id = f"bidirectional-live-{int(now.timestamp() * 1_000)}"
     transition_path = config.cohort_ledger.parent / "transition_drain.json"
     recovery = _transition_recovery(args, config, transition_path)
+    _await_venue(config)
+    # Stamped after any venue wait, so the run and its bundle carry the time the
+    # start actually proceeded.
+    now = datetime.now(UTC)
+    run_id = f"bidirectional-live-{int(now.timestamp() * 1_000)}"
     sources = discover_cohort_implementation_sources(
         _REPOSITORY_ROOT,
         args.backtest_lab_root.resolve(),
@@ -206,7 +219,40 @@ def _run_locked(
     try:
         return _run_guarded(runner, telemetry, max_polls=args.max_polls)
     except Exception as exc:
+        mismatch = _venue_metadata_mismatch(exc)
+        if mismatch is not None:
+            # A venue contract fact survives a relaunch, so every retry would
+            # fail the same way after another full backup and replay.
+            raise VenueMetadataMismatchError(str(mismatch)) from exc
         raise CohortRunFailure(str(exc)) from exc
+
+
+def _await_venue(config: MultiAssetLiveConfig) -> None:
+    """Wait, inside the runtime lock, for a venue whose markets match the profile.
+
+    It runs before the pre-start bundle, so an offline host neither writes a
+    bundle nor crashes into a charged relaunch, and the lock names this waiting
+    process so the supervisor sees a live backend rather than an absent one.
+    """
+    with requests.Session() as session:
+        venue_probe.await_venue_start(
+            {asset.symbol: int(asset.venue_max_leverage) for asset in config.assets},
+            fetch_meta=venue_probe.http_meta_fetcher(session),
+            stop_file=config.stop_file,
+            marker=config.cohort_ledger.parent / venue_probe.VENUE_WAIT_MARKER,
+            sleep_fn=time.sleep,
+        )
+
+
+def _venue_metadata_mismatch(error: BaseException) -> BaseException | None:
+    current: BaseException | None = error
+    seen: set[int] = set()
+    while current is not None and id(current) not in seen:
+        if isinstance(current, VenueMetadataMismatchError):
+            return current
+        seen.add(id(current))
+        current = current.__cause__ or current.__context__
+    return None
 
 
 def _create_runner(
@@ -245,6 +291,9 @@ def _create_runner(
         provider_directional_entry_sizing=(config.provider_directional_entry_sizing),
         operator_commands=_create_operator_inbox(config, run_id),
         transition_drain=transition_drain,
+        venue_unreachable_reason=lambda: venue_probe.fresh_session_unreachable_reason(
+            config.symbols
+        ),
     )
 
 
@@ -426,6 +475,8 @@ def main() -> int:
     except CohortRunFailure as exc:
         cause = exc.__cause__ or exc
         traceback.print_exception(cause)
+        if isinstance(cause, CohortDegradedBlindnessError):
+            return EXIT_DEGRADED_BLINDNESS
         return EXIT_RUN_FAILED
     except (
         FileNotFoundError,
@@ -436,6 +487,7 @@ def main() -> int:
         MultiAssetLiveRunnerError,
         RuntimeLockError,
         ValueError,
+        VenueMetadataMismatchError,
     ) as exc:
         print(f"live start refused: {exc}", file=sys.stderr)
         return EXIT_START_REFUSED
