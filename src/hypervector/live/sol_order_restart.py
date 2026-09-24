@@ -26,6 +26,7 @@ _STATE_OPERATIONS: dict[str, SolOrderOperation] = {
 _TARGET_VISIBILITY_FAULT = (
     "target acknowledged but complete bracket is not venue-visible"
 )
+MULTIPLE_UNRESOLVED_INTENTS = "multiple unresolved order intents remain"
 
 
 class SolOrderRestartError(RuntimeError):
@@ -46,10 +47,18 @@ def pending_order_intent(
     records: Sequence[Mapping[str, object]],
 ) -> PendingSolOrderIntent | None:
     """Return the sole unresolved CLOID intent or fail on ambiguous history."""
-    pending, _ = _pending_intent_state(records)
+    pending = unresolved_order_intents(records)
     if len(pending) > 1:
-        raise SolOrderRestartError("multiple unresolved order intents remain")
-    return next(iter(pending.values()), None)
+        raise SolOrderRestartError(MULTIPLE_UNRESOLVED_INTENTS)
+    return pending[0] if pending else None
+
+
+def unresolved_order_intents(
+    records: Sequence[Mapping[str, object]],
+) -> tuple[PendingSolOrderIntent, ...]:
+    """Return every CLOID intent still lacking a durable outcome, in journal order."""
+    pending, _ = _pending_intent_state(records)
+    return tuple(pending.values())
 
 
 def _pending_intent_state(
