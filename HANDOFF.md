@@ -1,4 +1,35 @@
-# Current operation — V93 LIVE ARMED after incident hotfix; V94 in build, 2026-09-24 17:00 UTC
+# Transition in progress — V93 DRAINING to install V94, 2026-09-24 19:33 UTC
+
+**Status.** The operator-approved V93→V94 transition drain is active: request
+`2196256195f64576972f7ea0ddcfbafd`, run `bidirectional-live-1790268029331`,
+`data/live/bidirectional_cohort/transition_drain.json` status `active`. New entries
+are withheld. SNDK short, SOL long and TSLA long exit on their own rules; the
+worst case is the 24h timers, about 17:00 UTC on 09-25. Brent closed at 17:01 UTC
+on the v2 profit floor for +$3.71.
+
+**Do not clear the marker, and do not start an ordinary live command during the
+drain.** If the backend crashes mid-drain, recover only with
+`--resume-transition-drain` on the V93 profile.
+
+V94 is built, verified and committed on branch `agent/v94-review-actions-20260924`
+(worktree `hypervector-v94-review-actions-20260924`):
+- merge of main at `11f1fe4`; low fixes at `95b1544`;
+- approval `docs/live-approvals/v93-to-v94-review-actions-20260924-v1.json` at `5fb79f7`;
+- candidate fingerprint `930117e9ac0f4bb91fc66631666f47eb68a5d66bd8928684d8792f63122b3fd1`.
+
+Deploy it at the flat boundary as follows:
+1. Archive the drain: `scripts/cohort_transition_drain_archive.py --expected-run-id <run>`, then again with `--yes`.
+2. Run the unsigned preflight and confirm the account is flat with no open orders.
+3. Back up the plists and the restart journal.
+4. Merge the branch into main.
+5. Build the cockpit release binary.
+6. Install the supervise and checkpoint plists with the V94 config.
+7. Bootstrap the checkpoint, then the supervise plist.
+8. Verify, then author the V94→V93 rollback with `scripts/cohort_rollback_profile.py`.
+
+---
+
+# Previous operation — V93 LIVE ARMED after incident hotfix; V94 in build, 2026-09-24 17:00 UTC
 
 **Status: LIVE ARMED and healthy.**
 - Supervisor PID 34903 owns backend PID 46680, run `bidirectional-live-1790268029331`, profile V93, fingerprint `33131f18…` unchanged.
