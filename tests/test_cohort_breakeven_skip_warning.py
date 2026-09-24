@@ -219,6 +219,7 @@ def test_the_runner_keeps_the_skip_streak_across_polls() -> None:
     engine = Mock()
     engine.snapshot = SimpleNamespace(entry_oid=41, stop_oid=77, execution_plan=_plan())
     engine.latest_book = None
+    engine.normalize_trigger_price.side_effect = lambda price: price
     events: list[str] = []
     runner._symbols = ("xyz:SNDK",)  # type: ignore[attr-defined]
     runner._engines = {"xyz:SNDK": engine}  # type: ignore[attr-defined]

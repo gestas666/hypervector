@@ -31,7 +31,8 @@ from hypervector.live.cohort_prestart_ledger_sources import (
 
 _CHUNK_BYTES = 1024 * 1024
 # Level 6 compresses the ledgers about 1.8x faster than the gzip default of 9
-# for about 2% more archive bytes; restore verification is level-independent.
+# for about 6% more archive bytes (measured on the BTC ledger); restore
+# verification is level-independent.
 _COMPRESS_LEVEL = 6
 # zlib and sha256 release the GIL, so the ledgers compress side by side. The
 # cohort ledger alone bounds the wall time; more workers would not shorten it.

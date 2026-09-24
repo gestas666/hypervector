@@ -259,6 +259,15 @@ class BtcHyperliquidAdapter(HyperliquidPerpReader):
             client_order_id=identity,
         )
 
+    def normalize_trigger_price(self, trigger_price: float) -> float:
+        """Return the trigger exactly as this adapter's stop orders put it on the wire.
+
+        It is the official SDK's perp price rounding over the cached market
+        metadata, so comparing a target with a venue trigger through it compares
+        both on the venue grid. It never mutates venue state.
+        """
+        return normalize_perp_price(trigger_price, self._market().size_decimals)
+
     def place_protective_stop(
         self,
         *,
@@ -268,7 +277,7 @@ class BtcHyperliquidAdapter(HyperliquidPerpReader):
     ) -> HyperliquidOrderAck:
         """Place one reduce-only BTC market trigger for reconciled exposure."""
         position = nonzero_finite(position_size_signed, "position_size_signed")
-        price = normalize_perp_price(trigger_price, self._market().size_decimals)
+        price = self.normalize_trigger_price(trigger_price)
         identity = validate_client_order_id(client_order_id)
         response = call_ambiguous_order_mutation(
             operation="protective_stop",
@@ -305,7 +314,7 @@ class BtcHyperliquidAdapter(HyperliquidPerpReader):
         """Replace one owned reduce-only stop with a new trigger in a single venue action."""
         order_id = positive_integer(oid, "oid")
         position = nonzero_finite(position_size_signed, "position_size_signed")
-        price = normalize_perp_price(trigger_price, self._market().size_decimals)
+        price = self.normalize_trigger_price(trigger_price)
         identity = validate_client_order_id(client_order_id)
         response = call_ambiguous_order_mutation(
             operation="raise_protective_stop",

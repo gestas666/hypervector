@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 from datetime import UTC, datetime
 from functools import partial
+import os
 from pathlib import Path
 import sys
 import time
@@ -48,6 +49,7 @@ from hypervector.live.cohort_accounting_rollover import (
 from hypervector.live.cohort_entry_submission import entry_delays_from_providers
 from hypervector.live.cohort_implementation_sources import (
     discover_cohort_implementation_sources,
+    implementation_source_identity,
 )
 from hypervector.live.hyperliquid_perp_reader import VenueMetadataMismatchError
 from hypervector.live.cohort_transition_drain import (
@@ -168,8 +170,8 @@ def run_live(args: argparse.Namespace) -> int:
             fetch_bars=partial(fetch_hl_ohlcv_snapshot, session=candle_session),
             backtest_lab_root=args.backtest_lab_root.resolve(),
         )
-        with bidirectional_live_runtime_lock(config.cohort_ledger):
-            return _run_locked(args, config, presence, poller)
+        with bidirectional_live_runtime_lock(config.cohort_ledger) as lock_path:
+            return _run_locked(args, config, presence, poller, lock_path=lock_path)
 
 
 def _run_locked(
@@ -177,18 +179,19 @@ def _run_locked(
     config: MultiAssetLiveConfig,
     presence: CredentialPresence,
     poller: ConfiguredMultiAssetIntentPoller,
+    lock_path: Path | None = None,
 ) -> int:
     transition_path = config.cohort_ledger.parent / "transition_drain.json"
     recovery = _transition_recovery(args, config, transition_path)
+    imported = implementation_source_identity(_implementation_sources(args))
     _await_venue(config)
+    _refresh_start_grace(lock_path)
     # Stamped after any venue wait, so the run and its bundle carry the time the
     # start actually proceeded.
     now = datetime.now(UTC)
     run_id = f"bidirectional-live-{int(now.timestamp() * 1_000)}"
-    sources = discover_cohort_implementation_sources(
-        _REPOSITORY_ROOT,
-        args.backtest_lab_root.resolve(),
-    )
+    sources = _implementation_sources(args)
+    _require_unchanged_implementation(imported, sources)
     backup = create_cohort_prestart_backup(
         config,
         now=now,
@@ -242,6 +245,50 @@ def _await_venue(config: MultiAssetLiveConfig) -> None:
             marker=config.cohort_ledger.parent / venue_probe.VENUE_WAIT_MARKER,
             sleep_fn=time.sleep,
         )
+
+
+def _implementation_sources(args: argparse.Namespace) -> dict[str, Path]:
+    return discover_cohort_implementation_sources(
+        _REPOSITORY_ROOT,
+        args.backtest_lab_root.resolve(),
+    )
+
+
+def _require_unchanged_implementation(
+    imported: dict[str, object], sources: dict[str, Path]
+) -> None:
+    """Refuse a start whose sources changed while this process waited for the venue.
+
+    The modules were imported when the process started, but the bundle hashes
+    the sources only after the wait, which has no upper bound. A difference
+    means the bundle would fingerprint code this process is not running.
+    """
+    current = implementation_source_identity(sources)
+    if current != imported:
+        raise MultiAssetLiveConfigError(
+            "implementation sources changed during the venue wait "
+            f"(files {imported['file_count']} -> {current['file_count']}, "
+            f"sha256 {imported['sha256']} -> {current['sha256']}); "
+            "this process runs the code imported at its start, so restart the "
+            "backend on the current sources"
+        )
+
+
+def _refresh_start_grace(lock_path: Path | None) -> None:
+    """Restart the monitors' startup grace once the venue wait has returned.
+
+    The watch agent anchors its grace on the runtime lock's age, and the lock was
+    written before the wait, so after a long wait the replay still ahead read as
+    a stale heartbeat. Only the lock this process holds is refreshed. The grace
+    is advisory monitoring, not an execution boundary, so a failed refresh is
+    reported and the start proceeds.
+    """
+    if lock_path is None:
+        return
+    try:
+        os.utime(lock_path)
+    except OSError as exc:
+        print(f"runtime lock not refreshed after the venue wait: {type(exc).__name__}")
 
 
 def _venue_metadata_mismatch(error: BaseException) -> BaseException | None:

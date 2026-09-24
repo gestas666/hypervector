@@ -19,7 +19,8 @@ def protection_warnings(
 ) -> list[dict[str, object]]:
     """Return exhausted venue-stop raises whose lifecycle is open and still unraised.
 
-    A later successful raise for the same lifecycle clears its warning, and a
+    A later successful raise for the same lifecycle, or a later attempt that
+    found the venue stop already at its target, clears its warning, and a
     lifecycle that has closed no longer carries one. Each open lifecycle reports
     at most one warning, stamped with its first unresolved exhaustion.
     """
@@ -38,7 +39,10 @@ def protection_warnings(
         if lifecycle not in open_lifecycles:
             continue
         if event_type == BREAKEVEN_ATTEMPT_EVENT:
-            if payload.get("raised") is True:
+            if (
+                payload.get("raised") is True
+                or payload.get("already_at_target") is True
+            ):
                 warnings.pop(lifecycle, None)
             continue
         strategy = payload.get("strategy_id")

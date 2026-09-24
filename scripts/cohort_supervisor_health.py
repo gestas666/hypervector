@@ -507,7 +507,7 @@ def evaluate_health(
         if free_disk is not None:
             details[disk_problem] = f"{free_disk:.1f} GiB free"
     streak = backend_degraded_streak(
-        paths.ledger, now=now, freshness_seconds=thresholds.heartbeat_seconds
+        paths.ledger, now=now, freshness_seconds=thresholds.degraded_freshness_seconds
     )
     degraded_detail = _degraded_problem(streak, thresholds)
     if degraded_detail is not None:

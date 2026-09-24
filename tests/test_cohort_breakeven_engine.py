@@ -9,6 +9,7 @@ from native_replay_engine_fixture import EngineReplayFixture
 
 from hypervector.live.cohort_adaptive_exit_policy import RETENTION_EXIT_POLICY
 from hypervector.live.cohort_execution_plan import ProviderExecutionContract
+from hypervector.live.sol_range_onset_engine_contract import STOP_ALREADY_AT_TARGET
 from hypervector.live.sol_range_onset_state import SolLiveState
 
 
@@ -81,7 +82,9 @@ def test_raise_replaces_the_owned_stop_and_survives_reconciliation(
 def test_raise_never_loosens_the_stop(tmp_path: Path) -> None:
     replay, engine, symbol = _open(tmp_path, "long")
     previous = engine.snapshot.stop_oid
-    assert engine.raise_protective_stop(trigger_price=97.0) is False
+    # The resting stop is already more protective: nothing to raise, no venue call.
+    outcome = engine.raise_protective_stop(trigger_price=97.0)
+    assert outcome is STOP_ALREADY_AT_TARGET and not outcome
     assert engine.snapshot.stop_oid == previous and previous in replay.orders
     assert "modify" not in replay.mutations
 

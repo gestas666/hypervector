@@ -63,6 +63,10 @@ class HealthThresholds:
     free_disk_warning_gib: float = 14.0
     degraded_polls_with_positions: int = 2
     degraded_seconds: float = 300.0
+    # A degraded poll lands only after the read retries are exhausted, about
+    # 123.5 s after the previous one, so the streak's freshness cannot be the
+    # 120 s heartbeat bound: the alert would clear before every next poll.
+    degraded_freshness_seconds: float = 300.0
 
     def __post_init__(self) -> None:
         """Reject unusable thresholds before any monitoring loop starts."""

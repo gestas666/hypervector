@@ -22,6 +22,11 @@ from hypervector.live.hyperliquid_protocol import (
     SolReconciliationSnapshot,
 )
 from hypervector.live.multi_asset_live_runner_support import entry_provider_strategy_id
+from hypervector.live.sol_range_onset_engine_contract import (
+    STOP_ALREADY_AT_TARGET,
+    StopRaiseOutcome,
+    stop_rests_at_or_beyond,
+)
 
 MAX_RAISE_ATTEMPTS = 3
 # Consecutive guarded skips after which an unraised floor target is surfaced. The
@@ -30,6 +35,8 @@ MAX_RAISE_ATTEMPTS = 3
 MAX_CONSECUTIVE_SKIPS = MAX_RAISE_ATTEMPTS
 
 SkipStreaks = MutableMapping[tuple[str, int], tuple[str, int]]
+# Maps one symbol's trigger onto the venue's wire price grid (the adapter's rounding).
+WirePrice = Callable[[str, float], float]
 
 
 def breakeven_trigger_price(entry_price: float, position_size_signed: float) -> float:
@@ -80,7 +87,7 @@ def raise_breakeven_stops(
     closed_symbols: set[str],
     symbols: tuple[str, ...],
     venues: Mapping[str, SolReconciliationSnapshot],
-    raise_stop: Callable[[str, float], bool],
+    raise_stop: Callable[[str, float], bool | StopRaiseOutcome],
     attempts: MutableMapping[tuple[str, int], int],
     lifecycle_oids: Mapping[str, int | None],
     emit: Callable[[str, Mapping[str, object]], None],
@@ -89,6 +96,7 @@ def raise_breakeven_stops(
     observed_ms: int | None = None,
     stop_oids: Mapping[str, int | None] | None = None,
     skips: SkipStreaks | None = None,
+    normalize: WirePrice | None = None,
 ) -> bool:
     """Attempt each requested raise at most MAX_RAISE_ATTEMPTS times per lifecycle.
 
@@ -103,6 +111,12 @@ def raise_breakeven_stops(
     the tick grid, so a target strictly inside the quote can round at most onto
     it, never through it. Running out of attempts is journaled once, unless the
     owned venue stop already rests at the target (a restart after a raise).
+    ``normalize`` maps a target onto the venue's wire price grid, so a stop that
+    rests at the wire-rounded target reads as raised even when nearest rounding
+    went against the position; without it the exact target is compared. A raise
+    the engine reports as STOP_ALREADY_AT_TARGET sent nothing to the venue: it
+    spends no attempt, is journaled once and ends the lifecycle's raise like a
+    success, so it neither retries nor warns.
     """
     streaks: SkipStreaks = {} if skips is None else skips
     mutated = False
@@ -145,7 +159,7 @@ def raise_breakeven_stops(
                 if cycles == MAX_CONSECUTIVE_SKIPS and not _stop_rests_at_target(
                     venue,
                     None if stop_oids is None else stop_oids.get(symbol),
-                    trigger,
+                    _wire_price(normalize, symbol, trigger),
                     size,
                 ):
                     emit(
@@ -162,8 +176,24 @@ def raise_breakeven_stops(
                 continue
             streaks.pop(key, None)
             guard = {"breakeven_stop_target": "floor", "executable_price": quote}
-        attempts[key] = attempts.get(key, 0) + 1
+        spent = attempts.get(key, 0)
+        attempts[key] = spent + 1
         raised = raise_stop(symbol, trigger)
+        if raised is STOP_ALREADY_AT_TARGET:
+            attempts[key] = MAX_RAISE_ATTEMPTS
+            emit(
+                BREAKEVEN_ATTEMPT_EVENT,
+                {
+                    "symbol": symbol,
+                    "entry_oid": entry_oid,
+                    "attempt": spent,
+                    "trigger_price": trigger,
+                    "raised": False,
+                    "already_at_target": True,
+                    **guard,
+                },
+            )
+            continue
         emit(
             BREAKEVEN_ATTEMPT_EVENT,
             {
@@ -179,7 +209,10 @@ def raise_breakeven_stops(
             attempts[key] = MAX_RAISE_ATTEMPTS
             mutated = True
         elif attempts[key] >= MAX_RAISE_ATTEMPTS and not _stop_rests_at_target(
-            venue, None if stop_oids is None else stop_oids.get(symbol), trigger, size
+            venue,
+            None if stop_oids is None else stop_oids.get(symbol),
+            _wire_price(normalize, symbol, trigger),
+            size,
         ):
             emit(
                 RAISE_EXHAUSTED_EVENT,
@@ -188,9 +221,14 @@ def raise_breakeven_stops(
     return mutated
 
 
+def _wire_price(normalize: WirePrice | None, symbol: str, price: float) -> float:
+    return price if normalize is None else normalize(symbol, price)
+
+
 def _stop_rests_at_target(
     venue: SolReconciliationSnapshot, stop_oid: int | None, target: float, size: float
 ) -> bool:
+    """Return whether the owned stop rests at or beyond ``target`` (a wire price)."""
     if stop_oid is None:
         return False
     current = next(
@@ -199,7 +237,7 @@ def _stop_rests_at_target(
     )
     if current is None:
         return False
-    return current >= target if size > 0.0 else current <= target
+    return stop_rests_at_or_beyond(current, target, size)
 
 
 def _exhausted_payload(

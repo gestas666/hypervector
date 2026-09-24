@@ -508,6 +508,9 @@ class MultiAssetLiveRunner:
                 symbol: self._engines[symbol].snapshot.stop_oid for symbol in requested
             },
             skips=self._breakeven_skips,
+            normalize=lambda symbol, price: self._engines[
+                symbol
+            ].normalize_trigger_price(price),
         )
 
     def _run_operator_commands(

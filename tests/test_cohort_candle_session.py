@@ -118,6 +118,7 @@ def test_one_candle_session_survives_multiple_assets_and_cycles_then_closes(
         config: MultiAssetLiveConfig,
         presence: CredentialPresence,
         fetch_bars: CohortBarFetcherProtocol,
+        lock_path: Path | None = None,
     ) -> int:
         """Exercise two assets at two cutoffs while the command owns its session."""
         assert session.closes == 0

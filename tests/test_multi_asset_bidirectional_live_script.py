@@ -856,6 +856,8 @@ def test_locked_start_snapshots_discovered_implementation_before_adapter(
     )
     provider_root = tmp_path / "backtest_lab"
     expected = {"provider_0000": tmp_path / "provider.py"}
+    # Discovery only returns existing files, and the start hashes them.
+    expected["provider_0000"].write_text("SIGNAL = 1\n", encoding="utf-8")
     discovered: dict[str, Path] = {}
     adapter_constructed = False
 

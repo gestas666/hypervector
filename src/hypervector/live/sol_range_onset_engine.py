@@ -38,10 +38,13 @@ from hypervector.live.sol_range_onset_consistency import (
     protective_stop_fill_visible,
 )
 from hypervector.live.sol_range_onset_engine_contract import (
+    STOP_ALREADY_AT_TARGET,
     SolEntryNotFilledError as SolEntryNotFilledError,
     SolLiveEngineError,
+    StopRaiseOutcome,
     require_started,
     resolve_decision_time_ms,
+    stop_rests_at_or_beyond,
 )
 from hypervector.live.sol_range_onset_engine_events import SolLiveEngineEvents
 from hypervector.live.sol_range_onset_execution_plan import (
@@ -327,12 +330,19 @@ class SolRangeOnsetLiveEngine:
             emergency_flatten=self._emergency_flatten,
         )
 
-    def raise_protective_stop(self, *, trigger_price: float) -> bool:
+    def normalize_trigger_price(self, trigger_price: float) -> float:
+        """Return the trigger as this engine's stop orders put it on the wire."""
+        return self._orders.normalize_trigger_price(trigger_price)
+
+    def raise_protective_stop(self, *, trigger_price: float) -> bool | StopRaiseOutcome:
         """Move the owned reduce-only stop to a more favorable trigger while staying OPEN.
 
         Returns True only after the venue shows the replacement covering the
         position. A rejected replacement leaves the original stop untouched and
-        returns False; it never faults the process on its own.
+        returns False; it never faults the process on its own. The target is
+        compared with the venue trigger on the adapter's wire price grid: when
+        the owned stop already rests at or beyond the wire-rounded target, no
+        venue call is made and the falsy STOP_ALREADY_AT_TARGET is returned.
         """
         require_started(self._started)
         snapshot = self.snapshot
@@ -350,13 +360,9 @@ class SolRangeOnsetLiveEngine:
         size = snapshot.position_size_signed
         if current is None or current.trigger_price is None or size == 0.0:
             return False
-        favorable = (
-            trigger_price > current.trigger_price
-            if size > 0.0
-            else trigger_price < current.trigger_price
-        )
-        if not favorable:
-            return False
+        wire_target = self._orders.normalize_trigger_price(trigger_price)
+        if stop_rests_at_or_beyond(current.trigger_price, wire_target, size):
+            return STOP_ALREADY_AT_TARGET
         previous_oid = snapshot.stop_oid
         ack = self._orders.modify_protective_stop(
             oid=previous_oid, position_size_signed=size, trigger_price=trigger_price
