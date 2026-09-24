@@ -16,6 +16,7 @@ from hypervector.live.sol_order_restart import (
     SolOrderRestartError,
     interrupted_lifecycle_intent,
     pending_order_intent,
+    unresolved_order_intents,
 )
 from hypervector.live.sol_order_restart_context import (
     execution_plan_for_intent,
@@ -55,6 +56,7 @@ from hypervector.live.sol_range_onset_exit_restart import (
 )
 from hypervector.live.sol_range_onset_ledger import SolLiveLedger
 from hypervector.live.sol_range_onset_live_journal_orders import intent_for_oid
+from hypervector.live.sol_range_onset_live_telemetry import order_ack_payload
 from hypervector.live.sol_range_onset_reconcile import (
     RecoveredSolOwnership,
     SolStartupReconciliationError,
@@ -68,6 +70,15 @@ from hypervector.live.hyperliquid_protocol import HyperliquidOrderAck
 from hypervector.live.hyperliquid_sol_parsing import HyperliquidOrderUnavailableError
 from hypervector.live.sol_startup_support import _fault_and_raise, _recover_intent_ack
 from hypervector.live.sol_startup_receipt_consistency import wait_for_stable_startup
+from hypervector.live.sol_unresolved_intent_restart_context import (
+    records_before_unresolved_intent_startup_fault,
+)
+
+UNINDEXED_RAISE_STATUS = "not_indexed_after_restart"
+_RAISE_RECOVERY_OPERATION = "protective_stop_raise_restart_recovery"
+_UNINDEXED_RAISE_ERROR = (
+    "stop raise was never indexed by the venue; the original protective stop governs"
+)
 
 
 def prepare_sol_live_startup(
@@ -87,7 +98,7 @@ def prepare_sol_live_startup(
         config, adapter, ledger, machine, events, orders, poller
     )
     cleaned, pending = _pending_after_cleanup(
-        partial_protective, prior_records, venue, events
+        partial_protective, prior_records, venue, events, adapter, config
     )
     if cleaned:
         return None
@@ -170,8 +181,11 @@ def _preflight_recovery(
 def _pending_intent(
     records: list[dict[str, object]],
     events: SolLiveEngineEvents,
+    adapter: SolLiveAdapterProtocol,
+    config: SolRangeOnsetConfig,
 ) -> PendingSolOrderIntent | None:
     try:
+        _resolve_unindexed_raise_intents(adapter, events, records, config)
         pending = pending_order_intent(records)
         if pending is None:
             pending = interrupted_lifecycle_intent(records)
@@ -180,11 +194,70 @@ def _pending_intent(
         _fault_and_raise(events, exc)
 
 
+def _resolve_unindexed_raise_intents(
+    adapter: SolLiveAdapterProtocol,
+    events: SolLiveEngineEvents,
+    records: list[dict[str, object]],
+    config: SolRangeOnsetConfig,
+) -> None:
+    """Durably retire several stop raises only when the venue indexed none of them.
+
+    Any other unresolved operation, or any raise identity the venue does know,
+    leaves the history untouched so the ambiguity still fails closed below.
+    """
+    pending = unresolved_order_intents(records)
+    if len(pending) < 2 or any(
+        intent.operation != "raise_protective_stop" for intent in pending
+    ):
+        return
+    if any(_venue_indexed(adapter, intent) for intent in pending):
+        return
+    for intent in pending:
+        _journal_unindexed_raise(events, records, intent, config)
+
+
+def _venue_indexed(
+    adapter: SolLiveAdapterProtocol, intent: PendingSolOrderIntent
+) -> bool:
+    try:
+        adapter.order_status_by_client_id(intent.client_order_id)
+    except HyperliquidOrderUnavailableError:
+        return False
+    return True
+
+
+def _journal_unindexed_raise(
+    events: SolLiveEngineEvents,
+    records: list[dict[str, object]],
+    intent: PendingSolOrderIntent,
+    config: SolRangeOnsetConfig,
+) -> None:
+    """Persist that a raise never reached the venue, then mirror it in memory."""
+    ack = HyperliquidOrderAck(
+        accepted=False,
+        oid=None,
+        status=UNINDEXED_RAISE_STATUS,
+        error=_UNINDEXED_RAISE_ERROR,
+        client_order_id=intent.client_order_id,
+        recovered_after_restart=True,
+    )
+    events.emit_ack(_RAISE_RECOVERY_OPERATION, ack, event_type="stop_order")
+    records.append(
+        {
+            "event_type": "stop_order",
+            "profile_fingerprint": config.profile_fingerprint,
+            "payload": order_ack_payload(_RAISE_RECOVERY_OPERATION, ack),
+        }
+    )
+
+
 def _pending_after_cleanup(
     recovery: SolPartialProtectiveRecovery | None,
     records: list[dict[str, object]],
     venue: SolReconciliationSnapshot,
     events: SolLiveEngineEvents,
+    adapter: SolLiveAdapterProtocol,
+    config: SolRangeOnsetConfig,
 ) -> tuple[bool, PendingSolOrderIntent | None]:
     try:
         if recovery is not None and recovery.resume_cleanup(records, venue):
@@ -195,7 +268,7 @@ def _pending_after_cleanup(
         ProtectiveExecutionEvidenceError,
     ) as exc:
         _fault_and_raise(events, exc)
-    return False, _pending_intent(records, events)
+    return False, _pending_intent(records, events, adapter, config)
 
 
 def _recover_pending_mutation(
@@ -282,6 +355,8 @@ def _recover_pending_raise(
     except HyperliquidOrderUnavailableError:
         # The venue never indexed the replacement identity: the original stop still
         # governs, and the normal OPEN recovery verifies it against the venue below.
+        # Journal that outcome so the intent can never linger as unresolved.
+        _journal_unindexed_raise(events, records, pending, config)
         status = None
     if status is not None:
         ack = HyperliquidOrderAck(
@@ -581,7 +656,9 @@ def _profile_recovery_records(
     )
     if pending_protective_cleanup(records) is None:
         records = records_before_partial_protective_fault(
-            records_before_partial_close_fault(records)
+            records_before_partial_close_fault(
+                records_before_unresolved_intent_startup_fault(records)
+            )
         )
     try:
         validate_latest_protective_checkpoint(records, intent_for_oid)

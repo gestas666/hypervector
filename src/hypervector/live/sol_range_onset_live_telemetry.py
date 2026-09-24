@@ -230,25 +230,7 @@ class SolLiveTelemetry:
         extra_payload: Mapping[str, object] | None = None,
     ) -> None:
         """Record one normalized exchange acknowledgement."""
-        payload: dict[str, object] = {
-            "operation": operation,
-            "accepted": ack.accepted,
-            "oid": ack.oid,
-            "status": ack.status,
-            "filled_size": ack.filled_size,
-            "average_price": ack.average_price,
-            "error": ack.error,
-            "client_order_id": ack.client_order_id,
-            "recovered_after_transport_error": ack.recovered_after_transport_error,
-            "venue_timestamp_ms": ack.venue_timestamp_ms,
-            "recovered_after_restart": ack.recovered_after_restart,
-        }
-        if extra_payload is not None:
-            payload.update(extra_payload)
-        self.emit(
-            event_type,
-            payload,
-        )
+        self.emit(event_type, order_ack_payload(operation, ack, extra_payload))
 
     def emit_funding_payments(
         self,
@@ -280,6 +262,30 @@ class SolLiveTelemetry:
         if value.tzinfo is None or value.utcoffset() is None:
             raise SolLiveTelemetryError("now_fn must return a timezone-aware datetime")
         return value.astimezone(timezone.utc).isoformat()
+
+
+def order_ack_payload(
+    operation: str,
+    ack: HyperliquidOrderAck,
+    extra_payload: Mapping[str, object] | None = None,
+) -> dict[str, object]:
+    """Return the exact journaled payload of one normalized acknowledgement."""
+    payload: dict[str, object] = {
+        "operation": operation,
+        "accepted": ack.accepted,
+        "oid": ack.oid,
+        "status": ack.status,
+        "filled_size": ack.filled_size,
+        "average_price": ack.average_price,
+        "error": ack.error,
+        "client_order_id": ack.client_order_id,
+        "recovered_after_transport_error": ack.recovered_after_transport_error,
+        "venue_timestamp_ms": ack.venue_timestamp_ms,
+        "recovered_after_restart": ack.recovered_after_restart,
+    }
+    if extra_payload is not None:
+        payload.update(extra_payload)
+    return payload
 
 
 def _fee_event_payload(

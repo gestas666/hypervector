@@ -145,3 +145,46 @@ def test_raise_interrupted_before_the_venue_saw_it_keeps_the_original_stop(
     restored = replay.engine(replay.assets[symbol])
     snapshot = restored.start()
     assert snapshot.state is SolLiveState.OPEN and snapshot.stop_oid == previous
+    resolved = _unindexed_raise_resolutions(_rows(tmp_path, symbol))
+    assert len(resolved) == 1 and resolved[0]["accepted"] is False
+    assert resolved[0]["oid"] is None
+
+
+def test_repeated_pre_dispatch_raise_crashes_never_accumulate_unresolved_intents(
+    tmp_path: Path,
+) -> None:
+    replay, engine, symbol = _open(tmp_path, "long")
+    previous = engine.snapshot.stop_oid
+    replay._exchange.modify_order.side_effect = lambda *a, **k: (_ for _ in ()).throw(
+        RuntimeError("crash before dispatch")
+    )
+    for _ in range(3):
+        with pytest.raises(RuntimeError):
+            engine.raise_protective_stop(trigger_price=100.25)
+        engine = replay.engine(replay.assets[symbol])
+        snapshot = engine.start()
+        assert snapshot.state is SolLiveState.OPEN and snapshot.stop_oid == previous
+    rows = _rows(tmp_path, symbol)
+    intents = [
+        r["payload"]["client_order_id"]
+        for r in rows
+        if r["event_type"] == "order_intent"
+        and r["payload"]["operation"] == "raise_protective_stop"
+    ]
+    resolved = _unindexed_raise_resolutions(rows)
+    assert len(intents) == 3
+    assert [r["client_order_id"] for r in resolved] == intents
+    assert not [r for r in rows if r["event_type"] == "fault"]
+    assert "modify" not in replay.mutations and previous in replay.orders
+
+
+def _unindexed_raise_resolutions(
+    rows: list[dict[str, object]],
+) -> list[dict[str, object]]:
+    return [
+        r["payload"]
+        for r in rows
+        if r["event_type"] == "stop_order"
+        and r["payload"]["operation"] == "protective_stop_raise_restart_recovery"
+        and r["payload"]["status"] == "not_indexed_after_restart"
+    ]
