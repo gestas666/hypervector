@@ -1,4 +1,29 @@
-# Current operation — V93 LIVE ARMED, exit policy v2 active, 2026-09-23 21:02 UTC
+# Current operation — V93 LIVE ARMED after incident hotfix; V94 in build, 2026-09-24 17:00 UTC
+
+**Status: LIVE ARMED and healthy.**
+- Supervisor PID 34903 owns backend PID 46680, run `bidirectional-live-1790268029331`, profile V93, fingerprint `33131f18…` unchanged.
+- The checkpoint agent was restarted at 16:59 UTC. Supervisor health reports `healthy: true` with no problems.
+- Open: xyz:SNDK short and xyz:BRENTOIL long 5.84.
+- Brent's venue stop now sits at break-even: 99.297625, oid 555530692113.
+
+**Incident 15:27–16:56 UTC (operator approved both hotfixes live).**
+- **Cause.** V93's first live break-even raise (Brent at +2R) crashed the backend: `SerializedHyperliquidExchange` had no `modify_order`. The AttributeError fired before any venue call, so the original stop stayed resting.
+- **Second defect.** Each crashed launch left an unresolved `raise_protective_stop` intent. From launch 3 on, startup refused the ambiguous history ("multiple unresolved order intents remain"), so launches 3–5 each failed about 14 minutes in.
+- **Fix.** Commit `a3e8ac5` on `main` (branch `fix/brent-raise-recovery-20260924`):
+  - adds the wrapper passthrough and a protocol-conformance test;
+  - journals a `not_indexed_after_restart` resolution for raise intents the venue never saw;
+  - hides only trailing startups that faulted on exactly that ambiguity.
+  - A proof test replays the real Brent records.
+- **Recovery.** Launch 6 resolved both intents, restored OPEN on the original stop, then made the first live venue modify at 16:56:41 (raised to break-even).
+- **Checkpoint.** The long-running checkpoint agent kept failing ("routing cycle is missing funding boundary") until it was restarted, because its follow state spanned the crashed runs. A fresh process builds cleanly.
+- **Cost.** About 90 minutes with only venue stops, and six 1.2 GB bundles. Disk is now at about 35 GiB free, after the operator-approved reclaim of 99 unreferenced pre-09-09 bundles (38.9 GiB).
+- **Lesson.** Never symlink a worktree's `.venv` to the live one and then use `uv run` there: uv re-points the live editable install. This happened at 16:23 and was restored at 16:44.
+
+**Approved plan in progress.** The operator approved executing review groups A–D (`docs/reviews/2026-09-24-v93-full-review.md`, plan `docs/plans/2026-09-24-v94-review-actions.md`). V94 is being built and verified in the worktree `hypervector-v94-review-actions-20260924`. It will be installed through one V93 drain-to-flat transition. The weak-short rule passed its pre-registered bar. Operator choices: alerts stay local-only (no webhook, no dead-man). The operator still has to run two `sudo defaults write` commands to turn off auto-install of macOS updates.
+
+---
+
+# Previous operation — V93 LIVE ARMED, exit policy v2 active, 2026-09-23 21:02 UTC
 
 **Status: LIVE ARMED; first lifecycle open and protected.** The operator said
 "go live"; the runbook was executed in full. Supervisor PID 34903 (launchd
