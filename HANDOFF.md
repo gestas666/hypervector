@@ -1,31 +1,88 @@
-# Transition in progress — V93 DRAINING to install V94, 2026-09-24 19:33 UTC
+# Current operation — V94 LIVE ARMED (review actions), 2026-09-25 06:52 UTC
 
-**Status.** The operator-approved V93→V94 transition drain is active: request
-`2196256195f64576972f7ea0ddcfbafd`, run `bidirectional-live-1790268029331`,
-`data/live/bidirectional_cohort/transition_drain.json` status `active`. New entries
-are withheld. SNDK short, SOL long and TSLA long exit on their own rules; the
-worst case is the 24h timers, about 17:00 UTC on 09-25. Brent closed at 17:01 UTC
-on the v2 profit floor for +$3.71.
+**Status.** V94 is live and armed and passed acceptance.
+- Profile `multi_asset_growth_first_5000_review_actions_v94`, fingerprint
+  `930117e9ac0f4bb91fc66631666f47eb68a5d66bd8928684d8792f63122b3fd1`, run
+  `bidirectional-live-1790318114363`.
+- Supervisor launched backend pid 22729 at 06:35:11 UTC. First heartbeat came
+  about 6.3 min later (V93 took about 15 min).
+- Account flat at start, $4,809.98.
+- Code: main `200e991` (merge of `agent/v94-review-actions-20260924`), plus the
+  rollback pair at `6589a40`.
 
-**Do not clear the marker, and do not start an ordinary live command during the
-drain.** If the backend crashes mid-drain, recover only with
-`--resume-transition-drain` on the V93 profile.
+**What V94 changed** (review `docs/reviews/2026-09-24-v93-full-review.md`, plan
+`docs/plans/2026-09-24-v94-review-actions.md`):
+- **Donchian routes.** SOL, SNDK, BRENTOIL and TSLA run
+  `hourly_donchian_20_10_atr20_strong_short_v1`. The weak-short rule passed its
+  pre-registered bar 4/4; evidence in
+  `docs/research-journal/v94-weak-short-rescore-20260924-v1.json`.
+- **Stop budget.** The Donchian budget is 0.6% of entry equity plus 20 bps, so SNDK
+  is capped at about $28.9. BTC and ETH stay at $25.
+- **Venue floor stop.** Once the +2R floor arms, the venue stop on ETH and the
+  Donchian routes rises to the +0.5R floor. This is guarded by the executable quote
+  and the venue price grid; exhaustion surfaces as checkpoint `protection_warnings`.
+- **Watch-only routes.** HYPE and SPCX band20 are watch-only, and HYPE's envelope
+  is $500.
+- **Strict config.** Unknown profile keys are refused.
+- **Degraded bound.** It is now a 1 h wall-clock bound. It rides out host-offline
+  outages in place and exits 4 (uncharged relaunch) only when the venue is
+  reachable.
+- **Startup.** A pre-bundle venue probe waits for reachability and refuses a
+  leverage mismatch (exit 2). Declared ledger reads are 15–50x faster and were
+  proven identical on the live ledgers. Bundles use gzip level 6 in parallel.
+- **Alerts.** New `backend_polls_degraded` and `free_disk_warning` (at 14 GiB)
+  alerts. Push filtering is in place but no webhook is configured (operator
+  choice).
+- **Tooling.** `scripts/cohort_ladder_evidence.py`; the ladder is pre-registered in
+  `docs/plans/2026-09-24-v94-size-ladder.md`. Rung 1 is not active.
+- **Book-level check.** In `scripts/cohort_runtime_validation_check.py`. V94 shows
+  1.66% at-stop risk and 10.9% margin.
 
-V94 is built, verified and committed on branch `agent/v94-review-actions-20260924`
-(worktree `hypervector-v94-review-actions-20260924`):
-- merge of main at `11f1fe4`; low fixes at `95b1544`;
-- approval `docs/live-approvals/v93-to-v94-review-actions-20260924-v1.json` at `5fb79f7`;
-- candidate fingerprint `930117e9ac0f4bb91fc66631666f47eb68a5d66bd8928684d8792f63122b3fd1`.
+**Deployment record.**
+- `data/backups/bidirectional_cohort/v94_deployment_20260925T0632Z/`: plists
+  before and after, restart journal, configs, approval, manifest.
+- `data/logs/operations/v94_go_live_20260925T0632Z/`: drain archive, V93 and V94
+  preflights, runtime gate.
+- The V93 drain completed 06:30:29 UTC and was archived. The last V93 exits were
+  SNDK short (+$2.94, v2 regime-flip ratchet, 01:45) and SOL long (−$1.97, ratchet,
+  06:30). TSLA stopped out at 19:59 on 09-24.
+- Cockpit binary `target/release/tui-regime-detector` sha256 `c4099af7…a2d8b`.
 
-Deploy it at the flat boundary as follows:
-1. Archive the drain: `scripts/cohort_transition_drain_archive.py --expected-run-id <run>`, then again with `--yes`.
-2. Run the unsigned preflight and confirm the account is flat with no open orders.
-3. Back up the plists and the restart journal.
-4. Merge the branch into main.
-5. Build the cockpit release binary.
-6. Install the supervise and checkpoint plists with the V94 config.
-7. Bootstrap the checkpoint, then the supervise plist.
-8. Verify, then author the V94→V93 rollback with `scripts/cohort_rollback_profile.py`.
+**Acceptance (3 independent read-only verifiers): pass with notes.**
+- Identity, approval, bundle and source identity all verified.
+- Heartbeats every 15 s with no faults. Six executable routes. The cockpit
+  accepts the live telemetry.
+- Low-severity notes:
+  - Startup does not journal the approval's retired and replacement scopes.
+  - A transient `backend_process_absent` alert at launch (lock race).
+  - The 30-min startup grace can mask a hung prestart.
+
+**Rollback (valid only while V94 runs).**
+1. Drain to flat.
+2. Archive the drain.
+3. Install plists pointing at `configs/v94-to-v93-rollback-20260925-v1.toml`.
+   Its approval is `docs/live-approvals/v94-to-v93-rollback-20260925-v1.json`,
+   pre-authored and dry-run.
+4. Archive the restart journal.
+5. Bootstrap checkpoint, then supervise.
+
+Do not reuse the old "restore V91 plists" procedure. It fails closed at the
+approval gate.
+
+**Cockpit.**
+```
+uv run python -m hypervector cohort-tui --mode monitor --config configs/multi_asset_growth_first_5000_review_actions_v94.toml
+```
+
+**Open items.**
+- **Operator:** run the two `sudo defaults write` commands to turn off macOS
+  auto-install. A reboot still ends in a manual supervisor hold.
+- **Known test failures:** `test_v80_tui_launch_resolution` and
+  `test_v85_tui_launch_resolution` fail. 19 of 22 historical accounting epochs
+  (V51–V85) reference 09-03 prestart bundles removed by the 09-24 reclaim, and
+  there is no Time Machine.
+- **Ledger rotation** is designed but deferred
+  (`docs/plans/2026-09-24-v94-ledger-rotation-design.md`).
 
 ---
 
