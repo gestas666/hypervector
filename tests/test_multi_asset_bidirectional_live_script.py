@@ -14,6 +14,7 @@ from unittest.mock import Mock
 
 import pytest
 
+from hypervector.live import cohort_venue_start_probe
 from hypervector.live.cohort_prestart_backup import CohortPrestartBackupError
 from hypervector.live.cohort_transition_drain import CohortTransitionDrainError
 from hypervector.live.cohort_transition_drain import CohortTransitionDrain
@@ -27,6 +28,18 @@ V25 = Path("configs/multi_asset_bidirectional_complete_portfolio_canary_v25.toml
 V90_CONFIG = Path(
     "configs/multi_asset_growth_first_5000_bankroll_builder_candidate_v90.toml"
 )
+
+
+@pytest.fixture(autouse=True)
+def _offline_venue_probe(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Keep these boundary tests offline; the probe has its own tests.
+
+    The launcher calls the probe through its module, so this stub also covers
+    every freshly loaded copy of the script.
+    """
+    monkeypatch.setattr(
+        cohort_venue_start_probe, "await_venue_start", lambda *_a, **_k: 1
+    )
 
 
 def _load_module() -> ModuleType:
@@ -843,6 +856,8 @@ def test_locked_start_snapshots_discovered_implementation_before_adapter(
     )
     provider_root = tmp_path / "backtest_lab"
     expected = {"provider_0000": tmp_path / "provider.py"}
+    # Discovery only returns existing files, and the start hashes them.
+    expected["provider_0000"].write_text("SIGNAL = 1\n", encoding="utf-8")
     discovered: dict[str, Path] = {}
     adapter_constructed = False
 

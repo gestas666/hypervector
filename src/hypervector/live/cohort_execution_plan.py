@@ -16,7 +16,10 @@ from hypervector.live.cohort_execution_plan_parsing import (
     _boolean,
 )
 
-from hypervector.live.cohort_adaptive_exit_policy import ADAPTIVE_EXIT_POLICIES
+from hypervector.live.cohort_adaptive_exit_policy import (
+    ADAPTIVE_EXIT_POLICIES,
+    RETENTION_EXIT_POLICY,
+)
 from hypervector.live.cohort_stop_risk_sizing import StopRiskBudget
 from hypervector.live.cohort_execution_plan_validation import (
     CohortExecutionPlanError,
@@ -34,12 +37,16 @@ ProfitLockPolicy = Literal[
     "btc_hulk_delayed_component_floor_v1",
     "btc_hulk_delayed_component_exit_v2",
 ]
+# Where the v2 floor moves the resting venue stop: entry +/- 25 bps (V93), or
+# the more protective of that and the +/- 0.5R software floor.
+BreakevenStopTarget = Literal["entry_offset", "floor"]
 
 _ENTRY_LIQUIDITIES = frozenset({"taker_ioc", "maker_post_only"})
 _STOP_POLICIES = frozenset({"fixed_bps", "structural_clamped_bps"})
 _TARGET_POLICIES = frozenset({"none", "fixed_bps", "reward_risk", "absolute_anchor"})
 _MAXIMUM_HOLD_POLICIES = frozenset({"fixed", "extend_while_regime_supported"})
 _PROVIDER_RECIPE_EXIT_POLICIES = frozenset({"ignore", "honor"})
+_BREAKEVEN_STOP_TARGETS = frozenset({"entry_offset", "floor"})
 _PROFIT_LOCK_POLICIES = frozenset(
     {
         "none",
@@ -74,6 +81,7 @@ class ProviderExecutionContract:
     profit_lock_floor_bps: float | None = None
     profit_lock_giveback_bps: float | None = None
     stop_risk_budget: StopRiskBudget | None = None
+    breakeven_stop_target: BreakevenStopTarget = "entry_offset"
 
     def __post_init__(self) -> None:
         """Reject missing parameters and ambiguous policy combinations."""
@@ -95,6 +103,15 @@ class ProviderExecutionContract:
         if self.adaptive_exit_policy != "none" and self.profit_lock_policy != "none":
             raise CohortExecutionPlanError(
                 "adaptive and legacy profit locks cannot overlap"
+            )
+        if self.breakeven_stop_target not in _BREAKEVEN_STOP_TARGETS:
+            raise CohortExecutionPlanError("unsupported breakeven stop target")
+        if (
+            self.breakeven_stop_target == "floor"
+            and self.adaptive_exit_policy != RETENTION_EXIT_POLICY
+        ):
+            raise CohortExecutionPlanError(
+                "breakeven_stop_target floor requires the v2 retention exit policy"
             )
         _validate_stop_contract(self)
         _validate_target_contract(self)
@@ -144,8 +161,12 @@ class ProviderExecutionContract:
         payload = asdict(self)
         if self.stop_risk_budget is None:
             payload.pop("stop_risk_budget")
+        else:
+            payload["stop_risk_budget"] = self.stop_risk_budget.as_payload()
         if self.adaptive_exit_policy == "none":
             payload.pop("adaptive_exit_policy")
+        if self.breakeven_stop_target == "entry_offset":
+            payload.pop("breakeven_stop_target")
         return payload
 
     @classmethod
@@ -200,6 +221,9 @@ class ProviderExecutionContract:
             profit_lock_giveback_bps=_optional_number(
                 row.get("profit_lock_giveback_bps"), "profit_lock_giveback_bps"
             ),
+            breakeven_stop_target=_breakeven_stop_target(
+                row.get("breakeven_stop_target", "entry_offset")
+            ),
         )
 
 
@@ -230,6 +254,7 @@ class BoundExecutionPlan:
     profit_lock_floor_bps: float | None = None
     profit_lock_giveback_bps: float | None = None
     stop_risk_budget: StopRiskBudget | None = None
+    breakeven_stop_target: BreakevenStopTarget = "entry_offset"
 
     def __post_init__(self) -> None:
         """Reuse contract validation and require dynamic structural evidence."""
@@ -256,6 +281,7 @@ class BoundExecutionPlan:
             profit_lock_activation_bps=self.profit_lock_activation_bps,
             profit_lock_floor_bps=self.profit_lock_floor_bps,
             profit_lock_giveback_bps=self.profit_lock_giveback_bps,
+            breakeven_stop_target=self.breakeven_stop_target,
         )
         if not self.strategy_id.strip():
             raise CohortExecutionPlanError("strategy_id must be non-empty")
@@ -273,8 +299,12 @@ class BoundExecutionPlan:
         payload = asdict(self)
         if self.stop_risk_budget is None:
             payload.pop("stop_risk_budget")
+        else:
+            payload["stop_risk_budget"] = self.stop_risk_budget.as_payload()
         if self.adaptive_exit_policy == "none":
             payload.pop("adaptive_exit_policy")
+        if self.breakeven_stop_target == "entry_offset":
+            payload.pop("breakeven_stop_target")
         return payload
 
     @classmethod
@@ -331,6 +361,9 @@ class BoundExecutionPlan:
             ),
             profit_lock_giveback_bps=_optional_number(
                 row.get("profit_lock_giveback_bps"), "profit_lock_giveback_bps"
+            ),
+            breakeven_stop_target=_breakeven_stop_target(
+                row.get("breakeven_stop_target", "entry_offset")
             ),
         )
 
@@ -487,6 +520,13 @@ def _profit_lock_policy(value: object) -> ProfitLockPolicy:
     text = _text(value, "profit_lock_policy")
     if text not in _PROFIT_LOCK_POLICIES:
         raise CohortExecutionPlanError("unsupported profit lock policy")
+    return text  # type: ignore[return-value]
+
+
+def _breakeven_stop_target(value: object) -> BreakevenStopTarget:
+    text = _text(value, "breakeven_stop_target")
+    if text not in _BREAKEVEN_STOP_TARGETS:
+        raise CohortExecutionPlanError("unsupported breakeven stop target")
     return text  # type: ignore[return-value]
 
 

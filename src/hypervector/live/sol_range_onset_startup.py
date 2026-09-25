@@ -651,8 +651,12 @@ def _profile_recovery_records(
     ledger: SolLiveLedger,
     expected_profile_fingerprint: str,
 ) -> list[dict[str, object]]:
+    # Restart consumers read this profile's telemetry rows too, so the selection
+    # is declared by profile only, never by event type.
     records = ledger.read_matching(
-        lambda record: record.get("profile_fingerprint") == expected_profile_fingerprint
+        lambda record: record.get("profile_fingerprint")
+        == expected_profile_fingerprint,
+        profile_fingerprint=expected_profile_fingerprint,
     )
     if pending_protective_cleanup(records) is None:
         records = records_before_partial_protective_fault(

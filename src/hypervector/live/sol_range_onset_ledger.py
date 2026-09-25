@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from array import array
 import json
 import os
-from collections.abc import Callable, Iterator, Mapping
+from collections.abc import Callable, Collection, Iterator, Mapping
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -28,6 +29,8 @@ SOL_LIVE_EVENT_TYPES = frozenset(
         "stop_order",
         "protective_stop_raised",
         "breakeven_stop_attempt",
+        "breakeven_stop_skipped",
+        "protective_stop_raise_exhausted",
         "structural_anchor_overrun",
         "target_order",
         "position",
@@ -58,6 +61,8 @@ SOL_LIVE_EVENT_TYPES = frozenset(
     }
 )
 _SECRET_KEY_FRAGMENTS = ("private_key", "api_key", "secret", "mnemonic")
+# Envelope code for a row whose event type or fingerprint is not hashable JSON.
+_UNKNOWN_ENVELOPE = 0
 LedgerExecutionMode = Literal["live", "observe"]
 
 
@@ -104,7 +109,17 @@ class SolLiveLedger:
         )
         self._run_fingerprint = _required_text(run_fingerprint, "run_fingerprint")
         self._run_id = _required_text(run_id, "run_id")
+        # One code per row this instance has validated or written, naming the
+        # decoded (event_type, profile_fingerprint) pair, so a later selective
+        # read can pass over rows it cannot select without decoding them again.
+        self._envelope_codes = array("I")
+        self._envelope_code_by_key: dict[object, int] = {}
+        self._envelope_keys: list[tuple[object, object] | None] = [None]
         self._next_sequence = self._validated_record_count() + 1
+        # Codes name line numbers only while every append starts a new line. An
+        # unterminated last row would absorb the next append, so this instance
+        # then decodes every row, exactly as a read without a declaration does.
+        self._envelopes_aligned = _ends_with_newline(self.path)
 
     def append(
         self,
@@ -149,6 +164,7 @@ class SolLiveLedger:
             "payload": clean_payload,
         }
         self._append_record(record)
+        self._remember_envelope(record)
         self._next_sequence += 1
         return self.path
 
@@ -185,18 +201,74 @@ class SolLiveLedger:
     def read_matching(
         self,
         predicate: Callable[[Mapping[str, object]], bool],
+        *,
+        event_types: Collection[object] | None = None,
+        profile_fingerprint: str | None = None,
     ) -> list[dict[str, object]]:
-        """Validate all rows while retaining only rows selected by ``predicate``."""
-        return [record for record in self._iter_records() if predicate(record)]
+        """Validate all rows while retaining only rows selected by ``predicate``.
+
+        ``event_types`` and ``profile_fingerprint`` declare a necessary condition
+        of ``predicate``: it must reject every row, other than the first, whose
+        decoded event type is outside ``event_types`` or whose decoded profile
+        fingerprint differs. A row this instance already validated (when it was
+        constructed, or when it wrote the row) that fails the declaration is
+        passed over without being decoded again; the first row and every other
+        row are decoded, checked and offered to ``predicate`` exactly as without
+        the declaration.
+        """
+        excluded = self._excluded_envelope_codes(event_types, profile_fingerprint)
+        return [record for record in self._iter_records(excluded) if predicate(record)]
 
     def _validated_record_count(self) -> int:
-        return sum(1 for _record in self._iter_records())
+        count = 0
+        for record in self._iter_records():
+            self._remember_envelope(record)
+            count += 1
+        return count
 
-    def _iter_records(self) -> Iterator[dict[str, object]]:
+    def _remember_envelope(self, record: Mapping[str, object]) -> None:
+        key = (record.get("event_type"), record.get("profile_fingerprint"))
+        try:
+            code = self._envelope_code_by_key.get(key)
+        except TypeError:
+            self._envelope_codes.append(_UNKNOWN_ENVELOPE)
+            return
+        if code is None:
+            code = len(self._envelope_keys)
+            self._envelope_code_by_key[key] = code
+            self._envelope_keys.append(key)
+        self._envelope_codes.append(code)
+
+    def _excluded_envelope_codes(
+        self,
+        event_types: Collection[object] | None,
+        profile_fingerprint: str | None,
+    ) -> frozenset[int]:
+        if not self._envelopes_aligned or (
+            event_types is None and profile_fingerprint is None
+        ):
+            return frozenset()
+        return frozenset(
+            code
+            for code, key in enumerate(self._envelope_keys)
+            if key is not None
+            and (
+                (event_types is not None and key[0] not in event_types)
+                or (profile_fingerprint is not None and key[1] != profile_fingerprint)
+            )
+        )
+
+    def _iter_records(
+        self, excluded: frozenset[int] = frozenset()
+    ) -> Iterator[dict[str, object]]:
         if not self.path.exists():
             return
+        codes = self._envelope_codes
+        known = len(codes) if excluded else 0
         with self.path.open("r", encoding="utf-8") as handle:
             for line_number, line in enumerate(handle, start=1):
+                if 1 < line_number <= known and codes[line_number - 1] in excluded:
+                    continue
                 if not line.strip():
                     raise SolLiveLedgerError(f"live ledger line {line_number} is empty")
                 record = _decode_record(line, line_number)
@@ -303,6 +375,18 @@ def _decode_record(line: str, line_number: int) -> dict[str, object]:
         raise SolLiveLedgerError(f"live ledger line {line_number} must be an object")
     _validate_json_value(value, path=f"line {line_number}")
     return value
+
+
+def _ends_with_newline(path: Path) -> bool:
+    """Report whether an append to ``path`` would start a new line."""
+    try:
+        with path.open("rb") as handle:
+            if handle.seek(0, os.SEEK_END) == 0:
+                return True
+            handle.seek(-1, os.SEEK_END)
+            return handle.read(1) == b"\n"
+    except FileNotFoundError:
+        return True
 
 
 def _read_suffix(path: Path, offset: int) -> bytes:

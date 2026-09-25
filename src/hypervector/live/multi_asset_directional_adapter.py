@@ -62,6 +62,10 @@ class MultiAssetDirectionalAdapter:
             ),
         )
 
+    def normalize_trigger_price(self, trigger_price: float) -> float:
+        """Return the trigger as the delegate's stop orders put it on the wire."""
+        return self._delegate.normalize_trigger_price(trigger_price)
+
     def place_protective_stop(
         self,
         *,

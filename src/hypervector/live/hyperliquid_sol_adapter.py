@@ -115,6 +115,10 @@ class SolHyperliquidAdapter(SolHyperliquidReader):
             client_order_id=identity,
         )
 
+    def normalize_trigger_price(self, trigger_price: float) -> float:
+        """Return the trigger exactly as this adapter's stop orders put it on the wire."""
+        return normalize_perp_price(trigger_price, self._market().size_decimals)
+
     def place_protective_stop(
         self,
         *,
@@ -124,7 +128,7 @@ class SolHyperliquidAdapter(SolHyperliquidReader):
     ) -> HyperliquidOrderAck:
         """Place a reduce-only market trigger for reconciled SOL exposure."""
         position_size = nonzero_finite(position_size_signed, "position_size_signed")
-        price = normalize_perp_price(trigger_price, self._market().size_decimals)
+        price = self.normalize_trigger_price(trigger_price)
         size = self._round_size_down(abs(position_size))
         identity = validate_client_order_id(client_order_id)
         response = call_ambiguous_order_mutation(

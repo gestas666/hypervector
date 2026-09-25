@@ -368,6 +368,7 @@ fn v58_exit_policies() -> BTreeMap<String, CohortPendingExitPolicy> {
             maximum_hold_evidence_maximum_age_seconds: None,
             provider_recipe_exit_policy: "ignore".into(),
             adaptive_exit_policy: "none".into(),
+            breakeven_stop_target: "entry_offset".into(),
             profit_lock_policy: "completed_bar_trailing".into(),
             profit_lock_activation_bps: Some(100.0),
             profit_lock_floor_bps: Some(40.0),

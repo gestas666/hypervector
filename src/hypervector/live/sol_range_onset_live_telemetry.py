@@ -42,7 +42,8 @@ class SolLiveTelemetry:
         self._now_fn = now_fn
         existing = ledger.read_matching(
             lambda row: row.get("sequence") == 1
-            or row.get("event_type") in _RECOVERY_EVENT_TYPES
+            or row.get("event_type") in _RECOVERY_EVENT_TYPES,
+            event_types=_RECOVERY_EVENT_TYPES,
         )
         self._fresh_ledger = not existing
         self._run_started_at_ms = _ledger_started_at_ms(existing)

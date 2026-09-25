@@ -312,9 +312,9 @@ def test_alerts_fire_on_change_remind_while_unhealthy_and_announce_recovery() ->
     )
     assert alerter.observe(_report(), 130.0) is True
     assert [title for title, _body in recorder.sent] == [
-        "HYPERVECTOR ALERT",
-        "HYPERVECTOR ALERT",
-        "HYPERVECTOR ALERT",
+        "Hypervector notice",  # informational: stays off the push channel
+        "Hypervector notice",
+        "HYPERVECTOR BACKEND ALERT",
         "Hypervector recovered",
     ]
 

@@ -1,0 +1,1597 @@
+{
+ "task": "weakshort",
+ "date": "2026-09-24",
+ "rule": "skip a Donchian 20/10 short entry when (prior 20-bar low - signal close) / ATR20 < 1.0; longs unchanged",
+ "threshold_atr": 1.0,
+ "pre_registered_bar_source": "docs/plans/2026-09-24-v94-review-actions.md (Pre-registered bar)",
+ "passed": true,
+ "bar": [
+  {
+   "item": "1. Net delta > 0 in all 4 cells",
+   "value": {
+    "recent_all8|measured": 431.39,
+    "recent_all8|adverse": 547.75,
+    "year_crypto4|measured": 798.3,
+    "year_crypto4|adverse": 1065.87
+   },
+   "passed": true
+  },
+  {
+   "item": "2. Delta ex 3 largest avoided losses >= 0 in >= 3 of 4 cells",
+   "value": {
+    "recent_all8|measured": 359.99,
+    "recent_all8|adverse": 475.14,
+    "year_crypto4|measured": 705.42,
+    "year_crypto4|adverse": 971.76
+   },
+   "passed": true
+  },
+  {
+   "item": "3. Live-4 (SOL, SNDK, BRENTOIL, TSLA) recent aggregate delta >= 0 at both costs",
+   "value": {
+    "recent_live4|measured": 210.09,
+    "recent_live4|adverse": 289.65
+   },
+   "passed": true
+  },
+  {
+   "item": "4. >= 30 shorts actually removed in each window",
+   "value": {
+    "recent": {
+     "measured": 151,
+     "adverse": 151
+    },
+    "year": {
+     "measured": 517,
+     "adverse": 516
+    }
+   },
+   "passed": true
+  }
+ ],
+ "harness_validation": {
+  "script": "scratchpad/levers/validate.py",
+  "frozen_v92_donchian_cells": 24,
+  "exact_to_1e-9": 24,
+  "v2_overlay_total_delta_flat500": {
+   "recent|measured": 111.12,
+   "recent|adverse": 105.61,
+   "year|measured": 65.28,
+   "year|adverse": 6.0
+  }
+ },
+ "rule_implementation_sanity": {
+  "check": "V92 exits, flat $500, adverse cost must reproduce the review's prior replay (recent 176.56 -> 535.44, one-year -1183.93 -> -394.51)",
+  "result": {
+   "recent": {
+    "base_net": 176.56,
+    "rule_net": 535.44,
+    "delta": 358.88
+   },
+   "year": {
+    "base_net": -1183.93,
+    "rule_net": -394.51,
+    "delta": 789.42
+   }
+  },
+  "reproduced": true
+ },
+ "atr_confirmation": {
+  "live_provider": "src/hypervector/live/hourly_price_provider.py:74-95 build_hourly_price_signals -> build_donchian_atr_breakout_signals(DonchianAtrBreakoutConfig(entry_channel_bars=20, exit_channel_bars=10, signal_hours=1))",
+  "shared_state": "src/hypervector/research/donchian_atr_breakout_signals.py:62-128 build_donchian_atr_breakout_state: atr = segmented_wilder_rma(raw_true_range(hourly, segments), segments, 20); prior_entry_low = 20-bar rolling min of lows shifted 1 within contiguous segments",
+  "research_builder": "src/hypervector/research/v92_entry_candidates.py:76-92 _donchian_state calls the same state builder (defaults 20/10/ATR20, signal_hours=1) and sets entry_extension_atr = (prior_entry_low - hourly close) / atr for shorts",
+  "residual_difference": "live evaluates over its 14-day lookback, so the Wilder seed differs; seed weight after ~316 hourly bars is (19/20)^316 ~ 1e-7 (negligible)"
+ },
+ "method": {
+  "exit_overlay": "harness v2 overlay: floor (2.0R activation, 0.5R floor, >= 25 bps) + regime-gated ratchet (0.5R activation, 0.5R giveback); 24h hold",
+  "sizing_v93": "live code path hypervector.live.cohort_stop_risk_sizing.size_for_stop_risk with a structural_clamped_bps BoundExecutionPlan (anchor = signal stop, clamp 20-250 bps), budget $25, cost buffer 20 bps, entry slippage cap 0.002, mark = entry-bar open, applied to planned notional min(equity*margin_fraction*leverage, max_notional) from V93 asset rows at equity $4,825.33 (V93 start)",
+  "sizing_v94_reporting": "same, budget = 0.006 x $4,825.33 = $28.95, V94 rows (HYPE envelope 0.013 / $500)",
+  "scaling": "simulator net P&L is linear in notional; each $500 screen trade is rescaled by sized notional / 500; fixed equity (non-compounding)",
+  "removed_definition": "baseline trades whose entry bar does not appear in the rule run; 'ex 3 largest avoided losses' adds the 3 most negative removed baseline nets back to the rule's P&L",
+  "trigger_count_definition": "item 4 counts baseline weak-short trades actually removed (not merely filtered signals); window passes on the minimum across its two cost cells"
+ },
+ "constants": {
+  "threshold_atr": 1.0,
+  "v2_overlay": {
+   "floor": [
+    2.0,
+    0.5
+   ],
+   "gated": [
+    0.5,
+    0.5
+   ]
+  },
+  "be_bps": 25.0,
+  "equity": 4825.33,
+  "entry_slippage_cap_fraction": 0.002,
+  "cost_buffer_bps": 20.0,
+  "v93_budget_usd": 25.0,
+  "v94_budget_usd": 28.95,
+  "v93_rows": {
+   "BTC": [
+    0.011,
+    10.0,
+    700.0
+   ],
+   "ETH": [
+    0.02,
+    15.0,
+    500.0
+   ],
+   "SOL": [
+    0.013,
+    8.0,
+    700.0
+   ],
+   "HYPE": [
+    0.08,
+    10.0,
+    2500.0
+   ],
+   "xyz:SPCX": [
+    0.02,
+    10.0,
+    500.0
+   ],
+   "xyz:SNDK": [
+    0.05,
+    8.0,
+    2600.0
+   ],
+   "xyz:BRENTOIL": [
+    0.015,
+    8.0,
+    800.0
+   ],
+   "xyz:TSLA": [
+    0.013,
+    8.0,
+    700.0
+   ]
+  },
+  "v94_rows": {
+   "BTC": [
+    0.011,
+    10.0,
+    700.0
+   ],
+   "ETH": [
+    0.02,
+    15.0,
+    500.0
+   ],
+   "SOL": [
+    0.013,
+    8.0,
+    700.0
+   ],
+   "HYPE": [
+    0.013,
+    10.0,
+    500.0
+   ],
+   "xyz:SPCX": [
+    0.02,
+    10.0,
+    500.0
+   ],
+   "xyz:SNDK": [
+    0.05,
+    8.0,
+    2600.0
+   ],
+   "xyz:BRENTOIL": [
+    0.015,
+    8.0,
+    800.0
+   ],
+   "xyz:TSLA": [
+    0.013,
+    8.0,
+    700.0
+   ]
+  }
+ },
+ "cells": {
+  "recent_all8|measured": {
+   "screen": "recent",
+   "symbols": [
+    "BTC",
+    "ETH",
+    "SOL",
+    "HYPE",
+    "xyz:SPCX",
+    "xyz:SNDK",
+    "xyz:BRENTOIL",
+    "xyz:TSLA"
+   ],
+   "cost": "measured",
+   "gating_cell": true,
+   "v93": {
+    "base_net": 831.34,
+    "rule_net": 1262.73,
+    "delta": 431.39,
+    "delta_ex_top3_avoided_losses": 359.99,
+    "top3_avoided_losses": [
+     {
+      "symbol": "HYPE",
+      "entry_time_utc": "2026-08-24T09:00:00+00:00",
+      "direction": "short",
+      "ext_atr": 0.337,
+      "baseline_net": -24.03
+     },
+     {
+      "symbol": "HYPE",
+      "entry_time_utc": "2026-09-11T00:00:00+00:00",
+      "direction": "short",
+      "ext_atr": 0.071,
+      "baseline_net": -23.97
+     },
+     {
+      "symbol": "xyz:SNDK",
+      "entry_time_utc": "2026-07-28T23:00:00+00:00",
+      "direction": "short",
+      "ext_atr": 0.457,
+      "baseline_net": -23.41
+     }
+    ],
+    "n_base": 437,
+    "n_rule": 305,
+    "weak_short_signals_filtered": 252,
+    "removed_total": 152,
+    "removed_shorts": 151,
+    "removed_weak_shorts": 151,
+    "removed_other_displaced": 1,
+    "removed_net": -405.84,
+    "added_trades": 20,
+    "added_net": 25.56,
+    "winners_removed": 44,
+    "winners_removed_net": 509.44,
+    "largest_winner_removed": 66.58,
+    "block_deltas": [
+     179.84,
+     230.98,
+     20.58
+    ],
+    "block_signs": "+++",
+    "per_symbol": {
+     "BTC": {
+      "base": 31.78,
+      "rule": 76.92,
+      "delta": 45.14,
+      "removed": 22,
+      "removed_weak_shorts": 21,
+      "added": 4
+     },
+     "ETH": {
+      "base": 3.68,
+      "rule": 22.2,
+      "delta": 18.52,
+      "removed": 18,
+      "removed_weak_shorts": 18,
+      "added": 2
+     },
+     "SOL": {
+      "base": 178.68,
+      "rule": 159.57,
+      "delta": -19.11,
+      "removed": 18,
+      "removed_weak_shorts": 18,
+      "added": 1
+     },
+     "HYPE": {
+      "base": 82.34,
+      "rule": 177.33,
+      "delta": 94.99,
+      "removed": 20,
+      "removed_weak_shorts": 20,
+      "added": 3
+     },
+     "xyz:SPCX": {
+      "base": -40.74,
+      "rule": 21.92,
+      "delta": 62.66,
+      "removed": 19,
+      "removed_weak_shorts": 19,
+      "added": 2
+     },
+     "xyz:SNDK": {
+      "base": 491.87,
+      "rule": 704.61,
+      "delta": 212.74,
+      "removed": 20,
+      "removed_weak_shorts": 20,
+      "added": 2
+     },
+     "xyz:BRENTOIL": {
+      "base": 56.16,
+      "rule": 77.14,
+      "delta": 20.98,
+      "removed": 18,
+      "removed_weak_shorts": 18,
+      "added": 3
+     },
+     "xyz:TSLA": {
+      "base": 27.58,
+      "rule": 23.05,
+      "delta": -4.52,
+      "removed": 17,
+      "removed_weak_shorts": 17,
+      "added": 3
+     }
+    },
+    "diag_avoided_losses_added_back_to_zero_delta": 21,
+    "diag_largest_symbol": "xyz:SNDK",
+    "diag_delta_ex_largest_symbol": 218.65,
+    "diag_removed_weak_short_mean": -2.659,
+    "diag_removed_weak_short_t": -2.45,
+    "diag_symbols_delta_positive": "6/8"
+   },
+   "v94_fraction_0006": {
+    "base_net": 833.49,
+    "rule_net": 1251.54,
+    "delta": 418.06,
+    "delta_ex_top3_avoided_losses": 336.74,
+    "top3_avoided_losses": [
+     {
+      "symbol": "xyz:SNDK",
+      "entry_time_utc": "2026-07-28T23:00:00+00:00",
+      "direction": "short",
+      "ext_atr": 0.457,
+      "baseline_net": -27.11
+     },
+     {
+      "symbol": "xyz:SNDK",
+      "entry_time_utc": "2026-07-22T13:00:00+00:00",
+      "direction": "short",
+      "ext_atr": 0.255,
+      "baseline_net": -27.11
+     },
+     {
+      "symbol": "xyz:SNDK",
+      "entry_time_utc": "2026-08-05T20:00:00+00:00",
+      "direction": "short",
+      "ext_atr": 0.453,
+      "baseline_net": -27.11
+     }
+    ],
+    "n_base": 437,
+    "n_rule": 305,
+    "weak_short_signals_filtered": 252,
+    "removed_total": 152,
+    "removed_shorts": 151,
+    "removed_weak_shorts": 151,
+    "removed_other_displaced": 1,
+    "removed_net": -383.89,
+    "added_trades": 20,
+    "added_net": 34.17,
+    "winners_removed": 44,
+    "winners_removed_net": 462.84,
+    "largest_winner_removed": 70.41,
+    "block_deltas": [
+     195.52,
+     207.67,
+     14.86
+    ],
+    "block_signs": "+++",
+    "per_symbol": {
+     "BTC": {
+      "base": 31.78,
+      "rule": 76.92,
+      "delta": 45.14,
+      "removed": 22,
+      "removed_weak_shorts": 21,
+      "added": 4
+     },
+     "ETH": {
+      "base": 3.68,
+      "rule": 22.2,
+      "delta": 18.52,
+      "removed": 18,
+      "removed_weak_shorts": 18,
+      "added": 2
+     },
+     "SOL": {
+      "base": 178.68,
+      "rule": 159.57,
+      "delta": -19.11,
+      "removed": 18,
+      "removed_weak_shorts": 18,
+      "added": 1
+     },
+     "HYPE": {
+      "base": 23.52,
+      "rule": 69.04,
+      "delta": 45.52,
+      "removed": 20,
+      "removed_weak_shorts": 20,
+      "added": 3
+     },
+     "xyz:SPCX": {
+      "base": -40.74,
+      "rule": 21.92,
+      "delta": 62.66,
+      "removed": 19,
+      "removed_weak_shorts": 19,
+      "added": 2
+     },
+     "xyz:SNDK": {
+      "base": 552.84,
+      "rule": 801.71,
+      "delta": 248.87,
+      "removed": 20,
+      "removed_weak_shorts": 20,
+      "added": 2
+     },
+     "xyz:BRENTOIL": {
+      "base": 56.16,
+      "rule": 77.14,
+      "delta": 20.98,
+      "removed": 18,
+      "removed_weak_shorts": 18,
+      "added": 3
+     },
+     "xyz:TSLA": {
+      "base": 27.58,
+      "rule": 23.05,
+      "delta": -4.52,
+      "removed": 17,
+      "removed_weak_shorts": 17,
+      "added": 3
+     }
+    },
+    "diag_avoided_losses_added_back_to_zero_delta": 22,
+    "diag_largest_symbol": "xyz:SNDK",
+    "diag_delta_ex_largest_symbol": 169.19,
+    "diag_removed_weak_short_mean": -2.514,
+    "diag_removed_weak_short_t": -2.52,
+    "diag_symbols_delta_positive": "6/8"
+   },
+   "flat500_v2_reference": {
+    "base_net": 492.24,
+    "rule_net": 764.87,
+    "delta": 272.63,
+    "delta_ex_top3_avoided_losses": 233.94,
+    "block_signs": "+++"
+   }
+  },
+  "recent_all8|adverse": {
+   "screen": "recent",
+   "symbols": [
+    "BTC",
+    "ETH",
+    "SOL",
+    "HYPE",
+    "xyz:SPCX",
+    "xyz:SNDK",
+    "xyz:BRENTOIL",
+    "xyz:TSLA"
+   ],
+   "cost": "adverse",
+   "gating_cell": true,
+   "v93": {
+    "base_net": 537.0,
+    "rule_net": 1084.76,
+    "delta": 547.75,
+    "delta_ex_top3_avoided_losses": 475.14,
+    "top3_avoided_losses": [
+     {
+      "symbol": "HYPE",
+      "entry_time_utc": "2026-08-24T09:00:00+00:00",
+      "direction": "short",
+      "ext_atr": 0.337,
+      "baseline_net": -24.44
+     },
+     {
+      "symbol": "HYPE",
+      "entry_time_utc": "2026-09-11T00:00:00+00:00",
+      "direction": "short",
+      "ext_atr": 0.071,
+      "baseline_net": -24.38
+     },
+     {
+      "symbol": "xyz:SNDK",
+      "entry_time_utc": "2026-08-05T20:00:00+00:00",
+      "direction": "short",
+      "ext_atr": 0.453,
+      "baseline_net": -23.79
+     }
+    ],
+    "n_base": 437,
+    "n_rule": 305,
+    "weak_short_signals_filtered": 252,
+    "removed_total": 152,
+    "removed_shorts": 151,
+    "removed_weak_shorts": 151,
+    "removed_other_displaced": 1,
+    "removed_net": -534.5,
+    "added_trades": 20,
+    "added_net": 13.25,
+    "winners_removed": 40,
+    "winners_removed_net": 472.44,
+    "largest_winner_removed": 65.03,
+    "block_deltas": [
+     242.31,
+     263.44,
+     42.0
+    ],
+    "block_signs": "+++",
+    "per_symbol": {
+     "BTC": {
+      "base": -3.1,
+      "rule": 50.35,
+      "delta": 53.45,
+      "removed": 22,
+      "removed_weak_shorts": 21,
+      "added": 4
+     },
+     "ETH": {
+      "base": -16.22,
+      "rule": 9.21,
+      "delta": 25.43,
+      "removed": 18,
+      "removed_weak_shorts": 18,
+      "added": 2
+     },
+     "SOL": {
+      "base": 153.56,
+      "rule": 146.32,
+      "delta": -7.24,
+      "removed": 18,
+      "removed_weak_shorts": 18,
+      "added": 1
+     },
+     "HYPE": {
+      "base": 28.67,
+      "rule": 139.03,
+      "delta": 110.36,
+      "removed": 20,
+      "removed_weak_shorts": 20,
+      "added": 3
+     },
+     "xyz:SPCX": {
+      "base": -66.51,
+      "rule": 2.34,
+      "delta": 68.86,
+      "removed": 19,
+      "removed_weak_shorts": 19,
+      "added": 2
+     },
+     "xyz:SNDK": {
+      "base": 400.06,
+      "rule": 664.36,
+      "delta": 264.3,
+      "removed": 20,
+      "removed_weak_shorts": 20,
+      "added": 2
+     },
+     "xyz:BRENTOIL": {
+      "base": 29.81,
+      "rule": 58.02,
+      "delta": 28.21,
+      "removed": 18,
+      "removed_weak_shorts": 18,
+      "added": 3
+     },
+     "xyz:TSLA": {
+      "base": 10.73,
+      "rule": 15.11,
+      "delta": 4.39,
+      "removed": 17,
+      "removed_weak_shorts": 17,
+      "added": 3
+     }
+    },
+    "diag_avoided_losses_added_back_to_zero_delta": 28,
+    "diag_largest_symbol": "xyz:SNDK",
+    "diag_delta_ex_largest_symbol": 283.45,
+    "diag_removed_weak_short_mean": -3.508,
+    "diag_removed_weak_short_t": -3.23,
+    "diag_symbols_delta_positive": "7/8"
+   },
+   "v94_fraction_0006": {
+    "base_net": 555.69,
+    "rule_net": 1089.56,
+    "delta": 533.87,
+    "delta_ex_top3_avoided_losses": 451.21,
+    "top3_avoided_losses": [
+     {
+      "symbol": "xyz:SNDK",
+      "entry_time_utc": "2026-08-05T20:00:00+00:00",
+      "direction": "short",
+      "ext_atr": 0.453,
+      "baseline_net": -27.55
+     },
+     {
+      "symbol": "xyz:SNDK",
+      "entry_time_utc": "2026-07-28T23:00:00+00:00",
+      "direction": "short",
+      "ext_atr": 0.457,
+      "baseline_net": -27.55
+     },
+     {
+      "symbol": "xyz:SNDK",
+      "entry_time_utc": "2026-07-22T13:00:00+00:00",
+      "direction": "short",
+      "ext_atr": 0.255,
+      "baseline_net": -27.55
+     }
+    ],
+    "n_base": 437,
+    "n_rule": 305,
+    "weak_short_signals_filtered": 252,
+    "removed_total": 152,
+    "removed_shorts": 151,
+    "removed_weak_shorts": 151,
+    "removed_other_displaced": 1,
+    "removed_net": -510.66,
+    "added_trades": 20,
+    "added_net": 23.21,
+    "winners_removed": 40,
+    "winners_removed_net": 425.63,
+    "largest_winner_removed": 68.77,
+    "block_deltas": [
+     261.71,
+     237.53,
+     34.62
+    ],
+    "block_signs": "+++",
+    "per_symbol": {
+     "BTC": {
+      "base": -3.1,
+      "rule": 50.35,
+      "delta": 53.45,
+      "removed": 22,
+      "removed_weak_shorts": 21,
+      "added": 4
+     },
+     "ETH": {
+      "base": -16.22,
+      "rule": 9.21,
+      "delta": 25.43,
+      "removed": 18,
+      "removed_weak_shorts": 18,
+      "added": 2
+     },
+     "SOL": {
+      "base": 153.56,
+      "rule": 146.32,
+      "delta": -7.24,
+      "removed": 18,
+      "removed_weak_shorts": 18,
+      "added": 1
+     },
+     "HYPE": {
+      "base": -0.51,
+      "rule": 51.91,
+      "delta": 52.43,
+      "removed": 20,
+      "removed_weak_shorts": 20,
+      "added": 3
+     },
+     "xyz:SPCX": {
+      "base": -66.51,
+      "rule": 2.34,
+      "delta": 68.86,
+      "removed": 19,
+      "removed_weak_shorts": 19,
+      "added": 2
+     },
+     "xyz:SNDK": {
+      "base": 447.93,
+      "rule": 756.28,
+      "delta": 308.35,
+      "removed": 20,
+      "removed_weak_shorts": 20,
+      "added": 2
+     },
+     "xyz:BRENTOIL": {
+      "base": 29.81,
+      "rule": 58.02,
+      "delta": 28.21,
+      "removed": 18,
+      "removed_weak_shorts": 18,
+      "added": 3
+     },
+     "xyz:TSLA": {
+      "base": 10.73,
+      "rule": 15.11,
+      "delta": 4.39,
+      "removed": 17,
+      "removed_weak_shorts": 17,
+      "added": 3
+     }
+    },
+    "diag_avoided_losses_added_back_to_zero_delta": 30,
+    "diag_largest_symbol": "xyz:SNDK",
+    "diag_delta_ex_largest_symbol": 225.52,
+    "diag_removed_weak_short_mean": -3.35,
+    "diag_removed_weak_short_t": -3.35,
+    "diag_symbols_delta_positive": "7/8"
+   },
+   "flat500_v2_reference": {
+    "base_net": 282.17,
+    "rule_net": 636.31,
+    "delta": 354.14,
+    "delta_ex_top3_avoided_losses": 314.79,
+    "block_signs": "+++"
+   }
+  },
+  "year_crypto4|measured": {
+   "screen": "year",
+   "symbols": [
+    "BTC",
+    "ETH",
+    "SOL",
+    "HYPE"
+   ],
+   "cost": "measured",
+   "gating_cell": true,
+   "v93": {
+    "base_net": -830.87,
+    "rule_net": -32.56,
+    "delta": 798.3,
+    "delta_ex_top3_avoided_losses": 705.42,
+    "top3_avoided_losses": [
+     {
+      "symbol": "HYPE",
+      "entry_time_utc": "2026-03-23T09:00:00+00:00",
+      "direction": "short",
+      "ext_atr": 0.206,
+      "baseline_net": -44.7
+     },
+     {
+      "symbol": "HYPE",
+      "entry_time_utc": "2025-11-10T17:00:00+00:00",
+      "direction": "short",
+      "ext_atr": 0.11,
+      "baseline_net": -24.11
+     },
+     {
+      "symbol": "HYPE",
+      "entry_time_utc": "2026-01-29T03:00:00+00:00",
+      "direction": "short",
+      "ext_atr": 0.394,
+      "baseline_net": -24.08
+     }
+    ],
+    "n_base": 1183,
+    "n_rule": 724,
+    "weak_short_signals_filtered": 908,
+    "removed_total": 519,
+    "removed_shorts": 517,
+    "removed_weak_shorts": 517,
+    "removed_other_displaced": 2,
+    "removed_net": -1010.25,
+    "added_trades": 60,
+    "added_net": -211.95,
+    "winners_removed": 165,
+    "winners_removed_net": 2802.61,
+    "largest_winner_removed": 94.05,
+    "block_deltas": [
+     473.38,
+     154.16,
+     170.76
+    ],
+    "block_signs": "+++",
+    "per_symbol": {
+     "BTC": {
+      "base": -201.08,
+      "rule": -175.52,
+      "delta": 25.56,
+      "removed": 128,
+      "removed_weak_shorts": 127,
+      "added": 17
+     },
+     "ETH": {
+      "base": -56.59,
+      "rule": -57.14,
+      "delta": -0.56,
+      "removed": 117,
+      "removed_weak_shorts": 117,
+      "added": 17
+     },
+     "SOL": {
+      "base": -89.2,
+      "rule": 101.09,
+      "delta": 190.29,
+      "removed": 123,
+      "removed_weak_shorts": 123,
+      "added": 13
+     },
+     "HYPE": {
+      "base": -484.0,
+      "rule": 99.01,
+      "delta": 583.01,
+      "removed": 151,
+      "removed_weak_shorts": 150,
+      "added": 13
+     }
+    },
+    "diag_avoided_losses_added_back_to_zero_delta": 33,
+    "diag_largest_symbol": "HYPE",
+    "diag_delta_ex_largest_symbol": 215.29,
+    "diag_removed_weak_short_mean": -1.906,
+    "diag_removed_weak_short_t": -2.42,
+    "diag_symbols_delta_positive": "3/4"
+   },
+   "v94_fraction_0006": {
+    "base_net": -618.96,
+    "rule_net": -77.64,
+    "delta": 541.32,
+    "delta_ex_top3_avoided_losses": 488.44,
+    "top3_avoided_losses": [
+     {
+      "symbol": "HYPE",
+      "entry_time_utc": "2026-03-23T09:00:00+00:00",
+      "direction": "short",
+      "ext_atr": 0.206,
+      "baseline_net": -24.12
+     },
+     {
+      "symbol": "SOL",
+      "entry_time_utc": "2026-06-05T19:00:00+00:00",
+      "direction": "short",
+      "ext_atr": 0.19,
+      "baseline_net": -14.88
+     },
+     {
+      "symbol": "SOL",
+      "entry_time_utc": "2025-10-11T20:00:00+00:00",
+      "direction": "short",
+      "ext_atr": 0.4,
+      "baseline_net": -13.88
+     }
+    ],
+    "n_base": 1183,
+    "n_rule": 724,
+    "weak_short_signals_filtered": 908,
+    "removed_total": 519,
+    "removed_shorts": 517,
+    "removed_weak_shorts": 517,
+    "removed_other_displaced": 2,
+    "removed_net": -726.23,
+    "added_trades": 60,
+    "added_net": -184.9,
+    "winners_removed": 165,
+    "winners_removed_net": 2119.47,
+    "largest_winner_removed": 53.42,
+    "block_deltas": [
+     314.84,
+     105.05,
+     121.44
+    ],
+    "block_signs": "+++",
+    "per_symbol": {
+     "BTC": {
+      "base": -201.08,
+      "rule": -175.52,
+      "delta": 25.56,
+      "removed": 128,
+      "removed_weak_shorts": 127,
+      "added": 17
+     },
+     "ETH": {
+      "base": -56.59,
+      "rule": -57.14,
+      "delta": -0.56,
+      "removed": 117,
+      "removed_weak_shorts": 117,
+      "added": 17
+     },
+     "SOL": {
+      "base": -89.2,
+      "rule": 101.09,
+      "delta": 190.29,
+      "removed": 123,
+      "removed_weak_shorts": 123,
+      "added": 13
+     },
+     "HYPE": {
+      "base": -272.09,
+      "rule": 53.94,
+      "delta": 326.04,
+      "removed": 151,
+      "removed_weak_shorts": 150,
+      "added": 13
+     }
+    },
+    "diag_avoided_losses_added_back_to_zero_delta": 41,
+    "diag_largest_symbol": "HYPE",
+    "diag_delta_ex_largest_symbol": 215.28,
+    "diag_removed_weak_short_mean": -1.382,
+    "diag_removed_weak_short_t": -2.57,
+    "diag_symbols_delta_positive": "3/4"
+   },
+   "flat500_v2_reference": {
+    "base_net": -606.97,
+    "rule_net": -67.83,
+    "delta": 539.15,
+    "delta_ex_top3_avoided_losses": 486.37,
+    "block_signs": "+++"
+   }
+  },
+  "year_crypto4|adverse": {
+   "screen": "year",
+   "symbols": [
+    "BTC",
+    "ETH",
+    "SOL",
+    "HYPE"
+   ],
+   "cost": "adverse",
+   "gating_cell": true,
+   "v93": {
+    "base_net": -1590.65,
+    "rule_net": -524.78,
+    "delta": 1065.87,
+    "delta_ex_top3_avoided_losses": 971.76,
+    "top3_avoided_losses": [
+     {
+      "symbol": "HYPE",
+      "entry_time_utc": "2026-03-23T09:00:00+00:00",
+      "direction": "short",
+      "ext_atr": 0.206,
+      "baseline_net": -45.1
+     },
+     {
+      "symbol": "HYPE",
+      "entry_time_utc": "2025-11-10T17:00:00+00:00",
+      "direction": "short",
+      "ext_atr": 0.11,
+      "baseline_net": -24.52
+     },
+     {
+      "symbol": "HYPE",
+      "entry_time_utc": "2026-01-29T03:00:00+00:00",
+      "direction": "short",
+      "ext_atr": 0.394,
+      "baseline_net": -24.49
+     }
+    ],
+    "n_base": 1184,
+    "n_rule": 725,
+    "weak_short_signals_filtered": 908,
+    "removed_total": 518,
+    "removed_shorts": 516,
+    "removed_weak_shorts": 516,
+    "removed_other_displaced": 2,
+    "removed_net": -1294.18,
+    "added_trades": 59,
+    "added_net": -228.31,
+    "winners_removed": 159,
+    "winners_removed_net": 2693.95,
+    "largest_winner_removed": 93.29,
+    "block_deltas": [
+     582.44,
+     221.15,
+     262.28
+    ],
+    "block_signs": "+++",
+    "per_symbol": {
+     "BTC": {
+      "base": -341.99,
+      "rule": -264.26,
+      "delta": 77.73,
+      "removed": 128,
+      "removed_weak_shorts": 127,
+      "added": 17
+     },
+     "ETH": {
+      "base": -171.57,
+      "rule": -128.99,
+      "delta": 42.58,
+      "removed": 117,
+      "removed_weak_shorts": 117,
+      "added": 17
+     },
+     "SOL": {
+      "base": -235.17,
+      "rule": 5.02,
+      "delta": 240.19,
+      "removed": 122,
+      "removed_weak_shorts": 122,
+      "added": 12
+     },
+     "HYPE": {
+      "base": -841.93,
+      "rule": -136.55,
+      "delta": 705.38,
+      "removed": 151,
+      "removed_weak_shorts": 150,
+      "added": 13
+     }
+    },
+    "diag_avoided_losses_added_back_to_zero_delta": 43,
+    "diag_largest_symbol": "HYPE",
+    "diag_delta_ex_largest_symbol": 360.49,
+    "diag_removed_weak_short_mean": -2.457,
+    "diag_removed_weak_short_t": -3.13,
+    "diag_symbols_delta_positive": "4/4"
+   },
+   "v94_fraction_0006": {
+    "base_net": -1198.62,
+    "rule_net": -450.28,
+    "delta": 748.34,
+    "delta_ex_top3_avoided_losses": 695.88,
+    "top3_avoided_losses": [
+     {
+      "symbol": "HYPE",
+      "entry_time_utc": "2026-03-23T09:00:00+00:00",
+      "direction": "short",
+      "ext_atr": 0.206,
+      "baseline_net": -24.34
+     },
+     {
+      "symbol": "SOL",
+      "entry_time_utc": "2025-10-11T20:00:00+00:00",
+      "direction": "short",
+      "ext_atr": 0.4,
+      "baseline_net": -14.1
+     },
+     {
+      "symbol": "BTC",
+      "entry_time_utc": "2025-11-14T21:00:00+00:00",
+      "direction": "short",
+      "ext_atr": 0.074,
+      "baseline_net": -14.01
+     }
+    ],
+    "n_base": 1184,
+    "n_rule": 725,
+    "weak_short_signals_filtered": 908,
+    "removed_total": 518,
+    "removed_shorts": 516,
+    "removed_weak_shorts": 516,
+    "removed_other_displaced": 2,
+    "removed_net": -945.4,
+    "added_trades": 59,
+    "added_net": -197.06,
+    "winners_removed": 159,
+    "winners_removed_net": 2041.16,
+    "largest_winner_removed": 53.02,
+    "block_deltas": [
+     406.01,
+     156.96,
+     185.36
+    ],
+    "block_signs": "+++",
+    "per_symbol": {
+     "BTC": {
+      "base": -341.99,
+      "rule": -264.26,
+      "delta": 77.73,
+      "removed": 128,
+      "removed_weak_shorts": 127,
+      "added": 17
+     },
+     "ETH": {
+      "base": -171.57,
+      "rule": -128.99,
+      "delta": 42.58,
+      "removed": 117,
+      "removed_weak_shorts": 117,
+      "added": 17
+     },
+     "SOL": {
+      "base": -235.17,
+      "rule": 5.02,
+      "delta": 240.19,
+      "removed": 122,
+      "removed_weak_shorts": 122,
+      "added": 12
+     },
+     "HYPE": {
+      "base": -449.9,
+      "rule": -62.06,
+      "delta": 387.84,
+      "removed": 151,
+      "removed_weak_shorts": 150,
+      "added": 13
+     }
+    },
+    "diag_avoided_losses_added_back_to_zero_delta": 56,
+    "diag_largest_symbol": "HYPE",
+    "diag_delta_ex_largest_symbol": 360.5,
+    "diag_removed_weak_short_mean": -1.807,
+    "diag_removed_weak_short_t": -3.36,
+    "diag_symbols_delta_positive": "4/4"
+   },
+   "flat500_v2_reference": {
+    "base_net": -1177.93,
+    "rule_net": -434.98,
+    "delta": 742.95,
+    "delta_ex_top3_avoided_losses": 691.18,
+    "block_signs": "+++"
+   }
+  },
+  "recent_live4|measured": {
+   "screen": "recent",
+   "symbols": [
+    "SOL",
+    "xyz:SNDK",
+    "xyz:BRENTOIL",
+    "xyz:TSLA"
+   ],
+   "cost": "measured",
+   "gating_cell": false,
+   "v93": {
+    "base_net": 754.28,
+    "rule_net": 964.37,
+    "delta": 210.09,
+    "delta_ex_top3_avoided_losses": 139.87,
+    "top3_avoided_losses": [
+     {
+      "symbol": "xyz:SNDK",
+      "entry_time_utc": "2026-07-28T23:00:00+00:00",
+      "direction": "short",
+      "ext_atr": 0.457,
+      "baseline_net": -23.41
+     },
+     {
+      "symbol": "xyz:SNDK",
+      "entry_time_utc": "2026-07-22T13:00:00+00:00",
+      "direction": "short",
+      "ext_atr": 0.255,
+      "baseline_net": -23.41
+     },
+     {
+      "symbol": "xyz:SNDK",
+      "entry_time_utc": "2026-08-05T20:00:00+00:00",
+      "direction": "short",
+      "ext_atr": 0.453,
+      "baseline_net": -23.41
+     }
+    ],
+    "n_base": 213,
+    "n_rule": 149,
+    "weak_short_signals_filtered": 131,
+    "removed_total": 73,
+    "removed_shorts": 73,
+    "removed_weak_shorts": 73,
+    "removed_other_displaced": 0,
+    "removed_net": -158.16,
+    "added_trades": 9,
+    "added_net": 51.93,
+    "winners_removed": 24,
+    "winners_removed_net": 303.49,
+    "largest_winner_removed": 66.58,
+    "block_deltas": [
+     134.46,
+     72.67,
+     2.97
+    ],
+    "block_signs": "+++",
+    "per_symbol": {
+     "SOL": {
+      "base": 178.68,
+      "rule": 159.57,
+      "delta": -19.11,
+      "removed": 18,
+      "removed_weak_shorts": 18,
+      "added": 1
+     },
+     "xyz:SNDK": {
+      "base": 491.87,
+      "rule": 704.61,
+      "delta": 212.74,
+      "removed": 20,
+      "removed_weak_shorts": 20,
+      "added": 2
+     },
+     "xyz:BRENTOIL": {
+      "base": 56.16,
+      "rule": 77.14,
+      "delta": 20.98,
+      "removed": 18,
+      "removed_weak_shorts": 18,
+      "added": 3
+     },
+     "xyz:TSLA": {
+      "base": 27.58,
+      "rule": 23.05,
+      "delta": -4.52,
+      "removed": 17,
+      "removed_weak_shorts": 17,
+      "added": 3
+     }
+    },
+    "diag_avoided_losses_added_back_to_zero_delta": 10,
+    "diag_largest_symbol": "xyz:SNDK",
+    "diag_delta_ex_largest_symbol": -2.65,
+    "diag_removed_weak_short_mean": -2.167,
+    "diag_removed_weak_short_t": -1.26,
+    "diag_symbols_delta_positive": "2/4"
+   },
+   "v94_fraction_0006": {
+    "base_net": 815.25,
+    "rule_net": 1061.48,
+    "delta": 246.22,
+    "delta_ex_top3_avoided_losses": 164.91,
+    "top3_avoided_losses": [
+     {
+      "symbol": "xyz:SNDK",
+      "entry_time_utc": "2026-07-28T23:00:00+00:00",
+      "direction": "short",
+      "ext_atr": 0.457,
+      "baseline_net": -27.11
+     },
+     {
+      "symbol": "xyz:SNDK",
+      "entry_time_utc": "2026-07-22T13:00:00+00:00",
+      "direction": "short",
+      "ext_atr": 0.255,
+      "baseline_net": -27.11
+     },
+     {
+      "symbol": "xyz:SNDK",
+      "entry_time_utc": "2026-08-05T20:00:00+00:00",
+      "direction": "short",
+      "ext_atr": 0.453,
+      "baseline_net": -27.11
+     }
+    ],
+    "n_base": 213,
+    "n_rule": 149,
+    "weak_short_signals_filtered": 131,
+    "removed_total": 73,
+    "removed_shorts": 73,
+    "removed_weak_shorts": 73,
+    "removed_other_displaced": 0,
+    "removed_net": -189.35,
+    "added_trades": 9,
+    "added_net": 56.87,
+    "winners_removed": 24,
+    "winners_removed_net": 315.49,
+    "largest_winner_removed": 70.41,
+    "block_deltas": [
+     157.19,
+     80.31,
+     8.73
+    ],
+    "block_signs": "+++",
+    "per_symbol": {
+     "SOL": {
+      "base": 178.68,
+      "rule": 159.57,
+      "delta": -19.11,
+      "removed": 18,
+      "removed_weak_shorts": 18,
+      "added": 1
+     },
+     "xyz:SNDK": {
+      "base": 552.84,
+      "rule": 801.71,
+      "delta": 248.87,
+      "removed": 20,
+      "removed_weak_shorts": 20,
+      "added": 2
+     },
+     "xyz:BRENTOIL": {
+      "base": 56.16,
+      "rule": 77.14,
+      "delta": 20.98,
+      "removed": 18,
+      "removed_weak_shorts": 18,
+      "added": 3
+     },
+     "xyz:TSLA": {
+      "base": 27.58,
+      "rule": 23.05,
+      "delta": -4.52,
+      "removed": 17,
+      "removed_weak_shorts": 17,
+      "added": 3
+     }
+    },
+    "diag_avoided_losses_added_back_to_zero_delta": 10,
+    "diag_largest_symbol": "xyz:SNDK",
+    "diag_delta_ex_largest_symbol": -2.65,
+    "diag_removed_weak_short_mean": -2.594,
+    "diag_removed_weak_short_t": -1.39,
+    "diag_symbols_delta_positive": "2/4"
+   },
+   "flat500_v2_reference": {
+    "base_net": 475.85,
+    "rule_net": 579.27,
+    "delta": 103.42,
+    "delta_ex_top3_avoided_losses": 65.43,
+    "block_signs": "++-"
+   }
+  },
+  "recent_live4|adverse": {
+   "screen": "recent",
+   "symbols": [
+    "SOL",
+    "xyz:SNDK",
+    "xyz:BRENTOIL",
+    "xyz:TSLA"
+   ],
+   "cost": "adverse",
+   "gating_cell": false,
+   "v93": {
+    "base_net": 594.16,
+    "rule_net": 883.82,
+    "delta": 289.65,
+    "delta_ex_top3_avoided_losses": 218.28,
+    "top3_avoided_losses": [
+     {
+      "symbol": "xyz:SNDK",
+      "entry_time_utc": "2026-08-05T20:00:00+00:00",
+      "direction": "short",
+      "ext_atr": 0.453,
+      "baseline_net": -23.79
+     },
+     {
+      "symbol": "xyz:SNDK",
+      "entry_time_utc": "2026-07-28T23:00:00+00:00",
+      "direction": "short",
+      "ext_atr": 0.457,
+      "baseline_net": -23.79
+     },
+     {
+      "symbol": "xyz:SNDK",
+      "entry_time_utc": "2026-07-22T13:00:00+00:00",
+      "direction": "short",
+      "ext_atr": 0.255,
+      "baseline_net": -23.79
+     }
+    ],
+    "n_base": 213,
+    "n_rule": 149,
+    "weak_short_signals_filtered": 131,
+    "removed_total": 73,
+    "removed_shorts": 73,
+    "removed_weak_shorts": 73,
+    "removed_other_displaced": 0,
+    "removed_net": -243.31,
+    "added_trades": 9,
+    "added_net": 46.34,
+    "winners_removed": 21,
+    "winners_removed_net": 276.49,
+    "largest_winner_removed": 65.03,
+    "block_deltas": [
+     184.37,
+     90.61,
+     14.67
+    ],
+    "block_signs": "+++",
+    "per_symbol": {
+     "SOL": {
+      "base": 153.56,
+      "rule": 146.32,
+      "delta": -7.24,
+      "removed": 18,
+      "removed_weak_shorts": 18,
+      "added": 1
+     },
+     "xyz:SNDK": {
+      "base": 400.06,
+      "rule": 664.36,
+      "delta": 264.3,
+      "removed": 20,
+      "removed_weak_shorts": 20,
+      "added": 2
+     },
+     "xyz:BRENTOIL": {
+      "base": 29.81,
+      "rule": 58.02,
+      "delta": 28.21,
+      "removed": 18,
+      "removed_weak_shorts": 18,
+      "added": 3
+     },
+     "xyz:TSLA": {
+      "base": 10.73,
+      "rule": 15.11,
+      "delta": 4.39,
+      "removed": 17,
+      "removed_weak_shorts": 17,
+      "added": 3
+     }
+    },
+    "diag_avoided_losses_added_back_to_zero_delta": 13,
+    "diag_largest_symbol": "xyz:SNDK",
+    "diag_delta_ex_largest_symbol": 25.35,
+    "diag_removed_weak_short_mean": -3.333,
+    "diag_removed_weak_short_t": -1.93,
+    "diag_symbols_delta_positive": "3/4"
+   },
+   "v94_fraction_0006": {
+    "base_net": 642.04,
+    "rule_net": 975.74,
+    "delta": 333.71,
+    "delta_ex_top3_avoided_losses": 251.05,
+    "top3_avoided_losses": [
+     {
+      "symbol": "xyz:SNDK",
+      "entry_time_utc": "2026-08-05T20:00:00+00:00",
+      "direction": "short",
+      "ext_atr": 0.453,
+      "baseline_net": -27.55
+     },
+     {
+      "symbol": "xyz:SNDK",
+      "entry_time_utc": "2026-07-28T23:00:00+00:00",
+      "direction": "short",
+      "ext_atr": 0.457,
+      "baseline_net": -27.55
+     },
+     {
+      "symbol": "xyz:SNDK",
+      "entry_time_utc": "2026-07-22T13:00:00+00:00",
+      "direction": "short",
+      "ext_atr": 0.255,
+      "baseline_net": -27.55
+     }
+    ],
+    "n_base": 213,
+    "n_rule": 149,
+    "weak_short_signals_filtered": 131,
+    "removed_total": 73,
+    "removed_shorts": 73,
+    "removed_weak_shorts": 73,
+    "removed_other_displaced": 0,
+    "removed_net": -282.71,
+    "added_trades": 9,
+    "added_net": 51.0,
+    "winners_removed": 21,
+    "winners_removed_net": 285.71,
+    "largest_winner_removed": 68.77,
+    "block_deltas": [
+     213.96,
+     98.72,
+     21.03
+    ],
+    "block_signs": "+++",
+    "per_symbol": {
+     "SOL": {
+      "base": 153.56,
+      "rule": 146.32,
+      "delta": -7.24,
+      "removed": 18,
+      "removed_weak_shorts": 18,
+      "added": 1
+     },
+     "xyz:SNDK": {
+      "base": 447.93,
+      "rule": 756.28,
+      "delta": 308.35,
+      "removed": 20,
+      "removed_weak_shorts": 20,
+      "added": 2
+     },
+     "xyz:BRENTOIL": {
+      "base": 29.81,
+      "rule": 58.02,
+      "delta": 28.21,
+      "removed": 18,
+      "removed_weak_shorts": 18,
+      "added": 3
+     },
+     "xyz:TSLA": {
+      "base": 10.73,
+      "rule": 15.11,
+      "delta": 4.39,
+      "removed": 17,
+      "removed_weak_shorts": 17,
+      "added": 3
+     }
+    },
+    "diag_avoided_losses_added_back_to_zero_delta": 13,
+    "diag_largest_symbol": "xyz:SNDK",
+    "diag_delta_ex_largest_symbol": 25.36,
+    "diag_removed_weak_short_mean": -3.873,
+    "diag_removed_weak_short_t": -2.07,
+    "diag_symbols_delta_positive": "3/4"
+   },
+   "flat500_v2_reference": {
+    "base_net": 368.33,
+    "rule_net": 525.42,
+    "delta": 157.08,
+    "delta_ex_top3_avoided_losses": 118.46,
+    "block_signs": "+++"
+   }
+  }
+ },
+ "v93_notional_diagnostics_measured": {
+  "recent|BTC": {
+   "n": 55,
+   "mean": 530.8,
+   "min": 530.8,
+   "max": 530.8,
+   "planned": 530.8
+  },
+  "recent|ETH": {
+   "n": 49,
+   "mean": 500.0,
+   "min": 500.0,
+   "max": 500.0,
+   "planned": 500.0
+  },
+  "recent|SOL": {
+   "n": 47,
+   "mean": 501.8,
+   "min": 501.8,
+   "max": 501.8,
+   "planned": 501.8
+  },
+  "recent|HYPE": {
+   "n": 61,
+   "mean": 1105.4,
+   "min": 924.1,
+   "max": 1663.9,
+   "planned": 2500.0
+  },
+  "recent|xyz:SPCX": {
+   "n": 59,
+   "mean": 500.0,
+   "min": 500.0,
+   "max": 500.0,
+   "planned": 500.0
+  },
+  "recent|xyz:SNDK": {
+   "n": 61,
+   "mean": 1169.6,
+   "min": 924.1,
+   "max": 1930.1,
+   "planned": 1930.1
+  },
+  "recent|xyz:BRENTOIL": {
+   "n": 54,
+   "mean": 579.0,
+   "min": 579.0,
+   "max": 579.0,
+   "planned": 579.0
+  },
+  "recent|xyz:TSLA": {
+   "n": 51,
+   "mean": 501.8,
+   "min": 501.8,
+   "max": 501.8,
+   "planned": 501.8
+  },
+  "year|BTC": {
+   "n": 298,
+   "mean": 530.8,
+   "min": 530.8,
+   "max": 530.8,
+   "planned": 530.8
+  },
+  "year|ETH": {
+   "n": 275,
+   "mean": 500.0,
+   "min": 500.0,
+   "max": 500.0,
+   "planned": 500.0
+  },
+  "year|SOL": {
+   "n": 293,
+   "mean": 501.8,
+   "min": 501.8,
+   "max": 501.8,
+   "planned": 501.8
+  },
+  "year|HYPE": {
+   "n": 317,
+   "mean": 974.5,
+   "min": 924.1,
+   "max": 1608.6,
+   "planned": 2500.0
+  }
+ },
+ "caveats": [
+  "Not out-of-sample: the <1 ATR split was found on these same two windows after 5 split families were examined (review section 9 item 15). The bar was written before this re-score, but the data is not a holdout.",
+  "Live-4 recent gain is SNDK-concentrated: without SNDK the delta is -2.65 (measured) / +25.35 (adverse); SOL is negative in the recent window (-19.11 / -7.24) and TSLA mixed (-4.52 / +4.39).",
+  "One-year delta is HYPE-heavy (+583 / +705 of +798 / +1066) because V93's HYPE row sizes it at ~$975 average; without HYPE it is +215 / +360. At V94 sizing (HYPE envelope $500) the year delta is +541 / +748.",
+  "The $25 budget caps each avoided loss near $24, so the ex-top-3 test is mild by construction; 10-56 of the largest avoided losses must be added back before any cell's delta reaches zero.",
+  "The rule removes winners too: 40-44 recent (largest $66.58) and 159-165 one-year (largest $94.05); skipping frees the slot for 20 / 59-60 added trades whose net is included in the delta.",
+  "Simulator leverage is min(10, venue max), not V93's 8x; this only matters for >~10% gaps. Fixed equity; no compounding; one position per symbol, no cross-symbol book constraints."
+ ],
+ "scripts": {
+  "rescore": "scratchpad/v94/weakshort/rescore.py",
+  "raw": "scratchpad/v94/weakshort/rescore_raw.json",
+  "validate_log": "scratchpad/v94/weakshort/validate.out"
+ }
+}

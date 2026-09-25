@@ -4,11 +4,30 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import datetime
+from enum import Enum
 
 from hypervector.live.cohort_execution_plan import BoundExecutionPlan
 from hypervector.live.hyperliquid_protocol import HyperliquidOrderAck
 
 _IOC_NO_FILL_FRAGMENT = "could not immediately match against any resting orders"
+
+
+class StopRaiseOutcome(Enum):
+    """A stop raise that needed no venue call; falsy because nothing was raised."""
+
+    ALREADY_AT_TARGET = "already_at_target"
+
+    def __bool__(self) -> bool:
+        return False
+
+
+# The owned venue stop already rests at or beyond the wire-rounded raise target.
+STOP_ALREADY_AT_TARGET = StopRaiseOutcome.ALREADY_AT_TARGET
+
+
+def stop_rests_at_or_beyond(current: float, target: float, size: float) -> bool:
+    """Return whether a stop trigger is at least as protective as the target."""
+    return current >= target if size > 0.0 else current <= target
 
 
 class SolLiveEngineError(RuntimeError):

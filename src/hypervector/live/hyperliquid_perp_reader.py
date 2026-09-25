@@ -44,6 +44,14 @@ from hypervector.live.hyperliquid_user_funding_history import read_user_funding_
 from hypervector.live.sol_order_identity import validate_client_order_id
 
 
+class VenueMetadataMismatchError(HyperliquidAdapterError):
+    """Venue market metadata contradicts the configured market contract.
+
+    A venue fact such as a changed maximum leverage persists across relaunches, so
+    the live boundary refuses the start instead of crashing into a restart loop.
+    """
+
+
 class HyperliquidPerpReader:
     """Expose read-only official-SDK endpoints for one perpetual symbol."""
 
@@ -66,7 +74,7 @@ class HyperliquidPerpReader:
         """Read metadata, fees, account state, and current mark."""
         market = self._market(refresh=True)
         if market.max_leverage != expected_max_leverage:
-            raise HyperliquidAdapterError(
+            raise VenueMetadataMismatchError(
                 f"{self._symbol} max leverage mismatch: expected "
                 f"{expected_max_leverage}, observed {market.max_leverage}"
             )

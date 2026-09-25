@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+import hashlib
 from pathlib import Path
+
+from hypervector.live.cohort_backup_identity import build_implementation_identity
 
 _ENTRYPOINT = Path("scripts/multi_asset_bidirectional_live.py")
 _LOCK_FILES = (Path("pyproject.toml"), Path("uv.lock"))
@@ -32,6 +36,39 @@ def discover_cohort_implementation_sources(
     if not provider_files:
         raise ValueError(f"provider package contains no Python source: {provider}")
     return _role_map(repository_files, provider_files)
+
+
+def implementation_source_identity(sources: Mapping[str, Path]) -> dict[str, object]:
+    """Return the content identity a pre-start backup would record for ``sources``.
+
+    It hashes each file's bytes under its role exactly as the bundle's
+    implementation identity does, so two discoveries compare by content and by
+    the set of files, without writing anything.
+    """
+    records = [
+        {
+            "role": f"implementation_{role}",
+            "source_bytes": size,
+            "source_sha256": digest,
+        }
+        for role, (digest, size) in (
+            (role, _digest(path)) for role, path in sorted(sources.items())
+        )
+    ]
+    identity = build_implementation_identity(records)
+    if identity is None:
+        raise ValueError("implementation sources are required")
+    return identity
+
+
+def _digest(path: Path) -> tuple[str, int]:
+    digest = hashlib.sha256()
+    size = 0
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+            size += len(chunk)
+    return digest.hexdigest(), size
 
 
 def _python_sources(root: Path) -> list[Path]:

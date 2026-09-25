@@ -50,6 +50,7 @@ from cohort_supervisor_state import (
     RestartJournal as RestartJournal,
     supervisor_lock as supervisor_lock,
 )
+from cohort_supervisor_venue_wait import backend_venue_wait
 from cohort_supervisor_runtime import (
     decide_restart as decide_restart,
     _StopFlag as _StopFlag,
@@ -276,8 +277,17 @@ def _backend_is_warming(
 
     The lock file is written at backend startup, so its age anchors the same grace
     the supervise agent applies. Without it the watch agent alerted
-    ``backend_heartbeat_stale`` on every legitimate restart.
+    ``backend_heartbeat_stale`` on every legitimate restart. A backend waiting for
+    the venue before its start is warming whatever its lock's age, as the
+    supervise agent treats it; it refreshes the lock once the wait returns, so
+    the grace then runs from the moment the start proceeds.
     """
+    pid = read_lock_pid(paths.process_lock)
+    waiting = pid is not None and (
+        backend_venue_wait(paths.process_lock, pid, now) is not None
+    )
+    if waiting:
+        return True
     age = file_age_seconds(paths.process_lock, now)
     return age is not None and age < startup_grace_seconds
 

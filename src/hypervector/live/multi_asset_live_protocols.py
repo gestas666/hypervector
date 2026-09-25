@@ -22,6 +22,7 @@ from hypervector.live.multi_asset_cohort_telemetry import (
 )
 from hypervector.live.multi_asset_intent_poller import CohortIntentPoll, CohortMarketBar
 from hypervector.live.multi_asset_signal_source import ProviderEvaluation
+from hypervector.live.sol_range_onset_engine_contract import StopRaiseOutcome
 from hypervector.live.sol_range_onset_state import SolLiveSnapshot
 
 
@@ -57,7 +58,11 @@ class MultiAssetEngineProtocol(Protocol):
 
     def exit(self, *, mark_price: float, reason: str) -> SolLiveSnapshot: ...
 
-    def raise_protective_stop(self, *, trigger_price: float) -> bool: ...
+    def raise_protective_stop(
+        self, *, trigger_price: float
+    ) -> bool | StopRaiseOutcome: ...
+
+    def normalize_trigger_price(self, trigger_price: float) -> float: ...
 
     def stop(self, reason: str) -> SolLiveSnapshot: ...
 

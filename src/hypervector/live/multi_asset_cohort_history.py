@@ -24,7 +24,12 @@ class _ExecutionContext:
 
 def compatible_execution_rows(ledger: SolLiveLedger) -> list[dict[str, object]]:
     """Return armed rows matching the current profile and execution contract."""
-    return ledger.read_matching(lambda row: execution_row_is_compatible(row, ledger))
+    # The journal and markouts read this profile's books, positions and
+    # reconciliations, so the selection is declared by profile only.
+    return ledger.read_matching(
+        lambda row: execution_row_is_compatible(row, ledger),
+        profile_fingerprint=ledger.profile_fingerprint,
+    )
 
 
 def execution_row_is_compatible(

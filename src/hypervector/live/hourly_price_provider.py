@@ -33,12 +33,18 @@ PROTECTED_DONCHIAN20_STRATEGY = (
 # pins the symbol set as well as the lock parameters, so the protected identity
 # cannot be armed on a market that has no protected-exit evidence.
 PROTECTED_DONCHIAN20_SYMBOLS = frozenset({"SOL", "xyz:SNDK", "xyz:BRENTOIL"})
+# V94: the 20/10 recipe without weak short breakdowns. The 1.0 ATR threshold was
+# fixed before its re-score (docs/plans/2026-09-24-v94-review-actions.md,
+# "Pre-registered bar") and is never tuned. Longs, exits and stops are unchanged.
+STRONG_SHORT_DONCHIAN20_STRATEGY = "hourly_donchian_20_10_atr20_strong_short_v1"
+STRONG_SHORT_MINIMUM_EXTENSION_ATR = 1.0
 HOURLY_PRICE_STRATEGIES = frozenset(
     {
         DONCHIAN20_STRATEGY,
         DONCHIAN8_STRATEGY,
         BAND_REENTRY_STRATEGY,
         PROTECTED_DONCHIAN20_STRATEGY,
+        STRONG_SHORT_DONCHIAN20_STRATEGY,
     }
 )
 HOURLY_PRICE_SYMBOLS = frozenset(
@@ -76,19 +82,25 @@ def build_hourly_price_signals(bars: pd.DataFrame, strategy_id: str) -> pd.DataF
     if strategy_id == BAND_REENTRY_STRATEGY:
         return build_hourly_band_reentry_signals(bars)
     channels = {
-        DONCHIAN20_STRATEGY: (20, 10),
-        DONCHIAN8_STRATEGY: (8, 4),
-        PROTECTED_DONCHIAN20_STRATEGY: (20, 10),
+        DONCHIAN20_STRATEGY: (20, 10, None),
+        DONCHIAN8_STRATEGY: (8, 4, None),
+        PROTECTED_DONCHIAN20_STRATEGY: (20, 10, None),
+        STRONG_SHORT_DONCHIAN20_STRATEGY: (
+            20,
+            10,
+            STRONG_SHORT_MINIMUM_EXTENSION_ATR,
+        ),
     }
     if strategy_id not in channels:
         raise ValueError(f"unsupported hourly price strategy: {strategy_id}")
-    entry, exit_channel = channels[strategy_id]
+    entry, exit_channel, minimum_short_extension = channels[strategy_id]
     return build_donchian_atr_breakout_signals(
         bars,
         DonchianAtrBreakoutConfig(
             entry_channel_bars=entry,
             exit_channel_bars=exit_channel,
             signal_hours=1,
+            minimum_short_extension_atr=minimum_short_extension,
         ),
     )
 

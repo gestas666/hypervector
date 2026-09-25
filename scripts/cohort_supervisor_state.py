@@ -80,8 +80,16 @@ class RestartJournal:
             self.hold_reason = "previous_supervisor_session_unresolved"
             self.hold_persisted = False
 
-    def reserve(self, now: float, policy: RestartPolicy) -> bool:
-        """Charge a launch before process creation; exhausted history latches a hold."""
+    def reserve(
+        self, now: float, policy: RestartPolicy, *, charged: bool = True
+    ) -> bool:
+        """Charge a launch before process creation; exhausted history latches a hold.
+
+        An uncharged launch (the relaunch after a venue-blindness exit) still marks
+        the session active before the spawn, so a supervisor crash in between
+        holds exactly as it does for a charged one; it neither spends nor
+        consults the crash budget.
+        """
         if self.hold_reason not in (None, "previous_supervisor_session_unresolved"):
             return False
         if any(stamp > now for stamp in self.launch_times):
@@ -90,13 +98,13 @@ class RestartJournal:
         recent = [
             stamp for stamp in self.launch_times if now - stamp <= policy.window_seconds
         ]
-        if len(recent) >= policy.maximum_restarts + 1:
+        if charged and len(recent) >= policy.maximum_restarts + 1:
             self.hold("restart_budget_exhausted")
             return False
         if self.hold_reason is not None:
             self.hold(self.hold_reason)
             return False
-        self.launch_times = [*recent, now]
+        self.launch_times = [*recent, now] if charged else recent
         was_active = self.session_active
         self.session_active = True
         if not self._save():

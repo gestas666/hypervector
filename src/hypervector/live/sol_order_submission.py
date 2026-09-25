@@ -91,6 +91,15 @@ class SolOrderSubmission:
         self._recovery_delay_seconds = recovery_delay_seconds
         self._sleep_fn = sleep_fn
 
+    def normalize_trigger_price(self, trigger_price: float) -> float:
+        """Return the trigger this adapter would put on the wire, without a venue call.
+
+        An adapter without a wire price grid (a structural test double) is taken
+        at its exact value, which is the comparison every caller made before.
+        """
+        normalize = getattr(self._adapter, "normalize_trigger_price", None)
+        return trigger_price if normalize is None else float(normalize(trigger_price))
+
     def submit_entry(
         self,
         *,

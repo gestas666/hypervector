@@ -28,13 +28,17 @@ class MultiAssetLiveRunnerError(RuntimeError):
 
 
 class CohortDegradedBlindnessError(MultiAssetLiveRunnerError):
-    """Market data has failed for longer than the configured technical bound.
+    """Account reconciliation has failed for longer than the wall-clock bound.
 
     Degraded polls append to the same ledger whose modification time is the
-    supervisor's only liveness probe, so an unbounded degraded loop reports a
-    healthy backend that has not seen a price in hours. This is a technical
-    failure, not a strategy gate: it ends the process so startup reconciliation
-    and the supervisor's restart accounting engage.
+    supervisor's liveness probe, so an unbounded degraded loop reports a running
+    backend that has not seen its account in hours. A public market-data outage
+    does not count: reconciliation and the unconditional deadlines still ran
+    before that read failed, and a restart would not repair it. Nor does an
+    offline host or venue: when a fresh session's public read fails too, the
+    runner keeps polling in place. This is a technical failure, not a strategy
+    gate: it ends the process so startup reconciliation runs again, and the
+    supervisor relaunches it without charging the crash budget.
     """
 
 

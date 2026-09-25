@@ -179,12 +179,11 @@ def _count_complete_reads(
             predicate: Callable[[Mapping[str, object]], bool],
             *,
             _symbol: str = symbol,
-            _original: Callable[
-                [Callable[[Mapping[str, object]], bool]], list[dict[str, object]]
-            ] = original,
+            _original: Callable[..., list[dict[str, object]]] = original,
+            **declared: object,
         ) -> list[dict[str, object]]:
             counts[_symbol] += 1
-            return _original(predicate)
+            return _original(predicate, **declared)
 
         monkeypatch.setattr(ledger, "read_matching", counted)
     return counts

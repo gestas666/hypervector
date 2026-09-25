@@ -196,6 +196,10 @@ pub(super) fn validate_identity(
                 || !crate::backend_cohort_configuration::adaptive_exit_policy_valid(
                     execution.adaptive_exit_policy.as_str(),
                 )
+                || !crate::backend_cohort_configuration::breakeven_stop_target_valid(
+                    execution.breakeven_stop_target.as_str(),
+                    execution.adaptive_exit_policy.as_str(),
+                )
                 || !super::profit_lock_contract_valid(
                     Some(&provider.strategy_id),
                     &execution.profit_lock_policy,
@@ -312,6 +316,10 @@ pub(super) fn validate_snapshot(
         asset.execution_plan.as_ref().is_some_and(|plan| {
             !recipe_exit_policy_valid(&plan.provider_recipe_exit_policy)
                 || !crate::backend_cohort_configuration::adaptive_exit_policy_valid(
+                    plan.adaptive_exit_policy.as_str(),
+                )
+                || !crate::backend_cohort_configuration::breakeven_stop_target_valid(
+                    plan.breakeven_stop_target.as_str(),
                     plan.adaptive_exit_policy.as_str(),
                 )
                 || !super::profit_lock_contract_valid(

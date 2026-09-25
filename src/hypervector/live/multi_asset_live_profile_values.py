@@ -42,8 +42,12 @@ def provider_profile_values(config: StrategyProviderConfig) -> dict[str, object]
         return values
     if config.execution.stop_risk_budget is None:
         execution.pop("stop_risk_budget")
+    else:
+        execution["stop_risk_budget"] = config.execution.stop_risk_budget.as_payload()
     if config.execution.adaptive_exit_policy == "none":
         execution.pop("adaptive_exit_policy")
+    if config.execution.breakeven_stop_target == "entry_offset":
+        execution.pop("breakeven_stop_target")
     if config.execution.provider_recipe_exit_policy == "ignore":
         execution.pop("provider_recipe_exit_policy")
     if config.execution.maximum_hold_evidence_maximum_age_seconds is None:

@@ -8,15 +8,29 @@ import json
 import math
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 
 from cohort_supervisor_models import (
     BACKEND_MARKER,
+    DegradedStreak,
     HealthReport,
     HealthThresholds,
     SupervisorPaths,
 )
+
+# The decisions ledger is gigabytes and grows about 175 KB a minute, so 2 MiB
+# covers roughly ten minutes of ordinary polls and hours of degraded-only ones.
+LEDGER_TAIL_BYTES = 2 * 1024 * 1024
+# The backend writes every degraded row of one cycle within milliseconds, and
+# cycles start at least one poll interval (15 s) apart.
+_SAME_POLL_GAP_SECONDS = 5.0
+_EVENT_TYPE = re.compile(rb'"event_type"\s*:\s*"([^"\\]*)"')
+_STREAK_EVENTS = frozenset(
+    {b"heartbeat", b"cohort_snapshot", b"runtime_stopped", b"runtime_fault"}
+)
+_DETAIL_LIMIT = 160
 
 
 def read_object(path: Path) -> dict[str, object] | None:
@@ -202,6 +216,200 @@ def maximum_hip3_fill_fee_bps(
     return _maximum_fee(rows, now, lookback_hours) if rows is not None else None
 
 
+def _ledger_tail(path: Path, limit: int) -> tuple[list[bytes], bool]:
+    """Return the complete lines in the last ``limit`` bytes, oldest first.
+
+    The second value reports whether the window reached the start of the file.
+    Only the tail is read: this runs every health cycle against a live ledger.
+    """
+    try:
+        with path.open("rb") as handle:
+            size = handle.seek(0, os.SEEK_END)
+            start = max(0, size - limit)
+            handle.seek(start)
+            data = handle.read(size - start)
+    except OSError:
+        return [], False
+    lines = data.split(b"\n")
+    if start > 0:
+        lines = lines[1:]  # the first line is cut by the window
+    return [line for line in lines if line.strip()], start == 0
+
+
+def _row(line: bytes) -> dict[str, object] | None:
+    try:
+        value = json.loads(line)
+    except (ValueError, UnicodeError):
+        return None  # includes a row the backend is still appending
+    return value if isinstance(value, dict) else None
+
+
+def _stamp(row: dict[str, object]) -> float | None:
+    value = row.get("observed_at_utc")
+    if not isinstance(value, str):
+        return None
+    try:
+        stamp = datetime.fromisoformat(value)
+    except ValueError:
+        return None
+    return stamp.timestamp() if stamp.tzinfo is not None else None
+
+
+def _payload(row: dict[str, object]) -> dict[str, object]:
+    payload = row.get("payload")
+    return payload if isinstance(payload, dict) else {}
+
+
+def _newest_run_id(lines: list[bytes]) -> object:
+    for line in reversed(lines):
+        row = _row(line)
+        if row is not None:
+            return row.get("run_id")
+    return None
+
+
+def _open_position_count(row: dict[str, object]) -> int | None:
+    value = _payload(row).get("open_position_count")
+    if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+        return None
+    return value
+
+
+def backend_degraded_streak(
+    path: Path, *, now: float, freshness_seconds: float
+) -> DegradedStreak | None:
+    """Return the current run's trailing degraded polls, or None when polling is clean.
+
+    A streak ends at a running heartbeat, at the start of the current run, or at
+    a terminal runtime row. A streak whose newest row is older than
+    ``freshness_seconds`` belongs to a backend that has stopped writing, which the
+    heartbeat probe reports; it is not reported as degraded polling.
+    """
+    lines, whole_file = _ledger_tail(path, LEDGER_TAIL_BYTES)
+    run_id = _newest_run_id(lines)
+    degraded: list[tuple[float, dict[str, object]]] = []  # newest first
+    open_positions: int | None = None
+    snapshot_seen = closed = False
+    for line in reversed(lines):
+        match = _EVENT_TYPE.search(line)
+        if match is None or match.group(1) not in _STREAK_EVENTS:
+            continue
+        row = _row(line)
+        if row is None:
+            continue
+        if row.get("run_id") != run_id:
+            closed = True
+            break
+        event = row.get("event_type")
+        if event == "cohort_snapshot":
+            if not snapshot_seen:
+                snapshot_seen, open_positions = True, _open_position_count(row)
+        elif not closed:
+            stamp = _stamp(row)
+            if event == "heartbeat" and stamp is not None and (
+                _payload(row).get("status") == "degraded"
+            ):
+                degraded.append((stamp, row))
+            else:
+                # A running heartbeat or a terminal runtime row ends the streak.
+                closed = True
+        if closed and (snapshot_seen or not degraded):
+            break
+    if not degraded or now - degraded[0][0] > freshness_seconds:
+        return None
+    stamps = sorted(stamp for stamp, _row_ in degraded)
+    polls = 1 + sum(
+        later - earlier > _SAME_POLL_GAP_SECONDS
+        for earlier, later in zip(stamps, stamps[1:])
+    )
+    latest = _payload(degraded[0][1])
+    source, reason = latest.get("source"), latest.get("reason")
+    return DegradedStreak(
+        polls=polls,
+        started_at_utc=datetime.fromtimestamp(stamps[0], UTC).isoformat(),
+        duration_seconds=max(0.0, now - stamps[0]),
+        complete=closed or whole_file,
+        source=source if isinstance(source, str) else None,
+        reason=reason if isinstance(reason, str) else None,
+        open_position_count=open_positions,
+    )
+
+
+def _degraded_problem(
+    streak: DegradedStreak | None, limits: HealthThresholds
+) -> str | None:
+    """Return the alert detail when the streak crosses either operator bound."""
+    if streak is None:
+        return None
+    exposed = streak.open_position_count != 0  # unknown counts as possibly open
+    if not (
+        streak.duration_seconds >= limits.degraded_seconds
+        or (exposed and streak.polls >= limits.degraded_polls_with_positions)
+    ):
+        return None
+    bound = "" if streak.complete else ">="
+    positions = (
+        "unknown"
+        if streak.open_position_count is None
+        else str(streak.open_position_count)
+    )
+    detail = (
+        f"{bound}{streak.polls} polls, degraded {bound}"
+        f"{streak.duration_seconds / 60.0:.1f} min, {positions} open positions, "
+        f"last {streak.source or 'unknown'}: {streak.reason or 'unknown'}"
+    )
+    return detail[:_DETAIL_LIMIT]
+
+
+def protection_warnings(
+    checkpoint: dict[str, object] | None,
+) -> tuple[tuple[dict[str, object], ...], bool]:
+    """Read the backend's top-level ``protection_warnings`` checkpoint list.
+
+    An absent, null or empty list is no warning. The second value reports
+    content that is present but unreadable, which must not read as healthy.
+    """
+    value = checkpoint.get("protection_warnings") if checkpoint is not None else None
+    if value is None:
+        return (), False
+    if not isinstance(value, list):
+        return (), True
+    valid = tuple(
+        entry
+        for entry in value
+        if isinstance(entry, dict)
+        and isinstance(entry.get("symbol"), str)
+        and isinstance(entry.get("reason"), str)
+    )
+    return valid, len(valid) != len(value)
+
+
+def _protection_detail(
+    warnings: tuple[dict[str, object], ...], unreadable: bool
+) -> str | None:
+    parts = [
+        f"{entry['symbol']} {entry.get('strategy_id')} "
+        f"entry_oid={entry.get('entry_oid')}: {entry['reason']}"
+        for entry in warnings
+    ]
+    if unreadable:
+        parts.append("unreadable protection_warnings entry")
+    return "; ".join(parts)[:_DETAIL_LIMIT] if parts else None
+
+
+def _free_disk_problem(
+    free_disk: float | None, limits: HealthThresholds
+) -> str | None:
+    """Name the disk problem; the launch floor supersedes the early warning."""
+    if free_disk is None:
+        return "free_disk_unavailable"
+    if free_disk < limits.minimum_free_disk_gib:
+        return "free_disk_low"
+    if free_disk < limits.free_disk_warning_gib:
+        return "free_disk_warning"
+    return None
+
+
 def _probe_age(
     path: Path,
     payload: dict[str, object] | None,
@@ -241,8 +449,9 @@ def _data_probes(
     paths: SupervisorPaths,
     limits: HealthThresholds,
     now: float,
+    checkpoint: dict[str, object] | None,
 ) -> tuple[float | None, float | None, dict[str, str], float | None, list[str]]:
-    checkpoint, roster = read_object(paths.checkpoint), read_object(paths.roster)
+    roster = read_object(paths.roster)
     checkpoint_age = _probe_age(paths.checkpoint, checkpoint, "generated_at_utc", now)
     roster_age = _probe_age(paths.roster, roster, "observed_at_utc", now)
     markets, fills = _roster_markets(roster), _fill_rows(checkpoint)
@@ -286,14 +495,29 @@ def evaluate_health(
     pid = read_lock_pid(paths.process_lock)
     alive = pid is not None and is_backend(pid)
     ledger_age = file_age_seconds(paths.ledger, now)
+    checkpoint = read_object(paths.checkpoint)
     checkpoint_age, roster_age, regime, fee, problems = _data_probes(
-        paths, thresholds, now
+        paths, thresholds, now, checkpoint
     )
+    details: dict[str, str] = {}
     free_disk = free_disk_gib(paths.ledger)
-    if free_disk is None:
-        problems.append("free_disk_unavailable")
-    elif free_disk < thresholds.minimum_free_disk_gib:
-        problems.append("free_disk_low")
+    disk_problem = _free_disk_problem(free_disk, thresholds)
+    if disk_problem is not None:
+        problems.append(disk_problem)
+        if free_disk is not None:
+            details[disk_problem] = f"{free_disk:.1f} GiB free"
+    streak = backend_degraded_streak(
+        paths.ledger, now=now, freshness_seconds=thresholds.degraded_freshness_seconds
+    )
+    degraded_detail = _degraded_problem(streak, thresholds)
+    if degraded_detail is not None:
+        problems.append("backend_polls_degraded")
+        details["backend_polls_degraded"] = degraded_detail
+    warnings, unreadable = protection_warnings(checkpoint)
+    protection_detail = _protection_detail(warnings, unreadable)
+    if protection_detail is not None:
+        problems.append("protection_warning")
+        details["protection_warning"] = protection_detail
     if mtime_in_future(paths.ledger, now):
         problems.append("ledger_mtime_in_future")
     if not alive:
@@ -314,4 +538,7 @@ def evaluate_health(
         hip3_fee_regime=regime,
         free_disk_gib=free_disk,
         problems=tuple(problems),
+        backend_degraded=streak,
+        protection_warnings=warnings,
+        problem_details=details,
     )

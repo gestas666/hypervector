@@ -38,10 +38,13 @@ from hypervector.live.sol_range_onset_consistency import (
     protective_stop_fill_visible,
 )
 from hypervector.live.sol_range_onset_engine_contract import (
+    STOP_ALREADY_AT_TARGET,
     SolEntryNotFilledError as SolEntryNotFilledError,
     SolLiveEngineError,
+    StopRaiseOutcome,
     require_started,
     resolve_decision_time_ms,
+    stop_rests_at_or_beyond,
 )
 from hypervector.live.sol_range_onset_engine_events import SolLiveEngineEvents
 from hypervector.live.sol_range_onset_execution_plan import (
@@ -73,7 +76,10 @@ from hypervector.live.sol_partial_protective_recovery import (
 from hypervector.live.sol_protective_execution_evidence import (
     ProtectiveExecutionEvidenceError,
 )
-from hypervector.live.cohort_stop_risk_sizing import size_for_stop_risk
+from hypervector.live.cohort_stop_risk_sizing import (
+    StopRiskAccountValueError,
+    size_for_stop_risk,
+)
 
 _TELEMETRY_DEPTH_LEVELS = 20
 
@@ -201,6 +207,7 @@ class SolRangeOnsetLiveEngine:
             notional=notional,
             entry_deadline=entry_deadline,
             decision_time_ms=decision_time_ms,
+            account_value_usd=before.account.account_value_usd,
         )
 
     def _enter_with_protection(
@@ -211,17 +218,27 @@ class SolRangeOnsetLiveEngine:
         notional: float,
         decision_time_ms: int | None,
         entry_deadline: EntrySubmissionDeadline | None = None,
+        account_value_usd: float | None = None,
     ) -> SolLiveSnapshot:
         plan = self._pending_execution_plan or legacy_execution_plan(self._config)
         if plan.stop_risk_budget is not None:
-            risk = size_for_stop_risk(
-                plan=plan,
-                budget=plan.stop_risk_budget,
-                mark_price=mark_price,
-                side=side,
-                entry_slippage_fraction=self._config.effective_entry_slippage_cap_fraction,
-                original_notional_usd=notional,
-            )
+            try:
+                risk = size_for_stop_risk(
+                    plan=plan,
+                    budget=plan.stop_risk_budget,
+                    mark_price=mark_price,
+                    side=side,
+                    entry_slippage_fraction=self._config.effective_entry_slippage_cap_fraction,
+                    original_notional_usd=notional,
+                    account_value_usd=account_value_usd,
+                )
+            except StopRiskAccountValueError as exc:
+                # An equity-fraction budget never sizes on a guessed equity; the
+                # entry is refused as a journaled technical failure.
+                self._pending_execution_plan = None
+                reason = f"entry refused: {exc}"
+                self._events.fault(reason)
+                raise SolLiveEngineError(reason) from exc
             self._events.emit("entry_stop_risk_sizing", risk.as_payload())
             notional = risk.notional_usd
         try:
@@ -313,12 +330,19 @@ class SolRangeOnsetLiveEngine:
             emergency_flatten=self._emergency_flatten,
         )
 
-    def raise_protective_stop(self, *, trigger_price: float) -> bool:
+    def normalize_trigger_price(self, trigger_price: float) -> float:
+        """Return the trigger as this engine's stop orders put it on the wire."""
+        return self._orders.normalize_trigger_price(trigger_price)
+
+    def raise_protective_stop(self, *, trigger_price: float) -> bool | StopRaiseOutcome:
         """Move the owned reduce-only stop to a more favorable trigger while staying OPEN.
 
         Returns True only after the venue shows the replacement covering the
         position. A rejected replacement leaves the original stop untouched and
-        returns False; it never faults the process on its own.
+        returns False; it never faults the process on its own. The target is
+        compared with the venue trigger on the adapter's wire price grid: when
+        the owned stop already rests at or beyond the wire-rounded target, no
+        venue call is made and the falsy STOP_ALREADY_AT_TARGET is returned.
         """
         require_started(self._started)
         snapshot = self.snapshot
@@ -336,13 +360,9 @@ class SolRangeOnsetLiveEngine:
         size = snapshot.position_size_signed
         if current is None or current.trigger_price is None or size == 0.0:
             return False
-        favorable = (
-            trigger_price > current.trigger_price
-            if size > 0.0
-            else trigger_price < current.trigger_price
-        )
-        if not favorable:
-            return False
+        wire_target = self._orders.normalize_trigger_price(trigger_price)
+        if stop_rests_at_or_beyond(current.trigger_price, wire_target, size):
+            return STOP_ALREADY_AT_TARGET
         previous_oid = snapshot.stop_oid
         ack = self._orders.modify_protective_stop(
             oid=previous_oid, position_size_signed=size, trigger_price=trigger_price

@@ -1,4 +1,4 @@
-"""Optional dollar stop-loss allowance, explicitly excluding unbounded gaps."""
+"""Optional stop-loss allowance in dollars and/or equity, excluding unbounded gaps."""
 
 from __future__ import annotations
 
@@ -11,18 +11,53 @@ if TYPE_CHECKING:
     from hypervector.live.cohort_execution_plan import BoundExecutionPlan
 
 BPS_PER_UNIT = 10_000.0
+MAXIMUM_LOSS_FRACTION_OF_EQUITY_CEILING = 0.05
+_BUDGET_KEYS = frozenset(
+    {"maximum_loss_usd", "maximum_loss_fraction_of_equity", "cost_buffer_bps"}
+)
+_FRACTION_PAYLOAD_KEYS = (
+    "maximum_loss_fraction_of_equity",
+    "account_value_usd",
+    "effective_maximum_loss_usd",
+)
+
+
+class StopRiskAccountValueError(ValueError):
+    """An equity-fraction budget cannot be priced without a usable account value."""
 
 
 @dataclass(frozen=True)
 class StopRiskBudget:
-    """User-configurable estimated stop loss including a declared cost allowance."""
+    """User-configurable estimated stop loss including a declared cost allowance.
 
-    maximum_loss_usd: float
+    A budget declares a dollar cap, an equity fraction, or both; the effective
+    cap is the smaller one, with the fraction applied to the account value the
+    entry sizing path used for that entry.
+    """
+
+    maximum_loss_usd: float | None
     cost_buffer_bps: float
+    maximum_loss_fraction_of_equity: float | None = None
 
     def __post_init__(self) -> None:
         """Reject implicit, nonfinite or malformed loss allowances."""
-        _positive(self.maximum_loss_usd, "maximum_loss_usd")
+        if (
+            self.maximum_loss_usd is None
+            and self.maximum_loss_fraction_of_equity is None
+        ):
+            raise ValueError(
+                "stop_risk_budget requires maximum_loss_usd and/or "
+                "maximum_loss_fraction_of_equity"
+            )
+        if self.maximum_loss_usd is not None:
+            _positive(self.maximum_loss_usd, "maximum_loss_usd")
+            object.__setattr__(self, "maximum_loss_usd", float(self.maximum_loss_usd))
+        fraction = self.maximum_loss_fraction_of_equity
+        if fraction is not None:
+            _positive(fraction, "maximum_loss_fraction_of_equity")
+            if fraction > MAXIMUM_LOSS_FRACTION_OF_EQUITY_CEILING:
+                raise ValueError("maximum_loss_fraction_of_equity must be in (0, 0.05]")
+            object.__setattr__(self, "maximum_loss_fraction_of_equity", float(fraction))
         if (
             isinstance(self.cost_buffer_bps, bool)
             or not isinstance(self.cost_buffer_bps, (int, float))
@@ -31,7 +66,6 @@ class StopRiskBudget:
             raise ValueError("cost_buffer_bps must be finite numeric")
         if not 0 <= self.cost_buffer_bps < BPS_PER_UNIT:
             raise ValueError("cost_buffer_bps must be in [0, 10000)")
-        object.__setattr__(self, "maximum_loss_usd", float(self.maximum_loss_usd))
         object.__setattr__(self, "cost_buffer_bps", float(self.cost_buffer_bps))
 
     @classmethod
@@ -39,20 +73,54 @@ class StopRiskBudget:
         """Parse an explicit optional contract without inventing defaults."""
         if value is None:
             return None
-        if not isinstance(value, Mapping) or set(value) != {
-            "maximum_loss_usd",
-            "cost_buffer_bps",
-        }:
+        if not isinstance(value, Mapping):
+            raise ValueError("stop_risk_budget must be a table")
+        unknown = sorted(str(key) for key in value if key not in _BUDGET_KEYS)
+        if unknown:
             raise ValueError(
-                "stop_risk_budget requires maximum_loss_usd and cost_buffer_bps"
+                f"stop_risk_budget has unknown key(s): {', '.join(unknown)}"
             )
-        maximum, buffer = value["maximum_loss_usd"], value["cost_buffer_bps"]
+        declared = [key for key in _BUDGET_KEYS if key in value]
+        if "cost_buffer_bps" not in value or len(declared) < 2:
+            raise ValueError(
+                "stop_risk_budget requires cost_buffer_bps and maximum_loss_usd "
+                "and/or maximum_loss_fraction_of_equity"
+            )
         if any(
-            isinstance(v, bool) or not isinstance(v, (int, float))
-            for v in (maximum, buffer)
+            isinstance(value[key], bool) or not isinstance(value[key], (int, float))
+            for key in declared
         ):
             raise ValueError("stop_risk_budget fields must be numeric")
-        return cls(float(maximum), float(buffer))
+        maximum = value.get("maximum_loss_usd")
+        fraction = value.get("maximum_loss_fraction_of_equity")
+        return cls(
+            None if maximum is None else float(maximum),
+            float(value["cost_buffer_bps"]),
+            None if fraction is None else float(fraction),
+        )
+
+    def as_payload(self) -> dict[str, float]:
+        """Return only declared fields; a dollar-only budget keeps its legacy shape."""
+        return {key: item for key, item in asdict(self).items() if item is not None}
+
+    def effective_maximum_loss_usd(self, account_value_usd: float | None) -> float:
+        """Return the smaller declared cap, pricing a fraction on the given equity."""
+        fraction = self.maximum_loss_fraction_of_equity
+        if fraction is None:
+            return float(self.maximum_loss_usd)  # type: ignore[arg-type]
+        if (
+            isinstance(account_value_usd, bool)
+            or not isinstance(account_value_usd, (int, float))
+            or not math.isfinite(account_value_usd)
+            or account_value_usd <= 0
+        ):
+            raise StopRiskAccountValueError(
+                "equity-fraction stop budget requires a finite positive account value"
+            )
+        equity_cap = fraction * float(account_value_usd)
+        if self.maximum_loss_usd is None:
+            return equity_cap
+        return min(self.maximum_loss_usd, equity_cap)
 
 
 @dataclass(frozen=True)
@@ -65,12 +133,19 @@ class StopRiskSizing:
     entry_bound: float
     stop_bound: float
     estimated_loss_usd: float
-    maximum_loss_usd: float
+    maximum_loss_usd: float | None
     cost_buffer_bps: float
+    maximum_loss_fraction_of_equity: float | None = None
+    account_value_usd: float | None = None
+    effective_maximum_loss_usd: float | None = None
 
-    def as_payload(self) -> dict[str, float]:
-        """Return non-secret values for durable pre-order telemetry."""
-        return asdict(self)
+    def as_payload(self) -> dict[str, float | None]:
+        """Return non-secret values; equity fields appear only for fraction budgets."""
+        payload = asdict(self)
+        if self.maximum_loss_fraction_of_equity is None:
+            for key in _FRACTION_PAYLOAD_KEYS:
+                payload.pop(key)
+        return payload
 
 
 def size_for_stop_risk(
@@ -81,8 +156,14 @@ def size_for_stop_risk(
     side: str,
     entry_slippage_fraction: float,
     original_notional_usd: float,
+    account_value_usd: float | None = None,
 ) -> StopRiskSizing:
-    """Cap notional for the modeled fill interval, including stop-clamp turning points."""
+    """Cap notional for the modeled fill interval, including stop-clamp turning points.
+
+    ``account_value_usd`` must be the equity the entry sizing path used for the
+    planned notional; a fraction budget refuses to size without it.
+    """
+    maximum_loss = budget.effective_maximum_loss_usd(account_value_usd)
     _positive(mark_price, "mark_price")
     _positive(original_notional_usd, "original_notional_usd")
     if side not in {"long", "short"}:
@@ -92,10 +173,9 @@ def size_for_stop_risk(
         raise ValueError("entry slippage fraction must be finite and in [0, 1)")
     entry, stop, loss_per_unit = _worst_loss(plan, budget, mark_price, slip, side)
     _positive(loss_per_unit, "estimated loss per unit")
-    quantity = min(
-        original_notional_usd / mark_price, budget.maximum_loss_usd / loss_per_unit
-    )
+    quantity = min(original_notional_usd / mark_price, maximum_loss / loss_per_unit)
     _positive(quantity, "risk-sized quantity")
+    fraction = budget.maximum_loss_fraction_of_equity
     return StopRiskSizing(
         original_notional_usd,
         quantity * mark_price,
@@ -105,6 +185,9 @@ def size_for_stop_risk(
         quantity * loss_per_unit,
         budget.maximum_loss_usd,
         budget.cost_buffer_bps,
+        fraction,
+        None if fraction is None else float(account_value_usd),  # type: ignore[arg-type]
+        None if fraction is None else maximum_loss,
     )
 
 

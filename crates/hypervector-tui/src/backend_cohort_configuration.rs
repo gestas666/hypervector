@@ -18,6 +18,17 @@ pub(crate) fn adaptive_exit_policy_valid(policy: &str) -> bool {
     ADAPTIVE_EXIT_POLICIES.contains(&policy)
 }
 
+/// Venue break-even raise target the backend binds when none is serialized.
+pub(crate) fn entry_offset_breakeven_stop_target() -> String {
+    "entry_offset".into()
+}
+
+/// Whether a raise target is known and, for the floor target, bound to exit v2.
+pub(crate) fn breakeven_stop_target_valid(target: &str, adaptive_exit_policy: &str) -> bool {
+    target == "entry_offset"
+        || (target == "floor" && adaptive_exit_policy == "regime_flip_floor_retention_v2")
+}
+
 /// Advisory configuration-generation status with no execution authority.
 #[derive(Debug, Clone, PartialEq)]
 pub struct CohortConfigurationGeneration {
@@ -54,18 +65,31 @@ pub struct CohortPendingAssetSizing {
 }
 
 /// Estimated stop-loss allowance from one provider in the selected profile.
+///
+/// A budget declares a dollar cap, an equity fraction, or both; the backend
+/// binds the smaller one against the account value used to size each entry.
 #[derive(Debug, Clone, Deserialize, PartialEq)]
 #[serde(deny_unknown_fields)]
 pub struct CohortStopRiskBudget {
-    pub maximum_loss_usd: f64,
+    #[serde(default)]
+    pub maximum_loss_usd: Option<f64>,
+    #[serde(default)]
+    pub maximum_loss_fraction_of_equity: Option<f64>,
     pub cost_buffer_bps: f64,
 }
 
 impl CohortStopRiskBudget {
-    /// Refuse nonfinite or nonpositive budgets and invalid cost allowances.
+    /// Refuse undeclared, nonfinite or out-of-range caps and invalid cost allowances.
     pub fn valid(&self) -> bool {
-        self.maximum_loss_usd.is_finite()
-            && self.maximum_loss_usd > 0.0
+        let dollars_valid = self
+            .maximum_loss_usd
+            .is_none_or(|loss| loss.is_finite() && loss > 0.0);
+        let fraction_valid = self
+            .maximum_loss_fraction_of_equity
+            .is_none_or(|fraction| fraction.is_finite() && fraction > 0.0 && fraction <= 0.05);
+        (self.maximum_loss_usd.is_some() || self.maximum_loss_fraction_of_equity.is_some())
+            && dollars_valid
+            && fraction_valid
             && self.cost_buffer_bps.is_finite()
             && (0.0..10_000.0).contains(&self.cost_buffer_bps)
     }
@@ -85,6 +109,8 @@ pub struct CohortPendingExitPolicy {
     pub provider_recipe_exit_policy: String,
     #[serde(default = "disabled_profit_lock_policy")]
     pub adaptive_exit_policy: String,
+    #[serde(default = "entry_offset_breakeven_stop_target")]
+    pub breakeven_stop_target: String,
     #[serde(default = "disabled_profit_lock_policy")]
     pub profit_lock_policy: String,
     #[serde(default)]
@@ -320,6 +346,10 @@ fn pending_exit_policy_valid(strategy_id: &str, policy: &CohortPendingExitPolicy
     policy.maximum_hold_seconds > 0
         && policy.stop_risk_budget.as_ref().is_none_or(CohortStopRiskBudget::valid)
         && adaptive_exit_policy_valid(policy.adaptive_exit_policy.as_str())
+        && breakeven_stop_target_valid(
+            policy.breakeven_stop_target.as_str(),
+            policy.adaptive_exit_policy.as_str(),
+        )
         && evidence_age_valid
         && contract_valid
         && matches!(

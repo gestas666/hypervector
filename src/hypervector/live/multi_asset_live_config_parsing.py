@@ -35,6 +35,17 @@ def mapping(value: object, label: str) -> Mapping[str, object]:
     return cast(dict[str, object], value)
 
 
+def require_known_keys(
+    values: Mapping[str, object], allowed: frozenset[str], table: str
+) -> None:
+    """Refuse keys the loader would otherwise silently ignore, naming each one."""
+    unknown = sorted(key for key in values if key not in allowed)
+    if unknown:
+        raise MultiAssetLiveConfigError(
+            f"{table} has unknown key(s): {', '.join(unknown)}"
+        )
+
+
 def mapping_rows(value: object, label: str) -> tuple[Mapping[str, object], ...]:
     """Require one non-empty TOML table array."""
     if not isinstance(value, list) or not value:

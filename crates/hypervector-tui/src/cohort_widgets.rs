@@ -101,6 +101,8 @@ pub(crate) fn provider_alias(strategy_id: &str) -> &str {
         "HOURLY RECOVERY"
     } else if strategy_id == "hourly_donchian_20_10_atr20_bidirectional_v1" {
         "HOURLY CHANNEL20"
+    } else if strategy_id == "hourly_donchian_20_10_atr20_strong_short_v1" {
+        "CHANNEL20 STRONG"
     } else if strategy_id == "hourly_donchian_8_4_atr20_bidirectional_v1" {
         "HOURLY CHANNEL8"
     } else if strategy_id == "btc_hulk_money_flow_relaxed_fixed60_bidirectional_v1" {
@@ -230,7 +232,11 @@ pub(crate) fn execution_plan_label(asset: &CohortAssetSnapshot) -> String {
     let profit_lock = if plan.adaptive_exit_policy == "regime_book_profit_retention_v1" {
         "AD".into()
     } else if plan.adaptive_exit_policy == "regime_flip_floor_retention_v2" {
-        "AD2".into()
+        if plan.breakeven_stop_target == "floor" {
+            "AD2F".into()
+        } else {
+            "AD2".into()
+        }
     } else {
         plan_profit_lock_label(
             &plan.profit_lock_policy,
@@ -358,6 +364,21 @@ mod tests {
     }
 
     #[test]
+    fn execution_plan_distinguishes_the_venue_floor_raise_target() {
+        let mut snapshot = open_btc_hulk_snapshot();
+        let plan = snapshot.execution_plan.as_mut().expect("fixture plan");
+        plan.profit_lock_policy = "none".into();
+        plan.adaptive_exit_policy = "regime_flip_floor_retention_v2".into();
+        assert_eq!(plan.breakeven_stop_target, "entry_offset");
+        assert_eq!(execution_plan_label(&snapshot), "HK24H/I/AD2");
+        let plan = snapshot.execution_plan.as_mut().expect("fixture plan");
+        plan.breakeven_stop_target = "floor".into();
+        let label = execution_plan_label(&snapshot);
+        assert_eq!(label, "HK24H/I/AD2F");
+        assert!(label.chars().count() <= 12);
+    }
+
+    #[test]
     fn relaxed_hype_provider_has_a_compact_distinct_alias() {
         assert_eq!(
             provider_alias("hip3_breakout_pressure_sp500_spcx_fresh15s_bidirectional_v2"),
@@ -451,5 +472,16 @@ mod tests {
             provider_alias("liquidity_sweep_long_1h_stop60_target60_v2"),
             "BTC SWEEP 60/60"
         );
+    }
+
+    #[test]
+    fn strong_short_channel_has_a_distinct_alias_within_the_column_budget() {
+        let alias = provider_alias("hourly_donchian_20_10_atr20_strong_short_v1");
+        assert_eq!(alias, "CHANNEL20 STRONG");
+        assert_ne!(
+            alias,
+            provider_alias("hourly_donchian_20_10_atr20_bidirectional_v1")
+        );
+        assert!(alias.chars().count() <= 16);
     }
 }
