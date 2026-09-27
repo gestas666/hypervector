@@ -8,6 +8,7 @@ use std::time::{Duration, SystemTime};
 use crate::backend_checkpoint_identity::validate_checkpoint_identity;
 use crate::backend_cohort::CohortFill;
 use crate::backend_cohort_checkpoint::{CohortCheckpointTelemetry, parse_cohort_checkpoint};
+use crate::backend_cohort_stop_raise::apply_venue_stop_raises;
 use crate::backend_ledger_reader::IncrementalBackendLedger;
 use crate::backend_observer::{SourceLongOutcomeTelemetry, parse_source_long_outcome};
 use crate::backend_telemetry::{BackendConnectionState, BackendTelemetrySnapshot};
@@ -145,6 +146,9 @@ impl BackendTelemetrySource {
             {
                 checkpoint = CohortCheckpointTelemetry::unavailable(issue);
             }
+        }
+        if checkpoint.available {
+            apply_venue_stop_raises(&snapshot.cohort, &mut checkpoint.open_trade_reflections);
         }
         snapshot.cohort_checkpoint = checkpoint;
         self.cached = snapshot.clone();

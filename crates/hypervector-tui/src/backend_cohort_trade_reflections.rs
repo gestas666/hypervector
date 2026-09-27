@@ -46,7 +46,7 @@ use crate::backend_cohort_trade_performance::{
 };
 use crate::backend_cohort_trade_reflection_values::{
     RawExecutionLeg, RawMarkedEconomics, RawProtectiveStop, RawRegimeDrift, RawTargetOrder,
-    project_protective_stop, project_target_order,
+    project_open_entry_size, project_protective_stop, project_target_order,
 };
 use serde::Deserialize;
 use std::collections::{BTreeMap, HashSet};
@@ -165,6 +165,8 @@ struct RawOpenTradeReflection {
     symbol: String,
     strategy_id: String,
     side: String,
+    #[serde(default)]
+    entry: Option<serde_json::Value>,
     #[serde(default)]
     protective_stop: Option<RawProtectiveStop>,
     #[serde(default)]
@@ -384,6 +386,7 @@ fn project_open_trade(
     validate_regime_assessment(&raw.regime_assessment)?;
     let mut projected = CohortOpenTradeReflection::default();
     apply_open_identity(&mut projected, &raw);
+    projected.entry_size = project_open_entry_size(raw.entry.as_ref());
     let stop = project_protective_stop(raw.protective_stop)?;
     let target = project_target_order(raw.target_order)?;
     let mut exit_plan = project_open_exit_plan(&raw.strategy_id, raw.exit_plan)?;

@@ -175,8 +175,16 @@ fn compact_trade_line<'a>(app: &'a App, trade: &'a CohortOpenTradeReflection) ->
 }
 
 fn stop_line<'a>(app: &'a App, trade: &'a CohortOpenTradeReflection) -> Line<'a> {
-    let stop = match (trade.protective_stop_oid, trade.protective_stop_price) {
-        (Some(oid), Some(price)) => format!("LAST STOP #{oid} @{price:.2}"),
+    let stop = match (
+        trade.protective_stop_oid,
+        trade.protective_stop_price,
+        trade.protective_stop_raise.as_ref(),
+    ) {
+        (Some(oid), Some(price), Some(raise)) => format!(
+            "VENUE STOP RAISED #{oid} @{price:.2} // FROM #{} @{:.2}",
+            raise.previous_oid, raise.previous_trigger_price
+        ),
+        (Some(oid), Some(price), None) => format!("LAST STOP #{oid} @{price:.2}"),
         _ => "STOP N/A".into(),
     };
     Line::from(Span::styled(stop, app.theme.bull))
@@ -220,8 +228,13 @@ fn compact_side(side: Option<&str>) -> &'static str {
 }
 
 fn compact_stop_timer_line<'a>(app: &'a App, trade: &'a CohortOpenTradeReflection) -> Line<'a> {
+    let raised = if trade.protective_stop_raise.is_some() {
+        "↑"
+    } else {
+        ""
+    };
     let stop = match (trade.protective_stop_oid, trade.protective_stop_price) {
-        (Some(oid), Some(price)) => format!("S#{oid}@{price:.2}"),
+        (Some(oid), Some(price)) => format!("S{raised}#{oid}@{price:.2}"),
         _ => "S:N/A".into(),
     };
     let policy = if trade.exit_plan.maximum_hold_policy == "fixed" {

@@ -14,6 +14,70 @@ pub struct CohortOpenProfitProtection {
     pub marked_to_stop_giveback_usd: f64,
     pub protected_profit_fraction: Option<f64>,
     pub stop_distance_from_mark_bps: f64,
+    pub measured_entry_fee_rate_bps: f64,
+    pub estimated_stop_exit_fee_usd: f64,
+}
+
+/// One acknowledged venue stop move, priced on the checkpoint's own mark and size.
+pub(crate) struct StopMove {
+    pub(crate) direction: f64,
+    pub(crate) entry_size: f64,
+    pub(crate) mark_price: f64,
+    pub(crate) previous_trigger_price: f64,
+    pub(crate) trigger_price: f64,
+}
+
+impl CohortOpenProfitProtection {
+    /// Re-price only the stop leg after the venue stop moved, as the backend estimate would.
+    ///
+    /// The exit-now leg is unchanged. The basis must reproduce the checkpoint's
+    /// previous stop fee, and the result must pass the same status validation as
+    /// parsed evidence; otherwise no estimate is returned rather than a stale one.
+    pub(crate) fn repriced(&self, stop: &StopMove) -> Option<Self> {
+        let fee_rate = self.measured_entry_fee_rate_bps / 10_000.0;
+        let basis_valid = stop.entry_size.is_finite()
+            && stop.entry_size > 0.0
+            && stop.mark_price.is_finite()
+            && stop.mark_price > 0.0
+            && close(
+                self.estimated_stop_exit_fee_usd,
+                stop.previous_trigger_price * stop.entry_size * fee_rate,
+            );
+        if !basis_valid {
+            return None;
+        }
+        let shift = stop.trigger_price - stop.previous_trigger_price;
+        let current = self.estimated_exit_now_net_usd;
+        let stop_net =
+            self.estimated_stop_net_usd + shift * stop.entry_size * (stop.direction - fee_rate);
+        let giveback = current - stop_net;
+        let fraction = (current > 0.0).then(|| (stop_net.max(0.0) / current).min(1.0));
+        let status = protection_status(current, stop_net, giveback);
+        validate_status(status, current, stop_net, giveback, fraction).ok()?;
+        Some(Self {
+            status: status.into(),
+            estimated_stop_net_usd: stop_net,
+            marked_to_stop_giveback_usd: giveback,
+            protected_profit_fraction: fraction,
+            stop_distance_from_mark_bps: stop.direction * (stop.mark_price - stop.trigger_price)
+                / stop.mark_price
+                * 10_000.0,
+            estimated_stop_exit_fee_usd: stop.trigger_price * stop.entry_size * fee_rate,
+            ..self.clone()
+        })
+    }
+}
+
+fn protection_status(current: f64, stop: f64, giveback: f64) -> &'static str {
+    if current <= 0.0 {
+        "no_open_profit"
+    } else if stop <= 0.0 {
+        "open_profit_unprotected"
+    } else if giveback > TOLERANCE {
+        "partial_profit_locked"
+    } else {
+        "current_profit_locked"
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -75,7 +139,7 @@ fn project_available(value: RawOpenProfitProtection) -> Result<CohortOpenProfitP
     let distance = required(value.stop_distance_from_mark_bps, "stop distance")?;
     let fee_rate = nonnegative(value.measured_entry_fee_rate_bps, "fee rate")?;
     let current_fee = nonnegative(value.estimated_current_exit_fee_usd, "current fee")?;
-    nonnegative(value.estimated_stop_exit_fee_usd, "stop fee")?;
+    let stop_fee = nonnegative(value.estimated_stop_exit_fee_usd, "stop fee")?;
     if !close(giveback, current - stop) || !close(marked - current, current_fee) {
         return Err("profit-protection economics do not reconcile".into());
     }
@@ -96,6 +160,8 @@ fn project_available(value: RawOpenProfitProtection) -> Result<CohortOpenProfitP
         marked_to_stop_giveback_usd: giveback,
         protected_profit_fraction: value.protected_profit_fraction,
         stop_distance_from_mark_bps: distance,
+        measured_entry_fee_rate_bps: fee_rate,
+        estimated_stop_exit_fee_usd: stop_fee,
     })
 }
 
@@ -200,5 +266,162 @@ mod tests {
 
         let error = project(Some(raw)).expect_err("invented measurement must fail");
         assert!(error.contains("success-shaped"), "{error}");
+    }
+
+    /// Backend `build_open_profit_protection` output for one lifecycle and stop.
+    fn backend_estimate(value: serde_json::Value) -> super::CohortOpenProfitProtection {
+        let raw: RawOpenProfitProtection = serde_json::from_value(value).expect("raw fixture");
+        project(Some(raw))
+            .expect("backend estimate")
+            .expect("available")
+    }
+
+    fn assert_matches_backend(
+        observed: &super::CohortOpenProfitProtection,
+        expected: &super::CohortOpenProfitProtection,
+    ) {
+        let pairs = [
+            (
+                observed.estimated_exit_now_net_usd,
+                expected.estimated_exit_now_net_usd,
+            ),
+            (
+                observed.estimated_stop_net_usd,
+                expected.estimated_stop_net_usd,
+            ),
+            (
+                observed.marked_to_stop_giveback_usd,
+                expected.marked_to_stop_giveback_usd,
+            ),
+            (
+                observed.stop_distance_from_mark_bps,
+                expected.stop_distance_from_mark_bps,
+            ),
+            (
+                observed.estimated_stop_exit_fee_usd,
+                expected.estimated_stop_exit_fee_usd,
+            ),
+            (
+                observed.protected_profit_fraction.expect("fraction"),
+                expected.protected_profit_fraction.expect("fraction"),
+            ),
+        ];
+        for (left, right) in pairs {
+            assert!((left - right).abs() < 1e-9, "{observed:?} != {expected:?}");
+        }
+        assert_eq!(observed.status, expected.status);
+    }
+
+    #[test]
+    fn repriced_long_stop_matches_the_backend_estimate_for_the_raised_trigger() {
+        // Both estimates come from the backend's own formula for one BRENTOIL long
+        // (entry 99.05 x 5.84, mark 99.9765): the initial stop and the V93 floor raise.
+        let initial = backend_estimate(json!({
+            "status": "open_profit_unprotected",
+            "reported_marked_net_pnl_usd": 5.358215230201701,
+            "estimated_exit_now_net_usd": 5.307769975257308,
+            "estimated_stop_net_usd": -8.838407701195626,
+            "marked_to_stop_giveback_usd": 14.146177676452934,
+            "protected_profit_fraction": 0.0,
+            "stop_distance_from_mark_bps": 242.30694213140083,
+            "measured_entry_fee_rate_bps": 0.8639916500992931,
+            "estimated_current_exit_fee_usd": 0.05044525494439275,
+            "estimated_stop_exit_fee_usd": 0.049222931397331283,
+            "method": "measured_entry_fee_rate_no_future_funding_or_slippage"
+        }));
+        let raised = backend_estimate(json!({
+            "status": "partial_profit_locked",
+            "reported_marked_net_pnl_usd": 5.358215230201701,
+            "estimated_exit_now_net_usd": 5.307769975257308,
+            "estimated_stop_net_usd": 1.3434825159788528,
+            "marked_to_stop_giveback_usd": 3.9642874592784554,
+            "protected_profit_fraction": 0.2531161904607074,
+            "stop_distance_from_mark_bps": 67.90345731246893,
+            "measured_entry_fee_rate_bps": 0.8639916500992931,
+            "estimated_current_exit_fee_usd": 0.05044525494439275,
+            "estimated_stop_exit_fee_usd": 0.050102714222819436,
+            "method": "measured_entry_fee_rate_no_future_funding_or_slippage"
+        }));
+
+        let observed = initial
+            .repriced(&super::StopMove {
+                direction: 1.0,
+                entry_size: 5.84,
+                mark_price: 99.9765,
+                previous_trigger_price: 97.554,
+                trigger_price: 99.297625,
+            })
+            .expect("repriced estimate");
+
+        assert_matches_backend(&observed, &raised);
+    }
+
+    #[test]
+    fn repriced_short_stop_matches_the_backend_estimate_for_the_raised_trigger() {
+        let initial = backend_estimate(json!({
+            "status": "open_profit_unprotected",
+            "reported_marked_net_pnl_usd": 4.72472,
+            "estimated_exit_now_net_usd": 4.450399999999999,
+            "estimated_stop_net_usd": -6.554352000000001,
+            "marked_to_stop_giveback_usd": 11.004752,
+            "protected_profit_fraction": 0.0,
+            "stop_distance_from_mark_bps": 173.22834645669292,
+            "measured_entry_fee_rate_bps": 4.319999999999999,
+            "estimated_current_exit_fee_usd": 0.27432,
+            "estimated_stop_exit_fee_usd": 0.279072,
+            "method": "measured_entry_fee_rate_no_future_funding_or_slippage"
+        }));
+        let raised = backend_estimate(json!({
+            "status": "partial_profit_locked",
+            "reported_marked_net_pnl_usd": 4.72472,
+            "estimated_exit_now_net_usd": 4.450399999999999,
+            "estimated_stop_net_usd": 1.0489312000000002,
+            "marked_to_stop_giveback_usd": 3.401468799999999,
+            "protected_profit_fraction": 0.23569369045479066,
+            "stop_distance_from_mark_bps": 53.54330708661417,
+            "measured_entry_fee_rate_bps": 4.319999999999999,
+            "estimated_current_exit_fee_usd": 0.27432,
+            "estimated_stop_exit_fee_usd": 0.2757888,
+            "method": "measured_entry_fee_rate_no_future_funding_or_slippage"
+        }));
+
+        let observed = initial
+            .repriced(&super::StopMove {
+                direction: -1.0,
+                entry_size: 0.01,
+                mark_price: 63_500.0,
+                previous_trigger_price: 64_600.0,
+                trigger_price: 63_840.0,
+            })
+            .expect("repriced estimate");
+
+        assert_matches_backend(&observed, &raised);
+    }
+
+    #[test]
+    fn reprice_refuses_a_size_basis_that_does_not_reproduce_the_stop_fee() {
+        let initial = backend_estimate(json!({
+            "status": "open_profit_unprotected",
+            "reported_marked_net_pnl_usd": 4.72472,
+            "estimated_exit_now_net_usd": 4.450399999999999,
+            "estimated_stop_net_usd": -6.554352000000001,
+            "marked_to_stop_giveback_usd": 11.004752,
+            "protected_profit_fraction": 0.0,
+            "stop_distance_from_mark_bps": 173.22834645669292,
+            "measured_entry_fee_rate_bps": 4.319999999999999,
+            "estimated_current_exit_fee_usd": 0.27432,
+            "estimated_stop_exit_fee_usd": 0.279072,
+            "method": "measured_entry_fee_rate_no_future_funding_or_slippage"
+        }));
+
+        let observed = initial.repriced(&super::StopMove {
+            direction: -1.0,
+            entry_size: 0.02,
+            mark_price: 63_500.0,
+            previous_trigger_price: 64_600.0,
+            trigger_price: 63_840.0,
+        });
+
+        assert_eq!(observed, None);
     }
 }
