@@ -1,3 +1,55 @@
+# Current operation — V94 LIVE ARMED (re-armed after reboot hold); V95 packaged, pending approval, 2026-09-27
+
+**Status.**
+- V94 is live and armed. Profile `multi_asset_growth_first_5000_review_actions_v94`,
+  fingerprint `930117e9…` (unchanged), run `bidirectional-live-1790464795401`.
+- The book was flat at $4,817.19 after the BRENTOIL 24 h timer exit at 01:00:21Z (−$1.19).
+
+**Incident (2026-09-26).**
+- An Apple-menu restart at 22:47Z latched a supervisor hold (`operator_stop_grace_expired`).
+- After boot the supervisor gave up silently, and the book was dark for 38 min.
+- Re-armed at 23:19:51Z on operator approval:
+  - archived the journal to `data/backups/bidirectional_cohort/reboot_hold_20260926T2249Z/`;
+  - ran `launchctl kickstart gui/501/local.hypervector.cohort.supervise`;
+  - the first heartbeat came about 6.5 min later.
+- **Manual procedure after any reboot until V95:**
+  1. Confirm STOP is absent and no backend is running.
+  2. Move `data/runtime/bidirectional_cohort/supervisor_events_restart_state.json` into a
+     dated `data/backups/bidirectional_cohort/reboot_hold_*` directory.
+  3. Kickstart supervise.
+
+**Review.** `docs/reviews/2026-09-27-v94-review-and-swing-research.md`. Evidence is in
+`data/logs/research/v94_review_swing_20260927/`.
+- No capital-safety bug.
+- Confirmed defects: the reboot hold, backend SIGTERM latency, the exact-equality venue
+  leverage pin, checkpoint I/O, the cockpit raise display, and ladder power (AGG-1).
+- Swing research:
+  - The daily crypto breakout is a mania option.
+  - Uncapped hourly holds, daily side filters and leveraged trend beta all fail.
+  - 1x spot beta is the only positive exposure since 2024.
+
+**V95 (branch `agent/v95-review-fixes-20260926`, worktree `../hypervector-v95-review-fixes-20260926`,
+own venv).**
+- Fixes plus the V95 profile, fingerprint `dd779cce…`.
+- Approval and rollback are both `pending_operator_approval`.
+- Also on the branch: the observe-only `scripts/d1_shadow_runner.py`.
+- **Do not merge into this checkout before the V95 transition.** The start gate compares
+  only the profile fingerprint, so any V94 relaunch would run the new source.
+- **Do not cite HANDOFF.md in approvals.** Armed starts re-hash the evidence.
+
+**Operator decisions pending.**
+1. Turn off macOS auto-install (sudo).
+2. V95 go-live, and whether to opt in to auto-resume after a host restart.
+3. Re-register the ladder before the 30th V94 Donchian close (about Oct 9–20).
+4. Aggression: rung 1 as a zero-Kelly bet; a spot BTC>SMA200 beta sleeve (0/50/80% of
+   the book, sub-account); the D1 sleeve after a shadow period.
+
+**Errata to the section below.**
+- The supervise plist `ExitTimeOut` is 60, not 180.
+- The V94→V93 rollback re-arms HYPE at $2,500/10x, band20 SPCX and weak shorts.
+
+---
+
 # Current operation — V94 LIVE ARMED (review actions), 2026-09-25 06:52 UTC
 
 **Status.** V94 is live and armed and passed acceptance.
