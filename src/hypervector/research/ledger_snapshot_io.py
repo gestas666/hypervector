@@ -15,7 +15,10 @@ from hypervector.data.oxa_storage import file_evidence
 from hypervector.paper.report import load_decision_stream
 from hypervector.research.mapped_snapshot_file import MappedSnapshotFile
 
-SNAPSHOT_MEMORY_BYTES = 128 * 1024 * 1024
+# A live run appends roughly 0.2 GB/day to its decisions share, so this budget
+# keeps about ten days of one run in anonymous pages. The former 128 MiB budget
+# re-copied the whole share to scratch disk on every 30 s checkpoint after ~15 h.
+SNAPSHOT_MEMORY_BYTES = 2 * 1024 * 1024 * 1024
 
 
 @contextmanager

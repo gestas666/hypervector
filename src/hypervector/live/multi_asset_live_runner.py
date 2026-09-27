@@ -72,6 +72,7 @@ from hypervector.live.multi_asset_operator_runtime import (
     OperatorCommandSourceProtocol,
 )
 from hypervector.live.multi_asset_signal_source import ProviderEvaluation
+from hypervector.live.process_signal_stop import ProcessStopRequested
 from hypervector.live.sol_range_onset_state import SolLiveState
 from hypervector.live.transient_transport import transient_read_failure_reason
 
@@ -540,6 +541,13 @@ class MultiAssetLiveRunner:
             try:
                 self.poll_once()
                 blind_since, blind_polls = None, 0
+            except ProcessStopRequested:
+                if self._execution_phase_failed:
+                    raise
+                # A stop abandoned this poll's public reads, which run after
+                # reconciliation and before the order-capable half of the cycle,
+                # so nothing was cut short; leave through the ordinary stop.
+                break
             except TransientCohortMarketDataError as exc:
                 if self._execution_phase_failed:
                     raise

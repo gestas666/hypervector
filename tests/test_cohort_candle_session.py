@@ -98,6 +98,7 @@ def test_one_candle_session_survives_multiple_assets_and_cycles_then_closes(
     """Every public fetch uses one owned session and preserves its request values."""
     module, session = _boundary(monkeypatch)
     observed: list[tuple[str, str, float, int | None, object]] = []
+    timeouts: list[object] = []
 
     def fetch(
         symbol: str,
@@ -106,9 +107,12 @@ def test_one_candle_session_survives_multiple_assets_and_cycles_then_closes(
         *,
         end_ms: int | None = None,
         session: object = None,
+        timeout: object = None,
+        **_stop_policy: object,
     ) -> pd.DataFrame:
         """Capture the request boundary without calling the network."""
         observed.append((symbol, timeframe, lookback_days, end_ms, session))
+        timeouts.append(timeout)
         return pd.DataFrame()
 
     monkeypatch.setattr(module, "fetch_hl_ohlcv_snapshot", fetch)
@@ -119,6 +123,7 @@ def test_one_candle_session_survives_multiple_assets_and_cycles_then_closes(
         presence: CredentialPresence,
         fetch_bars: CohortBarFetcherProtocol,
         lock_path: Path | None = None,
+        signal_stop: object = None,
     ) -> int:
         """Exercise two assets at two cutoffs while the command owns its session."""
         assert session.closes == 0
@@ -137,6 +142,7 @@ def test_one_candle_session_survives_multiple_assets_and_cycles_then_closes(
     )
     assert result == 17
     assert observed == [(*request, session) for request in REQUESTS]
+    assert timeouts == [(5.0, 10.0)] * len(REQUESTS)
     assert session.constructions == session.enters == session.closes == 1
 
 

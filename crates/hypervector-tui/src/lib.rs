@@ -65,6 +65,7 @@ pub mod backend_cohort_research_sync;
 pub mod backend_cohort_risk_utilization;
 pub mod backend_cohort_run_windows;
 pub mod backend_cohort_side_composition;
+mod backend_cohort_stop_raise;
 pub mod backend_cohort_strategy_evidence;
 mod backend_cohort_strategy_scorecard;
 mod backend_cohort_supplemental_challengers;

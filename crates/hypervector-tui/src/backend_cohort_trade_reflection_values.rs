@@ -1,6 +1,7 @@
 //! Small strict value projections shared by cohort trade reflections.
 
 use serde::Deserialize;
+use serde_json::Value;
 
 #[derive(Debug, Deserialize)]
 pub(crate) struct RawExecutionLeg {
@@ -49,6 +50,16 @@ pub(crate) fn project_protective_stop(
         return Err("trade reflection protective stop is invalid".into());
     }
     Ok((Some(value.oid), Some(value.trigger_price)))
+}
+
+/// Positive entry size of an open reflection, used only to re-price a raised stop.
+///
+/// Nothing else reads it, so an absent or unusable size withholds that
+/// re-pricing instead of making the whole checkpoint unavailable.
+pub(crate) fn project_open_entry_size(raw: Option<&Value>) -> Option<f64> {
+    raw?.get("size")?
+        .as_f64()
+        .filter(|size| size.is_finite() && *size > 0.0)
 }
 
 pub(crate) fn project_target_order(

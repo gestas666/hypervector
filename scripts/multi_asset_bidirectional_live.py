@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+from collections.abc import Callable
 from datetime import UTC, datetime
 from functools import partial
 import os
@@ -60,7 +61,10 @@ from hypervector.live.cohort_transition_drain import (
     load_transition_drain_snapshot,
 )
 from hypervector.live.multi_asset_cohort_telemetry import MultiAssetCohortTelemetry
-from hypervector.live.multi_asset_intent_poller import ConfiguredMultiAssetIntentPoller
+from hypervector.live.multi_asset_intent_poller import (
+    CohortBarFetcherProtocol,
+    ConfiguredMultiAssetIntentPoller,
+)
 from hypervector.live.multi_asset_live_config import (
     AssetLiveConfig,
     MultiAssetLiveConfig,
@@ -76,7 +80,12 @@ from hypervector.live.cohort_operator_commands import (
     CohortOperatorInbox,
     operator_command_maximum_age_seconds,
 )
-from hypervector.live.process_signal_stop import install_process_signal_stop
+from hypervector.live.process_signal_stop import (
+    ProcessSignalStop,
+    install_process_signal_stop,
+    raise_if_stop_requested,
+    stop_aware_sleep,
+)
 from hypervector.live.sol_range_onset_engine import SolRangeOnsetLiveEngine
 from hypervector.live.sol_range_onset_ledger import SolLiveLedger
 from hypervector.runtime_env import (
@@ -96,6 +105,10 @@ _DEFAULT_BACKTEST_LAB = Path("../backtest-lab/backtest_lab")
 _REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 _MAX_READ_COALESCE_SECONDS = 10.0
 _READ_COALESCE_POLL_FRACTION = 0.8
+# (connect, read) for the public candle reads only. One hung read then ends
+# inside the 15 s poll period instead of the research default's 30 s; account
+# reads and order calls keep their own client timeouts.
+_PUBLIC_CANDLE_TIMEOUT_SECONDS = (5.0, 10.0)
 EXIT_RUN_FAILED = 1
 EXIT_START_REFUSED = 2
 # The account stayed unreconciled past the runner's wall-clock bound. The
@@ -164,14 +177,51 @@ def run_live(args: argparse.Namespace) -> int:
         raise MultiAssetLiveConfigError(
             f"operator stop file exists; inspect before removing: {config.stop_file}"
         )
+    # Created here so the public candle reads consult the latch the run loop
+    # uses. Its handlers are installed only with the runner, so a signal during
+    # the start boundaries still ends the process at once, as it always has.
+    signal_stop = ProcessSignalStop()
     with requests.Session() as candle_session:
         poller = ConfiguredMultiAssetIntentPoller.with_default_collectors(
             config=config,
-            fetch_bars=partial(fetch_hl_ohlcv_snapshot, session=candle_session),
+            fetch_bars=_live_candle_fetcher(
+                candle_session,
+                partial(_backend_stop_requested, config.stop_file, signal_stop),
+            ),
             backtest_lab_root=args.backtest_lab_root.resolve(),
         )
         with bidirectional_live_runtime_lock(config.cohort_ledger) as lock_path:
-            return _run_locked(args, config, presence, poller, lock_path=lock_path)
+            return _run_locked(
+                args,
+                config,
+                presence,
+                poller,
+                lock_path=lock_path,
+                signal_stop=signal_stop,
+            )
+
+
+def _live_candle_fetcher(
+    session: requests.Session,
+    stop_requested: Callable[[], bool],
+) -> CohortBarFetcherProtocol:
+    """Return the cohort's public candle read, abandoned once a stop is requested.
+
+    The stop is checked before every per-symbol read and every retry, and the
+    retry waits end within a second of it, so a stop never waits out the ladder.
+    """
+    return partial(
+        fetch_hl_ohlcv_snapshot,
+        session=session,
+        timeout=_PUBLIC_CANDLE_TIMEOUT_SECONDS,
+        sleep_fn=partial(stop_aware_sleep, stop_requested=stop_requested),
+        stop_check=partial(raise_if_stop_requested, stop_requested),
+    )
+
+
+def _backend_stop_requested(stop_file: Path, signal_stop: ProcessSignalStop) -> bool:
+    """Mirror the runner's stop test: a latched signal or the operator stop file."""
+    return signal_stop.requested or stop_file.exists()
 
 
 def _run_locked(
@@ -180,6 +230,7 @@ def _run_locked(
     presence: CredentialPresence,
     poller: ConfiguredMultiAssetIntentPoller,
     lock_path: Path | None = None,
+    signal_stop: ProcessSignalStop | None = None,
 ) -> int:
     transition_path = config.cohort_ledger.parent / "transition_drain.json"
     recovery = _transition_recovery(args, config, transition_path)
@@ -217,7 +268,13 @@ def _run_locked(
         transition_drain,
     )
     runner = _create_runner(
-        config, engines, poller, telemetry, transition_drain, run_id
+        config,
+        engines,
+        poller,
+        telemetry,
+        transition_drain,
+        run_id,
+        signal_stop=signal_stop,
     )
     try:
         return _run_guarded(runner, telemetry, max_polls=args.max_polls)
@@ -244,6 +301,7 @@ def _await_venue(config: MultiAssetLiveConfig) -> None:
             stop_file=config.stop_file,
             marker=config.cohort_ledger.parent / venue_probe.VENUE_WAIT_MARKER,
             sleep_fn=time.sleep,
+            requested_leverage=venue_probe.requested_market_leverage(config),
         )
 
 
@@ -309,10 +367,11 @@ def _create_runner(
     telemetry: MultiAssetCohortTelemetry,
     transition_drain: CohortTransitionDrain,
     run_id: str,
+    signal_stop: ProcessSignalStop | None = None,
 ) -> MultiAssetLiveRunner:
     """Construct the runtime only after every startup boundary has passed."""
     poller.bind_startup_input_observer(telemetry.startup_input_observer())
-    stop = install_process_signal_stop()
+    stop = install_process_signal_stop(signal_stop)
     return MultiAssetLiveRunner(
         symbols=config.symbols,
         engines=engines,
@@ -321,7 +380,12 @@ def _create_runner(
         telemetry=telemetry,
         stop_file=config.stop_file,
         now_fn=lambda: datetime.now(UTC),
-        sleep_fn=time.sleep,
+        # The inter-poll wait re-checks the stop every second: a handled signal
+        # does not end time.sleep early.
+        sleep_fn=partial(
+            stop_aware_sleep,
+            stop_requested=partial(_backend_stop_requested, config.stop_file, stop),
+        ),
         poll_seconds=config.poll_seconds,
         signal_stop_requested=lambda: stop.requested,
         funding_recovery_start_ms=telemetry.funding_recovery_start_ms,
@@ -416,12 +480,14 @@ def _announce_backup(backup: CohortPrestartBackupResult) -> None:
 
 
 def _create_adapters(config: MultiAssetLiveConfig) -> MultiAssetCohortAdapters:
+    requested = venue_probe.requested_market_leverage(config)
     envelopes = tuple(
         AssetExecutionEnvelope(
             asset.symbol,
             asset.max_notional_usd,
             asset.market_slippage_cap_fraction,
             asset.effective_entry_slippage_cap_fraction,
+            requested_leverage=requested[asset.symbol],
         )
         for asset in config.assets
     )

@@ -2,6 +2,7 @@
 
 import json
 from pathlib import Path
+import time
 
 import pytest
 
@@ -10,6 +11,7 @@ import cohort_supervisor_runtime as runtime_module
 import threading
 
 from test_cohort_backend_supervisor import (
+    FAKE_HOST,
     FAST,
     _Recorder,
     _events,
@@ -19,20 +21,48 @@ from test_cohort_backend_supervisor import (
 )
 
 
+def _stop_once_held(tmp_path: Path) -> sup._StopFlag:
+    """Stop a supervisor that stays alive in its start-time hold.
+
+    A held start no longer exits 0 silently, so a replacement supervisor keeps
+    running until it is signalled, as launchd would on bootout or shutdown.
+    """
+    events = tmp_path / "events.jsonl"
+
+    def holding() -> int:
+        return events.read_text().count('"holding"') if events.exists() else 0
+
+    already, stop = holding(), sup._StopFlag()
+
+    def release() -> None:
+        deadline = time.time() + 10.0
+        while time.time() < deadline and holding() <= already:
+            time.sleep(0.01)
+        stop.requested = True
+
+    threading.Thread(target=release, daemon=True).start()
+    return stop
+
+
 def test_new_supervisor_cannot_reset_exhausted_restart_budget(tmp_path: Path) -> None:
     """Simulate launchd replacing a supervisor after its nonzero give-up exit."""
     _code, paths, _ = _run(tmp_path, "exit1")
     before = len([e for e in _events(paths) if e["event"] == "backend_launched"])
-    _run(tmp_path, "exit1")
+    code, _paths_again, recorder = _run(
+        tmp_path, "exit1", stop=_stop_once_held(tmp_path)
+    )
     after = len([e for e in _events(paths) if e["event"] == "backend_launched"])
     assert before == 3
     assert after == before
+    assert code == 0
+    assert recorder.sent[0][0] == "HYPERVECTOR SUPERVISOR HELD AT START"
+    assert recorder.sent[0][1].startswith("restart_budget_exhausted; ")
 
 
 def test_new_supervisor_does_not_rearm_after_clean_exit(tmp_path: Path) -> None:
     """RunAtLoad or an accidental kickstart cannot erase an operator stop."""
     _code, paths, _ = _run(tmp_path, "exit0")
-    _run(tmp_path, "exit0")
+    _run(tmp_path, "exit0", stop=_stop_once_held(tmp_path))
     assert len([e for e in _events(paths) if e["event"] == "backend_launched"]) == 1
 
 
@@ -124,7 +154,7 @@ def test_a_starved_volume_holds_instead_of_launching(
         working_directory=tmp_path,
         stop=stop,
         runtime=sup.SupervisorRuntime(
-            is_backend=lambda _pid: False, deadman=lambda _url: None
+            is_backend=lambda _pid: False, deadman=lambda _url: None, **FAKE_HOST
         ),
     )
     names = [event["event"] for event in _events(paths)]

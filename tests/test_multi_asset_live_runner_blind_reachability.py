@@ -211,7 +211,9 @@ def test_the_live_runner_is_built_with_the_profile_reachability_probe(
     script = _load_module()
     config = script.load_multi_asset_live_config(_V94, mode="observe")
     monkeypatch.setattr(
-        script, "install_process_signal_stop", lambda: SimpleNamespace(requested=False)
+        script,
+        "install_process_signal_stop",
+        lambda *_args: SimpleNamespace(requested=False),
     )
     engines = {symbol: Mock() for symbol in config.symbols}
     runner = script._create_runner(

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import math
+
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -106,8 +108,14 @@ class FakeReader:
             0.0,
         )
 
-    def preflight(self, *, expected_max_leverage: int) -> SolVenuePreflight:
+    def preflight(
+        self,
+        *,
+        expected_max_leverage: int,
+        requested_leverage: int | None = None,
+    ) -> SolVenuePreflight:
         assert expected_max_leverage == self.preflight_value.market.max_leverage
+        self.requested_leverage = requested_leverage
         return self.preflight_value
 
     def book_snapshot(self, *, depth_levels: int) -> SolBookSnapshot:
@@ -321,3 +329,23 @@ def test_naive_observation_time_is_rejected() -> None:
             active_profile_fingerprint="a" * 64,
             observed_at=datetime(2026, 8, 10, 22, 0),
         )
+
+
+def test_preflight_requests_each_asset_leverage_rounded_up() -> None:
+    """The unsigned preflight holds the venue only to the leverage each asset requests."""
+    config = load_multi_asset_live_config(_PROFILE, mode="observe")
+    readers = _readers()
+
+    collect_multi_asset_read_only_preflight(
+        config=config,
+        readers=readers,
+        ledger_expectations=_expectations(),
+        active_profile_id="multi_asset_bidirectional_all_live_canary_v35",
+        active_profile_fingerprint="a" * 64,
+        observed_at=_NOW,
+    )
+
+    assert {
+        asset.symbol: readers[asset.symbol].requested_leverage
+        for asset in config.assets
+    } == {asset.symbol: math.ceil(asset.leverage) for asset in config.assets}

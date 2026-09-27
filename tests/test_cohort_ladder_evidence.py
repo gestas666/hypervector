@@ -107,6 +107,9 @@ def _lifecycle(
     run_id: str = RUN,
     funding: Sequence[tuple[int, float]] = (),
     timer: bool = False,
+    submission_age_ms: int | None = None,
+    sizing: Mapping[str, object] | None = None,
+    stop_raised: bool = False,
 ) -> None:
     sign = 1.0 if side == "long" else -1.0
     stop_oid = entry_oid + 1000
@@ -124,11 +127,24 @@ def _lifecycle(
         },
         run_id=run_id,
     )
+    if sizing is not None:
+        ledger.add("entry_stop_risk_sizing", decision_ms + 5_500, sizing, run_id=run_id)
+    acknowledgement: dict[str, object] = {
+        "operation": "entry",
+        "accepted": True,
+        "oid": entry_oid,
+        "status": "filled",
+    }
+    if submission_age_ms is not None:
+        acknowledgement.update(
+            decision_time_ms=decision_ms,
+            submission_age_ms=submission_age_ms,
+            submission_boundary="sdk_dispatch",
+            submission_limit_ms=30_000,
+            submission_observed_at_ms=decision_ms + submission_age_ms,
+        )
     ledger.add(
-        "order_acknowledgement",
-        decision_ms + 6_000,
-        {"operation": "entry", "accepted": True, "oid": entry_oid, "status": "filled"},
-        run_id=run_id,
+        "order_acknowledgement", decision_ms + 6_000, acknowledgement, run_id=run_id
     )
     ledger.add(
         "order_intent",
@@ -174,6 +190,18 @@ def _lifecycle(
             "funding",
             venue_ms + 1_000,
             {"venue_timestamp_ms": venue_ms, "usdc_delta": delta},
+            run_id=run_id,
+        )
+    if stop_raised:
+        ledger.add(
+            "stop_order",
+            decision_ms + 10_000,
+            {
+                "operation": "protective_stop_raise",
+                "accepted": True,
+                "oid": stop_oid + 1,
+                "status": "resting",
+            },
             run_id=run_id,
         )
     if timer:
@@ -843,3 +871,456 @@ def test_a_verified_flat_close_is_ordered_by_its_flat_time(tmp_path: Path) -> No
     loser = _by_oid(report)[100]
     assert loser["exit_time_utc"] == _iso(T0 + HOUR_MS)
     assert loser["in_market_until_ms"] == T0 + HOUR_MS
+
+
+# ---------------------------------------------------------------- review additions
+
+
+def _routing_actions(
+    cohort: _Ledger,
+    observed_ms: int,
+    *,
+    actions: Sequence[Mapping[str, object]] = (),
+    withheld: Sequence[Mapping[str, object]] = (),
+) -> None:
+    cohort.add(
+        "intent_routing",
+        observed_ms,
+        {"evaluations": [], "actions": list(actions), "withheld": list(withheld)},
+    )
+
+
+def _entry_action(
+    symbol: str, decision_ms: int, age_ms: int, *, strategy: str = DONCHIAN
+) -> dict[str, object]:
+    return {
+        "action": "enter",
+        "strategy_id": strategy,
+        "symbol": symbol,
+        "side": "long",
+        "decision_time_ms": decision_ms,
+        "submission_age_ms": age_ms,
+        "submission_boundary": "sdk_dispatch",
+        "submission_limit_ms": 30_000,
+        "submission_observed_at_ms": decision_ms + age_ms,
+    }
+
+
+def test_entry_headroom_measures_every_routed_entry_and_stale_withhold(
+    tmp_path: Path,
+) -> None:
+    cohort = _Ledger(tmp_path / "decisions.jsonl", PROFILE)
+    later = T0 + HOUR_MS
+    # Three serial entries of one decision, one the next hour, and noise: an exit
+    # action, another route's entry, a duplicate row and a pre-window entry.
+    _routing_actions(
+        cohort,
+        T0 + 29_000,
+        actions=[
+            _entry_action("SOL", T0, 16_000),
+            _entry_action("xyz:SNDK", T0, 23_500),
+            _entry_action("xyz:TSLA", T0, 28_000),
+            {**_entry_action("SOL", T0, 1_000), "action": "close"},
+            _entry_action("BTC", T0, 29_500, strategy="liquidity_sweep_v2"),
+        ],
+    )
+    _routing_actions(cohort, T0 + 30_000, actions=[_entry_action("SOL", T0, 16_000)])
+    _routing_actions(
+        cohort,
+        T0 - 2 * HOUR_MS + 5_000,
+        actions=[_entry_action("SOL", T0 - 7_200_000, 5)],
+    )
+    stale = {
+        **_entry_action("xyz:BRENTOIL", later, 31_000),
+        "reason": "stale_before_submission",
+    }
+    stale.pop("action")
+    observe_only = {
+        **stale,
+        "symbol": "xyz:SPCX",
+        "reason": "provider_symbol_observe_only",
+    }
+    _routing_actions(
+        cohort,
+        later + 32_000,
+        actions=[_entry_action("SOL", later, 9_000)],
+        withheld=[stale, observe_only],
+    )
+    cohort.write()
+    report = _report(tmp_path)
+    headroom = report["entry_deadline_headroom"]
+    assert headroom["entries"] == 4
+    assert headroom["limit_seconds"] == [30.0]
+    ages = headroom["age_seconds"]
+    assert ages["median"] == pytest.approx((16.0 + 23.5) / 2)
+    assert ages["p95"] == pytest.approx(23.5 + 4.5 * (0.95 * 3 - 2))
+    assert ages["max"] == pytest.approx(28.0)
+    assert headroom["minimum_headroom_seconds"] == pytest.approx(2.0)
+    assert headroom["within_warning_of_limit"] == 1
+    assert headroom["over_limit"] == 0
+    ranks = headroom["by_same_decision_rank"]
+    assert ranks["1"] == {
+        "entries": 2,
+        "median_age_seconds": pytest.approx(12.5),
+        "max_age_seconds": pytest.approx(16.0),
+    }
+    assert ranks["3"]["max_age_seconds"] == pytest.approx(28.0)
+    tsla = next(row for row in headroom["entry_rows"] if row["symbol"] == "xyz:TSLA")
+    assert (tsla["same_decision_rank"], tsla["same_decision_entries"]) == (3, 3)
+    assert headroom["stale_before_submission"] == 1
+    assert headroom["stale_entries"][0]["symbol"] == "xyz:BRENTOIL"
+    assert headroom["stale_entries"][0]["age_seconds"] == pytest.approx(31.0)
+    text = ladder.summary_text(report)
+    assert "max 28.0 s vs 30 s limit" in text
+    assert "stale_before_submission: 1" in text
+
+
+def test_ioc_no_fills_count_as_submitted_and_over_limit_entries_are_counted(
+    tmp_path: Path,
+) -> None:
+    cohort = _Ledger(tmp_path / "decisions.jsonl", PROFILE)
+    # A submitted IOC that did not fill is journaled as a withhold with its age.
+    no_fill = {**_entry_action("xyz:SNDK", T0, 26_000), "reason": "entry_ioc_no_fill"}
+    no_fill.pop("action")
+    _routing_actions(
+        cohort,
+        T0 + 32_000,
+        # Synthetic: live withholds a stale entry, but the branch is reported.
+        actions=[_entry_action("SOL", T0, 31_000)],
+        withheld=[no_fill],
+    )
+    cohort.write()
+    report = _report(tmp_path)
+    headroom = report["entry_deadline_headroom"]
+    assert (headroom["entries"], headroom["ioc_no_fill"]) == (2, 1)
+    assert headroom["over_limit"] == 1
+    assert headroom["within_warning_of_limit"] == 2
+    assert headroom["minimum_headroom_seconds"] == pytest.approx(-1.0)
+    rows = {row["symbol"]: row for row in headroom["entry_rows"]}
+    assert rows["xyz:SNDK"]["outcome"] == "ioc_no_fill"
+    assert rows["xyz:SNDK"]["same_decision_rank"] == 1
+    assert (rows["SOL"]["outcome"], rows["SOL"]["same_decision_rank"]) == (
+        "submitted",
+        2,
+    )
+    assert headroom["stale_before_submission"] == 0
+    text = ladder.summary_text(report)
+    assert "2 Donchian entries (1 IOC no-fill)" in text
+    assert "2 within 5 s; 1 over)" in text
+
+
+def test_lifecycle_entry_submission_comes_from_its_acknowledgement(
+    tmp_path: Path,
+) -> None:
+    sol = _Ledger(tmp_path / "sol.jsonl", f"{PROFILE}_sol")
+    for index, age in enumerate((27_700, None)):
+        decision = T0 + index * 3 * HOUR_MS
+        _lifecycle(
+            sol,
+            symbol="SOL",
+            side="long",
+            decision_ms=decision,
+            entry_oid=300 + 10 * index,
+            entry_price=100.0,
+            size=5.0,
+            stop=98.0,
+            exit_oid=305 + 10 * index,
+            exit_ms=decision + HOUR_MS,
+            exit_price=101.0,
+            reason="hourly_price_recipe_exit",
+            submission_age_ms=age,
+        )
+    sol.write()
+    _Ledger(tmp_path / "decisions.jsonl", PROFILE).write()
+    rows = _by_oid(_report(tmp_path))
+    observed = rows[300]["entry_submission"]
+    assert observed["status"] == "observed"
+    assert observed["age_seconds"] == pytest.approx(27.7)
+    assert observed["headroom_seconds"] == pytest.approx(2.3)
+    assert observed["boundary"] == "sdk_dispatch"
+    assert rows[310]["entry_submission"] == {"status": "unavailable"}
+
+
+def _sizing(estimated: float, quantity: float) -> dict[str, object]:
+    return {
+        "estimated_loss_usd": estimated,
+        "quantity": quantity,
+        "effective_maximum_loss_usd": 28.99,
+        "notional_usd": quantity * 100.0,
+    }
+
+
+def test_modeled_and_realized_loss_are_compared_at_the_initial_stop(
+    tmp_path: Path,
+) -> None:
+    sndk = _Ledger(tmp_path / "xyz:sndk.jsonl", f"{PROFILE}_xyz:sndk")
+    # A: a short stopped 50 bps through its 200 bps stop; the model priced 10.5.
+    _lifecycle(
+        sndk,
+        symbol="xyz:SNDK",
+        side="short",
+        decision_ms=T0,
+        entry_oid=11,
+        entry_price=100.0,
+        size=10.0,
+        stop=102.0,
+        exit_oid=12,
+        exit_ms=T0 + HOUR_MS,
+        exit_price=102.5,
+        reason="protective_stop",
+        sizing=_sizing(24.0, 10.5),
+    )
+    # B: a raised stop closes a long in profit; it is not a loss at the model.
+    _lifecycle(
+        sndk,
+        symbol="xyz:SNDK",
+        side="long",
+        decision_ms=T0 + 3 * HOUR_MS,
+        entry_oid=21,
+        entry_price=100.0,
+        size=10.0,
+        stop=99.0,
+        exit_oid=22,
+        exit_ms=T0 + 5 * HOUR_MS,
+        exit_price=100.5,
+        reason="protective_stop",
+        sizing=_sizing(14.0, 10.0),
+        stop_raised=True,
+    )
+    # A sizing row whose entry never acknowledged must not attach to C.
+    sndk.add("entry_stop_risk_sizing", T0 + 7 * HOUR_MS, _sizing(99.0, 1.0))
+    # C: stopped without any sizing row.
+    _lifecycle(
+        sndk,
+        symbol="xyz:SNDK",
+        side="long",
+        decision_ms=T0 + 8 * HOUR_MS,
+        entry_oid=31,
+        entry_price=100.0,
+        size=10.0,
+        stop=99.0,
+        exit_oid=32,
+        exit_ms=T0 + 9 * HOUR_MS,
+        exit_price=99.0,
+        reason="protective_stop",
+    )
+    sndk.write()
+    _Ledger(tmp_path / "decisions.jsonl", PROFILE).write()
+    report = _report(tmp_path)
+    rows = _by_oid(report)
+    model = rows[11]["stop_loss_model"]
+    assert model["modeled_source"] == "entry_stop_risk_sizing"
+    assert model["modeled_loss_at_filled_size_usd"] == pytest.approx(24.0 * 10 / 10.5)
+    assert model["exited_at_initial_stop"] is True
+    assert model["realized_loss_usd"] == pytest.approx(25.2)
+    assert model["realized_to_modeled"] == pytest.approx(25.2 / (24.0 * 10 / 10.5))
+    assert model["realized_to_unslipped"] == pytest.approx(25.2 / 20.0)
+    raised = rows[21]["stop_loss_model"]
+    assert raised["stop_raised"] is True
+    assert raised["exited_at_initial_stop"] is False
+    assert raised["realized_loss_usd"] is None
+    unmodeled = rows[31]["stop_loss_model"]
+    assert unmodeled["modeled_source"] == "missing"
+    assert unmodeled["realized_loss_usd"] == pytest.approx(10.2)
+    assert unmodeled["realized_to_modeled"] is None
+    summary = report["stop_loss_model"]
+    assert summary["with_modeled_loss"] == 2
+    assert summary["stop_exits_at_initial_stop"] == 2
+    assert summary["stop_exits_after_raise"] == 1
+    assert summary["modeled_loss_usd"] == pytest.approx(24.0 * 10 / 10.5)
+    assert summary["realized_loss_usd"] == pytest.approx(25.2 + 10.2)
+    assert summary["realized_to_modeled"]["mean"] == pytest.approx(1.1025)
+    assert "2 close(s) at the initial stop" in ladder.summary_text(report)
+
+
+def test_every_stop_fill_reason_is_compared_and_a_dollar_budget_is_read(
+    tmp_path: Path,
+) -> None:
+    brent = _Ledger(tmp_path / "xyz:brentoil.jsonl", f"{PROFILE}_xyz:brentoil")
+    reasons = (
+        "protective_stop_during_protection",
+        "protective_stop_during_exit",
+        "protective_stop_during_rejected_exit",
+        "replacement_protective_stop_during_exit",
+        "protective_stop_remainder",
+        "protective_stop_future_reason",
+    )
+    for index, reason in enumerate(reasons):
+        decision = T0 + index * 3 * HOUR_MS
+        _lifecycle(
+            brent,
+            symbol="xyz:BRENTOIL",
+            side="long",
+            decision_ms=decision,
+            entry_oid=400 + 10 * index,
+            entry_price=100.0,
+            size=5.0,
+            stop=98.0,
+            exit_oid=405 + 10 * index,
+            exit_ms=decision + HOUR_MS,
+            exit_price=97.9,
+            reason=reason,
+            # A fixed-dollar budget journals no equity-fraction fields.
+            sizing={
+                "estimated_loss_usd": 10.5,
+                "quantity": 5.0,
+                "maximum_loss_usd": 25.0,
+            },
+        )
+    brent.write()
+    _Ledger(tmp_path / "decisions.jsonl", PROFILE).write()
+    report = _report(tmp_path)
+    rows = _by_oid(report)
+    model = rows[400]["stop_loss_model"]
+    assert model["exited_at_initial_stop"] is True
+    assert model["budget_usd"] == pytest.approx(25.0)
+    assert model["realized_loss_usd"] == pytest.approx(10.7)
+    summary = report["stop_loss_model"]
+    assert summary["stop_exits_at_initial_stop"] == 5
+    assert summary["stop_exit_reasons"] == {reason: 1 for reason in reasons[:5]}
+    # A stop-fill reason the tool does not know yet is counted, not dropped.
+    assert summary["unclassified_stop_exit_reasons"] == {
+        "protective_stop_future_reason": 1
+    }
+    assert rows[450]["stop_loss_model"]["exited_at_initial_stop"] is False
+
+
+def test_proposed_step_down_look_is_indeterminate_with_an_unreconciled_close() -> None:
+    # Mean -0.1R: the 50-close look triggers once every close is reconciled.
+    rows = [_trade(-5.0), _trade(3.0)] * 25
+    assert ladder.evaluate_proposed_ladder(rows, [])["step_down"]["triggered"] is True
+    rows[7] = {**rows[7], "status": "closed_size_mismatch"}
+    step = ladder.evaluate_proposed_ladder(rows, [])["step_down"]
+    look = step["looks"][0]
+    assert look["status"] == "indeterminate"
+    assert (look["capped_status"], look["realized_status"]) == (
+        "indeterminate",
+        "indeterminate",
+    )
+    assert (look["capped_t"], look["realized_t"]) == (None, None)
+    assert (step["t_triggered"], step["triggered"]) == (False, False)
+    assert ladder._looks_text(step["looks"]) == (
+        "50: indeterminate, 100: pending, 150: pending"
+    )
+
+
+def test_a_uniformly_winning_block_meets_the_conservative_look() -> None:
+    """Zero spread has no t; a positive mean is t = +inf, as in the power table."""
+    winning = ladder.evaluate_proposed_ladder([_trade(5.0)] * 30, [])["advance"]
+    assert winning["looks"][0]["t_stat"] is None
+    assert winning["looks"][0]["conservative_status"] == "met"
+    assert winning["conservative_status"] == "advance"
+    flat = ladder.evaluate_proposed_ladder([_trade(0.0)] * 30, [])["advance"]
+    assert flat["looks"][0]["conservative_status"] == "not_met"
+
+
+def test_proposed_rule_gates_ex_top_three_in_r_not_dollars() -> None:
+    """Three large-dollar, small-R winners fail the USD gate, not the R gate."""
+    rows = (
+        [_trade(100.0, risk=500.0)] * 3
+        + [_trade(0.3, risk=1.0)] * 10
+        + [_trade(-1.0, risk=10.0)] * 17
+    )
+    current = ladder.evaluate_ladder(rows, [])["advance"]
+    assert current["status"] == "not_met"
+    assert current["ex_top3_net_usd"] == pytest.approx(286.0 - 300.0)
+    proposed = ladder.evaluate_proposed_ladder(rows, [])["advance"]
+    assert proposed["status"] == "advance"
+    assert proposed["advanced_at_closes"] == 30
+    look = proposed["looks"][0]
+    assert look["ex_top3_r"] == pytest.approx(1.9 - 0.9)
+    assert look["ex_top3_net_usd"] == pytest.approx(-14.0)
+    assert [row["status"] for row in proposed["looks"][1:]] == ["pending", "pending"]
+
+
+def test_proposed_rule_retests_at_sixty_and_ninety_closes() -> None:
+    losing, winning = [_trade(-1.0)] * 30, [_trade(3.0)] * 30
+    assert ladder.evaluate_ladder(losing + winning, [])["advance"]["status"] == (
+        "not_met"
+    )
+    proposed = ladder.evaluate_proposed_ladder(losing + winning, [])["advance"]
+    assert [look["status"] for look in proposed["looks"]] == [
+        "not_met",
+        "met",
+        "pending",
+    ]
+    assert (proposed["status"], proposed["advanced_at_closes"]) == ("advance", 60)
+    waiting = ladder.evaluate_proposed_ladder(losing + winning[:15], [])["advance"]
+    assert waiting["status"] == "pending"
+    never = ladder.evaluate_proposed_ladder([_trade(-1.0)] * 95, [])["advance"]
+    assert never["status"] == "not_met"
+    assert never["conservative_status"] == "not_met"
+
+
+def test_conservative_variant_needs_a_t_of_one_point_six() -> None:
+    # Mean +0.1R with a standard deviation of about 0.4R: t is about 1.4 at 30.
+    rows = [_trade(5.0), _trade(-3.0)] * 15
+    proposed = ladder.evaluate_proposed_ladder(rows, [])["advance"]
+    look = proposed["looks"][0]
+    assert look["t_stat"] == pytest.approx(0.1 / (0.4 * (30 / 29) ** 0.5 / 30**0.5))
+    assert proposed["status"] == "advance"
+    assert proposed["conservative_status"] == "pending"
+    assert look["conservative_status"] == "not_met"
+
+
+def test_proposed_advance_is_indeterminate_with_an_unknown_r() -> None:
+    rows = [_trade(4.0)] * 30
+    rows[3] = {**rows[3], "r_multiple": None}
+    proposed = ladder.evaluate_proposed_ladder(rows, [])["advance"]
+    assert proposed["status"] == "indeterminate"
+    assert proposed["looks"][0]["unreconciled"] == 1
+
+
+def test_proposed_step_down_uses_cumulative_t_at_fixed_looks() -> None:
+    # A losing 50-close stretch inside a winning run trips the rule in force only.
+    middle = [_trade(5.0)] * 25 + [_trade(-1.0)] * 50 + [_trade(5.0)] * 25
+    assert ladder.evaluate_ladder(middle, [])["step_down"]["window_triggered"] is True
+    step = ladder.evaluate_proposed_ladder(middle, [])["step_down"]
+    assert step["triggered"] is False
+    assert [look["status"] for look in step["looks"]] == [
+        "not_triggered",
+        "not_triggered",
+        "pending",
+    ]
+    # Mean -0.1R with a 0.4R spread: t is about -1.75 at 50 closes.
+    losing = [_trade(-5.0), _trade(3.0)] * 25
+    step = ladder.evaluate_proposed_ladder(losing, [])["step_down"]
+    assert step["t_triggered"] is True
+    assert step["looks"][0]["capped_t"] == pytest.approx(
+        -0.1 / (0.4 * (50 / 49) ** 0.5 / 50**0.5)
+    )
+    # Zero spread has no t; a uniformly losing block still steps down.
+    flat = ladder.evaluate_proposed_ladder([_trade(-2.0)] * 50, [])["step_down"]
+    assert flat["looks"][0]["capped_t"] is None
+    assert flat["triggered"] is True
+    drawdown = ladder.evaluate_proposed_ladder([], [(1, 5_000.0), (2, 4_400.0)])
+    assert drawdown["step_down"]["drawdown_triggered"] is True
+    assert drawdown["step_down"]["t_triggered"] is False
+    assert drawdown["report_only"] is True
+
+
+def test_review_additions_leave_every_existing_report_key_in_place(
+    ledgers: Path,
+) -> None:
+    report = _report(ledgers)
+    assert {
+        "execution_authority",
+        "selection",
+        "ledger_stats",
+        "summary",
+        "ladder",
+        "equity",
+        "lifecycles",
+        "donchian_entry_extension",
+        "donchian_short_extension",
+        "timer_counterfactual",
+        "timer_exits",
+        "buy_and_hold",
+    } < set(report)
+    assert set(report["ladder"]) == {"advance", "step_down"}
+    assert report["ladder_proposed"]["advance"]["status"] == "pending"
+    assert report["entry_deadline_headroom"]["entries"] == 0
+    json.dumps(report, allow_nan=False)
+    text = ladder.summary_text(report)
+    assert "proposed ladder (report-only): advance pending" in text
+    assert "advance: pending (3/30 closes" in text

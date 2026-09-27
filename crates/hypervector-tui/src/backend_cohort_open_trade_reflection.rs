@@ -19,8 +19,11 @@ pub struct CohortOpenTradeReflection {
     pub strategy_id: String,
     pub side: String,
     pub holding_time_ms: u64,
+    pub entry_size: Option<f64>,
     pub protective_stop_oid: Option<u64>,
     pub protective_stop_price: Option<f64>,
+    /// Set only when the ledger acknowledged a venue raise replacing the checkpoint's stop.
+    pub protective_stop_raise: Option<CohortOpenStopRaise>,
     pub profit_protection: Option<CohortOpenProfitProtection>,
     pub target_order_oid: Option<u64>,
     pub target_order_price: Option<f64>,
@@ -48,4 +51,13 @@ pub struct CohortOpenTradeReflection {
     pub regime_opposition: Option<CohortRegimeOppositionEpisode>,
     pub mark_price: f64,
     pub active_lifecycle_marked_net_pnl_usd: f64,
+}
+
+/// The checkpoint-attributed stop that an acknowledged venue raise replaced.
+#[derive(Debug, Clone, PartialEq)]
+pub struct CohortOpenStopRaise {
+    pub previous_oid: u64,
+    pub previous_trigger_price: f64,
+    /// The backend found its owned stop already resting at the raise target.
+    pub already_at_target: bool,
 }

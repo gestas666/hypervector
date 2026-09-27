@@ -531,6 +531,14 @@ def _row_name(row: Mapping[str, object], key: str) -> str:
 def _validate_config(config: MultiAssetLiveConfig) -> None:
     if config.network != "mainnet" or config.margin_mode != "isolated":
         raise MultiAssetLiveConfigError("cohort requires mainnet isolated margin")
+    # The supervisor and the operator runbook use STOP beside the cohort ledger;
+    # a live backend watching any other path would never see an operator stop.
+    expected_stop_file = config.cohort_ledger.parent / "STOP"
+    if config.mode == "live" and config.stop_file != expected_stop_file:
+        raise MultiAssetLiveConfigError(
+            f"live stop_file must be {expected_stop_file}, beside cohort_ledger "
+            f"where the supervisor watches for STOP; observed {config.stop_file}"
+        )
     if not 0.0 < config.poll_seconds <= 60.0 or config.lookback_days < 3:
         raise MultiAssetLiveConfigError("invalid cohort polling or lookback settings")
     if not config.assets or len(set(config.symbols)) != len(config.symbols):

@@ -106,6 +106,16 @@ def _write_healthy_files(paths: sup.SupervisorPaths, *, fee_bps: float = 0.864) 
     )
 
 
+# Supervision reads the boot identity once at start. No test runs sysctl or
+# reads the host's shutdown history.
+FAKE_HOST: dict[str, object] = {
+    "boot_identity": lambda: sup.BootIdentity(
+        "00000000-0000-4000-8000-000000000001", 1_000.0
+    ),
+    "previous_shutdown": lambda _boot_time: None,
+}
+
+
 class _Recorder:
     def __init__(self) -> None:
         self.sent: list[tuple[str, str]] = []
@@ -383,7 +393,7 @@ def _run(
         interval=0.02,
         working_directory=tmp_path,
         runtime=sup.SupervisorRuntime(
-            is_backend=lambda _pid: False, deadman=lambda _url: None
+            is_backend=lambda _pid: False, deadman=lambda _url: None, **FAKE_HOST
         ),
         **kwargs,
     )
@@ -498,7 +508,7 @@ def test_a_second_backend_is_refused_and_then_monitored(tmp_path: Path) -> None:
         working_directory=tmp_path,
         stop=stop,
         runtime=sup.SupervisorRuntime(
-            is_backend=lambda _pid: True, deadman=lambda _url: None
+            is_backend=lambda _pid: True, deadman=lambda _url: None, **FAKE_HOST
         ),
     )
     names = [event["event"] for event in _events(paths)]
@@ -538,7 +548,10 @@ def test_mid_session_fault_holds_instead_of_reporting_a_start_refusal(
         working_directory=tmp_path,
         stop=stop,
         runtime=sup.SupervisorRuntime(
-            sleep=sleep, is_backend=lambda _pid: False, deadman=lambda _url: None
+            sleep=sleep,
+            is_backend=lambda _pid: False,
+            deadman=lambda _url: None,
+            **FAKE_HOST,
         ),
     )
     names = [event["event"] for event in _events(paths)]
@@ -571,7 +584,9 @@ def test_adopted_backend_exit_follows_the_explicit_policy(
         adopted_exit_policy=policy,
         stop=stop,
         runtime=sup.SupervisorRuntime(
-            is_backend=lambda _pid: next(alive, False), deadman=lambda _url: None
+            is_backend=lambda _pid: next(alive, False),
+            deadman=lambda _url: None,
+            **FAKE_HOST,
         ),
     )
     names = [event["event"] for event in _events(paths)]

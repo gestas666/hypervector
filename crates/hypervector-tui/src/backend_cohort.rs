@@ -22,6 +22,7 @@ pub use crate::backend_cohort_operator::{CohortOperatorEvent, CohortTransitionDr
 pub use crate::backend_cohort_readiness::{
     CohortProviderEvaluation, CohortSetupCoverage, CohortSignalReadiness,
 };
+pub use crate::backend_cohort_stop_raise::CohortVenueStopRaise;
 pub use crate::backend_cohort_strategy_evidence::CohortStrategyEvidence;
 use crate::backend_telemetry::LedgerRow;
 pub use routing::{CohortRoutingAction, CohortWithheldIntent};
@@ -325,6 +326,7 @@ pub struct BackendCohortTelemetry {
     pub candle_history: BTreeMap<String, Vec<CohortCandle>>,
     pub books: BTreeMap<String, CohortBookSnapshot>,
     pub operator_events: Vec<CohortOperatorEvent>,
+    pub venue_stop_raises: Vec<CohortVenueStopRaise>,
     pub transition_drain: Option<CohortTransitionDrainTelemetry>,
     pub last_observed_at: Option<String>,
     pub heartbeat: Option<CohortHeartbeat>,
@@ -363,6 +365,8 @@ pub(crate) fn project_cohort(rows: &[&LedgerRow]) -> Result<BackendCohortTelemet
         ..BackendCohortTelemetry::default()
     };
     apply_latest_snapshot(rows, &mut cohort)?;
+    cohort.venue_stop_raises =
+        crate::backend_cohort_stop_raise::project_stop_raises(rows, &cohort.enabled_symbols);
     routing::apply_routing_history(rows, &mut cohort)?;
     cohort.last_observed_at = rows.last().map(|row| row.feed_ts.clone());
     cohort.heartbeat = crate::backend_cohort_health::project_heartbeat(rows);

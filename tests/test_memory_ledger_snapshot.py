@@ -340,3 +340,45 @@ def test_empty_stable_prefix_retains_exact_empty_hash(
         assert evidence["bytes"] == 0
         assert evidence["sha256"] == hashlib.sha256(b"").hexdigest()
         assert evidence["dropped_tail_bytes"] == len(partial)
+
+
+def test_current_run_snapshot_uses_multi_day_memory_budget(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A long run's share stays in anonymous pages instead of a 30 s disk copy."""
+    storage = importlib.import_module("hypervector.research.ledger_snapshot_io")
+    assert 1024**3 <= storage.SNAPSHOT_MEMORY_BYTES <= 2 * 1024**3
+    capacities: list[int] = []
+    original = storage.MappedSnapshotFile
+
+    def recording(capacity: int) -> BinaryIO:
+        capacities.append(capacity)
+        return original(capacity)
+
+    monkeypatch.setattr(storage, "MappedSnapshotFile", recording)
+    path = tmp_path / "ledger.jsonl"
+    path.write_bytes(b"".join(_compatible_history()))
+    with (
+        no_disk_snapshots(),
+        snapshots.snapshot_current_run_ledger(path, run_id="run-current") as (rows, _),
+    ):
+        assert [row["sequence"] for row in rows] == [1, 2]
+    assert capacities == [storage.SNAPSHOT_MEMORY_BYTES]
+
+
+def test_default_budget_holds_more_than_former_budget_without_scratch() -> None:
+    """Bytes past the former 128 MiB spill point must not reach scratch disk."""
+    storage = importlib.import_module("hypervector.research.ledger_snapshot_io")
+    former_budget = 128 * 1024 * 1024
+    chunk = bytes(range(256)) * 4096
+    digest = hashlib.sha256()
+    with (
+        no_disk_snapshots(),
+        storage.MappedSnapshotFile(storage.SNAPSHOT_MEMORY_BYTES) as stream,
+    ):
+        for _ in range(former_budget // len(chunk) + 1):
+            assert stream.write(chunk) == len(chunk)
+            digest.update(chunk)
+        assert stream.tell() > former_budget
+        stream.seek(0)
+        assert hashlib.file_digest(stream, "sha256").hexdigest() == digest.hexdigest()

@@ -14,7 +14,7 @@ import threading
 import time
 
 import cohort_backend_supervisor as sup
-from test_cohort_backend_supervisor import FAST, _events, _paths, _Recorder
+from test_cohort_backend_supervisor import FAKE_HOST, FAST, _events, _paths, _Recorder
 
 REFUSING = textwrap.dedent(
     """
@@ -55,7 +55,7 @@ def _supervise_one_refusal(tmp_path: Path, message: str) -> list[dict[str, objec
         interval=0.02,
         working_directory=tmp_path,
         runtime=sup.SupervisorRuntime(
-            is_backend=lambda _pid: False, deadman=lambda _url: None
+            is_backend=lambda _pid: False, deadman=lambda _url: None, **FAKE_HOST
         ),
         stop=stop,
     )

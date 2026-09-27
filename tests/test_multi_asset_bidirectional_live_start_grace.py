@@ -148,7 +148,7 @@ def test_run_live_hands_the_lock_it_holds_to_the_locked_start(
     def lock(_ledger: Path) -> Iterator[Path]:
         yield held
 
-    def locked(*_args: object, lock_path: Path | None = None) -> int:
+    def locked(*_args: object, lock_path: Path | None = None, **_kwargs: object) -> int:
         received["lock_path"] = lock_path
         return 0
 

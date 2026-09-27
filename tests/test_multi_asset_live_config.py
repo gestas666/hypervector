@@ -528,3 +528,47 @@ def test_profile_fingerprint_is_independent_of_runtime_authority() -> None:
 
     assert observe.profile_fingerprint == live.profile_fingerprint
     assert observe.run_fingerprint != live.run_fingerprint
+
+
+@pytest.mark.parametrize(
+    "stop_file",
+    [
+        "data/live/bidirectional_cohort/SOTP",
+        "/tmp/STOP",
+        "data/live/bidirectional_cohrot/STOP",
+    ],
+)
+def test_live_stop_file_must_be_stop_beside_the_cohort_ledger(
+    tmp_path: Path, stop_file: str
+) -> None:
+    """A live backend watching another path would never see the operator's STOP."""
+    text = _PROFILE.read_text(encoding="utf-8")
+    marker = 'stop_file = "data/live/bidirectional_cohort/STOP"'
+    assert text.count(marker) == 1
+    profile = tmp_path / "stop_typo.toml"
+    profile.write_text(text.replace(marker, f'stop_file = "{stop_file}"'))
+
+    with pytest.raises(MultiAssetLiveConfigError) as raised:
+        load_multi_asset_live_config(profile, mode="live")
+
+    assert str(raised.value) == (
+        "live stop_file must be data/live/bidirectional_cohort/STOP, beside "
+        "cohort_ledger where the supervisor watches for STOP; observed "
+        f"{Path(stop_file)}"
+    )
+    observed = load_multi_asset_live_config(profile, mode="observe")
+    assert observed.stop_file == Path(stop_file)
+
+
+def test_live_stop_file_follows_a_moved_cohort_ledger(tmp_path: Path) -> None:
+    """The rule binds the two runtime paths together, not to one fixed directory."""
+    text = _PROFILE.read_text(encoding="utf-8").replace(
+        "data/live/bidirectional_cohort/", f"{tmp_path}/cohort/"
+    )
+    profile = tmp_path / "moved.toml"
+    profile.write_text(text)
+
+    config = load_multi_asset_live_config(profile, mode="live")
+
+    assert config.stop_file == tmp_path / "cohort" / "STOP"
+    assert config.cohort_ledger == tmp_path / "cohort" / "decisions.jsonl"

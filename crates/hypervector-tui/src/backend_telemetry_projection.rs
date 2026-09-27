@@ -216,7 +216,21 @@ fn live_protection(rows: &[&LedgerRow]) -> LiveProtection {
 }
 
 fn stop_order(rows: &[&LedgerRow], oid: u64) -> (Option<String>, Option<f64>) {
-    resting_order(rows, oid, "trigger_price", "stop_order")
+    let (status, price) = resting_order(rows, oid, "trigger_price", "stop_order");
+    (status, price.or_else(|| raised_stop_trigger(rows, oid)))
+}
+
+/// Trigger of an acknowledged raise to `oid` before any venue snapshot lists that order.
+fn raised_stop_trigger(rows: &[&LedgerRow], oid: u64) -> Option<f64> {
+    rows.iter()
+        .rev()
+        .find(|row| {
+            row.action == "protective_stop_raised"
+                && row.extra.get("stop_oid").and_then(Value::as_u64) == Some(oid)
+        })
+        .and_then(|row| row.extra.get("trigger_price"))
+        .and_then(Value::as_f64)
+        .filter(|price| price.is_finite() && *price > 0.0)
 }
 
 fn resting_order(

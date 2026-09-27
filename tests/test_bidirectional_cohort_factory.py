@@ -191,3 +191,30 @@ def test_multi_asset_factory_refuses_before_sdk_build(
         )
 
     assert builder.calls == []
+
+
+@pytest.mark.parametrize("requested", [0, -1, 2.5, True])
+def test_envelope_refuses_malformed_requested_leverage(requested: object) -> None:
+    """A malformed requested leverage fails before any SDK construction."""
+    with pytest.raises(ValueError, match="requested leverage must be a positive"):
+        AssetExecutionEnvelope("SOL", 25.0, 0.01, requested_leverage=requested)
+
+
+def test_armed_adapters_carry_each_market_requested_leverage() -> None:
+    """The live factory forwards each market's requested leverage to preflight."""
+    builder = _Builder()
+    assets = (
+        AssetExecutionEnvelope("BTC", 25.0, 0.01, requested_leverage=10),
+        AssetExecutionEnvelope("SOL", 25.0, 0.01),
+    )
+
+    adapters = create_armed_multi_asset_adapters(
+        assets,
+        enabled=True,
+        accepts_live_risk=True,
+        environ={SECRET_ENV_WALLET: _ADDRESS, SECRET_ENV_API_KEY: "private"},
+        builder=builder,
+    )
+
+    assert adapters.by_symbol["BTC"]._requested_leverage == 10
+    assert adapters.by_symbol["SOL"]._requested_leverage is None
