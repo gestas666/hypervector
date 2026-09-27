@@ -43,8 +43,16 @@ class AssetLedgerExpectation:
 class MultiAssetReadOnlyReaderProtocol(Protocol):
     """Public-data surface required for one asset preflight."""
 
-    def preflight(self, *, expected_max_leverage: int) -> SolVenuePreflight:
-        """Return current metadata, account, fee, mark, and position facts."""
+    def preflight(
+        self,
+        *,
+        expected_max_leverage: int,
+        requested_leverage: int | None = None,
+    ) -> SolVenuePreflight:
+        """Return current metadata, account, fee, mark, and position facts.
+
+        With ``requested_leverage`` only a venue maximum below it refuses.
+        """
         ...
 
     def book_snapshot(self, *, depth_levels: int) -> SolBookSnapshot:
@@ -106,7 +114,10 @@ def _asset_report(
     sizing_reference_equity_usd: float | None,
 ) -> dict[str, object]:
     maximum_leverage = _integer_leverage(asset.venue_max_leverage)
-    preflight = reader.preflight(expected_max_leverage=maximum_leverage)
+    preflight = reader.preflight(
+        expected_max_leverage=maximum_leverage,
+        requested_leverage=requested_market_leverage(asset),
+    )
     if preflight.market.symbol != asset.symbol:
         raise ValueError(f"{asset.symbol} venue reader returned another symbol")
     book = reader.book_snapshot(depth_levels=_BOOK_DEPTH_LEVELS)
@@ -476,6 +487,11 @@ def _validate_identity(profile_id: str, fingerprint: str) -> None:
         character not in "0123456789abcdef" for character in fingerprint
     ):
         raise ValueError("active profile fingerprint must be lowercase sha256")
+
+
+def requested_market_leverage(asset: AssetLiveConfig) -> int:
+    """Return the leverage an asset requests, rounded up to the venue's integer grid."""
+    return math.ceil(asset.leverage)
 
 
 def _integer_leverage(value: float) -> int:

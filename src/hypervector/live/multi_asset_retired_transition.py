@@ -9,6 +9,7 @@ from hypervector.live.multi_asset_live_config import AssetLiveConfig
 from hypervector.live.multi_asset_read_only_preflight import (
     AssetLedgerExpectation,
     MultiAssetReadOnlyReaderProtocol,
+    requested_market_leverage,
 )
 
 
@@ -19,7 +20,10 @@ def collect_retired_asset_report(
 ) -> dict[str, object]:
     """Read current venue state for one asset absent from the candidate roster."""
     maximum_leverage = _integer_leverage(asset.venue_max_leverage)
-    preflight = reader.preflight(expected_max_leverage=maximum_leverage)
+    preflight = reader.preflight(
+        expected_max_leverage=maximum_leverage,
+        requested_leverage=requested_market_leverage(asset),
+    )
     if preflight.market.symbol != asset.symbol:
         raise ValueError(f"{asset.symbol} retired reader returned another symbol")
     orders = reader.open_orders()
