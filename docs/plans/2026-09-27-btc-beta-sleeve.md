@@ -1,5 +1,10 @@
 # BTC beta sleeve (50% of book): rule and execution (2026-09-27)
 
+> **WITHDRAWN 2026-09-27 before any action.** The operator said: "forget about the btc spot,
+> replace with other hi gain per strategy trades". No sub-account was created, no funds
+> moved, and no order was placed. The master holds the full book (about $4,808 USDC), so V95
+> sizes from full equity. The rest of this file is kept for the record only.
+
 **Operator approval (2026-09-27, in conversation):** "approved - opt in to auto-resume
 after a host restart. The transition needs a drain, 50%,  install the daily-breakout
 shadow runner". "50%" selects option 4 of docs/reviews/2026-09-27-v94-review-and-swing-research.md
