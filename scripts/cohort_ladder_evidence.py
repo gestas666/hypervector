@@ -20,7 +20,14 @@ For one profile id and/or explicit run ids, since a start time, it reports:
   from the journaled ``intent_routing`` readiness metrics;
 - the floor-armed 24h-timer counterfactual along the observed book path;
 - post-exit marks at 240 and 1,440 minutes;
-- time-in-market-scaled buy-and-hold from observed marks.
+- time-in-market-scaled buy-and-hold from observed marks;
+- entry-deadline headroom: each submitted Donchian entry's journaled submission
+  age (IOC no-fills included) against its 30 s ``maximum_entry_delay``, and the
+  ``stale_before_submission`` withholds (review SIG-1);
+- modeled loss at the stop (``entry_stop_risk_sizing``) against the realized
+  loss of every lifecycle that exited at its initial stop;
+- a report-only evaluation of the proposed re-registered ladder rule (review
+  AGG-1) beside the rule in force. It changes no verdict.
 
 The ledgers are multi-GB. The reader bisects each append-only file to the start
 time, filters raw bytes by event type and by run or profile substring before any
@@ -40,6 +47,7 @@ import json
 import math
 from pathlib import Path
 import re
+import statistics
 import sys
 from typing import BinaryIO
 
@@ -61,6 +69,31 @@ POST_EXIT_MINUTES = (240, 1_440)
 # v2 floor in units of the lifecycle's own R, used only when the journaled
 # adaptive state lacks an explicit floor (cohort_adaptive_exit_policy.FLOOR_R).
 FLOOR_R = 0.5
+# Proposed re-registration (review AGG-1), reported beside the rule in force and
+# never used for the verdict: advance looks on cumulative mean R > 0 and ex-top-3
+# in R units; step-down on cumulative t <= -1 at fixed looks, or the -12% rule.
+PROPOSED_ADVANCE_LOOKS = (30, 60, 90)
+PROPOSED_STEP_DOWN_LOOKS = (50, 100, 150)
+PROPOSED_STEP_DOWN_T = -1.0
+CONSERVATIVE_ADVANCE_T = 1.6
+# Every verified-flat close the engine journals for a fill of the lifecycle's own
+# stop (sol_range_onset_engine_events, _cancel, _stop_close, partial recovery).
+STOP_EXIT_REASONS = frozenset(
+    {
+        "protective_stop",
+        "protective_stop_restart_recovery",
+        "protective_stop_during_protection",
+        "protective_stop_during_exit",
+        "protective_stop_during_rejected_exit",
+        "replacement_protective_stop_during_exit",
+        "protective_stop_remainder",
+    }
+)
+STALE_BEFORE_SUBMISSION = "stale_before_submission"
+# A submitted IOC entry that did not fill is journaled as a withhold, with the
+# same submission age as a filled one (cohort_entry_submission._ioc_no_fill).
+ENTRY_IOC_NO_FILL = "entry_ioc_no_fill"
+HEADROOM_WARNING_SECONDS = 5.0
 
 DEFAULT_MAXIMUM_HOLD_SECONDS = 86_400
 DEFAULT_HOLD_GRACE_SECONDS = 900.0
@@ -91,6 +124,7 @@ _LIFECYCLE_EVENTS = frozenset(
         "state_transition",
         "close",
         "entry_not_filled",
+        "entry_stop_risk_sizing",
     }
 )
 
@@ -401,6 +435,9 @@ class Lifecycle:
     flat_observed_ms: int | None = None
     entry_acknowledged: bool = False
     run_ids: set[str] = field(default_factory=set)
+    sizing: Mapping[str, object] | None = None
+    submission: Mapping[str, object] | None = None
+    stop_raised: bool = False
 
 
 @dataclass
@@ -469,6 +506,7 @@ class _AssetState:
     def __init__(self, evidence: AssetEvidence) -> None:
         self._evidence = evidence
         self._pending: Mapping[str, object] | None = None
+        self._sizing: Mapping[str, object] | None = None
         self._current: Lifecycle | None = None
 
     def cash(self, event: str, payload: Mapping[str, object]) -> None:
@@ -511,9 +549,16 @@ class _AssetState:
         if event == "regime_decision":
             if payload.get("routing_action") == "enter":
                 self._pending = payload
+                self._sizing = None
+            return
+        if event == "entry_stop_risk_sizing":
+            # Journaled between the entry decision and its order; it belongs to
+            # the next acknowledged entry only.
+            self._sizing = payload
             return
         if event == "entry_not_filled":
             self._pending = None
+            self._sizing = None
             return
         if event == "order_acknowledgement":
             self._entry_ack(payload, run_id)
@@ -538,6 +583,13 @@ class _AssetState:
         elif event == "stop_order":
             if oid is not None and payload.get("accepted") is not False:
                 current.exit_oids.add(oid)
+            operation = payload.get("operation")
+            if (
+                isinstance(operation, str)
+                and operation.startswith("protective_stop_raise")
+                and payload.get("accepted") is True
+            ):
+                current.stop_raised = True
         elif event == "close":
             if oid is not None:
                 current.exit_oids.add(oid)
@@ -565,6 +617,16 @@ class _AssetState:
         lifecycle = self._lifecycle(oid)
         lifecycle.entry_acknowledged = True
         lifecycle.run_ids.add(run_id)
+        age = _int(payload.get("submission_age_ms"))
+        if lifecycle.submission is None and age is not None:
+            lifecycle.submission = {
+                "age_ms": age,
+                "limit_ms": _int(payload.get("submission_limit_ms")),
+                "boundary": payload.get("submission_boundary"),
+            }
+        if lifecycle.sizing is None:
+            lifecycle.sizing = self._sizing
+        self._sizing = None
         pending = self._pending
         decided = _int(payload.get("decision_time_ms"))
         if pending is not None and (
@@ -626,6 +688,12 @@ class CohortEvidence:
     adaptive: dict[tuple[str, int], Record] = field(default_factory=dict)
     equity: list[tuple[int, float]] = field(default_factory=list)
     stats: Counter[str] = field(default_factory=Counter)
+    submissions: dict[tuple[str, str, int], Mapping[str, object]] = field(
+        default_factory=dict
+    )
+    stale: dict[tuple[str, str, int], Mapping[str, object]] = field(
+        default_factory=dict
+    )
 
 
 def scan_cohort_ledger(
@@ -669,6 +737,7 @@ def scan_cohort_ledger(
             continue
         if event == "intent_routing":
             _routing_row(evidence, _payload(row), strategy_prefix)
+            _submission_rows(evidence, _payload(row), strategy_prefix)
         else:
             _adaptive_row(evidence, _payload(row), strategy_prefix)
     evidence.equity.sort()
@@ -702,6 +771,41 @@ def _routing_row(
             for side in exit_sides:
                 if side in ("long", "short"):
                     evidence.recipe_exits.setdefault((symbol, side), []).append(decided)
+
+
+def _submission_rows(
+    evidence: CohortEvidence, payload: Mapping[str, object], prefix: str
+) -> None:
+    """Keep submitted Donchian entries and stale withholds, once per decision.
+
+    An IOC no-fill reached submission, so it is kept with the submitted entries.
+    """
+    for key in ("actions", "withheld"):
+        items = payload.get(key)
+        if not isinstance(items, list):
+            continue
+        for item in items:
+            if not isinstance(item, Mapping):
+                continue
+            strategy, symbol = item.get("strategy_id"), item.get("symbol")
+            decided = _int(item.get("decision_time_ms"))
+            if (
+                not isinstance(strategy, str)
+                or not strategy.startswith(prefix)
+                or not isinstance(symbol, str)
+                or decided is None
+            ):
+                continue
+            reason = item.get("reason")
+            if key == "actions" and item.get("action") == "enter":
+                target = evidence.submissions
+            elif key == "withheld" and reason == ENTRY_IOC_NO_FILL:
+                target = evidence.submissions
+            elif key == "withheld" and reason == STALE_BEFORE_SUBMISSION:
+                target = evidence.stale
+            else:
+                continue
+            target.setdefault((strategy, symbol, decided), item)
 
 
 def _adaptive_row(
@@ -846,6 +950,7 @@ def _lifecycle_row(
         "run_ids": sorted(run for run in lifecycle.run_ids if run),
     }
     row["exit_attribution"] = attribution
+    row["entry_submission"] = _entry_submission(lifecycle.submission)
     exit_size = sum(fill.size for fill in exits)
     if not lifecycle.verified_flat or not exits:
         flat = lifecycle.flat_observed_ms if lifecycle.verified_flat else None
@@ -861,6 +966,7 @@ def _lifecycle_row(
             # opening when none was journaled, so it cannot slide out of a window.
             closed_ms = opened if flat is None else flat
             row.update(exit_ms=closed_ms, exit_time_utc=_utc(closed_ms))
+        row["stop_loss_model"] = _stop_loss_model(lifecycle, row)
         return row
     _, exit_notional, exit_fee, pnl, _, exit_ms = _aggregate(exits)
     exit_price = exit_notional / exit_size
@@ -895,7 +1001,82 @@ def _lifecycle_row(
         for minutes in POST_EXIT_MINUTES
     }
     row["exit_fee_rate"] = exit_fee_rate
+    row["stop_loss_model"] = _stop_loss_model(lifecycle, row)
     return row
+
+
+def _seconds(milliseconds: int | None) -> float | None:
+    return milliseconds / 1000 if milliseconds is not None else None
+
+
+def _deadline(age_ms: int | None, limit_ms: int | None) -> Record:
+    """Submission age, limit and headroom in seconds; unknown stays None."""
+    return {
+        "age_seconds": _seconds(age_ms),
+        "limit_seconds": _seconds(limit_ms),
+        "headroom_seconds": _seconds(limit_ms - age_ms)
+        if age_ms is not None and limit_ms is not None
+        else None,
+    }
+
+
+def _entry_submission(submission: Mapping[str, object] | None) -> Record:
+    """Submission age from the entry acknowledgement against its entry deadline."""
+    if submission is None:
+        return {"status": "unavailable"}
+    return {
+        "status": "observed",
+        **_deadline(_int(submission.get("age_ms")), _int(submission.get("limit_ms"))),
+        "boundary": submission.get("boundary"),
+    }
+
+
+def _stop_loss_model(lifecycle: Lifecycle, row: Mapping[str, object]) -> Record:
+    """Modeled loss at the stop from entry sizing beside the realized stop loss.
+
+    The sizing row models the requested quantity; it is scaled to the filled size.
+    Only a close at the initial stop is compared: a raised stop no longer sits
+    where the model priced it.
+    """
+    sizing = lifecycle.sizing or {}
+    modeled = _num(sizing.get("estimated_loss_usd"))
+    quantity = _num(sizing.get("quantity"))
+    size = _num(row.get("size"))
+    scaled = (
+        modeled * size / quantity
+        if modeled is not None and quantity and size is not None
+        else None
+    )
+    at_stop = (
+        row.get("status") == "closed"
+        and row.get("exit_reason") in STOP_EXIT_REASONS
+        and not lifecycle.stop_raised
+    )
+    net = _num(row.get("net_usd"))
+    realized = -net if at_stop and net is not None else None
+    risk = _num(row.get("risk_usd"))
+    # The effective cap is journaled only for equity-fraction budgets; a fixed
+    # dollar budget carries its cap as maximum_loss_usd (StopRiskSizing.as_payload).
+    budget = _num(sizing.get("effective_maximum_loss_usd"))
+    if budget is None:
+        budget = _num(sizing.get("maximum_loss_usd"))
+    return {
+        "modeled_source": "entry_stop_risk_sizing" if sizing else "missing",
+        "modeled_loss_usd": modeled,
+        "modeled_quantity": quantity,
+        "modeled_loss_at_filled_size_usd": scaled,
+        "budget_usd": budget,
+        "unslipped_risk_usd": risk,
+        "stop_raised": lifecycle.stop_raised,
+        "exited_at_initial_stop": at_stop,
+        "realized_loss_usd": realized,
+        "realized_to_modeled": realized / scaled
+        if realized is not None and scaled
+        else None,
+        "realized_to_unslipped": realized / risk
+        if realized is not None and risk
+        else None,
+    }
 
 
 def _exit_fills(
@@ -1340,6 +1521,358 @@ def evaluate_ladder(
     return {"advance": advance, "step_down": step_down}
 
 
+def _t_stat(values: Sequence[float]) -> float | None:
+    """One-sample t of the mean; None below two values or with zero spread."""
+    if len(values) < 2:
+        return None
+    spread = statistics.stdev(values)
+    if spread == 0:
+        return None
+    return statistics.fmean(values) / (spread / math.sqrt(len(values)))
+
+
+def _sequential(statuses: Sequence[str]) -> str:
+    """The first look that is met advances; an unresolved look stops the scan."""
+    for status in statuses:
+        if status == "met":
+            return "advance"
+        if status in ("indeterminate", "pending"):
+            return status
+    return "not_met"
+
+
+def _advance_look(
+    window: Sequence[Mapping[str, object]], closes: int
+) -> tuple[Record, str, str]:
+    capped_r, capped_net = _ladder_basis(window, True)
+    unreconciled = sum(not _reconciled(row) for row in window)
+    missing = sum(
+        _reconciled(row) and (r is None or net is None)
+        for row, r, net in zip(window, capped_r, capped_net, strict=True)
+    )
+    known_r = [value for value in capped_r if value is not None]
+    known_net = [value for value in capped_net if value is not None]
+    mean_r, ex_top_r, t_value = _mean(known_r), _ex_top(known_r), _t_stat(known_r)
+    if missing or unreconciled:
+        status = conservative = "indeterminate"
+    else:
+        met = mean_r is not None and mean_r > 0 and ex_top_r >= 0
+        status = "met" if met else "not_met"
+        # Zero spread has no t; a uniformly winning block has t = +inf and meets
+        # it, as in the power table (ladder_power_table._t_stat).
+        strict = (
+            t_value >= CONSERVATIVE_ADVANCE_T
+            if t_value is not None
+            else mean_r is not None and mean_r > 0
+        )
+        conservative = "met" if strict else "not_met"
+    look: Record = {
+        "closes": closes,
+        "status": status,
+        "mean_r": mean_r,
+        "ex_top3_r": ex_top_r,
+        "t_stat": t_value,
+        "net_usd": sum(known_net),
+        "ex_top3_net_usd": _ex_top(known_net),
+        "conservative_status": conservative,
+        "unreconciled": unreconciled,
+        "capped_mark_unavailable": missing,
+    }
+    return look, status, conservative
+
+
+def evaluate_proposed_ladder(
+    closed: Sequence[Mapping[str, object]],
+    equity: Sequence[tuple[int, float]],
+) -> Record:
+    """Report-only: the proposed re-registered ladder beside the rule in force.
+
+    Advance at looks 30/60/90 on cumulative mean R > 0 and ex-top-3 R >= 0 (the
+    USD ex-top-3 is reported, never gated); the conservative variant needs a
+    cumulative t >= 1.6 at a look. Step down when the cumulative t <= -1 at 50,
+    100 or 150 closes since the rung start (capped or realized basis), or at
+    -12% from the rung high. Unknown values leave a look indeterminate, as in
+    ``evaluate_ladder``.
+    """
+    looks: list[Record] = []
+    statuses: list[str] = []
+    conservative: list[str] = []
+    for closes in PROPOSED_ADVANCE_LOOKS:
+        if len(closed) < closes:
+            looks.append({"closes": closes, "status": "pending"})
+            statuses.append("pending")
+            conservative.append("pending")
+            continue
+        look, status, strict = _advance_look(closed[:closes], closes)
+        looks.append(look)
+        statuses.append(status)
+        conservative.append(strict)
+    status = _sequential(statuses)
+    advance: Record = {
+        "status": status,
+        "advanced_at_closes": PROPOSED_ADVANCE_LOOKS[statuses.index("met")]
+        if status == "advance"
+        else None,
+        "conservative_status": _sequential(conservative),
+        "closed": len(closed),
+        "looks": looks,
+        "basis": "capped (holds beyond the configured maximum hold capped)",
+        "rule": "at 30, 60 and 90 Donchian closes since rung start: cumulative "
+        "mean R > 0 and ex-top-3 R >= 0 (ex-top-3 USD reported, not gated)",
+        "conservative_rule": "at 30, 60 and 90 closes: cumulative t >= 1.6",
+    }
+    realized = _ladder_basis(closed, False)[0]
+    capped_all = [
+        value if value is not None else actual
+        for value, actual in zip(_ladder_basis(closed, True)[0], realized, strict=True)
+    ]
+    step_looks: list[Record] = []
+    t_triggered = False
+    for closes in PROPOSED_STEP_DOWN_LOOKS:
+        if len(closed) < closes:
+            step_looks.append({"closes": closes, "status": "pending"})
+            continue
+        look: Record = {"closes": closes}
+        fired: list[bool] = []
+        for name, values in (("capped", capped_all), ("realized", realized)):
+            block = values[:closes]
+            if any(value is None for value in block):
+                look[f"{name}_t"] = None
+                look[f"{name}_status"] = "indeterminate"
+                continue
+            known = [value for value in block if value is not None]
+            t_value = _t_stat(known)
+            # Zero spread has no t; a uniformly losing block still steps down.
+            triggered = (
+                t_value <= PROPOSED_STEP_DOWN_T
+                if t_value is not None
+                else statistics.fmean(known) < 0
+            )
+            look[f"{name}_t"] = t_value
+            look[f"{name}_status"] = "triggered" if triggered else "not_triggered"
+            fired.append(triggered)
+        look["status"] = (
+            "triggered" if any(fired) else "not_triggered" if fired else "indeterminate"
+        )
+        t_triggered = t_triggered or any(fired)
+        step_looks.append(look)
+    equity_summary = _equity(equity)
+    max_drawdown = _num(equity_summary.get("max_drawdown_from_high"))
+    drawdown_triggered = (
+        max_drawdown is not None and max_drawdown <= STEP_DOWN_DRAWDOWN + 1e-12
+    )
+    step_down: Record = {
+        "triggered": drawdown_triggered or t_triggered,
+        "drawdown_triggered": drawdown_triggered,
+        "max_drawdown_from_high": max_drawdown,
+        "drawdown_limit": STEP_DOWN_DRAWDOWN,
+        "t_triggered": t_triggered,
+        "t_limit": PROPOSED_STEP_DOWN_T,
+        "looks": step_looks,
+        "closed": len(closed),
+        "rule": "step down to rung 0 on -12% from the rung high, or cumulative "
+        "t <= -1 at 50, 100 or 150 closes since rung start (capped or realized)",
+    }
+    return {
+        "report_only": True,
+        "source": "review AGG-1 proposal; not the pre-registered rule in force",
+        "advance": advance,
+        "step_down": step_down,
+    }
+
+
+def _quantile(values: Sequence[float], fraction: float) -> float | None:
+    """Linear-interpolated quantile of sorted values."""
+    if not values:
+        return None
+    ordered = sorted(values)
+    position = fraction * (len(ordered) - 1)
+    low = math.floor(position)
+    high = min(low + 1, len(ordered) - 1)
+    return ordered[low] + (ordered[high] - ordered[low]) * (position - low)
+
+
+def _entry_headroom(cohort: CohortEvidence, selection: Selection) -> Record:
+    """Submission age of every submitted Donchian entry against its entry deadline.
+
+    Filled entries and IOC no-fills both reached submission, so both count.
+    """
+    entries: list[Record] = []
+    for (strategy, symbol, decided), action in sorted(
+        cohort.submissions.items(), key=lambda item: (item[0][2], item[0][1])
+    ):
+        if not selection.in_window(decided):
+            continue
+        entries.append(
+            {
+                "strategy_id": strategy,
+                "symbol": symbol,
+                "side": action.get("side"),
+                "decision_time_ms": decided,
+                "decision_time_utc": _utc(decided),
+                "outcome": "ioc_no_fill"
+                if action.get("reason") == ENTRY_IOC_NO_FILL
+                else "submitted",
+                **_deadline(
+                    _int(action.get("submission_age_ms")),
+                    _int(action.get("submission_limit_ms")),
+                ),
+                "boundary": action.get("submission_boundary"),
+            }
+        )
+    # Entries of one decision are submitted serially; rank them by age.
+    by_decision: dict[int, list[Record]] = {}
+    for entry in entries:
+        if entry["age_seconds"] is not None:
+            by_decision.setdefault(_i(entry, "decision_time_ms"), []).append(entry)
+    ranks: dict[int, list[float]] = {}
+    for group in by_decision.values():
+        group.sort(key=lambda entry: _f(entry, "age_seconds"))
+        for rank, entry in enumerate(group, start=1):
+            entry["same_decision_rank"] = rank
+            entry["same_decision_entries"] = len(group)
+            ranks.setdefault(rank, []).append(_f(entry, "age_seconds"))
+    ages = [
+        _f(entry, "age_seconds")
+        for entry in entries
+        if entry["age_seconds"] is not None
+    ]
+    headrooms = [
+        _f(entry, "headroom_seconds")
+        for entry in entries
+        if entry["headroom_seconds"] is not None
+    ]
+    stale = [
+        {
+            "strategy_id": strategy,
+            "symbol": symbol,
+            "side": item.get("side"),
+            "decision_time_utc": _utc(decided),
+            **_deadline(
+                _int(item.get("submission_age_ms")),
+                _int(item.get("submission_limit_ms")),
+            ),
+            "boundary": item.get("submission_boundary"),
+        }
+        for (strategy, symbol, decided), item in sorted(
+            cohort.stale.items(), key=lambda item: (item[0][2], item[0][1])
+        )
+        if selection.in_window(decided)
+    ]
+    return {
+        "basis": "intent_routing enter actions and entry_ioc_no_fill withholds: "
+        "submission age at the journaled submission boundary against the route's "
+        "maximum entry delay",
+        "limit_seconds": sorted(
+            {_f(entry, "limit_seconds") for entry in entries if entry["limit_seconds"]}
+        ),
+        "entries": len(entries),
+        "ioc_no_fill": sum(entry["outcome"] == "ioc_no_fill" for entry in entries),
+        "measured": len(ages),
+        "age_seconds": {
+            "median": _quantile(ages, 0.5),
+            "p95": _quantile(ages, 0.95),
+            "max": max(ages) if ages else None,
+        },
+        "minimum_headroom_seconds": min(headrooms) if headrooms else None,
+        "headroom_warning_seconds": HEADROOM_WARNING_SECONDS,
+        "within_warning_of_limit": sum(
+            value < HEADROOM_WARNING_SECONDS for value in headrooms
+        ),
+        "over_limit": sum(value < 0 for value in headrooms),
+        "by_same_decision_rank": {
+            str(rank): {
+                "entries": len(values),
+                "median_age_seconds": _quantile(values, 0.5),
+                "max_age_seconds": max(values),
+            }
+            for rank, values in sorted(ranks.items())
+        },
+        "stale_before_submission": len(stale),
+        "stale_entries": stale,
+        "entry_rows": entries,
+    }
+
+
+def _stop_loss_summary(rows: Sequence[Mapping[str, object]]) -> Record:
+    """Aggregate modeled against realized loss for closes at the initial stop."""
+    stops: list[Record] = []
+    raised = modeled = 0
+    unclassified: Counter[str] = Counter()
+    for row in rows:
+        model = row["stop_loss_model"]
+        assert isinstance(model, Mapping)
+        modeled += model["modeled_loss_usd"] is not None
+        reason = row.get("exit_reason")
+        if model["stop_raised"] and reason in STOP_EXIT_REASONS:
+            raised += 1
+        if (
+            isinstance(reason, str)
+            and "protective_stop" in reason
+            and reason not in STOP_EXIT_REASONS
+        ):
+            # A stop-fill reason this tool does not know yet: counted, not compared.
+            unclassified[reason] += 1
+        if not model["exited_at_initial_stop"]:
+            continue
+        stops.append(
+            {
+                "lifecycle_id": row["lifecycle_id"],
+                "symbol": row["symbol"],
+                "side": row["side"],
+                "exit_reason": row.get("exit_reason"),
+                "stop_bps": row.get("stop_bps"),
+                "modeled_loss_at_filled_size_usd": model[
+                    "modeled_loss_at_filled_size_usd"
+                ],
+                "unslipped_risk_usd": model["unslipped_risk_usd"],
+                "realized_loss_usd": model["realized_loss_usd"],
+                "realized_to_modeled": model["realized_to_modeled"],
+                "realized_to_unslipped": model["realized_to_unslipped"],
+            }
+        )
+    to_model = [
+        value
+        for row in stops
+        if (value := _num(row["realized_to_modeled"])) is not None
+    ]
+    to_risk = [
+        value
+        for row in stops
+        if (value := _num(row["realized_to_unslipped"])) is not None
+    ]
+    return {
+        "basis": "modeled: entry_stop_risk_sizing estimated_loss_usd scaled to the "
+        "filled size; realized: net dollars of a close at the initial stop",
+        "lifecycles": len(rows),
+        "with_modeled_loss": modeled,
+        "stop_exits_at_initial_stop": len(stops),
+        "stop_exit_reasons": dict(Counter(str(row["exit_reason"]) for row in stops)),
+        "stop_exits_after_raise": raised,
+        "unclassified_stop_exit_reasons": dict(unclassified),
+        "modeled_loss_usd": sum(
+            value
+            for row in stops
+            if (value := _num(row["modeled_loss_at_filled_size_usd"])) is not None
+        ),
+        "realized_loss_usd": sum(
+            value
+            for row in stops
+            if (value := _num(row["realized_loss_usd"])) is not None
+        ),
+        "realized_to_modeled": {
+            "mean": _mean(to_model),
+            "min": min(to_model) if to_model else None,
+            "max": max(to_model) if to_model else None,
+        },
+        "realized_to_unslipped": {
+            "mean": _mean(to_risk),
+            "max": max(to_risk) if to_risk else None,
+        },
+        "stops": stops,
+    }
+
+
 def _summary(rows: Sequence[Mapping[str, object]]) -> Record:
     closed = [row for row in rows if row["status"] == "closed"]
     nets = [value for value in _nets(closed, False) if value is not None]
@@ -1488,6 +2021,9 @@ def build_report(
         },
         "summary": _summary(rows),
         "ladder": evaluate_ladder(ladder_sample, cohort.equity),
+        "ladder_proposed": evaluate_proposed_ladder(ladder_sample, cohort.equity),
+        "entry_deadline_headroom": _entry_headroom(cohort, selection),
+        "stop_loss_model": _stop_loss_summary(rows),
         "equity": _equity(cohort.equity),
         "lifecycles": rows,
         "donchian_entry_extension": extensions,
@@ -1561,8 +2097,65 @@ def summary_text(report: Mapping[str, object]) -> str:
         + "]",
         f"floor-armed 24h-timer exits: {len(counterfactuals)}; counterfactual delta "
         f"${_fmt(sum(float(row.get('delta_vs_timer_usd') or 0.0) for row in counterfactuals))}",
+        *_review_summary_lines(report),
     ]
     return "\n".join(lines)
+
+
+def _review_summary_lines(report: Mapping[str, object]) -> list[str]:
+    """Headroom, stop-loss model and proposed-rule lines (review SIG-1, AGG-1)."""
+    lines: list[str] = []
+    headroom = report.get("entry_deadline_headroom")
+    if isinstance(headroom, Mapping):
+        ages = headroom["age_seconds"]
+        assert isinstance(ages, Mapping)
+        limits = headroom["limit_seconds"]
+        assert isinstance(limits, list)
+        limit = "/".join(f"{value:g}" for value in limits) or "n/a"
+        lines.append(
+            f"entry deadline: {headroom['measured']} Donchian entries "
+            f"({headroom['ioc_no_fill']} IOC no-fill), submission "
+            f"age median {_fmt(ages['median'], '{:.1f}')} s / p95 "
+            f"{_fmt(ages['p95'], '{:.1f}')} s / max {_fmt(ages['max'], '{:.1f}')} s "
+            f"vs {limit} s limit (minimum headroom "
+            f"{_fmt(headroom['minimum_headroom_seconds'], '{:.1f}')} s; "
+            f"{headroom['within_warning_of_limit']} within "
+            f"{HEADROOM_WARNING_SECONDS:g} s; {headroom['over_limit']} over); "
+            f"stale_before_submission: {headroom['stale_before_submission']}"
+        )
+    stops = report.get("stop_loss_model")
+    if isinstance(stops, Mapping):
+        ratio = stops["realized_to_modeled"]
+        assert isinstance(ratio, Mapping)
+        lines.append(
+            f"stop loss vs model: {stops['stop_exits_at_initial_stop']} close(s) at "
+            f"the initial stop; realized ${_fmt(stops['realized_loss_usd'], '{:.2f}')} "
+            f"vs modeled ${_fmt(stops['modeled_loss_usd'], '{:.2f}')} (mean "
+            f"realized/modeled {_fmt(ratio['mean'], '{:.2f}')}); "
+            f"{stops['stop_exits_after_raise']} stop exit(s) after a raise"
+        )
+    proposed = report.get("ladder_proposed")
+    if isinstance(proposed, Mapping):
+        advance, step = proposed["advance"], proposed["step_down"]
+        assert isinstance(advance, Mapping) and isinstance(step, Mapping)
+        looks, step_looks = advance["looks"], step["looks"]
+        assert isinstance(looks, list) and isinstance(step_looks, list)
+        lines.append(
+            f"proposed ladder (report-only): advance {advance['status']} "
+            f"(looks {_looks_text(looks)}; conservative t >= "
+            f"{CONSERVATIVE_ADVANCE_T:g}: {advance['conservative_status']}); "
+            f"step-down {'TRIGGERED' if step['triggered'] else 'not triggered'} "
+            f"(t looks {_looks_text(step_looks)})"
+        )
+    return lines
+
+
+def _looks_text(looks: Sequence[object]) -> str:
+    parts = []
+    for look in looks:
+        assert isinstance(look, Mapping)
+        parts.append(f"{look['closes']}: {look['status']}")
+    return ", ".join(parts)
 
 
 def build_parser() -> argparse.ArgumentParser:
