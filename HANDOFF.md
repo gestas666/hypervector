@@ -1,3 +1,59 @@
+# Current operation — V95 LIVE ARMED (review fixes), 2026-09-27 22:59 UTC
+
+**Status.**
+- V95 is live and armed.
+  - Profile `multi_asset_growth_first_5000_review_fixes_v95`, fingerprint
+    `dd779cce74568e4ba6963d1a19810a7fbcaa7f4279e40f45be83f12286339420`.
+  - Run `bidirectional-live-1790549637273`, backend launched 22:53:54Z, LIVE ARMED 22:59:11Z.
+  - Source identity 1951 files / `37d3cc592414bfa4…`.
+  - Six executable routes: SOL, xyz:SNDK, xyz:BRENTOIL and xyz:TSLA on Donchian strong-short, plus the BTC sweep and ETH range-onset.
+  - HYPE and xyz:SPCX were removed (flat, reconciled).
+  - The book was flat at start; sizing equity was $4,796.35.
+- **Auto-resume after a host restart is ON.** The supervise plist sets
+  `HYPERVECTOR_SUPERVISOR_RESUME_AFTER_HOST_RESTART=1`. A durable operator stop is now the STOP
+  file, or `launchctl disable` before any bootout.
+- **macOS auto-install is off.** The operator set `AutomaticallyInstallMacOSUpdates=0` and
+  `CriticalUpdateInstall=0` on 2026-09-27.
+
+**Transition record.**
+- The drain was requested at 17:38:27Z (request `e1ad5e87…`) and completed at 22:50:28Z. V94 exited 0.
+- Drain archive:
+  `data/backups/bidirectional_cohort/transition_drains/transition_drain_20260927T225206Z_e1ad5e875412496d8783434a94d983b3.json`.
+- Code: merge `03388c2` (branch `agent/v95-review-fixes-20260926` at `e3673f0`); main head before the merge was `9495698`.
+- Deployment directory: `data/backups/bidirectional_cohort/v95_deployment_20260927T1738Z/`. It holds the old and new
+  plists, the restart journal, configs, approvals, `deployment_manifest.json` and the V94 cockpit binary.
+- Go-live evidence: `data/logs/operations/v95_go_live_20260927T2251Z/`, containing the preflights, runtime validation and cockpit sha.
+
+**Cockpit.** The release binary was rebuilt; sha256 `1714e213f62f4d7fa0651b8dc9b5d6953e67293f4df168c8878f785302a43998`.
+```
+.venv/bin/python -m hypervector cohort-tui --mode monitor --config configs/multi_asset_growth_first_5000_review_fixes_v95.toml --tui-bin target/release/tui-regime-detector --tui-bin-sha256 1714e213f62f4d7fa0651b8dc9b5d6953e67293f4df168c8878f785302a43998
+```
+
+**Rollback (V95→V94 profile only; the V95 source stays).**
+- Use `configs/v95-to-v94-rollback-20260927-v1.toml` with approval
+  `docs/live-approvals/v95-to-v94-rollback-20260927-v1.json`. The approval is recorded (operator words, 2026-09-27).
+- Procedure: drain V95, archive, preflight `--config <RB> --active-config <V95>`, generate plists as for V95,
+  archive the journal, then bootstrap.
+- **Frozen by sha256 until the rollback is retired:**
+  - the V95 TOML;
+  - the V94 TOML;
+  - `docs/reviews/2026-09-24-v93-full-review.md`;
+  - `docs/plans/2026-09-24-v94-review-actions.md`;
+  - `docs/reviews/2026-09-27-v94-review-and-swing-research.md`.
+- The V94→V93 rollback pair is void.
+
+**Pending.**
+- **D1 crypto breakout sleeve (operator: automated, 1% of book per trade).** The executor is built on
+  branch `agent/d1-sleeve-executor-20260927` and is in final review.
+  - It needs the operator's one-time setup: a sub-account, a new API wallet named `d1-sleeve`, an env
+    file outside the repo, a transfer while the cohort is flat, an approval, a canary, and the plist.
+  - A transfer to the sub-account halves V95's equity-fraction sizing. Anchor ladder evidence after the transfer.
+- **Engine agent `hl-api` expires 2026-10-22T12:59:22Z.** Renew it under the same name.
+- **Re-register the ladder** before the 30th Donchian close. Pool V94 and V95 closes, since the Donchian identity and sizing are unchanged.
+- **D1 shadow census refresh** between 10-25 and 10-31 UTC.
+
+---
+
 # Current operation — V94 LIVE ARMED (re-armed after reboot hold); V95 packaged, pending approval, 2026-09-27
 
 **Status.**
