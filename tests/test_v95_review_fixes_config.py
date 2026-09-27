@@ -5,11 +5,10 @@ providers and every override table naming them. Every value that remains must
 equal V94's. Neither provider had an executable scope in V94, so the change
 retires no execution scope.
 
-Both approval records (V94 -> V95 and the pre-authored V95 -> V94 rollback) are
-committed as ``pending_operator_approval`` with empty operator fields, so every
-gate refuses them. Once the operator approves, record the operator's exact words
-in both records and pin them here in place of the pending assertions, as
-tests/test_v93_to_v91_rollback_pair.py does.
+Both approval records (V94 -> V95 and the pre-authored V95 -> V94 rollback)
+carry the operator's exact words from 2026-09-27, pinned here as
+tests/test_v93_to_v91_rollback_pair.py does. A copy with the status flipped back
+to pending must still be refused.
 """
 
 from __future__ import annotations
@@ -72,6 +71,10 @@ HANDOFF = "HANDOFF.md"
 FORWARD_EVIDENCE = (V95_REVIEW, V93_REVIEW, V94_PLAN, ROLLBACK)
 ROLLBACK_EVIDENCE = (V94, V93_REVIEW, V94_PLAN)
 PENDING = "pending_operator_approval"
+OPERATOR_WORDS = (
+    "approved - opt in to auto-resume after a host restart. The transition needs "
+    "a drain, 50%,  install the daily-breakout shadow runner"
+)
 # Test-only stand-ins for the operator fields; never copied into the repository.
 PLACEHOLDER = {
     "approval_status": "approved_for_live_transition",
@@ -312,36 +315,49 @@ def test_v94_to_v95_survives_a_handoff_edit_after_approval(
 
 
 @pytest.mark.parametrize("approval", [APPROVAL, ROLLBACK_APPROVAL])
-def test_approvals_are_pending_without_operator_words(approval: str) -> None:
+def test_approvals_record_the_operator_words(approval: str) -> None:
     document = _document(approval)
-    assert document["approval_status"] == PENDING
-    assert document["approved_at_utc"] == ""
-    assert document["approved_by"] == ""
-    assert document["operator_approval"] == ""
+    assert document["approval_status"] == "approved_for_live_transition"
+    assert document["approved_at_utc"] == "2026-09-27T16:59:22+00:00"
+    assert document["approved_by"] == "operator_in_conversation"
+    assert document["operator_approval"] == OPERATOR_WORDS
 
 
-def test_pending_v94_to_v95_approval_is_refused(
+def test_recorded_v94_to_v95_approval_is_accepted(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.chdir(REPOSITORY)
-    previous = _load(V94)
+    candidate = _load(V95, "live")
+    validate_profile_change_approval(
+        _load(V94), candidate, candidate.transition_approval
+    )
+    summary = rollback.dry_run_startup(Path(V94), Path(V95))
+    assert (
+        summary["startup_profile_change_approval"]["state"] == "approved_profile_change"
+    )
+
+
+def test_pending_v94_to_v95_approval_is_refused(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _mirror(tmp_path, APPROVAL, V95)
+    _rewrite(tmp_path, APPROVAL, approval_status=PENDING)
+    monkeypatch.chdir(tmp_path)
     candidate = _load(V95, "live")
     with pytest.raises(
         ProfileChangeApprovalError,
         match="approval status is not approved_for_live_transition",
     ):
         validate_profile_change_approval(
-            previous, candidate, candidate.transition_approval
+            _load(V94), candidate, candidate.transition_approval
         )
-    with pytest.raises(ProfileChangeApprovalError, match="approval status"):
-        rollback.dry_run_startup(Path(V94), Path(V95))
 
 
-def test_flipping_the_status_alone_is_still_refused(
+def test_an_approved_status_without_operator_fields_is_refused(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _mirror(tmp_path, APPROVAL, V95)
-    _rewrite(tmp_path, APPROVAL, approval_status=PLACEHOLDER["approval_status"])
+    _rewrite(tmp_path, APPROVAL, approved_by="", operator_approval="")
     monkeypatch.chdir(tmp_path)
     candidate = _load(V95, "live")
     with pytest.raises(ProfileChangeApprovalError, match="approved_by"):
@@ -432,7 +448,7 @@ def test_rollback_profile_is_v94_with_only_the_approval_rebound() -> None:
     assert document["retirements"] == []
 
 
-def test_pending_rollback_is_refused_by_verify(
+def test_recorded_rollback_passes_verify(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.chdir(REPOSITORY)
@@ -440,6 +456,18 @@ def test_pending_rollback_is_refused_by_verify(
         rollback.main(
             ["--root", str(REPOSITORY), "--current", V95, "--verify", ROLLBACK]
         )
+        == 0
+    )
+
+
+def test_pending_rollback_is_refused_by_verify(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _mirror(tmp_path, ROLLBACK_APPROVAL, ROLLBACK)
+    _rewrite(tmp_path, ROLLBACK_APPROVAL, approval_status=PENDING)
+    monkeypatch.chdir(tmp_path)
+    assert (
+        rollback.main(["--root", str(tmp_path), "--current", V95, "--verify", ROLLBACK])
         == 2
     )
 
