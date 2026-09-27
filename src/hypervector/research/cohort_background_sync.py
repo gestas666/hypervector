@@ -7,6 +7,7 @@ from concurrent.futures import Future, ThreadPoolExecutor
 from pathlib import Path
 import shutil
 
+from hypervector.research.cohort_research_import_gate import ResearchImportGate
 from hypervector.research.cohort_research_sync_telemetry import (
     Clock,
     ResearchSyncTelemetry,
@@ -34,6 +35,7 @@ class BackgroundResearchSync:
         minimum_free_bytes: int = _MINIMUM_RESEARCH_SYNC_FREE_BYTES,
         portfolio_archive: Mapping[str, object] | None = None,
         clock: Clock = utc_now,
+        import_gate: ResearchImportGate | None = None,
     ) -> None:
         if interval_seconds <= 0.0:
             raise ValueError("research sync interval must be positive")
@@ -44,6 +46,7 @@ class BackgroundResearchSync:
         self._interval_seconds = interval_seconds
         self._minimum_free_bytes = minimum_free_bytes
         self._sync_fn = sync_fn
+        self._import_gate = import_gate
         self._executor = ThreadPoolExecutor(max_workers=1)
         self._future: Future[Mapping[str, object]] | None = None
         self._next_sync_at = 0.0
@@ -57,10 +60,19 @@ class BackgroundResearchSync:
         if self._consume_completed():
             self._next_sync_at = now + self._interval_seconds
         if self._future is None and now >= self._next_sync_at:
+            if self._import_gate is not None and not self._import_gate.due(now):
+                self._next_sync_at = min(
+                    now + self._interval_seconds, self._import_gate.deadline
+                )
+                return
             self.telemetry.begin_attempt()
             if not self._has_disk_headroom():
+                # The import never ran, so the next check retries it unconditionally.
+                self._import_completed(succeeded=False)
                 self._next_sync_at = now + self._interval_seconds
                 return
+            if self._import_gate is not None:
+                self._import_gate.submitted(now)
             self._future = self._executor.submit(
                 self._sync_fn,
                 self._database_path,
@@ -116,7 +128,9 @@ class BackgroundResearchSync:
         except ResearchSyncError as exc:
             self.error = str(exc)
             self.telemetry.failed(self.error)
+            self._import_completed(succeeded=False)
             return True
+        self._import_completed(succeeded=True)
         if archive is not None:
             self.portfolio_archive = archive
         self.report = {
@@ -125,6 +139,10 @@ class BackgroundResearchSync:
         self.telemetry.succeeded(self.report)
         self.error = None
         return False
+
+    def _import_completed(self, *, succeeded: bool) -> None:
+        if self._import_gate is not None:
+            self._import_gate.completed(succeeded=succeeded)
 
 
 def _portfolio_archive(

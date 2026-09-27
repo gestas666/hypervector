@@ -9,7 +9,7 @@ import subprocess
 import sys
 import threading
 import time
-from types import ModuleType
+from types import ModuleType, SimpleNamespace
 
 import pytest
 from requests import RequestException
@@ -662,6 +662,9 @@ def test_once_retries_a_transient_cross_ledger_snapshot(
     """A brief cross-file append boundary must not zero a valid checkpoint."""
     module = _load_module()
     output = tmp_path / "latest.json"
+    ledgers = tmp_path / "ledgers"
+    ledgers.mkdir()
+    (ledgers / "hype.jsonl").write_text('{"sequence":1}\n', encoding="utf-8")
     calls = 0
     delays: list[float] = []
 
@@ -677,12 +680,14 @@ def test_once_retries_a_transient_cross_ledger_snapshot(
         del run_id, config_path, venue_portfolio
         calls += 1
         if calls == 1:
+            with (ledgers / "hype.jsonl").open("a", encoding="utf-8") as handle:
+                handle.write('{"sequence":2}\n')
             raise ValueError("HYPE open lifecycle lacks a current position")
         out.write_text('{"status":"ready"}\n', encoding="utf-8")
         return {"status": "ready"}
 
     args = module.build_parser().parse_args(
-        ["--ledger-root", str(tmp_path / "ledgers"), "--out", str(output), "--once"]
+        ["--ledger-root", str(ledgers), "--out", str(output), "--once"]
     )
 
     assert (
@@ -732,3 +737,289 @@ def test_failed_refresh_retains_last_complete_live_checkpoint(
     assert module.run_checkpoint_loop(args, publish_fn=inconsistent) == 2
     assert json.loads(output.read_text(encoding="utf-8")) == complete
     assert "retaining last complete checkpoint" in capsys.readouterr().err
+
+
+def _scripted_publisher(
+    outcomes: list[Exception | None],
+    calls: list[int],
+    append_to: Path | None = None,
+) -> object:
+    """Raise each scripted failure in turn; None publishes a ready document."""
+
+    def publish(
+        _root: Path,
+        out: Path,
+        *,
+        run_id: str | None,
+        config_path: Path,
+        venue_portfolio: dict[str, object] | None,
+    ) -> dict[str, object]:
+        del run_id, config_path, venue_portfolio
+        outcome = outcomes[min(len(calls), len(outcomes) - 1)]
+        calls.append(len(calls))
+        if append_to is not None:
+            with append_to.open("a", encoding="utf-8") as handle:
+                handle.write(f'{{"sequence":{len(calls) + 1}}}\n')
+        if outcome is not None:
+            raise outcome
+        out.write_text('{"status":"ready"}\n', encoding="utf-8")
+        return {"status": "ready"}
+
+    return publish
+
+
+def _single_ledger(tmp_path: Path) -> Path:
+    ledgers = tmp_path / "ledgers"
+    ledgers.mkdir()
+    (ledgers / "decisions.jsonl").write_text('{"sequence":1}\n', encoding="utf-8")
+    return ledgers
+
+
+def test_deterministic_refresh_failure_is_not_retried_over_unchanged_ledgers(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Re-copying unchanged ledgers cannot clear a deterministic ValueError."""
+    module = _load_module()
+    output = tmp_path / "latest.json"
+    complete = {
+        "schema_version": 1,
+        "mode": "multi_asset_bidirectional_live_checkpoint",
+        "generated_at_utc": "2026-09-26T06:30:00+00:00",
+        "lifecycle": {"state": "running_consistent"},
+        "audit": {"execution": {"closed_trades": 15}},
+    }
+    output.write_text(json.dumps(complete), encoding="utf-8")
+    calls: list[int] = []
+    delays: list[float] = []
+    publish = _scripted_publisher(
+        [ValueError("routing cycle is missing funding boundary")], calls
+    )
+    args = module.build_parser().parse_args(
+        ["--ledger-root", str(_single_ledger(tmp_path)), "--out", str(output), "--once"]
+    )
+
+    assert (
+        module.run_checkpoint_loop(args, publish_fn=publish, sleep_fn=delays.append)
+        == 2
+    )
+    assert calls == [0]
+    assert delays == []
+    assert json.loads(output.read_text(encoding="utf-8")) == complete
+    assert (
+        "retaining last complete checkpoint: routing cycle is missing funding boundary"
+        in capsys.readouterr().err
+    )
+
+
+def test_repeated_value_error_is_not_retried_while_ledgers_append(
+    tmp_path: Path,
+) -> None:
+    """The same failure over a fresh, appended snapshot is deterministic."""
+    module = _load_module()
+    ledgers = _single_ledger(tmp_path)
+    calls: list[int] = []
+    delays: list[float] = []
+    publish = _scripted_publisher(
+        [ValueError("routing cycle is missing funding boundary")],
+        calls,
+        append_to=ledgers / "decisions.jsonl",
+    )
+    args = module.build_parser().parse_args(
+        ["--ledger-root", str(ledgers), "--out", str(tmp_path / "out"), "--once"]
+    )
+
+    assert (
+        module.run_checkpoint_loop(args, publish_fn=publish, sleep_fn=delays.append)
+        == 2
+    )
+    assert calls == [0, 1]
+    assert delays == [module._SNAPSHOT_RETRY_SECONDS]
+
+
+def test_changing_value_errors_during_appends_stay_bounded(tmp_path: Path) -> None:
+    """Retries follow distinct append races but never exceed the attempt bound."""
+    module = _load_module()
+    ledgers = _single_ledger(tmp_path)
+    calls: list[int] = []
+    delays: list[float] = []
+    publish = _scripted_publisher(
+        [ValueError(f"checkpoint race {index}") for index in range(5)],
+        calls,
+        append_to=ledgers / "decisions.jsonl",
+    )
+    args = module.build_parser().parse_args(
+        ["--ledger-root", str(ledgers), "--out", str(tmp_path / "out"), "--once"]
+    )
+
+    assert (
+        module.run_checkpoint_loop(args, publish_fn=publish, sleep_fn=delays.append)
+        == 2
+    )
+    assert len(calls) == module._SNAPSHOT_ATTEMPTS
+    assert delays == [module._SNAPSHOT_RETRY_SECONDS] * (module._SNAPSHOT_ATTEMPTS - 1)
+
+
+def test_failure_repeating_previous_cycle_is_attempted_once(tmp_path: Path) -> None:
+    """A failure persisting across cycles costs one snapshot until a success."""
+    module = _load_module()
+    ledgers = _single_ledger(tmp_path)
+    boundary = ValueError("routing cycle is missing funding boundary")
+    calls: list[int] = []
+    sleeps: list[float] = []
+    publish = _scripted_publisher(
+        [boundary, boundary, boundary, None, boundary, None],
+        calls,
+        append_to=ledgers / "decisions.jsonl",
+    )
+
+    def sleep(seconds: float) -> None:
+        sleeps.append(seconds)
+        if sleeps.count(30.0) == 4:
+            raise RuntimeError("bounded test stop")
+
+    args = module.build_parser().parse_args(
+        ["--ledger-root", str(ledgers), "--out", str(tmp_path / "out")]
+    )
+
+    with pytest.raises(RuntimeError, match="bounded test stop"):
+        module.run_checkpoint_loop(args, publish_fn=publish, sleep_fn=sleep)
+
+    retry = module._SNAPSHOT_RETRY_SECONDS
+    assert len(calls) == 6
+    assert sleeps == [retry, 30.0, 30.0, 30.0, retry, 30.0]
+
+
+def test_unstatable_ledger_keeps_bounded_value_error_retries(tmp_path: Path) -> None:
+    """Unknown append state cannot prove a failure deterministic, so it retries."""
+    module = _load_module()
+    ledgers = _single_ledger(tmp_path)
+    (ledgers / "sol.jsonl").symlink_to(tmp_path / "rotated-away.jsonl")
+    assert module._ledger_state(ledgers) is None
+    calls: list[int] = []
+    delays: list[float] = []
+    publish = _scripted_publisher(
+        [ValueError(f"checkpoint race {index}") for index in range(5)], calls
+    )
+    args = module.build_parser().parse_args(
+        ["--ledger-root", str(ledgers), "--out", str(tmp_path / "out"), "--once"]
+    )
+
+    assert (
+        module.run_checkpoint_loop(args, publish_fn=publish, sleep_fn=delays.append)
+        == 2
+    )
+    assert len(calls) == module._SNAPSHOT_ATTEMPTS
+    assert delays == [module._SNAPSHOT_RETRY_SECONDS] * (module._SNAPSHOT_ATTEMPTS - 1)
+
+
+def test_missing_startup_ledger_is_still_retried(tmp_path: Path) -> None:
+    """Absent startup evidence may appear without an append, so it keeps retries."""
+    module = _load_module()
+    output = tmp_path / "latest.json"
+    calls: list[int] = []
+    delays: list[float] = []
+    publish = _scripted_publisher([FileNotFoundError("asset ledgers not ready")], calls)
+    args = module.build_parser().parse_args(
+        ["--ledger-root", str(_single_ledger(tmp_path)), "--out", str(output), "--once"]
+    )
+
+    assert (
+        module.run_checkpoint_loop(args, publish_fn=publish, sleep_fn=delays.append)
+        == 2
+    )
+    assert len(calls) == module._SNAPSHOT_ATTEMPTS
+    assert delays == [module._SNAPSHOT_RETRY_SECONDS] * (module._SNAPSHOT_ATTEMPTS - 1)
+    assert json.loads(output.read_text(encoding="utf-8"))["status"] == {
+        "state": "unavailable",
+        "technical_issue": "asset ledgers not ready",
+    }
+
+
+def test_parser_throttles_research_import_without_changing_checkpoint_cadence() -> None:
+    """The 120 s import check and 30 s checkpoint stay; only the import waits."""
+    module = _load_module()
+    args = module.build_parser().parse_args(["--research-sync-interval-seconds", "120"])
+
+    assert args.interval_seconds == 30.0
+    assert args.research_sync_interval_seconds == 120.0
+    assert args.research_sync_min_pending_bytes == 4 * 1024 * 1024
+    assert args.research_sync_max_age_seconds == 600.0
+
+
+@pytest.mark.parametrize(
+    "flag,value,error",
+    [
+        (
+            "--research-sync-min-pending-bytes",
+            "-1",
+            "research sync minimum pending bytes cannot be negative",
+        ),
+        (
+            "--research-sync-max-age-seconds",
+            "0",
+            "research sync maximum age must be positive",
+        ),
+    ],
+)
+def test_invalid_research_import_thresholds_fail_before_publication(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    flag: str,
+    value: str,
+    error: str,
+) -> None:
+    """A misconfigured throttle is rejected instead of silently never importing."""
+    module = _load_module()
+    output = tmp_path / "latest.json"
+
+    assert module.main(["--out", str(output), "--once", flag, value]) == 2
+    assert f"cohort checkpoint failed: {error}" in capsys.readouterr().err
+    assert not output.exists()
+
+
+def test_continuous_research_import_uses_cli_thresholds(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Small ledger increments wait for the maximum age before rewriting DuckDB."""
+    module = _load_module()
+    monkeypatch.setattr(
+        "hypervector.research.cohort_background_sync.shutil.disk_usage",
+        lambda _path: SimpleNamespace(free=64 * 1024**3),
+    )
+    ledgers = _single_ledger(tmp_path)
+    calls: list[int] = []
+    args = module.build_parser().parse_args(
+        [
+            "--ledger-root",
+            str(ledgers),
+            "--out",
+            str(tmp_path / "latest.json"),
+            "--research-database",
+            str(tmp_path / "market.duckdb"),
+            "--research-sync-interval-seconds",
+            "120",
+            "--research-sync-min-pending-bytes",
+            "1024",
+            "--research-sync-max-age-seconds",
+            "480",
+        ]
+    )
+    controller = module._background_sync(
+        args, lambda *_: calls.append(len(calls)) or {"imported_events": 1}
+    )
+    try:
+        controller.poll(now=0.0)
+        controller.wait_for_completion(timeout=2.0)
+        controller.poll(now=1.0)
+        with (ledgers / "decisions.jsonl").open("a", encoding="utf-8") as handle:
+            handle.write('{"sequence":2}\n')
+        for now in (120.0, 240.0, 360.0):
+            controller.poll(now=now)
+        assert calls == [0]
+        controller.poll(now=480.0)
+        controller.wait_for_completion(timeout=2.0)
+        assert calls == [0, 1]
+    finally:
+        controller.close()

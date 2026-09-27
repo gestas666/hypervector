@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 from collections.abc import Callable, Mapping, Sequence
+from dataclasses import dataclass
 from functools import partial
 import json
 from pathlib import Path
@@ -40,6 +41,7 @@ from hypervector.research.cohort_checkpoint_logging import (
     emit_event as _emit_event,
     log_background_sync as _log_background_sync,
 )
+from hypervector.research.cohort_research_import_gate import ResearchImportGate
 from hypervector.research.cohort_research_sync_telemetry import ResearchSyncTelemetry
 from hypervector.research.cohort_checkpoint_accounting import (
     bind_sync_to_accounting_epoch as _bind_sync_to_accounting_epoch,
@@ -68,9 +70,19 @@ _DEFAULT_ASYMMETRIC_FORWARD_JOURNAL = Path(
 )
 _SNAPSHOT_ATTEMPTS = 3
 _SNAPSHOT_RETRY_SECONDS = 0.1
+_RESEARCH_SYNC_MIN_PENDING_BYTES = 4 * 1024 * 1024
+_RESEARCH_SYNC_MAX_AGE_SECONDS = 600.0
 
 PublishFn = Callable[..., dict[str, object]]
 SyncFn = Callable[[Path, Path], Mapping[str, object]]
+LedgerState = tuple[tuple[str, int, int, int], ...]
+
+
+@dataclass
+class RefreshFailureMemory:
+    """The latest unresolved refresh failure, kept across publication cycles."""
+
+    message: str | None = None
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -85,6 +97,20 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--research-database", type=Path)
     parser.add_argument("--accounting-epoch-bundle", type=Path)
     parser.add_argument("--research-sync-interval-seconds", type=float, default=600.0)
+    parser.add_argument(
+        "--research-sync-min-pending-bytes",
+        type=int,
+        default=_RESEARCH_SYNC_MIN_PENDING_BYTES,
+        help="defer a continuous research import until this many ledger bytes "
+        "are pending, unless a fill is pending or the maximum age passed; "
+        "0 imports at every interval",
+    )
+    parser.add_argument(
+        "--research-sync-max-age-seconds",
+        type=float,
+        default=_RESEARCH_SYNC_MAX_AGE_SECONDS,
+        help="import pending ledger evidence at least this often",
+    )
     parser.add_argument("--venue-portfolio", action="store_true")
     parser.add_argument(
         "--opportunity-matrix",
@@ -165,6 +191,7 @@ def _run_owned_checkpoint_loop(
             sleep_fn,
         )
     controller = _background_sync(args, active_sync)
+    failures = RefreshFailureMemory()
     try:
         while True:
             if controller is not None:
@@ -186,6 +213,7 @@ def _run_owned_checkpoint_loop(
                     if controller is None
                     else controller.telemetry.snapshot()
                 ),
+                failures=failures,
             )
             sleep_fn(args.interval_seconds)
     finally:
@@ -206,6 +234,10 @@ def _checkpoint_services(
         raise ValueError("checkpoint interval must be positive")
     if args.research_sync_interval_seconds <= 0.0:
         raise ValueError("research sync interval must be positive")
+    if args.research_sync_min_pending_bytes < 0:
+        raise ValueError("research sync minimum pending bytes cannot be negative")
+    if not args.research_sync_max_age_seconds > 0.0:
+        raise ValueError("research sync maximum age must be positive")
     base_sync = sync_fn or partial(
         _sync_research_database,
         cached_checkpoint_path=args.out,
@@ -259,6 +291,11 @@ def _background_sync(
             args.out,
             accounting_epoch=_loaded_accounting_epoch(args),
         ),
+        import_gate=ResearchImportGate(
+            args.ledger_root,
+            minimum_pending_bytes=args.research_sync_min_pending_bytes,
+            maximum_age_seconds=args.research_sync_max_age_seconds,
+        ),
     )
 
 
@@ -292,13 +329,17 @@ def _publish_once(
     current_run_only: bool = False,
     sleep_fn: Callable[[float], None],
     research_sync: Mapping[str, object] | None = None,
+    failures: RefreshFailureMemory | None = None,
 ) -> bool:
+    if failures is None:
+        failures = RefreshFailureMemory()
     venue_portfolio = (
         _portfolio_evidence(portfolio_fn)
         if args.venue_portfolio and portfolio_fn is not None
         else None
     )
     for attempt in range(_SNAPSHOT_ATTEMPTS):
+        ledgers = _ledger_state(args.ledger_root)
         try:
             _publish_snapshot(
                 args,
@@ -310,7 +351,11 @@ def _publish_once(
                 research_sync,
             )
         except (duckdb.Error, FileNotFoundError, ValueError) as exc:
-            if attempt + 1 < _SNAPSHOT_ATTEMPTS:
+            retry = attempt + 1 < _SNAPSHOT_ATTEMPTS and _retryable(
+                exc, args.ledger_root, ledgers, failures.message
+            )
+            failures.message = str(exc)
+            if retry:
                 sleep_fn(_SNAPSHOT_RETRY_SECONDS)
                 continue
             if _has_complete_live_checkpoint(args.out):
@@ -324,7 +369,38 @@ def _publish_once(
             print(f"cohort checkpoint unavailable: {exc}", file=sys.stderr)
             return False
         break
+    failures.message = None
     return True
+
+
+def _ledger_state(ledger_root: Path) -> LedgerState | None:
+    """Identify the append state of every ledger a snapshot attempt may read."""
+    try:
+        return tuple(
+            (path.name, stat.st_ino, stat.st_size, stat.st_mtime_ns)
+            for path in sorted(ledger_root.glob("*.jsonl"))
+            for stat in (path.stat(),)
+        )
+    except OSError:
+        return None
+
+
+def _retryable(
+    exc: Exception,
+    ledger_root: Path,
+    before: LedgerState | None,
+    previous_failure: str | None,
+) -> bool:
+    """Retry startup gaps and cross-ledger append races, not deterministic errors.
+
+    A ValueError is deterministic when no ledger changed during the failed attempt
+    or when it repeats the previous failure; re-copying the snapshot cannot clear it.
+    """
+    if not isinstance(exc, ValueError):
+        return True
+    if str(exc) == previous_failure:
+        return False
+    return before is None or _ledger_state(ledger_root) != before
 
 
 def _has_complete_live_checkpoint(path: Path) -> bool:
