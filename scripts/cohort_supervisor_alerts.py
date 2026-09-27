@@ -6,6 +6,7 @@ from collections.abc import Sequence
 from dataclasses import asdict
 from datetime import UTC, datetime
 import json
+import math
 import os
 from pathlib import Path
 import subprocess
@@ -16,6 +17,7 @@ import urllib.request
 
 from cohort_supervisor_models import (
     BACKEND_CRITICAL_PROBLEMS,
+    FLAPPING_INFORMATIONAL_PROBLEMS,
     SupervisorPaths,
     HealthReport,
     WEBHOOK_ENV,
@@ -27,6 +29,12 @@ CRITICAL_TITLE = "HYPERVECTOR BACKEND ALERT"
 NOTICE_TITLE = "Hypervector notice"
 BACKEND_RECOVERED_TITLE = "Hypervector backend recovered"
 RECOVERED_TITLE = "Hypervector recovered"
+DEBOUNCED_TITLE = "Hypervector problem debounced"
+# The alarm sound belongs to backend-critical banners only; informational
+# banners arrive silently so the two classes are told apart without looking.
+ALARM_SOUND = "Basso"
+# Only the durable journal receives a record marked with this key set False.
+BANNER_KEY = "banner"
 
 
 class AlertSink(Protocol):
@@ -54,10 +62,13 @@ class MacNotificationSink:
 
     def send(self, title: str, body: str, record: dict[str, object]) -> None:
         """Present an optional local notification without process authority."""
+        if record.get(BANNER_KEY) is False:
+            return
         script = (
             f"display notification {json.dumps(body)} with title {json.dumps(title)}"
-            ' sound name "Basso"'
         )
+        if record.get("alert_class") != INFORMATIONAL:
+            script += f" sound name {json.dumps(ALARM_SOUND)}"
         try:
             result = subprocess.run(
                 ["/usr/bin/osascript", "-e", script],
@@ -122,6 +133,7 @@ class Alerter:
         *,
         reminder_seconds: float = 1_800.0,
         minimum_interval_seconds: float = 0.0,
+        debounce_seconds: float = 0.0,
     ) -> None:
         """Bind notification sinks, the reminder interval, and the churn floor.
 
@@ -130,10 +142,25 @@ class Alerter:
         supervisor CLI sets the operational value. A problem label that has not
         been alerted since the last recovery always bypasses the floor, so new
         information is never delayed.
+
+        ``debounce_seconds`` leaves a flapping informational label
+        (FLAPPING_INFORMATIONAL_PROBLEMS) out of every alert decision until it
+        has been present that long; one that clears sooner is journaled, never
+        bannered. It also defaults to 0.0 (off). Backend-critical labels are
+        never debounced.
         """
+        if isinstance(debounce_seconds, bool) or not (
+            math.isfinite(debounce_seconds) and debounce_seconds >= 0
+        ):
+            raise ValueError("debounce_seconds must be finite and nonnegative")
         self._sinks = tuple(sinks)
         self._reminder_seconds = reminder_seconds
         self._minimum_interval = minimum_interval_seconds
+        self._debounce = debounce_seconds
+        self._debounced_labels = (
+            FLAPPING_INFORMATIONAL_PROBLEMS - BACKEND_CRITICAL_PROBLEMS
+        )
+        self._first_seen: dict[str, float] = {}
         self._last_problems: tuple[str, ...] | None = None
         self._alerted_labels: set[str] = set()
         self._suppressed = 0
@@ -142,9 +169,14 @@ class Alerter:
         # channel also learns when that condition clears.
         self._critical_pushed = False
 
+    @property
+    def reminder_seconds(self) -> float:
+        """Return how often an unchanged condition is re-announced."""
+        return self._reminder_seconds
+
     def observe(self, report: HealthReport, now: float) -> bool:
         """Send at most one alert for this report. Return whether one was sent."""
-        problems = report.problems
+        problems, pending = self._settled(report, now)
         previous = self._last_problems
         changed = problems != previous
         reminder_due = (
@@ -154,6 +186,9 @@ class Alerter:
         self._last_problems = problems
         if first_healthy or not (changed or reminder_due):
             return False
+        record = asdict(report)
+        if pending:
+            record["debounced_problems"] = list(pending)
         within_floor = now - self._last_sent < self._minimum_interval
         if not problems:
             if within_floor:
@@ -164,13 +199,14 @@ class Alerter:
                 return False
             self._alerted_labels.clear()
             pushed, self._critical_pushed = self._critical_pushed, False
-            self.emit(
-                RECOVERED_TITLE,
-                "all probes healthy",
-                asdict(report),
-                now,
-                critical=pushed,
+            # A label still inside its debounce is not settled, but it is not
+            # healthy either, so the recovery notice names it.
+            body = (
+                f"no settled problems; still debouncing {', '.join(pending)}"
+                if pending
+                else "all probes healthy"
             )
+            self.emit(RECOVERED_TITLE, body, record, now, critical=pushed)
             return True
         critical = any(problem in BACKEND_CRITICAL_PROBLEMS for problem in problems)
         unreported = [problem for problem in problems if problem not in self._alerted_labels]
@@ -187,12 +223,54 @@ class Alerter:
             title = BACKEND_RECOVERED_TITLE
         pushed = critical or self._critical_pushed
         self._critical_pushed = critical
-        self.emit(title, self._body(report), asdict(report), now, critical=pushed)
+        self.emit(title, self._body(report, problems), record, now, critical=pushed)
         return True
 
-    def _body(self, report: HealthReport) -> str:
+    def _settled(
+        self, report: HealthReport, now: float
+    ) -> tuple[tuple[str, ...], tuple[str, ...]]:
+        """Split the report into labels to alert on and labels still debouncing.
+
+        A debounced label that cleared before it settled is journaled once,
+        without a banner, so the flap stays on the durable record.
+        """
+        if not self._debounce:
+            return report.problems, ()
+        present = set(report.problems)
+        for label in [label for label in self._first_seen if label not in present]:
+            first = self._first_seen.pop(label)
+            if now - first < self._debounce:
+                self._journal_only(label, first, now)
+        pending: list[str] = []
+        for label in report.problems:
+            if label in self._debounced_labels:
+                first = self._first_seen.setdefault(label, now)
+                if now - first < self._debounce:
+                    pending.append(label)
+        return (
+            tuple(problem for problem in report.problems if problem not in pending),
+            tuple(pending),
+        )
+
+    def _journal_only(self, label: str, first: float, now: float) -> None:
+        stamped = {
+            "alerted_at_utc": datetime.fromtimestamp(now, UTC).isoformat(),
+            "debounced_problem": label,
+            "first_seen_utc": datetime.fromtimestamp(first, UTC).isoformat(),
+            "cleared_after_seconds": round(now - first, 3),
+            "debounce_seconds": self._debounce,
+            "alert_class": INFORMATIONAL,
+            BANNER_KEY: False,
+        }
+        for sink in self._sinks:
+            try:
+                sink.send(DEBOUNCED_TITLE, label, stamped)
+            except OSError as exc:
+                _delivery_failure(type(sink).__name__, type(exc).__name__)
+
+    def _body(self, report: HealthReport, problems: tuple[str, ...]) -> str:
         ordered = sorted(
-            report.problems, key=lambda problem: problem not in BACKEND_CRITICAL_PROBLEMS
+            problems, key=lambda problem: problem not in BACKEND_CRITICAL_PROBLEMS
         )
         details = report.problem_details
         body = ", ".join(

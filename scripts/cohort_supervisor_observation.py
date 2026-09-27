@@ -10,6 +10,11 @@ import time
 from cohort_supervisor_models import SupervisorPaths, HealthThresholds
 from cohort_supervisor_health import evaluate_health, process_is_backend
 from cohort_supervisor_alerts import Alerter, ping_deadman
+from cohort_supervisor_host import (
+    BootIdentity,
+    previous_shutdown_epoch,
+    read_boot_identity,
+)
 
 
 class _StopFlag:
@@ -35,6 +40,10 @@ class SupervisorRuntime:
     sleep: Callable[[float], None] = time.sleep
     is_backend: Callable[[int], bool] = process_is_backend
     deadman: Callable[[str | None], None] = ping_deadman
+    # Read once when supervision starts; a reboot ends this process.
+    boot_identity: Callable[[], BootIdentity] = read_boot_identity
+    # Called only while deciding an opt-in resume after a host restart.
+    previous_shutdown: Callable[[float], float | None] = previous_shutdown_epoch
 
 
 def wait_for_adopted_exit(

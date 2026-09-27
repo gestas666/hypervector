@@ -16,6 +16,13 @@ RESEARCH_RUNTIME_ROOT = REPOSITORY_ROOT / "data/runtime/research"
 BACKEND_MARKER = "multi_asset_bidirectional_live.py"
 WEBHOOK_ENV = "HYPERVECTOR_ALERT_WEBHOOK_URL"
 DEADMAN_ENV = "HYPERVECTOR_DEADMAN_URL"
+# Operator opt-in, set in the supervise plist's EnvironmentVariables: "1"
+# (surrounding whitespace ignored; any other value is off) lets a hold latched
+# by the previous boot's shutdown be released at start.
+# It is an environment variable, not an argument, so enabling it does not change
+# the supervise agent's argv.
+RESUME_AFTER_HOST_RESTART_ENV = "HYPERVECTOR_SUPERVISOR_RESUME_AFTER_HOST_RESTART"
+LAUNCHD_LABEL_PREFIX = "local.hypervector.cohort."
 EXIT_OPERATOR_STOP = 0
 EXIT_START_REFUSED = 2
 EXIT_STOP_INCOMPLETE = 5
@@ -31,6 +38,13 @@ BACKEND_CRITICAL_PROBLEMS = frozenset(
         "free_disk_warning",
         "protection_warning",
     }
+)
+# Informational probes that flap for a poll or two (2026-09-25..26: 16 roster
+# flaps of 120-150 s each). An alerter with a debounce leaves them out of every
+# alert decision until they persist; roster_observer_stale still catches a dead
+# observer. Never a backend-critical label.
+FLAPPING_INFORMATIONAL_PROBLEMS = frozenset(
+    {"roster_observer_unavailable", "hip3_active_fee_evidence_unavailable"}
 )
 
 

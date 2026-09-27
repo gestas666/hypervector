@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import argparse
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import asdict, replace
 import json
 import os
@@ -25,6 +25,8 @@ from cohort_supervisor_models import (
     WEBHOOK_ENV as WEBHOOK_ENV,
     DEADMAN_ENV as DEADMAN_ENV,
     EXIT_START_REFUSED as EXIT_START_REFUSED,
+    LAUNCHD_LABEL_PREFIX,
+    RESUME_AFTER_HOST_RESTART_ENV as RESUME_AFTER_HOST_RESTART_ENV,
     require_positive,
 )
 from cohort_supervisor_health import (
@@ -46,6 +48,7 @@ from cohort_supervisor_alerts import (
     ping_deadman as ping_deadman,
     append_jsonl as append_jsonl,
 )
+from cohort_supervisor_host import BootIdentity as BootIdentity
 from cohort_supervisor_state import (
     RestartJournal as RestartJournal,
     supervisor_lock as supervisor_lock,
@@ -65,14 +68,28 @@ from cohort_supervisor_runtime import (
 )
 
 
-def launchd_plist(kind: str, arguments: Sequence[str], *, python: Path) -> bytes:
+def launchd_plist(
+    kind: str,
+    arguments: Sequence[str],
+    *,
+    python: Path,
+    resume_after_host_restart: bool = False,
+) -> bytes:
     """Return a LaunchAgent that keeps this supervisor alive across logins.
 
     ``KeepAlive.SuccessfulExit = false`` relaunches a crashed supervisor but not
     one that returned 0 after an operator stop, so an operator stop stays stopped.
+
+    ``resume_after_host_restart`` writes the operator's opt-in into the
+    environment, never into ProgramArguments, so the agent's argv is unchanged.
     """
-    label = f"local.hypervector.cohort.{kind}"
+    if resume_after_host_restart and kind != "supervise":
+        raise ValueError("resume after host restart applies to the supervise agent")
+    label = f"{LAUNCHD_LABEL_PREFIX}{kind}"
     log = str(REPOSITORY_ROOT / RUNTIME_ROOT / f"supervisor_{kind}.launchd.log")
+    environment = {"PYTHONUNBUFFERED": "1"}
+    if resume_after_host_restart:
+        environment[RESUME_AFTER_HOST_RESTART_ENV] = "1"
     return plistlib.dumps(
         {
             "Label": label,
@@ -91,9 +108,14 @@ def launchd_plist(kind: str, arguments: Sequence[str], *, python: Path) -> bytes
             "ProcessType": "Interactive",
             "StandardOutPath": log,
             "StandardErrorPath": log,
-            "EnvironmentVariables": {"PYTHONUNBUFFERED": "1"},
+            "EnvironmentVariables": environment,
         }
     )
+
+
+def resume_after_host_restart_enabled(environment: Mapping[str, str]) -> bool:
+    """Return the operator's opt-in: only "1", surrounding whitespace ignored."""
+    return environment.get(RESUME_AFTER_HOST_RESTART_ENV, "").strip() == "1"
 
 
 def _add_health_arguments(parser: argparse.ArgumentParser) -> None:
@@ -112,6 +134,13 @@ def _add_health_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--interval", type=float, default=30.0)
     parser.add_argument("--reminder-seconds", type=float, default=1_800.0)
     parser.add_argument("--alert-minimum-interval-seconds", type=float, default=60.0)
+    parser.add_argument(
+        "--alert-debounce-seconds",
+        type=float,
+        default=600.0,
+        help="alert on a flapping roster/fee-evidence label only once it persists "
+        "this long (0 disables)",
+    )
     parser.add_argument(
         "--startup-grace-seconds",
         type=float,
@@ -150,6 +179,12 @@ def build_parser() -> argparse.ArgumentParser:
     plist.add_argument("--kind", choices=("watch", "supervise"), required=True)
     plist.add_argument(
         "--python", type=Path, default=REPOSITORY_ROOT / ".venv/bin/python"
+    )
+    plist.add_argument(
+        "--resume-after-host-restart",
+        action="store_true",
+        help=f"supervise only: set {RESUME_AFTER_HOST_RESTART_ENV}=1 so a hold "
+        "latched by the previous boot's shutdown is released at start",
     )
     plist.add_argument(
         "arguments",
@@ -209,8 +244,20 @@ def main(argv: Sequence[str] | None = None) -> int:
     paths = SupervisorPaths()
 
     if args.command == "print-launchd":
+        if args.resume_after_host_restart and args.kind != "supervise":
+            print(
+                "--resume-after-host-restart requires --kind supervise", file=sys.stderr
+            )
+            return EXIT_START_REFUSED
         forwarded = [args.kind, *_strip_separator(args.arguments)]
-        sys.stdout.buffer.write(launchd_plist(args.kind, forwarded, python=args.python))
+        sys.stdout.buffer.write(
+            launchd_plist(
+                args.kind,
+                forwarded,
+                python=args.python,
+                resume_after_host_restart=args.resume_after_host_restart,
+            )
+        )
         return 0
 
     thresholds = _thresholds(args)
@@ -233,6 +280,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         build_sinks(paths, notifications=not args.no_notifications),
         reminder_seconds=args.reminder_seconds,
         minimum_interval_seconds=args.alert_minimum_interval_seconds,
+        debounce_seconds=args.alert_debounce_seconds,
     )
     deadman_url = os.environ.get(DEADMAN_ENV, "").strip() or None
 
@@ -330,6 +378,7 @@ def _run_owned(
         adopted_exit_policy=args.adopted_exit_policy,
         deadman_url=deadman_url,
         stop=stop,
+        resume_after_host_restart=resume_after_host_restart_enabled(os.environ),
     )
 
 
