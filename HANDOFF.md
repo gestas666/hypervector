@@ -37,6 +37,16 @@ own venv).**
   only the profile fingerprint, so any V94 relaunch would run the new source.
 - **Do not cite HANDOFF.md in approvals.** Armed starts re-hash the evidence.
 
+**Approved 2026-09-27 16:59Z.** The operator's words: "approved - opt in to auto-resume after a host restart. The transition needs a drain, 50%,  install the daily-breakout shadow runner".
+- **Approval record:** both V95 approvals are recorded on the branch (commit e3673f0).
+- **D1 shadow (installed 17:36Z):**
+  - Runner `scripts/d1_shadow_runner.py` (main bc39f21, sha256 3496738e…4471).
+  - Pre-registration `docs/plans/2026-09-27-d1-shadow-prereg.md` (commit 8155800, sha256 7f059d5f…43c9).
+  - Seeded with `--backfill-from 2024-01-01`; the last seed mark is 2026-09-26, with 10 taken positions, all long.
+  - Census at `data/research/d1_shadow/census_perps.csv` (captured 2026-09-26). Refresh it between 10-25 and 10-31 UTC, or the November freeze fails closed. The capture tools are preserved in `data/research/d1_shadow/census_tools/`.
+  - launchd agent `local.hypervector.research.d1_shadow` runs at 20:10 and 22:10 local and writes to `data/runtime/research/d1_shadow.log`. It makes no Hyperliquid calls and places no orders.
+- **Engine API agent `hl-api` expires 2026-10-22T12:59:22Z.** After that, every armed start is refused and a running backend cannot place or exit orders. Renew it before then, keeping the name `hl-api` for the engine signer. Never approve another agent under that name.
+
 **Operator decisions pending.**
 1. Turn off macOS auto-install (sudo).
 2. V95 go-live, and whether to opt in to auto-resume after a host restart.
