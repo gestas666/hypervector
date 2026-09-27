@@ -127,7 +127,7 @@ def test_command_binds_capture_before_constructing_runner(monkeypatch: pytest.Mo
     poller = Mock()
     poller.bind_startup_input_observer.side_effect = lambda value: timeline.append("bind")
     telemetry = SimpleNamespace(startup_input_observer=lambda: observer, funding_recovery_start_ms=None)
-    monkeypatch.setattr(module, "install_process_signal_stop", lambda: SimpleNamespace(requested=False))
+    monkeypatch.setattr(module, "install_process_signal_stop", lambda *_args: SimpleNamespace(requested=False))
     monkeypatch.setattr(module, "_create_operator_inbox", lambda *args: None)
     monkeypatch.setattr(module, "MultiAssetLiveRunner", lambda **kwargs: timeline.append("construct"))
     module._create_runner(config, {}, poller, telemetry, Mock(), "offline-run")

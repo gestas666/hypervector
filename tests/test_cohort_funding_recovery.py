@@ -62,7 +62,9 @@ def test_long_downtime_restores_last_committed_funding_boundary(
     monkeypatch.setattr(telemetry, "emit_configuration", lambda: None)
     monkeypatch.setattr(module, "_create_operator_inbox", lambda *_args: None)
     monkeypatch.setattr(
-        module, "install_process_signal_stop", lambda: SimpleNamespace(requested=False)
+        module,
+        "install_process_signal_stop",
+        lambda *_args: SimpleNamespace(requested=False),
     )
     engines = {
         symbol: create_autospec(MultiAssetEngineProtocol, instance=True)

@@ -6,7 +6,14 @@ crash that follows is charged to the supervisor's restart budget. When a
 market's metadata contradicts the profile, every relaunch fails the same way.
 This probe runs inside the runtime lock, before the bundle, with public unsigned
 reads only: it waits in process while the venue is unreachable, and it refuses
-the start when a market's maximum leverage differs from the configured contract.
+the start when a market's maximum leverage breaks the configured contract.
+
+Given the leverage each market requests, only a venue maximum below it refuses;
+an increase, or a decrease that still allows the requested leverage, is emitted
+as a warning and the start continues. Every configured market is held to its
+requested leverage, including one no provider may execute, because each market's
+engine sets isolated leverage when it starts. Without requested leverage the
+venue maximum must equal the profile's recorded maximum exactly.
 
 While it waits it keeps a small marker next to the process lock, so a supervisor
 can tell a backend that is waiting for the venue from one that is hung.
@@ -17,6 +24,7 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping, Sequence
 from datetime import UTC, datetime
 import json
+import math
 import os
 from pathlib import Path
 import tempfile
@@ -25,8 +33,16 @@ import requests
 
 from hypervector.data.hl import HL_INFO_URL
 from hypervector.live.hyperliquid_perp_parsing import parse_market_for_symbol
-from hypervector.live.hyperliquid_perp_reader import VenueMetadataMismatchError
-from hypervector.live.multi_asset_live_config import MultiAssetLiveConfigError
+from hypervector.live.hyperliquid_perp_reader import (
+    VenueMetadataMismatchError,
+    require_requested_leverage,
+    venue_max_leverage_refusal,
+    venue_max_leverage_warning,
+)
+from hypervector.live.multi_asset_live_config import (
+    MultiAssetLiveConfig,
+    MultiAssetLiveConfigError,
+)
 from hypervector.live.perp_venue_identity import (
     configured_perp_dexes,
     parse_perp_venue_identity,
@@ -81,6 +97,11 @@ def fresh_session_unreachable_reason(symbols: Sequence[str]) -> str | None:
     return None
 
 
+def requested_market_leverage(config: MultiAssetLiveConfig) -> dict[str, int]:
+    """Return each configured market's leverage, rounded up to a whole number."""
+    return {asset.symbol: math.ceil(asset.leverage) for asset in config.assets}
+
+
 def await_venue_start(
     expected_max_leverage: Mapping[str, int],
     *,
@@ -90,14 +111,16 @@ def await_venue_start(
     sleep_fn: Callable[[float], None],
     now_fn: Callable[[], datetime] = lambda: datetime.now(UTC),
     emit: Callable[[str], None] = print,
+    requested_leverage: Mapping[str, int] | None = None,
 ) -> int:
-    """Return the attempt count once every configured market matches the venue.
+    """Return the attempt count once every configured market passes the venue check.
 
     Only a transport failure that a later read may clear (as classified for the
     running cohort) is waited out; any other read failure propagates unchanged.
     """
     if not expected_max_leverage:
         raise ValueError("venue start probe requires at least one market")
+    _require_requested_leverage(expected_max_leverage, requested_leverage)
     dexes = configured_perp_dexes(tuple(expected_max_leverage)) or ("",)
     attempts = 0
     waiting_since: str | None = None
@@ -123,7 +146,12 @@ def await_venue_start(
             break
     finally:
         marker.unlink(missing_ok=True)
-    require_market_contract(expected_max_leverage, metadata)
+    require_market_contract(
+        expected_max_leverage,
+        metadata,
+        requested_leverage=requested_leverage,
+        emit=emit,
+    )
     emit(
         f"venue start probe passed: markets={len(expected_max_leverage)} attempts={attempts}"
     )
@@ -140,19 +168,48 @@ def backoff_seconds(attempt: int) -> float:
 def require_market_contract(
     expected_max_leverage: Mapping[str, int],
     metadata: Mapping[str, object],
+    *,
+    requested_leverage: Mapping[str, int] | None = None,
+    emit: Callable[[str], None] = print,
 ) -> None:
-    """Refuse when any market's maximum leverage differs from its configuration."""
-    mismatches = []
+    """Refuse every market whose venue maximum breaks its contract; warn on the rest.
+
+    Tolerated differences are emitted before any refusal is raised, and the
+    refusal names every refused market.
+    """
+    _require_requested_leverage(expected_max_leverage, requested_leverage)
+    refusals = []
     for symbol, expected in expected_max_leverage.items():
         dex = parse_perp_venue_identity(symbol).perp_dex
         observed = parse_market_for_symbol(metadata[dex], symbol).max_leverage
-        if observed != expected:
-            mismatches.append(
-                f"{symbol} max leverage mismatch: expected {expected}, "
-                f"observed {observed}"
+        requested = None if requested_leverage is None else requested_leverage[symbol]
+        refusal = venue_max_leverage_refusal(
+            symbol, observed, expected=expected, requested=requested
+        )
+        if refusal is not None:
+            refusals.append(refusal)
+            continue
+        if requested is not None:
+            warning = venue_max_leverage_warning(
+                symbol, observed, expected=expected, requested=requested
             )
-    if mismatches:
-        raise VenueMetadataMismatchError("; ".join(mismatches))
+            if warning is not None:
+                emit(warning)
+    if refusals:
+        raise VenueMetadataMismatchError("; ".join(refusals))
+
+
+def _require_requested_leverage(
+    expected_max_leverage: Mapping[str, int],
+    requested_leverage: Mapping[str, int] | None,
+) -> None:
+    """Refuse requested leverage that does not cover exactly the configured markets."""
+    if requested_leverage is None:
+        return
+    if set(requested_leverage) != set(expected_max_leverage):
+        raise ValueError("requested leverage must name exactly the configured markets")
+    for symbol, requested in requested_leverage.items():
+        require_requested_leverage(symbol, requested)
 
 
 def _refuse_on_stop(stop_file: Path) -> None:

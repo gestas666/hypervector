@@ -185,7 +185,7 @@ def test_probe_mismatch_refuses_before_the_bundle_and_exits_two(
     config = _config(live_script, tmp_path)
     events: list[str] = []
     _install_venue(
-        live_script, monkeypatch, events, failures=0, meta=_meta(config, SOL=10)
+        live_script, monkeypatch, events, failures=0, meta=_meta(config, SOL=4)
     )
     _stop_after_backup(live_script, monkeypatch, events)
 
@@ -193,7 +193,10 @@ def test_probe_mismatch_refuses_before_the_bundle_and_exits_two(
         _run_locked(live_script, config)
 
     assert "backup" not in events
-    assert "SOL max leverage mismatch: expected 20, observed 10" in str(raised.value)
+    assert (
+        "SOL venue max leverage 4 is below the requested leverage 5 "
+        "(profile venue maximum 20)"
+    ) in str(raised.value)
 
     monkeypatch.setattr(live_script, "load_dotenv_if_present", lambda: None)
     monkeypatch.setattr(
@@ -205,7 +208,27 @@ def test_probe_mismatch_refuses_before_the_bundle_and_exits_two(
 
     monkeypatch.setattr(live_script, "run_live", refuse)
     assert live_script.main() == live_script.EXIT_START_REFUSED == 2
-    assert "live start refused: SOL max leverage mismatch" in capsys.readouterr().err
+    assert "live start refused: SOL venue max leverage 4" in capsys.readouterr().err
+
+
+def test_venue_max_leverage_change_that_allows_the_request_warns_and_starts(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    live_script = _load_module()
+    config = _config(live_script, tmp_path)
+    events: list[str] = []
+    _install_venue(
+        live_script, monkeypatch, events, failures=0, meta=_meta(config, SOL=10)
+    )
+    _stop_after_backup(live_script, monkeypatch, events)
+
+    with pytest.raises(live_script.CohortPrestartBackupError):
+        _run_locked(live_script, config)
+
+    assert "backup" in events
+    assert "venue_max_leverage_changed" in capsys.readouterr().out
 
 
 def _engine_start_fault(

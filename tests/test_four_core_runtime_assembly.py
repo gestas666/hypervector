@@ -54,7 +54,9 @@ def test_approved_four_core_runtime_constructs_without_execution(
     script = _load_module()
     config = script.load_multi_asset_live_config(_CONFIG, mode="observe")
     monkeypatch.setattr(
-        script, "install_process_signal_stop", lambda: SimpleNamespace(requested=False)
+        script,
+        "install_process_signal_stop",
+        lambda *_args: SimpleNamespace(requested=False),
     )
     forbidden = Mock(
         side_effect=AssertionError("execution clients are forbidden in this test")

@@ -17,8 +17,14 @@ from hypervector.live.hyperliquid_protocol import (
 class MultiAssetDirectionalAdapter:
     """Expose generic IOC entries while preserving exact delegated venue state."""
 
-    def __init__(self, delegate: BtcHyperliquidAdapter) -> None:
+    def __init__(
+        self,
+        delegate: BtcHyperliquidAdapter,
+        *,
+        requested_leverage: int | None = None,
+    ) -> None:
         self._delegate = delegate
+        self._requested_leverage = requested_leverage
 
     @property
     def symbol(self) -> str:
@@ -31,8 +37,17 @@ class MultiAssetDirectionalAdapter:
         return self._delegate.perp_dex
 
     def preflight(self, *, expected_max_leverage: int) -> SolVenuePreflight:
-        """Return symbol-scoped venue and account facts."""
-        return self._delegate.preflight(expected_max_leverage=expected_max_leverage)
+        """Return symbol-scoped venue and account facts.
+
+        With the market's requested leverage, only a venue maximum below it
+        refuses; without it the venue maximum must equal the expected one.
+        """
+        if self._requested_leverage is None:
+            return self._delegate.preflight(expected_max_leverage=expected_max_leverage)
+        return self._delegate.preflight(
+            expected_max_leverage=expected_max_leverage,
+            requested_leverage=self._requested_leverage,
+        )
 
     def book_snapshot(self, *, depth_levels: int) -> SolBookSnapshot:
         """Return the symbol's read-only depth snapshot."""

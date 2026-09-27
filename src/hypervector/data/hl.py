@@ -33,6 +33,7 @@ _INTERVAL_MS = {"1m": 60_000, "5m": 300_000, "15m": 900_000, "1h": 3_600_000}
 _SLEEP_S = 0.05
 _MILLIS_PER_DAY = 24 * 60 * 60 * 1000
 _SNAPSHOT_RETRY_DELAYS = (1.0, 2.0, 4.0)
+_SNAPSHOT_TIMEOUT_SECONDS = 30
 _SNAPSHOT_RETRYABLE_HTTP_STATUSES = frozenset({429, 500, 502, 503, 504})
 _MAX_RETRY_AFTER_SECONDS = 15.0
 
@@ -281,8 +282,16 @@ def fetch_hl_ohlcv_snapshot(
     session: requests.Session | None = None,
     end_ms: int | None = None,
     sleep_fn: Callable[[float], None] = time.sleep,
+    timeout: float | tuple[float, float] = _SNAPSHOT_TIMEOUT_SECONDS,
+    stop_check: Callable[[], None] | None = None,
 ) -> pd.DataFrame:
-    """Fetch one bounded recent candle snapshot for latency-sensitive polling."""
+    """Fetch one bounded recent candle snapshot for latency-sensitive polling.
+
+    ``timeout`` is passed to every attempt as given. ``stop_check``, when
+    supplied, runs before every attempt and after every failed one, and an
+    exception it raises abandons the read, so a stopping caller never waits out
+    the retry ladder. Callers that pass neither keep the 30 s ladder unchanged.
+    """
     if timeframe not in _INTERVAL_MS:
         raise ValueError(f"unsupported HL timeframe: {timeframe}")
     if isinstance(lookback_days, bool) or lookback_days <= 0.0:
@@ -302,6 +311,8 @@ def fetch_hl_ohlcv_snapshot(
         session or requests.Session(),
         payload,
         sleep_fn,
+        timeout=timeout,
+        stop_check=stop_check,
     )
     try:
         raw = response.json()
@@ -324,12 +335,18 @@ def _request_hl_candle_snapshot(
     session: requests.Session,
     payload: dict[str, object],
     sleep_fn: Callable[[float], None],
+    *,
+    timeout: float | tuple[float, float] = _SNAPSHOT_TIMEOUT_SECONDS,
+    stop_check: Callable[[], None] | None = None,
 ) -> requests.Response:
     attempts = len(_SNAPSHOT_RETRY_DELAYS) + 1
     for attempt in range(attempts):
+        _run_stop_check(stop_check)
         try:
-            response = session.post(HL_INFO_URL, json=payload, timeout=30)
+            response = session.post(HL_INFO_URL, json=payload, timeout=timeout)
         except requests.RequestException as exc:
+            # Raised from here, a stop keeps the transport failure as its context.
+            _run_stop_check(stop_check)
             if attempt == attempts - 1:
                 raise
             delay = _SNAPSHOT_RETRY_DELAYS[attempt]
@@ -343,6 +360,7 @@ def _request_hl_candle_snapshot(
         if response.status_code not in _SNAPSHOT_RETRYABLE_HTTP_STATUSES:
             response.raise_for_status()
             return response
+        _run_stop_check(stop_check)
         if attempt == attempts - 1:
             response.raise_for_status()
         delay = _snapshot_retry_delay(response, attempt)
@@ -355,11 +373,19 @@ def _request_hl_candle_snapshot(
     raise RuntimeError("HL candle snapshot retry loop exhausted")
 
 
+def _run_stop_check(stop_check: Callable[[], None] | None) -> None:
+    if stop_check is not None:
+        stop_check()
+
+
 def _snapshot_retry_delay(response: requests.Response, attempt: int) -> float:
     raw = response.headers.get("Retry-After")
     try:
         requested = float(raw) if raw is not None else 0.0
     except ValueError:
+        requested = 0.0
+    if math.isnan(requested):
+        # NaN would pass through min/max below, and no sleep accepts it.
         requested = 0.0
     fallback = _SNAPSHOT_RETRY_DELAYS[attempt]
     return min(max(requested, fallback), _MAX_RETRY_AFTER_SECONDS)

@@ -14,14 +14,30 @@ hands to the runner — using the same ``build_router`` and the same config-deri
 mappings — and calls ``validate_runtime`` with placeholder engines, which the
 validator inspects only by key. Run it before every armed start.
 
+In live mode it also refuses two shapes the loader and the runner both accept
+but the armed start cannot survive. The kill switch and the cohort ledger must
+be the paths the supervisor watches (``SupervisorPaths``), with ``stop_file`` as
+STOP beside the ledger; otherwise an operator stop or a stale heartbeat goes
+unseen. And every provider must resolve the default collector the armed
+entrypoint builds, so a mistyped ``strategy_id`` is refused here rather than
+after the pre-arm checks pass. Collector construction reads no venue data.
+
+Live mode also refuses a route whose stop could sit beyond its liquidation
+price. The armed start tolerates any venue maximum leverage at or above a
+market's requested leverage (``ceil(leverage)``); a lower maximum raises the
+maintenance margin and pulls liquidation toward the entry. Every executable
+route's widest stop plus its cost buffer must stay inside the isolated
+liquidation distance at that lowest tolerated maximum, so no venue change the
+start accepts can leave a stop that never fires.
+
 With ``--equity`` it also runs the book-level config check of the V94 size
 ladder (docs/plans/2026-09-24-v94-size-ladder.md): across executable routes at
 that equity, the summed maximum at-stop loss must stay within 3% of equity and
 the summed posted margin within 25%. It is a configuration validation, not a
 trade gate: the live runner never consults it.
 
-Exit codes: 0 accepted, 1 runner objection, 2 loader refusal, 3 book-level
-limit exceeded.
+Exit codes: 0 accepted, 1 runner objection, 2 loader, live-path, collector or
+stop-beyond-liquidation refusal, 3 book-level limit exceeded.
 """
 
 from __future__ import annotations
@@ -34,15 +50,20 @@ from pathlib import Path
 import sys
 import tomllib
 
+from cohort_supervisor_models import REPOSITORY_ROOT, SupervisorPaths
+
 from hypervector.live.cohort_execution_plan_validation import CohortExecutionPlanError
 from hypervector.live.cohort_runtime_preflight import validate_runtime_configuration
+from hypervector.live.multi_asset_default_collectors import build_default_collector
 from hypervector.live.multi_asset_live_config import (
+    MultiAssetLiveConfig,
     MultiAssetLiveConfigError,
     load_multi_asset_live_config,
 )
 from hypervector.live.multi_asset_live_runner_support import (
     MultiAssetLiveRunnerError,
 )
+from hypervector.live.multi_asset_market_bars import MultiAssetIntentPollerError
 
 BOOK_AT_STOP_RISK_LIMIT = 0.03
 BOOK_MARGIN_LIMIT = 0.25
@@ -50,20 +71,139 @@ BOOK_MARGIN_LIMIT = 0.25
 # a route whose provider declares no stop_risk_budget of its own.
 DEFAULT_COST_BUFFER_BPS = 20.0
 BPS_PER_UNIT = 10_000.0
+# The armed entrypoint's default, "../backtest-lab/backtest_lab" relative to the
+# repository root the supervisor runs it from; anchored there, not to this cwd.
+DEFAULT_BACKTEST_LAB = REPOSITORY_ROOT.parent / "backtest-lab" / "backtest_lab"
+# Hyperliquid's maintenance margin is half the initial margin at the venue's
+# maximum leverage.
+MAINTENANCE_MARGIN_SHARE = 0.5
 
 
-def check(config_path: Path, *, mode: str) -> list[str]:
-    """Return the runtime validator's objections for one profile, if any."""
+def check(
+    config_path: Path,
+    *,
+    mode: str,
+    backtest_lab_root: Path = DEFAULT_BACKTEST_LAB,
+) -> list[str]:
+    """Return the runtime validator's objections for one profile, if any.
+
+    In live mode a profile whose paths the supervisor does not watch, whose
+    provider has no default collector, or whose stop could sit beyond its
+    liquidation price raises instead: those are refusals.
+    """
     armed = mode == "live"
     config = load_multi_asset_live_config(
         config_path, mode=mode, enabled=armed, accepts_live_risk=armed
     )
+    if armed:
+        require_supervised_paths(config)
+        require_default_collectors(config, backtest_lab_root.resolve())
+        require_stops_inside_liquidation(config_path)
     problems: list[str] = []
     try:
         validate_runtime_configuration(config)
     except MultiAssetLiveRunnerError as exc:
         problems.append(str(exc))
     return problems
+
+
+def require_supervised_paths(
+    config: MultiAssetLiveConfig, paths: SupervisorPaths | None = None
+) -> None:
+    """Refuse a live profile whose kill switch or ledger the supervisor does not watch.
+
+    The backend runs from the repository root, so relative profile paths are
+    compared as the supervisor's absolute ones there.
+    """
+    supervised = paths if paths is not None else SupervisorPaths()
+    stop_file = _repository_path(config.stop_file)
+    ledger = _repository_path(config.cohort_ledger)
+    problems: list[str] = []
+    if stop_file != ledger.parent / "STOP":
+        problems.append(
+            f"stop_file {config.stop_file} is not STOP beside cohort_ledger "
+            f"{config.cohort_ledger}"
+        )
+    if stop_file != supervised.stop_file:
+        problems.append(
+            f"stop_file {stop_file} is not the supervisor's {supervised.stop_file}"
+        )
+    if ledger != supervised.ledger:
+        problems.append(
+            f"cohort_ledger {ledger} is not the supervisor's {supervised.ledger}"
+        )
+    if problems:
+        raise MultiAssetLiveConfigError("; ".join(problems))
+
+
+def require_default_collectors(
+    config: MultiAssetLiveConfig, backtest_lab_root: Path
+) -> None:
+    """Build every provider's collector exactly as the armed entrypoint does.
+
+    The armed start builds one for every provider, executable or not, and a
+    strategy_id without one is refused there. Construction fetches nothing.
+    """
+    for provider in config.providers:
+        build_default_collector(provider, config, backtest_lab_root)
+
+
+def _repository_path(path: Path) -> Path:
+    return path if path.is_absolute() else REPOSITORY_ROOT / path
+
+
+def isolated_liquidation_distance_bps(
+    leverage: float, venue_max_leverage: int
+) -> float:
+    """Return the nearer (short-side) isolated liquidation distance from entry.
+
+    Hyperliquid liquidates an isolated position once its margin, 1/leverage of
+    the entry notional, falls to the maintenance margin at the venue maximum.
+    The distance grows with the venue maximum.
+    """
+    maintenance = MAINTENANCE_MARGIN_SHARE / venue_max_leverage
+    return (1.0 / leverage - maintenance) / (1.0 + maintenance) * BPS_PER_UNIT
+
+
+def liquidation_problems(config_path: Path) -> list[str]:
+    """Name each executable route whose stop could sit beyond its liquidation.
+
+    Each route is checked at the lowest venue maximum the armed start tolerates,
+    ``ceil(leverage)``. Funding accrued while a position is open is not modeled.
+    """
+    with config_path.open("rb") as handle:
+        profile = tomllib.load(handle)
+    assets = {
+        str(row["symbol"]): row for row in _tables(profile.get("assets"), "assets")
+    }
+    problems: list[str] = []
+    for provider in _tables(profile.get("providers"), "providers"):
+        execution = provider.get("execution")
+        execution = execution if isinstance(execution, Mapping) else {}
+        for symbol in provider.get("execution_symbols") or ():
+            if symbol not in assets:
+                raise ValueError(f"executable route {symbol} has no asset table")
+            asset = assets[symbol]
+            leverage = _positive(asset.get("leverage"), f"{symbol} leverage")
+            venue_floor = math.ceil(leverage)
+            distance = isolated_liquidation_distance_bps(leverage, venue_floor)
+            stop = _maximum_stop_bps(execution, provider, str(symbol), asset)
+            buffer = _cost_buffer_bps(execution)
+            if stop + buffer >= distance:
+                problems.append(
+                    f"{provider.get('strategy_id')} {symbol} stop {stop:g} bps plus "
+                    f"cost buffer {buffer:g} bps reaches its {distance:.0f} bps "
+                    f"liquidation distance at {leverage:g}x once the venue maximum "
+                    f"is {venue_floor}x"
+                )
+    return problems
+
+
+def require_stops_inside_liquidation(config_path: Path) -> None:
+    """Refuse a live profile with any route whose stop could never fire."""
+    problems = liquidation_problems(config_path)
+    if problems:
+        raise MultiAssetLiveConfigError("; ".join(problems))
 
 
 @dataclass(frozen=True)
@@ -260,10 +400,9 @@ def _stop_budget(
     matching ``StopRiskBudget.effective_maximum_loss_usd``.
     """
     raw = execution.get("stop_risk_budget")
+    buffer = _cost_buffer_bps(execution)
     if not isinstance(raw, Mapping):
-        return None, DEFAULT_COST_BUFFER_BPS, "none"
-    buffer = raw.get("cost_buffer_bps", DEFAULT_COST_BUFFER_BPS)
-    buffer = _nonnegative(buffer, "stop_risk_budget cost_buffer_bps")
+        return None, buffer, "none"
     candidates: list[tuple[float, str]] = []
     if raw.get("maximum_loss_usd") is not None:
         candidates.append(
@@ -278,6 +417,14 @@ def _stop_budget(
         return None, buffer, "none"
     budget, source = min(candidates)
     return budget, buffer, source
+
+
+def _cost_buffer_bps(execution: Mapping[str, object]) -> float:
+    raw = execution.get("stop_risk_budget")
+    if not isinstance(raw, Mapping):
+        return DEFAULT_COST_BUFFER_BPS
+    buffer = raw.get("cost_buffer_bps", DEFAULT_COST_BUFFER_BPS)
+    return _nonnegative(buffer, "stop_risk_budget cost_buffer_bps")
 
 
 def _positive(value: object, label: str) -> float:
@@ -337,9 +484,20 @@ def main() -> int:
         type=float,
         help="account equity in USD for the book-level at-stop risk and margin check",
     )
+    parser.add_argument(
+        "--backtest-lab-root",
+        type=Path,
+        default=DEFAULT_BACKTEST_LAB,
+        help=(
+            "backtest-lab dependency root, as passed to the armed entrypoint "
+            "(default: the supervised entrypoint's, beside the repository root)"
+        ),
+    )
     args = parser.parse_args()
     try:
-        problems = check(args.config, mode=args.mode)
+        problems = check(
+            args.config, mode=args.mode, backtest_lab_root=args.backtest_lab_root
+        )
         book = (
             book_check(args.config, equity_usd=args.equity)
             if args.equity is not None and not problems
@@ -347,6 +505,7 @@ def main() -> int:
         )
     except (
         MultiAssetLiveConfigError,
+        MultiAssetIntentPollerError,
         CohortExecutionPlanError,
         FileNotFoundError,
         ValueError,

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+
 from hypervector.data.oxa_api import validate_hip3_symbol
 from hypervector.live.hyperliquid_protocol import (
     Hip3MarketFeeMetadata,
@@ -43,6 +45,10 @@ from hypervector.live.hyperliquid_sol_parsing import (
 from hypervector.live.hyperliquid_user_funding_history import read_user_funding_history
 from hypervector.live.sol_order_identity import validate_client_order_id
 
+logger = logging.getLogger(__name__)
+# Stable prefix of the warning for a tolerated venue maximum-leverage change.
+VENUE_MAX_LEVERAGE_CHANGED = "venue_max_leverage_changed"
+
 
 class VenueMetadataMismatchError(HyperliquidAdapterError):
     """Venue market metadata contradicts the configured market contract.
@@ -50,6 +56,61 @@ class VenueMetadataMismatchError(HyperliquidAdapterError):
     A venue fact such as a changed maximum leverage persists across relaunches, so
     the live boundary refuses the start instead of crashing into a restart loop.
     """
+
+
+def require_requested_leverage(symbol: str, requested: object) -> int:
+    """Return a market's requested leverage, refusing anything but a positive int.
+
+    A malformed value is the caller's error, so callers check it before any read.
+    """
+    if isinstance(requested, bool) or not isinstance(requested, int) or requested < 1:
+        raise ValueError(f"{symbol} requested leverage must be a positive integer")
+    return requested
+
+
+def venue_max_leverage_refusal(
+    symbol: str,
+    observed: int,
+    *,
+    expected: int,
+    requested: int | None,
+) -> str | None:
+    """Return why a venue maximum leverage refuses the start, or None when allowed.
+
+    Without ``requested`` the venue maximum must equal the profile's ``expected``
+    value. With the leverage the market will request (rounded up to the venue's
+    integer grid), only a venue maximum below it refuses, so the venue is never
+    asked for more leverage than it allows.
+    """
+    if requested is None:
+        if observed == expected:
+            return None
+        return (
+            f"{symbol} max leverage mismatch: expected {expected}, observed {observed}"
+        )
+    if observed >= require_requested_leverage(symbol, requested):
+        return None
+    return (
+        f"{symbol} venue max leverage {observed} is below the requested leverage "
+        f"{requested} (profile venue maximum {expected})"
+    )
+
+
+def venue_max_leverage_warning(
+    symbol: str,
+    observed: int,
+    *,
+    expected: int,
+    requested: int,
+) -> str | None:
+    """Return the warning for a changed maximum that still allows ``requested``."""
+    if observed == expected:
+        return None
+    return (
+        f"{VENUE_MAX_LEVERAGE_CHANGED}: {symbol} venue max leverage {observed} "
+        f"differs from the profile's {expected}; the requested leverage "
+        f"{requested} is still allowed, so the start continues"
+    )
 
 
 class HyperliquidPerpReader:
@@ -70,14 +131,39 @@ class HyperliquidPerpReader:
         self._market_metadata_cache: object | None = None
         self._account_mode_cache: str | None = None
 
-    def preflight(self, *, expected_max_leverage: int) -> SolVenuePreflight:
-        """Read metadata, fees, account state, and current mark."""
+    def preflight(
+        self,
+        *,
+        expected_max_leverage: int,
+        requested_leverage: int | None = None,
+    ) -> SolVenuePreflight:
+        """Read metadata, fees, account state, and current mark.
+
+        Without ``requested_leverage`` the venue maximum must equal the expected
+        one. With it, only a venue maximum below the requested leverage refuses;
+        any other difference is logged as a warning and the preflight continues.
+        A malformed requested leverage is refused before any venue read.
+        """
+        if requested_leverage is not None:
+            require_requested_leverage(self._symbol, requested_leverage)
         market = self._market(refresh=True)
-        if market.max_leverage != expected_max_leverage:
-            raise VenueMetadataMismatchError(
-                f"{self._symbol} max leverage mismatch: expected "
-                f"{expected_max_leverage}, observed {market.max_leverage}"
+        refusal = venue_max_leverage_refusal(
+            self._symbol,
+            market.max_leverage,
+            expected=expected_max_leverage,
+            requested=requested_leverage,
+        )
+        if refusal is not None:
+            raise VenueMetadataMismatchError(refusal)
+        if requested_leverage is not None:
+            warning = venue_max_leverage_warning(
+                self._symbol,
+                market.max_leverage,
+                expected=expected_max_leverage,
+                requested=requested_leverage,
             )
+            if warning is not None:
+                logger.warning(warning)
         mode = self.account_abstraction_mode(refresh=True)
         account = self._account_snapshot(mode)
         mark = parse_mid_for_symbol(

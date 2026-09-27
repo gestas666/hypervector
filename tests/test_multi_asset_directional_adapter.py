@@ -42,3 +42,24 @@ def test_consistency_retry_invalidates_delegate_read_cache() -> None:
     adapter.invalidate_reconciliation_cache()
 
     delegate.invalidate_reconciliation_cache.assert_called_once_with()
+
+
+def test_preflight_forwards_requested_leverage_only_when_configured() -> None:
+    """Live adapters relax the venue maximum check; others keep exact equality."""
+    delegate = Mock(spec=BtcHyperliquidAdapter)
+    delegate.symbol = "SOL"
+    delegate.preflight.return_value = "preflight"
+
+    assert (
+        MultiAssetDirectionalAdapter(delegate).preflight(expected_max_leverage=20)
+        == "preflight"
+    )
+    delegate.preflight.assert_called_once_with(expected_max_leverage=20)
+
+    delegate.preflight.reset_mock()
+    adapter = MultiAssetDirectionalAdapter(delegate, requested_leverage=8)
+
+    assert adapter.preflight(expected_max_leverage=20) == "preflight"
+    delegate.preflight.assert_called_once_with(
+        expected_max_leverage=20, requested_leverage=8
+    )

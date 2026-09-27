@@ -9,6 +9,7 @@ from types import MappingProxyType
 
 from hypervector.live.hulk_smash_live_config import HulkSmashLiveConfig
 from hypervector.live.hyperliquid_btc_adapter import BtcHyperliquidAdapter
+from hypervector.live.hyperliquid_perp_reader import require_requested_leverage
 from hypervector.live.hyperliquid_sol_adapter import SolHyperliquidAdapter
 from hypervector.live.hyperliquid_sol_factory import (
     OfficialSolSdkBuilder,
@@ -43,6 +44,7 @@ class AssetExecutionEnvelope:
     max_notional_usd: float
     slippage_fraction: float
     entry_slippage_fraction: float | None = None
+    requested_leverage: int | None = None
     perp_dex: str = field(init=False)
 
     def __post_init__(self) -> None:
@@ -58,6 +60,8 @@ class AssetExecutionEnvelope:
             raise ValueError(
                 "asset entry_slippage_fraction must be between zero and 0.05"
             )
+        if self.requested_leverage is not None:
+            require_requested_leverage(identity.symbol, self.requested_leverage)
         object.__setattr__(self, "symbol", identity.symbol)
         object.__setattr__(self, "perp_dex", identity.perp_dex)
 
@@ -163,7 +167,8 @@ def create_armed_multi_asset_adapters(
                 entry_slippage_fraction=asset.entry_slippage_fraction,
                 symbol=asset.symbol,
                 perp_dex=asset.perp_dex,
-            )
+            ),
+            requested_leverage=asset.requested_leverage,
         )
         for asset in assets
     }
