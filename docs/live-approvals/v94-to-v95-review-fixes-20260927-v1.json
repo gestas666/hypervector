@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "document_type": "cohort_profile_change_approval",
+  "approval_status": "approved_for_live_transition",
+  "approved_at_utc": "2026-09-27T16:59:22+00:00",
+  "approved_by": "operator_in_conversation",
+  "operator_approval": "approved - opt in to auto-resume after a host restart. The transition needs a drain, 50%,  install the daily-breakout shadow runner",
+  "execution_authority": "none",
+  "previous_profile": {
+    "profile_id": "multi_asset_growth_first_5000_review_actions_v94",
+    "profile_fingerprint": "930117e9ac0f4bb91fc66631666f47eb68a5d66bd8928684d8792f63122b3fd1"
+  },
+  "candidate_profile": {
+    "profile_id": "multi_asset_growth_first_5000_review_fixes_v95",
+    "profile_fingerprint": "dd779cce74568e4ba6963d1a19810a7fbcaa7f4279e40f45be83f12286339420"
+  },
+  "change_scopes": [
+    "hype_asset_and_watch_only_hype_breakout_compression_alignment_bidirectional_v2_provider_removed",
+    "xyz_spcx_asset_and_watch_only_hourly_band20_reentry_atr20_bidirectional_v1_provider_removed",
+    "no_executable_scope_retired_btc_sweep_eth_range_onset_and_donchian_routes_keep_v94_values",
+    "supervisor_resume_after_host_restart_opt_in_via_plist_environment_default_off",
+    "backend_honours_sigterm_within_seconds_without_interrupting_order_or_stop_placement",
+    "venue_max_leverage_refuses_only_below_requested_leverage_in_start_probe_and_engine_preflight",
+    "live_stop_file_required_beside_cohort_ledger_and_prearm_collector_resolution_check",
+    "checkpoint_snapshot_spill_and_research_import_io_cut",
+    "cockpit_stop_lock_line_follows_acknowledged_protective_stop_raises"
+  ],
+  "recommendation_evidence": [
+    {
+      "path": "../reviews/2026-09-27-v94-review-and-swing-research.md",
+      "sha256": "f83cae53e3ace9a49656b1f18f19b941e68e8c2e4c22784810ae69b685db5525"
+    },
+    {
+      "path": "../reviews/2026-09-24-v93-full-review.md",
+      "sha256": "4386daf5774f5ea458b77f948392546b7bd87376b2c2a7434c0b8cc04633ab54"
+    },
+    {
+      "path": "../plans/2026-09-24-v94-review-actions.md",
+      "sha256": "0f44af9a3b943ee1d4dd3020e8977875277c6c9c0d4bd73e85a23cd68833937f"
+    },
+    {
+      "path": "../../configs/v95-to-v94-rollback-20260927-v1.toml",
+      "sha256": "d572d99ecca2154f14179e52d71b6e8fd2c8166bed94349892a7bc0eb42f40c9"
+    }
+  ],
+  "rollback": {
+    "config_path": "../../configs/multi_asset_growth_first_5000_review_actions_v94.toml",
+    "profile_fingerprint": "930117e9ac0f4bb91fc66631666f47eb68a5d66bd8928684d8792f63122b3fd1",
+    "sha256": "8a8ef35de29b46c91cfad4cc0774a171485740901b3063d66851ceecbbad2e34"
+  },
+  "retirements": []
+}
