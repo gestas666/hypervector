@@ -55,12 +55,62 @@
   - cockpit follow-ups: Python raise attribution after a restart, and a payload contract test;
   - supervisor follow-ups;
   - halted markets and HIP-3 weekend gaps;
-  - the BRENTOIL oracle roll around 2026-09-30;
+  - the BRENTOIL oracle roll: CORRECTED, it is **not** 09-30. The xyz oracle rolls Z6→F7 in 20% steps, effective about 22:00Z on Oct 7, 8, 9, 12 and 13. ICE X6 expiry on 09-30 does not move it, and step days show no artefact. No action;
   - ladder re-registration (due before the 30th Donchian close, about Oct 9-20);
-  - `hl-api` agent expiry on 2026-10-22 (operator renewal);
+  - `hl-api` agent expiry on 2026-10-22 (operator renewal under a NEW name, see below);
   - dead capacity in the BTC sweep and ETH routes.
 - **Deploy rule.** Anything under src/hypervector or the entrypoint means a V96 profile, an approval and a drain. Scripts-only fixes need no backend restart.
 - **D1 shadow runner removed (operator, 2026-09-28).** The launchd agent `local.hypervector.research.d1_shadow` was unloaded, and its plist was moved to `data/backups/d1_shadow_removed_20260928/`. The ledger and census stay in `data/research/d1_shadow/`, and the code stays in scripts/ (inert).
+
+**V95 issue sweep: RESULTS (2026-09-28 12:22Z; 41 agents, every finding adversarially verified).**
+- **Plan and evidence.** The full plan is `data/logs/research/v95_issue_sweep_20260928/v95sweep_plan.md`; the repros are under `.../evidence/verify/`.
+- **Verdict.** The live V95 book needs no action and no restart, and the V95 profile and config have no errors. There are 24 confirmed issues, all medium or low. They split into:
+  - docs and watch-agent fixes that can land now;
+  - one V96 source batch (one drain; config byte-identical to V95 apart from identity and approval);
+  - operator actions.
+- **Medium items:**
+  - **BL-1:** `hl-api` expiry (see the corrected renewal note).
+  - **VR-2:** a venue settlement or halt of an open xyz position faults the whole backend, and the restart is refused. Now: watch docs.trade.xyz notices for SNDK and TSLA, and send `manual_close` (not STOP) before any notice window. V96 fix only once a real settlement-fill shape is known.
+- **Time-bound:**
+  - **LF-6 checkpoint cost grows linearly with run age:**
+    - `--independent-monitor` breaks around 10-01;
+    - the TUI shows STALE around 10-05;
+    - the 2 GiB spill arrives around 10-10.
+
+    Target the V96 launch for about 10-04/05. The fallback is a flat-window restart of the same V95 profile: no approval, the fingerprint is unchanged, it resets the growth and it can carry the `hl-api-2` swap.
+  - TSLA deliveries on 10-02: optional operator close.
+  - BRENT roll steps Oct 7–13: no action.
+  - Ladder D2 decision before the 30th close.
+- **V96 batch:**
+  - **B1** `covering_stop`: the checkpoint currently shows a raised stop as the old stop, labelled `open_profit_unprotected`.
+  - **B2** checkpoint provisional economics while `entry_unfilled`.
+  - **B3** raise-telemetry keys.
+  - **B4** poll phase alignment: the third same-hour entry is withheld about 42% of the time.
+  - **B5** per-side restart-seed exits.
+  - **B6** a definitive venue rejection on a flat venue becomes withheld instead of crashing the backend.
+  - **B7** incremental checkpoint snapshot, and single-pass importer hashing.
+  - **B8** whole-number leverage plus a stop-inside-liquidation loader check; `effective_mode` leverage flags; the drain error names the resume flag.
+  - **B9** (conditional) `venue_settled`.
+  - Supervisor BL-9 (a start-refusal relaunch loop with no alert).
+  - TUI: inactivity limit relative to cadence; raise display that survives restarts.
+- **Watch now (additive; watch reload only):**
+  - LF-3 false `backend_process_absent` at launch;
+  - `liquidation_near_stop` and max-leverage-change alerts;
+  - agent-expiry countdown;
+  - deadline-headroom and checkpoint-publish-latency alerts;
+  - live-source drift check (as a subprocess);
+  - `print-launchd` PYTHONPATH.
+- **Operator actions:**
+  - `hl-api-2` (new name) by about 10-15;
+  - off-host alerts: webhook and deadman on the watch plist;
+  - disk reclaim (Spotify cache about 4 GB; about 10 unreferenced prestart bundles, about 11 GB; grep untracked manifests first);
+  - settlement watch;
+  - durable-stop discipline: use the STOP file, or `launchctl disable` before any bootout. A bare bootout followed by a reboot within 3 min re-arms the book;
+  - merge V96 only inside the drain;
+  - put `../backtest-lab` under git.
+- **Do not change:** see plan §3 (refuted items and rejected literal fixes).
+- **Rollback plists.** Never regenerate them with `print-launchd`: it drops PYTHONPATH and the alert URLs. Copy the installed plists and edit only `--config`.
+- **During the V96 drain,** any exit or reboot ends in a hold. Recover with `--resume-transition-drain` (FR-4).
 
 **Pending.**
 - **D1 crypto breakout sleeve: SHELVED by the operator on 2026-09-28 ("forget this").** The code is merged but inert. No sub-account, key or approval exists, and nothing is armed. The details below are kept for the record.
@@ -90,9 +140,9 @@
   - It needs the operator's one-time setup: a sub-account, a new API wallet named `d1-sleeve`, an env
     file outside the repo, a transfer while the cohort is flat, an approval, a canary, and the plist.
   - A transfer to the sub-account halves V95's equity-fraction sizing. Anchor ladder evidence after the transfer.
-- **Engine agent `hl-api` expires 2026-10-22T12:59:22Z.** Renew it under the same name.
+- **Engine agent `hl-api` expires 2026-10-22T12:59:22Z.** CORRECTED 2026-09-28: do **NOT** re-approve under the name `hl-api`. A same-name approval immediately de-registers the running signer, and V95 then cannot place, raise or exit orders. Instead, by about 10-15, approve a NEW API wallet under a **different** name (for example `hl-api-2`) and put its key in `.env`. The running backend does not re-read `.env`; the new key takes effect at the next backend start (V96 launch, or a flat-window V95 restart). Let `hl-api` expire on its own. Never reuse its name or address.
 - **Re-register the ladder** before the 30th Donchian close. Pool V94 and V95 closes, since the Donchian identity and sizing are unchanged.
-- **D1 shadow census refresh** between 10-25 and 10-31 UTC.
+- (shelved) The D1 shadow census refresh is no longer needed: the shadow agent was removed on 2026-09-28.
 
 ---
 
@@ -143,7 +193,7 @@ own venv).**
   - Seeded with `--backfill-from 2024-01-01`; the last seed mark is 2026-09-26, with 10 taken positions, all long.
   - Census at `data/research/d1_shadow/census_perps.csv` (captured 2026-09-26). Refresh it between 10-25 and 10-31 UTC, or the November freeze fails closed. The capture tools are preserved in `data/research/d1_shadow/census_tools/`.
   - launchd agent `local.hypervector.research.d1_shadow` runs at 20:10 and 22:10 local and writes to `data/runtime/research/d1_shadow.log`. It makes no Hyperliquid calls and places no orders.
-- **Engine API agent `hl-api` expires 2026-10-22T12:59:22Z.** After that, every armed start is refused and a running backend cannot place or exit orders. Renew it before then, keeping the name `hl-api` for the engine signer. Never approve another agent under that name.
+- **Engine agent `hl-api` expires 2026-10-22T12:59:22Z.** CORRECTED 2026-09-28: do **NOT** re-approve under the name `hl-api`. A same-name approval immediately de-registers the running signer, and V95 then cannot place, raise or exit orders. Instead, by about 10-15, approve a NEW API wallet under a **different** name (for example `hl-api-2`) and put its key in `.env`. The running backend does not re-read `.env`; the new key takes effect at the next backend start (V96 launch, or a flat-window V95 restart). Let `hl-api` expire on its own. Never reuse its name or address. After expiry, every armed start is refused and a running backend cannot place or exit orders.
 
 **Operator decisions pending.**
 1. Turn off macOS auto-install (sudo).
