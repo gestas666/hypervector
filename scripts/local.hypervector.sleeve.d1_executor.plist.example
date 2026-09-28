@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  EXAMPLE ONLY - not installed. Installing it is the operator's call.
+
+  D1 sleeve executor (Sleeve S1 on the d1-sleeve Hyperliquid sub-account).
+  As written it has NO arming flags, so every hourly run is a DRY RUN: it
+  never loads the private key, never imports the signing SDK, builds no
+  exchange client, writes nothing and logs signing_client=none
+  exchange_posts=0. Adding the two arming strings (enabled and
+  i-accept-live-risk, each with the usual two-dash prefix) to
+  ProgramArguments right after the approval path is Albert's explicit
+  arming act; nothing else arms it. (XML comments cannot contain a double
+  hyphen, so no flag is spelled here.)
+
+  Design: one idempotent run per hour at minute 15. Each run re-reads the
+  venue, resolves any ambiguous order, makes every owned position hold
+  exactly one verified reduce-only stop, closes positions whose virtual
+  trade closed in the shadow ledger, then takes today's fresh shadow
+  entries (within 6 hours of 00:00 UTC). A re-run on the same UTC day that
+  finds nothing to do makes no mutation. A missed hour is caught up by the
+  next one.
+
+  Minute 15 is clear of the quiet window (minutes 57 to 03, when the
+  executor makes no Hyperliquid call) and follows the shadow's own run.
+  launchd StartCalendarInterval uses local time, but only Minute is set, so
+  the job runs at :15 of every hour in any time zone.
+
+  Credentials come from ~/.config/hypervector/d1_sleeve.env, outside the
+  repository, owned by this user with mode 0600 (chmod 600). It holds the
+  sleeve API wallet key and address, the sub-account address and the
+  master address, never the engine key (a file naming the engine key is
+  refused). No EnvironmentVariables are set here on purpose.
+
+  launchd does not create the log directory: create data/runtime/d1_sleeve
+  (and data/live/d1_sleeve) before bootstrapping, or the job cannot start.
+
+  Pause: touch data/live/d1_sleeve/STOP. STOP means reduce-only mode (no
+  entries, no leverage changes); exits, stop repair and breach closes
+  continue. A STOP touched during a run blocks that run's remaining entries.
+  Off: launchctl bootout of this label, in this order: touch STOP, wait for
+  the current run's summary line in the log, then bootout. A bootout during
+  the entry phase can stop the process between a fill and its stop, and no
+  hourly run follows a bootout, so after ANY bootout run the status command
+  with its venue flag; one armed run (or flatten) re-places or closes a
+  position left without a stop.
+
+  Armed runs refused before they start (torn journal, an approval that no
+  longer pins the code, env file drift) raise a critical banner, an
+  alerts.jsonl record and, when the env loads, the webhook; the dead-man URL
+  is pinged only by runs that finish. Armed runs also take a host-wide lock,
+  ~/.config/hypervector/d1_sleeve.SUBFP.lock (SUBFP = the sub-account
+  fingerprint), so a second checkout can never trade the same sub-account
+  at the same time.
+
+  Operator prerequisites: approve the sleeve API wallet on the master under
+  the exact name d1-sleeve (approving it under an existing name such as
+  hl-api replaces the engine's signer); set a new sub-account's abstraction
+  to unifiedAccount or disabled (a new sub reports default, which probe
+  refuses); keep the host clock NTP-synced (an ambiguous order is resolved
+  5 s after its expiry, so a run whose clock is more than 3 s from the
+  venue's Date header takes no entries and raises critical clock_skew).
+
+  A technical failure or an unprotected position in a run halts that run's
+  remaining entries (never exits or stop repair); nothing is skipped, so
+  the next hourly run retries them inside the 6 h window. A stop that
+  vanished while its position was open is critical (stop_missing) and is
+  re-placed. The canary waits about a minute after its stop rests to prove
+  the stop outlives its expiresAfter: start it before minute 40.
+
+  Python runs isolated (-I): PYTHONPATH, user site-packages and the script
+  directory are not on the import path; the executor appends its own
+  directory to import the shadow runner and its core.
+-->
+<plist version="1.0">
+<dict>
+	<key>ExitTimeOut</key>
+	<integer>60</integer>
+	<key>Label</key>
+	<string>local.hypervector.sleeve.d1_executor</string>
+	<key>ProcessType</key>
+	<string>Standard</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/Users/gestas/Prototypes/hypervector/.venv/bin/python</string>
+		<string>-I</string>
+		<string>-u</string>
+		<string>/Users/gestas/Prototypes/hypervector/scripts/d1_sleeve_executor.py</string>
+		<string>run</string>
+		<string>--approval</string>
+		<string>/Users/gestas/Prototypes/hypervector/docs/live-approvals/d1-sleeve-v1-YYYYMMDD.json</string>
+	</array>
+	<key>RunAtLoad</key>
+	<false/>
+	<key>StandardErrorPath</key>
+	<string>/Users/gestas/Prototypes/hypervector/data/runtime/d1_sleeve/executor.log</string>
+	<key>StandardOutPath</key>
+	<string>/Users/gestas/Prototypes/hypervector/data/runtime/d1_sleeve/executor.log</string>
+	<key>StartCalendarInterval</key>
+	<dict>
+		<key>Minute</key>
+		<integer>15</integer>
+	</dict>
+	<key>WorkingDirectory</key>
+	<string>/Users/gestas/Prototypes/hypervector</string>
+</dict>
+</plist>
