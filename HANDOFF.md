@@ -42,6 +42,26 @@
   - `docs/reviews/2026-09-27-v94-review-and-swing-research.md`.
 - The V94→V93 rollback pair is void.
 
+**Next session: action the V95 issue sweep (operator, 2026-09-28: "will action it next session").**
+- **What it is.** A read-only sweep of the live V95 profile, run as workflow `v95-issue-sweep` on 2026-09-28. It covers:
+  - live forensics since go-live;
+  - the backlog of review items V95 did not fix, re-checked against the current code;
+  - venue and market-structure risks;
+  - a fresh review of the code V95 changed.
+- **Where the results are.** Once the sweep completes, its ranked plan is recorded in the section directly below. The raw evidence is in `data/logs/research/v95_issue_sweep_20260928/`.
+- **Candidates already known going in:**
+  - the 30 s entry-deadline headroom, and V95 item B4 (poll phase alignment, minute-gated candle refetch, fewer 429s);
+  - engine hardening: the recovery seed keeps only the latest exit across both sides, there is no stop-vs-liquidation invariant, leverage uses `int()`, and startup history is about 3.5 days;
+  - cockpit follow-ups: Python raise attribution after a restart, and a payload contract test;
+  - supervisor follow-ups;
+  - halted markets and HIP-3 weekend gaps;
+  - the BRENTOIL oracle roll around 2026-09-30;
+  - ladder re-registration (due before the 30th Donchian close, about Oct 9-20);
+  - `hl-api` agent expiry on 2026-10-22 (operator renewal);
+  - dead capacity in the BTC sweep and ETH routes.
+- **Deploy rule.** Anything under src/hypervector or the entrypoint means a V96 profile, an approval and a drain. Scripts-only fixes need no backend restart.
+- **D1 shadow runner removed (operator, 2026-09-28).** The launchd agent `local.hypervector.research.d1_shadow` was unloaded, and its plist was moved to `data/backups/d1_shadow_removed_20260928/`. The ledger and census stay in `data/research/d1_shadow/`, and the code stays in scripts/ (inert).
+
 **Pending.**
 - **D1 crypto breakout sleeve: SHELVED by the operator on 2026-09-28 ("forget this").** The code is merged but inert. No sub-account, key or approval exists, and nothing is armed. The details below are kept for the record.
 - (shelved) D1 sleeve, previously: operator chose automated at 1% of book per trade; merged, frozen, not armed.
