@@ -43,7 +43,8 @@
 - The V94→V93 rollback pair is void.
 
 **Pending.**
-- **D1 crypto breakout sleeve (operator: automated, 1% of book per trade). Merged, frozen, not armed.**
+- **D1 crypto breakout sleeve: SHELVED by the operator on 2026-09-28 ("forget this").** The code is merged but inert. No sub-account, key or approval exists, and nothing is armed. The details below are kept for the record.
+- (shelved) D1 sleeve, previously: operator chose automated at 1% of book per trade; merged, frozen, not armed.
   - Code:
     - `scripts/d1_sleeve_executor.py` sha `2fb94efd…`;
     - `scripts/d1_sleeve_core.py` sha `cb76c74b…`;
