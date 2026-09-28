@@ -43,8 +43,29 @@
 - The V94→V93 rollback pair is void.
 
 **Pending.**
-- **D1 crypto breakout sleeve (operator: automated, 1% of book per trade).** The executor is built on
-  branch `agent/d1-sleeve-executor-20260927` and is in final review.
+- **D1 crypto breakout sleeve (operator: automated, 1% of book per trade). Merged, frozen, not armed.**
+  - Code:
+    - `scripts/d1_sleeve_executor.py` sha `2fb94efd…`;
+    - `scripts/d1_sleeve_core.py` sha `cb76c74b…`;
+    - merge `49c09fe`.
+  - Amendment `docs/plans/2026-09-28-d1-sleeve-stage2-amendment.md` sha `d10a8b24…`.
+  - It passed eleven adversarial review rounds; the last independent round had 0 blocking issues.
+    420 tests pass. The verification harnesses are in `data/logs/research/d1_sleeve_verification_20260928/`.
+  - **Frozen bytes:** any change needs a new approval plus a re-run of those harnesses.
+  - **Operator setup:** the full procedure is in `data/logs/research/d1_sleeve_verification_20260928/d1exec_setup.md`.
+    1. Create the `d1-sleeve` sub-account.
+    2. Create an API wallet named `d1-sleeve` (never `hl-api`).
+    3. Write `~/.config/hypervector/d1_sleeve.env` (0600).
+    4. Run `probe`.
+    5. Transfer USDC master→sub while V95 is flat (recommended $2,500; it halves V95's equity-fraction sizing).
+    6. Write the approval JSON.
+    7. Run the supervised canary ($15 BTC).
+    8. Do the first armed run.
+    9. Install the hourly plist.
+  - **Operator procedures:**
+    - never run a manual armed run within 10 min of another run;
+    - treat `exit_incomplete` as a page;
+    - check that the daily `stops_ok` equals the position count.
   - It needs the operator's one-time setup: a sub-account, a new API wallet named `d1-sleeve`, an env
     file outside the repo, a transfer while the cohort is flat, an approval, a canary, and the plist.
   - A transfer to the sub-account halves V95's equity-fraction sizing. Anchor ladder evidence after the transfer.
