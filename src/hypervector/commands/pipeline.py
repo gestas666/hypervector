@@ -42,6 +42,9 @@ from typing import Any
 from hypervector.commands.common import CommandRefused
 from hypervector.config import DEFAULT_LOOKBACK, DEFAULT_SYMBOL, DEFAULT_TIMEFRAME
 
+#: Window fields the search stage reports and compares with the pinned window.
+SEARCH_WINDOW_FIELDS: tuple[str, ...] = ("start", "end", "bars", "cache_key")
+
 MANIFEST_SCHEMA = 1
 MANIFEST = "pipeline.json"
 RUNS_DIR = Path("runs") / "pipeline"
@@ -754,6 +757,10 @@ class PipelineRun:
             "best": result.best_metrics,
             "best_params": result.best_params,
             "best_exit_cfg": result.best_exit_cfg,
+            "window": search_window_check(
+                self.manifest.get("window"),
+                _read_board(Path(result.board_path)).get("data_provenance"),
+            ),
         }
 
     def _sweep(self, entry: dict[str, Any]) -> None:
@@ -779,6 +786,9 @@ class PipelineRun:
             for key in ("run_id", "track", "trials", "ok_trials", "failed_trials")
         }
         entry["metrics"]["best"] = result.get("best")
+        entry["metrics"]["window"] = search_window_check(
+            self.manifest.get("window"), result.get("data_provenance")
+        )
 
     # --- stage 3: export --------------------------------------------------------
 
@@ -1209,6 +1219,49 @@ def _window_value(field: str, value: object) -> object:
             stamp = stamp.replace(tzinfo=UTC)
         return stamp.astimezone(UTC).isoformat()
     return str(value)
+
+
+def search_window_check(
+    pinned: Mapping[str, Any] | None, provenance: Mapping[str, Any] | None
+) -> dict[str, Any]:
+    """The window the search stage was served against the pinned one (report-only).
+
+    ``matches_pinned`` is None when no field is reported on both sides.
+    """
+    prov = provenance if isinstance(provenance, Mapping) else {}
+    observed = {
+        "start": prov.get("start"),
+        "end": prov.get("end"),
+        "bars": prov.get("bar_count"),
+        "cache_key": prov.get("cache_key"),
+    }
+    reference = dict(pinned) if isinstance(pinned, Mapping) else {}
+    compared = [
+        field
+        for field in SEARCH_WINDOW_FIELDS
+        if observed.get(field) is not None and reference.get(field) is not None
+    ]
+    mismatched = [
+        field
+        for field in compared
+        if _window_value(field, observed[field])
+        != _window_value(field, reference[field])
+    ]
+    return {
+        "report_only": True,
+        "observed": observed,
+        "matches_pinned": (not mismatched) if compared else None,
+        "mismatched_fields": mismatched,
+    }
+
+
+def _read_board(path: Path) -> dict[str, Any]:
+    """The tune board as a mapping; an unreadable board reports no window."""
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    return value if isinstance(value, dict) else {}
 
 
 # --- show / list (stdlib only) --------------------------------------------------------

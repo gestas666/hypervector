@@ -34,6 +34,8 @@ def train_metalabel_bundle(
     max_hold_bars: int = 120,
     ohlcv: Any = None,
     ohlcv_provenance: dict[str, Any] | None = None,
+    allow_network: bool = True,
+    strict_hl_only: bool | None = None,
 ) -> dict[str, Any]:
     """Walk-forward LightGBM metalabel training on one strategy bundle's entries.
 
@@ -41,6 +43,9 @@ def train_metalabel_bundle(
     and returns its report with ``bundle_dir``. Never installs. ``ohlcv`` trains
     on an already loaded window (``pipeline run`` passes its pinned frame) and
     skips the history load; ``ohlcv_provenance`` is recorded with it.
+    on an already pinned window without loading history; otherwise history is
+    loaded cache-first (``allow_network=False``: cache only), strict HL-only
+    when ``strict_hl_only`` says so or, when ``None``, when the bundle was.
     """
     from hypervector.ml.walk_forward import run_walk_forward_metalabel
 
@@ -56,6 +61,8 @@ def train_metalabel_bundle(
         max_hold_bars=int(max_hold_bars),
         ohlcv=ohlcv,
         ohlcv_provenance=ohlcv_provenance,
+        allow_network=bool(allow_network),
+        strict_hl_only=strict_hl_only,
     )
     return {**result.report, "bundle_dir": str(Path(result.bundle_dir).resolve())}
 

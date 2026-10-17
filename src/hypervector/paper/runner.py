@@ -80,6 +80,93 @@ def _requires_fresh_warmup(profile: HypervelocityProfile | None) -> bool:
     return isinstance(profile, SourceFollowHypervelocityProfile)
 
 
+def _load_warm_history(
+    root: Path,
+    *,
+    symbol: str,
+    timeframe: str,
+    lookback_days: int,
+    strict_hl_only: bool,
+    force_refresh: bool,
+) -> tuple[pd.DataFrame, dict[str, Any]]:
+    """Cache-first warm-up history that a failed research refresh cannot block.
+
+    Warm-up needs only Hyperliquid candles, and :func:`refresh_warm_history`
+    tops the tail up from HL afterwards (fail-closed). So when refreshing the
+    research window fails (for example a Binance or Bybit outage during the CEX
+    backfill), the fresher of the cached window and the HL-only window the
+    failed load just kept is served as is. A forced refresh (source-follow
+    profiles) never falls back to cached bars, and with no cached window the
+    failure stands.
+    """
+    try:
+        return load_research_history(
+            root,
+            symbol=symbol,
+            timeframe=timeframe,
+            lookback_days=lookback_days,
+            strict_hl_only=strict_hl_only,
+            force_refresh=force_refresh,
+        )
+    except (RuntimeError, OSError) as exc:  # a failed refresh (network, backfill)
+        if force_refresh:
+            raise
+        cached = _cached_warm_history(
+            root,
+            symbol=symbol,
+            timeframe=timeframe,
+            lookback_days=lookback_days,
+            strict_hl_only=strict_hl_only,
+        )
+        if cached is None:
+            raise
+        frame, provenance = cached
+        logger.warning(
+            "warm-up history refresh failed (%s: %s); warming up from cached "
+            "window %s and the Hyperliquid tail",
+            type(exc).__name__,
+            exc,
+            provenance.get("cache_key"),
+        )
+        return frame, {**provenance, "refresh_error": f"{type(exc).__name__}: {exc}"}
+
+
+def _cached_warm_history(
+    root: Path,
+    *,
+    symbol: str,
+    timeframe: str,
+    lookback_days: int,
+    strict_hl_only: bool,
+) -> tuple[pd.DataFrame, dict[str, Any]] | None:
+    """The freshest cached window: the request's own or the HL-only one (offline).
+
+    Both are read pinned (``max_cache_age=None``). The HL-only entry is the one
+    a failed backfill keeps, so it is usually the newest; a tie keeps the
+    request's own window.
+    """
+    best: tuple[pd.Timestamp, pd.DataFrame, dict[str, Any]] | None = None
+    for strict in dict.fromkeys((strict_hl_only, True)):
+        try:
+            frame, provenance = load_research_history(
+                root,
+                symbol=symbol,
+                timeframe=timeframe,
+                lookback_days=lookback_days,
+                strict_hl_only=strict,
+                allow_network=False,
+                max_cache_age=None,
+            )
+        except Exception:  # noqa: BLE001 - a missing or unreadable entry is skipped
+            continue
+        if not len(frame):
+            continue
+        end = pd.to_datetime(frame["timestamp"], utc=True).max()
+        if best is None or end > best[0]:
+            best = (end, frame, provenance)
+    return None if best is None else (best[1], best[2])
+
+
 def start_paper_daemon(
     *,
     export_dir: Path | str,
@@ -206,7 +293,7 @@ def start_paper_daemon(
     if warm_ohlcv is not None:
         warm_df = warm_ohlcv
     else:
-        warm_df, prov = load_research_history(
+        warm_df, prov = _load_warm_history(
             root,
             symbol=loadout.symbol,
             timeframe=loadout.timeframe,

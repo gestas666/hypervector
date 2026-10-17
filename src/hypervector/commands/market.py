@@ -69,8 +69,8 @@ def cmd_history(args: argparse.Namespace) -> int:
         return history_failure(args, exc)
     served = prov.get("cache_path") if isinstance(prov, dict) else None
     if served:
-        # The cache the loader actually served (a strict load may be an all-HL
-        # default key); otherwise the strict-aware key rule.
+        # The entry the loader actually read or wrote (a strict load may be
+        # served by the _hlonly key or by an all-HL default entry).
         cache_path = Path(str(served))
     else:
         key = cache_key(

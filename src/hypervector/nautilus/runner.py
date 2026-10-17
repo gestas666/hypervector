@@ -66,7 +66,7 @@ from nautilus_trader.model.identifiers import Venue
 from nautilus_trader.model.objects import Money
 
 from hypervector.config import DEFAULT_LOOKBACK
-from hypervector.data.pipeline import load_research_history
+from hypervector.data.pipeline import load_research_history, strict_hl_only_from_meta
 from hypervector.infra import ensure_data_layout
 from hypervector.nautilus.actor import (
     EXECUTION_MODE,
@@ -162,6 +162,7 @@ def run_phase2_backtest(
     venue: str = _VENUE,
     allow_network: bool = True,
     signal_mode: SignalMode = "auto",
+    strict_hl_only: bool | None = None,
 ) -> Phase2Result:
     """Run HypervectorStrategy on research OHLCV via Nautilus BacktestEngine.
 
@@ -192,6 +193,10 @@ def run_phase2_backtest(
         finds no mismatch, else replay windowed. ``"precomputed"``: require
         precompute (probe mismatch is a technical failure). ``"windowed"``:
         rebuild signals from the trailing window on every bar.
+    strict_hl_only:
+        Load the strict HL-only (``_hlonly``) history window. ``None`` (default)
+        follows the bundle: a bundle searched on HL-only history is replayed
+        on HL-only history, never on the Binance/Bybit-backfilled entry.
 
     Returns
     -------
@@ -229,6 +234,7 @@ def run_phase2_backtest(
         loadout=loadout,
         lookback_days=lookback_days,
         allow_network=allow_network,
+        strict_hl_only=strict_hl_only,
     )
     if max_bars is not None and len(df) > int(max_bars):
         df = df.iloc[: int(max_bars)].copy()
@@ -652,6 +658,7 @@ def _resolve_ohlcv(
     loadout: StrategyLoadout,
     lookback_days: int | None,
     allow_network: bool = True,
+    strict_hl_only: bool | None = None,
 ) -> pd.DataFrame:
     if ohlcv is not None:
         if len(ohlcv) == 0:
@@ -663,11 +670,17 @@ def _resolve_ohlcv(
         meta_days = (loadout.meta or {}).get("lookback_days")
         days = int(meta_days) if meta_days is not None else DEFAULT_LOOKBACK
 
+    strict = (
+        strict_hl_only_from_meta(loadout.meta)
+        if strict_hl_only is None
+        else bool(strict_hl_only)
+    )
     df, _prov = load_research_history(
         data_root,
         symbol=loadout.symbol,
         timeframe=loadout.timeframe,
         lookback_days=int(days),
+        strict_hl_only=strict,
         force_refresh=False,
         allow_network=allow_network,
     )

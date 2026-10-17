@@ -11,7 +11,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-from hypervector.data.pipeline import load_research_history
+from hypervector.data.pipeline import load_research_history, strict_hl_only_from_meta
 from hypervector.ml.feature_matrix import FEATURE_NAMES, build_feature_matrix
 from hypervector.ml.labels import build_strategy_labels
 from hypervector.ml.purged_cv import walk_forward_windows
@@ -104,8 +104,16 @@ def run_walk_forward_metalabel(
     n_cv_splits: int = 5,
     ohlcv: pd.DataFrame | None = None,
     ohlcv_provenance: dict[str, Any] | None = None,
+    allow_network: bool = True,
+    strict_hl_only: bool | None = None,
 ) -> WalkForwardResult:
-    """Label strategy entries → walk-forward OOS scores → final metalabel bundle."""
+    """Label strategy entries → walk-forward OOS scores → final metalabel bundle.
+
+    Without ``ohlcv`` the history is loaded cache-first; ``allow_network=False``
+    serves only the cache (a miss raises ``FileNotFoundError``).
+    ``strict_hl_only=None`` follows the bundle, so a bundle searched on HL-only
+    history is trained on HL-only history.
+    """
     try:
         import lightgbm as lgb
         from sklearn.metrics import brier_score_loss, log_loss, roc_auc_score
@@ -136,6 +144,12 @@ def run_walk_forward_metalabel(
             symbol=loadout.symbol,
             timeframe=loadout.timeframe,
             lookback_days=int(lb),
+            strict_hl_only=(
+                strict_hl_only_from_meta(loadout.meta)
+                if strict_hl_only is None
+                else bool(strict_hl_only)
+            ),
+            allow_network=allow_network,
         )
 
     # Strategy params from export (drop non-signal keys)

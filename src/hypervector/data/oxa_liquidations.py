@@ -13,7 +13,7 @@ from hypervector.data.oxa_api import (
     OxaRestClient,
     parse_utc_timestamp_ms,
     positive_decimal,
-    validate_symbol,
+    validate_core_symbol,
     validate_window,
 )
 from hypervector.data.oxa_acquisition import (
@@ -55,7 +55,9 @@ class OxaLiquidationRequest:
     timeout_seconds: float = 30.0
 
     def __post_init__(self) -> None:
-        validate_symbol(self.symbol)
+        # Core perps only: HIP-3 liquidations live on a different vendor route
+        # and identity, which this acquisition does not implement.
+        validate_core_symbol(self.symbol)
         validate_window(self.start, self.end)
         if not 1 <= self.limit <= 1000:
             raise ValueError("limit must be between 1 and 1000")

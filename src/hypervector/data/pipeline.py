@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import logging
 import os
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -62,6 +63,21 @@ def cache_key(
 ) -> str:
     key = f"{symbol.upper()}_{timeframe}_{lookback_days}d"
     return f"{key}{_STRICT_SUFFIX}" if strict_hl_only else key
+
+
+def strict_hl_only_from_meta(meta: Mapping[str, Any] | None) -> bool:
+    """Whether a strategy bundle's research window was loaded strict HL-only.
+
+    Read from ``meta.strict_hl_only`` or the recorded ``data_provenance``, so a
+    later replay or training run of the bundle loads the same (``_hlonly``)
+    window instead of the Binance/Bybit-backfilled default entry.
+    """
+    if not isinstance(meta, Mapping):
+        return False
+    if "strict_hl_only" in meta:
+        return meta["strict_hl_only"] is True
+    provenance = meta.get("data_provenance")
+    return isinstance(provenance, Mapping) and provenance.get("strict_hl_only") is True
 
 
 def live_hl_fetcher(symbol: str, timeframe: str, lookback_days: int) -> pd.DataFrame:
@@ -433,8 +449,8 @@ def _keep_hl_only(
         exc.add_note(f"could not keep the fetched HL history: {save_exc}")
         return
     exc.add_note(
-        f"{len(hl_df)} fetched HL bars were kept in cache key {key}; retry later, "
-        "or pass --strict-hl-only to use HL-only history"
+        f"{len(hl_df)} fetched HL bars were kept in cache key {key}; retry later "
+        "(commands that offer --strict-hl-only can use that HL-only history now)"
     )
 
 
