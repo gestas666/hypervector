@@ -102,6 +102,15 @@ deletion or retroactive reconstruction of older startup inputs is performed.
 
 1. **Paper ≠ live storage** — separate roots; tag every row with `execution_mode`.
 2. **Cache-first** research history; live paper decisions use **HL feed** after warm-up.
+   `cache/<SYM>_<tf>_<N>d.parquet` means "the last N days": every load reports
+   the window it serves (`start`, `end`, `coverage_ratio`, `age_seconds`,
+   `stale`, `partial`, `fetched_at`, cache key/path, backfill status). A window
+   older than one day or under 95% of the lookback is refreshed when network is
+   allowed and served with a warning when it is not. Strict HL-only loads use
+   `<key>_hlonly` and never overwrite the default (backfilled) entry. A refresh
+   renames a file the pipeline did not write to
+   `<key>__preserved_<start>_<end>.parquet` instead of deleting it. Aligned book
+   features are NaN where no snapshot matched (`book_available`, `book_age_ms`).
 3. **Configs** stay tracked under `configs/` (costs, risk, exits, fee_model).
 4. **Secrets** only via environment / `.env` (gitignored); not in exports.
 5. **DuckDB owns historical analytics/replay.** Redis remains deferred until

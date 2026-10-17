@@ -11,9 +11,11 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import sqlite3
 import subprocess
 import tempfile
+from contextlib import closing
 from pathlib import Path
 from typing import Any
 
@@ -21,6 +23,21 @@ import numpy as np
 import pandas as pd
 
 from hypervector.data.oxa_storage import open_text_reader
+
+# Fallback for launchd-style environments whose PATH lacks Homebrew.
+_HOMEBREW_ZSTD = "/opt/homebrew/bin/zstd"
+DEFAULT_MAX_TOLERANCE_MS = 300_000
+# Book feature columns an aligned frame carries; NaN where no snapshot matched.
+BOOK_FEATURE_COLUMNS = (
+    "spread_bps",
+    "obi_5",
+    "obi_10",
+    "bid_depth_10",
+    "ask_depth_10",
+    "book_depth_ratio",
+    "micro_price_delta_bps",
+    "book_pressure",
+)
 
 
 def load_l2_jsonl(path: Path | str) -> pd.DataFrame:
@@ -105,21 +122,29 @@ def load_l2_sqlite_feature_samples(
 
     temp_sqlite: str | None = None
     target_path = str(p)
-
-    if str(p).endswith(".zst"):
-        # Extract sqlite to temp location using zstd
-        with tempfile.NamedTemporaryFile(suffix=".sqlite", delete=False) as tmp:
-            temp_sqlite = tmp.name
-        cmd = f"/opt/homebrew/bin/zstd -dc '{p}' > '{temp_sqlite}'"
-        res = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-        if res.returncode != 0:
-            if os.path.exists(temp_sqlite):
-                os.remove(temp_sqlite)
-            raise RuntimeError(f"zstd decompression failed: {res.stderr}")
-        target_path = temp_sqlite
-
     try:
-        conn = sqlite3.connect(target_path)
+        if str(p).endswith(".zst"):
+            # Decompress to a temp file without a shell: the path is one argv
+            # element and "--" stops a leading "-" being read as an option.
+            zstd = shutil.which("zstd") or _HOMEBREW_ZSTD
+            if not Path(zstd).is_file():
+                raise RuntimeError(
+                    "zstd executable is required to read .zst orderbook snapshots"
+                )
+            with tempfile.NamedTemporaryFile(suffix=".sqlite", delete=False) as tmp:
+                temp_sqlite = tmp.name
+            with open(temp_sqlite, "wb") as out:
+                res = subprocess.run(
+                    [zstd, "-dc", "--", str(p)],
+                    stdout=out,
+                    stderr=subprocess.PIPE,
+                    check=False,
+                )
+            if res.returncode != 0:
+                detail = (res.stderr or b"").decode("utf-8", errors="replace").strip()
+                raise RuntimeError(f"zstd decompression failed: {detail}")
+            target_path = temp_sqlite
+
         query = """
             SELECT
                 feature_time as ts_ms,
@@ -136,8 +161,8 @@ def load_l2_sqlite_feature_samples(
             WHERE coin = ?
             ORDER BY feature_time ASC
         """
-        df = pd.read_sql_query(query, conn, params=(coin,))
-        conn.close()
+        with closing(sqlite3.connect(target_path)) as conn:
+            df = pd.read_sql_query(query, conn, params=(coin,))
 
         if not df.empty:
             df["ts_ms"] = df["ts_ms"].astype(np.int64)
@@ -172,13 +197,19 @@ def _to_ts_ms_series(ts_col: pd.Series | pd.DatetimeIndex) -> np.ndarray:
 def align_orderbook_to_ohlcv(
     df_ohlcv: pd.DataFrame,
     df_book: pd.DataFrame,
-    max_tolerance_ms: int = 300_000,
+    max_tolerance_ms: int = DEFAULT_MAX_TOLERANCE_MS,
 ) -> pd.DataFrame:
     """Point-in-time merge_asof of orderbook microstructure features onto OHLCV bars.
 
     Uses exact bar timestamp (or timestamp derived from DatetimeIndex).
     Guarantees no future peek: each bar receives the latest orderbook snapshot
-    recorded BEFORE or AT that bar's timestamp.
+    recorded BEFORE or AT that bar's timestamp, within ``max_tolerance_ms``.
+
+    Missing book data is never invented: a bar with no snapshot in tolerance
+    (or every bar, when ``df_book`` is empty) keeps NaN book features. Two
+    columns say what was matched: ``book_available`` (bool) and
+    ``book_age_ms`` (bar ts minus matched snapshot ts; NaN when unmatched).
+    ``book_pressure`` is the EMA of the observed ``obi_5`` values only.
     """
     if df_ohlcv.empty:
         return df_ohlcv
@@ -200,24 +231,16 @@ def align_orderbook_to_ohlcv(
             )
 
     if df_book.empty:
-        # Fill defaults when no book data exists
-        defaults = {
-            "spread_bps": 1.5,
-            "obi_5": 0.0,
-            "obi_10": 0.0,
-            "bid_depth_10": 10.0,
-            "ask_depth_10": 10.0,
-            "book_depth_ratio": 1.0,
-            "micro_price_delta_bps": 0.0,
-            "book_pressure": 0.0,
-        }
-        for k, v in defaults.items():
-            bars[k] = v
+        for column in BOOK_FEATURE_COLUMNS:
+            bars[column] = np.nan
+        bars["book_available"] = False
+        bars["book_age_ms"] = np.nan
         return bars
 
     bars["__bar_order"] = np.arange(len(bars), dtype=np.int64)
     bars_sorted = bars.sort_values("ts_ms").reset_index(drop=True)
     book_sorted = df_book.sort_values("ts_ms").reset_index(drop=True)
+    book_sorted["__book_ts_ms"] = book_sorted["ts_ms"].astype(np.float64)
 
     # Point-in-time backward merge_asof
     merged = pd.merge_asof(
@@ -228,32 +251,63 @@ def align_orderbook_to_ohlcv(
         tolerance=max_tolerance_ms,
         suffixes=("", "_book"),
     )
+    matched_ts = merged.pop("__book_ts_ms")
+    available = matched_ts.notna()
+    merged["book_available"] = available.to_numpy(dtype=bool)
+    merged["book_age_ms"] = merged["ts_ms"].astype(np.float64) - matched_ts
 
-    # Compute rolling book pressure (EMA of obi_5)
+    # Rolling book pressure: EMA over observed obi_5 only, NaN on unmatched bars.
     if "obi_5" in merged.columns:
-        merged["book_pressure"] = (
-            merged["obi_5"].fillna(0.0).ewm(span=10, adjust=False).mean()
-        )
-
-    # Fill NaNs with neutral defaults
-    fill_dict = {
-        "spread_bps": 1.5,
-        "obi_5": 0.0,
-        "obi_10": 0.0,
-        "bid_depth_10": 10.0,
-        "ask_depth_10": 10.0,
-        "book_depth_ratio": 1.0,
-        "micro_price_delta_bps": 0.0,
-        "book_pressure": 0.0,
-    }
-    for col, val in fill_dict.items():
-        if col in merged.columns:
-            merged[col] = merged[col].fillna(val)
+        pressure = merged["obi_5"].astype(float).ewm(span=10, adjust=False).mean()
+        merged["book_pressure"] = pressure.where(available)
 
     merged = merged.sort_values("__bar_order")
     order = merged.pop("__bar_order").to_numpy(dtype=np.int64)
     merged.index = original_index.take(order)
     return merged
+
+
+def book_coverage_summary(
+    df_aligned: pd.DataFrame,
+    *,
+    max_tolerance_ms: int = DEFAULT_MAX_TOLERANCE_MS,
+) -> dict[str, Any]:
+    """How many aligned bars carry a real snapshot, for reports and CLI JSON."""
+    bars = int(len(df_aligned))
+    if "book_available" in df_aligned.columns:
+        available = df_aligned["book_available"].fillna(False).astype(bool)
+    else:
+        available = pd.Series(False, index=df_aligned.index)
+    matched = int(available.sum())
+    coverage = matched / bars if bars else 0.0
+    first = last = None
+    if matched and {"ts_ms", "book_age_ms"}.issubset(df_aligned.columns):
+        snap_ms = (
+            df_aligned.loc[available, "ts_ms"].astype(np.float64)
+            - df_aligned.loc[available, "book_age_ms"].astype(np.float64)
+        )
+        first = pd.Timestamp(int(snap_ms.min()), unit="ms", tz="UTC").isoformat()
+        last = pd.Timestamp(int(snap_ms.max()), unit="ms", tz="UTC").isoformat()
+    warnings: list[str] = []
+    if bars and not matched:
+        warnings.append(
+            f"no bar has an order-book snapshot within {max_tolerance_ms} ms; "
+            "every book column is missing (NaN)"
+        )
+    elif matched < bars:
+        warnings.append(
+            f"{bars - matched} of {bars} bars ({1.0 - coverage:.1%}) have no "
+            f"order-book snapshot within {max_tolerance_ms} ms; their book columns are NaN"
+        )
+    return {
+        "bars": bars,
+        "matched_bars": matched,
+        "book_coverage": coverage,
+        "book_first_ts_utc": first,
+        "book_last_ts_utc": last,
+        "max_tolerance_ms": int(max_tolerance_ms),
+        "warnings": warnings,
+    }
 
 
 def gate_signals_by_orderbook(
@@ -267,7 +321,8 @@ def gate_signals_by_orderbook(
 ) -> pd.Series:
     """Filter signal entries using orderbook spread, imbalance, and depth gates.
 
-    If book data is unavailable or unpopulated, defaults to passing signals through.
+    If book data is unavailable or unpopulated (NaN), the signal passes through:
+    only an observed book can block an entry.
     """
     if not entries.any() or df_aligned.empty:
         return entries
@@ -275,19 +330,29 @@ def gate_signals_by_orderbook(
     gate_ok = pd.Series(True, index=entries.index)
     df = df_aligned.reset_index(drop=True)
 
+    def observed(column: str) -> np.ndarray:
+        return df[column].to_numpy(dtype=float)
+
     if "spread_bps" in df.columns:
-        gate_ok = gate_ok & (df["spread_bps"].to_numpy() <= max_spread_bps)
+        spread = observed("spread_bps")
+        gate_ok = gate_ok & (np.isnan(spread) | (spread <= max_spread_bps))
 
     if direction == "long":
         if "obi_5" in df.columns:
-            gate_ok = gate_ok & (df["obi_5"].to_numpy() >= min_obi)
+            obi = observed("obi_5")
+            gate_ok = gate_ok & (np.isnan(obi) | (obi >= min_obi))
         if "book_depth_ratio" in df.columns:
-            gate_ok = gate_ok & (df["book_depth_ratio"].to_numpy() >= min_depth_ratio)
+            ratio = observed("book_depth_ratio")
+            gate_ok = gate_ok & (np.isnan(ratio) | (ratio >= min_depth_ratio))
     else:  # short
         if "obi_5" in df.columns:
-            gate_ok = gate_ok & (df["obi_5"].to_numpy() <= -min_obi)
+            obi = observed("obi_5")
+            gate_ok = gate_ok & (np.isnan(obi) | (obi <= -min_obi))
         if "book_depth_ratio" in df.columns:
             max_dr = 1.0 / max(min_depth_ratio, 1e-4)
-            gate_ok = gate_ok & (df["book_depth_ratio"].to_numpy() <= max_dr)
+            ratio = observed("book_depth_ratio")
+            gate_ok = gate_ok & (np.isnan(ratio) | (ratio <= max_dr))
 
     return entries & gate_ok.fillna(True).astype(bool)
+
+

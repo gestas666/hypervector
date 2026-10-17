@@ -2,15 +2,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Sequence
-from typing import Any
+from collections.abc import Sequence
 
 import pandas as pd
 
-from hypervector.data.cache import ParquetCache
-from hypervector.data.provenance import normalize_ohlcv, summarize_provenance
-
-Fetcher = Callable[[str, str, int], pd.DataFrame]
+from hypervector.data.provenance import normalize_ohlcv
 
 
 def merge_history(
@@ -73,43 +69,3 @@ def merge_history(
         subset=["timestamp"], keep="first"
     )
     return out.reset_index(drop=True)
-
-
-def load_or_fetch_history(
-    cache: ParquetCache,
-    cache_key: str,
-    *,
-    symbol: str = "BTC",
-    timeframe: str = "1m",
-    lookback_days: int = 90,
-    hl_fetcher: Fetcher | None = None,
-    backfill_fetchers: Sequence[tuple[str, Fetcher]] = (),
-    force_refresh: bool = False,
-) -> tuple[pd.DataFrame, dict[str, Any]]:
-    """Cache-first load. On miss, HL-first then backfill; write cache; return provenance."""
-    if not force_refresh and cache.exists(cache_key):
-        df = cache.load(cache_key)
-        assert df is not None
-        return df, summarize_provenance(df)
-
-    hl_df: pd.DataFrame | None = None
-    if hl_fetcher is not None:
-        hl_df = hl_fetcher(symbol, timeframe, lookback_days)
-        if hl_df is not None and len(hl_df):
-            hl_df = normalize_ohlcv(
-                hl_df, source="hl" if "source" not in hl_df.columns else None
-            )
-
-    backfills: list[tuple[str, pd.DataFrame]] = []
-    for name, fetcher in backfill_fetchers:
-        frame = fetcher(symbol, timeframe, lookback_days)
-        if frame is not None and len(frame):
-            backfills.append((name, frame))
-
-    merged = merge_history(hl_df, backfills)
-    if len(merged) == 0:
-        raise RuntimeError(
-            f"no history for {symbol} {timeframe} lookback={lookback_days}d"
-        )
-    cache.save(cache_key, merged)
-    return merged, summarize_provenance(merged)

@@ -6,6 +6,7 @@ Price-path assistance only — not Hyperliquid microstructure. No API keys.
 from __future__ import annotations
 
 import logging
+import re
 import time
 from typing import Any
 
@@ -32,12 +33,33 @@ _TF_BYBIT = {"1m": "1", "5m": "5", "15m": "15", "1h": "60"}
 _INTERVAL_MS = {"1m": 60_000, "5m": 300_000, "15m": 900_000, "1h": 3_600_000}
 
 
+class BackfillUnavailable(RuntimeError):
+    """The venue lists no instrument equivalent to the requested HL symbol.
+
+    Distinct from transport or server failures: retrying cannot help, so the
+    history pipeline records it and keeps the HL candles it already has.
+    """
+
+
+# HL 1000x contracts (kPEPE, kSHIB, kBONK, ...) quote 1000 units, like the
+# venues' 1000PEPEUSDT perps; the 1-unit spot pairs would be 1000x off in price.
+_THOUSAND_COIN = re.compile(r"^k([A-Z0-9]+)$")
+# Endpoint answers that mean "this endpoint is unusable here", not "no symbol".
+_ENDPOINT_BLOCKED_STATUSES = frozenset({401, 403, 451})
+_BYBIT_INVALID_SYMBOL_CODES = frozenset({10001})
+
+
 def binance_symbol(symbol: str) -> str:
-    s = symbol.upper().replace("-PERP", "")
+    raw = symbol.strip()
+    if ":" in raw:
+        raise BackfillUnavailable(f"HIP-3 symbol {raw} has no Binance/Bybit equivalent")
+    base = raw.replace("-PERP", "").replace("-perp", "")
+    thousand = _THOUSAND_COIN.fullmatch(base.removesuffix("USDT"))
+    if thousand is not None:
+        return f"1000{thousand.group(1)}USDT"
+    s = base.upper()
     if s.endswith("USDT"):
         return s
-    if s in ("BTC", "ETH", "SOL"):
-        return f"{s}USDT"
     return f"{s}USDT"
 
 
@@ -58,6 +80,14 @@ def bars_from_bybit_list(raw: list[list[object]], *, source: str = "bybit") -> p
 def _pick_binance_endpoint(
     sess: requests.Session, symbol: str, interval: str, probe_start: int
 ) -> str:
+    """Return the first endpoint serving ``symbol``.
+
+    Raises :class:`BackfillUnavailable` only when every reachable endpoint
+    rejected the symbol (HTTP 400/404 or no klines); a transport error, 429 or
+    5xx on any endpoint keeps the plain ``RuntimeError`` so outages stay loud.
+    """
+    rejected: list[str] = []
+    failed: list[str] = []
     for name, url in BINANCE_KLINE_ENDPOINTS:
         try:
             r = sess.get(
@@ -70,12 +100,29 @@ def _pick_binance_endpoint(
                 },
                 timeout=20,
             )
-            if r.ok and isinstance(r.json(), list) and r.json():
+        except requests.RequestException as exc:
+            failed.append(f"{name}: {type(exc).__name__}")
+            continue
+        if r.ok:
+            try:
+                body = r.json()
+            except ValueError:
+                failed.append(f"{name}: non-JSON body")
+                continue
+            if isinstance(body, list) and body:
                 logger.info("Binance endpoint selected: %s", name)
                 return url
-        except requests.RequestException:
+            rejected.append(f"{name}: no klines")
+        elif r.status_code in (400, 404):
+            rejected.append(f"{name}: HTTP {r.status_code}")
+        elif r.status_code in _ENDPOINT_BLOCKED_STATUSES:
             continue
-    raise RuntimeError("no Binance kline endpoint available")
+        else:
+            failed.append(f"{name}: HTTP {r.status_code}")
+    detail = "; ".join(failed + rejected) or "all endpoints blocked"
+    if rejected and not failed:
+        raise BackfillUnavailable(f"Binance lists no klines for {symbol} ({detail})")
+    raise RuntimeError(f"no Binance kline endpoint available for {symbol}: {detail}")
 
 
 def fetch_binance_ohlcv(
@@ -163,8 +210,12 @@ def fetch_bybit_ohlcv(
         )
         r.raise_for_status()
         body = r.json()
-        if body.get("retCode") not in (0, "0", None):
-            raise RuntimeError(f"Bybit error: {body.get('retMsg')}")
+        code = body.get("retCode")
+        if code not in (0, "0", None):
+            message = str(body.get("retMsg"))
+            if _bybit_rejects_symbol(code, message):
+                raise BackfillUnavailable(f"Bybit lists no {pair}: {message}")
+            raise RuntimeError(f"Bybit error: {message}")
         page = (body.get("result") or {}).get("list") or []
         if not page:
             break
@@ -192,6 +243,14 @@ def fetch_bybit_ohlcv(
         "Bybit %s %s lookback=%sd → %d bars", pair, timeframe, lookback_days, len(df)
     )
     return df
+
+
+def _bybit_rejects_symbol(code: object, message: str) -> bool:
+    try:
+        numeric = int(str(code))
+    except ValueError:
+        return False
+    return numeric in _BYBIT_INVALID_SYMBOL_CODES and "symbol" in message.lower()
 
 
 def _bars_from_klines(
