@@ -2,11 +2,15 @@
 
 Warm-up uses place_enabled=False (synthetic position tracking, no venue).
 Live phase sets place_enabled=True and stamps submitted from PlaceResult.
+Synthetic exposure is discarded before arming, every live position change uses
+the venue-reported fill, and the venue position is re-read after every live
+order so an ambiguous fill or a second owner of the coin stops the daemon.
 """
 
 from __future__ import annotations
 
 import logging
+import math
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -14,12 +18,21 @@ from typing import Any
 
 from hypervector.live.exec_client import LiveExecClient, PlaceResult
 from hypervector.live.ledger import append_live_decision
+from hypervector.live.policy import notional_cap_error
 from hypervector.paper.costs import CostProvider, CostSnapshot, funding_payment
 from hypervector.paper.order_intent import NETWORK_MAINNET, ORDER_INTENT_SCHEMA
 
 logger = logging.getLogger(__name__)
 
 _VALID_SIDES = frozenset({"buy", "sell"})
+# Float residue below this after netting is treated as flat.
+_DUST_QTY = 1e-12
+# Venue sizes are exact decimals at szDecimals <= 6; anything wider is real drift.
+_RECONCILE_ABS_TOL = 1e-9
+
+
+class LiveReconciliationError(RuntimeError):
+    """Venue position disagrees with the engine after a live order (technical)."""
 
 
 @dataclass
@@ -36,6 +49,7 @@ def build_live_order_intent(
     qty: float,
     submit_enabled: bool,
     notes: str = "",
+    reduce_only: bool = False,
 ) -> dict[str, Any]:
     q = float(qty)
     if q <= 0:
@@ -52,7 +66,7 @@ def build_live_order_intent(
         "qty": q,
         "order_type": "market",
         "time_in_force": "ioc",
-        "reduce_only": False,
+        "reduce_only": bool(reduce_only),
         "client_ts_ms": time.time() * 1000.0,
         "submit_enabled": bool(submit_enabled),
         "notes": notes
@@ -86,6 +100,9 @@ class LiveFillEngine:
         self._symbol = str(symbol)
         self._timeframe = str(timeframe)
         self._conviction = float(conviction)
+        cap_error = notional_cap_error(max_notional_usd)
+        if cap_error is not None:
+            raise ValueError(cap_error)
         self._client = client
         self.place_enabled = bool(place_enabled)
         self._max_notional_usd = float(max_notional_usd)
@@ -94,6 +111,22 @@ class LiveFillEngine:
     @property
     def position(self) -> LivePosition:
         return self._position
+
+    def discard_synthetic_position(self) -> LivePosition:
+        """Drop warm-up synthetic exposure before arming; return what was dropped.
+
+        Only an unarmed engine holds synthetic exposure. An armed engine's
+        position mirrors venue fills and is never discarded.
+        """
+        if self.place_enabled:
+            raise RuntimeError("refusing to discard the position of an armed engine")
+        previous = LivePosition(
+            qty=self._position.qty,
+            avg_px=self._position.avg_px,
+            realized_pnl=self._position.realized_pnl,
+        )
+        self._position = LivePosition()
+        return previous
 
     def apply_market_fill(
         self,
@@ -108,22 +141,30 @@ class LiveFillEngine:
         conviction_source: str | None = None,
         metalabel_p: float | None = None,
         metalabel_bundle_id: str | None = None,
+        reduce_only: bool = False,
     ) -> dict[str, Any]:
+        """Apply one market decision; ``reduce_only`` marks a position close.
+
+        Opening orders are scaled down to the hard notional cap. A reduce-only
+        close is bounded by the position itself, so it is never cap-scaled into
+        a partial close that would leave exposure behind.
+        """
         side_n = str(side).lower().strip()
         if side_n not in _VALID_SIDES:
             raise ValueError(f"side must be 'buy' or 'sell', got {side!r}")
         qty_f = float(qty)
-        if qty_f <= 0:
+        if not math.isfinite(qty_f) or qty_f <= 0:
             raise ValueError(f"qty must be positive, got {qty}")
         mark = float(mark_px)
-        if mark <= 0:
+        # NaN compares false against every bound and would skip the cap scaling.
+        if not math.isfinite(mark) or mark <= 0:
             raise ValueError(f"mark_px must be positive, got {mark_px}")
 
-        # Hard cap: scale qty down to max notional (tiny default $50).
+        # Hard cap: scale opening qty down to max notional (tiny default $50).
         cap = float(self._max_notional_usd)
-        max_qty = cap / mark if mark > 0 and cap > 0 else 0.0
+        max_qty = cap / mark
         scaled = False
-        if max_qty > 0 and qty_f > max_qty + 1e-15:
+        if not reduce_only and qty_f > max_qty + 1e-15:
             qty_f = max_qty
             scaled = True
 
@@ -136,7 +177,11 @@ class LiveFillEngine:
         if place_attempted:
             assert self._client is not None
             place_result = self._client.place_market(
-                self._symbol, side_n, qty_f, mark_px=mark
+                self._symbol,
+                side_n,
+                qty_f,
+                mark_px=mark,
+                reduce_only=bool(reduce_only),
             )
             submitted = bool(place_result.submitted)
             venue_order_id = place_result.venue_order_id
@@ -164,22 +209,35 @@ class LiveFillEngine:
                 record["venue_order_id"] = venue_order_id
                 record["submit_error"] = submit_error
                 record["qty_scaled_to_cap"] = scaled
+                record["filled_qty"] = 0.0
                 record["order_intent"] = build_live_order_intent(
                     symbol=self._symbol,
                     side=side_n,
                     qty=qty_f,
                     submit_enabled=True,
+                    reduce_only=reduce_only,
                 )
                 if intent is not None:
                     record["intent"] = intent
                 append_live_decision(self._data_root, record)
+                self._reconcile_with_venue(feed_ts=feed_ts)
                 return record
 
-        # Warm-up synthetic path OR successful place: update position.
+        # Warm-up synthetic path OR successful place: update position with the
+        # venue-reported fill when the transport reports one.
+        fill_qty = qty_f
         fill_px = mark
+        if place_result is not None:
+            if place_result.filled_qty is not None:
+                fill_qty = float(place_result.filled_qty)
+            if place_result.avg_px is not None:
+                fill_px = float(place_result.avg_px)
         snap = self._cost_provider.snapshot()
-        fee_usd = abs(qty_f) * fill_px * self._cost_provider.trade_fee_rate()
-        self._update_position(side=side_n, qty=qty_f, fill_px=fill_px, fee_usd=fee_usd)
+        fee_usd = abs(fill_qty) * fill_px * self._cost_provider.trade_fee_rate()
+        if fill_qty > 0.0:
+            self._update_position(
+                side=side_n, qty=fill_qty, fill_px=fill_px, fee_usd=fee_usd
+            )
 
         record = self._base_record(
             feed_ts=feed_ts,
@@ -202,16 +260,75 @@ class LiveFillEngine:
         record["venue_order_id"] = venue_order_id
         record["submit_error"] = submit_error
         record["qty_scaled_to_cap"] = scaled
+        record["filled_qty"] = fill_qty
         record["order_intent"] = build_live_order_intent(
             symbol=self._symbol,
             side=side_n,
             qty=qty_f,
             submit_enabled=place_attempted,
+            reduce_only=reduce_only,
         )
         if intent is not None:
             record["intent"] = intent
         append_live_decision(self._data_root, record)
+        if place_attempted:
+            self._reconcile_with_venue(feed_ts=feed_ts)
         return record
+
+    def _reconcile_with_venue(self, *, feed_ts: Any) -> None:
+        """Require the venue position to equal the engine position after an order.
+
+        A transport failure can still have filled (ambiguous outcome) and another
+        owner can trade the same coin; either leaves the engine unable to manage
+        the real exposure, which is a technical failure that must stop the daemon.
+        """
+        expected = self._position.qty
+        reader = getattr(self._client, "venue_position", None)
+        try:
+            if not callable(reader):
+                raise RuntimeError("live client cannot read the venue position")
+            venue = float(reader(self._symbol))
+        except Exception as exc:  # noqa: BLE001 — any read failure is technical
+            message = f"venue position read after a live order failed: {exc}"
+            self._record_reconciliation_failure(
+                feed_ts=feed_ts, venue_qty=None, error=message
+            )
+            raise LiveReconciliationError(message) from exc
+        if not math.isclose(venue, expected, rel_tol=1e-9, abs_tol=_RECONCILE_ABS_TOL):
+            message = (
+                f"venue position {venue!r} {self._symbol} does not match the engine "
+                f"position {expected!r} after a live order (ambiguous fill or another "
+                "owner trading this coin); stopping"
+            )
+            self._record_reconciliation_failure(
+                feed_ts=feed_ts, venue_qty=venue, error=message
+            )
+            raise LiveReconciliationError(message)
+
+    def _record_reconciliation_failure(
+        self, *, feed_ts: Any, venue_qty: float | None, error: str
+    ) -> None:
+        logger.error("live reconciliation failed: %s", error)
+        append_live_decision(
+            self._data_root,
+            {
+                "execution_mode": "live",
+                "network": NETWORK_MAINNET,
+                "feed_ts": feed_ts,
+                "run_id": self._run_id,
+                "export_id": self._export_id,
+                "strategy_name": self._strategy_name,
+                "symbol": self._symbol,
+                "timeframe": self._timeframe,
+                "action": "venue_reconciliation_failed",
+                "position_qty": self._position.qty,
+                "venue_position_qty": venue_qty,
+                "error": error,
+                "submitted": False,
+                "place_attempted": False,
+                "live_phase": bool(self.place_enabled),
+            },
+        )
 
     def apply_funding(
         self, *, feed_ts: Any, oracle_px: float, hours: float = 1.0
@@ -335,10 +452,10 @@ class LiveFillEngine:
 
         remaining = abs(pos.qty) - close_qty
         open_qty = abs(signed) - close_qty
-        if remaining == 0.0 and open_qty == 0.0:
+        if remaining <= _DUST_QTY and open_qty <= _DUST_QTY:
             pos.qty = 0.0
             pos.avg_px = 0.0
-        elif remaining > 0.0:
+        elif remaining > _DUST_QTY:
             pos.qty = remaining if pos.qty > 0 else -remaining
         else:
             pos.qty = open_qty if signed > 0 else -open_qty

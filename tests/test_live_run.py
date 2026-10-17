@@ -15,6 +15,8 @@ from hypervector.live.policy import LivePolicy, LivePolicyError
 
 
 class RecordingTransport:
+    """Offline venue: records calls and tracks the net position it filled."""
+
     def __init__(
         self,
         *,
@@ -24,6 +26,7 @@ class RecordingTransport:
     ) -> None:
         self.calls: list[dict[str, Any]] = []
         self.cancel_calls: list[dict[str, Any]] = []
+        self.net: dict[str, float] = {}
         self._response = (
             response if response is not None else {"status": "ok", "oid": "live-1"}
         )
@@ -38,19 +41,27 @@ class RecordingTransport:
         sz: float,
         wallet_address: str,
         private_key: str,
+        reduce_only: bool = False,
     ) -> dict[str, Any]:
         self.calls.append(
             {
                 "coin": coin,
                 "is_buy": is_buy,
                 "sz": sz,
+                "reduce_only": reduce_only,
                 "wallet_address": wallet_address,
                 "private_key": private_key,
             }
         )
         if self._error is not None:
             raise self._error
-        return dict(self._response)
+        response = dict(self._response)
+        if "resting" not in json.dumps(response):
+            self.net[coin] = self.net.get(coin, 0.0) + (sz if is_buy else -sz)
+        return response
+
+    def position(self, *, wallet_address: str, private_key: str, coin: str) -> float:
+        return self.net.get(coin, 0.0)
 
     def cancel_all(
         self,
@@ -58,12 +69,14 @@ class RecordingTransport:
         wallet_address: str,
         private_key: str,
         coin: str | None = None,
+        oids: list[int] | None = None,
     ) -> dict[str, Any]:
         self.cancel_calls.append(
             {
                 "wallet_address": wallet_address,
                 "private_key": private_key,
                 "coin": coin,
+                "oids": oids,
             }
         )
         if self._cancel_error is not None:
@@ -438,7 +451,12 @@ def test_paper_package_still_has_no_live_exec_import():
 
 
 def test_start_live_daemon_cancel_all_on_stop(tmp_path: Path):
-    """F4: after live phase armed, stop path best-effort cancel_all once."""
+    """F4: after live phase armed, the stop path runs the kill switch once.
+
+    The daemon only sends IOC orders, which never rest, so with no owned
+    resting order the kill is a verified no-op: it must not cancel orders it
+    did not place (another strategy's stops on the same account).
+    """
     from hypervector.live.runner import start_live_daemon
 
     export = _write_strict_export(tmp_path)
@@ -461,17 +479,31 @@ def test_start_live_daemon_cancel_all_on_stop(tmp_path: Path):
     assert result.cancel_attempted is True
     assert result.cancel_ok is True
     assert result.cancel_error is None
-    assert len(transport.cancel_calls) == 1
-    assert transport.cancel_calls[0]["wallet_address"] == "0xabc"
-    assert transport.cancel_calls[0]["coin"] == "BTC"
+    assert transport.cancel_calls == []
 
 
-def test_cancel_all_transport_error_is_best_effort(tmp_path: Path):
+def test_cancel_all_transport_error_is_best_effort(tmp_path: Path, monkeypatch):
+    """An owned resting order whose cancel fails is reported, never raised."""
     from hypervector.live.runner import start_live_daemon
+    from hypervector.nautilus.signals import SignalIntent
 
+    monkeypatch.setattr(
+        "hypervector.live.session.last_bar_intent",
+        lambda df, name, params: SignalIntent("short", True, False, len(df) - 1),
+    )
     export = _write_strict_export(tmp_path)
-    transport = RecordingTransport(cancel_error=RuntimeError("cancel down"))
+    transport = RecordingTransport(
+        response={
+            "status": "ok",
+            "response": {"type": "order", "data": {"statuses": [{"resting": {"oid": 42}}]}},
+        },
+        cancel_error=RuntimeError("cancel down"),
+    )
     warm = fixture_ohlcv(n_bars=20, drift=-5.0)
+    live_bar = warm.iloc[[-1]].copy()
+    live_bar["timestamp"] = pd.Timestamp(warm["timestamp"].iloc[-1]) + pd.Timedelta(
+        minutes=1
+    )
 
     result = start_live_daemon(
         export_dir=export,
@@ -481,11 +513,14 @@ def test_cancel_all_transport_error_is_best_effort(tmp_path: Path):
         private_key="k",
         transport=transport,
         warm_ohlcv=warm,
-        poll_fn=lambda after_ts=None: pd.DataFrame(),
-        max_live_bars=0,
+        poll_fn=lambda after_ts=None: live_bar,
+        max_live_bars=1,
         install_signal_handlers=False,
         sleep_fn=lambda _s: None,
     )
+    assert len(transport.calls) == 1
+    assert transport.cancel_calls[0]["oids"] == [42]
+    assert transport.cancel_calls[0]["coin"] == "BTC"
     assert result.cancel_attempted is True
     assert result.cancel_ok is False
     assert "cancel down" in (result.cancel_error or "")

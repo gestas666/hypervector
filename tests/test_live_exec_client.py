@@ -53,12 +53,14 @@ class RecordingTransport:
         wallet_address: str,
         private_key: str,
         coin: str | None = None,
+        oids: list[int] | None = None,
     ) -> dict[str, Any]:
         self.cancel_calls.append(
             {
                 "wallet_address": wallet_address,
                 "private_key": private_key,
                 "coin": coin,
+                "oids": oids,
             }
         )
         return {"status": "ok", "oid": "cancel-1"}
@@ -270,18 +272,33 @@ def test_submit_wired_surface_true():
     assert r["can_start"] is False
 
 
-def test_cancel_all_calls_transport():
+def test_cancel_all_calls_transport_for_owned_resting_orders_only():
     from hypervector.live.exec_client import create_live_exec_client
 
-    transport = RecordingTransport()
+    transport = RecordingTransport(
+        response={
+            "status": "ok",
+            "response": {"type": "order", "data": {"statuses": [{"resting": {"oid": 77}}]}},
+        }
+    )
     client = create_live_exec_client(
         _armed_policy(),
         wallet_address="0xabc",
         private_key="k",
         transport=transport,
     )
+    # Nothing owned yet: the kill switch never touches the venue.
+    idle = client.cancel_all(symbol="BTC-PERP")
+    assert idle.submitted is True
+    assert transport.cancel_calls == []
+
+    client.place_market("BTC-PERP", "buy", 0.0005, mark_px=50_000.0)
     result = client.cancel_all(symbol="BTC-PERP")
     assert result.submitted is True
-    assert result.venue_order_id == "cancel-1"
+    assert result.error is None
     assert len(transport.cancel_calls) == 1
     assert transport.cancel_calls[0]["coin"] == "BTC"
+    assert transport.cancel_calls[0]["oids"] == [77]
+    # Cancelled orders are no longer owned.
+    assert client.cancel_all(symbol="BTC-PERP").submitted is True
+    assert len(transport.cancel_calls) == 1
