@@ -15,8 +15,8 @@ imported inside the stage that needs them, and only these entry points are used
 - data: ``data.pipeline.load_research_history``
 - search: ``sweep.autotune.run_autotune`` or ``commands.sweep.run_sweep``
 - export: ``export.schema.validate_export_dir``, ``nautilus.load_export.load_strategy_loadout``
-- nautilus: the ``nautilus run`` symbol predicate, ``nautilus.config_stub.phase2_check_report``,
-  ``nautilus.runner.run_phase2_backtest``
+- nautilus: the ``nautilus run`` symbol predicate, ``nautilus.config_stub.phase2_check_report``
+  (without the engine probe), ``nautilus.runner.run_phase2_backtest``
 - model: ``commands.model.train_metalabel_bundle``
 - paper: paper constants by default; ``paper.runner.start_paper_daemon`` (shadow)
   only with ``--paper-bars``
@@ -576,7 +576,9 @@ class PipelineRun:
         except KeyboardInterrupt:
             self._fail(entry, "interrupted", "KeyboardInterrupt", 130)
             raise
-        except Exception as exc:  # noqa: BLE001 - a stage failure is technical (exit 1)
+        # A library calling sys.exit inside a stage did not complete it: record a
+        # technical failure instead of leaving the manifest "running".
+        except (Exception, SystemExit) as exc:  # noqa: BLE001 - technical (exit 1)
             self._fail(entry, f"{type(exc).__name__}: {exc}", type(exc).__name__, 1)
             _progress(f"{name}: failed ({type(exc).__name__}: {exc})")
             print(
@@ -658,6 +660,7 @@ class PipelineRun:
             )
         start, end = _bar_window(frame)
         key = cache_key(plan.symbol, plan.timeframe, plan.lookback)
+        cache_path = _cache_path(self.root, key)
         prov = provenance if isinstance(provenance, dict) else {}
         window = {
             "symbol": plan.symbol,
@@ -668,7 +671,7 @@ class PipelineRun:
             "bars": int(len(frame)),
             "sources": prov.get("sources"),
             "cache_key": key,
-            "cache_path": str((self.root / "cache" / f"{key}.parquet").resolve()),
+            "cache_path": str(cache_path.resolve()),
         }
         self.manifest["window"] = window
         entry["artifacts"] = {"dataset": dict(window)}
@@ -780,7 +783,11 @@ class PipelineRun:
         from hypervector.nautilus.config_stub import phase2_check_report
         from hypervector.nautilus.runner import run_phase2_backtest
 
-        check = phase2_check_report(path, data_root=self.root, strict=True)
+        # No engine probe: it imports Nautilus's Hyperliquid execution-client
+        # module and builds an exec client config, which this pipeline never needs.
+        check = phase2_check_report(
+            path, data_root=self.root, strict=True, probe_nautilus=False
+        )
         result = run_phase2_backtest(
             export_dir=path,
             data_root=self.root,
@@ -825,14 +832,33 @@ class PipelineRun:
     def _model(self, entry: dict[str, Any]) -> None:
         """Walk-forward metalabel training into ``<out-dir>/model``; never installed."""
         from hypervector.commands.model import train_metalabel_bundle
+        from hypervector.data.pipeline import cache_key
+        from hypervector.ml.walk_forward import InsufficientLabelsError
 
         path = self._require_export()
-        report = train_metalabel_bundle(
-            export_dir=path,
-            data_root=self.root,
-            out_dir=self.plan.out_dir / "model",
-            lookback_days=self.plan.lookback,
-        )
+        if self.args.no_network:
+            # Training loads history cache-first but fetches on a miss; with
+            # --no-network a miss must fail here instead of reaching the network.
+            key = cache_key(
+                self.loadout.symbol, self.loadout.timeframe, self.plan.lookback
+            )
+            cached = _cache_path(self.root, key)
+            if not cached.is_file():
+                raise FileNotFoundError(
+                    f"offline history cache missing for model training: {cached}"
+                )
+        try:
+            report = train_metalabel_bundle(
+                export_dir=path,
+                data_root=self.root,
+                out_dir=self.plan.out_dir / "model",
+                lookback_days=self.plan.lookback,
+            )
+        except InsufficientLabelsError as exc:
+            # Too few entries is a measured result (trade count), not a technical
+            # failure: no implicit gate, so record it and hand off without a model.
+            entry["metrics"] = {"n_labels": exc.n_labels, "installed": False}
+            raise StageSkipped("insufficient_labels", str(exc)) from exc
         self.model_dir = Path(report.get("bundle_dir") or self.plan.out_dir / "model")
         entry["artifacts"] = {"export": str(path), "model": str(self.model_dir)}
         entry["metrics"] = {key: report.get(key) for key in MODEL_METRICS}
@@ -910,6 +936,11 @@ class PipelineRun:
         options = _paper_options(namespace, path, strategy)
         if options["execution_mode"] != "shadow" or options["sandbox_enabled"]:
             raise RuntimeError("the pipeline paper session must be shadow, no submit")
+        if options["max_live_bars"] != self.args.paper_bars:
+            raise RuntimeError(
+                "the pipeline paper session must stop after --paper-bars "
+                f"{self.args.paper_bars} live bars; got {options['max_live_bars']!r}"
+            )
         hypervelocity_shadow = is_hypervelocity_strategy(strategy)
         with (
             _runtime_guard(namespace, hypervelocity_shadow),
@@ -1191,6 +1222,13 @@ def _recency(path: Path, manifest: Mapping[str, Any]) -> float:
 
 
 # --- helpers ------------------------------------------------------------------------
+
+
+def _cache_path(root: Path, key: str) -> Path:
+    """Where the history cache stores ``key`` (the cache's own path rule)."""
+    from hypervector.data.cache import ParquetCache
+
+    return ParquetCache(Path(root) / "cache").path_for(key)
 
 
 def _read_object(path: Path) -> dict[str, Any]:

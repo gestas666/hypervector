@@ -401,10 +401,16 @@ def test_full_run_pins_the_window_and_reports_parity(
     window = manifest["window"]
     assert window["bars"] == BARS and window["lookback_days"] == 30
     assert window["start"] and window["end"] and window["cache_key"] == "BTC_1m_30d"
+    assert window["cache_path"] == str(
+        (data / "cache" / "BTC_1m_30d.parquet").resolve()
+    )
     [load] = fakes.calls["load"]
     assert load["force_refresh"] is False and load["allow_network"] is True
     [tune] = fakes.calls["tune"]
     assert tune["export_best"] is True and tune["force_refresh"] is False
+    # The engine probe imports Nautilus's execution-client module: never run it.
+    [check] = fakes.calls["check"]
+    assert check["probe_nautilus"] is False and check["strict"] is True
     [replay] = fakes.calls["nautilus"]
     assert replay["allow_network"] is False and replay["lookback_days"] == 30
 
@@ -538,6 +544,89 @@ def test_an_interrupt_records_the_stage_and_exits_130(
     assert _stages(manifest)["export"]["status"] == "not_started"
 
 
+def test_a_stage_calling_sys_exit_is_a_technical_failure(
+    tmp_path: Path,
+    fakes: Fakes,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """A library sys.exit(0) mid-stage must not leave the run 'running' or exit 0."""
+
+    def exits(**_kwargs: Any) -> Any:
+        raise SystemExit(0)
+
+    monkeypatch.delenv("HYPERVECTOR_DEBUG", raising=False)
+    monkeypatch.setattr("hypervector.sweep.autotune.run_autotune", exits)
+    data = tmp_path / "data"
+    assert main(_run(data, "--strategy", "crown_stack_long")) == 1
+    manifest = _manifest_on_disk(data)
+    assert json.loads(capsys.readouterr().out) == manifest
+    assert manifest["status"] == "failed"
+    search = _stages(manifest)["search"]
+    assert (search["status"], search["error_type"], search["exit_code"]) == (
+        "failed",
+        "SystemExit",
+        1,
+    )
+    assert _stages(manifest)["export"]["status"] == "not_started"
+
+
+def test_no_network_model_training_never_fetches_a_missing_window(
+    tmp_path: Path, fakes: Fakes, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """From a bundle the data stage is skipped, so only the cache may feed training."""
+    data = tmp_path / "data"
+    strict_bundle(data / "exports", "cand", lookback_days=30)
+    flags = ["--strategy", "crown_stack_long", "--export", "cand", "--no-network"]
+    flags += ["--train-model", "--no-nautilus"]
+
+    missing = tmp_path / "missing"
+    assert main([*_run(data, *flags), "--out-dir", str(missing)]) == 1
+    manifest = json.loads((missing / pipeline.MANIFEST).read_text(encoding="utf-8"))
+    model = _stages(manifest)["model"]
+    assert (model["status"], model["error_type"]) == ("failed", "FileNotFoundError")
+    assert "BTC_1m_30d.parquet" in model["reason"]
+    assert fakes.calls["model"] == []
+    assert _stages(manifest)["paper"]["status"] == "not_started"
+    capsys.readouterr()
+
+    (data / "cache").mkdir(parents=True, exist_ok=True)
+    (data / "cache" / "BTC_1m_30d.parquet").write_bytes(b"")
+    cached = tmp_path / "cached"
+    assert main([*_run(data, *flags), "--out-dir", str(cached)]) == 0
+    assert _stages(json.loads(capsys.readouterr().out))["model"]["status"] == "ok"
+    assert len(fakes.calls["model"]) == 1
+
+
+def test_too_few_model_labels_is_a_result_not_a_failure(
+    tmp_path: Path,
+    fakes: Fakes,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """A best trial that rarely fires (often 0 trades) must not abort the run."""
+    from hypervector.ml.walk_forward import InsufficientLabelsError
+
+    def too_few(**kwargs: Any) -> dict[str, Any]:
+        fakes.calls["model"].append(kwargs)
+        raise InsufficientLabelsError(3)
+
+    monkeypatch.setattr("hypervector.commands.model.train_metalabel_bundle", too_few)
+    data = tmp_path / "data"
+    argv = _run(data, "--strategy", "crown_stack_long", "--no-nautilus")
+    assert main([*argv, "--train-model"]) == 0
+    manifest = json.loads(capsys.readouterr().out)
+    assert manifest["status"] == "ok"
+    model = _stages(manifest)["model"]
+    assert (model["status"], model["reason"]) == ("skipped", "insufficient_labels")
+    assert model["metrics"]["n_labels"] == 3 and "need ≥25" in model["detail"]
+    assert not (Path(manifest["out_dir"]) / "model").exists()
+    paper = _stages(manifest)["paper"]
+    assert paper["status"] == "ok"
+    assert paper["metrics"]["identity"]["metalabel_mode"] == "off"
+    assert "--metalabel-bundle" not in manifest["next"][0]
+
+
 def test_an_invalid_export_fails_the_export_stage(
     tmp_path: Path, fakes: Fakes, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -645,6 +734,30 @@ def test_start_paper_daemon_runs_only_with_paper_bars(
     assert "--max-live-bars 3" in " ".join(paper["argv"])
     assert "--max-live-bars" not in session["next"][0]
     assert "paper report --decisions" in session["next"][1]
+
+
+def test_paper_session_is_refused_unless_bounded_by_paper_bars(
+    tmp_path: Path,
+    fakes: Fakes,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """An unbounded session would be a daemon: fail before start_paper_daemon."""
+    from hypervector.commands import paper as paper_commands
+
+    install(monkeypatch.setattr, fakes, paper=True)
+    real = paper_commands._paper_options
+
+    def unbounded(*args: Any, **kwargs: Any) -> dict[str, object]:
+        return {**real(*args, **kwargs), "max_live_bars": None}
+
+    monkeypatch.setattr(paper_commands, "_paper_options", unbounded)
+    data = tmp_path / "data"
+    argv = _run(data, "--strategy", "crown_stack_long", "--no-nautilus")
+    assert main([*argv, "--paper-bars", "3"]) == 1
+    paper = _stages(_manifest_on_disk(data))["paper"]
+    assert (paper["status"], paper["error_type"]) == ("failed", "RuntimeError")
+    assert fakes.calls["paper"] == []
 
 
 # --- sweep search -------------------------------------------------------------------------
