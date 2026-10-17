@@ -23,19 +23,22 @@ if TYPE_CHECKING:
 
 
 def session_identity_payload(session: PaperSession) -> dict[str, object]:
-    """Build the unchanged public identity from independently bounded sections."""
+    """Build the public session_start identity from its meaning-named sections.
+
+    Section order is the payload key order; keep it stable for consumers.
+    """
     return {
-        **_section_feed_ts(session),
-        **_section_execution_update_latency_ms(session),
-        **_section_strategy_params(session),
-        **_section_exits(session),
+        **_section_identity(session),
+        **_section_execution_model(session),
+        **_section_strategy_policy(session),
+        **_section_risk_costs(session),
         **_section_runtime(session),
-        **_section_orderbook_archive(session),
-        **_section_position_opened_at(session),
+        **_section_portfolio_state(session),
+        **_section_event_hold_state(session),
     }
 
 
-def _section_feed_ts(session: PaperSession) -> dict[str, object]:
+def _section_identity(session: PaperSession) -> dict[str, object]:
     return {
         "feed_ts": "session_start",
         "run_id": session.run_id,
@@ -64,7 +67,7 @@ def _section_feed_ts(session: PaperSession) -> dict[str, object]:
     }
 
 
-def _section_execution_update_latency_ms(session: PaperSession) -> dict[str, object]:
+def _section_execution_model(session: PaperSession) -> dict[str, object]:
     return {
         "execution_update_latency_ms": session.hypervelocity_profile.execution_update_latency_ms
         if session.hypervelocity_profile is not None
@@ -95,7 +98,7 @@ def _section_execution_update_latency_ms(session: PaperSession) -> dict[str, obj
     }
 
 
-def _section_strategy_params(session: PaperSession) -> dict[str, object]:
+def _section_strategy_policy(session: PaperSession) -> dict[str, object]:
     resume = session._shadow_resume
     return {
         "strategy_params": {
@@ -123,7 +126,7 @@ def _section_strategy_params(session: PaperSession) -> dict[str, object]:
     }
 
 
-def _section_exits(session: PaperSession) -> dict[str, object]:
+def _section_risk_costs(session: PaperSession) -> dict[str, object]:
     return {
         "exits": _effective_exits(
             session.loadout, profile=session.hypervelocity_profile
@@ -154,7 +157,7 @@ def _section_runtime(session: PaperSession) -> dict[str, object]:
     }
 
 
-def _section_orderbook_archive(session: PaperSession) -> dict[str, object]:
+def _section_portfolio_state(session: PaperSession) -> dict[str, object]:
     position = session.engine.position
     resume = session._shadow_resume
     return {
@@ -181,7 +184,7 @@ def _section_orderbook_archive(session: PaperSession) -> dict[str, object]:
     }
 
 
-def _section_position_opened_at(session: PaperSession) -> dict[str, object]:
+def _section_event_hold_state(session: PaperSession) -> dict[str, object]:
     return {
         "position_opened_at": session._event_shadow_bridge.controller.state.position_opened_at
         if session._event_shadow_bridge is not None

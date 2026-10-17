@@ -2,32 +2,32 @@
 
 Pure counters over ``decisions.jsonl``. Never submits orders, never writes
 under ``data/live/``. Used by ``paper-report`` CLI.
+
+Only real fills feed ``market_fills`` and the fill-model attribution: order
+lifecycle rows (``order_status``), zero-quantity skipped fills and funding are
+counted separately. The honesty block's ``live_files`` counts paper/shadow
+artifacts found under ``live/`` (a misrouted paper write), not the files a
+co-hosted live runtime owns there, and it never walks the whole live tree.
 """
 
 from __future__ import annotations
 
 import json
+import logging
 from collections import Counter, deque
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
-from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
 from hypervector.infra import paths_for
-from hypervector.paper.ledger import DECISIONS_FILENAME
+from hypervector.paper.ledger import ALLOWED_EXECUTION_MODES, DECISIONS_FILENAME
 
-# Market-like actions that may carry fills / order_intent (not funding).
-_MARKET_ACTIONS = frozenset(
-    {
-        "enter_long",
-        "enter_short",
-        "close",
-        "close_long",
-        "close_short",
-        "exit",
-        "flatten",
-    }
-)
+logger = logging.getLogger(__name__)
+
+LIVE_FILES_SCOPE = "paper_artifacts_under_live"
+# Live directories a misrouted paper ledger could reach; scanned one level deep.
+_LIVE_LEDGER_DIRS = ("decisions", "ledger")
 
 
 def default_decisions_path(data_root: Path | str) -> Path:
@@ -45,9 +45,17 @@ def load_decision_rows(path: Path | str) -> list[dict[str, Any]]:
 
 
 def iter_decision_stream(
-    lines: Iterable[str], *, source_label: str
+    lines: Iterable[str],
+    *,
+    source_label: str,
+    on_torn_tail: Callable[[int], None] | None = None,
 ) -> Iterable[dict[str, object]]:
-    """Yield strict JSONL records from a caller-owned immutable stream."""
+    """Yield strict JSONL records from a caller-owned immutable stream.
+
+    With ``on_torn_tail`` (file-backed streams only), an unparseable final
+    line that lacks its newline is reported and skipped instead of raising;
+    every interior line stays strict.
+    """
     for line_no, line in enumerate(lines, start=1):
         text = line.strip()
         if not text:
@@ -55,6 +63,9 @@ def iter_decision_stream(
         try:
             obj = json.loads(text)
         except json.JSONDecodeError as exc:
+            if on_torn_tail is not None and not line.endswith("\n"):
+                on_torn_tail(line_no)
+                continue
             raise ValueError(
                 f"invalid JSONL at {source_label}:{line_no}: {exc}"
             ) from exc
@@ -68,22 +79,83 @@ def _count(values: list[Any]) -> dict[str, int]:
     return dict(sorted(c.items(), key=lambda kv: (-kv[1], kv[0])))
 
 
+def is_market_fill(row: dict[str, object]) -> bool:
+    """Return whether a ledger row records a real (non-zero) fill.
+
+    Uses no action allow-list so liquidations, target reductions and future
+    fill actions still count. Rows without any quantity field are legacy fills.
+    """
+    if row.get("action") == "funding" or row.get("fill_model_id") is None:
+        return False
+    if row.get("skipped") is True or "order_status" in row:
+        return False
+    quantity = row.get("fill_qty", row.get("qty"))
+    if quantity is None:
+        return True
+    try:
+        return float(quantity) > 0.0  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return False
+
+
 def summarize_paper_decisions(
     rows: Iterable[dict[str, object]],
-    *, decisions_path: Path | str | None = None,
-    data_root: Path | str | None = None, last_n: int = 5,
+    *,
+    decisions_path: Path | str | None = None,
+    data_root: Path | str | None = None,
+    last_n: int = 5,
+    run_id: str | None = None,
+    strategy: str | None = None,
 ) -> dict[str, object]:
     """Summarize a single-pass ledger using counters and a bounded recent sample."""
     state = _PaperSummary(last_n=max(0, int(last_n)))
     for row in rows:
+        if run_id is not None and row.get("run_id") != run_id:
+            continue
+        if strategy is not None and row.get("strategy_name") != strategy:
+            continue
         state.add(row)
-    live_files = 0
-    if data_root is not None:
-        live_root = paths_for(data_root).live
-        if live_root.is_dir():
-            live_files = sum(1 for path in live_root.rglob("*") if path.is_file())
-    return state.report(decisions_path, live_files)
+    live_files = paper_artifacts_under_live(data_root) if data_root is not None else 0
+    report = state.report(decisions_path, live_files)
+    report["filters"] = {"run_id": run_id, "strategy": strategy}
+    return report
 
+
+def paper_artifacts_under_live(data_root: Path | str) -> int:
+    """Count paper/shadow-stamped artifacts under ``live/`` without a tree walk.
+
+    Checks the two places a misrouted paper write could land: a paper layout
+    nested under ``live/paper/`` (every file there counts), and JSONL files
+    directly in ``live/decisions`` or ``live/ledger`` whose first record is
+    stamped ``paper`` or ``shadow``. Files a live runtime writes are ignored.
+    """
+    live_root = paths_for(data_root).live
+    if not live_root.is_dir():
+        return 0
+    count = 0
+    nested = live_root / "paper"
+    if nested.is_dir():
+        count += sum(1 for path in nested.rglob("*") if path.is_file())
+    for name in _LIVE_LEDGER_DIRS:
+        directory = live_root / name
+        if not directory.is_dir():
+            continue
+        for path in directory.glob("*.jsonl"):
+            if path.is_file() and _first_record_mode(path) in ALLOWED_EXECUTION_MODES:
+                count += 1
+    return count
+
+
+def _first_record_mode(path: Path) -> object:
+    try:
+        with path.open(encoding="utf-8") as handle:
+            for line in handle:
+                if line.strip():
+                    row = json.loads(line)
+                    return row.get("execution_mode") if isinstance(row, dict) else None
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+        return None
+    return None
 
 
 def _is_under(path: Path, ancestor: Path) -> bool:
@@ -103,8 +175,14 @@ def report_from_data_root(
     *,
     decisions_path: Path | str | None = None,
     last_n: int = 5,
+    run_id: str | None = None,
+    strategy: str | None = None,
 ) -> dict[str, Any]:
-    """Load default (or override) decisions path and summarize."""
+    """Load default (or override) decisions path and summarize.
+
+    ``run_id`` and ``strategy`` optionally restrict the summary to one run or
+    one strategy when a ledger mixes several profiles' runs.
+    """
     root = Path(data_root)
     path = (
         Path(decisions_path)
@@ -118,13 +196,20 @@ def report_from_data_root(
     if "live" in path.resolve().parts and "paper" not in path.resolve().parts:
         raise ValueError(f"refusing paper-report on live path: {path}")
 
-    rows = iter_decision_rows(path)
-    return summarize_paper_decisions(
+    torn: list[int] = []
+    rows = iter_decision_rows(path, on_torn_tail=torn.append)
+    report = summarize_paper_decisions(
         rows,
         decisions_path=path,
         data_root=root,
         last_n=last_n,
+        run_id=run_id,
+        strategy=strategy,
     )
+    if torn:
+        logger.warning("paper report skipped torn final ledger line %s", torn[-1])
+    report["torn_tail_skipped"] = bool(torn)
+    return report
 
 
 def load_decision_stream(lines: Iterable[str], *, source_label: str) -> list[dict[str, object]]:
@@ -132,13 +217,19 @@ def load_decision_stream(lines: Iterable[str], *, source_label: str) -> list[dic
     return list(iter_decision_stream(lines, source_label=source_label))
 
 
-def iter_decision_rows(path: Path | str) -> Iterable[dict[str, object]]:
+def iter_decision_rows(
+    path: Path | str,
+    *,
+    on_torn_tail: Callable[[int], None] | None = None,
+) -> Iterable[dict[str, object]]:
     """Stream a ledger while owning its file for the duration of iteration."""
     source = Path(path)
     if not source.is_file():
         return
     with source.open(encoding="utf-8") as stream:
-        yield from iter_decision_stream(stream, source_label=str(source))
+        yield from iter_decision_stream(
+            stream, source_label=str(source), on_torn_tail=on_torn_tail
+        )
 
 
 @dataclass
@@ -150,6 +241,8 @@ class _PaperSummary:
     intents: int = 0
     submitted: int = 0
     intent_submit: int = 0
+    order_events: int = 0
+    skipped_fills: int = 0
     counts: dict[str, Counter[str]] = field(default_factory=dict)
     modes: set[str] = field(default_factory=set)
     networks: set[str] = field(default_factory=set)
@@ -171,15 +264,24 @@ class _PaperSummary:
             self.modes.add(str(row["execution_mode"]))
         if row.get("network") is not None:
             self.networks.add(str(row["network"]))
-        if row.get("action") == "funding" or row.get("fill_model_id") is None:
+        intent = row.get("order_intent")
+        if isinstance(intent, dict):
+            # Any submit-enabled intent breaks honesty, fill or not.
+            self.intent_submit += intent.get("submit_enabled") is True
+        if "order_status" in row:
+            self.order_events += 1
+            self.count("order_event_action", row.get("action"))
+            return
+        if row.get("skipped") is True:
+            self.skipped_fills += 1
+            return
+        if not is_market_fill(row):
             return
         self.markets += 1
         for name in ("action", "fill_model_id", "fill_fallback_reason"):
             self.count(name, row.get(name))
-        intent = row.get("order_intent")
         if isinstance(intent, dict):
             self.intents += 1
-            self.intent_submit += intent.get("submit_enabled") is True
             self.count("intent_schema", intent.get("schema"))
             self.count("intent_submit_enabled", intent.get("submit_enabled"))
         self.recent.append(_paper_sample(row))
@@ -191,6 +293,9 @@ class _PaperSummary:
         report: dict[str, object] = {
             "ok": True, "decisions_path": str(path) if path is not None else None,
             "rows": self.rows, "market_fills": self.markets, "funding_rows": self.funding,
+            "order_events": {"count": self.order_events,
+                "action": self.totals("order_event_action")},
+            "skipped_fills": self.skipped_fills,
             "order_intent": {"count": self.intents,
                 "missing_on_market_fills": self.markets - self.intents,
                 "schema": self.totals("intent_schema"),
@@ -198,6 +303,7 @@ class _PaperSummary:
             "honesty": {"all_submitted_false_or_absent": self.submitted == 0,
                 "all_intent_submit_enabled_false": self.intent_submit == 0,
                 "live_files": live_files, "no_live_files": live_files == 0,
+                "live_files_scope": LIVE_FILES_SCOPE,
                 "modes_seen": sorted(self.modes), "networks_seen": sorted(self.networks)},
             "last_market": list(self.recent), "no_submit": True,
             "live_submit_implemented": True, "live_submit_command": "live start",

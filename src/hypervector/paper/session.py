@@ -24,7 +24,6 @@ from hypervector.data.hl_events import (
     PublicTradeEvent,
     StreamGap,
 )
-from hypervector.infra import ensure_data_layout
 from hypervector.nautilus.actor import (
     DEFAULT_MAX_LOOKBACK,
     _action_from_intent,
@@ -69,7 +68,11 @@ from hypervector.paper.hypervelocity_shadow_controller import (
 )
 from hypervector.paper.event_runtime import build_event_shadow_controller
 from hypervector.paper.event_resume import PendingTargetResume
-from hypervector.paper.ledger import DECISIONS_FILENAME, append_paper_decision
+from hypervector.paper.ledger import (
+    DECISIONS_FILENAME,
+    append_paper_decision,
+    ensure_paper_layout,
+)
 from hypervector.paper.maker_execution import (
     PostOnlyLimitFillModel,
     PendingMakerEntry,
@@ -87,6 +90,29 @@ from hypervector.paper.resume import (
     load_shadow_portfolio_resume,
     portfolio_fingerprint,
 )
+# Re-exported (``name as name``) for hypervector.live.session and tests.
+from hypervector.paper.session_bars import (
+    _bar_close_timestamp as _bar_close_timestamp,
+    _bars_closing_after as _bars_closing_after,
+    _buffer_to_df as _buffer_to_df,
+    _feed_ts as _feed_ts,
+    _is_funding_boundary as _is_funding_boundary,
+    _normalized_funding_rates as _normalized_funding_rates,
+    _prepare_ohlcv as _prepare_ohlcv,
+    _resume_timestamp as _resume_timestamp,
+    _row_to_buffer_record as _row_to_buffer_record,
+    _timeframe_minutes as _timeframe_minutes,
+)
+from hypervector.paper.session_configuration import (
+    _effective_execution as _effective_execution,
+    _effective_exits as _effective_exits,
+    _effective_risk as _effective_risk,
+    _effective_strategy_params as _effective_strategy_params,
+    _exits_dict as _exits_dict,
+    _portfolio_spec as _portfolio_spec,
+    _source_follow_metalabel_policy as _source_follow_metalabel_policy,
+)
+from hypervector.paper.session_identity import session_identity_payload
 from hypervector.paper.telemetry import bar_telemetry_payload, book_telemetry_payload
 from hypervector.regime.source_follow_runtime import SourceFollowDecision
 from hypervector.regime.source_follow_session import SourceFollowSessionSignal
@@ -97,7 +123,6 @@ from hypervector.strategies.hypervelocity_contract import (
 )
 from hypervector.strategies.hypervelocity import (
     HypervelocityMarketObservation,
-    current_hypervelocity_entry_allowed,
     current_hypervelocity_market,
 )
 from hypervector.strategies.hypervelocity_profile import HypervelocityProfile
@@ -108,8 +133,6 @@ from hypervector.strategies.source_follow_profile import (
 from hypervector.strategies import register_all_strategies
 
 logger = logging.getLogger(__name__)
-
-_OHLCV_REQUIRED = ("open", "high", "low", "close", "volume")
 
 
 def _source_follow_reason(
@@ -197,6 +220,9 @@ class PaperSession:
             raise FileNotFoundError(f"export_dir not found: {export_path}")
 
         self.loadout = load_strategy_loadout(export_path, strict=True)
+        # Fail on an unsupported candle duration before any IO, not on the
+        # first bar that holds a position (funding boundaries need it).
+        _timeframe_minutes(self.loadout.timeframe)
         requested_initial_cash = _validated_initial_cash(initial_cash_usd)
         self._is_hypervelocity = is_hypervelocity_strategy(self.loadout.strategy_name)
         self.hypervelocity_profile = hypervelocity_profile
@@ -212,7 +238,7 @@ class PaperSession:
         ):
             raise ValueError("faithful Hypervelocity paper execution requires BTC 1m")
         self.root = Path(data_root)
-        self.paths = ensure_data_layout(self.root)
+        self.paths = ensure_paper_layout(self.root)
         self.decisions_path = self.paths.paper_decisions / DECISIONS_FILENAME
         self.conviction = float(conviction)
         self.sandbox_enabled = bool(sandbox_enabled)
@@ -348,6 +374,11 @@ class PaperSession:
         self.fills_count = 0
         self.bars_processed = 0
         self._last_ts: pd.Timestamp | None = None
+        # One canonical regime classification per on_bar call (see _bar_market).
+        self._bar_memo_active = False
+        self._bar_market_memo: (
+            tuple[dict[str, Any], int, HypervelocityMarketObservation] | None
+        ) = None
         self._last_funding_refresh_mono: float = 0.0
         self._identity_written = False
         self._pending_maker_entry = _restore_pending_maker_entry(resume)
@@ -679,8 +710,9 @@ class PaperSession:
     def on_bar(self, row: pd.Series | dict[str, Any]) -> str | None:
         """Process one OHLCV bar. Returns fill action or None.
 
-        When a position is open, applies one hour of signed funding at bar close
-        using the current ``cost_provider`` rate (no network in this method).
+        When a position is open and the bar closes on an hourly Hyperliquid
+        settlement boundary, applies one hour of signed funding using the
+        current ``cost_provider`` rate (no network in this method).
         """
         self.ensure_session_identity()
         record = _row_to_buffer_record(
@@ -692,7 +724,16 @@ class PaperSession:
         ts = record.get("timestamp")
         if isinstance(ts, pd.Timestamp):
             self._last_ts = ts
+        self._bar_market_memo = None
+        self._bar_memo_active = True
+        try:
+            return self._process_bar(record)
+        finally:
+            self._bar_memo_active = False
+            self._bar_market_memo = None
 
+    def _process_bar(self, record: dict[str, Any]) -> str | None:
+        """Run funding, telemetry and intent for the bar just buffered."""
         self.maybe_refresh_funding()
 
         event_funding_applied = self._event_shadow_bridge is not None
@@ -839,17 +880,42 @@ class PaperSession:
             return f"blocked_{expired}"
         return "ready"
 
+    def _regime_config(self):
+        """Return the canonical classifier config shared by every consumer."""
+        profile = self.hypervelocity_profile
+        return profile.regime_config if profile is not None else faithful_regime_config()
+
+    def _bar_market(
+        self, frame: pd.DataFrame | None = None
+    ) -> HypervelocityMarketObservation:
+        """Classify the current buffer once per ``on_bar`` call.
+
+        Telemetry and the entry decision read the same immutable observation.
+        The memo is keyed by the newest buffered record object and buffer
+        length and only lives for one ``on_bar`` call, so no other buffer state
+        can ever be served from it.
+        """
+        last = self.buffer_rows[-1] if self.buffer_rows else None
+        memo = self._bar_market_memo
+        if (
+            memo is not None
+            and last is not None
+            and memo[0] is last
+            and memo[1] == len(self.buffer_rows)
+        ):
+            return memo[2]
+        market = current_hypervelocity_market(
+            frame if frame is not None else _buffer_to_df(self.buffer_rows),
+            regime_config=self._regime_config(),
+        )
+        if self._bar_memo_active and last is not None:
+            self._bar_market_memo = (last, len(self.buffer_rows), market)
+        return market
+
     def _hypervelocity_regime_payload(self, frame: pd.DataFrame) -> dict[str, Any]:
         """Return the exact backend classification fields used for display."""
-        config = (
-            self.hypervelocity_profile.regime_config
-            if self.hypervelocity_profile is not None
-            else faithful_regime_config()
-        )
-        market = current_hypervelocity_market(
-            frame,
-            regime_config=config,
-        )
+        config = self._regime_config()
+        market = self._bar_market(frame)
         if self._source_follow_signal is not None:
             return self._source_follow_regime_payload(
                 market,
@@ -1469,14 +1535,8 @@ class PaperSession:
         self._pending_maker_entry = None
 
     def _hypervelocity_allowed(self, direction: str) -> bool:
-        frame = _buffer_to_df(self.buffer_rows)
-        if self.hypervelocity_profile is None:
-            return current_hypervelocity_entry_allowed(frame, direction=direction)
-        return current_hypervelocity_entry_allowed(
-            frame,
-            direction=direction,
-            regime_config=self.hypervelocity_profile.regime_config,
-        )
+        """Return whether the latest classification permits the fixed side."""
+        return self._bar_market().entry_direction == direction
 
     def _desired_hypervelocity_direction(self) -> str | None:
         direction, _ = self._hypervelocity_directions(_buffer_to_df(self.buffer_rows))
@@ -1500,10 +1560,7 @@ class PaperSession:
             direction = self._hypervelocity_direction()
             allowed = direction if self._hypervelocity_allowed(direction) else None
             return allowed, allowed
-        observation = current_hypervelocity_market(
-            frame,
-            regime_config=self.hypervelocity_profile.regime_config,
-        )
+        observation = self._bar_market(frame)
         return observation.entry_direction, observation.structural_direction
 
     def _source_follow_observed_at(self) -> pd.Timestamp:
@@ -1643,7 +1700,9 @@ class PaperSession:
         if isinstance(ohlcv, pd.DataFrame) and ohlcv.empty:
             return 0
         frame = _prepare_ohlcv(ohlcv, max_bars=None)
-        cutoff = _resume_timestamp(self._shadow_resume.state_asof)
+        cutoff = self._reconciled_through or _resume_timestamp(
+            self._shadow_resume.state_asof
+        )
         missed = _bars_closing_after(
             frame,
             cutoff=cutoff,
@@ -1795,7 +1854,8 @@ def run_paper_session_offline(
 
     Warm-up matches :class:`HypervectorStrategy`: no trade when buffer length
     is less than 2. Uses loadout/injected funding rate (no network poll).
-    Open positions receive signed funding once per bar. No venue orders.
+    Open positions receive one hour of signed funding on each bar that closes
+    on an hourly settlement boundary. No venue orders.
     """
     session = PaperSession(
         export_dir=export_dir,
@@ -2008,29 +2068,3 @@ def _entry_qty(
     notional = equity * float(size_frac)
     qty = notional / mark_px
     return qty if qty > 0 else None
-
-
-from hypervector.paper.session_configuration import (
-    _exits_dict as _exits_dict,
-    _effective_strategy_params as _effective_strategy_params,
-    _source_follow_metalabel_policy as _source_follow_metalabel_policy,
-    _effective_exits as _effective_exits,
-    _effective_risk as _effective_risk,
-    _effective_execution as _effective_execution,
-    _portfolio_spec as _portfolio_spec,
-)
-
-from hypervector.paper.session_bars import (
-    _prepare_ohlcv as _prepare_ohlcv,
-    _row_to_buffer_record as _row_to_buffer_record,
-    _buffer_to_df as _buffer_to_df,
-    _feed_ts as _feed_ts,
-    _timeframe_minutes as _timeframe_minutes,
-    _bar_close_timestamp as _bar_close_timestamp,
-    _is_funding_boundary as _is_funding_boundary,
-    _resume_timestamp as _resume_timestamp,
-    _bars_closing_after as _bars_closing_after,
-    _normalized_funding_rates as _normalized_funding_rates,
-)
-
-from hypervector.paper.session_identity import session_identity_payload

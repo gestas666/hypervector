@@ -33,6 +33,8 @@ def load_peak_observer_state(
         for line_number, raw in enumerate(handle, 1):
             if not raw.strip():
                 continue
+            if not raw.endswith("\n") and not _is_json(raw):
+                continue  # torn final line from a crash; the next append repairs it
             record = _record(raw, line_number)
             if _matches(record, run_id=run_id, candidate_id=candidate_id):
                 latest = record
@@ -42,6 +44,14 @@ def load_peak_observer_state(
     if not _boolean(latest, "observer_active"):
         return None
     return _state(latest)
+
+
+def _is_json(raw: str) -> bool:
+    try:
+        json.loads(raw)
+    except json.JSONDecodeError:
+        return False
+    return True
 
 
 def _record(raw: str, line_number: int) -> dict[str, object]:
