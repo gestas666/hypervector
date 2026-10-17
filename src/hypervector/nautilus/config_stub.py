@@ -29,9 +29,9 @@ class Phase2StubConfig:
     paper_live_implemented: bool = True
     notes: tuple[str, ...] = field(
         default_factory=lambda: (
-            "phase2-run is historical Nautilus only",
-            "paper/shadow dry-run → paper-run (no venue orders)",
-            "live venue submit → live-run (enabled+armed+secrets)",
+            "nautilus run is historical Nautilus only",
+            "paper/shadow dry-run → paper run (no venue orders)",
+            "live execution → live start (--enabled --i-accept-live-risk)",
             "Re-run strategy from params; do not replay signals as alpha",
         )
     )
@@ -119,29 +119,29 @@ def phase2_check_report(
     report: dict[str, Any] = {
         "ok": True,
         "phase2_stub": stub.to_dict(),
-        # Honesty: paper/shadow dry-run is implemented via paper-run (not phase2-run).
-        # Live venue submit remains a later phase (4b-live).
+        # Honesty: paper/shadow dry-run is 'paper run' (not 'nautilus run').
+        # Live execution is 'live start' with both authority flags.
         "paper_live": {
             "implemented": True,
             "phase2_run_modes": False,
             "paper_dry_run": {
                 "implemented": True,
-                "command": "paper-run",
+                "command": "paper run",
                 "default_mode": "shadow",
                 "no_submit": True,
             },
             "live_submit": {
                 "implemented": True,
-                "command": "live-run",
-                "requires": ["--enabled", "--i-accept-live-risk", "secrets"],
+                "command": "live start",
+                "requires": ["--config", "--enabled", "--i-accept-live-risk"],
                 "message": (
-                    "live-run places only when enabled+armed+secrets; "
-                    "paper-run remains no-submit"
+                    "live start places only with --enabled --i-accept-live-risk; "
+                    "paper run remains no-submit"
                 ),
             },
             "message": (
-                "phase2-run is historical only; paper/shadow dry-run is paper-run "
-                "(default mode=shadow, no venue orders); live venue submit is live-run"
+                "nautilus run is historical only; paper/shadow dry-run is paper run "
+                "(default mode=shadow, no venue orders); live execution is live start"
             ),
         },
     }

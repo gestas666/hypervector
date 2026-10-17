@@ -51,7 +51,7 @@ def run_autotune(
     lookback_days: int = 180,
     strategy_name: str = "crown_stack_long",
     n_trials: int = 100,
-    fee_model: str = "hl_taker_default",
+    fee_model: str = "hl_base_taker",
     book_data_path: str | Path | None = None,
     sampler: str = "karpathy",
     strict_hl_only: bool = False,

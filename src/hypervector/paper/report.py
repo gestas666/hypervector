@@ -200,7 +200,7 @@ class _PaperSummary:
                 "live_files": live_files, "no_live_files": live_files == 0,
                 "modes_seen": sorted(self.modes), "networks_seen": sorted(self.networks)},
             "last_market": list(self.recent), "no_submit": True,
-            "live_submit_implemented": True, "live_submit_command": "live-run",
+            "live_submit_implemented": True, "live_submit_command": "live start",
         }
         for name in ("execution_mode", "submitted", "network", "action", "fill_model_id", "fill_fallback_reason"):
             report[name] = self.totals(name)

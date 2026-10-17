@@ -1,0 +1,30 @@
+{
+  "schema": 2,
+  "help": "Report completed shadow trades with their causal entry regimes",
+  "kind": "inprocess",
+  "handler": "hypervector.cli_research_reports:cmd_research_db_shadow_trades",
+  "authority": "none",
+  "environment": [],
+  "data_root": "honored",
+  "include": [],
+  "fragment_overrides": {},
+  "legacy": [
+    "research db-shadow-trades",
+    "research-db-shadow-trades"
+  ],
+  "exclusive_groups": [],
+  "arguments": [
+    {
+      "flags": [
+        "--database"
+      ],
+      "options": {
+        "dest": "database",
+        "type": "Path",
+        "default": null,
+        "help": "DuckDB research database file"
+      },
+      "data_default": "research/market.duckdb"
+    }
+  ]
+}

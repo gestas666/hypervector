@@ -29,7 +29,7 @@ def cmd_export(args: argparse.Namespace) -> int:
         if any_ok:
             print(
                 "ok trials exist but none have research_meta "
-                "(costs/risk/exits/cash); re-run sweep-* with current CLI "
+                "(costs/risk/exits/cash); re-run 'backtest sweep' "
                 "so Phase 2-ready config is stored",
                 file=sys.stderr,
             )
@@ -42,10 +42,10 @@ def cmd_export(args: argparse.Namespace) -> int:
 
 
 def cmd_export_validate(args: argparse.Namespace) -> int:
-    """Validate an export bundle against the Phase 1→2 schema contract."""
-    path = Path(args.path)
+    """Validate a strategy bundle; strict unless --loose is given."""
+    path = Path(args.export)
     try:
-        report = validate_export_dir(path, strict=bool(args.strict))
+        report = validate_export_dir(path, strict=not args.loose)
     except ExportSchemaError as exc:
         print(
             json.dumps(

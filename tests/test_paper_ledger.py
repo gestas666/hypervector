@@ -107,7 +107,7 @@ def test_refuse_write_when_data_root_nested_under_live(tmp_path: Path):
 
 def test_cli_paper_check_prints_layout_and_live_feed_loop(tmp_path: Path, capsys):
     data = tmp_path / "data"
-    assert main(["--data-root", str(data), "paper-check"]) == 0
+    assert main(["--data-root", str(data), "paper", "check"]) == 0
     captured = capsys.readouterr()
     report = json.loads(captured.out)
     assert report["dirs"]["paper_decisions"]["exists"] is False

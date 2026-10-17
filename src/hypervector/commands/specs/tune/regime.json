@@ -1,0 +1,89 @@
+{
+  "schema": 2,
+  "help": "Tune Hypervelocity regime parameters against recorded entries (chronological holdout)",
+  "kind": "inprocess",
+  "handler": "hypervector.commands.regime:cmd_hypervelocity_regime_autotune",
+  "authority": "none",
+  "environment": [],
+  "data_root": "honored",
+  "include": [
+    "market"
+  ],
+  "fragment_overrides": {},
+  "legacy": [
+    "regime autotune",
+    "hypervelocity-regime-autotune"
+  ],
+  "exclusive_groups": [],
+  "arguments": [
+    {
+      "flags": [
+        "--positions"
+      ],
+      "options": {
+        "dest": "positions",
+        "default": null,
+        "help": "recorded-entries CSV with open_time_utc, side and symbol"
+      },
+      "required": true
+    },
+    {
+      "flags": [
+        "--n-trials"
+      ],
+      "options": {
+        "dest": "n_trials",
+        "type": "int",
+        "default": 100,
+        "help": "number of candidate parameter sets"
+      }
+    },
+    {
+      "flags": [
+        "--seed"
+      ],
+      "options": {
+        "dest": "seed",
+        "type": "int",
+        "default": 7,
+        "help": "random seed for candidate generation"
+      }
+    },
+    {
+      "flags": [
+        "--train-fraction"
+      ],
+      "options": {
+        "dest": "train_fraction",
+        "type": "float",
+        "default": 0.7,
+        "help": "chronological share of entries used for training (0..1)"
+      }
+    },
+    {
+      "flags": [
+        "--forward-bars"
+      ],
+      "options": {
+        "dest": "forward_horizon",
+        "type": "int",
+        "default": 30,
+        "help": "forward bars used to score breakout targets"
+      },
+      "legacy_flags": [
+        "--forward-horizon"
+      ]
+    },
+    {
+      "flags": [
+        "--out"
+      ],
+      "options": {
+        "dest": "out",
+        "type": "Path",
+        "default": null,
+        "help": "optional path for the complete JSON tuning board"
+      }
+    }
+  ]
+}

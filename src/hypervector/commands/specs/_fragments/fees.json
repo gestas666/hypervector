@@ -1,0 +1,47 @@
+{
+  "schema": 2,
+  "arguments": [
+    {
+      "flags": [
+        "--fee-model"
+      ],
+      "options": {
+        "dest": "fee_model",
+        "type": "fee_model",
+        "choices": [
+          "hl_base_taker",
+          "hl_referred_taker",
+          "hl_vip1_taker",
+          "hl_vip2_taker",
+          "hl_maker",
+          "zero"
+        ],
+        "default": "hl_base_taker",
+        "help": "Hyperliquid cost preset"
+      }
+    }
+  ],
+  "fee_model_names": [
+    "hl_base_taker",
+    "hl_referred_taker",
+    "hl_vip1_taker",
+    "hl_vip2_taker",
+    "hl_maker",
+    "zero"
+  ],
+  "fee_model_aliases": {
+    "base": "hl_base_taker",
+    "default": "hl_base_taker",
+    "hl": "hl_base_taker",
+    "referred": "hl_referred_taker",
+    "ref": "hl_referred_taker",
+    "vip1": "hl_vip1_taker",
+    "hl_taker_default": "hl_vip1_taker",
+    "vip2": "hl_vip2_taker",
+    "hl_taker_tight": "hl_vip2_taker",
+    "tight": "hl_vip2_taker",
+    "maker": "hl_maker",
+    "none": "zero",
+    "off": "zero"
+  }
+}

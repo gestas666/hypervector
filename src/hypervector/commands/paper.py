@@ -23,7 +23,7 @@ ALLOWED_CLI_EXECUTION_MODES = frozenset({"shadow", "paper"})
 
 def cmd_paper_run(args: argparse.Namespace) -> int:
     """Run one explicitly configured no-submit paper/shadow session."""
-    path = Path(args.path)
+    path = Path(args.export)
     if not path.is_dir():
         print(f"export path not found: {path}", file=sys.stderr)
         return 1
@@ -32,10 +32,10 @@ def cmd_paper_run(args: argparse.Namespace) -> int:
         _ensure_root(args)
         result = start_paper_daemon(**options)
     except PaperArgumentsError as exc:
-        print(f"paper-run refused: {exc}", file=sys.stderr)
+        print(f"paper run refused: {exc}", file=sys.stderr)
         return 2
     except (OSError, RuntimeError, ValueError) as exc:
-        print(f"paper-run failed: {exc}", file=sys.stderr)
+        print(f"paper run failed: {exc}", file=sys.stderr)
         return 1
     print(json.dumps(_paper_result(args, result, options), indent=2, default=str))
     return 0
@@ -44,7 +44,7 @@ def cmd_paper_run(args: argparse.Namespace) -> int:
 def cmd_paper_report(args: argparse.Namespace) -> int:
     """Summarize paper/shadow decisions JSONL (read-only; no venue orders)."""
     root = Path(args.data_root)
-    decisions = Path(args.path) if getattr(args, "path", None) else None
+    decisions = Path(args.decisions) if getattr(args, "decisions", None) else None
     last_n = int(getattr(args, "last", 5))
     try:
         report = report_from_data_root(
@@ -80,10 +80,10 @@ def _paper_options(args: argparse.Namespace, path: Path) -> dict[str, object]:
         "export_dir": path,
         "data_root": Path(args.data_root),
         "conviction": float(args.conviction),
-        "sandbox_enabled": bool(getattr(args, "sandbox", False)),
+        "sandbox_enabled": False,
         "fee_tier": int(getattr(args, "fee_tier", 0)),
         "stop_file": stop_file,
-        "poll_interval_secs": float(getattr(args, "poll_interval", 5.0)),
+        "poll_interval_secs": float(getattr(args, "interval_seconds", 5.0)),
         "max_live_bars": int(args.max_live_bars)
         if getattr(args, "max_live_bars", None) is not None
         else None,
@@ -146,7 +146,7 @@ def _paper_result(
         "bars_processed": result.bars_processed,
         "fills_count": result.fills_count,
         "stop_reason": result.stop_reason,
-        "sandbox_enabled": bool(getattr(args, "sandbox", False)),
+        "sandbox_enabled": False,
         "preferred_fill_model": options["preferred_fill_model"],
         "max_book_age_ms": options["max_book_age_ms"],
         "metalabel_enabled": options["metalabel_enabled"],

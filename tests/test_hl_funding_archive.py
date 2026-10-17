@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import argparse
 import json
 from datetime import UTC, datetime
 from pathlib import Path
@@ -10,7 +9,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from hypervector.cli import build_parser
+from hypervector.cli import CLI_COMMANDS, build_parser
 from hypervector.data.hl_funding_archive import (
     HlFundingRequest,
     store_hl_funding,
@@ -19,13 +18,18 @@ from hypervector.data.hl_funding_archive import (
 
 def test_hl_funding_fetch_command_is_discoverable() -> None:
     """The official funding acquisition command is public and repeatable."""
-    parser = build_parser()
-    choices: set[str] = set()
-    for action in parser._actions:
-        if isinstance(action, argparse._SubParsersAction):
-            choices.update(action.choices)
-
-    assert "hl-funding-fetch" in choices
+    assert "data funding-fetch" in CLI_COMMANDS
+    args = build_parser().parse_args(
+        [
+            "data",
+            "funding-fetch",
+            "--start",
+            "2026-07-26T23:50:00Z",
+            "--end",
+            "2026-07-26T23:51:00Z",
+        ]
+    )
+    assert args.command == "data funding-fetch"
 
 
 def _request() -> HlFundingRequest:

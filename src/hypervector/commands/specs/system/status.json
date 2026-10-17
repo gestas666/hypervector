@@ -1,8 +1,19 @@
 {
-  "name": "status",
-  "action": "status",
-  "help": "Pipeline + command inventory + paper/live honesty flags (no secret values; no place)",
+  "schema": 2,
+  "help": "Command inventory, capabilities and paper/live safety flags (never prints secret values)",
+  "kind": "inprocess",
   "handler": "hypervector.commands.status:cmd_status",
+  "authority": "none",
+  "environment": [
+    "models"
+  ],
+  "data_root": "honored",
+  "include": [],
+  "fragment_overrides": {},
+  "legacy": [
+    "status"
+  ],
+  "exclusive_groups": [],
   "arguments": [
     {
       "flags": [
@@ -12,7 +23,7 @@
         "dest": "probe_model",
         "action": "store_true",
         "default": false,
-        "help": "Load and validate the explicitly scoped metalabel bundle"
+        "help": "load and validate the metalabel bundle under the data root"
       }
     }
   ]

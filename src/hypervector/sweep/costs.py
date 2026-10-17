@@ -96,18 +96,45 @@ HL_MAKER = CostModel(
 ZERO_COST = CostModel(taker_fee=0.0, slippage_bps=0.0, funding_rate_1h=0.0)
 
 
+COST_MODEL_NAMES: tuple[str, ...] = (
+    "hl_base_taker",
+    "hl_referred_taker",
+    "hl_vip1_taker",
+    "hl_vip2_taker",
+    "hl_maker",
+    "zero",
+)
+COST_MODEL_ALIASES: dict[str, str] = {
+    "base": "hl_base_taker",
+    "default": "hl_base_taker",
+    "hl": "hl_base_taker",
+    "referred": "hl_referred_taker",
+    "ref": "hl_referred_taker",
+    "vip1": "hl_vip1_taker",
+    "hl_taker_default": "hl_vip1_taker",
+    "vip2": "hl_vip2_taker",
+    "hl_taker_tight": "hl_vip2_taker",
+    "tight": "hl_vip2_taker",
+    "maker": "hl_maker",
+    "none": "zero",
+    "off": "zero",
+}
+_COST_MODELS: dict[str, CostModel] = {
+    "hl_base_taker": HL_BASE_TAKER,
+    "hl_referred_taker": HL_REFERRED_TAKER,
+    "hl_vip1_taker": HL_VIP1_TAKER,
+    "hl_vip2_taker": HL_VIP2_TAKER,
+    "hl_maker": HL_MAKER,
+    "zero": ZERO_COST,
+}
+
+
 def resolve_cost_model(name: str = "hl_base_taker") -> CostModel:
+    """Return a named preset (or alias); unknown names are a ValueError."""
     key = (name or "hl_base_taker").lower().strip().replace("-", "_")
-    if key in ("hl_base_taker", "base", "default", "hl"):
-        return HL_BASE_TAKER
-    if key in ("hl_referred_taker", "referred", "ref"):
-        return HL_REFERRED_TAKER
-    if key in ("hl_vip1_taker", "vip1", "hl_taker_default"):
-        return HL_VIP1_TAKER
-    if key in ("hl_vip2_taker", "vip2", "hl_taker_tight", "tight"):
-        return HL_VIP2_TAKER
-    if key in ("hl_maker", "maker"):
-        return HL_MAKER
-    if key in ("zero", "none", "off"):
-        return ZERO_COST
-    return HL_BASE_TAKER
+    key = COST_MODEL_ALIASES.get(key, key)
+    if key not in _COST_MODELS:
+        raise ValueError(
+            f"unknown fee model {name!r}; choose one of {', '.join(COST_MODEL_NAMES)}"
+        )
+    return _COST_MODELS[key]

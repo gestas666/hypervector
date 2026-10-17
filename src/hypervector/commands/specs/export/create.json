@@ -1,0 +1,52 @@
+{
+  "schema": 2,
+  "help": "Write the best stored sweep trial of a track as a strict strategy bundle",
+  "kind": "inprocess",
+  "handler": "hypervector.commands.export:cmd_export",
+  "authority": "none",
+  "environment": [],
+  "data_root": "honored",
+  "include": [],
+  "fragment_overrides": {},
+  "legacy": [
+    "research export"
+  ],
+  "exclusive_groups": [],
+  "arguments": [
+    {
+      "flags": [
+        "--track"
+      ],
+      "options": {
+        "dest": "track",
+        "choices": [
+          "uptrend",
+          "downtrend"
+        ],
+        "default": null,
+        "help": "strategy track whose best trial is exported"
+      },
+      "required": true
+    },
+    {
+      "flags": [
+        "--symbol"
+      ],
+      "options": {
+        "dest": "symbol",
+        "default": "BTC",
+        "help": "symbol recorded when the trial lacks one"
+      }
+    },
+    {
+      "flags": [
+        "--timeframe"
+      ],
+      "options": {
+        "dest": "timeframe",
+        "default": "1m",
+        "help": "bar size recorded when the trial lacks one"
+      }
+    }
+  ]
+}

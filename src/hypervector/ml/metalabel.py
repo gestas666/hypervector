@@ -125,10 +125,10 @@ def probe_metalabel(
     *,
     data_root: Path | str | None = None,
 ) -> dict[str, Any]:
-    """Readiness probe for paper-check/status (no secret values).
+    """Readiness probe for 'paper check' and status (no secret values).
 
     Does not enable metalabel; reports whether a bundle can load when
-    ``paper-run --metalabel`` is used.
+    ``paper run --metalabel-mode`` is used.
     """
     out: dict[str, Any] = {
         "env_root_set": bool((env if env is not None else os.environ).get(ENV_ROOT)),

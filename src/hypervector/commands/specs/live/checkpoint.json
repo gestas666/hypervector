@@ -1,0 +1,232 @@
+{
+  "schema": 2,
+  "help": "Continuously publish read-only checkpoints for one live cohort ledger set",
+  "section": "observe",
+  "kind": "operation",
+  "operation": "hypervector.operations.multi_asset_bidirectional_live_checkpoint",
+  "authority": "none",
+  "environment": [],
+  "data_root": "honored",
+  "include": [],
+  "fragment_overrides": {},
+  "legacy": [
+    "cohort checkpoint",
+    "cohort-checkpoint"
+  ],
+  "exclusive_groups": [],
+  "arguments": [
+    {
+      "flags": [
+        "--ledger-root"
+      ],
+      "options": {
+        "dest": "ledger_root",
+        "type": "Path",
+        "default": null,
+        "help": "cohort live ledger directory"
+      },
+      "data_default": "live/bidirectional_cohort"
+    },
+    {
+      "flags": [
+        "--out"
+      ],
+      "options": {
+        "dest": "out",
+        "type": "Path",
+        "default": null,
+        "help": "checkpoint JSON to publish"
+      },
+      "data_default": "runtime/bidirectional_cohort/latest_checkpoint.json"
+    },
+    {
+      "flags": [
+        "--config"
+      ],
+      "options": {
+        "dest": "config",
+        "type": "Path",
+        "default": null,
+        "help": "active cohort profile TOML"
+      },
+      "required": true
+    },
+    {
+      "flags": [
+        "--run-id"
+      ],
+      "options": {
+        "dest": "run_id",
+        "default": null,
+        "help": "exact run ID to select"
+      }
+    },
+    {
+      "flags": [
+        "--follow-latest-run"
+      ],
+      "options": {
+        "dest": "follow_latest_run",
+        "action": "store_true",
+        "default": false,
+        "help": "follow the newest run in the ledger"
+      }
+    },
+    {
+      "flags": [
+        "--interval-seconds"
+      ],
+      "options": {
+        "dest": "interval_seconds",
+        "type": "float",
+        "default": 30.0,
+        "help": "seconds between publications"
+      }
+    },
+    {
+      "flags": [
+        "--research-database"
+      ],
+      "options": {
+        "dest": "research_database",
+        "type": "Path",
+        "default": null,
+        "help": "DuckDB file kept in sync with the ledger (omit to skip research sync)"
+      }
+    },
+    {
+      "flags": [
+        "--accounting-epoch-bundle"
+      ],
+      "options": {
+        "dest": "accounting_epoch_bundle",
+        "type": "Path",
+        "default": null,
+        "help": "accounting epoch bundle that binds the equity baseline"
+      }
+    },
+    {
+      "flags": [
+        "--research-sync-interval-seconds"
+      ],
+      "options": {
+        "dest": "research_sync_interval_seconds",
+        "type": "float",
+        "default": 600.0,
+        "help": "seconds between research sync attempts"
+      }
+    },
+    {
+      "flags": [
+        "--research-sync-min-pending-bytes"
+      ],
+      "options": {
+        "dest": "research_sync_min_pending_bytes",
+        "type": "int",
+        "default": 4194304,
+        "help": "defer a continuous research import until this many ledger bytes are pending, unless a fill is pending or the maximum age passed; 0 imports at every interval"
+      }
+    },
+    {
+      "flags": [
+        "--research-sync-max-age-seconds"
+      ],
+      "options": {
+        "dest": "research_sync_max_age_seconds",
+        "type": "float",
+        "default": 600.0,
+        "help": "import pending ledger evidence at least this often (seconds)"
+      }
+    },
+    {
+      "flags": [
+        "--venue-portfolio"
+      ],
+      "options": {
+        "dest": "venue_portfolio",
+        "action": "store_true",
+        "default": false,
+        "help": "attach the public venue portfolio snapshot"
+      }
+    },
+    {
+      "flags": [
+        "--opportunity-matrix"
+      ],
+      "options": {
+        "dest": "opportunity_matrix",
+        "type": "Path",
+        "default": null,
+        "help": "opportunity matrix JSON to attach when present"
+      },
+      "data_default": "runtime/bidirectional_cohort/latest_opportunity_matrix.json"
+    },
+    {
+      "flags": [
+        "--supplemental-opportunity-matrix"
+      ],
+      "options": {
+        "dest": "supplemental_opportunity_matrix",
+        "action": "append",
+        "type": "Path",
+        "default": [],
+        "help": "additional opportunity matrix JSON; repeatable"
+      }
+    },
+    {
+      "flags": [
+        "--eligible-policy-forward"
+      ],
+      "options": {
+        "dest": "eligible_policy_forward",
+        "action": "store_true",
+        "default": false,
+        "help": "attach the report-only exact ETH stop/hold lifecycle journal"
+      }
+    },
+    {
+      "flags": [
+        "--asymmetric-forward-journal"
+      ],
+      "options": {
+        "dest": "asymmetric_forward_journal",
+        "type": "Path",
+        "default": null,
+        "help": "attach this frozen report-only asymmetric portfolio observer journal"
+      }
+    },
+    {
+      "flags": [
+        "--disable-asymmetric-forward-observer"
+      ],
+      "options": {
+        "dest": "disable_asymmetric_forward_observer",
+        "action": "store_true",
+        "default": false,
+        "help": "do not attach a profile-specific asymmetric portfolio observer"
+      }
+    },
+    {
+      "flags": [
+        "--current-run-only"
+      ],
+      "options": {
+        "dest": "current_run_only",
+        "action": "boolean_optional",
+        "default": true,
+        "help": "bound publication to the explicitly selected live run"
+      }
+    },
+    {
+      "flags": [
+        "--once"
+      ],
+      "options": {
+        "dest": "once",
+        "action": "store_true",
+        "default": false,
+        "help": "publish one checkpoint and exit"
+      }
+    }
+  ]
+}

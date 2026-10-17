@@ -2,25 +2,29 @@
 
 from __future__ import annotations
 
-import argparse
 import json
 from pathlib import Path
 
 import pytest
 
-from hypervector.cli import build_parser, main
+from hypervector.cli import CLI_COMMANDS, build_parser, main
 from hypervector.data.oxa_prices import OxaPriceRequest
 
 
 def test_price_fetch_command_is_discoverable() -> None:
     """The public CLI must expose the bounded price acquisition command."""
-    parser = build_parser()
-    choices: set[str] = set()
-    for action in parser._actions:
-        if isinstance(action, argparse._SubParsersAction):
-            choices.update(action.choices)
-
-    assert "oxa-price-fetch" in choices
+    assert "archive price-fetch" in CLI_COMMANDS
+    args = build_parser().parse_args(
+        [
+            "archive",
+            "price-fetch",
+            "--start",
+            "2026-07-26T23:50:00Z",
+            "--end",
+            "2026-07-26T23:51:00Z",
+        ]
+    )
+    assert args.command == "archive price-fetch"
 
 
 def test_price_fetch_cli_is_bounded_and_secret_safe(
@@ -52,7 +56,8 @@ def test_price_fetch_cli_is_bounded_and_secret_safe(
         [
             "--data-root",
             str(tmp_path / "data"),
-            "oxa-price-fetch",
+            "archive",
+            "price-fetch",
             "--symbol",
             "BTC",
             "--start",

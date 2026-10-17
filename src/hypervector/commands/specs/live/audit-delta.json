@@ -1,0 +1,56 @@
+{
+  "schema": 2,
+  "help": "Compare two immutable cohort live-audit prefixes",
+  "section": "observe",
+  "kind": "operation",
+  "operation": "hypervector.operations.cohort_live_audit_delta",
+  "authority": "none",
+  "environment": [],
+  "data_root": "refused",
+  "data_root_reason": "both audits and the output are explicit paths",
+  "include": [],
+  "fragment_overrides": {},
+  "legacy": [
+    "cohort audit-delta",
+    "cohort-live-audit-delta"
+  ],
+  "exclusive_groups": [],
+  "arguments": [
+    {
+      "flags": [
+        "--before"
+      ],
+      "options": {
+        "dest": "before",
+        "type": "Path",
+        "default": null,
+        "help": "earlier immutable audit JSON"
+      },
+      "required": true
+    },
+    {
+      "flags": [
+        "--after"
+      ],
+      "options": {
+        "dest": "after",
+        "type": "Path",
+        "default": null,
+        "help": "later immutable audit JSON"
+      },
+      "required": true
+    },
+    {
+      "flags": [
+        "--out"
+      ],
+      "options": {
+        "dest": "out",
+        "type": "Path",
+        "default": null,
+        "help": "delta report JSON to write"
+      },
+      "required": true
+    }
+  ]
+}

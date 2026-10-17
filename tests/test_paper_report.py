@@ -1,4 +1,4 @@
-"""paper-report: pure summary + CLI over real decisions JSONL."""
+"""paper report: pure summary + CLI over real decisions JSONL."""
 
 from __future__ import annotations
 
@@ -66,7 +66,7 @@ def test_summarize_paper_decisions_counters():
     assert rep["honesty"]["all_intent_submit_enabled_false"] is True
     assert rep["no_submit"] is True
     assert rep["live_submit_implemented"] is True
-    assert rep["live_submit_command"] == "live-run"
+    assert rep["live_submit_command"] == "live start"
     assert len(rep["last_market"]) == 2
 
 
@@ -106,7 +106,7 @@ def test_cli_paper_report(tmp_path: Path, capsys):
     root = tmp_path / "data"
     ensure_data_layout(root)
     append_paper_decision(root, _market_row())
-    rc = main(["--data-root", str(root), "paper-report", "--last", "1"])
+    rc = main(["--data-root", str(root), "paper", "report", "--last", "1"])
     assert rc == 0
     out = capsys.readouterr().out
     rep = json.loads(out)

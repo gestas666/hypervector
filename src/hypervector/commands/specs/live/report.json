@@ -1,18 +1,33 @@
 {
-  "name": "live-report",
-  "action": "report",
-  "help": "Summarize live decisions.jsonl (submitted/place_attempted, modes; read-only; no place)",
+  "schema": 2,
+  "help": "Summarize generic live-daemon decisions (read-only)",
+  "section": "observe",
+  "kind": "inprocess",
   "handler": "hypervector.commands.live:cmd_live_report",
+  "authority": "none",
+  "environment": [],
+  "data_root": "honored",
+  "include": [],
+  "fragment_overrides": {},
+  "legacy": [
+    "live-report"
+  ],
+  "exclusive_groups": [],
   "arguments": [
     {
       "flags": [
-        "--path"
+        "--decisions"
       ],
       "options": {
-        "dest": "path",
+        "dest": "decisions",
+        "type": "Path",
         "default": null,
-        "help": "optional decisions JSONL path (default: <data-root>/live/decisions/decisions.jsonl)"
-      }
+        "help": "live decisions JSONL"
+      },
+      "legacy_flags": [
+        "--path"
+      ],
+      "data_default": "live/decisions/decisions.jsonl"
     },
     {
       "flags": [
@@ -20,9 +35,9 @@
       ],
       "options": {
         "dest": "last",
+        "type": "int",
         "default": 5,
-        "help": "include last N market fills in sample (default 5)",
-        "type": "int"
+        "help": "number of recent market fills in the sample"
       }
     }
   ]

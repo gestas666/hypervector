@@ -139,7 +139,8 @@ def test_research_database_cli_accepts_explicit_hip3_book_only_mode(
         [
             "--data-root",
             str(tmp_path),
-            "research-db-build",
+            "db",
+            "build",
             "--symbol",
             _SYMBOL,
             "--start",

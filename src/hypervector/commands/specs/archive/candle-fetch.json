@@ -1,8 +1,21 @@
 {
-  "name": "oxa-candle-fetch",
-  "action": "candle-fetch",
+  "schema": 2,
   "help": "Fetch bounded Hyperliquid-native OHLCV candles from 0xArchive",
+  "kind": "inprocess",
   "handler": "hypervector.cli_oxa:cmd_oxa_candle_fetch",
+  "authority": "none",
+  "environment": [
+    "oxa"
+  ],
+  "data_root": "honored",
+  "include": [
+    "window"
+  ],
+  "fragment_overrides": {},
+  "legacy": [
+    "oxa-candle-fetch"
+  ],
+  "exclusive_groups": [],
   "arguments": [
     {
       "flags": [
@@ -10,7 +23,8 @@
       ],
       "options": {
         "dest": "symbol",
-        "default": "BTC"
+        "default": "BTC",
+        "help": "Hyperliquid coin (core) or deployer:asset (HIP-3)"
       }
     },
     {
@@ -19,42 +33,20 @@
       ],
       "options": {
         "dest": "market_family",
-        "default": "core",
         "choices": [
           "core",
           "hip3"
-        ]
+        ],
+        "default": "core",
+        "help": "0xArchive market family: core perps or HIP-3 builder markets"
       }
     },
     {
       "flags": [
-        "--start"
+        "--timeframe"
       ],
       "options": {
-        "dest": "start",
-        "required": true,
-        "default": null,
-        "type": "_parse_utc_datetime"
-      }
-    },
-    {
-      "flags": [
-        "--end"
-      ],
-      "options": {
-        "dest": "end",
-        "required": true,
-        "default": null,
-        "type": "_parse_utc_datetime"
-      }
-    },
-    {
-      "flags": [
-        "--interval"
-      ],
-      "options": {
-        "dest": "interval",
-        "default": "1m",
+        "dest": "timeframe",
         "choices": [
           "1m",
           "5m",
@@ -64,8 +56,13 @@
           "4h",
           "1d",
           "1w"
-        ]
-      }
+        ],
+        "default": "1m",
+        "help": "candle bar size"
+      },
+      "legacy_flags": [
+        "--interval"
+      ]
     },
     {
       "flags": [
@@ -73,8 +70,9 @@
       ],
       "options": {
         "dest": "limit",
+        "type": "int",
         "default": 10000,
-        "type": "int"
+        "help": "candles per page (1..10000)"
       }
     },
     {
@@ -83,19 +81,24 @@
       ],
       "options": {
         "dest": "max_pages",
+        "type": "int",
         "default": 20,
-        "type": "int"
+        "help": "maximum pages to request"
       }
     },
     {
       "flags": [
-        "--timeout"
+        "--timeout-seconds"
       ],
       "options": {
         "dest": "timeout",
+        "type": "float",
         "default": 30.0,
-        "type": "float"
-      }
+        "help": "HTTP request timeout in seconds"
+      },
+      "legacy_flags": [
+        "--timeout"
+      ]
     },
     {
       "flags": [
@@ -103,8 +106,9 @@
       ],
       "options": {
         "dest": "install_research_cache",
+        "action": "store_true",
         "default": false,
-        "action": "store_true"
+        "help": "also install 1m candles as an exact research cache"
       }
     }
   ]

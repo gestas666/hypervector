@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 
 import pandas as pd
 
-from hypervector.cli import _write_replay_labels
 from hypervector.ml.feature_matrix import FEATURE_NAMES, build_feature_matrix
 from hypervector.research.maker_replay_models import (
     FillRule,
@@ -113,19 +111,6 @@ def test_fill_assumption_outcome_disagreement_is_not_labeled() -> None:
     assert result.rows.empty
     assert result.unresolved_signals == 1
     assert result.disagreement_signals == 1
-
-
-def test_cli_label_writer_persists_parquet_and_coverage(tmp_path: Path) -> None:
-    output = tmp_path / "replay_labels.parquet"
-
-    summary = _write_replay_labels(
-        _reports(("target_completed", "target_completed", "target_completed")),
-        output,
-    )
-
-    assert output.is_file()
-    assert summary["resolved_signals"] == 1
-    assert summary["path"] == str(output.resolve())
 
 
 def test_runtime_features_use_last_completed_bar_at_signal_time() -> None:

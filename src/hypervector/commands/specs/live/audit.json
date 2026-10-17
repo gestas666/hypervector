@@ -1,0 +1,84 @@
+{
+  "schema": 2,
+  "help": "Publish immutable report-only evidence for one cohort run",
+  "section": "observe",
+  "kind": "operation",
+  "operation": "hypervector.operations.multi_asset_bidirectional_live_audit",
+  "preflight": "hypervector.commands.live:preflight_audit",
+  "authority": "none",
+  "environment": [],
+  "data_root": "honored",
+  "include": [],
+  "fragment_overrides": {},
+  "legacy": [
+    "cohort audit",
+    "cohort-live-audit"
+  ],
+  "exclusive_groups": [
+    {
+      "required": true
+    }
+  ],
+  "arguments": [
+    {
+      "flags": [
+        "--ledger-root"
+      ],
+      "options": {
+        "dest": "ledger_root",
+        "type": "Path",
+        "default": null,
+        "help": "cohort live ledger directory"
+      },
+      "data_default": "live/bidirectional_cohort"
+    },
+    {
+      "flags": [
+        "--run-id"
+      ],
+      "options": {
+        "dest": "run_id",
+        "default": null,
+        "help": "run to audit (required for current-run scope)"
+      }
+    },
+    {
+      "flags": [
+        "--history-scope"
+      ],
+      "options": {
+        "dest": "history_scope",
+        "choices": [
+          "all-time",
+          "current-run"
+        ],
+        "default": "current-run",
+        "help": "all compatible history or only the run named by --run-id"
+      }
+    },
+    {
+      "flags": [
+        "--out"
+      ],
+      "options": {
+        "dest": "out",
+        "type": "Path",
+        "default": null,
+        "help": "immutable audit JSON file to write"
+      },
+      "exclusive_group": 0
+    },
+    {
+      "flags": [
+        "--out-dir"
+      ],
+      "options": {
+        "dest": "out_dir",
+        "type": "Path",
+        "default": null,
+        "help": "directory that receives a new immutable audit bundle"
+      },
+      "exclusive_group": 0
+    }
+  ]
+}

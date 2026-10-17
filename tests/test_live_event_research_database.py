@@ -257,7 +257,8 @@ def test_live_event_import_cli_is_explicitly_report_only(
         [
             "--data-root",
             str(tmp_path),
-            "research-db-live-event-import",
+            "db",
+            "import-events",
             "--symbol",
             "BTC",
         ]
@@ -269,7 +270,7 @@ def test_live_event_import_cli_is_explicitly_report_only(
     assert report["execution_authority"] == "none"
     assert report["ingest"]["trade_rows"] == 2
 
-    status_result = main(["--data-root", str(tmp_path), "research-db-status"])
+    status_result = main(["--data-root", str(tmp_path), "db", "status"])
     status = json.loads(capsys.readouterr().out)
     assert status_result == 0
     assert status["live_events"]["source_trade_rows"] == 2

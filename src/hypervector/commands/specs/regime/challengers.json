@@ -1,69 +1,33 @@
 {
-  "name": "hypervelocity-regime-challengers",
-  "action": "challengers",
+  "schema": 2,
   "help": "Evaluate annotation-only point-in-time regime challengers",
+  "kind": "inprocess",
   "handler": "hypervector.commands.regime:cmd_hypervelocity_regime_challengers",
+  "authority": "none",
+  "environment": [],
+  "data_root": "honored",
+  "include": [
+    "market"
+  ],
+  "fragment_overrides": {},
+  "legacy": [
+    "hypervelocity-regime-challengers"
+  ],
+  "exclusive_groups": [],
   "arguments": [
     {
       "flags": [
-        "--symbol"
-      ],
-      "options": {
-        "dest": "symbol",
-        "default": "BTC"
-      }
-    },
-    {
-      "flags": [
-        "--timeframe"
-      ],
-      "options": {
-        "dest": "timeframe",
-        "default": "1m"
-      }
-    },
-    {
-      "flags": [
-        "--lookback"
-      ],
-      "options": {
-        "dest": "lookback",
-        "default": 90,
-        "help": "calendar days (floor=30, default=90, promo=180)",
-        "type": "int"
-      }
-    },
-    {
-      "flags": [
-        "--strict-hl-only"
-      ],
-      "options": {
-        "dest": "strict_hl_only",
-        "default": false,
-        "help": "do not backfill from Binance/Bybit",
-        "action": "store_true"
-      }
-    },
-    {
-      "flags": [
-        "--force"
-      ],
-      "options": {
-        "dest": "force",
-        "default": false,
-        "help": "ignore Parquet cache and re-fetch",
-        "action": "store_true"
-      }
-    },
-    {
-      "flags": [
-        "--forward-horizon"
+        "--forward-bars"
       ],
       "options": {
         "dest": "forward_horizon",
+        "type": "int",
         "default": 30,
-        "type": "int"
-      }
+        "help": "forward bars used to score each challenger"
+      },
+      "legacy_flags": [
+        "--forward-horizon"
+      ]
     },
     {
       "flags": [
@@ -71,8 +35,9 @@
       ],
       "options": {
         "dest": "seed",
+        "type": "int",
         "default": 42,
-        "type": "int"
+        "help": "random seed for the statistical models"
       }
     },
     {
@@ -81,8 +46,9 @@
       ],
       "options": {
         "dest": "n_splits",
+        "type": "int",
         "default": 3,
-        "type": "int"
+        "help": "walk-forward splits"
       }
     },
     {
@@ -91,8 +57,9 @@
       ],
       "options": {
         "dest": "wasserstein_window",
+        "type": "int",
         "default": 60,
-        "type": "int"
+        "help": "bars per Wasserstein distribution window"
       }
     },
     {
@@ -101,8 +68,9 @@
       ],
       "options": {
         "dest": "wasserstein_sample_cap",
+        "type": "int",
         "default": 1000,
-        "type": "int"
+        "help": "maximum samples per Wasserstein comparison"
       }
     },
     {
@@ -111,7 +79,9 @@
       ],
       "options": {
         "dest": "out",
-        "default": null
+        "type": "Path",
+        "default": null,
+        "help": "optional JSON report path"
       }
     }
   ]

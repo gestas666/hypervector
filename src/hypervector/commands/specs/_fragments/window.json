@@ -1,0 +1,29 @@
+{
+  "schema": 2,
+  "arguments": [
+    {
+      "flags": [
+        "--start"
+      ],
+      "options": {
+        "dest": "start",
+        "type": "utc_datetime",
+        "default": null,
+        "help": "window start as ISO-8601 UTC (offset or Z required)"
+      },
+      "required": true
+    },
+    {
+      "flags": [
+        "--end"
+      ],
+      "options": {
+        "dest": "end",
+        "type": "utc_datetime",
+        "default": null,
+        "help": "window end as ISO-8601 UTC (offset or Z required)"
+      },
+      "required": true
+    }
+  ]
+}

@@ -1,70 +1,33 @@
 {
-  "name": "regime-eval",
-  "action": "eval",
-  "help": "Evaluate forward return accuracy and predictive edge of Ultimate Regime Classifier",
+  "schema": 2,
+  "help": "Evaluate forward-return accuracy and edge of the canonical regime classifier",
+  "kind": "inprocess",
   "handler": "hypervector.commands.regime:cmd_regime_eval",
+  "authority": "none",
+  "environment": [],
+  "data_root": "honored",
+  "include": [
+    "market"
+  ],
+  "fragment_overrides": {},
+  "legacy": [
+    "regime-eval"
+  ],
+  "exclusive_groups": [],
   "arguments": [
     {
       "flags": [
-        "--symbol"
-      ],
-      "options": {
-        "dest": "symbol",
-        "default": "BTC"
-      }
-    },
-    {
-      "flags": [
-        "--timeframe"
-      ],
-      "options": {
-        "dest": "timeframe",
-        "default": "1m"
-      }
-    },
-    {
-      "flags": [
-        "--lookback"
-      ],
-      "options": {
-        "dest": "lookback",
-        "default": 90,
-        "help": "calendar days (floor=30, default=90, promo=180)",
-        "type": "int"
-      }
-    },
-    {
-      "flags": [
-        "--strict-hl-only"
-      ],
-      "options": {
-        "dest": "strict_hl_only",
-        "default": false,
-        "help": "do not backfill from Binance/Bybit",
-        "action": "store_true"
-      }
-    },
-    {
-      "flags": [
-        "--force"
-      ],
-      "options": {
-        "dest": "force",
-        "default": false,
-        "help": "ignore Parquet cache and re-fetch",
-        "action": "store_true"
-      }
-    },
-    {
-      "flags": [
-        "--forward-horizon"
+        "--forward-bars"
       ],
       "options": {
         "dest": "forward_horizon",
+        "type": "int",
         "default": 15,
-        "help": "number of forward bars to evaluate return accuracy (default 15)",
-        "type": "int"
-      }
+        "help": "forward bars used to score direction accuracy"
+      },
+      "legacy_flags": [
+        "--forward-horizon"
+      ]
     },
     {
       "flags": [
@@ -73,7 +36,7 @@
       "options": {
         "dest": "book_path",
         "default": null,
-        "help": "optional orderbook L2 data path (JSONL or SQLite)"
+        "help": "optional L2 snapshot JSONL aligned to the bars"
       }
     }
   ]

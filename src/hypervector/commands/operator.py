@@ -14,7 +14,7 @@ def cmd_operator_request(args: argparse.Namespace) -> int:
     """Dry-run by default; publishing live requests requires both authority flags."""
     if (
         args.submit
-        and args.action != "stage_profile"
+        and args.request_action != "stage_profile"
         and not (args.enabled and args.i_accept_live_risk)
     ):
         print(
@@ -29,7 +29,7 @@ def cmd_operator_request(args: argparse.Namespace) -> int:
         request = build_request(
             run_id=args.run_id,
             profile_fingerprint=args.profile_fingerprint,
-            action=args.action,
+            action=args.request_action,
             symbol=args.symbol,
             provider=args.provider,
             side=args.side,

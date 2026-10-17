@@ -66,8 +66,8 @@ def cmd_hip3_liquidity_profile(args: argparse.Namespace) -> int:
             "profile": profile.to_dict(),
         }
         rendered = json.dumps(report, indent=2, default=_json_default)
-        if args.output is not None:
-            _write_exclusive(Path(args.output), rendered)
+        if args.out is not None:
+            _write_exclusive(Path(args.out), rendered)
     except (duckdb.Error, OSError, TypeError, ValueError) as exc:
         print(json.dumps({"ok": False, "error": str(exc)}), file=sys.stderr)
         return 1

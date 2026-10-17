@@ -1,0 +1,74 @@
+{
+  "schema": 2,
+  "help": "Run the production cohort collectors with zero execution authority",
+  "kind": "operation",
+  "operation": "hypervector.operations.multi_asset_bidirectional_observe",
+  "authority": "none",
+  "environment": [],
+  "data_root": "honored",
+  "include": [],
+  "fragment_overrides": {},
+  "legacy": [
+    "cohort observe",
+    "cohort-observe"
+  ],
+  "exclusive_groups": [],
+  "arguments": [
+    {
+      "flags": [
+        "--config"
+      ],
+      "options": {
+        "dest": "config",
+        "type": "Path",
+        "default": null,
+        "help": "cohort profile TOML to observe"
+      },
+      "required": true
+    },
+    {
+      "flags": [
+        "--backtest-lab-root"
+      ],
+      "options": {
+        "dest": "backtest_lab_root",
+        "type": "Path",
+        "default": "../backtest-lab/backtest_lab",
+        "help": "backtest-lab package root used by strategy providers"
+      }
+    },
+    {
+      "flags": [
+        "--ledger-root"
+      ],
+      "options": {
+        "dest": "ledger_root",
+        "type": "Path",
+        "default": null,
+        "help": "directory that receives every observe-only ledger"
+      },
+      "data_default": "paper/cohort"
+    },
+    {
+      "flags": [
+        "--resume-run-id"
+      ],
+      "options": {
+        "dest": "resume_run_id",
+        "default": null,
+        "help": "resume only the existing observer ledger with this run ID"
+      }
+    },
+    {
+      "flags": [
+        "--max-polls"
+      ],
+      "options": {
+        "dest": "max_polls",
+        "type": "int",
+        "default": null,
+        "help": "stop after N polls (omit to run until stopped)"
+      }
+    }
+  ]
+}

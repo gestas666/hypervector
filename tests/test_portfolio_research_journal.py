@@ -9,7 +9,6 @@ from pathlib import Path
 
 import pytest
 
-from hypervector.cli import main
 from hypervector.data.research_database import ResearchDatabase
 
 
@@ -143,46 +142,6 @@ def test_evidence_hash_is_verified_on_append_and_report(tmp_path: Path) -> None:
         "missing": 0,
     }
     assert history["revisions"][0]["evidence"][0]["integrity"] == "changed"
-
-
-def test_cli_appends_and_reports_research_revision(
-    tmp_path: Path,
-    capsys: pytest.CaptureFixture[str],
-) -> None:
-    """The first-class CLI exposes append, history, and status telemetry."""
-    evidence = _evidence_file(tmp_path, "evidence.json", {"closed": 6})
-    record = _record_file(tmp_path, _record(evidence=evidence))
-    data_root = tmp_path / "data"
-
-    appended = main(
-        [
-            "--data-root",
-            str(data_root),
-            "research-db-journal-append",
-            "--record",
-            str(record),
-        ]
-    )
-    append_output = json.loads(capsys.readouterr().out)
-    reported = main(
-        [
-            "--data-root",
-            str(data_root),
-            "research-db-journal-report",
-            "--hypothesis-id",
-            "hype-breakout-core",
-        ]
-    )
-    report_output = json.loads(capsys.readouterr().out)
-    status = main(["--data-root", str(data_root), "research-db-status"])
-    status_output = json.loads(capsys.readouterr().out)
-
-    assert (appended, reported, status) == (0, 0, 0)
-    assert append_output["report_only"] is True
-    assert append_output["execution_authority"] == "none"
-    assert append_output["append"]["inserted"] is True
-    assert report_output["history"]["revisions"][0]["status"] == "retain"
-    assert status_output["portfolio_research"]["revisions"] == 1
 
 
 def _record(

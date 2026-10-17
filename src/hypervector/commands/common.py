@@ -12,8 +12,28 @@ from hypervector.infra import DataPaths, ensure_data_layout
 if TYPE_CHECKING:
     import pandas as pd
 
+    from hypervector.sweep.exits import ExitConfig
+
 SECRET_ENV_WALLET = "HYPERVECTOR_HL_WALLET_ADDRESS"
 SECRET_ENV_API_KEY = "HYPERVECTOR_HL_API_PRIVATE_KEY"
+
+
+class CommandRefused(Exception):
+    """A refusal before any side effect; the CLI maps it to exit code 2."""
+
+
+def exit_config_from_args(args: argparse.Namespace) -> ExitConfig:
+    """Build the shared exit model from the canonical exits fragment."""
+    from hypervector.sweep.exits import ExitConfig
+
+    return ExitConfig(
+        mode=args.exit_mode,
+        sl_pct=float(args.sl_pct),
+        rr=float(args.rr),
+        atr_length=int(args.atr_length),
+        sl_atr_mult=float(args.sl_atr_mult),
+        trail_atr_mult=float(args.trail_atr_mult),
+    )
 
 
 def _secrets_present() -> bool:

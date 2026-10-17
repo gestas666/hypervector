@@ -1,30 +1,47 @@
 {
-  "name": "metalabel-train",
-  "action": "train",
-  "help": "Walk-forward LightGBM metalabel retrain on strategy entries from a Phase-1.5 export (labels match export TP/SL)",
+  "schema": 2,
+  "help": "Walk-forward LightGBM metalabel training on a strategy bundle's entries",
+  "kind": "inprocess",
   "handler": "hypervector.commands.model:cmd_metalabel_train",
+  "authority": "none",
+  "environment": [
+    "models"
+  ],
+  "data_root": "honored",
+  "include": [],
+  "fragment_overrides": {},
+  "legacy": [
+    "metalabel-train"
+  ],
+  "exclusive_groups": [],
   "arguments": [
     {
       "flags": [
-        "--path"
+        "--export"
       ],
       "options": {
-        "dest": "path",
-        "required": true,
+        "dest": "export",
         "default": null,
-        "help": "export directory (params/meta with strategy + exits)"
-      }
+        "help": "strategy bundle directory"
+      },
+      "required": true,
+      "legacy_flags": [
+        "--path"
+      ]
     },
     {
       "flags": [
-        "--lookback"
+        "--lookback-days"
       ],
       "options": {
         "dest": "lookback",
+        "type": "lookback_days",
         "default": null,
-        "help": "history lookback days (default: export meta or 90)",
-        "type": "int"
-      }
+        "help": "history calendar days (default: the bundle's lookback, else 90)"
+      },
+      "legacy_flags": [
+        "--lookback"
+      ]
     },
     {
       "flags": [
@@ -32,9 +49,9 @@
       ],
       "options": {
         "dest": "train_days",
+        "type": "int",
         "default": 45,
-        "help": "walk-forward train window in days (default 45)",
-        "type": "int"
+        "help": "walk-forward train window in days"
       }
     },
     {
@@ -43,9 +60,9 @@
       ],
       "options": {
         "dest": "test_days",
+        "type": "int",
         "default": 15,
-        "help": "walk-forward OOS test window in days (default 15)",
-        "type": "int"
+        "help": "walk-forward out-of-sample window in days"
       }
     },
     {
@@ -54,9 +71,9 @@
       ],
       "options": {
         "dest": "step_days",
+        "type": "int",
         "default": null,
-        "help": "step between OOS windows (default: test-days)",
-        "type": "int"
+        "help": "days between out-of-sample windows (default: --test-days)"
       }
     },
     {
@@ -65,9 +82,9 @@
       ],
       "options": {
         "dest": "embargo_minutes",
+        "type": "int",
         "default": 60,
-        "help": "purged-CV embargo minutes (default 60)",
-        "type": "int"
+        "help": "purged cross-validation embargo in minutes"
       }
     },
     {
@@ -76,20 +93,24 @@
       ],
       "options": {
         "dest": "max_hold_bars",
+        "type": "int",
         "default": 120,
-        "help": "label barrier timeout in bars (default 120 = 2h on 1m)",
-        "type": "int"
+        "help": "label barrier timeout in bars"
       }
     },
     {
       "flags": [
-        "--out"
+        "--out-dir"
       ],
       "options": {
-        "dest": "out",
+        "dest": "out_dir",
+        "type": "Path",
         "default": null,
-        "help": "bundle output dir (default data/models/metalabel/wf_<strategy>_<ts>)"
-      }
+        "help": "bundle output directory (default: models/metalabel/wf_<strategy>_<time> under the data root)"
+      },
+      "legacy_flags": [
+        "--out"
+      ]
     },
     {
       "flags": [
@@ -97,9 +118,9 @@
       ],
       "options": {
         "dest": "install",
+        "action": "store_true",
         "default": false,
-        "help": "also copy final model files into data/models/metalabel/ and print HYPERVECTOR_METALABEL_ROOT",
-        "action": "store_true"
+        "help": "also copy the trained model into models/metalabel/ under the data root"
       }
     }
   ]

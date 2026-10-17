@@ -189,6 +189,7 @@ def cmd_oxa_book_fetch(args: argparse.Namespace) -> int:
             limit=args.limit,
             max_pages=args.max_pages,
             timeout_seconds=args.timeout,
+            market_family=args.market_family,
         )
         report = acquire_and_store_orderbooks(
             data_root=args.data_root,
@@ -215,6 +216,7 @@ def cmd_oxa_trade_fetch(args: argparse.Namespace) -> int:
             limit=args.limit,
             max_pages=args.max_pages,
             timeout_seconds=args.timeout,
+            market_family=args.market_family,
         )
         report = acquire_and_store_trades(
             data_root=args.data_root,
@@ -241,6 +243,7 @@ def cmd_oxa_price_fetch(args: argparse.Namespace) -> int:
             limit=args.limit,
             max_pages=args.max_pages,
             timeout_seconds=args.timeout,
+            market_family=args.market_family,
         )
         report = acquire_and_store_prices(
             data_root=args.data_root,
@@ -284,7 +287,7 @@ def cmd_oxa_candle_fetch(args: argparse.Namespace) -> int:
             args.symbol,
             args.start,
             args.end,
-            args.interval,
+            args.timeframe,
             args.limit,
             args.max_pages,
             args.timeout,
@@ -343,8 +346,8 @@ def cmd_research_db_shadow_import(args: argparse.Namespace) -> int:
 
     path = _research_database_path(args)
     ledger = (
-        Path(args.ledger)
-        if args.ledger is not None
+        Path(args.decisions)
+        if args.decisions is not None
         else Path(args.data_root) / "paper" / "decisions" / "decisions.jsonl"
     )
     try:

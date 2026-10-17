@@ -36,7 +36,7 @@ def cmd_monitor(args: argparse.Namespace) -> int:
     try:
         return _monitor(args)
     except (OSError, RuntimeError, ValueError) as exc:
-        print(f"cohort monitor refused: {exc}", file=sys.stderr)
+        print(f"live monitor refused: {exc}", file=sys.stderr)
         return 2
 
 
@@ -54,7 +54,7 @@ def _monitor(args: argparse.Namespace) -> int:
         )
         if document is None:
             raise ValueError(
-                "checkpoint is missing or stale; publish 'cohort checkpoint' for the exact active config"
+                "checkpoint is missing or stale; publish 'live checkpoint' for the exact active config"
             )
         identity = checkpoint_identity(document)
         if args.run_id and identity.run_id != args.run_id:

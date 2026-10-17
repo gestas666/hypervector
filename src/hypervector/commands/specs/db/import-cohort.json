@@ -1,0 +1,95 @@
+{
+  "schema": 2,
+  "help": "Incrementally import append-only cohort journals into DuckDB",
+  "kind": "operation",
+  "operation": "hypervector.operations.multi_asset_bidirectional_research_import",
+  "authority": "none",
+  "environment": [],
+  "data_root": "honored",
+  "include": [],
+  "fragment_overrides": {},
+  "legacy": [
+    "cohort research-import",
+    "cohort-research-import"
+  ],
+  "exclusive_groups": [],
+  "arguments": [
+    {
+      "flags": [
+        "--ledger-root"
+      ],
+      "options": {
+        "dest": "ledger_root",
+        "type": "Path",
+        "default": null,
+        "help": "cohort live ledger directory"
+      },
+      "data_default": "live/bidirectional_cohort"
+    },
+    {
+      "flags": [
+        "--database"
+      ],
+      "options": {
+        "dest": "database",
+        "type": "Path",
+        "default": null,
+        "help": "DuckDB research database file"
+      },
+      "data_default": "research/market.duckdb"
+    },
+    {
+      "flags": [
+        "--cached-checkpoint"
+      ],
+      "options": {
+        "dest": "cached_checkpoint",
+        "type": "Path",
+        "default": null,
+        "help": "checkpoint JSON reused for venue context"
+      }
+    },
+    {
+      "flags": [
+        "--accounting-epoch-id"
+      ],
+      "options": {
+        "dest": "accounting_epoch_id",
+        "default": null,
+        "help": "accounting epoch identifier"
+      }
+    },
+    {
+      "flags": [
+        "--accounting-epoch-profile-fingerprint"
+      ],
+      "options": {
+        "dest": "accounting_epoch_profile_fingerprint",
+        "default": null,
+        "help": "profile fingerprint that opened the accounting epoch"
+      }
+    },
+    {
+      "flags": [
+        "--accounting-epoch-start-ms"
+      ],
+      "options": {
+        "dest": "accounting_epoch_start_ms",
+        "type": "int",
+        "default": null,
+        "help": "accounting epoch start as epoch milliseconds"
+      }
+    },
+    {
+      "flags": [
+        "--accounting-epoch-included-profile-fingerprint"
+      ],
+      "options": {
+        "dest": "accounting_epoch_included_profile_fingerprint",
+        "action": "append",
+        "default": [],
+        "help": "profile fingerprint included in the epoch; repeatable"
+      }
+    }
+  ]
+}

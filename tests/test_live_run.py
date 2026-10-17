@@ -378,8 +378,9 @@ def test_cli_live_run_refuses_without_arm(tmp_path: Path, capsys, monkeypatch):
         [
             "--data-root",
             str(tmp_path / "data"),
-            "live-run",
-            "--path",
+            "live",
+            "run",
+            "--export",
             str(export),
             "--enabled",
             "--max-live-bars",
@@ -405,8 +406,9 @@ def test_cli_live_run_refuses_without_enabled(tmp_path: Path, capsys, monkeypatc
         [
             "--data-root",
             str(tmp_path / "data"),
-            "live-run",
-            "--path",
+            "live",
+            "run",
+            "--export",
             str(export),
             "--i-accept-live-risk",
             "--max-live-bars",

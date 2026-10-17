@@ -1,0 +1,108 @@
+{
+  "schema": 2,
+  "help": "Read exact-run backend JSON telemetry; never owns the backend",
+  "section": "observe",
+  "kind": "inprocess",
+  "handler": "hypervector.commands.monitor:cmd_monitor",
+  "authority": "none",
+  "environment": [],
+  "data_root": "honored",
+  "include": [],
+  "fragment_overrides": {},
+  "legacy": [
+    "cohort monitor",
+    "cohort-monitor"
+  ],
+  "exclusive_groups": [],
+  "arguments": [
+    {
+      "flags": [
+        "--config"
+      ],
+      "options": {
+        "dest": "config",
+        "type": "Path",
+        "default": null,
+        "help": "active cohort profile TOML"
+      },
+      "required": true
+    },
+    {
+      "flags": [
+        "--source-checkpoint"
+      ],
+      "options": {
+        "dest": "source_checkpoint",
+        "type": "Path",
+        "default": null,
+        "help": "checkpoint JSON published by 'live checkpoint'"
+      },
+      "data_default": "runtime/bidirectional_cohort/latest_checkpoint.json"
+    },
+    {
+      "flags": [
+        "--run-id"
+      ],
+      "options": {
+        "dest": "run_id",
+        "default": null,
+        "help": "refuse a checkpoint from any other run"
+      }
+    },
+    {
+      "flags": [
+        "--out"
+      ],
+      "options": {
+        "dest": "out",
+        "type": "Path",
+        "default": null,
+        "help": "also publish an independent checkpoint copy here"
+      }
+    },
+    {
+      "flags": [
+        "--accounting-epoch-bundle"
+      ],
+      "options": {
+        "dest": "accounting_epoch_bundle",
+        "type": "Path",
+        "default": null,
+        "help": "accounting epoch bundle that binds the equity baseline"
+      }
+    },
+    {
+      "flags": [
+        "--follow"
+      ],
+      "options": {
+        "dest": "follow",
+        "action": "store_true",
+        "default": false,
+        "help": "keep polling and print one JSON line per poll"
+      }
+    },
+    {
+      "flags": [
+        "--interval-seconds"
+      ],
+      "options": {
+        "dest": "interval_seconds",
+        "type": "float",
+        "default": 30.0,
+        "help": "seconds between polls with --follow"
+      }
+    },
+    {
+      "flags": [
+        "--maximum-age-seconds"
+      ],
+      "options": {
+        "dest": "maximum_age_seconds",
+        "type": "float",
+        "default": 90.0,
+        "help": "maximum accepted checkpoint age in seconds"
+      }
+    }
+  ]
+}

@@ -1,0 +1,175 @@
+{
+  "schema": 2,
+  "help": "Measure point-in-time HIP-3 visible liquidity without execution",
+  "kind": "inprocess",
+  "handler": "hypervector.cli_hip3_research:cmd_hip3_liquidity_profile",
+  "authority": "none",
+  "environment": [],
+  "data_root": "honored",
+  "include": [],
+  "fragment_overrides": {},
+  "legacy": [
+    "research hip3-liquidity-profile",
+    "research-hip3-liquidity-profile"
+  ],
+  "exclusive_groups": [],
+  "arguments": [
+    {
+      "flags": [
+        "--symbol"
+      ],
+      "options": {
+        "dest": "symbol",
+        "default": null,
+        "help": "HIP-3 market as deployer:asset, e.g. xyz:TSLA"
+      },
+      "required": true
+    },
+    {
+      "flags": [
+        "--database"
+      ],
+      "options": {
+        "dest": "database",
+        "type": "Path",
+        "default": null,
+        "help": "DuckDB research database file"
+      },
+      "data_default": "research/market.duckdb"
+    },
+    {
+      "flags": [
+        "--notional-usd"
+      ],
+      "options": {
+        "dest": "notional_usd",
+        "action": "append",
+        "type": "float",
+        "default": null,
+        "help": "order notional in USD to measure; repeatable (default: 25, 50 and 75)"
+      }
+    },
+    {
+      "flags": [
+        "--sample-minutes"
+      ],
+      "options": {
+        "dest": "sample_minutes",
+        "type": "int",
+        "default": 5,
+        "help": "minutes between book samples"
+      }
+    },
+    {
+      "flags": [
+        "--maximum-boundary-delay-ms"
+      ],
+      "options": {
+        "dest": "maximum_boundary_delay_ms",
+        "type": "int",
+        "default": 15000,
+        "help": "maximum delay in milliseconds between a sample boundary and its book"
+      }
+    },
+    {
+      "flags": [
+        "--account-maker-rate"
+      ],
+      "options": {
+        "dest": "account_maker_rate",
+        "type": "float",
+        "default": null,
+        "help": "account maker fee rate as a fraction"
+      }
+    },
+    {
+      "flags": [
+        "--account-taker-rate"
+      ],
+      "options": {
+        "dest": "account_taker_rate",
+        "type": "float",
+        "default": null,
+        "help": "account taker fee rate as a fraction"
+      }
+    },
+    {
+      "flags": [
+        "--active-referral-discount"
+      ],
+      "options": {
+        "dest": "active_referral_discount",
+        "type": "float",
+        "default": null,
+        "help": "active referral discount as a fraction"
+      }
+    },
+    {
+      "flags": [
+        "--deployer-fee-scale"
+      ],
+      "options": {
+        "dest": "deployer_fee_scale",
+        "type": "float",
+        "default": null,
+        "help": "HIP-3 deployer fee scale multiplier"
+      }
+    },
+    {
+      "flags": [
+        "--growth-mode"
+      ],
+      "options": {
+        "dest": "growth_mode",
+        "action": "boolean_optional",
+        "default": null,
+        "help": "whether the market is in growth mode"
+      }
+    },
+    {
+      "flags": [
+        "--aligned-quote"
+      ],
+      "options": {
+        "dest": "aligned_quote",
+        "action": "boolean_optional",
+        "default": null,
+        "help": "whether the market uses an aligned quote token"
+      }
+    },
+    {
+      "flags": [
+        "--aligned-quote-status"
+      ],
+      "options": {
+        "dest": "aligned_quote_status",
+        "default": null,
+        "help": "evidence label for the aligned-quote status"
+      }
+    },
+    {
+      "flags": [
+        "--fee-evidence-label"
+      ],
+      "options": {
+        "dest": "fee_evidence_label",
+        "default": null,
+        "help": "label naming the source of the fee inputs"
+      }
+    },
+    {
+      "flags": [
+        "--out"
+      ],
+      "options": {
+        "dest": "out",
+        "type": "Path",
+        "default": null,
+        "help": "optional JSON report path (must not exist yet)"
+      },
+      "legacy_flags": [
+        "--output"
+      ]
+    }
+  ]
+}

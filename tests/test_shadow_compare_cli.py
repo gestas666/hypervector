@@ -60,7 +60,8 @@ def test_shadow_compare_cli_writes_report(tmp_path: Path, capsys) -> None:
 
     rc = main(
         [
-            "hypervelocity-shadow-compare",
+            "paper",
+            "compare",
             "--shadow-ledger",
             str(ledger),
             "--positions",

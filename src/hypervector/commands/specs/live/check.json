@@ -1,8 +1,19 @@
 {
-  "name": "live-check",
-  "action": "check",
-  "help": "Live readiness: secrets present (bool), arm/enabled gates, max notional, submit_wired (no secret values; no place)",
+  "schema": 2,
+  "help": "Live readiness as booleans: credentials present, authority flags, start gate",
+  "section": "run",
+  "kind": "inprocess",
   "handler": "hypervector.commands.status:cmd_live_check",
+  "authority": "simulate",
+  "environment": [],
+  "data_root": "refused",
+  "data_root_reason": "live readiness reads the process environment, not the data root",
+  "include": [],
+  "fragment_overrides": {},
+  "legacy": [
+    "live-check"
+  ],
+  "exclusive_groups": [],
   "arguments": [
     {
       "flags": [
@@ -10,32 +21,24 @@
       ],
       "options": {
         "dest": "enabled",
+        "action": "store_true",
         "default": false,
-        "help": "simulate [live] enabled=true for readiness (default false)",
-        "action": "store_true"
+        "help": "simulate the first live-authority flag"
       }
     },
     {
       "flags": [
+        "--i-accept-live-risk"
+      ],
+      "options": {
+        "dest": "i_accept_live_risk",
+        "action": "store_true",
+        "default": false,
+        "help": "simulate the second live-authority flag"
+      },
+      "legacy_flags": [
         "--armed"
-      ],
-      "options": {
-        "dest": "armed",
-        "default": false,
-        "help": "simulate --i-accept-live-risk arm for readiness (default false)",
-        "action": "store_true"
-      }
-    },
-    {
-      "flags": [
-        "--max-notional-usd"
-      ],
-      "options": {
-        "dest": "max_notional_usd",
-        "default": 50.0,
-        "help": "max notional cap for policy (default 50.0)",
-        "type": "float"
-      }
+      ]
     }
   ]
 }

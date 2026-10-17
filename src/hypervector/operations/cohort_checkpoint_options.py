@@ -58,7 +58,8 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--current-run-only",
-        action="store_true",
+        action=argparse.BooleanOptionalAction,
+        default=False,
         help="bound publication to the explicitly selected live run",
     )
     parser.add_argument("--once", action="store_true")

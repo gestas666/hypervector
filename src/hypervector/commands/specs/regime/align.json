@@ -1,0 +1,56 @@
+{
+  "schema": 2,
+  "help": "Report Hypervelocity regime alignment with recorded entries",
+  "kind": "inprocess",
+  "handler": "hypervector.commands.regime:cmd_hypervelocity_regime_eval",
+  "authority": "none",
+  "environment": [],
+  "data_root": "honored",
+  "include": [
+    "market"
+  ],
+  "fragment_overrides": {},
+  "legacy": [
+    "regime hypervelocity-eval",
+    "hypervelocity-regime-eval"
+  ],
+  "exclusive_groups": [],
+  "arguments": [
+    {
+      "flags": [
+        "--positions"
+      ],
+      "options": {
+        "dest": "positions",
+        "default": null,
+        "help": "recorded-entries CSV with open_time_utc, side and symbol"
+      },
+      "required": true
+    },
+    {
+      "flags": [
+        "--forward-bars"
+      ],
+      "options": {
+        "dest": "forward_horizon",
+        "type": "int",
+        "default": 30,
+        "help": "forward 1m bars used to report breakout target misses"
+      },
+      "legacy_flags": [
+        "--forward-horizon"
+      ]
+    },
+    {
+      "flags": [
+        "--out"
+      ],
+      "options": {
+        "dest": "out",
+        "type": "Path",
+        "default": null,
+        "help": "optional JSON report path"
+      }
+    }
+  ]
+}

@@ -79,6 +79,30 @@ def _load_dotenv(
     return tuple(loaded)
 
 
+def dotenv_key_presence(
+    keys: Sequence[str],
+    *,
+    candidates: Sequence[Path] | None = None,
+    environ: MutableMapping[str, str] | None = None,
+) -> dict[str, bool]:
+    """Report which keys are configured (process environment first, then dotenv).
+
+    Precedence matches the real loaders: a name already present in the process
+    environment (even empty) is never replaced by a dotenv value. Values are read
+    into a scratch mapping that is cleared before returning; the process
+    environment is never modified and no value leaves this function.
+    """
+    source = environ if environ is not None else os.environ
+    scratch: dict[str, str] = {key: source[key] for key in keys if key in source}
+    try:
+        _load_dotenv(
+            candidates=candidates, environ=scratch, allowed_keys=frozenset(keys)
+        )
+        return {key: bool((scratch.get(key) or "").strip()) for key in keys}
+    finally:
+        scratch.clear()
+
+
 def credential_presence_from_env(
     *,
     environ: MutableMapping[str, str] | None = None,

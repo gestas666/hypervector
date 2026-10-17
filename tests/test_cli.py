@@ -53,7 +53,7 @@ def inject_history(monkeypatch):
         monkeypatch.setattr(
             "hypervector.data.pipeline.load_research_history", fake_load
         )
-        # Runner binds load_research_history at import; patch for phase2-run E2E.
+        # Runner binds load_research_history at import; patch for nautilus run E2E.
         monkeypatch.setattr(
             "hypervector.nautilus.runner.load_research_history", fake_load
         )
@@ -68,8 +68,9 @@ def test_cli_history_twice_cache(tmp_path: Path, capsys, inject_history):
     argv = [
         "--data-root",
         str(data),
+        "data",
         "history",
-        "--lookback",
+        "--lookback-days",
         "30",
         "--symbol",
         "BTC",
@@ -87,7 +88,7 @@ def test_cli_history_twice_cache(tmp_path: Path, capsys, inject_history):
     assert out2["bars"] == out1["bars"]
 
 
-def test_cli_regime_export(tmp_path: Path, capsys, inject_history):
+def test_cli_regime_classify(tmp_path: Path, capsys, inject_history):
     inject_history()
     data = tmp_path / "data"
     rc = main(
@@ -95,16 +96,16 @@ def test_cli_regime_export(tmp_path: Path, capsys, inject_history):
             "--data-root",
             str(data),
             "regime",
-            "--lookback",
+            "classify",
+            "--lookback-days",
             "30",
-            "--export",
         ]
     )
     assert rc == 0
     payload = json.loads(capsys.readouterr().out)
     assert "metrics" in payload
     assert "data_provenance" in payload
-    assert (data / "exports" / "regime_BTC" / "meta.json").is_file()
+    assert not (data / "exports").exists() or not any((data / "exports").iterdir())
 
 
 def test_cli_sweep_up_and_down(tmp_path: Path, capsys, inject_history):
@@ -120,32 +121,21 @@ def test_cli_sweep_up_and_down(tmp_path: Path, capsys, inject_history):
     inject_history(df, summarize_provenance(df))
 
     data = tmp_path / "data"
-    assert (
-        main(["--data-root", str(data), "sweep-up", "--lookback", "30", "--export"])
-        == 0
-    )
+    sweep = ["--data-root", str(data), "backtest", "sweep", "--lookback-days", "30"]
+    assert main([*sweep, "--track", "uptrend"]) == 0
     up_out = capsys.readouterr().out
     assert "net_pnl" in up_out or "ma_cross" in up_out
 
-    assert (
-        main(["--data-root", str(data), "sweep-down", "--lookback", "30", "--export"])
-        == 0
-    )
+    assert main([*sweep, "--track", "downtrend"]) == 0
     assert (data / "runs" / "hypervector.db").is_file()
-    assert main(["--data-root", str(data), "report", "--track", "uptrend"]) == 0
+    report = ["--data-root", str(data), "backtest", "report", "--track", "uptrend"]
+    assert main(report) == 0
 
 
 def test_cli_rejects_lookback_below_floor(tmp_path: Path):
-    rc = main(
-        [
-            "--data-root",
-            str(tmp_path),
-            "history",
-            "--lookback",
-            "10",
-        ]
-    )
-    assert rc == 2
+    with pytest.raises(SystemExit) as exc:
+        main(["--data-root", str(tmp_path), "data", "history", "--lookback-days", "10"])
+    assert exc.value.code == 2
 
 
 def test_cli_oxa_book_fetch_is_bounded_and_secret_safe(
@@ -180,7 +170,8 @@ def test_cli_oxa_book_fetch_is_bounded_and_secret_safe(
         [
             "--data-root",
             str(tmp_path / "data"),
-            "oxa-book-fetch",
+            "archive",
+            "book-fetch",
             "--symbol",
             "BTC",
             "--start",
@@ -224,7 +215,8 @@ def test_cli_oxa_book_fetch_reports_technical_failure(
         [
             "--data-root",
             str(tmp_path / "data"),
-            "oxa-book-fetch",
+            "archive",
+            "book-fetch",
             "--symbol",
             "BTC",
             "--start",
@@ -255,14 +247,17 @@ def test_cli_export_validate_and_phase2_check(tmp_path: Path, capsys, inject_his
             [
                 "--data-root",
                 str(data),
-                "sweep-down",
-                "--lookback",
+                "backtest",
+                "sweep",
+                "--track",
+                "downtrend",
+                "--lookback-days",
                 "30",
                 "--strategy",
                 "crown_stack_short",
-                "--cash",
+                "--initial-cash",
                 "10000",
-                "--tp-sl-mode",
+                "--exit-mode",
                 "atr",
                 "--risk-min",
                 "0.01",
@@ -270,14 +265,13 @@ def test_cli_export_validate_and_phase2_check(tmp_path: Path, capsys, inject_his
                 "0.05",
                 "--conviction",
                 "0.5",
-                "--export",
             ]
         )
         == 0
     )
     capsys.readouterr()
     exports = list((data / "exports").iterdir())
-    assert exports, "sweep --export should write a bundle"
+    assert exports, "backtest sweep should write a bundle by default"
     export_path = exports[0]
 
     assert (
@@ -285,10 +279,10 @@ def test_cli_export_validate_and_phase2_check(tmp_path: Path, capsys, inject_his
             [
                 "--data-root",
                 str(data),
-                "export-validate",
-                "--path",
+                "export",
+                "validate",
+                "--export",
                 str(export_path),
-                "--strict",
             ]
         )
         == 0
@@ -304,8 +298,9 @@ def test_cli_export_validate_and_phase2_check(tmp_path: Path, capsys, inject_his
             [
                 "--data-root",
                 str(data),
-                "phase2-check",
-                "--path",
+                "nautilus",
+                "check",
+                "--export",
                 str(export_path),
             ]
         )
@@ -318,14 +313,17 @@ def test_cli_export_validate_and_phase2_check(tmp_path: Path, capsys, inject_his
     assert report["phase2_stub"]["exits"]["mode"] == "atr"
     assert report["paper_live"]["implemented"] is True
     assert report["paper_live"]["paper_dry_run"]["implemented"] is True
-    assert report["paper_live"]["paper_dry_run"]["command"] == "paper-run"
+    assert report["paper_live"]["paper_dry_run"]["command"] == "paper run"
     assert report["paper_live"]["live_submit"]["implemented"] is True
-    assert report["paper_live"]["live_submit"]["command"] == "live-run"
-    assert "paper-run" in captured.err
-    assert "live-run" in captured.err
+    assert report["paper_live"]["live_submit"]["command"] == "live start"
+    assert "'paper run'" in captured.err
+    assert "'live start'" in captured.err
 
     # DB re-export should also be Phase 2-ready (research_meta path)
-    assert main(["--data-root", str(data), "export", "--track", "downtrend"]) == 0
+    assert (
+        main(["--data-root", str(data), "export", "create", "--track", "downtrend"])
+        == 0
+    )
     reexport_path = Path(capsys.readouterr().out.strip())
     assert reexport_path.is_dir()
     assert (
@@ -333,10 +331,10 @@ def test_cli_export_validate_and_phase2_check(tmp_path: Path, capsys, inject_his
             [
                 "--data-root",
                 str(data),
-                "export-validate",
-                "--path",
+                "export",
+                "validate",
+                "--export",
                 str(reexport_path),
-                "--strict",
             ]
         )
         == 0
@@ -353,8 +351,9 @@ def test_cli_export_validate_fails_on_garbage(tmp_path: Path, capsys):
         [
             "--data-root",
             str(tmp_path),
-            "export-validate",
-            "--path",
+            "export",
+            "validate",
+            "--export",
             str(bad),
         ]
     )
@@ -366,7 +365,7 @@ def test_cli_export_validate_fails_on_garbage(tmp_path: Path, capsys):
 
 def test_cli_infra_init(tmp_path: Path, capsys):
     data = tmp_path / "data"
-    assert main(["--data-root", str(data), "infra-init"]) == 0
+    assert main(["--data-root", str(data), "system", "init"]) == 0
     report = json.loads(capsys.readouterr().out)
     assert report["dirs"]["exports"]["exists"] is True
     assert report["dirs"]["paper_ledger"]["exists"] is True
@@ -374,7 +373,7 @@ def test_cli_infra_init(tmp_path: Path, capsys):
 
 
 def _strict_export_for_phase2(exports_root: Path) -> Path:
-    """Write a Phase 1.5 strict export suitable for phase2-run."""
+    """Write a Phase 1.5 strict export suitable for nautilus run."""
     from hypervector.export.phase2 import export_candidate
 
     return export_candidate(
@@ -427,7 +426,7 @@ def _strict_export_for_phase2(exports_root: Path) -> Path:
 
 
 def test_cli_phase2_run_offline(tmp_path: Path, capsys, inject_history):
-    """phase2-run: strict export + injected OHLCV → JSON summary, artifacts."""
+    """nautilus run: strict export + injected OHLCV → JSON summary, artifacts."""
     from hypervector.data.sources import fixture_ohlcv
 
     # Short wave series: MA cross fires; keep engine time reasonable
@@ -441,10 +440,11 @@ def test_cli_phase2_run_offline(tmp_path: Path, capsys, inject_history):
         [
             "--data-root",
             str(data),
-            "phase2-run",
-            "--path",
+            "nautilus",
+            "run",
+            "--export",
             str(export_dir),
-            "--lookback",
+            "--lookback-days",
             "30",
             "--conviction",
             "0.5",
@@ -471,7 +471,7 @@ def test_cli_phase2_run_offline(tmp_path: Path, capsys, inject_history):
 
 
 def test_cli_phase2_run_schema_error(tmp_path: Path, capsys):
-    """phase2-run exits 1 on invalid export (ExportSchemaError)."""
+    """nautilus run exits 1 on invalid export (ExportSchemaError)."""
     bad = tmp_path / "bad_export"
     bad.mkdir()
     (bad / "meta.json").write_text("{}", encoding="utf-8")
@@ -482,10 +482,11 @@ def test_cli_phase2_run_schema_error(tmp_path: Path, capsys):
         [
             "--data-root",
             str(tmp_path / "data"),
-            "phase2-run",
-            "--path",
+            "nautilus",
+            "run",
+            "--export",
             str(bad),
-            "--lookback",
+            "--lookback-days",
             "30",
         ]
     )
@@ -495,37 +496,22 @@ def test_cli_phase2_run_schema_error(tmp_path: Path, capsys):
     assert err["errors"]
 
 
-def test_cli_phase2_run_paper_flag_notes_not_implemented(
-    tmp_path: Path, capsys, inject_history
-):
-    """If --paper requested, redirect to paper-run on stderr; still run historical."""
-    from hypervector.data.sources import fixture_ohlcv
-
-    df = fixture_ohlcv(n_bars=80, drift=5.0, wave_period=30, source="hl")
-    inject_history(df, summarize_provenance(df))
-    data = tmp_path / "data"
-    export_dir = _strict_export_for_phase2(data / "exports")
-
-    rc = main(
-        [
-            "--data-root",
-            str(data),
-            "phase2-run",
-            "--path",
-            str(export_dir),
-            "--lookback",
-            "30",
-            "--paper",
-            "--no-network",
-        ]
-    )
-    assert rc == 0
-    captured = capsys.readouterr()
-    summary = json.loads(captured.out)
-    assert summary["ok"] is True
-    assert summary["execution_mode"] == "phase2_historical"
-    assert "paper-run" in captured.err
-    assert "paper ran" not in captured.err.lower()
+@pytest.mark.parametrize("removed", ["--paper", "--live"])
+def test_cli_nautilus_run_rejects_removed_mode_flags(tmp_path: Path, removed: str):
+    """The old no-op mode flags are gone; an unknown flag is a usage error."""
+    with pytest.raises(SystemExit) as exc:
+        main(
+            [
+                "--data-root",
+                str(tmp_path / "data"),
+                "nautilus",
+                "run",
+                "--export",
+                str(tmp_path),
+                removed,
+            ]
+        )
+    assert exc.value.code == 2
 
 
 def test_cli_autotune_wires_current_runner_arguments(
@@ -561,13 +547,14 @@ def test_cli_autotune_wires_current_runner_arguments(
         [
             "--data-root",
             str(data_root),
-            "autotune",
+            "tune",
+            "strategy",
             "--strategy",
             "hypervelocity_1m_scalper_long",
             "--timeframe",
             "1m",
             "--fee-model",
-            "hl_taker_default",
+            "hl_vip1_taker",
             "--n-trials",
             "2",
             "--no-export",
@@ -576,5 +563,5 @@ def test_cli_autotune_wires_current_runner_arguments(
 
     assert rc == 0
     assert json.loads(capsys.readouterr().out)["ok"] is True
-    assert captured["fee_model"] == "hl_taker_default"
+    assert captured["fee_model"] == "hl_vip1_taker"
     assert captured["data_root"] == data_root

@@ -1,4 +1,4 @@
-"""live-report: pure summary + CLI over live decisions JSONL."""
+"""live report: pure summary + CLI over live decisions JSONL."""
 
 from __future__ import annotations
 
@@ -100,7 +100,7 @@ def test_cli_live_report(tmp_path: Path, capsys):
     root = tmp_path / "data"
     ensure_data_layout(root)
     append_live_decision(root, _live_row())
-    rc = main(["--data-root", str(root), "live-report", "--last", "1"])
+    rc = main(["--data-root", str(root), "live", "report", "--last", "1"])
     assert rc == 0
     rep = json.loads(capsys.readouterr().out)
     assert rep["ok"] is True

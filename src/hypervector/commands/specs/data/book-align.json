@@ -1,70 +1,30 @@
 {
-  "name": "book-align",
-  "action": "book-align",
-  "help": "Align historical L2 orderbook data (JSONL or SQLite) with OHLCV bars",
+  "schema": 2,
+  "help": "Align recorded L2 orderbook data (JSONL or SQLite) with OHLCV bars",
+  "kind": "inprocess",
   "handler": "hypervector.commands.market:cmd_book_align",
+  "authority": "none",
+  "environment": [],
+  "data_root": "honored",
+  "include": [
+    "market"
+  ],
+  "fragment_overrides": {},
+  "legacy": [
+    "book-align"
+  ],
+  "exclusive_groups": [],
   "arguments": [
-    {
-      "flags": [
-        "--symbol"
-      ],
-      "options": {
-        "dest": "symbol",
-        "default": "BTC"
-      }
-    },
-    {
-      "flags": [
-        "--timeframe"
-      ],
-      "options": {
-        "dest": "timeframe",
-        "default": "1m"
-      }
-    },
-    {
-      "flags": [
-        "--lookback"
-      ],
-      "options": {
-        "dest": "lookback",
-        "default": 90,
-        "help": "calendar days (floor=30, default=90, promo=180)",
-        "type": "int"
-      }
-    },
-    {
-      "flags": [
-        "--strict-hl-only"
-      ],
-      "options": {
-        "dest": "strict_hl_only",
-        "default": false,
-        "help": "do not backfill from Binance/Bybit",
-        "action": "store_true"
-      }
-    },
-    {
-      "flags": [
-        "--force"
-      ],
-      "options": {
-        "dest": "force",
-        "default": false,
-        "help": "ignore Parquet cache and re-fetch",
-        "action": "store_true"
-      }
-    },
     {
       "flags": [
         "--book-path"
       ],
       "options": {
         "dest": "book_path",
-        "required": true,
         "default": null,
-        "help": "path to L2 orderbook data (data/cache/book/BTC_l2_...jsonl or impulse_calibration_snapshot.sqlite.zst)"
-      }
+        "help": "L2 orderbook file: JSONL snapshots or a calibration SQLite (.sqlite.zst)"
+      },
+      "required": true
     }
   ]
 }

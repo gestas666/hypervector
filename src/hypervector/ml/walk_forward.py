@@ -274,7 +274,7 @@ def run_walk_forward_metalabel(
         "cv": train_res.cv,
         "folds": [asdict(f) for f in fold_scores],
         "promote_hint": (
-            "Set HYPERVECTOR_METALABEL_ROOT to bundle_dir; paper-run --metalabel"
+            "Set HYPERVECTOR_METALABEL_ROOT to bundle_dir; paper run --metalabel-mode observe"
             if beat
             else "OOS did not beat baseline — inspect folds before promoting"
         ),

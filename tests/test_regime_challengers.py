@@ -91,8 +91,9 @@ def test_challenger_cli_writes_complete_report(
         [
             "--data-root",
             str(tmp_path),
-            "hypervelocity-regime-challengers",
-            "--forward-horizon",
+            "regime",
+            "challengers",
+            "--forward-bars",
             "15",
             "--n-splits",
             "2",

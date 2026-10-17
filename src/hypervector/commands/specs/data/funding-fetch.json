@@ -1,8 +1,19 @@
 {
-  "name": "hl-funding-fetch",
-  "action": "funding-fetch",
+  "schema": 2,
   "help": "Fetch complete official Hyperliquid hourly funding history",
+  "kind": "inprocess",
   "handler": "hypervector.cli_oxa:cmd_hl_funding_fetch",
+  "authority": "none",
+  "environment": [],
+  "data_root": "honored",
+  "include": [
+    "window"
+  ],
+  "fragment_overrides": {},
+  "legacy": [
+    "hl-funding-fetch"
+  ],
+  "exclusive_groups": [],
   "arguments": [
     {
       "flags": [
@@ -10,29 +21,8 @@
       ],
       "options": {
         "dest": "symbol",
-        "default": "BTC"
-      }
-    },
-    {
-      "flags": [
-        "--start"
-      ],
-      "options": {
-        "dest": "start",
-        "required": true,
-        "default": null,
-        "type": "_parse_utc_datetime"
-      }
-    },
-    {
-      "flags": [
-        "--end"
-      ],
-      "options": {
-        "dest": "end",
-        "required": true,
-        "default": null,
-        "type": "_parse_utc_datetime"
+        "default": "BTC",
+        "help": "Hyperliquid coin, e.g. BTC, kPEPE or xyz:TSLA"
       }
     }
   ]

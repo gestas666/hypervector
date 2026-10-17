@@ -1,0 +1,45 @@
+{
+  "schema": 2,
+  "help": "Import paper/shadow ledger evidence into DuckDB",
+  "kind": "inprocess",
+  "handler": "hypervector.cli_oxa:cmd_research_db_shadow_import",
+  "authority": "none",
+  "environment": [],
+  "data_root": "honored",
+  "include": [],
+  "fragment_overrides": {},
+  "legacy": [
+    "research db-shadow-import",
+    "research-db-shadow-import"
+  ],
+  "exclusive_groups": [],
+  "arguments": [
+    {
+      "flags": [
+        "--decisions"
+      ],
+      "options": {
+        "dest": "decisions",
+        "type": "Path",
+        "default": null,
+        "help": "paper decisions JSONL"
+      },
+      "legacy_flags": [
+        "--ledger"
+      ],
+      "data_default": "paper/decisions/decisions.jsonl"
+    },
+    {
+      "flags": [
+        "--database"
+      ],
+      "options": {
+        "dest": "database",
+        "type": "Path",
+        "default": null,
+        "help": "DuckDB research database file"
+      },
+      "data_default": "research/market.duckdb"
+    }
+  ]
+}

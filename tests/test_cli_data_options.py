@@ -7,15 +7,15 @@ import pytest
 from hypervector.cli import main
 
 
-class HistoryBoundaryReached(RuntimeError):
+class HistoryBoundaryReached(Exception):
     """Stop before expensive business logic once the data policy is observed."""
 
 
 @pytest.mark.parametrize(
     ("command", "loader"),
     [
-        (["research", "backtest"], "hypervector.data.pipeline.load_research_history"),
-        (["research", "autotune"], "hypervector.sweep.autotune.load_research_history"),
+        (["backtest", "run"], "hypervector.data.pipeline.load_research_history"),
+        (["tune", "strategy"], "hypervector.sweep.autotune.load_research_history"),
         (
             ["data", "book-align", "--book-path", "fixture.jsonl"],
             "hypervector.data.pipeline.load_research_history",
@@ -38,6 +38,6 @@ def test_history_flags_reach_the_acquisition_boundary(
 
     monkeypatch.setattr(loader, capture)
     with pytest.raises(HistoryBoundaryReached):
-        main(["--data-root", str(tmp_path), *command, "--strict-hl-only", "--force"])
+        main(["--data-root", str(tmp_path), *command, "--strict-hl-only", "--refresh"])
     assert observed.get("strict_hl_only") is True
     assert observed.get("force_refresh") is True

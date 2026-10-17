@@ -3,26 +3,29 @@
 from __future__ import annotations
 
 import argparse
+from importlib.util import find_spec
 import json
 from pathlib import Path
 from hypervector.infra import layout_report, paths_for
 from importlib.metadata import PackageNotFoundError, version
 from hypervector.paper.fill_models import DEFAULT_MAX_BOOK_AGE_MS
-from hypervector.live.policy import (
-    DEFAULT_MAX_NOTIONAL_USD,
-    LivePolicyError,
-    live_policy_from_env,
-)
 from hypervector.paper.order_intent import NETWORK_MAINNET, ORDER_INTENT_SCHEMA
 from hypervector.commands.common import _ensure_root, _secrets_present
 from hypervector.paper.fill_models import FILL_MODEL_L2_WALK_V1
-from hypervector.commands.registry import CLI_COMMANDS, GROUPS, command_specs
+from hypervector.commands.registry import (
+    ACTIONS,
+    CLI_COMMANDS,
+    GROUP_ORDER,
+    LEGACY_ALIASES,
+    RETIRED,
+)
 
 SECRET_ENV_WALLET = "HYPERVECTOR_HL_WALLET_ADDRESS"
 SECRET_ENV_API_KEY = "HYPERVECTOR_HL_API_PRIVATE_KEY"
 DEFAULT_PREFERRED_FILL_MODEL = FILL_MODEL_L2_WALK_V1
 DEFAULT_METALABEL_ENABLED = False
 DEFAULT_EXECUTION_MODE = "shadow"
+LIVE_BACKEND = "hypervector.operations.multi_asset_bidirectional_live"
 
 
 def cmd_infra_init(args: argparse.Namespace) -> int:
@@ -34,12 +37,11 @@ def cmd_infra_init(args: argparse.Namespace) -> int:
 
 
 def cmd_status(args: argparse.Namespace) -> int:
-    """Pipeline + CLI inventory (no secret values; no place)."""
+    """Command inventory and capability flags (no secret values; creates nothing)."""
     paths = paths_for(args.data_root)
-    ready = live_policy_from_env(enabled=False, armed=False).readiness()
     out = {
         "ok": True,
-        "schema_version": 2,
+        "schema_version": 3,
         "workflows": _workflows(),
         "root": str(paths.root.resolve()),
         "pipeline": {
@@ -50,26 +52,18 @@ def cmd_status(args: argparse.Namespace) -> int:
             "tui_gui": False,
         },
         "commands": list(CLI_COMMANDS),
+        "legacy_aliases": _legacy_aliases(),
+        "retired": dict(RETIRED),
         "capabilities": _capabilities(),
         "paper": {
             "default_mode": DEFAULT_EXECUTION_MODE,
             "no_submit": True,
-            "commands": ["paper-check", "paper-report", "paper-run"],
+            "commands": _group_commands("paper"),
         },
-        "live": {
-            "submit_wired": bool(ready.get("submit_wired")),
-            "can_start": bool(ready.get("can_start")),
-            "enabled_default": False,
-            "max_notional_usd": float(
-                ready.get("max_notional_usd", DEFAULT_MAX_NOTIONAL_USD)
-            ),
-            "network": ready.get("network", NETWORK_MAINNET),
-            "commands": ["live-check", "live-report", "live-run"],
-            "requires_for_run": ["--enabled", "--i-accept-live-risk", "secrets"],
-        },
+        "live": _live_inventory(),
         "honesty": {
             "paper_never_constructs_exec_client": True,
-            "live_run_fail_closed": True,
+            "live_fail_closed": True,
             "secret_values_never_printed": True,
         },
         "metalabel": _model_inventory(args, paths.root),
@@ -78,10 +72,32 @@ def cmd_status(args: argparse.Namespace) -> int:
     return 0
 
 
-def _workflows() -> dict[str, list[object]]:
+def _group_commands(group: str) -> list[str]:
+    return [f"{group} {action}" for action in ACTIONS.get(group, ())]
+
+
+def _workflows() -> dict[str, list[str]]:
+    return {group: list(ACTIONS[group]) for group in GROUP_ORDER if group in ACTIONS}
+
+
+def _legacy_aliases() -> dict[str, str]:
     return {
-        group: [spec["action"] for owner, spec in command_specs() if owner == group]
-        for group in GROUPS
+        old: " ".join((*legacy.words, *legacy.insert))
+        for old, legacy in sorted(LEGACY_ALIASES.items())
+    }
+
+
+def _live_inventory() -> dict[str, object]:
+    """Describe the cohort backend's command surface; status never arms anything."""
+    return {
+        "backend": LIVE_BACKEND,
+        "check_command": "live check",
+        "start_command": "live start",
+        "commands": _group_commands("live"),
+        "requires_for_start": ["--config", "--enabled", "--i-accept-live-risk"],
+        "enabled_default": False,
+        "armed": False,
+        "network": NETWORK_MAINNET,
     }
 
 
@@ -104,7 +120,6 @@ def _capabilities() -> dict[str, dict[str, object]]:
         "talib": "TA-Lib",
         "nautilus": "nautilus_trader",
         "hyperliquid": "hyperliquid-python-sdk",
-        "0xarchive": "requests",
     }
     result = {}
     for capability, package in packages.items():
@@ -118,7 +133,21 @@ def _capabilities() -> dict[str, dict[str, object]]:
             "operational_readiness": "not_probed",
         }
     result["karpathy"] = {"installed": True, "operational_readiness": "not_probed"}
+    result["0xarchive"] = _oxa_capability()
     return result
+
+
+def _oxa_capability() -> dict[str, object]:
+    """0xArchive readiness is the API key's presence (boolean only), not a package."""
+    from hypervector.runtime_env import dotenv_key_presence
+
+    configured = dotenv_key_presence(("OXA_API_KEY",))["OXA_API_KEY"]
+    return {
+        "installed": True,
+        "api_key_configured": configured,
+        "credential_env": "OXA_API_KEY",
+        "operational_readiness": "not_probed",
+    }
 
 
 def _metalabel_status(data_root: Path | str) -> dict[str, object]:
@@ -141,23 +170,36 @@ def _metalabel_status(data_root: Path | str) -> dict[str, object]:
         "calibrator": bool(p.get("calibrator_present")),
         "env_root_set": bool(p.get("env_root_set")),
         "error": p.get("error"),
-        "enable_flag": "paper-run --metalabel",
+        "enable_flag": "paper run --metalabel-mode",
         "modes": ["off", "observe", "scale", "filter"],
-        "recommended_annotation_flag": "paper-run --metalabel-mode observe",
+        "recommended_annotation_flag": "paper run --metalabel-mode observe",
     }
 
 
 def _paper_surface_flags(data_root: Path | str | None = None) -> dict[str, object]:
-    """Report paper wiring and explicitly scoped model readiness without clients."""
-    from hypervector.paper.book import BookFeed
-    from hypervector.paper.fill_models import L2WalkFillModel
+    """Report paper wiring and explicitly scoped model readiness without clients.
+
+    Module availability is probed with ``find_spec``; the fields named in
+    ``policy_constants`` are fixed policy values, not probes.
+    """
     from hypervector.ml.metalabel import probe_metalabel
 
-    book_feed_ok = callable(BookFeed)
-    l2_walk_ok = callable(L2WalkFillModel)
+    book_feed_ok = find_spec("hypervector.paper.book") is not None
+    l2_walk_ok = find_spec("hypervector.paper.fill_models") is not None
     metalabel_probe = probe_metalabel(data_root=data_root)
     return {
-        # Phase 4b shadow surface (strings/bools only; never secret values).
+        # Shadow surface (strings/bools only; never secret values).
+        "policy_constants": [
+            "mode",
+            "network",
+            "no_submit",
+            "submitted_default",
+            "order_intent_schema",
+            "preferred_fill_model",
+            "max_book_age_ms",
+            "metalabel_enabled",
+            "metalabel_default_off",
+        ],
         "mode": DEFAULT_EXECUTION_MODE,
         "network": NETWORK_MAINNET,
         "no_submit": True,
@@ -171,7 +213,7 @@ def _paper_surface_flags(data_root: Path | str | None = None) -> dict[str, objec
         "metalabel_default_off": True,
         "metalabel_modes": ["off", "observe", "scale", "filter"],
         "recommended_annotation_flag": "--metalabel-mode observe",
-        # Ready-to-enable (bundle installed); still off until paper-run --metalabel.
+        # Ready-to-enable (bundle installed); still off until paper run --metalabel-mode.
         "metalabel_ready": bool(metalabel_probe.get("loadable")),
         "metalabel_bundle_root": metalabel_probe.get("bundle_root"),
         "metalabel_n_features": metalabel_probe.get("n_features"),
@@ -185,18 +227,20 @@ def cmd_paper_check(args: argparse.Namespace) -> int:
     paths = paths_for(args.data_root)
     report = layout_report(paths.root)
     paper = {
-        # Alias of mode; Phase 4b default is shadow (mainnet, no venue orders).
+        # Alias of mode; the default is shadow (mainnet, no venue orders).
         "execution_mode": DEFAULT_EXECUTION_MODE,
         "decisions": str(paths.paper_decisions),
         "ledger": str(paths.paper_ledger),
         "live_feed_loop": True,
-        # Default off; paper-run --sandbox sets shadow fields only (no real sandbox client).
+        # There is no sandbox client; the field stays for report compatibility.
         "sandbox_enabled": False,
         "secrets_present": _secrets_present(),
         "secret_env_names": [SECRET_ENV_WALLET, SECRET_ENV_API_KEY],
     }
     paper.update(_paper_surface_flags(paths.root))
     report["paper"] = paper
+    from hypervector.live.policy import live_policy_from_env
+
     live_pol = live_policy_from_env(enabled=False, armed=False)
     ready = live_pol.readiness()
     report["live"] = {
@@ -206,7 +250,7 @@ def cmd_paper_check(args: argparse.Namespace) -> int:
         "submit_wired": bool(ready.get("submit_wired")),
         "note": ready.get(
             "note",
-            "Live readiness — use live-check for start gates.",
+            "Live readiness — use 'live check' for start gates.",
         ),
         "readiness": ready,
     }
@@ -216,15 +260,12 @@ def cmd_paper_check(args: argparse.Namespace) -> int:
 
 def cmd_live_check(args: argparse.Namespace) -> int:
     """Live readiness (policy only; never prints secret values; no submit)."""
+    from hypervector.live.policy import LivePolicyError, live_policy_from_env
+
     paths = paths_for(args.data_root)
     enabled = bool(getattr(args, "enabled", False))
-    armed = bool(getattr(args, "armed", False))
-    max_notional = float(getattr(args, "max_notional_usd", DEFAULT_MAX_NOTIONAL_USD))
-    policy = live_policy_from_env(
-        enabled=enabled,
-        armed=armed,
-        max_notional_usd=max_notional,
-    )
+    armed = bool(getattr(args, "i_accept_live_risk", False))
+    policy = live_policy_from_env(enabled=enabled, armed=armed)
     ready = policy.readiness()
     report = {
         "ok": True,
@@ -233,7 +274,7 @@ def cmd_live_check(args: argparse.Namespace) -> int:
         "live_ledger": str(paths.live_ledger),
         "live": ready,
         "paper_path_unchanged": True,
-        # live-check never places; True only would mean an active submit session.
+        # 'live check' never places; True only would mean an active submit session.
         "venue_submit": False,
         "submit_wired": bool(ready.get("submit_wired")),
     }

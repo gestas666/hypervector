@@ -109,8 +109,8 @@ def test_build_phase2_stub_config_offline(tmp_path: Path):
     d = stub.to_dict()
     assert d["loadout"]["strategy_name"] == "crown_stack_short"
     assert d["venue"] == "HYPERLIQUID"
-    assert any("paper-run" in n for n in d["notes"])
-    assert any("live-run" in n for n in d["notes"])
+    assert any("paper run" in n for n in d["notes"])
+    assert any("live start" in n for n in d["notes"])
 
 
 def test_phase2_check_report_probes_nautilus(tmp_path: Path):
@@ -124,9 +124,9 @@ def test_phase2_check_report_probes_nautilus(tmp_path: Path):
     assert report["ok"] is True
     assert report["paper_live"]["implemented"] is True
     assert report["paper_live"]["paper_dry_run"]["implemented"] is True
-    assert report["paper_live"]["paper_dry_run"]["command"] == "paper-run"
+    assert report["paper_live"]["paper_dry_run"]["command"] == "paper run"
     assert report["paper_live"]["live_submit"]["implemented"] is True
-    assert report["paper_live"]["live_submit"]["command"] == "live-run"
+    assert report["paper_live"]["live_submit"]["command"] == "live start"
     probe = report["nautilus_probe"]
     assert probe.get("engine_started") is False
     assert probe.get("venue") == "HYPERLIQUID" or "error" in probe

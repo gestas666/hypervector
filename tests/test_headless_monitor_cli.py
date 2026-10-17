@@ -28,7 +28,7 @@ def test_monitor_publishes_the_exact_backend_document(
     assert (
         main(
             [
-                "cohort",
+                "live",
                 "monitor",
                 "--config",
                 "profile.toml",
@@ -57,7 +57,7 @@ def test_monitor_rejects_a_foreign_requested_run(
     assert (
         main(
             [
-                "cohort",
+                "live",
                 "monitor",
                 "--config",
                 "profile.toml",
@@ -77,7 +77,7 @@ def test_request_default_does_not_create_an_inbox(
     """Reviewing an operator request cannot start a transport or execution process."""
     inbox = tmp_path / "absent"
     argv = [
-        "cohort",
+        "live",
         "request",
         "--inbox",
         str(inbox),
@@ -103,7 +103,7 @@ def test_monitor_rejects_unusable_intervals(interval: str) -> None:
     assert (
         main(
             [
-                "cohort",
+                "live",
                 "monitor",
                 "--config",
                 "profile.toml",
@@ -122,7 +122,7 @@ def test_invalid_request_settings_fail_before_publication(tmp_path: Path) -> Non
     assert (
         main(
             [
-                "cohort",
+                "live",
                 "request",
                 "--inbox",
                 str(tmp_path),
@@ -205,7 +205,7 @@ def test_monitor_refuses_missing_checkpoint(
     assert (
         main(
             [
-                "cohort",
+                "live",
                 "monitor",
                 "--config",
                 "profile.toml",
@@ -219,7 +219,7 @@ def test_monitor_refuses_missing_checkpoint(
 
 def _monitor_args(checkpoint: Path, *options: str) -> list[str]:
     return [
-        "cohort",
+        "live",
         "monitor",
         "--config",
         "profile.toml",

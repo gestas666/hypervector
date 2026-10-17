@@ -1,8 +1,21 @@
 {
-  "name": "oxa-trade-fetch",
-  "action": "trade-fetch",
+  "schema": 2,
   "help": "Fetch bounded Hyperliquid public trades from 0xArchive",
+  "kind": "inprocess",
   "handler": "hypervector.cli_oxa:cmd_oxa_trade_fetch",
+  "authority": "none",
+  "environment": [
+    "oxa"
+  ],
+  "data_root": "honored",
+  "include": [
+    "window"
+  ],
+  "fragment_overrides": {},
+  "legacy": [
+    "oxa-trade-fetch"
+  ],
+  "exclusive_groups": [],
   "arguments": [
     {
       "flags": [
@@ -11,29 +24,21 @@
       "options": {
         "dest": "symbol",
         "default": "BTC",
-        "help": "Hyperliquid core asset"
+        "help": "Hyperliquid coin (core) or deployer:asset (HIP-3)"
       }
     },
     {
       "flags": [
-        "--start"
+        "--market-family"
       ],
       "options": {
-        "dest": "start",
-        "required": true,
-        "default": null,
-        "type": "_parse_utc_datetime"
-      }
-    },
-    {
-      "flags": [
-        "--end"
-      ],
-      "options": {
-        "dest": "end",
-        "required": true,
-        "default": null,
-        "type": "_parse_utc_datetime"
+        "dest": "market_family",
+        "choices": [
+          "core",
+          "hip3"
+        ],
+        "default": "core",
+        "help": "0xArchive market family: core perps or HIP-3 builder markets"
       }
     },
     {
@@ -42,8 +47,9 @@
       ],
       "options": {
         "dest": "limit",
+        "type": "page_limit",
         "default": 1000,
-        "type": "_bounded_page_limit"
+        "help": "rows per page (1..1000)"
       }
     },
     {
@@ -52,19 +58,24 @@
       ],
       "options": {
         "dest": "max_pages",
+        "type": "int",
         "default": 1,
-        "type": "int"
+        "help": "maximum pages to request"
       }
     },
     {
       "flags": [
-        "--timeout"
+        "--timeout-seconds"
       ],
       "options": {
         "dest": "timeout",
+        "type": "float",
         "default": 30.0,
-        "type": "float"
-      }
+        "help": "HTTP request timeout in seconds"
+      },
+      "legacy_flags": [
+        "--timeout"
+      ]
     }
   ]
 }

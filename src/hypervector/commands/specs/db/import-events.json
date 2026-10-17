@@ -1,0 +1,40 @@
+{
+  "schema": 2,
+  "help": "Import recorded public Hyperliquid event parts into DuckDB",
+  "kind": "inprocess",
+  "handler": "hypervector.cli_oxa:cmd_research_db_live_event_import",
+  "authority": "none",
+  "environment": [],
+  "data_root": "honored",
+  "include": [],
+  "fragment_overrides": {},
+  "legacy": [
+    "research db-live-event-import",
+    "research-db-live-event-import"
+  ],
+  "exclusive_groups": [],
+  "arguments": [
+    {
+      "flags": [
+        "--symbol"
+      ],
+      "options": {
+        "dest": "symbol",
+        "default": "BTC",
+        "help": "Hyperliquid coin, e.g. BTC, kPEPE or xyz:TSLA"
+      }
+    },
+    {
+      "flags": [
+        "--database"
+      ],
+      "options": {
+        "dest": "database",
+        "type": "Path",
+        "default": null,
+        "help": "DuckDB research database file"
+      },
+      "data_default": "research/market.duckdb"
+    }
+  ]
+}

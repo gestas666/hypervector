@@ -1,0 +1,68 @@
+{
+  "schema": 2,
+  "help": "Publish immutable setup-process evidence for one observer run",
+  "kind": "operation",
+  "operation": "hypervector.operations.multi_asset_bidirectional_observer_audit",
+  "authority": "none",
+  "environment": [],
+  "data_root": "honored",
+  "include": [],
+  "fragment_overrides": {},
+  "legacy": [
+    "cohort observer-audit",
+    "cohort-observer-audit"
+  ],
+  "exclusive_groups": [
+    {
+      "required": true
+    }
+  ],
+  "arguments": [
+    {
+      "flags": [
+        "--decisions"
+      ],
+      "options": {
+        "dest": "decisions",
+        "type": "Path",
+        "default": null,
+        "help": "observer decisions JSONL"
+      },
+      "data_default": "paper/cohort/decisions.jsonl"
+    },
+    {
+      "flags": [
+        "--run-id"
+      ],
+      "options": {
+        "dest": "run_id",
+        "default": null,
+        "help": "exact run ID to select"
+      }
+    },
+    {
+      "flags": [
+        "--out"
+      ],
+      "options": {
+        "dest": "out",
+        "type": "Path",
+        "default": null,
+        "help": "immutable audit JSON file to write"
+      },
+      "exclusive_group": 0
+    },
+    {
+      "flags": [
+        "--out-dir"
+      ],
+      "options": {
+        "dest": "out_dir",
+        "type": "Path",
+        "default": null,
+        "help": "directory that receives a new immutable audit bundle"
+      },
+      "exclusive_group": 0
+    }
+  ]
+}

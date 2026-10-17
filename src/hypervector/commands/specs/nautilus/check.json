@@ -1,19 +1,31 @@
 {
-  "name": "phase2-check",
-  "action": "check",
-  "help": "Load export as Phase 2 StrategyLoadout stub (historical; paper dry-run is paper-run)",
+  "schema": 2,
+  "help": "Load a strategy bundle as a Nautilus loadout and probe the engine offline",
+  "kind": "inprocess",
   "handler": "hypervector.commands.nautilus:cmd_phase2_check",
+  "authority": "none",
+  "environment": [],
+  "data_root": "honored",
+  "include": [],
+  "fragment_overrides": {},
+  "legacy": [
+    "phase2-check"
+  ],
+  "exclusive_groups": [],
   "arguments": [
     {
       "flags": [
-        "--path"
+        "--export"
       ],
       "options": {
-        "dest": "path",
-        "required": true,
+        "dest": "export",
         "default": null,
-        "help": "path to export directory"
-      }
+        "help": "strategy bundle directory"
+      },
+      "required": true,
+      "legacy_flags": [
+        "--path"
+      ]
     },
     {
       "flags": [
@@ -21,9 +33,9 @@
       ],
       "options": {
         "dest": "loose",
+        "action": "store_true",
         "default": false,
-        "help": "do not require Phase 1.5 fields",
-        "action": "store_true"
+        "help": "accept bundles without the strict execution fields"
       }
     },
     {
@@ -32,9 +44,9 @@
       ],
       "options": {
         "dest": "no_nautilus_probe",
+        "action": "store_true",
         "default": false,
-        "help": "skip offline Nautilus import/config probe",
-        "action": "store_true"
+        "help": "skip the offline Nautilus import and config probe"
       }
     }
   ]

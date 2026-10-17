@@ -1,0 +1,108 @@
+{
+  "schema": 2,
+  "help": "Grid-search one strategy track and store every trial on the board (VectorBT)",
+  "kind": "inprocess",
+  "handler": "hypervector.commands.sweep:cmd_sweep",
+  "authority": "none",
+  "environment": [],
+  "data_root": "honored",
+  "include": [
+    "market",
+    "fees",
+    "cash",
+    "exits",
+    "risk"
+  ],
+  "fragment_overrides": {},
+  "legacy": [
+    {
+      "words": "research sweep-up",
+      "insert": [
+        "--track",
+        "uptrend"
+      ]
+    },
+    {
+      "words": "sweep-up",
+      "insert": [
+        "--track",
+        "uptrend"
+      ]
+    },
+    {
+      "words": "research sweep-down",
+      "insert": [
+        "--track",
+        "downtrend"
+      ]
+    },
+    {
+      "words": "sweep-down",
+      "insert": [
+        "--track",
+        "downtrend"
+      ]
+    }
+  ],
+  "exclusive_groups": [],
+  "arguments": [
+    {
+      "flags": [
+        "--track"
+      ],
+      "options": {
+        "dest": "track",
+        "choices": [
+          "uptrend",
+          "downtrend"
+        ],
+        "default": null,
+        "help": "strategy track to search: uptrend (long) or downtrend (short)"
+      },
+      "required": true
+    },
+    {
+      "flags": [
+        "--strategy"
+      ],
+      "options": {
+        "dest": "strategy",
+        "default": null,
+        "help": "strategy name (default: the track's trend_ride_*, then crown_stack_*)"
+      }
+    },
+    {
+      "flags": [
+        "--no-costs"
+      ],
+      "options": {
+        "dest": "no_costs",
+        "action": "store_true",
+        "default": false,
+        "help": "disable fees, slippage and funding (debug only)"
+      }
+    },
+    {
+      "flags": [
+        "--no-export"
+      ],
+      "options": {
+        "dest": "no_export",
+        "action": "store_true",
+        "default": false,
+        "help": "do not write the best trial as a strategy bundle"
+      }
+    },
+    {
+      "flags": [
+        "--export"
+      ],
+      "options": {
+        "dest": "no_export",
+        "action": "store_false",
+        "help": "accepted for compatibility; exporting is the default"
+      },
+      "hidden": true
+    }
+  ]
+}

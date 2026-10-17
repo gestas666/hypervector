@@ -209,7 +209,7 @@ def test_research_status_reports_pending_cohort_ledger_bytes(
     with btc.open("a", encoding="utf-8") as handle:
         handle.write(json.dumps(_event(2, "heartbeat", {})) + "\n")
 
-    result = main(["--data-root", str(data_root), "research-db-status"])
+    result = main(["--data-root", str(data_root), "db", "status"])
     report = json.loads(capsys.readouterr().out)
 
     assert result == 0

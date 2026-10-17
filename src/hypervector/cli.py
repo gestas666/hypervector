@@ -2,67 +2,77 @@
 
 from __future__ import annotations
 
-from importlib import import_module
-from importlib.resources import files
-import json
 import argparse
+import json
+import os
 import sys
 
-from hypervector.commands.registry import CLI_COMMANDS as CLI_COMMANDS, build_parser
-from hypervector.config import FLOOR_LOOKBACK, PROMO_LOOKBACK
+from hypervector.commands.common import CommandRefused
+from hypervector.commands.registry import (
+    CLI_COMMANDS as CLI_COMMANDS,
+    LEGACY_ALIASES as LEGACY_ALIASES,
+    RETIRED as RETIRED,
+    build_parser as build_parser,
+    spec_for,
+)
+
+MODEL_ENVIRONMENT = frozenset(
+    {"HYPERVECTOR_METALABEL_ROOT", "HYPERVECTOR_IMPULSE_BTC_ROOT"}
+)
+OXA_ENVIRONMENT = frozenset({"OXA_API_KEY"})
 
 
-def _load_dotenv_if_present() -> None:
-    """Load operator credentials only for explicitly invoked execution commands."""
-    from hypervector.runtime_env import load_dotenv_if_present
+def load_command_environment(args: argparse.Namespace) -> None:
+    """Load only the dotenv names the selected spec declares.
 
-    load_dotenv_if_present()
-
-
-def __getattr__(name: str) -> object:
-    """Keep existing Python helper imports available during the CLI migration."""
-    owners = json.loads(
-        files("hypervector.commands").joinpath("compat.json").read_text()
+    The full dotenv (including the signing key) loads only for a spec that declares
+    ``live-credentials`` and only when both authority flags were given.
+    """
+    from hypervector.runtime_env import (
+        load_dotenv_if_present,
+        load_selected_env_if_present,
     )
-    if name not in owners:
-        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
-    return getattr(import_module(f"hypervector.commands.{owners[name]}"), name)
+
+    declared = spec_for(args.command).get("environment", [])
+    if "live-credentials" in declared:
+        if getattr(args, "enabled", False) and getattr(
+            args, "i_accept_live_risk", False
+        ):
+            load_dotenv_if_present()
+    if "oxa" in declared:
+        load_selected_env_if_present(OXA_ENVIRONMENT)
+    if "models" in declared:
+        load_selected_env_if_present(MODEL_ENVIRONMENT)
 
 
-def _load_command_environment(args: argparse.Namespace) -> None:
-    """Keep archive/model dotenv support without loading signing keys for observers."""
-    from hypervector.runtime_env import load_selected_env_if_present
-
-    if args.command in {"live-run", "cohort-live"}:
-        if args.enabled and args.i_accept_live_risk:
-            _load_dotenv_if_present()
-    elif args.command.startswith("oxa-"):
-        load_selected_env_if_present(frozenset({"OXA_API_KEY"}))
-    elif args.command in {"paper-run", "hypervelocity-shadow-run"}:
-        load_selected_env_if_present(
-            frozenset({"HYPERVECTOR_METALABEL_ROOT", "HYPERVECTOR_IMPULSE_BTC_ROOT"})
-        )
+def _error(args: argparse.Namespace, exc: BaseException, code: int) -> int:
+    """Print the single JSON error document on stderr and return its exit code."""
+    report = {
+        "ok": False,
+        "command": getattr(args, "command", None),
+        "error_type": type(exc).__name__,
+        "error": str(exc),
+    }
+    print(json.dumps(report), file=sys.stderr)
+    return code
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Dispatch a scoped workflow without creating clients during discovery."""
+    """Parse, load the declared environment, dispatch, and map failures to exit codes."""
     parser = build_parser()
-    values = sys.argv[1:] if argv is None else argv
-    if any(value in {"cohort-tui", "hypervelocity-tui"} for value in values):
-        parser.error(
-            "the TUI has been retired; use 'cohort observe', 'cohort checkpoint', "
-            "or 'paper shadow-run'; live execution uses 'cohort live' with both authority flags"
-        )
-    args = parser.parse_args(values)
-    if argv is None:
-        _load_command_environment(args)
-    if getattr(args, "lookback", None) is not None and args.lookback < FLOOR_LOOKBACK:
-        print(
-            f"lookback must be >= {FLOOR_LOOKBACK} (promo={PROMO_LOOKBACK})",
-            file=sys.stderr,
-        )
-        return 2
-    return int(args.func(args))
+    args = parser.parse_args(sys.argv[1:] if argv is None else argv)
+    try:
+        if argv is None:
+            load_command_environment(args)
+        return int(args.func(args))
+    except CommandRefused as exc:
+        return _error(args, exc, 2)
+    except KeyboardInterrupt:
+        return 130
+    except (KeyError, ValueError, OSError, RuntimeError) as exc:
+        if os.environ.get("HYPERVECTOR_DEBUG") == "1":
+            raise
+        return _error(args, exc, 1)
 
 
 if __name__ == "__main__":

@@ -1,8 +1,17 @@
 {
-  "name": "book-record",
-  "action": "book-record",
-  "help": "Record HL public L2 snapshots under data/cache/book/ (jsonl)",
+  "schema": 2,
+  "help": "Record Hyperliquid public L2 snapshots as JSON lines under cache/book/",
+  "kind": "inprocess",
   "handler": "hypervector.commands.market:cmd_book_record",
+  "authority": "none",
+  "environment": [],
+  "data_root": "honored",
+  "include": [],
+  "fragment_overrides": {},
+  "legacy": [
+    "book-record"
+  ],
+  "exclusive_groups": [],
   "arguments": [
     {
       "flags": [
@@ -10,19 +19,23 @@
       ],
       "options": {
         "dest": "symbol",
-        "default": "BTC"
+        "default": "BTC",
+        "help": "Hyperliquid coin, e.g. BTC, kPEPE or xyz:TSLA"
       }
     },
     {
       "flags": [
-        "--interval"
+        "--interval-seconds"
       ],
       "options": {
-        "dest": "interval",
+        "dest": "interval_seconds",
+        "type": "float",
         "default": 2.0,
-        "help": "seconds between snapshots (default 2)",
-        "type": "float"
-      }
+        "help": "seconds between snapshots"
+      },
+      "legacy_flags": [
+        "--interval"
+      ]
     },
     {
       "flags": [
@@ -30,9 +43,9 @@
       ],
       "options": {
         "dest": "once",
+        "action": "store_true",
         "default": false,
-        "help": "fetch and write a single snapshot then exit",
-        "action": "store_true"
+        "help": "write a single snapshot and exit"
       }
     },
     {
@@ -41,9 +54,9 @@
       ],
       "options": {
         "dest": "max_snapshots",
+        "type": "int",
         "default": null,
-        "help": "stop after N snapshots (omit = run until stop-file)",
-        "type": "int"
+        "help": "stop after N snapshots (omit to run until the stop file appears)"
       }
     },
     {

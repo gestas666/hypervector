@@ -8,6 +8,17 @@ import pytest
 
 
 @pytest.fixture(autouse=True)
+def forbid_cli_process_replacement(monkeypatch: pytest.MonkeyPatch) -> None:
+    """An operation command must never replace the pytest process."""
+    from hypervector.commands import operations
+
+    def refuse(*_args: object, **_kwargs: object) -> None:
+        raise AssertionError("exec in tests")
+
+    monkeypatch.setattr(operations, "_exec", refuse)
+
+
+@pytest.fixture(autouse=True)
 def forbid_unit_test_network(
     request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch
 ) -> None:

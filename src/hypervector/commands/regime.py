@@ -4,10 +4,8 @@ from __future__ import annotations
 
 import argparse
 import json
-import uuid
 from pathlib import Path
 import pandas as pd
-from hypervector.export.phase2 import export_candidate
 from hypervector.regime.detectors import detect_regime_ema
 from hypervector.regime.metrics import regime_detection_metrics
 from hypervector.commands.common import _load_bars
@@ -28,25 +26,6 @@ def cmd_regime(args: argparse.Namespace) -> int:
             default=str,
         )
     )
-    if args.export:
-        export_candidate(
-            Path(args.data_root) / "exports",
-            run_id=str(uuid.uuid4())[:8],
-            meta={
-                "track": "regime",
-                "symbol": args.symbol,
-                "timeframe": args.timeframe,
-                "data_provenance": prov,
-            },
-            params={
-                "strategy": "regime_ema",
-                "fast": args.fast,
-                "slow": args.slow,
-            },
-            metrics=metrics,
-            regime_labels=labels,
-            candidate_id=f"regime_{args.symbol}",
-        )
     return 0
 
 
@@ -165,7 +144,7 @@ def cmd_hypervelocity_regime_challengers(args: argparse.Namespace) -> int:
 
 
 def cmd_regime_export(args: argparse.Namespace) -> int:
-    """Export real per-bar regime telemetry snapshots for the TUI cockpit."""
+    """Export real per-bar regime telemetry snapshots as JSON."""
     from hypervector.regime.snapshot_export import export_regime_snapshots
 
     root = Path(args.data_root)

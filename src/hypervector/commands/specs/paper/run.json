@@ -1,19 +1,33 @@
 {
-  "name": "paper-run",
-  "action": "run",
-  "help": "Paper/shadow daemon: mainnet HL bars + synthetic fills; no venue orders (default mode=shadow)",
+  "schema": 2,
+  "help": "Paper/shadow daemon on mainnet bars with synthetic fills; never places venue orders",
+  "kind": "inprocess",
   "handler": "hypervector.commands.paper:cmd_paper_run",
+  "authority": "none",
+  "environment": [
+    "models"
+  ],
+  "data_root": "honored",
+  "include": [],
+  "fragment_overrides": {},
+  "legacy": [
+    "paper-run"
+  ],
+  "exclusive_groups": [],
   "arguments": [
     {
       "flags": [
-        "--path"
+        "--export"
       ],
       "options": {
-        "dest": "path",
-        "required": true,
+        "dest": "export",
         "default": null,
-        "help": "path to strict Phase 1.5 export directory"
-      }
+        "help": "strategy bundle directory"
+      },
+      "required": true,
+      "legacy_flags": [
+        "--path"
+      ]
     },
     {
       "flags": [
@@ -21,12 +35,12 @@
       ],
       "options": {
         "dest": "mode",
-        "default": "shadow",
-        "help": "execution mode: shadow (default; mainnet-honest intents, no venue orders) or paper (offline-compat synthetic path)",
         "choices": [
           "paper",
           "shadow"
-        ]
+        ],
+        "default": "shadow",
+        "help": "shadow (mainnet-honest intents, no venue orders) or paper (offline synthetic fills)"
       }
     },
     {
@@ -35,9 +49,9 @@
       ],
       "options": {
         "dest": "conviction",
+        "type": "float",
         "default": 0.5,
-        "help": "0-1 conviction for position sizing (default 0.5)",
-        "type": "float"
+        "help": "position-sizing conviction (0..1)"
       }
     },
     {
@@ -46,20 +60,96 @@
       ],
       "options": {
         "dest": "fee_tier",
+        "type": "int",
         "default": 0,
-        "help": "HL fee tier for CostProvider (default 0)",
-        "type": "int"
+        "help": "Hyperliquid fee tier index for the cost model"
       }
     },
     {
       "flags": [
-        "--sandbox"
+        "--interval-seconds"
       ],
       "options": {
-        "dest": "sandbox",
-        "default": false,
-        "help": "enable optional sandbox shadow fields (non-authoritative; default off)",
-        "action": "store_true"
+        "dest": "interval_seconds",
+        "type": "float",
+        "default": 5.0,
+        "help": "seconds between REST candle polls"
+      },
+      "legacy_flags": [
+        "--poll-interval"
+      ]
+    },
+    {
+      "flags": [
+        "--max-live-bars"
+      ],
+      "options": {
+        "dest": "max_live_bars",
+        "type": "int",
+        "default": null,
+        "help": "stop after N live bars"
+      }
+    },
+    {
+      "flags": [
+        "--lookback-days"
+      ],
+      "options": {
+        "dest": "lookback",
+        "type": "lookback_days",
+        "default": null,
+        "help": "warm-up calendar days (default: the bundle's lookback, else 90)"
+      },
+      "legacy_flags": [
+        "--lookback"
+      ]
+    },
+    {
+      "flags": [
+        "--preferred-fill-model"
+      ],
+      "options": {
+        "dest": "preferred_fill_model",
+        "default": "l2_walk_v1",
+        "help": "fill model used while the book is fresh (falls back to bar_close)"
+      }
+    },
+    {
+      "flags": [
+        "--max-book-age-ms"
+      ],
+      "options": {
+        "dest": "max_book_age_ms",
+        "type": "float",
+        "default": 3000.0,
+        "help": "book age in milliseconds after which fills fall back"
+      }
+    },
+    {
+      "flags": [
+        "--metalabel-mode"
+      ],
+      "options": {
+        "dest": "metalabel_mode",
+        "choices": [
+          "off",
+          "observe",
+          "scale",
+          "filter"
+        ],
+        "default": null,
+        "help": "metalabel policy: off, observe (annotate), scale (size by p) or filter (size and gate by p)"
+      }
+    },
+    {
+      "flags": [
+        "--metalabel-min-p"
+      ],
+      "options": {
+        "dest": "metalabel_min_p",
+        "type": "float",
+        "default": 0.5,
+        "help": "minimum metalabel probability (0..1) to allow an entry when filtering"
       }
     },
     {
@@ -69,61 +159,7 @@
       "options": {
         "dest": "stop_file",
         "default": null,
-        "help": "if this path exists, daemon stops gracefully"
-      }
-    },
-    {
-      "flags": [
-        "--poll-interval"
-      ],
-      "options": {
-        "dest": "poll_interval",
-        "default": 5.0,
-        "help": "seconds between REST candle polls (default 5)",
-        "type": "float"
-      }
-    },
-    {
-      "flags": [
-        "--max-live-bars"
-      ],
-      "options": {
-        "dest": "max_live_bars",
-        "default": null,
-        "help": "stop after N live bars (offline / smoke tests)",
-        "type": "int"
-      }
-    },
-    {
-      "flags": [
-        "--lookback"
-      ],
-      "options": {
-        "dest": "lookback",
-        "default": null,
-        "help": "warm-up lookback days (default: export meta or 90)",
-        "type": "int"
-      }
-    },
-    {
-      "flags": [
-        "--preferred-fill-model"
-      ],
-      "options": {
-        "dest": "preferred_fill_model",
-        "default": "l2_walk_v1",
-        "help": "preferred FillModel id when book is fresh (default: l2_walk_v1; falls back to bar_close without book)"
-      }
-    },
-    {
-      "flags": [
-        "--max-book-age-ms"
-      ],
-      "options": {
-        "dest": "max_book_age_ms",
-        "default": 3000.0,
-        "help": "stale book threshold in ms (default: 3000)",
-        "type": "float"
+        "help": "stop gracefully when this path exists"
       }
     },
     {
@@ -132,37 +168,10 @@
       ],
       "options": {
         "dest": "metalabel",
-        "default": null,
-        "help": "enable LightGBM metalabel: scale conviction by p and filter entries below --metalabel-min-p (default: off)",
-        "action": "boolean_optional"
-      }
-    },
-    {
-      "flags": [
-        "--metalabel-mode"
-      ],
-      "options": {
-        "dest": "metalabel_mode",
-        "default": null,
-        "help": "explicit model policy: off, observe (annotate only), scale (size by p), or filter (size and gate by p)",
-        "choices": [
-          "off",
-          "observe",
-          "scale",
-          "filter"
-        ]
-      }
-    },
-    {
-      "flags": [
-        "--metalabel-min-p"
-      ],
-      "options": {
-        "dest": "metalabel_min_p",
-        "default": 0.5,
-        "help": "min metalabel p to allow entry when filtering (default: 0.5)",
-        "type": "float"
-      }
+        "action": "boolean_optional",
+        "help": "compatibility switch for --metalabel-mode"
+      },
+      "hidden": true
     },
     {
       "flags": [
@@ -170,10 +179,10 @@
       ],
       "options": {
         "dest": "metalabel_filter",
-        "default": true,
-        "help": "when metalabel is on, skip entries with p < min-p (default: on; use --no-metalabel-filter for scale-only)",
-        "action": "boolean_optional"
-      }
+        "action": "boolean_optional",
+        "help": "compatibility switch for --metalabel-mode filter"
+      },
+      "hidden": true
     }
   ]
 }

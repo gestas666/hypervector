@@ -278,7 +278,7 @@ def test_cli_live_check_submit_wired_true_can_start_false_default(
 
     monkeypatch.delenv("HYPERVECTOR_HL_WALLET_ADDRESS", raising=False)
     monkeypatch.delenv("HYPERVECTOR_HL_API_PRIVATE_KEY", raising=False)
-    rc = main(["--data-root", str(tmp_path / "data"), "live-check"])
+    rc = main(["live", "check"])
     assert rc == 0
     rep = json.loads(capsys.readouterr().out)
     assert rep["live"]["submit_wired"] is True

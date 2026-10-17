@@ -1,0 +1,78 @@
+{
+  "schema": 2,
+  "arguments": [
+    {
+      "flags": [
+        "--exit-mode"
+      ],
+      "options": {
+        "dest": "exit_mode",
+        "choices": [
+          "atr",
+          "fixed_rr",
+          "trail"
+        ],
+        "default": "atr",
+        "help": "exit model: atr, fixed_rr or trail"
+      },
+      "legacy_flags": [
+        "--tp-sl-mode"
+      ]
+    },
+    {
+      "flags": [
+        "--sl-pct"
+      ],
+      "options": {
+        "dest": "sl_pct",
+        "type": "float",
+        "default": 0.01,
+        "help": "fixed_rr stop distance as a fraction of price"
+      }
+    },
+    {
+      "flags": [
+        "--rr"
+      ],
+      "options": {
+        "dest": "rr",
+        "type": "float",
+        "default": 2.0,
+        "help": "reward-to-risk ratio for fixed_rr and atr exits"
+      }
+    },
+    {
+      "flags": [
+        "--atr-length"
+      ],
+      "options": {
+        "dest": "atr_length",
+        "type": "int",
+        "default": 14,
+        "help": "ATR length in bars"
+      }
+    },
+    {
+      "flags": [
+        "--sl-atr-mult"
+      ],
+      "options": {
+        "dest": "sl_atr_mult",
+        "type": "float",
+        "default": 1.5,
+        "help": "stop distance in ATR multiples"
+      }
+    },
+    {
+      "flags": [
+        "--trail-atr-mult"
+      ],
+      "options": {
+        "dest": "trail_atr_mult",
+        "type": "float",
+        "default": 2.0,
+        "help": "trailing stop distance in ATR multiples"
+      }
+    }
+  ]
+}

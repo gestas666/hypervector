@@ -1,0 +1,101 @@
+{
+  "schema": 2,
+  "help": "Run the shared cohort live backend (requires --enabled and --i-accept-live-risk)",
+  "section": "run",
+  "kind": "operation",
+  "operation": "hypervector.operations.multi_asset_bidirectional_live",
+  "preflight": "hypervector.commands.live:preflight_start",
+  "authority": "live",
+  "environment": [
+    "live-credentials"
+  ],
+  "data_root": "refused",
+  "data_root_reason": "the live backend's paths come from the profile and launchd",
+  "include": [],
+  "fragment_overrides": {},
+  "legacy": [
+    "cohort live",
+    "cohort-live"
+  ],
+  "exclusive_groups": [],
+  "arguments": [
+    {
+      "flags": [
+        "--config"
+      ],
+      "options": {
+        "dest": "config",
+        "type": "Path",
+        "default": null,
+        "help": "cohort profile TOML to run"
+      },
+      "required": true
+    },
+    {
+      "flags": [
+        "--backtest-lab-root"
+      ],
+      "options": {
+        "dest": "backtest_lab_root",
+        "type": "Path",
+        "default": "../backtest-lab/backtest_lab",
+        "help": "backtest-lab package root used by strategy providers"
+      }
+    },
+    {
+      "flags": [
+        "--enabled"
+      ],
+      "options": {
+        "dest": "enabled",
+        "action": "store_true",
+        "default": false,
+        "help": "first of the two live-authority flags"
+      }
+    },
+    {
+      "flags": [
+        "--i-accept-live-risk"
+      ],
+      "options": {
+        "dest": "i_accept_live_risk",
+        "action": "store_true",
+        "default": false,
+        "help": "second of the two live-authority flags"
+      }
+    },
+    {
+      "flags": [
+        "--accounting-epoch-bundle"
+      ],
+      "options": {
+        "dest": "accounting_epoch_bundle",
+        "type": "Path",
+        "default": null,
+        "help": "accounting epoch bundle that binds the equity baseline"
+      }
+    },
+    {
+      "flags": [
+        "--resume-transition-drain"
+      ],
+      "options": {
+        "dest": "resume_transition_drain",
+        "action": "store_true",
+        "default": false,
+        "help": "resume only an active same-profile drain after a backend interruption"
+      }
+    },
+    {
+      "flags": [
+        "--max-polls"
+      ],
+      "options": {
+        "dest": "max_polls",
+        "type": "int",
+        "default": null,
+        "help": "stop after N polls (omit to run until stopped)"
+      }
+    }
+  ]
+}

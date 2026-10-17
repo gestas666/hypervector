@@ -8,35 +8,48 @@ from pathlib import Path
 
 import pytest
 
-from hypervector.cli import build_parser, main
+from hypervector.cli import CLI_COMMANDS, build_parser, main
 from hypervector.data.oxa_trades import OxaTradeRequest
 
 
 def test_trade_fetch_command_is_discoverable() -> None:
     """The public CLI must expose the bounded trade acquisition command."""
-    parser = build_parser()
-    choices: set[str] = set()
-    for action in parser._actions:
-        if isinstance(action, argparse._SubParsersAction):
-            choices.update(action.choices)
-
-    assert "oxa-trade-fetch" in choices
+    assert "archive trade-fetch" in CLI_COMMANDS
+    args = build_parser().parse_args(
+        [
+            "archive",
+            "trade-fetch",
+            "--start",
+            "2026-07-26T23:50:00Z",
+            "--end",
+            "2026-07-26T23:51:00Z",
+        ]
+    )
+    assert args.command == "archive trade-fetch"
 
 
 def test_trade_fetch_limit_help_is_concise_and_range_is_validated() -> None:
     """The bounded limit must not expand 1,000 choices into CLI help."""
     parser = build_parser()
-    trade_parser: argparse.ArgumentParser | None = None
-    for action in parser._actions:
-        if isinstance(action, argparse._SubParsersAction):
-            trade_parser = action.choices["oxa-trade-fetch"]
+    groups = next(
+        action
+        for action in parser._actions
+        if isinstance(action, argparse._SubParsersAction)
+    )
+    archive = groups.choices["archive"]
+    actions = next(
+        action
+        for action in archive._actions
+        if isinstance(action, argparse._SubParsersAction)
+    )
+    trade_parser = actions.choices["trade-fetch"]
 
-    assert trade_parser is not None
     assert "--limit LIMIT" in trade_parser.format_help()
     with pytest.raises(SystemExit):
         parser.parse_args(
             [
-                "oxa-trade-fetch",
+                "archive",
+                "trade-fetch",
                 "--start",
                 "2026-07-26T23:50:00Z",
                 "--end",
@@ -77,7 +90,8 @@ def test_trade_fetch_cli_is_bounded_and_secret_safe(
         [
             "--data-root",
             str(tmp_path / "data"),
-            "oxa-trade-fetch",
+            "archive",
+            "trade-fetch",
             "--symbol",
             "BTC",
             "--start",
@@ -120,7 +134,8 @@ def test_trade_fetch_cli_returns_non_success_on_vendor_failure(
         [
             "--data-root",
             str(tmp_path / "data"),
-            "oxa-trade-fetch",
+            "archive",
+            "trade-fetch",
             "--start",
             "2026-07-26T23:50:00Z",
             "--end",

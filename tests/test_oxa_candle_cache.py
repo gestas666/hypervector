@@ -17,7 +17,7 @@ def _args(tmp_path: Path, *, minutes: int = 1440) -> argparse.Namespace:
     return argparse.Namespace(
         data_root=tmp_path,
         symbol="xyz:SNDK",
-        interval="1m",
+        timeframe="1m",
         start=start,
         end=start + timedelta(minutes=minutes),
     )
@@ -72,6 +72,6 @@ def test_cache_requires_explicit_acquired_file_path(tmp_path: Path) -> None:
 def test_direct_cache_helper_rejects_nonminute_interval(tmp_path: Path) -> None:
     """The helper also guards callers that bypass CLI validation."""
     args = _args(tmp_path)
-    args.interval = "15m"
-    with pytest.raises(ValueError, match="requires --interval 1m"):
+    args.timeframe = "15m"
+    with pytest.raises(ValueError, match="requires --timeframe 1m"):
         install_candle_cache(args, {})

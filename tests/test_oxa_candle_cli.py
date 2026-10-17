@@ -33,12 +33,13 @@ def test_candle_fetch_cli_reports_secret_free_provenance(
         [
             "--data-root",
             str(tmp_path),
-            "oxa-candle-fetch",
+            "archive",
+            "candle-fetch",
             "--start",
             "2026-07-25T00:00:00Z",
             "--end",
             "2026-07-26T00:00:00Z",
-            "--interval",
+            "--timeframe",
             "1m",
         ]
     )
@@ -77,7 +78,8 @@ def test_candle_cli_passes_explicit_identity(
         [
             "--data-root",
             str(tmp_path),
-            "oxa-candle-fetch",
+            "archive",
+            "candle-fetch",
             "--symbol",
             symbol,
             "--start",
@@ -114,7 +116,8 @@ def test_candle_cli_rejects_family_mismatch_before_acquisition(
         [
             "--data-root",
             str(tmp_path),
-            "oxa-candle-fetch",
+            "archive",
+            "candle-fetch",
             "--symbol",
             symbol,
             "--market-family",
@@ -150,16 +153,17 @@ def test_nonminute_cache_install_fails_before_acquisition(
         [
             "--data-root",
             str(tmp_path),
-            "oxa-candle-fetch",
+            "archive",
+            "candle-fetch",
             "--start",
             "2026-07-01T00:00:00Z",
             "--end",
             "2026-07-02T00:00:00Z",
-            "--interval",
+            "--timeframe",
             interval,
             "--install-research-cache",
         ]
     )
     assert rc == 1
     assert calls == []
-    assert "requires --interval 1m" in capsys.readouterr().err
+    assert "requires --timeframe 1m" in capsys.readouterr().err

@@ -1,0 +1,38 @@
+{
+  "schema": 2,
+  "arguments": [
+    {
+      "flags": [
+        "--risk-min"
+      ],
+      "options": {
+        "dest": "risk_min",
+        "type": "float",
+        "default": 0.01,
+        "help": "minimum equity risk per trade as a fraction"
+      }
+    },
+    {
+      "flags": [
+        "--risk-max"
+      ],
+      "options": {
+        "dest": "risk_max",
+        "type": "float",
+        "default": 0.05,
+        "help": "maximum equity risk per trade as a fraction"
+      }
+    },
+    {
+      "flags": [
+        "--conviction"
+      ],
+      "options": {
+        "dest": "conviction",
+        "type": "float",
+        "default": 0.5,
+        "help": "conviction (0..1) mapping risk between --risk-min and --risk-max"
+      }
+    }
+  ]
+}

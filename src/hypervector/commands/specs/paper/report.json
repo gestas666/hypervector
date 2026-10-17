@@ -1,18 +1,32 @@
 {
-  "name": "paper-report",
-  "action": "report",
-  "help": "Summarize paper/shadow decisions.jsonl (fill models, modes, intents, honesty counters; read-only)",
+  "schema": 2,
+  "help": "Summarize paper/shadow decisions (fill models, modes, intents, honesty counters)",
+  "kind": "inprocess",
   "handler": "hypervector.commands.paper:cmd_paper_report",
+  "authority": "none",
+  "environment": [],
+  "data_root": "honored",
+  "include": [],
+  "fragment_overrides": {},
+  "legacy": [
+    "paper-report"
+  ],
+  "exclusive_groups": [],
   "arguments": [
     {
       "flags": [
-        "--path"
+        "--decisions"
       ],
       "options": {
-        "dest": "path",
+        "dest": "decisions",
+        "type": "Path",
         "default": null,
-        "help": "optional decisions JSONL path (default: <data-root>/paper/decisions/decisions.jsonl)"
-      }
+        "help": "paper decisions JSONL"
+      },
+      "legacy_flags": [
+        "--path"
+      ],
+      "data_default": "paper/decisions/decisions.jsonl"
     },
     {
       "flags": [
@@ -20,9 +34,9 @@
       ],
       "options": {
         "dest": "last",
+        "type": "int",
         "default": 5,
-        "help": "include last N market fills in sample (default 5)",
-        "type": "int"
+        "help": "number of recent market fills in the sample"
       }
     }
   ]

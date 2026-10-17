@@ -1,8 +1,17 @@
 {
-  "name": "hypervelocity-shadow-reset",
-  "action": "shadow-reset",
-  "help": "Back up and reset shadow portfolio/trade telemetry",
+  "schema": 2,
+  "help": "Back up and reset shadow portfolio and trade telemetry (dry run unless --yes)",
+  "kind": "inprocess",
   "handler": "hypervector.commands.shadow:cmd_hypervelocity_shadow_reset",
+  "authority": "none",
+  "environment": [],
+  "data_root": "honored",
+  "include": [],
+  "fragment_overrides": {},
+  "legacy": [
+    "hypervelocity-shadow-reset"
+  ],
+  "exclusive_groups": [],
   "arguments": [
     {
       "flags": [
@@ -10,9 +19,9 @@
       ],
       "options": {
         "dest": "yes",
+        "action": "store_true",
         "default": false,
-        "help": "perform the reset; without this flag the command is a dry run",
-        "action": "store_true"
+        "help": "perform the reset; without it the command is a dry run"
       }
     }
   ]

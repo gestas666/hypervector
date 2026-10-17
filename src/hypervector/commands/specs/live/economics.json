@@ -1,0 +1,56 @@
+{
+  "schema": 2,
+  "help": "Reconcile recorded strategy economics and funding capacity without execution",
+  "section": "observe",
+  "kind": "operation",
+  "operation": "hypervector.operations.strategy_economic_reset",
+  "authority": "none",
+  "environment": [],
+  "data_root": "honored",
+  "include": [],
+  "fragment_overrides": {},
+  "legacy": [
+    "research economics",
+    "research-economics"
+  ],
+  "exclusive_groups": [],
+  "arguments": [
+    {
+      "flags": [
+        "--checkpoint"
+      ],
+      "options": {
+        "dest": "checkpoint",
+        "type": "Path",
+        "default": null,
+        "help": "cohort checkpoint JSON to reconcile"
+      },
+      "required": true
+    },
+    {
+      "flags": [
+        "--funding"
+      ],
+      "options": {
+        "dest": "funding",
+        "action": "append",
+        "type": "Path",
+        "default": null,
+        "help": "funding history file; repeat per symbol"
+      },
+      "required": true
+    },
+    {
+      "flags": [
+        "--out"
+      ],
+      "options": {
+        "dest": "out",
+        "type": "Path",
+        "default": null,
+        "help": "report JSON to write"
+      },
+      "required": true
+    }
+  ]
+}

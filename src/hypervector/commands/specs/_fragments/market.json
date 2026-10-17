@@ -1,0 +1,70 @@
+{
+  "schema": 2,
+  "arguments": [
+    {
+      "flags": [
+        "--symbol"
+      ],
+      "options": {
+        "dest": "symbol",
+        "default": "BTC",
+        "help": "Hyperliquid coin, e.g. BTC, kPEPE or xyz:TSLA"
+      }
+    },
+    {
+      "flags": [
+        "--timeframe"
+      ],
+      "options": {
+        "dest": "timeframe",
+        "choices": [
+          "1m",
+          "5m",
+          "15m",
+          "1h"
+        ],
+        "default": "1m",
+        "help": "bar size"
+      }
+    },
+    {
+      "flags": [
+        "--lookback-days"
+      ],
+      "options": {
+        "dest": "lookback",
+        "type": "lookback_days",
+        "default": 90,
+        "help": "calendar days of history (minimum 30)"
+      },
+      "legacy_flags": [
+        "--lookback"
+      ]
+    },
+    {
+      "flags": [
+        "--strict-hl-only"
+      ],
+      "options": {
+        "dest": "strict_hl_only",
+        "action": "store_true",
+        "default": false,
+        "help": "do not backfill from Binance or Bybit"
+      }
+    },
+    {
+      "flags": [
+        "--refresh"
+      ],
+      "options": {
+        "dest": "force",
+        "action": "store_true",
+        "default": false,
+        "help": "ignore the cache and re-fetch"
+      },
+      "legacy_flags": [
+        "--force"
+      ]
+    }
+  ]
+}

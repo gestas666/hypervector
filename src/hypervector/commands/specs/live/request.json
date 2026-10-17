@@ -1,0 +1,150 @@
+{
+  "schema": 2,
+  "help": "Review or explicitly publish an identity-bound operator request",
+  "section": "run",
+  "kind": "inprocess",
+  "handler": "hypervector.commands.operator:cmd_operator_request",
+  "authority": "request",
+  "environment": [],
+  "data_root": "refused",
+  "data_root_reason": "the operator inbox is an explicit path",
+  "include": [],
+  "fragment_overrides": {},
+  "legacy": [
+    "cohort request",
+    "cohort-request"
+  ],
+  "exclusive_groups": [],
+  "arguments": [
+    {
+      "flags": [
+        "--inbox"
+      ],
+      "options": {
+        "dest": "inbox",
+        "type": "Path",
+        "default": null,
+        "help": "existing operator inbox directory of the active run"
+      },
+      "required": true
+    },
+    {
+      "flags": [
+        "--run-id"
+      ],
+      "options": {
+        "dest": "run_id",
+        "default": null,
+        "help": "active live run ID"
+      },
+      "required": true
+    },
+    {
+      "flags": [
+        "--profile-fingerprint"
+      ],
+      "options": {
+        "dest": "profile_fingerprint",
+        "default": null,
+        "help": "fingerprint of the active profile"
+      },
+      "required": true
+    },
+    {
+      "flags": [
+        "--action"
+      ],
+      "options": {
+        "dest": "request_action",
+        "choices": [
+          "manual_enter",
+          "manual_close",
+          "transition_drain",
+          "stage_profile"
+        ],
+        "default": null,
+        "help": "request type: manual_enter, manual_close, transition_drain or stage_profile"
+      },
+      "required": true
+    },
+    {
+      "flags": [
+        "--symbol"
+      ],
+      "options": {
+        "dest": "symbol",
+        "default": null,
+        "help": "Hyperliquid coin the request applies to (MULTI for portfolio)"
+      },
+      "required": true
+    },
+    {
+      "flags": [
+        "--provider"
+      ],
+      "options": {
+        "dest": "provider",
+        "default": null,
+        "help": "strategy provider for a manual entry"
+      }
+    },
+    {
+      "flags": [
+        "--side"
+      ],
+      "options": {
+        "dest": "side",
+        "choices": [
+          "long",
+          "short"
+        ],
+        "default": null,
+        "help": "position side for a manual entry"
+      }
+    },
+    {
+      "flags": [
+        "--settings"
+      ],
+      "options": {
+        "dest": "settings",
+        "type": "Path",
+        "default": null,
+        "help": "JSON file with action settings"
+      }
+    },
+    {
+      "flags": [
+        "--submit"
+      ],
+      "options": {
+        "dest": "submit",
+        "action": "store_true",
+        "default": false,
+        "help": "publish the request (without it the command is a dry run)"
+      }
+    },
+    {
+      "flags": [
+        "--enabled"
+      ],
+      "options": {
+        "dest": "enabled",
+        "action": "store_true",
+        "default": false,
+        "help": "first live-authority flag (needed with --submit)"
+      }
+    },
+    {
+      "flags": [
+        "--i-accept-live-risk"
+      ],
+      "options": {
+        "dest": "i_accept_live_risk",
+        "action": "store_true",
+        "default": false,
+        "help": "second live-authority flag (needed with --submit)"
+      }
+    }
+  ]
+}

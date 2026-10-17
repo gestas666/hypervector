@@ -12,13 +12,14 @@ from hypervector.runs.db import RunsDB
 
 
 @pytest.mark.parametrize(
-    "command,owner,expected", [("report", "sweep", 0), ("export", "export", 1)]
+    "command,owner,expected",
+    [(["backtest", "report"], "sweep", 0), (["export", "create"], "export", 1)],
 )
 @pytest.mark.parametrize("failed_query", [False, True])
 def test_read_commands_close_their_database(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
-    command: str,
+    command: list[str],
     owner: str,
     expected: int,
     failed_query: bool,
@@ -33,7 +34,7 @@ def test_read_commands_close_their_database(
 
         monkeypatch.setattr(database, "list_trials", refuse_query)
     try:
-        argv = ["--data-root", str(tmp_path), command, "--track", "uptrend"]
+        argv = ["--data-root", str(tmp_path), *command, "--track", "uptrend"]
         if failed_query:
             with pytest.raises(sqlite3.OperationalError, match="injected"):
                 main(argv)

@@ -8,9 +8,9 @@ from pathlib import Path
 
 def validate_candle_cache_interval(args: argparse.Namespace) -> None:
     """Reject intervals unsupported by the one-minute continuity repair."""
-    if args.interval != "1m":
+    if args.timeframe != "1m":
         raise ValueError(
-            "research cache installation requires --interval 1m; "
+            "research cache installation requires --timeframe 1m; "
             "omit --install-research-cache to acquire other candle intervals"
         )
 
@@ -36,6 +36,6 @@ def install_candle_cache(
     frame, gap_fills = repair_candle_cadence(frame, start=args.start, end=args.end)
     cache = ParquetCache(Path(args.data_root) / "cache")
     installed = cache.save(
-        cache_key(args.symbol, args.interval, int(duration_days)), frame
+        cache_key(args.symbol, args.timeframe, int(duration_days)), frame
     )
     return str(installed.resolve()), gap_fills

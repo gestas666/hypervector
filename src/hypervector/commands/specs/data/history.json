@@ -1,59 +1,18 @@
 {
-  "name": "history",
-  "action": "history",
-  "help": "Fetch/cache HL-max + Binance/Bybit backfill",
+  "schema": 2,
+  "help": "Fetch and cache Hyperliquid bars with a Binance/Bybit backfill",
+  "kind": "inprocess",
   "handler": "hypervector.commands.market:cmd_history",
-  "arguments": [
-    {
-      "flags": [
-        "--symbol"
-      ],
-      "options": {
-        "dest": "symbol",
-        "default": "BTC"
-      }
-    },
-    {
-      "flags": [
-        "--timeframe"
-      ],
-      "options": {
-        "dest": "timeframe",
-        "default": "1m"
-      }
-    },
-    {
-      "flags": [
-        "--lookback"
-      ],
-      "options": {
-        "dest": "lookback",
-        "default": 90,
-        "help": "calendar days (floor=30, default=90, promo=180)",
-        "type": "int"
-      }
-    },
-    {
-      "flags": [
-        "--strict-hl-only"
-      ],
-      "options": {
-        "dest": "strict_hl_only",
-        "default": false,
-        "help": "do not backfill from Binance/Bybit",
-        "action": "store_true"
-      }
-    },
-    {
-      "flags": [
-        "--force"
-      ],
-      "options": {
-        "dest": "force",
-        "default": false,
-        "help": "ignore Parquet cache and re-fetch",
-        "action": "store_true"
-      }
-    }
-  ]
+  "authority": "none",
+  "environment": [],
+  "data_root": "honored",
+  "include": [
+    "market"
+  ],
+  "fragment_overrides": {},
+  "legacy": [
+    "history"
+  ],
+  "exclusive_groups": [],
+  "arguments": []
 }

@@ -1,7 +1,18 @@
 {
-  "name": "paper-check",
-  "action": "check",
-  "help": "Paper/shadow identity: mode, mainnet network, no_submit (booleans/strings only; never secret values)",
+  "schema": 2,
+  "help": "Paper/shadow identity: mode, mainnet network, no_submit and model readiness",
+  "kind": "inprocess",
   "handler": "hypervector.commands.status:cmd_paper_check",
+  "authority": "none",
+  "environment": [
+    "models"
+  ],
+  "data_root": "honored",
+  "include": [],
+  "fragment_overrides": {},
+  "legacy": [
+    "paper-check"
+  ],
+  "exclusive_groups": [],
   "arguments": []
 }

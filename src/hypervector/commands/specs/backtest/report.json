@@ -1,0 +1,32 @@
+{
+  "schema": 2,
+  "help": "Print the ranked trial board from the runs database",
+  "kind": "inprocess",
+  "handler": "hypervector.commands.sweep:cmd_report",
+  "authority": "none",
+  "environment": [],
+  "data_root": "honored",
+  "include": [],
+  "fragment_overrides": {},
+  "legacy": [
+    "research report",
+    "report"
+  ],
+  "exclusive_groups": [],
+  "arguments": [
+    {
+      "flags": [
+        "--track"
+      ],
+      "options": {
+        "dest": "track",
+        "choices": [
+          "uptrend",
+          "downtrend"
+        ],
+        "default": null,
+        "help": "only trials from this track (uptrend or downtrend)"
+      }
+    }
+  ]
+}

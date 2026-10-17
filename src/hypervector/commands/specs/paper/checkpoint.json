@@ -1,0 +1,74 @@
+{
+  "schema": 2,
+  "help": "Continuously publish bounded analysis for one observer ledger",
+  "kind": "operation",
+  "operation": "hypervector.operations.multi_asset_bidirectional_observer_checkpoint",
+  "authority": "none",
+  "environment": [],
+  "data_root": "honored",
+  "include": [],
+  "fragment_overrides": {},
+  "legacy": [
+    "cohort observer-checkpoint",
+    "cohort-observer-checkpoint"
+  ],
+  "exclusive_groups": [],
+  "arguments": [
+    {
+      "flags": [
+        "--decisions"
+      ],
+      "options": {
+        "dest": "decisions",
+        "type": "Path",
+        "default": null,
+        "help": "observer decisions JSONL"
+      },
+      "data_default": "paper/cohort/decisions.jsonl"
+    },
+    {
+      "flags": [
+        "--out"
+      ],
+      "options": {
+        "dest": "out",
+        "type": "Path",
+        "default": null,
+        "help": "checkpoint JSON to publish"
+      },
+      "data_default": "runtime/cohort_observer/latest_checkpoint.json"
+    },
+    {
+      "flags": [
+        "--run-id"
+      ],
+      "options": {
+        "dest": "run_id",
+        "default": null,
+        "help": "exact run ID to select"
+      }
+    },
+    {
+      "flags": [
+        "--interval-seconds"
+      ],
+      "options": {
+        "dest": "interval_seconds",
+        "type": "float",
+        "default": 30.0,
+        "help": "seconds between publications"
+      }
+    },
+    {
+      "flags": [
+        "--once"
+      ],
+      "options": {
+        "dest": "once",
+        "action": "store_true",
+        "default": false,
+        "help": "publish one checkpoint and exit"
+      }
+    }
+  ]
+}

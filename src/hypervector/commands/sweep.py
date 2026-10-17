@@ -14,24 +14,25 @@ from hypervector.runs.db import RunsDB, TrialRow
 from hypervector.strategies import register_all_strategies
 from hypervector.strategies.registry import StrategySpec, get_strategy, list_strategies
 from hypervector.sweep.costs import CostModel, resolve_cost_model
-from hypervector.sweep.exits import EXIT_MODES, ExitConfig
+from hypervector.sweep.exits import ExitConfig
 from hypervector.sweep.search import TrialResult, run_grid_search
 from hypervector.sweep.sizing import RiskConfig
-from hypervector.commands.common import _ensure_root, _load_bars
+from hypervector.commands.common import (
+    CommandRefused,
+    _ensure_root,
+    _load_bars,
+    exit_config_from_args,
+)
 
 
-def _run_sweep(args: argparse.Namespace, role: str) -> int:
+def cmd_sweep(args: argparse.Namespace) -> int:
+    """Grid-search one declared strategy track and store every measured trial."""
+    role = str(args.track)
     register_all_strategies()
+    strategy = _select_sweep_strategy(args, role)
+    init_cash, cost, exit_cfg, risk_cfg = _sweep_settings(args)
     root = _ensure_root(args).root
     df, prov = _load_bars(args)
-    strategy = _select_sweep_strategy(args, role)
-    if strategy is None:
-        return 1
-    try:
-        init_cash, cost, exit_cfg, risk_cfg = _sweep_settings(args)
-    except ValueError as exc:
-        print(str(exc), file=sys.stderr)
-        return 2
     _emit_sweep_diagnostics(
         strategy, len(df), init_cash, cost, exit_cfg, risk_cfg, prov
     )
@@ -52,18 +53,8 @@ def _run_sweep(args: argparse.Namespace, role: str) -> int:
     )
     rows = _persist_sweep_trials(root, run_id, role, results, research_meta)
     print(rank_trials(rows).to_string(index=False))
-    _export_sweep_best(args.export, root, run_id, role, results, research_meta)
+    _export_sweep_best(not args.no_export, root, run_id, role, results, research_meta)
     return 0
-
-
-def cmd_sweep_up(args: argparse.Namespace) -> int:
-    """Search the declared uptrend strategy track."""
-    return _run_sweep(args, "uptrend")
-
-
-def cmd_sweep_down(args: argparse.Namespace) -> int:
-    """Search the declared downtrend strategy track."""
-    return _run_sweep(args, "downtrend")
 
 
 def cmd_report(args: argparse.Namespace) -> int:
@@ -76,17 +67,18 @@ def cmd_report(args: argparse.Namespace) -> int:
     return 0
 
 
-def _select_sweep_strategy(args: argparse.Namespace, role: str) -> StrategySpec | None:
+def _select_sweep_strategy(args: argparse.Namespace, role: str) -> StrategySpec:
     """Resolve the requested family and preserve its declared research track."""
     name = getattr(args, "strategy", None)
     if name:
-        strategy = get_strategy(name)
+        try:
+            strategy = get_strategy(name)
+        except KeyError as exc:
+            raise CommandRefused(f"unknown strategy: {name}") from exc
         if strategy.role != role:
-            print(
-                f"strategy {name!r} has role={strategy.role!r}, expected {role!r}",
-                file=sys.stderr,
+            raise CommandRefused(
+                f"strategy {name!r} has role={strategy.role!r}, expected {role!r}"
             )
-            return None
     else:
         # Prefer frankenstein trend_ride, then crown_stack
         preferred = (
@@ -103,8 +95,7 @@ def _select_sweep_strategy(args: argparse.Namespace, role: str) -> StrategySpec 
         if strategy is None and specs:
             strategy = specs[0]
     if strategy is None:
-        print(f"no strategies for role={role}", file=sys.stderr)
-        return None
+        raise CommandRefused(f"no strategies for role={role}")
     return strategy
 
 
@@ -112,19 +103,9 @@ def _sweep_settings(
     args: argparse.Namespace,
 ) -> tuple[float, CostModel, ExitConfig, RiskConfig]:
     """Validate explicit sweep settings without introducing performance gates."""
-    init_cash = float(getattr(args, "cash", 10_000.0))
-    cost = resolve_cost_model(getattr(args, "fee_model", "hl_taker_default"))
-    mode = getattr(args, "tp_sl_mode", "atr")
-    if mode not in EXIT_MODES:
-        raise ValueError(f"tp_sl_mode must be one of {EXIT_MODES}")
-    exit_cfg = ExitConfig(
-        mode=mode,
-        sl_pct=float(getattr(args, "sl_pct", 0.01)),
-        rr=float(getattr(args, "rr", 2.0)),
-        atr_length=int(getattr(args, "atr_length", 14)),
-        sl_atr_mult=float(getattr(args, "sl_atr_mult", 1.5)),
-        trail_atr_mult=float(getattr(args, "trail_atr_mult", 2.0)),
-    )
+    init_cash = float(args.initial_cash)
+    cost = resolve_cost_model(args.fee_model)
+    exit_cfg = exit_config_from_args(args)
     risk_cfg = RiskConfig(
         risk_pct_min=float(getattr(args, "risk_min", 0.01)),
         risk_pct_max=float(getattr(args, "risk_max", 0.05)),
@@ -184,7 +165,7 @@ def _sweep_metadata(
         "costs": cost.to_dict(),
         "apply_costs": apply_costs,
         "data_provenance": prov,
-        "fee_model": getattr(args, "fee_model", "hl_taker_default"),
+        "fee_model": args.fee_model,
         "conviction": risk_cfg.default_conviction,
     }
 

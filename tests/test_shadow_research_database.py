@@ -132,8 +132,9 @@ def test_shadow_ledger_import_cli_reports_annotation_only_contract(
         [
             "--data-root",
             str(tmp_path),
-            "research-db-shadow-import",
-            "--ledger",
+            "db",
+            "import-paper",
+            "--decisions",
             str(ledger),
         ]
     )
@@ -430,7 +431,8 @@ def test_completed_trade_attribution_uses_filled_intent_and_causal_labels(
         [
             "--data-root",
             str(tmp_path),
-            "research-db-shadow-trades",
+            "db",
+            "paper-trades",
             "--database",
             str(database_path),
         ]
@@ -592,10 +594,7 @@ def test_revision_label_identity_rejects_conflicting_reimport(tmp_path: Path) ->
     assert count == (1,)
 
 
-def test_regime_label_import_cli_preserves_source_revision(
-    tmp_path: Path,
-    capsys: pytest.CaptureFixture[str],
-) -> None:
+def test_regime_label_import_preserves_source_revision(tmp_path: Path) -> None:
     labels = tmp_path / "legacy.parquet"
     metadata = tmp_path / "legacy.json"
     _write_labels(
@@ -605,24 +604,11 @@ def test_regime_label_import_cli_preserves_source_revision(
         primary="TREND_DOWN",
     )
 
-    result = main(
-        [
-            "--data-root",
-            str(tmp_path),
-            "research-db-regime-label-import",
-            "--labels",
-            str(labels),
-            "--metadata",
-            str(metadata),
-        ]
-    )
-    report = json.loads(capsys.readouterr().out)
+    database = ResearchDatabase(tmp_path / "research" / "market.duckdb")
+    ingest = database.ingest_hypertrader_labels(labels, metadata).to_dict()
 
-    assert result == 0
-    assert report["report_only"] is True
-    assert report["execution_authority"] == "none"
-    assert report["ingest"]["revision"] == LEGACY_HYPERTRADER_REVISION
-    assert report["ingest"]["imported_labels"] == 1
+    assert ingest["revision"] == LEGACY_HYPERTRADER_REVISION
+    assert ingest["imported_labels"] == 1
 
 
 def test_regime_comparison_summary_quantifies_backend_and_source_disagreement(
@@ -663,17 +649,6 @@ def test_regime_comparison_summary_quantifies_backend_and_source_disagreement(
         "comparison_start_utc": "2026-07-28T00:00:00+00:00",
         "comparison_end_utc": "2026-07-28T00:00:00+00:00",
     }
-
-    result = main(
-        [
-            "--data-root",
-            str(tmp_path),
-            "research-db-regime-compare",
-            "--database",
-            str(tmp_path / "research.duckdb"),
-        ]
-    )
-    assert result == 0
 
 
 def test_regime_comparison_summary_separates_strict_from_dual_label_coverage(

@@ -27,7 +27,7 @@ def cmd_book_record(args: argparse.Namespace) -> int:
         print(json.dumps({"ok": True, "mode": "once", **row}, indent=2, default=str))
         return 0
 
-    interval = float(getattr(args, "interval", 2.0))
+    interval = float(args.interval_seconds)
     max_n = getattr(args, "max_snapshots", None)
     stop = getattr(args, "stop_file", None)
     try:

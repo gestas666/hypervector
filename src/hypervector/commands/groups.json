@@ -1,0 +1,88 @@
+{
+  "schema": 2,
+  "order": [
+    "data",
+    "archive",
+    "backtest",
+    "tune",
+    "nautilus",
+    "paper",
+    "live",
+    "regime",
+    "model",
+    "export",
+    "db",
+    "pipeline",
+    "system"
+  ],
+  "groups": {
+    "data": {
+      "help": "Hyperliquid market data: history, funding, books, HIP-3 roster",
+      "pillar": true
+    },
+    "archive": {
+      "help": "0xArchive Hyperliquid evidence: bounded fetches, resumable backfill, coverage audit",
+      "pillar": true
+    },
+    "backtest": {
+      "help": "VectorBT + TA-Lib backtests, track sweeps and the trial board",
+      "pillar": true,
+      "default_action": "run"
+    },
+    "tune": {
+      "help": "Karpathy autotuning (Optuna optional) for strategies and regimes",
+      "pillar": true
+    },
+    "nautilus": {
+      "help": "NautilusTrader event-driven validation of strategy bundles",
+      "pillar": true
+    },
+    "paper": {
+      "help": "Paper and shadow trading; never builds a venue execution client",
+      "pillar": true
+    },
+    "live": {
+      "help": "Hyperliquid execution and cohort operations (only 'live start' and 'live run' can arm)",
+      "pillar": true,
+      "sections": {
+        "run": "readiness, execution and operator requests",
+        "observe": "read-only checkpoints, monitoring, audits and reports",
+        "transition": "profile changes, backups and rollback",
+        "supervise": "process supervision"
+      }
+    },
+    "regime": {
+      "help": "Canonical regime engine: classify, evaluate, export, challengers",
+      "pillar": true,
+      "default_action": "classify"
+    },
+    "model": {
+      "help": "Walk-forward metalabel model training",
+      "pillar": true
+    },
+    "export": {
+      "help": "Strategy bundles handed between pillars",
+      "pillar": false,
+      "default_action": "create"
+    },
+    "db": {
+      "help": "DuckDB research store: build, import, report",
+      "pillar": false
+    },
+    "pipeline": {
+      "help": "One foreground run: data, search, export, Nautilus, paper hand-off",
+      "pillar": false
+    },
+    "system": {
+      "help": "Data layout, capabilities and inventory",
+      "pillar": false
+    }
+  },
+  "legacy_groups": [
+    "research",
+    "cohort"
+  ],
+  "shortcuts": {
+    "status": "system status"
+  }
+}

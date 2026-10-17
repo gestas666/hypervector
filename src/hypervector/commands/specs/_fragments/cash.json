@@ -1,0 +1,20 @@
+{
+  "schema": 2,
+  "arguments": [
+    {
+      "flags": [
+        "--initial-cash"
+      ],
+      "options": {
+        "dest": "initial_cash",
+        "type": "float",
+        "default": 10000.0,
+        "help": "starting equity in USD"
+      },
+      "legacy_flags": [
+        "--init-cash",
+        "--cash"
+      ]
+    }
+  ]
+}

@@ -6,18 +6,29 @@ import pytest
 from pathlib import Path
 
 from hypervector.cli import build_parser, main
-from hypervector.cli_cohort import cohort_command
+from hypervector.commands import operations
+from hypervector.commands.common import CommandRefused
+from hypervector.commands.operations import operation_argv
 
 _CLI_SKILL = Path("skills/hypervector-cli/SKILL.md")
+_PROFILE = ["--config", "profile.toml"]
 
 
 def test_live_command_forwards_both_explicit_authority_flags() -> None:
     """Headless live execution remains double-armed at the script boundary."""
     args = build_parser().parse_args(
-        ["cohort-live", "--enabled", "--i-accept-live-risk", "--max-polls", "2"]
+        [
+            "live",
+            "start",
+            *_PROFILE,
+            "--enabled",
+            "--i-accept-live-risk",
+            "--max-polls",
+            "2",
+        ]
     )
 
-    command = cohort_command(args)
+    command = operation_argv(args)
 
     assert command[1:3] == (
         "-m",
@@ -35,14 +46,16 @@ def test_live_recovery_flag_is_forwarded_without_weakening_double_arm() -> None:
     """Explicit crash recovery reaches the backend only through live authority."""
     args = build_parser().parse_args(
         [
-            "cohort-live",
+            "live",
+            "start",
+            *_PROFILE,
             "--enabled",
             "--i-accept-live-risk",
             "--resume-transition-drain",
         ]
     )
 
-    command = cohort_command(args)
+    command = operation_argv(args)
 
     assert command[-3:] == (
         "--enabled",
@@ -54,10 +67,10 @@ def test_live_recovery_flag_is_forwarded_without_weakening_double_arm() -> None:
 def test_audit_command_is_report_only_and_requires_an_output() -> None:
     """Audit CLI resolves a non-executing immutable-report command."""
     args = build_parser().parse_args(
-        ["cohort-live-audit", "--out", "audit.json", "--run-id", "run-1"]
+        ["live", "audit", "--out", "audit.json", "--run-id", "run-1"]
     )
 
-    command = cohort_command(args)
+    command = operation_argv(args)
 
     assert command[1:3] == (
         "-m",
@@ -73,7 +86,8 @@ def test_audit_delta_command_binds_two_prefixes_without_live_authority() -> None
     """The first-class delta command must remain immutable and report-only."""
     args = build_parser().parse_args(
         [
-            "cohort-live-audit-delta",
+            "live",
+            "audit-delta",
             "--before",
             "before.json",
             "--after",
@@ -83,7 +97,7 @@ def test_audit_delta_command_binds_two_prefixes_without_live_authority() -> None
         ]
     )
 
-    command = cohort_command(args)
+    command = operation_argv(args)
 
     assert command[1:3] == ("-m", "hypervector.operations.cohort_live_audit_delta")
     assert command[-6:] == (
@@ -112,10 +126,10 @@ def test_cli_skill_documents_prefix_delta_evidence_boundaries() -> None:
 def test_research_import_command_has_no_execution_authority() -> None:
     """Cohort journal ingestion resolves only the report-only database script."""
     args = build_parser().parse_args(
-        ["cohort-research-import", "--database", "research.duckdb"]
+        ["db", "import-cohort", "--database", "research.duckdb"]
     )
 
-    command = cohort_command(args)
+    command = operation_argv(args)
 
     assert command[1:3] == (
         "-m",
@@ -126,26 +140,32 @@ def test_research_import_command_has_no_execution_authority() -> None:
 
 
 @pytest.mark.parametrize(
-    "argv",
-    (
-        ["cohort-live"],
-        ["cohort-live", "--enabled"],
-    ),
+    "flags",
+    ([], ["--enabled"], ["--i-accept-live-risk"]),
 )
 def test_live_boundaries_require_both_explicit_authority_flags(
-    argv: list[str],
+    flags: list[str],
 ) -> None:
     """No cohort CLI path may weaken the existing double-arm boundary."""
-    args = build_parser().parse_args(argv)
+    args = build_parser().parse_args(["live", "start", *_PROFILE, *flags])
 
-    with pytest.raises(ValueError, match="both --enabled and --i-accept-live-risk"):
-        cohort_command(args)
+    with pytest.raises(CommandRefused, match="both --enabled and --i-accept-live-risk"):
+        operations.run_operation(args)
 
 
 def test_main_reports_live_refusal_without_a_traceback(capsys) -> None:
     """Operator mistakes fail closed with one actionable CLI message."""
-    assert main(["cohort-live"]) == 2
+    assert main(["live", "start", *_PROFILE]) == 2
 
     captured = capsys.readouterr()
     assert "both --enabled and --i-accept-live-risk" in captured.err
     assert "Traceback" not in captured.err
+
+
+def test_live_start_requires_an_explicit_profile() -> None:
+    """The live backend never falls back to a module default profile."""
+    with pytest.raises(SystemExit) as exc:
+        build_parser().parse_args(
+            ["live", "start", "--enabled", "--i-accept-live-risk"]
+        )
+    assert exc.value.code == 2

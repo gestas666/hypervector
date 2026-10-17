@@ -1,19 +1,34 @@
 {
-  "name": "live-run",
-  "action": "run",
-  "help": "Live mainnet daemon: requires --enabled + --i-accept-live-risk + secrets; writes data/live/ decisions (fail-closed)",
+  "schema": 2,
+  "help": "Generic single-bundle live daemon (requires --enabled, --i-accept-live-risk and credentials)",
+  "section": "run",
+  "kind": "inprocess",
   "handler": "hypervector.commands.live:cmd_live_run",
+  "authority": "live",
+  "environment": [
+    "live-credentials"
+  ],
+  "data_root": "honored",
+  "include": [],
+  "fragment_overrides": {},
+  "legacy": [
+    "live-run"
+  ],
+  "exclusive_groups": [],
   "arguments": [
     {
       "flags": [
-        "--path"
+        "--export"
       ],
       "options": {
-        "dest": "path",
-        "required": true,
+        "dest": "export",
         "default": null,
-        "help": "path to strict Phase 1.5 export directory"
-      }
+        "help": "strict strategy bundle directory"
+      },
+      "required": true,
+      "legacy_flags": [
+        "--path"
+      ]
     },
     {
       "flags": [
@@ -21,9 +36,9 @@
       ],
       "options": {
         "dest": "enabled",
+        "action": "store_true",
         "default": false,
-        "help": "set [live] enabled=true for this run (required)",
-        "action": "store_true"
+        "help": "first of the two live-authority flags (required to run)"
       }
     },
     {
@@ -32,9 +47,9 @@
       ],
       "options": {
         "dest": "i_accept_live_risk",
+        "action": "store_true",
         "default": false,
-        "help": "explicit arm for mainnet risk (required)",
-        "action": "store_true"
+        "help": "second of the two live-authority flags (required to run)"
       }
     },
     {
@@ -43,9 +58,9 @@
       ],
       "options": {
         "dest": "max_notional_usd",
+        "type": "float",
         "default": 50.0,
-        "help": "hard notional cap (default 50.0)",
-        "type": "float"
+        "help": "hard notional cap per order in USD"
       }
     },
     {
@@ -54,9 +69,9 @@
       ],
       "options": {
         "dest": "conviction",
+        "type": "float",
         "default": 0.5,
-        "help": "fixed conviction [0,1] (default 0.5)",
-        "type": "float"
+        "help": "position-sizing conviction (0..1)"
       }
     },
     {
@@ -65,9 +80,9 @@
       ],
       "options": {
         "dest": "fee_tier",
+        "type": "int",
         "default": 0,
-        "help": "HL fee tier index (default 0)",
-        "type": "int"
+        "help": "Hyperliquid fee tier index for the cost model"
       }
     },
     {
@@ -77,19 +92,22 @@
       "options": {
         "dest": "stop_file",
         "default": null,
-        "help": "path: when this file exists, stop gracefully"
+        "help": "stop gracefully when this path exists"
       }
     },
     {
       "flags": [
-        "--poll-interval"
+        "--interval-seconds"
       ],
       "options": {
-        "dest": "poll_interval",
+        "dest": "interval_seconds",
+        "type": "float",
         "default": 5.0,
-        "help": "seconds between bar polls (default 5)",
-        "type": "float"
-      }
+        "help": "seconds between bar polls"
+      },
+      "legacy_flags": [
+        "--poll-interval"
+      ]
     },
     {
       "flags": [
@@ -97,21 +115,24 @@
       ],
       "options": {
         "dest": "max_live_bars",
+        "type": "int",
         "default": null,
-        "help": "stop after N live bars (smoke / offline cap)",
-        "type": "int"
+        "help": "stop after N live bars"
       }
     },
     {
       "flags": [
-        "--lookback"
+        "--lookback-days"
       ],
       "options": {
         "dest": "lookback",
+        "type": "lookback_days",
         "default": null,
-        "help": "warm-up lookback days (default from export meta)",
-        "type": "int"
-      }
+        "help": "warm-up calendar days (default: the bundle's lookback)"
+      },
+      "legacy_flags": [
+        "--lookback"
+      ]
     }
   ]
 }

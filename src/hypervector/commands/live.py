@@ -1,4 +1,4 @@
-"""Live command handlers; imported only on dispatch."""
+"""Live command handlers and cohort preflights; imported only on dispatch."""
 
 from __future__ import annotations
 
@@ -7,24 +7,48 @@ import json
 import os
 import sys
 from pathlib import Path
-from hypervector.live.policy import (
-    DEFAULT_MAX_NOTIONAL_USD,
-    LivePolicy,
-    LivePolicyError,
-    live_policy_from_env,
-)
-from hypervector.live.report import report_from_data_root as live_report_from_data_root
-from hypervector.live.runner import LiveDaemonResult, start_live_daemon
+from typing import TYPE_CHECKING
+
+from hypervector.commands.common import CommandRefused, _ensure_root
 from hypervector.paper.order_intent import NETWORK_MAINNET
-from hypervector.commands.common import _ensure_root
+
+if TYPE_CHECKING:
+    from hypervector.live.policy import LivePolicy
+    from hypervector.live.runner import LiveDaemonResult
 
 SECRET_ENV_WALLET = "HYPERVECTOR_HL_WALLET_ADDRESS"
 SECRET_ENV_API_KEY = "HYPERVECTOR_HL_API_PRIVATE_KEY"
 
 
+def preflight_start(args: argparse.Namespace) -> None:
+    """Load the profile in observe mode and check provider dependencies before exec."""
+    from hypervector.live.cohort_process_commands import (
+        require_live_provider_dependencies,
+    )
+    from hypervector.live.multi_asset_live_config import load_multi_asset_live_config
+
+    try:
+        config = load_multi_asset_live_config(args.config, mode="observe")
+        require_live_provider_dependencies(config)
+    except (OSError, ValueError) as exc:
+        raise CommandRefused(f"live start refused: {exc}") from exc
+
+
+def preflight_audit(args: argparse.Namespace) -> None:
+    """A current-run audit needs the run it is about."""
+    if args.history_scope == "current-run" and not args.run_id:
+        raise CommandRefused(
+            "current-run audit requires --run-id; pass --history-scope all-time "
+            "to snapshot all compatible history"
+        )
+
+
 def cmd_live_run(args: argparse.Namespace) -> int:
     """Live daemon: mainnet place when enabled+armed+secrets (fail-closed)."""
-    path = Path(args.path)
+    from hypervector.live.policy import LivePolicyError
+    from hypervector.live.runner import start_live_daemon
+
+    path = Path(args.export)
     if not path.is_dir():
         print(f"export path not found: {path}", file=sys.stderr)
         return 1
@@ -33,7 +57,7 @@ def cmd_live_run(args: argparse.Namespace) -> int:
         policy = _armed_policy(args)
         wallet, key = _live_credentials()
     except LivePolicyError as exc:
-        print(f"live-run refused: {exc}", file=sys.stderr)
+        print(f"live run refused: {exc}", file=sys.stderr)
         return 1
     _ensure_root(args)
     stop_file = Path(args.stop_file) if getattr(args, "stop_file", None) else None
@@ -42,13 +66,13 @@ def cmd_live_run(args: argparse.Namespace) -> int:
             **_live_options(args, path, policy, wallet, key, stop_file)
         )
     except LivePolicyError as exc:
-        print(f"live-run refused: {exc}", file=sys.stderr)
+        print(f"live run refused: {exc}", file=sys.stderr)
         return 1
     except FileNotFoundError as exc:
         print(str(exc), file=sys.stderr)
         return 1
     except (OSError, RuntimeError, ValueError) as exc:
-        print(f"live-run failed: {exc}", file=sys.stderr)
+        print(f"live run failed: {exc}", file=sys.stderr)
         return 1
 
     print(json.dumps(_live_result(result, policy), indent=2, default=str))
@@ -57,8 +81,12 @@ def cmd_live_run(args: argparse.Namespace) -> int:
 
 def cmd_live_report(args: argparse.Namespace) -> int:
     """Summarize live decisions JSONL (read-only; no place)."""
+    from hypervector.live.report import (
+        report_from_data_root as live_report_from_data_root,
+    )
+
     root = Path(args.data_root)
-    decisions = Path(args.path) if getattr(args, "path", None) else None
+    decisions = Path(args.decisions) if getattr(args, "decisions", None) else None
     last_n = int(getattr(args, "last", 5))
     try:
         report = live_report_from_data_root(
@@ -75,6 +103,12 @@ def cmd_live_report(args: argparse.Namespace) -> int:
 
 def _armed_policy(args: argparse.Namespace) -> LivePolicy:
     """Require explicit authority and existing policy checks before execution."""
+    from hypervector.live.policy import (
+        DEFAULT_MAX_NOTIONAL_USD,
+        LivePolicyError,
+        live_policy_from_env,
+    )
+
     armed = bool(getattr(args, "i_accept_live_risk", False))
     if not armed:
         raise LivePolicyError("pass --i-accept-live-risk to arm mainnet risk")
@@ -111,7 +145,7 @@ def _live_options(
         "conviction": float(getattr(args, "conviction", 0.5)),
         "fee_tier": int(getattr(args, "fee_tier", 0)),
         "stop_file": stop_file,
-        "poll_interval_secs": float(getattr(args, "poll_interval", 5.0)),
+        "poll_interval_secs": float(getattr(args, "interval_seconds", 5.0)),
         "max_live_bars": int(args.max_live_bars)
         if getattr(args, "max_live_bars", None) is not None
         else None,
@@ -146,6 +180,8 @@ def _live_result(result: LiveDaemonResult, policy: LivePolicy) -> dict[str, obje
 
 def _live_credentials() -> tuple[str, str]:
     """Require non-empty configured values without exposing them in diagnostics."""
+    from hypervector.live.policy import LivePolicyError
+
     wallet = (os.environ.get(SECRET_ENV_WALLET) or "").strip()
     key = (os.environ.get(SECRET_ENV_API_KEY) or "").strip()
     if not wallet or not key:

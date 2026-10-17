@@ -1,0 +1,65 @@
+{
+  "schema": 2,
+  "help": "Validate a strategy bundle (strict by default)",
+  "kind": "inprocess",
+  "handler": "hypervector.commands.export:cmd_export_validate",
+  "authority": "none",
+  "environment": [],
+  "data_root": "honored",
+  "include": [],
+  "fragment_overrides": {},
+  "legacy": [
+    "research export-validate",
+    "export-validate"
+  ],
+  "exclusive_groups": [],
+  "arguments": [
+    {
+      "flags": [
+        "--export"
+      ],
+      "options": {
+        "dest": "export",
+        "default": null,
+        "help": "strategy bundle directory"
+      },
+      "required": true,
+      "legacy_flags": [
+        "--path"
+      ]
+    },
+    {
+      "flags": [
+        "--loose"
+      ],
+      "options": {
+        "dest": "loose",
+        "action": "store_true",
+        "default": false,
+        "help": "accept bundles without the strict execution fields"
+      }
+    },
+    {
+      "flags": [
+        "--verbose"
+      ],
+      "options": {
+        "dest": "verbose",
+        "action": "store_true",
+        "default": false,
+        "help": "include full meta, params and metrics in the output"
+      }
+    },
+    {
+      "flags": [
+        "--strict"
+      ],
+      "options": {
+        "dest": "strict",
+        "action": "store_true",
+        "help": "accepted for compatibility; validation is strict by default"
+      },
+      "hidden": true
+    }
+  ]
+}

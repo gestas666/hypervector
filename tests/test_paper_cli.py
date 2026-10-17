@@ -272,7 +272,7 @@ def test_paper_check_reports_mode(tmp_path: Path, capsys, monkeypatch):
     data = tmp_path / "data"
     monkeypatch.delenv("HYPERVECTOR_HL_WALLET_ADDRESS", raising=False)
     monkeypatch.delenv("HYPERVECTOR_HL_API_PRIVATE_KEY", raising=False)
-    rc = main(["--data-root", str(data), "paper-check"])
+    rc = main(["--data-root", str(data), "paper", "check"])
     assert rc == 0
     captured = capsys.readouterr()
     report = json.loads(captured.out)
@@ -293,7 +293,7 @@ def test_paper_check_reports_shadow_surface(tmp_path: Path, capsys, monkeypatch)
     data = tmp_path / "data"
     monkeypatch.delenv("HYPERVECTOR_HL_WALLET_ADDRESS", raising=False)
     monkeypatch.delenv("HYPERVECTOR_HL_API_PRIVATE_KEY", raising=False)
-    rc = main(["--data-root", str(data), "paper-check"])
+    rc = main(["--data-root", str(data), "paper", "check"])
     assert rc == 0
     out = capsys.readouterr().out
     report = json.loads(out)
@@ -314,7 +314,7 @@ def test_paper_check_reports_shadow_surface(tmp_path: Path, capsys, monkeypatch)
 def test_paper_check_secrets_present_true(tmp_path: Path, capsys, monkeypatch):
     monkeypatch.setenv("HYPERVECTOR_HL_WALLET_ADDRESS", "0xabc")
     monkeypatch.setenv("HYPERVECTOR_HL_API_PRIVATE_KEY", "sekrit")
-    rc = main(["--data-root", str(tmp_path / "data"), "paper-check"])
+    rc = main(["--data-root", str(tmp_path / "data"), "paper", "check"])
     assert rc == 0
     out = capsys.readouterr().out
     report = json.loads(out)
@@ -328,7 +328,7 @@ def test_paper_check_reports_fill_and_book_surface(tmp_path: Path, capsys, monke
     data = tmp_path / "data"
     monkeypatch.delenv("HYPERVECTOR_HL_WALLET_ADDRESS", raising=False)
     monkeypatch.delenv("HYPERVECTOR_HL_API_PRIVATE_KEY", raising=False)
-    rc = main(["--data-root", str(data), "paper-check"])
+    rc = main(["--data-root", str(data), "paper", "check"])
     assert rc == 0
     out = capsys.readouterr().out
     report = json.loads(out)
@@ -354,31 +354,31 @@ def test_paper_check_reports_fill_and_book_surface(tmp_path: Path, capsys, monke
 
 def test_paper_run_requires_export_path():
     with pytest.raises(SystemExit) as exc:
-        main(["paper-run"])
+        main(["paper", "run"])
     assert exc.value.code != 0
 
 
 def test_paper_run_help():
     with pytest.raises(SystemExit) as exc:
-        main(["paper-run", "--help"])
+        main(["paper", "run", "--help"])
     assert exc.value.code == 0
 
 
 def test_paper_run_help_lists_phase4a_flags(capsys):
     with pytest.raises(SystemExit) as exc:
-        main(["paper-run", "--help"])
+        main(["paper", "run", "--help"])
     assert exc.value.code == 0
     help_text = capsys.readouterr().out
     assert "--preferred-fill-model" in help_text
     assert "--max-book-age-ms" in help_text
-    assert "--metalabel" in help_text
-    assert "--no-metalabel" in help_text
+    assert "--metalabel-mode" in help_text
+    assert "--no-metalabel" not in help_text
 
 
 def test_paper_run_help_lists_mode_and_shadow_surface(capsys):
     """Phase 4b: --mode flag + help states no venue orders / mainnet shadow."""
     with pytest.raises(SystemExit) as exc:
-        main(["paper-run", "--help"])
+        main(["paper", "run", "--help"])
     assert exc.value.code == 0
     help_text = capsys.readouterr().out.lower()
     assert "--mode" in help_text
@@ -810,8 +810,9 @@ def test_cli_paper_run_offline_via_monkeypatch(tmp_path: Path, capsys, monkeypat
         [
             "--data-root",
             str(data),
-            "paper-run",
-            "--path",
+            "paper",
+            "run",
+            "--export",
             str(export),
         ]
     )
@@ -858,14 +859,16 @@ def test_cli_paper_run_passes_fill_and_metalabel_flags(tmp_path: Path, monkeypat
         [
             "--data-root",
             str(data),
-            "paper-run",
-            "--path",
+            "paper",
+            "run",
+            "--export",
             str(export),
             "--preferred-fill-model",
             "top_bps_v1",
             "--max-book-age-ms",
             "1500",
-            "--metalabel",
+            "--metalabel-mode",
+            "filter",
         ]
     )
     assert rc == 0
@@ -905,8 +908,9 @@ def test_cli_paper_run_observe_mode_reaches_daemon(tmp_path: Path, monkeypatch):
         [
             "--data-root",
             str(data),
-            "paper-run",
-            "--path",
+            "paper",
+            "run",
+            "--export",
             str(export),
             "--metalabel-mode",
             "observe",
@@ -947,8 +951,9 @@ def test_cli_forces_hypervelocity_model_policy_to_annotation_only(
         [
             "--data-root",
             str(tmp_path / "data"),
-            "paper-run",
-            "--path",
+            "paper",
+            "run",
+            "--export",
             str(export),
             "--metalabel-mode",
             "filter",
@@ -988,7 +993,8 @@ def test_hypervelocity_shadow_cli_uses_websocket_funding_authority(
         [
             "--data-root",
             str(tmp_path / "data"),
-            "hypervelocity-shadow-run",
+            "paper",
+            "shadow",
             "--config",
             "configs/hypervelocity_faithful.toml",
             "--max-live-bars",
@@ -1004,7 +1010,7 @@ def test_hypervelocity_shadow_cli_uses_websocket_funding_authority(
 
 
 def test_cli_paper_run_mode_flag_wires_execution_mode(tmp_path: Path, monkeypatch):
-    """paper-run --mode paper|shadow is forwarded to start_paper_daemon."""
+    """paper run --mode paper|shadow is forwarded to start_paper_daemon."""
     export = _write_strict_export(tmp_path)
     data = tmp_path / "data"
     captured: dict = {}
@@ -1029,8 +1035,9 @@ def test_cli_paper_run_mode_flag_wires_execution_mode(tmp_path: Path, monkeypatc
         [
             "--data-root",
             str(data),
-            "paper-run",
-            "--path",
+            "paper",
+            "run",
+            "--export",
             str(export),
             "--mode",
             "paper",

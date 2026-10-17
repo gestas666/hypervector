@@ -1,0 +1,86 @@
+{
+  "schema": 2,
+  "help": "Backtest one registered strategy with leverage, fees and exits (VectorBT)",
+  "kind": "inprocess",
+  "handler": "hypervector.commands.backtest:cmd_backtest",
+  "authority": "none",
+  "environment": [],
+  "data_root": "honored",
+  "include": [
+    "market",
+    "fees",
+    "cash",
+    "exits"
+  ],
+  "fragment_overrides": {},
+  "legacy": [
+    "research backtest"
+  ],
+  "exclusive_groups": [],
+  "arguments": [
+    {
+      "flags": [
+        "--strategy"
+      ],
+      "options": {
+        "dest": "strategy",
+        "default": "crown_stack_long",
+        "help": "registered strategy name, e.g. crown_stack_long"
+      }
+    },
+    {
+      "flags": [
+        "--leverage"
+      ],
+      "options": {
+        "dest": "leverage",
+        "type": "float",
+        "default": 2.0,
+        "help": "position size as a multiple of equity (1.0..10.0)"
+      }
+    },
+    {
+      "flags": [
+        "--book-gate"
+      ],
+      "options": {
+        "dest": "book_gate",
+        "action": "store_true",
+        "default": false,
+        "help": "gate entries on recorded orderbook spread and imbalance"
+      }
+    },
+    {
+      "flags": [
+        "--max-spread-bps"
+      ],
+      "options": {
+        "dest": "max_spread_bps",
+        "type": "float",
+        "default": 3.0,
+        "help": "maximum bid-ask spread in basis points for the book gate"
+      }
+    },
+    {
+      "flags": [
+        "--min-obi"
+      ],
+      "options": {
+        "dest": "min_obi",
+        "type": "float",
+        "default": 0.1,
+        "help": "minimum orderbook imbalance (0..1) for the book gate"
+      }
+    },
+    {
+      "flags": [
+        "--book-path"
+      ],
+      "options": {
+        "dest": "book_path",
+        "default": null,
+        "help": "optional L2 snapshot JSONL aligned to the bars"
+      }
+    }
+  ]
+}

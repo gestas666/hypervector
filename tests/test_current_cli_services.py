@@ -11,17 +11,17 @@ import cohort_supervisor_health as health
 @pytest.mark.parametrize("operation", ["status", "watch", "print-launchd"])
 def test_supervisor_options_are_forwarded_verbatim(operation: str) -> None:
     """Nested supervisor commands cannot depend on repository-relative scripts."""
-    args = build_parser().parse_args(["cohort", "supervisor", operation, "--help"])
+    args = build_parser().parse_args(["live", "supervisor", operation, "--help"])
     assert args.arguments == [operation, "--help"]
 
 
 def test_economic_report_uses_a_packaged_service() -> None:
-    """The retained local accounting work belongs to the research workflow."""
-    from hypervector.commands.operations import operation_command
+    """The retained local accounting work is a packaged observe-only service."""
+    from hypervector.commands.operations import operation_argv
 
     args = build_parser().parse_args(
         [
-            "research",
+            "live",
             "economics",
             "--checkpoint",
             "snapshot.json",
@@ -31,8 +31,9 @@ def test_economic_report_uses_a_packaged_service() -> None:
             "new.json",
         ]
     )
-    command = operation_command(args)
+    command = operation_argv(args)
     assert command[1:3] == ("-m", "hypervector.operations.strategy_economic_reset")
+    assert "--enabled" not in command
 
 
 @pytest.mark.parametrize(

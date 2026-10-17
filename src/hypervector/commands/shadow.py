@@ -34,7 +34,7 @@ def cmd_hypervelocity_shadow_run(args: argparse.Namespace) -> int:
                 hypervelocity_profile=profile,
             )
     except (FileNotFoundError, OSError, RuntimeError, ValueError) as exc:
-        print(f"hypervelocity-shadow-run failed: {exc}", file=sys.stderr)
+        print(f"paper shadow failed: {exc}", file=sys.stderr)
         return 1
     print(
         json.dumps(
@@ -66,7 +66,7 @@ def cmd_hypervelocity_shadow_reset(args: argparse.Namespace) -> int:
             confirmed=bool(args.yes),
         )
     except (FileExistsError, OSError, RuntimeError, ValueError) as exc:
-        print(f"hypervelocity-shadow-reset failed: {exc}", file=sys.stderr)
+        print(f"paper shadow-reset failed: {exc}", file=sys.stderr)
         return 1
     print(json.dumps(report.as_dict(), indent=2))
     return 0

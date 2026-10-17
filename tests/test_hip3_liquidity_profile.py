@@ -222,7 +222,8 @@ def test_cli_writes_report_only_profile_without_overwriting(
     arguments = [
         "--data-root",
         str(tmp_path),
-        "research-hip3-liquidity-profile",
+        "db",
+        "hip3-liquidity",
         "--database",
         str(database),
         "--symbol",
@@ -243,7 +244,7 @@ def test_cli_writes_report_only_profile_without_overwriting(
         "unresolved_conservative_false",
         "--fee-evidence-label",
         "fixture",
-        "--output",
+        "--out",
         str(output),
     ]
 

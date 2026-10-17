@@ -14,7 +14,7 @@ def cmd_metalabel_train(args: argparse.Namespace) -> int:
     from hypervector.ml.walk_forward import run_walk_forward_metalabel
 
     paths = _ensure_root(args)
-    export_path = Path(args.path)
+    export_path = Path(args.export)
     if not export_path.is_dir():
         print(json.dumps({"ok": False, "error": f"export not found: {export_path}"}))
         return 1
@@ -22,7 +22,7 @@ def cmd_metalabel_train(args: argparse.Namespace) -> int:
         result = run_walk_forward_metalabel(
             export_dir=export_path,
             data_root=paths.root,
-            out_dir=Path(args.out) if args.out else None,
+            out_dir=Path(args.out_dir) if args.out_dir else None,
             lookback_days=int(args.lookback) if args.lookback is not None else None,
             train_days=int(args.train_days),
             test_days=int(args.test_days),

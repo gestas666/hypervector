@@ -1,15 +1,8 @@
 """Full candidate-matrix screening and archive shortlist contracts."""
 
-import json
-from datetime import UTC, datetime
-from pathlib import Path
-
 import numpy as np
 import pandas as pd
-import pytest
 
-from hypervector.cli import _verified_replay_archive, build_parser, main
-from hypervector.data.oxa_archive_audit import OxaArchiveBundle
 from hypervector.research.maker_replay_models import MakerReplayReport
 from hypervector.research.hypervelocity_archive_compare import (
     screen_candidate_matrix,
@@ -100,95 +93,3 @@ def _replay_report(rule: str) -> MakerReplayReport:
         lifecycles=(),
         limitations=(),
     )
-
-
-def test_cli_writes_stamped_screening_and_l2_shortlist(
-    tmp_path: Path,
-    capsys,
-    monkeypatch,
-) -> None:
-    bars = _bars()
-    positions_path = tmp_path / "positions.csv"
-    pd.DataFrame(
-        {"open_time_utc": [bars.index[900].isoformat()], "side": ["long"]}
-    ).to_csv(positions_path, index=False)
-    start = datetime(2026, 1, 1, tzinfo=UTC)
-    end = datetime(2026, 1, 1, 1, tzinfo=UTC)
-    bundle = OxaArchiveBundle(start, end, None, None, 0, 0)
-    monkeypatch.setattr(
-        "hypervector.commands.replay._load_bars",
-        lambda _args: (bars.reset_index(names="timestamp"), {"source": "fixture"}),
-    )
-    monkeypatch.setattr(
-        "hypervector.commands.replay._verified_replay_archive",
-        lambda _args: (bundle,),
-    )
-    monkeypatch.setattr(
-        "hypervector.commands.replay._archive_replay_reports",
-        lambda _args, _decisions, _bundles: {
-            rule: _replay_report(rule) for rule in ("touch", "through", "trade-through")
-        },
-    )
-    output = tmp_path / "comparison.json"
-
-    rc = main(
-        [
-            "--data-root",
-            str(tmp_path / "data"),
-            "hypervelocity-archive-compare",
-            "--positions",
-            str(positions_path),
-            "--archive-start",
-            start.isoformat(),
-            "--archive-end",
-            end.isoformat(),
-            "--out",
-            str(output),
-        ]
-    )
-
-    payload = json.loads(capsys.readouterr().out)
-    persisted = json.loads(output.read_text(encoding="utf-8"))
-    assert rc == 0
-    assert payload == persisted
-    assert len(payload["screenings"]) == 12
-    assert len(payload["shortlist"]) == 4
-    assert set(payload["l2_replay"]) == {
-        item["candidate"]["candidate_id"] for item in payload["shortlist"]
-    }
-    assert all(
-        len(result["candidate"]["fingerprint"]) == 64
-        for result in payload["l2_replay"].values()
-    )
-    assert all(
-        result["execution_summary"]["liquidation_adjusted"] is True
-        for result in payload["l2_replay"].values()
-    )
-    assert payload["limitations"]["funding"] == "not_available"
-    assert payload["limitations"]["l2_drawdown"] == "event_marked_available"
-
-
-def test_archive_compare_parser_can_use_shared_archive_verifier(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    start = "2026-01-01T00:00:00Z"
-    end = "2026-01-01T01:00:00Z"
-    args = build_parser().parse_args(
-        [
-            "hypervelocity-archive-compare",
-            "--positions",
-            "positions.csv",
-            "--archive-start",
-            start,
-            "--archive-end",
-            end,
-            "--out",
-            "comparison.json",
-        ]
-    )
-    monkeypatch.setattr(
-        "hypervector.data.oxa_archive_audit.verified_archive_bundles",
-        lambda _config: (),
-    )
-
-    assert _verified_replay_archive(args) == ()

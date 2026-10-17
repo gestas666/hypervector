@@ -1,0 +1,100 @@
+{
+  "schema": 2,
+  "help": "Verify and incrementally load 0xArchive evidence into DuckDB",
+  "kind": "inprocess",
+  "handler": "hypervector.cli_oxa:cmd_research_db_build",
+  "authority": "none",
+  "environment": [],
+  "data_root": "honored",
+  "include": [
+    "window"
+  ],
+  "fragment_overrides": {},
+  "legacy": [
+    "research db-build",
+    "research-db-build"
+  ],
+  "exclusive_groups": [],
+  "arguments": [
+    {
+      "flags": [
+        "--symbol"
+      ],
+      "options": {
+        "dest": "symbol",
+        "default": "BTC",
+        "help": "Hyperliquid coin (core) or deployer:asset (HIP-3)"
+      }
+    },
+    {
+      "flags": [
+        "--market-family"
+      ],
+      "options": {
+        "dest": "market_family",
+        "choices": [
+          "core",
+          "hip3"
+        ],
+        "default": "core",
+        "help": "0xArchive market family: core perps or HIP-3 builder markets"
+      }
+    },
+    {
+      "flags": [
+        "--depth"
+      ],
+      "options": {
+        "dest": "depth",
+        "type": "int",
+        "choices": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20
+        ],
+        "default": 20,
+        "help": "orderbook levels per side (1..20)"
+      }
+    },
+    {
+      "flags": [
+        "--books-only"
+      ],
+      "options": {
+        "dest": "books_only",
+        "action": "store_true",
+        "default": false,
+        "help": "load only orderbook evidence"
+      }
+    },
+    {
+      "flags": [
+        "--database"
+      ],
+      "options": {
+        "dest": "database",
+        "type": "Path",
+        "default": null,
+        "help": "DuckDB research database file"
+      },
+      "data_default": "research/market.duckdb"
+    }
+  ]
+}

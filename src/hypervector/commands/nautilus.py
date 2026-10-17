@@ -13,9 +13,9 @@ from hypervector.commands.common import _ensure_root
 
 
 def cmd_phase2_check(args: argparse.Namespace) -> int:
-    """Load export as Phase 2 loadout stub; note paper dry-run is paper-run."""
+    """Load a strategy bundle as a Nautilus loadout and probe the engine offline."""
     _ensure_root(args)
-    path = Path(args.path)
+    path = Path(args.export)
     try:
         report = phase2_check_report(
             path,
@@ -34,23 +34,18 @@ def cmd_phase2_check(args: argparse.Namespace) -> int:
         return 1
     print(json.dumps(report, indent=2, default=str))
     print(
-        "note: phase2-run is historical only; "
-        "paper/shadow dry-run → paper-run (default shadow, no venue orders); "
-        "live venue submit → live-run (--enabled + --i-accept-live-risk + secrets)",
+        "note: 'nautilus run' is historical only; "
+        "paper/shadow dry-run → 'paper run' (default shadow, no venue orders); "
+        "live execution → 'live start' (--enabled + --i-accept-live-risk)",
         file=sys.stderr,
     )
     return 0
 
 
 def cmd_phase2_run(args: argparse.Namespace) -> int:
-    """Run Phase 2 historical backtest from a strict export bundle.
-
-    ``--paper`` / ``--live`` on phase2-run do not switch engines: historical
-    path still runs. Paper dry-run is ``paper-run``; live venue is ``live-run``.
-    """
+    """Run a strict strategy bundle through the historical Nautilus engine."""
     _ensure_root(args)
-    path = Path(args.path)
-    _historical_mode_notices(args)
+    path = Path(args.export)
 
     try:
         result = run_phase2_backtest(
@@ -85,19 +80,3 @@ def cmd_phase2_run(args: argparse.Namespace) -> int:
     }
     print(json.dumps(out, indent=2, default=str))
     return 0
-
-
-def _historical_mode_notices(args: argparse.Namespace) -> None:
-    """Explain legacy flags while preserving historical-only execution authority."""
-    if getattr(args, "paper", False):
-        print(
-            "note: phase2-run --paper does not start paper daemon; "
-            "use: hypervector paper-run --path <export>",
-            file=sys.stderr,
-        )
-    if getattr(args, "live", False):
-        print(
-            "note: phase2-run --live does not place venue orders; "
-            "use: hypervector live-run --path <export> --enabled --i-accept-live-risk",
-            file=sys.stderr,
-        )

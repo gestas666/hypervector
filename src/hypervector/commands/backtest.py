@@ -7,21 +7,23 @@ import json
 import pandas as pd
 from pathlib import Path
 from hypervector.strategies import register_all_strategies
-from hypervector.strategies.registry import get_strategy
+from hypervector.strategies.registry import StrategySpec, get_strategy
 from hypervector.sweep.costs import resolve_cost_model
-from hypervector.sweep.exits import ExitConfig
 from hypervector.sweep.sizing import RiskConfig
-from hypervector.commands.common import _load_bars
+from hypervector.commands.common import (
+    CommandRefused,
+    _load_bars,
+    exit_config_from_args,
+)
 
 
 def cmd_backtest(args: argparse.Namespace) -> int:
-    """Run Phase-1.5 backtest across any registered strategy with leverage & fee models."""
+    """Backtest one registered strategy with leverage, fee and exit models."""
     from hypervector.sweep.metrics import compute_trial_metrics
 
-    register_all_strategies()
+    spec = _validated_strategy(args)
     df_bars = _backtest_bars(args)
 
-    spec = get_strategy(args.strategy)
     params = {}
     if getattr(args, "book_gate", False):
         params["book_gate"] = True
@@ -31,11 +33,7 @@ def cmd_backtest(args: argparse.Namespace) -> int:
     entries, exits, direction = spec.build_signals(df_bars, **params)
     close = df_bars["close"].astype(float)
 
-    exit_cfg = ExitConfig(
-        mode=args.exit_mode,
-        sl_atr_mult=args.sl_atr_mult,
-        rr=args.rr,
-    )
+    exit_cfg = exit_config_from_args(args)
     risk_cfg = RiskConfig(max_size_frac=args.leverage)
     cost = resolve_cost_model(args.fee_model)
 
@@ -46,7 +44,7 @@ def cmd_backtest(args: argparse.Namespace) -> int:
         entries,
         exits,
         direction=direction_clean,
-        init_cash=args.init_cash,
+        init_cash=args.initial_cash,
         df=df_bars,
         cost=cost,
         exit_cfg=exit_cfg,
@@ -69,7 +67,7 @@ def _backtest_report(
         "timeframe": args.timeframe,
         "lookback_days": args.lookback,
         "leverage": args.leverage,
-        "initial_cash": args.init_cash,
+        "initial_cash": args.initial_cash,
         "fee_model": args.fee_model,
         "orderbook_gated": getattr(args, "book_gate", False),
         "metrics": {
@@ -89,6 +87,19 @@ def _backtest_report(
             else 0.0,
         },
     }
+
+
+def _validated_strategy(args: argparse.Namespace) -> StrategySpec:
+    """Refuse an unknown strategy or a missing book file before any data load."""
+    register_all_strategies()
+    try:
+        spec = get_strategy(args.strategy)
+    except KeyError as exc:
+        raise CommandRefused(f"unknown strategy: {args.strategy}") from exc
+    book_path = getattr(args, "book_path", None)
+    if book_path and not Path(book_path).is_file():
+        raise CommandRefused(f"book path not found: {book_path}")
+    return spec
 
 
 def _backtest_bars(args: argparse.Namespace) -> pd.DataFrame:

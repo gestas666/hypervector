@@ -1,7 +1,16 @@
 {
-  "name": "infra-init",
-  "action": "init",
-  "help": "Create I2 data layout (cache/runs/exports/logs/paper/live/nautilus)",
+  "schema": 2,
+  "help": "Create the data layout (cache, runs, exports, logs, paper, live, nautilus)",
+  "kind": "inprocess",
   "handler": "hypervector.commands.status:cmd_infra_init",
+  "authority": "none",
+  "environment": [],
+  "data_root": "honored",
+  "include": [],
+  "fragment_overrides": {},
+  "legacy": [
+    "infra-init"
+  ],
+  "exclusive_groups": [],
   "arguments": []
 }

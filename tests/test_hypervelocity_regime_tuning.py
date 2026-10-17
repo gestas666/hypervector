@@ -140,14 +140,15 @@ def test_cli_autotune_emits_complete_report_only_board(
         [
             "--data-root",
             str(tmp_path / "data"),
-            "hypervelocity-regime-autotune",
+            "tune",
+            "regime",
             "--positions",
             str(positions_path),
             "--n-trials",
             "2",
             "--seed",
             "11",
-            "--forward-horizon",
+            "--forward-bars",
             "5",
         ]
     )

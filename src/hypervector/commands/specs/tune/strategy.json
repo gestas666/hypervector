@@ -1,0 +1,78 @@
+{
+  "schema": 2,
+  "help": "Autotune one strategy's parameters with Karpathy search or Optuna TPE (VectorBT)",
+  "kind": "inprocess",
+  "handler": "hypervector.commands.autotune:cmd_autotune",
+  "authority": "none",
+  "environment": [],
+  "data_root": "honored",
+  "include": [
+    "market",
+    "fees"
+  ],
+  "fragment_overrides": {},
+  "legacy": [
+    "research autotune",
+    "autotune"
+  ],
+  "exclusive_groups": [],
+  "arguments": [
+    {
+      "flags": [
+        "--strategy"
+      ],
+      "options": {
+        "dest": "strategy",
+        "default": "crown_stack_long",
+        "help": "registered strategy name, e.g. crown_stack_long"
+      }
+    },
+    {
+      "flags": [
+        "--n-trials"
+      ],
+      "options": {
+        "dest": "n_trials",
+        "type": "int",
+        "default": 100,
+        "help": "number of tuning trials"
+      }
+    },
+    {
+      "flags": [
+        "--sampler"
+      ],
+      "options": {
+        "dest": "sampler",
+        "type": "sampler",
+        "choices": [
+          "karpathy",
+          "optuna"
+        ],
+        "default": "karpathy",
+        "help": "search sampler: karpathy (random-adaptive with elite zoom) or optuna (TPE)"
+      }
+    },
+    {
+      "flags": [
+        "--book-path"
+      ],
+      "options": {
+        "dest": "book_path",
+        "default": null,
+        "help": "optional L2 orderbook file (JSONL or SQLite)"
+      }
+    },
+    {
+      "flags": [
+        "--no-export"
+      ],
+      "options": {
+        "dest": "no_export",
+        "action": "store_true",
+        "default": false,
+        "help": "do not write the best trial as a strategy bundle"
+      }
+    }
+  ]
+}
