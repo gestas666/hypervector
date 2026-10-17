@@ -615,6 +615,21 @@ def test_launchd_agent_relaunches_a_crash_but_respects_an_operator_stop() -> Non
 
 def test_supervisor_never_imports_the_package_it_supervises() -> None:
     source = Path(sup.__file__).read_text(encoding="utf-8")
-    assert "import hypervector" not in source
-    assert "from hypervector" not in source
+    import ast
+
+    imports = [
+        node
+        for node in ast.walk(ast.parse(source))
+        if isinstance(node, (ast.Import, ast.ImportFrom))
+    ]
+    names = [
+        name.name
+        for node in imports
+        if isinstance(node, ast.Import)
+        for name in node.names
+    ]
+    names += [node.module or "" for node in imports if isinstance(node, ast.ImportFrom)]
+    assert not any(
+        name == "hypervector" or name.startswith("hypervector.") for name in names
+    )
     assert "PRIVATE_KEY" not in source

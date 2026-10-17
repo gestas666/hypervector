@@ -5,7 +5,7 @@
 | Skill | When | Path |
 |-------|------|------|
 | **`hypervector-cli`** | Any CLI / backtesting / autotune / paper / live / research ops | `skills/hypervector-cli/SKILL.md` |
-| **`hypervector-regime-detector`** | Ultimate Regime Engine, accuracy evaluation, `tui-regime-detector` | `skills/hypervector-regime-detector/SKILL.md` |
+| **`hypervector-regime-detector`** | Canonical regime engine, accuracy evaluation and JSON telemetry | `skills/hypervector-regime-detector/SKILL.md` |
 
 Paths (project-scoped):
 - `skills/hypervector-cli/SKILL.md` (or `.grok/skills/hypervector-cli/SKILL.md`)

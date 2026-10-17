@@ -70,10 +70,6 @@ from hypervector.paper.hypervelocity_shadow_controller import (
 from hypervector.paper.event_runtime import build_event_shadow_controller
 from hypervector.paper.event_resume import PendingTargetResume
 from hypervector.paper.ledger import DECISIONS_FILENAME, append_paper_decision
-from hypervector.paper.liquidation_execution import (
-    LIQUIDATION_EXECUTION_MODEL,
-    PARTIAL_LIQUIDATION_SUPPORTED,
-)
 from hypervector.paper.maker_execution import (
     PostOnlyLimitFillModel,
     PendingMakerEntry,
@@ -248,6 +244,12 @@ class PaperSession:
         self.metalabel_min_p = float(metalabel_min_p)
         self.metalabel_filter = self.metalabel_mode == "filter"
         self.execution_mode = str(execution_mode)
+        if isinstance(hypervelocity_profile, SourceFollowHypervelocityProfile) and (
+            conviction_provider is not None or metalabeler is not None
+        ):
+            raise ValueError(
+                "source-follow annotation collection cannot accept inference providers"
+            )
         if (
             hypervelocity_profile is not None
             and self.metalabel_mode == "observe"
@@ -1745,198 +1747,10 @@ class PaperSession:
         return None
 
     def ensure_session_identity(self) -> None:
-        """Write exactly one session_start row for this backend run.
-
-        Stamps the session ``execution_mode`` (shadow|paper) plus dry-run
-        honesty fields so ledger mode never silently defaults to paper when
-        the daemon is shadow.
-        """
+        """Write exactly one unchanged no-submit identity for this backend run."""
         if self._identity_written:
             return
-        from hypervector.paper.order_intent import NETWORK_MAINNET
-
-        position = self.engine.position
-        resume = self._shadow_resume
-        append_paper_decision(
-            self.root,
-            {
-                "feed_ts": "session_start",
-                "run_id": self.run_id,
-                "export_id": str(self.export_id),
-                "strategy_name": self.strategy_name,
-                "profile_id": (
-                    self.hypervelocity_profile.profile_id
-                    if self.hypervelocity_profile is not None
-                    else None
-                ),
-                "symbol": self.loadout.symbol,
-                "timeframe": self.loadout.timeframe,
-                "data_root": str(self.root.resolve()),
-                "action": "session_start",
-                "execution_model": (
-                    self.hypervelocity_profile.shadow_execution_model
-                    if self.hypervelocity_profile is not None
-                    else "legacy_bar_through_v1"
-                ),
-                "execution_data_source": (
-                    "hyperliquid_public_ws_l2_trades_active_asset_ctx"
-                    if self.hypervelocity_profile is not None
-                    else None
-                ),
-                "execution_evidence_fresh": False,
-                "execution_submit_latency_ms": (
-                    self.hypervelocity_profile.execution_submit_latency_ms
-                    if self.hypervelocity_profile is not None
-                    else None
-                ),
-                "execution_cancel_latency_ms": (
-                    self.hypervelocity_profile.execution_cancel_latency_ms
-                    if self.hypervelocity_profile is not None
-                    else None
-                ),
-                "execution_update_latency_ms": (
-                    self.hypervelocity_profile.execution_update_latency_ms
-                    if self.hypervelocity_profile is not None
-                    else None
-                ),
-                "execution_queue_ahead_qty": None,
-                "execution_requested_qty": None,
-                "cumulative_filled_qty": None,
-                "remaining_qty": None,
-                "liquidity_side": None,
-                "margin_model": (
-                    "hyperliquid_isolated_v1"
-                    if self.hypervelocity_profile is not None
-                    else None
-                ),
-                "liquidation_execution_model": (
-                    LIQUIDATION_EXECUTION_MODEL
-                    if self.hypervelocity_profile is not None
-                    else None
-                ),
-                "partial_liquidation_supported": (
-                    PARTIAL_LIQUIDATION_SUPPORTED
-                    if self.hypervelocity_profile is not None
-                    else None
-                ),
-                "backstop_liquidation_supported": (
-                    self.hypervelocity_profile.backstop_liquidation_supported
-                    if self.hypervelocity_profile is not None
-                    else None
-                ),
-                "conviction": self.conviction,
-                "metalabel_mode": self.metalabel_mode,
-                "metalabel_policy": _source_follow_metalabel_policy(
-                    self.hypervelocity_profile
-                ),
-                "metalabel_bundle_id": self.conviction_provider.bundle_id,
-                "strategy_params": {
-                    "strategy": (
-                        self.hypervelocity_profile.strategy_id
-                        if self.hypervelocity_profile
-                        else self.loadout.strategy_name
-                    ),
-                    **_effective_strategy_params(
-                        self.loadout,
-                        profile=self.hypervelocity_profile,
-                    ),
-                },
-                "position_policy": (
-                    self.hypervelocity_profile.position_policy()
-                    if self.hypervelocity_profile
-                    else None
-                ),
-                "regime_policy": (
-                    self.hypervelocity_profile.regime_policy()
-                    if self.hypervelocity_profile
-                    else None
-                ),
-                "peak_observer": (
-                    self.hypervelocity_profile.peak_observer.telemetry()
-                    if self.hypervelocity_profile
-                    else None
-                ),
-                "portfolio_spec": self._portfolio_spec,
-                "portfolio_fingerprint": self._portfolio_fingerprint,
-                "portfolio_profile_changed_from": (
-                    resume.portfolio_profile_changed_from
-                    if resume is not None
-                    else None
-                ),
-                "exits": _effective_exits(
-                    self.loadout,
-                    profile=self.hypervelocity_profile,
-                ),
-                "risk": _effective_risk(
-                    self.loadout,
-                    profile=self.hypervelocity_profile,
-                ),
-                "execution": _effective_execution(
-                    self.loadout, profile=self.hypervelocity_profile
-                ),
-                "costs": self._effective_costs(),
-                "runtime": {
-                    "lookback_days": self.lookback_days,
-                    "live_activated_at": (
-                        self._live_activated_at.isoformat()
-                        if self._live_activated_at is not None
-                        else None
-                    ),
-                    **(
-                        self.hypervelocity_profile.research_evidence()
-                        if isinstance(
-                            self.hypervelocity_profile,
-                            SourceFollowHypervelocityProfile,
-                        )
-                        else {}
-                    ),
-                },
-                "orderbook_archive": (
-                    {
-                        "enabled": self.hypervelocity_profile.orderbook_archive_enabled,
-                        "depth_levels": (
-                            self.hypervelocity_profile.orderbook_archive_depth_levels
-                        ),
-                        "path_pattern": (
-                            "cache/events/hyperliquid/<SYMBOL>/<UTC_DAY>/"
-                            "{l2.parquet,trades.parquet,asset_context.parquet,gaps.jsonl}"
-                        ),
-                    }
-                    if self.hypervelocity_profile is not None
-                    else {"enabled": False}
-                ),
-                "bars_processed": self.bars_processed,
-                "execution_mode": self.execution_mode,
-                "submitted": False,
-                "network": NETWORK_MAINNET,
-                "position_qty": float(position.qty),
-                "position_avg_px": float(position.avg_px),
-                "liquidation_price": self._current_liquidation_price(),
-                "realized_pnl": float(position.realized_pnl),
-                "unrealized_pnl": (
-                    float(resume.unrealized_pnl) if resume is not None else 0.0
-                ),
-                "equity": (
-                    float(resume.equity) if resume is not None else float(self.equity)
-                ),
-                "init_cash": float(self.engine.initial_cash),
-                "resumed_shadow_portfolio": resume is not None,
-                "portfolio_state_asof": (
-                    resume.state_asof if resume is not None else None
-                ),
-                "position_opened_at": (
-                    self._event_shadow_bridge.controller.state.position_opened_at
-                    if self._event_shadow_bridge is not None
-                    else None
-                ),
-                "maximum_hold_seconds": (
-                    self._event_shadow_bridge.controller.state.maximum_hold_seconds
-                    if self._event_shadow_bridge is not None
-                    else None
-                ),
-                "no_submit": True,
-            },
-        )
+        append_paper_decision(self.root, session_identity_payload(self))
         self._identity_written = True
 
     def _effective_costs(self) -> dict[str, object]:
@@ -2003,316 +1817,6 @@ def _validated_initial_cash(value: float | None) -> float | None:
     if not math.isfinite(initial_cash) or initial_cash <= 0.0:
         raise ValueError("initial_cash_usd must be finite and positive")
     return initial_cash
-
-
-def _prepare_ohlcv(ohlcv: pd.DataFrame, *, max_bars: int | None) -> pd.DataFrame:
-    if ohlcv is None or not isinstance(ohlcv, pd.DataFrame) or ohlcv.empty:
-        raise ValueError("OHLCV must be a non-empty DataFrame")
-    frame = ohlcv.copy()
-    if "timestamp" not in frame.columns and frame.index.name == "timestamp":
-        frame = frame.reset_index()
-    missing = [c for c in _OHLCV_REQUIRED if c not in frame.columns]
-    if missing:
-        raise ValueError(f"OHLCV missing columns: {missing}")
-    if max_bars is not None:
-        frame = frame.iloc[: int(max_bars)]
-    return frame.reset_index(drop=True)
-
-
-def _row_to_buffer_record(row: pd.Series) -> dict[str, Any]:
-    ts = row["timestamp"] if "timestamp" in row.index else None
-    if ts is None or (isinstance(ts, float) and pd.isna(ts)):
-        ts = pd.Timestamp.utcnow()
-    else:
-        ts = pd.Timestamp(ts)
-        if ts.tzinfo is None:
-            ts = ts.tz_localize("UTC")
-        else:
-            ts = ts.tz_convert("UTC")
-    return {
-        "timestamp": ts,
-        "open": float(row["open"]),
-        "high": float(row["high"]),
-        "low": float(row["low"]),
-        "close": float(row["close"]),
-        "volume": float(row["volume"]),
-    }
-
-
-def _buffer_to_df(buffer: list[dict[str, Any]]) -> pd.DataFrame:
-    df = pd.DataFrame(buffer)
-    if "timestamp" in df.columns:
-        df = df.set_index("timestamp")
-    return df.loc[:, list(_OHLCV_REQUIRED)].astype(float)
-
-
-def _feed_ts(record: dict[str, Any]) -> str:
-    ts = record.get("timestamp")
-    if ts is None:
-        return "unknown"
-    if isinstance(ts, pd.Timestamp):
-        return ts.isoformat()
-    return str(ts)
-
-
-def _timeframe_minutes(timeframe: str) -> int:
-    values = {"1m": 1, "5m": 5, "15m": 15}
-    if timeframe not in values:
-        raise ValueError(f"unsupported funding timeframe: {timeframe}")
-    return values[timeframe]
-
-
-def _bar_close_timestamp(
-    record: dict[str, Any],
-    *,
-    timeframe: str,
-) -> pd.Timestamp:
-    return pd.Timestamp(record["timestamp"]) + pd.Timedelta(
-        minutes=_timeframe_minutes(timeframe)
-    )
-
-
-def _is_funding_boundary(
-    record: dict[str, Any],
-    *,
-    timeframe: str,
-) -> bool:
-    closed_at = _bar_close_timestamp(record, timeframe=timeframe)
-    return closed_at.minute == 0 and closed_at.second == 0
-
-
-def _resume_timestamp(value: str) -> pd.Timestamp:
-    """Parse an authoritative ledger timestamp or fail closed."""
-    try:
-        timestamp = pd.Timestamp(value)
-    except (TypeError, ValueError) as exc:
-        raise RuntimeError(
-            f"invalid shadow portfolio state timestamp: {value!r}"
-        ) from exc
-    if timestamp.tzinfo is None:
-        return timestamp.tz_localize("UTC")
-    return timestamp.tz_convert("UTC")
-
-
-def _bars_closing_after(
-    frame: pd.DataFrame,
-    *,
-    cutoff: pd.Timestamp,
-    timeframe: str,
-) -> pd.DataFrame:
-    """Return timestamp-ordered bars whose close follows persisted state."""
-    normalized = frame.copy()
-    timestamps = pd.to_datetime(normalized["timestamp"], utc=True)
-    normalized = normalized.assign(timestamp=timestamps).sort_values("timestamp")
-    closes = normalized["timestamp"] + pd.Timedelta(
-        minutes=_timeframe_minutes(timeframe)
-    )
-    return normalized.loc[closes > cutoff].reset_index(drop=True)
-
-
-def _normalized_funding_rates(
-    rates: Mapping[pd.Timestamp, float],
-) -> dict[pd.Timestamp, float]:
-    """Normalize historical funding keys to exact UTC timestamps."""
-    normalized: dict[pd.Timestamp, float] = {}
-    for raw_timestamp, raw_rate in rates.items():
-        timestamp = pd.Timestamp(raw_timestamp)
-        if timestamp.tzinfo is None:
-            timestamp = timestamp.tz_localize("UTC")
-        else:
-            timestamp = timestamp.tz_convert("UTC")
-        rate = float(raw_rate)
-        if not math.isfinite(rate):
-            raise RuntimeError(f"non-finite funding history at {timestamp.isoformat()}")
-        normalized[timestamp] = rate
-    return normalized
-
-
-def _exits_dict(loadout: StrategyLoadout) -> dict[str, Any]:
-    raw = dict(loadout.exits or {})
-    if "mode" not in raw or raw.get("mode") is None:
-        if loadout.exit_mode is not None:
-            raw["mode"] = loadout.exit_mode
-    return raw
-
-
-def _effective_strategy_params(
-    loadout: StrategyLoadout,
-    *,
-    profile: HypervelocityProfile | None = None,
-) -> dict[str, Any]:
-    if not is_hypervelocity_strategy(loadout.strategy_name):
-        return dict(loadout.params or {})
-    if profile is not None:
-        return {
-            "leverage": profile.leverage,
-            "target_margin_pct": profile.target_margin_pct,
-        }
-    contract = HypervelocityContract()
-    return {
-        "leverage": contract.leverage,
-        "target_margin_pct": contract.target_margin_pct,
-    }
-
-
-def _source_follow_metalabel_policy(
-    profile: HypervelocityProfile | None,
-) -> dict[str, object] | None:
-    if not isinstance(profile, SourceFollowHypervelocityProfile):
-        return None
-    return {
-        "observation_type": "annotation_collection",
-        "inference_active": False,
-        "bundle_id": None,
-        "probabilities_emitted": False,
-        "may_filter": False,
-        "may_scale": False,
-        "execution_authority": "none",
-    }
-
-
-def _effective_exits(
-    loadout: StrategyLoadout,
-    *,
-    profile: HypervelocityProfile | None = None,
-) -> dict[str, Any]:
-    if not is_hypervelocity_strategy(loadout.strategy_name):
-        return dict(loadout.exits or {})
-    if profile is not None:
-        exits: dict[str, Any] = {
-            "mode": "strategy_target_only",
-            "target_margin_pct": profile.target_margin_pct,
-            "target_price_fraction": (
-                profile.target_margin_pct / profile.leverage / 100.0
-            ),
-            "target_basis": "gross_margin_return_before_costs",
-            "stop": None,
-            "range_policy": profile.open_position_range_policy,
-        }
-        if isinstance(profile, SourceFollowHypervelocityProfile):
-            exits["maximum_hold_seconds"] = profile.maximum_hold_seconds
-        return exits
-    contract = HypervelocityContract()
-    return {
-        "mode": "strategy_target_only",
-        "target_margin_pct": contract.target_margin_pct,
-        "target_price_fraction": contract.target_price_fraction,
-        "target_basis": "gross_margin_return_before_costs",
-        "stop": None,
-        "range_policy": contract.open_position_range_policy,
-    }
-
-
-def _effective_risk(
-    loadout: StrategyLoadout,
-    *,
-    profile: HypervelocityProfile | None = None,
-) -> dict[str, Any]:
-    if not is_hypervelocity_strategy(loadout.strategy_name):
-        return dict(loadout.risk or {})
-    if profile is not None:
-        return {
-            "mode": "fixed_margin_fraction",
-            "margin_fraction": profile.margin_fraction,
-            "notional_fraction": profile.margin_fraction * profile.leverage,
-        }
-    contract = HypervelocityContract()
-    return {
-        "mode": "fixed_margin_fraction",
-        "margin_fraction": contract.margin_fraction,
-        "notional_fraction": contract.notional_fraction,
-    }
-
-
-def _effective_execution(
-    loadout: StrategyLoadout,
-    *,
-    profile: HypervelocityProfile | None = None,
-) -> dict[str, Any]:
-    if not is_hypervelocity_strategy(loadout.strategy_name):
-        return {"order_type": "market", "time_in_force": "ioc"}
-    contract = HypervelocityContract()
-    event_model = profile.shadow_execution_model if profile else "legacy_bar_through_v1"
-    execution: dict[str, Any] = {
-        "order_type": contract.order_type,
-        "time_in_force": contract.time_in_force,
-        "fill_rule": (
-            "public_l2_trade_event_tape"
-            if event_model == "nautilus_event_v1"
-            else "through_one_tick"
-        ),
-        "fill_model": (
-            event_model if profile is not None else PostOnlyLimitFillModel.fill_model_id
-        ),
-        "legacy_comparator": "legacy_bar_through_v1",
-        "price_tick_mode": "hyperliquid_dynamic",
-        "entry_ttl_seconds": (
-            profile.entry_ttl_seconds
-            if profile is not None
-            else contract.entry_ttl_seconds
-        ),
-        "expired_entry_rearm_policy": (
-            profile.expired_entry_rearm_policy
-            if profile is not None
-            else contract.expired_entry_rearm_policy
-        ),
-        "same_direction_reentry_policy": (
-            profile.same_direction_reentry_policy
-            if profile is not None
-            else contract.same_direction_reentry_policy
-        ),
-        "reentry_cooldown_bars": (
-            profile.reentry_cooldown_bars if profile is not None else 1
-        ),
-    }
-    if profile is not None:
-        execution.update(
-            submit_latency_ms=profile.execution_submit_latency_ms,
-            cancel_latency_ms=profile.execution_cancel_latency_ms,
-            update_latency_ms=profile.execution_update_latency_ms,
-            max_event_age_ms=profile.execution_max_event_age_ms,
-            restart_queue_policy=profile.restart_queue_policy,
-            liquidation_execution_model=profile.liquidation_execution_model,
-            partial_liquidation_supported=profile.partial_liquidation_supported,
-            partial_liquidation_threshold_usd=(
-                profile.partial_liquidation_threshold_usd
-            ),
-            partial_liquidation_fraction=profile.partial_liquidation_fraction,
-            liquidation_cooldown_ms=profile.liquidation_cooldown_ms,
-            backstop_liquidation_supported=(profile.backstop_liquidation_supported),
-            backstop_maintenance_fraction=profile.backstop_maintenance_fraction,
-            backstop_accounting_model=profile.backstop_accounting_model,
-        )
-        if isinstance(profile, SourceFollowHypervelocityProfile):
-            execution.update(
-                maximum_hold_exit="first_fresh_bbo_taker",
-                execution_authority="shadow_only",
-            )
-    return execution
-
-
-def _portfolio_spec(
-    loadout: StrategyLoadout,
-    *,
-    profile: HypervelocityProfile | None,
-    strategy_name: str,
-) -> dict[str, object]:
-    return {
-        "strategy_name": strategy_name,
-        "symbol": loadout.symbol,
-        "timeframe": loadout.timeframe,
-        "strategy_params": {
-            "strategy": profile.strategy_id
-            if profile is not None
-            else loadout.strategy_name,
-            **_effective_strategy_params(loadout, profile=profile),
-        },
-        "position_policy": profile.position_policy() if profile is not None else None,
-        "regime_policy": profile.regime_policy() if profile is not None else None,
-        "exits": _effective_exits(loadout, profile=profile),
-        "risk": _effective_risk(loadout, profile=profile),
-        "execution": _effective_execution(loadout, profile=profile),
-    }
 
 
 def _restore_pending_maker_entry(
@@ -2443,8 +1947,10 @@ def _build_hypervelocity_directional_provider(
     *,
     conviction: float,
     metalabel_min_p: float,
-) -> DirectionalMetalabelConvictionProvider:
-    """Load the configured long/short annotation-only model pair."""
+) -> ConvictionProvider:
+    """Honor collection-only profiles; otherwise load declared annotation models."""
+    if isinstance(profile, SourceFollowHypervelocityProfile):
+        return FixedConvictionProvider(conviction=conviction)
     from hypervector.ml.features import FeatureBuilder
     from hypervector.ml.metalabel import Metalabeler
 
@@ -2502,3 +2008,29 @@ def _entry_qty(
     notional = equity * float(size_frac)
     qty = notional / mark_px
     return qty if qty > 0 else None
+
+
+from hypervector.paper.session_configuration import (
+    _exits_dict as _exits_dict,
+    _effective_strategy_params as _effective_strategy_params,
+    _source_follow_metalabel_policy as _source_follow_metalabel_policy,
+    _effective_exits as _effective_exits,
+    _effective_risk as _effective_risk,
+    _effective_execution as _effective_execution,
+    _portfolio_spec as _portfolio_spec,
+)
+
+from hypervector.paper.session_bars import (
+    _prepare_ohlcv as _prepare_ohlcv,
+    _row_to_buffer_record as _row_to_buffer_record,
+    _buffer_to_df as _buffer_to_df,
+    _feed_ts as _feed_ts,
+    _timeframe_minutes as _timeframe_minutes,
+    _bar_close_timestamp as _bar_close_timestamp,
+    _is_funding_boundary as _is_funding_boundary,
+    _resume_timestamp as _resume_timestamp,
+    _bars_closing_after as _bars_closing_after,
+    _normalized_funding_rates as _normalized_funding_rates,
+)
+
+from hypervector.paper.session_identity import session_identity_payload

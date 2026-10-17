@@ -42,7 +42,7 @@ build-backend = "hatchling.build"
 hypervector = "hypervector.cli:main"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/hypervector"]
+packages = ["src/hypervector", "src/hypervector_supervision"]
 
 [tool.hatch.build.targets.wheel.force-include]
 "pyproject.toml" = "hypervector/_build/pyproject.toml"

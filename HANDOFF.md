@@ -30,7 +30,7 @@ The following sections are historical and do not describe current service state.
 
 ---
 
-# Current operation — V95 LIVE ARMED (review fixes), 2026-09-27 22:59 UTC
+# Historical operation — V95 LIVE ARMED (review fixes), 2026-09-27 22:59 UTC
 
 **Status.**
 - V95 is live and armed.

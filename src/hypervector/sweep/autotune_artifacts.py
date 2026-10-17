@@ -49,6 +49,17 @@ def finish_search(
             best_metrics=best["metrics"],
         )
     )
+    return _result(settings, trials, best, sampler_label, export_dir, board_path)
+
+
+def _result(
+    settings: SearchSettings,
+    trials: list[dict[str, object]],
+    best: dict[str, object],
+    sampler_label: str,
+    export_dir: Path | None,
+    board_path: Path,
+) -> AutotuneResult:
     return AutotuneResult(
         settings.strategy_name,
         settings.symbol,

@@ -1,0 +1,19 @@
+{
+  "name": "cohort-supervisor",
+  "action": "supervisor",
+  "help": "Explicit cohort supervision: status, watch, supervise, print-launchd",
+  "handler": "hypervector.commands.services:cmd_supervisor",
+  "arguments": [
+    {
+      "flags": [
+        "arguments"
+      ],
+      "options": {
+        "nargs": "...",
+        "default": [],
+        "help": "status | watch | supervise | print-launchd, followed by service options"
+      }
+    }
+  ],
+  "service_module": "hypervector_supervision.cohort_backend_supervisor"
+}

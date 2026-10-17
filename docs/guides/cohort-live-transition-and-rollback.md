@@ -120,8 +120,8 @@ candidate profile. Recover only the exact active profile with fresh explicit
 live authority:
 
 ```bash
-.venv/bin/python -m hypervector cohort-tui \
-  --mode live --enabled --i-accept-live-risk \
+.venv/bin/python -m hypervector cohort live \
+  --enabled --i-accept-live-risk \
   --resume-transition-drain \
   --config <exact-active-profile>
 ```
@@ -293,16 +293,15 @@ Do not remove any ledger, order-command, checkpoint, or backup file.
 This is the only live-arm command in this runbook:
 
 ```bash
-uv run python -m hypervector cohort-tui \
-  --mode live \
+.venv/bin/python -m hypervector cohort live \
   --config configs/multi_asset_bidirectional_evidence_routed_hype75_extension_candidate.toml \
   --enabled --i-accept-live-risk
 ```
 
 After acquiring the singleton lock, the backend must create, decompress, and
 hash-verify an immutable pre-start bundle before constructing authenticated
-Hyperliquid adapters. The launcher allows 180 seconds for this preparation and
-fresh telemetry. The bundle must include the complete bounded Python execution
+Hyperliquid adapters. The foreground CLI propagates the backend result; an explicitly invoked
+supervisor owns restart and monitoring policy. The bundle must include the complete bounded Python execution
 source set from Hypervector and its local backtest-lab provider dependency, plus
 `pyproject.toml` and `uv.lock`; its manifest binds those bytes through an
 implementation file count and composite SHA-256.

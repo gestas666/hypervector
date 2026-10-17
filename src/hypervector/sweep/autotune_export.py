@@ -5,6 +5,7 @@ Plugin-defined JSON mappings retain their legacy Any interface here.
 
 from __future__ import annotations
 from pathlib import Path
+from hypervector.export.phase2 import export_candidate
 from typing import Any
 from hypervector.strategies.hypervelocity_contract import (
     HypervelocityContract,
@@ -56,8 +57,6 @@ def _export_autotune_candidate(
     best_metrics: dict[str, Any],
 ) -> Path:
     """Write a strict Phase-2 bundle through the canonical exporter."""
-    from hypervector.export.phase2 import export_candidate
-
     exit_cfg, risk_cfg = _export_settings(strategy_name, best_exit_dict)
     candidate_id = f"exp_{strategy_name}_{timeframe}_{stamp}"
     return export_candidate(

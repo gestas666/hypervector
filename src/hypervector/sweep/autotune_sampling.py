@@ -76,8 +76,8 @@ def _optuna_exit_dict(trial: Any, *, hypervelocity: bool) -> dict[str, Any]:
         "mode": trial.suggest_categorical("exit_mode", ["atr", "trail", "fixed_rr"]),
         "sl_pct": trial.suggest_float("sl_pct", 0.003, 0.03, step=0.003),
         "sl_atr_mult": trial.suggest_float("sl_atr_mult", 0.8, 4.0, step=0.4),
-        "rr": trial.suggest_float("rr", 1.2, 5.0, step=0.3),
-        "trail_atr_mult": trial.suggest_float("trail_atr_mult", 1.2, 5.0, step=0.3),
+        "rr": trial.suggest_float("rr", 1.2, 4.8, step=0.3),
+        "trail_atr_mult": trial.suggest_float("trail_atr_mult", 1.2, 4.8, step=0.3),
         "leverage": trial.suggest_categorical("leverage", [1.0, 2.0, 3.0, 5.0]),
     }
 

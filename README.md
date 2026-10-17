@@ -56,6 +56,8 @@ hypervector paper report --last 5
 hypervector cohort checkpoint --config profile.toml --once --current-run-only
 hypervector cohort monitor --config profile.toml --follow
 hypervector cohort audit --run-id RUN_ID --out-dir data/logs/cohort-audits
+hypervector cohort supervisor status
+hypervector research economics --checkpoint snapshot.json --funding BTC_funding.parquet --out economics.json
 ```
 
 The supplied research profiles may reference local exports, models, external
@@ -98,3 +100,18 @@ VectorBT integrations use `hypervector[integrations]`; Optuna/hybrid samplers
 use `hypervector[optuna]`. TA-Lib indicators, Karpathy and the VectorBT Rust accelerator remain
 part of the core installation. Technical trial failures are errors; weak
 performance is a reported result, without new implicit strategy/risk gates.
+
+## Current checkout and retained history
+
+The original checkout is the maintained unified CLI version on `main` after
+verification and merge. Its current handoff is `HANDOFF.md`. Operational
+supervision is packaged separately as `hypervector_supervision` so trading
+engine import failures cannot disable the independent watcher. Compatibility
+scripts continue to call the same packaged services.
+
+Historical approvals, research journals, shelved D1 tooling and experimental
+research APIs are retained as provenance and compatibility surfaces. They do
+not auto-run or enter the default CLI pipeline. Historical hash checks audit
+their dated source/data snapshots; they do not authorize the current source.
+See `docs/reviews/2026-10-17-unified-current-validation.md` for acceptance and
+retention decisions. Trading remains stopped until separately authorized.

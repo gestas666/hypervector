@@ -31,6 +31,7 @@ def discover_cohort_implementation_sources(
             for relative in _LOCK_FILES
         ),
         *_package_sources(package),
+        *_supervision_sources(package),
     ]
     provider_files = _python_sources(provider_package)
     if not provider_files:
@@ -39,25 +40,49 @@ def discover_cohort_implementation_sources(
 
 
 def discover_installed_cohort_sources(
-    provider_root: Path, *, package_root: Path | None = None,
+    provider_root: Path,
+    *,
+    package_root: Path | None = None,
 ) -> dict[str, Path]:
     """Bind installed Python, CLI option resources and bundled dependency metadata."""
     package = package_root or Path(__file__).resolve().parents[1]
-    metadata = [_required_file(package / "_build" / name, "dependency lock metadata")
-                for name in ("pyproject.toml", "uv.lock")]
-    _required_file(package / "operations" / "multi_asset_bidirectional_live.py", "cohort entrypoint")
-    provider = _python_sources(_required_directory(provider_root.resolve(), "provider package"))
+    metadata = [
+        _required_file(package / "_build" / name, "dependency lock metadata")
+        for name in ("pyproject.toml", "uv.lock")
+    ]
+    _required_file(
+        package / "operations" / "multi_asset_bidirectional_live.py",
+        "cohort entrypoint",
+    )
+    provider = _python_sources(
+        _required_directory(provider_root.resolve(), "provider package")
+    )
     if not provider:
         raise ValueError(f"provider package contains no Python source: {provider_root}")
-    return _role_map([*metadata, *_package_sources(package)], provider)
+    return _role_map(
+        [*metadata, *_package_sources(package), *_supervision_sources(package)],
+        provider,
+    )
+
+
+def _supervision_sources(package: Path) -> list[Path]:
+    """Bind any independent supervision package shipped beside the trading code."""
+    companion = package.parent / "hypervector_supervision"
+    if not companion.exists():
+        return []
+    return _python_sources(_required_directory(companion, "supervision package"))
 
 
 def _package_sources(package: Path) -> list[Path]:
     resources = sorted((package / "commands").rglob("*.json"))
-    selected = [*_python_sources(package),
-                *(_required_file(path, "CLI option contract") for path in resources)]
+    selected = [
+        *_python_sources(package),
+        *(_required_file(path, "CLI option contract") for path in resources),
+    ]
     if len(selected) > _MAX_SOURCE_FILES:
-        raise ValueError(f"implementation source count exceeds {_MAX_SOURCE_FILES}: {package}")
+        raise ValueError(
+            f"implementation source count exceeds {_MAX_SOURCE_FILES}: {package}"
+        )
     return selected
 
 

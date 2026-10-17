@@ -79,3 +79,20 @@ def test_negative_valid_trials_remain_eligible_for_adaptation(
     )
     assert result.best_metrics["net_pnl"] == -100.0
     assert mutated
+
+
+def test_optuna_bounds_are_exact_points_on_their_declared_grid() -> None:
+    """Search bounds must not rely on Optuna silently shrinking a range."""
+    import math
+
+    class StrictTrial:
+        def suggest_categorical(self, _name: str, choices: list[object]) -> object:
+            return choices[0]
+
+        def suggest_float(
+            self, _name: str, low: float, high: float, *, step: float
+        ) -> float:
+            assert math.isclose((high - low) / step, round((high - low) / step))
+            return low
+
+    autotune._optuna_exit_dict(StrictTrial(), hypervelocity=False)
