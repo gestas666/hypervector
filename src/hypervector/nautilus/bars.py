@@ -2,6 +2,11 @@
 
 Uses ``BarDataWrangler`` (same path as Nautilus custom-CSV examples). Does not
 claim CEX/research bars equal Hyperliquid book; this is a sim feed adapter only.
+
+Research frames label each bar by its open time. :func:`dataframe_to_bars`
+stamps Nautilus bars at the bar close by default (Nautilus convention for
+EXTERNAL bars), so the engine never sees a close price before the bar has
+closed; :func:`bar_open_label_ns` recovers the research label.
 """
 
 from __future__ import annotations
@@ -9,7 +14,7 @@ from __future__ import annotations
 import io
 import re
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
 import pandas as pd
@@ -19,6 +24,8 @@ from nautilus_trader.model.identifiers import InstrumentId, Symbol, Venue
 from nautilus_trader.model.instruments import CryptoPerpetual
 from nautilus_trader.model.objects import Money, Price, Quantity
 from nautilus_trader.persistence.wranglers import BarDataWrangler
+
+from hypervector.nautilus.venue_spec import research_symbol_to_instrument
 
 if TYPE_CHECKING:
     from hypervector.nautilus.load_export import StrategyLoadout
@@ -41,12 +48,19 @@ _TF_MAP = {
 def synthetic_btc_perp_instrument(
     venue: str = "HYPERLIQUID",
     symbol: str = "BTC-PERP",
+    *,
+    maker_fee: Decimal = Decimal("0.00015"),
+    taker_fee: Decimal = Decimal("0.00045"),
+    margin_init: Decimal = Decimal("0.025"),
+    margin_maint: Decimal = Decimal("0.0125"),
 ) -> CryptoPerpetual:
     """Minimal BTC perpetual for offline backtests (no network).
 
     Defaults to venue ``HYPERLIQUID``; pass ``SIM`` for pure sim identity.
     Price/size increments are coarse stubs sufficient for bar wrangling — not
-    a live HL instrument definition.
+    a live HL instrument definition. Fee and margin rates default to the
+    historical stub values; the Phase 2 runner passes the export cost model
+    and leverage-derived margins explicitly.
     """
     return CryptoPerpetual(
         instrument_id=InstrumentId(symbol=Symbol(symbol), venue=Venue(venue)),
@@ -65,10 +79,10 @@ def synthetic_btc_perp_instrument(
         min_notional=Money(10.00, USDT),
         max_price=Price.from_str("1000000.0"),
         min_price=Price.from_str("0.1"),
-        margin_init=Decimal("0.025"),
-        margin_maint=Decimal("0.0125"),
-        maker_fee=Decimal("0.00015"),
-        taker_fee=Decimal("0.00045"),
+        margin_init=Decimal(margin_init),
+        margin_maint=Decimal(margin_maint),
+        maker_fee=Decimal(maker_fee),
+        taker_fee=Decimal(taker_fee),
         ts_event=0,
         ts_init=0,
     )
@@ -99,6 +113,8 @@ def dataframe_to_bars(
     df: pd.DataFrame,
     bar_type: str | BarType,
     instrument: CryptoPerpetual | Any,
+    *,
+    timestamp_at: Literal["close", "open"] = "close",
 ) -> list[Bar]:
     """Convert a research OHLCV frame into a list of Nautilus ``Bar`` objects.
 
@@ -106,7 +122,8 @@ def dataframe_to_bars(
     ----------
     df:
         Research OHLCV (UTC ``timestamp`` column or index; open/high/low/close/volume).
-        Extra columns (e.g. ``source``) are dropped.
+        Extra columns (e.g. ``source``) are dropped. Research timestamps are
+        bar-open labels.
     bar_type:
         Nautilus bar type string (e.g. from :func:`bar_type_from_loadout`) or
         a :class:`BarType` instance.
@@ -114,6 +131,11 @@ def dataframe_to_bars(
         Instrument definition for ``BarDataWrangler`` (price/size precision).
         Required — the wrangler needs it even when ``bar_type`` is a string.
         Use :func:`synthetic_btc_perp_instrument` for offline tests.
+    timestamp_at:
+        ``"close"`` (default, Nautilus convention for EXTERNAL bars) stamps
+        ``ts_event``/``ts_init`` at the bar close (open label + bar interval),
+        so the engine clock, fills and positions never see a bar's close
+        price before the bar has closed. ``"open"`` keeps the research label.
 
     Returns
     -------
@@ -122,10 +144,17 @@ def dataframe_to_bars(
 
     Notes
     -----
-    Offline conversion only — does not start a backtest engine.
+    Offline conversion only — does not start a backtest engine. Use
+    :func:`bar_open_label_ns` to recover the research label from a bar.
     """
     work = _to_wrangler_ohlcv(df)
     bt = BarType.from_str(bar_type) if isinstance(bar_type, str) else bar_type
+    if timestamp_at == "close":
+        work.index = work.index + bar_interval(bt)
+    elif timestamp_at != "open":
+        raise ValueError(
+            f"timestamp_at must be 'close' or 'open', got {timestamp_at!r}"
+        )
     wrangler = BarDataWrangler(bt, instrument)
     # pandas>=3 CoW: homogeneous float frames expose read-only .values; Cython
     # ``double[:]`` in BarDataWrangler rejects them. Materialize via CSV like
@@ -135,15 +164,26 @@ def dataframe_to_bars(
 
 
 def _research_symbol_to_instrument(symbol: str) -> str:
-    s = symbol.strip().upper()
-    if s in {"BTC", "BTCUSD", "BTCUSDT", "BTC-USD"}:
-        return "BTC-PERP"
-    if s.endswith("-PERP"):
-        return s
-    if s.endswith("PERP") and "-" not in s:
-        # e.g. BTCPERP → BTC-PERP
-        return f"{s[:-4]}-PERP"
-    return f"{s}-PERP"
+    """``BTC`` → ``BTC-PERP`` (single mapping shared with :mod:`venue_spec`)."""
+    return research_symbol_to_instrument(symbol)
+
+
+def bar_interval(bar_type: str | BarType) -> pd.Timedelta:
+    """Wall-clock length of one bar for a time-aggregated bar type."""
+    bt = BarType.from_str(bar_type) if isinstance(bar_type, str) else bar_type
+    return pd.Timedelta(bt.spec.timedelta)
+
+
+def bar_interval_ns(bar_type: str | BarType) -> int:
+    return int(bar_interval(bar_type).value)
+
+
+def bar_open_label_ns(bar: Bar, *, timestamp_at: str = "close") -> int:
+    """Research bar-open label (ns) for a bar built by :func:`dataframe_to_bars`."""
+    ts = int(bar.ts_event)
+    if timestamp_at == "close":
+        return ts - bar_interval_ns(bar.bar_type)
+    return ts
 
 
 def _timeframe_to_aggregation(timeframe: str) -> str:

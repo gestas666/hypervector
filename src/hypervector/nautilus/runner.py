@@ -2,24 +2,47 @@
 
 Offline-capable when ``ohlcv`` is injected (tests) or research cache is warm.
 Never requires network when OHLCV is provided.
+
+What the run models (all recorded in ``summary.json``):
+
+* instrument: built for the export symbol from venue geometry
+  (:mod:`hypervector.nautilus.venue_spec`); unknown symbols are refused before
+  any history is loaded;
+* costs: the export cost model (taker fee + slippage per side, post-run
+  funding estimate) — :mod:`hypervector.nautilus.costs`;
+* conviction: explicit argument, else the export's conviction;
+* margin: ``StandardMarginModel`` with ``margin_init = 1 / sim leverage`` and
+  the venue maintenance rate (Nautilus 1.230 neither denies nor liquidates
+  margin-account orders in this bar sim; nothing here adds such a gate);
+* bars: stamped at bar close; the actor rebuilds research bar-open labels;
+* signals: precomputed once over the replay when a windowed probe confirms
+  equivalence (``signal_mode="auto"``), else the windowed actor path;
+* PnL: mark-to-market (realized + unrealized of open positions) minus the
+  funding estimate; position cycles are reported as ``trade_count``.
+
+Any strategy or engine error raises :class:`Phase2TechnicalFailure` and no
+success summary is written (technical failure aborts; there are no gates).
 """
 
 from __future__ import annotations
 
 import json
+import math
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from decimal import Decimal
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import pandas as pd
 from nautilus_trader.backtest.engine import BacktestEngine
+from nautilus_trader.backtest.models import StandardMarginModel
 from nautilus_trader.config import BacktestEngineConfig, LoggingConfig
 from nautilus_trader.core.uuid import UUID4
 from nautilus_trader.model import TraderId
 from nautilus_trader.model.currencies import USDT
+from nautilus_trader.model.data import BarType
 from nautilus_trader.model.enums import AccountType, OmsType
 from nautilus_trader.model.identifiers import Venue
 from nautilus_trader.model.objects import Money
@@ -32,17 +55,42 @@ from hypervector.nautilus.actor import (
     HypervectorStrategy,
     config_from_loadout,
 )
-from hypervector.strategies.hypervelocity_contract import is_hypervelocity_strategy
 from hypervector.nautilus.bars import (
+    bar_interval_ns,
     bar_type_from_loadout,
     dataframe_to_bars,
-    synthetic_btc_perp_instrument,
 )
+from hypervector.nautilus.costs import (
+    Phase2CostModel,
+    estimate_funding,
+    resolve_phase2_conviction,
+    resolve_phase2_costs,
+)
+from hypervector.nautilus.errors import (
+    Phase2IntentError,
+    Phase2TechnicalFailure,
+    UnknownStrategyError,
+)
+from hypervector.nautilus.instruments import perp_instrument_from_spec
 from hypervector.nautilus.load_export import StrategyLoadout, load_strategy_loadout
-from hypervector.strategies import register_all_strategies
+from hypervector.nautilus.precompute import (
+    ohlcv_frame_from_bars,
+    precompute_intents,
+    probe_precomputed,
+)
+from hypervector.nautilus.venue_spec import VenueInstrumentSpec, resolve_venue_spec
+from hypervector.strategies import get_strategy, register_all_strategies
+from hypervector.strategies.hypervelocity_contract import is_hypervelocity_strategy
 
 _DEFAULT_INIT_CASH = 10_000.0
 _VENUE = "HYPERLIQUID"
+
+SignalMode = Literal["auto", "windowed", "precomputed"]
+_SIGNAL_MODES = ("auto", "windowed", "precomputed")
+_SEMANTICS = {
+    "precomputed": "full_frame_research_parity",
+    "windowed": "rolling_window_live_parity",
+}
 
 
 @dataclass(frozen=True)
@@ -54,10 +102,32 @@ class Phase2Result:
     pnl: float
     report_path: Path
     loadout_summary: dict[str, Any]
+    trade_count: int = 0
+    pnl_realized: float = 0.0
+    pnl_unrealized: float = 0.0
+    funding_cost: float = 0.0
+    commissions_total: float = 0.0
+    open_positions_at_end: int = 0
+    signal_mode: str = "windowed"
+    extras: dict[str, Any] = field(default_factory=dict)
 
 
 def _default_leverage(loadout: StrategyLoadout) -> int:
     return 30 if is_hypervelocity_strategy(loadout.strategy_name) else 1
+
+
+def _sim_leverage(loadout: StrategyLoadout, spec: VenueInstrumentSpec) -> Decimal:
+    """Configured sim leverage, never above the venue/charter max for the asset."""
+    return min(
+        Decimal(_default_leverage(loadout)), Decimal(str(spec.venue_max_leverage))
+    )
+
+
+def _require_registered_strategy(loadout: StrategyLoadout, export_path: Path) -> None:
+    try:
+        get_strategy(loadout.strategy_name)
+    except KeyError:
+        raise UnknownStrategyError(export_path, loadout.strategy_name) from None
 
 
 def run_phase2_backtest(
@@ -65,12 +135,13 @@ def run_phase2_backtest(
     export_dir: Path | str,
     data_root: Path | str,
     ohlcv: pd.DataFrame | None = None,
-    conviction: float = 0.5,
+    conviction: float | None = None,
     lookback_days: int | None = None,
     max_bars: int | None = None,
     log_level: str = "ERROR",
     venue: str = _VENUE,
     allow_network: bool = True,
+    signal_mode: SignalMode = "auto",
 ) -> Phase2Result:
     """Run HypervectorStrategy on research OHLCV via Nautilus BacktestEngine.
 
@@ -85,7 +156,8 @@ def run_phase2_backtest(
         (offline path for unit tests). When ``None``, loads via
         :func:`load_research_history` (cache-first).
     conviction:
-        Position-sizing conviction passed to the strategy config.
+        Position-sizing conviction. ``None`` (default) uses the export's
+        ``meta.conviction``, else ``risk.default_conviction``, else 0.5.
     lookback_days:
         History window when loading from cache (defaults to loadout meta or
         :data:`DEFAULT_LOOKBACK`).
@@ -95,18 +167,42 @@ def run_phase2_backtest(
         Nautilus console log level (default ERROR to keep tests quiet).
     venue:
         Simulated venue code (default HYPERLIQUID).
+    signal_mode:
+        ``"auto"`` (default): precompute signals once when the windowed probe
+        finds no mismatch, else replay windowed. ``"precomputed"``: require
+        precompute (probe mismatch is a technical failure). ``"windowed"``:
+        rebuild signals from the trailing window on every bar.
 
     Returns
     -------
     Phase2Result
-        Orders count, total PnL, path to ``summary.json``, loadout summary.
+        Orders/trade counts, mark-to-market PnL, path to ``summary.json``.
+
+    Raises
+    ------
+    Phase2TechnicalFailure
+        Strategy error, probe mismatch in ``precomputed`` mode, or engine
+        fault. No success summary is written.
+    UnknownStrategyError
+        The bundle names an unregistered strategy.
+    UnsupportedNautilusSymbol
+        No venue geometry is known for the export symbol.
     """
+    if signal_mode not in _SIGNAL_MODES:
+        raise ValueError(
+            f"signal_mode must be one of {_SIGNAL_MODES}, got {signal_mode!r}"
+        )
     register_all_strategies()
     export_path = Path(export_dir).resolve()
     paths = ensure_data_layout(data_root)
 
     loadout = load_strategy_loadout(export_path, strict=True)
+    _require_registered_strategy(loadout, export_path)
+    spec = resolve_venue_spec(loadout.symbol, loadout.meta)
+    costs = resolve_phase2_costs(loadout)
+    conviction_value, conviction_source = resolve_phase2_conviction(loadout, conviction)
     hypervelocity = is_hypervelocity_strategy(loadout.strategy_name)
+
     df = _resolve_ohlcv(
         ohlcv=ohlcv,
         data_root=paths.root,
@@ -117,9 +213,25 @@ def run_phase2_backtest(
     if max_bars is not None and len(df) > int(max_bars):
         df = df.iloc[: int(max_bars)].copy()
 
-    instrument = synthetic_btc_perp_instrument(venue=venue)
     bar_type = bar_type_from_loadout(loadout, venue=venue)
-    bars = dataframe_to_bars(df, bar_type, instrument)
+    sim_leverage = _sim_leverage(loadout, spec)
+    instrument = perp_instrument_from_spec(
+        spec,
+        venue=venue,
+        maker_fee=Decimal(str(costs.instrument_maker_fee)),
+        taker_fee=Decimal(str(costs.instrument_taker_fee)),
+        margin_init=Decimal(1) / sim_leverage,
+        margin_maint=Decimal(str(spec.maintenance_rate)),
+    )
+    bar_instrument_id = str(BarType.from_str(bar_type).instrument_id)
+    if str(instrument.id) != bar_instrument_id:
+        raise Phase2TechnicalFailure(
+            f"instrument {instrument.id} does not match bar type instrument "
+            f"{bar_instrument_id}",
+            strategy=loadout.strategy_name,
+            export_dir=export_path,
+        )
+    bars = dataframe_to_bars(df, bar_type, instrument, timestamp_at="close")
 
     init_cash = (
         float(loadout.init_cash)
@@ -130,7 +242,18 @@ def run_phase2_backtest(
         loadout,
         bar_type=bar_type,
         instrument_id=str(instrument.id),
-        conviction=float(conviction),
+        conviction=float(conviction_value),
+    )
+    strategy = HypervectorStrategy(config=strategy_config)
+    signal_info = _prepare_signals(
+        strategy,
+        bars=bars,
+        bar_type=bar_type,
+        loadout=loadout,
+        export_path=export_path,
+        exits=dict(strategy_config.exits or {}),
+        max_lookback=int(strategy_config.max_lookback),
+        signal_mode=signal_mode,
     )
 
     # Unique trader/instance IDs so sequential runs in one process don't abort
@@ -146,25 +269,54 @@ def run_phase2_backtest(
             ),
         )
     )
+    v = Venue(venue)
     try:
         engine.add_venue(
-            venue=Venue(venue),
+            venue=v,
             oms_type=OmsType.NETTING,
             account_type=AccountType.MARGIN,
             starting_balances=[Money(init_cash, USDT)],
             base_currency=USDT,
-            default_leverage=Decimal(_default_leverage(loadout)),
+            default_leverage=sim_leverage,
+            margin_model=StandardMarginModel(),
         )
         engine.add_instrument(instrument)
         engine.add_data(bars)
-        engine.add_strategy(HypervectorStrategy(config=strategy_config))
-        engine.run()
+        engine.add_strategy(strategy)
+        try:
+            engine.run()
+        except Phase2TechnicalFailure as exc:
+            exc.export_dir = str(export_path)
+            raise
+        except Exception as exc:
+            raise Phase2TechnicalFailure(
+                f"Nautilus engine run failed for {loadout.strategy_name!r}: "
+                f"{type(exc).__name__}: {exc}",
+                strategy=loadout.strategy_name,
+                export_dir=export_path,
+                first_error=strategy.intent_error or f"{type(exc).__name__}: {exc}",
+            ) from exc
+        if strategy.intent_error is not None:  # defensive: never report ok
+            raise Phase2IntentError(
+                f"strategy {loadout.strategy_name!r} recorded an intent error",
+                strategy=loadout.strategy_name,
+                export_dir=export_path,
+                first_error=strategy.intent_error,
+            )
 
         result = engine.get_result()
         orders_count = int(getattr(result, "total_orders", 0) or 0)
         if orders_count == 0:
             orders_count = len(engine.cache.orders())
-        pnl = _extract_pnl(result, engine, Venue(venue), init_cash)
+        outcome = _collect_outcome(
+            result=result,
+            engine=engine,
+            strategy=strategy,
+            venue=v,
+            init_cash=init_cash,
+            costs=costs,
+            last_bar_close_ns=int(bars[-1].ts_event) if bars else 0,
+        )
         engine_run_id = str(getattr(result, "run_id", "") or "")
     finally:
         engine.dispose()
@@ -175,6 +327,9 @@ def run_phase2_backtest(
     report_path = report_dir / "summary.json"
 
     loadout_summary = loadout.summary()
+    gaps = ["native_liquidation"]
+    if hypervelocity:
+        gaps.append("proportional_target_resize")
     payload: dict[str, Any] = {
         "run_id": run_id,
         "engine_run_id": engine_run_id,
@@ -183,23 +338,54 @@ def run_phase2_backtest(
         "data_root": str(paths.root.resolve()),
         "venue": venue,
         "instrument_id": str(instrument.id),
+        "instrument": {
+            **spec.to_dict(),
+            "price_increment": str(instrument.price_increment),
+            "size_increment": str(instrument.size_increment),
+        },
         "bar_type": bar_type,
+        "bar_timestamps": "close",
         "data_fidelity": "ohlcv_bar",
         "venue_model": "phase2_bar_only",
         "event_venue_model_available": (
             "hypervelocity_event_friction_v1" if hypervelocity else None
         ),
         "event_venue_model_ready": False if hypervelocity else None,
-        "event_venue_model_gaps": (
-            ["native_liquidation", "proportional_target_resize"]
-            if hypervelocity
-            else []
+        "event_venue_model_gaps": gaps,
+        "margin": {
+            "sim_leverage": float(sim_leverage),
+            "venue_max_leverage": float(spec.venue_max_leverage),
+            "margin_model": "standard_init_1_over_sim_leverage",
+            "margin_init": float(instrument.margin_init),
+            "margin_maint": float(instrument.margin_maint),
+            "margin_enforcement": "none_nautilus_1230_bar_sim_no_denial_or_liquidation",
+        },
+        "cost_model": costs.to_dict(),
+        "exit_mode": str((strategy_config.exits or {}).get("mode")),
+        "trail_exit_model": (
+            "close_evaluated_trailing_stop_vectorbt_parity"
+            if strategy._trail_enabled
+            else None
         ),
+        "trail_exits": int(strategy.trail_exits),
+        **signal_info,
         "bars": len(bars),
-        "conviction": float(conviction),
+        "conviction": float(conviction_value),
+        "conviction_source": conviction_source,
         "init_cash": init_cash,
         "orders_count": orders_count,
-        "pnl": pnl,
+        "pnl": outcome["pnl"],
+        "pnl_basis": "mark_to_market_net_of_fees_and_funding",
+        "pnl_realized": outcome["pnl_realized"],
+        "pnl_unrealized": outcome["pnl_unrealized"],
+        "pnl_before_funding": outcome["pnl_before_funding"],
+        "funding_cost": outcome["funding_cost"],
+        "commissions_total": outcome["commissions_total"],
+        "trade_count": outcome["trade_count"],
+        "positions_count": outcome["trade_count"],
+        "open_positions_at_end": outcome["open_positions_at_end"],
+        "intent_errors": 0,
+        "parity": _parity_block(loadout, outcome),
         "loadout": loadout_summary,
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
@@ -208,10 +394,162 @@ def run_phase2_backtest(
     return Phase2Result(
         export_dir=export_path,
         orders_count=orders_count,
-        pnl=pnl,
+        pnl=outcome["pnl"],
         report_path=report_path.resolve(),
         loadout_summary=loadout_summary,
+        trade_count=outcome["trade_count"],
+        pnl_realized=outcome["pnl_realized"],
+        pnl_unrealized=outcome["pnl_unrealized"],
+        funding_cost=outcome["funding_cost"],
+        commissions_total=outcome["commissions_total"],
+        open_positions_at_end=outcome["open_positions_at_end"],
+        signal_mode=str(signal_info["signal_mode_used"]),
+        extras={"conviction_source": conviction_source, "cost_model": costs.to_dict()},
     )
+
+
+def _prepare_signals(
+    strategy: HypervectorStrategy,
+    *,
+    bars: list[Any],
+    bar_type: str,
+    loadout: StrategyLoadout,
+    export_path: Path,
+    exits: dict[str, Any],
+    max_lookback: int,
+    signal_mode: str,
+) -> dict[str, Any]:
+    """Attach precomputed intents when allowed; return summary fields."""
+    info: dict[str, Any] = {
+        "signal_mode": signal_mode,
+        "signal_mode_used": "windowed",
+        "signal_semantics": _SEMANTICS["windowed"],
+        "causal_probe": None,
+    }
+    if signal_mode == "windowed" or not bars:
+        return info
+    frame = ohlcv_frame_from_bars(bars, label_offset_ns=bar_interval_ns(bar_type))
+    try:
+        intents = precompute_intents(
+            frame, loadout.strategy_name, dict(loadout.params), exits
+        )
+        probe = probe_precomputed(
+            intents,
+            frame,
+            loadout.strategy_name,
+            dict(loadout.params),
+            exits,
+            max_lookback=max_lookback,
+        )
+    except Exception as exc:
+        raise Phase2IntentError(
+            f"strategy {loadout.strategy_name!r} failed while computing signals: "
+            f"{type(exc).__name__}: {exc}",
+            strategy=loadout.strategy_name,
+            export_dir=export_path,
+            first_error={
+                "phase": "signal_precompute",
+                "error": f"{type(exc).__name__}: {exc}",
+            },
+        ) from exc
+    info["causal_probe"] = probe
+    if probe["mismatches"]:
+        if signal_mode == "precomputed":
+            raise Phase2TechnicalFailure(
+                f"precomputed signals for {loadout.strategy_name!r} disagree with the "
+                f"windowed computation on {probe['mismatches']} of "
+                f"{probe['sampled']} probed bars",
+                strategy=loadout.strategy_name,
+                export_dir=export_path,
+                first_error=probe["first_mismatch"],
+            )
+        info["signal_fallback_reason"] = "causal_probe_mismatch"
+        return info
+    strategy.attach_precomputed(intents)
+    info["signal_mode_used"] = "precomputed"
+    info["signal_semantics"] = _SEMANTICS["precomputed"]
+    return info
+
+
+def _money_total(mapping: Any) -> float:
+    if not mapping:
+        return 0.0
+    total = 0.0
+    for money in mapping.values():
+        if money is None:
+            continue
+        total += float(money.as_double())
+    return total
+
+
+def _collect_outcome(
+    *,
+    result: Any,
+    engine: BacktestEngine,
+    strategy: HypervectorStrategy,
+    venue: Venue,
+    init_cash: float,
+    costs: Phase2CostModel,
+    last_bar_close_ns: int,
+) -> dict[str, Any]:
+    """Mark-to-market PnL, funding, commissions and position counts (pre-dispose)."""
+    pnl_realized = _realized_pnl(result, engine, venue, init_cash)
+    pnl_unrealized = _money_total(engine.portfolio.unrealized_pnls(venue))
+    account = engine.portfolio.account(venue)
+    commissions_total = _money_total(account.commissions()) if account else 0.0
+
+    holdings: list[tuple[float, float]] = []
+    for rec in strategy.position_records:
+        notional = abs(rec["avg_px_open"] * rec["peak_qty"])
+        hold_min = (rec["ts_closed"] - rec["ts_opened"]) / 60e9
+        if math.isfinite(notional) and math.isfinite(hold_min):
+            holdings.append((notional, hold_min))
+    open_positions = list(engine.cache.positions_open())
+    for pos in open_positions:
+        notional = abs(float(pos.avg_px_open) * float(pos.peak_qty.as_double()))
+        hold_min = (last_bar_close_ns - int(pos.ts_opened)) / 60e9
+        holdings.append((notional, hold_min))
+    funding_cost = estimate_funding(holdings, costs)
+
+    pnl_before_funding = pnl_realized + pnl_unrealized
+    return {
+        "pnl": pnl_before_funding - funding_cost,
+        "pnl_realized": pnl_realized,
+        "pnl_unrealized": pnl_unrealized,
+        "pnl_before_funding": pnl_before_funding,
+        "funding_cost": funding_cost,
+        "commissions_total": commissions_total,
+        "trade_count": int(strategy.positions_opened),
+        "open_positions_at_end": len(open_positions),
+    }
+
+
+def _parity_block(loadout: StrategyLoadout, outcome: dict[str, Any]) -> dict[str, Any]:
+    """Side-by-side with the export's research metrics (report only, never a gate)."""
+    metrics = loadout.metrics or {}
+
+    def _num(key: str) -> float | None:
+        value = metrics.get(key)
+        try:
+            return float(value) if value is not None else None
+        except (TypeError, ValueError):
+            return None
+
+    export_trades = _num("trade_count")
+    export_pnl = _num("net_pnl")
+    return {
+        "export_trade_count": export_trades,
+        "nautilus_trade_count": outcome["trade_count"],
+        "trade_count_delta": (
+            outcome["trade_count"] - export_trades
+            if export_trades is not None
+            else None
+        ),
+        "export_net_pnl": export_pnl,
+        "nautilus_pnl": outcome["pnl"],
+        "pnl_delta": outcome["pnl"] - export_pnl if export_pnl is not None else None,
+        "note": "export metrics cover the research window; compare only like windows",
+    }
 
 
 def _resolve_ohlcv(
@@ -248,13 +586,13 @@ def _resolve_ohlcv(
     return df
 
 
-def _extract_pnl(
+def _realized_pnl(
     result: Any,
     engine: BacktestEngine,
     venue: Venue,
     init_cash: float,
 ) -> float:
-    """Total USDT PnL from engine stats, else equity delta vs init cash."""
+    """Realized USDT PnL (account balance delta, net of commissions)."""
     stats = getattr(result, "stats_pnls", None) or {}
     for _ccy, ccy_stats in stats.items():
         if isinstance(ccy_stats, dict) and "PnL (total)" in ccy_stats:
@@ -264,15 +602,11 @@ def _extract_pnl(
                     return float(val)
             except (TypeError, ValueError):
                 pass
-
-    try:
-        equity = engine.portfolio.equity(venue)
-        if equity:
-            total = sum(float(m.as_double()) for m in equity.values())
-            return total - float(init_cash)
-    except Exception:
-        pass
-    return 0.0
+    # No stats (e.g. no fills): realized PnL is the balance delta.
+    account = engine.portfolio.account(venue)
+    if account is None:
+        return 0.0
+    return _money_total(account.balances_total()) - float(init_cash)
 
 
 def _make_run_id(loadout: StrategyLoadout) -> str:
