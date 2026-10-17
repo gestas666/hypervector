@@ -107,3 +107,45 @@ def test_exhausted_book_bound_names_symbol_window_pages_and_cursor(
     assert "continuation_cursor='cur-5'" in message
     assert "book_max_pages" in message
     assert not any(tmp_path.rglob("manifest.json"))
+
+
+def test_native_replay_reader_accepts_book_hours_the_backfill_now_publishes(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Raising the writer bound must raise the authenticated reader bound too.
+
+    The native replay execution source used a hard-coded bound of 20 pages, so a
+    21-page hour the backfill now completes would be refused as exceeding the
+    reader bounds even though it is complete, verified evidence.
+    """
+    from decimal import Decimal
+
+    from hypervector.data.oxa_history import OxaBookRequest, output_directory
+    from hypervector.data.oxa_storage import file_evidence
+    from hypervector.research.native_replay_packets import _execution_source
+
+    session = PagedSession(21)
+    monkeypatch.setattr("hypervector.data.oxa_api.requests.Session", lambda: session)
+    config = OxaBackfillConfig("BTC", START, END, tmp_path, book_only=True)
+    assert _acquire_task(config, OxaBackfillTask("book", START, END), "key").pages == 21
+
+    manifest = output_directory(tmp_path, OxaBookRequest("BTC", START, END)) / (
+        "manifest.json"
+    )
+    execution = _execution_source(
+        [
+            {
+                "symbol": "BTC",
+                "start": START.isoformat(),
+                "end": END.isoformat(),
+                "data_root": str(tmp_path),
+                "manifest_sha256": file_evidence(manifest)["sha256"],
+            }
+        ],
+        1_000,
+    )
+    arrival_ms = int((START + timedelta(seconds=21)).timestamp() * 1000)
+
+    book = execution("BTC", arrival_ms, Decimal("0.00001"))
+
+    assert book.exchange_time_ms == arrival_ms
