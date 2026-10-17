@@ -1,4 +1,10 @@
-"""Live session: same alpha path as paper; live ledger + optional place (F3)."""
+"""Live session: same alpha path as paper; live ledger + optional place (F3).
+
+Warm-up history is seeded into the rolling buffer without evaluating intents
+(:meth:`LiveSession.seed_history`), bars without execution authority are only
+recorded (:meth:`LiveSession.observe_bar`), and arming discards any synthetic
+exposure so the armed phase always starts from the venue-reconciled flat state.
+"""
 
 from __future__ import annotations
 
@@ -21,6 +27,7 @@ from hypervector.nautilus.actor import (
 )
 from hypervector.nautilus.signals import last_bar_intent
 from hypervector.paper.conviction import FixedConvictionProvider
+from hypervector.paper.live_node import timeframe_delta
 from hypervector.paper.order_intent import NETWORK_MAINNET
 from hypervector.paper.session import (
     _buffer_to_df,
@@ -69,6 +76,10 @@ class LiveSession:
             raise FileNotFoundError(f"export_dir not found: {export_path}")
 
         self.loadout = load_strategy_loadout(export_path, strict=True)
+        # Resolve the bar duration once; an unsupported timeframe fails here,
+        # before any ledger write, warm-up or arming.
+        self.bar_interval = timeframe_delta(self.loadout.timeframe)
+        self._bar_hours = self.bar_interval.total_seconds() / 3600.0
         self.root = Path(data_root)
         self.paths = ensure_data_layout(self.root)
         self.decisions_path = self.paths.live_decisions / DECISIONS_FILENAME
@@ -107,7 +118,44 @@ class LiveSession:
         self._last_ts: pd.Timestamp | None = None
 
     def enable_live_place(self) -> None:
-        """Arm venue place after warm-up (live phase only)."""
+        """Arm venue place after warm-up (live phase only).
+
+        Synthetic warm-up exposure never reaches the armed phase: a strategy
+        exit on the first live bar would otherwise send a real order that opens
+        the opposite position while the engine believes it is flat.
+        """
+        if not self.engine.place_enabled:
+            discarded = self.engine.discard_synthetic_position()
+            if discarded.qty != 0.0:
+                logger.warning(
+                    "live arm discarded synthetic warm-up position qty=%s avg_px=%s",
+                    discarded.qty,
+                    discarded.avg_px,
+                )
+                append_live_decision(
+                    self.root,
+                    {
+                        "feed_ts": (
+                            self._last_ts.isoformat()
+                            if self._last_ts is not None
+                            else "warmup_end"
+                        ),
+                        "run_id": self.run_id,
+                        "export_id": str(self.export_id),
+                        "strategy_name": self.loadout.strategy_name,
+                        "symbol": self.loadout.symbol,
+                        "timeframe": self.loadout.timeframe,
+                        "action": "warmup_position_discarded",
+                        "discarded_qty": discarded.qty,
+                        "discarded_avg_px": discarded.avg_px,
+                        "position_qty": 0.0,
+                        "execution_mode": "live",
+                        "submitted": False,
+                        "place_attempted": False,
+                        "live_phase": False,
+                        "network": NETWORK_MAINNET,
+                    },
+                )
         self.engine.place_enabled = True
 
     @property
@@ -115,6 +163,47 @@ class LiveSession:
         return self._last_ts
 
     def on_bar(self, row: pd.Series | dict[str, Any]) -> str | None:
+        """Process one bar with execution authority (intent + possible order)."""
+        record = self._append_record(row)
+        fill_action: str | None = None
+        if len(self.buffer_rows) >= 2:
+            fill_action = self._process_intent(record)
+        self._accrue_funding(record)
+        return fill_action
+
+    def observe_bar(self, row: pd.Series | dict[str, Any]) -> None:
+        """Record one bar without execution authority (catch-up or stale bar).
+
+        The bar extends the indicator history and accrues ledger funding on any
+        open position, but no intent is evaluated and nothing is placed.
+        """
+        record = self._append_record(row)
+        self._accrue_funding(record)
+
+    def seed_history(self, ohlcv: pd.DataFrame) -> int:
+        """Seed the rolling buffer from warm-up history in O(n); return bar count.
+
+        Equivalent to the buffer :meth:`process_frame` leaves behind, without the
+        per-bar DataFrame rebuild and strategy evaluation, and without synthetic
+        fills, funding rows or position changes.
+        """
+        frame = _prepare_ohlcv(ohlcv, max_bars=None)
+        if "timestamp" in frame.columns:
+            frame = frame.sort_values("timestamp", kind="mergesort")
+        tail = frame.iloc[-DEFAULT_MAX_LOOKBACK:]
+        for _, row in tail.iterrows():
+            _append_bar_record(
+                self.buffer_rows,
+                _row_to_buffer_record(row),
+                max_lookback=DEFAULT_MAX_LOOKBACK,
+            )
+        self.bars_processed += len(frame)
+        ts = self.buffer_rows[-1].get("timestamp") if self.buffer_rows else None
+        if isinstance(ts, pd.Timestamp):
+            self._last_ts = ts
+        return len(frame)
+
+    def _append_record(self, row: pd.Series | dict[str, Any]) -> dict[str, Any]:
         record = _row_to_buffer_record(
             row if isinstance(row, pd.Series) else pd.Series(row)
         )
@@ -123,23 +212,15 @@ class LiveSession:
         ts = record.get("timestamp")
         if isinstance(ts, pd.Timestamp):
             self._last_ts = ts
+        return record
 
-        fill_action: str | None = None
-        if len(self.buffer_rows) >= 2:
-            fill_action = self._process_intent(record)
-
+    def _accrue_funding(self, record: dict[str, Any]) -> None:
         if self.engine.position.qty != 0.0:
-            bar_mins = (
-                1.0
-                if self.loadout.timeframe == "1m"
-                else (5.0 if self.loadout.timeframe == "5m" else 15.0)
-            )
             self.engine.apply_funding(
                 feed_ts=_feed_ts(record),
                 oracle_px=float(record["close"]),
-                hours=bar_mins / 60.0,
+                hours=self._bar_hours,
             )
-        return fill_action
 
     def _process_intent(self, record: dict[str, Any]) -> str | None:
         df = _buffer_to_df(self.buffer_rows)
@@ -189,6 +270,7 @@ class LiveSession:
                 intent=intent_payload,
                 conviction=cv.conviction,
                 conviction_source=cv.source,
+                reduce_only=True,
             )
             if rec.get("place_attempted"):
                 self.places_count += 1
@@ -231,6 +313,11 @@ class LiveSession:
         return None
 
     def process_frame(self, ohlcv: pd.DataFrame, *, max_bars: int | None = None) -> int:
+        """Replay bars through :meth:`on_bar` (synthetic when unarmed).
+
+        Kept for API compatibility; the live daemon warms up with
+        :meth:`seed_history`, which is linear and leaves the engine flat.
+        """
         frame = _prepare_ohlcv(ohlcv, max_bars=max_bars)
         n = 0
         for _, row in frame.iterrows():

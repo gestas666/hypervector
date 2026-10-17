@@ -6,6 +6,7 @@ before any venue client is constructed.
 
 from __future__ import annotations
 
+import math
 import os
 from dataclasses import dataclass
 from typing import Any
@@ -19,6 +20,29 @@ DEFAULT_MAX_NOTIONAL_USD = 50.0
 
 class LivePolicyError(ValueError):
     """Live policy refused to arm or size an order."""
+
+
+def notional_cap_error(value: object) -> str | None:
+    """Return why ``value`` is not a usable hard notional cap, or None if it is.
+
+    ``float("nan")`` compares false against every bound, so a NaN or infinite cap
+    would silently disable both the engine scaling and the client cap check.
+    """
+    try:
+        cap = float(value)  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return f"max_notional_usd must be a finite positive number, got {value!r}"
+    if not math.isfinite(cap) or cap <= 0.0:
+        return f"max_notional_usd must be a finite positive number, got {value!r}"
+    return None
+
+
+def require_notional_cap(value: object) -> float:
+    """Return a validated hard notional cap or raise :class:`LivePolicyError`."""
+    error = notional_cap_error(value)
+    if error is not None:
+        raise LivePolicyError(error)
+    return float(value)  # type: ignore[arg-type]
 
 
 @dataclass(frozen=True)
@@ -57,6 +81,7 @@ class LivePolicy:
                 "live secrets missing — set "
                 f"{SECRET_ENV_WALLET} and {SECRET_ENV_API_KEY}"
             )
+        require_notional_cap(self.max_notional_usd)
 
     def require_notional(self, *, qty: float, mark_px: float) -> float:
         """Return notional if within cap; else raise."""
@@ -67,9 +92,7 @@ class LivePolicy:
         if px <= 0:
             raise LivePolicyError(f"mark_px must be positive, got {mark_px!r}")
         notional = abs(q) * px
-        cap = float(self.max_notional_usd)
-        if cap <= 0:
-            raise LivePolicyError(f"max_notional_usd must be positive, got {cap!r}")
+        cap = require_notional_cap(self.max_notional_usd)
         if notional > cap + 1e-12:
             raise LivePolicyError(
                 f"notional {notional:.6f} exceeds max_notional_usd {cap:.6f}"
@@ -82,6 +105,7 @@ class LivePolicy:
         from hypervector.live.capabilities import is_submit_wired
 
         wired = bool(is_submit_wired())
+        cap_error = notional_cap_error(self.max_notional_usd)
         return {
             "enabled": self.enabled,
             "armed": self.armed,
@@ -90,7 +114,13 @@ class LivePolicy:
             "secret_env_names": [SECRET_ENV_WALLET, SECRET_ENV_API_KEY],
             "network": "mainnet",
             "submit_wired": wired,
-            "can_start": bool(self.enabled and self.armed and self.secrets_present),
+            "max_notional_valid": cap_error is None,
+            "can_start": bool(
+                self.enabled
+                and self.armed
+                and self.secrets_present
+                and cap_error is None
+            ),
             "note": (
                 "Live exec client present (F2). "
                 "live-run / venue place only when enabled+armed+secrets (F3)."
